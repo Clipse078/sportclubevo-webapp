@@ -14,8 +14,7 @@ import {
   isPerf01aRegionProofEnvironment,
 } from "@/lib/diagnostics/sce-perf-01a-region-proof";
 import { getRuntimeEnvironment } from "@/lib/env";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requirePlatformOperatorPermission } from "@/lib/permissions/require-platform-operator-permission";
+import { requirePlatformWorkspaceOperator } from "@/lib/permissions/require-platform-operator-permission";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +24,7 @@ export default async function PerformanceRegionDiagnosticPage() {
     notFound();
   }
 
-  await requirePlatformOperatorPermission(PERMISSIONS.TENANTS_MANAGE);
+  await requirePlatformWorkspaceOperator();
 
   let payload;
   try {

@@ -30,9 +30,8 @@ vi.mock("@/lib/permissions/services/effective-permission-resolver", () => ({
   }),
 }));
 
-const { requirePlatformOperatorPermission } = await import(
-  "../require-platform-operator-permission"
-);
+const { requirePlatformOperatorPermission, requirePlatformWorkspaceOperator } =
+  await import("../require-platform-operator-permission");
 
 function platformSession(overrides: Record<string, unknown> = {}) {
   return {
@@ -41,6 +40,8 @@ function platformSession(overrides: Record<string, unknown> = {}) {
       effectiveUserId: "platform-1",
       actorUserId: "platform-1",
       isImpersonating: false,
+      activeTenantId: null,
+      roleKeys: ["super_admin"],
       ...overrides,
     },
   };
@@ -94,5 +95,53 @@ describe("requirePlatformOperatorPermission", () => {
       userId: "platform-1",
       permission: PERMISSIONS.TENANTS_MANAGE,
     });
+  });
+});
+
+describe("requirePlatformWorkspaceOperator", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetRequestAuthSession.mockResolvedValue(platformSession());
+    mockFindUnique.mockResolvedValue({ isActive: true });
+  });
+
+  it("redirects unauthenticated users to login", async () => {
+    mockGetRequestAuthSession.mockResolvedValue(null);
+    await expect(requirePlatformWorkspaceOperator()).rejects.toThrow(
+      "REDIRECT:/login",
+    );
+  });
+
+  it("redirects impersonated users to dashboard", async () => {
+    mockGetRequestAuthSession.mockResolvedValue(
+      platformSession({ isImpersonating: true }),
+    );
+    await expect(requirePlatformWorkspaceOperator()).rejects.toThrow(
+      "REDIRECT:/dashboard",
+    );
+  });
+
+  it("redirects club workspace users to dashboard", async () => {
+    mockGetRequestAuthSession.mockResolvedValue(
+      platformSession({ activeTenantId: "tenant-1", roleKeys: ["super_admin"] }),
+    );
+    await expect(requirePlatformWorkspaceOperator()).rejects.toThrow(
+      "REDIRECT:/dashboard",
+    );
+  });
+
+  it("redirects when session is not a platform super-admin", async () => {
+    mockGetRequestAuthSession.mockResolvedValue(
+      platformSession({ roleKeys: ["club_admin"] }),
+    );
+    await expect(requirePlatformWorkspaceOperator()).rejects.toThrow(
+      "REDIRECT:/dashboard",
+    );
+  });
+
+  it("returns session for platform workspace operator", async () => {
+    const session = await requirePlatformWorkspaceOperator();
+    expect(session.user.id).toBe("platform-1");
+    expect(mockHasPermission).not.toHaveBeenCalled();
   });
 });

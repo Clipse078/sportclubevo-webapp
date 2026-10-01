@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
-
 const mockGetRuntimeEnvironment = vi.fn();
-const mockRequirePlatformOperatorPermission = vi.fn();
+const mockRequirePlatformWorkspaceOperator = vi.fn();
 const mockCollectPerf01aRegionProof = vi.fn();
 const mockNotFound = vi.fn(() => {
   throw new Error("NOT_FOUND");
@@ -16,7 +14,7 @@ vi.mock("@/lib/env", () => ({
 }));
 
 vi.mock("@/lib/permissions/require-platform-operator-permission", () => ({
-  requirePlatformOperatorPermission: mockRequirePlatformOperatorPermission,
+  requirePlatformWorkspaceOperator: mockRequirePlatformWorkspaceOperator,
 }));
 
 vi.mock("@/lib/diagnostics/sce-perf-01a-region-proof", async (importOriginal) => {
@@ -74,7 +72,7 @@ describe("/dashboard/platform/diagnostics/performance-region", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetRuntimeEnvironment.mockReturnValue(previewRuntime());
-    mockRequirePlatformOperatorPermission.mockResolvedValue({
+    mockRequirePlatformWorkspaceOperator.mockResolvedValue({
       user: { id: "platform-1" },
     });
     mockCollectPerf01aRegionProof.mockResolvedValue(samplePayload());
@@ -83,18 +81,16 @@ describe("/dashboard/platform/diagnostics/performance-region", () => {
   it("rejects PROD via notFound", async () => {
     mockGetRuntimeEnvironment.mockReturnValue(prodRuntime());
     await expect(PerformanceRegionDiagnosticPage()).rejects.toThrow("NOT_FOUND");
-    expect(mockRequirePlatformOperatorPermission).not.toHaveBeenCalled();
+    expect(mockRequirePlatformWorkspaceOperator).not.toHaveBeenCalled();
   });
 
-  it("requires TENANTS_MANAGE platform operator gate", async () => {
+  it("requires platform workspace operator gate", async () => {
     await PerformanceRegionDiagnosticPage();
-    expect(mockRequirePlatformOperatorPermission).toHaveBeenCalledWith(
-      PERMISSIONS.TENANTS_MANAGE,
-    );
+    expect(mockRequirePlatformWorkspaceOperator).toHaveBeenCalled();
   });
 
   it("rejects unauthenticated users when gate redirects to login", async () => {
-    mockRequirePlatformOperatorPermission.mockImplementation(() => {
+    mockRequirePlatformWorkspaceOperator.mockImplementation(() => {
       throw new Error("REDIRECT:/login");
     });
     await expect(PerformanceRegionDiagnosticPage()).rejects.toThrow("REDIRECT:/login");
@@ -102,7 +98,7 @@ describe("/dashboard/platform/diagnostics/performance-region", () => {
   });
 
   it("rejects tenant users when gate redirects to dashboard", async () => {
-    mockRequirePlatformOperatorPermission.mockImplementation(() => {
+    mockRequirePlatformWorkspaceOperator.mockImplementation(() => {
       throw new Error("REDIRECT:/dashboard");
     });
     await expect(PerformanceRegionDiagnosticPage()).rejects.toThrow("REDIRECT:/dashboard");
@@ -110,7 +106,7 @@ describe("/dashboard/platform/diagnostics/performance-region", () => {
   });
 
   it("rejects impersonated sessions when gate redirects to dashboard", async () => {
-    mockRequirePlatformOperatorPermission.mockImplementation(() => {
+    mockRequirePlatformWorkspaceOperator.mockImplementation(() => {
       throw new Error("REDIRECT:/dashboard");
     });
     await expect(PerformanceRegionDiagnosticPage()).rejects.toThrow("REDIRECT:/dashboard");
