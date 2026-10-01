@@ -1,4 +1,4 @@
-﻿import { auth } from "@/auth";
+﻿import { getRequestAuthSession } from "@/lib/auth/get-request-auth-session";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
@@ -33,8 +33,8 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   const session = sceHotfixLogin01TraceEnabled()
-    ? await runWithSceHotfixLogin01Trace("layout-auth", () => auth())
-    : await auth();
+    ? await runWithSceHotfixLogin01Trace("layout-auth", () => getRequestAuthSession())
+    : await getRequestAuthSession();
 
   if (!session?.user) {
     redirect("/login");
@@ -49,30 +49,31 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   // User.tenantId column). generateTenantCssVars() applies PLATFORM_BRANDING
   // defaults when null, so the layout is always safe even for platform-only
   // administrators with no active tenant.
-  const [ctx, linkedPersonProfile] = await Promise.all([
+  const activeTenantId = session.user.activeTenantId ?? null;
+
+  const [ctx, linkedPersonProfile, participationNavCapable] = await Promise.all([
     sceHotfixLogin01TraceEnabled()
       ? runWithSceHotfixLogin01Trace("layout-tenant", () => getActiveTenant())
       : getActiveTenant(),
     getPersonProfileByUserIdCached(session.user.id),
+    activeTenantId
+      ? sceHotfixLogin01TraceEnabled()
+        ? runWithSceHotfixLogin01Trace("layout-participation-nav", () =>
+            resolvePersonalParticipationNavCapability({
+              tenantId: activeTenantId,
+              userId: session.user.id,
+            }),
+          )
+        : resolvePersonalParticipationNavCapability({
+            tenantId: activeTenantId,
+            userId: session.user.id,
+          })
+      : Promise.resolve(false),
   ]);
 
   if (sceHotfixLogin01TraceEnabled()) {
     logSceHotfixLogin01Milestone("T2_TENANT");
   }
-
-  const participationNavCapable = ctx?.id
-    ? await (sceHotfixLogin01TraceEnabled()
-        ? runWithSceHotfixLogin01Trace("layout-participation-nav", () =>
-            resolvePersonalParticipationNavCapability({
-              tenantId: ctx.id!,
-              userId: session.user.id,
-            }),
-          )
-        : resolvePersonalParticipationNavCapability({
-            tenantId: ctx.id,
-            userId: session.user.id,
-          }))
-    : false;
 
   const tenantCssVars = generateTenantCssVars(ctx);
 

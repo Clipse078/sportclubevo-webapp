@@ -45,7 +45,7 @@
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getRequestAuthSession } from "@/lib/auth/get-request-auth-session";
 import { prisma } from "@/lib/db/prisma";
 import { recordSceHotfixLogin01DuplicateProbe } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { getCurrentTenantContextByIdCached } from "@/lib/server/request-cache";
@@ -55,8 +55,8 @@ import {
 } from "@/lib/tenants/context";
 
 const resolveActiveTenantIdFromSession = cache(async (): Promise<string | null> => {
-  recordSceHotfixLogin01DuplicateProbe("auth()");
-  const session = await auth();
+  recordSceHotfixLogin01DuplicateProbe("getRequestAuthSession");
+  const session = await getRequestAuthSession();
   return session?.user?.activeTenantId ?? null;
 });
 
@@ -146,7 +146,7 @@ export type SlugTenantContext = TenantContext & { membershipId: string };
 export async function getTenantContextForSlug(
   tenantSlug: string,
 ): Promise<SlugTenantContext | null> {
-  const session = await auth();
+  const session = await getRequestAuthSession();
   const userId = session?.user?.id;
   if (!userId) return null;
   return resolveTenantContextForSlugAndUser(userId, tenantSlug);
@@ -206,7 +206,7 @@ export async function requireApiTenantContextForSlug(
   | { ok: true; tenantId: string; tenant: SlugTenantContext }
   | { ok: false; status: 401 | 404; error: string }
 > {
-  const session = await auth();
+  const session = await getRequestAuthSession();
   const userId = session?.user?.id;
   if (!userId) {
     return { ok: false, status: 401, error: "Unauthorized" };

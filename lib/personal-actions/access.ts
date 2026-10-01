@@ -2,6 +2,7 @@
  * AUFGABEN-05-UI — cheap module / navigation capability (no full inbox load).
  */
 
+import { cache } from "react";
 import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -33,7 +34,7 @@ function taskContextFromKeys(
  * Lightweight participation-domain capability: linked person who is a guardian
  * and/or active squad player in the tenant. Does not load attendance obligations.
  */
-export async function resolvePersonalParticipationNavCapability(args: {
+export async function resolvePersonalParticipationNavCapabilityUncached(args: {
   tenantId: string;
   userId: string;
 }): Promise<boolean> {
@@ -62,6 +63,11 @@ export async function resolvePersonalParticipationNavCapability(args: {
 
   return guardianLinks > 0 || squadMemberships > 0;
 }
+
+/** Request-scoped deduplication — shell layout may resolve this once per navigation. */
+export const resolvePersonalParticipationNavCapability = cache(
+  resolvePersonalParticipationNavCapabilityUncached,
+);
 
 /** User has at least one open Requirement obligation they may respond to (bounded count). */
 export async function resolvePersonalRequirementNavCapability(args: {

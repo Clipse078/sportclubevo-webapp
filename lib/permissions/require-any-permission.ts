@@ -1,5 +1,5 @@
-﻿import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
+import { getRequestAuthSession } from "@/lib/auth/get-request-auth-session";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 
@@ -11,7 +11,7 @@ import type { PermissionKey } from "@/lib/permissions/permissions";
  * tenant (`tenantId` ?? session.activeTenantId) bucket.
  */
 export async function requireAnyPermission(permissionKeys: PermissionKey[], tenantId?: string) {
-  const session = await auth();
+  const session = await getRequestAuthSession();
 
   if (!session?.user) {
     redirect("/login");
