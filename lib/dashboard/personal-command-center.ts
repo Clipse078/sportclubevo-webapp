@@ -35,6 +35,11 @@ import {
   type CommandCenterNewsItem,
 } from "@/lib/dashboard/command-center-presentation";
 import type { PersonalDashboardSecondaryActivity } from "@/lib/dashboard/secondary-activity-facts";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
 
 export type { PersonalDashboardSecondaryActivity };
 
@@ -264,6 +269,10 @@ export async function getPersonalCommandCenterData(args: {
     viewAllHref: null,
   };
 
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Step("command-center");
+  }
+
   const [programme, personalWork, secondary] = await Promise.all([
     loadPersonalProgramme({
       tenantId: args.tenantId,
@@ -294,6 +303,10 @@ export async function getPersonalCommandCenterData(args: {
       now,
     }),
   ]);
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01StepDone("command-center");
+  }
 
   const programmeFeedItems = filterProgrammeItemsToRange(programme.items, feedRange);
   const programmeFeedGroups = buildProgrammeFeedGroups({

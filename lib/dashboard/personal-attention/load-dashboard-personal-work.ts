@@ -29,6 +29,14 @@ import {
   selectPersonalAttentionCandidates,
 } from "./select-attention-candidates";
 import type { DashboardPersonalWorkSnapshot } from "./types";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
+
+const SKIP_OPERATIONAL_FOR_ISOLATION =
+  process.env.SCE_HOTFIX_LOGIN_01_SKIP_OPERATIONAL === "1";
 
 export const DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT = 5;
 
@@ -67,12 +75,14 @@ export async function loadDashboardPersonalWork(args: {
   const { platform, tenant } = await getRequestEffectivePermissions(args.userId, args.tenantId);
   const permissionKeys = new Set([...platform, ...tenant, ...capabilities.permissionKeys]);
 
-  const operationalPromise = loadDomainOperationalAttention({
-    tenantId: args.tenantId,
-    actorUserId: args.userId,
-    permissionKeys,
-    now,
-  });
+  const operationalPromise = SKIP_OPERATIONAL_FOR_ISOLATION
+    ? Promise.resolve({ items: [], failedSourceKeys: [] as string[] })
+    : loadDomainOperationalAttention({
+        tenantId: args.tenantId,
+        actorUserId: args.userId,
+        permissionKeys,
+        now,
+      });
 
   if (!capabilities.personalInbox) {
     const operational = await operationalPromise;
@@ -95,22 +105,39 @@ export async function loadDashboardPersonalWork(args: {
     };
   }
 
-  const [counts, aggregated, operational] = await Promise.all([
-    countPersonalActions({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      permissionKeys: capabilities.permissionKeys,
-      now,
-    }),
-    loadPersonalActions({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      permissionKeys: capabilities.permissionKeys,
-      limit: DASHBOARD_PERSONAL_WORK_AGGREGATE_LIMIT,
-      now,
-    }),
+  const personalActionsPromise = (async () => {
+    if (sceHotfixLogin01TraceEnabled()) {
+      logSceHotfixLogin01Step("personal-actions");
+    }
+    try {
+      const [counts, aggregated] = await Promise.all([
+        countPersonalActions({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          permissionKeys: capabilities.permissionKeys,
+          now,
+        }),
+        loadPersonalActions({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          permissionKeys: capabilities.permissionKeys,
+          limit: DASHBOARD_PERSONAL_WORK_AGGREGATE_LIMIT,
+          now,
+        }),
+      ]);
+      return { counts, aggregated };
+    } finally {
+      if (sceHotfixLogin01TraceEnabled()) {
+        logSceHotfixLogin01StepDone("personal-actions");
+      }
+    }
+  })();
+
+  const [personalActions, operational] = await Promise.all([
+    personalActionsPromise,
     operationalPromise,
   ]);
+  const { counts, aggregated } = personalActions;
 
   const attentionCandidates = selectPersonalAttentionCandidates(aggregated, now);
   const attentionSorted = sortPersonalActions(attentionCandidates, now);

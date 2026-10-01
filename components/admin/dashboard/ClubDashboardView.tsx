@@ -30,6 +30,11 @@ import { QUICK_ACCESS_MAX_PINS } from "@/lib/dashboard/quick-access/constants";
 import { formatDate, formatTodayDate, formatTime } from "@/lib/tenant-runtime/formatters";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { getTranslations } from "next-intl/server";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
 
 type ClubDashboardViewProps = {
   calendarMonthParam?: string | null;
@@ -38,8 +43,14 @@ type ClubDashboardViewProps = {
 export default async function ClubDashboardView({
   calendarMonthParam = null }: ClubDashboardViewProps) {
   const tSecondary = await getTranslations("PersonalDashboard.secondary");
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Step("tenant");
+  }
   const session = await auth();
   const ctx = await getActiveTenant();
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01StepDone("tenant");
+  }
   const tenantId = ctx?.id;
 
   const actor =
