@@ -20,10 +20,27 @@ import {
 } from "@/lib/diagnostics/sce-perf-01a-region-proof";
 import { getRuntimeEnvironment } from "@/lib/env";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requirePlatformApiPermission } from "@/lib/permissions/require-platform-api-permission";
+import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+function rejectNonPlatformActorSession(
+  session: NonNullable<
+    Extract<Awaited<ReturnType<typeof requireApiPermission>>, { ok: true }>["session"]
+  >,
+): NextResponse | null {
+  if (session.user.isImpersonating) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const actorUserId = session.user.actorUserId ?? session.user.id;
+  if (!actorUserId || session.user.effectiveUserId !== actorUserId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  return null;
+}
 
 export async function GET(): Promise<NextResponse> {
   const runtimeEnv = getRuntimeEnvironment();
@@ -37,9 +54,14 @@ export async function GET(): Promise<NextResponse> {
     );
   }
 
-  const access = await requirePlatformApiPermission(PERMISSIONS.TENANTS_MANAGE);
+  const access = await requireApiPermission(PERMISSIONS.TENANTS_MANAGE);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
+  const impersonationRejection = rejectNonPlatformActorSession(access.session);
+  if (impersonationRejection) {
+    return impersonationRejection;
   }
 
   try {

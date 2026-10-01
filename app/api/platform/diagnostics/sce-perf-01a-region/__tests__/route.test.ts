@@ -1,15 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const mockGetRuntimeEnvironment = vi.fn();
-const mockRequirePlatformApiPermission = vi.fn();
+const mockRequireApiPermission = vi.fn();
 const mockCollectPerf01aRegionProof = vi.fn();
 
 vi.mock("@/lib/env", () => ({
   getRuntimeEnvironment: mockGetRuntimeEnvironment,
 }));
 
-vi.mock("@/lib/permissions/require-platform-api-permission", () => ({
-  requirePlatformApiPermission: mockRequirePlatformApiPermission,
+vi.mock("@/lib/permissions/require-api-permission", () => ({
+  requireApiPermission: mockRequireApiPermission,
 }));
 
 vi.mock("@/lib/diagnostics/sce-perf-01a-region-proof", async (importOriginal) => {
@@ -40,17 +41,33 @@ function prodRuntime() {
   };
 }
 
+function platformOperatorSession(overrides: Record<string, unknown> = {}) {
+  return {
+    user: {
+      id: "platform-1",
+      effectiveUserId: "platform-1",
+      actorUserId: "platform-1",
+      isImpersonating: false,
+      activeTenantId: "tenant-1",
+      ...overrides,
+    },
+  };
+}
+
+function accessOk(session: ReturnType<typeof platformOperatorSession>) {
+  return {
+    ok: true,
+    status: 200,
+    error: null,
+    session,
+  };
+}
+
 describe("GET /api/platform/diagnostics/sce-perf-01a-region", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetRuntimeEnvironment.mockReturnValue(previewRuntime());
-    mockRequirePlatformApiPermission.mockResolvedValue({
-      ok: true,
-      status: 200,
-      error: null,
-      session: {},
-      actorUserId: "user-1",
-    });
+    mockRequireApiPermission.mockResolvedValue(accessOk(platformOperatorSession()));
     mockCollectPerf01aRegionProof.mockResolvedValue({
       vercelRegion: "iad1",
       databaseRegion: "eu-central-1",
@@ -62,13 +79,12 @@ describe("GET /api/platform/diagnostics/sce-perf-01a-region", () => {
     });
   });
 
-  it("rejects unauthorized requests", async () => {
-    mockRequirePlatformApiPermission.mockResolvedValue({
+  it("rejects unauthenticated requests", async () => {
+    mockRequireApiPermission.mockResolvedValue({
       ok: false,
       status: 401,
       error: "Unauthorized",
       session: null,
-      actorUserId: null,
     });
 
     const response = await GET();
@@ -76,12 +92,68 @@ describe("GET /api/platform/diagnostics/sce-perf-01a-region", () => {
     expect(mockCollectPerf01aRegionProof).not.toHaveBeenCalled();
   });
 
-  it("rejects PROD", async () => {
+  it("rejects ordinary tenant users without TENANTS_MANAGE", async () => {
+    mockRequireApiPermission.mockResolvedValue({
+      ok: false,
+      status: 403,
+      error: "Forbidden",
+      session: platformOperatorSession({ id: "tenant-user-1" }),
+    });
+
+    const response = await GET();
+    expect(response.status).toBe(403);
+    expect(mockCollectPerf01aRegionProof).not.toHaveBeenCalled();
+  });
+
+  it("rejects impersonated platform sessions", async () => {
+    mockRequireApiPermission.mockResolvedValue(
+      accessOk(
+        platformOperatorSession({
+          id: "tenant-user-1",
+          effectiveUserId: "tenant-user-1",
+          actorUserId: "platform-1",
+          isImpersonating: true,
+        }),
+      ),
+    );
+
+    const response = await GET();
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Forbidden" });
+    expect(mockCollectPerf01aRegionProof).not.toHaveBeenCalled();
+  });
+
+  it("rejects stale identity mismatch without impersonation flag", async () => {
+    mockRequireApiPermission.mockResolvedValue(
+      accessOk(
+        platformOperatorSession({
+          id: "tenant-user-1",
+          effectiveUserId: "tenant-user-1",
+          actorUserId: "platform-1",
+          isImpersonating: false,
+        }),
+      ),
+    );
+
+    const response = await GET();
+    expect(response.status).toBe(403);
+    expect(mockCollectPerf01aRegionProof).not.toHaveBeenCalled();
+  });
+
+  it("accepts authorized non-impersonated platform operators", async () => {
+    const response = await GET();
+    expect(response.status).toBe(200);
+    expect(mockRequireApiPermission).toHaveBeenCalledWith(PERMISSIONS.TENANTS_MANAGE);
+    expect(mockCollectPerf01aRegionProof).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects PROD before auth", async () => {
     mockGetRuntimeEnvironment.mockReturnValue(prodRuntime());
 
     const response = await GET();
     expect(response.status).toBe(403);
-    expect(mockRequirePlatformApiPermission).not.toHaveBeenCalled();
+    expect(mockRequireApiPermission).not.toHaveBeenCalled();
     expect(mockCollectPerf01aRegionProof).not.toHaveBeenCalled();
   });
 
@@ -110,12 +182,9 @@ describe("GET /api/platform/diagnostics/sce-perf-01a-region", () => {
     expect(serialized).not.toContain("postgresql://");
     expect(serialized).not.toContain("DATABASE_URL");
     expect(serialized).not.toContain("ep-test");
+    expect(serialized).not.toContain("platform-1");
+    expect(serialized).not.toContain("tenant-1");
 
     vi.unstubAllEnvs();
-  });
-
-  it("uses read-only SELECT 1 collection via shared helper", async () => {
-    await GET();
-    expect(mockCollectPerf01aRegionProof).toHaveBeenCalledTimes(1);
   });
 });
