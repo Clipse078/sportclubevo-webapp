@@ -31,8 +31,10 @@ import { formatDate, formatTodayDate, formatTime } from "@/lib/tenant-runtime/fo
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { getTranslations } from "next-intl/server";
 import {
+  finishSceHotfixLogin01DashboardTrace,
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
+  runWithSceHotfixLogin01Trace,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 
@@ -42,7 +44,11 @@ type ClubDashboardViewProps = {
 
 export default async function ClubDashboardView({
   calendarMonthParam = null }: ClubDashboardViewProps) {
-  const tSecondary = await getTranslations("PersonalDashboard.secondary");
+  const tSecondary = sceHotfixLogin01TraceEnabled()
+    ? await runWithSceHotfixLogin01Trace("i18n-secondary", () =>
+        getTranslations("PersonalDashboard.secondary"),
+      )
+    : await getTranslations("PersonalDashboard.secondary");
   if (sceHotfixLogin01TraceEnabled()) {
     logSceHotfixLogin01Step("tenant");
   }
@@ -59,7 +65,9 @@ export default async function ClubDashboardView({
       : null;
 
   const linkedPersonFirstName = session?.user?.id
-    ? await getPersonFirstNameByUserId(session.user.id)
+    ? await runWithSceHotfixLogin01Trace("person-first-name", () =>
+        getPersonFirstNameByUserId(session.user!.id),
+      )
     : null;
 
   const firstName = resolveDashboardFirstName({
@@ -75,24 +83,29 @@ export default async function ClubDashboardView({
     session?.user?.permissionKeys ??
     []) as PermissionKey[];
 
-  const personal =
-    tenantId
-      ? await getPersonalCommandCenterData({
+  const personal = tenantId
+    ? await runWithSceHotfixLogin01Trace("command-center-data", () =>
+        getPersonalCommandCenterData({
           tenantId,
           actor,
           fmtCfg,
           userId: session?.user?.id ?? null,
           calendarMonthParam,
-          permissionKeys })
-      : null;
+          permissionKeys,
+        }),
+      )
+    : null;
 
   const quickAccessBundle =
     tenantId && session?.user?.id
-      ? await resolvePersonalQuickAccess({
-          tenantId,
-          userId: session.user.id,
-          permissionKeys,
-          locale: fmtCfg.locale })
+      ? await runWithSceHotfixLogin01Trace("quick-access", () =>
+          resolvePersonalQuickAccess({
+            tenantId,
+            userId: session.user!.id,
+            permissionKeys,
+            locale: fmtCfg.locale,
+          }),
+        )
       : null;
 
   const quickAccessItems = quickAccessBundle ? quickAccessBundle.items : [];
@@ -108,8 +121,11 @@ export default async function ClubDashboardView({
   const greeting = getPersonalizedGreeting(firstName);
   const displayName = firstName?.trim() || undefined;
 
-  const heroState =
-    session?.user?.id ? await getUserDashboardHeroState(session.user.id) : null;
+  const heroState = session?.user?.id
+    ? await runWithSceHotfixLogin01Trace("hero-state", () =>
+        getUserDashboardHeroState(session.user!.id),
+      )
+    : null;
 
   const heroTransform: HeroImageTransform | undefined = heroState
     ? {
@@ -177,6 +193,8 @@ export default async function ClubDashboardView({
   const tasksSlot = personal?.personalTasksAvailable ? (
     <PersonalTasksPreview previewItems={personal.personalTaskPreview} embedded />
   ) : null;
+
+  finishSceHotfixLogin01DashboardTrace();
 
   return (
     <div

@@ -32,6 +32,7 @@ import type { DashboardPersonalWorkSnapshot } from "./types";
 import {
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
+  runWithSceHotfixLogin01Trace,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 
@@ -67,25 +68,37 @@ export async function loadDashboardPersonalWork(args: {
     timezone: timeZone,
   };
 
-  const capabilities = await loadPersonalActionsModuleCapabilities({
-    tenantId: args.tenantId,
-    userId: args.userId,
-  });
-
-  const { platform, tenant } = await getRequestEffectivePermissions(args.userId, args.tenantId);
-  const permissionKeys = new Set([...platform, ...tenant, ...capabilities.permissionKeys]);
-
-  const operationalPromise = SKIP_OPERATIONAL_FOR_ISOLATION
-    ? Promise.resolve({ items: [], failedSourceKeys: [] as string[] })
-    : loadDomainOperationalAttention({
+  const capabilities = sceHotfixLogin01TraceEnabled()
+    ? await runWithSceHotfixLogin01Trace("personal-work-capabilities", () =>
+        loadPersonalActionsModuleCapabilities({
+          tenantId: args.tenantId,
+          userId: args.userId,
+        }),
+      )
+    : await loadPersonalActionsModuleCapabilities({
         tenantId: args.tenantId,
-        actorUserId: args.userId,
-        permissionKeys,
-        now,
+        userId: args.userId,
       });
 
+  const { platform, tenant } = sceHotfixLogin01TraceEnabled()
+    ? await runWithSceHotfixLogin01Trace("personal-work-permissions", () =>
+        getRequestEffectivePermissions(args.userId, args.tenantId),
+      )
+    : await getRequestEffectivePermissions(args.userId, args.tenantId);
+  const permissionKeys = new Set([...platform, ...tenant, ...capabilities.permissionKeys]);
+
+  const runOperationalAttention = () =>
+    SKIP_OPERATIONAL_FOR_ISOLATION
+      ? Promise.resolve({ items: [], failedSourceKeys: [] as string[] })
+      : loadDomainOperationalAttention({
+          tenantId: args.tenantId,
+          actorUserId: args.userId,
+          permissionKeys,
+          now,
+        });
+
   if (!capabilities.personalInbox) {
-    const operational = await operationalPromise;
+    const operational = await runOperationalAttention();
     const operationalItems = mapDomainOperationalAttentionItems(operational.items);
     const sortedOperational = sortPersonalAttentionItems(operationalItems);
 
@@ -135,7 +148,7 @@ export async function loadDashboardPersonalWork(args: {
 
   const [personalActions, operational] = await Promise.all([
     personalActionsPromise,
-    operationalPromise,
+    runOperationalAttention(),
   ]);
   const { counts, aggregated } = personalActions;
 

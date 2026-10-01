@@ -33,7 +33,13 @@ When `VERCEL_ENV=preview` (or `SCE_HOTFIX_LOGIN_01_TRACE=1`), server logs emit:
 
 `[SCE-HOTFIX-LOGIN-01] cid=… step=… elapsedMs=…`
 
-Checkpoints: `dashboard`, `auth`, `tenant`, `command-center`, `personal-actions`, `operational-attention`, `spielbetrieb`, `training`, `events`.
+Checkpoints (R3 gap instrumentation):
+
+- Page: `dashboard`, `auth`, `search-params`
+- `ClubDashboardView`: `i18n-secondary`, `tenant`, `actor-context` (`actor-membership`, `actor-permissions`, `actor-org-scope`), `person-first-name`, `command-center-data`, `quick-access`, `hero-state`, `dashboard` (done)
+- `getPersonalCommandCenterData`: `command-center-prep`, `command-center`, `programme`, `personal-work`, `secondary-snapshot`, nested `personal-actions`, `operational-attention`, `spielbetrieb`, `training`, `events`
+
+Find the first `phase=start` without a matching `phase=done` for the same `step` and `cid`.
 
 Isolation (preview only): `SCE_HOTFIX_LOGIN_01_SKIP_OPERATIONAL=1` skips operational attention aggregation for A/B.
 

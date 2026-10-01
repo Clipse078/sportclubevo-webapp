@@ -62,3 +62,22 @@ export function finishSceHotfixLogin01DashboardTrace(): void {
   if (!TRACE_ENABLED || originMs == null) return;
   logSceHotfixLogin01StepDone("dashboard");
 }
+
+/** Trace start → await fn() → trace done|failure (no-op when tracing disabled). */
+export async function runWithSceHotfixLogin01Trace<T>(
+  step: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  if (!TRACE_ENABLED || originMs == null) {
+    return operation();
+  }
+  logSceHotfixLogin01Step(step);
+  try {
+    const result = await operation();
+    logSceHotfixLogin01StepDone(step);
+    return result;
+  } catch (error) {
+    logSceHotfixLogin01StepFailed(step, error);
+    throw error;
+  }
+}

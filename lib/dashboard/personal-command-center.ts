@@ -38,6 +38,7 @@ import type { PersonalDashboardSecondaryActivity } from "@/lib/dashboard/seconda
 import {
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
+  logSceHotfixLogin01StepFailed,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 
@@ -239,6 +240,11 @@ export async function getPersonalCommandCenterData(args: {
   calendarMonthParam?: string | null;
   permissionKeys?: PermissionKey[];
 }): Promise<PersonalCommandCenterData> {
+  const trace = sceHotfixLogin01TraceEnabled();
+  if (trace) {
+    logSceHotfixLogin01Step("command-center-prep");
+  }
+
   const now = args.now ?? new Date();
   const timeZone = args.fmtCfg.timezone ?? "Europe/Zurich";
   const locale = args.fmtCfg.locale ?? "de-CH";
@@ -269,42 +275,92 @@ export async function getPersonalCommandCenterData(args: {
     viewAllHref: null,
   };
 
-  if (sceHotfixLogin01TraceEnabled()) {
+  if (trace) {
+    logSceHotfixLogin01StepDone("command-center-prep");
     logSceHotfixLogin01Step("command-center");
   }
 
   const [programme, personalWork, secondary] = await Promise.all([
-    loadPersonalProgramme({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      timeZone,
-      now,
-      from: queryRange.rangeStart,
-      to: queryRange.rangeEnd,
-      permissionKeys: args.permissionKeys,
-    }),
-    args.userId
-      ? loadDashboardPersonalWork({
+    (async () => {
+      if (trace) {
+        logSceHotfixLogin01Step("programme");
+      }
+      try {
+        return await loadPersonalProgramme({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          timeZone,
+          now,
+          from: queryRange.rangeStart,
+          to: queryRange.rangeEnd,
+          permissionKeys: args.permissionKeys,
+        });
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("programme", error);
+        }
+        throw error;
+      } finally {
+        if (trace) {
+          logSceHotfixLogin01StepDone("programme");
+        }
+      }
+    })(),
+    (async () => {
+      if (trace) {
+        logSceHotfixLogin01Step("personal-work");
+      }
+      try {
+        if (!args.userId) {
+          return {
+            attention: emptyPersonalAttention,
+            tasks: { authorized: false, count: null, preview: [] },
+          };
+        }
+        return await loadDashboardPersonalWork({
           tenantId: args.tenantId,
           userId: args.userId,
           fmtCfg: args.fmtCfg,
           locale,
           timeZone,
           now,
-        })
-      : Promise.resolve({
-          attention: emptyPersonalAttention,
-          tasks: { authorized: false, count: null, preview: [] },
-        }),
-    loadSecondarySnapshotSafe({
-      tenantId: args.tenantId,
-      actor: args.actor,
-      fmtCfg: args.fmtCfg,
-      now,
-    }),
+        });
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("personal-work", error);
+        }
+        throw error;
+      } finally {
+        if (trace) {
+          logSceHotfixLogin01StepDone("personal-work");
+        }
+      }
+    })(),
+    (async () => {
+      if (trace) {
+        logSceHotfixLogin01Step("secondary-snapshot");
+      }
+      try {
+        return await loadSecondarySnapshotSafe({
+          tenantId: args.tenantId,
+          actor: args.actor,
+          fmtCfg: args.fmtCfg,
+          now,
+        });
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("secondary-snapshot", error);
+        }
+        throw error;
+      } finally {
+        if (trace) {
+          logSceHotfixLogin01StepDone("secondary-snapshot");
+        }
+      }
+    })(),
   ]);
 
-  if (sceHotfixLogin01TraceEnabled()) {
+  if (trace) {
     logSceHotfixLogin01StepDone("command-center");
   }
 
