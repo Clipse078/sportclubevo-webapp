@@ -22,6 +22,7 @@ import {
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,
 } from "../compact";
+import { filterCompactMetadataPartsAgainstPrimary } from "../compact-dedupe";
 import { formatSportingActivityPresentation } from "../format";
 
 describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
@@ -183,23 +184,20 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         teamName: "Junioren F2",
         startAt,
         endAt,
+        clubContextName: "FC Allschwil",
         facilityName: "Im Brüel",
         pitchResourceName: "KR2",
       });
 
       expect(formatSportingActivityCompactPrimaryText(withResource)).toBe("Junioren F2 Training");
-      expect(
-        formatSportingActivityCompactAgendaSecondaryLine(withResource, {
-          schedulePresentation: "omit-start",
-          fmtCfg,
-        }),
-      ).toMatch(/Im Brüel/);
-      expect(
-        formatSportingActivityCompactAgendaSecondaryLine(withResource, {
-          schedulePresentation: "omit-start",
-          fmtCfg,
-        }),
-      ).toMatch(/KR2/);
+      const secondaryWithResource = formatSportingActivityCompactAgendaSecondaryLine(withResource, {
+        schedulePresentation: "omit-start",
+        fmtCfg,
+      });
+      expect(secondaryWithResource).toMatch(/FC Allschwil/);
+      expect(secondaryWithResource).toMatch(/Im Brüel/);
+      expect(secondaryWithResource).toMatch(/KR2/);
+      expect(secondaryWithResource).not.toMatch(/Junioren F2/);
 
       const withoutResource = buildTrainingActivityPresentation({
         resourceKey: "training-session:11",
@@ -237,6 +235,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
       });
       expect(secondary).toMatch(/Auswärts/);
       expect(secondary).toMatch(/Schützenmatte, Basel/);
+      expect(secondary).not.toMatch(/BSC Old Boys/);
       expect(secondary).not.toMatch(/Platz|KR|Feld/i);
     });
 
@@ -261,6 +260,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
       expect(secondary).toMatch(/Im Brüel/);
       expect(secondary).toMatch(/Kunstrasen 3/);
       expect(secondary).not.toMatch(/Auswärts/);
+      expect(secondary).not.toMatch(/FC Allschwil/);
     });
 
     it("TOURNAMENT — team in primary; organiser and venue in secondary", () => {
@@ -282,6 +282,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
       });
       expect(secondary).toMatch(/FC Arisdorf/);
       expect(secondary).toMatch(/Gemeindesportplatz/);
+      expect(secondary).not.toMatch(/Junioren F2/);
     });
 
     it("TOURNAMENT — organiser distinct from venue when names differ", () => {
@@ -298,6 +299,70 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         schedulePresentation: "omit-start",
       });
       expect(secondary).toBe("FC Lausen 72 · Sportanlage Bifang");
+    });
+  });
+
+  describe("SCE-ACTIVITY-UX-01R2 compact deduplication", () => {
+    const fmtCfg = { locale: "de-CH", timezone: "Europe/Zurich" };
+
+    it("drops duplicate metadata segments and team names already in the title", () => {
+      const presentation = buildTrainingActivityPresentation({
+        resourceKey: "training-session:dedupe",
+        title: "Junioren F2 Training",
+        typeLabel: "Training",
+        teamName: "Junioren F2",
+        startAt,
+        clubContextName: "FC Allschwil",
+        facilityName: "Im Brüel",
+      });
+
+      const primary = formatSportingActivityCompactPrimaryText(presentation);
+      const filtered = filterCompactMetadataPartsAgainstPrimary(presentation, primary, [
+        "Junioren F2",
+        "FC Allschwil",
+        "Im Brüel",
+        "Im Brüel",
+      ]);
+
+      expect(filtered).toEqual(["FC Allschwil", "Im Brüel"]);
+    });
+
+    it("keeps clean separators when venue/context/resource are missing", () => {
+      const presentation = buildTrainingActivityPresentation({
+        resourceKey: "training-session:sparse",
+        title: "Techniktraining",
+        typeLabel: "Training",
+        startAt,
+        clubContextName: "FC Allschwil",
+      });
+
+      const secondary = formatSportingActivityCompactAgendaSecondaryLine(presentation, {
+        schedulePresentation: "omit-start",
+        fmtCfg,
+      });
+
+      expect(secondary).toBe("FC Allschwil");
+    });
+
+    it("away match secondary never repeats opponent from the fixture", () => {
+      const away = buildMatchActivityPresentation({
+        resourceKey: "event:dedupe-away",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        teamName: "1. Mannschaft",
+        opponentName: "BSC Old Boys",
+        homeAway: "AWAY",
+        location: "Schützenmatte, Basel",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+
+      const secondary =
+        formatSportingActivityCompactAgendaSecondaryLine(away, {
+          schedulePresentation: "omit-start",
+        }) ?? "";
+
+      expect(secondary.split(" · ").filter((part) => part === "BSC Old Boys")).toHaveLength(0);
     });
   });
 

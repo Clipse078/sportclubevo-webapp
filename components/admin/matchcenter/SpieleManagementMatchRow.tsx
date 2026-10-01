@@ -115,16 +115,7 @@ function PreparationColumn({
   const isAway = homeAway === "AWAY";
 
   if (isAway) {
-    if (layout === "compact") {
-      return null;
-    }
-    const venue = buildSpieleVenueLine(match) ?? match.location?.trim();
-    if (!venue) {
-      return <span className="text-xs text-[var(--muted)]">—</span>;
-    }
-    return (
-      <p className="line-clamp-3 break-words text-xs text-[var(--text-2)]">{venue}</p>
-    );
+    return null;
   }
 
   if (!isHome) {
@@ -369,7 +360,10 @@ export default function SpieleManagementMatchRow({
           </div>
 
           {venueLine ? (
-            <p className="mt-2 flex items-start gap-1 text-xs text-[var(--muted)] md:hidden min-[105rem]:flex">
+            <p
+              className="mt-2 flex items-start gap-1 text-xs text-[var(--muted)]"
+              data-testid={`matchcenter-venue-${match.id}`}
+            >
               <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
               <span className="line-clamp-2 break-words">{venueLine}</span>
             </p>
@@ -395,12 +389,6 @@ export default function SpieleManagementMatchRow({
         className="relative z-[1] flex min-w-0 flex-col gap-1 md:col-span-2 md:col-start-2 md:row-start-2 min-[105rem]:col-start-3 min-[105rem]:col-span-1 min-[105rem]:row-start-1 min-[105rem]:justify-center"
         data-testid={`matchcenter-action-${match.id}`}
       >
-        {venueLine ? (
-          <p className="hidden items-start gap-1 text-xs text-[var(--muted)] md:flex min-[105rem]:hidden">
-            <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
-            <span className="line-clamp-2 break-words">{venueLine}</span>
-          </p>
-        ) : null}
         <StatusPillsRow
           homeAway={homeAway}
           statusLabel={status.label}

@@ -28,6 +28,8 @@ export type BuildTrainingPresentationInput = {
   status?: PersonalProgrammePresentationStatus;
   facilityName?: string | null;
   pitchResourceName?: string | null;
+  /** Tenant club / host context for compact secondary (not the SCE team). */
+  clubContextName?: string | null;
 };
 
 export function buildTrainingActivityPresentation(
@@ -35,6 +37,7 @@ export function buildTrainingActivityPresentation(
 ): SportingActivityPresentation {
   const location = buildSportingActivityLocation({
     mode: "HOME",
+    hostOrOrganiser: meaningful(input.clubContextName),
     venueName: input.facilityName,
     facilityResource: input.pitchResourceName,
   });

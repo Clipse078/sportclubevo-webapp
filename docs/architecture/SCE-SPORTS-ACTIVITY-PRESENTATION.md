@@ -1,6 +1,6 @@
 # SCE Canonical Sports Activity Presentation
 
-**Package:** SCE-ACTIVITY-UX-01 / SCE-ACTIVITY-UX-01R1  
+**Package:** SCE-ACTIVITY-UX-01 / SCE-ACTIVITY-UX-01R1 / SCE-ACTIVITY-UX-01R2  
 **Status:** Canonical presentation + compact visible contract (Dashboard programme, calendar foundation, training/match/tournament management semantics)
 
 ## Purpose
@@ -68,17 +68,44 @@ Organiser and venue are separate concepts — do not merge into one label.
 
 Presentation may surface existing participation/RSVP state (e.g. pending response). This package does **not** introduce match squad (“Aufgebot”) models or player-pool semantics.
 
-## Minimum visible information contract (R1)
+## Compact hierarchy principle (R2)
+
+**PRIMARY = identity / WHO / WHAT** — training title, match fixture, tournament title (plus SCE team on tournament primary when not already in the title).
+
+**SECONDARY = schedule remainder + WHERE / contextual information not already communicated by PRIMARY.**
+
+Do not repeat information merely because it exists in multiple canonical fields. Secondary metadata must answer **where / context**, not restate **who / what** already visible on the primary line.
+
+Central deduplication lives in `lib/sporting-activity-presentation/compact-dedupe.ts` (`filterCompactMetadataPartsAgainstPrimary`). Compact formatters apply it deterministically (case/whitespace tolerant, no fuzzy guessing).
+
+Illustrative FCA examples (tenant-neutral pattern):
+
+| Kind | Primary | Secondary |
+|------|---------|-----------|
+| Training | `Junioren F2 Training` | `FC Allschwil · Im Brüel · Kunstrasen 2/3` (club context · venue · allocated resource) |
+| Tournament | `PlayMore Turnier · Junioren F2` | `FC Arisdorf · Gemeindesportplatz` |
+| Away match | `BSC Old Boys – 1. Mannschaft` | `Auswärts · Schützenmatte, Basel` |
+
+## Minimum visible information contract (R1 + R2)
 
 Compact helpers live in `lib/sporting-activity-presentation/compact.ts`:
 
 | Kind | Primary (`primaryText`) | Secondary metadata (agenda row, `omit-start` schedule) |
 |------|-------------------------|--------------------------------------------------------|
-| **TRAINING** | Training title | End time (start in time column) · venue · pitch/hall when known |
-| **MATCH** | Home – Away fixture | Auswärts/Neutral when relevant · venue · address · resource only when supplied |
-| **TOURNAMENT** | Title · SCE team | Organiser · venue · address · resource when supplied |
+| **TRAINING** | Training title | End time (start in time column) · club/host context · venue · pitch/hall when known |
+| **MATCH** | Home – Away fixture | Auswärts/Neutral when relevant · venue · address · resource only when supplied (never repeat fixture participants) |
+| **TOURNAMENT** | Title · SCE team | Organiser · venue · address · resource when supplied (never repeat SCE team) |
 
 Consumers must not reimplement these semantics — use `formatSportingActivityCompactPrimaryText`, `formatSportingActivityCompactAgendaSecondaryLine`, or `resolveSportingActivityCompactPresentation`.
+
+### Training facility field flow (FCA)
+
+Personal programme training rows resolve facility hints in `loadTrainingSessionFacilityHints`:
+
+- **Venue** — `FacilityResource.facility.name` from the effective pitch/hall allocation (session override, else series default).
+- **Resource** — pitch/hall `FacilityResource.name` or `code` when a PITCH_HALL allocation exists.
+
+Do not substitute the resource label for the venue when a parent facility name is present in source data.
 
 ## Progressive disclosure
 
@@ -94,7 +121,7 @@ Consumers must not reimplement these semantics — use `formatSportingActivityCo
 | Personal calendar month blocks (`buildCalendarEventBlockLines`) | Migrated (concise primary; rich detail via selected-day agenda row) |
 | Personal programme adapters (training / team events) | Migrated |
 | Training management list (`TrainingSeriesManagementRow` facility cell) | Shared location semantics (venue + resource) |
-| Matchcenter Spiele list (`buildSpieleVenueLine`) | Shared location semantics |
+| Matchcenter Spiele list (`buildSpieleVenueLine`) | Shared compact secondary semantics (no opponent duplication; venue once per row) |
 | Tournamentcenter list (`resolveTournamentManagementMetadataLine`) | Shared organiser/venue semantics |
 | Club command center / Heute im Verein | Uses legacy `event-venue-presentation` (inventory) |
 | Wochenplaner | Not migrated |

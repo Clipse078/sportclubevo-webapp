@@ -21,6 +21,7 @@ import {
   buildTrainingActivityPresentation,
 } from "@/lib/sporting-activity-presentation/builders";
 import { loadTrainingSessionFacilityHints } from "@/lib/sporting-activity-presentation/training-facility-batch";
+import { prisma } from "@/lib/db/prisma";
 
 function normalizeTrainingProgrammeStatus(
   status: string,
@@ -64,13 +65,20 @@ export async function loadTrainingProgrammeItems(
     dateTo,
   });
 
-  const facilityHints = await loadTrainingSessionFacilityHints(
-    ctx.personal.tenantId,
-    sessions.map((session) => ({
-      id: session.id,
-      trainingSeriesId: session.trainingSeriesId,
-    })),
-  );
+  const [facilityHints, tenant] = await Promise.all([
+    loadTrainingSessionFacilityHints(
+      ctx.personal.tenantId,
+      sessions.map((session) => ({
+        id: session.id,
+        trainingSeriesId: session.trainingSeriesId,
+      })),
+    ),
+    prisma.tenant.findUnique({
+      where: { id: ctx.personal.tenantId },
+      select: { name: true },
+    }),
+  ]);
+  const tenantClubName = tenant?.name?.trim() || undefined;
 
   const rangeStartMs = ctx.rangeStart.getTime();
   const rangeEndMs = ctx.rangeEnd.getTime();
@@ -118,11 +126,14 @@ export async function loadTrainingProgrammeItems(
       startAt: startsAt,
       endAt: endsAt,
       status,
+      clubContextName: tenantClubName,
       facilityName: facility?.facilityName,
       pitchResourceName: facility?.pitchResourceName,
     });
 
-    const presentationFields = applyPresentationToProgrammeFields(activityPresentation);
+    const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {
+      tenantDisplayNames: tenantClubName ? [tenantClubName] : undefined,
+    });
 
     items.push({
       id: resourceKey,

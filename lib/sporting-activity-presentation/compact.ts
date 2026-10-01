@@ -1,6 +1,7 @@
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { formatTime } from "@/lib/tenant-runtime/formatters";
 import type { SportingActivityPresentation } from "./types";
+import { filterCompactMetadataPartsAgainstPrimary } from "./compact-dedupe";
 import { formatSportingActivityLocationLines } from "./location";
 
 export type SportingActivityCompactFormatOptions = {
@@ -26,9 +27,14 @@ function dedupeParts(parts: readonly string[]): string[] {
   return out;
 }
 
-function joinMetadataParts(parts: readonly string[]): string | undefined {
+function joinMetadataParts(
+  presentation: SportingActivityPresentation,
+  parts: readonly string[],
+): string | undefined {
+  const primaryText = formatSportingActivityCompactPrimaryText(presentation);
   const deduped = dedupeParts(parts);
-  return deduped.length > 0 ? deduped.join(" · ") : undefined;
+  const filtered = filterCompactMetadataPartsAgainstPrimary(presentation, primaryText, deduped);
+  return filtered.length > 0 ? filtered.join(" · ") : undefined;
 }
 
 function meaningful(value: string | null | undefined): string | undefined {
@@ -98,6 +104,17 @@ export function formatSportingActivityCompactAgendaLocationParts(
 
   const parts: string[] = [];
 
+  if (identity.activityKind === "TRAINING") {
+    const host = meaningful(location.hostOrOrganiser);
+    if (host && !parts.some((line) => line.toLowerCase() === host.toLowerCase())) {
+      parts.push(host);
+    }
+    push(meaningful(location.venueName), parts);
+    push(meaningful(location.address), parts);
+    push(meaningful(location.facilityResource), parts);
+    return parts;
+  }
+
   if (identity.activityKind === "TOURNAMENT") {
     push(meaningful(location.venueName), parts);
     push(meaningful(location.address), parts);
@@ -156,25 +173,25 @@ export function formatSportingActivityCompactAgendaSecondaryLine(
     const schedule = formatCompactSchedulePart(presentation, options);
     if (schedule) parts.push(schedule);
     parts.push(...formatSportingActivityCompactAgendaLocationParts(presentation, options));
-    return joinMetadataParts(parts);
+    return joinMetadataParts(presentation, parts);
   }
 
   if (kind === "MATCH") {
     const modeLabel = formatSportingActivityLocationModeCompactLabel(presentation.location.mode);
     if (modeLabel) parts.push(modeLabel);
     parts.push(...formatSportingActivityCompactAgendaLocationParts(presentation, options));
-    return joinMetadataParts(parts);
+    return joinMetadataParts(presentation, parts);
   }
 
   if (kind === "TOURNAMENT") {
     const organiser = presentation.context?.organiser?.trim();
     if (organiser) parts.push(organiser);
     parts.push(...formatSportingActivityCompactAgendaLocationParts(presentation, options));
-    return joinMetadataParts(parts);
+    return joinMetadataParts(presentation, parts);
   }
 
   parts.push(...formatSportingActivityCompactAgendaLocationParts(presentation, options));
-  return joinMetadataParts(parts);
+  return joinMetadataParts(presentation, parts);
 }
 
 export type SportingActivityCompactPresentation = {

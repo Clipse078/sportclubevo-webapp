@@ -22,6 +22,11 @@ export {
 } from "./format";
 
 export {
+  collectCompactPrimaryCoverageKeys,
+  filterCompactMetadataPartsAgainstPrimary,
+} from "./compact-dedupe";
+
+export {
   formatSportingActivityCompactAgendaLocationParts,
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,

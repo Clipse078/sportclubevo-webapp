@@ -3,11 +3,12 @@
  * search, sort, date grouping, compact readiness, and status presentation.
  */
 
+import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
 import {
   buildSportingActivityLocation,
-  formatSportingActivityLocationSummary,
   normalizeSportingLocationMode,
 } from "@/lib/sporting-activity-presentation/location";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { MatchcenterMatchSummary } from "./types";
 import {
   assessMatchOperationalState,
@@ -666,24 +667,52 @@ function resolveOpponentSideLabel(match: MatchcenterMatchSummary): string | null
   return resolveMatchcenterCompactSideName(opponentSide)?.trim() || opponentSide.displayName?.trim() || null;
 }
 
+function buildMatchcenterCompactActivityPresentation(
+  match: MatchcenterMatchSummary,
+  pitchLabel?: string | null,
+): SportingActivityPresentation {
+  const mode = normalizeSportingLocationMode(match.homeAway);
+  const homeName = resolveMatchcenterCompactSideName(match.home) ?? "—";
+  const awayName = resolveMatchcenterCompactSideName(match.away) ?? "—";
+  const opponent = mode === "AWAY" ? resolveOpponentSideLabel(match) : null;
+  const pitch = pitchLabel?.trim() || match.operational.pitchCode?.trim() || null;
+
+  return {
+    identity: {
+      resourceKey: `event:${match.id}`,
+      title: match.title,
+      typeLabel: "Spiel",
+      activityKind: "MATCH",
+    },
+    schedule: {
+      startAt: match.startAt.toISOString(),
+      endAt: match.endAt ? match.endAt.toISOString() : null,
+    },
+    participants: {
+      fixtureLine: `${homeName} – ${awayName}`,
+      opponentName: opponent ?? undefined,
+      homeAway: mode,
+    },
+    location: buildSportingActivityLocation({
+      mode,
+      hostOrOrganiser: opponent ?? undefined,
+      venueName: match.location,
+      facilityResource: pitch,
+    }),
+  };
+}
+
 export function buildSpieleVenueLine(
   match: MatchcenterMatchSummary,
   options: { tenantClubName?: string; pitchLabel?: string | null } = {},
 ): string | null {
-  const mode = normalizeSportingLocationMode(match.homeAway);
-  const pitch =
-    options.pitchLabel?.trim() || match.operational.pitchCode?.trim() || null;
-  const location = buildSportingActivityLocation({
-    mode,
-    hostOrOrganiser: mode === "AWAY" ? resolveOpponentSideLabel(match) : undefined,
-    venueName: match.location,
-    facilityResource: pitch,
-  });
-
-  const summary = formatSportingActivityLocationSummary(location, {
-    tenantDisplayNames: options.tenantClubName ? [options.tenantClubName] : undefined,
-  });
-  return summary ? summary.replace(/\n/g, " · ") : null;
+  const presentation = buildMatchcenterCompactActivityPresentation(match, options.pitchLabel);
+  return (
+    formatSportingActivityCompactAgendaSecondaryLine(presentation, {
+      schedulePresentation: "omit-start",
+      tenantDisplayNames: options.tenantClubName ? [options.tenantClubName] : undefined,
+    }) ?? null
+  );
 }
 
 export type SpieleManagementDerivationInput = {

@@ -122,10 +122,12 @@ describe("SPIELE-UX-01D — match row presentation", () => {
     expect(countOccurrences(actionBlock, "Auswärtsspiel")).toBe(1);
   });
 
-  it("B. AWAY row surfaces venue once in the operational column (not duplicated in status)", () => {
+  it("B. AWAY row surfaces venue once without repeating the opponent", () => {
     const venue = "St. Jakob-Park, Basel";
     const html = renderRow(createMatch({ homeAway: "AWAY", location: venue }));
-    expect(html).toContain(venue);
+    expect(countOccurrences(html, venue)).toBe(1);
+    expect(html).toContain("Auswärts");
+    expect(html).not.toMatch(/FC Basel E1 · St\. Jakob-Park/);
     expect(html).not.toContain('aria-label="Matchvorbereitung"');
   });
 
