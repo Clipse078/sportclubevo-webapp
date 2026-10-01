@@ -9,6 +9,10 @@ import {
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { extendPrismaClientWithSceHotfixLogin01QueryTrace } from "./sce-hotfix-login-01-prisma-query-instrumentation";
+import {
+  extendPrismaClientWithWeekQueryProfile,
+  isWeekQueryProfileEnabled,
+} from "@/lib/diagnostics/week-query-profile";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -48,6 +52,9 @@ function getPrismaClient(): PrismaClient {
   });
   if (sceHotfixLogin01TraceEnabled()) {
     client = extendPrismaClientWithSceHotfixLogin01QueryTrace(client);
+  }
+  if (isWeekQueryProfileEnabled()) {
+    client = extendPrismaClientWithWeekQueryProfile(client);
   }
   modulePrisma = client;
   globalForPrisma.prisma = client;

@@ -75,14 +75,25 @@
 import { prisma } from "@/lib/db/prisma";
 import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
-import { listTrainingSessions } from "@/lib/training/session-generation-service";
+import {
+  listTrainingSessionsForWeekplanner,
+  type WeekplannerTrainingSessionListItem,
+} from "@/lib/training/session-generation-service";
+import {
+  beginWeekQueryParallelGroup,
+  endWeekQueryParallelGroup,
+  formatWeekQueryProfileTable,
+  getWeekQueryProfileReport,
+  profileWeekQueryOperation,
+  resetWeekQueryProfileQueryCounter,
+  runWithWeekQueryProfile,
+} from "@/lib/diagnostics/week-query-profile";
 import {
   matchTimingToOperationalInput,
   resolveMatchOperationalInterval,
 } from "@/lib/match/resolve-match-operational-interval";
 import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 import {
-  getFacilitiesForTenantCached,
   getTenantDressingRoomOccupancyPresetsCached,
   getTenantMatchOperationalPolicyCached,
 } from "@/lib/server/request-cache";
@@ -177,21 +188,34 @@ function toResourceRef(
 async function findFacilityResourceCodeMap(
   tenantId: string,
 ): Promise<Map<string, WeekplannerResourceRef>> {
-  const facilities = await getFacilitiesForTenantCached(tenantId);
+  const resources = await prisma.facilityResource.findMany({
+    where: {
+      tenantId,
+      status: { not: "ARCHIVED" },
+      facility: { status: { not: "ARCHIVED" } },
+    },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      type: true,
+      facility: { select: { id: true, name: true } },
+    },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+  });
+
   const map = new Map<string, WeekplannerResourceRef>();
-  for (const facility of facilities) {
-    for (const resource of facility.resources) {
-      map.set(
-        resource.code,
-        toResourceRef({
-          id: resource.id,
-          code: resource.code,
-          name: resource.name,
-          type: resource.type,
-          facility: { id: facility.id, name: facility.name },
-        }),
-      );
-    }
+  for (const resource of resources) {
+    map.set(
+      resource.code,
+      toResourceRef({
+        id: resource.id,
+        code: resource.code,
+        name: resource.name,
+        type: resource.type ?? undefined,
+        facility: { id: resource.facility.id, name: resource.facility.name },
+      }),
+    );
   }
   return map;
 }
@@ -388,47 +412,24 @@ function toWeekplannerResourceRefs(
   }));
 }
 
-type WeekplannerTrainingSessionsLoad = {
-  complete: (
-    overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
-    timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
-    tenantPresets: TenantDressingRoomOccupancyPresets,
-  ) => Promise<WeekplannerTrainingItem[]>;
-};
-
-/** Starts the week-bounded session read immediately so it can overlap prefetch I/O. */
-function startWeekplannerTrainingSessionsLoad(
-  tenantId: string,
-  days: readonly string[],
-): WeekplannerTrainingSessionsLoad {
-  if (days.length === 0) {
-    return { complete: async () => [] };
-  }
-
-  const dateFrom = new Date(`${days[0]}T00:00:00.000Z`);
-  const dateTo = new Date(`${days[days.length - 1]}T00:00:00.000Z`);
-  const sessionsPromise = listTrainingSessions(tenantId, { dateFrom, dateTo });
-
+function weekplannerSessionDateBounds(days: readonly string[]): {
+  dateFrom: Date;
+  dateTo: Date;
+} | null {
+  if (days.length === 0) return null;
   return {
-    complete: (overridesByKey, timeOverridesByKey, tenantPresets) =>
-      buildWeekplannerTrainingItemsFromSessions(
-        tenantId,
-        sessionsPromise,
-        overridesByKey,
-        timeOverridesByKey,
-        tenantPresets,
-      ),
+    dateFrom: new Date(`${days[0]}T00:00:00.000Z`),
+    dateTo: new Date(`${days[days.length - 1]}T00:00:00.000Z`),
   };
 }
 
 async function buildWeekplannerTrainingItemsFromSessions(
   tenantId: string,
-  sessionsPromise: Promise<Awaited<ReturnType<typeof listTrainingSessions>>>,
+  sessions: readonly WeekplannerTrainingSessionListItem[],
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
 ): Promise<WeekplannerTrainingItem[]> {
-  const sessions = await sessionsPromise;
   if (sessions.length === 0) return [];
 
   const seriesIds = [...new Set(sessions.map((session) => session.trainingSeriesId))];
@@ -558,20 +559,6 @@ async function buildWeekplannerTrainingItemsFromSessions(
   });
 }
 
-async function findWeekplannerTrainingItems(
-  tenantId: string,
-  days: readonly string[],
-  overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
-  timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
-  tenantPresets: TenantDressingRoomOccupancyPresets,
-): Promise<WeekplannerTrainingItem[]> {
-  return startWeekplannerTrainingSessionsLoad(tenantId, days).complete(
-    overridesByKey,
-    timeOverridesByKey,
-    tenantPresets,
-  );
-}
-
 // ── Event(type=MATCH) → WeekplannerMatchItem (HOME only) ────────────────────
 
 function isAwayHomeAway(value: string | null): boolean {
@@ -618,34 +605,133 @@ async function loadEventDressingRoomOccupancyMap(
   );
 }
 
-async function findWeekplannerHomeMatches(
+type WeekplannerVeranstaltungEventRow = Awaited<
+  ReturnType<typeof fetchWeekplannerVeranstaltungEvents>
+>[number];
+
+async function fetchWeekplannerVeranstaltungEvents(
   tenantId: string,
   from: Date,
   to: Date,
+) {
+  return prisma.event.findMany({
+    where: {
+      tenantId,
+      type: "OTHER",
+      status: { notIn: ["CANCELLED"] },
+      startAt: { lt: to },
+      OR: [{ endAt: { gt: from } }, { endAt: null, startAt: { gte: from } }],
+    },
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      startAt: true,
+      endAt: true,
+      allDay: true,
+      teamSeasonId: true,
+      pitchCode: true,
+      homeDressingRoomCode: true,
+      teamSeason: { select: { team: { select: { name: true } } } },
+      eventFacilityAllocations: {
+        select: {
+          facilityResource: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              type: true,
+              facility: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+      },
+    },
+    orderBy: [{ startAt: "asc" }, { title: "asc" }],
+  });
+}
+
+function mapWeekplannerVeranstaltungEvents(
+  tenantId: string,
+  events: WeekplannerVeranstaltungEventRow[],
+  resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
+): WeekplannerVeranstaltungItem[] {
+  return events.map((event) => {
+    const endAt =
+      event.endAt ??
+      (event.allDay
+        ? new Date(event.startAt.getTime() + 24 * 60 * 60_000)
+        : new Date(event.startAt.getTime() + 60 * 60_000));
+    const pitchAllocations: WeekplannerResourceRef[] = [];
+    const dressingRoomAllocations: WeekplannerResourceRef[] = [];
+    for (const allocation of event.eventFacilityAllocations) {
+      const resource = allocation.facilityResource;
+      const ref = toResourceRef(resource);
+      if (resource.type === "DRESSING_ROOM") {
+        dressingRoomAllocations.push(ref);
+      } else if (resource.type === "FULL_PITCH" || resource.type === "HALF_PITCH") {
+        pitchAllocations.push(ref);
+      }
+    }
+    if (pitchAllocations.length === 0 && event.pitchCode) {
+      const pitchRef = resourceByCode.get(event.pitchCode);
+      if (pitchRef) pitchAllocations.push(pitchRef);
+    }
+    if (dressingRoomAllocations.length === 0 && event.homeDressingRoomCode) {
+      const roomRef = resourceByCode.get(event.homeDressingRoomCode);
+      if (roomRef) dressingRoomAllocations.push(roomRef);
+    }
+    const teamNames = event.teamSeason?.team?.name ? [event.teamSeason.team.name] : [];
+
+    return {
+      id: `veranstaltung:${event.id}`,
+      tenantId,
+      type: "VERANSTALTUNG",
+      startAt: event.startAt,
+      endAt,
+      canonicalStartAt: event.startAt,
+      canonicalEndAt: endAt,
+      timeOverridden: false,
+      title: event.title,
+      teamNames,
+      pitchAllocations,
+      dressingRoomAllocations,
+      canonicalPitchAllocations: pitchAllocations,
+      canonicalDressingRoomAllocations: dressingRoomAllocations,
+      pitchOverridden: false,
+      dressingRoomOverridden: false,
+      conflicts: [],
+      eventId: event.id,
+      location: event.location,
+      teamSeasonId: event.teamSeasonId,
+      allDay: Boolean(event.allDay),
+      dressingRoomOccupancyMode: "DEFAULT",
+      dressingRoomOccupancyBeforeMinutes: null,
+      dressingRoomOccupancyAfterMinutes: null,
+      dressingRoomResolvedBeforeMinutes: 0,
+      dressingRoomResolvedAfterMinutes: 0,
+    } satisfies WeekplannerVeranstaltungItem;
+  });
+}
+
+function mapWeekplannerHomeMatchItems(
+  homeMatches: Awaited<ReturnType<typeof listMatchcenterMatches>>,
   resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
   tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
   tenantLogoUrl: string | null,
-): Promise<WeekplannerMatchItem[]> {
-  const database = prisma as unknown as MatchcenterQueryDatabase;
-  const matches = await listMatchcenterMatches(database, {
-    tenantId,
-    from,
-    to,
-    matchOperationalPolicy: tenantMatchPolicy,
-  });
-
-  const homeMatches = matches.filter(
-    (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
-  );
-
-  const occupancyByEventId = await loadEventDressingRoomOccupancyMap(
-    tenantId,
-    homeMatches.map((match) => match.id),
-  );
-
+  occupancyByEventId: ReadonlyMap<
+    string,
+    {
+      dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+      dressingRoomBeforeMinutes: number | null;
+      dressingRoomAfterMinutes: number | null;
+    }
+  >,
+): WeekplannerMatchItem[] {
   return homeMatches.map((match) => {
     const pitchRef = match.operational.pitchCode
       ? resourceByCode.get(match.operational.pitchCode)
@@ -745,31 +831,62 @@ async function findWeekplannerHomeMatches(
   });
 }
 
-// ── Event(type=TOURNAMENT) → WeekplannerTournamentItem (HOME only) ──────────
-
-async function findWeekplannerHomeTournaments(
+async function findWeekplannerHomeMatches(
   tenantId: string,
   from: Date,
   to: Date,
+  resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
-): Promise<WeekplannerTournamentItem[]> {
-  const tournaments = await listTournaments(tenantId, {
-    overlapsWindow: { from, to },
+  tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
+  tenantLogoUrl: string | null,
+): Promise<WeekplannerMatchItem[]> {
+  const database = prisma as unknown as MatchcenterQueryDatabase;
+  const matches = await listMatchcenterMatches(database, {
+    tenantId,
+    from,
+    to,
+    matchOperationalPolicy: tenantMatchPolicy,
   });
 
-  const homeTournaments = tournaments.filter((tournament) => {
-    if (tournament.homeAway !== "HOME") return false;
-    if (isCancelled(tournament.status)) return false;
-    return true;
-  });
+  const homeMatches = matches.filter(
+    (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
+  );
 
   const occupancyByEventId = await loadEventDressingRoomOccupancyMap(
     tenantId,
-    homeTournaments.map((tournament) => tournament.id),
+    homeMatches.map((match) => match.id),
   );
 
+  return mapWeekplannerHomeMatchItems(
+    homeMatches,
+    resourceByCode,
+    overridesByKey,
+    timeOverridesByKey,
+    tenantPresets,
+    tenantMatchPolicy,
+    tenantLogoUrl,
+    occupancyByEventId,
+  );
+}
+
+// ── Event(type=TOURNAMENT) → WeekplannerTournamentItem (HOME only) ──────────
+
+function mapWeekplannerHomeTournamentItems(
+  homeTournaments: Awaited<ReturnType<typeof listTournaments>>,
+  overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
+  timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+  tenantPresets: TenantDressingRoomOccupancyPresets,
+  occupancyByEventId: ReadonlyMap<
+    string,
+    {
+      dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+      dressingRoomBeforeMinutes: number | null;
+      dressingRoomAfterMinutes: number | null;
+    }
+  >,
+): WeekplannerTournamentItem[] {
   return homeTournaments.map((tournament) => {
     const canonicalStartAt = new Date(tournament.startAt);
     const canonicalEndAt = tournament.endAt ? new Date(tournament.endAt) : canonicalStartAt;
@@ -864,7 +981,37 @@ async function findWeekplannerHomeTournaments(
   });
 }
 
-// ── Event(type=OTHER) → WeekplannerVeranstaltungItem ───────────────────────
+async function findWeekplannerHomeTournaments(
+  tenantId: string,
+  from: Date,
+  to: Date,
+  overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
+  timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+  tenantPresets: TenantDressingRoomOccupancyPresets,
+): Promise<WeekplannerTournamentItem[]> {
+  const tournaments = await listTournaments(tenantId, {
+    overlapsWindow: { from, to },
+  });
+
+  const homeTournaments = tournaments.filter((tournament) => {
+    if (tournament.homeAway !== "HOME") return false;
+    if (isCancelled(tournament.status)) return false;
+    return true;
+  });
+
+  const occupancyByEventId = await loadEventDressingRoomOccupancyMap(
+    tenantId,
+    homeTournaments.map((tournament) => tournament.id),
+  );
+
+  return mapWeekplannerHomeTournamentItems(
+    homeTournaments,
+    overridesByKey,
+    timeOverridesByKey,
+    tenantPresets,
+    occupancyByEventId,
+  );
+}
 
 async function findWeekplannerVeranstaltungen(
   tenantId: string,
@@ -872,99 +1019,8 @@ async function findWeekplannerVeranstaltungen(
   to: Date,
   resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
 ): Promise<WeekplannerVeranstaltungItem[]> {
-  const events = await prisma.event.findMany({
-    where: {
-      tenantId,
-      type: "OTHER",
-      status: { notIn: ["CANCELLED"] },
-      startAt: { lt: to },
-      OR: [{ endAt: { gt: from } }, { endAt: null, startAt: { gte: from } }],
-    },
-    select: {
-      id: true,
-      title: true,
-      location: true,
-      startAt: true,
-      endAt: true,
-      allDay: true,
-      teamSeasonId: true,
-      pitchCode: true,
-      homeDressingRoomCode: true,
-      teamSeason: { select: { team: { select: { name: true } } } },
-      eventFacilityAllocations: {
-        select: {
-          facilityResource: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-              type: true,
-              facility: { select: { id: true, name: true } },
-            },
-          },
-        },
-        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
-      },
-    },
-    orderBy: [{ startAt: "asc" }, { title: "asc" }],
-  });
-
-  return events.map((event) => {
-    const endAt =
-      event.endAt ??
-      (event.allDay
-        ? new Date(event.startAt.getTime() + 24 * 60 * 60_000)
-        : new Date(event.startAt.getTime() + 60 * 60_000));
-    const pitchAllocations: WeekplannerResourceRef[] = [];
-    const dressingRoomAllocations: WeekplannerResourceRef[] = [];
-    for (const allocation of event.eventFacilityAllocations) {
-      const resource = allocation.facilityResource;
-      const ref = toResourceRef(resource);
-      if (resource.type === "DRESSING_ROOM") {
-        dressingRoomAllocations.push(ref);
-      } else if (resource.type === "FULL_PITCH" || resource.type === "HALF_PITCH") {
-        pitchAllocations.push(ref);
-      }
-    }
-    if (pitchAllocations.length === 0 && event.pitchCode) {
-      const pitchRef = resourceByCode.get(event.pitchCode);
-      if (pitchRef) pitchAllocations.push(pitchRef);
-    }
-    if (dressingRoomAllocations.length === 0 && event.homeDressingRoomCode) {
-      const roomRef = resourceByCode.get(event.homeDressingRoomCode);
-      if (roomRef) dressingRoomAllocations.push(roomRef);
-    }
-    const teamNames = event.teamSeason?.team?.name ? [event.teamSeason.team.name] : [];
-
-    return {
-      id: `veranstaltung:${event.id}`,
-      tenantId,
-      type: "VERANSTALTUNG",
-      startAt: event.startAt,
-      endAt,
-      canonicalStartAt: event.startAt,
-      canonicalEndAt: endAt,
-      timeOverridden: false,
-      title: event.title,
-      teamNames,
-      pitchAllocations,
-      dressingRoomAllocations,
-      canonicalPitchAllocations: pitchAllocations,
-      canonicalDressingRoomAllocations: dressingRoomAllocations,
-      pitchOverridden: false,
-      dressingRoomOverridden: false,
-      conflicts: [],
-      eventId: event.id,
-      location: event.location,
-      teamSeasonId: event.teamSeasonId,
-      allDay: Boolean(event.allDay),
-      dressingRoomOccupancyMode: "DEFAULT",
-      dressingRoomOccupancyBeforeMinutes: null,
-      dressingRoomOccupancyAfterMinutes: null,
-      dressingRoomResolvedBeforeMinutes: 0,
-      dressingRoomResolvedAfterMinutes: 0,
-    } satisfies WeekplannerVeranstaltungItem;
-  });
+  const events = await fetchWeekplannerVeranstaltungEvents(tenantId, from, to);
+  return mapWeekplannerVeranstaltungEvents(tenantId, events, resourceByCode);
 }
 
 // ── Public API ────────────────────────────────────────────────────────────
@@ -987,81 +1043,221 @@ export async function getWeekplannerWeek(
   window: WeekplannerWindow,
   planId?: string,
 ): Promise<WeekplannerWeek> {
-  const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
+  return runWithWeekQueryProfile(async () => {
+    resetWeekQueryProfileQueryCounter();
+    const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
+    const sessionBounds = weekplannerSessionDateBounds(window.days);
+    const database = prisma as unknown as MatchcenterQueryDatabase;
 
-  // Overlap the week-bounded training session read with plan/policy prefetch I/O.
-  const trainingLoad = startWeekplannerTrainingSessionsLoad(tenantId, window.days);
+    beginWeekQueryParallelGroup();
 
-  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantRow] =
-    await Promise.all([
-      findFacilityResourceCodeMap(tenantId),
-      findWeekplannerPlanOverrides(tenantId, planId),
-      findWeekplannerPlanTimeOverrides(tenantId, planId),
-      resolveWeekplannerPlanBaselineMode(tenantId, planId),
-      getTenantDressingRoomOccupancyPresetsCached(tenantId),
-      getTenantMatchOperationalPolicyCached(tenantId),
-      prisma.tenant.findUnique({ where: { id: tenantId }, select: { logoUrl: true } }),
+    const tenantMatchPolicyPromise = profileWeekQueryOperation(
+      "tenant_match_policy",
+      () => getTenantMatchOperationalPolicyCached(tenantId),
+      { requiredInitial: true },
+    );
+
+    const planContextPromise = profileWeekQueryOperation(
+      "plan_policy_prefetch",
+      () =>
+        Promise.all([
+          findWeekplannerPlanOverrides(tenantId, planId),
+          findWeekplannerPlanTimeOverrides(tenantId, planId),
+          resolveWeekplannerPlanBaselineMode(tenantId, planId),
+          getTenantDressingRoomOccupancyPresetsCached(tenantId),
+          tenantMatchPolicyPromise,
+          prisma.tenant.findUnique({ where: { id: tenantId }, select: { logoUrl: true } }),
+        ]),
+      { requiredInitial: true },
+    );
+
+    const sessionsPromise = sessionBounds
+      ? profileWeekQueryOperation(
+          "training_sessions",
+          () =>
+            listTrainingSessionsForWeekplanner(tenantId, {
+              dateFrom: sessionBounds.dateFrom,
+              dateTo: sessionBounds.dateTo,
+            }),
+          { rowCount: (rows) => rows.length, requiredInitial: true },
+        )
+      : Promise.resolve([] as WeekplannerTrainingSessionListItem[]);
+
+    const trainingItemsPromise = profileWeekQueryOperation(
+      "training_allocations",
+      () =>
+        Promise.all([planContextPromise, sessionsPromise]).then(
+          ([[overridesByKey, timeOverridesByKey, , tenantPresets], sessions]) =>
+            buildWeekplannerTrainingItemsFromSessions(
+              tenantId,
+              sessions,
+              overridesByKey,
+              timeOverridesByKey,
+              tenantPresets,
+            ),
+        ),
+      { rowCount: (rows) => rows.length, requiredInitial: true },
+    );
+
+    const resourceByCodePromise = profileWeekQueryOperation(
+      "facilities",
+      () => findFacilityResourceCodeMap(tenantId),
+      { requiredInitial: true },
+    );
+
+    const matchesPromise = profileWeekQueryOperation(
+      "matches",
+      () =>
+        listMatchcenterMatches(database, {
+          tenantId,
+          from: window.from,
+          to: window.to,
+          matchOperationalPolicyPromise: tenantMatchPolicyPromise,
+        }),
+      { rowCount: (rows) => rows.length, requiredInitial: true },
+    );
+
+    const tournamentsPromise = profileWeekQueryOperation(
+      "tournaments",
+      () =>
+        listTournaments(tenantId, {
+          overlapsWindow: { from: window.from, to: window.to },
+        }),
+      { rowCount: (rows) => rows.length, requiredInitial: true },
+    );
+
+    const veranstaltungEventsPromise = profileWeekQueryOperation(
+      "events_veranstaltung",
+      () => fetchWeekplannerVeranstaltungEvents(tenantId, window.from, window.to),
+      { rowCount: (rows) => rows.length, requiredInitial: true },
+    );
+
+    const occupancyByEventIdPromise = profileWeekQueryOperation(
+      "match_dressing_occupancy",
+      () =>
+        Promise.all([matchesPromise, tournamentsPromise]).then(([matchSummaries, tournamentDtos]) => {
+          const homeMatches = matchSummaries.filter(
+            (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
+          );
+          const homeTournaments = tournamentDtos.filter((tournament) => {
+            if (tournament.homeAway !== "HOME") return false;
+            if (isCancelled(tournament.status)) return false;
+            return true;
+          });
+          return loadEventDressingRoomOccupancyMap(tenantId, [
+            ...homeMatches.map((match) => match.id),
+            ...homeTournaments.map((tournament) => tournament.id),
+          ]);
+        }),
+      { rowCount: (map) => map.size, requiredInitial: true },
+    );
+
+    const [
+      [overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantRow],
+      resourceByCode,
+      trainingItems,
+      matchSummaries,
+      tournamentDtos,
+      veranstaltungEvents,
+      occupancyByEventId,
+    ] = await Promise.all([
+      planContextPromise,
+      resourceByCodePromise,
+      trainingItemsPromise,
+      matchesPromise,
+      tournamentsPromise,
+      veranstaltungEventsPromise,
+      occupancyByEventIdPromise,
     ]);
-  const tenantLogoUrl = tenantRow?.logoUrl ?? null;
-  perfTimer?.mark("prefetch-policy-allocations");
 
-  const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
-    trainingLoad.complete(overridesByKey, timeOverridesByKey, tenantPresets),
-    findWeekplannerHomeMatches(
-      tenantId,
-      window.from,
-      window.to,
+    endWeekQueryParallelGroup();
+    const tenantLogoUrl = tenantRow?.logoUrl ?? null;
+    perfTimer?.mark("parallel-domain-reads");
+
+    const homeMatches = matchSummaries.filter(
+      (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
+    );
+    const homeTournaments = tournamentDtos.filter((tournament) => {
+      if (tournament.homeAway !== "HOME") return false;
+      if (isCancelled(tournament.status)) return false;
+      return true;
+    });
+
+    const matchItems = mapWeekplannerHomeMatchItems(
+      homeMatches,
       resourceByCode,
       overridesByKey,
       timeOverridesByKey,
       tenantPresets,
       tenantMatchPolicy,
       tenantLogoUrl,
-    ),
-    findWeekplannerHomeTournaments(
-      tenantId,
-      window.from,
-      window.to,
+      occupancyByEventId,
+    );
+
+    const tournamentItems = mapWeekplannerHomeTournamentItems(
+      homeTournaments,
       overridesByKey,
       timeOverridesByKey,
       tenantPresets,
-    ),
-    findWeekplannerVeranstaltungen(tenantId, window.from, window.to, resourceByCode),
-  ]);
-  perfTimer?.mark("activity-sources-parallel");
-  perfTimer?.mark(`trainings:${trainingItems.length}`);
-  perfTimer?.mark(`matches:${matchItems.length}`);
-  perfTimer?.mark(`tournaments:${tournamentItems.length}`);
-  perfTimer?.mark(`events:${veranstaltungItems.length}`);
+      occupancyByEventId,
+    );
 
-  let items: WeekplannerItem[] = [
-    ...trainingItems,
-    ...matchItems,
-    ...tournamentItems,
-    ...veranstaltungItems,
-  ];
+    const veranstaltungItems = mapWeekplannerVeranstaltungEvents(
+      tenantId,
+      veranstaltungEvents,
+      resourceByCode,
+    );
 
-  if (baselineMode === "empty") {
-    const activitiesWithOverrides = collectActivitiesWithOverrides(overridesByKey, timeOverridesByKey);
-    items = filterItemsForEmptyBaseline(items, activitiesWithOverrides);
-  }
+    perfTimer?.mark("activity-mapping");
+    perfTimer?.mark(`trainings:${trainingItems.length}`);
+    perfTimer?.mark(`matches:${matchItems.length}`);
+    perfTimer?.mark(`tournaments:${tournamentItems.length}`);
+    perfTimer?.mark(`events:${veranstaltungItems.length}`);
 
-  const week = buildWeekplannerWeek({
-    items,
-    days: window.days,
-    weekNumberLabel: formatWeekNumberLabel(window.days),
-    rangeLabel: formatWeekRangeLabel(window.days),
-    param: window.param,
-    previousParam: window.previousParam,
-    nextParam: window.nextParam,
+    let items: WeekplannerItem[] = [
+      ...trainingItems,
+      ...matchItems,
+      ...tournamentItems,
+      ...veranstaltungItems,
+    ];
+
+    if (baselineMode === "empty") {
+      const activitiesWithOverrides = collectActivitiesWithOverrides(overridesByKey, timeOverridesByKey);
+      items = filterItemsForEmptyBaseline(items, activitiesWithOverrides);
+    }
+
+    const week = await profileWeekQueryOperation(
+      "week_transform",
+      async () =>
+        buildWeekplannerWeek({
+          items,
+          days: window.days,
+          weekNumberLabel: formatWeekNumberLabel(window.days),
+          rangeLabel: formatWeekRangeLabel(window.days),
+          param: window.param,
+          previousParam: window.previousParam,
+          nextParam: window.nextParam,
+        }),
+      { sequential: true, requiredInitial: true },
+    );
+    perfTimer?.mark("week-model-conflicts");
+
+    const profileReport = getWeekQueryProfileReport();
+    if (profileReport && isScePerfTimingEnabled()) {
+      console.info("[sce-perf:week-query-profile]\n" + formatWeekQueryProfileTable(profileReport));
+      console.info(
+        `[sce-perf:week-query-profile] TOTAL_WALL_MS=${profileReport.totalWallMs.toFixed(1)} ` +
+          `TOTAL_DB_QUERIES=${profileReport.totalDbQueries} ` +
+          `PARALLEL_GROUPS=${profileReport.parallelGroups}`,
+      );
+    }
+
+    if (perfTimer) {
+      logAdminServerTiming(perfTimer.finish());
+    }
+
+    return week;
   });
-  perfTimer?.mark("week-model-conflicts");
-
-  if (perfTimer) {
-    logAdminServerTiming(perfTimer.finish());
-  }
-
-  return week;
 }
 
 /**
