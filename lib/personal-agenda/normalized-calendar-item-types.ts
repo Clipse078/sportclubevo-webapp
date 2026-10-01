@@ -1,5 +1,6 @@
 import type { EventType, TaskStatus } from "@prisma/client";
 import type { PersonalProgrammePresentationStatus } from "./personal-programme-types";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 
 /** Application-level semantic types for personal calendar (not a Prisma enum). */
 export type CalendarItemSemanticType =
@@ -54,4 +55,5 @@ export type NormalizedCalendarItem = {
   typeLabel: string;
   eventType?: EventType | "MEETING";
   ariaLabel: string;
+  activityPresentation?: SportingActivityPresentation;
 };

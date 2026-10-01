@@ -1,4 +1,5 @@
 import type { NormalizedCalendarItem } from "./normalized-calendar-item-types";
+import { formatSportingActivityStandardSecondaryLines } from "@/lib/sporting-activity-presentation/format";
 
 export type CalendarEventBlockLines = {
   /** Primary label after the time column (type or category). */
@@ -170,6 +171,17 @@ export function buildCalendarEventBlockLines(
   item: NormalizedCalendarItem,
   options: CalendarEventBlockLineOptions = {},
 ): CalendarEventBlockLines {
+  if (item.activityPresentation) {
+    const secondaryParts = formatSportingActivityStandardSecondaryLines(
+      item.activityPresentation,
+      { tenantDisplayNames: options.tenantDisplayNames },
+    );
+    return {
+      primary: item.activityPresentation.identity.typeLabel || item.typeLabel,
+      secondary: joinParts(secondaryParts),
+    };
+  }
+
   switch (item.semanticType) {
     case "TRAINING": {
       const team = item.team?.name ?? item.subtitle;

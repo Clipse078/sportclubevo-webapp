@@ -8,6 +8,9 @@ import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { getProgrammeSourceActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { cn } from "@/lib/cn";
+import { SportingActivityLocationLines } from "@/components/sporting-activity/SportingActivityLocationLines";
+import { formatSportingActivityCompactTitle } from "@/lib/sporting-activity-presentation/format";
+import { formatSportingActivityLocationLines } from "@/lib/sporting-activity-presentation/location";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
@@ -36,6 +39,14 @@ export function PersonalProgrammeAgendaRow({
 
   const markerPresentation = getProgrammeSourcePresentation(item.sourceType);
   const activitySceIconName = getProgrammeSourceActivitySceIconName(item.sourceType);
+  const displayTitle = item.activityPresentation
+    ? formatSportingActivityCompactTitle(item.activityPresentation)
+    : item.title;
+  const locationLines = item.activityPresentation
+    ? formatSportingActivityLocationLines(item.activityPresentation.location)
+    : item.venue
+      ? [item.venue]
+      : [];
 
   const row = (
     <div
@@ -65,7 +76,7 @@ export function PersonalProgrammeAgendaRow({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="truncate text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
-                {item.title}
+                {displayTitle}
               </p>
               <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
                 {item.typeLabel}
@@ -75,8 +86,12 @@ export function PersonalProgrammeAgendaRow({
               <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
             ) : null}
           </div>
-          {item.venue ? (
-            <p className="mt-0.5 truncate text-[0.6875rem] text-[var(--muted)]">{item.venue}</p>
+          {locationLines.length > 0 ? (
+            <SportingActivityLocationLines
+              lines={locationLines}
+              density="compact"
+              className="mt-0.5"
+            />
           ) : null}
           {statusLabel ? (
             <span className="mt-1 inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">

@@ -35,6 +35,7 @@ export type PersonalCalendarItem = {
   teamName?: string;
   opponentName?: string;
   homeAway?: string | null;
+  activityPresentation?: import("@/lib/sporting-activity-presentation").SportingActivityPresentation;
 };
 
 export function buildTaskProjectionId(taskId: string): string {

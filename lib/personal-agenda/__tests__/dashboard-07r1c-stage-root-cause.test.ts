@@ -6,7 +6,26 @@ import { loadTeamEventProgrammeItems } from "../adapters/team-event-programme-ad
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: { findMany: vi.fn() },
+    tenant: { findUnique: vi.fn() },
   },
+}));
+
+vi.mock("@/lib/facilities/display-helpers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/facilities/display-helpers")>();
+  return {
+    ...actual,
+    batchGetEventAllocationDisplayForTenant: vi.fn(async (events: unknown[]) =>
+      events.map(() => ({
+        pitchLabel: null,
+        homeDressingRoomLabel: null,
+        awayDressingRoomLabel: null,
+      })),
+    ),
+  };
+});
+
+vi.mock("@/lib/website/public-matches-identity", () => ({
+  loadMatchEventPoliciesByEventId: vi.fn(async () => new Map()),
 }));
 
 import { prisma } from "@/lib/db/prisma";
@@ -57,6 +76,7 @@ const adapterCtx = (ctx: PersonalContext) => ({
 describe("DASHBOARD-07R1C — STAGE root-cause regression", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ name: "FC Allschwil" } as never);
   });
 
   it("SFV match with null teamSeasonId for season-scoped SPIELER assignment → absent", async () => {

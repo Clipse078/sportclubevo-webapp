@@ -15,6 +15,14 @@ This document collects all features and modules that are explicitly deferred to 
 
 Cross-cutting UX upgrade: replace generic-only "Interner Fehler." responses with safe, actionable copy when the application can determine cause (example: billing duplicate invoice for contract/period — cite existing invoice number and link when permitted). Must not expose stack traces, SQL, secrets, or private identifiers. Dedicated implementation package; not part of SCE-PERF-02.
 
+### SCE-ACTIVITY-UX-01 — Canonical Sports Activity Presentation (2026-10-01)
+
+**Status:** IMPLEMENTED / PR OPEN (first consumers: Personal Dashboard programme + personal calendar)
+
+Canonical presentation read-model (`lib/sporting-activity-presentation/`, architecture doc in `docs/architecture/SCE-SPORTS-ACTIVITY-PRESENTATION.md`). Remaining consumer migration: command center, Wochenplaner, Matchcenter, team views — see architecture doc inventory.
+
+---
+
 This list exists so that:
 
 1. Architectural decisions made during v1.0 development remain compatible with future needs.

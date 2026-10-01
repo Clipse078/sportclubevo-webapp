@@ -1,4 +1,5 @@
 import type { EventType } from "@prisma/client";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 
 /** Canonical programme source types for Mein Programm (DASHBOARD-02). */
 export type PersonalProgrammeSourceType =
@@ -46,6 +47,8 @@ export type PersonalProgrammeItem = {
   typeLabel: string;
   eventType?: EventType | "MEETING";
   ariaLabel: string;
+  /** Canonical read-model presentation (SCE-ACTIVITY-UX-01). */
+  activityPresentation?: SportingActivityPresentation;
 };
 
 export function eventTypeToProgrammeSourceType(type: EventType): PersonalProgrammeSourceType {
