@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { logAction } from "@/lib/audit/log-action";
+import { invalidatePersonalDashboardReadModelsForPerson } from "@/lib/dashboard/read-model/invalidate";
+import { notifyPersonalDashboardForTeamSeason } from "@/lib/dashboard/read-model/invalidate-audience";
 import { isBirthYearAllowedForTeamSeason } from "@/lib/teams/jahrgang-rules";
 
 type Context = {

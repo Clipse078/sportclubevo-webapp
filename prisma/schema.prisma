@@ -1179,6 +1179,7 @@ model Tenant {
   userCommunicationPreferences       UserCommunicationPreference[]
   sponsorContactCommunicationPreferences SponsorContactCommunicationPreference[]
   userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
+  personalDashboardReadModels         PersonalDashboardReadModel[]
   userCommunicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
   userCommunicationPersonalSignatures UserCommunicationPersonalSignature[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
@@ -1409,6 +1410,7 @@ model User {
   notificationPreferences          UserNotificationPreference[]
   communicationPreferences         UserCommunicationPreference[]
   dashboardQuickAccessPreferences  UserDashboardQuickAccessPreference[]
+  personalDashboardReadModels    PersonalDashboardReadModel[]
   communicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
   communicationPersonalSignatures  UserCommunicationPersonalSignature[]
   pushDeviceRegistrations          PushDeviceRegistration[]
@@ -4847,6 +4849,32 @@ model UserDashboardQuickAccessPreference {
   @@index([tenantId, userId])
 }
 
+/// SCE-PERF-DASHBOARD-02 — derived personal dashboard projection (not canonical domain data).
+model PersonalDashboardReadModel {
+  id       String @id @default(cuid())
+  tenantId String
+  userId   String
+  personId String?
+
+  /// Monotonic payload schema version inside payloadJson.v
+  projectionVersion Int @default(1)
+
+  payloadJson Json
+
+  horizonStart DateTime
+  horizonEnd   DateTime
+
+  builtAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, userId])
+  @@index([tenantId, personId])
+}
+
 /// SCE-COMM-INBOX-02 — per-user Kommunikationscenter workspace layout (not mailbox-scoped).
 model UserCommunicationInboxWorkspacePref {
   id               String   @id @default(cuid())
@@ -5953,6 +5981,7 @@ enum WorkspaceBackgroundJobType {
   MALWARE_SCAN_VERSION
   DOCUMENT_PURGE_FINALIZE
   SUBTREE_OPERATION_BATCH
+  PERSONAL_DASHBOARD_REBUILD
 }
 
 // ---------------------------------------------------------------------------

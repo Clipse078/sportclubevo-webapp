@@ -4,7 +4,7 @@
  */
 
 import { loadPersonalActionsModuleCapabilities } from "@/lib/personal-actions/access";
-import { countPersonalActions, loadPersonalActions } from "@/lib/personal-actions";
+import { loadPersonalActionsWithCounts } from "@/lib/personal-actions";
 import {
   filterPersonalActionsForInbox,
   mapPersonalActionsToPreviewItems,
@@ -29,6 +29,16 @@ import {
   selectPersonalAttentionCandidates,
 } from "./select-attention-candidates";
 import type { DashboardPersonalWorkSnapshot } from "./types";
+import {
+  logSceHotfixLogin01Milestone,
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  runWithSceHotfixLogin01Trace,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
+
+const SKIP_OPERATIONAL_FOR_ISOLATION =
+  process.env.SCE_HOTFIX_LOGIN_01_SKIP_OPERATIONAL === "1";
 
 export const DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT = 5;
 
@@ -39,6 +49,8 @@ export async function loadDashboardPersonalWork(args: {
   locale?: string;
   timeZone?: string;
   now?: Date;
+  /** Pre-resolved tenant/platform permission keys (avoids duplicate resolver work on dashboard SSR). */
+  permissionKeys?: readonly string[];
 }): Promise<DashboardPersonalWorkSnapshot> {
   const empty: DashboardPersonalWorkSnapshot = {
     attention: {
@@ -59,20 +71,44 @@ export async function loadDashboardPersonalWork(args: {
     timezone: timeZone,
   };
 
-  const capabilities = await loadPersonalActionsModuleCapabilities({
-    tenantId: args.tenantId,
-    userId: args.userId,
-  });
+  let effectivePlatform: string[] = [];
+  let effectiveTenant: string[] = [];
+  if (args.permissionKeys?.length) {
+    effectivePlatform = [];
+    effectiveTenant = [...args.permissionKeys];
+  } else {
+    const resolved = sceHotfixLogin01TraceEnabled()
+      ? await runWithSceHotfixLogin01Trace("personal-work-permissions", () =>
+          getRequestEffectivePermissions(args.userId, args.tenantId),
+        )
+      : await getRequestEffectivePermissions(args.userId, args.tenantId);
+    effectivePlatform = [...resolved.platform];
+    effectiveTenant = [...resolved.tenant];
+  }
 
-  const { platform, tenant } = await getRequestEffectivePermissions(args.userId, args.tenantId);
-  const permissionKeys = new Set([...platform, ...tenant, ...capabilities.permissionKeys]);
+  const operationalPermissionKeys = new Set([...effectivePlatform, ...effectiveTenant]);
+  const operationalPromise = SKIP_OPERATIONAL_FOR_ISOLATION
+    ? Promise.resolve({ items: [], failedSourceKeys: [] as string[] })
+    : loadDomainOperationalAttention({
+        tenantId: args.tenantId,
+        actorUserId: args.userId,
+        permissionKeys: operationalPermissionKeys,
+        now,
+      });
 
-  const operationalPromise = loadDomainOperationalAttention({
-    tenantId: args.tenantId,
-    actorUserId: args.userId,
-    permissionKeys,
-    now,
-  });
+  const capabilities = sceHotfixLogin01TraceEnabled()
+    ? await runWithSceHotfixLogin01Trace("personal-work-capabilities", () =>
+        loadPersonalActionsModuleCapabilities({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          permissionKeys: args.permissionKeys,
+        }),
+      )
+    : await loadPersonalActionsModuleCapabilities({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        permissionKeys: args.permissionKeys,
+      });
 
   if (!capabilities.personalInbox) {
     const operational = await operationalPromise;
@@ -95,22 +131,41 @@ export async function loadDashboardPersonalWork(args: {
     };
   }
 
-  const [counts, aggregated, operational] = await Promise.all([
-    countPersonalActions({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      permissionKeys: capabilities.permissionKeys,
-      now,
-    }),
-    loadPersonalActions({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      permissionKeys: capabilities.permissionKeys,
-      limit: DASHBOARD_PERSONAL_WORK_AGGREGATE_LIMIT,
-      now,
-    }),
+  const personalActionsPromise = (async () => {
+    if (sceHotfixLogin01TraceEnabled()) {
+      logSceHotfixLogin01Step("personal-actions");
+    }
+    try {
+      const mergedPermissionKeys = [
+        ...effectivePlatform,
+        ...effectiveTenant,
+        ...capabilities.permissionKeys,
+      ];
+      return await loadPersonalActionsWithCounts({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        permissionKeys: mergedPermissionKeys,
+        limit: DASHBOARD_PERSONAL_WORK_AGGREGATE_LIMIT,
+        now,
+      });
+    } finally {
+      if (sceHotfixLogin01TraceEnabled()) {
+        logSceHotfixLogin01StepDone("personal-actions");
+      }
+    }
+  })();
+
+  const [personalActions, operational] = await Promise.all([
+    personalActionsPromise,
     operationalPromise,
   ]);
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T8_PERSONAL_ACTIONS");
+    logSceHotfixLogin01Milestone("T9_OPERATIONAL_ATTENTION");
+    logSceHotfixLogin01Step("personal-work-attention-merge");
+  }
+  const { counts, actions: aggregated } = personalActions;
 
   const attentionCandidates = selectPersonalAttentionCandidates(aggregated, now);
   const attentionSorted = sortPersonalActions(attentionCandidates, now);
@@ -142,6 +197,10 @@ export async function loadDashboardPersonalWork(args: {
   );
 
   const viewAllHref = buildPersonalInboxFilterHref("all");
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01StepDone("personal-work-attention-merge");
+  }
 
   return {
     attention: {

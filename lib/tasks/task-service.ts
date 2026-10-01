@@ -9,6 +9,20 @@ import { TaskStatus as TaskStatusEnum, TaskVisibilityScope } from "@prisma/clien
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { notifyPersonalDashboardDomainMutation } from "@/lib/dashboard/read-model/invalidate";
+
+function schedulePersonalDashboardRebuildForTaskUsers(
+  tenantId: string,
+  userIds: readonly (string | null | undefined)[],
+): void {
+  const seen = new Set<string>();
+  for (const userId of userIds) {
+    const trimmed = userId?.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    void notifyPersonalDashboardDomainMutation({ tenantId, userId: trimmed });
+  }
+}
 import { validateTaskContext } from "./context-validation";
 import { normalizeTaskDescriptionInput } from "./task-description";
 import {
@@ -64,6 +78,7 @@ import {
   snapshotTaskAccessGrantsToChild,
   validateTaskAccessGrantMutation,
 } from "./task-access-grants";
+import { listMyOpenTasksForPersonalActions } from "./my-open-tasks-personal-actions";
 
 const TASK_INCLUDE = TASK_AUTH_INCLUDE;
 
@@ -417,6 +432,10 @@ export async function createTask(
     return finalRow;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...assigneeUserIds,
+  ]);
   return mapTask(task);
 }
 
@@ -539,6 +558,10 @@ export async function createQuickTask(
     return finalRow;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...assigneeUserIds,
+  ]);
   return mapTask(task);
 }
 
@@ -595,6 +618,17 @@ export async function listMyTasks(
   filter?: ListTasksFilter,
 ): Promise<PersonalTaskDto[]> {
   assertCanView(ctx);
+
+  if (
+    filter?.openOnly &&
+    filter.limit != null &&
+    filter.limit > 0
+  ) {
+    return listMyOpenTasksForPersonalActions(ctx, {
+      limit: filter.limit,
+      now: filter.now,
+    });
+  }
 
   const statusFilter: Prisma.TaskWhereInput = filter?.openOnly
     ? { status: { in: [TaskStatusEnum.OPEN, TaskStatusEnum.IN_PROGRESS] } }
@@ -740,6 +774,10 @@ export async function createSubtask(
     return finalRow;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...assigneeUserIds,
+  ]);
   return mapTask(task);
 }
 
@@ -1008,6 +1046,10 @@ export async function updateTask(
     return row;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...updated.assignees.map((a) => a.userId),
+  ]);
   return mapTask(updated);
 }
 
@@ -1068,6 +1110,11 @@ export async function assignTask(
     return row;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...previousUserIds,
+    ...unique,
+  ]);
   return mapTask(updated);
 }
 
@@ -1122,6 +1169,11 @@ export async function completeTask(
     return row;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...existing.assignees.map((a) => a.userId),
+  ]);
+
   return mapTask(updated);
 }
 
@@ -1156,6 +1208,10 @@ export async function cancelTask(
     return row;
   });
 
+  schedulePersonalDashboardRebuildForTaskUsers(ctx.tenantId, [
+    ctx.userId,
+    ...existing.assignees.map((a) => a.userId),
+  ]);
   return mapTask(updated);
 }
 

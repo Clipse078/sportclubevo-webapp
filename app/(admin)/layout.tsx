@@ -16,16 +16,32 @@ import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
 import "./authenticated-shell.css";
 import "./global-app-navigation.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
+import {
+  initSceHotfixLogin01DashboardTrace,
+  logSceHotfixLogin01Milestone,
+  runWithSceHotfixLogin01Trace,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
 
 type AdminLayoutProps = {
   children: ReactNode;
 };
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  const session = await auth();
+  if (sceHotfixLogin01TraceEnabled()) {
+    await initSceHotfixLogin01DashboardTrace();
+  }
+
+  const session = sceHotfixLogin01TraceEnabled()
+    ? await runWithSceHotfixLogin01Trace("layout-auth", () => auth())
+    : await auth();
 
   if (!session?.user) {
     redirect("/login");
+  }
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T1_AUTH");
   }
 
   // RPERM-04: resolve tenant context through the single tenant-resolution helper
@@ -34,15 +50,28 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   // defaults when null, so the layout is always safe even for platform-only
   // administrators with no active tenant.
   const [ctx, linkedPersonProfile] = await Promise.all([
-    getActiveTenant(),
+    sceHotfixLogin01TraceEnabled()
+      ? runWithSceHotfixLogin01Trace("layout-tenant", () => getActiveTenant())
+      : getActiveTenant(),
     getPersonProfileByUserIdCached(session.user.id),
   ]);
 
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T2_TENANT");
+  }
+
   const participationNavCapable = ctx?.id
-    ? await resolvePersonalParticipationNavCapability({
-        tenantId: ctx.id,
-        userId: session.user.id,
-      })
+    ? await (sceHotfixLogin01TraceEnabled()
+        ? runWithSceHotfixLogin01Trace("layout-participation-nav", () =>
+            resolvePersonalParticipationNavCapability({
+              tenantId: ctx.id!,
+              userId: session.user.id,
+            }),
+          )
+        : resolvePersonalParticipationNavCapability({
+            tenantId: ctx.id,
+            userId: session.user.id,
+          }))
     : false;
 
   const tenantCssVars = generateTenantCssVars(ctx);

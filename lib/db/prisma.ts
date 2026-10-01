@@ -3,6 +3,12 @@ import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { requireSafeTestDatabaseUrlForPrisma } from "@/lib/test/safe-test-database";
 import { getEffectivePrismaRuntimeConnectionSource } from "./runtime-connection";
+import {
+  recordSceHotfixLogin01DbClientReadyMs,
+  recordSceHotfixLogin01FirstPrismaWaitMs,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
+import { extendPrismaClientWithSceHotfixLogin01QueryTrace } from "./sce-hotfix-login-01-prisma-query-instrumentation";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -30,16 +36,22 @@ function getPrismaClient(): PrismaClient {
     );
   }
 
+  const poolInitStartedMs = sceHotfixLogin01TraceEnabled() ? Date.now() : 0;
   const pool = new Pool({ connectionString });
-  const client = new PrismaClient({
+  if (sceHotfixLogin01TraceEnabled()) {
+    pool.once("connect", () => {
+      recordSceHotfixLogin01DbClientReadyMs(Date.now() - poolInitStartedMs);
+    });
+  }
+  let client: PrismaClient = new PrismaClient({
     adapter: new PrismaPg(pool),
   });
-  modulePrisma = client;
-
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-    globalForPrisma.prismaPool = pool;
+  if (sceHotfixLogin01TraceEnabled()) {
+    client = extendPrismaClientWithSceHotfixLogin01QueryTrace(client);
   }
+  modulePrisma = client;
+  globalForPrisma.prisma = client;
+  globalForPrisma.prismaPool = pool;
 
   return client;
 }
@@ -53,9 +65,22 @@ function getPrismaClient(): PrismaClient {
  * access initializes the real client and still fails closed when DATABASE_URL
  * is absent.
  */
+let firstPrismaProxyAccessMs: number | null = null;
+
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, property) {
+    if (sceHotfixLogin01TraceEnabled() && firstPrismaProxyAccessMs == null) {
+      firstPrismaProxyAccessMs = Date.now();
+    }
     const client = getPrismaClient();
+    if (
+      sceHotfixLogin01TraceEnabled() &&
+      firstPrismaProxyAccessMs != null &&
+      property !== "$connect"
+    ) {
+      recordSceHotfixLogin01FirstPrismaWaitMs(Date.now() - firstPrismaProxyAccessMs);
+      firstPrismaProxyAccessMs = null;
+    }
     const value = Reflect.get(client, property, client);
     return typeof value === "function" ? value.bind(client) : value;
   },

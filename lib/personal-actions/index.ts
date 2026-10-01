@@ -42,6 +42,7 @@ export {
 export {
   loadDashboardPersonalActions,
   loadPersonalActions,
+  loadPersonalActionsWithCounts,
   DASHBOARD_PERSONAL_ACTION_PREVIEW_LIMIT,
 } from "./load-personal-actions";
 

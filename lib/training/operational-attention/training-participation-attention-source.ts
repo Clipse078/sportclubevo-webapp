@@ -10,8 +10,10 @@ import type {
 import { buildDomainOperationalAttentionId } from "@/lib/domain-attention/source-identity";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/db/prisma";
-import { resolveEventParticipationAnchor } from "@/lib/communication/event/event-participation-anchor";
-import { listParticipationSubjectPersonIds } from "@/lib/participation/participation-audience-resolution";
+import {
+  buildResolvedEventParticipationAnchorFromKnown,
+  countNotRespondedParticipantsByContextEventId,
+} from "@/lib/participation/batch-not-responded-participation-counts";
 import {
   buildTrainingAudienceCandidateId,
   TRAINING_DOMAIN_KEY,
@@ -60,10 +62,16 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
     async evaluateAttention(
       ctx: DomainOperationalAttentionEvaluationContext,
     ): Promise<DomainOperationalAttentionItem[]> {
-      const teamIds = await listTeamIdsWithTrainingAudienceView({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-      });
+      if (!ctx.permissionKeys.has(PERMISSIONS.COMMUNICATION_TEAM_VIEW)) {
+        return [];
+      }
+      const teamIds = [
+        ...(ctx.communicationTeamIds ??
+          (await listTeamIdsWithTrainingAudienceView({
+            tenantId: ctx.tenantId,
+            userId: ctx.userId,
+          }))),
+      ];
       if (teamIds.length === 0) return [];
 
       const sessions = await prisma.trainingSession.findMany({
@@ -72,6 +80,10 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
           teamSeason: { teamId: { in: teamIds } },
           status: "SCHEDULED",
           participationResponseDueAt: { not: null },
+          OR: [
+            { overrideStartAt: { gte: ctx.now } },
+            { overrideStartAt: null, startAt: { gte: ctx.now } },
+          ],
         },
         select: {
           id: true,
@@ -87,35 +99,38 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
         take: 40,
       });
 
+      const relevantSessions = sessions.filter((session) => {
+        const teamId = session.teamSeason.teamId;
+        if (!teamId) return false;
+        return isTrainingSessionRelevantForParticipationAttention({
+          status: session.status,
+          startAt: session.startAt,
+          overrideStartAt: session.overrideStartAt,
+          now: ctx.now,
+          participationResponseDueAt: session.participationResponseDueAt,
+        });
+      });
+
+      const anchors = relevantSessions.map((session) =>
+        buildResolvedEventParticipationAnchorFromKnown({
+          tenantId: ctx.tenantId,
+          teamId: session.teamSeason.teamId,
+          teamSeasonId: session.teamSeasonId,
+          title: session.trainingSeries.title,
+          startAt: session.startAt,
+          participationEvent: { eventKind: "TRAINING", trainingSessionId: session.id },
+        }),
+      );
+
+      const outstandingBySessionId =
+        await countNotRespondedParticipantsByContextEventId(anchors);
+
       const items: DomainOperationalAttentionItem[] = [];
 
-      for (const session of sessions) {
+      for (const session of relevantSessions) {
         const teamId = session.teamSeason.teamId;
-        if (!teamId) continue;
-        if (
-          !isTrainingSessionRelevantForParticipationAttention({
-            status: session.status,
-            startAt: session.startAt,
-            overrideStartAt: session.overrideStartAt,
-            now: ctx.now,
-            participationResponseDueAt: session.participationResponseDueAt,
-          })
-        ) {
-          continue;
-        }
-
-        const anchor = await resolveEventParticipationAnchor({
-          tenantId: ctx.tenantId,
-          teamId,
-          teamSeasonId: session.teamSeasonId,
-          event: { eventKind: "TRAINING", trainingSessionId: session.id },
-        });
-
-        const outstanding = await listParticipationSubjectPersonIds({
-          anchor,
-          preset: "NOT_RESPONDED",
-        });
-        if (outstanding.length === 0) continue;
+        const outstandingCount = outstandingBySessionId.get(session.id) ?? 0;
+        if (outstandingCount === 0) continue;
 
         const candidateId = buildTrainingAudienceCandidateId({
           teamId,
@@ -152,9 +167,9 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
             sessionTitle: session.trainingSeries.title,
             sessionStartAt: effectiveStart,
           }),
-          summary: `${outstanding.length} Rückmeldung${outstanding.length === 1 ? "" : "en"} ausstehend`,
+          summary: `${outstandingCount} Rückmeldung${outstandingCount === 1 ? "" : "en"} ausstehend`,
           severity: "info",
-          count: outstanding.length,
+          count: outstandingCount,
           dueAt: null,
           deepLink: `/dashboard/teams/${teamId}/teilnahmen`,
           optionalDomainAudience: deferredAudience,
@@ -181,8 +196,5 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
 export async function evaluateTrainingParticipationOperationalAttention(
   ctx: DomainOperationalAttentionEvaluationContext,
 ): Promise<DomainOperationalAttentionItem[]> {
-  if (!(await trainingParticipationOutstandingAttentionSource.canDiscover(ctx))) {
-    return [];
-  }
   return trainingParticipationOutstandingAttentionSource.evaluateAttention(ctx);
 }

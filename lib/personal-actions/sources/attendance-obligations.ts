@@ -4,7 +4,10 @@
 
 import type { AttendanceEventKind, ParticipationResponseStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS } from "../config";
+import {
+  PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS,
+  resolveDashboardAttendanceEventFetchCap,
+} from "../config";
 
 export type AttendanceObligationCandidate = {
   personId: string;
@@ -52,12 +55,25 @@ function responseLookupKey(input: {
   return `${input.personId}:${input.teamSeasonId}:${input.eventKind}:${input.eventId}`;
 }
 
+function sortAttendanceCandidatesByUrgency(
+  candidates: AttendanceObligationCandidate[],
+): AttendanceObligationCandidate[] {
+  return [...candidates].sort((a, b) => {
+    const dueA = a.participationResponseDueAt?.getTime() ?? a.eventStartAt.getTime();
+    const dueB = b.participationResponseDueAt?.getTime() ?? b.eventStartAt.getTime();
+    if (dueA !== dueB) return dueA - dueB;
+    return a.eventStartAt.getTime() - b.eventStartAt.getTime();
+  });
+}
+
 export async function loadAttendanceObligationCandidates(
   tenantId: string,
-  authorizedPersonIds: string[],
+  authorizedPersonIds: readonly string[],
   now: Date = new Date(),
+  actionableCap?: number,
 ): Promise<AttendanceObligationCandidate[]> {
-  if (authorizedPersonIds.length === 0) {
+  const personIds = [...authorizedPersonIds];
+  if (personIds.length === 0) {
     return [];
   }
 
@@ -65,7 +81,7 @@ export async function loadAttendanceObligationCandidates(
 
   const squadMemberships = await prisma.playerSquadMember.findMany({
     where: {
-      personId: { in: authorizedPersonIds },
+      personId: { in: personIds },
       teamSeason: {
         status: "ACTIVE",
         team: { tenantId },
@@ -116,7 +132,12 @@ export async function loadAttendanceObligationCandidates(
   const teamIds = [...new Set(squadMemberships.map((m) => m.teamSeason.teamId))];
   const seasonIds = [...new Set(squadMemberships.map((m) => m.teamSeason.seasonId))];
 
-  const [trainingSessions, calendarEvents, responses] = await Promise.all([
+  const dashboardEventFetchCap =
+    actionableCap != null && actionableCap > 0
+      ? resolveDashboardAttendanceEventFetchCap(actionableCap)
+      : undefined;
+
+  const [trainingSessions, calendarEvents] = await Promise.all([
     prisma.trainingSession.findMany({
       where: {
         tenantId,
@@ -132,6 +153,7 @@ export async function loadAttendanceObligationCandidates(
         trainingSeries: { select: { title: true } },
       },
       orderBy: [{ startAt: "asc" }],
+      ...(dashboardEventFetchCap != null ? { take: dashboardEventFetchCap } : {}),
     }),
     prisma.event.findMany({
       where: {
@@ -152,24 +174,47 @@ export async function loadAttendanceObligationCandidates(
         participationResponseDueAt: true,
       },
       orderBy: [{ startAt: "asc" }],
-    }),
-    prisma.participationResponse.findMany({
-      where: {
-        tenantId,
-        personId: { in: authorizedPersonIds },
-        teamSeasonId: { in: teamSeasonIds },
-      },
-      select: {
-        id: true,
-        personId: true,
-        teamSeasonId: true,
-        eventKind: true,
-        trainingSessionId: true,
-        eventId: true,
-        status: true,
-      },
+      ...(dashboardEventFetchCap != null ? { take: dashboardEventFetchCap } : {}),
     }),
   ]);
+
+  const trainingSessionIds = trainingSessions.map((session) => session.id);
+  const calendarEventIds = calendarEvents.map((event) => event.id);
+
+  const responseEventFilters: Array<Record<string, unknown>> = [];
+  if (trainingSessionIds.length > 0) {
+    responseEventFilters.push({
+      eventKind: "TRAINING" as const,
+      trainingSessionId: { in: trainingSessionIds },
+    });
+  }
+  if (calendarEventIds.length > 0) {
+    responseEventFilters.push({
+      eventKind: { in: ["MATCH", "TOURNAMENT"] as const },
+      eventId: { in: calendarEventIds },
+    });
+  }
+
+  const responses =
+    responseEventFilters.length === 0
+      ? []
+      : await prisma.participationResponse.findMany({
+          where: {
+            tenantId,
+            personId: { in: personIds },
+            teamSeasonId: { in: teamSeasonIds },
+            OR: responseEventFilters,
+          },
+          select: {
+            id: true,
+            personId: true,
+            teamSeasonId: true,
+            eventKind: true,
+            trainingSessionId: true,
+            eventId: true,
+            status: true,
+          },
+        });
 
   const responseByKey = new Map(
     responses.map((response) => [
@@ -212,17 +257,23 @@ export async function loadAttendanceObligationCandidates(
     });
   }
 
+  const teamSeasonIdsByTeamSeasonPair = new Map<string, string[]>();
+  for (const [teamSeasonId, meta] of teamSeasonMeta.entries()) {
+    const pairKey = `${meta.teamId}:${meta.seasonId}`;
+    const bucket = teamSeasonIdsByTeamSeasonPair.get(pairKey) ?? [];
+    bucket.push(teamSeasonId);
+    teamSeasonIdsByTeamSeasonPair.set(pairKey, bucket);
+  }
+
   for (const calendarEvent of calendarEvents) {
     const pairKey = `${calendarEvent.teamId}:${calendarEvent.seasonId}`;
     if (!allowedSeasonTeamPairs.has(pairKey)) continue;
+    if (calendarEvent.type !== "MATCH" && calendarEvent.type !== "TOURNAMENT") continue;
 
-    for (const [teamSeasonId, meta] of teamSeasonMeta.entries()) {
-      if (meta.teamId !== calendarEvent.teamId || meta.seasonId !== calendarEvent.seasonId) {
-        continue;
-      }
+    const matchingTeamSeasonIds = teamSeasonIdsByTeamSeasonPair.get(pairKey) ?? [];
+    for (const teamSeasonId of matchingTeamSeasonIds) {
       const list = eventsByTeamSeason.get(teamSeasonId);
       if (!list) continue;
-      if (calendarEvent.type !== "MATCH" && calendarEvent.type !== "TOURNAMENT") continue;
       list.push({
         eventKind: calendarEvent.type,
         eventId: calendarEvent.id,
@@ -233,7 +284,12 @@ export async function loadAttendanceObligationCandidates(
     }
   }
 
-  const candidates: AttendanceObligationCandidate[] = [];
+  type PendingCandidate = Omit<AttendanceObligationCandidate, "responseId" | "responseStatus"> & {
+    responseId: string | null;
+    responseStatus: ParticipationResponseStatus;
+  };
+
+  const pending: PendingCandidate[] = [];
 
   for (const membership of squadMemberships) {
     const teamDisplayName =
@@ -256,7 +312,7 @@ export async function loadAttendanceObligationCandidates(
         continue;
       }
 
-      candidates.push({
+      pending.push({
         personId: membership.personId,
         personDisplayName,
         teamSeasonId: membership.teamSeasonId,
@@ -273,7 +329,10 @@ export async function loadAttendanceObligationCandidates(
     }
   }
 
-  return candidates;
+  if (actionableCap != null && actionableCap > 0) {
+    return sortAttendanceCandidatesByUrgency(pending).slice(0, actionableCap);
+  }
+  return pending;
 }
 
 export function filterActionableAttendanceCandidates(

@@ -27,6 +27,7 @@
  * recurring *template*, which a tournament never is).
  */
 
+import { notifyPersonalDashboardForSportingEvent } from "@/lib/dashboard/read-model/invalidate-audience";
 import { assertEventStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import { prisma } from "@/lib/db/prisma";
 import { scheduleTenantPublicWebsiteCacheNotificationByTenantId } from "@/lib/website/public-cache-notification";
@@ -542,6 +543,7 @@ export async function updateTournament(
     }
   }
 
+  void notifyPersonalDashboardForSportingEvent(tenantId, tournamentId);
   return getTournament(tenantId, tournamentId);
 }
 
@@ -571,6 +573,7 @@ export async function cancelTournament(tenantId: string, tournamentId: string): 
   }
 
   await prisma.event.update({ where: { id: tournamentId }, data: { status: "CANCELLED" } });
+  void notifyPersonalDashboardForSportingEvent(tenantId, tournamentId);
   return getTournament(tenantId, tournamentId);
 }
 
@@ -598,5 +601,6 @@ export async function restoreTournament(tenantId: string, tournamentId: string):
   }
 
   await prisma.event.update({ where: { id: tournamentId }, data: { status: "SCHEDULED" } });
+  void notifyPersonalDashboardForSportingEvent(tenantId, tournamentId);
   return getTournament(tenantId, tournamentId);
 }

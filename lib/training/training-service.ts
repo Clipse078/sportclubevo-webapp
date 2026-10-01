@@ -28,6 +28,7 @@
  *   - At least one weekday must be provided.
  */
 
+import { notifyPersonalDashboardForTeamSeason } from "@/lib/dashboard/read-model/invalidate-audience";
 import { prisma } from "@/lib/db/prisma";
 import type {
   TrainingSeriesDto,
@@ -319,7 +320,9 @@ export async function createTrainingSeries(
       include,
     });
 
-    return toDto(row as TrainingSeriesRow);
+    const dto = toDto(row as TrainingSeriesRow);
+    void notifyPersonalDashboardForTeamSeason(tenantId, input.teamSeasonId);
+    return dto;
   } catch (err) {
     if (
       err instanceof Error &&
@@ -391,7 +394,9 @@ export async function updateTrainingSeries(
       include,
     });
 
-    return toDto(row as TrainingSeriesRow);
+    const dto = toDto(row as TrainingSeriesRow);
+    void notifyPersonalDashboardForTeamSeason(tenantId, existing.teamSeasonId);
+    return dto;
   } catch (err) {
     if (
       err instanceof Error &&

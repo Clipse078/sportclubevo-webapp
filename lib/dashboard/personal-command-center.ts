@@ -35,6 +35,21 @@ import {
   type CommandCenterNewsItem,
 } from "@/lib/dashboard/command-center-presentation";
 import type { PersonalDashboardSecondaryActivity } from "@/lib/dashboard/secondary-activity-facts";
+import { resolveDashboardContext } from "@/lib/dashboard/dashboard-context";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  logSceHotfixLogin01StepFailed,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
+import {
+  buildDegradedPersonalCommandCenterData,
+  personalDashboardLegacyAggregationAllowed,
+  personalDashboardReadModelEnabled,
+  readPersonalDashboardProjection,
+  schedulePersonalDashboardReadModelRebuild,
+} from "@/lib/dashboard/read-model";
+import { rebuildPersonalDashboardReadModel } from "@/lib/dashboard/read-model/rebuild";
 
 export type { PersonalDashboardSecondaryActivity };
 
@@ -225,7 +240,7 @@ async function loadSecondarySnapshotSafe(args: Parameters<typeof loadSecondarySn
   }
 }
 
-export async function getPersonalCommandCenterData(args: {
+async function loadPersonalCommandCenterViaLegacyAggregation(args: {
   tenantId: string;
   actor: StrategicActor | null;
   fmtCfg: TenantFormatConfig;
@@ -234,6 +249,11 @@ export async function getPersonalCommandCenterData(args: {
   calendarMonthParam?: string | null;
   permissionKeys?: PermissionKey[];
 }): Promise<PersonalCommandCenterData> {
+  const trace = sceHotfixLogin01TraceEnabled();
+  if (trace) {
+    logSceHotfixLogin01Step("command-center-prep");
+  }
+
   const now = args.now ?? new Date();
   const timeZone = args.fmtCfg.timezone ?? "Europe/Zurich";
   const locale = args.fmtCfg.locale ?? "de-CH";
@@ -264,36 +284,118 @@ export async function getPersonalCommandCenterData(args: {
     viewAllHref: null,
   };
 
-  const [programme, personalWork, secondary] = await Promise.all([
-    loadPersonalProgramme({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      timeZone,
-      now,
-      from: queryRange.rangeStart,
-      to: queryRange.rangeEnd,
-      permissionKeys: args.permissionKeys,
-    }),
-    args.userId
-      ? loadDashboardPersonalWork({
+  if (trace) {
+    logSceHotfixLogin01StepDone("command-center-prep");
+    logSceHotfixLogin01Step("command-center-total");
+    logSceHotfixLogin01Step("command-center");
+  }
+
+  const dashboardContextPromise =
+    args.userId != null
+      ? resolveDashboardContext({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          actor: args.actor
+            ? {
+                permissionKeys: args.actor.permissionKeys,
+                roleKeys: [],
+                orgUnitIds: [],
+                targetGroupIds: [],
+              }
+            : undefined,
+        })
+      : Promise.resolve(null);
+
+  const bootstrapPermissionKeys =
+    args.permissionKeys ?? args.actor?.permissionKeys ?? undefined;
+
+  const [dashboardContext, programme, personalWork, secondary] = await Promise.all([
+    dashboardContextPromise,
+    (async () => {
+      if (trace) {
+        logSceHotfixLogin01Step("programme");
+      }
+      try {
+        return await loadPersonalProgramme({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          timeZone,
+          now,
+          from: queryRange.rangeStart,
+          to: queryRange.rangeEnd,
+          permissionKeys: bootstrapPermissionKeys,
+          personalContext: undefined,
+        });
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("programme", error);
+        }
+        throw error;
+      } finally {
+        if (trace) {
+          logSceHotfixLogin01StepDone("programme");
+        }
+      }
+    })(),
+    (async () => {
+      if (trace) {
+        logSceHotfixLogin01Step("personal-work");
+      }
+      try {
+        if (!args.userId) {
+          return {
+            attention: emptyPersonalAttention,
+            tasks: { authorized: false, count: null, preview: [] },
+          };
+        }
+        return await loadDashboardPersonalWork({
           tenantId: args.tenantId,
           userId: args.userId,
           fmtCfg: args.fmtCfg,
           locale,
           timeZone,
           now,
-        })
-      : Promise.resolve({
-          attention: emptyPersonalAttention,
-          tasks: { authorized: false, count: null, preview: [] },
-        }),
-    loadSecondarySnapshotSafe({
-      tenantId: args.tenantId,
-      actor: args.actor,
-      fmtCfg: args.fmtCfg,
-      now,
-    }),
+          permissionKeys: bootstrapPermissionKeys,
+        });
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("personal-work", error);
+        }
+        throw error;
+      } finally {
+        if (trace) {
+          logSceHotfixLogin01StepDone("personal-work");
+        }
+      }
+    })(),
+    (async () => {
+      if (trace) {
+        logSceHotfixLogin01Step("secondary-snapshot");
+      }
+      try {
+        return await loadSecondarySnapshotSafe({
+          tenantId: args.tenantId,
+          actor: args.actor,
+          fmtCfg: args.fmtCfg,
+          now,
+        });
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("secondary-snapshot", error);
+        }
+        throw error;
+      } finally {
+        if (trace) {
+          logSceHotfixLogin01StepDone("secondary-snapshot");
+        }
+      }
+    })(),
   ]);
+
+  if (trace) {
+    logSceHotfixLogin01StepDone("command-center");
+    logSceHotfixLogin01Step("command-center-merge");
+  }
 
   const programmeFeedItems = filterProgrammeItemsToRange(programme.items, feedRange);
   const programmeFeedGroups = buildProgrammeFeedGroups({
@@ -302,6 +404,11 @@ export async function getPersonalCommandCenterData(args: {
     locale,
     now,
   });
+
+  if (trace) {
+    logSceHotfixLogin01StepDone("command-center-merge");
+    logSceHotfixLogin01StepDone("command-center-total");
+  }
 
   const tasks = personalWork.tasks;
 
@@ -324,7 +431,99 @@ export async function getPersonalCommandCenterData(args: {
   };
 }
 
+export async function getPersonalCommandCenterData(args: {
+  tenantId: string;
+  actor: StrategicActor | null;
+  fmtCfg: TenantFormatConfig;
+  userId?: string | null;
+  now?: Date;
+  calendarMonthParam?: string | null;
+  permissionKeys?: PermissionKey[];
+}): Promise<PersonalCommandCenterData> {
+  const permissionKeys = (args.permissionKeys ??
+    args.actor?.permissionKeys ??
+    []) as PermissionKey[];
+
+  if (
+    personalDashboardReadModelEnabled() &&
+    args.userId &&
+    !personalDashboardLegacyAggregationAllowed()
+  ) {
+    const projectionRead = await readPersonalDashboardProjection({
+      tenantId: args.tenantId,
+      userId: args.userId,
+      permissionKeys,
+      fmtCfg: args.fmtCfg,
+      calendarMonthParam: args.calendarMonthParam,
+      now: args.now,
+    });
+
+    let core: PersonalCommandCenterData;
+    if (projectionRead.status === "hit" || projectionRead.status === "stale") {
+      core = projectionRead.data;
+    } else {
+      void schedulePersonalDashboardReadModelRebuild({
+        tenantId: args.tenantId,
+        userId: args.userId,
+      });
+      if (process.env.SCE_PERF_DASHBOARD_02_SYNC_REBUILD === "1") {
+        await rebuildPersonalDashboardReadModel({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+        const retry = await readPersonalDashboardProjection({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          permissionKeys,
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+        if (retry.status === "hit" || retry.status === "stale") {
+          core = retry.data;
+        } else {
+          core = buildDegradedPersonalCommandCenterData({
+            fmtCfg: args.fmtCfg,
+            calendarMonthParam: args.calendarMonthParam,
+            now: args.now,
+          });
+        }
+      } else {
+        core = buildDegradedPersonalCommandCenterData({
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+      }
+    }
+
+    const now = args.now ?? new Date();
+    const secondary = await loadSecondarySnapshotSafe({
+      tenantId: args.tenantId,
+      actor: args.actor,
+      fmtCfg: args.fmtCfg,
+      now,
+    });
+
+    return {
+      ...core,
+      newsItems: secondary.newsItems,
+      activitySources: secondary.activitySources,
+    };
+  }
+
+  return loadPersonalCommandCenterViaLegacyAggregation(args);
+}
+
 /** @internal test helper */
 export function personalCommandCenterUsesSingleProgrammeLoader(): true {
   return true;
+}
+
+/** @internal test helper — SCE-PERF-DASHBOARD-02 */
+export function personalCommandCenterUsesReadModelWarmPath(): boolean {
+  return personalDashboardReadModelEnabled() && !personalDashboardLegacyAggregationAllowed();
 }

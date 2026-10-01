@@ -29,6 +29,7 @@
  *   - No raw provider payloads are written to logs or error messages.
  */
 
+import { notifyPersonalDashboardForSportingEvent } from "@/lib/dashboard/read-model/invalidate-audience";
 import { assertEventStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import { prisma } from "@/lib/db/prisma";
 import { classifyProviderMatchDisposition } from "@/lib/sporting-data/provider-state";
@@ -422,6 +423,8 @@ export async function updateMatchRecord(
         data: mappingFields,
       });
     });
+
+    void notifyPersonalDashboardForSportingEvent(context.tenantId, eventId);
 
     return {
       status: "updated",

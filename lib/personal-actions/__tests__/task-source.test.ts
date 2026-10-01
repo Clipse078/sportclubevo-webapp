@@ -57,7 +57,7 @@ describe("AUFGABEN-05 — task PersonalAction source", () => {
     });
     expect(listMyTasks).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: "tenant-a", userId: "user-a" }),
-      { openOnly: true },
+      expect.objectContaining({ openOnly: true, now: expect.any(Date) }),
     );
   });
 

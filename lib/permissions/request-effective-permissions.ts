@@ -6,6 +6,7 @@
 
 import { cache } from "react";
 import { prisma } from "@/lib/db/prisma";
+import { recordSceHotfixLogin01DuplicateProbe } from "@/lib/incident/sce-hotfix-login-01-trace";
 import {
   createEffectivePermissionResolver,
   type EffectivePermissionsResult,
@@ -18,6 +19,7 @@ export const getRequestEffectivePermissions = cache(
     userId: string,
     tenantId: string | undefined,
   ): Promise<EffectivePermissionsResult> => {
+    recordSceHotfixLogin01DuplicateProbe("getRequestEffectivePermissions");
     const resolver = createEffectivePermissionResolver(prisma);
     return resolver.getEffectivePermissions({ userId, tenantId });
   },

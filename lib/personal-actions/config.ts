@@ -8,6 +8,14 @@
 export const PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS = 90;
 
 /**
+ * Dashboard hot path: caps upcoming session/event rows loaded before in-memory
+ * participation join. Full inbox (no actionableItemCap) keeps horizon completeness.
+ */
+export function resolveDashboardAttendanceEventFetchCap(actionableCap: number): number {
+  return Math.min(400, Math.max(actionableCap * 8, 80));
+}
+
+/**
  * Completeness contract: attendance obligations are bounded only by
  * {@link PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS} and canonical upcoming
  * `startAt >= now` semantics. We do not truncate per team season, because

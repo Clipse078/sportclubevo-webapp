@@ -1,5 +1,4 @@
 import { resolvePersonalActionSourceContext } from "./load-context";
-import { dedupePersonalActionsById } from "./ordering";
 import type { LoadPersonalActionsArgs, PersonalActionCounts } from "./types";
 import { taskPersonalActionSource } from "./sources/task-source";
 import { attendancePersonalActionSource } from "./sources/attendance-source";
@@ -10,18 +9,16 @@ export async function countPersonalActions(
 ): Promise<PersonalActionCounts> {
   const ctx = await resolvePersonalActionSourceContext(args);
 
-  const [taskActionable, attendanceActions, requirementActionable] = await Promise.all([
+  const [taskActionable, attendanceActionable, requirementActionable] = await Promise.all([
     taskPersonalActionSource.countActionable(ctx),
-    attendancePersonalActionSource.loadActionable(ctx),
+    attendancePersonalActionSource.countActionable(ctx),
     requirementPersonalActionSource.countActionable(ctx),
   ]);
 
-  const uniqueAttendance = dedupePersonalActionsById(attendanceActions);
-
   return {
     taskActionable,
-    attendanceActionable: uniqueAttendance.length,
+    attendanceActionable,
     requirementActionable,
-    totalActionable: taskActionable + uniqueAttendance.length + requirementActionable,
+    totalActionable: taskActionable + attendanceActionable + requirementActionable,
   };
 }

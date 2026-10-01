@@ -2,7 +2,10 @@ import { personalRequirementExecutionHref } from "@/lib/requirements/personal-na
 import { buildRequirementPersonalActionId } from "../identity";
 import type { PersonalAction } from "../types";
 import type { PersonalActionSourceAdapter, PersonalActionSourceContext } from "./types";
-import { loadRequirementObligationCandidates } from "./requirement-obligations";
+import {
+  countOpenRequirementObligationsForUser,
+  loadRequirementObligationCandidates,
+} from "./requirement-obligations";
 
 function mapCandidateToPersonalAction(
   candidate: Awaited<ReturnType<typeof loadRequirementObligationCandidates>>[number],
@@ -40,12 +43,16 @@ export const requirementPersonalActionSource: PersonalActionSourceAdapter = {
   sourceType: "REQUIREMENT",
 
   async loadActionable(ctx: PersonalActionSourceContext): Promise<PersonalAction[]> {
-    const candidates = await loadRequirementObligationCandidates(ctx.tenantId, ctx.userId);
+    const candidates = await loadRequirementObligationCandidates(
+      ctx.tenantId,
+      ctx.userId,
+      ctx.authorizedPersonIds,
+      ctx.actionableItemCap,
+    );
     return candidates.map(mapCandidateToPersonalAction);
   },
 
   async countActionable(ctx: PersonalActionSourceContext): Promise<number> {
-    const actions = await this.loadActionable(ctx);
-    return actions.length;
+    return countOpenRequirementObligationsForUser(ctx.tenantId, ctx.userId, ctx.authorizedPersonIds);
   },
 };

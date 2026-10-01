@@ -3,8 +3,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const mocks = vi.hoisted(() => ({
   loadPersonalActionsModuleCapabilities: vi.fn(),
-  countPersonalActions: vi.fn(),
-  loadPersonalActions: vi.fn(),
+  loadPersonalActionsWithCounts: vi.fn(),
   loadDomainOperationalAttention: vi.fn(),
   getRequestEffectivePermissions: vi.fn(),
 }));
@@ -14,8 +13,7 @@ vi.mock("@/lib/personal-actions/access", () => ({
 }));
 
 vi.mock("@/lib/personal-actions", () => ({
-  countPersonalActions: mocks.countPersonalActions,
-  loadPersonalActions: mocks.loadPersonalActions,
+  loadPersonalActionsWithCounts: mocks.loadPersonalActionsWithCounts,
 }));
 
 vi.mock("@/lib/domain-attention/load-domain-operational-attention", () => ({
@@ -77,7 +75,7 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
     expect(work.attention.totalCount).toBe(1);
     expect(work.attention.items[0]?.sourceType).toBe("DOMAIN_OPERATIONAL");
     expect(work.tasks.authorized).toBe(false);
-    expect(mocks.loadPersonalActions).not.toHaveBeenCalled();
+    expect(mocks.loadPersonalActionsWithCounts).not.toHaveBeenCalled();
   });
 
   it("A — surfaces urgent tasks and obligations; preview excludes attention tasks", async () => {
@@ -85,13 +83,14 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
       personalInbox: true,
       permissionKeys: [PERMISSIONS.TASKS_VIEW],
     });
-    mocks.countPersonalActions.mockResolvedValue({
-      totalActionable: 3,
-      taskActionable: 2,
-      attendanceActionable: 1,
-      requirementActionable: 0,
-    });
-    mocks.loadPersonalActions.mockResolvedValue([
+    mocks.loadPersonalActionsWithCounts.mockResolvedValue({
+      counts: {
+        totalActionable: 3,
+        taskActionable: 2,
+        attendanceActionable: 1,
+        requirementActionable: 0,
+      },
+      actions: [
       {
         id: "task:overdue",
         sourceType: "TASK",
@@ -130,7 +129,8 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
         actionKind: "PARTICIPATION_RESPONSE",
         context: { teamDisplayName: "F2" },
       },
-    ]);
+    ],
+    });
 
     const work = await loadDashboardPersonalWork({
       tenantId: "tenant-a",
@@ -154,20 +154,22 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
       personalInbox: true,
       permissionKeys: [PERMISSIONS.TASKS_VIEW],
     });
-    mocks.countPersonalActions.mockResolvedValue({
-      totalActionable: 0,
-      taskActionable: 0,
-      attendanceActionable: 0,
-      requirementActionable: 0,
+    mocks.loadPersonalActionsWithCounts.mockResolvedValue({
+      counts: {
+        totalActionable: 0,
+        taskActionable: 0,
+        attendanceActionable: 0,
+        requirementActionable: 0,
+      },
+      actions: [],
     });
-    mocks.loadPersonalActions.mockResolvedValue([]);
 
     await loadDashboardPersonalWork({
       tenantId: "tenant-b",
       userId: "user-a",
     });
 
-    expect(mocks.loadPersonalActions).toHaveBeenCalledWith(
+    expect(mocks.loadPersonalActionsWithCounts).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: "tenant-b", userId: "user-a" }),
     );
   });
@@ -177,13 +179,14 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
       personalInbox: true,
       permissionKeys: [PERMISSIONS.TASKS_VIEW],
     });
-    mocks.countPersonalActions.mockResolvedValue({
-      totalActionable: 1,
-      taskActionable: 1,
-      attendanceActionable: 0,
-      requirementActionable: 0,
-    });
-    mocks.loadPersonalActions.mockResolvedValue([
+    mocks.loadPersonalActionsWithCounts.mockResolvedValue({
+      counts: {
+        totalActionable: 1,
+        taskActionable: 1,
+        attendanceActionable: 0,
+        requirementActionable: 0,
+      },
+      actions: [
       {
         id: "task:one",
         sourceType: "TASK",
@@ -197,7 +200,8 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
         createdAt: "2026-09-01T00:00:00.000Z",
         priority: "NORMAL",
       },
-    ]);
+    ],
+    });
     mocks.loadDomainOperationalAttention.mockResolvedValue({
       items: [
         {
@@ -232,18 +236,44 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
     ]);
   });
 
+  it("reuses pre-resolved permissionKeys and skips effective-permissions resolver", async () => {
+    mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
+      personalInbox: true,
+      permissionKeys: [PERMISSIONS.TASKS_VIEW],
+    });
+    mocks.loadPersonalActionsWithCounts.mockResolvedValue({
+      counts: {
+        totalActionable: 0,
+        taskActionable: 0,
+        attendanceActionable: 0,
+        requirementActionable: 0,
+      },
+      actions: [],
+    });
+
+    await loadDashboardPersonalWork({
+      tenantId: "tenant-a",
+      userId: "user-a",
+      permissionKeys: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.COMMUNICATION_TEAM_VIEW],
+    });
+
+    expect(mocks.getRequestEffectivePermissions).not.toHaveBeenCalled();
+  });
+
   it("D — surfaces operational source degradation without implying all clear", async () => {
     mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
       personalInbox: true,
       permissionKeys: [PERMISSIONS.TASKS_VIEW],
     });
-    mocks.countPersonalActions.mockResolvedValue({
-      totalActionable: 0,
-      taskActionable: 0,
-      attendanceActionable: 0,
-      requirementActionable: 0,
+    mocks.loadPersonalActionsWithCounts.mockResolvedValue({
+      counts: {
+        totalActionable: 0,
+        taskActionable: 0,
+        attendanceActionable: 0,
+        requirementActionable: 0,
+      },
+      actions: [],
     });
-    mocks.loadPersonalActions.mockResolvedValue([]);
     mocks.loadDomainOperationalAttention.mockResolvedValue({
       items: [],
       failedSourceKeys: ["training"],

@@ -32,8 +32,11 @@ function formatPersonDisplayName(person: {
 export async function loadRequirementObligationCandidates(
   tenantId: string,
   userId: string,
+  authorizedPersonIds?: readonly string[],
+  take?: number,
 ): Promise<RequirementObligationCandidate[]> {
-  const personIds = await getAuthorizedPersonIdsForUser(tenantId, userId);
+  const personIds =
+    authorizedPersonIds ?? (await getAuthorizedPersonIdsForUser(tenantId, userId));
   if (personIds.length === 0) {
     return [];
   }
@@ -48,6 +51,8 @@ export async function loadRequirementObligationCandidates(
         tenantId,
         ...openAcknowledgeableRequirementRecipientForPersons(personIds),
       },
+      orderBy: [{ requirement: { dueAt: { sort: "asc", nulls: "last" } } }, { id: "asc" }],
+      ...(take != null && take > 0 ? { take } : {}),
       select: {
         id: true,
         requirementId: true,
@@ -88,8 +93,10 @@ export async function loadRequirementObligationCandidates(
 export async function countOpenRequirementObligationsForUser(
   tenantId: string,
   userId: string,
+  authorizedPersonIds?: readonly string[],
 ): Promise<number> {
-  const personIds = await getAuthorizedPersonIdsForUser(tenantId, userId);
+  const personIds =
+    authorizedPersonIds ?? (await getAuthorizedPersonIdsForUser(tenantId, userId));
   if (personIds.length === 0) {
     return 0;
   }

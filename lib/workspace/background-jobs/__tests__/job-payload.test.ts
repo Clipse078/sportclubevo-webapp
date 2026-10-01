@@ -24,6 +24,14 @@ describe("workspace background job payload", () => {
     );
   });
 
+  it("parses personal dashboard rebuild payload", () => {
+    const payload = parseWorkspaceBackgroundJobPayload(
+      WorkspaceBackgroundJobType.PERSONAL_DASHBOARD_REBUILD,
+      { v: 1, userId: "user-1" },
+    );
+    expect(payload.userId).toBe("user-1");
+  });
+
   it("rejects unsafe payload tokens", () => {
     expect(() =>
       assertWorkspaceBackgroundJobPayloadSafeForPersistence({

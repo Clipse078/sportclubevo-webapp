@@ -16,6 +16,8 @@
  */
 
 import { WaitingListStatus, WaitingListPriority, WaitingListScopeType, RegistrationType } from "@prisma/client";
+import { invalidatePersonalDashboardReadModelsForPerson } from "@/lib/dashboard/read-model/invalidate";
+import { notifyPersonalDashboardForTeamSeason } from "@/lib/dashboard/read-model/invalidate-audience";
 import { prisma } from "@/lib/db/prisma";
 import { requireTenant } from "@/lib/tenants/require-tenant";
 import { logAction } from "@/lib/audit/log-action";
@@ -416,6 +418,14 @@ export async function placeWaitingListEntry(
       afterJson: { status: "ACCEPTED", waitingListEntryId: entryId },
     }),
   ]);
+
+  void invalidatePersonalDashboardReadModelsForPerson({
+    tenantId,
+    personId: effectivePersonId,
+  });
+  if (targetTeamSeasonId) {
+    void notifyPersonalDashboardForTeamSeason(tenantId, targetTeamSeasonId);
+  }
 
   return getWaitingListEntryForTenant(tenantSlug, entryId);
 }

@@ -47,6 +47,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
+import { recordSceHotfixLogin01DuplicateProbe } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { getCurrentTenantContextByIdCached } from "@/lib/server/request-cache";
 import {
   getCurrentTenantContext,
@@ -54,6 +55,7 @@ import {
 } from "@/lib/tenants/context";
 
 const resolveActiveTenantIdFromSession = cache(async (): Promise<string | null> => {
+  recordSceHotfixLogin01DuplicateProbe("auth()");
   const session = await auth();
   return session?.user?.activeTenantId ?? null;
 });
@@ -78,8 +80,10 @@ export async function requireActiveTenantId(): Promise<string> {
 
 /** Returns the full TenantContext for the session's active tenant, or null. */
 export async function getActiveTenant(): Promise<TenantContext | null> {
+  recordSceHotfixLogin01DuplicateProbe("getActiveTenant()");
   const tenantId = await getActiveTenantId();
   if (!tenantId) return null;
+  recordSceHotfixLogin01DuplicateProbe("getCurrentTenantContextByIdCached");
   return getCurrentTenantContextByIdCached(tenantId);
 }
 

@@ -7,6 +7,11 @@ const clubDashboardSource = readFileSync(
   "utf8",
 );
 
+const clubDashboardDeferredSource = readFileSync(
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  "utf8",
+);
+
 const workspaceSource = readFileSync(
   join(process.cwd(), "components/ui/dashboard/PersonalDashboardWorkspace.tsx"),
   "utf8",
@@ -88,15 +93,15 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
   });
 
   it("preserves personalized programme and calendar data wiring", () => {
-    expect(clubDashboardSource).toContain("getPersonalCommandCenterData");
-    expect(clubDashboardSource).toContain("programmeFeedGroups");
-    expect(clubDashboardSource).toContain("programmeItems");
+    expect(clubDashboardDeferredSource).toContain("getPersonalCommandCenterData");
+    expect(clubDashboardDeferredSource).toContain("programmeFeedGroups");
+    expect(clubDashboardDeferredSource).toContain("programmeItems");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
     expect(workspaceSource).toContain("onSelectedDayChange");
   });
 
   it("preserves attention and tasks data sources", () => {
-    expect(clubDashboardSource).toContain("<PersonalAttention");
+    expect(clubDashboardDeferredSource).toContain("<PersonalAttention");
     expect(clubDashboardSource).toContain("personal.personalAttention.items");
     expect(clubDashboardSource).toContain("personalTaskPreview");
   });

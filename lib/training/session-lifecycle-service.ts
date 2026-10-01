@@ -34,6 +34,7 @@ import {
   TrainingSessionInvalidTransitionError,
   TrainingSessionNotFoundError,
 } from "./errors";
+import { notifyPersonalDashboardForTrainingSession } from "@/lib/dashboard/read-model/invalidate-audience";
 import { findTrainingSessionById, updateTrainingSessionStatus } from "./queries";
 import { getTrainingSession } from "./session-generation-service";
 import type { TrainingSessionDto } from "./types";
@@ -68,7 +69,9 @@ export async function cancelTrainingSession(
   }
 
   await updateTrainingSessionStatus(sessionId, "CANCELLED");
-  return getTrainingSession(tenantId, sessionId);
+  const dto = await getTrainingSession(tenantId, sessionId);
+  void notifyPersonalDashboardForTrainingSession(tenantId, sessionId);
+  return dto;
 }
 
 /**
@@ -100,5 +103,7 @@ export async function restoreTrainingSession(
   }
 
   await updateTrainingSessionStatus(sessionId, "SCHEDULED");
-  return getTrainingSession(tenantId, sessionId);
+  const dto = await getTrainingSession(tenantId, sessionId);
+  void notifyPersonalDashboardForTrainingSession(tenantId, sessionId);
+  return dto;
 }

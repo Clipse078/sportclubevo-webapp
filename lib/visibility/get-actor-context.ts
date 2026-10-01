@@ -34,7 +34,14 @@
 import { buildActorContext } from "./actor-context";
 import { loadOrgUnitIds, loadTargetGroupIds } from "@/lib/org/queries";
 import { prisma } from "@/lib/db/prisma";
-import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  logSceHotfixLogin01StepFailed,
+  recordSceHotfixLogin01DuplicateProbe,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
 
 type SessionUser = {
   id: string;
@@ -52,6 +59,12 @@ type SessionUser = {
  * only as a backwards-compat fallback in single-tenant deployments.
  */
 export async function getActorContext(user: SessionUser, tenantId?: string) {
+  recordSceHotfixLogin01DuplicateProbe("getActorContext");
+  const trace = sceHotfixLogin01TraceEnabled();
+  if (trace) {
+    logSceHotfixLogin01Step("actor-context");
+  }
+
   let orgUnitIds: string[] = [];
   let targetGroupIds: string[] = [];
   let roleKeys = user.roleKeys ?? [];
@@ -59,29 +72,47 @@ export async function getActorContext(user: SessionUser, tenantId?: string) {
 
   if (tenantId) {
     try {
-      const membership = await prisma.tenantMembership.findFirst({
-        where: {
-          tenantId,
-          userId: user.id,
-          isActive: true,
-          user: { isActive: true },
-          tenant: { status: "ACTIVE" },
-        },
-        select: { id: true },
-      });
+      if (trace) {
+        logSceHotfixLogin01Step("actor-membership");
+      }
+      let membership: { id: string } | null;
+      try {
+        membership = await prisma.tenantMembership.findFirst({
+          where: {
+            tenantId,
+            userId: user.id,
+            isActive: true,
+            user: { isActive: true },
+            tenant: { status: "ACTIVE" },
+          },
+          select: { id: true },
+        });
+        if (trace) {
+          logSceHotfixLogin01StepDone("actor-membership");
+        }
+      } catch (error) {
+        if (trace) {
+          logSceHotfixLogin01StepFailed("actor-membership", error);
+        }
+        throw error;
+      }
       if (!membership) {
-        return buildActorContext(
+        const actor = buildActorContext(
           { id: user.id, roleKeys: [], permissionKeys: [] },
           [],
           [],
         );
+        if (trace) {
+          logSceHotfixLogin01StepDone("actor-context");
+        }
+        return actor;
       }
 
+      if (trace) {
+        logSceHotfixLogin01Step("actor-permissions");
+      }
       const [effective, assignments] = await Promise.all([
-        createEffectivePermissionResolver(prisma).getEffectivePermissions({
-          userId: user.id,
-          tenantId,
-        }),
+        getRequestEffectivePermissions(user.id, tenantId),
         prisma.userRole.findMany({
           where: {
             userId: user.id,
@@ -91,9 +122,15 @@ export async function getActorContext(user: SessionUser, tenantId?: string) {
           select: { role: { select: { key: true } } },
         }),
       ]);
+      if (trace) {
+        logSceHotfixLogin01StepDone("actor-permissions");
+      }
       permissionKeys = [...effective.platform, ...effective.tenant];
       roleKeys = assignments.map((assignment) => assignment.role.key);
-    } catch {
+    } catch (error) {
+      if (trace) {
+        logSceHotfixLogin01StepFailed("actor-context", error);
+      }
       return buildActorContext(
         { id: user.id, roleKeys: [], permissionKeys: [] },
         [],
@@ -103,19 +140,29 @@ export async function getActorContext(user: SessionUser, tenantId?: string) {
   }
 
   try {
+    if (trace) {
+      logSceHotfixLogin01Step("actor-org-scope");
+    }
     [orgUnitIds, targetGroupIds] = await Promise.all([
       loadOrgUnitIds(user.id, tenantId),
       loadTargetGroupIds(user.id, tenantId),
     ]);
+    if (trace) {
+      logSceHotfixLogin01StepDone("actor-org-scope");
+    }
   } catch {
     // Tables may not yet exist (pre-migration environment).
     // [] is the documented safe default — no false-positive visibility grants.
   }
 
-  return buildActorContext(
+  const actor = buildActorContext(
     { id: user.id, roleKeys, permissionKeys },
     orgUnitIds,
     targetGroupIds,
     tenantId,
   );
+  if (trace) {
+    logSceHotfixLogin01StepDone("actor-context");
+  }
+  return actor;
 }

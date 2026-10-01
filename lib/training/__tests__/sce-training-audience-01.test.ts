@@ -81,6 +81,31 @@ vi.mock("@/lib/communication/team/team-communication-authorization", () => ({
     mocks.resolveTeamCommunicationAuthorization(...args),
 }));
 
+vi.mock("@/lib/communication/team/team-communication-authorization-scope", () => ({
+  listTeamIdsWithTeamCommunicationView: async (input: {
+    tenantId: string;
+    userId: string;
+  }) => {
+    const teams = await mocks.team.findMany({
+      where: { tenantId: input.tenantId },
+      select: { id: true },
+    });
+    const authorized: string[] = [];
+    for (const team of teams) {
+      const auth = await mocks.resolveTeamCommunicationAuthorization({
+        tenantId: input.tenantId,
+        userId: input.userId,
+        teamId: team.id,
+      });
+      if (auth?.canView) {
+        authorized.push(team.id);
+      }
+    }
+    return authorized;
+  },
+  getTeamCommunicationAuthorizationScope: vi.fn(),
+}));
+
 vi.mock("@/lib/communication/platform/recipient-resolution/resolve-recipients", () => ({
   resolveCommunicationRecipients: (...args: unknown[]) => mocks.resolveCommunicationRecipients(...args),
 }));

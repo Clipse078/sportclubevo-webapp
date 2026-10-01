@@ -3,6 +3,7 @@
  */
 
 import { Prisma, type RequirementStatus } from "@prisma/client";
+import { notifyPersonalDashboardForPersonIds } from "@/lib/dashboard/read-model/invalidate-audience";
 import { prisma } from "@/lib/db/prisma";
 import {
   assertActorCanRespondForPerson,
@@ -508,6 +509,7 @@ export async function activateRequirement(
     });
   });
 
+  void notifyPersonalDashboardForPersonIds(ctx.tenantId, audiencePersonIds);
   return mapRequirement(await loadRequirementOrThrow(ctx.tenantId, requirementId));
 }
 
@@ -685,6 +687,7 @@ export async function acknowledgeRequirementRecipient(
     },
   });
 
+  void notifyPersonalDashboardForPersonIds(ctx.tenantId, [existing.subjectPersonId]);
   return mapRecipient(updated);
 }
 
@@ -705,6 +708,14 @@ export async function closeRequirement(
     data: { status: "CLOSED", closedAt: new Date() },
     include: REQUIREMENT_INCLUDE,
   });
+  const recipients = await prisma.requirementRecipient.findMany({
+    where: { tenantId: ctx.tenantId, requirementId, removedAt: null },
+    select: { subjectPersonId: true },
+  });
+  void notifyPersonalDashboardForPersonIds(
+    ctx.tenantId,
+    recipients.map((r) => r.subjectPersonId),
+  );
   return mapRequirement(row);
 }
 
@@ -742,6 +753,10 @@ export async function cancelRequirement(
     recipients,
   });
 
+  void notifyPersonalDashboardForPersonIds(
+    ctx.tenantId,
+    recipients.map((r) => r.subjectPersonId),
+  );
   return mapRequirement(row);
 }
 
