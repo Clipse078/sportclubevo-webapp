@@ -64,6 +64,7 @@ import {
   snapshotTaskAccessGrantsToChild,
   validateTaskAccessGrantMutation,
 } from "./task-access-grants";
+import { listMyOpenTasksForPersonalActions } from "./my-open-tasks-personal-actions";
 
 const TASK_INCLUDE = TASK_AUTH_INCLUDE;
 
@@ -595,6 +596,17 @@ export async function listMyTasks(
   filter?: ListTasksFilter,
 ): Promise<PersonalTaskDto[]> {
   assertCanView(ctx);
+
+  if (
+    filter?.openOnly &&
+    filter.limit != null &&
+    filter.limit > 0
+  ) {
+    return listMyOpenTasksForPersonalActions(ctx, {
+      limit: filter.limit,
+      now: filter.now,
+    });
+  }
 
   const statusFilter: Prisma.TaskWhereInput = filter?.openOnly
     ? { status: { in: [TaskStatusEnum.OPEN, TaskStatusEnum.IN_PROGRESS] } }

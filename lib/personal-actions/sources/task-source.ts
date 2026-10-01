@@ -42,6 +42,7 @@ export const taskPersonalActionSource: PersonalActionSourceAdapter = {
 
     const tasks = await listMyTasks(taskCtx, {
       openOnly: true,
+      now: ctx.now,
       ...(ctx.actionableItemCap != null && ctx.actionableItemCap > 0
         ? { limit: ctx.actionableItemCap }
         : {}),

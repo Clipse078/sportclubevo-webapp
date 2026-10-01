@@ -32,8 +32,11 @@ vi.mock("@/lib/personal-actions/load-context", () => ({
   }),
 }));
 
+const authorizedPersonIdsMock = vi.fn().mockResolvedValue(["p1"]);
+
 vi.mock("@/lib/participation/request-scoped-person-ids", () => ({
-  getAuthorizedPersonIdsForUserInRequest: vi.fn().mockResolvedValue(["p1"]),
+  getAuthorizedPersonIdsForUserInRequest: (...args: unknown[]) =>
+    authorizedPersonIdsMock(...args),
 }));
 
 import { taskPersonalActionSource } from "@/lib/personal-actions/sources/task-source";
@@ -41,6 +44,7 @@ import { attendancePersonalActionSource } from "@/lib/personal-actions/sources/a
 import { requirementPersonalActionSource } from "@/lib/personal-actions/sources/requirement-source";
 import { loadPersonalActionsWithCounts } from "../load-personal-actions";
 import { countPersonalActions } from "../count-personal-actions";
+import { readFileSync as readTaskService } from "node:fs";
 
 describe("SCE-HOTFIX-LOGIN-01 — dashboard personal-actions performance structure", () => {
   beforeEach(() => {
@@ -73,6 +77,28 @@ describe("SCE-HOTFIX-LOGIN-01 — dashboard personal-actions performance structu
     expect(attendancePersonalActionSource.loadActionable).toHaveBeenCalledTimes(1);
     expect(attendancePersonalActionSource.countActionable).not.toHaveBeenCalled();
     expect(requirementPersonalActionSource.countActionable).not.toHaveBeenCalled();
+  });
+
+  it("resolves authorized person ids once per loadPersonalActionsWithCounts call", async () => {
+    await loadPersonalActionsWithCounts({
+      tenantId: "t1",
+      userId: "u1",
+      permissionKeys: [PERMISSIONS.TASKS_VIEW],
+      limit: 50,
+    });
+    expect(authorizedPersonIdsMock).toHaveBeenCalledTimes(1);
+    expect(authorizedPersonIdsMock).toHaveBeenCalledWith("t1", "u1");
+  });
+
+  it("dashboard task path delegates to bounded personal-actions list when limit set", () => {
+    const taskService = readTaskService("/workspace/lib/tasks/task-service.ts", "utf8");
+    expect(taskService).toContain("listMyOpenTasksForPersonalActions");
+    const personalList = readTaskService(
+      "/workspace/lib/tasks/my-open-tasks-personal-actions.ts",
+      "utf8",
+    );
+    expect(personalList).not.toMatch(/include:\s*TASK_AUTH_INCLUDE/);
+    expect(personalList).toContain("PERSONAL_ACTION_TASK_ROW_SELECT");
   });
 
   it("countPersonalActions uses attendance countActionable (not full loadActionable)", () => {

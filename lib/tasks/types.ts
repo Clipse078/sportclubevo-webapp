@@ -122,6 +122,8 @@ export type ListTasksFilter = {
   rootsOnly?: boolean;
   /** Max rows after personal ordering (dashboard preview, etc.). */
   limit?: number;
+  /** Reference time for personal urgency ordering (tests / SSR snapshots). */
+  now?: Date;
 };
 
 export type TaskServiceContext = {

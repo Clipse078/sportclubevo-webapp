@@ -42,11 +42,41 @@ export function logSceHotfixLogin01Step(step: string): void {
   console.info(`${PREFIX} cid=${correlationId ?? "?"} step=${step} elapsedMs=${steps.at(-1)?.atMs ?? 0} phase=start`);
 }
 
+const stepStartedAtMs = new Map<string, number>();
+
 export function logSceHotfixLogin01StepDone(step: string): void {
   if (!TRACE_ENABLED || originMs == null) return;
   const elapsedMs = Date.now() - originMs;
   steps.push({ name: `${step}:done`, atMs: elapsedMs });
   console.info(`${PREFIX} cid=${correlationId ?? "?"} step=${step} elapsedMs=${elapsedMs} phase=done`);
+}
+
+/** Per-step wall duration (step start → done), plus optional non-PII metrics. */
+export function logSceHotfixLogin01StepFinished(
+  step: string,
+  metrics?: Record<string, number | string | boolean>,
+): void {
+  if (!TRACE_ENABLED || originMs == null) return;
+  const startedAt = stepStartedAtMs.get(step);
+  const durationMs = startedAt != null ? Date.now() - startedAt : 0;
+  stepStartedAtMs.delete(step);
+  const elapsedMs = Date.now() - originMs;
+  steps.push({ name: `${step}:done`, atMs: elapsedMs });
+  const metricParts =
+    metrics == null
+      ? ""
+      : ` ${Object.entries(metrics)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(" ")}`;
+  console.info(
+    `${PREFIX} cid=${correlationId ?? "?"} step=${step}:done durationMs=${durationMs} elapsedMs=${elapsedMs}${metricParts}`,
+  );
+}
+
+export function markSceHotfixLogin01StepStart(step: string): void {
+  if (!TRACE_ENABLED || originMs == null) return;
+  stepStartedAtMs.set(step, Date.now());
+  logSceHotfixLogin01Step(step);
 }
 
 export function logSceHotfixLogin01StepFailed(step: string, error: unknown): void {
