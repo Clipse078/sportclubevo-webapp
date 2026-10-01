@@ -35,6 +35,7 @@ import {
   type CommandCenterNewsItem,
 } from "@/lib/dashboard/command-center-presentation";
 import type { PersonalDashboardSecondaryActivity } from "@/lib/dashboard/secondary-activity-facts";
+import { resolveDashboardContext } from "@/lib/dashboard/dashboard-context";
 import {
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
@@ -280,6 +281,25 @@ export async function getPersonalCommandCenterData(args: {
     logSceHotfixLogin01Step("command-center");
   }
 
+  const dashboardContext =
+    args.userId != null
+      ? await resolveDashboardContext({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          actor: args.actor
+            ? {
+                permissionKeys: args.actor.permissionKeys,
+                roleKeys: [],
+                orgUnitIds: [],
+                targetGroupIds: [],
+              }
+            : undefined,
+        })
+      : null;
+
+  const resolvedPermissionKeys =
+    dashboardContext?.permissionKeys ?? args.permissionKeys ?? args.actor?.permissionKeys;
+
   const [programme, personalWork, secondary] = await Promise.all([
     (async () => {
       if (trace) {
@@ -293,7 +313,8 @@ export async function getPersonalCommandCenterData(args: {
           now,
           from: queryRange.rangeStart,
           to: queryRange.rangeEnd,
-          permissionKeys: args.permissionKeys,
+          permissionKeys: resolvedPermissionKeys,
+          personalContext: dashboardContext?.personalContext,
         });
       } catch (error) {
         if (trace) {
@@ -324,7 +345,7 @@ export async function getPersonalCommandCenterData(args: {
           locale,
           timeZone,
           now,
-          permissionKeys: args.permissionKeys ?? args.actor?.permissionKeys,
+          permissionKeys: resolvedPermissionKeys,
         });
       } catch (error) {
         if (trace) {

@@ -2,6 +2,7 @@ import {
   getPersonallyRelevantTeamIds,
   resolvePersonalContext,
 } from "@/lib/dashboard/personal-context";
+import type { PersonalContext } from "@/lib/dashboard/personal-context/types";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { loadTeamEventProgrammeItems } from "./adapters/team-event-programme-adapter";
@@ -31,6 +32,8 @@ export type LoadPersonalProgrammeArgs = {
   to?: Date;
   /** Optional pre-resolved permission keys. */
   permissionKeys?: string[];
+  /** Optional pre-resolved personal context (DashboardContext). */
+  personalContext?: PersonalContext;
   limit?: number;
 };
 
@@ -78,10 +81,12 @@ export async function loadPersonalProgramme(
   }
   let personalContext;
   try {
-    personalContext = await resolvePersonalContext({
-      tenantId: args.tenantId,
-      userId: args.userId,
-    });
+    personalContext =
+      args.personalContext ??
+      (await resolvePersonalContext({
+        tenantId: args.tenantId,
+        userId: args.userId,
+      }));
     if (trace) {
       logSceHotfixLogin01StepFinished("programme-personal-context");
     }

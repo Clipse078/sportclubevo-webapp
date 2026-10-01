@@ -34,7 +34,7 @@
 import { buildActorContext } from "./actor-context";
 import { loadOrgUnitIds, loadTargetGroupIds } from "@/lib/org/queries";
 import { prisma } from "@/lib/db/prisma";
-import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import {
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
@@ -112,10 +112,7 @@ export async function getActorContext(user: SessionUser, tenantId?: string) {
         logSceHotfixLogin01Step("actor-permissions");
       }
       const [effective, assignments] = await Promise.all([
-        createEffectivePermissionResolver(prisma).getEffectivePermissions({
-          userId: user.id,
-          tenantId,
-        }),
+        getRequestEffectivePermissions(user.id, tenantId),
         prisma.userRole.findMany({
           where: {
             userId: user.id,

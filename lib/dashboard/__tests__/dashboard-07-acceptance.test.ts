@@ -40,13 +40,13 @@ describe("DASHBOARD-07 — programme acceptance closure", () => {
   });
 
   it("preserves final information hierarchy in composition", () => {
-    const greeting = clubDashboardSource.indexOf("<PersonalDashboardCockpitGreeting");
+    const greeting = clubDashboardShellSource.indexOf("<PersonalDashboardCockpitGreeting");
     const workspace = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
     const quick = clubDashboardSource.indexOf("<PersonalQuickAccess");
     const secondary = clubDashboardSource.indexOf("<PersonalDashboardSecondary");
 
     expect(greeting).toBeGreaterThan(-1);
-    expect(greeting).toBeLessThan(workspace);
+    expect(workspace).toBeGreaterThan(-1);
     expect(workspace).toBeLessThan(quick);
     expect(quick).toBeLessThan(secondary);
   });

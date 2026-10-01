@@ -231,6 +231,7 @@ function emitCriticalPathLedger(store: SceHotfixLogin01TraceStore, requestTotalM
   const authSessionMs = readDuration(store, "layout-auth", "auth");
   const tenantMs = readDuration(store, "layout-tenant", "tenant");
   const actorSecurityMs = readDuration(store, "actor-context");
+  const dashboardContextMs = readDuration(store, "dashboard-context");
   const shellMs = sumDuration(store, "person-first-name", "hero-state");
   const programmeMs = readDuration(store, "programme");
   const calendarMs = readDuration(store, "programme-merge");
@@ -289,7 +290,7 @@ function emitCriticalPathLedger(store: SceHotfixLogin01TraceStore, requestTotalM
     `${PREFIX} cid=${store.correlationId} ledger=wall-clock requestTotalMs=${requestTotalMs} criticalPathMs=${criticalPathMs} parallelWorkSumMs=${parallelWorkSumMs} reconciliationPercent=${reconciliationPercent} unexplainedMs=${unexplainedMs} dbClientReadyMs=${dbClientReadyMs} firstPrismaWaitMs=${firstPrismaWaitMs}`,
   );
   console.info(
-    `${PREFIX} cid=${store.correlationId} ledger=breakdown authSessionMs=${authSessionMs} tenantMs=${tenantMs} layoutParticipationNavMs=${layoutParticipationNavMs} pageAuthMs=${pageAuthMs} actorSecurityMs=${actorSecurityMs} shellMs=${shellMs} programmeMs=${programmeMs} calendarMergeMs=${calendarMs} personalActionsMs=${personalActionsMs} operationalAttentionMs=${operationalAttentionMs} personalWorkMaxMs=${personalWorkMs} secondaryMs=${secondaryMs} quickAccessMs=${quickAccessMs} commandCenterDataMs=${commandCenterDataMs} commandCenterInnerParallelMaxMs=${commandCenterInnerParallelMs} commandCenterOuterMaxMs=${commandCenterOuterMs}`,
+    `${PREFIX} cid=${store.correlationId} ledger=breakdown authSessionMs=${authSessionMs} tenantMs=${tenantMs} layoutParticipationNavMs=${layoutParticipationNavMs} pageAuthMs=${pageAuthMs} actorSecurityMs=${actorSecurityMs} dashboardContextMs=${dashboardContextMs} shellMs=${shellMs} programmeMs=${programmeMs} calendarMergeMs=${calendarMs} personalActionsMs=${personalActionsMs} operationalAttentionMs=${operationalAttentionMs} personalWorkMaxMs=${personalWorkMs} secondaryMs=${secondaryMs} quickAccessMs=${quickAccessMs} commandCenterDataMs=${commandCenterDataMs} commandCenterInnerParallelMaxMs=${commandCenterInnerParallelMs} commandCenterOuterMaxMs=${commandCenterOuterMs}`,
   );
   if (duplicateSummary) {
     console.info(`${PREFIX} cid=${store.correlationId} ledger=duplicateProbes ${duplicateSummary}`);

@@ -46,11 +46,8 @@ function getPrismaClient(): PrismaClient {
     adapter: new PrismaPg(pool),
   });
   modulePrisma = client;
-
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-    globalForPrisma.prismaPool = pool;
-  }
+  globalForPrisma.prisma = client;
+  globalForPrisma.prismaPool = pool;
 
   return client;
 }

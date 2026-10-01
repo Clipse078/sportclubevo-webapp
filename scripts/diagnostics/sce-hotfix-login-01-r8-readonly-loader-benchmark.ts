@@ -9,6 +9,7 @@ import { getPersonalCommandCenterData } from "@/lib/dashboard/personal-command-c
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { buildActorContext } from "@/lib/visibility/actor-context";
 import { summarizeLatency } from "@/lib/diagnostics/sce-perf-stats";
+import type { PermissionKey } from "@/lib/permissions/permissions";
 
 const TENANT_KEY = "fc-allschwil";
 const ACTOR_EMAIL = "it@fcallschwil.ch";
@@ -56,7 +57,7 @@ async function main(): Promise<void> {
   }
 
   const permissions = await getRequestEffectivePermissions(user.id, tenant.id);
-  const permissionKeys = [...permissions.platform, ...permissions.tenant];
+  const permissionKeys = [...permissions.platform, ...permissions.tenant] as PermissionKey[];
   const actor = buildActorContext(
     {
       id: user.id,
