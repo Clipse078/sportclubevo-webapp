@@ -39,6 +39,8 @@ export type PersonalAttentionSnapshot = {
   /** Authorized personally relevant attention count (after dedupe, before display cap). */
   totalCount: number;
   viewAllHref: string | null;
+  /** True when one or more operational attention sources failed during aggregation. */
+  operationalSourcesDegraded?: boolean;
 };
 
 export type DashboardPersonalTaskPreviewItem = {

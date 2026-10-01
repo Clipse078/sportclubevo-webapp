@@ -159,6 +159,7 @@ export default async function ClubDashboardView({
         items={personal.personalAttention.items}
         totalCount={personal.personalAttention.totalCount}
         viewAllHref={personal.personalAttention.viewAllHref}
+        operationalSourcesDegraded={personal.personalAttention.operationalSourcesDegraded}
       />
     ) : null;
 

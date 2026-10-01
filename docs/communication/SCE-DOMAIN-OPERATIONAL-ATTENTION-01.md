@@ -61,6 +61,7 @@ Registration: `ensureProductionOperationalAttentionSourcesRegistered()` (idempot
 - **Tenant isolation:** rejects items whose `tenantId` ≠ context
 - **Dedup:** duplicate stable `id` within one evaluation throws
 - **Failure isolation:** source exception → logged, no items from that source; other sources continue
+- **Partial load UX:** `failedSourceKeys` → `operationalSourcesDegraded` on dashboard snapshot; empty attention must not show definitive “all clear” when degraded
 - **Ordering:** `dueAt` ascending, then stable `id`
 
 ---
@@ -102,7 +103,7 @@ Registration: `ensureProductionOperationalAttentionSourcesRegistered()` (idempot
 | Training | Similar per-session evaluation |
 | Events | Per club event invitee resolution |
 
-Three sources are acceptable for FCA scale today; per-entity loops exist — batching deferred until measured pain.
+Three sources are acceptable for FCA scale today; per-entity loops exist — batching deferred (**ATTENTION-PERF-01**).
 
 ---
 
@@ -119,6 +120,8 @@ Reports aggregate counts only (no participant PII, no actions).
 |------|--------|
 | **CALENDAR-UX-UPGRADE** — Smart next-active-period | Not implemented here; applies across Spiele/Trainings/Turniere/Veranstaltungen |
 | **FCA-EVENTS-PARTICIPATION-UAT** | Remains open (#788 could not validate FCA live data) |
+| **ATTENTION-PERF-01** | Batch operational attention evaluation when tenant scale requires it |
+| **DOMAIN-OPERATIONAL-ATTENTION-01-UI-UAT** | Post-STAGE browser UAT for dashboard operational attention (mixed/partial/reminder flows) |
 
 ---
 

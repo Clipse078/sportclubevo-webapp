@@ -41,7 +41,13 @@ export async function loadDashboardPersonalWork(args: {
   now?: Date;
 }): Promise<DashboardPersonalWorkSnapshot> {
   const empty: DashboardPersonalWorkSnapshot = {
-    attention: { authorized: false, items: [], totalCount: 0, viewAllHref: null },
+    attention: {
+      authorized: false,
+      items: [],
+      totalCount: 0,
+      viewAllHref: null,
+      operationalSourcesDegraded: false,
+    },
     tasks: { authorized: false, count: null, preview: [] },
   };
 
@@ -83,6 +89,7 @@ export async function loadDashboardPersonalWork(args: {
         items: sortedOperational.slice(0, DASHBOARD_PERSONAL_ATTENTION_DISPLAY_LIMIT),
         totalCount: sortedOperational.length,
         viewAllHref: null,
+        operationalSourcesDegraded: operational.failedSourceKeys.length > 0,
       },
       tasks: empty.tasks,
     };
@@ -142,6 +149,7 @@ export async function loadDashboardPersonalWork(args: {
       items: attentionItems,
       totalCount: combinedAttention.length,
       viewAllHref,
+      operationalSourcesDegraded: operational.failedSourceKeys.length > 0,
     },
     tasks: {
       authorized: true,

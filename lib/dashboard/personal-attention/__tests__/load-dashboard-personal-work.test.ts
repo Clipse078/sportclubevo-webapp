@@ -231,4 +231,31 @@ describe("DASHBOARD-05 — loadDashboardPersonalWork", () => {
       "TASK",
     ]);
   });
+
+  it("D — surfaces operational source degradation without implying all clear", async () => {
+    mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
+      personalInbox: true,
+      permissionKeys: [PERMISSIONS.TASKS_VIEW],
+    });
+    mocks.countPersonalActions.mockResolvedValue({
+      totalActionable: 0,
+      taskActionable: 0,
+      attendanceActionable: 0,
+      requirementActionable: 0,
+    });
+    mocks.loadPersonalActions.mockResolvedValue([]);
+    mocks.loadDomainOperationalAttention.mockResolvedValue({
+      items: [],
+      failedSourceKeys: ["training"],
+    });
+
+    const work = await loadDashboardPersonalWork({
+      tenantId: "tenant-a",
+      userId: "user-a",
+    });
+
+    expect(work.attention.authorized).toBe(true);
+    expect(work.attention.items).toHaveLength(0);
+    expect(work.attention.operationalSourcesDegraded).toBe(true);
+  });
 });

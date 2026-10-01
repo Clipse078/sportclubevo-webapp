@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -16,6 +17,7 @@ export function PersonalAttentionOperationalActionButton({
   label,
   className,
 }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +47,12 @@ export function PersonalAttentionOperationalActionButton({
         }
         if (payload.duplicate) {
           setFeedback("Erinnerung bereits geplant.");
+          router.refresh();
           return;
         }
         if ((payload.recipientCount ?? 0) === 0) {
           setFeedback("Keine ausstehenden Rückmeldungen mehr.");
+          router.refresh();
           return;
         }
         setFeedback(
@@ -56,6 +60,7 @@ export function PersonalAttentionOperationalActionButton({
             ? "Erinnerung an 1 Person gesendet."
             : `Erinnerung an ${payload.recipientCount} Personen gesendet.`,
         );
+        router.refresh();
       } catch {
         setError("Netzwerkfehler — bitte erneut versuchen.");
       }

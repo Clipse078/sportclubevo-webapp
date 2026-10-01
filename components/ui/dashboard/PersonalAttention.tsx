@@ -19,6 +19,7 @@ export type PersonalAttentionProps = {
   items: PersonalAttentionItem[];
   totalCount: number;
   viewAllHref: string | null;
+  operationalSourcesDegraded?: boolean;
   className?: string;
 };
 
@@ -151,17 +152,25 @@ export async function PersonalAttention({
   items,
   totalCount,
   viewAllHref,
+  operationalSourcesDegraded = false,
   className,
 }: PersonalAttentionProps) {
   const t = await getTranslations("PersonalDashboard.attention");
 
   if (items.length === 0) {
+    const degraded = operationalSourcesDegraded;
     return (
       <DashboardEmptyState
         className={cn("min-h-0", className)}
-        icon={<CheckCircle2 className="h-4 w-4 text-[var(--sce-success)]" />}
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
+        icon={
+          degraded ? (
+            <Bell className="h-4 w-4 text-[var(--sce-warning)]" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 text-[var(--sce-success)]" />
+          )
+        }
+        title={degraded ? t("partialEmptyTitle") : t("emptyTitle")}
+        description={degraded ? t("partialEmptyDescription") : t("emptyDescription")}
         variant="cockpit"
       />
     );

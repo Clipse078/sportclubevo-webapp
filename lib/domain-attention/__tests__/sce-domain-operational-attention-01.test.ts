@@ -71,6 +71,12 @@ describe("SCE-DOMAIN-OPERATIONAL-ATTENTION-01 — registry", () => {
     expect(keys).toEqual(["events", "spielbetrieb", "training"]);
   });
 
+  it("repeated ensureProductionOperationalAttentionSourcesRegistered is idempotent", () => {
+    ensureProductionOperationalAttentionSourcesRegistered();
+    ensureProductionOperationalAttentionSourcesRegistered();
+    expect(listRegisteredDomainOperationalAttentionSources()).toHaveLength(3);
+  });
+
   it("duplicate registration fails loudly", () => {
     const source = mockSource({ domainKey: "demo" });
     registerDomainOperationalAttentionSource(source, "participation-outstanding");

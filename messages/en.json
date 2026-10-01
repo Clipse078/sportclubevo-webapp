@@ -162,6 +162,8 @@
       "listAria": "Needs my attention",
       "emptyTitle": "All clear",
       "emptyDescription": "Nothing personally assigned needs your attention right now.",
+      "partialEmptyTitle": "Overview incomplete",
+      "partialEmptyDescription": "Some operational attention items could not be loaded. Please check again later.",
       "viewAll": "View all",
       "openInbox": "Open my tasks",
       "urgency": {
