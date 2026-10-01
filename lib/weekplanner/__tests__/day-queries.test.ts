@@ -24,6 +24,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resolveTrainingDayWindow } from "@/lib/training/date-range";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
@@ -34,6 +39,13 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanActivityOverrideFindMany: vi.fn(),
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
+  tenantFindUnique: vi.fn(),
+  externalClubFindMany: vi.fn(),
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -47,6 +59,8 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlanActivityOverride: { findMany: mocks.weekplannerPlanActivityOverrideFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    tenant: { findUnique: mocks.tenantFindUnique },
+    externalClub: { findMany: mocks.externalClubFindMany },
   },
 }));
 
@@ -223,9 +237,29 @@ function tournamentEventRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function facilityResourceRow(resource: typeof PITCH_RESOURCE, type: "FULL_PITCH" | "DRESSING_ROOM", facilityId: string) {
+  return {
+    ...resource,
+    type,
+    facility: { id: facilityId, name: resource.facility.name },
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.facilityResourceFindMany.mockResolvedValue([PITCH_RESOURCE, HALLE_RESOURCE, HOME_ROOM_RESOURCE, AWAY_ROOM_RESOURCE]);
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
+  mocks.tenantFindUnique.mockResolvedValue({ logoUrl: null });
+  mocks.externalClubFindMany.mockResolvedValue([]);
+  mocks.facilityResourceFindMany.mockResolvedValue([
+    facilityResourceRow(PITCH_RESOURCE, "FULL_PITCH", "facility-brueel"),
+    facilityResourceRow(HALLE_RESOURCE, "FULL_PITCH", "facility-brueel"),
+    facilityResourceRow(HOME_ROOM_RESOURCE, "DRESSING_ROOM", "facility-rooms"),
+    facilityResourceRow(AWAY_ROOM_RESOURCE, "DRESSING_ROOM", "facility-rooms"),
+  ]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionFindMany.mockResolvedValue([]);

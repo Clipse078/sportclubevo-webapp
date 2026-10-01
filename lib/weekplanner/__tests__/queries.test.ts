@@ -289,7 +289,23 @@ beforeEach(() => {
     defaultMatchDurationMinutes: 120,
     isClubConfigured: false,
   });
-  mocks.facilityResourceFindMany.mockResolvedValue([PITCH_RESOURCE, HOME_ROOM_RESOURCE, AWAY_ROOM_RESOURCE]);
+  mocks.facilityResourceFindMany.mockResolvedValue([
+    {
+      ...PITCH_RESOURCE,
+      type: "FULL_PITCH",
+      facility: { id: "facility-pitch", name: PITCH_RESOURCE.facility.name },
+    },
+    {
+      ...HOME_ROOM_RESOURCE,
+      type: "DRESSING_ROOM",
+      facility: { id: "facility-rooms", name: HOME_ROOM_RESOURCE.facility.name },
+    },
+    {
+      ...AWAY_ROOM_RESOURCE,
+      type: "DRESSING_ROOM",
+      facility: { id: "facility-rooms", name: AWAY_ROOM_RESOURCE.facility.name },
+    },
+  ]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionFindMany.mockResolvedValue([]);
@@ -492,7 +508,9 @@ describe("getWeekplannerWeek — tenant isolation", () => {
 
     await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
 
-    expect(cacheMocks.getFacilitiesForTenantCached).toHaveBeenCalledWith(TENANT_A);
+    expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }),
+    );
     expect(mocks.trainingSessionFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }),
     );
