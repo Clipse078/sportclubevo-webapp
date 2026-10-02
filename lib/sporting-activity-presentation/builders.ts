@@ -23,6 +23,8 @@ export type BuildTrainingPresentationInput = {
   title: string;
   typeLabel: string;
   teamName?: string | null;
+  /** Tenant / responsible club (Dashboard Mein Programm secondary club). */
+  clubName?: string | null;
   startAt: Date;
   endAt?: Date | null;
   status?: PersonalProgrammePresentationStatus;
@@ -35,6 +37,7 @@ export function buildTrainingActivityPresentation(
 ): SportingActivityPresentation {
   const location = buildSportingActivityLocation({
     mode: "HOME",
+    hostOrOrganiser: input.clubName,
     venueName: input.facilityName,
     facilityResource: input.pitchResourceName,
   });
@@ -115,9 +118,19 @@ export function buildMatchActivityPresentation(
         undefined
       : undefined;
 
+  const homeClub = meaningful(input.tenantClubName);
+  const hostOrOrganiser =
+    mode === "HOME"
+      ? homeClub
+      : mode === "AWAY"
+        ? awayHost
+        : mode === "NEUTRAL"
+          ? homeClub
+          : undefined;
+
   const location = buildSportingActivityLocation({
     mode,
-    hostOrOrganiser: mode === "NEUTRAL" ? input.tenantClubName : awayHost,
+    hostOrOrganiser,
     venueName: input.location,
     facilityResource: pitch,
   });
@@ -155,6 +168,8 @@ export type BuildTournamentPresentationInput = {
   typeLabel: string;
   teamName?: string | null;
   organiserName?: string | null;
+  homeAway?: string | null;
+  tenantClubName?: string | null;
   location?: string | null;
   pitchCode?: string | null;
   pitchLabel?: string | null;
@@ -169,9 +184,13 @@ export function buildTournamentActivityPresentation(
 ): SportingActivityPresentation {
   const pitch = resolvePitchPresentationLabel(input.pitchCode, input.pitchLabel);
   const organiser = meaningful(input.organiserName);
+  const mode = normalizeSportingLocationMode(input.homeAway);
+  const organisingClub =
+    organiser ?? (mode === "HOME" ? meaningful(input.tenantClubName) : undefined);
 
   const location = buildSportingActivityLocation({
-    mode: "NEUTRAL",
+    mode,
+    hostOrOrganiser: organisingClub,
     venueName: input.location,
     facilityResource: pitch,
   });

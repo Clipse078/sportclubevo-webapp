@@ -11,6 +11,11 @@ export type SportingActivityCompactFormatOptions = {
    */
   schedulePresentation?: "full" | "omit-start";
   fmtCfg?: TenantFormatConfig;
+  /**
+   * Dashboard → Mein Programm (SCE-ACTIVITY-UX-01R4): club - location secondary,
+   * separate home/away context indicator for match and tournament.
+   */
+  meinProgrammContract?: boolean;
 };
 
 function dedupeParts(parts: readonly string[]): string[] {
@@ -42,7 +47,7 @@ function meaningful(value: string | null | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-/** Compact HOME / AWAY / NEUTRAL label for programme metadata (German). */
+/** Compact HOME / AWAY / NEUTRAL label for legacy programme metadata (German). */
 export function formatSportingActivityLocationModeCompactLabel(
   mode: SportingActivityPresentation["location"]["mode"],
 ): string | undefined {
@@ -79,6 +84,84 @@ function formatCompactSchedulePart(
   if (Number.isNaN(start.getTime())) return endLabel;
   const startLabel = formatTime(start, cfg);
   return `${startLabel}–${endLabel}`;
+}
+
+function joinClubAndLocation(club?: string, location?: string): string | undefined {
+  if (club && location) return `${club} - ${location}`;
+  return club ?? location;
+}
+
+function resolveMeinProgrammClubAndLocation(
+  presentation: SportingActivityPresentation,
+): { club?: string; location?: string } {
+  const { location, identity, context } = presentation;
+
+  if (identity.activityKind === "TRAINING") {
+    return {
+      club: meaningful(location.hostOrOrganiser),
+      location: meaningful(location.venueName),
+    };
+  }
+
+  if (identity.activityKind === "MATCH") {
+    return {
+      club: meaningful(location.hostOrOrganiser),
+      location: meaningful(location.venueName),
+    };
+  }
+
+  if (identity.activityKind === "TOURNAMENT") {
+    return {
+      club: meaningful(location.hostOrOrganiser) ?? meaningful(context?.organiser),
+      location: meaningful(location.venueName),
+    };
+  }
+
+  return {
+    club: meaningful(location.hostOrOrganiser),
+    location: meaningful(location.venueName),
+  };
+}
+
+/**
+ * Dashboard Mein Programm secondary line: CLUB - LOCATION (R4).
+ */
+export function formatSportingActivityCompactAgendaClubLocationLine(
+  presentation: SportingActivityPresentation,
+  options: SportingActivityCompactFormatOptions = {},
+): string | undefined {
+  if (!options.meinProgrammContract) {
+    return undefined;
+  }
+
+  const { club, location } = resolveMeinProgrammClubAndLocation(presentation);
+  return joinClubAndLocation(club, location);
+}
+
+/**
+ * Dashboard Mein Programm home/away context (match and tournament only).
+ */
+export function formatSportingActivityCompactAgendaContextIndicator(
+  presentation: SportingActivityPresentation,
+  options: SportingActivityCompactFormatOptions = {},
+): string | undefined {
+  if (!options.meinProgrammContract) {
+    return undefined;
+  }
+
+  const kind = presentation.identity.activityKind;
+  if (kind !== "MATCH" && kind !== "TOURNAMENT") {
+    return undefined;
+  }
+
+  switch (presentation.location.mode) {
+    case "HOME":
+      return "Eigener Verein";
+    case "AWAY":
+      return "Auswärts";
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -141,15 +224,7 @@ export function formatSportingActivityCompactPrimaryText(
   }
 
   if (kind === "TOURNAMENT") {
-    const title = presentation.identity.title.trim();
-    const team = presentation.team?.name?.trim();
-    if (team) {
-      const lowerTitle = title.toLowerCase();
-      const lowerTeam = team.toLowerCase();
-      if (lowerTitle.includes(lowerTeam)) return title;
-      return `${title} · ${team}`;
-    }
-    return title;
+    return presentation.identity.title.trim();
   }
 
   return presentation.identity.title;
@@ -162,6 +237,10 @@ export function formatSportingActivityCompactAgendaSecondaryLine(
   presentation: SportingActivityPresentation,
   options: SportingActivityCompactFormatOptions = {},
 ): string | undefined {
+  if (options.meinProgrammContract) {
+    return formatSportingActivityCompactAgendaClubLocationLine(presentation, options);
+  }
+
   const kind = presentation.identity.activityKind;
   const parts: string[] = [];
 
@@ -193,6 +272,7 @@ export function formatSportingActivityCompactAgendaSecondaryLine(
 export type SportingActivityCompactPresentation = {
   primaryText: string;
   secondaryText?: string;
+  contextIndicator?: string;
   metadataParts: string[];
 };
 
@@ -201,6 +281,10 @@ export function resolveSportingActivityCompactPresentation(
   options: SportingActivityCompactFormatOptions = {},
 ): SportingActivityCompactPresentation {
   const secondaryText = formatSportingActivityCompactAgendaSecondaryLine(presentation, options);
+  const contextIndicator = formatSportingActivityCompactAgendaContextIndicator(
+    presentation,
+    options,
+  );
   const metadataParts = secondaryText
     ? secondaryText.split(" · ").map((part) => part.trim()).filter(Boolean)
     : [];
@@ -208,6 +292,7 @@ export function resolveSportingActivityCompactPresentation(
   return {
     primaryText: formatSportingActivityCompactPrimaryText(presentation),
     secondaryText,
+    contextIndicator,
     metadataParts,
   };
 }

@@ -180,6 +180,8 @@ export async function loadTeamEventProgrammeItems(
         typeLabel,
         teamName,
         organiserName: event.organizerName,
+        homeAway: event.homeAway,
+        tenantClubName,
         location: event.location,
         pitchCode: event.pitchCode,
         pitchLabel,

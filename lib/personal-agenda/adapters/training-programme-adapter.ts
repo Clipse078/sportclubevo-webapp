@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/db/prisma";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import {
   isPersonalTrainingSessionRowRelevant,
@@ -64,13 +65,20 @@ export async function loadTrainingProgrammeItems(
     dateTo,
   });
 
-  const facilityHints = await loadTrainingSessionFacilityHints(
-    ctx.personal.tenantId,
-    sessions.map((session) => ({
-      id: session.id,
-      trainingSeriesId: session.trainingSeriesId,
-    })),
-  );
+  const [facilityHints, tenant] = await Promise.all([
+    loadTrainingSessionFacilityHints(
+      ctx.personal.tenantId,
+      sessions.map((session) => ({
+        id: session.id,
+        trainingSeriesId: session.trainingSeriesId,
+      })),
+    ),
+    prisma.tenant.findUnique({
+      where: { id: ctx.personal.tenantId },
+      select: { name: true },
+    }),
+  ]);
+  const tenantClubName = tenant?.name?.trim() || "Verein";
 
   const rangeStartMs = ctx.rangeStart.getTime();
   const rangeEndMs = ctx.rangeEnd.getTime();
@@ -115,6 +123,7 @@ export async function loadTrainingProgrammeItems(
       title: baseTitle,
       typeLabel: "Training",
       teamName,
+      clubName: tenantClubName,
       startAt: startsAt,
       endAt: endsAt,
       status,
@@ -122,7 +131,9 @@ export async function loadTrainingProgrammeItems(
       pitchResourceName: facility?.pitchResourceName,
     });
 
-    const presentationFields = applyPresentationToProgrammeFields(activityPresentation);
+    const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {
+      tenantDisplayNames: [tenantClubName],
+    });
 
     items.push({
       id: resourceKey,

@@ -19,6 +19,7 @@ import {
   formatSportingActivityLocationSummary,
 } from "../location";
 import {
+  formatSportingActivityCompactAgendaContextIndicator,
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,
 } from "../compact";
@@ -155,7 +156,10 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
       });
 
       expect(presentation.context?.organiser).toBe("FC Lausen 72");
-      expect(formatSportingActivityLocationLines(presentation.location)).toEqual(["Sportanlage Bifang"]);
+      expect(formatSportingActivityLocationLines(presentation.location)).toEqual([
+        "FC Lausen 72",
+        "Sportanlage Bifang",
+      ]);
     });
 
     it("venue without resource", () => {
@@ -168,7 +172,10 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         startAt,
       });
 
-      expect(formatSportingActivityLocationLines(presentation.location)).toEqual(["Sportanlage Bifang"]);
+      expect(formatSportingActivityLocationLines(presentation.location)).toEqual([
+        "FC Lausen 72",
+        "Sportanlage Bifang",
+      ]);
     });
   });
 
@@ -272,9 +279,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         startAt,
       });
 
-      expect(formatSportingActivityCompactPrimaryText(tournament)).toBe(
-        "PlayMore Turnier · Junioren F2",
-      );
+      expect(formatSportingActivityCompactPrimaryText(tournament)).toBe("PlayMore Turnier");
       const secondary = formatSportingActivityCompactAgendaSecondaryLine(tournament, {
         schedulePresentation: "omit-start",
       });
@@ -454,9 +459,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         startAt,
       });
 
-      expect(formatSportingActivityCompactPrimaryText(tournament)).toBe(
-        "PlayMore Turnier · Junioren F2",
-      );
+      expect(formatSportingActivityCompactPrimaryText(tournament)).toBe("PlayMore Turnier");
       const secondary = formatSportingActivityCompactAgendaSecondaryLine(tournament, {
         schedulePresentation: "omit-start",
       });
@@ -515,6 +518,180 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         schedulePresentation: "omit-start",
       });
       expect(secondary).toBe("FC Arisdorf · Gemeindesportplatz · Platz 1");
+    });
+  });
+
+  describe("SCE-ACTIVITY-UX-01R4 Mein Programm compact contract", () => {
+    const r4 = { meinProgrammContract: true, schedulePresentation: "omit-start" as const };
+    const endAt = new Date("2026-10-10T09:30:00.000Z");
+
+    it("TRAINING — FC Allschwil - Im Brüel without team or KR2", () => {
+      const presentation = buildTrainingActivityPresentation({
+        resourceKey: "training-session:r4",
+        title: "Junioren F2 Training",
+        typeLabel: "Training",
+        teamName: "Junioren F2",
+        clubName: "FC Allschwil",
+        startAt,
+        endAt,
+        facilityName: "Im Brüel",
+        pitchResourceName: "KR2",
+      });
+
+      expect(
+        formatSportingActivityCompactAgendaSecondaryLine(presentation, r4),
+      ).toBe("FC Allschwil - Im Brüel");
+      expect(formatSportingActivityCompactAgendaContextIndicator(presentation, r4)).toBeUndefined();
+    });
+
+    it("INDOOR TRAINING — Gartenschul Halle", () => {
+      const presentation = buildTrainingActivityPresentation({
+        resourceKey: "training-session:indoor-r4",
+        title: "Junioren F2 Training",
+        typeLabel: "Training",
+        clubName: "FC Allschwil",
+        startAt,
+        endAt,
+        facilityName: "Gartenschul Halle",
+      });
+
+      const line = formatSportingActivityCompactAgendaSecondaryLine(presentation, r4);
+      expect(line).toBe("FC Allschwil - Gartenschul Halle");
+      expect(line).not.toMatch(/Im Brüel|Junioren F2/);
+    });
+
+    it("MATCH HOME — club - location + Eigener Verein", () => {
+      const home = buildMatchActivityPresentation({
+        resourceKey: "event:home-r4",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        teamName: "2. Mannschaft",
+        opponentName: "FC Bubendorf",
+        homeAway: "HOME",
+        location: "Im Brüel",
+        pitchLabel: "Kunstrasen 3",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+
+      expect(formatSportingActivityCompactAgendaSecondaryLine(home, r4)).toBe(
+        "FC Allschwil - Im Brüel",
+      );
+      expect(formatSportingActivityCompactAgendaContextIndicator(home, r4)).toBe(
+        "Eigener Verein",
+      );
+    });
+
+    it("MATCH AWAY — host - location + Auswärts", () => {
+      const away = buildMatchActivityPresentation({
+        resourceKey: "event:away-r4",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        teamName: "Junioren F2",
+        opponentName: "FC Arisdorf",
+        homeAway: "AWAY",
+        location: "Gemeindesportplatz",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+
+      expect(formatSportingActivityCompactAgendaSecondaryLine(away, r4)).toBe(
+        "FC Arisdorf - Gemeindesportplatz",
+      );
+      expect(formatSportingActivityCompactAgendaContextIndicator(away, r4)).toBe("Auswärts");
+      expect(formatSportingActivityCompactAgendaSecondaryLine(away, r4)).not.toMatch(
+        /FC Allschwil/,
+      );
+    });
+
+    it("TOURNAMENT HOME — organiser club - location + Eigener Verein", () => {
+      const tournament = buildTournamentActivityPresentation({
+        resourceKey: "event:th-r4",
+        title: "PlayMore Turnier",
+        typeLabel: "Turnier",
+        teamName: "Junioren F2",
+        organiserName: "FC Allschwil",
+        homeAway: "HOME",
+        tenantClubName: "FC Allschwil",
+        location: "Im Brüel",
+        startAt,
+      });
+
+      expect(formatSportingActivityCompactPrimaryText(tournament)).toBe("PlayMore Turnier");
+      expect(formatSportingActivityCompactAgendaSecondaryLine(tournament, r4)).toBe(
+        "FC Allschwil - Im Brüel",
+      );
+      expect(formatSportingActivityCompactAgendaContextIndicator(tournament, r4)).toBe(
+        "Eigener Verein",
+      );
+    });
+
+    it("TOURNAMENT AWAY — organiser - location; no team", () => {
+      const tournament = buildTournamentActivityPresentation({
+        resourceKey: "event:ta-r4",
+        title: "PlayMore Turnier",
+        typeLabel: "Turnier",
+        teamName: "Junioren F2",
+        organiserName: "FC Arisdorf",
+        homeAway: "AWAY",
+        location: "Gemeindesportplatz",
+        startAt,
+      });
+
+      expect(formatSportingActivityCompactAgendaSecondaryLine(tournament, r4)).toBe(
+        "FC Arisdorf - Gemeindesportplatz",
+      );
+      expect(formatSportingActivityCompactAgendaContextIndicator(tournament, r4)).toBe("Auswärts");
+      expect(formatSportingActivityCompactAgendaSecondaryLine(tournament, r4)).not.toMatch(
+        /Junioren F2/,
+      );
+    });
+
+    it("MISSING DATA — host/organiser only, location only, both absent", () => {
+      const hostOnly = buildMatchActivityPresentation({
+        resourceKey: "event:host-only",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        opponentName: "FC Arisdorf",
+        homeAway: "AWAY",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+      expect(formatSportingActivityCompactAgendaSecondaryLine(hostOnly, r4)).toBe("FC Arisdorf");
+      expect(formatSportingActivityCompactAgendaContextIndicator(hostOnly, r4)).toBe("Auswärts");
+
+      const locationOnly = buildTournamentActivityPresentation({
+        resourceKey: "event:loc-only",
+        title: "Cup",
+        typeLabel: "Turnier",
+        homeAway: "AWAY",
+        location: "Gemeindesportplatz",
+        startAt,
+      });
+      expect(formatSportingActivityCompactAgendaSecondaryLine(locationOnly, r4)).toBe(
+        "Gemeindesportplatz",
+      );
+
+      const neither = buildTrainingActivityPresentation({
+        resourceKey: "training:none",
+        title: "Training",
+        typeLabel: "Training",
+        startAt,
+      });
+      expect(formatSportingActivityCompactAgendaSecondaryLine(neither, r4)).toBeUndefined();
+    });
+
+    it("NEUTRAL — no Eigener Verein or Auswärts", () => {
+      const neutral = buildMatchActivityPresentation({
+        resourceKey: "event:neutral",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        homeAway: "NEUTRAL",
+        location: "Neutral Arena",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+      expect(formatSportingActivityCompactAgendaContextIndicator(neutral, r4)).toBeUndefined();
     });
   });
 

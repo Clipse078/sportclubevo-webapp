@@ -27,6 +27,8 @@ export {
 } from "./compact-dedupe";
 
 export {
+  formatSportingActivityCompactAgendaClubLocationLine,
+  formatSportingActivityCompactAgendaContextIndicator,
   formatSportingActivityCompactAgendaLocationParts,
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,

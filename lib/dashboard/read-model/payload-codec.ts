@@ -42,7 +42,13 @@ export function parsePersonalDashboardReadModelPayload(
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
   const version = record.v;
-  if (version !== 1 && version !== PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION) return null;
+  if (
+    typeof version !== "number" ||
+    version < 1 ||
+    version > PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION
+  ) {
+    return null;
+  }
   if (!record.scopeHints || typeof record.scopeHints !== "object") return null;
   if (!record.programme || typeof record.programme !== "object") return null;
   if (!record.personalWork || typeof record.personalWork !== "object") return null;
