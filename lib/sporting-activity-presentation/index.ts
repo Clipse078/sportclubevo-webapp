@@ -33,7 +33,9 @@ export {
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,
   formatSportingActivityLocationModeCompactLabel,
+  resolveSportingActivityCompactAgendaTypeLine,
   resolveSportingActivityCompactPresentation,
+  type SportingActivityCompactAgendaTypeLine,
   type SportingActivityCompactFormatOptions,
   type SportingActivityCompactPresentation,
 } from "./compact";

@@ -81,6 +81,32 @@ describe("loadTrainingSessionFacilityHints — SCE-ACTIVITY-UX-01R3", () => {
     });
   });
 
+  it("FCA seed shape — playing-area Facility.name is the resolved venue (no site parent in schema)", async () => {
+    vi.mocked(prisma.trainingAllocation.findMany).mockResolvedValue([
+      {
+        trainingSeriesId: "series-kr2",
+        displayOrder: 0,
+        createdAt: new Date("2026-01-01"),
+        facilityResource: {
+          id: "res-kr2a",
+          code: "KUNSTRASEN_2_A",
+          name: "Kunstrasen 2 A",
+          type: "HALF_PITCH",
+          facility: { id: "fac-kr2", name: "Kunstrasen 2" },
+        },
+      },
+    ] as never);
+
+    const hints = await loadTrainingSessionFacilityHints("tenant-fca", [
+      { id: "sess-kr2", trainingSeriesId: "series-kr2" },
+    ]);
+
+    expect(hints.get("sess-kr2")).toEqual({
+      facilityName: "Kunstrasen 2",
+      pitchResourceName: "Kunstrasen 2 A",
+    });
+  });
+
   it("falls back to OTHER series allocation when no PITCH_HALL exists", async () => {
     vi.mocked(prisma.trainingAllocation.findMany).mockResolvedValue([
       {

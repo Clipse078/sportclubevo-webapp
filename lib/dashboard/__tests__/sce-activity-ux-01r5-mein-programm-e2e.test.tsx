@@ -79,8 +79,8 @@ describe("SCE-ACTIVITY-UX-01R5 — Mein Programm read-model to row", () => {
     renderFromReadModelItem(item, "17:00");
 
     expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
+    expect(screen.getByText("TRAINING")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
-    expect(screen.queryByText("TRAINING")).not.toBeInTheDocument();
     expect(screen.queryByText("KR2")).not.toBeInTheDocument();
     expect(screen.queryByText("FC Allschwil Junioren F2")).not.toBeInTheDocument();
   });
@@ -136,9 +136,9 @@ describe("SCE-ACTIVITY-UX-01R5 — Mein Programm read-model to row", () => {
     renderFromReadModelItem(item, "09:30");
 
     expect(screen.getByText("PlayMore Turnier")).toBeInTheDocument();
+    expect(screen.getByText("TURNIER")).toBeInTheDocument();
     expect(screen.getByText("FC Arisdorf - Gemeindesportplatz")).toBeInTheDocument();
     expect(screen.getByText("Auswärts")).toBeInTheDocument();
-    expect(screen.queryByText("TURNIER")).not.toBeInTheDocument();
   });
 
   it("MATCH HOME and AWAY compact lines", () => {

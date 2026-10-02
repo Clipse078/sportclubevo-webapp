@@ -11,9 +11,10 @@ import { getProgrammeSourceActivitySceIconName } from "@/lib/planning/activity-s
 import { cn } from "@/lib/cn";
 import {
   formatSportingActivityCompactAgendaClubLocationLine,
-  formatSportingActivityCompactAgendaContextIndicator,
   formatSportingActivityCompactPrimaryText,
+  resolveSportingActivityCompactAgendaTypeLine,
 } from "@/lib/sporting-activity-presentation/compact";
+import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
@@ -60,15 +61,14 @@ export function PersonalProgrammeAgendaRow({
       )
     : undefined;
 
-  const contextIndicator = item.activityPresentation
-    ? formatSportingActivityCompactAgendaContextIndicator(
-        item.activityPresentation,
-        compactOptions,
-      )
+  const typeLine = item.activityPresentation
+    ? resolveSportingActivityCompactAgendaTypeLine(item.activityPresentation, compactOptions)
     : undefined;
 
   const legacyTypeFallback =
-    !item.activityPresentation && !clubLocationLine ? item.typeLabel : null;
+    !item.activityPresentation && item.typeLabel
+      ? formatTodayEventTypeBadge(item.typeLabel)
+      : null;
 
   const row = (
     <div
@@ -100,13 +100,23 @@ export function PersonalProgrammeAgendaRow({
               <p className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
                 {displayTitle}
               </p>
-              {clubLocationLine ? (
-                <p className="line-clamp-2 text-[0.8125rem] leading-snug text-[var(--text-2)]">
-                  {clubLocationLine}
+              {typeLine ? (
+                <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                  <span>{typeLine.typeLabel}</span>
+                  {typeLine.contextIndicator ? (
+                    <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]">
+                      {typeLine.contextIndicator}
+                    </span>
+                  ) : null}
                 </p>
               ) : legacyTypeFallback ? (
-                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                <p className="mt-0.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
                   {legacyTypeFallback}
+                </p>
+              ) : null}
+              {clubLocationLine ? (
+                <p className="mt-0.5 line-clamp-2 text-[0.8125rem] leading-snug text-[var(--text-2)]">
+                  {clubLocationLine}
                 </p>
               ) : null}
             </div>
@@ -114,18 +124,13 @@ export function PersonalProgrammeAgendaRow({
               <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
             ) : null}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-1">
-            {contextIndicator ? (
-              <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium text-[var(--text-2)]">
-                {contextIndicator}
-              </span>
-            ) : null}
-            {statusLabel ? (
+          {statusLabel ? (
+            <div className="mt-0.5 flex flex-wrap items-center gap-1">
               <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
                 {statusLabel}
               </span>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

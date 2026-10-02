@@ -1,5 +1,6 @@
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { formatTime } from "@/lib/tenant-runtime/formatters";
+import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
 import type { SportingActivityPresentation } from "./types";
 import { filterCompactMetadataPartsAgainstPrimary } from "./compact-dedupe";
 import { formatSportingActivityLocationLines } from "./location";
@@ -136,6 +137,38 @@ export function formatSportingActivityCompactAgendaClubLocationLine(
 
   const { club, location } = resolveMeinProgrammClubAndLocation(presentation);
   return joinClubAndLocation(club, location);
+}
+
+export type SportingActivityCompactAgendaTypeLine = {
+  typeLabel: string;
+  contextIndicator?: string;
+};
+
+/**
+ * Dashboard Mein Programm line 2: uppercase activity type + optional home/away badge (R6).
+ */
+export function resolveSportingActivityCompactAgendaTypeLine(
+  presentation: SportingActivityPresentation,
+  options: SportingActivityCompactFormatOptions = {},
+): SportingActivityCompactAgendaTypeLine | undefined {
+  if (!options.meinProgrammContract) {
+    return undefined;
+  }
+
+  const rawType = presentation.identity.typeLabel?.trim();
+  if (!rawType) {
+    return undefined;
+  }
+
+  const contextIndicator = formatSportingActivityCompactAgendaContextIndicator(
+    presentation,
+    options,
+  );
+
+  return {
+    typeLabel: formatTodayEventTypeBadge(rawType),
+    contextIndicator,
+  };
 }
 
 /**

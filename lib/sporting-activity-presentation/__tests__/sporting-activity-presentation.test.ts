@@ -22,6 +22,7 @@ import {
   formatSportingActivityCompactAgendaContextIndicator,
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,
+  resolveSportingActivityCompactAgendaTypeLine,
 } from "../compact";
 import { filterCompactMetadataPartsAgainstPrimary } from "../compact-dedupe";
 import { formatSportingActivityPresentation } from "../format";
@@ -524,6 +525,36 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
   describe("SCE-ACTIVITY-UX-01R4 Mein Programm compact contract", () => {
     const r4 = { meinProgrammContract: true, schedulePresentation: "omit-start" as const };
     const endAt = new Date("2026-10-10T09:30:00.000Z");
+
+    it("R6 type line — TRAINING without home/away badge", () => {
+      const presentation = buildTrainingActivityPresentation({
+        resourceKey: "training-session:r6-type",
+        title: "Junioren F2 Training",
+        typeLabel: "Training",
+        startAt,
+        endAt,
+      });
+
+      expect(resolveSportingActivityCompactAgendaTypeLine(presentation, r4)).toEqual({
+        typeLabel: "TRAINING",
+      });
+    });
+
+    it("R6 type line — SPIEL + Eigener Verein", () => {
+      const home = buildMatchActivityPresentation({
+        resourceKey: "event:r6-home",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        homeAway: "HOME",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+
+      expect(resolveSportingActivityCompactAgendaTypeLine(home, r4)).toEqual({
+        typeLabel: "SPIEL",
+        contextIndicator: "Eigener Verein",
+      });
+    });
 
     it("TRAINING — FC Allschwil - Im Brüel without team or KR2", () => {
       const presentation = buildTrainingActivityPresentation({
