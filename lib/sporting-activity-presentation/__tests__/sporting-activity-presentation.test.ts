@@ -19,6 +19,10 @@ import {
   formatSportingActivityLocationSummary,
 } from "../location";
 import {
+  resolveSportingActivityTypePillVariant,
+  sportingActivityTypePillClassName,
+} from "../activity-type-pill";
+import {
   formatSportingActivityCompactAgendaContextIndicator,
   formatSportingActivityCompactAgendaSecondaryLine,
   formatSportingActivityCompactPrimaryText,
@@ -757,6 +761,23 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
       expect(compact.title).toBe("Cup");
       expect(compact.subtitle).toBeUndefined();
       expect(standard.locationLines).toEqual([]);
+    });
+  });
+
+  describe("SCE-ACTIVITY-UX-01R7 activity type pill variants", () => {
+    it("maps operational kinds to canonical semantic pill keys", () => {
+      expect(resolveSportingActivityTypePillVariant("TRAINING")).toBe("training-blue");
+      expect(resolveSportingActivityTypePillVariant("MATCH")).toBe("match-red");
+      expect(resolveSportingActivityTypePillVariant("TOURNAMENT")).toBe("tournament-orange");
+      expect(resolveSportingActivityTypePillVariant("EVENT")).toBeUndefined();
+    });
+
+    it("uses SCE token-backed classes per variant", () => {
+      expect(sportingActivityTypePillClassName("training-blue")).toContain("--sce-info-light");
+      expect(sportingActivityTypePillClassName("match-red")).toContain("--sce-secondary-light");
+      expect(sportingActivityTypePillClassName("tournament-orange")).toContain(
+        "--sce-primary-light",
+      );
     });
   });
 });

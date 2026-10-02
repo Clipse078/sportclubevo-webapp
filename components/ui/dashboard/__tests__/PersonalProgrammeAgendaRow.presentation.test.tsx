@@ -29,7 +29,7 @@ function baseItem(overrides: Partial<PersonalProgrammeItem>): PersonalProgrammeI
   };
 }
 
-describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6 three-line Mein Programm", () => {
+describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6/R7 three-line Mein Programm", () => {
   const startAt = new Date("2026-10-10T15:00:00.000Z");
   const endAt = new Date("2026-10-10T16:30:00.000Z");
   const meinProgrammOpts = { tenantClubName: "FC Allschwil" };
@@ -56,6 +56,9 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6 three-line Mein Pr
 
     expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
     expect(screen.getByText("TRAINING")).toBeInTheDocument();
+    expect(screen.getByText("TRAINING").getAttribute("data-activity-type-pill")).toBe(
+      "training-blue",
+    );
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil - Im Brüel").textContent).not.toMatch(
       /Junioren F2|KR2|Kunstrasen 2/,
@@ -90,7 +93,8 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6 three-line Mein Pr
 
     expect(screen.getByText(/FC Allschwil.*FC Binningen/)).toBeInTheDocument();
     expect(screen.getByText("SPIEL")).toBeInTheDocument();
-    expect(screen.getByText("Eigener Verein")).toBeInTheDocument();
+    expect(screen.getByText("SPIEL").getAttribute("data-activity-type-pill")).toBe("match-red");
+    expect(screen.getByText("Eigener Verein")).toHaveAttribute("data-activity-context-badge");
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
     expect(screen.queryByText(/Kunstrasen/)).not.toBeInTheDocument();
   });
@@ -121,8 +125,9 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6 three-line Mein Pr
 
     expect(screen.getByText("FC Arisdorf – FC Allschwil")).toBeInTheDocument();
     expect(screen.getByText("SPIEL")).toBeInTheDocument();
+    expect(screen.getByText("SPIEL").getAttribute("data-activity-type-pill")).toBe("match-red");
     expect(screen.getByText("FC Arisdorf - Gemeindesportplatz")).toBeInTheDocument();
-    expect(screen.getByText("Auswärts")).toBeInTheDocument();
+    expect(screen.getByText("Auswärts")).toHaveAttribute("data-activity-context-badge");
     expect(screen.queryByText(/FC Allschwil -/)).not.toBeInTheDocument();
   });
 
@@ -151,9 +156,12 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6 three-line Mein Pr
 
     expect(screen.getByText("PlayMore Turnier")).toBeInTheDocument();
     expect(screen.getByText("TURNIER")).toBeInTheDocument();
+    expect(screen.getByText("TURNIER").getAttribute("data-activity-type-pill")).toBe(
+      "tournament-orange",
+    );
     expect(screen.queryByText(/Junioren F2/)).not.toBeInTheDocument();
     expect(screen.getByText("FC Arisdorf - Gemeindesportplatz")).toBeInTheDocument();
-    expect(screen.getByText("Auswärts")).toBeInTheDocument();
+    expect(screen.getByText("Auswärts")).toHaveAttribute("data-activity-context-badge");
   });
 
   it("TOURNAMENT HOME — title, TURNIER + Eigener Verein, organiser - location", () => {
@@ -181,7 +189,10 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6 three-line Mein Pr
 
     expect(screen.getByText("PlayMore Turnier")).toBeInTheDocument();
     expect(screen.getByText("TURNIER")).toBeInTheDocument();
-    expect(screen.getByText("Eigener Verein")).toBeInTheDocument();
+    expect(screen.getByText("TURNIER").getAttribute("data-activity-type-pill")).toBe(
+      "tournament-orange",
+    );
+    expect(screen.getByText("Eigener Verein")).toHaveAttribute("data-activity-context-badge");
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
     expect(screen.queryByText(/Junioren F2/)).not.toBeInTheDocument();
   });

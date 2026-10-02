@@ -14,7 +14,12 @@ import {
   formatSportingActivityCompactPrimaryText,
   resolveSportingActivityCompactAgendaTypeLine,
 } from "@/lib/sporting-activity-presentation/compact";
+import {
+  resolveSportingActivityTypePillVariant,
+  sportingActivityTypePillClassName,
+} from "@/lib/sporting-activity-presentation/activity-type-pill";
 import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
+import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
@@ -70,6 +75,18 @@ export function PersonalProgrammeAgendaRow({
       ? formatTodayEventTypeBadge(item.typeLabel)
       : null;
 
+  const operationalSourceKinds = new Set<SportingActivityKind>([
+    "TRAINING",
+    "MATCH",
+    "TOURNAMENT",
+  ]);
+  const activityKindForTypePill: SportingActivityKind | undefined =
+    item.activityPresentation?.identity.activityKind ??
+    (operationalSourceKinds.has(item.sourceType as SportingActivityKind)
+      ? (item.sourceType as SportingActivityKind)
+      : undefined);
+  const typePillVariant = resolveSportingActivityTypePillVariant(activityKindForTypePill);
+
   const row = (
     <div
       className={cn(
@@ -101,17 +118,38 @@ export function PersonalProgrammeAgendaRow({
                 {displayTitle}
               </p>
               {typeLine ? (
-                <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  <span>{typeLine.typeLabel}</span>
+                <p className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={
+                      typePillVariant
+                        ? sportingActivityTypePillClassName(typePillVariant)
+                        : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+                    }
+                    data-activity-type-pill={typePillVariant ?? undefined}
+                  >
+                    {typeLine.typeLabel}
+                  </span>
                   {typeLine.contextIndicator ? (
-                    <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]">
+                    <span
+                      className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]"
+                      data-activity-context-badge
+                    >
                       {typeLine.contextIndicator}
                     </span>
                   ) : null}
                 </p>
               ) : legacyTypeFallback ? (
-                <p className="mt-0.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  {legacyTypeFallback}
+                <p className="mt-0.5">
+                  <span
+                    className={
+                      typePillVariant
+                        ? sportingActivityTypePillClassName(typePillVariant)
+                        : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+                    }
+                    data-activity-type-pill={typePillVariant ?? undefined}
+                  >
+                    {legacyTypeFallback}
+                  </span>
                 </p>
               ) : null}
               {clubLocationLine ? (
