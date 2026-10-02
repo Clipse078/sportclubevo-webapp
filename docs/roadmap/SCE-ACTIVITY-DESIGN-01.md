@@ -67,7 +67,28 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 **Goal:** One canonical visual system across personal and planning surfaces.
 
-**Surfaces:**
+**Status (STAGE):** **Foundation implemented** — presentation primitives and contracts in `lib/sporting-activity-design/` + `components/sporting-activity/`. Existing UX-01 consumers are not fully migrated; 01B–01D adopt these building blocks incrementally.
+
+### 01A architecture (implemented)
+
+| Concern | Source of truth |
+|--------|-------------------|
+| **ClubIdentity contract** | `lib/sporting-activity-design/club-identity.ts` — `displayName`, optional `id` / `externalAssociationId`, `logoUrl`, `fallbackIdentity` (initials or neutral icon). Built via adapters from match sides, tournament organiser fields, or name-only input — **not** a new persistence entity. |
+| **Match-side logo URL** | `resolveMatchSideClubLogoUrl` — own team → `Tenant.logoUrl`; external → `MatchcenterSide.externalLogoUrl` (Club Directory chain). Re-exported from `lib/matchcenter/club-identity.ts` for legacy imports. |
+| **Tournament organiser logo URL** | `resolveTournamentOrganiserClubLogoUrl` — **`Event`-derived `organizerLogoUrl` only** (populated by `lib/tournaments/tournament-service.ts` / `lib/tournaments/club-identity.ts`). No substitution from participating SCE team or HOME tenant branding at presentation time. |
+| **External / SFV crest data** | Persisted on `ExternalClub.logoUrl` / `ExternalTeam.logoUrl`; canonical Verein fallback via `lib/club-directory/logo.ts` and `lib/club-directory/canonical-logo-resolution.ts` at **load** boundaries (Infoboard, public feeds, tournament service) — not per-row network fetch. |
+| **Fallback crest** | `ClubCrest` — initials from `deriveClubIdentityFallbackLabel` (prefers `shortName` when compact); `onError` hides broken images. No “Logo fehlt” copy. |
+| **Match home/away** | `buildMatchClubIdentityPair` + `MatchClubPair` — **home always left, away always right**, independent of tenant position. |
+| **Tournament organiser** | `buildTournamentOrganiserClubIdentity` — organiser name + crest distinct from participating team (`SportingActivityPresentation.team`). |
+| **Training** | Unchanged UX-01 identity (`SportingActivityIdentity` text hierarchy); no mandatory crest on training rows in 01A. |
+| **Density** | `SportingActivityDensity`: `compact` \| `planner` \| `management` — layout only; maps to UX-01 formatter via `mapSportingActivityDensityToPresentationDensity`. |
+| **Activity colors** | `lib/sporting-activity-design/activity-color-tokens.ts` delegates to `lib/sporting-activity-presentation/activity-type-pill.ts` (Training blue, Spiel red, Turnier orange). Repository-wide migration remains **SCE-ACTIVITY-COLOR-01**. |
+
+**Shared UI primitives:** `ClubCrest`, `ClubIdentityDisplay`, `MatchClubPair`, `ActivityTypePill` under `components/sporting-activity/`.
+
+**Deferred to 01B–01E:** Activity Detail, management card redesign, Wochenplaner planner blocks, consume vs manage navigation, permission hardening.
+
+**Surfaces (target consumers, not all migrated in 01A):**
 
 - Mein Programm
 - Mein Kalender
@@ -75,15 +96,6 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 - Planning → Trainings
 - Planning → Spiele
 - Planning → Turniere
-
-**Deliverables:**
-
-- **Density variants:** Compact / Planner / Management (same semantics, different layout density).
-- **Canonical ClubIdentity:** club logo resolution and fallback rules.
-- **Match:** home club identity + logo (always left), away club identity + logo (always right).
-- **Tournament:** organising club identity + logo as visual anchor (not participating team unless that club organises).
-- **Training:** deliberately simpler identity treatment than Match/Tournament.
-- Preserve semantic colors (Training blue, Spiel red, Turnier orange).
 
 **Dependency:** SCE-ACTIVITY-UX-01 presentation layer and `SportingActivityIdentity` component.
 
