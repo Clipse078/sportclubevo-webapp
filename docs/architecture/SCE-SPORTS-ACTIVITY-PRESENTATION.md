@@ -1,7 +1,9 @@
 # SCE Canonical Sports Activity Presentation
 
-**Package:** SCE-ACTIVITY-UX-01 / R1 / R2 / R3  
-**Status:** Canonical presentation + compact visible contract (Dashboard programme, calendar foundation, training/match/tournament management semantics)
+**Package:** SCE-ACTIVITY-UX-01 (R1–R8)  
+**Status:** **Closed on STAGE (2026-10-02)** — canonical presentation read-model, Mein Programm three-line contract, activity type pills, shared `SportingActivityIdentity` on Planning management lists
+
+**Follow-up (not in UX-01):** [`docs/roadmap/SCE-ACTIVITY-DESIGN-01.md`](../roadmap/SCE-ACTIVITY-DESIGN-01.md)
 
 ## Purpose
 
@@ -136,16 +138,34 @@ Personal programme training rows resolve facility hints in `loadTrainingSessionF
 
 Do not substitute the resource label for the venue when a parent facility name is present in source data.
 
+## Activity type identity (semantic colors)
+
+Canonical activity type pills / identity treatment:
+
+| Kind | Label | Semantic color |
+|------|-------|----------------|
+| Training | TRAINING | **blue** (`training-blue`) |
+| Match | SPIEL | **red** (`match-red`) |
+| Tournament | TURNIER | **orange** (`tournament-orange`) |
+
+Helpers: `lib/sporting-activity-presentation/activity-type-pill.ts`. UI: `components/sporting-activity/SportingActivityIdentity.tsx`.
+
+Historical consumers may still map match to non-red colors — track migration under **SCE-ACTIVITY-COLOR-01** (shared design tokens, not per-surface hacks).
+
 ## Progressive disclosure
 
 - **Compact** — dashboard programme rows (`PersonalProgrammeAgendaRow`), selected-day calendar agenda  
 - **Standard** — calendar month block secondary line (identity primary, no full metadata in month cells)  
-- **Detail** — dedicated activity views (future consumers)
+- **Management** — Planning → Trainings / Spiele / Turniere list rows (`SportingActivityIdentity` + management presentation adapters)  
+- **Detail** — dedicated Activity Detail (future: SCE-ACTIVITY-DESIGN-01B)
 
 ## Consumer migration
 
 | Consumer | Status |
 |----------|--------|
-| Personal Dashboard — Mein Programm (`PersonalProgrammeAgendaRow`) | Migrated (R1–R3 compact metadata) |
+| Personal Dashboard — Mein Programm (`PersonalProgrammeAgendaRow`) | Migrated (R1–R7: compact metadata, club–location line, type pills) |
 | Personal calendar selected-day agenda | Uses same compact helpers |
-| Matchcenter / tournament management lists | Separate standard/detail formatters |
+| Planning → Trainings (`TrainingSeriesManagementRow`) | Migrated (R8 management presentation + identity) |
+| Planning → Spiele (`SpieleManagementMatchRow`) | Migrated (R8) |
+| Planning → Turniere (`TurniereManagementRow`) | Migrated (R8) |
+| Command center / Wochenplaner / team views | Planned — SCE-ACTIVITY-DESIGN-01A / 01D |
