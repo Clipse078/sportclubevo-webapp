@@ -14,6 +14,7 @@ const TOURNAMENT_CATEGORY_LABELS: Record<string, string> = {
   SENIOREN: "Senioren",
   TRAININGSGRUPPE: "Trainingsgruppe",
 };
+import { buildTournamentOrganiserClubIdentity } from "@/lib/sporting-activity-design";
 import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
 import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
@@ -172,16 +173,13 @@ export function isTenantHostedTournament(tournament: Pick<TournamentDto, "homeAw
 
 export function resolveTournamentRowCrest(
   tournament: TournamentDto,
-  tenantLogoUrl: string | null | undefined,
+  _tenantLogoUrl: string | null | undefined,
 ): { logoUrl: string | null; altName: string } {
-  const organizerName = tournament.organizerName?.trim() || tournament.title;
-  if (tournament.organizerLogoUrl) {
-    return { logoUrl: tournament.organizerLogoUrl, altName: organizerName };
-  }
-  if (tournament.homeAway === "HOME" && tenantLogoUrl?.trim()) {
-    return { logoUrl: tenantLogoUrl.trim(), altName: organizerName };
-  }
-  return { logoUrl: null, altName: organizerName };
+  const identity = buildTournamentOrganiserClubIdentity(tournament);
+  return {
+    logoUrl: identity.logoUrl ?? null,
+    altName: identity.displayName,
+  };
 }
 
 export { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";

@@ -73,4 +73,8 @@ export type SportingActivityPresentation = {
   eventType?: EventType;
 };
 
+/**
+ * UX-01 formatter output density. For layout surfaces (Mein Programm, Wochenplaner, management),
+ * prefer `SportingActivityDensity` in `@/lib/sporting-activity-design` (`compact` | `planner` | `management`).
+ */
 export type SportingActivityPresentationDensity = "compact" | "standard" | "detail";
