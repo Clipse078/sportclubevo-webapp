@@ -15,6 +15,7 @@ const TOURNAMENT_CATEGORY_LABELS: Record<string, string> = {
   TRAININGSGRUPPE: "Trainingsgruppe",
 };
 import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
+import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { TournamentDto } from "./types";
 import type { TournamentOperationalAssessment } from "./operational-state";
@@ -183,39 +184,13 @@ export function resolveTournamentRowCrest(
   return { logoUrl: null, altName: organizerName };
 }
 
+export { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
+
 function buildTournamentManagementPresentationSnapshot(
   tournament: TournamentDto,
+  tenantClubName?: string | null,
 ): SportingActivityPresentation {
-  const teamName =
-    tournament.team?.name?.trim() ||
-    getTournamentParticipatingTeams(tournament)[0]?.name?.trim() ||
-    undefined;
-  const allocation = tournament.resourceAllocations[0];
-  const organiser = tournament.organizerName?.trim() || undefined;
-  const resource =
-    allocation?.facilityResourceName?.trim() ||
-    allocation?.facilityResourceCode?.trim() ||
-    undefined;
-
-  return {
-    identity: {
-      resourceKey: `event:${tournament.id}`,
-      title: tournament.title,
-      typeLabel: "Turnier",
-      activityKind: "TOURNAMENT",
-    },
-    schedule: {
-      startAt: tournament.startAt,
-      endAt: tournament.endAt,
-    },
-    team: teamName ? { name: teamName } : undefined,
-    context: organiser ? { organiser } : undefined,
-    location: {
-      mode: "NEUTRAL",
-      venueName: tournament.location?.trim() || undefined,
-      facilityResource: resource,
-    },
-  };
+  return buildTurniereManagementActivityPresentation(tournament, tenantClubName);
 }
 
 export function resolveTournamentManagementMetadataLine(tournament: TournamentDto): string | null {

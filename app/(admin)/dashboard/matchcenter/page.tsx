@@ -159,6 +159,7 @@ export default async function MatchcenterPage({
           canManage={canManage}
           currentMonthParam={currentMonthParam}
           tenantLogoUrl={tenantContext.logoUrl}
+          tenantClubName={tenantContext.name}
           searchQuery={searchQuery}
           sortParam={params.sort ?? null}
           homeAwayFilter={homeAwayFilter}

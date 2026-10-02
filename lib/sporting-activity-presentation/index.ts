@@ -49,3 +49,5 @@ export {
 } from "./builders";
 
 export { loadTrainingSessionFacilityHints } from "./training-facility-batch";
+
+export { buildTrainingManagementActivityPresentation } from "./management-adapters";

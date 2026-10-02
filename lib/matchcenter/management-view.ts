@@ -4,10 +4,7 @@
  */
 
 import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
-import {
-  buildSportingActivityLocation,
-  normalizeSportingLocationMode,
-} from "@/lib/sporting-activity-presentation/location";
+import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { MatchcenterMatchSummary } from "./types";
 import {
@@ -658,48 +655,14 @@ export function buildSpieleTeamContextLine(match: MatchcenterMatchSummary): stri
   return ownTeam ?? competition ?? null;
 }
 
-function resolveOpponentSideLabel(match: MatchcenterMatchSummary): string | null {
-  const opponentSide = match.home.isOwnTeam
-    ? match.away
-    : match.away.isOwnTeam
-      ? match.home
-      : match.away;
-  return resolveMatchcenterCompactSideName(opponentSide)?.trim() || opponentSide.displayName?.trim() || null;
-}
+export { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
 
 function buildMatchcenterCompactActivityPresentation(
   match: MatchcenterMatchSummary,
   pitchLabel?: string | null,
+  tenantClubName?: string | null,
 ): SportingActivityPresentation {
-  const mode = normalizeSportingLocationMode(match.homeAway);
-  const homeName = resolveMatchcenterCompactSideName(match.home) ?? "—";
-  const awayName = resolveMatchcenterCompactSideName(match.away) ?? "—";
-  const opponent = mode === "AWAY" ? resolveOpponentSideLabel(match) : null;
-  const pitch = pitchLabel?.trim() || match.operational.pitchCode?.trim() || null;
-
-  return {
-    identity: {
-      resourceKey: `event:${match.id}`,
-      title: match.title,
-      typeLabel: "Spiel",
-      activityKind: "MATCH",
-    },
-    schedule: {
-      startAt: match.startAt.toISOString(),
-      endAt: match.endAt ? match.endAt.toISOString() : null,
-    },
-    participants: {
-      fixtureLine: `${homeName} – ${awayName}`,
-      opponentName: opponent ?? undefined,
-      homeAway: mode,
-    },
-    location: buildSportingActivityLocation({
-      mode,
-      hostOrOrganiser: opponent ?? undefined,
-      venueName: match.location,
-      facilityResource: pitch,
-    }),
-  };
+  return buildSpieleManagementActivityPresentation(match, { pitchLabel, tenantClubName });
 }
 
 export function buildSpieleVenueLine(

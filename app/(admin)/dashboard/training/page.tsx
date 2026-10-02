@@ -24,6 +24,7 @@ import {
   sortTrainingSeriesManagementRows,
   type TrainingSeriesManagementFilters,
 } from "@/lib/training/management-series-view";
+import { attachTrainingManagementActivityPresentations } from "@/lib/sporting-activity-presentation/management-adapters";
 import {
   listTeamSeasonDisplayNamesForManagement,
   listTeamSeasonFilterOptions,
@@ -145,13 +146,16 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
 
   const teamLabelByTeamSeasonId = new Map(teamOptions.map((team) => [team.id, team.label]));
 
-  const seriesManagementRows = buildTrainingSeriesManagementRows({
-    series: displayedSeries,
-    tenantName: tenantContext.name,
-    teamDisplayNameByTeamSeasonId,
-    teamLabelByTeamSeasonId,
-    allocationsBySeriesId: allocationsBySeries,
-  });
+  const seriesManagementRows = attachTrainingManagementActivityPresentations(
+    buildTrainingSeriesManagementRows({
+      series: displayedSeries,
+      tenantName: tenantContext.name,
+      teamDisplayNameByTeamSeasonId,
+      teamLabelByTeamSeasonId,
+      allocationsBySeriesId: allocationsBySeries,
+    }),
+    tenantContext.name,
+  );
 
   const filteredSeriesRows = filterTrainingSeriesManagementRows(seriesManagementRows, {
     search: params.seriesSearch,

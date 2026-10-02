@@ -2,24 +2,20 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { getProgrammeSourceActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { cn } from "@/lib/cn";
-import {
-  formatSportingActivityCompactAgendaClubLocationLine,
-  formatSportingActivityCompactPrimaryText,
-  resolveSportingActivityCompactAgendaTypeLine,
-} from "@/lib/sporting-activity-presentation/compact";
+import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
 import {
   resolveSportingActivityTypePillVariant,
   sportingActivityTypePillClassName,
 } from "@/lib/sporting-activity-presentation/activity-type-pill";
 import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
+import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
@@ -38,7 +34,6 @@ export function PersonalProgrammeAgendaRow({
   className,
 }: PersonalProgrammeAgendaRowProps) {
   const t = useTranslations("PersonalDashboard.programme");
-  const locale = useLocale();
   const statusLabel =
     item.status === "cancelled"
       ? t("statusCancelled")
@@ -52,23 +47,6 @@ export function PersonalProgrammeAgendaRow({
   const displayTitle = item.activityPresentation
     ? formatSportingActivityCompactPrimaryText(item.activityPresentation)
     : item.title;
-
-  const compactOptions = {
-    schedulePresentation: "omit-start" as const,
-    fmtCfg: { locale },
-    meinProgrammContract: true,
-  };
-
-  const clubLocationLine = item.activityPresentation
-    ? formatSportingActivityCompactAgendaClubLocationLine(
-        item.activityPresentation,
-        compactOptions,
-      )
-    : undefined;
-
-  const typeLine = item.activityPresentation
-    ? resolveSportingActivityCompactAgendaTypeLine(item.activityPresentation, compactOptions)
-    : undefined;
 
   const legacyTypeFallback =
     !item.activityPresentation && item.typeLabel
@@ -114,49 +92,32 @@ export function PersonalProgrammeAgendaRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
-                {displayTitle}
-              </p>
-              {typeLine ? (
-                <p className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                  <span
-                    className={
-                      typePillVariant
-                        ? sportingActivityTypePillClassName(typePillVariant)
-                        : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
-                    }
-                    data-activity-type-pill={typePillVariant ?? undefined}
-                  >
-                    {typeLine.typeLabel}
-                  </span>
-                  {typeLine.contextIndicator ? (
-                    <span
-                      className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]"
-                      data-activity-context-badge
-                    >
-                      {typeLine.contextIndicator}
-                    </span>
+              {item.activityPresentation ? (
+                <SportingActivityIdentity
+                  presentation={item.activityPresentation}
+                  mode="compact"
+                />
+              ) : (
+                <>
+                  <p className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+                    {displayTitle}
+                  </p>
+                  {legacyTypeFallback ? (
+                    <p className="mt-0.5">
+                      <span
+                        className={
+                          typePillVariant
+                            ? sportingActivityTypePillClassName(typePillVariant)
+                            : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+                        }
+                        data-activity-type-pill={typePillVariant ?? undefined}
+                      >
+                        {legacyTypeFallback}
+                      </span>
+                    </p>
                   ) : null}
-                </p>
-              ) : legacyTypeFallback ? (
-                <p className="mt-0.5">
-                  <span
-                    className={
-                      typePillVariant
-                        ? sportingActivityTypePillClassName(typePillVariant)
-                        : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
-                    }
-                    data-activity-type-pill={typePillVariant ?? undefined}
-                  >
-                    {legacyTypeFallback}
-                  </span>
-                </p>
-              ) : null}
-              {clubLocationLine ? (
-                <p className="mt-0.5 line-clamp-2 text-[0.8125rem] leading-snug text-[var(--text-2)]">
-                  {clubLocationLine}
-                </p>
-              ) : null}
+                </>
+              )}
             </div>
             {item.deepLink ? (
               <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />

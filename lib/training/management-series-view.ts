@@ -8,6 +8,7 @@ import {
   COCKPIT_WEEKDAY_ORDER,
   resolveSeriesAllocationDisplay,
 } from "@/lib/training/series-cockpit";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { TrainingAllocationDto, TrainingSeriesDto, TrainingSeriesStatus, Weekday } from "@/lib/training/types";
 
 const WEEKDAY_SHORT: Record<Weekday, string> = {
@@ -71,6 +72,8 @@ export type TrainingSeriesManagementRow = {
   sessionCount: number;
   updatedAt: string;
   seriesEntries: TrainingSeriesManagementSeriesEntry[];
+  /** Attached on the server in training management page load (SCE-ACTIVITY-UX-01R8). */
+  activityPresentation?: SportingActivityPresentation;
 };
 
 export type TrainingSeriesManagementFilters = {

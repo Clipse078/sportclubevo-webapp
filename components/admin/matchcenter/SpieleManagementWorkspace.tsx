@@ -57,6 +57,7 @@ type Props = {
   canManage?: boolean;
   currentMonthParam?: string;
   tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
   searchQuery?: string;
   sortParam?: string | null;
   homeAwayFilter?: SpieleHomeAwayFilter;
@@ -133,6 +134,7 @@ export default function SpieleManagementWorkspace({
   canManage = false,
   currentMonthParam,
   tenantLogoUrl = null,
+  tenantClubName = null,
   searchQuery = "",
   sortParam = null,
   homeAwayFilter = "ALLE",
@@ -482,6 +484,7 @@ export default function SpieleManagementWorkspace({
                 locale={locale}
                 timezone={timezone}
                 tenantLogoUrl={tenantLogoUrl}
+                tenantClubName={tenantClubName}
                 canManage={canManage}
                 compact={listView === "KOMPAKT"}
               />

@@ -1,32 +1,30 @@
 /**
- * SPIELE-UX-01D — responsive match row presentation (dedup + density).
+ * SPIELE-UX-01D / SCE-ACTIVITY-UX-01R8 — match row identity presentation.
  * @vitest-environment jsdom
  */
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
-  useTranslations: (namespace?: string) => (key: string) => {
-    if (namespace === "PlanningEditor.match" && key === "activityTypeLabel") {
-      return "Spiel";
-    }
-    return key;
-  },
+  useTranslations: () => (key: string) => key,
 }));
+
 import SpieleManagementMatchRow from "@/components/admin/matchcenter/SpieleManagementMatchRow";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import type { MatchcenterMatchSummary, MatchcenterSide } from "@/lib/matchcenter/types";
 
 function side(overrides: Partial<MatchcenterSide> = {}): MatchcenterSide {
+  const displayName = overrides.displayName ?? "FC Allschwil E1";
   return {
     providerTeamId: 1,
-    providerTeamName: "FC Allschwil E1",
+    providerTeamName: displayName,
     canonicalTeamId: "team-1",
-    canonicalTeamName: "FC Allschwil E1",
-    displayName: "FC Allschwil E1",
+    canonicalTeamName: displayName,
+    displayName,
     resolution: "RESOLVED",
     isOwnTeam: true,
     ...overrides,
@@ -91,7 +89,21 @@ function createMatch(
   };
 }
 
-function renderRow(match: MatchcenterMatchSummary) {
+function renderRow(match: MatchcenterMatchSummary, tenantClubName = "FC Allschwil") {
+  const assessment = assessMatchOperationalState(match);
+  return render(
+    <SpieleManagementMatchRow
+      match={match}
+      assessment={assessment}
+      locale="de-CH"
+      timezone="Europe/Zurich"
+      tenantClubName={tenantClubName}
+      canManage={false}
+    />,
+  );
+}
+
+function renderRowHtml(match: MatchcenterMatchSummary) {
   const assessment = assessMatchOperationalState(match);
   return renderToStaticMarkup(
     <SpieleManagementMatchRow
@@ -99,40 +111,52 @@ function renderRow(match: MatchcenterMatchSummary) {
       assessment={assessment}
       locale="de-CH"
       timezone="Europe/Zurich"
+      tenantClubName="FC Allschwil"
       canManage={false}
     />,
   );
 }
 
-function countOccurrences(haystack: string, needle: string): number {
-  let count = 0;
-  let index = 0;
-  while ((index = haystack.indexOf(needle, index)) !== -1) {
-    count += 1;
-    index += needle.length;
-  }
-  return count;
-}
+describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
+  it("MATCH AWAY — fixture, SPIEL red, Auswärts, host club - location", () => {
+    renderRow(
+      createMatch({
+        home: side({ isOwnTeam: false, displayName: "BSC Old Boys" }),
+        away: side({ isOwnTeam: true, displayName: "FC Allschwil E1" }),
+        location: "Schützenmatte",
+        homeAway: "AWAY",
+      }),
+    );
 
-describe("SPIELE-UX-01D — match row presentation", () => {
-  it("A. AWAY intermediate status renders Auswärtsspiel exactly once (no readiness duplicate)", () => {
-    const html = renderRow(createMatch({ homeAway: "AWAY" }));
-    const start = html.indexOf('data-testid="matchcenter-action-match-away-1"');
-    const actionBlock = html.slice(start, html.indexOf("</article>", start));
-    expect(countOccurrences(actionBlock, "Auswärtsspiel")).toBe(1);
+    expect(screen.getByText(/BSC Old Boys.*FC Allschwil E1/)).toBeInTheDocument();
+    expect(screen.getByText("SPIEL").getAttribute("data-activity-type-pill")).toBe("match-red");
+    expect(screen.getByText("Auswärts")).toHaveAttribute("data-activity-context-badge");
+    expect(screen.getByText("BSC Old Boys - Schützenmatte")).toBeInTheDocument();
+    expect(screen.queryByText("FC Allschwil - Schützenmatte")).not.toBeInTheDocument();
+    expect(screen.getByText("Meisterschaft")).toBeInTheDocument();
   });
 
-  it("B. AWAY row surfaces venue once without repeating the opponent", () => {
-    const venue = "St. Jakob-Park, Basel";
-    const html = renderRow(createMatch({ homeAway: "AWAY", location: venue }));
-    expect(countOccurrences(html, venue)).toBe(1);
-    expect(html).toContain("Auswärts");
-    expect(html).not.toMatch(/FC Basel E1 · St\. Jakob-Park/);
-    expect(html).not.toContain('aria-label="Matchvorbereitung"');
+  it("MATCH HOME — SPIEL red, Eigener Verein, tenant club - location", () => {
+    renderRow(
+      createMatch({
+        id: "match-home-1",
+        homeAway: "HOME",
+        home: side({ isOwnTeam: true, displayName: "FC Allschwil E1" }),
+        away: side({
+          isOwnTeam: false,
+          displayName: "FC Binningen",
+        }),
+        location: "Im Brüel",
+      }),
+    );
+
+    expect(screen.getByText(/FC Allschwil E1.*FC Binningen/)).toBeInTheDocument();
+    expect(screen.getByText("Eigener Verein")).toHaveAttribute("data-activity-context-badge");
+    expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
   });
 
-  it("C. HOME row retains preparation checklist labels and readiness", () => {
-    const html = renderRow(
+  it("HOME row retains preparation checklist operational metadata", () => {
+    const html = renderRowHtml(
       createMatch({
         id: "match-home-1",
         homeAway: "HOME",
@@ -140,7 +164,6 @@ describe("SPIELE-UX-01D — match row presentation", () => {
         away: side({
           isOwnTeam: false,
           displayName: "FC Basel E1",
-          canonicalTeamName: "FC Basel E1",
         }),
         operational: {
           pitchCode: "KR2",
@@ -158,7 +181,6 @@ describe("SPIELE-UX-01D — match row presentation", () => {
       }),
     );
 
-    expect(html).toContain("Heimspiel");
     expect(html).toContain("Bereit");
     expect(html).toContain("Spielfeld");
     expect(html).toContain("Heimkabine");
@@ -169,14 +191,19 @@ describe("SPIELE-UX-01D — match row presentation", () => {
     expect(html).toContain("E1");
   });
 
-  it("D. match identity (teams + kickoff test id) remains stable", () => {
-    const html = renderRow(createMatch());
-    expect(html).toContain('data-testid="matchcenter-spielplanung-row-match-away-1"');
-    expect(html).toContain("FC Allschwil E1");
-    expect(html).toContain("FC Basel E1");
+  it("AWAY row does not render home preparation checklist", () => {
+    const html = renderRowHtml(createMatch({ homeAway: "AWAY" }));
+    expect(html).not.toContain('aria-label="Matchvorbereitung"');
   });
 
-  it("E. row source does not add client data fetching", () => {
+  it("does not fabricate location or context when home/away unknown", () => {
+    renderRow(createMatch({ homeAway: null, location: null }));
+    expect(screen.queryByText("Eigener Verein")).not.toBeInTheDocument();
+    expect(screen.queryByText("Auswärts")).not.toBeInTheDocument();
+    expect(screen.queryByText(/undefined|-\s*$/)).not.toBeInTheDocument();
+  });
+
+  it("row source does not add client data fetching", () => {
     const rowSource = readFileSync(
       resolve(__dirname, "../SpieleManagementMatchRow.tsx"),
       "utf8",

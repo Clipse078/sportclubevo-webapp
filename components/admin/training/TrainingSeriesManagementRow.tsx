@@ -11,9 +11,8 @@ import {
   resolveTeamIdentityAccentClass,
   trainingManagementStatusPresentation,
 } from "@/lib/training/management-presentation";
-import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
+import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { cn } from "@/lib/cn";
-import { Users } from "lucide-react";
 
 type Props = {
   row: Row;
@@ -49,13 +48,17 @@ export default function TrainingSeriesManagementRow({
       >
         <ProductDomainSceIcon name="people" size={20} />
       </span>
-      <div className="min-w-0">
-        <p className="flex min-w-0 items-center gap-1.5 truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-          <ActivitySceIcon activityKind="TRAINING" size={20} />
-          <span className="truncate">{row.title}</span>
+      {row.activityPresentation ? (
+        <SportingActivityIdentity
+          presentation={row.activityPresentation}
+          mode="management"
+          className="flex-1"
+        />
+      ) : (
+        <p className="truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)]">
+          {row.title}
         </p>
-        <p className="truncate text-[0.8125rem] leading-snug text-[var(--text-2)]">{row.contextLabel}</p>
-      </div>
+      )}
     </div>
   );
 
