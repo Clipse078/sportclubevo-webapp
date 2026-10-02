@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SportingActivityDetailLink } from "@/components/sporting-activity/detail/SportingActivityDetailLink";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
@@ -137,13 +137,13 @@ export function PersonalProgrammeAgendaRow({
 
   if (item.deepLink) {
     return (
-      <Link
+      <SportingActivityDetailLink
         href={item.deepLink}
         className="block rounded-[var(--radius-md)] no-underline motion-safe:transition-colors motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_45%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
         aria-label={item.ariaLabel}
       >
         {row}
-      </Link>
+      </SportingActivityDetailLink>
     );
   }
 

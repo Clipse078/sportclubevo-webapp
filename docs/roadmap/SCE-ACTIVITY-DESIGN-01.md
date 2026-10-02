@@ -131,6 +131,38 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 **Bearbeiten** in Activity Detail appears **only** for users with appropriate **management capabilities** (e.g. Spielbetrieb Koordinator — use canonical permissions, do not hardcode role names).
 
+### 01B implementation (STAGE)
+
+**Architecture**
+
+- Canonical read model: `SportingActivityDetail` in `lib/sporting-activity-detail/` (server-composed; no Prisma/domain leakage to the client).
+- Presentation reuse: `SportingActivityPresentation` + 01A `ClubIdentity` / `MatchClubPair` / tournament organiser identity.
+- UI shell: SCE `Sheet` with activity-detail width (`~680px` max), scroll body, Escape/backdrop close, focus restore to trigger on close.
+- Contextual navigation: `SportingActivityDetailProvider` in authenticated admin shell intercepts links to activity detail routes and loads via `GET /api/dashboard/sporting-activity-detail` (on-demand; dashboard initial load unchanged).
+- Direct / deep links: `/dashboard/activity/training-session/[sessionId]` and `/dashboard/activity/event/[eventId]` render full page detail (mobile-friendly card layout).
+
+**Read vs manage**
+
+- Mein Programm + Mein Kalender (selected-day agenda) deep links now target Activity Detail for TRAINING / MATCH / TOURNAMENT.
+- Management editors (`/dashboard/training/sessions/.../edit`, `/dashboard/planner/edit/...`) unchanged; no Bearbeiten slot wired in 01B (reserved for 01E).
+
+**Participant data boundary**
+
+- Included when canonical data exists: schedule, location lines, team, meeting time (events), trainers (training), organiser crest (tournament), participation (when `ParticipationResponse` exists), participant `description` / series description.
+- Excluded: SFV IDs, sync timestamps, import/source metadata, publication/admin controls, raw policy JSON.
+
+**Participation**
+
+- Reuses `respondToPersonalParticipationAction` when actor may respond for linked person; otherwise read-only status.
+
+**Performance**
+
+- Detail fetched only on open (sheet) or on direct route navigation; programme adapters unchanged except `deepLink` targets.
+
+**Deferred**
+
+- 01C management cards, 01D Wochenplaner block UX, 01E permission/navigation hardening + Bearbeiten, FACILITY-MODEL-01 hierarchy.
+
 ---
 
 ## SCE-ACTIVITY-DESIGN-01C — Match & Tournament Management Cards

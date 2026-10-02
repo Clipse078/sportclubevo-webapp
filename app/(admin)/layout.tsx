@@ -22,6 +22,7 @@ import {
   runWithSceHotfixLogin01Trace,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
+import { SportingActivityDetailProvider } from "@/components/sporting-activity/detail/SportingActivityDetailProvider";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -132,7 +133,14 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 px-5 py-6 lg:px-7 lg:py-7">
-          {children}
+          <SportingActivityDetailProvider
+            fmtCfg={{
+              locale: ctx?.locale ?? "de-CH",
+              timezone: ctx?.timezone ?? "Europe/Zurich",
+            }}
+          >
+            {children}
+          </SportingActivityDetailProvider>
         </main>
       </div>
     </div>

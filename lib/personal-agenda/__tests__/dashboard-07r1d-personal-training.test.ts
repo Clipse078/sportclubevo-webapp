@@ -150,7 +150,7 @@ describe("DASHBOARD-07R1D — personal trainings (canonical TrainingSession)", (
     expect(items[0].sourceType).toBe("TRAINING");
     expect(items[0].id).toBe("training-session:sess-mon");
     expect(getProgrammeSourcePresentation(items[0].sourceType).paletteKey).toBe("training-blue");
-    expect(items[0].deepLink).toBe("/dashboard/training/sessions/sess-mon/edit");
+    expect(items[0].deepLink).toBe("/dashboard/activity/training-session/sess-mon");
   });
 
   it("B — unrelated team training → absent (zero metadata)", async () => {
