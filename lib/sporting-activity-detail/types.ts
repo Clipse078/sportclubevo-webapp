@@ -40,6 +40,11 @@ export type SportingActivityDetailTrainingSection = {
   trainers: { name: string; roleLabel?: string | null }[];
 };
 
+export type SportingActivityDetailParticipantTeam = {
+  label: string;
+  identity: ClubIdentity;
+};
+
 /**
  * Canonical read model for Activity Detail (SCE-ACTIVITY-DESIGN-01B).
  * Server-composed; safe for client rendering without domain leakage.
@@ -49,6 +54,7 @@ export type SportingActivityDetail = {
   kind: SportingActivityDetailKind;
   presentation: SportingActivityPresentation;
   teamLabel?: string;
+  participantTeam?: SportingActivityDetailParticipantTeam;
   meetingAt?: string | null;
   routeTarget?: SportingActivityDetailRouteTarget | null;
   participation?: SportingActivityDetailParticipation;

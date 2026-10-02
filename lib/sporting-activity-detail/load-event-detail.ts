@@ -20,7 +20,7 @@ import {
 } from "@/lib/matchcenter/query-service";
 import { getTenantMatchOperationalPolicy } from "@/lib/match/tenant-operational-policy-service";
 import { getTournament } from "@/lib/tournaments/tournament-service";
-import { getTournamentParticipatingTeams } from "@/lib/tournaments/team-participation";
+import { buildSportingActivityDetailParticipantTeam } from "./participant-team";
 import { loadSportingActivityDetailParticipation } from "./participation";
 import { resolveSportingActivityDetailRouteTarget } from "./route-target";
 import type { LoadSportingActivityDetailResult, SportingActivityDetail } from "./types";
@@ -145,11 +145,18 @@ export async function loadMatchActivityDetail(input: {
     participantInformation.push({ label: "Hinweise", value: description });
   }
 
+  const participantTeam = buildSportingActivityDetailParticipantTeam({
+    tenantClubName: input.tenantClubName,
+    tenantLogoUrl: input.tenantLogoUrl,
+    teamName,
+  });
+
   const detail: SportingActivityDetail = {
     resourceKey,
     kind: "MATCH",
     presentation,
     teamLabel: teamName,
+    participantTeam,
     meetingAt: event.meetingTime?.toISOString() ?? null,
     routeTarget: resolveSportingActivityDetailRouteTarget(presentation),
     participation,
@@ -168,6 +175,7 @@ export async function loadTournamentActivityDetail(input: {
   personal: Awaited<ReturnType<typeof import("@/lib/dashboard/personal-context").resolvePersonalContext>>;
   eventId: string;
   tenantClubName: string;
+  tenantLogoUrl: string | null;
 }): Promise<LoadSportingActivityDetailResult> {
   const event = await prisma.event.findFirst({
     where: { id: input.eventId, tenantId: input.tenantId, type: "TOURNAMENT" },
@@ -263,14 +271,6 @@ export async function loadTournamentActivityDetail(input: {
     tournamentInfo.tournamentInfo.push({ label: "Spielmodus", value: formatLabel });
   }
 
-  const participatingTeams = getTournamentParticipatingTeams(tournament);
-  if (participatingTeams.length > 0) {
-    tournamentInfo.tournamentInfo.push({
-      label: "Teams",
-      value: String(participatingTeams.length),
-    });
-  }
-
   const participation = await loadSportingActivityDetailParticipation({
     tenantId: input.tenantId,
     actorUserId: input.userId,
@@ -286,11 +286,18 @@ export async function loadTournamentActivityDetail(input: {
     participantInformation.push({ label: "Hinweise", value: description });
   }
 
+  const participantTeam = buildSportingActivityDetailParticipantTeam({
+    tenantClubName: input.tenantClubName,
+    tenantLogoUrl: input.tenantLogoUrl,
+    teamName,
+  });
+
   const detail: SportingActivityDetail = {
     resourceKey,
     kind: "TOURNAMENT",
     presentation,
     teamLabel: teamName,
+    participantTeam,
     meetingAt: event.meetingTime?.toISOString() ?? null,
     routeTarget: resolveSportingActivityDetailRouteTarget(presentation),
     participation,

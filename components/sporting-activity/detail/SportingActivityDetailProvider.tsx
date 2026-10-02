@@ -20,8 +20,6 @@ import {
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { SportingActivityDetailContent } from "./SportingActivityDetailContent";
 import { SportingActivityDetailSkeleton } from "./SportingActivityDetailSkeleton";
-import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
-
 type SportingActivityDetailContextValue = {
   openFromHref: (href: string, trigger?: HTMLElement | null) => void;
   openFromResourceKey: (resourceKey: string, trigger?: HTMLElement | null) => void;
@@ -160,11 +158,7 @@ export function SportingActivityDetailProvider({
     [openFromHref, openFromResourceKey],
   );
 
-  const sheetTitle = detail
-    ? formatSportingActivityCompactPrimaryText(detail.presentation)
-    : loading
-      ? "Aktivität"
-      : "Aktivität";
+  const sheetTitle = "Aktivität";
 
   const refreshDetail = useCallback(() => {
     if (!detail) return;

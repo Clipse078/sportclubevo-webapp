@@ -1,17 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
-import { ClubIdentityDisplay } from "@/components/sporting-activity/ClubIdentityDisplay";
+import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { MatchClubPair } from "@/components/sporting-activity/MatchClubPair";
-import { SportingActivityLocationLines } from "@/components/sporting-activity/SportingActivityLocationLines";
-import { SportingActivityScheduleLine } from "@/components/sporting-activity/SportingActivityScheduleLine";
 import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
 import {
   resolveSportingActivityCompactAgendaTypeLine,
   formatSportingActivityCompactAgendaContextIndicator,
 } from "@/lib/sporting-activity-presentation/compact";
-import { formatSportingActivityLocationLines } from "@/lib/sporting-activity-presentation/location";
+import { formatSportingActivityDetailLocationLines } from "@/lib/sporting-activity-detail/detail-location";
+import { formatSportingActivityDetailScheduleParts } from "@/lib/sporting-activity-detail/detail-schedule";
 import type { SportingActivityDetail } from "@/lib/sporting-activity-detail/types";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { formatTime } from "@/lib/tenant-runtime/formatters";
@@ -20,6 +18,11 @@ import {
   ActivityDetailSection,
 } from "./SportingActivityDetailSections";
 import { SportingActivityDetailParticipationBlock } from "./SportingActivityDetailParticipation";
+import {
+  ActivityDetailLocationBlock,
+  ActivityDetailScheduleGroup,
+  ActivityDetailTeamRow,
+} from "./ActivityDetailBlocks";
 
 const MEIN_PROGRAMM_CONTRACT = { meinProgrammContract: true as const };
 
@@ -45,10 +48,16 @@ export function SportingActivityDetailContent({
     presentation,
     MEIN_PROGRAMM_CONTRACT,
   );
-  const locationLines = formatSportingActivityLocationLines(presentation.location);
   const primaryTitle = formatSportingActivityCompactPrimaryText(presentation);
   const startAt = new Date(presentation.schedule.startAt);
   const endAt = presentation.schedule.endAt ? new Date(presentation.schedule.endAt) : null;
+
+  const scheduleParts = formatSportingActivityDetailScheduleParts({
+    startAt,
+    endAt,
+    allDay: presentation.schedule.allDay,
+    fmtCfg,
+  });
 
   const headerTypeLabel =
     presentation.identity.activityKind === "TRAINING"
@@ -57,14 +66,34 @@ export function SportingActivityDetailContent({
         ? "Spiel"
         : "Turnier";
 
+  const heroLocationLines = formatSportingActivityDetailLocationLines(presentation.location, {
+    includeHomeClub: detail.kind === "TRAINING",
+    omitHostOrOrganiser: detail.kind === "TOURNAMENT",
+  });
+
+  const ortLocationLines =
+    detail.kind === "MATCH" || detail.kind === "TOURNAMENT"
+      ? formatSportingActivityDetailLocationLines(presentation.location, {
+          omitHostOrOrganiser: true,
+        })
+      : heroLocationLines;
+
+  const showOrtSection =
+    (detail.kind === "MATCH" || detail.kind === "TOURNAMENT") && ortLocationLines.length > 0;
+
+  const organiserName =
+    detail.kind === "TOURNAMENT" && detail.tournament
+      ? detail.tournament.organiserClubIdentity.displayName
+      : presentation.context?.organiser;
+
   return (
     <article
-      className="min-w-0 space-y-4 pb-2"
+      className="min-w-0 space-y-5 pb-4 text-[var(--foreground)]"
       data-testid="sporting-activity-detail-content"
       data-activity-kind={detail.kind}
       data-layout={layout}
     >
-      <header className="space-y-3">
+      <header className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <ActivityTypePill
             activityKind={presentation.identity.activityKind}
@@ -78,31 +107,32 @@ export function SportingActivityDetailContent({
         </div>
 
         {detail.kind === "MATCH" && detail.match ? (
-          <MatchClubPair pair={detail.match.clubPair} density="management" vsLabel="–" />
+          <MatchClubPair pair={detail.match.clubPair} density="management" />
         ) : null}
 
         {detail.kind === "TOURNAMENT" && detail.tournament ? (
-          <div className="flex flex-col items-start gap-2">
-            <ClubIdentityDisplay
+          <div className="flex items-start gap-3">
+            <ClubCrest
               identity={detail.tournament.organiserClubIdentity}
-              density="management"
+              density="detail"
+              decorative
+              className="shrink-0"
             />
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">{primaryTitle}</h2>
-            {presentation.context?.organiser ? (
-              <p className="text-[0.875rem] text-[var(--text-2)]">{presentation.context.organiser}</p>
-            ) : null}
+            <div className="min-w-0 space-y-1">
+              <h2 className="text-xl font-semibold leading-snug tracking-tight">{primaryTitle}</h2>
+              {organiserName ? (
+                <p className="text-[0.875rem] text-[var(--text-2)]">
+                  Veranstalter:{" "}
+                  <span className="font-medium text-[var(--foreground)]">{organiserName}</span>
+                </p>
+              ) : null}
+            </div>
           </div>
         ) : (
-          <h2 className="text-lg font-semibold leading-snug text-[var(--foreground)]">{primaryTitle}</h2>
+          <h2 className="text-xl font-semibold leading-snug tracking-tight">{primaryTitle}</h2>
         )}
 
-        <SportingActivityScheduleLine
-          startAt={startAt}
-          endAt={endAt}
-          allDay={presentation.schedule.allDay}
-          fmtCfg={fmtCfg}
-          className="text-[0.9375rem] font-medium text-[var(--foreground)]"
-        />
+        <ActivityDetailScheduleGroup parts={scheduleParts} />
 
         {typeLine && detail.kind === "TRAINING" ? (
           <p className="sr-only">
@@ -111,29 +141,33 @@ export function SportingActivityDetailContent({
           </p>
         ) : null}
 
-        {locationLines.length > 0 ? (
-          <div className="space-y-2">
-            <SportingActivityLocationLines lines={locationLines} density="standard" />
-            {detail.routeTarget ? (
-              <Link
-                href={detail.routeTarget.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sce-link-primary inline-flex min-h-10 items-center text-[0.875rem] font-medium"
-                data-testid="activity-detail-route-link"
-              >
-                {detail.routeTarget.label}
-              </Link>
-            ) : null}
-          </div>
+        {detail.kind === "TRAINING" ? (
+          <ActivityDetailLocationBlock
+            lines={heroLocationLines}
+            routeTarget={detail.routeTarget}
+          />
         ) : null}
 
-        {presentation.context?.competitionLabel ? (
-          <p className="text-[0.875rem] text-[var(--text-2)]">{presentation.context.competitionLabel}</p>
+        {presentation.context?.competitionLabel && detail.kind === "MATCH" ? (
+          <p className="text-[0.9375rem] font-medium text-[var(--text-2)]">
+            {presentation.context.competitionLabel}
+          </p>
+        ) : null}
+
+        {showOrtSection ? (
+          <ActivityDetailLocationBlock
+            lines={ortLocationLines}
+            routeTarget={detail.routeTarget}
+            showOrtLabel
+          />
         ) : null}
       </header>
 
-      {detail.teamLabel ? (
+      {detail.participantTeam ? (
+        <ActivityDetailSection title="Mein Team" className="!border-t-[var(--border)]">
+          <ActivityDetailTeamRow participantTeam={detail.participantTeam} />
+        </ActivityDetailSection>
+      ) : detail.teamLabel ? (
         <ActivityDetailSection title="Mein Team">
           <p className="text-[0.9375rem] font-medium text-[var(--foreground)]">{detail.teamLabel}</p>
         </ActivityDetailSection>
@@ -158,7 +192,7 @@ export function SportingActivityDetailContent({
 
       {detail.training?.trainers && detail.training.trainers.length > 0 ? (
         <ActivityDetailSection title="Trainer">
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {detail.training.trainers.map((trainer) => (
               <li key={`${trainer.name}-${trainer.roleLabel ?? ""}`} className="text-[0.875rem]">
                 <span className="font-medium text-[var(--foreground)]">{trainer.name}</span>

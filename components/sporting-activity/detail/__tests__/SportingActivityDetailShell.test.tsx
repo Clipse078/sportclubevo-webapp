@@ -18,13 +18,13 @@ describe("SportingActivityDetailShell", () => {
   it("opens with accessible title and closes", () => {
     const onClose = vi.fn();
     render(
-      <SportingActivityDetailShell open onClose={onClose} title="Junioren F2 Training">
+      <SportingActivityDetailShell open onClose={onClose} title="Aktivität">
         <p>Body</p>
       </SportingActivityDetailShell>,
     );
 
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Junioren F2 Training" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Aktivität" })).toBeTruthy();
     fireEvent.click(screen.getByLabelText("Schließen"));
     expect(onClose).toHaveBeenCalled();
   });

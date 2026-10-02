@@ -37,7 +37,7 @@ describe("SCE-ACTIVITY-DESIGN-01B — route target", () => {
     expect(resolveSportingActivityDetailRouteTarget(presentation)).toBeNull();
   });
 
-  it("builds maps link from canonical location lines", () => {
+  it("builds maps link from trustworthy away venue lines", () => {
     const presentation = buildMatchActivityPresentation({
       resourceKey: "event:1",
       title: "Spiel",
@@ -46,11 +46,25 @@ describe("SCE-ACTIVITY-DESIGN-01B — route target", () => {
       location: "Schützenmatte, Basel",
       startAt: new Date("2026-10-03T14:00:00.000Z"),
       homeAway: "AWAY",
+      opponentName: "BSC Old Boys",
     });
     const target = resolveSportingActivityDetailRouteTarget(presentation);
     expect(target?.label).toBe("Route öffnen");
     expect(target?.href).toContain("google.com/maps");
     expect(target?.href).toContain(encodeURIComponent("Schützenmatte"));
+  });
+
+  it("does not build maps link from HOME facility labels alone", () => {
+    const presentation = buildTrainingActivityPresentation({
+      resourceKey: "training-session:1",
+      title: "Training",
+      typeLabel: "Training",
+      clubName: "FC Allschwil",
+      facilityName: "Kunstrasen 2",
+      pitchResourceName: "Kunstrasen 2 A",
+      startAt: new Date("2026-10-05T15:00:00.000Z"),
+    });
+    expect(resolveSportingActivityDetailRouteTarget(presentation)).toBeNull();
   });
 });
 

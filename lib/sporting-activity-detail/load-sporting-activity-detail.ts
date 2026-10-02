@@ -72,6 +72,7 @@ export async function loadSportingActivityDetail(input: {
       personal,
       eventId: input.ref.eventId,
       tenantClubName,
+      tenantLogoUrl,
     });
   }
 

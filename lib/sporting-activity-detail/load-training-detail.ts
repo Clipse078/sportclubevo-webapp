@@ -12,6 +12,7 @@ import type { PersonalEventProjectionActor } from "@/lib/personal-agenda/event-p
 import { getTrainingSession } from "@/lib/training/session-generation-service";
 import { normalizeTrainingProgrammeStatus } from "@/lib/sporting-activity-detail/normalize-training-status";
 import { loadSportingActivityDetailParticipation } from "./participation";
+import { buildSportingActivityDetailParticipantTeam } from "./participant-team";
 import { resolveSportingActivityDetailRouteTarget } from "./route-target";
 import type { LoadSportingActivityDetailResult, SportingActivityDetail } from "./types";
 
@@ -116,11 +117,18 @@ export async function loadTrainingActivityDetail(input: {
     }))
     .filter((row) => row.name.trim());
 
+  const participantTeam = buildSportingActivityDetailParticipantTeam({
+    tenantClubName: input.tenantClubName,
+    tenantLogoUrl: input.tenantLogoUrl,
+    teamName,
+  });
+
   const detail: SportingActivityDetail = {
     resourceKey,
     kind: "TRAINING",
     presentation,
     teamLabel: teamName,
+    participantTeam,
     routeTarget: resolveSportingActivityDetailRouteTarget(presentation),
     participation,
     participantInformation: participantInformation.length > 0 ? participantInformation : undefined,
