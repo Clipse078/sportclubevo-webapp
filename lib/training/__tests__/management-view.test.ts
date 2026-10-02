@@ -219,7 +219,9 @@ describe("TRAININGS-UX-01J2 team-grouped management view models", () => {
       ]),
     });
 
-    expect(rows[0]?.facilityLabel).toBe("Kunstrasen 2 A");
+    expect(rows[0]?.facilityLabel).toBe("Anlage");
+    expect(rows[0]?.facilityVenueName).toBe("Anlage");
+    expect(rows[0]?.facilityResourceLabel).toBe("Kunstrasen 2 A");
     expect(rows[0]?.facilityExtraCount).toBe(1);
   });
 

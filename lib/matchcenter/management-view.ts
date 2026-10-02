@@ -3,6 +3,9 @@
  * search, sort, date grouping, compact readiness, and status presentation.
  */
 
+import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
+import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { MatchcenterMatchSummary } from "./types";
 import {
   assessMatchOperationalState,
@@ -652,11 +655,27 @@ export function buildSpieleTeamContextLine(match: MatchcenterMatchSummary): stri
   return ownTeam ?? competition ?? null;
 }
 
-export function buildSpieleVenueLine(match: MatchcenterMatchSummary): string | null {
-  const location = match.location?.trim();
-  const pitch = match.operational.pitchCode?.trim();
-  if (location && pitch) return `${location} · ${pitch}`;
-  return location ?? pitch ?? null;
+export { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
+
+function buildMatchcenterCompactActivityPresentation(
+  match: MatchcenterMatchSummary,
+  pitchLabel?: string | null,
+  tenantClubName?: string | null,
+): SportingActivityPresentation {
+  return buildSpieleManagementActivityPresentation(match, { pitchLabel, tenantClubName });
+}
+
+export function buildSpieleVenueLine(
+  match: MatchcenterMatchSummary,
+  options: { tenantClubName?: string; pitchLabel?: string | null } = {},
+): string | null {
+  const presentation = buildMatchcenterCompactActivityPresentation(match, options.pitchLabel);
+  return (
+    formatSportingActivityCompactAgendaSecondaryLine(presentation, {
+      schedulePresentation: "omit-start",
+      tenantDisplayNames: options.tenantClubName ? [options.tenantClubName] : undefined,
+    }) ?? null
+  );
 }
 
 export type SpieleManagementDerivationInput = {

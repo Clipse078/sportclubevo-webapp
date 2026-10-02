@@ -41,7 +41,14 @@ export function parsePersonalDashboardReadModelPayload(
 ): PersonalDashboardReadModelPayloadV1 | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
-  if (record.v !== PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION) return null;
+  const version = record.v;
+  if (
+    typeof version !== "number" ||
+    version < 1 ||
+    version > PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION
+  ) {
+    return null;
+  }
   if (!record.scopeHints || typeof record.scopeHints !== "object") return null;
   if (!record.programme || typeof record.programme !== "object") return null;
   if (!record.personalWork || typeof record.personalWork !== "object") return null;
@@ -58,7 +65,7 @@ export function parsePersonalDashboardReadModelPayload(
   if (!Array.isArray(personalWork.taskPreview)) return null;
 
   return {
-    v: PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION,
+    v: version as PersonalDashboardReadModelPayloadV1["v"],
     scopeHints,
     programme: {
       supported: programme.supported === true,

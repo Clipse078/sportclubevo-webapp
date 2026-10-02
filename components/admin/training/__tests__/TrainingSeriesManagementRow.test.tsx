@@ -6,11 +6,12 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import TrainingSeriesManagementRow from "@/components/admin/training/TrainingSeriesManagementRow";
 import type { TrainingSeriesManagementRow as Row } from "@/lib/training/management-series-view";
+import { buildTrainingManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-adapters";
 
 const BASE_ROW: Row = {
   seriesId: "series-1",
   teamSeasonId: "ts-1",
-  title: "1. Mannschaft Training",
+  title: "Junioren F2 Training",
   contextLabel: "FC Allschwil · 1. Mannschaft",
   teamDisplayName: "1. Mannschaft",
   weekdays: ["MONDAY", "WEDNESDAY", "FRIDAY"],
@@ -39,6 +40,17 @@ const BASE_ROW: Row = {
       updatedAt: "2026-02-01T00:00:00.000Z",
     },
   ],
+  activityPresentation: buildTrainingManagementActivityPresentation(
+    {
+      teamSeasonId: "ts-1",
+      title: "Junioren F2 Training",
+      facilityVenueName: "Kunstrasen 2",
+    },
+    "FC Allschwil",
+  ),
+  facilityVenueName: "Kunstrasen 2",
+  facilityResourceLabel: "Kunstrasen 2 A",
+  facilityLabels: ["Kunstrasen 2 A"],
 };
 
 describe("TrainingSeriesManagementRow", () => {
@@ -52,8 +64,12 @@ describe("TrainingSeriesManagementRow", () => {
       />,
     );
 
-    expect(screen.getByText("1. Mannschaft Training")).toBeInTheDocument();
-    expect(screen.getByText("FC Allschwil · 1. Mannschaft")).toBeInTheDocument();
+    expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
+    expect(screen.getByText("TRAINING").getAttribute("data-activity-type-pill")).toBe(
+      "training-blue",
+    );
+    expect(screen.getByText("FC Allschwil - Kunstrasen 2")).toBeInTheDocument();
+    expect(screen.queryByText(/FC Allschwil ·/)).not.toBeInTheDocument();
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Mo");
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Fr");
     expect(screen.getByTestId("training-facility-cell")).toHaveTextContent("Kunstrasen 2 A");
@@ -71,6 +87,16 @@ describe("TrainingSeriesManagementRow", () => {
         row={{
           ...BASE_ROW,
           facilityLabel: null,
+          facilityVenueName: null,
+          facilityResourceLabel: null,
+          activityPresentation: buildTrainingManagementActivityPresentation(
+            {
+              teamSeasonId: "ts-1",
+              title: "Junioren F2 Training",
+              facilityVenueName: null,
+            },
+            "FC Allschwil",
+          ),
           timeLabel: "Unterschiedliche Zeiten",
           timeDetailLines: ["Mo 18:45–20:15", "Mi 19:45–21:15"],
         }}

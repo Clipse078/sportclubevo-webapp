@@ -61,6 +61,7 @@ export type TournamentCenterWorkspaceProps = {
   listView: TournamentListView;
   teamOptions: TournamentTeamOption[];
   tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
   basePath?: string;
   timezone?: string;
   locale?: string;
@@ -121,6 +122,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     publicOnly,
     listView,
     tenantLogoUrl = null,
+    tenantClubName = null,
     basePath = "/dashboard/tournamentcenter",
     timezone = "Europe/Zurich",
     locale = "de-CH",
@@ -447,6 +449,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
                         locale={locale}
                         timezone={timezone}
                         tenantLogoUrl={tenantLogoUrl}
+                        tenantClubName={tenantClubName}
                         canManage={canCreate}
                         compact={compactRows}
                         variant={rowVariant(row)}

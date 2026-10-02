@@ -27,6 +27,7 @@ export function personalProgrammeItemToCalendarItem(item: PersonalProgrammeItem)
     teamName: item.teamName,
     opponentName: item.opponentName,
     homeAway: item.homeAway,
+    activityPresentation: item.activityPresentation,
   };
 }
 

@@ -52,6 +52,7 @@ export function normalizePersonalProgrammeItem(item: PersonalProgrammeItem): Nor
     typeLabel: item.typeLabel,
     eventType: item.eventType,
     ariaLabel: item.ariaLabel,
+    activityPresentation: item.activityPresentation,
   };
 }
 
@@ -80,6 +81,7 @@ export function normalizePersonalTaskCalendarItem(item: PersonalCalendarItem): N
     typeLabel: item.typeLabel,
     eventType: item.eventType,
     ariaLabel: item.ariaLabel,
+    activityPresentation: item.activityPresentation,
   };
 }
 
@@ -107,6 +109,7 @@ export function normalizedCalendarItemToProgrammeItem(
     typeLabel: item.typeLabel,
     eventType: item.eventType,
     ariaLabel: item.ariaLabel,
+    activityPresentation: item.activityPresentation,
   };
 }
 

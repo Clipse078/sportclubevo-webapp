@@ -16,6 +16,14 @@ import {
 } from "../personal-programme-types";
 import { normalizeEventProgrammeStatus } from "../programme-status";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
+import { batchGetEventAllocationDisplayForTenant } from "@/lib/facilities/display-helpers";
+import { loadMatchEventPoliciesByEventId } from "@/lib/website/public-matches-identity";
+import {
+  applyPresentationToProgrammeFields,
+  buildGenericSportingEventPresentation,
+  buildMatchActivityPresentation,
+  buildTournamentActivityPresentation,
+} from "@/lib/sporting-activity-presentation/builders";
 
 function getEventTypeLabel(type: EventType): string {
   switch (type) {
@@ -46,16 +54,6 @@ function buildPersonalEventTitle(input: {
     if (own) return own;
   }
   return input.title;
-}
-
-function resolveVenue(input: {
-  location: string | null;
-  pitchCode: string | null;
-}): string | undefined {
-  const pitch = input.pitchCode?.trim();
-  if (pitch) return pitch;
-  const loc = input.location?.trim();
-  return loc || undefined;
 }
 
 export async function loadTeamEventProgrammeItems(
@@ -96,24 +94,51 @@ export async function loadTeamEventProgrammeItems(
       homeAway: true,
       location: true,
       pitchCode: true,
+      organizerName: true,
+      competitionLabel: true,
       team: { select: { name: true } },
     },
   });
 
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: ctx.personal.tenantId },
+    select: { name: true },
+  });
+  const tenantClubName = tenant?.name?.trim() || "Verein";
+
+  const matchAndTournamentIds = candidates
+    .filter((event) => event.type === "MATCH" || event.type === "TOURNAMENT")
+    .map((event) => event.id);
+
+  const eventPolicyByEventId =
+    matchAndTournamentIds.length > 0
+      ? await loadMatchEventPoliciesByEventId(ctx.personal.tenantId, matchAndTournamentIds)
+      : new Map();
+
+  const allocationDisplays = await batchGetEventAllocationDisplayForTenant(
+    candidates.map((event) => ({
+      type: event.type,
+      pitchCode: event.pitchCode,
+      homeDressingRoomCode: null,
+      awayDressingRoomCode: null,
+    })),
+    ctx.personal.tenantId,
+  );
+
   const items: PersonalProgrammeItem[] = [];
   const seen = new Set<string>();
 
-  for (const event of candidates) {
+  candidates.forEach((event, index) => {
     if (!isPersonalTeamEventRowRelevant(ctx.personal, event)) {
-      continue;
+      return;
     }
     if (!canIncludeEventInPersonalProjection(actor, event)) {
-      continue;
+      return;
     }
 
     const sourceType = eventTypeToProgrammeSourceType(event.type);
     const resourceKey = programmeResourceKey(sourceType, event.id);
-    if (seen.has(resourceKey)) continue;
+    if (seen.has(resourceKey)) return;
     seen.add(resourceKey);
 
     const typeLabel = getEventTypeLabel(event.type);
@@ -125,6 +150,64 @@ export async function loadTeamEventProgrammeItems(
       teamName: teamName ?? null,
     });
     const contextLabel = resolveTeamEventContextLabel(ctx.personal, event.teamId);
+    const status = normalizeEventProgrammeStatus(event.status);
+    const pitchLabel = allocationDisplays[index]?.pitchLabel ?? null;
+
+    let activityPresentation;
+    if (event.type === "MATCH") {
+      activityPresentation = buildMatchActivityPresentation({
+        resourceKey,
+        title,
+        typeLabel,
+        teamName,
+        opponentName: event.opponentName,
+        homeAway: event.homeAway,
+        location: event.location,
+        pitchCode: event.pitchCode,
+        pitchLabel,
+        competitionLabel: event.competitionLabel,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        allDay: event.allDay,
+        status,
+        policy: eventPolicyByEventId.get(event.id),
+        tenantClubName,
+      });
+    } else if (event.type === "TOURNAMENT") {
+      activityPresentation = buildTournamentActivityPresentation({
+        resourceKey,
+        title: event.title,
+        typeLabel,
+        teamName,
+        organiserName: event.organizerName,
+        homeAway: event.homeAway,
+        tenantClubName,
+        location: event.location,
+        pitchCode: event.pitchCode,
+        pitchLabel,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        allDay: event.allDay,
+        status,
+      });
+    } else {
+      activityPresentation = buildGenericSportingEventPresentation({
+        resourceKey,
+        title: event.title,
+        typeLabel,
+        teamName,
+        location: event.location,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        allDay: event.allDay,
+        status,
+        eventType: event.type,
+      });
+    }
+
+    const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {
+      tenantDisplayNames: [tenantClubName],
+    });
 
     items.push({
       id: resourceKey,
@@ -132,20 +215,21 @@ export async function loadTeamEventProgrammeItems(
       startsAt: event.startAt,
       endsAt: event.endAt,
       allDay: event.allDay,
-      title,
-      subtitle: event.type !== "MATCH" && teamName ? teamName : undefined,
+      title: presentationFields.title,
+      subtitle: presentationFields.subtitle,
       contextLabel,
-      venue: resolveVenue({ location: event.location, pitchCode: event.pitchCode }),
-      status: normalizeEventProgrammeStatus(event.status),
+      venue: presentationFields.venue,
+      status,
       deepLink: `/dashboard/planner/edit/${event.id}`,
       teamName,
       opponentName: event.opponentName ?? undefined,
       homeAway: event.homeAway,
       typeLabel,
       eventType: event.type,
-      ariaLabel: `${typeLabel}: ${title}`,
+      ariaLabel: `${typeLabel}: ${presentationFields.title}`,
+      activityPresentation,
     });
-  }
+  });
 
   return items;
 }

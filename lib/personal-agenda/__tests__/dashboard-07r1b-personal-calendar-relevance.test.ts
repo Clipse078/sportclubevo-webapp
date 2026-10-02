@@ -13,7 +13,26 @@ import { loadTeamEventProgrammeItems } from "../adapters/team-event-programme-ad
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: { findMany: vi.fn() },
+    tenant: { findUnique: vi.fn() },
   },
+}));
+
+vi.mock("@/lib/facilities/display-helpers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/facilities/display-helpers")>();
+  return {
+    ...actual,
+    batchGetEventAllocationDisplayForTenant: vi.fn(async (events: unknown[]) =>
+      events.map(() => ({
+        pitchLabel: null,
+        homeDressingRoomLabel: null,
+        awayDressingRoomLabel: null,
+      })),
+    ),
+  };
+});
+
+vi.mock("@/lib/website/public-matches-identity", () => ({
+  loadMatchEventPoliciesByEventId: vi.fn(async () => new Map()),
 }));
 
 import { prisma } from "@/lib/db/prisma";
@@ -84,6 +103,7 @@ function eventRow(input: {
 describe("DASHBOARD-07R1B — personal calendar relevance", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ name: "FC Allschwil" } as never);
   });
 
   it("A — TEAM A trainer + TEAM A match → visible", async () => {

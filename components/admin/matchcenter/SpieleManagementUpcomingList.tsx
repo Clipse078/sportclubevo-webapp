@@ -17,6 +17,7 @@ type Props = {
   locale: string;
   timezone: string;
   tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
   canManage: boolean;
   compact?: boolean;
 };
@@ -26,6 +27,7 @@ export default function SpieleManagementUpcomingList({
   locale,
   timezone,
   tenantLogoUrl = null,
+  tenantClubName = null,
   canManage,
   compact = false,
 }: Props) {
@@ -194,6 +196,7 @@ export default function SpieleManagementUpcomingList({
                     locale={locale}
                     timezone={timezone}
                     tenantLogoUrl={tenantLogoUrl}
+                    tenantClubName={tenantClubName}
                     canManage={canManage}
                     compact={compact}
                     isSelecting={isSelecting}

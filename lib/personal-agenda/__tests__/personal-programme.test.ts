@@ -6,7 +6,28 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: { findMany: vi.fn() },
     meeting: { findMany: vi.fn() },
+    tenant: { findUnique: vi.fn() },
+    trainingSessionAllocation: { findMany: vi.fn() },
+    trainingAllocation: { findMany: vi.fn() },
   },
+}));
+
+vi.mock("@/lib/facilities/display-helpers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/facilities/display-helpers")>();
+  return {
+    ...actual,
+    batchGetEventAllocationDisplayForTenant: vi.fn(async (events: unknown[]) =>
+      events.map(() => ({
+        pitchLabel: null,
+        homeDressingRoomLabel: null,
+        awayDressingRoomLabel: null,
+      })),
+    ),
+  };
+});
+
+vi.mock("@/lib/website/public-matches-identity", () => ({
+  loadMatchEventPoliciesByEventId: vi.fn(async () => new Map()),
 }));
 
 vi.mock("@/lib/training/session-generation-service", () => ({
@@ -82,6 +103,9 @@ describe("DASHBOARD-02 — personal programme", () => {
     vi.mocked(prisma.meeting.findMany).mockResolvedValue([] as never);
     vi.mocked(canSeeMeeting).mockReturnValue(true);
     vi.mocked(listTrainingSessions).mockResolvedValue([]);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ name: "FC Allschwil" } as never);
+    vi.mocked(prisma.trainingSessionAllocation.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.trainingAllocation.findMany).mockResolvedValue([] as never);
   });
 
   describe("TRAINING", () => {

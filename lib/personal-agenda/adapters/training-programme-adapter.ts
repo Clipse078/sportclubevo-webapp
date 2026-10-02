@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/db/prisma";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import {
   isPersonalTrainingSessionRowRelevant,
@@ -16,6 +17,11 @@ import {
 } from "../personal-programme-types";
 import { resolveTrainingSessionDateBoundsForProgrammeRange } from "../training-programme-range";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
+import {
+  applyPresentationToProgrammeFields,
+  buildTrainingActivityPresentation,
+} from "@/lib/sporting-activity-presentation/builders";
+import { loadTrainingSessionFacilityHints } from "@/lib/sporting-activity-presentation/training-facility-batch";
 
 function normalizeTrainingProgrammeStatus(
   status: string,
@@ -59,6 +65,21 @@ export async function loadTrainingProgrammeItems(
     dateTo,
   });
 
+  const [facilityHints, tenant] = await Promise.all([
+    loadTrainingSessionFacilityHints(
+      ctx.personal.tenantId,
+      sessions.map((session) => ({
+        id: session.id,
+        trainingSeriesId: session.trainingSeriesId,
+      })),
+    ),
+    prisma.tenant.findUnique({
+      where: { id: ctx.personal.tenantId },
+      select: { name: true },
+    }),
+  ]);
+  const tenantClubName = tenant?.name?.trim() || "Verein";
+
   const rangeStartMs = ctx.rangeStart.getTime();
   const rangeEndMs = ctx.rangeEnd.getTime();
   const items: PersonalProgrammeItem[] = [];
@@ -91,9 +112,28 @@ export async function loadTrainingProgrammeItems(
 
     const teamId = resolvePersonalTeamIdForTeamSeason(ctx.personal, session.teamSeasonId);
     const contextLabel = resolveTeamEventContextLabel(ctx.personal, teamId);
-    const title = session.trainingSeriesTitle?.trim() || "Training";
+    const baseTitle = session.trainingSeriesTitle?.trim() || "Training";
     const teamName = session.teamName?.trim() || undefined;
     const endsAt = session.endAt ? new Date(session.endAt) : null;
+    const status = normalizeTrainingProgrammeStatus(session.status);
+    const facility = facilityHints.get(session.id);
+
+    const activityPresentation = buildTrainingActivityPresentation({
+      resourceKey,
+      title: baseTitle,
+      typeLabel: "Training",
+      teamName,
+      clubName: tenantClubName,
+      startAt: startsAt,
+      endAt: endsAt,
+      status,
+      facilityName: facility?.facilityName,
+      pitchResourceName: facility?.pitchResourceName,
+    });
+
+    const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {
+      tenantDisplayNames: [tenantClubName],
+    });
 
     items.push({
       id: resourceKey,
@@ -101,14 +141,16 @@ export async function loadTrainingProgrammeItems(
       startsAt,
       endsAt,
       allDay: false,
-      title,
-      subtitle: teamName,
+      title: presentationFields.title,
+      subtitle: presentationFields.subtitle,
       contextLabel,
-      status: normalizeTrainingProgrammeStatus(session.status),
+      status,
       deepLink: `/dashboard/training/sessions/${session.id}/edit`,
       teamName,
       typeLabel: "Training",
-      ariaLabel: `Training: ${title}`,
+      ariaLabel: `Training: ${presentationFields.title}`,
+      venue: presentationFields.venue,
+      activityPresentation,
     });
   }
 

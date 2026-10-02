@@ -2,7 +2,7 @@
 
 > **Document type:** Post-v1 ideas and deferred modules  
 > **Status:** Active — collected and deferred; not in v1.0 scope  
-> **Last updated:** 2026-06-25  
+> **Last updated:** 2026-10-02  
 > **Maintained by:** SportClubEvo product team
 
 ---
@@ -14,6 +14,21 @@ This document collects all features and modules that are explicitly deferred to 
 ### SCE-ERROR-UX-01 — Actionable Error Handling (captured 2026-10-01)
 
 Cross-cutting UX upgrade: replace generic-only "Interner Fehler." responses with safe, actionable copy when the application can determine cause (example: billing duplicate invoice for contract/period — cite existing invoice number and link when permitted). Must not expose stack traces, SQL, secrets, or private identifiers. Dedicated implementation package; not part of SCE-PERF-02.
+
+### SCE-ACTIVITY-UX-01 — Canonical Sports Activity Presentation (2026-10-01)
+
+**Status:** **CLOSED** — merged to STAGE (2026-10-02, PR #792)
+
+Canonical presentation read-model (`lib/sporting-activity-presentation/`, architecture doc in `docs/architecture/SCE-SPORTS-ACTIVITY-PRESENTATION.md`). Human UAT accepted for Dashboard → Mein Programm and Planning → Trainings / Spiele / Turniere. Semantic identity: Training **blue**, Spiel **red**, Turnier **orange**; shared `SportingActivityIdentity` on management lists (R8).
+
+**Follow-up umbrella (accepted, not part of #792):** [`SCE-ACTIVITY-DESIGN-01.md`](./SCE-ACTIVITY-DESIGN-01.md) — sub-packages 01A–01E (unified activity experience, Activity Detail, management cards, Wochenplaner density, consume vs manage).
+
+**Separate follow-ups (still open):**
+
+- **FACILITY-MODEL-01** — Site → Facility → Resource hierarchy (e.g. Im Brüel → Kunstrasen 2 → Kunstrasen 2 A)
+- **SCE-ACTIVITY-COLOR-01** — audit and unify activity color tokens across all consumers (historical match green vs canonical red)
+
+---
 
 This list exists so that:
 

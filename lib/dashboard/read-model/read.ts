@@ -19,8 +19,22 @@ import {
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { applyLiveAuthorizationToProjection } from "./apply-live-authorization";
 import { parsePersonalDashboardReadModelPayload } from "./payload-codec";
-import { PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS } from "./constants";
+import {
+  PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS,
+  PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION,
+} from "./constants";
 import { schedulePersonalDashboardReadModelRebuild } from "./invalidate";
+import { rebuildPersonalDashboardReadModel } from "./rebuild";
+import type { PersonalDashboardReadModelPayloadV1 } from "./types";
+
+export function personalDashboardPayloadNeedsPresentationRefresh(
+  payload: PersonalDashboardReadModelPayloadV1,
+): boolean {
+  return (
+    payload.v < PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION ||
+    payload.programme.items.some((item) => !item.activityPresentation)
+  );
+}
 
 export type PersonalDashboardProjectionReadResult =
   | { status: "hit"; data: PersonalCommandCenterData; projectionAgeMs: number }
@@ -94,7 +108,7 @@ export async function readPersonalDashboardProjection(args: {
   }
 
   try {
-    const row = await prisma.personalDashboardReadModel.findUnique({
+    let row = await prisma.personalDashboardReadModel.findUnique({
       where: {
         tenantId_userId: {
           tenantId: args.tenantId,
@@ -107,18 +121,60 @@ export async function readPersonalDashboardProjection(args: {
       return { status: "miss", reason: row ? "tenant_mismatch" : "not_found" };
     }
 
+    let payload = parsePersonalDashboardReadModelPayload(row.payloadJson);
+    if (!payload) {
+      return { status: "miss", reason: "invalid_payload" };
+    }
+
+    let needsPresentationRefresh = personalDashboardPayloadNeedsPresentationRefresh(payload);
+
+    if (needsPresentationRefresh) {
+      try {
+        await rebuildPersonalDashboardReadModel({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+        const refreshedRow = await prisma.personalDashboardReadModel.findUnique({
+          where: {
+            tenantId_userId: {
+              tenantId: args.tenantId,
+              userId: args.userId,
+            },
+          },
+        });
+        if (refreshedRow) {
+          row = refreshedRow;
+          const refreshedPayload = parsePersonalDashboardReadModelPayload(row.payloadJson);
+          if (refreshedPayload) {
+            payload = refreshedPayload;
+            needsPresentationRefresh =
+              personalDashboardPayloadNeedsPresentationRefresh(payload);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "[personal-dashboard-read-model] synchronous presentation rebuild failed",
+          {
+            tenantId: args.tenantId,
+            userId: args.userId,
+            message: error instanceof Error ? error.message : "unknown",
+          },
+        );
+      }
+    }
+
     const projectionAgeMs = Date.now() - row.updatedAt.getTime();
-    const isStale = projectionAgeMs > PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS;
-    if (isStale) {
+    const ageStale = projectionAgeMs > PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS;
+    const isStale = ageStale || needsPresentationRefresh;
+
+    if (ageStale) {
       void schedulePersonalDashboardReadModelRebuild({
         tenantId: args.tenantId,
         userId: args.userId,
       });
-    }
-
-    const payload = parsePersonalDashboardReadModelPayload(row.payloadJson);
-    if (!payload) {
-      return { status: "miss", reason: "invalid_payload" };
     }
 
     const now = args.now ?? new Date();

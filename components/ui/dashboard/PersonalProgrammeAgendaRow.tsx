@@ -8,6 +8,14 @@ import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { getProgrammeSourceActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { cn } from "@/lib/cn";
+import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
+import {
+  resolveSportingActivityTypePillVariant,
+  sportingActivityTypePillClassName,
+} from "@/lib/sporting-activity-presentation/activity-type-pill";
+import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
+import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
+import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
@@ -17,8 +25,7 @@ export type PersonalProgrammeAgendaRowProps = {
 };
 
 /**
- * Compact programme row (time, semantic marker, title, type, venue).
- * Dashboard surfaces omit relationship context lines (DASHBOARD-07R1E).
+ * Compact programme row (time, semantic marker, primary identity, operational metadata).
  */
 export function PersonalProgrammeAgendaRow({
   item,
@@ -36,6 +43,27 @@ export function PersonalProgrammeAgendaRow({
 
   const markerPresentation = getProgrammeSourcePresentation(item.sourceType);
   const activitySceIconName = getProgrammeSourceActivitySceIconName(item.sourceType);
+
+  const displayTitle = item.activityPresentation
+    ? formatSportingActivityCompactPrimaryText(item.activityPresentation)
+    : item.title;
+
+  const legacyTypeFallback =
+    !item.activityPresentation && item.typeLabel
+      ? formatTodayEventTypeBadge(item.typeLabel)
+      : null;
+
+  const operationalSourceKinds = new Set<SportingActivityKind>([
+    "TRAINING",
+    "MATCH",
+    "TOURNAMENT",
+  ]);
+  const activityKindForTypePill: SportingActivityKind | undefined =
+    item.activityPresentation?.identity.activityKind ??
+    (operationalSourceKinds.has(item.sourceType as SportingActivityKind)
+      ? (item.sourceType as SportingActivityKind)
+      : undefined);
+  const typePillVariant = resolveSportingActivityTypePillVariant(activityKindForTypePill);
 
   const row = (
     <div
@@ -64,24 +92,43 @@ export function PersonalProgrammeAgendaRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
-                {item.title}
-              </p>
-              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-                {item.typeLabel}
-              </p>
+              {item.activityPresentation ? (
+                <SportingActivityIdentity
+                  presentation={item.activityPresentation}
+                  mode="compact"
+                />
+              ) : (
+                <>
+                  <p className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+                    {displayTitle}
+                  </p>
+                  {legacyTypeFallback ? (
+                    <p className="mt-0.5">
+                      <span
+                        className={
+                          typePillVariant
+                            ? sportingActivityTypePillClassName(typePillVariant)
+                            : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+                        }
+                        data-activity-type-pill={typePillVariant ?? undefined}
+                      >
+                        {legacyTypeFallback}
+                      </span>
+                    </p>
+                  ) : null}
+                </>
+              )}
             </div>
             {item.deepLink ? (
               <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
             ) : null}
           </div>
-          {item.venue ? (
-            <p className="mt-0.5 truncate text-[0.6875rem] text-[var(--muted)]">{item.venue}</p>
-          ) : null}
           {statusLabel ? (
-            <span className="mt-1 inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
-              {statusLabel}
-            </span>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1">
+              <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
+                {statusLabel}
+              </span>
+            </div>
           ) : null}
         </div>
       </div>

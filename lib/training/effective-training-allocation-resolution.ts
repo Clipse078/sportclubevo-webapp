@@ -43,6 +43,8 @@ export type TrainingAllocationResourceRow = {
 export type ResolvedTrainingAllocationGroup = {
   pitch: TrainingAllocationResourceRow[];
   dressingRoom: TrainingAllocationResourceRow[];
+  /** Bookable OTHER resources (e.g. indoor halls) when no PITCH_HALL row exists. */
+  otherPlayable: TrainingAllocationResourceRow[];
 };
 
 function compareSeriesAllocationRows(
@@ -105,7 +107,10 @@ function pickCanonicalSessionOverrideRow(
  * series canonical row applies.
  */
 export function resolveTrainingOccurrenceAllocationGroup(
-  group: Extract<TrainingAllocationGroupKey, "PITCH_HALL" | "DRESSING_ROOM">,
+  group: Extract<
+    TrainingAllocationGroupKey,
+    "PITCH_HALL" | "DRESSING_ROOM" | "OTHER"
+  >,
   seriesRows: readonly TrainingAllocationResourceRow[],
   sessionOverrideRows: readonly TrainingAllocationResourceRow[],
 ): TrainingAllocationResourceRow[] {
@@ -126,6 +131,27 @@ export function resolveTrainingOccurrenceAllocationGroup(
 }
 
 /**
+ * Primary playable surface for occurrence presentation: PITCH_HALL wins;
+ * otherwise the canonical OTHER resource (e.g. hall booked as OTHER type).
+ */
+export function resolveTrainingOccurrencePrimaryPlayableAllocation(input: {
+  seriesRows: readonly TrainingAllocationResourceRow[];
+  sessionOverrideRows: readonly TrainingAllocationResourceRow[];
+}): TrainingAllocationResourceRow[] {
+  const pitch = resolveTrainingOccurrenceAllocationGroup(
+    "PITCH_HALL",
+    input.seriesRows,
+    input.sessionOverrideRows,
+  );
+  if (pitch.length > 0) return pitch;
+  return resolveTrainingOccurrenceAllocationGroup(
+    "OTHER",
+    input.seriesRows,
+    input.sessionOverrideRows,
+  );
+}
+
+/**
  * Resolves both Weekplanner-relevant allocation groups for one occurrence.
  */
 export function resolveTrainingOccurrenceAllocations(input: {
@@ -140,6 +166,11 @@ export function resolveTrainingOccurrenceAllocations(input: {
     ),
     dressingRoom: resolveTrainingOccurrenceAllocationGroup(
       "DRESSING_ROOM",
+      input.seriesRows,
+      input.sessionOverrideRows,
+    ),
+    otherPlayable: resolveTrainingOccurrenceAllocationGroup(
+      "OTHER",
       input.seriesRows,
       input.sessionOverrideRows,
     ),

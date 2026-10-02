@@ -117,6 +117,7 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
         listView={listView}
         teamOptions={teamOptions}
         tenantLogoUrl={tenantContext.logoUrl}
+        tenantClubName={tenantContext.name}
         timezone={timezone}
         locale={locale}
         canCreate={canCreate}

@@ -1,18 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, MapPin, Users } from "lucide-react";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { TournamentOperationalAssessment } from "@/lib/tournaments/operational-state";
 import {
   buildTournamentWochenplanerHref,
-  isTenantHostedTournament,
   resolveTournamentCategoryAgeLine,
   resolveTournamentOperationalLine,
   resolveTournamentPublicationPresentation,
   resolveTournamentRowCrest,
   resolveTournamentStatusPresentation,
 } from "@/lib/tournaments/management-view";
+import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
 import { formatTournamentDatePresentation } from "@/lib/tournaments/presentation";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import TurniereRowContextMenu from "./TurniereRowContextMenu";
@@ -21,7 +20,7 @@ import {
   TURNIERE_ROW_WIDE_GRID,
 } from "./turniere-management-layout";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
+import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -30,6 +29,7 @@ type Props = {
   locale: string;
   timezone: string;
   tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
   canManage: boolean;
   compact?: boolean;
   variant?: "upcoming" | "past";
@@ -71,6 +71,7 @@ export default function TurniereManagementRow({
   locale,
   timezone,
   tenantLogoUrl = null,
+  tenantClubName = null,
   canManage,
   compact = false,
   variant = "upcoming",
@@ -86,6 +87,10 @@ export default function TurniereManagementRow({
   const operationalSegments = resolveTournamentOperationalLine(tournament, timezone, locale);
   const status = resolveTournamentStatusPresentation(tournament, assessment);
   const publication = resolveTournamentPublicationPresentation(tournament);
+  const activityPresentation = buildTurniereManagementActivityPresentation(
+    tournament,
+    tenantClubName,
+  );
   const editHref = `/dashboard/tournamentcenter/${tournament.id}/edit`;
   const wochenplanerHref = buildTournamentWochenplanerHref({
     startAt: tournament.startAt,
@@ -139,36 +144,18 @@ export default function TurniereManagementRow({
         />
       </div>
 
-      <div className="min-w-0 space-y-1 md:col-span-1 min-[105rem]:col-span-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <ActivitySceIcon activityKind="TOURNAMENT" size={compact ? 16 : 20} />
-          <Link
-            href={editHref}
-            className="min-w-0 truncate text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)] min-[105rem]:text-base"
-          >
-            {tournament.title}
-          </Link>
-          {isTenantHostedTournament(tournament) ? (
-            <span
-              className="inline-flex shrink-0 rounded-full bg-sky-500/15 px-2 py-0.5 text-[0.625rem] font-semibold text-sky-300"
-              data-testid={`turniere-own-badge-${tournament.id}`}
-            >
-              Eigener Verein
-            </span>
-          ) : null}
-        </div>
+      <div className="relative z-[1] min-w-0 space-y-1 md:col-span-1 min-[105rem]:col-span-1">
+        <SportingActivityIdentity
+          presentation={activityPresentation}
+          mode="management"
+          primaryWrap
+        />
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-2)]">
           {categoryLine ? (
             <span className="inline-flex items-center gap-1">
               <ProductDomainSceIcon name="people" size={12} className="h-3 w-3 shrink-0 opacity-70" />
               <span>{categoryLine}</span>
-            </span>
-          ) : null}
-          {tournament.location ? (
-            <span className="inline-flex min-w-0 items-center gap-1">
-              <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 opacity-70" />
-              <span className="truncate">{tournament.location}</span>
             </span>
           ) : null}
         </div>

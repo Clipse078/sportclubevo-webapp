@@ -14,6 +14,9 @@ const TOURNAMENT_CATEGORY_LABELS: Record<string, string> = {
   SENIOREN: "Senioren",
   TRAININGSGRUPPE: "Trainingsgruppe",
 };
+import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
+import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { TournamentDto } from "./types";
 import type { TournamentOperationalAssessment } from "./operational-state";
 import { getTournamentParticipatingTeams } from "./team-participation";
@@ -179,6 +182,24 @@ export function resolveTournamentRowCrest(
     return { logoUrl: tenantLogoUrl.trim(), altName: organizerName };
   }
   return { logoUrl: null, altName: organizerName };
+}
+
+export { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
+
+function buildTournamentManagementPresentationSnapshot(
+  tournament: TournamentDto,
+  tenantClubName?: string | null,
+): SportingActivityPresentation {
+  return buildTurniereManagementActivityPresentation(tournament, tenantClubName);
+}
+
+export function resolveTournamentManagementMetadataLine(tournament: TournamentDto): string | null {
+  const presentation = buildTournamentManagementPresentationSnapshot(tournament);
+  return (
+    formatSportingActivityCompactAgendaSecondaryLine(presentation, {
+      schedulePresentation: "omit-start",
+    }) ?? null
+  );
 }
 
 export function resolveTournamentCategoryAgeLine(

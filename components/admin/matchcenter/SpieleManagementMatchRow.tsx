@@ -1,31 +1,25 @@
 "use client";
-import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
-import { CheckCircle2, MapPin } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { CheckCircle2 } from "lucide-react";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type { MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
-import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
-import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 import { getMatchcenterResultLabel, isMatchLive } from "@/lib/matchcenter/match-lifecycle";
 import {
   buildHomeReadinessChecklist,
-  buildSpieleTeamContextLine,
-  buildSpieleVenueLine,
   formatSpieleEndTime,
   formatSpieleKickoffForMatch,
   resolveSpieleOperationalEndTime,
   resolveSpieleStatusPresentation,
 } from "@/lib/matchcenter/management-view";
+import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
 import {
   SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
   SPIELE_MATCH_ROW_WIDE_GRID,
 } from "./spiele-management-layout";
-import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
+import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -34,32 +28,13 @@ type Props = {
   locale: string;
   timezone: string;
   tenantLogoUrl?: string | null;
+  tenantClubName?: string | null;
   canManage: boolean;
   compact?: boolean;
   isSelecting?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
 };
-
-const TEAM_NAME =
-  "min-w-[3.25rem] flex-1 basis-0 text-sm leading-snug md:line-clamp-2 md:whitespace-normal min-[105rem]:truncate min-[105rem]:whitespace-nowrap min-[105rem]:line-clamp-none";
-
-function HomeAwayPill({ homeAway }: { homeAway: "HOME" | "AWAY" | null }) {
-  if (!homeAway) return null;
-  const isHome = homeAway === "HOME";
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide",
-        isHome
-          ? "bg-sky-500/15 text-sky-300"
-          : "bg-[var(--surface-2)] text-[var(--muted)]",
-      )}
-    >
-      {isHome ? "Heimspiel" : "Auswärtsspiel"}
-    </span>
-  );
-}
 
 function shouldShowReadinessPill({
   homeAway,
@@ -115,16 +90,7 @@ function PreparationColumn({
   const isAway = homeAway === "AWAY";
 
   if (isAway) {
-    if (layout === "compact") {
-      return null;
-    }
-    const venue = buildSpieleVenueLine(match) ?? match.location?.trim();
-    if (!venue) {
-      return <span className="text-xs text-[var(--muted)]">—</span>;
-    }
-    return (
-      <p className="line-clamp-3 break-words text-xs text-[var(--text-2)]">{venue}</p>
-    );
+    return null;
   }
 
   if (!isHome) {
@@ -201,19 +167,13 @@ function StatusPillsRow({
     live,
   });
 
+  if (!showReadiness) {
+    return null;
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-      <HomeAwayPill homeAway={homeAway} />
-      {showReadiness ? (
-        <>
-          {homeAway === "HOME" ? (
-            <span className="text-xs text-[var(--muted)]" aria-hidden="true">
-              ·
-            </span>
-          ) : null}
-          <ReadinessPill label={statusLabel} tone={live ? "ready" : readinessTone} />
-        </>
-      ) : null}
+      <ReadinessPill label={statusLabel} tone={live ? "ready" : readinessTone} />
     </div>
   );
 }
@@ -224,13 +184,13 @@ export default function SpieleManagementMatchRow({
   locale,
   timezone,
   tenantLogoUrl = null,
+  tenantClubName = null,
   canManage,
   compact = false,
   isSelecting = false,
   isSelected = false,
   onToggleSelect,
 }: Props) {
-  const tMatch = useTranslations("PlanningEditor.match");
   const detailHref = `/dashboard/matchcenter/${match.id}`;
   const status = resolveSpieleStatusPresentation(match, assessment);
   const wochenplanerHref = buildMatchWochenplanerHref({
@@ -246,12 +206,9 @@ export default function SpieleManagementMatchRow({
     timezone,
   );
 
-  const homeName = resolveMatchcenterCompactSideName(match.home);
-  const awayName = resolveMatchcenterCompactSideName(match.away);
-  const homeLogoUrl = resolveClubIdentityLogoUrl(match.home, tenantLogoUrl);
-  const awayLogoUrl = resolveClubIdentityLogoUrl(match.away, tenantLogoUrl);
-  const contextLine = buildSpieleTeamContextLine(match);
-  const venueLine = buildSpieleVenueLine(match);
+  const activityPresentation = buildSpieleManagementActivityPresentation(match, {
+    tenantClubName,
+  });
 
   const normalizedHomeAway = match.homeAway?.trim().toUpperCase() ?? null;
   const homeAway: "HOME" | "AWAY" | null =
@@ -268,6 +225,8 @@ export default function SpieleManagementMatchRow({
       : status.label.includes("offen")
         ? "open"
         : "neutral";
+
+  const competitionLabel = match.competitionLabel?.trim();
 
   return (
     <article
@@ -305,76 +264,24 @@ export default function SpieleManagementMatchRow({
           className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           aria-label={`Details zu ${match.title} anzeigen`}
         >
-          {contextLine ? (
-            <p className="mb-1 line-clamp-1 text-[0.6875rem] text-[var(--muted)]">{contextLine}</p>
-          ) : null}
-
-          <div
-            className="mb-1 flex items-center gap-1.5"
-            data-testid={`matchcenter-activity-type-${match.id}`}
-          >
-            <ActivitySceIcon activityKind="MATCH" size={compact ? 16 : 20} className="shrink-0" />
-            <span className="text-sm font-semibold text-[var(--foreground)]">
-              {tMatch("activityTypeLabel")}
-            </span>
+          <div data-testid={`matchcenter-team-matchup-${match.id}`}>
+            <SportingActivityIdentity
+              presentation={activityPresentation}
+              mode="management"
+              primaryWrap
+            />
           </div>
-
-          <div
-            className="flex min-w-0 items-center gap-1.5"
-            data-testid={`matchcenter-team-matchup-${match.id}`}
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <ClubLogo
-                logoUrl={homeLogoUrl}
-                name={homeName}
-                size="md"
-                bare
-                className={cn("h-9 w-9 shrink-0", compact && "h-7 w-7")}
-              />
-              <span
-                className={cn(
-                  TEAM_NAME,
-                  match.home.isOwnTeam ? "font-bold text-[var(--foreground)]" : "font-semibold text-[var(--text-2)]",
-                )}
-              >
-                {homeName}
-              </span>
-            </div>
-
-            <span
-              className="shrink-0 px-1 text-xs font-bold uppercase text-[var(--muted)]"
-              data-testid={live && liveScore ? `matchcenter-live-score-${match.id}` : undefined}
+          {live && liveScore ? (
+            <p
+              className="mt-1 text-xs font-bold tabular-nums text-[var(--foreground)]"
+              data-testid={`matchcenter-live-score-${match.id}`}
             >
-              {live && liveScore ? liveScore : "VS"}
-            </span>
-
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-              <span
-                className={cn(
-                  TEAM_NAME,
-                  "text-right",
-                  match.away.isOwnTeam ? "font-bold text-[var(--foreground)]" : "font-semibold text-[var(--text-2)]",
-                )}
-              >
-                {awayName}
-              </span>
-              <ClubLogo
-                logoUrl={awayLogoUrl}
-                name={awayName}
-                size="md"
-                bare
-                className={cn("h-9 w-9 shrink-0", compact && "h-7 w-7")}
-              />
-            </div>
-          </div>
-
-          {venueLine ? (
-            <p className="mt-2 flex items-start gap-1 text-xs text-[var(--muted)] md:hidden min-[105rem]:flex">
-              <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
-              <span className="line-clamp-2 break-words">{venueLine}</span>
+              Ergebnis {liveScore}
             </p>
           ) : null}
-
+          {competitionLabel ? (
+            <p className="mt-1 line-clamp-1 text-[0.6875rem] text-[var(--muted)]">{competitionLabel}</p>
+          ) : null}
         </Link>
       </div>
 
@@ -395,12 +302,6 @@ export default function SpieleManagementMatchRow({
         className="relative z-[1] flex min-w-0 flex-col gap-1 md:col-span-2 md:col-start-2 md:row-start-2 min-[105rem]:col-start-3 min-[105rem]:col-span-1 min-[105rem]:row-start-1 min-[105rem]:justify-center"
         data-testid={`matchcenter-action-${match.id}`}
       >
-        {venueLine ? (
-          <p className="hidden items-start gap-1 text-xs text-[var(--muted)] md:flex min-[105rem]:hidden">
-            <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
-            <span className="line-clamp-2 break-words">{venueLine}</span>
-          </p>
-        ) : null}
         <StatusPillsRow
           homeAway={homeAway}
           statusLabel={status.label}
