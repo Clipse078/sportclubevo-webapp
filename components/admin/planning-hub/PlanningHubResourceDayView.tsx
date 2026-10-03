@@ -107,6 +107,11 @@ export default function PlanningHubResourceDayView({
             facilityId: row.resourceId,
             facilityName: row.facilityName,
             segments: row.segments,
+            presentationGroupKey: row.resourceId,
+            presentationPrimaryLabel: row.name,
+            presentationSecondaryLabel: row.facilityName,
+            presentationTier: "primary" as const,
+            presentationRole: "standalone" as const,
           } satisfies ResourceTimelineLane,
         ],
       }));
@@ -116,6 +121,7 @@ export default function PlanningHubResourceDayView({
       segmentRows,
       facilityFilterId: urlState.facility,
       resourceFilterIds: urlState.resourceFilterIds,
+      resourceCategory: urlState.resourceCategory,
     });
   }, [
     resourceCatalogGroups,
@@ -126,7 +132,14 @@ export default function PlanningHubResourceDayView({
   ]);
 
   const laneCount = countResourceTimelineLanes(timelineGroups);
-  const showFacilityGroups = Boolean(resourceCatalogGroups) && timelineGroups.length > 0;
+
+  function groupWantsSiteHeader(group: (typeof timelineGroups)[number]): boolean {
+    if (group.lanes.length <= 1) return false;
+    if (group.lanes.some((l) => l.presentationRole === "segment" || l.presentationRole === "whole")) {
+      return false;
+    }
+    return true;
+  }
 
   const perspectiveTestId =
     urlState.perspective === "garderobe"
@@ -142,7 +155,12 @@ export default function PlanningHubResourceDayView({
   }
 
   return (
-    <div data-testid={perspectiveTestId} data-planning-hub-resource-day>
+    <div
+      data-testid={perspectiveTestId}
+      data-planning-hub-resource-day
+      className="flex min-h-0 flex-col"
+      style={{ minHeight: "min(72vh, calc(100dvh - 14rem))" }}
+    >
       <div
         className="flex flex-wrap gap-1 border-b border-[var(--border)] px-3 py-2"
         data-testid="planning-hub-resource-day-selector"
@@ -178,7 +196,7 @@ export default function PlanningHubResourceDayView({
         </p>
       ) : (
         <div
-          className="overflow-auto rounded-md border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
+          className="min-h-0 flex-1 overflow-auto rounded-md border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
           data-planning-hub-resource-scroll
           data-sce-planner-scroll-root
         >
@@ -206,7 +224,7 @@ export default function PlanningHubResourceDayView({
 
             {timelineGroups.map((group) => (
               <Fragment key={group.facilityId}>
-                {showFacilityGroups && timelineGroups.length > 1 ? (
+                {groupWantsSiteHeader(group) ? (
                   <div
                     className="border-b border-[var(--border)]/80 bg-[var(--surface-2)]/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]"
                     data-testid="planning-hub-resource-facility-group"
@@ -248,11 +266,26 @@ export default function PlanningHubResourceDayView({
                   data-planning-resource-id={row.resourceId}
                 >
                   <div
-                    className="sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--sce-surface-dense)] px-3 py-2"
+                    className={cn(
+                      "sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--sce-surface-dense)] py-2",
+                      lane.presentationTier === "secondary" ? "pl-6 pr-3" : "px-3",
+                    )}
                     style={{ width: RESOURCE_LABEL_WIDTH_PX }}
+                    data-planning-resource-tier={lane.presentationTier}
                   >
-                    <p className="text-xs font-semibold text-[var(--foreground)]">{row.name}</p>
-                    <p className="text-[10px] text-[var(--muted)]">{row.facilityName}</p>
+                    <p
+                      className={cn(
+                        "text-[var(--foreground)]",
+                        lane.presentationTier === "secondary"
+                          ? "text-[11px] font-medium"
+                          : "text-xs font-semibold",
+                      )}
+                    >
+                      {lane.presentationPrimaryLabel}
+                    </p>
+                    {lane.presentationSecondaryLabel ? (
+                      <p className="text-[10px] text-[var(--muted)]">{lane.presentationSecondaryLabel}</p>
+                    ) : null}
                   </div>
                   <div
                     className="relative shrink-0 bg-[var(--sce-surface-dense)]"

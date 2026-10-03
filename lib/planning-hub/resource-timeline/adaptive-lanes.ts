@@ -5,6 +5,11 @@
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { PlanningHubResourceCategory } from "@/lib/planning-hub/planner-url";
 import type { ResourceRow } from "@/lib/planning-hub/scheduler/resource-segments";
+import {
+  buildPlanningResourceGroupsFromFacilityGroups,
+  lanePresentationForSegment,
+  type PlanningResourceSegmentRole,
+} from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 
 /** Minimum readable label column width (px) — never shrink below this in product semantics. */
 export const RESOURCE_TIMELINE_LABEL_MIN_WIDTH_PX = 148;
@@ -18,6 +23,12 @@ export type ResourceTimelineLane = {
   facilityId: string;
   facilityName: string;
   segments: ResourceRow["segments"];
+  /** Presentation hierarchy — canonical mutation id remains resourceId. */
+  presentationGroupKey: string;
+  presentationPrimaryLabel: string;
+  presentationSecondaryLabel: string | null;
+  presentationTier: "primary" | "secondary";
+  presentationRole: PlanningResourceSegmentRole;
 };
 
 export type ResourceTimelineFacilityGroup = {
@@ -32,6 +43,7 @@ export type BuildAdaptiveResourceTimelineInput = {
   facilityFilterId: string | null;
   resourceFilterIds: string[] | null;
   searchQuery?: string;
+  resourceCategory?: PlanningHubResourceCategory;
 };
 
 function normalizeSearch(value: string): string {
@@ -69,17 +81,34 @@ export function buildAdaptiveResourceTimeline(
   const search = normalizeSearch(input.searchQuery ?? "");
   const groups: ResourceTimelineFacilityGroup[] = [];
 
-  for (const facility of input.catalogGroups) {
-    if (input.facilityFilterId && facility.facilityId !== input.facilityFilterId) continue;
+  const category: PlanningHubResourceCategory =
+    input.resourceCategory ??
+    (input.catalogGroups.some((g) => g.resources.some((r) => r.type === "DRESSING_ROOM")) &&
+    !input.catalogGroups.some((g) =>
+      g.resources.some((r) => r.type === "FULL_PITCH" || r.type === "HALF_PITCH"),
+    )
+      ? "dressing"
+      : "pitch");
+
+  const planningGroups = buildPlanningResourceGroupsFromFacilityGroups(input.catalogGroups, category);
+
+  for (const planningGroup of planningGroups) {
+    if (input.facilityFilterId && planningGroup.facilityId !== input.facilityFilterId) continue;
 
     const lanes: ResourceTimelineLane[] = [];
-    for (const resource of facility.resources) {
+    for (const segment of planningGroup.segments) {
+      const presentation = lanePresentationForSegment(planningGroup, segment);
       const lane: ResourceTimelineLane = {
-        resourceId: resource.id,
-        name: resource.name,
-        facilityId: facility.facilityId,
-        facilityName: facility.facilityName,
-        segments: segmentByResourceId.get(resource.id)?.segments ?? [],
+        resourceId: segment.resourceId,
+        name: segment.fullResource.name,
+        facilityId: planningGroup.facilityId,
+        facilityName: planningGroup.facilityName,
+        segments: segmentByResourceId.get(segment.resourceId)?.segments ?? [],
+        presentationGroupKey: planningGroup.groupKey,
+        presentationPrimaryLabel: presentation.primaryLabel,
+        presentationSecondaryLabel: presentation.secondaryLabel,
+        presentationTier: presentation.tier,
+        presentationRole: segment.role,
       };
       if (!laneMatchesFilters(lane, input.facilityFilterId, input.resourceFilterIds)) continue;
       if (!laneMatchesSearch(lane, search)) continue;
@@ -87,10 +116,9 @@ export function buildAdaptiveResourceTimeline(
     }
 
     if (lanes.length > 0) {
-      lanes.sort((a, b) => a.name.localeCompare(b.name, "de-CH"));
       groups.push({
-        facilityId: facility.facilityId,
-        facilityName: facility.facilityName,
+        facilityId: planningGroup.groupKey,
+        facilityName: planningGroup.label,
         lanes,
       });
     }
@@ -106,17 +134,24 @@ export function buildAdaptiveResourceTimeline(
       facilityId: "__orphan__",
       facilityName: "Weitere Ressourcen",
       lanes: orphanRows
-        .filter((row) => laneMatchesFilters(
-          {
-            resourceId: row.resourceId,
-            name: row.name,
-            facilityId: "__orphan__",
-            facilityName: row.facilityName,
-            segments: row.segments,
-          },
-          input.facilityFilterId,
-          input.resourceFilterIds,
-        ))
+        .filter((row) =>
+          laneMatchesFilters(
+            {
+              resourceId: row.resourceId,
+              name: row.name,
+              facilityId: "__orphan__",
+              facilityName: row.facilityName,
+              segments: row.segments,
+              presentationGroupKey: row.resourceId,
+              presentationPrimaryLabel: row.name,
+              presentationSecondaryLabel: row.facilityName,
+              presentationTier: "primary",
+              presentationRole: "standalone",
+            },
+            input.facilityFilterId,
+            input.resourceFilterIds,
+          ),
+        )
         .filter((row) =>
           laneMatchesSearch(
             {
@@ -125,6 +160,11 @@ export function buildAdaptiveResourceTimeline(
               facilityId: "__orphan__",
               facilityName: row.facilityName,
               segments: row.segments,
+              presentationGroupKey: row.resourceId,
+              presentationPrimaryLabel: row.name,
+              presentationSecondaryLabel: row.facilityName,
+              presentationTier: "primary",
+              presentationRole: "standalone",
             },
             search,
           ),
@@ -135,6 +175,11 @@ export function buildAdaptiveResourceTimeline(
           facilityId: "__orphan__",
           facilityName: row.facilityName,
           segments: row.segments,
+          presentationGroupKey: row.resourceId,
+          presentationPrimaryLabel: row.name,
+          presentationSecondaryLabel: row.facilityName,
+          presentationTier: "primary" as const,
+          presentationRole: "standalone" as const,
         })),
     });
   }

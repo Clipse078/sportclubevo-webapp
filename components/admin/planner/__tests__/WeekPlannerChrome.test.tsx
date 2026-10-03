@@ -48,5 +48,7 @@ describe("WeekPlannerChrome — planning family shell", () => {
     expect(screen.getByTestId("planning-hub-perspective-garderobe")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-perspective-liste")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-filter-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-view-options-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-visible-time-range")).not.toBeInTheDocument();
   });
 });
