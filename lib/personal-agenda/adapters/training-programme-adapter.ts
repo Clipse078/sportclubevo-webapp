@@ -22,6 +22,7 @@ import {
   buildTrainingActivityPresentation,
 } from "@/lib/sporting-activity-presentation/builders";
 import { loadTrainingSessionFacilityHints } from "@/lib/sporting-activity-presentation/training-facility-batch";
+import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
 
 function normalizeTrainingProgrammeStatus(
   status: string,
@@ -145,7 +146,9 @@ export async function loadTrainingProgrammeItems(
       subtitle: presentationFields.subtitle,
       contextLabel,
       status,
-      deepLink: `/dashboard/training/sessions/${session.id}/edit`,
+      deepLink:
+        buildSportingActivityDetailHref("TRAINING", session.id) ??
+        `/dashboard/training/sessions/${session.id}/edit`,
       teamName,
       typeLabel: "Training",
       ariaLabel: `Training: ${presentationFields.title}`,

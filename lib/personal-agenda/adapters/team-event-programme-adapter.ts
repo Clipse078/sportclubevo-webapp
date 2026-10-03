@@ -24,6 +24,7 @@ import {
   buildMatchActivityPresentation,
   buildTournamentActivityPresentation,
 } from "@/lib/sporting-activity-presentation/builders";
+import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
 
 function getEventTypeLabel(type: EventType): string {
   switch (type) {
@@ -220,7 +221,13 @@ export async function loadTeamEventProgrammeItems(
       contextLabel,
       venue: presentationFields.venue,
       status,
-      deepLink: `/dashboard/planner/edit/${event.id}`,
+      deepLink:
+        (event.type === "MATCH" || event.type === "TOURNAMENT"
+          ? buildSportingActivityDetailHref(
+              event.type === "MATCH" ? "MATCH" : "TOURNAMENT",
+              event.id,
+            )
+          : null) ?? `/dashboard/planner/edit/${event.id}`,
       teamName,
       opponentName: event.opponentName ?? undefined,
       homeAway: event.homeAway,

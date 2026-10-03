@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SportingActivityDetailLink } from "@/components/sporting-activity/detail/SportingActivityDetailLink";
 import { useTranslations } from "next-intl";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
@@ -97,13 +97,13 @@ export default function PersonalCalendarEventBlock({
 
   if (item.deepLink) {
     return (
-      <Link
+      <SportingActivityDetailLink
         href={item.deepLink}
         className="block min-w-0 no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--primary)]"
         aria-label={item.ariaLabel || `${lines.primary}, ${timeDisplay}`}
       >
         {content}
-      </Link>
+      </SportingActivityDetailLink>
     );
   }
 

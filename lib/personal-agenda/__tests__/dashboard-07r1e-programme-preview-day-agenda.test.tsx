@@ -16,6 +16,10 @@ import { buildPersonalProgrammeDayActivityMarkers } from "../programme-source-pr
 import type { PersonalProgrammeItem } from "../personal-programme-types";
 import PersonalProgrammeMonthCalendar from "@/components/ui/calendar/PersonalProgrammeMonthCalendar";
 import { PersonalProgrammeFeed } from "@/components/ui/dashboard/PersonalProgrammeFeed";
+import {
+  buildTournamentActivityPresentation,
+  buildTrainingActivityPresentation,
+} from "@/lib/sporting-activity-presentation/builders";
 
 const TIME_ZONE = "Europe/Zurich";
 const NOW = new Date("2026-09-24T10:00:00.000Z");
@@ -122,10 +126,20 @@ describe("DASHBOARD-07R1E — programme preview", () => {
 
 describe("DASHBOARD-07R1E — context removal and CTA", () => {
   it("does not render relationship context lines in programme feed rows", () => {
+    const activityPresentation = buildTrainingActivityPresentation({
+      resourceKey: "training-session:ctx",
+      title: "Junioren F2 Training",
+      typeLabel: "Training",
+      teamName: "Junioren F2",
+      clubName: "FC Allschwil",
+      facilityName: "Kunstrasen",
+      startAt: new Date("2026-09-28T15:45:00.000Z"),
+    });
     const groups = buildProgrammeFeedGroups({
       items: [
         programmeItem("ctx", new Date("2026-09-28T15:45:00.000Z"), {
           title: "Junioren F2 Training",
+          activityPresentation,
           contextLabel: "Junioren F2 · Trainer/in · FC Allschwil Junioren F2",
           subtitle: "Trainer/in",
           venue: "Kunstrasen",
@@ -146,10 +160,10 @@ describe("DASHBOARD-07R1E — context removal and CTA", () => {
     );
 
     expect(screen.getByText("Junioren F2 Training")).toBeTruthy();
-    expect(screen.getByText("Training")).toBeTruthy();
-    expect(screen.getByText("Kunstrasen")).toBeTruthy();
+    expect(screen.getByText("TRAINING")).toBeTruthy();
+    expect(screen.getByText("FC Allschwil - Kunstrasen")).toBeTruthy();
     expect(screen.queryByText(/Trainer\/in/)).toBeNull();
-    expect(screen.queryByText(/FC Allschwil/)).toBeNull();
+    expect(screen.queryByText(/FC Allschwil Junioren F2/)).toBeNull();
 
     const cta = screen.getByTestId("personal-programme-view-all");
     expect(cta.getAttribute("href")).toBe("/dashboard/kalender?monat=2026-09&quelle=termine");
@@ -213,6 +227,16 @@ describe("DASHBOARD-07R1E — selected-day agenda flows", () => {
   };
 
   it("shows tournament-orange on Sep 27 Blitzturnier day", () => {
+    const activityPresentation = buildTournamentActivityPresentation({
+      resourceKey: "event:blitz",
+      title: "Blitzturnier",
+      typeLabel: "Turnier",
+      organiserName: "FC Allschwil",
+      tenantClubName: "FC Allschwil",
+      location: "Im Brüel",
+      homeAway: "HOME",
+      startAt: new Date("2026-09-27T07:30:00.000Z"),
+    });
     render(
       <PersonalProgrammeMonthCalendar
         monthParam="2026-09"
@@ -222,6 +246,7 @@ describe("DASHBOARD-07R1E — selected-day agenda flows", () => {
             sourceType: "TOURNAMENT",
             title: "Blitzturnier",
             typeLabel: "Turnier",
+            activityPresentation,
             venue: "Im Brüel",
           }),
         ]}
@@ -233,7 +258,8 @@ describe("DASHBOARD-07R1E — selected-day agenda flows", () => {
     );
 
     expect(screen.getByText("Blitzturnier")).toBeTruthy();
-    expect(screen.getByText("Im Brüel")).toBeTruthy();
+    expect(screen.getByText("TURNIER")).toBeTruthy();
+    expect(screen.getByText("FC Allschwil - Im Brüel")).toBeTruthy();
     const panel = screen.getByTestId("personal-programme-selected-day");
     expect(panel.querySelector("[data-programme-palette]")?.getAttribute("data-programme-palette")).toBe(
       "tournament-orange",

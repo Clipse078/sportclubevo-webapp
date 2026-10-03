@@ -24,12 +24,22 @@ export type SheetProps = {
   children?: ReactNode;
   /** Optional footer slot — typically holds action buttons. Sticky at bottom. */
   footer?: ReactNode;
+  /** Optional panel width/layout override (e.g. Activity Detail). */
+  panelClassName?: string;
 };
 
 /**
  * Sheet — right-side planning workspace overlay (canonical SCE modal family).
  */
-export function Sheet({ open, onClose, title, description, children, footer }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  panelClassName,
+}: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
@@ -62,7 +72,8 @@ export function Sheet({ open, onClose, title, description, children, footer }: S
         onKeyDown={handlePanelKeyDown}
         className={cn(
           "relative z-10 flex h-full max-h-[var(--sce-dialog-max-height)] min-h-0 flex-col",
-          "w-full sm:w-[750px] lg:w-[820px]",
+          panelClassName ??
+            "w-full sm:w-[750px] lg:w-[820px]",
           "border-l border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none",
         )}
       >
