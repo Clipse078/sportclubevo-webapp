@@ -77,6 +77,7 @@ import {
 } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
@@ -562,6 +563,12 @@ export default function TrainingSeriesCreateForm({
           Bereit zum Erstellen
         </div>
       )}
+
+      <SportingActivityFormIdentitySummary
+        activityKind="TRAINING"
+        typeLabel="TRAINING"
+        title="Neues Training"
+      />
 
       <PlanningEditorOperationalWorkspace
         testId="training-create-operational-workspace"

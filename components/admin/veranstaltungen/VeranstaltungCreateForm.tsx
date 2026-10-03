@@ -14,6 +14,7 @@ import PlanningEditorSection from "@/components/admin/shared/planning-editor/Pla
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
@@ -347,6 +348,11 @@ export default function VeranstaltungCreateForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
+      <SportingActivityFormIdentitySummary
+        activityKind="VERANSTALTUNG"
+        typeLabel="VERANSTALTUNG"
+        title="Neue Veranstaltung"
+      />
       <PlanningEditorOperationalWorkspace
         testId="veranstaltung-create-operational-workspace"
         secondaryRail={

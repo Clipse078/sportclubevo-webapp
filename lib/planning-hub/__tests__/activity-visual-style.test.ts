@@ -45,9 +45,9 @@ describe("PLANNING-HUB-02F activityVisualStyle", () => {
     expect(activityVisualStyle("MATCH").semanticType).toBe("MATCH");
     expect(activityVisualStyle("TOURNAMENT").semanticType).toBe("TOURNAMENT");
     expect(activityVisualStyle("VERANSTALTUNG").semanticType).toBe("VERANSTALTUNG");
-    expect(activityVisualStyle("TRAINING").leftAccentClass).toContain("indigo");
-    expect(activityVisualStyle("MATCH").leftAccentClass).toContain("emerald");
-    expect(activityVisualStyle("TOURNAMENT").leftAccentClass).toContain("violet");
+    expect(activityVisualStyle("TRAINING").leftAccentClass).toContain("--sce-info");
+    expect(activityVisualStyle("MATCH").leftAccentClass).toContain("--sce-secondary");
+    expect(activityVisualStyle("TOURNAMENT").leftAccentClass).toContain("--sce-primary");
     expect(activityVisualStyle("VERANSTALTUNG").leftAccentClass).toContain("amber");
   });
 

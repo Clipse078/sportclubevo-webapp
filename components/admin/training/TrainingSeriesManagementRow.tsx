@@ -12,6 +12,7 @@ import {
   trainingManagementStatusPresentation,
 } from "@/lib/training/management-presentation";
 import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
+import { SportingActivityMetaRail } from "@/components/sporting-activity/SportingActivityMetaRail";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -38,26 +39,38 @@ export default function TrainingSeriesManagementRow({
   const timeDetails = row.timeDetailLines?.join(" · ");
 
   const identityBlock = (
-    <div className="flex min-w-0 items-center gap-3">
-      <span
-        className={cn(
-          "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.625rem]",
-          identityAccent,
-        )}
-        aria-hidden="true"
-      >
-        <ProductDomainSceIcon name="people" size={20} />
-      </span>
+    <div className="flex min-w-0 items-start gap-3">
       {row.activityPresentation ? (
-        <SportingActivityIdentity
-          presentation={row.activityPresentation}
-          mode="management"
-          className="flex-1"
-        />
+        <>
+          <SportingActivityMetaRail
+            activityKind="TRAINING"
+            typeLabel="TRAINING"
+            startTimeLabel={row.timeLabel.split(" · ")[0] ?? row.timeLabel}
+            density="management"
+            className="hidden sm:flex"
+          />
+          <SportingActivityIdentity
+            presentation={row.activityPresentation}
+            mode="management"
+            className="flex-1"
+            showTypeLine={false}
+          />
+        </>
       ) : (
-        <p className="truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)]">
-          {row.title}
-        </p>
+        <>
+          <span
+            className={cn(
+              "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.625rem]",
+              identityAccent,
+            )}
+            aria-hidden="true"
+          >
+            <ProductDomainSceIcon name="people" size={20} />
+          </span>
+          <p className="truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)]">
+            {row.title}
+          </p>
+        </>
       )}
     </div>
   );

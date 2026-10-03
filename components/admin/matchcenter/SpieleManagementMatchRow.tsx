@@ -19,7 +19,7 @@ import {
   SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
   SPIELE_MATCH_ROW_WIDE_GRID,
 } from "./spiele-management-layout";
-import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
+import { SpieleManagementMatchIdentity } from "@/components/sporting-activity/SpieleManagementMatchIdentity";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -251,24 +251,20 @@ export default function SpieleManagementMatchRow({
         </label>
       ) : null}
 
-      <div className="relative z-[1] tabular-nums md:col-start-1 md:row-start-1 min-[105rem]:col-span-1">
-        <p className="text-base font-semibold leading-none text-[var(--foreground)]">{kickoff}</p>
-        {endTime && endTime !== kickoff ? (
-          <p className="mt-0.5 text-xs text-[var(--muted)]">{endTime}</p>
-        ) : null}
-      </div>
-
-      <div className="relative z-[1] min-w-0 md:col-start-2 md:row-start-1 min-[105rem]:col-span-1">
+      <div className="relative z-[1] min-w-0 md:col-span-2 md:col-start-1 md:row-start-1 min-[105rem]:col-span-2">
         <Link
           href={detailHref}
           className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           aria-label={`Details zu ${match.title} anzeigen`}
         >
           <div data-testid={`matchcenter-team-matchup-${match.id}`}>
-            <SportingActivityIdentity
-              presentation={activityPresentation}
-              mode="management"
-              primaryWrap
+            <SpieleManagementMatchIdentity
+              match={match}
+              activityPresentation={activityPresentation}
+              tenantLogoUrl={tenantLogoUrl}
+              kickoffLabel={kickoff}
+              endTimeLabel={endTime && endTime !== kickoff ? endTime : null}
+              competitionLabel={competitionLabel ?? null}
             />
           </div>
           {live && liveScore ? (
@@ -278,9 +274,6 @@ export default function SpieleManagementMatchRow({
             >
               Ergebnis {liveScore}
             </p>
-          ) : null}
-          {competitionLabel ? (
-            <p className="mt-1 line-clamp-1 text-[0.6875rem] text-[var(--muted)]">{competitionLabel}</p>
           ) : null}
         </Link>
       </div>

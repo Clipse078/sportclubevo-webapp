@@ -42,6 +42,7 @@ import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOption
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
@@ -717,6 +718,12 @@ export default function TournamentCreateForm({
           Alle Angaben vollständig — bereit zum Einreichen.
         </div>
       )}
+
+      <SportingActivityFormIdentitySummary
+        activityKind="TOURNAMENT"
+        typeLabel="TURNIER"
+        title="Neues Turnier"
+      />
 
       <PlanningEditorOperationalWorkspace
         testId="tournament-create-operational-workspace"

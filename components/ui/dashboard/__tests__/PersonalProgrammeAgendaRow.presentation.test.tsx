@@ -56,9 +56,11 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6/R7 three-line Mein
 
     expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
     expect(screen.getByText("TRAINING")).toBeInTheDocument();
+    expect(screen.getAllByText("TRAINING")).toHaveLength(1);
     expect(screen.getByText("TRAINING").getAttribute("data-activity-type-pill")).toBe(
       "training-blue",
     );
+    expect(screen.getByTestId("sporting-activity-meta-rail")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil - Im Brüel").textContent).not.toMatch(
       /Junioren F2|KR2|Kunstrasen 2/,

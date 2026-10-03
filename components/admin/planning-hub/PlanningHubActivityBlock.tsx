@@ -28,6 +28,8 @@ import {
 } from "@/lib/planning-hub/activity-visual-style";
 import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-icon";
+import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
+import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -115,6 +117,18 @@ export default function PlanningHubActivityBlock({
   const semantic = activityVisualStyle(item.type);
   const activitySceIcon = getWeekplannerActivitySceIconName(item.type);
   const activityIconSize = compact ? 12 : 16;
+  const sportingKindForPill: SportingActivityKind | undefined =
+    item.type === "TRAINING" || item.type === "MATCH" || item.type === "TOURNAMENT"
+      ? item.type
+      : undefined;
+  const plannerTypeLabel =
+    item.type === "TRAINING"
+      ? "TRAINING"
+      : item.type === "MATCH"
+        ? "SPIEL"
+        : item.type === "TOURNAMENT"
+          ? "TURNIER"
+          : null;
 
   const isGhost = visualVariant === "ghost";
   const isPreview = visualVariant === "preview" || visualVariant === "preview-warning";
@@ -225,6 +239,14 @@ export default function PlanningHubActivityBlock({
       >
         <div className="flex items-start gap-1">
           <div className="min-w-0 flex-1">
+            {sportingKindForPill && plannerTypeLabel ? (
+              <div className="mb-0.5 flex items-center gap-1">
+                <ActivityTypePill activityKind={sportingKindForPill} label={plannerTypeLabel} />
+                <span className="truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--text-2)]">
+                  {time}
+                </span>
+              </div>
+            ) : null}
             <p className="flex min-w-0 items-center gap-1 font-semibold text-[var(--foreground)]">
               {activitySceIcon ? (
                 <ActivitySceIcon
@@ -246,7 +268,9 @@ export default function PlanningHubActivityBlock({
                 <span className="truncate">{teamContext}</span>
               </p>
             )}
-            {!compact && <p className="truncate text-[var(--text-2)]">{time}</p>}
+            {!compact && !sportingKindForPill ? (
+              <p className="truncate text-[var(--text-2)]">{time}</p>
+            ) : null}
             {!compact && resources && (
               <p className="truncate text-[var(--muted)]">{resources}</p>
             )}

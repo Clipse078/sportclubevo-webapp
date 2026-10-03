@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { useTranslations } from "next-intl";
 import PersonalCalendarEventBlock from "./PersonalCalendarEventBlock";
+import { PersonalProgrammeAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeAgendaRow";
+import { calendarItemToProgrammeAgendaItem } from "@/lib/personal-agenda/calendar-item-to-programme-item";
 import { sortNormalizedCalendarItems } from "@/lib/personal-agenda/calendar-item-sort";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 
@@ -37,16 +39,27 @@ export default function PersonalKalenderMobileDayAgenda({
         </p>
       ) : (
         <ul className="space-y-2" aria-label={heading}>
-          {sorted.map((item) => (
-            <li key={item.id} className="list-none">
-              <PersonalCalendarEventBlock
-                item={item}
-                timeLabel={timeLabelById[item.id] ?? ""}
-                tenantDisplayNames={tenantDisplayNames}
-                className="py-1.5"
-              />
-            </li>
-          ))}
+          {sorted.map((item) => {
+            const programmeItem = calendarItemToProgrammeAgendaItem(item);
+            return (
+              <li key={item.id} className="list-none">
+                {programmeItem ? (
+                  <PersonalProgrammeAgendaRow
+                    item={programmeItem}
+                    timeLabel={timeLabelById[item.id] ?? ""}
+                    className="py-1.5"
+                  />
+                ) : (
+                  <PersonalCalendarEventBlock
+                    item={item}
+                    timeLabel={timeLabelById[item.id] ?? ""}
+                    tenantDisplayNames={tenantDisplayNames}
+                    className="py-1.5"
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

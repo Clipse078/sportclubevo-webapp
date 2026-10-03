@@ -24,6 +24,8 @@ import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
 import VeranstaltungFacilityAllocationEditor from "./VeranstaltungFacilityAllocationEditor";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
+import { formatClubEventTimingLabel } from "@/lib/events/club-event-scheduling";
 
 type SeasonSummary = {
   id: string;
@@ -214,8 +216,28 @@ export default function VeranstaltungEditForm({
     }
   }
 
+  const timingSummary = formatClubEventTimingLabel(
+    {
+      allDay: schedule.allDay,
+      startAt: new Date(scheduleInterval?.startAt ?? event.startAt),
+      endAt: scheduleInterval?.endAt
+        ? new Date(scheduleInterval.endAt)
+        : event.endAt
+          ? new Date(event.endAt)
+          : null,
+    },
+    "de-CH",
+    tz,
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-edit-form">
+      <SportingActivityFormIdentitySummary
+        activityKind="VERANSTALTUNG"
+        typeLabel="VERANSTALTUNG"
+        title={title.trim() || event.title}
+        startTimeLabel={timingSummary}
+      />
       <PlanningEditorOperationalWorkspace
         testId="veranstaltung-edit-operational-workspace"
         secondaryRail={

@@ -8,19 +8,17 @@ import {
   resolveTournamentCategoryAgeLine,
   resolveTournamentOperationalLine,
   resolveTournamentPublicationPresentation,
-  resolveTournamentRowCrest,
   resolveTournamentStatusPresentation,
 } from "@/lib/tournaments/management-view";
 import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
 import { formatTournamentDatePresentation } from "@/lib/tournaments/presentation";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import { TournamentManagementIdentity } from "@/components/sporting-activity/TournamentManagementIdentity";
 import TurniereRowContextMenu from "./TurniereRowContextMenu";
 import {
   TURNIERE_ROW_INTERMEDIATE_GRID,
   TURNIERE_ROW_WIDE_GRID,
 } from "./turniere-management-layout";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -82,7 +80,18 @@ export default function TurniereManagementRow({
     locale,
     timezone,
   );
-  const crest = resolveTournamentRowCrest(tournament, tenantLogoUrl);
+  const kickoffTime = new Intl.DateTimeFormat("de-CH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  }).format(new Date(tournament.startAt));
+  const endTime =
+    tournament.endAt &&
+    new Intl.DateTimeFormat("de-CH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: timezone,
+    }).format(new Date(tournament.endAt));
   const categoryLine = resolveTournamentCategoryAgeLine(tournament);
   const operationalSegments = resolveTournamentOperationalLine(tournament, timezone, locale);
   const status = resolveTournamentStatusPresentation(tournament, assessment);
@@ -132,23 +141,14 @@ export default function TurniereManagementRow({
       </div>
 
       <div
-        className="hidden shrink-0 md:block min-[105rem]:row-span-1"
+        className="relative z-[1] min-w-0 space-y-1 md:col-span-2 min-[105rem]:col-span-2"
         data-testid={`turniere-row-crest-${tournament.id}`}
       >
-        <ClubLogo
-          logoUrl={crest.logoUrl}
-          name={crest.altName}
-          size="md"
-          bare
-          className={cn("h-12 w-12", compact && "h-9 w-9")}
-        />
-      </div>
-
-      <div className="relative z-[1] min-w-0 space-y-1 md:col-span-1 min-[105rem]:col-span-1">
-        <SportingActivityIdentity
-          presentation={activityPresentation}
-          mode="management"
-          primaryWrap
+        <TournamentManagementIdentity
+          tournament={tournament}
+          activityPresentation={activityPresentation}
+          startTimeLabel={kickoffTime}
+          endTimeLabel={endTime && endTime !== kickoffTime ? endTime : undefined}
         />
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-2)]">

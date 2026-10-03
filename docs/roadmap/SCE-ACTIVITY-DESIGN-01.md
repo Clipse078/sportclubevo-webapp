@@ -181,9 +181,21 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 ---
 
+## SCE-ACTIVITY-DESIGN-01C01D — Unified Activity Visual System & Planning Rollout
+
+**Status (STAGE):** **In human UAT** — shared meta rail, compact/programme/calendar parity, Wochenplaner canonical colors, management cards (Trainings / Spiele / Turniere / Veranstaltungen), create/edit identity summaries. Activity Detail (01B) unchanged except shared-component compatibility.
+
+**Delivered primitives:** `SportingActivityMetaRail`, `EventDomainMetaRail`, `SportingActivityFormIdentitySummary`, `SpieleManagementMatchIdentity`, `TournamentManagementIdentity`; `SportingActivityIdentity` supports `showTypeLine` / meta-rail split.
+
+**SCE-ACTIVITY-COLOR-01 (partial close):** Planning Hub Wochenplaner blocks + touched management surfaces use canonical `--sce-info` / `--sce-secondary` / `--sce-primary` tokens. Remaining non-planning legacy consumers (e.g. some calendar marker dots) stay on **SCE-ACTIVITY-COLOR-01** until migrated.
+
+---
+
 ## SCE-ACTIVITY-DESIGN-01C — Match & Tournament Management Cards
 
 **Goal:** Football-native management list/card presentation without replacing operational data.
+
+**Note:** Largely absorbed by **01C01D** on STAGE; keep section for historical card spec reference.
 
 **Match card:**
 
@@ -286,6 +298,8 @@ Not in SCE-ACTIVITY-UX-01 scope.
 
 ### SCE-ACTIVITY-COLOR-01
 
+**Status:** **OPEN (narrowed)** — Wochenplaner + 01C01D touched surfaces canonicalized. Remaining: calendar month-cell marker palette vs dashboard pill semantics, any straggler Infoboard-adjacent mappings not yet on `activity-type-pill.ts`.
+
 Audit and migrate historical color inconsistency across consumers to shared design-system tokens:
 
 - Training = blue
@@ -296,10 +310,10 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ## Suggested execution order
 
-1. **01A** — Design system + ClubIdentity (tokens, logos, density variants)
-2. **01B** — Activity Detail (read layer; unblocks consume navigation)
-3. **01E** — Permission & navigation hardening (parallel with 01B where possible)
-4. **01C** — Match & Tournament management cards
-5. **01D** — Wochenplaner planner blocks + training management polish
+1. **01A** — Design system + ClubIdentity (**closed**)
+2. **01B** — Activity Detail (**closed**)
+3. **01C01D** — Unified visual rollout (**in UAT**)
+4. **01E** — Permission & navigation hardening (**next**)
+5. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in UAT / follow-ups
 
 **SCE-ACTIVITY-COLOR-01** and **FACILITY-MODEL-01** can proceed on independent tracks when engineering capacity allows.

@@ -21,6 +21,10 @@ export type SportingActivityIdentityProps = {
   primaryClassName?: string;
   /** When true, primary line may wrap (dashboard agenda). When false, truncates (management tables). */
   primaryWrap?: boolean;
+  /** When false, type pill is omitted (shown on meta rail instead). Context badge remains in body. */
+  showTypeLine?: boolean;
+  showPrimary?: boolean;
+  showClubLocationLine?: boolean;
 };
 
 const MEIN_PROGRAMM_CONTRACT = { meinProgrammContract: true as const };
@@ -34,6 +38,9 @@ export function SportingActivityIdentity({
   className,
   primaryClassName,
   primaryWrap,
+  showTypeLine = true,
+  showPrimary = true,
+  showClubLocationLine = true,
 }: SportingActivityIdentityProps) {
   const primaryText = formatSportingActivityCompactPrimaryText(presentation);
   const typeLine = resolveSportingActivityCompactAgendaTypeLine(
@@ -53,28 +60,32 @@ export function SportingActivityIdentity({
 
   return (
     <div className={cn("min-w-0", className)} data-testid="sporting-activity-identity">
-      <p
-        className={cn(
-          wrapPrimary
-            ? "line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]"
-            : "truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]",
-          primaryClassName,
-        )}
-      >
-        {primaryText}
-      </p>
-      {typeLine ? (
+      {showPrimary ? (
+        <p
+          className={cn(
+            wrapPrimary
+              ? "line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]"
+              : "truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]",
+            primaryClassName,
+          )}
+        >
+          {primaryText}
+        </p>
+      ) : null}
+      {typeLine && (showTypeLine || typeLine.contextIndicator) ? (
         <p className="mt-0.5 flex flex-wrap items-center gap-1.5">
-          <span
-            className={
-              typePillVariant
-                ? sportingActivityTypePillClassName(typePillVariant)
-                : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
-            }
-            data-activity-type-pill={typePillVariant ?? undefined}
-          >
-            {typeLine.typeLabel}
-          </span>
+          {showTypeLine ? (
+            <span
+              className={
+                typePillVariant
+                  ? sportingActivityTypePillClassName(typePillVariant)
+                  : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+              }
+              data-activity-type-pill={typePillVariant ?? undefined}
+            >
+              {typeLine.typeLabel}
+            </span>
+          ) : null}
           {typeLine.contextIndicator ? (
             <span
               className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]"
@@ -85,7 +96,7 @@ export function SportingActivityIdentity({
           ) : null}
         </p>
       ) : null}
-      {clubLocationLine ? (
+      {showClubLocationLine && clubLocationLine ? (
         <p
           className={cn(
             "mt-0.5 text-[0.8125rem] leading-snug text-[var(--text-2)]",
