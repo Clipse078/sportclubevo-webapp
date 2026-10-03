@@ -2,7 +2,7 @@
 
 > **Document type:** Product roadmap — follow-up to SCE-ACTIVITY-UX-01  
 > **Status:** Accepted direction — **not** part of PR #792 / SCE-ACTIVITY-UX-01 implementation  
-> **Last updated:** 2026-10-02  
+> **Last updated:** 2026-10-03  
 > **Maintained by:** SportClubEvo product team
 
 ---
@@ -103,6 +103,8 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 ## SCE-ACTIVITY-DESIGN-01B — Activity Detail Experience
 
+**Status (closure):** **Implemented on STAGE via PR #794** — Activity Detail read layer, Mein Programm + Mein Kalender consume navigation, on-demand detail loading, participant-facing filtering. **Human UAT PASS** for consume architecture and Training / Match / Tournament detail (Michael, Club Admin). **Cross-role permission matrix UAT deferred to 01E** (Michael’s FCA identity is Club Admin only; do not weaken admin permissions for testing).
+
 **Goal:** Click on a sporting activity → **OPEN ACTIVITY**, not **EDIT ACTIVITY**.
 
 **Scope:** Permission-aware read/detail experience for Training, Match, and Tournament.
@@ -131,7 +133,21 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 **Bearbeiten** in Activity Detail appears **only** for users with appropriate **management capabilities** (e.g. Spielbetrieb Koordinator — use canonical permissions, do not hardcode role names).
 
-### 01B implementation (STAGE)
+### 01B implementation (merged to STAGE)
+
+**Human UAT (confirmed PASS)**
+
+- Activity Detail consume architecture; Mein Programm opens detail (not edit).
+- Training, Match, and Tournament Activity Detail behave as designed.
+- Consume surface excludes large management/admin experience; semantic presentation preserved.
+- Organiser crest presentation; management modules remain separately available.
+- Club Admin retains Planning access.
+
+**R1 corrections (implemented)**
+
+- Duplicate sheet title removed; training hierarchy and date/time improved.
+- Club context on training detail; unsafe facility-only **Route öffnen** removed.
+- Mein Team improved; tournament organiser repetition reduced; misleading Teams count removed; sparse detail polish.
 
 **Architecture**
 
@@ -204,7 +220,31 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 ## SCE-ACTIVITY-DESIGN-01E — Permission & Navigation Hardening
 
+**Status:** **Not started** — required before marking permission/persona matrix UAT complete.
+
 **Goal:** Separate **CONSUME** from **MANAGE** in navigation and authorization.
+
+### Persona matrix (required UAT / implementation scope)
+
+Verify and harden behavior **per persona** using **canonical permissions/capabilities only** — never role-name string checks.
+
+| Persona | Consume expectations | Manage expectations |
+|--------|----------------------|---------------------|
+| **Normal member / player / parent** | May consume personally relevant activities; Activity Detail is default destination; no management UI merely because activity is visible; no SFV/admin/source/publication internals; no edit without explicit management permission | No planning administration from consume surfaces |
+| **Trainer** | Consumes relevant activities; trainer-specific operational actions only where separately authorized; viewing an activity must not imply planning administration; future participation/Spielerpool actions remain capability-based | Bearbeiten / editors only via granted capabilities |
+| **Spielbetrieb Koordinator** | Consumes activities like other users | Operational management capabilities granted to the role; **Bearbeiten** only through canonical permissions/capabilities |
+| **Club Admin** | Consumes activities | Retains broad Planning/management access; Activity Detail does not remove legitimate admin functionality; management actions remain permission/capability based |
+
+**Never implement:**
+
+```ts
+if (roleName === "Spielbetrieb Koordinator") { ... }
+if (roleName === "Club Admin") { ... }
+```
+
+Use canonical permissions/capabilities (FCA capability model, server-side enforcement on edit routes, server actions, and APIs).
+
+**Wochenplaner (deferred from 01B):** planner block → Activity Detail consume path and consume-vs-manage navigation decision land in **01D / 01E**; current **Planning bearbeiten** behavior unchanged in 01B.
 
 **Normal (consume) navigation:**
 
@@ -233,6 +273,8 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 ## Related follow-up packages (separate from DESIGN-01)
 
 ### FACILITY-MODEL-01
+
+**Status:** **OPEN** — no hardcoded site aliases (e.g. Kunstrasen 2 → Im Brüel) in Activity Detail; consume canonical facility/resource until Site → Facility → Resource data exists.
 
 Required future hierarchy:
 
