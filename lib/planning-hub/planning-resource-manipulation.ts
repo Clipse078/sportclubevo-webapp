@@ -85,6 +85,27 @@ export function isSyntheticCollapsedResourceId(resourceId: string | null | undef
   return !!resourceId && resourceId.startsWith("__collapsed__");
 }
 
+/** Keeps DnD drops on synthetic collapsed overview rows from changing the canonical resource id. */
+export function resolveProposedResourceDropTarget(input: {
+  targetResourceId: string | null;
+  originalResourceId: string | undefined;
+  canChangeResource: boolean;
+  knownResourceIds: { has(id: string): boolean };
+}): string | undefined {
+  const { targetResourceId, originalResourceId, canChangeResource, knownResourceIds } = input;
+  if (!originalResourceId) return originalResourceId;
+  if (
+    targetResourceId &&
+    canChangeResource &&
+    targetResourceId !== originalResourceId &&
+    !isSyntheticCollapsedResourceId(targetResourceId) &&
+    knownResourceIds.has(targetResourceId)
+  ) {
+    return targetResourceId;
+  }
+  return originalResourceId;
+}
+
 export function activityTimeUnchanged(m: PlanningResourceManipulation): boolean {
   return (
     m.proposedReservationStart.getTime() !== m.activityStart.getTime() ||

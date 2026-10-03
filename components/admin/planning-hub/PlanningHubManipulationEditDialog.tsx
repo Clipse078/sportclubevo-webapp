@@ -7,6 +7,8 @@ import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulatio
 import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import { isoToLocalTime, combineTimeWithReferenceDay } from "@/lib/planning-hub/planner-time";
 import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resource-segment-display";
+import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
+import { formatManipulationResourceLabel } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
 
 type Props = {
@@ -17,6 +19,7 @@ type Props = {
   timezone: string;
   resourceCategory: PlanningHubUrlState["resourceCategory"];
   resourceOptions: WeekplannerResourceRef[];
+  planningResourceGroups?: readonly PlanningResourceGroup[];
   onClose: () => void;
   onSubmitDraft: (draft: SchedulerDraftChange) => void;
   evaluateConflicts: (
@@ -33,6 +36,7 @@ export default function PlanningHubManipulationEditDialog({
   timezone,
   resourceCategory,
   resourceOptions,
+  planningResourceGroups,
   onClose,
   onSubmitDraft,
   evaluateConflicts,
@@ -107,6 +111,7 @@ export default function PlanningHubManipulationEditDialog({
         saving={false}
         error={null}
         resolveResourceRef={(id) => resourceOptions.find((r) => r.facilityResourceId === id) ?? null}
+        planningResourceGroups={planningResourceGroups}
         onCancel={() => {
           setConfirmDraft(null);
           setConflictPreview(null);
@@ -155,7 +160,13 @@ export default function PlanningHubManipulationEditDialog({
         >
           {resourceOptions.map((option) => (
             <option key={option.facilityResourceId} value={option.facilityResourceId}>
-              {option.name}
+              {planningResourceGroups?.length
+                ? formatManipulationResourceLabel(
+                    option.facilityResourceId,
+                    planningResourceGroups,
+                    option.name,
+                  )
+                : option.name}
             </option>
           ))}
         </select>

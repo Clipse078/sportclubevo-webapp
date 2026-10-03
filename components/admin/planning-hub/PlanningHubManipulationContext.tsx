@@ -51,9 +51,10 @@ import {
   isValidResourceOccupancySpan,
 } from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
 import {
-  isSyntheticCollapsedResourceId,
+  resolveProposedResourceDropTarget,
   schedulerTimeTargetForCategory,
 } from "@/lib/planning-hub/planning-resource-manipulation";
+import { buildPlanningResourceGroupsFromFacilityGroups } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import { manipulationSurfaceForPerspective } from "@/lib/planning-hub/planner-perspective";
 import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulation-projection";
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
@@ -526,15 +527,12 @@ export function PlanningHubManipulationProvider({
           ? session.capabilities.canChangePrimaryResource
           : session.capabilities.canChangeDressingRoom;
 
-      if (
-        targetResourceId &&
-        canChangeResource &&
-        targetResourceId !== session.originalResourceId &&
-        !isSyntheticCollapsedResourceId(targetResourceId) &&
-        resourceRefById.has(targetResourceId)
-      ) {
-        proposedResourceId = targetResourceId;
-      }
+      proposedResourceId = resolveProposedResourceDropTarget({
+        targetResourceId,
+        originalResourceId: session.originalResourceId,
+        canChangeResource,
+        knownResourceIds: resourceRefById,
+      });
 
       commitPreviewDraft(buildDraft(session, proposedStart, proposedEnd, proposedResourceId));
     },
@@ -725,6 +723,15 @@ export function PlanningHubManipulationProvider({
     return evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory);
   }, [confirmationDraft, allItems, resolveResourceRef, urlState.resourceCategory]);
 
+  const planningResourceGroups = useMemo(() => {
+    if (!facilityGroupsByAllocationGroup) return [];
+    const facilityGroups =
+      urlState.resourceCategory === "pitch"
+        ? facilityGroupsByAllocationGroup.PITCH_HALL
+        : facilityGroupsByAllocationGroup.DRESSING_ROOM;
+    return buildPlanningResourceGroupsFromFacilityGroups(facilityGroups, urlState.resourceCategory);
+  }, [facilityGroupsByAllocationGroup, urlState.resourceCategory]);
+
   const resourceOptionsForCategory = useMemo(() => {
     const options: WeekplannerResourceRef[] = [];
     if (facilityGroupsByAllocationGroup) {
@@ -844,6 +851,7 @@ export function PlanningHubManipulationProvider({
           timezone={timezone}
           resourceCategory={urlState.resourceCategory}
           resourceOptions={resourceOptionsForCategory}
+          planningResourceGroups={planningResourceGroups}
           onClose={() => setEditTarget(null)}
           onSubmitDraft={submitEditorDraft}
           evaluateConflicts={(draft, targetRef) =>
@@ -861,6 +869,7 @@ export function PlanningHubManipulationProvider({
           saving={confirmSaving}
           error={confirmError}
           resolveResourceRef={resolveResourceRef}
+          planningResourceGroups={planningResourceGroups}
           onCancel={cancelManipulation}
           onConfirm={handleConfirm}
         />

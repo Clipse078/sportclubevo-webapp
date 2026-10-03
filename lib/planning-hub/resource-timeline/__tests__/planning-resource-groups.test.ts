@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import {
   buildPlanningResourceGroupsFromFacilityGroups,
+  formatManipulationResourceLabel,
   formatPlanningResourceScopeSummary,
   lanePresentationForSegment,
   resourceIdsMatchGroup,
@@ -70,6 +71,17 @@ describe("planning-resource-groups — FCA pitch hierarchy", () => {
     expect(segA.primaryLabel).toBe("A");
     expect(segA.tier).toBe("secondary");
     expect(segA.secondaryLabel).toBe("Kunstrasen 2");
+  });
+
+  it("formats manipulation labels with Gesamt · A · B segment semantics", () => {
+    const groups = buildPlanningResourceGroupsFromFacilityGroups(fcaCatalog, "pitch");
+    const kr3 = groups.find((g) => g.groupKey === "fac-kr3")!;
+    expect(formatManipulationResourceLabel(kr3.segments[0]!.resourceId, groups, "x")).toBe(
+      "Kunstrasen 3 · Gesamt",
+    );
+    expect(formatManipulationResourceLabel(kr3.segments[1]!.resourceId, groups, "x")).toBe(
+      "Kunstrasen 3 · A",
+    );
   });
 
   it("formats scope summary for whole-group selection", () => {

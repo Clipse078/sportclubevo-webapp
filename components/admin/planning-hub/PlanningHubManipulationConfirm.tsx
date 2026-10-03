@@ -7,6 +7,8 @@ import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import { weekplannerActivityTypeLabel, weekplannerPrimaryLabel } from "@/lib/planning-hub/item-presenters";
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
+import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
+import { formatManipulationResourceLabel } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
 
 type Props = {
@@ -18,6 +20,7 @@ type Props = {
   saving: boolean;
   error: string | null;
   resolveResourceRef: (resourceId: string) => WeekplannerResourceRef | null;
+  planningResourceGroups?: readonly PlanningResourceGroup[];
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -29,10 +32,13 @@ function formatOccupancyRange(start: Date, end: Date, timeZone: string): string 
 function resourceShortLabel(
   resourceId: string | undefined,
   resolve: (id: string) => WeekplannerResourceRef | null,
+  groups: readonly PlanningResourceGroup[] | undefined,
 ): string {
   if (!resourceId) return "—";
   const ref = resolve(resourceId);
-  return ref ? ref.name : resourceId;
+  const fallback = ref ? ref.name : resourceId;
+  if (!groups?.length) return fallback;
+  return formatManipulationResourceLabel(resourceId, groups, fallback);
 }
 
 export default function PlanningHubManipulationConfirm({
@@ -44,6 +50,7 @@ export default function PlanningHubManipulationConfirm({
   saving,
   error,
   resolveResourceRef,
+  planningResourceGroups,
   onCancel,
   onConfirm,
 }: Props) {
@@ -73,7 +80,7 @@ export default function PlanningHubManipulationConfirm({
               <>
                 {draft.originalResourceId && (
                   <p className="mt-1 font-semibold text-[var(--foreground)]">
-                    {resourceShortLabel(draft.originalResourceId, resolveResourceRef)}
+                    {resourceShortLabel(draft.originalResourceId, resolveResourceRef, planningResourceGroups)}
                   </p>
                 )}
                 <p className="mt-1 text-[var(--foreground)]">
@@ -90,7 +97,7 @@ export default function PlanningHubManipulationConfirm({
             )}
             {!isOccupancyDraft && draft.originalResourceId && (
               <p className="mt-1 text-[var(--text-2)]">
-                {resourceShortLabel(draft.originalResourceId, resolveResourceRef)}
+                {resourceShortLabel(draft.originalResourceId, resolveResourceRef, planningResourceGroups)}
               </p>
             )}
           </div>
@@ -100,7 +107,7 @@ export default function PlanningHubManipulationConfirm({
               <>
                 {draft.proposedResourceId && (
                   <p className="mt-1 font-semibold text-[var(--foreground)]">
-                    {resourceShortLabel(draft.proposedResourceId, resolveResourceRef)}
+                    {resourceShortLabel(draft.proposedResourceId, resolveResourceRef, planningResourceGroups)}
                   </p>
                 )}
                 <p className="mt-1 text-[var(--foreground)]">
@@ -117,7 +124,7 @@ export default function PlanningHubManipulationConfirm({
             )}
             {!isOccupancyDraft && draft.proposedResourceId && (
               <p className="mt-1 text-[var(--text-2)]">
-                {resourceShortLabel(draft.proposedResourceId, resolveResourceRef)}
+                {resourceShortLabel(draft.proposedResourceId, resolveResourceRef, planningResourceGroups)}
               </p>
             )}
           </div>
