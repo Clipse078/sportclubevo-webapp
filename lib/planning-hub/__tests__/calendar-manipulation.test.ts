@@ -202,7 +202,11 @@ describe("PLANNING-HUB-03C calendar manipulation", () => {
   });
 
   it("standard plan match time move stays disabled (provider-owned)", () => {
-    const match = training({ type: "MATCH", eventId: "m1" } as Partial<WeekplannerItem>);
+    const match = training({
+      type: "MATCH",
+      eventId: "m1",
+      eventSource: "SFV",
+    } as Partial<WeekplannerItem>);
     const caps = getSchedulerManipulationCapabilities(match, {
       isStandardplan: true,
       canManageTrainings: false,

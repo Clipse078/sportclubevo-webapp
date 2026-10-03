@@ -310,6 +310,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     },
   });
 
+  if ("startAt" in data || "endAt" in data) {
+    const { notifyPersonalDashboardForSportingEvent } = await import(
+      "@/lib/dashboard/read-model/invalidate-audience"
+    );
+    void notifyPersonalDashboardForSportingEvent(tenantId, matchId);
+  }
+
   // Invalidate the admin Matchcenter pages so the next visit reflects the saved state.
   revalidatePath("/dashboard/matchcenter");
   revalidatePath(`/dashboard/matchcenter/${matchId}`);

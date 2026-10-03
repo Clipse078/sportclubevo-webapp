@@ -250,7 +250,22 @@ export async function applyStandardPlanSchedulerDraft(
 
   if (item.type === "MATCH") {
     if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
-      throw new Error("Zeitänderung für Heimspiele ist im Standardplan nicht verfügbar.");
+      const { resolveActivityScheduleAuthority } = await import(
+        "@/lib/planning-hub/planning-activity-rescheduling"
+      );
+      const validation = resolveActivityScheduleAuthority(item, {
+        isStandardplan: true,
+        alternativePlanId: null,
+      });
+      if (!validation.permitted) {
+        throw new Error(
+          validation.reason ?? "Zeitänderung für dieses Spiel ist nicht verfügbar.",
+        );
+      }
+      await applyMatchPatch(item.eventId, {
+        startAt: draft.proposedStart.toISOString(),
+        endAt: draft.proposedEnd.toISOString(),
+      });
     }
 
     const matchBody: Record<string, unknown> = {};
@@ -300,8 +315,15 @@ export async function applyStandardPlanSchedulerDraft(
   }
 
   if (item.type === "TOURNAMENT") {
-    if (timeChanged(draft)) {
-      throw new Error("Zeitänderung für Turniere ist im Standardplan nicht verfügbar.");
+    if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
+      const { applyTournamentActivityTime } = await import(
+        "@/lib/planning-hub/activity-rescheduling-mutations"
+      );
+      await applyTournamentActivityTime(
+        item.eventId,
+        draft.proposedStart,
+        draft.proposedEnd,
+      );
     }
     if (resourceChanged(draft) && draft.originalResourceId && draft.proposedResourceId) {
       await applyTournamentPitchSwap(item, draft.originalResourceId, draft.proposedResourceId);

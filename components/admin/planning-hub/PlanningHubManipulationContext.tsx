@@ -13,8 +13,8 @@ import {
 import { useRouter } from "next/navigation";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
-import { applyStandardPlanSchedulerDraft } from "@/lib/planning-hub/canonical-planning-mutations";
-import { applyAlternativePlanSchedulerDraft } from "@/lib/planning-hub/operational-planning-mutations";
+import { applyPlanningHubActivityRescheduleDraft } from "@/lib/planning-hub/activity-rescheduling-mutations";
+import { isActivityTimeDraft } from "@/lib/planning-hub/planning-activity-rescheduling";
 import {
   evaluateManipulationConflicts,
   projectItemWithDraft,
@@ -60,6 +60,7 @@ import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulatio
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
 import PlanningHubManipulationEditDialog from "./PlanningHubManipulationEditDialog";
+import PlanningHubActivityScheduleEditDialog from "./PlanningHubActivityScheduleEditDialog";
 import { useDesktopMinWidth768 } from "@/lib/planning-hub/use-desktop-min-width";
 import type { PlanningHubManipulationSurface } from "@/lib/planning-hub/planner-perspective";
 
@@ -157,6 +158,7 @@ type PlanningHubManipulationContextValue = {
   cancelManipulation: () => void;
   resolveResourceRef: (resourceId: string) => WeekplannerResourceRef | null;
   openManipulationEditor: (item: WeekplannerItem, segmentId: string, resourceId: string) => void;
+  openActivityScheduleEditor: (item: WeekplannerItem) => void;
 };
 
 const PlanningHubManipulationContext = createContext<PlanningHubManipulationContextValue | null>(null);
@@ -209,6 +211,7 @@ export function PlanningHubManipulationProvider({
     segmentId: string;
     resourceId: string;
   } | null>(null);
+  const [scheduleEditItem, setScheduleEditItem] = useState<WeekplannerItem | null>(null);
   const lastPreviewKeyRef = useRef<string>("");
   const pointerSessionRef = useRef(pointerSession);
   pointerSessionRef.current = pointerSession;
@@ -762,6 +765,20 @@ export function PlanningHubManipulationProvider({
       const caps = getCapabilities(item);
       if (!hasAnyManipulationCapability(caps)) return;
       setEditTarget({ item, segmentId, resourceId });
+      setScheduleEditItem(null);
+      setConfirmationDraft(null);
+      setConfirmError(null);
+    },
+    [enabled, getCapabilities],
+  );
+
+  const openActivityScheduleEditor = useCallback(
+    (item: WeekplannerItem) => {
+      if (!enabled) return;
+      const caps = getCapabilities(item);
+      if (!caps.canMoveTime && !caps.canResize) return;
+      setScheduleEditItem(item);
+      setEditTarget(null);
       setConfirmationDraft(null);
       setConfirmError(null);
     },
@@ -782,11 +799,51 @@ export function PlanningHubManipulationProvider({
     setConfirmSaving(true);
     setConfirmError(null);
     try {
-      if (isStandardplan) {
-        const groups = facilityGroupsByAllocationGroup ?? {
-          PITCH_HALL: [],
-          DRESSING_ROOM: [],
-        };
+      const groups = facilityGroupsByAllocationGroup ?? {
+        PITCH_HALL: [],
+        DRESSING_ROOM: [],
+      };
+
+      if (isActivityTimeDraft(confirmationDraft)) {
+        const validateRes = await fetch("/api/planning-hub/activity-rescheduling/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            draft: {
+              ...confirmationDraft,
+              originalStart: confirmationDraft.originalStart.toISOString(),
+              originalEnd: confirmationDraft.originalEnd.toISOString(),
+              proposedStart: confirmationDraft.proposedStart.toISOString(),
+              proposedEnd: confirmationDraft.proposedEnd.toISOString(),
+            },
+            allItems,
+            resourceCategory: urlState.resourceCategory,
+            targetResource: confirmationDraft.proposedResourceId
+              ? resolveResourceRef(confirmationDraft.proposedResourceId)
+              : null,
+            isStandardplan,
+            alternativePlanId,
+          }),
+        });
+        if (!validateRes.ok) {
+          const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(data?.error ?? "Validierung fehlgeschlagen.");
+        }
+      }
+
+      if (isActivityTimeDraft(confirmationDraft)) {
+        await applyPlanningHubActivityRescheduleDraft(confirmationDraft, {
+          isStandardplan,
+          alternativePlanId,
+          resourceCategory: urlState.resourceCategory,
+          facilityGroups: groups,
+          overridesByKey,
+          timeZone: timezone,
+        });
+      } else if (isStandardplan) {
+        const { applyStandardPlanSchedulerDraft } = await import(
+          "@/lib/planning-hub/canonical-planning-mutations"
+        );
         await applyStandardPlanSchedulerDraft(
           confirmationDraft,
           urlState.resourceCategory,
@@ -794,6 +851,9 @@ export function PlanningHubManipulationProvider({
           timezone,
         );
       } else if (alternativePlanId) {
+        const { applyAlternativePlanSchedulerDraft } = await import(
+          "@/lib/planning-hub/operational-planning-mutations"
+        );
         await applyAlternativePlanSchedulerDraft(
           confirmationDraft,
           alternativePlanId,
@@ -819,6 +879,8 @@ export function PlanningHubManipulationProvider({
     alternativePlanId,
     overridesByKey,
     router,
+    allItems,
+    resolveResourceRef,
   ]);
 
   const value: PlanningHubManipulationContextValue = {
@@ -837,11 +899,27 @@ export function PlanningHubManipulationProvider({
     cancelManipulation,
     resolveResourceRef,
     openManipulationEditor,
+    openActivityScheduleEditor,
   };
 
   return (
     <PlanningHubManipulationContext.Provider value={value}>
       {children}
+      {scheduleEditItem && (
+        <PlanningHubActivityScheduleEditDialog
+          item={scheduleEditItem}
+          locale={locale}
+          timezone={timezone}
+          resourceCategory={urlState.resourceCategory}
+          planningResourceGroups={planningResourceGroups}
+          onClose={() => setScheduleEditItem(null)}
+          onSubmitDraft={submitEditorDraft}
+          evaluateConflicts={(draft) =>
+            evaluateManipulationConflicts(allItems, draft, null, urlState.resourceCategory)
+          }
+          resolveResourceRef={resolveResourceRef}
+        />
+      )}
       {editTarget && (
         <PlanningHubManipulationEditDialog
           item={editTarget.item}
