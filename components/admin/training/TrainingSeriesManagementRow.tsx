@@ -12,7 +12,9 @@ import {
   trainingManagementStatusPresentation,
 } from "@/lib/training/management-presentation";
 import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
+import { SportingActivityMetaRail } from "@/components/sporting-activity/SportingActivityMetaRail";
 import { cn } from "@/lib/cn";
+import { splitSportingActivityTimeRangeLabel } from "@/lib/sporting-activity-presentation/time-range";
 
 type Props = {
   row: Row;
@@ -36,28 +38,46 @@ export default function TrainingSeriesManagementRow({
   const status = trainingManagementStatusPresentation(row.status);
   const identityAccent = resolveTeamIdentityAccentClass(row.teamSeasonId);
   const timeDetails = row.timeDetailLines?.join(" · ");
+  const primaryTimeToken = row.timeLabel.split(" · ")[0]?.trim() ?? row.timeLabel;
+  const parsedPrimaryTime = splitSportingActivityTimeRangeLabel(primaryTimeToken);
+  const isVariableTimeLabel = row.timeLabel === "Unterschiedliche Zeiten";
+  const showMetaRailTime = Boolean(row.activityPresentation) && !isVariableTimeLabel;
+  const hideDuplicateTimeColumn = showMetaRailTime && !row.timeDetailLines?.length;
 
   const identityBlock = (
-    <div className="flex min-w-0 items-center gap-3">
-      <span
-        className={cn(
-          "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.625rem]",
-          identityAccent,
-        )}
-        aria-hidden="true"
-      >
-        <ProductDomainSceIcon name="people" size={20} />
-      </span>
+    <div className="flex min-w-0 items-start gap-3">
       {row.activityPresentation ? (
-        <SportingActivityIdentity
-          presentation={row.activityPresentation}
-          mode="management"
-          className="flex-1"
-        />
+        <>
+          <SportingActivityMetaRail
+            activityKind="TRAINING"
+            typeLabel="TRAINING"
+            startTimeLabel={isVariableTimeLabel ? undefined : parsedPrimaryTime.startLabel}
+            endTimeLabel={isVariableTimeLabel ? undefined : parsedPrimaryTime.endLabel}
+            density="management"
+            className="hidden sm:flex"
+          />
+          <SportingActivityIdentity
+            presentation={row.activityPresentation}
+            mode="management"
+            className="flex-1"
+            showTypeLine={false}
+          />
+        </>
       ) : (
-        <p className="truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)]">
-          {row.title}
-        </p>
+        <>
+          <span
+            className={cn(
+              "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.625rem]",
+              identityAccent,
+            )}
+            aria-hidden="true"
+          >
+            <ProductDomainSceIcon name="people" size={20} />
+          </span>
+          <p className="truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)]">
+            {row.title}
+          </p>
+        </>
       )}
     </div>
   );
@@ -85,7 +105,9 @@ export default function TrainingSeriesManagementRow({
       <TrainingWeekdayPills weekdays={row.weekdays} className="md:col-span-1" />
 
       <div className="text-sm tabular-nums text-[var(--foreground)] md:col-span-1">
-        {timeDetails ? (
+        {hideDuplicateTimeColumn ? (
+          <span className="sr-only" aria-label={`Zeit: ${row.timeLabel}`} />
+        ) : timeDetails ? (
           <p title={timeDetails} aria-label={`${row.timeLabel}: ${timeDetails}`}>
             {row.timeLabel}
           </p>

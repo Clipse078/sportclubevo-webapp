@@ -51,13 +51,19 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6/R7 three-line Mein
       <PersonalProgrammeAgendaRow
         item={baseItem({ activityPresentation, title: activityPresentation.identity.title })}
         timeLabel="17:00"
+        endTimeLabel="18:30"
       />,
     );
 
     expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
     expect(screen.getByText("TRAINING")).toBeInTheDocument();
+    expect(screen.getAllByText("TRAINING")).toHaveLength(1);
     expect(screen.getByText("TRAINING").getAttribute("data-activity-type-pill")).toBe(
       "training-blue",
+    );
+    expect(screen.getByTestId("sporting-activity-meta-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("sporting-activity-meta-rail-time")).toHaveTextContent(
+      "17:00–18:30",
     );
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil - Im Brüel").textContent).not.toMatch(

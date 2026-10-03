@@ -181,9 +181,134 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 ---
 
+## SCE-ACTIVITY-DESIGN-01C01D — Unified Activity Visual System & Planning Rollout
+
+**Status (STAGE):** **CLOSED — Human UAT PASSED (03.10.2026)** — merged via PR #795. Shared meta rail, compact/programme/calendar parity, Wochenplaner canonical colors, management cards (Trainings / Spiele / Turniere / Veranstaltungen), create/edit identity summaries. Activity Detail (01B) unchanged except shared-component compatibility.
+
+**Human UAT (Michael, Club Admin — 03.10.2026):** Mein Programm, Wochenplaner (+ Training/Match editors), Trainings management, Matchcenter, Tournamentcenter, Veranstaltungen — Training blue / Spiel red / Turnier orange; non-wrapping `HH:mm–HH:mm`; no fabricated end times; trainings time dedupe; neutral context badges; football-native match identity; clear tournament organiser; canonical editor identity headers.
+
+**Delivered primitives:** `SportingActivityMetaRail`, `EventDomainMetaRail`, `SportingActivityFormIdentitySummary`, `SpieleManagementMatchIdentity`, `TournamentManagementIdentity`; `SportingActivityIdentity` supports `showTypeLine` / meta-rail split.
+
+**SCE-ACTIVITY-COLOR-01 (partial close):** Planning Hub Wochenplaner blocks + touched management surfaces use canonical `--sce-info` / `--sce-secondary` / `--sce-primary` tokens. Remaining non-planning legacy consumers (e.g. some calendar marker dots) stay on **SCE-ACTIVITY-COLOR-01** until migrated.
+
+### SCE-ACTIVITY-DESIGN-01C01D-R1 — Human UAT corrections
+
+**Status:** **Delivered on feature branch** (PR #795, STAGE target) — presentation-only R1; no permission or Activity Detail architecture changes.
+
+- Tournament/match **context badge** beside primary title (not a separate row under meta rail).
+- **`formatSportingActivityTimeRange`** — single HH:mm–HH:mm unit on meta rails, planner blocks, management, detail schedule lines, Veranstaltungen.
+- **Training blue / Spiel red / Turnier orange** enforced on planning editor identity summaries (removed legacy green Training / blue Heimspiel activity identity).
+- Rollout: Mein Programm, Mein Kalender selected-day agenda, Wochenplaner individual blocks, Trainings/Spiele/Turniere management, Matchcenter, create/edit identity summaries.
+
+**Still open:** **01E** (consume/manage matrix), **FACILITY-MODEL-01**, residual **SCE-ACTIVITY-COLOR-01** (month-cell markers / unrelated surfaces), **BUILD-PERF**, **PERFORMANCE-INFRA-01**.
+
+### SCE-ACTIVITY-DESIGN-01C01D-R2 — Final consistency & UAT closure
+
+**Status:** **CLOSED** (PR #795 → STAGE) — presentation-only R2; human UAT passed 03.10.2026.
+
+- Meta rail time ranges use **non-wrapping** single-unit presentation (`whitespace-nowrap`, compact rail width tuned for `HH:mm–HH:mm`).
+- Trainings management rows show canonical time **once** (meta rail); weekday/facility/status/actions preserved; variable schedules keep the ZEIT column label.
+- SCE icon regression tests reconciled with 01C01D meta-rail identity (obsolete dot+icon programme expectations superseded).
+- Create/edit surfaces gain **schedule line** on `SportingActivityFormIdentitySummary` (training series edit, training session edit, Veranstaltung edit timing).
+
+**Deferred to SCE-ACTIVITY-DESIGN-02:** premium management-center card composition (Matchcenter / Tournamentcenter / Trainings / Veranstaltungen full layout).
+
+---
+
+## SCE-ACTIVITY-DESIGN-02 — Premium Management Activity Experience
+
+**Status:** **OPEN** — not in PR #795.
+
+**Purpose:** Take the semantically correct 01A / 01B / 01C01D activity system and upgrade management surfaces from functional administrative views to a premium sports operating experience.
+
+### A. Universal information hierarchy
+
+Every activity experience should answer, in order unless context requires otherwise:
+
+1. **WHAT?**
+2. **WHEN?**
+3. **WHO?**
+4. **WHERE?**
+5. **WHAT DO I NEED TO DO?**
+
+### B. Management card grid
+
+Replace accidental full-width empty canvases with intentional internal layout:
+
+**META | IDENTITY / FIXTURE | CONTEXT | OPERATIONS**
+
+Responsive composition required — not a literal four-column table everywhere.
+
+### C. Matchcenter premium card
+
+Football-native fixture as focal object (desktop concept):
+
+- `[SPIEL]` + `16:00–18:00`
+- Home crest/name **left**, **VS**, away crest/name **right**
+- Auswärts · competition · location
+- Primary operational action + secondary `...`
+- No giant dead space; no raw SFV metadata; status/action secondary to fixture identity
+
+### D. Tournamentcenter premium card
+
+- `[TURNIER]` + time range
+- Organiser crest + name; tournament title + Auswärts badge
+- Location; participating SCE team separate from organiser
+- Geplant / Öffentlich + actions
+- No misleading tournament-size semantics; fix left-heavy empty-card problem
+
+### E. Trainings premium management row
+
+Operationally efficient — **no duplicate time**. Identity: TRAINING, range, team, weekdays, facility/resource, status, contextual action. Preserve table scan efficiency.
+
+### F. Veranstaltungen premium management row
+
+Veranstaltung remains its own domain (not relabelled as sporting activity). Mature row: date/time, identity, location, publication/status, operational action. Avoid huge empty full-width cards.
+
+### G. Five presentation jobs
+
+| Job | Role |
+|-----|------|
+| **COMPACT** | Mein Programm / calendar agenda — personal consumption |
+| **PLANNER** | Spatial/time/resource planning |
+| **MANAGEMENT** | Scanning, operational state and actions |
+| **DETAIL** | Understanding, participation, personally relevant info |
+| **EDITOR** | Privileged changes |
+
+Shared canonical identity/data semantics; **not** the same card component everywhere.
+
+### H. Contextual primary action
+
+One primary contextual action when useful (e.g. Vorbereitung öffnen, Planung bearbeiten, Teilnahmen ansehen). Secondary actions in `...`. Capability-driven — never role-name strings. Final permission behavior with **01E**.
+
+### I. Interaction polish
+
+After structure: hover, focus, clickable regions, truncation discovery, touch targets, skeleton geometry, empty states, subtle transitions. Structure before animation.
+
+---
+
+## SCE-STATUS-DESIGN-01 — Canonical Operational Status Semantics
+
+**Status:** **OPEN** — document only; **not implemented in #795**.
+
+**Purpose:** Separate **activity identity colors** from **operational status** semantics.
+
+| Layer | Treatment |
+|-------|-----------|
+| **Activity identity** | Training blue, Spiel red, Turnier orange, Veranstaltung event/domain treatment |
+| **Operational status** | success/ready/active, attention/open, error/conflict, inactive/archived, publication states |
+
+Status must use semantic token + text + icon where appropriate — **never color alone**.
+
+**Future audit consumers:** Trainings, Spiele, Turniere, Veranstaltungen, Aufgaben, Requirements, Communication, Workspace.
+
+---
+
 ## SCE-ACTIVITY-DESIGN-01C — Match & Tournament Management Cards
 
 **Goal:** Football-native management list/card presentation without replacing operational data.
+
+**Note:** Largely absorbed by **01C01D** on STAGE; keep section for historical card spec reference.
 
 **Match card:**
 
@@ -286,6 +411,8 @@ Not in SCE-ACTIVITY-UX-01 scope.
 
 ### SCE-ACTIVITY-COLOR-01
 
+**Status:** **OPEN (narrowed)** — Wochenplaner + 01C01D touched surfaces canonicalized. Remaining: calendar month-cell marker palette vs dashboard pill semantics, any straggler Infoboard-adjacent mappings not yet on `activity-type-pill.ts`.
+
 Audit and migrate historical color inconsistency across consumers to shared design-system tokens:
 
 - Training = blue
@@ -294,12 +421,30 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ---
 
+## SCE-CALENDAR-UX-02 — Personal Calendar World-Class Upgrade
+
+**Status:** **OPEN** — next package after 01C01D closure; **not** implemented in PR #795.
+
+**Goal:** Upgrade the personal Dashboard calendar (`Mein Kalender`) now that the canonical activity identity/presentation system is established.
+
+**Core direction (intent only):**
+
+- Personal calendar experience — not a generic club calendar
+- Canonical Training / Spiel / Turnier semantics and semantic activity colors
+- Clear multi-activity days and excellent selected-day agenda
+- Responsive desktop/mobile design; useful density without clutter
+- Interaction with canonical Activity Detail (consume path)
+- Reuse `SportingActivityPresentation` / `SportingActivityIdentity` — no duplicate activity presentation architecture
+
+---
+
 ## Suggested execution order
 
-1. **01A** — Design system + ClubIdentity (tokens, logos, density variants)
-2. **01B** — Activity Detail (read layer; unblocks consume navigation)
-3. **01E** — Permission & navigation hardening (parallel with 01B where possible)
-4. **01C** — Match & Tournament management cards
-5. **01D** — Wochenplaner planner blocks + training management polish
+1. **01A** — Design system + ClubIdentity (**closed**)
+2. **01B** — Activity Detail (**closed**)
+3. **01C01D** — Unified visual rollout (**closed — human UAT 03.10.2026**)
+4. **01E** — Permission & navigation hardening (**next**)
+5. **SCE-CALENDAR-UX-02** — Personal calendar world-class upgrade (after 01C01D)
+6. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in follow-ups
 
-**SCE-ACTIVITY-COLOR-01** and **FACILITY-MODEL-01** can proceed on independent tracks when engineering capacity allows.
+**SCE-ACTIVITY-COLOR-01** (narrowed), **FACILITY-MODEL-01**, **SCE-ACTIVITY-DESIGN-02**, **SCE-STATUS-DESIGN-01**, **PERFORMANCE-INFRA-01**, and **BUILD-PERF** remain open on independent tracks.

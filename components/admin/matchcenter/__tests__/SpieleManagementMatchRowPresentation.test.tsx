@@ -128,7 +128,9 @@ describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
       }),
     );
 
-    expect(screen.getByText(/BSC Old Boys.*FC Allschwil E1/)).toBeInTheDocument();
+    expect(screen.getByTestId("match-club-pair")).toBeInTheDocument();
+    expect(screen.getByText("BSC Old Boys")).toBeInTheDocument();
+    expect(screen.getByText("FC Allschwil E1")).toBeInTheDocument();
     expect(screen.getByText("SPIEL").getAttribute("data-activity-type-pill")).toBe("match-red");
     expect(screen.getByText("Auswärts")).toHaveAttribute("data-activity-context-badge");
     expect(screen.getByText("BSC Old Boys - Schützenmatte")).toBeInTheDocument();
@@ -150,7 +152,9 @@ describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
       }),
     );
 
-    expect(screen.getByText(/FC Allschwil E1.*FC Binningen/)).toBeInTheDocument();
+    expect(screen.getByTestId("match-club-pair")).toBeInTheDocument();
+    expect(screen.getByText("FC Allschwil E1")).toBeInTheDocument();
+    expect(screen.getByText("FC Binningen")).toBeInTheDocument();
     expect(screen.getByText("Eigener Verein")).toHaveAttribute("data-activity-context-badge");
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
   });

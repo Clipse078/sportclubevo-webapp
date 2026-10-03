@@ -9,6 +9,7 @@ import {
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 import { cn } from "@/lib/cn";
+import { EventDomainMetaRail } from "@/components/sporting-activity/EventDomainMetaRail";
 
 const REVIEW_STAGE_LABEL: Record<string, string> = {
   DRAFT: "Entwurf",
@@ -69,18 +70,10 @@ export default function VeranstaltungListRow({
       )}
       data-testid={`veranstaltung-row-${event.id}`}
     >
-      <div
-        className="flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center"
-        aria-hidden
-      >
-        <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {weekdayShort}
-        </span>
-        <span className="text-xl font-bold leading-none text-[var(--foreground)]">{day}</span>
-        <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
-          {monthShort}
-        </span>
-      </div>
+      <EventDomainMetaRail
+        domainLabel="VERANSTALTUNG"
+        dateStack={{ weekdayShort, day, monthShort }}
+      />
       <div className="min-w-0 space-y-0.5">
         <p className="truncate text-sm font-semibold text-[var(--foreground)]">{event.title}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--text-2)]">

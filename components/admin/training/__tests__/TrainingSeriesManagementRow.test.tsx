@@ -65,6 +65,10 @@ describe("TrainingSeriesManagementRow", () => {
     );
 
     expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
+    expect(screen.getByTestId("sporting-activity-meta-rail-time")).toHaveTextContent(
+      "18:45–20:15",
+    );
+    expect(screen.queryByText("18:45–20:15", { selector: "p" })).toBeNull();
     expect(screen.getByText("TRAINING").getAttribute("data-activity-type-pill")).toBe(
       "training-blue",
     );
@@ -107,7 +111,7 @@ describe("TrainingSeriesManagementRow", () => {
     );
 
     expect(screen.getByText("Nicht zugewiesen")).toBeInTheDocument();
-    expect(screen.getByText("Unterschiedliche Zeiten")).toBeInTheDocument();
+    expect(screen.getAllByText("Unterschiedliche Zeiten")).toHaveLength(1);
     expect(screen.queryByText("Mo 18:45–20:15")).not.toBeInTheDocument();
   });
 });

@@ -47,6 +47,7 @@ const defaultProps = {
     infoboardVisible: true,
     canEditTeamPublication: false,
   },
+  tenantClubName: "FC Allschwil",
   canManage: true,
   canDelete: true,
   defaultTrainingDurationMinutes: 90,

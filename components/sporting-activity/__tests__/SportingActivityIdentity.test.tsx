@@ -57,6 +57,24 @@ describe("SportingActivityIdentity", () => {
     );
   });
 
+  it("places home/away context beside primary when type pill is on meta rail", () => {
+    const tournament = buildTournamentActivityPresentation({
+      resourceKey: "x:2",
+      title: "PlayMore Turnier",
+      typeLabel: "Turnier",
+      homeAway: "AWAY",
+      organiserName: "FC Arisdorf",
+      location: "Gemeindesportplatz",
+      startAt,
+    });
+    render(
+      <SportingActivityIdentity presentation={tournament} mode="compact" showTypeLine={false} />,
+    );
+    const identity = screen.getByTestId("sporting-activity-identity");
+    expect(identity.textContent).toMatch(/PlayMore Turnier.*Auswärts/s);
+    expect(screen.queryByText("TURNIER")).not.toBeInTheDocument();
+  });
+
   it("does not fabricate club-location when data is missing", () => {
     const presentation = buildTrainingActivityPresentation({
       resourceKey: "t:2",

@@ -2,11 +2,13 @@
  * @vitest-environment jsdom
  *
  * SCE-ICONS-03 — operational activity icon adoption on planning surfaces.
+ * Programme / Matchcenter / Tournamentcenter management rows follow
+ * SCE-ACTIVITY-DESIGN-01C01D meta-rail identity (see sce-icons-03r1-refinement).
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalProgrammeAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeAgendaRow";
 import { PersonalProgrammeActivityIndicator } from "@/components/ui/calendar/PersonalProgrammeActivityIndicator";
@@ -21,11 +23,24 @@ import type { MatchcenterMatchSummary, MatchcenterSide } from "@/lib/matchcenter
 import type { TournamentDto } from "@/lib/tournaments/types";
 import { assessTournamentOperationalState } from "@/lib/tournaments/operational-state";
 import type { TrainingSessionManagementRow as TrainingSessionRow } from "@/lib/training/management-session-view";
+import {
+  buildMatchActivityPresentation,
+  buildTrainingActivityPresentation,
+  buildTournamentActivityPresentation,
+} from "@/lib/sporting-activity-presentation/builders";
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace?: string) => (key: string) => {
     if (namespace === "PlanningEditor.match" && key === "activityTypeLabel") {
       return "Spiel";
+    }
+    if (namespace === "PersonalDashboard.programme") {
+      const labels: Record<string, string> = {
+        statusCancelled: "Abgesagt",
+        statusPostponed: "Verschoben",
+        allDay: "Ganztägig",
+      };
+      return labels[key] ?? key;
     }
     return key;
   },
@@ -176,6 +191,7 @@ function createTournament(overrides: Partial<TournamentDto> = {}): TournamentDto
     teamLogoUrl: null,
     participants: [],
     team: null,
+    resourceAllocations: [],
     visibility: {
       websiteVisible: false,
       infoboardVisible: false,
@@ -213,47 +229,78 @@ function expectApprovedActivityIcon(container: HTMLElement, kind: string, regist
 }
 
 describe("SCE-ICONS-03 PersonalProgrammeFeed", () => {
-  it("renders SCE training and tournament icons on programme rows", () => {
-    const training = programmeItem({
-      id: "tr-1",
-      sourceType: "TRAINING",
-      title: "Junioren F2 Training",
-      typeLabel: "Training",
-    });
-    const match = programmeItem({
-      id: "ma-1",
-      sourceType: "MATCH",
-      title: "Heimspiel",
-      typeLabel: "Spiel",
-    });
-    const tournament = programmeItem({
-      id: "to-1",
-      sourceType: "TOURNAMENT",
-      title: "Blitzturnier",
-      typeLabel: "Turnier",
-    });
+  it("renders canonical type pills on programme meta rails (01C01D)", () => {
+    const startAt = new Date("2026-09-27T16:00:00.000Z");
+    const endAt = new Date("2026-09-27T17:30:00.000Z");
+    const specs = [
+      {
+        sourceType: "TRAINING" as const,
+        title: "Junioren F2 Training",
+        pill: "TRAINING",
+        palette: "training-blue",
+        presentation: buildTrainingActivityPresentation({
+          resourceKey: "training-session:tr-1",
+          title: "Junioren F2 Training",
+          typeLabel: "Training",
+          clubName: "FC Allschwil",
+          startAt,
+          endAt,
+        }),
+      },
+      {
+        sourceType: "MATCH" as const,
+        title: "Heimspiel",
+        pill: "SPIEL",
+        palette: "match-red",
+        presentation: buildMatchActivityPresentation({
+          resourceKey: "event:ma-1",
+          title: "Heimspiel",
+          typeLabel: "Spiel",
+          teamName: "FC Allschwil",
+          opponentName: "FC X",
+          homeAway: "HOME",
+          startAt,
+          endAt,
+          tenantClubName: "FC Allschwil",
+        }),
+      },
+      {
+        sourceType: "TOURNAMENT" as const,
+        title: "Blitzturnier",
+        pill: "TURNIER",
+        palette: "tournament-orange",
+        presentation: buildTournamentActivityPresentation({
+          resourceKey: "event:to-1",
+          title: "Blitzturnier",
+          typeLabel: "Turnier",
+          organiserName: "FC Allschwil",
+          startAt,
+          endAt,
+        }),
+      },
+    ];
 
-    const { container: trainingContainer } = render(
-      <PersonalProgrammeAgendaRow item={training} timeLabel="18:00" />,
-    );
-    expectApprovedActivityIcon(trainingContainer, "TRAINING", "training");
-    expect(
-      trainingContainer.querySelector('[data-programme-palette="training-blue"]'),
-    ).toBeTruthy();
-
-    const { container: matchContainer } = render(
-      <PersonalProgrammeAgendaRow item={match} timeLabel="17:00" />,
-    );
-    expectApprovedActivityIcon(matchContainer, "MATCH", "match");
-    expect(matchContainer.querySelector('[data-programme-palette="match-green"]')).toBeTruthy();
-
-    const { container: tournamentContainer } = render(
-      <PersonalProgrammeAgendaRow item={tournament} timeLabel="10:00" />,
-    );
-    expectApprovedActivityIcon(tournamentContainer, "TOURNAMENT", "tournament");
-    expect(
-      tournamentContainer.querySelector('[data-programme-palette="tournament-orange"]'),
-    ).toBeTruthy();
+    for (const spec of specs) {
+      const { container } = render(
+        <PersonalProgrammeAgendaRow
+          item={programmeItem({
+            id: spec.sourceType,
+            sourceType: spec.sourceType,
+            title: spec.title,
+            typeLabel: spec.title,
+            activityPresentation: spec.presentation,
+            endsAt: endAt,
+          })}
+          timeLabel="18:00"
+          endTimeLabel="19:30"
+        />,
+      );
+      const view = within(container);
+      expect(view.getByTestId("sporting-activity-meta-rail")).toBeInTheDocument();
+      expect(view.getByText(spec.pill).getAttribute("data-activity-type-pill")).toBe(spec.palette);
+      expect(container.querySelector("[data-sce-activity-icon]")).toBeNull();
+      cleanup();
+    }
 
     const feedSource = readRelative("components/ui/dashboard/PersonalProgrammeFeed.tsx");
     expect(feedSource).toContain("PersonalProgrammeAgendaRow");
@@ -329,7 +376,7 @@ describe("SCE-ICONS-03 TrainingCenter records", () => {
 });
 
 describe("SCE-ICONS-03 MatchCenter records", () => {
-  it("renders SCE match icon while preserving club crest markup", () => {
+  it("preserves football-native fixture identity with SPIEL type pill (01C01D)", () => {
     const match = createMatch();
     const assessment = assessMatchOperationalState(match);
     const { container } = render(
@@ -341,16 +388,15 @@ describe("SCE-ICONS-03 MatchCenter records", () => {
         canManage
       />,
     );
-    expectApprovedActivityIcon(container, "MATCH", "match");
-    expect(screen.getByText("Spiel")).toBeInTheDocument();
-    expect(container.querySelector(`[data-testid="matchcenter-activity-type-${match.id}"]`)).toBeTruthy();
-    expect(container.querySelector(`[data-testid="matchcenter-team-matchup-${match.id}"]`)).toBeTruthy();
-    expect(container.querySelectorAll('[data-sce-activity-icon="match"]').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("SPIEL")).toBeInTheDocument();
+    expect(container.querySelector('[data-activity-type-pill="match-red"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="spiele-management-match-identity"]')).toBeTruthy();
+    expect(screen.getByText("VS")).toBeInTheDocument();
   });
 });
 
 describe("SCE-ICONS-03 TournamentCenter records", () => {
-  it("renders SCE tournament icon on management rows", () => {
+  it("renders organiser crest and TURNIER type pill on management rows (01C01D)", () => {
     const tournament = createTournament();
     const assessment = assessTournamentOperationalState(tournament);
     const { container } = render(
@@ -362,25 +408,31 @@ describe("SCE-ICONS-03 TournamentCenter records", () => {
         canManage
       />,
     );
-    expectApprovedActivityIcon(container, "TOURNAMENT", "tournament");
+    expect(screen.getByText("TURNIER")).toBeInTheDocument();
+    expect(container.querySelector('[data-activity-type-pill="tournament-orange"]')).toBeTruthy();
     expect(container.querySelector(`[data-testid="turniere-row-crest-${tournament.id}"]`)).toBeTruthy();
   });
 });
 
 describe("SCE-ICONS-03 fidelity on adopted surfaces", () => {
-  it("routes operational surfaces through ActivitySceIcon instead of Lucide substitutes", () => {
-    const paths = [
-      "components/ui/dashboard/PersonalProgrammeAgendaRow.tsx",
+  it("routes calendar/planner/training surfaces through ActivitySceIcon instead of Lucide substitutes", () => {
+    const iconPaths = [
       "components/ui/calendar/PersonalProgrammeActivityIndicator.tsx",
       "components/admin/planning-hub/PlanningHubActivityBlock.tsx",
       "components/admin/training/TrainingSessionManagementRow.tsx",
-      "components/admin/matchcenter/SpieleManagementMatchRow.tsx",
-      "components/admin/tournamentcenter/TurniereManagementRow.tsx",
     ];
-    for (const path of paths) {
+    for (const path of iconPaths) {
       const source = readRelative(path);
       expect(source).toContain("ActivitySceIcon");
       expect(source).not.toMatch(/\b(Dumbbell|Trophy)\b.*activityKind/);
     }
+
+    const programmeSource = readRelative("components/ui/dashboard/PersonalProgrammeAgendaRow.tsx");
+    expect(programmeSource).toContain("SportingActivityMetaRail");
+    expect(programmeSource).not.toContain("ActivitySceIcon");
+
+    const matchSource = readRelative("components/sporting-activity/SpieleManagementMatchIdentity.tsx");
+    expect(matchSource).toContain("MatchClubPair");
+    expect(matchSource).not.toContain("ActivitySceIcon");
   });
 });

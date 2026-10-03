@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, RotateCcw, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -12,6 +12,9 @@ import {
   TRAINING_SESSION_EDIT_DATETIME_GRID_CLASS,
 } from "@/components/admin/training/form/training-form-layout";
 import { cn } from "@/lib/cn";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
+import { buildTrainingManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-adapters";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 
 type Props = {
   sessionId: string;
@@ -26,6 +29,10 @@ type Props = {
   timezone: string;
   locale: string;
   seriesStandardLine: string;
+  identityTitle: string;
+  tenantClubName: string;
+  teamSeasonId: string;
+  facilityVenueName?: string | null;
 };
 
 export default function TrainingSessionEditForm({
@@ -39,6 +46,12 @@ export default function TrainingSessionEditForm({
   originalStartTime,
   originalEndTime,
   seriesStandardLine,
+  identityTitle,
+  tenantClubName,
+  teamSeasonId,
+  facilityVenueName,
+  timezone,
+  locale,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
@@ -48,6 +61,36 @@ export default function TrainingSessionEditForm({
   const [startTime, setStartTime] = useState(effectiveStartTime);
   const [endTime, setEndTime] = useState(effectiveEndTime);
   const [saving, setSaving] = useState(false);
+
+  const identityPresentation = useMemo(
+    () =>
+      buildTrainingManagementActivityPresentation(
+        {
+          teamSeasonId,
+          title: identityTitle,
+          facilityVenueName: facilityVenueName ?? null,
+        },
+        tenantClubName,
+      ),
+    [teamSeasonId, identityTitle, facilityVenueName, tenantClubName],
+  );
+
+  const scheduleLine = useMemo(() => {
+    const timeRange =
+      formatSportingActivityTimeRange({ startLabel: startTime, endLabel: endTime }) ?? startTime;
+    try {
+      const dateLabel = new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        timeZone: timezone,
+      }).format(new Date(`${date}T12:00:00`));
+      return `${dateLabel} · ${timeRange}`;
+    } catch {
+      return `${date} · ${timeRange}`;
+    }
+  }, [date, startTime, endTime, locale, timezone]);
 
   async function handleSave() {
     if (!startTime || !endTime) {
@@ -91,6 +134,15 @@ export default function TrainingSessionEditForm({
 
   return (
     <div className="space-y-3" data-testid="training-session-edit-form">
+      <SportingActivityFormIdentitySummary
+        activityKind="TRAINING"
+        typeLabel="TRAINING"
+        title={identityTitle}
+        presentation={identityPresentation}
+        startTimeLabel={startTime}
+        endTimeLabel={endTime}
+        scheduleLine={scheduleLine}
+      />
       <div className="space-y-0.5">
         <h2
           id="training-session-edit-datetime-heading"

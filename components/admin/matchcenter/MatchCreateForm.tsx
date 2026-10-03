@@ -55,6 +55,7 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
@@ -511,6 +512,12 @@ export default function MatchCreateForm({
           Alle Angaben vollständig — bereit zum Einreichen.
         </div>
       )}
+
+      <SportingActivityFormIdentitySummary
+        activityKind="MATCH"
+        typeLabel="SPIEL"
+        title="Neues Spiel"
+      />
 
       <PlanningEditorOperationalWorkspace
         testId="match-create-operational-workspace"

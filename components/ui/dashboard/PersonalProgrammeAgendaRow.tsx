@@ -1,12 +1,12 @@
 "use client";
 
 import { SportingActivityDetailLink } from "@/components/sporting-activity/detail/SportingActivityDetailLink";
+import { SportingActivityMetaRail } from "@/components/sporting-activity/SportingActivityMetaRail";
+import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
-import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
-import { getProgrammeSourceActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { cn } from "@/lib/cn";
 import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
 import {
@@ -15,21 +15,47 @@ import {
 } from "@/lib/sporting-activity-presentation/activity-type-pill";
 import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
-import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
+import { resolveSportingActivityCompactAgendaTypeLine } from "@/lib/sporting-activity-presentation/compact";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
   timeLabel: string;
+  endTimeLabel?: string;
   highlighted?: boolean;
   className?: string;
 };
 
+const MEIN_PROGRAMM_CONTRACT = { meinProgrammContract: true as const };
+
+function resolveEndTimeLabel(item: PersonalProgrammeItem, endTimeLabel?: string): string | undefined {
+  if (endTimeLabel?.trim()) return endTimeLabel.trim();
+  const endRaw = item.endsAt ?? item.activityPresentation?.schedule.endAt;
+  if (!endRaw) return undefined;
+  const end = endRaw instanceof Date ? endRaw : new Date(endRaw);
+  if (Number.isNaN(end.getTime())) return undefined;
+  return new Intl.DateTimeFormat("de-CH", { hour: "2-digit", minute: "2-digit" }).format(end);
+}
+
+function resolveTypeLabelForItem(item: PersonalProgrammeItem): string | undefined {
+  if (item.activityPresentation) {
+    return resolveSportingActivityCompactAgendaTypeLine(
+      item.activityPresentation,
+      MEIN_PROGRAMM_CONTRACT,
+    )?.typeLabel;
+  }
+  if (item.typeLabel) {
+    return formatTodayEventTypeBadge(item.typeLabel);
+  }
+  return undefined;
+}
+
 /**
- * Compact programme row (time, semantic marker, primary identity, operational metadata).
+ * Compact programme row — left meta rail (type + time), canonical activity identity body.
  */
 export function PersonalProgrammeAgendaRow({
   item,
   timeLabel,
+  endTimeLabel,
   highlighted = false,
   className,
 }: PersonalProgrammeAgendaRowProps) {
@@ -42,16 +68,10 @@ export function PersonalProgrammeAgendaRow({
         : null;
 
   const markerPresentation = getProgrammeSourcePresentation(item.sourceType);
-  const activitySceIconName = getProgrammeSourceActivitySceIconName(item.sourceType);
 
   const displayTitle = item.activityPresentation
     ? formatSportingActivityCompactPrimaryText(item.activityPresentation)
     : item.title;
-
-  const legacyTypeFallback =
-    !item.activityPresentation && item.typeLabel
-      ? formatTodayEventTypeBadge(item.typeLabel)
-      : null;
 
   const operationalSourceKinds = new Set<SportingActivityKind>([
     "TRAINING",
@@ -64,31 +84,36 @@ export function PersonalProgrammeAgendaRow({
       ? (item.sourceType as SportingActivityKind)
       : undefined);
   const typePillVariant = resolveSportingActivityTypePillVariant(activityKindForTypePill);
+  const typeLabel = resolveTypeLabelForItem(item);
+  const resolvedEnd = resolveEndTimeLabel(item, endTimeLabel);
 
   const row = (
     <div
       className={cn(
-        "grid grid-cols-[3.5rem_minmax(0,1fr)] items-start gap-x-2 py-2",
+        "grid grid-cols-[minmax(4.75rem,max-content)_minmax(0,1fr)] items-start gap-x-2.5 py-2",
         highlighted &&
           "rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_8%,transparent)] px-1",
         className,
       )}
     >
-      <span className="pt-0.5 text-right font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--text-2)]">
-        {item.allDay ? t("allDay") : timeLabel}
-      </span>
+      <SportingActivityMetaRail
+        activityKind={activityKindForTypePill}
+        typeLabel={typeLabel}
+        startTimeLabel={item.allDay ? t("allDay") : timeLabel}
+        endTimeLabel={item.allDay ? undefined : resolvedEnd}
+        allDay={item.allDay}
+        allDayLabel={t("allDay")}
+        density="compact"
+      />
       <div className="flex min-w-0 items-start gap-2">
-        <div className="flex shrink-0 items-center gap-1 self-start pt-1">
+        {!item.activityPresentation ? (
           <span
-            className={cn("h-2 w-2 shrink-0 rounded-full", markerPresentation.markerAccentClass)}
+            className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", markerPresentation.markerAccentClass)}
             data-programme-palette={markerPresentation.paletteKey}
             data-programme-source={item.sourceType}
             aria-hidden
           />
-          {activitySceIconName ? (
-            <ActivitySceIcon activityKind={item.sourceType} size={16} className="shrink-0" />
-          ) : null}
-        </div>
+        ) : null}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -96,13 +121,14 @@ export function PersonalProgrammeAgendaRow({
                 <SportingActivityIdentity
                   presentation={item.activityPresentation}
                   mode="compact"
+                  showTypeLine={false}
                 />
               ) : (
                 <>
                   <p className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
                     {displayTitle}
                   </p>
-                  {legacyTypeFallback ? (
+                  {typeLabel && !activityKindForTypePill ? (
                     <p className="mt-0.5">
                       <span
                         className={
@@ -112,7 +138,7 @@ export function PersonalProgrammeAgendaRow({
                         }
                         data-activity-type-pill={typePillVariant ?? undefined}
                       >
-                        {legacyTypeFallback}
+                        {typeLabel}
                       </span>
                     </p>
                   ) : null}

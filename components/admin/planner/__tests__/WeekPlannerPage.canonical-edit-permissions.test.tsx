@@ -16,6 +16,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 const FACILITY_GROUPS = { PITCH_HALL: [], DRESSING_ROOM: [] };
 
 const LISTE_URL = {
@@ -143,9 +147,10 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     );
 
     await user.click(screen.getByTestId("weekplanner-item-training"));
-    expect(screen.getByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
+    expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
 
-    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
     await user.click(screen.getByTestId("weekplanner-item-match"));
     expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
     await user.click(screen.getByTestId("weekplanner-item-tournament"));
@@ -173,7 +178,7 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
     expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
 
     await user.click(screen.getByTestId("weekplanner-item-match"));
-    expect(screen.getByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
+    expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
   });
 
   it("both TRAININGS_MANAGE + EVENTS_MANAGE: all entity types open editor", async () => {
@@ -199,8 +204,8 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
       "weekplanner-item-tournament",
     ]) {
       await user.click(screen.getByTestId(testId));
-      expect(screen.getByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
-      await user.keyboard("{Escape}");
+      expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Abbrechen" }));
     }
   });
 

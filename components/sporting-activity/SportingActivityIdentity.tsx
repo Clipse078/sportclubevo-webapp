@@ -11,6 +11,7 @@ import {
   sportingActivityTypePillClassName,
 } from "@/lib/sporting-activity-presentation/activity-type-pill";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
+import { ActivityContextBadge } from "./ActivityContextBadge";
 
 export type SportingActivityIdentityMode = "compact" | "management";
 
@@ -21,6 +22,10 @@ export type SportingActivityIdentityProps = {
   primaryClassName?: string;
   /** When true, primary line may wrap (dashboard agenda). When false, truncates (management tables). */
   primaryWrap?: boolean;
+  /** When false, type pill is omitted (shown on meta rail instead). Context badge remains in body. */
+  showTypeLine?: boolean;
+  showPrimary?: boolean;
+  showClubLocationLine?: boolean;
 };
 
 const MEIN_PROGRAMM_CONTRACT = { meinProgrammContract: true as const };
@@ -34,6 +39,9 @@ export function SportingActivityIdentity({
   className,
   primaryClassName,
   primaryWrap,
+  showTypeLine = true,
+  showPrimary = true,
+  showClubLocationLine = true,
 }: SportingActivityIdentityProps) {
   const primaryText = formatSportingActivityCompactPrimaryText(presentation);
   const typeLine = resolveSportingActivityCompactAgendaTypeLine(
@@ -50,20 +58,31 @@ export function SportingActivityIdentity({
 
   const wrapPrimary =
     primaryWrap ?? mode === "compact";
+  const contextIndicator = typeLine?.contextIndicator;
+  const showContextBesidePrimary = Boolean(!showTypeLine && showPrimary && contextIndicator);
+  const showContextOnlyRow = Boolean(!showTypeLine && !showPrimary && contextIndicator);
 
   return (
     <div className={cn("min-w-0", className)} data-testid="sporting-activity-identity">
-      <p
-        className={cn(
-          wrapPrimary
-            ? "line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]"
-            : "truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]",
-          primaryClassName,
-        )}
-      >
-        {primaryText}
-      </p>
-      {typeLine ? (
+      {showPrimary ? (
+        <p
+          className={cn(
+            "flex flex-wrap items-center gap-x-1.5 gap-y-0.5",
+            wrapPrimary
+              ? "text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]"
+              : "text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]",
+            primaryClassName,
+          )}
+        >
+          <span className={cn(wrapPrimary ? "line-clamp-2 min-w-0 flex-1 basis-full sm:basis-auto" : "truncate")}>
+            {primaryText}
+          </span>
+          {showContextBesidePrimary && contextIndicator ? (
+            <ActivityContextBadge label={contextIndicator} />
+          ) : null}
+        </p>
+      ) : null}
+      {typeLine && showTypeLine ? (
         <p className="mt-0.5 flex flex-wrap items-center gap-1.5">
           <span
             className={
@@ -75,17 +94,15 @@ export function SportingActivityIdentity({
           >
             {typeLine.typeLabel}
           </span>
-          {typeLine.contextIndicator ? (
-            <span
-              className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]"
-              data-activity-context-badge
-            >
-              {typeLine.contextIndicator}
-            </span>
-          ) : null}
+          {contextIndicator ? <ActivityContextBadge label={contextIndicator} /> : null}
         </p>
       ) : null}
-      {clubLocationLine ? (
+      {showContextOnlyRow && contextIndicator ? (
+        <p className="mt-0.5">
+          <ActivityContextBadge label={contextIndicator} />
+        </p>
+      ) : null}
+      {showClubLocationLine && clubLocationLine ? (
         <p
           className={cn(
             "mt-0.5 text-[0.8125rem] leading-snug text-[var(--text-2)]",

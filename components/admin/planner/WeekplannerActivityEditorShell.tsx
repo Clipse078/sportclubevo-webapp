@@ -1,16 +1,20 @@
 "use client";
 import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
-import { AlertCircle, Calendar, Check, Clock, Dumbbell, Loader2, Shield, Trophy } from "lucide-react";
+import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Sheet } from "@/components/ui/Sheet";
 import { WeekplannerMatchIdentityCard } from "@/components/admin/planner/WeekplannerMatchIdentityCard";
+import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
+import { ActivityContextBadge } from "@/components/sporting-activity/ActivityContextBadge";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import {
   formatLocalDateLong,
   isoToLocalDate,
   isoToLocalTime,
 } from "@/lib/weekplanner/weekplanner-editor-time";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 
 export const WOCHENPLANNER_EDITOR_SHEET_TITLE = "Planung bearbeiten";
 
@@ -74,6 +78,31 @@ export function WeekplannerEditorFooter({
   );
 }
 
+function resolveWeekplannerIdentityLabels(item: WeekplannerItem): {
+  activityKind?: SportingActivityKind;
+  typeLabel: string;
+  contextLabel?: string;
+} {
+  switch (item.type) {
+    case "TRAINING":
+      return { activityKind: "TRAINING", typeLabel: "TRAINING" };
+    case "MATCH":
+      return {
+        activityKind: "MATCH",
+        typeLabel: "SPIEL",
+        contextLabel: "Eigener Verein",
+      };
+    case "TOURNAMENT":
+      return {
+        activityKind: "TOURNAMENT",
+        typeLabel: "TURNIER",
+        contextLabel: "Eigener Verein",
+      };
+    case "VERANSTALTUNG":
+      return { typeLabel: "VERANSTALTUNG" };
+  }
+}
+
 export function WeekplannerActivityIdentityCard({
   item,
   timezone,
@@ -81,32 +110,31 @@ export function WeekplannerActivityIdentityCard({
   item: WeekplannerItem;
   timezone: string;
 }) {
-  const typeConfig = {
-    TRAINING: { icon: Dumbbell, label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-    MATCH: { icon: RolesAccessSceIcon, label: "Heimspiel", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" },
-    TOURNAMENT: { icon: Trophy, label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700" },
-    VERANSTALTUNG: { icon: Calendar, label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700" },
-  }[item.type];
-
-  const Icon = typeConfig.icon;
+  const identity = resolveWeekplannerIdentityLabels(item);
   const dateLabel = formatLocalDateLong(item.canonicalStartAt, timezone);
-  const timeLabel = `${isoToLocalTime(item.canonicalStartAt, timezone)} – ${isoToLocalTime(item.canonicalEndAt, timezone)}`;
+  const timeLabel =
+    formatSportingActivityTimeRange({
+      startLabel: isoToLocalTime(item.canonicalStartAt, timezone),
+      endLabel: isoToLocalTime(item.canonicalEndAt, timezone),
+    }) ?? isoToLocalTime(item.canonicalStartAt, timezone);
+  const scheduleSummary = `${dateLabel} · ${timeLabel}`;
 
   return (
     <div
       className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
       data-testid="weekplanner-activity-identity"
     >
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-            typeConfig.badgeClass,
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          {typeConfig.label}
-        </span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {identity.activityKind ? (
+          <ActivityTypePill activityKind={identity.activityKind} label={identity.typeLabel} />
+        ) : (
+          <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
+            {identity.typeLabel}
+          </span>
+        )}
+        {identity.contextLabel ? (
+          <ActivityContextBadge label={identity.contextLabel} />
+        ) : null}
       </div>
 
       {item.type === "MATCH" ? (
@@ -119,16 +147,9 @@ export function WeekplannerActivityIdentityCard({
         <p className="text-sm text-[var(--text-2)]">{item.teamNames[0]}</p>
       )}
 
-      <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-2)]">
-        <span className="inline-flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-          {dateLabel}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-          {timeLabel}
-        </span>
-      </div>
+      <p className="text-sm text-[var(--text-2)]" data-testid="weekplanner-activity-identity-schedule">
+        {scheduleSummary}
+      </p>
     </div>
   );
 }
