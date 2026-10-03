@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import {
@@ -9,37 +10,39 @@ import {
   resolvePlanningHubResourceDay,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
-import { assignIntervalLanes } from "@/lib/planning-hub/scheduler/interval-lanes";
 import {
   buildResourceSegmentsForDay,
   groupSegmentsByResource,
-  type ResourceRow,
+  type ResourceOccupancySegment,
 } from "@/lib/planning-hub/scheduler/resource-segments";
 import {
   buildAdaptiveResourceTimeline,
-  countResourceTimelineLanes,
   pickFacilityGroupsForCategory,
   RESOURCE_TIMELINE_LABEL_MIN_WIDTH_PX,
   RESOURCE_TIMELINE_MIN_TIMELINE_WIDTH_PX,
   type ResourceTimelineLane,
 } from "@/lib/planning-hub/resource-timeline/adaptive-lanes";
+import {
+  collectCollapsedPitchGroupSegments,
+  countVisibleResourceTimelineRows,
+  pitchGroupDisclosureKey,
+  resolveAutoExpandedPitchGroupKeys,
+  shouldUsePitchGroupCollapse,
+  summarizePitchGroupOverview,
+} from "@/lib/planning-hub/resource-timeline/pitch-group-disclosure";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import {
-  durationToResourceWidthPx,
   minutesToResourceLeftPx,
   RESOURCE_PIXELS_PER_MINUTE,
 } from "@/lib/planning-hub/scheduler/time-scale";
 import { useWeekplannerVisibleTimeRange } from "./WeekplannerVisibleTimeRangeContext";
-import { zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
-import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
-import {
-  projectedItemForRender,
-  usePlanningHubManipulation,
-} from "./PlanningHubManipulationContext";
-import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
-import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
+import { usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
+import PlanningHubResourceLaneRow, {
+  buildRowFromLane,
+  mergedRowFromSegments,
+} from "./PlanningHubResourceLaneRow";
 
 type PlanningHubResourceDayViewProps = {
   week: WeekplannerWeek;
@@ -52,7 +55,6 @@ type PlanningHubResourceDayViewProps = {
 };
 
 const RESOURCE_LABEL_WIDTH_PX = RESOURCE_TIMELINE_LABEL_MIN_WIDTH_PX;
-const ROW_BASE_HEIGHT_PX = 38;
 
 function dressingRefOnItem(
   item: WeekplannerItem,
@@ -66,6 +68,28 @@ function dressingRefOnItem(
     }
   }
   return refs.find((r) => r.facilityResourceId === resourceId);
+}
+
+function segmentLabelForExpandedLane(lane: ResourceTimelineLane): {
+  primary: string;
+  secondary: string | null;
+  tier: "primary" | "secondary";
+} {
+  if (lane.presentationRole === "segment") {
+    return {
+      primary: lane.presentationPrimaryLabel,
+      secondary: lane.presentationSecondaryLabel,
+      tier: "secondary",
+    };
+  }
+  if (lane.presentationRole === "whole") {
+    return { primary: "Gesamt", secondary: null, tier: "secondary" };
+  }
+  return {
+    primary: lane.presentationPrimaryLabel,
+    secondary: lane.presentationSecondaryLabel,
+    tier: lane.presentationTier,
+  };
 }
 
 export default function PlanningHubResourceDayView({
@@ -112,7 +136,7 @@ export default function PlanningHubResourceDayView({
             presentationSecondaryLabel: row.facilityName,
             presentationTier: "primary" as const,
             presentationRole: "standalone" as const,
-          } satisfies ResourceTimelineLane,
+          },
         ],
       }));
     }
@@ -131,9 +155,64 @@ export default function PlanningHubResourceDayView({
     urlState.resourceFilterIds,
   ]);
 
-  const laneCount = countResourceTimelineLanes(timelineGroups);
+  const autoExpandedKeys = useMemo(
+    () =>
+      resolveAutoExpandedPitchGroupKeys(
+        timelineGroups,
+        urlState.resourceFilterIds,
+        urlState.resourceCategory,
+      ),
+    [timelineGroups, urlState.resourceFilterIds, urlState.resourceCategory],
+  );
+
+  const [manualExpandedKeys, setManualExpandedKeys] = useState<Set<string>>(() => new Set());
+  const [manualCollapsedKeys, setManualCollapsedKeys] = useState<Set<string>>(() => new Set());
+
+  const isPitchGroupExpanded = useCallback(
+    (groupKey: string) => {
+      if (autoExpandedKeys.has(groupKey)) return true;
+      if (manualCollapsedKeys.has(groupKey)) return false;
+      return manualExpandedKeys.has(groupKey);
+    },
+    [autoExpandedKeys, manualCollapsedKeys, manualExpandedKeys],
+  );
+
+  const togglePitchGroup = useCallback((groupKey: string) => {
+    setManualExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
+      return next;
+    });
+    setManualCollapsedKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(groupKey);
+      return next;
+    });
+  }, []);
+
+  const collapsePitchGroup = useCallback((groupKey: string) => {
+    setManualCollapsedKeys((prev) => new Set(prev).add(groupKey));
+    setManualExpandedKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(groupKey);
+      return next;
+    });
+  }, []);
+
+  const expandedKeysForCount = useMemo(() => {
+    const keys = new Set<string>();
+    for (const group of timelineGroups) {
+      if (shouldUsePitchGroupCollapse(urlState.resourceCategory, group)) {
+        const key = pitchGroupDisclosureKey(group);
+        if (isPitchGroupExpanded(key)) keys.add(key);
+      }
+    }
+    return keys;
+  }, [timelineGroups, urlState.resourceCategory, isPitchGroupExpanded]);
 
   function groupWantsSiteHeader(group: (typeof timelineGroups)[number]): boolean {
+    if (shouldUsePitchGroupCollapse(urlState.resourceCategory, group)) return false;
     if (group.lanes.length <= 1) return false;
     if (group.lanes.some((l) => l.presentationRole === "segment" || l.presentationRole === "whole")) {
       return false;
@@ -147,11 +226,166 @@ export default function PlanningHubResourceDayView({
       : "planning-hub-spielfeld-day";
 
   const timeRange = userVisibleRange;
-
   const timelineWidthPx = timeRange.totalMinutes * RESOURCE_PIXELS_PER_MINUTE;
   const halfHourMarks: number[] = [];
   for (let m = timeRange.startMinutes; m <= timeRange.endMinutes; m += 30) {
     halfHourMarks.push(m);
+  }
+
+  const laneCount = countVisibleResourceTimelineRows(
+    timelineGroups,
+    urlState.resourceCategory,
+    expandedKeysForCount,
+  );
+
+  const sharedLaneProps = {
+    timelineWidthPx,
+    halfHourMarks,
+    timeRange,
+    locale,
+    timezone,
+    isDressingCategory,
+    urlState,
+    manipulation,
+    onItemActivate,
+    dressingRefOnItem,
+    labelWidthPx: RESOURCE_LABEL_WIDTH_PX,
+  };
+
+  function renderCollapsedPitchGroup(group: (typeof timelineGroups)[number]) {
+    const groupKey = pitchGroupDisclosureKey(group);
+    const summary = summarizePitchGroupOverview(group.lanes);
+    const collapsedSegments = collectCollapsedPitchGroupSegments(group.lanes);
+    const segmentList: ResourceOccupancySegment[] = collapsedSegments.map((c) => c.segment);
+    const hintMap = new Map(
+      collapsedSegments.map((c) => [c.segment.segmentId, c.segmentHint] as const),
+    );
+    const syntheticLane: ResourceTimelineLane = {
+      resourceId: `__collapsed__${groupKey}`,
+      name: group.facilityName,
+      facilityId: group.facilityId,
+      facilityName: group.facilityName,
+      segments: segmentList,
+      presentationGroupKey: groupKey,
+      presentationPrimaryLabel: group.facilityName,
+      presentationSecondaryLabel: null,
+      presentationTier: "primary",
+      presentationRole: "whole",
+    };
+
+    const panelId = `pitch-group-segments-${groupKey}`;
+
+    return (
+      <div
+        key={groupKey}
+        data-testid="planning-hub-pitch-group"
+        data-pitch-group-key={groupKey}
+        data-pitch-group-expanded="false"
+      >
+        <div className="flex border-b border-[var(--border)]/60 bg-[var(--sce-surface-dense)]">
+          <div
+            className="sticky left-0 z-10 flex shrink-0 items-start gap-1 border-r border-[var(--border)] px-2 py-2"
+            style={{ width: RESOURCE_LABEL_WIDTH_PX }}
+          >
+            <button
+              type="button"
+              className="mt-0.5 rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--sce-primary)]"
+              aria-expanded={false}
+              aria-controls={panelId}
+              aria-label={`${group.facilityName} aufklappen`}
+              data-testid="planning-hub-pitch-group-toggle"
+              onClick={() => togglePitchGroup(groupKey)}
+            >
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-[var(--foreground)]">{group.facilityName}</p>
+              <p
+                className={cn(
+                  "text-[10px] tabular-nums",
+                  summary.kind === "conflict"
+                    ? "font-semibold text-amber-700 dark:text-amber-400"
+                    : "text-[var(--muted)]",
+                )}
+                data-testid="planning-hub-pitch-group-summary"
+              >
+                {summary.label}
+              </p>
+            </div>
+          </div>
+          <div className="min-w-0 flex-1" id={panelId}>
+            <PlanningHubResourceLaneRow
+              {...sharedLaneProps}
+              lane={syntheticLane}
+              row={mergedRowFromSegments(groupKey, segmentList)}
+              labelPrimary=""
+              labelSecondary={null}
+              labelTier="primary"
+              segmentHints={hintMap}
+              rowTestId="planning-hub-pitch-group-collapsed-row"
+              hideLabelColumn
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderExpandedPitchGroup(group: (typeof timelineGroups)[number]) {
+    const groupKey = pitchGroupDisclosureKey(group);
+    const summary = summarizePitchGroupOverview(group.lanes);
+    const panelId = `pitch-group-segments-${groupKey}`;
+
+    return (
+      <div
+        key={groupKey}
+        data-testid="planning-hub-pitch-group"
+        data-pitch-group-key={groupKey}
+        data-pitch-group-expanded="true"
+      >
+        <div className="flex border-b border-[var(--border)]/80 bg-[var(--surface-2)]/30">
+          <div
+            className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r border-[var(--border)] px-2 py-1.5"
+            style={{ width: RESOURCE_LABEL_WIDTH_PX }}
+          >
+            <button
+              type="button"
+              className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--sce-primary)]"
+              aria-expanded={true}
+              aria-controls={panelId}
+              aria-label={`${group.facilityName} zuklappen`}
+              data-testid="planning-hub-pitch-group-toggle"
+              onClick={() => collapsePitchGroup(groupKey)}
+            >
+              <ChevronRight className="h-3.5 w-3.5 rotate-90" aria-hidden />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-[var(--foreground)]">{group.facilityName}</p>
+              {summary.kind !== "free" ? (
+                <p className="text-[10px] text-[var(--muted)]">{summary.label}</p>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex-1" aria-hidden />
+        </div>
+        <div id={panelId}>
+          {group.lanes.map((lane) => {
+            const labels = segmentLabelForExpandedLane(lane);
+            return (
+              <PlanningHubResourceLaneRow
+                key={lane.resourceId}
+                {...sharedLaneProps}
+                lane={lane}
+                row={buildRowFromLane(lane)}
+                labelPrimary={labels.primary}
+                labelSecondary={labels.secondary}
+                labelTier={labels.tier}
+              />
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -233,293 +467,25 @@ export default function PlanningHubResourceDayView({
                     {group.facilityName}
                   </div>
                 ) : null}
-                {group.lanes.map((lane) => {
-                  const row: ResourceRow = {
-                    resourceId: lane.resourceId,
-                    name: lane.name,
-                    facilityName: lane.facilityName,
-                    segments: lane.segments,
-                  };
-              const intervals = row.segments.map((s) => ({
-                id: s.segmentId,
-                startMs: s.startAt.getTime(),
-                endMs: s.endAt.getTime(),
-              }));
-              const lanes = assignIntervalLanes(intervals);
-              const maxLane =
-                row.segments.reduce(
-                  (max, s) => Math.max(max, (lanes.get(s.segmentId)?.lane ?? 0) + 1),
-                  1,
-                ) ?? 1;
-              const rowHeight = ROW_BASE_HEIGHT_PX * maxLane;
-
-              return (
-                <div
-                  key={row.resourceId}
-                  className={cn(
-                    "flex border-b border-[var(--border)]/60",
-                    manipulation?.hoverResourceId === row.resourceId &&
-                      manipulation.isDragging &&
-                      "bg-[var(--sce-primary-light)]/25",
-                  )}
-                  data-testid="planning-hub-resource-row"
-                  data-planning-resource-id={row.resourceId}
-                >
-                  <div
-                    className={cn(
-                      "sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--sce-surface-dense)] py-2",
-                      lane.presentationTier === "secondary" ? "pl-6 pr-3" : "px-3",
-                    )}
-                    style={{ width: RESOURCE_LABEL_WIDTH_PX }}
-                    data-planning-resource-tier={lane.presentationTier}
-                  >
-                    <p
-                      className={cn(
-                        "text-[var(--foreground)]",
-                        lane.presentationTier === "secondary"
-                          ? "text-[11px] font-medium"
-                          : "text-xs font-semibold",
-                      )}
-                    >
-                      {lane.presentationPrimaryLabel}
-                    </p>
-                    {lane.presentationSecondaryLabel ? (
-                      <p className="text-[10px] text-[var(--muted)]">{lane.presentationSecondaryLabel}</p>
-                    ) : null}
-                  </div>
-                  <div
-                    className="relative shrink-0 bg-[var(--sce-surface-dense)]"
-                    style={{ width: timelineWidthPx, height: rowHeight }}
-                  >
-                    {halfHourMarks.map((minutes) => (
-                      <div
-                        key={minutes}
-                        className={cn(
-                          "absolute top-0 bottom-0 border-l",
-                          minutes % 60 === 0
-                            ? "border-[var(--border)]"
-                            : "border-[var(--border)]/30 border-dashed",
-                        )}
-                        style={{
-                          left: minutesToResourceLeftPx(minutes, timeRange, RESOURCE_PIXELS_PER_MINUTE),
-                        }}
-                      />
-                    ))}
-                    {row.segments.map((segment) => {
-                      const activeDraft =
-                        manipulation?.previewDraft?.segmentId === segment.segmentId
-                          ? manipulation.previewDraft
-                          : null;
-                      const caps = manipulation?.getCapabilities(segment.item);
-
-                      const renderSegment = (
-                        segItem: typeof segment.item,
-                        activityStart: Date,
-                        activityEnd: Date,
-                        variant: "default" | "ghost" | "preview" | "preview-warning",
-                        keySuffix: string,
-                        interactive: boolean,
-                        occupancyOverride?: { startAt: Date; endAt: Date },
-                      ) => {
-                        const resourceRef =
-                          dressingRefOnItem(segItem, row.resourceId) ?? segment.resource;
-                        const displayWindow = occupancyOverride
-                          ? occupancyOverride
-                          : isDressingCategory
-                            ? dressingSegmentDisplayWindow(activityStart, activityEnd, resourceRef)
-                            : { startAt: activityStart, endAt: activityEnd };
-                        const startAt = displayWindow.startAt;
-                        const endAt = displayWindow.endAt;
-
-                        const segmentSpanMs = endAt.getTime() - startAt.getTime();
-                        let nominalBand:
-                          | { leftPercent: number; widthPercent: number }
-                          | undefined;
-                        if (isDressingCategory && segmentSpanMs > 0) {
-                          const nominalStart = activityStart.getTime();
-                          const nominalEnd = activityEnd.getTime();
-                          const leftMs = Math.max(0, nominalStart - startAt.getTime());
-                          const widthMs = Math.max(0, Math.min(nominalEnd, endAt.getTime()) - Math.max(nominalStart, startAt.getTime()));
-                          nominalBand = {
-                            leftPercent: (leftMs / segmentSpanMs) * 100,
-                            widthPercent: (widthMs / segmentSpanMs) * 100,
-                          };
-                        }
-
-                        const startMin = zonedMinutesFromMidnight(startAt, timezone);
-                        const endMin = Math.max(
-                          startMin + 15,
-                          zonedMinutesFromMidnight(endAt, timezone),
-                        );
-                        const layout = lanes.get(segment.segmentId) ?? { lane: 0, totalLanes: 1 };
-                        const leftPx = minutesToResourceLeftPx(
-                          startMin,
-                          timeRange,
-                          RESOURCE_PIXELS_PER_MINUTE,
-                        );
-                        const widthPx = durationToResourceWidthPx(
-                          startMin,
-                          endMin,
-                          timeRange,
-                          RESOURCE_PIXELS_PER_MINUTE,
-                        );
-                        const laneHeight = rowHeight / maxLane;
-                        const timeLabel = `${isoToLocalTime(startAt, timezone)}–${isoToLocalTime(endAt, timezone)}`;
-
-                        return (
-                          <PlanningHubActivityBlock
-                            key={`${segment.segmentId}${keySuffix}`}
-                            item={segItem}
-                            locale={locale}
-                            timezone={timezone}
-                            resourceId={row.resourceId}
-                            compact
-                            visualVariant={variant}
-                            dragTimeLabel={timeLabel}
-                            canDrag={
-                              interactive &&
-                              (caps?.canMoveTime ||
-                                caps?.canMoveResourceOccupancy ||
-                                caps?.canChangePrimaryResource ||
-                                caps?.canChangeDressingRoom)
-                            }
-                            canResize={
-                              interactive &&
-                              (!!caps?.canResize ||
-                                caps?.canChangeResourceOccupancyStart ||
-                                caps?.canChangeResourceOccupancyEnd)
-                            }
-                            resizeOrientation="horizontal"
-                            onPointerDownMove={
-                              interactive && manipulation
-                                ? (clientX, clientY) =>
-                                    manipulation.beginResourceMove(
-                                      segment.item,
-                                      segment.segmentId,
-                                      row.resourceId,
-                                      clientX,
-                                      clientY,
-                                    )
-                                : undefined
-                            }
-                            onPointerDownResize={
-                              interactive && manipulation
-                                ? (edge, clientX, clientY) =>
-                                    manipulation.beginResourceResize(
-                                      segment.item,
-                                      segment.segmentId,
-                                      row.resourceId,
-                                      edge,
-                                      clientX,
-                                      clientY,
-                                    )
-                                : undefined
-                            }
-                            onActivate={() => {
-                              if (manipulation?.isDragging) return;
-                              onItemActivate(segment.item);
-                            }}
-                            style={{
-                              top: layout.lane * laneHeight + 2,
-                              height: laneHeight - 4,
-                              left: leftPx + 2,
-                              width: Math.max(24, widthPx - 4),
-                            }}
-                            className="!absolute"
-                            nominalActivityBand={nominalBand}
-                          />
-                        );
-                      };
-
-                      if (activeDraft && manipulation?.isDragging) {
-                        const proposedResourceId =
-                          activeDraft.proposedResourceId ?? activeDraft.originalResourceId;
-                        const onOriginalRow = row.resourceId === activeDraft.originalResourceId;
-                        const onProposedRow = row.resourceId === proposedResourceId;
-                        if (!onOriginalRow && !onProposedRow) return null;
-
-                        const projected = projectedItemForRender(
-                          segment.item,
-                          activeDraft,
-                          urlState.resourceCategory,
-                          manipulation.resolveResourceRef,
-                        );
-                        const previewVariant =
-                          manipulation.dragConflictPreview?.status === "warning"
-                            ? "preview-warning"
-                            : "preview";
-
-                        return (
-                          <Fragment key={segment.segmentId}>
-                            {onOriginalRow &&
-                              renderSegment(
-                                segment.item,
-                                segment.item.startAt,
-                                segment.item.endAt,
-                                "ghost",
-                                "-ghost",
-                                false,
-                                activeDraft.timeTarget === "resourceOccupancy"
-                                  ? {
-                                      startAt: activeDraft.originalStart,
-                                      endAt: activeDraft.originalEnd,
-                                    }
-                                  : undefined,
-                              )}
-                            {onProposedRow &&
-                              renderSegment(
-                                projected,
-                                projected.startAt,
-                                projected.endAt,
-                                previewVariant,
-                                "-preview",
-                                false,
-                                activeDraft.timeTarget === "resourceOccupancy"
-                                  ? {
-                                      startAt: activeDraft.proposedStart,
-                                      endAt: activeDraft.proposedEnd,
-                                    }
-                                  : undefined,
-                              )}
-                          </Fragment>
-                        );
-                      }
-
-                      if (
-                        activeDraft &&
-                        row.resourceId !== (activeDraft.proposedResourceId ?? activeDraft.originalResourceId) &&
-                        row.resourceId !== activeDraft.originalResourceId
-                      ) {
-                        return null;
-                      }
-
-                      const displayItem = activeDraft
-                        ? projectedItemForRender(
-                            segment.item,
-                            activeDraft,
-                            urlState.resourceCategory,
-                            manipulation!.resolveResourceRef,
-                          )
-                        : segment.item;
-                      return renderSegment(
-                        displayItem,
-                        displayItem.startAt,
-                        displayItem.endAt,
-                        "default",
-                        "",
-                        !!manipulation?.enabled,
-                        activeDraft?.timeTarget === "resourceOccupancy"
-                          ? {
-                              startAt: activeDraft.proposedStart,
-                              endAt: activeDraft.proposedEnd,
-                            }
-                          : undefined,
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-                })}
+                {shouldUsePitchGroupCollapse(urlState.resourceCategory, group) ? (
+                  isPitchGroupExpanded(pitchGroupDisclosureKey(group)) ? (
+                    renderExpandedPitchGroup(group)
+                  ) : (
+                    renderCollapsedPitchGroup(group)
+                  )
+                ) : (
+                  group.lanes.map((lane) => (
+                    <PlanningHubResourceLaneRow
+                      key={lane.resourceId}
+                      {...sharedLaneProps}
+                      lane={lane}
+                      row={buildRowFromLane(lane)}
+                      labelPrimary={lane.presentationPrimaryLabel}
+                      labelSecondary={lane.presentationSecondaryLabel}
+                      labelTier={lane.presentationTier}
+                    />
+                  ))
+                )}
               </Fragment>
             ))}
           </div>

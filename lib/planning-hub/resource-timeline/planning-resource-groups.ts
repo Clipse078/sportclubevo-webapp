@@ -1,5 +1,5 @@
 /**
- * SCE-PLANNER-UX-08-01-R1 — presentation-level resource hierarchy for the Wochenplaner.
+ * SCE-PLANNER-UX-08-01-R1/R2 — presentation-level resource hierarchy for the Wochenplaner.
  *
  * Groups canonical FacilityResource rows for UX only. Mutation identity remains each
  * resource id (FULL_PITCH / HALF_PITCH / DRESSING_ROOM). No fabricated site hierarchy.

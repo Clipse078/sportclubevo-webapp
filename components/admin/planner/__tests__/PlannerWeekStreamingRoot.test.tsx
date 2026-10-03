@@ -8,6 +8,7 @@
 
 import { useLayoutEffect } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import PlannerWeekStreamingRoot, {
   usePublishPlannerWeekChrome,
@@ -86,9 +87,12 @@ describe("PlannerWeekStreamingRoot — visible time range provider", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("planning-hub-visible-time-range")).toBeInTheDocument();
+      expect(screen.getByTestId("weekplanner-management-chrome")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("weekplanner-management-chrome")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("planning-hub-view-options-trigger"));
+    expect(screen.getByTestId("planning-hub-visible-time-range")).toBeInTheDocument();
 
     const defaults = defaultWeekplannerVisibleTimeRange();
     expect(screen.getByTestId("planning-hub-visible-time-start")).toHaveValue(
@@ -109,8 +113,12 @@ describe("PlannerWeekStreamingRoot — visible time range provider", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("planning-hub-visible-time-range")).toBeInTheDocument();
+      expect(screen.getByTestId("weekplanner-management-chrome")).toBeInTheDocument();
     });
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("planning-hub-view-options-trigger"));
+    expect(screen.getByTestId("planning-hub-visible-time-range")).toBeInTheDocument();
 
     const defaults = defaultWeekplannerVisibleTimeRange();
     expect(screen.getByTestId("planning-hub-visible-time-start")).toHaveValue(
