@@ -3,6 +3,7 @@ import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
   applyDressingOccupancyBuffersToItem,
+  applyPitchOccupancyBuffersToItem,
   buffersFromOccupancyInterval,
 } from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
 import type { SchedulerDraftChange } from "./scheduler-draft";
@@ -107,7 +108,10 @@ export function projectItemWithDraft(
       draft.proposedStart,
       draft.proposedEnd,
     );
-    projected = applyDressingOccupancyBuffersToItem(item, beforeMinutes, afterMinutes);
+    projected =
+      resourceCategory === "pitch"
+        ? applyPitchOccupancyBuffersToItem(item, beforeMinutes, afterMinutes)
+        : applyDressingOccupancyBuffersToItem(item, beforeMinutes, afterMinutes);
   } else {
     projected = {
       ...item,

@@ -129,9 +129,15 @@ export default function PlanningHubManipulationConfirm({
           </p>
         )}
 
-        {isOccupancyDraft && resourceCategory === "dressing" && draft.item.type === "TRAINING" && (
-          <p className="mt-2 text-xs text-[var(--text-2)]">
+        {isOccupancyDraft && draft.item.type === "TRAINING" && (
+          <p className="mt-2 text-xs text-[var(--text-2)]" data-testid="planning-hub-manipulation-activity-unchanged">
             Trainingszeit {activityRange} unverändert
+          </p>
+        )}
+
+        {isOccupancyDraft && draft.item.type === "TOURNAMENT" && (
+          <p className="mt-2 text-xs text-[var(--text-2)]">
+            Turnierzeit {activityRange} unverändert
           </p>
         )}
 

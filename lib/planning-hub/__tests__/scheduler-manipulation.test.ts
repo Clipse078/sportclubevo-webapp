@@ -117,21 +117,38 @@ describe("capabilities", () => {
       canManageEvents: false,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "resourceTimeline",
     });
     expect(hasAnyManipulationCapability(caps)).toBe(false);
   });
 
-  it("authorized training user receives supported capabilities", () => {
+  it("authorized training user receives supported capabilities on resource timeline", () => {
     const caps = getSchedulerManipulationCapabilities(item, {
       isStandardplan: true,
       canManageTrainings: true,
       canManageEvents: false,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "resourceTimeline",
+    });
+    expect(caps.canMoveTime).toBe(false);
+    expect(caps.canMoveResourceOccupancy).toBe(true);
+    expect(caps.canChangeResourceOccupancyStart).toBe(true);
+    expect(caps.canChangePrimaryResource).toBe(true);
+  });
+
+  it("authorized training user receives calendar activity capabilities", () => {
+    const caps = getSchedulerManipulationCapabilities(item, {
+      isStandardplan: true,
+      canManageTrainings: true,
+      canManageEvents: false,
+      alternativePlanId: null,
+      resourceCategory: "pitch",
+      manipulationSurface: "kalender",
     });
     expect(caps.canMoveTime).toBe(true);
     expect(caps.canResize).toBe(true);
-    expect(caps.canChangePrimaryResource).toBe(true);
+    expect(caps.canMoveResourceOccupancy).toBe(false);
   });
 
   it("match standard plan cannot move time", () => {
@@ -142,6 +159,7 @@ describe("capabilities", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "resourceTimeline",
     });
     expect(caps.canMoveTime).toBe(false);
     expect(caps.canChangePrimaryResource).toBe(true);
@@ -155,6 +173,7 @@ describe("capabilities", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "resourceTimeline",
     });
     expect(hasAnyManipulationCapability(caps)).toBe(false);
   });
@@ -167,6 +186,7 @@ describe("capabilities", () => {
       canManageEvents: true,
       alternativePlanId: "plan-1",
       resourceCategory: "pitch",
+      manipulationSurface: "kalender",
     });
     expect(caps.canMoveTime).toBe(true);
   });
@@ -224,6 +244,7 @@ describe("draft + conflicts", () => {
       proposedStart: new Date("2026-08-10T15:30:00.000Z"),
       proposedEnd: new Date("2026-08-10T17:00:00.000Z"),
       manipulationType: "move",
+      timeTarget: "resourceOccupancy",
       item: a,
     };
     const preview = evaluateManipulationConflicts([a, b], draft, null, "pitch");

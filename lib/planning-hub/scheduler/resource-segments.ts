@@ -37,31 +37,21 @@ export function buildResourceSegmentsForDay(
   const segments: ResourceOccupancySegment[] = [];
   for (const item of items) {
     for (const resource of resourcesForPlanningItem(item, category)) {
-      if (category === "dressing") {
-        const window = computeResourceOccupancyWindow(
-          item.startAt,
-          item.endAt,
-          resource.occupancyBeforeMinutes,
-          resource.occupancyAfterMinutes,
-        );
-        segments.push({
-          segmentId: `${item.id}:${resource.facilityResourceId}`,
-          item,
-          resource,
-          startAt: window.effectiveStartAt,
-          endAt: window.effectiveEndAt,
-          nominalStartAt: item.startAt,
-          nominalEndAt: item.endAt,
-        });
-      } else {
-        segments.push({
-          segmentId: `${item.id}:${resource.facilityResourceId}`,
-          item,
-          resource,
-          startAt: item.startAt,
-          endAt: item.endAt,
-        });
-      }
+      const window = computeResourceOccupancyWindow(
+        item.startAt,
+        item.endAt,
+        resource.occupancyBeforeMinutes,
+        resource.occupancyAfterMinutes,
+      );
+      segments.push({
+        segmentId: `${item.id}:${resource.facilityResourceId}`,
+        item,
+        resource,
+        startAt: window.effectiveStartAt,
+        endAt: window.effectiveEndAt,
+        nominalStartAt: item.startAt,
+        nominalEndAt: item.endAt,
+      });
     }
   }
   return segments;

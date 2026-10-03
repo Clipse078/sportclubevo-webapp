@@ -45,12 +45,20 @@ import {
 } from "@/lib/planning-hub/scheduler/time-scale";
 import type { SchedulerDraftChange, SchedulerTimeTarget } from "@/lib/planning-hub/scheduler-draft";
 import { isNoOpDraft } from "@/lib/planning-hub/scheduler-draft";
-import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
+import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resource-segment-display";
 import { draftGeometryKey } from "@/lib/planning-hub/scheduler/draft-geometry-key";
-import { isValidDressingOccupancySpan } from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
+import {
+  isValidResourceOccupancySpan,
+} from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
+import {
+  isSyntheticCollapsedResourceId,
+  schedulerTimeTargetForCategory,
+} from "@/lib/planning-hub/planning-resource-manipulation";
+import { manipulationSurfaceForPerspective } from "@/lib/planning-hub/planner-perspective";
 import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulation-projection";
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
+import PlanningHubManipulationEditDialog from "./PlanningHubManipulationEditDialog";
 import { useDesktopMinWidth768 } from "@/lib/planning-hub/use-desktop-min-width";
 import type { PlanningHubManipulationSurface } from "@/lib/planning-hub/planner-perspective";
 
@@ -95,15 +103,24 @@ function dressingResourceRef(
   return refs.find((r) => r.facilityResourceId === resourceId) ?? null;
 }
 
+function pitchResourceRef(item: WeekplannerItem, resourceId: string): WeekplannerResourceRef | null {
+  return item.pitchAllocations.find((r) => r.facilityResourceId === resourceId) ?? null;
+}
+
 function resourceManipulationBounds(
   item: WeekplannerItem,
   resourceId: string | undefined,
   category: PlanningHubUrlState["resourceCategory"],
+  surface: ManipulationSurface,
 ): { startAt: Date; endAt: Date; timeTarget: SchedulerTimeTarget } {
-  if (category === "dressing" && resourceId) {
-    const ref = dressingResourceRef(item, resourceId);
+  const timeTarget = schedulerTimeTargetForCategory(category, surface);
+  if (timeTarget === "resourceOccupancy" && resourceId) {
+    const ref =
+      category === "dressing"
+        ? dressingResourceRef(item, resourceId)
+        : pitchResourceRef(item, resourceId);
     if (ref) {
-      const window = dressingSegmentDisplayWindow(item.startAt, item.endAt, ref);
+      const window = resourceSegmentDisplayWindow(item.startAt, item.endAt, ref);
       return { ...window, timeTarget: "resourceOccupancy" };
     }
   }
@@ -138,6 +155,7 @@ type PlanningHubManipulationContextValue = {
   setCalendarDragLayout: (layout: CalendarDragLayout) => void;
   cancelManipulation: () => void;
   resolveResourceRef: (resourceId: string) => WeekplannerResourceRef | null;
+  openManipulationEditor: (item: WeekplannerItem, segmentId: string, resourceId: string) => void;
 };
 
 const PlanningHubManipulationContext = createContext<PlanningHubManipulationContextValue | null>(null);
@@ -185,6 +203,11 @@ export function PlanningHubManipulationProvider({
   const [dragConflictPreview, setDragConflictPreview] = useState<ManipulationConflictPreview | null>(
     null,
   );
+  const [editTarget, setEditTarget] = useState<{
+    item: WeekplannerItem;
+    segmentId: string;
+    resourceId: string;
+  } | null>(null);
   const lastPreviewKeyRef = useRef<string>("");
   const pointerSessionRef = useRef(pointerSession);
   pointerSessionRef.current = pointerSession;
@@ -203,6 +226,8 @@ export function PlanningHubManipulationProvider({
     (canManageTrainings || canManageEvents) &&
     (isStandardplan || !!alternativePlanId);
 
+  const manipulationSurface = manipulationSurfaceForPerspective(urlState.perspective);
+
   const permissionContext: ManipulationPermissionContext = useMemo(
     () => ({
       isStandardplan,
@@ -210,8 +235,16 @@ export function PlanningHubManipulationProvider({
       canManageEvents,
       alternativePlanId,
       resourceCategory: urlState.resourceCategory,
+      manipulationSurface,
     }),
-    [isStandardplan, canManageTrainings, canManageEvents, alternativePlanId, urlState.resourceCategory],
+    [
+      isStandardplan,
+      canManageTrainings,
+      canManageEvents,
+      alternativePlanId,
+      urlState.resourceCategory,
+      manipulationSurface,
+    ],
   );
 
   const allItems = useMemo(() => week.days.flatMap((d) => d.items), [week.days]);
@@ -475,7 +508,7 @@ export function PlanningHubManipulationProvider({
         proposedEnd = shifted.endAt;
       }
 
-      if (occupancySession && !isValidDressingOccupancySpan(proposedStart, proposedEnd)) {
+      if (occupancySession && !isValidResourceOccupancySpan(proposedStart, proposedEnd)) {
         return;
       }
 
@@ -497,6 +530,7 @@ export function PlanningHubManipulationProvider({
         targetResourceId &&
         canChangeResource &&
         targetResourceId !== session.originalResourceId &&
+        !isSyntheticCollapsedResourceId(targetResourceId) &&
         resourceRefById.has(targetResourceId)
       ) {
         proposedResourceId = targetResourceId;
@@ -623,7 +657,12 @@ export function PlanningHubManipulationProvider({
       ) {
         return;
       }
-      const bounds = resourceManipulationBounds(item, resourceId, urlState.resourceCategory);
+      const bounds = resourceManipulationBounds(
+        item,
+        resourceId,
+        urlState.resourceCategory,
+        "resourceTimeline",
+      );
       beginSession({
         mode: "move",
         surface: "resourceTimeline",
@@ -652,10 +691,14 @@ export function PlanningHubManipulationProvider({
     ) => {
       const caps = getCapabilities(item);
       const occupancyResize =
-        urlState.resourceCategory === "dressing" &&
-        (caps.canChangeResourceOccupancyStart || caps.canChangeResourceOccupancyEnd);
+        caps.canChangeResourceOccupancyStart || caps.canChangeResourceOccupancyEnd;
       if (!caps.canResize && !occupancyResize) return;
-      const bounds = resourceManipulationBounds(item, resourceId, urlState.resourceCategory);
+      const bounds = resourceManipulationBounds(
+        item,
+        resourceId,
+        urlState.resourceCategory,
+        "resourceTimeline",
+      );
       beginSession({
         mode: "resize",
         resizeEdge: edge,
@@ -681,6 +724,51 @@ export function PlanningHubManipulationProvider({
       draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null;
     return evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory);
   }, [confirmationDraft, allItems, resolveResourceRef, urlState.resourceCategory]);
+
+  const resourceOptionsForCategory = useMemo(() => {
+    const options: WeekplannerResourceRef[] = [];
+    if (facilityGroupsByAllocationGroup) {
+      const groups =
+        urlState.resourceCategory === "pitch"
+          ? facilityGroupsByAllocationGroup.PITCH_HALL
+          : facilityGroupsByAllocationGroup.DRESSING_ROOM;
+      for (const group of groups) {
+        for (const r of group.resources) {
+          options.push({
+            facilityResourceId: r.id,
+            facilityId: r.facilityId,
+            code: r.code,
+            name: r.name,
+            facilityName: r.facilityName,
+            occupancyBeforeMinutes: 0,
+            occupancyAfterMinutes: 0,
+          });
+        }
+      }
+    }
+    return options;
+  }, [facilityGroupsByAllocationGroup, urlState.resourceCategory]);
+
+  const openManipulationEditor = useCallback(
+    (item: WeekplannerItem, segmentId: string, resourceId: string) => {
+      if (!enabled) return;
+      const caps = getCapabilities(item);
+      if (!hasAnyManipulationCapability(caps)) return;
+      setEditTarget({ item, segmentId, resourceId });
+      setConfirmationDraft(null);
+      setConfirmError(null);
+    },
+    [enabled, getCapabilities],
+  );
+
+  const submitEditorDraft = useCallback(
+    async (draft: SchedulerDraftChange) => {
+      setConfirmationDraft(draft);
+      setEditTarget(null);
+      setConfirmError(null);
+    },
+    [],
+  );
 
   const handleConfirm = useCallback(async () => {
     if (!confirmationDraft) return;
@@ -741,11 +829,28 @@ export function PlanningHubManipulationProvider({
     setCalendarDragLayout,
     cancelManipulation,
     resolveResourceRef,
+    openManipulationEditor,
   };
 
   return (
     <PlanningHubManipulationContext.Provider value={value}>
       {children}
+      {editTarget && (
+        <PlanningHubManipulationEditDialog
+          item={editTarget.item}
+          segmentId={editTarget.segmentId}
+          resourceId={editTarget.resourceId}
+          locale={locale}
+          timezone={timezone}
+          resourceCategory={urlState.resourceCategory}
+          resourceOptions={resourceOptionsForCategory}
+          onClose={() => setEditTarget(null)}
+          onSubmitDraft={submitEditorDraft}
+          evaluateConflicts={(draft, targetRef) =>
+            evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory)
+          }
+        />
+      )}
       {confirmationDraft && conflictPreview && (
         <PlanningHubManipulationConfirm
           draft={confirmationDraft}
