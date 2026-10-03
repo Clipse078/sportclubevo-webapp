@@ -260,10 +260,8 @@ describe("DASHBOARD-07R1E — selected-day agenda flows", () => {
     expect(screen.getByText("Blitzturnier")).toBeTruthy();
     expect(screen.getByText("TURNIER")).toBeTruthy();
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeTruthy();
-    const panel = screen.getByTestId("personal-programme-selected-day");
-    expect(panel.querySelector("[data-programme-palette]")?.getAttribute("data-programme-palette")).toBe(
-      "tournament-orange",
-    );
+    expect(screen.getByText("TURNIER").getAttribute("data-activity-type-pill")).toBe("tournament-orange");
+    expect(screen.getByTestId("sporting-activity-meta-rail")).toBeInTheDocument();
   });
 
   it("shows localized empty state for days without activities", () => {

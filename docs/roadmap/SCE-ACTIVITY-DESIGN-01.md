@@ -183,7 +183,9 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 ## SCE-ACTIVITY-DESIGN-01C01D — Unified Activity Visual System & Planning Rollout
 
-**Status (STAGE):** **In human UAT** — shared meta rail, compact/programme/calendar parity, Wochenplaner canonical colors, management cards (Trainings / Spiele / Turniere / Veranstaltungen), create/edit identity summaries. Activity Detail (01B) unchanged except shared-component compatibility.
+**Status (STAGE):** **CLOSED — Human UAT PASSED (03.10.2026)** — merged via PR #795. Shared meta rail, compact/programme/calendar parity, Wochenplaner canonical colors, management cards (Trainings / Spiele / Turniere / Veranstaltungen), create/edit identity summaries. Activity Detail (01B) unchanged except shared-component compatibility.
+
+**Human UAT (Michael, Club Admin — 03.10.2026):** Mein Programm, Wochenplaner (+ Training/Match editors), Trainings management, Matchcenter, Tournamentcenter, Veranstaltungen — Training blue / Spiel red / Turnier orange; non-wrapping `HH:mm–HH:mm`; no fabricated end times; trainings time dedupe; neutral context badges; football-native match identity; clear tournament organiser; canonical editor identity headers.
 
 **Delivered primitives:** `SportingActivityMetaRail`, `EventDomainMetaRail`, `SportingActivityFormIdentitySummary`, `SpieleManagementMatchIdentity`, `TournamentManagementIdentity`; `SportingActivityIdentity` supports `showTypeLine` / meta-rail split.
 
@@ -202,7 +204,7 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 ### SCE-ACTIVITY-DESIGN-01C01D-R2 — Final consistency & UAT closure
 
-**Status:** **Delivered on feature branch** (PR #795, STAGE target) — presentation-only R2; human UAT remains mandatory before merge.
+**Status:** **CLOSED** (PR #795 → STAGE) — presentation-only R2; human UAT passed 03.10.2026.
 
 - Meta rail time ranges use **non-wrapping** single-unit presentation (`whitespace-nowrap`, compact rail width tuned for `HH:mm–HH:mm`).
 - Trainings management rows show canonical time **once** (meta rail); weekday/facility/status/actions preserved; variable schedules keep the ZEIT column label.
@@ -419,12 +421,30 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ---
 
+## SCE-CALENDAR-UX-02 — Personal Calendar World-Class Upgrade
+
+**Status:** **OPEN** — next package after 01C01D closure; **not** implemented in PR #795.
+
+**Goal:** Upgrade the personal Dashboard calendar (`Mein Kalender`) now that the canonical activity identity/presentation system is established.
+
+**Core direction (intent only):**
+
+- Personal calendar experience — not a generic club calendar
+- Canonical Training / Spiel / Turnier semantics and semantic activity colors
+- Clear multi-activity days and excellent selected-day agenda
+- Responsive desktop/mobile design; useful density without clutter
+- Interaction with canonical Activity Detail (consume path)
+- Reuse `SportingActivityPresentation` / `SportingActivityIdentity` — no duplicate activity presentation architecture
+
+---
+
 ## Suggested execution order
 
 1. **01A** — Design system + ClubIdentity (**closed**)
 2. **01B** — Activity Detail (**closed**)
-3. **01C01D** — Unified visual rollout (**in UAT**)
+3. **01C01D** — Unified visual rollout (**closed — human UAT 03.10.2026**)
 4. **01E** — Permission & navigation hardening (**next**)
-5. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in UAT / follow-ups
+5. **SCE-CALENDAR-UX-02** — Personal calendar world-class upgrade (after 01C01D)
+6. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in follow-ups
 
-**SCE-ACTIVITY-COLOR-01** and **FACILITY-MODEL-01** can proceed on independent tracks when engineering capacity allows.
+**SCE-ACTIVITY-COLOR-01** (narrowed), **FACILITY-MODEL-01**, **SCE-ACTIVITY-DESIGN-02**, **SCE-STATUS-DESIGN-01**, **PERFORMANCE-INFRA-01**, and **BUILD-PERF** remain open on independent tracks.

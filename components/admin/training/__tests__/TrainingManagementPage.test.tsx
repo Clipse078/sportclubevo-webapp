@@ -118,7 +118,8 @@ describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
     expect(screen.getByTestId("training-management-rail")).toBeInTheDocument();
     expect(screen.getByTestId("training-filter-rail")).toBeInTheDocument();
     expect(screen.getByTestId("training-search")).toBeInTheDocument();
-    expect(screen.getByText("Planung")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Trainings" })).toBeInTheDocument();
+    expect(screen.getByTestId("training-create-link")).toBeInTheDocument();
   });
 
   it("session edit route remains in codebase", () => {
