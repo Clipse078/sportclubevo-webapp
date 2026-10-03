@@ -447,13 +447,24 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ---
 
+## SCE-PLANNER-UX-08 — Unified Planning & Allocation Workspace
+
+**Status:** **UPCOMING** — start only after **SCE-CALENDAR-UX-02** is closed on STAGE (human UAT + merge).
+
+**Goal:** Unified Planning & Allocation Workspace foundation (Wochenplaner / allocation UX). **Not in scope** for SCE-CALENDAR-UX-02 or PR #796.
+
+**Dependency:** Current STAGE head after PR #796 merge.
+
+---
+
 ## Suggested execution order
 
 1. **01A** — Design system + ClubIdentity (**closed**)
 2. **01B** — Activity Detail (**closed**)
 3. **01C01D** — Unified visual rollout (**closed — human UAT 03.10.2026**)
 4. **01E** — Permission & navigation hardening (**next**)
-5. **SCE-CALENDAR-UX-02** — Personal calendar world-class upgrade (after 01C01D)
-6. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in follow-ups
+5. **SCE-CALENDAR-UX-02** — Personal calendar world-class upgrade (**implemented — human UAT required**; PR #796)
+6. **SCE-PLANNER-UX-08** — Unified Planning & Allocation Workspace (**upcoming**)
+7. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in follow-ups
 
 **SCE-ACTIVITY-COLOR-01** (narrowed), **FACILITY-MODEL-01**, **SCE-ACTIVITY-DESIGN-02**, **SCE-STATUS-DESIGN-01**, **PERFORMANCE-INFRA-01**, and **BUILD-PERF** remain open on independent tracks.
