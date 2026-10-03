@@ -15,9 +15,12 @@ import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubW
 import PlanningHubVisibleTimeRangeControl from "@/components/admin/planning-hub/PlanningHubVisibleTimeRangeControl";
 import {
   buildPlanningHubHref,
+  isPlanningHubResourceTimelinePerspective,
   preserveCalendarZeitForHeute,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
+import PlanningHubResourceScopeControl from "@/components/admin/planning-hub/PlanningHubResourceScopeControl";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import { WeekplannerPlanBar } from "./WeekplannerPlanBar";
 
@@ -44,6 +47,7 @@ export type WeekPlannerChromeProps = {
   week?: WeekplannerWeek;
   incompleteCount?: number;
   onReviewConflicts?: (incidents: PlanningConflictIncident[]) => void;
+  resourceTimelineCatalog?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
 function weekHref(param: string, urlState: PlanningHubUrlState): string {
@@ -66,8 +70,19 @@ export default function WeekPlannerChrome({
   week,
   incompleteCount = 0,
   onReviewConflicts,
+  resourceTimelineCatalog,
 }: WeekPlannerChromeProps) {
   const resolvedUrlState = { ...urlState, week: weekNav.param };
+  const resourceScopeOptions =
+    urlState.perspective === "spielfeld"
+      ? (resourceTimelineCatalog?.PITCH_HALL ?? []).flatMap((g) =>
+          g.resources.map((r) => ({ value: r.id, label: r.name })),
+        )
+      : urlState.perspective === "garderobe"
+        ? (resourceTimelineCatalog?.DRESSING_ROOM ?? []).flatMap((g) =>
+            g.resources.map((r) => ({ value: r.id, label: r.name })),
+          )
+        : [];
 
   const todayHref = buildPlanningHubHref(resolvedUrlState, {
     week: todayParam,
@@ -128,7 +143,8 @@ export default function WeekPlannerChrome({
           {(
             [
               ["kalender", "Kalender"],
-              ["ressourcen", "Ressourcen"],
+              ["spielfeld", "Spielfeld"],
+              ["garderobe", "Garderobe"],
               ["liste", "Liste"],
             ] as const
           ).map(([perspective, label]) => {
@@ -152,34 +168,16 @@ export default function WeekPlannerChrome({
           })}
         </div>
 
-        {urlState.perspective === "ressourcen" && (
-          <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5">
-            <Link
-              href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "pitch" })}
-              data-testid="planning-hub-resource-pitch"
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                urlState.resourceCategory === "pitch"
-                  ? "bg-[var(--sce-primary)] text-white shadow-sm"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
-            >
-              Spielfeld / Halle
-            </Link>
-            <Link
-              href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "dressing" })}
-              data-testid="planning-hub-resource-dressing"
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                urlState.resourceCategory === "dressing"
-                  ? "bg-[var(--sce-primary)] text-white shadow-sm"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
-            >
-              Garderobe
-            </Link>
-          </div>
-        )}
+        {isPlanningHubResourceTimelinePerspective(urlState.perspective) &&
+        resourceScopeOptions.length > 0 ? (
+          <PlanningHubResourceScopeControl
+            urlState={resolvedUrlState}
+            resourceOptions={resourceScopeOptions}
+            perspectiveLabel={
+              urlState.perspective === "garderobe" ? "Garderoben" : "Spielfelder"
+            }
+          />
+        ) : null}
 
         <div
           className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-3 shadow-[var(--sce-surface-shadow)] sm:ml-auto sm:min-w-[min(100%,20rem)]"

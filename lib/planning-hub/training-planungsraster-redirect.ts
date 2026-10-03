@@ -32,12 +32,13 @@ export function buildWochenplanerResourcesHrefFromLegacyTrainingParams(
   const category = params.category?.trim().toUpperCase();
   const state: PlanningHubUrlState = {
     week: weekWindow.param,
-    perspective: "ressourcen",
+    perspective: category === "DRESSING_ROOM" ? "garderobe" : "spielfeld",
     activity: "alle",
     team: params.team?.trim() || null,
     facility: params.facility?.trim() || null,
     conflictsOnly: params.conflicts === "1",
     resourceCategory: category === "DRESSING_ROOM" ? "dressing" : "pitch",
+    resourceFilterIds: null,
   };
 
   return buildPlanningHubHref(state);

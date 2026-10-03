@@ -13,7 +13,17 @@ import { assignIntervalLanes } from "@/lib/planning-hub/scheduler/interval-lanes
 import {
   buildResourceSegmentsForDay,
   groupSegmentsByResource,
+  type ResourceRow,
 } from "@/lib/planning-hub/scheduler/resource-segments";
+import {
+  buildAdaptiveResourceTimeline,
+  countResourceTimelineLanes,
+  pickFacilityGroupsForCategory,
+  RESOURCE_TIMELINE_LABEL_MIN_WIDTH_PX,
+  RESOURCE_TIMELINE_MIN_TIMELINE_WIDTH_PX,
+  type ResourceTimelineLane,
+} from "@/lib/planning-hub/resource-timeline/adaptive-lanes";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import {
   durationToResourceWidthPx,
   minutesToResourceLeftPx,
@@ -38,9 +48,10 @@ type PlanningHubResourceDayViewProps = {
   timezone: string;
   todayDayKey: string;
   onItemActivate: (item: WeekplannerItem) => void;
+  resourceCatalogGroups?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
-const RESOURCE_LABEL_WIDTH_PX = 148;
+const RESOURCE_LABEL_WIDTH_PX = RESOURCE_TIMELINE_LABEL_MIN_WIDTH_PX;
 const ROW_BASE_HEIGHT_PX = 38;
 
 function dressingRefOnItem(
@@ -64,6 +75,7 @@ export default function PlanningHubResourceDayView({
   timezone,
   todayDayKey,
   onItemActivate,
+  resourceCatalogGroups,
 }: PlanningHubResourceDayViewProps) {
   const manipulation = usePlanningHubManipulation();
   const { visibleRange: userVisibleRange } = useWeekplannerVisibleTimeRange();
@@ -78,7 +90,48 @@ export default function PlanningHubResourceDayView({
     [day, urlState.resourceCategory],
   );
 
-  const rows = useMemo(() => groupSegmentsByResource(segments), [segments]);
+  const segmentRows = useMemo(() => groupSegmentsByResource(segments), [segments]);
+
+  const timelineGroups = useMemo(() => {
+    const catalog = resourceCatalogGroups
+      ? pickFacilityGroupsForCategory(resourceCatalogGroups, urlState.resourceCategory)
+      : [];
+    if (catalog.length === 0) {
+      return segmentRows.map((row) => ({
+        facilityId: row.resourceId,
+        facilityName: row.facilityName,
+        lanes: [
+          {
+            resourceId: row.resourceId,
+            name: row.name,
+            facilityId: row.resourceId,
+            facilityName: row.facilityName,
+            segments: row.segments,
+          } satisfies ResourceTimelineLane,
+        ],
+      }));
+    }
+    return buildAdaptiveResourceTimeline({
+      catalogGroups: catalog,
+      segmentRows,
+      facilityFilterId: urlState.facility,
+      resourceFilterIds: urlState.resourceFilterIds,
+    });
+  }, [
+    resourceCatalogGroups,
+    segmentRows,
+    urlState.resourceCategory,
+    urlState.facility,
+    urlState.resourceFilterIds,
+  ]);
+
+  const laneCount = countResourceTimelineLanes(timelineGroups);
+  const showFacilityGroups = Boolean(resourceCatalogGroups) && timelineGroups.length > 0;
+
+  const perspectiveTestId =
+    urlState.perspective === "garderobe"
+      ? "planning-hub-garderobe-day"
+      : "planning-hub-spielfeld-day";
 
   const timeRange = userVisibleRange;
 
@@ -89,7 +142,7 @@ export default function PlanningHubResourceDayView({
   }
 
   return (
-    <div data-testid="planning-hub-resource-day">
+    <div data-testid={perspectiveTestId} data-planning-hub-resource-day>
       <div
         className="flex flex-wrap gap-1 border-b border-[var(--border)] px-3 py-2"
         data-testid="planning-hub-resource-day-selector"
@@ -104,7 +157,7 @@ export default function PlanningHubResourceDayView({
           return (
             <Link
               key={d.dayKey}
-              href={buildPlanningHubHref(urlState, { day: d.dayKey, perspective: "ressourcen" })}
+              href={buildPlanningHubHref(urlState, { day: d.dayKey })}
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs font-semibold",
                 isSelected
@@ -119,9 +172,9 @@ export default function PlanningHubResourceDayView({
         })}
       </div>
 
-      {rows.length === 0 ? (
+      {laneCount === 0 ? (
         <p className="px-5 py-8 text-center text-sm text-[var(--muted)]">
-          Keine Ressourcenbelegungen an diesem Tag.
+          Keine passenden Ressourcen für diese Filter.
         </p>
       ) : (
         <div
@@ -129,7 +182,7 @@ export default function PlanningHubResourceDayView({
           data-planning-hub-resource-scroll
           data-sce-planner-scroll-root
         >
-          <div className="min-w-[640px]">
+          <div style={{ minWidth: RESOURCE_TIMELINE_MIN_TIMELINE_WIDTH_PX }}>
             <div
               className="sticky top-0 z-10 flex border-b border-[var(--border)] bg-[var(--sce-surface-dense)]"
               style={{ paddingLeft: RESOURCE_LABEL_WIDTH_PX }}
@@ -151,7 +204,24 @@ export default function PlanningHubResourceDayView({
               </div>
             </div>
 
-            {rows.map((row) => {
+            {timelineGroups.map((group) => (
+              <Fragment key={group.facilityId}>
+                {showFacilityGroups && timelineGroups.length > 1 ? (
+                  <div
+                    className="border-b border-[var(--border)]/80 bg-[var(--surface-2)]/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]"
+                    data-testid="planning-hub-resource-facility-group"
+                    data-facility-id={group.facilityId}
+                  >
+                    {group.facilityName}
+                  </div>
+                ) : null}
+                {group.lanes.map((lane) => {
+                  const row: ResourceRow = {
+                    resourceId: lane.resourceId,
+                    name: lane.name,
+                    facilityName: lane.facilityName,
+                    segments: lane.segments,
+                  };
               const intervals = row.segments.map((s) => ({
                 id: s.segmentId,
                 startMs: s.startAt.getTime(),
@@ -416,7 +486,9 @@ export default function PlanningHubResourceDayView({
                   </div>
                 </div>
               );
-            })}
+                })}
+              </Fragment>
+            ))}
           </div>
         </div>
       )}

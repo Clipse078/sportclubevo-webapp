@@ -12,6 +12,7 @@ describe("planning-hub planner-url", () => {
     expect(state.activity).toBe("alle");
     expect(state.conflictsOnly).toBe(false);
     expect(state.calendarZeit).toBeUndefined();
+    expect(state.resourceFilterIds).toBeNull();
   });
 
   it("accepts zeit=ganz as Ganzer Tag without requiring param in href", () => {
@@ -24,23 +25,24 @@ describe("planning-hub planner-url", () => {
     expect(parsePlanningHubUrlState({ ansicht: "woche" }).perspective).toBe("liste");
   });
 
-  it("round-trips week navigation and filters", () => {
+  it("round-trips week navigation and filters for Spielfeld", () => {
     const state = parsePlanningHubUrlState({
       week: "2026-09-14",
-      ansicht: "ressourcen",
+      ansicht: "spielfeld",
       day: "2026-09-16",
       typ: "trainings",
       team: "team-1",
       facility: "fac-1",
       konflikte: "1",
-      ressource: "garderobe",
+      resFilter: "res-1",
     });
     const href = buildPlanningHubHref(state);
     expect(href).toContain("week=2026-09-14");
-    expect(href).toContain("ansicht=ressourcen");
+    expect(href).toContain("ansicht=spielfeld");
     expect(href).toContain("day=2026-09-16");
     expect(href).toContain("typ=trainings");
     expect(href).toContain("konflikte=1");
+    expect(href).toContain("resFilter=res-1");
   });
 
   it("omits ansicht param for default Kalender", () => {
@@ -51,12 +53,11 @@ describe("planning-hub planner-url", () => {
 
   it("preserves filters when switching perspective", () => {
     const base = parsePlanningHubUrlState({ typ: "turniere", team: "t1", konflikte: "1" });
-    const href = buildPlanningHubHref(base, { perspective: "ressourcen", resourceCategory: "dressing" });
-    expect(href).toContain("ansicht=ressourcen");
+    const href = buildPlanningHubHref(base, { perspective: "garderobe" });
+    expect(href).toContain("ansicht=garderobe");
     expect(href).toContain("typ=turniere");
     expect(href).toContain("team=t1");
     expect(href).toContain("konflikte=1");
-    expect(href).toContain("ressource=garderobe");
   });
 
   it("preserves filters when changing week via patch", () => {

@@ -71,6 +71,7 @@ export function buildTurniereManagementWochenplanerHref(input?: {
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
   };
 
   return buildPlanningHubHref(state);
@@ -96,6 +97,7 @@ export function buildTournamentWochenplanerHref(input: {
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
     day,
   };
 

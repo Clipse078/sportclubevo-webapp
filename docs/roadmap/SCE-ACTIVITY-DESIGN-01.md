@@ -469,11 +469,24 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ## SCE-PLANNER-UX-08 — Unified Planning & Allocation Workspace
 
-**Status:** **UPCOMING** — **SCE-CALENDAR-UX-02** closed (human UAT 03.10.2026); implementation starts from STAGE after PR #796 merge.
+**Status:** **IN PROGRESS** — **08-01** foundation on branch `cursor/sce-planner-ux-08-01-unified-planning-foundation` (from post–PR #796 `origin/STAGE`).
 
-**First implementation package:** **SCE-PLANNER-UX-08-01** — Unified Planning & Allocation Workspace Foundation (branch from merged `origin/STAGE` HEAD only — never from the calendar feature branch).
+**Packages:**
 
-**Goal:** Unified Planning & Allocation Workspace foundation (Wochenplaner / allocation UX). **Not in scope** for SCE-CALENDAR-UX-02 or PR #796.
+| ID | Focus |
+|----|--------|
+| **08-01** | Unified workspace foundation — Kalender / Spielfeld / Garderobe / Liste, shared URL state, adaptive resource timeline, scale fixtures |
+| **08-02** | Spielfeld resource planning depth |
+| **08-03** | Garderobe allocation (Heim/Gast semantics) |
+| **08-04** | Permission-aware drag/drop & rescheduling |
+| **08-05** | Conflict resolution & operational actions |
+| **08-06** | List / search / bulk operational UX |
+| **08-07** | Responsive / tablet hardening |
+| **08-08** | Integration / Human UAT / release hardening |
+
+**Dependencies (not absorbed):** SCE-ACTIVITY-DESIGN-01E, SCE-ACTIVITY-DESIGN-02, FACILITY-MODEL-01, SCE-STATUS-DESIGN-01, SCE-ACTIVITY-COLOR-01 (narrowed), PERFORMANCE-INFRA-01, BUILD-PERF.
+
+**Goal:** Unified Planning & Allocation Workspace (Wochenplaner / allocation UX). **Not in scope** for SCE-CALENDAR-UX-02 or PR #796.
 
 **Product principles (preserved for UX-08):**
 
