@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -200,6 +200,27 @@ export default function PlanningHubResourceDayView({
     });
   }, []);
 
+  useEffect(() => {
+    setManualExpandedKeys(new Set());
+    setManualCollapsedKeys(new Set());
+  }, [urlState.resourceCategory]);
+
+  useEffect(() => {
+    setManualExpandedKeys(new Set());
+    setManualCollapsedKeys(new Set());
+  }, [selectedDay]);
+
+  useEffect(() => {
+    setManualCollapsedKeys((prev) => {
+      if (prev.size === 0 || autoExpandedKeys.size === 0) return prev;
+      const next = new Set(prev);
+      for (const key of autoExpandedKeys) {
+        next.delete(key);
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [autoExpandedKeys]);
+
   const expandedKeysForCount = useMemo(() => {
     const keys = new Set<string>();
     for (const group of timelineGroups) {
@@ -336,15 +357,20 @@ export default function PlanningHubResourceDayView({
     const summary = summarizePitchGroupOverview(group.lanes);
     const panelId = `pitch-group-segments-${groupKey}`;
 
+    const headerId = `pitch-group-header-${groupKey}`;
+
     return (
       <div
         key={groupKey}
+        role="group"
+        aria-labelledby={headerId}
         data-testid="planning-hub-pitch-group"
         data-pitch-group-key={groupKey}
         data-pitch-group-expanded="true"
       >
-        <div className="flex border-b border-[var(--border)]/80 bg-[var(--surface-2)]/30">
+        <div className="flex border-b border-[var(--border)]/80 bg-[var(--surface-2)]/40">
           <div
+            id={headerId}
             className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r border-[var(--border)] px-2 py-1.5"
             style={{ width: RESOURCE_LABEL_WIDTH_PX }}
           >
@@ -360,9 +386,11 @@ export default function PlanningHubResourceDayView({
               <ChevronRight className="h-3.5 w-3.5 rotate-90" aria-hidden />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[var(--foreground)]">{group.facilityName}</p>
+              <p className="text-xs font-semibold tracking-tight text-[var(--foreground)]">
+                {group.facilityName}
+              </p>
               {summary.kind !== "free" ? (
-                <p className="text-[10px] text-[var(--muted)]">{summary.label}</p>
+                <p className="text-[10px] font-medium text-[var(--muted)]">{summary.label}</p>
               ) : null}
             </div>
           </div>
@@ -371,6 +399,8 @@ export default function PlanningHubResourceDayView({
         <div id={panelId}>
           {group.lanes.map((lane) => {
             const labels = segmentLabelForExpandedLane(lane);
+            const isSegmentLane =
+              lane.presentationRole === "segment" || lane.presentationRole === "whole";
             return (
               <PlanningHubResourceLaneRow
                 key={lane.resourceId}
@@ -380,6 +410,7 @@ export default function PlanningHubResourceDayView({
                 labelPrimary={labels.primary}
                 labelSecondary={labels.secondary}
                 labelTier={labels.tier}
+                pitchSegmentLane={isSegmentLane}
               />
             );
           })}

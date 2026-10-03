@@ -46,8 +46,7 @@ export function resolveAutoExpandedPitchGroupKeys(
     if (!shouldUsePitchGroupCollapse(resourceCategory, group)) continue;
     const idsInGroup = new Set(group.lanes.map((l) => l.resourceId));
     const filterInGroup = resourceFilterIds.filter((id) => idsInGroup.has(id));
-    if (filterInGroup.length === 0) continue;
-    if (filterInGroup.length === resourceFilterIds.length) {
+    if (filterInGroup.length > 0) {
       expanded.add(pitchGroupDisclosureKey(group));
     }
   }

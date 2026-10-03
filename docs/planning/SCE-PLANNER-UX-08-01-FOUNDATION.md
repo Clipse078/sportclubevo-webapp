@@ -25,6 +25,13 @@
 
 All mutations remain **server-authoritative** via existing `canonical-planning-mutations` / `operational-planning-mutations`. UI capabilities from `manipulation-capabilities.ts` (TRAININGS_MANAGE / EVENTS_MANAGE / plan overrides).
 
+## R3 — Human-UAT closure (hierarchy, disclosure, invariants)
+
+- **Expanded pitch hierarchy:** group header stays semibold; Gesamt/A/B lanes use segment styling (indent, muted type, subtle surface) without increasing row height.
+- **Disclosure hardening:** manual expand/collapse resets on day change and pitch↔garderobe category change; `resFilter` auto-expands every physical group touched by the filter (including multi-pitch subsets); manual collapse yields to scope auto-expand.
+- **Collapsed overview:** child-segment activities remain on the synthetic overview row with `Gesamt ·` / `A ·` / `B ·` hints; no DnD drop target on `__collapsed__*` ids (mutations still use canonical segment ids on expanded lanes).
+- **Tests:** R3 matrix in `PlanningHubResourcePitchGroupsR3.test.tsx` + extended `pitch-group-disclosure.test.ts`.
+
 ## R2 — collapsible physical pitch groups (Human UAT refinement)
 
 - Default **Spielfeld → Alle**: one compact row per physical pitch (facility record); Gesamt/A/B segments are **collapsed** behind disclosure.
@@ -41,7 +48,15 @@ All mutations remain **server-authoritative** via existing `canonical-planning-m
 | **Legacy / infoboard Screen-2 resolver** | Often labelled **Hauptfeld** in UI copy | Primary `HAUPTFELD`, `HAUPTFELD A/B`; legacy fallback `STADION*` | Same physical Brüelstadion pitch; resolver treats HAUPTFELD and STADION as **mutually ambiguous** if both exist. |
 | **STAGE UAT observation (four pitches)** | Hauptfeld **and** Hauptplatz both visible | Typically separate `Facility` rows when legacy HAUPTFELD facility was created before seed migration to Hauptplatz | **Not** a fourth physical pitch — duplicate canonical facility records for one site. UI must show four groups if four facilities exist; consolidation requires **FACILITY-MODEL-01 migration** (merge facility, re-point allocations, retire duplicate codes), not tenant string hacks. |
 
-**Migration implications (future FACILITY-MODEL-01):** pick one facility name/code set per physical pitch; merge duplicate facility ids; map `HAUPTFELD*` allocations to surviving `STADION*` (or vice versa) with audit; enforce single FULL_PITCH per physical pitch at site level.
+**Migration implications (future FACILITY-MODEL-01):** pick one facility name/code set per physical pitch; merge duplicate facility ids; map `HAUPTFELD*` allocations to surviving `STADION*` (or vice versa) with audit; enforce single FULL_PITCH per physical pitch at site level; **inspect actual STAGE data before mutation**; re-point existing training/event/weekplanner/infoboard allocations safely; retire duplicate resources only after reference migration and verification.
+
+**Observed FCA Human UAT (R2/R3):** Hauptfeld and Hauptplatz simultaneously appear as separate physical pitch groups — consolidation is **FACILITY-MODEL-01**, not planner UI aliasing.
+
+### Canonical location presentation (Matchcenter / management)
+
+| Observation | Diagnosis | R3 action |
+|-------------|-----------|-----------|
+| `FC Allschwil - Im Brüel, Allschwil, - 3` | `Event.location` / SFV `playgroundName` stored verbatim; compact line is `tenantClub - venueName` (`formatSportingActivityCompactAgendaClubLocationLine`) — trailing `, - 3` is import tail artifact, not a separate formatter field | Generic presentation sanitizer strips trailing `, - <digits>` in `sanitizeImportedVenuePresentation`; full canonical site/address model remains **FACILITY-MODEL-01** |
 
 ## R1 — compact control & resource hierarchy (Human UAT refinement)
 
@@ -60,7 +75,7 @@ All mutations remain **server-authoritative** via existing `canonical-planning-m
 
 | Package | Focus |
 |---------|--------|
-| 08-01 | Foundation + R1 compact cockpit (this branch) |
+| 08-01 | Foundation + R1/R2/R3 compact cockpit (this branch) |
 | 08-02 | Resource hierarchy & facility navigation refinement |
 | 08-03 | Operational conflict workflow |
 | 08-04 | Drag/drop & manipulation hardening |
@@ -69,4 +84,15 @@ All mutations remain **server-authoritative** via existing `canonical-planning-m
 | 08-07 | Planning performance / large-tenant optimization |
 | 08-08 | Final planning polish / acceptance |
 
-**Dependencies (unchanged):** SCE-ACTIVITY-DESIGN-01E, ACTIVITY-DESIGN-02, FACILITY-MODEL-01, STATUS-DESIGN-01, PERFORMANCE-INFRA-01, BUILD-PERF.
+**Product principle:** The planner is an **operational cockpit** — optimise scanability, conflicts, resources, and manipulation; do not reproduce consumer Mein Programm density.
+
+**Related packages (explicit backlog):**
+
+| Id | Scope |
+|----|--------|
+| **SCE-ACTIVITY-DESIGN-01E** | Permission & navigation hardening |
+| **ACTIVITY-DESIGN-02** | Management card composition (Trainings, Matchcenter, Tournamentcenter, Veranstaltungen): information grids, horizontal space, role-aware primary actions, context density |
+| **FACILITY-MODEL-01** | Site → physical pitch → segment; Hauptfeld/Hauptplatz consolidation; HAUPTFELD*/STADION* migration; safe allocation re-pointing; canonical location presentation; malformed tails like `Allschwil, - 3`; no fabricated hierarchy |
+| **STATUS-DESIGN-01** | Separate activity identity colours from operational status semantics |
+| **PERFORMANCE-INFRA-01** | Vercel ↔ Neon runtime/latency verification |
+| **BUILD-PERF** | Default `npm run build` memory / OOM |

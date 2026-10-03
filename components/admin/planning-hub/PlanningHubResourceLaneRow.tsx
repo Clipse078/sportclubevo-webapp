@@ -41,6 +41,8 @@ export type PlanningHubResourceLaneRowProps = {
   labelWidthPx: number;
   rowTestId?: string;
   hideLabelColumn?: boolean;
+  /** Subordinate Gesamt/A/B lane inside an expanded physical-pitch group (R3 hierarchy). */
+  pitchSegmentLane?: boolean;
 };
 
 export default function PlanningHubResourceLaneRow({
@@ -63,6 +65,7 @@ export default function PlanningHubResourceLaneRow({
   labelWidthPx,
   rowTestId = "planning-hub-resource-row",
   hideLabelColumn = false,
+  pitchSegmentLane = false,
 }: PlanningHubResourceLaneRowProps) {
   const intervals = row.segments.map((s) => ({
     id: s.segmentId,
@@ -81,6 +84,7 @@ export default function PlanningHubResourceLaneRow({
     <div
       className={cn(
         "flex border-b border-[var(--border)]/60",
+        pitchSegmentLane && "bg-[var(--surface-2)]/20",
         manipulation?.hoverResourceId === row.resourceId &&
           manipulation.isDragging &&
           "bg-[var(--sce-primary-light)]/25",
@@ -91,16 +95,25 @@ export default function PlanningHubResourceLaneRow({
       {hideLabelColumn ? null : (
         <div
           className={cn(
-            "sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--sce-surface-dense)] py-2",
-            labelTier === "secondary" ? "pl-6 pr-3" : "px-3",
+            "sticky left-0 z-10 shrink-0 border-r border-[var(--border)] py-2",
+            pitchSegmentLane
+              ? "border-l-2 border-l-[var(--border)] bg-[var(--surface-2)]/25 pl-8 pr-3"
+              : cn(
+                  "bg-[var(--sce-surface-dense)]",
+                  labelTier === "secondary" ? "pl-6 pr-3" : "px-3",
+                ),
           )}
           style={{ width: labelWidthPx }}
           data-planning-resource-tier={labelTier}
+          data-planning-pitch-segment-lane={pitchSegmentLane ? "true" : undefined}
         >
           <p
             className={cn(
-              "text-[var(--foreground)]",
-              labelTier === "secondary" ? "text-[11px] font-medium" : "text-xs font-semibold",
+              pitchSegmentLane
+                ? "text-[10px] font-normal tracking-wide text-[var(--muted)]"
+                : "text-[var(--foreground)]",
+              !pitchSegmentLane &&
+                (labelTier === "secondary" ? "text-[11px] font-medium" : "text-xs font-semibold"),
             )}
           >
             {labelPrimary}

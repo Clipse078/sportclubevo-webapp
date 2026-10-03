@@ -131,9 +131,9 @@ export default function WeekPlannerChrome({
         className="flex flex-col gap-2 border-t border-[var(--border)]/70 pt-2"
         data-testid="planning-hub-toolbar"
       >
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">
           <div
-            className="inline-flex shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
+            className="inline-flex max-w-full shrink-0 overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5 [scrollbar-width:thin]"
             role="group"
             aria-label="Ansicht"
             data-testid="planning-hub-perspective"
@@ -168,13 +168,15 @@ export default function WeekPlannerChrome({
 
           {isPlanningHubResourceTimelinePerspective(urlState.perspective) &&
           resourceScopeFacilityGroups.length > 0 ? (
-            <PlanningHubResourceScopeControl
-              urlState={resolvedUrlState}
-              facilityGroups={resourceScopeFacilityGroups}
-              perspectiveLabel={
-                urlState.perspective === "garderobe" ? "Garderoben" : "Spielfelder"
-              }
-            />
+            <div className="min-w-0 flex-1">
+              <PlanningHubResourceScopeControl
+                urlState={resolvedUrlState}
+                facilityGroups={resourceScopeFacilityGroups}
+                perspectiveLabel={
+                  urlState.perspective === "garderobe" ? "Garderoben" : "Spielfelder"
+                }
+              />
+            </div>
           ) : null}
         </div>
 

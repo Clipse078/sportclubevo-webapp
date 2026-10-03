@@ -79,6 +79,22 @@ describe("pitch-group-disclosure — FCA canonical seed (3 physical pitches)", (
     );
     expect(expanded.has("fac-kr2")).toBe(true);
   });
+
+  it("auto-expands every physical group touched by resFilter (multi-pitch subset)", () => {
+    const timeline = buildAdaptiveResourceTimeline({
+      catalogGroups: fcaCatalog,
+      segmentRows: [],
+      facilityFilterId: null,
+      resourceFilterIds: null,
+      resourceCategory: "pitch",
+    });
+    const kr2a = fcaCatalog[1]!.resources[1]!.id;
+    const kr3b = fcaCatalog[2]!.resources[2]!.id;
+    const expanded = resolveAutoExpandedPitchGroupKeys(timeline, [kr2a, kr3b], "pitch");
+    expect(expanded.has("fac-kr2")).toBe(true);
+    expect(expanded.has("fac-kr3")).toBe(true);
+    expect(expanded.has("fac-hp")).toBe(false);
+  });
 });
 
 describe("pitch-group-disclosure — FCA duplicate Hauptfeld + Hauptplatz (STAGE data defect)", () => {

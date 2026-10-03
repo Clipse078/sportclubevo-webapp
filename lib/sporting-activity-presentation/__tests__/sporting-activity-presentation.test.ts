@@ -17,6 +17,7 @@ import {
 import {
   formatSportingActivityLocationLines,
   formatSportingActivityLocationSummary,
+  sanitizeImportedVenuePresentation,
 } from "../location";
 import {
   resolveSportingActivityTypePillVariant,
@@ -90,6 +91,21 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
   });
 
   describe("MATCH", () => {
+    it("sanitizes malformed SFV venue tail in presentation (FACILITY-MODEL-01 data follow-up)", () => {
+      expect(sanitizeImportedVenuePresentation("Im Brüel, Allschwil, - 3")).toBe("Im Brüel, Allschwil");
+      const presentation = buildMatchActivityPresentation({
+        resourceKey: "event:m-malformed",
+        title: "Test",
+        typeLabel: "Spiel",
+        teamName: "E1",
+        homeAway: "HOME",
+        location: "Im Brüel, Allschwil, - 3",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+      expect(presentation.location.venueName).toBe("Im Brüel, Allschwil");
+    });
+
     it("home match uses venue and optional resource", () => {
       const presentation = buildMatchActivityPresentation({
         resourceKey: "event:m1",
