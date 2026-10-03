@@ -17,7 +17,10 @@ import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
 import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
 import PlannerWeekDataSection from "@/components/admin/planner/PlannerWeekDataSection";
 import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
-import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import {
+  isPlanningHubResourceTimelinePerspective,
+  parsePlanningHubUrlState,
+} from "@/lib/planning-hub/planner-url";
 import {
   createPlannerServerTimer,
   isPlannerPerfTimingEnabled,
@@ -144,8 +147,8 @@ export default async function PlannerWeekPageRoute({
   perfTimer?.mark("plan-resolution");
 
   const needsEagerFacilityGroups =
-    canManagePlans &&
-    (urlState.perspective === "ressourcen" || Boolean(activePlan));
+    isPlanningHubResourceTimelinePerspective(urlState.perspective) ||
+    (canManagePlans && Boolean(activePlan));
 
   const resolvedUrlState = {
     ...urlState,

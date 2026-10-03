@@ -85,6 +85,7 @@ export default function WeekPlannerPage({
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
   };
 
   const filteredWeek = applyPlanningHubFilters(week, urlState);

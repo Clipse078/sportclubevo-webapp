@@ -195,7 +195,7 @@ function weekWithDay(dayKey: string, items: WeekplannerItem[]): WeekplannerWeek 
 
 const URL_STATE = {
   week: "2026-09-14",
-  perspective: "ressourcen" as const,
+  perspective: "spielfeld" as const,
   activity: "alle" as const,
   team: null,
   facility: null,

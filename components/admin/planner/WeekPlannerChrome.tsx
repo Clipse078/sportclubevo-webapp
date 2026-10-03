@@ -12,12 +12,16 @@ import PlanningHubCreateMenu, {
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
-import PlanningHubVisibleTimeRangeControl from "@/components/admin/planning-hub/PlanningHubVisibleTimeRangeControl";
+import PlanningHubPlannerViewOptions from "@/components/admin/planning-hub/PlanningHubPlannerViewOptions";
 import {
   buildPlanningHubHref,
+  isPlanningHubResourceTimelinePerspective,
   preserveCalendarZeitForHeute,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
+import PlanningHubResourceScopeControl from "@/components/admin/planning-hub/PlanningHubResourceScopeControl";
+import { pickFacilityGroupsForCategory } from "@/lib/planning-hub/resource-timeline/adaptive-lanes";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import { WeekplannerPlanBar } from "./WeekplannerPlanBar";
 
@@ -44,6 +48,7 @@ export type WeekPlannerChromeProps = {
   week?: WeekplannerWeek;
   incompleteCount?: number;
   onReviewConflicts?: (incidents: PlanningConflictIncident[]) => void;
+  resourceTimelineCatalog?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
 function weekHref(param: string, urlState: PlanningHubUrlState): string {
@@ -66,8 +71,16 @@ export default function WeekPlannerChrome({
   week,
   incompleteCount = 0,
   onReviewConflicts,
+  resourceTimelineCatalog,
 }: WeekPlannerChromeProps) {
   const resolvedUrlState = { ...urlState, week: weekNav.param };
+
+  const resourceScopeFacilityGroups =
+    urlState.perspective === "spielfeld"
+      ? pickFacilityGroupsForCategory(resourceTimelineCatalog ?? { PITCH_HALL: [], DRESSING_ROOM: [] }, "pitch")
+      : urlState.perspective === "garderobe"
+        ? pickFacilityGroupsForCategory(resourceTimelineCatalog ?? { PITCH_HALL: [], DRESSING_ROOM: [] }, "dressing")
+        : [];
 
   const todayHref = buildPlanningHubHref(resolvedUrlState, {
     week: todayParam,
@@ -75,7 +88,7 @@ export default function WeekPlannerChrome({
   });
 
   return (
-    <div className="w-full space-y-4" data-testid="weekplanner-management-chrome">
+    <div className="w-full space-y-2" data-testid="weekplanner-management-chrome">
       <PlanningManagementPageHeader
         breadcrumbLeaf="Wochenplaner"
         title="Wochenplaner"
@@ -84,15 +97,14 @@ export default function WeekPlannerChrome({
         actions={createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : null}
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           <PlanningWeekNavigation
             rangeLabel={weekNav.rangeLabel}
             previousWeekHref={weekHref(weekNav.previousParam, resolvedUrlState)}
             nextWeekHref={weekHref(weekNav.nextParam, resolvedUrlState)}
             todayHref={todayHref}
           />
-
           <WeekplannerPlanBar
             weekParam={weekNav.param}
             wochenplanPlans={wochenplanPlans}
@@ -105,7 +117,7 @@ export default function WeekPlannerChrome({
         </div>
 
         {week && onReviewConflicts ? (
-          <div className="flex min-w-0 items-start lg:max-w-sm lg:justify-end">
+          <div className="flex min-w-0 shrink-0 items-center lg:justify-end">
             <PlanningHubConflictAttention
               week={week}
               incompleteCount={incompleteCount}
@@ -116,85 +128,69 @@ export default function WeekPlannerChrome({
       </div>
 
       <div
-        className="flex flex-col gap-3 border-t border-[var(--border)]/70 pt-3 sm:flex-row sm:flex-wrap sm:items-center"
+        className="flex flex-col gap-2 border-t border-[var(--border)]/70 pt-2"
         data-testid="planning-hub-toolbar"
       >
-        <div
-          className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
-          role="group"
-          aria-label="Ansicht"
-          data-testid="planning-hub-perspective"
-        >
-          {(
-            [
-              ["kalender", "Kalender"],
-              ["ressourcen", "Ressourcen"],
-              ["liste", "Liste"],
-            ] as const
-          ).map(([perspective, label]) => {
-            const active = urlState.perspective === perspective;
-            return (
-              <Link
-                key={perspective}
-                href={buildPlanningHubHref(resolvedUrlState, { perspective })}
-                data-testid={`planning-hub-perspective-${perspective}`}
-                aria-current={active ? "true" : undefined}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
-                  active
-                    ? "bg-[var(--sce-primary)] text-white shadow-sm"
-                    : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-                )}
-              >
-                {label}
-              </Link>
-            );
-          })}
+        <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">
+          <div
+            className="inline-flex max-w-full shrink-0 overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5 [scrollbar-width:thin]"
+            role="group"
+            aria-label="Ansicht"
+            data-testid="planning-hub-perspective"
+          >
+            {(
+              [
+                ["kalender", "Kalender"],
+                ["spielfeld", "Spielfeld"],
+                ["garderobe", "Garderobe"],
+                ["liste", "Liste"],
+              ] as const
+            ).map(([perspective, label]) => {
+              const active = urlState.perspective === perspective;
+              return (
+                <Link
+                  key={perspective}
+                  href={buildPlanningHubHref(resolvedUrlState, { perspective })}
+                  data-testid={`planning-hub-perspective-${perspective}`}
+                  aria-current={active ? "true" : undefined}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
+                    active
+                      ? "bg-[var(--sce-primary)] text-white shadow-sm"
+                      : "text-[var(--text-2)] hover:text-[var(--foreground)]",
+                  )}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {isPlanningHubResourceTimelinePerspective(urlState.perspective) &&
+          resourceScopeFacilityGroups.length > 0 ? (
+            <div className="min-w-0 flex-1">
+              <PlanningHubResourceScopeControl
+                urlState={resolvedUrlState}
+                facilityGroups={resourceScopeFacilityGroups}
+                perspectiveLabel={
+                  urlState.perspective === "garderobe" ? "Garderoben" : "Spielfelder"
+                }
+              />
+            </div>
+          ) : null}
         </div>
 
-        {urlState.perspective === "ressourcen" && (
-          <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5">
-            <Link
-              href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "pitch" })}
-              data-testid="planning-hub-resource-pitch"
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                urlState.resourceCategory === "pitch"
-                  ? "bg-[var(--sce-primary)] text-white shadow-sm"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
-            >
-              Spielfeld / Halle
-            </Link>
-            <Link
-              href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "dressing" })}
-              data-testid="planning-hub-resource-dressing"
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                urlState.resourceCategory === "dressing"
-                  ? "bg-[var(--sce-primary)] text-white shadow-sm"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
-            >
-              Garderobe
-            </Link>
-          </div>
-        )}
-
         <div
-          className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-3 shadow-[var(--sce-surface-shadow)] sm:ml-auto sm:min-w-[min(100%,20rem)]"
+          className="flex flex-wrap items-center gap-2"
           data-testid="planning-hub-filter-panel"
         >
-          <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Filter
-          </p>
           <PlanningHubWeekFilters
             urlState={resolvedUrlState}
             teamOptions={teamOptions}
             facilityOptions={facilityOptions}
             inline
           />
-          <PlanningHubVisibleTimeRangeControl />
+          <PlanningHubPlannerViewOptions className="ml-auto sm:ml-0" />
         </div>
       </div>
     </div>

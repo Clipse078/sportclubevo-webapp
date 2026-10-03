@@ -29,6 +29,7 @@ import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubLis
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import {
+  isPlanningHubResourceTimelinePerspective,
   resolvePlanningHubResourceDay,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
@@ -61,6 +62,7 @@ export type WeekPlannerWorkspaceProps = {
   canonicalEditing?: CanonicalEditingContext;
   urlState?: PlanningHubUrlState;
   dressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  resourceTimelineCatalog?: PlanningHubFacilityGroups;
   selectedIncident?: PlanningConflictIncident | null;
   conflictPicker?: PlanningConflictIncident[] | null;
   onCloseIncident?: () => void;
@@ -88,6 +90,7 @@ export default function WeekPlannerWorkspace({
   canonicalEditing,
   urlState: urlStateProp,
   dressingRoomOccupancyPresets,
+  resourceTimelineCatalog,
   selectedIncident,
   conflictPicker,
   onCloseIncident,
@@ -103,6 +106,7 @@ export default function WeekPlannerWorkspace({
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
   };
 
   const filteredWeek = applyPlanningHubFilters(week, urlState);
@@ -161,16 +165,6 @@ export default function WeekPlannerWorkspace({
     },
     [isConflictControlled, onPickConflictIncident],
   );
-
-  const publishChrome = usePublishPlannerWeekChrome();
-  useLayoutEffect(() => {
-    publishChrome({
-      week,
-      teamOptions,
-      incompleteCount,
-      onReviewConflicts: handleReviewConflicts,
-    });
-  }, [publishChrome, week, teamOptions, incompleteCount, handleReviewConflicts]);
 
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
   const [operationalEditingItem, setOperationalEditingItem] = useState<WeekplannerItem | null>(null);
@@ -233,9 +227,18 @@ export default function WeekPlannerWorkspace({
     null,
   );
 
+  const needsTimelineCatalog =
+    isPlanningHubResourceTimelinePerspective(urlState.perspective) ||
+    !!canonicalEditing ||
+    !!overrideEditing;
+
   useEffect(() => {
-    if (!canonicalEditing && !overrideEditing) return;
-    if (canonicalEditing?.facilityGroupsByAllocationGroup || overrideEditing?.facilityGroupsByAllocationGroup) {
+    if (!needsTimelineCatalog) return;
+    if (
+      resourceTimelineCatalog ||
+      canonicalEditing?.facilityGroupsByAllocationGroup ||
+      overrideEditing?.facilityGroupsByAllocationGroup
+    ) {
       return;
     }
     let cancelled = false;
@@ -249,15 +252,36 @@ export default function WeekPlannerWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [canonicalEditing, overrideEditing]);
+  }, [needsTimelineCatalog, resourceTimelineCatalog, canonicalEditing, overrideEditing]);
 
   const manipulationFacilityGroups =
+    resourceTimelineCatalog ??
     canonicalEditing?.facilityGroupsByAllocationGroup ??
     overrideEditing?.facilityGroupsByAllocationGroup ??
     lazyFacilityGroups;
 
+  const publishChrome = usePublishPlannerWeekChrome();
+  useLayoutEffect(() => {
+    publishChrome({
+      week,
+      teamOptions,
+      incompleteCount,
+      onReviewConflicts: handleReviewConflicts,
+      resourceTimelineCatalog: manipulationFacilityGroups ?? undefined,
+    });
+  }, [
+    publishChrome,
+    week,
+    teamOptions,
+    incompleteCount,
+    handleReviewConflicts,
+    manipulationFacilityGroups,
+  ]);
+
   const resourceRowsForManipulation = useMemo(() => {
-    if (urlState.perspective !== "ressourcen" || !manipulationFacilityGroups) return [];
+    if (!isPlanningHubResourceTimelinePerspective(urlState.perspective) || !manipulationFacilityGroups) {
+      return [];
+    }
     const filtered = applyPlanningHubFilters(week, resolvedUrlState);
     const weekDayKeys = filtered.days.map((d) => d.dayKey);
     const selectedDay = resolvePlanningHubResourceDay(weekDayKeys, urlState.day, todayDayKey);
@@ -315,7 +339,7 @@ export default function WeekPlannerWorkspace({
             canEditItem={canEditPlannerItem}
           />,
         )
-      ) : urlState.perspective === "ressourcen" ? (
+      ) : isPlanningHubResourceTimelinePerspective(urlState.perspective) ? (
         wrapManipulation(
           <PlanningHubResourceDayView
             week={week}
@@ -324,6 +348,7 @@ export default function WeekPlannerWorkspace({
             timezone={timezone}
             todayDayKey={todayDayKey}
             onItemActivate={handleItemActivate}
+            resourceCatalogGroups={manipulationFacilityGroups ?? undefined}
           />,
         )
       ) : (

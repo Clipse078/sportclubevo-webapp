@@ -469,11 +469,24 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ## SCE-PLANNER-UX-08 — Unified Planning & Allocation Workspace
 
-**Status:** **UPCOMING** — **SCE-CALENDAR-UX-02** closed (human UAT 03.10.2026); implementation starts from STAGE after PR #796 merge.
+**Status:** **IN PROGRESS** — **08-01** foundation on branch `cursor/sce-planner-ux-08-01-unified-planning-foundation` (from post–PR #796 `origin/STAGE`).
 
-**First implementation package:** **SCE-PLANNER-UX-08-01** — Unified Planning & Allocation Workspace Foundation (branch from merged `origin/STAGE` HEAD only — never from the calendar feature branch).
+**Packages:**
 
-**Goal:** Unified Planning & Allocation Workspace foundation (Wochenplaner / allocation UX). **Not in scope** for SCE-CALENDAR-UX-02 or PR #796.
+| ID | Focus |
+|----|--------|
+| **08-01** | Unified workspace foundation — Kalender / Spielfeld / Garderobe / Liste, shared URL state, adaptive resource timeline, scale fixtures |
+| **08-02** | **Canonical Resource Manipulation** — generalize Garderobe-proven DnD/confirm flow to Spielfeld + Garderobe; resource time ≠ activity time; shared `PlanningResourceManipulation` target |
+| **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
+| **08-04** | Permission-aware drag/drop & rescheduling |
+| **08-05** | Conflict resolution & operational actions |
+| **08-06** | List / search / bulk operational UX |
+| **08-07** | Responsive / tablet hardening |
+| **08-08** | Integration / Human UAT / release hardening |
+
+**Dependencies (not absorbed):** SCE-ACTIVITY-DESIGN-01E, SCE-ACTIVITY-DESIGN-02, FACILITY-MODEL-01, SCE-STATUS-DESIGN-01, SCE-ACTIVITY-COLOR-01 (narrowed), PERFORMANCE-INFRA-01, BUILD-PERF.
+
+**Goal:** Unified Planning & Allocation Workspace (Wochenplaner / allocation UX). **Not in scope** for SCE-CALENDAR-UX-02 or PR #796.
 
 **Product principles (preserved for UX-08):**
 
@@ -484,6 +497,17 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 - Shared date/week navigation, filters, conflict state, and activity identity; canonical Training / Spiel / Turnier / Veranstaltung semantics
 - Permission-aware direct manipulation (time-management vs allocation-management vs read-only); drag/drop never bypasses server authorization; optimistic UI reconciles to canonical server state; server-side conflict validation; clear rollback on failed moves; no role-name-string authorization
 - Future interaction direction: drag to reschedule, drag between permitted resources, resize where semantics permit, conflict preview, clear drop targets, keyboard alternatives, undo/recovery where safe, strong responsive behaviour, dense readable planning cards
+
+**Manipulation architecture (R4 — canonical):**
+
+- **Kalender** = activity scheduling (*Wann?*) → **08-03** Activity Rescheduling with impact analysis.
+- **Spielfeld** = primary physical-resource allocation (*Wo?*) → **08-02** Canonical Resource Manipulation.
+- **Garderobe** = supporting-resource allocation (*Welche Nebenressourcen?*) → **08-02** (foundation: Garderobe manipulation on **08-01** / PR #797).
+- One shared flow: direct manipulation → proposed mutation → server conflict/impact validation → user confirmation → server mutation → recovery.
+- Resource moves must not silently change kickoff/training/event time; calendar moves must not silently propagate arbitrary dependent changes.
+- Capabilities-based authorization only (**01E**); external/SFV authority rules in **08-03**.
+
+Full detail: [`docs/planning/SCE-PLANNER-UX-08-01-FOUNDATION.md`](../planning/SCE-PLANNER-UX-08-01-FOUNDATION.md) (R4 sections).
 
 **Dependency:** `origin/STAGE` HEAD after PR #796 merge.
 
