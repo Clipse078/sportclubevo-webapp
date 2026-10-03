@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 
 export type EventDomainMetaRailProps = {
   domainLabel: string;
@@ -24,10 +25,10 @@ export function EventDomainMetaRail({
   density = "management",
   className,
 }: EventDomainMetaRailProps) {
-  const showEnd =
-    endTimeLabel &&
-    startTimeLabel &&
-    endTimeLabel.trim() !== startTimeLabel.trim();
+  const timeRangeLabel = formatSportingActivityTimeRange({
+    startLabel: startTimeLabel,
+    endLabel: endTimeLabel,
+  });
 
   if (dateStack) {
     return (
@@ -57,18 +58,16 @@ export function EventDomainMetaRail({
       <span className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
         {domainLabel}
       </span>
-      {startTimeLabel ? (
-        <span
+      {timeRangeLabel ? (
+        <time
           className={cn(
             "font-mono font-semibold tabular-nums text-[var(--foreground)]",
             density === "compact" ? "text-[0.8125rem]" : "text-sm",
           )}
+          data-testid="event-domain-meta-rail-time"
         >
-          {startTimeLabel}
-        </span>
-      ) : null}
-      {showEnd ? (
-        <span className="font-mono text-xs tabular-nums text-[var(--muted)]">{endTimeLabel}</span>
+          {timeRangeLabel}
+        </time>
       ) : null}
     </div>
   );

@@ -4,6 +4,7 @@ import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-pres
 import type { SportingActivityPresentation } from "./types";
 import { filterCompactMetadataPartsAgainstPrimary } from "./compact-dedupe";
 import { formatSportingActivityLocationLines } from "./location";
+import { formatSportingActivityTimeRange } from "./time-range";
 
 export type SportingActivityCompactFormatOptions = {
   tenantDisplayNames?: string[];
@@ -84,7 +85,10 @@ function formatCompactSchedulePart(
   const start = new Date(presentation.schedule.startAt);
   if (Number.isNaN(start.getTime())) return endLabel;
   const startLabel = formatTime(start, cfg);
-  return `${startLabel}–${endLabel}`;
+  return (
+    formatSportingActivityTimeRange({ startLabel, endLabel }) ??
+    `${startLabel}–${endLabel}`
+  );
 }
 
 function joinClubAndLocation(club?: string, location?: string): string | undefined {

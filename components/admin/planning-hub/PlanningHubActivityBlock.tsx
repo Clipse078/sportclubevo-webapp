@@ -30,6 +30,7 @@ import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -58,7 +59,12 @@ type PlanningHubActivityBlockProps = {
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
   const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  return `${fmt.format(start)}–${fmt.format(end)}`;
+  return (
+    formatSportingActivityTimeRange({
+      startLabel: fmt.format(start),
+      endLabel: fmt.format(end),
+    }) ?? fmt.format(start)
+  );
 }
 
 function capturePointer(target: EventTarget & Element, pointerId: number) {

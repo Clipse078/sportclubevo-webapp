@@ -189,6 +189,17 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 **SCE-ACTIVITY-COLOR-01 (partial close):** Planning Hub Wochenplaner blocks + touched management surfaces use canonical `--sce-info` / `--sce-secondary` / `--sce-primary` tokens. Remaining non-planning legacy consumers (e.g. some calendar marker dots) stay on **SCE-ACTIVITY-COLOR-01** until migrated.
 
+### SCE-ACTIVITY-DESIGN-01C01D-R1 — Human UAT corrections
+
+**Status:** **Delivered on feature branch** (PR #795, STAGE target) — presentation-only R1; no permission or Activity Detail architecture changes.
+
+- Tournament/match **context badge** beside primary title (not a separate row under meta rail).
+- **`formatSportingActivityTimeRange`** — single HH:mm–HH:mm unit on meta rails, planner blocks, management, detail schedule lines, Veranstaltungen.
+- **Training blue / Spiel red / Turnier orange** enforced on planning editor identity summaries (removed legacy green Training / blue Heimspiel activity identity).
+- Rollout: Mein Programm, Mein Kalender selected-day agenda, Wochenplaner individual blocks, Trainings/Spiele/Turniere management, Matchcenter, create/edit identity summaries.
+
+**Still open:** **01E** (consume/manage matrix), **FACILITY-MODEL-01**, residual **SCE-ACTIVITY-COLOR-01** (month-cell markers / unrelated surfaces), **BUILD-PERF**, **PERFORMANCE-INFRA-01**.
+
 ---
 
 ## SCE-ACTIVITY-DESIGN-01C — Match & Tournament Management Cards

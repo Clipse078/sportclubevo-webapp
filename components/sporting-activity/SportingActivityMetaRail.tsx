@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import { ActivityTypePill } from "./ActivityTypePill";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 
@@ -21,14 +22,8 @@ const TIME_CLASS: Record<SportingActivityMetaRailDensity, string> = {
   management: "font-mono text-sm font-semibold tabular-nums text-[var(--foreground)]",
 };
 
-const END_TIME_CLASS: Record<SportingActivityMetaRailDensity, string> = {
-  compact: "font-mono text-[0.6875rem] tabular-nums text-[var(--muted)]",
-  planner: "font-mono text-[9px] tabular-nums text-[var(--muted)] leading-tight",
-  management: "font-mono text-xs tabular-nums text-[var(--muted)]",
-};
-
 /**
- * Left metadata column: semantic type pill, then start (and optional end) time.
+ * Left metadata column: semantic type pill, then canonical start–end time (single unit).
  */
 export function SportingActivityMetaRail({
   activityKind,
@@ -40,13 +35,12 @@ export function SportingActivityMetaRail({
   density = "compact",
   className,
 }: SportingActivityMetaRailProps) {
-  const showEnd =
-    endTimeLabel &&
-    endTimeLabel.trim() &&
-    endTimeLabel.trim() !== startTimeLabel.trim() &&
-    !allDay;
-
-  const timePrimary = allDay ? allDayLabel : startTimeLabel;
+  const timeRangeLabel = allDay
+    ? allDayLabel
+    : formatSportingActivityTimeRange({
+        startLabel: startTimeLabel,
+        endLabel: endTimeLabel,
+      }) ?? startTimeLabel;
 
   return (
     <div
@@ -60,14 +54,13 @@ export function SportingActivityMetaRail({
           {typeLabel}
         </span>
       ) : null}
-      <span className={TIME_CLASS[density]} data-testid="sporting-activity-meta-rail-start">
-        {timePrimary}
-      </span>
-      {showEnd ? (
-        <span className={END_TIME_CLASS[density]} data-testid="sporting-activity-meta-rail-end">
-          {endTimeLabel}
-        </span>
-      ) : null}
+      <time
+        className={TIME_CLASS[density]}
+        data-testid="sporting-activity-meta-rail-time"
+        dateTime={timeRangeLabel.includes("–") ? undefined : timeRangeLabel}
+      >
+        {timeRangeLabel}
+      </time>
     </div>
   );
 }

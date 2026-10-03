@@ -10,6 +10,7 @@ import {
 } from "./compact";
 import { filterCompactMetadataPartsAgainstPrimary } from "./compact-dedupe";
 import { formatSportingActivityLocationLines, formatSportingActivityLocationSummary } from "./location";
+import { formatSportingActivityTimeRange } from "./time-range";
 
 export type SportingActivityScheduleFormatInput = {
   startAt: Date;
@@ -33,11 +34,13 @@ export function formatSportingActivityScheduleLine(
     month: "short",
   });
   const start = formatTime(input.startAt, input.fmtCfg);
-  if (input.endAt) {
-    const end = formatTime(input.endAt, input.fmtCfg);
-    return `${dayPart} · ${start}–${end}`;
-  }
-  return `${dayPart} · ${start}`;
+  const timePart = input.endAt
+    ? formatSportingActivityTimeRange({
+        startLabel: start,
+        endLabel: formatTime(input.endAt, input.fmtCfg),
+      })
+    : start;
+  return timePart ? `${dayPart} · ${timePart}` : dayPart;
 }
 
 export function formatSportingActivityCompactTitle(

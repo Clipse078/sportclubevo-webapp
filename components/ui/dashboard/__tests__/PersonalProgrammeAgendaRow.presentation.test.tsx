@@ -51,6 +51,7 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6/R7 three-line Mein
       <PersonalProgrammeAgendaRow
         item={baseItem({ activityPresentation, title: activityPresentation.identity.title })}
         timeLabel="17:00"
+        endTimeLabel="18:30"
       />,
     );
 
@@ -61,6 +62,9 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R6/R7 three-line Mein
       "training-blue",
     );
     expect(screen.getByTestId("sporting-activity-meta-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("sporting-activity-meta-rail-time")).toHaveTextContent(
+      "17:00–18:30",
+    );
     expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil - Im Brüel").textContent).not.toMatch(
       /Junioren F2|KR2|Kunstrasen 2/,

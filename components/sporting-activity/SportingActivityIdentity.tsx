@@ -11,6 +11,7 @@ import {
   sportingActivityTypePillClassName,
 } from "@/lib/sporting-activity-presentation/activity-type-pill";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
+import { ActivityContextBadge } from "./ActivityContextBadge";
 
 export type SportingActivityIdentityMode = "compact" | "management";
 
@@ -57,43 +58,48 @@ export function SportingActivityIdentity({
 
   const wrapPrimary =
     primaryWrap ?? mode === "compact";
+  const contextIndicator = typeLine?.contextIndicator;
+  const showContextBesidePrimary = Boolean(!showTypeLine && showPrimary && contextIndicator);
+  const showContextOnlyRow = Boolean(!showTypeLine && !showPrimary && contextIndicator);
 
   return (
     <div className={cn("min-w-0", className)} data-testid="sporting-activity-identity">
       {showPrimary ? (
         <p
           className={cn(
+            "flex flex-wrap items-center gap-x-1.5 gap-y-0.5",
             wrapPrimary
-              ? "line-clamp-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]"
-              : "truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]",
+              ? "text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]"
+              : "text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]",
             primaryClassName,
           )}
         >
-          {primaryText}
+          <span className={cn(wrapPrimary ? "line-clamp-2 min-w-0 flex-1 basis-full sm:basis-auto" : "truncate")}>
+            {primaryText}
+          </span>
+          {showContextBesidePrimary ? (
+            <ActivityContextBadge>{contextIndicator}</ActivityContextBadge>
+          ) : null}
         </p>
       ) : null}
-      {typeLine && (showTypeLine || typeLine.contextIndicator) ? (
+      {typeLine && showTypeLine ? (
         <p className="mt-0.5 flex flex-wrap items-center gap-1.5">
-          {showTypeLine ? (
-            <span
-              className={
-                typePillVariant
-                  ? sportingActivityTypePillClassName(typePillVariant)
-                  : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
-              }
-              data-activity-type-pill={typePillVariant ?? undefined}
-            >
-              {typeLine.typeLabel}
-            </span>
-          ) : null}
-          {typeLine.contextIndicator ? (
-            <span
-              className="inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium normal-case tracking-normal text-[var(--text-2)]"
-              data-activity-context-badge
-            >
-              {typeLine.contextIndicator}
-            </span>
-          ) : null}
+          <span
+            className={
+              typePillVariant
+                ? sportingActivityTypePillClassName(typePillVariant)
+                : "inline-block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+            }
+            data-activity-type-pill={typePillVariant ?? undefined}
+          >
+            {typeLine.typeLabel}
+          </span>
+          {contextIndicator ? <ActivityContextBadge>{contextIndicator}</ActivityContextBadge> : null}
+        </p>
+      ) : null}
+      {showContextOnlyRow ? (
+        <p className="mt-0.5">
+          <ActivityContextBadge>{contextIndicator}</ActivityContextBadge>
         </p>
       ) : null}
       {showClubLocationLine && clubLocationLine ? (
