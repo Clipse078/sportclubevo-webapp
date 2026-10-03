@@ -476,8 +476,8 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | ID | Focus |
 |----|--------|
 | **08-01** | Unified workspace foundation — Kalender / Spielfeld / Garderobe / Liste, shared URL state, adaptive resource timeline, scale fixtures |
-| **08-02** | Spielfeld resource planning depth |
-| **08-03** | Garderobe allocation (Heim/Gast semantics) |
+| **08-02** | **Canonical Resource Manipulation** — generalize Garderobe-proven DnD/confirm flow to Spielfeld + Garderobe; resource time ≠ activity time; shared `PlanningResourceManipulation` target |
+| **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
 | **08-04** | Permission-aware drag/drop & rescheduling |
 | **08-05** | Conflict resolution & operational actions |
 | **08-06** | List / search / bulk operational UX |
@@ -497,6 +497,17 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 - Shared date/week navigation, filters, conflict state, and activity identity; canonical Training / Spiel / Turnier / Veranstaltung semantics
 - Permission-aware direct manipulation (time-management vs allocation-management vs read-only); drag/drop never bypasses server authorization; optimistic UI reconciles to canonical server state; server-side conflict validation; clear rollback on failed moves; no role-name-string authorization
 - Future interaction direction: drag to reschedule, drag between permitted resources, resize where semantics permit, conflict preview, clear drop targets, keyboard alternatives, undo/recovery where safe, strong responsive behaviour, dense readable planning cards
+
+**Manipulation architecture (R4 — canonical):**
+
+- **Kalender** = activity scheduling (*Wann?*) → **08-03** Activity Rescheduling with impact analysis.
+- **Spielfeld** = primary physical-resource allocation (*Wo?*) → **08-02** Canonical Resource Manipulation.
+- **Garderobe** = supporting-resource allocation (*Welche Nebenressourcen?*) → **08-02** (foundation: Garderobe manipulation on **08-01** / PR #797).
+- One shared flow: direct manipulation → proposed mutation → server conflict/impact validation → user confirmation → server mutation → recovery.
+- Resource moves must not silently change kickoff/training/event time; calendar moves must not silently propagate arbitrary dependent changes.
+- Capabilities-based authorization only (**01E**); external/SFV authority rules in **08-03**.
+
+Full detail: [`docs/planning/SCE-PLANNER-UX-08-01-FOUNDATION.md`](../planning/SCE-PLANNER-UX-08-01-FOUNDATION.md) (R4 sections).
 
 **Dependency:** `origin/STAGE` HEAD after PR #796 merge.
 

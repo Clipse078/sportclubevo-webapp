@@ -14,16 +14,54 @@
 - Facility grouping, minimum label width (148px), horizontal scroll, optional `resFilter` subset.
 - Scale fixtures: small / medium / large club in `scale-fixtures.ts` + component tests.
 
-## Drag / drop contract (foundation)
+## Planner manipulation architecture (canonical product decision — R4)
 
-| Surface | Vertical | Horizontal / lane |
-|---------|----------|-------------------|
-| Kalender | Time change | Day change where supported |
-| Spielfeld | Time change | Pitch/resource allocation |
-| Garderobe | Occupancy time | Dressing-room allocation |
-| Liste | — | Explicit edit actions only |
+**Core principle:** Direct manipulation is allowed where the visual perspective clearly represents the domain property being changed. Kalender, Spielfeld, and Garderobe share **canonical Planner manipulation infrastructure** but have **different mutation semantics** — not three unrelated drag-and-drop systems.
 
-All mutations remain **server-authoritative** via existing `canonical-planning-mutations` / `operational-planning-mutations`. UI capabilities from `manipulation-capabilities.ts` (TRAININGS_MANAGE / EVENTS_MANAGE / plan overrides).
+| Perspective | Domain question | Mutation class (future packages) |
+|-------------|-----------------|----------------------------------|
+| **Kalender** | *Wann findet es statt?* — activity scheduling | **Activity rescheduling** → **SCE-PLANNER-UX-08-03** |
+| **Spielfeld** | *Wo findet es statt?* — primary physical-resource allocation | **Resource manipulation** → **SCE-PLANNER-UX-08-02** |
+| **Garderobe** | *Welche Nebenressourcen werden benötigt?* — supporting-resource allocation | **Resource manipulation** → **SCE-PLANNER-UX-08-02** (proven first in Garderobe on this branch) |
+| **Liste** | High-density operational list | Explicit edit actions; no timeline DnD |
+
+**08-01 scope (PR #797):** foundation perspectives, URL/state, adaptive timelines, pitch grouping/disclosure, **existing Garderobe resource manipulation**, conflict presentation, capabilities-gated UI — **not** generalized Spielfeld DnD or Kalender activity reschedule (08-02 / 08-03).
+
+### Shared manipulation flow (architecture target for 08-02 / 08-03)
+
+```
+DIRECT MANIPULATION
+  → PROPOSED MUTATION
+  → IMPACT / CONFLICT VALIDATION (server-authoritative)
+  → USER CONFIRMATION
+  → SERVER-AUTHORITATIVE MUTATION
+  → SUCCESS / ERROR RECOVERY
+```
+
+Reuse Garderobe interaction language (e.g. **Planung ändern**, VON/NACH, unchanged activity time line, conflict summary, Abbrechen / Änderung übernehmen).
+
+### Resource vs activity time (08-02)
+
+Resource allocation time and sporting-activity time are **separate concepts**. Moving or resizing a pitch or Garderobe reservation must **not** silently change training time, match kickoff, tournament time, or event time unless a future explicitly confirmed workflow requests activity mutation.
+
+Resource mutations may change: `facilityResourceId`, allocation/reservation start, allocation/reservation end.
+
+### Activity rescheduling (08-03)
+
+Calendar manipulation is **not** merely resource manipulation. Kalender horizontal/day movement changes activity date; vertical/time movement changes activity start; resize changes duration/end where permitted. Requires **impact analysis** before mutation (allocations, participants, authority, notifications, read models, etc.) — see package 08-03 below.
+
+### Permissions, affordances, conflicts, undo
+
+- **Capabilities only** — no role-name-string authorization; UI visibility ≠ authorization; coordinate with **SCE-ACTIVITY-DESIGN-01E**.
+- **Affordances:** clean block by default; subtle grab/resize on hover/focus; accessible **Planung ändern**; keyboard-equivalent workflow — DnD never the only path.
+- **Conflict validation:** server-authoritative; client visualization is never authoritative.
+- **Undo / recovery:** lightweight confirmation and safe optimistic UI where appropriate; short-lived “Änderung übernommen · Rückgängig” is a **future** requirement (not 08-01).
+
+### External / SFV authority (08-03)
+
+Distinguish SCE-owned, imported, synchronized, and read-only authoritative activities. 08-03 defines allowed / overridable / proposal-only / blocked actions — never silent divergence from authoritative external fixtures.
+
+**Current branch mutations:** server-authoritative via `canonical-planning-mutations` / `operational-planning-mutations`; UI gates from `manipulation-capabilities.ts`.
 
 ## R3 — Human-UAT closure (hierarchy, disclosure, invariants)
 
@@ -75,16 +113,75 @@ All mutations remain **server-authoritative** via existing `canonical-planning-m
 
 | Package | Focus |
 |---------|--------|
-| 08-01 | Foundation + R1/R2/R3 compact cockpit (this branch) |
-| 08-02 | Resource hierarchy & facility navigation refinement |
-| 08-03 | Operational conflict workflow |
-| 08-04 | Drag/drop & manipulation hardening |
-| 08-05 | Planning density / responsive optimization |
-| 08-06 | Operational list excellence |
-| 08-07 | Planning performance / large-tenant optimization |
-| 08-08 | Final planning polish / acceptance |
+| **08-01** | Unified Planning Foundation — Kalender / Spielfeld / Garderobe / Liste, URL state, adaptive timelines, pitch hierarchy & disclosure, Garderobe manipulation, conflicts, a11y/responsive foundation (**PR #797**, this branch) |
+| **08-02** | **Canonical Resource Manipulation** — generalize Garderobe-proven model to Spielfeld + Garderobe; `PlanningResourceManipulation` target (PITCH, DRESSING_ROOM, HALL, ROOM, OTHER_RESOURCE); horizontal = reservation time, vertical = facility resource, resize = start/end; activity time unchanged unless explicit future workflow |
+| **08-03** | **Activity Rescheduling** — primarily Kalender; activity date/time/duration semantics; impact-aware confirmation (allocations, teams, trainers, authority, comms, Infoboard, Dashboard, SFV sync); not silent dependent propagation |
+| **08-04** | Permission-aware drag/drop & rescheduling |
+| **08-05** | Conflict resolution & operational actions |
+| **08-06** | List / search / bulk operational UX |
+| **08-07** | Responsive / tablet hardening |
+| **08-08** | Integration / Human UAT / release hardening |
+
+Detail for **08-02** and **08-03** is canonical in this document (R4); **08-04…08-08** meanings match [`docs/roadmap/SCE-ACTIVITY-DESIGN-01.md`](../roadmap/SCE-ACTIVITY-DESIGN-01.md) and are unchanged by R4.
 
 **Product principle:** The planner is an **operational cockpit** — optimise scanability, conflicts, resources, and manipulation; do not reproduce consumer Mein Programm density.
+
+## SCE-PLANNER-UX-08-02 — Canonical Resource Manipulation (roadmap)
+
+**Purpose:** Generalize the resource manipulation model already proven by Garderobe on 08-01. Applies initially to **Spielfeld** and **Garderobe**; designed for future physical resources (pitches, halls, rooms, referee rooms, meeting rooms, other allocatable club resources).
+
+**Canonical semantics (resource timeline):**
+
+| Gesture | Effect |
+|---------|--------|
+| Horizontal move | Reservation time shift; duration preserved |
+| Vertical move | `FacilityResource` allocation change |
+| Resize start/end | Reservation start/end change |
+
+**Example confirmation copy (reuse Garderobe patterns):**
+
+> Planung ändern  
+> VON Kunstrasen 3 A · Reserviert 17:00–18:30  
+> NACH Kunstrasen 2 B · Reserviert 17:15–18:45  
+> Trainingszeit 17:00–18:30 unverändert  
+> ✓ Keine neuen Ressourcenkonflikte  
+
+**Architecture target:** `PlanningResourceManipulation` with resource classes `PITCH`, `DRESSING_ROOM`, `HALL`, `ROOM`, `OTHER_RESOURCE`. Introduce shared abstraction in 08-02 only where it falls out naturally — not required in 08-01/R4.
+
+**Conflict checks (resource):** overlap, incompatible whole/half pitch allocation, team overlap where relevant, facility availability, reservation constraints.
+
+---
+
+## SCE-PLANNER-UX-08-03 — Activity Rescheduling (roadmap)
+
+**Purpose:** Kalender-first **sporting activity** reschedule — more consequential than resource allocation moves.
+
+| Gesture | Effect |
+|---------|--------|
+| Horizontal / day | Activity date |
+| Vertical / time | Activity start time |
+| Resize | Activity duration/end where type permits |
+
+**Impact layer (required before mutation):** canonical activity date/time; pitch and dressing-room allocations; other reservations; meeting/arrival; participant availability; team/trainer conflicts; notifications; Infoboard; public presentation; Mein Programm / calendar projections; imported SFV authority; sync state.
+
+**Example interaction concept (08-03 implementation):**
+
+> Spiel verschieben — 2. Mannschaft vs FC Bubendorf  
+> VON So. 04.10.2026 14:00–16:00  
+> NACH So. 04.10.2026 15:00–17:00  
+> AUSWIRKUNGEN: Spielzeit geändert; Spielfeld-/Garderobenreservation prüfen; …  
+> [Abbrechen] [Änderung prüfen]
+
+**Authority:** For externally authoritative/imported activities, 08-03 defines allowed, locally overridable, proposal-only, and blocked/read-only actions — no silent divergence from authoritative fixtures.
+
+---
+
+## R4 — roadmap capture & closure (no scope expansion)
+
+- Documented canonical manipulation architecture and 08-02 / 08-03 packages (this file + activity-design roadmap).
+- **PR #797** remains **08-01 only** — no Kalender/Spielfeld DnD expansion, no 08-02/08-03 implementation, no merge, no PROD.
+- **Human UAT** on Preview: required before final closure; not substituted by automated regression.
+- **FACILITY-MODEL-01** boundary unchanged — no Hauptfeld/Hauptplatz merge in #797.
 
 **Related packages (explicit backlog):**
 
