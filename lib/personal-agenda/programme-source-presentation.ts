@@ -1,11 +1,12 @@
 import type { PersonalProgrammeSourceType } from "./personal-programme-types";
 import { sortPersonalProgrammeItems } from "./programme-sort";
 import type { PersonalProgrammeItem } from "./personal-programme-types";
+import { resolvePersonalCalendarDayMarkerSlots } from "./personal-calendar-day-marker-slots";
 
 /** Stable semantic palette keys for tests (not CSS snapshots). */
 export type ProgrammeSourcePaletteKey =
   | "training-blue"
-  | "match-green"
+  | "match-red"
   | "tournament-orange"
   | "event-violet"
   | "meeting-cyan";
@@ -35,12 +36,12 @@ const PRESENTATION_BY_SOURCE: Record<PersonalProgrammeSourceType, ProgrammeSourc
   },
   MATCH: {
     sourceType: "MATCH",
-    paletteKey: "match-green",
-    markerAccentClass: "bg-[var(--sce-success)]",
-    dayTintClass: "bg-[var(--sce-success-light)]",
-    chipTintClass: "bg-[var(--sce-success-light)]",
-    chipBorderClass: "border-[var(--sce-success-border)]",
-    chipTextClass: "text-[color-mix(in_srgb,var(--sce-success)_88%,var(--foreground)_12%)]",
+    paletteKey: "match-red",
+    markerAccentClass: "bg-[var(--sce-secondary)]",
+    dayTintClass: "bg-[var(--sce-secondary-light)]",
+    chipTintClass: "bg-[var(--sce-secondary-light)]",
+    chipBorderClass: "border-[color-mix(in_srgb,var(--sce-secondary)_35%,var(--border))]",
+    chipTextClass: "text-[color-mix(in_srgb,var(--sce-secondary)_88%,var(--foreground)_12%)]",
   },
   TOURNAMENT: {
     sourceType: "TOURNAMENT",
@@ -78,13 +79,11 @@ export function getProgrammeSourcePresentation(
 }
 
 export type PersonalProgrammeDayActivityMarkers = {
-  /** Up to three distinct source types in canonical programme order. */
+  /** Up to three semantic slots (may repeat types). */
   markerSourceTypes: PersonalProgrammeSourceType[];
   /** Additional authorized items beyond visible marker slots (+N). */
   overflowCount: number;
 };
-
-const MAX_VISIBLE_MARKERS = 3;
 
 /**
  * Builds bounded semantic markers for a calendar day from authorized programme items.
@@ -95,14 +94,9 @@ export function buildPersonalProgrammeDayActivityMarkers(
   activityCount: number,
 ): PersonalProgrammeDayActivityMarkers {
   const sorted = sortPersonalProgrammeItems([...dayItems]);
-  const markerSourceTypes: PersonalProgrammeSourceType[] = [];
-  for (const item of sorted) {
-    if (!markerSourceTypes.includes(item.sourceType)) {
-      markerSourceTypes.push(item.sourceType);
-    }
-    if (markerSourceTypes.length >= MAX_VISIBLE_MARKERS) break;
-  }
-
-  const overflowCount = Math.max(0, activityCount - markerSourceTypes.length);
-  return { markerSourceTypes, overflowCount };
+  const { markerSlots, overflowCount } = resolvePersonalCalendarDayMarkerSlots(
+    sorted.map((item) => item.sourceType),
+    activityCount,
+  );
+  return { markerSourceTypes: markerSlots, overflowCount };
 }

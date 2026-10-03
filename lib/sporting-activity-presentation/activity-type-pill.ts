@@ -4,7 +4,7 @@ import type { SportingActivityKind } from "./types";
 /**
  * Semantic activity-type pill keys for compact dashboard/agenda rows.
  * Aligns with Infoboard family colors: TRAINING blue, MATCH/SPIEL red, TURNIER orange.
- * Distinct from calendar marker palette (e.g. match-green timeline dots).
+ * Calendar month markers reuse the same semantic palette via programme-source-presentation.
  */
 export type SportingActivityTypePillVariantKey =
   | "training-blue"
