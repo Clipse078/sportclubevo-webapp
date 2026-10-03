@@ -411,7 +411,7 @@ Not in SCE-ACTIVITY-UX-01 scope.
 
 ### SCE-ACTIVITY-COLOR-01
 
-**Status:** **OPEN (narrowed)** — Wochenplaner + 01C01D touched surfaces canonicalized. Remaining: calendar month-cell marker palette vs dashboard pill semantics, any straggler Infoboard-adjacent mappings not yet on `activity-type-pill.ts`.
+**Status:** **OPEN (narrowed)** — Wochenplaner + 01C01D + **SCE-CALENDAR-UX-02 month markers** canonicalized (MATCH → match-red). Remaining: any straggler Infoboard-adjacent mappings not yet on `activity-type-pill.ts`.
 
 Audit and migrate historical color inconsistency across consumers to shared design-system tokens:
 
@@ -423,9 +423,18 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ## SCE-CALENDAR-UX-02 — Personal Calendar World-Class Upgrade
 
-**Status:** **OPEN** — next package after 01C01D closure; **not** implemented in PR #795.
+**Status:** **IMPLEMENTED ON STAGE BRANCH (pending human UAT)** — PR draft `cursor/sce-calendar-ux-02-personal-calendar-0798`; **do not merge** until UAT sign-off.
 
 **Goal:** Upgrade the personal Dashboard calendar (`Mein Kalender`) now that the canonical activity identity/presentation system is established.
+
+**Delivered (engineering):**
+
+- Calm month-cell **semantic dot markers** (+N overflow) with type-aware aggregation (`personal-calendar-day-marker-slots.ts`)
+- Accessible day summaries (e.g. «2 Trainings, 1 Spiel») — not color-only
+- **match-red** calendar markers aligned with SCE-ACTIVITY-COLOR-01 (training blue / spiel red / turnier orange)
+- Selected-day agenda via `PersonalProgrammeAgendaRow` + Activity Detail consume path (unchanged)
+- Shared `CalendarActivityMarkers` / `CalendarMonthLegend` on dashboard month grid; compact full Kalender mobile cells reuse markers
+- Personal empty copy, month empty hint, legend, keyboard day navigation, today vs selected styling
 
 **Core direction (intent only):**
 

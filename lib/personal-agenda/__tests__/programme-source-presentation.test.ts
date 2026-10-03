@@ -26,8 +26,8 @@ describe("getProgrammeSourcePresentation", () => {
     expect(getProgrammeSourcePresentation("TRAINING").paletteKey).toBe("training-blue");
   });
 
-  it("maps MATCH to green semantic palette", () => {
-    expect(getProgrammeSourcePresentation("MATCH").paletteKey).toBe("match-green");
+  it("maps MATCH to red semantic palette (SCE-ACTIVITY-COLOR-01)", () => {
+    expect(getProgrammeSourcePresentation("MATCH").paletteKey).toBe("match-red");
   });
 
   it("maps TOURNAMENT to SCE orange semantic palette", () => {
@@ -44,7 +44,7 @@ describe("getProgrammeSourcePresentation", () => {
 });
 
 describe("buildPersonalProgrammeDayActivityMarkers", () => {
-  it("bounds markers to three distinct source types with +N overflow", () => {
+  it("bounds markers to three type-aware slots with +N overflow", () => {
     const dayItems = [
       item("a", "TRAINING", "2026-09-12T08:00:00.000Z"),
       item("b", "MATCH", "2026-09-12T09:00:00.000Z"),
@@ -57,14 +57,14 @@ describe("buildPersonalProgrammeDayActivityMarkers", () => {
     expect(result.overflowCount).toBe(2);
   });
 
-  it("consolidates duplicate source types while preserving full count overflow", () => {
+  it("repeats dominant types in slots (2 Training + 1 Match)", () => {
     const dayItems = [
       item("a", "TRAINING", "2026-09-12T08:00:00.000Z"),
       item("b", "TRAINING", "2026-09-12T09:00:00.000Z"),
       item("c", "MATCH", "2026-09-12T10:00:00.000Z"),
     ];
     const result = buildPersonalProgrammeDayActivityMarkers(dayItems, 3);
-    expect(result.markerSourceTypes).toEqual(["TRAINING", "MATCH"]);
-    expect(result.overflowCount).toBe(1);
+    expect(result.markerSourceTypes).toEqual(["TRAINING", "MATCH", "TRAINING"]);
+    expect(result.overflowCount).toBe(0);
   });
 });
