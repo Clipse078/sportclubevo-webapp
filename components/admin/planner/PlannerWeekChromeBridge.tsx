@@ -15,6 +15,7 @@ import type { WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import { WeekplannerVisibleTimeRangeProvider } from "@/components/admin/planning-hub/WeekplannerVisibleTimeRangeContext";
 import WeekPlannerChrome, { type WeekPlannerChromeProps } from "./WeekPlannerChrome";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 export type PlannerWeekChromeBridgePayload = {
   week?: WeekplannerWeek;
@@ -22,6 +23,7 @@ export type PlannerWeekChromeBridgePayload = {
   facilityOptions?: { value: string; label: string }[];
   incompleteCount?: number;
   onReviewConflicts?: (incidents: PlanningConflictIncident[]) => void;
+  resourceTimelineCatalog?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
 const BridgeContext = createContext<Dispatch<SetStateAction<PlannerWeekChromeBridgePayload>> | null>(
@@ -67,6 +69,7 @@ export default function PlannerWeekStreamingRoot({
     facilityOptions: bridge.facilityOptions ?? [],
     incompleteCount: bridge.incompleteCount ?? 0,
     onReviewConflicts: bridge.onReviewConflicts,
+    resourceTimelineCatalog: bridge.resourceTimelineCatalog,
   };
 
   const plannerReady = Boolean(bridge.week);

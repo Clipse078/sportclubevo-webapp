@@ -1,6 +1,6 @@
 /**
  * PLANNING-HUB-01 — URL state for the unified Wochenplaner shell.
- * PLANNING-HUB-01B — Kalender (default) · Ressourcen · Liste
+ * SCE-PLANNER-UX-08-01 — Kalender · Spielfeld · Garderobe · Liste (shared planning context).
  * PLANNING-HUB-02D — Kalender daypart viewport (`zeit=morgen|nachmittag|abend|spaet|ganz`)
  */
 
@@ -11,7 +11,7 @@ import {
   type PlanningHubCalendarZeitParam,
 } from "./planning-dayparts";
 
-export type PlanningHubPerspective = "kalender" | "ressourcen" | "liste";
+export type PlanningHubPerspective = "kalender" | "spielfeld" | "garderobe" | "liste";
 
 export type PlanningHubActivityFilter =
   | "alle"
@@ -23,17 +23,22 @@ export type PlanningHubActivityFilter =
 /** @deprecated Use `calendarZeit` — retained for tests migrating from 02C. */
 export type PlanningHubCalendarTimeRange = "focused" | "full";
 
+export type PlanningHubResourceCategory = "pitch" | "dressing";
+
 export type PlanningHubUrlState = {
   week?: string;
   plan?: string;
   perspective: PlanningHubPerspective;
-  /** Selected calendar day for Ressourcen (`YYYY-MM-DD`). */
+  /** Selected calendar day for Spielfeld / Garderobe (`YYYY-MM-DD`). */
   day?: string;
   activity: PlanningHubActivityFilter;
   team: string | null;
   facility: string | null;
   conflictsOnly: boolean;
-  resourceCategory: "pitch" | "dressing";
+  /** Derived from perspective; kept for mutation/segment code paths. */
+  resourceCategory: PlanningHubResourceCategory;
+  /** Optional subset of facility resource IDs (`resFilter=a,b`). */
+  resourceFilterIds: string[] | null;
   /**
    * Kalender `zeit` query value when present in the URL.
    * `undefined` = omit param → canonical Ganzer Tag (full accepted range).
@@ -43,19 +48,57 @@ export type PlanningHubUrlState = {
 
 const BASE_PATH = "/dashboard/planner/week";
 
-function parsePerspective(raw: string | undefined): PlanningHubPerspective {
+export function isPlanningHubResourceTimelinePerspective(
+  perspective: PlanningHubPerspective,
+): boolean {
+  return perspective === "spielfeld" || perspective === "garderobe";
+}
+
+export function resourceCategoryForPerspective(
+  perspective: PlanningHubPerspective,
+): PlanningHubResourceCategory {
+  return perspective === "garderobe" ? "dressing" : "pitch";
+}
+
+function parseResourceFilterIds(raw: string | undefined): string[] | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) return null;
+  const ids = trimmed
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return ids.length > 0 ? ids : null;
+}
+
+function parsePerspective(
+  raw: string | undefined,
+  legacyResourceParam: string | undefined,
+): PlanningHubPerspective {
   const value = raw?.trim().toLowerCase();
-  if (value === "ressourcen") return "ressourcen";
+  if (value === "spielfeld") return "spielfeld";
+  if (value === "garderobe") return "garderobe";
   if (value === "liste" || value === "woche") return "liste";
   if (value === "kalender") return "kalender";
+  /** Legacy PLANNING-HUB-01B combined resource view. */
+  if (value === "ressourcen") {
+    return legacyResourceParam?.trim().toLowerCase() === "garderobe" ? "garderobe" : "spielfeld";
+  }
   return "kalender";
+}
+
+export function normalizePlanningHubUrlState(state: PlanningHubUrlState): PlanningHubUrlState {
+  const resourceCategory = isPlanningHubResourceTimelinePerspective(state.perspective)
+    ? resourceCategoryForPerspective(state.perspective)
+    : state.resourceCategory;
+  return { ...state, resourceCategory };
 }
 
 export function parsePlanningHubUrlState(
   params: Record<string, string | undefined>,
   options?: { now?: Date; timeZone?: string },
 ): PlanningHubUrlState {
-  const perspective = parsePerspective(params.ansicht);
+  const legacyRessource = params.ressource;
+  const perspective = parsePerspective(params.ansicht, legacyRessource);
   const activityRaw = params.typ?.toLowerCase();
   const activity: PlanningHubActivityFilter =
     activityRaw === "trainings" ||
@@ -72,7 +115,13 @@ export function parsePlanningHubUrlState(
     options?.timeZone ?? "Europe/Zurich",
   );
 
-  return {
+  const resourceCategory = isPlanningHubResourceTimelinePerspective(perspective)
+    ? resourceCategoryForPerspective(perspective)
+    : legacyRessource?.trim().toLowerCase() === "garderobe"
+      ? "dressing"
+      : "pitch";
+
+  return normalizePlanningHubUrlState({
     week: params.week?.trim() || undefined,
     plan: params.plan?.trim() || undefined,
     perspective,
@@ -81,9 +130,10 @@ export function parsePlanningHubUrlState(
     team: params.team?.trim() || null,
     facility: params.facility?.trim() || null,
     conflictsOnly: params.konflikte === "1",
-    resourceCategory: params.ressource === "garderobe" ? "dressing" : "pitch",
+    resourceCategory,
+    resourceFilterIds: parseResourceFilterIds(params.resFilter),
     calendarZeit,
-  };
+  });
 }
 
 /** Maps URL patch daypart to `zeit` slug (explicit selection). */
@@ -95,20 +145,23 @@ export function buildPlanningHubHref(
   state: PlanningHubUrlState,
   patch: Partial<PlanningHubUrlState> = {},
 ): string {
-  const merged: PlanningHubUrlState = { ...state, ...patch };
+  const merged = normalizePlanningHubUrlState({ ...state, ...patch });
   const query = new URLSearchParams();
 
   if (merged.week) query.set("week", merged.week);
   if (merged.plan) query.set("plan", merged.plan);
-  if (merged.perspective === "ressourcen") query.set("ansicht", "ressourcen");
+  if (merged.perspective === "spielfeld") query.set("ansicht", "spielfeld");
+  else if (merged.perspective === "garderobe") query.set("ansicht", "garderobe");
   else if (merged.perspective === "liste") query.set("ansicht", "liste");
-  if (merged.perspective === "ressourcen" && merged.day) query.set("day", merged.day);
+  if (isPlanningHubResourceTimelinePerspective(merged.perspective) && merged.day) {
+    query.set("day", merged.day);
+  }
   if (merged.activity !== "alle") query.set("typ", merged.activity);
   if (merged.team) query.set("team", merged.team);
   if (merged.facility) query.set("facility", merged.facility);
   if (merged.conflictsOnly) query.set("konflikte", "1");
-  if (merged.perspective === "ressourcen" && merged.resourceCategory === "dressing") {
-    query.set("ressource", "garderobe");
+  if (merged.resourceFilterIds?.length) {
+    query.set("resFilter", merged.resourceFilterIds.join(","));
   }
   if (
     merged.calendarZeit &&
@@ -122,7 +175,7 @@ export function buildPlanningHubHref(
   return qs ? `${BASE_PATH}?${qs}` : BASE_PATH;
 }
 
-/** Picks the Ressourcen day: URL `day` if in week, else today if in week, else Monday. */
+/** Picks the resource-timeline day: URL `day` if in week, else today if in week, else Monday. */
 export function resolvePlanningHubResourceDay(
   weekDayKeys: readonly string[],
   urlDay: string | undefined,

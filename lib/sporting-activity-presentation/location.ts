@@ -16,6 +16,24 @@ function meaningful(value: string | null | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+/**
+ * Strips common SFV/import venue tail artifacts (e.g. "Im Brüel, Allschwil, - 3")
+ * without rewriting canonical address parts. Full normalization belongs in FACILITY-MODEL-01.
+ */
+export function sanitizeImportedVenuePresentation(value: string): string {
+  return value
+    .trim()
+    .replace(/,\s*-\s*\d*\s*$/u, "")
+    .trim();
+}
+
+function meaningfulVenue(value: string | null | undefined): string | undefined {
+  const trimmed = meaningful(value);
+  if (!trimmed) return undefined;
+  const sanitized = sanitizeImportedVenuePresentation(trimmed);
+  return sanitized || undefined;
+}
+
 export type BuildSportingActivityLocationInput = {
   mode: SportingLocationMode;
   hostOrOrganiser?: string | null;
@@ -30,7 +48,7 @@ export function buildSportingActivityLocation(
   return {
     mode: input.mode,
     hostOrOrganiser: meaningful(input.hostOrOrganiser),
-    venueName: meaningful(input.venueName),
+    venueName: meaningfulVenue(input.venueName),
     address: meaningful(input.address),
     facilityResource: meaningful(input.facilityResource),
   };

@@ -30,6 +30,7 @@ describe("WeekPlannerChrome — planning family shell", () => {
           facility: null,
           conflictsOnly: false,
           resourceCategory: "pitch",
+          resourceFilterIds: null,
         }}
         todayParam="2026-08-12"
         teamOptions={[]}
@@ -43,7 +44,11 @@ describe("WeekPlannerChrome — planning family shell", () => {
     expect(screen.getByTestId("planning-week-navigation")).toBeInTheDocument();
     expect(screen.getByTestId("weekplanner-range-label")).toHaveTextContent("10.–16. Aug 2026");
     expect(screen.getByTestId("planning-hub-perspective-kalender")).toHaveAttribute("aria-current", "true");
+    expect(screen.getByTestId("planning-hub-perspective-spielfeld")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-perspective-garderobe")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-perspective-liste")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-filter-panel")).toBeInTheDocument();
-    expect(screen.getByText("Planung")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-view-options-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-visible-time-range")).not.toBeInTheDocument();
   });
 });

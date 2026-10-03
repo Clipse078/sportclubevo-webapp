@@ -5,7 +5,13 @@ import { listWeekplannerTimeOptions } from "@/lib/planning-hub/weekplanner-visib
 
 const TIME_OPTIONS = listWeekplannerTimeOptions();
 
-export default function PlanningHubVisibleTimeRangeControl() {
+type PlanningHubVisibleTimeRangeControlProps = {
+  embedded?: boolean;
+};
+
+export default function PlanningHubVisibleTimeRangeControl({
+  embedded = false,
+}: PlanningHubVisibleTimeRangeControlProps) {
   const {
     draft,
     setDraftStartMinutes,
@@ -16,7 +22,7 @@ export default function PlanningHubVisibleTimeRangeControl() {
 
   return (
     <div
-      className="mt-3 space-y-2 border-t border-[var(--border)]/60 pt-3"
+      className={embedded ? "space-y-2" : "mt-3 space-y-2 border-t border-[var(--border)]/60 pt-3"}
       data-testid="planning-hub-visible-time-range"
     >
       <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">

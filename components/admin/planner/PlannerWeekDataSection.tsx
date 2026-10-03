@@ -120,6 +120,7 @@ export default async function PlannerWeekDataSection({
         overrideEditing={overrideEditing}
         canonicalEditing={canonicalEditing}
         urlState={{ ...urlState, week: weekWindow.param }}
+        resourceTimelineCatalog={facilityGroupsByAllocationGroup ?? undefined}
         dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
       />
     </PlannerWeekContentReveal>

@@ -52,8 +52,9 @@ import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulatio
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
 import { useDesktopMinWidth768 } from "@/lib/planning-hub/use-desktop-min-width";
+import type { PlanningHubManipulationSurface } from "@/lib/planning-hub/planner-perspective";
 
-export type ManipulationSurface = "kalender" | "ressourcen";
+export type ManipulationSurface = PlanningHubManipulationSurface;
 
 type ResizeEdge = "start" | "end";
 
@@ -625,7 +626,7 @@ export function PlanningHubManipulationProvider({
       const bounds = resourceManipulationBounds(item, resourceId, urlState.resourceCategory);
       beginSession({
         mode: "move",
-        surface: "ressourcen",
+        surface: "resourceTimeline",
         item,
         segmentId,
         originalResourceId: resourceId,
@@ -658,7 +659,7 @@ export function PlanningHubManipulationProvider({
       beginSession({
         mode: "resize",
         resizeEdge: edge,
-        surface: "ressourcen",
+        surface: "resourceTimeline",
         item,
         segmentId,
         originalResourceId: resourceId,

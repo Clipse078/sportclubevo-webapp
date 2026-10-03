@@ -55,6 +55,8 @@ type PlanningHubActivityBlockProps = {
   nominalActivityBand?: { leftPercent: number; widthPercent: number };
   continuesFromBefore?: boolean;
   continuesAfter?: boolean;
+  /** Segment lane hint when multiple allocatable segments share one collapsed overview row. */
+  laneSegmentHint?: string;
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -99,6 +101,7 @@ export default function PlanningHubActivityBlock({
   nominalActivityBand,
   continuesFromBefore = false,
   continuesAfter = false,
+  laneSegmentHint,
 }: PlanningHubActivityBlockProps) {
   const suppressClickRef = useRef(false);
   const pendingPointerRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
@@ -262,6 +265,9 @@ export default function PlanningHubActivityBlock({
                 />
               ) : null}
               <span className="min-w-0 truncate">
+                {laneSegmentHint ? (
+                  <span className="font-normal text-[var(--muted)]">{laneSegmentHint} · </span>
+                ) : null}
                 {primary}
                 {!compact && typeLabel && (
                   <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>

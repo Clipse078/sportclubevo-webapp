@@ -26,6 +26,7 @@ export function buildTrainingSessionWochenplanerHref(input: {
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
     day: input.sessionDate,
   };
 
@@ -52,6 +53,7 @@ export function buildTrainingSeriesWochenplanerHref(input: {
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
   };
 
   return buildPlanningHubHref(state);
@@ -70,11 +72,12 @@ export function buildTrainingResourcesWochenplanerHref(input?: {
 
   return buildPlanningHubHref({
     week: weekWindow.param,
-    perspective: "ressourcen",
+    perspective: "spielfeld",
     activity: "trainings",
     team: null,
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    resourceFilterIds: null,
   });
 }

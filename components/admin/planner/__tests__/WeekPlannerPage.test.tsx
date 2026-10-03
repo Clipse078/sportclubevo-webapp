@@ -15,7 +15,10 @@
 
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactElement } from "react";
+import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import type { WeekplannerDay, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
@@ -194,6 +197,14 @@ const TOURNAMENT_ITEM = {
   conflicts: [],
 };
 
+function renderWeekPlannerPage(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.stubGlobal(
@@ -205,7 +216,7 @@ beforeEach(() => {
 describe("WeekPlannerPage — default Kalender workspace", () => {
   it("renders the week×time Kalender as the default view without legacy Standardplan banner", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
-    render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[PLAN]} activePlanId={null} canManagePlans />);
+    renderWeekPlannerPage(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[PLAN]} activePlanId={null} canManagePlans />);
 
     expect(screen.getByTestId("planning-hub-calendar")).toBeInTheDocument();
     expect(screen.queryByTestId("weekplanner-standardplan-safety-note")).not.toBeInTheDocument();
@@ -217,7 +228,7 @@ describe("WeekPlannerPage — alternative plan operational sheet", () => {
   it("opens the operational planning sheet when an activity is activated under an alternative plan", async () => {
     const user = userEvent.setup();
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
-    render(
+    renderWeekPlannerPage(
       <WeekPlannerPage
         week={week}
         todayParam="2026-08-10"
@@ -247,7 +258,7 @@ describe("WeekPlannerPage — override editing per activity type", () => {
       { dayKey: "2026-08-15", items: [MATCH_ITEM, TOURNAMENT_ITEM] },
     ]);
 
-    render(
+    renderWeekPlannerPage(
       <WeekPlannerPage
         week={week}
         todayParam="2026-08-10"
@@ -282,7 +293,7 @@ describe("WeekPlannerPage — WEEKPLANNER-01D effective time drives availability
       timeOverridden: true,
     };
     const week = makeWeek([{ dayKey: "2026-08-10", items: [overriddenTraining] }]);
-    render(
+    renderWeekPlannerPage(
       <WeekPlannerPage
         week={week}
         todayParam="2026-08-10"
@@ -322,7 +333,7 @@ describe("WeekPlannerPage — WEEKPLANNER-01D time override indicator", () => {
       pitchOverridden: true,
     };
     const week = makeWeek([{ dayKey: "2026-08-10", items: [overriddenTraining] }]);
-    render(
+    renderWeekPlannerPage(
       <WeekPlannerPage
         week={week}
         todayParam="2026-08-10"
@@ -340,7 +351,7 @@ describe("WeekPlannerPage — WEEKPLANNER-01D time override indicator", () => {
 
   it("shows no override indicator for an untouched (non-overridden) activity", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
-    render(
+    renderWeekPlannerPage(
       <WeekPlannerPage
         week={week}
         todayParam="2026-08-10"
@@ -359,14 +370,14 @@ describe("WeekPlannerPage — WEEKPLANNER-01D time override indicator", () => {
 describe("WeekPlannerPage — shared occupancy visibility", () => {
   it("renders a shared-occupancy badge on the affected item and a week-level conflict attention count", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM, TRAINING_ITEM_CONFLICT] }]);
-    render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
+    renderWeekPlannerPage(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
 
     expect(screen.getByTestId("planning-hub-conflict-attention")).toHaveTextContent(/Konflikt/);
   });
 
   it("shows compact no-conflict state when the week has zero conflicts", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
-    render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
+    renderWeekPlannerPage(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
 
     expect(screen.getByTestId("planning-hub-conflict-none")).toBeInTheDocument();
   });
