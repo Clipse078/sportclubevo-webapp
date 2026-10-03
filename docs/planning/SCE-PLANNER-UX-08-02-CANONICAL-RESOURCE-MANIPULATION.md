@@ -91,5 +91,6 @@ Whole/half pitch compatibility continues to use existing conflict detection; no 
 
 | Id | Package |
 |----|---------|
+| **SCE-ICONS-02** | Premium Navigation Icons — immediately after 08-02 merge; see [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](../roadmap/SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | Activity Rescheduling → Kalender |
 | **FACILITY-MODEL-01** | Site/pitch persistence and presentation follow-ups (optional Gesamt labelling already uses segment role where model provides it) |
