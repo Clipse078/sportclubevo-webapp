@@ -77,8 +77,8 @@ export function SportingActivityIdentity({
           <span className={cn(wrapPrimary ? "line-clamp-2 min-w-0 flex-1 basis-full sm:basis-auto" : "truncate")}>
             {primaryText}
           </span>
-          {showContextBesidePrimary ? (
-            <ActivityContextBadge>{contextIndicator}</ActivityContextBadge>
+          {showContextBesidePrimary && contextIndicator ? (
+            <ActivityContextBadge label={contextIndicator} />
           ) : null}
         </p>
       ) : null}
@@ -94,12 +94,12 @@ export function SportingActivityIdentity({
           >
             {typeLine.typeLabel}
           </span>
-          {contextIndicator ? <ActivityContextBadge>{contextIndicator}</ActivityContextBadge> : null}
+          {contextIndicator ? <ActivityContextBadge label={contextIndicator} /> : null}
         </p>
       ) : null}
-      {showContextOnlyRow ? (
+      {showContextOnlyRow && contextIndicator ? (
         <p className="mt-0.5">
-          <ActivityContextBadge>{contextIndicator}</ActivityContextBadge>
+          <ActivityContextBadge label={contextIndicator} />
         </p>
       ) : null}
       {showClubLocationLine && clubLocationLine ? (

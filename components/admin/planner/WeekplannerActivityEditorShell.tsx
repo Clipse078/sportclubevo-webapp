@@ -133,7 +133,7 @@ export function WeekplannerActivityIdentityCard({
           </span>
         )}
         {identity.contextLabel ? (
-          <ActivityContextBadge>{identity.contextLabel}</ActivityContextBadge>
+          <ActivityContextBadge label={identity.contextLabel} />
         ) : null}
       </div>
 

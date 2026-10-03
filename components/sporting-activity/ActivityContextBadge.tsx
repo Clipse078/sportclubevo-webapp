@@ -1,12 +1,12 @@
 import { cn } from "@/lib/cn";
 
 export type ActivityContextBadgeProps = {
-  children: string;
+  label: string;
   className?: string;
 };
 
 /** Neutral home/away/venue context — not an activity type color. */
-export function ActivityContextBadge({ children, className }: ActivityContextBadgeProps) {
+export function ActivityContextBadge({ label, className }: ActivityContextBadgeProps) {
   return (
     <span
       className={cn(
@@ -15,7 +15,7 @@ export function ActivityContextBadge({ children, className }: ActivityContextBad
       )}
       data-activity-context-badge
     >
-      {children}
+      {label}
     </span>
   );
 }
