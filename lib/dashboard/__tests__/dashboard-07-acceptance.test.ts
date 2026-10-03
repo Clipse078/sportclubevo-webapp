@@ -8,7 +8,7 @@ const read = (rel: string) => readFileSync(join(root, rel), "utf8");
 const clubDashboardSource = read("components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx");
 const clubDashboardShellSource = read("components/admin/dashboard/ClubDashboardView.tsx");
 const loaderSource = read("lib/dashboard/personal-command-center.ts");
-const pageSource = read("app/(admin)/dashboard/page.tsx");
+const pageSource = read("app/(admin)/dashboard/(personal-dashboard)/page.tsx");
 
 describe("DASHBOARD-07 — programme acceptance closure", () => {
   it("routes /dashboard through personal command center only", () => {
