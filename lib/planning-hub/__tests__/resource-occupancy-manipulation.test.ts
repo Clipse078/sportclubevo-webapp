@@ -58,6 +58,7 @@ describe("PLANNING-HUB-03B resource occupancy", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "kalender",
     });
     expect(caps.canMoveTime).toBe(false);
     expect(caps.canResize).toBe(false);
@@ -70,6 +71,7 @@ describe("PLANNING-HUB-03B resource occupancy", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "dressing",
+      manipulationSurface: "resourceTimeline",
     });
     expect(caps.canMoveResourceOccupancy).toBe(true);
     expect(caps.canChangeResourceOccupancyStart).toBe(true);

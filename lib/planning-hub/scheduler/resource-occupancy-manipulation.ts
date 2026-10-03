@@ -26,6 +26,40 @@ export function isValidDressingOccupancySpan(occupancyStart: Date, occupancyEnd:
   );
 }
 
+export const MIN_RESOURCE_OCCUPANCY_MINUTES = MIN_DRESSING_OCCUPANCY_MINUTES;
+
+export function isValidResourceOccupancySpan(occupancyStart: Date, occupancyEnd: Date): boolean {
+  return isValidDressingOccupancySpan(occupancyStart, occupancyEnd);
+}
+
+function patchResourceRefs(
+  refs: WeekplannerItem["pitchAllocations"],
+  beforeMinutes: number,
+  afterMinutes: number,
+): WeekplannerItem["pitchAllocations"] {
+  return refs.map((ref) => ({
+    ...ref,
+    occupancyBeforeMinutes: beforeMinutes,
+    occupancyAfterMinutes: afterMinutes,
+  }));
+}
+
+export function applyPitchOccupancyBuffersToItem(
+  item: WeekplannerItem,
+  beforeMinutes: number,
+  afterMinutes: number,
+): WeekplannerItem {
+  return {
+    ...item,
+    pitchAllocations: patchResourceRefs(item.pitchAllocations, beforeMinutes, afterMinutes),
+    canonicalPitchAllocations: patchResourceRefs(
+      item.canonicalPitchAllocations,
+      beforeMinutes,
+      afterMinutes,
+    ),
+  };
+}
+
 export function applyDressingOccupancyBuffersToItem(
   item: WeekplannerItem,
   beforeMinutes: number,

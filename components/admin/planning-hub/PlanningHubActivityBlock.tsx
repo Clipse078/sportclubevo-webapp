@@ -51,6 +51,7 @@ type PlanningHubActivityBlockProps = {
   resizeOrientation?: "horizontal" | "vertical";
   onPointerDownMove?: (clientX: number, clientY: number) => void;
   onPointerDownResize?: (edge: "start" | "end", clientX: number, clientY: number) => void;
+  onOpenManipulationEdit?: () => void;
   /** Subtle inner band for nominal activity within effective Garderobe occupancy. */
   nominalActivityBand?: { leftPercent: number; widthPercent: number };
   continuesFromBefore?: boolean;
@@ -98,6 +99,7 @@ export default function PlanningHubActivityBlock({
   resizeOrientation = "vertical",
   onPointerDownMove,
   onPointerDownResize,
+  onOpenManipulationEdit,
   nominalActivityBand,
   continuesFromBefore = false,
   continuesAfter = false,
@@ -290,6 +292,20 @@ export default function PlanningHubActivityBlock({
               <p className="truncate font-medium text-amber-800/90">{MATCH_END_TIME_ACTION_LABEL}</p>
             )}
           </div>
+          {onOpenManipulationEdit && !isGhost && (
+            <button
+              type="button"
+              className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
+              aria-label="Planung ändern"
+              data-testid="planning-hub-manipulation-edit-trigger"
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenManipulationEdit();
+              }}
+            >
+              Planung ändern
+            </button>
+          )}
           {(hasConflict || requiresEndTimeAction) && !isGhost && (
             <span
               title={hasConflict ? "Planungskonflikt" : MATCH_END_TIME_ACTION_LABEL}

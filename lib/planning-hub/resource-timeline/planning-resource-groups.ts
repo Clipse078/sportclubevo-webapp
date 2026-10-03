@@ -167,6 +167,23 @@ export type ResourceScopeSummaryInput = {
   perspectiveLabel: "Spielfelder" | "Garderoben";
 };
 
+/** Confirmation / manipulation copy — physical pitch + segment when subdivided. */
+export function formatManipulationResourceLabel(
+  resourceId: string,
+  groups: readonly PlanningResourceGroup[],
+  fallbackName: string,
+): string {
+  for (const group of groups) {
+    const seg = group.segments.find((s) => s.resourceId === resourceId);
+    if (!seg) continue;
+    if (group.segments.length > 1) {
+      return `${group.label} · ${seg.segmentLabel}`;
+    }
+    return group.label;
+  }
+  return fallbackName;
+}
+
 export function formatPlanningResourceScopeSummary(input: ResourceScopeSummaryInput): string {
   const { groups, activeIds, perspectiveLabel } = input;
   if (!activeIds?.length) {

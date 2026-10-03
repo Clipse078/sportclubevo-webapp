@@ -1,0 +1,48 @@
+# SCE-ICONS-02 — Premium Navigation Icons
+
+**Status:** Approved — **ASAP** (implement immediately after **SCE-PLANNER-UX-08-02** merge to STAGE, before **SCE-PLANNER-UX-08-03**)
+
+**Priority order:**
+
+1. **SCE-PLANNER-UX-08-02** — Canonical Resource Manipulation
+2. **SCE-ICONS-02** — Premium Navigation Icons *(this package)*
+3. **SCE-PLANNER-UX-08-03** — Activity Rescheduling
+
+---
+
+## Approved designs
+
+| Navigation concept | Variant | Design intent |
+|--------------------|---------|---------------|
+| **CLUB** | Variante 1 | Minimal premium outline shield |
+| **SPIELE** | Variante 4 | Minimal premium outlined circle containing **VS** |
+
+**Design intent:** minimal, premium, restrained, clean geometry, excellent recognition at navigation sizes, visually consistent with SportClubEvo, no decorative complexity.
+
+---
+
+## Implementation rules
+
+- Use reusable **vector/icon components** — do **not** use raster or generated image assets.
+- Preserve current navigation **labels**, **routes**, **permissions**, **active/inactive** behavior, and **hover/focus** behavior.
+- Integrate with existing icon **sizing/stroke** conventions.
+- Active state continues using canonical SCE **accent** treatment.
+- Ensure **16 / 20 / 24px** rendering remains crisp.
+
+---
+
+## Scope (minimum)
+
+Replace the canonical representations of **Club** and **Spiele** wherever these concepts appear in **navigation**.
+
+Before implementation, identify shared icon sources/components so navigation instances are not patched independently.
+
+---
+
+## Explicit boundaries
+
+- **Not** part of SCE-PLANNER-UX-08-02 (PR #798).
+- **Not** Kalender activity rescheduling (**08-03**).
+- **Not** PROD-only changes unless released via normal STAGE → PROD promotion.
+
+**Branch from:** `origin/STAGE` HEAD immediately after **08-02** merge.

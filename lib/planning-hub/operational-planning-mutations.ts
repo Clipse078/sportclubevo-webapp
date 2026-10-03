@@ -160,8 +160,18 @@ export async function applyAlternativePlanSchedulerDraft(
     nextIds.add(draft.proposedResourceId);
   }
 
-  let occupancyBeforeMinutes = item.dressingRoomResolvedBeforeMinutes;
-  let occupancyAfterMinutes = item.dressingRoomResolvedAfterMinutes;
+  let occupancyBeforeMinutes = 0;
+  let occupancyAfterMinutes = 0;
+  if (resourceCategory === "dressing") {
+    occupancyBeforeMinutes = item.dressingRoomResolvedBeforeMinutes;
+    occupancyAfterMinutes = item.dressingRoomResolvedAfterMinutes;
+  } else if (draft.originalResourceId) {
+    const pitchRef = item.pitchAllocations.find(
+      (r) => r.facilityResourceId === draft.originalResourceId,
+    );
+    occupancyBeforeMinutes = pitchRef?.occupancyBeforeMinutes ?? 0;
+    occupancyAfterMinutes = pitchRef?.occupancyAfterMinutes ?? 0;
+  }
   if (occupancyIntervalChanged) {
     const buffers = buffersFromOccupancyInterval(
       item.startAt,
@@ -173,13 +183,27 @@ export async function applyAlternativePlanSchedulerDraft(
     occupancyAfterMinutes = buffers.afterMinutes;
   }
 
-  const selectedAllocations = Array.from(nextIds).map((facilityResourceId) => ({
-    facilityResourceId,
-    occupancyBeforeMinutes:
-      allocationGroup === "DRESSING_ROOM" ? occupancyBeforeMinutes : 0,
-    occupancyAfterMinutes:
-      allocationGroup === "DRESSING_ROOM" ? occupancyAfterMinutes : 0,
-  }));
+  const currentRefs =
+    allocationGroup === "PITCH_HALL" ? item.pitchAllocations : item.dressingRoomAllocations;
+  const occupancyByResourceId = new Map(
+    currentRefs.map((r) => [
+      r.facilityResourceId,
+      { before: r.occupancyBeforeMinutes, after: r.occupancyAfterMinutes },
+    ]),
+  );
+
+  const selectedAllocations = Array.from(nextIds).map((facilityResourceId) => {
+    const preserved = occupancyByResourceId.get(facilityResourceId);
+    return {
+      facilityResourceId,
+      occupancyBeforeMinutes: occupancyIntervalChanged
+        ? occupancyBeforeMinutes
+        : (preserved?.before ?? 0),
+      occupancyAfterMinutes: occupancyIntervalChanged
+        ? occupancyAfterMinutes
+        : (preserved?.after ?? 0),
+    };
+  });
 
   const canonicalOccupancyUnchanged =
     !occupancyIntervalChanged &&

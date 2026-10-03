@@ -477,6 +477,7 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 |----|--------|
 | **08-01** | Unified workspace foundation — Kalender / Spielfeld / Garderobe / Liste, shared URL state, adaptive resource timeline, scale fixtures |
 | **08-02** | **Canonical Resource Manipulation** — generalize Garderobe-proven DnD/confirm flow to Spielfeld + Garderobe; resource time ≠ activity time; shared `PlanningResourceManipulation` target |
+| **SCE-ICONS-02** | **Premium Navigation Icons** — minimal vector Club + Spiele nav icons; ASAP after 08-02, before 08-03 — [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](./SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
 | **08-04** | Permission-aware drag/drop & rescheduling |
 | **08-05** | Conflict resolution & operational actions |

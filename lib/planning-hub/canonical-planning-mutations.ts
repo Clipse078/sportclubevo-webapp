@@ -228,13 +228,19 @@ export async function applyStandardPlanSchedulerDraft(
       await applyTrainingTime(item.trainingSessionId, draft.proposedStart, draft.proposedEnd, timeZone);
     }
     if (occupancyIntervalChanged(draft)) {
-      const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
-        item.startAt,
-        item.endAt,
-        draft.proposedStart,
-        draft.proposedEnd,
-      );
-      await applyTrainingDressingOccupancy(item.trainingSessionId, beforeMinutes, afterMinutes);
+      if (resourceCategory === "dressing") {
+        const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
+          item.startAt,
+          item.endAt,
+          draft.proposedStart,
+          draft.proposedEnd,
+        );
+        await applyTrainingDressingOccupancy(item.trainingSessionId, beforeMinutes, afterMinutes);
+      } else {
+        throw new Error(
+          "Reservierungszeit am Spielfeld im Standardplan über einen Alternativplan speichern.",
+        );
+      }
     }
     if (resourceChanged(draft) && draft.originalResourceId && draft.proposedResourceId) {
       await applyTrainingResourceSwap(item, draft.originalResourceId, draft.proposedResourceId, resourceCategory);
@@ -263,15 +269,29 @@ export async function applyStandardPlanSchedulerDraft(
       }
     }
     if (occupancyIntervalChanged(draft)) {
-      const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
-        item.startAt,
-        item.endAt,
-        draft.proposedStart,
-        draft.proposedEnd,
-      );
-      matchBody.dressingRoomOccupancyMode = "CUSTOM";
-      matchBody.dressingRoomBeforeMinutes = beforeMinutes;
-      matchBody.dressingRoomAfterMinutes = afterMinutes;
+      if (resourceCategory === "dressing") {
+        const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
+          item.startAt,
+          item.endAt,
+          draft.proposedStart,
+          draft.proposedEnd,
+        );
+        matchBody.dressingRoomOccupancyMode = "CUSTOM";
+        matchBody.dressingRoomBeforeMinutes = beforeMinutes;
+        matchBody.dressingRoomAfterMinutes = afterMinutes;
+      } else {
+        const { saveMatchOperationalEndOverride } = await import(
+          "@/lib/weekplanner/weekplanner-match-schedule"
+        );
+        if (draft.proposedEnd.getTime() !== draft.originalEnd.getTime()) {
+          await saveMatchOperationalEndOverride(item.eventId, draft.proposedEnd.toISOString());
+        }
+        if (draft.proposedStart.getTime() !== draft.originalStart.getTime()) {
+          throw new Error(
+            "Reservierungsbeginn am Spielfeld im Standardplan über einen Alternativplan speichern.",
+          );
+        }
+      }
     }
     if (Object.keys(matchBody).length > 0) {
       await applyMatchPatch(item.eventId, matchBody);

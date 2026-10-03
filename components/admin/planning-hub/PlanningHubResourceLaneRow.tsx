@@ -15,7 +15,7 @@ import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
 import { projectedItemForRender, usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
-import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
+import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resource-segment-display";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { ResourceTimelineLane } from "@/lib/planning-hub/resource-timeline/adaptive-lanes";
 
@@ -160,15 +160,13 @@ export default function PlanningHubResourceLaneRow({
             const resourceRef = dressingRefOnItem(segItem, resourceId) ?? segment.resource;
             const displayWindow = occupancyOverride
               ? occupancyOverride
-              : isDressingCategory
-                ? dressingSegmentDisplayWindow(activityStart, activityEnd, resourceRef)
-                : { startAt: activityStart, endAt: activityEnd };
+              : resourceSegmentDisplayWindow(activityStart, activityEnd, resourceRef);
             const startAt = displayWindow.startAt;
             const endAt = displayWindow.endAt;
 
             const segmentSpanMs = endAt.getTime() - startAt.getTime();
             let nominalBand: { leftPercent: number; widthPercent: number } | undefined;
-            if (isDressingCategory && segmentSpanMs > 0) {
+            if (segmentSpanMs > 0 && (isDressingCategory || urlState.resourceCategory === "pitch")) {
               const nominalStart = activityStart.getTime();
               const nominalEnd = activityEnd.getTime();
               const leftMs = Math.max(0, nominalStart - startAt.getTime());
@@ -242,6 +240,20 @@ export default function PlanningHubResourceLaneRow({
                           edge,
                           clientX,
                           clientY,
+                        )
+                    : undefined
+                }
+                onOpenManipulationEdit={
+                  interactive &&
+                  manipulation &&
+                  (caps?.canMoveResourceOccupancy ||
+                    caps?.canChangePrimaryResource ||
+                    caps?.canChangeDressingRoom)
+                    ? () =>
+                        manipulation.openManipulationEditor(
+                          segment.item,
+                          segment.segmentId,
+                          resourceId,
                         )
                     : undefined
                 }

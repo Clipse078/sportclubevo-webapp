@@ -245,6 +245,7 @@ describe("manipulation capabilities — Standardplan vs alternative", () => {
     canManageEvents: true,
     alternativePlanId: null,
     resourceCategory: "dressing" as const,
+    manipulationSurface: "resourceTimeline" as const,
   };
   const altCtx = { ...stdCtx, isStandardplan: false, alternativePlanId: "plan-1" };
 
@@ -277,16 +278,18 @@ describe("manipulation capabilities — Standardplan vs alternative", () => {
     const caps = getSchedulerManipulationCapabilities(MATCH, {
       ...altCtx,
       resourceCategory: "pitch",
+      manipulationSurface: "kalender",
     });
     expect(caps.canMoveTime).toBe(true);
     expect(caps.canResize).toBe(true);
-    expect(caps.canChangePrimaryResource).toBe(true);
+    expect(caps.canChangePrimaryResource).toBe(false);
   });
 
   it("pitch allocation capability follows resource category", () => {
     const pitchCtx = { ...stdCtx, resourceCategory: "pitch" as const };
     expect(getSchedulerManipulationCapabilities(MATCH, pitchCtx).canChangePrimaryResource).toBe(true);
     expect(getSchedulerManipulationCapabilities(MATCH, pitchCtx).canChangeDressingRoom).toBe(false);
+    expect(getSchedulerManipulationCapabilities(MATCH, pitchCtx).canMoveResourceOccupancy).toBe(true);
   });
 });
 

@@ -114,7 +114,8 @@ Distinguish SCE-owned, imported, synchronized, and read-only authoritative activ
 | Package | Focus |
 |---------|--------|
 | **08-01** | Unified Planning Foundation — Kalender / Spielfeld / Garderobe / Liste, URL state, adaptive timelines, pitch hierarchy & disclosure, Garderobe manipulation, conflicts, a11y/responsive foundation (**PR #797**, this branch) |
-| **08-02** | **Canonical Resource Manipulation** — generalize Garderobe-proven model to Spielfeld + Garderobe; `PlanningResourceManipulation` target (PITCH, DRESSING_ROOM, HALL, ROOM, OTHER_RESOURCE); horizontal = reservation time, vertical = facility resource, resize = start/end; activity time unchanged unless explicit future workflow |
+| **08-02** | **Canonical Resource Manipulation** — see [`SCE-PLANNER-UX-08-02-CANONICAL-RESOURCE-MANIPULATION.md`](./SCE-PLANNER-UX-08-02-CANONICAL-RESOURCE-MANIPULATION.md) |
+| **SCE-ICONS-02** | **Premium Navigation Icons** — Club (shield v1) + Spiele (VS circle v4); ASAP after 08-02, before 08-03 — see [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](../roadmap/SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | **Activity Rescheduling** — primarily Kalender; activity date/time/duration semantics; impact-aware confirmation (allocations, teams, trainers, authority, comms, Infoboard, Dashboard, SFV sync); not silent dependent propagation |
 | **08-04** | Permission-aware drag/drop & rescheduling |
 | **08-05** | Conflict resolution & operational actions |

@@ -1,5 +1,5 @@
-import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
+import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resource-segment-display";
 
 /** Effective Garderobe timeline bounds for resource rows (not nominal activity). */
 export function dressingSegmentDisplayWindow(
@@ -7,11 +7,5 @@ export function dressingSegmentDisplayWindow(
   activityEnd: Date,
   resource: WeekplannerResourceRef,
 ): { startAt: Date; endAt: Date } {
-  const window = computeResourceOccupancyWindow(
-    activityStart,
-    activityEnd,
-    resource.occupancyBeforeMinutes,
-    resource.occupancyAfterMinutes,
-  );
-  return { startAt: window.effectiveStartAt, endAt: window.effectiveEndAt };
+  return resourceSegmentDisplayWindow(activityStart, activityEnd, resource);
 }

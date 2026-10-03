@@ -196,6 +196,7 @@ describe("PLANNING-HUB-03C calendar manipulation", () => {
       canManageEvents: false,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "kalender",
     });
     expect(hasAnyManipulationCapability(caps)).toBe(false);
   });
@@ -208,6 +209,7 @@ describe("PLANNING-HUB-03C calendar manipulation", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "pitch",
+      manipulationSurface: "kalender",
     });
     expect(caps.canMoveTime).toBe(false);
     expect(caps.canResize).toBe(false);
@@ -240,6 +242,7 @@ describe("PLANNING-HUB-03C calendar manipulation", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "dressing",
+      manipulationSurface: "resourceTimeline",
     });
     expect(caps.canMoveTime).toBe(false);
     expect(caps.canMoveResourceOccupancy).toBe(true);
