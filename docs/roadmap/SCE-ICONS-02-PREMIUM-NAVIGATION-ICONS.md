@@ -1,6 +1,10 @@
 # SCE-ICONS-02 — Premium Navigation Icons
 
-**Status:** Approved — **ASAP** (implement immediately after **SCE-PLANNER-UX-08-02** merge to STAGE, before **SCE-PLANNER-UX-08-03**)
+**Status:** Implemented on STAGE branch — **awaiting Human UAT** (not CLOSED)
+
+**Implementation:** `cursor/sce-icons-02-premium-navigation-icons` — Club master (`club.svg` / `ClubApprovedMasterGlyph`) Variante 1 minimal outline shield; Spiele master (`match.svg` / `MatchApprovedMasterGlyph`) Variante 4 circle + path VS; canonical nav via `TARGET_L1_SCE_ICONS.club`, `NAV_DESTINATION_SCE_ICON_BY_KEY.matchcenter`.
+
+**Status (previous):** Approved — **ASAP** (implement immediately after **SCE-PLANNER-UX-08-02** merge to STAGE, before **SCE-PLANNER-UX-08-03**)
 
 **Priority order:**
 

@@ -50,7 +50,7 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
     expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
   });
 
-  it("proves V1_GEOMETRY_EQUIVALENT = 89/90 with one documented optical exception", () => {
+  it("proves V1_GEOMETRY_EQUIVALENT = 87/90 with documented optical exceptions (SCE-ICONS-02 + settings)", () => {
     const mismatches: string[] = [];
     const approvedExceptions: string[] = [];
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
@@ -66,16 +66,16 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
       mismatches.push(name);
     }
     expect(mismatches).toEqual([]);
-    expect(approvedExceptions).toEqual(["settings"]);
+    expect(approvedExceptions.sort()).toEqual(["club", "match", "settings"]);
     expect(SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS.settings).toBe(
       "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION",
     );
   });
 
-  it("keeps 89/90 SVG masters byte-identical to the pre-03R1 artwork baseline", () => {
+  it("keeps 87/90 SVG masters byte-identical to the pre-03R1 artwork baseline", () => {
     const changed: string[] = [];
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
-      if (name === "settings") continue;
+      if (name === "settings" || name === "club" || name === "match") continue;
       const baseline = execFileSync(
         "git",
         ["show", `${V2_ARTWORK_BASELINE_SHA}:public/images/icons/${name}.svg`],
@@ -98,14 +98,13 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
     expect(trainingV2).toContain('d="M8 12v42h18"');
     expect(trainingV2).not.toContain("<rect");
 
-    const matchV1 = readV1MasterSvg("match");
-    expect(matchV1).toContain('d="M18 13A23 23');
-    expect(
-      masterSvgGeometryEquivalent(
-        matchV1,
-        readFileSync(join(process.cwd(), SCE_APPROVED_MASTER_ASSETS.match), "utf8"),
-      ),
-    ).toBe(true);
+    const matchCurrent = readFileSync(
+      join(process.cwd(), SCE_APPROVED_MASTER_ASSETS.match),
+      "utf8",
+    );
+    expect(matchCurrent).toMatch(/<circle cx="32" cy="32" r="21"/);
+    expect(matchCurrent).not.toMatch(/M18 13A23 23/);
+    expect(matchCurrent).toMatch(/fill="currentColor"/);
 
     for (const name of ["tournament", "dashboard", "week-planner", "team"] as const) {
       expect(

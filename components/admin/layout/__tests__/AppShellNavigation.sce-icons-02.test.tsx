@@ -13,6 +13,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/planner/week",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ prefetch: vi.fn(), push: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -68,6 +69,11 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
     const eventsLink = screen.getByRole("link", { name: /Veranstaltungen/i });
     expect(eventsLink).toHaveAttribute("data-sce-nav-icon", "events");
     expect(eventsLink.querySelector('[data-sce-nav-destination-icon="events"]')).toBeTruthy();
+
+    const spieleLink = screen.getByRole("link", { name: /Spiele/i });
+    expect(spieleLink).toHaveAttribute("data-sce-nav-icon", "match");
+    expect(spieleLink.querySelector('[data-sce-nav-destination-icon="match"]')).toBeTruthy();
+    expect(spieleLink.querySelector("circle")).toBeTruthy();
   });
 
   it("shows SCE module icons in explorer module pane and search results", async () => {

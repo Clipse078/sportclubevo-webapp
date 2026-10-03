@@ -157,19 +157,19 @@ describe("SCE approved master library", () => {
     }
   });
 
-  it("uses Open VS match master without football-specific markup (V2 monochrome)", () => {
+  it("uses SCE-ICONS-02 circle + VS match master without football-specific markup", () => {
     const matchSrc = readFileSync(
       join(process.cwd(), SCE_APPROVED_MASTER_ASSETS.match),
       "utf8",
     );
     expect(matchSrc).not.toMatch(/<text[\s>]/i);
     expect(matchSrc).not.toMatch(/font-family/i);
-    expect(matchSrc).not.toMatch(/M25 24l7-5 7 5/);
-    expect(matchSrc).toMatch(/M18 13A23 23/);
+    expect(matchSrc).not.toMatch(/M18 13A23 23/);
+    expect(matchSrc).toMatch(/<circle cx="32" cy="32" r="21"/);
     expect(matchSrc).toMatch(/stroke="currentColor"/);
     expect(SCE_ICON_REGISTRY.match.name).toBe("match");
     const { container } = render(<SceIcon name="match" size={24} />);
-    expect(container.innerHTML).toContain("M18 13A23 23");
+    expect(container.innerHTML).toContain('cx="32" cy="32" r="21"');
     expect(container.innerHTML).not.toMatch(/<text[\s>]/i);
   });
 
