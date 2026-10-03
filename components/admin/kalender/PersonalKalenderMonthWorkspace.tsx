@@ -9,14 +9,14 @@ import { useTranslations } from "next-intl";
 import { PopoverContent } from "@/components/ui/Popover";
 import PersonalCalendarEventBlock from "./PersonalCalendarEventBlock";
 import PersonalKalenderMobileDayAgenda from "./PersonalKalenderMobileDayAgenda";
-import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
-import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { buildMonthGridCells } from "@/lib/calendar/month-grid";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
 import { formatMonthLabel, parseMonthParam } from "@/lib/matchcenter/month-range";
 import { parseMonthParamToGridDate } from "@/lib/calendar/month-grid";
 import { sortNormalizedCalendarItems } from "@/lib/personal-agenda/calendar-item-sort";
-import { resolvePersonalCalendarCompactDayMarkers } from "@/lib/personal-agenda/personal-calendar-compact-day-markers";
+import { resolvePersonalCalendarCompactDayMarkerSlots } from "@/lib/personal-agenda/personal-calendar-compact-day-markers";
+import { CalendarActivityMarkers } from "@/components/ui/calendar/CalendarActivityMarkers";
+import { mapCalendarSemanticTypeToProgrammeSource } from "@/lib/personal-agenda/map-calendar-semantic-to-programme-source";
 import { resolvePersonalCalendarSelectedDayKey } from "@/lib/personal-agenda/resolve-personal-calendar-selected-day-key";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 import { cn } from "@/lib/cn";
@@ -75,18 +75,6 @@ function NavControl({
     >
       {children}
     </Link>
-  );
-}
-
-function CompactSemanticMarker({ item }: { item: NormalizedCalendarItem }) {
-  if (item.semanticType === "TASK" || item.iconKey === "tasks") {
-    return <ProductDomainSceIcon name="tasks" size={12} className="h-3 w-3 shrink-0 text-[var(--text-2)]" />;
-  }
-  if (item.iconKey === "event") {
-    return <ProductDomainSceIcon name="event" size={12} className="h-3 w-3 shrink-0 text-[var(--text-2)]" />;
-  }
-  return (
-    <ActivitySceIcon activityKind={item.semanticType} size={12} className="h-3 w-3 shrink-0 text-[var(--text-2)]" />
   );
 }
 
@@ -158,8 +146,17 @@ function CompactDayCell({
 }) {
   const t = useTranslations("PersonalDashboard.calendar");
   const sorted = useMemo(() => sortNormalizedCalendarItems(items), [items]);
-  const markers = useMemo(() => resolvePersonalCalendarCompactDayMarkers(sorted), [sorted]);
-  const overflowCount = Math.max(0, sorted.length - markers.length);
+  const { markerSlots: rawSlots, overflowCount } = useMemo(
+    () => resolvePersonalCalendarCompactDayMarkerSlots(sorted),
+    [sorted],
+  );
+  const markerSlots = useMemo(
+    () =>
+      rawSlots
+        .map((type) => mapCalendarSemanticTypeToProgrammeSource(type))
+        .filter((type): type is NonNullable<typeof type> => type != null),
+    [rawSlots],
+  );
 
   const activitySummary =
     sorted.length === 0
@@ -214,20 +211,7 @@ function CompactDayCell({
           aria-hidden
           data-testid={`personal-calendar-compact-markers-${dayKey}`}
         >
-          {markers.map((semanticType) => {
-            const sample = sorted.find((item) => item.semanticType === semanticType);
-            if (!sample) return null;
-            return (
-              <span key={semanticType} data-calendar-semantic={semanticType}>
-                <CompactSemanticMarker item={sample} />
-              </span>
-            );
-          })}
-          {overflowCount > 0 ? (
-            <span className="text-[0.5625rem] font-semibold tabular-nums text-[var(--text-2)]">
-              +{overflowCount}
-            </span>
-          ) : null}
+          <CalendarActivityMarkers markerSlots={markerSlots} overflowCount={overflowCount} />
         </div>
       ) : null}
     </button>

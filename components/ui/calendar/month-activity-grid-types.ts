@@ -13,10 +13,12 @@ export type MonthActivityGridDay = {
   /** Compact in-cell preview (authorized programme only). */
   activityPreviewLabel?: string;
   primarySourceType?: PersonalProgrammeSourceType;
-  /** Distinct programme source markers (personal calendar, max 3). */
+  /** Semantic marker slots (personal calendar, max 3; may repeat types). */
   activityMarkerSourceTypes?: readonly PersonalProgrammeSourceType[];
   /** +N overflow beyond visible marker slots (authorized count preserved in aria). */
   activityMarkerOverflow?: number;
+  /** Optional tooltip / supplemental label for marker row. */
+  activityMarkerTooltip?: string;
 };
 
 export type MonthActivityGridNavigation = {
