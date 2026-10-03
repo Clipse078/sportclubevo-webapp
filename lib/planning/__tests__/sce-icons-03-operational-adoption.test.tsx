@@ -308,19 +308,15 @@ describe("SCE-ICONS-03 PersonalProgrammeFeed", () => {
 });
 
 describe("SCE-ICONS-03 dashboard calendar markers", () => {
-  it("resolves single-day preview through canonical activity mapping", () => {
+  it("uses semantic palette dots for single-day markers (SCE-CALENDAR-UX-02)", () => {
     const { container } = render(
-      <PersonalProgrammeActivityIndicator
-        count={1}
-        previewLabel="Training"
-        primarySourceType="TRAINING"
-      />,
+      <PersonalProgrammeActivityIndicator count={1} primarySourceType="TRAINING" />,
     );
-    expectApprovedActivityIcon(container, "TRAINING", "training");
-    expect(screen.getByText("Training")).toBeInTheDocument();
+    expect(container.querySelector('[data-programme-palette="training-blue"]')).toBeTruthy();
+    expect(screen.queryByText("Training")).toBeNull();
   });
 
-  it("uses SCE icons for multi-activity marker slots where mapped", () => {
+  it("uses canonical palette keys for multi-activity marker slots", () => {
     const { container } = render(
       <PersonalProgrammeActivityIndicator
         count={3}
@@ -328,9 +324,9 @@ describe("SCE-ICONS-03 dashboard calendar markers", () => {
         overflowCount={0}
       />,
     );
-    expect(container.querySelector('[data-sce-activity-icon="training"]')).toBeTruthy();
-    expect(container.querySelector('[data-sce-activity-icon="match"]')).toBeTruthy();
-    expect(container.querySelector('[data-sce-activity-icon="tournament"]')).toBeTruthy();
+    expect(container.querySelector('[data-programme-palette="training-blue"]')).toBeTruthy();
+    expect(container.querySelector('[data-programme-palette="match-red"]')).toBeTruthy();
+    expect(container.querySelector('[data-programme-palette="tournament-orange"]')).toBeTruthy();
   });
 });
 
@@ -417,7 +413,6 @@ describe("SCE-ICONS-03 TournamentCenter records", () => {
 describe("SCE-ICONS-03 fidelity on adopted surfaces", () => {
   it("routes calendar/planner/training surfaces through ActivitySceIcon instead of Lucide substitutes", () => {
     const iconPaths = [
-      "components/ui/calendar/PersonalProgrammeActivityIndicator.tsx",
       "components/admin/planning-hub/PlanningHubActivityBlock.tsx",
       "components/admin/training/TrainingSessionManagementRow.tsx",
     ];

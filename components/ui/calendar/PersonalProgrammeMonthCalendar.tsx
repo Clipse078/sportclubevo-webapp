@@ -14,6 +14,7 @@ import {
 import { groupPersonalProgrammeItemsByDay } from "@/lib/personal-agenda/programme-day-key";
 import { sortPersonalProgrammeItems } from "@/lib/personal-agenda/programme-sort";
 import { buildPersonalProgrammeDayActivityMarkers } from "@/lib/personal-agenda/programme-source-presentation";
+import { buildPersonalCalendarDayActivityAriaPart } from "@/lib/personal-agenda/personal-calendar-day-activity-aria";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import { cn } from "@/lib/cn";
 import MonthActivityGrid from "./MonthActivityGrid";
@@ -38,6 +39,7 @@ export type PersonalProgrammeMonthCalendarProps = {
   /** Optional override for dot/aria counts (e.g. tasks on full Kalender page). Programme list still uses `items`. */
   activityCountByDay?: ReadonlyMap<string, number>;
   density?: "default" | "cockpit";
+  showLegend?: boolean;
 };
 
 function defaultTodayKey(timeZone: string, now = new Date()): string {
@@ -58,8 +60,22 @@ export default function PersonalProgrammeMonthCalendar({
   timeLabelById = {},
   activityCountByDay,
   density = "default",
+  showLegend = true,
 }: PersonalProgrammeMonthCalendarProps) {
   const t = useTranslations("PersonalDashboard.calendar");
+
+  const ariaSummaryLabels = useMemo(
+    () => ({
+      training: (count: number) => t("dayAriaTrainingCount", { count }),
+      match: (count: number) => t("dayAriaMatchCount", { count }),
+      tournament: (count: number) => t("dayAriaTournamentCount", { count }),
+      event: (count: number) => t("dayAriaEventCount", { count }),
+      meeting: (count: number) => t("dayAriaMeetingCount", { count }),
+      oneNamed: (title: string) => t("dayAriaOneActivityNamed", { title }),
+      totalCount: (count: number) => t("dayAriaActivitiesCount", { count }),
+    }),
+    [t],
+  );
   const monthStart = parseMonthParamToGridDate(monthParam);
   const yearMonth =
     parseMonthParam(monthParam) ?? {
@@ -114,9 +130,11 @@ export default function PersonalProgrammeMonthCalendar({
       const activityPart =
         activityCount === 0
           ? ""
-          : activityCount === 1 && primaryItem
-            ? t("dayAriaOneActivityNamed", { title: primaryItem.title })
-            : t("dayAriaActivitiesCount", { count: activityCount });
+          : buildPersonalCalendarDayActivityAriaPart(
+              dayItems.map((item) => item.sourceType),
+              ariaSummaryLabels,
+              activityCount === 1 && primaryItem ? { singleTitle: primaryItem.title } : undefined,
+            );
 
       const accessibleLabel = [
         format(dateRef, "d. MMMM yyyy", { locale: de }),
@@ -127,17 +145,18 @@ export default function PersonalProgrammeMonthCalendar({
         .filter(Boolean)
         .join(", ");
 
-      const activityPreviewLabel =
-        activityCount === 1 && primaryItem
-          ? primaryItem.typeLabel
-          : activityCount > 1
-            ? t("activityMultipleShort", { count: activityCount })
-            : undefined;
-
       const { markerSourceTypes, overflowCount } = buildPersonalProgrammeDayActivityMarkers(
         dayItems,
         activityCount,
       );
+
+      const markerTooltip =
+        activityCount > 0
+          ? buildPersonalCalendarDayActivityAriaPart(
+              dayItems.map((item) => item.sourceType),
+              ariaSummaryLabels,
+            )
+          : undefined;
 
       return {
         dayKey,
@@ -147,10 +166,10 @@ export default function PersonalProgrammeMonthCalendar({
         activityCount,
         isSelected,
         accessibleLabel,
-        activityPreviewLabel,
         primarySourceType: primaryItem?.sourceType,
         activityMarkerSourceTypes: markerSourceTypes,
         activityMarkerOverflow: overflowCount > 0 ? overflowCount : undefined,
+        activityMarkerTooltip: markerTooltip,
       };
     });
   }, [
@@ -160,8 +179,13 @@ export default function PersonalProgrammeMonthCalendar({
     selectedDayKey,
     t,
     timeZone,
+    ariaSummaryLabels,
     todayKey,
   ]);
+
+  const monthHasPersonalActivities = useMemo(() => {
+    return gridDays.some((day) => day.inMonth && day.activityCount > 0);
+  }, [gridDays]);
 
   const selectedItems = useMemo(() => {
     const dayItems = itemsByDay.get(selectedDayKey) ?? [];
@@ -194,7 +218,17 @@ export default function PersonalProgrammeMonthCalendar({
         selectable
         onSelectDay={handleSelectDay}
         cellVariant="personal"
+        showLegend={showLegend}
       />
+
+      {!monthHasPersonalActivities ? (
+        <p
+          className={cn("text-[var(--text-2)]", isCockpit ? "text-xs" : "text-sm")}
+          data-testid="personal-programme-empty-month"
+        >
+          {t("emptyMonth")}
+        </p>
+      ) : null}
 
       {showSelectedDayPanel ? (
         <section
@@ -212,7 +246,7 @@ export default function PersonalProgrammeMonthCalendar({
           </h3>
           {selectedItems.length === 0 ? (
             <p className={cn("text-[var(--text-2)]", isCockpit ? "text-xs" : "text-sm")}>
-              {t("emptyDay")}
+              {t("emptyDayPersonal")}
             </p>
           ) : (
             <ul className="divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] pl-2">

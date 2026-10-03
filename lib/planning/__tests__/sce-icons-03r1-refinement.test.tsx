@@ -248,19 +248,13 @@ describe("SCE-ICONS-03R1 dashboard programme rows (01C01D meta rail)", () => {
 });
 
 describe("SCE-ICONS-03R1 dashboard calendar markers", () => {
-  it("does not add programme agenda dot markers to calendar chips", () => {
+  it("uses calm semantic dots instead of agenda chip markers (SCE-CALENDAR-UX-02)", () => {
     const { container } = render(
-      <PersonalProgrammeActivityIndicator
-        count={1}
-        previewLabel="Training"
-        primarySourceType="TRAINING"
-      />,
+      <PersonalProgrammeActivityIndicator count={1} primarySourceType="TRAINING" />,
     );
-    expect(container.querySelector('[data-sce-activity-icon="training"]')).toBeTruthy();
-    expect(container.querySelector(".h-2.w-2.rounded-full")).toBeNull();
-    expect(readRelative("components/ui/calendar/PersonalProgrammeActivityIndicator.tsx")).not.toContain(
-      "h-2 w-2",
-    );
+    expect(container.querySelector('[data-programme-palette="training-blue"]')).toBeTruthy();
+    expect(container.querySelector('[data-sce-activity-icon="training"]')).toBeNull();
+    expect(readRelative("components/ui/calendar/CalendarActivityMarkers.tsx")).toContain("rounded-full");
   });
 });
 

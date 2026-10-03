@@ -42,14 +42,13 @@ describe("MonthActivityGrid — shared infrastructure", () => {
     expect(container.innerHTML).toContain("bg-sky-400");
   });
 
-  it("personal variant exposes semantic tournament chip for Sep 27 Turnier", () => {
+  it("personal variant uses semantic dot markers without type pill text", () => {
     render(
       <MonthActivityGrid
         monthLabel="September 2026"
         weekdayLabels={["Mo"]}
         days={[
           baseDay({
-            activityPreviewLabel: "Turnier",
             primarySourceType: "TOURNAMENT",
             activityMarkerSourceTypes: ["TOURNAMENT"],
           }),
@@ -64,9 +63,8 @@ describe("MonthActivityGrid — shared infrastructure", () => {
       />,
     );
 
-    const chip = screen.getByText("Turnier");
-    expect(chip.getAttribute("data-programme-palette")).toBe("tournament-orange");
-    expect(chip.getAttribute("data-programme-source")).toBe("TOURNAMENT");
+    expect(screen.queryByText("Turnier")).toBeNull();
+    expect(document.querySelector('[data-programme-palette="tournament-orange"]')).toBeTruthy();
   });
 
   it("selected personal day retains semantic marker attributes", () => {
@@ -77,7 +75,6 @@ describe("MonthActivityGrid — shared infrastructure", () => {
         days={[
           baseDay({
             isSelected: true,
-            activityPreviewLabel: "Turnier",
             primarySourceType: "TOURNAMENT",
             activityMarkerSourceTypes: ["TOURNAMENT"],
           }),
@@ -92,8 +89,6 @@ describe("MonthActivityGrid — shared infrastructure", () => {
       />,
     );
 
-    const chip = screen.getByText("Turnier");
-    expect(chip.getAttribute("data-programme-palette")).toBe("tournament-orange");
-    expect(screen.getByRole("button", { pressed: true })).toBeTruthy();
+    expect(document.querySelector('[data-programme-palette="tournament-orange"]')).toBeTruthy();
   });
 });

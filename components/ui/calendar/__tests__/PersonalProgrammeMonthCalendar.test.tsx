@@ -9,17 +9,33 @@ import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-progr
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: { count?: number; title?: string }) => {
-    if (key === "dayAriaActivities" && values?.count != null) {
-      return `${values.count} activities`;
+    const count = values?.count;
+    if (key === "dayAriaTrainingCount" && count != null) {
+      return count === 1 ? "1 training" : `${count} trainings`;
     }
-    if (key === "dayAriaActivitiesCount" && values?.count != null) {
-      return `${values.count} appointments`;
+    if (key === "dayAriaMatchCount" && count != null) {
+      return count === 1 ? "1 match" : `${count} matches`;
+    }
+    if (key === "dayAriaTournamentCount" && count != null) {
+      return count === 1 ? "1 tournament" : `${count} tournaments`;
+    }
+    if (key === "dayAriaEventCount" && count != null) {
+      return count === 1 ? "1 event" : `${count} events`;
+    }
+    if (key === "dayAriaMeetingCount" && count != null) {
+      return `${count} meetings`;
+    }
+    if (key === "dayAriaActivities" && count != null) {
+      return `${count} activities`;
+    }
+    if (key === "dayAriaActivitiesCount" && count != null) {
+      return `${count} appointments`;
     }
     if (key === "dayAriaOneActivityNamed" && values?.title) {
       return `1 appointment: ${values.title}`;
     }
-    if (key === "activityMultipleShort" && values?.count != null) {
-      return `${values.count} appts`;
+    if (key === "activityMultipleShort" && count != null) {
+      return `${count} appts`;
     }
     const map: Record<string, string> = {
       title: "My calendar",
@@ -30,6 +46,13 @@ vi.mock("next-intl", () => ({
       ariaMonthGrid: "Calendar grid",
       selectedDayPanel: "Selected day",
       emptyDay: "No events on this day.",
+      emptyDayPersonal: "No appointments for you on this day.",
+      emptyMonth: "No appointments this month.",
+      legendAria: "Legend",
+      legendTraining: "Training",
+      legendMatch: "Match",
+      legendTournament: "Tournament",
+      legendEvent: "Event",
       dayAriaOneActivity: "1 activity",
       dayAriaOneActivityNamed: "1 appointment: {title}",
       dayAriaActivitiesCount: "{count} appointments",
@@ -90,7 +113,7 @@ describe("PersonalProgrammeMonthCalendar", () => {
 
     const day = screen.getByTestId("personal-calendar-day-2026-09-27");
     expect(day.getAttribute("aria-label")).toContain("Blitzturnier");
-    expect(day.textContent).toContain("Turnier");
+    expect(day.textContent).not.toContain("Turnier");
     const chip = day.querySelector("[data-programme-palette]");
     expect(chip?.getAttribute("data-programme-palette")).toBe("tournament-orange");
     expect(chip?.getAttribute("data-programme-source")).toBe("TOURNAMENT");
@@ -141,7 +164,7 @@ describe("PersonalProgrammeMonthCalendar", () => {
     const day = screen.getByTestId("personal-calendar-day-2026-09-12");
     expect(day.querySelectorAll("[data-programme-palette]").length).toBe(3);
     expect(day.textContent).toContain("+1");
-    expect(day.getAttribute("aria-label")).toMatch(/4 appointments|4 activities/);
+    expect(day.getAttribute("aria-label")).toContain("1 event");
   });
 
   it("maps training activity to blue semantic palette", () => {
@@ -196,7 +219,7 @@ describe("PersonalProgrammeMonthCalendar", () => {
     );
 
     const dayButton = screen.getByTestId("personal-calendar-day-2026-09-23");
-    expect(dayButton.getAttribute("aria-label")).toMatch(/2 appointments|2 activities/);
+    expect(dayButton.getAttribute("aria-label")).toContain("2 trainings");
   });
 
   it("shows empty selected day copy when no items", () => {
@@ -211,7 +234,7 @@ describe("PersonalProgrammeMonthCalendar", () => {
       />,
     );
 
-    expect(screen.getByText("No events on this day.")).toBeTruthy();
+    expect(screen.getByText("No appointments for you on this day.")).toBeTruthy();
   });
 
   it("does not render unauthorized programme rows that were never passed in", () => {

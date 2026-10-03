@@ -411,7 +411,7 @@ Not in SCE-ACTIVITY-UX-01 scope.
 
 ### SCE-ACTIVITY-COLOR-01
 
-**Status:** **OPEN (narrowed)** — Wochenplaner + 01C01D touched surfaces canonicalized. Remaining: calendar month-cell marker palette vs dashboard pill semantics, any straggler Infoboard-adjacent mappings not yet on `activity-type-pill.ts`.
+**Status:** **OPEN (narrowed)** — Wochenplaner + 01C01D + **SCE-CALENDAR-UX-02 month markers** canonicalized (MATCH → match-red). Remaining: any straggler Infoboard-adjacent mappings not yet on `activity-type-pill.ts`.
 
 Audit and migrate historical color inconsistency across consumers to shared design-system tokens:
 
@@ -423,9 +423,38 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ## SCE-CALENDAR-UX-02 — Personal Calendar World-Class Upgrade
 
-**Status:** **OPEN** — next package after 01C01D closure; **not** implemented in PR #795.
+**Status:** **CLOSED**
+
+**Human UAT:** **PASSED** — 03.10.2026 (Product Owner)
+
+**Accepted contract:**
+
+- Personal calendar month presentation accepted
+- Semantic activity markers accepted
+- Selected-day state accepted
+- Activity legend accepted
+- Month navigation accepted
+- Selected-day agenda accepted
+- Integration with the canonical SCE activity presentation remains intact
+
+**Out of scope / follow-up (SCE-PLANNER-UX-08 and later, not SCE-CALENDAR-UX-02):**
+
+- Management-calendar redesign
+- Wochenplaner Kalender / Spielfeld / Garderobe unified workspace
+- Drag/drop and resize planning interactions
+- Resource/allocation workspace redesign
+- Broader management calendar presentation
 
 **Goal:** Upgrade the personal Dashboard calendar (`Mein Kalender`) now that the canonical activity identity/presentation system is established.
+
+**Delivered (engineering):**
+
+- Calm month-cell **semantic dot markers** (+N overflow) with type-aware aggregation (`personal-calendar-day-marker-slots.ts`)
+- Accessible day summaries (e.g. «2 Trainings, 1 Spiel») — not color-only
+- **match-red** calendar markers aligned with SCE-ACTIVITY-COLOR-01 (training blue / spiel red / turnier orange)
+- Selected-day agenda via `PersonalProgrammeAgendaRow` + Activity Detail consume path (unchanged)
+- Shared `CalendarActivityMarkers` / `CalendarMonthLegend` on dashboard month grid; compact full Kalender mobile cells reuse markers
+- Personal empty copy, month empty hint, legend, keyboard day navigation, today vs selected styling
 
 **Core direction (intent only):**
 
@@ -438,13 +467,36 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ---
 
+## SCE-PLANNER-UX-08 — Unified Planning & Allocation Workspace
+
+**Status:** **UPCOMING** — **SCE-CALENDAR-UX-02** closed (human UAT 03.10.2026); implementation starts from STAGE after PR #796 merge.
+
+**First implementation package:** **SCE-PLANNER-UX-08-01** — Unified Planning & Allocation Workspace Foundation (branch from merged `origin/STAGE` HEAD only — never from the calendar feature branch).
+
+**Goal:** Unified Planning & Allocation Workspace foundation (Wochenplaner / allocation UX). **Not in scope** for SCE-CALENDAR-UX-02 or PR #796.
+
+**Product principles (preserved for UX-08):**
+
+- One operational planning workspace
+- Primary workspace perspectives: Kalender, Spielfeld, Garderobe, Liste
+- Kalender, Spielfeld and Garderobe retain the same temporal calendar/grid context where appropriate; switching perspective changes the planning dimension and card content rather than disconnected tools
+- Liste remains a separate high-density operational perspective
+- Shared date/week navigation, filters, conflict state, and activity identity; canonical Training / Spiel / Turnier / Veranstaltung semantics
+- Permission-aware direct manipulation (time-management vs allocation-management vs read-only); drag/drop never bypasses server authorization; optimistic UI reconciles to canonical server state; server-side conflict validation; clear rollback on failed moves; no role-name-string authorization
+- Future interaction direction: drag to reschedule, drag between permitted resources, resize where semantics permit, conflict preview, clear drop targets, keyboard alternatives, undo/recovery where safe, strong responsive behaviour, dense readable planning cards
+
+**Dependency:** `origin/STAGE` HEAD after PR #796 merge.
+
+---
+
 ## Suggested execution order
 
 1. **01A** — Design system + ClubIdentity (**closed**)
 2. **01B** — Activity Detail (**closed**)
 3. **01C01D** — Unified visual rollout (**closed — human UAT 03.10.2026**)
 4. **01E** — Permission & navigation hardening (**next**)
-5. **SCE-CALENDAR-UX-02** — Personal calendar world-class upgrade (after 01C01D)
-6. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in follow-ups
+5. **SCE-CALENDAR-UX-02** — Personal calendar world-class upgrade (**closed — human UAT 03.10.2026**; PR #796 → STAGE)
+6. **SCE-PLANNER-UX-08** — Unified Planning & Allocation Workspace (**upcoming**; branch from post-#796 STAGE)
+7. **01C / 01D** — Residual items folded into 01C01D where implemented; any gaps tracked in follow-ups
 
 **SCE-ACTIVITY-COLOR-01** (narrowed), **FACILITY-MODEL-01**, **SCE-ACTIVITY-DESIGN-02**, **SCE-STATUS-DESIGN-01**, **PERFORMANCE-INFRA-01**, and **BUILD-PERF** remain open on independent tracks.

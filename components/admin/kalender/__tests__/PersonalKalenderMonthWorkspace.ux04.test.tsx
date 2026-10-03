@@ -2,8 +2,8 @@
  * @vitest-environment jsdom
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PersonalKalenderMonthWorkspace from "../PersonalKalenderMonthWorkspace";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 
@@ -83,6 +83,15 @@ function normalized(
 }
 
 describe("SCE-CALENDAR-UX-04 — accessibility & responsive contracts", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-27T10:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("exposes aria-current on today and aria-pressed on selected day controls", () => {
     render(
       <PersonalKalenderMonthWorkspace
@@ -156,6 +165,15 @@ describe("SCE-CALENDAR-UX-04 — accessibility & responsive contracts", () => {
 });
 
 describe("SCE-CALENDAR-UX-04 — mobile compact month + agenda", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-27T10:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders compact grid without desktop event blocks and shows selected-day agenda", async () => {
     const { usePersonalCalendarLayoutMode } = await import(
       "@/lib/personal-agenda/use-personal-calendar-layout-mode"
@@ -185,7 +203,8 @@ describe("SCE-CALENDAR-UX-04 — mobile compact month + agenda", () => {
       "data-layout-mode",
       "mobile-compact",
     );
-    expect(screen.queryAllByTestId(/^personal-calendar-event-/).length).toBe(0);
+    const monthGrid = screen.getByTestId("personal-kalender-month-grid");
+    expect(within(monthGrid).queryAllByTestId(/^personal-calendar-event-/).length).toBe(0);
     expect(screen.getByTestId("personal-kalender-mobile-day-agenda")).toBeTruthy();
     expect(screen.getByTestId("personal-calendar-compact-markers-2026-09-23")).toBeTruthy();
     fireEvent.click(screen.getByTestId("personal-calendar-day-2026-09-23"));

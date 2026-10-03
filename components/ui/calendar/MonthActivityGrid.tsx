@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useRef } from "react";
 import { cn } from "@/lib/cn";
 import type { MonthActivityGridDay, MonthActivityGridNavigation } from "./month-activity-grid-types";
 import { PersonalProgrammeActivityIndicator } from "./PersonalProgrammeActivityIndicator";
+import { CalendarMonthLegend } from "./CalendarMonthLegend";
 
 export type MonthActivityGridProps = {
   monthLabel: string;
@@ -23,6 +25,7 @@ export type MonthActivityGridProps = {
   getDayHref?: (dayKey: string) => string | undefined;
   /** Matchcenter uses non-interactive cells; dashboard uses compact dot cells. */
   cellVariant?: "matchcenter" | "personal";
+  showLegend?: boolean;
 };
 
 function NavControl({
@@ -86,16 +89,18 @@ function DayCell({
   );
 
   const personalClass = cn(
-    "relative flex min-h-[2.65rem] min-w-0 flex-col items-center justify-start rounded-lg px-0.5 pb-0.5 pt-0.5 text-xs tabular-nums sm:min-h-[2.5rem]",
+    "relative flex min-h-[2.75rem] min-w-0 flex-col items-center justify-start rounded-lg px-0.5 pb-0.5 pt-0.5 text-xs tabular-nums sm:min-h-[2.65rem]",
     !day.inMonth && "text-[var(--muted)]/45",
     day.inMonth && "text-[var(--text-2)]",
-    day.activityCount > 0 &&
-      day.inMonth &&
+    day.isToday &&
       !day.isSelected &&
-      "bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]",
+      "bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface))] font-medium text-[var(--foreground)] ring-1 ring-inset ring-[var(--primary)]/45",
     day.isSelected &&
-      "bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-[var(--primary)]",
-    day.isToday && !day.isSelected && "ring-1 ring-[var(--primary)]/55",
+      !day.isToday &&
+      "bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-inset ring-[var(--primary)]",
+    day.isSelected &&
+      day.isToday &&
+      "bg-[color-mix(in_srgb,var(--primary)_16%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-inset ring-[var(--primary)] ring-offset-0",
   );
 
   const cellClassName = variant === "matchcenter" ? matchcenterClass : personalClass;
@@ -105,16 +110,19 @@ function DayCell({
   const inner =
     variant === "personal" ? (
       <>
-        <time dateTime={day.dayKey} className="leading-none">
+        <time
+          dateTime={day.dayKey}
+          className={cn("leading-none", day.isToday && "font-semibold text-[var(--primary)]")}
+          aria-current={day.isToday ? "date" : undefined}
+        >
           {day.dayNumber}
         </time>
         <PersonalProgrammeActivityIndicator
           count={day.activityCount}
-          previewLabel={day.activityPreviewLabel}
           primarySourceType={day.primarySourceType}
           markerSourceTypes={day.activityMarkerSourceTypes}
           overflowCount={day.activityMarkerOverflow}
-          isSelected={day.isSelected}
+          tooltipSummary={day.activityMarkerTooltip}
         />
       </>
     ) : (
@@ -129,6 +137,7 @@ function DayCell({
       <button
         type="button"
         data-testid={`personal-calendar-day-${day.dayKey}`}
+        data-day-key={day.dayKey}
         aria-label={ariaLabel}
         aria-pressed={day.isSelected}
         onClick={() => onSelectDay?.(day.dayKey)}
@@ -173,8 +182,46 @@ export default function MonthActivityGrid({
   onSelectDay,
   getDayHref,
   cellVariant = "personal",
+  showLegend = false,
 }: MonthActivityGridProps) {
   const Heading = headingLevel;
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleGridKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!selectable || !onSelectDay) return;
+      const key = event.key;
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)) {
+        return;
+      }
+      const active = document.activeElement;
+      if (!(active instanceof HTMLButtonElement) || !gridRef.current?.contains(active)) {
+        return;
+      }
+      const dayKey = active.getAttribute("data-day-key");
+      if (!dayKey) return;
+      const index = days.findIndex((d) => d.dayKey === dayKey);
+      if (index < 0) return;
+
+      let nextIndex = index;
+      if (key === "ArrowLeft") nextIndex = index - 1;
+      if (key === "ArrowRight") nextIndex = index + 1;
+      if (key === "ArrowUp") nextIndex = index - 7;
+      if (key === "ArrowDown") nextIndex = index + 7;
+      if (key === "Home") nextIndex = 0;
+      if (key === "End") nextIndex = days.length - 1;
+
+      const nextDay = days[nextIndex];
+      if (!nextDay) return;
+      event.preventDefault();
+      onSelectDay(nextDay.dayKey);
+      const nextButton = gridRef.current.querySelector<HTMLButtonElement>(
+        `[data-day-key="${nextDay.dayKey}"]`,
+      );
+      nextButton?.focus();
+    },
+    [days, onSelectDay, selectable],
+  );
 
   return (
     <section
@@ -237,7 +284,17 @@ export default function MonthActivityGrid({
         ))}
       </div>
 
-      <div className="mt-0.5 grid grid-cols-7 gap-0.5">
+      {cellVariant === "personal" && showLegend ? (
+        <CalendarMonthLegend className="mb-2 mt-1" compact />
+      ) : null}
+
+      <div
+        ref={gridRef}
+        className="mt-0.5 grid grid-cols-7 gap-0.5"
+        role={selectable ? "grid" : undefined}
+        onKeyDown={selectable ? handleGridKeyDown : undefined}
+        data-testid="month-activity-grid-days"
+      >
         {days.map((day) => (
           <DayCell
             key={day.dayKey}
