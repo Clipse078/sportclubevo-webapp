@@ -139,7 +139,7 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   dashboard: "Dashboard",
   "week-planner": "Wochenplaner",
   training: "Training",
-  match: "Spiele — Open VS",
+  match: "Spiele — VS circle",
   tournament: "Turniere",
   team: "Team",
   season: "Season / Saison",

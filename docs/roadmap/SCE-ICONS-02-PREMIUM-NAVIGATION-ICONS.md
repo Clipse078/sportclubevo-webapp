@@ -1,12 +1,26 @@
 # SCE-ICONS-02 — Premium Navigation Icons
 
-**Status:** Approved — **ASAP** (implement immediately after **SCE-PLANNER-UX-08-02** merge to STAGE, before **SCE-PLANNER-UX-08-03**)
+**Status:** **CLOSED**
 
-**Priority order:**
+**Human UAT:** **PASS** (authenticated Vercel Preview)
+
+**Implementation:** `cursor/sce-icons-02-premium-navigation-icons` — Club master (`club.svg` / `ClubApprovedMasterGlyph`) Variante 1 minimal outline shield; Spiele master (`match.svg` / `MatchApprovedMasterGlyph`) Variante 4 circle + path VS; canonical nav via `TARGET_L1_SCE_ICONS.club`, `NAV_DESTINATION_SCE_ICON_BY_KEY.matchcenter`.
+
+**Human UAT verification (authenticated Preview):**
+
+| Concept | Approved variant | Design |
+|---------|------------------|--------|
+| **Club** | Variante 1 | Minimal premium outline shield |
+| **Spiele** | Variante 4 | Outlined circle containing **VS** |
+
+- **Visual integration:** PASS — Spiele active state inherits SCE gold; inactive Club inherits navigation muted color; icon/text alignment correct; optical sizing consistent with neighboring navigation icons; VS clearly legible; no clipping or navigation layout regression.
+- **Responsive/navigation regression observed:** NONE
+
+**Priority order (historical):**
 
 1. **SCE-PLANNER-UX-08-02** — Canonical Resource Manipulation
-2. **SCE-ICONS-02** — Premium Navigation Icons *(this package)*
-3. **SCE-PLANNER-UX-08-03** — Activity Rescheduling
+2. **SCE-ICONS-02** — Premium Navigation Icons *(this package — CLOSED)*
+3. **SCE-PLANNER-UX-08-03** — Activity Rescheduling *(next package)*
 
 ---
 

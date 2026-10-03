@@ -119,11 +119,11 @@ export function RolesAccessApprovedMasterGlyph(props: ApprovedMasterGlyphProps) 
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/club.svg` (V2 monochrome artwork). */
+/** Geometry copied exactly from `public/images/icons/club.svg` (SCE-ICONS-02 premium navigation). */
 export function ClubApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M32 6l20 7v15c0 14-8 24-20 30C20 52 12 42 12 28V13z" stroke="currentColor" strokeWidth="4"/><path d="M32 12v39" stroke="currentColor" strokeWidth="4"/><path d="M20 21h24M22 37h20" stroke="currentColor" strokeWidth="3"/>
+      <path d="M32 6l20 7v15c0 14-8 24-20 30C20 52 12 42 12 28V13z" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }

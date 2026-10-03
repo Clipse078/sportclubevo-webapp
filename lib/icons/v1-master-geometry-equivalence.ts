@@ -2,9 +2,13 @@
  * SCE-ICONS-V2-03 — deterministic V1 geometry equivalence (color/style stripped).
  */
 
-/** Approved V2 optical revisions that intentionally diverge from V1 geometry (one master only). */
+/** Approved V2 optical revisions that intentionally diverge from V1 geometry. */
 export const SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS = {
   settings: "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION",
+  /** SCE-ICONS-02 — Variante 1 minimal outline shield (navigation). */
+  club: "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION",
+  /** SCE-ICONS-02 — Variante 4 circle + VS (navigation). */
+  match: "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION",
 } as const satisfies Record<string, "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION">;
 
 export type SceV2V1GeometryOpticalExceptionMaster =
