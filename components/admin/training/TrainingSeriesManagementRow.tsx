@@ -14,6 +14,7 @@ import {
 import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { SportingActivityMetaRail } from "@/components/sporting-activity/SportingActivityMetaRail";
 import { cn } from "@/lib/cn";
+import { splitSportingActivityTimeRangeLabel } from "@/lib/sporting-activity-presentation/time-range";
 
 type Props = {
   row: Row;
@@ -37,6 +38,11 @@ export default function TrainingSeriesManagementRow({
   const status = trainingManagementStatusPresentation(row.status);
   const identityAccent = resolveTeamIdentityAccentClass(row.teamSeasonId);
   const timeDetails = row.timeDetailLines?.join(" · ");
+  const primaryTimeToken = row.timeLabel.split(" · ")[0]?.trim() ?? row.timeLabel;
+  const parsedPrimaryTime = splitSportingActivityTimeRangeLabel(primaryTimeToken);
+  const isVariableTimeLabel = row.timeLabel === "Unterschiedliche Zeiten";
+  const showMetaRailTime = Boolean(row.activityPresentation) && !isVariableTimeLabel;
+  const hideDuplicateTimeColumn = showMetaRailTime && !row.timeDetailLines?.length;
 
   const identityBlock = (
     <div className="flex min-w-0 items-start gap-3">
@@ -45,7 +51,8 @@ export default function TrainingSeriesManagementRow({
           <SportingActivityMetaRail
             activityKind="TRAINING"
             typeLabel="TRAINING"
-            startTimeLabel={row.timeLabel.split(" · ")[0] ?? row.timeLabel}
+            startTimeLabel={isVariableTimeLabel ? undefined : parsedPrimaryTime.startLabel}
+            endTimeLabel={isVariableTimeLabel ? undefined : parsedPrimaryTime.endLabel}
             density="management"
             className="hidden sm:flex"
           />
@@ -98,7 +105,9 @@ export default function TrainingSeriesManagementRow({
       <TrainingWeekdayPills weekdays={row.weekdays} className="md:col-span-1" />
 
       <div className="text-sm tabular-nums text-[var(--foreground)] md:col-span-1">
-        {timeDetails ? (
+        {hideDuplicateTimeColumn ? (
+          <span className="sr-only" aria-label={`Zeit: ${row.timeLabel}`} />
+        ) : timeDetails ? (
           <p title={timeDetails} aria-label={`${row.timeLabel}: ${timeDetails}`}>
             {row.timeLabel}
           </p>

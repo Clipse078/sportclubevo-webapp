@@ -236,7 +236,7 @@ export default function VeranstaltungEditForm({
         activityKind="VERANSTALTUNG"
         typeLabel="VERANSTALTUNG"
         title={title.trim() || event.title}
-        startTimeLabel={timingSummary}
+        scheduleLine={timingSummary}
       />
       <PlanningEditorOperationalWorkspace
         testId="veranstaltung-edit-operational-workspace"

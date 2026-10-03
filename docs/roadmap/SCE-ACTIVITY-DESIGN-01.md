@@ -200,6 +200,106 @@ Historical inconsistency (e.g. match green in some programme/calendar code vs re
 
 **Still open:** **01E** (consume/manage matrix), **FACILITY-MODEL-01**, residual **SCE-ACTIVITY-COLOR-01** (month-cell markers / unrelated surfaces), **BUILD-PERF**, **PERFORMANCE-INFRA-01**.
 
+### SCE-ACTIVITY-DESIGN-01C01D-R2 — Final consistency & UAT closure
+
+**Status:** **Delivered on feature branch** (PR #795, STAGE target) — presentation-only R2; human UAT remains mandatory before merge.
+
+- Meta rail time ranges use **non-wrapping** single-unit presentation (`whitespace-nowrap`, compact rail width tuned for `HH:mm–HH:mm`).
+- Trainings management rows show canonical time **once** (meta rail); weekday/facility/status/actions preserved; variable schedules keep the ZEIT column label.
+- SCE icon regression tests reconciled with 01C01D meta-rail identity (obsolete dot+icon programme expectations superseded).
+- Create/edit surfaces gain **schedule line** on `SportingActivityFormIdentitySummary` (training series edit, training session edit, Veranstaltung edit timing).
+
+**Deferred to SCE-ACTIVITY-DESIGN-02:** premium management-center card composition (Matchcenter / Tournamentcenter / Trainings / Veranstaltungen full layout).
+
+---
+
+## SCE-ACTIVITY-DESIGN-02 — Premium Management Activity Experience
+
+**Status:** **OPEN** — not in PR #795.
+
+**Purpose:** Take the semantically correct 01A / 01B / 01C01D activity system and upgrade management surfaces from functional administrative views to a premium sports operating experience.
+
+### A. Universal information hierarchy
+
+Every activity experience should answer, in order unless context requires otherwise:
+
+1. **WHAT?**
+2. **WHEN?**
+3. **WHO?**
+4. **WHERE?**
+5. **WHAT DO I NEED TO DO?**
+
+### B. Management card grid
+
+Replace accidental full-width empty canvases with intentional internal layout:
+
+**META | IDENTITY / FIXTURE | CONTEXT | OPERATIONS**
+
+Responsive composition required — not a literal four-column table everywhere.
+
+### C. Matchcenter premium card
+
+Football-native fixture as focal object (desktop concept):
+
+- `[SPIEL]` + `16:00–18:00`
+- Home crest/name **left**, **VS**, away crest/name **right**
+- Auswärts · competition · location
+- Primary operational action + secondary `...`
+- No giant dead space; no raw SFV metadata; status/action secondary to fixture identity
+
+### D. Tournamentcenter premium card
+
+- `[TURNIER]` + time range
+- Organiser crest + name; tournament title + Auswärts badge
+- Location; participating SCE team separate from organiser
+- Geplant / Öffentlich + actions
+- No misleading tournament-size semantics; fix left-heavy empty-card problem
+
+### E. Trainings premium management row
+
+Operationally efficient — **no duplicate time**. Identity: TRAINING, range, team, weekdays, facility/resource, status, contextual action. Preserve table scan efficiency.
+
+### F. Veranstaltungen premium management row
+
+Veranstaltung remains its own domain (not relabelled as sporting activity). Mature row: date/time, identity, location, publication/status, operational action. Avoid huge empty full-width cards.
+
+### G. Five presentation jobs
+
+| Job | Role |
+|-----|------|
+| **COMPACT** | Mein Programm / calendar agenda — personal consumption |
+| **PLANNER** | Spatial/time/resource planning |
+| **MANAGEMENT** | Scanning, operational state and actions |
+| **DETAIL** | Understanding, participation, personally relevant info |
+| **EDITOR** | Privileged changes |
+
+Shared canonical identity/data semantics; **not** the same card component everywhere.
+
+### H. Contextual primary action
+
+One primary contextual action when useful (e.g. Vorbereitung öffnen, Planung bearbeiten, Teilnahmen ansehen). Secondary actions in `...`. Capability-driven — never role-name strings. Final permission behavior with **01E**.
+
+### I. Interaction polish
+
+After structure: hover, focus, clickable regions, truncation discovery, touch targets, skeleton geometry, empty states, subtle transitions. Structure before animation.
+
+---
+
+## SCE-STATUS-DESIGN-01 — Canonical Operational Status Semantics
+
+**Status:** **OPEN** — document only; **not implemented in #795**.
+
+**Purpose:** Separate **activity identity colors** from **operational status** semantics.
+
+| Layer | Treatment |
+|-------|-----------|
+| **Activity identity** | Training blue, Spiel red, Turnier orange, Veranstaltung event/domain treatment |
+| **Operational status** | success/ready/active, attention/open, error/conflict, inactive/archived, publication states |
+
+Status must use semantic token + text + icon where appropriate — **never color alone**.
+
+**Future audit consumers:** Trainings, Spiele, Turniere, Veranstaltungen, Aufgaben, Requirements, Communication, Workspace.
+
 ---
 
 ## SCE-ACTIVITY-DESIGN-01C — Match & Tournament Management Cards

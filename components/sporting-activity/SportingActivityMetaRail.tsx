@@ -8,7 +8,7 @@ export type SportingActivityMetaRailDensity = "compact" | "planner" | "managemen
 export type SportingActivityMetaRailProps = {
   activityKind?: SportingActivityKind;
   typeLabel?: string;
-  startTimeLabel: string;
+  startTimeLabel?: string;
   endTimeLabel?: string;
   allDay?: boolean;
   allDayLabel?: string;
@@ -17,9 +17,18 @@ export type SportingActivityMetaRailProps = {
 };
 
 const TIME_CLASS: Record<SportingActivityMetaRailDensity, string> = {
-  compact: "font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--text-2)]",
-  planner: "font-mono text-[10px] font-semibold tabular-nums text-[var(--text-2)] leading-tight",
-  management: "font-mono text-sm font-semibold tabular-nums text-[var(--foreground)]",
+  compact:
+    "whitespace-nowrap font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--text-2)]",
+  planner:
+    "whitespace-nowrap font-mono text-[10px] font-semibold tabular-nums text-[var(--text-2)] leading-tight",
+  management:
+    "whitespace-nowrap font-mono text-sm font-semibold tabular-nums text-[var(--foreground)]",
+};
+
+const RAIL_WIDTH_CLASS: Record<SportingActivityMetaRailDensity, string> = {
+  compact: "w-max min-w-[4.75rem] max-w-[5.75rem]",
+  planner: "w-max min-w-[3.25rem] max-w-[5.25rem]",
+  management: "w-max min-w-[4.75rem] max-w-[6rem]",
 };
 
 /**
@@ -37,14 +46,20 @@ export function SportingActivityMetaRail({
 }: SportingActivityMetaRailProps) {
   const timeRangeLabel = allDay
     ? allDayLabel
-    : formatSportingActivityTimeRange({
-        startLabel: startTimeLabel,
-        endLabel: endTimeLabel,
-      }) ?? startTimeLabel;
+    : startTimeLabel?.trim()
+      ? formatSportingActivityTimeRange({
+          startLabel: startTimeLabel,
+          endLabel: endTimeLabel,
+        }) ?? startTimeLabel
+      : undefined;
 
   return (
     <div
-      className={cn("flex shrink-0 flex-col items-end gap-0.5 text-right", className)}
+      className={cn(
+        "flex shrink-0 flex-col items-end gap-0.5 text-right",
+        RAIL_WIDTH_CLASS[density],
+        className,
+      )}
       data-testid="sporting-activity-meta-rail"
     >
       {activityKind && typeLabel ? (
@@ -54,13 +69,15 @@ export function SportingActivityMetaRail({
           {typeLabel}
         </span>
       ) : null}
-      <time
-        className={TIME_CLASS[density]}
-        data-testid="sporting-activity-meta-rail-time"
-        dateTime={timeRangeLabel.includes("–") ? undefined : timeRangeLabel}
-      >
-        {timeRangeLabel}
-      </time>
+      {timeRangeLabel ? (
+        <time
+          className={TIME_CLASS[density]}
+          data-testid="sporting-activity-meta-rail-time"
+          dateTime={timeRangeLabel.includes("–") ? undefined : timeRangeLabel}
+        >
+          {timeRangeLabel}
+        </time>
+      ) : null}
     </div>
   );
 }

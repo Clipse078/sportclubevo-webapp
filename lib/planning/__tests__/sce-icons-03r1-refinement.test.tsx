@@ -1,25 +1,29 @@
 /**
  * @vitest-environment jsdom
  *
- * SCE-ICONS-03R1 — restore programme semantic markers + MatchCenter activity hierarchy.
+ * SCE-ICONS-03R1 — updated for SCE-ACTIVITY-DESIGN-01C01D meta-rail identity.
+ * Programme rows no longer expose palette dot + ActivitySceIcon (obsolete expectation — class A).
+ * Matchcenter uses SpieleManagementMatchIdentity + SPIEL type pill (class A).
  */
 
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalProgrammeAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeAgendaRow";
 import { PersonalProgrammeActivityIndicator } from "@/components/ui/calendar/PersonalProgrammeActivityIndicator";
 import SpieleManagementMatchRow from "@/components/admin/matchcenter/SpieleManagementMatchRow";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
+import {
+  buildMatchActivityPresentation,
+  buildTrainingActivityPresentation,
+  buildTournamentActivityPresentation,
+} from "@/lib/sporting-activity-presentation/builders";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import type { MatchcenterMatchSummary, MatchcenterSide } from "@/lib/matchcenter/types";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 vi.mock("next-intl", () => ({
   useTranslations: (namespace?: string) => (key: string) => {
-    if (namespace === "PlanningEditor.match" && key === "activityTypeLabel") {
-      return "Spiel";
-    }
     if (namespace === "PersonalDashboard.programme") {
       const labels: Record<string, string> = {
         statusCancelled: "Abgesagt",
@@ -142,37 +146,73 @@ function createMatch(
   };
 }
 
-function expectRowHasMarkerAndIcon(
-  container: HTMLElement,
-  sourceType: PersonalProgrammeItem["sourceType"],
-  paletteKey: string,
-  sceIcon: string,
-) {
-  const marker = container.querySelector(
-    `[data-programme-source="${sourceType}"][data-programme-palette="${paletteKey}"]`,
-  );
-  expect(marker).toBeTruthy();
-  expect(container.querySelector(`[data-sce-activity-icon="${sceIcon}"]`)).toBeTruthy();
-}
-
-describe("SCE-ICONS-03R1 dashboard programme rows", () => {
+describe("SCE-ICONS-03R1 dashboard programme rows (01C01D meta rail)", () => {
   it.each([
-    ["TRAINING", "training-blue", "training", "Junioren F2 Training"],
-    ["MATCH", "match-green", "match", "Heimspiel vs FC X"],
-    ["TOURNAMENT", "tournament-orange", "tournament", "Blitzturnier"],
-  ] as const)(
-    "renders semantic marker and SCE icon for %s",
-    (sourceType, paletteKey, sceIcon, title) => {
-      const { container } = render(
-        <PersonalProgrammeAgendaRow
-          item={programmeItem({ sourceType, title, typeLabel: sourceType })}
-          timeLabel="09:30"
-        />,
-      );
-      expectRowHasMarkerAndIcon(container, sourceType, paletteKey, sceIcon);
-      expect(screen.getByText(title)).toBeInTheDocument();
-    },
-  );
+    ["TRAINING", "training-blue", "TRAINING", "Junioren F2 Training"] as const,
+    ["MATCH", "match-red", "SPIEL", "Heimspiel vs FC X"] as const,
+    ["TOURNAMENT", "tournament-orange", "TURNIER", "Blitzturnier"] as const,
+  ])("renders type pill on meta rail for %s", (sourceType, paletteKey, pillLabel, title) => {
+    const startAt = new Date("2026-09-30T07:30:00.000Z");
+    const endAt = new Date("2026-09-30T09:30:00.000Z");
+    const activityPresentation =
+      sourceType === "TRAINING"
+        ? buildTrainingActivityPresentation({
+            resourceKey: "training-session:1",
+            title,
+            typeLabel: "Training",
+            clubName: "FC Allschwil",
+            startAt,
+            endAt,
+          })
+        : sourceType === "MATCH"
+          ? buildMatchActivityPresentation({
+              resourceKey: "event:1",
+              title,
+              typeLabel: "Spiel",
+              teamName: "FC Allschwil",
+              opponentName: "FC X",
+              homeAway: "HOME",
+              startAt,
+              endAt,
+              tenantClubName: "FC Allschwil",
+            })
+          : buildTournamentActivityPresentation({
+              resourceKey: "event:t1",
+              title,
+              typeLabel: "Turnier",
+              organiserName: "FC Arisdorf",
+              startAt,
+              endAt,
+            });
+
+    const { container } = render(
+      <PersonalProgrammeAgendaRow
+        item={programmeItem({
+          sourceType,
+          title,
+          typeLabel: sourceType,
+          activityPresentation,
+          endsAt: endAt,
+        })}
+        timeLabel="09:30"
+        endTimeLabel="11:30"
+      />,
+    );
+    expect(screen.getByTestId("sporting-activity-meta-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("sporting-activity-meta-rail-time")).toHaveTextContent(
+      "09:30–11:30",
+    );
+    const pill = screen.getByText(pillLabel);
+    expect(pill.getAttribute("data-activity-type-pill")).toBe(paletteKey);
+    expect(
+      container.querySelector('[data-programme-source][data-programme-palette]'),
+    ).toBeNull();
+    expect(container.querySelector("[data-sce-activity-icon]")).toBeNull();
+    expect(screen.getByTestId("sporting-activity-identity")).toBeInTheDocument();
+    if (sourceType !== "MATCH") {
+      expect(screen.getByTestId("sporting-activity-identity")).toHaveTextContent(title);
+    }
+  });
 
   it("keeps palette marker for non-SCE programme sources without SCE icon", () => {
     const { container } = render(
@@ -224,8 +264,8 @@ describe("SCE-ICONS-03R1 dashboard calendar markers", () => {
   });
 });
 
-describe("SCE-ICONS-03R1 MatchCenter hierarchy", () => {
-  it("shows translated activity title above team matchup", () => {
+describe("SCE-ICONS-03R1 MatchCenter hierarchy (01C01D identity)", () => {
+  it("shows SPIEL type pill and fixture matchup via SpieleManagementMatchIdentity", () => {
     const match = createMatch();
     const assessment = assessMatchOperationalState(match);
     const { container } = render(
@@ -238,25 +278,16 @@ describe("SCE-ICONS-03R1 MatchCenter hierarchy", () => {
       />,
     );
 
-    expect(screen.getByText("Spiel")).toBeInTheDocument();
-    expect(container.querySelector(`[data-testid="matchcenter-activity-type-${match.id}"]`)).toBeTruthy();
-    expect(container.querySelector(`[data-testid="matchcenter-team-matchup-${match.id}"]`)).toBeTruthy();
-    expect(container.querySelector('[data-sce-activity-icon="match"]')).toBeTruthy();
+    expect(screen.getByText("SPIEL")).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="spiele-management-match-identity"]')).toBeTruthy();
     expect(screen.getByText("VS")).toBeInTheDocument();
+    expect(container.querySelector('[data-activity-type-pill="match-red"]')).toBeTruthy();
   });
 
-  it("keeps SCE match icon outside the home-team identity cluster", () => {
-    const source = readRelative("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
-    const activityBlock = source.slice(
-      source.indexOf("matchcenter-activity-type"),
-      source.indexOf("matchcenter-team-matchup"),
-    );
-    expect(activityBlock).toContain("ActivitySceIcon");
-    const matchupBlock = source.slice(
-      source.indexOf("matchcenter-team-matchup"),
-      source.indexOf("venueLine ?"),
-    );
-    expect(matchupBlock).not.toContain("ActivitySceIcon");
-    expect(matchupBlock).toContain("ClubLogo");
+  it("keeps fixture crests on MatchClubPair without legacy ActivitySceIcon in matchup", () => {
+    const source = readRelative("components/sporting-activity/SpieleManagementMatchIdentity.tsx");
+    expect(source).toContain("MatchClubPair");
+    expect(source).toContain('typeLabel="SPIEL"');
+    expect(source).not.toContain("ActivitySceIcon");
   });
 });

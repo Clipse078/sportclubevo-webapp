@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { formatSportingActivityTimeRange } from "../time-range";
+import {
+  formatSportingActivityTimeRange,
+  splitSportingActivityTimeRangeLabel,
+} from "../time-range";
 
 describe("formatSportingActivityTimeRange — SCE-ACTIVITY-DESIGN-01C01D-R1", () => {
   it("combines start and end with en dash", () => {
@@ -14,6 +17,13 @@ describe("formatSportingActivityTimeRange — SCE-ACTIVITY-DESIGN-01C01D-R1", ()
   it("returns start only when end is missing", () => {
     expect(formatSportingActivityTimeRange({ startLabel: "17:00", endLabel: null })).toBe("17:00");
     expect(formatSportingActivityTimeRange({ startLabel: "17:00" })).toBe("17:00");
+  });
+
+  it("splits canonical range labels for management adapters", () => {
+    expect(splitSportingActivityTimeRangeLabel("17:00–18:30")).toEqual({
+      startLabel: "17:00",
+      endLabel: "18:30",
+    });
   });
 
   it("does not fabricate end time or placeholders", () => {

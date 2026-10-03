@@ -15,6 +15,9 @@ import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/
 import TrainingSeriesRecordContextMenu from "@/components/admin/training/record/TrainingSeriesRecordContextMenu";
 import TrainingRecordStatusBadge from "@/components/admin/training/record/TrainingRecordStatusBadge";
 import { buildTrainingRecordPrimaryTitle } from "@/lib/training/training-series-edit-presentation";
+import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
+import { buildTrainingManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-adapters";
+import { splitSportingActivityTimeRangeLabel } from "@/lib/sporting-activity-presentation/time-range";
 import { defaultNewTrainingSlotTimes } from "@/lib/training/training-create-schedule-defaults";
 import type { BreadcrumbItem } from "@/components/ui/page";
 import type { TrainingSeriesStatus } from "@/lib/training/types";
@@ -62,6 +65,7 @@ type Props = {
   publication: PublicationProps;
   canManage: boolean;
   canDelete: boolean;
+  tenantClubName: string;
   exceptionNotice?: ReactNode;
   /** Canonical training duration for newly enabled weekday slots only. */
   defaultTrainingDurationMinutes: number;
@@ -154,6 +158,7 @@ export default function TrainingSeriesRecordWorkspace({
   publication,
   canManage,
   canDelete,
+  tenantClubName,
   exceptionNotice,
   defaultTrainingDurationMinutes,
   participationPolicy,
@@ -205,6 +210,32 @@ export default function TrainingSeriesRecordWorkspace({
     () => teamSeasons.find((ts) => ts.id === teamSeasonId) ?? null,
     [teamSeasons, teamSeasonId],
   );
+
+  const seriesIdentityPresentation = useMemo(() => {
+    if (!selectedTeamSeason) return undefined;
+    return buildTrainingManagementActivityPresentation(
+      {
+        teamSeasonId: selectedTeamSeason.id,
+        title,
+        facilityVenueName: pitchLabel,
+      },
+      tenantClubName,
+    );
+  }, [selectedTeamSeason, title, pitchLabel, tenantClubName]);
+
+  const enabledWeekdaySlots = weekdayRows.filter((row) => row.enabled);
+  const uniformSlotTime =
+    enabledWeekdaySlots.length > 0 &&
+    enabledWeekdaySlots.every(
+      (row) =>
+        row.startsAt === enabledWeekdaySlots[0]!.startsAt &&
+        row.endsAt === enabledWeekdaySlots[0]!.endsAt,
+    );
+  const identityTimeRange = uniformSlotTime
+    ? splitSportingActivityTimeRangeLabel(
+        `${enabledWeekdaySlots[0]!.startsAt}–${enabledWeekdaySlots[0]!.endsAt}`,
+      )
+    : null;
 
   const primaryTitle = selectedTeamSeason
     ? buildTrainingRecordPrimaryTitle(selectedTeamSeason.teamName, title)
@@ -394,6 +425,15 @@ export default function TrainingSeriesRecordWorkspace({
       {exceptionNotice}
 
       <form onSubmit={handleSubmit} className="space-y-4" data-testid="training-series-form">
+        <SportingActivityFormIdentitySummary
+          activityKind="TRAINING"
+          typeLabel="TRAINING"
+          title={title}
+          presentation={seriesIdentityPresentation}
+          startTimeLabel={identityTimeRange?.startLabel}
+          endTimeLabel={identityTimeRange?.endLabel}
+          scheduleLine={scheduleRail ?? undefined}
+        />
         {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
         {saveSuccess ? (
           <div

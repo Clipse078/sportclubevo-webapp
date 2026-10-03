@@ -13,6 +13,23 @@ export type FormatSportingActivityTimeRangeInput = {
  * Canonical HH:mm or HH:mm–HH:mm presentation for sporting activities and shared event rails.
  * Never fabricates an end time; never renders placeholders such as "17:00–?" or "17:00–".
  */
+/** Split a rendered range label back into start/end (for management rows that store HH:mm–HH:mm). */
+export function splitSportingActivityTimeRangeLabel(label: string): {
+  startLabel: string;
+  endLabel?: string;
+} {
+  const trimmed = label.trim();
+  const separatorIndex = trimmed.indexOf(SPORTING_ACTIVITY_TIME_RANGE_SEPARATOR);
+  if (separatorIndex === -1) {
+    return { startLabel: trimmed };
+  }
+  const startLabel = trimmed.slice(0, separatorIndex).trim();
+  const endLabel = trimmed
+    .slice(separatorIndex + SPORTING_ACTIVITY_TIME_RANGE_SEPARATOR.length)
+    .trim();
+  return endLabel ? { startLabel, endLabel } : { startLabel };
+}
+
 export function formatSportingActivityTimeRange(
   input: FormatSportingActivityTimeRangeInput,
 ): string | undefined {

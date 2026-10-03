@@ -11,6 +11,8 @@ export type SportingActivityFormIdentitySummaryProps = {
   typeLabel: string;
   startTimeLabel?: string;
   endTimeLabel?: string;
+  /** Date + time or rhythm line below identity (editor/manage header). */
+  scheduleLine?: string;
   presentation?: SportingActivityPresentation;
   className?: string;
 };
@@ -24,6 +26,7 @@ export function SportingActivityFormIdentitySummary({
   typeLabel,
   startTimeLabel,
   endTimeLabel,
+  scheduleLine,
   presentation,
   className,
 }: SportingActivityFormIdentitySummaryProps) {
@@ -48,7 +51,7 @@ export function SportingActivityFormIdentitySummary({
           density="management"
         />
       )}
-      <div className="min-w-0">
+      <div className="min-w-0 space-y-0.5">
         {presentation ? (
           <SportingActivityIdentity
             presentation={presentation}
@@ -59,6 +62,14 @@ export function SportingActivityFormIdentitySummary({
         ) : (
           <p className="text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">{title}</p>
         )}
+        {scheduleLine ? (
+          <p
+            className="text-sm text-[var(--text-2)]"
+            data-testid="sporting-activity-form-identity-schedule"
+          >
+            {scheduleLine}
+          </p>
+        ) : null}
       </div>
     </div>
   );

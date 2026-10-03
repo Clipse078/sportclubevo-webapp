@@ -19,6 +19,7 @@ import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/conte
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
 
 type Props = { params: Promise<{ seriesId: string }> };
 
@@ -39,6 +40,9 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
 
   const tenantId = session.user?.activeTenantId;
   if (!tenantId) notFound();
+
+  const tenantContext = await getActiveTenant();
+  if (!tenantContext) notFound();
 
   const { seriesId } = await params;
 
@@ -164,6 +168,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
       }}
       canManage={canManage}
       canDelete={canDelete}
+      tenantClubName={tenantContext.name}
       exceptionNotice={exceptionNotice}
       defaultTrainingDurationMinutes={operationalDurationPolicy.TRAINING.durationMinutes}
       participationPolicy={{

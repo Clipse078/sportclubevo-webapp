@@ -61,7 +61,7 @@ export function EventDomainMetaRail({
       {timeRangeLabel ? (
         <time
           className={cn(
-            "font-mono font-semibold tabular-nums text-[var(--foreground)]",
+            "whitespace-nowrap font-mono font-semibold tabular-nums text-[var(--foreground)]",
             density === "compact" ? "text-[0.8125rem]" : "text-sm",
           )}
           data-testid="event-domain-meta-rail-time"

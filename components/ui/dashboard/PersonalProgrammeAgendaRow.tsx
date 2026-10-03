@@ -90,7 +90,7 @@ export function PersonalProgrammeAgendaRow({
   const row = (
     <div
       className={cn(
-        "grid grid-cols-[4.25rem_minmax(0,1fr)] items-start gap-x-2.5 py-2",
+        "grid grid-cols-[minmax(4.75rem,max-content)_minmax(0,1fr)] items-start gap-x-2.5 py-2",
         highlighted &&
           "rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_8%,transparent)] px-1",
         className,

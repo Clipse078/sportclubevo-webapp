@@ -37,6 +37,7 @@ import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/context
 import { getTranslations as getPlanningTranslations } from "next-intl/server";
 import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
 import { prisma } from "@/lib/db/prisma";
+import { resolveSeriesAllocationDisplay } from "@/lib/training/series-cockpit";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -138,6 +139,8 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     }))
     .filter((fg) => fg.resources.length > 0);
 
+  const allocationDisplay = resolveSeriesAllocationDisplay(seriesAllocations);
+
   const wochenplanerHref = buildTrainingSessionWochenplanerHref({
     sessionDate: trainingSession.date,
     teamSeasonId: trainingSession.teamSeasonId,
@@ -229,6 +232,10 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                   timezone={trainingSession.timezone}
                   locale={locale}
                   seriesStandardLine={seriesStandardLine}
+                  identityTitle={pageTitle}
+                  tenantClubName={tenantContext.name}
+                  teamSeasonId={trainingSession.teamSeasonId}
+                  facilityVenueName={allocationDisplay.pitchName}
                 />
               </PlanningEditorSection>
 
