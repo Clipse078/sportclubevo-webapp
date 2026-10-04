@@ -9,6 +9,10 @@ import { weekplannerActivityTypeLabel, weekplannerPrimaryLabel } from "@/lib/pla
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import { formatManipulationResourceLabel } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
+import {
+  buildActivityRescheduleImpact,
+  isActivityTimeDraft,
+} from "@/lib/planning-hub/planning-activity-rescheduling";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
 
 type Props = {
@@ -56,11 +60,21 @@ export default function PlanningHubManipulationConfirm({
 }: Props) {
   const typeLabel = weekplannerActivityTypeLabel(draft.item.type);
   const primary = weekplannerPrimaryLabel(draft.item);
-  const title = "Planung ändern";
-  const subtitle = `${typeLabel} · ${primary}`;
   const isOccupancyDraft = draft.timeTarget === "resourceOccupancy";
+  const isActivityDraft = isActivityTimeDraft(draft);
+  const title = isActivityDraft ? "Termin verschieben" : "Planung ändern";
+  const subtitle = `${typeLabel} · ${primary}`;
 
   const activityRange = formatOccupancyRange(draft.item.startAt, draft.item.endAt, timezone);
+  const activityImpact = isActivityDraft
+    ? buildActivityRescheduleImpact(draft.item, draft.proposedStart, draft.proposedEnd)
+    : null;
+
+  const formatDayTime = (start: Date, end: Date) =>
+    `${new Intl.DateTimeFormat(locale, {
+      weekday: "long",
+      timeZone: timezone,
+    }).format(start)} ${formatOccupancyRange(start, end, timezone)}`;
 
   return (
     <div
@@ -89,10 +103,11 @@ export default function PlanningHubManipulationConfirm({
               </>
             ) : (
               <p className="mt-1 text-[var(--foreground)]">
-                {new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
-                  draft.originalStart,
-                )}{" "}
-                {formatOccupancyRange(draft.originalStart, draft.originalEnd, timezone)}
+                {isActivityDraft
+                  ? formatDayTime(draft.originalStart, draft.originalEnd)
+                  : `${new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
+                      draft.originalStart,
+                    )} ${formatOccupancyRange(draft.originalStart, draft.originalEnd, timezone)}`}
               </p>
             )}
             {!isOccupancyDraft && draft.originalResourceId && (
@@ -116,10 +131,11 @@ export default function PlanningHubManipulationConfirm({
               </>
             ) : (
               <p className="mt-1 text-[var(--foreground)]">
-                {new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
-                  draft.proposedStart,
-                )}{" "}
-                {formatOccupancyRange(draft.proposedStart, draft.proposedEnd, timezone)}
+                {isActivityDraft
+                  ? formatDayTime(draft.proposedStart, draft.proposedEnd)
+                  : `${new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
+                      draft.proposedStart,
+                    )} ${formatOccupancyRange(draft.proposedStart, draft.proposedEnd, timezone)}`}
               </p>
             )}
             {!isOccupancyDraft && draft.proposedResourceId && (
@@ -146,6 +162,26 @@ export default function PlanningHubManipulationConfirm({
           <p className="mt-2 text-xs text-[var(--text-2)]">
             Turnierzeit {activityRange} unverändert
           </p>
+        )}
+
+        {activityImpact && activityImpact.resourceLines.length > 0 && (
+          <div className="mt-3 space-y-2 text-xs" data-testid="planning-hub-activity-resource-impact">
+            {activityImpact.resourceLines.map((line) => (
+              <div key={`${line.kind}-${line.resourceName}`} className="rounded-lg bg-[var(--surface-2)] p-2">
+                <p className="font-semibold text-[var(--foreground)]">
+                  {line.kind === "pitch" ? "Spielfeld" : "Garderobe"} · {line.resourceName}
+                </p>
+                <p className="mt-0.5 text-[var(--text-2)]">
+                  {formatOccupancyRange(line.beforeStart, line.beforeEnd, timezone)} →{" "}
+                  {formatOccupancyRange(line.afterStart, line.afterEnd, timezone)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activityImpact?.participationNote && (
+          <p className="mt-2 text-xs text-[var(--text-2)]">{activityImpact.participationNote}</p>
         )}
 
         <p
@@ -185,7 +221,7 @@ export default function PlanningHubManipulationConfirm({
             disabled={saving}
             data-testid="planning-hub-manipulation-confirm-apply"
           >
-            Änderung übernehmen
+            {isActivityDraft ? "Termin verschieben" : "Änderung übernehmen"}
           </button>
         </div>
       </div>

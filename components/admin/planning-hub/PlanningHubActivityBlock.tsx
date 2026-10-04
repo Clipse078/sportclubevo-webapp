@@ -52,6 +52,7 @@ type PlanningHubActivityBlockProps = {
   onPointerDownMove?: (clientX: number, clientY: number) => void;
   onPointerDownResize?: (edge: "start" | "end", clientX: number, clientY: number) => void;
   onOpenManipulationEdit?: () => void;
+  manipulationEditLabel?: string;
   /** Subtle inner band for nominal activity within effective Garderobe occupancy. */
   nominalActivityBand?: { leftPercent: number; widthPercent: number };
   continuesFromBefore?: boolean;
@@ -100,6 +101,7 @@ export default function PlanningHubActivityBlock({
   onPointerDownMove,
   onPointerDownResize,
   onOpenManipulationEdit,
+  manipulationEditLabel = "Planung ändern",
   nominalActivityBand,
   continuesFromBefore = false,
   continuesAfter = false,
@@ -296,14 +298,14 @@ export default function PlanningHubActivityBlock({
             <button
               type="button"
               className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
-              aria-label="Planung ändern"
+              aria-label={manipulationEditLabel}
               data-testid="planning-hub-manipulation-edit-trigger"
               onClick={(event) => {
                 event.stopPropagation();
                 onOpenManipulationEdit();
               }}
             >
-              Planung ändern
+              {manipulationEditLabel}
             </button>
           )}
           {(hasConflict || requiresEndTimeAction) && !isGhost && (

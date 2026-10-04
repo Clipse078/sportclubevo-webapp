@@ -348,6 +348,7 @@ export default function PlanningHubCalendarView({
                       canResize: boolean;
                       onMove?: (clientX: number, clientY: number) => void;
                       onResize?: (edge: "start" | "end", clientX: number, clientY: number) => void;
+                      onScheduleEdit?: () => void;
                     },
                   ) => {
                     const clip = clipItemMinutes(startAt, endAt, timeRange, timezone);
@@ -393,6 +394,8 @@ export default function PlanningHubCalendarView({
                           if (manipulation?.isDragging) return;
                           onItemActivate(item);
                         }}
+                        onOpenManipulationEdit={pointerHandlers?.onScheduleEdit}
+                        manipulationEditLabel="Termin ändern"
                         style={{
                           top,
                           height,
@@ -452,6 +455,10 @@ export default function PlanningHubCalendarView({
                             manipulation.beginCalendarMove(item, clientX, clientY),
                           onResize: (edge, clientX, clientY) =>
                             manipulation.beginCalendarResize(item, edge, clientX, clientY),
+                          onScheduleEdit:
+                            caps.canMoveTime || caps.canResize
+                              ? () => manipulation.openActivityScheduleEditor(item)
+                              : undefined,
                         }
                       : undefined,
                   );

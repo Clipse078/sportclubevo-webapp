@@ -1,5 +1,6 @@
 import type { PlanningHubManipulationSurface } from "@/lib/planning-hub/planner-perspective";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import { resolveActivityScheduleAuthority } from "@/lib/planning-hub/planning-activity-rescheduling";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 export type SchedulerManipulationCapabilities = {
@@ -148,8 +149,12 @@ export function getSchedulerManipulationCapabilities(
           ...resourceTimelineCaps(ctx, true),
         };
       }
+      const canActivity = resolveActivityScheduleAuthority(item, {
+        isStandardplan: true,
+        alternativePlanId: null,
+      }).permitted;
       return {
-        ...calendarCaps(ctx, false, false),
+        ...calendarCaps(ctx, canActivity, canActivity),
       };
     }
     if (item.type === "TOURNAMENT") {
@@ -159,8 +164,12 @@ export function getSchedulerManipulationCapabilities(
           ...resourceTimelineCaps(ctx, ctx.resourceCategory === "pitch"),
         };
       }
+      const canActivity = resolveActivityScheduleAuthority(item, {
+        isStandardplan: true,
+        alternativePlanId: null,
+      }).permitted;
       return {
-        ...calendarCaps(ctx, false, false),
+        ...calendarCaps(ctx, canActivity, canActivity),
       };
     }
     return NONE;
