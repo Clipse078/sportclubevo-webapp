@@ -218,6 +218,7 @@ function renderResourceView(items: WeekplannerItem[], isStandardplan = true) {
         alternativePlanId={isStandardplan ? null : "plan-alt"}
         canManageTrainings
         canManageEvents
+        canManageAllocations
         facilityGroupsByAllocationGroup={FACILITY_GROUPS}
         resourceRows={[
           { resourceId: "room-a", ref: TRAINING.dressingRoomAllocations[0]! },
@@ -243,6 +244,7 @@ describe("manipulation capabilities — Standardplan vs alternative", () => {
     isStandardplan: true,
     canManageTrainings: true,
     canManageEvents: true,
+    canManageAllocations: true,
     alternativePlanId: null,
     resourceCategory: "dressing" as const,
     manipulationSurface: "resourceTimeline" as const,

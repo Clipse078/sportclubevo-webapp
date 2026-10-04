@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import {
-  PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
-  PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
-} from "@/lib/permissions/planning-allocation-permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
 import {
   assertActivityReschedulePermitted,
   ActivityRescheduleForbiddenError,
 } from "@/lib/planning-hub/activity-rescheduling-mutations";
+import {
+  assertActivityTimeMutationPermitted,
+  assertManipulationTenantScope,
+  ManipulationForbiddenError,
+} from "@/lib/planning-hub/manipulation-server-authorization";
+import { resolveLiveManipulationActorPermissions } from "@/lib/planning-hub/manipulation-live-permissions";
 import {
   buildActivityRescheduleProposal,
   isActivityTimeDraft,
@@ -36,12 +39,17 @@ type ValidateBody = {
 };
 
 export async function POST(req: NextRequest) {
-  const auth = await requireApiAnyPermission([
-    ...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
-    ...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
-  ]);
+  const auth = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return NextResponse.json(
+      {
+        error:
+          auth.status === 403
+            ? "Du hast keine Berechtigung mehr, diese Planung zu ändern."
+            : auth.error,
+      },
+      { status: auth.status },
+    );
   }
 
   const body = (await req.json().catch(() => null)) as ValidateBody | null;
@@ -64,14 +72,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const tenantId = auth.session.user.activeTenantId ?? null;
+  const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
+
   try {
+    assertManipulationTenantScope(body.draft.item, tenantId);
+    if (userId && tenantId) {
+      const actor = await resolveLiveManipulationActorPermissions(userId, tenantId);
+      assertActivityTimeMutationPermitted(body.draft.item, actor);
+    }
     assertActivityReschedulePermitted(
       draft,
       body.isStandardplan,
       body.alternativePlanId,
     );
   } catch (err) {
-    if (err instanceof ActivityRescheduleForbiddenError) {
+    if (
+      err instanceof ActivityRescheduleForbiddenError ||
+      err instanceof ManipulationForbiddenError
+    ) {
       return NextResponse.json({ error: err.message }, { status: 403 });
     }
     throw err;

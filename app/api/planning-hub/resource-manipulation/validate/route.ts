@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import {
-  PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
-  PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
-} from "@/lib/permissions/planning-allocation-permissions";
+import { PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
+import { isActivityTimeDraft } from "@/lib/planning-hub/planning-activity-rescheduling";
+import {
+  assertManipulationTenantScope,
+  assertResourceReservationMutationPermitted,
+  ManipulationForbiddenError,
+} from "@/lib/planning-hub/manipulation-server-authorization";
+import { resolveLiveManipulationActorPermissions } from "@/lib/planning-hub/manipulation-live-permissions";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
@@ -26,12 +30,17 @@ type ValidateBody = {
 };
 
 export async function POST(req: NextRequest) {
-  const auth = await requireApiAnyPermission([
-    ...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
-    ...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
-  ]);
+  const auth = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS]);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return NextResponse.json(
+      {
+        error:
+          auth.status === 403
+            ? "Du hast keine Berechtigung mehr, diese Planung zu ändern."
+            : auth.error,
+      },
+      { status: auth.status },
+    );
   }
 
   const body = (await req.json().catch(() => null)) as ValidateBody | null;
@@ -46,6 +55,29 @@ export async function POST(req: NextRequest) {
     proposedStart: new Date(body.draft.proposedStart),
     proposedEnd: new Date(body.draft.proposedEnd),
   };
+
+  if (isActivityTimeDraft(draft)) {
+    return NextResponse.json(
+      { error: "Ressourcenplanung unterstützt keine Sporttermin-Verschiebung." },
+      { status: 400 },
+    );
+  }
+
+  const tenantId = auth.session.user.activeTenantId ?? null;
+  const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
+
+  try {
+    assertManipulationTenantScope(body.draft.item, tenantId);
+    if (userId && tenantId) {
+      const actor = await resolveLiveManipulationActorPermissions(userId, tenantId);
+      assertResourceReservationMutationPermitted(body.draft.item, actor);
+    }
+  } catch (err) {
+    if (err instanceof ManipulationForbiddenError) {
+      return NextResponse.json({ error: err.message }, { status: 403 });
+    }
+    throw err;
+  }
 
   const preview = evaluateManipulationConflicts(
     body.allItems,
