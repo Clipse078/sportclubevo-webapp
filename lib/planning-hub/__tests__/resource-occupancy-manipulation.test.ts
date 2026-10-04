@@ -21,7 +21,7 @@ const ROOM_E1 = {
   occupancyAfterMinutes: 45,
 };
 
-function matchItem(): WeekplannerItem {
+function matchItem(overrides: Partial<WeekplannerItem> = {}): WeekplannerItem {
   return {
     id: "match:m1",
     tenantId: "t1",
@@ -47,11 +47,29 @@ function matchItem(): WeekplannerItem {
     dressingRoomOccupancyAfterMinutes: null,
     dressingRoomResolvedBeforeMinutes: 60,
     dressingRoomResolvedAfterMinutes: 45,
+    eventSource: "MANUAL",
+    ...overrides,
   } as WeekplannerItem;
 }
 
 describe("PLANNING-HUB-03B resource occupancy", () => {
-  it("standardplan MATCH cannot change official activity time in Kalender caps", () => {
+  it("standardplan SFV MATCH cannot change activity time in Kalender caps (08-03 authority)", () => {
+    const caps = getSchedulerManipulationCapabilities(
+      matchItem({ eventSource: "SFV" } as Partial<WeekplannerItem>),
+      {
+        isStandardplan: true,
+        canManageTrainings: false,
+        canManageEvents: true,
+        alternativePlanId: null,
+        resourceCategory: "pitch",
+        manipulationSurface: "kalender",
+      },
+    );
+    expect(caps.canMoveTime).toBe(false);
+    expect(caps.canResize).toBe(false);
+  });
+
+  it("standardplan SCE-managed MATCH can change activity time in Kalender when permitted (08-03)", () => {
     const caps = getSchedulerManipulationCapabilities(matchItem(), {
       isStandardplan: true,
       canManageTrainings: false,
@@ -60,8 +78,8 @@ describe("PLANNING-HUB-03B resource occupancy", () => {
       resourceCategory: "pitch",
       manipulationSurface: "kalender",
     });
-    expect(caps.canMoveTime).toBe(false);
-    expect(caps.canResize).toBe(false);
+    expect(caps.canMoveTime).toBe(true);
+    expect(caps.canResize).toBe(true);
   });
 
   it("standardplan MATCH CAN manipulate dressing occupancy in Ressourcen view", () => {
