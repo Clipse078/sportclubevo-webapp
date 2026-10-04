@@ -95,6 +95,58 @@ See package brief §25 — authenticated Vercel Preview; scenarios A–H.
 
 **Status after 08-05R1:** Automated handoff + modal stacking regression tests added; **human re-test required** for C and dressing/time/open actions on Preview.
 
+## 08-05R2 — Resource Availability Picker
+
+### Human UAT finding
+
+After 08-05R1, **Spielfeld ändern → Planung ändern** handoff works, but the resource field was still a blind native `<select>`: coordinators could not see which pitches/rooms are free, occupied, conflicting, or recommended before clicking **Weiter**.
+
+### Architecture
+
+| Layer | Role |
+|-------|------|
+| Occupancy truth | Reuses `collectWeekplannerOccupiedResources` + `facilityResourcesShareConflictCapacity` + `resourceOccupancyWindowsOverlap` (same as `detectPairwiseWeekplannerConflicts`) |
+| Derivation | `lib/planning-hub/manipulation-resource-availability.ts` — in-memory over current week items (excludes editing item), **no N+1 API** |
+| UI | `PlanningHubManipulationResourceAvailabilityPicker` in canonical **08-02** `PlanningHubManipulationEditDialog` |
+| Validation | Unchanged — **Weiter** still runs `evaluateManipulationConflicts` + server `/api/planning-hub/resource-manipulation/validate` |
+
+### Availability semantics
+
+- **AVAILABLE** → label **Frei**
+- **PARTIAL** → **Teilweise belegt** (+ detail e.g. **Belegt ab HH:MM**) only when overlap does not cover the full requested reservation window
+- **OCCUPIED** → **Belegt** (+ activity label and occupancy time, or **N Konflikte**)
+
+States are derived only; nothing is persisted.
+
+### Hierarchy (Gesamt / A / B)
+
+Uses canonical pitch capacity rules from `lib/weekplanner/pitch-capacity-overlap.ts` (FULL↔HALF within one facility; independent HALF siblings do not block each other). Facility resource refs in the manipulation context now include `resourceType` via `weekplannerResourceRefFromFacilityOption`.
+
+### Recommendation ranking (deterministic, informational)
+
+1. **AVAILABLE** (not current)
+2. Same `facilityId` as current resource
+3. Same `resourceType` where possible
+4. Stable order from `resourceOptions`
+
+Badge **Empfohlen** — user must still explicitly select.
+
+### Reservation time behavior
+
+Picker evaluates **Reserviert ab / Reserviert bis** (effective reservation window from `resourceSegmentDisplayWindow`, including buffers). Changing times recomputes availability client-side. Sporting activity time is not mutated (`timeTarget: resourceOccupancy` unchanged).
+
+### Reuse
+
+Same model for **PITCH_HALL** and **DRESSING_ROOM** (`ManipulationResourceKind`); picker title switches **Spielfeld auswählen** / **Garderobe auswählen**.
+
+### Accessibility
+
+Listbox-style popover: keyboard open, arrow navigation, Enter select, Escape close, text labels always present (not color-only).
+
+### Status
+
+**IN PROGRESS** — automated coverage in `manipulation-resource-availability.test.ts`; **Human UAT not yet passed** for informed picker flow (pitch + Garderobe).
+
 ## Regression hooks
 
 `lib/planning-hub/__tests__/sce-planner-ux-08-05-conflict-resolution.test.ts` + `components/admin/planning-hub/__tests__/PlanningHubConflictResolutionHandoff.test.tsx` + existing 08-02/08-03/08-04 and conflict-attention tests.

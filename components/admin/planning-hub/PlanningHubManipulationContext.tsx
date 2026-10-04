@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { weekplannerResourceRefFromFacilityOption } from "@/lib/planning-hub/weekplanner-resource-ref";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import { applyPlanningHubActivityRescheduleDraft } from "@/lib/planning-hub/activity-rescheduling-mutations";
 import { isActivityTimeDraft } from "@/lib/planning-hub/planning-activity-rescheduling";
@@ -302,28 +303,12 @@ export function PlanningHubManipulationProvider({
     if (facilityGroupsByAllocationGroup) {
       for (const group of facilityGroupsByAllocationGroup.PITCH_HALL) {
         for (const r of group.resources) {
-          map.set(r.id, {
-            facilityResourceId: r.id,
-            facilityId: r.facilityId,
-            code: r.code,
-            name: r.name,
-            facilityName: r.facilityName,
-            occupancyBeforeMinutes: 0,
-            occupancyAfterMinutes: 0,
-          });
+          map.set(r.id, weekplannerResourceRefFromFacilityOption(r));
         }
       }
       for (const group of facilityGroupsByAllocationGroup.DRESSING_ROOM) {
         for (const r of group.resources) {
-          map.set(r.id, {
-            facilityResourceId: r.id,
-            facilityId: r.facilityId,
-            code: r.code,
-            name: r.name,
-            facilityName: r.facilityName,
-            occupancyBeforeMinutes: 0,
-            occupancyAfterMinutes: 0,
-          });
+          map.set(r.id, weekplannerResourceRefFromFacilityOption(r));
         }
       }
     }
@@ -777,19 +762,18 @@ export function PlanningHubManipulationProvider({
           : facilityGroupsByAllocationGroup.DRESSING_ROOM;
       for (const group of groups) {
         for (const r of group.resources) {
-          options.push({
-            facilityResourceId: r.id,
-            facilityId: r.facilityId,
-            code: r.code,
-            name: r.name,
-            facilityName: r.facilityName,
-            occupancyBeforeMinutes: 0,
-            occupancyAfterMinutes: 0,
-          });
+          options.push(weekplannerResourceRefFromFacilityOption(r));
         }
       }
     }
     return options;
+  }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
+
+  const facilityGroupsForEditCategory = useMemo(() => {
+    if (!facilityGroupsByAllocationGroup) return [];
+    return effectiveResourceCategory === "pitch"
+      ? facilityGroupsByAllocationGroup.PITCH_HALL
+      : facilityGroupsByAllocationGroup.DRESSING_ROOM;
   }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
 
   const openManipulationEditor = useCallback(
@@ -1047,6 +1031,8 @@ export function PlanningHubManipulationProvider({
           resourceCategory={effectiveResourceCategory}
           resourceOptions={resourceOptionsForCategory}
           planningResourceGroups={planningResourceGroups}
+          facilityGroups={facilityGroupsForEditCategory}
+          allItems={allItems}
           onClose={() => {
             setEditTarget(null);
             setManipulationCategoryOverride(null);
