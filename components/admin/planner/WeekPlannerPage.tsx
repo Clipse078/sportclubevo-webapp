@@ -115,15 +115,10 @@ export default function WeekPlannerPage({
       .sort((a, b) => a.label.localeCompare(b.label, "de-CH"));
   }, [week]);
 
-  const [selectedIncident, setSelectedIncident] = useState<PlanningConflictIncident | null>(null);
-  const [conflictPicker, setConflictPicker] = useState<PlanningConflictIncident[] | null>(null);
+  const [conflictWorkspaceOpen, setConflictWorkspaceOpen] = useState(false);
 
-  function handleReviewConflicts(incidents: PlanningConflictIncident[]) {
-    if (incidents.length === 1) {
-      setSelectedIncident(incidents[0]!);
-      return;
-    }
-    setConflictPicker(incidents);
+  function handleReviewConflicts(_incidents: PlanningConflictIncident[]) {
+    setConflictWorkspaceOpen(true);
   }
 
   return (
@@ -162,14 +157,9 @@ export default function WeekPlannerPage({
         canonicalEditing={canonicalEditing}
         urlState={urlState}
         dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
-        selectedIncident={selectedIncident ?? null}
-        conflictPicker={conflictPicker ?? null}
-        onCloseIncident={() => setSelectedIncident(null)}
-        onCloseConflictPicker={() => setConflictPicker(null)}
-        onPickConflictIncident={(incident) => {
-          setConflictPicker(null);
-          setSelectedIncident(incident);
-        }}
+        conflictWorkspaceOpen={conflictWorkspaceOpen}
+        onOpenConflictWorkspace={() => setConflictWorkspaceOpen(true)}
+        onCloseConflictWorkspace={() => setConflictWorkspaceOpen(false)}
       />
     </div>
     </WeekplannerVisibleTimeRangeProvider>

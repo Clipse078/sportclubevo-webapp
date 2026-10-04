@@ -35,7 +35,10 @@ import {
   weekplannerConflictPartnerTimeLabel,
 } from "@/lib/planning-hub/conflict-inspection-presenters";
 import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
+import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import PlanningHubConflictResolutionActions from "./PlanningHubConflictResolutionActions";
+import { usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 
 export type AggregatedActivityInspectionDialogProps = {
   open: boolean;
@@ -47,6 +50,14 @@ export type AggregatedActivityInspectionDialogProps = {
   onOpenItem: (item: WeekplannerItem) => void;
   onEditItem?: (item: WeekplannerItem) => void;
   canEditItem?: (item: WeekplannerItem) => boolean;
+  permissionContext?: Pick<
+    ManipulationPermissionContext,
+    | "canManageTrainings"
+    | "canManageEvents"
+    | "canManageAllocations"
+    | "isStandardplan"
+    | "alternativePlanId"
+  >;
 };
 
 const SORT_OPTIONS: { value: AggregateInspectionSortKey; label: string }[] = [
@@ -97,7 +108,10 @@ export default function AggregatedActivityInspectionDialog({
   onOpenItem,
   onEditItem,
   canEditItem,
+  permissionContext: permissionContextProp,
 }: AggregatedActivityInspectionDialogProps) {
+  const manipulation = usePlanningHubManipulation();
+  const permissionContext = permissionContextProp ?? manipulation?.permissionContext;
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleId = "aggregated-activity-inspection-title";
@@ -503,6 +517,17 @@ export default function AggregatedActivityInspectionDialog({
                             </p>
                             {partnerTime && (
                               <p className="text-xs tabular-nums text-[var(--muted)]">{partnerTime}</p>
+                            )}
+                            {permissionContext && (
+                              <PlanningHubConflictResolutionActions
+                                item={selectedItem}
+                                conflict={conflict}
+                                permissionContext={permissionContext}
+                                onOpenItem={onOpenItem}
+                                onEditItem={onEditItem}
+                                canEditItem={canEditItem}
+                                testIdPrefix="aggregate-inspection"
+                              />
                             )}
                           </div>
                         );

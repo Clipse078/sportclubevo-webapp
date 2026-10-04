@@ -15,7 +15,13 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import { applyPlanningHubActivityRescheduleDraft } from "@/lib/planning-hub/activity-rescheduling-mutations";
 import { isActivityTimeDraft } from "@/lib/planning-hub/planning-activity-rescheduling";
-import { formatManipulationHttpError } from "@/lib/planning-hub/manipulation-server-authorization";
+import {
+  canMutateActivityTimeForItem,
+  canMutateResourceReservationForItem,
+  formatManipulationHttpError,
+} from "@/lib/planning-hub/manipulation-server-authorization";
+import { resolveActivityScheduleAuthority } from "@/lib/planning-hub/planning-activity-rescheduling";
+import { segmentIdForResource } from "@/lib/planning-hub/conflict-resolution";
 import {
   evaluateManipulationConflicts,
   projectItemWithDraft,
@@ -160,6 +166,13 @@ type PlanningHubManipulationContextValue = {
   resolveResourceRef: (resourceId: string) => WeekplannerResourceRef | null;
   openManipulationEditor: (item: WeekplannerItem, segmentId: string, resourceId: string) => void;
   openActivityScheduleEditor: (item: WeekplannerItem) => void;
+  /** SCE-PLANNER-UX-08-05 — perspective-independent resource editor entry. */
+  openResourceEditorForConflict: (
+    item: WeekplannerItem,
+    resourceId: string,
+    category: PlanningHubUrlState["resourceCategory"],
+  ) => void;
+  openActivityScheduleEditorForConflict: (item: WeekplannerItem) => void;
 };
 
 const PlanningHubManipulationContext = createContext<PlanningHubManipulationContextValue | null>(null);
@@ -181,6 +194,7 @@ type ProviderProps = {
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   overridesByKey?: Record<string, WeekplannerOverrideRow[]>;
   resourceRows?: { resourceId: string; ref: WeekplannerResourceRef }[];
+  onManipulationApplied?: (draft: SchedulerDraftChange) => void;
   children: ReactNode;
 };
 
@@ -197,6 +211,7 @@ export function PlanningHubManipulationProvider({
   facilityGroupsByAllocationGroup,
   overridesByKey = {},
   resourceRows = [],
+  onManipulationApplied,
   children,
 }: ProviderProps) {
   const router = useRouter();
@@ -215,6 +230,10 @@ export function PlanningHubManipulationProvider({
     resourceId: string;
   } | null>(null);
   const [scheduleEditItem, setScheduleEditItem] = useState<WeekplannerItem | null>(null);
+  const [manipulationCategoryOverride, setManipulationCategoryOverride] = useState<
+    PlanningHubUrlState["resourceCategory"] | null
+  >(null);
+  const effectiveResourceCategory = manipulationCategoryOverride ?? urlState.resourceCategory;
   const lastPreviewKeyRef = useRef<string>("");
   const pointerSessionRef = useRef(pointerSession);
   pointerSessionRef.current = pointerSession;
@@ -728,23 +747,31 @@ export function PlanningHubManipulationProvider({
     if (!draft) return null;
     const targetRef =
       draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null;
-    return evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory);
-  }, [confirmationDraft, allItems, resolveResourceRef, urlState.resourceCategory]);
+    return evaluateManipulationConflicts(
+      allItems,
+      draft,
+      targetRef,
+      effectiveResourceCategory,
+    );
+  }, [confirmationDraft, allItems, resolveResourceRef, effectiveResourceCategory]);
 
   const planningResourceGroups = useMemo(() => {
     if (!facilityGroupsByAllocationGroup) return [];
     const facilityGroups =
-      urlState.resourceCategory === "pitch"
+      effectiveResourceCategory === "pitch"
         ? facilityGroupsByAllocationGroup.PITCH_HALL
         : facilityGroupsByAllocationGroup.DRESSING_ROOM;
-    return buildPlanningResourceGroupsFromFacilityGroups(facilityGroups, urlState.resourceCategory);
-  }, [facilityGroupsByAllocationGroup, urlState.resourceCategory]);
+    return buildPlanningResourceGroupsFromFacilityGroups(
+      facilityGroups,
+      effectiveResourceCategory,
+    );
+  }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
 
   const resourceOptionsForCategory = useMemo(() => {
     const options: WeekplannerResourceRef[] = [];
     if (facilityGroupsByAllocationGroup) {
       const groups =
-        urlState.resourceCategory === "pitch"
+        effectiveResourceCategory === "pitch"
           ? facilityGroupsByAllocationGroup.PITCH_HALL
           : facilityGroupsByAllocationGroup.DRESSING_ROOM;
       for (const group of groups) {
@@ -762,13 +789,14 @@ export function PlanningHubManipulationProvider({
       }
     }
     return options;
-  }, [facilityGroupsByAllocationGroup, urlState.resourceCategory]);
+  }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
 
   const openManipulationEditor = useCallback(
     (item: WeekplannerItem, segmentId: string, resourceId: string) => {
       if (!enabled) return;
       const caps = getCapabilities(item);
       if (!hasAnyManipulationCapability(caps)) return;
+      setManipulationCategoryOverride(null);
       setEditTarget({ item, segmentId, resourceId });
       setScheduleEditItem(null);
       setConfirmationDraft(null);
@@ -782,12 +810,57 @@ export function PlanningHubManipulationProvider({
       if (!enabled) return;
       const caps = getCapabilities(item);
       if (!caps.canMoveTime && !caps.canResize) return;
+      setManipulationCategoryOverride(null);
       setScheduleEditItem(item);
       setEditTarget(null);
       setConfirmationDraft(null);
       setConfirmError(null);
     },
     [enabled, getCapabilities],
+  );
+
+  const openResourceEditorForConflict = useCallback(
+    (item: WeekplannerItem, resourceId: string, category: PlanningHubUrlState["resourceCategory"]) => {
+      if (!enabled) return;
+      const actor = {
+        canManageTrainings: permissionContext.canManageTrainings,
+        canManageEvents: permissionContext.canManageEvents,
+        canManageAllocations: permissionContext.canManageAllocations,
+      };
+      if (!canMutateResourceReservationForItem(item, actor)) return;
+      setManipulationCategoryOverride(category);
+      setEditTarget({
+        item,
+        segmentId: segmentIdForResource(item.id, resourceId),
+        resourceId,
+      });
+      setScheduleEditItem(null);
+      setConfirmationDraft(null);
+      setConfirmError(null);
+    },
+    [enabled, permissionContext],
+  );
+
+  const openActivityScheduleEditorForConflict = useCallback(
+    (item: WeekplannerItem) => {
+      if (!enabled) return;
+      const actor = {
+        canManageTrainings: permissionContext.canManageTrainings,
+        canManageEvents: permissionContext.canManageEvents,
+        canManageAllocations: permissionContext.canManageAllocations,
+      };
+      const authority = resolveActivityScheduleAuthority(item, {
+        isStandardplan: permissionContext.isStandardplan,
+        alternativePlanId: permissionContext.alternativePlanId,
+      });
+      if (!canMutateActivityTimeForItem(item, actor) || !authority.permitted) return;
+      setManipulationCategoryOverride(null);
+      setScheduleEditItem(item);
+      setEditTarget(null);
+      setConfirmationDraft(null);
+      setConfirmError(null);
+    },
+    [enabled, permissionContext],
   );
 
   const submitEditorDraft = useCallback(
@@ -830,7 +903,7 @@ export function PlanningHubManipulationProvider({
           proposedEnd: confirmationDraft.proposedEnd.toISOString(),
         },
         allItems,
-        resourceCategory: urlState.resourceCategory,
+        resourceCategory: effectiveResourceCategory,
         targetResource: confirmationDraft.proposedResourceId
           ? resolveResourceRef(confirmationDraft.proposedResourceId)
           : null,
@@ -879,7 +952,7 @@ export function PlanningHubManipulationProvider({
         );
         await applyStandardPlanSchedulerDraft(
           confirmationDraft,
-          urlState.resourceCategory,
+          effectiveResourceCategory,
           groups,
           timezone,
         );
@@ -890,14 +963,16 @@ export function PlanningHubManipulationProvider({
         await applyAlternativePlanSchedulerDraft(
           confirmationDraft,
           alternativePlanId,
-          urlState.resourceCategory,
+          effectiveResourceCategory,
           overridesByKey,
           timezone,
         );
       }
+      onManipulationApplied?.(confirmationDraft);
       router.refresh();
       setConfirmationDraft(null);
       setPreviewDraft(null);
+      setManipulationCategoryOverride(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
       if (/keine berechtigung/i.test(message)) {
@@ -910,6 +985,7 @@ export function PlanningHubManipulationProvider({
   }, [
     confirmationDraft,
     isStandardplan,
+    effectiveResourceCategory,
     urlState.resourceCategory,
     facilityGroupsByAllocationGroup,
     timezone,
@@ -918,6 +994,7 @@ export function PlanningHubManipulationProvider({
     allItems,
     resolveResourceRef,
     recoverFromRejectedMutation,
+    onManipulationApplied,
   ]);
 
   const value: PlanningHubManipulationContextValue = {
@@ -937,6 +1014,8 @@ export function PlanningHubManipulationProvider({
     resolveResourceRef,
     openManipulationEditor,
     openActivityScheduleEditor,
+    openResourceEditorForConflict,
+    openActivityScheduleEditorForConflict,
   };
 
   return (
@@ -964,13 +1043,16 @@ export function PlanningHubManipulationProvider({
           resourceId={editTarget.resourceId}
           locale={locale}
           timezone={timezone}
-          resourceCategory={urlState.resourceCategory}
+          resourceCategory={effectiveResourceCategory}
           resourceOptions={resourceOptionsForCategory}
           planningResourceGroups={planningResourceGroups}
-          onClose={() => setEditTarget(null)}
+          onClose={() => {
+            setEditTarget(null);
+            setManipulationCategoryOverride(null);
+          }}
           onSubmitDraft={submitEditorDraft}
           evaluateConflicts={(draft, targetRef) =>
-            evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory)
+            evaluateManipulationConflicts(allItems, draft, targetRef, effectiveResourceCategory)
           }
         />
       )}
@@ -979,7 +1061,7 @@ export function PlanningHubManipulationProvider({
           draft={confirmationDraft}
           locale={locale}
           timezone={timezone}
-          resourceCategory={urlState.resourceCategory}
+          resourceCategory={effectiveResourceCategory}
           conflictPreview={conflictPreview}
           saving={confirmSaving}
           error={confirmError}

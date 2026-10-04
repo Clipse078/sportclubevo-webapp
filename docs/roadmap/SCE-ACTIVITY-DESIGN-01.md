@@ -480,7 +480,7 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | **SCE-ICONS-02** | **Premium Navigation Icons** — minimal vector Club + Spiele nav icons; ASAP after 08-02, before 08-03 — [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](./SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (Human UAT PASS 2026-10-04; PR #801 → STAGE) — [`SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md`](../planning/SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md) |
-| **08-05** | Conflict resolution & operational actions |
+| **08-05** | Conflict resolution & operational actions — **IN PROGRESS** — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](../planning/SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
 | **08-06** | List / search / bulk operational UX |
 | **08-07** | Responsive / tablet hardening |
 | **08-08** | Integration / Human UAT / release hardening |
