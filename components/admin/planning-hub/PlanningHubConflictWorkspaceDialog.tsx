@@ -25,6 +25,7 @@ import {
   filterConflictIncidents,
   type ConflictResolutionFilterKind,
 } from "@/lib/planning-hub/conflict-resolution";
+import { reconcileSelectedConflictIncidentId } from "@/lib/planning-hub/conflict-resolution-workspace";
 import {
   conflictPartnerDisplayTitle,
   itemInspectionDressingLabel,
@@ -64,8 +65,11 @@ export type PlanningHubConflictWorkspaceDialogProps = {
   canEditItem?: (item: WeekplannerItem) => boolean;
   pendingResolutionRef?: MutableRefObject<{
     itemId: string;
+    incidentId: string | null;
     conflictResourceId: string;
-    beforeCount: number;
+    beforeIncidentTotal: number;
+    beforeItemConflictCount: number;
+    successMessage: string | null;
   } | null>;
 };
 
@@ -122,10 +126,14 @@ export default function PlanningHubConflictWorkspaceDialog({
   const [feedback, setFeedback] = useState<string | null>(null);
   const internalPendingRef = useRef<{
     itemId: string;
+    incidentId: string | null;
     conflictResourceId: string;
-    beforeCount: number;
+    beforeIncidentTotal: number;
+    beforeItemConflictCount: number;
+    successMessage: string | null;
   } | null>(null);
   const pendingResolutionRef = externalPendingRef ?? internalPendingRef;
+  const openInitializedRef = useRef(false);
 
   const filteredIncidents = useMemo(
     () =>
@@ -138,11 +146,15 @@ export default function PlanningHubConflictWorkspaceDialog({
   );
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      openInitializedRef.current = false;
+      return;
+    }
+    if (openInitializedRef.current) return;
+    openInitializedRef.current = true;
     setSearchQuery("");
     setKindFilter("all");
     setFeedback(null);
-    pendingResolutionRef.current = null;
     const initial =
       focusIncidentId && incidents.some((i) => i.id === focusIncidentId)
         ? focusIncidentId
@@ -152,13 +164,10 @@ export default function PlanningHubConflictWorkspaceDialog({
 
   useEffect(() => {
     if (!open) return;
-    if (
-      selectedIncidentId &&
-      !filteredIncidents.some((i) => i.id === selectedIncidentId)
-    ) {
-      setSelectedIncidentId(filteredIncidents[0]?.id ?? null);
-    }
-  }, [filteredIncidents, selectedIncidentId, open]);
+    setSelectedIncidentId((current) =>
+      reconcileSelectedConflictIncidentId(current, incidents, filteredIncidents),
+    );
+  }, [filteredIncidents, incidents, open]);
 
   const selectedIncident = selectedIncidentId
     ? incidents.find((i) => i.id === selectedIncidentId) ?? null
@@ -176,22 +185,34 @@ export default function PlanningHubConflictWorkspaceDialog({
     const pending = pendingResolutionRef.current;
     if (!pending) return;
     const after = itemsById.get(pending.itemId);
-    if (!after || after.conflicts.length >= pending.beforeCount) return;
-    const syntheticBefore = {
-      ...after,
-      conflicts: [{ facilityResourceId: pending.conflictResourceId, facilityResourceName: "" }],
-    } as WeekplannerItem;
-    const fb = buildConflictResolutionFeedback(syntheticBefore, after, {
-      facilityResourceId: pending.conflictResourceId,
-      facilityResourceName: "",
-      resourceKind: "PITCH_HALL",
-    });
-    if (fb?.kind === "full") {
-      setFeedback(fb.message);
-    } else if (fb?.kind === "partial") {
-      setFeedback(
-        `✓ ${fb.resolvedLabel} behoben · ${fb.remainingCount} weiterer Konflikt${fb.remainingCount === 1 ? "" : "e"} bleibt bestehen`,
-      );
+    const afterIncidentTotal = incidents.length;
+    const incidentResolved =
+      pending.incidentId != null && !incidents.some((incident) => incident.id === pending.incidentId);
+    const incidentCountDecreased = afterIncidentTotal < pending.beforeIncidentTotal;
+    const itemConflictsReduced =
+      !!after && after.conflicts.length < pending.beforeItemConflictCount;
+
+    if (!incidentResolved && !incidentCountDecreased && !itemConflictsReduced) return;
+
+    if (pending.successMessage) {
+      setFeedback(pending.successMessage);
+    } else if (after) {
+      const syntheticBefore = {
+        ...after,
+        conflicts: [{ facilityResourceId: pending.conflictResourceId, facilityResourceName: "" }],
+      } as WeekplannerItem;
+      const fb = buildConflictResolutionFeedback(syntheticBefore, after, {
+        facilityResourceId: pending.conflictResourceId,
+        facilityResourceName: "",
+        resourceKind: "PITCH_HALL",
+      });
+      if (fb?.kind === "full") {
+        setFeedback(fb.message);
+      } else if (fb?.kind === "partial") {
+        setFeedback(
+          `✓ ${fb.resolvedLabel} behoben · ${fb.remainingCount} weiterer Konflikt${fb.remainingCount === 1 ? "" : "e"} bleibt bestehen`,
+        );
+      }
     }
     pendingResolutionRef.current = null;
   }, [itemsById, incidents, pendingResolutionRef]);

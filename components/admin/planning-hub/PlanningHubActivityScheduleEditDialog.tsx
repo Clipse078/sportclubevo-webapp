@@ -20,6 +20,9 @@ type Props = {
   planningResourceGroups?: readonly PlanningResourceGroup[];
   onClose: () => void;
   onSubmitDraft: (draft: SchedulerDraftChange) => void;
+  onApplyDraft: (draft: SchedulerDraftChange) => Promise<void>;
+  applySaving: boolean;
+  applyError: string | null;
   evaluateConflicts: (draft: SchedulerDraftChange) => ManipulationConflictPreview;
   resolveResourceRef: (id: string) => WeekplannerResourceRef | null;
 };
@@ -32,6 +35,9 @@ export default function PlanningHubActivityScheduleEditDialog({
   planningResourceGroups,
   onClose,
   onSubmitDraft,
+  onApplyDraft,
+  applySaving,
+  applyError,
   evaluateConflicts,
   resolveResourceRef,
 }: Props) {
@@ -71,17 +77,21 @@ export default function PlanningHubActivityScheduleEditDialog({
         timezone={timezone}
         resourceCategory={resourceCategory}
         conflictPreview={conflictPreview}
-        saving={false}
-        error={null}
+        saving={applySaving}
+        error={applyError}
         resolveResourceRef={resolveResourceRef}
         planningResourceGroups={planningResourceGroups}
         onCancel={() => {
           setConfirmDraft(null);
           setConflictPreview(null);
         }}
-        onConfirm={() => {
-          onSubmitDraft(confirmDraft);
-          onClose();
+        onConfirm={async () => {
+          try {
+            await onApplyDraft(confirmDraft);
+            onClose();
+          } catch {
+            // Parent surfaces applyError on the confirm layer.
+          }
         }}
       />
     );

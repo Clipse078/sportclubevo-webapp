@@ -28,6 +28,12 @@ const ROOM_E2 = {
   occupancyAfterMinutes: 45,
 };
 
+const defaultApplyProps = {
+  onApplyDraft: vi.fn().mockResolvedValue(undefined),
+  applySaving: false,
+  applyError: null,
+};
+
 function matchItem(): WeekplannerItem {
   return {
     id: "match:m1",
@@ -81,6 +87,7 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
         allItems={[matchItem()]}
         onClose={vi.fn()}
         onSubmitDraft={onSubmitDraft}
+        {...defaultApplyProps}
         evaluateConflicts={() => ({ status: "valid", message: "Keine Konflikte.", newResourceConflictCount: 0 })}
       />,
     );
@@ -115,6 +122,7 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
         allItems={[matchItem()]}
         onClose={vi.fn()}
         onSubmitDraft={vi.fn()}
+        {...defaultApplyProps}
         evaluateConflicts={() => ({ status: "valid", message: "OK", newResourceConflictCount: 0 })}
       />,
     );
@@ -126,9 +134,9 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
     expect(screen.queryByTestId("planning-hub-manipulation-confirm")).toBeNull();
   });
 
-  it("submits draft through confirm apply (same pipeline as DnD)", async () => {
+  it("applies draft through confirm (authoritative mutation pipeline)", async () => {
     const user = userEvent.setup();
-    const onSubmitDraft = vi.fn();
+    const onApplyDraft = vi.fn().mockResolvedValue(undefined);
     render(
       <PlanningHubManipulationEditDialog
         item={matchItem()}
@@ -150,7 +158,10 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
         ]}
         allItems={[matchItem()]}
         onClose={vi.fn()}
-        onSubmitDraft={onSubmitDraft}
+        onSubmitDraft={vi.fn()}
+        onApplyDraft={onApplyDraft}
+        applySaving={false}
+        applyError={null}
         evaluateConflicts={() => ({ status: "valid", message: "OK", newResourceConflictCount: 0 })}
       />,
     );
@@ -160,8 +171,8 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
     await user.click(screen.getByTestId("planning-hub-manipulation-edit-continue"));
     await user.click(screen.getByTestId("planning-hub-manipulation-confirm-apply"));
 
-    expect(onSubmitDraft).toHaveBeenCalledTimes(1);
-    expect(onSubmitDraft.mock.calls[0]![0].proposedResourceId).toBe(ROOM_E2.facilityResourceId);
-    expect(onSubmitDraft.mock.calls[0]![0].timeTarget).toBe("resourceOccupancy");
+    expect(onApplyDraft).toHaveBeenCalledTimes(1);
+    expect(onApplyDraft.mock.calls[0]![0].proposedResourceId).toBe(ROOM_E2.facilityResourceId);
+    expect(onApplyDraft.mock.calls[0]![0].timeTarget).toBe("resourceOccupancy");
   });
 });

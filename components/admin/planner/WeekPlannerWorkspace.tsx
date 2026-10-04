@@ -35,7 +35,10 @@ import { PlanningHubManipulationProvider } from "@/components/admin/planning-hub
 import { buildResourceSegmentsForDay } from "@/lib/planning-hub/scheduler/resource-segments";
 import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
-import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
+import {
+  buildPlanningConflictIncidents,
+  type PlanningConflictIncident,
+} from "@/lib/planning-hub/conflict-attention";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import {
   isPlanningHubResourceTimelinePerspective,
@@ -163,8 +166,11 @@ export default function WeekPlannerWorkspace({
 
   const conflictResolutionPendingRef = useRef<{
     itemId: string;
+    incidentId: string | null;
     conflictResourceId: string;
-    beforeCount: number;
+    beforeIncidentTotal: number;
+    beforeItemConflictCount: number;
+    successMessage: string | null;
   } | null>(null);
 
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
@@ -298,19 +304,33 @@ export default function WeekPlannerWorkspace({
   const handleManipulationApplied = useCallback(
     (draft: SchedulerDraftChange) => {
       const item = itemsById.get(draft.itemId);
-      if (!item || item.conflicts.length === 0) return;
-      const resourceId =
+      if (!item) return;
+      const conflictResourceId =
+        draft.originalResourceId ??
         draft.proposedResourceId ??
         (draft.timeTarget === "resourceOccupancy" ? draft.segmentId?.split(":")[1] : undefined) ??
         item.conflicts[0]?.facilityResourceId;
-      if (!resourceId) return;
+      if (!conflictResourceId) return;
+      const incidentsBefore = buildPlanningConflictIncidents(week);
       conflictResolutionPendingRef.current = {
         itemId: item.id,
-        conflictResourceId: resourceId,
-        beforeCount: item.conflicts.length,
+        incidentId: conflictResourceId
+          ? incidentsBefore.find(
+              (incident) =>
+                incident.facilityResourceId === conflictResourceId &&
+                incident.itemIds.includes(item.id),
+            )?.id ?? null
+          : null,
+        conflictResourceId,
+        beforeIncidentTotal: incidentsBefore.length,
+        beforeItemConflictCount: item.conflicts.length,
+        successMessage:
+          draft.proposedResourceId && draft.timeTarget === "resourceOccupancy"
+            ? `Planung aktualisiert`
+            : "Planung aktualisiert",
       };
     },
-    [itemsById],
+    [itemsById, week],
   );
 
   const wrapManipulation = (node: ReactNode) => {

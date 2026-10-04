@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
+import { revalidatePlannerWeekPaths } from "@/lib/planning-hub/planner-week-revalidation";
 import {
   getTrainingSessionAllocation,
   deleteTrainingSessionAllocation,
@@ -34,6 +35,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Allocation not found" }, { status: 404 });
     }
     await deleteTrainingSessionAllocation(tenantId, allocationId);
+    revalidatePlannerWeekPaths();
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof TrainingSessionAllocationNotFoundError) {

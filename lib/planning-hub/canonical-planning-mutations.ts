@@ -90,8 +90,12 @@ async function syncTrainingAllocationGroup(
   sessionId: string,
   group: "PITCH_HALL" | "DRESSING_ROOM",
   selectedIds: Set<string>,
-) {
+): Promise<number> {
   const currentAllocationsRes = await fetch(`/api/training-sessions/${sessionId}/allocations`);
+  if (!currentAllocationsRes.ok) {
+    const data = (await currentAllocationsRes.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(data?.error ?? "Aktuelle Ressourcenzuweisungen konnten nicht geladen werden.");
+  }
   const currentData = (await currentAllocationsRes.json().catch(() => null)) as
     | { allocations?: Array<{ id: string; facilityResourceType: string }> }
     | null;
@@ -101,11 +105,17 @@ async function syncTrainingAllocationGroup(
     (a) => classifyFacilityResourceType(a.facilityResourceType as FacilityResourceType) === group,
   );
 
-  await Promise.all(
-    inGroup.map((a) =>
-      fetch(`/api/training-sessions/${sessionId}/allocations/${a.id}`, { method: "DELETE" }),
-    ),
-  );
+  let mutations = 0;
+  for (const allocation of inGroup) {
+    const deleteRes = await fetch(`/api/training-sessions/${sessionId}/allocations/${allocation.id}`, {
+      method: "DELETE",
+    });
+    if (!deleteRes.ok) {
+      const data = (await deleteRes.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error ?? "Ressourcenzuweisung konnte nicht entfernt werden.");
+    }
+    mutations += 1;
+  }
 
   for (const resourceId of selectedIds) {
     const res = await fetch(`/api/training-sessions/${sessionId}/allocations`, {
@@ -117,6 +127,29 @@ async function syncTrainingAllocationGroup(
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       throw new Error(data?.error ?? "Ressourcenzuweisung fehlgeschlagen.");
     }
+    mutations += 1;
+  }
+  return mutations;
+}
+
+async function applyTrainingOccurrenceResourceReassign(
+  sessionId: string,
+  targetResourceId: string,
+  category: PlanningHubUrlState["resourceCategory"],
+): Promise<void> {
+  const res = await fetch("/api/training/planning-grid/reassign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sessionId,
+      targetResourceId,
+      category: category === "pitch" ? "PITCH_HALL" : "DRESSING_ROOM",
+      scope: "occurrence",
+    }),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(data?.error ?? "Ressourcenzuweisung fehlgeschlagen.");
   }
 }
 
@@ -125,7 +158,7 @@ async function applyTrainingResourceSwap(
   fromId: string,
   toId: string,
   category: PlanningHubUrlState["resourceCategory"],
-) {
+): Promise<void> {
   const pitchIds = new Set(item.canonicalPitchAllocations.map((r) => r.facilityResourceId));
   const roomIds = new Set(item.canonicalDressingRoomAllocations.map((r) => r.facilityResourceId));
 
@@ -133,14 +166,24 @@ async function applyTrainingResourceSwap(
     const next = new Set(pitchIds);
     next.delete(fromId);
     next.add(toId);
-    await syncTrainingAllocationGroup(item.trainingSessionId, "PITCH_HALL", next);
+    if (next.size === 1 && next.has(toId) && !next.has(fromId)) {
+      await applyTrainingOccurrenceResourceReassign(item.trainingSessionId, toId, category);
+      return;
+    }
+    const mutations = await syncTrainingAllocationGroup(item.trainingSessionId, "PITCH_HALL", next);
+    if (mutations === 0) {
+      throw new Error("Ressourcenzuweisung konnte nicht gespeichert werden.");
+    }
     return;
   }
 
   const next = new Set(roomIds);
   next.delete(fromId);
   next.add(toId);
-  await syncTrainingAllocationGroup(item.trainingSessionId, "DRESSING_ROOM", next);
+  const mutations = await syncTrainingAllocationGroup(item.trainingSessionId, "DRESSING_ROOM", next);
+  if (mutations === 0) {
+    throw new Error("Ressourcenzuweisung konnte nicht gespeichert werden.");
+  }
 }
 
 async function applyMatchResourceSwap(
@@ -215,17 +258,24 @@ async function applyTournamentPitchSwap(
   );
 }
 
+export type StandardPlanSchedulerApplyResult = {
+  applied: boolean;
+  mutationKinds: Array<"activity_time" | "resource_occupancy" | "resource_swap">;
+};
+
 export async function applyStandardPlanSchedulerDraft(
   draft: SchedulerDraftChange,
   resourceCategory: PlanningHubUrlState["resourceCategory"],
   facilityGroups: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] },
   timeZone: string,
-): Promise<void> {
+): Promise<StandardPlanSchedulerApplyResult> {
   const item = draft.item;
+  const mutationKinds: StandardPlanSchedulerApplyResult["mutationKinds"] = [];
 
   if (item.type === "TRAINING") {
     if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
       await applyTrainingTime(item.trainingSessionId, draft.proposedStart, draft.proposedEnd, timeZone);
+      mutationKinds.push("activity_time");
     }
     if (occupancyIntervalChanged(draft)) {
       if (resourceCategory === "dressing") {
@@ -236,6 +286,7 @@ export async function applyStandardPlanSchedulerDraft(
           draft.proposedEnd,
         );
         await applyTrainingDressingOccupancy(item.trainingSessionId, beforeMinutes, afterMinutes);
+        mutationKinds.push("resource_occupancy");
       } else {
         throw new Error(
           "Reservierungszeit am Spielfeld im Standardplan über einen Alternativplan speichern.",
@@ -244,11 +295,22 @@ export async function applyStandardPlanSchedulerDraft(
     }
     if (resourceChanged(draft) && draft.originalResourceId && draft.proposedResourceId) {
       await applyTrainingResourceSwap(item, draft.originalResourceId, draft.proposedResourceId, resourceCategory);
+      mutationKinds.push("resource_swap");
     }
-    return;
+    if (
+      (timeChanged(draft) && !isResourceOccupancyDraft(draft)) ||
+      occupancyIntervalChanged(draft) ||
+      resourceChanged(draft)
+    ) {
+      if (mutationKinds.length === 0) {
+        throw new Error("Planungsänderung konnte nicht gespeichert werden.");
+      }
+    }
+    return { applied: mutationKinds.length > 0, mutationKinds };
   }
 
   if (item.type === "MATCH") {
+    const matchMutationKinds: StandardPlanSchedulerApplyResult["mutationKinds"] = [];
     if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
       const { resolveActivityScheduleAuthority } = await import(
         "@/lib/planning-hub/planning-activity-rescheduling"
@@ -266,6 +328,7 @@ export async function applyStandardPlanSchedulerDraft(
         startAt: draft.proposedStart.toISOString(),
         endAt: draft.proposedEnd.toISOString(),
       });
+      matchMutationKinds.push("activity_time");
     }
 
     const matchBody: Record<string, unknown> = {};
@@ -310,11 +373,13 @@ export async function applyStandardPlanSchedulerDraft(
     }
     if (Object.keys(matchBody).length > 0) {
       await applyMatchPatch(item.eventId, matchBody);
+      matchMutationKinds.push(resourceChanged(draft) ? "resource_swap" : "resource_occupancy");
     }
-    return;
+    return { applied: matchMutationKinds.length > 0, mutationKinds: matchMutationKinds };
   }
 
   if (item.type === "TOURNAMENT") {
+    const tournamentMutationKinds: StandardPlanSchedulerApplyResult["mutationKinds"] = [];
     if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
       const { applyTournamentActivityTime } = await import(
         "@/lib/planning-hub/activity-rescheduling-mutations"
@@ -324,9 +389,14 @@ export async function applyStandardPlanSchedulerDraft(
         draft.proposedStart,
         draft.proposedEnd,
       );
+      tournamentMutationKinds.push("activity_time");
     }
     if (resourceChanged(draft) && draft.originalResourceId && draft.proposedResourceId) {
       await applyTournamentPitchSwap(item, draft.originalResourceId, draft.proposedResourceId);
+      tournamentMutationKinds.push("resource_swap");
     }
+    return { applied: tournamentMutationKinds.length > 0, mutationKinds: tournamentMutationKinds };
   }
+
+  return { applied: false, mutationKinds };
 }

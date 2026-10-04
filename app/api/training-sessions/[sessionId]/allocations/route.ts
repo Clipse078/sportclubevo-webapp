@@ -15,6 +15,7 @@ import {
   PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
   PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
 } from "@/lib/permissions/planning-allocation-permissions";
+import { revalidatePlannerWeekPaths } from "@/lib/planning-hub/planner-week-revalidation";
 import {
   createTrainingSessionAllocation,
   listAllocationsByTrainingSession,
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       notes: typeof body.notes === "string" ? body.notes.trim() || null : null,
       displayOrder: typeof body.displayOrder === "number" ? body.displayOrder : undefined,
     });
+    revalidatePlannerWeekPaths();
     return NextResponse.json({ allocation }, { status: 201 });
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {

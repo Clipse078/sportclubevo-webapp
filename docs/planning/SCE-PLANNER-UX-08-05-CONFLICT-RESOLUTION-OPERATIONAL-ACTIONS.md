@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS
 
-**Human UAT:** NOT YET PASSED
+**Human UAT:** BLOCKED — RETEST REQUIRED (08-05R5)
 
 **Base:** STAGE `aec52552837e5d789a6f8c5d95a0f05b522a2401` (08-01…08-04 merged)
 
@@ -247,3 +247,53 @@ Single in-memory `buildManipulationResourceAvailabilityList` per reservation win
 ## Regression hooks
 
 `lib/planning-hub/__tests__/sce-planner-ux-08-05-conflict-resolution.test.ts` + `components/admin/planning-hub/__tests__/PlanningHubConflictResolutionHandoff.test.tsx` + existing 08-02/08-03/08-04 and conflict-attention tests.
+
+## 08-05R5 — Applied resource mutation / read-after-write blocker
+
+### Human UAT reproduction (08-05R4 PASS path)
+
+Wochenplaner → **Prüfen** → Kunstrasen 2 A (Junioren F1 + F2) → **Spielfeld ändern** (F2) → Hauptfeld A → **Weiter** → „Keine neuen Ressourcenkonflikte“ → **Änderung übernehmen**.
+
+Observed: confirm layer closed, conflict workspace unchanged (still Kunstrasen 2 A, same incident, **25 Konflikte**).
+
+### Root cause
+
+**A — apply never ran (primary):** `PlanningHubManipulationEditDialog` / activity schedule edit confirm called `onSubmitDraft` + `onClose()` only. That staged `confirmationDraft` in context but did **not** invoke the authoritative `handleConfirm` apply pipeline. Users could complete the visible confirm while **zero** canonical mutation executed.
+
+**E — read-after-write / workspace (secondary):** `PlanningHubConflictWorkspaceDialog` reset `pendingResolutionRef`, feedback, filters, and selection whenever `incidents` changed (including post-`router.refresh()`), preventing success acknowledgement and stable incident reconciliation.
+
+### DB truth (expected canonical model)
+
+| Layer | Before F2 move | After successful F2 move |
+|-------|----------------|---------------------------|
+| TrainingSeries allocation | Kunstrasen 2 A (both teams default) | unchanged |
+| F2 `TrainingSessionAllocation` | none (inherits series) | **Hauptfeld A** occurrence override (PITCH_HALL group) |
+| F1 occurrence | Kunstrasen 2 A | unchanged |
+| F2 sport time | 17:00–18:30 | unchanged |
+| F2 dressing | unchanged | unchanged |
+
+Conflict detection reads **effective** `pitchAllocations` on week items (not a separate persisted incident store).
+
+### Fix
+
+| Area | Change |
+|------|--------|
+| Apply handoff | Edit/schedule confirm → `applyConfirmationDraft` (same pipeline as DnD confirm): validate → mutate → `planner-revalidate` → `router.refresh()` |
+| Training pitch move | Standardplan F2 occurrence move uses canonical `POST /api/training/planning-grid/reassign` (`scope: occurrence`) instead of silent client-only staging |
+| Mutation contract | `applyStandardPlanSchedulerDraft` returns `{ applied, mutationKinds }`; throws when a requested change produces **zero** writes |
+| Cache | `revalidatePlannerWeekPaths()` on training session allocation POST/DELETE, planning-grid reassign, and `POST /api/planning-hub/planner-revalidate` after hub apply |
+| Workspace | Initialize conflict workspace only on **open**; reconcile selected incident by stable id when incidents rebuild; success feedback when incident count/item conflicts decrease |
+| Failure UX | Apply errors stay on confirm layer (`applyError`); dialog does not close as success |
+
+### Tests
+
+- `lib/planning-hub/__tests__/sce-planner-ux-08-05-r5-read-after-write.test.ts`
+- Updated `PlanningHubManipulationEditDialog.test.tsx` (confirm invokes apply, not stage-only)
+
+### Facility integrity input (FACILITY-INTEGRITY-01)
+
+No duplicate persisted incident entity; week read model is assembled from series + occurrence allocations + plan overrides. R5 reinforces that **occurrence overrides** must be written through the same services the weekplanner loader consumes (`session-allocation-service` / planning-grid reassign).
+
+### Status
+
+**IN PROGRESS** — automated R5 coverage added; **Human UAT retest required** (same Kunstrasen 2 A → Hauptfeld A scenario).

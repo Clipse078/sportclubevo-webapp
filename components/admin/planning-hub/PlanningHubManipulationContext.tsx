@@ -869,118 +869,149 @@ export function PlanningHubManipulationProvider({
     [router],
   );
 
-  const handleConfirm = useCallback(async () => {
-    if (!confirmationDraft) return;
-    setConfirmSaving(true);
-    setConfirmError(null);
-    try {
-      const groups = facilityGroupsByAllocationGroup ?? {
-        PITCH_HALL: [],
-        DRESSING_ROOM: [],
-      };
+  const applyConfirmationDraft = useCallback(
+    async (draft: SchedulerDraftChange) => {
+      setConfirmSaving(true);
+      setConfirmError(null);
+      try {
+        const groups = facilityGroupsByAllocationGroup ?? {
+          PITCH_HALL: [],
+          DRESSING_ROOM: [],
+        };
 
-      const draftPayload = {
-        draft: {
-          ...confirmationDraft,
-          originalStart: confirmationDraft.originalStart.toISOString(),
-          originalEnd: confirmationDraft.originalEnd.toISOString(),
-          proposedStart: confirmationDraft.proposedStart.toISOString(),
-          proposedEnd: confirmationDraft.proposedEnd.toISOString(),
-        },
-        allItems,
-        resourceCategory: effectiveResourceCategory,
-        targetResource: confirmationDraft.proposedResourceId
-          ? resolveResourceRef(confirmationDraft.proposedResourceId)
-          : null,
-      };
+        const draftPayload = {
+          draft: {
+            ...draft,
+            originalStart: draft.originalStart.toISOString(),
+            originalEnd: draft.originalEnd.toISOString(),
+            proposedStart: draft.proposedStart.toISOString(),
+            proposedEnd: draft.proposedEnd.toISOString(),
+          },
+          allItems,
+          resourceCategory: effectiveResourceCategory,
+          targetResource: draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null,
+        };
 
-      if (isActivityTimeDraft(confirmationDraft)) {
-        const validateRes = await fetch("/api/planning-hub/activity-rescheduling/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...draftPayload,
+        if (isActivityTimeDraft(draft)) {
+          const validateRes = await fetch("/api/planning-hub/activity-rescheduling/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...draftPayload,
+              isStandardplan,
+              alternativePlanId,
+            }),
+          });
+          if (!validateRes.ok) {
+            const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
+            recoverFromRejectedMutation(validateRes.status);
+            throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+          }
+        } else {
+          const validateRes = await fetch("/api/planning-hub/resource-manipulation/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(draftPayload),
+          });
+          if (!validateRes.ok) {
+            const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
+            recoverFromRejectedMutation(validateRes.status);
+            throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+          }
+        }
+
+        let applied = false;
+        if (isActivityTimeDraft(draft)) {
+          await applyPlanningHubActivityRescheduleDraft(draft, {
             isStandardplan,
             alternativePlanId,
-          }),
-        });
-        if (!validateRes.ok) {
-          const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
-          recoverFromRejectedMutation(validateRes.status);
-          throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+            resourceCategory: urlState.resourceCategory,
+            facilityGroups: groups,
+            overridesByKey,
+            timeZone: timezone,
+          });
+          applied = true;
+        } else if (isStandardplan) {
+          const { applyStandardPlanSchedulerDraft } = await import(
+            "@/lib/planning-hub/canonical-planning-mutations"
+          );
+          const result = await applyStandardPlanSchedulerDraft(
+            draft,
+            effectiveResourceCategory,
+            groups,
+            timezone,
+          );
+          applied = result.applied;
+        } else if (alternativePlanId) {
+          const { applyAlternativePlanSchedulerDraft } = await import(
+            "@/lib/planning-hub/operational-planning-mutations"
+          );
+          const resourceSwapRequested =
+            !!draft.proposedResourceId &&
+            !!draft.originalResourceId &&
+            draft.proposedResourceId !== draft.originalResourceId;
+          const occupancyChangeRequested =
+            draft.timeTarget === "resourceOccupancy" &&
+            (draft.proposedStart.getTime() !== draft.originalStart.getTime() ||
+              draft.proposedEnd.getTime() !== draft.originalEnd.getTime());
+          if (!resourceSwapRequested && !occupancyChangeRequested && !isActivityTimeDraft(draft)) {
+            throw new Error("Planungsänderung konnte nicht gespeichert werden.");
+          }
+          await applyAlternativePlanSchedulerDraft(
+            draft,
+            alternativePlanId,
+            effectiveResourceCategory,
+            overridesByKey,
+            timezone,
+          );
+          applied = true;
+        } else {
+          throw new Error("Planungsänderung ist für diesen Plan nicht verfügbar.");
         }
-      } else {
-        const validateRes = await fetch("/api/planning-hub/resource-manipulation/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draftPayload),
-        });
-        if (!validateRes.ok) {
-          const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
-          recoverFromRejectedMutation(validateRes.status);
-          throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
-        }
-      }
 
-      if (isActivityTimeDraft(confirmationDraft)) {
-        await applyPlanningHubActivityRescheduleDraft(confirmationDraft, {
-          isStandardplan,
-          alternativePlanId,
-          resourceCategory: urlState.resourceCategory,
-          facilityGroups: groups,
-          overridesByKey,
-          timeZone: timezone,
-        });
-      } else if (isStandardplan) {
-        const { applyStandardPlanSchedulerDraft } = await import(
-          "@/lib/planning-hub/canonical-planning-mutations"
-        );
-        await applyStandardPlanSchedulerDraft(
-          confirmationDraft,
-          effectiveResourceCategory,
-          groups,
-          timezone,
-        );
-      } else if (alternativePlanId) {
-        const { applyAlternativePlanSchedulerDraft } = await import(
-          "@/lib/planning-hub/operational-planning-mutations"
-        );
-        await applyAlternativePlanSchedulerDraft(
-          confirmationDraft,
-          alternativePlanId,
-          effectiveResourceCategory,
-          overridesByKey,
-          timezone,
-        );
+        if (!applied) {
+          throw new Error("Planungsänderung konnte nicht gespeichert werden.");
+        }
+
+        await fetch("/api/planning-hub/planner-revalidate", { method: "POST" });
+        onManipulationApplied?.(draft);
+        router.refresh();
+        setConfirmationDraft(null);
+        setPreviewDraft(null);
+        setManipulationCategoryOverride(null);
+        setEditTarget(null);
+        setScheduleEditItem(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+        if (/keine berechtigung/i.test(message)) {
+          recoverFromRejectedMutation(403);
+        }
+        setConfirmError(message);
+        throw err;
+      } finally {
+        setConfirmSaving(false);
       }
-      onManipulationApplied?.(confirmationDraft);
-      router.refresh();
-      setConfirmationDraft(null);
-      setPreviewDraft(null);
-      setManipulationCategoryOverride(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
-      if (/keine berechtigung/i.test(message)) {
-        recoverFromRejectedMutation(403);
-      }
-      setConfirmError(message);
-    } finally {
-      setConfirmSaving(false);
-    }
-  }, [
-    confirmationDraft,
-    isStandardplan,
-    effectiveResourceCategory,
-    urlState.resourceCategory,
-    facilityGroupsByAllocationGroup,
-    timezone,
-    alternativePlanId,
-    overridesByKey,
-    allItems,
-    resolveResourceRef,
-    recoverFromRejectedMutation,
-    onManipulationApplied,
-  ]);
+    },
+    [
+      isStandardplan,
+      effectiveResourceCategory,
+      urlState.resourceCategory,
+      facilityGroupsByAllocationGroup,
+      timezone,
+      alternativePlanId,
+      overridesByKey,
+      allItems,
+      resolveResourceRef,
+      recoverFromRejectedMutation,
+      onManipulationApplied,
+      router,
+    ],
+  );
+
+  const handleConfirm = useCallback(async () => {
+    if (!confirmationDraft) return;
+    await applyConfirmationDraft(confirmationDraft);
+  }, [confirmationDraft, applyConfirmationDraft]);
 
   const value: PlanningHubManipulationContextValue = {
     enabled,
@@ -1015,6 +1046,9 @@ export function PlanningHubManipulationProvider({
           planningResourceGroups={planningResourceGroups}
           onClose={() => setScheduleEditItem(null)}
           onSubmitDraft={submitEditorDraft}
+          onApplyDraft={applyConfirmationDraft}
+          applySaving={confirmSaving}
+          applyError={confirmError}
           evaluateConflicts={(draft) =>
             evaluateManipulationConflicts(allItems, draft, null, urlState.resourceCategory)
           }
@@ -1038,6 +1072,9 @@ export function PlanningHubManipulationProvider({
             setManipulationCategoryOverride(null);
           }}
           onSubmitDraft={submitEditorDraft}
+          onApplyDraft={applyConfirmationDraft}
+          applySaving={confirmSaving}
+          applyError={confirmError}
           evaluateConflicts={(draft, targetRef) =>
             evaluateManipulationConflicts(allItems, draft, targetRef, effectiveResourceCategory)
           }
