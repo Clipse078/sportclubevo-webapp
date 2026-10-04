@@ -9,10 +9,17 @@ import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/
 import { isoToLocalTime, combineTimeWithReferenceDay } from "@/lib/planning-hub/planner-time";
 import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resource-segment-display";
 import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
+import { SCE_DIALOG_VARIANT_FORM } from "@/lib/shell/responsive-layout";
+import { cn } from "@/lib/cn";
+import {
+  buildManipulationResourceAvailabilityList,
+  sortManipulationResourceAvailabilityForPicker,
+  type ManipulationResourceKind,
+} from "@/lib/planning-hub/manipulation-resource-availability";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
 import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
+import PlanningHubManipulationResourceAvailabilityBoard from "./PlanningHubManipulationResourceAvailabilityBoard";
 import PlanningHubManipulationResourceAvailabilityPicker from "./PlanningHubManipulationResourceAvailabilityPicker";
-import type { ManipulationResourceKind } from "@/lib/planning-hub/manipulation-resource-availability";
 
 type Props = {
   item: WeekplannerItem;
@@ -115,6 +122,27 @@ export default function PlanningHubManipulationEditDialog({
   const resourceKind: ManipulationResourceKind =
     resourceCategory === "pitch" ? "PITCH_HALL" : "DRESSING_ROOM";
 
+  const availabilityEntries = useMemo(() => {
+    const list = buildManipulationResourceAvailabilityList({
+      allItems,
+      editingItem: item,
+      currentResourceId: resourceId,
+      resourceOptions,
+      reservationStartAt: reservationWindow.startAt,
+      reservationEndAt: reservationWindow.endAt,
+      resourceKind,
+    });
+    return sortManipulationResourceAvailabilityForPicker(list);
+  }, [
+    allItems,
+    item,
+    resourceId,
+    resourceOptions,
+    reservationWindow.startAt,
+    reservationWindow.endAt,
+    resourceKind,
+  ]);
+
   if (confirmDraft && conflictPreview) {
     return (
       <PlanningHubManipulationConfirm
@@ -144,6 +172,7 @@ export default function PlanningHubManipulationEditDialog({
       testId="planning-hub-manipulation-edit"
       onClose={onClose}
       initialFocusRef={firstFieldRef}
+      panelClassName={cn(SCE_DIALOG_VARIANT_FORM, "max-w-[min(42rem,var(--sce-dialog-form-max-width))]")}
     >
       <form
         aria-labelledby={`${formId}-title`}
@@ -177,6 +206,7 @@ export default function PlanningHubManipulationEditDialog({
             reservationEndAt={reservationWindow.endAt}
             timezone={timezone}
             initialFocusRef={firstFieldRef}
+            availabilityEntries={availabilityEntries}
           />
         </div>
 
@@ -202,6 +232,19 @@ export default function PlanningHubManipulationEditDialog({
             onChange={(event) => setEndTime(event.target.value)}
           />
         </div>
+
+        <PlanningHubManipulationResourceAvailabilityBoard
+          item={item}
+          resourceKind={resourceKind}
+          availabilityEntries={availabilityEntries}
+          facilityGroups={facilityGroups}
+          planningResourceGroups={planningResourceGroups}
+          selectedResourceId={targetResourceId}
+          onSelectResourceId={setTargetResourceId}
+          reservationStartAt={reservationWindow.startAt}
+          reservationEndAt={reservationWindow.endAt}
+          timezone={timezone}
+        />
 
         <div className="mt-4 flex justify-end gap-2">
           <button

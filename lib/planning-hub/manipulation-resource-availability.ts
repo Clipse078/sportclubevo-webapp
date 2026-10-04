@@ -256,6 +256,53 @@ export function manipulationResourceAvailabilityStatusText(
   return "Belegt";
 }
 
+/** Compact board cell lines (text + semantics; not color-only). */
+export function manipulationResourceAvailabilityBoardLines(
+  entry: ManipulationResourceAvailability,
+  editingItem: WeekplannerItem,
+): string[] {
+  if (entry.isCurrent) {
+    if (editingItem.conflicts.length > 0) return ["Aktuell", "Konflikt"];
+    return ["Aktuell"];
+  }
+  if (entry.isRecommended && entry.state === "AVAILABLE") return ["Empfohlen", "Frei"];
+  if (entry.state === "AVAILABLE") return ["Frei"];
+  if (entry.state === "PARTIAL") return ["Teilweise"];
+  return ["Belegt"];
+}
+
+export function manipulationResourceAvailabilityCellSelectable(
+  entry: ManipulationResourceAvailability,
+): boolean {
+  return entry.state === "AVAILABLE" && !entry.isCurrent;
+}
+
+export function manipulationResourceAvailabilityAccessibleName(
+  entry: ManipulationResourceAvailability,
+  editingItem: WeekplannerItem,
+  facilityLabel: string,
+  segmentLabel: string,
+): string {
+  const parts: string[] = [`${facilityLabel} ${segmentLabel}`];
+  for (const line of manipulationResourceAvailabilityBoardLines(entry, editingItem)) {
+    parts.push(line.toLowerCase());
+  }
+  return parts.join(", ");
+}
+
+export function formatManipulationReservationWindow(
+  start: Date,
+  end: Date,
+  timezone: string,
+): string {
+  const opts: Intl.DateTimeFormatOptions = {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  };
+  return `${start.toLocaleTimeString("de-CH", opts)}–${end.toLocaleTimeString("de-CH", opts)}`;
+}
+
 export function manipulationResourceAvailabilitySecondaryLine(
   entry: ManipulationResourceAvailability,
 ): string | null {

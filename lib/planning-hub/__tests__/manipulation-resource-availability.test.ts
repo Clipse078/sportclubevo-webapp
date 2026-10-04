@@ -4,6 +4,8 @@ import {
   pickRecommendedManipulationResourceId,
   sortManipulationResourceAvailabilityForPicker,
   manipulationResourceAvailabilityStatusText,
+  manipulationResourceAvailabilityBoardLines,
+  manipulationResourceAvailabilityCellSelectable,
 } from "../manipulation-resource-availability";
 import type { WeekplannerMatchItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 
@@ -323,6 +325,33 @@ describe("manipulation-resource-availability — SCE-PLANNER-UX-08-05R2", () => 
       resourceKind: "PITCH_HALL",
     });
     expect(list[0]!.state).toBe("AVAILABLE");
+  });
+
+  it("board lines distinguish current conflict and recommended free", () => {
+    const editing = matchBase({});
+    const other = matchBase({
+      id: "match:other",
+      pitchAllocations: [KR2_B],
+      conflicts: [],
+    });
+    const list = buildManipulationResourceAvailabilityList({
+      allItems: [editing, other],
+      editingItem: editing,
+      currentResourceId: KR2_A.facilityResourceId,
+      resourceOptions: [KR2_A, KR2_B, KR3_A],
+      reservationStartAt: reservationStart,
+      reservationEndAt: reservationEnd,
+      resourceKind: "PITCH_HALL",
+    });
+    const current = list.find((e) => e.resourceId === KR2_A.facilityResourceId)!;
+    const recommended = list.find((e) => e.isRecommended)!;
+    expect(manipulationResourceAvailabilityBoardLines(current, editing)).toEqual(["Aktuell", "Konflikt"]);
+    expect(manipulationResourceAvailabilityBoardLines(recommended, editing)).toEqual([
+      "Empfohlen",
+      "Frei",
+    ]);
+    expect(manipulationResourceAvailabilityCellSelectable(recommended)).toBe(true);
+    expect(manipulationResourceAvailabilityCellSelectable(current)).toBe(false);
   });
 
   it("uses shared dressing-room availability model", () => {

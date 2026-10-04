@@ -147,6 +147,39 @@ Listbox-style popover: keyboard open, arrow navigation, Enter select, Escape clo
 
 **IN PROGRESS** — automated coverage in `manipulation-resource-availability.test.ts`; **Human UAT not yet passed** for informed picker flow (pitch + Garderobe).
 
+## 08-05R3 — At-a-glance Resource Availability Board
+
+### Human UAT finding
+
+R2 canonical availability architecture **accepted** (derivation, pitch hierarchy, states, recommendation, reservation reactivity, server validation). Human UAT of **Planung ändern** found availability still **primarily behind the resource picker** — coordinators saw *what* was wrong but not *where to move* without opening the dropdown.
+
+**R2:** functional pass · **R2 UX:** needs R3 presentation.
+
+### Architecture
+
+| Layer | Role |
+|-------|------|
+| Truth | Unchanged — `manipulation-resource-availability.ts` (no second calculation) |
+| Primary UI | `PlanningHubManipulationResourceAvailabilityBoard` — immediate pitch matrix / dressing list |
+| Secondary UI | `PlanningHubManipulationResourceAvailabilityPicker` — compact selected resource, search, a11y fallback |
+| Dialog | `PlanningHubManipulationEditDialog` — shared memoized availability entries for picker + board; reservation fields recompute board header and cells |
+
+### Pitch board
+
+- Header **Spielfeld-Verfügbarkeit** + **Für Reservierung HH:MM–HH:MM**
+- Rows grouped by physical facility (`PlanningResourceGroup` / facility groups)
+- Columns **Gesamt · A · B** when subdivided
+- Cell text: **Frei**, **Belegt**, **Teilweise**, **Aktuell**, **Konflikt**, **Empfohlen**
+- **Frei** / **Empfohlen** cells are direct selection controls; occupied details via focusable detail control (popover)
+
+### Garderobe board
+
+- **Garderoben-Verfügbarkeit** compact list (same canonical model, not a pitch matrix)
+
+### Status
+
+**IN PROGRESS** — `PlanningHubManipulationResourceAvailabilityBoard.test.tsx` + extended availability tests; **Human UAT not yet passed**.
+
 ## Regression hooks
 
 `lib/planning-hub/__tests__/sce-planner-ux-08-05-conflict-resolution.test.ts` + `components/admin/planning-hub/__tests__/PlanningHubConflictResolutionHandoff.test.tsx` + existing 08-02/08-03/08-04 and conflict-attention tests.

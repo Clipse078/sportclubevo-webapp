@@ -11,6 +11,7 @@ import {
   manipulationResourceAvailabilitySecondaryLine,
   manipulationResourceAvailabilityStatusText,
   sortManipulationResourceAvailabilityForPicker,
+  formatManipulationReservationWindow,
   type ManipulationResourceAvailability,
   type ManipulationResourceKind,
 } from "@/lib/planning-hub/manipulation-resource-availability";
@@ -31,16 +32,9 @@ type Props = {
   timezone: string;
   initialFocusRef?: React.RefObject<HTMLElement | null>;
   testId?: string;
+  /** Precomputed R2 availability (shared with board — no duplicate derivation). */
+  availabilityEntries?: readonly ManipulationResourceAvailability[];
 };
-
-function formatReservationWindow(start: Date, end: Date, timezone: string): string {
-  const opts: Intl.DateTimeFormatOptions = {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: timezone,
-  };
-  return `${start.toLocaleTimeString("de-CH", opts)}–${end.toLocaleTimeString("de-CH", opts)}`;
-}
 
 function resourceMatchesSearch(
   entry: ManipulationResourceAvailability,
@@ -139,6 +133,7 @@ export default function PlanningHubManipulationResourceAvailabilityPicker({
   timezone,
   initialFocusRef,
   testId = "planning-hub-manipulation-resource-picker",
+  availabilityEntries: availabilityEntriesProp,
 }: Props) {
   const labelId = useId();
   const listboxId = useId();
@@ -148,6 +143,7 @@ export default function PlanningHubManipulationResourceAvailabilityPicker({
   const [activeIndex, setActiveIndex] = useState(0);
 
   const availabilityEntries = useMemo(() => {
+    if (availabilityEntriesProp) return [...availabilityEntriesProp];
     const list = buildManipulationResourceAvailabilityList({
       allItems,
       editingItem: item,
@@ -159,10 +155,10 @@ export default function PlanningHubManipulationResourceAvailabilityPicker({
     });
     return sortManipulationResourceAvailabilityForPicker(list);
   }, [
+    availabilityEntriesProp,
     allItems,
     item,
     currentResourceId,
-    selectedResourceId,
     resourceOptions,
     reservationStartAt,
     reservationEndAt,
@@ -346,7 +342,8 @@ export default function PlanningHubManipulationResourceAvailabilityPicker({
           {pickerTitle}
         </p>
         <p className="px-2 text-[11px] text-[var(--text-2)]">
-          Für Reservierung {formatReservationWindow(reservationStartAt, reservationEndAt, timezone)}
+          Für Reservierung{" "}
+          {formatManipulationReservationWindow(reservationStartAt, reservationEndAt, timezone)}
         </p>
         {facilityGroups.length > 0 ? (
           <input
