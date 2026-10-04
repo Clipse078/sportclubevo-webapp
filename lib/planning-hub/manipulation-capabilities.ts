@@ -1,5 +1,10 @@
 import type { PlanningHubManipulationSurface } from "@/lib/planning-hub/planner-perspective";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import {
+  canMutateActivityTimeForItem,
+  canMutateResourceReservationForItem,
+  type ManipulationActorPermissions,
+} from "@/lib/planning-hub/manipulation-server-authorization";
 import { resolveActivityScheduleAuthority } from "@/lib/planning-hub/planning-activity-rescheduling";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
@@ -19,6 +24,8 @@ export type ManipulationPermissionContext = {
   isStandardplan: boolean;
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  /** Facility allocation planning without full training/event domain manage. */
+  canManageAllocations: boolean;
   /** Alternative plan — operational overrides permitted when set. */
   alternativePlanId: string | null;
   resourceCategory: PlanningHubUrlState["resourceCategory"];
@@ -46,14 +53,20 @@ function resourceOccupancyCaps(enabled: boolean): Pick<
   };
 }
 
-function canManageItem(
-  item: WeekplannerItem,
-  ctx: ManipulationPermissionContext,
-): boolean {
-  if (item.type === "VERANSTALTUNG") return false;
-  if (item.type === "TRAINING") return ctx.canManageTrainings;
-  if (item.type === "MATCH" || item.type === "TOURNAMENT") return ctx.canManageEvents;
-  return false;
+function actorFromContext(ctx: ManipulationPermissionContext): ManipulationActorPermissions {
+  return {
+    canManageTrainings: ctx.canManageTrainings,
+    canManageEvents: ctx.canManageEvents,
+    canManageAllocations: ctx.canManageAllocations,
+  };
+}
+
+function hasAnyManageAccess(item: WeekplannerItem, ctx: ManipulationPermissionContext): boolean {
+  const actor = actorFromContext(ctx);
+  return (
+    canMutateActivityTimeForItem(item, actor) ||
+    canMutateResourceReservationForItem(item, actor)
+  );
 }
 
 function resourceTimelineCaps(
@@ -128,31 +141,37 @@ export function getSchedulerManipulationCapabilities(
   item: WeekplannerItem,
   ctx: ManipulationPermissionContext,
 ): SchedulerManipulationCapabilities {
-  if (!canManageItem(item, ctx)) return NONE;
+  if (!hasAnyManageAccess(item, ctx)) return NONE;
+
+  const actor = actorFromContext(ctx);
+  const canResource = canMutateResourceReservationForItem(item, actor);
+  const canActivityDomain = canMutateActivityTimeForItem(item, actor);
 
   if (ctx.isStandardplan) {
     if (item.type === "TRAINING") {
       const onResource = ctx.manipulationSurface === "resourceTimeline";
       if (onResource) {
         return {
-          ...resourceTimelineCaps(ctx, true),
+          ...resourceTimelineCaps(ctx, canResource),
         };
       }
       return {
-        ...calendarCaps(ctx, true, true),
+        ...calendarCaps(ctx, canActivityDomain, canActivityDomain),
       };
     }
     if (item.type === "MATCH") {
       const onResource = ctx.manipulationSurface === "resourceTimeline";
       if (onResource) {
         return {
-          ...resourceTimelineCaps(ctx, true),
+          ...resourceTimelineCaps(ctx, canResource),
         };
       }
-      const canActivity = resolveActivityScheduleAuthority(item, {
-        isStandardplan: true,
-        alternativePlanId: null,
-      }).permitted;
+      const canActivity =
+        canActivityDomain &&
+        resolveActivityScheduleAuthority(item, {
+          isStandardplan: true,
+          alternativePlanId: null,
+        }).permitted;
       return {
         ...calendarCaps(ctx, canActivity, canActivity),
       };
@@ -161,13 +180,18 @@ export function getSchedulerManipulationCapabilities(
       const onResource = ctx.manipulationSurface === "resourceTimeline";
       if (onResource) {
         return {
-          ...resourceTimelineCaps(ctx, ctx.resourceCategory === "pitch"),
+          ...resourceTimelineCaps(
+            ctx,
+            canResource && ctx.resourceCategory === "pitch",
+          ),
         };
       }
-      const canActivity = resolveActivityScheduleAuthority(item, {
-        isStandardplan: true,
-        alternativePlanId: null,
-      }).permitted;
+      const canActivity =
+        canActivityDomain &&
+        resolveActivityScheduleAuthority(item, {
+          isStandardplan: true,
+          alternativePlanId: null,
+        }).permitted;
       return {
         ...calendarCaps(ctx, canActivity, canActivity),
       };
@@ -182,12 +206,14 @@ export function getSchedulerManipulationCapabilities(
     const dressingRoomChange =
       ctx.resourceCategory === "dressing" && (item.type === "TRAINING" || item.type === "MATCH");
     if (onResource) {
+      const allowResource =
+        canResource && (dressingRoomChange || ctx.resourceCategory === "pitch");
       return {
-        ...resourceTimelineCaps(ctx, dressingRoomChange || ctx.resourceCategory === "pitch"),
+        ...resourceTimelineCaps(ctx, allowResource),
       };
     }
     return {
-      ...calendarCaps(ctx, true, true),
+      ...calendarCaps(ctx, canActivityDomain, canActivityDomain),
     };
   }
 

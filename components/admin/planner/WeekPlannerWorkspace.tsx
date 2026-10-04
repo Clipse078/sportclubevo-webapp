@@ -49,6 +49,7 @@ type OverrideEditingContext = {
 type CanonicalEditingContext = {
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canManageAllocations: boolean;
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
@@ -306,6 +307,7 @@ export default function WeekPlannerWorkspace({
         alternativePlanId={activePlanId}
         canManageTrainings={canonicalEditing?.canManageTrainings ?? false}
         canManageEvents={canonicalEditing?.canManageEvents ?? false}
+        canManageAllocations={canonicalEditing?.canManageAllocations ?? false}
         facilityGroupsByAllocationGroup={manipulationFacilityGroups ?? undefined}
         overridesByKey={overrideEditing?.overridesByKey}
         resourceRows={resourceRowsForManipulation}

@@ -117,7 +117,7 @@ Distinguish SCE-owned, imported, synchronized, and read-only authoritative activ
 | **08-02** | **Canonical Resource Manipulation** — see [`SCE-PLANNER-UX-08-02-CANONICAL-RESOURCE-MANIPULATION.md`](./SCE-PLANNER-UX-08-02-CANONICAL-RESOURCE-MANIPULATION.md) |
 | **SCE-ICONS-02** | **Premium Navigation Icons** — Club (shield v1) + Spiele (VS circle v4); ASAP after 08-02, before 08-03 — see [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](../roadmap/SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | **Activity Rescheduling** — primarily Kalender; activity date/time/duration semantics; impact-aware confirmation (allocations, teams, trainers, authority, comms, Infoboard, Dashboard, SFV sync); not silent dependent propagation |
-| **08-04** | Permission-aware drag/drop & rescheduling |
+| **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (see dedicated doc) |
 | **08-05** | Conflict resolution & operational actions |
 | **08-06** | List / search / bulk operational UX |
 | **08-07** | Responsive / tablet hardening |
@@ -194,3 +194,6 @@ Detail for **08-02** and **08-03** is canonical in this document (R4); **08-04�
 | **STATUS-DESIGN-01** | Separate activity identity colours from operational status semantics |
 | **PERFORMANCE-INFRA-01** | Vercel ↔ Neon runtime/latency verification |
 | **BUILD-PERF** | Default `npm run build` memory / OOM |
+| **SCE-PLANNER-UX-AGGREGATION-01** | Mixed activity cluster presentation (08-04 UAT discovery) — PLANNED |
+| **SCE-PLANNER-UX-LIST-01** | Operational list experience (08-04 UAT discovery) — PLANNED |
+| **PEOPLE-ACCESS-IMPERSONATION-01** | Club Admin impersonation availability (08-04 UAT observation) — OPEN / SEPARATE |

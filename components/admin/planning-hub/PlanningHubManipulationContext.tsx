@@ -15,6 +15,7 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import { applyPlanningHubActivityRescheduleDraft } from "@/lib/planning-hub/activity-rescheduling-mutations";
 import { isActivityTimeDraft } from "@/lib/planning-hub/planning-activity-rescheduling";
+import { formatManipulationHttpError } from "@/lib/planning-hub/manipulation-server-authorization";
 import {
   evaluateManipulationConflicts,
   projectItemWithDraft,
@@ -176,6 +177,7 @@ type ProviderProps = {
   alternativePlanId: string | null;
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canManageAllocations: boolean;
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   overridesByKey?: Record<string, WeekplannerOverrideRow[]>;
   resourceRows?: { resourceId: string; ref: WeekplannerResourceRef }[];
@@ -191,6 +193,7 @@ export function PlanningHubManipulationProvider({
   alternativePlanId,
   canManageTrainings,
   canManageEvents,
+  canManageAllocations,
   facilityGroupsByAllocationGroup,
   overridesByKey = {},
   resourceRows = [],
@@ -227,7 +230,7 @@ export function PlanningHubManipulationProvider({
   const desktopMinWidth = useDesktopMinWidth768();
   const enabled =
     desktopMinWidth &&
-    (canManageTrainings || canManageEvents) &&
+    (canManageTrainings || canManageEvents || canManageAllocations) &&
     (isStandardplan || !!alternativePlanId);
 
   const manipulationSurface = manipulationSurfaceForPerspective(urlState.perspective);
@@ -237,6 +240,7 @@ export function PlanningHubManipulationProvider({
       isStandardplan,
       canManageTrainings,
       canManageEvents,
+      canManageAllocations,
       alternativePlanId,
       resourceCategory: urlState.resourceCategory,
       manipulationSurface,
@@ -245,6 +249,7 @@ export function PlanningHubManipulationProvider({
       isStandardplan,
       canManageTrainings,
       canManageEvents,
+      canManageAllocations,
       alternativePlanId,
       urlState.resourceCategory,
       manipulationSurface,
@@ -794,6 +799,18 @@ export function PlanningHubManipulationProvider({
     [],
   );
 
+  const recoverFromRejectedMutation = useCallback(
+    (status: number) => {
+      setConfirmationDraft(null);
+      setPreviewDraft(null);
+      lastPreviewKeyRef.current = "";
+      if (status === 403) {
+        router.refresh();
+      }
+    },
+    [router],
+  );
+
   const handleConfirm = useCallback(async () => {
     if (!confirmationDraft) return;
     setConfirmSaving(true);
@@ -804,30 +821,46 @@ export function PlanningHubManipulationProvider({
         DRESSING_ROOM: [],
       };
 
+      const draftPayload = {
+        draft: {
+          ...confirmationDraft,
+          originalStart: confirmationDraft.originalStart.toISOString(),
+          originalEnd: confirmationDraft.originalEnd.toISOString(),
+          proposedStart: confirmationDraft.proposedStart.toISOString(),
+          proposedEnd: confirmationDraft.proposedEnd.toISOString(),
+        },
+        allItems,
+        resourceCategory: urlState.resourceCategory,
+        targetResource: confirmationDraft.proposedResourceId
+          ? resolveResourceRef(confirmationDraft.proposedResourceId)
+          : null,
+      };
+
       if (isActivityTimeDraft(confirmationDraft)) {
         const validateRes = await fetch("/api/planning-hub/activity-rescheduling/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            draft: {
-              ...confirmationDraft,
-              originalStart: confirmationDraft.originalStart.toISOString(),
-              originalEnd: confirmationDraft.originalEnd.toISOString(),
-              proposedStart: confirmationDraft.proposedStart.toISOString(),
-              proposedEnd: confirmationDraft.proposedEnd.toISOString(),
-            },
-            allItems,
-            resourceCategory: urlState.resourceCategory,
-            targetResource: confirmationDraft.proposedResourceId
-              ? resolveResourceRef(confirmationDraft.proposedResourceId)
-              : null,
+            ...draftPayload,
             isStandardplan,
             alternativePlanId,
           }),
         });
         if (!validateRes.ok) {
           const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error ?? "Validierung fehlgeschlagen.");
+          recoverFromRejectedMutation(validateRes.status);
+          throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+        }
+      } else {
+        const validateRes = await fetch("/api/planning-hub/resource-manipulation/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draftPayload),
+        });
+        if (!validateRes.ok) {
+          const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
+          recoverFromRejectedMutation(validateRes.status);
+          throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
         }
       }
 
@@ -866,7 +899,11 @@ export function PlanningHubManipulationProvider({
       setConfirmationDraft(null);
       setPreviewDraft(null);
     } catch (err) {
-      setConfirmError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+      const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+      if (/keine berechtigung/i.test(message)) {
+        recoverFromRejectedMutation(403);
+      }
+      setConfirmError(message);
     } finally {
       setConfirmSaving(false);
     }
@@ -878,9 +915,9 @@ export function PlanningHubManipulationProvider({
     timezone,
     alternativePlanId,
     overridesByKey,
-    router,
     allItems,
     resolveResourceRef,
+    recoverFromRejectedMutation,
   ]);
 
   const value: PlanningHubManipulationContextValue = {

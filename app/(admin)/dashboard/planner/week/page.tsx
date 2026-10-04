@@ -202,6 +202,7 @@ export default async function PlannerWeekPageRoute({
           canManagePlans={canManagePlans}
           canManageTrainings={canManageTrainings}
           canManageEvents={canManageEvents}
+          canManageAllocations={canManageAllocations}
           urlState={resolvedUrlState}
           plans={plans}
           needsEagerFacilityGroups={needsEagerFacilityGroups}
