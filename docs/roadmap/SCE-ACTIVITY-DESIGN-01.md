@@ -479,11 +479,19 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | **08-02** | **Canonical Resource Manipulation** — generalize Garderobe-proven DnD/confirm flow to Spielfeld + Garderobe; resource time ≠ activity time; shared `PlanningResourceManipulation` target |
 | **SCE-ICONS-02** | **Premium Navigation Icons** — minimal vector Club + Spiele nav icons; ASAP after 08-02, before 08-03 — [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](./SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
-| **08-04** | Permission-aware drag/drop & rescheduling |
+| **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (Human UAT PASS 2026-10-04; PR #801 → STAGE) — [`SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md`](../planning/SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md) |
 | **08-05** | Conflict resolution & operational actions |
 | **08-06** | List / search / bulk operational UX |
 | **08-07** | Responsive / tablet hardening |
 | **08-08** | Integration / Human UAT / release hardening |
+
+**Planner follow-ups (discovered 08-04 Human UAT — not reordering 08-05):**
+
+| Id | Focus | Status |
+|----|--------|--------|
+| **SCE-PLANNER-UX-AGGREGATION-01** | Mixed activity cluster presentation (card vs inspector semantic parity) | PLANNED |
+| **SCE-PLANNER-UX-LIST-01** | Operational list experience | PLANNED |
+| **PEOPLE-ACCESS-IMPERSONATION-01** | Club Admin «Als Benutzer ansehen» availability (08-04 UAT observation) | OPEN / SEPARATE |
 
 **Dependencies (not absorbed):** SCE-ACTIVITY-DESIGN-01E, SCE-ACTIVITY-DESIGN-02, FACILITY-MODEL-01, SCE-STATUS-DESIGN-01, SCE-ACTIVITY-COLOR-01 (narrowed), PERFORMANCE-INFRA-01, BUILD-PERF.
 
