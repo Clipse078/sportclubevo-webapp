@@ -180,6 +180,70 @@ R2 canonical availability architecture **accepted** (derivation, pitch hierarchy
 
 **IN PROGRESS** — `PlanningHubManipulationResourceAvailabilityBoard.test.tsx` + extended availability tests; **Human UAT not yet passed**.
 
+## 08-05R4 — Adaptive Resource Availability for Large Clubs
+
+### Human UAT finding (R3)
+
+**PASS** for FCA / small-club compact inventory: immediate **Spielfeld-Verfügbarkeit** matrix (physical pitch rows, **Gesamt / A / B**, **Frei / Belegt / Teilweise**, **Aktuell · Konflikt**, **Empfohlen**) is operationally strong and must be preserved.
+
+**Scalability finding:** a permanently expanded full matrix inside the manipulation modal does not scale for tenants with many facilities / pitches / dressing rooms. R4 adds a **presentation-only** adaptive contract; R2 availability derivation and R3 matrix semantics stay canonical.
+
+### Presentation modes (deterministic)
+
+Derived in `lib/planning-hub/manipulation-resource-availability-presentation.ts` from **physical group count** (`PlanningResourceGroup` rows — not raw Gesamt/A/B segment count):
+
+| Mode | Physical groups | UX |
+|------|-----------------|-----|
+| `COMPACT_MATRIX` | 1–6 | R3 full matrix immediately (FCA) — no dominating search chrome |
+| `GROUPED_MATRIX` | 7–12 | Best free alternatives + local search / **Nur freie** + full grouped matrix |
+| `LARGE_INVENTORY` | 13+ | Best alternatives + search/filter + **collapsed site summaries** (expand for R3 cells) |
+
+Thresholds live in `MANIPULATION_AVAILABILITY_PRESENTATION_POLICY` (tunable, not domain constants).
+
+### Best alternatives
+
+`pickBestManipulationAlternatives` — same transparent criteria as R2 `pickRecommendedManipulationResourceId`, up to **3** **AVAILABLE** targets (current excluded). Empty state: **Keine konfliktfreie Alternative für HH:MM–HH:MM**.
+
+### Filtering & search
+
+Local only (no API): facility name, resource name, segment label; optional **Anlage** `<select>` when multiple canonical `facilityName` buckets exist. **Nur freie** hides physical groups with no **AVAILABLE** segment (current resource summary stays visible when filters active).
+
+### Group summaries
+
+Collapsed site headers (large mode) show counts from the same availability entries: **N Plätze · X frei · Y teilweise · Z belegt** via `summarizeManipulationPhysicalGroups`.
+
+### Multi-site / FACILITY-MODEL-01
+
+Canonical inventory today: **tenant → Facility (facility record) → physical pitch group → segments (Gesamt/A/B)**. There is **no** separate Site/Anlage entity in the data model; R4 buckets presentation by existing `facilityName` only.
+
+**Follow-up (no schema in #802):** FACILITY-MODEL-01 — explicit **Tenant → Site/Anlage → physical facility/pitch → resource segment** when product requires true multi-site hierarchy above Facility.
+
+### Dressing rooms
+
+Same presentation policy by physical dressing group count: compact list (small), alternatives + controls (medium/large), collapsible site sections (large). No Gesamt/A/B matrix for dressing rows.
+
+### Occupied interaction (R4 tweak)
+
+Occupied / partial cells use the **full cell** as the accessible occupancy-detail control (not a tiny **Details** link). **AVAILABLE** cells remain direct selection controls.
+
+### Performance
+
+Single in-memory `buildManipulationResourceAvailabilityList` per reservation window; filtering, search, summaries, and mode derivation are memoized client-side — **no per-group / per-cell API**.
+
+### Test fixtures (automated only)
+
+`lib/planning-hub/manipulation-availability-scale-fixtures.ts` — **small FCA-like (4)**, **medium (10)**, **large (24)** physical pitch groups (+ large dressing catalog). **Not seeded on STAGE.**
+
+### Tests
+
+- `manipulation-resource-availability-presentation.test.ts`
+- `PlanningHubManipulationResourceAvailabilityBoard.r4.test.tsx`
+- R3 board regression retained
+
+### Status
+
+**IN PROGRESS** — automated R4 coverage; **Human UAT not yet passed** (FCA compact matrix regression + end-to-end resolution on Preview).
+
 ## Regression hooks
 
 `lib/planning-hub/__tests__/sce-planner-ux-08-05-conflict-resolution.test.ts` + `components/admin/planning-hub/__tests__/PlanningHubConflictResolutionHandoff.test.tsx` + existing 08-02/08-03/08-04 and conflict-attention tests.

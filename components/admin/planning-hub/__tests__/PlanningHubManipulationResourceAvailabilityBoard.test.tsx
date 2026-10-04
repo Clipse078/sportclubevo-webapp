@@ -336,8 +336,9 @@ describe("PlanningHubManipulationResourceAvailabilityBoard — SCE-PLANNER-UX-08
       />,
     );
 
-    const detail = screen.getByTestId("planning-hub-manipulation-board-occupied-detail-kr2-b");
-    detail.focus();
+    const occupiedCell = screen.getByTestId("planning-hub-manipulation-board-cell-kr2-b");
+    expect(occupiedCell.getAttribute("data-occupancy-detail")).toBe("true");
+    occupiedCell.focus();
     await user.keyboard("{Enter}");
     expect(await screen.findByText("Junioren F1 Training")).toBeTruthy();
   });
