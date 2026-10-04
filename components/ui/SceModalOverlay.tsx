@@ -17,6 +17,7 @@ import {
 import {
   SCE_OVERLAY_CONTENT_VIEWPORT,
   SCE_OVERLAY_ROOT,
+  SCE_OVERLAY_ROOT_ELEVATED,
 } from "@/lib/shell/responsive-layout";
 
 export type SceModalOverlayProps = {
@@ -29,6 +30,8 @@ export type SceModalOverlayProps = {
   contentViewportClassName?: string;
   /** Initial focus target (e.g. dialog title) — focused with preventScroll before background is aria-hidden. */
   initialFocusRef?: RefObject<HTMLElement | null>;
+  /** Elevated stack layer for nested dialogs (e.g. 08-02 editor over conflict workspace). */
+  stackLayer?: "default" | "elevated";
 };
 
 /**
@@ -45,6 +48,7 @@ export function SceModalOverlay({
   testId,
   contentViewportClassName,
   initialFocusRef,
+  stackLayer = "default",
 }: SceModalOverlayProps) {
   /** Client-only portal target — never render overlay inline in the React tree (SCE-RESPONSIVE-01G). */
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -89,10 +93,14 @@ export function SceModalOverlay({
 
   const overlay = (
     <div
-      className={SCE_OVERLAY_ROOT}
+      className={cn(
+        SCE_OVERLAY_ROOT,
+        stackLayer === "elevated" && SCE_OVERLAY_ROOT_ELEVATED,
+      )}
       role="presentation"
       data-state="open"
       data-testid={testId}
+      data-stack-layer={stackLayer}
     >
       <div
         className="sce-modal-overlay-interaction-layer sce-modal-overlay-backdrop"

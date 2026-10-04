@@ -12,6 +12,9 @@
 /** Viewport-fixed portal root ({@code inset: 0}) — transparent coordinate system, no sidebar inset. */
 export const SCE_OVERLAY_ROOT = "sce-modal-overlay-root";
 
+/** Stacked above {@link SCE_OVERLAY_ROOT} when a canonical editor opens over an SCE workspace dialog. */
+export const SCE_OVERLAY_ROOT_ELEVATED = "sce-modal-overlay-root-elevated";
+
 /**
  * Sidebar-aware flex centering region within {@link SCE_OVERLAY_ROOT} (application band only).
  */

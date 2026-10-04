@@ -7,6 +7,7 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { isoToLocalDate, isoToLocalTime } from "@/lib/planning-hub/planner-time";
 import { zonedTimeToUtc } from "@/lib/training/recurrence";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
+import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
@@ -87,14 +88,13 @@ export default function PlanningHubActivityScheduleEditDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25 p-4 sm:items-center"
-      role="dialog"
-      aria-labelledby={`${formId}-title`}
-      data-testid="planning-hub-activity-schedule-edit"
+    <PlanningHubManipulationModalShell
+      testId="planning-hub-activity-schedule-edit"
+      onClose={onClose}
+      initialFocusRef={firstFieldRef}
     >
       <form
-        className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg"
+        aria-labelledby={`${formId}-title`}
         onSubmit={(event) => {
           event.preventDefault();
           if (!draft) return;
@@ -163,6 +163,6 @@ export default function PlanningHubActivityScheduleEditDialog({
           </button>
         </div>
       </form>
-    </div>
+    </PlanningHubManipulationModalShell>
   );
 }

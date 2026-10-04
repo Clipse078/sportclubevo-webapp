@@ -53,6 +53,7 @@ export default function PlanningHubConflictResolutionActions({
   testIdPrefix = "conflict-resolution",
 }: Props) {
   const manipulation = usePlanningHubManipulation();
+  const manipulationEnabled = manipulation?.enabled ?? false;
   const caps = deriveConflictResolutionCapabilities(item, permissionContext, {
     canEditActivity: canEditItem ? canEditItem(item) : undefined,
   });
@@ -80,47 +81,39 @@ export default function PlanningHubConflictResolutionActions({
 
   return (
     <div className="mt-3 flex flex-wrap gap-2" data-testid={`${prefix}-actions`}>
-      {prioritized.showPitch && manipulation && (
+      {prioritized.showPitch && manipulationEnabled && (
         <Button
           type="button"
           variant="primary"
           size="sm"
           data-testid={`${prefix}-change-pitch`}
           onClick={() =>
-            manipulation.openResourceEditorForConflict(
-              item,
-              resourceId,
-              "pitch",
-            )
+            manipulation!.openResourceEditorForConflict(item, resourceId, "pitch")
           }
         >
           Spielfeld ändern
         </Button>
       )}
-      {prioritized.showDressing && manipulation && (
+      {prioritized.showDressing && manipulationEnabled && (
         <Button
           type="button"
           variant="primary"
           size="sm"
           data-testid={`${prefix}-change-dressing`}
           onClick={() =>
-            manipulation.openResourceEditorForConflict(
-              item,
-              resourceId,
-              "dressing",
-            )
+            manipulation!.openResourceEditorForConflict(item, resourceId, "dressing")
           }
         >
           Garderobe ändern
         </Button>
       )}
-      {prioritized.showTime && manipulation && (
+      {prioritized.showTime && manipulationEnabled && (
         <Button
           type="button"
           variant="secondary"
           size="sm"
           data-testid={`${prefix}-change-time`}
-          onClick={() => manipulation.openActivityScheduleEditorForConflict(item)}
+          onClick={() => manipulation!.openActivityScheduleEditorForConflict(item)}
         >
           Termin ändern
         </Button>

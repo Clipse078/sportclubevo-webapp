@@ -136,7 +136,7 @@ function resourceManipulationBounds(
   return { startAt: item.startAt, endAt: item.endAt, timeTarget: "activity" };
 }
 
-type PlanningHubManipulationContextValue = {
+export type PlanningHubManipulationContextValue = {
   enabled: boolean;
   isDragging: boolean;
   permissionContext: ManipulationPermissionContext;
@@ -175,7 +175,8 @@ type PlanningHubManipulationContextValue = {
   openActivityScheduleEditorForConflict: (item: WeekplannerItem) => void;
 };
 
-const PlanningHubManipulationContext = createContext<PlanningHubManipulationContextValue | null>(null);
+export const PlanningHubManipulationContext =
+  createContext<PlanningHubManipulationContextValue | null>(null);
 
 export function usePlanningHubManipulation(): PlanningHubManipulationContextValue | null {
   return useContext(PlanningHubManipulationContext);

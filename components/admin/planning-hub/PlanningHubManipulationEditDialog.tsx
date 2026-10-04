@@ -10,6 +10,7 @@ import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resou
 import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import { formatManipulationResourceLabel } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
+import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
 
 type Props = {
   item: WeekplannerItem;
@@ -125,14 +126,13 @@ export default function PlanningHubManipulationEditDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25 p-4 sm:items-center"
-      role="dialog"
-      aria-labelledby={`${formId}-title`}
-      data-testid="planning-hub-manipulation-edit"
+    <PlanningHubManipulationModalShell
+      testId="planning-hub-manipulation-edit"
+      onClose={onClose}
+      initialFocusRef={firstFieldRef}
     >
       <form
-        className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg"
+        aria-labelledby={`${formId}-title`}
         onSubmit={(event) => {
           event.preventDefault();
           if (!draft) return;
@@ -211,6 +211,6 @@ export default function PlanningHubManipulationEditDialog({
           </button>
         </div>
       </form>
-    </div>
+    </PlanningHubManipulationModalShell>
   );
 }

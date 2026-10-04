@@ -27,7 +27,6 @@ import {
 } from "@/lib/planning-hub/conflict-resolution";
 import {
   conflictPartnerDisplayTitle,
-  formatAggregateInspectionDayHeading,
   itemInspectionDressingLabel,
   itemInspectionPitchLabel,
 } from "@/lib/planning-hub/aggregate-inspection";
@@ -39,6 +38,7 @@ import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-l
 import {
   weekplannerConflictDoubleBookingHeadline,
   weekplannerConflictPartnerTimeLabel,
+  weekplannerResourceOccupancyTimeLabel,
 } from "@/lib/planning-hub/conflict-inspection-presenters";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
@@ -69,14 +69,24 @@ export type PlanningHubConflictWorkspaceDialogProps = {
   } | null>;
 };
 
-function formatIncidentWhen(
+function formatIncidentOverlapRange(
   incident: PlanningConflictIncident,
   locale: string,
   timeZone: string,
 ): string {
-  const day = formatAggregateInspectionDayHeading(incident.dayKey, locale, timeZone);
   const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  return `${day} · ${fmt.format(incident.startAt)}–${fmt.format(incident.endAt)}`;
+  return `${fmt.format(incident.startAt)}–${fmt.format(incident.endAt)}`;
+}
+
+function incidentActivityScanLine(
+  incident: PlanningConflictIncident,
+  itemsById: Map<string, WeekplannerItem>,
+): string {
+  return incident.itemIds
+    .map((id) => itemsById.get(id))
+    .filter((item): item is WeekplannerItem => !!item)
+    .map((item) => schedulerDisplayIdentity(item))
+    .join(" / ");
 }
 
 export default function PlanningHubConflictWorkspaceDialog({
@@ -324,8 +334,8 @@ export default function PlanningHubConflictWorkspaceDialog({
               ) : (
                 filteredIncidents.map((incident) => {
                   const selected = incident.id === selectedIncidentId;
-                  const kindLabel =
-                    incident.resourceKind === "PITCH_HALL" ? "Spielfeld" : "Garderobe";
+                  const overlapRange = formatIncidentOverlapRange(incident, locale, timezone);
+                  const activityScan = incidentActivityScanLine(incident, itemsById);
                   return (
                     <li key={incident.id}>
                       <button
@@ -334,7 +344,7 @@ export default function PlanningHubConflictWorkspaceDialog({
                         className={cn(
                           "mb-1 w-full rounded-lg border px-3 py-2.5 text-left text-xs transition-colors",
                           selected
-                            ? "border-[var(--sce-primary)]/40 bg-[var(--sce-primary)]/[0.08]"
+                            ? "border-[var(--sce-primary)]/50 bg-[var(--sce-primary)]/[0.08] ring-1 ring-[var(--sce-primary)]/25"
                             : "border-[var(--border)]/60 hover:bg-[var(--surface-2)]",
                         )}
                         onClick={() => setSelectedIncidentId(incident.id)}
@@ -344,7 +354,8 @@ export default function PlanningHubConflictWorkspaceDialog({
                           {incident.facilityResourceName}
                         </span>
                         <span className="mt-0.5 block text-[var(--text-2)]">
-                          {kindLabel} · {incident.occupancyCount} Aktivitäten
+                          {overlapRange}
+                          {activityScan ? ` · ${activityScan}` : ""}
                         </span>
                       </button>
                     </li>
@@ -355,18 +366,21 @@ export default function PlanningHubConflictWorkspaceDialog({
           </section>
 
           <aside
-            className="flex min-h-0 flex-col border-t border-[var(--border)] lg:border-t-0"
+            className={cn(
+              "flex min-h-0 flex-col border-t border-[var(--border)] lg:border-t-0",
+              selectedIncident && "border-l-2 border-l-[var(--sce-primary)]/40 lg:border-l-[var(--sce-primary)]/40",
+            )}
             data-testid="conflict-workspace-detail"
           >
             {selectedIncident && selectedActivity ? (
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
                 <p className="text-base font-semibold">{schedulerDisplayIdentity(selectedActivity)}</p>
-                <p className="mt-0.5 text-sm text-[var(--text-2)]">
-                  {weekplannerActivityTypeLabel(selectedActivity.type)} ·{" "}
+                <p
+                  className="mt-0.5 text-sm text-[var(--text-2)]"
+                  data-testid="conflict-workspace-activity-sport-time"
+                >
+                  {weekplannerActivityTypeLabel(selectedActivity.type)} · Sporttermin{" "}
                   {weekplannerTimingDetail(selectedActivity, locale, timezone)}
-                </p>
-                <p className="mt-2 text-xs text-[var(--muted)]">
-                  {formatIncidentWhen(selectedIncident, locale, timezone)}
                 </p>
 
                 <dl className="mt-4 space-y-2 text-sm">
@@ -393,6 +407,12 @@ export default function PlanningHubConflictWorkspaceDialog({
                         locale,
                         timezone,
                       );
+                      const ownReservation = weekplannerResourceOccupancyTimeLabel(
+                        selectedActivity,
+                        conflict.facilityResourceId,
+                        locale,
+                        timezone,
+                      );
                       return (
                         <div
                           key={`${conflict.facilityResourceId}-${conflict.partnerItemId ?? index}`}
@@ -406,12 +426,23 @@ export default function PlanningHubConflictWorkspaceDialog({
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                             {weekplannerConflictDoubleBookingHeadline(conflict)}
                           </p>
+                          {ownReservation && (
+                            <p
+                              className="mt-2 text-xs text-[var(--text-2)]"
+                              data-testid="conflict-workspace-own-reservation"
+                            >
+                              Reservierung {conflict.facilityResourceName}:{" "}
+                              <span className="tabular-nums font-medium">{ownReservation}</span>
+                            </p>
+                          )}
                           <p className="mt-2 text-xs font-medium text-[var(--text-2)]">
                             Zur gleichen Zeit:
                           </p>
                           <p className="text-sm font-semibold">{partnerTitle}</p>
                           {partnerTime && (
-                            <p className="text-xs tabular-nums text-[var(--muted)]">{partnerTime}</p>
+                            <p className="text-xs tabular-nums text-[var(--muted)]">
+                              Reservierung {partnerTime}
+                            </p>
                           )}
                           <PlanningHubConflictResolutionActions
                             item={selectedActivity}

@@ -79,6 +79,22 @@ No persisted `Conflict` entity — presentation contract in `lib/planning-hub/co
 
 See package brief §25 — authenticated Vercel Preview; scenarios A–H.
 
+## Human UAT (08-05R1)
+
+| Scenario | Result | Notes |
+|----------|--------|-------|
+| A — Conflict workspace opens | **PASS** | Prüfen → workspace dialog |
+| B — Pitch conflict selection | **PASS** | Kunstrasen 2 A / Junioren F1+F2 detail |
+| C — Pitch resolution handoff (`Spielfeld ändern`) | **FAIL → fixed in 08-05R1** | See root cause below |
+
+**Root cause (C):** `openResourceEditorForConflict` set `editTarget` correctly, but canonical **08-02** editors (`PlanningHubManipulationEditDialog` / confirm) rendered as inline `fixed z-50` layers **below** the portalled conflict workspace (`SceModalOverlay`, `z-index: 100`). The handoff ran with no visible UI.
+
+**Correction (08-05R1):** Manipulation editors use `PlanningHubManipulationModalShell` → portalled `SceModalOverlay` with **elevated** stack layer (`z-index: 110`) so 08-02/08-03 open above the conflict workspace without a second editor implementation.
+
+**Time presentation (UAT):** Activity header showed **sporting** time (`item.startAt`/`endAt`) while an unlabeled line showed **resource overlap** time from `PlanningConflictIncident` (occupancy windows). These differ when pitch buffers apply (e.g. sport 17:00–18:30 vs reservation 16:45–18:30). Detail panel now labels **Sporttermin** vs **Reservierung** explicitly.
+
+**Status after 08-05R1:** Automated handoff + modal stacking regression tests added; **human re-test required** for C and dressing/time/open actions on Preview.
+
 ## Regression hooks
 
-`lib/planning-hub/__tests__/sce-planner-ux-08-05-conflict-resolution.test.ts` + existing 08-02/08-03/08-04 and conflict-attention tests.
+`lib/planning-hub/__tests__/sce-planner-ux-08-05-conflict-resolution.test.ts` + `components/admin/planning-hub/__tests__/PlanningHubConflictResolutionHandoff.test.tsx` + existing 08-02/08-03/08-04 and conflict-attention tests.

@@ -14,6 +14,7 @@ import {
   isActivityTimeDraft,
 } from "@/lib/planning-hub/planning-activity-rescheduling";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
+import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
 
 type Props = {
   draft: SchedulerDraftChange;
@@ -77,13 +78,11 @@ export default function PlanningHubManipulationConfirm({
     }).format(start)} ${formatOccupancyRange(start, end, timezone)}`;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25 p-4 sm:items-center"
-      role="dialog"
-      aria-label="Planungsänderung bestätigen"
-      data-testid="planning-hub-manipulation-confirm"
+    <PlanningHubManipulationModalShell
+      testId="planning-hub-manipulation-confirm"
+      onClose={onCancel}
     >
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
+      <>
         <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
         <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
 
@@ -224,7 +223,7 @@ export default function PlanningHubManipulationConfirm({
             {isActivityDraft ? "Termin verschieben" : "Änderung übernehmen"}
           </button>
         </div>
-      </div>
-    </div>
+      </>
+    </PlanningHubManipulationModalShell>
   );
 }
