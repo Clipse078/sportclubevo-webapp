@@ -482,7 +482,7 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (Human UAT PASS 2026-10-04; PR #801 → STAGE) — [`SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md`](../planning/SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md) |
 | **08-05** | Conflict resolution & operational actions — **CLOSED** (Human UAT PASS 2026-10-05; PR #802 → STAGE) — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](../planning/SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
 | **FACILITY-INTEGRITY-01** | Facility admin ↔ planner read-model integrity (pitches + dressing rooms) — **HIGH PRIORITY / PLANNED** — gate before 08-06 recommended |
-| **08-06** | List / search / bulk operational UX |
+| **08-06** | List / search / bulk operational UX — **IN PROGRESS (DRAFT PR, Human UAT)** — [`SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md`](../planning/SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md) |
 | **08-07** | Responsive / tablet hardening |
 | **08-08** | Integration / Human UAT / release hardening |
 
@@ -491,7 +491,7 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | Id | Focus | Status |
 |----|--------|--------|
 | **SCE-PLANNER-UX-AGGREGATION-01** | Mixed activity cluster presentation (card vs inspector semantic parity) | PLANNED |
-| **SCE-PLANNER-UX-LIST-01** | Operational list experience | PLANNED |
+| **SCE-PLANNER-UX-LIST-01** | Operational list experience | **Absorbed by 08-06** (spec retained as historical UAT notes) |
 | **PEOPLE-ACCESS-IMPERSONATION-01** | Club Admin «Als Benutzer ansehen» availability (08-04 UAT observation) | OPEN / SEPARATE |
 
 **Dependencies (not absorbed):** SCE-ACTIVITY-DESIGN-01E, SCE-ACTIVITY-DESIGN-02, FACILITY-MODEL-01, SCE-STATUS-DESIGN-01, SCE-ACTIVITY-COLOR-01 (narrowed), PERFORMANCE-INFRA-01, BUILD-PERF.

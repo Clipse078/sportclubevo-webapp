@@ -1,10 +1,10 @@
 # SCE-PLANNER-UX-LIST-01 — Operational List Experience
 
-**Status:** PLANNED
+**Status:** **ABSORBED → SCE-PLANNER-UX-08-06**
 
-**Priority:** Important UX upgrade — **non-blocking** for SCE-PLANNER-UX-08-04
+**Priority:** Delivered via canonical package **08-06** (List / search / bulk operational UX).
 
-**Not part of:** PR #801 / SCE-PLANNER-UX-08-04
+**Not a separate implementation track.**
 
 ---
 
