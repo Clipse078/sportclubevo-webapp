@@ -11,6 +11,7 @@ import {
   resolveFcaMainPitchCanonicalCode,
 } from "@/lib/facilities/fca-main-pitch-legacy-codes";
 import { getPitchAllocationByCode } from "@/lib/facilities/pitches";
+import { getPitchDisplayLabel } from "@/lib/facilities/display-helpers";
 import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
 
 const LEGACY_FACILITY_ID = "fac-hauptfeld";
@@ -30,13 +31,13 @@ const legacyFacility = {
 
 const canonicalFacility = {
   id: CANONICAL_FACILITY_ID,
-  name: "Hauptplatz",
+  name: "Hauptfeld",
   type: "PITCH" as const,
   status: "ACTIVE" as const,
   resources: [
-    { id: "r-st", code: "STADION", name: "Hauptplatz", type: "FULL_PITCH" as const, status: "ACTIVE" as const },
-    { id: "r-sta", code: "STADION_A", name: "Hauptplatz A", type: "HALF_PITCH" as const, status: "ACTIVE" as const },
-    { id: "r-stb", code: "STADION_B", name: "Hauptplatz B", type: "HALF_PITCH" as const, status: "ACTIVE" as const },
+    { id: "r-st", code: "STADION", name: "Hauptfeld", type: "FULL_PITCH" as const, status: "ACTIVE" as const },
+    { id: "r-sta", code: "STADION_A", name: "Hauptfeld A", type: "HALF_PITCH" as const, status: "ACTIVE" as const },
+    { id: "r-stb", code: "STADION_B", name: "Hauptfeld B", type: "HALF_PITCH" as const, status: "ACTIVE" as const },
   ],
 };
 
@@ -90,7 +91,10 @@ describe("FCA main-pitch consolidation (FACILITY-INTEGRITY-01A)", () => {
   it("F — legacy pitchCode resolves for historical readability", () => {
     expect(resolveFcaMainPitchCanonicalCode("HAUPTFELD A")).toBe("STADION_A");
     expect(getPitchAllocationByCode("HAUPTFELD A")?.code).toBe("STADION_A");
-    expect(getPitchAllocationByCode("HAUPTFELD A")?.label).toBe("Stadion A");
+    expect(getPitchAllocationByCode("HAUPTFELD A")?.label).toBe("Hauptfeld A");
+    expect(getPitchDisplayLabel("STADION")).toBe("Hauptfeld");
+    expect(getPitchDisplayLabel("STADION_A")).toBe("Hauptfeld A");
+    expect(getPitchDisplayLabel("STADION_B")).toBe("Hauptfeld B");
   });
 
   it("G — canonical code map matches diagnosis constants", () => {
@@ -108,12 +112,11 @@ describe("FCA main-pitch consolidation (FACILITY-INTEGRITY-01A)", () => {
     expect(findings.some((f) => f.code === "LEGACY_CANONICAL_MAIN_PITCH_PAIR")).toBe(false);
   });
 
-  it("K — planner facility groups show one Hauptplatz after consolidation", () => {
+  it("K — planner facility groups show one Hauptfeld after consolidation", () => {
     const groups = buildFacilityGroupsByAllocationGroupFromFacilities([canonicalFacility, kunstrasen2]);
     const pitchNames = groups.PITCH_HALL.map((g) => g.facilityName);
-    expect(pitchNames).toContain("Hauptplatz");
-    expect(pitchNames).not.toContain("Hauptfeld");
-    expect(pitchNames.filter((n) => n === "Hauptplatz")).toHaveLength(1);
+    expect(pitchNames).toContain("Hauptfeld");
+    expect(pitchNames.filter((n) => n === "Hauptfeld")).toHaveLength(1);
   });
 
   it("L — infoboard ambiguity finding cleared when only STADION* active", () => {

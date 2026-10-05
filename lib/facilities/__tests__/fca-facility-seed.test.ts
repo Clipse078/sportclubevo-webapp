@@ -5,18 +5,18 @@ import {
 } from "@/lib/facilities/fca-facility-seed";
 
 const mainPitchDef: FcaFacilitySeedDefinition = {
-  name: "Hauptplatz",
+  name: "Hauptfeld",
   type: "PITCH",
   sortOrder: 10,
   resources: [
-    { name: "Hauptplatz", code: "STADION", type: "FULL_PITCH", sortOrder: 10 },
-    { name: "Hauptplatz A", code: "STADION_A", type: "HALF_PITCH", sortOrder: 20 },
-    { name: "Hauptplatz B", code: "STADION_B", type: "HALF_PITCH", sortOrder: 30 },
+    { name: "Hauptfeld", code: "STADION", type: "FULL_PITCH", sortOrder: 10 },
+    { name: "Hauptfeld A", code: "STADION_A", type: "HALF_PITCH", sortOrder: 20 },
+    { name: "Hauptfeld B", code: "STADION_B", type: "HALF_PITCH", sortOrder: 30 },
   ],
 };
 
 describe("resolveFcaFacilityForSeed (FACILITY-INTEGRITY-01A)", () => {
-  it("M — anchors main pitch to legacy HAUPTFELD facility instead of creating Hauptplatz duplicate", async () => {
+  it("M — anchors main pitch to legacy HAUPTFELD facility instead of creating a duplicate facility row", async () => {
     const prisma = {
       facilityResource: {
         findUnique: vi.fn(async ({ where }: { where: { tenantId_code: { code: string } } }) => {
@@ -43,7 +43,7 @@ describe("resolveFcaFacilityForSeed (FACILITY-INTEGRITY-01A)", () => {
     expect(prisma.facility.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "legacy-fac-id" },
-        data: expect.objectContaining({ name: "Hauptplatz" }),
+        data: expect.objectContaining({ name: "Hauptfeld" }),
       }),
     );
     expect(prisma.facility.create).not.toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe("resolveFcaFacilityForSeed (FACILITY-INTEGRITY-01A)", () => {
       },
       facility: {
         findFirst: vi.fn(),
-        update: vi.fn(async ({ where }: { where: { id: string } }) => ({ id: where.id, name: "Hauptplatz" })),
+        update: vi.fn(async ({ where }: { where: { id: string } }) => ({ id: where.id, name: "Hauptfeld" })),
         create: vi.fn(),
       },
     };

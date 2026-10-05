@@ -11,11 +11,11 @@ describe("buildReconciliationPlan", () => {
         findMany: vi.fn(async () => [
           {
             id: "fac-hp",
-            name: "Hauptplatz",
+            name: "Hauptfeld",
             type: "PITCH",
             status: "ACTIVE",
             resources: [
-              { id: "r1", code: "STADION", name: "Hauptplatz", type: "FULL_PITCH", status: "ACTIVE" },
+              { id: "r1", code: "STADION", name: "Hauptfeld", type: "FULL_PITCH", status: "ACTIVE" },
               { id: "r2", code: "STADION_A", name: "A", type: "HALF_PITCH", status: "ACTIVE" },
               { id: "r3", code: "STADION_B", name: "B", type: "HALF_PITCH", status: "ACTIVE" },
             ],

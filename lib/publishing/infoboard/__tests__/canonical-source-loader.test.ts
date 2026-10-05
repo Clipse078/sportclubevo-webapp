@@ -771,7 +771,7 @@ describe("MATCHCENTER-CANONICAL-OPPONENT-01B — match identity propagation", ()
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("FACILITY-INTEGRITY-01A-R1 canonical pitch labels on Screen1SourceEvent", () => {
-  it("maps STADION_A weekplanner ref to Hauptplatz A (not static infoboard Stadion – Feld A)", async () => {
+  it("maps STADION_A weekplanner ref to Hauptfeld A (not legacy static infoboard label)", async () => {
     const f2Training = trainingItem({
       title: "Junioren F2",
       teamNames: ["Junioren F2"],
@@ -782,8 +782,8 @@ describe("FACILITY-INTEGRITY-01A-R1 canonical pitch labels on Screen1SourceEvent
           facilityResourceId: "res-stadion-a",
           facilityId: "fac-hauptplatz",
           code: "STADION_A",
-          name: "Hauptplatz A",
-          facilityName: "Hauptplatz",
+          name: "Hauptfeld A",
+          facilityName: "Hauptfeld",
           resourceType: "HALF_PITCH",
           occupancyBeforeMinutes: 0,
           occupancyAfterMinutes: 0,
@@ -813,7 +813,7 @@ describe("FACILITY-INTEGRITY-01A-R1 canonical pitch labels on Screen1SourceEvent
       dateTo: new Date("2026-09-28T23:59:59.000Z"),
     });
 
-    expect(event.pitch?.label).toBe("Hauptplatz A");
+    expect(event.pitch?.label).toBe("Hauptfeld A");
     expect(event.pitch?.code).toBe("STADION_A");
     expect(event.homeDressingRoom?.name).toBe("Kabine O3");
   });

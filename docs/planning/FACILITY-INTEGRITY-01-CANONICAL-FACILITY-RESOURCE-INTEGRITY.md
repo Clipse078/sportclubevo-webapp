@@ -168,11 +168,11 @@ Classification: **B — LEGACY + CANONICAL REPRESENTATION**.
 
 | Field | Value |
 |-------|-------|
-| **FACILITY** | Hauptplatz (`cmtmsld6r…`) |
-| **FULL (Gesamt)** | STADION |
-| **HALF A** | STADION_A |
-| **HALF B** | STADION_B |
-| **WHY** | Seed/SFV/static registry + Event.pitchCode already use STADION*; Infoboard preview treats STADION as canonical fallback; planner admin target naming is Hauptplatz |
+| **FACILITY** | Hauptfeld (`cmtmsld6r…` after 01A consolidation) |
+| **FULL (Gesamt)** | STADION → display **Hauptfeld** |
+| **HALF A** | STADION_A → display **Hauptfeld A** |
+| **HALF B** | STADION_B → display **Hauptfeld B** |
+| **WHY** | Technical codes remain STADION* (SFV/Event.pitchCode); human-facing FCA terminology is **Hauptfeld** (01A-R2 product decision) |
 | **LEGACY_ALIASES_REQUIRED** | Yes — read/display only |
 | **LEGACY_ALIAS_STRATEGY** | `lib/facilities/fca-main-pitch-legacy-codes.ts` + `getPitchAllocationByCode()` maps HAUPTFELD* → static STADION* definitions; archived DB rows keep HAUPTFELD codes for audit |
 
@@ -202,7 +202,34 @@ Requires `APP_ENV=stage` + `SCE_OPERATION_AUTHORIZATION=facility-integrity-01a-f
 | Event.pitchCode STADION* | 5 | 5 |
 | Legacy facility/resources | ACTIVE | ARCHIVED |
 
-F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00–18:30 (UTC+2); allocation now on **Hauptplatz A** (`STADION_A`).
+F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00–18:30 (UTC+2); allocation now on **Hauptfeld A** (`STADION_A`).
+
+### FACILITY-INTEGRITY-01A-R2 — Canonical terminology (Hauptfeld)
+
+**STATUS:** IN PROGRESS  
+**HUMAN_UAT:** REQUIRED  
+**PROD:** untouched  
+
+| Layer | R1 (Hauptplatz) | R2 (Hauptfeld) |
+|-------|-----------------|----------------|
+| Facility.name | Hauptplatz | **Hauptfeld** |
+| STADION resource | Hauptplatz | **Hauptfeld** |
+| STADION_A | Hauptplatz A | **Hauptfeld A** |
+| STADION_B | Hauptplatz B | **Hauptfeld B** |
+| Technical codes | STADION / STADION_A / STADION_B | unchanged |
+| Static fallback (`pitches.ts`) | Stadion / Stadion – Feld A/B | **Hauptfeld / Hauptfeld A/B** |
+
+Implementation:
+
+- `lib/facilities/fca-main-pitch-canonical-terminology.ts` — canonical display names
+- `lib/facilities/fca-main-pitch-terminology-reconciliation.ts` — idempotent STAGE rename (tenant `fc-allschwil` only)
+- `scripts/facility-integrity-01a-r2-fca-terminology.ts` — `--inventory`, `--dry-run`, `--execute --confirm FIX-FCA-MAIN-PITCH-TERMINOLOGY`
+- `prisma/seed.ts` — seed upserts Hauptfeld names on STADION* anchor
+- 01A consolidation execute applies the same terminology step post-merge
+
+Presentation priority (unchanged from R1): **FacilityResource.name** → facility + subdivision → static registry → code.
+
+**STAGE data:** run R2 terminology script after deploy if persisted rows still read Hauptplatz* (expected after 01A execute on STAGE).
 
 ### Tests added
 
@@ -219,13 +246,13 @@ F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00�
 
 ### Human UAT gate (Michael — Preview/STAGE)
 
-1. Admin → Facilities: one main pitch (**Hauptplatz** only active).  
-2. Wochenplaner → Spielfeld: Hauptplatz, Kunstrasen 2, Kunstrasen 3 — no duplicate Hauptfeld.  
-3. Hauptplatz: Gesamt / A / B.  
-4. F2 training still present on Hauptplatz A.  
+1. Admin → Facilities: one main pitch (**Hauptfeld** only active).  
+2. Wochenplaner → Spielfeld: Hauptfeld, Kunstrasen 2, Kunstrasen 3 — no duplicate legacy facility row.  
+3. Hauptfeld: Gesamt / A / B.  
+4. F2 training still present on Hauptfeld A.  
 5. Garderobe unchanged (E1–E4, O1–O4).  
-6. Conflict workspace labels Hauptplatz.  
-7. Availability board: Hauptplatz once.  
+6. Conflict workspace labels Hauptfeld.  
+7. Availability board: Hauptfeld once.  
 8. Matches on STADION* unchanged.  
 9. Infoboard loads without HAUPTFELD/STADION ambiguity.  
 10. No missing activities/allocations.
@@ -243,7 +270,14 @@ F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00�
 | Infoboard canonical naming | **HUMAN_UAT_PENDING** |
 | PROD | untouched |
 
-FACILITY-INTEGRITY-01A remains **not CLOSED** until R1 Human UAT passes (Preview: `/dashboard/infoboard/preview`, 2026-09-28 ~16:00, Junioren F2 → **HAUPTPLATZ A**, not `STADION - FELD A`).
+FACILITY-INTEGRITY-01A remains **not CLOSED** until Human UAT passes:
+
+| Surface | Check |
+|---------|-------|
+| **Infoboard** | Preview `/dashboard/infoboard/preview`, 2026-09-28 ~16:00, Junioren F2 → **HAUPTFELD A** (not `STADION - FELD A`) |
+| **Matchcenter** | Event `cmrkh1qla000u04jufwip9diu` (25.07.2026, FC Allschwil vs SV Muttenz), `Event.pitchCode` **STADION** → display **Hauptfeld** |
+
+**HUMAN_UAT_PENDING** — do not close 01A until Michael confirms both gates on Preview/STAGE.
 
 ---
 

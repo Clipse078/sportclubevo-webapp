@@ -1,58 +1,58 @@
 /**
- * FACILITY-INTEGRITY-01A-R1 — canonical pitch presentation for Infoboard / publication.
+ * FACILITY-INTEGRITY-01A-R1/R2 — canonical pitch presentation for Infoboard / publication.
  */
 
 import { describe, it, expect } from "vitest";
 import { resolveCanonicalPitchPresentationLabel } from "../canonical-pitch-presentation";
 
-describe("resolveCanonicalPitchPresentationLabel (FACILITY-INTEGRITY-01A-R1)", () => {
-  it("STADION_A with canonical Hauptplatz A resource name → Hauptplatz A", () => {
+describe("resolveCanonicalPitchPresentationLabel (FACILITY-INTEGRITY-01A-R1/R2)", () => {
+  it("STADION_A with canonical Hauptfeld A resource name → Hauptfeld A", () => {
     expect(
       resolveCanonicalPitchPresentationLabel({
         code: "STADION_A",
-        name: "Hauptplatz A",
-        facilityName: "Hauptplatz",
+        name: "Hauptfeld A",
+        facilityName: "Hauptfeld",
         resourceType: "HALF_PITCH",
       }),
-    ).toBe("Hauptplatz A");
+    ).toBe("Hauptfeld A");
     expect(
       resolveCanonicalPitchPresentationLabel({
         code: "STADION_A",
-        name: "Hauptplatz A",
-        facilityName: "Hauptplatz",
+        name: "Hauptfeld A",
+        facilityName: "Hauptfeld",
         resourceType: "HALF_PITCH",
       }),
     ).not.toContain("Stadion");
     expect(
       resolveCanonicalPitchPresentationLabel({
         code: "STADION_A",
-        name: "Hauptplatz A",
-        facilityName: "Hauptplatz",
+        name: "Hauptfeld A",
+        facilityName: "Hauptfeld",
         resourceType: "HALF_PITCH",
       }),
-    ).not.toMatch(/Feld/i);
+    ).not.toContain("Stadion");
   });
 
-  it("STADION with canonical full resource → Hauptplatz", () => {
+  it("STADION with canonical full resource → Hauptfeld", () => {
     expect(
       resolveCanonicalPitchPresentationLabel({
         code: "STADION",
-        name: "Hauptplatz",
-        facilityName: "Hauptplatz",
+        name: "Hauptfeld",
+        facilityName: "Hauptfeld",
         resourceType: "FULL_PITCH",
       }),
-    ).toBe("Hauptplatz");
+    ).toBe("Hauptfeld");
   });
 
-  it("STADION_B with canonical Hauptplatz B resource → Hauptplatz B", () => {
+  it("STADION_B with canonical Hauptfeld B resource → Hauptfeld B", () => {
     expect(
       resolveCanonicalPitchPresentationLabel({
         code: "STADION_B",
-        name: "Hauptplatz B",
-        facilityName: "Hauptplatz",
+        name: "Hauptfeld B",
+        facilityName: "Hauptfeld",
         resourceType: "HALF_PITCH",
       }),
-    ).toBe("Hauptplatz B");
+    ).toBe("Hauptfeld B");
   });
 
   it("falls back to static registry when canonical resource name is absent", () => {
@@ -62,7 +62,7 @@ describe("resolveCanonicalPitchPresentationLabel (FACILITY-INTEGRITY-01A-R1)", (
         name: null,
         facilityName: null,
       }),
-    ).toBe("Stadion – Feld A");
+    ).toBe("Hauptfeld A");
   });
 
   it("KUNSTRASEN_2_A with canonical name → Kunstrasen 2 A", () => {
@@ -90,11 +90,11 @@ describe("resolveCanonicalPitchPresentationLabel (FACILITY-INTEGRITY-01A-R1)", (
   it("does not require Event.pitchCode mutation — presentation derives from resource ref", () => {
     const label = resolveCanonicalPitchPresentationLabel({
       code: "STADION_A",
-      name: "Hauptplatz A",
-      facilityName: "Hauptplatz",
+      name: "Hauptfeld A",
+      facilityName: "Hauptfeld",
       resourceType: "HALF_PITCH",
     });
-    expect(label).toBe("Hauptplatz A");
+    expect(label).toBe("Hauptfeld A");
   });
 
   it("facility + subdivision when name missing but facility and code present", () => {
@@ -102,9 +102,19 @@ describe("resolveCanonicalPitchPresentationLabel (FACILITY-INTEGRITY-01A-R1)", (
       resolveCanonicalPitchPresentationLabel({
         code: "STADION_A",
         name: "",
-        facilityName: "Hauptplatz",
+        facilityName: "Hauptfeld",
         resourceType: "HALF_PITCH",
       }),
-    ).toBe("Hauptplatz A");
+    ).toBe("Hauptfeld A");
+  });
+
+  it("canonical FacilityResource.name beats static registry fallback", () => {
+    expect(
+      resolveCanonicalPitchPresentationLabel({
+        code: "STADION",
+        name: "Hauptfeld",
+        facilityName: "Hauptfeld",
+      }),
+    ).toBe("Hauptfeld");
   });
 });
