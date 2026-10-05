@@ -35,6 +35,8 @@ type PopoverContentProps = {
   maxHeight?: number;
   /** When false, the floating surface does not clip children horizontally (filter panels). */
   clipOverflow?: boolean;
+  /** When false, do not clamp height (short action menus — avoids internal scroll). */
+  constrainHeight?: boolean;
   className?: string;
 };
 
@@ -49,6 +51,7 @@ export function PopoverContent({
   matchAnchorWidth = true,
   maxHeight = 224,
   clipOverflow = true,
+  constrainHeight = true,
   className,
 }: PopoverContentProps) {
   const { refs, floatingStyles, context } = useFloating({
@@ -63,15 +66,19 @@ export function PopoverContent({
         fallbackPlacements: ["top-start", "bottom-start", "top-end", "bottom-end"],
       }),
       shift({ padding: 8 }),
-      size({
-        padding: 8,
-        apply({ availableHeight, elements, rects }) {
-          Object.assign(elements.floating.style, {
-            width: matchAnchorWidth ? `${rects.reference.width}px` : undefined,
-            maxHeight: `${Math.min(maxHeight, Math.max(availableHeight - 8, 96))}px`,
-          });
-        },
-      }),
+      ...(constrainHeight
+        ? [
+            size({
+              padding: 8,
+              apply({ availableHeight, elements, rects }) {
+                Object.assign(elements.floating.style, {
+                  width: matchAnchorWidth ? `${rects.reference.width}px` : undefined,
+                  maxHeight: `${Math.min(maxHeight, Math.max(availableHeight - 8, 96))}px`,
+                });
+              },
+            }),
+          ]
+        : []),
     ],
   });
 

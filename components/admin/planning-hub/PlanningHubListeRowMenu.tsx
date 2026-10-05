@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CalendarClock, DoorOpen, MoreHorizontal, ShieldAlert } from "lucide-react";
+import {
+  ClipboardList,
+  Clock3,
+  DoorOpen,
+  ExternalLink,
+  MoreHorizontal,
+  ShieldAlert,
+} from "lucide-react";
 import { SoccerPitchLineIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
+import {
+  RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
+  RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
+} from "@/components/admin/shared/planning/resource-card-selection-style";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 import { deriveConflictResolutionCapabilities } from "@/lib/planning-hub/conflict-resolution";
@@ -26,14 +37,27 @@ type PlanningHubListeRowMenuProps = {
   onReviewConflict: () => void;
 };
 
+type MenuIconTone = "neutral" | "planning" | "schedule" | "pitch" | "dressing" | "conflict";
+
+const MENU_ICON_TONE_CLASS: Record<MenuIconTone, string> = {
+  neutral: "bg-[var(--surface-2)] text-[var(--text-2)]",
+  planning: "bg-[var(--sce-primary-light)]/80 text-[var(--sce-primary)]",
+  schedule: "bg-[var(--sce-info-light)]/80 text-[color-mix(in_srgb,var(--sce-info)_85%,var(--foreground))]",
+  pitch: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  dressing: "bg-[var(--blue)]/10 text-[var(--blue)]",
+  conflict: "bg-amber-500/12 text-amber-700 dark:text-amber-400",
+};
+
 function MenuButton({
   label,
   icon,
+  tone,
   onClick,
   testId,
 }: {
   label: string;
   icon: React.ReactNode;
+  tone: MenuIconTone;
   onClick: () => void;
   testId: string;
 }) {
@@ -52,7 +76,13 @@ function MenuButton({
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
       )}
     >
-      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden>
+      <span
+        className={cn(
+          "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+          MENU_ICON_TONE_CLASS[tone],
+        )}
+        aria-hidden
+      >
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -124,13 +154,16 @@ export default function PlanningHubListeRowMenu({
         anchorRef={triggerRef}
         placement="bottom-end"
         matchAnchorWidth={false}
+        constrainHeight={false}
+        clipOverflow={false}
         role="dialog"
         className="w-[min(100vw-2rem,16rem)] p-1.5"
         aria-label="Planungsaktionen"
       >
         <MenuButton
           label="Öffnen"
-          icon={<CalendarClock className="h-4 w-4" />}
+          tone="neutral"
+          icon={<ExternalLink className="h-4 w-4" />}
           testId={`planning-hub-liste-action-open-${item.id}`}
           onClick={() => {
             setOpen(false);
@@ -140,7 +173,8 @@ export default function PlanningHubListeRowMenu({
         {showPlanningEdit ? (
           <MenuButton
             label="Planung ändern"
-            icon={<CalendarClock className="h-4 w-4" />}
+            tone="planning"
+            icon={<ClipboardList className="h-4 w-4" />}
             testId={`planning-hub-liste-action-plan-${item.id}`}
             onClick={() => {
               setOpen(false);
@@ -151,7 +185,8 @@ export default function PlanningHubListeRowMenu({
         {showSchedule ? (
           <MenuButton
             label="Termin ändern"
-            icon={<CalendarClock className="h-4 w-4" />}
+            tone="schedule"
+            icon={<Clock3 className="h-4 w-4" />}
             testId={`planning-hub-liste-action-schedule-${item.id}`}
             onClick={() => {
               setOpen(false);
@@ -162,7 +197,8 @@ export default function PlanningHubListeRowMenu({
         {showPitch ? (
           <MenuButton
             label="Spielfeld ändern"
-            icon={<SoccerPitchLineIcon className="h-4 w-4" />}
+            tone="pitch"
+            icon={<SoccerPitchLineIcon className={cn("h-4 w-4", RESOURCE_SEMANTIC_PITCH_ICON_CLASS)} />}
             testId={`planning-hub-liste-action-pitch-${item.id}`}
             onClick={() => {
               setOpen(false);
@@ -173,7 +209,8 @@ export default function PlanningHubListeRowMenu({
         {showDressing ? (
           <MenuButton
             label="Garderobe ändern"
-            icon={<DoorOpen className="h-4 w-4" />}
+            tone="dressing"
+            icon={<DoorOpen className={cn("h-4 w-4", RESOURCE_SEMANTIC_DRESSING_ICON_CLASS)} />}
             testId={`planning-hub-liste-action-dressing-${item.id}`}
             onClick={() => {
               setOpen(false);
@@ -184,6 +221,7 @@ export default function PlanningHubListeRowMenu({
         {showConflict ? (
           <MenuButton
             label="Konflikt prüfen"
+            tone="conflict"
             icon={<ShieldAlert className="h-4 w-4" />}
             testId={`planning-hub-liste-action-conflict-${item.id}`}
             onClick={() => {

@@ -1,6 +1,6 @@
 # SCE-PLANNER-UX-08-06 — List / Search / Bulk Operational UX
 
-**Status:** IMPLEMENTED — **DRAFT PR** — Human UAT **REQUIRED**
+**Status:** IN PROGRESS — **DRAFT PR #804** — Human UAT **REQUIRED** (08-06R1 corrections landed)
 
 **Base:** `STAGE`
 
@@ -38,6 +38,7 @@ No parallel activity model, conflict engine, or facility registry.
 | Activity identity | `schedulerDisplayIdentity`, `ActivityTypePill`, `activityVisualStyle` |
 | Resources | `schedulerResourceLabel`, `itemInspectionPitchLabel` / dressing labels |
 | Filters | `applyPlanningHubFilters` + URL `typ` / `team` / `facility` / `konflikte` |
+| Team filter keys | `lib/planning-hub/team-filter.ts` — canonical **TeamSeason** ids (not display labels) |
 | Search haystack | Extends `aggregateInspectionSearchHaystack` |
 | Conflicts | Item `conflicts[]`, `PlanningConflictIncident`, `PlanningHubConflictWorkspaceDialog` |
 | Mutations | `PlanningHubManipulationContext` (schedule / resource editors) |
@@ -80,16 +81,26 @@ Existing hub filters compose with search (intersection). **Filter zurücksetzen*
 | Match end-time action | **Offen** |
 | `conflicts.length > 0` | **Konflikt** (08-05 model) |
 
-### Bulk decision
+### Bulk decision (08-06R1)
 
-- **Implemented:** multi-select, select-all-visible, selection bar, clear selection.
-- **Not implemented:** bulk mutations — no safe canonical server bulk write was available without bypassing validation/authority.
-- Selection bar states explicitly that no mass changes are offered.
+- **No exposed multi-selection** in Liste — checkboxes and “Sichtbare auswählen” removed after Human UAT (false affordance without bulk writes).
+- Architecture remains ready to reintroduce selection when the first real bulk operation exists.
+- **Not implemented:** bulk mutations — no safe canonical server bulk write without bypassing validation/authority.
 
 ### Row interaction
 
 - Primary click → **canonical activity detail** (`onItemOpen` / `getPlanningHubItemHref`).
 - Mutations only via explicit row menu (Öffnen, Planung ändern, Termin/Spielfeld/Garderobe, Konflikt prüfen) when capabilities allow.
+- Row menu uses collision-aware `PopoverContent` (flip/shift) **without** a clipped internal scroll viewport; action icons use existing semantic/resource tokens (supplementary colour, labels primary).
+
+### Team + type filter (08-06R1)
+
+- Team filter values are **TeamSeason ids** across Trainings, Spiele, Turniere, and Veranstaltungen.
+- Matches expose `Event.teamSeasonId` on `WeekplannerMatchItem` so **Spiele + team** composes with training-derived team options (e.g. “FC Allschwil Senioren 40+” vs compact “Senioren 40+” display).
+
+### Filtered empty state
+
+- When the week has items but filters/search yield zero rows: **“Für die aktuellen Filter wurden keine Aktivitäten gefunden.”** plus **Filter zurücksetzen** (distinct from a genuinely empty week).
 
 ### Conflict integration
 
@@ -105,7 +116,9 @@ Existing hub filters compose with search (intersection). **Filter zurücksetzen*
 ## Tests
 
 - `lib/planning-hub/__tests__/sce-planner-ux-08-06-list-operational.test.ts`
+- `lib/planning-hub/__tests__/team-filter.test.ts` (Spiele + Senioren 40+ regression)
 - `components/admin/planning-hub/__tests__/PlanningHubListeView.test.tsx`
+- `components/admin/planning-hub/__tests__/PlanningHubListeRowMenu.test.tsx`
 - `lib/planning-hub/__tests__/planner-url.test.ts` (`q` round-trip)
 
 ---
@@ -120,7 +133,9 @@ Existing hub filters compose with search (intersection). **Filter zurücksetzen*
 | D Detail | Row opens detail, not silent edit |
 | E Conflict | Konflikt prüfen → 08-05 workspace |
 | F Permissions | Automated matrix; `MANUAL_READ_ONLY_UAT = BLOCKED_BY_PEOPLE_ACCESS_IMPERSONATION_01` |
-| G Bulk | Selection only — no bulk write |
+| G Team filter | Spiele + FC Allschwil Senioren 40+ keeps the Senioren 40+ match |
+| H Row menu | No clipped scroll; semantic icon colours |
+| I Empty filter | Filtered-empty copy + reset vs empty week |
 
 ---
 

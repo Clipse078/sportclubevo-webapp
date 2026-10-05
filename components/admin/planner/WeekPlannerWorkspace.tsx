@@ -35,6 +35,7 @@ import { PlanningHubManipulationProvider } from "@/components/admin/planning-hub
 import { buildResourceSegmentsForDay } from "@/lib/planning-hub/scheduler/resource-segments";
 import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
+import { buildPlanningHubTeamOptions } from "@/lib/planning-hub/team-filter";
 import {
   buildPlanningConflictIncidents,
   type PlanningConflictIncident,
@@ -132,21 +133,7 @@ export default function WeekPlannerWorkspace({
       )
     : 0;
 
-  const teamOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const day of week.days) {
-      for (const item of day.items) {
-        if (item.type === "TRAINING") {
-          map.set(item.teamSeasonId, item.teamNames[0] ?? item.title);
-        } else if (item.teamNames[0]) {
-          map.set(item.teamNames[0], item.teamNames[0]);
-        }
-      }
-    }
-    return [...map.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label, "de-CH"));
-  }, [week]);
+  const teamOptions = useMemo(() => buildPlanningHubTeamOptions(week), [week]);
 
   const [conflictFocusIncidentId, setConflictFocusIncidentId] = useState<string | null>(null);
   const [internalConflictWorkspaceOpen, setInternalConflictWorkspaceOpen] = useState(false);

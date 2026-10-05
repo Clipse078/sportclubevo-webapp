@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import {
   applyListOperationalFilters,
@@ -18,6 +19,7 @@ import {
   weekplannerTimeColumnLabel,
   weekplannerTimingDetail,
 } from "@/lib/planning-hub/item-presenters";
+import { buildPlanningHubHref } from "@/lib/planning-hub/planner-url";
 import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-label";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
@@ -102,39 +104,15 @@ export default function PlanningHubListeView({
   const weekHasItems = week.days.some((day) => day.items.length > 0);
   const filtersActive = planningHubFiltersActive(urlState);
   const searchActive = urlState.search.trim().length > 0;
+  const filterOrSearchActive = filtersActive || searchActive;
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-
-  const visibleIds = useMemo(
-    () => filtered.days.flatMap((day) => day.items.map((item) => item.id)),
-    [filtered],
-  );
-
-  const allVisibleSelected =
-    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
-  const someSelected = selectedIds.size > 0;
-
-  function toggleItem(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function toggleSelectAllVisible() {
-    setSelectedIds((prev) => {
-      if (allVisibleSelected) {
-        const next = new Set(prev);
-        for (const id of visibleIds) next.delete(id);
-        return next;
-      }
-      const next = new Set(prev);
-      for (const id of visibleIds) next.add(id);
-      return next;
-    });
-  }
+  const resetHref = buildPlanningHubHref(urlState, {
+    activity: "alle",
+    team: null,
+    facility: null,
+    conflictsOnly: false,
+    search: "",
+  });
 
   if (!weekHasItems) {
     return (
@@ -145,56 +123,27 @@ export default function PlanningHubListeView({
   }
 
   if (visibleCount === 0) {
-    const message = searchActive
-      ? "Keine Aktivitäten entsprechen deiner Suche."
-      : filtersActive
-        ? "Keine Aktivitäten entsprechen deinen Filtern."
-        : "Keine Aktivitäten in diesem Zeitraum.";
+    const message = filterOrSearchActive
+      ? "Für die aktuellen Filter wurden keine Aktivitäten gefunden."
+      : "Keine Aktivitäten in diesem Zeitraum.";
     return (
-      <p className="px-1 py-6 text-sm text-[var(--muted)]" data-testid="planning-hub-liste-empty-filtered">
-        {message}
-      </p>
+      <div className="space-y-3 px-1 py-6" data-testid="planning-hub-liste-empty-filtered">
+        <p className="text-sm text-[var(--muted)]">{message}</p>
+        {filterOrSearchActive ? (
+          <Link
+            href={resetHref}
+            className="inline-flex rounded-full border border-[var(--border)] px-2.5 py-1 text-xs font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+            data-testid="planning-hub-liste-empty-reset"
+          >
+            Filter zurücksetzen
+          </Link>
+        ) : null}
+      </div>
     );
   }
 
   return (
     <div className="space-y-3" data-testid="planning-hub-liste">
-      {someSelected ? (
-        <div
-          className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-3 py-2 text-xs"
-          data-testid="planning-hub-liste-bulk-bar"
-        >
-          <span className="font-semibold text-[var(--foreground)]">
-            {selectedIds.size} ausgewählt
-          </span>
-          <button
-            type="button"
-            className="rounded-md px-2 py-1 font-medium text-[var(--sce-primary)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-            onClick={() => setSelectedIds(new Set())}
-            data-testid="planning-hub-liste-clear-selection"
-          >
-            Auswahl aufheben
-          </button>
-          <span className="text-[var(--muted)]">
-            Keine Massenänderungen — Auswahl dient der operativen Orientierung.
-          </span>
-        </div>
-      ) : null}
-
-      <div className="flex items-center gap-2 px-1">
-        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-2)]">
-          <input
-            type="checkbox"
-            className="rounded border-[var(--border)]"
-            checked={allVisibleSelected}
-            onChange={toggleSelectAllVisible}
-            data-testid="planning-hub-liste-select-all"
-            aria-label="Alle sichtbaren Einträge auswählen"
-          />
-          Sichtbare auswählen
-        </label>
-      </div>
-
       {filtered.days.map((day) => {
         if (day.items.length === 0) return null;
         return (
@@ -213,7 +162,6 @@ export default function PlanningHubListeView({
                 const typeLabel = weekplannerActivityTypeLabel(item.type);
                 const resourceLine = listOperationalResourceLine(item);
                 const resourceTitle = listOperationalResourceTitle(item);
-                const selected = selectedIds.has(item.id);
 
                 return (
                   <li key={item.id}>
@@ -224,19 +172,8 @@ export default function PlanningHubListeView({
                         semantic.listLeftEdgeClass,
                         "border-l-[3px]",
                         status === "conflict" && "ring-1 ring-inset ring-amber-500/15",
-                        selected && "border-[var(--sce-primary)]/40 bg-[var(--sce-primary-light)]/20",
                       )}
                     >
-                      <input
-                        type="checkbox"
-                        className="mt-1 shrink-0 rounded border-[var(--border)]"
-                        checked={selected}
-                        onChange={() => toggleItem(item.id)}
-                        onClick={(event) => event.stopPropagation()}
-                        aria-label={`${schedulerDisplayIdentity(item)} auswählen`}
-                        data-testid={`planning-hub-liste-select-${item.id}`}
-                      />
-
                       <button
                         type="button"
                         onClick={() => onItemOpen(item)}

@@ -808,6 +808,7 @@ function mapWeekplannerHomeMatchItems(
       },
       homeAway: "HOME" as const,
       eventId: match.id,
+      teamSeasonId: match.teamSeasonId,
       pitchAllocations: pitch.allocations,
       dressingRoomAllocations: dressingRoom.allocations,
       canonicalPitchAllocations: pitchRef ? [pitchRef] : [],
@@ -873,11 +874,55 @@ async function findWeekplannerHomeMatches(
 
 // ── Event(type=TOURNAMENT) → WeekplannerTournamentItem (HOME only) ──────────
 
+function collectTournamentTeamSeasonIds(
+  tournament: Awaited<ReturnType<typeof listTournaments>>[number],
+  teamSeasonIdByTeamId: ReadonlyMap<string, string>,
+): string[] {
+  const ids = new Set<string>();
+  if (tournament.teamSeasonId) ids.add(tournament.teamSeasonId);
+  for (const participant of tournament.participants) {
+    if (participant.kind !== "TEAM") continue;
+    const teamId = participant.team?.id;
+    if (!teamId) continue;
+    const teamSeasonId = teamSeasonIdByTeamId.get(teamId);
+    if (teamSeasonId) ids.add(teamSeasonId);
+  }
+  return [...ids];
+}
+
+async function loadTeamSeasonIdByTeamIdForTournaments(
+  tenantId: string,
+  tournaments: Awaited<ReturnType<typeof listTournaments>>,
+): Promise<Map<string, string>> {
+  const seasonIds = new Set<string>();
+  const teamIds = new Set<string>();
+  for (const tournament of tournaments) {
+    if (tournament.season?.id) seasonIds.add(tournament.season.id);
+    for (const participant of tournament.participants) {
+      if (participant.kind === "TEAM" && participant.team?.id) {
+        teamIds.add(participant.team.id);
+      }
+    }
+  }
+  if (seasonIds.size === 0 || teamIds.size === 0) return new Map();
+
+  const rows = await prisma.teamSeason.findMany({
+    where: {
+      seasonId: { in: [...seasonIds] },
+      teamId: { in: [...teamIds] },
+      team: { tenantId },
+    },
+    select: { id: true, teamId: true },
+  });
+  return new Map(rows.map((row) => [row.teamId, row.id]));
+}
+
 function mapWeekplannerHomeTournamentItems(
   homeTournaments: Awaited<ReturnType<typeof listTournaments>>,
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
+  teamSeasonIdByTeamId: ReadonlyMap<string, string>,
   occupancyByEventId: ReadonlyMap<
     string,
     {
@@ -933,6 +978,7 @@ function mapWeekplannerHomeTournamentItems(
       timeOverridden: time.overridden,
       title: tournament.title,
       teamNames: ownTeamNames,
+      teamSeasonIds: collectTournamentTeamSeasonIds(tournament, teamSeasonIdByTeamId),
       homeAway: "HOME" as const,
       eventId: tournament.id,
       pitchAllocations: pitch.allocations,
@@ -1004,11 +1050,17 @@ async function findWeekplannerHomeTournaments(
     homeTournaments.map((tournament) => tournament.id),
   );
 
+  const teamSeasonIdByTeamId = await loadTeamSeasonIdByTeamIdForTournaments(
+    tenantId,
+    homeTournaments,
+  );
+
   return mapWeekplannerHomeTournamentItems(
     homeTournaments,
     overridesByKey,
     timeOverridesByKey,
     tenantPresets,
+    teamSeasonIdByTeamId,
     occupancyByEventId,
   );
 }
@@ -1194,11 +1246,17 @@ export async function getWeekplannerWeek(
       occupancyByEventId,
     );
 
+    const teamSeasonIdByTeamId = await loadTeamSeasonIdByTeamIdForTournaments(
+      tenantId,
+      homeTournaments,
+    );
+
     const tournamentItems = mapWeekplannerHomeTournamentItems(
       homeTournaments,
       overridesByKey,
       timeOverridesByKey,
       tenantPresets,
+      teamSeasonIdByTeamId,
       occupancyByEventId,
     );
 

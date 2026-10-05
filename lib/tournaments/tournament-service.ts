@@ -265,6 +265,7 @@ function toDto(
     resultLabel: row.resultLabel,
     remarks: row.remarks,
     season: row.season,
+    teamSeasonId: row.teamSeasonId,
     team: row.team,
     teamLogoUrl: row.team ? tenantContext.logoUrl?.trim() || null : null,
     homeAway,

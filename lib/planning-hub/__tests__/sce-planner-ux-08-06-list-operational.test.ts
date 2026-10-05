@@ -78,6 +78,7 @@ function matchItem(
     timeOverridden: false,
     title: "Spiel",
     teamNames: [team],
+    teamSeasonId: "ts-match-1",
     opponentName: opponent,
     pitchAllocations: [pitch],
     dressingRoomAllocations: [],

@@ -70,6 +70,17 @@ const permissionContext = {
   alternativePlanId: null as string | null,
 };
 
+const baseUrlState = {
+  perspective: "liste" as const,
+  activity: "alle" as const,
+  team: null,
+  facility: null,
+  search: "",
+  conflictsOnly: false,
+  resourceCategory: "pitch" as const,
+  resourceFilterIds: null,
+};
+
 describe("PlanningHubListeView", () => {
   it("renders day grouping, type pill, resources, and opens detail on row click", async () => {
     const user = userEvent.setup();
@@ -77,16 +88,7 @@ describe("PlanningHubListeView", () => {
     render(
       <PlanningHubListeView
         week={week([training("training:1", "Junioren F2")])}
-        urlState={{
-          perspective: "liste",
-          activity: "alle",
-          team: null,
-          facility: null,
-          search: "",
-          conflictsOnly: false,
-          resourceCategory: "pitch",
-          resourceFilterIds: null,
-        }}
+        urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
         onItemOpen={onOpen}
@@ -106,47 +108,11 @@ describe("PlanningHubListeView", () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  it("shows empty search state", () => {
-    render(
-      <PlanningHubListeView
-        week={week([training("training:1", "Junioren F2")])}
-        urlState={{
-          perspective: "liste",
-          activity: "alle",
-          team: null,
-          facility: null,
-          search: "KeinTreffer",
-          conflictsOnly: false,
-          resourceCategory: "pitch",
-          resourceFilterIds: null,
-        }}
-        locale="de-CH"
-        timezone="Europe/Zurich"
-        onItemOpen={vi.fn()}
-        onItemEditPlanning={vi.fn()}
-        onReviewConflictForItem={vi.fn()}
-        canEditItem={() => false}
-        permissionContext={{ ...permissionContext, canManageTrainings: false }}
-      />,
-    );
-    expect(screen.getByTestId("planning-hub-liste-empty-filtered").textContent).toContain("Suche");
-  });
-
-  it("supports multi-selection without bulk write affordance", async () => {
-    const user = userEvent.setup();
+  it("does not render selection checkboxes or bulk bar", () => {
     render(
       <PlanningHubListeView
         week={week([training("training:1", "Junioren F2"), training("training:2", "Junioren E1")])}
-        urlState={{
-          perspective: "liste",
-          activity: "alle",
-          team: null,
-          facility: null,
-          search: "",
-          conflictsOnly: false,
-          resourceCategory: "pitch",
-          resourceFilterIds: null,
-        }}
+        urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
         onItemOpen={vi.fn()}
@@ -157,10 +123,55 @@ describe("PlanningHubListeView", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("planning-hub-liste-select-training:1"));
-    expect(screen.getByTestId("planning-hub-liste-bulk-bar").textContent).toContain("1 ausgewählt");
-    expect(screen.getByTestId("planning-hub-liste-bulk-bar").textContent).toContain(
-      "Keine Massenänderungen",
+    expect(screen.queryByTestId("planning-hub-liste-select-all")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-liste-select-training:1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-liste-bulk-bar")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sichtbare auswählen")).not.toBeInTheDocument();
+  });
+
+  it("shows filtered empty state with reset when filters yield no rows", () => {
+    render(
+      <PlanningHubListeView
+        week={week([training("training:1", "Junioren F2")])}
+        urlState={{
+          ...baseUrlState,
+          activity: "spiele",
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => false}
+        permissionContext={{ ...permissionContext, canManageTrainings: false }}
+      />,
     );
+    expect(screen.getByTestId("planning-hub-liste-empty-filtered").textContent).toContain(
+      "Für die aktuellen Filter",
+    );
+    expect(screen.getByTestId("planning-hub-liste-empty-reset")).toBeInTheDocument();
+  });
+
+  it("shows search-specific filtered empty copy", () => {
+    render(
+      <PlanningHubListeView
+        week={week([training("training:1", "Junioren F2")])}
+        urlState={{
+          ...baseUrlState,
+          search: "KeinTreffer",
+        }}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        onItemOpen={vi.fn()}
+        onItemEditPlanning={vi.fn()}
+        onReviewConflictForItem={vi.fn()}
+        canEditItem={() => false}
+        permissionContext={{ ...permissionContext, canManageTrainings: false }}
+      />,
+    );
+    expect(screen.getByTestId("planning-hub-liste-empty-filtered").textContent).toContain(
+      "Für die aktuellen Filter",
+    );
+    expect(screen.getByTestId("planning-hub-liste-empty-reset")).toBeInTheDocument();
   });
 });

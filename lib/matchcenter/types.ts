@@ -95,6 +95,8 @@ export interface MatchcenterMatchSummary {
   tenantId: string;
   /** Canonical Event.teamId — the tenant-owned team assigned to this match. */
   teamId: string | null;
+  /** Canonical Event.teamSeasonId — seasonal team identity for filters and routing. */
+  teamSeasonId: string | null;
   /** Canonical Event.seasonId — used for season isolation in sporting queries. */
   seasonId: string | null;
   type: "MATCH";

@@ -94,6 +94,7 @@ interface MatchcenterEventRecord {
   tenantId: string | null;
   seasonId: string | null;
   teamId: string | null;
+  teamSeasonId: string | null;
   type: string;
   source: string;
   status: string;
@@ -515,6 +516,7 @@ function toSummary(
     id: event.id,
     tenantId: event.tenantId,
     teamId: event.teamId,
+    teamSeasonId: event.teamSeasonId,
     seasonId: event.seasonId,
     type: "MATCH",
     title: event.title,
