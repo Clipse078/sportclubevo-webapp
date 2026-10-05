@@ -393,3 +393,59 @@ Helpers: `lib/planning-hub/conflict-workspace-presenters.ts`. **No** changes to 
 ### Status
 
 **IN PROGRESS** — **Human UAT:** final shortened **Garderobe ändern** flow (E1 conflict → free room → apply without refresh).
+
+## 08-05R8 — Prüfen workspace crash
+
+### Human UAT failure
+
+On authenticated PR **#802** Preview (feature head **146b7f7c**), **Wochenplaner → Prüfen** crashed the entire Planner page into the Next.js error boundary (“This page couldn’t load”).
+
+**Human UAT:** **BLOCKED — R8 RETEST REQUIRED**
+
+### Deployment / commit correlation
+
+| Check | Value |
+|-------|--------|
+| Branch | `cursor/sce-planner-ux-08-05-conflict-resolution-operational-actions` |
+| Local / origin / PR #802 `headRefOid` | **146b7f7c** (pre-R8) |
+| Failure introduced | **08-05R7** filter UI (`buildConflictResolutionFilterOptions`) |
+| Vercel Preview | Must be rebuilt from post-R8 push (same PR #802, new commit) |
+
+Tester-visible Vercel log **~18:13** `POST …/resource-manipulation/validate` **500** `TypeError: *.getTime is not a function` is the **known R6-pre-fix** validate failure and is **not** the Prüfen open crash (~**18:42**). R8 does not change manipulation transport.
+
+### Reproduction
+
+1. Load week planner with conflicts (FCA-like week).
+2. Dialog mounts with `open={false}` (default while workspace closed).
+3. Click **Prüfen** → `open={true}`.
+
+**Failure class:** **C** — rendering `PlanningHubConflictWorkspaceDialog` after open transition.
+
+### Root cause
+
+**React Rules of Hooks violation** in `PlanningHubConflictWorkspaceDialog.tsx`: R7 added `useMemo` / `useEffect` for kind-filter options **after** `if (!open) return null`. While closed, those hooks did not run; on **Prüfen**, React saw **more hooks than the previous render** and threw (page-level error boundary).
+
+Not caused by conflict engine, incident construction, or `getTime` on filter sort (incidents already had `Date` instants client-side).
+
+### Fix
+
+- Move kind-filter `useMemo` / `useEffect` **above** the early `open` return (stable hook order for closed → open lifecycle).
+- Harden `conflict-workspace-presenters.ts` for optional `facilityName` / `teamNames` (presentation-only fallbacks).
+
+### Tests
+
+- `PlanningHubConflictResolutionHandoff.test.tsx` — **open lifecycle (08-05R8)** (`open={false}` → `open={true}`).
+- Extended `sce-planner-ux-08-05-r7-conflict-workspace-presentation.test.ts` — stale resource ref + empty `facilityName`.
+- R6 transport + R5 apply tests unchanged (regression suite).
+
+### Facility integrity
+
+No new structural facility defect identified; crash was client hook ordering. Legacy label fallbacks (`facilityResourceName`) remain relevant for **FACILITY-INTEGRITY-01** read-model gaps.
+
+### Status
+
+**IN PROGRESS**
+
+### Human UAT (next step after R8 deploy)
+
+**FIRST TEST ONLY:** Wochenplaner → **Prüfen** — expect workspace opens, Garderobe/Spielfeld labels, filter counts, search; **no** page crash. **Stop** before Garderobe mutation until this passes.
