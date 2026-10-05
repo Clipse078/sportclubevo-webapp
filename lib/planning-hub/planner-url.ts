@@ -34,6 +34,8 @@ export type PlanningHubUrlState = {
   activity: PlanningHubActivityFilter;
   team: string | null;
   facility: string | null;
+  /** Liste operational search (`q` query param). */
+  search: string;
   conflictsOnly: boolean;
   /** Derived from perspective; kept for mutation/segment code paths. */
   resourceCategory: PlanningHubResourceCategory;
@@ -129,6 +131,7 @@ export function parsePlanningHubUrlState(
     activity,
     team: params.team?.trim() || null,
     facility: params.facility?.trim() || null,
+    search: params.q?.trim() || "",
     conflictsOnly: params.konflikte === "1",
     resourceCategory,
     resourceFilterIds: parseResourceFilterIds(params.resFilter),
@@ -159,6 +162,7 @@ export function buildPlanningHubHref(
   if (merged.activity !== "alle") query.set("typ", merged.activity);
   if (merged.team) query.set("team", merged.team);
   if (merged.facility) query.set("facility", merged.facility);
+  if (merged.search.trim()) query.set("q", merged.search.trim());
   if (merged.conflictsOnly) query.set("konflikte", "1");
   if (merged.resourceFilterIds?.length) {
     query.set("resFilter", merged.resourceFilterIds.join(","));

@@ -11,6 +11,7 @@ describe("planning-hub planner-url", () => {
     expect(state.perspective).toBe("kalender");
     expect(state.activity).toBe("alle");
     expect(state.conflictsOnly).toBe(false);
+    expect(state.search).toBe("");
     expect(state.calendarZeit).toBeUndefined();
     expect(state.resourceFilterIds).toBeNull();
   });
@@ -49,6 +50,12 @@ describe("planning-hub planner-url", () => {
     const href = buildPlanningHubHref(parsePlanningHubUrlState({ week: "2026-09-14" }));
     expect(href).not.toContain("ansicht=");
     expect(href).toContain("week=2026-09-14");
+  });
+
+  it("round-trips liste search query param", () => {
+    const state = parsePlanningHubUrlState({ ansicht: "liste", q: "Hauptfeld" });
+    expect(state.search).toBe("Hauptfeld");
+    expect(buildPlanningHubHref(state)).toContain("q=Hauptfeld");
   });
 
   it("preserves filters when switching perspective", () => {
