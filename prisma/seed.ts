@@ -697,13 +697,13 @@ async function main() {
       resources: Array<{ name: string; code: string; type: FacilityResourceType; sortOrder: number }>;
     }> = [
       {
-        name: "Hauptplatz",
+        name: "Hauptfeld",
         type: FacilityType.PITCH,
         sortOrder: 10,
         resources: [
-          { name: "Hauptplatz", code: "STADION", type: FacilityResourceType.FULL_PITCH, sortOrder: 10 },
-          { name: "Hauptplatz A", code: "STADION_A", type: FacilityResourceType.HALF_PITCH, sortOrder: 20 },
-          { name: "Hauptplatz B", code: "STADION_B", type: FacilityResourceType.HALF_PITCH, sortOrder: 30 },
+          { name: "Hauptfeld", code: "STADION", type: FacilityResourceType.FULL_PITCH, sortOrder: 10 },
+          { name: "Hauptfeld A", code: "STADION_A", type: FacilityResourceType.HALF_PITCH, sortOrder: 20 },
+          { name: "Hauptfeld B", code: "STADION_B", type: FacilityResourceType.HALF_PITCH, sortOrder: 30 },
         ],
       },
       {

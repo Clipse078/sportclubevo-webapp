@@ -21,6 +21,7 @@ import {
   FCA_MAIN_PITCH_LEGACY_TO_CANONICAL,
   isFcaMainPitchLegacyCode,
 } from "@/lib/facilities/fca-main-pitch-legacy-codes";
+import { applyFcaMainPitchCanonicalTerminologyInTransaction } from "@/lib/facilities/fca-main-pitch-terminology-reconciliation";
 
 export { FCA_TENANT_KEY };
 
@@ -454,10 +455,11 @@ export async function executeFcaMainPitchReconciliation(
     });
     stats.legacyFacilityArchived = true;
 
-    await tx.facility.update({
-      where: { id: plan.inventory.canonicalFacility.id },
-      data: { name: "Hauptplatz" },
-    });
+    await applyFcaMainPitchCanonicalTerminologyInTransaction(
+      tx,
+      tenantId,
+      plan.inventory.canonicalFacility.id,
+    );
 
     const postFailures = await verifyNoLegacyReferencesRemain(tx, tenantId, legacyResourceIds);
     if (postFailures.length > 0) {
