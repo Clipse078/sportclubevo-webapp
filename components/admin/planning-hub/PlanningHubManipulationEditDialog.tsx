@@ -183,8 +183,38 @@ export default function PlanningHubManipulationEditDialog({
       onClose={onClose}
       initialFocusRef={firstFieldRef}
       panelClassName={cn(SCE_DIALOG_VARIANT_FORM, "max-w-[min(42rem,var(--sce-dialog-form-max-width))]")}
+      header={
+        <>
+          <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
+            Planung ändern
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-2)]">
+            Zielressource und Reservierungszeit (Sportzeit bleibt unverändert).
+          </p>
+        </>
+      }
+      footer={
+        <>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+            onClick={onClose}
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+            data-testid="planning-hub-manipulation-edit-continue"
+          >
+            Weiter
+          </button>
+        </>
+      }
     >
       <form
+        id={formId}
         aria-labelledby={`${formId}-title`}
         onSubmit={(event) => {
           event.preventDefault();
@@ -194,14 +224,7 @@ export default function PlanningHubManipulationEditDialog({
           setConfirmDraft(draft);
         }}
       >
-        <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
-          Planung ändern
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Zielressource und Reservierungszeit (Sportzeit bleibt unverändert).
-        </p>
-
-        <div className="mt-3">
+        <div>
           <PlanningHubManipulationResourceAvailabilityPicker
             item={item}
             allItems={allItems}
@@ -255,23 +278,6 @@ export default function PlanningHubManipulationEditDialog({
           reservationEndAt={reservationWindow.endAt}
           timezone={timezone}
         />
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
-            onClick={onClose}
-          >
-            Abbrechen
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white"
-            data-testid="planning-hub-manipulation-edit-continue"
-          >
-            Weiter
-          </button>
-        </div>
       </form>
     </PlanningHubManipulationModalShell>
   );

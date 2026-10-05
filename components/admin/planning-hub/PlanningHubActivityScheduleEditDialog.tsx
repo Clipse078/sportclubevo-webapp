@@ -102,8 +102,39 @@ export default function PlanningHubActivityScheduleEditDialog({
       testId="planning-hub-activity-schedule-edit"
       onClose={onClose}
       initialFocusRef={firstFieldRef}
+      header={
+        <>
+          <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
+            Termin ändern
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-2)]">
+            Sporttermin (Trainingszeit / Spielzeit / Turnierzeit) — Reservierungen folgen mit Puffer.
+          </p>
+        </>
+      }
+      footer={
+        <>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+            onClick={onClose}
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            disabled={!draft}
+            data-testid="planning-hub-activity-schedule-edit-continue"
+          >
+            Weiter
+          </button>
+        </>
+      }
     >
       <form
+        id={formId}
         aria-labelledby={`${formId}-title`}
         onSubmit={(event) => {
           event.preventDefault();
@@ -113,14 +144,7 @@ export default function PlanningHubActivityScheduleEditDialog({
           setConfirmDraft(draft);
         }}
       >
-        <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
-          Termin ändern
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Sporttermin (Trainingszeit / Spielzeit / Turnierzeit) — Reservierungen folgen mit Puffer.
-        </p>
-
-        <label className="mt-3 block text-xs font-semibold text-[var(--muted)]" htmlFor={`${formId}-date`}>
+        <label className="block text-xs font-semibold text-[var(--muted)]" htmlFor={`${formId}-date`}>
           Datum
         </label>
         <input
@@ -153,24 +177,6 @@ export default function PlanningHubActivityScheduleEditDialog({
             value={endTime}
             onChange={(event) => setEndTime(event.target.value)}
           />
-        </div>
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
-            onClick={onClose}
-          >
-            Abbrechen
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-            disabled={!draft}
-            data-testid="planning-hub-activity-schedule-edit-continue"
-          >
-            Weiter
-          </button>
         </div>
       </form>
     </PlanningHubManipulationModalShell>

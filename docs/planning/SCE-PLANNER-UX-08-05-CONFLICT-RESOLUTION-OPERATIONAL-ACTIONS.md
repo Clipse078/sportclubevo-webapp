@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS
 
-**Human UAT:** RETEST / FINAL GARDEROBE FLOW REQUIRED (08-05R7)
+**Human UAT:** BLOCKED — R9 RETEST REQUIRED
 
 **Base:** STAGE `aec52552837e5d789a6f8c5d95a0f05b522a2401` (08-01…08-04 merged)
 
@@ -449,3 +449,88 @@ No new structural facility defect identified; crash was client hook ordering. Le
 ### Human UAT (next step after R8 deploy)
 
 **FIRST TEST ONLY:** Wochenplaner → **Prüfen** — expect workspace opens, Garderobe/Spielfeld labels, filter counts, search; **no** page crash. **Stop** before Garderobe mutation until this passes.
+
+## 08-05R9 — Manipulation dialog viewport & sticky actions
+
+### Human UAT blocker
+
+After **08-05R8**, **Prüfen** opens correctly. In **Garderobe ändern** (Junioren F2, Garderobe **E1**, reservation **16:30–19:00**), the manipulation editor shows availability, recommendations (**O3**), search, **Nur freie**, and the full inventory — but on a normal desktop viewport the dialog grows taller than the visible area. **Abbrechen** / **Weiter** sit below the fold; the page/body scrollbar does not fix the modal layout. This blocks the canonical Garderobe mutation flow.
+
+**Human UAT:** **BLOCKED — R9 RETEST REQUIRED**
+
+### Root cause
+
+Combination **A + B + C + D + E**:
+
+| Factor | Detail |
+|--------|--------|
+| A | `PlanningHubManipulationModalShell` panel had **no** `max-h-[var(--sce-dialog-max-height)]` / flex column cap |
+| B | No dedicated scroll boundary on content — entire form expanded naturally |
+| C | `PlanningHubManipulationResourceAvailabilityBoard` inventory grows with resource count |
+| D | Primary actions lived **after** expanding content inside the same flow |
+| E | `SceModalOverlay` content viewport uses `overflow: hidden` — clipped dialog cannot be scrolled into view via page scroll |
+
+Not a conflict engine, availability, or R8 regression.
+
+### Modal architecture (canonical three-zone shell)
+
+`PlanningHubManipulationModalShell` now mirrors the SCE dialog contract used by `Dialog.tsx`:
+
+```
+┌ HEADER (shrink-0, border-b) ─ Planung ändern + copy ─┐
+├ BODY (flex-1 min-h-0 overflow-y-auto) ─ form fields ─┤
+└ FOOTER (shrink-0 border-t) ─ Abbrechen · Weiter ─────┘
+```
+
+Panel: `max-h-[var(--sce-dialog-max-height)]` (`calc(100dvh - 2 × overlay gutter)` from `app/globals.css`), `overflow-hidden`, viewport-safe via existing portalled overlay.
+
+### Scrolling ownership
+
+- **One** vertical scroll surface: `planning-hub-manipulation-*-modal-body`.
+- Header + footer never scroll.
+- Pitch matrix may retain intentional **horizontal** overflow inside the body only (`overflow-x-auto` grid).
+- No nested list max-height hacks; inventory scrolls with the body region.
+
+### Sticky actions
+
+- **Abbrechen** / **Weiter** (and confirm **Änderung übernehmen**) render in `*-modal-footer`, visually separated (`border-t`, dark `bg-[var(--surface)]`).
+- Submit uses `form={formId}` so footer buttons stay associated with the editor form.
+- Primary CTA remains SCE orange; secondary stays bordered/muted.
+
+### Pitch / dressing consistency
+
+Same shell for:
+
+- `PlanningHubManipulationEditDialog` (PITCH, DRESSING_ROOM, HALL, ROOM, OTHER via 08-02 surface)
+- `PlanningHubManipulationConfirm`
+- `PlanningHubActivityScheduleEditDialog` (Termin ändern)
+
+R3/R4 presentation modes (COMPACT_MATRIX / GROUPED_MATRIX / LARGE_INVENTORY) unchanged — only the outer shell constrains height.
+
+### Responsive behaviour
+
+- **Desktop large:** dialog capped by viewport max-height; does not grow unbounded.
+- **Desktop / laptop (Human UAT case):** actions always visible without zoom or page scroll.
+- **Short viewport:** internal body scroll; header/footer fixed within panel.
+- **Narrow:** existing responsive controls unchanged; no horizontal page overflow from shell.
+
+### State preservation
+
+Layout refactor only — React state for target resource, reservation times, search, **Nur freie**, large-inventory expansion, and draft unchanged. Scrolling the modal body must not reset selection or filters.
+
+### Tests
+
+- `PlanningHubManipulationEditDialog.r9.test.tsx` — header/body/footer structure, footer outside scroll region, large dressing + pitch inventories, O3 selection + search/filter after scroll, confirm footer reachable, FCA pitch matrix footer.
+- Regression: R3/R4 board tests, R5 apply, R6 transport, R7 workspace presentation, R8 open lifecycle (unchanged suites).
+
+### Domain logic unchanged
+
+No edits to conflict incidents, availability engine, recommendation ranking, validation/apply pipelines, R6 transport, R7 presenters, or R8 hook order.
+
+### Human UAT retest (after R9 deploy on PR #802 Preview)
+
+Resume: **Wochenplaner → Prüfen → Garderobe E1 → Garderobe ändern** — expect **Abbrechen** + **Weiter** always visible; select **O3** → **Weiter** → confirm **VON E1 / NACH O3** → **Änderung übernehmen** without manual reload (same expectations as package brief §15).
+
+### Status
+
+**IN PROGRESS**

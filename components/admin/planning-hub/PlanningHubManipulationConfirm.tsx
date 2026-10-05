@@ -81,12 +81,36 @@ export default function PlanningHubManipulationConfirm({
     <PlanningHubManipulationModalShell
       testId="planning-hub-manipulation-confirm"
       onClose={onCancel}
+      header={
+        <>
+          <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
+          <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
+        </>
+      }
+      footer={
+        <>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+            onClick={onCancel}
+            disabled={saving}
+          >
+            Abbrechen
+          </button>
+          <button
+            type="button"
+            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            onClick={onConfirm}
+            disabled={saving}
+            data-testid="planning-hub-manipulation-confirm-apply"
+          >
+            {isActivityDraft ? "Termin verschieben" : "Änderung übernehmen"}
+          </button>
+        </>
+      }
     >
       <>
-        <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
-        <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
-
-        <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
+        <div className="grid gap-3 text-xs sm:grid-cols-2">
           <div className="rounded-lg bg-[var(--surface-2)] p-2.5">
             <p className="font-semibold uppercase tracking-wide text-[var(--muted)]">Von</p>
             {isOccupancyDraft ? (
@@ -203,26 +227,6 @@ export default function PlanningHubManipulationConfirm({
             {error}
           </p>
         )}
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-            onClick={onCancel}
-            disabled={saving}
-          >
-            Abbrechen
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-            onClick={onConfirm}
-            disabled={saving}
-            data-testid="planning-hub-manipulation-confirm-apply"
-          >
-            {isActivityDraft ? "Termin verschieben" : "Änderung übernehmen"}
-          </button>
-        </div>
       </>
     </PlanningHubManipulationModalShell>
   );
