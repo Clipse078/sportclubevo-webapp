@@ -136,8 +136,12 @@ export async function applyAlternativePlanSchedulerDraft(
 
   const occupancyIntervalChanged = resourceOccupancyDraft && timeChanged;
 
-  if (!resourceChanged && !occupancyIntervalChanged) return;
-  if (resourceChanged && (!draft.proposedResourceId || !draft.originalResourceId)) return;
+  if (!resourceChanged && !occupancyIntervalChanged) {
+    return;
+  }
+  if (resourceChanged && (!draft.proposedResourceId || !draft.originalResourceId)) {
+    throw new Error("Planungsänderung konnte nicht gespeichert werden.");
+  }
 
   const allocationGroup = resourceCategory === "pitch" ? "PITCH_HALL" : "DRESSING_ROOM";
   const overrideRows = overridesByKey[planOverrideKey(activityType, activityId, allocationGroup)] ?? [];

@@ -1,7 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { usePublishPlannerWeekChrome } from "./PlannerWeekChromeBridge";
 import {
   fetchPlanningHubFacilityGroupsClient,
@@ -20,14 +28,18 @@ const WeekplannerOperationalPlanningSheet = dynamic(
     import("./WeekplannerOperationalPlanningSheet").then((m) => m.WeekplannerOperationalPlanningSheet),
   { ssr: false },
 );
-import PlanningHubConflictSheet from "@/components/admin/planning-hub/PlanningHubConflictSheet";
+import PlanningHubConflictWorkspaceDialog from "@/components/admin/planning-hub/PlanningHubConflictWorkspaceDialog";
 import PlanningHubCalendarView from "@/components/admin/planning-hub/PlanningHubCalendarView";
 import PlanningHubResourceDayView from "@/components/admin/planning-hub/PlanningHubResourceDayView";
 import { PlanningHubManipulationProvider } from "@/components/admin/planning-hub/PlanningHubManipulationContext";
 import { buildResourceSegmentsForDay } from "@/lib/planning-hub/scheduler/resource-segments";
 import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
-import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
+import {
+  buildPlanningConflictIncidents,
+  type PlanningConflictIncident,
+} from "@/lib/planning-hub/conflict-attention";
+import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import {
   isPlanningHubResourceTimelinePerspective,
   resolvePlanningHubResourceDay,
@@ -64,11 +76,9 @@ export type WeekPlannerWorkspaceProps = {
   urlState?: PlanningHubUrlState;
   dressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   resourceTimelineCatalog?: PlanningHubFacilityGroups;
-  selectedIncident?: PlanningConflictIncident | null;
-  conflictPicker?: PlanningConflictIncident[] | null;
-  onCloseIncident?: () => void;
-  onCloseConflictPicker?: () => void;
-  onPickConflictIncident?: (incident: PlanningConflictIncident) => void;
+  conflictWorkspaceOpen?: boolean;
+  onOpenConflictWorkspace?: () => void;
+  onCloseConflictWorkspace?: () => void;
 };
 
 function getMissingAllocations(item: WeekplannerItem): string[] {
@@ -92,11 +102,9 @@ export default function WeekPlannerWorkspace({
   urlState: urlStateProp,
   dressingRoomOccupancyPresets,
   resourceTimelineCatalog,
-  selectedIncident,
-  conflictPicker,
-  onCloseIncident,
-  onCloseConflictPicker,
-  onPickConflictIncident,
+  conflictWorkspaceOpen = false,
+  onOpenConflictWorkspace,
+  onCloseConflictWorkspace,
 }: WeekPlannerWorkspaceProps) {
   const router = useRouter();
   const urlState: PlanningHubUrlState = urlStateProp ?? {
@@ -139,33 +147,31 @@ export default function WeekPlannerWorkspace({
       .sort((a, b) => a.label.localeCompare(b.label, "de-CH"));
   }, [week]);
 
-  const [internalSelectedIncident, setInternalSelectedIncident] =
-    useState<PlanningConflictIncident | null>(null);
-  const [internalConflictPicker, setInternalConflictPicker] = useState<
-    PlanningConflictIncident[] | null
-  >(null);
-
-  const isConflictControlled = selectedIncident !== undefined;
-  const resolvedSelectedIncident = isConflictControlled ? selectedIncident ?? null : internalSelectedIncident;
-  const resolvedConflictPicker = isConflictControlled ? conflictPicker ?? null : internalConflictPicker;
+  const [internalConflictWorkspaceOpen, setInternalConflictWorkspaceOpen] = useState(false);
+  const conflictWorkspaceVisible = onCloseConflictWorkspace
+    ? conflictWorkspaceOpen
+    : internalConflictWorkspaceOpen;
+  const closeConflictWorkspace = onCloseConflictWorkspace ?? (() => setInternalConflictWorkspaceOpen(false));
 
   const handleReviewConflicts = useCallback(
-    (incidents: PlanningConflictIncident[]) => {
-      if (incidents.length === 1) {
-        const incident = incidents[0]!;
-        if (isConflictControlled) {
-          onPickConflictIncident?.(incident);
-        } else {
-          setInternalSelectedIncident(incident);
-        }
-        return;
-      }
-      if (!isConflictControlled) {
-        setInternalConflictPicker(incidents);
+    (_incidents: PlanningConflictIncident[]) => {
+      if (onOpenConflictWorkspace) {
+        onOpenConflictWorkspace();
+      } else {
+        setInternalConflictWorkspaceOpen(true);
       }
     },
-    [isConflictControlled, onPickConflictIncident],
+    [onOpenConflictWorkspace],
   );
+
+  const conflictResolutionPendingRef = useRef<{
+    itemId: string;
+    incidentId: string | null;
+    conflictResourceId: string;
+    beforeIncidentTotal: number;
+    beforeItemConflictCount: number;
+    successMessage: string | null;
+  } | null>(null);
 
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
   const [operationalEditingItem, setOperationalEditingItem] = useState<WeekplannerItem | null>(null);
@@ -295,6 +301,38 @@ export default function WeekPlannerWorkspace({
     }));
   }, [week, resolvedUrlState, urlState.perspective, urlState.day, urlState.resourceCategory, todayDayKey, manipulationFacilityGroups]);
 
+  const handleManipulationApplied = useCallback(
+    (draft: SchedulerDraftChange) => {
+      const item = itemsById.get(draft.itemId);
+      if (!item) return;
+      const conflictResourceId =
+        draft.originalResourceId ??
+        draft.proposedResourceId ??
+        (draft.timeTarget === "resourceOccupancy" ? draft.segmentId?.split(":")[1] : undefined) ??
+        item.conflicts[0]?.facilityResourceId;
+      if (!conflictResourceId) return;
+      const incidentsBefore = buildPlanningConflictIncidents(week);
+      conflictResolutionPendingRef.current = {
+        itemId: item.id,
+        incidentId: conflictResourceId
+          ? incidentsBefore.find(
+              (incident) =>
+                incident.facilityResourceId === conflictResourceId &&
+                incident.itemIds.includes(item.id),
+            )?.id ?? null
+          : null,
+        conflictResourceId,
+        beforeIncidentTotal: incidentsBefore.length,
+        beforeItemConflictCount: item.conflicts.length,
+        successMessage:
+          draft.proposedResourceId && draft.timeTarget === "resourceOccupancy"
+            ? `Planung aktualisiert`
+            : "Planung aktualisiert",
+      };
+    },
+    [itemsById, week],
+  );
+
   const wrapManipulation = (node: ReactNode) => {
     if (!canonicalEditing && !overrideEditing) return node;
     return (
@@ -311,58 +349,82 @@ export default function WeekPlannerWorkspace({
         facilityGroupsByAllocationGroup={manipulationFacilityGroups ?? undefined}
         overridesByKey={overrideEditing?.overridesByKey}
         resourceRows={resourceRowsForManipulation}
+        onManipulationApplied={handleManipulationApplied}
       >
         {node}
       </PlanningHubManipulationProvider>
     );
   };
 
+  const manipulationPermissionContext = {
+    canManageTrainings: canonicalEditing?.canManageTrainings ?? false,
+    canManageEvents: canonicalEditing?.canManageEvents ?? false,
+    canManageAllocations: canonicalEditing?.canManageAllocations ?? false,
+    isStandardplan,
+    alternativePlanId: activePlanId,
+  };
+
+  const plannerPerspective =
+    totalItems === 0 ? (
+      <EmptyState
+        heading="Keine Planungseinträge"
+        description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
+      />
+    ) : urlState.perspective === "kalender" ? (
+      <PlanningHubCalendarView
+        week={week}
+        urlState={resolvedUrlState}
+        locale={locale}
+        timezone={timezone}
+        todayDayKey={todayDayKey}
+        onItemActivate={handleItemActivate}
+        onItemOpen={handleItemOpen}
+        onItemEdit={handleItemActivate}
+        canEditItem={canEditPlannerItem}
+      />
+    ) : isPlanningHubResourceTimelinePerspective(urlState.perspective) ? (
+      <PlanningHubResourceDayView
+        week={week}
+        urlState={resolvedUrlState}
+        locale={locale}
+        timezone={timezone}
+        todayDayKey={todayDayKey}
+        onItemActivate={handleItemActivate}
+        resourceCatalogGroups={manipulationFacilityGroups ?? undefined}
+      />
+    ) : (
+      <PlanningHubListeView
+        week={week}
+        urlState={resolvedUrlState}
+        locale={locale}
+        timezone={timezone}
+        planName={activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null}
+        onItemActivate={handleItemActivate}
+        canManageMatchSchedule={canonicalEditing?.canManageEvents ?? false}
+      />
+    );
+
   return (
     <div
       className="space-y-2 opacity-0 animate-[plannerContentReveal_180ms_ease-out_forwards]"
       data-testid="planning-hub-planner-content"
     >
-      {totalItems === 0 ? (
-        <EmptyState
-          heading="Keine Planungseinträge"
-          description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
-        />
-      ) : urlState.perspective === "kalender" ? (
-        wrapManipulation(
-          <PlanningHubCalendarView
+      {wrapManipulation(
+        <>
+          {plannerPerspective}
+          <PlanningHubConflictWorkspaceDialog
+            open={conflictWorkspaceVisible}
+            onClose={closeConflictWorkspace}
             week={week}
-            urlState={resolvedUrlState}
             locale={locale}
             timezone={timezone}
-            todayDayKey={todayDayKey}
-            onItemActivate={handleItemActivate}
-            onItemOpen={handleItemOpen}
-            onItemEdit={handleItemActivate}
+            permissionContext={manipulationPermissionContext}
+            onOpenItem={handleItemOpen}
+            onEditItem={canEdit ? handleEdit : undefined}
             canEditItem={canEditPlannerItem}
-          />,
-        )
-      ) : isPlanningHubResourceTimelinePerspective(urlState.perspective) ? (
-        wrapManipulation(
-          <PlanningHubResourceDayView
-            week={week}
-            urlState={resolvedUrlState}
-            locale={locale}
-            timezone={timezone}
-            todayDayKey={todayDayKey}
-            onItemActivate={handleItemActivate}
-            resourceCatalogGroups={manipulationFacilityGroups ?? undefined}
-          />,
-        )
-      ) : (
-        <PlanningHubListeView
-          week={week}
-          urlState={resolvedUrlState}
-          locale={locale}
-          timezone={timezone}
-          planName={activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null}
-          onItemActivate={handleItemActivate}
-          canManageMatchSchedule={canonicalEditing?.canManageEvents ?? false}
-        />
+            pendingResolutionRef={conflictResolutionPendingRef}
+          />
+        </>,
       )}
 
       {canonicalEditing && (
@@ -394,58 +456,6 @@ export default function WeekPlannerWorkspace({
         />
       )}
 
-      <PlanningHubConflictSheet
-        incident={resolvedSelectedIncident}
-        itemsById={itemsById}
-        locale={locale}
-        timezone={timezone}
-        reassignContext={
-          canonicalEditing
-            ? {
-                canManageTrainings: canonicalEditing.canManageTrainings,
-                canManageEvents: canonicalEditing.canManageEvents,
-                isStandardplan: activePlanId === null,
-              }
-            : undefined
-        }
-        onClose={() => onCloseIncident?.()}
-        onReassignItem={(item) => {
-          onCloseIncident?.();
-          handleEdit(item);
-        }}
-      />
-
-      {resolvedConflictPicker && resolvedConflictPicker.length > 1 && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 sm:items-center"
-          role="dialog"
-          aria-label="Konflikte auswählen"
-        >
-          <div className="max-h-[70vh] w-full max-w-md overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
-            <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">Konflikte prüfen</p>
-            <ul className="space-y-1">
-              {resolvedConflictPicker.map((incident) => (
-                <li key={incident.id}>
-                  <button
-                    type="button"
-                    className="w-full rounded-lg px-2 py-2 text-left text-xs hover:bg-[var(--surface-2)]"
-                    onClick={() => onPickConflictIncident?.(incident)}
-                  >
-                    {incident.facilityResourceName} · {incident.occupancyCount} Belegungen
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button
-              type="button"
-              className="mt-3 text-xs font-semibold text-[var(--text-2)]"
-              onClick={() => onCloseConflictPicker?.()}
-            >
-              Schliessen
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

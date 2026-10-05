@@ -117,6 +117,59 @@ describe("POST /api/planning-hub/resource-manipulation/validate", () => {
     expect(json.error).toContain("Berechtigung");
   });
 
+  it("accepts JSON-serialized week items for resourceOccupancy MOVE_RESOURCE", async () => {
+    const pitchA = {
+      facilityResourceId: "pitch-a",
+      facilityId: "fac-1",
+      code: "A",
+      name: "A",
+      facilityName: "Platz",
+      resourceType: "HALF_PITCH" as const,
+      occupancyBeforeMinutes: 0,
+      occupancyAfterMinutes: 0,
+    };
+    const pitchB = {
+      ...pitchA,
+      facilityResourceId: "pitch-b",
+      code: "B",
+      name: "B",
+    };
+    const item = {
+      ...TRAINING_ITEM,
+      pitchAllocations: [pitchA],
+      canonicalPitchAllocations: [pitchA],
+      dressingRoomOccupancyMode: "DEFAULT" as const,
+      dressingRoomOccupancyBeforeMinutes: null,
+      dressingRoomOccupancyAfterMinutes: null,
+      dressingRoomResolvedBeforeMinutes: 0,
+      dressingRoomResolvedAfterMinutes: 0,
+    };
+    const res = await POST(
+      makeRequest(
+        JSON.parse(
+          JSON.stringify({
+            draft: {
+              itemId: item.id,
+              item,
+              originalStart: item.startAt,
+              originalEnd: item.endAt,
+              proposedStart: item.startAt,
+              proposedEnd: item.endAt,
+              originalResourceId: pitchA.facilityResourceId,
+              proposedResourceId: pitchB.facilityResourceId,
+              manipulationType: "move",
+              timeTarget: "resourceOccupancy",
+            },
+            allItems: [item],
+            resourceCategory: "pitch",
+            targetResource: pitchB,
+          }),
+        ),
+      ),
+    );
+    expect(res.status).toBe(200);
+  });
+
   it("rejects resource mutation without domain permission", async () => {
     mocks.resolveLiveManipulationActorPermissions.mockResolvedValue({
       canManageTrainings: false,

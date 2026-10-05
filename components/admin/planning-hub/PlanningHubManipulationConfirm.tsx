@@ -14,6 +14,7 @@ import {
   isActivityTimeDraft,
 } from "@/lib/planning-hub/planning-activity-rescheduling";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
+import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
 
 type Props = {
   draft: SchedulerDraftChange;
@@ -77,17 +78,39 @@ export default function PlanningHubManipulationConfirm({
     }).format(start)} ${formatOccupancyRange(start, end, timezone)}`;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25 p-4 sm:items-center"
-      role="dialog"
-      aria-label="Planungsänderung bestätigen"
-      data-testid="planning-hub-manipulation-confirm"
+    <PlanningHubManipulationModalShell
+      testId="planning-hub-manipulation-confirm"
+      onClose={onCancel}
+      header={
+        <>
+          <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
+          <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
+        </>
+      }
+      footer={
+        <>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+            onClick={onCancel}
+            disabled={saving}
+          >
+            Abbrechen
+          </button>
+          <button
+            type="button"
+            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            onClick={onConfirm}
+            disabled={saving}
+            data-testid="planning-hub-manipulation-confirm-apply"
+          >
+            {isActivityDraft ? "Termin verschieben" : "Änderung übernehmen"}
+          </button>
+        </>
+      }
     >
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
-        <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
-        <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
-
-        <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
+      <>
+        <div className="grid gap-3 text-xs sm:grid-cols-2">
           <div className="rounded-lg bg-[var(--surface-2)] p-2.5">
             <p className="font-semibold uppercase tracking-wide text-[var(--muted)]">Von</p>
             {isOccupancyDraft ? (
@@ -204,27 +227,7 @@ export default function PlanningHubManipulationConfirm({
             {error}
           </p>
         )}
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-            onClick={onCancel}
-            disabled={saving}
-          >
-            Abbrechen
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-            onClick={onConfirm}
-            disabled={saving}
-            data-testid="planning-hub-manipulation-confirm-apply"
-          >
-            {isActivityDraft ? "Termin verschieben" : "Änderung übernehmen"}
-          </button>
-        </div>
-      </div>
-    </div>
+      </>
+    </PlanningHubManipulationModalShell>
   );
 }

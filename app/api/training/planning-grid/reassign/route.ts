@@ -7,7 +7,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
+import { PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { revalidatePlannerWeekPaths } from "@/lib/planning-hub/planner-week-revalidation";
 import { reassignPlanningGridResource } from "@/lib/training/planning-grid/reassignment-service";
 import { isValidPlanningCategory } from "@/lib/training/planning-grid/data-service";
 import { TrainingSessionNotFoundError } from "@/lib/training/errors";
@@ -18,7 +20,10 @@ function isValidScope(value: unknown): value is ResourceReassignmentScope {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireApiAnyPermission([PERMISSIONS.TRAININGS_MANAGE]);
+  const auth = await requireApiAnyPermission([
+    PERMISSIONS.TRAININGS_MANAGE,
+    ...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
+  ]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tenantId = auth.session.user?.activeTenantId;
@@ -50,7 +55,14 @@ export async function POST(request: NextRequest) {
       category,
       scope,
     });
-    return NextResponse.json({ ok: true });
+    revalidatePlannerWeekPaths();
+    return NextResponse.json({
+      ok: true,
+      sessionId: sessionId.trim(),
+      targetResourceId: targetResourceId.trim(),
+      category,
+      scope,
+    });
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {
       return NextResponse.json({ error: "Training session not found" }, { status: 404 });

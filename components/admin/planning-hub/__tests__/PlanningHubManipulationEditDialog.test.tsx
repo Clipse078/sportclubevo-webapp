@@ -28,6 +28,12 @@ const ROOM_E2 = {
   occupancyAfterMinutes: 45,
 };
 
+const defaultApplyProps = {
+  onApplyDraft: vi.fn().mockResolvedValue(undefined),
+  applySaving: false,
+  applyError: null,
+};
+
 function matchItem(): WeekplannerItem {
   return {
     id: "match:m1",
@@ -68,16 +74,29 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
         timezone="Europe/Zurich"
         resourceCategory="dressing"
         resourceOptions={[ROOM_E1, ROOM_E2]}
+        facilityGroups={[
+          {
+            facilityId: "f-dress",
+            facilityName: "Garderobe",
+            resources: [
+              { id: ROOM_E1.facilityResourceId, name: "E1", code: "E1", type: "DRESSING_ROOM", facilityId: "f-dress", facilityName: "Garderobe" },
+              { id: ROOM_E2.facilityResourceId, name: "E2", code: "E2", type: "DRESSING_ROOM", facilityId: "f-dress", facilityName: "Garderobe" },
+            ],
+          },
+        ]}
+        allItems={[matchItem()]}
         onClose={vi.fn()}
         onSubmitDraft={onSubmitDraft}
+        {...defaultApplyProps}
         evaluateConflicts={() => ({ status: "valid", message: "Keine Konflikte.", newResourceConflictCount: 0 })}
       />,
     );
 
-    const resourceSelect = screen.getByLabelText(/Ressource/i);
-    expect(document.activeElement).toBe(resourceSelect);
+    const resourceTrigger = screen.getByTestId("planning-hub-manipulation-resource-picker-trigger");
+    expect(document.activeElement).toBe(resourceTrigger);
 
-    await user.selectOptions(resourceSelect, ROOM_E2.facilityResourceId);
+    await user.click(resourceTrigger);
+    await user.click(screen.getByTestId(`planning-hub-manipulation-resource-option-${ROOM_E2.facilityResourceId}`));
     await user.click(screen.getByTestId("planning-hub-manipulation-edit-continue"));
 
     expect(screen.getByTestId("planning-hub-manipulation-confirm")).toBeTruthy();
@@ -99,8 +118,11 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
         timezone="Europe/Zurich"
         resourceCategory="dressing"
         resourceOptions={[ROOM_E1, ROOM_E2]}
+        facilityGroups={[]}
+        allItems={[matchItem()]}
         onClose={vi.fn()}
         onSubmitDraft={vi.fn()}
+        {...defaultApplyProps}
         evaluateConflicts={() => ({ status: "valid", message: "OK", newResourceConflictCount: 0 })}
       />,
     );
@@ -112,9 +134,9 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
     expect(screen.queryByTestId("planning-hub-manipulation-confirm")).toBeNull();
   });
 
-  it("submits draft through confirm apply (same pipeline as DnD)", async () => {
+  it("applies draft through confirm (authoritative mutation pipeline)", async () => {
     const user = userEvent.setup();
-    const onSubmitDraft = vi.fn();
+    const onApplyDraft = vi.fn().mockResolvedValue(undefined);
     render(
       <PlanningHubManipulationEditDialog
         item={matchItem()}
@@ -124,18 +146,33 @@ describe("PlanningHubManipulationEditDialog — non-DnD Planung ändern", () => 
         timezone="Europe/Zurich"
         resourceCategory="dressing"
         resourceOptions={[ROOM_E1, ROOM_E2]}
+        facilityGroups={[
+          {
+            facilityId: "f-dress",
+            facilityName: "Garderobe",
+            resources: [
+              { id: ROOM_E1.facilityResourceId, name: "E1", code: "E1", type: "DRESSING_ROOM", facilityId: "f-dress", facilityName: "Garderobe" },
+              { id: ROOM_E2.facilityResourceId, name: "E2", code: "E2", type: "DRESSING_ROOM", facilityId: "f-dress", facilityName: "Garderobe" },
+            ],
+          },
+        ]}
+        allItems={[matchItem()]}
         onClose={vi.fn()}
-        onSubmitDraft={onSubmitDraft}
+        onSubmitDraft={vi.fn()}
+        onApplyDraft={onApplyDraft}
+        applySaving={false}
+        applyError={null}
         evaluateConflicts={() => ({ status: "valid", message: "OK", newResourceConflictCount: 0 })}
       />,
     );
 
-    await user.selectOptions(screen.getByLabelText(/Ressource/i), ROOM_E2.facilityResourceId);
+    await user.click(screen.getByTestId("planning-hub-manipulation-resource-picker-trigger"));
+    await user.click(screen.getByTestId(`planning-hub-manipulation-resource-option-${ROOM_E2.facilityResourceId}`));
     await user.click(screen.getByTestId("planning-hub-manipulation-edit-continue"));
     await user.click(screen.getByTestId("planning-hub-manipulation-confirm-apply"));
 
-    expect(onSubmitDraft).toHaveBeenCalledTimes(1);
-    expect(onSubmitDraft.mock.calls[0]![0].proposedResourceId).toBe(ROOM_E2.facilityResourceId);
-    expect(onSubmitDraft.mock.calls[0]![0].timeTarget).toBe("resourceOccupancy");
+    expect(onApplyDraft).toHaveBeenCalledTimes(1);
+    expect(onApplyDraft.mock.calls[0]![0].proposedResourceId).toBe(ROOM_E2.facilityResourceId);
+    expect(onApplyDraft.mock.calls[0]![0].timeTarget).toBe("resourceOccupancy");
   });
 });

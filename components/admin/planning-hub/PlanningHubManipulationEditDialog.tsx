@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulation-projection";
@@ -8,8 +9,17 @@ import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/
 import { isoToLocalTime, combineTimeWithReferenceDay } from "@/lib/planning-hub/planner-time";
 import { resourceSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/resource-segment-display";
 import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
-import { formatManipulationResourceLabel } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
+import { SCE_DIALOG_VARIANT_FORM } from "@/lib/shell/responsive-layout";
+import { cn } from "@/lib/cn";
+import {
+  buildManipulationResourceAvailabilityList,
+  sortManipulationResourceAvailabilityForPicker,
+  type ManipulationResourceKind,
+} from "@/lib/planning-hub/manipulation-resource-availability";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
+import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
+import PlanningHubManipulationResourceAvailabilityBoard from "./PlanningHubManipulationResourceAvailabilityBoard";
+import PlanningHubManipulationResourceAvailabilityPicker from "./PlanningHubManipulationResourceAvailabilityPicker";
 
 type Props = {
   item: WeekplannerItem;
@@ -20,8 +30,13 @@ type Props = {
   resourceCategory: PlanningHubUrlState["resourceCategory"];
   resourceOptions: WeekplannerResourceRef[];
   planningResourceGroups?: readonly PlanningResourceGroup[];
+  facilityGroups: FacilityGroup[];
+  allItems: readonly WeekplannerItem[];
   onClose: () => void;
   onSubmitDraft: (draft: SchedulerDraftChange) => void;
+  onApplyDraft: (draft: SchedulerDraftChange) => Promise<void>;
+  applySaving: boolean;
+  applyError: string | null;
   evaluateConflicts: (
     draft: SchedulerDraftChange,
     targetRef: WeekplannerResourceRef | null,
@@ -37,12 +52,17 @@ export default function PlanningHubManipulationEditDialog({
   resourceCategory,
   resourceOptions,
   planningResourceGroups,
+  facilityGroups,
+  allItems,
   onClose,
   onSubmitDraft,
+  onApplyDraft,
+  applySaving,
+  applyError,
   evaluateConflicts,
 }: Props) {
   const formId = useId();
-  const firstFieldRef = useRef<HTMLSelectElement>(null);
+  const firstFieldRef = useRef<HTMLElement | null>(null);
   const ref =
     resourceCategory === "pitch"
       ? item.pitchAllocations.find((r) => r.facilityResourceId === resourceId)
@@ -56,10 +76,6 @@ export default function PlanningHubManipulationEditDialog({
   const [endTime, setEndTime] = useState(isoToLocalTime(window.endAt, timezone));
   const [confirmDraft, setConfirmDraft] = useState<SchedulerDraftChange | null>(null);
   const [conflictPreview, setConflictPreview] = useState<ManipulationConflictPreview | null>(null);
-
-  useEffect(() => {
-    firstFieldRef.current?.focus();
-  }, []);
 
   const draft = useMemo((): SchedulerDraftChange | null => {
     if (!ref) return null;
@@ -100,6 +116,39 @@ export default function PlanningHubManipulationEditDialog({
 
   const targetRef = resourceOptions.find((r) => r.facilityResourceId === targetResourceId) ?? null;
 
+  const reservationWindow = useMemo(() => {
+    const proposedStartIso = combineTimeWithReferenceDay(startTime, window.startAt, timezone);
+    const proposedEndIso = combineTimeWithReferenceDay(endTime, window.endAt, timezone);
+    if (!proposedStartIso || !proposedEndIso) {
+      return { startAt: window.startAt, endAt: window.endAt };
+    }
+    return { startAt: new Date(proposedStartIso), endAt: new Date(proposedEndIso) };
+  }, [startTime, endTime, window.startAt, window.endAt, timezone]);
+
+  const resourceKind: ManipulationResourceKind =
+    resourceCategory === "pitch" ? "PITCH_HALL" : "DRESSING_ROOM";
+
+  const availabilityEntries = useMemo(() => {
+    const list = buildManipulationResourceAvailabilityList({
+      allItems,
+      editingItem: item,
+      currentResourceId: resourceId,
+      resourceOptions,
+      reservationStartAt: reservationWindow.startAt,
+      reservationEndAt: reservationWindow.endAt,
+      resourceKind,
+    });
+    return sortManipulationResourceAvailabilityForPicker(list);
+  }, [
+    allItems,
+    item,
+    resourceId,
+    resourceOptions,
+    reservationWindow.startAt,
+    reservationWindow.endAt,
+    resourceKind,
+  ]);
+
   if (confirmDraft && conflictPreview) {
     return (
       <PlanningHubManipulationConfirm
@@ -108,31 +157,65 @@ export default function PlanningHubManipulationEditDialog({
         timezone={timezone}
         resourceCategory={resourceCategory}
         conflictPreview={conflictPreview}
-        saving={false}
-        error={null}
+        saving={applySaving}
+        error={applyError}
         resolveResourceRef={(id) => resourceOptions.find((r) => r.facilityResourceId === id) ?? null}
         planningResourceGroups={planningResourceGroups}
         onCancel={() => {
           setConfirmDraft(null);
           setConflictPreview(null);
         }}
-        onConfirm={() => {
-          onSubmitDraft(confirmDraft);
-          onClose();
+        onConfirm={async () => {
+          try {
+            await onApplyDraft(confirmDraft);
+            onClose();
+          } catch {
+            // Parent surfaces applyError on the confirm layer.
+          }
         }}
       />
     );
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25 p-4 sm:items-center"
-      role="dialog"
-      aria-labelledby={`${formId}-title`}
-      data-testid="planning-hub-manipulation-edit"
+    <PlanningHubManipulationModalShell
+      testId="planning-hub-manipulation-edit"
+      onClose={onClose}
+      initialFocusRef={firstFieldRef}
+      panelClassName={cn(SCE_DIALOG_VARIANT_FORM, "max-w-[min(42rem,var(--sce-dialog-form-max-width))]")}
+      header={
+        <>
+          <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
+            Planung ändern
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-2)]">
+            Zielressource und Reservierungszeit (Sportzeit bleibt unverändert).
+          </p>
+        </>
+      }
+      footer={
+        <>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+            onClick={onClose}
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+            data-testid="planning-hub-manipulation-edit-continue"
+          >
+            Weiter
+          </button>
+        </>
+      }
     >
       <form
-        className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg"
+        id={formId}
+        aria-labelledby={`${formId}-title`}
         onSubmit={(event) => {
           event.preventDefault();
           if (!draft) return;
@@ -141,35 +224,24 @@ export default function PlanningHubManipulationEditDialog({
           setConfirmDraft(draft);
         }}
       >
-        <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
-          Planung ändern
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Zielressource und Reservierungszeit (Sportzeit bleibt unverändert).
-        </p>
-
-        <label className="mt-3 block text-xs font-semibold text-[var(--muted)]" htmlFor={`${formId}-resource`}>
-          Ressource
-        </label>
-        <select
-          id={`${formId}-resource`}
-          ref={firstFieldRef}
-          className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm"
-          value={targetResourceId}
-          onChange={(event) => setTargetResourceId(event.target.value)}
-        >
-          {resourceOptions.map((option) => (
-            <option key={option.facilityResourceId} value={option.facilityResourceId}>
-              {planningResourceGroups?.length
-                ? formatManipulationResourceLabel(
-                    option.facilityResourceId,
-                    planningResourceGroups,
-                    option.name,
-                  )
-                : option.name}
-            </option>
-          ))}
-        </select>
+        <div>
+          <PlanningHubManipulationResourceAvailabilityPicker
+            item={item}
+            allItems={allItems}
+            resourceKind={resourceKind}
+            resourceOptions={resourceOptions}
+            facilityGroups={facilityGroups}
+            planningResourceGroups={planningResourceGroups}
+            currentResourceId={resourceId}
+            selectedResourceId={targetResourceId}
+            onSelectResourceId={setTargetResourceId}
+            reservationStartAt={reservationWindow.startAt}
+            reservationEndAt={reservationWindow.endAt}
+            timezone={timezone}
+            initialFocusRef={firstFieldRef}
+            availabilityEntries={availabilityEntries}
+          />
+        </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="block text-xs font-semibold text-[var(--muted)]" htmlFor={`${formId}-start`}>
@@ -194,23 +266,19 @@ export default function PlanningHubManipulationEditDialog({
           />
         </div>
 
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
-            onClick={onClose}
-          >
-            Abbrechen
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white"
-            data-testid="planning-hub-manipulation-edit-continue"
-          >
-            Weiter
-          </button>
-        </div>
+        <PlanningHubManipulationResourceAvailabilityBoard
+          item={item}
+          resourceKind={resourceKind}
+          availabilityEntries={availabilityEntries}
+          facilityGroups={facilityGroups}
+          planningResourceGroups={planningResourceGroups}
+          selectedResourceId={targetResourceId}
+          onSelectResourceId={setTargetResourceId}
+          reservationStartAt={reservationWindow.startAt}
+          reservationEndAt={reservationWindow.endAt}
+          timezone={timezone}
+        />
       </form>
-    </div>
+    </PlanningHubManipulationModalShell>
   );
 }

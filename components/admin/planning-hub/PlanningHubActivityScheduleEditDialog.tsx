@@ -7,6 +7,7 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { isoToLocalDate, isoToLocalTime } from "@/lib/planning-hub/planner-time";
 import { zonedTimeToUtc } from "@/lib/training/recurrence";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
+import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { PlanningResourceGroup } from "@/lib/planning-hub/resource-timeline/planning-resource-groups";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
@@ -19,6 +20,9 @@ type Props = {
   planningResourceGroups?: readonly PlanningResourceGroup[];
   onClose: () => void;
   onSubmitDraft: (draft: SchedulerDraftChange) => void;
+  onApplyDraft: (draft: SchedulerDraftChange) => Promise<void>;
+  applySaving: boolean;
+  applyError: string | null;
   evaluateConflicts: (draft: SchedulerDraftChange) => ManipulationConflictPreview;
   resolveResourceRef: (id: string) => WeekplannerResourceRef | null;
 };
@@ -31,6 +35,9 @@ export default function PlanningHubActivityScheduleEditDialog({
   planningResourceGroups,
   onClose,
   onSubmitDraft,
+  onApplyDraft,
+  applySaving,
+  applyError,
   evaluateConflicts,
   resolveResourceRef,
 }: Props) {
@@ -70,31 +77,65 @@ export default function PlanningHubActivityScheduleEditDialog({
         timezone={timezone}
         resourceCategory={resourceCategory}
         conflictPreview={conflictPreview}
-        saving={false}
-        error={null}
+        saving={applySaving}
+        error={applyError}
         resolveResourceRef={resolveResourceRef}
         planningResourceGroups={planningResourceGroups}
         onCancel={() => {
           setConfirmDraft(null);
           setConflictPreview(null);
         }}
-        onConfirm={() => {
-          onSubmitDraft(confirmDraft);
-          onClose();
+        onConfirm={async () => {
+          try {
+            await onApplyDraft(confirmDraft);
+            onClose();
+          } catch {
+            // Parent surfaces applyError on the confirm layer.
+          }
         }}
       />
     );
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/25 p-4 sm:items-center"
-      role="dialog"
-      aria-labelledby={`${formId}-title`}
-      data-testid="planning-hub-activity-schedule-edit"
+    <PlanningHubManipulationModalShell
+      testId="planning-hub-activity-schedule-edit"
+      onClose={onClose}
+      initialFocusRef={firstFieldRef}
+      header={
+        <>
+          <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
+            Termin ändern
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--text-2)]">
+            Sporttermin (Trainingszeit / Spielzeit / Turnierzeit) — Reservierungen folgen mit Puffer.
+          </p>
+        </>
+      }
+      footer={
+        <>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+            onClick={onClose}
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            disabled={!draft}
+            data-testid="planning-hub-activity-schedule-edit-continue"
+          >
+            Weiter
+          </button>
+        </>
+      }
     >
       <form
-        className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg"
+        id={formId}
+        aria-labelledby={`${formId}-title`}
         onSubmit={(event) => {
           event.preventDefault();
           if (!draft) return;
@@ -103,14 +144,7 @@ export default function PlanningHubActivityScheduleEditDialog({
           setConfirmDraft(draft);
         }}
       >
-        <p id={`${formId}-title`} className="text-sm font-semibold text-[var(--foreground)]">
-          Termin ändern
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Sporttermin (Trainingszeit / Spielzeit / Turnierzeit) — Reservierungen folgen mit Puffer.
-        </p>
-
-        <label className="mt-3 block text-xs font-semibold text-[var(--muted)]" htmlFor={`${formId}-date`}>
+        <label className="block text-xs font-semibold text-[var(--muted)]" htmlFor={`${formId}-date`}>
           Datum
         </label>
         <input
@@ -144,25 +178,7 @@ export default function PlanningHubActivityScheduleEditDialog({
             onChange={(event) => setEndTime(event.target.value)}
           />
         </div>
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
-            onClick={onClose}
-          >
-            Abbrechen
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-            disabled={!draft}
-            data-testid="planning-hub-activity-schedule-edit-continue"
-          >
-            Weiter
-          </button>
-        </div>
       </form>
-    </div>
+    </PlanningHubManipulationModalShell>
   );
 }

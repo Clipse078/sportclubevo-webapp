@@ -12,10 +12,17 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { weekplannerResourceRefFromFacilityOption } from "@/lib/planning-hub/weekplanner-resource-ref";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import { applyPlanningHubActivityRescheduleDraft } from "@/lib/planning-hub/activity-rescheduling-mutations";
 import { isActivityTimeDraft } from "@/lib/planning-hub/planning-activity-rescheduling";
-import { formatManipulationHttpError } from "@/lib/planning-hub/manipulation-server-authorization";
+import {
+  canMutateActivityTimeForItem,
+  canMutateResourceReservationForItem,
+  formatManipulationHttpError,
+} from "@/lib/planning-hub/manipulation-server-authorization";
+import { resolveActivityScheduleAuthority } from "@/lib/planning-hub/planning-activity-rescheduling";
+import { segmentIdForResource } from "@/lib/planning-hub/conflict-resolution";
 import {
   evaluateManipulationConflicts,
   projectItemWithDraft,
@@ -130,7 +137,7 @@ function resourceManipulationBounds(
   return { startAt: item.startAt, endAt: item.endAt, timeTarget: "activity" };
 }
 
-type PlanningHubManipulationContextValue = {
+export type PlanningHubManipulationContextValue = {
   enabled: boolean;
   isDragging: boolean;
   permissionContext: ManipulationPermissionContext;
@@ -160,9 +167,17 @@ type PlanningHubManipulationContextValue = {
   resolveResourceRef: (resourceId: string) => WeekplannerResourceRef | null;
   openManipulationEditor: (item: WeekplannerItem, segmentId: string, resourceId: string) => void;
   openActivityScheduleEditor: (item: WeekplannerItem) => void;
+  /** SCE-PLANNER-UX-08-05 — perspective-independent resource editor entry. */
+  openResourceEditorForConflict: (
+    item: WeekplannerItem,
+    resourceId: string,
+    category: PlanningHubUrlState["resourceCategory"],
+  ) => void;
+  openActivityScheduleEditorForConflict: (item: WeekplannerItem) => void;
 };
 
-const PlanningHubManipulationContext = createContext<PlanningHubManipulationContextValue | null>(null);
+export const PlanningHubManipulationContext =
+  createContext<PlanningHubManipulationContextValue | null>(null);
 
 export function usePlanningHubManipulation(): PlanningHubManipulationContextValue | null {
   return useContext(PlanningHubManipulationContext);
@@ -181,6 +196,7 @@ type ProviderProps = {
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   overridesByKey?: Record<string, WeekplannerOverrideRow[]>;
   resourceRows?: { resourceId: string; ref: WeekplannerResourceRef }[];
+  onManipulationApplied?: (draft: SchedulerDraftChange) => void;
   children: ReactNode;
 };
 
@@ -197,6 +213,7 @@ export function PlanningHubManipulationProvider({
   facilityGroupsByAllocationGroup,
   overridesByKey = {},
   resourceRows = [],
+  onManipulationApplied,
   children,
 }: ProviderProps) {
   const router = useRouter();
@@ -215,6 +232,10 @@ export function PlanningHubManipulationProvider({
     resourceId: string;
   } | null>(null);
   const [scheduleEditItem, setScheduleEditItem] = useState<WeekplannerItem | null>(null);
+  const [manipulationCategoryOverride, setManipulationCategoryOverride] = useState<
+    PlanningHubUrlState["resourceCategory"] | null
+  >(null);
+  const effectiveResourceCategory = manipulationCategoryOverride ?? urlState.resourceCategory;
   const lastPreviewKeyRef = useRef<string>("");
   const pointerSessionRef = useRef(pointerSession);
   pointerSessionRef.current = pointerSession;
@@ -282,28 +303,12 @@ export function PlanningHubManipulationProvider({
     if (facilityGroupsByAllocationGroup) {
       for (const group of facilityGroupsByAllocationGroup.PITCH_HALL) {
         for (const r of group.resources) {
-          map.set(r.id, {
-            facilityResourceId: r.id,
-            facilityId: r.facilityId,
-            code: r.code,
-            name: r.name,
-            facilityName: r.facilityName,
-            occupancyBeforeMinutes: 0,
-            occupancyAfterMinutes: 0,
-          });
+          map.set(r.id, weekplannerResourceRefFromFacilityOption(r));
         }
       }
       for (const group of facilityGroupsByAllocationGroup.DRESSING_ROOM) {
         for (const r of group.resources) {
-          map.set(r.id, {
-            facilityResourceId: r.id,
-            facilityId: r.facilityId,
-            code: r.code,
-            name: r.name,
-            facilityName: r.facilityName,
-            occupancyBeforeMinutes: 0,
-            occupancyAfterMinutes: 0,
-          });
+          map.set(r.id, weekplannerResourceRefFromFacilityOption(r));
         }
       }
     }
@@ -728,47 +733,55 @@ export function PlanningHubManipulationProvider({
     if (!draft) return null;
     const targetRef =
       draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null;
-    return evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory);
-  }, [confirmationDraft, allItems, resolveResourceRef, urlState.resourceCategory]);
+    return evaluateManipulationConflicts(
+      allItems,
+      draft,
+      targetRef,
+      effectiveResourceCategory,
+    );
+  }, [confirmationDraft, allItems, resolveResourceRef, effectiveResourceCategory]);
 
   const planningResourceGroups = useMemo(() => {
     if (!facilityGroupsByAllocationGroup) return [];
     const facilityGroups =
-      urlState.resourceCategory === "pitch"
+      effectiveResourceCategory === "pitch"
         ? facilityGroupsByAllocationGroup.PITCH_HALL
         : facilityGroupsByAllocationGroup.DRESSING_ROOM;
-    return buildPlanningResourceGroupsFromFacilityGroups(facilityGroups, urlState.resourceCategory);
-  }, [facilityGroupsByAllocationGroup, urlState.resourceCategory]);
+    return buildPlanningResourceGroupsFromFacilityGroups(
+      facilityGroups,
+      effectiveResourceCategory,
+    );
+  }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
 
   const resourceOptionsForCategory = useMemo(() => {
     const options: WeekplannerResourceRef[] = [];
     if (facilityGroupsByAllocationGroup) {
       const groups =
-        urlState.resourceCategory === "pitch"
+        effectiveResourceCategory === "pitch"
           ? facilityGroupsByAllocationGroup.PITCH_HALL
           : facilityGroupsByAllocationGroup.DRESSING_ROOM;
       for (const group of groups) {
         for (const r of group.resources) {
-          options.push({
-            facilityResourceId: r.id,
-            facilityId: r.facilityId,
-            code: r.code,
-            name: r.name,
-            facilityName: r.facilityName,
-            occupancyBeforeMinutes: 0,
-            occupancyAfterMinutes: 0,
-          });
+          options.push(weekplannerResourceRefFromFacilityOption(r));
         }
       }
     }
     return options;
-  }, [facilityGroupsByAllocationGroup, urlState.resourceCategory]);
+  }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
+
+  const facilityGroupsForEditCategory = useMemo(() => {
+    if (!facilityGroupsByAllocationGroup) return [];
+    return effectiveResourceCategory === "pitch"
+      ? facilityGroupsByAllocationGroup.PITCH_HALL
+      : facilityGroupsByAllocationGroup.DRESSING_ROOM;
+  }, [facilityGroupsByAllocationGroup, effectiveResourceCategory]);
 
   const openManipulationEditor = useCallback(
     (item: WeekplannerItem, segmentId: string, resourceId: string) => {
       if (!enabled) return;
       const caps = getCapabilities(item);
       if (!hasAnyManipulationCapability(caps)) return;
+      setManipulationCategoryOverride(null);
       setEditTarget({ item, segmentId, resourceId });
       setScheduleEditItem(null);
       setConfirmationDraft(null);
@@ -782,12 +795,57 @@ export function PlanningHubManipulationProvider({
       if (!enabled) return;
       const caps = getCapabilities(item);
       if (!caps.canMoveTime && !caps.canResize) return;
+      setManipulationCategoryOverride(null);
       setScheduleEditItem(item);
       setEditTarget(null);
       setConfirmationDraft(null);
       setConfirmError(null);
     },
     [enabled, getCapabilities],
+  );
+
+  const openResourceEditorForConflict = useCallback(
+    (item: WeekplannerItem, resourceId: string, category: PlanningHubUrlState["resourceCategory"]) => {
+      if (!enabled) return;
+      const actor = {
+        canManageTrainings: permissionContext.canManageTrainings,
+        canManageEvents: permissionContext.canManageEvents,
+        canManageAllocations: permissionContext.canManageAllocations,
+      };
+      if (!canMutateResourceReservationForItem(item, actor)) return;
+      setManipulationCategoryOverride(category);
+      setEditTarget({
+        item,
+        segmentId: segmentIdForResource(item.id, resourceId),
+        resourceId,
+      });
+      setScheduleEditItem(null);
+      setConfirmationDraft(null);
+      setConfirmError(null);
+    },
+    [enabled, permissionContext],
+  );
+
+  const openActivityScheduleEditorForConflict = useCallback(
+    (item: WeekplannerItem) => {
+      if (!enabled) return;
+      const actor = {
+        canManageTrainings: permissionContext.canManageTrainings,
+        canManageEvents: permissionContext.canManageEvents,
+        canManageAllocations: permissionContext.canManageAllocations,
+      };
+      const authority = resolveActivityScheduleAuthority(item, {
+        isStandardplan: permissionContext.isStandardplan,
+        alternativePlanId: permissionContext.alternativePlanId,
+      });
+      if (!canMutateActivityTimeForItem(item, actor) || !authority.permitted) return;
+      setManipulationCategoryOverride(null);
+      setScheduleEditItem(item);
+      setEditTarget(null);
+      setConfirmationDraft(null);
+      setConfirmError(null);
+    },
+    [enabled, permissionContext],
   );
 
   const submitEditorDraft = useCallback(
@@ -811,114 +869,149 @@ export function PlanningHubManipulationProvider({
     [router],
   );
 
-  const handleConfirm = useCallback(async () => {
-    if (!confirmationDraft) return;
-    setConfirmSaving(true);
-    setConfirmError(null);
-    try {
-      const groups = facilityGroupsByAllocationGroup ?? {
-        PITCH_HALL: [],
-        DRESSING_ROOM: [],
-      };
+  const applyConfirmationDraft = useCallback(
+    async (draft: SchedulerDraftChange) => {
+      setConfirmSaving(true);
+      setConfirmError(null);
+      try {
+        const groups = facilityGroupsByAllocationGroup ?? {
+          PITCH_HALL: [],
+          DRESSING_ROOM: [],
+        };
 
-      const draftPayload = {
-        draft: {
-          ...confirmationDraft,
-          originalStart: confirmationDraft.originalStart.toISOString(),
-          originalEnd: confirmationDraft.originalEnd.toISOString(),
-          proposedStart: confirmationDraft.proposedStart.toISOString(),
-          proposedEnd: confirmationDraft.proposedEnd.toISOString(),
-        },
-        allItems,
-        resourceCategory: urlState.resourceCategory,
-        targetResource: confirmationDraft.proposedResourceId
-          ? resolveResourceRef(confirmationDraft.proposedResourceId)
-          : null,
-      };
+        const draftPayload = {
+          draft: {
+            ...draft,
+            originalStart: draft.originalStart.toISOString(),
+            originalEnd: draft.originalEnd.toISOString(),
+            proposedStart: draft.proposedStart.toISOString(),
+            proposedEnd: draft.proposedEnd.toISOString(),
+          },
+          allItems,
+          resourceCategory: effectiveResourceCategory,
+          targetResource: draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null,
+        };
 
-      if (isActivityTimeDraft(confirmationDraft)) {
-        const validateRes = await fetch("/api/planning-hub/activity-rescheduling/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...draftPayload,
+        if (isActivityTimeDraft(draft)) {
+          const validateRes = await fetch("/api/planning-hub/activity-rescheduling/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...draftPayload,
+              isStandardplan,
+              alternativePlanId,
+            }),
+          });
+          if (!validateRes.ok) {
+            const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
+            recoverFromRejectedMutation(validateRes.status);
+            throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+          }
+        } else {
+          const validateRes = await fetch("/api/planning-hub/resource-manipulation/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(draftPayload),
+          });
+          if (!validateRes.ok) {
+            const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
+            recoverFromRejectedMutation(validateRes.status);
+            throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+          }
+        }
+
+        let applied = false;
+        if (isActivityTimeDraft(draft)) {
+          await applyPlanningHubActivityRescheduleDraft(draft, {
             isStandardplan,
             alternativePlanId,
-          }),
-        });
-        if (!validateRes.ok) {
-          const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
-          recoverFromRejectedMutation(validateRes.status);
-          throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
+            resourceCategory: urlState.resourceCategory,
+            facilityGroups: groups,
+            overridesByKey,
+            timeZone: timezone,
+          });
+          applied = true;
+        } else if (isStandardplan) {
+          const { applyStandardPlanSchedulerDraft } = await import(
+            "@/lib/planning-hub/canonical-planning-mutations"
+          );
+          const result = await applyStandardPlanSchedulerDraft(
+            draft,
+            effectiveResourceCategory,
+            groups,
+            timezone,
+          );
+          applied = result.applied;
+        } else if (alternativePlanId) {
+          const { applyAlternativePlanSchedulerDraft } = await import(
+            "@/lib/planning-hub/operational-planning-mutations"
+          );
+          const resourceSwapRequested =
+            !!draft.proposedResourceId &&
+            !!draft.originalResourceId &&
+            draft.proposedResourceId !== draft.originalResourceId;
+          const occupancyChangeRequested =
+            draft.timeTarget === "resourceOccupancy" &&
+            (draft.proposedStart.getTime() !== draft.originalStart.getTime() ||
+              draft.proposedEnd.getTime() !== draft.originalEnd.getTime());
+          if (!resourceSwapRequested && !occupancyChangeRequested && !isActivityTimeDraft(draft)) {
+            throw new Error("Planungsänderung konnte nicht gespeichert werden.");
+          }
+          await applyAlternativePlanSchedulerDraft(
+            draft,
+            alternativePlanId,
+            effectiveResourceCategory,
+            overridesByKey,
+            timezone,
+          );
+          applied = true;
+        } else {
+          throw new Error("Planungsänderung ist für diesen Plan nicht verfügbar.");
         }
-      } else {
-        const validateRes = await fetch("/api/planning-hub/resource-manipulation/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draftPayload),
-        });
-        if (!validateRes.ok) {
-          const data = (await validateRes.json().catch(() => null)) as { error?: string } | null;
-          recoverFromRejectedMutation(validateRes.status);
-          throw new Error(formatManipulationHttpError(validateRes.status, data?.error));
-        }
-      }
 
-      if (isActivityTimeDraft(confirmationDraft)) {
-        await applyPlanningHubActivityRescheduleDraft(confirmationDraft, {
-          isStandardplan,
-          alternativePlanId,
-          resourceCategory: urlState.resourceCategory,
-          facilityGroups: groups,
-          overridesByKey,
-          timeZone: timezone,
-        });
-      } else if (isStandardplan) {
-        const { applyStandardPlanSchedulerDraft } = await import(
-          "@/lib/planning-hub/canonical-planning-mutations"
-        );
-        await applyStandardPlanSchedulerDraft(
-          confirmationDraft,
-          urlState.resourceCategory,
-          groups,
-          timezone,
-        );
-      } else if (alternativePlanId) {
-        const { applyAlternativePlanSchedulerDraft } = await import(
-          "@/lib/planning-hub/operational-planning-mutations"
-        );
-        await applyAlternativePlanSchedulerDraft(
-          confirmationDraft,
-          alternativePlanId,
-          urlState.resourceCategory,
-          overridesByKey,
-          timezone,
-        );
+        if (!applied) {
+          throw new Error("Planungsänderung konnte nicht gespeichert werden.");
+        }
+
+        await fetch("/api/planning-hub/planner-revalidate", { method: "POST" });
+        onManipulationApplied?.(draft);
+        router.refresh();
+        setConfirmationDraft(null);
+        setPreviewDraft(null);
+        setManipulationCategoryOverride(null);
+        setEditTarget(null);
+        setScheduleEditItem(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+        if (/keine berechtigung/i.test(message)) {
+          recoverFromRejectedMutation(403);
+        }
+        setConfirmError(message);
+        throw err;
+      } finally {
+        setConfirmSaving(false);
       }
-      router.refresh();
-      setConfirmationDraft(null);
-      setPreviewDraft(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
-      if (/keine berechtigung/i.test(message)) {
-        recoverFromRejectedMutation(403);
-      }
-      setConfirmError(message);
-    } finally {
-      setConfirmSaving(false);
-    }
-  }, [
-    confirmationDraft,
-    isStandardplan,
-    urlState.resourceCategory,
-    facilityGroupsByAllocationGroup,
-    timezone,
-    alternativePlanId,
-    overridesByKey,
-    allItems,
-    resolveResourceRef,
-    recoverFromRejectedMutation,
-  ]);
+    },
+    [
+      isStandardplan,
+      effectiveResourceCategory,
+      urlState.resourceCategory,
+      facilityGroupsByAllocationGroup,
+      timezone,
+      alternativePlanId,
+      overridesByKey,
+      allItems,
+      resolveResourceRef,
+      recoverFromRejectedMutation,
+      onManipulationApplied,
+      router,
+    ],
+  );
+
+  const handleConfirm = useCallback(async () => {
+    if (!confirmationDraft) return;
+    await applyConfirmationDraft(confirmationDraft);
+  }, [confirmationDraft, applyConfirmationDraft]);
 
   const value: PlanningHubManipulationContextValue = {
     enabled,
@@ -937,6 +1030,8 @@ export function PlanningHubManipulationProvider({
     resolveResourceRef,
     openManipulationEditor,
     openActivityScheduleEditor,
+    openResourceEditorForConflict,
+    openActivityScheduleEditorForConflict,
   };
 
   return (
@@ -951,6 +1046,9 @@ export function PlanningHubManipulationProvider({
           planningResourceGroups={planningResourceGroups}
           onClose={() => setScheduleEditItem(null)}
           onSubmitDraft={submitEditorDraft}
+          onApplyDraft={applyConfirmationDraft}
+          applySaving={confirmSaving}
+          applyError={confirmError}
           evaluateConflicts={(draft) =>
             evaluateManipulationConflicts(allItems, draft, null, urlState.resourceCategory)
           }
@@ -964,13 +1062,21 @@ export function PlanningHubManipulationProvider({
           resourceId={editTarget.resourceId}
           locale={locale}
           timezone={timezone}
-          resourceCategory={urlState.resourceCategory}
+          resourceCategory={effectiveResourceCategory}
           resourceOptions={resourceOptionsForCategory}
           planningResourceGroups={planningResourceGroups}
-          onClose={() => setEditTarget(null)}
+          facilityGroups={facilityGroupsForEditCategory}
+          allItems={allItems}
+          onClose={() => {
+            setEditTarget(null);
+            setManipulationCategoryOverride(null);
+          }}
           onSubmitDraft={submitEditorDraft}
+          onApplyDraft={applyConfirmationDraft}
+          applySaving={confirmSaving}
+          applyError={confirmError}
           evaluateConflicts={(draft, targetRef) =>
-            evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory)
+            evaluateManipulationConflicts(allItems, draft, targetRef, effectiveResourceCategory)
           }
         />
       )}
@@ -979,7 +1085,7 @@ export function PlanningHubManipulationProvider({
           draft={confirmationDraft}
           locale={locale}
           timezone={timezone}
-          resourceCategory={urlState.resourceCategory}
+          resourceCategory={effectiveResourceCategory}
           conflictPreview={conflictPreview}
           saving={confirmSaving}
           error={confirmError}
