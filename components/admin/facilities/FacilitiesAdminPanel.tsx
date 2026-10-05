@@ -407,6 +407,7 @@ type ResourceImpact = {
   tournamentResourceAllocations: number;
   tournamentParticipantAllocations: number;
   weekplannerPlanAllocations: number;
+  eventFacilityAllocations: number;
 };
 
 function ResourceItem({
@@ -478,7 +479,8 @@ function ResourceItem({
       deleteImpact.trainingSessionAllocations +
       deleteImpact.tournamentResourceAllocations +
       deleteImpact.tournamentParticipantAllocations +
-      deleteImpact.weekplannerPlanAllocations
+      deleteImpact.weekplannerPlanAllocations +
+      deleteImpact.eventFacilityAllocations
     : 0;
 
   async function patchResource(data: Record<string, unknown>) {

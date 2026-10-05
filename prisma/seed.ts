@@ -697,13 +697,13 @@ async function main() {
       resources: Array<{ name: string; code: string; type: FacilityResourceType; sortOrder: number }>;
     }> = [
       {
-        name: "Hauptplatz",
+        name: "Hauptfeld",
         type: FacilityType.PITCH,
         sortOrder: 10,
         resources: [
-          { name: "Hauptplatz", code: "STADION", type: FacilityResourceType.FULL_PITCH, sortOrder: 10 },
-          { name: "Hauptplatz A", code: "STADION_A", type: FacilityResourceType.HALF_PITCH, sortOrder: 20 },
-          { name: "Hauptplatz B", code: "STADION_B", type: FacilityResourceType.HALF_PITCH, sortOrder: 30 },
+          { name: "Hauptfeld", code: "STADION", type: FacilityResourceType.FULL_PITCH, sortOrder: 10 },
+          { name: "Hauptfeld A", code: "STADION_A", type: FacilityResourceType.HALF_PITCH, sortOrder: 20 },
+          { name: "Hauptfeld B", code: "STADION_B", type: FacilityResourceType.HALF_PITCH, sortOrder: 30 },
         ],
       },
       {
@@ -743,41 +743,19 @@ async function main() {
       },
     ];
 
+    const {
+      resolveFcaFacilityForSeed,
+      upsertFcaFacilityResourcesForSeed,
+    } = await import("@/lib/facilities/fca-facility-seed");
+
     for (const facilityDef of facilitySeedData) {
-      // Upsert by (tenantId, name) — safe to re-run
-      const existing = await prisma.facility.findFirst({
-        where: { tenantId: fcaTenant.id, name: facilityDef.name },
-        select: { id: true },
-      });
-
-      const facility = existing
-        ? await prisma.facility.update({
-            where: { id: existing.id },
-            data: { type: facilityDef.type, sortOrder: facilityDef.sortOrder },
-          })
-        : await prisma.facility.create({
-            data: {
-              tenantId: fcaTenant.id,
-              name: facilityDef.name,
-              type: facilityDef.type,
-              sortOrder: facilityDef.sortOrder,
-            },
-          });
-
-      for (const resourceDef of facilityDef.resources) {
-        await prisma.facilityResource.upsert({
-          where: { tenantId_code: { tenantId: fcaTenant.id, code: resourceDef.code } },
-          update: { name: resourceDef.name, type: resourceDef.type, sortOrder: resourceDef.sortOrder, facilityId: facility.id },
-          create: {
-            tenantId: fcaTenant.id,
-            facilityId: facility.id,
-            name: resourceDef.name,
-            code: resourceDef.code,
-            type: resourceDef.type,
-            sortOrder: resourceDef.sortOrder,
-          },
-        });
-      }
+      const facility = await resolveFcaFacilityForSeed(prisma, fcaTenant.id, facilityDef);
+      await upsertFcaFacilityResourcesForSeed(
+        prisma,
+        fcaTenant.id,
+        facility.id,
+        facilityDef.resources,
+      );
     }
   }
 

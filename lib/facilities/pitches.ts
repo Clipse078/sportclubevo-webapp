@@ -1,3 +1,5 @@
+import { resolveFcaMainPitchCanonicalCode } from "@/lib/facilities/fca-main-pitch-legacy-codes";
+
 export type BasePitchCode =
   | "STADION"
   | "KUNSTRASEN_2"
@@ -44,8 +46,8 @@ export type PitchAllocationOption = {
 export const FCA_BASE_PITCHES: PitchDefinition[] = [
   {
     code: "STADION",
-    label: "Stadion",
-    websiteLabel: "Stadion",
+    label: "Hauptfeld",
+    websiteLabel: "Hauptfeld",
     canSplitForTraining: true,
   },
   {
@@ -67,27 +69,27 @@ export const FCA_PITCH_ALLOCATIONS: PitchAllocationOption[] = [
     code: "STADION",
     basePitchCode: "STADION",
     mode: "FULL",
-    label: "Stadion",
-    websiteLabel: "Stadion",
-    infoboardLabel: "Stadion",
+    label: "Hauptfeld",
+    websiteLabel: "Hauptfeld",
+    infoboardLabel: "Hauptfeld",
     usage: "ALL",
   },
   {
     code: "STADION_A",
     basePitchCode: "STADION",
     mode: "HALF_A",
-    label: "Stadion A",
-    websiteLabel: "Stadion A",
-    infoboardLabel: "Stadion – Feld A",
+    label: "Hauptfeld A",
+    websiteLabel: "Hauptfeld A",
+    infoboardLabel: "Hauptfeld A",
     usage: "TRAINING_ONLY",
   },
   {
     code: "STADION_B",
     basePitchCode: "STADION",
     mode: "HALF_B",
-    label: "Stadion B",
-    websiteLabel: "Stadion B",
-    infoboardLabel: "Stadion – Feld B",
+    label: "Hauptfeld B",
+    websiteLabel: "Hauptfeld B",
+    infoboardLabel: "Hauptfeld B",
     usage: "TRAINING_ONLY",
   },
   {
@@ -151,7 +153,13 @@ export function getPitchAllocationByCode(code: string | null | undefined) {
     return null;
   }
 
-  return FCA_PITCH_ALLOCATIONS.find((item) => item.code === code) ?? null;
+  const direct = FCA_PITCH_ALLOCATIONS.find((item) => item.code === code);
+  if (direct) return direct;
+
+  const canonicalCode = resolveFcaMainPitchCanonicalCode(code);
+  if (!canonicalCode) return null;
+
+  return FCA_PITCH_ALLOCATIONS.find((item) => item.code === canonicalCode) ?? null;
 }
 
 export function getPitchOptionsForEventType(eventType: string) {

@@ -767,6 +767,59 @@ describe("MATCHCENTER-CANONICAL-OPPONENT-01B — match identity propagation", ()
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ── FACILITY-INTEGRITY-01A-R1 canonical pitch labels ─────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("FACILITY-INTEGRITY-01A-R1 canonical pitch labels on Screen1SourceEvent", () => {
+  it("maps STADION_A weekplanner ref to Hauptfeld A (not legacy static infoboard label)", async () => {
+    const f2Training = trainingItem({
+      title: "Junioren F2",
+      teamNames: ["Junioren F2"],
+      startAt: new Date("2026-09-28T15:00:00.000Z"),
+      endAt: new Date("2026-09-28T16:30:00.000Z"),
+      pitchAllocations: [
+        {
+          facilityResourceId: "res-stadion-a",
+          facilityId: "fac-hauptplatz",
+          code: "STADION_A",
+          name: "Hauptfeld A",
+          facilityName: "Hauptfeld",
+          resourceType: "HALF_PITCH",
+          occupancyBeforeMinutes: 0,
+          occupancyAfterMinutes: 0,
+        },
+      ],
+      dressingRoomAllocations: [
+        {
+          facilityResourceId: "res-o3",
+          facilityId: "fac-garderoben",
+          code: "O3",
+          name: "Kabine O3",
+          facilityName: "Garderoben",
+          resourceType: "DRESSING_ROOM",
+          occupancyBeforeMinutes: 0,
+          occupancyAfterMinutes: 0,
+        },
+      ],
+    });
+    mocks.getWeekplannerDay.mockResolvedValue(makeDay([f2Training], "2026-09-28"));
+    const loader = createCanonicalInfoboardSourceLoader(
+      makeDatabase([], [trainingPolicyRow({ id: "session-1" })]),
+    );
+
+    const [event] = await loader({
+      tenantId: TENANT_A,
+      dateFrom: new Date("2026-09-28T00:00:00.000Z"),
+      dateTo: new Date("2026-09-28T23:59:59.000Z"),
+    });
+
+    expect(event.pitch?.label).toBe("Hauptfeld A");
+    expect(event.pitch?.code).toBe("STADION_A");
+    expect(event.homeDressingRoom?.name).toBe("Kabine O3");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ── Europe/Zurich day enumeration ─────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
 

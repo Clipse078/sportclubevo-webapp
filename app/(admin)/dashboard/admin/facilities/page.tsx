@@ -3,8 +3,10 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import { diagnoseTenantFacilityIntegrity } from "@/lib/facilities/facility-integrity-diagnosis";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import FacilitiesAdminPanel from "@/components/admin/facilities/FacilitiesAdminPanel";
+import { FacilityIntegrityAlerts } from "@/components/admin/facilities/FacilityIntegrityAlerts";
 import FacilitiesOperationalSettingsPanel from "@/components/admin/facilities/FacilitiesOperationalSettingsPanel";
 import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
@@ -33,6 +35,22 @@ export default async function FacilitiesPage() {
     getTenantOperationalDurationPolicy(tenantId),
   ]);
 
+  const integrityFindings = diagnoseTenantFacilityIntegrity(
+    facilities.map((f) => ({
+      id: f.id,
+      name: f.name,
+      type: f.type,
+      status: f.status,
+      resources: f.resources.map((r) => ({
+        id: r.id,
+        code: r.code,
+        name: r.name,
+        type: r.type,
+        status: r.status,
+      })),
+    })),
+  );
+
   return (
     <div className="space-y-8">
       <AdminSectionHeader
@@ -45,6 +63,8 @@ export default async function FacilitiesPage() {
         initialPresets={dressingRoomPresets}
         canManage={canManage}
       />
+
+      <FacilityIntegrityAlerts findings={integrityFindings} />
 
       <FacilitiesAdminPanel
         initialFacilities={facilities}

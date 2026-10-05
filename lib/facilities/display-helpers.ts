@@ -26,7 +26,7 @@ import { getFacilityResourcesByCodesForTenant } from "@/lib/facilities/queries";
  * Falls back to null when no code is present or the code is unrecognised.
  *
  * @example
- *   getPitchDisplayLabel("STADION")        // "Stadion"
+ *   getPitchDisplayLabel("STADION")        // "Hauptfeld"
  *   getPitchDisplayLabel("KUNSTRASEN_2_A") // "Kunstrasen 2 A"
  *   getPitchDisplayLabel(null)             // null
  */

@@ -44,9 +44,14 @@ describe("PitchAllocationOption.infoboardLabel", () => {
     expect(alloc?.infoboardLabel).toBe("KR 3");
   });
 
-  it("STADION infoboardLabel is 'Stadion'", () => {
+  it("STADION infoboardLabel is 'Hauptfeld'", () => {
     const alloc = getPitchAllocationByCode("STADION");
-    expect(alloc?.infoboardLabel).toBe("Stadion");
+    expect(alloc?.infoboardLabel).toBe("Hauptfeld");
+  });
+
+  it("STADION_A infoboardLabel is 'Hauptfeld A'", () => {
+    const alloc = getPitchAllocationByCode("STADION_A");
+    expect(alloc?.infoboardLabel).toBe("Hauptfeld A");
   });
 
   it("infoboardLabel does not expose raw code like KUNSTRASEN_2_A", () => {
