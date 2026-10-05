@@ -213,13 +213,6 @@ export default function PlanningHubConflictWorkspaceDialog({
 
   useSceModalDialog({ open, onClose, panelRef, initialFocusRef: titleRef });
 
-  if (!open) return null;
-
-  const selectedActivity = selectedActivityId ? itemsById.get(selectedActivityId) : undefined;
-  const incidentIndex = selectedIncident
-    ? filteredIncidents.findIndex((i) => i.id === selectedIncident.id)
-    : -1;
-  const totalCanonical = canonicalConflictIncidentTotal(incidents);
   const kindFilterOptions = useMemo(
     () => buildConflictResolutionFilterOptions(incidents),
     [incidents],
@@ -231,6 +224,14 @@ export default function PlanningHubConflictWorkspaceDialog({
       setKindFilter("all");
     }
   }, [kindFilter, kindFilterOptions, open]);
+
+  if (!open) return null;
+
+  const selectedActivity = selectedActivityId ? itemsById.get(selectedActivityId) : undefined;
+  const incidentIndex = selectedIncident
+    ? filteredIncidents.findIndex((i) => i.id === selectedIncident.id)
+    : -1;
+  const totalCanonical = canonicalConflictIncidentTotal(incidents);
 
   function handlePanelKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Escape") e.stopPropagation();

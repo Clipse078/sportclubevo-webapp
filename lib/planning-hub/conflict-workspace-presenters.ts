@@ -9,7 +9,7 @@ import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-l
 import { collectWeekplannerOccupiedResources } from "@/lib/weekplanner/conflict-detection";
 import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 
-export function planningConflictResourceCategoryLabel(kind: PlanningResourceKind): string {
+export function planningConflictResourceCategoryLabel(kind: PlanningResourceKind | undefined): string {
   return kind === "DRESSING_ROOM" ? "Garderobe" : "Spielfeld";
 }
 
@@ -33,7 +33,7 @@ function formatPitchResourceLabel(
     return compactPitchPlanningResourceLabel(name);
   }
   if (ref?.resourceType === "HALF_PITCH") {
-    const facility = ref.facilityName.trim();
+    const facility = (ref.facilityName ?? "").trim();
     const segment = name.length <= 2 ? name : name;
     if (facility && segment && facility !== name) {
       return `${facility} · ${segment}`;
@@ -116,7 +116,7 @@ export function conflictIncidentSearchHaystack(
     activities,
     ...incident.itemIds.map((id) => {
       const item = itemsById.get(id);
-      return item ? `${item.title} ${item.teamNames.join(" ")}` : id;
+      return item ? `${item.title} ${(item.teamNames ?? []).join(" ")}` : id;
     }),
   ]
     .join(" ")

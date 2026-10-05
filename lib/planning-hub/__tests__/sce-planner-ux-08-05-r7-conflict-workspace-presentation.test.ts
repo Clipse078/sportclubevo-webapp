@@ -200,6 +200,48 @@ describe("SCE-PLANNER-UX-08-05R7 conflict workspace presentation", () => {
     expect(missing).toBe(filtered[0]?.id ?? null);
   });
 
+  it("R8 — stale resource ref falls back to incident facilityResourceName", () => {
+    const orphanIncident: PlanningConflictIncident = {
+      id: "orphan-pitch",
+      facilityResourceId: "deleted-pitch-id",
+      facilityResourceName: "Legacy Hauptplatz",
+      resourceKind: "PITCH_HALL",
+      dayKey: "2026-09-28",
+      startAt: new Date("2026-09-28T15:00:00.000Z"),
+      endAt: new Date("2026-09-28T16:30:00.000Z"),
+      occupancyCount: 2,
+      itemIds: ["training:a"],
+    };
+    expect(conflictIncidentListPrimaryLabel(orphanIncident, itemsById)).toBe(
+      "Spielfeld Legacy Hauptplatz",
+    );
+    expect(() =>
+      conflictIncidentSearchHaystack(orphanIncident, itemsById),
+    ).not.toThrow();
+  });
+
+  it("R8 — HALF_PITCH without facilityName still formats safely", () => {
+    const halfNoFacility = {
+      ...PITCH_B,
+      facilityName: "",
+      name: "Kunstrasen 2 B",
+    };
+    const item = training("training:half", "Team X", halfNoFacility, ROOM_E1);
+    const map = new Map([[item.id, item]]);
+    const incident: PlanningConflictIncident = {
+      id: "half",
+      facilityResourceId: halfNoFacility.facilityResourceId,
+      facilityResourceName: "Kunstrasen 2 B",
+      resourceKind: "PITCH_HALL",
+      dayKey: "2026-09-28",
+      startAt: item.startAt,
+      endAt: item.endAt,
+      occupancyCount: 1,
+      itemIds: [item.id],
+    };
+    expect(conflictIncidentListPrimaryLabel(incident, map)).toBe("Spielfeld Kunstrasen 2 · B");
+  });
+
   it("N/O — search haystack includes canonical primary label", () => {
     const incident: PlanningConflictIncident = {
       id: "room-e1|1|2",

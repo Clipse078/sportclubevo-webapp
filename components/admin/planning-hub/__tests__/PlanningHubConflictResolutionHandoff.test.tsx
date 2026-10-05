@@ -367,6 +367,54 @@ describe("PlanningHubConflictResolutionActions — elevated editor over workspac
   });
 });
 
+describe("PlanningHubConflictWorkspaceDialog — open lifecycle (08-05R8)", () => {
+  it("opens from closed without violating React hook order (Prüfen UAT blocker)", async () => {
+    const start = new Date("2026-09-28T15:00:00.000Z");
+    const end = new Date("2026-09-28T16:30:00.000Z");
+    const itemA = training("training:a", "Junioren F1", start, end);
+    const itemB = training("training:b", "Junioren F2", start, end);
+    const week: WeekplannerWeek = {
+      weekKey: "2026-W39",
+      days: [
+        {
+          dayKey: "2026-09-28",
+          items: annotateWeekplannerConflicts([itemA, itemB]),
+        },
+      ],
+    };
+
+    const { rerender } = render(
+      <PlanningHubConflictWorkspaceDialog
+        open={false}
+        onClose={vi.fn()}
+        week={week}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        permissionContext={permissionContext}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByTestId("planning-conflict-workspace-dialog")).toBeNull();
+
+    rerender(
+      <PlanningHubConflictWorkspaceDialog
+        open
+        onClose={vi.fn()}
+        week={week}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        permissionContext={permissionContext}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("planning-conflict-workspace-dialog")).toBeTruthy();
+    expect(screen.getByText("Planungskonflikte prüfen")).toBeTruthy();
+    expect(screen.getByText("Garderobe E1")).toBeTruthy();
+  });
+});
+
 describe("PlanningHubConflictWorkspaceDialog — resource-type list clarity (08-05R7)", () => {
   it("shows Garderobe and Spielfeld primary labels in the incident list", () => {
     const start = new Date("2026-09-28T15:00:00.000Z");
