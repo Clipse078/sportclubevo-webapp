@@ -118,7 +118,7 @@ Distinguish SCE-owned, imported, synchronized, and read-only authoritative activ
 | **SCE-ICONS-02** | **Premium Navigation Icons** — Club (shield v1) + Spiele (VS circle v4); ASAP after 08-02, before 08-03 — see [`SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md`](../roadmap/SCE-ICONS-02-PREMIUM-NAVIGATION-ICONS.md) |
 | **08-03** | **Activity Rescheduling** — primarily Kalender; activity date/time/duration semantics; impact-aware confirmation (allocations, teams, trainers, authority, comms, Infoboard, Dashboard, SFV sync); not silent dependent propagation |
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (see dedicated doc) |
-| **08-05** | Conflict resolution & operational actions |
+| **08-05** | Conflict resolution & operational actions — **CLOSED** (PR #802 → STAGE) — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](./SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
 | **08-06** | List / search / bulk operational UX |
 | **08-07** | Responsive / tablet hardening |
 | **08-08** | Integration / Human UAT / release hardening |

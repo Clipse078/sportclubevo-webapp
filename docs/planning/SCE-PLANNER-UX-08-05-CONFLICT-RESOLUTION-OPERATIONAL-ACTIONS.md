@@ -1,8 +1,12 @@
 # SCE-PLANNER-UX-08-05 — Conflict resolution & operational actions
 
-**Status:** IN PROGRESS
+**Status:** CLOSED
 
-**Human UAT:** BLOCKED — R9 RETEST REQUIRED
+**Human UAT:** PASS
+
+**Closure:** PR **#802** → **STAGE** (2026-10-05)
+
+**Feature HEAD:** `cc2c1d5d8b5f1cbc086d3e4d12509d7b1c525268`
 
 **Base:** STAGE `aec52552837e5d789a6f8c5d95a0f05b522a2401` (08-01…08-04 merged)
 
@@ -145,7 +149,7 @@ Listbox-style popover: keyboard open, arrow navigation, Enter select, Escape clo
 
 ### Status
 
-**IN PROGRESS** — automated coverage in `manipulation-resource-availability.test.ts`; **Human UAT not yet passed** for informed picker flow (pitch + Garderobe).
+**CLOSED** — Human UAT PASS (final closure 2026-10-05) — automated coverage in `manipulation-resource-availability.test.ts`; **Human UAT not yet passed** for informed picker flow (pitch + Garderobe).
 
 ## 08-05R3 — At-a-glance Resource Availability Board
 
@@ -178,7 +182,7 @@ R2 canonical availability architecture **accepted** (derivation, pitch hierarchy
 
 ### Status
 
-**IN PROGRESS** — `PlanningHubManipulationResourceAvailabilityBoard.test.tsx` + extended availability tests; **Human UAT not yet passed**.
+**CLOSED** — Human UAT PASS (final closure 2026-10-05) — `PlanningHubManipulationResourceAvailabilityBoard.test.tsx` + extended availability tests; **Human UAT not yet passed**.
 
 ## 08-05R4 — Adaptive Resource Availability for Large Clubs
 
@@ -242,7 +246,7 @@ Single in-memory `buildManipulationResourceAvailabilityList` per reservation win
 
 ### Status
 
-**IN PROGRESS** — automated R4 coverage; **Human UAT not yet passed** (FCA compact matrix regression + end-to-end resolution on Preview).
+**CLOSED** — Human UAT PASS (final closure 2026-10-05) — automated R4 coverage; **Human UAT not yet passed** (FCA compact matrix regression + end-to-end resolution on Preview).
 
 ## Regression hooks
 
@@ -296,7 +300,7 @@ No duplicate persisted incident entity; week read model is assembled from series
 
 ### Status
 
-**IN PROGRESS** — automated R5 coverage added; **Human UAT retest required** (same Kunstrasen 2 A → Hauptfeld A scenario).
+**CLOSED** — Human UAT PASS (final closure 2026-10-05) — automated R5 coverage added; **Human UAT retest required** (same Kunstrasen 2 A → Hauptfeld A scenario).
 
 ## 08-05R6 — Resource manipulation runtime date-type failure
 
@@ -351,7 +355,7 @@ Week read model still assembled from series + occurrence allocations + plan over
 
 ### Status
 
-**IN PROGRESS** — automated R6 coverage; **Human UAT pitch mutation PASS** (see 08-05R7).
+**CLOSED** — Human UAT PASS (final closure 2026-10-05) — automated R6 coverage; **Human UAT pitch mutation PASS** (see 08-05R7).
 
 ### Human UAT (08-05R6 retest — PASS)
 
@@ -392,7 +396,7 @@ Helpers: `lib/planning-hub/conflict-workspace-presenters.ts`. **No** changes to 
 
 ### Status
 
-**IN PROGRESS** — **Human UAT:** final shortened **Garderobe ändern** flow (E1 conflict → free room → apply without refresh).
+**CLOSED** — Human UAT PASS (final closure 2026-10-05) — **Human UAT:** final shortened **Garderobe ändern** flow (E1 conflict → free room → apply without refresh).
 
 ## 08-05R8 — Prüfen workspace crash
 
@@ -444,7 +448,7 @@ No new structural facility defect identified; crash was client hook ordering. Le
 
 ### Status
 
-**IN PROGRESS**
+**CLOSED** — Human UAT PASS (final closure 2026-10-05)
 
 ### Human UAT (next step after R8 deploy)
 
@@ -533,4 +537,78 @@ Resume: **Wochenplaner → Prüfen → Garderobe E1 → Garderobe ändern** — 
 
 ### Status
 
-**IN PROGRESS**
+**CLOSED** — Human UAT PASS (final closure 2026-10-05; dressing + viewport verified on Preview)
+
+## Final Human UAT closure (authoritative)
+
+Recorded **2026-10-05** after PR **#802** Preview (feature head `cc2c1d5`).
+
+| Area | Result | Evidence |
+|------|--------|----------|
+| Prüfen workspace | **PASS** | Opens without crash; **Garderobe E1/E2/…** vs **Spielfeld Kunstrasen 2 · B/…** distinguishable; Alle Konflikte / Spielfelder / Garderoben filters; search/filter accepted; detail + affected activities understandable |
+| Pitch mutation (Junioren F2) | **PASS** | Kunstrasen 2 A → Hauptfeld A; authoritative write; **Planung aktualisiert** without manual refresh; sport time 17:00–18:30 unchanged; Garderobe E1 unchanged; pitch incident removed; count decreased; selection reconciled |
+| Dressing mutation (Junioren F2) | **PASS** | E1 → O3; confirm **VON E1 / NACH O3** Reserviert 16:30–19:00; **Änderung übernehmen** succeeded; no refresh; incident 24→23; workspace reconciled; no 500 / silent failure |
+| Conflict count reconciliation | **PASS** | Incident totals and workspace selection track post-mutation rebuild |
+| Read-after-write | **PASS** | Apply → revalidate → refresh → incident rebuild (R5–R6) |
+| Modal viewport (R9) | **PASS** | Inventory scrollable; dialog in viewport; **Abbrechen** / **Weiter** / confirm actions always visible |
+| Failure handling | **PASS** | R6 validate failures stay on confirm layer (no false success) |
+| Permissions / security | **PASS** | Unchanged 08-04 capability model; server-side authorization authoritative |
+| PROD untouched | **PASS** | Merge to **STAGE** only |
+
+## Final architecture (08-05)
+
+End-to-end resolution flow (canonical):
+
+1. **Conflict detection** — derived from week items (`annotateWeekplannerConflicts` / `buildPlanningConflictIncidents`); no persisted duplicate conflict store.
+2. **Incident** — deduplicated operator-facing overlap windows.
+3. **Operational workspace** — `PlanningHubConflictWorkspaceDialog` from **Prüfen**.
+4. **Canonical resolution action** — 08-02 resource manipulation / 08-03 activity rescheduling via `openResourceEditorForConflict` / schedule editors (modal stack R1).
+5. **Validation** — client + server (`evaluateManipulationConflicts`, validate routes; R6 ISO transport revival).
+6. **Authoritative write** — `applyConfirmationDraft` / planning-grid reassign / allocation APIs (R5).
+7. **Revalidation** — `planner-revalidate` + path revalidation.
+8. **Fresh read model** — `router.refresh()` reloads week.
+9. **Incident reconstruction** — counters and list from canonical truth.
+10. **Selection reconciliation** — workspace keeps stable incident id where possible (R5).
+
+**Resource reservation time ≠ sporting activity time** — manipulation uses `timeTarget: resourceOccupancy`; sport times unchanged on resource-only moves.
+
+## Delivery sequence (R1–R9)
+
+| Rev | Focus | Status |
+|-----|-------|--------|
+| R1 | Manipulation modal layering + Sporttermin vs Reservierung time semantics | **CLOSED** |
+| R2 | Resource availability picker | **CLOSED** |
+| R3 | At-a-glance availability board | **CLOSED** |
+| R4 | Scalable resource inventory presentation | **CLOSED** |
+| R5 | Authoritative apply / read-after-write | **CLOSED** |
+| R6 | Manipulation transport Date normalization | **CLOSED** |
+| R7 | Conflict workspace resource-type clarity | **CLOSED** |
+| R8 | Prüfen workspace hook-order crash fix | **CLOSED** |
+| R9 | Viewport-safe manipulation dialogs + persistent actions | **CLOSED** |
+
+## Roadmap follow-ups (explicitly out of #802)
+
+Do **not** absorb into 08-05:
+
+| ID | Priority | Scope (summary) |
+|----|----------|-----------------|
+| **FACILITY-INTEGRITY-01** | **HIGH — next integrity gate** | `/dashboard/admin/facilities` source of truth for **pitches/segments** and **dressing rooms**; ADD/RENAME/EDIT/DISABLE/DELETE propagation across Wochenplaner, Trainings, Spiele, Turniere, Vereinsveranstaltungen, pickers, conflict detection, allocations, read models, Infoboard consumers; stale/deleted/renamed refs; FULL_PITCH/HALF_PITCH hierarchy; safe delete when in use; snapshot vs live reference; revalidation after facility mutations. **Diagnose** Hauptfeld/Hauptplatz duplicate legacy — do not blind merge. **Separate package.** |
+| **SCE-PLANNER-UX-AGGREGATION-01** | PLANNED | Mixed cluster semantics (card vs inspector parity) |
+| **SCE-PLANNER-UX-LIST-01** | PLANNED | Operational agenda/list UX — check overlap with **08-06** before duplicate work |
+| **PEOPLE-ACCESS-IMPERSONATION-01** | PLANNED | Tenant impersonation reliability (Michael) |
+| **SCE-COLLAB-01** | PLANNED | Contextual Action → Impact → Inform |
+
+## Canonical Planner sequence after 08-05
+
+| Package | Status |
+|---------|--------|
+| 08-01 Unified foundation | **CLOSED** |
+| 08-02 Canonical resource manipulation | **CLOSED** |
+| 08-03 Activity rescheduling | **CLOSED** |
+| 08-04 Permission-aware DnD/rescheduling | **CLOSED** |
+| **08-05** Conflict resolution & operational actions | **CLOSED** (this doc) |
+| 08-06 List / search / bulk operational UX | **PLANNED** |
+| 08-07 Responsive / tablet hardening | **PLANNED** |
+| 08-08 Integration / UAT / release hardening | **PLANNED** |
+
+**Next-package note:** Conflict resolution and availability now depend on canonical facility/resource truth. **FACILITY-INTEGRITY-01** should run **before 08-06** presentation work unless a future audit shows lower risk (recommended: **A — FACILITY-INTEGRITY-01 next**).
