@@ -1,3 +1,5 @@
+import { resolveFcaMainPitchCanonicalCode } from "@/lib/facilities/fca-main-pitch-legacy-codes";
+
 export type BasePitchCode =
   | "STADION"
   | "KUNSTRASEN_2"
@@ -151,7 +153,13 @@ export function getPitchAllocationByCode(code: string | null | undefined) {
     return null;
   }
 
-  return FCA_PITCH_ALLOCATIONS.find((item) => item.code === code) ?? null;
+  const direct = FCA_PITCH_ALLOCATIONS.find((item) => item.code === code);
+  if (direct) return direct;
+
+  const canonicalCode = resolveFcaMainPitchCanonicalCode(code);
+  if (!canonicalCode) return null;
+
+  return FCA_PITCH_ALLOCATIONS.find((item) => item.code === canonicalCode) ?? null;
 }
 
 export function getPitchOptionsForEventType(eventType: string) {
