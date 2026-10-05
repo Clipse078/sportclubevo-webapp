@@ -132,19 +132,103 @@ Script: `scripts/facility-integrity-01-fca-diagnosis.ts`
 | Delete preview totals | **Fixed** — include `eventFacilityAllocations` |
 | Read-only FCA script | **Added** |
 | Automated tests | **Added** |
-| Data merge Hauptfeld→Hauptplatz | **Deferred → FACILITY-INTEGRITY-01A** |
+| Data merge Hauptfeld→Hauptplatz | **FACILITY-INTEGRITY-01A (see below)** |
 | Block delete when referenced | **Deferred** (documented; current product allows cascade after confirmation) |
 
 ---
 
-## FACILITY-INTEGRITY-01A (proposed follow-up)
+## FACILITY-INTEGRITY-01A — FCA Main-Pitch Canonical Consolidation
 
-1. Inventory all FK + legacy code references for HAUPTFELD* / STADION*.
-2. Choose canonical target (seed: Hauptplatz + STADION*).
-3. Idempotent reassignment transaction + verification queries.
-4. Archive legacy Hauptfeld facility; fix seed upsert to match by code not display name.
-5. Infoboard resolver: single code set per tenant.
-6. Human UAT checklist A–L below.
+**STATUS:** IN PROGRESS  
+**HUMAN_UAT:** REQUIRED  
+**PROD:** untouched  
+
+### Pre-migration state (FCA STAGE, 2026-10-05)
+
+| Role | Facility | Id (prefix) | Active codes |
+|------|----------|-------------|--------------|
+| Legacy | Hauptfeld | `cmq821z9r…` | HAUPTFELD, HAUPTFELD A, HAUPTFELD B |
+| Canonical | Hauptplatz | `cmtmsld6r…` | STADION, STADION_A, STADION_B |
+
+Classification: **B — LEGACY + CANONICAL REPRESENTATION**.
+
+### Pre-migration reference matrix (STAGE snapshot)
+
+| Source | Reference type | Legacy | Target | Action |
+|--------|----------------|--------|--------|--------|
+| TrainingAllocation | facilityResourceId | 0 | 0 | — |
+| TrainingSessionAllocation | facilityResourceId | 1 | 0 | Re-point HAUPTFELD A → STADION_A |
+| TournamentResourceAllocation | facilityResourceId | 0 | 0 | — |
+| TournamentParticipantAllocation | facilityResourceId | 0 | 0 | — |
+| EventFacilityAllocation | facilityResourceId | 0 | 0 | — |
+| WeekplannerPlanAllocation | facilityResourceId | 0 | 0 | — |
+| Event.pitchCode | pitchCode | 0 | 5 | Preserve STADION* |
+
+### Canonical target decision
+
+| Field | Value |
+|-------|-------|
+| **FACILITY** | Hauptplatz (`cmtmsld6r…`) |
+| **FULL (Gesamt)** | STADION |
+| **HALF A** | STADION_A |
+| **HALF B** | STADION_B |
+| **WHY** | Seed/SFV/static registry + Event.pitchCode already use STADION*; Infoboard preview treats STADION as canonical fallback; planner admin target naming is Hauptplatz |
+| **LEGACY_ALIASES_REQUIRED** | Yes — read/display only |
+| **LEGACY_ALIAS_STRATEGY** | `lib/facilities/fca-main-pitch-legacy-codes.ts` + `getPitchAllocationByCode()` maps HAUPTFELD* → static STADION* definitions; archived DB rows keep HAUPTFELD codes for audit |
+
+### Migration algorithm (idempotent, tenant `fc-allschwil` only)
+
+1. Validate B_LEGACY_AND_CANONICAL shape; abort on unexpected facilities/codes.
+2. Re-point FK allocations from legacy resource ids → canonical ids (merge duplicate parent rows).
+3. Migrate any legacy `Event.pitchCode` strings to STADION* (none on STAGE pre-migration).
+4. Verify zero remaining FK / pitchCode references on legacy ids.
+5. Archive legacy HAUPTFELD* resources and Hauptfeld facility (no cascade delete).
+6. Postcondition: exactly one active main-pitch PITCH facility; no `LEGACY_CANONICAL_MAIN_PITCH_PAIR` finding.
+
+Script: `scripts/facility-integrity-01a-fca-reconcile.ts` (`--inventory`, `--dry-run`, `--execute --confirm FIX-FCA-MAIN-PITCH`).  
+Requires `APP_ENV=stage` + `SCE_OPERATION_AUTHORIZATION=facility-integrity-01a-fca-reconcile:stage` for remote execute. Refuses PROD URLs.
+
+### Seed correction
+
+`prisma/seed.ts` uses `resolveFcaFacilityForSeed()` — main pitch anchors on STADION* or legacy HAUPTFELD* resource codes, not display name alone (`lib/facilities/fca-facility-seed.ts`).
+
+### STAGE execution (2026-10-05)
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Active main-pitch facilities | 2 | 1 |
+| TrainingSessionAllocation on legacy HALF A | 1 | 0 |
+| TrainingSessionAllocation on STADION_A | 0 | 1 |
+| Event.pitchCode STADION* | 5 | 5 |
+| Legacy facility/resources | ACTIVE | ARCHIVED |
+
+F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00–18:30 (UTC+2); allocation now on **Hauptplatz A** (`STADION_A`).
+
+### Tests added
+
+- `lib/facilities/__tests__/fca-main-pitch-consolidation.test.ts`
+- `lib/facilities/__tests__/fca-main-pitch-reconciliation.test.ts`
+- `lib/facilities/__tests__/fca-facility-seed.test.ts`
+- Legacy pitchCode readability via `pitches.ts`
+
+### Residual risks (01A)
+
+- Human UAT still required across Wochenplaner, Infoboard, Matchcenter (automated coverage is partial).
+- Rollback: restore archived facility/resources + reverse id map from backup JSON (manual; no auto-rollback script in this slice).
+- Cross-environment: PROD must run the same script separately after STAGE UAT — not executed here.
+
+### Human UAT gate (Michael — Preview/STAGE)
+
+1. Admin → Facilities: one main pitch (**Hauptplatz** only active).  
+2. Wochenplaner → Spielfeld: Hauptplatz, Kunstrasen 2, Kunstrasen 3 — no duplicate Hauptfeld.  
+3. Hauptplatz: Gesamt / A / B.  
+4. F2 training still present on Hauptplatz A.  
+5. Garderobe unchanged (E1–E4, O1–O4).  
+6. Conflict workspace labels Hauptplatz.  
+7. Availability board: Hauptplatz once.  
+8. Matches on STADION* unchanged.  
+9. Infoboard loads without HAUPTFELD/STADION ambiguity.  
+10. No missing activities/allocations.
 
 ---
 
@@ -169,10 +253,10 @@ L. Infoboard matches admin catalog.
 
 ---
 
-## Residual risks
+## Residual risks (package)
 
-- Until 01A, FCA planner shows **four** pitch facility groups (Hauptfeld, Hauptplatz, KR2, KR3).
-- Screen-2 preview may throw if both HAUPTFELD and STADION active (by design).
+- FCA STAGE main-pitch duplicate **reconciled in 01A**; Human UAT still open.
+- Screen-2 preview throws only when **both** HAUPTFELD and STADION code sets are simultaneously active (resolved on STAGE after 01A execute).
 - Permanent delete still cascades allocation links when confirmed.
 
 ---
