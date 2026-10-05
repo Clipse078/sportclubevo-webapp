@@ -1,7 +1,7 @@
 # FACILITY-INTEGRITY-01 — Canonical Facility & Resource Integrity
 
-**STATUS:** IN PROGRESS  
-**HUMAN_UAT:** REQUIRED  
+**STATUS:** IN PROGRESS (01 diagnosis/alerts **CLOSED** on STAGE; **01A CLOSED** — PR **#803**; broader propagation integrity **OPEN**)  
+**HUMAN_UAT (01A):** **PASS** (Michael, 2026-10-05, R2 Vercel Preview)  
 **Branch:** `cursor/facility-integrity-01-canonical-facility-resource-integrity-b94f`  
 **Target:** STAGE  
 **PROD:** untouched  
@@ -139,8 +139,9 @@ Script: `scripts/facility-integrity-01-fca-diagnosis.ts`
 
 ## FACILITY-INTEGRITY-01A — FCA Main-Pitch Canonical Consolidation
 
-**STATUS:** IN PROGRESS  
-**HUMAN_UAT:** REQUIRED  
+**STATUS:** **CLOSED**  
+**HUMAN_UAT:** **PASS** (2026-10-05)  
+**PR:** **#803** → STAGE  
 **PROD:** untouched  
 
 ### Pre-migration state (FCA STAGE, 2026-10-05)
@@ -206,8 +207,8 @@ F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00�
 
 ### FACILITY-INTEGRITY-01A-R2 — Canonical terminology (Hauptfeld)
 
-**STATUS:** IN PROGRESS  
-**HUMAN_UAT:** REQUIRED  
+**STATUS:** **CLOSED** (included in **#803**)  
+**HUMAN_UAT:** **PASS** (2026-10-05)  
 **PROD:** untouched  
 
 | Layer | R1 (Hauptplatz) | R2 (Hauptfeld) |
@@ -229,7 +230,9 @@ Implementation:
 
 Presentation priority (unchanged from R1): **FacilityResource.name** → facility + subdivision → static registry → code.
 
-**STAGE data:** run R2 terminology script after deploy if persisted rows still read Hauptplatz* (expected after 01A execute on STAGE).
+**STAGE data (read-only verify, 2026-10-05 closure):** Neon `ep-wispy-hall-aso93dy6`, tenant `fc-allschwil` — facility **Hauptfeld** (`cmtmsld6r…`); resources **Hauptfeld / Hauptfeld A / Hauptfeld B** on codes **STADION / STADION_A / STADION_B**; R2 inventory `alreadyCanonical: true`; legacy HAUPTFELD* facility/resources **ARCHIVED**; integrity findings **[]**.
+
+**DISPLAY NAME ≠ STABLE RESOURCE CODE:** human-facing labels use **Hauptfeld***; persisted codes and `Event.pitchCode` remain **STADION*** (intentional stable identifiers). R2 did **not** change resource IDs, allocation FKs, event pitchCode values, Kunstrasen 2/3, or Garderoben.
 
 ### Tests added
 
@@ -244,40 +247,39 @@ Presentation priority (unchanged from R1): **FacilityResource.name** → facilit
 - Rollback: restore archived facility/resources + reverse id map from backup JSON (manual; no auto-rollback script in this slice).
 - Cross-environment: PROD must run the same script separately after STAGE UAT — not executed here.
 
-### Human UAT gate (Michael — Preview/STAGE)
+### Human UAT closure (Michael — R2 Vercel Preview, 2026-10-05)
 
-1. Admin → Facilities: one main pitch (**Hauptfeld** only active).  
-2. Wochenplaner → Spielfeld: Hauptfeld, Kunstrasen 2, Kunstrasen 3 — no duplicate legacy facility row.  
-3. Hauptfeld: Gesamt / A / B.  
-4. F2 training still present on Hauptfeld A.  
-5. Garderobe unchanged (E1–E4, O1–O4).  
-6. Conflict workspace labels Hauptfeld.  
-7. Availability board: Hauptfeld once.  
-8. Matches on STADION* unchanged.  
-9. Infoboard loads without HAUPTFELD/STADION ambiguity.  
-10. No missing activities/allocations.
+| Surface | Result | Evidence |
+|---------|--------|----------|
+| **Admin → Anlagen & Ressourcen** | **PASS** | Single active main-pitch hierarchy: **Hauptfeld** → Gesamt **Hauptfeld**, halves **Hauptfeld A/B**; visible **Hauptplatz** terminology absent for canonical set |
+| **Infoboard → Vorschau** | **PASS** | Screen 1, 28/09/2026 16:00, Junioren F2 → **HAUPTFELD A** (canonical presentation via STADION_A allocation) |
+| **Matchcenter** | **PASS** | Resource UI shows **Hauptfeld / Hauptfeld A / Hauptfeld B** with canonical facility name under cards |
 
-### INFOBOARD_CANONICAL_PRESENTATION (01A-R1)
+**FACILITY-INTEGRITY-01A HUMAN_UAT = PASS** — Admin, Infoboard, and Matchcenter facility presentation confirmed.
+
+### INFOBOARD_CANONICAL_PRESENTATION (01A-R1 + R2)
 
 | Check | Status |
 |-------|--------|
 | R1 implementation | **R1_IMPLEMENTED** |
-| Human UAT | **HUMAN_UAT_PENDING** |
+| R2 terminology | **CLOSED** |
+| Human UAT | **PASS** |
 | allocation integrity | PASS |
 | resolver integrity | PASS |
-| Matchcenter canonical naming | PASS (pre-R1 UAT) |
+| Matchcenter canonical naming | **PASS** |
 | Infoboard availability | PASS |
-| Infoboard canonical naming | **HUMAN_UAT_PENDING** |
+| Infoboard canonical naming | **PASS** |
 | PROD | untouched |
 
-FACILITY-INTEGRITY-01A remains **not CLOSED** until Human UAT passes:
+### UAT follow-ups (explicitly **not** in PR #803)
 
-| Surface | Check |
-|---------|-------|
-| **Infoboard** | Preview `/dashboard/infoboard/preview`, 2026-09-28 ~16:00, Junioren F2 → **HAUPTFELD A** (not `STADION - FELD A`) |
-| **Matchcenter** | Event `cmrkh1qla000u04jufwip9diu` (25.07.2026, FC Allschwil vs SV Muttenz), `Event.pitchCode` **STADION** → display **Hauptfeld** |
-
-**HUMAN_UAT_PENDING** — do not close 01A until Michael confirms both gates on Preview/STAGE.
+| Id | Topic | Status |
+|----|-------|--------|
+| **A** | Planner resource availability alignment — status labels (**Belegt**, **Teilweise**, **Aktuell · Konflikt**) need a consistent column/alignment system | OPEN |
+| **B** | Planner/calendar clipped activity information — accessible hover **and** keyboard focus detail for truncated compact cards | OPEN |
+| **C** | Planner aggregation semantics — mixed clusters must not read as all trainings (target: `10 Aktivitäten · 9 Trainings · 1 Spiel · 8 Konflikte`) — see **SCE-PLANNER-UX-AGGREGATION-01** | PLANNED |
+| **D** | People & Access impersonation (Club Admin) — **PEOPLE-ACCESS-IMPERSONATION-01** | OPEN / SEPARATE |
+| **E** | Broader facility propagation/integrity — create/rename/delete must propagate across Wochenplaner, Trainings, Spiele, Turniere, Vereinsveranstaltungen, availability, conflict detection, Infoboard, read models | **FACILITY-INTEGRITY** stream continues |
 
 ---
 
@@ -304,9 +306,10 @@ L. Infoboard matches admin catalog.
 
 ## Residual risks (package)
 
-- FCA STAGE main-pitch duplicate **reconciled in 01A**; Human UAT still open.
-- Screen-2 preview throws only when **both** HAUPTFELD and STADION code sets are simultaneously active (resolved on STAGE after 01A execute).
+- FCA STAGE main-pitch duplicate **reconciled and UAT-closed in 01A** (#803); PROD still requires separate authorized migration if/when approved.
+- Screen-2 preview throws only when **both** HAUPTFELD and STADION code sets are simultaneously **active** (resolved on STAGE after 01A execute).
 - Permanent delete still cascades allocation links when confirmed.
+- Follow-ups **A–E** above remain open; do not conflate 01A closure with full cross-module propagation hardening.
 
 ---
 

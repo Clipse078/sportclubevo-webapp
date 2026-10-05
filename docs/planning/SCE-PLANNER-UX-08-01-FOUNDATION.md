@@ -190,8 +190,8 @@ Detail for **08-02** and **08-03** is canonical in this document (R4); **08-04�
 |----|--------|
 | **SCE-ACTIVITY-DESIGN-01E** | Permission & navigation hardening |
 | **ACTIVITY-DESIGN-02** | Management card composition (Trainings, Matchcenter, Tournamentcenter, Veranstaltungen): information grids, horizontal space, role-aware primary actions, context density |
-| **FACILITY-INTEGRITY-01** | **IN PROGRESS** — diagnosis + admin alerts + FCA STAGE evidence — [`FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md`](./FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md) |
-| **FACILITY-INTEGRITY-01A** | **PLANNED** — referenzsichere HAUPTFELD→STADION / Hauptfeld→Hauptplatz migration (blocked until Human UAT approves 01A design) |
+| **FACILITY-INTEGRITY-01** | **IN PROGRESS** — diagnosis + admin alerts; cross-cutting propagation hardening remains — [`FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md`](./FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md) |
+| **FACILITY-INTEGRITY-01A** | **CLOSED** — FCA main-pitch consolidation + R2 Hauptfeld terminology; Human UAT **PASS**; **PR #803** → STAGE |
 | **FACILITY-MODEL-01** | Superseded in planning by FACILITY-INTEGRITY-01/01A — same scope: site → pitch → segment; HAUPTFELD*/STADION*; safe re-pointing |
 | **STATUS-DESIGN-01** | Separate activity identity colours from operational status semantics |
 | **PERFORMANCE-INFRA-01** | Vercel ↔ Neon runtime/latency verification |
