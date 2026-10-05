@@ -367,6 +367,43 @@ describe("PlanningHubConflictResolutionActions — elevated editor over workspac
   });
 });
 
+describe("PlanningHubConflictWorkspaceDialog — resource-type list clarity (08-05R7)", () => {
+  it("shows Garderobe and Spielfeld primary labels in the incident list", () => {
+    const start = new Date("2026-09-28T15:00:00.000Z");
+    const end = new Date("2026-09-28T16:30:00.000Z");
+    const itemA = training("training:a", "Junioren F1", start, end);
+    const itemB = training("training:b", "Junioren F2", start, end);
+    const week: WeekplannerWeek = {
+      weekKey: "2026-W39",
+      days: [
+        {
+          dayKey: "2026-09-28",
+          items: annotateWeekplannerConflicts([itemA, itemB]),
+        },
+      ],
+    };
+
+    render(
+      <PlanningHubConflictWorkspaceDialog
+        open
+        onClose={vi.fn()}
+        week={week}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        permissionContext={permissionContext}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Garderobe E1")).toBeTruthy();
+    expect(screen.getByText(/Spielfeld Kunstrasen 2 · A/)).toBeTruthy();
+    const filter = screen.getByTestId("conflict-workspace-kind-filter") as HTMLSelectElement;
+    expect(filter.textContent).toMatch(/Alle Konflikte \(\d+\)/);
+    expect(filter.textContent).toMatch(/Spielfelder \(\d+\)/);
+    expect(filter.textContent).toMatch(/Garderoben \(\d+\)/);
+  });
+});
+
 describe("PlanningHubConflictWorkspaceDialog — time presentation", () => {
   it("H/I — sport time vs resource reservation are labeled distinctly", () => {
     const start = new Date("2026-09-28T15:00:00.000Z");

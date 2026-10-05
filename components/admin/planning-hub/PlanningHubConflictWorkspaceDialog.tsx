@@ -35,6 +35,11 @@ import {
   weekplannerActivityTypeLabel,
   weekplannerTimingDetail,
 } from "@/lib/planning-hub/item-presenters";
+import {
+  buildConflictResolutionFilterOptions,
+  conflictIncidentActivityScanLine,
+  conflictIncidentListPrimaryLabel,
+} from "@/lib/planning-hub/conflict-workspace-presenters";
 import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-label";
 import {
   weekplannerConflictDoubleBookingHeadline,
@@ -80,17 +85,6 @@ function formatIncidentOverlapRange(
 ): string {
   const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
   return `${fmt.format(incident.startAt)}–${fmt.format(incident.endAt)}`;
-}
-
-function incidentActivityScanLine(
-  incident: PlanningConflictIncident,
-  itemsById: Map<string, WeekplannerItem>,
-): string {
-  return incident.itemIds
-    .map((id) => itemsById.get(id))
-    .filter((item): item is WeekplannerItem => !!item)
-    .map((item) => schedulerDisplayIdentity(item))
-    .join(" / ");
 }
 
 export default function PlanningHubConflictWorkspaceDialog({
@@ -226,6 +220,17 @@ export default function PlanningHubConflictWorkspaceDialog({
     ? filteredIncidents.findIndex((i) => i.id === selectedIncident.id)
     : -1;
   const totalCanonical = canonicalConflictIncidentTotal(incidents);
+  const kindFilterOptions = useMemo(
+    () => buildConflictResolutionFilterOptions(incidents),
+    [incidents],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    if (kindFilter !== "all" && !kindFilterOptions.some((option) => option.kind === kindFilter)) {
+      setKindFilter("all");
+    }
+  }, [kindFilter, kindFilterOptions, open]);
 
   function handlePanelKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Escape") e.stopPropagation();
@@ -308,9 +313,11 @@ export default function PlanningHubConflictWorkspaceDialog({
                   data-testid="conflict-workspace-kind-filter"
                   aria-label="Konflikttyp filtern"
                 >
-                  <option value="all">Alle Konflikte</option>
-                  <option value="PITCH_HALL">Spielfeld</option>
-                  <option value="DRESSING_ROOM">Garderobe</option>
+                  {kindFilterOptions.map((option) => (
+                    <option key={option.kind} value={option.kind}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               {filteredIncidents.length > 1 && (
@@ -356,7 +363,8 @@ export default function PlanningHubConflictWorkspaceDialog({
                 filteredIncidents.map((incident) => {
                   const selected = incident.id === selectedIncidentId;
                   const overlapRange = formatIncidentOverlapRange(incident, locale, timezone);
-                  const activityScan = incidentActivityScanLine(incident, itemsById);
+                  const activityScan = conflictIncidentActivityScanLine(incident, itemsById);
+                  const primaryLabel = conflictIncidentListPrimaryLabel(incident, itemsById);
                   return (
                     <li key={incident.id}>
                       <button
@@ -371,8 +379,8 @@ export default function PlanningHubConflictWorkspaceDialog({
                         onClick={() => setSelectedIncidentId(incident.id)}
                       >
                         <span className="flex items-center gap-1 font-semibold text-[var(--foreground)]">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-700" aria-hidden />
-                          {incident.facilityResourceName}
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
+                          <span>{primaryLabel}</span>
                         </span>
                         <span className="mt-0.5 block text-[var(--text-2)]">
                           {overlapRange}

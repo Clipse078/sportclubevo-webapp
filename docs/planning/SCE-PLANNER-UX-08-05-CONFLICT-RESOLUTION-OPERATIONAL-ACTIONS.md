@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS
 
-**Human UAT:** BLOCKED — RETEST REQUIRED (08-05R6)
+**Human UAT:** RETEST / FINAL GARDEROBE FLOW REQUIRED (08-05R7)
 
 **Base:** STAGE `aec52552837e5d789a6f8c5d95a0f05b522a2401` (08-01…08-04 merged)
 
@@ -351,4 +351,45 @@ Week read model still assembled from series + occurrence allocations + plan over
 
 ### Status
 
-**IN PROGRESS** — automated R6 coverage; **Human UAT retest required** (same Kunstrasen 2 A → Hauptfeld A scenario, then shortened Garderobe test).
+**IN PROGRESS** — automated R6 coverage; **Human UAT pitch mutation PASS** (see 08-05R7).
+
+### Human UAT (08-05R6 retest — PASS)
+
+| Check | Result |
+|-------|--------|
+| Pitch mutation persisted (F2 → Hauptfeld A) | **PASS** |
+| „Planung aktualisiert“ without manual refresh | **PASS** |
+| F2 detail Anlage = Hauptfeld A | **PASS** |
+| Sport time 17:00–18:30 unchanged | **PASS** |
+| Garderobe E1 unchanged | **PASS** |
+| Kunstrasen 2 A pitch incident disappeared | **PASS** |
+| Conflict workspace rebuilt + selection reconciled | **PASS** |
+
+Read-after-write / authoritative resource mutation blocker from R5–R6 is **resolved** for the pitch path.
+
+## 08-05R7 — Conflict workspace resource-type clarity
+
+### Human UAT finding
+
+After R6 pitch resolution, the incident list was technically correct but operationally unclear: bare codes such as **E1**, **E2**, **E4** mixed with pitch names without strong resource-type semantics.
+
+### Presentation (UX only)
+
+| Area | Change |
+|------|--------|
+| Incident list primary line | Canonical category + resource label — e.g. **Garderobe E1**, **Spielfeld Kunstrasen 2 · B** |
+| Secondary line | Overlap window · affected activities (unchanged structure) |
+| Filter | **Alle Konflikte (n)**, **Spielfelder (x)**, **Garderoben (y)** — options omitted when count is zero |
+| Search | Matches type label, canonical resource label, activity/team labels (local filter on incident list) |
+| Detail panel | Unchanged strong contextual copy (no duplicate type noise) |
+
+Helpers: `lib/planning-hub/conflict-workspace-presenters.ts`. **No** changes to `buildPlanningConflictIncidents`, identity, deduplication, or availability engine.
+
+### Tests
+
+- `lib/planning-hub/__tests__/sce-planner-ux-08-05-r7-conflict-workspace-presentation.test.ts`
+- Extended `PlanningHubConflictResolutionHandoff.test.tsx` (list labels + filter counts)
+
+### Status
+
+**IN PROGRESS** — **Human UAT:** final shortened **Garderobe ändern** flow (E1 conflict → free room → apply without refresh).

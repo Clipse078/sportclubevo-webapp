@@ -4,6 +4,7 @@
  */
 
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
+import { conflictIncidentSearchHaystack } from "@/lib/planning-hub/conflict-workspace-presenters";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import {
   canMutateActivityTimeForItem,
@@ -115,19 +116,7 @@ export function filterConflictIncidents(
     list = list.filter((i) => i.resourceKind === options.kind);
   }
   if (q) {
-    list = list.filter((incident) => {
-      const haystack = [
-        incident.facilityResourceName,
-        incident.resourceKind === "PITCH_HALL" ? "Spielfeld" : "Garderobe",
-        ...incident.itemIds.map((id) => {
-          const item = options.itemsById.get(id);
-          return item ? `${item.title} ${item.teamNames.join(" ")}` : id;
-        }),
-      ]
-        .join(" ")
-        .toLocaleLowerCase("de-CH");
-      return haystack.includes(q);
-    });
+    list = list.filter((incident) => conflictIncidentSearchHaystack(incident, options.itemsById).includes(q));
   }
   list.sort((a, b) => a.startAt.getTime() - b.startAt.getTime() || a.id.localeCompare(b.id));
   return list;
