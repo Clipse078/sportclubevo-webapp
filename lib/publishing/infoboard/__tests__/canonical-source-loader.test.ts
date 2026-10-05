@@ -252,12 +252,7 @@ describe("canonical operational resolution", () => {
     const events = await loader({ tenantId: TENANT_A, dateFrom: DATE_FROM, dateTo: DATE_FROM });
 
     expect(mocks.getWeekplannerDay.mock.calls[0][2]).toBe("plan-alt");
-    expect(events[0].pitch).toEqual({
-      label: "Halle 1",
-      code: "HALLE1",
-      name: "Halle 1",
-      facilityName: "Im Brüel",
-    });
+    expect(events[0].pitch).toEqual({ label: null, code: "HALLE1", name: "Halle 1", facilityName: "Im Brüel" });
   });
 
   it("3. active alternative plan -> time override reaches Infoboard (pass-through)", async () => {

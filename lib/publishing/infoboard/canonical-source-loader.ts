@@ -115,7 +115,7 @@ import type {
 import type { PublicationEventLoader, PublicationEventLoadInput } from "../policy/event-selection";
 import type { Screen1SourceEvent } from "./screen1-event-mapper";
 import type { PublishingEventStatus } from "../event-types";
-import { getDressingRoomByCode } from "@/lib/facilities/dressing-rooms";
+import { getPitchAllocationByCode } from "@/lib/facilities/pitches";
 import { resolveCanonicalPitchPresentationLabel } from "@/lib/publishing/presentation/canonical-pitch-presentation";
 
 // ── Injected policy-metadata database ──────────────────────────────────────
@@ -465,19 +465,24 @@ async function loadTrainingPolicyBySessionId(
 
 // ── WeekplannerItem -> Screen1SourceEvent mapping ──────────────────────────
 
+function isPitchWeekplannerResourceRef(ref: WeekplannerResourceRef): boolean {
+  if (ref.resourceType === "DRESSING_ROOM") return false;
+  if (ref.resourceType === "FULL_PITCH" || ref.resourceType === "HALF_PITCH") return true;
+  return getPitchAllocationByCode(ref.code) != null;
+}
+
 function toAllocationCandidate(
   ref: WeekplannerResourceRef | undefined,
 ): { label: string | null; code: string; name: string; facilityName: string } | null {
   if (!ref) return null;
-  const label =
-    ref.resourceType === "DRESSING_ROOM"
-      ? (getDressingRoomByCode(ref.code)?.label ?? null)
-      : resolveCanonicalPitchPresentationLabel({
-          code: ref.code,
-          name: ref.name,
-          facilityName: ref.facilityName,
-          resourceType: ref.resourceType,
-        });
+  const label = isPitchWeekplannerResourceRef(ref)
+    ? resolveCanonicalPitchPresentationLabel({
+        code: ref.code,
+        name: ref.name,
+        facilityName: ref.facilityName,
+        resourceType: ref.resourceType,
+      })
+    : (getPitchAllocationByCode(ref.code)?.infoboardLabel ?? null);
   return { label, code: ref.code, name: ref.name, facilityName: ref.facilityName };
 }
 
