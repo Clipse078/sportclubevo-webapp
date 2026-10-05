@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS
 
-**Human UAT:** BLOCKED — RETEST REQUIRED (08-05R5)
+**Human UAT:** BLOCKED — RETEST REQUIRED (08-05R6)
 
 **Base:** STAGE `aec52552837e5d789a6f8c5d95a0f05b522a2401` (08-01…08-04 merged)
 
@@ -297,3 +297,58 @@ No duplicate persisted incident entity; week read model is assembled from series
 ### Status
 
 **IN PROGRESS** — automated R5 coverage added; **Human UAT retest required** (same Kunstrasen 2 A → Hauptfeld A scenario).
+
+## 08-05R6 — Resource manipulation runtime date-type failure
+
+### Human UAT reproduction (08-05R5 retest)
+
+Same scenario as R5: Wochenplaner → **Prüfen** → Kunstrasen 2 A (Junioren F1 + F2) → **Spielfeld ändern** (F2) → Hauptfeld A → **Weiter** → „Keine neuen Ressourcenkonflikte“ → **Änderung übernehmen**.
+
+Observed on Preview (Vercel):
+
+- Confirm layer stayed open with **Speichern fehlgeschlagen.**
+- `POST /api/planning-hub/resource-manipulation/validate` → **HTTP 500**
+- Runtime: `TypeError: E.getTime is not a function`
+
+R5 wiring (**authoritative apply reached validate**) and failure UX (**modal stays open**) **confirmed**.
+
+### Root cause
+
+| Boundary | Expected | Actual on confirm apply |
+|----------|----------|-------------------------|
+| Client draft / week state | `WeekplannerItem.startAt` / `endAt` as `Date` | `Date` in React |
+| JSON request (`JSON.stringify(draftPayload)`) | ISO-8601 strings | ISO strings (correct transport) |
+| API route (before R6) | Domain `Date` on items + draft | Draft instants revived; **`draft.item` and `allItems[*]` left as strings** |
+| `projectItemWithDraft` → `buffersFromOccupancyInterval` | `activityStart` / `activityEnd` as `Date` | **`item.startAt` string** → `.getTime()` throws |
+
+Exact failing call: `buffersFromOccupancyInterval` in `lib/planning-hub/scheduler/resource-occupancy-manipulation.ts` (lines 13–17), invoked from `projectItemWithDraft` when `timeTarget === "resourceOccupancy"` (canonical **MOVE_RESOURCE** / **RESIZE_*** / unchanged reservation window paths from **Planung ändern**).
+
+**Weiter** did not hit the server validate route (client-only `evaluateManipulationConflicts` with in-memory `Date` objects); **Änderung übernehmen** re-validates on the server and exposed the defect.
+
+### Transport contract (after R6)
+
+| Layer | Contract |
+|-------|----------|
+| Transport DTO | ISO-8601 strings for all instants in JSON bodies |
+| API boundary | `lib/planning-hub/manipulation-transport.ts` — validate + revive to `Date` |
+| Domain | Planning helpers keep strong `Date` semantics (no `Date \| string` deep in logic) |
+
+Applied on:
+
+- `POST /api/planning-hub/resource-manipulation/validate`
+- `POST /api/planning-hub/activity-rescheduling/validate` (shared `evaluateManipulationConflicts` path)
+
+Invalid / missing instants → **400** with `Ungültiges Datum` (not HTTP 500).
+
+### Tests
+
+- `lib/planning-hub/__tests__/sce-planner-ux-08-05-r6-resource-manipulation-transport.test.ts` — client payload → `JSON.stringify` → route → MOVE_RESOURCE F2 scenario
+- Extended `app/api/planning-hub/resource-manipulation/validate/__tests__/route.test.ts`
+
+### Facility integrity input (unchanged)
+
+Week read model still assembled from series + occurrence allocations + plan overrides; R6 does not expand into FACILITY-INTEGRITY-01.
+
+### Status
+
+**IN PROGRESS** — automated R6 coverage; **Human UAT retest required** (same Kunstrasen 2 A → Hauptfeld A scenario, then shortened Garderobe test).

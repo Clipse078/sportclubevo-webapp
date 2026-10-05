@@ -16,6 +16,11 @@ import {
   buildActivityRescheduleProposal,
   isActivityTimeDraft,
 } from "@/lib/planning-hub/planning-activity-rescheduling";
+import {
+  ManipulationTransportValidationError,
+  parseSchedulerDraftFromTransport,
+  reviveWeekplannerItemsFromTransport,
+} from "@/lib/planning-hub/manipulation-transport";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
@@ -57,13 +62,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ungültige Anfrage" }, { status: 400 });
   }
 
-  const draft: SchedulerDraftChange = {
-    ...body.draft,
-    originalStart: new Date(body.draft.originalStart),
-    originalEnd: new Date(body.draft.originalEnd),
-    proposedStart: new Date(body.draft.proposedStart),
-    proposedEnd: new Date(body.draft.proposedEnd),
-  };
+  let draft: SchedulerDraftChange;
+  let allItems: WeekplannerItem[];
+  try {
+    draft = parseSchedulerDraftFromTransport(body.draft);
+    allItems = reviveWeekplannerItemsFromTransport(body.allItems ?? []);
+  } catch (err) {
+    if (err instanceof ManipulationTransportValidationError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+    throw err;
+  }
 
   if (!isActivityTimeDraft(draft)) {
     return NextResponse.json(
@@ -97,7 +106,7 @@ export async function POST(req: NextRequest) {
   }
 
   const conflictPreview = evaluateManipulationConflicts(
-    body.allItems,
+    allItems,
     draft,
     body.targetResource ?? null,
     body.resourceCategory,
