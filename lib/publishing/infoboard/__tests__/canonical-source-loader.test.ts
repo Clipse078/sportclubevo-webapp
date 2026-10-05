@@ -252,7 +252,12 @@ describe("canonical operational resolution", () => {
     const events = await loader({ tenantId: TENANT_A, dateFrom: DATE_FROM, dateTo: DATE_FROM });
 
     expect(mocks.getWeekplannerDay.mock.calls[0][2]).toBe("plan-alt");
-    expect(events[0].pitch).toEqual({ label: null, code: "HALLE1", name: "Halle 1", facilityName: "Im Brüel" });
+    expect(events[0].pitch).toEqual({
+      label: "Halle 1",
+      code: "HALLE1",
+      name: "Halle 1",
+      facilityName: "Im Brüel",
+    });
   });
 
   it("3. active alternative plan -> time override reaches Infoboard (pass-through)", async () => {
@@ -763,6 +768,59 @@ describe("MATCHCENTER-CANONICAL-OPPONENT-01B — match identity propagation", ()
     expect(event.opponentLogoUrl).toBe("https://cdn.example.com/muttenz.png");
     expect(event.matchIdentity?.away.clubName).toBe("SV Muttenz");
     expect(event.matchIdentity?.away.teamName).toBe("SV Muttenz Erste Mannschaft");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ── FACILITY-INTEGRITY-01A-R1 canonical pitch labels ─────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("FACILITY-INTEGRITY-01A-R1 canonical pitch labels on Screen1SourceEvent", () => {
+  it("maps STADION_A weekplanner ref to Hauptplatz A (not static infoboard Stadion – Feld A)", async () => {
+    const f2Training = trainingItem({
+      title: "Junioren F2",
+      teamNames: ["Junioren F2"],
+      startAt: new Date("2026-09-28T15:00:00.000Z"),
+      endAt: new Date("2026-09-28T16:30:00.000Z"),
+      pitchAllocations: [
+        {
+          facilityResourceId: "res-stadion-a",
+          facilityId: "fac-hauptplatz",
+          code: "STADION_A",
+          name: "Hauptplatz A",
+          facilityName: "Hauptplatz",
+          resourceType: "HALF_PITCH",
+          occupancyBeforeMinutes: 0,
+          occupancyAfterMinutes: 0,
+        },
+      ],
+      dressingRoomAllocations: [
+        {
+          facilityResourceId: "res-o3",
+          facilityId: "fac-garderoben",
+          code: "O3",
+          name: "Kabine O3",
+          facilityName: "Garderoben",
+          resourceType: "DRESSING_ROOM",
+          occupancyBeforeMinutes: 0,
+          occupancyAfterMinutes: 0,
+        },
+      ],
+    });
+    mocks.getWeekplannerDay.mockResolvedValue(makeDay([f2Training], "2026-09-28"));
+    const loader = createCanonicalInfoboardSourceLoader(
+      makeDatabase([], [trainingPolicyRow({ id: "session-1" })]),
+    );
+
+    const [event] = await loader({
+      tenantId: TENANT_A,
+      dateFrom: new Date("2026-09-28T00:00:00.000Z"),
+      dateTo: new Date("2026-09-28T23:59:59.000Z"),
+    });
+
+    expect(event.pitch?.label).toBe("Hauptplatz A");
+    expect(event.pitch?.code).toBe("STADION_A");
+    expect(event.homeDressingRoom?.name).toBe("Kabine O3");
   });
 });
 

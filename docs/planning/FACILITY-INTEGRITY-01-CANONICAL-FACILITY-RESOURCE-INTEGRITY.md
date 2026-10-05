@@ -230,6 +230,21 @@ F2 occurrence (08-05 UAT): session `cmsoxnk2e…` retains sporting window 17:00�
 9. Infoboard loads without HAUPTFELD/STADION ambiguity.  
 10. No missing activities/allocations.
 
+### INFOBOARD_CANONICAL_PRESENTATION (01A-R1)
+
+| Check | Status |
+|-------|--------|
+| R1 implementation | **R1_IMPLEMENTED** |
+| Human UAT | **HUMAN_UAT_PENDING** |
+| allocation integrity | PASS |
+| resolver integrity | PASS |
+| Matchcenter canonical naming | PASS (pre-R1 UAT) |
+| Infoboard availability | PASS |
+| Infoboard canonical naming | **HUMAN_UAT_PENDING** |
+| PROD | untouched |
+
+FACILITY-INTEGRITY-01A remains **not CLOSED** until R1 Human UAT passes (Preview: `/dashboard/infoboard/preview`, 2026-09-28 ~16:00, Junioren F2 → **HAUPTPLATZ A**, not `STADION - FELD A`).
+
 ---
 
 ## Tests

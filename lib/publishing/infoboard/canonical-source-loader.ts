@@ -115,7 +115,8 @@ import type {
 import type { PublicationEventLoader, PublicationEventLoadInput } from "../policy/event-selection";
 import type { Screen1SourceEvent } from "./screen1-event-mapper";
 import type { PublishingEventStatus } from "../event-types";
-import { getPitchAllocationByCode } from "@/lib/facilities/pitches";
+import { getDressingRoomByCode } from "@/lib/facilities/dressing-rooms";
+import { resolveCanonicalPitchPresentationLabel } from "@/lib/publishing/presentation/canonical-pitch-presentation";
 
 // ── Injected policy-metadata database ──────────────────────────────────────
 
@@ -468,10 +469,15 @@ function toAllocationCandidate(
   ref: WeekplannerResourceRef | undefined,
 ): { label: string | null; code: string; name: string; facilityName: string } | null {
   if (!ref) return null;
-  // Use the infoboardLabel from the FCA pitch registry when available.
-  // This converts codes like "KUNSTRASEN_2_A" to "KR 2 – Feld A" for TV readability.
-  const pitchEntry = getPitchAllocationByCode(ref.code);
-  const label = pitchEntry?.infoboardLabel ?? null;
+  const label =
+    ref.resourceType === "DRESSING_ROOM"
+      ? (getDressingRoomByCode(ref.code)?.label ?? null)
+      : resolveCanonicalPitchPresentationLabel({
+          code: ref.code,
+          name: ref.name,
+          facilityName: ref.facilityName,
+          resourceType: ref.resourceType,
+        });
   return { label, code: ref.code, name: ref.name, facilityName: ref.facilityName };
 }
 
