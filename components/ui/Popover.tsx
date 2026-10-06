@@ -58,14 +58,15 @@ export function PopoverContent({
     open,
     onOpenChange,
     placement,
+    strategy: "fixed",
     whileElementsMounted: open ? autoUpdate : undefined,
     middleware: [
       offset(6),
       flip({
-        padding: 8,
+        padding: 12,
         fallbackPlacements: ["top-start", "bottom-start", "top-end", "bottom-end"],
       }),
-      shift({ padding: 8 }),
+      shift({ padding: 12 }),
       ...(constrainHeight
         ? [
             size({

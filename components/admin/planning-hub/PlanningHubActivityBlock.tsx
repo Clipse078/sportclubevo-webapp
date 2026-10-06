@@ -31,6 +31,8 @@ import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-i
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
+import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
+import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -120,10 +122,9 @@ export default function PlanningHubActivityBlock({
   const primary = schedulerDisplayIdentity(item);
   const typeLabel = schedulerBlockSubtitle(item);
   const teamContextRaw = schedulerAssignedTeamContext(item, { primaryLine: primary });
-  const blockWidthPx =
-    typeof style?.width === "number"
-      ? style.width
-      : Number.parseInt(String(style?.width ?? ""), 10) || 240;
+  const blockWidthPx = parseBlockDimensionPx(style?.width, 240);
+  const blockHeightPx = parseBlockDimensionPx(style?.height, compact ? 40 : 64);
+  const clippedDetailGeometry = { blockWidthPx, blockHeightPx, compact };
   const teamContext = teamContextRaw
     ? schedulerTeamContextForBlockWidth(teamContextRaw, blockWidthPx)
     : null;
@@ -194,8 +195,16 @@ export default function PlanningHubActivityBlock({
           aria-hidden
         />
       )}
+      <PlanningHubActivityClippedDetailSurface
+        item={item}
+        locale={locale}
+        timezone={timezone}
+        geometry={clippedDetailGeometry}
+      >
+        {(detailReferenceProps) => (
       <button
         type="button"
+        {...detailReferenceProps}
         onClick={(event) => {
           if (suppressClickRef.current) {
             event.preventDefault();
@@ -215,7 +224,7 @@ export default function PlanningHubActivityBlock({
           .filter(Boolean)
           .join(", ")}
         className={cn(
-          "block h-full w-full text-left select-none",
+          "block h-full w-full text-left select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1",
           canDrag && "cursor-grab active:cursor-grabbing",
         )}
         onPointerDown={(event) => {
@@ -297,7 +306,7 @@ export default function PlanningHubActivityBlock({
           {onOpenManipulationEdit && !isGhost && (
             <button
               type="button"
-              className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
+              className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
               aria-label={manipulationEditLabel}
               data-testid="planning-hub-manipulation-edit-trigger"
               onClick={(event) => {
@@ -318,6 +327,8 @@ export default function PlanningHubActivityBlock({
           )}
         </div>
       </button>
+        )}
+      </PlanningHubActivityClippedDetailSurface>
 
       {canResize && onPointerDownResize && !isGhost && resizeOrientation === "vertical" && (
         <>

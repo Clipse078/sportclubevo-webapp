@@ -442,7 +442,8 @@ export default function PlanningHubResourceDayView({
               key={d.dayKey}
               href={buildPlanningHubHref(urlState, { day: d.dayKey })}
               className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-semibold",
+                "inline-flex min-h-9 items-center rounded-md px-3 py-2 text-xs font-semibold",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1",
                 isSelected
                   ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
                   : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
