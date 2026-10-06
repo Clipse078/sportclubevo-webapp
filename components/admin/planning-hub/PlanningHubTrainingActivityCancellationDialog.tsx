@@ -14,7 +14,8 @@ type Props = {
   timezone: string;
   testId: string;
   onClose: () => void;
-  onCancelled?: () => void;
+  onCancelled?: (trainingSessionId: string) => void;
+  onRefreshFailed?: (message: string) => void;
 };
 
 function formatOccurrenceDayHeading(startAt: Date, locale: string, timeZone: string): string {
@@ -34,6 +35,7 @@ export default function PlanningHubTrainingActivityCancellationDialog({
   testId,
   onClose,
   onCancelled,
+  onRefreshFailed,
 }: Props) {
   const router = useRouter();
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -59,10 +61,34 @@ export default function PlanningHubTrainingActivityCancellationDialog({
         setError(data?.error?.trim() || "Training konnte nicht abgesagt werden.");
         return;
       }
-      await fetch("/api/planning-hub/planner-revalidate", { method: "POST" }).catch(() => undefined);
-      onCancelled?.();
-      router.refresh();
+
+      onCancelled?.(training.trainingSessionId);
+
+      let refreshFailed = false;
+      try {
+        const revalidateRes = await fetch("/api/planning-hub/planner-revalidate", {
+          method: "POST",
+        });
+        if (!revalidateRes.ok) {
+          refreshFailed = true;
+        }
+      } catch {
+        refreshFailed = true;
+      }
+
+      try {
+        router.refresh();
+      } catch {
+        refreshFailed = true;
+      }
+
       onClose();
+
+      if (refreshFailed) {
+        onRefreshFailed?.(
+          "Training wurde abgesagt, aber die Planungsansicht konnte nicht vollständig synchronisiert werden. Bitte Seite neu laden, falls Einträge veraltet wirken.",
+        );
+      }
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {

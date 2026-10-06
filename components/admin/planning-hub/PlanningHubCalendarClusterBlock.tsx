@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -62,6 +62,13 @@ export default function PlanningHubCalendarClusterBlock({
   function handleClose() {
     setOpen(false);
   }
+
+  useEffect(() => {
+    if (!open) return;
+    if (items.length === 0) {
+      setOpen(false);
+    }
+  }, [open, items.length]);
 
   return (
     <>

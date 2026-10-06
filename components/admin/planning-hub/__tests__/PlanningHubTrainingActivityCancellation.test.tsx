@@ -8,7 +8,12 @@ import type { ReactNode } from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { computeAggregateInspectionMetrics } from "@/lib/planning-hub/aggregate-inspection";
 import AggregatedActivityInspectionDialog from "../AggregatedActivityInspectionDialog";
+import {
+  PlanningHubPlannerWeekProvider,
+  usePlanningHubPlannerWeek,
+} from "../PlanningHubPlannerWeekContext";
 import PlanningHubConflictResolutionActions from "../PlanningHubConflictResolutionActions";
 import PlanningHubConflictWorkspaceDialog from "../PlanningHubConflictWorkspaceDialog";
 import {
@@ -160,8 +165,33 @@ function renderWithManipulation(ui: ReactNode) {
   );
 }
 
-function renderAggregate(items: ReturnType<typeof annotateWeekplannerConflicts>, permission = permissionManage) {
-  return renderWithManipulation(
+function weekFromAnnotated(items: ReturnType<typeof annotateWeekplannerConflicts>) {
+  return {
+    days: [
+      { dayKey: "2026-10-06", items: [] },
+      { dayKey: "2026-10-07", items },
+      { dayKey: "2026-10-08", items: [] },
+      { dayKey: "2026-10-09", items: [] },
+      { dayKey: "2026-10-10", items: [] },
+      { dayKey: "2026-10-11", items: [] },
+      { dayKey: "2026-10-12", items: [] },
+    ],
+    weekNumberLabel: "KW 41",
+    rangeLabel: "6.–12. Okt 2026",
+    param: "2026-10-06",
+    previousParam: "2026-09-29",
+    nextParam: "2026-10-13",
+  } satisfies WeekplannerWeek;
+}
+
+function AggregateInspectionFromPlannerWeek({
+  permission = permissionManage,
+}: {
+  permission?: typeof permissionManage;
+}) {
+  const plannerWeek = usePlanningHubPlannerWeek();
+  const items = plannerWeek?.week.days.find((day) => day.dayKey === "2026-10-07")?.items ?? [];
+  return (
     <AggregatedActivityInspectionDialog
       open
       onClose={() => {}}
@@ -171,7 +201,16 @@ function renderAggregate(items: ReturnType<typeof annotateWeekplannerConflicts>,
       timezone="Europe/Zurich"
       onOpenItem={() => {}}
       permissionContext={permission}
-    />,
+    />
+  );
+}
+
+function renderAggregate(items: ReturnType<typeof annotateWeekplannerConflicts>, permission = permissionManage) {
+  const week = weekFromAnnotated(items);
+  return renderWithManipulation(
+    <PlanningHubPlannerWeekProvider serverWeek={week} timezone="Europe/Zurich">
+      <AggregateInspectionFromPlannerWeek permission={permission} />
+    </PlanningHubPlannerWeekProvider>,
   );
 }
 
@@ -266,6 +305,60 @@ describe("PlanningHubTrainingActivityCancellation — aggregate inspection", () 
     expect(within(identity).queryByText("FC Dardania")).toBeNull();
     expect(within(identity).queryByText(/vs FC Dardania/)).toBeNull();
     expect(screen.getByText(/Es wird nur dieses Training abgesagt/)).toBeTruthy();
+  });
+
+  it("R5 — successful cancellation removes training from open aggregate immediately", async () => {
+    const user = userEvent.setup();
+    const annotated = annotateWeekplannerConflicts([training(), homeMatch()]);
+    renderAggregate(annotated);
+    const metricsBefore = computeAggregateInspectionMetrics(annotated);
+    expect(metricsBefore.activityCount).toBe(2);
+
+    await user.click(screen.getByTestId("aggregate-inspection-row-training:30"));
+    await user.click(screen.getByTestId("aggregate-inspection-cancel-training"));
+    await user.click(screen.getByTestId("aggregate-inspection-cancel-training-dialog-confirm"));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("aggregate-inspection-row-training:30")).toBeNull();
+    });
+    expect(screen.getByTestId("aggregate-inspection-title")).toHaveTextContent("1 gleichzeitige Aktivitäten");
+    expect(screen.getByTestId("aggregate-inspection-row-match:30")).toBeTruthy();
+    const patchCalls = vi.mocked(fetch).mock.calls.filter(([url]) =>
+      String(url).includes("/api/training-sessions/sess-30"),
+    );
+    expect(patchCalls).toHaveLength(1);
+  });
+
+  it("R5 — refresh failure shows warning without issuing second PATCH", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = typeof input === "string" ? input : input.url;
+        if (url.includes("/api/training-sessions/sess-30")) {
+          return new Response(JSON.stringify({ session: { id: "sess-30", status: "CANCELLED" } }), {
+            status: 200,
+          });
+        }
+        if (url.includes("/api/planning-hub/planner-revalidate")) {
+          return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+        }
+        return new Response(JSON.stringify({ error: "unexpected" }), { status: 500 });
+      }),
+    );
+    const user = userEvent.setup();
+    renderAggregate(annotateWeekplannerConflicts([training(), homeMatch()]));
+    await user.click(screen.getByTestId("aggregate-inspection-row-training:30"));
+    await user.click(screen.getByTestId("aggregate-inspection-cancel-training"));
+    await user.click(screen.getByTestId("aggregate-inspection-cancel-training-dialog-confirm"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("aggregate-inspection-sync-warning")).toBeTruthy();
+    });
+    const patchCalls = vi.mocked(fetch).mock.calls.filter(([url]) =>
+      String(url).includes("/api/training-sessions/sess-30"),
+    );
+    expect(patchCalls).toHaveLength(1);
+    expect(screen.queryByTestId("aggregate-inspection-row-training:30")).toBeNull();
   });
 
   it("K+L — confirm PATCHes session and refreshes planner", async () => {

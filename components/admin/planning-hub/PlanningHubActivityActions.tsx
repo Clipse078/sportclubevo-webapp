@@ -6,6 +6,7 @@ import { actorFromManipulationContext } from "@/lib/planning-hub/conflict-resolu
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import { canCancelTrainingActivity } from "@/lib/planning-hub/training-activity-cancellation";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import { usePlanningHubPlannerWeek } from "./PlanningHubPlannerWeekContext";
 import PlanningHubTrainingActivityCancellationDialog from "./PlanningHubTrainingActivityCancellationDialog";
 
 type Props = {
@@ -17,7 +18,8 @@ type Props = {
     "canManageTrainings" | "canManageEvents" | "canManageAllocations"
   >;
   testIdPrefix?: string;
-  onTrainingCancelled?: () => void;
+  onTrainingCancelled?: (trainingSessionId: string) => void;
+  onTrainingCancellationRefreshFailed?: (message: string) => void;
 };
 
 export default function PlanningHubActivityActions({
@@ -27,7 +29,9 @@ export default function PlanningHubActivityActions({
   permissionContext,
   testIdPrefix = "planning-hub-activity",
   onTrainingCancelled,
+  onTrainingCancellationRefreshFailed,
 }: Props) {
+  const plannerWeek = usePlanningHubPlannerWeek();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const actor = useMemo(() => actorFromManipulationContext(permissionContext), [permissionContext]);
   const showTrainingCancel = canCancelTrainingActivity(item, actor);
@@ -55,7 +59,14 @@ export default function PlanningHubActivityActions({
           timezone={timezone}
           testId={`${cancelTestId}-dialog`}
           onClose={() => setCancelDialogOpen(false)}
-          onCancelled={onTrainingCancelled}
+          onCancelled={(sessionId) => {
+            onTrainingCancelled?.(sessionId);
+            plannerWeek?.notifyTrainingSessionCancelled(sessionId);
+          }}
+          onRefreshFailed={(message) => {
+            onTrainingCancellationRefreshFailed?.(message);
+            plannerWeek?.reportPlannerSyncWarning(message);
+          }}
         />
       )}
     </>

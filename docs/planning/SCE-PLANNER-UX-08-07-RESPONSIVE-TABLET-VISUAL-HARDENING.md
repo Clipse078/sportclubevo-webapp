@@ -107,7 +107,9 @@ Harden the existing Unified Planner (Kalender · Spielfeld · Garderobe · Liste
 | `PlanningHubCalendarClippedDetail.test.tsx` | Kalender runtime hover/focus/aggregate/resize (08-07R1) |
 | `activity-clipped-detail-dom.test.ts` | DOM overflow + layoutWidthPx (08-07R1) |
 | `sce-planner-ux-08-07r4-training-activity-cancellation.test.ts` | Per-training cancel eligibility (08-07R4) |
-| `PlanningHubTrainingActivityCancellation.test.tsx` | Activity-detail cancel + conflict-card exclusion (08-07R4) |
+| `PlanningHubTrainingActivityCancellation.test.tsx` | Activity-detail cancel + conflict-card exclusion (08-07R4/R5) |
+| `sce-planner-ux-08-07r5-training-cancellation-reconciliation.test.ts` | Post-cancel planner/aggregate/conflict reconciliation (08-07R5) |
+| `weekplanner-session-list.test.ts` | CANCELLED exclusion in weekplanner session list (08-07R5) |
 | Existing planner regression | 08-03…08-06 suites (run in CI / local) |
 
 Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
@@ -119,6 +121,22 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 | Result | Detail |
 |--------|--------|
 | **PASS** | Clipped-detail hover/focus operational on Kalender for individual and aggregate constrained cards; floating detail readable; constrained-card detection works on tested runtime path (PR #805 preview). |
+
+---
+
+## Human UAT finding 08-07R5 — stale aggregate after successful training cancellation
+
+| Item | Detail |
+|------|--------|
+| **Symptom** | After confirming **Training absagen** on a selected TRAINING inside an open aggregate inspection (e.g. Senioren 30+ 20:15–21:45 on 7 Oct 2026), the PATCH succeeded but the dialog and Kalender cluster kept pre-mutation counts (10 Aktivitäten / 9 Trainings / 9 Konflikte) and still listed the cancelled occurrence. |
+| **Root cause** | (1) Weekplanner read model still returned `CANCELLED` training sessions (`findAllTrainingSessionsForWeekplanner` filtered only `RECURRENCE_REMOVED`), so `router.refresh()` could not drop the occurrence. (2) `POST /api/planning-hub/planner-revalidate` required `PLANNING_ALLOCATIONS_MANAGE`, so training-only managers often failed revalidation silently while the open dialog kept its initial `WeekplannerItem[]` snapshot. |
+| **Read-model invariant** | `findAllTrainingSessionsForWeekplanner` now excludes `CANCELLED` (with `RECURRENCE_REMOVED`) — single canonical exclusion at the query boundary feeding `listTrainingSessionsForWeekplanner` → `buildWeekplannerTrainingItemsFromSessions`. |
+| **Server refresh** | Successful `PATCH /api/training-sessions/[sessionId]` also calls `revalidatePlannerWeekPaths()`; planner revalidate endpoint additionally accepts `TRAININGS_MANAGE`. |
+| **Client reconciliation** | `PlanningHubPlannerWeekProvider` applies `applyTrainingCancellationToPlannerWeek` immediately after PATCH success so mounted consumers (Kalender cluster, aggregate inspection, conflict workspace, chrome counts) recompute from the same refreshed collection; override clears when the next server `week` arrives. |
+| **Selection** | Aggregate inspection reuses `resolveAggregateSelectionId`; cancelled row disappears; another selected activity is preserved when still present; empty aggregate closes. Conflict workspace uses `reconcileConflictWorkspaceActivityId`. |
+| **Refresh failure** | PATCH is never retried; local reconciliation still removes the cancelled occurrence; `plannerSyncWarning` surfaces recoverable sync errors. |
+| **Regression** | `sce-planner-ux-08-07r5-training-cancellation-reconciliation.test.ts`, `weekplanner-session-list.test.ts`, extended `PlanningHubTrainingActivityCancellation.test.tsx`. |
+| **Human UAT** | Pending Michael retest on PR #805 preview. |
 
 ---
 

@@ -21,10 +21,10 @@ import {
   buildConflictResolutionFeedback,
   canonicalConflictIncidentTotal,
   conflictsForIncidentOnItem,
-  defaultActivityIdForIncident,
   filterConflictIncidents,
   type ConflictResolutionFilterKind,
 } from "@/lib/planning-hub/conflict-resolution";
+import { reconcileConflictWorkspaceActivityId } from "@/lib/planning-hub/training-cancellation-reconciliation";
 import { reconcileSelectedConflictIncidentId } from "@/lib/planning-hub/conflict-resolution-workspace";
 import {
   conflictPartnerDisplayTitle,
@@ -50,6 +50,7 @@ import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulat
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityActions from "./PlanningHubActivityActions";
 import PlanningHubConflictResolutionActions from "./PlanningHubConflictResolutionActions";
+import { usePlanningHubPlannerWeek } from "./PlanningHubPlannerWeekContext";
 
 export type PlanningHubConflictWorkspaceDialogProps = {
   open: boolean;
@@ -101,6 +102,7 @@ export default function PlanningHubConflictWorkspaceDialog({
   canEditItem,
   pendingResolutionRef: externalPendingRef,
 }: PlanningHubConflictWorkspaceDialogProps) {
+  const plannerWeek = usePlanningHubPlannerWeek();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleId = "planning-conflict-workspace-title";
@@ -169,12 +171,15 @@ export default function PlanningHubConflictWorkspaceDialog({
     : null;
 
   useEffect(() => {
+    if (!open) return;
     if (!selectedIncident) {
       setSelectedActivityId(null);
       return;
     }
-    setSelectedActivityId(defaultActivityIdForIncident(selectedIncident, itemsById));
-  }, [selectedIncident, itemsById]);
+    setSelectedActivityId((current) =>
+      reconcileConflictWorkspaceActivityId(current, selectedIncident, itemsById),
+    );
+  }, [open, selectedIncident, itemsById]);
 
   useEffect(() => {
     const pending = pendingResolutionRef.current;
@@ -285,6 +290,14 @@ export default function PlanningHubConflictWorkspaceDialog({
               <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
+          {plannerWeek?.plannerSyncWarning ? (
+            <p
+              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-900/95"
+              data-testid="conflict-workspace-sync-warning"
+            >
+              {plannerWeek.plannerSyncWarning}
+            </p>
+          ) : null}
           {feedback && (
             <p
               className="mt-2 text-sm font-medium text-emerald-800"
