@@ -59,7 +59,7 @@ Harden the existing Unified Planner (Kalender · Spielfeld · Garderobe · Liste
 
 **Content:** `buildActivityClippedDetailModel` — reuses `schedulerDisplayIdentity`, inspection pitch/dressing labels, timing presenters, conflict/end-time operational notes.
 
-**Geometry rule:** No per-card `ResizeObserver`; uses render-time `blockWidthPx` / `blockHeightPx` / `compact` only.
+**Geometry rule (08-07R1):** Kalender passes computed `blockLayoutPx` (lane width × height) because card CSS uses `calc(…%)`. Per-card `ResizeObserver` re-measures overflow (`scrollWidth`/`clientWidth`, content shell height) when layout changes — scoped to each card, not planner-wide polling.
 
 **DnD on touch:** Unchanged — pointer DnD remains primary; non-DnD edit/manipulation actions remain the supported tablet path (documented; not expanded in 08-07).
 
@@ -103,9 +103,23 @@ Harden the existing Unified Planner (Kalender · Spielfeld · Garderobe · Liste
 | `activity-clipped-detail.test.ts` | Geometry + canonical detail model |
 | `sce-planner-ux-08-07-responsive.test.ts` | Shell, Liste, scroll roots, popover, wiring |
 | `PlanningHubActivityClippedDetailSurface.test.tsx` | Touch trigger + spacious skip |
+| `PlanningHubCalendarClippedDetail.test.tsx` | Kalender runtime hover/focus/aggregate/resize (08-07R1) |
+| `activity-clipped-detail-dom.test.ts` | DOM overflow + layoutWidthPx (08-07R1) |
 | Existing planner regression | 08-03…08-06 suites (run in CI / local) |
 
 Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
+
+---
+
+## Human UAT finding 08-07R1 (release-blocking)
+
+| Item | Detail |
+|------|--------|
+| **Symptom** | Kalender cards visibly truncated (parallel lanes, aggregated “N Trainings”, narrow Sunday cards) but hover/focus produced **no** clipped-detail surface on PR #805 preview. |
+| **Root cause** | (1) `PlanningHubActivityBlock` derived disclosure geometry from `style.width` / `style.height`; Kalender uses `calc(${lanePercent}% - 4px)` so `parseBlockDimensionPx` fell back to **240×64** and `shouldOfferActivityClippedDetailDisclosure` returned **false** for most constrained cards. (2) `PlanningHubCalendarClusterBlock` (aggregated cards) never integrated `PlanningHubActivityClippedDetailSurface`. (3) Floating-ui hover reference sat on a wrapper **div** while the interactive target is the inner **button** — `pointerenter` does not bubble, so hover never opened even when disclosure was offered. |
+| **Runtime paths** | `PlanningHubCalendarView` → `PlanningHubActivityBlock` / `PlanningHubCalendarClusterBlock` → `PlanningHubActivityClippedDetailSurface`. |
+| **Correction** | Pass `blockLayoutPx` from calendar lane math; DOM overflow measurement + card-scoped `ResizeObserver`; attach `getReferenceProps()` to the card **button**; aggregate detail via `buildAggregateClippedDetailModel` + same surface (full team list, time, conflicts). |
+| **Regression** | `PlanningHubCalendarClippedDetail.test.tsx`, `activity-clipped-detail-dom.test.ts`. |
 
 ---
 

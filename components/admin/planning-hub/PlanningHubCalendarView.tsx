@@ -319,6 +319,7 @@ export default function PlanningHubCalendarView({
                         onOpenItem={openClusterItem}
                         onEditItem={editClusterItem}
                         canEditItem={canEditItem}
+                        blockLayoutPx={{ width: Math.max(0, columnWidthPx - 4), height }}
                         style={{
                           top,
                           height,
@@ -365,6 +366,10 @@ export default function PlanningHubCalendarView({
                     );
                     const laneW = laneWidthPx(layout.totalLanes, columnWidthPx);
                     const compact = height < 52 || laneW < minActivityWidth;
+                    const blockLayoutWidthPx = Math.max(
+                      0,
+                      (columnWidthPx * widthPercent) / 100 - 4,
+                    );
                     const timeLabel = `${isoToLocalTime(startAt, timezone)}–${isoToLocalTime(endAt, timezone)}`;
                     return (
                       <PlanningHubActivityBlock
@@ -396,6 +401,7 @@ export default function PlanningHubCalendarView({
                         }}
                         onOpenManipulationEdit={pointerHandlers?.onScheduleEdit}
                         manipulationEditLabel="Termin ändern"
+                        blockLayoutPx={{ width: blockLayoutWidthPx, height }}
                         style={{
                           top,
                           height,

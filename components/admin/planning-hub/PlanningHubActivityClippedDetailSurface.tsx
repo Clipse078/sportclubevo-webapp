@@ -19,15 +19,18 @@ import { Info } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
   buildActivityClippedDetailModel,
-  shouldOfferActivityClippedDetailDisclosure,
+  buildAggregateClippedDetailModel,
   type ActivityClippedDetailGeometry,
 } from "@/lib/planning-hub/activity-clipped-detail";
+import { useActivityClippedDetailOffer } from "@/lib/planning-hub/use-activity-clipped-detail-offer";
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 type PlanningHubActivityClippedDetailSurfaceProps = {
-  item: WeekplannerItem;
+  item?: WeekplannerItem;
+  aggregateItems?: WeekplannerItem[];
+  aggregateTimeLabel?: string;
   locale: string;
   timezone: string;
   geometry: ActivityClippedDetailGeometry;
@@ -43,13 +46,16 @@ function sportingKind(type: WeekplannerItem["type"]): SportingActivityKind | und
 
 export default function PlanningHubActivityClippedDetailSurface({
   item,
+  aggregateItems,
+  aggregateTimeLabel,
   locale,
   timezone,
   geometry,
   children,
   touchDetailTrigger = true,
 }: PlanningHubActivityClippedDetailSurfaceProps) {
-  const offerDisclosure = shouldOfferActivityClippedDetailDisclosure(geometry);
+  const measureRootRef = useRef<HTMLDivElement>(null);
+  const offerDisclosure = useActivityClippedDetailOffer(measureRootRef, geometry);
   const detailId = useId();
   const [open, setOpen] = useState(false);
   const [touchPinned, setTouchPinned] = useState(false);
@@ -81,12 +87,9 @@ export default function PlanningHubActivityClippedDetailSurface({
   const role = useRole(context, { role: "tooltip" });
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
 
-  const setReference = useCallback(
-    (node: HTMLElement | null) => {
-      refs.setReference(node);
-    },
-    [refs],
-  );
+  const setMeasureRoot = useCallback((node: HTMLDivElement | null) => {
+    measureRootRef.current = node;
+  }, []);
 
   useEffect(() => {
     if (touchPinned && touchTriggerRef.current) {
@@ -94,21 +97,36 @@ export default function PlanningHubActivityClippedDetailSurface({
     }
   }, [touchPinned, refs]);
 
-  const model = buildActivityClippedDetailModel(item, locale, timezone);
-  const kind = sportingKind(item.type);
-  const visible = offerDisclosure && (open || touchPinned);
+  const model =
+    aggregateItems && aggregateItems.length > 0 && aggregateTimeLabel
+      ? buildAggregateClippedDetailModel(aggregateItems, locale, timezone, aggregateTimeLabel)
+      : item
+        ? buildActivityClippedDetailModel(item, locale, timezone)
+        : null;
 
-  if (!offerDisclosure) {
-    return <>{children({})}</>;
-  }
+  const kind = item ? sportingKind(item.type) : undefined;
+  const visible = offerDisclosure && (open || touchPinned) && model;
 
   return (
     <>
-      <div className="relative h-full w-full" data-planning-hub-clipped-detail-root="true">
-        <div ref={setReference} className="h-full w-full" {...getReferenceProps()}>
-          {children({})}
+      <div
+        ref={setMeasureRoot}
+        className="relative h-full w-full"
+        data-planning-hub-clipped-detail-root="true"
+      >
+        <div className="h-full w-full">
+          {children(
+            offerDisclosure && !touchPinned
+              ? {
+                  ...getReferenceProps(),
+                  ref: (node: HTMLElement | null) => {
+                    refs.setReference(node);
+                  },
+                }
+              : {},
+          )}
         </div>
-        {touchDetailTrigger ? (
+        {offerDisclosure && touchDetailTrigger ? (
           <button
             ref={touchTriggerRef}
             type="button"
@@ -134,7 +152,7 @@ export default function PlanningHubActivityClippedDetailSurface({
         ) : null}
       </div>
 
-      {visible ? (
+      {visible && model ? (
         <FloatingPortal>
           <FloatingFocusManager context={context} modal={false} initialFocus={-1}>
             <div
@@ -152,9 +170,9 @@ export default function PlanningHubActivityClippedDetailSurface({
                   <ActivityTypePill
                     activityKind={kind}
                     label={
-                      item.type === "MATCH"
+                      item?.type === "MATCH"
                         ? "SPIEL"
-                        : item.type === "TRAINING"
+                        : item?.type === "TRAINING"
                           ? "TRAINING"
                           : "TURNIER"
                     }

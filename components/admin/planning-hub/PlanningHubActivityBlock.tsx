@@ -61,6 +61,8 @@ type PlanningHubActivityBlockProps = {
   continuesAfter?: boolean;
   /** Segment lane hint when multiple allocatable segments share one collapsed overview row. */
   laneSegmentHint?: string;
+  /** Kalender/resource layout box in px when CSS width/height are calc()/percent. */
+  blockLayoutPx?: { width: number; height: number };
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -108,6 +110,7 @@ export default function PlanningHubActivityBlock({
   continuesFromBefore = false,
   continuesAfter = false,
   laneSegmentHint,
+  blockLayoutPx,
 }: PlanningHubActivityBlockProps) {
   const suppressClickRef = useRef(false);
   const pendingPointerRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
@@ -124,7 +127,13 @@ export default function PlanningHubActivityBlock({
   const teamContextRaw = schedulerAssignedTeamContext(item, { primaryLine: primary });
   const blockWidthPx = parseBlockDimensionPx(style?.width, 240);
   const blockHeightPx = parseBlockDimensionPx(style?.height, compact ? 40 : 64);
-  const clippedDetailGeometry = { blockWidthPx, blockHeightPx, compact };
+  const clippedDetailGeometry = {
+    blockWidthPx,
+    blockHeightPx,
+    compact,
+    layoutWidthPx: blockLayoutPx?.width,
+    layoutHeightPx: blockLayoutPx?.height,
+  };
   const teamContext = teamContextRaw
     ? schedulerTeamContextForBlockWidth(teamContextRaw, blockWidthPx)
     : null;
@@ -260,7 +269,7 @@ export default function PlanningHubActivityBlock({
         }}
       >
         <div className="flex items-start gap-1">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1" data-planning-hub-activity-content="true">
             {sportingKindForPill && plannerTypeLabel ? (
               <div className="mb-0.5 flex items-center gap-1">
                 <ActivityTypePill activityKind={sportingKindForPill} label={plannerTypeLabel} />
@@ -277,7 +286,7 @@ export default function PlanningHubActivityBlock({
                   className="shrink-0"
                 />
               ) : null}
-              <span className="min-w-0 truncate">
+                <span className="min-w-0 truncate" data-planning-hub-clipped-text="true">
                 {laneSegmentHint ? (
                   <span className="font-normal text-[var(--muted)]">{laneSegmentHint} · </span>
                 ) : null}
@@ -290,7 +299,9 @@ export default function PlanningHubActivityBlock({
             {teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">
                 <ProductDomainSceIcon name="people" size={20} className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                <span className="truncate">{teamContext}</span>
+                <span className="truncate" data-planning-hub-clipped-text="true">
+                  {teamContext}
+                </span>
               </p>
             )}
             {!compact && !sportingKindForPill ? (

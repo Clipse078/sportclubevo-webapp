@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildActivityClippedDetailModel,
+  buildAggregateClippedDetailModel,
   shouldOfferActivityClippedDetailDisclosure,
 } from "../activity-clipped-detail";
 import type { WeekplannerTrainingItem } from "@/lib/weekplanner/types";
@@ -57,6 +58,17 @@ describe("activity-clipped-detail geometry", () => {
     ).toBe(true);
   });
 
+  it("uses layoutWidthPx when CSS width is calc()", () => {
+    expect(
+      shouldOfferActivityClippedDetailDisclosure({
+        compact: true,
+        blockWidthPx: 240,
+        blockHeightPx: 90,
+        layoutWidthPx: 58,
+      }),
+    ).toBe(true);
+  });
+
   it("skips disclosure for spacious non-compact blocks", () => {
     expect(
       shouldOfferActivityClippedDetailDisclosure({
@@ -77,5 +89,17 @@ describe("buildActivityClippedDetailModel", () => {
       true,
     );
     expect(model.lines.some((l) => l.term === "Anlage" && l.description.includes("Hauptfeld"))).toBe(true);
+  });
+});
+
+describe("buildAggregateClippedDetailModel", () => {
+  it("lists full team identities for aggregation cards", () => {
+    const items = [
+      training(),
+      { ...training(), id: "t2", teamNames: ["Team B"], trainingSessionId: "t2" },
+    ];
+    const model = buildAggregateClippedDetailModel(items, "de-CH", "Europe/Zurich", "10:00–11:30");
+    expect(model.title).toContain("2");
+    expect(model.lines.some((l) => l.term === "Teams" && l.description.includes("Team B"))).toBe(true);
   });
 });
