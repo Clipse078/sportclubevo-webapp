@@ -131,10 +131,14 @@ export default function PlanningHubActivityClippedDetailSurface({
             ref={touchTriggerRef}
             type="button"
             className={cn(
-              "absolute right-0.5 top-0.5 z-[5] inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)]/80 bg-[var(--surface)]/95 text-[var(--text-2)] shadow-sm",
-              "opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
-              "pointer-coarse:opacity-100",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
+              "absolute right-0.5 top-0.5 z-[5] inline-flex h-7 w-7 items-center justify-center rounded-md",
+              "text-[var(--muted)] transition-[opacity,color] duration-150",
+              "opacity-0 group-hover:opacity-90 group-hover:text-[var(--text-2)]",
+              "group-focus-within:opacity-90 group-focus-within:text-[var(--text-2)]",
+              "pointer-coarse:opacity-75 pointer-coarse:text-[var(--text-2)]",
+              "pointer-coarse:border pointer-coarse:border-[var(--border)]/70 pointer-coarse:bg-[var(--surface)]/90",
+              "hover:opacity-100 focus-visible:opacity-100",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-strong)] focus-visible:ring-offset-1",
             )}
             aria-label="Vollständige Aktivitätsdetails anzeigen"
             aria-expanded={touchPinned}
@@ -165,31 +169,44 @@ export default function PlanningHubActivityClippedDetailSurface({
                 "aria-label": `${model.title}, ${model.typeLabel}`,
               })}
             >
-              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                {kind ? (
-                  <ActivityTypePill
-                    activityKind={kind}
-                    label={
-                      item?.type === "MATCH"
-                        ? "SPIEL"
-                        : item?.type === "TRAINING"
-                          ? "TRAINING"
-                          : "TURNIER"
-                    }
-                    className="!py-0"
-                  />
-                ) : (
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-2)]">
-                    {model.typeLabel}
-                  </span>
-                )}
-                {model.operationalNote ? (
-                  <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300">
-                    {model.operationalNote}
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-sm font-semibold leading-snug text-[var(--foreground)]">{model.title}</p>
+              {model.suppressActivityTypeHeader ? (
+                <div className="mb-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <p className="text-sm font-semibold leading-snug text-[var(--foreground)]">{model.title}</p>
+                  {model.operationalNote ? (
+                    <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                      {model.operationalNote}
+                    </span>
+                  ) : null}
+                </div>
+              ) : (
+                <>
+                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                    {kind ? (
+                      <ActivityTypePill
+                        activityKind={kind}
+                        label={
+                          item?.type === "MATCH"
+                            ? "SPIEL"
+                            : item?.type === "TRAINING"
+                              ? "TRAINING"
+                              : "TURNIER"
+                        }
+                        className="!py-0"
+                      />
+                    ) : (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-2)]">
+                        {model.typeLabel}
+                      </span>
+                    )}
+                    {model.operationalNote ? (
+                      <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                        {model.operationalNote}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="text-sm font-semibold leading-snug text-[var(--foreground)]">{model.title}</p>
+                </>
+              )}
               <dl className="mt-2 space-y-1">
                 {model.lines.map((line) => (
                   <div key={line.term} className="grid grid-cols-[4.5rem_1fr] gap-x-2 text-[11px] leading-snug">

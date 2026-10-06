@@ -130,6 +130,15 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
     expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
   });
 
+  function match(id: string, team: string, hour: number): WeekplannerItem {
+    return {
+      ...training(id, team, hour),
+      type: "MATCH",
+      opponentName: "Gast",
+      awayDressingRoomAllocations: [],
+    } as WeekplannerItem;
+  }
+
   it("constrained aggregated card opens aggregation detail on hover", async () => {
     vi.useRealTimers();
     const items = Array.from({ length: 7 }, (_, i) => training(`agg-${i}`, `Team ${i + 1}`, 11));
@@ -155,6 +164,55 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
     expect(detail).toBeInTheDocument();
     expect(detail.textContent).toContain("Team 1");
     expect(detail.textContent).toContain("Team 7");
+    expect(detail.textContent).not.toMatch(/\bSPIEL\b/);
+  });
+
+  it("mixed aggregate hover detail uses neutral Aktivitäten identity", async () => {
+    vi.useRealTimers();
+    const trainings = Array.from({ length: 9 }, (_, i) => training(`mix-${i}`, `Training ${i + 1}`, 11));
+    const items: WeekplannerItem[] = [match("mix-match", "Team Spiel", 11), ...trainings];
+    render(
+      <PlanningHubCalendarClusterBlock
+        items={items}
+        dayKey="2026-09-15"
+        locale="de-CH"
+        timezone="UTC"
+        onOpenItem={vi.fn()}
+        blockLayoutPx={{ width: 110, height: 80 }}
+        style={{ width: "calc(100% - 4px)", height: 80, top: 0, left: 0 }}
+      />,
+    );
+
+    expect(screen.getByText("10 Aktivitäten")).toBeInTheDocument();
+    expect(screen.queryByText("10 Trainings")).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.hover(screen.getByTestId("planning-hub-calendar-cluster"));
+
+    const detail = await screen.findByTestId("planning-hub-activity-clipped-detail");
+    expect(detail.textContent).toContain("10 Aktivitäten");
+    expect(detail.textContent).not.toContain("10 Trainings");
+    expect(detail.textContent).not.toMatch(/\bSPIEL\b/);
+  });
+
+  it("aggregate card click still opens inspection dialog", async () => {
+    vi.useRealTimers();
+    const items = Array.from({ length: 3 }, (_, i) => training(`dlg-${i}`, `Team ${i + 1}`, 11));
+    render(
+      <PlanningHubCalendarClusterBlock
+        items={items}
+        dayKey="2026-09-15"
+        locale="de-CH"
+        timezone="UTC"
+        onOpenItem={vi.fn()}
+        blockLayoutPx={{ width: 110, height: 80 }}
+        style={{ width: "calc(100% - 4px)", height: 80, top: 0, left: 0 }}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("planning-hub-calendar-cluster"));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
   it("keyboard focus opens equivalent detail for constrained activity", async () => {

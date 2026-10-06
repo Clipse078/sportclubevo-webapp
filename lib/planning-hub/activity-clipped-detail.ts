@@ -128,6 +128,8 @@ export type ActivityClippedDetailModel = {
   typeLabel: string;
   lines: ActivityClippedDetailLine[];
   operationalNote: string | null;
+  /** Aggregate clipped-detail uses the headline only — no per-type badge row. */
+  suppressActivityTypeHeader?: boolean;
 };
 
 function primaryVenueLabel(item: WeekplannerItem): string | null {
@@ -224,9 +226,6 @@ export function buildAggregateClippedDetailModel(
     lines.push({ term: "Endzeit", description: summary.endTimeActionLabel });
   }
 
-  const dominantType =
-    items.length > 0 ? weekplannerActivityTypeLabel(items[0]!.type) : weekplannerActivityTypeLabel("TRAINING");
-
   let operationalNote: string | null = null;
   if (summary.conflictCount > 0) {
     operationalNote = summary.conflictLabel;
@@ -236,8 +235,9 @@ export function buildAggregateClippedDetailModel(
 
   return {
     title: summary.headline,
-    typeLabel: dominantType,
+    typeLabel: summary.isMixedActivityTypes ? "Aktivitäten" : summary.headline,
     lines,
     operationalNote,
+    suppressActivityTypeHeader: true,
   };
 }

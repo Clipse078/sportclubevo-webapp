@@ -6,6 +6,8 @@ import { weekplannerMatchRequiresEndTimeAction } from "@/lib/planning-hub/match-
 export type AggregateClusterSummary = {
   activityCount: number;
   headline: string;
+  /** True when the cluster contains more than one weekplanner activity type. */
+  isMixedActivityTypes: boolean;
   identityPreview: string;
   conflictCount: number;
   endTimeActionCount: number;
@@ -13,6 +15,15 @@ export type AggregateClusterSummary = {
   conflictLabel: string | null;
   endTimeActionLabel: string | null;
 };
+
+export function aggregateClusterHasMixedActivityTypes(items: readonly WeekplannerItem[]): boolean {
+  if (items.length === 0) return false;
+  const first = items[0]!.type;
+  for (let i = 1; i < items.length; i += 1) {
+    if (items[i]!.type !== first) return true;
+  }
+  return false;
+}
 
 function pluralActivityTypeLabel(dominantType: string, count: number): string {
   if (count === 1) return dominantType;
@@ -28,16 +39,13 @@ export function summarizeAggregateCluster(
   timeLabel?: string | null,
 ): AggregateClusterSummary {
   const activityCount = items.length;
-  const typeCounts = new Map<string, number>();
-  for (const item of items) {
-    const label = weekplannerActivityTypeLabel(item.type);
-    typeCounts.set(label, (typeCounts.get(label) ?? 0) + 1);
-  }
-  const dominantEntry =
-    [...typeCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] ??
-    ["Aktivität", activityCount];
-  const dominantType = dominantEntry[0];
-  const headline = `${activityCount} ${pluralActivityTypeLabel(dominantType, activityCount)}`;
+  const isMixedActivityTypes = aggregateClusterHasMixedActivityTypes(items);
+  const headline = isMixedActivityTypes
+    ? `${activityCount} Aktivitäten`
+    : `${activityCount} ${pluralActivityTypeLabel(
+        weekplannerActivityTypeLabel(items[0]?.type ?? "TRAINING"),
+        activityCount,
+      )}`;
 
   const identities = [...new Set(items.map((item) => schedulerDisplayIdentity(item)))].sort((a, b) =>
     a.localeCompare(b, "de-CH"),
@@ -64,6 +72,7 @@ export function summarizeAggregateCluster(
   return {
     activityCount,
     headline,
+    isMixedActivityTypes,
     identityPreview: preview,
     conflictCount,
     endTimeActionCount,

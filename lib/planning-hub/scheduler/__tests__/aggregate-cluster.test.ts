@@ -49,6 +49,39 @@ describe("summarizeAggregateCluster", () => {
       { ...item("b"), teamNames: ["F3"] },
     ]);
     expect(summary.identityPreview).toBe("F2 · F3");
-    expect(summary.headline).toContain("2");
+    expect(summary.headline).toBe("2 Trainings");
+    expect(summary.isMixedActivityTypes).toBe(false);
+  });
+
+  it("uses neutral headline for homogeneous training cluster", () => {
+    const summary = summarizeAggregateCluster(Array.from({ length: 7 }, (_, i) => item(`t-${i}`)));
+    expect(summary.headline).toBe("7 Trainings");
+    expect(summary.isMixedActivityTypes).toBe(false);
+  });
+
+  it("uses Aktivitäten headline when activity types are mixed", () => {
+    const match = {
+      ...item("m1"),
+      type: "MATCH" as const,
+      teamNames: ["Team Spiel"],
+    };
+    const trainings = Array.from({ length: 9 }, (_, i) => item(`t-${i}`));
+    const summary = summarizeAggregateCluster([match, ...trainings]);
+    expect(summary.activityCount).toBe(10);
+    expect(summary.headline).toBe("10 Aktivitäten");
+    expect(summary.isMixedActivityTypes).toBe(true);
+    expect(summary.headline).not.toContain("Trainings");
+    expect(summary.headline).not.toMatch(/Spiel/i);
+  });
+
+  it("preserves conflict count for mixed clusters", () => {
+    const conflicted = Array.from({ length: 9 }, (_, i) =>
+      item(`c-${i}`, [{ facilityResourceId: "r1", facilityResourceName: "F1" }]),
+    );
+    const match = { ...item("m1"), type: "MATCH" as const };
+    const summary = summarizeAggregateCluster([...conflicted, match]);
+    expect(summary.conflictCount).toBe(9);
+    expect(summary.conflictLabel).toBe("9 Konflikte");
+    expect(summary.headline).toBe("10 Aktivitäten");
   });
 });

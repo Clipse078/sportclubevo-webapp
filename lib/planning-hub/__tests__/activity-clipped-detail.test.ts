@@ -99,7 +99,49 @@ describe("buildAggregateClippedDetailModel", () => {
       { ...training(), id: "t2", teamNames: ["Team B"], trainingSessionId: "t2" },
     ];
     const model = buildAggregateClippedDetailModel(items, "de-CH", "Europe/Zurich", "10:00–11:30");
-    expect(model.title).toContain("2");
+    expect(model.title).toBe("2 Trainings");
+    expect(model.suppressActivityTypeHeader).toBe(true);
     expect(model.lines.some((l) => l.term === "Teams" && l.description.includes("Team B"))).toBe(true);
+  });
+
+  it("uses neutral mixed aggregate identity in clipped detail", () => {
+    const match = {
+      ...training(),
+      id: "m1",
+      type: "MATCH" as const,
+      teamNames: ["Team Spiel"],
+    };
+    const trainings = Array.from({ length: 9 }, (_, i) => ({
+      ...training(),
+      id: `t-${i}`,
+      trainingSessionId: `t-${i}`,
+      teamNames: [`Training Team ${i}`],
+    }));
+    const items = [match, ...trainings];
+    const model = buildAggregateClippedDetailModel(items, "de-CH", "Europe/Zurich", "18:45–22:15");
+    expect(model.title).toBe("10 Aktivitäten");
+    expect(model.title).not.toContain("Trainings");
+    expect(model.typeLabel).toBe("Aktivitäten");
+    expect(model.lines.some((l) => l.term === "Anzahl" && l.description === "10")).toBe(true);
+  });
+
+  it("reports conflicts for mixed aggregates without implying a single activity type", () => {
+    const conflict = [{ facilityResourceId: "r1", facilityResourceName: "F1" }];
+    const trainings = Array.from({ length: 9 }, (_, i) => ({
+      ...training(),
+      id: `t-${i}`,
+      trainingSessionId: `t-${i}`,
+      conflicts: conflict,
+    }));
+    const match = { ...training(), id: "m1", type: "MATCH" as const, conflicts: [] as typeof conflict };
+    const model = buildAggregateClippedDetailModel(
+      [...trainings, match],
+      "de-CH",
+      "Europe/Zurich",
+      "18:45–22:15",
+    );
+    expect(model.title).toBe("10 Aktivitäten");
+    expect(model.operationalNote).toBe("9 Konflikte");
+    expect(model.lines.some((l) => l.term === "Konflikte" && l.description === "9 Konflikte")).toBe(true);
   });
 });

@@ -37,6 +37,15 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
     expect(surface).toContain("useHover");
     expect(surface).toContain("planning-hub-activity-detail-touch-trigger");
     expect(surface).toContain("buildActivityClippedDetailModel");
+    expect(surface).toContain("pointer-coarse:opacity-75");
+    expect(surface).not.toContain("ring-[var(--sce-primary)]");
+    expect(surface).toContain("suppressActivityTypeHeader");
+  });
+
+  it("aggregate cluster summary uses Aktivitäten for mixed types", () => {
+    const cluster = read("lib/planning-hub/scheduler/aggregate-cluster.ts");
+    expect(cluster).toContain("isMixedActivityTypes");
+    expect(cluster).toContain("Aktivitäten");
   });
 
   it("calendar and resource views document intentional horizontal scroll roots", () => {

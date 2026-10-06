@@ -1,6 +1,6 @@
 # SCE-PLANNER-UX-08-07 — Responsive / Tablet + Visual Interaction Hardening
 
-**Status:** **IN PROGRESS** — awaiting Human UAT on PR preview
+**Status:** **IN PROGRESS** — 08-07R1 Human UAT passed; 08-07R2 shipped on PR preview; awaiting final Human UAT (Michael)
 
 **Base:** `STAGE` @ `a10278222dd6def5f92d5dd953df7b23dfdfbe7c` (includes **08-06** PR #804, **FACILITY-INTEGRITY-01A** PR #803)
 
@@ -55,7 +55,8 @@ Harden the existing Unified Planner (Kalender · Spielfeld · Garderobe · Liste
 |----------|-----------|
 | **Pointer** | When geometry indicates constrained card (`shouldOfferActivityClippedDetailDisclosure`), hover (220ms) shows floating detail surface. |
 | **Keyboard** | Focus on activity card opens the same surface (`useFocus`). |
-| **Touch** | Info control (`pointer-coarse:opacity-100`) toggles the same surface; card tap still opens canonical activation path. |
+| **Touch** | Neutral info control (`pointer-coarse:opacity-75`, no activity colour) toggles the same surface; card tap still opens canonical activation path. |
+| **Desktop info affordance (08-07R2)** | Hidden/subtle by default on fine pointer; visible on card hover/focus-within; neutral muted glyph — not Training/Spiel semantic colour. |
 
 **Content:** `buildActivityClippedDetailModel` — reuses `schedulerDisplayIdentity`, inspection pitch/dressing labels, timing presenters, conflict/end-time operational notes.
 
@@ -111,7 +112,24 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 
 ---
 
-## Human UAT finding 08-07R1 (release-blocking)
+## Human UAT 08-07R1
+
+| Result | Detail |
+|--------|--------|
+| **PASS** | Clipped-detail hover/focus operational on Kalender for individual and aggregate constrained cards; floating detail readable; constrained-card detection works on tested runtime path (PR #805 preview). |
+
+---
+
+## Human UAT findings 08-07R2 (pre-close polish)
+
+| Item | Detail |
+|------|--------|
+| **Info affordance noise** | Permanently prominent info control competed with semantic activity/conflict/selection states. **Fix:** neutral contextual disclosure — subtle on desktop until card hover/focus; discoverable on coarse pointer; keyboard focus unchanged. |
+| **Mixed aggregate tooltip semantics** | Example: 9 Trainings + 1 Spiel showed misleading type header (“SPIEL”) and “10 Trainings”. **Fix:** homogeneous clusters keep type-specific headline (`7 Trainings`); mixed clusters use `{n} Aktivitäten` with no single-child type badge; conflict/count lines unchanged. |
+
+---
+
+## Human UAT finding 08-07R1 (release-blocking — resolved)
 
 | Item | Detail |
 |------|--------|
