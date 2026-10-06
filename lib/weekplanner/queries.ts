@@ -117,6 +117,10 @@ import {
 } from "@/lib/planning-hub/admin-server-timing";
 import { formatWeekNumberLabel, formatWeekRangeLabel } from "./date";
 import { buildWeekplannerWeek } from "./view-model";
+import {
+  loadTeamSeasonIdByTeamAndSeasonForMatches,
+  resolveWeekplannerMatchTeamSeasonId,
+} from "./match-team-season-resolution";
 import { planOverrideKey, planTimeOverrideKey } from "./plan-override-key";
 import type {
   WeekplannerDay,
@@ -723,6 +727,7 @@ function mapWeekplannerHomeMatchItems(
   tenantPresets: TenantDressingRoomOccupancyPresets,
   tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
   tenantLogoUrl: string | null,
+  teamSeasonIdByTeamAndSeason: ReadonlyMap<string, string>,
   occupancyByEventId: ReadonlyMap<
     string,
     {
@@ -808,7 +813,7 @@ function mapWeekplannerHomeMatchItems(
       },
       homeAway: "HOME" as const,
       eventId: match.id,
-      teamSeasonId: match.teamSeasonId,
+      teamSeasonId: resolveWeekplannerMatchTeamSeasonId(match, teamSeasonIdByTeamAndSeason),
       pitchAllocations: pitch.allocations,
       dressingRoomAllocations: dressingRoom.allocations,
       canonicalPitchAllocations: pitchRef ? [pitchRef] : [],
@@ -860,6 +865,11 @@ async function findWeekplannerHomeMatches(
     homeMatches.map((match) => match.id),
   );
 
+  const teamSeasonIdByTeamAndSeason = await loadTeamSeasonIdByTeamAndSeasonForMatches(
+    tenantId,
+    homeMatches,
+  );
+
   return mapWeekplannerHomeMatchItems(
     homeMatches,
     resourceByCode,
@@ -868,6 +878,7 @@ async function findWeekplannerHomeMatches(
     tenantPresets,
     tenantMatchPolicy,
     tenantLogoUrl,
+    teamSeasonIdByTeamAndSeason,
     occupancyByEventId,
   );
 }
@@ -1235,6 +1246,11 @@ export async function getWeekplannerWeek(
       return true;
     });
 
+    const teamSeasonIdByTeamAndSeason = await loadTeamSeasonIdByTeamAndSeasonForMatches(
+      tenantId,
+      homeMatches,
+    );
+
     const matchItems = mapWeekplannerHomeMatchItems(
       homeMatches,
       resourceByCode,
@@ -1243,6 +1259,7 @@ export async function getWeekplannerWeek(
       tenantPresets,
       tenantMatchPolicy,
       tenantLogoUrl,
+      teamSeasonIdByTeamAndSeason,
       occupancyByEventId,
     );
 

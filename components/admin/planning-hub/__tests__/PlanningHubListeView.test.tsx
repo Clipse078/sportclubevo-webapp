@@ -149,7 +149,8 @@ describe("PlanningHubListeView", () => {
     expect(screen.getByTestId("planning-hub-liste-empty-filtered").textContent).toContain(
       "Für die aktuellen Filter",
     );
-    expect(screen.getByTestId("planning-hub-liste-empty-reset")).toBeInTheDocument();
+    expect(screen.getByText("Keine passenden Einträge")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-filtered-empty-reset")).toBeInTheDocument();
   });
 
   it("shows search-specific filtered empty copy", () => {
@@ -172,6 +173,7 @@ describe("PlanningHubListeView", () => {
     expect(screen.getByTestId("planning-hub-liste-empty-filtered").textContent).toContain(
       "Für die aktuellen Filter",
     );
-    expect(screen.getByTestId("planning-hub-liste-empty-reset")).toBeInTheDocument();
+    expect(screen.getByText("Keine passenden Einträge")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-filtered-empty-reset")).toBeInTheDocument();
   });
 });

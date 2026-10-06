@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import {
@@ -19,7 +18,6 @@ import {
   weekplannerTimeColumnLabel,
   weekplannerTimingDetail,
 } from "@/lib/planning-hub/item-presenters";
-import { buildPlanningHubHref } from "@/lib/planning-hub/planner-url";
 import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-label";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
@@ -28,6 +26,7 @@ import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePil
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
+import PlanningHubFilteredEmptyState from "./PlanningHubFilteredEmptyState";
 
 type PlanningHubListeViewProps = {
   week: WeekplannerWeek;
@@ -106,14 +105,6 @@ export default function PlanningHubListeView({
   const searchActive = urlState.search.trim().length > 0;
   const filterOrSearchActive = filtersActive || searchActive;
 
-  const resetHref = buildPlanningHubHref(urlState, {
-    activity: "alle",
-    team: null,
-    facility: null,
-    conflictsOnly: false,
-    search: "",
-  });
-
   if (!weekHasItems) {
     return (
       <p className="px-1 py-6 text-sm text-[var(--muted)]" data-testid="planning-hub-liste-empty-week">
@@ -123,22 +114,18 @@ export default function PlanningHubListeView({
   }
 
   if (visibleCount === 0) {
-    const message = filterOrSearchActive
-      ? "Für die aktuellen Filter wurden keine Aktivitäten gefunden."
-      : "Keine Aktivitäten in diesem Zeitraum.";
+    if (filterOrSearchActive) {
+      return (
+        <PlanningHubFilteredEmptyState
+          urlState={urlState}
+          data-testid="planning-hub-liste-empty-filtered"
+        />
+      );
+    }
     return (
-      <div className="space-y-3 px-1 py-6" data-testid="planning-hub-liste-empty-filtered">
-        <p className="text-sm text-[var(--muted)]">{message}</p>
-        {filterOrSearchActive ? (
-          <Link
-            href={resetHref}
-            className="inline-flex rounded-full border border-[var(--border)] px-2.5 py-1 text-xs font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-            data-testid="planning-hub-liste-empty-reset"
-          >
-            Filter zurücksetzen
-          </Link>
-        ) : null}
-      </div>
+      <p className="px-1 py-6 text-sm text-[var(--muted)]" data-testid="planning-hub-liste-empty-filtered">
+        Keine Aktivitäten in diesem Zeitraum.
+      </p>
     );
   }
 

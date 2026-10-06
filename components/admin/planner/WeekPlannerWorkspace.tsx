@@ -121,7 +121,7 @@ export default function WeekPlannerWorkspace({
   };
 
   const filteredWeek = applyPlanningHubFilters(week, urlState);
-  const totalItems = filteredWeek.days.reduce((sum, day) => sum + day.items.length, 0);
+  const weekTotalItems = week.days.reduce((sum, day) => sum + day.items.length, 0);
   const todayDayKey = dayKeyInTimeZone(new Date(), timezone);
 
   const isStandardplan = activePlanId === null;
@@ -364,10 +364,10 @@ export default function WeekPlannerWorkspace({
   };
 
   const plannerPerspective =
-    totalItems === 0 ? (
+    weekTotalItems === 0 ? (
       <EmptyState
         heading="Keine Planungseinträge"
-        description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
+        description="Für diese Kalenderwoche gibt es keine Aktivitäten."
       />
     ) : urlState.perspective === "kalender" ? (
       <PlanningHubCalendarView
