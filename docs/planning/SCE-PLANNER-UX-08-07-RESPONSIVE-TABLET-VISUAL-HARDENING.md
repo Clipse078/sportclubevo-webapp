@@ -1,6 +1,6 @@
 # SCE-PLANNER-UX-08-07 — Responsive / Tablet + Visual Interaction Hardening
 
-**Status:** **IN PROGRESS** — 08-07R1 Human UAT passed; 08-07R2 shipped on PR preview; awaiting final Human UAT (Michael)
+**Status:** **CLOSED** — Human UAT R1–R5 passed; merged to `STAGE` via PR #805
 
 **Base:** `STAGE` @ `a10278222dd6def5f92d5dd953df7b23dfdfbe7c` (includes **08-06** PR #804, **FACILITY-INTEGRITY-01A** PR #803)
 
@@ -121,6 +121,7 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 | Result | Detail |
 |--------|--------|
 | **PASS** | Clipped-detail hover/focus operational on Kalender for individual and aggregate constrained cards; floating detail readable; constrained-card detection works on tested runtime path (PR #805 preview). |
+| **Superseded UX** | Initial “always prominent” info affordance on constrained cards was replaced by **08-07R2** neutral contextual disclosure (see R2). |
 
 ---
 
@@ -136,7 +137,7 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 | **Selection** | Aggregate inspection reuses `resolveAggregateSelectionId`; cancelled row disappears; another selected activity is preserved when still present; empty aggregate closes. Conflict workspace uses `reconcileConflictWorkspaceActivityId`. |
 | **Refresh failure** | PATCH is never retried; local reconciliation still removes the cancelled occurrence; `plannerSyncWarning` surfaces recoverable sync errors. |
 | **Regression** | `sce-planner-ux-08-07r5-training-cancellation-reconciliation.test.ts`, `weekplanner-session-list.test.ts`, extended `PlanningHubTrainingActivityCancellation.test.tsx`. |
-| **Human UAT** | Pending Michael retest on PR #805 preview. |
+| **Human UAT** | **PASS** (Michael, FCA Wed 7 Oct 2026 — aggregate 10→9 Aktivitäten, training removed, match retained, no reload). |
 
 ---
 
@@ -153,23 +154,18 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 | **Refresh** | `POST /api/planning-hub/planner-revalidate` + `router.refresh()` on success. |
 | **R3 cleanup** | Removed `same-team-training-cancellation` offer model and conflict-card cancel UI. |
 | **Regression** | `sce-planner-ux-08-07r4-training-activity-cancellation.test.ts`, `PlanningHubTrainingActivityCancellation.test.tsx`. |
-| **Human UAT** | Required before close (Michael retest on 7 Oct 2026 aggregate). |
+| **Human UAT** | **PASS** — per-training cancel on selected TRAINING only; MATCH invariant confirmed on 7 Oct 2026 scenario. |
 
 ---
 
-## Human UAT finding 08-07R3 — same-team match/training conflict cancellation (superseded by R4)
+## Human UAT finding 08-07R3 — same-team match/training conflict cancellation (**SUPERSEDED — not canonical**)
+
+> **Closure note:** R3 shipped briefly on this branch (conflict-card **Training absagen** tied to same-team TRAINING/MATCH edges). **R4 replaced it entirely.** No active implementation or regression suite remains — see R4 for the canonical model. Historical detail retained for audit only.
 
 | Item | Detail |
 |------|--------|
-| **Symptom** | Aggregated activity inspection correctly surfaced a same-team TRAINING vs MATCH resource/time collision (e.g. Senioren 30+ Training 20:15–21:45 vs Senioren 30+ vs FC Dardania 20:15–22:15) but offered only resource/time handoffs (Spielfeld, Garderobe, Termin, Öffnen) — not the obvious operational fix **Training absagen**. |
-| **Canonical identity** | Same-team detection uses **TeamSeason id** only (`WeekplannerTrainingItem.teamSeasonId` vs resolved `WeekplannerMatchItem.teamSeasonId` from the weekplanner read model, including SFV matches where `Event.teamSeasonId` was null at persistence). Display labels are never compared. |
-| **Eligibility** | Focal item + conflict partner must be one TRAINING and one MATCH, with overlapping **effective activity times** (`startAt`/`endAt`), plus an existing weekplanner resource conflict edge. |
-| **Authorization** | UI shows **Training absagen** only when `canManageTrainings` (same capability gate as training time mutations). Server remains authoritative via `PATCH /api/training-sessions/[sessionId]` (`TRAININGS_MANAGE`). |
-| **Canonical mutation** | Reuses TRAININGCENTER-01 single-occurrence cancel: `cancelTrainingSession` → `TrainingSession.status = CANCELLED` for the **session id** on the training item — parent `TrainingSeries` recurrence is untouched. |
-| **Confirmation** | Compact elevated dialog (`Training absagen?`) lists training occurrence + conflicting match; **Abbrechen** / **Training absagen** — no mutation on shortcut click alone. |
-| **Post-cancel refresh** | `POST /api/planning-hub/planner-revalidate` + `router.refresh()` so aggregate/conflict inspector, counts, and Kalender/Liste read models update without full reload. Audit/notification side effects stay in the canonical training lifecycle service. |
-| **Provider invariant** | Only the SCE training occurrence is cancelled; provider-owned matches are never mutated. |
-| **Regression** | `sce-planner-ux-08-07r3-same-team-training-cancellation.test.ts`, `PlanningHubSameTeamTrainingCancellation.test.tsx`; existing 08-05 conflict handoff + 08-07 clipped-detail suites remain green. |
+| **Outcome** | Superseded by **08-07R4** — cancellation belongs on the **selected TRAINING activity**, not conflict partner cards. |
+| **Cleanup** | Removed `same-team-training-cancellation` offer model, conflict-card cancel UI, and R3-only tests (`PlanningHubSameTeamTrainingCancellation`, `sce-planner-ux-08-07r3-same-team-training-cancellation`). |
 
 ---
 
@@ -179,6 +175,7 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 |------|--------|
 | **Info affordance noise** | Permanently prominent info control competed with semantic activity/conflict/selection states. **Fix:** neutral contextual disclosure — subtle on desktop until card hover/focus; discoverable on coarse pointer; keyboard focus unchanged. |
 | **Mixed aggregate tooltip semantics** | Example: 9 Trainings + 1 Spiel showed misleading type header (“SPIEL”) and “10 Trainings”. **Fix:** homogeneous clusters keep type-specific headline (`7 Trainings`); mixed clusters use `{n} Aktivitäten` with no single-child type badge; conflict/count lines unchanged. |
+| **Human UAT** | **PASS** — neutral info affordance and mixed aggregate labels verified on PR #805 preview. |
 
 ---
 
@@ -231,5 +228,5 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 | Package | Status |
 |---------|--------|
 | 08-06 | **CLOSED** (PR #804) |
-| **08-07** | **IN PROGRESS** (this branch) |
+| **08-07** | **CLOSED** (PR #805 → `STAGE`) |
 | 08-08 | **PLANNED** |
