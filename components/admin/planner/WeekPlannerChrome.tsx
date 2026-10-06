@@ -12,6 +12,12 @@ import PlanningHubCreateMenu, {
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
+import PlanningHubListeToolbar from "@/components/admin/planning-hub/PlanningHubListeToolbar";
+import {
+  applyListOperationalFilters,
+  listOperationalVisibleItemCount,
+  listOperationalWeekHasAnyItems,
+} from "@/lib/planning-hub/list-operational";
 import PlanningHubPlannerViewOptions from "@/components/admin/planning-hub/PlanningHubPlannerViewOptions";
 import {
   buildPlanningHubHref,
@@ -74,6 +80,17 @@ export default function WeekPlannerChrome({
   resourceTimelineCatalog,
 }: WeekPlannerChromeProps) {
   const resolvedUrlState = { ...urlState, week: weekNav.param };
+
+  const listeFilteredWeek =
+    week && urlState.perspective === "liste"
+      ? applyListOperationalFilters(week, {
+          activity: resolvedUrlState.activity,
+          team: resolvedUrlState.team,
+          facility: resolvedUrlState.facility,
+          conflictsOnly: resolvedUrlState.conflictsOnly,
+          search: resolvedUrlState.search,
+        })
+      : null;
 
   const resourceScopeFacilityGroups =
     urlState.perspective === "spielfeld"
@@ -181,16 +198,25 @@ export default function WeekPlannerChrome({
         </div>
 
         <div
-          className="flex flex-wrap items-center gap-2"
+          className="flex flex-col gap-2"
           data-testid="planning-hub-filter-panel"
         >
-          <PlanningHubWeekFilters
-            urlState={resolvedUrlState}
-            teamOptions={teamOptions}
-            facilityOptions={facilityOptions}
-            inline
-          />
-          <PlanningHubPlannerViewOptions className="ml-auto sm:ml-0" />
+          {urlState.perspective === "liste" && week ? (
+            <PlanningHubListeToolbar
+              urlState={resolvedUrlState}
+              visibleCount={listeFilteredWeek ? listOperationalVisibleItemCount(listeFilteredWeek) : 0}
+              weekHasItems={listOperationalWeekHasAnyItems(week)}
+            />
+          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            <PlanningHubWeekFilters
+              urlState={resolvedUrlState}
+              teamOptions={teamOptions}
+              facilityOptions={facilityOptions}
+              inline
+            />
+            <PlanningHubPlannerViewOptions className="ml-auto sm:ml-0" />
+          </div>
         </div>
       </div>
     </div>

@@ -48,6 +48,7 @@ const LISTE_URL = {
   activity: "alle" as const,
   team: null,
   facility: null,
+    search: "",
   conflictsOnly: false,
   resourceCategory: "pitch" as const,
 };

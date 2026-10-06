@@ -199,6 +199,7 @@ const URL_STATE = {
   activity: "alle" as const,
   team: null,
   facility: null,
+    search: "",
   conflictsOnly: false,
   resourceCategory: "dressing" as const,
   day: "2026-09-20",

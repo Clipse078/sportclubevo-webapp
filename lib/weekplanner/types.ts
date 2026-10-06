@@ -143,6 +143,8 @@ export type WeekplannerMatchSideIdentity = {
 
 export type WeekplannerMatchItem = WeekplannerItemBase & {
   type: "MATCH";
+  /** Canonical TeamSeason for the tenant-owned home side — hub team filter key. */
+  teamSeasonId: string | null;
   eventId: string;
   opponentName: string | null;
   /** Canonical Event.source — drives SFV/manual schedule write rules in the editor. */
@@ -164,6 +166,8 @@ export type WeekplannerTournamentItem = WeekplannerItemBase & {
   eventId: string;
   /** Weekplanner only ever surfaces HOME tournaments — see queries.ts. */
   homeAway: "HOME";
+  /** Canonical TeamSeason ids for tenant TEAM participants — hub team filter keys. */
+  teamSeasonIds: string[];
   participantAllocations: WeekplannerTournamentParticipantAllocation[];
 };
 

@@ -28,6 +28,7 @@ describe("WeekPlannerChrome — planning family shell", () => {
           activity: "alle",
           team: null,
           facility: null,
+    search: "",
           conflictsOnly: false,
           resourceCategory: "pitch",
           resourceFilterIds: null,

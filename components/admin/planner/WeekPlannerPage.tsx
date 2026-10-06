@@ -7,6 +7,7 @@ import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
 import type { PlanningHubCreatePermissions } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
+import { buildPlanningHubTeamOptions } from "@/lib/planning-hub/team-filter";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -84,6 +85,7 @@ export default function WeekPlannerPage({
     activity: "alle",
     team: null,
     facility: null,
+    search: "",
     conflictsOnly: false,
     resourceCategory: "pitch",
     resourceFilterIds: null,
@@ -99,21 +101,7 @@ export default function WeekPlannerPage({
       )
     : 0;
 
-  const teamOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const day of week.days) {
-      for (const item of day.items) {
-        if (item.type === "TRAINING") {
-          map.set(item.teamSeasonId, item.teamNames[0] ?? item.title);
-        } else if (item.teamNames[0]) {
-          map.set(item.teamNames[0], item.teamNames[0]);
-        }
-      }
-    }
-    return [...map.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label, "de-CH"));
-  }, [week]);
+  const teamOptions = useMemo(() => buildPlanningHubTeamOptions(week), [week]);
 
   const [conflictWorkspaceOpen, setConflictWorkspaceOpen] = useState(false);
 

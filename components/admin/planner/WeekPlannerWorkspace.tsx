@@ -35,6 +35,7 @@ import { PlanningHubManipulationProvider } from "@/components/admin/planning-hub
 import { buildResourceSegmentsForDay } from "@/lib/planning-hub/scheduler/resource-segments";
 import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
+import { buildPlanningHubTeamOptions } from "@/lib/planning-hub/team-filter";
 import {
   buildPlanningConflictIncidents,
   type PlanningConflictIncident,
@@ -113,13 +114,14 @@ export default function WeekPlannerWorkspace({
     activity: "alle",
     team: null,
     facility: null,
+    search: "",
     conflictsOnly: false,
     resourceCategory: "pitch",
     resourceFilterIds: null,
   };
 
   const filteredWeek = applyPlanningHubFilters(week, urlState);
-  const totalItems = filteredWeek.days.reduce((sum, day) => sum + day.items.length, 0);
+  const weekTotalItems = week.days.reduce((sum, day) => sum + day.items.length, 0);
   const todayDayKey = dayKeyInTimeZone(new Date(), timezone);
 
   const isStandardplan = activePlanId === null;
@@ -131,22 +133,9 @@ export default function WeekPlannerWorkspace({
       )
     : 0;
 
-  const teamOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const day of week.days) {
-      for (const item of day.items) {
-        if (item.type === "TRAINING") {
-          map.set(item.teamSeasonId, item.teamNames[0] ?? item.title);
-        } else if (item.teamNames[0]) {
-          map.set(item.teamNames[0], item.teamNames[0]);
-        }
-      }
-    }
-    return [...map.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label, "de-CH"));
-  }, [week]);
+  const teamOptions = useMemo(() => buildPlanningHubTeamOptions(week), [week]);
 
+  const [conflictFocusIncidentId, setConflictFocusIncidentId] = useState<string | null>(null);
   const [internalConflictWorkspaceOpen, setInternalConflictWorkspaceOpen] = useState(false);
   const conflictWorkspaceVisible = onCloseConflictWorkspace
     ? conflictWorkspaceOpen
@@ -154,7 +143,8 @@ export default function WeekPlannerWorkspace({
   const closeConflictWorkspace = onCloseConflictWorkspace ?? (() => setInternalConflictWorkspaceOpen(false));
 
   const handleReviewConflicts = useCallback(
-    (_incidents: PlanningConflictIncident[]) => {
+    (_incidents: PlanningConflictIncident[], focusIncidentId?: string | null) => {
+      setConflictFocusIncidentId(focusIncidentId ?? null);
       if (onOpenConflictWorkspace) {
         onOpenConflictWorkspace();
       } else {
@@ -162,6 +152,15 @@ export default function WeekPlannerWorkspace({
       }
     },
     [onOpenConflictWorkspace],
+  );
+
+  const handleReviewConflictForItem = useCallback(
+    (item: WeekplannerItem) => {
+      const incidents = buildPlanningConflictIncidents(week);
+      const incident = incidents.find((entry) => entry.itemIds.includes(item.id));
+      handleReviewConflicts(incidents, incident?.id ?? null);
+    },
+    [week, handleReviewConflicts],
   );
 
   const conflictResolutionPendingRef = useRef<{
@@ -365,10 +364,10 @@ export default function WeekPlannerWorkspace({
   };
 
   const plannerPerspective =
-    totalItems === 0 ? (
+    weekTotalItems === 0 ? (
       <EmptyState
         heading="Keine Planungseinträge"
-        description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
+        description="Für diese Kalenderwoche gibt es keine Aktivitäten."
       />
     ) : urlState.perspective === "kalender" ? (
       <PlanningHubCalendarView
@@ -398,9 +397,23 @@ export default function WeekPlannerWorkspace({
         urlState={resolvedUrlState}
         locale={locale}
         timezone={timezone}
-        planName={activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null}
-        onItemActivate={handleItemActivate}
-        canManageMatchSchedule={canonicalEditing?.canManageEvents ?? false}
+        onItemOpen={handleItemOpen}
+        onItemEditPlanning={(item) => {
+          if (activePlanId && overrideEditing) {
+            handleOperationalEdit(item);
+            return;
+          }
+          handleEdit(item);
+        }}
+        onReviewConflictForItem={handleReviewConflictForItem}
+        canEditItem={canEditPlannerItem}
+        permissionContext={{
+          canManageTrainings: canonicalEditing?.canManageTrainings ?? false,
+          canManageEvents: canonicalEditing?.canManageEvents ?? false,
+          canManageAllocations: canonicalEditing?.canManageAllocations ?? false,
+          isStandardplan,
+          alternativePlanId: activePlanId,
+        }}
       />
     );
 
@@ -416,6 +429,7 @@ export default function WeekPlannerWorkspace({
             open={conflictWorkspaceVisible}
             onClose={closeConflictWorkspace}
             week={week}
+            focusIncidentId={conflictFocusIncidentId}
             locale={locale}
             timezone={timezone}
             permissionContext={manipulationPermissionContext}

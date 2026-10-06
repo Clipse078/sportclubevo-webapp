@@ -63,6 +63,7 @@ const STREAMING_CHROME_PROPS = {
     activity: "alle" as const,
     team: null,
     facility: null,
+    search: "",
     conflictsOnly: false,
     resourceCategory: "pitch" as const,
   },

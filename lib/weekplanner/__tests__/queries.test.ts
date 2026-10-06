@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
   tenantFindUnique: vi.fn(),
   externalClubFindMany: vi.fn(),
   listTournaments: vi.fn(),
+  teamSeasonFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/tournaments/tournament-service", () => ({
@@ -62,6 +63,7 @@ vi.mock("@/lib/db/prisma", () => ({
     tenantDressingRoomOccupancyPreset: { findUnique: mocks.tenantDressingRoomOccupancyPresetFindUnique },
     tenant: { findFirst: mocks.tenantFindFirst, findUnique: mocks.tenantFindUnique },
     externalClub: { findMany: mocks.externalClubFindMany },
+    teamSeason: { findMany: mocks.teamSeasonFindMany },
   },
 }));
 
@@ -415,6 +417,7 @@ beforeEach(() => {
   mocks.tenantFindUnique.mockResolvedValue({ logoUrl: null });
   mocks.externalClubFindMany.mockResolvedValue([]);
   mocks.listTournaments.mockResolvedValue([]);
+  mocks.teamSeasonFindMany.mockResolvedValue([]);
 });
 
 describe("getWeekplannerWeek — TrainingSession", () => {
@@ -499,6 +502,72 @@ describe("getWeekplannerWeek — HOME Match", () => {
     expect(item.pitchAllocations.map((r) => r.code)).toEqual([PITCH_RESOURCE.code]);
     expect(item.dressingRoomAllocations.map((r) => r.code)).toEqual([HOME_ROOM_RESOURCE.code]);
     expect(item.awayDressingRoomAllocations.map((r) => r.code)).toEqual([AWAY_ROOM_RESOURCE.code]);
+  });
+
+  it("resolves WeekplannerMatchItem.teamSeasonId from teamId + seasonId when Event.teamSeasonId is null (SFV)", async () => {
+    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
+      if (args.where?.type === "MATCH") {
+        return Promise.resolve([
+          matchEventRow({
+            id: "event-sfv-s40",
+            source: "SFV",
+            teamId: "team-senioren-40",
+            seasonId: "season-2026-2027",
+            teamSeasonId: null,
+            matchExternalMapping: {
+              provider: "SFV",
+              externalMatchId: 9001,
+              externalSeasonId: 2027,
+              matchNumber: 12345,
+              providerHomeTeamId: 100,
+              providerAwayTeamId: 200,
+              providerHomeTeamName: "Provider Home",
+              providerAwayTeamName: "Provider Away",
+              homeTeamId: "team-senioren-40",
+              awayTeamId: null,
+              providerMatchState: 1,
+              providerMatchStateName: "Geplant",
+              scoreHome: null,
+              scoreAway: null,
+              providerLeagueId: 10,
+              providerLeagueName: "League",
+              providerDivisionId: 20,
+              providerDivisionName: "Division",
+              providerRoundNbr: 3,
+              providerOrganisationId: 30,
+              providerPlaygroundId: 40,
+              providerVenueName: "Im Brüel",
+              providerSeasonName: "2026/2027",
+              lastSyncedAt: new Date("2026-07-20T10:00:00.000Z"),
+              detailSyncedAt: new Date("2026-07-20T10:05:00.000Z"),
+              homeTeam: {
+                id: "team-senioren-40",
+                name: "Senioren 40+",
+                shortName: "Senioren 40+",
+                alternativeName: null,
+              },
+              awayTeam: null,
+            },
+          }),
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+    mocks.teamSeasonFindMany.mockResolvedValue([
+      {
+        id: "ts-senioren-40-fca",
+        teamId: "team-senioren-40",
+        seasonId: "season-2026-2027",
+      },
+    ]);
+
+    const week = await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
+    const saturday = week.days.find((d) => d.dayKey === "2026-08-15");
+    const item = saturday?.items[0];
+    expect(item?.type).toBe("MATCH");
+    if (item?.type !== "MATCH") throw new Error("expected MATCH");
+    expect(item.teamSeasonId).toBe("ts-senioren-40-fca");
+    expect(mocks.teamSeasonFindMany).toHaveBeenCalled();
   });
 
   it("excludes an AWAY match entirely — it never creates local facility occupancy", async () => {

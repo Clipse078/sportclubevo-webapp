@@ -3,6 +3,7 @@
  */
 
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
+import { weekplannerItemTeamSeasonIds } from "@/lib/planning-hub/team-filter";
 import type { PlanningHubActivityFilter, PlanningHubUrlState } from "./planner-url";
 
 function itemMatchesActivity(item: WeekplannerItem, activity: PlanningHubActivityFilter): boolean {
@@ -26,14 +27,8 @@ function itemUsesFacility(item: WeekplannerItem, facilityId: string): boolean {
   return refs.some((ref) => ref.facilityId === facilityId);
 }
 
-function itemMatchesTeam(item: WeekplannerItem, teamKey: string): boolean {
-  if (item.type === "TRAINING") {
-    return item.teamSeasonId === teamKey;
-  }
-  if (item.type === "VERANSTALTUNG" && item.teamSeasonId) {
-    return item.teamSeasonId === teamKey;
-  }
-  return item.teamNames.some((name) => name === teamKey);
+function itemMatchesTeam(item: WeekplannerItem, teamSeasonId: string): boolean {
+  return weekplannerItemTeamSeasonIds(item).includes(teamSeasonId);
 }
 
 export function filterWeekplannerItem(

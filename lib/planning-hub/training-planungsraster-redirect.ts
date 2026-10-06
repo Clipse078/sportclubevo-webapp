@@ -36,6 +36,7 @@ export function buildWochenplanerResourcesHrefFromLegacyTrainingParams(
     activity: "alle",
     team: params.team?.trim() || null,
     facility: params.facility?.trim() || null,
+    search: "",
     conflictsOnly: params.conflicts === "1",
     resourceCategory: category === "DRESSING_ROOM" ? "dressing" : "pitch",
     resourceFilterIds: null,

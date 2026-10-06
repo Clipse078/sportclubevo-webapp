@@ -1,76 +1,79 @@
 "use client";
 
-import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { useMemo } from "react";
 import { cn } from "@/lib/cn";
-import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import {
+  applyListOperationalFilters,
+  formatListOperationalDayHeading,
+  listOperationalResourceLine,
+  listOperationalResourceTitle,
+  listOperationalRowStatus,
+  listOperationalStatusLabel,
+  listOperationalVisibleItemCount,
+  planningHubFiltersActive,
+} from "@/lib/planning-hub/list-operational";
+import {
+  weekplannerAccessibleName,
   weekplannerActivityTypeLabel,
   weekplannerTimeColumnLabel,
   weekplannerTimingDetail,
 } from "@/lib/planning-hub/item-presenters";
-import {
-  schedulerDisplayIdentity,
-  schedulerResourceCodes,
-  schedulerResourceLabel,
-} from "@/lib/planning-hub/scheduler-display-label";
+import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-label";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
-import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import { activityVisualStyle } from "@/lib/planning-hub/activity-visual-style";
-import { getMatchEndTimeCorrectionHref } from "@/lib/match/match-operational-completeness";
-import {
-  MATCH_END_TIME_ACTION_LABEL,
-  weekplannerMatchRequiresEndTimeAction,
-} from "@/lib/planning-hub/match-operational-presenters";
+import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
+import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
+import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
+import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
+import PlanningHubFilteredEmptyState from "./PlanningHubFilteredEmptyState";
 
 type PlanningHubListeViewProps = {
   week: WeekplannerWeek;
   urlState: PlanningHubUrlState;
   locale: string;
   timezone: string;
-  planName?: string | null;
-  onItemActivate: (item: WeekplannerItem) => void;
-  canManageMatchSchedule?: boolean;
+  onItemOpen: (item: WeekplannerItem) => void;
+  onItemEditPlanning: (item: WeekplannerItem) => void;
+  onReviewConflictForItem: (item: WeekplannerItem) => void;
+  canEditItem: (item: WeekplannerItem) => boolean;
+  permissionContext: Pick<
+    ManipulationPermissionContext,
+    | "canManageTrainings"
+    | "canManageEvents"
+    | "canManageAllocations"
+    | "isStandardplan"
+    | "alternativePlanId"
+  >;
 };
 
-function formatDayHeading(dayKey: string, locale: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone,
-  }).format(new Date(`${dayKey}T12:00:00.000Z`));
+function activityKindForItem(type: WeekplannerItem["type"]): SportingActivityKind {
+  switch (type) {
+    case "TRAINING":
+      return "TRAINING";
+    case "MATCH":
+      return "MATCH";
+    case "TOURNAMENT":
+      return "TOURNAMENT";
+    case "VERANSTALTUNG":
+      return "EVENT";
+    default:
+      return "TRAINING";
+  }
 }
 
-function dressingOccupancyShort(
-  item: WeekplannerItem,
-  locale: string,
-  timeZone: string,
-): string | null {
-  const hasRoom =
-    item.dressingRoomAllocations.length > 0 ||
-    (item.type === "MATCH" && item.awayDressingRoomAllocations.length > 0);
-  if (!hasRoom || item.type === "VERANSTALTUNG") return null;
-
-  const window = computeResourceOccupancyWindow(
-    item.startAt,
-    item.endAt,
-    item.dressingRoomResolvedBeforeMinutes,
-    item.dressingRoomResolvedAfterMinutes,
-  );
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  const room = item.dressingRoomAllocations.map((r) => schedulerResourceLabel(r)).join(", ");
-  return `${room} ${fmt.format(window.effectiveStartAt)}–${fmt.format(window.effectiveEndAt)}`;
-}
-
-function isItemOverridden(item: WeekplannerItem): boolean {
-  const resourceOverridden =
-    item.pitchOverridden ||
-    item.dressingRoomOverridden ||
-    (item.type === "TOURNAMENT" &&
-      item.participantAllocations.some((p) => p.dressingRoomOverridden));
-  return item.timeOverridden || resourceOverridden;
+function statusBadgeClass(status: ReturnType<typeof listOperationalRowStatus>): string {
+  switch (status) {
+    case "conflict":
+      return "border-amber-300/80 bg-amber-50 text-amber-900";
+    case "incomplete":
+      return "border-sky-300/70 bg-sky-50 text-sky-900";
+    case "open":
+      return "border-violet-300/70 bg-violet-50 text-violet-900";
+    case "ready":
+    default:
+      return "border-emerald-300/70 bg-emerald-50 text-emerald-900";
+  }
 }
 
 export default function PlanningHubListeView({
@@ -78,106 +81,149 @@ export default function PlanningHubListeView({
   urlState,
   locale,
   timezone,
-  planName,
-  onItemActivate,
-  canManageMatchSchedule = false,
+  onItemOpen,
+  onItemEditPlanning,
+  onReviewConflictForItem,
+  canEditItem,
+  permissionContext,
 }: PlanningHubListeViewProps) {
-  const filtered = applyPlanningHubFilters(week, urlState);
+  const filtered = useMemo(
+    () =>
+      applyListOperationalFilters(week, {
+        activity: urlState.activity,
+        team: urlState.team,
+        facility: urlState.facility,
+        conflictsOnly: urlState.conflictsOnly,
+        search: urlState.search,
+      }),
+    [week, urlState],
+  );
+
+  const visibleCount = listOperationalVisibleItemCount(filtered);
+  const weekHasItems = week.days.some((day) => day.items.length > 0);
+  const filtersActive = planningHubFiltersActive(urlState);
+  const searchActive = urlState.search.trim().length > 0;
+  const filterOrSearchActive = filtersActive || searchActive;
+
+  if (!weekHasItems) {
+    return (
+      <p className="px-1 py-6 text-sm text-[var(--muted)]" data-testid="planning-hub-liste-empty-week">
+        Keine Aktivitäten in diesem Zeitraum.
+      </p>
+    );
+  }
+
+  if (visibleCount === 0) {
+    if (filterOrSearchActive) {
+      return (
+        <PlanningHubFilteredEmptyState
+          urlState={urlState}
+          data-testid="planning-hub-liste-empty-filtered"
+        />
+      );
+    }
+    return (
+      <p className="px-1 py-6 text-sm text-[var(--muted)]" data-testid="planning-hub-liste-empty-filtered">
+        Keine Aktivitäten in diesem Zeitraum.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-3" data-testid="planning-hub-liste">
-      {filtered.days.map((day) => (
-        <section key={day.dayKey}>
-          <h3 className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {formatDayHeading(day.dayKey, locale, timezone)}
-          </h3>
-          {day.items.length === 0 ? (
-            <p className="px-1 text-sm text-[var(--muted)]">Keine Einträge</p>
-          ) : (
-            <ul className="divide-y divide-[var(--border)]/50 rounded-md border border-[var(--border)]/80">
+      {filtered.days.map((day) => {
+        if (day.items.length === 0) return null;
+        return (
+          <section key={day.dayKey} aria-labelledby={`liste-day-${day.dayKey}`}>
+            <h3
+              id={`liste-day-${day.dayKey}`}
+              className="sticky top-0 z-[1] mb-2 border-b border-[var(--border)]/60 bg-[var(--surface)]/95 px-1 py-1.5 text-[11px] font-bold tracking-wide text-[var(--text-2)] backdrop-blur-sm"
+              data-testid={`planning-hub-liste-day-${day.dayKey}`}
+            >
+              {formatListOperationalDayHeading(day.dayKey, locale, timezone)}
+            </h3>
+            <ul className="space-y-1.5">
               {day.items.map((item) => {
-                const hasConflict = item.conflicts.length > 0;
-                const requiresEndTime = weekplannerMatchRequiresEndTimeAction(item);
-                const resources = schedulerResourceCodes(item, 4);
-                const dressing = dressingOccupancyShort(item, locale, timezone);
-                const typeLabel =
-                  item.type === "TRAINING" ? null : weekplannerActivityTypeLabel(item.type);
+                const status = listOperationalRowStatus(item);
                 const semantic = activityVisualStyle(item.type);
+                const typeLabel = weekplannerActivityTypeLabel(item.type);
+                const resourceLine = listOperationalResourceLine(item);
+                const resourceTitle = listOperationalResourceTitle(item);
 
                 return (
                   <li key={item.id}>
-                    <button
-                      type="button"
-                      onClick={() => onItemActivate(item)}
-                      data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
+                    <div
                       className={cn(
-                        "grid w-full grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-l-[3px] px-2 py-1.5 text-left transition hover:bg-[var(--surface-2)] sm:grid-cols-[5rem_minmax(0,1.2fr)_minmax(0,1fr)_4rem]",
+                        "group flex gap-2 rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2 shadow-sm transition",
+                        "hover:border-[var(--border)] hover:bg-[var(--surface-2)]/40",
                         semantic.listLeftEdgeClass,
-                        hasConflict && "ring-1 ring-inset ring-amber-500/20",
+                        "border-l-[3px]",
+                        status === "conflict" && "ring-1 ring-inset ring-amber-500/15",
                       )}
                     >
-                      <span className="text-xs tabular-nums text-[var(--text-2)]">
-                        {item.type === "VERANSTALTUNG" && item.allDay
-                          ? weekplannerTimeColumnLabel(item, locale, timezone, day.dayKey)
-                          : weekplannerTimingDetail(item, locale, timezone)}
-                      </span>
-                      <span className="min-w-0 truncate text-sm font-medium text-[var(--foreground)]">
-                        {schedulerDisplayIdentity(item)}
-                        {typeLabel && (
-                          <span className="ml-1 font-normal text-[var(--muted)]">· {typeLabel}</span>
+                      <button
+                        type="button"
+                        onClick={() => onItemOpen(item)}
+                        data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
+                        aria-label={weekplannerAccessibleName(item, locale, timezone)}
+                        className={cn(
+                          "min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2",
                         )}
-                      </span>
-                      <span className="min-w-0 truncate text-xs text-[var(--muted)]">
-                        {item.type === "VERANSTALTUNG" && item.allDay
-                          ? [resources, dressing, "Ganztägig"].filter(Boolean).join(" · ") || "Ganztägig"
-                          : resources || dressing || "—"}
-                      </span>
-                      <span className="flex items-center justify-end gap-1">
-                        {planName && isItemOverridden(item) && (
+                      >
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                           <span
-                            className="max-w-[7rem] truncate text-[10px] text-[var(--muted)]"
-                            data-testid="weekplanner-override-indicator"
+                            className="text-sm font-semibold tabular-nums text-[var(--foreground)]"
+                            data-testid="planning-hub-liste-row-time"
                           >
-                            {planName} angepasst
+                            {item.type === "VERANSTALTUNG" && item.allDay
+                              ? weekplannerTimeColumnLabel(item, locale, timezone, day.dayKey)
+                              : weekplannerTimingDetail(item, locale, timezone)}
                           </span>
-                        )}
-                        {requiresEndTime &&
-                          item.type === "MATCH" &&
-                          (canManageMatchSchedule ? (
-                            <Link
-                              href={getMatchEndTimeCorrectionHref(item.eventId)}
-                              onClick={(event) => event.stopPropagation()}
-                              className="text-[11px] font-semibold text-amber-800/90 hover:underline"
-                              data-testid="planning-hub-end-time-action"
-                            >
-                              {MATCH_END_TIME_ACTION_LABEL}
-                            </Link>
-                          ) : (
-                            <span className="text-[11px] font-semibold text-amber-800/90">
-                              {MATCH_END_TIME_ACTION_LABEL}
-                            </span>
-                          ))}
-                        {hasConflict && (
-                          <AlertTriangle
-                            className="h-3.5 w-3.5 shrink-0 text-amber-600/80"
-                            aria-label={
-                              item.conflicts[0]?.resourceKind === "DRESSING_ROOM"
-                                ? "Garderobenkonflikt"
-                                : item.conflicts[0]?.resourceKind === "PITCH_HALL"
-                                  ? "Spielfeldkonflikt"
-                                  : "Planungskonflikt"
-                            }
+                          <ActivityTypePill
+                            activityKind={activityKindForItem(item.type)}
+                            label={typeLabel}
+                            className="!py-0"
                           />
-                        )}
-                      </span>
-                    </button>
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                              statusBadgeClass(status),
+                            )}
+                            data-testid="planning-hub-liste-row-status"
+                          >
+                            {listOperationalStatusLabel(status)}
+                          </span>
+                        </div>
+
+                        <p className="mt-0.5 truncate text-sm font-semibold text-[var(--foreground)]">
+                          {schedulerDisplayIdentity(item)}
+                        </p>
+
+                        <p
+                          className="mt-0.5 truncate text-xs text-[var(--text-2)]"
+                          title={resourceTitle}
+                          data-testid="planning-hub-liste-row-resources"
+                        >
+                          {resourceLine}
+                        </p>
+                      </button>
+
+                      <PlanningHubListeRowMenu
+                        item={item}
+                        permissionContext={permissionContext}
+                        canEditItem={canEditItem(item)}
+                        onOpenItem={() => onItemOpen(item)}
+                        onEditPlanning={() => onItemEditPlanning(item)}
+                        onReviewConflict={() => onReviewConflictForItem(item)}
+                      />
+                    </div>
                   </li>
                 );
               })}
             </ul>
-          )}
-        </section>
-      ))}
+          </section>
+        );
+      })}
     </div>
   );
 }
