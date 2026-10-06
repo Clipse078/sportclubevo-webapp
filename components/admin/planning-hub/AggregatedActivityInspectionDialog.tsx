@@ -37,6 +37,7 @@ import {
 import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import PlanningHubActivityActions from "./PlanningHubActivityActions";
 import PlanningHubConflictResolutionActions from "./PlanningHubConflictResolutionActions";
 import { usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 
@@ -487,6 +488,16 @@ export default function AggregatedActivityInspectionDialog({
                       </dd>
                     </div>
                   </dl>
+
+                  {permissionContext && (
+                    <PlanningHubActivityActions
+                      item={selectedItem}
+                      locale={locale}
+                      timezone={timezone}
+                      permissionContext={permissionContext}
+                      testIdPrefix="aggregate-inspection"
+                    />
+                  )}
 
                   {selectedItem.conflicts.length > 0 && (
                     <div

@@ -48,6 +48,7 @@ import {
 } from "@/lib/planning-hub/conflict-inspection-presenters";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
+import PlanningHubActivityActions from "./PlanningHubActivityActions";
 import PlanningHubConflictResolutionActions from "./PlanningHubConflictResolutionActions";
 
 export type PlanningHubConflictWorkspaceDialogProps = {
@@ -427,6 +428,14 @@ export default function PlanningHubConflictWorkspaceDialog({
                     <dd>{itemInspectionDressingLabel(selectedActivity)}</dd>
                   </div>
                 </dl>
+
+                <PlanningHubActivityActions
+                  item={selectedActivity}
+                  locale={locale}
+                  timezone={timezone}
+                  permissionContext={permissionContext}
+                  testIdPrefix="conflict-workspace"
+                />
 
                 <div className="mt-4 space-y-3">
                   {conflictsForIncidentOnItem(selectedActivity, selectedIncident).map(

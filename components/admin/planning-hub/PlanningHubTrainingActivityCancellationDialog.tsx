@@ -3,13 +3,13 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { weekplannerActivityTypeLabel, weekplannerTimingDetail } from "@/lib/planning-hub/item-presenters";
 import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-label";
-import { weekplannerTimingDetail } from "@/lib/planning-hub/item-presenters";
-import type { SameTeamTrainingCancellationOffer } from "@/lib/planning-hub/same-team-training-cancellation";
+import type { WeekplannerTrainingItem } from "@/lib/weekplanner/types";
 import PlanningHubManipulationModalShell from "./PlanningHubManipulationModalShell";
 
 type Props = {
-  offer: SameTeamTrainingCancellationOffer;
+  training: WeekplannerTrainingItem;
   locale: string;
   timezone: string;
   testId: string;
@@ -27,8 +27,8 @@ function formatOccurrenceDayHeading(startAt: Date, locale: string, timeZone: str
   }).format(startAt);
 }
 
-export default function PlanningHubTrainingConflictCancellationDialog({
-  offer,
+export default function PlanningHubTrainingActivityCancellationDialog({
+  training,
   locale,
   timezone,
   testId,
@@ -40,12 +40,10 @@ export default function PlanningHubTrainingConflictCancellationDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { training, match } = offer;
   const trainingTitle = schedulerDisplayIdentity(training);
-  const matchTitle = schedulerDisplayIdentity(match);
+  const activityTypeLabel = weekplannerActivityTypeLabel(training.type);
   const dayHeading = formatOccurrenceDayHeading(training.startAt, locale, timezone);
   const timeRange = weekplannerTimingDetail(training, locale, timezone);
-  const matchTimeRange = weekplannerTimingDetail(match, locale, timezone);
 
   async function handleConfirm() {
     setSaving(true);
@@ -85,7 +83,7 @@ export default function PlanningHubTrainingConflictCancellationDialog({
       footer={
         <>
           <Button type="button" variant="secondary" size="sm" disabled={saving} onClick={onClose}>
-            Abbrechen
+            Zurück
           </Button>
           <Button
             type="button"
@@ -101,16 +99,15 @@ export default function PlanningHubTrainingConflictCancellationDialog({
       }
     >
       <div className="space-y-3 text-sm">
-        <div>
+        <div data-testid={`${testId}-identity`}>
           <p className="font-semibold text-[var(--foreground)]">{trainingTitle}</p>
+          <p className="text-[var(--text-2)]">{activityTypeLabel}</p>
           <p className="text-[var(--text-2)]">{dayHeading}</p>
           <p className="tabular-nums text-[var(--text-2)]">{timeRange}</p>
         </div>
-        <div>
-          <p className="text-xs text-[var(--text-2)]">Dieses Training überschneidet sich mit:</p>
-          <p className="mt-1 font-semibold text-[var(--foreground)]">{matchTitle}</p>
-          <p className="tabular-nums text-xs text-[var(--muted)]">{matchTimeRange}</p>
-        </div>
+        <p className="text-xs text-[var(--text-2)]">
+          Es wird nur dieses Training abgesagt. Die Trainingsserie bleibt unverändert.
+        </p>
         {error ? (
           <p className="text-xs font-medium text-rose-600" data-testid={`${testId}-error`}>
             {error}

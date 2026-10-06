@@ -106,8 +106,8 @@ Harden the existing Unified Planner (Kalender · Spielfeld · Garderobe · Liste
 | `PlanningHubActivityClippedDetailSurface.test.tsx` | Touch trigger + spacious skip |
 | `PlanningHubCalendarClippedDetail.test.tsx` | Kalender runtime hover/focus/aggregate/resize (08-07R1) |
 | `activity-clipped-detail-dom.test.ts` | DOM overflow + layoutWidthPx (08-07R1) |
-| `sce-planner-ux-08-07r3-same-team-training-cancellation.test.ts` | Same-team TRAINING/MATCH cancel offer + auth (08-07R3) |
-| `PlanningHubSameTeamTrainingCancellation.test.tsx` | Confirmation + canonical PATCH + refresh (08-07R3) |
+| `sce-planner-ux-08-07r4-training-activity-cancellation.test.ts` | Per-training cancel eligibility (08-07R4) |
+| `PlanningHubTrainingActivityCancellation.test.tsx` | Activity-detail cancel + conflict-card exclusion (08-07R4) |
 | Existing planner regression | 08-03…08-06 suites (run in CI / local) |
 
 Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
@@ -122,7 +122,24 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 
 ---
 
-## Human UAT finding 08-07R3 — same-team match/training conflict cancellation
+## Human UAT finding 08-07R4 — canonical per-training cancellation (activity vs conflict)
+
+| Item | Detail |
+|------|--------|
+| **Symptom** | R3 placed **Training absagen** on conflict-partner cards (under match identity “Senioren 30+ vs FC Dardania”), implying cancellation of a **match** or tying cancel eligibility to same-team TRAINING/MATCH edges. |
+| **R3 semantic gap** | Cancellation is a capability of an **individual TRAINING session**, not of conflicts, matches, or same-team TRAINING+MATCH pairing. |
+| **Activity vs conflict** | **Activity actions** (`PlanningHubActivityActions`) live on the selected activity detail pane (aggregate inspection + conflict workspace). **Conflict actions** (`PlanningHubConflictResolutionActions`) remain Spielfeld / Garderobe / Termin / Öffnen only. |
+| **Eligibility** | `canCancelTrainingActivity`: `type === TRAINING` + valid `trainingSessionId` + `canManageTrainings`. No conflict, same-team, or match prerequisites. |
+| **Match invariant** | MATCH rows never show **Training absagen**; provider/SFV matches are never sent through training PATCH. |
+| **Mutation** | Unchanged canonical path: `PATCH /api/training-sessions/[sessionId]` `{ status: "CANCELLED" }` → `cancelTrainingSession`; single occurrence only (confirmation states series unchanged). |
+| **Refresh** | `POST /api/planning-hub/planner-revalidate` + `router.refresh()` on success. |
+| **R3 cleanup** | Removed `same-team-training-cancellation` offer model and conflict-card cancel UI. |
+| **Regression** | `sce-planner-ux-08-07r4-training-activity-cancellation.test.ts`, `PlanningHubTrainingActivityCancellation.test.tsx`. |
+| **Human UAT** | Required before close (Michael retest on 7 Oct 2026 aggregate). |
+
+---
+
+## Human UAT finding 08-07R3 — same-team match/training conflict cancellation (superseded by R4)
 
 | Item | Detail |
 |------|--------|
