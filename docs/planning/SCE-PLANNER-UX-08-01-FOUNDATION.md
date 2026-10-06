@@ -120,8 +120,8 @@ Distinguish SCE-owned, imported, synchronized, and read-only authoritative activ
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (see dedicated doc) |
 | **08-05** | Conflict resolution & operational actions — **CLOSED** (PR #802 → STAGE) — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](./SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
 | **08-06** | List / search / bulk operational UX — **CLOSED** (PR #804 → STAGE) — [`SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md`](./SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md) |
-| **08-07** | Responsive / tablet hardening — **NEXT / PLANNED** |
-| **08-08** | Integration / Human UAT / release hardening |
+| **08-07** | Responsive / tablet hardening — **IN PROGRESS** — [`SCE-PLANNER-UX-08-07-RESPONSIVE-TABLET-VISUAL-HARDENING.md`](./SCE-PLANNER-UX-08-07-RESPONSIVE-TABLET-VISUAL-HARDENING.md) |
+| **08-08** | Integration / Human UAT / release hardening — **PLANNED** |
 
 Detail for **08-02** and **08-03** is canonical in this document (R4); **08-04…08-08** meanings match [`docs/roadmap/SCE-ACTIVITY-DESIGN-01.md`](../roadmap/SCE-ACTIVITY-DESIGN-01.md) and are unchanged by R4.
 
