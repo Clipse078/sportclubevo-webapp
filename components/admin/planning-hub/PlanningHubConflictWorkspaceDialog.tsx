@@ -477,6 +477,9 @@ export default function PlanningHubConflictWorkspaceDialog({
                           <PlanningHubConflictResolutionActions
                             item={selectedActivity}
                             conflict={conflict}
+                            itemsById={itemsById}
+                            locale={locale}
+                            timezone={timezone}
                             permissionContext={permissionContext}
                             onOpenItem={onOpenItem}
                             onEditItem={onEditItem}

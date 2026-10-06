@@ -522,6 +522,9 @@ export default function AggregatedActivityInspectionDialog({
                               <PlanningHubConflictResolutionActions
                                 item={selectedItem}
                                 conflict={conflict}
+                                itemsById={itemsById}
+                                locale={locale}
+                                timezone={timezone}
                                 permissionContext={permissionContext}
                                 onOpenItem={onOpenItem}
                                 onEditItem={onEditItem}

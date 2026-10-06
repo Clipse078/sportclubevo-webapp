@@ -106,6 +106,8 @@ Harden the existing Unified Planner (Kalender · Spielfeld · Garderobe · Liste
 | `PlanningHubActivityClippedDetailSurface.test.tsx` | Touch trigger + spacious skip |
 | `PlanningHubCalendarClippedDetail.test.tsx` | Kalender runtime hover/focus/aggregate/resize (08-07R1) |
 | `activity-clipped-detail-dom.test.ts` | DOM overflow + layoutWidthPx (08-07R1) |
+| `sce-planner-ux-08-07r3-same-team-training-cancellation.test.ts` | Same-team TRAINING/MATCH cancel offer + auth (08-07R3) |
+| `PlanningHubSameTeamTrainingCancellation.test.tsx` | Confirmation + canonical PATCH + refresh (08-07R3) |
 | Existing planner regression | 08-03…08-06 suites (run in CI / local) |
 
 Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
@@ -117,6 +119,22 @@ Build: `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 | Result | Detail |
 |--------|--------|
 | **PASS** | Clipped-detail hover/focus operational on Kalender for individual and aggregate constrained cards; floating detail readable; constrained-card detection works on tested runtime path (PR #805 preview). |
+
+---
+
+## Human UAT finding 08-07R3 — same-team match/training conflict cancellation
+
+| Item | Detail |
+|------|--------|
+| **Symptom** | Aggregated activity inspection correctly surfaced a same-team TRAINING vs MATCH resource/time collision (e.g. Senioren 30+ Training 20:15–21:45 vs Senioren 30+ vs FC Dardania 20:15–22:15) but offered only resource/time handoffs (Spielfeld, Garderobe, Termin, Öffnen) — not the obvious operational fix **Training absagen**. |
+| **Canonical identity** | Same-team detection uses **TeamSeason id** only (`WeekplannerTrainingItem.teamSeasonId` vs resolved `WeekplannerMatchItem.teamSeasonId` from the weekplanner read model, including SFV matches where `Event.teamSeasonId` was null at persistence). Display labels are never compared. |
+| **Eligibility** | Focal item + conflict partner must be one TRAINING and one MATCH, with overlapping **effective activity times** (`startAt`/`endAt`), plus an existing weekplanner resource conflict edge. |
+| **Authorization** | UI shows **Training absagen** only when `canManageTrainings` (same capability gate as training time mutations). Server remains authoritative via `PATCH /api/training-sessions/[sessionId]` (`TRAININGS_MANAGE`). |
+| **Canonical mutation** | Reuses TRAININGCENTER-01 single-occurrence cancel: `cancelTrainingSession` → `TrainingSession.status = CANCELLED` for the **session id** on the training item — parent `TrainingSeries` recurrence is untouched. |
+| **Confirmation** | Compact elevated dialog (`Training absagen?`) lists training occurrence + conflicting match; **Abbrechen** / **Training absagen** — no mutation on shortcut click alone. |
+| **Post-cancel refresh** | `POST /api/planning-hub/planner-revalidate` + `router.refresh()` so aggregate/conflict inspector, counts, and Kalender/Liste read models update without full reload. Audit/notification side effects stay in the canonical training lifecycle service. |
+| **Provider invariant** | Only the SCE training occurrence is cancelled; provider-owned matches are never mutated. |
+| **Regression** | `sce-planner-ux-08-07r3-same-team-training-cancellation.test.ts`, `PlanningHubSameTeamTrainingCancellation.test.tsx`; existing 08-05 conflict handoff + 08-07 clipped-detail suites remain green. |
 
 ---
 
