@@ -119,8 +119,8 @@ Distinguish SCE-owned, imported, synchronized, and read-only authoritative activ
 | **08-03** | **Activity Rescheduling** — primarily Kalender; activity date/time/duration semantics; impact-aware confirmation (allocations, teams, trainers, authority, comms, Infoboard, Dashboard, SFV sync); not silent dependent propagation |
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (see dedicated doc) |
 | **08-05** | Conflict resolution & operational actions — **CLOSED** (PR #802 → STAGE) — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](./SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
-| **08-06** | List / search / bulk operational UX |
-| **08-07** | Responsive / tablet hardening |
+| **08-06** | List / search / bulk operational UX — **CLOSED** (PR #804 → STAGE) — [`SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md`](./SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md) |
+| **08-07** | Responsive / tablet hardening — **NEXT / PLANNED** |
 | **08-08** | Integration / Human UAT / release hardening |
 
 Detail for **08-02** and **08-03** is canonical in this document (R4); **08-04…08-08** meanings match [`docs/roadmap/SCE-ACTIVITY-DESIGN-01.md`](../roadmap/SCE-ACTIVITY-DESIGN-01.md) and are unchanged by R4.
@@ -197,5 +197,5 @@ Detail for **08-02** and **08-03** is canonical in this document (R4); **08-04�
 | **PERFORMANCE-INFRA-01** | Vercel ↔ Neon runtime/latency verification |
 | **BUILD-PERF** | Default `npm run build` memory / OOM |
 | **SCE-PLANNER-UX-AGGREGATION-01** | Mixed activity cluster presentation (08-04 UAT discovery) — PLANNED |
-| **SCE-PLANNER-UX-LIST-01** | Operational list experience (08-04 UAT discovery) — PLANNED |
+| **SCE-PLANNER-UX-LIST-01** | Operational list experience — **ABSORBED → 08-06** (spec pointer only) |
 | **PEOPLE-ACCESS-IMPERSONATION-01** | Club Admin impersonation availability (08-04 UAT observation) — OPEN / SEPARATE |

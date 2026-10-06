@@ -481,9 +481,9 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (Human UAT PASS 2026-10-04; PR #801 → STAGE) — [`SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md`](../planning/SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md) |
 | **08-05** | Conflict resolution & operational actions — **CLOSED** (Human UAT PASS 2026-10-05; PR #802 → STAGE) — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](../planning/SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
-| **FACILITY-INTEGRITY-01** | Facility admin ↔ planner read-model integrity (pitches + dressing rooms) — **HIGH PRIORITY / PLANNED** — gate before 08-06 recommended |
-| **08-06** | List / search / bulk operational UX — **IN PROGRESS (DRAFT PR, Human UAT)** — [`SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md`](../planning/SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md) |
-| **08-07** | Responsive / tablet hardening |
+| **FACILITY-INTEGRITY-01** | Facility admin ↔ planner read-model integrity (pitches + dressing rooms) — **IN PROGRESS** — broader create/rename/archive-delete propagation (pitches + dressing rooms); **01A closed**; gate before **08-08** if still outstanding — [`FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md`](../planning/FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md) |
+| **08-06** | List / search / bulk operational UX — **CLOSED** (Human UAT PASS 2026-10-06; PR #804 → STAGE) — [`SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md`](../planning/SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md) |
+| **08-07** | Responsive / tablet hardening — **NEXT / PLANNED** (clipped activity detail UX, interaction hardening) |
 | **08-08** | Integration / Human UAT / release hardening |
 
 **Planner follow-ups (discovered 08-04 Human UAT — not reordering 08-05):**

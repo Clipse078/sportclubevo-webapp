@@ -1,10 +1,10 @@
 # SCE-PLANNER-UX-08-06 — List / Search / Bulk Operational UX
 
-**Status:** IN PROGRESS — **DRAFT PR #804** — Human UAT **REQUIRED** (08-06R1 corrections landed)
+**Status:** **CLOSED / COMPLETE** — Human UAT **PASS** (08-06R1 + 08-06R2) — **PR #804** → `STAGE`
 
 **Base:** `STAGE`
 
-**Branch:** `cursor/sce-planner-ux-08-06-list-search-bulk-operational-ux`
+**Branch:** `cursor/sce-planner-ux-08-06-list-search-bulk-operational-ux` (merged)
 
 ---
 
@@ -93,10 +93,11 @@ Existing hub filters compose with search (intersection). **Filter zurücksetzen*
 - Mutations only via explicit row menu (Öffnen, Planung ändern, Termin/Spielfeld/Garderobe, Konflikt prüfen) when capabilities allow.
 - Row menu uses collision-aware `PopoverContent` (flip/shift) **without** a clipped internal scroll viewport; action icons use existing semantic/resource tokens (supplementary colour, labels primary).
 
-### Team + type filter (08-06R1)
+### Team + type filter (08-06R1 / 08-06R2)
 
 - Team filter values are **TeamSeason ids** across Trainings, Spiele, Turniere, and Veranstaltungen.
-- Matches expose `Event.teamSeasonId` on `WeekplannerMatchItem` so **Spiele + team** composes with training-derived team options (e.g. “FC Allschwil Senioren 40+” vs compact “Senioren 40+” display).
+- Matches expose canonical **TeamSeason** on `WeekplannerMatchItem` (`Event.teamSeasonId` when present; **08-06R2** resolves from `Event.teamId` + season when absent — typical SFV/provider matches).
+- Human UAT **PASS:** Spiele + FC Allschwil Senioren 30+ / 40+ keeps the respective Senioren matches visible (canonical id filtering, not display-label matching).
 
 ### Filtered empty state
 
@@ -117,11 +118,17 @@ Existing hub filters compose with search (intersection). **Filter zurücksetzen*
 
 - `lib/planning-hub/__tests__/sce-planner-ux-08-06-list-operational.test.ts`
 - `lib/planning-hub/__tests__/team-filter.test.ts` (Spiele + Senioren 40+ regression)
+- `lib/planning-hub/__tests__/sce-planner-ux-08-06r2-team-filter.test.ts` (provider/SFV match TeamSeason resolution)
+- `components/admin/planner/__tests__/WeekPlannerWorkspace.empty-state.test.tsx` (filtered-empty vs genuine empty week)
 - `components/admin/planning-hub/__tests__/PlanningHubListeView.test.tsx`
 - `components/admin/planning-hub/__tests__/PlanningHubListeRowMenu.test.tsx`
 - `lib/planning-hub/__tests__/planner-url.test.ts` (`q` round-trip)
 
 ---
+
+## Human UAT (closure)
+
+**Result: PASS** (2026-10-06) — operational Liste, no selection checkboxes, unclipped action menu, semantic action icons, canonical TeamSeason filtering for provider/SFV matches (Senioren 30+ / 40+ scenarios verified).
 
 ## Human UAT checklist
 
