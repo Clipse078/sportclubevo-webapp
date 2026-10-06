@@ -37,7 +37,9 @@ import {
 import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import PlanningHubActivityActions from "./PlanningHubActivityActions";
 import PlanningHubConflictResolutionActions from "./PlanningHubConflictResolutionActions";
+import { usePlanningHubPlannerWeek } from "./PlanningHubPlannerWeekContext";
 import { usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 
 export type AggregatedActivityInspectionDialogProps = {
@@ -111,6 +113,7 @@ export default function AggregatedActivityInspectionDialog({
   permissionContext: permissionContextProp,
 }: AggregatedActivityInspectionDialogProps) {
   const manipulation = usePlanningHubManipulation();
+  const plannerWeek = usePlanningHubPlannerWeek();
   const permissionContext = permissionContextProp ?? manipulation?.permissionContext;
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -152,6 +155,12 @@ export default function AggregatedActivityInspectionDialog({
   useEffect(() => {
     setSelectedId((current) => resolveAggregateSelectionId(visibleItems, current));
   }, [visibleItems]);
+
+  useEffect(() => {
+    if (open && items.length === 0) {
+      onClose();
+    }
+  }, [open, items.length, onClose]);
 
   useSceModalDialog({
     open,
@@ -226,6 +235,15 @@ export default function AggregatedActivityInspectionDialog({
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
+
+          {plannerWeek?.plannerSyncWarning ? (
+            <p
+              className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-900/95"
+              data-testid="aggregate-inspection-sync-warning"
+            >
+              {plannerWeek.plannerSyncWarning}
+            </p>
+          ) : null}
 
           <div
             className="mt-3 flex flex-wrap gap-2"
@@ -488,6 +506,16 @@ export default function AggregatedActivityInspectionDialog({
                     </div>
                   </dl>
 
+                  {permissionContext && (
+                    <PlanningHubActivityActions
+                      item={selectedItem}
+                      locale={locale}
+                      timezone={timezone}
+                      permissionContext={permissionContext}
+                      testIdPrefix="aggregate-inspection"
+                    />
+                  )}
+
                   {selectedItem.conflicts.length > 0 && (
                     <div
                       className="mt-4 space-y-3"
@@ -522,6 +550,9 @@ export default function AggregatedActivityInspectionDialog({
                               <PlanningHubConflictResolutionActions
                                 item={selectedItem}
                                 conflict={conflict}
+                                itemsById={itemsById}
+                                locale={locale}
+                                timezone={timezone}
                                 permissionContext={permissionContext}
                                 onOpenItem={onOpenItem}
                                 onEditItem={onEditItem}

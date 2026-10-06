@@ -13,6 +13,9 @@ import { usePlanningHubManipulation } from "./PlanningHubManipulationContext";
 type Props = {
   item: WeekplannerItem;
   conflict: WeekplannerConflict;
+  itemsById: Map<string, WeekplannerItem>;
+  locale: string;
+  timezone: string;
   permissionContext: Pick<
     ManipulationPermissionContext,
     | "canManageTrainings"
@@ -46,6 +49,8 @@ function capsForConflict(
 export default function PlanningHubConflictResolutionActions({
   item,
   conflict,
+  locale: _locale,
+  timezone: _timezone,
   permissionContext,
   onOpenItem,
   onEditItem,
@@ -54,6 +59,7 @@ export default function PlanningHubConflictResolutionActions({
 }: Props) {
   const manipulation = usePlanningHubManipulation();
   const manipulationEnabled = manipulation?.enabled ?? false;
+
   const caps = deriveConflictResolutionCapabilities(item, permissionContext, {
     canEditActivity: canEditItem ? canEditItem(item) : undefined,
   });
@@ -87,9 +93,7 @@ export default function PlanningHubConflictResolutionActions({
           variant="primary"
           size="sm"
           data-testid={`${prefix}-change-pitch`}
-          onClick={() =>
-            manipulation!.openResourceEditorForConflict(item, resourceId, "pitch")
-          }
+          onClick={() => manipulation!.openResourceEditorForConflict(item, resourceId, "pitch")}
         >
           Spielfeld ändern
         </Button>

@@ -15,7 +15,7 @@ import {
   PlanningHubManipulationProvider,
   type PlanningHubManipulationContextValue,
 } from "../PlanningHubManipulationContext";
-import type { WeekplannerTrainingItem, WeekplannerWeek } from "@/lib/weekplanner/types";
+import type { WeekplannerItem, WeekplannerTrainingItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import { annotateWeekplannerConflicts } from "@/lib/weekplanner/conflict-detection";
 
 vi.mock("next/navigation", () => ({
@@ -79,6 +79,29 @@ const permissionContext = {
   isStandardplan: true,
   alternativePlanId: null as string | null,
 };
+
+const LOCALE = "de-CH";
+const TIMEZONE = "Europe/Zurich";
+
+function conflictActionProps(
+  item: WeekplannerItem,
+  conflict: { facilityResourceId: string; facilityResourceName: string; resourceKind: "PITCH_HALL" | "DRESSING_ROOM" },
+  itemsById?: Map<string, WeekplannerItem>,
+  overrides: Record<string, unknown> = {},
+) {
+  const map = itemsById ?? new Map([[item.id, item]]);
+  return {
+    item,
+    conflict,
+    itemsById: map,
+    locale: LOCALE,
+    timezone: TIMEZONE,
+    permissionContext,
+    onOpenItem: vi.fn(),
+    testIdPrefix: "handoff",
+    ...overrides,
+  };
+}
 
 function mockManipulation(
   overrides: Partial<PlanningHubManipulationContextValue> = {},
@@ -149,11 +172,7 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
     const openResourceEditorForConflict = vi.fn();
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={item}
-        conflict={pitchConflict}
-        permissionContext={permissionContext}
-        onOpenItem={vi.fn()}
-        testIdPrefix="handoff"
+        {...conflictActionProps(item, pitchConflict)}
       />,
       mockManipulation({ openResourceEditorForConflict }),
     );
@@ -166,11 +185,7 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
     const openResourceEditorForConflict = vi.fn();
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={item}
-        conflict={dressingConflict}
-        permissionContext={permissionContext}
-        onOpenItem={vi.fn()}
-        testIdPrefix="handoff"
+        {...conflictActionProps(item, dressingConflict)}
       />,
       mockManipulation({ openResourceEditorForConflict }),
     );
@@ -183,11 +198,7 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
     const openActivityScheduleEditorForConflict = vi.fn();
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={item}
-        conflict={pitchConflict}
-        permissionContext={permissionContext}
-        onOpenItem={vi.fn()}
-        testIdPrefix="handoff"
+        {...conflictActionProps(item, pitchConflict)}
       />,
       mockManipulation({ openActivityScheduleEditorForConflict }),
     );
@@ -200,11 +211,7 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
     const onOpenItem = vi.fn();
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={item}
-        conflict={pitchConflict}
-        permissionContext={permissionContext}
-        onOpenItem={onOpenItem}
-        testIdPrefix="handoff"
+        {...conflictActionProps(item, pitchConflict, undefined, { onOpenItem })}
       />,
       mockManipulation(),
     );
@@ -215,16 +222,14 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
   it("E — unavailable capabilities hide mutation actions", () => {
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={item}
-        conflict={pitchConflict}
-        permissionContext={{
-          ...permissionContext,
-          canManageTrainings: false,
-          canManageEvents: false,
-          canManageAllocations: false,
-        }}
-        onOpenItem={vi.fn()}
-        testIdPrefix="handoff"
+        {...conflictActionProps(item, pitchConflict, undefined, {
+          permissionContext: {
+            ...permissionContext,
+            canManageTrainings: false,
+            canManageEvents: false,
+            canManageAllocations: false,
+          },
+        })}
       />,
       mockManipulation(),
     );
@@ -243,11 +248,7 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
     };
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={providerMatch}
-        conflict={pitchConflict}
-        permissionContext={permissionContext}
-        onOpenItem={vi.fn()}
-        testIdPrefix="handoff"
+        {...conflictActionProps(providerMatch, pitchConflict)}
       />,
       mockManipulation(),
     );
@@ -259,11 +260,7 @@ describe("PlanningHubConflictResolutionActions — canonical handoff", () => {
   it("G — disabled manipulation context does not render mutation buttons", () => {
     renderWithManipulation(
       <PlanningHubConflictResolutionActions
-        item={item}
-        conflict={pitchConflict}
-        permissionContext={permissionContext}
-        onOpenItem={vi.fn()}
-        testIdPrefix="handoff"
+        {...conflictActionProps(item, pitchConflict)}
       />,
       mockManipulation({ enabled: false }),
     );

@@ -170,7 +170,7 @@ export default function PlanningHubListeView({
                           "min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2",
                         )}
                       >
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 sm:gap-y-0.5">
                           <span
                             className="text-sm font-semibold tabular-nums text-[var(--foreground)]"
                             data-testid="planning-hub-liste-row-time"

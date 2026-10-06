@@ -140,7 +140,7 @@ export default function PlanningHubListeRowMenu({
           setOpen((value) => !value);
         }}
         className={cn(
-          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent text-[var(--text-2)] transition-colors",
+          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-transparent text-[var(--text-2)] transition-colors",
           "hover:border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
         )}

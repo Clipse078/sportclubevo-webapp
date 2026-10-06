@@ -31,6 +31,8 @@ import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-i
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
+import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
+import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -59,6 +61,8 @@ type PlanningHubActivityBlockProps = {
   continuesAfter?: boolean;
   /** Segment lane hint when multiple allocatable segments share one collapsed overview row. */
   laneSegmentHint?: string;
+  /** Kalender/resource layout box in px when CSS width/height are calc()/percent. */
+  blockLayoutPx?: { width: number; height: number };
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -106,6 +110,7 @@ export default function PlanningHubActivityBlock({
   continuesFromBefore = false,
   continuesAfter = false,
   laneSegmentHint,
+  blockLayoutPx,
 }: PlanningHubActivityBlockProps) {
   const suppressClickRef = useRef(false);
   const pendingPointerRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
@@ -120,10 +125,15 @@ export default function PlanningHubActivityBlock({
   const primary = schedulerDisplayIdentity(item);
   const typeLabel = schedulerBlockSubtitle(item);
   const teamContextRaw = schedulerAssignedTeamContext(item, { primaryLine: primary });
-  const blockWidthPx =
-    typeof style?.width === "number"
-      ? style.width
-      : Number.parseInt(String(style?.width ?? ""), 10) || 240;
+  const blockWidthPx = parseBlockDimensionPx(style?.width, 240);
+  const blockHeightPx = parseBlockDimensionPx(style?.height, compact ? 40 : 64);
+  const clippedDetailGeometry = {
+    blockWidthPx,
+    blockHeightPx,
+    compact,
+    layoutWidthPx: blockLayoutPx?.width,
+    layoutHeightPx: blockLayoutPx?.height,
+  };
   const teamContext = teamContextRaw
     ? schedulerTeamContextForBlockWidth(teamContextRaw, blockWidthPx)
     : null;
@@ -194,8 +204,16 @@ export default function PlanningHubActivityBlock({
           aria-hidden
         />
       )}
+      <PlanningHubActivityClippedDetailSurface
+        item={item}
+        locale={locale}
+        timezone={timezone}
+        geometry={clippedDetailGeometry}
+      >
+        {(detailReferenceProps) => (
       <button
         type="button"
+        {...detailReferenceProps}
         onClick={(event) => {
           if (suppressClickRef.current) {
             event.preventDefault();
@@ -215,7 +233,7 @@ export default function PlanningHubActivityBlock({
           .filter(Boolean)
           .join(", ")}
         className={cn(
-          "block h-full w-full text-left select-none",
+          "block h-full w-full text-left select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1",
           canDrag && "cursor-grab active:cursor-grabbing",
         )}
         onPointerDown={(event) => {
@@ -251,7 +269,7 @@ export default function PlanningHubActivityBlock({
         }}
       >
         <div className="flex items-start gap-1">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1" data-planning-hub-activity-content="true">
             {sportingKindForPill && plannerTypeLabel ? (
               <div className="mb-0.5 flex items-center gap-1">
                 <ActivityTypePill activityKind={sportingKindForPill} label={plannerTypeLabel} />
@@ -268,7 +286,7 @@ export default function PlanningHubActivityBlock({
                   className="shrink-0"
                 />
               ) : null}
-              <span className="min-w-0 truncate">
+                <span className="min-w-0 truncate" data-planning-hub-clipped-text="true">
                 {laneSegmentHint ? (
                   <span className="font-normal text-[var(--muted)]">{laneSegmentHint} · </span>
                 ) : null}
@@ -281,7 +299,9 @@ export default function PlanningHubActivityBlock({
             {teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">
                 <ProductDomainSceIcon name="people" size={20} className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                <span className="truncate">{teamContext}</span>
+                <span className="truncate" data-planning-hub-clipped-text="true">
+                  {teamContext}
+                </span>
               </p>
             )}
             {!compact && !sportingKindForPill ? (
@@ -297,7 +317,7 @@ export default function PlanningHubActivityBlock({
           {onOpenManipulationEdit && !isGhost && (
             <button
               type="button"
-              className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
+              className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
               aria-label={manipulationEditLabel}
               data-testid="planning-hub-manipulation-edit-trigger"
               onClick={(event) => {
@@ -318,6 +338,8 @@ export default function PlanningHubActivityBlock({
           )}
         </div>
       </button>
+        )}
+      </PlanningHubActivityClippedDetailSurface>
 
       {canResize && onPointerDownResize && !isGhost && resizeOrientation === "vertical" && (
         <>

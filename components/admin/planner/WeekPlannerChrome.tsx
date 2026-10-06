@@ -171,7 +171,8 @@ export default function WeekPlannerChrome({
                   data-testid={`planning-hub-perspective-${perspective}`}
                   aria-current={active ? "true" : undefined}
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
+                    "inline-flex min-h-9 items-center rounded-md px-3 py-2 text-xs font-semibold transition-colors duration-150",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1",
                     active
                       ? "bg-[var(--sce-primary)] text-white shadow-sm"
                       : "text-[var(--text-2)] hover:text-[var(--foreground)]",

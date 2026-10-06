@@ -28,6 +28,10 @@ const WeekplannerOperationalPlanningSheet = dynamic(
     import("./WeekplannerOperationalPlanningSheet").then((m) => m.WeekplannerOperationalPlanningSheet),
   { ssr: false },
 );
+import {
+  PlanningHubPlannerWeekProvider,
+  usePlanningHubPlannerWeek,
+} from "@/components/admin/planning-hub/PlanningHubPlannerWeekContext";
 import PlanningHubConflictWorkspaceDialog from "@/components/admin/planning-hub/PlanningHubConflictWorkspaceDialog";
 import PlanningHubCalendarView from "@/components/admin/planning-hub/PlanningHubCalendarView";
 import PlanningHubResourceDayView from "@/components/admin/planning-hub/PlanningHubResourceDayView";
@@ -92,7 +96,7 @@ function getMissingAllocations(item: WeekplannerItem): string[] {
   return missing;
 }
 
-export default function WeekPlannerWorkspace({
+function WeekPlannerWorkspaceBody({
   week,
   locale = "de-CH",
   timezone = "Europe/Zurich",
@@ -471,5 +475,19 @@ export default function WeekPlannerWorkspace({
       )}
 
     </div>
+  );
+}
+
+function WeekPlannerWorkspaceWithReconciledWeek(props: WeekPlannerWorkspaceProps) {
+  const plannerWeek = usePlanningHubPlannerWeek();
+  const week = plannerWeek?.week ?? props.week;
+  return <WeekPlannerWorkspaceBody {...props} week={week} />;
+}
+
+export default function WeekPlannerWorkspace(props: WeekPlannerWorkspaceProps) {
+  return (
+    <PlanningHubPlannerWeekProvider serverWeek={props.week} timezone={props.timezone ?? "Europe/Zurich"}>
+      <WeekPlannerWorkspaceWithReconciledWeek {...props} />
+    </PlanningHubPlannerWeekProvider>
   );
 }

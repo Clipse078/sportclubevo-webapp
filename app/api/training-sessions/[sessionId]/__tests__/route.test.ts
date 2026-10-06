@@ -25,6 +25,12 @@ vi.mock("@/lib/training/session-lifecycle-service", () => ({
   restoreTrainingSession: mocks.restoreTrainingSession,
 }));
 
+const revalidatePlannerWeekPaths = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/planning-hub/planner-week-revalidation", () => ({
+  revalidatePlannerWeekPaths,
+}));
+
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 
 import { PATCH } from "../route";
@@ -97,6 +103,7 @@ describe("PATCH /api/training-sessions/[sessionId]", () => {
     expect(json.session.status).toBe("CANCELLED");
     expect(mocks.cancelTrainingSession).toHaveBeenCalledWith(TENANT_A, SESSION_ID);
     expect(mocks.restoreTrainingSession).not.toHaveBeenCalled();
+    expect(revalidatePlannerWeekPaths).toHaveBeenCalledTimes(1);
   });
 
   it("restores a session when status=SCHEDULED", async () => {

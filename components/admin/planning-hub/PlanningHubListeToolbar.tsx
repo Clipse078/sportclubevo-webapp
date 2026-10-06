@@ -76,7 +76,7 @@ export default function PlanningHubListeToolbar({
             }
           }}
           placeholder="Team, Gegner, Anlage, Ressource …"
-          className="fca-input fca-search-input h-8 w-full text-xs"
+          className="fca-input fca-search-input h-9 w-full text-xs"
           aria-label="Aktivitäten durchsuchen"
           data-testid="planning-hub-liste-search"
         />

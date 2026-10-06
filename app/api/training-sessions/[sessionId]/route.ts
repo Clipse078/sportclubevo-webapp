@@ -22,6 +22,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { revalidatePlannerWeekPaths } from "@/lib/planning-hub/planner-week-revalidation";
 import { cancelTrainingSession, restoreTrainingSession } from "@/lib/training/session-lifecycle-service";
 import {
   TrainingSessionInvalidTransitionError,
@@ -63,6 +64,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       body.status === "CANCELLED"
         ? await cancelTrainingSession(tenantId, sessionId)
         : await restoreTrainingSession(tenantId, sessionId);
+
+    revalidatePlannerWeekPaths();
 
     return NextResponse.json({ session });
   } catch (err) {

@@ -708,7 +708,7 @@ export async function findAllTrainingSessionsForWeekplanner(
   return prisma.trainingSession.findMany({
     where: {
       tenantId,
-      NOT: { status: "RECURRENCE_REMOVED" },
+      status: { notIn: ["CANCELLED", "RECURRENCE_REMOVED"] },
       ...(dateFrom || dateTo
         ? {
             OR: [
