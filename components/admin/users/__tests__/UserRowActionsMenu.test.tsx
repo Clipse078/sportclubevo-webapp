@@ -128,9 +128,8 @@ describe("UserRowActionsMenu", () => {
     expect(screen.getByText("Zugriff bearbeiten")).toBeInTheDocument();
   });
 
-  it("R7 — self row: impersonation absent even when flag true", async () => {
-    const user = userEvent.setup();
-    render(
+  it("R7 — self row: no menu when only self-blocked admin actions", () => {
+    const { container } = render(
       <UserRowActionsMenu
         {...BASE_PROPS}
         isSelf={true}
@@ -141,9 +140,7 @@ describe("UserRowActionsMenu", () => {
       />,
     );
 
-    await openMenu(user);
-    expect(screen.queryByText("Als Benutzer ansehen")).not.toBeInTheDocument();
-    expect(screen.queryByText("Zugriff bearbeiten")).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("R7 — admin shortcuts off: access/detail hidden (system/inactive handled upstream)", async () => {
