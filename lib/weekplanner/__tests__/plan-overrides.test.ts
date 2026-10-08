@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
   listTournaments: vi.fn(),
+  teamSeasonFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/server/request-cache", () => ({
@@ -56,6 +57,7 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
     tenant: { findUnique: vi.fn().mockResolvedValue({ logoUrl: null }) },
+    teamSeason: { findMany: mocks.teamSeasonFindMany },
   },
 }));
 
@@ -364,6 +366,7 @@ beforeEach(() => {
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
   mocks.listTournaments.mockResolvedValue([]);
+  mocks.teamSeasonFindMany.mockResolvedValue([{ id: "teamseason-own", teamId: "team-own" }]);
 });
 
 describe("getWeekplannerWeek — sparse override fallback to Standardplan", () => {
