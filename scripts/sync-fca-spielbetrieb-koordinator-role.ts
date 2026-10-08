@@ -7,21 +7,40 @@
  * Never targets PROD tenants other than fc-allschwil (pilot tenant key).
  */
 
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
 import {
   PILOT_TENANT_KEY,
   SANDRA_FISCHER_SPIELBETRIEB_ROLE,
 } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
+import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 
 const DRY_RUN = process.env.APPLY_FCA_SPIELBETRIEB_ROLE_SYNC !== "true";
 
-async function main() {
-  if (!process.env.DATABASE_URL) {
-    console.error("[sync-fca-spielbetrieb-koordinator-role] DATABASE_URL is required.");
-    process.exit(1);
-  }
+const connectionString =
+  process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
 
-  const prisma = new PrismaClient();
+if (!connectionString) {
+  console.error("[sync-fca-spielbetrieb-koordinator-role] DATABASE_URL is required.");
+  process.exit(1);
+}
+
+if (!DRY_RUN) {
+  assertOperationalMutationAllowed({
+    operationId: "sync-fca-spielbetrieb-koordinator-role",
+    databaseUrl: connectionString,
+    explicitIntent: true,
+    allowedRemoteEnvironments: ["stage"],
+  });
+}
+
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+async function main() {
   try {
     const tenant = await prisma.tenant.findUnique({
       where: { key: PILOT_TENANT_KEY },
@@ -99,6 +118,7 @@ async function main() {
     console.log("\nDone.\n");
   } finally {
     await prisma.$disconnect();
+    await pool.end();
   }
 }
 
