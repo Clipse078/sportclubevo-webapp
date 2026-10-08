@@ -44,7 +44,10 @@ type PlanningHubListeViewProps = {
     | "canManageAllocations"
     | "isStandardplan"
     | "alternativePlanId"
-  >;
+  > & {
+    canViewTrainings?: boolean;
+    canViewEvents?: boolean;
+  };
 };
 
 function activityKindForItem(type: WeekplannerItem["type"]): SportingActivityKind {

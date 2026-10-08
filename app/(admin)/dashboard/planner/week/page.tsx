@@ -60,6 +60,10 @@ export default async function PlannerWeekPageRoute({
 
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canManageEvents = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canViewTrainings =
+    canManageTrainings || hasPermission(session, PERMISSIONS.TRAININGS_VIEW);
+  const canViewEvents =
+    canManageEvents || hasPermission(session, PERMISSIONS.EVENTS_VIEW);
   const canManageAllocations = hasPermission(session, PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
   const canCreateTraining = canManageTrainings;
   const canManagePlans = canManageTrainings || canManageEvents || canManageAllocations;
@@ -148,7 +152,8 @@ export default async function PlannerWeekPageRoute({
 
   const needsEagerFacilityGroups =
     isPlanningHubResourceTimelinePerspective(urlState.perspective) ||
-    (canManagePlans && Boolean(activePlan));
+    (canManagePlans && Boolean(activePlan)) ||
+    (canManageAllocations && !canManageTrainings && !canManageEvents);
 
   const resolvedUrlState = {
     ...urlState,
@@ -202,6 +207,8 @@ export default async function PlannerWeekPageRoute({
           canManagePlans={canManagePlans}
           canManageTrainings={canManageTrainings}
           canManageEvents={canManageEvents}
+          canViewTrainings={canViewTrainings}
+          canViewEvents={canViewEvents}
           canManageAllocations={canManageAllocations}
           urlState={resolvedUrlState}
           plans={plans}

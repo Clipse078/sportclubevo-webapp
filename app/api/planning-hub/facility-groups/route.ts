@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getFacilitiesForTenantCached } from "@/lib/server/request-cache";
 import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
@@ -10,10 +10,7 @@ import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planni
  * Keeps the initial Kalender RSC response smaller (VIEW FIRST).
  */
 export async function GET() {
-  await requireAnyPermission([
-    PERMISSIONS.TRAININGS_MANAGE,
-    PERMISSIONS.EVENTS_MANAGE,
-  ]);
+  await requireAnyPermission([...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS]);
 
   const tenant = await getActiveTenant();
   if (!tenant) {

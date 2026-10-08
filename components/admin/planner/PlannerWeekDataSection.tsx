@@ -30,6 +30,8 @@ export type PlannerWeekDataSectionProps = {
   canManagePlans: boolean;
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canViewTrainings: boolean;
+  canViewEvents: boolean;
   canManageAllocations: boolean;
   urlState: PlanningHubUrlState;
   plans: WeekplannerPlanDto[];
@@ -49,6 +51,8 @@ export default async function PlannerWeekDataSection({
   canManagePlans,
   canManageTrainings,
   canManageEvents,
+  canViewTrainings,
+  canViewEvents,
   canManageAllocations,
   urlState,
   plans,
@@ -103,6 +107,8 @@ export default async function PlannerWeekDataSection({
     ? {
         canManageTrainings,
         canManageEvents,
+        canViewTrainings,
+        canViewEvents,
         canManageAllocations,
         ...(facilityGroupsByAllocationGroup ? { facilityGroupsByAllocationGroup } : {}),
       }

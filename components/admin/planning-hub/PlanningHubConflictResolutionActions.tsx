@@ -23,7 +23,10 @@ type Props = {
     | "canManageAllocations"
     | "isStandardplan"
     | "alternativePlanId"
-  >;
+  > & {
+    canViewTrainings?: boolean;
+    canViewEvents?: boolean;
+  };
   onOpenItem: (item: WeekplannerItem) => void;
   onEditItem?: (item: WeekplannerItem) => void;
   canEditItem?: (item: WeekplannerItem) => boolean;

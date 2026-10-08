@@ -53,6 +53,7 @@ import {
 } from "@/lib/planning-hub/planner-url";
 import { dayKeyInTimeZone } from "@/lib/planning-hub/scheduler/time-zone";
 import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
+import { canOpenPlanningHubItem } from "@/lib/planning-hub/planning-navigation-access";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
@@ -67,6 +68,8 @@ type OverrideEditingContext = {
 type CanonicalEditingContext = {
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canViewTrainings: boolean;
+  canViewEvents: boolean;
   canManageAllocations: boolean;
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
@@ -202,6 +205,15 @@ function WeekPlannerWorkspaceBody({
   }
 
   function handleItemOpen(item: WeekplannerItem) {
+    const openAccess = {
+      canViewTrainings: canonicalEditing?.canViewTrainings ?? false,
+      canManageTrainings: canonicalEditing?.canManageTrainings ?? false,
+      canViewEvents: canonicalEditing?.canViewEvents ?? false,
+      canManageEvents: canonicalEditing?.canManageEvents ?? false,
+    };
+    if (!canOpenPlanningHubItem(item, openAccess)) {
+      return;
+    }
     const href = getPlanningHubItemHref(item);
     if (href) router.push(href);
   }
@@ -369,6 +381,8 @@ function WeekPlannerWorkspaceBody({
   const manipulationPermissionContext = {
     canManageTrainings: canonicalEditing?.canManageTrainings ?? false,
     canManageEvents: canonicalEditing?.canManageEvents ?? false,
+    canViewTrainings: canonicalEditing?.canViewTrainings ?? false,
+    canViewEvents: canonicalEditing?.canViewEvents ?? false,
     canManageAllocations: canonicalEditing?.canManageAllocations ?? false,
     isStandardplan,
     alternativePlanId: activePlanId,

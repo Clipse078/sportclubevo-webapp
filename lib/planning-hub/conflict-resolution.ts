@@ -13,6 +13,10 @@ import {
 } from "@/lib/planning-hub/manipulation-server-authorization";
 import { resolveActivityScheduleAuthority } from "@/lib/planning-hub/planning-activity-rescheduling";
 import type { WeekplannerConflict, WeekplannerItem } from "@/lib/weekplanner/types";
+import {
+  canOpenPlanningHubItem,
+  type PlanningHubItemOpenAccess,
+} from "@/lib/planning-hub/planning-navigation-access";
 
 export type ConflictResolutionCapabilities = {
   canMoveActivityTime: boolean;
@@ -47,7 +51,8 @@ export function deriveConflictResolutionCapabilities(
     | "canManageAllocations"
     | "isStandardplan"
     | "alternativePlanId"
-  >,
+  > &
+    Partial<PlanningHubItemOpenAccess>,
   options?: { canOpenActivity?: boolean; canEditActivity?: boolean },
 ): ConflictResolutionCapabilities {
   const actor = actorFromManipulationContext(ctx);
@@ -63,7 +68,14 @@ export function deriveConflictResolutionCapabilities(
     canMoveActivityTime,
     canChangePrimaryResource: canResource && item.pitchAllocations.length > 0,
     canChangeSupportingResource: canResource && hasAnyDressingAllocation(item),
-    canOpenActivity: options?.canOpenActivity ?? true,
+    canOpenActivity:
+      options?.canOpenActivity ??
+      canOpenPlanningHubItem(item, {
+        canViewTrainings: ctx.canViewTrainings ?? false,
+        canManageTrainings: ctx.canManageTrainings,
+        canViewEvents: ctx.canViewEvents ?? false,
+        canManageEvents: ctx.canManageEvents,
+      }),
     canEditActivity: options?.canEditActivity ?? (canMoveActivityTime || canResource),
     activityTimeBlockedReason:
       canMutateActivityTimeForItem(item, actor) && !authority.permitted

@@ -26,6 +26,8 @@ type OverrideEditingContext = {
 type CanonicalEditingContext = {
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canViewTrainings: boolean;
+  canViewEvents: boolean;
   canManageAllocations: boolean;
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
