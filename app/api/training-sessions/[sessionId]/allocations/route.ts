@@ -27,6 +27,9 @@ import {
   TrainingSessionAllocationArchivedFacilityError,
   TrainingSessionAllocationDuplicateError,
 } from "@/lib/training/errors";
+import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { buildTrainingMutationCollaborationImpact } from "@/lib/collaboration/training/training-mutation-collaboration";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type Params = { params: Promise<{ sessionId: string }> };
 
@@ -67,6 +70,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   try {
+    const beforeSnapshot = await loadTrainingActivitySnapshot({ tenantId, sessionId });
     const allocation = await createTrainingSessionAllocation(tenantId, {
       trainingSessionId: sessionId,
       facilityResourceId: body.facilityResourceId.trim(),
@@ -74,7 +78,16 @@ export async function POST(request: NextRequest, { params }: Params) {
       displayOrder: typeof body.displayOrder === "number" ? body.displayOrder : undefined,
     });
     revalidatePlannerWeekPaths();
-    return NextResponse.json({ allocation }, { status: 201 });
+    const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaboration = await buildTrainingMutationCollaborationImpact({
+      tenantId,
+      tenantKey,
+      userId,
+      sessionId,
+      beforeSnapshot,
+    });
+    return NextResponse.json({ allocation, collaboration }, { status: 201 });
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {
       return NextResponse.json({ error: "Training session not found" }, { status: 404 });

@@ -24,7 +24,21 @@ vi.mock("@/lib/training/session-allocation-service", () => ({
   listAllocationsByTrainingSession: mocks.listAllocationsByTrainingSession,
 }));
 
+vi.mock("@/lib/planning-hub/planner-week-revalidation", () => ({
+  revalidatePlannerWeekPaths: vi.fn(),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
+
+vi.mock("@/lib/collaboration/training/training-activity-snapshot", () => ({
+  loadTrainingActivitySnapshot: vi.fn().mockResolvedValue(null),
+}));
+vi.mock("@/lib/collaboration/training/training-mutation-collaboration", () => ({
+  buildTrainingMutationCollaborationImpact: vi.fn().mockResolvedValue(null),
+}));
+vi.mock("@/lib/collaboration/resolve-tenant-key", () => ({
+  resolveTenantKeyForCollaboration: vi.fn().mockResolvedValue("tenant-key"),
+}));
 
 import { GET, POST } from "../route";
 import {

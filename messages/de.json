@@ -839,6 +839,26 @@
     "matchHomeSide": "Heim",
     "matchAwaySide": "Gast"
   },
+  "Collaboration": {
+    "activityChange": {
+      "trainingUpdated": "Training aktualisiert",
+      "multipleChanges": "{count} Änderungen",
+      "audience": "Zielgruppe",
+      "zeroRecipients": "Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.",
+      "communicateChange": "Änderung kommunizieren",
+      "dismiss": "Schliessen",
+      "prepareError": "Kommunikationsentwurf konnte nicht vorbereitet werden.",
+      "publishError": "Senden fehlgeschlagen.",
+      "publishSuccess": "Mitteilung gesendet ({count} Empfänger).",
+      "composerTitle": "Mitteilung vorbereiten",
+      "composerClose": "Entwurf schliessen",
+      "composerCancel": "Abbrechen",
+      "composerSend": "Senden",
+      "fieldSubject": "Betreff",
+      "fieldBody": "Inhalt"
+    }
+  },
+
   "AppShell": {
     "primaryNavAria": "Hauptnavigation",
     "contextNavAria": "Kontextnavigation",

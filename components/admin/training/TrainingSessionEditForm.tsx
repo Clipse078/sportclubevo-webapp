@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Loader2, RotateCcw, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
 import {
   TRAINING_FORM_COMPACT_TIME_INPUT_CLASS,
   TRAINING_FORM_TIME_FIELD_WIDTH_CLASS,
@@ -55,6 +57,7 @@ export default function TrainingSessionEditForm({
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
+  const { setImpact } = useActivityChangeCollaboration();
   const t = useTranslations("TrainingCenter.sessionEdit");
 
   const [date, setDate] = useState(effectiveDate);
@@ -113,6 +116,13 @@ export default function TrainingSessionEditForm({
 
       if (!res.ok) {
         throw new Error(data?.error ?? t("saveError"));
+      }
+
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) {
+        setImpact(collaboration);
+      } else {
+        setImpact(null);
       }
 
       toast.success(t("saveSuccess"));

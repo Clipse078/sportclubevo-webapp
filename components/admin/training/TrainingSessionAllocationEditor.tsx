@@ -16,6 +16,8 @@ import {
   type TrainingAllocationGroupKey,
 } from "@/lib/training/allocation-groups";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
 type Props = {
   sessionId: string;
   initialAllocations: TrainingSessionAllocationDto[];
@@ -274,6 +276,7 @@ export function TrainingSessionAllocationEditor({
   sessionEndAt,
 }: Props) {
   const t = useTranslations("TrainingCenter.sessionEdit");
+  const { setImpact } = useActivityChangeCollaboration();
   const [allocations, setAllocations] = useState<TrainingSessionAllocationDto[]>(initialAllocations);
   const [openPickerGroup, setOpenPickerGroup] = useState<TrainingAllocationGroupKey | null>(null);
 
@@ -315,10 +318,15 @@ export function TrainingSessionAllocationEditor({
         throw new Error((data as { error?: string }).error ?? `Fehler: HTTP ${res.status}`);
       }
 
-      const data = (await res.json()) as { allocation: TrainingSessionAllocationDto };
+      const data = (await res.json()) as {
+        allocation: TrainingSessionAllocationDto;
+        collaboration?: unknown;
+      };
       setAllocations((prev) => [...prev, data.allocation].sort((a, b) => a.displayOrder - b.displayOrder));
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) setImpact(collaboration);
     },
-    [sessionId],
+    [sessionId, setImpact],
   );
 
   const handleRemove = useCallback(
@@ -332,9 +340,12 @@ export function TrainingSessionAllocationEditor({
         throw new Error((data as { error?: string }).error ?? `Fehler: HTTP ${res.status}`);
       }
 
+      const data = (await res.json().catch(() => null)) as { collaboration?: unknown } | null;
       setAllocations((prev) => prev.filter((a) => a.id !== allocationId));
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) setImpact(collaboration);
     },
-    [sessionId],
+    [sessionId, setImpact],
   );
 
   const handleUseSeriesDefaultForGroup = useCallback(
