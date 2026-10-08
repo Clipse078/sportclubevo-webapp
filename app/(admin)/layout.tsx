@@ -103,23 +103,23 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       style={tenantCssVars as React.CSSProperties}
       data-sce-modal-background
     >
-      <Suspense fallback={null}>
-        <AppShellNavigation
-          permissionKeys={session.user.permissionKeys}
-          workspaceContext={workspaceContext}
-          clubName={ctx?.name}
-          logoUrl={ctx?.logoUrl}
-          navCapabilities={{
-            personalActionsModule: participationNavCapable,
-          }}
-          firstName={shellIdentity.firstName}
-          lastName={shellIdentity.lastName}
-          email={session.user.email}
-          imageUrl={shellImageUrl}
-        />
-      </Suspense>
+      <div className="sce-authenticated-sticky-shell-chrome">
+        <Suspense fallback={null}>
+          <AppShellNavigation
+            permissionKeys={session.user.permissionKeys}
+            workspaceContext={workspaceContext}
+            clubName={ctx?.name}
+            logoUrl={ctx?.logoUrl}
+            navCapabilities={{
+              personalActionsModule: participationNavCapable,
+            }}
+            firstName={shellIdentity.firstName}
+            lastName={shellIdentity.lastName}
+            email={session.user.email}
+            imageUrl={shellImageUrl}
+          />
+        </Suspense>
 
-      <div className={`${SCE_APP_MAIN_COLUMN} sce-app-main-with-mobile-nav`}>
         <div className="sce-authenticated-safety-chrome-stack">
           <StageEnvironmentBanner />
           <ImpersonationSafetyChrome
@@ -135,7 +135,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             }}
           />
         </div>
+      </div>
 
+      <div className={`${SCE_APP_MAIN_COLUMN} sce-app-main-with-mobile-nav`}>
         {/* Page content */}
         <main className="flex-1 px-5 py-6 lg:px-7 lg:py-7">
           <SportingActivityDetailProvider

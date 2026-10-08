@@ -11,9 +11,8 @@
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav .sce-global-app-header {
-  position: sticky;
-  top: 0;
-  z-index: 35;
+  position: relative;
+  z-index: 0;
   background: var(--sce-app-chrome);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);

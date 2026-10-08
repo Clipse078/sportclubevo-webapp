@@ -85,8 +85,12 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01 (UAT01)", () => {
   it("IMPERSONATION_DASHBOARD — admin shell owns impersonation chrome above module content", () => {
     const layout = readRelative("app/(admin)/layout.tsx");
     expect(layout).toContain("ImpersonationSafetyChrome");
+    expect(layout).toContain("sce-authenticated-sticky-shell-chrome");
     expect(layout.indexOf("ImpersonationSafetyChrome")).toBeLessThan(
       layout.indexOf("<main"),
+    );
+    expect(layout.indexOf("sce-authenticated-sticky-shell-chrome")).toBeLessThan(
+      layout.indexOf("sce-app-main-with-mobile-nav"),
     );
   });
 

@@ -27,13 +27,25 @@
 }
 
 /**
- * PEOPLE-ACCESS-IMPERSONATION-01R4 — safety chrome stays visible while scrolling,
- * directly under the sticky global app header (see global-app-navigation.css).
+ * PEOPLE-ACCESS-IMPERSONATION-01R5 — persistent authenticated shell chrome.
+ *
+ * Scroll owner: document/body (no nested app-shell scrollport). R4 sticky on the
+ * safety stack failed because it lived inside the main column with
+ * top: var(--topnav-height) while the sticky global header includes contextual
+ * navigation rows taller than --topnav-height — the banner slid under that layer.
+ *
+ * Stacking (low → high): page content → module sticky controls → shell safety
+ * chrome (with global header) → mobile bottom nav → modal overlays.
  */
-[data-sce-modal-background].sce-authenticated-app-shell .sce-authenticated-safety-chrome-stack {
+[data-sce-modal-background].sce-authenticated-app-shell {
+  --sce-shell-sticky-chrome-z-index: 35;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell .sce-authenticated-sticky-shell-chrome {
   position: sticky;
-  top: var(--topnav-height);
-  z-index: 34;
+  top: 0;
+  z-index: var(--sce-shell-sticky-chrome-z-index);
+  background: var(--sce-app-chrome);
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell .sce-impersonation-safety-banner {

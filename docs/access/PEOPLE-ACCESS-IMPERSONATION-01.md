@@ -101,9 +101,19 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 | **R4-01** | **Benutzeransicht aktiv** disappears on vertical scroll | Banner lived in document flow inside the main column without sticky positioning under the global header | `sce-authenticated-safety-chrome-stack` in `(admin)/layout` + sticky `top: var(--topnav-height)` / `z-index: 34` in `authenticated-shell.css`; shared shell only (no per-route duplication) |
 | **R4-02** | Sandra sees Match in Planner but cannot select/open for pitch/Garderobe workflow | `WeekPlannerWorkspace` gated canonical sheet activation on `events.manage` / `trainings.manage` only | `canOpenPlannerCanonicalEditor()` — `planning.allocations.manage` opens canonical allocation editor; domain schedule fields hidden when domain manage absent; Match operational PATCH classification unchanged |
 
-**UAT-PERM-01R4:** **HUMAN_UAT_PENDING** — retest checklist **UAT-PERM-01R4** on PR #808 preview after R4 HEAD is deployed (not the pre-R4 `8308dba2` preview).
+**UAT-PERM-01R4:** **FAILED** (Human UAT 2026-10-08) — **UAT-PERM-01R4-A**: impersonation safety chrome still disappeared during vertical scroll on `/dashboard/planner/week` despite R4 sticky CSS (Match allocation fix from R4 otherwise reachable).
 
-**FCA STAGE readiness:** `FCA_ROLE_SYNC = APPLIED_TO_STAGE` (unchanged in R4). Do **not** mark UAT-PERM-01 PASS until Human **UAT-PERM-01R4** completes.
+**FCA STAGE readiness:** `FCA_ROLE_SYNC = APPLIED_TO_STAGE` (unchanged in R4/R5). Do **not** mark PEOPLE-ACCESS-IMPERSONATION-01 closed until Human **UAT-PERM-01R5** completes.
+
+### 01R5 fixes (PR #808)
+
+| ID | Observation | Root cause | Fix |
+|----|-------------|------------|-----|
+| **P1-IMP-R5-01** / **R4-01 (retest)** | **Benutzeransicht aktiv** / **Ansicht beenden** vanish when scrolling Wochenplaner | **Scroll owner:** `document` / `body` (no nested authenticated-shell scrollport). **Sticky containing block:** safety stack inside `sce-app-main-with-mobile-nav` with `position: sticky; top: var(--topnav-height)` — offset matched primary header row only while `.sce-global-app-header` sticks as a taller block (primary + domain context + module rows). Banner slid under contextual navigation / left the visible shell layer. | **`sce-authenticated-sticky-shell-chrome`** wraps global header + `sce-authenticated-safety-chrome-stack` (STAGE + impersonation) as one **`position: sticky; top: 0`** shell block (`--sce-shell-sticky-chrome-z-index: 35`). Safety chrome sits in document flow directly under the global header, outside `<main>` scrolling content. No per-module Planner fix. **Exit:** unchanged actor-scoped `POST /api/auth/stop-impersonation`. **R4 Match allocation:** preserved (`canOpenPlannerCanonicalEditor` / `planning.allocations.manage`). |
+
+**Stacking contract:** global header + safety chrome (sticky shell) → module/sub-nav & planner sticky controls → page content → dialogs/sheets (existing overlay roots above normal content).
+
+**UAT-PERM-01R5:** **HUMAN_UAT_PENDING** — retest persistent banner + exit on Dashboard, Wochenplaner (deep scroll), Training, Match Center, Tournament Center.
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
