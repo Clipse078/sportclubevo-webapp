@@ -91,7 +91,7 @@ Contextual collaboration + targeted communication will consume the same change/a
 | Planner / training regression | PASS (scoped) | Training session lifecycle/reschedule + planning operational auth batch green; session-allocation harness emits 2 known P2 unhandled rejections (public cache notification mock) |
 | Impersonation security | PASS | `trusted-session-state` + PEOPLE-ACCESS-IMPERSONATION governance tests in R1 batch |
 | Build / lint (changed files) | PASS | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` green; eslint on changed TS/TSX: 0 new errors |
-| Vercel preview | READY | PR #810 preview deployed at SHA `81e26c119ee15cdae3261fdf8c641168747ffa08` (pre-R1 commit); post-R1 commit triggers new preview |
+| Vercel preview | READY | PR #810 preview deployed at SHA `17ad4bbaba240cd6f86d27a772105be1b4adadcf` (SCE-COLLAB-01A-R1) |
 
 Status remains **IMPLEMENTED / HUMAN_UAT_PENDING** (not CLOSED).
 
