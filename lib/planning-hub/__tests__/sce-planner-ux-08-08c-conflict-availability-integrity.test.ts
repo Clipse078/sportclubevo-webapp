@@ -354,6 +354,7 @@ describe("08-08C assignability vs conflict occupancy", () => {
 
 const availabilityMocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
+  facilityResourceCodeAliasFindMany: vi.fn(),
   trainingSessionFindMany: vi.fn(),
   eventFindMany: vi.fn(),
   tournamentResourceAllocationFindMany: vi.fn(),
@@ -364,6 +365,7 @@ const availabilityMocks = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     facilityResource: { findMany: availabilityMocks.facilityResourceFindMany },
+    facilityResourceCodeAlias: { findMany: availabilityMocks.facilityResourceCodeAliasFindMany },
     trainingSession: { findMany: availabilityMocks.trainingSessionFindMany },
     event: { findMany: availabilityMocks.eventFindMany },
     tournamentResourceAllocation: { findMany: availabilityMocks.tournamentResourceAllocationFindMany },
@@ -398,6 +400,7 @@ beforeEach(() => {
   availabilityMocks.tournamentResourceAllocationFindMany.mockResolvedValue([]);
   availabilityMocks.tournamentParticipantAllocationFindMany.mockResolvedValue([]);
   availabilityMocks.eventFacilityAllocationFindMany.mockResolvedValue([]);
+  availabilityMocks.facilityResourceCodeAliasFindMany.mockResolvedValue([]);
 });
 
 describe("08-08C availability invariants", () => {
@@ -438,9 +441,12 @@ describe("08-08C availability invariants", () => {
     expect(rows[0]?.status).toBe("OCCUPIED");
   });
 
-  it("MATCH LEGACY — code rename leaves stale pitchCode unmatched (occupancy gap)", async () => {
+  it("MATCH LEGACY — stale pitchCode stays occupied when alias maps retired code", async () => {
     availabilityMocks.facilityResourceFindMany.mockResolvedValue([
-      { ...ACTIVE_PITCH, code: "KR2_NEW" },
+      { ...ACTIVE_PITCH, code: "KUNSTRASEN2" },
+    ]);
+    availabilityMocks.facilityResourceCodeAliasFindMany.mockResolvedValue([
+      { code: "KR2", facilityResourceId: "pitch-kr2" },
     ]);
     availabilityMocks.eventFindMany.mockResolvedValue([
       {
@@ -460,7 +466,7 @@ describe("08-08C availability invariants", () => {
       endAt: AV_END,
       group: "PITCH_HALL",
     });
-    expect(rows[0]?.status).toBe("FREE");
+    expect(rows[0]?.status).toBe("OCCUPIED");
   });
 
   it("DRESSING_ROOM parity — occupied active room unavailable", async () => {

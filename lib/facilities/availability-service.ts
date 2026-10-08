@@ -50,6 +50,10 @@ import {
   facilityResourceTypesForAvailabilityGroup,
 } from "@/lib/facilities/facility-resource-classification";
 import {
+  buildMatchLegacyCodeToResourceIdMap,
+  lookupMatchLegacyResourceId,
+} from "@/lib/facilities/match-legacy-resource-compatibility";
+import {
   findWeekplannerPlanConflicts,
   findWeekplannerReplacedActivities,
   shouldExcludeCanonicalEvent,
@@ -282,7 +286,7 @@ async function findMatchConflicts(
 
     for (const code of codes) {
       if (!code) continue;
-      const resourceId = resourcesByCode.get(code);
+      const resourceId = lookupMatchLegacyResourceId(resourcesByCode, code);
       if (!resourceId) continue;
       conflicts.push({ resourceId, label, startAt: effectiveStart, endAt: effectiveEnd, sourceType: "MATCH" });
     }
@@ -543,7 +547,11 @@ export async function getResourceAvailability(
 
   if (resources.length === 0) return [];
 
-  const resourcesByCode = new Map(resources.map((r) => [r.code, r.id]));
+  const resourcesByCode = await buildMatchLegacyCodeToResourceIdMap(
+    prisma,
+    tenantId,
+    resources.map((r) => ({ code: r.code, id: r.id })),
+  );
   const resourceRefsByCode = new Map(
     resources.map((r) => [
       r.code,

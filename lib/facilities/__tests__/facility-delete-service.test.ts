@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   tournamentParticipantAllocationCount: vi.fn(),
   weekplannerPlanAllocationCount: vi.fn(),
   eventFacilityAllocationCount: vi.fn(),
+  eventFindMany: vi.fn(),
+  facilityResourceCodeAliasFindMany: vi.fn(),
   transaction: vi.fn(),
 }));
 
@@ -49,6 +51,10 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     eventFacilityAllocation: {
       count: (...args: unknown[]) => mocks.eventFacilityAllocationCount(...args),
+    },
+    event: { findMany: (...args: unknown[]) => mocks.eventFindMany(...args) },
+    facilityResourceCodeAlias: {
+      findMany: (...args: unknown[]) => mocks.facilityResourceCodeAliasFindMany(...args),
     },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) => mocks.transaction(fn),
   },
@@ -83,6 +89,8 @@ function makeTx() {
     tournamentParticipantAllocation: { count: mocks.tournamentParticipantAllocationCount },
     weekplannerPlanAllocation: { count: mocks.weekplannerPlanAllocationCount },
     eventFacilityAllocation: { count: mocks.eventFacilityAllocationCount },
+    event: { findMany: mocks.eventFindMany },
+    facilityResourceCodeAlias: { findMany: mocks.facilityResourceCodeAliasFindMany },
   };
 }
 
@@ -102,6 +110,8 @@ function stubAllReferenceCounts(counts: Partial<Record<string, number>>) {
     Promise.resolve(value("weekplanner")),
   );
   mocks.eventFacilityAllocationCount.mockImplementation(() => Promise.resolve(value("event")));
+  mocks.eventFindMany.mockResolvedValue([]);
+  mocks.facilityResourceCodeAliasFindMany.mockResolvedValue([]);
 }
 
 beforeEach(() => {
@@ -116,7 +126,7 @@ describe("getFacilityResourceDeletionImpact", () => {
   });
 
   it("marks deletable when all reference counts are zero", async () => {
-    mocks.facilityResourceFindFirst.mockResolvedValue({ id: RESOURCE_ID });
+    mocks.facilityResourceFindFirst.mockResolvedValue({ id: RESOURCE_ID, code: "STADION" });
     stubAllReferenceCounts({});
     const impact = await getFacilityResourceDeletionImpact(TENANT_A, RESOURCE_ID);
     expect(impact?.deletable).toBe(true);
@@ -146,6 +156,23 @@ describe("deleteFacilityResourcePermanently", () => {
       code: "STADION",
     });
     stubAllReferenceCounts({ training: 1 });
+
+    await expect(deleteFacilityResourcePermanently(TENANT_A, RESOURCE_ID)).rejects.toMatchObject({
+      code: FACILITY_LIFECYCLE_ERROR_CODES.RESOURCE_IN_USE,
+    });
+    expect(mocks.facilityResourceDelete).not.toHaveBeenCalled();
+  });
+
+  it("D — match-only pitch reference blocks delete", async () => {
+    mocks.facilityResourceFindFirst.mockResolvedValue({
+      id: RESOURCE_ID,
+      name: "Kunstrasen 2",
+      code: "KR2",
+    });
+    stubAllReferenceCounts({});
+    mocks.eventFindMany.mockResolvedValue([
+      { pitchCode: "KR2", homeDressingRoomCode: null, awayDressingRoomCode: null },
+    ]);
 
     await expect(deleteFacilityResourcePermanently(TENANT_A, RESOURCE_ID)).rejects.toMatchObject({
       code: FACILITY_LIFECYCLE_ERROR_CODES.RESOURCE_IN_USE,

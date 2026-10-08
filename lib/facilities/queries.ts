@@ -15,6 +15,10 @@ import {
   normalizeFacilityResourceCode,
 } from "@/lib/facilities/facility-resource-reference-guard";
 import {
+  propagateMatchLegacyResourceCodesForRename,
+  registerFacilityResourceCodeAlias,
+} from "@/lib/facilities/match-legacy-resource-compatibility";
+import {
   withRequiredCodes,
   type FacilityResourceOption,
 } from "@/lib/facilities/resource-options";
@@ -285,8 +289,30 @@ export async function updateFacilityResource(
 ) {
   const patch = { ...data };
   if (typeof patch.code === "string") {
-    patch.code = normalizeFacilityResourceCode(patch.code);
-    await assertFacilityResourceCodeAvailable(prisma, tenantId, patch.code, id);
+    const newCode = normalizeFacilityResourceCode(patch.code);
+    patch.code = newCode;
+    await assertFacilityResourceCodeAvailable(prisma, tenantId, newCode, id);
+
+    return prisma.$transaction(async (tx) => {
+      const current = await tx.facilityResource.findFirst({
+        where: { id, tenantId },
+        select: { code: true },
+      });
+      if (!current) {
+        return tx.facilityResource.updateMany({ where: { id, tenantId }, data: patch });
+      }
+
+      const previousCode = normalizeFacilityResourceCode(current.code);
+      if (previousCode !== newCode) {
+        await registerFacilityResourceCodeAlias(tx, tenantId, id, previousCode);
+        await propagateMatchLegacyResourceCodesForRename(tx, tenantId, previousCode, newCode);
+      }
+
+      return tx.facilityResource.updateMany({
+        where: { id, tenantId },
+        data: patch,
+      });
+    });
   }
 
   return prisma.facilityResource.updateMany({

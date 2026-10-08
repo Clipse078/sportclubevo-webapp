@@ -47,6 +47,7 @@ vi.mock("@/lib/server/request-cache", () => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     facilityResource: { findMany: mocks.facilityResourceFindMany },
+    facilityResourceCodeAlias: { findMany: vi.fn().mockResolvedValue([]) },
     trainingAllocation: { findMany: mocks.trainingAllocationFindMany },
     trainingSessionAllocation: { findMany: mocks.trainingSessionAllocationFindMany },
     trainingSession: { findMany: mocks.trainingSessionFindMany },

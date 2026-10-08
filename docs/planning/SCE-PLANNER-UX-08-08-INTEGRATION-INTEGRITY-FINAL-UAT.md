@@ -3,7 +3,8 @@
 **Status:** **IN PROGRESS** — **08-08A** lifecycle/delete safety; **08-08B** mutation revalidation; **08-08C** conflict/availability integrity  
 **08_08A_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
 **08_08B_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
-**08_08C_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRITY PASS** (no P1 in slice; F-08-08-03 remains P2 deferred)  
+**08_08C_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRITY PASS**  
+**08_08C_R1_STATUS:** **IMPLEMENTED / MATCH LEGACY RENAME COMPATIBILITY** (F-08-08-03 → FIXED_COMPATIBILITY_LAYER)  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
 **Target:** STAGE  
@@ -339,20 +340,58 @@ Lifecycle operations on the **catalog row** (archive, inactive, rename, reactiva
 
 ### Conflict vs availability consistency
 
-For FK-backed training occupancy on the same interval, weekplanner conflict annotation and `getResourceAvailability` both report **OCCUPIED** (08-08C test). Match legacy code rename can desync availability (stale `pitchCode` → no code map hit) while weekplanner read may also fail to attach pitch ref — documented under F-08-08-03.
+For FK-backed training occupancy on the same interval, weekplanner conflict annotation and `getResourceAvailability` both report **OCCUPIED** (08-08C test). Match legacy rename integrity is handled by **08-08C/R1** (alias + propagation — see below).
 
-### Match legacy seam (F-08-08-03)
+### Match legacy seam (F-08-08-03) — 08-08C/R1 compatibility layer
 
-- **Model:** Match persists codes, not `facilityResourceId`.
-- **Code rename:** If `FacilityResource.code` changes but `Event.pitchCode` retains old value, availability marks pitch **FREE** incorrectly (characterized test); weekplanner match row may lose pitch ref when code no longer resolves.
-- **Status change:** Archive/inactive removes resource from assignable availability list; does not remove code from Event row — historical match display depends on `getFacilityResourcesByCodesForTenant` / `withRequiredCodes`.
-- **Classification:** **P2 / DEFERRED_SAFE** for 08-08 closure — bounded migration slice required for full FK parity; not release-blocking for training/tournament/event FK paths.
+- **Model:** Match still persists SCE-local codes (`Event.pitchCode`, `homeDressingRoomCode`, `awayDressingRoomCode`), not `facilityResourceId` FKs. Physical identity for facility-backed logic is **`facilityResourceId`** resolved at read time.
+- **Strategy (R1):** **A + B combined** — on `FacilityResource.code` rename, atomically (same transaction) register retired code in `FacilityResourceCodeAlias` (tenant-scoped, blocks code reuse) **and** propagate new code into Match allocation fields. Read paths merge current codes + aliases (`match-legacy-resource-compatibility.ts`, weekplanner + availability).
+- **Provider authority:** SFV schedule/detail sync **never** writes `pitchCode` / dressing codes (PUB-01 / `sync-schedule-persistence` U8). Propagation is SCE-local and survives normal resync.
+- **Delete guard:** Match-only legacy references count toward `RESOURCE_IN_USE` via `matchLegacyReferences` in `facility-resource-reference-guard.ts`.
+- **Code reuse:** Retired codes remain in alias table → `assertFacilityResourceCodeAvailable` rejects assigning old code to a new physical resource; alias map resolves historical Match to original `facilityResourceId`.
+- **Full Match FK migration:** **DEFERRED_NON_BLOCKING** — not required for FACILITY-INTEGRITY-01 Match rename/delete/conflict/availability closure.
+- **Tests:** `lib/facilities/__tests__/match-legacy-resource-compatibility.test.ts` (+ updated 08-08C characterization).
 
 ### Defects fixed in 08-08C
 
 | Fix | Detail |
 |-----|--------|
 | Availability assignable filter | `getResourceAvailability` now queries **ACTIVE** facility + resource only (was `not ARCHIVED`, which incorrectly included INACTIVE as selectable) |
+
+## 3D. SCE-PLANNER-UX-08-08C/R1 — Match legacy resource rename compatibility
+
+| Invariant | Mechanism |
+|-----------|-----------|
+| Rename KR2 → KUNSTRASEN2 | Transaction: alias old code + propagate Match fields + update resource |
+| Stale code read | `FacilityResourceCodeAlias` merged into weekplanner + availability code maps |
+| Code reuse | Alias unique `(tenantId, code)` + duplicate guard |
+| Delete | `matchLegacyReferences` in reference guard |
+| SFV resync | Provider never writes allocation codes — propagation not reverted |
+
+```bash
+npm run test -- lib/facilities/__tests__/match-legacy-resource-compatibility.test.ts
+```
+
+| Suite | Result |
+|-------|--------|
+| R1 characterization | **PASS** (10 tests) |
+| Broad sweep | **1013 pass, 14 fail — PRE_EXISTING (F-08-08-06)**; **NEW_FAILURES = 0** |
+| Build | **PASS** |
+
+### FACILITY-INTEGRITY-01 — Match cells (post R1)
+
+| Cell | Status |
+|------|--------|
+| MATCH_PITCH_RENAME | **COVERED_BY_TEST** |
+| MATCH_PITCH_STATUS | **COVERED_BY_TEST** (alias + inactive catalog rules unchanged) |
+| MATCH_PITCH_DELETE | **COVERED_BY_TEST** |
+| MATCH_DRESSING_RENAME | **COVERED_BY_TEST** |
+| MATCH_DRESSING_STATUS | **COVERED_BY_TEST** |
+| MATCH_DRESSING_DELETE | **COVERED_BY_TEST** |
+| MATCH_CONFLICT | **COVERED_BY_TEST** |
+| MATCH_AVAILABILITY | **COVERED_BY_TEST** |
+| MATCH_HISTORICAL_IDENTITY | **COVERED_BY_TEST** (alias) |
+| OVERALL_STATUS | **OPEN** — FI-01 not fully closed (non-Match cells / Human UAT) |
 
 ### Tests (08-08C)
 
@@ -380,15 +419,15 @@ Legend: **PASS** = code + test evidence; **COVERED_BY_TEST** = automated charact
 | Mutation ↓ / Consumer → | Admin | Training | Match | Tournament | Club event | Kalender | Spielfeld | Garderobe | Liste | Conflict engine | Availability | Infoboard | Historical refs | Future refs | Cache/reval |
 |---------------------------|-------|----------|-------|------------|------------|----------|-----------|-----------|-------|-----------------|--------------|-----------|-----------------|-------------|-------------|
 | Pitch create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | N/A | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
-| Pitch rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
-| Pitch archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
-| Pitch delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
+| Pitch rename | PASS | UNPROVEN | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
+| Pitch archive | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
+| Pitch delete | PASS+guard | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
 | DR create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
-| DR rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
-| DR archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
-| DR delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
+| DR rename | PASS | UNPROVEN | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
+| DR archive | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
+| DR delete | PASS+guard | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
 
-Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, **`sce-planner-ux-08-08c-conflict-availability-integrity.test.ts`**. Match-column cells remain **UNPROVEN** (legacy code seam).
+Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, **`sce-planner-ux-08-08c-conflict-availability-integrity.test.ts`**, **`match-legacy-resource-compatibility.test.ts`**. Match rename/delete/conflict/availability cells **COVERED_BY_TEST** (R1); full FK model still **DEFERRED**.
 
 ---
 
@@ -514,7 +553,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 |----|-----|--------|---------|----------|------------|-----------|-------|-----------|
 | F-08-08-01 | P1 → **FIXED (08-08A+08-08B)** | Facility delete | Delete blocked / RESTRICT; revalidation on safe delete | Historical activities remain intelligible | Restrict + service guards + post-delete revalidation | Planner, trainings, tournaments, events | `facility-delete-service.test.ts`, `facility-mutation-08-08b.test.ts` | **Done** |
 | F-08-08-02 | P2 → **FIXED (08-08B)** | Facility mutate → cache | Planner paths revalidated; client catalog syncs to server props | Planner surfaces update after facility mutation + RSC refresh | Was missing `revalidatePlannerWeekPaths` on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | `facility-mutation-08-08b.test.ts` | **08-08B done** |
-| F-08-08-03 | P2 → **DEFERRED_SAFE (08-08C evidence)** | Match identity | Match pitch/dressing via `pitchCode` strings | Single FK model like training | Code rename desyncs availability + week ref resolution (characterized); status/archive OK for FK paths | Match planner, availability, infoboard | **COVERED_BY_TEST** (08-08C legacy rename case) | Dedicated Match FK migration slice — not 08-08C |
+| F-08-08-03 | P2 → **FIXED_COMPATIBILITY_LAYER (08-08C/R1)** | Match identity | Match pitch/dressing via legacy codes + alias/propagation | Stable physical identity across rename | Was code-only lookup without rename seam | Match planner, availability, conflict, delete guard | **COVERED_BY_TEST** (`match-legacy-resource-compatibility.test.ts`) | Full Match FK migration **deferred non-blocking** |
 | F-08-08-04 | P2 → **PARTIAL (08-08A)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | Stable codes OK; block same-name facility + duplicate codes | Admin duplicate code/name guard | Duplicate lanes for distinct names | `facility-lifecycle-08-08a.test.ts` | Residual Class B pair — migration out of scope |
 | F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
 | F-08-08-06 | P3 | Test harness | 14 tests fail in broad sweep (`planner-url` `search.trim`, plan-overrides mocks) | Green CI | Test props omit `search`; mock drift | CI signal | — | 08-08F test hygiene |

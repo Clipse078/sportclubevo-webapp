@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
 const db = {
   facilityResource: { findFirst: (...args: unknown[]) => mocks.facilityResourceFindFirst(...args) },
   facility: { findMany: vi.fn() },
+  facilityResourceCodeAlias: { findFirst: vi.fn().mockResolvedValue(null) },
 };
 
 describe("normalizeFacilityResourceCode", () => {

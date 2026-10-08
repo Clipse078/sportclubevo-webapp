@@ -25,6 +25,7 @@ vi.mock("@/lib/db/prisma", () => ({
     trainingAllocation: { findMany: mocks.trainingAllocationFindMany },
     trainingSessionAllocation: { findMany: mocks.trainingSessionAllocationFindMany },
     facilityResource: { findMany: mocks.facilityResourceFindMany },
+    facilityResourceCodeAlias: { findMany: vi.fn().mockResolvedValue([]) },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
     weekplannerPlanAllocation: { findMany: vi.fn().mockResolvedValue([]) },

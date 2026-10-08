@@ -73,6 +73,7 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { normalizeFacilityResourceCode } from "@/lib/facilities/facility-resource-reference-guard";
 import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import {
@@ -170,6 +171,14 @@ type FacilityResourceRow = {
   facility: { id: string; name: string };
 };
 
+function resolveResourceByLegacyCode(
+  resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
+  rawCode: string | null | undefined,
+): WeekplannerResourceRef | undefined {
+  const normalized = rawCode?.trim() ? normalizeFacilityResourceCode(rawCode) : null;
+  return normalized ? resourceByCode.get(normalized) : undefined;
+}
+
 function toResourceRef(
   row: FacilityResourceRow,
   occupancy: { occupancyBeforeMinutes: number; occupancyAfterMinutes: number } = {
@@ -192,26 +201,58 @@ function toResourceRef(
 async function findFacilityResourceCodeMap(
   tenantId: string,
 ): Promise<Map<string, WeekplannerResourceRef>> {
-  const resources = await prisma.facilityResource.findMany({
-    where: {
-      tenantId,
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
-    },
-    select: {
-      id: true,
-      code: true,
-      name: true,
-      type: true,
-      facility: { select: { id: true, name: true } },
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-  });
+  const [resources, aliases] = await Promise.all([
+    prisma.facilityResource.findMany({
+      where: {
+        tenantId,
+        status: { not: "ARCHIVED" },
+        facility: { status: { not: "ARCHIVED" } },
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        type: true,
+        facility: { select: { id: true, name: true } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
+    prisma.facilityResourceCodeAlias.findMany({
+      where: { tenantId },
+      select: { code: true, facilityResourceId: true },
+    }),
+  ]);
+
+  const resourcesById = new Map(resources.map((resource) => [resource.id, resource]));
+
+  const missingAliasResourceIds = [
+    ...new Set(
+      aliases
+        .map((alias) => alias.facilityResourceId)
+        .filter((id) => !resourcesById.has(id)),
+    ),
+  ];
+
+  if (missingAliasResourceIds.length > 0) {
+    const aliasTargets = await prisma.facilityResource.findMany({
+      where: { tenantId, id: { in: missingAliasResourceIds } },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        type: true,
+        facility: { select: { id: true, name: true } },
+      },
+    });
+    for (const resource of aliasTargets) {
+      resourcesById.set(resource.id, resource);
+    }
+  }
 
   const map = new Map<string, WeekplannerResourceRef>();
   for (const resource of resources) {
     map.set(
-      resource.code,
+      normalizeFacilityResourceCode(resource.code),
       toResourceRef({
         id: resource.id,
         code: resource.code,
@@ -221,6 +262,24 @@ async function findFacilityResourceCodeMap(
       }),
     );
   }
+
+  for (const alias of aliases) {
+    const key = normalizeFacilityResourceCode(alias.code);
+    if (map.has(key)) continue;
+    const resource = resourcesById.get(alias.facilityResourceId);
+    if (!resource) continue;
+    map.set(
+      key,
+      toResourceRef({
+        id: resource.id,
+        code: resource.code,
+        name: resource.name,
+        type: resource.type ?? undefined,
+        facility: { id: resource.facility.id, name: resource.facility.name },
+      }),
+    );
+  }
+
   return map;
 }
 
@@ -679,11 +738,11 @@ function mapWeekplannerVeranstaltungEvents(
       }
     }
     if (pitchAllocations.length === 0 && event.pitchCode) {
-      const pitchRef = resourceByCode.get(event.pitchCode);
+      const pitchRef = resolveResourceByLegacyCode(resourceByCode, event.pitchCode);
       if (pitchRef) pitchAllocations.push(pitchRef);
     }
     if (dressingRoomAllocations.length === 0 && event.homeDressingRoomCode) {
-      const roomRef = resourceByCode.get(event.homeDressingRoomCode);
+      const roomRef = resolveResourceByLegacyCode(resourceByCode, event.homeDressingRoomCode);
       if (roomRef) dressingRoomAllocations.push(roomRef);
     }
     const teamNames = event.teamSeason?.team?.name ? [event.teamSeason.team.name] : [];
@@ -738,15 +797,9 @@ function mapWeekplannerHomeMatchItems(
   >,
 ): WeekplannerMatchItem[] {
   return homeMatches.map((match) => {
-    const pitchRef = match.operational.pitchCode
-      ? resourceByCode.get(match.operational.pitchCode)
-      : undefined;
-    const homeRoomRef = match.operational.homeDressingRoomCode
-      ? resourceByCode.get(match.operational.homeDressingRoomCode)
-      : undefined;
-    const awayRoomRef = match.operational.awayDressingRoomCode
-      ? resourceByCode.get(match.operational.awayDressingRoomCode)
-      : undefined;
+    const pitchRef = resolveResourceByLegacyCode(resourceByCode, match.operational.pitchCode);
+    const homeRoomRef = resolveResourceByLegacyCode(resourceByCode, match.operational.homeDressingRoomCode);
+    const awayRoomRef = resolveResourceByLegacyCode(resourceByCode, match.operational.awayDressingRoomCode);
 
     // WEEKPLANNER-01B only supports overrides for the HOME side (Spielfeld/
     // Halle + the club's own Garderobe) — the away room is always the

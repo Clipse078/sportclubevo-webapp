@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   tournamentResourceAllocationFindMany: vi.fn(),
   tournamentParticipantAllocationFindMany: vi.fn(),
   eventFacilityAllocationFindMany: vi.fn(),
+  facilityResourceCodeAliasFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -25,6 +26,7 @@ vi.mock("@/lib/db/prisma", () => ({
     tournamentResourceAllocation: { findMany: mocks.tournamentResourceAllocationFindMany },
     tournamentParticipantAllocation: { findMany: mocks.tournamentParticipantAllocationFindMany },
     eventFacilityAllocation: { findMany: mocks.eventFacilityAllocationFindMany },
+    facilityResourceCodeAlias: { findMany: mocks.facilityResourceCodeAliasFindMany },
   },
 }));
 
@@ -71,6 +73,7 @@ beforeEach(() => {
   mocks.tournamentResourceAllocationFindMany.mockResolvedValue([]);
   mocks.tournamentParticipantAllocationFindMany.mockResolvedValue([]);
   mocks.eventFacilityAllocationFindMany.mockResolvedValue([]);
+  mocks.facilityResourceCodeAliasFindMany.mockResolvedValue([]);
 });
 
 describe("PLANNING-UX-07R4B — cross-event occupancy (canonical engine)", () => {

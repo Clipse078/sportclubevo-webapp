@@ -6,6 +6,7 @@
 
 import type { FacilityType, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { countMatchLegacyResourceReferences } from "@/lib/facilities/match-legacy-resource-compatibility";
 import {
   FACILITY_LIFECYCLE_ERROR_CODES,
   FACILITY_LIFECYCLE_MESSAGES,
@@ -20,6 +21,7 @@ export type FacilityResourceReferenceCounts = {
   tournamentParticipantAllocations: number;
   weekplannerPlanAllocations: number;
   eventFacilityAllocations: number;
+  matchLegacyReferences: number;
 };
 
 export type FacilityResourceReferenceDb = Pick<
@@ -30,6 +32,9 @@ export type FacilityResourceReferenceDb = Pick<
   | "tournamentParticipantAllocation"
   | "weekplannerPlanAllocation"
   | "eventFacilityAllocation"
+  | "event"
+  | "facilityResourceCodeAlias"
+  | "facilityResource"
 >;
 
 export function totalFacilityResourceReferences(
@@ -41,7 +46,8 @@ export function totalFacilityResourceReferences(
     counts.tournamentResourceAllocations +
     counts.tournamentParticipantAllocations +
     counts.weekplannerPlanAllocations +
-    counts.eventFacilityAllocations
+    counts.eventFacilityAllocations +
+    counts.matchLegacyReferences
   );
 }
 
@@ -52,6 +58,11 @@ export async function countFacilityResourceReferences(
 ): Promise<FacilityResourceReferenceCounts> {
   const scoped = { tenantId, facilityResourceId };
 
+  const resource = await db.facilityResource.findFirst({
+    where: { id: facilityResourceId, tenantId },
+    select: { code: true },
+  });
+
   const [
     trainingAllocations,
     trainingSessionAllocations,
@@ -59,6 +70,7 @@ export async function countFacilityResourceReferences(
     tournamentParticipantAllocations,
     weekplannerPlanAllocations,
     eventFacilityAllocations,
+    matchLegacyReferences,
   ] = await Promise.all([
     db.trainingAllocation.count({ where: scoped }),
     db.trainingSessionAllocation.count({ where: scoped }),
@@ -66,6 +78,9 @@ export async function countFacilityResourceReferences(
     db.tournamentParticipantAllocation.count({ where: scoped }),
     db.weekplannerPlanAllocation.count({ where: scoped }),
     db.eventFacilityAllocation.count({ where: scoped }),
+    resource
+      ? countMatchLegacyResourceReferences(db, tenantId, facilityResourceId, resource.code)
+      : Promise.resolve(0),
   ]);
 
   return {
@@ -75,6 +90,7 @@ export async function countFacilityResourceReferences(
     tournamentParticipantAllocations,
     weekplannerPlanAllocations,
     eventFacilityAllocations,
+    matchLegacyReferences,
   };
 }
 
@@ -159,7 +175,10 @@ export function mapForeignKeyViolationToLifecycleError(error: unknown): Facility
   );
 }
 
-export type FacilityWriteDb = Pick<PrismaClient, "facilityResource" | "facility">;
+export type FacilityWriteDb = Pick<
+  PrismaClient,
+  "facilityResource" | "facility" | "facilityResourceCodeAlias"
+>;
 
 export function normalizeFacilityResourceCode(raw: string): string {
   return raw.trim().replace(/\s+/g, " ").toUpperCase();
@@ -183,16 +202,26 @@ export async function assertFacilityResourceCodeAvailable(
     );
   }
 
-  const existing = await db.facilityResource.findFirst({
-    where: {
-      tenantId,
-      code: normalized,
-      ...(excludeResourceId ? { id: { not: excludeResourceId } } : {}),
-    },
-    select: { id: true },
-  });
+  const [existing, alias] = await Promise.all([
+    db.facilityResource.findFirst({
+      where: {
+        tenantId,
+        code: normalized,
+        ...(excludeResourceId ? { id: { not: excludeResourceId } } : {}),
+      },
+      select: { id: true },
+    }),
+    db.facilityResourceCodeAlias.findFirst({
+      where: {
+        tenantId,
+        code: normalized,
+        ...(excludeResourceId ? { facilityResourceId: { not: excludeResourceId } } : {}),
+      },
+      select: { id: true },
+    }),
+  ]);
 
-  if (existing) {
+  if (existing || alias) {
     throw new FacilityLifecycleError(
       FACILITY_LIFECYCLE_ERROR_CODES.DUPLICATE_RESOURCE,
       FACILITY_LIFECYCLE_MESSAGES.duplicateResourceCode,
