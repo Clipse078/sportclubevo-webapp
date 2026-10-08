@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { JWT } from "next-auth/jwt";
 import {
   resolveSessionPermissionKeys,
+  resolveSessionUserForTenant,
   resolveTenantMembershipContext,
 } from "@/lib/auth/session-context";
 
@@ -323,79 +324,125 @@ export async function applyTrustedJwtState(
     token.authorizationContextVersion = AUTHORIZATION_CONTEXT_VERSION;
   }
 
+  if (trigger === "update" && canonicalActorUserId) {
+    const intent = consumeTrustedSessionUpdateIntent(
+      trustedCapabilityFromSession(session),
+      canonicalActorUserId,
+    );
+
+    // Generic client update() calls have no server-issued one-use capability.
+    if (intent) {
+      if (intent.kind === "start-impersonation") {
+        if (token.isImpersonating) return token;
+        const pinnedTenantId =
+          typeof token.activeTenantId === "string" ? token.activeTenantId : null;
+        const actorAvailableTenants = Array.isArray(token.availableTenants)
+          ? token.availableTenants
+          : [];
+        if (!pinnedTenantId) return token;
+
+        const target = await resolveSessionUserForTenant(
+          prisma,
+          intent.targetUserId,
+          pinnedTenantId,
+        );
+        if (!target) return token;
+
+        token.id = target.id;
+        token.email = target.email;
+        token.firstName = target.firstName;
+        token.lastName = target.lastName;
+        token.roleKeys = target.roleKeys;
+        token.permissionKeys = target.permissionKeys;
+        token.isImpersonating = true;
+        token.effectiveUserId = target.id;
+        token.activeTenantId = pinnedTenantId;
+        token.activeMembershipId = target.activeMembershipId;
+        token.availableTenants = actorAvailableTenants;
+        return token;
+      }
+
+      if (intent.kind === "stop-impersonation") {
+        if (!token.isImpersonating) return token;
+        const actor = await loadLiveSessionUser(prisma, canonicalActorUserId);
+        if (!actor) return token;
+        token.actorEmail = actor.email;
+        token.actorName =
+          `${actor.firstName} ${actor.lastName}`.trim() || actor.email;
+        applyEffectiveUserState(token, actor, false);
+        return token;
+      }
+
+      const effectiveUserId =
+        typeof token.effectiveUserId === "string" && token.effectiveUserId
+          ? token.effectiveUserId
+          : typeof token.id === "string"
+            ? token.id
+            : "";
+
+      if (token.isImpersonating) {
+        const pinnedTenantId =
+          typeof token.activeTenantId === "string" ? token.activeTenantId : "";
+        const liveEffective =
+          effectiveUserId && pinnedTenantId
+            ? await resolveSessionUserForTenant(
+                prisma,
+                effectiveUserId,
+                pinnedTenantId,
+              )
+            : null;
+        if (!liveEffective) return token;
+        token.id = liveEffective.id;
+        token.email = liveEffective.email;
+        token.firstName = liveEffective.firstName;
+        token.lastName = liveEffective.lastName;
+        token.roleKeys = liveEffective.roleKeys;
+        token.permissionKeys = liveEffective.permissionKeys;
+        token.effectiveUserId = liveEffective.id;
+        token.activeTenantId = pinnedTenantId;
+        token.activeMembershipId = liveEffective.activeMembershipId;
+        return token;
+      }
+
+      const effectiveUser = await loadLiveSessionUser(prisma, effectiveUserId);
+      if (!effectiveUser) return token;
+
+      token.actorEmail = effectiveUser.email;
+      token.actorName =
+        `${effectiveUser.firstName} ${effectiveUser.lastName}`.trim() ||
+        effectiveUser.email;
+      applyEffectiveUserState(token, effectiveUser, false);
+      return token;
+    }
+  }
+
   if (token.isImpersonating) {
     const effectiveUserId =
       typeof token.effectiveUserId === "string" ? token.effectiveUserId : "";
-    const activeTenantId =
+    const pinnedTenantId =
       typeof token.activeTenantId === "string" ? token.activeTenantId : "";
-    if (
-      !effectiveUserId ||
-      !activeTenantId ||
-      !(await isCurrentEffectiveUserEligible(
-        prisma,
-        effectiveUserId,
-        activeTenantId,
-      ))
-    ) {
+    const liveEffective =
+      effectiveUserId && pinnedTenantId
+        ? await resolveSessionUserForTenant(
+            prisma,
+            effectiveUserId,
+            pinnedTenantId,
+          )
+        : null;
+    if (!liveEffective) {
       return null;
     }
+    token.id = liveEffective.id;
+    token.email = liveEffective.email;
+    token.firstName = liveEffective.firstName;
+    token.lastName = liveEffective.lastName;
+    token.roleKeys = liveEffective.roleKeys;
+    token.permissionKeys = liveEffective.permissionKeys;
+    token.effectiveUserId = liveEffective.id;
+    token.activeTenantId = pinnedTenantId;
+    token.activeMembershipId = liveEffective.activeMembershipId;
   }
 
-  if (trigger !== "update" || !canonicalActorUserId) return token;
-
-  const intent = consumeTrustedSessionUpdateIntent(
-    trustedCapabilityFromSession(session),
-    canonicalActorUserId,
-  );
-
-  // Generic client update() calls have no server-issued one-use capability.
-  // Their entire payload is ignored, including presentation fields.
-  if (!intent) return token;
-
-  if (intent.kind === "start-impersonation") {
-    if (token.isImpersonating) return token;
-    const target = await loadLiveSessionUser(prisma, intent.targetUserId);
-    if (
-      !target?.activeTenantId ||
-      !target.activeMembershipId ||
-      !(await isCurrentEffectiveUserEligible(
-        prisma,
-        target.id,
-        target.activeTenantId,
-      ))
-    ) {
-      return token;
-    }
-    applyEffectiveUserState(token, target, true);
-    return token;
-  }
-
-  if (intent.kind === "stop-impersonation") {
-    if (!token.isImpersonating) return token;
-    const actor = await loadLiveSessionUser(prisma, canonicalActorUserId);
-    if (!actor) return token;
-    token.actorEmail = actor.email;
-    token.actorName = `${actor.firstName} ${actor.lastName}`.trim() || actor.email;
-    applyEffectiveUserState(token, actor, false);
-    return token;
-  }
-
-  const effectiveUserId =
-    typeof token.effectiveUserId === "string" && token.effectiveUserId
-      ? token.effectiveUserId
-      : typeof token.id === "string"
-        ? token.id
-        : "";
-  const effectiveUser = await loadLiveSessionUser(prisma, effectiveUserId);
-  if (!effectiveUser) return token;
-
-  if (effectiveUser.id === canonicalActorUserId) {
-    token.actorEmail = effectiveUser.email;
-    token.actorName =
-      `${effectiveUser.firstName} ${effectiveUser.lastName}`.trim() ||
-      effectiveUser.email;
-  }
-  applyEffectiveUserState(token, effectiveUser, Boolean(token.isImpersonating));
   return token;
 }
 

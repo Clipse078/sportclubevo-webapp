@@ -38,7 +38,7 @@ export default function StopImpersonationButton() {
       disabled={submitting}
       className="fca-button-secondary shrink-0 border-[var(--sce-warning-border)] text-[var(--sce-warning)] hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {submitting ? "Beende…" : "Impersonation beenden"}
+      {submitting ? "Beende…" : "Ansicht beenden"}
     </button>
   );
 }

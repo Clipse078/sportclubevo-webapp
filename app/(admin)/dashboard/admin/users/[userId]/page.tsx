@@ -17,6 +17,7 @@ import ScopedRoleManagementControl from "@/components/admin/users/ScopedRoleMana
 import PersonNavEffectiveAccessCard from "@/components/admin/users/PersonNavEffectiveAccessCard";
 import PersonAdminActionsPanel from "@/components/admin/users/PersonAdminActionsPanel";
 import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
+import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
 
 type Props = {
   params: Promise<{ userId: string }>;
@@ -66,11 +67,12 @@ export default async function AdminUserDetailPage({ params }: Props) {
     hasPermission(session, PERMISSIONS.USERS_MANAGE_MEMBERSHIPS) ||
     hasPermission(session, PERMISSIONS.USERS_MANAGE);
   const canInvite = hasPermission(session, PERMISSIONS.USERS_INVITE);
+  const actorUserId = session.user.actorUserId ?? session.user.id;
   const canImpersonate =
-    hasPermission(session, PERMISSIONS.USERS_IMPERSONATE_TENANT) ||
-    hasPermission(session, PERMISSIONS.USERS_IMPERSONATE);
-  const currentUserId = session.user.effectiveUserId ?? session.user.id;
-  const isSelf = currentUserId === userId;
+    !session.user.isImpersonating &&
+    actorUserId === (session.user.effectiveUserId ?? session.user.id) &&
+    (await actorHasImpersonateTenantPermission(actorUserId, tenantId));
+  const isSelf = actorUserId === userId;
 
   const linkedPerson = user.person;
   const pendingInvitation = user.passwordResetTokens.length > 0;

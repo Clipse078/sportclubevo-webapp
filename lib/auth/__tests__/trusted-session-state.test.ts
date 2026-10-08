@@ -5,6 +5,7 @@ import type { JWT } from "next-auth/jwt";
 const mocks = vi.hoisted(() => ({
   resolveTenantMembershipContext: vi.fn(),
   resolveSessionPermissionKeys: vi.fn(),
+  resolveSessionUserForTenant: vi.fn(),
   userFindUnique: vi.fn(),
   userFindFirst: vi.fn(),
 }));
@@ -12,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth/session-context", () => ({
   resolveTenantMembershipContext: mocks.resolveTenantMembershipContext,
   resolveSessionPermissionKeys: mocks.resolveSessionPermissionKeys,
+  resolveSessionUserForTenant: mocks.resolveSessionUserForTenant,
 }));
 
 import {
@@ -78,6 +80,23 @@ beforeEach(() => {
   );
   mocks.resolveSessionPermissionKeys.mockImplementation(
     async (_prisma: unknown, userId: string) => [`permission:${userId}`],
+  );
+  mocks.resolveSessionUserForTenant.mockImplementation(
+    async (_prisma: unknown, userId: string, tenantId: string) => {
+      if (userId === "target-1" && tenantId === "tenant-a") {
+        return {
+          id: "target-1",
+          email: "target-1@example.com",
+          firstName: "Terry",
+          lastName: "Target",
+          roleKeys: ["member"],
+          permissionKeys: ["permission:target-1"],
+          activeTenantId: tenantId,
+          activeMembershipId: "membership-target-1-tenant-a",
+        };
+      }
+      return null;
+    },
   );
   mocks.userFindUnique.mockImplementation(async ({ where }: { where: { id: string } }) =>
     liveUser(where.id),
@@ -410,7 +429,7 @@ describe("password-change session revocation", () => {
 
 describe("trusted impersonation lifecycle", () => {
   it("rejects an existing impersonated session when the effective user is no longer eligible", async () => {
-    mocks.userFindFirst.mockResolvedValueOnce(null);
+    mocks.resolveSessionUserForTenant.mockResolvedValueOnce(null);
     const token = cloneToken({
       ...actorToken,
       id: "target-1",
@@ -422,19 +441,10 @@ describe("trusted impersonation lifecycle", () => {
     const result = await applyTrustedJwtState({ token }, prisma);
 
     expect(result).toBeNull();
-    expect(mocks.userFindFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          id: "target-1",
-          isActive: true,
-          tenantMemberships: {
-            some: expect.objectContaining({
-              tenantId: "tenant-a",
-              isActive: true,
-            }),
-          },
-        }),
-      }),
+    expect(mocks.resolveSessionUserForTenant).toHaveBeenCalledWith(
+      prisma,
+      "target-1",
+      "tenant-a",
     );
   });
 
@@ -462,10 +472,53 @@ describe("trusted impersonation lifecycle", () => {
       id: "target-1",
       effectiveUserId: "target-1",
       isImpersonating: true,
-      activeTenantId: "tenant-target-1",
-      activeMembershipId: "membership-target-1",
+      activeTenantId: "tenant-a",
+      activeMembershipId: "membership-target-1-tenant-a",
       permissionKeys: ["permission:target-1"],
+      availableTenants: actorToken.availableTenants,
     });
+    expect(mocks.resolveSessionUserForTenant).toHaveBeenCalledWith(
+      prisma,
+      "target-1",
+      "tenant-a",
+    );
+  });
+
+  it("pins impersonation to the actor tenant when the target belongs to multiple tenants", async () => {
+    mocks.resolveSessionUserForTenant.mockImplementation(
+      async (_prisma: unknown, userId: string, tenantId: string) => {
+        expect(tenantId).toBe("tenant-a");
+        if (userId !== "target-1") return null;
+        return {
+          id: "target-1",
+          email: "target-1@example.com",
+          firstName: "Terry",
+          lastName: "Target",
+          roleKeys: ["member"],
+          permissionKeys: ["permission:tenant-a-only"],
+          activeTenantId: "tenant-a",
+          activeMembershipId: "membership-target-a",
+        };
+      },
+    );
+    const token = cloneToken();
+    const capability = issueTrustedSessionUpdateIntent({
+      kind: "start-impersonation",
+      actorUserId: "actor-1",
+      targetUserId: "target-1",
+    });
+
+    await applyTrustedJwtState(
+      {
+        token,
+        trigger: "update",
+        session: trustedUpdatePayload(capability),
+      },
+      prisma,
+    );
+
+    expect(token.activeTenantId).toBe("tenant-a");
+    expect(token.permissionKeys).toEqual(["permission:tenant-a-only"]);
   });
 
   it("does not start impersonation without a capability issued for this actor", async () => {
@@ -518,13 +571,10 @@ describe("trusted impersonation lifecycle", () => {
 
     expect(firstToken.effectiveUserId).toBe("target-1");
     expect(replayToken).toEqual(actorToken);
-    expect(mocks.userFindUnique).toHaveBeenCalledTimes(3);
   });
 
   it("fails closed when the target user is inactive", async () => {
-    mocks.userFindUnique
-      .mockResolvedValueOnce(liveUser("actor-1"))
-      .mockResolvedValueOnce(liveUser("target-1", { isActive: false }));
+    mocks.resolveSessionUserForTenant.mockResolvedValueOnce(null);
     const token = cloneToken();
     const before = cloneToken(token);
     const capability = issueTrustedSessionUpdateIntent({
@@ -546,12 +596,7 @@ describe("trusted impersonation lifecycle", () => {
   });
 
   it("does not start impersonation when the target has no live membership", async () => {
-    mocks.resolveTenantMembershipContext.mockResolvedValueOnce({
-      activeTenantId: null,
-      activeMembershipId: null,
-      availableTenants: [],
-    });
-    mocks.resolveSessionPermissionKeys.mockResolvedValueOnce([]);
+    mocks.resolveSessionUserForTenant.mockResolvedValueOnce(null);
     const token = cloneToken();
     const before = cloneToken(token);
     const capability = issueTrustedSessionUpdateIntent({
@@ -570,11 +615,10 @@ describe("trusted impersonation lifecycle", () => {
     );
 
     expect(token).toEqual(before);
-    expect(mocks.userFindFirst).not.toHaveBeenCalled();
   });
 
   it("does not start impersonation when target eligibility is revoked during setup", async () => {
-    mocks.userFindFirst.mockResolvedValueOnce(null);
+    mocks.resolveSessionUserForTenant.mockResolvedValueOnce(null);
     const token = cloneToken();
     const before = cloneToken(token);
     const capability = issueTrustedSessionUpdateIntent({
@@ -593,6 +637,30 @@ describe("trusted impersonation lifecycle", () => {
     );
 
     expect(token).toEqual(before);
+  });
+
+  it("refreshes effective permissionKeys from live state on each jwt callback while impersonating", async () => {
+    mocks.resolveSessionUserForTenant.mockResolvedValue({
+      id: "target-1",
+      email: "target-1@example.com",
+      firstName: "Terry",
+      lastName: "Target",
+      roleKeys: ["member"],
+      permissionKeys: ["teams.view"],
+      activeTenantId: "tenant-a",
+      activeMembershipId: "membership-target-1-tenant-a",
+    });
+    const token = cloneToken({
+      ...actorToken,
+      id: "target-1",
+      effectiveUserId: "target-1",
+      isImpersonating: true,
+      permissionKeys: ["teams.manage"],
+    });
+
+    await applyTrustedJwtState({ token }, prisma);
+
+    expect(token.permissionKeys).toEqual(["teams.view"]);
   });
 
   it("stops impersonation by restoring the subject actor from live state", async () => {

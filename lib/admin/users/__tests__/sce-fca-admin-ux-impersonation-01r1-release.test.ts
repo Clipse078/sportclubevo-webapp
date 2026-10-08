@@ -23,6 +23,9 @@ describe("SCE-FCA-ADMIN-UX-IMPERSONATION-01R1 — release hardening sentinels", 
 
     expect(banner).toContain("flex flex-col gap-3 sm:flex-row");
     expect(banner).toContain("StopImpersonationButton");
+    expect(banner).toContain("actorDisplayName");
+    expect(banner).toContain("Benutzeransicht aktiv");
+    expect(stop).toContain("Ansicht beenden");
     expect(stop).toContain("shrink-0");
   });
 

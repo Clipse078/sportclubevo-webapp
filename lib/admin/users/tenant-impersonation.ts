@@ -4,6 +4,8 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { userHasPlatformSystemIdentity } from "@/lib/admin/people-access/platform-identity";
+import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 export type ImpersonationGateResult =
   | { ok: true; actorUserId: string; targetUserId: string; tenantId: string }
@@ -106,4 +108,19 @@ export async function assertCanImpersonateTenantMember(input: {
   }
 
   return { ok: true, actorUserId, targetUserId, tenantId };
+}
+
+/** Live DB check: REAL actor holds tenant impersonation in the active tenant. */
+export async function actorHasImpersonateTenantPermission(
+  actorUserId: string,
+  tenantId: string | null | undefined,
+): Promise<boolean> {
+  if (!actorUserId || !tenantId) return false;
+
+  const resolver = createEffectivePermissionResolver(prisma);
+  return resolver.hasPermission({
+    userId: actorUserId,
+    permission: PERMISSIONS.USERS_IMPERSONATE_TENANT,
+    tenantId,
+  });
 }

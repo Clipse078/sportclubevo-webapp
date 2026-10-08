@@ -128,6 +128,11 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
               `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
               session.user.email
             }
+            actorDisplayName={
+              session.user.actorName?.trim() ||
+              session.user.actorEmail ||
+              "Administrator"
+            }
           />
         ) : null}
 

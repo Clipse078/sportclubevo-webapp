@@ -36,12 +36,15 @@ import type { PrismaClient } from "@prisma/client";
 import {
   resolveTenantMembershipContext,
   resolveSessionPermissionKeys,
+  resolveSessionUserForTenant,
 } from "../session-context";
 
 function makeMockPrisma(overrides: {
   tenantMembershipFindMany?: ReturnType<typeof vi.fn>;
   userRoleFindMany?: ReturnType<typeof vi.fn>;
   tenantMembershipFindUnique?: ReturnType<typeof vi.fn>;
+  userFindFirst?: ReturnType<typeof vi.fn>;
+  userPermissionOverrideFindMany?: ReturnType<typeof vi.fn>;
 } = {}): PrismaClient {
   return {
     tenantMembership: {
@@ -50,6 +53,12 @@ function makeMockPrisma(overrides: {
     },
     userRole: {
       findMany: overrides.userRoleFindMany ?? vi.fn().mockResolvedValue([]),
+    },
+    user: {
+      findFirst: overrides.userFindFirst ?? vi.fn().mockResolvedValue(null),
+    },
+    userPermissionOverride: {
+      findMany: overrides.userPermissionOverrideFindMany ?? vi.fn().mockResolvedValue([]),
     },
   } as unknown as PrismaClient;
 }
@@ -231,20 +240,22 @@ describe("resolveSessionPermissionKeys", () => {
     // like teams.manage. Before RPERM-04, auth.ts flattened this into
     // session.permissionKeys unconditionally — silently granting the
     // platform super admin every tenant's operational permissions.
+    const platformRoles = [
+      {
+        tenantId: null,
+        role: {
+          rolePermissions: [
+            { permission: { key: "users.manage", scope: "PLATFORM" } },
+            { permission: { key: "teams.manage", scope: "TENANT" } },
+            { permission: { key: "events.manage", scope: "TENANT" } },
+          ],
+        },
+      },
+    ];
     const prisma = makeMockPrisma({
       userRoleFindMany: vi.fn().mockImplementation(({ where }) => {
-        if (where.tenantId === null) {
-          return Promise.resolve([
-            {
-              role: {
-                rolePermissions: [
-                  { permission: { key: "users.manage", scope: "PLATFORM" } },
-                  { permission: { key: "teams.manage", scope: "TENANT" } },
-                  { permission: { key: "events.manage", scope: "TENANT" } },
-                ],
-              },
-            },
-          ]);
+        if (where.tenantId === null || where.OR) {
+          return Promise.resolve(platformRoles);
         }
         return Promise.resolve([]);
       }),
@@ -264,19 +275,25 @@ describe("resolveSessionPermissionKeys", () => {
         if (where.tenantId === null) {
           return Promise.resolve([]);
         }
-        return Promise.resolve([
-          {
-            role: {
-              rolePermissions: [
-                { permission: { key: "teams.manage", scope: "TENANT" } },
-              ],
+        if (where.OR) {
+          return Promise.resolve([
+            {
+              tenantId: "tenant-1",
+              role: {
+                rolePermissions: [
+                  { permission: { key: "teams.manage", scope: "TENANT" } },
+                ],
+              },
             },
-          },
-        ]);
+          ]);
+        }
+        return Promise.resolve([]);
       }),
-      tenantMembershipFindUnique: vi
-        .fn()
-        .mockResolvedValue({ isActive: true, tenant: { status: "ACTIVE" } }),
+      tenantMembershipFindUnique: vi.fn().mockResolvedValue({
+        isActive: true,
+        user: { isActive: true },
+        tenant: { status: "ACTIVE" },
+      }),
     });
 
     const keys = await resolveSessionPermissionKeys(prisma, "user-1", "tenant-1");
@@ -287,22 +304,25 @@ describe("resolveSessionPermissionKeys", () => {
   it("PK-06: an active membership in an ARCHIVED tenant contributes no tenant permissions (RPERM-04-C1)", async () => {
     const prisma = makeMockPrisma({
       userRoleFindMany: vi.fn().mockImplementation(({ where }) => {
-        if (where.tenantId === null) {
-          return Promise.resolve([]);
-        }
-        return Promise.resolve([
-          {
-            role: {
-              rolePermissions: [
-                { permission: { key: "teams.manage", scope: "TENANT" } },
-              ],
+        if (where.OR) {
+          return Promise.resolve([
+            {
+              tenantId: "tenant-1",
+              role: {
+                rolePermissions: [
+                  { permission: { key: "teams.manage", scope: "TENANT" } },
+                ],
+              },
             },
-          },
-        ]);
+          ]);
+        }
+        return Promise.resolve([]);
       }),
-      tenantMembershipFindUnique: vi
-        .fn()
-        .mockResolvedValue({ isActive: true, tenant: { status: "ARCHIVED" } }),
+      tenantMembershipFindUnique: vi.fn().mockResolvedValue({
+        isActive: true,
+        user: { isActive: true },
+        tenant: { status: "ARCHIVED" },
+      }),
     });
 
     const keys = await resolveSessionPermissionKeys(prisma, "user-1", "tenant-1");
@@ -339,5 +359,59 @@ describe("resolveSessionPermissionKeys", () => {
 
     expect(keys).toEqual([]);
     expect(findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("resolveSessionUserForTenant", () => {
+  it("returns null when the user is not an active member of the pinned tenant", async () => {
+    const prisma = makeMockPrisma({
+      userFindFirst: vi.fn().mockResolvedValue(null),
+    });
+
+    const result = await resolveSessionUserForTenant(prisma, "target-1", "tenant-a");
+
+    expect(result).toBeNull();
+  });
+
+  it("resolves permissions for the pinned tenant membership", async () => {
+    const prisma = makeMockPrisma({
+      userFindFirst: vi.fn().mockResolvedValue({
+        id: "target-1",
+        email: "target@example.com",
+        firstName: "Terry",
+        lastName: "Target",
+        userRoles: [{ role: { key: "member" } }],
+        tenantMemberships: [{ id: "membership-a" }],
+      }),
+      userRoleFindMany: vi.fn().mockImplementation(({ where }) => {
+        if (where.OR) {
+          return Promise.resolve([
+            {
+              tenantId: "tenant-a",
+              role: {
+                rolePermissions: [
+                  { permission: { key: "planning.view", scope: "TENANT" } },
+                ],
+              },
+            },
+          ]);
+        }
+        return Promise.resolve([]);
+      }),
+      tenantMembershipFindUnique: vi.fn().mockResolvedValue({
+        isActive: true,
+        user: { isActive: true },
+        tenant: { status: "ACTIVE" },
+      }),
+    });
+
+    const result = await resolveSessionUserForTenant(prisma, "target-1", "tenant-a");
+
+    expect(result).toMatchObject({
+      id: "target-1",
+      activeTenantId: "tenant-a",
+      activeMembershipId: "membership-a",
+      permissionKeys: ["planning.view"],
+    });
   });
 });

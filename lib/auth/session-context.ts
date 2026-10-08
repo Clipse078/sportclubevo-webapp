@@ -120,3 +120,74 @@ export async function resolveSessionPermissionKeys(
 
   return Array.from(new Set([...platform, ...tenant])).sort();
 }
+
+export type ResolvedSessionUserProfile = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roleKeys: string[];
+  permissionKeys: string[];
+  activeTenantId: string;
+  activeMembershipId: string;
+};
+
+/**
+ * Builds session presentation + authorization fields for a user scoped to an
+ * explicit tenant. Used for impersonation (tenant pin) and live JWT refresh
+ * while impersonating — never derives tenant from the user's default membership.
+ */
+export async function resolveSessionUserForTenant(
+  prisma: PrismaClient,
+  userId: string,
+  tenantId: string,
+): Promise<ResolvedSessionUserProfile | null> {
+  if (!userId || !tenantId) return null;
+
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      isActive: true,
+      tenantMemberships: {
+        some: {
+          tenantId,
+          isActive: true,
+          tenant: { status: "ACTIVE" },
+        },
+      },
+    },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      userRoles: {
+        select: { role: { select: { key: true } } },
+      },
+      tenantMemberships: {
+        where: {
+          tenantId,
+          isActive: true,
+          tenant: { status: "ACTIVE" },
+        },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  });
+
+  if (!user || user.tenantMemberships.length === 0) return null;
+
+  const permissionKeys = await resolveSessionPermissionKeys(prisma, userId, tenantId);
+
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    roleKeys: Array.from(new Set(user.userRoles.map((userRole) => userRole.role.key))),
+    permissionKeys,
+    activeTenantId: tenantId,
+    activeMembershipId: user.tenantMemberships[0].id,
+  };
+}
