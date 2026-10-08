@@ -113,7 +113,33 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 
 **Stacking contract:** global header + safety chrome (sticky shell) → module/sub-nav & planner sticky controls → page content → dialogs/sheets (existing overlay roots above normal content).
 
-**UAT-PERM-01R5:** **HUMAN_UAT_PENDING** — retest persistent banner + exit on Dashboard, Wochenplaner (deep scroll), Training, Match Center, Tournament Center.
+**UAT-PERM-01R5-A:** **PASS** (Human UAT 2026-10-08) — sticky **Benutzeransicht aktiv** / **Ansicht beenden** on Dashboard, Wochenplaner (deep scroll), Trainings, Match Center / Match detail; R4 Match operational allocation remains available.
+
+**UAT-PERM-01R5-B:** **FAIL** (Human UAT 2026-10-08) — **P1_IMP_R6_01:** impersonation start works via URL/API but no discoverable **Als Benutzer ansehen** entry in Admin → Personen & Zugänge (row ••• menu / quick-detail).
+
+### 01R6 fixes (PR #808) — discoverable start UI
+
+| ID | Observation | Fix |
+|----|-------------|-----|
+| **P1_IMP_R6_01** | No People & Access UI to start impersonation | **Primary:** row ••• menu → **Als Benutzer ansehen** (`UserRowActionsMenu` + shared `ImpersonateButton`). **Secondary:** person quick-detail footer → same control. **Capability:** `actorHasImpersonateTenantPermission` + `canShowImpersonateTenantUserAction` (actor-scoped; target eligibility mirrors `assertCanImpersonateTenantMember` UI contract). **Start path unchanged:** `POST /api/users/[userId]/impersonate` → `startImpersonationSession` → redirect `/dashboard` → R5 safety chrome. |
+
+**Canonical Human path (R6):**
+
+Admin → Personen & Zugänge → target person → **Als Benutzer ansehen** → `/dashboard` → **BENUTZERANSICHT AKTIV**
+
+**Security model (unchanged):**
+
+```
+REAL ACTOR
+  └─ users.impersonate_tenant
+       └─ eligible tenant target (membership, active, no pending invite, not platform system)
+            └─ impersonation session
+                 └─ EFFECTIVE USER permissions
+```
+
+**EFFECTIVE USER** permissions never grant the ability to start impersonation. Nested start rejected while `isImpersonating`.
+
+**UAT-PERM-01R6:** **HUMAN_UAT_PENDING** — discoverability + start + effective permissions + sticky chrome retest + stop.
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
@@ -121,7 +147,7 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 
 ### P2-IMP-02 — Legacy route (DEFERRED)
 
-`/dashboard/users/[userId]` still gates platform `users.impersonate` only. FCA Club Admin path uses People & Access person detail — documented; no routing redesign in 01R2.
+`/dashboard/users/[userId]` still gates platform `users.impersonate` only. FCA Club Admin canonical paths: People & Access list (R6) and person detail (`PersonAdminActionsPanel`).
 
 ---
 

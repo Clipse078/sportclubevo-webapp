@@ -19,9 +19,18 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, MoreHorizontal, Trash2, User, UserMinus, X } from "lucide-react";
+import {
+  AlertTriangle,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  User,
+  UserMinus,
+  X,
+} from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
+import ImpersonateButton from "@/components/admin/users/ImpersonateButton";
 
 type Props = {
   userId: string;
@@ -35,6 +44,11 @@ type Props = {
   canGlobalDelete: boolean;
   /** Prevent self-removal from offering the remove action. */
   isSelf: boolean;
+  /** Real actor may start tenant impersonation for this target (server-derived). */
+  canImpersonateTarget?: boolean;
+  /** Show tenant admin shortcuts (not destructive). */
+  canShowAdminShortcuts?: boolean;
+  onEditAccess?: (userId: string) => void;
   linkedPersonName?: string | null;
   tenantRoleNames?: string[];
 };
@@ -47,6 +61,9 @@ export default function UserRowActionsMenu({
   canManageMembership,
   canGlobalDelete,
   isSelf,
+  canImpersonateTarget = false,
+  canShowAdminShortcuts = false,
+  onEditAccess,
   linkedPersonName,
   tenantRoleNames = [],
 }: Props) {
@@ -65,9 +82,11 @@ export default function UserRowActionsMenu({
   const [revokeError, setRevokeError] = useState<string | null>(null);
 
   const canRemove = canManageMembership && !isSelf;
+  const hasNonDestructiveActions =
+    canImpersonateTarget || (canShowAdminShortcuts && !isSelf);
 
   // If no actions are available, render nothing.
-  if (!canRemove && !canGlobalDelete) return null;
+  if (!canRemove && !canGlobalDelete && !hasNonDestructiveActions) return null;
 
   function openMenu(e: React.MouseEvent) {
     e.preventDefault();
@@ -160,6 +179,52 @@ export default function UserRowActionsMenu({
               }}
             />
             <div className="absolute right-0 top-9 z-20 min-w-[210px] rounded-[var(--radius-lg)] border border-[var(--border)] bg-white py-1 shadow-[var(--shadow-md)]">
+              {canImpersonateTarget ? (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ImpersonateButton
+                    userId={userId}
+                    variant="row-menu"
+                    onActivate={closeMenu}
+                  />
+                </div>
+              ) : null}
+
+              {canShowAdminShortcuts && !isSelf ? (
+                <>
+                  {onEditAccess ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeMenu();
+                        onEditAccess(userId);
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
+                    >
+                      <Pencil className="h-3.5 w-3.5 shrink-0" />
+                      Zugriff bearbeiten
+                    </button>
+                  ) : null}
+                  <Link
+                    href={`/dashboard/admin/users/${userId}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeMenu();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
+                  >
+                    <User className="h-3.5 w-3.5 shrink-0" />
+                    Detailseite
+                  </Link>
+                </>
+              ) : null}
+
+              {(canRemove || canGlobalDelete) &&
+              (canImpersonateTarget || (canShowAdminShortcuts && !isSelf)) ? (
+                <div className="mx-2 my-1 border-t border-[var(--border)]" />
+              ) : null}
+
               {/* Tenant removal / invitation revoke */}
               {canRemove && (
                 <button

@@ -10,6 +10,7 @@ import { getPrivilegedTenantRoleIds } from "@/lib/admin/people-access/privileged
 import { prisma } from "@/lib/db/prisma";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TenantUsersSearchableList from "@/components/admin/users/TenantUsersSearchableList";
+import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
 
 export default async function PeopleAccessPage() {
   const session = await requireAnyPermission([
@@ -20,7 +21,11 @@ export default async function PeopleAccessPage() {
   const tenantId = session.user?.activeTenantId;
   if (!tenantId) notFound();
 
+  const actorUserId = session.user.actorUserId ?? session.user.id;
   const currentUserId = session.user.effectiveUserId ?? session.user.id;
+  const canImpersonateTenant =
+    !session.user.isImpersonating &&
+    (await actorHasImpersonateTenantPermission(actorUserId, tenantId));
   const canInvite = hasPermission(session, PERMISSIONS.USERS_INVITE);
   const canManage =
     hasPermission(session, PERMISSIONS.USERS_MANAGE_MEMBERSHIPS) ||
@@ -70,6 +75,8 @@ export default async function PeopleAccessPage() {
         initialUsers={users}
         personsWithoutUser={personsWithoutUser}
         currentUserId={currentUserId}
+        actorUserId={actorUserId}
+        canImpersonateTenant={canImpersonateTenant}
         canInvite={canInvite}
         canManage={canManage}
         canGlobalDelete={canGlobalDelete}

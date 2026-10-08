@@ -102,6 +102,24 @@ describe("UserRowActionsMenu", () => {
    * the list never renders the menu on person-only rows because those rows
    * don't call UserRowActionsMenu (integration-level assertion via null return).
    */
+  it("1b. Club Admin with impersonate target sees 'Als Benutzer ansehen' in menu", async () => {
+    const user = userEvent.setup();
+    render(
+      <UserRowActionsMenu
+        {...BASE_PROPS}
+        canManageMembership={true}
+        canGlobalDelete={false}
+        canImpersonateTarget={true}
+        canShowAdminShortcuts={true}
+        onEditAccess={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /mehr aktionen/i }));
+    expect(screen.getByText("Als Benutzer ansehen")).toBeInTheDocument();
+    expect(screen.getByText("Aus Verein entfernen")).toBeInTheDocument();
+  });
+
   it("2. Returns null when neither canManageMembership nor canGlobalDelete", () => {
     const { container } = render(
       <UserRowActionsMenu
