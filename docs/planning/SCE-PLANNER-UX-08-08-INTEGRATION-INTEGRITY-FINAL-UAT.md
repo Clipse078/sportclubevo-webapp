@@ -1,8 +1,9 @@
 # SCE-PLANNER-UX-08-08 — Integration, Integrity & Final UAT Hardening
 
-**Status:** **IN PROGRESS** — **08-08A** lifecycle/delete safety; **08-08B** mutation revalidation; 08-08C pending  
+**Status:** **IN PROGRESS** — **08-08A** lifecycle/delete safety; **08-08B** mutation revalidation; **08-08C** conflict/availability integrity  
 **08_08A_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
 **08_08B_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
+**08_08C_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRITY PASS** (no P1 in slice; F-08-08-03 remains P2 deferred)  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
 **Target:** STAGE  
@@ -278,11 +279,97 @@ npm run test -- lib/planning-hub/__tests__/facility-mutation-revalidation.test.t
 | Broad sweep | **14 fail — PRE_EXISTING (F-08-08-06)**; **0 NEW_08_08B_REGRESSION** |
 | Build | **PASS** |
 
-### Remaining 08-08C gaps
+### Remaining post-08-08C gaps
 
-- Conflict/availability matrix cells after archive/delete under **open** planner (not merely revalidation)
 - Cross-tab planner auto-refresh without user `router.refresh()` (no broadcast channel in 08-08B)
-- Match `pitchCode` seam (F-08-08-03) — deferred
+- Match `pitchCode` seam (F-08-08-03) — P2 deferred; code-rename occupancy gap characterized in 08-08C tests
+- Open-planner E2E without browser (08-08D regression pack)
+
+---
+
+## 3C. SCE-PLANNER-UX-08-08C — conflict, availability & historical resource integrity
+
+### Conflict identity model
+
+| Layer | Identity rule |
+|-------|----------------|
+| **FK-backed allocations** (training, tournament, veranstaltung, plan overrides) | `facilityResourceId` (+ pitch FULL↔HALF hierarchy via `facilityResourcesShareConflictCapacity`) |
+| **Presentation** | `name`, `code`, `facilityName` on `WeekplannerResourceRef` — labels only; never compared for pairwise match |
+| **Match (legacy)** | `Event.pitchCode` / dressing codes resolved to refs by **code** at read time (`lib/weekplanner/queries.ts` + `availability-service.ts#findMatchConflicts`) |
+| **Persisted conflicts** | None — `annotateWeekplannerConflicts` recomputes from in-memory `WeekplannerItem[]` |
+
+Lifecycle operations on the **catalog row** (archive, inactive, rename, reactivate) do **not** remove or rewrite allocation FKs. Conflict detection operates on refs already embedded on activities; archiving a resource does **not** filter it out of occupancy collection.
+
+### Availability identity model
+
+| State | Assignable catalog | Occupancy detection |
+|-------|-------------------|---------------------|
+| **ACTIVE + FREE** | Returned FREE | No conflict windows |
+| **ACTIVE + OCCUPIED** | Returned OCCUPIED | Training/tournament/event FK + match code map + weekplanner plan integration |
+| **INACTIVE / ARCHIVED** | **Excluded** from `getResourceAvailability` candidate query (aligned with `getActiveResourceOptionsForTenant` ACTIVE-only rule as of 08-08C) | Existing FK allocations still queried by id/code; historical refs on week items unchanged |
+| **SAFE DELETE** | Resource absent from catalog | Cannot exist while referenced (08-08A RESTRICT + guard) |
+| **BLOCKED DELETE** | Resource remains | Occupancy + conflicts unchanged |
+
+### Lifecycle semantics (characterization)
+
+| Operation | Conflict engine | Availability selectors | Historical refs on activities |
+|-----------|-----------------|------------------------|------------------------------|
+| Rename (same id) | Same conflict pairs; updated `facilityResourceName` | ACTIVE row shows new name | FK id stable |
+| Archive / inactive while occupied | Conflicts **preserved** on existing overlaps | Not assignable for new booking | Refs + conflicts on next week read |
+| Reactivate | Same id; conflicts unchanged | ACTIVE again in catalog | No duplicate lane |
+| Safe delete | N/A (no allocations) | Absent | N/A |
+| Blocked delete | Unchanged | Unchanged | Unchanged |
+
+### Pitch & dressing-room results
+
+- **Parity:** Same conflict primitive for `PITCH_HALL` and `DRESSING_ROOM`; tournament participant + match away dressing included in occupancy collection.
+- **Capacity hierarchy:** FULL↔HALF within one `facilityId` still shares conflict capacity; rename does not alter hierarchy keys (id + type + facilityId).
+- **Cancellation (08-07R5):** Removing cancelled training from item set clears pitch + dressing conflicts and releases availability occupancy for that session.
+
+### Cross-domain matrix (automated)
+
+| Pair | Pitch conflict | Dressing conflict |
+|------|----------------|-------------------|
+| TRAINING ↔ TRAINING | COVERED_BY_TEST | COVERED_BY_TEST |
+| TRAINING ↔ MATCH | COVERED_BY_TEST | COVERED_BY_TEST (incl. away room) |
+| TRAINING ↔ TOURNAMENT | COVERED_BY_TEST | COVERED_BY_TEST (participant room) |
+| TRAINING ↔ VERANSTALTUNG | COVERED_BY_TEST | NOT_APPLICABLE (no dressing on sample event) |
+| MATCH ↔ TOURNAMENT | COVERED_BY_TEST | NOT_APPLICABLE unless away/participant rooms overlap |
+| TOURNAMENT ↔ VERANSTALTUNG | COVERED_BY_TEST | NOT_APPLICABLE |
+
+### Conflict vs availability consistency
+
+For FK-backed training occupancy on the same interval, weekplanner conflict annotation and `getResourceAvailability` both report **OCCUPIED** (08-08C test). Match legacy code rename can desync availability (stale `pitchCode` → no code map hit) while weekplanner read may also fail to attach pitch ref — documented under F-08-08-03.
+
+### Match legacy seam (F-08-08-03)
+
+- **Model:** Match persists codes, not `facilityResourceId`.
+- **Code rename:** If `FacilityResource.code` changes but `Event.pitchCode` retains old value, availability marks pitch **FREE** incorrectly (characterized test); weekplanner match row may lose pitch ref when code no longer resolves.
+- **Status change:** Archive/inactive removes resource from assignable availability list; does not remove code from Event row — historical match display depends on `getFacilityResourcesByCodesForTenant` / `withRequiredCodes`.
+- **Classification:** **P2 / DEFERRED_SAFE** for 08-08 closure — bounded migration slice required for full FK parity; not release-blocking for training/tournament/event FK paths.
+
+### Defects fixed in 08-08C
+
+| Fix | Detail |
+|-----|--------|
+| Availability assignable filter | `getResourceAvailability` now queries **ACTIVE** facility + resource only (was `not ARCHIVED`, which incorrectly included INACTIVE as selectable) |
+
+### Tests (08-08C)
+
+```bash
+npm run test -- lib/planning-hub/__tests__/sce-planner-ux-08-08c-conflict-availability-integrity.test.ts \
+  lib/weekplanner/__tests__/conflict-detection.test.ts \
+  lib/facilities/__tests__/availability-service.test.ts \
+  lib/weekplanner/__tests__/availability-integration.test.ts
+```
+
+| Suite | Result |
+|-------|--------|
+| 08-08C new characterization | **PASS** (20 tests) |
+| 08-08A + 08-08B (unchanged) | **PASS** |
+| Focused conflict + availability | **PASS** (111 tests in combined 08-08C run) |
+| Broad sweep | **1002 pass, 14 fail — PRE_EXISTING (F-08-08-06)**; **NEW_FAILURES = 0** |
+| Build | **PASS** |
 
 ---
 
@@ -293,15 +380,15 @@ Legend: **PASS** = code + test evidence; **COVERED_BY_TEST** = automated charact
 | Mutation ↓ / Consumer → | Admin | Training | Match | Tournament | Club event | Kalender | Spielfeld | Garderobe | Liste | Conflict engine | Availability | Infoboard | Historical refs | Future refs | Cache/reval |
 |---------------------------|-------|----------|-------|------------|------------|----------|-----------|-----------|-------|-----------------|--------------|-----------|-----------------|-------------|-------------|
 | Pitch create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | N/A | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
-| Pitch rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | UNPROVEN | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
-| Pitch archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS selectors | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
-| Pitch delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS blocked | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
+| Pitch rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
+| Pitch archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
+| Pitch delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
 | DR create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
-| DR rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
-| DR archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS selectors | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
-| DR delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS blocked | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
+| DR rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
+| DR archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
+| DR delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
 
-Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`. Conflict/availability planner cells remain **UNPROVEN** until 08-08C.
+Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, **`sce-planner-ux-08-08c-conflict-availability-integrity.test.ts`**. Match-column cells remain **UNPROVEN** (legacy code seam).
 
 ---
 
@@ -322,7 +409,8 @@ Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalid
 - Excludes self via `weekplannerCanonicalActivityKey`
 - Pitch FULL/HALF hierarchy in `pitch-capacity-overlap.ts`
 - Cancelled trainings excluded from item set → conflicts recalc automatically
-- **Archived/deleted resources:** conflicts use whatever refs remain on items; deleted resource removes FK links → empty allocation → conflict may disappear while activity remains (P1 for delete)
+- **Archived/inactive resources:** conflicts use refs on items; catalog status does not suppress pairwise detection (08-08C)
+- **Safe delete:** blocked when referenced (08-08A); conflicts cannot be silently removed by delete while allocations exist
 - No client-side second conflict engine in hub (manipulation uses server validate)
 
 ---
@@ -332,7 +420,8 @@ Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalid
 - Uses same resource IDs for training/tournament/event FK paths
 - Match uses code → resource map
 - New resources: appear after DB commit + next read
-- Deactivated/archived: blocked for new assignment (`getActiveFacilityResourcesByCodesForTenant`)
+- Assignable catalog: ACTIVE-only (`getActiveResourceOptionsForTenant`, `getResourceAvailability` as of 08-08C)
+- Deactivated/archived: blocked for new assignment; inactive no longer returned as availability rows
 - Cancelled sessions: excluded from weekplanner occupancy set (08-07R5)
 
 ---
@@ -414,7 +503,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | Run | Result |
 |-----|--------|
 | Focused 08 + integrity | **23 files, 184 tests — PASS** |
-| Broad sweep | **124 files, 966 tests — 952 pass, 14 fail** (see findings) |
+| Broad sweep | **129 files, 1016 tests — 1002 pass, 14 fail** (see findings; +08-08C tests) |
 | Build | **PASS** |
 
 ---
@@ -425,7 +514,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 |----|-----|--------|---------|----------|------------|-----------|-------|-----------|
 | F-08-08-01 | P1 → **FIXED (08-08A+08-08B)** | Facility delete | Delete blocked / RESTRICT; revalidation on safe delete | Historical activities remain intelligible | Restrict + service guards + post-delete revalidation | Planner, trainings, tournaments, events | `facility-delete-service.test.ts`, `facility-mutation-08-08b.test.ts` | **Done** |
 | F-08-08-02 | P2 → **FIXED (08-08B)** | Facility mutate → cache | Planner paths revalidated; client catalog syncs to server props | Planner surfaces update after facility mutation + RSC refresh | Was missing `revalidatePlannerWeekPaths` on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | `facility-mutation-08-08b.test.ts` | **08-08B done** |
-| F-08-08-03 | P2 | Match identity | Match pitch/dressing via `pitchCode` strings | Single FK model like training | WEEKPLANNER-01A scope left legacy fields | Match planner, availability, infoboard | PARTIAL | DEFERRED post-08-08 or dedicated migration slice |
+| F-08-08-03 | P2 → **DEFERRED_SAFE (08-08C evidence)** | Match identity | Match pitch/dressing via `pitchCode` strings | Single FK model like training | Code rename desyncs availability + week ref resolution (characterized); status/archive OK for FK paths | Match planner, availability, infoboard | **COVERED_BY_TEST** (08-08C legacy rename case) | Dedicated Match FK migration slice — not 08-08C |
 | F-08-08-04 | P2 → **PARTIAL (08-08A)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | Stable codes OK; block same-name facility + duplicate codes | Admin duplicate code/name guard | Duplicate lanes for distinct names | `facility-lifecycle-08-08a.test.ts` | Residual Class B pair — migration out of scope |
 | F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
 | F-08-08-06 | P3 | Test harness | 14 tests fail in broad sweep (`planner-url` `search.trim`, plan-overrides mocks) | Green CI | Test props omit `search`; mock drift | CI signal | — | 08-08F test hygiene |
@@ -441,7 +530,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 |-------|---------|---------|------------|-------|-----------|---------|
 | **08-08A** | Facility lifecycle canonicalization + admin guards | Admin, duplicate prevention | Archive-first; delete only when unused | **DONE** — see §3A | — | — |
 | **08-08B** | Mutation → revalidation + client facility-groups refresh | All planner perspectives | After facility PATCH/DELETE, planner paths revalidated; open hub refreshes labels | **DONE** — `facility-mutation-08-08b.test.ts` | Cross-tab refresh still manual | 08-08A |
-| **08-08C** | Conflict/availability after resource delete/archive | Conflicts, availability, historical display | No silent loss of «where» on delete | Integration tests with archived refs | Delete blocked with allocations | 08-08A |
+| **08-08C** | Conflict/availability after resource lifecycle | Conflicts, availability, historical display | No silent loss of conflict truth on archive/rename | **DONE** — `sce-planner-ux-08-08c-conflict-availability-integrity.test.ts` | Delete blocked with allocations | 08-08A |
 | **08-08D** | Cross-domain integration regression pack | Training/match/tournament/event + facility | Single week read model | E2E-style vitest fixtures | Full week scenario | 08-08B |
 | **08-08E** | Aggregation closure (optional) | Kalender + inspector | Shared `countByActivityType` | `aggregate-inspection` | Mixed cluster copy | — |
 | **08-08F** | Final automated regression + Human UAT | All | 08-01…08-07 + FI-01 gates | Full suite green + build | Michael checklist | 08-08A–D |
