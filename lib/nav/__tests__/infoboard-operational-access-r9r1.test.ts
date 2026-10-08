@@ -41,10 +41,11 @@ describe("R9R1 — Infoboard operational access", () => {
     expect(collectHrefs(keys)).toContain("/dashboard/infoboard");
   });
 
-  it("view-only actor — preview nav without manage permission", () => {
-    const hrefs = collectHrefs([PERMISSIONS.INFOBOARD_VIEW]);
-    expect(hrefs).toContain("/dashboard/infoboard/preview");
-    expect(hrefs).not.toContain("/dashboard/infoboard");
+  it("view-only actor — preview child only; overview child hidden (parent href redirects at route)", () => {
+    const sections = getVisibleNavSections([PERMISSIONS.INFOBOARD_VIEW]);
+    const infoboard = sections.flatMap((s) => s.items).find((i) => i.key === "infoboard");
+    expect(infoboard?.children?.map((c) => c.href)).toEqual(["/dashboard/infoboard/preview"]);
+    expect(collectHrefs([PERMISSIONS.INFOBOARD_VIEW])).toContain("/dashboard/infoboard/preview");
   });
 
   it("unauthorized actor — no Infoboard nav", () => {
