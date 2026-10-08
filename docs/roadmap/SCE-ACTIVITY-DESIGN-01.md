@@ -469,7 +469,7 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 
 ## SCE-PLANNER-UX-08 — Unified Planning & Allocation Workspace
 
-**Status:** **IN PROGRESS** — **08-01** foundation on branch `cursor/sce-planner-ux-08-01-unified-planning-foundation` (from post–PR #796 `origin/STAGE`).
+**Status:** **08-01 … 08-08 CLOSED** on STAGE (through PR **#806** / Facility Integrity + final UAT); follow-ups: **PEOPLE-ACCESS-IMPERSONATION-01**, optional **AGGREGATION-01** polish, **SCE-COLLAB-01** planned.
 
 **Packages:**
 
@@ -481,16 +481,16 @@ Audit and migrate historical color inconsistency across consumers to shared desi
 | **08-03** | **Activity Rescheduling** — Kalender activity date/time/duration; impact-aware confirmation; SFV/authority rules; not silent dependent changes |
 | **08-04** | Permission-aware drag/drop & rescheduling — **CLOSED** (Human UAT PASS 2026-10-04; PR #801 → STAGE) — [`SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md`](../planning/SCE-PLANNER-UX-08-04-PERMISSION-AWARE-DND-RESCHEDULING.md) |
 | **08-05** | Conflict resolution & operational actions — **CLOSED** (Human UAT PASS 2026-10-05; PR #802 → STAGE) — [`SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md`](../planning/SCE-PLANNER-UX-08-05-CONFLICT-RESOLUTION-OPERATIONAL-ACTIONS.md) |
-| **FACILITY-INTEGRITY-01** | Facility admin ↔ planner read-model integrity (pitches + dressing rooms) — **IN PROGRESS** — broader create/rename/archive-delete propagation (pitches + dressing rooms); **01A closed**; gate before **08-08** if still outstanding — [`FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md`](../planning/FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md) |
+| **FACILITY-INTEGRITY-01** | Facility admin ↔ planner read-model integrity — **CLOSED** (Human UAT 8/8; PR **#806** → STAGE) — [`FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md`](../planning/FACILITY-INTEGRITY-01-CANONICAL-FACILITY-RESOURCE-INTEGRITY.md) |
 | **08-06** | List / search / bulk operational UX — **CLOSED** (Human UAT PASS 2026-10-06; PR #804 → STAGE) — [`SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md`](../planning/SCE-PLANNER-UX-08-06-LIST-SEARCH-BULK-OPERATIONAL-UX.md) |
-| **08-07** | Responsive / tablet hardening — **IN PROGRESS** — [`SCE-PLANNER-UX-08-07-RESPONSIVE-TABLET-VISUAL-HARDENING.md`](../planning/SCE-PLANNER-UX-08-07-RESPONSIVE-TABLET-VISUAL-HARDENING.md) |
-| **08-08** | Integration / Human UAT / release hardening — **PLANNED** |
+| **08-07** | Responsive / tablet hardening — **CLOSED** (Human UAT R1–R5; PR #805 → STAGE) — [`SCE-PLANNER-UX-08-07-RESPONSIVE-TABLET-VISUAL-HARDENING.md`](../planning/SCE-PLANNER-UX-08-07-RESPONSIVE-TABLET-VISUAL-HARDENING.md) |
+| **08-08** | Integration / integrity / final UAT — **CLOSED** (PR **#806** → STAGE) — [`SCE-PLANNER-UX-08-08-INTEGRATION-INTEGRITY-FINAL-UAT.md`](../planning/SCE-PLANNER-UX-08-08-INTEGRATION-INTEGRITY-FINAL-UAT.md) |
 
 **Planner follow-ups (discovered 08-04 Human UAT — not reordering 08-05):**
 
 | Id | Focus | Status |
 |----|--------|--------|
-| **SCE-PLANNER-UX-AGGREGATION-01** | Mixed activity cluster presentation (card vs inspector semantic parity) | PLANNED |
+| **SCE-PLANNER-UX-AGGREGATION-01** | Mixed activity cluster presentation (card vs inspector semantic parity) | **BACKLOG / NON_BLOCKING** — headline fixed in 08-07R2; inspector polish optional (F-08-08-05) — [`SCE-PLANNER-UX-AGGREGATION-01-MIXED-ACTIVITY-CLUSTER-PRESENTATION.md`](../planning/SCE-PLANNER-UX-AGGREGATION-01-MIXED-ACTIVITY-CLUSTER-PRESENTATION.md) |
 | **SCE-PLANNER-UX-LIST-01** | Operational list experience | **Absorbed by 08-06** (spec retained as historical UAT notes) |
 | **PEOPLE-ACCESS-IMPERSONATION-01** | Club Admin «Als Benutzer ansehen» availability (08-04 UAT observation) | OPEN / SEPARATE |
 

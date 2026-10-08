@@ -34,8 +34,13 @@ vi.mock("@/lib/facilities/queries", () => ({
   createFacilityResource: mocks.createFacilityResource,
 }));
 
+vi.mock("@/lib/planning-hub/facility-mutation-revalidation", () => ({
+  revalidateAfterSuccessfulFacilityMutation: vi.fn(),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 import { GET, POST } from "../route";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -315,6 +320,7 @@ describe("POST /api/facilities/[facilityId]/resources", () => {
     );
 
     expect(res.status).toBe(201);
+    expect(revalidateAfterSuccessfulFacilityMutation).toHaveBeenCalledTimes(1);
     const body = await res.json();
     expect(body.resource).toBeDefined();
     expect(body.resource.id).toBe("resource-1");
@@ -427,7 +433,7 @@ describe("POST /api/facilities/[facilityId]/resources", () => {
 
     expect(res.status).toBe(409);
     const body = await res.json();
-    expect(body.error).toMatch(/already exists/i);
+    expect(body.code).toBe("DUPLICATE_RESOURCE");
   });
 
   it("does not call createFacilityResource when facility ownership validation fails", async () => {

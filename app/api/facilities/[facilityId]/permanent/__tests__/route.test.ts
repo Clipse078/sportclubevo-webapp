@@ -35,12 +35,15 @@ vi.mock("@/lib/db/prisma", () => ({
     facility: { findUnique: (...args: unknown[]) => mocks.facilityFindUnique(...args) },
   },
 }));
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/planning-hub/facility-mutation-revalidation", () => ({
+  revalidateAfterSuccessfulFacilityMutation: vi.fn(),
+}));
 vi.mock("@/lib/facilities/facility-delete-service", () => ({
   getFacilityDeletionImpact: mocks.getFacilityDeletionImpact,
   deleteFacilityPermanently: mocks.deleteFacilityPermanently,
 }));
 
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 import { DELETE } from "../route";
 
 const FACILITY_ID = "facility-1";
@@ -93,19 +96,34 @@ describe("DELETE /api/facilities/[facilityId]/permanent", () => {
     expect(mocks.deleteFacilityPermanently).not.toHaveBeenCalled();
   });
 
-  it("5. confirm=true: deletion with planning history preserved (in impact as refs)", async () => {
+  it("5. confirm=true: unused facility deletes successfully", async () => {
     mocks.auth.mockResolvedValue({ user: { id: ACTOR_ID } });
     mocks.facilityFindUnique.mockResolvedValue({ id: FACILITY_ID, tenantId: TENANT_ID, name: "Spielfeld" });
     mocks.hasTenantDeletionAuthority.mockResolvedValue(true);
     mocks.deleteFacilityPermanently.mockResolvedValue({
-      facilityId: FACILITY_ID, name: "Spielfeld", impact: MOCK_IMPACT,
+      facilityId: FACILITY_ID,
+      name: "Spielfeld",
+      impact: { resources: 0, totalAllocationRefs: 0 },
     });
 
     const res = await DELETE(makeReq("?confirm=true"), makeParams());
     expect(res.status).toBe(200);
     expect(mocks.deleteFacilityPermanently).toHaveBeenCalledWith(TENANT_ID, FACILITY_ID);
+    expect(revalidateAfterSuccessfulFacilityMutation).toHaveBeenCalledTimes(1);
+  });
+
+  it("6. confirm=true: referenced facility returns 409 (J — error contract)", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: ACTOR_ID } });
+    mocks.facilityFindUnique.mockResolvedValue({ id: FACILITY_ID, tenantId: TENANT_ID, name: "Spielfeld" });
+    mocks.hasTenantDeletionAuthority.mockResolvedValue(true);
+    const { FacilityLifecycleError } = await import("@/lib/facilities/facility-lifecycle-errors");
+    mocks.deleteFacilityPermanently.mockRejectedValue(
+      new FacilityLifecycleError("FACILITY_IN_USE", "blocked"),
+    );
+
+    const res = await DELETE(makeReq("?confirm=true"), makeParams());
+    expect(res.status).toBe(409);
     const body = await res.json();
-    // totalAllocationRefs shows planning history existed (links removed, not planning data)
-    expect(body.impact.totalAllocationRefs).toBe(12);
+    expect(body.code).toBe("FACILITY_IN_USE");
   });
 });

@@ -1,7 +1,8 @@
 # FACILITY-INTEGRITY-01 — Canonical Facility & Resource Integrity
 
-**STATUS:** IN PROGRESS (01 diagnosis/alerts **CLOSED** on STAGE; **01A CLOSED** — PR **#803**; broader propagation integrity **OPEN**)  
+**STATUS:** **CLOSED / PASS** (01 diagnosis/alerts **CLOSED**; **01A CLOSED** — PR **#803**; broader lifecycle + Human UAT closed via **SCE-PLANNER-UX-08-08** — PR **#806** → STAGE)  
 **HUMAN_UAT (01A):** **PASS** (Michael, 2026-10-05, R2 Vercel Preview)  
+**HUMAN_UAT (FI pack):** **PASS** 8/8 (Product Owner, 2026-10-08, PR #806 preview + FCA STAGE) — see [`SCE-PLANNER-UX-08-08-INTEGRATION-INTEGRITY-FINAL-UAT.md`](./SCE-PLANNER-UX-08-08-INTEGRATION-INTEGRITY-FINAL-UAT.md) §3G  
 **Branch:** `cursor/facility-integrity-01-canonical-facility-resource-integrity-b94f`  
 **Target:** STAGE  
 **PROD:** untouched  

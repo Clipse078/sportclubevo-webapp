@@ -560,12 +560,24 @@ function ResourceItem({
             )}
             {deleteImpact && (
               <div className="mb-4 space-y-3 text-sm">
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                  <p className="text-amber-800">
+                <div
+                  className={cn(
+                    "flex items-start gap-2 rounded-lg border px-3 py-2",
+                    totalAllocations > 0
+                      ? "border-red-200 bg-red-50"
+                      : "border-emerald-200 bg-emerald-50",
+                  )}
+                >
+                  <AlertTriangle
+                    className={cn(
+                      "mt-0.5 h-4 w-4 shrink-0",
+                      totalAllocations > 0 ? "text-red-600" : "text-emerald-600",
+                    )}
+                  />
+                  <p className={totalAllocations > 0 ? "text-red-800" : "text-emerald-800"}>
                     {totalAllocations > 0
-                      ? `${totalAllocations} Planungs-Zuweisung${totalAllocations !== 1 ? "en" : ""} werden entfernt. Trainings, Spiele und Turniere bleiben erhalten.`
-                      : "Keine aktiven Planungszuweisungen. Sicher zu löschen."}
+                      ? `Diese Ressource wird bereits verwendet (${totalAllocations} Zuweisung${totalAllocations !== 1 ? "en" : ""}) und kann nicht gelöscht werden. Deaktiviere sie stattdessen.`
+                      : "Keine Planungszuweisungen. Endgültiges Löschen ist möglich."}
                   </p>
                 </div>
               </div>
@@ -581,7 +593,12 @@ function ResourceItem({
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={deleting || loadingImpact || !!deleteError}
+                disabled={
+                  deleting ||
+                  loadingImpact ||
+                  !!deleteError ||
+                  (deleteImpact !== null && totalAllocations > 0)
+                }
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
               >
                 {deleting ? "Löschen…" : "Endgültig löschen"}
@@ -596,7 +613,7 @@ function ResourceItem({
 
 // ── Facility card ─────────────────────────────────────────────────────────────
 
-type FacilityImpact = { resources: number; totalAllocationRefs: number };
+type FacilityImpact = { resources: number; totalAllocationRefs: number; deletable?: boolean };
 
 function FacilityCard({
   facility,
@@ -803,19 +820,33 @@ function FacilityCard({
             {loadingImpact && <p className="mb-4 text-sm text-slate-400">Auswirkungen werden geprüft…</p>}
             {deleteImpact && (
               <div className="mb-4 space-y-3 text-sm">
-                <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-                  <div className="text-red-800">
-                    <p className="font-medium">Wird gelöscht:</p>
-                    <ul className="mt-1 ml-3 list-disc space-y-0.5">
-                      <li>Anlage &bdquo;{facility.name}&ldquo;</li>
-                      {deleteImpact.resources > 0 && <li>{deleteImpact.resources} Ressource{deleteImpact.resources !== 1 ? "n" : ""}</li>}
-                      {deleteImpact.totalAllocationRefs > 0 && (
-                        <li>{deleteImpact.totalAllocationRefs} Planungs-Zuweisung{deleteImpact.totalAllocationRefs !== 1 ? "en" : ""} (Trainings/Spiele bleiben erhalten)</li>
-                      )}
-                    </ul>
+                {deleteImpact.totalAllocationRefs > 0 ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                    <p className="text-red-800">
+                      Diese Anlage oder ihre Ressourcen werden bereits verwendet (
+                      {deleteImpact.totalAllocationRefs} Zuweisung
+                      {deleteImpact.totalAllocationRefs !== 1 ? "en" : ""}) und können nicht gelöscht werden.
+                      Deaktiviere sie stattdessen.
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                    <div className="text-amber-800">
+                      <p className="font-medium">Wird gelöscht:</p>
+                      <ul className="mt-1 ml-3 list-disc space-y-0.5">
+                        <li>Anlage &bdquo;{facility.name}&ldquo;</li>
+                        {deleteImpact.resources > 0 && (
+                          <li>
+                            {deleteImpact.resources} unbenutzte Ressource
+                            {deleteImpact.resources !== 1 ? "n" : ""}
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {deleteError && <p className="mb-3 text-sm text-red-600">{deleteError}</p>}
@@ -829,7 +860,12 @@ function FacilityCard({
               </button>
               <button
                 onClick={confirmFacilityDelete}
-                disabled={deleting || loadingImpact || !!deleteError}
+                disabled={
+                  deleting ||
+                  loadingImpact ||
+                  !!deleteError ||
+                  (deleteImpact !== null && deleteImpact.totalAllocationRefs > 0)
+                }
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
               >
                 {deleting ? "Löschen…" : "Endgültig löschen"}

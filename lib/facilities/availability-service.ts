@@ -31,8 +31,10 @@
  * Security invariants:
  *   - tenantId always comes from a trusted session context — never from input.
  *   - Every query below is scoped by tenantId.
- *   - Archived FacilityResources (and resources of an archived Facility)
- *     are never returned.
+ *   - Only ACTIVE FacilityResources on ACTIVE Facilities are returned as
+ *     assignable candidates (same rule as getActiveResourceOptionsForTenant).
+ *     INACTIVE/ARCHIVED resources are never selectable; existing bookings on
+ *     those ids still contribute occupancy via allocation FK lookups.
  */
 
 import { prisma } from "@/lib/db/prisma";
@@ -47,6 +49,10 @@ import {
   type CanonicalAvailabilityGroup,
   facilityResourceTypesForAvailabilityGroup,
 } from "@/lib/facilities/facility-resource-classification";
+import {
+  buildMatchLegacyCodeToResourceIdMap,
+  lookupMatchLegacyResourceId,
+} from "@/lib/facilities/match-legacy-resource-compatibility";
 import {
   findWeekplannerPlanConflicts,
   findWeekplannerReplacedActivities,
@@ -126,6 +132,15 @@ export type GetResourceAvailabilityInput = {
 
 function resourceTypesForGroup(group: AvailabilityResourceGroup): FacilityResourceType[] {
   return facilityResourceTypesForAvailabilityGroup(group);
+}
+
+/** Assignable catalog filter — aligned with getActiveResourceOptionsForTenant. */
+function assignableResourceBaseWhere(tenantId: string) {
+  return {
+    tenantId,
+    status: "ACTIVE" as const,
+    facility: { status: "ACTIVE" as const },
+  };
 }
 
 type ConflictWindow = {
@@ -271,7 +286,7 @@ async function findMatchConflicts(
 
     for (const code of codes) {
       if (!code) continue;
-      const resourceId = resourcesByCode.get(code);
+      const resourceId = lookupMatchLegacyResourceId(resourcesByCode, code);
       if (!resourceId) continue;
       conflicts.push({ resourceId, label, startAt: effectiveStart, endAt: effectiveEnd, sourceType: "MATCH" });
     }
@@ -469,10 +484,8 @@ export async function getResourceAvailability(
   if (!isMeaningfulEventInterval(eventStartAt, eventEndAt)) {
     const resources = await prisma.facilityResource.findMany({
       where: {
-        tenantId,
+        ...assignableResourceBaseWhere(tenantId),
         type: { in: resourceTypesForGroup(group) },
-        status: { not: "ARCHIVED" },
-        facility: { status: { not: "ARCHIVED" } },
       },
       select: {
         id: true,
@@ -518,10 +531,8 @@ export async function getResourceAvailability(
 
   const resources = await prisma.facilityResource.findMany({
     where: {
-      tenantId,
+      ...assignableResourceBaseWhere(tenantId),
       type: { in: resourceTypesForGroup(group) },
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
     },
     select: {
       id: true,
@@ -536,7 +547,11 @@ export async function getResourceAvailability(
 
   if (resources.length === 0) return [];
 
-  const resourcesByCode = new Map(resources.map((r) => [r.code, r.id]));
+  const resourcesByCode = await buildMatchLegacyCodeToResourceIdMap(
+    prisma,
+    tenantId,
+    resources.map((r) => ({ code: r.code, id: r.id })),
+  );
   const resourceRefsByCode = new Map(
     resources.map((r) => [
       r.code,

@@ -3,6 +3,9 @@ import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permi
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { updateFacilityResource } from "@/lib/facilities/queries";
 import type { FacilityResourceType, FacilityStatus } from "@prisma/client";
+import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
+import { normalizeFacilityResourceCode } from "@/lib/facilities/facility-resource-reference-guard";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 
 const ALLOWED_TYPES: FacilityResourceType[] = [
   "FULL_PITCH",
@@ -33,6 +36,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const data: Parameters<typeof updateFacilityResource>[2] = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
+  if (typeof body.code === "string" && body.code.trim()) {
+    data.code = normalizeFacilityResourceCode(body.code);
+  }
   if (ALLOWED_TYPES.includes(body.type)) data.type = body.type;
   if (ALLOWED_STATUSES.includes(body.status)) data.status = body.status;
   if (typeof body.sortOrder === "number") data.sortOrder = body.sortOrder;
@@ -41,6 +47,13 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  await updateFacilityResource(resourceId, tenantId, data);
-  return NextResponse.json({ ok: true });
+  try {
+    await updateFacilityResource(resourceId, tenantId, data);
+    revalidateAfterSuccessfulFacilityMutation();
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const lifecycle = facilityLifecycleErrorResponse(err);
+    if (lifecycle) return lifecycle;
+    throw err;
+  }
 }

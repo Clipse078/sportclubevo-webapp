@@ -1078,6 +1078,7 @@ model Tenant {
   teams                     Team[]
   facilities                Facility[]
   facilityResources         FacilityResource[]
+  facilityResourceCodeAliases FacilityResourceCodeAlias[]
   wochenplanPublications    WochenplanPublication[]
   // WOCHENPLAN-2.0-01B: tenant-defined named Wochenplan variants + sparse
   // per-event allocation overrides for alternative plans.
@@ -5095,10 +5096,27 @@ model FacilityResource {
   // WEEKPLANNER-01B: alternative-plan Spielfeld/Halle + Garderobe
   // overrides — same canonical FacilityResource, no parallel resource model.
   weekplannerPlanAllocations       WeekplannerPlanAllocation[]
+  codeAliases                      FacilityResourceCodeAlias[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([facilityId])
+}
+
+/// SCE-PLANNER-UX-08-08C/R1 — tenant-scoped retired FacilityResource codes (Match allocation compatibility + reuse guard).
+model FacilityResourceCodeAlias {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  facilityResourceId String
+  code               String
+  createdAt          DateTime @default(now())
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, facilityResourceId])
 }
 
 // ---------------------------------------------------------------------------
@@ -8146,7 +8164,7 @@ model TrainingAllocation {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   trainingSeries   TrainingSeries   @relation(fields: [trainingSeriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   /// Prevent duplicate allocation of the same resource to the same training series.
   @@unique([trainingSeriesId, facilityResourceId])
@@ -8392,7 +8410,7 @@ model TrainingSessionAllocation {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   trainingSession  TrainingSession  @relation(fields: [trainingSessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   /// Prevent duplicate allocation of the same resource to the same occurrence.
   @@unique([trainingSessionId, facilityResourceId])
@@ -8532,7 +8550,7 @@ model TournamentResourceAllocation {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   event            Event            @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   /// Prevent duplicate allocation of the same resource to the same tournament.
   @@unique([eventId, facilityResourceId])
@@ -8561,7 +8579,7 @@ model TournamentParticipantAllocation {
 
   tenant                Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   tournamentParticipant TournamentParticipant @relation(fields: [tournamentParticipantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource      FacilityResource      @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource      FacilityResource      @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   /// Prevent duplicate allocation of the same resource to the same participant.
   /// Deliberately NOT unique on facilityResourceId alone — multiple
@@ -8590,7 +8608,7 @@ model EventFacilityAllocation {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   event            Event            @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([eventId, facilityResourceId])
   @@index([tenantId])
@@ -8855,7 +8873,7 @@ model WeekplannerPlanAllocation {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   weekplannerPlan  WeekplannerPlan  @relation(fields: [weekplannerPlanId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   /// Prevent a duplicate override of the same resource for the same
   /// activity + group + participant within one plan.

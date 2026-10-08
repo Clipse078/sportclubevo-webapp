@@ -124,6 +124,7 @@ function renderSpielfeld(resourceFilterIds: string[] | null = null) {
           activity: "alle",
           team: null,
           facility: null,
+          search: "",
           conflictsOnly: false,
           resourceCategory: "pitch",
           day: "2026-09-20",

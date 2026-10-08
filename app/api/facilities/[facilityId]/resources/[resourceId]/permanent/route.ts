@@ -10,14 +10,11 @@
  *   DELETE .../permanent              → PREVIEW: impact + requiresConfirmation.
  *   DELETE .../permanent?confirm=true → PERFORM: cascade-delete resource + allocation links.
  *
- * Preservation:
- *   Canonical planning entities (TrainingSeries, TrainingSession, Events,
- *   Tournaments, WeekplannerPlan) are NEVER deleted. Only the resource
- *   allocation links cascade-delete automatically via onDelete: Cascade.
+ * SCE-PLANNER-UX-08-08A: delete is blocked when allocation links exist (409).
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -27,6 +24,7 @@ import {
   getFacilityResourceDeletionImpact,
   deleteFacilityResourcePermanently,
 } from "@/lib/facilities/facility-delete-service";
+import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
 
 type Params = { params: Promise<{ facilityId: string; resourceId: string }> };
 
@@ -73,10 +71,21 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Ressource nicht gefunden." }, { status: 404 });
     }
 
-    return NextResponse.json({ impact, requiresConfirmation: true });
+    return NextResponse.json({
+      impact,
+      requiresConfirmation: true,
+      deletable: impact.deletable,
+    });
   }
 
-  const result = await deleteFacilityResourcePermanently(resource.tenantId, resourceId);
+  let result;
+  try {
+    result = await deleteFacilityResourcePermanently(resource.tenantId, resourceId);
+  } catch (error) {
+    const lifecycle = facilityLifecycleErrorResponse(error);
+    if (lifecycle) return lifecycle;
+    throw error;
+  }
 
   if (!result) {
     return NextResponse.json({ error: "Ressource nicht gefunden." }, { status: 404 });
@@ -91,7 +100,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     beforeJson: { name: result.name, code: result.code, facilityId, impact: result.impact },
   });
 
-  revalidatePath("/dashboard/admin/facilities");
+  revalidateAfterSuccessfulFacilityMutation();
 
   return NextResponse.json({
     message: "Ressource wurde endgültig gelöscht.",

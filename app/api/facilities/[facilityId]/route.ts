@@ -3,6 +3,7 @@ import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permi
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { updateFacility } from "@/lib/facilities/queries";
 import type { FacilityStatus, FacilityType } from "@prisma/client";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 
 const ALLOWED_TYPES: FacilityType[] = ["PITCH", "DRESSING_ROOM_BLOCK", "INDOOR_HALL", "OTHER"];
 const ALLOWED_STATUSES: FacilityStatus[] = ["ACTIVE", "INACTIVE", "ARCHIVED"];
@@ -37,5 +38,6 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   await updateFacility(facilityId, tenantId, data);
+  revalidateAfterSuccessfulFacilityMutation();
   return NextResponse.json({ ok: true });
 }

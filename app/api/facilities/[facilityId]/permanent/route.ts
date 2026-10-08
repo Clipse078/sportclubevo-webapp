@@ -11,14 +11,11 @@
  *   DELETE .../permanent              → PREVIEW: impact + requiresConfirmation.
  *   DELETE .../permanent?confirm=true → PERFORM: cascade-delete children, then Facility.
  *
- * Preservation:
- *   Canonical planning entities (TrainingSeries, TrainingSession, Events,
- *   Tournaments, WeekplannerPlan) are NEVER deleted. Only the resource
- *   allocation links cascade-delete with the resource rows.
+ * SCE-PLANNER-UX-08-08A: delete blocked when child resources are referenced (409).
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -28,6 +25,7 @@ import {
   getFacilityDeletionImpact,
   deleteFacilityPermanently,
 } from "@/lib/facilities/facility-delete-service";
+import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
 
 type Params = { params: Promise<{ facilityId: string }> };
 
@@ -69,10 +67,21 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Anlage nicht gefunden." }, { status: 404 });
     }
 
-    return NextResponse.json({ impact, requiresConfirmation: true });
+    return NextResponse.json({
+      impact,
+      requiresConfirmation: true,
+      deletable: impact.deletable,
+    });
   }
 
-  const result = await deleteFacilityPermanently(facility.tenantId, facilityId);
+  let result;
+  try {
+    result = await deleteFacilityPermanently(facility.tenantId, facilityId);
+  } catch (error) {
+    const lifecycle = facilityLifecycleErrorResponse(error);
+    if (lifecycle) return lifecycle;
+    throw error;
+  }
 
   if (!result) {
     return NextResponse.json({ error: "Anlage nicht gefunden." }, { status: 404 });
@@ -87,7 +96,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     beforeJson: { name: result.name, impact: result.impact },
   });
 
-  revalidatePath("/dashboard/admin/facilities");
+  revalidateAfterSuccessfulFacilityMutation();
 
   return NextResponse.json({
     message: "Anlage wurde endgültig gelöscht.",

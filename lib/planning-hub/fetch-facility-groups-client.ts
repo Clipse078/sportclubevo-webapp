@@ -7,6 +7,11 @@ export type PlanningHubFacilityGroups = {
 
 let inFlight: Promise<PlanningHubFacilityGroups> | null = null;
 
+/** Clears the in-flight dedupe slot so the next fetch hits the network (e.g. after RSC refresh). */
+export function resetPlanningHubFacilityGroupsClientFetch(): void {
+  inFlight = null;
+}
+
 export function fetchPlanningHubFacilityGroupsClient(): Promise<PlanningHubFacilityGroups> {
   if (!inFlight) {
     inFlight = fetch("/api/planning-hub/facility-groups")

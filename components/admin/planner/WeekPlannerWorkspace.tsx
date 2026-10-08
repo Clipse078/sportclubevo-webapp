@@ -13,6 +13,7 @@ import {
 import { usePublishPlannerWeekChrome } from "./PlannerWeekChromeBridge";
 import {
   fetchPlanningHubFacilityGroupsClient,
+  resetPlanningHubFacilityGroupsClientFetch,
   type PlanningHubFacilityGroups,
 } from "@/lib/planning-hub/fetch-facility-groups-client";
 import { useRouter } from "next/navigation";
@@ -242,16 +243,26 @@ function WeekPlannerWorkspaceBody({
     !!canonicalEditing ||
     !!overrideEditing;
 
+  const serverFacilityCatalog =
+    resourceTimelineCatalog ??
+    canonicalEditing?.facilityGroupsByAllocationGroup ??
+    overrideEditing?.facilityGroupsByAllocationGroup ??
+    null;
+
+  // Authoritative server catalog replaces any stale lazy client fetch after RSC refresh.
+  useEffect(() => {
+    if (serverFacilityCatalog) {
+      setLazyFacilityGroups(null);
+    }
+  }, [serverFacilityCatalog]);
+
   useEffect(() => {
     if (!needsTimelineCatalog) return;
-    if (
-      resourceTimelineCatalog ||
-      canonicalEditing?.facilityGroupsByAllocationGroup ||
-      overrideEditing?.facilityGroupsByAllocationGroup
-    ) {
+    if (serverFacilityCatalog) {
       return;
     }
     let cancelled = false;
+    resetPlanningHubFacilityGroupsClientFetch();
     fetchPlanningHubFacilityGroupsClient()
       .then((groups) => {
         if (!cancelled) setLazyFacilityGroups(groups);
@@ -262,13 +273,9 @@ function WeekPlannerWorkspaceBody({
     return () => {
       cancelled = true;
     };
-  }, [needsTimelineCatalog, resourceTimelineCatalog, canonicalEditing, overrideEditing]);
+  }, [needsTimelineCatalog, serverFacilityCatalog, week]);
 
-  const manipulationFacilityGroups =
-    resourceTimelineCatalog ??
-    canonicalEditing?.facilityGroupsByAllocationGroup ??
-    overrideEditing?.facilityGroupsByAllocationGroup ??
-    lazyFacilityGroups;
+  const manipulationFacilityGroups = serverFacilityCatalog ?? lazyFacilityGroups;
 
   const publishChrome = usePublishPlannerWeekChrome();
   useLayoutEffect(() => {

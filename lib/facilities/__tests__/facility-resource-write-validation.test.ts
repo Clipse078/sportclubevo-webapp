@@ -46,6 +46,15 @@ describe("facility-resource-write-validation", () => {
         facility: { id: "f", status: "ACTIVE" },
       }),
     ).toBe("ARCHIVED_RESOURCE");
+    expect(
+      validateAssignableFacilityResource({
+        id: "r",
+        tenantId: "t",
+        status: "INACTIVE",
+        type: "FULL_PITCH",
+        facility: { id: "f", status: "ACTIVE" },
+      }),
+    ).toBe("INACTIVE_RESOURCE");
     const active = {
       id: "r",
       tenantId: "t",

@@ -459,19 +459,16 @@ describe("MATCH / TOURNAMENT publication-policy metadata pass-through", () => {
     expect(decision).toEqual({ eligible: true, reason: "ELIGIBLE" });
   });
 
-  it("11b. VERANSTALTUNG maps to canonical OTHER without throwing", async () => {
+  it("11b. VERANSTALTUNG weekplanner items are omitted from the canonical Infoboard loader feed", async () => {
     mocks.getWeekplannerDay.mockResolvedValue(makeDay([veranstaltungItem()], "2026-08-10"));
     const database = makeDatabase([
       eventPolicyRow({ id: "event-v1", infoboardVisible: false, websiteVisible: true }),
     ]);
     const loader = createCanonicalInfoboardSourceLoader(database);
 
-    const [event] = await loader({ tenantId: TENANT_A, dateFrom: DATE_FROM, dateTo: DATE_FROM });
-    expect(event.type).toBe("OTHER");
-    expect(event.id).toBe("event-v1");
-    expect(event.infoboardVisible).toBe(true);
-    const decision = evaluatePublication(event, "INFOBOARD_SCREEN_2", TENANT_A);
-    expect(decision.eligible).toBe(true);
+    const events = await loader({ tenantId: TENANT_A, dateFrom: DATE_FROM, dateTo: DATE_FROM });
+    expect(events).toEqual([]);
+    expect(database.event.findMany).not.toHaveBeenCalled();
   });
 
   it("12a. a match with infoboardVisible=false is excluded (hidden activity)", async () => {

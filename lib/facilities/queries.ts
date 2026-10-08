@@ -10,6 +10,15 @@
 import { prisma } from "@/lib/db/prisma";
 import type { FacilityStatus, FacilityType, FacilityResourceType } from "@prisma/client";
 import {
+  assertFacilityIdentityAvailable,
+  assertFacilityResourceCodeAvailable,
+  normalizeFacilityResourceCode,
+} from "@/lib/facilities/facility-resource-reference-guard";
+import {
+  propagateMatchLegacyResourceCodesForRename,
+  registerFacilityResourceCodeAlias,
+} from "@/lib/facilities/match-legacy-resource-compatibility";
+import {
   withRequiredCodes,
   type FacilityResourceOption,
 } from "@/lib/facilities/resource-options";
@@ -58,8 +67,8 @@ export async function getActiveResourceOptionsForTenant(
     where: {
       tenantId,
       type: { in: RESOURCE_TYPES_BY_GROUP[group] },
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
+      status: "ACTIVE",
+      facility: { status: "ACTIVE" },
     },
     select: { code: true, name: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -87,8 +96,8 @@ export async function getActiveFacilityResourcesByCodesForTenant(
     where: {
       tenantId,
       code: { in: codes },
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
+      status: "ACTIVE",
+      facility: { status: "ACTIVE" },
     },
     select: { code: true, name: true, type: true },
   });
@@ -221,10 +230,12 @@ export async function createFacility(input: {
   type: FacilityType;
   sortOrder?: number;
 }) {
+  await assertFacilityIdentityAvailable(prisma, input.tenantId, input.name, input.type);
+
   return prisma.facility.create({
     data: {
       tenantId: input.tenantId,
-      name: input.name,
+      name: input.name.trim(),
       type: input.type,
       sortOrder: input.sortOrder ?? 0,
     },
@@ -250,12 +261,15 @@ export async function createFacilityResource(input: {
   type: FacilityResourceType;
   sortOrder?: number;
 }) {
+  const code = normalizeFacilityResourceCode(input.code);
+  await assertFacilityResourceCodeAvailable(prisma, input.tenantId, code);
+
   return prisma.facilityResource.create({
     data: {
       tenantId: input.tenantId,
       facilityId: input.facilityId,
       name: input.name,
-      code: input.code,
+      code,
       type: input.type,
       sortOrder: input.sortOrder ?? 0,
     },
@@ -273,8 +287,36 @@ export async function updateFacilityResource(
     sortOrder: number;
   }>,
 ) {
+  const patch = { ...data };
+  if (typeof patch.code === "string") {
+    const newCode = normalizeFacilityResourceCode(patch.code);
+    patch.code = newCode;
+    await assertFacilityResourceCodeAvailable(prisma, tenantId, newCode, id);
+
+    return prisma.$transaction(async (tx) => {
+      const current = await tx.facilityResource.findFirst({
+        where: { id, tenantId },
+        select: { code: true },
+      });
+      if (!current) {
+        return tx.facilityResource.updateMany({ where: { id, tenantId }, data: patch });
+      }
+
+      const previousCode = normalizeFacilityResourceCode(current.code);
+      if (previousCode !== newCode) {
+        await registerFacilityResourceCodeAlias(tx, tenantId, id, previousCode);
+        await propagateMatchLegacyResourceCodesForRename(tx, tenantId, previousCode, newCode);
+      }
+
+      return tx.facilityResource.updateMany({
+        where: { id, tenantId },
+        data: patch,
+      });
+    });
+  }
+
   return prisma.facilityResource.updateMany({
     where: { id, tenantId },
-    data,
+    data: patch,
   });
 }

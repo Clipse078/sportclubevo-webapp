@@ -1,6 +1,6 @@
 # SCE-PLANNER-UX-AGGREGATION-01 — Mixed Activity Cluster Presentation
 
-**Status:** PLANNED
+**Status:** PARTIALLY RESOLVED (08-07R2 Kalender cluster headline) — full shared `countByActivityType` model still optional (see 08-08 diagnosis)
 
 **Priority:** High UX / data-semantics improvement
 

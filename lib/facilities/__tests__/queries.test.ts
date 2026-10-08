@@ -24,8 +24,11 @@ const mocks = vi.hoisted(() => ({
   facilityUpdateMany: vi.fn(),
   facilityResourceFindMany: vi.fn(),
   facilityResourceFindUnique: vi.fn(),
+  facilityResourceFindFirst: vi.fn(),
   facilityResourceCreate: vi.fn(),
   facilityResourceUpdateMany: vi.fn(),
+  facilityResourceCodeAliasFindFirst: vi.fn(),
+  transaction: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -39,9 +42,14 @@ vi.mock("@/lib/db/prisma", () => ({
     facilityResource: {
       findMany: mocks.facilityResourceFindMany,
       findUnique: mocks.facilityResourceFindUnique,
+      findFirst: mocks.facilityResourceFindFirst,
       create: mocks.facilityResourceCreate,
       updateMany: mocks.facilityResourceUpdateMany,
     },
+    facilityResourceCodeAlias: {
+      findFirst: mocks.facilityResourceCodeAliasFindFirst,
+    },
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) => mocks.transaction(fn),
   },
 }));
 
@@ -100,6 +108,10 @@ function makeResource(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.facilityResourceFindFirst.mockResolvedValue(null);
+  mocks.facilityResourceCodeAliasFindFirst.mockResolvedValue(null);
+  mocks.facilityFindMany.mockResolvedValue([]);
+  mocks.transaction.mockImplementation(async (fn) => fn({}));
 });
 
 describe("getFacilitiesForTenant", () => {
@@ -588,8 +600,8 @@ describe("getActiveResourceOptionsForTenant", () => {
         where: {
           tenantId: TENANT_A,
           type: { in: ["FULL_PITCH", "HALF_PITCH"] },
-          status: { not: "ARCHIVED" },
-          facility: { status: { not: "ARCHIVED" } },
+          status: "ACTIVE",
+          facility: { status: "ACTIVE" },
         },
       }),
     );
@@ -640,7 +652,7 @@ describe("getActiveResourceOptionsForTenant", () => {
     expect(result).toEqual([]);
     expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: { not: "ARCHIVED" } }),
+        where: expect.objectContaining({ status: "ACTIVE" }),
       }),
     );
   });
@@ -652,7 +664,7 @@ describe("getActiveResourceOptionsForTenant", () => {
 
     expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ facility: { status: { not: "ARCHIVED" } } }),
+        where: expect.objectContaining({ facility: { status: "ACTIVE" } }),
       }),
     );
   });
@@ -687,8 +699,8 @@ describe("getActiveFacilityResourcesByCodesForTenant", () => {
         where: {
           tenantId: TENANT_A,
           code: { in: ["E1"] },
-          status: { not: "ARCHIVED" },
-          facility: { status: { not: "ARCHIVED" } },
+          status: "ACTIVE",
+          facility: { status: "ACTIVE" },
         },
       }),
     );

@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   tournamentResourceAllocationFindMany: vi.fn(),
   tournamentParticipantAllocationFindMany: vi.fn(),
   eventFacilityAllocationFindMany: vi.fn(),
+  facilityResourceCodeAliasFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -33,6 +34,7 @@ vi.mock("@/lib/db/prisma", () => ({
     tournamentResourceAllocation: { findMany: mocks.tournamentResourceAllocationFindMany },
     tournamentParticipantAllocation: { findMany: mocks.tournamentParticipantAllocationFindMany },
     eventFacilityAllocation: { findMany: mocks.eventFacilityAllocationFindMany },
+    facilityResourceCodeAlias: { findMany: mocks.facilityResourceCodeAliasFindMany },
   },
 }));
 
@@ -55,6 +57,7 @@ beforeEach(() => {
   mocks.tournamentResourceAllocationFindMany.mockResolvedValue([]);
   mocks.tournamentParticipantAllocationFindMany.mockResolvedValue([]);
   mocks.eventFacilityAllocationFindMany.mockResolvedValue([]);
+  mocks.facilityResourceCodeAliasFindMany.mockResolvedValue([]);
 });
 
 describe("getResourceAvailability — free resource", () => {
@@ -385,8 +388,8 @@ describe("getResourceAvailability — tenant isolation", () => {
   });
 });
 
-describe("getResourceAvailability — archived resource excluded", () => {
-  it("filters archived resources and archived-facility resources at the query level", async () => {
+describe("getResourceAvailability — assignable catalog (ACTIVE only)", () => {
+  it("returns only ACTIVE resources on ACTIVE facilities (excludes archived and inactive)", async () => {
     mocks.facilityResourceFindMany.mockResolvedValue([PITCH_1]);
 
     await getResourceAvailability({ tenantId: TENANT_A, startAt: START, endAt: END, group: "PITCH_HALL" });
@@ -394,8 +397,8 @@ describe("getResourceAvailability — archived resource excluded", () => {
     expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          status: { not: "ARCHIVED" },
-          facility: { status: { not: "ARCHIVED" } },
+          status: "ACTIVE",
+          facility: { status: "ACTIVE" },
         }),
       }),
     );
