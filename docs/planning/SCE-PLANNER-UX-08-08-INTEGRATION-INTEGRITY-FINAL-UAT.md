@@ -1,12 +1,14 @@
 # SCE-PLANNER-UX-08-08 — Integration, Integrity & Final UAT Hardening
 
-**Status:** **IN PROGRESS** — **08-08D** cross-domain integration closure complete; **Human UAT pending** (FACILITY-INTEGRITY-01 automated gate pass)  
-**08_08A_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
-**08_08B_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
-**08_08C_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRITY PASS**  
-**08_08C_R1_STATUS:** **IMPLEMENTED / MATCH LEGACY RENAME COMPATIBILITY** (F-08-08-03 → FIXED_COMPATIBILITY_LAYER)  
-**08_08D_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRATION PASS**  
+**Status:** **HUMAN_UAT_READY** — **08-08F** automated release baseline green; **Human UAT pending** (FACILITY-INTEGRITY-01 not fully CLOSED)  
+**08_08A_STATUS:** **COMPLETE**  
+**08_08B_STATUS:** **COMPLETE**  
+**08_08C_STATUS:** **COMPLETE**  
+**08_08C_R1_STATUS:** **COMPLETE** (F-08-08-03 → FIXED_COMPATIBILITY_LAYER)  
+**08_08D_STATUS:** **COMPLETE**  
+**08_08F_STATUS:** **COMPLETE** — test harness green; **0** production behavior changes  
 **FACILITY_INTEGRITY_01:** **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** (not CLOSED)  
+**08_08_STATUS:** **HUMAN_UAT_READY** (not CLOSED until Human UAT + gates)  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
 **HEAD (08-08D):** see git — post-integration commit on this branch  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
@@ -499,6 +501,108 @@ npm run test -- lib/planning-hub/__tests__/sce-planner-ux-08-08d-cross-domain-in
 | Broad sweep (§11 command) | **14 fail — F-08-08-06**; **NEW_FAILURES = 0** |
 | Build | **PASS** |
 
+---
+
+## 3F. SCE-PLANNER-UX-08-08F — test harness closure & automated release baseline
+
+**HEAD (08-08F):** post-harness commit on branch `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
+**Production code changed:** **NONE** (test-only repairs)
+
+### F-08-08-06 — 14 failure root-cause table (pre-fix)
+
+| # | Test file | Test name (summary) | Error | Classification | Root cause | Expected current contract |
+|---|-----------|---------------------|-------|----------------|------------|---------------------------|
+| 1–3 | `lib/weekplanner/__tests__/plan-overrides.test.ts` | Tournament override + read-only guard | `teamSeason.findMany` undefined | **MOCK_DRIFT** | Prisma mock missing `teamSeason` after tournament `teamSeasonId` resolution in `queries.ts` | Mock returns `{ id, teamId }` rows for tournament participants |
+| 4–6 | `PlanningHubResourcePitchGroups.test.tsx` | R2 pitch group collapse/expand | `search.trim` on undefined | **HARNESS_STALE** | `PlanningHubUrlState.search` required (`string`, default `""` via `parsePlanningHubUrlState`) | Test `urlState` includes `search: ""` |
+| 7–10 | `PlanningHubResourcePitchGroupsR3.test.tsx` | R3 collapsed activity / DnD ids | same | **HARNESS_STALE** | same | same |
+| 11–14 | `PlanningHubResourceScopeControl.test.tsx` | R1 scope chips / popover | same | **HARNESS_STALE** | same | same |
+
+**REAL_PRODUCT_DEFECTS:** **0**  
+**CLASSIFICATION_CHANGES:** **0** (08-08D buckets confirmed)
+
+### Additional isolation fix (outside the 14)
+
+| Test | Classification | Repair |
+|------|----------------|--------|
+| `canonical-source-loader.test.ts` **11b** | **MOCK_DRIFT** / stale assertion | Loader intentionally filters `VERANSTALTUNG` items before mapping (`createCanonicalInfoboardSourceLoader`); test now expects **empty feed**, not `OTHER` mapping |
+
+### Harness repairs applied
+
+| Area | Change |
+|------|--------|
+| **PLANNER_URL / search** | Added `search: ""` to stale `urlState` fixtures in resource UI tests (matches `PlanningHubUrlState` and production SSR defaults) |
+| **PLANNING_HUB_RESOURCE_UI** | Same — no deprecated props restored |
+| **PLAN_OVERRIDES** | Added `prisma.teamSeason.findMany` mock + default `{ id: teamseason-own, teamId: team-own }` in `beforeEach` |
+| **INFOBOARD_CANONICAL_SOURCE** | Test **11b** aligned to omit-VERANSTALTUNG feed contract |
+
+### Regression results (08-08F)
+
+```bash
+# Broad sweep (§11) — primary F-08-08-06 gate
+npm run test -- lib/weekplanner lib/planning-hub lib/facilities/__tests__ \
+  lib/planning/__tests__/planning-ux-07r* components/admin/planning-hub/__tests__
+# → 131 files, 1059 tests — ALL PASS
+
+# Extended 08-08 + integrity packs (08-01…08-08D, infoboard resolver, training list)
+npm run test -- lib/planning-hub/__tests__/sce-planner-ux-08 \
+  lib/planning-hub/__tests__/aggregate \
+  lib/planning-hub/scheduler/__tests__/aggregate-cluster.test.ts \
+  lib/facilities/__tests__/facility-integrity \
+  lib/weekplanner/__tests__/conflict-detection.test.ts \
+  lib/weekplanner/__tests__/availability-integration.test.ts \
+  lib/training/__tests__/weekplanner-session-list.test.ts \
+  lib/publishing/infoboard/__tests__/canonical-source-loader.test.ts \
+  lib/publishing/infoboard/__tests__/screen2-preview-facility-resolver.test.ts
+# → 25 files, 226 tests — ALL PASS
+
+NODE_OPTIONS=--max-old-space-size=8192 npm run build
+# → PASS
+```
+
+| Run | Result |
+|-----|--------|
+| Broad sweep (§11) | **131 files, 1059 tests — ALL PASS** (was 1045 pass / 14 fail) |
+| Extended 08-08 packs | **226 tests — ALL PASS** |
+| Full repository `npm run test` | **1477 files pass / 160 fail files** — failures are **live-DB / integration / env** suites (`TEST_DATABASE_URL`, S3, etc.); **not** 08-08 release surface |
+| Build | **PASS** |
+| Lint (`npm run lint`) | **54 errors / 762 warnings** — pre-existing repo baseline; not introduced by 08-08F |
+| Typecheck | **Via `next build`** (no separate `typecheck` script) — **PASS** |
+
+### F-08-08-06 closure
+
+| Finding | Status |
+|---------|--------|
+| F-08-08-06 | **FIXED / TEST HARNESS GREEN** |
+
+### Executable Human UAT pack (FCA — do not run in 08-08F)
+
+**DATA_SAFETY:** Prefer reversible rename/archive; use clearly marked temporary resources for create/delete; never delete real historical resources to prove guards; blocked-delete only when UI confirms guard before destructive action.
+
+#### A. EXECUTABLE_NOW
+
+| CASE_ID | PRECONDITION | PERSONA | PAGE | ACTION | EXPECTED_RESULT | PASS_CRITERIA | RESTORE/CLEANUP | IMPERSONATION |
+|---------|--------------|---------|------|--------|-----------------|---------------|-----------------|---------------|
+| UAT-FI-01 | Known pitch + open Wochenplaner week | Club admin | Admin → Facilities → Planner (Kalender) | Rename pitch label; navigate Planner (or soft refresh) | Labels on Kalender/Spielfeld match new name | Visible text updated without hard reload | Revert rename | No |
+| UAT-FI-02 | HOME Match + Training same week on that pitch | Club admin | Planner Spielfeld + Matchcenter | Rename pitch | Match + Training stay on same physical lane; conflict badge unchanged if overlap unchanged | Same resource identity / conflict state | Revert rename | No |
+| UAT-FI-03 | Training with Garderobe | Club admin | Planner Garderobe | Rename dressing resource | Lane headers / chips show new name | Correct dressing labels | Revert rename | No |
+| UAT-FI-04 | Active resource | Club admin | Admin Facilities | Archive/deactivate resource | Absent from new assignment selectors; existing week activities still readable | Assign blocked; historical visible | Reactivate | No |
+| UAT-FI-05 | Archived resource | Club admin | Admin Facilities | Reactivate | Reappears in assignment selectors | Selectable again | Archive again if desired | No |
+| UAT-FI-06 | Resource with allocations | Club admin | Admin Facilities | Attempt permanent delete | German actionable error; no silent link strip | 409 / blocked UI | None (no delete) | No |
+| UAT-FI-07 | Unused temp resource | Club admin | Admin + Planner | Create temp → delete when unused | Gone from admin + planner catalog after refresh | No orphan lanes | N/A | No |
+| UAT-FI-08 | Two browser tabs on Planner | Club admin | Planner (2 tabs) | Facility mutation tab A; view tab B | Tab B shows fresh labels after navigation/refresh path product defines | Cross-tab freshness acceptable | Revert mutation | No |
+
+#### B. BLOCKED_BY_IMPERSONATION
+
+| CASE_ID | PRECONDITION | PERSONA | PAGE | ACTION | EXPECTED_RESULT | PASS_CRITERIA | RESTORE/CLEANUP | IMPERSONATION |
+|---------|--------------|---------|------|--------|-----------------|---------------|-----------------|---------------|
+| UAT-PERM-01 | Sandra / allocation-only user | Training staff | Garderobe | DnD without allocation manage | Blocked or read-only per role | Matches 08-04 policy | — | **Required** (PEOPLE-ACCESS-IMPERSONATION-01) |
+| UAT-PERM-02 | Read-only coach | Kalender | Drag activity | Denied | No mutation | — | **Required** |
+| UAT-PERM-03 | Training-only manager | Conflict workspace | Apply resolution | Denied without rights | 403 / disabled | — | **Required** |
+| UAT-PERM-04 | Role changed mid-session | Planner | Retry privileged action | Stale permission handled | Safe failure | — | **Required** |
+| UAT-PERM-05 | Facilities admin vs planner view-only | Admin + Planner | Facility PATCH vs view | Separation holds | No privilege bleed | — | **Required** |
+
+**HUMAN_UAT_PACK:** **READY** (executable subset does not wait on impersonation)
+
 ### FACILITY-INTEGRITY-01 — final automated matrix (summary)
 
 | Area | Status |
@@ -513,19 +617,9 @@ npm run test -- lib/planning-hub/__tests__/sce-planner-ux-08-08d-cross-domain-in
 | Open planner cross-tab refresh | **UNPROVEN** — Human UAT step |
 | **OVERALL** | **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** |
 
-### Final Human UAT checklist (do not execute in 08-08D)
+### Final Human UAT checklist
 
-Minimal FCA steps automation cannot fully prove:
-
-1. Admin facility rename → open Planner tab presentation refresh without manual hard reload  
-2. Pitch rename with live Match + Training → Match stays on correct pitch; conflict badge unchanged  
-3. Dressing rename with live activities → Garderobe lanes/labels correct  
-4. Archive/deactivate → absent from new assignment; existing activity still readable  
-5. Reactivate → returns to assignment selectors  
-6. Blocked delete → actionable German UI message (409)  
-7. Safe delete unused resource → disappears from admin + planner catalog after refresh  
-8. Cross-tab Planner refresh after facility mutation  
-9. Persona-specific actions — mark **BLOCKED_BY_IMPERSONATION** where PEOPLE-ACCESS-IMPERSONATION-01 applies (Sandra/read-only/training-only separation)
+Superseded by executable pack **§3F** (`EXECUTABLE_NOW` vs `BLOCKED_BY_IMPERSONATION`). Do not execute during 08-08F agent run.
 
 ### FACILITY-INTEGRITY-01 — Match cells (post R1)
 
@@ -586,7 +680,7 @@ Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalid
 |--------|---------------------|------------------|
 | **Training** lifecycle, recurrence, cancel, reconcile | 08-03, 08-07R4/R5, `weekplanner-session-list.test.ts` | Full recurrence + facility change under open planner |
 | **Match** SFV authority, teamSeason, pitch presentation | 08-03/04/06 tests, `match-team-season-resolution.test.ts` | Provider reschedule boundaries — Human UAT |
-| **Tournament** teamSeasonIds, allocations | weekplanner plan-override tests (3 failures in full suite — env/mock) | Participant dressing under facility rename |
+| **Tournament** teamSeasonIds, allocations | 08-08D + `plan-overrides.test.ts` (**PASS** post-08-08F) | Participant dressing under facility rename |
 | **Club event** allocations, all-day | `sce-events-01*` tests | Facility lifecycle + all-day cluster |
 
 ---
@@ -681,7 +775,7 @@ npm run test -- lib/planning-hub/__tests__/sce-planner-ux-08 \
   lib/weekplanner/__tests__/availability-integration.test.ts \
   lib/training/__tests__/weekplanner-session-list.test.ts
 
-# Broader planner sweep (partial failures — see findings F-08-08-06)
+# Broader planner sweep (08-08F — green)
 npm run test -- lib/weekplanner lib/planning-hub lib/facilities/__tests__ \
   lib/planning/__tests__/planning-ux-07r* components/admin/planning-hub/__tests__
 
@@ -691,7 +785,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | Run | Result |
 |-----|--------|
 | Focused 08 + integrity | **23 files, 184 tests — PASS** |
-| Broad sweep | **129 files, 1016 tests — 1002 pass, 14 fail** (see findings; +08-08C tests) |
+| Broad sweep | **131 files, 1059 tests — ALL PASS** (08-08F) |
 | Build | **PASS** |
 
 ---
@@ -705,7 +799,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | F-08-08-03 | P2 → **FIXED_COMPATIBILITY_LAYER (08-08C/R1)** | Match identity | Match pitch/dressing via legacy codes + alias/propagation | Stable physical identity across rename | Was code-only lookup without rename seam | Match planner, availability, conflict, delete guard | **COVERED_BY_TEST** (`match-legacy-resource-compatibility.test.ts`) | Full Match FK migration **deferred non-blocking** |
 | F-08-08-04 | P2 → **ACCEPTED_RESIDUAL (08-08D review)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | No unsafe duplicate physical identity path | Admin duplicate code/name guard; distinct names legit | Duplicate lanes for distinct names only | `facility-lifecycle-08-08a.test.ts`, **08-08D** | No fuzzy merge; Human UAT optional visual check |
 | F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
-| F-08-08-06 | P3 | Test harness | 14 tests fail in broad sweep (`planner-url` `search.trim`, plan-overrides mocks) | Green CI | Test props omit `search`; mock drift | CI signal | — | 08-08F test hygiene |
+| F-08-08-06 | P3 → **FIXED (08-08F)** | Test harness | Broad sweep green | Green CI | Stale `urlState.search`; missing `teamSeason` mock; stale Infoboard 11b | CI signal | Broad sweep **PASS** | **Done** |
 | F-08-08-07 | DEFERRED | Impersonation | Manual persona UAT blocked | Reliable impersonation | PEOPLE-ACCESS-IMPERSONATION-01 open | Permission UAT | N/A | Separate package |
 
 **P0:** none identified in this diagnosis pass.
@@ -721,7 +815,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | **08-08C** | Conflict/availability after resource lifecycle | Conflicts, availability, historical display | No silent loss of conflict truth on archive/rename | **DONE** — `sce-planner-ux-08-08c-conflict-availability-integrity.test.ts` | Delete blocked with allocations | 08-08A |
 | **08-08D** | Cross-domain integration regression pack | Training/match/tournament/event + facility | Single week read model | **DONE** — `sce-planner-ux-08-08d-cross-domain-integration.test.ts` | Full week scenario (Human UAT checklist §3E) | 08-08B |
 | **08-08E** | Aggregation closure (optional) | Kalender + inspector | Shared `countByActivityType` | `aggregate-inspection` | Mixed cluster copy | — |
-| **08-08F** | Final automated regression + Human UAT | All | 08-01…08-07 + FI-01 gates | Full suite green + build | Michael checklist | 08-08A–D |
+| **08-08F** | Final automated regression + Human UAT pack | All | 08-01…08-07 + FI-01 gates | **DONE** — broad sweep green + build | §3F checklist (Human run) | 08-08A–D |
 
 **FINAL_UAT_GATE:** FACILITY-INTEGRITY-01 lifecycle matrix predominantly PASS/COVERED; no P1 open; 08-07 CLOSED; build green; documented impersonation gaps accepted or PEOPLE-ACCESS-IMPERSONATION-01 resolved.
 
@@ -737,5 +831,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | AGGREGATION-01 | **Partial** — headline fixed; full spec optional |
 | PEOPLE-ACCESS-IMPERSONATION-01 | OPEN |
 | PROD untouched | PASS |
+| 08-08 automated release baseline (F-08-08-06) | **PASS** |
+| Human UAT pack prepared | **PASS** — §3F |
 
-**08-08 is NOT CLOSED.**
+**08-08 is NOT CLOSED** (Human UAT + optional aggregation/impersonation remain).
