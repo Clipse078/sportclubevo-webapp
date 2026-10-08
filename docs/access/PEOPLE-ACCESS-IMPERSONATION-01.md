@@ -212,6 +212,51 @@ Aus Verein entfernen
 
 **UAT-PERM-01R9:** **HUMAN_UAT_PENDING** — Patrick Registrierungen UX + responsive pass; Sandra/Patrick Infoboard via normal nav; security spot-check (no People admin / no impersonation start).
 
+**R9 Human UAT Infoboard (Sandra/Patrick):** **FAIL** — preview-only scope insufficient (`/dashboard/infoboard/preview` only; canonical management overview at `/dashboard/infoboard` required).
+
+| Case | Status |
+|------|--------|
+| **R9_C_SANDRA_INFOBOARD** | **FAIL** → **FIXED_IN_R9R1 / HUMAN_UAT_PENDING** |
+| **R9_D_PATRICK_INFOBOARD** | **FAIL** → **FIXED_IN_R9R1 / HUMAN_UAT_PENDING** |
+
+### 01R9R1 — Infoboard operational access correction (PR #808)
+
+**Human UAT finding:** R9 correctly exposed Infoboard preview for Sandra and Patrick, but FCA pilot requires the **operational management overview** (`/dashboard/infoboard`) — board list, filters, **Öffnen** / **Bearbeiten**, same surface as Club Admin — not preview-only.
+
+**Root cause:** R9 granted only `infoboard.view`. The canonical overview route requires a **write** permission from `INFOBOARD_WRITE_PERMISSIONS` (`infoboard.manage` or `events.publish_infoboard`). View-only actors are correctly redirected to `/dashboard/infoboard/preview`; Sandra/Patrick were view-only.
+
+**Permission decision (minimum coherent set):**
+
+| Permission | Sandra | Patrick | Notes |
+|------------|--------|---------|-------|
+| `infoboard.view` | yes | yes (inherited) | Preview + read path |
+| `infoboard.manage` | **+added** | **+added** (via Spielbetrieb baseline) | Operational overview, editor, APIs (except hard delete) |
+| `events.publish_infoboard` | no | no | Not required for FCA Infoboard ops today |
+| `infoboard.delete` | no | no | Permanent delete remains Club Admin / deletion authority |
+
+**Route/API model (unchanged guards):**
+
+| Capability | Route/API | Permission |
+|------------|-----------|------------|
+| Preview/read | `/dashboard/infoboard/preview` | `INFOBOARD_READ_PERMISSIONS` |
+| Management overview | `/dashboard/infoboard` | `INFOBOARD_WRITE_PERMISSIONS` (no redirect when manage held) |
+| Board editor | `/dashboard/infoboard/[id]` | `infoboard.manage` |
+| CRUD APIs | `/api/infoboards*` | `infoboard.manage` |
+| Permanent delete | `DELETE /api/infoboards/[id]` | `infoboard.delete` (Sandra/Patrick denied) |
+
+**View-only boundary:** `infoboard.view` without manage/publish → redirect to preview (preserved).
+
+**STAGE role sync:** Canonical source `lib/roles/pilot-fc-allschwil-role-definitions.ts`; apply via existing idempotent scripts:
+
+- `APPLY_FCA_SPIELBETRIEB_ROLE_SYNC=true npx tsx scripts/sync-fca-spielbetrieb-koordinator-role.ts`
+- `APPLY_FCA_PRAESIDENT_PILOT_ROLE_SYNC=true npx tsx scripts/sync-fca-praesident-pilot-role.ts` (STAGE fingerprint guard)
+
+**Automated evidence (R9R1):** `infoboard-operational-access-r9r1.test.ts`, updated `fca-praesident-pilot-access.test.ts`, infoboard admin page redirect test; R4–R9 sentinels re-run.
+
+**Build:** `NODE_OPTIONS=--max-old-space-size=8192 npm run build` — required PASS before Human UAT.
+
+**Human UAT pending:** UAT_R9R1_A–E (overview, edit, Patrick parity, view-only security, exit impersonation).
+
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
 `users.impersonate_tenant` → **Benutzeransicht** in `permission-metadata.ts`.

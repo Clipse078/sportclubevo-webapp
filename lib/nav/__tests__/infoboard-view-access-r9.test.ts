@@ -13,17 +13,15 @@ function collectHrefs(permissionKeys: readonly string[]) {
 }
 
 describe("R9 — Infoboard view access (navigation)", () => {
-  it("Sandra — Infoboard preview in nav, no manage permission in role template", () => {
+  it("Sandra — Infoboard preview remains in nav (R9R1 adds manage — see infoboard-operational-access-r9r1)", () => {
     const keys = SANDRA_FISCHER_SPIELBETRIEB_ROLE.permissionKeys;
     expect(keys).toContain(PERMISSIONS.INFOBOARD_VIEW);
-    expect(keys).not.toContain(PERMISSIONS.INFOBOARD_MANAGE);
     expect(collectHrefs(keys)).toContain("/dashboard/infoboard/preview");
   });
 
-  it("Patrick — same Infoboard preview discoverability as Sandra baseline", () => {
+  it("Patrick — Infoboard preview discoverability as Sandra baseline", () => {
     const keys = PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE.permissionKeys;
     expect(keys).toContain(PERMISSIONS.INFOBOARD_VIEW);
-    expect(keys).not.toContain(PERMISSIONS.INFOBOARD_MANAGE);
     expect(collectHrefs(keys)).toContain("/dashboard/infoboard/preview");
   });
 

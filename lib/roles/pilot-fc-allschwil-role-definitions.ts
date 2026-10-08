@@ -46,7 +46,8 @@ const sandraRationale: Record<string, string> = {
   "communication.club.view": "Mitteilungen lesen (kein Senden/Posteingang)",
   "news.view": "Veröffentlichte News read-only",
   "website.view": "Publizieren/Website read-only",
-  "infoboard.view": "Infoboard-Vorschau ohne Manage",
+  "infoboard.view": "Infoboard-Vorschau (read path)",
+  "infoboard.manage": "Operative Infoboard-Verwaltung (Übersicht, Bearbeiten)",
 };
 
 export const SANDRA_FISCHER_SPIELBETRIEB_ROLE: PilotRoleDefinition = {
@@ -60,6 +61,7 @@ export const SANDRA_FISCHER_SPIELBETRIEB_ROLE: PilotRoleDefinition = {
     PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
     PERMISSIONS.TRAININGS_VIEW,
     PERMISSIONS.EVENTS_VIEW,
+    PERMISSIONS.INFOBOARD_MANAGE,
   ],
   permissionRationale: sandraRationale,
 };
@@ -115,7 +117,6 @@ export const PILOT_FORBIDDEN_PERMISSION_KEYS: PermissionKey[] = [
   PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
   PERMISSIONS.NEWS_MANAGE,
   PERMISSIONS.WEBSITE_MANAGE,
-  PERMISSIONS.INFOBOARD_MANAGE,
   PERMISSIONS.PEOPLE_VIEW,
   PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
   PERMISSIONS.COMMUNICATION_INBOX_VIEW,

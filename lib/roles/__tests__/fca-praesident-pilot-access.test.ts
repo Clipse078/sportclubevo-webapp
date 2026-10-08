@@ -34,13 +34,14 @@ describe("P1_PRESIDENT_PILOT_ACCESS_01 — Präsident (Pilot) access model", () 
     expect(hrefs).toContain("/dashboard/workspace");
   });
 
-  it("PRESIDENT_INFOBOARD — operational preview without manage", () => {
+  it("PRESIDENT_INFOBOARD — operational management overview (R9R1)", () => {
     expect(PATRICK_KEYS).toContain(PERMISSIONS.INFOBOARD_VIEW);
-    expect(PATRICK_KEYS).not.toContain(PERMISSIONS.INFOBOARD_MANAGE);
+    expect(PATRICK_KEYS).toContain(PERMISSIONS.INFOBOARD_MANAGE);
     const sections = getVisibleNavSections(PATRICK_KEYS);
     const hrefs = sections.flatMap((s) =>
       s.items.flatMap((i) => [i.href, ...(i.children?.map((c) => c.href) ?? [])]),
     );
+    expect(hrefs).toContain("/dashboard/infoboard");
     expect(hrefs).toContain("/dashboard/infoboard/preview");
   });
 
