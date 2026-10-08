@@ -255,7 +255,38 @@ Aus Verein entfernen
 
 **Build:** `NODE_OPTIONS=--max-old-space-size=8192 npm run build` — required PASS before Human UAT.
 
-**Human UAT pending:** UAT_R9R1_A–E (overview, edit, Patrick parity, view-only security, exit impersonation).
+**Human UAT (2026-10-08):**
+
+| Case | Status |
+|------|--------|
+| **R9R1_A_SANDRA_INFOBOARD_OVERVIEW** | **PASS** |
+| **R9R1_B_INFOBOARD_EDITOR** | **PASS** |
+| **R9R1_C_PATRICK_INFOBOARD** | **PASS** |
+| R9R1_D view-only boundary | Pending |
+| R9R1_E exit impersonation | Pending |
+
+### 01R9R2 — Infoboard preview ↔ overview navigation (PR #808)
+
+**Human UAT finding:** On `/dashboard/infoboard/preview`, clicking module-local **Übersicht** (expected → `/dashboard/infoboard`) did nothing. Direct URL to `/dashboard/infoboard` worked; overview → **Vorschau** worked. Reproduced impersonating Patrick after R9R1 STAGE role sync.
+
+**Root cause:** Sibling route collision between `/dashboard/infoboard` and `/dashboard/infoboard/preview`. Prefix-based `isNavigationHrefActive` treated preview URLs as “on” the overview href; the overview nav child lacked `matchExact`, so explorer/module chrome could mark **Übersicht** active while still on preview. Module-local links from a nested pathname to the exact overview href could be swallowed by the App Router soft-navigation path.
+
+**Fix (shared navigation, no persona hacks):**
+
+1. `infoboard-overview` nav child: `matchExact: true` (same pattern as Commercial Billing overview).
+2. `resolvePrimaryActiveModuleLocalChildKey`: nested fallback for `/dashboard/infoboard/[id]` editor routes without stealing `/preview`.
+3. `GlobalNavDrawer`: sibling-aware `isModuleLocalChildPrimaryActive` for module children (replacing naive prefix active checks).
+4. `AppShellNavigation` module-local row: explicit `router.push` when navigating from a nested path to an exact sibling href (preview → overview).
+
+**Permission behavior:** Unchanged R9/R9R1 model — `infoboard.view` + `infoboard.manage` sees **Übersicht** + **Vorschau** and can switch both ways; view-only remains preview-only (overview child hidden; route redirect preserved). No new permissions; no STAGE role sync.
+
+**Automated evidence (R9R2):** `lib/nav/__tests__/infoboard-r9r2-nav.test.ts`, `AppShellNavigation.infoboard-r9r2.test.tsx`; R9/R9R1 nav + impersonation sentinels re-run.
+
+| Case | Status |
+|------|--------|
+| **R9R2_NAVIGATION** | **IMPLEMENTED / HUMAN_UAT_PENDING** |
+
+**Human UAT pending:** R9R2_A–E (Sandra/Patrick preview ↔ overview, exit).
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 

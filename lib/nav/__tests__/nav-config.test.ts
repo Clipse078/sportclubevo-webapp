@@ -92,6 +92,7 @@ describe("NAV_SECTIONS static structure", () => {
         key: "infoboard-overview",
         label: "Übersicht",
         href: "/dashboard/infoboard",
+        matchExact: true,
       }),
       expect.objectContaining({
         key: "infoboard-preview",
