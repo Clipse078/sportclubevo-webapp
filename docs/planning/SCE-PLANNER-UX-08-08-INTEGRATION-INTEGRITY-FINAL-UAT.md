@@ -1,16 +1,16 @@
 # SCE-PLANNER-UX-08-08 — Integration, Integrity & Final UAT Hardening
 
-**Status:** **HUMAN_UAT_READY** — **08-08F** automated release baseline green; **Human UAT pending** (FACILITY-INTEGRITY-01 not fully CLOSED)  
+**Status:** **CLOSED / PASS** — **08-08F** automated release baseline green; **Final FCA Human UAT PASS** (8/8); **PR #806** → STAGE  
 **08_08A_STATUS:** **COMPLETE**  
 **08_08B_STATUS:** **COMPLETE**  
 **08_08C_STATUS:** **COMPLETE**  
 **08_08C_R1_STATUS:** **COMPLETE** (F-08-08-03 → FIXED_COMPATIBILITY_LAYER)  
 **08_08D_STATUS:** **COMPLETE**  
 **08_08F_STATUS:** **COMPLETE** — test harness green; **0** production behavior changes  
-**FACILITY_INTEGRITY_01:** **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** (not CLOSED)  
-**08_08_STATUS:** **HUMAN_UAT_READY** (not CLOSED until Human UAT + gates)  
+**FACILITY_INTEGRITY_01:** **CLOSED / PASS** (automated gate + 8/8 Human UAT)  
+**08_08_STATUS:** **CLOSED / PASS**  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
-**HEAD (08-08D):** see git — post-integration commit on this branch  
+**HEAD (closure RC):** `32b5b41963fb054af112e4129e43680351224527` (+ closure documentation commit)  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
 **Target:** STAGE  
 **PROD:** untouched  
@@ -603,6 +603,68 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 
 **HUMAN_UAT_PACK:** **READY** (executable subset does not wait on impersonation)
 
+---
+
+## 3G. FINAL FCA Human UAT sign-off (closure)
+
+| Field | Value |
+|-------|--------|
+| **DATE** | 2026-10-08 |
+| **EXECUTOR** | Product Owner / FCA Club Admin |
+| **TARGET** | PR #806 Vercel Preview |
+| **RC_SHA** | `32b5b41963fb054af112e4129e43680351224527` |
+| **DATABASE** | FCA STAGE (migrated 08-08A + 08-08C/R1) |
+
+### Executable results (Facility Integrity)
+
+| CASE | Result | Notes |
+|------|--------|-------|
+| **UAT-FI-01** | **PASS** | Pitch rename propagated; Planner presentation updated; physical resource identity preserved |
+| **UAT-FI-02** | **PASS** | Match + Training remained on canonical physical resource after rename; no resource/lane loss |
+| **UAT-FI-03** | **PASS** | Dressing-room rename propagated; existing allocation remained intact |
+| **UAT-FI-04** | **PASS** | Archived/inactive resource unavailable for new assignment; existing references remained readable |
+| **UAT-FI-05** | **PASS** | Reactivated resource became assignable again |
+| **UAT-FI-06** | **PASS** | Permanent delete of referenced resource blocked safely; existing allocations preserved |
+| **UAT-FI-07** | **PASS** | Temporary unused resource created → visible in Planner/resource surfaces → permanent safe delete succeeded → resource disappeared afterward |
+| **UAT-FI-08** | **PASS** | Cross-tab behavior matched 08-08B architecture (no real-time sync expected); refreshed/RSC-loaded Planner reflected mutation; original value restored |
+
+**EXECUTABLE_UAT:** **8/8 PASS**
+
+### Cleanup
+
+- Temporary resource from FI-07 absent  
+- Renamed resources restored  
+- Archived resource restored **ACTIVE**  
+- No intentional FCA UAT mutation left behind  
+
+**CLEANUP:** **PRODUCT_OWNER_CONFIRMED** (no agent DB audit trail for post-UAT restore)
+
+### Persona UAT (out of scope for 08-08 closure)
+
+| CASE | Status |
+|------|--------|
+| UAT-PERM-01 … UAT-PERM-05 | **DEFERRED** → **PEOPLE-ACCESS-IMPERSONATION-01** (not blockers for Facility Integrity or Planner 08-08) |
+
+### FACILITY-INTEGRITY-01 — final dimension sign-off
+
+| Dimension | Status |
+|-----------|--------|
+| PITCH | **PASS** |
+| DRESSING_ROOM | **PASS** |
+| TRAINING | **PASS** |
+| MATCH | **PASS** |
+| TOURNAMENT | **PASS** |
+| CLUB_EVENT | **PASS** |
+| CONFLICTS | **PASS** |
+| AVAILABILITY | **PASS** |
+| HISTORICAL_REFERENCES | **PASS** |
+| CACHE_REVALIDATION | **PASS** |
+| DELETE_SAFETY | **PASS** |
+| MATCH_LEGACY_COMPATIBILITY | **PASS** |
+| INFOBOARD | **PASS / NO_REGRESSION** |
+| HUMAN_UAT | **PASS** |
+| **FINAL_STATUS** | **CLOSED / PASS** |
+
 ### FACILITY-INTEGRITY-01 — final automated matrix (summary)
 
 | Area | Status |
@@ -613,9 +675,9 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | Tournament + Event cross-domain | **COVERED_BY_TEST** (08-08D) |
 | Training cancel + reconciliation | **COVERED_BY_TEST** (08-07R5 + 08-08D) |
 | Cache/revalidation | **COVERED_BY_TEST** (08-08B) |
-| Infoboard | **COVERED_BY_TEST** (01A + resolver); live refresh **UNPROVEN** (Human UAT) |
-| Open planner cross-tab refresh | **UNPROVEN** — Human UAT step |
-| **OVERALL** | **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** |
+| Infoboard | **PASS / NO_REGRESSION** (01A + resolver; Human UAT no regression) |
+| Open planner cross-tab refresh | **PASS** (UAT-FI-08; 08-08B refresh model) |
+| **OVERALL** | **CLOSED / PASS** |
 
 ### Final Human UAT checklist
 
@@ -634,7 +696,7 @@ Superseded by executable pack **§3F** (`EXECUTABLE_NOW` vs `BLOCKED_BY_IMPERSON
 | MATCH_CONFLICT | **COVERED_BY_TEST** |
 | MATCH_AVAILABILITY | **COVERED_BY_TEST** |
 | MATCH_HISTORICAL_IDENTITY | **COVERED_BY_TEST** (alias) |
-| OVERALL_STATUS | **OPEN** — FI-01 not fully closed (non-Match cells / Human UAT) |
+| OVERALL_STATUS | **CLOSED / PASS** |
 
 ### Tests (08-08C)
 
@@ -797,10 +859,10 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | F-08-08-01 | P1 → **FIXED (08-08A+08-08B)** | Facility delete | Delete blocked / RESTRICT; revalidation on safe delete | Historical activities remain intelligible | Restrict + service guards + post-delete revalidation | Planner, trainings, tournaments, events | `facility-delete-service.test.ts`, `facility-mutation-08-08b.test.ts` | **Done** |
 | F-08-08-02 | P2 → **FIXED (08-08B)** | Facility mutate → cache | Planner paths revalidated; client catalog syncs to server props | Planner surfaces update after facility mutation + RSC refresh | Was missing `revalidatePlannerWeekPaths` on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | `facility-mutation-08-08b.test.ts` | **08-08B done** |
 | F-08-08-03 | P2 → **FIXED_COMPATIBILITY_LAYER (08-08C/R1)** | Match identity | Match pitch/dressing via legacy codes + alias/propagation | Stable physical identity across rename | Was code-only lookup without rename seam | Match planner, availability, conflict, delete guard | **COVERED_BY_TEST** (`match-legacy-resource-compatibility.test.ts`) | Full Match FK migration **deferred non-blocking** |
-| F-08-08-04 | P2 → **ACCEPTED_RESIDUAL (08-08D review)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | No unsafe duplicate physical identity path | Admin duplicate code/name guard; distinct names legit | Duplicate lanes for distinct names only | `facility-lifecycle-08-08a.test.ts`, **08-08D** | No fuzzy merge; Human UAT optional visual check |
-| F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
-| F-08-08-06 | P3 → **FIXED (08-08F)** | Test harness | Broad sweep green | Green CI | Stale `urlState.search`; missing `teamSeason` mock; stale Infoboard 11b | CI signal | Broad sweep **PASS** | **Done** |
-| F-08-08-07 | DEFERRED | Impersonation | Manual persona UAT blocked | Reliable impersonation | PEOPLE-ACCESS-IMPERSONATION-01 open | Permission UAT | N/A | Separate package |
+| F-08-08-04 | P2 → **ACCEPTED_RESIDUAL / NON_BLOCKING** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | No unsafe duplicate physical identity path | Admin duplicate code/name guard; distinct names legit | Duplicate lanes for distinct names only | `facility-lifecycle-08-08a.test.ts`, **08-08D** | No fuzzy merge; not a release blocker |
+| F-08-08-05 | P3 → **DEFERRED_OPTIONAL_POLISH / NON_BLOCKING** | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | Backlog / optional 08-08E |
+| F-08-08-06 | P3 → **FIXED / TEST_HARNESS_GREEN (08-08F)** | Test harness | Broad sweep green | Green CI | Stale `urlState.search`; missing `teamSeason` mock; stale Infoboard 11b | CI signal | Broad sweep **PASS** | **Done** |
+| F-08-08-07 | **DEFERRED_TO_PEOPLE_ACCESS_IMPERSONATION_01 / NON_BLOCKING_FOR_08_08** | Impersonation | Manual persona UAT blocked | Reliable impersonation | PEOPLE-ACCESS-IMPERSONATION-01 open | Permission UAT (UAT-PERM-01…05) | N/A | Separate package — **not** impersonation complete |
 
 **P0:** none identified in this diagnosis pass.
 
@@ -827,11 +889,12 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 |------|--------|
 | 08-07 unified planner packages on STAGE | PASS (contained) |
 | FACILITY-INTEGRITY-01A | CLOSED |
-| FACILITY-INTEGRITY-01 broader lifecycle | **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** — matrix §3E |
-| AGGREGATION-01 | **Partial** — headline fixed; full spec optional |
-| PEOPLE-ACCESS-IMPERSONATION-01 | OPEN |
+| FACILITY-INTEGRITY-01 broader lifecycle | **CLOSED / PASS** — §3G Human UAT 8/8 + automated matrix |
+| AGGREGATION-01 | **Partial / BACKLOG** — headline fixed; inspector polish **NON_BLOCKING** (F-08-08-05) |
+| PEOPLE-ACCESS-IMPERSONATION-01 | **OPEN** — UAT-PERM-01…05 deferred; **not** closed by 08-08 |
 | PROD untouched | PASS |
 | 08-08 automated release baseline (F-08-08-06) | **PASS** |
-| Human UAT pack prepared | **PASS** — §3F |
+| Human UAT (executable FI pack) | **PASS** — §3G |
+| PR #806 → STAGE | Merge authorized after final gates |
 
-**08-08 is NOT CLOSED** (Human UAT + optional aggregation/impersonation remain).
+**SCE-PLANNER-UX-08-08 = CLOSED / PASS** (persona/impersonation UAT explicitly separate from Facility Integrity closure).
