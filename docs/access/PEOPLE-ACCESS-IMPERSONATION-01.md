@@ -187,11 +187,30 @@ Aus Verein entfernen
 
 **STAGE data audit (read-only):** zero custom tenant roles held `users.impersonate_tenant`; FCA `club_admin__fc-allschwil` retains it; Sandra / Präsident pilot roles do not.
 
-**UAT-PERM-01R8:** **HUMAN_UAT_PENDING** — verify Club Admin can still start impersonation; custom role editor cannot grant it.
+**UAT-PERM-01R8:** **PASS** (Human UAT 2026-10-08) — Club Admin impersonates Sandra/Patrick; `users.impersonate_tenant` not delegatable to pilot roles.
 
 **Automated evidence:** `UserRowActionsMenu.test.tsx`, `people-access-impersonation-01-uat01-r7-row-menu.test.ts`, existing R4/R5/R6 impersonation suites — run in R7 commit.
 
-**UAT-PERM-01R7:** **HUMAN_UAT_PENDING** — compact dark menu, hierarchy, positioning, keyboard, no auth regression.
+**UAT-PERM-01R7:** **PASS** (Human UAT 2026-10-08) — compact dark row menu acceptable.
+
+### 01R9 — Registrierungen world-class UX + Infoboard access (PR #808)
+
+**Human UAT context (2026-10-08):** Impersonation, Planner, Dokumente, and Registrierungen access validated for Patrick; Sandra operational Planner OK. R9 scope: polish **Registrierungen** operational inbox/drawer (presentation only) and ensure **Infoboard** is discoverable for Sandra + Patrick via `infoboard.view` (no broad `infoboard.manage` grant).
+
+| Goal | Change | Business logic |
+|------|--------|----------------|
+| **R9-A Registrations UX** | Compact clickable KPI filters; dense responsive table hierarchy; drawer IA (sticky identity header, workflow block above tabs, secondary footer) | **Unchanged** — workflow PATCH/create-person/archive rules untouched |
+| **R9-B Infoboard** | `/dashboard/infoboard` redirects view-only actors to `/dashboard/infoboard/preview`; quick action uses preview + `INFOBOARD_VIEW`; pilot roles already include `infoboard.view` | Route guard aligned with nav (`INFOBOARD_READ_PERMISSIONS` on preview; manage on admin overview) |
+
+**Infoboard diagnosis:** Missing access was a **route/navigation mismatch** — parent nav allowed `infoboard.view` but `/dashboard/infoboard` required manage-only permissions. Preview route already accepted read permissions.
+
+**Workspace boundary (Patrick):** `workspace.view` without `workspace.manage` — folder edit denial message is **accepted**; `PRESIDENT_WORKSPACE_MANAGE_DECISION = DEFERRED_PRODUCT_DECISION` (not R9).
+
+**Security boundaries preserved:** No `users.impersonate_tenant` for Sandra/Patrick; no Club Admin expansion; impersonation effective-user model unchanged.
+
+**Automated evidence (R9):** `registration-inbox-ux.test.tsx`, `infoboard-view-access-r9.test.ts`, extended `fca-praesident-pilot-access.test.ts`, infoboard admin page redirect test; R4–R8 impersonation/planner sentinels re-run.
+
+**UAT-PERM-01R9:** **HUMAN_UAT_PENDING** — Patrick Registrierungen UX + responsive pass; Sandra/Patrick Infoboard via normal nav; security spot-check (no People admin / no impersonation start).
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 

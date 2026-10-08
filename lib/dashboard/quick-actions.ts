@@ -64,10 +64,14 @@ export const DASHBOARD_QUICK_ACTION_CATALOG: DashboardQuickActionDef[] = [
   },
   {
     key: "infoboard",
-    href: "/dashboard/infoboard",
+    href: "/dashboard/infoboard/preview",
     title: "Infoboard",
-    subtitle: "Display verwalten",
-    permissionKeys: [PERMISSIONS.INFOBOARD_MANAGE, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD],
+    subtitle: "Vorschau & Displays",
+    permissionKeys: [
+      PERMISSIONS.INFOBOARD_VIEW,
+      PERMISSIONS.INFOBOARD_MANAGE,
+      PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
+    ],
   },
   {
     key: "registrations",

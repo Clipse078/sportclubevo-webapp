@@ -12,8 +12,13 @@
  *   - No hard-coded Display 1 / Display 2 concept.
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
+import {
+  INFOBOARD_READ_PERMISSIONS,
+  INFOBOARD_WRITE_PERMISSIONS,
+} from "@/lib/permissions/content-view-permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
@@ -23,10 +28,14 @@ import { listInfoboards, countInfoboards } from "@/lib/infoboard/queries";
 import { InboardOverview } from "@/components/infoboard/v2/InboardOverview";
 
 export default async function InfoboardAdminPage() {
-  const session = await requireAnyPermission([
-    PERMISSIONS.INFOBOARD_MANAGE,
-    PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
-  ]);
+  const session = await requireAnyPermission([...INFOBOARD_READ_PERMISSIONS]);
+
+  const canManageInfoboard = INFOBOARD_WRITE_PERMISSIONS.some((permission) =>
+    hasPermission(session, permission),
+  );
+  if (!canManageInfoboard) {
+    redirect("/dashboard/infoboard/preview");
+  }
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
