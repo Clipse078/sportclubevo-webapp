@@ -123,7 +123,12 @@ describe("Sandra restricted role delegation (simulated)", () => {
   ];
 
   it("club admin without reconciled allocation keys cannot delegate Sandra role", async () => {
-    const actorWithoutAllocations = [PERMISSIONS.ROLES_MANAGE, PERMISSIONS.TEAMS_VIEW];
+    const actorWithoutAllocations = [
+      PERMISSIONS.ROLES_MANAGE,
+      PERMISSIONS.TEAMS_VIEW,
+      PERMISSIONS.TRAININGS_VIEW,
+      PERMISSIONS.EVENTS_VIEW,
+    ];
     const { findMissingDelegatedPermissions } = await import("@/lib/roles/delegation-utils");
     expect(findMissingDelegatedPermissions(actorWithoutAllocations, SANDRA_KEYS)).toEqual([
       PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
