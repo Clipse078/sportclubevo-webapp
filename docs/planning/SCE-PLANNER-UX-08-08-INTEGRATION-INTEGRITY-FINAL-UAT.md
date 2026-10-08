@@ -1,11 +1,14 @@
 # SCE-PLANNER-UX-08-08 — Integration, Integrity & Final UAT Hardening
 
-**Status:** **IN PROGRESS** — **08-08A** lifecycle/delete safety; **08-08B** mutation revalidation; **08-08C** conflict/availability integrity  
+**Status:** **IN PROGRESS** — **08-08D** cross-domain integration closure complete; **Human UAT pending** (FACILITY-INTEGRITY-01 automated gate pass)  
 **08_08A_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
 **08_08B_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
 **08_08C_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRITY PASS**  
 **08_08C_R1_STATUS:** **IMPLEMENTED / MATCH LEGACY RENAME COMPATIBILITY** (F-08-08-03 → FIXED_COMPATIBILITY_LAYER)  
+**08_08D_STATUS:** **IMPLEMENTED / AUTOMATED INTEGRATION PASS**  
+**FACILITY_INTEGRITY_01:** **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** (not CLOSED)  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
+**HEAD (08-08D):** see git — post-integration commit on this branch  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
 **Target:** STAGE  
 **PROD:** untouched  
@@ -378,6 +381,152 @@ npm run test -- lib/facilities/__tests__/match-legacy-resource-compatibility.tes
 | Broad sweep | **1013 pass, 14 fail — PRE_EXISTING (F-08-08-06)**; **NEW_FAILURES = 0** |
 | Build | **PASS** |
 
+## 3E. SCE-PLANNER-UX-08-08D — cross-domain integration regression
+
+### Canonical integration fixture
+
+Single representative week (`2026-10-07`) with:
+
+| Asset | Identity |
+|-------|----------|
+| **Facility** | Parent `fac-hauptfeld` + Garderobe facility |
+| **Pitches** | `HAUPTFELD` (FULL), `HAUPTFELD A` (HALF), `KR2` (second full pitch) |
+| **Dressing** | `D1`, `D2` |
+| **Training** | Series + occurrence on Hauptfeld + D1; cancelled session on KR2 (08-07R5 removal) |
+| **Match** | Legacy codes on Hauptfeld + home/away dressing |
+| **Tournament** | Pitch on Hauptfeld; **per-participant** D1/D2 (not flattened) |
+| **Veranstaltung** | FK allocation on KR2 (non-overlap window for pitch isolation tests) |
+
+Pipeline under test: `WeekplannerItem[]` → `buildWeekplannerWeek` → conflict annotation → perspective filters (`filterWeekplannerItem`, `listOperationalItemVisible`, `planner-view-consistency.ts`).
+
+### Cross-domain read model
+
+| Domain | Automated evidence |
+|--------|-------------------|
+| TRAINING | Canonical key `TRAINING:{trainingSessionId}`; cancellation removes occurrence |
+| MATCH | `MATCH:{eventId}`; `eventSource` + `teamSeasonId` preserved |
+| TOURNAMENT | `TOURNAMENT:{eventId}`; `teamSeasonIds`; participant dressing refs |
+| VERANSTALTUNG | `VERANSTALTUNG:{eventId}`; `allDay` semantics unchanged |
+| Identity collisions | **None** — four distinct canonical keys in one week |
+
+### Planner view consistency (Kalender · Spielfeld · Garderobe · Liste)
+
+Shared week payload; perspectives differ only by filter geometry:
+
+| View | Rule characterized |
+|------|-------------------|
+| **Kalender** | All non-cancelled activities in day bucket |
+| **Liste** | Same ids as Kalender with default `alle` + empty search |
+| **Spielfeld** | Activity visible iff `pitchAllocations` contains lane `facilityResourceId` |
+| **Garderobe** | Activity visible iff home/away/participant dressing refs contain lane id |
+
+**Silent disappearance:** none detected for the canonical fixture across perspectives.
+
+### Cross-domain conflict & availability matrices
+
+Extended 08-08C matrix with **TRAINING↔EVENT**, **MATCH↔EVENT**, **TOURNAMENT↔EVENT**, non-overlap, distinct-pitch, cancelled-training, rename-stable `facilityResourceId`, dressing cross-domain (incl. match away + tournament participant).
+
+Availability: training, match (alias), tournament FK, event FK — all **OCCUPIED** on shared interval; conflict engine + availability **consistent** for characterized pitch occupancy.
+
+### Match R1 inside full planner flow
+
+Rename/alias/reallocation characterized in `sce-planner-ux-08-08d-cross-domain-integration.test.ts` (complements `match-legacy-resource-compatibility.test.ts`):
+
+- Stale `pitchCode` → same `facilityResourceId` via alias map  
+- Code reuse blocked when alias exists  
+- Reallocation changes physical id; rename does not  
+
+### Delete-guard completeness (post R1)
+
+`facility-resource-reference-guard.ts` counts:
+
+`TrainingAllocation`, `TrainingSessionAllocation`, `TournamentResourceAllocation`, `TournamentParticipantAllocation`, `WeekplannerPlanAllocation`, `EventFacilityAllocation`, **plus** `matchLegacyReferences`.
+
+Schema audit: no additional `FacilityResource` operational FK beyond the above (+ `FacilityResourceCodeAlias` cascade-only).
+
+### F-08-08-04 reassessment (duplicate resource)
+
+| Class | Verdict |
+|-------|---------|
+| **A** Same display name, different legitimate resource | Still possible (e.g. Hauptfeld vs Hauptplatz) — **not** unsafe duplicate identity |
+| **B** Two active rows, same physical pitch/dressing | **No reproducible unsafe create/update path** after tenant-scoped normalized code uniqueness + facility `(type, normalized name)` guard |
+| **Status** | **PARTIAL → ACCEPTED_RESIDUAL** — legacy Class B pairs remain historical; no fuzzy merge |
+
+### F-08-08-05 (aggregation)
+
+| Check | Result |
+|-------|--------|
+| Mixed cluster headline | `{n} Aktivitäten` — **no regression** (08-08D assertion) |
+| Inspector per-type breakdown | Still absent |
+| Classification | **OPTIONAL_POLISH** — not release-blocking |
+
+### F-08-08-06 (test harness)
+
+Broad sweep (same command as §11): **1045 pass, 14 fail** — identical failure set to pre-08-08D baseline.
+
+| Failure bucket | Tests | Classification |
+|----------------|-------|----------------|
+| `plan-overrides.test.ts` | 3 | **MOCK_DRIFT** (tournament plan override mocks) |
+| `PlanningHubResourcePitchGroups*.tsx` | 7 | **HARNESS_STALE** (component props / facility catalog fixtures) |
+| `PlanningHubResourceScopeControl.test.tsx` | 4 | **HARNESS_STALE** (`search` undefined → `planner-url` `.trim`) |
+
+**REAL_PRODUCT_DEFECTS:** **0**  
+**NEW_FAILURES (broad sweep):** **0**  
+**Next slice:** 08-08F test hygiene (do not block 08-08D).
+
+### Infoboard bounded review
+
+| Check | Result |
+|-------|--------|
+| FACILITY-INTEGRITY-01A | **CLOSED** — not reopened |
+| Screen-2 Hauptfeld resolver | **COVERED_BY_TEST** — `screen2-preview-facility-resolver.test.ts` (unchanged) |
+| Dynamic DB reads / cache | No facility-lifecycle cache invalidation required for Infoboard (same as 08-08B) |
+| Note | `canonical-source-loader.test.ts` **11b** fails in isolation (loader returns no event — **MOCK_DRIFT**, outside the 14-test broad baseline) |
+
+### Tests (08-08D)
+
+```bash
+npm run test -- lib/planning-hub/__tests__/sce-planner-ux-08-08d-cross-domain-integration.test.ts
+```
+
+| Suite | Result |
+|-------|--------|
+| 08-08D cross-domain integration | **PASS** (32 tests) |
+| 08-08A + B + C + R1 (regression) | **PASS** |
+| 08-01…08-07 planning-hub packs | **PASS** (109 tests) |
+| Facilities `__tests__` | **PASS** (168 tests) |
+| Planning-hub `__tests__` (incl. 08-08D) | **PASS** (379 tests) |
+| Broad sweep (§11 command) | **14 fail — F-08-08-06**; **NEW_FAILURES = 0** |
+| Build | **PASS** |
+
+### FACILITY-INTEGRITY-01 — final automated matrix (summary)
+
+| Area | Status |
+|------|--------|
+| Pitch lifecycle (admin + planner + conflict + availability) | **COVERED_BY_TEST** (08-08A–D) |
+| Dressing lifecycle | **COVERED_BY_TEST** |
+| Match legacy rename/delete/conflict/availability | **COVERED_BY_TEST** (R1 + 08-08D) |
+| Tournament + Event cross-domain | **COVERED_BY_TEST** (08-08D) |
+| Training cancel + reconciliation | **COVERED_BY_TEST** (08-07R5 + 08-08D) |
+| Cache/revalidation | **COVERED_BY_TEST** (08-08B) |
+| Infoboard | **COVERED_BY_TEST** (01A + resolver); live refresh **UNPROVEN** (Human UAT) |
+| Open planner cross-tab refresh | **UNPROVEN** — Human UAT step |
+| **OVERALL** | **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** |
+
+### Final Human UAT checklist (do not execute in 08-08D)
+
+Minimal FCA steps automation cannot fully prove:
+
+1. Admin facility rename → open Planner tab presentation refresh without manual hard reload  
+2. Pitch rename with live Match + Training → Match stays on correct pitch; conflict badge unchanged  
+3. Dressing rename with live activities → Garderobe lanes/labels correct  
+4. Archive/deactivate → absent from new assignment; existing activity still readable  
+5. Reactivate → returns to assignment selectors  
+6. Blocked delete → actionable German UI message (409)  
+7. Safe delete unused resource → disappears from admin + planner catalog after refresh  
+8. Cross-tab Planner refresh after facility mutation  
+9. Persona-specific actions — mark **BLOCKED_BY_IMPERSONATION** where PEOPLE-ACCESS-IMPERSONATION-01 applies (Sandra/read-only/training-only separation)
+
 ### FACILITY-INTEGRITY-01 — Match cells (post R1)
 
 | Cell | Status |
@@ -418,16 +567,16 @@ Legend: **PASS** = code + test evidence; **COVERED_BY_TEST** = automated charact
 
 | Mutation ↓ / Consumer → | Admin | Training | Match | Tournament | Club event | Kalender | Spielfeld | Garderobe | Liste | Conflict engine | Availability | Infoboard | Historical refs | Future refs | Cache/reval |
 |---------------------------|-------|----------|-------|------------|------------|----------|-----------|-----------|-------|-----------------|--------------|-----------|-----------------|-------------|-------------|
-| Pitch create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | N/A | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
-| Pitch rename | PASS | UNPROVEN | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
-| Pitch archive | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
-| Pitch delete | PASS+guard | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
-| DR create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
-| DR rename | PASS | UNPROVEN | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
-| DR archive | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
-| DR delete | PASS+guard | COVERED_BY_TEST | **COVERED_BY_TEST** | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
+| Pitch create | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | COVERED_BY_TEST | N/A | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
+| Pitch rename | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
+| Pitch archive | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
+| Pitch delete | PASS+guard | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | **COVERED_BY_TEST** | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
+| DR create | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | NOT_APPLICABLE | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
+| DR rename | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | NOT_APPLICABLE | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
+| DR archive | PASS | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | NOT_APPLICABLE | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
+| DR delete | PASS+guard | COVERED_BY_TEST | **COVERED_BY_TEST** | **COVERED_BY_TEST** | NOT_APPLICABLE | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | **COVERED_BY_TEST** (blocked) | **COVERED_BY_TEST** | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
 
-Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, **`sce-planner-ux-08-08c-conflict-availability-integrity.test.ts`**, **`match-legacy-resource-compatibility.test.ts`**. Match rename/delete/conflict/availability cells **COVERED_BY_TEST** (R1); full FK model still **DEFERRED**.
+Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, **`sce-planner-ux-08-08c-conflict-availability-integrity.test.ts`**, **`match-legacy-resource-compatibility.test.ts`**, **`sce-planner-ux-08-08d-cross-domain-integration.test.ts`**, **`planner-view-consistency.ts`**. Match rename/delete/conflict/availability cells **COVERED_BY_TEST** (R1 + 08-08D); full Match FK model still **DEFERRED**.
 
 ---
 
@@ -554,7 +703,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | F-08-08-01 | P1 → **FIXED (08-08A+08-08B)** | Facility delete | Delete blocked / RESTRICT; revalidation on safe delete | Historical activities remain intelligible | Restrict + service guards + post-delete revalidation | Planner, trainings, tournaments, events | `facility-delete-service.test.ts`, `facility-mutation-08-08b.test.ts` | **Done** |
 | F-08-08-02 | P2 → **FIXED (08-08B)** | Facility mutate → cache | Planner paths revalidated; client catalog syncs to server props | Planner surfaces update after facility mutation + RSC refresh | Was missing `revalidatePlannerWeekPaths` on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | `facility-mutation-08-08b.test.ts` | **08-08B done** |
 | F-08-08-03 | P2 → **FIXED_COMPATIBILITY_LAYER (08-08C/R1)** | Match identity | Match pitch/dressing via legacy codes + alias/propagation | Stable physical identity across rename | Was code-only lookup without rename seam | Match planner, availability, conflict, delete guard | **COVERED_BY_TEST** (`match-legacy-resource-compatibility.test.ts`) | Full Match FK migration **deferred non-blocking** |
-| F-08-08-04 | P2 → **PARTIAL (08-08A)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | Stable codes OK; block same-name facility + duplicate codes | Admin duplicate code/name guard | Duplicate lanes for distinct names | `facility-lifecycle-08-08a.test.ts` | Residual Class B pair — migration out of scope |
+| F-08-08-04 | P2 → **ACCEPTED_RESIDUAL (08-08D review)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | No unsafe duplicate physical identity path | Admin duplicate code/name guard; distinct names legit | Duplicate lanes for distinct names only | `facility-lifecycle-08-08a.test.ts`, **08-08D** | No fuzzy merge; Human UAT optional visual check |
 | F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
 | F-08-08-06 | P3 | Test harness | 14 tests fail in broad sweep (`planner-url` `search.trim`, plan-overrides mocks) | Green CI | Test props omit `search`; mock drift | CI signal | — | 08-08F test hygiene |
 | F-08-08-07 | DEFERRED | Impersonation | Manual persona UAT blocked | Reliable impersonation | PEOPLE-ACCESS-IMPERSONATION-01 open | Permission UAT | N/A | Separate package |
@@ -570,7 +719,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | **08-08A** | Facility lifecycle canonicalization + admin guards | Admin, duplicate prevention | Archive-first; delete only when unused | **DONE** — see §3A | — | — |
 | **08-08B** | Mutation → revalidation + client facility-groups refresh | All planner perspectives | After facility PATCH/DELETE, planner paths revalidated; open hub refreshes labels | **DONE** — `facility-mutation-08-08b.test.ts` | Cross-tab refresh still manual | 08-08A |
 | **08-08C** | Conflict/availability after resource lifecycle | Conflicts, availability, historical display | No silent loss of conflict truth on archive/rename | **DONE** — `sce-planner-ux-08-08c-conflict-availability-integrity.test.ts` | Delete blocked with allocations | 08-08A |
-| **08-08D** | Cross-domain integration regression pack | Training/match/tournament/event + facility | Single week read model | E2E-style vitest fixtures | Full week scenario | 08-08B |
+| **08-08D** | Cross-domain integration regression pack | Training/match/tournament/event + facility | Single week read model | **DONE** — `sce-planner-ux-08-08d-cross-domain-integration.test.ts` | Full week scenario (Human UAT checklist §3E) | 08-08B |
 | **08-08E** | Aggregation closure (optional) | Kalender + inspector | Shared `countByActivityType` | `aggregate-inspection` | Mixed cluster copy | — |
 | **08-08F** | Final automated regression + Human UAT | All | 08-01…08-07 + FI-01 gates | Full suite green + build | Michael checklist | 08-08A–D |
 
@@ -584,7 +733,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 |------|--------|
 | 08-07 unified planner packages on STAGE | PASS (contained) |
 | FACILITY-INTEGRITY-01A | CLOSED |
-| FACILITY-INTEGRITY-01 broader lifecycle | **OPEN** — matrix above |
+| FACILITY-INTEGRITY-01 broader lifecycle | **AUTOMATED_GATE_PASS / HUMAN_UAT_PENDING** — matrix §3E |
 | AGGREGATION-01 | **Partial** — headline fixed; full spec optional |
 | PEOPLE-ACCESS-IMPERSONATION-01 | OPEN |
 | PROD untouched | PASS |
