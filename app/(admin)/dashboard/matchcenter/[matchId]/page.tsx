@@ -72,10 +72,10 @@ export default async function MatchcenterDetailPage({
     notFound();
   }
 
-  const canManageMappings = hasPermission(
-    session,
-    PERMISSIONS.EVENTS_MANAGE,
-  );
+  const canManageMappings = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canManageOperationalAllocations =
+    canManageMappings ||
+    hasPermission(session, PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
 
   // ADMIN-DELETE-02A: permanent "Löschen" gating — deliberately independent
   // of events.manage (manage alone must never authorize deletion).
@@ -194,6 +194,7 @@ export default async function MatchcenterDetailPage({
         locale={locale}
         timezone={timeZone}
         canManageMappings={canManageMappings}
+        canManageOperationalAllocations={canManageOperationalAllocations}
         canDelete={canDelete}
         pitchOptions={pitchOptions}
         dressingRoomOptions={dressingRoomOptions}

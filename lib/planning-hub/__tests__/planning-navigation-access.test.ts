@@ -41,14 +41,14 @@ describe("canOpenPlanningHubItem", () => {
     ).toBe(true);
   });
 
-  it("denies training open for allocation-only Sandra persona", () => {
+  it("allows training open for Spielbetrieb view + allocation manage", () => {
     expect(
       canOpenPlanningHubItem(trainingItem(), {
-        canViewTrainings: false,
+        canViewTrainings: true,
         canManageTrainings: false,
-        canViewEvents: false,
+        canViewEvents: true,
         canManageEvents: false,
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 });

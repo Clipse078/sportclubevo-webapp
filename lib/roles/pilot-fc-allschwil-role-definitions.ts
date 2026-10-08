@@ -53,11 +53,13 @@ export const SANDRA_FISCHER_SPIELBETRIEB_ROLE: PilotRoleDefinition = {
   roleKey: "pilot_spielbetrieb_koordinatorin",
   name: "Spielbetrieb Koordinatorin (Pilot)",
   description:
-    "Wochenplaner-Zuteilungen verwalten; Planung sonst read-only; kein Publish/Admin/Personen.",
+    "Spielbetrieb: Wochenplaner, Trainings-/Spiel-/Turniercenter (operative Zuteilungen); kein Club-Admin.",
   permissionKeys: [
     ...SHARED_READ_PERSONAL.filter((k) => k !== PERMISSIONS.ORG_VIEW),
     PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
     PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
+    PERMISSIONS.TRAININGS_VIEW,
+    PERMISSIONS.EVENTS_VIEW,
   ],
   permissionRationale: sandraRationale,
 };

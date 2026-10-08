@@ -63,12 +63,14 @@ function sandraTraining(): WeekplannerTrainingItem {
 }
 
 describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01 (UAT01)", () => {
-  it("Sandra persona contract — planner manage without training or facility admin", () => {
+  it("Sandra persona contract — Spielbetrieb operational without club admin", () => {
     expect(SANDRA_KEYS).toContain(PERMISSIONS.PLANNING_ALLOCATIONS_VIEW);
     expect(SANDRA_KEYS).toContain(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
+    expect(SANDRA_KEYS).toContain(PERMISSIONS.TRAININGS_VIEW);
+    expect(SANDRA_KEYS).toContain(PERMISSIONS.EVENTS_VIEW);
     expect(SANDRA_KEYS).toContain(PERMISSIONS.TEAMS_VIEW);
-    expect(SANDRA_KEYS).not.toContain(PERMISSIONS.TRAININGS_VIEW);
     expect(SANDRA_KEYS).not.toContain(PERMISSIONS.TRAININGS_MANAGE);
+    expect(SANDRA_KEYS).not.toContain(PERMISSIONS.EVENTS_MANAGE);
     expect(SANDRA_KEYS).not.toContain(PERMISSIONS.FACILITIES_MANAGE);
     expect(SANDRA_KEYS).not.toContain(PERMISSIONS.USERS_IMPERSONATE_TENANT);
   });
@@ -88,18 +90,18 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01 (UAT01)", () => {
     );
   });
 
-  it("UAT01-B — conflict workspace hides Training Öffnen without trainings.view", () => {
+  it("UAT01-D/E — Sandra opens Training when trainings.view is granted", () => {
     const caps = deriveConflictResolutionCapabilities(sandraTraining(), {
       canManageTrainings: false,
       canManageEvents: false,
       canManageAllocations: true,
-      canViewTrainings: false,
-      canViewEvents: false,
+      canViewTrainings: true,
+      canViewEvents: true,
       isStandardplan: true,
       alternativePlanId: null,
     });
     expect(caps.canChangePrimaryResource).toBe(true);
-    expect(caps.canOpenActivity).toBe(false);
+    expect(caps.canOpenActivity).toBe(true);
   });
 
   it("UAT01-A — facility-groups API accepts allocation manage for operational reads", () => {

@@ -367,6 +367,8 @@ function WeekPlannerWorkspaceBody({
         alternativePlanId={activePlanId}
         canManageTrainings={canonicalEditing?.canManageTrainings ?? false}
         canManageEvents={canonicalEditing?.canManageEvents ?? false}
+        canViewTrainings={canonicalEditing?.canViewTrainings ?? false}
+        canViewEvents={canonicalEditing?.canViewEvents ?? false}
         canManageAllocations={canonicalEditing?.canManageAllocations ?? false}
         facilityGroupsByAllocationGroup={manipulationFacilityGroups ?? undefined}
         overridesByKey={overrideEditing?.overridesByKey}

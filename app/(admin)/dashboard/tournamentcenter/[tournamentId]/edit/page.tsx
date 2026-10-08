@@ -32,6 +32,8 @@ export default async function TournamentEditPage({ params }: Props) {
   if (!tenantContext) notFound();
 
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canManageOperationalAllocations =
+    canManage || hasPermission(session, PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.TOURNAMENTS_DELETE);
   const canManageFacilitiesTimeStandards = hasPermission(session, PERMISSIONS.FACILITIES_MANAGE);
 
@@ -111,6 +113,7 @@ export default async function TournamentEditPage({ params }: Props) {
         <TournamentEditForm
           tournament={tournament}
           canManage={canManage}
+          canManageOperationalAllocations={canManageOperationalAllocations}
           canDelete={canDelete}
           pitchHallFacilityGroups={pitchHallFacilityGroups}
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}

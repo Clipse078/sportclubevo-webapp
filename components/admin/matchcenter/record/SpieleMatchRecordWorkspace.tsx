@@ -59,6 +59,7 @@ export type SpieleMatchRecordWorkspaceProps = {
   locale: string;
   timezone: string;
   canManageMappings: boolean;
+  canManageOperationalAllocations?: boolean;
   canDelete: boolean;
   pitchOptions: FacilityResourceOption[];
   dressingRoomOptions: FacilityResourceOption[];
@@ -108,6 +109,7 @@ export default function SpieleMatchRecordWorkspace({
   locale,
   timezone,
   canManageMappings,
+  canManageOperationalAllocations: canManageOperationalAllocationsProp,
   canDelete,
   pitchOptions,
   dressingRoomOptions,
@@ -124,6 +126,8 @@ export default function SpieleMatchRecordWorkspace({
   participantsSection,
   collaborationSection,
 }: SpieleMatchRecordWorkspaceProps) {
+  const canManageOperationalAllocations =
+    canManageOperationalAllocationsProp ?? canManageMappings;
   const router = useRouter();
   const saveActionRef = useRef<(() => Promise<void>) | null>(null);
   const [saveUi, setSaveUi] = useState({ isDirty: false, saving: false });
@@ -358,7 +362,7 @@ export default function SpieleMatchRecordWorkspace({
           canDelete={canDelete}
           onDeleteRequest={canDelete ? () => setDeleteOpen(true) : undefined}
         />
-        {canManageMappings ? (
+        {canManageOperationalAllocations ? (
           <button
             type="button"
             disabled={saving || !isDirty}
@@ -466,7 +470,7 @@ export default function SpieleMatchRecordWorkspace({
             suppressPublicationUI
             matchDateIso={matchDateIso}
             matchEndAtIso={matchEndAtIso}
-            canManage={canManageMappings}
+            canManage={canManageOperationalAllocations}
             pitchOptions={pitchOptions}
             dressingRoomOptions={dressingRoomOptions}
             pitchHallFacilityGroups={pitchHallFacilityGroups}

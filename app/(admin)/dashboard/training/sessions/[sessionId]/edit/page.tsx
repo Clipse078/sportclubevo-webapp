@@ -60,6 +60,8 @@ export default async function TrainingSessionEditPage({ params }: Props) {
   if (!tenantContext) notFound();
 
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
+  const canManageOperationalAllocations =
+    canManage || hasPermission(session, PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
   const canManageFacilities = checkPermission(session, PERMISSIONS.FACILITIES_MANAGE);
   const tPlanning = await getPlanningTranslations("PlanningEditor.operational");
   const { sessionId } = await params;
@@ -245,7 +247,7 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                   initialAllocations={sessionAllocations}
                   seriesAllocations={seriesAllocations}
                   facilityGroups={facilityGroups}
-                  canManage={canManage}
+                  canManage={canManageOperationalAllocations}
                   sessionStartAt={trainingSession.startAt}
                   sessionEndAt={trainingSession.endAt}
                 />

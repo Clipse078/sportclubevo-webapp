@@ -140,6 +140,7 @@ function badgeVariantForStatusTone(
 export type TurniereTournamentRecordWorkspaceProps = {
   tournament: TournamentDto;
   canManage: boolean;
+  canManageOperationalAllocations?: boolean;
   canDelete?: boolean;
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
@@ -158,6 +159,7 @@ export type TurniereTournamentRecordWorkspaceProps = {
 export default function TurniereTournamentRecordWorkspace({
   tournament,
   canManage,
+  canManageOperationalAllocations: canManageOperationalAllocationsProp,
   canDelete = false,
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
@@ -235,7 +237,12 @@ export default function TurniereTournamentRecordWorkspace({
   const [resourceAllocationError, setResourceAllocationError] = useState<string | null>(null);
 
   const isCancelled = tournament.status === "CANCELLED";
-  const isEditable = canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED";
+  const canManageOperationalAllocations =
+    canManageOperationalAllocationsProp ?? canManage;
+  const lifecycleOpen =
+    tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED";
+  const isEditable = canManage && lifecycleOpen;
+  const isAllocationEditable = canManageOperationalAllocations && lifecycleOpen;
 
   const assessment = useMemo(() => assessTournamentOperationalState(tournament), [tournament]);
   const statusPresentation = resolveTournamentStatusPresentation(tournament, assessment);
@@ -751,7 +758,7 @@ export default function TurniereTournamentRecordWorkspace({
                   <TurniereTournamentRecordResourceSummary presentation={resourcePresentation} />
                   <TournamentResourceAllocationEditor
                     tournamentId={tournament.id}
-                    canManage={isEditable}
+                    canManage={isAllocationEditable}
                     initialAllocations={tournament.resourceAllocations}
                     facilityGroups={pitchHallFacilityGroups}
                     availabilityByResourceId={pitchAvailability}
@@ -765,7 +772,7 @@ export default function TurniereTournamentRecordWorkspace({
                   </p>
                   <TournamentParticipantDressingRoomPanel
                     tournamentId={tournament.id}
-                    canManage={isEditable}
+                    canManage={isAllocationEditable}
                     participants={participants}
                     dressingRoomFacilityGroups={dressingRoomFacilityGroups}
                     dressingRoomAvailability={dressingRoomAvailability}

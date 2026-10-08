@@ -117,6 +117,8 @@ describe("Sandra restricted role delegation (simulated)", () => {
   const SANDRA_KEYS = [
     PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
     PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
+    PERMISSIONS.TRAININGS_VIEW,
+    PERMISSIONS.EVENTS_VIEW,
     PERMISSIONS.TEAMS_VIEW,
   ];
 
@@ -135,12 +137,16 @@ describe("Sandra restricted role delegation (simulated)", () => {
       PERMISSIONS.TEAMS_VIEW,
       PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
       PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
+      PERMISSIONS.TRAININGS_VIEW,
+      PERMISSIONS.EVENTS_VIEW,
     ];
     const { findMissingDelegatedPermissions } = await import("@/lib/roles/delegation-utils");
     expect(findMissingDelegatedPermissions(actorWithAllocations, SANDRA_KEYS)).toEqual([]);
   });
 
   it("Sandra role does not include trainings manage, events manage, or teams manage", () => {
+    expect(SANDRA_KEYS).toContain(PERMISSIONS.TRAININGS_VIEW);
+    expect(SANDRA_KEYS).toContain(PERMISSIONS.EVENTS_VIEW);
     expect(SANDRA_KEYS).not.toContain(PERMISSIONS.TRAININGS_MANAGE);
     expect(SANDRA_KEYS).not.toContain(PERMISSIONS.EVENTS_MANAGE);
     expect(SANDRA_KEYS).not.toContain(PERMISSIONS.TEAMS_MANAGE);

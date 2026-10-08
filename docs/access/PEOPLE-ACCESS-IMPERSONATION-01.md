@@ -84,10 +84,15 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 | ID | Observation | Classification | Fix |
 |----|-------------|----------------|-----|
 | **UAT01-A** | Planung ändern → «Keine Ressource für die aktuelle Filterung gefunden» for Sandra | **PERMISSION** on operational resource catalog read | `/api/planning-hub/facility-groups` now accepts `planning.allocations.manage`; Standardplan eager facility groups for allocation-only actors |
-| **UAT01-B** | Training **Öffnen** → Dashboard dead-end without `trainings.view` | **PERMISSION_CONTRACT** / UX | Hide **Öffnen** when destination module view/manage absent (`canOpenPlanningHubItem`) |
+| **UAT01-B** | Training **Öffnen** → Dashboard dead-end without `trainings.view` | **PERMISSION_CONTRACT** (superseded) | Spielbetrieb role now includes `trainings.view` / `events.view`; **Öffnen** enabled where authorized |
 | **UAT01-C** | Banner/exit missing after redirect; session still Sandra | **UI_STATE** / layout stale | P1-IMP-04 above |
+| **UAT01-D** | Single Training/Match operational workflow insufficient in Planner | **PERMISSION_CONTRACT** | Spielbetrieb bundle: center **view** + `planning.allocations.manage`; Training/Match operational surfaces honor allocation manage |
+| **UAT01-E** | Aggregate modal **Öffnen** visible but non-functional | **UX** | Hide **Öffnen** when `canOpenPlanningHubItem` is false; no dead actions |
+| **UAT01-F** | Spielbetrieb Koordinator role too narrow (no Training/Match/Tournament centers) | **ROLE_DEFINITION** | Pilot template + `scripts/sync-fca-spielbetrieb-koordinator-role.ts` (STAGE, idempotent) |
 
-**UAT-PERM-01:** **FINDINGS / RETEST_REQUIRED** — do not mark PASS until Human retest on preview containing post-fix HEAD.
+**Canonical Spielbetrieb allocator:** tenant `planning.allocations.manage` for pitch/Garderobe across Wochenplaner, Training Center (session allocations API), Match Center (operational PATCH fields), Tournament Center (resource allocation APIs). Domain `trainings.manage` / `events.manage` remain full coordinator paths — not granted to Sandra.
+
+**UAT-PERM-01:** **FINDINGS / RETEST_REQUIRED (R3)** — Human retest checklist **UAT-PERM-01R3** after preview HEAD contains R3 commits.
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
@@ -172,7 +177,7 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 | SCE-PLANNER-UX-08-08 | CLOSED on STAGE |
 | FACILITY-INTEGRITY-01 | CLOSED |
 | PEOPLE-ACCESS-IMPERSONATION-01 | **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** |
-| UAT-PERM-01 | **FINDINGS / RETEST_REQUIRED** (UAT01-A/B/C documented) |
+| UAT-PERM-01 | **FINDINGS / RETEST_REQUIRED** (UAT01-A…F documented; R3 Human retest pending) |
 | UAT01-C | **P1 RELEASE BLOCKER** until Human retest confirms fix |
 | Persona UAT UAT-PERM-02…05 | **Not started** (per scope) |
 | Next after impersonation | Human retest UAT-PERM-01 on PR #808 preview; then continue UAT pack |

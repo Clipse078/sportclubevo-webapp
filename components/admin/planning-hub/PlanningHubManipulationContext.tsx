@@ -192,6 +192,8 @@ type ProviderProps = {
   alternativePlanId: string | null;
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canViewTrainings?: boolean;
+  canViewEvents?: boolean;
   canManageAllocations: boolean;
   facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   overridesByKey?: Record<string, WeekplannerOverrideRow[]>;
@@ -209,6 +211,8 @@ export function PlanningHubManipulationProvider({
   alternativePlanId,
   canManageTrainings,
   canManageEvents,
+  canViewTrainings = false,
+  canViewEvents = false,
   canManageAllocations,
   facilityGroupsByAllocationGroup,
   overridesByKey = {},
@@ -261,6 +265,8 @@ export function PlanningHubManipulationProvider({
       isStandardplan,
       canManageTrainings,
       canManageEvents,
+      canViewTrainings,
+      canViewEvents,
       canManageAllocations,
       alternativePlanId,
       resourceCategory: urlState.resourceCategory,
@@ -270,6 +276,8 @@ export function PlanningHubManipulationProvider({
       isStandardplan,
       canManageTrainings,
       canManageEvents,
+      canViewTrainings,
+      canViewEvents,
       canManageAllocations,
       alternativePlanId,
       urlState.resourceCategory,
