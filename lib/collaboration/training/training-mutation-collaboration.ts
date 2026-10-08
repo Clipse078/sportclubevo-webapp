@@ -10,20 +10,24 @@ export async function buildTrainingMutationCollaborationImpact(input: {
   locale?: string;
   beforeSnapshot: Awaited<ReturnType<typeof loadTrainingActivitySnapshot>>;
 }): Promise<ActivityChangeImpact | null> {
-  if (!input.beforeSnapshot) return null;
+  try {
+    if (!input.beforeSnapshot) return null;
 
-  const after = await loadTrainingActivitySnapshot({
-    tenantId: input.tenantId,
-    sessionId: input.sessionId,
-    locale: input.locale,
-  });
-  if (!after) return null;
+    const after = await loadTrainingActivitySnapshot({
+      tenantId: input.tenantId,
+      sessionId: input.sessionId,
+      locale: input.locale,
+    });
+    if (!after) return null;
 
-  return resolveTrainingCollaborationImpactAfterChange({
-    tenantId: input.tenantId,
-    tenantKey: input.tenantKey,
-    userId: input.userId,
-    before: input.beforeSnapshot,
-    after,
-  });
+    return await resolveTrainingCollaborationImpactAfterChange({
+      tenantId: input.tenantId,
+      tenantKey: input.tenantKey,
+      userId: input.userId,
+      before: input.beforeSnapshot,
+      after,
+    });
+  } catch {
+    return null;
+  }
 }

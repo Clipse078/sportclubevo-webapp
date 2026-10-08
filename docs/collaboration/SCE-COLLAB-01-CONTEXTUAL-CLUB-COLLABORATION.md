@@ -72,6 +72,28 @@ Contextual collaboration + targeted communication will consume the same change/a
 ## Tests
 
 - `lib/collaboration/__tests__/sce-collab-01a-activity-change.test.ts`
+- `lib/collaboration/__tests__/sce-collab-01a-r1-verification.test.ts` (SCE-COLLAB-01A-R1 gate)
+- `app/api/collaboration/training-sessions/[sessionId]/__tests__/collaboration-communication-routes.test.ts`
+- `components/admin/collaboration/__tests__/ContextualActivityChangeImpactSurface.test.tsx`
+- Training mutation route regressions under `app/api/training-sessions/[sessionId]/**/__tests__/`
+
+## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| Audience integration | PASS | `defaultTeamOperationalAudience` → `resolveCommunicationRecipients` PREVIEW; zero-recipient + preview-failure isolation covered in R1 tests |
+| Authorization matrix | PASS | Activity ∩ comm send enforced in prepare/publish service + `COMMUNICATION_TEAM_SEND` API boundary; effectiveUserId path covered |
+| Enumeration security | PASS | Recipient resolution skipped when `canCommunicate` false; prepare/publish 403 responses omit draft/recipient payloads |
+| Prepare / publish | PASS | DRAFT-only prepare via `createTeamCommunicationDraft`; publish via `publishTeamCommunication` with re-auth |
+| Duplicate semantics | PASS | Reuse by sender + `activityId` + `changeFingerprint`; distinct fingerprints across activities |
+| Failure isolation | PASS | `buildTrainingMutationCollaborationImpact` swallows post-save assembly errors (training save unaffected) |
+| Communication regression | PASS (scoped) | COMM-04 team comm, COMM-10/11, tenant isolation, audience capabilities: 192 tests in focused batch; 4 failures in unrelated full COMM suite classified as known baseline debt |
+| Planner / training regression | PASS (scoped) | Training session lifecycle/reschedule + planning operational auth batch green; session-allocation harness emits 2 known P2 unhandled rejections (public cache notification mock) |
+| Impersonation security | PASS | `trusted-session-state` + PEOPLE-ACCESS-IMPERSONATION governance tests in R1 batch |
+| Build / lint (changed files) | PASS | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` green; eslint on changed TS/TSX: 0 new errors |
+| Vercel preview | READY | PR #810 preview deployed at SHA `81e26c119ee15cdae3261fdf8c641168747ffa08` (pre-R1 commit); post-R1 commit triggers new preview |
+
+Status remains **IMPLEMENTED / HUMAN_UAT_PENDING** (not CLOSED).
 
 ## Human UAT (preview)
 
