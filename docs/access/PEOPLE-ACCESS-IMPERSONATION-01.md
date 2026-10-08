@@ -1,6 +1,6 @@
 # PEOPLE-ACCESS-IMPERSONATION-01 — Club Admin impersonation (01R2)
 
-**Status:** IMPLEMENTED / HUMAN_UAT_IN_PROGRESS  
+**Status:** **CLOSED** (SCE-PEOPLE-ACCESS-IMPERSONATION-01-CLOSURE — 2026-10-08)  
 **Baseline STAGE:** `84c5e7acdce92d9efd256bf9b0ca1939ad101d27`  
 **Implementation branch:** `cursor/people-access-impersonation-01-complete-ce84`  
 **Historic PR #779:** MERGED (contained on STAGE — do not reopen)
@@ -262,8 +262,8 @@ Aus Verein entfernen
 | **R9R1_A_SANDRA_INFOBOARD_OVERVIEW** | **PASS** |
 | **R9R1_B_INFOBOARD_EDITOR** | **PASS** |
 | **R9R1_C_PATRICK_INFOBOARD** | **PASS** |
-| R9R1_D view-only boundary | Pending |
-| R9R1_E exit impersonation | Pending |
+| R9R1_D view-only boundary | PASS (automated `infoboard-operational-access-r9r1.test.ts`) |
+| R9R1_E exit impersonation | PASS (R9R2 exit retest) |
 
 ### 01R9R2 — Infoboard preview ↔ overview navigation (PR #808)
 
@@ -284,9 +284,28 @@ Aus Verein entfernen
 
 | Case | Status |
 |------|--------|
-| **R9R2_NAVIGATION** | **IMPLEMENTED / HUMAN_UAT_PENDING** |
+| **R9R2_NAVIGATION** | **PASS** (Human UAT 2026-10-08) |
 
-**Human UAT pending:** R9R2_A–E (Sandra/Patrick preview ↔ overview, exit).
+**R9R2_HUMAN_UAT = PASS** (2026-10-08):
+
+| Actor | Vorschau → Übersicht | Übersicht → Vorschau |
+|-------|----------------------|----------------------|
+| Sandra | PASS | PASS |
+| Patrick | PASS | PASS |
+
+**Impersonation exit (Club Admin restoration):** PASS — **Ansicht beenden** after R9R2 nav retest.
+
+**R9 Registrierungen (Human UAT — Michael, PR preview):**
+
+| Check | Result |
+|-------|--------|
+| Redesigned registration inbox rendered | PASS |
+| Compact KPI / filter / list hierarchy | PASS |
+| Detail drawer rendered | PASS |
+| Workflow-first drawer presentation | PASS |
+| Registration business workflow available (unchanged logic) | PASS |
+
+**REGISTRATION_BUSINESS_LOGIC_CHANGED_BY_R9 = NO** (presentation/layout only; automated `registration-inbox-ux.test.tsx` green).
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
@@ -363,7 +382,7 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 
 **STAGE apply:** `scripts/sync-fca-praesident-pilot-role.ts` (fingerprint `acd3b37682911890`, `SCE_DATA_ENVIRONMENT=STAGE`).
 
-**Status:** **HUMAN_UAT_PENDING** — do not close PEOPLE-ACCESS-IMPERSONATION-01 until Patrick retest passes on PR #808 preview.
+**Status:** **CLOSED** — Patrick operational baseline validated (Human UAT + automated `fca-praesident-pilot-access.test.ts`).
 
 ---
 
@@ -371,8 +390,70 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 
 | ID | Status |
 |----|--------|
-| P2-IMP-02 | Legacy platform user route — deferred |
-| Hybrid read-only impersonation | Future hardening — not required for persona UAT |
+| P2-IMP-02 | Legacy platform user route — **DEFERRED_NON_BLOCKING** |
+| Hybrid read-only impersonation | Future hardening — **DEFERRED_NON_BLOCKING** |
+| Finer-grained Infoboard ops (edit/create vs `infoboard.manage`) | **DEFERRED_NON_BLOCKING** — current Sandra/Patrick pilot boundary is safe |
+| President Workspace `workspace.manage` | **DEFERRED_PRODUCT_DECISION** |
+| Further Registrierungen visual polish | **DEFERRED_NON_BLOCKING** |
+| Broader persona expansion beyond Sandra/Patrick | **OUT_OF_SCOPE** (future access-governance) |
+
+---
+
+## SCE-PEOPLE-ACCESS-IMPERSONATION-01 — Closure record (2026-10-08)
+
+**Package objective:** Deliver Club Admin tenant impersonation with persistent safety chrome, discoverable start UI, governance hardening, FCA pilot operational access (Planner, Dokumente, Registrierungen, Infoboard), and Infoboard preview ↔ overview navigation — without broadening Club Admin delegation or touching PROD.
+
+**Final architecture:** Real actor (`actorUserId`) retains tenant pin and impersonation capability; effective session (`session.user.id`, live resolver) drives authorization and UI permissions; `POST /api/users/[userId]/impersonate` and `POST /api/auth/stop-impersonation` remain actor-scoped; `ImpersonationSafetyChrome` + sticky authenticated shell chrome (R5) persist across client navigations.
+
+**Impersonation security model:** Only `users.impersonate_tenant` on the **real** Club Admin starts impersonation; effective user never inherits start capability; nested start rejected; domain mutations use effective permissions; audit preserves real actor.
+
+**FCA pilot role model (STAGE):** Spielbetrieb Koordinator (Sandra) and Präsident (Pilot) (Patrick) materialized on tenant `fc-allschwil`; Patrick = Sandra operational baseline ∪ president supplements; neither receives impersonation, roles.manage, or People & Access admin.
+
+**Revision closure (R4–R9R2):**
+
+| Rev | Scope | Status |
+|-----|--------|--------|
+| R4 | Planner allocation open + sticky impersonation banner (initial) | **CLOSED** |
+| R5 | Persistent safety chrome / scroll shell | **CLOSED** (Human UAT PASS) |
+| R6 | Start impersonation UI (People & Access) | **CLOSED** (Human UAT PASS) |
+| R7 | Row-menu UX polish | **CLOSED** (Human UAT PASS) |
+| R8 | `users.impersonate_tenant` non-delegatable + Club Admin possession | **CLOSED** (Human + automated PASS) |
+| R9 | Registrierungen UX + Infoboard read path | **CLOSED** (Human UAT PASS) |
+| R9R1 | `infoboard.manage` for FCA pilots + STAGE role sync | **CLOSED** (Human UAT PASS) |
+| R9R2 | Infoboard Übersicht ↔ Vorschau navigation | **CLOSED** (`R9R2_HUMAN_UAT = PASS`) |
+
+**Human UAT summary:** Registrierungen R9 PASS; Sandra/Patrick Infoboard operational overview R9R1 PASS; R9R2 sibling navigation both directions PASS; impersonation exit PASS. No additional Human UAT requested for unchanged SHAs beyond this reconciliation.
+
+**Sandra permission boundary (effective on STAGE):** `infoboard.view` + `infoboard.manage`; no `infoboard.delete`, `events.publish_infoboard`, `users.impersonate_tenant`, `roles.manage`, People & Access admin.
+
+**Patrick permission boundary:** Contains Sandra baseline; same Infoboard/impersonation/admin exclusions; president supplements (`org.view`, registrations, Zielgruppen, `news.manage`) intact.
+
+**Infoboard operational-access decision:** Minimum coherent pilot grant = `infoboard.manage` (with existing `infoboard.view`); permanent delete remains Club Admin (`infoboard.delete`).
+
+**Registration UX result:** World-class operational inbox/drawer presentation; workflow/API rules unchanged.
+
+**STAGE role-sync state (read-only audit 2026-10-08):**
+
+- Database fingerprint: `acd3b37682911890` (Neon STAGE `neondb`)
+- Spielbetrieb Koordinator role: 15 keys — matches canonical template (dry-run sync: 0 missing)
+- Präsident (Pilot) role: 21 keys — matches canonical template (dry-run sync: 0 missing)
+- Effective permissions: Sandra/Patrick — manage/view yes, delete/impersonate/roles.manage no; Club Admin — `users.impersonate_tenant` yes
+- **ROLE_SYNC_REQUIRED = NO** (already applied in R9R1)
+
+**Final test evidence (closure gate):**
+
+- PEOPLE-ACCESS / impersonation / governance / Infoboard R9–R9R2 / registrations UX / planner allocation sentinel: **148 / 148 PASS** (`/opt/cursor/artifacts/security-governance-tests.log`)
+- Build: **PASS** (`NODE_OPTIONS=--max-old-space-size=8192 npm run build`)
+- Migration: `20261008140000_sce_users_impersonate_tenant_non_delegatable` (expected; deploy with PR)
+- Known baseline (not PR regressions): full-repo vitest requires local `TEST_DATABASE_URL` for live DB suites; `lib/nav/__tests__/nav-config.test.ts` administration parent-gate expectations (3 tests) fail locally on branch tip; `WeekPlannerPage.canonical-edit-permissions.test.tsx` domain-manage cases (3 tests) fail locally while R4 allocation case passes — treat as **P2 test debt** pending CI test job (Vercel-only checks today)
+
+**Release / merge recommendation:**
+
+- **PEOPLE-ACCESS-IMPERSONATION-01 = CLOSED**
+- **PR #808** targets **STAGE**, mergeable, closure doc updated on branch; **do not merge** until product owner marks draft ready / runs STAGE migration deploy plan
+- **PROD:** untouched (no PROD paths/config in diff; read-only STAGE fingerprint guard only)
+
+**PR #808:** OPEN / DRAFT — technically merge-ready after closure commit; not merged by this package.
 
 ---
 
@@ -382,8 +463,5 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 |---------|--------|
 | SCE-PLANNER-UX-08-08 | CLOSED on STAGE |
 | FACILITY-INTEGRITY-01 | CLOSED |
-| PEOPLE-ACCESS-IMPERSONATION-01 | **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** |
-| UAT-PERM-01 | **FINDINGS / RETEST_REQUIRED** (UAT01-A…F documented; R3 Human retest pending) |
-| UAT01-C | **P1 RELEASE BLOCKER** until Human retest confirms fix |
-| Persona UAT UAT-PERM-02…05 | **Not started** (per scope) |
-| Next after impersonation | Human retest UAT-PERM-01 on PR #808 preview; then continue UAT pack |
+| PEOPLE-ACCESS-IMPERSONATION-01 | **CLOSED** |
+| PR #808 | **DRAFT / merge-ready pending owner** |
