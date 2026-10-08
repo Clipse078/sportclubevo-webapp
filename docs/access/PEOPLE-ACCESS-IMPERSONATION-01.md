@@ -1,6 +1,6 @@
 # PEOPLE-ACCESS-IMPERSONATION-01 — Club Admin impersonation (01R2)
 
-**Status:** IMPLEMENTED / HUMAN_UAT_PENDING  
+**Status:** IMPLEMENTED / HUMAN_UAT_IN_PROGRESS  
 **Baseline STAGE:** `84c5e7acdce92d9efd256bf9b0ca1939ad101d27`  
 **Implementation branch:** `cursor/people-access-impersonation-01-complete-ce84`  
 **Historic PR #779:** MERGED (contained on STAGE — do not reopen)
@@ -70,6 +70,24 @@ Does **not** rely on stale JWT `hasPermission` for the **Als Benutzer ansehen** 
 ### P2-IMP-01 — Banner UX (IMPROVED)
 
 German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansicht beenden**.
+
+### P1-IMP-04 — Impersonation safety chrome persistence (UAT01-C — FIXED in PR #808)
+
+**Human UAT-PERM-01 finding:** After Sandra used Planner **Öffnen** on a Training (no `trainings.view`), authorization redirected to Dashboard while the session remained impersonated — but **Benutzeransicht aktiv** / **Ansicht beenden** disappeared (P1 release blocker).
+
+**Root cause:** Impersonation banner was server-rendered only in `(admin)/layout`; client-side Planner → unauthorized destination navigation could reuse a stale layout RSC tree without re-evaluating `isImpersonating`.
+
+**Fix:** `ImpersonationSafetyChrome` (client) re-fetches `/api/auth/impersonation-context` on every pathname change; `(admin)/layout` is `force-dynamic`. Exit still uses `/api/auth/stop-impersonation` (real actor).
+
+### Planner UAT01-A / UAT01-B (PR #808)
+
+| ID | Observation | Classification | Fix |
+|----|-------------|----------------|-----|
+| **UAT01-A** | Planung ändern → «Keine Ressource für die aktuelle Filterung gefunden» for Sandra | **PERMISSION** on operational resource catalog read | `/api/planning-hub/facility-groups` now accepts `planning.allocations.manage`; Standardplan eager facility groups for allocation-only actors |
+| **UAT01-B** | Training **Öffnen** → Dashboard dead-end without `trainings.view` | **PERMISSION_CONTRACT** / UX | Hide **Öffnen** when destination module view/manage absent (`canOpenPlanningHubItem`) |
+| **UAT01-C** | Banner/exit missing after redirect; session still Sandra | **UI_STATE** / layout stale | P1-IMP-04 above |
+
+**UAT-PERM-01:** **FINDINGS / RETEST_REQUIRED** — do not mark PASS until Human retest on preview containing post-fix HEAD.
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
@@ -153,6 +171,8 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 |---------|--------|
 | SCE-PLANNER-UX-08-08 | CLOSED on STAGE |
 | FACILITY-INTEGRITY-01 | CLOSED |
-| PEOPLE-ACCESS-IMPERSONATION-01 | **IMPLEMENTED / HUMAN_UAT_PENDING** |
-| Persona UAT UAT-PERM-01…05 | **Ready to execute** (Human) |
-| Next after impersonation | Execute Human UAT; close package with evidence |
+| PEOPLE-ACCESS-IMPERSONATION-01 | **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** |
+| UAT-PERM-01 | **FINDINGS / RETEST_REQUIRED** (UAT01-A/B/C documented) |
+| UAT01-C | **P1 RELEASE BLOCKER** until Human retest confirms fix |
+| Persona UAT UAT-PERM-02…05 | **Not started** (per scope) |
+| Next after impersonation | Human retest UAT-PERM-01 on PR #808 preview; then continue UAT pack |
