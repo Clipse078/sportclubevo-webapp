@@ -12,10 +12,8 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-import {
-  assertCanImpersonateTenantMember,
-  canShowImpersonateTenantUserAction,
-} from "@/lib/admin/users/tenant-impersonation";
+import { assertCanImpersonateTenantMember } from "@/lib/admin/users/tenant-impersonation";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -17,7 +17,7 @@ import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display
 import { buildAccessColumnSummary } from "@/lib/admin/people-access/access-column-summary";
 import { userHasPrivilegedRole } from "@/lib/admin/people-access/privileged-utils";
 import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/queries";
-import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 export type PeopleAccessWizardConfig = {
   availableRoles: WizardRoleOption[];

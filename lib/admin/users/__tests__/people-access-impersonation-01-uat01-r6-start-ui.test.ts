@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { SANDRA_FISCHER_SPIELBETRIEB_ROLE } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
-import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 function readRelative(relativePath: string): string {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
@@ -31,7 +31,7 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01R6 — discoverable start UI
 
   it("person quick-detail drawer exposes the same start control", () => {
     const drawer = readRelative("components/admin/users/people-access/PersonAccessDrawer.tsx");
-    expect(drawer).toContain("canShowImpersonateTenantUserAction");
+    expect(drawer).toContain("tenant-impersonation-eligibility");
     expect(drawer).toContain("ImpersonateButton");
     expect(drawer).toContain("Zugriff bearbeiten");
     expect(drawer).toContain("Detailseite");

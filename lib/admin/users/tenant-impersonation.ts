@@ -4,30 +4,8 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { userHasPlatformSystemIdentity } from "@/lib/admin/people-access/platform-identity";
-import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-
-/** UI visibility for People & Access impersonation start (server-derived actor flag + target snapshot). */
-export function canShowImpersonateTenantUserAction(input: {
-  actorCanImpersonate: boolean;
-  actorUserId: string;
-  targetUserId: string;
-  pendingInvitation: boolean;
-  membershipIsActive: boolean;
-  userIsActive: boolean;
-  isPlatformSystemIdentity: boolean;
-}): boolean {
-  if (!input.actorCanImpersonate) return false;
-  if (input.actorUserId === input.targetUserId) return false;
-  if (input.isPlatformSystemIdentity) return false;
-
-  return resolvePersonAccessStatus({
-    pendingInvitation: input.pendingInvitation,
-    membershipIsActive: input.membershipIsActive,
-    userIsActive: input.userIsActive,
-  }).isFullyActive;
-}
 
 export type ImpersonationGateResult =
   | { ok: true; actorUserId: string; targetUserId: string; tenantId: string }

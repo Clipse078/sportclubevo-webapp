@@ -17,7 +17,7 @@ import {
   formatPeopleAccessDateTime,
 } from "@/lib/admin/people-access/date-format";
 import ImpersonateButton from "@/components/admin/users/ImpersonateButton";
-import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 type Tab = "overview" | "functions" | "access" | "activity";
 
