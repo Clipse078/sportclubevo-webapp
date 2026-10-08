@@ -28,12 +28,12 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01R7 — row menu UX polish", () => {
     expect(menu).toContain("MenuDivider");
   });
 
-  it("documents impersonation permission delegatability audit (catalog unchanged in R7)", () => {
+  it("R8 — impersonation is privileged possession, not tenant-admin delegatable", () => {
     const delegatable = isTenantClubAdminDelegatablePermission({
       key: PERMISSIONS.USERS_IMPERSONATE_TENANT,
       scope: "TENANT",
-      grantableByAdmin: true,
+      grantableByAdmin: false,
     });
-    expect(delegatable).toBe(true);
+    expect(delegatable).toBe(false);
   });
 });

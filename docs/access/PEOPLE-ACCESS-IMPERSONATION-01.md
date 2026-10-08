@@ -169,11 +169,24 @@ Detailseite
 Aus Verein entfernen
 ```
 
-**Delegatability audit (R7 — catalog not modified):**
+**Delegatability audit (R7):**
 
-- `users.impersonate_tenant` is `TENANT` + `grantableByAdmin: true` in seed/catalog.
-- `isTenantClubAdminDelegatablePermission(USERS_IMPERSONATE_TENANT)` → **true**.
-- **Finding:** `P1_IMPERSONATION_PERMISSION_DELEGATABLE` — Club Admins holding `roles.manage` can delegate impersonation to custom tenant roles via normal role UI unless separately restricted (future governance; out of R7 scope).
+- **Finding:** `P1_IMPERSONATION_PERMISSION_DELEGATABLE` — catalog had `grantableByAdmin: true`.
+
+### 01R8 — Impersonation permission governance (PR #808)
+
+**P1_IMPERSONATION_PERMISSION_DELEGATABLE → FIXED**
+
+| Layer | Policy |
+|-------|--------|
+| Catalog | `users.impersonate_tenant` → `grantableByAdmin: false` (seed + migration `20261008140000_sce_users_impersonate_tenant_non_delegatable`) |
+| Club Admin possession | `TENANT_CLUB_ADMIN_PRIVILEGED_POSSESSION_KEYS` — reconciled onto materialized `club_admin__*` system roles via `reconcileTenantClubAdminPermissions` (possession ≠ delegation) |
+| Custom roles | Excluded from `getTenantPermissionCatalog()`; `resolveTenantPermissions` / `assertTenantDelegationAllowed` reject assignment |
+| Start API | Unchanged — `requireApiActorTenantPermission(USERS_IMPERSONATE_TENANT)` on **real actor** |
+
+**STAGE data audit (read-only):** zero custom tenant roles held `users.impersonate_tenant`; FCA `club_admin__fc-allschwil` retains it; Sandra / Präsident pilot roles do not.
+
+**UAT-PERM-01R8:** **HUMAN_UAT_PENDING** — verify Club Admin can still start impersonation; custom role editor cannot grant it.
 
 **Automated evidence:** `UserRowActionsMenu.test.tsx`, `people-access-impersonation-01-uat01-r7-row-menu.test.ts`, existing R4/R5/R6 impersonation suites — run in R7 commit.
 

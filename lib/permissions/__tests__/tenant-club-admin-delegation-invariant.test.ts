@@ -8,6 +8,8 @@ import {
   computeTenantClubAdminPermissionDrift,
   filterTenantClubAdminDelegatablePermissionKeys,
   isTenantClubAdminDelegatablePermission,
+  isTenantClubAdminPrivilegedPossessionKey,
+  mergeTenantClubAdminAssignedPermissionKeys,
   TENANT_CLUB_ADMIN_DELEGATION_REGRESSION_KEYS,
   TENANT_CLUB_ADMIN_GOVERNANCE_EXCLUDED_KEYS,
   TENANT_CLUB_ADMIN_ROLE_KEY_PREFIX,
@@ -33,6 +35,17 @@ vi.mock("@/lib/permissions/services/effective-permission-resolver", () => ({
 }));
 
 describe("tenant Club Admin delegatable permission contract", () => {
+  it("treats users.impersonate_tenant as privileged possession, not delegatable", () => {
+    expect(isTenantClubAdminPrivilegedPossessionKey(PERMISSIONS.USERS_IMPERSONATE_TENANT)).toBe(
+      true,
+    );
+    expect(
+      mergeTenantClubAdminAssignedPermissionKeys(["teams.view"]).includes(
+        PERMISSIONS.USERS_IMPERSONATE_TENANT,
+      ),
+    ).toBe(true);
+  });
+
   it("includes TENANT grantable permissions and excludes governance break-glass keys", () => {
     expect(
       isTenantClubAdminDelegatablePermission({
@@ -46,9 +59,9 @@ describe("tenant Club Admin delegatable permission contract", () => {
       isTenantClubAdminDelegatablePermission({
         key: PERMISSIONS.USERS_IMPERSONATE_TENANT,
         scope: "TENANT",
-        grantableByAdmin: true,
+        grantableByAdmin: false,
       }),
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       isTenantClubAdminDelegatablePermission({

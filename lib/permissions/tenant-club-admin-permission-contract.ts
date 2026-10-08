@@ -9,6 +9,7 @@
 
 import type { PermissionScope } from "@prisma/client";
 
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { TENANT_CLUB_ADMIN_GOVERNANCE_EXCLUDED_KEYS } from "@/lib/permissions/workspace-governance-permission-reconciliation";
 import { CLUB_ADMIN_TEMPLATE_KEY } from "@/lib/roles/tenant-role-keys";
 
@@ -93,3 +94,27 @@ export const TENANT_CLUB_ADMIN_DELEGATION_REGRESSION_KEYS = [
   "infoboard.view",
   "news.view",
 ] as const;
+
+/**
+ * TENANT permissions materialized Club Admin roles must hold but that must
+ * never be assignable to custom tenant roles via the delegation catalog
+ * (grantableByAdmin=false in DB).
+ */
+export const TENANT_CLUB_ADMIN_PRIVILEGED_POSSESSION_KEYS = [
+  PERMISSIONS.USERS_IMPERSONATE_TENANT,
+] as const;
+
+export function isTenantClubAdminPrivilegedPossessionKey(key: string): boolean {
+  return (TENANT_CLUB_ADMIN_PRIVILEGED_POSSESSION_KEYS as readonly string[]).includes(
+    key,
+  );
+}
+
+/** Full permission set expected on canonical materialized Club Admin roles. */
+export function mergeTenantClubAdminAssignedPermissionKeys(
+  delegatableKeys: readonly string[],
+): string[] {
+  return Array.from(
+    new Set([...delegatableKeys, ...TENANT_CLUB_ADMIN_PRIVILEGED_POSSESSION_KEYS]),
+  ).sort((a, b) => a.localeCompare(b));
+}

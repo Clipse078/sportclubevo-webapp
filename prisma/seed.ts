@@ -97,12 +97,13 @@ async function main() {
     { key: "users.view", name: "View users", module: PermissionModule.USERS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "users.invite", name: "Invite users", module: PermissionModule.USERS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "users.manage_memberships", name: "Manage user memberships", module: PermissionModule.USERS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    // Privileged Club Admin capability — assigned via club_admin reconciliation, not custom-role delegation.
     {
       key: "users.impersonate_tenant",
       name: "Benutzer imitieren (Verein)",
       module: PermissionModule.USERS,
       scope: PermissionScope.TENANT,
-      grantableByAdmin: true,
+      grantableByAdmin: false,
     },
 
     // ── RPERM-02: new role management keys ───────────────────────────────
