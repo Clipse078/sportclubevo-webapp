@@ -50,7 +50,7 @@ vi.mock("@/components/ui/Button", () => ({
 
 vi.mock("@/components/admin/users/ImpersonateButton", () => ({
   default: ({ onActivate }: { onActivate?: () => void }) => (
-    <button type="button" onClick={() => onActivate?.()}>
+    <button type="button" role="menuitem" onClick={() => onActivate?.()}>
       Als Benutzer ansehen
     </button>
   ),

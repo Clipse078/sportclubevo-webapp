@@ -141,9 +141,9 @@ export default function UserRowActionsMenu({
   const [revokeError, setRevokeError] = useState<string | null>(null);
 
   const canRemove = canManageMembership && !isSelf;
+  const showImpersonate = canImpersonateTarget && !isSelf;
   const showAdminShortcuts = canShowAdminShortcuts && !isSelf;
-  const hasNormalActions =
-    canImpersonateTarget || showAdminShortcuts;
+  const hasNormalActions = showImpersonate || showAdminShortcuts;
 
   // If no actions are available, render nothing.
   if (!canRemove && !canGlobalDelete && !hasNormalActions) return null;
@@ -242,7 +242,7 @@ export default function UserRowActionsMenu({
         className="w-[min(100vw-2rem,14.5rem)] p-1.5"
       >
         <div role="menu" aria-label="Benutzeraktionen">
-          {canImpersonateTarget ? (
+          {showImpersonate ? (
             <div onClick={(event) => event.stopPropagation()}>
               <ImpersonateButton
                 userId={userId}
