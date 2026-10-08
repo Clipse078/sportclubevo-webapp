@@ -141,6 +141,44 @@ REAL ACTOR
 
 **UAT-PERM-01R6:** **HUMAN_UAT_PENDING** — discoverability + start + effective permissions + sticky chrome retest + stop.
 
+**UAT-PERM-01R6-A:** **PASS** (Human UAT 2026-10-08) — **Als Benutzer ansehen** discoverable in Personen & Zugänge row ••• menu.
+
+### 01R7 — People & Access contextual action UX polish (PR #808)
+
+**Human UAT finding:** R6-A confirmed discoverability, but the row ••• dropdown rendered as an oversized bright panel (white background, weak hierarchy, faded normal actions, destructive action visually dominant, loose spacing, weak anchor to trigger).
+
+**Root cause:** `UserRowActionsMenu` used a custom absolutely positioned panel with `bg-white` and ad-hoc row styles instead of the canonical SCE dark `PopoverContent` row-menu pattern (Match Center / Training / Workspace).
+
+**Fix (presentation only):**
+
+| Area | Change |
+|------|--------|
+| Container | `PopoverContent` — `bottom-end`, ~14.5rem width, `bg-[var(--surface)]`, compact padding |
+| Normal actions | Shared compact row geometry (~38px): **Als Benutzer ansehen** → **Zugriff bearbeiten** → **Detailseite** |
+| Destructive | `MenuDivider` then **Aus Verein entfernen** (destructive token hover, not dominant block) |
+| Trigger | Dark-aligned ••• control (transparent border, surface hover) |
+| Security | **Unchanged** — same `canImpersonateTarget` / R6 eligibility; start API still actor-scoped |
+
+**Menu hierarchy (authorized actions only):**
+
+```
+Als Benutzer ansehen
+Zugriff bearbeiten
+Detailseite
+────────────────────
+Aus Verein entfernen
+```
+
+**Delegatability audit (R7 — catalog not modified):**
+
+- `users.impersonate_tenant` is `TENANT` + `grantableByAdmin: true` in seed/catalog.
+- `isTenantClubAdminDelegatablePermission(USERS_IMPERSONATE_TENANT)` → **true**.
+- **Finding:** `P1_IMPERSONATION_PERMISSION_DELEGATABLE` — Club Admins holding `roles.manage` can delegate impersonation to custom tenant roles via normal role UI unless separately restricted (future governance; out of R7 scope).
+
+**Automated evidence:** `UserRowActionsMenu.test.tsx`, `people-access-impersonation-01-uat01-r7-row-menu.test.ts`, existing R4/R5/R6 impersonation suites — run in R7 commit.
+
+**UAT-PERM-01R7:** **HUMAN_UAT_PENDING** — compact dark menu, hierarchy, positioning, keyboard, no auth regression.
+
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
 `users.impersonate_tenant` → **Benutzeransicht** in `permission-metadata.ts`.

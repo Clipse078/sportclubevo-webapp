@@ -2,25 +2,13 @@
  * @vitest-environment jsdom
  *
  * ADMIN-HARD-DELETE — focused tests for the Benutzer delete/removal UI.
- *
- * Test matrix:
- *  1. Club Admin sees "Aus Verein entfernen" in ••• menu.
- *  2. Person-only rows have no ••• actions menu rendered.
- *  3. Ordinary tenant user without management authority sees no ••• menu.
- *  7. Global delete is hidden from Club Admin (canGlobalDelete=false).
- *  8. Platform global delete link is present for platform-authorized users.
- *  9. Pending invitation row shows "Einladung widerrufen", NOT membership removal.
- *
- * Tests 4, 5, 6 (API-level safety) live in:
- *   app/api/admin/users/[userId]/membership/__tests__/membership-remove-safety.test.ts
+ * PEOPLE-ACCESS-IMPERSONATION-01R7 — row action menu UX + impersonation visibility.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import UserRowActionsMenu from "@/components/admin/users/UserRowActionsMenu";
-
-// ── Mocks ─────────────────────────────────────────────────────────────────────
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -32,7 +20,6 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Render Dialog children inline (no portal magic in tests).
 vi.mock("@/components/ui/Dialog", () => ({
   Dialog: ({ open, children, footer, title }: {
     open: boolean;
@@ -61,7 +48,13 @@ vi.mock("@/components/ui/Button", () => ({
   ),
 }));
 
-// ── Shared fixtures ───────────────────────────────────────────────────────────
+vi.mock("@/components/admin/users/ImpersonateButton", () => ({
+  default: ({ onActivate }: { onActivate?: () => void }) => (
+    <button type="button" onClick={() => onActivate?.()}>
+      Als Benutzer ansehen
+    </button>
+  ),
+}));
 
 const BASE_PROPS = {
   userId: "user-1",
@@ -73,13 +66,11 @@ const BASE_PROPS = {
   tenantRoleNames: [],
 };
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+function openMenu(user: ReturnType<typeof userEvent.setup>) {
+  return user.click(screen.getByRole("button", { name: /mehr aktionen/i }));
+}
 
 describe("UserRowActionsMenu", () => {
-  /**
-   * Test 1 — Club Admin (canManageMembership=true, canGlobalDelete=false)
-   * should see "Aus Verein entfernen" after opening the ••• menu.
-   */
   it("1. Club Admin sees 'Aus Verein entfernen' in the ••• menu", async () => {
     const user = userEvent.setup();
     render(
@@ -90,20 +81,13 @@ describe("UserRowActionsMenu", () => {
       />,
     );
 
-    const moreBtn = screen.getByRole("button", { name: /mehr aktionen/i });
-    await user.click(moreBtn);
-
+    await openMenu(user);
     expect(screen.getByText("Aus Verein entfernen")).toBeInTheDocument();
   });
 
-  /**
-   * Test 2 — Person-only rows (no userId / no UserRowActionsMenu rendered at all).
-   * We verify that the component returns null when both flags are false —
-   * the list never renders the menu on person-only rows because those rows
-   * don't call UserRowActionsMenu (integration-level assertion via null return).
-   */
-  it("1b. Club Admin with impersonate target sees 'Als Benutzer ansehen' in menu", async () => {
+  it("1b. eligible target + authorized actor sees impersonation and ordered normal actions", async () => {
     const user = userEvent.setup();
+    const onEditAccess = vi.fn();
     render(
       <UserRowActionsMenu
         {...BASE_PROPS}
@@ -111,13 +95,111 @@ describe("UserRowActionsMenu", () => {
         canGlobalDelete={false}
         canImpersonateTarget={true}
         canShowAdminShortcuts={true}
+        onEditAccess={onEditAccess}
+      />,
+    );
+
+    await openMenu(user);
+
+    const menu = screen.getByRole("menu", { name: /benutzeraktionen/i });
+    const items = within(menu).getAllByRole("menuitem");
+    expect(items[0]).toHaveTextContent("Als Benutzer ansehen");
+    expect(items[1]).toHaveTextContent("Zugriff bearbeiten");
+    expect(items[2]).toHaveTextContent("Detailseite");
+    expect(within(menu).getByRole("separator")).toBeInTheDocument();
+    expect(screen.getByText("Aus Verein entfernen")).toBeInTheDocument();
+  });
+
+  it("R7 — unauthorized actor: impersonation action absent", async () => {
+    const user = userEvent.setup();
+    render(
+      <UserRowActionsMenu
+        {...BASE_PROPS}
+        canManageMembership={true}
+        canGlobalDelete={false}
+        canImpersonateTarget={false}
+        canShowAdminShortcuts={true}
         onEditAccess={vi.fn()}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /mehr aktionen/i }));
-    expect(screen.getByText("Als Benutzer ansehen")).toBeInTheDocument();
-    expect(screen.getByText("Aus Verein entfernen")).toBeInTheDocument();
+    await openMenu(user);
+    expect(screen.queryByText("Als Benutzer ansehen")).not.toBeInTheDocument();
+    expect(screen.getByText("Zugriff bearbeiten")).toBeInTheDocument();
+  });
+
+  it("R7 — self row: impersonation absent even when flag true", async () => {
+    const user = userEvent.setup();
+    render(
+      <UserRowActionsMenu
+        {...BASE_PROPS}
+        isSelf={true}
+        canManageMembership={true}
+        canGlobalDelete={false}
+        canImpersonateTarget={true}
+        canShowAdminShortcuts={true}
+      />,
+    );
+
+    await openMenu(user);
+    expect(screen.queryByText("Als Benutzer ansehen")).not.toBeInTheDocument();
+    expect(screen.queryByText("Zugriff bearbeiten")).not.toBeInTheDocument();
+  });
+
+  it("R7 — admin shortcuts off: access/detail hidden (system/inactive handled upstream)", async () => {
+    const user = userEvent.setup();
+    render(
+      <UserRowActionsMenu
+        {...BASE_PROPS}
+        canManageMembership={true}
+        canGlobalDelete={false}
+        canImpersonateTarget={false}
+        canShowAdminShortcuts={false}
+      />,
+    );
+
+    await openMenu(user);
+    expect(screen.queryByText("Zugriff bearbeiten")).not.toBeInTheDocument();
+    expect(screen.queryByText("Detailseite")).not.toBeInTheDocument();
+  });
+
+  it("R7 — normal actions use foreground styling (not disabled)", async () => {
+    const user = userEvent.setup();
+    render(
+      <UserRowActionsMenu
+        {...BASE_PROPS}
+        canManageMembership={true}
+        canGlobalDelete={false}
+        canImpersonateTarget={false}
+        canShowAdminShortcuts={true}
+        onEditAccess={vi.fn()}
+      />,
+    );
+
+    await openMenu(user);
+    const edit = screen.getByRole("menuitem", { name: /zugriff bearbeiten/i });
+    expect(edit).not.toHaveAttribute("disabled");
+    expect(edit.className).toContain("foreground");
+    expect(edit.className).not.toMatch(/opacity-40|text-\[var\(--muted\)\]/);
+  });
+
+  it("R7 — menu closes after selecting a normal action", async () => {
+    const user = userEvent.setup();
+    const onEditAccess = vi.fn();
+    render(
+      <UserRowActionsMenu
+        {...BASE_PROPS}
+        canManageMembership={true}
+        canGlobalDelete={false}
+        canShowAdminShortcuts={true}
+        onEditAccess={onEditAccess}
+      />,
+    );
+
+    await openMenu(user);
+    await user.click(screen.getByRole("menuitem", { name: /zugriff bearbeiten/i }));
+    expect(screen.queryByRole("menu", { name: /benutzeraktionen/i })).not.toBeInTheDocument();
+    expect(onEditAccess).toHaveBeenCalledWith(BASE_PROPS.userId);
   });
 
   it("2. Returns null when neither canManageMembership nor canGlobalDelete", () => {
@@ -131,10 +213,6 @@ describe("UserRowActionsMenu", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  /**
-   * Test 3 — Ordinary tenant user without management authority:
-   * no ••• button at all.
-   */
   it("3. Ordinary tenant user without authority sees no ••• menu", () => {
     render(
       <UserRowActionsMenu
@@ -146,10 +224,6 @@ describe("UserRowActionsMenu", () => {
     expect(screen.queryByRole("button", { name: /mehr aktionen/i })).not.toBeInTheDocument();
   });
 
-  /**
-   * Test 7 — Club Admin (canGlobalDelete=false) must NOT see
-   * "Benutzer endgültig löschen".
-   */
   it("7. Global delete is hidden from Club Admin (canGlobalDelete=false)", async () => {
     const user = userEvent.setup();
     render(
@@ -160,16 +234,10 @@ describe("UserRowActionsMenu", () => {
       />,
     );
 
-    const moreBtn = screen.getByRole("button", { name: /mehr aktionen/i });
-    await user.click(moreBtn);
-
+    await openMenu(user);
     expect(screen.queryByText(/endgültig löschen/i)).not.toBeInTheDocument();
   });
 
-  /**
-   * Test 8 — Platform-authorized user (canGlobalDelete=true) sees
-   * "Benutzer endgültig löschen" linking to the platform detail page.
-   */
   it("8. Platform global delete link is present for platform-authorized user", async () => {
     const user = userEvent.setup();
     render(
@@ -180,19 +248,12 @@ describe("UserRowActionsMenu", () => {
       />,
     );
 
-    const moreBtn = screen.getByRole("button", { name: /mehr aktionen/i });
-    await user.click(moreBtn);
-
+    await openMenu(user);
     const link = screen.getByText(/endgültig löschen/i).closest("a");
     expect(link).not.toBeNull();
     expect(link).toHaveAttribute("href", `/dashboard/users/${BASE_PROPS.userId}`);
   });
 
-  /**
-   * Test 9 — Pending invitation row shows "Einladung widerrufen",
-   * NOT "Aus Verein entfernen" (membership deletion flow).
-   * Clicking it opens the revoke dialog, not the removal dialog.
-   */
   it("9. Pending invitation row shows 'Einladung widerrufen', not membership removal", async () => {
     const user = userEvent.setup();
     render(
@@ -204,17 +265,11 @@ describe("UserRowActionsMenu", () => {
       />,
     );
 
-    const moreBtn = screen.getByRole("button", { name: /mehr aktionen/i });
-    await user.click(moreBtn);
-
+    await openMenu(user);
     expect(screen.getByText("Einladung widerrufen")).toBeInTheDocument();
     expect(screen.queryByText("Aus Verein entfernen")).not.toBeInTheDocument();
   });
 
-  /**
-   * Test 9b — Clicking "Einladung widerrufen" opens the revoke confirmation dialog,
-   * NOT the membership removal dialog.
-   */
   it("9b. Pending invitation: clicking action opens revoke dialog (not removal dialog)", async () => {
     const user = userEvent.setup();
     render(
@@ -226,10 +281,9 @@ describe("UserRowActionsMenu", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /mehr aktionen/i }));
+    await openMenu(user);
     await user.click(screen.getByText("Einladung widerrufen"));
 
-    // Revoke dialog title visible, removal dialog title NOT visible
     expect(screen.getByRole("dialog", { name: /einladung widerrufen/i })).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: /aus verein entfernen/i })).not.toBeInTheDocument();
   });

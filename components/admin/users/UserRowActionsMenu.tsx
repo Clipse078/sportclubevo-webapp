@@ -16,13 +16,13 @@
  * The two actions are deliberately kept separate and never combined.
  */
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AlertTriangle,
+  KeyRound,
   MoreHorizontal,
-  Pencil,
   Trash2,
   User,
   UserMinus,
@@ -30,7 +30,9 @@ import {
 } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
+import { PopoverContent } from "@/components/ui/Popover";
 import ImpersonateButton from "@/components/admin/users/ImpersonateButton";
+import { cn } from "@/lib/cn";
 
 type Props = {
   userId: string;
@@ -53,6 +55,63 @@ type Props = {
   tenantRoleNames?: string[];
 };
 
+function MenuDivider() {
+  return <div className="my-1 h-px bg-[var(--border)]/80" role="separator" />;
+}
+
+function RowMenuItem({
+  icon,
+  iconClassName,
+  label,
+  href,
+  onSelect,
+  destructive = false,
+}: {
+  icon: ReactNode;
+  iconClassName?: string;
+  label: string;
+  href?: string;
+  onSelect?: () => void;
+  destructive?: boolean;
+}) {
+  const className = cn(
+    "flex w-full min-h-[38px] cursor-pointer items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-[0.8125rem] font-medium transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-0",
+    destructive
+      ? "text-[var(--sce-danger)] hover:bg-red-500/10 hover:text-[var(--sce-danger)]"
+      : "text-[var(--foreground)] hover:bg-[var(--surface-2)]/90",
+  );
+
+  const content = (
+    <>
+      <span
+        className={cn(
+          "inline-flex h-4 w-4 shrink-0 items-center justify-center",
+          iconClassName,
+        )}
+        aria-hidden="true"
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} role="menuitem" className={className} onClick={onSelect}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" role="menuitem" className={className} onClick={onSelect}>
+      {content}
+    </button>
+  );
+}
+
 export default function UserRowActionsMenu({
   userId,
   userName,
@@ -68,7 +127,7 @@ export default function UserRowActionsMenu({
   tenantRoleNames = [],
 }: Props) {
   const router = useRouter();
-  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Tenant removal dialog state
@@ -82,25 +141,18 @@ export default function UserRowActionsMenu({
   const [revokeError, setRevokeError] = useState<string | null>(null);
 
   const canRemove = canManageMembership && !isSelf;
-  const hasNonDestructiveActions =
-    canImpersonateTarget || (canShowAdminShortcuts && !isSelf);
+  const showAdminShortcuts = canShowAdminShortcuts && !isSelf;
+  const hasNormalActions =
+    canImpersonateTarget || showAdminShortcuts;
 
   // If no actions are available, render nothing.
-  if (!canRemove && !canGlobalDelete && !hasNonDestructiveActions) return null;
-
-  function openMenu(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    setMenuOpen((v) => !v);
-  }
+  if (!canRemove && !canGlobalDelete && !hasNormalActions) return null;
 
   function closeMenu() {
     setMenuOpen(false);
   }
 
-  function handleRemoveClick(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleRemoveClick() {
     closeMenu();
     if (pendingInvitation) {
       setRevokeError(null);
@@ -154,118 +206,108 @@ export default function UserRowActionsMenu({
     }
   }
 
+  const hasDestructiveSection = canRemove || canGlobalDelete;
+
   return (
     <>
-      {/* ••• trigger */}
-      <div ref={menuRef} className="relative" onClick={(e) => e.preventDefault()}>
-        <button
-          type="button"
-          aria-label="Mehr Aktionen"
-          onClick={openMenu}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-white text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] transition"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
-
-        {menuOpen && (
-          <>
-            {/* Click-away backdrop */}
-            <div
-              className="fixed inset-0 z-10"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                closeMenu();
-              }}
-            />
-            <div className="absolute right-0 top-9 z-20 min-w-[210px] rounded-[var(--radius-lg)] border border-[var(--border)] bg-white py-1 shadow-[var(--shadow-md)]">
-              {canImpersonateTarget ? (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <ImpersonateButton
-                    userId={userId}
-                    variant="row-menu"
-                    onActivate={closeMenu}
-                  />
-                </div>
-              ) : null}
-
-              {canShowAdminShortcuts && !isSelf ? (
-                <>
-                  {onEditAccess ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        closeMenu();
-                        onEditAccess(userId);
-                      }}
-                      className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
-                    >
-                      <Pencil className="h-3.5 w-3.5 shrink-0" />
-                      Zugriff bearbeiten
-                    </button>
-                  ) : null}
-                  <Link
-                    href={`/dashboard/admin/users/${userId}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      closeMenu();
-                    }}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
-                  >
-                    <User className="h-3.5 w-3.5 shrink-0" />
-                    Detailseite
-                  </Link>
-                </>
-              ) : null}
-
-              {(canRemove || canGlobalDelete) &&
-              (canImpersonateTarget || (canShowAdminShortcuts && !isSelf)) ? (
-                <div className="mx-2 my-1 border-t border-[var(--border)]" />
-              ) : null}
-
-              {/* Tenant removal / invitation revoke */}
-              {canRemove && (
-                <button
-                  type="button"
-                  onClick={handleRemoveClick}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 transition"
-                >
-                  {pendingInvitation ? (
-                    <>
-                      <X className="h-3.5 w-3.5 shrink-0" />
-                      Einladung widerrufen
-                    </>
-                  ) : (
-                    <>
-                      <UserMinus className="h-3.5 w-3.5 shrink-0" />
-                      Aus Verein entfernen
-                    </>
-                  )}
-                </button>
-              )}
-
-              {/* Global delete — platform only, navigates to platform detail page */}
-              {canGlobalDelete && (
-                <>
-                  {canRemove && (
-                    <div className="mx-2 my-1 border-t border-[var(--border)]" />
-                  )}
-                  <Link
-                    href={`/dashboard/users/${userId}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-700 hover:bg-red-50 transition"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                    Benutzer endgültig löschen
-                  </Link>
-                </>
-              )}
-            </div>
-          </>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        aria-label="Mehr Aktionen"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setMenuOpen((value) => !value);
+        }}
+        className={cn(
+          "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-2)] transition-colors",
+          "hover:border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
         )}
-      </div>
+      >
+        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+      </button>
+
+      <PopoverContent
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        anchorRef={triggerRef}
+        placement="bottom-end"
+        matchAnchorWidth={false}
+        constrainHeight={false}
+        clipOverflow={false}
+        role="dialog"
+        className="w-[min(100vw-2rem,14.5rem)] p-1.5"
+      >
+        <div role="menu" aria-label="Benutzeraktionen">
+          {canImpersonateTarget ? (
+            <div onClick={(event) => event.stopPropagation()}>
+              <ImpersonateButton
+                userId={userId}
+                variant="row-menu"
+                onActivate={closeMenu}
+              />
+            </div>
+          ) : null}
+
+          {showAdminShortcuts ? (
+            <>
+              {onEditAccess ? (
+                <RowMenuItem
+                  icon={<KeyRound className="h-4 w-4" />}
+                  iconClassName="text-[var(--sce-primary)]"
+                  label="Zugriff bearbeiten"
+                  onSelect={() => {
+                    closeMenu();
+                    onEditAccess(userId);
+                  }}
+                />
+              ) : null}
+              <RowMenuItem
+                icon={<User className="h-4 w-4" />}
+                iconClassName="text-[var(--blue-mid)]"
+                label="Detailseite"
+                href={`/dashboard/admin/users/${userId}`}
+                onSelect={closeMenu}
+              />
+            </>
+          ) : null}
+
+          {hasNormalActions && hasDestructiveSection ? <MenuDivider /> : null}
+
+          {canRemove ? (
+            <RowMenuItem
+              icon={
+                pendingInvitation ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <UserMinus className="h-4 w-4" />
+                )
+              }
+              iconClassName="text-[var(--sce-danger)]"
+              label={pendingInvitation ? "Einladung widerrufen" : "Aus Verein entfernen"}
+              onSelect={handleRemoveClick}
+              destructive
+            />
+          ) : null}
+
+          {canGlobalDelete ? (
+            <>
+              {canRemove ? <MenuDivider /> : null}
+              <RowMenuItem
+                icon={<Trash2 className="h-4 w-4" />}
+                iconClassName="text-[var(--sce-danger)]"
+                label="Benutzer endgültig löschen"
+                href={`/dashboard/users/${userId}`}
+                onSelect={closeMenu}
+                destructive
+              />
+            </>
+          ) : null}
+        </div>
+      </PopoverContent>
 
       {/* Tenant membership removal confirmation dialog */}
       <Dialog
