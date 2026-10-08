@@ -94,6 +94,8 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 
 **UAT-PERM-01:** **FINDINGS / RETEST_REQUIRED (R3)** — Human retest checklist **UAT-PERM-01R3** after preview HEAD contains R3 commits.
 
+**FCA STAGE readiness (01R3 UAT prep):** `FCA_ROLE_SYNC = APPLIED_TO_STAGE` (Spielbetrieb Koordinator on tenant `fc-allschwil` synced to canonical `SANDRA_FISCHER_SPIELBETRIEB_ROLE` via `scripts/sync-fca-spielbetrieb-koordinator-role.ts`). **`HUMAN_UAT = READY`** for Product Owner **UAT-PERM-01R3** on PR #808 preview @ `8308dba2181c0ce7905937902c0ff086b6801b6d` — do **not** mark UAT-PERM-01 PASS until Human retest completes.
+
 ### P3-IMP-01 — Permission catalog label (FIXED)
 
 `users.impersonate_tenant` → **Benutzeransicht** in `permission-metadata.ts`.
