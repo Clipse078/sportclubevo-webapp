@@ -92,9 +92,18 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 
 **Canonical Spielbetrieb allocator:** tenant `planning.allocations.manage` for pitch/Garderobe across Wochenplaner, Training Center (session allocations API), Match Center (operational PATCH fields), Tournament Center (resource allocation APIs). Domain `trainings.manage` / `events.manage` remain full coordinator paths — not granted to Sandra.
 
-**UAT-PERM-01:** **FINDINGS / RETEST_REQUIRED (R3)** — Human retest checklist **UAT-PERM-01R3** after preview HEAD contains R3 commits.
+**UAT-PERM-01R3:** **FAILED / BLOCKED** (Human UAT) — Product Owner findings **R4-01** (impersonation banner scrolls away) and **R4-02** (Match not selectable for operational allocation workflow in Wochenplaner despite `planning.allocations.manage`).
 
-**FCA STAGE readiness (01R3 UAT prep):** `FCA_ROLE_SYNC = APPLIED_TO_STAGE` (Spielbetrieb Koordinator on tenant `fc-allschwil` synced to canonical `SANDRA_FISCHER_SPIELBETRIEB_ROLE` via `scripts/sync-fca-spielbetrieb-koordinator-role.ts`). **`HUMAN_UAT = READY`** for Product Owner **UAT-PERM-01R3** on PR #808 preview @ `8308dba2181c0ce7905937902c0ff086b6801b6d` — do **not** mark UAT-PERM-01 PASS until Human retest completes.
+### 01R4 fixes (PR #808)
+
+| ID | Observation | Root cause | Fix |
+|----|-------------|------------|-----|
+| **R4-01** | **Benutzeransicht aktiv** disappears on vertical scroll | Banner lived in document flow inside the main column without sticky positioning under the global header | `sce-authenticated-safety-chrome-stack` in `(admin)/layout` + sticky `top: var(--topnav-height)` / `z-index: 34` in `authenticated-shell.css`; shared shell only (no per-route duplication) |
+| **R4-02** | Sandra sees Match in Planner but cannot select/open for pitch/Garderobe workflow | `WeekPlannerWorkspace` gated canonical sheet activation on `events.manage` / `trainings.manage` only | `canOpenPlannerCanonicalEditor()` — `planning.allocations.manage` opens canonical allocation editor; domain schedule fields hidden when domain manage absent; Match operational PATCH classification unchanged |
+
+**UAT-PERM-01R4:** **HUMAN_UAT_PENDING** — retest checklist **UAT-PERM-01R4** on PR #808 preview after R4 HEAD is deployed (not the pre-R4 `8308dba2` preview).
+
+**FCA STAGE readiness:** `FCA_ROLE_SYNC = APPLIED_TO_STAGE` (unchanged in R4). Do **not** mark UAT-PERM-01 PASS until Human **UAT-PERM-01R4** completes.
 
 ### P3-IMP-01 — Permission catalog label (FIXED)
 

@@ -8,6 +8,7 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 export type PlanningHubReassignContext = {
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  canManageAllocations?: boolean;
   /** Standardplan only — alternative plans use operational sheet separately. */
   isStandardplan: boolean;
 };
@@ -18,7 +19,10 @@ export function canInlineReassignItem(
 ): boolean {
   if (!context?.isStandardplan) return false;
   if (item.type === "VERANSTALTUNG") return false;
-  if (item.type === "TRAINING") return context.canManageTrainings;
-  if (item.type === "MATCH" || item.type === "TOURNAMENT") return context.canManageEvents;
+  const allocation = context.canManageAllocations ?? false;
+  if (item.type === "TRAINING") return context.canManageTrainings || allocation;
+  if (item.type === "MATCH" || item.type === "TOURNAMENT") {
+    return context.canManageEvents || allocation;
+  }
   return false;
 }

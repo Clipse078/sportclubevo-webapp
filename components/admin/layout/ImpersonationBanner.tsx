@@ -11,7 +11,7 @@ export default function ImpersonationBanner({
 }: Props) {
   return (
     <div
-      className="border-b border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] backdrop-blur-sm"
+      className="sce-impersonation-safety-banner border-b border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] backdrop-blur-sm"
       role="status"
       aria-live="polite"
     >

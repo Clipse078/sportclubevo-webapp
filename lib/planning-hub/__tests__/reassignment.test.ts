@@ -60,6 +60,20 @@ describe("canInlineReassignItem", () => {
     ).toBe(true);
   });
 
+  it("allows match inline reassign for allocation manage without events.manage", () => {
+    expect(
+      canInlineReassignItem(
+        { ...TRAINING, type: "MATCH", eventId: "m1", opponentName: "X" } as never,
+        {
+          canManageTrainings: false,
+          canManageEvents: false,
+          canManageAllocations: true,
+          isStandardplan: true,
+        },
+      ),
+    ).toBe(true);
+  });
+
   it("denies Veranstaltungen and alternative plans", () => {
     expect(
       canInlineReassignItem(VERANSTALTUNG, {

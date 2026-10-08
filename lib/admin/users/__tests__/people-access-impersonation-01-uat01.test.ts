@@ -90,6 +90,12 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01 (UAT01)", () => {
     );
   });
 
+  it("UAT01-R4 — Sandra can open Match canonical editor with allocation manage only", () => {
+    const workspace = readRelative("components/admin/planner/WeekPlannerWorkspace.tsx");
+    expect(workspace).toContain("canOpenPlannerCanonicalEditor");
+    expect(workspace).toContain("canManageAllocations");
+  });
+
   it("UAT01-D/E — Sandra opens Training when trainings.view is granted", () => {
     const caps = deriveConflictResolutionCapabilities(sandraTraining(), {
       canManageTrainings: false,

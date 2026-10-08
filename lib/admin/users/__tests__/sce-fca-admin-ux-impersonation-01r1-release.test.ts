@@ -21,7 +21,13 @@ describe("SCE-FCA-ADMIN-UX-IMPERSONATION-01R1 — release hardening sentinels", 
   it("impersonation banner keeps mobile-reachable exit control", () => {
     const banner = readRelative("components/admin/layout/ImpersonationBanner.tsx");
     const stop = readRelative("components/admin/layout/StopImpersonationButton.tsx");
+    const shellCss = readRelative("app/(admin)/authenticated-shell.css");
+    const layout = readRelative("app/(admin)/layout.tsx");
 
+    expect(layout).toContain("sce-authenticated-safety-chrome-stack");
+    expect(shellCss).toContain("sce-authenticated-safety-chrome-stack");
+    expect(shellCss).toContain("top: var(--topnav-height)");
+    expect(banner).toContain("sce-impersonation-safety-banner");
     expect(banner).toContain("flex flex-col gap-3 sm:flex-row");
     expect(banner).toContain("StopImpersonationButton");
     expect(banner).toContain("actorDisplayName");

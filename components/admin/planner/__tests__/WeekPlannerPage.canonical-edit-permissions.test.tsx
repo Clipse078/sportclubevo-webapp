@@ -7,7 +7,7 @@
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
 import { WEEKPLANNER_DRESSING_OCCUPANCY_STUB } from "@/lib/weekplanner/test-fixtures";
@@ -19,6 +19,22 @@ vi.mock("next/navigation", () => ({
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
+
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("min-width: 768px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+});
 
 const FACILITY_GROUPS = { PITCH_HALL: [], DRESSING_ROOM: [] };
 
@@ -123,6 +139,7 @@ const TOURNAMENT_ITEM = {
   conflicts: [],
   eventId: "event-2",
   homeAway: "HOME" as const,
+  teamSeasonIds: [],
   participantAllocations: [],
   ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
@@ -208,6 +225,33 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
       expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Abbrechen" }));
     }
+  });
+
+  it("PLANNING_ALLOCATIONS_MANAGE only: Match opens editor from Liste menu", async () => {
+    const user = userEvent.setup();
+    render(
+      <WeekPlannerPage
+        week={makeWeek([MATCH_ITEM])}
+        todayParam="2026-38"
+        activePlanId={null}
+        canManagePlans
+        urlState={LISTE_URL}
+        canonicalEditing={{
+          canManageTrainings: false,
+          canManageEvents: false,
+          canManageAllocations: true,
+          canViewTrainings: true,
+          canViewEvents: true,
+          facilityGroupsByAllocationGroup: FACILITY_GROUPS,
+        }}
+      />,
+    );
+
+    await user.click(screen.getByTestId("planning-hub-liste-row-menu-match-1"));
+    await user.click(screen.getByTestId("planning-hub-liste-action-plan-match-1"));
+    expect(await screen.findByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
+    expect(screen.getByTestId("wochenplaner-canonical-match-pitch")).toBeInTheDocument();
+    expect(screen.queryByTestId("weekplanner-match-canonical-end")).toBeNull();
   });
 
   it("no canonicalEditing: canonical editor never opens", async () => {

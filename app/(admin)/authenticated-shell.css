@@ -25,3 +25,17 @@
     background-attachment: fixed;
   }
 }
+
+/**
+ * PEOPLE-ACCESS-IMPERSONATION-01R4 — safety chrome stays visible while scrolling,
+ * directly under the sticky global app header (see global-app-navigation.css).
+ */
+[data-sce-modal-background].sce-authenticated-app-shell .sce-authenticated-safety-chrome-stack {
+  position: sticky;
+  top: var(--topnav-height);
+  z-index: 34;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell .sce-impersonation-safety-banner {
+  background: var(--sce-warning-light);
+}

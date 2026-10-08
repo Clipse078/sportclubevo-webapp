@@ -120,21 +120,21 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       </Suspense>
 
       <div className={`${SCE_APP_MAIN_COLUMN} sce-app-main-with-mobile-nav`}>
-        {/* Deployment environment banner */}
-        <StageEnvironmentBanner />
-
-        <ImpersonationSafetyChrome
-          initialState={{
-            isImpersonating: Boolean(session.user.isImpersonating),
-            effectiveDisplayName:
-              `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
-              session.user.email,
-            actorDisplayName:
-              session.user.actorName?.trim() ||
-              session.user.actorEmail ||
-              "Administrator",
-          }}
-        />
+        <div className="sce-authenticated-safety-chrome-stack">
+          <StageEnvironmentBanner />
+          <ImpersonationSafetyChrome
+            initialState={{
+              isImpersonating: Boolean(session.user.isImpersonating),
+              effectiveDisplayName:
+                `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
+                session.user.email,
+              actorDisplayName:
+                session.user.actorName?.trim() ||
+                session.user.actorEmail ||
+                "Administrator",
+            }}
+          />
+        </div>
 
         {/* Page content */}
         <main className="flex-1 px-5 py-6 lg:px-7 lg:py-7">

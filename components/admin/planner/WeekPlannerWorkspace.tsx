@@ -54,6 +54,10 @@ import {
 import { dayKeyInTimeZone } from "@/lib/planning-hub/scheduler/time-zone";
 import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
 import { canOpenPlanningHubItem } from "@/lib/planning-hub/planning-navigation-access";
+import {
+  canOpenPlannerCanonicalEditor,
+  type PlannerCanonicalEditAccess,
+} from "@/lib/planning-hub/planner-canonical-edit-access";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
@@ -188,15 +192,19 @@ function WeekPlannerWorkspaceBody({
     week.days.flatMap((day) => day.items.map((item) => [item.id, item] as const)),
   );
 
+  function plannerEditAccess(): PlannerCanonicalEditAccess | null {
+    if (!canonicalEditing) return null;
+    return {
+      canManageTrainings: canonicalEditing.canManageTrainings,
+      canManageEvents: canonicalEditing.canManageEvents,
+      canManageAllocations: canonicalEditing.canManageAllocations,
+    };
+  }
+
   function handleEdit(item: WeekplannerItem) {
-    if (!canonicalEditing) return;
-    const canEditThisItem =
-      (item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
-      ((item.type === "MATCH" ||
-        item.type === "TOURNAMENT" ||
-        item.type === "VERANSTALTUNG") &&
-        canonicalEditing.canManageEvents);
-    if (canEditThisItem) setEditingItem(item);
+    const access = plannerEditAccess();
+    if (!access || !canOpenPlannerCanonicalEditor(item, access)) return;
+    setEditingItem(item);
   }
 
   function handleOperationalEdit(item: WeekplannerItem) {
@@ -220,14 +228,9 @@ function WeekPlannerWorkspaceBody({
 
   function canEditPlannerItem(item: WeekplannerItem): boolean {
     if (activePlanId && overrideEditing && item.type !== "VERANSTALTUNG") return true;
-    if (!canonicalEditing) return false;
-    return (
-      (item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
-      ((item.type === "MATCH" ||
-        item.type === "TOURNAMENT" ||
-        item.type === "VERANSTALTUNG") &&
-        canonicalEditing.canManageEvents)
-    );
+    const access = plannerEditAccess();
+    if (!access) return false;
+    return canOpenPlannerCanonicalEditor(item, access);
   }
 
   function handleItemActivate(item: WeekplannerItem) {
@@ -476,6 +479,10 @@ function WeekPlannerWorkspaceBody({
           }
           timezone={timezone}
           tenantDressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
+          domainEditAccess={{
+            canManageTrainings: canonicalEditing.canManageTrainings,
+            canManageEvents: canonicalEditing.canManageEvents,
+          }}
           onClose={() => setEditingItem(null)}
           onSaved={() => {
             setEditingItem(null);
