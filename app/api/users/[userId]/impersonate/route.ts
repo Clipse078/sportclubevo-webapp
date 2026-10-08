@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { startImpersonationSession } from "@/auth";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
+import { requireApiActorTenantPermission } from "@/lib/permissions/require-api-actor-tenant-permission";
 import { logSecurityAction } from "@/lib/audit/log-action";
 import { assertCanImpersonateTenantMember } from "@/lib/admin/users/tenant-impersonation";
 
@@ -12,10 +12,9 @@ type RouteContext = {
 };
 
 export async function POST(_: NextRequest, context: RouteContext) {
-  const access = await requireApiAnyPermission([
-    PERMISSIONS.USERS_IMPERSONATE,
+  const access = await requireApiActorTenantPermission(
     PERMISSIONS.USERS_IMPERSONATE_TENANT,
-  ]);
+  );
 
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });

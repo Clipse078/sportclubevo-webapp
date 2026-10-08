@@ -119,32 +119,32 @@ const TYPE_CONFIG: Record<string, TypeCfg> = {
   PROBETRAINING: {
     Icon: Volleyball,
     label: "Probetraining",
-    colorClass: "border-blue-200 bg-blue-50 text-blue-700",
+    colorClass: "border-blue-500/30 bg-blue-500/10 text-blue-300",
   },
   SPIELERANMELDUNG: {
     Icon: User,
     label: "Spieler",
-    colorClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    colorClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
   },
   TRAINERANMELDUNG: {
     Icon: GraduationCap,
     label: "Trainer",
-    colorClass: "border-orange-200 bg-orange-50 text-orange-700",
+    colorClass: "border-orange-500/30 bg-orange-500/10 text-orange-300",
   },
   SPONSORANFRAGE: {
     Icon: Handshake,
     label: "Sponsor",
-    colorClass: "border-amber-200 bg-amber-50 text-amber-700",
+    colorClass: "border-amber-500/30 bg-amber-500/10 text-amber-300",
   },
   KONTAKTANFRAGE: {
     Icon: MessageSquare,
     label: "Kontakt",
-    colorClass: "border-slate-200 bg-slate-50 text-slate-600",
+    colorClass: "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]",
   },
   OTHER: {
     Icon: ClipboardList,
     label: "Andere",
-    colorClass: "border-slate-200 bg-slate-50 text-slate-400",
+    colorClass: "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
   },
   // Website-integration types
   MITGLIEDSCHAFT: {
@@ -426,8 +426,7 @@ export default function RegistrationDetailDrawer({
         aria-modal="true"
         aria-label={`${registration.firstName} ${registration.lastName} — Details`}
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex flex-col",
-          // Width: generous workspace surface — 580px on desktop
+          "fixed inset-y-0 right-0 z-50 flex max-h-[100dvh] flex-col",
           "w-full sm:max-w-[580px] lg:max-w-[620px]",
           "border-l border-[var(--border)] bg-[var(--surface)]",
           "shadow-[var(--shadow-xl)]",
@@ -438,9 +437,9 @@ export default function RegistrationDetailDrawer({
         )}
         style={{ transitionDuration: "220ms" }}
       >
-        {/* ── Header ───────────────────────────────────────────────────────── */}
-        <div className="flex-shrink-0 border-b border-[var(--border)] bg-[var(--surface)]">
-          <div className="flex items-start gap-4 px-6 py-5">
+        {/* ── Sticky identity header ─────────────────────────────────────────── */}
+        <div className="sticky top-0 z-10 flex-shrink-0 border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-sm">
+          <div className="flex items-start gap-4 px-5 py-4 sm:px-6">
             {/* Applicant avatar */}
             <div className="flex-shrink-0 h-11 w-11 rounded-full border-2 border-[color-mix(in_srgb,var(--tenant-primary)_20%,white)] bg-[color-mix(in_srgb,var(--tenant-primary)_10%,white)] flex items-center justify-center text-sm font-bold uppercase text-[var(--tenant-primary)]">
               {initials}
@@ -516,14 +515,44 @@ export default function RegistrationDetailDrawer({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-6 pb-4">
-            <SummaryItem icon={TypeIcon}>{typeConfig.label}</SummaryItem>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-[var(--border)]/60 px-5 pb-3 pt-2 sm:px-6">
             <SummaryItem icon={Calendar}>
-              {formatDateTimeCompact(registration.submittedAt, cfg)}
+              Eingegangen {formatDateTimeCompact(registration.submittedAt, cfg)}
             </SummaryItem>
             <SummaryItem icon={Lightbulb}>{classification.targetGroupLabel}</SummaryItem>
+            {registration.assignedToUser ? (
+              <SummaryItem icon={UserCheck}>
+                {registration.assignedToUser.firstName} {registration.assignedToUser.lastName}
+              </SummaryItem>
+            ) : (
+              <SummaryItem dotClassName="bg-amber-500">Noch nicht zugewiesen</SummaryItem>
+            )}
           </div>
         </div>
+
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex-shrink-0 border-b border-[var(--border)] bg-[var(--surface-2)]/40 px-5 py-4 sm:px-6">
+            <RegistrationWorkflowSteps registration={registration} locale={locale} timezone={timezone} />
+            <div className="mt-4">
+              <RegistrationWorkflowPanel
+                registration={registration}
+                tenantSlug={tenantSlug}
+                canEdit={canEdit}
+                locale={locale}
+                timezone={timezone}
+                assignableUsers={assignableUsers}
+                eligibleCoordinators={eligibleCoordinators}
+                targetGroups={targetGroups}
+                orgUnits={orgUnits}
+                teamSeasons={teamSeasons}
+                showInlineTimeline={false}
+                onUpdate={(updated) => {
+                  setRegistration(updated);
+                  onUpdate(updated);
+                }}
+              />
+            </div>
+          </div>
 
         <RegistrationDetailDrawerTabs key={registration.id}>
           {({ activeTab, setActiveTab }) => (
@@ -533,34 +562,6 @@ export default function RegistrationDetailDrawer({
         <RegistrationDrawerTabBody>
           {activeTab === "overview" ? (
             <>
-              <div className="border-b border-[var(--border)] px-6 py-5">
-                <RegistrationWorkflowSteps
-                  registration={registration}
-                  locale={locale}
-                  timezone={timezone}
-                />
-              </div>
-
-              <div className="border-b border-[var(--border)] px-6 py-5">
-                <RegistrationWorkflowPanel
-                  registration={registration}
-                  tenantSlug={tenantSlug}
-                  canEdit={canEdit}
-                  locale={locale}
-                  timezone={timezone}
-                  assignableUsers={assignableUsers}
-                  eligibleCoordinators={eligibleCoordinators}
-                  targetGroups={targetGroups}
-                  orgUnits={orgUnits}
-                  teamSeasons={teamSeasons}
-                  showInlineTimeline={false}
-                  onUpdate={(updated) => {
-                    setRegistration(updated);
-                    onUpdate(updated);
-                  }}
-                />
-              </div>
-
               {/* Vollständige Angaben — expandable secondary data section */}
               <div className="border-b border-[var(--border)]">
             <button
@@ -824,6 +825,7 @@ export default function RegistrationDetailDrawer({
             </>
           )}
         </RegistrationDetailDrawerTabs>
+        </div>
 
         <ContactEmailEditDialog
           open={editingEmail}
@@ -841,8 +843,8 @@ export default function RegistrationDetailDrawer({
           }}
         />
 
-        {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <div className="flex-shrink-0 flex items-center justify-between gap-3 px-6 py-4 border-t border-[var(--border)] bg-[var(--surface-2)]">
+        {/* ── Secondary footer actions ───────────────────────────────────── */}
+        <div className="sticky bottom-0 z-10 flex flex-shrink-0 items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-2)]/95 px-5 py-3 backdrop-blur-sm sm:px-6">
           <a
             href={`mailto:${registration.email}`}
             className="fca-button-secondary text-xs gap-1.5"
@@ -850,10 +852,7 @@ export default function RegistrationDetailDrawer({
             <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5" />
             Kontaktieren
           </a>
-          <a
-            href={detailHref}
-            className="fca-button-primary text-xs gap-1.5"
-          >
+          <a href={detailHref} className="fca-button-secondary text-xs gap-1.5">
             <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             Vollansicht
           </a>

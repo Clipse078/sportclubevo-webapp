@@ -13,6 +13,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { assertCanImpersonateTenantMember } from "@/lib/admin/users/tenant-impersonation";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -101,5 +102,75 @@ describe("assertCanImpersonateTenantMember", () => {
       targetUserId: "target-1",
       tenantId: "tenant-a",
     });
+  });
+});
+
+describe("canShowImpersonateTenantUserAction", () => {
+  const activeTarget = {
+    pendingInvitation: false,
+    membershipIsActive: true,
+    userIsActive: true,
+    isPlatformSystemIdentity: false,
+  };
+
+  it("requires actor permission and fully active non-self tenant member", () => {
+    expect(
+      canShowImpersonateTenantUserAction({
+        actorCanImpersonate: true,
+        actorUserId: "actor-1",
+        targetUserId: "target-1",
+        ...activeTarget,
+      }),
+    ).toBe(true);
+  });
+
+  it("hides for unauthorized actor, self, platform, pending, inactive", () => {
+    expect(
+      canShowImpersonateTenantUserAction({
+        actorCanImpersonate: false,
+        actorUserId: "actor-1",
+        targetUserId: "target-1",
+        ...activeTarget,
+      }),
+    ).toBe(false);
+
+    expect(
+      canShowImpersonateTenantUserAction({
+        actorCanImpersonate: true,
+        actorUserId: "same",
+        targetUserId: "same",
+        ...activeTarget,
+      }),
+    ).toBe(false);
+
+    expect(
+      canShowImpersonateTenantUserAction({
+        actorCanImpersonate: true,
+        actorUserId: "actor-1",
+        targetUserId: "target-1",
+        ...activeTarget,
+        isPlatformSystemIdentity: true,
+      }),
+    ).toBe(false);
+
+    expect(
+      canShowImpersonateTenantUserAction({
+        actorCanImpersonate: true,
+        actorUserId: "actor-1",
+        targetUserId: "target-1",
+        ...activeTarget,
+        pendingInvitation: true,
+      }),
+    ).toBe(false);
+
+    expect(
+      canShowImpersonateTenantUserAction({
+        actorCanImpersonate: true,
+        actorUserId: "actor-1",
+        targetUserId: "target-1",
+        ...activeTarget,
+        membershipIsActive: false,
+      }),
+    ).toBe(false);
   });
 });

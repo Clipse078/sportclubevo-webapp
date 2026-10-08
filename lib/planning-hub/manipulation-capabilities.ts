@@ -24,6 +24,9 @@ export type ManipulationPermissionContext = {
   isStandardplan: boolean;
   canManageTrainings: boolean;
   canManageEvents: boolean;
+  /** Module view for cross-center «Öffnen» (distinct from manage). */
+  canViewTrainings?: boolean;
+  canViewEvents?: boolean;
   /** Facility allocation planning without full training/event domain manage. */
   canManageAllocations: boolean;
   /** Alternative plan — operational overrides permitted when set. */

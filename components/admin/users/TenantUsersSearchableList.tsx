@@ -17,6 +17,7 @@ import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display
 import { buildAccessColumnSummary } from "@/lib/admin/people-access/access-column-summary";
 import { userHasPrivilegedRole } from "@/lib/admin/people-access/privileged-utils";
 import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/queries";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 export type PeopleAccessWizardConfig = {
   availableRoles: WizardRoleOption[];
@@ -30,6 +31,9 @@ type Props = {
   initialUsers: TenantUserItem[];
   personsWithoutUser: TenantPersonWithoutUser[];
   currentUserId: string;
+  /** Real authenticated actor (defaults to currentUserId when omitted). */
+  actorUserId?: string;
+  canImpersonateTenant?: boolean;
   canInvite: boolean;
   canManage?: boolean;
   canGlobalDelete?: boolean;
@@ -82,6 +86,8 @@ export default function TenantUsersSearchableList({
   initialUsers,
   personsWithoutUser,
   currentUserId,
+  actorUserId = currentUserId,
+  canImpersonateTenant = false,
   canInvite,
   canManage = false,
   canGlobalDelete = false,
@@ -348,6 +354,15 @@ export default function TenantUsersSearchableList({
           {filteredUsers.map((user, idx) => {
             const isLast = idx === filteredUsers.length - 1 && filteredPersons.length === 0;
             const isCurrentUser = user.userId === currentUserId;
+            const canImpersonateTarget = canShowImpersonateTenantUserAction({
+              actorCanImpersonate: canImpersonateTenant,
+              actorUserId,
+              targetUserId: user.userId,
+              pendingInvitation: user.pendingInvitation,
+              membershipIsActive: user.membershipIsActive,
+              userIsActive: user.userIsActive,
+              isPlatformSystemIdentity: user.isPlatformSystemIdentity,
+            });
             const status = getAccessStatusLabel(user);
             const roleChips = groupRoleChipsForDisplay(user.roles);
 
@@ -439,7 +454,10 @@ export default function TenantUsersSearchableList({
                     pendingInvitation={user.pendingInvitation}
                     canManageMembership={canManage && !user.isPlatformSystemIdentity}
                     canGlobalDelete={canGlobalDelete}
-                    isSelf={isCurrentUser}
+                    isSelf={user.userId === actorUserId}
+                    canImpersonateTarget={canImpersonateTarget}
+                    canShowAdminShortcuts={canManage && !user.isPlatformSystemIdentity}
+                    onEditAccess={(userId) => router.push(`/dashboard/admin/users/${userId}`)}
                     linkedPersonName={user.linkedPersonName ?? null}
                     tenantRoleNames={user.roles.map((r) => r.name)}
                   />
@@ -510,6 +528,8 @@ export default function TenantUsersSearchableList({
         open={drawerUser !== null}
         onClose={() => setDrawerUser(null)}
         currentUserId={currentUserId}
+        actorUserId={actorUserId}
+        canImpersonateTenant={canImpersonateTenant}
         canManage={canManage}
         canInvite={canInvite}
         privilegedRoleIds={privilegedRoleIds}

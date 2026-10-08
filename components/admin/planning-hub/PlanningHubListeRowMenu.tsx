@@ -30,7 +30,10 @@ type PlanningHubListeRowMenuProps = {
     | "canManageAllocations"
     | "isStandardplan"
     | "alternativePlanId"
-  >;
+  > & {
+    canViewTrainings?: boolean;
+    canViewEvents?: boolean;
+  };
   canEditItem: boolean;
   onOpenItem: () => void;
   onEditPlanning: () => void;
@@ -160,16 +163,18 @@ export default function PlanningHubListeRowMenu({
         className="w-[min(100vw-2rem,16rem)] p-1.5"
         aria-label="Planungsaktionen"
       >
-        <MenuButton
-          label="Öffnen"
-          tone="neutral"
-          icon={<ExternalLink className="h-4 w-4" />}
-          testId={`planning-hub-liste-action-open-${item.id}`}
-          onClick={() => {
-            setOpen(false);
-            onOpenItem();
-          }}
-        />
+        {caps.canOpenActivity ? (
+          <MenuButton
+            label="Öffnen"
+            tone="neutral"
+            icon={<ExternalLink className="h-4 w-4" />}
+            testId={`planning-hub-liste-action-open-${item.id}`}
+            onClick={() => {
+              setOpen(false);
+              onOpenItem();
+            }}
+          />
+        ) : null}
         {showPlanningEdit ? (
           <MenuButton
             label="Planung ändern"

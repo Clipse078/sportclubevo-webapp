@@ -176,21 +176,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 
   const planningPolicy = createPlanningAuthorizationPolicy(prisma);
-  const canEdit = await planningPolicy.canEditPlanningRecord(
-    { userId, tenantId },
-    "tournament",
-    {
-      teamId: existingTournament.teamId,
-      planningStage: existingTournament.reviewStage,
-      source: existingTournament.source,
-    },
-  );
-  if (!canEdit) {
-    return NextResponse.json(
-      { error: "Keine Berechtigung zum Bearbeiten dieses Turniers." },
-      { status: 403 },
-    );
-  }
+  const planningRecord = {
+    teamId: existingTournament.teamId,
+    planningStage: existingTournament.reviewStage,
+    source: existingTournament.source,
+  };
+  const planningCtx = { userId, tenantId };
 
   let body: Record<string, unknown>;
   try {
@@ -204,8 +195,46 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     "dressingRoomBeforeMinutes" in body ||
     "dressingRoomAfterMinutes" in body;
 
+  async function assertTournamentMutationAuthorized(
+    opts: { occupancyOnly: boolean; includesLifecycle: boolean },
+  ): Promise<Response | null> {
+    if (opts.includesLifecycle) {
+      const canEdit = await planningPolicy.canEditPlanningRecord(
+        planningCtx,
+        "tournament",
+        planningRecord,
+      );
+      if (!canEdit) {
+        return NextResponse.json(
+          { error: "Keine Berechtigung zum Bearbeiten dieses Turniers." },
+          { status: 403 },
+        );
+      }
+      return null;
+    }
+    const allowed = opts.occupancyOnly
+      ? await planningPolicy.canManageOperationalAllocations(
+          planningCtx,
+          "tournament",
+          planningRecord,
+        )
+      : await planningPolicy.canEditPlanningRecord(planningCtx, "tournament", planningRecord);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Keine Berechtigung zum Bearbeiten dieses Turniers." },
+        { status: 403 },
+      );
+    }
+    return null;
+  }
+
   try {
     if (hasOccupancyPatch) {
+      const occupancyAuth = await assertTournamentMutationAuthorized({
+        occupancyOnly: true,
+        includesLifecycle: false,
+      });
+      if (occupancyAuth) return occupancyAuth;
       const { updateEventDressingRoomOccupancy } = await import(
         "@/lib/dressing-room-occupancy/event-occupancy-service"
       );
@@ -233,6 +262,11 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     // ── Lifecycle transition ────────────────────────────────────────────────
     if ("status" in body) {
+      const lifecycleAuth = await assertTournamentMutationAuthorized({
+        occupancyOnly: false,
+        includesLifecycle: true,
+      });
+      if (lifecycleAuth) return lifecycleAuth;
       const status = body.status;
       if (!ALLOWED_STATUS_TRANSITIONS.includes(status as (typeof ALLOWED_STATUS_TRANSITIONS)[number])) {
         return NextResponse.json(
@@ -253,6 +287,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     }
 
     // ── Field update ─────────────────────────────────────────────────────────
+    const fieldAuth = await assertTournamentMutationAuthorized({
+      occupancyOnly: false,
+      includesLifecycle: false,
+    });
+    if (fieldAuth) return fieldAuth;
+
     const data: UpdateTournamentInput = {};
 
     if ("title" in body) {

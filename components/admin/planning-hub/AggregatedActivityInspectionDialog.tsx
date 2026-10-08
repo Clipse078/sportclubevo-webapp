@@ -35,6 +35,7 @@ import {
   weekplannerConflictPartnerTimeLabel,
 } from "@/lib/planning-hub/conflict-inspection-presenters";
 import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
+import { canOpenPlanningHubItem } from "@/lib/planning-hub/planning-navigation-access";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import PlanningHubActivityActions from "./PlanningHubActivityActions";
@@ -59,7 +60,8 @@ export type AggregatedActivityInspectionDialogProps = {
     | "canManageAllocations"
     | "isStandardplan"
     | "alternativePlanId"
-  >;
+  > &
+    Partial<Pick<ManipulationPermissionContext, "canViewTrainings" | "canViewEvents">>;
 };
 
 const SORT_OPTIONS: { value: AggregateInspectionSortKey; label: string }[] = [
@@ -189,6 +191,18 @@ export default function AggregatedActivityInspectionDialog({
     (canEditItem ? canEditItem(selectedItem) : true);
 
   const openHref = selectedItem ? getPlanningHubItemHref(selectedItem) : null;
+
+  function canOpenItem(item: WeekplannerItem): boolean {
+    if (!permissionContext) return false;
+    return canOpenPlanningHubItem(item, {
+      canViewTrainings: permissionContext.canViewTrainings ?? false,
+      canManageTrainings: permissionContext.canManageTrainings,
+      canViewEvents: permissionContext.canViewEvents ?? false,
+      canManageEvents: permissionContext.canManageEvents,
+    });
+  }
+
+  const selectedCanOpen = selectedItem ? canOpenItem(selectedItem) : false;
 
   return (
     <SceModalOverlay
@@ -418,16 +432,20 @@ export default function AggregatedActivityInspectionDialog({
                             </span>
                           </td>
                           <td className="px-1.5 py-1.5">
-                            <button
-                              type="button"
-                              className="whitespace-nowrap rounded-md px-1.5 py-1 text-[10px] font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenItem(item);
-                              }}
-                            >
-                              Öffnen
-                            </button>
+                            {canOpenItem(item) ? (
+                              <button
+                                type="button"
+                                className="whitespace-nowrap rounded-md px-1.5 py-1 text-[10px] font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenItem(item);
+                                }}
+                              >
+                                Öffnen
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-[var(--muted)]">—</span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -568,16 +586,17 @@ export default function AggregatedActivityInspectionDialog({
                 </div>
 
                 <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-[var(--border)] px-4 py-3 sm:px-5">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={!openHref}
-                    onClick={() => onOpenItem(selectedItem)}
-                    data-testid="aggregate-inspection-open"
-                  >
-                    Öffnen
-                  </Button>
+                  {selectedCanOpen ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onOpenItem(selectedItem)}
+                      data-testid="aggregate-inspection-open"
+                    >
+                      Öffnen
+                    </Button>
+                  ) : null}
                   {showEdit && (
                     <Button
                       type="button"

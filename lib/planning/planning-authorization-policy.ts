@@ -298,6 +298,28 @@ export class PlanningAuthorizationPolicy {
     return { allowed: true, isCoordinator: false, isScoped: true, teamId: resolved.teamId };
   }
 
+  // ── canManageOperationalAllocations ───────────────────────────────────────
+
+  /**
+   * Tenant-wide Spielbetrieb allocator (planning.allocations.manage) may assign
+   * pitch/Garderobe without holding trainings.manage / events.manage.
+   * Domain coordinators retain access via canEditPlanningRecord.
+   */
+  async canManageOperationalAllocations(
+    ctx: PlanningContext,
+    domain: PlanningDomain,
+    record: PlanningRecord,
+  ): Promise<boolean> {
+    const { tenant } = await this.effectiveResolver.getEffectivePermissions({
+      userId: ctx.userId,
+      tenantId: ctx.tenantId,
+    });
+    if (tenant.includes(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE)) {
+      return true;
+    }
+    return this.canEditPlanningRecord(ctx, domain, record);
+  }
+
   // ── canEditPlanningRecord ─────────────────────────────────────────────────
 
   /**

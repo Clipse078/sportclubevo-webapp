@@ -65,6 +65,11 @@ import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-all
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export type WeekplannerPlanningDomainEditAccess = {
+  canManageTrainings: boolean;
+  canManageEvents: boolean;
+};
+
 type SheetProps = {
   item: WeekplannerItem | null;
   facilityGroupsByAllocationGroup: {
@@ -73,8 +78,15 @@ type SheetProps = {
   };
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  /** When omitted, domain schedule fields remain editable (legacy callers). */
+  domainEditAccess?: WeekplannerPlanningDomainEditAccess;
   onClose: () => void;
   onSaved: () => void;
+};
+
+const FULL_DOMAIN_EDIT: WeekplannerPlanningDomainEditAccess = {
+  canManageTrainings: true,
+  canManageEvents: true,
 };
 
 // ── TrainingEditor ────────────────────────────────────────────────────────────
@@ -84,6 +96,7 @@ function TrainingEditorContent({
   facilityGroupsByAllocationGroup,
   timezone,
   tenantDressingRoomOccupancyPresets,
+  domainEditAccess,
   onClose,
   onSaved,
 }: {
@@ -91,9 +104,11 @@ function TrainingEditorContent({
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  domainEditAccess: WeekplannerPlanningDomainEditAccess;
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const canEditSchedule = domainEditAccess.canManageTrainings;
   const router = useRouter();
   const formId = useId();
 
@@ -133,7 +148,8 @@ function TrainingEditorContent({
   });
 
   const timesValid = !!startTime && !!endTime && startTime < endTime;
-  const timeChanged = date !== initDate || startTime !== initStart || endTime !== initEnd;
+  const timeChanged =
+    canEditSchedule && (date !== initDate || startTime !== initStart || endTime !== initEnd);
   const pitchChanged = !setsEqual(selectedPitchIds, initPitchIds);
   const roomChanged = !setsEqual(selectedRoomIds, initRoomIds);
   const hasChanges = timeChanged || pitchChanged || roomChanged;
@@ -146,7 +162,7 @@ function TrainingEditorContent({
     try {
       const sessionId = item.trainingSessionId;
 
-      if (timeChanged) {
+      if (timeChanged && canEditSchedule) {
         const res = await fetch(`/api/training-sessions/${sessionId}/reschedule`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -227,15 +243,17 @@ function TrainingEditorContent({
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
         {error ? <WeekplannerEditorError message={error} /> : null}
 
-        <WeekplannerDateTimeFields
-          formId={formId}
-          date={date}
-          startTime={startTime}
-          endTime={endTime}
-          onDateChange={setDate}
-          onStartChange={setStartTime}
-          onEndChange={setEndTime}
-        />
+        {canEditSchedule ? (
+          <WeekplannerDateTimeFields
+            formId={formId}
+            date={date}
+            startTime={startTime}
+            endTime={endTime}
+            onDateChange={setDate}
+            onStartChange={setStartTime}
+            onEndChange={setEndTime}
+          />
+        ) : null}
 
         <div className="space-y-2">
           <WeekplannerSectionLabel>Spielfeld / Halle</WeekplannerSectionLabel>
@@ -299,6 +317,7 @@ function MatchEditorContent({
   facilityGroupsByAllocationGroup,
   timezone,
   tenantDressingRoomOccupancyPresets,
+  domainEditAccess,
   onClose,
   onSaved,
 }: {
@@ -306,12 +325,14 @@ function MatchEditorContent({
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  domainEditAccess: WeekplannerPlanningDomainEditAccess;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const router = useRouter();
   const formId = useId();
   const scheduleExternallyOwned = isMatchScheduleExternallyOwned(item.eventSource);
+  const canEditSchedule = domainEditAccess.canManageEvents;
 
   const initDate = isoToLocalDate(item.canonicalStartAt, timezone);
   const initStart = isoToLocalTime(item.canonicalStartAt, timezone);
@@ -366,10 +387,11 @@ function MatchEditorContent({
   );
 
   const timeChanged =
+    canEditSchedule &&
     !scheduleExternallyOwned &&
     (date !== initDate || startTime !== initStart || endTime !== initEnd);
   const scheduleChanged =
-    scheduleExternallyOwned && endTime !== initEnd;
+    canEditSchedule && scheduleExternallyOwned && endTime !== initEnd;
   const hasChanges =
     timeChanged ||
     scheduleChanged ||
@@ -461,22 +483,26 @@ function MatchEditorContent({
 
         {error ? <WeekplannerEditorError message={error} /> : null}
 
-        <WeekplannerDateTimeFields
-          formId={formId}
-          date={date}
-          startTime={startTime}
-          endTime={endTime}
-          onDateChange={setDate}
-          onStartChange={setStartTime}
-          onEndChange={setEndTime}
-          dateReadOnly={scheduleExternallyOwned}
-          startReadOnly={scheduleExternallyOwned}
-          endTestId="weekplanner-match-canonical-end"
-        />
-        {scheduleExternallyOwned ? (
-          <p className="text-xs text-[var(--muted)]">
-            Anstoß und Datum werden vom Anbieter synchronisiert. Endzeit kann operativ angepasst werden.
-          </p>
+        {canEditSchedule ? (
+          <>
+            <WeekplannerDateTimeFields
+              formId={formId}
+              date={date}
+              startTime={startTime}
+              endTime={endTime}
+              onDateChange={setDate}
+              onStartChange={setStartTime}
+              onEndChange={setEndTime}
+              dateReadOnly={scheduleExternallyOwned}
+              startReadOnly={scheduleExternallyOwned}
+              endTestId="weekplanner-match-canonical-end"
+            />
+            {scheduleExternallyOwned ? (
+              <p className="text-xs text-[var(--muted)]">
+                Anstoß und Datum werden vom Anbieter synchronisiert. Endzeit kann operativ angepasst werden.
+              </p>
+            ) : null}
+          </>
         ) : null}
 
         <div className="space-y-2">
@@ -550,6 +576,7 @@ function TournamentEditorContent({
   facilityGroupsByAllocationGroup,
   timezone,
   tenantDressingRoomOccupancyPresets,
+  domainEditAccess,
   onClose,
   onSaved,
 }: {
@@ -557,11 +584,13 @@ function TournamentEditorContent({
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
   tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  domainEditAccess: WeekplannerPlanningDomainEditAccess;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const router = useRouter();
   const formId = useId();
+  const canEditSchedule = domainEditAccess.canManageEvents;
 
   const initDate = initialEditorDate(item, timezone);
   const initStart = isoToLocalTime(item.canonicalStartAt, timezone);
@@ -591,7 +620,8 @@ function TournamentEditorContent({
   });
 
   const timesValid = !!startTime && !!endTime && startTime < endTime;
-  const timeChanged = date !== initDate || startTime !== initStart || endTime !== initEnd;
+  const timeChanged =
+    canEditSchedule && (date !== initDate || startTime !== initStart || endTime !== initEnd);
   const pitchChanged = !setsEqual(selectedPitchIds, initPitchIds);
   const hasChanges = timeChanged || pitchChanged;
 
@@ -601,7 +631,7 @@ function TournamentEditorContent({
     setError(null);
 
     try {
-      if (timeChanged) {
+      if (timeChanged && canEditSchedule) {
         await saveTournamentSchedule(item.eventId, startAt, endAt);
       }
 
@@ -659,15 +689,17 @@ function TournamentEditorContent({
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
         {error ? <WeekplannerEditorError message={error} /> : null}
 
-        <WeekplannerDateTimeFields
-          formId={formId}
-          date={date}
-          startTime={startTime}
-          endTime={endTime}
-          onDateChange={setDate}
-          onStartChange={setStartTime}
-          onEndChange={setEndTime}
-        />
+        {canEditSchedule ? (
+          <WeekplannerDateTimeFields
+            formId={formId}
+            date={date}
+            startTime={startTime}
+            endTime={endTime}
+            onDateChange={setDate}
+            onStartChange={setStartTime}
+            onEndChange={setEndTime}
+          />
+        ) : null}
 
         <div className="space-y-2">
           <WeekplannerSectionLabel>Spielfeld / Halle</WeekplannerSectionLabel>
@@ -874,6 +906,7 @@ export function WeekplannerPlanningSheet({
   facilityGroupsByAllocationGroup,
   timezone,
   tenantDressingRoomOccupancyPresets,
+  domainEditAccess = FULL_DOMAIN_EDIT,
   onClose,
   onSaved,
 }: SheetProps) {
@@ -886,6 +919,7 @@ export function WeekplannerPlanningSheet({
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
         tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        domainEditAccess={domainEditAccess}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -899,6 +933,7 @@ export function WeekplannerPlanningSheet({
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
         tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        domainEditAccess={domainEditAccess}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -912,6 +947,7 @@ export function WeekplannerPlanningSheet({
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
         tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        domainEditAccess={domainEditAccess}
         onClose={onClose}
         onSaved={onSaved}
       />

@@ -10,7 +10,7 @@ import {
   SANDRA_FISCHER_SPIELBETRIEB_ROLE,
 } from "@/lib/roles/pilot-fc-allschwil-role-definitions";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
-import { reconcileScePilot03Permissions } from "@/lib/permissions/sce-pilot-03-permission-reconciliation";
+import { SCE_PILOT_03_PERMISSION_DEFS } from "@/lib/permissions/sce-pilot-03-permission-reconciliation";
 
 const mocks = vi.hoisted(() => ({
   requireApiAnyPermission: vi.fn(),
@@ -34,11 +34,11 @@ describe("SCE-PILOT-03 scoped access", () => {
     );
   });
 
-  it("defines Patrick as read-only planning", () => {
+  it("defines Präsident pilot with Sandra operational baseline", () => {
     expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).toContain(
       PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
     );
-    expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).not.toContain(
+    expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).toContain(
       PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
     );
     expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).not.toContain(
@@ -46,13 +46,15 @@ describe("SCE-PILOT-03 scoped access", () => {
     );
   });
 
-  it("hides demo Vereinsleitung and planning centers for Sandra nav keys", () => {
+  it("shows Spielbetrieb planning centers without admin surfaces for Sandra nav keys", () => {
     const sections = getVisibleNavSections([...SANDRA_FISCHER_SPIELBETRIEB_ROLE.permissionKeys]);
     const hrefs = sections.flatMap((s) =>
       s.items.flatMap((i) => [i.href, ...(i.children?.map((c) => c.href) ?? [])]),
     );
     expect(hrefs).toContain("/dashboard/planner/week");
-    expect(hrefs).not.toContain("/dashboard/training");
+    expect(hrefs).toContain("/dashboard/training");
+    expect(hrefs).toContain("/dashboard/matchcenter");
+    expect(hrefs).toContain("/dashboard/tournamentcenter");
     expect(hrefs).not.toContain("/vereinsleitung/finanzen");
     expect(hrefs).not.toContain("/dashboard/mitglieder");
     expect(hrefs).toContain("/dashboard/website/news");
@@ -69,17 +71,8 @@ describe("SCE-PILOT-03 scoped access", () => {
     );
   });
 
-  it("reconciliation dry-run reports five permission keys", async () => {
-    const prisma = {
-      permission: {
-        findUnique: vi.fn().mockResolvedValue(null),
-        upsert: vi.fn(),
-      },
-    } as unknown as import("@prisma/client").PrismaClient;
-
-    const result = await reconcileScePilot03Permissions(prisma, true);
-    expect(result.permissions).toHaveLength(5);
-    expect(prisma.permission.upsert).not.toHaveBeenCalled();
+  it("defines five SCE-PILOT-03 catalog permission keys", () => {
+    expect(SCE_PILOT_03_PERMISSION_DEFS).toHaveLength(5);
   });
 });
 

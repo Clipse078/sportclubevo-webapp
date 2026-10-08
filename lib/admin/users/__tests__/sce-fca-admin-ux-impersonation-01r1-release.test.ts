@@ -7,22 +7,33 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-FCA-ADMIN-UX-IMPERSONATION-01R1 — release hardening sentinels", () => {
-  it("admin layout renders STAGE and impersonation banners in the main column", () => {
+  it("admin layout renders STAGE and impersonation banners in the sticky shell chrome", () => {
     const layout = readRelative("app/(admin)/layout.tsx");
 
     const stageIdx = layout.indexOf("<StageEnvironmentBanner");
-    const impersonationIdx = layout.indexOf("<ImpersonationBanner");
+    const impersonationIdx = layout.indexOf("<ImpersonationSafetyChrome");
     expect(stageIdx).toBeGreaterThan(-1);
     expect(impersonationIdx).toBeGreaterThan(stageIdx);
-    expect(layout).toContain("session.user.isImpersonating");
+    expect(layout).toContain("ImpersonationSafetyChrome");
+    expect(layout).toContain("sce-authenticated-sticky-shell-chrome");
+    expect(layout).toContain("export const dynamic = \"force-dynamic\"");
   });
 
   it("impersonation banner keeps mobile-reachable exit control", () => {
     const banner = readRelative("components/admin/layout/ImpersonationBanner.tsx");
     const stop = readRelative("components/admin/layout/StopImpersonationButton.tsx");
+    const shellCss = readRelative("app/(admin)/authenticated-shell.css");
+    const layout = readRelative("app/(admin)/layout.tsx");
 
+    expect(layout).toContain("sce-authenticated-safety-chrome-stack");
+    expect(shellCss).toContain("sce-authenticated-sticky-shell-chrome");
+    expect(shellCss).toContain("position: sticky");
+    expect(banner).toContain("sce-impersonation-safety-banner");
     expect(banner).toContain("flex flex-col gap-3 sm:flex-row");
     expect(banner).toContain("StopImpersonationButton");
+    expect(banner).toContain("actorDisplayName");
+    expect(banner).toContain("Benutzeransicht aktiv");
+    expect(stop).toContain("Ansicht beenden");
     expect(stop).toContain("shrink-0");
   });
 

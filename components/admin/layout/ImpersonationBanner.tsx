@@ -2,12 +2,16 @@ import StopImpersonationButton from "@/components/admin/layout/StopImpersonation
 
 type Props = {
   effectiveDisplayName: string;
+  actorDisplayName: string;
 };
 
-export default function ImpersonationBanner({ effectiveDisplayName }: Props) {
+export default function ImpersonationBanner({
+  effectiveDisplayName,
+  actorDisplayName,
+}: Props) {
   return (
     <div
-      className="border-b border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] backdrop-blur-sm"
+      className="sce-impersonation-safety-banner border-b border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] backdrop-blur-sm"
       role="status"
       aria-live="polite"
     >
@@ -15,11 +19,13 @@ export default function ImpersonationBanner({ effectiveDisplayName }: Props) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sce-warning)]">
-              Impersonation aktiv
+              Benutzeransicht aktiv
             </p>
             <p className="mt-0.5 text-sm text-[var(--foreground)]">
-              Du siehst SportClubEvo als{" "}
-              <span className="font-semibold">{effectiveDisplayName}</span>.
+              Du bist als{" "}
+              <span className="font-semibold">{effectiveDisplayName}</span> unterwegs
+              und handelst mit deren Berechtigungen. Angemeldet als{" "}
+              <span className="font-semibold">{actorDisplayName}</span>.
             </p>
           </div>
           <StopImpersonationButton />

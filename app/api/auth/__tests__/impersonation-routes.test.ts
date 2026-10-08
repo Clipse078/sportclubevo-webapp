@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
-  requireApiAnyPermission: vi.fn(),
+  requireApiActorTenantPermission: vi.fn(),
   startImpersonationSession: vi.fn(),
   stopImpersonationSession: vi.fn(),
   assertCanImpersonateTenantMember: vi.fn(),
@@ -17,8 +17,8 @@ vi.mock("@/auth", () => ({
   stopImpersonationSession: mocks.stopImpersonationSession,
 }));
 
-vi.mock("@/lib/permissions/require-api-any-permission", () => ({
-  requireApiAnyPermission: mocks.requireApiAnyPermission,
+vi.mock("@/lib/permissions/require-api-actor-tenant-permission", () => ({
+  requireApiActorTenantPermission: mocks.requireApiActorTenantPermission,
 }));
 
 vi.mock("@/lib/admin/users/tenant-impersonation", () => ({
@@ -53,7 +53,7 @@ function request(path: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.requireApiAnyPermission.mockResolvedValue({
+  mocks.requireApiActorTenantPermission.mockResolvedValue({
     ok: true,
     status: 200,
     error: null,
@@ -82,7 +82,7 @@ beforeEach(() => {
 
 describe("POST /api/users/[userId]/impersonate", () => {
   it("preserves the dedicated server-side permission denial", async () => {
-    mocks.requireApiAnyPermission.mockResolvedValue({
+    mocks.requireApiActorTenantPermission.mockResolvedValue({
       ok: false,
       status: 403,
       error: "Forbidden",
@@ -124,7 +124,7 @@ describe("POST /api/users/[userId]/impersonate", () => {
   });
 
   it("rejects nested impersonation", async () => {
-    mocks.requireApiAnyPermission.mockResolvedValue({
+    mocks.requireApiActorTenantPermission.mockResolvedValue({
       ok: true,
       status: 200,
       error: null,

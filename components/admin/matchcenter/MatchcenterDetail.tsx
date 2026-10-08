@@ -13,6 +13,7 @@ type MatchcenterDetailProps = {
   locale?: string;
   timezone?: string;
   canManageMappings?: boolean;
+  canManageOperationalAllocations?: boolean;
   canDelete?: boolean;
   pitchOptions?: FacilityResourceOption[];
   dressingRoomOptions?: FacilityResourceOption[];
@@ -31,6 +32,7 @@ export default function MatchcenterDetail({
   locale = "de-CH",
   timezone = "Europe/Zurich",
   canManageMappings = false,
+  canManageOperationalAllocations = false,
   canDelete = false,
   pitchOptions = [],
   dressingRoomOptions = [],
@@ -58,6 +60,7 @@ export default function MatchcenterDetail({
         locale={locale}
         timezone={timezone}
         canManageMappings={canManageMappings}
+        canManageOperationalAllocations={canManageOperationalAllocations}
         canDelete={canDelete}
         pitchOptions={pitchOptions}
         dressingRoomOptions={dressingRoomOptions}

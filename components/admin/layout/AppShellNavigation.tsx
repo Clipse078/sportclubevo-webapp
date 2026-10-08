@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useId, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+  type MouseEvent,
+} from "react";
 import { useTranslations } from "next-intl";
 import { Menu, MoreHorizontal } from "lucide-react";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
@@ -108,6 +115,7 @@ function AppShellNavigationInner({
   imageUrl,
 }: AppShellNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const selectedSeason = searchParams.get("season");
   const [globalNavDrawerOpen, setGlobalNavDrawerOpen] = useState(false);
@@ -372,11 +380,32 @@ function AppShellNavigationInner({
                   active.moduleLocalChildren,
                   active.activeChildKey,
                 );
+                const childPathname = childHref.split("?")[0] ?? childHref;
+                const navigateToModuleLocalSibling = (event: MouseEvent<HTMLAnchorElement>) => {
+                  if (
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey ||
+                    event.defaultPrevented
+                  ) {
+                    return;
+                  }
+                  if (childPathname === pathname) return;
+                  if (
+                    pathname.startsWith(`${childPathname}/`) ||
+                    (child.matchExact && pathname.startsWith(`${child.href}/`))
+                  ) {
+                    event.preventDefault();
+                    router.push(childHref);
+                  }
+                };
                 return (
                   <Link
                     key={child.key}
                     href={childHref}
                     aria-current={isChildActive ? "page" : undefined}
+                    onClick={navigateToModuleLocalSibling}
                     className={cn(
                       "sce-global-context-nav-item shrink-0 text-[0.75rem]",
                       isChildActive && "sce-global-context-nav-item--active",

@@ -12,6 +12,8 @@ type Props = {
   locale?: string;
   timezone?: string;
   showClubManagementState?: boolean;
+  /** R9 inbox rows: inline secondary metadata instead of bright pills */
+  metadataVariant?: "pills" | "inline";
   className?: string;
 };
 
@@ -20,6 +22,41 @@ function MetadataPill({ children }: { children: React.ReactNode }) {
     <span className="inline-flex h-5 items-center rounded-full border border-slate-200 bg-slate-50 px-2 text-[0.65rem] font-semibold text-slate-600">
       {children}
     </span>
+  );
+}
+
+function RegistrationApplicantMetadataInline({
+  registration,
+  personDateOfBirth,
+  locale,
+  timezone,
+  className,
+}: {
+  registration: RegistrationRawShape;
+  personDateOfBirth?: string | null;
+  locale?: string;
+  timezone?: string;
+  className?: string;
+}) {
+  const { birthYear, postalCode, city, receivedAtLabel } = getRegistrationApplicantMetadata(registration, {
+    personDateOfBirth,
+    locale,
+    timezone,
+  });
+
+  const parts: string[] = [];
+  if (birthYear) parts.push(`Jg. ${birthYear}`);
+  if (postalCode && city) parts.push(`${postalCode} ${city}`);
+  else if (city) parts.push(city);
+  else if (postalCode) parts.push(postalCode);
+  if (receivedAtLabel) parts.push(receivedAtLabel);
+
+  if (parts.length === 0) return null;
+
+  return (
+    <p className={cn("truncate text-[0.72rem] text-[var(--muted)]", className)} title={parts.join(" · ")}>
+      {parts.join(" · ")}
+    </p>
   );
 }
 
@@ -68,6 +105,7 @@ export function RegistrationApplicantIdentity({
   locale = "de-CH",
   timezone = "Europe/Zurich",
   showClubManagementState = true,
+  metadataVariant = "pills",
   className,
 }: Props) {
   const initials = getInitials(firstName, lastName);
@@ -82,13 +120,23 @@ export function RegistrationApplicantIdentity({
         <p className="font-semibold text-[var(--foreground)]">
           {firstName} {lastName}
         </p>
-        <RegistrationApplicantMetadataPills
-          registration={registration}
-          personDateOfBirth={personDateOfBirth}
-          locale={locale}
-          timezone={timezone}
-          className="mt-0.5"
-        />
+        {metadataVariant === "inline" ? (
+          <RegistrationApplicantMetadataInline
+            registration={registration}
+            personDateOfBirth={personDateOfBirth}
+            locale={locale}
+            timezone={timezone}
+            className="mt-0.5"
+          />
+        ) : (
+          <RegistrationApplicantMetadataPills
+            registration={registration}
+            personDateOfBirth={personDateOfBirth}
+            locale={locale}
+            timezone={timezone}
+            className="mt-0.5"
+          />
+        )}
         {showClubManagementState ? (
           linkedPerson ? (
             <p className="mt-0.5 text-[0.68rem] font-medium text-emerald-700">In Vereinsverwaltung</p>

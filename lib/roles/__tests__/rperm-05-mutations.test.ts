@@ -20,6 +20,7 @@
  *     PS-01  TENANT/grantableByAdmin permissions persist correctly
  *     PS-02  PLATFORM-scoped permission key is rejected
  *     PS-03  Unknown permission key is rejected
+ *     PS-05  Non-delegatable TENANT permission (users.impersonate_tenant) is rejected
  *     PS-04  Essential permission cannot be removed from a protected role
  *   Tenant isolation
  *     TI-01  Mutating a role id that belongs to a different tenant fails (not found)
@@ -44,6 +45,7 @@ import {
 } from "@/lib/roles/mutations";
 import {
   ArchivedRoleError,
+  DelegationForbiddenError,
   DuplicateRoleNameError,
   InactiveMembershipError,
   InvalidPermissionScopeError,
@@ -176,6 +178,41 @@ describe("RPERM-05 — Role mutations (live DB)", () => {
         actorUserId: "actor-1",
       }),
     ).rejects.toBeInstanceOf(RoleValidationError);
+  });
+
+  it("PS-05: rejects users.impersonate_tenant on custom roles (non-delegatable)", async () => {
+    await ensurePermission("users.impersonate_tenant", {
+      module: "USERS",
+      scope: "TENANT",
+      grantableByAdmin: false,
+    });
+
+    await expect(
+      createTenantRole({
+        tenantId: tenantA.id,
+        name: `Impersonate Escalation ${Date.now()}`,
+        permissionKeys: ["users.impersonate_tenant"],
+        isActive: true,
+        actorUserId: "actor-1",
+      }),
+    ).rejects.toBeInstanceOf(DelegationForbiddenError);
+
+    const role = await createTenantRole({
+      tenantId: tenantA.id,
+      name: `R8 Base ${Date.now()}`,
+      permissionKeys: ["teams.view"],
+      isActive: true,
+      actorUserId: "actor-1",
+    });
+
+    await expect(
+      setTenantRolePermissions({
+        tenantId: tenantA.id,
+        roleId: role.id,
+        permissionKeys: ["users.impersonate_tenant"],
+        actorUserId: "actor-1",
+      }),
+    ).rejects.toBeInstanceOf(InvalidPermissionScopeError);
   });
 
   it("RL-04: renames and edits description of a custom role", async () => {

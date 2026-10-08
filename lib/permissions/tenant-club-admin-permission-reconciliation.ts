@@ -9,6 +9,7 @@ import type { PrismaClient } from "@prisma/client";
 import {
   CANONICAL_TENANT_CLUB_ADMIN_ROLE_WHERE,
   isTenantClubAdminDelegatablePermission,
+  mergeTenantClubAdminAssignedPermissionKeys,
 } from "@/lib/permissions/tenant-club-admin-permission-contract";
 
 export type RolePermissionSyncOutcome =
@@ -19,6 +20,7 @@ export type RolePermissionSyncOutcome =
 
 export type TenantClubAdminPermissionReconciliationResult = {
   expectedDelegatablePermissionKeys: string[];
+  expectedAssignedPermissionKeys: string[];
   tenantClubAdminRoles: RolePermissionSyncOutcome[];
 };
 
@@ -41,6 +43,9 @@ export async function reconcileTenantClubAdminPermissions(
 ): Promise<TenantClubAdminPermissionReconciliationResult> {
   const expectedDelegatablePermissionKeys =
     await listExpectedTenantClubAdminDelegatablePermissionKeys(prisma);
+  const expectedAssignedPermissionKeys = mergeTenantClubAdminAssignedPermissionKeys(
+    expectedDelegatablePermissionKeys,
+  );
 
   const materializedClubAdminRoles = await prisma.role.findMany({
     where: CANONICAL_TENANT_CLUB_ADMIN_ROLE_WHERE,
@@ -51,14 +56,18 @@ export async function reconcileTenantClubAdminPermissions(
   const tenantClubAdminRoles: RolePermissionSyncOutcome[] = [];
 
   for (const role of materializedClubAdminRoles) {
-    for (const permissionKey of expectedDelegatablePermissionKeys) {
+    for (const permissionKey of expectedAssignedPermissionKeys) {
       tenantClubAdminRoles.push(
         await assignPermissionToRole(prisma, role.key, permissionKey, dryRun),
       );
     }
   }
 
-  return { expectedDelegatablePermissionKeys, tenantClubAdminRoles };
+  return {
+    expectedDelegatablePermissionKeys,
+    expectedAssignedPermissionKeys,
+    tenantClubAdminRoles,
+  };
 }
 
 async function assignPermissionToRole(

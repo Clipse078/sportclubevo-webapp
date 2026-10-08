@@ -512,6 +512,29 @@ button {
   border-color: var(--border-strong);
 }
 
+/** Compact operational KPI — registration / inbox summaries (R9) */
+.sce-kpi-card-compact {
+  border: 1px solid var(--sce-surface-border);
+  border-radius: var(--radius-lg);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  padding: 0.625rem 0.875rem;
+  transition:
+    box-shadow var(--transition-base),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.sce-kpi-card-compact:hover {
+  border-color: var(--border-strong);
+}
+
+.sce-kpi-card-compact[data-active="true"] {
+  border-color: color-mix(in srgb, var(--tenant-primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--tenant-primary) 8%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tenant-primary) 20%, transparent);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    FORM ELEMENTS
 ───────────────────────────────────────────────────────────────────────── */

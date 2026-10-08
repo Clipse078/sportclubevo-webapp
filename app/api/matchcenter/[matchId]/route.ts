@@ -64,6 +64,7 @@ import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
+import { classifyMatchOperationalPatch } from "@/lib/planning/planning-operational-allocation-authorization";
 import { logAction } from "@/lib/audit/log-action";
 import {
   MatchNotFoundError,
@@ -151,23 +152,40 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     );
   }
 
-  // ORG-ACCESS-03: enforce OrgUnit scope and SFV protection.
   const planningPolicy = createPlanningAuthorizationPolicy(prisma);
-  const canEdit = await planningPolicy.canEditPlanningRecord(
-    { userId, tenantId },
-    "match",
-    {
-      teamId: event.teamId,
-      planningStage: event.reviewStage,
-      source: event.source,
-    },
-  );
-  if (!canEdit) {
-    return NextResponse.json(
-      { error: "Keine Berechtigung zum Bearbeiten dieses Spiels." },
-      { status: 403 },
+  const planningRecord = {
+    teamId: event.teamId,
+    planningStage: event.reviewStage,
+    source: event.source,
+  };
+  const planningCtx = { userId, tenantId };
+
+  async function assertMatchPatchAuthorized(patchBody: PatchBody): Promise<Response | null> {
+    const classification = classifyMatchOperationalPatch(
+      patchBody as Record<string, unknown>,
     );
+    if (classification === "empty") {
+      return NextResponse.json({ error: "Keine gültigen Felder zum Aktualisieren." }, { status: 400 });
+    }
+    const allowed =
+      classification === "operational_allocation_only"
+        ? await planningPolicy.canManageOperationalAllocations(
+            planningCtx,
+            "match",
+            planningRecord,
+          )
+        : await planningPolicy.canEditPlanningRecord(planningCtx, "match", planningRecord);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Keine Berechtigung zum Bearbeiten dieses Spiels." },
+        { status: 403 },
+      );
+    }
+    return null;
   }
+
+  const patchAuthResponse = await assertMatchPatchAuthorized(body);
+  if (patchAuthResponse) return patchAuthResponse;
 
   const PROVIDER_PROTECTED_SOURCES = new Set(["SFV", "CLUBCORNER_FVNWS", "CSV_EXCEL_IMPORT"]);
 

@@ -5,7 +5,10 @@ import { useCallback, useEffect, useId, useMemo, useState, type Dispatch, type S
 import { ChevronLeft, Search } from "lucide-react";
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import type { AppNavigationModel, ActiveAppNavigation } from "@/lib/nav/app-navigation-model";
-import { isNavigationChildActive } from "@/lib/nav/app-navigation-model";
+import {
+  isModuleLocalChildPrimaryActive,
+  isNavigationChildActive,
+} from "@/lib/nav/app-navigation-model";
 import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import {
   buildExplorerSearchIndex,
@@ -84,7 +87,14 @@ function ExplorerModuleCard({
 }: ExplorerModuleCardProps) {
   const moduleActive =
     active.activeDestinationKey === module.key ||
-    module.children.some((child) => isNavigationChildActive(pathname, child));
+    module.children.some((child) =>
+      isModuleLocalChildPrimaryActive(
+        pathname,
+        child,
+        module.children,
+        active.activeChildKey,
+      ),
+    );
   const isExpanded = expandedModuleKey === module.key;
   const hasChildren = module.children.length > 0;
 
@@ -137,7 +147,12 @@ function ExplorerModuleCard({
             className="space-y-0.5 border-t border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-1 py-0.5"
           >
             {module.children.map((child) => {
-              const childActive = isNavigationChildActive(pathname, child);
+              const childActive = isModuleLocalChildPrimaryActive(
+                pathname,
+                child,
+                module.children,
+                active.activeChildKey,
+              );
               return (
                 <li key={child.key}>
                   <Link

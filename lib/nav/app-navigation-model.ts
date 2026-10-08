@@ -593,6 +593,27 @@ function pickBestNavigationHrefMatch(
   return best?.token ?? null;
 }
 
+function resolveNestedModuleLocalChildKey(
+  pathname: string,
+  children: readonly NavItemChild[],
+): string | null {
+  for (const child of children) {
+    if (!child.matchExact) continue;
+    if (pathname === child.href) continue;
+    if (!pathname.startsWith(`${child.href}/`)) continue;
+
+    const ownedBySibling = children.some(
+      (other) =>
+        other.key !== child.key &&
+        (pathname === other.href || pathname.startsWith(`${other.href}/`)),
+    );
+    if (!ownedBySibling) {
+      return child.key;
+    }
+  }
+  return null;
+}
+
 export function resolvePrimaryActiveModuleLocalChildKey(
   pathname: string,
   children: readonly NavItemChild[],
@@ -609,6 +630,8 @@ export function resolvePrimaryActiveModuleLocalChildKey(
     })),
   );
   if (bestKey) return bestKey;
+  const nestedKey = resolveNestedModuleLocalChildKey(pathname, children);
+  if (nestedKey) return nestedKey;
   return preferredChildKey;
 }
 

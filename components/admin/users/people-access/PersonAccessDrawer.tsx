@@ -16,6 +16,8 @@ import {
   formatPeopleAccessDate,
   formatPeopleAccessDateTime,
 } from "@/lib/admin/people-access/date-format";
+import ImpersonateButton from "@/components/admin/users/ImpersonateButton";
+import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
 type Tab = "overview" | "functions" | "access" | "activity";
 
@@ -24,6 +26,8 @@ type Props = {
   open: boolean;
   onClose: () => void;
   currentUserId: string;
+  actorUserId?: string;
+  canImpersonateTenant?: boolean;
   canManage: boolean;
   canInvite: boolean;
   privilegedRoleIds: string[];
@@ -43,6 +47,8 @@ export default function PersonAccessDrawer({
   open,
   onClose,
   currentUserId,
+  actorUserId = currentUserId,
+  canImpersonateTenant = false,
   canManage,
   canInvite,
   permissionModuleGroups = [],
@@ -147,6 +153,15 @@ export default function PersonAccessDrawer({
 
   const status = getStatus(user);
   const isSelf = user.userId === currentUserId;
+  const canImpersonateTarget = canShowImpersonateTenantUserAction({
+    actorCanImpersonate: canImpersonateTenant,
+    actorUserId,
+    targetUserId: user.userId,
+    pendingInvitation: user.pendingInvitation,
+    membershipIsActive: user.membershipIsActive,
+    userIsActive: user.userIsActive,
+    isPlatformSystemIdentity: user.isPlatformSystemIdentity,
+  });
   const roleChips = groupRoleChipsForDisplay(user.roles);
   const scopeLabels =
     user.scopedRoles?.map((s) => `${s.name} · ${s.orgUnitName}`) ?? [];
@@ -165,18 +180,30 @@ export default function PersonAccessDrawer({
       title={user.name}
       description={user.email}
       footer={
-        canManage && !user.isPlatformSystemIdentity ? (
+        canImpersonateTarget || (canManage && !user.isPlatformSystemIdentity) ? (
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="fca-button-primary text-sm"
-              onClick={() => onEditAccess(user.userId)}
-            >
-              Zugriff bearbeiten
-            </button>
-            <Link href={`/dashboard/admin/users/${user.userId}`} className="fca-button-secondary text-sm">
-              Detailseite
-            </Link>
+            {canImpersonateTarget ? (
+              <ImpersonateButton userId={user.userId} variant="person-detail" />
+            ) : null}
+            {canManage && !user.isPlatformSystemIdentity ? (
+              <>
+                <button
+                  type="button"
+                  className={
+                    canImpersonateTarget ? "fca-button-secondary text-sm" : "fca-button-primary text-sm"
+                  }
+                  onClick={() => onEditAccess(user.userId)}
+                >
+                  Zugriff bearbeiten
+                </button>
+                <Link
+                  href={`/dashboard/admin/users/${user.userId}`}
+                  className="fca-button-secondary text-sm"
+                >
+                  Detailseite
+                </Link>
+              </>
+            ) : null}
           </div>
         ) : user.isPlatformSystemIdentity ? (
           <p className="text-xs text-[var(--muted)]">Systemzugang — keine tenant-seitigen Änderungen.</p>

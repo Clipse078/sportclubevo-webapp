@@ -19,5 +19,6 @@ See `lib/roles/pilot-fc-allschwil-role-definitions.ts`.
 
 ## Limitations
 
-- Match detail allocation UI still requires `events.manage`; Sandra uses Wochenplaner.
+- Spielbetrieb Koordinator: `planning.allocations.manage` + `trainings.view` + `events.view` (see `lib/roles/pilot-fc-allschwil-role-definitions.ts`). FCA role sync: `scripts/sync-fca-spielbetrieb-koordinator-role.ts`.
+- Präsident (Pilot): Sandra operational baseline + `workspace.view`, `registrations.view`/`registrations.edit`, preserved president supplements (`org.view`, Zielgruppen, `news.manage`). FCA role sync: `scripts/sync-fca-praesident-pilot-role.ts`.
 - Authenticated STAGE UAT requires role assignment after catalog sync.

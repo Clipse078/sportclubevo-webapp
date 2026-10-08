@@ -23,15 +23,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireAnyPermission: vi.fn(),
+  hasPermission: vi.fn(),
   getActiveTenant: vi.fn(),
   listInfoboards: vi.fn(),
   countInfoboards: vi.fn(),
   notFound: vi.fn(),
+  redirect: vi.fn((path: string) => {
+    throw new Error(`REDIRECT:${path}`);
+  }),
   hasTenantDeletionAuthority: vi.fn().mockResolvedValue(false),
 }));
 
 vi.mock("@/lib/permissions/require-any-permission", () => ({
   requireAnyPermission: mocks.requireAnyPermission,
+}));
+
+vi.mock("@/lib/permissions/has-permission", () => ({
+  hasPermission: mocks.hasPermission,
 }));
 
 vi.mock("@/lib/tenants/active-tenant", () => ({
@@ -53,6 +61,7 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 
 vi.mock("next/navigation", () => ({
   notFound: mocks.notFound,
+  redirect: mocks.redirect,
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
@@ -102,6 +111,7 @@ beforeEach(async () => {
   vi.clearAllMocks();
 
   mocks.requireAnyPermission.mockResolvedValue({ user: { id: "user-test" } });
+  mocks.hasPermission.mockReturnValue(true);
   mocks.getActiveTenant.mockResolvedValue(ACTIVE_TENANT);
   mocks.listInfoboards.mockResolvedValue([]);
   mocks.countInfoboards.mockResolvedValue({ total: 0, active: 0, draft: 0, disabled: 0 });
@@ -174,5 +184,15 @@ describe("InfoboardAdminPage V2 — auth", () => {
   it("calls getActiveTenant", async () => {
     await renderPage();
     expect(mocks.getActiveTenant).toHaveBeenCalledOnce();
+  });
+
+  it("redirects infoboard.view-only callers to preview workspace", async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    mocks.requireAnyPermission.mockResolvedValue({ user: { id: "viewer" } });
+    mocks.hasPermission.mockReturnValue(false);
+
+    const { default: InfoboardAdminPage } = await import("../page");
+    await expect(InfoboardAdminPage()).rejects.toThrow("REDIRECT:/dashboard/infoboard/preview");
   });
 });
