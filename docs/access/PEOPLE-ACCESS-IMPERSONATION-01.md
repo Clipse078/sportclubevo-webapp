@@ -447,13 +447,14 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 - Migration: `20261008140000_sce_users_impersonate_tenant_non_delegatable` (expected; deploy with PR)
 - Known baseline (not PR regressions): full-repo vitest requires local `TEST_DATABASE_URL` for live DB suites; `lib/nav/__tests__/nav-config.test.ts` administration parent-gate expectations (3 tests) fail locally on branch tip; `WeekPlannerPage.canonical-edit-permissions.test.tsx` domain-manage cases (3 tests) fail locally while R4 allocation case passes — treat as **P2 test debt** pending CI test job (Vercel-only checks today)
 
-**Release / merge recommendation:**
+**Release / merge record (2026-10-08):**
 
 - **PEOPLE-ACCESS-IMPERSONATION-01 = CLOSED**
-- **PR #808** targets **STAGE**, mergeable, closure doc updated on branch; **do not merge** until product owner marks draft ready / runs STAGE migration deploy plan
-- **PROD:** untouched (no PROD paths/config in diff; read-only STAGE fingerprint guard only)
-
-**PR #808:** OPEN / DRAFT — technically merge-ready after closure commit; not merged by this package.
+- **PR #808** — **MERGED** into **STAGE** (`merge` commit `90075c0f891f2bb0e0229c0968b80e9b859ca1cf`; PR head `f8560d70287433c209ae8ccd0aab41ee0211961d`)
+- **STAGE deployment:** Vercel **READY** (`BPCLjv1PKuccB9Kd3pu79rZ4iT2W` → `https://fcallschwil.sportclubevo.com`)
+- **Migration `20261008140000_sce_users_impersonate_tenant_non_delegatable`:** **ALREADY_APPLIED** on STAGE before merge; post-deploy `prisma migrate status` = up to date; `grantableByAdmin=false` verified
+- **Post-merge regression:** focused package tests **194/194 PASS**; `npm run build` **PASS**
+- **PROD:** untouched
 
 ---
 
@@ -464,4 +465,4 @@ Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` in
 | SCE-PLANNER-UX-08-08 | CLOSED on STAGE |
 | FACILITY-INTEGRITY-01 | CLOSED |
 | PEOPLE-ACCESS-IMPERSONATION-01 | **CLOSED** |
-| PR #808 | **DRAFT / merge-ready pending owner** |
+| PR #808 | **MERGED → STAGE** (`90075c0f`) |
