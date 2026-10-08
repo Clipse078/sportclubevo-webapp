@@ -23,6 +23,10 @@ vi.mock("@/lib/training/session-allocation-service", () => ({
   deleteTrainingSessionAllocation: mocks.deleteTrainingSessionAllocation,
 }));
 
+vi.mock("@/lib/planning-hub/planner-week-revalidation", () => ({
+  revalidatePlannerWeekPaths: vi.fn(),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 
 vi.mock("@/lib/collaboration/training/training-activity-snapshot", () => ({
