@@ -122,10 +122,10 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01 (UAT01)", () => {
     expect(route).toContain("PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS");
   });
 
-  it("READ_ONLY persona retains planner view permission only", () => {
+  it("Präsident pilot retains allocation manage for Match operational workflow (R4)", () => {
     const keys = PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys;
     expect(keys).toContain(PERMISSIONS.PLANNING_ALLOCATIONS_VIEW);
-    expect(keys).not.toContain(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
+    expect(keys).toContain(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
     expect(PLANNING_ALLOCATIONS_VIEW_PERMISSIONS).toContain(
       PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
     );

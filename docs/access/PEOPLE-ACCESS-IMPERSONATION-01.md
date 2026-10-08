@@ -89,6 +89,7 @@ German copy: **Benutzeransicht aktiv**; shows target + real actor; exit **Ansich
 | **UAT01-D** | Single Training/Match operational workflow insufficient in Planner | **PERMISSION_CONTRACT** | Spielbetrieb bundle: center **view** + `planning.allocations.manage`; Training/Match operational surfaces honor allocation manage |
 | **UAT01-E** | Aggregate modal **Öffnen** visible but non-functional | **UX** | Hide **Öffnen** when `canOpenPlanningHubItem` is false; no dead actions |
 | **UAT01-F** | Spielbetrieb Koordinator role too narrow (no Training/Match/Tournament centers) | **ROLE_DEFINITION** | Pilot template + `scripts/sync-fca-spielbetrieb-koordinator-role.ts` (STAGE, idempotent) |
+| **P1_PRESIDENT_PILOT_ACCESS_01** | Präsident (Pilot) Patrick under-permissioned vs Sandra operational baseline + Dokumente/Anmeldungen | **ROLE_DEFINITION** | `PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE` + `scripts/sync-fca-praesident-pilot-role.ts` (STAGE, idempotent) — **HUMAN_UAT_PENDING** |
 
 **Canonical Spielbetrieb allocator:** tenant `planning.allocations.manage` for pitch/Garderobe across Wochenplaner, Training Center (session allocations API), Match Center (operational PATCH fields), Tournament Center (resource allocation APIs). Domain `trainings.manage` / `events.manage` remain full coordinator paths — not granted to Sandra.
 
@@ -256,6 +257,18 @@ Database: migration `20260930180000_sce_users_impersonate_tenant` — **unchange
 ## PR #807 handling
 
 Diagnosis content from `cursor/people-access-impersonation-01-reconcile-ce84` incorporated into this canonical doc. Draft PR #807 may be closed/superseded by the 01R2 implementation PR.
+
+---
+
+### P1_PRESIDENT_PILOT_ACCESS_01 — Präsident (Pilot) under-permissioned (pre-merge Human UAT)
+
+**Observed:** Impersonating Patrick Scotton (`Präsident (Pilot)`) exposed essentially personal shell/calendar only — missing Spielbetrieb operational surfaces, Dokumenten-Workspace, and workable Neue Anmeldungen processing.
+
+**Required model:** `PATRICK_SCOTTON_PRAESIDENT_PILOT_ROLE` = `SANDRA_FISCHER_SPIELBETRIEB_ROLE` permission keys ∪ president supplements (`org.view`, `registrations.view`, `registrations.edit`, existing Zielgruppen + `news.manage` on STAGE) — **without** Club Admin, `users.impersonate_tenant`, `roles.manage`, or People & Access administration.
+
+**STAGE apply:** `scripts/sync-fca-praesident-pilot-role.ts` (fingerprint `acd3b37682911890`, `SCE_DATA_ENVIRONMENT=STAGE`).
+
+**Status:** **HUMAN_UAT_PENDING** — do not close PEOPLE-ACCESS-IMPERSONATION-01 until Patrick retest passes on PR #808 preview.
 
 ---
 

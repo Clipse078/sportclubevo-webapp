@@ -28,10 +28,11 @@ describe("UAT-PERM-01R3 security negatives (automated personas)", () => {
     }
   });
 
-  it("read-only persona keeps allocation view without manage", () => {
+  it("Präsident pilot shares Sandra allocation manage without domain manage", () => {
     expect(readOnly).toContain(PERMISSIONS.PLANNING_ALLOCATIONS_VIEW);
-    expect(readOnly).not.toContain(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
+    expect(readOnly).toContain(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
     expect(readOnly).not.toContain(PERMISSIONS.TRAININGS_MANAGE);
     expect(readOnly).not.toContain(PERMISSIONS.EVENTS_MANAGE);
+    expect(readOnly).not.toContain(PERMISSIONS.USERS_IMPERSONATE_TENANT);
   });
 });

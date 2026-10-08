@@ -34,11 +34,11 @@ describe("SCE-PILOT-03 scoped access", () => {
     );
   });
 
-  it("defines Patrick as read-only planning", () => {
+  it("defines Präsident pilot with Sandra operational baseline", () => {
     expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).toContain(
       PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
     );
-    expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).not.toContain(
+    expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).toContain(
       PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
     );
     expect(PATRICK_SCOTTON_PILOT_VIEWER_ROLE.permissionKeys).not.toContain(
