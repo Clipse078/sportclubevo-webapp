@@ -70,6 +70,8 @@ const TYPE_LABELS: Record<string, string> = Object.fromEntries(
 
 type ToggleFilterKey = "ASSIGNED_TO_ME" | "HAS_DUPLICATE" | "NEEDS_PERSON" | "ALREADY_LINKED";
 
+type InboxKpiFilterKey = "new" | "needsAssignment" | "needsPerson" | "duplicates";
+
 function isActiveDuplicate(r: RegistrationListItem): boolean {
   const p = r.payloadJson;
   const flagged =
@@ -93,35 +95,54 @@ function belongsInWorkspace(registration: RegistrationListItem, mode: Registrati
     : isActiveInboxRegistrationStatus(registration.status);
 }
 
-function MetricCard({
+function InboxKpiFilterButton({
   icon: Icon,
   label,
+  helper,
   value,
   tone,
+  active,
+  onClick,
 }: {
   icon: typeof AlertTriangle;
   label: string;
+  helper?: string;
   value: number;
   tone: "blue" | "amber" | "violet" | "red" | "orange" | "emerald";
+  active: boolean;
+  onClick: () => void;
 }) {
   const toneClass: Record<typeof tone, string> = {
     blue: "text-[var(--blue)]",
-    amber: "text-amber-600",
-    violet: "text-violet-600",
-    red: "text-red-600",
-    orange: "text-orange-600",
-    emerald: "text-emerald-600",
+    amber: "text-amber-500",
+    violet: "text-violet-400",
+    red: "text-red-400",
+    orange: "text-orange-500",
+    emerald: "text-emerald-500",
   };
   return (
-    <div className="sce-kpi-card">
-      <p className="sce-data-label flex items-center gap-1.5">
-        <Icon className="h-3 w-3" aria-hidden />
-        {label}
+    <button
+      type="button"
+      data-active={active ? "true" : "false"}
+      onClick={onClick}
+      className={cn(
+        "sce-kpi-card-compact w-full text-left ring-offset-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)]/35",
+        active && "ring-2 ring-[var(--tenant-primary)]/25",
+      )}
+      aria-pressed={active}
+    >
+      <p className="sce-data-label flex items-center gap-1.5 text-[0.65rem]">
+        <Icon className="h-3 w-3 flex-shrink-0 opacity-80" aria-hidden />
+        <span className="truncate">{label}</span>
       </p>
-      <p className={cn("mt-1.5 text-2xl font-bold", toneClass[tone])} style={{ fontFamily: "var(--font-display)" }}>
+      <p
+        className={cn("mt-0.5 text-lg font-bold leading-tight tabular-nums", toneClass[tone])}
+        style={{ fontFamily: "var(--font-display)" }}
+      >
         {value}
       </p>
-    </div>
+      {helper ? <p className="mt-0.5 line-clamp-1 text-[0.62rem] text-[var(--muted)]">{helper}</p> : null}
+    </button>
   );
 }
 
@@ -277,6 +298,7 @@ export default function RegistrationInbox({
   const [ageGroupFilter, setAgeGroupFilter] = useState("");
   const [recommendedTeamFilter, setRecommendedTeamFilter] = useState("");
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  const [kpiFilter, setKpiFilter] = useState<InboxKpiFilterKey | null>(null);
   const moreFiltersRef = useRef<HTMLDivElement>(null);
 
   const statusGroups = workspaceMode === "archive" ? ARCHIVE_STATUS_GROUPS : INBOX_STATUS_GROUPS;
@@ -339,6 +361,11 @@ export default function RegistrationInbox({
       if (ageGroupFilter && classified.get(r.id)?.ageGroup !== ageGroupFilter) return false;
       if (recommendedTeamFilter && classified.get(r.id)?.team !== recommendedTeamFilter) return false;
 
+      if (kpiFilter === "new" && r.status !== "NEW") return false;
+      if (kpiFilter === "needsAssignment" && !needsAssignment(r)) return false;
+      if (kpiFilter === "needsPerson" && !needsPerson(r)) return false;
+      if (kpiFilter === "duplicates" && !isActiveDuplicate(r)) return false;
+
       if (q) {
         const metadata = getRegistrationApplicantMetadata(r);
         const searchable = [
@@ -369,6 +396,7 @@ export default function RegistrationInbox({
     classified,
     currentUserId,
     query,
+    kpiFilter,
   ]);
 
   const handleUpdate = useCallback(
@@ -415,7 +443,12 @@ export default function RegistrationInbox({
     setToggleFilters(new Set());
     setAgeGroupFilter("");
     setRecommendedTeamFilter("");
+    setKpiFilter(null);
   };
+
+  const toggleKpiFilter = useCallback((key: InboxKpiFilterKey) => {
+    setKpiFilter((prev) => (prev === key ? null : key));
+  }, []);
 
   const hasActiveFilters = Boolean(
     query.trim() ||
@@ -424,7 +457,8 @@ export default function RegistrationInbox({
       coordinatorFilter ||
       toggleFilters.size > 0 ||
       ageGroupFilter ||
-      recommendedTeamFilter,
+      recommendedTeamFilter ||
+      kpiFilter,
   );
 
   const statusOptions = statusGroups.map((group) => ({ value: group.key, label: group.label }));
@@ -479,6 +513,18 @@ export default function RegistrationInbox({
       ? { key: "team", label: `Empf. Team: ${recommendedTeamFilter}`, onRemove: () => setRecommendedTeamFilter("") }
       : null,
     query.trim() ? { key: "search", label: `Suche: ${query.trim()}`, onRemove: () => setQuery("") } : null,
+    kpiFilter === "new"
+      ? { key: "kpi-new", label: "KPI: Neu", onRemove: () => setKpiFilter(null) }
+      : null,
+    kpiFilter === "needsAssignment"
+      ? { key: "kpi-assign", label: "KPI: Braucht Zuweisung", onRemove: () => setKpiFilter(null) }
+      : null,
+    kpiFilter === "needsPerson"
+      ? { key: "kpi-person", label: "KPI: Braucht Vereinsverwaltung", onRemove: () => setKpiFilter(null) }
+      : null,
+    kpiFilter === "duplicates"
+      ? { key: "kpi-dup", label: "KPI: Duplikate", onRemove: () => setKpiFilter(null) }
+      : null,
   ].filter(Boolean) as { key: string; label: string; onRemove: () => void }[];
 
   const openCount = workspaceMode === "inbox" ? registrations.filter((r) => r.status === "NEW").length : 0;
@@ -486,47 +532,105 @@ export default function RegistrationInbox({
 
   return (
     <div className="flex flex-col gap-0">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <header className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div className="min-w-0">
           <h1
-            className="text-xl font-bold text-[var(--foreground)] tracking-tight"
+            className="text-lg font-bold tracking-tight text-[var(--foreground)] sm:text-xl"
             style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.01em" }}
           >
             {isArchive ? "Archiv" : "Registrierungen"}
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--muted)]">
+          <p className="mt-0.5 text-xs text-[var(--muted)] sm:text-sm">
             {isArchive ? (
               `${registrations.length} abgeschlossene Anmeldung${registrations.length !== 1 ? "en" : ""}`
             ) : openCount > 0 ? (
               <>
-                <span className="font-semibold text-[var(--blue)]">{openCount}</span> offene Anmeldung
-                {openCount !== 1 ? "en" : ""}
+                <span className="font-semibold text-[var(--blue)]">{openCount}</span> neu ·{" "}
+                {filtered.length} in Ansicht
               </>
             ) : (
-              `${registrations.length} aktive Anmeldung${registrations.length !== 1 ? "en" : ""}`
+              `${registrations.length} aktive · ${filtered.length} in Ansicht`
             )}
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className={cn("mb-5 grid grid-cols-2 gap-3", isArchive ? "sm:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-4")}>
+      <div
+        className={cn(
+          "mb-3 grid grid-cols-2 gap-2 sm:gap-2.5",
+          isArchive ? "sm:grid-cols-3" : "lg:grid-cols-4",
+        )}
+        role="group"
+        aria-label="Operative Kennzahlen"
+      >
         {isArchive ? (
           <>
-            <MetricCard icon={CheckCircle2} label="Angenommen" value={metrics.accepted ?? 0} tone="emerald" />
-            <MetricCard icon={AlertTriangle} label="Abgelehnt" value={metrics.rejected ?? 0} tone="red" />
-            <MetricCard icon={Archive} label="Archiviert" value={metrics.archived ?? 0} tone="blue" />
+            {(
+              [
+                { icon: CheckCircle2, label: "Angenommen", value: metrics.accepted ?? 0, tone: "emerald" as const },
+                { icon: AlertTriangle, label: "Abgelehnt", value: metrics.rejected ?? 0, tone: "red" as const },
+                { icon: Archive, label: "Archiviert", value: metrics.archived ?? 0, tone: "blue" as const },
+              ] as const
+            ).map((kpi) => (
+              <div key={kpi.label} className="sce-kpi-card-compact" aria-hidden={false}>
+                <p className="sce-data-label flex items-center gap-1.5 text-[0.65rem]">
+                  <kpi.icon className="h-3 w-3 opacity-80" aria-hidden />
+                  {kpi.label}
+                </p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-lg font-bold tabular-nums",
+                    kpi.tone === "emerald" && "text-emerald-500",
+                    kpi.tone === "red" && "text-red-400",
+                    kpi.tone === "blue" && "text-[var(--blue)]",
+                  )}
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {kpi.value}
+                </p>
+              </div>
+            ))}
           </>
         ) : (
           <>
-            <MetricCard icon={Inbox} label="Neu" value={metrics.new ?? 0} tone="blue" />
-            <MetricCard icon={UserCheck2} label="Braucht Zuweisung" value={metrics.needsAssignment ?? 0} tone="amber" />
-            <MetricCard icon={UserRoundSearch} label="Braucht Vereinsverwaltung" value={metrics.needsPerson ?? 0} tone="violet" />
-            <MetricCard icon={AlertTriangle} label="Duplikate" value={metrics.duplicates ?? 0} tone="red" />
+            <InboxKpiFilterButton
+              icon={Inbox}
+              label="Neu"
+              helper="Noch unbearbeitet"
+              value={metrics.new ?? 0}
+              tone="blue"
+              active={kpiFilter === "new"}
+              onClick={() => toggleKpiFilter("new")}
+            />
+            <InboxKpiFilterButton
+              icon={UserCheck2}
+              label="Braucht Zuweisung"
+              value={metrics.needsAssignment ?? 0}
+              tone="amber"
+              active={kpiFilter === "needsAssignment"}
+              onClick={() => toggleKpiFilter("needsAssignment")}
+            />
+            <InboxKpiFilterButton
+              icon={UserRoundSearch}
+              label="Braucht Vereinsverwaltung"
+              value={metrics.needsPerson ?? 0}
+              tone="violet"
+              active={kpiFilter === "needsPerson"}
+              onClick={() => toggleKpiFilter("needsPerson")}
+            />
+            <InboxKpiFilterButton
+              icon={AlertTriangle}
+              label="Duplikate"
+              value={metrics.duplicates ?? 0}
+              tone="red"
+              active={kpiFilter === "duplicates"}
+              onClick={() => toggleKpiFilter("duplicates")}
+            />
           </>
         )}
       </div>
 
-      <div className="mb-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)] p-3">
+      <div className="mb-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)] p-2.5 sm:p-3">
         <div className="flex flex-wrap items-center gap-2">
           <RegistrationWorkspaceSearchInput
             value={query}
@@ -689,26 +793,26 @@ export default function RegistrationInbox({
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-hidden">
+            <table className="w-full table-fixed text-sm">
               <thead className="border-b border-[var(--border)] bg-[var(--surface-2)]">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  <th className="w-[min(28%,14rem)] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted)] sm:px-4">
                     Bewerber/in
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  <th className="hidden w-[10%] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted)] lg:table-cell lg:px-4">
                     Typ
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  <th className="hidden w-[14%] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted)] md:table-cell lg:px-4">
                     Ziel / Empfehlung
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  <th className="hidden w-[12%] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted)] xl:table-cell lg:px-4">
                     Verantwortlich
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  <th className="w-[min(18%,7rem)] px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted)] sm:px-4">
                     Status
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  <th className="px-3 py-2 text-left text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted)] sm:px-4">
                     {isArchive ? "Abschluss" : "Nächster Schritt"}
                   </th>
                 </tr>
@@ -727,12 +831,12 @@ export default function RegistrationInbox({
                       key={registration.id}
                       onClick={() => setSelectedRegistration(registration)}
                       className={cn(
-                        "cursor-pointer transition-colors hover:bg-[var(--surface-2)]",
+                        "cursor-pointer transition-colors hover:bg-[var(--surface-2)]/80",
                         isSelected &&
-                          "border-l-[3px] border-l-[var(--tenant-primary)] bg-[var(--tenant-primary)]/5 hover:bg-[var(--tenant-primary)]/8",
+                          "border-l-[3px] border-l-[var(--tenant-primary)] bg-[var(--tenant-primary)]/8 hover:bg-[var(--tenant-primary)]/10",
                       )}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                         <RegistrationApplicantIdentity
                           firstName={registration.firstName}
                           lastName={registration.lastName}
@@ -740,21 +844,27 @@ export default function RegistrationInbox({
                           personId={registration.personId}
                           locale={locale}
                           timezone={timezone}
-                          showClubManagementState
+                          showClubManagementState={false}
+                          metadataVariant="inline"
                         />
                         {duplicate && !isArchive ? (
-                          <p className="mt-0.5 pl-[2.625rem] text-[0.65rem] font-medium text-amber-600">Duplikat</p>
+                          <p className="mt-0.5 pl-[2.625rem] text-[0.62rem] font-medium text-amber-500">Duplikat</p>
                         ) : null}
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="text-xs text-[var(--foreground)]">{TYPE_LABELS[registration.type] ?? registration.type}</p>
+                      <td className="hidden px-3 py-2.5 lg:table-cell lg:px-4 lg:py-3">
+                        <p className="truncate text-xs text-[var(--text-2)]" title={TYPE_LABELS[registration.type] ?? registration.type}>
+                          {TYPE_LABELS[registration.type] ?? registration.type}
+                        </p>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="text-xs font-medium text-[var(--foreground)]">
+                      <td className="hidden px-3 py-2.5 md:table-cell lg:px-4 lg:py-3">
+                        <p
+                          className="truncate text-xs font-medium text-[var(--foreground)]"
+                          title={registration.targetGroup?.name ?? classification.targetGroupLabel}
+                        >
                           {registration.targetGroup?.name ?? classification.targetGroupLabel}
                         </p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="hidden px-3 py-2.5 xl:table-cell lg:px-4 lg:py-3">
                         {registration.assignedToUser ? (
                           <WaitingListResponsibleDisplay
                             firstName={registration.assignedToUser.firstName}
@@ -766,20 +876,23 @@ export default function RegistrationInbox({
                           <span className="text-xs italic text-[var(--muted)]">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                         <span
                           className={cn(
-                            "inline-flex h-5 items-center rounded-full border px-2 text-[0.65rem] font-semibold",
+                            "inline-flex max-w-full items-center truncate rounded-md border px-1.5 py-0.5 text-[0.62rem] font-semibold",
                             STATUS_BADGE_CLASS[registration.status],
                           )}
+                          title={STATUS_LABELS[registration.status]}
                         >
                           {STATUS_LABELS[registration.status]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-[var(--foreground)]">
-                        {isArchive
-                          ? formatDateTimeCompact(completionAt, { locale, timezone })
-                          : getRegistrationNextStep(registration)}
+                      <td className="px-3 py-2.5 text-xs font-medium text-[var(--foreground)] sm:px-4 sm:py-3">
+                        <span className="line-clamp-2" title={isArchive ? formatDateTimeCompact(completionAt, { locale, timezone }) : getRegistrationNextStep(registration)}>
+                          {isArchive
+                            ? formatDateTimeCompact(completionAt, { locale, timezone })
+                            : getRegistrationNextStep(registration)}
+                        </span>
                       </td>
                     </tr>
                   );
