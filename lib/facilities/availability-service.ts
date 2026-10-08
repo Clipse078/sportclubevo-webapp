@@ -31,8 +31,10 @@
  * Security invariants:
  *   - tenantId always comes from a trusted session context — never from input.
  *   - Every query below is scoped by tenantId.
- *   - Archived FacilityResources (and resources of an archived Facility)
- *     are never returned.
+ *   - Only ACTIVE FacilityResources on ACTIVE Facilities are returned as
+ *     assignable candidates (same rule as getActiveResourceOptionsForTenant).
+ *     INACTIVE/ARCHIVED resources are never selectable; existing bookings on
+ *     those ids still contribute occupancy via allocation FK lookups.
  */
 
 import { prisma } from "@/lib/db/prisma";
@@ -126,6 +128,15 @@ export type GetResourceAvailabilityInput = {
 
 function resourceTypesForGroup(group: AvailabilityResourceGroup): FacilityResourceType[] {
   return facilityResourceTypesForAvailabilityGroup(group);
+}
+
+/** Assignable catalog filter — aligned with getActiveResourceOptionsForTenant. */
+function assignableResourceBaseWhere(tenantId: string) {
+  return {
+    tenantId,
+    status: "ACTIVE" as const,
+    facility: { status: "ACTIVE" as const },
+  };
 }
 
 type ConflictWindow = {
@@ -469,10 +480,8 @@ export async function getResourceAvailability(
   if (!isMeaningfulEventInterval(eventStartAt, eventEndAt)) {
     const resources = await prisma.facilityResource.findMany({
       where: {
-        tenantId,
+        ...assignableResourceBaseWhere(tenantId),
         type: { in: resourceTypesForGroup(group) },
-        status: { not: "ARCHIVED" },
-        facility: { status: { not: "ARCHIVED" } },
       },
       select: {
         id: true,
@@ -518,10 +527,8 @@ export async function getResourceAvailability(
 
   const resources = await prisma.facilityResource.findMany({
     where: {
-      tenantId,
+      ...assignableResourceBaseWhere(tenantId),
       type: { in: resourceTypesForGroup(group) },
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
     },
     select: {
       id: true,

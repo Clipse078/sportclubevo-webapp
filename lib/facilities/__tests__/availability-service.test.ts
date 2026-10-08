@@ -385,8 +385,8 @@ describe("getResourceAvailability — tenant isolation", () => {
   });
 });
 
-describe("getResourceAvailability — archived resource excluded", () => {
-  it("filters archived resources and archived-facility resources at the query level", async () => {
+describe("getResourceAvailability — assignable catalog (ACTIVE only)", () => {
+  it("returns only ACTIVE resources on ACTIVE facilities (excludes archived and inactive)", async () => {
     mocks.facilityResourceFindMany.mockResolvedValue([PITCH_1]);
 
     await getResourceAvailability({ tenantId: TENANT_A, startAt: START, endAt: END, group: "PITCH_HALL" });
@@ -394,8 +394,8 @@ describe("getResourceAvailability — archived resource excluded", () => {
     expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          status: { not: "ARCHIVED" },
-          facility: { status: { not: "ARCHIVED" } },
+          status: "ACTIVE",
+          facility: { status: "ACTIVE" },
         }),
       }),
     );
