@@ -592,8 +592,8 @@ describe("getActiveResourceOptionsForTenant", () => {
         where: {
           tenantId: TENANT_A,
           type: { in: ["FULL_PITCH", "HALF_PITCH"] },
-          status: { not: "ARCHIVED" },
-          facility: { status: { not: "ARCHIVED" } },
+          status: "ACTIVE",
+          facility: { status: "ACTIVE" },
         },
       }),
     );
@@ -644,7 +644,7 @@ describe("getActiveResourceOptionsForTenant", () => {
     expect(result).toEqual([]);
     expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: { not: "ARCHIVED" } }),
+        where: expect.objectContaining({ status: "ACTIVE" }),
       }),
     );
   });
@@ -656,7 +656,7 @@ describe("getActiveResourceOptionsForTenant", () => {
 
     expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ facility: { status: { not: "ARCHIVED" } } }),
+        where: expect.objectContaining({ facility: { status: "ACTIVE" } }),
       }),
     );
   });
@@ -691,8 +691,8 @@ describe("getActiveFacilityResourcesByCodesForTenant", () => {
         where: {
           tenantId: TENANT_A,
           code: { in: ["E1"] },
-          status: { not: "ARCHIVED" },
-          facility: { status: { not: "ARCHIVED" } },
+          status: "ACTIVE",
+          facility: { status: "ACTIVE" },
         },
       }),
     );

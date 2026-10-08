@@ -22,6 +22,8 @@ export type FacilityResourceWriteRow = {
 
 export type FacilityResourceWriteValidationIssue =
   | "NOT_FOUND"
+  | "INACTIVE_RESOURCE"
+  | "INACTIVE_FACILITY"
   | "ARCHIVED_RESOURCE"
   | "ARCHIVED_FACILITY"
   | "GROUP_MISMATCH";
@@ -47,7 +49,9 @@ export function validateAssignableFacilityResource(
 ): FacilityResourceWriteValidationIssue | null {
   if (!resource) return "NOT_FOUND";
   if (resource.status === "ARCHIVED") return "ARCHIVED_RESOURCE";
+  if (resource.status === "INACTIVE") return "INACTIVE_RESOURCE";
   if (resource.facility.status === "ARCHIVED") return "ARCHIVED_FACILITY";
+  if (resource.facility.status === "INACTIVE") return "INACTIVE_FACILITY";
   return null;
 }
 

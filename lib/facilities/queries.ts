@@ -63,8 +63,8 @@ export async function getActiveResourceOptionsForTenant(
     where: {
       tenantId,
       type: { in: RESOURCE_TYPES_BY_GROUP[group] },
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
+      status: "ACTIVE",
+      facility: { status: "ACTIVE" },
     },
     select: { code: true, name: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -92,8 +92,8 @@ export async function getActiveFacilityResourcesByCodesForTenant(
     where: {
       tenantId,
       code: { in: codes },
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
+      status: "ACTIVE",
+      facility: { status: "ACTIVE" },
     },
     select: { code: true, name: true, type: true },
   });
