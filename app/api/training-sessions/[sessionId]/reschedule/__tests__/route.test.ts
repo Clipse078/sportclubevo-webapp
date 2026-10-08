@@ -27,6 +27,16 @@ vi.mock("@/lib/training/session-reschedule-service", () => ({
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 
+vi.mock("@/lib/collaboration/training/training-activity-snapshot", () => ({
+  loadTrainingActivitySnapshot: vi.fn().mockResolvedValue(null),
+}));
+vi.mock("@/lib/collaboration/training/training-mutation-collaboration", () => ({
+  buildTrainingMutationCollaborationImpact: vi.fn().mockResolvedValue(null),
+}));
+vi.mock("@/lib/collaboration/resolve-tenant-key", () => ({
+  resolveTenantKeyForCollaboration: vi.fn().mockResolvedValue("tenant-key"),
+}));
+
 import { PATCH, DELETE } from "../route";
 import {
   TrainingSessionInvalidTransitionError,

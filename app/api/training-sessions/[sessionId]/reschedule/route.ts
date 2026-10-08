@@ -28,6 +28,9 @@ import {
   TrainingSessionNotFoundError,
   TrainingSessionRescheduleValidationError,
 } from "@/lib/training/errors";
+import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { buildTrainingMutationCollaborationImpact } from "@/lib/collaboration/training/training-mutation-collaboration";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type Params = { params: Promise<{ sessionId: string }> };
 
@@ -50,12 +53,22 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   try {
+    const beforeSnapshot = await loadTrainingActivitySnapshot({ tenantId, sessionId });
     const session = await rescheduleTrainingSession(tenantId, sessionId, {
       startsAt: body.startsAt,
       endsAt: body.endsAt,
       date: typeof body.date === "string" ? body.date : null,
     });
-    return NextResponse.json({ session });
+    const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaboration = await buildTrainingMutationCollaborationImpact({
+      tenantId,
+      tenantKey,
+      userId,
+      sessionId,
+      beforeSnapshot,
+    });
+    return NextResponse.json({ session, collaboration });
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
@@ -83,8 +96,18 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const { sessionId } = await params;
 
   try {
+    const beforeSnapshot = await loadTrainingActivitySnapshot({ tenantId, sessionId });
     const session = await resetTrainingSessionSchedule(tenantId, sessionId);
-    return NextResponse.json({ session });
+    const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaboration = await buildTrainingMutationCollaborationImpact({
+      tenantId,
+      tenantKey,
+      userId,
+      sessionId,
+      beforeSnapshot,
+    });
+    return NextResponse.json({ session, collaboration });
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {
       return NextResponse.json({ error: err.message }, { status: 404 });

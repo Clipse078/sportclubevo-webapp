@@ -16,6 +16,9 @@ import {
   deleteTrainingSessionAllocation,
 } from "@/lib/training/session-allocation-service";
 import { TrainingSessionAllocationNotFoundError } from "@/lib/training/errors";
+import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { buildTrainingMutationCollaborationImpact } from "@/lib/collaboration/training/training-mutation-collaboration";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type Params = { params: Promise<{ sessionId: string; allocationId: string }> };
 
@@ -29,6 +32,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const { sessionId, allocationId } = await params;
 
   try {
+    const beforeSnapshot = await loadTrainingActivitySnapshot({ tenantId, sessionId });
     // Enforce URL ownership before mutation
     const existing = await getTrainingSessionAllocation(tenantId, allocationId);
     if (existing.trainingSessionId !== sessionId) {
@@ -36,7 +40,16 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     }
     await deleteTrainingSessionAllocation(tenantId, allocationId);
     revalidatePlannerWeekPaths();
-    return NextResponse.json({ ok: true });
+    const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaboration = await buildTrainingMutationCollaborationImpact({
+      tenantId,
+      tenantKey,
+      userId,
+      sessionId,
+      beforeSnapshot,
+    });
+    return NextResponse.json({ ok: true, collaboration });
   } catch (err) {
     if (err instanceof TrainingSessionAllocationNotFoundError) {
       return NextResponse.json({ error: "Allocation not found" }, { status: 404 });

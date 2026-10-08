@@ -1,0 +1,143 @@
+"use client";
+
+import { useId, useState, useTransition } from "react";
+import { Loader2, Send, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui";
+import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
+import { useToast } from "@/hooks/use-toast";
+
+type Props = {
+  sessionId: string;
+  teamId: string;
+  draftId: string;
+  initialSubject: string;
+  initialBody: string;
+  onClose: () => void;
+  onPublished: () => void;
+};
+
+export function ContextualActivityCommunicationComposer({
+  sessionId,
+  teamId,
+  draftId,
+  initialSubject,
+  initialBody,
+  onClose,
+  onPublished,
+}: Props) {
+  const t = useTranslations("Collaboration.activityChange");
+  const subjectId = useId();
+  const bodyId = useId();
+  const { toast } = useToast();
+  const [subject, setSubject] = useState(initialSubject);
+  const [body, setBody] = useState(initialBody);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const canSubmit = !pending && body.trim().length > 0;
+
+  function handlePublish() {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch(
+          `/api/collaboration/training-sessions/${sessionId}/publish-communication`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              draftId,
+              teamId,
+              subject,
+              bodyText: body,
+            }),
+          },
+        );
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+          recipientCount?: number;
+        } | null;
+        if (!res.ok) {
+          throw new Error(data?.error ?? t("publishError"));
+        }
+        toast.success(t("publishSuccess", { count: data?.recipientCount ?? 0 }));
+        onPublished();
+        onClose();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("publishError"));
+      }
+    });
+  }
+
+  return (
+    <div
+      className="mt-3 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3"
+      data-testid="contextual-activity-communication-composer"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-[var(--foreground)]">{t("composerTitle")}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-3)]"
+          aria-label={t("composerClose")}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="space-y-1">
+        <label htmlFor={subjectId} className="text-xs font-medium text-[var(--text-2)]">
+          {t("fieldSubject")}
+        </label>
+        <input
+          id={subjectId}
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          maxLength={240}
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+          data-testid="contextual-activity-communication-subject"
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label htmlFor={bodyId} className="text-xs font-medium text-[var(--text-2)]">
+          {t("fieldBody")}
+        </label>
+        <textarea
+          id={bodyId}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          maxLength={MAX_TEAM_COMMUNICATION_BODY_LENGTH}
+          rows={6}
+          className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+          data-testid="contextual-activity-communication-body"
+        />
+      </div>
+
+      {error ? (
+        <p className="text-xs text-rose-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={pending}>
+          {t("composerCancel")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={handlePublish}
+          disabled={!canSubmit}
+          data-testid="contextual-activity-communication-send"
+        >
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {t("composerSend")}
+        </Button>
+      </div>
+    </div>
+  );
+}
