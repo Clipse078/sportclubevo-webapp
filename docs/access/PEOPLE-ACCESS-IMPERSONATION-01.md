@@ -210,7 +210,7 @@ Aus Verein entfernen
 
 **Automated evidence (R9):** `registration-inbox-ux.test.tsx`, `infoboard-view-access-r9.test.ts`, extended `fca-praesident-pilot-access.test.ts`, infoboard admin page redirect test; R4–R8 impersonation/planner sentinels re-run.
 
-**UAT-PERM-01R9:** **HUMAN_UAT_PENDING** — Patrick Registrierungen UX + responsive pass; Sandra/Patrick Infoboard via normal nav; security spot-check (no People admin / no impersonation start).
+**UAT-PERM-01R9:** **PASS** (Human UAT 2026-10-08) — Registrierungen UX; Infoboard follow-ups completed in R9R1/R9R2.
 
 **R9 Human UAT Infoboard (Sandra/Patrick):** **FAIL** — preview-only scope insufficient (`/dashboard/infoboard/preview` only; canonical management overview at `/dashboard/infoboard` required).
 
