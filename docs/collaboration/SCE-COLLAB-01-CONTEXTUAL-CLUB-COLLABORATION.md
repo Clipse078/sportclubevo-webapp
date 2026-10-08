@@ -4,8 +4,12 @@
 
 | Package | Status |
 |---------|--------|
-| **SCE-COLLAB-01A** (Training vertical slice) | **IMPLEMENTED / HUMAN_UAT_PENDING** |
-| SCE-COLLAB-01 (full roadmap) | OPEN |
+| **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
+| **SCE-COLLAB-01B** (Matches + Tournaments) | FUTURE |
+| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
+| **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
+| **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A closed; 01B–01D remain) |
 
 ## Product principle
 
@@ -93,15 +97,30 @@ Contextual collaboration + targeted communication will consume the same change/a
 | Build / lint (changed files) | PASS | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` green; eslint on changed TS/TSX: 0 new errors |
 | Vercel preview | READY | PR #810 preview deployed at SHA `17ad4bbaba240cd6f86d27a772105be1b4adadcf` (SCE-COLLAB-01A-R1) |
 
-Status remains **IMPLEMENTED / HUMAN_UAT_PENDING** (not CLOSED).
+## SCE-COLLAB-01A Human UAT (2026-10-08)
 
-## Human UAT (preview)
+**Result: PASS** — explicit user sign-off on preview (all scenarios below).
 
-| ID | Scenario |
-|----|----------|
-| COLLAB_UAT_01 | Edit without participant-facing change → no prompt |
-| COLLAB_UAT_02 | Change location → save + impact + communicate offer |
-| COLLAB_UAT_03 | Communicate → prefilled draft, no auto-send |
-| COLLAB_UAT_04 | Time + location → consolidated summary |
-| COLLAB_UAT_05 | Dismiss → saved training, no send |
-| COLLAB_UAT_06 | User without comm send → no send capability |
+| ID | Scenario | Result |
+|----|----------|--------|
+| COLLAB_UAT_01 | Edit without participant-facing change → no unnecessary communication prompt | **PASS** |
+| COLLAB_UAT_02 | Meaningful location change → correct old/new presentation and “Änderung kommunizieren” | **PASS** |
+| COLLAB_UAT_03 | Prepared communication → correct contextual draft/audience; nothing sent automatically | **PASS** |
+| COLLAB_UAT_04 | Multiple meaningful changes → consolidated summary | **PASS** |
+| COLLAB_UAT_05 | Dismiss → Training remains saved; no communication sent | **PASS** |
+| COLLAB_UAT_06 | Authorization boundary (no comm send) → accepted as part of sign-off; supported by R1 authorization/security matrix | **PASS** |
+
+Evidence: user-provided explicit approval of COLLAB_UAT_01–06 (closure package SCE-COLLAB-01A-CLOSURE).
+
+## Closure record
+
+| Item | Value |
+|------|-------|
+| Package | SCE-COLLAB-01A |
+| Status | **CLOSED** |
+| Human UAT | **PASS** |
+| R1 automated gate | **PASS** (see table above) |
+| PR | #810 → `STAGE` |
+| Scope delivered | Training contextual collaboration only |
+
+**Not closed:** SCE-COLLAB-01 overall roadmap (01B Matches + Tournaments, 01C Club Events, 01D multi-activity impact, TRAINER-SPIELERBOERSE-01).
