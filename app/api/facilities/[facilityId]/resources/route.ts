@@ -9,6 +9,7 @@ import {
 import type { FacilityResourceType } from "@prisma/client";
 import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
 import { normalizeFacilityResourceCode } from "@/lib/facilities/facility-resource-reference-guard";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 
 const ALLOWED_TYPES: FacilityResourceType[] = [
   "FULL_PITCH",
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       type,
       sortOrder: typeof body.sortOrder === "number" ? body.sortOrder : 0,
     });
+    revalidateAfterSuccessfulFacilityMutation();
     return NextResponse.json({ resource }, { status: 201 });
   } catch (err) {
     const lifecycle = facilityLifecycleErrorResponse(err);

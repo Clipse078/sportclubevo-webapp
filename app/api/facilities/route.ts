@@ -4,6 +4,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createFacility, getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityType } from "@prisma/client";
 import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 
 const ALLOWED_TYPES: FacilityType[] = ["PITCH", "DRESSING_ROOM_BLOCK", "INDOOR_HALL", "OTHER"];
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
       sortOrder: typeof body.sortOrder === "number" ? body.sortOrder : 0,
     });
 
+    revalidateAfterSuccessfulFacilityMutation();
     return NextResponse.json({ facility }, { status: 201 });
   } catch (err) {
     const lifecycle = facilityLifecycleErrorResponse(err);

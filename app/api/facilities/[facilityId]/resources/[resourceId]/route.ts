@@ -5,6 +5,7 @@ import { updateFacilityResource } from "@/lib/facilities/queries";
 import type { FacilityResourceType, FacilityStatus } from "@prisma/client";
 import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
 import { normalizeFacilityResourceCode } from "@/lib/facilities/facility-resource-reference-guard";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 
 const ALLOWED_TYPES: FacilityResourceType[] = [
   "FULL_PITCH",
@@ -48,6 +49,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   try {
     await updateFacilityResource(resourceId, tenantId, data);
+    revalidateAfterSuccessfulFacilityMutation();
     return NextResponse.json({ ok: true });
   } catch (err) {
     const lifecycle = facilityLifecycleErrorResponse(err);

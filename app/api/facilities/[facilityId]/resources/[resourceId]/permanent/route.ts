@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -100,7 +100,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     beforeJson: { name: result.name, code: result.code, facilityId, impact: result.impact },
   });
 
-  revalidatePath("/dashboard/admin/facilities");
+  revalidateAfterSuccessfulFacilityMutation();
 
   return NextResponse.json({
     message: "Ressource wurde endgültig gelöscht.",

@@ -35,12 +35,15 @@ vi.mock("@/lib/db/prisma", () => ({
     facility: { findUnique: (...args: unknown[]) => mocks.facilityFindUnique(...args) },
   },
 }));
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/planning-hub/facility-mutation-revalidation", () => ({
+  revalidateAfterSuccessfulFacilityMutation: vi.fn(),
+}));
 vi.mock("@/lib/facilities/facility-delete-service", () => ({
   getFacilityDeletionImpact: mocks.getFacilityDeletionImpact,
   deleteFacilityPermanently: mocks.deleteFacilityPermanently,
 }));
 
+import { revalidateAfterSuccessfulFacilityMutation } from "@/lib/planning-hub/facility-mutation-revalidation";
 import { DELETE } from "../route";
 
 const FACILITY_ID = "facility-1";
@@ -106,6 +109,7 @@ describe("DELETE /api/facilities/[facilityId]/permanent", () => {
     const res = await DELETE(makeReq("?confirm=true"), makeParams());
     expect(res.status).toBe(200);
     expect(mocks.deleteFacilityPermanently).toHaveBeenCalledWith(TENANT_ID, FACILITY_ID);
+    expect(revalidateAfterSuccessfulFacilityMutation).toHaveBeenCalledTimes(1);
   });
 
   it("6. confirm=true: referenced facility returns 409 (J — error contract)", async () => {

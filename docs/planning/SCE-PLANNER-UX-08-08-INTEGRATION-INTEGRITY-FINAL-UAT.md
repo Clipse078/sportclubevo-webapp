@@ -1,7 +1,8 @@
 # SCE-PLANNER-UX-08-08 — Integration, Integrity & Final UAT Hardening
 
-**Status:** **IN PROGRESS** — Phase 1 diagnosis complete; **08-08A implemented** (lifecycle/delete safety); 08-08B/C pending  
+**Status:** **IN PROGRESS** — **08-08A** lifecycle/delete safety; **08-08B** mutation revalidation; 08-08C pending  
 **08_08A_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
+**08_08B_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
 **Target:** STAGE  
@@ -129,9 +130,10 @@ Domain persistence (tenant-scoped)
 | `getWeekplannerWeekCached` | React `cache()` — dedupe within one RSC request |
 | `getFacilitiesForTenantCached` | React `cache()` — facility catalog per request |
 | `revalidatePlannerWeekPaths()` | `/dashboard/planner/week`, `/dashboard/planner/day` |
-| `POST /api/planning-hub/planner-revalidate` | Same paths; permissions include `TRAININGS_MANAGE` (08-07R5) |
+| `revalidateAfterSuccessfulFacilityMutation()` | **08-08B** — planner week/day + `/dashboard/admin/facilities` after successful facility/resource writes |
+| `POST /api/planning-hub/planner-revalidate` | Same paths; permissions include `TRAININGS_MANAGE` (08-07R5) — **not** required for facility admin revalidation |
 | Client | `PlanningHubManipulationContext` → fetch revalidate + `router.refresh()`; cancellation → `applyTrainingCancellationToPlannerWeek` |
-| **Gap** | Facility admin PATCH/POST/DELETE routes **do not** call `revalidatePlannerWeekPaths()`; client `fetchPlanningHubFacilityGroupsClient()` memoizes in-flight fetch only for one load |
+| Client facility catalog | **08-08B** — `WeekPlannerWorkspace` prefers server `resourceTimelineCatalog`; lazy fetch resets via `resetPlanningHubFacilityGroupsClientFetch()` on RSC refresh / week identity change |
 
 ---
 
@@ -209,11 +211,78 @@ npm run test -- lib/facilities/__tests__/facility-delete-service.test.ts \
 | Broad sweep (§11) | **14 fail — PRE_EXISTING_DIAGNOSIS_FAILURE (F-08-08-06)**; **0 NEW_08_08A_REGRESSION** |
 | Build | **PASS** |
 
-### Remaining gaps (not 08-08A)
+### Remaining gaps (post 08-08B)
 
-- **08-08B:** facility mutation → planner revalidation / open-hub stale labels (F-08-08-02)
-- **08-08C:** conflict/availability characterization after archive (adjacent to delete fix)
-- **FACILITY-INTEGRITY-01:** not CLOSED until matrix + 08-08B/C complete
+- **08-08C:** conflict/availability characterization after archive/delete under open planner (F-08-08-05 adjacent semantics)
+- **FACILITY-INTEGRITY-01:** not CLOSED until matrix + 08-08C complete
+
+---
+
+## 3B. SCE-PLANNER-UX-08-08B — facility mutation → planner revalidation (this branch)
+
+### Mutation entry-point inventory
+
+| Route / action | Service | DB mutation | Revalidation (success only) | Client effect |
+|----------------|---------|-------------|-----------------------------|---------------|
+| `POST /api/facilities` | `createFacility` | `Facility` insert | `revalidateAfterSuccessfulFacilityMutation()` | Admin `router.refresh()`; planner RSC refresh picks up new catalog on next navigation/`router.refresh()` |
+| `PATCH /api/facilities/[facilityId]` | `updateFacility` | name/type/status/sort | same | same |
+| `DELETE …/permanent?confirm=true` (facility) | `deleteFacilityPermanently` | guarded hard delete | same (preview / 409 → **no** revalidate) | Admin list refresh |
+| `POST …/resources` | `createFacilityResource` | `FacilityResource` insert | same | Planner selectors / lanes on refreshed catalog |
+| `PATCH …/resources/[resourceId]` | `updateFacilityResource` | rename/code/type/status | same; lifecycle 409 → **no** revalidate | Labels + assignable options |
+| `DELETE …/resources/…/permanent?confirm=true` | `deleteFacilityResourcePermanently` | guarded hard delete | same | Unused resource drops from lanes/options after refresh |
+
+No separate admin UI server actions — all writes go through the API routes above.
+
+### Canonical invalidation architecture
+
+- **Boundary:** `lib/planning-hub/facility-mutation-revalidation.ts` → `revalidatePlannerWeekPaths()` + `revalidatePath("/dashboard/admin/facilities")`
+- **Not duplicated:** training/match/tournament routes unchanged; facility writes do not call `POST /api/planning-hub/planner-revalidate` (avoids extra permission gate)
+- **Failed mutations:** validation errors, duplicate codes, `RESOURCE_IN_USE` / `FACILITY_IN_USE` — DB unchanged, **no** revalidation (08-08A contract preserved)
+
+### Consumer invalidation set
+
+| Consumer | Mechanism |
+|----------|-----------|
+| Planner week/day RSC | `revalidatePlannerWeekPaths()` |
+| Admin facilities page | `revalidatePath("/dashboard/admin/facilities")` |
+| `/api/planning-hub/facility-groups` | Dynamic API — fresh on client refetch after planner RSC refresh |
+| Training / match / tournament / event create forms | Request-fresh on navigation (SSR facility groups); no broad path sweep in 08-08B |
+| Infoboard | **No change** — dynamic DB reads / preview resolver unchanged (FACILITY-INTEGRITY-01A boundary) |
+
+### Open planner client state
+
+| Surface | Ownership | 08-08B behavior |
+|---------|-----------|-----------------|
+| Week activities | `PlanningHubPlannerWeekProvider` (`serverWeek` → reconciled week) | Unchanged; facility mutations do not use training-cancellation reconciliation |
+| Facility/resource groups | `WeekPlannerWorkspace` `serverFacilityCatalog` \| lazy fetch | Server catalog props **replace** stale lazy state; lazy path refetches when `week` identity changes after RSC refresh |
+| Selector options in sheets | `manipulationFacilityGroups` | Same catalog pipeline as lanes |
+
+**Archive lane behavior:** archived resources remain on **existing** week items via stored `facilityResourceId` refs; assignable catalog excludes them (`getActiveResourceOptionsForTenant`). Empty lanes for unused archived resources may disappear on refresh — activities keep historical labels on items.
+
+**Resource identity:** renames preserve `facilityResourceId`; tests assert stable id across catalog refresh.
+
+### Tests (08-08B)
+
+```bash
+npm run test -- lib/planning-hub/__tests__/facility-mutation-revalidation.test.ts \
+  lib/facilities/__tests__/facility-mutation-08-08b.test.ts \
+  lib/planning-hub/__tests__/fetch-facility-groups-client.test.ts \
+  components/admin/planner/__tests__/WeekPlannerWorkspace.facility-groups-sync.test.tsx \
+  app/api/facilities
+```
+
+| Suite | Result |
+|-------|--------|
+| 08-08B new tests | **PASS** (16 + route extensions) |
+| 08-08A lifecycle/delete | **PASS** (unchanged) |
+| Broad sweep | **14 fail — PRE_EXISTING (F-08-08-06)**; **0 NEW_08_08B_REGRESSION** |
+| Build | **PASS** |
+
+### Remaining 08-08C gaps
+
+- Conflict/availability matrix cells after archive/delete under **open** planner (not merely revalidation)
+- Cross-tab planner auto-refresh without user `router.refresh()` (no broadcast channel in 08-08B)
+- Match `pitchCode` seam (F-08-08-03) — deferred
 
 ---
 
@@ -223,16 +292,16 @@ Legend: **PASS** = code + test evidence; **COVERED_BY_TEST** = automated charact
 
 | Mutation ↓ / Consumer → | Admin | Training | Match | Tournament | Club event | Kalender | Spielfeld | Garderobe | Liste | Conflict engine | Availability | Infoboard | Historical refs | Future refs | Cache/reval |
 |---------------------------|-------|----------|-------|------------|------------|----------|-----------|-----------|-------|-----------------|--------------|-----------|-----------------|-------------|-------------|
-| Pitch create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | N/A | UNPROVEN | PASS next read | PASS next read | UNPROVEN | N/A | PASS | UNPROVEN |
-| Pitch rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | P2 stale | P2 stale | P2 stale | P2 stale | PASS next read | PASS next read | COVERED_BY_TEST | PASS (id) | PASS | **BROKEN** no revalidate |
-| Pitch archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS next read | PASS next read | PASS next read | PASS next read | PASS next read | PASS selectors | UNPROVEN | PASS withRequiredCodes | PASS block new | UNPROVEN |
-| Pitch delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS blocked | PASS blocked | PASS blocked | PASS blocked | PASS blocked | PASS blocked | UNPROVEN | **PASS** (links kept) | PASS | UNPROVEN |
-| DR create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | N/A | UNPROVEN | UNPROVEN | PASS next read | PASS next read | UNPROVEN | N/A | PASS | UNPROVEN |
-| DR rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | P2 stale | N/A | P2 stale | P2 stale | PASS next read | PASS next read | UNPROVEN | PASS (id) | PASS | **BROKEN** no revalidate |
-| DR archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS next read | N/A | PASS next read | PASS next read | PASS next read | PASS selectors | UNPROVEN | PASS | PASS block new | UNPROVEN |
-| DR delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS blocked | N/A | PASS blocked | PASS blocked | PASS blocked | PASS blocked | UNPROVEN | **PASS** | PASS | UNPROVEN |
+| Pitch create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | N/A | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
+| Pitch rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | UNPROVEN | COVERED_BY_TEST | PASS (id) | PASS | **COVERED_BY_TEST** |
+| Pitch archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS selectors | UNPROVEN | PASS withRequiredCodes | PASS block new | **COVERED_BY_TEST** |
+| Pitch delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS blocked | UNPROVEN | **PASS** (links kept) | PASS | **COVERED_BY_TEST** |
+| DR create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | PASS next read | PASS next read | UNPROVEN | N/A | PASS | **COVERED_BY_TEST** |
+| DR rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS (id) | PASS | **COVERED_BY_TEST** |
+| DR archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS selectors | UNPROVEN | PASS | PASS block new | **COVERED_BY_TEST** |
+| DR delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | COVERED_BY_TEST | N/A | COVERED_BY_TEST | COVERED_BY_TEST | UNPROVEN | PASS blocked | UNPROVEN | **PASS** | PASS | **COVERED_BY_TEST** |
 
-Evidence anchors: `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, `queries.test.ts`, `facility-integrity-diagnosis.test.ts`; revalidation gap unchanged in `app/api/facilities/**` (08-08B).
+Evidence anchors: `facility-mutation-08-08b.test.ts`, `facility-mutation-revalidation.test.ts`, `WeekPlannerWorkspace.facility-groups-sync.test.tsx`, `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`. Conflict/availability planner cells remain **UNPROVEN** until 08-08C.
 
 ---
 
@@ -319,8 +388,8 @@ Evidence anchors: `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.
 | Aggregation | **PARTIAL** | cluster + inspector metrics — no full type breakdown |
 | Responsive UX | **GOOD** | 08-07 |
 | Permissions | **GOOD** (automated) | 08-04 — manual impersonation gap |
-| **Facility lifecycle → planner E2E** | **MISSING** | No automated rename/delete propagation to open planner |
-| **Facility mutation revalidation** | **MISSING** | — |
+| **Facility lifecycle → planner E2E** | **PARTIAL** | Revalidation + client catalog sync tested; no browser E2E in 08-08B |
+| **Facility mutation revalidation** | **GOOD** | `facility-mutation-08-08b.test.ts`, route tests |
 
 ### Regression commands (this diagnosis)
 
@@ -354,8 +423,8 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 
 | ID | Sev | Domain | Current | Expected | Root cause | Consumers | Tests | Fix slice |
 |----|-----|--------|---------|----------|------------|-----------|-------|-----------|
-| F-08-08-01 | P1 → **FIXED (08-08A)** | Facility delete | ~~Cascade strips links~~ → delete blocked / RESTRICT | Historical activities remain intelligible | Was `onDelete: Cascade`; now Restrict + service guards | Planner, trainings, tournaments, events | `facility-delete-service.test.ts` | **08-08A done**; propagation reval in 08-08B |
-| F-08-08-02 | P2 | Facility mutate → cache | Admin rename/archive succeeds; open planner may show old resource/facility names until manual refresh | Planner surfaces update after facility mutation | No `revalidatePlannerWeekPaths` / tag invalidation on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | MISSING | 08-08B |
+| F-08-08-01 | P1 → **FIXED (08-08A+08-08B)** | Facility delete | Delete blocked / RESTRICT; revalidation on safe delete | Historical activities remain intelligible | Restrict + service guards + post-delete revalidation | Planner, trainings, tournaments, events | `facility-delete-service.test.ts`, `facility-mutation-08-08b.test.ts` | **Done** |
+| F-08-08-02 | P2 → **FIXED (08-08B)** | Facility mutate → cache | Planner paths revalidated; client catalog syncs to server props | Planner surfaces update after facility mutation + RSC refresh | Was missing `revalidatePlannerWeekPaths` on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | `facility-mutation-08-08b.test.ts` | **08-08B done** |
 | F-08-08-03 | P2 | Match identity | Match pitch/dressing via `pitchCode` strings | Single FK model like training | WEEKPLANNER-01A scope left legacy fields | Match planner, availability, infoboard | PARTIAL | DEFERRED post-08-08 or dedicated migration slice |
 | F-08-08-04 | P2 → **PARTIAL (08-08A)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | Stable codes OK; block same-name facility + duplicate codes | Admin duplicate code/name guard | Duplicate lanes for distinct names | `facility-lifecycle-08-08a.test.ts` | Residual Class B pair — migration out of scope |
 | F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
@@ -371,7 +440,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 | Slice | Problem | Domains | Invariants | Tests | Human UAT | Depends |
 |-------|---------|---------|------------|-------|-----------|---------|
 | **08-08A** | Facility lifecycle canonicalization + admin guards | Admin, duplicate prevention | Archive-first; delete only when unused | **DONE** — see §3A | — | — |
-| **08-08B** | Mutation → revalidation + client facility-groups refresh | All planner perspectives | After facility PATCH/DELETE, planner paths revalidated; open hub refreshes labels | New API route tests asserting `revalidatePath` | Open planner during rename | 08-08A |
+| **08-08B** | Mutation → revalidation + client facility-groups refresh | All planner perspectives | After facility PATCH/DELETE, planner paths revalidated; open hub refreshes labels | **DONE** — `facility-mutation-08-08b.test.ts` | Cross-tab refresh still manual | 08-08A |
 | **08-08C** | Conflict/availability after resource delete/archive | Conflicts, availability, historical display | No silent loss of «where» on delete | Integration tests with archived refs | Delete blocked with allocations | 08-08A |
 | **08-08D** | Cross-domain integration regression pack | Training/match/tournament/event + facility | Single week read model | E2E-style vitest fixtures | Full week scenario | 08-08B |
 | **08-08E** | Aggregation closure (optional) | Kalender + inspector | Shared `countByActivityType` | `aggregate-inspection` | Mixed cluster copy | — |
