@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   facilityUpdateMany: vi.fn(),
   facilityResourceFindMany: vi.fn(),
   facilityResourceFindUnique: vi.fn(),
+  facilityResourceFindFirst: vi.fn(),
   facilityResourceCreate: vi.fn(),
   facilityResourceUpdateMany: vi.fn(),
 }));
@@ -39,6 +40,7 @@ vi.mock("@/lib/db/prisma", () => ({
     facilityResource: {
       findMany: mocks.facilityResourceFindMany,
       findUnique: mocks.facilityResourceFindUnique,
+      findFirst: mocks.facilityResourceFindFirst,
       create: mocks.facilityResourceCreate,
       updateMany: mocks.facilityResourceUpdateMany,
     },
@@ -100,6 +102,8 @@ function makeResource(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.facilityResourceFindFirst.mockResolvedValue(null);
+  mocks.facilityFindMany.mockResolvedValue([]);
 });
 
 describe("getFacilitiesForTenant", () => {

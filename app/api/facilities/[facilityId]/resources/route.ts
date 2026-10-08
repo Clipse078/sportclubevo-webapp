@@ -7,6 +7,8 @@ import {
   getFacilityById,
 } from "@/lib/facilities/queries";
 import type { FacilityResourceType } from "@prisma/client";
+import { facilityLifecycleErrorResponse } from "@/lib/facilities/facility-lifecycle-http";
+import { normalizeFacilityResourceCode } from "@/lib/facilities/facility-resource-reference-guard";
 
 const ALLOWED_TYPES: FacilityResourceType[] = [
   "FULL_PITCH",
@@ -78,16 +80,18 @@ export async function POST(request: NextRequest, { params }: Params) {
       tenantId,
       facilityId,
       name: body.name.trim(),
-      code: body.code.trim().toUpperCase(),
+      code: normalizeFacilityResourceCode(body.code),
       type,
       sortOrder: typeof body.sortOrder === "number" ? body.sortOrder : 0,
     });
     return NextResponse.json({ resource }, { status: 201 });
   } catch (err) {
+    const lifecycle = facilityLifecycleErrorResponse(err);
+    if (lifecycle) return lifecycle;
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("Unique constraint")) {
       return NextResponse.json(
-        { error: "A resource with this code already exists for this tenant." },
+        { error: "Eine Ressource mit diesem Code existiert in diesem Mandanten bereits.", code: "DUPLICATE_RESOURCE" },
         { status: 409 },
       );
     }

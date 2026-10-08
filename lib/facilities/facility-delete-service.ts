@@ -1,49 +1,35 @@
 /**
  * lib/facilities/facility-delete-service.ts
  *
- * ADMIN-DELETE-FACILITIES-01: Service layer for Facility and FacilityResource
- * permanent hard-delete.
+ * SCE-PLANNER-UX-08-08A — safe permanent delete for Facility / FacilityResource.
  *
- * Preservation rule:
- *   Deleting a FacilityResource removes only the resource record and its
- *   allocation LINK rows (TrainingAllocation, TrainingSessionAllocation, etc.).
- *   These link rows are subordinate to the resource — they record "which
- *   resource was assigned to which training/match". The canonical planning
- *   entities themselves (TrainingSeries, TrainingSession, Event, Tournament,
- *   WeekplannerPlan) are NEVER deleted; only the resource-assignment links
- *   are removed by the DB engine cascade.
- *
- * Schema FK behavior (from prisma/schema.prisma):
- *   FacilityResource.facilityId            → non-nullable, onDelete: Cascade (from Facility)
- *   TrainingAllocation.facilityResourceId  → non-nullable, onDelete: Cascade
- *   TrainingSessionAllocation.facilityResourceId → non-nullable, onDelete: Cascade
- *   TournamentResourceAllocation.facilityResourceId → non-nullable, onDelete: Cascade
- *   TournamentParticipantAllocation.facilityResourceId → non-nullable, onDelete: Cascade
- *   WeekplannerPlanAllocation.facilityResourceId → non-nullable, onDelete: Cascade
- *   EventFacilityAllocation.facilityResourceId → non-nullable, onDelete: Cascade
- *
- *   All allocation rows cascade-delete automatically. The DB engine handles
- *   this — no explicit pre-delete cleanup is needed. The planning history
- *   (sessions were scheduled, matches were played) is preserved in full;
- *   only the "which resource" linkage is removed with the resource.
+ * Lifecycle policy:
+ *   - Archive/deactivate is the normal retirement path when a resource was used.
+ *   - Physical delete is allowed only when no protected allocation/history links exist.
+ *   - DB FKs on allocation → FacilityResource use ON DELETE RESTRICT (race-safe backstop).
  */
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  FACILITY_LIFECYCLE_ERROR_CODES,
+  FACILITY_LIFECYCLE_MESSAGES,
+  FacilityLifecycleError,
+  isPrismaForeignKeyViolation,
+} from "@/lib/facilities/facility-lifecycle-errors";
+import {
+  assertFacilityNotReferenced,
+  assertFacilityResourceNotReferenced,
+  countFacilityResourceReferences,
+  countFacilityResourceReferencesForFacility,
+  toFacilityDeletionImpactView,
+  toResourceDeletionImpactView,
+  totalFacilityResourceReferences,
+  type FacilityResourceReferenceCounts,
+} from "@/lib/facilities/facility-resource-reference-guard";
 
-// ── FacilityResource permanent delete ────────────────────────────────────────
-
-export type FacilityResourceDeletionImpact = {
-  /** Training series allocation links cascade-deleted (TrainingSeries survives). */
-  trainingAllocations: number;
-  /** Training session allocation links cascade-deleted (TrainingSession survives). */
-  trainingSessionAllocations: number;
-  /** Tournament resource allocation links cascade-deleted (Tournament survives). */
-  tournamentResourceAllocations: number;
-  /** Tournament participant allocation links cascade-deleted (TournamentParticipant survives). */
-  tournamentParticipantAllocations: number;
-  /** Weekplanner plan allocation links cascade-deleted (WeekplannerPlan survives). */
-  weekplannerPlanAllocations: number;
-  eventFacilityAllocations: number;
+export type FacilityResourceDeletionImpact = FacilityResourceReferenceCounts & {
+  totalReferences: number;
+  deletable: boolean;
 };
 
 /**
@@ -55,100 +41,65 @@ export async function getFacilityResourceDeletionImpact(
   tenantId: string,
   resourceId: string,
 ): Promise<FacilityResourceDeletionImpact | null> {
-  const resource = await prisma.facilityResource.findUnique({
-    where: { id: resourceId },
-    select: {
-      tenantId: true,
-      _count: {
-        select: {
-          trainingAllocations: true,
-          trainingSessionAllocations: true,
-          tournamentResourceAllocations: true,
-          tournamentParticipantAllocations: true,
-          weekplannerPlanAllocations: true,
-          eventFacilityAllocations: true,
-        },
-      },
-    },
+  const resource = await prisma.facilityResource.findFirst({
+    where: { id: resourceId, tenantId },
+    select: { id: true },
   });
 
-  if (!resource || resource.tenantId !== tenantId) return null;
+  if (!resource) return null;
 
-  return {
-    trainingAllocations: resource._count.trainingAllocations,
-    trainingSessionAllocations: resource._count.trainingSessionAllocations,
-    tournamentResourceAllocations: resource._count.tournamentResourceAllocations,
-    tournamentParticipantAllocations: resource._count.tournamentParticipantAllocations,
-    weekplannerPlanAllocations: resource._count.weekplannerPlanAllocations,
-    eventFacilityAllocations: resource._count.eventFacilityAllocations,
-  };
+  const counts = await countFacilityResourceReferences(prisma, tenantId, resourceId);
+  return toResourceDeletionImpactView(counts);
 }
 
 export type FacilityResourceDeletionResult = {
   resourceId: string;
   name: string;
   code: string;
-  impact: FacilityResourceDeletionImpact;
+  impact: FacilityResourceReferenceCounts;
 };
 
 /**
- * Permanently deletes a FacilityResource within the given tenant.
+ * Permanently deletes a FacilityResource within the given tenant when structurally safe.
  *
- * Allocation link rows (TrainingAllocation, TrainingSessionAllocation, etc.)
- * cascade-delete automatically via onDelete: Cascade on facilityResourceId.
- * The canonical planning records (TrainingSeries, TrainingSession, Event,
- * Tournament, WeekplannerPlan) are never deleted — only the allocation links.
- *
+ * Throws FacilityLifecycleError (RESOURCE_IN_USE) when any allocation link exists.
  * Returns null when the resource does not exist in the tenant.
  */
 export async function deleteFacilityResourcePermanently(
   tenantId: string,
   resourceId: string,
 ): Promise<FacilityResourceDeletionResult | null> {
-  const resource = await prisma.facilityResource.findUnique({
-    where: { id: resourceId },
-    select: {
-      tenantId: true,
-      name: true,
-      code: true,
-      _count: {
-        select: {
-          trainingAllocations: true,
-          trainingSessionAllocations: true,
-          tournamentResourceAllocations: true,
-          tournamentParticipantAllocations: true,
-          weekplannerPlanAllocations: true,
-          eventFacilityAllocations: true,
-        },
-      },
-    },
-  });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const resource = await tx.facilityResource.findFirst({
+        where: { id: resourceId, tenantId },
+        select: { id: true, name: true, code: true },
+      });
 
-  if (!resource || resource.tenantId !== tenantId) return null;
+      if (!resource) return null;
 
-  const impact: FacilityResourceDeletionImpact = {
-    trainingAllocations: resource._count.trainingAllocations,
-    trainingSessionAllocations: resource._count.trainingSessionAllocations,
-    tournamentResourceAllocations: resource._count.tournamentResourceAllocations,
-    tournamentParticipantAllocations: resource._count.tournamentParticipantAllocations,
-    weekplannerPlanAllocations: resource._count.weekplannerPlanAllocations,
-    eventFacilityAllocations: resource._count.eventFacilityAllocations,
-  };
+      const impact = await countFacilityResourceReferences(tx, tenantId, resourceId);
+      assertFacilityResourceNotReferenced(impact);
 
-  // DB engine cascade-deletes allocation link rows automatically (onDelete: Cascade).
-  // Canonical planning entities (TrainingSeries, TrainingSession, etc.) are never touched.
-  await prisma.facilityResource.delete({ where: { id: resourceId } });
+      await tx.facilityResource.delete({ where: { id: resourceId } });
 
-  return { resourceId, name: resource.name, code: resource.code, impact };
+      return { resourceId, name: resource.name, code: resource.code, impact };
+    });
+  } catch (error) {
+    if (isPrismaForeignKeyViolation(error)) {
+      throw new FacilityLifecycleError(
+        FACILITY_LIFECYCLE_ERROR_CODES.RESOURCE_IN_USE,
+        FACILITY_LIFECYCLE_MESSAGES.resourceInUse,
+      );
+    }
+    throw error;
+  }
 }
 
-// ── Facility permanent delete ─────────────────────────────────────────────────
-
 export type FacilityDeletionImpact = {
-  /** Direct child FacilityResource rows (cascade-deleted with the Facility). */
   resources: number;
-  /** Aggregated allocation link rows across all child resources (cascade-deleted). */
   totalAllocationRefs: number;
+  deletable: boolean;
 };
 
 /**
@@ -160,95 +111,94 @@ export async function getFacilityDeletionImpact(
   tenantId: string,
   facilityId: string,
 ): Promise<FacilityDeletionImpact | null> {
-  const facility = await prisma.facility.findUnique({
-    where: { id: facilityId },
+  const facility = await prisma.facility.findFirst({
+    where: { id: facilityId, tenantId },
     select: {
-      tenantId: true,
       _count: { select: { resources: true } },
     },
   });
 
-  if (!facility || facility.tenantId !== tenantId) return null;
+  if (!facility) return null;
 
-  // Count all allocation references across child resources.
-  // Use individual count queries scoped by facility resources in this tenant.
   const resourceIds = await prisma.facilityResource.findMany({
     where: { facilityId, tenantId },
     select: { id: true },
   }).then((rows) => rows.map((r) => r.id));
 
-  const totalAllocationRefs = resourceIds.length === 0 ? 0 : (
-    await Promise.all([
-      prisma.trainingAllocation.count({ where: { facilityResourceId: { in: resourceIds } } }),
-      prisma.trainingSessionAllocation.count({ where: { facilityResourceId: { in: resourceIds } } }),
-      prisma.tournamentResourceAllocation.count({ where: { facilityResourceId: { in: resourceIds } } }),
-      prisma.tournamentParticipantAllocation.count({ where: { facilityResourceId: { in: resourceIds } } }),
-      prisma.weekplannerPlanAllocation.count({ where: { facilityResourceId: { in: resourceIds } } }),
-    ])
-  ).reduce((sum, n) => sum + n, 0);
+  const totalAllocationRefs = await countFacilityResourceReferencesForFacility(
+    prisma,
+    tenantId,
+    resourceIds,
+  );
 
-  return {
+  return toFacilityDeletionImpactView({
     resources: facility._count.resources,
     totalAllocationRefs,
-  };
+  });
 }
 
 export type FacilityDeletionResult = {
   facilityId: string;
   name: string;
-  impact: FacilityDeletionImpact;
+  impact: Omit<FacilityDeletionImpact, "deletable">;
 };
 
 /**
- * Permanently deletes a Facility within the given tenant.
+ * Permanently deletes a Facility within the given tenant when all child resources are unused.
  *
- * All child FacilityResource rows cascade-delete automatically.
- * Allocation references on each resource are set to null by the DB engine
- * (onDelete: SetNull on allocation FK columns).
- * Trainings, Matches, Tournaments, and Events are preserved.
- *
+ * Throws FacilityLifecycleError (FACILITY_IN_USE) when any child resource is referenced.
  * Returns null when the facility does not exist in the tenant.
  */
 export async function deleteFacilityPermanently(
   tenantId: string,
   facilityId: string,
 ): Promise<FacilityDeletionResult | null> {
-  const facility = await prisma.facility.findUnique({
-    where: { id: facilityId },
-    select: {
-      tenantId: true,
-      name: true,
-      _count: { select: { resources: true } },
-    },
-  });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const facility = await tx.facility.findFirst({
+        where: { id: facilityId, tenantId },
+        select: {
+          name: true,
+          _count: { select: { resources: true } },
+        },
+      });
 
-  if (!facility || facility.tenantId !== tenantId) return null;
+      if (!facility) return null;
 
-  // Count total allocation refs for audit (before deletion).
-  const resourceIdsForAudit = await prisma.facilityResource.findMany({
-    where: { facilityId, tenantId },
-    select: { id: true },
-  }).then((rows) => rows.map((r) => r.id));
+      const resourceIds = await tx.facilityResource.findMany({
+        where: { facilityId, tenantId },
+        select: { id: true },
+      }).then((rows) => rows.map((r) => r.id));
 
-  const totalAllocationRefs = resourceIdsForAudit.length === 0 ? 0 : (
-    await Promise.all([
-      prisma.trainingAllocation.count({ where: { facilityResourceId: { in: resourceIdsForAudit } } }),
-      prisma.trainingSessionAllocation.count({ where: { facilityResourceId: { in: resourceIdsForAudit } } }),
-      prisma.tournamentResourceAllocation.count({ where: { facilityResourceId: { in: resourceIdsForAudit } } }),
-      prisma.tournamentParticipantAllocation.count({ where: { facilityResourceId: { in: resourceIdsForAudit } } }),
-      prisma.weekplannerPlanAllocation.count({ where: { facilityResourceId: { in: resourceIdsForAudit } } }),
-    ])
-  ).reduce((sum, n) => sum + n, 0);
+      const totalAllocationRefs = await countFacilityResourceReferencesForFacility(
+        tx,
+        tenantId,
+        resourceIds,
+      );
 
-  const impact: FacilityDeletionImpact = {
-    resources: facility._count.resources,
-    totalAllocationRefs,
-  };
+      assertFacilityNotReferenced(totalAllocationRefs);
 
-  // Deleting the Facility cascade-deletes all FacilityResource children.
-  // Each resource deletion then cascade-deletes its allocation link rows.
-  // Canonical planning entities (TrainingSeries, TrainingSession, etc.) are never touched.
-  await prisma.facility.delete({ where: { id: facilityId } });
+      await tx.facility.delete({ where: { id: facilityId } });
 
-  return { facilityId, name: facility.name, impact };
+      return {
+        facilityId,
+        name: facility.name,
+        impact: {
+          resources: facility._count.resources,
+          totalAllocationRefs,
+        },
+      };
+    });
+  } catch (error) {
+    if (isPrismaForeignKeyViolation(error)) {
+      throw new FacilityLifecycleError(
+        FACILITY_LIFECYCLE_ERROR_CODES.FACILITY_IN_USE,
+        FACILITY_LIFECYCLE_MESSAGES.facilityInUse,
+      );
+    }
+    throw error;
+  }
 }
+
+/** @internal test helper */
+export { totalFacilityResourceReferences };

@@ -1,6 +1,7 @@
 # SCE-PLANNER-UX-08-08 — Integration, Integrity & Final UAT Hardening
 
-**Status:** **IN PROGRESS** — Phase 1 diagnosis complete; implementation slices pending  
+**Status:** **IN PROGRESS** — Phase 1 diagnosis complete; **08-08A implemented** (lifecycle/delete safety); 08-08B/C pending  
+**08_08A_STATUS:** **IMPLEMENTED / AUTOMATED TEST PASS**  
 **Branch:** `cursor/sce-planner-ux-08-08-integration-integrity-final-uat-a6e2`  
 **Base (STAGE):** `82d7b7b0e53bcf93642735dc7330eefb3b93d330` (merge PR #805 / 08-07 closure)  
 **Target:** STAGE  
@@ -145,11 +146,11 @@ Domain persistence (tenant-scoped)
 | **Create** | PASS | PASS (active query) | PASS on navigation | UNPROVEN — lazy facility-groups cache | PASS next read | n/a |
 | **Rename** | PASS | PASS | PASS on RSC refresh | **P2** — no revalidatePath from `/api/facilities/*` | PASS next read (names from DB) | n/a |
 | **Archive/deactivate** | PASS | PASS (excluded from active) | Historical refs via `withRequiredCodes` | UNPROVEN | PASS next read | Preferred over delete |
-| **Delete** | PASS (with impact preview) | PASS | Allocations **cascade-removed** | N/A | Orphan refs possible on open client | **P1** — see deletion audit |
+| **Delete** | PASS (blocked when referenced) | PASS | Links **preserved** when blocked | N/A | Next read consistent | **PASS** — 08-08A guards + RESTRICT FK |
 
 ### Dressing vs pitch parity
 
-- Same `FacilityResource` model, same cascade FKs, same `getActiveResourceOptionsForTenant` grouping (`DRESSING_ROOM` vs `PITCH_HALL`)
+- Same `FacilityResource` model, same allocation FKs (**RESTRICT** on delete since 08-08A), same `getActiveResourceOptionsForTenant` grouping (`DRESSING_ROOM` vs `PITCH_HALL`)
 - Same planner conflict collection paths (dressing includes match away + tournament participants)
 
 ### Legacy seams (still on STAGE)
@@ -157,7 +158,62 @@ Domain persistence (tenant-scoped)
 - **STADION_*** codes on canonical Hauptfeld facility (01A intentional stable codes)
 - **Event.pitchCode** string snapshots for matches (not FK)
 - Infoboard Screen-2 preview resolver: HAUPTFELD vs STADION ambiguity guard (`lib/infoboard/screen2-preview-facility-resolver.ts`)
-- Residual **duplicate facility row** risk if admin creates second pitch facility (diagnosis doc Class B) — planner lanes duplicate by facility group
+- Residual **duplicate facility row** risk for distinct names (e.g. Hauptfeld vs Hauptplatz) — 08-08A blocks same `(tenant, normalized name, type)`; legacy Class B pair unchanged
+
+---
+
+## 3A. SCE-PLANNER-UX-08-08A — facility lifecycle canonicalization (this branch)
+
+### Canonical lifecycle semantics
+
+| State | Behavior |
+|-------|----------|
+| **ACTIVE** | Available for new assignment (`getActiveResourceOptionsForTenant`, `validateAssignableFacilityResource`) |
+| **INACTIVE / ARCHIVED** | Hidden from assignable queries; existing FK/code references remain intact |
+| **DELETE (physical)** | Allowed only when `_count` of all allocation join tables = 0 for the resource (and for facility: all children unused) |
+
+### Delete safety (F-08-08-01)
+
+- **Service:** `lib/facilities/facility-delete-service.ts` + `lib/facilities/facility-resource-reference-guard.ts`
+- **DB backstop:** migration `20261008120000_sce_planner_ux_08_08a_facility_resource_delete_restrict` — allocation → `FacilityResource` FKs `ON DELETE RESTRICT`
+- **API:** `/api/facilities/*/permanent` returns **409** `{ code: RESOURCE_IN_USE \| FACILITY_IN_USE }` with German actionable copy
+- **Admin UI:** delete confirm disabled when impact counts > 0 (no “success” after stripping links)
+- **Protected relations (verified in schema):** `TrainingAllocation`, `TrainingSessionAllocation`, `TournamentResourceAllocation`, `TournamentParticipantAllocation`, `EventFacilityAllocation`, `WeekplannerPlanAllocation` — all tenant-scoped counts
+
+### Duplicate prevention (F-08-08-04 partial)
+
+- **Resource code:** normalize (`trim`, collapse whitespace, uppercase) + `assertFacilityResourceCodeAvailable` on create/update; DB `@@unique([tenantId, code])` retained
+- **Facility identity:** reject duplicate active `(tenantId, type, normalized name)` on create — does not merge Hauptfeld/Hauptplatz (distinct names)
+
+### Assignable vs historical queries
+
+| Query | Location | Filter |
+|-------|----------|--------|
+| Assignable | `getActiveResourceOptionsForTenant`, `getActiveFacilityResourcesByCodesForTenant` | Excludes ARCHIVED resource/facility |
+| Historical | `getFacilityResourcesByCodesForTenant`, `withRequiredCodes` | No active-only filter; archived labels merged in selectors |
+
+### Test evidence (08-08A)
+
+```bash
+npm run test -- lib/facilities/__tests__/facility-delete-service.test.ts \
+  lib/facilities/__tests__/facility-lifecycle-08-08a.test.ts \
+  lib/facilities/__tests__/facility-integrity \
+  lib/facilities/__tests__/queries.test.ts \
+  app/api/facilities/[facilityId]/permanent/__tests__/route.test.ts
+```
+
+| Suite | Result |
+|-------|--------|
+| 08-08A new tests | **PASS** (80 facility-focused incl. above) |
+| Focused 08 + integrity (§11) | **184 tests — PASS** |
+| Broad sweep (§11) | **14 fail — PRE_EXISTING_DIAGNOSIS_FAILURE (F-08-08-06)**; **0 NEW_08_08A_REGRESSION** |
+| Build | **PASS** |
+
+### Remaining gaps (not 08-08A)
+
+- **08-08B:** facility mutation → planner revalidation / open-hub stale labels (F-08-08-02)
+- **08-08C:** conflict/availability characterization after archive (adjacent to delete fix)
+- **FACILITY-INTEGRITY-01:** not CLOSED until matrix + 08-08B/C complete
 
 ---
 
@@ -170,13 +226,13 @@ Legend: **PASS** = code + test evidence; **COVERED_BY_TEST** = automated charact
 | Pitch create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | N/A | UNPROVEN | PASS next read | PASS next read | UNPROVEN | N/A | PASS | UNPROVEN |
 | Pitch rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | P2 stale | P2 stale | P2 stale | P2 stale | PASS next read | PASS next read | COVERED_BY_TEST | PASS (id) | PASS | **BROKEN** no revalidate |
 | Pitch archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS next read | PASS next read | PASS next read | PASS next read | PASS next read | PASS selectors | UNPROVEN | PASS withRequiredCodes | PASS block new | UNPROVEN |
-| Pitch delete | PASS+guard UI | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | P1 links gone | P1 | P1 | P1 | P1 | P1 | UNPROVEN | **BROKEN** intelligibility | PASS | UNPROVEN |
+| Pitch delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS blocked | PASS blocked | PASS blocked | PASS blocked | PASS blocked | PASS blocked | UNPROVEN | **PASS** (links kept) | PASS | UNPROVEN |
 | DR create | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | N/A | UNPROVEN | UNPROVEN | PASS next read | PASS next read | UNPROVEN | N/A | PASS | UNPROVEN |
 | DR rename | PASS | UNPROVEN | UNPROVEN | UNPROVEN | UNPROVEN | P2 stale | N/A | P2 stale | P2 stale | PASS next read | PASS next read | UNPROVEN | PASS (id) | PASS | **BROKEN** no revalidate |
 | DR archive | PASS | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS next read | N/A | PASS next read | PASS next read | PASS next read | PASS selectors | UNPROVEN | PASS | PASS block new | UNPROVEN |
-| DR delete | PASS+guard UI | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | P1 | N/A | P1 | P1 | P1 | P1 | UNPROVEN | **BROKEN** | PASS | UNPROVEN |
+| DR delete | PASS+guard | COVERED_BY_TEST | UNPROVEN | UNPROVEN | UNPROVEN | PASS blocked | N/A | PASS blocked | PASS blocked | PASS blocked | PASS blocked | UNPROVEN | **PASS** | PASS | UNPROVEN |
 
-Evidence anchors: `lib/facilities/queries.test.ts`, `facility-delete-service.ts`, `facility-integrity-diagnosis.test.ts`, absence of `revalidatePlannerWeekPaths` in `app/api/facilities/**`.
+Evidence anchors: `facility-delete-service.test.ts`, `facility-lifecycle-08-08a.test.ts`, `queries.test.ts`, `facility-integrity-diagnosis.test.ts`; revalidation gap unchanged in `app/api/facilities/**` (08-08B).
 
 ---
 
@@ -242,10 +298,10 @@ Evidence anchors: `lib/facilities/queries.test.ts`, `facility-delete-service.ts`
 
 | Entity | FK behavior | Classification |
 |--------|-------------|----------------|
-| **FacilityResource** | All allocation join tables `onDelete: Cascade` | **UNSAFE** for physical delete when any historical allocation exists — links stripped, activities lose «where» |
-| **Facility** | Cascades to resources → allocations | **UNSAFE** same |
-| **Application guard** | Impact preview + `FACILITIES_DELETE` on permanent routes | **SAFE_WITH_GUARDS** if UI enforces archive-first and delete only when counts zero |
-| **Recommendation** | Treat archive/deactivate as canonical; block delete when `_count` > 0 (extend server enforcement in 08-08A) |
+| **FacilityResource** | Allocation FKs `onDelete: Restrict` (08-08A) | **SAFE** — DB refuses delete while referenced |
+| **Facility** | Cascades to child resources; child delete hits Restrict when referenced | **SAFE** — blocked when any child in use |
+| **Application guard** | Transaction + reference counts + 409 error contract | **SAFE** — matches DB (race-safe) |
+| **Recommendation** | Archive/deactivate for retired resources; physical delete only when impact `deletable: true` |
 
 ---
 
@@ -298,10 +354,10 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 
 | ID | Sev | Domain | Current | Expected | Root cause | Consumers | Tests | Fix slice |
 |----|-----|--------|---------|----------|------------|-----------|-------|-----------|
-| F-08-08-01 | P1 | Facility delete | Physical delete cascades allocation rows | Historical activities remain intelligible | Prisma `onDelete: Cascade` on allocation FKs | Planner, trainings, matches, infoboard | `queries.test.ts`, delete service docs | 08-08A/B |
+| F-08-08-01 | P1 → **FIXED (08-08A)** | Facility delete | ~~Cascade strips links~~ → delete blocked / RESTRICT | Historical activities remain intelligible | Was `onDelete: Cascade`; now Restrict + service guards | Planner, trainings, tournaments, events | `facility-delete-service.test.ts` | **08-08A done**; propagation reval in 08-08B |
 | F-08-08-02 | P2 | Facility mutate → cache | Admin rename/archive succeeds; open planner may show old resource/facility names until manual refresh | Planner surfaces update after facility mutation | No `revalidatePlannerWeekPaths` / tag invalidation on `/api/facilities/*` | Kalender, Spielfeld, Garderobe, Liste, manipulation selectors | MISSING | 08-08B |
 | F-08-08-03 | P2 | Match identity | Match pitch/dressing via `pitchCode` strings | Single FK model like training | WEEKPLANNER-01A scope left legacy fields | Match planner, availability, infoboard | PARTIAL | DEFERRED post-08-08 or dedicated migration slice |
-| F-08-08-04 | P2 | Legacy codes | STADION_* codes persist alongside Hauptfeld naming | Stable codes OK; duplicate facility rows still possible | Admin can create second PITCH facility | Duplicate planner lanes | 01A diagnosis | 08-08A admin guardrails |
+| F-08-08-04 | P2 → **PARTIAL (08-08A)** | Legacy codes | STADION_* + Hauptfeld/Hauptplatz pair persists | Stable codes OK; block same-name facility + duplicate codes | Admin duplicate code/name guard | Duplicate lanes for distinct names | `facility-lifecycle-08-08a.test.ts` | Residual Class B pair — migration out of scope |
 | F-08-08-05 | P3 | Aggregation | Inspector lacks per-type breakdown line | AGGREGATION-01 full spec | Only `trainingCount` in metrics | Aggregate inspector | PARTIAL | 08-08E optional |
 | F-08-08-06 | P3 | Test harness | 14 tests fail in broad sweep (`planner-url` `search.trim`, plan-overrides mocks) | Green CI | Test props omit `search`; mock drift | CI signal | — | 08-08F test hygiene |
 | F-08-08-07 | DEFERRED | Impersonation | Manual persona UAT blocked | Reliable impersonation | PEOPLE-ACCESS-IMPERSONATION-01 open | Permission UAT | N/A | Separate package |
@@ -314,7 +370,7 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run build
 
 | Slice | Problem | Domains | Invariants | Tests | Human UAT | Depends |
 |-------|---------|---------|------------|-------|-----------|---------|
-| **08-08A** | Facility lifecycle canonicalization + admin guards | Admin, duplicate facility prevention | One logical pitch per site; archive-first | Extend `queries.test.ts`, new propagation tests | Rename/create/archive in admin | — |
+| **08-08A** | Facility lifecycle canonicalization + admin guards | Admin, duplicate prevention | Archive-first; delete only when unused | **DONE** — see §3A | — | — |
 | **08-08B** | Mutation → revalidation + client facility-groups refresh | All planner perspectives | After facility PATCH/DELETE, planner paths revalidated; open hub refreshes labels | New API route tests asserting `revalidatePath` | Open planner during rename | 08-08A |
 | **08-08C** | Conflict/availability after resource delete/archive | Conflicts, availability, historical display | No silent loss of «where» on delete | Integration tests with archived refs | Delete blocked with allocations | 08-08A |
 | **08-08D** | Cross-domain integration regression pack | Training/match/tournament/event + facility | Single week read model | E2E-style vitest fixtures | Full week scenario | 08-08B |
