@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import type { ReactNode } from "react";
 import StageEnvironmentBanner from "@/components/admin/deployment/StageEnvironmentBanner";
 import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
-import ImpersonationBanner from "@/components/admin/layout/ImpersonationBanner";
+import ImpersonationSafetyChrome from "@/components/admin/layout/ImpersonationSafetyChrome";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
 import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
@@ -27,6 +27,8 @@ import { SportingActivityDetailProvider } from "@/components/sporting-activity/d
 type AdminLayoutProps = {
   children: ReactNode;
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   if (sceHotfixLogin01TraceEnabled()) {
@@ -121,20 +123,18 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
         {/* Deployment environment banner */}
         <StageEnvironmentBanner />
 
-        {/* Impersonation banner */}
-        {session.user.isImpersonating ? (
-          <ImpersonationBanner
-            effectiveDisplayName={
+        <ImpersonationSafetyChrome
+          initialState={{
+            isImpersonating: Boolean(session.user.isImpersonating),
+            effectiveDisplayName:
               `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
-              session.user.email
-            }
-            actorDisplayName={
+              session.user.email,
+            actorDisplayName:
               session.user.actorName?.trim() ||
               session.user.actorEmail ||
-              "Administrator"
-            }
-          />
-        ) : null}
+              "Administrator",
+          }}
+        />
 
         {/* Page content */}
         <main className="flex-1 px-5 py-6 lg:px-7 lg:py-7">
