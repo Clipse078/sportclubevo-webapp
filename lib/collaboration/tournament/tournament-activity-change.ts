@@ -13,7 +13,12 @@ import {
   hasCommunicationWorthyChanges,
 } from "@/lib/collaboration/activity-change/policy";
 import { displayTournamentCollaborationStatus } from "@/lib/collaboration/tournament/tournament-status-presentation";
+import { UNASSIGNED_RESOURCE_DISPLAY } from "@/lib/collaboration/activity-change/cycle-baseline";
 import type { TournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
+
+function displayResourceLabel(value: string | null): string {
+  return value?.trim() ? value : UNASSIGNED_RESOURCE_DISPLAY;
+}
 
 function entry(
   field: ActivityChangeEntry["field"],
@@ -50,14 +55,25 @@ export function diffTournamentActivitySnapshots(
       entry("END_TIME", before.endTime, after.endTime, before.endTime, after.endTime),
     );
   }
-  if (before.playableVenueLabel !== after.playableVenueLabel) {
+  if (before.locationLabel !== after.locationLabel) {
     changes.push(
       entry(
         "VENUE",
-        before.playableVenueLabel,
-        after.playableVenueLabel,
-        before.playableVenueLabel,
-        after.playableVenueLabel,
+        before.locationLabel,
+        after.locationLabel,
+        before.locationLabel,
+        after.locationLabel,
+      ),
+    );
+  }
+  if (before.resourceLabel !== after.resourceLabel) {
+    changes.push(
+      entry(
+        "RESOURCE",
+        before.resourceLabel,
+        after.resourceLabel,
+        displayResourceLabel(before.resourceLabel),
+        displayResourceLabel(after.resourceLabel),
       ),
     );
   }

@@ -97,6 +97,8 @@ function matchSnap(overrides: Partial<MatchActivitySnapshot> = {}): MatchActivit
     dateKey: "2026-10-15",
     startTime: "18:30",
     endTime: "20:00",
+    locationLabel: "Im Brüel",
+    pitchLabel: "KR2",
     playableVenueLabel: "Im Brüel · KR2",
     dressingRoomLabel: null,
     scheduleLine: null,
@@ -118,6 +120,8 @@ function tourSnap(overrides: Partial<TournamentActivitySnapshot> = {}): Tourname
     dateKey: "2026-10-20",
     startTime: "09:00",
     endTime: "12:00",
+    locationLabel: "Im Brüel",
+    resourceLabel: "KR2",
     playableVenueLabel: "Im Brüel · KR2",
     scheduleLine: null,
     ...overrides,
@@ -202,14 +206,14 @@ describe("SCE-COLLAB-01B match audience + impact", () => {
   it("57 match impact assembly failure isolated", async () => {
     mocks.loadMatchActivitySnapshot.mockResolvedValue(matchSnap({ startTime: "19:30" }));
     mocks.resolveMatchAudienceContext.mockRejectedValue(new Error("boom"));
-    const impact = await buildMatchMutationCollaborationImpact({
+    const result = await buildMatchMutationCollaborationImpact({
       tenantId: "tenant-1",
       tenantKey: "fca",
       userId: "user-1",
       matchId: "match-1",
       beforeSnapshot: matchSnap(),
     });
-    expect(impact).toBeNull();
+    expect(result.impact).toBeNull();
   });
 });
 
@@ -239,14 +243,14 @@ describe("SCE-COLLAB-01B tournament audience", () => {
 
   it("58 tournament impact failure isolated", async () => {
     mocks.loadTournamentActivitySnapshot.mockRejectedValue(new Error("fail"));
-    const impact = await buildTournamentMutationCollaborationImpact({
+    const result = await buildTournamentMutationCollaborationImpact({
       tenantId: "tenant-1",
       tenantKey: "fca",
       userId: "user-1",
       tournamentId: "tour-1",
       beforeSnapshot: tourSnap(),
     });
-    expect(impact).toBeNull();
+    expect(result.impact).toBeNull();
   });
 });
 

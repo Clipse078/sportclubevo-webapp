@@ -29,6 +29,8 @@ import {
   TrainingSessionNotFoundError,
 } from "@/lib/training/errors";
 import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildTrainingMutationCollaborationImpact } from "@/lib/collaboration/training/training-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
@@ -50,10 +52,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const { sessionId } = await params;
 
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Request body required" }, { status: 400 });
   }
+
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TRAINING", sessionId);
 
   if (!isAllowedStatus(body.status)) {
     return NextResponse.json(
@@ -73,15 +77,19 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-    const collaboration = await buildTrainingMutationCollaborationImpact({
+    const collaborationResult = await buildTrainingMutationCollaborationImpact({
       tenantId,
       tenantKey,
       userId,
       sessionId,
       beforeSnapshot,
+      cycleBaseline,
     });
 
-    return NextResponse.json({ session, collaboration });
+    return NextResponse.json({
+      session,
+      ...buildCollaborationMutationResponse(collaborationResult),
+    });
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {
       return NextResponse.json({ error: err.message }, { status: 404 });

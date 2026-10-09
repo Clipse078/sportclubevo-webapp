@@ -95,6 +95,8 @@ import {
   resolveTenantEventTimezone,
 } from "@/lib/events/tenant-local-datetime";
 import { loadTournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildTournamentMutationCollaborationImpact } from "@/lib/collaboration/tournament/tournament-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
@@ -195,6 +197,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TOURNAMENT", tournamentId);
+
   const hasOccupancyPatch =
     "dressingRoomOccupancyMode" in body ||
     "dressingRoomBeforeMinutes" in body ||
@@ -289,15 +293,19 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
 
       const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-      const collaboration = await buildTournamentMutationCollaborationImpact({
+      const collaborationResult = await buildTournamentMutationCollaborationImpact({
         tenantId,
         tenantKey,
         userId,
         tournamentId,
         beforeSnapshot,
+        cycleBaseline,
       });
 
-      return NextResponse.json({ tournament, collaboration });
+      return NextResponse.json({
+        tournament,
+        ...buildCollaborationMutationResponse(collaborationResult),
+      });
     }
 
     // ── Field update ─────────────────────────────────────────────────────────
@@ -388,15 +396,19 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
 
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-    const collaboration = await buildTournamentMutationCollaborationImpact({
+    const collaborationResult = await buildTournamentMutationCollaborationImpact({
       tenantId,
       tenantKey,
       userId,
       tournamentId,
       beforeSnapshot,
+      cycleBaseline,
     });
 
-    return NextResponse.json({ tournament, collaboration });
+    return NextResponse.json({
+      tournament,
+      ...buildCollaborationMutationResponse(collaborationResult),
+    });
   } catch (err) {
     if (err instanceof TournamentNotFoundError) {
       return NextResponse.json({ error: "Turnier nicht gefunden." }, { status: 404 });

@@ -14,8 +14,7 @@ import {
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
-import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
-import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 type Props = {
   tournamentId: string;
   canManage: boolean;
@@ -34,7 +33,10 @@ export default function TournamentResourceAllocationEditor({
   const [allocations, setAllocations] = useState<TournamentResourceAllocationDto[]>(initialAllocations);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const { setImpact } = useActivityChangeCollaboration();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "TOURNAMENT",
+    tournamentId,
+  );
 
   const allocatedResourceIds = useMemo(
     () => new Set(allocations.map((a) => a.facilityResourceId)),
@@ -43,10 +45,11 @@ export default function TournamentResourceAllocationEditor({
 
   const handleAdd = useCallback(
     async (facilityResourceId: string) => {
+      const { payload, cycleRequested } = attachCycleBaseline({ facilityResourceId });
       const res = await fetch(`/api/tournaments/${tournamentId}/resource-allocations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ facilityResourceId }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json().catch(() => null)) as
         | { allocation?: TournamentResourceAllocationDto; error?: string; collaboration?: unknown }
@@ -54,11 +57,10 @@ export default function TournamentResourceAllocationEditor({
       if (!res.ok || !data?.allocation) {
         throw new Error(data?.error ?? "Ressource konnte nicht zugewiesen werden.");
       }
-      const collaboration = extractCollaborationImpact(data);
-      if (collaboration) setImpact(collaboration);
+      applyMutationCollaboration(data, cycleRequested);
       setAllocations((prev) => [...prev, data.allocation as TournamentResourceAllocationDto]);
     },
-    [tournamentId],
+    [applyMutationCollaboration, attachCycleBaseline, tournamentId],
   );
 
   const handleRemove = useCallback(
@@ -66,9 +68,14 @@ export default function TournamentResourceAllocationEditor({
       setError(null);
       startTransition(async () => {
         try {
+          const { payload, cycleRequested } = attachCycleBaseline({});
           const res = await fetch(
             `/api/tournaments/${tournamentId}/resource-allocations/${allocationId}`,
-            { method: "DELETE" },
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
           );
           const data = (await res.json().catch(() => null)) as {
             error?: string;
@@ -77,15 +84,14 @@ export default function TournamentResourceAllocationEditor({
           if (!res.ok) {
             throw new Error(data?.error ?? "Ressource konnte nicht entfernt werden.");
           }
-          const collaboration = extractCollaborationImpact(data);
-          if (collaboration) setImpact(collaboration);
+          applyMutationCollaboration(data, cycleRequested);
           setAllocations((prev) => prev.filter((a) => a.id !== allocationId));
         } catch (err) {
           setError(err instanceof Error ? err.message : "Ressource konnte nicht entfernt werden.");
         }
       });
     },
-    [tournamentId],
+    [applyMutationCollaboration, attachCycleBaseline, tournamentId],
   );
 
   const primaryName =

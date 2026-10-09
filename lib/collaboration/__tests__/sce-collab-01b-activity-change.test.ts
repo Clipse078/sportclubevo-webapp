@@ -28,7 +28,9 @@ function matchSnapshot(overrides: Partial<MatchActivitySnapshot> = {}): MatchAct
     dateKey: "2026-10-15",
     startTime: "18:30",
     endTime: "20:00",
-    playableVenueLabel: "Im Brüel · KR2",
+    locationLabel: "Im Brüel, Allschwil, -2",
+    pitchLabel: "KR2",
+    playableVenueLabel: "Im Brüel, Allschwil, -2 · KR2",
     dressingRoomLabel: "Heim G1",
     scheduleLine: "Mittwoch · 18:30–20:00",
     ...overrides,
@@ -51,6 +53,8 @@ function tournamentSnapshot(
     dateKey: "2026-10-20",
     startTime: "09:00",
     endTime: "12:00",
+    locationLabel: "Im Brüel",
+    resourceLabel: "KR2",
     playableVenueLabel: "Im Brüel · KR2",
     scheduleLine: "Montag · 09:00–12:00",
     ...overrides,
@@ -80,14 +84,25 @@ describe("SCE-COLLAB-01B match change detection", () => {
   it("4 venue change", () => {
     const set = buildMatchActivityChangeSet(
       matchSnapshot(),
-      matchSnapshot({ playableVenueLabel: "Gemeindesportplatz · Platz 1" }),
+      matchSnapshot({ locationLabel: "Gemeindesportplatz" }),
     );
     expect(set?.entries.some((e) => e.field === "VENUE")).toBe(true);
   });
 
-  it("5 pitch/resource change", () => {
-    const before = matchSnapshot({ playableVenueLabel: "Im Brüel · KR2", dressingRoomLabel: "Heim G1" });
-    const after = matchSnapshot({ playableVenueLabel: "Im Brüel · KR2", dressingRoomLabel: "Heim G2" });
+  it("5 pitch/resource change uses Spielfeld without noisy Ort", () => {
+    const before = matchSnapshot({ pitchLabel: null, locationLabel: "Im Brüel, Allschwil, -2" });
+    const after = matchSnapshot({ pitchLabel: "Hauptfeld", locationLabel: "Im Brüel, Allschwil, -2" });
+    const entries = diffMatchActivitySnapshots(before, after);
+    expect(entries.some((e) => e.field === "RESOURCE")).toBe(true);
+    expect(entries.some((e) => e.field === "VENUE")).toBe(false);
+    const resource = entries.find((e) => e.field === "RESOURCE");
+    expect(resource?.displayOld).toBe("Nicht zugewiesen");
+    expect(resource?.displayNew).toBe("Hauptfeld");
+  });
+
+  it("5b dressing room resource change", () => {
+    const before = matchSnapshot({ dressingRoomLabel: "Heim G1" });
+    const after = matchSnapshot({ dressingRoomLabel: "Heim G2" });
     const entries = diffMatchActivitySnapshots(before, after);
     expect(entries.some((e) => e.field === "RESOURCE")).toBe(true);
   });
@@ -110,7 +125,7 @@ describe("SCE-COLLAB-01B match change detection", () => {
       matchSnapshot(),
       matchSnapshot({
         startTime: "19:30",
-        playableVenueLabel: "Gemeindesportplatz · Platz 1",
+        locationLabel: "Gemeindesportplatz",
       }),
     );
     expect((set?.entries.length ?? 0) >= 2).toBe(true);
@@ -216,8 +231,14 @@ describe("SCE-COLLAB-01B tournament change detection", () => {
     expect(
       buildTournamentActivityChangeSet(
         tournamentSnapshot(),
-        tournamentSnapshot({ playableVenueLabel: "Gemeindesportplatz · Platz 1" }),
+        tournamentSnapshot({ locationLabel: "Gemeindesportplatz" }),
       )?.entries.some((e) => e.field === "VENUE"),
+    ).toBe(true);
+    expect(
+      buildTournamentActivityChangeSet(
+        tournamentSnapshot({ locationLabel: "Im Brüel", resourceLabel: null }),
+        tournamentSnapshot({ locationLabel: "Im Brüel", resourceLabel: "Kunstrasen 2" }),
+      )?.entries.some((e) => e.field === "RESOURCE"),
     ).toBe(true);
     expect(
       buildTournamentActivityChangeSet(
@@ -236,7 +257,7 @@ describe("SCE-COLLAB-01B tournament change detection", () => {
   it("29 multi-change consolidated", () => {
     const set = buildTournamentActivityChangeSet(
       tournamentSnapshot(),
-      tournamentSnapshot({ startTime: "10:00", playableVenueLabel: "Neu · KR1" }),
+      tournamentSnapshot({ startTime: "10:00", locationLabel: "Neu" }),
     );
     expect((set?.entries.length ?? 0) >= 2).toBe(true);
   });

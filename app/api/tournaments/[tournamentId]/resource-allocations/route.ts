@@ -31,6 +31,8 @@ import {
   TournamentResourceAllocationDuplicateError,
 } from "@/lib/tournaments/errors";
 import { loadTournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildTournamentMutationCollaborationImpact } from "@/lib/collaboration/tournament/tournament-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
@@ -84,6 +86,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "facilityResourceId is required." }, { status: 400 });
   }
 
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TOURNAMENT", tournamentId);
+
   try {
     const beforeSnapshot = await loadTournamentActivitySnapshot({ tenantId, tournamentId });
     const allocation = await addTournamentResourceAllocation(tenantId, tournamentId, {
@@ -96,15 +100,19 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     const userId = access.session.user.effectiveUserId ?? access.session.user.id;
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-    const collaboration = await buildTournamentMutationCollaborationImpact({
+    const collaborationResult = await buildTournamentMutationCollaborationImpact({
       tenantId,
       tenantKey,
       userId,
       tournamentId,
       beforeSnapshot,
+      cycleBaseline,
     });
 
-    return NextResponse.json({ allocation, collaboration }, { status: 201 });
+    return NextResponse.json(
+      { allocation, ...buildCollaborationMutationResponse(collaborationResult) },
+      { status: 201 },
+    );
   } catch (err) {
     if (err instanceof TournamentNotFoundError) {
       return NextResponse.json({ error: "Turnier nicht gefunden." }, { status: 404 });

@@ -13,7 +13,12 @@ import {
   hasCommunicationWorthyChanges,
 } from "@/lib/collaboration/activity-change/policy";
 import { displayMatchCollaborationStatus } from "@/lib/collaboration/match/match-status-presentation";
+import { UNASSIGNED_RESOURCE_DISPLAY } from "@/lib/collaboration/activity-change/cycle-baseline";
 import type { MatchActivitySnapshot } from "@/lib/collaboration/match/match-activity-snapshot";
+
+function displayPitchLabel(value: string | null): string {
+  return value?.trim() ? value : UNASSIGNED_RESOURCE_DISPLAY;
+}
 
 function entry(
   field: ActivityChangeEntry["field"],
@@ -50,24 +55,36 @@ export function diffMatchActivitySnapshots(
       entry("END_TIME", before.endTime, after.endTime, before.endTime, after.endTime),
     );
   }
-  if (before.playableVenueLabel !== after.playableVenueLabel) {
+  if (before.locationLabel !== after.locationLabel) {
     changes.push(
       entry(
         "VENUE",
-        before.playableVenueLabel,
-        after.playableVenueLabel,
-        before.playableVenueLabel,
-        after.playableVenueLabel,
+        before.locationLabel,
+        after.locationLabel,
+        before.locationLabel,
+        after.locationLabel,
       ),
     );
-  } else if (before.dressingRoomLabel !== after.dressingRoomLabel) {
+  }
+  if (before.pitchLabel !== after.pitchLabel) {
+    changes.push(
+      entry(
+        "RESOURCE",
+        before.pitchLabel,
+        after.pitchLabel,
+        displayPitchLabel(before.pitchLabel),
+        displayPitchLabel(after.pitchLabel),
+      ),
+    );
+  }
+  if (before.dressingRoomLabel !== after.dressingRoomLabel) {
     changes.push(
       entry(
         "RESOURCE",
         before.dressingRoomLabel,
         after.dressingRoomLabel,
-        before.dressingRoomLabel,
-        after.dressingRoomLabel,
+        displayPitchLabel(before.dressingRoomLabel),
+        displayPitchLabel(after.dressingRoomLabel),
       ),
     );
   }

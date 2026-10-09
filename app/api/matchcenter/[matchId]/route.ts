@@ -73,6 +73,11 @@ import {
 } from "@/lib/matchcenter/match-lifecycle-service";
 import { parseTenantLocalDateTimeInput, resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 import { loadMatchActivitySnapshot } from "@/lib/collaboration/match/match-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import {
+  parseCollaborationCycleBaselineFromBody,
+  stripCollaborationCycleBaselineFromBody,
+} from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildMatchMutationCollaborationImpact } from "@/lib/collaboration/match/match-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
@@ -142,6 +147,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(
+    body as Record<string, unknown>,
+    "MATCH",
+    matchId,
+  );
+  const patchBody = stripCollaborationCycleBaselineFromBody(body as Record<string, unknown>) as PatchBody;
+
   // Load the event — include source, teamId, reviewStage for scope checks.
   const event = await prisma.event.findFirst({
     where: { id: matchId, tenantId, type: "MATCH" },
@@ -187,14 +199,14 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return null;
   }
 
-  const patchAuthResponse = await assertMatchPatchAuthorized(body);
+  const patchAuthResponse = await assertMatchPatchAuthorized(patchBody);
   if (patchAuthResponse) return patchAuthResponse;
 
   const beforeSnapshot = await loadMatchActivitySnapshot({ tenantId, matchId });
 
   const PROVIDER_PROTECTED_SOURCES = new Set(["SFV", "CLUBCORNER_FVNWS", "CSV_EXCEL_IMPORT"]);
 
-  if ("startAt" in body || "endAt" in body) {
+  if ("startAt" in patchBody || "endAt" in patchBody) {
     if (PROVIDER_PROTECTED_SOURCES.has(event.source)) {
       return NextResponse.json(
         { error: "Terminänderungen sind für synchronisierte Spiele nicht zulässig." },
@@ -212,24 +224,26 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   // Build the data object from allowed locally-managed fields only
   const data: Record<string, string | boolean | Date | null> = {};
 
-  if ("startAt" in body) {
-    if (typeof body.startAt !== "string" || !body.startAt.trim()) {
+  if ("startAt" in patchBody) {
+    if (typeof patchBody.startAt !== "string" || !patchBody.startAt.trim()) {
       return NextResponse.json({ error: "startAt muss ein ISO-Datum sein." }, { status: 400 });
     }
     const parsed =
-      parseTenantLocalDateTimeInput(body.startAt, tenantTimeZone) ?? new Date(body.startAt);
+      parseTenantLocalDateTimeInput(patchBody.startAt, tenantTimeZone) ??
+      new Date(patchBody.startAt);
     if (Number.isNaN(parsed.getTime())) {
       return NextResponse.json({ error: "startAt ist ungültig." }, { status: 400 });
     }
     data.startAt = parsed;
   }
 
-  if ("endAt" in body) {
-    if (body.endAt === null || body.endAt === undefined || body.endAt === "") {
+  if ("endAt" in patchBody) {
+    if (patchBody.endAt === null || patchBody.endAt === undefined || patchBody.endAt === "") {
       data.endAt = null;
-    } else if (typeof body.endAt === "string") {
+    } else if (typeof patchBody.endAt === "string") {
       const parsed =
-        parseTenantLocalDateTimeInput(body.endAt, tenantTimeZone) ?? new Date(body.endAt);
+        parseTenantLocalDateTimeInput(patchBody.endAt, tenantTimeZone) ??
+        new Date(patchBody.endAt);
       if (Number.isNaN(parsed.getTime())) {
         return NextResponse.json({ error: "endAt ist ungültig." }, { status: 400 });
       }
@@ -240,8 +254,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 
   for (const key of ALLOWED_STRING_KEYS) {
-    if (key in body) {
-      const value = body[key];
+    if (key in patchBody) {
+      const value = patchBody[key];
       if (value === null || value === undefined) {
         data[key] = null;
       } else if (typeof value === "string") {
@@ -256,8 +270,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 
   for (const key of ALLOWED_BOOLEAN_KEYS) {
-    if (key in body) {
-      const value = body[key];
+    if (key in patchBody) {
+      const value = patchBody[key];
       if (typeof value !== "boolean") {
         return NextResponse.json(
           { error: `${key} muss ein Boolean sein.` },
@@ -269,9 +283,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 
   const hasOccupancyPatch =
-    "dressingRoomOccupancyMode" in body ||
-    "dressingRoomBeforeMinutes" in body ||
-    "dressingRoomAfterMinutes" in body;
+    "dressingRoomOccupancyMode" in patchBody ||
+    "dressingRoomBeforeMinutes" in patchBody ||
+    "dressingRoomAfterMinutes" in patchBody;
 
   if (hasOccupancyPatch) {
     const { updateEventDressingRoomOccupancy } = await import(
@@ -279,9 +293,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     );
     try {
       await updateEventDressingRoomOccupancy(tenantId, matchId, {
-        mode: body.dressingRoomOccupancyMode ?? "DEFAULT",
-        beforeMinutes: body.dressingRoomBeforeMinutes,
-        afterMinutes: body.dressingRoomAfterMinutes,
+        mode: patchBody.dressingRoomOccupancyMode ?? "DEFAULT",
+        beforeMinutes: patchBody.dressingRoomBeforeMinutes,
+        afterMinutes: patchBody.dressingRoomAfterMinutes,
       });
     } catch (err) {
       return NextResponse.json(
@@ -347,15 +361,19 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   revalidatePath("/dashboard/wochenplan");
 
   const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-  const collaboration = await buildMatchMutationCollaborationImpact({
+  const collaborationResult = await buildMatchMutationCollaborationImpact({
     tenantId,
     tenantKey,
     userId,
     matchId,
     beforeSnapshot,
+    cycleBaseline,
   });
 
-  return NextResponse.json({ ...updated, collaboration });
+  return NextResponse.json({
+    ...updated,
+    ...buildCollaborationMutationResponse(collaborationResult),
+  });
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteContext) {

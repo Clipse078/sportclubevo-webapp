@@ -5,7 +5,7 @@
 | Package | Status |
 |---------|--------|
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
-| **SCE-COLLAB-01B** (Matches + Tournaments) | **IMPLEMENTED / HUMAN_UAT_PENDING** |
+| **SCE-COLLAB-01B** (Matches + Tournaments) | **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
@@ -140,6 +140,43 @@ Contextual collaboration + targeted communication will consume the same change/a
 | Vercel preview | READY | PR #811 preview green at SHA `7b3174f8` (SCE-COLLAB-01B-R1) |
 
 **Status after R1:** SCE-COLLAB-01B remains **IMPLEMENTED / HUMAN_UAT_PENDING** (not CLOSED).
+
+## SCE-COLLAB-01B-R2 — cumulative unresolved change cycle (2026-10-09)
+
+### Human UAT finding (UAT-04)
+
+During Tournament editing, separate participant-facing mutations (e.g. start time via `PATCH /api/tournaments/[id]`, then pitch via resource allocation) **replaced** the pending impact with only the latest single-mutation delta. Required semantics: **one unresolved cycle** from first canonical baseline → latest canonical state → net typed `ActivityChangeSet` → one impact → one communication.
+
+### Unresolved change cycle (active editing flow)
+
+| Invariant | Behavior |
+|-----------|----------|
+| Baseline | Captured on first participant-facing mutation in the cycle (`collaborationCycleBaseline` returned from server) |
+| Current | Latest canonical snapshot after each mutation |
+| Net diff | Recalculated baseline → current (not an append-only edit log) |
+| Multi-endpoint | Tournament/Match/Training mutations may participate in the same activity cycle when client sends stored baseline |
+| Reversion | Fields returned to baseline values disappear from the pending change set |
+| Zero net | Clears pending impact |
+| Non-participant saves | Do not clear pending impact when client resends cycle baseline (publication-only, remarks-only, etc.) |
+| Dismiss | Closes prompt without sending; saved activity unchanged; next cycle starts from post-dismiss canonical state |
+| Send | Successful publish clears cycle; next change starts fresh baseline |
+| Composer stale | If activity changes after prepare, composer closes with stale hint; user must prepare again (no silent obsolete publish) |
+| Persistence | **Transient** client/page cycle only (`ActivityChangeCollaborationProvider` + optional baseline in mutation JSON). **No durable DB impact inbox** (SFV async deferred). |
+| Hard reload | `HARD_RELOAD_RESETS_TRANSIENT_PENDING_CYCLE = YES` (acceptable for R2) |
+| Navigation | Leaving activity page clears provider state (no cross-activity leakage) |
+
+### Presentation (UAT-02/03 P2)
+
+Match/Tournament resource-only changes use typed **`RESOURCE` / Spielfeld** deltas (`Nicht zugewiesen → …`) instead of repeating unchanged venue text in **`VENUE` / Ort**. Venue and resource may both appear when both meaningfully change.
+
+### Modules (R2)
+
+- `lib/collaboration/activity-change/cycle-baseline.ts` — serializable baseline + merge helpers
+- `lib/collaboration/activity-change/collaboration-mutation-result.ts` — mutation response shape
+- `lib/collaboration/client/use-collaboration-mutation.ts` — attach baseline + apply response
+- Domain mutation builders accept optional `cycleBaseline` and return `{ impact, cycleBaseline }`
+
+**Status after R2 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R2**.
 
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 

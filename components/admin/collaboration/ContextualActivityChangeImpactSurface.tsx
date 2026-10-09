@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui";
@@ -8,9 +8,14 @@ import type {
   ActivityChangeImpact,
   ActivityCollaborationDomain,
 } from "@/lib/collaboration/activity-change/types";
-import { summarizeActivityChangeLine } from "@/lib/collaboration/activity-change/presentation";
+import {
+  MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  summarizeActivityChangeLine,
+} from "@/lib/collaboration/activity-change/presentation";
 import { ContextualActivityCommunicationComposer } from "@/components/admin/collaboration/ContextualActivityCommunicationComposer";
 import { contextualPrepareCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
 
 type Props = {
   domain: ActivityCollaborationDomain;
@@ -19,6 +24,12 @@ type Props = {
   onDismiss: () => void;
 };
 
+function fieldLabelsForDomain(domain: ActivityCollaborationDomain) {
+  if (domain === "MATCH") return MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE;
+  if (domain === "TOURNAMENT") return TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE;
+  return undefined;
+}
+
 export function ContextualActivityChangeImpactSurface({
   domain,
   activityId,
@@ -26,30 +37,46 @@ export function ContextualActivityChangeImpactSurface({
   onDismiss,
 }: Props) {
   const t = useTranslations("Collaboration.activityChange");
+  const { acknowledgeCommunicationSent } = useActivityChangeCollaboration();
+  const labels = fieldLabelsForDomain(domain);
   const [composerOpen, setComposerOpen] = useState(false);
   const [prepareError, setPrepareError] = useState<string | null>(null);
+  const [composerStale, setComposerStale] = useState(false);
   const [pending, startTransition] = useTransition();
   const [draftPrefill, setDraftPrefill] = useState<{
     draftId: string;
     teamId: string;
     subject: string;
     bodyText: string;
+    changeFingerprint: string;
   } | null>(null);
+  const preparedFingerprintRef = useRef<string | null>(null);
 
   const entries = impact.changeSet?.entries ?? [];
-  const summaryLines = entries.map((entry) => summarizeActivityChangeLine(entry));
+  const summaryLines = entries.map((entry) => summarizeActivityChangeLine(entry, labels));
+  const currentFingerprint = impact.changeSet?.fingerprint ?? null;
+
+  useEffect(() => {
+    if (!composerOpen || !currentFingerprint || !preparedFingerprintRef.current) return;
+    if (currentFingerprint !== preparedFingerprintRef.current) {
+      setComposerStale(true);
+      setDraftPrefill(null);
+      setComposerOpen(false);
+      preparedFingerprintRef.current = null;
+    }
+  }, [composerOpen, currentFingerprint]);
 
   function handleCommunicateClick() {
     if (!impact.changeSet || !impact.canCommunicate) return;
     setPrepareError(null);
+    setComposerStale(false);
     startTransition(async () => {
       try {
         const res = await fetch(contextualPrepareCommunicationPath(domain, activityId), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ changeSet: impact.changeSet }),
-          },
-        );
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ changeSet: impact.changeSet }),
+        });
         const data = (await res.json().catch(() => null)) as {
           error?: string;
           draftId?: string;
@@ -60,11 +87,14 @@ export function ContextualActivityChangeImpactSurface({
         if (!res.ok || !data?.draftId || !data.teamId) {
           throw new Error(data?.error ?? t("prepareError"));
         }
+        const fingerprint = impact.changeSet!.fingerprint;
+        preparedFingerprintRef.current = fingerprint;
         setDraftPrefill({
           draftId: data.draftId,
           teamId: data.teamId,
           subject: data.subject ?? "",
           bodyText: data.bodyText ?? "",
+          changeFingerprint: fingerprint,
         });
         setComposerOpen(true);
       } catch (err) {
@@ -127,6 +157,12 @@ export function ContextualActivityChangeImpactSurface({
         </p>
       ) : null}
 
+      {composerStale ? (
+        <p className="mt-2 text-xs text-amber-700" role="status" data-testid="contextual-activity-composer-stale">
+          {t("composerStale")}
+        </p>
+      ) : null}
+
       {impact.canCommunicate ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button
@@ -157,7 +193,10 @@ export function ContextualActivityChangeImpactSurface({
           initialSubject={draftPrefill.subject}
           initialBody={draftPrefill.bodyText}
           onClose={() => setComposerOpen(false)}
-          onPublished={onDismiss}
+          onPublished={() => {
+            acknowledgeCommunicationSent();
+            onDismiss();
+          }}
         />
       ) : null}
     </div>

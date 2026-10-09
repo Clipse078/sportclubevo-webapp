@@ -464,14 +464,14 @@ describe("SCE-COLLAB-01A-R1 failure isolation", () => {
     mocks.loadTrainingActivitySnapshot
       .mockResolvedValueOnce(snapshot())
       .mockRejectedValue(new Error("after load failed"));
-    const impact = await buildTrainingMutationCollaborationImpact({
+    const result = await buildTrainingMutationCollaborationImpact({
       tenantId: "tenant-1",
       tenantKey: "fca",
       userId: "user-1",
       sessionId: "sess-1",
       beforeSnapshot: snapshot(),
     });
-    expect(impact).toBeNull();
+    expect(result.impact).toBeNull();
   });
 
   it("prepare failure does not invoke publish", async () => {

@@ -16,12 +16,14 @@ import { removeTournamentResourceAllocation } from "@/lib/tournaments/resource-a
 import { TournamentResourceAllocationNotFoundError } from "@/lib/tournaments/errors";
 import { prisma } from "@/lib/db/prisma";
 import { loadTournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildTournamentMutationCollaborationImpact } from "@/lib/collaboration/tournament/tournament-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type RouteContext = { params: Promise<{ tournamentId: string; allocationId: string }> };
 
-export async function DELETE(_request: NextRequest, { params }: RouteContext) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const access = await requireApiAnyPermission([PERMISSIONS.EVENTS_MANAGE]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
@@ -33,6 +35,14 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   }
 
   const { tournamentId, allocationId } = await params;
+
+  let cycleBaseline = null;
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TOURNAMENT", tournamentId);
+  } catch {
+    cycleBaseline = null;
+  }
 
   try {
     // Enforce URL ownership before mutation.
@@ -51,15 +61,19 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
     const userId = access.session.user.effectiveUserId ?? access.session.user.id;
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-    const collaboration = await buildTournamentMutationCollaborationImpact({
+    const collaborationResult = await buildTournamentMutationCollaborationImpact({
       tenantId,
       tenantKey,
       userId,
       tournamentId,
       beforeSnapshot,
+      cycleBaseline,
     });
 
-    return NextResponse.json({ ok: true, collaboration });
+    return NextResponse.json({
+      ok: true,
+      ...buildCollaborationMutationResponse(collaborationResult),
+    });
   } catch (err) {
     if (err instanceof TournamentResourceAllocationNotFoundError) {
       return NextResponse.json({ error: "Zuweisung nicht gefunden." }, { status: 404 });

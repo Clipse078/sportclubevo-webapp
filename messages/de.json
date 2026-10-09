@@ -850,6 +850,7 @@
       "communicateChange": "Änderung kommunizieren",
       "dismiss": "Schliessen",
       "prepareError": "Kommunikationsentwurf konnte nicht vorbereitet werden.",
+      "composerStale": "Die Aktivität wurde seit dem Entwurf geändert. Bitte «Änderung kommunizieren» erneut ausführen.",
       "publishError": "Senden fehlgeschlagen.",
       "publishSuccess": "Mitteilung gesendet ({count} Empfänger).",
       "composerTitle": "Mitteilung vorbereiten",

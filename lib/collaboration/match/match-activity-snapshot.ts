@@ -29,6 +29,8 @@ export type MatchActivitySnapshot = {
   dateKey: string;
   startTime: string;
   endTime: string;
+  locationLabel: string | null;
+  pitchLabel: string | null;
   playableVenueLabel: string | null;
   dressingRoomLabel: string | null;
   scheduleLine: string | null;
@@ -146,6 +148,7 @@ export async function loadMatchActivitySnapshot(input: {
 
   const { pitchByCode, dressingByCode } = await loadResourceMaps(input.tenantId);
   const pitchLabel = formatMatchPitchLabel(event.pitchCode, pitchByCode);
+  const locationLabel = event.location?.trim() || null;
   const playableVenueLabel = formatMatchPlayableVenueLabel({
     location: event.location,
     pitchLabel,
@@ -169,6 +172,8 @@ export async function loadMatchActivitySnapshot(input: {
     dateKey,
     startTime,
     endTime,
+    locationLabel,
+    pitchLabel,
     playableVenueLabel,
     dressingRoomLabel,
     scheduleLine: buildScheduleLine({ dateKey, startTime, endTime, timezone, locale }),

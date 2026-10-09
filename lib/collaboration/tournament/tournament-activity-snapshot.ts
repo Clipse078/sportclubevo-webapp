@@ -24,6 +24,8 @@ export type TournamentActivitySnapshot = {
   dateKey: string;
   startTime: string;
   endTime: string;
+  locationLabel: string | null;
+  resourceLabel: string | null;
   playableVenueLabel: string | null;
   scheduleLine: string | null;
 };
@@ -112,6 +114,7 @@ export async function loadTournamentActivitySnapshot(input: {
     }),
   );
   const resourceLabel = formatTournamentResourceLabels(resourceRows);
+  const locationLabel = event.location?.trim() || null;
   const playableVenueLabel = formatTournamentPlayableVenueLabel({
     location: event.location,
     resourceLabel,
@@ -130,6 +133,8 @@ export async function loadTournamentActivitySnapshot(input: {
     dateKey,
     startTime,
     endTime,
+    locationLabel,
+    resourceLabel,
     playableVenueLabel,
     scheduleLine: buildScheduleLine({ dateKey, startTime, endTime, timezone, locale }),
   };

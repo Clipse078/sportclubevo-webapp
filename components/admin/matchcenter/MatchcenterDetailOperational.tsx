@@ -8,8 +8,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
-import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 import {
   CheckCircle2,
   CircleAlert,
@@ -285,7 +284,10 @@ export default function MatchcenterDetailOperational({
 }: MatchcenterDetailOperationalProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { setImpact } = useActivityChangeCollaboration();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "MATCH",
+    matchId,
+  );
   const tResources = useTranslations("PlanningResources");
 
   // PLANNING-RESOURCE-UX-01 — code-as-ID groups for the visual pickers.
@@ -394,20 +396,21 @@ export default function MatchcenterDetailOperational({
     setSaving(true);
 
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({
+        teamId: teamId.trim() || null,
+        pitchCode: pitchCode.trim() || null,
+        homeDressingRoomCode: homeDressingRoomCode.trim() || null,
+        awayDressingRoomCode: awayDressingRoomCode.trim() || null,
+        websiteVisible,
+        infoboardVisible,
+        homepageVisible,
+        wochenplanVisible,
+        teamPageVisible,
+      });
       const res = await fetch(`/api/matchcenter/${matchId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teamId: teamId.trim() || null,
-          pitchCode: pitchCode.trim() || null,
-          homeDressingRoomCode: homeDressingRoomCode.trim() || null,
-          awayDressingRoomCode: awayDressingRoomCode.trim() || null,
-          websiteVisible,
-          infoboardVisible,
-          homepageVisible,
-          wochenplanVisible,
-          teamPageVisible,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = (await res.json().catch(() => null)) as {
@@ -421,12 +424,7 @@ export default function MatchcenterDetailOperational({
         );
       }
 
-      const collaboration = extractCollaborationImpact(data);
-      if (collaboration) {
-        setImpact(collaboration);
-      } else {
-        setImpact(null);
-      }
+      applyMutationCollaboration(data, cycleRequested);
 
       toast.success("Änderungen gespeichert.");
       router.refresh();
