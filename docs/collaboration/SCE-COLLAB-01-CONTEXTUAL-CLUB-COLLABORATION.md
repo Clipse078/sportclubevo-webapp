@@ -7,10 +7,10 @@
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
-| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **READY_FOR_MERGE** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; Human UAT R5 PASS 2026-10-09) |
+| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **CLOSED** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; merge `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` 2026-10-09) |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C ready for merge; 01D remains) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B + 01C closed; 01D remains) |
 
 ## Product principle
 
@@ -97,7 +97,7 @@ Duplicate prepare: reuses existing DRAFT with same `activityId` + `changeFingerp
 
 - Training session edit page only (not Weekplanner sheet yet).
 - Draft editing uses contextual inline composer (team chat timeline still hides unpublished drafts).
-- Club Event adapter implemented in 01C (Human UAT R5 PASS; merge pending).
+- Club Event adapter merged in 01C (Human UAT R5 PASS; STAGE `a03c0f9d5f03c767b1650028ef1e47eec6c8510a`).
 - SFV async change surfacing remains future (requires durable impact inbox — not in 01B).
 
 ## Future: Trainer-/Spielerbörse
@@ -543,7 +543,7 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | UAT-06 | Cancel composer | Banner remains |
 | UAT-07 | Send or zero-recipient UX | Explicit send resets cycle; zero → disabled Send (DATA_BLOCKED if no eligible users on STAGE) |
 
-**01C status:** **READY_FOR_MERGE** (Human UAT R5 PASS; await PR #812 merge to STAGE — not marked CLOSED until merged).
+**01C status:** **CLOSED** (merged via PR #812; feature head `e790d274f520e6a79b6c7a7ac77923876034ee45`).
 
 ---
 
@@ -859,6 +859,27 @@ Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present o
 
 **KNOWN_P2 (pre-existing on STAGE, unrelated mock gap):** `lib/events/__tests__/sce-events-audience-01.test.ts` — 3 failures (`eventParticipationAudienceEntry.findMany` mock undefined).
 
-**01C status:** **READY_FOR_MERGE** (PR #812 → STAGE).
+**01C status:** **CLOSED** (PR #812 → STAGE).
 
-**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C ready for merge; 01D outstanding).
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B/01C CLOSED; 01D outstanding).
+
+### SCE-COLLAB-01C — STAGE merge closure (2026-10-09)
+
+| Field | Value |
+|-------|-------|
+| PR | [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) |
+| Merge method | Merge commit (same as 01A/01B) |
+| Merged at | 2026-10-09T18:54:20Z |
+| Feature head | `e790d274f520e6a79b6c7a7ac77923876034ee45` |
+| Pre-merge STAGE | `82465e651a11c6ec1dea32464b6488299d5d77c2` |
+| Code merge SHA (STAGE) | `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` |
+| Deployed STAGE SHA (`/api/health/diag`) | `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` |
+| Shared STAGE URL | https://fcallschwil.sportclubevo.com |
+| Human UAT R5 | **PASS** |
+| Post-merge sentinels (bounded) | **91/91 PASS** (01C suite + club-event APIs + 01B R7 + teams parser + COMM-03 recipient resolution) |
+| P0 / P1 / NEW_FAILURES | **0 / 0 / 0** |
+| Schema / migration / role / permission / STAGE data | **NO** |
+| PROD | **Untouched** |
+| Zero-recipient on STAGE | **EXPECTED_DATA_STATE** — follow **SCE-PEOPLE-TEAM-ONBOARDING-01** (no roster fabrication for UAT) |
+
+**Next package (recommended):** **SCE-PEOPLE-TEAM-ONBOARDING-01** — then **SCE-COLLAB-01D** (multi-activity impact).
