@@ -319,6 +319,70 @@ Unchanged from R3/R4: successful publish → collaboration cycle reset; failed/z
 
 **Status after R5 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-05**.
 
+## SCE-COLLAB-01B-R6 — STAGE recipient eligibility diagnosis (2026-10-09)
+
+### Human UAT (R5 sign-off)
+
+| Gate | Result |
+|------|--------|
+| UAT-05A cumulative tournament communication flow | **PASS** |
+| UAT-05B zero-recipient UX (German copy, Send disabled) | **PASS** |
+| UAT-05C no raw dispatch error exposed | **PASS** |
+| ZERO_RECIPIENT_PROTECTION | **PASS** |
+
+Open question for R6: **why** STAGE F2/F3 operational audience resolves to zero dispatchable recipients (data vs resolver).
+
+### STAGE read-only diagnosis (FC Allschwil)
+
+| Check | Result |
+|-------|--------|
+| Database | STAGE Neon host matched `STAGE_DB_URL` fingerprint (not PROD) |
+| Mutations | **None** (SELECT / read-only resolver PREVIEW only) |
+| Dispatch | **None** |
+
+**PlayMore Turnier (UAT-aligned multi-team audience):** event `cmsutv9kj000p04l4mac8jlvo` (2026-10-17) — internal participants **FC Allschwil Junioren F2** + **FC Allschwil Junioren F3**; external clubs excluded via `teamId: null` on other tournaments in tenant.
+
+**Canonical audience:** `resolveTournamentAudienceContext` → `buildOperationalAudienceForTeamIds` → COMM-03 structural `teamIds` union (F2 ∪ F3).
+
+### Funnel (aggregate, no PII)
+
+| Stage | F2 | F3 | F2 ∪ F3 (Oct-17 PlayMore) |
+|-------|----|----|---------------------------|
+| Active `TeamSeason` (status ACTIVE) | 1 (Season 2026/2027) | 1 | 2 team-season rows |
+| Active `playerSquadMembers` | 0 | 0 | 0 |
+| Active `trainerTeamMembers` | 0 | 0 | 0 |
+| `resolveTeamAudiencePersonIds` | 0 persons | 0 persons | 0 persons |
+| COMM-03 PREVIEW `effectiveCount` | — | — | **0** |
+| COMM-03 DISPATCH pipeline targets | — | — | **0** (matches PREVIEW) |
+
+**First material drop-off:** structural team roster resolution — there are **no** active player or trainer memberships on any active `TeamSeason` for F2/F3 (in fact **zero** active squad/trainer rows tenant-wide on STAGE at diagnosis time).
+
+**Not the limiting factor in this STAGE snapshot:** Person→User linkage, tenant membership, guardian substitution, or channel preference — the pipeline never receives candidate persons because the operational roster is empty. No canonical F2 trainer membership (including any real-world trainer expectation) exists in DB; Michael was **not** used as proof.
+
+**Control group:** no other FC Allschwil team produced ≥1 COMM-03 operational recipient on STAGE — same empty roster pattern across teams (tenant has active persons/users, but none attached to team seasons).
+
+### Classification
+
+**EXPECTED_DATA_GAP** — STAGE lacks team-season roster onboarding (players/trainers) required for `defaultTeamOperationalAudience` / COMM-03 structural team resolution. **Not** a tournament multi-team union defect and **not** grounds to weaken dispatch or add fallback recipients.
+
+### Operational prerequisites (future onboarding, not R6 scope)
+
+| Path | Required links for IN_APP team operational delivery |
+|------|-----------------------------------------------------|
+| **Trainer** | Team → active `TeamSeason` → active `trainerTeamMember` → active tenant `Person` → `Person.userId` → active `User` (+ safeguarding/preferences as applicable) |
+| **Player (adult / direct)** | Same via `playerSquadMember` → `Person` → `User` |
+| **Player (minor / guardian)** | Above plus canonical `GuardianRelationship` → guardian `Person.userId` when tenant safeguarding requires guardian delivery |
+
+F2/F3 on STAGE today: teams + active seasons exist; **membership → person → user** chain is missing for all roster slots.
+
+### R6 outcome
+
+- **No product code changes**
+- **No STAGE data changes**
+- Resume Human UAT zero-recipient path as **expected** until roster/users are onboarded; positive send UAT requires data onboarding package (future), not resolver weakening.
+
+**Status after R6:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** (zero-recipient path understood; positive send blocked on data).
+
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 
 | Gate | Result | Notes |
