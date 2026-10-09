@@ -219,6 +219,36 @@ Contributing client lifecycle issues (R3):
 
 **Status after R3 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R3**.
 
+## SCE-COLLAB-01B-R4 — composer crash after cumulative prepare (2026-10-09)
+
+### Human UAT (UAT-04R3 partial)
+
+| Step | Result |
+|------|--------|
+| Cumulative banner after resource + time (and further resource change) | **PASS** — one banner with multiple typed deltas (Human evidence: Zeit 10:00→10:15 + Spielfeld Kunstrasen 2→Hauptfeld) |
+| UAT-04R3-B / UAT-04R3-C | **PASS** |
+| UAT-04R3-E — click **Änderung kommunizieren** | **FAIL** — full-page Next.js error (“This page couldn’t load”) |
+
+Zero-recipient preview text (“Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.”) was visible on the banner and is **not** the crash cause.
+
+### Root cause (R4)
+
+R3 moved `ActivityChangeCollaborationProvider` / impact surface to **activity `[id]` layouts**, **above** page-level `<ToastProvider>`. After prepare succeeded, `ContextualActivityCommunicationComposer` mounted and called `useToast()` **outside** any `ToastProvider`, throwing `useToast must be used inside <ToastProvider>`. That uncaught client error surfaced as a generic full-page failure.
+
+Prepare/orchestration, cumulative `ActivityChangeSet`, fingerprint, and audience resolution were **not** the failing boundary.
+
+### Fix (R4)
+
+Wrap `EventActivityCollaborationHost` and `TrainingSessionCollaborationHost` with `<ToastProvider>` so the impact surface and inline composer always sit inside a toast context (same pattern as `dashboard/teams/register`).
+
+Failure isolation unchanged: prepare errors remain inline on the impact surface; publish errors remain in the composer; tournament saves and cumulative cycle state are not rolled back.
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01b-r4-verification.test.tsx` — cumulative tournament prepare body/fingerprint/idempotency + composer open/cancel with activity layout host.
+
+**Status after R4 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R4**.
+
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 
 | Gate | Result | Notes |

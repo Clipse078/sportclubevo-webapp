@@ -7,6 +7,7 @@ import {
   useActivityChangeCollaboration,
 } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
 import { ContextualActivityChangeImpactSurface } from "@/components/admin/collaboration/ContextualActivityChangeImpactSurface";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 function ImpactSlot({
   domain,
@@ -37,11 +38,13 @@ export function EventActivityCollaborationHost({
   children: ReactNode;
 }) {
   return (
-    <ActivityChangeCollaborationProvider>
-      <div className="space-y-3">
-        <ImpactSlot domain={domain} activityId={activityId} />
-        {children}
-      </div>
-    </ActivityChangeCollaborationProvider>
+    <ToastProvider>
+      <ActivityChangeCollaborationProvider>
+        <div className="space-y-3">
+          <ImpactSlot domain={domain} activityId={activityId} />
+          {children}
+        </div>
+      </ActivityChangeCollaborationProvider>
+    </ToastProvider>
   );
 }
