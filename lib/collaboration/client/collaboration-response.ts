@@ -45,6 +45,7 @@ export type ApplyCollaborationMutationHandlers = {
     activityId: string,
     baseline: CollaborationCycleBaseline["baseline"] | null,
   ) => void;
+  getExistingCycleBaseline?: () => CollaborationCycleBaseline["baseline"] | undefined;
 };
 
 export function applyCollaborationMutationResponse(
@@ -57,8 +58,9 @@ export function applyCollaborationMutationResponse(
 
   if (impact) {
     handlers.setImpact(impact);
-    if (cycleBaseline) {
-      handlers.setCycleBaseline(options.domain, options.activityId, cycleBaseline);
+    const baselineToStore = cycleBaseline ?? handlers.getExistingCycleBaseline?.();
+    if (baselineToStore) {
+      handlers.setCycleBaseline(options.domain, options.activityId, baselineToStore);
     }
     return;
   }

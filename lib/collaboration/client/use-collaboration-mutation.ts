@@ -9,7 +9,7 @@ import {
 import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
 
 export function useCollaborationMutation(domain: ActivityCollaborationDomain, activityId: string) {
-  const { setImpact, setCycleBaseline, getCycleBaselineForRequest } =
+  const { setImpact, setCycleBaseline, getCycleBaselineForRequest, getExistingCycleBaseline } =
     useActivityChangeCollaboration();
 
   const attachCycleBaseline = useCallback(
@@ -25,10 +25,10 @@ export function useCollaborationMutation(domain: ActivityCollaborationDomain, ac
       applyCollaborationMutationResponse(
         responsePayload,
         { domain, activityId, cycleRequested },
-        { setImpact, setCycleBaseline },
+        { setImpact, setCycleBaseline, getExistingCycleBaseline },
       );
     },
-    [activityId, domain, setCycleBaseline, setImpact],
+    [activityId, domain, getExistingCycleBaseline, setCycleBaseline, setImpact],
   );
 
   return { attachCycleBaseline, applyMutationCollaboration };

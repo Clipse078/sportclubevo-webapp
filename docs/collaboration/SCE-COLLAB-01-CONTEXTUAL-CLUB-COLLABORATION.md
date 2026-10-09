@@ -178,6 +178,47 @@ Match/Tournament resource-only changes use typed **`RESOURCE` / Spielfeld** delt
 
 **Status after R2 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R2**.
 
+## SCE-COLLAB-01B-R3 — real browser multi-mutation cycle fix (2026-10-09)
+
+### Human UAT (UAT-04R2)
+
+| Step | Result |
+|------|--------|
+| Resource first (`null → Kunstrasen 2`) | **PASS** (banner correct) |
+| Time second (`10:00 → 10:15`) without dismiss | **FAIL** — banner showed time only; resource delta dropped |
+| Composer after second mutation | **FAIL** — body contained time only |
+
+**UAT-04R2 overall:** **FAIL** — cumulative unresolved cycle did not survive resource → time in the Vercel browser flow.
+
+### Root cause (R3)
+
+The server cumulative diff was correct whenever the client resent the **original** `collaborationCycleBaseline`. Human UAT proved the **time PATCH** often ran **without** that baseline, so the API diffed only the immediate pre-PATCH snapshot (`resource = Kunstrasen 2`, `time = 10:00`) against post-PATCH state → **time-only** impact.
+
+Contributing client lifecycle issues (R3):
+
+1. **Baseline read timing** — `attachCycleBaseline` read React state; the unresolved baseline must also be available synchronously from a ref updated in the same turn as `applyMutationCollaboration`.
+2. **Baseline/impact desync guard** — when a mutation response includes `collaboration` but omits `collaborationCycleBaseline`, the client now **preserves** the existing cycle baseline instead of leaving impact without a sendable baseline.
+3. **Provider lifetime** — `ActivityChangeCollaborationProvider` moved to **activity `[id]` layouts** (tournament / match / training session) so ordinary same-activity `router.refresh()` / RSC revalidation on the edit page does **not** remount the collaboration host that sits under the page component.
+
+### Provider lifetime semantics (final)
+
+| Boundary | Clears unresolved cycle? |
+|----------|-------------------------|
+| User dismiss | Yes — new baseline after dismiss |
+| Communication successfully sent | Yes |
+| Net diff returns to zero (reversion) | Yes |
+| Navigate to different activity | Yes (provider unmount) |
+| Hard browser reload | Yes (transient model; no DB persistence) |
+| Same-activity resource save, tournament PATCH, publication-only save, `router.refresh()` | **No** |
+
+### Architecture (unchanged intent, enforced in R3)
+
+- **BASELINE** — canonical participant-facing state immediately before the **first** unresolved worthy mutation (server returns `collaborationCycleBaseline`; client retains until cycle ends).
+- **CURRENT** — latest canonical snapshot after the most recent mutation.
+- **IMPACT** — typed net diff baseline → current (`ActivityChangeSet`), never string concatenation of per-step banners.
+
+**Status after R3 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R3**.
+
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 
 | Gate | Result | Notes |

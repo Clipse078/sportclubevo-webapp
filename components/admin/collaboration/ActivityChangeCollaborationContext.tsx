@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -22,6 +23,7 @@ type ActivityChangeCollaborationContextValue = {
     domain: ActivityCollaborationDomain,
     activityId: string,
   ) => CollaborationCycleBaseline["baseline"] | undefined;
+  getExistingCycleBaseline: () => CollaborationCycleBaseline["baseline"] | undefined;
   setCycleBaseline: (
     domain: ActivityCollaborationDomain,
     activityId: string,
@@ -41,14 +43,14 @@ type StoredCycle = {
 
 export function ActivityChangeCollaborationProvider({ children }: { children: ReactNode }) {
   const [impact, setImpactState] = useState<ActivityChangeImpact | null>(null);
-  const [cycle, setCycle] = useState<StoredCycle | null>(null);
+  const cycleRef = useRef<StoredCycle | null>(null);
 
   const setImpact = useCallback((next: ActivityChangeImpact | null) => {
     setImpactState(next?.worthy ? next : null);
   }, []);
 
   const clearCycle = useCallback(() => {
-    setCycle(null);
+    cycleRef.current = null;
     setImpactState(null);
   }, []);
 
@@ -67,23 +69,26 @@ export function ActivityChangeCollaborationProvider({ children }: { children: Re
       baseline: CollaborationCycleBaseline["baseline"] | null,
     ) => {
       if (!baseline) {
-        setCycle(null);
+        cycleRef.current = null;
         return;
       }
-      setCycle({ domain, activityId, baseline });
+      cycleRef.current = { domain, activityId, baseline };
     },
     [],
   );
 
   const getCycleBaselineForRequest = useCallback(
     (domain: ActivityCollaborationDomain, activityId: string) => {
-      if (!cycle || cycle.domain !== domain || cycle.activityId !== activityId) {
+      const active = cycleRef.current;
+      if (!active || active.domain !== domain || active.activityId !== activityId) {
         return undefined;
       }
-      return cycle.baseline;
+      return active.baseline;
     },
-    [cycle],
+    [],
   );
+
+  const getExistingCycleBaseline = useCallback(() => cycleRef.current?.baseline, []);
 
   const value = useMemo(
     () => ({
@@ -91,6 +96,7 @@ export function ActivityChangeCollaborationProvider({ children }: { children: Re
       setImpact,
       dismissImpact,
       getCycleBaselineForRequest,
+      getExistingCycleBaseline,
       setCycleBaseline,
       acknowledgeCommunicationSent,
     }),
@@ -99,6 +105,7 @@ export function ActivityChangeCollaborationProvider({ children }: { children: Re
       setImpact,
       dismissImpact,
       getCycleBaselineForRequest,
+      getExistingCycleBaseline,
       setCycleBaseline,
       acknowledgeCommunicationSent,
     ],

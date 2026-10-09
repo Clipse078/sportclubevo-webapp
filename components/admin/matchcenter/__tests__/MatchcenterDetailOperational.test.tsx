@@ -61,6 +61,10 @@ vi.mock("@/components/admin/collaboration/ActivityChangeCollaborationContext", (
     impact: null,
     setImpact: vi.fn(),
     dismissImpact: vi.fn(),
+    getCycleBaselineForRequest: vi.fn(),
+    getExistingCycleBaseline: vi.fn(),
+    setCycleBaseline: vi.fn(),
+    acknowledgeCommunicationSent: vi.fn(),
   }),
 }));
 
