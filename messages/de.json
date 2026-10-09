@@ -811,7 +811,8 @@
         "timeEnd": "Ende",
         "allDay": "Ganztägig",
         "allDaySummary": "Ganztägig",
-        "teamSelectPlaceholder": "Team auswählen"
+        "teamSelectPlaceholder": "Team auswählen",
+        "teamSelectEmpty": "Keine Teams verfügbar"
       },
       "errors": {
         "createFailed": "Veranstaltung konnte nicht erstellt werden.",

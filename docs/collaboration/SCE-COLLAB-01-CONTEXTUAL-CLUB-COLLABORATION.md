@@ -753,3 +753,77 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | UAT-R4-06 | Composer **Abbrechen** → unresolved surface remains |
 
 **COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R4 pending).
+
+---
+
+## SCE-COLLAB-01C-R5 — Human UAT R4 follow-up (2026-10-09)
+
+### Human UAT R4 result
+
+| Check | Result |
+|-------|--------|
+| UAT-R4-01 | **PASS** |
+| UAT-R4-02 | **PASS** — contextual SCE dialog; no anchor jump |
+| UAT-R4-03 | **BLOCKED_EMPTY_SELECTOR** — Team dropdown only placeholder „Team auswählen“ |
+| UAT-R4-04 … UAT-R4-06 | **BLOCKED** on empty selector |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING**.
+
+### Audience option architecture
+
+| Kind | Source | Notes |
+|------|--------|-------|
+| TEAM | Client `GET /api/teams` (`ClubEventParticipationAudienceEditorCore`) | Tenant from session; includes current-season `TeamSeason` metadata; **no** roster / COMM-03 recipient gate for listing |
+| ORG_UNIT / ROLE / PERSON | Backend `participation-audience` POST kinds | UI selectors for these types not yet exposed in `ClubEventParticipationAudienceEditorCore` (Team-only add UI today); counts exist on STAGE |
+
+**Layering (explicit):**
+
+1. **Audience target discovery** — selectable Team / Org / Role / Person (`EventParticipationAudienceEntry`)
+2. **Audience spec resolution** — `CommunicationAudienceSpec` from configured entries
+3. **COMM-03 recipient resolution** — eligible recipients (may be **0** without hiding the Team from the selector)
+
+### Normal vs contextual editor
+
+Both `ClubEventParticipationAudienceEditor` (Teilnehmer) and `ContextualClubEventParticipationAudienceDialog` render the same `ClubEventParticipationAudienceEditorCore` with identical props (`eventId`, `interaction` only). **No** contextual prop/context loss — same fetch paths.
+
+### STAGE read-only diagnosis (FC Allschwil, event `cmsprr1r6000304jr98oq6899`)
+
+| Metric | Value |
+|--------|------:|
+| Tenant | `cmomwboak0000tsf3zzivrs46` (FC Allschwil) |
+| TOTAL_TEAMS | 28 |
+| ACTIVE_TEAMS | 28 |
+| ACTIVE_TEAM_SEASONS (current) | 28 |
+| SELECTOR_ELIGIBLE_TEAMS | 28 (structural; not roster-gated) |
+| ORG_UNIT / ROLE / PERSON (tenant rows) | 17 / 4 / 4 |
+
+Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present on STAGE.
+
+### Root cause
+
+**R5-F — CANONICAL_PARTICIPATION_EDITOR_DEFECT** (client response parsing, not STAGE data):
+
+`GET /api/teams` returns a **bare JSON array** (see `app/api/teams/route.ts`). `ClubEventParticipationAudienceEditorCore` incorrectly read `{ teams: [...] }`, so `teams` state was always `[]` in production for **both** Teilnehmer and contextual dialog. Vitest mocks used the wrong shape and masked the defect.
+
+**Not** R5-E (STAGE data gap). **Not** recipient/roster coupling (R5-C).
+
+### R5 fix
+
+| Area | Change |
+|------|--------|
+| Parser | `lib/teams/parse-teams-list-api-response.ts` — canonical array + legacy wrapper; active teams; season `displayName` labels |
+| Core editor | Use parser; `GET /api/teams` with `cache: "no-store"`; empty state **Keine Teams verfügbar** |
+| Tests | `sce-collab-01c-r5-verification.test.tsx`, `parse-teams-list-api-response.test.ts` |
+
+### Human UAT R5 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R5-01 | Dialog opens in place |
+| UAT-R5-02 | FC Allschwil teams visible in Team selector |
+| UAT-R5-03 | Select Team + save → dialog closes; change preserved |
+| UAT-R5-04 | Zielgruppe + Empfänger 0/n + **Änderung kommunizieren** |
+| UAT-R5-05 | Composer opens; Empfänger 0 → Send disabled |
+| UAT-R5-06 | Composer cancel → unresolved change remains |
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R5 pending).

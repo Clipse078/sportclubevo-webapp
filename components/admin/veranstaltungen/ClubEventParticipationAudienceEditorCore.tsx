@@ -10,6 +10,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 import { formatClubEventParticipationAudienceEntryLabel } from "@/lib/collaboration/club-event/club-event-audience-presentation";
+import { parseTeamsListApiResponse } from "@/lib/teams/parse-teams-list-api-response";
 
 type AudienceEntry = {
   id: string;
@@ -60,9 +61,15 @@ export const ClubEventParticipationAudienceEditorCore = forwardRef<
 
   useEffect(() => {
     void reload();
-    void fetch("/api/teams?limit=100")
-      .then((r) => r.json())
-      .then((data: { teams?: TeamOption[] }) => setTeams(Array.isArray(data?.teams) ? data.teams : []))
+    void fetch("/api/teams", { cache: "no-store" })
+      .then(async (r) => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok) {
+          setTeams([]);
+          return;
+        }
+        setTeams(parseTeamsListApiResponse(data));
+      })
       .catch(() => setTeams([]));
   }, [reload]);
 
@@ -143,11 +150,13 @@ export const ClubEventParticipationAudienceEditorCore = forwardRef<
           <select
             className="fca-select min-h-[2.375rem] py-2 text-sm leading-normal"
             value={teamId}
-            disabled={disabled || pending}
+            disabled={disabled || pending || teams.length === 0}
             onChange={(e) => setTeamId(e.target.value)}
             data-testid="club-event-audience-team-select"
           >
-            <option value="">{tf("teamSelectPlaceholder")}</option>
+            <option value="">
+              {teams.length === 0 ? tf("teamSelectEmpty") : tf("teamSelectPlaceholder")}
+            </option>
             {teams.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}

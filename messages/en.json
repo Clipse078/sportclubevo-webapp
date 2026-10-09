@@ -384,7 +384,8 @@
         "timeEnd": "End",
         "allDay": "All day",
         "allDaySummary": "All day",
-        "teamSelectPlaceholder": "Select team"
+        "teamSelectPlaceholder": "Select team",
+        "teamSelectEmpty": "No teams available"
       },
       "errors": {
         "createFailed": "Could not create the event.",
