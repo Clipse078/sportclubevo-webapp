@@ -9,9 +9,9 @@ import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
-import { EventActivityCollaborationImpactSlot } from "@/components/admin/collaboration/EventActivityCollaborationHost";
 import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import VeranstaltungEditTopSaveButton from "@/components/admin/veranstaltungen/VeranstaltungEditTopSaveButton";
+import VeranstaltungEditTopCancelButton from "@/components/admin/veranstaltungen/VeranstaltungEditTopCancelButton";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
@@ -191,6 +191,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           actions={
             <>
               {canManage ? <VeranstaltungEditTopSaveButton /> : null}
+              {canManage ? <VeranstaltungEditTopCancelButton /> : null}
               <ContextualTaskCreateTriggerServer
                 contextType="CLUB_EVENT"
                 contextId={event.id}
@@ -202,8 +203,6 @@ export default async function VeranstaltungEditPage({ params }: Props) {
             </>
           }
         />
-
-        <EventActivityCollaborationImpactSlot domain="CLUB_EVENT" activityId={event.id} />
 
         <p className="text-xs leading-snug text-[var(--text-2)]">{t("description")}</p>
 

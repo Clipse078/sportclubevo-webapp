@@ -659,3 +659,49 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | UAT-R2-03 … UAT-R2-05 | **Änderung kommunizieren** + composer after configuring a valid participation audience (or any event with resolvable audience + send permission) |
 
 **Note:** Full communicate flow for Mitgliederversammlung requires setting participation audience in **Teilnehmer** first (product-correct; not a COLLAB data patch).
+
+---
+
+## SCE-COLLAB-01C-R3 — Human UAT R2 follow-up (2026-10-09)
+
+### Human UAT R2 result
+
+| Check | Result |
+|-------|--------|
+| Single top **Änderungen speichern** + save works | **PASS** |
+| Worthy change detection + persistent impact surface | **PASS** |
+| Empty audience **Keine Zielgruppe festgelegt** (no fabricated recipients) | **PASS** |
+| Bottom **Abbrechen** alone on long page | **FAIL** — must move to header |
+| Continue from changed event into communication after configuring audience | **FAIL** — unresolved cycle did not re-resolve audience/preview |
+| Club Event collaboration look-and-feel vs Tournamentcenter | **FAIL** — must use exact shared Tournamentcenter surface/composer path |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING** (not CLOSED).
+
+### R3 fix — Tournamentcenter shared UI seam
+
+| Area | Change |
+|------|--------|
+| Impact / composer | Club events use the same `EventActivityCollaborationHost` → `ContextualActivityChangeImpactSurface` → `ContextualActivityCommunicationComposer` path as `/dashboard/tournamentcenter` (no club-specific visual wrapper) |
+| Layout placement | Club event layout matches tournament: impact slot at activity host top (removed `suppressImpactSlot` + duplicate edit-page slot) |
+| Header actions | **Änderungen speichern** (primary) + **Abbrechen** (secondary) + **+ Aufgabe** in `PlanningEditorHeader`; bottom Save/Cancel removed |
+| Audience refresh | `POST/DELETE /api/events/[eventId]/participation-audience*` accepts `collaborationCycleBaseline` and returns `{ collaboration, collaborationCycleBaseline }` via `appendClubEventParticipationAudienceCollaboration` |
+| Client lifecycle | `ClubEventParticipationAudienceEditor` calls `useCollaborationMutation` after audience save — preserves unresolved cycle, re-runs preview/auth, updates `canCommunicate` / Empfänger without another event PATCH |
+| Change set | Participation audience remains configuration-only (not an `ActivityChangeSet` entry) |
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01c-r3-verification.test.tsx` (R3-01 … R3-30 subset)
+- Tournament / 01A / 01B regressions on branch
+
+### Human UAT R3 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R3-01 | Header: Save + Cancel + Aufgabe; no bottom Save/Cancel |
+| UAT-R3-02 | Time change → Tournament-style surface + **Zielgruppe festlegen** when no audience |
+| UAT-R3-03 | Configure audience in Teilnehmer → time change stays unresolved; audience not listed as change |
+| UAT-R3-04 | Surface shows readable Zielgruppe + Empfänger + **Änderung kommunizieren** without re-editing time |
+| UAT-R3-05 | Composer matches Tournamentcenter; zero recipients → Send disabled |
+| UAT-R3-06 | Composer cancel → unresolved surface remains |
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R3 pending).

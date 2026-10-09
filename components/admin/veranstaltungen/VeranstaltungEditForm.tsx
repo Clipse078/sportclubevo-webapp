@@ -9,7 +9,6 @@ import { VERANSTALTUNG_EDIT_FORM_ID } from "@/components/admin/veranstaltungen/v
 import { useVeranstaltungEditSubmitState } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
-import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
@@ -90,7 +89,6 @@ export default function VeranstaltungEditForm({
   const { submitting, setSubmitting } = useVeranstaltungEditSubmitState();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
-  const tc = useTranslations("PlanningEditor.common");
   const tz = resolveTenantEventTimezone(timeZone);
 
   const isArchived = event.status === "ARCHIVED";
@@ -378,19 +376,6 @@ export default function VeranstaltungEditForm({
       />
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
-
-      {!isReadonly ? (
-        <PlanningEditorActions testId="veranstaltung-edit-actions">
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard/veranstaltungen")}
-            className="fca-button-secondary"
-            data-testid="veranstaltung-edit-cancel"
-          >
-            {tc("cancel")}
-          </button>
-        </PlanningEditorActions>
-      ) : null}
     </form>
   );
 }

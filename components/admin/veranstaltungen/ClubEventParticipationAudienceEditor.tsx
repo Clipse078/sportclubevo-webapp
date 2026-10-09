@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 
 type AudienceEntry = {
   id: string;
@@ -19,6 +20,10 @@ type Props = {
 
 export default function ClubEventParticipationAudienceEditor({ eventId, disabled }: Props) {
   const tf = useTranslations("Veranstaltungen.editor.fields");
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "CLUB_EVENT",
+    eventId,
+  );
   const [entries, setEntries] = useState<AudienceEntry[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [teamId, setTeamId] = useState("");
@@ -44,17 +49,23 @@ export default function ClubEventParticipationAudienceEditor({ eventId, disabled
     setPending(true);
     setError(null);
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({ kind: "TEAM", teamId });
       const res = await fetch(`/api/events/${eventId}/participation-audience`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "TEAM", teamId }),
+        body: JSON.stringify(payload),
       });
-      const data = (await res.json().catch(() => null)) as { error?: string; entries?: AudienceEntry[] } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        entries?: AudienceEntry[];
+        collaboration?: unknown;
+      } | null;
       if (!res.ok) {
         setError(data?.error ?? "Teilnehmerkreis konnte nicht gespeichert werden.");
         return;
       }
       if (data?.entries) setEntries(data.entries);
+      applyMutationCollaboration(data, cycleRequested);
       setTeamId("");
     } finally {
       setPending(false);
@@ -65,14 +76,24 @@ export default function ClubEventParticipationAudienceEditor({ eventId, disabled
     setPending(true);
     setError(null);
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({});
       const res = await fetch(`/api/events/${eventId}/participation-audience/${entryId}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        entries?: AudienceEntry[];
+        collaboration?: unknown;
+      } | null;
       if (!res.ok) {
-        setError("Eintrag konnte nicht entfernt werden.");
+        setError(data?.error ?? "Eintrag konnte nicht entfernt werden.");
         return;
       }
-      await reload();
+      if (data?.entries) setEntries(data.entries);
+      else await reload();
+      applyMutationCollaboration(data, cycleRequested);
     } finally {
       setPending(false);
     }

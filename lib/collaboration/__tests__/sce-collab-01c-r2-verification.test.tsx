@@ -402,7 +402,7 @@ describe("SCE-COLLAB-01C-R2 save UX", () => {
     season: { id: "season-1", key: "2026-27", name: "2026/27" },
   };
 
-  it("R2-19 bottom Save button no longer exists; R2-20 top save submits form", async () => {
+  it("R2-19/R3 bottom Save and Cancel absent; R2-20 top save submits form", async () => {
     render(
       <IntlWrapper>
         <EventActivityCollaborationHost domain="CLUB_EVENT" activityId="evt-gv">
@@ -415,6 +415,7 @@ describe("SCE-COLLAB-01C-R2 save UX", () => {
     );
 
     expect(screen.queryByTestId("veranstaltung-edit-save")).toBeNull();
+    expect(screen.queryByTestId("veranstaltung-edit-cancel")).toBeNull();
     const top = screen.getByTestId("veranstaltung-edit-save-top");
     expect(top).toHaveAttribute("form", VERANSTALTUNG_EDIT_FORM_ID);
     fireEvent.click(top);

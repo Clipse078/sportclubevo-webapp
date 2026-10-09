@@ -16,7 +16,7 @@ export default async function VeranstaltungCollaborationLayout({
   const { eventId } = await params;
 
   return (
-    <EventActivityCollaborationHost domain="CLUB_EVENT" activityId={eventId} suppressImpactSlot>
+    <EventActivityCollaborationHost domain="CLUB_EVENT" activityId={eventId}>
       {children}
     </EventActivityCollaborationHost>
   );
