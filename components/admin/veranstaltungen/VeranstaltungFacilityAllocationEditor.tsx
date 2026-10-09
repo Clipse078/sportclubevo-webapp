@@ -12,6 +12,7 @@ import type { ResourceAvailabilityAnnotation } from "@/components/admin/training
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 
 type Props = {
   eventId: string;
@@ -46,6 +47,10 @@ export default function VeranstaltungFacilityAllocationEditor({
   const [allocations, setAllocations] = useState(initialAllocations);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "CLUB_EVENT",
+    eventId,
+  );
   const [otherPickerOpen, setOtherPickerOpen] = useState(false);
   const [otherPickerError, setOtherPickerError] = useState<string | null>(null);
 
@@ -83,10 +88,11 @@ export default function VeranstaltungFacilityAllocationEditor({
 
   const assignResource = useCallback(
     async (facilityResourceId: string) => {
+      const { payload, cycleRequested } = attachCycleBaseline({ facilityResourceId });
       const res = await fetch(`/api/events/${eventId}/facility-allocations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ facilityResourceId }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json().catch(() => null)) as
         | { allocation?: EventFacilityAllocationDto; error?: string }
@@ -94,9 +100,10 @@ export default function VeranstaltungFacilityAllocationEditor({
       if (!res.ok || !data?.allocation) {
         throw new Error(data?.error ?? "Ressource konnte nicht zugewiesen werden.");
       }
+      applyMutationCollaboration(data, cycleRequested);
       setAllocations((prev) => [...prev, data.allocation!]);
     },
-    [eventId],
+    [applyMutationCollaboration, attachCycleBaseline, eventId],
   );
 
   const assignOrReplace = useCallback(
@@ -105,12 +112,13 @@ export default function VeranstaltungFacilityAllocationEditor({
       if (existing?.facilityResourceId === facilityResourceId) return;
 
       if (existing) {
+        const { payload, cycleRequested } = attachCycleBaseline({ facilityResourceId });
         const res = await fetch(
           `/api/events/${eventId}/facility-allocations/${existing.id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ facilityResourceId }),
+            body: JSON.stringify(payload),
           },
         );
         const data = (await res.json().catch(() => null)) as
@@ -119,6 +127,7 @@ export default function VeranstaltungFacilityAllocationEditor({
         if (!res.ok || !data?.allocation) {
           throw new Error(data?.error ?? "Ressource konnte nicht geändert werden.");
         }
+        applyMutationCollaboration(data, cycleRequested);
         setAllocations((prev) =>
           prev.map((row) => (row.id === existing.id ? data.allocation! : row)),
         );
@@ -127,21 +136,26 @@ export default function VeranstaltungFacilityAllocationEditor({
 
       await assignResource(facilityResourceId);
     },
-    [allocations, assignResource, eventId],
+    [allocations, applyMutationCollaboration, assignResource, attachCycleBaseline, eventId],
   );
 
   const unassign = useCallback(
     async (allocationId: string) => {
+      const { payload, cycleRequested } = attachCycleBaseline({});
       const res = await fetch(`/api/events/${eventId}/facility-allocations/${allocationId}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? "Ressource konnte nicht entfernt werden.");
+        const errRow = data as { error?: string } | null;
+        throw new Error(errRow?.error ?? "Ressource konnte nicht entfernt werden.");
       }
+      applyMutationCollaboration(data, cycleRequested);
       setAllocations((prev) => prev.filter((a) => a.id !== allocationId));
     },
-    [eventId],
+    [applyMutationCollaboration, attachCycleBaseline, eventId],
   );
 
   const handlePitchSelect = useCallback(

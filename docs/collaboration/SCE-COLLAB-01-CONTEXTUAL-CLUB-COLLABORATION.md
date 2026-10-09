@@ -7,10 +7,10 @@
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
-| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
+| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **READY_FOR_MERGE** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; Human UAT R5 PASS 2026-10-09) |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C–01D remain) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C ready for merge; 01D remains) |
 
 ## Product principle
 
@@ -53,7 +53,9 @@ Domain adapters (01B):
 | Match | `lib/collaboration/match/*` | `PATCH /api/matchcenter/[matchId]` (SCE-owned operational fields) |
 | Tournament | `lib/collaboration/tournament/*` | `PATCH /api/tournaments/[tournamentId]`, tournament resource allocation routes |
 
-Future: `CLUB_EVENT` via the same `ActivityChangeSet` seam.
+| Club event (Veranstaltung) | `lib/collaboration/club-event/*` | `PATCH /api/events/[eventId]`, club event facility allocation routes |
+
+`CLUB_EVENT` uses the same `ActivityChangeSet` seam (01C).
 
 ### Match source ownership (01B)
 
@@ -95,7 +97,7 @@ Duplicate prepare: reuses existing DRAFT with same `activityId` + `changeFingerp
 
 - Training session edit page only (not Weekplanner sheet yet).
 - Draft editing uses contextual inline composer (team chat timeline still hides unpublished drafts).
-- Match/Tournament adapters implemented in 01B; Club Event remains future (01C).
+- Club Event adapter implemented in 01C (Human UAT R5 PASS; merge pending).
 - SFV async change surfacing remains future (requires durable impact inbox — not in 01B).
 
 ## Future: Trainer-/Spielerbörse
@@ -470,4 +472,393 @@ Evidence: user-provided explicit approval of COLLAB_UAT_01–06 (closure package
 | PR | #810 → `STAGE` |
 | Scope delivered | Training contextual collaboration only |
 
-**Not closed:** SCE-COLLAB-01 overall roadmap (01B Matches + Tournaments, 01C Club Events, 01D multi-activity impact, TRAINER-SPIELERBOERSE-01).
+**Not closed:** SCE-COLLAB-01 overall roadmap (01C Human UAT, 01D multi-activity impact, TRAINER-SPIELERBOERSE-01).
+
+---
+
+## SCE-COLLAB-01C — Club Events (2026-10-09)
+
+### Architecture discovery
+
+| Concern | Canonical source |
+|---------|------------------|
+| Activity identity | `Event` with `type = OTHER` (Veranstaltungen) |
+| Scheduling | `startAt`, `endAt`, `allDay`, tenant timezone via `club-event-api-scheduling` |
+| Venue | `Event.location` (free-text Ort) |
+| Facility / resource | `EventFacilityAllocation` → `FacilityResource` (canonical presentation labels) |
+| Status / cancellation | `Event.status` (`SCHEDULED`, `ARCHIVED`, …) |
+| Audience | `EventParticipationAudienceEntry` (`PERSON`, `TEAM`, `ORG_UNIT`, `ROLE`) expanded via existing requirement resolvers |
+| Communication context | `CommunicationContextRef` `{ kind: "EVENT", eventId }` + COMM-10 `eventAnchor` in orchestration meta |
+| Presentation | `formatClubEventTimingLabel` + facility canonical pitch labels (same as Weekplanner / Veranstaltungen UI) |
+
+Mutation paths wired for collaboration (failure-isolated):
+
+- `PATCH /api/events/[eventId]` (participant-facing fields only in change policy)
+- `POST/PATCH/DELETE` `/api/events/[eventId]/facility-allocations/*`
+
+### Participant-facing change policy
+
+| Field | Communicated |
+|-------|--------------|
+| DATE / START_TIME / END_TIME | Yes (timed events; all-day date moves via DATE) |
+| VENUE (`location`) | Yes |
+| RESOURCE (facility allocations) | Yes |
+| STATUS (archive/cancel semantics) | Yes |
+| TITLE / DESCRIPTION | No (not in 01C policy — internal/title comms out of scope) |
+| Publication toggles, remarks, organizer, internal metadata | No |
+
+### Audience semantics (01C)
+
+- **Canonical source:** stored `EventParticipationAudienceEntry` rows (not invented).
+- **CommunicationAudienceSpec:** UNION of structural/explicit components mirroring entry kinds; COMM-03 reused with EVENT context.
+- **Send path:** team conversation when `Event.teamId` + `communication.team.send`; otherwise **club** conversation (`communication.club.send`) — separate from `events.manage`.
+- **Zero recipients:** same 01B UX (composer may open; Send disabled; German copy).
+- **DOMAIN-CONSUMERS-01:** not implemented — only event-scoped participation audience.
+
+### Cumulative semantics
+
+Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation requests); survives `router.refresh` via `[eventId]/layout.tsx` collaboration host.
+
+### Broader adapter discovery
+
+| Candidate | Decision |
+|-----------|----------|
+| MEETING / other TaskContext types | **DEFERRED** — no canonical activity presentation + participation audience parity |
+| TRAINING / MATCH / TOURNAMENT | Already covered in 01A/01B |
+
+### Automated verification
+
+- `lib/collaboration/__tests__/sce-collab-01c-activity-change.test.ts`
+- `app/api/collaboration/club-events/[eventId]/__tests__/collaboration-communication-routes.test.ts` (when present)
+
+### Human UAT script (STAGE)
+
+| ID | Scenario | Expected |
+|----|----------|----------|
+| UAT-01 | Edit remarks/publication only | No collaboration banner |
+| UAT-02 | Change event time | Banner old → new |
+| UAT-03 | Change Ort + resource before communicate | One banner, two lines |
+| UAT-04 | Open composer | One editable message with both changes |
+| UAT-05 | Audience label + recipient count | Canonical participation audience |
+| UAT-06 | Cancel composer | Banner remains |
+| UAT-07 | Send or zero-recipient UX | Explicit send resets cycle; zero → disabled Send (DATA_BLOCKED if no eligible users on STAGE) |
+
+**01C status:** **READY_FOR_MERGE** (Human UAT R5 PASS; await PR #812 merge to STAGE — not marked CLOSED until merged).
+
+---
+
+## SCE-COLLAB-01C-R1 — Human UAT defect (2026-10-09)
+
+### Human UAT finding
+
+| Check | Result |
+|-------|--------|
+| UAT-02 change detection (time delta visible) | **PASS** |
+| UAT-02 persistent contextual collaboration impact surface on `/dashboard/veranstaltungen/[eventId]/edit` | **FAIL** — only dismissible “Veranstaltung aktualisiert” header + change line; missing Zielgruppe, Empfänger, **Änderung kommunizieren**, composer path |
+| UAT-03 … UAT-07 | **BLOCKED_BY_UAT_DEFECT** |
+| Save UX — primary **Speichern** only at bottom of long edit form | **FAIL** |
+
+### ROOT_CAUSE
+
+| Area | Finding |
+|------|---------|
+| **MUTATION_RESPONSE** | `PATCH /api/events/[eventId]` already returns `{ collaboration, collaborationCycleBaseline }` with worthy `changeSet` (change detection worked in UAT). |
+| **CLIENT_HANDLING** | `VeranstaltungEditForm` calls `applyMutationCollaboration`; cycle baseline attachment is correct. |
+| **CYCLE_PROVIDER** | `EventActivityCollaborationHost` in `[eventId]/layout.tsx` wraps the edit route; provider lifecycle is correct. |
+| **IMPACT_SURFACE** | `ContextualActivityChangeImpactSurface` rendered, but **degraded mode**: `impact.audience === null` and `impact.canCommunicate === false`, so Zielgruppe / Empfänger / communicate action were suppressed. Caused by participation-audience spec building skipping entries without `referenceId`, returning `null` audience context even when labeled participation rows exist; preview/authorization never ran. Impact slot placement above the page shell also read as a toast-like banner. |
+| **EDIT_ROUTE** | Edit page did not mount the impact slot inside the planning editor shell (layout-only slot). |
+| **ROUTER_REFRESH** | Not the primary defect; client cycle state remains in the layout provider (01B invariant). |
+
+### FIX
+
+- Harden club-event audience resolution: human-readable labels from `EventParticipationAudienceEntry`, valid `CommunicationAudienceSpec` only from resolvable reference ids, failure-isolated preview with display-only audience fallback.
+- Mount `EventActivityCollaborationImpactSlot` on the **edit page** below `PlanningEditorHeader`; suppress duplicate layout slot for club events (`suppressImpactSlot`).
+- Remove nested `ToastProvider` on the edit page (use collaboration host provider — 01B R4 boundary).
+- Add top **Speichern** in header actions (`form=` association + shared submit/loading via `VeranstaltungEditSubmitProvider`); duplicate-submit guard on the form handler.
+- Impact surface UX: show **1 Änderung** / **n Änderungen** count header (canonical copy).
+
+### AUTOMATED_REGRESSION
+
+- `lib/collaboration/__tests__/sce-collab-01c-r1-verification.test.tsx` (R1-01 … R1-20 subset)
+- Updated `sce-collab-01c-activity-change.test.ts`, `ContextualActivityChangeImpactSurface.test.tsx`
+- Re-run 01A/01B collab regressions (`sce-collab-01b-r3`, `sce-collab-01b-r4`, …) on R1 branch
+
+### HUMAN_UAT_RETEST_REQUIRED
+
+| ID | Scenario |
+|----|----------|
+| UAT-R1-01 | Top **Speichern** visible without scrolling |
+| UAT-R1-02 | Change time → save with top **Speichern** |
+| UAT-R1-03 | Persistent impact surface: count, delta, **Zielgruppe**, **Empfänger**, **Änderung kommunizieren** |
+| UAT-R1-04 | Second save accumulates changes (one surface, two lines) |
+| UAT-R1-05 | Composer opens with cumulative body + subject |
+| UAT-R1-06 | Human-readable Zielgruppe (no raw enums/ids) |
+| UAT-R1-07 | Composer cancel → unresolved surface remains |
+
+**01C status after R1:** IMPLEMENTED / **HUMAN_UAT_PENDING** (retest required; not CLOSED).
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C retest pending).
+
+---
+
+## SCE-COLLAB-01C-R2 — Human UAT R2 (2026-10-09)
+
+### Human UAT R1 result (deployed feature SHA)
+
+| Check | Result |
+|-------|--------|
+| Top **Änderungen speichern** visible + works | **PASS** |
+| Change detection + persistent surface below header | **PASS** |
+| Zielgruppe / Empfänger / **Änderung kommunizieren** | **FAIL** — surface showed change-only mode |
+| Duplicate bottom **Änderungen speichern** | **FAIL** |
+| UAT-R1-03 onward | **BLOCKED** |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING** (not CLOSED).
+
+### Exact UAT event diagnosis (STAGE read-only)
+
+| Field | Value |
+|-------|-------|
+| Event ID | `cmsprr1r6000304jr98oq6899` |
+| Title | Mittgliederversammlung (STAGE row) |
+| Tenant | `cmomwboak0000tsf3zzivrs46` |
+| Type / status | `OTHER` / `SCHEDULED` |
+| `EventParticipationAudienceEntry` rows | **0** |
+| Audience state | **A — no participation audience configured** |
+| `CommunicationAudienceSpec` | **null** (not fabricated) |
+| `canCommunicate` | **false** (no valid audience + auth path not reached) |
+| `canDispatch` | **n/a** (composer not offered without valid audience) |
+
+**ROOT_CAUSE:** Mitgliederversammlung has **no** participation audience entries in STAGE. R1 treated missing spec as `audience === null`, so the impact surface hid Zielgruppe/Empfänger entirely instead of explaining the state. Separate UX finding: duplicate primary Save at bottom of form.
+
+**Participation UX:** Audience is configured in **Teilnehmer** on the edit page via `ClubEventParticipationAudienceEditor` (team/org/role/person entries); editable after create. Reminders/deadline rail is separate (`ParticipationRequestConfigEditor`).
+
+### R2 fix
+
+| Area | Change |
+|------|--------|
+| Audience states | Explicit **none** / **invalid** / **valid** handling; always surface Zielgruppe on worthy club-event changes |
+| No audience | **Keine Zielgruppe festgelegt**, Empfänger **—**, action **Zielgruppe festlegen** opens contextual audience dialog (R4; no page jump) |
+| Invalid/stale | Human label without IDs; no silent drop to null-only surface |
+| Communication path | **TEAM** only when all resolvable entries are `TEAM`; otherwise **CLUB** (`communication.club.send`). TEAM path no longer blocks club path for ROLE/ORG/PERSON/mixed audiences |
+| `canCommunicate` vs `canDispatch` | Unchanged 01B contract: composer when authorized + valid audience; Send disabled when preview count is 0 |
+| Save UX | Remove bottom primary Save; keep top header Save + bottom **Abbrechen** only |
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01c-r2-verification.test.tsx` (R2-01 … R2-20 subset)
+- Updated `sce-collab-01c-r1-verification.test.tsx` (bottom Save removed)
+- Re-run 01A/01B/01C regressions on branch
+
+### Human UAT R2 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R2-01 | Single top Save; no bottom duplicate |
+| UAT-R2-02 | After time change: count + delta + Zielgruppe state (for this event: **Keine Zielgruppe festgelegt** + Empfänger **—** until audience configured) |
+| UAT-R2-03 … UAT-R2-05 | **Änderung kommunizieren** + composer after configuring a valid participation audience (or any event with resolvable audience + send permission) |
+
+**Note:** Full communicate flow for Mitgliederversammlung requires setting participation audience in **Teilnehmer** first (product-correct; not a COLLAB data patch).
+
+---
+
+## SCE-COLLAB-01C-R3 — Human UAT R2 follow-up (2026-10-09)
+
+### Human UAT R2 result
+
+| Check | Result |
+|-------|--------|
+| Single top **Änderungen speichern** + save works | **PASS** |
+| Worthy change detection + persistent impact surface | **PASS** |
+| Empty audience **Keine Zielgruppe festgelegt** (no fabricated recipients) | **PASS** |
+| Bottom **Abbrechen** alone on long page | **FAIL** — must move to header |
+| Continue from changed event into communication after configuring audience | **FAIL** — unresolved cycle did not re-resolve audience/preview |
+| Club Event collaboration look-and-feel vs Tournamentcenter | **FAIL** — must use exact shared Tournamentcenter surface/composer path |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING** (not CLOSED).
+
+### R3 fix — Tournamentcenter shared UI seam
+
+| Area | Change |
+|------|--------|
+| Impact / composer | Club events use the same `EventActivityCollaborationHost` → `ContextualActivityChangeImpactSurface` → `ContextualActivityCommunicationComposer` path as `/dashboard/tournamentcenter` (no club-specific visual wrapper) |
+| Layout placement | Club event layout matches tournament: impact slot at activity host top (removed `suppressImpactSlot` + duplicate edit-page slot) |
+| Header actions | **Änderungen speichern** (primary) + **Abbrechen** (secondary) + **+ Aufgabe** in `PlanningEditorHeader`; bottom Save/Cancel removed |
+| Audience refresh | `POST/DELETE /api/events/[eventId]/participation-audience*` accepts `collaborationCycleBaseline` and returns `{ collaboration, collaborationCycleBaseline }` via `appendClubEventParticipationAudienceCollaboration` |
+| Client lifecycle | `ClubEventParticipationAudienceEditor` calls `useCollaborationMutation` after audience save — preserves unresolved cycle, re-runs preview/auth, updates `canCommunicate` / Empfänger without another event PATCH |
+| Change set | Participation audience remains configuration-only (not an `ActivityChangeSet` entry) |
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01c-r3-verification.test.tsx` (R3-01 … R3-30 subset)
+- Tournament / 01A / 01B regressions on branch
+
+### Human UAT R3 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R3-01 | Header: Save + Cancel + Aufgabe; no bottom Save/Cancel |
+| UAT-R3-02 | Time change → Tournament-style surface + **Zielgruppe festlegen** when no audience |
+| UAT-R3-03 | Configure audience in Teilnehmer → time change stays unresolved; audience not listed as change |
+| UAT-R3-04 | Surface shows readable Zielgruppe + Empfänger + **Änderung kommunizieren** without re-editing time |
+| UAT-R3-05 | Composer matches Tournamentcenter; zero recipients → Send disabled |
+| UAT-R3-06 | Composer cancel → unresolved surface remains |
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R3 pending).
+
+---
+
+## SCE-COLLAB-01C-R4 — Human UAT R3 follow-up (2026-10-09)
+
+### Human UAT R3 result
+
+| Check | Result |
+|-------|--------|
+| Header **Änderungen speichern** / **Abbrechen** / **+ Aufgabe**; no bottom Save/Cancel | **PASS** |
+| Worthy change + Tournament-style impact surface | **PASS** |
+| Empty audience **Keine Zielgruppe festgelegt** + Empfänger **—** | **PASS** |
+| **Zielgruppe festlegen** jumps to Teilnehmer section (anchor) | **FAIL_UX** — loses collaboration context on long edit page |
+| UAT-R3-04 … UAT-R3-06 | **BLOCKED** on contextual audience flow |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING** (not CLOSED).
+
+### R4 fix — contextual audience configuration (no page jump)
+
+| Area | Change |
+|------|--------|
+| Trigger | **Zielgruppe festlegen** is a button (not `#veranstaltung-edit-participants-heading`) |
+| Presentation | SCE `Dialog` + `ContextualClubEventParticipationAudienceDialog` (Tournamentcenter/SCE modal language) |
+| Editor reuse | `ClubEventParticipationAudienceEditorCore` shared by Teilnehmer section and contextual dialog; same `/api/events/[eventId]/participation-audience` persistence + `useCollaborationMutation` lifecycle |
+| Teilnehmer | Page section unchanged — second entry point to the same canonical editor |
+| Labels | Human-readable Team / Organisationseinheit / Rolle / Person (no raw enum in UI) |
+| Save / cancel | **Speichern** persists pending selection, refreshes audience/recipient preview + `canCommunicate`, closes dialog; **Abbrechen** closes without mutation; unresolved `ActivityChange` preserved |
+| Scroll | No hash navigation / `scrollIntoView` for contextual action |
+| Change set | Audience configuration still not an `ActivityChangeSet` entry |
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01c-r4-verification.test.tsx` (R4-01 … R4-24 subset)
+- Updated `sce-collab-01c-r3-verification.test.tsx` (configure action no longer anchor)
+- Re-run 01A / 01B / 01C / bounded regressions on branch
+
+### Human UAT R4 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R4-01 | Time change save → Tournament-style surface |
+| UAT-R4-02 | **Zielgruppe festlegen** opens in-place audience dialog — **no** jump to page bottom |
+| UAT-R4-03 | Select audience + **Speichern** → dialog closes; time change still unresolved; audience not listed as change |
+| UAT-R4-04 | Surface shows Zielgruppe + Empfänger + **Änderung kommunizieren** without another event edit |
+| UAT-R4-05 | Composer matches Tournamentcenter; Empfänger **0** → Send disabled |
+| UAT-R4-06 | Composer **Abbrechen** → unresolved surface remains |
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R4 pending).
+
+---
+
+## SCE-COLLAB-01C-R5 — Human UAT R4 follow-up (2026-10-09)
+
+### Human UAT R4 result
+
+| Check | Result |
+|-------|--------|
+| UAT-R4-01 | **PASS** |
+| UAT-R4-02 | **PASS** — contextual SCE dialog; no anchor jump |
+| UAT-R4-03 | **BLOCKED_EMPTY_SELECTOR** — Team dropdown only placeholder „Team auswählen“ |
+| UAT-R4-04 … UAT-R4-06 | **BLOCKED** on empty selector |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING**.
+
+### Audience option architecture
+
+| Kind | Source | Notes |
+|------|--------|-------|
+| TEAM | Client `GET /api/teams` (`ClubEventParticipationAudienceEditorCore`) | Tenant from session; includes current-season `TeamSeason` metadata; **no** roster / COMM-03 recipient gate for listing |
+| ORG_UNIT / ROLE / PERSON | Backend `participation-audience` POST kinds | UI selectors for these types not yet exposed in `ClubEventParticipationAudienceEditorCore` (Team-only add UI today); counts exist on STAGE |
+
+**Layering (explicit):**
+
+1. **Audience target discovery** — selectable Team / Org / Role / Person (`EventParticipationAudienceEntry`)
+2. **Audience spec resolution** — `CommunicationAudienceSpec` from configured entries
+3. **COMM-03 recipient resolution** — eligible recipients (may be **0** without hiding the Team from the selector)
+
+### Normal vs contextual editor
+
+Both `ClubEventParticipationAudienceEditor` (Teilnehmer) and `ContextualClubEventParticipationAudienceDialog` render the same `ClubEventParticipationAudienceEditorCore` with identical props (`eventId`, `interaction` only). **No** contextual prop/context loss — same fetch paths.
+
+### STAGE read-only diagnosis (FC Allschwil, event `cmsprr1r6000304jr98oq6899`)
+
+| Metric | Value |
+|--------|------:|
+| Tenant | `cmomwboak0000tsf3zzivrs46` (FC Allschwil) |
+| TOTAL_TEAMS | 28 |
+| ACTIVE_TEAMS | 28 |
+| ACTIVE_TEAM_SEASONS (current) | 28 |
+| SELECTOR_ELIGIBLE_TEAMS | 28 (structural; not roster-gated) |
+| ORG_UNIT / ROLE / PERSON (tenant rows) | 17 / 4 / 4 |
+
+Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present on STAGE.
+
+### Root cause
+
+**R5-F — CANONICAL_PARTICIPATION_EDITOR_DEFECT** (client response parsing, not STAGE data):
+
+`GET /api/teams` returns a **bare JSON array** (see `app/api/teams/route.ts`). `ClubEventParticipationAudienceEditorCore` incorrectly read `{ teams: [...] }`, so `teams` state was always `[]` in production for **both** Teilnehmer and contextual dialog. Vitest mocks used the wrong shape and masked the defect.
+
+**Not** R5-E (STAGE data gap). **Not** recipient/roster coupling (R5-C).
+
+### R5 fix
+
+| Area | Change |
+|------|--------|
+| Parser | `lib/teams/parse-teams-list-api-response.ts` — canonical array + legacy wrapper; active teams; season `displayName` labels |
+| Core editor | Use parser; `GET /api/teams` with `cache: "no-store"`; empty state **Keine Teams verfügbar** |
+| Tests | `sce-collab-01c-r5-verification.test.tsx`, `parse-teams-list-api-response.test.ts` |
+
+### Human UAT R5 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R5-01 | Dialog opens in place |
+| UAT-R5-02 | FC Allschwil teams visible in Team selector |
+| UAT-R5-03 | Select Team + save → dialog closes; change preserved |
+| UAT-R5-04 | Zielgruppe + Empfänger 0/n + **Änderung kommunizieren** |
+| UAT-R5-05 | Composer opens; Empfänger 0 → Send disabled |
+| UAT-R5-06 | Composer cancel → unresolved change remains |
+
+### Human UAT R5 result (product owner, STAGE — final)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| UAT-R5-01 | **PASS** | Contextual Zielgruppe dialog opens in place |
+| UAT-R5-02 | **PASS** | Team dropdown lists real FC Allschwil teams (e.g. Junioren E1–F3, Seniorinnen, …) |
+| UAT-R5-03 | **PASS** | Team selected (example: **Seniorinnen**) and audience saved |
+| UAT-R5-04 | **PASS** | Unresolved participant-facing change preserved (example: Zeit 20:30 → 20:00) after audience save |
+| UAT-R5-05 | **PASS** | Impact refreshes: Zielgruppe **Seniorinnen**, Empfänger **0**, **Änderung kommunizieren** available |
+| UAT-R5-06 | **PASS** | Composer **Mitteilung vorbereiten**; subject **Änderung: …**; body includes unresolved change; **Keine Empfänger verfügbar**; Send disabled |
+
+**Zero-recipient classification:** **EXPECTED_DATA_STATE** — structural Team exists and is selectable; COMM-03 returns 0 eligible recipients because FC Allschwil STAGE lacks onboarded active TeamSeason roster → person → user links (**not** an 01C collaboration/audience/authorization defect). Positive-recipient dispatch remains covered by automated tests and 01B verification. **No STAGE roster data was fabricated for UAT.**
+
+**Follow-up (not 01C scope):** **SCE-PEOPLE-TEAM-ONBOARDING-01** — operational roster onboarding so COMM-03 can resolve real recipients for structural teams on STAGE.
+
+### SCE-COLLAB-01C closure gate (2026-10-09)
+
+| Gate | Result |
+|------|--------|
+| Human UAT R5 | **PASS** |
+| 01C automated suite (activity-change + R1–R5 + club-event collaboration APIs) | **70/70 PASS** |
+| 01A/01B regression (collaboration batches) | **123/123 PASS** |
+| COMM-03 + club/team communication + impact surface | **32/32 PASS** |
+| Participation audience + teams list parser | **29/29 PASS** (excludes KNOWN_P2 harness) |
+| Facility integrity | **168/168 PASS** |
+| Veranstaltung facility allocation regression | **PASS** |
+| ESLint (PR-changed TS/TSX) | **0 errors** after closure lint fix |
+| Build | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` (closure 2026-10-09) |
+| Schema / migration / role / permission / STAGE data mutation | **NO** |
+| PROD | **Untouched** |
+
+**KNOWN_P2 (pre-existing on STAGE, unrelated mock gap):** `lib/events/__tests__/sce-events-audience-01.test.ts` — 3 failures (`eventParticipationAudienceEntry.findMany` mock undefined).
+
+**01C status:** **READY_FOR_MERGE** (PR #812 → STAGE).
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C ready for merge; 01D outstanding).

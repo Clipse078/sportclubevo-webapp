@@ -10,10 +10,27 @@ import { describe, expect, it, vi } from "vitest";
 import deMessages from "@/messages/de.json";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
+import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import VeranstaltungAusspielungFields from "@/components/admin/veranstaltungen/VeranstaltungAusspielungFields";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
+vi.mock("@/lib/collaboration/client/use-collaboration-mutation", () => ({
+  useCollaborationMutation: () => ({
+    attachCycleBaseline: (body: Record<string, unknown>) => ({
+      payload: body,
+      cycleRequested: false,
+    }),
+    applyMutationCollaboration: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/use-toast", () => ({
+  useToast: () => ({
+    toast: { success: vi.fn(), danger: vi.fn(), warning: vi.fn(), info: vi.fn(), neutral: vi.fn() },
+  }),
 }));
 
 function renderWithIntl(ui: ReactElement) {
@@ -166,29 +183,31 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
 
   it("edit form loads persisted Ausspielung values", () => {
     renderWithIntl(
-      <VeranstaltungEditForm
-        timeZone="Europe/Zurich"
-        event={{
-          id: "evt-1",
-          title: "Fest",
-          description: null,
-          location: null,
-          startAt: "2026-09-25T16:00:00.000Z",
-          endAt: "2026-09-25T18:00:00.000Z",
-          allDay: false,
-          organizerName: null,
-          remarks: null,
-          status: "SCHEDULED",
-          source: "MANUAL",
-          websiteVisible: false,
-          infoboardVisible: true,
-          homepageVisible: true,
-          wochenplanVisible: true,
-          trainingsplanVisible: false,
-          teamPageVisible: false,
-          season: { id: "season-1", key: "2026-27", name: "2026/27" },
-        }}
-      />,
+      <VeranstaltungEditSubmitProvider>
+        <VeranstaltungEditForm
+          timeZone="Europe/Zurich"
+          event={{
+            id: "evt-1",
+            title: "Fest",
+            description: null,
+            location: null,
+            startAt: "2026-09-25T16:00:00.000Z",
+            endAt: "2026-09-25T18:00:00.000Z",
+            allDay: false,
+            organizerName: null,
+            remarks: null,
+            status: "SCHEDULED",
+            source: "MANUAL",
+            websiteVisible: false,
+            infoboardVisible: true,
+            homepageVisible: true,
+            wochenplanVisible: true,
+            trainingsplanVisible: false,
+            teamPageVisible: false,
+            season: { id: "season-1", key: "2026-27", name: "2026/27" },
+          }}
+        />
+      </VeranstaltungEditSubmitProvider>,
     );
 
     expect(screen.getByRole("switch", { name: "Website" })).toHaveAttribute("aria-checked", "false");

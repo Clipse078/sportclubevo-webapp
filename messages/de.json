@@ -811,7 +811,8 @@
         "timeEnd": "Ende",
         "allDay": "Ganztägig",
         "allDaySummary": "Ganztägig",
-        "teamSelectPlaceholder": "Team auswählen"
+        "teamSelectPlaceholder": "Team auswählen",
+        "teamSelectEmpty": "Keine Teams verfügbar"
       },
       "errors": {
         "createFailed": "Veranstaltung konnte nicht erstellt werden.",
@@ -844,9 +845,15 @@
       "trainingUpdated": "Training aktualisiert",
       "matchUpdated": "Spiel aktualisiert",
       "tournamentUpdated": "Turnier aktualisiert",
+      "clubEventUpdated": "Veranstaltung aktualisiert",
+      "singleChange": "1 Änderung",
       "multipleChanges": "{count} Änderungen",
       "audience": "Zielgruppe",
       "recipients": "Empfänger",
+      "recipientsNotApplicable": "—",
+      "configureAudience": "Zielgruppe festlegen",
+      "configureAudienceDescription": "Wähle aus, wer von dieser Veranstaltung betroffen ist.",
+      "configureAudienceSave": "Speichern",
       "zeroRecipients": "Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.",
       "noRecipientsTitle": "Keine Empfänger verfügbar",
       "noRecipientsBody": "Für die ausgewählten Teams konnten aktuell keine berechtigten Empfänger ermittelt werden. Die Mitteilung kann deshalb noch nicht gesendet werden.",

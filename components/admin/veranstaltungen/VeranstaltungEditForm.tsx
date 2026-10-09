@@ -3,9 +3,12 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
+import { VERANSTALTUNG_EDIT_FORM_ID } from "@/components/admin/veranstaltungen/veranstaltung-edit-form-id";
+import { useVeranstaltungEditSubmitState } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
-import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
@@ -78,9 +81,14 @@ export default function VeranstaltungEditForm({
   initialFacilityAllocations = [],
 }: VeranstaltungEditFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "CLUB_EVENT",
+    event.id,
+  );
+  const { submitting, setSubmitting } = useVeranstaltungEditSubmitState();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
-  const tc = useTranslations("PlanningEditor.common");
   const tz = resolveTenantEventTimezone(timeZone);
 
   const isArchived = event.status === "ARCHIVED";
@@ -118,7 +126,6 @@ export default function VeranstaltungEditForm({
     wochenplanVisible: event.wochenplanVisible,
   });
 
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const scheduleInterval = useMemo(() => {
@@ -175,43 +182,50 @@ export default function VeranstaltungEditForm({
     });
   }
 
+  const submitLock = useRef(false);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (isReadonly) return;
+    if (isReadonly || submitLock.current) return;
 
+    submitLock.current = true;
     setSubmitting(true);
     setError(null);
 
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({
+        title: title.trim(),
+        description: description || null,
+        location: location || null,
+        allDay: schedule.allDay,
+        startDate: schedule.startDate,
+        endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
+        startTime: schedule.allDay ? null : schedule.startTime,
+        endTime: schedule.allDay ? null : schedule.endTime || null,
+        organizerName: organizerName || null,
+        remarks: remarks || null,
+        websiteVisible: ausspielung.websiteVisible,
+        homepageVisible: ausspielung.homepageVisible,
+        wochenplanVisible: ausspielung.wochenplanVisible,
+      });
       const res = await fetch(`/api/events/${event.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description || null,
-          location: location || null,
-          allDay: schedule.allDay,
-          startDate: schedule.startDate,
-          endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
-          startTime: schedule.allDay ? null : schedule.startTime,
-          endTime: schedule.allDay ? null : schedule.endTime || null,
-          organizerName: organizerName || null,
-          remarks: remarks || null,
-          websiteVisible: ausspielung.websiteVisible,
-          homepageVisible: ausspielung.homepageVisible,
-          wochenplanVisible: ausspielung.wochenplanVisible,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data?.error ?? t("errors.saveFailed"));
+        const errRow = data as { error?: string } | null;
+        setError(errRow?.error ?? t("errors.saveFailed"));
         return;
       }
 
-      router.push("/dashboard/veranstaltungen?updated=1");
+      applyMutationCollaboration(data, cycleRequested);
+      toast.success("Änderung gespeichert");
       router.refresh();
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }
@@ -231,7 +245,12 @@ export default function VeranstaltungEditForm({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-edit-form">
+    <form
+      id={VERANSTALTUNG_EDIT_FORM_ID}
+      onSubmit={handleSubmit}
+      className="space-y-3"
+      data-testid="veranstaltung-edit-form"
+    >
       <SportingActivityFormIdentitySummary
         activityKind="VERANSTALTUNG"
         typeLabel="VERANSTALTUNG"
@@ -357,21 +376,6 @@ export default function VeranstaltungEditForm({
       />
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
-
-      {!isReadonly ? (
-        <PlanningEditorActions testId="veranstaltung-edit-actions">
-          <button type="submit" disabled={submitting} className="fca-button-primary" data-testid="veranstaltung-edit-save">
-            {submitting ? t("edit.saving") : t("edit.save")}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard/veranstaltungen")}
-            className="fca-button-secondary"
-          >
-            {tc("cancel")}
-          </button>
-        </PlanningEditorActions>
-      ) : null}
     </form>
   );
 }

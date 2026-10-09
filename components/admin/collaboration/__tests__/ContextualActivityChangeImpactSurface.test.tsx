@@ -10,6 +10,7 @@ const messages = {
   Collaboration: {
     activityChange: {
       trainingUpdated: "Training aktualisiert",
+      singleChange: "1 Änderung",
       multipleChanges: "{count} Änderungen",
       audience: "Zielgruppe",
       zeroRecipients: "Keine Empfänger",

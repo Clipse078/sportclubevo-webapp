@@ -6,6 +6,8 @@ import {
   listClubEventAudienceEntries,
 } from "@/lib/events/club-event-participation-audience-service";
 import { ensureClubEventParticipationResponses } from "@/lib/planning/load-club-event-planning-participants";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
+import { appendClubEventParticipationAudienceCollaboration } from "@/lib/collaboration/club-event/club-event-participation-audience-collaboration";
 import type { EventParticipationAudienceKind } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ eventId: string }> };
@@ -55,7 +57,17 @@ export async function POST(request: Request, context: RouteContext) {
     );
     await ensureClubEventParticipationResponses(tenantId, eventId);
     const entries = await listClubEventAudienceEntries(tenantId, eventId);
-    return NextResponse.json({ entries }, { status: 201 });
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaborationPayload = userId
+      ? await appendClubEventParticipationAudienceCollaboration({
+          tenantId,
+          tenantKey,
+          userId,
+          eventId,
+          requestBody: body,
+        })
+      : {};
+    return NextResponse.json({ entries, ...collaborationPayload }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed";
     return NextResponse.json({ error: message }, { status: 422 });

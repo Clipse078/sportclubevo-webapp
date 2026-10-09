@@ -6,6 +6,7 @@ import type { ActivityCollaborationDomain } from "@/lib/collaboration/activity-c
 import type { MatchActivitySnapshot } from "@/lib/collaboration/match/match-activity-snapshot";
 import type { TournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
 import type { TrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import type { ClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
 
 export type MatchCollaborationCycleBaseline = Pick<
   MatchActivitySnapshot,
@@ -41,10 +42,23 @@ export type TrainingCollaborationCycleBaseline = Pick<
   | "status"
 >;
 
+export type ClubEventCollaborationCycleBaseline = Pick<
+  ClubEventActivitySnapshot,
+  | "eventId"
+  | "dateKey"
+  | "startTime"
+  | "endTime"
+  | "locationLabel"
+  | "resourceLabel"
+  | "status"
+  | "allDay"
+>;
+
 export type CollaborationCycleBaseline =
   | { domain: "MATCH"; baseline: MatchCollaborationCycleBaseline }
   | { domain: "TOURNAMENT"; baseline: TournamentCollaborationCycleBaseline }
-  | { domain: "TRAINING"; baseline: TrainingCollaborationCycleBaseline };
+  | { domain: "TRAINING"; baseline: TrainingCollaborationCycleBaseline }
+  | { domain: "CLUB_EVENT"; baseline: ClubEventCollaborationCycleBaseline };
 
 export function matchSnapshotToCycleBaseline(
   snapshot: MatchActivitySnapshot,
@@ -86,6 +100,21 @@ export function trainingSnapshotToCycleBaseline(
     playableVenueLabel: snapshot.playableVenueLabel,
     dressingRoomLabel: snapshot.dressingRoomLabel,
     status: snapshot.status,
+  };
+}
+
+export function clubEventSnapshotToCycleBaseline(
+  snapshot: ClubEventActivitySnapshot,
+): ClubEventCollaborationCycleBaseline {
+  return {
+    eventId: snapshot.eventId,
+    dateKey: snapshot.dateKey,
+    startTime: snapshot.startTime,
+    endTime: snapshot.endTime,
+    locationLabel: snapshot.locationLabel,
+    resourceLabel: snapshot.resourceLabel,
+    status: snapshot.status,
+    allDay: snapshot.allDay,
   };
 }
 
@@ -137,6 +166,23 @@ export function mergeTrainingCycleBaselineWithAfter(
   };
 }
 
+export function mergeClubEventCycleBaselineWithAfter(
+  baseline: ClubEventCollaborationCycleBaseline,
+  after: ClubEventActivitySnapshot,
+): ClubEventActivitySnapshot {
+  return {
+    ...after,
+    dateKey: baseline.dateKey,
+    startTime: baseline.startTime,
+    endTime: baseline.endTime,
+    locationLabel: baseline.locationLabel,
+    resourceLabel: baseline.resourceLabel,
+    status: baseline.status,
+    allDay: baseline.allDay,
+    playableVenueLabel: after.playableVenueLabel,
+  };
+}
+
 export function parseCollaborationCycleBaselineFromBody(
   body: Record<string, unknown>,
   domain: "MATCH",
@@ -154,12 +200,18 @@ export function parseCollaborationCycleBaselineFromBody(
 ): TrainingCollaborationCycleBaseline | null;
 export function parseCollaborationCycleBaselineFromBody(
   body: Record<string, unknown>,
+  domain: "CLUB_EVENT",
+  activityId: string,
+): ClubEventCollaborationCycleBaseline | null;
+export function parseCollaborationCycleBaselineFromBody(
+  body: Record<string, unknown>,
   domain: ActivityCollaborationDomain,
   activityId: string,
 ):
   | MatchCollaborationCycleBaseline
   | TournamentCollaborationCycleBaseline
   | TrainingCollaborationCycleBaseline
+  | ClubEventCollaborationCycleBaseline
   | null {
   const raw = body.collaborationCycleBaseline;
   if (!raw || typeof raw !== "object") return null;
@@ -177,6 +229,11 @@ export function parseCollaborationCycleBaselineFromBody(
   if (domain === "TRAINING") {
     const b = raw as TrainingCollaborationCycleBaseline;
     if (b.sessionId !== activityId) return null;
+    return b;
+  }
+  if (domain === "CLUB_EVENT") {
+    const b = raw as ClubEventCollaborationCycleBaseline;
+    if (b.eventId !== activityId) return null;
     return b;
   }
   return null;

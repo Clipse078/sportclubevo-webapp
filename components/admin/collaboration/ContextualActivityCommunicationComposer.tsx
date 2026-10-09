@@ -8,13 +8,15 @@ import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/tea
 import { useToast } from "@/hooks/use-toast";
 
 import type { ActivityCollaborationDomain } from "@/lib/collaboration/activity-change/types";
+import type { ClubEventCommunicationScope } from "@/lib/collaboration/club-event/resolve-club-event-audience-preview";
 import { contextualPublishCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
 import { CONTEXTUAL_COMMUNICATION_ERROR_CODES } from "@/lib/collaboration/contextual-communication-http";
 
 type Props = {
   domain: ActivityCollaborationDomain;
   activityId: string;
-  teamId: string;
+  teamId: string | null;
+  communicationScope?: ClubEventCommunicationScope;
   draftId: string;
   initialSubject: string;
   initialBody: string;
@@ -29,6 +31,7 @@ export function ContextualActivityCommunicationComposer({
   domain,
   activityId,
   teamId,
+  communicationScope,
   draftId,
   initialSubject,
   initialBody,
@@ -59,6 +62,10 @@ export function ContextualActivityCommunicationComposer({
             body: JSON.stringify({
               draftId,
               teamId,
+              communicationScope:
+                domain === "CLUB_EVENT"
+                  ? communicationScope ?? (teamId ? "TEAM" : "CLUB")
+                  : undefined,
               subject,
               bodyText: body,
             }),

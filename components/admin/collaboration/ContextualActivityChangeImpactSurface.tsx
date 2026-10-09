@@ -11,9 +11,12 @@ import type {
 import {
   MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE,
   TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
   summarizeActivityChangeLine,
 } from "@/lib/collaboration/activity-change/presentation";
+import type { ClubEventCommunicationScope } from "@/lib/collaboration/club-event/resolve-club-event-audience-preview";
 import { ContextualActivityCommunicationComposer } from "@/components/admin/collaboration/ContextualActivityCommunicationComposer";
+import { ContextualClubEventParticipationAudienceDialog } from "@/components/admin/collaboration/ContextualClubEventParticipationAudienceDialog";
 import { contextualPrepareCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
 import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
 
@@ -27,6 +30,7 @@ type Props = {
 function fieldLabelsForDomain(domain: ActivityCollaborationDomain) {
   if (domain === "MATCH") return MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE;
   if (domain === "TOURNAMENT") return TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE;
+  if (domain === "CLUB_EVENT") return CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE;
   return undefined;
 }
 
@@ -40,12 +44,14 @@ export function ContextualActivityChangeImpactSurface({
   const { acknowledgeCommunicationSent } = useActivityChangeCollaboration();
   const labels = fieldLabelsForDomain(domain);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [audienceDialogOpen, setAudienceDialogOpen] = useState(false);
   const [prepareError, setPrepareError] = useState<string | null>(null);
   const [composerStale, setComposerStale] = useState(false);
   const [pending, startTransition] = useTransition();
   const [draftPrefill, setDraftPrefill] = useState<{
     draftId: string;
-    teamId: string;
+    teamId: string | null;
+    communicationScope?: ClubEventCommunicationScope;
     subject: string;
     bodyText: string;
     changeFingerprint: string;
@@ -83,27 +89,37 @@ export function ContextualActivityChangeImpactSurface({
         const data = (await res.json().catch(() => null)) as {
           error?: string;
           draftId?: string;
-          teamId?: string;
+          teamId?: string | null;
+          communicationScope?: ClubEventCommunicationScope;
           subject?: string;
           bodyText?: string;
           audienceLabel?: string;
           recipientCount?: number;
           canDispatch?: boolean;
         } | null;
-        if (!res.ok || !data?.draftId || !data.teamId) {
+        const scopeOk =
+          domain === "CLUB_EVENT"
+            ? Boolean(data?.draftId)
+            : Boolean(data?.draftId && data?.teamId);
+        if (!res.ok || !scopeOk) {
           throw new Error(data?.error ?? t("prepareError"));
         }
         const fingerprint = impact.changeSet!.fingerprint;
         preparedFingerprintRef.current = fingerprint;
         setDraftPrefill({
-          draftId: data.draftId,
-          teamId: data.teamId,
-          subject: data.subject ?? "",
-          bodyText: data.bodyText ?? "",
+          draftId: data!.draftId!,
+          teamId: data!.teamId ?? null,
+          communicationScope: data!.communicationScope,
+          subject: data!.subject ?? "",
+          bodyText: data!.bodyText ?? "",
           changeFingerprint: fingerprint,
-          audienceLabel: data.audienceLabel ?? impact.audience?.teamNamesLabel ?? impact.audience?.teamName ?? "",
-          recipientCount: data.recipientCount ?? impact.audience?.effectiveRecipientCount ?? 0,
-          canDispatch: data.canDispatch ?? (data.recipientCount ?? 0) > 0,
+          audienceLabel:
+            data!.audienceLabel ??
+            impact.audience?.teamNamesLabel ??
+            impact.audience?.teamName ??
+            "",
+          recipientCount: data!.recipientCount ?? impact.audience?.effectiveRecipientCount ?? 0,
+          canDispatch: data!.canDispatch ?? (data!.recipientCount ?? 0) > 0,
         });
         setComposerOpen(true);
       } catch (err) {
@@ -125,7 +141,9 @@ export function ContextualActivityChangeImpactSurface({
               ? t("matchUpdated")
               : domain === "TOURNAMENT"
                 ? t("tournamentUpdated")
-                : t("trainingUpdated")}
+                : domain === "CLUB_EVENT"
+                  ? t("clubEventUpdated")
+                  : t("trainingUpdated")}
           </p>
           <p className="text-xs text-[var(--text-2)]" data-testid="contextual-activity-change-title">
             {impact.activityTitle}
@@ -143,17 +161,21 @@ export function ContextualActivityChangeImpactSurface({
       </div>
 
       <div className="mt-2 space-y-1 text-xs text-[var(--foreground)]">
+        {summaryLines.length > 0 ? (
+          <p className="font-medium" data-testid="contextual-activity-change-count">
+            {summaryLines.length === 1
+              ? t("singleChange")
+              : t("multipleChanges", { count: summaryLines.length })}
+          </p>
+        ) : null}
         {summaryLines.length === 1 ? (
           <p data-testid="contextual-activity-change-single">{summaryLines[0]}</p>
         ) : (
-          <>
-            <p className="font-medium">{t("multipleChanges", { count: summaryLines.length })}</p>
-            <ul className="list-disc space-y-0.5 pl-4" data-testid="contextual-activity-change-list">
-              {summaryLines.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          </>
+          <ul className="list-disc space-y-0.5 pl-4" data-testid="contextual-activity-change-list">
+            {summaryLines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
         )}
       </div>
 
@@ -166,12 +188,35 @@ export function ContextualActivityChangeImpactSurface({
             <span className="font-medium text-[var(--foreground)]">{t("audience")}: </span>
             {impact.audience.teamNamesLabel ?? impact.audience.teamName}
           </p>
-          {impact.audience.effectiveRecipientCount !== null ? (
+          {impact.audience.audienceNotConfigured ? (
+            <p data-testid="contextual-activity-change-recipient-count">
+              <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
+              {t("recipientsNotApplicable")}
+            </p>
+          ) : impact.audience.effectiveRecipientCount !== null ? (
             <p data-testid="contextual-activity-change-recipient-count">
               <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
               {impact.audience.effectiveRecipientCount}
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {domain === "CLUB_EVENT" && impact.audience?.audienceNotConfigured ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setAudienceDialogOpen(true)}
+            className="text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline"
+            data-testid="contextual-activity-change-configure-audience"
+          >
+            {t("configureAudience")}
+          </button>
+          <ContextualClubEventParticipationAudienceDialog
+            eventId={activityId}
+            open={audienceDialogOpen}
+            onClose={() => setAudienceDialogOpen(false)}
+          />
         </div>
       ) : null}
 
@@ -207,6 +252,7 @@ export function ContextualActivityChangeImpactSurface({
           domain={domain}
           activityId={activityId}
           teamId={draftPrefill.teamId}
+          communicationScope={draftPrefill.communicationScope}
           draftId={draftPrefill.draftId}
           initialSubject={draftPrefill.subject}
           initialBody={draftPrefill.bodyText}

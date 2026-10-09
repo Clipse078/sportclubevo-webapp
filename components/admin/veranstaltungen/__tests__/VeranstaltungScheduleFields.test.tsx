@@ -10,12 +10,29 @@ import { describe, expect, it, vi } from "vitest";
 import deMessages from "@/messages/de.json";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
+import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "@/components/admin/veranstaltungen/VeranstaltungScheduleFields";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
+vi.mock("@/lib/collaboration/client/use-collaboration-mutation", () => ({
+  useCollaborationMutation: () => ({
+    attachCycleBaseline: (body: Record<string, unknown>) => ({
+      payload: body,
+      cycleRequested: false,
+    }),
+    applyMutationCollaboration: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/use-toast", () => ({
+  useToast: () => ({
+    toast: { success: vi.fn(), danger: vi.fn(), warning: vi.fn(), info: vi.fn(), neutral: vi.fn() },
+  }),
 }));
 
 const baseValues: VeranstaltungScheduleFieldValues = {
@@ -133,6 +150,7 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
     unmountCreate();
 
     renderWithIntl(
+      <VeranstaltungEditSubmitProvider>
       <VeranstaltungEditForm
         timeZone="Europe/Zurich"
         event={{
@@ -155,7 +173,8 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
           teamPageVisible: false,
           season: { id: "season-1", key: "2026-27", name: "2026/27" },
         }}
-      />,
+      />
+      </VeranstaltungEditSubmitProvider>,
     );
 
     expect(screen.getByRole("switch", { name: "Ganztägig" })).toHaveAttribute(

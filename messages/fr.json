@@ -372,7 +372,8 @@
         "timeEnd": "Fin",
         "allDay": "Journée entière",
         "allDaySummary": "Journée entière",
-        "teamSelectPlaceholder": "Sélectionner une équipe"
+        "teamSelectPlaceholder": "Sélectionner une équipe",
+        "teamSelectEmpty": "Aucune équipe disponible"
       },
       "errors": {
         "createFailed": "Impossible de créer l'événement.",

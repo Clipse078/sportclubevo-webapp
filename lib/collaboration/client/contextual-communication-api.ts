@@ -11,6 +11,8 @@ export function contextualPrepareCommunicationPath(
       return `/api/collaboration/matches/${activityId}/prepare-communication`;
     case "TOURNAMENT":
       return `/api/collaboration/tournaments/${activityId}/prepare-communication`;
+    case "CLUB_EVENT":
+      return `/api/collaboration/club-events/${activityId}/prepare-communication`;
     default:
       throw new Error(`unsupported collaboration domain: ${domain}`);
   }
@@ -27,6 +29,8 @@ export function contextualPublishCommunicationPath(
       return `/api/collaboration/matches/${activityId}/publish-communication`;
     case "TOURNAMENT":
       return `/api/collaboration/tournaments/${activityId}/publish-communication`;
+    case "CLUB_EVENT":
+      return `/api/collaboration/club-events/${activityId}/publish-communication`;
     default:
       throw new Error(`unsupported collaboration domain: ${domain}`);
   }
