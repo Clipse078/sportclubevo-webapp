@@ -54,6 +54,24 @@ describe("resolveTournamentAudienceContext", () => {
     expect(result?.teamNamesLabel).toContain(",");
   });
 
+  it("R5-04 internal F2+F3 with external null teamId → union of SCE teams only", async () => {
+    mocks.participantFindMany.mockResolvedValue([
+      { teamId: "team-f2", team: { id: "team-f2", name: "Junioren F2" } },
+      { teamId: "team-f3", team: { id: "team-f3", name: "Junioren F3" } },
+      { teamId: null, team: null },
+    ]);
+    mocks.teamFindMany.mockResolvedValue([
+      { id: "team-f2", name: "Junioren F2" },
+      { id: "team-f3", name: "Junioren F3" },
+    ]);
+    const result = await resolveTournamentAudienceContext({
+      tenantId: "tenant-1",
+      tournamentId: "tour-playmore",
+      eventTeamId: "team-f3",
+    });
+    expect(result?.teamIds).toEqual(["team-f2", "team-f3"]);
+  });
+
   it("participants without teamId do not expand audience (external clubs)", async () => {
     mocks.participantFindMany.mockResolvedValue([
       { teamId: null, team: null },

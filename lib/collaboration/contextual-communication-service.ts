@@ -26,6 +26,8 @@ import { resolveMatchAudienceContext } from "@/lib/collaboration/match/resolve-m
 import { loadTournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
 import { resolveTournamentAudienceContext } from "@/lib/collaboration/tournament/resolve-tournament-audience";
 import { buildOperationalAudienceForTeamIds } from "@/lib/collaboration/shared/operational-audience";
+import { resolveActivityChangeDispatchPreview } from "@/lib/collaboration/shared/resolve-activity-change-dispatch-preview";
+import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import type { MatchActivitySnapshot } from "@/lib/collaboration/match/match-activity-snapshot";
 import type { TournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
 import {
@@ -49,7 +51,32 @@ export type PrepareContextualCommunicationResult = {
   reusedExistingDraft: boolean;
   subject: string;
   bodyText: string;
+  audienceLabel: string;
+  recipientCount: number;
+  canDispatch: boolean;
 };
+
+async function attachPrepareDispatchPreview(input: {
+  tenantId: string;
+  senderUserId: string;
+  eventId: string;
+  audienceSpec: CommunicationAudienceSpec;
+  audienceLabel: string;
+  base: Omit<PrepareContextualCommunicationResult, "audienceLabel" | "recipientCount" | "canDispatch">;
+}): Promise<PrepareContextualCommunicationResult> {
+  const preview = await resolveActivityChangeDispatchPreview({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    eventId: input.eventId,
+    audience: input.audienceSpec,
+  });
+  return {
+    ...input.base,
+    audienceLabel: input.audienceLabel,
+    recipientCount: preview.recipientCount,
+    canDispatch: preview.canDispatch,
+  };
+}
 
 function buildActivityChangeSubject(title: string): string {
   return `Änderung: ${title.trim()}`;
@@ -192,15 +219,25 @@ export async function prepareTrainingActivityChangeCommunicationDraft(input: {
     scheduleLine: snapshot.scheduleLine,
   });
 
+  const audienceSpec = defaultTeamOperationalAudience(snapshot.teamId);
+  const audienceLabel = snapshot.teamName?.trim() || "Team";
+
   if (existing) {
-    return {
-      draftId: existing.id,
-      teamId: snapshot.teamId,
-      redirectPath: `/dashboard/teams/${snapshot.teamId}/kommunikation?communicationId=${existing.id}`,
-      reusedExistingDraft: true,
-      subject,
-      bodyText,
-    };
+    return attachPrepareDispatchPreview({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      eventId: snapshot.sessionId,
+      audienceSpec,
+      audienceLabel,
+      base: {
+        draftId: existing.id,
+        teamId: snapshot.teamId,
+        redirectPath: `/dashboard/teams/${snapshot.teamId}/kommunikation?communicationId=${existing.id}`,
+        reusedExistingDraft: true,
+        subject,
+        bodyText,
+      },
+    });
   }
 
   const orchestrationMeta = buildActivityChangeOrchestrationMeta({
@@ -222,19 +259,26 @@ export async function prepareTrainingActivityChangeCommunicationDraft(input: {
     kind: "ANNOUNCEMENT",
     subject,
     bodyText,
-    audienceSpec: defaultTeamOperationalAudience(snapshot.teamId),
+    audienceSpec,
     contextRef: eventCommunicationContext(snapshot.sessionId),
     orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
   });
 
-  return {
-    draftId: draft.id,
-    teamId: snapshot.teamId,
-    redirectPath: `/dashboard/teams/${snapshot.teamId}/kommunikation?communicationId=${draft.id}`,
-    reusedExistingDraft: false,
-    subject,
-    bodyText,
-  };
+  return attachPrepareDispatchPreview({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    eventId: snapshot.sessionId,
+    audienceSpec,
+    audienceLabel,
+    base: {
+      draftId: draft.id,
+      teamId: snapshot.teamId,
+      redirectPath: `/dashboard/teams/${snapshot.teamId}/kommunikation?communicationId=${draft.id}`,
+      reusedExistingDraft: false,
+      subject,
+      bodyText,
+    },
+  });
 }
 
 /** Validates a before/after pair supplied by mutation handlers (authoritative). */
@@ -499,6 +543,8 @@ export async function prepareMatchActivityChangeCommunicationDraft(input: {
   validateMatchChangeSetAgainstSnapshot(snapshot, input.changeSet);
   const changeSet = input.changeSet;
   const audienceSpec = buildOperationalAudienceForTeamIds(audienceContext.teamIds);
+  const audienceLabel =
+    audienceContext.teamNamesLabel?.trim() || audienceContext.teamName?.trim() || "Team";
 
   const existing = await findExistingActivityChangeDraft({
     tenantId: input.tenantId,
@@ -517,14 +563,21 @@ export async function prepareMatchActivityChangeCommunicationDraft(input: {
   });
 
   if (existing) {
-    return {
-      draftId: existing.id,
-      teamId: audienceContext.primaryTeamId,
-      redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${existing.id}`,
-      reusedExistingDraft: true,
-      subject,
-      bodyText,
-    };
+    return attachPrepareDispatchPreview({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      eventId: snapshot.matchId,
+      audienceSpec,
+      audienceLabel,
+      base: {
+        draftId: existing.id,
+        teamId: audienceContext.primaryTeamId,
+        redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${existing.id}`,
+        reusedExistingDraft: true,
+        subject,
+        bodyText,
+      },
+    });
   }
 
   const orchestrationMeta = buildActivityChangeOrchestrationMeta({
@@ -551,14 +604,21 @@ export async function prepareMatchActivityChangeCommunicationDraft(input: {
     orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
   });
 
-  return {
-    draftId: draft.id,
-    teamId: audienceContext.primaryTeamId,
-    redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${draft.id}`,
-    reusedExistingDraft: false,
-    subject,
-    bodyText,
-  };
+  return attachPrepareDispatchPreview({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    eventId: snapshot.matchId,
+    audienceSpec,
+    audienceLabel,
+    base: {
+      draftId: draft.id,
+      teamId: audienceContext.primaryTeamId,
+      redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${draft.id}`,
+      reusedExistingDraft: false,
+      subject,
+      bodyText,
+    },
+  });
 }
 
 export async function prepareTournamentActivityChangeCommunicationDraft(input: {
@@ -598,6 +658,8 @@ export async function prepareTournamentActivityChangeCommunicationDraft(input: {
   validateTournamentChangeSetAgainstSnapshot(snapshot, input.changeSet);
   const changeSet = input.changeSet;
   const audienceSpec = buildOperationalAudienceForTeamIds(audienceContext.teamIds);
+  const audienceLabel =
+    audienceContext.teamNamesLabel?.trim() || audienceContext.teamName?.trim() || "Team";
 
   const existing = await findExistingActivityChangeDraft({
     tenantId: input.tenantId,
@@ -616,14 +678,21 @@ export async function prepareTournamentActivityChangeCommunicationDraft(input: {
   });
 
   if (existing) {
-    return {
-      draftId: existing.id,
-      teamId: audienceContext.primaryTeamId,
-      redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${existing.id}`,
-      reusedExistingDraft: true,
-      subject,
-      bodyText,
-    };
+    return attachPrepareDispatchPreview({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      eventId: snapshot.tournamentId,
+      audienceSpec,
+      audienceLabel,
+      base: {
+        draftId: existing.id,
+        teamId: audienceContext.primaryTeamId,
+        redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${existing.id}`,
+        reusedExistingDraft: true,
+        subject,
+        bodyText,
+      },
+    });
   }
 
   const orchestrationMeta = buildActivityChangeOrchestrationMeta({
@@ -650,14 +719,21 @@ export async function prepareTournamentActivityChangeCommunicationDraft(input: {
     orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
   });
 
-  return {
-    draftId: draft.id,
-    teamId: audienceContext.primaryTeamId,
-    redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${draft.id}`,
-    reusedExistingDraft: false,
-    subject,
-    bodyText,
-  };
+  return attachPrepareDispatchPreview({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    eventId: snapshot.tournamentId,
+    audienceSpec,
+    audienceLabel,
+    base: {
+      draftId: draft.id,
+      teamId: audienceContext.primaryTeamId,
+      redirectPath: `/dashboard/teams/${audienceContext.primaryTeamId}/kommunikation?communicationId=${draft.id}`,
+      reusedExistingDraft: false,
+      subject,
+      bodyText,
+    },
+  });
 }
 
 export async function publishPreparedMatchActivityChangeCommunication(input: {

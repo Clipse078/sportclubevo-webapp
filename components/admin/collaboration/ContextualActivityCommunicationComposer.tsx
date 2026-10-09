@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import type { ActivityCollaborationDomain } from "@/lib/collaboration/activity-change/types";
 import { contextualPublishCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
+import { CONTEXTUAL_COMMUNICATION_ERROR_CODES } from "@/lib/collaboration/contextual-communication-http";
 
 type Props = {
   domain: ActivityCollaborationDomain;
@@ -17,6 +18,9 @@ type Props = {
   draftId: string;
   initialSubject: string;
   initialBody: string;
+  audienceLabel?: string;
+  recipientCount: number;
+  canDispatch: boolean;
   onClose: () => void;
   onPublished: () => void;
 };
@@ -28,6 +32,9 @@ export function ContextualActivityCommunicationComposer({
   draftId,
   initialSubject,
   initialBody,
+  audienceLabel,
+  recipientCount,
+  canDispatch,
   onClose,
   onPublished,
 }: Props) {
@@ -40,7 +47,7 @@ export function ContextualActivityCommunicationComposer({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const canSubmit = !pending && body.trim().length > 0;
+  const canSubmit = !pending && body.trim().length > 0 && canDispatch;
 
   function handlePublish() {
     setError(null);
@@ -59,10 +66,18 @@ export function ContextualActivityCommunicationComposer({
         );
         const data = (await res.json().catch(() => null)) as {
           error?: string;
+          errorCode?: string;
           recipientCount?: number;
         } | null;
         if (!res.ok) {
-          throw new Error(data?.error ?? t("publishError"));
+          if (data?.errorCode === CONTEXTUAL_COMMUNICATION_ERROR_CODES.NO_ELIGIBLE_RECIPIENTS) {
+            throw new Error(t("noRecipientsBody"));
+          }
+          const raw = data?.error ?? "";
+          if (raw.includes("no eligible recipients for dispatch")) {
+            throw new Error(t("noRecipientsBody"));
+          }
+          throw new Error(raw || t("publishError"));
         }
         toast.success(t("publishSuccess", { count: data?.recipientCount ?? 0 }));
         onPublished();
@@ -89,6 +104,22 @@ export function ContextualActivityCommunicationComposer({
           <X className="h-4 w-4" />
         </button>
       </div>
+
+      {!canDispatch ? (
+        <div
+          className="space-y-1 rounded-md border border-amber-200 bg-amber-50/80 p-2 text-xs text-amber-950"
+          role="status"
+          data-testid="contextual-activity-communication-no-recipients"
+        >
+          <p className="font-semibold">{t("noRecipientsTitle")}</p>
+          <p>{t("noRecipientsBody")}</p>
+          {audienceLabel ? (
+            <p className="text-amber-900/90">
+              {t("audience")}: {audienceLabel} · {t("recipients")}: {recipientCount}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="space-y-1">
         <label htmlFor={subjectId} className="text-xs font-medium text-[var(--text-2)]">
@@ -135,6 +166,7 @@ export function ContextualActivityCommunicationComposer({
           size="sm"
           onClick={handlePublish}
           disabled={!canSubmit}
+          title={!canDispatch ? t("sendDisabledNoRecipients") : undefined}
           data-testid="contextual-activity-communication-send"
         >
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

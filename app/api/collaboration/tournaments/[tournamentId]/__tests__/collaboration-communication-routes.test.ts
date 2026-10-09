@@ -27,6 +27,8 @@ vi.mock("@/lib/collaboration/contextual-communication-service", () => ({
     mocks.publishPreparedTournamentActivityChangeCommunication,
 }));
 
+import { TeamCommunicationValidationError } from "@/lib/communication/team/team-communication-errors";
+import { TEAM_COMMUNICATION_NO_ELIGIBLE_RECIPIENTS_MESSAGE } from "@/lib/collaboration/contextual-communication-http";
 import { POST as preparePost } from "../prepare-communication/route";
 import { POST as publishPost } from "../publish-communication/route";
 
@@ -138,5 +140,26 @@ describe("tournament collaboration publish-communication route", () => {
     const res = await publishPost(req, { params: Promise.resolve({ tournamentId: TOURNAMENT_ID }) });
     expect(res.status).toBe(403);
     expect(mocks.publishPreparedTournamentActivityChangeCommunication).not.toHaveBeenCalled();
+  });
+
+  it("R5-11/R5-13 publish zero recipients returns localized German errorCode", async () => {
+    mocks.requireApiAnyPermission.mockResolvedValue(authOk());
+    mocks.publishPreparedTournamentActivityChangeCommunication.mockRejectedValue(
+      new TeamCommunicationValidationError(TEAM_COMMUNICATION_NO_ELIGIBLE_RECIPIENTS_MESSAGE),
+    );
+    const req = new NextRequest(
+      `http://localhost/api/collaboration/tournaments/${TOURNAMENT_ID}/publish-communication`,
+      {
+        method: "POST",
+        body: JSON.stringify({ draftId: "d1", teamId: "team-1" }),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+    const res = await publishPost(req, { params: Promise.resolve({ tournamentId: TOURNAMENT_ID }) });
+    expect(res.status).toBe(422);
+    const body = (await res.json()) as { error?: string; errorCode?: string };
+    expect(body.errorCode).toBe("NO_ELIGIBLE_RECIPIENTS");
+    expect(body.error).toContain("berechtigten Empfänger");
+    expect(body.error).not.toMatch(/no eligible recipients/i);
   });
 });

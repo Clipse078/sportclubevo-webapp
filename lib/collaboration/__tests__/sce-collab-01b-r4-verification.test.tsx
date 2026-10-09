@@ -21,6 +21,11 @@ const messages = {
       tournamentUpdated: "Turnier aktualisiert",
       multipleChanges: "{count} Änderungen",
       audience: "Zielgruppe",
+      recipients: "Empfänger",
+      noRecipientsTitle: "Keine Empfänger verfügbar",
+      noRecipientsBody:
+        "Für die ausgewählten Teams konnten aktuell keine berechtigten Empfänger ermittelt werden. Die Mitteilung kann deshalb noch nicht gesendet werden.",
+      sendDisabledNoRecipients: "Senden nicht möglich",
       zeroRecipients: "Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.",
       communicateChange: "Änderung kommunizieren",
       dismiss: "Schliessen",
@@ -73,6 +78,7 @@ const cumulativeImpact: ActivityChangeImpact = {
     teamId: "team-f3",
     teamIds: ["team-f3", "team-f2"],
     teamName: "Junioren F3",
+    teamNamesLabel: "Junioren F3, Junioren F2",
     recipientPreviewLabel: null,
     effectiveRecipientCount: 0,
     zeroRecipients: true,
@@ -110,6 +116,10 @@ vi.mock("@/lib/db/prisma", () => ({
 
 vi.mock("@/lib/communication/team/team-communication-service", () => ({
   createTeamCommunicationDraft: mocks.createTeamCommunicationDraft,
+}));
+
+vi.mock("@/lib/communication/platform/recipient-resolution/resolve-recipients", () => ({
+  resolveCommunicationRecipients: vi.fn().mockResolvedValue({ summary: { effectiveCount: 0 } }),
 }));
 
 describe("SCE-COLLAB-01B-R4 tournament cumulative prepare", () => {
@@ -195,6 +205,9 @@ describe("SCE-COLLAB-01B-R4 composer ToastProvider boundary", () => {
           teamId: "team-f3",
           subject: "Turnier angepasst",
           bodyText: "Das Turnier wurde angepasst.\n\n• Zeit: 10:00 → 10:15\n• Spielfeld: Kunstrasen 2 → Hauptfeld",
+          audienceLabel: "Junioren F3, Junioren F2",
+          recipientCount: 0,
+          canDispatch: false,
         }),
       }),
     );

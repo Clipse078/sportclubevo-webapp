@@ -5,7 +5,7 @@
 | Package | Status |
 |---------|--------|
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
-| **SCE-COLLAB-01B** (Matches + Tournaments) | **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** |
+| **SCE-COLLAB-01B** (Matches + Tournaments) | **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
@@ -245,9 +245,79 @@ Failure isolation unchanged: prepare errors remain inline on the impact surface;
 
 ### Tests
 
-- `lib/collaboration/__tests__/sce-collab-01b-r4-verification.test.tsx` — cumulative tournament prepare body/fingerprint/idempotency + composer open/cancel with activity layout host.
+- `lib/collaboration/__tests__/sce-collab-01b-r4-verification.test.tsx`
+- `lib/collaboration/__tests__/sce-collab-01b-r5-verification.test.ts`
+- `components/admin/collaboration/__tests__/ContextualActivityCommunicationComposer.test.tsx` — cumulative tournament prepare body/fingerprint/idempotency + composer open/cancel with activity layout host.
 
-**Status after R4 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_FIX_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R4**.
+**Status after R4 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-04R4**.
+
+## SCE-COLLAB-01B-R5 — recipient resolution diagnosis + zero-recipient UX (2026-10-09)
+
+### Human UAT (R4 sign-off + R5 blocker)
+
+| Step | Result |
+|------|--------|
+| R4 cumulative banner (TIME + RESOURCE) | **PASS** |
+| R4 composer opens with both changes | **PASS** |
+| R4 cancel preserves cycle | **PASS** |
+| R4 composer crash (ToastProvider) | **FIXED** (R4) |
+| UAT-05 send with zero eligible recipients | **BLOCKED** — dispatch guard correctly rejects; UI previously showed raw English `no eligible recipients for dispatch` |
+
+### Tournament audience semantics (PlayMore Turnier)
+
+| Stage | Behaviour |
+|-------|-----------|
+| Internal SCE teams | `Event.teamId` (when tenant-scoped) **union** distinct `TournamentParticipant.teamId` rows; external clubs remain `teamId: null` and are excluded |
+| Canonical audience spec | `buildOperationalAudienceForTeamIds` → Zielgruppen `UNION` with one structural component `{ teamIds: […] }` (sorted dedupe) |
+| Recipient resolution | COMM-03 `resolveCommunicationRecipients` PREVIEW (impact banner + prepare) and DISPATCH (publish via `publishTeamCommunication` + `preservePreparedAudience: true`) |
+| Multi-team union | F2 ∪ F3 recipients; COMM-03 deduplicates persons across teams; no whole-tenant fallback |
+
+### Eligible operational recipient (current SCE product)
+
+Team operational audience = **active `TeamSeason` roster** for structural `teamIds`:
+
+- active **player** squad members (`playerSquadMembers`) with active tenant `Person`
+- active **trainer** team members (`trainerTeamMembers`) with active tenant `Person`
+
+Downstream COMM-03 intersects with sender communication scope, channel/category eligibility (IN_APP / `TEAM_OPERATIONAL`), preferences, safeguarding/guardian substitution. Persons without a linked active delivery user are excluded at dispatch. **Parent/guardian-only delivery without a supported person→user path is not a separate audience shortcut in 01B.**
+
+If F2/F3 have no roster persons satisfying the pipeline, **zero recipients is a data/eligibility boundary**, not authorization to weaken dispatch.
+
+### R5 diagnosis (PlayMore zero recipients)
+
+Code path review (no resolver bug identified for multi-team union):
+
+1. `resolveTournamentAudienceContext` → canonical internal team ids + labels
+2. `buildOperationalAudienceForTeamIds` → multi-team structural union
+3. PREVIEW/DISPATCH via COMM-03 → `effectiveCount === 0`
+4. Publish guard in `publishTeamCommunication` throws `no eligible recipients for dispatch` (unchanged)
+
+**Zero stage:** post-resolution effective delivery targets (COMM-03 dispatch pipeline), not tournament adapter or missing union support.
+
+### Zero-recipient UX (R5)
+
+| Surface | Behaviour |
+|---------|-----------|
+| Impact banner | `Zielgruppe: {team labels}` + `Empfänger: {count}` (no emails/user ids) |
+| Prepare API | Returns `audienceLabel`, `recipientCount`, `canDispatch` (draft still allowed) |
+| Composer | German panel **Keine Empfänger verfügbar**; Send disabled when `canDispatch === false` |
+| Publish API | Maps zero-recipient guard to `errorCode: NO_ELIGIBLE_RECIPIENTS` + localized German message |
+
+### Publish revalidation
+
+Prepare-time preview does **not** bypass dispatch-time resolution. Publish re-runs COMM-03 DISPATCH; race to zero recipients returns localized error, leaves DRAFT + cumulative cycle intact.
+
+### Successful send reset
+
+Unchanged from R3/R4: successful publish → collaboration cycle reset; failed/zero send → cycle preserved.
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01b-r5-verification.test.ts`
+- `components/admin/collaboration/__tests__/ContextualActivityCommunicationComposer.test.tsx`
+- Tournament route publish error mapping extended in `app/api/collaboration/tournaments/[tournamentId]/__tests__/collaboration-communication-routes.test.ts`
+
+**Status after R5 implementation:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** (not CLOSED). Resume Human UAT at **UAT-05**.
 
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 

@@ -258,6 +258,7 @@ describe("SCE-COLLAB-01B communication drafts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.resolveContextualCommunicationSendAuthorization.mockResolvedValue({ canCommunicate: true });
+    mocks.resolveCommunicationRecipients.mockResolvedValue({ summary: { effectiveCount: 4 } });
     mocks.platformCommunicationFindMany.mockResolvedValue([]);
     mocks.createTeamCommunicationDraft.mockResolvedValue({ id: "draft-1" });
     mocks.publishTeamCommunication.mockResolvedValue({ id: "draft-1", recipientCount: 3 });

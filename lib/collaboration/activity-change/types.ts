@@ -44,6 +44,8 @@ export type ActivityAudienceContext = {
   /** Present when the operational audience spans multiple SCE teams (e.g. tournaments). */
   teamIds?: string[];
   teamName: string;
+  /** Human-readable target teams (comma-separated when multi-team). */
+  teamNamesLabel?: string | null;
   recipientPreviewLabel: string | null;
   effectiveRecipientCount: number | null;
   zeroRecipients: boolean;

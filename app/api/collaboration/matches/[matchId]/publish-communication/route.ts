@@ -12,6 +12,7 @@ import {
   TeamCommunicationNotFoundError,
   TeamCommunicationValidationError,
 } from "@/lib/communication/team/team-communication-errors";
+import { mapContextualCommunicationValidationError } from "@/lib/collaboration/contextual-communication-http";
 
 type Params = { params: Promise<{ matchId: string }> };
 
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
     if (err instanceof TeamCommunicationValidationError) {
-      return NextResponse.json({ error: err.message }, { status: 422 });
+      const mapped = mapContextualCommunicationValidationError(err);
+      return NextResponse.json(mapped.body, { status: mapped.status });
     }
     throw err;
   }

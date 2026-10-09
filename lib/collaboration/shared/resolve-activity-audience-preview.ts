@@ -62,9 +62,12 @@ export async function resolveActivityAudiencePreview(input: {
     }
   }
 
+  const teamNamesLabel = input.teamNamesLabel?.trim() || input.teamName;
+
   const audience: ActivityAudienceContext = {
     teamId: input.primaryTeamId,
     teamName: input.teamName,
+    teamNamesLabel,
     recipientPreviewLabel,
     effectiveRecipientCount,
     zeroRecipients,

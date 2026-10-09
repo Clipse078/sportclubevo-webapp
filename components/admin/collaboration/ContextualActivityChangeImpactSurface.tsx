@@ -49,6 +49,9 @@ export function ContextualActivityChangeImpactSurface({
     subject: string;
     bodyText: string;
     changeFingerprint: string;
+    audienceLabel: string;
+    recipientCount: number;
+    canDispatch: boolean;
   } | null>(null);
   const preparedFingerprintRef = useRef<string | null>(null);
 
@@ -83,6 +86,9 @@ export function ContextualActivityChangeImpactSurface({
           teamId?: string;
           subject?: string;
           bodyText?: string;
+          audienceLabel?: string;
+          recipientCount?: number;
+          canDispatch?: boolean;
         } | null;
         if (!res.ok || !data?.draftId || !data.teamId) {
           throw new Error(data?.error ?? t("prepareError"));
@@ -95,6 +101,9 @@ export function ContextualActivityChangeImpactSurface({
           subject: data.subject ?? "",
           bodyText: data.bodyText ?? "",
           changeFingerprint: fingerprint,
+          audienceLabel: data.audienceLabel ?? impact.audience?.teamNamesLabel ?? impact.audience?.teamName ?? "",
+          recipientCount: data.recipientCount ?? impact.audience?.effectiveRecipientCount ?? 0,
+          canDispatch: data.canDispatch ?? (data.recipientCount ?? 0) > 0,
         });
         setComposerOpen(true);
       } catch (err) {
@@ -149,12 +158,21 @@ export function ContextualActivityChangeImpactSurface({
       </div>
 
       {impact.audience ? (
-        <p className="mt-2 text-xs text-[var(--text-2)]" data-testid="contextual-activity-change-audience">
-          <span className="font-medium text-[var(--foreground)]">{t("audience")}: </span>
-          {impact.audience.zeroRecipients
-            ? t("zeroRecipients")
-            : (impact.audience.recipientPreviewLabel ?? impact.audience.teamName)}
-        </p>
+        <div
+          className="mt-2 space-y-0.5 text-xs text-[var(--text-2)]"
+          data-testid="contextual-activity-change-audience"
+        >
+          <p>
+            <span className="font-medium text-[var(--foreground)]">{t("audience")}: </span>
+            {impact.audience.teamNamesLabel ?? impact.audience.teamName}
+          </p>
+          {impact.audience.effectiveRecipientCount !== null ? (
+            <p data-testid="contextual-activity-change-recipient-count">
+              <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
+              {impact.audience.effectiveRecipientCount}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {composerStale ? (
@@ -192,6 +210,9 @@ export function ContextualActivityChangeImpactSurface({
           draftId={draftPrefill.draftId}
           initialSubject={draftPrefill.subject}
           initialBody={draftPrefill.bodyText}
+          audienceLabel={draftPrefill.audienceLabel}
+          recipientCount={draftPrefill.recipientCount}
+          canDispatch={draftPrefill.canDispatch}
           onClose={() => setComposerOpen(false)}
           onPublished={() => {
             acknowledgeCommunicationSent();
