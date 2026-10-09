@@ -147,6 +147,8 @@ describe("SCE-COLLAB-01C-R1 server collaboration payload", () => {
       teamIds: [],
       teamName: "Mitglieder",
       teamNamesLabel: "Mitglieder",
+      communicationPath: "CLUB",
+      participationEntries: [],
     });
     mocks.resolveClubEventAudiencePreview.mockResolvedValue({
       canCommunicate: true,
@@ -404,16 +406,14 @@ describe("SCE-COLLAB-01C-R1 save UX", () => {
     );
 
     const top = screen.getByTestId("veranstaltung-edit-save-top");
-    const bottom = screen.getByTestId("veranstaltung-edit-save");
+    expect(screen.queryByTestId("veranstaltung-edit-save")).toBeNull();
     expect(top).toHaveAttribute("form", VERANSTALTUNG_EDIT_FORM_ID);
-    expect(bottom).toHaveAttribute("type", "submit");
 
     fireEvent.click(top);
 
     await waitFor(() => {
       expect(mocks.fetchMock).toHaveBeenCalledTimes(1);
       expect(top).toBeDisabled();
-      expect(bottom).toBeDisabled();
     });
 
     resolveFetch({
@@ -456,6 +456,8 @@ describe("SCE-COLLAB-01C-R1 audience fallback label", () => {
       teamIds: [],
       teamName: "Mitglieder",
       teamNamesLabel: "Mitglieder",
+      communicationPath: "CLUB",
+      participationEntries: [],
     });
     mocks.resolveClubEventAudiencePreview.mockResolvedValue({
       canCommunicate: true,

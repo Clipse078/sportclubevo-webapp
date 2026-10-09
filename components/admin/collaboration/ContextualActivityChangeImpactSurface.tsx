@@ -186,12 +186,29 @@ export function ContextualActivityChangeImpactSurface({
             <span className="font-medium text-[var(--foreground)]">{t("audience")}: </span>
             {impact.audience.teamNamesLabel ?? impact.audience.teamName}
           </p>
-          {impact.audience.effectiveRecipientCount !== null ? (
+          {impact.audience.audienceNotConfigured ? (
+            <p data-testid="contextual-activity-change-recipient-count">
+              <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
+              {t("recipientsNotApplicable")}
+            </p>
+          ) : impact.audience.effectiveRecipientCount !== null ? (
             <p data-testid="contextual-activity-change-recipient-count">
               <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
               {impact.audience.effectiveRecipientCount}
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {domain === "CLUB_EVENT" && impact.audience?.audienceNotConfigured ? (
+        <div className="mt-2">
+          <a
+            href="#veranstaltung-edit-participants-heading"
+            className="text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline"
+            data-testid="contextual-activity-change-configure-audience"
+          >
+            {t("configureAudience")}
+          </a>
         </div>
       ) : null}
 

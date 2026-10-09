@@ -381,13 +381,11 @@ export default function VeranstaltungEditForm({
 
       {!isReadonly ? (
         <PlanningEditorActions testId="veranstaltung-edit-actions">
-          <button type="submit" disabled={submitting} className="fca-button-primary" data-testid="veranstaltung-edit-save">
-            {submitting ? t("edit.saving") : t("edit.save")}
-          </button>
           <button
             type="button"
             onClick={() => router.push("/dashboard/veranstaltungen")}
             className="fca-button-secondary"
+            data-testid="veranstaltung-edit-cancel"
           >
             {tc("cancel")}
           </button>

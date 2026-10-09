@@ -598,3 +598,64 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 **01C status after R1:** IMPLEMENTED / **HUMAN_UAT_PENDING** (retest required; not CLOSED).
 
 **COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C retest pending).
+
+---
+
+## SCE-COLLAB-01C-R2 — Human UAT R2 (2026-10-09)
+
+### Human UAT R1 result (deployed feature SHA)
+
+| Check | Result |
+|-------|--------|
+| Top **Änderungen speichern** visible + works | **PASS** |
+| Change detection + persistent surface below header | **PASS** |
+| Zielgruppe / Empfänger / **Änderung kommunizieren** | **FAIL** — surface showed change-only mode |
+| Duplicate bottom **Änderungen speichern** | **FAIL** |
+| UAT-R1-03 onward | **BLOCKED** |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING** (not CLOSED).
+
+### Exact UAT event diagnosis (STAGE read-only)
+
+| Field | Value |
+|-------|-------|
+| Event ID | `cmsprr1r6000304jr98oq6899` |
+| Title | Mittgliederversammlung (STAGE row) |
+| Tenant | `cmomwboak0000tsf3zzivrs46` |
+| Type / status | `OTHER` / `SCHEDULED` |
+| `EventParticipationAudienceEntry` rows | **0** |
+| Audience state | **A — no participation audience configured** |
+| `CommunicationAudienceSpec` | **null** (not fabricated) |
+| `canCommunicate` | **false** (no valid audience + auth path not reached) |
+| `canDispatch` | **n/a** (composer not offered without valid audience) |
+
+**ROOT_CAUSE:** Mitgliederversammlung has **no** participation audience entries in STAGE. R1 treated missing spec as `audience === null`, so the impact surface hid Zielgruppe/Empfänger entirely instead of explaining the state. Separate UX finding: duplicate primary Save at bottom of form.
+
+**Participation UX:** Audience is configured in **Teilnehmer** on the edit page via `ClubEventParticipationAudienceEditor` (team/org/role/person entries); editable after create. Reminders/deadline rail is separate (`ParticipationRequestConfigEditor`).
+
+### R2 fix
+
+| Area | Change |
+|------|--------|
+| Audience states | Explicit **none** / **invalid** / **valid** handling; always surface Zielgruppe on worthy club-event changes |
+| No audience | **Keine Zielgruppe festgelegt**, Empfänger **—**, link **Zielgruppe festlegen** → participants section (no fabricated spec) |
+| Invalid/stale | Human label without IDs; no silent drop to null-only surface |
+| Communication path | **TEAM** only when all resolvable entries are `TEAM`; otherwise **CLUB** (`communication.club.send`). TEAM path no longer blocks club path for ROLE/ORG/PERSON/mixed audiences |
+| `canCommunicate` vs `canDispatch` | Unchanged 01B contract: composer when authorized + valid audience; Send disabled when preview count is 0 |
+| Save UX | Remove bottom primary Save; keep top header Save + bottom **Abbrechen** only |
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01c-r2-verification.test.tsx` (R2-01 … R2-20 subset)
+- Updated `sce-collab-01c-r1-verification.test.tsx` (bottom Save removed)
+- Re-run 01A/01B/01C regressions on branch
+
+### Human UAT R2 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R2-01 | Single top Save; no bottom duplicate |
+| UAT-R2-02 | After time change: count + delta + Zielgruppe state (for this event: **Keine Zielgruppe festgelegt** + Empfänger **—** until audience configured) |
+| UAT-R2-03 … UAT-R2-05 | **Änderung kommunizieren** + composer after configuring a valid participation audience (or any event with resolvable audience + send permission) |
+
+**Note:** Full communicate flow for Mitgliederversammlung requires setting participation audience in **Teilnehmer** first (product-correct; not a COLLAB data patch).

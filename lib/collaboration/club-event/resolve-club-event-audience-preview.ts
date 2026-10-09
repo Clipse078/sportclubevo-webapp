@@ -8,8 +8,9 @@ import type { ActivityChangeImpact } from "@/lib/collaboration/activity-change/t
 import { resolveContextualCommunicationSendAuthorization } from "@/lib/collaboration/contextual-communication-authorization";
 import { resolveClubCommunicationAuthorization } from "@/lib/communication/club/club-communication-authorization";
 import type { ResolvedClubEventAudience } from "@/lib/collaboration/club-event/resolve-club-event-audience";
+import type { ClubEventCommunicationScope } from "@/lib/collaboration/club-event/club-event-audience-presentation";
 
-export type ClubEventCommunicationScope = "TEAM" | "CLUB";
+export type { ClubEventCommunicationScope } from "@/lib/collaboration/club-event/club-event-audience-presentation";
 
 export async function resolveClubEventCommunicationScope(input: {
   tenantId: string;
@@ -17,17 +18,19 @@ export async function resolveClubEventCommunicationScope(input: {
   userId: string;
   audienceContext: ResolvedClubEventAudience;
 }): Promise<{ scope: ClubEventCommunicationScope; canCommunicate: boolean }> {
-  const teamId = input.audienceContext.primaryTeamId;
-  if (teamId) {
+  const path = input.audienceContext.communicationPath;
+
+  if (path === "TEAM" && input.audienceContext.primaryTeamId) {
     const teamAuth = await resolveContextualCommunicationSendAuthorization({
       tenantId: input.tenantId,
       tenantKey: input.tenantKey,
       userId: input.userId,
-      teamId,
+      teamId: input.audienceContext.primaryTeamId,
     });
     if (teamAuth.canCommunicate) {
       return { scope: "TEAM", canCommunicate: true };
     }
+    return { scope: "TEAM", canCommunicate: false };
   }
 
   const clubAuth = await resolveClubCommunicationAuthorization({
@@ -39,7 +42,7 @@ export async function resolveClubEventCommunicationScope(input: {
     return { scope: "CLUB", canCommunicate: true };
   }
 
-  return { scope: teamId ? "TEAM" : "CLUB", canCommunicate: false };
+  return { scope: path, canCommunicate: false };
 }
 
 export async function resolveClubEventAudiencePreview(input: {

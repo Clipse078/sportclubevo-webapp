@@ -849,6 +849,8 @@
       "multipleChanges": "{count} Änderungen",
       "audience": "Zielgruppe",
       "recipients": "Empfänger",
+      "recipientsNotApplicable": "—",
+      "configureAudience": "Zielgruppe festlegen",
       "zeroRecipients": "Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.",
       "noRecipientsTitle": "Keine Empfänger verfügbar",
       "noRecipientsBody": "Für die ausgewählten Teams konnten aktuell keine berechtigten Empfänger ermittelt werden. Die Mitteilung kann deshalb noch nicht gesendet werden.",

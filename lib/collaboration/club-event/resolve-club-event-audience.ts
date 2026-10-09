@@ -5,9 +5,16 @@
 import type { EventParticipationAudienceKind } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
-import { listClubEventAudienceEntries } from "@/lib/events/club-event-participation-audience-service";
+import {
+  listClubEventAudienceEntries,
+  type ClubEventAudienceEntryDto,
+} from "@/lib/events/club-event-participation-audience-service";
 import { dedupeTenantTeamIds } from "@/lib/collaboration/shared/operational-audience";
 import type { ClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
+import {
+  resolveClubEventCommunicationPathFromEntries,
+  type ClubEventCommunicationScope,
+} from "@/lib/collaboration/club-event/club-event-audience-presentation";
 
 export type ResolvedClubEventAudience = {
   audienceSpec: CommunicationAudienceSpec;
@@ -17,6 +24,8 @@ export type ResolvedClubEventAudience = {
   teamIds: string[];
   teamName: string;
   teamNamesLabel: string | null;
+  communicationPath: ClubEventCommunicationScope;
+  participationEntries: ClubEventAudienceEntryDto[];
 };
 
 export function formatClubEventParticipationAudienceLabel(
@@ -31,7 +40,7 @@ export function formatClubEventParticipationAudienceLabel(
 }
 
 export function buildAudienceSpecFromEntries(
-  entries: Awaited<ReturnType<typeof listClubEventAudienceEntries>>,
+  entries: ClubEventAudienceEntryDto[],
 ): CommunicationAudienceSpec | null {
   const eligibleEntries = entries.filter((entry) => entry.referenceId.trim().length > 0);
   if (eligibleEntries.length === 0) return null;
@@ -105,30 +114,35 @@ export async function resolveClubEventAudienceContext(input: {
   const audienceLabel = formatClubEventParticipationAudienceLabel(entries);
   if (!audienceSpec || !audienceLabel) return null;
 
+  const communicationPath = resolveClubEventCommunicationPathFromEntries(entries);
   const teamIdsFromAudience = dedupeTenantTeamIds(
     entries.filter((e) => e.kind === "TEAM").map((e) => e.referenceId),
   );
-  const teamIds = dedupeTenantTeamIds([
-    input.snapshot.teamId,
-    ...teamIdsFromAudience,
-  ]);
+  const teamIds =
+    communicationPath === "TEAM"
+      ? teamIdsFromAudience
+      : dedupeTenantTeamIds([input.snapshot.teamId, ...teamIdsFromAudience].filter(Boolean) as string[]);
 
   let teamName = "Veranstaltungsteilnehmer";
   let teamNamesLabel: string | null = audienceLabel;
-  let primaryTeamId: string | null = null;
+  let primaryTeamId: string | null =
+    communicationPath === "TEAM" ? (teamIdsFromAudience[0] ?? null) : null;
 
-  if (teamIds.length > 0) {
+  if (teamIdsFromAudience.length > 0) {
     const teams = await prisma.team.findMany({
-      where: { tenantId: input.tenantId, id: { in: teamIds } },
+      where: { tenantId: input.tenantId, id: { in: teamIdsFromAudience } },
       select: { id: true, name: true },
     });
     const byId = new Map(teams.map((t) => [t.id, t.name]));
-    const orderedNames = teamIds.map((id) => byId.get(id)).filter(Boolean) as string[];
-    primaryTeamId = teamIds[0] ?? null;
-    teamName = orderedNames[0] ?? teamName;
-    if (orderedNames.length > 0 && entries.every((e) => e.kind === "TEAM")) {
-      teamNamesLabel =
-        orderedNames.length > 1 ? orderedNames.join(", ") : orderedNames[0] ?? audienceLabel;
+    const orderedNames = teamIdsFromAudience
+      .map((id) => byId.get(id))
+      .filter(Boolean) as string[];
+    if (communicationPath === "TEAM") {
+      teamName = orderedNames[0] ?? teamName;
+      if (orderedNames.length > 0) {
+        teamNamesLabel =
+          orderedNames.length > 1 ? orderedNames.join(", ") : orderedNames[0] ?? audienceLabel;
+      }
     }
   }
 
@@ -139,5 +153,7 @@ export async function resolveClubEventAudienceContext(input: {
     teamIds,
     teamName,
     teamNamesLabel,
+    communicationPath,
+    participationEntries: entries,
   };
 }

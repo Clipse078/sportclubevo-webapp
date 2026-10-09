@@ -7,22 +7,28 @@ import { buildClubEventActivityChangeImpact } from "@/lib/collaboration/club-eve
 import type { ClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
 import { listClubEventAudienceEntries } from "@/lib/events/club-event-participation-audience-service";
 import {
-  formatClubEventParticipationAudienceLabel,
-  resolveClubEventAudienceContext,
-} from "@/lib/collaboration/club-event/resolve-club-event-audience";
+  CLUB_EVENT_INVALID_AUDIENCE_LABEL_DE,
+  CLUB_EVENT_NO_AUDIENCE_LABEL_DE,
+  classifyClubEventParticipationAudience,
+} from "@/lib/collaboration/club-event/club-event-audience-presentation";
+import { resolveClubEventAudienceContext } from "@/lib/collaboration/club-event/resolve-club-event-audience";
 import { resolveClubEventAudiencePreview } from "@/lib/collaboration/club-event/resolve-club-event-audience-preview";
 
-function displayOnlyClubEventAudience(
-  eventId: string,
-  label: string,
-): NonNullable<ActivityChangeImpact["audience"]> {
+function displayOnlyClubEventAudience(input: {
+  eventId: string;
+  label: string;
+  audienceNotConfigured?: boolean;
+  audienceInvalid?: boolean;
+}): NonNullable<ActivityChangeImpact["audience"]> {
   return {
-    teamId: eventId,
-    teamName: label,
-    teamNamesLabel: label,
+    teamId: input.eventId,
+    teamName: input.label,
+    teamNamesLabel: input.label,
     recipientPreviewLabel: null,
     effectiveRecipientCount: null,
     zeroRecipients: false,
+    audienceNotConfigured: input.audienceNotConfigured,
+    audienceInvalid: input.audienceInvalid,
   };
 }
 
@@ -37,8 +43,7 @@ export async function resolveClubEventCollaborationImpactAfterChange(input: {
     input.tenantId,
     input.after.eventId,
   );
-  const participationAudienceLabel =
-    formatClubEventParticipationAudienceLabel(participationEntries);
+  const classification = classifyClubEventParticipationAudience(participationEntries);
 
   const audienceContext = await resolveClubEventAudienceContext({
     tenantId: input.tenantId,
@@ -60,13 +65,25 @@ export async function resolveClubEventCollaborationImpactAfterChange(input: {
       canCommunicate = preview.canCommunicate;
       audience = preview.audience;
     } catch {
-      audience = displayOnlyClubEventAudience(
-        input.after.eventId,
-        audienceContext.audienceLabel,
-      );
+      audience = displayOnlyClubEventAudience({
+        eventId: input.after.eventId,
+        label: audienceContext.audienceLabel,
+      });
     }
-  } else if (participationAudienceLabel) {
-    audience = displayOnlyClubEventAudience(input.after.eventId, participationAudienceLabel);
+  } else if (classification.state === "NONE") {
+    audience = displayOnlyClubEventAudience({
+      eventId: input.after.eventId,
+      label: CLUB_EVENT_NO_AUDIENCE_LABEL_DE,
+      audienceNotConfigured: true,
+    });
+  } else if (classification.state === "INVALID") {
+    const label =
+      classification.partialLabel?.trim() || CLUB_EVENT_INVALID_AUDIENCE_LABEL_DE;
+    audience = displayOnlyClubEventAudience({
+      eventId: input.after.eventId,
+      label,
+      audienceInvalid: true,
+    });
   }
 
   const impact = buildClubEventActivityChangeImpact({

@@ -49,6 +49,10 @@ export type ActivityAudienceContext = {
   recipientPreviewLabel: string | null;
   effectiveRecipientCount: number | null;
   zeroRecipients: boolean;
+  /** Club event: participation audience not configured on the event. */
+  audienceNotConfigured?: boolean;
+  /** Club event: entries exist but none resolve to a communication audience. */
+  audienceInvalid?: boolean;
 };
 
 export type ActivityChangeImpact = {
