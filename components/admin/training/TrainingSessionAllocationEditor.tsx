@@ -16,8 +16,7 @@ import {
   type TrainingAllocationGroupKey,
 } from "@/lib/training/allocation-groups";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
-import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
-import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 type Props = {
   sessionId: string;
   initialAllocations: TrainingSessionAllocationDto[];
@@ -276,7 +275,10 @@ export function TrainingSessionAllocationEditor({
   sessionEndAt,
 }: Props) {
   const t = useTranslations("TrainingCenter.sessionEdit");
-  const { setImpact } = useActivityChangeCollaboration();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "TRAINING",
+    sessionId,
+  );
   const [allocations, setAllocations] = useState<TrainingSessionAllocationDto[]>(initialAllocations);
   const [openPickerGroup, setOpenPickerGroup] = useState<TrainingAllocationGroupKey | null>(null);
 
@@ -307,10 +309,11 @@ export function TrainingSessionAllocationEditor({
 
   const handleAdd = useCallback(
     async (facilityResourceId: string) => {
+      const { payload, cycleRequested } = attachCycleBaseline({ facilityResourceId });
       const res = await fetch(`/api/training-sessions/${sessionId}/allocations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ facilityResourceId }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -323,16 +326,18 @@ export function TrainingSessionAllocationEditor({
         collaboration?: unknown;
       };
       setAllocations((prev) => [...prev, data.allocation].sort((a, b) => a.displayOrder - b.displayOrder));
-      const collaboration = extractCollaborationImpact(data);
-      if (collaboration) setImpact(collaboration);
+      applyMutationCollaboration(data, cycleRequested);
     },
-    [sessionId, setImpact],
+    [applyMutationCollaboration, attachCycleBaseline, sessionId],
   );
 
   const handleRemove = useCallback(
     async (allocationId: string) => {
+      const { payload, cycleRequested } = attachCycleBaseline({});
       const res = await fetch(`/api/training-sessions/${sessionId}/allocations/${allocationId}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -342,10 +347,9 @@ export function TrainingSessionAllocationEditor({
 
       const data = (await res.json().catch(() => null)) as { collaboration?: unknown } | null;
       setAllocations((prev) => prev.filter((a) => a.id !== allocationId));
-      const collaboration = extractCollaborationImpact(data);
-      if (collaboration) setImpact(collaboration);
+      applyMutationCollaboration(data, cycleRequested);
     },
-    [sessionId, setImpact],
+    [applyMutationCollaboration, attachCycleBaseline, sessionId],
   );
 
   const handleUseSeriesDefaultForGroup = useCallback(

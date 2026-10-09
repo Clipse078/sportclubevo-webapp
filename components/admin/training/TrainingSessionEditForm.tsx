@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, RotateCcw, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
-import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 import {
   TRAINING_FORM_COMPACT_TIME_INPUT_CLASS,
   TRAINING_FORM_TIME_FIELD_WIDTH_CLASS,
@@ -57,7 +56,10 @@ export default function TrainingSessionEditForm({
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
-  const { setImpact } = useActivityChangeCollaboration();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "TRAINING",
+    sessionId,
+  );
   const t = useTranslations("TrainingCenter.sessionEdit");
 
   const [date, setDate] = useState(effectiveDate);
@@ -107,10 +109,15 @@ export default function TrainingSessionEditForm({
 
     setSaving(true);
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({
+        date,
+        startsAt: startTime,
+        endsAt: endTime,
+      });
       const res = await fetch(`/api/training-sessions/${sessionId}/reschedule`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, startsAt: startTime, endsAt: endTime }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
 
@@ -118,12 +125,7 @@ export default function TrainingSessionEditForm({
         throw new Error(data?.error ?? t("saveError"));
       }
 
-      const collaboration = extractCollaborationImpact(data);
-      if (collaboration) {
-        setImpact(collaboration);
-      } else {
-        setImpact(null);
-      }
+      applyMutationCollaboration(data, cycleRequested);
 
       toast.success(t("saveSuccess"));
       router.refresh();

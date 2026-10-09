@@ -28,6 +28,8 @@ import {
   TrainingSessionAllocationDuplicateError,
 } from "@/lib/training/errors";
 import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildTrainingMutationCollaborationImpact } from "@/lib/collaboration/training/training-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
@@ -62,8 +64,10 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const { sessionId } = await params;
 
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ error: "Request body required" }, { status: 400 });
+
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TRAINING", sessionId);
 
   if (typeof body.facilityResourceId !== "string" || !body.facilityResourceId.trim()) {
     return NextResponse.json({ error: "facilityResourceId is required" }, { status: 400 });
@@ -80,14 +84,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     revalidatePlannerWeekPaths();
     const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-    const collaboration = await buildTrainingMutationCollaborationImpact({
+    const collaborationResult = await buildTrainingMutationCollaborationImpact({
       tenantId,
       tenantKey,
       userId,
       sessionId,
       beforeSnapshot,
+      cycleBaseline,
     });
-    return NextResponse.json({ allocation, collaboration }, { status: 201 });
+    return NextResponse.json(
+      { allocation, ...buildCollaborationMutationResponse(collaborationResult) },
+      { status: 201 },
+    );
   } catch (err) {
     if (err instanceof TrainingSessionNotFoundError) {
       return NextResponse.json({ error: "Training session not found" }, { status: 404 });

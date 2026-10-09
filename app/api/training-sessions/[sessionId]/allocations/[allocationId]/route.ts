@@ -17,12 +17,14 @@ import {
 } from "@/lib/training/session-allocation-service";
 import { TrainingSessionAllocationNotFoundError } from "@/lib/training/errors";
 import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { buildTrainingMutationCollaborationImpact } from "@/lib/collaboration/training/training-mutation-collaboration";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type Params = { params: Promise<{ sessionId: string; allocationId: string }> };
 
-export async function DELETE(_request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: Params) {
   const auth = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -30,6 +32,14 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   if (!tenantId) return NextResponse.json({ error: "Tenant context required" }, { status: 400 });
 
   const { sessionId, allocationId } = await params;
+
+  let cycleBaseline = null;
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TRAINING", sessionId);
+  } catch {
+    cycleBaseline = null;
+  }
 
   try {
     const beforeSnapshot = await loadTrainingActivitySnapshot({ tenantId, sessionId });
@@ -42,14 +52,18 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     revalidatePlannerWeekPaths();
     const userId = auth.session.user.effectiveUserId ?? auth.session.user.id;
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
-    const collaboration = await buildTrainingMutationCollaborationImpact({
+    const collaborationResult = await buildTrainingMutationCollaborationImpact({
       tenantId,
       tenantKey,
       userId,
       sessionId,
       beforeSnapshot,
+      cycleBaseline,
     });
-    return NextResponse.json({ ok: true, collaboration });
+    return NextResponse.json({
+      ok: true,
+      ...buildCollaborationMutationResponse(collaborationResult),
+    });
   } catch (err) {
     if (err instanceof TrainingSessionAllocationNotFoundError) {
       return NextResponse.json({ error: "Allocation not found" }, { status: 404 });

@@ -1,5 +1,7 @@
 "use client";
 
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
+
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
@@ -176,6 +178,10 @@ export default function TurniereTournamentRecordWorkspace({
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "TOURNAMENT",
+    tournament.id,
+  );
 
   const [title, setTitle] = useState(tournament.title);
   const [organizerSelection, setOrganizerSelection] = useState<ExternalClubPickerResult | null>(() =>
@@ -338,31 +344,37 @@ export default function TurniereTournamentRecordWorkspace({
 
     setSaving(true);
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({
+        title: title.trim(),
+        organizerName: organizerNameFromPickerSelection(organizerSelection),
+        competitionLabel: competitionLabel.trim() || null,
+        location: location.trim() || null,
+        startAt,
+        endAt: endAt || null,
+        meetingTime: meetingTime || null,
+        description: description.trim() || null,
+        resultLabel: resultLabel.trim() || null,
+        remarks: remarks.trim() || null,
+        teamId: teamId || null,
+        homeAway,
+        ...publication,
+      });
       const res = await fetch(`/api/tournaments/${tournament.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          organizerName: organizerNameFromPickerSelection(organizerSelection),
-          competitionLabel: competitionLabel.trim() || null,
-          location: location.trim() || null,
-          startAt,
-          endAt: endAt || null,
-          meetingTime: meetingTime || null,
-          description: description.trim() || null,
-          resultLabel: resultLabel.trim() || null,
-          remarks: remarks.trim() || null,
-          teamId: teamId || null,
-          homeAway,
-          ...publication,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        collaboration?: unknown;
+      } | null;
 
       if (!res.ok) {
         throw new Error(data?.error ?? "Änderungen konnten nicht gespeichert werden.");
       }
+
+      applyMutationCollaboration(data, cycleRequested);
 
       initialSnapshotRef.current = currentSnapshot;
       toast.success("Turnier aktualisiert.");
@@ -379,16 +391,24 @@ export default function TurniereTournamentRecordWorkspace({
   async function handleLifecycleToggle() {
     setLifecycleLoading(true);
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({
+        status: isCancelled ? "SCHEDULED" : "CANCELLED",
+      });
       const res = await fetch(`/api/tournaments/${tournament.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: isCancelled ? "SCHEDULED" : "CANCELLED" }),
+        body: JSON.stringify(payload),
       });
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        collaboration?: unknown;
+      } | null;
 
       if (!res.ok) {
         throw new Error(data?.error ?? "Aktion fehlgeschlagen.");
       }
+
+      applyMutationCollaboration(data, cycleRequested);
 
       toast.success(isCancelled ? "Turnier wiederhergestellt." : "Turnier storniert.");
       router.refresh();

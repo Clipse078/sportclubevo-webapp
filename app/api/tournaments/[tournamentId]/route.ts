@@ -94,6 +94,11 @@ import {
   parseTenantLocalDateTimeInput,
   resolveTenantEventTimezone,
 } from "@/lib/events/tenant-local-datetime";
+import { loadTournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
+import { buildCollaborationMutationResponse } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
+import { parseCollaborationCycleBaselineFromBody } from "@/lib/collaboration/activity-change/cycle-baseline";
+import { buildTournamentMutationCollaborationImpact } from "@/lib/collaboration/tournament/tournament-mutation-collaboration";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type RouteContext = { params: Promise<{ tournamentId: string }> };
 
@@ -175,6 +180,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Turnier nicht gefunden." }, { status: 404 });
   }
 
+  const beforeSnapshot = await loadTournamentActivitySnapshot({ tenantId, tournamentId });
+
   const planningPolicy = createPlanningAuthorizationPolicy(prisma);
   const planningRecord = {
     teamId: existingTournament.teamId,
@@ -189,6 +196,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
+
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "TOURNAMENT", tournamentId);
 
   const hasOccupancyPatch =
     "dressingRoomOccupancyMode" in body ||
@@ -283,7 +292,20 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       revalidatePath("/dashboard/tournamentcenter");
       revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
 
-      return NextResponse.json({ tournament });
+      const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+      const collaborationResult = await buildTournamentMutationCollaborationImpact({
+        tenantId,
+        tenantKey,
+        userId,
+        tournamentId,
+        beforeSnapshot,
+        cycleBaseline,
+      });
+
+      return NextResponse.json({
+        tournament,
+        ...buildCollaborationMutationResponse(collaborationResult),
+      });
     }
 
     // ── Field update ─────────────────────────────────────────────────────────
@@ -365,7 +387,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       revalidatePath("/dashboard/tournamentcenter");
       revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
       revalidatePath("/dashboard/planner/week");
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, collaboration: null });
     }
 
     const tournament = await updateTournament(tenantId, tournamentId, data);
@@ -373,7 +395,20 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     revalidatePath("/dashboard/tournamentcenter");
     revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
 
-    return NextResponse.json({ tournament });
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaborationResult = await buildTournamentMutationCollaborationImpact({
+      tenantId,
+      tenantKey,
+      userId,
+      tournamentId,
+      beforeSnapshot,
+      cycleBaseline,
+    });
+
+    return NextResponse.json({
+      tournament,
+      ...buildCollaborationMutationResponse(collaborationResult),
+    });
   } catch (err) {
     if (err instanceof TournamentNotFoundError) {
       return NextResponse.json({ error: "Turnier nicht gefunden." }, { status: 404 });

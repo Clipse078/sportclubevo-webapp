@@ -38,7 +38,6 @@ import { getTranslations as getPlanningTranslations } from "next-intl/server";
 import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
 import { prisma } from "@/lib/db/prisma";
 import { resolveSeriesAllocationDisplay } from "@/lib/training/series-cockpit";
-import { TrainingSessionCollaborationHost } from "@/components/admin/collaboration/TrainingSessionCollaborationHost";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -217,7 +216,6 @@ export default async function TrainingSessionEditPage({ params }: Props) {
             </>
           }
           primary={
-            <TrainingSessionCollaborationHost sessionId={trainingSession.id}>
             <div className="space-y-3">
               <PlanningEditorSection
                 ariaLabelledBy="training-session-edit-datetime-heading"
@@ -302,7 +300,6 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                 timezone={timezone}
               />
             </div>
-            </TrainingSessionCollaborationHost>
           }
         />
       </PlanningEditorShell>

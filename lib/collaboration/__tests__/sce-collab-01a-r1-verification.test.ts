@@ -192,6 +192,7 @@ describe("SCE-COLLAB-01A-R1 authorization matrix", () => {
     mocks.loadTrainingActivitySnapshot.mockResolvedValue(after);
     mocks.platformCommunicationFindMany.mockResolvedValue([]);
     mocks.createTeamCommunicationDraft.mockResolvedValue({ id: "draft-new" });
+    mocks.resolveCommunicationRecipients.mockResolvedValue({ summary: { effectiveCount: 3 } });
   });
 
   it("ACTIVITY_YES_COMM_YES — prepare succeeds when team send is granted", async () => {
@@ -324,6 +325,7 @@ describe("SCE-COLLAB-01A-R1 prepare/publish semantics", () => {
     const pair = venueChangePair();
     mocks.loadTrainingActivitySnapshot.mockResolvedValue(pair.after);
     mocks.resolveContextualCommunicationSendAuthorization.mockResolvedValue({ canCommunicate: true });
+    mocks.resolveCommunicationRecipients.mockResolvedValue({ summary: { effectiveCount: 3 } });
     mocks.platformCommunicationFindMany.mockResolvedValue([]);
     mocks.createTeamCommunicationDraft.mockResolvedValue({ id: "draft-new" });
     mocks.publishTeamCommunication.mockResolvedValue({ id: "pub-1", recipientCount: 3 });
@@ -387,6 +389,7 @@ describe("SCE-COLLAB-01A-R1 duplicate semantics", () => {
     vi.clearAllMocks();
     mocks.loadTrainingActivitySnapshot.mockResolvedValue(venueChangePair().after);
     mocks.resolveContextualCommunicationSendAuthorization.mockResolvedValue({ canCommunicate: true });
+    mocks.resolveCommunicationRecipients.mockResolvedValue({ summary: { effectiveCount: 3 } });
     mocks.createTeamCommunicationDraft.mockResolvedValue({ id: "draft-new" });
   });
 
@@ -464,19 +467,20 @@ describe("SCE-COLLAB-01A-R1 failure isolation", () => {
     mocks.loadTrainingActivitySnapshot
       .mockResolvedValueOnce(snapshot())
       .mockRejectedValue(new Error("after load failed"));
-    const impact = await buildTrainingMutationCollaborationImpact({
+    const result = await buildTrainingMutationCollaborationImpact({
       tenantId: "tenant-1",
       tenantKey: "fca",
       userId: "user-1",
       sessionId: "sess-1",
       beforeSnapshot: snapshot(),
     });
-    expect(impact).toBeNull();
+    expect(result.impact).toBeNull();
   });
 
   it("prepare failure does not invoke publish", async () => {
     mocks.loadTrainingActivitySnapshot.mockResolvedValue(venueChangePair().after);
     mocks.resolveContextualCommunicationSendAuthorization.mockResolvedValue({ canCommunicate: true });
+    mocks.resolveCommunicationRecipients.mockResolvedValue({ summary: { effectiveCount: 3 } });
     mocks.createTeamCommunicationDraft.mockRejectedValue(new Error("draft failed"));
     await expect(
       prepareTrainingActivityChangeCommunicationDraft({

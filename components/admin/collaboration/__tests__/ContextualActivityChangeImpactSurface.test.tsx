@@ -2,6 +2,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import { ActivityChangeCollaborationProvider } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
 import { ContextualActivityChangeImpactSurface } from "@/components/admin/collaboration/ContextualActivityChangeImpactSurface";
 import type { ActivityChangeImpact } from "@/lib/collaboration/activity-change/types";
 
@@ -30,7 +31,7 @@ const messages = {
 function renderWithIntl(ui: React.ReactElement) {
   return render(
     <NextIntlClientProvider locale="de" messages={messages}>
-      {ui}
+      <ActivityChangeCollaborationProvider>{ui}</ActivityChangeCollaborationProvider>
     </NextIntlClientProvider>,
   );
 }
@@ -68,7 +69,8 @@ describe("ContextualActivityChangeImpactSurface", () => {
   it("renders change summary and communicate action", () => {
     renderWithIntl(
       <ContextualActivityChangeImpactSurface
-        sessionId="sess-1"
+        domain="TRAINING"
+        activityId="sess-1"
         impact={impact}
         onDismiss={vi.fn()}
       />,
@@ -82,7 +84,8 @@ describe("ContextualActivityChangeImpactSurface", () => {
     const onDismiss = vi.fn();
     renderWithIntl(
       <ContextualActivityChangeImpactSurface
-        sessionId="sess-1"
+        domain="TRAINING"
+        activityId="sess-1"
         impact={impact}
         onDismiss={onDismiss}
       />,
