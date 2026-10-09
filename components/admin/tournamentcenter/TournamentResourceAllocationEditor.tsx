@@ -14,6 +14,8 @@ import {
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
 type Props = {
   tournamentId: string;
   canManage: boolean;
@@ -32,6 +34,7 @@ export default function TournamentResourceAllocationEditor({
   const [allocations, setAllocations] = useState<TournamentResourceAllocationDto[]>(initialAllocations);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { setImpact } = useActivityChangeCollaboration();
 
   const allocatedResourceIds = useMemo(
     () => new Set(allocations.map((a) => a.facilityResourceId)),
@@ -46,11 +49,13 @@ export default function TournamentResourceAllocationEditor({
         body: JSON.stringify({ facilityResourceId }),
       });
       const data = (await res.json().catch(() => null)) as
-        | { allocation?: TournamentResourceAllocationDto; error?: string }
+        | { allocation?: TournamentResourceAllocationDto; error?: string; collaboration?: unknown }
         | null;
       if (!res.ok || !data?.allocation) {
         throw new Error(data?.error ?? "Ressource konnte nicht zugewiesen werden.");
       }
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) setImpact(collaboration);
       setAllocations((prev) => [...prev, data.allocation as TournamentResourceAllocationDto]);
     },
     [tournamentId],
@@ -65,10 +70,15 @@ export default function TournamentResourceAllocationEditor({
             `/api/tournaments/${tournamentId}/resource-allocations/${allocationId}`,
             { method: "DELETE" },
           );
+          const data = (await res.json().catch(() => null)) as {
+            error?: string;
+            collaboration?: unknown;
+          } | null;
           if (!res.ok) {
-            const data = (await res.json().catch(() => null)) as { error?: string } | null;
             throw new Error(data?.error ?? "Ressource konnte nicht entfernt werden.");
           }
+          const collaboration = extractCollaborationImpact(data);
+          if (collaboration) setImpact(collaboration);
           setAllocations((prev) => prev.filter((a) => a.id !== allocationId));
         } catch (err) {
           setError(err instanceof Error ? err.message : "Ressource konnte nicht entfernt werden.");

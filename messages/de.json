@@ -842,6 +842,8 @@
   "Collaboration": {
     "activityChange": {
       "trainingUpdated": "Training aktualisiert",
+      "matchUpdated": "Spiel aktualisiert",
+      "tournamentUpdated": "Turnier aktualisiert",
       "multipleChanges": "{count} Änderungen",
       "audience": "Zielgruppe",
       "zeroRecipients": "Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.",

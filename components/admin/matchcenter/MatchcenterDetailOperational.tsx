@@ -8,6 +8,8 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
 import {
   CheckCircle2,
   CircleAlert,
@@ -283,6 +285,7 @@ export default function MatchcenterDetailOperational({
 }: MatchcenterDetailOperationalProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { setImpact } = useActivityChangeCollaboration();
   const tResources = useTranslations("PlanningResources");
 
   // PLANNING-RESOURCE-UX-01 — code-as-ID groups for the visual pickers.
@@ -409,12 +412,20 @@ export default function MatchcenterDetailOperational({
 
       const data = (await res.json().catch(() => null)) as {
         error?: string;
+        collaboration?: unknown;
       } | null;
 
       if (!res.ok) {
         throw new Error(
           data?.error ?? "Änderungen konnten nicht gespeichert werden.",
         );
+      }
+
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) {
+        setImpact(collaboration);
+      } else {
+        setImpact(null);
       }
 
       toast.success("Änderungen gespeichert.");

@@ -56,6 +56,14 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
+vi.mock("@/components/admin/collaboration/ActivityChangeCollaborationContext", () => ({
+  useActivityChangeCollaboration: () => ({
+    impact: null,
+    setImpact: vi.fn(),
+    dismissImpact: vi.fn(),
+  }),
+}));
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);

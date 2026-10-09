@@ -5,7 +5,7 @@
 | Package | Status |
 |---------|--------|
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
-| **SCE-COLLAB-01B** (Matches + Tournaments) | FUTURE |
+| **SCE-COLLAB-01B** (Matches + Tournaments) | **IMPLEMENTED / HUMAN_UAT_PENDING** |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
@@ -44,7 +44,34 @@ lib/collaboration/training/*            Training adapter (01A)
 lib/collaboration/contextual-communication-service.ts
 ```
 
-Future adapters: `MATCH`, `TOURNAMENT`, `CLUB_EVENT` via the same `ActivityChangeSet` seam.
+Domain adapters (01B):
+
+| Domain | Module prefix | Mutation entry points |
+|--------|---------------|------------------------|
+| Training | `lib/collaboration/training/*` | `app/api/training-sessions/[sessionId]/*` |
+| Match | `lib/collaboration/match/*` | `PATCH /api/matchcenter/[matchId]` (SCE-owned operational fields) |
+| Tournament | `lib/collaboration/tournament/*` | `PATCH /api/tournaments/[tournamentId]`, tournament resource allocation routes |
+
+Future: `CLUB_EVENT` via the same `ActivityChangeSet` seam.
+
+### Match source ownership (01B)
+
+| Field class | Ownership | Communicated in 01B |
+|-------------|-----------|---------------------|
+| `startAt` / `endAt` (manual events) | SCE mutation | Yes (local/manual path only) |
+| `startAt` / status / `location` (SFV detail sync) | SFV provider | Detection supported in sync layer; **async surfacing deferred** (see below) |
+| `pitchCode`, dressing-room codes | SCE allocation | Yes (resource/venue labels via facility integrity) |
+| `resultLabel`, scores, sync metadata | Technical / sporting | No |
+| Publication toggles | Operational | No |
+
+### SFV asynchronous changes (01B boundary)
+
+SFV match-detail sync (`lib/integrations/sfv/sync/detail-persistence.ts`) updates provider-managed fields without a human actor. **01B does not introduce durable pending-impact persistence** — therefore there is no Matchcenter post-sync “Änderung kommunizieren” surface for background SFV updates yet. Sync remains failure-isolated from collaboration. Human communication still requires explicit action with normal `communication.team.send` authorization when triggered from supported SCE mutation responses.
+
+### Tournament audience (01B)
+
+- Primary conversation anchor: `Event.teamId` when set, otherwise first canonical SCE `TournamentParticipant.teamId` (sorted).
+- Multi-team tournaments: audience spec uses existing Zielgruppen `structural.teamIds` union (deduped via `resolveCommunicationRecipients`); no opponent/external club teams.
 
 ## Authorization
 
@@ -67,7 +94,8 @@ Duplicate prepare: reuses existing DRAFT with same `activityId` + `changeFingerp
 
 - Training session edit page only (not Weekplanner sheet yet).
 - Draft editing uses contextual inline composer (team chat timeline still hides unpublished drafts).
-- Match/Tournament/Club Event adapters not implemented.
+- Match/Tournament adapters implemented in 01B; Club Event remains future (01C).
+- SFV async change surfacing remains future (requires durable impact inbox — not in 01B).
 
 ## Future: Trainer-/Spielerbörse
 
@@ -77,6 +105,9 @@ Contextual collaboration + targeted communication will consume the same change/a
 
 - `lib/collaboration/__tests__/sce-collab-01a-activity-change.test.ts`
 - `lib/collaboration/__tests__/sce-collab-01a-r1-verification.test.ts` (SCE-COLLAB-01A-R1 gate)
+- `lib/collaboration/__tests__/sce-collab-01b-activity-change.test.ts`
+- `lib/collaboration/__tests__/sce-collab-01b-r1-verification.test.ts` (SCE-COLLAB-01B gate)
+- `app/api/collaboration/matches/[matchId]/*`, `app/api/collaboration/tournaments/[tournamentId]/*`
 - `app/api/collaboration/training-sessions/[sessionId]/__tests__/collaboration-communication-routes.test.ts`
 - `components/admin/collaboration/__tests__/ContextualActivityChangeImpactSurface.test.tsx`
 - Training mutation route regressions under `app/api/training-sessions/[sessionId]/**/__tests__/`

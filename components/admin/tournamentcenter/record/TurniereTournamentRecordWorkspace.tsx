@@ -1,5 +1,8 @@
 "use client";
 
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+import { extractCollaborationImpact } from "@/lib/collaboration/client/collaboration-response";
+
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
@@ -176,6 +179,7 @@ export default function TurniereTournamentRecordWorkspace({
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { setImpact } = useActivityChangeCollaboration();
 
   const [title, setTitle] = useState(tournament.title);
   const [organizerSelection, setOrganizerSelection] = useState<ExternalClubPickerResult | null>(() =>
@@ -358,11 +362,18 @@ export default function TurniereTournamentRecordWorkspace({
         }),
       });
 
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        collaboration?: unknown;
+      } | null;
 
       if (!res.ok) {
         throw new Error(data?.error ?? "Änderungen konnten nicht gespeichert werden.");
       }
+
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) setImpact(collaboration);
+      else setImpact(null);
 
       initialSnapshotRef.current = currentSnapshot;
       toast.success("Turnier aktualisiert.");
@@ -384,11 +395,18 @@ export default function TurniereTournamentRecordWorkspace({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: isCancelled ? "SCHEDULED" : "CANCELLED" }),
       });
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        collaboration?: unknown;
+      } | null;
 
       if (!res.ok) {
         throw new Error(data?.error ?? "Aktion fehlgeschlagen.");
       }
+
+      const collaboration = extractCollaborationImpact(data);
+      if (collaboration) setImpact(collaboration);
+      else setImpact(null);
 
       toast.success(isCancelled ? "Turnier wiederhergestellt." : "Turnier storniert.");
       router.refresh();

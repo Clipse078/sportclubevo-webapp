@@ -17,6 +17,18 @@ export const DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE: ActivityChangeFieldLabels 
   STATUS: "Status",
 };
 
+export const MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE: ActivityChangeFieldLabels = {
+  ...DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  START_TIME: "Anspielzeit",
+  RESOURCE: "Spielfeld",
+};
+
+export const TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE: ActivityChangeFieldLabels = {
+  ...DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  START_TIME: "Zeit",
+  RESOURCE: "Spielfeld",
+};
+
 export function summarizeActivityChangeLine(
   entry: ActivityChangeEntry,
   labels: ActivityChangeFieldLabels = DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,

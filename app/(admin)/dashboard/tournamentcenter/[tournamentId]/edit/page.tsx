@@ -10,6 +10,7 @@ import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-ope
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { PageShell } from "@/components/ui/page";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
+import { EventActivityCollaborationHost } from "@/components/admin/collaboration/EventActivityCollaborationHost";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
@@ -110,6 +111,7 @@ export default async function TournamentEditPage({ params }: Props) {
   return (
     <PageShell fullWidth>
       <ToastProvider>
+        <EventActivityCollaborationHost domain="TOURNAMENT" activityId={tournament.id}>
         <TournamentEditForm
           tournament={tournament}
           canManage={canManage}
@@ -148,6 +150,7 @@ export default async function TournamentEditPage({ params }: Props) {
           participantsSection={participantsSection}
           collaborationSection={collaborationSection}
         />
+        </EventActivityCollaborationHost>
       </ToastProvider>
     </PageShell>
   );

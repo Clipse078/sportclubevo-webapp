@@ -41,6 +41,8 @@ export type ActivityChangeSet = {
 
 export type ActivityAudienceContext = {
   teamId: string;
+  /** Present when the operational audience spans multiple SCE teams (e.g. tournaments). */
+  teamIds?: string[];
   teamName: string;
   recipientPreviewLabel: string | null;
   effectiveRecipientCount: number | null;

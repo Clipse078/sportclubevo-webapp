@@ -15,6 +15,9 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { removeTournamentResourceAllocation } from "@/lib/tournaments/resource-allocation-service";
 import { TournamentResourceAllocationNotFoundError } from "@/lib/tournaments/errors";
 import { prisma } from "@/lib/db/prisma";
+import { loadTournamentActivitySnapshot } from "@/lib/collaboration/tournament/tournament-activity-snapshot";
+import { buildTournamentMutationCollaborationImpact } from "@/lib/collaboration/tournament/tournament-mutation-collaboration";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type RouteContext = { params: Promise<{ tournamentId: string; allocationId: string }> };
 
@@ -41,11 +44,22 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Zuweisung nicht gefunden." }, { status: 404 });
     }
 
+    const beforeSnapshot = await loadTournamentActivitySnapshot({ tenantId, tournamentId });
     await removeTournamentResourceAllocation(tenantId, allocationId);
 
     revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
 
-    return NextResponse.json({ ok: true });
+    const userId = access.session.user.effectiveUserId ?? access.session.user.id;
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const collaboration = await buildTournamentMutationCollaborationImpact({
+      tenantId,
+      tenantKey,
+      userId,
+      tournamentId,
+      beforeSnapshot,
+    });
+
+    return NextResponse.json({ ok: true, collaboration });
   } catch (err) {
     if (err instanceof TournamentResourceAllocationNotFoundError) {
       return NextResponse.json({ error: "Zuweisung nicht gefunden." }, { status: 404 });

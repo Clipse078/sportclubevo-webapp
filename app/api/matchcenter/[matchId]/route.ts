@@ -72,6 +72,9 @@ import {
   getMatchDeletionImpact,
 } from "@/lib/matchcenter/match-lifecycle-service";
 import { parseTenantLocalDateTimeInput, resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import { loadMatchActivitySnapshot } from "@/lib/collaboration/match/match-activity-snapshot";
+import { buildMatchMutationCollaborationImpact } from "@/lib/collaboration/match/match-mutation-collaboration";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 
 type RouteContext = { params: Promise<{ matchId: string }> };
 
@@ -187,6 +190,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const patchAuthResponse = await assertMatchPatchAuthorized(body);
   if (patchAuthResponse) return patchAuthResponse;
 
+  const beforeSnapshot = await loadMatchActivitySnapshot({ tenantId, matchId });
+
   const PROVIDER_PROTECTED_SOURCES = new Set(["SFV", "CLUBCORNER_FVNWS", "CSV_EXCEL_IMPORT"]);
 
   if ("startAt" in body || "endAt" in body) {
@@ -297,7 +302,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     revalidatePath("/dashboard/matchcenter");
     revalidatePath(`/dashboard/matchcenter/${matchId}`);
     revalidatePath("/dashboard/planner/week");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, collaboration: null });
   }
 
   // Validate teamId belongs to the same tenant if provided
@@ -341,7 +346,16 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   revalidatePath("/dashboard/planner/week");
   revalidatePath("/dashboard/wochenplan");
 
-  return NextResponse.json(updated);
+  const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+  const collaboration = await buildMatchMutationCollaborationImpact({
+    tenantId,
+    tenantKey,
+    userId,
+    matchId,
+    beforeSnapshot,
+  });
+
+  return NextResponse.json({ ...updated, collaboration });
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteContext) {

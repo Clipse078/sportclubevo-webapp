@@ -7,8 +7,12 @@ import { Button } from "@/components/ui";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import { useToast } from "@/hooks/use-toast";
 
+import type { ActivityCollaborationDomain } from "@/lib/collaboration/activity-change/types";
+import { contextualPublishCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
+
 type Props = {
-  sessionId: string;
+  domain: ActivityCollaborationDomain;
+  activityId: string;
   teamId: string;
   draftId: string;
   initialSubject: string;
@@ -18,7 +22,8 @@ type Props = {
 };
 
 export function ContextualActivityCommunicationComposer({
-  sessionId,
+  domain,
+  activityId,
   teamId,
   draftId,
   initialSubject,
@@ -41,9 +46,7 @@ export function ContextualActivityCommunicationComposer({
     setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch(
-          `/api/collaboration/training-sessions/${sessionId}/publish-communication`,
-          {
+        const res = await fetch(contextualPublishCommunicationPath(domain, activityId), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

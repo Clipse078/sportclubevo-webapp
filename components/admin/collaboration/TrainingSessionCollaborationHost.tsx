@@ -9,7 +9,8 @@ function ImpactSlot({ sessionId }: { sessionId: string }) {
   if (!impact) return null;
   return (
     <ContextualActivityChangeImpactSurface
-      sessionId={sessionId}
+      domain="TRAINING"
+      activityId={sessionId}
       impact={impact}
       onDismiss={dismissImpact}
     />

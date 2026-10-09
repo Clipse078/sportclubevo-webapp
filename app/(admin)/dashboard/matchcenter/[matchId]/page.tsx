@@ -14,6 +14,7 @@ import PlanningParticipantsList from "@/components/admin/shared/planning-editor/
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import { loadMatchPlanningParticipants } from "@/lib/planning/load-match-planning-participants";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { EventActivityCollaborationHost } from "@/components/admin/collaboration/EventActivityCollaborationHost";
 import {
   getActiveResourceOptionsForTenant,
   getFacilityResourcesByCodesForTenant,
@@ -189,6 +190,7 @@ export default async function MatchcenterDetailPage({
 
   return (
     <ToastProvider>
+      <EventActivityCollaborationHost domain="MATCH" activityId={match.id}>
       <MatchcenterDetail
         match={match}
         locale={locale}
@@ -207,6 +209,7 @@ export default async function MatchcenterDetailPage({
         participantsSection={participantsSection}
         collaborationSection={collaborationSection}
       />
+      </EventActivityCollaborationHost>
     </ToastProvider>
   );
 }

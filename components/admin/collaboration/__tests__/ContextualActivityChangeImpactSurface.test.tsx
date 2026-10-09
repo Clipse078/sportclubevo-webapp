@@ -68,7 +68,8 @@ describe("ContextualActivityChangeImpactSurface", () => {
   it("renders change summary and communicate action", () => {
     renderWithIntl(
       <ContextualActivityChangeImpactSurface
-        sessionId="sess-1"
+        domain="TRAINING"
+        activityId="sess-1"
         impact={impact}
         onDismiss={vi.fn()}
       />,

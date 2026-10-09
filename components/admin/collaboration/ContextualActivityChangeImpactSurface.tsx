@@ -4,17 +4,27 @@ import { useState, useTransition } from "react";
 import { Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui";
-import type { ActivityChangeImpact } from "@/lib/collaboration/activity-change/types";
+import type {
+  ActivityChangeImpact,
+  ActivityCollaborationDomain,
+} from "@/lib/collaboration/activity-change/types";
 import { summarizeActivityChangeLine } from "@/lib/collaboration/activity-change/presentation";
 import { ContextualActivityCommunicationComposer } from "@/components/admin/collaboration/ContextualActivityCommunicationComposer";
+import { contextualPrepareCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
 
 type Props = {
-  sessionId: string;
+  domain: ActivityCollaborationDomain;
+  activityId: string;
   impact: ActivityChangeImpact;
   onDismiss: () => void;
 };
 
-export function ContextualActivityChangeImpactSurface({ sessionId, impact, onDismiss }: Props) {
+export function ContextualActivityChangeImpactSurface({
+  domain,
+  activityId,
+  impact,
+  onDismiss,
+}: Props) {
   const t = useTranslations("Collaboration.activityChange");
   const [composerOpen, setComposerOpen] = useState(false);
   const [prepareError, setPrepareError] = useState<string | null>(null);
@@ -34,9 +44,7 @@ export function ContextualActivityChangeImpactSurface({ sessionId, impact, onDis
     setPrepareError(null);
     startTransition(async () => {
       try {
-        const res = await fetch(
-          `/api/collaboration/training-sessions/${sessionId}/prepare-communication`,
-          {
+        const res = await fetch(contextualPrepareCommunicationPath(domain, activityId), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ changeSet: impact.changeSet }),
@@ -73,7 +81,13 @@ export function ContextualActivityChangeImpactSurface({ sessionId, impact, onDis
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 space-y-1">
-          <p className="text-sm font-semibold text-[var(--foreground)]">{t("trainingUpdated")}</p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">
+            {domain === "MATCH"
+              ? t("matchUpdated")
+              : domain === "TOURNAMENT"
+                ? t("tournamentUpdated")
+                : t("trainingUpdated")}
+          </p>
           <p className="text-xs text-[var(--text-2)]" data-testid="contextual-activity-change-title">
             {impact.activityTitle}
           </p>
@@ -136,7 +150,8 @@ export function ContextualActivityChangeImpactSurface({ sessionId, impact, onDis
 
       {composerOpen && draftPrefill ? (
         <ContextualActivityCommunicationComposer
-          sessionId={sessionId}
+          domain={domain}
+          activityId={activityId}
           teamId={draftPrefill.teamId}
           draftId={draftPrefill.draftId}
           initialSubject={draftPrefill.subject}
