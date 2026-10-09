@@ -106,11 +106,40 @@ Contextual collaboration + targeted communication will consume the same change/a
 - `lib/collaboration/__tests__/sce-collab-01a-activity-change.test.ts`
 - `lib/collaboration/__tests__/sce-collab-01a-r1-verification.test.ts` (SCE-COLLAB-01A-R1 gate)
 - `lib/collaboration/__tests__/sce-collab-01b-activity-change.test.ts`
-- `lib/collaboration/__tests__/sce-collab-01b-r1-verification.test.ts` (SCE-COLLAB-01B gate)
-- `app/api/collaboration/matches/[matchId]/*`, `app/api/collaboration/tournaments/[tournamentId]/*`
+- `lib/collaboration/__tests__/sce-collab-01b-r1-verification.test.ts` (SCE-COLLAB-01B-R1 gate)
+- `lib/collaboration/match/__tests__/resolve-match-audience.test.ts`
+- `lib/collaboration/tournament/__tests__/resolve-tournament-audience.test.ts`
+- `lib/collaboration/shared/__tests__/operational-audience.test.ts`
+- `app/api/collaboration/matches/[matchId]/__tests__/collaboration-communication-routes.test.ts`
+- `app/api/collaboration/tournaments/[tournamentId]/__tests__/collaboration-communication-routes.test.ts`
 - `app/api/collaboration/training-sessions/[sessionId]/__tests__/collaboration-communication-routes.test.ts`
 - `components/admin/collaboration/__tests__/ContextualActivityChangeImpactSurface.test.tsx`
 - Training mutation route regressions under `app/api/training-sessions/[sessionId]/**/__tests__/`
+
+## SCE-COLLAB-01B-R1 verification evidence (2026-10-09)
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| Match / Tournament architecture | PASS | Event `MATCH` / `TOURNAMENT` snapshots; audience from `Event.teamId` + canonical mapping fallback (match) or `TournamentParticipant.teamId` union (tournament); opponent / external clubs excluded |
+| Mutation paths | PASS (scoped) | Collaboration wired on `PATCH /api/matchcenter/[matchId]`, `PATCH /api/tournaments/[tournamentId]`, tournament resource allocation POST/DELETE; publication/result-only / SFV-protected schedule edits intentionally unwired |
+| SFV boundary | PASS | `detail-persistence.ts` has no collaboration imports; identical payload → no `detectDetailChanges`; no auto draft/send from sync |
+| Authorization matrix | PASS | Activity edit vs `communication.team.send` enforced in impact + prepare/publish service + API routes; effectiveUserId on match/tournament prepare APIs |
+| Audience / enumeration security | PASS | Resolver unit tests (tenant-scoped teams only); recipient preview skipped when `canCommunicate` false |
+| Idempotency / stale change set | PASS | Draft reuse by fingerprint; stale prepare rejected; domain-separated fingerprints |
+| Failure isolation | PASS | `buildMatchMutationCollaborationImpact` / `buildTournamentMutationCollaborationImpact` return null on assembly errors |
+| Facility integrity | PASS | `lib/facilities` regression batch: 168/168 |
+| Activity presentation | PASS | `lib/sporting-activity-detail`: 16/16 |
+| Collaboration automated gate | PASS | **96** tests (`lib/collaboration` + collaboration API routes + impact surface component); ≥80 01B/shared target met |
+| 01A regression | PASS | All SCE-COLLAB-01A collaboration tests unchanged green in shared batch |
+| Match / Tournament regression | PASS (scoped) | lib + API batches: failures confined to known P2 harness gaps (incomplete route prisma/policy mocks; DB-mutating allocation tests without `TEST_DATABASE_URL`) — reproduced on feature HEAD before R1 edits |
+| Planner regression | KNOWN_BASELINE_P2 | `lib/planning`: 660 pass / 29 fail — pre-existing on branch, not introduced by R1 |
+| Communication regression | KNOWN_BASELINE_P2 | `lib/communication`: 609 pass / 4 fail — same unrelated COMM debt as 01A-R1 |
+| Impersonation / Zielgruppen | PASS | `trusted-session-state` + `lib/communication/platform/audience` in R1 batch: 139 pass |
+| Lint (R1 files) | PASS | `./node_modules/.bin/eslint` on all R1-added/changed TS: 0 errors |
+| Build | PASS | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` green at R1 HEAD |
+| Vercel preview | PENDING | Await deployment for post-R1 push on PR #811 |
+
+**Status after R1:** SCE-COLLAB-01B remains **IMPLEMENTED / HUMAN_UAT_PENDING** (not CLOSED).
 
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 

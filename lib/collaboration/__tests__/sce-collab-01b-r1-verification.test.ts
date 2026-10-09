@@ -397,4 +397,66 @@ describe("SCE-COLLAB-01B communication drafts", () => {
       }),
     ).rejects.toBeInstanceOf(TeamCommunicationValidationError);
   });
+
+  it("47 tournament duplicate draft reuse by fingerprint", async () => {
+    mocks.loadTournamentActivitySnapshot.mockResolvedValue(tourSnap({ startTime: "10:00" }));
+    const fp = buildTournamentActivityChangeSet(
+      tourSnap(),
+      tourSnap({ startTime: "10:00" }),
+    )!.fingerprint;
+    mocks.platformCommunicationFindMany.mockResolvedValue([
+      {
+        id: "t-draft",
+        orchestrationMetaJson: {
+          collaborationOrigin: "ACTIVITY_CHANGE",
+          activityDomain: "TOURNAMENT",
+          activityId: "tour-1",
+          changeFingerprint: fp,
+        },
+      },
+    ]);
+    const changeSet = buildTournamentActivityChangeSet(
+      tourSnap(),
+      tourSnap({ startTime: "10:00" }),
+    )!;
+    const result = await prepareTournamentActivityChangeCommunicationDraft({
+      tenantId: "tenant-1",
+      tenantKey: "fca",
+      senderUserId: "user-1",
+      tournamentId: "tour-1",
+      changeSet,
+    });
+    expect(result.reusedExistingDraft).toBe(true);
+    expect(result.draftId).toBe("t-draft");
+  });
+
+  it("48 match vs tournament fingerprint domain isolation", async () => {
+    const matchSet = buildMatchActivityChangeSet(
+      matchSnap(),
+      matchSnap({ startTime: "19:30" }),
+    )!;
+    const tourSet = buildTournamentActivityChangeSet(
+      tourSnap(),
+      tourSnap({ startTime: "19:30" }),
+    )!;
+    expect(matchSet.fingerprint).not.toEqual(tourSet.fingerprint);
+  });
+
+  it("49 prepare forbidden when service denies send", async () => {
+    mocks.resolveContextualCommunicationSendAuthorization.mockResolvedValue({ canCommunicate: false });
+    mocks.loadMatchActivitySnapshot.mockResolvedValue(matchSnap({ startTime: "19:30" }));
+    const changeSet = buildMatchActivityChangeSet(
+      matchSnap(),
+      matchSnap({ startTime: "19:30" }),
+    )!;
+    await expect(
+      prepareMatchActivityChangeCommunicationDraft({
+        tenantId: "tenant-1",
+        tenantKey: "fca",
+        senderUserId: "user-1",
+        matchId: "match-1",
+        changeSet,
+      }),
+    ).rejects.toBeInstanceOf(TeamCommunicationForbiddenError);
+  });
 });
