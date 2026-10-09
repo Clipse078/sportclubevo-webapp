@@ -31,7 +31,9 @@ vi.mock("@/lib/collaboration/training/training-activity-snapshot", () => ({
   loadTrainingActivitySnapshot: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("@/lib/collaboration/training/training-mutation-collaboration", () => ({
-  buildTrainingMutationCollaborationImpact: vi.fn().mockResolvedValue(null),
+  buildTrainingMutationCollaborationImpact: vi
+    .fn()
+    .mockResolvedValue({ impact: null, cycleBaseline: null }),
 }));
 vi.mock("@/lib/collaboration/resolve-tenant-key", () => ({
   resolveTenantKeyForCollaboration: vi.fn().mockResolvedValue("tenant-key"),

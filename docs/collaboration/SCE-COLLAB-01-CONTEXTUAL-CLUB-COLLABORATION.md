@@ -5,11 +5,12 @@
 | Package | Status |
 |---------|--------|
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
-| **SCE-COLLAB-01B** (Matches + Tournaments) | **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** |
+| **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
+| **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A closed; 01B–01D remain) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C–01D remain) |
 
 ## Product principle
 
@@ -107,6 +108,7 @@ Contextual collaboration + targeted communication will consume the same change/a
 - `lib/collaboration/__tests__/sce-collab-01a-r1-verification.test.ts` (SCE-COLLAB-01A-R1 gate)
 - `lib/collaboration/__tests__/sce-collab-01b-activity-change.test.ts`
 - `lib/collaboration/__tests__/sce-collab-01b-r1-verification.test.ts` (SCE-COLLAB-01B-R1 gate)
+- `lib/collaboration/__tests__/sce-collab-01b-r2-verification.test.ts` … `sce-collab-01b-r7-verification.test.ts` (R2–R7 gates)
 - `lib/collaboration/match/__tests__/resolve-match-audience.test.ts`
 - `lib/collaboration/tournament/__tests__/resolve-tournament-audience.test.ts`
 - `lib/collaboration/shared/__tests__/operational-audience.test.ts`
@@ -382,6 +384,49 @@ F2/F3 on STAGE today: teams + active seasons exist; **membership → person → 
 - Resume Human UAT zero-recipient path as **expected** until roster/users are onboarded; positive send UAT requires data onboarding package (future), not resolver weakening.
 
 **Status after R6:** SCE-COLLAB-01B = **IMPLEMENTED / HUMAN_UAT_IN_PROGRESS** (zero-recipient path understood; positive send blocked on data).
+
+## SCE-COLLAB-01B-R7 — final closure gate (2026-10-09)
+
+### Human UAT final ledger (01B)
+
+| ID | Scenario | Disposition | Notes |
+|----|----------|-------------|-------|
+| UAT-01 | Non-participant-facing edit → no communication prompt | **PASS** | Match/tournament publication-only / remarks-only saves do not clear or spuriously open impact (R2/R3) |
+| UAT-02 | Supported kickoff/location/resource change → correct impact | **PASS** | Typed TIME / RESOURCE / VENUE presentation (R2); facility canonical labels |
+| UAT-03 | Match communication prep → SCE team audience; opponent excluded; no auto-send | **PASS** | `Event.teamId` + mapping fallback; external clubs never in structural `teamIds` |
+| UAT-04 | Tournament cumulative one-activity / one-message workflow | **PASS** | R2 baseline semantics; R3 client baseline ref + activity layouts; R4 composer; Human: resource+time+resource cumulative banner and composer body |
+| UAT-05 (zero recipient) | F2∪F3 labels, Empfänger 0, German UX, Send disabled | **PASS** | R5/R6; dispatch guard unchanged |
+| UAT-05 (positive real dispatch on STAGE) | Real IN_APP send to roster user | **NOT_TESTABLE_DATA_BLOCKED** | R6: zero active `playerSquadMember` / `trainerTeamMember` on STAGE F2/F3 (tenant-wide); **not FAIL** |
+| UAT-06 | Dismiss/cancel — saved activity preserved; no auto-send; cycle boundary | **PASS** | Dismiss clears transient cycle; cancel composer preserves cycle (R4) |
+| UAT-07 | Actor without `communication.team.send` cannot prepare/publish | **PASS** | Service + API routes; R1 matrix |
+| UAT-08 | SFV-originated match changes | **NOT_APPLICABLE / DEFERRED** | Sync detection exists; **no durable pending-impact inbox** in 01B — no post-sync communicate surface |
+
+**Human UAT blockers remaining:** none (positive STAGE send explicitly classified as data-blocked substitute).
+
+### Positive dispatch — automated substitute (R7)
+
+Controlled fixtures (no STAGE seeding) in `sce-collab-01b-r7-verification.test.ts` plus existing R1/R3/R5/COMM-03/COMM-04/COMM-18 batches cover: structural trainer/player candidates, F2∪F3 union, external exclusion, PREVIEW `effectiveCount > 0` → `canDispatch`, publish via `publishTeamCommunication` with `preservePreparedAudience`, zero-recipient and dispatch-time disappearance guards, authorization/tenant draft isolation, cumulative body through publish update, duplicate draft idempotency, MATCH/TOURNAMENT orchestration anchors.
+
+### R7 technical gates
+
+| Gate | Result |
+|------|--------|
+| Lint (all PR TS/TSX vs `origin/STAGE`) | **PASS** — 0 errors; 4 pre-existing warnings on touched files (`no-unused-vars`, `react-hooks/exhaustive-deps`) |
+| Collaboration regression | **PASS** — 156 tests (`lib/collaboration`, collaboration API routes, admin collaboration UI) |
+| 01A training regression | **PASS** — 01A suites + training API routes green after R2 response-shape test fixture alignment |
+| COMM / audience / guardian (bounded) | **PASS** — COMM-03 + Zielgruppen + COMM-04 + COMM-18: 79/79; full `lib/communication`: 609 pass / **4 known baseline P2** (unchanged unrelated debt) |
+| Facility + activity presentation | **PASS** — 184/184 |
+| Build | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| Schema / migration / STAGE data / roles / permissions | **NO CHANGE** |
+| PROD | **UNTOUCHED** |
+
+**Status after R7:** **SCE-COLLAB-01B = CLOSED** (merge-ready pending PR review; positive STAGE send remains **NOT_TESTABLE_DATA_BLOCKED** until **SCE-PEOPLE-TEAM-ONBOARDING-01**).
+
+### SCE-PEOPLE-TEAM-ONBOARDING-01 (future)
+
+**Working title:** Operational Team Roster & Communication Eligibility.
+
+**Purpose:** make real operational audiences usable end-to-end: Team → TeamSeason → player/trainer memberships → Person → User → guardian (when safeguarding requires) → tenant access → COMM-03 eligibility. Not in scope for COLLAB-01B closure.
 
 ## SCE-COLLAB-01A-R1 verification evidence (2026-10-08)
 
