@@ -137,7 +137,7 @@ Contextual collaboration + targeted communication will consume the same change/a
 | Impersonation / Zielgruppen | PASS | `trusted-session-state` + `lib/communication/platform/audience` in R1 batch: 139 pass |
 | Lint (R1 files) | PASS | `./node_modules/.bin/eslint` on all R1-added/changed TS: 0 errors |
 | Build | PASS | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` green at R1 HEAD |
-| Vercel preview | READY | PR #811 preview green at SHA `c66788f6` (SCE-COLLAB-01B-R1) |
+| Vercel preview | READY | PR #811 preview green at SHA `7b3174f8` (SCE-COLLAB-01B-R1) |
 
 **Status after R1:** SCE-COLLAB-01B remains **IMPLEMENTED / HUMAN_UAT_PENDING** (not CLOSED).
 
