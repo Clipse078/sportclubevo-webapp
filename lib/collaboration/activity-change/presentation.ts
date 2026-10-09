@@ -29,6 +29,13 @@ export const TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE: ActivityChangeFieldLabe
   RESOURCE: "Spielfeld",
 };
 
+export const CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE: ActivityChangeFieldLabels = {
+  ...DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  START_TIME: "Zeit",
+  END_TIME: "Endzeit",
+  RESOURCE: "Ressource",
+};
+
 export function summarizeActivityChangeLine(
   entry: ActivityChangeEntry,
   labels: ActivityChangeFieldLabels = DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,

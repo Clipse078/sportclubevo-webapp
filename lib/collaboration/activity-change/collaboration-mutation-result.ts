@@ -4,6 +4,7 @@
 
 import type { ActivityChangeImpact } from "@/lib/collaboration/activity-change/types";
 import type {
+  ClubEventCollaborationCycleBaseline,
   MatchCollaborationCycleBaseline,
   TournamentCollaborationCycleBaseline,
   TrainingCollaborationCycleBaseline,
@@ -16,6 +17,7 @@ export type ActivityCollaborationMutationResult = {
     | MatchCollaborationCycleBaseline
     | TournamentCollaborationCycleBaseline
     | TrainingCollaborationCycleBaseline
+    | ClubEventCollaborationCycleBaseline
     | null;
 };
 

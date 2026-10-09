@@ -7,10 +7,10 @@
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
-| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | FUTURE |
+| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **IMPLEMENTED / HUMAN_UAT_PENDING** |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C–01D remain) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C implemented pending Human UAT; 01D remains) |
 
 ## Product principle
 
@@ -53,7 +53,9 @@ Domain adapters (01B):
 | Match | `lib/collaboration/match/*` | `PATCH /api/matchcenter/[matchId]` (SCE-owned operational fields) |
 | Tournament | `lib/collaboration/tournament/*` | `PATCH /api/tournaments/[tournamentId]`, tournament resource allocation routes |
 
-Future: `CLUB_EVENT` via the same `ActivityChangeSet` seam.
+| Club event (Veranstaltung) | `lib/collaboration/club-event/*` | `PATCH /api/events/[eventId]`, club event facility allocation routes |
+
+`CLUB_EVENT` uses the same `ActivityChangeSet` seam (01C).
 
 ### Match source ownership (01B)
 
@@ -95,7 +97,7 @@ Duplicate prepare: reuses existing DRAFT with same `activityId` + `changeFingerp
 
 - Training session edit page only (not Weekplanner sheet yet).
 - Draft editing uses contextual inline composer (team chat timeline still hides unpublished drafts).
-- Match/Tournament adapters implemented in 01B; Club Event remains future (01C).
+- Club Event adapter implemented in 01C (Human UAT pending).
 - SFV async change surfacing remains future (requires durable impact inbox — not in 01B).
 
 ## Future: Trainer-/Spielerbörse
@@ -470,4 +472,75 @@ Evidence: user-provided explicit approval of COLLAB_UAT_01–06 (closure package
 | PR | #810 → `STAGE` |
 | Scope delivered | Training contextual collaboration only |
 
-**Not closed:** SCE-COLLAB-01 overall roadmap (01B Matches + Tournaments, 01C Club Events, 01D multi-activity impact, TRAINER-SPIELERBOERSE-01).
+**Not closed:** SCE-COLLAB-01 overall roadmap (01C Human UAT, 01D multi-activity impact, TRAINER-SPIELERBOERSE-01).
+
+---
+
+## SCE-COLLAB-01C — Club Events (2026-10-09)
+
+### Architecture discovery
+
+| Concern | Canonical source |
+|---------|------------------|
+| Activity identity | `Event` with `type = OTHER` (Veranstaltungen) |
+| Scheduling | `startAt`, `endAt`, `allDay`, tenant timezone via `club-event-api-scheduling` |
+| Venue | `Event.location` (free-text Ort) |
+| Facility / resource | `EventFacilityAllocation` → `FacilityResource` (canonical presentation labels) |
+| Status / cancellation | `Event.status` (`SCHEDULED`, `ARCHIVED`, …) |
+| Audience | `EventParticipationAudienceEntry` (`PERSON`, `TEAM`, `ORG_UNIT`, `ROLE`) expanded via existing requirement resolvers |
+| Communication context | `CommunicationContextRef` `{ kind: "EVENT", eventId }` + COMM-10 `eventAnchor` in orchestration meta |
+| Presentation | `formatClubEventTimingLabel` + facility canonical pitch labels (same as Weekplanner / Veranstaltungen UI) |
+
+Mutation paths wired for collaboration (failure-isolated):
+
+- `PATCH /api/events/[eventId]` (participant-facing fields only in change policy)
+- `POST/PATCH/DELETE` `/api/events/[eventId]/facility-allocations/*`
+
+### Participant-facing change policy
+
+| Field | Communicated |
+|-------|--------------|
+| DATE / START_TIME / END_TIME | Yes (timed events; all-day date moves via DATE) |
+| VENUE (`location`) | Yes |
+| RESOURCE (facility allocations) | Yes |
+| STATUS (archive/cancel semantics) | Yes |
+| TITLE / DESCRIPTION | No (not in 01C policy — internal/title comms out of scope) |
+| Publication toggles, remarks, organizer, internal metadata | No |
+
+### Audience semantics (01C)
+
+- **Canonical source:** stored `EventParticipationAudienceEntry` rows (not invented).
+- **CommunicationAudienceSpec:** UNION of structural/explicit components mirroring entry kinds; COMM-03 reused with EVENT context.
+- **Send path:** team conversation when `Event.teamId` + `communication.team.send`; otherwise **club** conversation (`communication.club.send`) — separate from `events.manage`.
+- **Zero recipients:** same 01B UX (composer may open; Send disabled; German copy).
+- **DOMAIN-CONSUMERS-01:** not implemented — only event-scoped participation audience.
+
+### Cumulative semantics
+
+Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation requests); survives `router.refresh` via `[eventId]/layout.tsx` collaboration host.
+
+### Broader adapter discovery
+
+| Candidate | Decision |
+|-----------|----------|
+| MEETING / other TaskContext types | **DEFERRED** — no canonical activity presentation + participation audience parity |
+| TRAINING / MATCH / TOURNAMENT | Already covered in 01A/01B |
+
+### Automated verification
+
+- `lib/collaboration/__tests__/sce-collab-01c-activity-change.test.ts`
+- `app/api/collaboration/club-events/[eventId]/__tests__/collaboration-communication-routes.test.ts` (when present)
+
+### Human UAT script (STAGE)
+
+| ID | Scenario | Expected |
+|----|----------|----------|
+| UAT-01 | Edit remarks/publication only | No collaboration banner |
+| UAT-02 | Change event time | Banner old → new |
+| UAT-03 | Change Ort + resource before communicate | One banner, two lines |
+| UAT-04 | Open composer | One editable message with both changes |
+| UAT-05 | Audience label + recipient count | Canonical participation audience |
+| UAT-06 | Cancel composer | Banner remains |
+| UAT-07 | Send or zero-recipient UX | Explicit send resets cycle; zero → disabled Send (DATA_BLOCKED if no eligible users on STAGE) |
+
+**01C status:** IMPLEMENTED / **HUMAN_UAT_PENDING** (do not mark CLOSED before UAT).

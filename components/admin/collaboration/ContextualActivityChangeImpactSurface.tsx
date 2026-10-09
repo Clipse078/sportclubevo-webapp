@@ -11,8 +11,10 @@ import type {
 import {
   MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE,
   TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
   summarizeActivityChangeLine,
 } from "@/lib/collaboration/activity-change/presentation";
+import type { ClubEventCommunicationScope } from "@/lib/collaboration/club-event/resolve-club-event-audience-preview";
 import { ContextualActivityCommunicationComposer } from "@/components/admin/collaboration/ContextualActivityCommunicationComposer";
 import { contextualPrepareCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
 import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
@@ -27,6 +29,7 @@ type Props = {
 function fieldLabelsForDomain(domain: ActivityCollaborationDomain) {
   if (domain === "MATCH") return MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE;
   if (domain === "TOURNAMENT") return TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE;
+  if (domain === "CLUB_EVENT") return CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE;
   return undefined;
 }
 
@@ -45,7 +48,8 @@ export function ContextualActivityChangeImpactSurface({
   const [pending, startTransition] = useTransition();
   const [draftPrefill, setDraftPrefill] = useState<{
     draftId: string;
-    teamId: string;
+    teamId: string | null;
+    communicationScope?: ClubEventCommunicationScope;
     subject: string;
     bodyText: string;
     changeFingerprint: string;
@@ -83,27 +87,37 @@ export function ContextualActivityChangeImpactSurface({
         const data = (await res.json().catch(() => null)) as {
           error?: string;
           draftId?: string;
-          teamId?: string;
+          teamId?: string | null;
+          communicationScope?: ClubEventCommunicationScope;
           subject?: string;
           bodyText?: string;
           audienceLabel?: string;
           recipientCount?: number;
           canDispatch?: boolean;
         } | null;
-        if (!res.ok || !data?.draftId || !data.teamId) {
+        const scopeOk =
+          domain === "CLUB_EVENT"
+            ? Boolean(data?.draftId)
+            : Boolean(data?.draftId && data?.teamId);
+        if (!res.ok || !scopeOk) {
           throw new Error(data?.error ?? t("prepareError"));
         }
         const fingerprint = impact.changeSet!.fingerprint;
         preparedFingerprintRef.current = fingerprint;
         setDraftPrefill({
-          draftId: data.draftId,
-          teamId: data.teamId,
-          subject: data.subject ?? "",
-          bodyText: data.bodyText ?? "",
+          draftId: data!.draftId!,
+          teamId: data!.teamId ?? null,
+          communicationScope: data!.communicationScope,
+          subject: data!.subject ?? "",
+          bodyText: data!.bodyText ?? "",
           changeFingerprint: fingerprint,
-          audienceLabel: data.audienceLabel ?? impact.audience?.teamNamesLabel ?? impact.audience?.teamName ?? "",
-          recipientCount: data.recipientCount ?? impact.audience?.effectiveRecipientCount ?? 0,
-          canDispatch: data.canDispatch ?? (data.recipientCount ?? 0) > 0,
+          audienceLabel:
+            data!.audienceLabel ??
+            impact.audience?.teamNamesLabel ??
+            impact.audience?.teamName ??
+            "",
+          recipientCount: data!.recipientCount ?? impact.audience?.effectiveRecipientCount ?? 0,
+          canDispatch: data!.canDispatch ?? (data!.recipientCount ?? 0) > 0,
         });
         setComposerOpen(true);
       } catch (err) {
@@ -125,7 +139,9 @@ export function ContextualActivityChangeImpactSurface({
               ? t("matchUpdated")
               : domain === "TOURNAMENT"
                 ? t("tournamentUpdated")
-                : t("trainingUpdated")}
+                : domain === "CLUB_EVENT"
+                  ? t("clubEventUpdated")
+                  : t("trainingUpdated")}
           </p>
           <p className="text-xs text-[var(--text-2)]" data-testid="contextual-activity-change-title">
             {impact.activityTitle}
@@ -207,6 +223,7 @@ export function ContextualActivityChangeImpactSurface({
           domain={domain}
           activityId={activityId}
           teamId={draftPrefill.teamId}
+          communicationScope={draftPrefill.communicationScope}
           draftId={draftPrefill.draftId}
           initialSubject={draftPrefill.subject}
           initialBody={draftPrefill.bodyText}

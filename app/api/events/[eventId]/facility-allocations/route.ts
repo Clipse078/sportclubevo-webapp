@@ -12,6 +12,13 @@ import { revalidatePath } from "next/cache";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { ClubEventNotFoundError } from "@/lib/events/club-events-service";
+import { loadClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
+import {
+  parseCollaborationCycleBaselineFromBody,
+  stripCollaborationCycleBaselineFromBody,
+} from "@/lib/collaboration/activity-change/cycle-baseline";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
+import { buildClubEventApiCollaborationPayload } from "@/lib/collaboration/club-event/club-event-api-collaboration";
 import {
   assignEventFacilityResource,
   listEventFacilityAllocations,
@@ -64,6 +71,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   }
 
   const { eventId } = await params;
+  const userId = access.session.user.effectiveUserId ?? access.session.user.id ?? "";
 
   let body: Record<string, unknown>;
   try {
@@ -72,20 +80,39 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  if (typeof body.facilityResourceId !== "string" || !body.facilityResourceId.trim()) {
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(body, "CLUB_EVENT", eventId);
+  const mutationBody = stripCollaborationCycleBaselineFromBody(body);
+
+  if (
+    typeof mutationBody.facilityResourceId !== "string" ||
+    !mutationBody.facilityResourceId.trim()
+  ) {
     return NextResponse.json({ error: "facilityResourceId is required." }, { status: 400 });
   }
 
   try {
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const beforeSnapshot = await loadClubEventActivitySnapshot({ tenantId, eventId });
     const allocation = await assignEventFacilityResource(tenantId, eventId, {
-      facilityResourceId: body.facilityResourceId.trim(),
-      notes: typeof body.notes === "string" ? body.notes.trim() || null : null,
-      displayOrder: typeof body.displayOrder === "number" ? body.displayOrder : undefined,
+      facilityResourceId: mutationBody.facilityResourceId.trim(),
+      notes:
+        typeof mutationBody.notes === "string" ? mutationBody.notes.trim() || null : null,
+      displayOrder:
+        typeof mutationBody.displayOrder === "number" ? mutationBody.displayOrder : undefined,
     });
 
     revalidatePath(`/dashboard/veranstaltungen/${eventId}/edit`);
 
-    return NextResponse.json({ allocation }, { status: 201 });
+    const collaborationPayload = await buildClubEventApiCollaborationPayload({
+      tenantId,
+      tenantKey,
+      userId,
+      eventId,
+      beforeSnapshot,
+      cycleBaseline,
+    });
+
+    return NextResponse.json({ allocation, ...collaborationPayload }, { status: 201 });
   } catch (err) {
     if (err instanceof ClubEventNotFoundError) {
       return NextResponse.json({ error: err.message }, { status: 404 });

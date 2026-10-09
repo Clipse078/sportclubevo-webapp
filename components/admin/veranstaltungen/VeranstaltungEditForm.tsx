@@ -3,6 +3,8 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
+import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
@@ -78,6 +80,11 @@ export default function VeranstaltungEditForm({
   initialFacilityAllocations = [],
 }: VeranstaltungEditFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
+  const { attachCycleBaseline, applyMutationCollaboration } = useCollaborationMutation(
+    "CLUB_EVENT",
+    event.id,
+  );
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
   const tc = useTranslations("PlanningEditor.common");
@@ -183,33 +190,36 @@ export default function VeranstaltungEditForm({
     setError(null);
 
     try {
+      const { payload, cycleRequested } = attachCycleBaseline({
+        title: title.trim(),
+        description: description || null,
+        location: location || null,
+        allDay: schedule.allDay,
+        startDate: schedule.startDate,
+        endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
+        startTime: schedule.allDay ? null : schedule.startTime,
+        endTime: schedule.allDay ? null : schedule.endTime || null,
+        organizerName: organizerName || null,
+        remarks: remarks || null,
+        websiteVisible: ausspielung.websiteVisible,
+        homepageVisible: ausspielung.homepageVisible,
+        wochenplanVisible: ausspielung.wochenplanVisible,
+      });
       const res = await fetch(`/api/events/${event.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description || null,
-          location: location || null,
-          allDay: schedule.allDay,
-          startDate: schedule.startDate,
-          endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
-          startTime: schedule.allDay ? null : schedule.startTime,
-          endTime: schedule.allDay ? null : schedule.endTime || null,
-          organizerName: organizerName || null,
-          remarks: remarks || null,
-          websiteVisible: ausspielung.websiteVisible,
-          homepageVisible: ausspielung.homepageVisible,
-          wochenplanVisible: ausspielung.wochenplanVisible,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data?.error ?? t("errors.saveFailed"));
+        const errRow = data as { error?: string } | null;
+        setError(errRow?.error ?? t("errors.saveFailed"));
         return;
       }
 
-      router.push("/dashboard/veranstaltungen?updated=1");
+      applyMutationCollaboration(data, cycleRequested);
+      toast.success("Änderung gespeichert");
       router.refresh();
     } finally {
       setSubmitting(false);

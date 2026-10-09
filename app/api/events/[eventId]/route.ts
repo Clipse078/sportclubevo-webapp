@@ -43,6 +43,13 @@ import {
   parseClubEventScheduleFromApiBody,
 } from "@/lib/events/club-event-api-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import { loadClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
+import {
+  parseCollaborationCycleBaselineFromBody,
+  stripCollaborationCycleBaselineFromBody,
+} from "@/lib/collaboration/activity-change/cycle-baseline";
+import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
+import { buildClubEventApiCollaborationPayload } from "@/lib/collaboration/club-event/club-event-api-collaboration";
 
 export const dynamic = "force-dynamic";
 
@@ -122,9 +129,11 @@ export async function PATCH(
   }
 
   const raw = body as Record<string, unknown>;
+  const cycleBaseline = parseCollaborationCycleBaselineFromBody(raw, "CLUB_EVENT", eventId);
+  const mutationBody = stripCollaborationCycleBaselineFromBody(raw);
 
   // Handle archive/restore action — both remain under EVENTS_MANAGE
-  if (raw.action === "archive") {
+  if (mutationBody.action === "archive") {
     try {
       const event = await archiveClubEvent(tenantId, eventId);
       await logAction({
@@ -151,7 +160,7 @@ export async function PATCH(
     }
   }
 
-  if (raw.action === "restore") {
+  if (mutationBody.action === "restore") {
     try {
       const event = await restoreClubEvent(tenantId, eventId);
       await logAction({
@@ -178,21 +187,22 @@ export async function PATCH(
   // Core field update — remains under EVENTS_MANAGE
   const input: Parameters<typeof updateClubEvent>[2] = {};
 
-  if (raw.title !== undefined) input.title = String(raw.title ?? "");
-  if (raw.description !== undefined)
+  if (mutationBody.title !== undefined) input.title = String(mutationBody.title ?? "");
+  if (mutationBody.description !== undefined)
     input.description =
-      raw.description === null ? null : String(raw.description) || null;
-  if (raw.location !== undefined)
-    input.location = raw.location === null ? null : String(raw.location) || null;
+      mutationBody.description === null ? null : String(mutationBody.description) || null;
+  if (mutationBody.location !== undefined)
+    input.location =
+      mutationBody.location === null ? null : String(mutationBody.location) || null;
 
   const scheduleTouched =
-    raw.allDay !== undefined ||
-    raw.startDate !== undefined ||
-    raw.endDate !== undefined ||
-    raw.startTime !== undefined ||
-    raw.endTime !== undefined ||
-    raw.startAt !== undefined ||
-    raw.endAt !== undefined;
+    mutationBody.allDay !== undefined ||
+    mutationBody.startDate !== undefined ||
+    mutationBody.endDate !== undefined ||
+    mutationBody.startTime !== undefined ||
+    mutationBody.endTime !== undefined ||
+    mutationBody.startAt !== undefined ||
+    mutationBody.endAt !== undefined;
 
   if (scheduleTouched) {
     const tenant = await prisma.tenant.findUnique({
@@ -211,32 +221,35 @@ export async function PATCH(
     try {
       const schedule = parseClubEventScheduleFromApiBody(
         {
-          allDay: raw.allDay !== undefined ? Boolean(raw.allDay) : undefined,
+          allDay:
+            mutationBody.allDay !== undefined ? Boolean(mutationBody.allDay) : undefined,
           startAt:
-            raw.startAt !== undefined && raw.startAt !== null && raw.startAt !== ""
-              ? String(raw.startAt)
+            mutationBody.startAt !== undefined &&
+            mutationBody.startAt !== null &&
+            mutationBody.startAt !== ""
+              ? String(mutationBody.startAt)
               : undefined,
           endAt:
-            raw.endAt === null
+            mutationBody.endAt === null
               ? null
-              : raw.endAt !== undefined && raw.endAt !== ""
-                ? String(raw.endAt)
+              : mutationBody.endAt !== undefined && mutationBody.endAt !== ""
+                ? String(mutationBody.endAt)
                 : undefined,
           startDate:
-            raw.startDate !== undefined && raw.startDate !== null
-              ? String(raw.startDate)
+            mutationBody.startDate !== undefined && mutationBody.startDate !== null
+              ? String(mutationBody.startDate)
               : undefined,
           endDate:
-            raw.endDate !== undefined && raw.endDate !== null
-              ? String(raw.endDate)
+            mutationBody.endDate !== undefined && mutationBody.endDate !== null
+              ? String(mutationBody.endDate)
               : undefined,
           startTime:
-            raw.startTime !== undefined && raw.startTime !== null
-              ? String(raw.startTime)
+            mutationBody.startTime !== undefined && mutationBody.startTime !== null
+              ? String(mutationBody.startTime)
               : undefined,
           endTime:
-            raw.endTime !== undefined && raw.endTime !== null
-              ? String(raw.endTime)
+            mutationBody.endTime !== undefined && mutationBody.endTime !== null
+              ? String(mutationBody.endTime)
               : undefined,
         },
         timeZone,
@@ -255,25 +268,28 @@ export async function PATCH(
       throw err;
     }
   }
-  if (raw.organizerName !== undefined)
+  if (mutationBody.organizerName !== undefined)
     input.organizerName =
-      raw.organizerName === null ? null : String(raw.organizerName) || null;
-  if (raw.remarks !== undefined)
-    input.remarks = raw.remarks === null ? null : String(raw.remarks) || null;
-  if (raw.websiteVisible !== undefined)
-    input.websiteVisible = Boolean(raw.websiteVisible);
-  if (raw.infoboardVisible !== undefined)
-    input.infoboardVisible = Boolean(raw.infoboardVisible);
-  if (raw.homepageVisible !== undefined)
-    input.homepageVisible = Boolean(raw.homepageVisible);
-  if (raw.wochenplanVisible !== undefined)
-    input.wochenplanVisible = Boolean(raw.wochenplanVisible);
-  if (raw.trainingsplanVisible !== undefined)
-    input.trainingsplanVisible = Boolean(raw.trainingsplanVisible);
-  if (raw.teamPageVisible !== undefined)
-    input.teamPageVisible = Boolean(raw.teamPageVisible);
+      mutationBody.organizerName === null ? null : String(mutationBody.organizerName) || null;
+  if (mutationBody.remarks !== undefined)
+    input.remarks =
+      mutationBody.remarks === null ? null : String(mutationBody.remarks) || null;
+  if (mutationBody.websiteVisible !== undefined)
+    input.websiteVisible = Boolean(mutationBody.websiteVisible);
+  if (mutationBody.infoboardVisible !== undefined)
+    input.infoboardVisible = Boolean(mutationBody.infoboardVisible);
+  if (mutationBody.homepageVisible !== undefined)
+    input.homepageVisible = Boolean(mutationBody.homepageVisible);
+  if (mutationBody.wochenplanVisible !== undefined)
+    input.wochenplanVisible = Boolean(mutationBody.wochenplanVisible);
+  if (mutationBody.trainingsplanVisible !== undefined)
+    input.trainingsplanVisible = Boolean(mutationBody.trainingsplanVisible);
+  if (mutationBody.teamPageVisible !== undefined)
+    input.teamPageVisible = Boolean(mutationBody.teamPageVisible);
 
   try {
+    const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
+    const beforeSnapshot = await loadClubEventActivitySnapshot({ tenantId, eventId });
     const event = await updateClubEvent(tenantId, eventId, input);
     await logAction({
       actorUserId,
@@ -283,7 +299,18 @@ export async function PATCH(
       action: "UPDATE",
       afterJson: input,
     });
-    return NextResponse.json({ event });
+    const collaborationPayload = await buildClubEventApiCollaborationPayload({
+      tenantId,
+      tenantKey,
+      userId: actorUserId ?? "",
+      eventId,
+      beforeSnapshot,
+      cycleBaseline,
+    });
+    return NextResponse.json({
+      event,
+      ...collaborationPayload,
+    });
   } catch (err) {
     if (err instanceof ClubEventNotFoundError) {
       return NextResponse.json(

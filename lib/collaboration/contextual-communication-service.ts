@@ -20,6 +20,7 @@ import {
   DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
   MATCH_ACTIVITY_CHANGE_FIELD_LABELS_DE,
   TOURNAMENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
 } from "@/lib/collaboration/activity-change/presentation";
 import { loadMatchActivitySnapshot } from "@/lib/collaboration/match/match-activity-snapshot";
 import { resolveMatchAudienceContext } from "@/lib/collaboration/match/resolve-match-audience";
@@ -43,10 +44,23 @@ import { resolveContextualCommunicationSendAuthorization } from "@/lib/collabora
 import { buildActivityChangeFingerprint } from "@/lib/collaboration/activity-change/fingerprint";
 import { filterCommunicationWorthyChanges } from "@/lib/collaboration/activity-change/policy";
 import type { TrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { loadClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
+import { resolveClubEventAudienceContext } from "@/lib/collaboration/club-event/resolve-club-event-audience";
+import {
+  resolveClubEventCommunicationScope,
+  type ClubEventCommunicationScope,
+} from "@/lib/collaboration/club-event/resolve-club-event-audience-preview";
+import type { ClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
+import {
+  createClubCommunicationDraft,
+  publishClubCommunication,
+} from "@/lib/communication/club/club-communication-service";
+import { resolveClubCommunicationAuthorization } from "@/lib/communication/club/club-communication-authorization";
 
 export type PrepareContextualCommunicationResult = {
   draftId: string;
-  teamId: string;
+  teamId: string | null;
+  communicationScope?: ClubEventCommunicationScope;
   redirectPath: string;
   reusedExistingDraft: boolean;
   subject: string;
@@ -116,6 +130,35 @@ async function findExistingActivityChangeDraft(input: {
   for (const row of rows) {
     const meta = parseActivityChangeOrchestrationMeta(row.orchestrationMetaJson);
     if (!meta) continue;
+    if (meta.activityId !== input.activityId) continue;
+    if (meta.changeFingerprint !== input.fingerprint) continue;
+    return { id: row.id };
+  }
+  return null;
+}
+
+async function findExistingClubActivityChangeDraft(input: {
+  tenantId: string;
+  senderUserId: string;
+  fingerprint: string;
+  activityId: string;
+}): Promise<{ id: string } | null> {
+  const rows = await prisma.platformCommunication.findMany({
+    where: {
+      tenantId: input.tenantId,
+      status: "DRAFT",
+      createdByUserId: input.senderUserId,
+      conversation: { contextKind: "ORGANISATION", teamId: null },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: { id: true, orchestrationMetaJson: true },
+  });
+
+  for (const row of rows) {
+    const meta = parseActivityChangeOrchestrationMeta(row.orchestrationMetaJson);
+    if (!meta) continue;
+    if (meta.activityDomain !== "CLUB_EVENT") continue;
     if (meta.activityId !== input.activityId) continue;
     if (meta.changeFingerprint !== input.fingerprint) continue;
     return { id: row.id };
@@ -758,4 +801,291 @@ export async function publishPreparedTournamentActivityChangeCommunication(input
   bodyText?: string | null;
 }): Promise<{ communicationId: string; recipientCount: number }> {
   return publishPreparedActivityChangeCommunication(input);
+}
+
+function validateClubEventChangeSetAgainstSnapshot(
+  snapshot: ClubEventActivitySnapshot,
+  changeSet: ActivityChangeSet,
+): void {
+  if (changeSet.domain !== "CLUB_EVENT" || changeSet.activityId !== snapshot.eventId) {
+    throw new TeamCommunicationValidationError("activity change context mismatch");
+  }
+  assertChangeSetFingerprint(changeSet);
+  for (const entry of changeSet.entries) {
+    switch (entry.field) {
+      case "DATE":
+        if (snapshot.dateKey !== entry.newValue) {
+          throw new TeamCommunicationValidationError("activity change is stale (date)");
+        }
+        break;
+      case "START_TIME":
+        if (snapshot.startTime !== entry.newValue) {
+          throw new TeamCommunicationValidationError("activity change is stale (start time)");
+        }
+        break;
+      case "END_TIME":
+        if (snapshot.endTime !== entry.newValue) {
+          throw new TeamCommunicationValidationError("activity change is stale (end time)");
+        }
+        break;
+      case "VENUE":
+        if (snapshot.locationLabel !== entry.newValue) {
+          throw new TeamCommunicationValidationError("activity change is stale (venue)");
+        }
+        break;
+      case "RESOURCE":
+        if (snapshot.resourceLabel !== entry.newValue) {
+          throw new TeamCommunicationValidationError("activity change is stale (resource)");
+        }
+        break;
+      case "STATUS":
+        if (snapshot.status !== entry.newValue) {
+          throw new TeamCommunicationValidationError("activity change is stale (status)");
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+export async function prepareClubEventActivityChangeCommunicationDraft(input: {
+  tenantId: string;
+  tenantKey: string;
+  senderUserId: string;
+  eventId: string;
+  changeSet: ActivityChangeSet;
+}): Promise<PrepareContextualCommunicationResult> {
+  const snapshot = await loadClubEventActivitySnapshot({
+    tenantId: input.tenantId,
+    eventId: input.eventId,
+  });
+  if (!snapshot) {
+    throw new TeamCommunicationNotFoundError("club event not found");
+  }
+
+  const audienceContext = await resolveClubEventAudienceContext({
+    tenantId: input.tenantId,
+    snapshot,
+  });
+  if (!audienceContext) {
+    throw new TeamCommunicationValidationError("club event has no participation audience");
+  }
+
+  const { scope, canCommunicate } = await resolveClubEventCommunicationScope({
+    tenantId: input.tenantId,
+    tenantKey: input.tenantKey,
+    userId: input.senderUserId,
+    audienceContext,
+  });
+  if (!canCommunicate) {
+    throw new TeamCommunicationForbiddenError("CLUB_EVENT_COMMUNICATION_SEND_DENIED");
+  }
+
+  validateClubEventChangeSetAgainstSnapshot(snapshot, input.changeSet);
+  const changeSet = input.changeSet;
+  const audienceSpec = audienceContext.audienceSpec;
+  const audienceLabel = audienceContext.audienceLabel;
+
+  const subject = buildActivityChangeSubject(snapshot.title);
+  const bodyText = buildActivityChangeAnnouncementBody({
+    introLine: "Die Veranstaltung wurde angepasst.",
+    entries: changeSet.entries,
+    scheduleLine: snapshot.scheduleLine,
+    labels: CLUB_EVENT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
+  });
+
+  const orchestrationMeta = buildActivityChangeOrchestrationMeta({
+    activityDomain: "CLUB_EVENT",
+    activityId: snapshot.eventId,
+    changeFingerprint: changeSet.fingerprint,
+    eventAnchor: {
+      eventKind: "CLUB_EVENT",
+      eventId: snapshot.eventId,
+      teamSeasonId: snapshot.teamSeasonId,
+      contextEventId: snapshot.eventId,
+    },
+  });
+
+  if (scope === "TEAM" && audienceContext.primaryTeamId) {
+    const teamId = audienceContext.primaryTeamId;
+    const existing = await findExistingActivityChangeDraft({
+      tenantId: input.tenantId,
+      teamId,
+      senderUserId: input.senderUserId,
+      fingerprint: changeSet.fingerprint,
+      activityId: snapshot.eventId,
+    });
+
+    if (existing) {
+      return attachPrepareDispatchPreview({
+        tenantId: input.tenantId,
+        senderUserId: input.senderUserId,
+        eventId: snapshot.eventId,
+        audienceSpec,
+        audienceLabel,
+        base: {
+          draftId: existing.id,
+          teamId,
+          communicationScope: "TEAM",
+          redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${existing.id}`,
+          reusedExistingDraft: true,
+          subject,
+          bodyText,
+        },
+      });
+    }
+
+    const draft = await createTeamCommunicationDraft({
+      tenantId: input.tenantId,
+      teamId,
+      senderUserId: input.senderUserId,
+      kind: "ANNOUNCEMENT",
+      subject,
+      bodyText,
+      audienceSpec,
+      contextRef: eventCommunicationContext(snapshot.eventId),
+      orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
+    });
+
+    return attachPrepareDispatchPreview({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      eventId: snapshot.eventId,
+      audienceSpec,
+      audienceLabel,
+      base: {
+        draftId: draft.id,
+        teamId,
+        communicationScope: "TEAM",
+        redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${draft.id}`,
+        reusedExistingDraft: false,
+        subject,
+        bodyText,
+      },
+    });
+  }
+
+  const existingClub = await findExistingClubActivityChangeDraft({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    fingerprint: changeSet.fingerprint,
+    activityId: snapshot.eventId,
+  });
+
+  if (existingClub) {
+    return attachPrepareDispatchPreview({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      eventId: snapshot.eventId,
+      audienceSpec,
+      audienceLabel,
+      base: {
+        draftId: existingClub.id,
+        teamId: null,
+        communicationScope: "CLUB",
+        redirectPath: `/dashboard/kommunikation/club?communicationId=${existingClub.id}`,
+        reusedExistingDraft: true,
+        subject,
+        bodyText,
+      },
+    });
+  }
+
+  const draft = await createClubCommunicationDraft({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    kind: "ANNOUNCEMENT",
+    subject,
+    bodyText,
+    audienceSpec,
+    contextRef: eventCommunicationContext(snapshot.eventId),
+    orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
+  });
+
+  return attachPrepareDispatchPreview({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    eventId: snapshot.eventId,
+    audienceSpec,
+    audienceLabel,
+    base: {
+      draftId: draft.id,
+      teamId: null,
+      communicationScope: "CLUB",
+      redirectPath: `/dashboard/kommunikation/club?communicationId=${draft.id}`,
+      reusedExistingDraft: false,
+      subject,
+      bodyText,
+    },
+  });
+}
+
+export async function publishPreparedClubEventActivityChangeCommunication(input: {
+  tenantId: string;
+  tenantKey: string;
+  senderUserId: string;
+  draftId: string;
+  communicationScope: ClubEventCommunicationScope;
+  teamId?: string | null;
+  subject?: string | null;
+  bodyText?: string | null;
+}): Promise<{ communicationId: string; recipientCount: number }> {
+  if (input.communicationScope === "TEAM") {
+    const teamId = input.teamId?.trim();
+    if (!teamId) {
+      throw new TeamCommunicationValidationError("teamId is required for team-scoped club event communication");
+    }
+    return publishPreparedActivityChangeCommunication({
+      tenantId: input.tenantId,
+      tenantKey: input.tenantKey,
+      senderUserId: input.senderUserId,
+      teamId,
+      draftId: input.draftId,
+      subject: input.subject,
+      bodyText: input.bodyText,
+    });
+  }
+
+  const clubAuth = await resolveClubCommunicationAuthorization({
+    tenantId: input.tenantId,
+    tenantKey: input.tenantKey,
+    userId: input.senderUserId,
+  });
+  if (!clubAuth.canSend) {
+    throw new TeamCommunicationForbiddenError("CLUB_COMMUNICATION_SEND_DENIED");
+  }
+
+  const row = await prisma.platformCommunication.findFirst({
+    where: { id: input.draftId, tenantId: input.tenantId, status: "DRAFT" },
+    include: { conversation: { select: { contextKind: true, teamId: true } } },
+  });
+  if (!row) throw new TeamCommunicationNotFoundError();
+  if (row.conversation.contextKind !== "ORGANISATION" || row.conversation.teamId !== null) {
+    throw new TeamCommunicationNotFoundError();
+  }
+
+  const meta = parseActivityChangeOrchestrationMeta(row.orchestrationMetaJson);
+  if (!meta || meta.collaborationOrigin !== "ACTIVITY_CHANGE" || meta.activityDomain !== "CLUB_EVENT") {
+    throw new TeamCommunicationValidationError("not a club event activity-change draft");
+  }
+
+  const nextSubject = input.subject?.trim() || row.subject;
+  const nextBody = input.bodyText?.trim() || row.bodyText;
+  if (!nextBody?.trim()) {
+    throw new TeamCommunicationValidationError("body is required");
+  }
+
+  await prisma.platformCommunication.update({
+    where: { id: row.id },
+    data: { subject: nextSubject, bodyText: nextBody },
+  });
+
+  const published = await publishClubCommunication({
+    tenantId: input.tenantId,
+    communicationId: row.id,
+    senderUserId: input.senderUserId,
+  });
+
+  return { communicationId: published.id, recipientCount: published.recipientCount };
 }

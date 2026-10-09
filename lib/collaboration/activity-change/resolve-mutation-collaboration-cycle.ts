@@ -5,6 +5,7 @@
 import type { ActivityChangeImpact } from "@/lib/collaboration/activity-change/types";
 import type { ActivityCollaborationMutationResult } from "@/lib/collaboration/activity-change/collaboration-mutation-result";
 import type {
+  ClubEventCollaborationCycleBaseline,
   MatchCollaborationCycleBaseline,
   TournamentCollaborationCycleBaseline,
   TrainingCollaborationCycleBaseline,
@@ -13,7 +14,8 @@ import type {
 type AnyCycleBaseline =
   | MatchCollaborationCycleBaseline
   | TournamentCollaborationCycleBaseline
-  | TrainingCollaborationCycleBaseline;
+  | TrainingCollaborationCycleBaseline
+  | ClubEventCollaborationCycleBaseline;
 
 export function finalizeCollaborationMutationCycle<TBaseline extends AnyCycleBaseline>(input: {
   cycleRequested: boolean;

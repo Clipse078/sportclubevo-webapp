@@ -33,7 +33,7 @@ export function EventActivityCollaborationHost({
   activityId,
   children,
 }: {
-  domain: Extract<ActivityCollaborationDomain, "MATCH" | "TOURNAMENT">;
+  domain: Extract<ActivityCollaborationDomain, "MATCH" | "TOURNAMENT" | "CLUB_EVENT">;
   activityId: string;
   children: ReactNode;
 }) {

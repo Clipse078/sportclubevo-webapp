@@ -844,6 +844,7 @@
       "trainingUpdated": "Training aktualisiert",
       "matchUpdated": "Spiel aktualisiert",
       "tournamentUpdated": "Turnier aktualisiert",
+      "clubEventUpdated": "Veranstaltung aktualisiert",
       "multipleChanges": "{count} Änderungen",
       "audience": "Zielgruppe",
       "recipients": "Empfänger",

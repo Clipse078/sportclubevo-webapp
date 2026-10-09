@@ -231,6 +231,7 @@ export async function createClubCommunicationDraft(input: {
   audienceSpec: CommunicationAudienceSpec;
   contextRef?: CommunicationContextRef;
   acknowledgementRequired?: boolean;
+  orchestrationMetaJson?: import("@prisma/client").Prisma.InputJsonValue;
 }): Promise<{ id: string }> {
   const kind = assertClubKind(input.kind ?? "MESSAGE");
   const bodyText = sanitizeBodyText(input.bodyText);
@@ -258,6 +259,7 @@ export async function createClubCommunicationDraft(input: {
       subject: input.subject?.trim() || null,
       bodyText,
       audienceSpecJson: input.audienceSpec as unknown as Prisma.InputJsonValue,
+      orchestrationMetaJson: input.orchestrationMetaJson ?? undefined,
       acknowledgementRequired: input.acknowledgementRequired === true,
       createdByUserId: input.senderUserId,
     },
