@@ -7,10 +7,10 @@
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
-| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **IMPLEMENTED / HUMAN_UAT_PENDING** |
+| **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **READY_FOR_MERGE** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; Human UAT R5 PASS 2026-10-09) |
 | **SCE-COLLAB-01D** (Multi-activity impact) | FUTURE |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C implemented pending Human UAT; 01D remains) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B closed; 01C ready for merge; 01D remains) |
 
 ## Product principle
 
@@ -97,7 +97,7 @@ Duplicate prepare: reuses existing DRAFT with same `activityId` + `changeFingerp
 
 - Training session edit page only (not Weekplanner sheet yet).
 - Draft editing uses contextual inline composer (team chat timeline still hides unpublished drafts).
-- Club Event adapter implemented in 01C (Human UAT pending).
+- Club Event adapter implemented in 01C (Human UAT R5 PASS; merge pending).
 - SFV async change surfacing remains future (requires durable impact inbox — not in 01B).
 
 ## Future: Trainer-/Spielerbörse
@@ -543,7 +543,7 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | UAT-06 | Cancel composer | Banner remains |
 | UAT-07 | Send or zero-recipient UX | Explicit send resets cycle; zero → disabled Send (DATA_BLOCKED if no eligible users on STAGE) |
 
-**01C status:** IMPLEMENTED / **HUMAN_UAT_PENDING** (do not mark CLOSED before UAT).
+**01C status:** **READY_FOR_MERGE** (Human UAT R5 PASS; await PR #812 merge to STAGE — not marked CLOSED until merged).
 
 ---
 
@@ -826,4 +826,39 @@ Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present o
 | UAT-R5-05 | Composer opens; Empfänger 0 → Send disabled |
 | UAT-R5-06 | Composer cancel → unresolved change remains |
 
-**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R5 pending).
+### Human UAT R5 result (product owner, STAGE — final)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| UAT-R5-01 | **PASS** | Contextual Zielgruppe dialog opens in place |
+| UAT-R5-02 | **PASS** | Team dropdown lists real FC Allschwil teams (e.g. Junioren E1–F3, Seniorinnen, …) |
+| UAT-R5-03 | **PASS** | Team selected (example: **Seniorinnen**) and audience saved |
+| UAT-R5-04 | **PASS** | Unresolved participant-facing change preserved (example: Zeit 20:30 → 20:00) after audience save |
+| UAT-R5-05 | **PASS** | Impact refreshes: Zielgruppe **Seniorinnen**, Empfänger **0**, **Änderung kommunizieren** available |
+| UAT-R5-06 | **PASS** | Composer **Mitteilung vorbereiten**; subject **Änderung: …**; body includes unresolved change; **Keine Empfänger verfügbar**; Send disabled |
+
+**Zero-recipient classification:** **EXPECTED_DATA_STATE** — structural Team exists and is selectable; COMM-03 returns 0 eligible recipients because FC Allschwil STAGE lacks onboarded active TeamSeason roster → person → user links (**not** an 01C collaboration/audience/authorization defect). Positive-recipient dispatch remains covered by automated tests and 01B verification. **No STAGE roster data was fabricated for UAT.**
+
+**Follow-up (not 01C scope):** **SCE-PEOPLE-TEAM-ONBOARDING-01** — operational roster onboarding so COMM-03 can resolve real recipients for structural teams on STAGE.
+
+### SCE-COLLAB-01C closure gate (2026-10-09)
+
+| Gate | Result |
+|------|--------|
+| Human UAT R5 | **PASS** |
+| 01C automated suite (activity-change + R1–R5 + club-event collaboration APIs) | **70/70 PASS** |
+| 01A/01B regression (collaboration batches) | **123/123 PASS** |
+| COMM-03 + club/team communication + impact surface | **32/32 PASS** |
+| Participation audience + teams list parser | **29/29 PASS** (excludes KNOWN_P2 harness) |
+| Facility integrity | **168/168 PASS** |
+| Veranstaltung facility allocation regression | **PASS** |
+| ESLint (PR-changed TS/TSX) | **0 errors** after closure lint fix |
+| Build | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` (closure 2026-10-09) |
+| Schema / migration / role / permission / STAGE data mutation | **NO** |
+| PROD | **Untouched** |
+
+**KNOWN_P2 (pre-existing on STAGE, unrelated mock gap):** `lib/events/__tests__/sce-events-audience-01.test.ts` — 3 failures (`eventParticipationAudienceEntry.findMany` mock undefined).
+
+**01C status:** **READY_FOR_MERGE** (PR #812 → STAGE).
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C ready for merge; 01D outstanding).

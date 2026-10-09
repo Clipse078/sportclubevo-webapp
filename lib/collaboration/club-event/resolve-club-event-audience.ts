@@ -125,7 +125,7 @@ export async function resolveClubEventAudienceContext(input: {
 
   let teamName = "Veranstaltungsteilnehmer";
   let teamNamesLabel: string | null = audienceLabel;
-  let primaryTeamId: string | null =
+  const primaryTeamId: string | null =
     communicationPath === "TEAM" ? (teamIdsFromAudience[0] ?? null) : null;
 
   if (teamIdsFromAudience.length > 0) {
