@@ -4,7 +4,10 @@ import {
   diffClubEventActivitySnapshots,
 } from "@/lib/collaboration/club-event/club-event-activity-change";
 import type { ClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
-import { buildAudienceSpecFromEntries } from "@/lib/collaboration/club-event/resolve-club-event-audience";
+import {
+  buildAudienceSpecFromEntries,
+  formatClubEventParticipationAudienceLabel,
+} from "@/lib/collaboration/club-event/resolve-club-event-audience";
 
 function clubSnapshot(
   overrides: Partial<ClubEventActivitySnapshot> = {},
@@ -82,6 +85,23 @@ describe("SCE-COLLAB-01C club event change detection", () => {
 });
 
 describe("SCE-COLLAB-01C club event audience spec", () => {
+  it("ignores participation entries without reference ids when building spec", () => {
+    const spec = buildAudienceSpecFromEntries([
+      { id: "1", kind: "TEAM", referenceId: "", label: "—" },
+      { id: "2", kind: "PERSON", referenceId: "p-1", label: "Max Muster" },
+    ]);
+    expect(spec?.components.length).toBe(1);
+  });
+
+  it("formats human-readable audience labels from entries", () => {
+    expect(
+      formatClubEventParticipationAudienceLabel([
+        { id: "1", kind: "ORG_UNIT", referenceId: "ou-1", label: "Mitglieder" },
+        { id: "2", kind: "TEAM", referenceId: "team-a", label: "Junioren F2" },
+      ]),
+    ).toBe("Mitglieder · Junioren F2");
+  });
+
   it("builds UNION spec from participation audience entries", () => {
     const spec = buildAudienceSpecFromEntries([
       { id: "1", kind: "TEAM", referenceId: "team-a", label: "F2" },

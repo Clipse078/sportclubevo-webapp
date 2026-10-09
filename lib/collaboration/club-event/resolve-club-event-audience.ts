@@ -19,10 +19,22 @@ export type ResolvedClubEventAudience = {
   teamNamesLabel: string | null;
 };
 
+export function formatClubEventParticipationAudienceLabel(
+  entries: Awaited<ReturnType<typeof listClubEventAudienceEntries>>,
+): string | null {
+  const labels = entries
+    .map((entry) => entry.label.trim())
+    .filter((label) => label.length > 0 && label !== "—");
+  if (labels.length === 0) return null;
+  if (labels.length === 1) return labels[0]!;
+  return labels.join(" · ");
+}
+
 export function buildAudienceSpecFromEntries(
   entries: Awaited<ReturnType<typeof listClubEventAudienceEntries>>,
 ): CommunicationAudienceSpec | null {
-  if (entries.length === 0) return null;
+  const eligibleEntries = entries.filter((entry) => entry.referenceId.trim().length > 0);
+  if (eligibleEntries.length === 0) return null;
 
   const components: CommunicationAudienceSpec["components"] = [];
   const personIds: string[] = [];
@@ -30,7 +42,7 @@ export function buildAudienceSpecFromEntries(
   const orgUnitIds: string[] = [];
   const roleIds: string[] = [];
 
-  for (const entry of entries) {
+  for (const entry of eligibleEntries) {
     switch (entry.kind as EventParticipationAudienceKind) {
       case "PERSON":
         if (entry.referenceId) personIds.push(entry.referenceId);
@@ -90,12 +102,8 @@ export async function resolveClubEventAudienceContext(input: {
 }): Promise<ResolvedClubEventAudience | null> {
   const entries = await listClubEventAudienceEntries(input.tenantId, input.snapshot.eventId);
   const audienceSpec = buildAudienceSpecFromEntries(entries);
-  if (!audienceSpec) return null;
-
-  const audienceLabel =
-    entries.length === 1
-      ? entries[0]!.label
-      : entries.map((e) => e.label).join(", ");
+  const audienceLabel = formatClubEventParticipationAudienceLabel(entries);
+  if (!audienceSpec || !audienceLabel) return null;
 
   const teamIdsFromAudience = dedupeTenantTeamIds(
     entries.filter((e) => e.kind === "TEAM").map((e) => e.referenceId),

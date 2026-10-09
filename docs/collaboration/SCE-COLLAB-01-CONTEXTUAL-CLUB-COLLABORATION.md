@@ -544,3 +544,57 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | UAT-07 | Send or zero-recipient UX | Explicit send resets cycle; zero → disabled Send (DATA_BLOCKED if no eligible users on STAGE) |
 
 **01C status:** IMPLEMENTED / **HUMAN_UAT_PENDING** (do not mark CLOSED before UAT).
+
+---
+
+## SCE-COLLAB-01C-R1 — Human UAT defect (2026-10-09)
+
+### Human UAT finding
+
+| Check | Result |
+|-------|--------|
+| UAT-02 change detection (time delta visible) | **PASS** |
+| UAT-02 persistent contextual collaboration impact surface on `/dashboard/veranstaltungen/[eventId]/edit` | **FAIL** — only dismissible “Veranstaltung aktualisiert” header + change line; missing Zielgruppe, Empfänger, **Änderung kommunizieren**, composer path |
+| UAT-03 … UAT-07 | **BLOCKED_BY_UAT_DEFECT** |
+| Save UX — primary **Speichern** only at bottom of long edit form | **FAIL** |
+
+### ROOT_CAUSE
+
+| Area | Finding |
+|------|---------|
+| **MUTATION_RESPONSE** | `PATCH /api/events/[eventId]` already returns `{ collaboration, collaborationCycleBaseline }` with worthy `changeSet` (change detection worked in UAT). |
+| **CLIENT_HANDLING** | `VeranstaltungEditForm` calls `applyMutationCollaboration`; cycle baseline attachment is correct. |
+| **CYCLE_PROVIDER** | `EventActivityCollaborationHost` in `[eventId]/layout.tsx` wraps the edit route; provider lifecycle is correct. |
+| **IMPACT_SURFACE** | `ContextualActivityChangeImpactSurface` rendered, but **degraded mode**: `impact.audience === null` and `impact.canCommunicate === false`, so Zielgruppe / Empfänger / communicate action were suppressed. Caused by participation-audience spec building skipping entries without `referenceId`, returning `null` audience context even when labeled participation rows exist; preview/authorization never ran. Impact slot placement above the page shell also read as a toast-like banner. |
+| **EDIT_ROUTE** | Edit page did not mount the impact slot inside the planning editor shell (layout-only slot). |
+| **ROUTER_REFRESH** | Not the primary defect; client cycle state remains in the layout provider (01B invariant). |
+
+### FIX
+
+- Harden club-event audience resolution: human-readable labels from `EventParticipationAudienceEntry`, valid `CommunicationAudienceSpec` only from resolvable reference ids, failure-isolated preview with display-only audience fallback.
+- Mount `EventActivityCollaborationImpactSlot` on the **edit page** below `PlanningEditorHeader`; suppress duplicate layout slot for club events (`suppressImpactSlot`).
+- Remove nested `ToastProvider` on the edit page (use collaboration host provider — 01B R4 boundary).
+- Add top **Speichern** in header actions (`form=` association + shared submit/loading via `VeranstaltungEditSubmitProvider`); duplicate-submit guard on the form handler.
+- Impact surface UX: show **1 Änderung** / **n Änderungen** count header (canonical copy).
+
+### AUTOMATED_REGRESSION
+
+- `lib/collaboration/__tests__/sce-collab-01c-r1-verification.test.tsx` (R1-01 … R1-20 subset)
+- Updated `sce-collab-01c-activity-change.test.ts`, `ContextualActivityChangeImpactSurface.test.tsx`
+- Re-run 01A/01B collab regressions (`sce-collab-01b-r3`, `sce-collab-01b-r4`, …) on R1 branch
+
+### HUMAN_UAT_RETEST_REQUIRED
+
+| ID | Scenario |
+|----|----------|
+| UAT-R1-01 | Top **Speichern** visible without scrolling |
+| UAT-R1-02 | Change time → save with top **Speichern** |
+| UAT-R1-03 | Persistent impact surface: count, delta, **Zielgruppe**, **Empfänger**, **Änderung kommunizieren** |
+| UAT-R1-04 | Second save accumulates changes (one surface, two lines) |
+| UAT-R1-05 | Composer opens with cumulative body + subject |
+| UAT-R1-06 | Human-readable Zielgruppe (no raw enums/ids) |
+| UAT-R1-07 | Composer cancel → unresolved surface remains |
+
+**01C status after R1:** IMPLEMENTED / **HUMAN_UAT_PENDING** (retest required; not CLOSED).
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C retest pending).

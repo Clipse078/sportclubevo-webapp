@@ -7,9 +7,11 @@ import { getClubEvent } from "@/lib/events/club-events-service";
 import { listEventFacilityAllocations } from "@/lib/events/event-facility-allocation-service";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import { ToastProvider } from "@/components/ui/ToastProvider";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
+import { EventActivityCollaborationImpactSlot } from "@/components/admin/collaboration/EventActivityCollaborationHost";
+import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
+import VeranstaltungEditTopSaveButton from "@/components/admin/veranstaltungen/VeranstaltungEditTopSaveButton";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
@@ -176,7 +178,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   );
 
   return (
-    <ToastProvider>
+    <VeranstaltungEditSubmitProvider>
       <PlanningEditorShell testId="veranstaltung-edit-page">
         <PlanningEditorHeader
           backHref="/dashboard/veranstaltungen"
@@ -187,16 +189,21 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           testId="veranstaltung-edit-header"
           contextTestId="veranstaltung-edit-schedule-context"
           actions={
-            <ContextualTaskCreateTriggerServer
-              contextType="CLUB_EVENT"
-              contextId={event.id}
-              variant="button"
-              label={tWork("createTask")}
-              locale={locale}
-              timeZone={timeZone}
-            />
+            <>
+              {canManage ? <VeranstaltungEditTopSaveButton /> : null}
+              <ContextualTaskCreateTriggerServer
+                contextType="CLUB_EVENT"
+                contextId={event.id}
+                variant="button"
+                label={tWork("createTask")}
+                locale={locale}
+                timeZone={timeZone}
+              />
+            </>
           }
         />
+
+        <EventActivityCollaborationImpactSlot domain="CLUB_EVENT" activityId={event.id} />
 
         <p className="text-xs leading-snug text-[var(--text-2)]">{t("description")}</p>
 
@@ -218,6 +225,6 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           initialFacilityAllocations={initialFacilityAllocations}
         />
       </PlanningEditorShell>
-    </ToastProvider>
+    </VeranstaltungEditSubmitProvider>
   );
 }

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useCollaborationMutation } from "@/lib/collaboration/client/use-collaboration-mutation";
+import { VERANSTALTUNG_EDIT_FORM_ID } from "@/components/admin/veranstaltungen/veranstaltung-edit-form-id";
+import { useVeranstaltungEditSubmitState } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
@@ -85,6 +87,7 @@ export default function VeranstaltungEditForm({
     "CLUB_EVENT",
     event.id,
   );
+  const { submitting, setSubmitting } = useVeranstaltungEditSubmitState();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
   const tc = useTranslations("PlanningEditor.common");
@@ -125,7 +128,6 @@ export default function VeranstaltungEditForm({
     wochenplanVisible: event.wochenplanVisible,
   });
 
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const scheduleInterval = useMemo(() => {
@@ -182,10 +184,13 @@ export default function VeranstaltungEditForm({
     });
   }
 
+  const submitLock = useRef(false);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (isReadonly) return;
+    if (isReadonly || submitLock.current) return;
 
+    submitLock.current = true;
     setSubmitting(true);
     setError(null);
 
@@ -222,6 +227,7 @@ export default function VeranstaltungEditForm({
       toast.success("Änderung gespeichert");
       router.refresh();
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }
@@ -241,7 +247,12 @@ export default function VeranstaltungEditForm({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-edit-form">
+    <form
+      id={VERANSTALTUNG_EDIT_FORM_ID}
+      onSubmit={handleSubmit}
+      className="space-y-3"
+      data-testid="veranstaltung-edit-form"
+    >
       <SportingActivityFormIdentitySummary
         activityKind="VERANSTALTUNG"
         typeLabel="VERANSTALTUNG"

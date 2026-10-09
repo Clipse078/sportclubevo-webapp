@@ -9,11 +9,11 @@ import {
 import { ContextualActivityChangeImpactSurface } from "@/components/admin/collaboration/ContextualActivityChangeImpactSurface";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
-function ImpactSlot({
+export function EventActivityCollaborationImpactSlot({
   domain,
   activityId,
 }: {
-  domain: ActivityCollaborationDomain;
+  domain: Extract<ActivityCollaborationDomain, "MATCH" | "TOURNAMENT" | "CLUB_EVENT">;
   activityId: string;
 }) {
   const { impact, dismissImpact } = useActivityChangeCollaboration();
@@ -32,16 +32,21 @@ export function EventActivityCollaborationHost({
   domain,
   activityId,
   children,
+  suppressImpactSlot = false,
 }: {
   domain: Extract<ActivityCollaborationDomain, "MATCH" | "TOURNAMENT" | "CLUB_EVENT">;
   activityId: string;
   children: ReactNode;
+  /** When true, render impact via {@link EventActivityCollaborationImpactSlot} in the page shell instead. */
+  suppressImpactSlot?: boolean;
 }) {
   return (
     <ToastProvider>
       <ActivityChangeCollaborationProvider>
         <div className="space-y-3">
-          <ImpactSlot domain={domain} activityId={activityId} />
+          {suppressImpactSlot ? null : (
+            <EventActivityCollaborationImpactSlot domain={domain} activityId={activityId} />
+          )}
           {children}
         </div>
       </ActivityChangeCollaborationProvider>

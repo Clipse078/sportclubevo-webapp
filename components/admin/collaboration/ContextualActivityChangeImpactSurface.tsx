@@ -159,17 +159,21 @@ export function ContextualActivityChangeImpactSurface({
       </div>
 
       <div className="mt-2 space-y-1 text-xs text-[var(--foreground)]">
+        {summaryLines.length > 0 ? (
+          <p className="font-medium" data-testid="contextual-activity-change-count">
+            {summaryLines.length === 1
+              ? t("singleChange")
+              : t("multipleChanges", { count: summaryLines.length })}
+          </p>
+        ) : null}
         {summaryLines.length === 1 ? (
           <p data-testid="contextual-activity-change-single">{summaryLines[0]}</p>
         ) : (
-          <>
-            <p className="font-medium">{t("multipleChanges", { count: summaryLines.length })}</p>
-            <ul className="list-disc space-y-0.5 pl-4" data-testid="contextual-activity-change-list">
-              {summaryLines.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          </>
+          <ul className="list-disc space-y-0.5 pl-4" data-testid="contextual-activity-change-list">
+            {summaryLines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
         )}
       </div>
 

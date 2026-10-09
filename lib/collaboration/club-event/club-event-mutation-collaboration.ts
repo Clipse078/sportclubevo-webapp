@@ -6,6 +6,7 @@ import {
 } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { finalizeCollaborationMutationCycle } from "@/lib/collaboration/activity-change/resolve-mutation-collaboration-cycle";
 import { loadClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
+import { buildClubEventActivityChangeImpact } from "@/lib/collaboration/club-event/club-event-activity-change";
 import { resolveClubEventCollaborationImpactAfterChange } from "@/lib/collaboration/club-event/club-event-collaboration-impact-service";
 
 export async function buildClubEventMutationCollaborationImpact(input: {
@@ -52,6 +53,38 @@ export async function buildClubEventMutationCollaborationImpact(input: {
       initialCycleBaseline,
     });
   } catch {
-    return { impact: null, cycleBaseline: null };
+    if (!input.beforeSnapshot) {
+      return { impact: null, cycleBaseline: null };
+    }
+    try {
+      const after = await loadClubEventActivitySnapshot({
+        tenantId: input.tenantId,
+        eventId: input.eventId,
+        locale: input.locale,
+      });
+      if (!after) return { impact: null, cycleBaseline: null };
+
+      const effectiveBefore = input.cycleBaseline
+        ? mergeClubEventCycleBaselineWithAfter(input.cycleBaseline, after)
+        : input.beforeSnapshot;
+
+      const fallbackImpact = buildClubEventActivityChangeImpact({
+        before: effectiveBefore,
+        after,
+        audience: null,
+        canCommunicate: false,
+      });
+
+      const initialCycleBaseline = clubEventSnapshotToCycleBaseline(effectiveBefore);
+
+      return finalizeCollaborationMutationCycle({
+        cycleRequested,
+        impact: fallbackImpact.worthy ? fallbackImpact : null,
+        cycleBaseline: input.cycleBaseline ?? null,
+        initialCycleBaseline,
+      });
+    } catch {
+      return { impact: null, cycleBaseline: null };
+    }
   }
 }
