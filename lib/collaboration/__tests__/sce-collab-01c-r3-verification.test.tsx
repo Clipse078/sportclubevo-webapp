@@ -181,8 +181,9 @@ describe("SCE-COLLAB-01C-R3 audience lifecycle", () => {
     expect(screen.getByTestId("contextual-activity-change-audience")).toHaveTextContent(
       "Keine Zielgruppe festgelegt",
     );
-    const link = screen.getByTestId("contextual-activity-change-configure-audience");
-    expect(link).toHaveAttribute("href", "#veranstaltung-edit-participants-heading");
+    const trigger = screen.getByTestId("contextual-activity-change-configure-audience");
+    expect(trigger.tagName).toBe("BUTTON");
+    expect(trigger).toHaveTextContent("Zielgruppe festlegen");
   });
 
   it("R3-08 audience configuration is not part of activity change set", () => {

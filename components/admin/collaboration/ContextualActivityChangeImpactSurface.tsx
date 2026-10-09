@@ -16,6 +16,7 @@ import {
 } from "@/lib/collaboration/activity-change/presentation";
 import type { ClubEventCommunicationScope } from "@/lib/collaboration/club-event/resolve-club-event-audience-preview";
 import { ContextualActivityCommunicationComposer } from "@/components/admin/collaboration/ContextualActivityCommunicationComposer";
+import { ContextualClubEventParticipationAudienceDialog } from "@/components/admin/collaboration/ContextualClubEventParticipationAudienceDialog";
 import { contextualPrepareCommunicationPath } from "@/lib/collaboration/client/contextual-communication-api";
 import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
 
@@ -43,6 +44,7 @@ export function ContextualActivityChangeImpactSurface({
   const { acknowledgeCommunicationSent } = useActivityChangeCollaboration();
   const labels = fieldLabelsForDomain(domain);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [audienceDialogOpen, setAudienceDialogOpen] = useState(false);
   const [prepareError, setPrepareError] = useState<string | null>(null);
   const [composerStale, setComposerStale] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -202,13 +204,19 @@ export function ContextualActivityChangeImpactSurface({
 
       {domain === "CLUB_EVENT" && impact.audience?.audienceNotConfigured ? (
         <div className="mt-2">
-          <a
-            href="#veranstaltung-edit-participants-heading"
+          <button
+            type="button"
+            onClick={() => setAudienceDialogOpen(true)}
             className="text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline"
             data-testid="contextual-activity-change-configure-audience"
           >
             {t("configureAudience")}
-          </a>
+          </button>
+          <ContextualClubEventParticipationAudienceDialog
+            eventId={activityId}
+            open={audienceDialogOpen}
+            onClose={() => setAudienceDialogOpen(false)}
+          />
         </div>
       ) : null}
 

@@ -851,6 +851,8 @@
       "recipients": "Empfänger",
       "recipientsNotApplicable": "—",
       "configureAudience": "Zielgruppe festlegen",
+      "configureAudienceDescription": "Wähle aus, wer von dieser Veranstaltung betroffen ist.",
+      "configureAudienceSave": "Speichern",
       "zeroRecipients": "Für diese Zielgruppe konnten aktuell keine Empfänger ermittelt werden.",
       "noRecipientsTitle": "Keine Empfänger verfügbar",
       "noRecipientsBody": "Für die ausgewählten Teams konnten aktuell keine berechtigten Empfänger ermittelt werden. Die Mitteilung kann deshalb noch nicht gesendet werden.",

@@ -35,6 +35,21 @@ export function classifyClubEventParticipationAudience(
   return { state: "VALID" };
 }
 
+export function clubEventParticipationAudienceKindLabelDe(kind: string): string {
+  if (kind === "TEAM") return "Team";
+  if (kind === "ORG_UNIT") return "Organisationseinheit";
+  if (kind === "ROLE") return "Rolle";
+  if (kind === "PERSON") return "Person";
+  return kind;
+}
+
+export function formatClubEventParticipationAudienceEntryLabel(entry: {
+  kind: string;
+  label: string;
+}): string {
+  return `${clubEventParticipationAudienceKindLabelDe(entry.kind)}: ${entry.label}`;
+}
+
 export function resolveClubEventCommunicationPathFromEntries(
   entries: ClubEventAudienceEntryDto[],
 ): ClubEventCommunicationScope {

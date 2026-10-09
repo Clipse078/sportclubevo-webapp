@@ -638,7 +638,7 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | Area | Change |
 |------|--------|
 | Audience states | Explicit **none** / **invalid** / **valid** handling; always surface Zielgruppe on worthy club-event changes |
-| No audience | **Keine Zielgruppe festgelegt**, Empfänger **—**, link **Zielgruppe festlegen** → participants section (no fabricated spec) |
+| No audience | **Keine Zielgruppe festgelegt**, Empfänger **—**, action **Zielgruppe festlegen** opens contextual audience dialog (R4; no page jump) |
 | Invalid/stale | Human label without IDs; no silent drop to null-only surface |
 | Communication path | **TEAM** only when all resolvable entries are `TEAM`; otherwise **CLUB** (`communication.club.send`). TEAM path no longer blocks club path for ROLE/ORG/PERSON/mixed audiences |
 | `canCommunicate` vs `canDispatch` | Unchanged 01B contract: composer when authorized + valid audience; Send disabled when preview count is 0 |
@@ -705,3 +705,51 @@ Same 01B baseline/current cycle (`collaborationCycleBaseline` on mutation reques
 | UAT-R3-06 | Composer cancel → unresolved surface remains |
 
 **COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R3 pending).
+
+---
+
+## SCE-COLLAB-01C-R4 — Human UAT R3 follow-up (2026-10-09)
+
+### Human UAT R3 result
+
+| Check | Result |
+|-------|--------|
+| Header **Änderungen speichern** / **Abbrechen** / **+ Aufgabe**; no bottom Save/Cancel | **PASS** |
+| Worthy change + Tournament-style impact surface | **PASS** |
+| Empty audience **Keine Zielgruppe festgelegt** + Empfänger **—** | **PASS** |
+| **Zielgruppe festlegen** jumps to Teilnehmer section (anchor) | **FAIL_UX** — loses collaboration context on long edit page |
+| UAT-R3-04 … UAT-R3-06 | **BLOCKED** on contextual audience flow |
+
+**01C remains:** IMPLEMENTED / **HUMAN_UAT_PENDING** (not CLOSED).
+
+### R4 fix — contextual audience configuration (no page jump)
+
+| Area | Change |
+|------|--------|
+| Trigger | **Zielgruppe festlegen** is a button (not `#veranstaltung-edit-participants-heading`) |
+| Presentation | SCE `Dialog` + `ContextualClubEventParticipationAudienceDialog` (Tournamentcenter/SCE modal language) |
+| Editor reuse | `ClubEventParticipationAudienceEditorCore` shared by Teilnehmer section and contextual dialog; same `/api/events/[eventId]/participation-audience` persistence + `useCollaborationMutation` lifecycle |
+| Teilnehmer | Page section unchanged — second entry point to the same canonical editor |
+| Labels | Human-readable Team / Organisationseinheit / Rolle / Person (no raw enum in UI) |
+| Save / cancel | **Speichern** persists pending selection, refreshes audience/recipient preview + `canCommunicate`, closes dialog; **Abbrechen** closes without mutation; unresolved `ActivityChange` preserved |
+| Scroll | No hash navigation / `scrollIntoView` for contextual action |
+| Change set | Audience configuration still not an `ActivityChangeSet` entry |
+
+### Tests
+
+- `lib/collaboration/__tests__/sce-collab-01c-r4-verification.test.tsx` (R4-01 … R4-24 subset)
+- Updated `sce-collab-01c-r3-verification.test.tsx` (configure action no longer anchor)
+- Re-run 01A / 01B / 01C / bounded regressions on branch
+
+### Human UAT R4 (after deploy)
+
+| ID | Expectation |
+|----|-------------|
+| UAT-R4-01 | Time change save → Tournament-style surface |
+| UAT-R4-02 | **Zielgruppe festlegen** opens in-place audience dialog — **no** jump to page bottom |
+| UAT-R4-03 | Select audience + **Speichern** → dialog closes; time change still unresolved; audience not listed as change |
+| UAT-R4-04 | Surface shows Zielgruppe + Empfänger + **Änderung kommunizieren** without another event edit |
+| UAT-R4-05 | Composer matches Tournamentcenter; Empfänger **0** → Send disabled |
+| UAT-R4-06 | Composer **Abbrechen** → unresolved surface remains |
+
+**COLLAB-01 status:** **IN_PROGRESS** (01A/01B CLOSED; 01C Human UAT R4 pending).
