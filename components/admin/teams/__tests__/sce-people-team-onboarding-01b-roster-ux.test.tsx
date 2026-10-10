@@ -36,7 +36,7 @@ const teamSeason = {
   status: "ACTIVE",
   squadWebsiteVisible: true,
   season: baseSeason,
-  teamAgeGroup: "F2",
+  teamAgeGroup: "F",
   playerSquadMembers: [] as [],
 };
 
@@ -205,6 +205,154 @@ describe("TeamSquadManagementCard onboarding UX", () => {
     await waitFor(() => {
       expect(screen.getByText(/people\.manage/)).toBeInTheDocument();
       expect(screen.queryByTestId("team-squad-enable-player-capacity")).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows missing DOB guidance for junior teams without empty Jahrgänge label", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = String(input);
+        if (url.includes("/roster-onboarding/person-context")) {
+          return new Response(
+            JSON.stringify({
+              person: {
+                id: "person-no-dob",
+                firstName: "Ohne",
+                lastName: "Geburt",
+                displayName: null,
+                dateOfBirth: null,
+                isActive: true,
+                isPlayer: true,
+                isTrainer: false,
+              },
+              squadMembership: null,
+              trainerMembership: null,
+              otherActivePlayerSquads: [],
+              otherActiveTrainerTeams: [],
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes("/api/people/search")) {
+          return new Response(
+            JSON.stringify([
+              {
+                id: "person-no-dob",
+                firstName: "Ohne",
+                lastName: "Geburt",
+                displayName: null,
+                email: null,
+                phone: null,
+                dateOfBirth: null,
+                isPlayer: true,
+                isTrainer: false,
+              },
+            ]),
+            { status: 200 },
+          );
+        }
+        return new Response(JSON.stringify({}), { status: 200 });
+      }),
+    );
+
+    render(
+      <TeamSquadManagementCard
+        teamId="team-1"
+        canManage
+        canManagePeople
+        teamSeason={teamSeason}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("team-squad-empty-add-button"));
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "Ohne" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Ohne Geburt")).toBeInTheDocument();
+    });
+
+    fireEvent.mouseDown(screen.getByText("Ohne Geburt"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("team-roster-eligibility-notice")).toHaveTextContent(
+        "Zuordnung noch nicht möglich",
+      );
+      expect(screen.getByTestId("team-roster-eligibility-person-edit-cta")).toBeInTheDocument();
+      expect(screen.getByText(/Erlaubte Jahrgänge:/)).toBeInTheDocument();
+      expect(screen.queryByText(/Erlaubte Jahrgänge: \./)).not.toBeInTheDocument();
+    });
+  });
+
+  it("allows assign preview for unrestricted senior teams without DOB", async () => {
+    const seniorSeason = {
+      ...teamSeason,
+      teamAgeGroup: "40+",
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = String(input);
+        if (url.includes("/roster-onboarding/person-context")) {
+          return new Response(
+            JSON.stringify({
+              person: {
+                id: "person-senior",
+                firstName: "Senior",
+                lastName: "Spieler",
+                displayName: null,
+                dateOfBirth: null,
+                isActive: true,
+                isPlayer: true,
+                isTrainer: false,
+              },
+              squadMembership: null,
+              trainerMembership: null,
+              otherActivePlayerSquads: [],
+              otherActiveTrainerTeams: [],
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes("/api/people/search")) {
+          return new Response(
+            JSON.stringify([
+              {
+                id: "person-senior",
+                firstName: "Senior",
+                lastName: "Spieler",
+                displayName: null,
+                email: null,
+                phone: null,
+                dateOfBirth: null,
+                isPlayer: true,
+                isTrainer: false,
+              },
+            ]),
+            { status: 200 },
+          );
+        }
+        return new Response(JSON.stringify({}), { status: 200 });
+      }),
+    );
+
+    render(
+      <TeamSquadManagementCard teamId="team-sen" canManage teamSeason={seniorSeason} />,
+    );
+
+    fireEvent.click(screen.getByTestId("team-squad-empty-add-button"));
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "Senior" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Senior Spieler")).toBeInTheDocument();
+    });
+
+    fireEvent.mouseDown(screen.getByText("Senior Spieler"));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("team-roster-eligibility-notice")).not.toBeInTheDocument();
+      expect(screen.getByTestId("team-squad-add-confirm")).not.toBeDisabled();
     });
   });
 

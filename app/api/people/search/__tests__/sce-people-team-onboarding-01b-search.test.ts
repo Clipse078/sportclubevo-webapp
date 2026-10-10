@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   requireContext: vi.fn(),
   teamSeasonFindFirst: vi.fn(),
   personFindMany: vi.fn(),
-  getAllowedBirthYearsForSeason: vi.fn(),
+  resolveTeamBirthYearEligibility: vi.fn(),
 }));
 
 vi.mock("@/lib/permissions/require-api-tenant-context", () => ({
@@ -17,8 +17,8 @@ vi.mock("@/lib/db/prisma", () => ({
     person: { findMany: mocks.personFindMany },
   },
 }));
-vi.mock("@/lib/teams/jahrgang-rules", () => ({
-  getAllowedBirthYearsForSeason: mocks.getAllowedBirthYearsForSeason,
+vi.mock("@/lib/teams/player-birth-year-eligibility", () => ({
+  resolveTeamBirthYearEligibility: mocks.resolveTeamBirthYearEligibility,
 }));
 
 import { GET } from "@/app/api/people/search/route";
@@ -29,7 +29,12 @@ beforeEach(() => {
     ok: true,
     context: { tenantId: "tenant-a", actorUserId: "actor-a" },
   });
-  mocks.getAllowedBirthYearsForSeason.mockReturnValue([2012]);
+  mocks.resolveTeamBirthYearEligibility.mockReturnValue({
+    mode: "JUNIOR_BIRTH_YEAR",
+    allowedBirthYears: [2012],
+    rawAgeGroup: "F2",
+    normalizedJuniorCode: "F",
+  });
 });
 
 describe("SCE-PEOPLE-TEAM-ONBOARDING-01B people search roster context", () => {

@@ -15,10 +15,13 @@ import {
   enablePersonCapacity,
   fetchRosterPersonContext,
 } from "@/components/admin/teams/roster/roster-onboarding-client";
+import { getCanonicalSeasonLabel } from "@/lib/teams/jahrgang-rules";
+import { evaluatePlayerBirthYearEligibility } from "@/lib/teams/player-birth-year-eligibility";
 import {
-  getAllowedBirthYearsForSeason,
-  getCanonicalSeasonLabel,
-} from "@/lib/teams/jahrgang-rules";
+  formatAllowedBirthYearsLabel,
+  presentRosterBirthYearEligibility,
+} from "@/lib/teams/roster-eligibility-presentation";
+import TeamRosterEligibilityNotice from "@/components/admin/teams/roster/TeamRosterEligibilityNotice";
 import {
   mapRosterFetchErrorMessage,
   squadMembershipStatusHint,
@@ -133,8 +136,14 @@ export default function TeamSquadManagementCard({
     return getCanonicalSeasonLabel(teamSeason.season.startDate) ?? teamSeason.season.name;
   }, [teamSeason.season.startDate, teamSeason.season.name]);
 
-  const allowedBirthYears = useMemo(() => {
-    return getAllowedBirthYearsForSeason(teamSeason.teamAgeGroup, teamSeason.season.startDate);
+  const allowedBirthYearsLabel = useMemo(() => {
+    const evaluation = evaluatePlayerBirthYearEligibility({
+      categoryCode: teamSeason.teamAgeGroup,
+      seasonStartDate: teamSeason.season.startDate,
+      birthDate: null,
+    });
+
+    return formatAllowedBirthYearsLabel(evaluation.allowedBirthYears);
   }, [teamSeason.teamAgeGroup, teamSeason.season.startDate]);
 
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -165,6 +174,35 @@ export default function TeamSquadManagementCard({
     () => activeMembers.map((member) => member.person.id),
     [activeMembers],
   );
+
+  const selectedPersonEligibility = useMemo(() => {
+    if (!selectedPerson) {
+      return null;
+    }
+
+    const evaluation = evaluatePlayerBirthYearEligibility({
+      categoryCode: teamSeason.teamAgeGroup,
+      seasonStartDate: teamSeason.season.startDate,
+      birthDate: selectedPerson.dateOfBirth,
+    });
+
+    return presentRosterBirthYearEligibility({
+      kind: evaluation.kind,
+      allowedBirthYears: evaluation.allowedBirthYears,
+      birthYear: evaluation.birthYear,
+      personId: selectedPerson.id,
+      canEditPerson: canManagePeople,
+      returnTo: `/dashboard/teams/${teamId}/kader`,
+    });
+  }, [
+    canManagePeople,
+    selectedPerson,
+    teamId,
+    teamSeason.season.startDate,
+    teamSeason.teamAgeGroup,
+  ]);
+
+  const blockAssignBecauseEligibility = selectedPersonEligibility != null;
 
   const seasonMutable = teamSeason.status === "ACTIVE";
 
@@ -384,17 +422,10 @@ export default function TeamSquadManagementCard({
         </p>
       ) : null}
 
-      {allowedBirthYears.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {allowedBirthYears.map((year) => (
-            <span
-              key={year}
-              className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-xs text-[var(--text-2)]"
-            >
-              {year}
-            </span>
-          ))}
-        </div>
+      {allowedBirthYearsLabel ? (
+        <p className="mt-3 text-xs text-[var(--muted)]">
+          Erlaubte Jahrgänge: {allowedBirthYearsLabel}
+        </p>
       ) : null}
 
       <Sheet
@@ -411,7 +442,12 @@ export default function TeamSquadManagementCard({
               variant="primary"
               size="sm"
               loading={assignLoading}
-              disabled={!selectedPerson || blockAssignBecauseActive || !seasonMutable}
+              disabled={
+                !selectedPerson ||
+                blockAssignBecauseActive ||
+                blockAssignBecauseEligibility ||
+                !seasonMutable
+              }
               onClick={handleAssign}
               data-testid="team-squad-add-confirm"
             >
@@ -472,6 +508,10 @@ export default function TeamSquadManagementCard({
                 </p>
               ) : null}
 
+              {selectedPersonEligibility ? (
+                <TeamRosterEligibilityNotice presentation={selectedPersonEligibility} />
+              ) : null}
+
               {personContext && !personContext.person.isPlayer ? (
                 <div className={rosterContextNoticeClass}>
                   <p className="font-medium text-[var(--foreground)]">Keine Spieler-Kapazität</p>
@@ -511,7 +551,9 @@ export default function TeamSquadManagementCard({
                 </div>
               ) : null}
 
-              {!blockAssignBecauseActive && personContext?.person.isPlayer !== false ? (
+              {!blockAssignBecauseActive &&
+              !blockAssignBecauseEligibility &&
+              personContext?.person.isPlayer !== false ? (
                 <>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <label className="block">

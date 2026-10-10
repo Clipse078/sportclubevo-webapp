@@ -5,9 +5,9 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01B-R3 ready for Human UAT) |
+| **Mode** | IN_PROGRESS (01B-R4 ready for Human UAT) |
 | **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
-| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_SUPERSEDED_BY_R3 / HUMAN_UAT_R3_PENDING |
+| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_SUPERSEDED_BY_R3 / HUMAN_UAT_R3_SUPERSEDED_BY_R4 / HUMAN_UAT_R4_PENDING |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
 | **PR** | #814 (DRAFT) |
@@ -166,9 +166,44 @@ Human UAT R2 findings:
 - `lib/teams/__tests__/team-roster-navigation.test.ts`
 - Updated person CTA expectations + `team-cockpit-metrics` ACTIVE filter
 
-**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R3_PENDING
+**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R3_SUPERSEDED_BY_R4
 
-### Human UAT (01B-R3 — pending)
+### Slice 01B-R4 — Player eligibility / birth-date / year-group integrity (2026-10-10)
+
+Human UAT R3 finding (Senioren 40+ / Michael Duijster):
+
+| Symptom | Root cause |
+|---------|------------|
+| Kader add blocked with «Kein Geburtsdatum … Erlaubte Jahrgänge: .» | `Team.ageGroup` for Senioren teams (e.g. `40+`) is **not** a canonical junior category code (`F`, `E`, …). `getAllowedBirthYearsForSeason` returned `[]`, but roster service still treated missing DOB as a jahrgang failure and appended an empty «Erlaubte Jahrgänge» suffix. |
+
+**Canonical eligibility sources (unchanged model, clarified semantics):**
+
+| Input | Source |
+|-------|--------|
+| Person birth date | `Person.dateOfBirth` (editable via `/dashboard/persons/[id]/edit` — Stammdaten section, `people.manage`) |
+| Junior birth-year bands | `Team.ageGroup` junior code + `Season.startDate` → `lib/teams/jahrgang-rules.ts` (`BASE_JAHRGANG_BY_CODE`, season shift) |
+| Senioren / adult teams | No formal 40+ age rule in code today — `40+`, `30+`, `Aktive`, empty `ageGroup`, and other non-junior labels → **unrestricted** (no birth-year gate) |
+| Malformed junior config | Non-canonical junior-looking labels (e.g. `F2` instead of `F`) → **CONFIG_INCOMPLETE** (actionable admin message, not a silent Person workaround) |
+
+**Implementation:**
+
+- `lib/teams/player-birth-year-eligibility.ts` — `resolveTeamBirthYearEligibility` + `evaluatePlayerBirthYearEligibility`
+- `lib/teams/roster-eligibility-presentation.ts` — semantic German copy (missing DOB, outside range, incomplete team config); never renders empty «Erlaubte Jahrgänge»
+- `TeamSquadManagementCard` — proactive eligibility notice + optional CTA «Geburtsdatum in Stammdaten ergänzen» (`people.manage`) with safe `returnTo` back to Kader
+- `PersonForm` + `lib/navigation/safe-internal-return-path.ts` — post-save return to originating dashboard route
+- Roster service + people search roster context aligned with unrestricted vs junior modes
+
+**Roster integrity (unchanged):** `PersonAssignment` ≠ Kader count; only ACTIVE `PlayerSquadMember` on the active `TeamSeason`. No COMM-03 fallback recipients. No STAGE DB patch.
+
+**Tests:** `lib/teams/__tests__/sce-people-team-onboarding-01b-r4-player-eligibility.test.ts` + extended roster UX tests; 01A/01B regression suites.
+
+**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / **HUMAN_UAT_R4_PENDING**
+
+### Human UAT (01B-R4 — pending)
+
+See PR #814 R4 checklist: Senioren 40+ eligibility message, optional DOB remediation via Person edit + return to Kader, canonical `PlayerSquadMember` creation when eligible, F2 / Trainerteam / Person Overview / Team Directory regression.
+
+### Human UAT (01B-R3 — superseded by R4)
 
 See PR #814 R3 checklist: Team Directory dark UX, F2 cockpit regression, Person overview, Senioren 40+ completion via product UI (no manual DB edits).
 

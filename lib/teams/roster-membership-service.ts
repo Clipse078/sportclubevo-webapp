@@ -12,7 +12,8 @@ import {
   type TeamSeasonStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { isBirthYearAllowedForTeamSeason } from "@/lib/teams/jahrgang-rules";
+import { evaluatePlayerBirthYearEligibility } from "@/lib/teams/player-birth-year-eligibility";
+import { rosterEligibilityErrorMessage } from "@/lib/teams/roster-eligibility-presentation";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -238,7 +239,7 @@ export async function addPlayerToTeamSeason(
     };
   }
 
-  const jahrgangCheck = isBirthYearAllowedForTeamSeason({
+  const jahrgangCheck = evaluatePlayerBirthYearEligibility({
     categoryCode: teamSeason.team.ageGroup,
     seasonStartDate: teamSeason.season.startDate,
     birthDate: person.dateOfBirth,
@@ -248,12 +249,11 @@ export async function addPlayerToTeamSeason(
     return {
       ok: false,
       code: "JAHRGANG_NOT_ALLOWED",
-      message:
-        "Spieler kann diesem Team nicht zugewiesen werden. " +
-        jahrgangCheck.reason +
-        " Erlaubte Jahrgänge: " +
-        jahrgangCheck.allowedBirthYears.join(", ") +
-        ".",
+      message: rosterEligibilityErrorMessage({
+        kind: jahrgangCheck.kind,
+        allowedBirthYears: jahrgangCheck.allowedBirthYears,
+        birthYear: jahrgangCheck.birthYear,
+      }),
     };
   }
 

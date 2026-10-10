@@ -44,8 +44,8 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/teams/jahrgang-rules", () => ({
-  isBirthYearAllowedForTeamSeason: mocks.jahrgang,
+vi.mock("@/lib/teams/player-birth-year-eligibility", () => ({
+  evaluatePlayerBirthYearEligibility: mocks.jahrgang,
 }));
 
 import {
@@ -127,8 +127,10 @@ beforeEach(() => {
   mocks.teamSeasonFindFirst.mockResolvedValue(ACTIVE_TEAM_SEASON);
   mocks.jahrgang.mockReturnValue({
     ok: true,
+    kind: "ELIGIBLE",
     allowedBirthYears: [2017, 2018],
     birthYear: 2017,
+    teamContext: { mode: "JUNIOR_BIRTH_YEAR", allowedBirthYears: [2017, 2018] },
   });
   mocks.playerFindUnique.mockResolvedValue(null);
   mocks.trainerFindUnique.mockResolvedValue(null);
