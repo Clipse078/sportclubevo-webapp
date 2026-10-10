@@ -14,6 +14,7 @@ import { buildTrainingSeriesWochenplanerHref } from "@/lib/training/wochenplaner
 import { formatTrainingSeriesEditHeaderMeta } from "@/lib/training/training-series-edit-presentation";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import TrainingSeriesRecordWorkspace from "@/components/admin/training/record/TrainingSeriesRecordWorkspace";
+import { TrainingSeriesCollaborationHost } from "@/components/admin/collaboration/TrainingSeriesCollaborationHost";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -133,6 +134,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
     ) : null;
 
   return (
+    <TrainingSeriesCollaborationHost trainingSeriesId={series.id}>
     <TrainingSeriesRecordWorkspace
       seriesId={series.id}
       seriesStatus={series.status}
@@ -195,5 +197,6 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
         />
       }
     />
+    </TrainingSeriesCollaborationHost>
   );
 }

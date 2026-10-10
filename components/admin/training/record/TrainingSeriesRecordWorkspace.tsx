@@ -26,6 +26,8 @@ import {
   ParticipationSeriesPolicyEditor,
   type ParticipationSeriesPolicyValues,
 } from "@/components/admin/participation/ParticipationSeriesPolicyEditor";
+import { useActivityChangeCollaboration } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+import type { MultiActivityChangeImpact } from "@/lib/collaboration/multi-activity/types";
 
 export type TeamSeasonOption = {
   id: string;
@@ -166,6 +168,7 @@ export default function TrainingSeriesRecordWorkspace({
   relatedTasksPanel,
 }: Props) {
   const router = useRouter();
+  const { setMultiImpact } = useActivityChangeCollaboration();
 
   const [teamSeasonId] = useState(defaultValues.teamSeasonId);
   const [title, setTitle] = useState(defaultValues.title);
@@ -315,14 +318,20 @@ export default function TrainingSeriesRecordWorkspace({
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        generation?: { occurrencesInWindow: number; updated: number; unchanged: number };
+        multiActivityCollaboration?: MultiActivityChangeImpact | null;
+      };
       if (!res.ok) {
         setError(data?.error ?? "Fehler beim Speichern.");
         return;
       }
 
+      setMultiImpact(data.multiActivityCollaboration ?? null);
+
       setSaveSuccess(
-        `${data.generation.occurrencesInWindow} Termine — ${data.generation.updated} aktualisiert, ${data.generation.unchanged} unverändert.`,
+        `${data.generation?.occurrencesInWindow ?? 0} Termine — ${data.generation?.updated ?? 0} aktualisiert, ${data.generation?.unchanged ?? 0} unverändert.`,
       );
       router.refresh();
     } catch {

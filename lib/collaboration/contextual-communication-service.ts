@@ -42,6 +42,13 @@ import {
 } from "@/lib/collaboration/training/training-activity-change";
 import { resolveContextualCommunicationSendAuthorization } from "@/lib/collaboration/contextual-communication-authorization";
 import { buildActivityChangeFingerprint } from "@/lib/collaboration/activity-change/fingerprint";
+import type { MultiActivityChangeSet } from "@/lib/collaboration/multi-activity/types";
+import { buildMultiActivityBatchFingerprint } from "@/lib/collaboration/multi-activity/batch-fingerprint";
+import {
+  buildMultiTrainingChangeAnnouncementBody,
+  buildMultiTrainingChangeSubject,
+} from "@/lib/collaboration/multi-activity/multi-activity-presentation";
+import { resolveMultiActivityTrainingDispatchPreview } from "@/lib/collaboration/multi-activity/multi-activity-dispatch-preview";
 import { filterCommunicationWorthyChanges } from "@/lib/collaboration/activity-change/policy";
 import type { TrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
 import { loadClubEventActivitySnapshot } from "@/lib/collaboration/club-event/club-event-activity-snapshot";
@@ -1085,6 +1092,229 @@ export async function publishPreparedClubEventActivityChangeCommunication(input:
     tenantId: input.tenantId,
     communicationId: row.id,
     senderUserId: input.senderUserId,
+  });
+
+  return { communicationId: published.id, recipientCount: published.recipientCount };
+}
+
+async function findExistingMultiActivityChangeDraft(input: {
+  tenantId: string;
+  teamId: string;
+  senderUserId: string;
+  batchFingerprint: string;
+}): Promise<{ id: string } | null> {
+  const rows = await prisma.platformCommunication.findMany({
+    where: {
+      tenantId: input.tenantId,
+      status: "DRAFT",
+      createdByUserId: input.senderUserId,
+      conversation: { teamId: input.teamId },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: { id: true, orchestrationMetaJson: true },
+  });
+
+  for (const row of rows) {
+    const meta = parseActivityChangeOrchestrationMeta(row.orchestrationMetaJson);
+    if (!meta?.multiActivityBatch) continue;
+    if (meta.changeFingerprint !== input.batchFingerprint) continue;
+    return { id: row.id };
+  }
+  return null;
+}
+
+function validateMultiActivityChangeSet(multiChangeSet: MultiActivityChangeSet): void {
+  if (multiChangeSet.domain !== "TRAINING") {
+    throw new TeamCommunicationValidationError("unsupported multi-activity domain");
+  }
+  if (multiChangeSet.changeSets.length === 0) {
+    throw new TeamCommunicationValidationError("multi-activity changeSet is empty");
+  }
+  const expectedBatchFingerprint = buildMultiActivityBatchFingerprint(multiChangeSet.changeSets);
+  if (expectedBatchFingerprint !== multiChangeSet.batchFingerprint) {
+    throw new TeamCommunicationValidationError("invalid multi-activity batch fingerprint");
+  }
+  for (const changeSet of multiChangeSet.changeSets) {
+    if (changeSet.domain !== "TRAINING") {
+      throw new TeamCommunicationValidationError("mixed domains in multi-activity batch");
+    }
+    assertChangeSetFingerprint(changeSet);
+  }
+}
+
+export async function prepareMultiTrainingActivityChangeCommunicationDraft(input: {
+  tenantId: string;
+  tenantKey: string;
+  senderUserId: string;
+  trainingSeriesId: string;
+  multiChangeSet: MultiActivityChangeSet;
+}): Promise<PrepareContextualCommunicationResult> {
+  validateMultiActivityChangeSet(input.multiChangeSet);
+
+  const snapshots: TrainingActivitySnapshot[] = [];
+  for (const changeSet of input.multiChangeSet.changeSets) {
+    const snapshot = await loadTrainingActivitySnapshot({
+      tenantId: input.tenantId,
+      sessionId: changeSet.activityId,
+    });
+    if (!snapshot) {
+      throw new TeamCommunicationNotFoundError("training session not found");
+    }
+    validateChangeSetAgainstCurrentSnapshot(snapshot, changeSet);
+    snapshots.push(snapshot);
+  }
+
+  const teamId = input.multiChangeSet.teamId;
+  const teamName = snapshots[0]?.teamName?.trim() || "Team";
+
+  const { canCommunicate } = await resolveContextualCommunicationSendAuthorization({
+    tenantId: input.tenantId,
+    tenantKey: input.tenantKey,
+    userId: input.senderUserId,
+    teamId,
+  });
+  if (!canCommunicate) {
+    throw new TeamCommunicationForbiddenError("TEAM_COMMUNICATION_SEND_DENIED");
+  }
+
+  const summaries = snapshots.map((snapshot, index) => ({
+    scheduleLine: snapshot.scheduleLine,
+    dateKey: snapshot.dateKey,
+    entries: input.multiChangeSet.changeSets[index]!.entries,
+  }));
+
+  const subject = buildMultiTrainingChangeSubject(teamName, summaries.length);
+  const bodyText = buildMultiTrainingChangeAnnouncementBody({ summaries });
+
+  const existing = await findExistingMultiActivityChangeDraft({
+    tenantId: input.tenantId,
+    teamId,
+    senderUserId: input.senderUserId,
+    batchFingerprint: input.multiChangeSet.batchFingerprint,
+  });
+
+  const anchorSessionId = input.multiChangeSet.changeSets[0]!.activityId;
+  const anchorSnapshot = snapshots[0]!;
+  const audienceSpec = defaultTeamOperationalAudience(teamId);
+  const audienceLabel = teamName;
+
+  if (existing) {
+    return attachPrepareDispatchPreview({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      eventId: anchorSessionId,
+      audienceSpec,
+      audienceLabel,
+      base: {
+        draftId: existing.id,
+        teamId,
+        redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${existing.id}`,
+        reusedExistingDraft: true,
+        subject,
+        bodyText,
+      },
+    });
+  }
+
+  const orchestrationMeta = buildActivityChangeOrchestrationMeta({
+    activityDomain: "TRAINING",
+    activityId: anchorSessionId,
+    changeFingerprint: input.multiChangeSet.batchFingerprint,
+    multiActivityBatch: true,
+    batchOperationId: input.multiChangeSet.batchOperationId,
+    relatedActivityIds: input.multiChangeSet.changeSets.map((row) => row.activityId),
+    relatedChangeFingerprints: input.multiChangeSet.changeSets.map((row) => row.fingerprint),
+    eventAnchor: {
+      eventKind: "TRAINING",
+      trainingSessionId: anchorSessionId,
+      teamSeasonId: anchorSnapshot.teamSeasonId,
+      contextEventId: anchorSessionId,
+    },
+  });
+
+  const draft = await createTeamCommunicationDraft({
+    tenantId: input.tenantId,
+    teamId,
+    senderUserId: input.senderUserId,
+    kind: "ANNOUNCEMENT",
+    subject,
+    bodyText,
+    audienceSpec,
+    contextRef: eventCommunicationContext(anchorSessionId),
+    orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
+  });
+
+  const unionPreview = await resolveMultiActivityTrainingDispatchPreview({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    sessionIds: input.multiChangeSet.changeSets.map((row) => row.activityId),
+    audience: audienceSpec,
+  });
+
+  return {
+    draftId: draft.id,
+    teamId,
+    redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${draft.id}`,
+    reusedExistingDraft: false,
+    subject,
+    bodyText,
+    audienceLabel,
+    recipientCount: unionPreview.recipientCount,
+    canDispatch: unionPreview.canDispatch,
+  };
+}
+
+export async function publishPreparedMultiTrainingActivityChangeCommunication(input: {
+  tenantId: string;
+  tenantKey: string;
+  senderUserId: string;
+  teamId: string;
+  draftId: string;
+  subject?: string | null;
+  bodyText?: string | null;
+}): Promise<{ communicationId: string; recipientCount: number }> {
+  const { canCommunicate } = await resolveContextualCommunicationSendAuthorization({
+    tenantId: input.tenantId,
+    tenantKey: input.tenantKey,
+    userId: input.senderUserId,
+    teamId: input.teamId,
+  });
+  if (!canCommunicate) {
+    throw new TeamCommunicationForbiddenError("TEAM_COMMUNICATION_SEND_DENIED");
+  }
+
+  const row = await prisma.platformCommunication.findFirst({
+    where: { id: input.draftId, tenantId: input.tenantId, status: "DRAFT" },
+    include: { conversation: { select: { teamId: true } } },
+  });
+  if (!row) throw new TeamCommunicationNotFoundError();
+  if (row.conversation.teamId !== input.teamId) {
+    throw new TeamCommunicationNotFoundError();
+  }
+
+  const meta = parseActivityChangeOrchestrationMeta(row.orchestrationMetaJson);
+  if (!meta?.multiActivityBatch) {
+    throw new TeamCommunicationValidationError("not a multi-activity change draft");
+  }
+
+  const nextSubject = input.subject?.trim() || row.subject;
+  const nextBody = input.bodyText?.trim() || row.bodyText;
+  if (!nextBody?.trim()) {
+    throw new TeamCommunicationValidationError("body is required");
+  }
+
+  await prisma.platformCommunication.update({
+    where: { id: row.id },
+    data: { subject: nextSubject, bodyText: nextBody },
+  });
+
+  const published = await publishTeamCommunication({
+    tenantId: input.tenantId,
+    teamId: input.teamId,
+    communicationId: row.id,
+    senderUserId: input.senderUserId,
+    preservePreparedAudience: true,
   });
 
   return { communicationId: published.id, recipientCount: published.recipientCount };

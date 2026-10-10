@@ -14,10 +14,15 @@ import type {
   ActivityCollaborationDomain,
 } from "@/lib/collaboration/activity-change/types";
 import type { CollaborationCycleBaseline } from "@/lib/collaboration/activity-change/cycle-baseline";
+import type { MultiActivityChangeImpact } from "@/lib/collaboration/multi-activity/types";
 
 type ActivityChangeCollaborationContextValue = {
   impact: ActivityChangeImpact | null;
   setImpact: (impact: ActivityChangeImpact | null) => void;
+  multiImpact: MultiActivityChangeImpact | null;
+  setMultiImpact: (impact: MultiActivityChangeImpact | null) => void;
+  dismissMultiImpact: () => void;
+  acknowledgeMultiCommunicationSent: () => void;
   dismissImpact: () => void;
   getCycleBaselineForRequest: (
     domain: ActivityCollaborationDomain,
@@ -43,15 +48,27 @@ type StoredCycle = {
 
 export function ActivityChangeCollaborationProvider({ children }: { children: ReactNode }) {
   const [impact, setImpactState] = useState<ActivityChangeImpact | null>(null);
+  const [multiImpact, setMultiImpactState] = useState<MultiActivityChangeImpact | null>(null);
   const cycleRef = useRef<StoredCycle | null>(null);
 
   const setImpact = useCallback((next: ActivityChangeImpact | null) => {
+    setMultiImpactState(null);
     setImpactState(next?.worthy ? next : null);
+  }, []);
+
+  const setMultiImpact = useCallback((next: MultiActivityChangeImpact | null) => {
+    cycleRef.current = null;
+    setImpactState(null);
+    setMultiImpactState(next?.worthy ? next : null);
   }, []);
 
   const clearCycle = useCallback(() => {
     cycleRef.current = null;
     setImpactState(null);
+  }, []);
+
+  const clearMultiImpact = useCallback(() => {
+    setMultiImpactState(null);
   }, []);
 
   const dismissImpact = useCallback(() => {
@@ -61,6 +78,14 @@ export function ActivityChangeCollaborationProvider({ children }: { children: Re
   const acknowledgeCommunicationSent = useCallback(() => {
     clearCycle();
   }, [clearCycle]);
+
+  const dismissMultiImpact = useCallback(() => {
+    clearMultiImpact();
+  }, [clearMultiImpact]);
+
+  const acknowledgeMultiCommunicationSent = useCallback(() => {
+    clearMultiImpact();
+  }, [clearMultiImpact]);
 
   const setCycleBaseline = useCallback(
     (
@@ -94,6 +119,10 @@ export function ActivityChangeCollaborationProvider({ children }: { children: Re
     () => ({
       impact,
       setImpact,
+      multiImpact,
+      setMultiImpact,
+      dismissMultiImpact,
+      acknowledgeMultiCommunicationSent,
       dismissImpact,
       getCycleBaselineForRequest,
       getExistingCycleBaseline,
@@ -103,6 +132,10 @@ export function ActivityChangeCollaborationProvider({ children }: { children: Re
     [
       impact,
       setImpact,
+      multiImpact,
+      setMultiImpact,
+      dismissMultiImpact,
+      acknowledgeMultiCommunicationSent,
       dismissImpact,
       getCycleBaselineForRequest,
       getExistingCycleBaseline,

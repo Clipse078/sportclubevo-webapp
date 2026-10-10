@@ -25,6 +25,8 @@ type Props = {
   canDispatch: boolean;
   onClose: () => void;
   onPublished: () => void;
+  /** SCE-COLLAB-01D — override publish endpoint (e.g. training-series batch). */
+  publishPath?: string;
 };
 
 export function ContextualActivityCommunicationComposer({
@@ -40,6 +42,7 @@ export function ContextualActivityCommunicationComposer({
   canDispatch,
   onClose,
   onPublished,
+  publishPath,
 }: Props) {
   const t = useTranslations("Collaboration.activityChange");
   const subjectId = useId();
@@ -56,7 +59,9 @@ export function ContextualActivityCommunicationComposer({
     setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch(contextualPublishCommunicationPath(domain, activityId), {
+        const res = await fetch(
+          publishPath ?? contextualPublishCommunicationPath(domain, activityId),
+          {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

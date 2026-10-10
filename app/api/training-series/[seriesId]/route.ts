@@ -24,6 +24,9 @@ import { generateTrainingSessions } from "@/lib/training/session-generation-serv
 import { TrainingSeriesNotFoundError, TrainingSeriesValidationError, TrainingSeriesConflictError } from "@/lib/training/errors";
 import { parseWeekdaySchedules, parseRequiredDate } from "@/lib/training/series-request-helpers";
 import type { PlanningRecord } from "@/lib/planning/planning-authorization-policy";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { loadTrainingSeriesActivitySnapshots } from "@/lib/collaboration/training/load-training-series-activity-snapshots";
+import { buildTrainingSeriesMutationCollaborationImpact } from "@/lib/collaboration/training/training-series-mutation-collaboration";
 
 type Params = { params: Promise<{ seriesId: string }> };
 
@@ -93,6 +96,16 @@ export async function PUT(request: NextRequest, { params }: Params) {
   const schedules = parseWeekdaySchedules(body.weekdaySchedules);
   if (!schedules.ok) return NextResponse.json({ error: schedules.error }, { status: 400 });
 
+  let beforeSnapshots: Awaited<ReturnType<typeof loadTrainingSeriesActivitySnapshots>> | null = null;
+  try {
+    beforeSnapshots = await loadTrainingSeriesActivitySnapshots({
+      tenantId,
+      trainingSeriesId: seriesId,
+    });
+  } catch {
+    beforeSnapshots = null;
+  }
+
   try {
     await updateTrainingSeries(tenantId, seriesId, {
       title,
@@ -113,7 +126,27 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
     const series = await getTrainingSeries(tenantId, seriesId);
 
-    return NextResponse.json({ series, generation });
+    let multiActivityCollaboration: Awaited<
+      ReturnType<typeof buildTrainingSeriesMutationCollaborationImpact>
+    > = null;
+    if (beforeSnapshots) {
+      try {
+        const tenant = await getActiveTenant();
+        if (tenant) {
+          multiActivityCollaboration = await buildTrainingSeriesMutationCollaborationImpact({
+            tenantId,
+            tenantKey: tenant.key,
+            userId,
+            trainingSeriesId: seriesId,
+            beforeSnapshots,
+          });
+        }
+      } catch {
+        multiActivityCollaboration = null;
+      }
+    }
+
+    return NextResponse.json({ series, generation, multiActivityCollaboration });
   } catch (err) {
     if (err instanceof TrainingSeriesValidationError) {
       return NextResponse.json({ error: err.message }, { status: 400 });
