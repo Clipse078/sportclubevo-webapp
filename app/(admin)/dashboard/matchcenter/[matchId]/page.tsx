@@ -12,6 +12,7 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import MatchSquadSection from "@/components/admin/matchcenter/MatchSquadSection";
 import { loadMatchPlanningParticipants } from "@/lib/planning/load-match-planning-participants";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import {
@@ -172,6 +173,8 @@ export default async function MatchcenterDetailPage({
     </PlanningEditorParticipantsSection>
   );
 
+  const matchSquadSection = <MatchSquadSection matchId={match.id} />;
+
   const collaborationSection = (
     <PlanningEditorCollaborationSection
       headingId="spiele-edit-collaboration-heading"
@@ -205,6 +208,7 @@ export default async function MatchcenterDetailPage({
         isProtectedSource={isProtectedSource}
         tenantLogoUrl={tenantContext.logoUrl}
         participantsSection={participantsSection}
+        matchSquadSection={matchSquadSection}
         collaborationSection={collaborationSection}
       />
     </ToastProvider>

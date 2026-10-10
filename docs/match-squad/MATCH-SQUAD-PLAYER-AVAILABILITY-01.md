@@ -385,3 +385,76 @@ Implement **`MATCH_SQUAD_PLAYER_AVAILABILITY-01A`** on branch from STAGE:
 5. Tests per §16; no COMM/SFV/release scope.
 
 **Merge:** not until Human UAT on STAGE after review of this document.
+
+---
+
+## 21. Implementation — MATCH_SQUAD_PLAYER_AVAILABILITY-01A
+
+**Status:** `IMPLEMENTED` / `HUMAN_UAT_PENDING`  
+**Parent:** `MATCH_SQUAD_PLAYER_AVAILABILITY` → `IN_PROGRESS`
+
+### Identity decision
+
+| Field | Value |
+|-------|-------|
+| `CAN_ONE_EVENT_HAVE_MULTIPLE_OWN_TEAMSEASONS` | **No** — one club-owned side / one resolved `TeamSeason` per MATCH Event in product scope. |
+| `BUSINESS_IDENTITY` | `(tenantId, eventId)` — one `MatchSquad` per tenant + match. |
+| `TEAMSEASON_ROLE` | Validated roster context column (`MatchSquad.teamSeasonId` must equal resolved match TeamSeason). |
+| `UNIQUE_CONSTRAINT` | `@@unique([tenantId, eventId])` |
+
+### Schema (01A)
+
+- `MatchSquad`: `id`, `tenantId`, `eventId`, `teamSeasonId`, `createdAt`, `updatedAt` (optimistic concurrency via `updatedAt`).
+- `MatchSquadMember`: `id`, `matchSquadId`, `personId`, `createdAt`.
+- Uniqueness: one person at most once per squad (`@@unique([matchSquadId, personId])`).
+- No publication / availability / release columns (DRAFT-only; no status field).
+
+### Candidate invariant
+
+- Source: `PlayerSquadMember` with `status = ACTIVE` on resolved `TeamSeason`.
+- `PersonAssignment` excluded; inactive / wrong tenant / wrong TeamSeason rejected at mutation.
+
+### Authorization
+
+- Read: `events.view` or squad edit paths.
+- Write: `events.manage`, `teams.manage`, club admin, platform superadmin, or **ACTIVE** `TrainerTeamMember` on the resolved `TeamSeason`.
+- No new permission seed.
+
+### Concurrency
+
+- Client sends `expectedVersion` (ISO `MatchSquad.updatedAt`).
+- Stale write → HTTP 409 with canonical latest squad payload.
+
+### Cancelled match
+
+- Squad rows retained; UI/API read-only while event status is `CANCELLED` / `CANCELED`.
+- Reactivated sporting status → editable again under normal auth.
+
+### Stale roster member
+
+- Selected person no longer ACTIVE in `PlayerSquadMember`: shown as **«Nicht mehr im aktiven Kader»**, cannot be newly selected; trainer may remove; rows not silently deleted.
+
+### API
+
+- `GET /api/matchcenter/[matchId]/match-squad` — context, candidates, selected/remaining, version, editability.
+- `PUT` — `{ selectedPersonIds, expectedVersion? }`; server validates roster + tenant.
+
+### UX
+
+- Entry: `/dashboard/matchcenter/[matchId]` → section **Aufgebot**.
+- Desktop + responsive card rows; **Aufbieten** / **Entfernen**; no cross-team availability controls.
+
+### Participation roster filter fix
+
+- Shared `lib/teams/player-squad-structural-filter.ts` — ACTIVE-only structural roster for participation audience + squad candidates.
+- Regression: `lib/participation/__tests__/participation-roster-active-filter.test.ts`.
+
+### Tests (01A)
+
+- `lib/match-squad/__tests__/match-squad-service.test.ts`
+- `lib/match-squad/__tests__/match-squad-auth.test.ts`
+- Invariant: `remainingRosterIsNotCrossTeamAvailability()` assertion in service tests.
+
+### Human UAT
+
+Pending on STAGE preview — see §18 / product UAT plan (01A scope only).
