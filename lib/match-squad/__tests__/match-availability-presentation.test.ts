@@ -20,6 +20,25 @@ describe("match-availability-presentation", () => {
     expect(getMatchParticipationStatusPresentation("OPEN").tone).toBe("muted");
   });
 
+  it("assigns icon + label for text-not-color-only semantics", () => {
+    expect(getMatchParticipationStatusPresentation("YES")).toMatchObject({
+      label: "Verfügbar",
+      icon: "check",
+    });
+    expect(getMatchParticipationStatusPresentation("NO")).toMatchObject({
+      label: "Nicht verfügbar",
+      icon: "x",
+    });
+    expect(getMatchParticipationStatusPresentation("MAYBE")).toMatchObject({
+      label: "Unsicher",
+      icon: "help",
+    });
+    expect(getMatchParticipationStatusPresentation("OPEN")).toMatchObject({
+      label: "Offen",
+      icon: "circle",
+    });
+  });
+
   it("preserves MAYBE vs OPEN presentation status", () => {
     expect(mapParticipationStatusToMatchPresentationStatus("OPEN")).toBe("OPEN");
     expect(mapParticipationStatusToMatchPresentationStatus("MAYBE")).toBe("MAYBE");

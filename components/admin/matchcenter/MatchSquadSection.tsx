@@ -123,6 +123,14 @@ function PlayerCard({
             tone={player.presentationTone}
             icon={player.presentationIcon}
           />
+          {player.responseProvenanceLabel ? (
+            <span
+              className="text-[10px] text-[var(--muted)]"
+              data-testid={`match-squad-provenance-${player.personId}`}
+            >
+              {player.responseProvenanceLabel}
+            </span>
+          ) : null}
           {player.availabilityConflict ? (
             <MatchAvailabilityConflictBadge testId={`match-squad-conflict-${player.personId}`} />
           ) : null}
@@ -130,7 +138,6 @@ function PlayerCard({
         <p className="truncate text-[10px] text-[var(--muted)]">
           {player.shirtNumber != null ? `#${player.shirtNumber}` : "Kader"}
           {player.rosterIneligibleLabel ? ` · ${player.rosterIneligibleLabel}` : ""}
-          {player.responseProvenanceLabel ? ` · ${player.responseProvenanceLabel}` : ""}
         </p>
       </div>
       {canManageAvailability ? (
@@ -139,6 +146,7 @@ function PlayerCard({
           personId={player.personId}
           displayName={player.displayName}
           disabled={disabled}
+          hasParticipationResponse={player.participationStatus !== null}
           onRecorded={onAvailabilityRecorded}
         />
       ) : null}

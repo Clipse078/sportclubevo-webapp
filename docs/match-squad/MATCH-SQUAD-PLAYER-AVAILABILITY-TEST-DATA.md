@@ -32,6 +32,10 @@ ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created vi
 
 **FINAL_MODULE_CLEANUP_REQUIRED:** remove Persons + squad memberships + module-created participation rows; never remove real FC Allschwil roster data.
 
+## 01B Human UAT R1 (2026-10-10)
+
+Controlled match `cmrzhj3je006a04kwhbepxvdz` may show **KEINE ANFRAGE** while `ParticipationResponse` rows from earlier 01A/UAT seeding remain. That is intentional test history: responses are valid without an active request (offline/historical). Do not delete UAT responses to clean screenshots.
+
 ## 01B notes (2026-10-10)
 
 | Field | Value |

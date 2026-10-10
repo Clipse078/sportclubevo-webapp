@@ -22,12 +22,14 @@ function SummaryChip({
   label,
   value,
   tone,
+  icon,
   onClick,
   pressed,
 }: {
   label: string;
   value: number;
   tone: "success" | "danger" | "warning" | "muted" | "default";
+  icon: "check" | "x" | "help" | "circle";
   onClick?: () => void;
   pressed?: boolean;
 }) {
@@ -39,7 +41,7 @@ function SummaryChip({
     <MatchAvailabilityStatusBadge
       label={`${label} ${value}`}
       tone={chipTone}
-      icon="circle"
+      icon={icon}
       size="md"
     />
   );
@@ -66,21 +68,22 @@ export default function MatchSquadCountsSummary({
       className="mb-4 flex flex-wrap gap-2"
       data-testid="match-squad-counts-summary"
     >
-      <SummaryChip label="Kader" value={counts.rosterTotal} tone="default" />
+      <SummaryChip label="Kader" value={counts.rosterTotal} tone="default" icon="circle" />
       {counts.available > 0 ? (
-        <SummaryChip label="Verfügbar" value={counts.available} tone="success" />
+        <SummaryChip label="Verfügbar" value={counts.available} tone="success" icon="check" />
       ) : null}
       {counts.unavailable > 0 ? (
-        <SummaryChip label="Nicht verfügbar" value={counts.unavailable} tone="danger" />
+        <SummaryChip label="Nicht verfügbar" value={counts.unavailable} tone="danger" icon="x" />
       ) : null}
       {counts.maybe > 0 ? (
-        <SummaryChip label="Unsicher" value={counts.maybe} tone="warning" />
+        <SummaryChip label="Unsicher" value={counts.maybe} tone="warning" icon="help" />
       ) : null}
       {counts.open > 0 ? (
         <SummaryChip
           label="Offen"
           value={counts.open}
           tone="muted"
+          icon="circle"
           onClick={
             onFilterChange
               ? () => onFilterChange(activeFilter === "OPEN" ? "ALL" : "OPEN")
@@ -90,10 +93,10 @@ export default function MatchSquadCountsSummary({
         />
       ) : null}
       {counts.selected > 0 ? (
-        <SummaryChip label="Aufgeboten" value={counts.selected} tone="default" />
+        <SummaryChip label="Aufgeboten" value={counts.selected} tone="default" icon="circle" />
       ) : null}
       {counts.conflicts > 0 ? (
-        <SummaryChip label="Zu prüfen" value={counts.conflicts} tone="warning" />
+        <SummaryChip label="Zu prüfen" value={counts.conflicts} tone="warning" icon="help" />
       ) : null}
     </div>
   );

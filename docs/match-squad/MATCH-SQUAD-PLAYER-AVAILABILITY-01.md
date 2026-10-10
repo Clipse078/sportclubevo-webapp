@@ -1017,7 +1017,7 @@ Match-relative `participationResponseDueAt` on `Event` (timezone via tenant). No
 
 | Surface | Behaviour |
 |---------|-----------|
-| **Trainer / Aufgebot** | `MatchAvailabilityCollectionPanel` — Rückmeldung bis, Erinnerung (Offen only), provenance on rows, trainer «Verfügbarkeit» menu, Offen filter chip |
+| **Trainer / Aufgebot** | `MatchAvailabilityCollectionPanel` — Rückmeldung bis, Erinnerung (Offen only), provenance on rows, trainer «Rückmeldung eintragen / verwalten» proxy menu, Offen filter chip |
 | **Player / guardian** | Match wording on activity detail + Meine Aufgaben inline (`Verfügbar` / `Nicht verfügbar` / `Unsicher`) when request active |
 | **APIs** | Reuse `PATCH …/participation-request`; new `POST …/participation-response`, `POST …/participation-reminder`; squad GET includes `availabilityCollection` meta |
 
@@ -1028,6 +1028,18 @@ No `PlayerRelease`, no cross-team visibility, no selection mutation from availab
 ### Reschedule policy
 
 Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirmation after material reschedule = future product policy.
+
+### 01B Human UAT R1 — availability ownership & presentation (2026-10-10)
+
+| Topic | Decision |
+|-------|----------|
+| **Finding** | Trainer row action «Verfügbarkeit» implied the trainer *owns* availability; UAT rejected trainer-as-primary-respondent UX. |
+| **Canonical owner** | **Player** or **parent/guardian** answer «Can / will this player participate?» via `ParticipationResponse`. |
+| **Trainer role** | **Consume** responses for Aufgebot; **optionally record offline/proxy** responses with `responseSource = TRAINER` (never masquerade as PLAYER/PARENT). |
+| **DISPLAY STATE ≠ ACTOR** | Status badge shows canonical YES/NO/MAYBE/OPEN; trainer uses «Rückmeldung eintragen / verwalten» and «Rückmeldung zurücksetzen» (not «Offen» as a fourth affirmative choice). |
+| **Provenance** | Visible from `responseSource`: PLAYER → «Vom Spieler», PARENT → «Von Eltern bestätigt», TRAINER → «Vom Trainer eingetragen», STAFF → staff label; OPEN/missing → no invented provenance. |
+| **Existing responses without active request** | Legitimate (historical/offline); **KEINE ANFRAGE** does not delete or invalidate stored `ParticipationResponse`. |
+| **01C boundary** | Unchanged — no release, borrowing, or cross-team discovery in this remediation. |
 
 ### Match lifecycle
 

@@ -9,7 +9,7 @@ export function getParticipationResponseProvenanceLabel(
 ): string | null {
   switch (source) {
     case "PLAYER":
-      return "Vom Spieler bestätigt";
+      return "Vom Spieler";
     case "PARENT":
       return "Von Eltern bestätigt";
     case "TRAINER":
