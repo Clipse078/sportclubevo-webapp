@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import { Loader2, Minus, Plus } from "lucide-react";
+import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
 type SquadPayload = {
@@ -93,11 +94,15 @@ function PlayerCard({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-[var(--foreground)]">{player.displayName}</p>
         <p
-          className="truncate text-[10px] text-[var(--muted)]"
+          className={`truncate text-[10px] ${
+            player.availabilityConflict
+              ? "font-semibold text-[var(--warning)]"
+              : "text-[var(--muted)]"
+          }`}
           data-testid={`match-squad-availability-${player.personId}`}
         >
           {availabilityIcon(player.availability)} {player.availabilityLabel}
-          {player.availabilityConflict ? " · Konflikt: Spieler ist aufgeboten" : ""}
+          {player.availabilityConflict ? " · Nicht verfügbar – Aufgebot prüfen" : ""}
         </p>
         <p className="truncate text-[10px] text-[var(--muted)]">
           {player.shirtNumber != null ? `#${player.shirtNumber}` : "Kader"}
@@ -309,8 +314,12 @@ export default function MatchSquadSection({ matchId }: Props) {
               Weitere Kaderspieler · {optimisticRemaining.length} Spieler
             </h3>
             {optimisticRemaining.length === 0 ? (
-              <p className="text-sm text-[var(--muted)]" data-testid="match-squad-empty-remaining">
-                Alle aktiven Kaderspieler sind aufgeboten.
+              <p
+                className="text-sm text-[var(--muted)]"
+                data-testid="match-squad-empty-remaining"
+                data-roster-total={data.counts?.rosterTotal ?? 0}
+              >
+                {matchSquadRemainingEmptyMessage(data.counts?.rosterTotal ?? 0)}
               </p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2">
