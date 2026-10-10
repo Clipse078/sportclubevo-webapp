@@ -23,7 +23,7 @@ export type SubmitParticipationPersonalActionInput = {
   eventKind: "TRAINING" | "MATCH" | "TOURNAMENT";
   trainingSessionId?: string;
   eventId?: string;
-  status: "YES" | "NO";
+  status: "YES" | "NO" | "MAYBE" | "OPEN";
 };
 
 export type SubmitParticipationPersonalActionResult =

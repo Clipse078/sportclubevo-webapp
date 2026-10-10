@@ -12,7 +12,7 @@ export type SportingActivityDetailParticipationSubmitResult =
 
 export async function submitSportingActivityDetailParticipation(input: {
   participation: SportingActivityDetailParticipation;
-  status: "YES" | "NO";
+  status: "YES" | "NO" | "MAYBE";
 }): Promise<SportingActivityDetailParticipationSubmitResult> {
   const session = await auth();
   if (!session?.user?.id) {

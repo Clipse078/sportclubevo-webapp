@@ -12,7 +12,12 @@ import {
   mapParticipationStatusToMatchAvailability,
 } from "@/lib/match-squad/availability-adapter";
 import { getMatchParticipationStatusPresentation } from "@/lib/match-squad/match-availability-presentation";
-import type { ParticipationResponseStatus, PlayerSquadStatus } from "@prisma/client";
+import type {
+  ParticipationResponseSource,
+  ParticipationResponseStatus,
+  PlayerSquadStatus,
+} from "@prisma/client";
+import { getParticipationResponseProvenanceLabel } from "@/lib/match-squad/participation-provenance-labels";
 import type {
   MatchSquadCounts,
   MatchSquadPlayerPresentation,
@@ -76,6 +81,7 @@ type ParticipationRow = {
   personId: string;
   status: ParticipationResponseStatus;
   note: string | null;
+  responseSource: ParticipationResponseSource | null;
 };
 
 async function loadCurrentRosterRows(teamSeasonId: string, tenantId: string): Promise<RosterRow[]> {
@@ -120,6 +126,7 @@ async function loadParticipationByPerson(
       personId: true,
       status: true,
       note: true,
+      responseSource: true,
     },
   });
   return new Map(rows.map((row) => [row.personId, row]));
@@ -161,6 +168,10 @@ function buildPlayerPresentation(input: {
     presentationIcon: presentation.icon,
     participationStatus: input.participation?.status ?? null,
     participationNote: input.participation?.note ?? null,
+    responseSource: input.participation?.responseSource ?? null,
+    responseProvenanceLabel: getParticipationResponseProvenanceLabel(
+      input.participation?.responseSource,
+    ),
     selected: input.selected,
     availabilityConflict,
     staleRosterSelection,

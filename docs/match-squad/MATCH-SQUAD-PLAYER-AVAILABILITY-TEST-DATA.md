@@ -30,7 +30,31 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
+## 01B Human UAT R2.2 (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **PO result** | **PASS** |
+| **Controlled match** | `cmrzhj3je006a04kwhbepxvdz` |
+| **01B slice status** | **CLOSED** (PR **#821**) |
+
+Some retained UAT `ParticipationResponse` rows may still carry **historical** `responseSource = TRAINER` or `STAFF` from superseded 01B UAT iterations (proxy recording). **Do not SQL-rewrite** for prettier screenshots. Match Squad UI shows canonical status only (Verfügbar / Nicht verfügbar / Unsicher / Offen). **FINAL_MODULE_CLEANUP_REQUIRED:** `TEST_DATA_REMAINING = 0` at parent module closure (unchanged).
+
 **FINAL_MODULE_CLEANUP_REQUIRED:** remove Persons + squad memberships + module-created participation rows; never remove real FC Allschwil roster data.
+
+## 01B Human UAT R1 (2026-10-10)
+
+Controlled match `cmrzhj3je006a04kwhbepxvdz` may show **KEINE ANFRAGE** while `ParticipationResponse` rows from earlier 01A/UAT seeding remain. That is intentional test history: responses are valid without an active request (offline/historical). Do not delete UAT responses to clean screenshots.
+
+## 01B notes (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Module slice** | 01B availability collection UX |
+| **New persistent records** | None required — reuses existing ParticipationResponse + Event deadline fields |
+| **UAT match** | `cmrzhj3je006a04kwhbepxvdz` (configure `participationResponseDueAt` for request-active UAT) |
+| **LEDGER update** | No new Person/Squad rows in 01B code path |
+| **01B closure** | **CLOSED** 2026-10-10 — ledger unchanged; fixtures retained for 01C–01F |
 
 ## 01A closure (2026-10-10)
 

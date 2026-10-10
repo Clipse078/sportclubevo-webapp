@@ -1,4 +1,8 @@
-import type { ParticipationResponseStatus, PlayerSquadStatus } from "@prisma/client";
+import type {
+  ParticipationResponseSource,
+  ParticipationResponseStatus,
+  PlayerSquadStatus,
+} from "@prisma/client";
 import type { MatchPlayerAvailability } from "@/lib/match-squad/availability-adapter";
 import type {
   MatchAvailabilityTone,
@@ -20,6 +24,8 @@ export type MatchSquadPlayerPresentation = {
   presentationIcon: "check" | "x" | "help" | "circle";
   participationStatus: ParticipationResponseStatus | null;
   participationNote: string | null;
+  responseSource: ParticipationResponseSource | null;
+  responseProvenanceLabel: string | null;
   selected: boolean;
   availabilityConflict: boolean;
   staleRosterSelection: boolean;
@@ -40,6 +46,21 @@ export type MatchSquadCounts = {
   conflicts: number;
 };
 
+export type MatchAvailabilityCollectionMetaView = {
+  participationResponseDueAt: string | null;
+  participationReminder1At: string | null;
+  participationReminder2At: string | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
+  requestActive: boolean;
+  readOnlyReason: string | null;
+  canConfigureRequest: boolean;
+  canSendReminder: boolean;
+  reminderCandidateId: string;
+  outstandingPlayerCount: number;
+  reminderDeliveryTargetCount: number | null;
+};
+
 export type MatchSquadViewModel = {
   eventId: string;
   teamId: string;
@@ -53,4 +74,5 @@ export type MatchSquadViewModel = {
   selectedPersonIds: string[];
   remainingPersonIds: string[];
   counts: MatchSquadCounts;
+  availabilityCollection?: MatchAvailabilityCollectionMetaView;
 };

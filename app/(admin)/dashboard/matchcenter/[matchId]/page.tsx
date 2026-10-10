@@ -195,7 +195,7 @@ export default async function MatchcenterDetailPage({
   ) : null;
 
   const matchSquadSection = integratedMatchSquadWorkspace.available ? (
-    <MatchSquadSection matchId={match.id} />
+    <MatchSquadSection matchId={match.id} timeZone={timeZone} />
   ) : null;
 
   const collaborationSection = (
