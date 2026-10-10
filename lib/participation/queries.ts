@@ -6,6 +6,7 @@
 
 import type { AttendanceEventKind } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { structuralPlayerSquadMemberWhere } from "@/lib/teams/player-squad-structural-filter";
 import {
   getParticipationEventKindLabel,
   getParticipationResponseSourceLabel,
@@ -47,7 +48,7 @@ export async function getParticipationForEvent(
   const [squadMembers, responses] = await Promise.all([
     prisma.playerSquadMember.findMany({
       where: {
-        teamSeasonId,
+        ...structuralPlayerSquadMemberWhere(teamSeasonId),
         teamSeason: {
           team: { tenantId },
         },
