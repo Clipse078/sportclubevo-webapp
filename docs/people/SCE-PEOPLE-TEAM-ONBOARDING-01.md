@@ -11,8 +11,10 @@
 | **Canonical STAGE baseline (pre-#814)** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **PR** | [#814](https://github.com/Clipse078/sportclubevo-webapp/pull/814) → STAGE |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
-| **Feature HEAD (pre-merge)** | `74a8d1b0c18070b45d5ee0272dd5432fe9c40b02` |
-| **STAGE merge SHA** | *(set at merge — see closure gate below)* |
+| **Feature HEAD (pre-merge tip)** | `a2916368a759d79136d958b60702356ba7ac1185` |
+| **PR #814 merge commit** | `05b881fbb45277d01df3ee372ee25e9e78b101b5` |
+| **Canonical STAGE SHA (post-merge)** | `05b881fbb45277d01df3ee372ee25e9e78b101b5` |
+| **Vercel STAGE deployment (2026-10-10)** | `GCtzNBr4CigswCnhVa9wc8AKDgSX` — GitHub commit status SUCCESS |
 | **STAGE data mutated during discovery / 01A** | No |
 | **STAGE data mutated during R4 Human UAT** | Yes — supported product UI only (`PlayerSquadMember` `cmv270j5v000006jqg6ui6ypv`) |
 | **Schema / migration / prod** | Untouched |
