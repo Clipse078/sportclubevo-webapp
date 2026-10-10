@@ -15,8 +15,18 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
   ),
 }));
 
@@ -54,7 +64,7 @@ beforeEach(() => {
               firstName: "Max",
               lastName: "Muster",
               displayName: null,
-              dateOfBirth: "2012-01-01T00:00:00.000Z",
+              dateOfBirth: "2018-01-01T00:00:00.000Z",
               isActive: true,
               isPlayer: true,
               isTrainer: false,
@@ -83,7 +93,7 @@ beforeEach(() => {
               displayName: null,
               email: null,
               phone: null,
-              dateOfBirth: "2012-01-01T00:00:00.000Z",
+              dateOfBirth: "2018-01-01T00:00:00.000Z",
               isPlayer: true,
               isTrainer: false,
             },
@@ -274,14 +284,11 @@ describe("TeamSquadManagementCard onboarding UX", () => {
 
     fireEvent.mouseDown(screen.getByText("Ohne Geburt"));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("team-roster-eligibility-notice")).toHaveTextContent(
-        "Zuordnung noch nicht möglich",
-      );
-      expect(screen.getByTestId("team-roster-eligibility-person-edit-cta")).toBeInTheDocument();
-      expect(screen.getByText(/Erlaubte Jahrgänge:/)).toBeInTheDocument();
-      expect(screen.queryByText(/Erlaubte Jahrgänge: \./)).not.toBeInTheDocument();
-    });
+    const notice = await screen.findByRole("alert");
+    expect(notice).toHaveTextContent("Zuordnung noch nicht möglich");
+    expect(screen.getByTestId("team-roster-eligibility-person-edit-cta")).toBeInTheDocument();
+    expect(notice).toHaveTextContent("Erlaubte Jahrgänge:");
+    expect(notice.textContent).not.toMatch(/Erlaubte Jahrgänge:\s*\./);
   });
 
   it("allows assign preview for unrestricted senior teams without DOB", async () => {
