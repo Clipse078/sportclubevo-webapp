@@ -26,8 +26,9 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
  *      Normal assignment card.
  *
  * PersonAssignment functions shown as "Weitere Funktionen" ONLY when they are
- * not already surfaced in the incomplete (State B) section — preventing the
- * same team/role from appearing twice in conflicting contexts.
+ * not already surfaced in the incomplete (State B) section and do not repeat
+ * a complete current-season PlayerSquadMember / TrainerTeamMember for the
+ * same team (see person-overview-assignment-projection).
  *
  * PERSON-UX-09 removal semantics:
  *   - Squad membership (State C Spieler):      DELETE /api/people/[id]/squad-memberships/[sid]
@@ -61,14 +62,11 @@ import type {
   PersonTrainerMembership,
 } from "@/lib/people/queries";
 import type { PersonDetail } from "@/lib/people/queries";
-import { getPersonFunctionLabel, PERSON_FUNCTION_GROUPS } from "@/lib/people/functions";
+import { getPersonFunctionLabel } from "@/lib/people/functions";
+import { buildPersonOverviewAssignmentProjection } from "@/lib/people/person-overview-assignment-projection";
 import { EmptyState } from "@/components/ui/page";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
-
-/** functionKey sets for player and trainer capacities */
-const PLAYER_FUNCTION_KEYS = new Set<string>(PERSON_FUNCTION_GROUPS.SPIELER);
-const TRAINER_FUNCTION_KEYS = new Set<string>(PERSON_FUNCTION_GROUPS.TRAINER_STAFF);
 
 type PersonOverviewTabProps = {
   person: PersonDetail & {
@@ -414,32 +412,15 @@ export default function PersonWorkspaceOverviewTab({
   const isPlayerProfile = person.isPlayer === true;
   const isTrainerProfile = person.isTrainer === true;
 
-  const playerCompleteTeamIds = new Set(activeSquadMemberships.map((sm) => sm.teamSeason.team.id));
-  const trainerCompleteTeamIds = new Set(activeTrainerMemberships.map((tm) => tm.teamSeason.team.id));
-
-  const incompletePlayerAssignments = activeAssignments.filter(
-    (a) =>
-      a.functionKey !== null &&
-      a.functionKey !== undefined &&
-      PLAYER_FUNCTION_KEYS.has(a.functionKey) &&
-      a.team != null &&
-      !playerCompleteTeamIds.has(a.team.id),
-  );
-  const incompleteTrainerAssignments = activeAssignments.filter(
-    (a) =>
-      a.functionKey !== null &&
-      a.functionKey !== undefined &&
-      TRAINER_FUNCTION_KEYS.has(a.functionKey) &&
-      a.team != null &&
-      !trainerCompleteTeamIds.has(a.team.id),
-  );
-
-  const suppressedFromWeitere = new Set<string>([
-    ...incompletePlayerAssignments.map((a) => a.id),
-    ...incompleteTrainerAssignments.map((a) => a.id),
-  ]);
-
-  const weitereAssignments = activeAssignments.filter((a) => !suppressedFromWeitere.has(a.id));
+  const {
+    incompletePlayerAssignments,
+    incompleteTrainerAssignments,
+    weitereAssignments,
+  } = buildPersonOverviewAssignmentProjection({
+    assignments: activeAssignments,
+    squadMemberships: person.squadMemberships,
+    trainerMemberships: person.trainerMemberships,
+  });
 
   const activeTeamIds = new Set<string>();
   const activeTeamNames: string[] = [];
