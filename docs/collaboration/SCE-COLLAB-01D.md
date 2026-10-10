@@ -8,6 +8,8 @@
 | Status | **CLOSED** (PR [#816](https://github.com/Clipse078/sportclubevo-webapp/pull/816) → STAGE; Human UAT R2 **PASS** 2026-10-10) |
 | Parent SCE-COLLAB-01 | **CLOSED** (01A–01D delivered; see parent doc) |
 | Feature head (implementation) | `60d4377a57812afae9c17c33c2164bb914e9ca85` |
+| STAGE merge SHA (PR #816) | `b90a617a7bd7ae28cadc59d776c8263bf3b54b4f` |
+| Merged at | 2026-10-10T11:23:41Z |
 | Schema / migration | **NO** |
 | STAGE baseline at slice start | `e16a6d983601a1cfde9ad9273f2e1036e8007000` |
 
