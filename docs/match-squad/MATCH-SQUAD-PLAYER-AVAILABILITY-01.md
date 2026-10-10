@@ -261,16 +261,9 @@ Conceptual aggregates ( **not implemented** — schema in 01B–01C):
 
 ---
 
-## 14. Package breakdown (validated)
+## 14. Package breakdown (superseded by §21 R1 table)
 
-| Slice | Scope |
-|-------|--------|
-| **01A** | Match squad foundation: resolve roster → select/unselect → persist draft → auth |
-| **01B** | Explicit release + conditions + lifecycle |
-| **01C** | Cross-team discovery + request + home approval + concurrency |
-| **01D** | Player/guardian confirmation + safeguarding |
-| **01E** | Squad publish comm + Mein Programm integration |
-| **01F** | Match-relative reminders + club UAT |
+See **§21 R1** for the current 01A–01F split.
 
 **Consolidation:** 01E may merge with COLLAB if “squad published” uses existing prepare/publish; 01F depends on domain attention patterns (`lib/domain-attention/`).
 
@@ -388,7 +381,74 @@ Implement **`MATCH_SQUAD_PLAYER_AVAILABILITY-01A`** on branch from STAGE:
 
 ---
 
-## 21. Implementation — MATCH_SQUAD_PLAYER_AVAILABILITY-01A
+## 21. R1 — Availability × Trainer Selection (foundation correction)
+
+**Status:** `IMPLEMENTED` / `HUMAN_UAT_PENDING` (trainer combined view; availability creation UI unchanged)  
+**Branch / PR:** `cursor/match-squad-player-availability-01a-match-squad-foundation-b3de` / #819
+
+### Canonical formula (locked)
+
+```text
+ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATCH-SQUAD STATE
+```
+
+| Signal | Canonical persistence | Owner |
+|--------|----------------------|--------|
+| Roster eligibility | `PlayerSquadMember` on resolved `TeamSeason` (`ACTIVE` \| `INJURED` \| `ABSENT` = current Kader) | Season roster |
+| Match availability | `ParticipationResponse` per `(personId, eventId)` for `eventKind = MATCH` | Player / guardian (`PLAYER` / `PARENT`); trainer offline via existing team API (`TRAINER` + `teams.manage`) |
+| Trainer selection | `MatchSquadMember` on `MatchSquad` | Authorized trainer / team management |
+
+**No cross-signal mutation:** availability writes never create/delete squad members; squad mutations never fabricate participation responses.
+
+**Derived states (not persisted):** e.g. `UNKNOWN + selected`, `UNAVAILABLE + selected` → `availabilityConflict`; `AVAILABLE + selected` → operational ready candidate. `NOT_SELECTED + AVAILABLE` ≠ cross-team release (01C).
+
+### ParticipationResponse diagnosis (R1)
+
+| Question | Answer |
+|----------|--------|
+| Event + person scoped? | **Yes** — `@@unique([personId, eventId])` for MATCH/TOURNAMENT/CLUB_EVENT |
+| One canonical response per player/event? | **Yes** |
+| Guardian on behalf of junior? | **Yes** — `assertActorCanRespondForPerson` + `responseSource: PARENT` |
+| Audit / provenance? | **Yes** — `respondedByUserId`, `responseSource`, `respondedAt`, `note` |
+| Match-specific? | **Yes** — same model for TRAINING / MATCH / TOURNAMENT / CLUB_EVENT via `eventKind` |
+| Safe as match availability? | **Yes (Option C)** — persistence unchanged; `lib/match-squad/availability-adapter.ts` maps `OPEN`/`MAYBE` → `UNKNOWN`, `YES` → `AVAILABLE`, `NO` → `UNAVAILABLE` |
+
+### Availability architecture decision
+
+- **Selected:** **Option C** — reuse `ParticipationResponse` persistence + match-squad domain adapter/read model.
+- **No** `MatchSquadMember.available` / duplicated availability column.
+
+### PlayerSquadMember status semantics (R1)
+
+| Status | Structurally in Kader? | Team comm / participation audience? | Match squad candidate? | Default availability implication |
+|--------|------------------------|-------------------------------------|------------------------|----------------------------------|
+| ACTIVE | Yes | Yes | Yes | None (use participation) |
+| INJURED | Yes | Yes | Yes | None — injury may end before match |
+| ABSENT | Yes | Yes | Yes | None — operational absence ≠ match RSVP |
+| INACTIVE | No | No | No | N/A |
+| ARCHIVED | No | No | No | N/A |
+
+**COMM-03 / participation audience (R1):** refined from pre-01A “all statuses” and incorrect 01A “ACTIVE-only” to **`ACTIVE` + `INJURED` + `ABSENT`** via `currentSeasonRosterPlayerSquadMemberWhere` — aligns with `team-communication-authorization-scope` without excluding injured/absent Kader members.
+
+### Package breakdown (01A–01F)
+
+| Slice | Scope |
+|-------|--------|
+| **01A** | Match squad + availability-aware foundation (adapter, combined trainer workspace, counts, conflict flags; no release) |
+| **01B** | Availability collection & player/guardian UX (requests, deadlines, notes) |
+| **01C** | Explicit cross-team release |
+| **01D** | Cross-team discovery / request / approval |
+| **01E** | Assignment + communication |
+| **01F** | Operational intelligence + club-scale UAT |
+
+### Tests added (R1)
+
+- `lib/match-squad/__tests__/availability-adapter.test.ts`
+- `lib/match-squad/__tests__/match-squad-combined-states.test.ts` — six combinations + cross-signal invariants
+
+---
+
+## 22. Implementation — MATCH_SQUAD_PLAYER_AVAILABILITY-01A
 
 **Status:** `IMPLEMENTED` / `HUMAN_UAT_PENDING`  
 **Parent:** `MATCH_SQUAD_PLAYER_AVAILABILITY` → `IN_PROGRESS`
@@ -411,8 +471,8 @@ Implement **`MATCH_SQUAD_PLAYER_AVAILABILITY-01A`** on branch from STAGE:
 
 ### Candidate invariant
 
-- Source: `PlayerSquadMember` with `status = ACTIVE` on resolved `TeamSeason`.
-- `PersonAssignment` excluded; inactive / wrong tenant / wrong TeamSeason rejected at mutation.
+- Source: current season Kader — `PlayerSquadMember.status ∈ { ACTIVE, INJURED, ABSENT }` on resolved `TeamSeason`.
+- `PersonAssignment` excluded; INACTIVE/ARCHIVED / wrong tenant / wrong TeamSeason rejected at mutation.
 
 ### Authorization
 
@@ -444,10 +504,15 @@ Implement **`MATCH_SQUAD_PLAYER_AVAILABILITY-01A`** on branch from STAGE:
 - Entry: `/dashboard/matchcenter/[matchId]` → section **Aufgebot**.
 - Desktop + responsive card rows; **Aufbieten** / **Entfernen**; no cross-team availability controls.
 
-### Participation roster filter fix
+### Participation roster filter (R1)
 
-- Shared `lib/teams/player-squad-structural-filter.ts` — ACTIVE-only structural roster for participation audience + squad candidates.
+- Shared `lib/teams/player-squad-structural-filter.ts` — `currentSeasonRosterPlayerSquadMemberWhere` for participation audience + squad candidates.
 - Regression: `lib/participation/__tests__/participation-roster-active-filter.test.ts`.
+
+### Availability overlay (R1)
+
+- Read model enriches each candidate with `availability`, `selected`, `availabilityConflict`, `canSelect`, `canRemove`, derived `counts`.
+- UX: Matchcenter **Aufgebot** section shows availability labels; **Aufbieten** disabled for `UNAVAILABLE` (no trainer override in 01A).
 
 ### Tests (01A)
 

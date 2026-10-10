@@ -1,16 +1,31 @@
 import type { PlayerSquadStatus, Prisma } from "@prisma/client";
 
 /**
- * Canonical structural season Kader membership for participation audience and Match Squad candidates.
- * INACTIVE / ARCHIVED rows are historical — not current roster population.
+ * Current season Kader membership (structural roster).
+ * INACTIVE / ARCHIVED are historical — not current roster population.
+ * INJURED / ABSENT remain on the Kader with operational sporting status.
  */
-export const STRUCTURAL_PLAYER_SQUAD_STATUS: PlayerSquadStatus = "ACTIVE";
+export const CURRENT_ROSTER_PLAYER_STATUSES = [
+  "ACTIVE",
+  "INJURED",
+  "ABSENT",
+] as const satisfies readonly PlayerSquadStatus[];
 
-export function structuralPlayerSquadMemberWhere(
+export function currentSeasonRosterPlayerSquadMemberWhere(
   teamSeasonId: string,
 ): Prisma.PlayerSquadMemberWhereInput {
   return {
     teamSeasonId,
-    status: STRUCTURAL_PLAYER_SQUAD_STATUS,
+    status: { in: [...CURRENT_ROSTER_PLAYER_STATUSES] },
   };
+}
+
+/** @deprecated Use currentSeasonRosterPlayerSquadMemberWhere — kept for import stability during R1. */
+export const STRUCTURAL_PLAYER_SQUAD_STATUS: PlayerSquadStatus = "ACTIVE";
+
+/** @deprecated Use currentSeasonRosterPlayerSquadMemberWhere. */
+export function structuralPlayerSquadMemberWhere(
+  teamSeasonId: string,
+): Prisma.PlayerSquadMemberWhereInput {
+  return currentSeasonRosterPlayerSquadMemberWhere(teamSeasonId);
 }

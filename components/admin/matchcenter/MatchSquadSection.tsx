@@ -14,11 +14,32 @@ type SquadPayload = {
   selected: MatchSquadPlayerPresentation[];
   remaining: MatchSquadPlayerPresentation[];
   teamDisplayName: string | null;
+  counts?: {
+    rosterTotal: number;
+    available: number;
+    unavailable: number;
+    unknown: number;
+    selected: number;
+    selectedAvailable: number;
+    selectedUnknown: number;
+    conflicts: number;
+  };
 };
 
 type Props = {
   matchId: string;
 };
+
+function availabilityIcon(availability: MatchSquadPlayerPresentation["availability"]): string {
+  switch (availability) {
+    case "AVAILABLE":
+      return "✓";
+    case "UNAVAILABLE":
+      return "✕";
+    default:
+      return "○";
+  }
+}
 
 function PlayerCard({
   player,
@@ -41,6 +62,13 @@ function PlayerCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-[var(--foreground)]">{player.displayName}</p>
+        <p
+          className="truncate text-[10px] text-[var(--muted)]"
+          data-testid={`match-squad-availability-${player.personId}`}
+        >
+          {availabilityIcon(player.availability)} {player.availabilityLabel}
+          {player.availabilityConflict ? " · Konflikt: Spieler ist aufgeboten" : ""}
+        </p>
         <p className="truncate text-[10px] text-[var(--muted)]">
           {player.shirtNumber != null ? `#${player.shirtNumber}` : "Kader"}
           {player.rosterIneligibleLabel ? ` · ${player.rosterIneligibleLabel}` : ""}
@@ -190,6 +218,23 @@ export default function MatchSquadSection({ matchId }: Props) {
         </p>
       ) : null}
 
+      {!loading && data?.counts ? (
+        <p
+          className="mb-4 text-xs text-[var(--muted)]"
+          data-testid="match-squad-counts-summary"
+        >
+          Kader: {data.counts.rosterTotal} · Verfügbar: {data.counts.available} · Nicht verfügbar:{" "}
+          {data.counts.unavailable} · Offen: {data.counts.unknown} · Aufgeboten: {data.counts.selected}
+          {data.counts.selectedAvailable > 0
+            ? ` · Aufgeboten & verfügbar: ${data.counts.selectedAvailable}`
+            : ""}
+          {data.counts.selectedUnknown > 0
+            ? ` · Aufgeboten mit offener Rückmeldung: ${data.counts.selectedUnknown}`
+            : ""}
+          {data.counts.conflicts > 0 ? ` · Konflikte: ${data.counts.conflicts}` : ""}
+        </p>
+      ) : null}
+
       {!loading && data ? (
         <div className="space-y-6">
           <section aria-labelledby="match-squad-selected-heading">
@@ -210,7 +255,7 @@ export default function MatchSquadSection({ matchId }: Props) {
                     key={player.personId}
                     player={player}
                     action="remove"
-                    disabled={!canMutate || !player.rosterEligible}
+                    disabled={!canMutate || !player.canRemove}
                     onAction={() => togglePerson(player.personId, false)}
                   />
                 ))}
@@ -236,7 +281,7 @@ export default function MatchSquadSection({ matchId }: Props) {
                     key={player.personId}
                     player={player}
                     action="add"
-                    disabled={!canMutate}
+                    disabled={!canMutate || !player.canSelect}
                     onAction={() => togglePerson(player.personId, true)}
                   />
                 ))}

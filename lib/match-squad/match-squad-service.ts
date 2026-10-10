@@ -4,14 +4,26 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { logAction } from "@/lib/audit/log-action";
-import { structuralPlayerSquadMemberWhere } from "@/lib/teams/player-squad-structural-filter";
+import { currentSeasonRosterPlayerSquadMemberWhere } from "@/lib/teams/player-squad-structural-filter";
+import {
+  canRemoveFromMatchSquad,
+  canSelectForMatchSquad,
+  hasMatchAvailabilityConflict,
+  mapParticipationStatusToMatchAvailability,
+  MATCH_AVAILABILITY_LABELS,
+} from "@/lib/match-squad/availability-adapter";
+import type { ParticipationResponseStatus, PlayerSquadStatus } from "@prisma/client";
+import type {
+  MatchSquadCounts,
+  MatchSquadPlayerPresentation,
+  MatchSquadViewModel,
+} from "@/lib/match-squad/types";
 import { resolveMatchSquadEventContext } from "@/lib/match-squad/event-context";
 import {
   MatchSquadConflictError,
   MatchSquadReadOnlyError,
   MatchSquadValidationError,
 } from "@/lib/match-squad/errors";
-import type { MatchSquadPlayerPresentation, MatchSquadViewModel } from "@/lib/match-squad/types";
 
 function formatPersonName(input: {
   firstName: string;
@@ -52,6 +64,7 @@ type RosterRow = {
   personId: string;
   shirtNumber: number | null;
   sortOrder: number;
+  status: PlayerSquadStatus;
   person: {
     firstName: string;
     lastName: string;
@@ -59,16 +72,23 @@ type RosterRow = {
   };
 };
 
-async function loadActiveRosterRows(teamSeasonId: string, tenantId: string): Promise<RosterRow[]> {
+type ParticipationRow = {
+  personId: string;
+  status: ParticipationResponseStatus;
+  note: string | null;
+};
+
+async function loadCurrentRosterRows(teamSeasonId: string, tenantId: string): Promise<RosterRow[]> {
   return prisma.playerSquadMember.findMany({
     where: {
-      ...structuralPlayerSquadMemberWhere(teamSeasonId),
+      ...currentSeasonRosterPlayerSquadMemberWhere(teamSeasonId),
       teamSeason: { team: { tenantId } },
     },
     select: {
       personId: true,
       shirtNumber: true,
       sortOrder: true,
+      status: true,
       person: {
         select: {
           firstName: true,
@@ -81,18 +101,102 @@ async function loadActiveRosterRows(teamSeasonId: string, tenantId: string): Pro
   });
 }
 
-function toPresentation(
-  row: RosterRow,
-  options?: { rosterEligible?: boolean },
-): MatchSquadPlayerPresentation {
-  const rosterEligible = options?.rosterEligible ?? true;
+async function loadParticipationByPerson(
+  tenantId: string,
+  eventId: string,
+  personIds: string[],
+): Promise<Map<string, ParticipationRow>> {
+  if (personIds.length === 0) {
+    return new Map();
+  }
+  const rows = await prisma.participationResponse.findMany({
+    where: {
+      tenantId,
+      eventId,
+      eventKind: "MATCH",
+      personId: { in: personIds },
+    },
+    select: {
+      personId: true,
+      status: true,
+      note: true,
+    },
+  });
+  return new Map(rows.map((row) => [row.personId, row]));
+}
+
+function buildPlayerPresentation(input: {
+  personId: string;
+  displayName: string;
+  shirtNumber: number | null;
+  sortOrder: number;
+  rosterEligible: boolean;
+  rosterStatus: PlayerSquadStatus | null;
+  participation: ParticipationRow | undefined;
+  selected: boolean;
+  editable: boolean;
+}): MatchSquadPlayerPresentation {
+  const availability = mapParticipationStatusToMatchAvailability(input.participation?.status);
+  const availabilityConflict = hasMatchAvailabilityConflict({
+    selected: input.selected,
+    availability,
+  });
+  const staleRosterSelection = input.selected && !input.rosterEligible;
   return {
-    personId: row.personId,
-    displayName: formatPersonName(row.person),
-    shirtNumber: row.shirtNumber,
-    sortOrder: row.sortOrder,
-    rosterEligible,
-    rosterIneligibleLabel: rosterEligible ? null : "Nicht mehr im aktiven Kader",
+    personId: input.personId,
+    displayName: input.displayName,
+    shirtNumber: input.shirtNumber,
+    sortOrder: input.sortOrder,
+    rosterEligible: input.rosterEligible,
+    rosterIneligibleLabel: input.rosterEligible ? null : "Nicht mehr im Saison-Kader",
+    rosterStatus: input.rosterStatus,
+    availability,
+    availabilityLabel: MATCH_AVAILABILITY_LABELS[availability],
+    participationStatus: input.participation?.status ?? null,
+    participationNote: input.participation?.note ?? null,
+    selected: input.selected,
+    availabilityConflict,
+    staleRosterSelection,
+    canSelect: canSelectForMatchSquad({
+      rosterEligible: input.rosterEligible,
+      editable: input.editable,
+      availability,
+    }),
+    canRemove: canRemoveFromMatchSquad({ selected: input.selected, editable: input.editable }),
+  };
+}
+
+function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts {
+  let available = 0;
+  let unavailable = 0;
+  let unknown = 0;
+  let selected = 0;
+  let selectedAvailable = 0;
+  let selectedUnknown = 0;
+  let conflicts = 0;
+
+  for (const player of players) {
+    if (player.availability === "AVAILABLE") available += 1;
+    else if (player.availability === "UNAVAILABLE") unavailable += 1;
+    else unknown += 1;
+
+    if (player.selected) {
+      selected += 1;
+      if (player.availability === "AVAILABLE") selectedAvailable += 1;
+      if (player.availability === "UNKNOWN") selectedUnknown += 1;
+      if (player.availabilityConflict) conflicts += 1;
+    }
+  }
+
+  return {
+    rosterTotal: players.length,
+    available,
+    unavailable,
+    unknown,
+    selected,
+    selectedAvailable,
+    selectedUnknown,
+    conflicts,
   };
 }
 
@@ -151,7 +255,7 @@ export async function buildMatchSquadViewModel(
   const editability = isMatchSquadEditable(context.status);
 
   const [rosterRows, squad] = await Promise.all([
-    loadActiveRosterRows(context.teamSeasonId, tenantId),
+    loadCurrentRosterRows(context.teamSeasonId, tenantId),
     prisma.matchSquad.findUnique({
       where: { tenantId_eventId: { tenantId, eventId } },
       select: { id: true, updatedAt: true, teamSeasonId: true },
@@ -160,12 +264,32 @@ export async function buildMatchSquadViewModel(
 
   const rosterByPerson = new Map(rosterRows.map((row) => [row.personId, row]));
   const selectedIds = squad ? await loadSelectedPersonIds(squad.id) : [];
+  const participationPersonIds = [
+    ...new Set([...rosterRows.map((row) => row.personId), ...selectedIds]),
+  ];
+  const participationByPerson = await loadParticipationByPerson(
+    tenantId,
+    eventId,
+    participationPersonIds,
+  );
 
   const selected: MatchSquadPlayerPresentation[] = [];
   for (const personId of selectedIds) {
     const rosterRow = rosterByPerson.get(personId);
     if (rosterRow) {
-      selected.push(toPresentation(rosterRow, { rosterEligible: true }));
+      selected.push(
+        buildPlayerPresentation({
+          personId: rosterRow.personId,
+          displayName: formatPersonName(rosterRow.person),
+          shirtNumber: rosterRow.shirtNumber,
+          sortOrder: rosterRow.sortOrder,
+          rosterEligible: true,
+          rosterStatus: rosterRow.status,
+          participation: participationByPerson.get(personId),
+          selected: true,
+          editable: editability.editable,
+        }),
+      );
       continue;
     }
     const person = await prisma.person.findFirst({
@@ -173,20 +297,39 @@ export async function buildMatchSquadViewModel(
       select: { id: true, firstName: true, lastName: true, displayName: true },
     });
     if (!person) continue;
-    selected.push({
-      personId: person.id,
-      displayName: formatPersonName(person),
-      shirtNumber: null,
-      sortOrder: 9999,
-      rosterEligible: false,
-      rosterIneligibleLabel: "Nicht mehr im aktiven Kader",
-    });
+    selected.push(
+      buildPlayerPresentation({
+        personId: person.id,
+        displayName: formatPersonName(person),
+        shirtNumber: null,
+        sortOrder: 9999,
+        rosterEligible: false,
+        rosterStatus: null,
+        participation: participationByPerson.get(personId),
+        selected: true,
+        editable: editability.editable,
+      }),
+    );
   }
 
   const selectedSet = new Set(selected.map((row) => row.personId));
   const remaining = rosterRows
     .filter((row) => !selectedSet.has(row.personId))
-    .map((row) => toPresentation(row));
+    .map((row) =>
+      buildPlayerPresentation({
+        personId: row.personId,
+        displayName: formatPersonName(row.person),
+        shirtNumber: row.shirtNumber,
+        sortOrder: row.sortOrder,
+        rosterEligible: true,
+        rosterStatus: row.status,
+        participation: participationByPerson.get(row.personId),
+        selected: false,
+        editable: editability.editable,
+      }),
+    );
+
+  const counts = deriveCounts([...remaining, ...selected]);
 
   return {
     eventId: context.eventId,
@@ -200,6 +343,7 @@ export async function buildMatchSquadViewModel(
     remaining,
     selectedPersonIds: selected.map((row) => row.personId),
     remainingPersonIds: remaining.map((row) => row.personId),
+    counts,
   };
 }
 
@@ -217,7 +361,7 @@ export async function setMatchSquadMembers(input: {
   }
 
   const desired = uniquePersonIds(input.desiredPersonIds);
-  const rosterRows = await loadActiveRosterRows(context.teamSeasonId, input.tenantId);
+  const rosterRows = await loadCurrentRosterRows(context.teamSeasonId, input.tenantId);
   const eligibleIds = new Set(rosterRows.map((row) => row.personId));
 
   for (const personId of desired) {
@@ -230,8 +374,8 @@ export async function setMatchSquadMembers(input: {
     }
     if (!eligibleIds.has(personId)) {
       throw new MatchSquadValidationError(
-        "Person ist nicht im aktiven Saison-Kader dieses Teams.",
-        "NOT_ACTIVE_ROSTER",
+        "Person ist nicht im Saison-Kader dieses Teams.",
+        "NOT_ROSTER_MEMBER",
       );
     }
   }

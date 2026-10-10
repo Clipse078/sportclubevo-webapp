@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   teamSeasonFindFirst: vi.fn(),
   playerFindMany: vi.fn(),
   personFindFirst: vi.fn(),
+  participationResponseFindMany: vi.fn(),
   matchSquadFindUnique: vi.fn(),
   matchSquadCreate: vi.fn(),
   matchSquadMemberFindMany: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("@/lib/db/prisma", () => ({
     teamSeason: { findFirst: mocks.teamSeasonFindFirst },
     playerSquadMember: { findMany: mocks.playerFindMany },
     person: { findFirst: mocks.personFindFirst },
+    participationResponse: { findMany: mocks.participationResponseFindMany },
     matchSquad: {
       findUnique: mocks.matchSquadFindUnique,
       create: mocks.matchSquadCreate,
@@ -83,12 +85,12 @@ function baseEvent(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function roster(personId: string, status = "ACTIVE") {
+function roster(personId: string) {
   return {
     personId,
     shirtNumber: 9,
     sortOrder: 1,
-    status,
+    status: "ACTIVE" as const,
     person: { firstName: "Max", lastName: "Muster", displayName: null },
   };
 }
@@ -107,6 +109,7 @@ describe("match-squad-service", () => {
     mocks.playerFindMany.mockResolvedValue([roster("p1"), roster("p2")]);
     mocks.matchSquadFindUnique.mockResolvedValue(null);
     mocks.matchSquadMemberFindMany.mockResolvedValue([]);
+    mocks.participationResponseFindMany.mockResolvedValue([]);
     mocks.transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
         matchSquad: {

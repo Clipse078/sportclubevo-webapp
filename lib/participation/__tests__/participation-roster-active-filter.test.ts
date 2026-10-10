@@ -36,13 +36,13 @@ function anchor(): ResolvedEventParticipationAnchor {
   };
 }
 
-describe("participation audience — ACTIVE structural roster filter", () => {
+describe("participation audience — current season roster filter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.participationResponse.findMany.mockResolvedValue([]);
   });
 
-  it("includes ACTIVE PlayerSquadMember in eligible population query", async () => {
+  it("includes ACTIVE/INJURED/ABSENT PlayerSquadMember in eligible population query", async () => {
     mocks.playerSquadMember.findMany.mockResolvedValue([{ personId: "p-active" }]);
     const ids = await listParticipationSubjectPersonIds({ anchor: anchor(), preset: "ALL_INVITEES" });
     expect(ids).toEqual(["p-active"]);
@@ -50,7 +50,7 @@ describe("participation audience — ACTIVE structural roster filter", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           teamSeasonId: "ts-1",
-          status: "ACTIVE",
+          status: { in: ["ACTIVE", "INJURED", "ABSENT"] },
         }),
       }),
     );
