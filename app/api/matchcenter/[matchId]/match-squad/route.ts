@@ -3,6 +3,7 @@
  * MATCH_SQUAD_PLAYER_AVAILABILITY-01A
  */
 
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -22,7 +23,22 @@ function mapError(error: unknown): NextResponse {
   if (error instanceof MatchSquadError) {
     return NextResponse.json({ error: error.message, code: error.code }, { status: error.httpStatus });
   }
-  throw error;
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+    console.error("[match-squad] required table missing (migration pending)", error);
+    return NextResponse.json(
+      {
+        error:
+          "Das Aufgebot-Schema ist auf dieser Umgebung noch nicht bereit. Bitte wenden Sie sich an den Support.",
+        code: "SCHEMA_NOT_READY",
+      },
+      { status: 503 },
+    );
+  }
+  console.error("[match-squad]", error);
+  return NextResponse.json(
+    { error: "Aufgebot konnte nicht verarbeitet werden.", code: "INTERNAL" },
+    { status: 500 },
+  );
 }
 
 async function resolveAccessForMatch(matchId: string) {

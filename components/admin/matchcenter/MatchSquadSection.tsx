@@ -30,6 +30,36 @@ type Props = {
   matchId: string;
 };
 
+type SquadApiBody = SquadPayload & { error?: string; code?: string; squad?: SquadPayload };
+
+async function readSquadApiBody(response: Response): Promise<SquadApiBody> {
+  const raw = await response.text();
+  if (!raw.trim()) {
+    throw new Error("Aufgebot konnte nicht geladen werden.");
+  }
+  try {
+    return JSON.parse(raw) as SquadApiBody;
+  } catch {
+    throw new Error("Aufgebot konnte nicht geladen werden.");
+  }
+}
+
+function resolveLoadErrorMessage(body: SquadApiBody, response: Response): string {
+  if (body.error?.trim()) {
+    return body.error;
+  }
+  if (response.status === 401) {
+    return "Bitte melden Sie sich erneut an.";
+  }
+  if (response.status === 403) {
+    return "Keine Berechtigung für dieses Aufgebot.";
+  }
+  if (response.status === 404) {
+    return "Spiel nicht gefunden.";
+  }
+  return "Aufgebot konnte nicht geladen werden.";
+}
+
 function availabilityIcon(availability: MatchSquadPlayerPresentation["availability"]): string {
   switch (availability) {
     case "AVAILABLE":
@@ -112,9 +142,9 @@ export default function MatchSquadSection({ matchId }: Props) {
       const response = await fetch(`/api/matchcenter/${matchId}/match-squad`, {
         cache: "no-store",
       });
-      const json = (await response.json()) as SquadPayload & { error?: string };
+      const json = await readSquadApiBody(response);
       if (!response.ok) {
-        throw new Error(json.error ?? "Aufgebot konnte nicht geladen werden.");
+        throw new Error(resolveLoadErrorMessage(json, response));
       }
       setData(json);
       setSelectedIds(json.selected.map((row) => row.personId));
@@ -144,7 +174,7 @@ export default function MatchSquadSection({ matchId }: Props) {
           expectedVersion: version,
         }),
       });
-      const json = (await response.json()) as SquadPayload & { error?: string; squad?: SquadPayload };
+      const json = await readSquadApiBody(response);
       if (response.status === 409 && json.squad) {
         setData({ ...json.squad, canEdit: json.squad.canEdit });
         setSelectedIds(json.squad.selected.map((row) => row.personId));
@@ -207,9 +237,17 @@ export default function MatchSquadSection({ matchId }: Props) {
           Aufgebot wird geladen…
         </div>
       ) : error ? (
-        <p className="text-sm text-[var(--destructive)]" data-testid="match-squad-error">
-          {error}
-        </p>
+        <div className="space-y-2" data-testid="match-squad-error">
+          <p className="text-sm text-[var(--destructive)]">{error}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-3)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-4)]"
+            data-testid="match-squad-retry"
+          >
+            Erneut versuchen
+          </button>
+        </div>
       ) : null}
 
       {!loading && data?.readOnlyReason ? (

@@ -523,3 +523,63 @@ ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATC
 ### Human UAT
 
 Pending on STAGE preview — see §18 / product UAT plan (01A scope only).
+
+---
+
+## 23. 01A Human UAT R2 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-R2)
+
+**Status:** `IN_PROGRESS` — blocker remediated on STAGE; full UAT matrix pending credentials-led browser pass.
+
+### Original UAT blocker
+
+- **Symptom:** Matchcenter **Aufgebot** showed raw `Unexpected end of JSON input` instead of squad workspace.
+- **Client request:** `GET /api/matchcenter/[matchId]/match-squad` on PR #819 Vercel preview (shared STAGE DB).
+
+### Proven root cause
+
+| Item | Finding |
+|------|---------|
+| **Category** | STAGE schema lag — migration not applied before preview UAT |
+| **Migration** | `20261010153000_match_squad_player_availability_01a` was **pending** on STAGE (`prisma migrate status`) |
+| **Runtime failure** | Prisma `P2021` (table `MatchSquad` missing) during `buildMatchSquadViewModel` |
+| **API behavior (before fix)** | Unhandled exception → empty/non-JSON 500 response |
+| **Client behavior (before fix)** | Blind `response.json()` surfaced parser message to users |
+
+### Remediation
+
+1. **STAGE migration (canonical):**  
+   `APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled`  
+   → applied `20261010153000_match_squad_player_availability_01a` (no manual DDL).
+2. **API hardening:** `mapError` always returns JSON; `P2021` → `503` + `SCHEMA_NOT_READY`; unexpected → `500` + `INTERNAL`.
+3. **Client hardening:** safe body parse (`text` → JSON), German actionable errors, **Erneut versuchen** retry.
+4. **Tests:** empty squad (no `MatchSquad` row), missing participation → `UNKNOWN`, route JSON contract tests.
+
+### Match context (repro match — FC Allschwil STAGE)
+
+| Field | Example value |
+|-------|----------------|
+| `eventId` | `cmrzhj0mx005q04kwtr9etuk6` |
+| `event.type` | `MATCH` |
+| `tenantId` | `cmomwboak0000tsf3zzivrs46` (`fc-allschwil`) |
+| `teamId` | `cmrkh1mb1000i04jurtajh262` |
+| `seasonId` | `cmso85qmu000004l5d3q0xbi4` |
+| Resolved `teamSeasonId` | `cmsoczv2t000504juhvod5hi9` (ACTIVE) |
+| `Event.teamSeasonId` | `null` (resolved via team+season) |
+| Post-fix GET | Valid JSON; empty squad state when no roster rows on resolved TeamSeason |
+
+Additional STAGE future match with roster for functional UAT: `cmrzhj5a5006m04kwbsu1l3fd` (Senioren 40+ Meister).
+
+### TEST_DATA_LEDGER (R2)
+
+| Created | None (migration-only remediation; no fictional players added in R2) |
+| **PRE_EXISTING_DATA_DELETED** | No |
+| **RETAINED_FOR_LATER_MODULE_UAT** | N/A |
+| **FINAL_MODULE_CLEANUP_REQUIRED** | `TEST_DATA_REMAINING = 0` at module close (unchanged policy) |
+
+### Regression / build (R2 gate)
+
+Recorded in agent final report after test battery + `NODE_OPTIONS=--max-old-space-size=8192 npm run build`.
+
+### 01A closure
+
+**Not CLOSED** until Human UAT matrix (§11) passes on preview after STAGE migration + redeployed head with client/API hardening.

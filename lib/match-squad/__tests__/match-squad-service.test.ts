@@ -135,6 +135,24 @@ describe("match-squad-service", () => {
     expect(remainingRosterIsNotCrossTeamAvailability()).toBe(true);
   });
 
+  it("buildMatchSquadViewModel without MatchSquad row returns empty selection", async () => {
+    mocks.matchSquadFindUnique.mockResolvedValue(null);
+    mocks.matchSquadMemberFindMany.mockResolvedValue([]);
+
+    const view = await buildMatchSquadViewModel(TENANT, EVENT);
+    expect(view.selected).toEqual([]);
+    expect(view.selectedPersonIds).toEqual([]);
+    expect(view.version).toBe("1970-01-01T00:00:00.000Z");
+    expect(mocks.matchSquadCreate).not.toHaveBeenCalled();
+  });
+
+  it("buildMatchSquadViewModel maps missing ParticipationResponse to UNKNOWN", async () => {
+    mocks.participationResponseFindMany.mockResolvedValue([]);
+
+    const view = await buildMatchSquadViewModel(TENANT, EVENT);
+    expect(view.remaining.every((row) => row.availability === "UNKNOWN")).toBe(true);
+  });
+
   it("buildMatchSquadViewModel splits ACTIVE roster into selected and remaining", async () => {
     mocks.matchSquadFindUnique.mockResolvedValue({
       id: "squad-1",
