@@ -248,7 +248,7 @@ describe("1. PersonWorkspaceOverviewTab — renders canonical Person", () => {
 
 describe("2. Multiple simultaneous roles — all render, none collapsed", () => {
   it("renders squad membership AND trainer membership AND assignment simultaneously", () => {
-    const person = makePerson();
+    const person = makePerson({ isTrainer: true });
     render(
       <PersonWorkspaceOverviewTab
         person={{
@@ -291,8 +291,7 @@ describe("2. Multiple simultaneous roles — all render, none collapsed", () => 
     expect(screen.getByText("Koordinator/in")).toBeTruthy();
     expect(screen.getByText("Vorstandsmitglied")).toBeTruthy();
 
-    // Must have at least 3 role cards (sce-accent badges)
-    const roleBadges = container.querySelectorAll(".rounded-full.bg-\\[var\\(--sce-accent\\)\\]");
+    const roleBadges = container.querySelectorAll("[data-testid='person-semantic-pill']");
     expect(roleBadges.length).toBeGreaterThanOrEqual(3);
   });
 });
@@ -546,7 +545,7 @@ describe("7. Season history — only persisted data, no fabrication", () => {
         assignments={[makeAssignment()]} // no seasonId
       />,
     );
-    expect(screen.getByText(/keine Saison-Verknüpfung/)).toBeTruthy();
+    expect(screen.getByText(/Saison-Verknüpfung fehlt/)).toBeTruthy();
   });
 
   it("does NOT show gap notice when all active assignments have a seasonId", () => {
@@ -562,7 +561,7 @@ describe("7. Season history — only persisted data, no fabrication", () => {
         assignments={[aWithSeason]}
       />,
     );
-    expect(screen.queryByText(/keine Saison-Verknüpfung/)).toBeNull();
+    expect(screen.queryByText(/Saison-Verknüpfung fehlt/)).toBeNull();
   });
 });
 

@@ -57,23 +57,16 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
           { label: "Teams" },
         ]}
         headerActions={
-          <>
-            <a
-              href="#season-context"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-            >
-              Saison wechseln
-            </a>
-            <Link href="/dashboard/teams/register" className="fca-button-primary">
-              <Plus className="h-4 w-4" />
-              Neues Team
-            </Link>
-          </>
+          <Link href="/dashboard/teams/register" className="fca-button-primary">
+            <Plus className="h-4 w-4" />
+            Neues Team
+          </Link>
         }
         stats={
           <div id="season-context">
             <SeasonContextSelector
-              title="Aktive Saison"
+              variant="compact"
+              title="Saison"
               description="Teams werden innerhalb der gewählten Saison nach Kategorie geführt."
               seasons={availableSeasons}
               selectedSeasonKey={selectedSeasonKey}

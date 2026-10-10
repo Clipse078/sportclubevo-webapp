@@ -33,6 +33,7 @@ import { Users2, Trophy, Star, ChevronDown, ChevronRight, ExternalLink } from "l
 import { useState } from "react";
 import type { PersonSquadMembership, PersonAssessmentRecord, TenantCriterion, PersonAssignment } from "@/lib/people/queries";
 import { getPersonFunctionLabel, PERSON_FUNCTION_GROUPS } from "@/lib/people/functions";
+import { teamSquadOnboardingHref } from "@/lib/teams/team-roster-navigation";
 import { EmptyState } from "@/components/ui/page";
 import PersonAssessmentSection from "./PersonAssessmentSection";
 
@@ -272,7 +273,7 @@ export default function PersonSpielerTab({
                   </p>
                   {a.team?.id ? (
                     <a
-                      href={`/dashboard/teams/${a.team.id}#spielerkader`}
+                      href={teamSquadOnboardingHref(a.team.id)}
                       className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
                       data-testid="spieler-incomplete-team-link"
                     >
@@ -311,7 +312,7 @@ export default function PersonSpielerTab({
                   </p>
                   {a.team?.id ? (
                     <a
-                      href={`/dashboard/teams/${a.team.id}#spielerkader`}
+                      href={teamSquadOnboardingHref(a.team.id)}
                       className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
                       data-testid="spieler-incomplete-team-link"
                     >

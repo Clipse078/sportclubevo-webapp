@@ -26,15 +26,14 @@ export default function TeamUpcomingMatchesView({
 
       {matches.length === 0 ? (
         <div
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-6"
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/80 px-4 py-3"
           data-testid="team-upcoming-matches-empty"
         >
-          <p className="text-sm text-[var(--muted)]">Keine nächsten Spiele geplant.</p>
-          {seasonName ? (
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Für {seasonName} sind derzeit keine kommenden Spiele hinterlegt.
-            </p>
-          ) : null}
+          <p className="text-sm text-[var(--muted)]">
+            {seasonName
+              ? `Keine nächsten Spiele für ${seasonName} geplant.`
+              : "Keine nächsten Spiele geplant."}
+          </p>
         </div>
       ) : (
         <ol

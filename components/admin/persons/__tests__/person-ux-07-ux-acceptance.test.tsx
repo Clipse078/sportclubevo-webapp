@@ -854,7 +854,7 @@ describe("L. Spieler CTA deep-links to spielerkader anchor", () => {
     );
     const link = container.querySelector('[data-testid="spieler-incomplete-team-link"]') as HTMLAnchorElement | null;
     expect(link).toBeTruthy();
-    expect(link?.href).toContain(`${TEAM_F2.id}#spielerkader`);
+    expect(link?.href).toContain(`${TEAM_F2.id}/kader#spielerkader`);
   });
 
   it("Spieler tab State B CTA wording is task-oriented", () => {
@@ -942,7 +942,7 @@ describe("M. Trainer CTA deep-links to trainerteam anchor", () => {
     );
     const link = container.querySelector('[data-testid="trainer-incomplete-team-link"]') as HTMLAnchorElement | null;
     expect(link).toBeTruthy();
-    expect(link?.href).toContain(`${TEAM_E3.id}#trainerteam`);
+    expect(link?.href).toContain(`${TEAM_E3.id}/trainerteam#trainerteam`);
   });
 
   it("Trainer tab State B CTA wording is task-oriented", () => {

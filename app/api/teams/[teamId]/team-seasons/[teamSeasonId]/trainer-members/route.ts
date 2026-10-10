@@ -1,16 +1,29 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { Prisma, TrainerTeamStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db/prisma";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { logAction } from "@/lib/audit/log-action";
+import { addTrainerToTeamSeason } from "@/lib/teams/roster-membership-service";
 
 type Context = {
   params: Promise<{ teamId: string; teamSeasonId: string }>;
 };
 
 const ALLOWED_STATUSES = ["ACTIVE", "INACTIVE", "ARCHIVED"] as const;
+
+function rosterErrorStatus(code: string): number {
+  switch (code) {
+    case "TEAM_SEASON_NOT_FOUND":
+    case "PERSON_NOT_FOUND":
+      return 404;
+    case "PERSON_NOT_ELIGIBLE":
+    case "TEAM_SEASON_NOT_MUTABLE":
+      return 400;
+    default:
+      return 500;
+  }
+}
 
 export async function POST(request: NextRequest, context: Context) {
   const access = await requireApiPermission(PERMISSIONS.TEAMS_MANAGE);
@@ -50,125 +63,51 @@ export async function POST(request: NextRequest, context: Context) {
     if (!personId) {
       return NextResponse.json(
         { error: "Bitte eine Person auswählen." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!ALLOWED_STATUSES.includes(status as (typeof ALLOWED_STATUSES)[number])) {
       return NextResponse.json(
         { error: "Ungültiger Trainer-Status." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!Number.isFinite(sortOrder)) {
       return NextResponse.json(
         { error: "Sortierung muss eine Zahl sein." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const teamSeason = await prisma.teamSeason.findFirst({
-      where: { id: teamSeasonId, teamId, team: { tenantId } },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        season: {
-          select: {
-            id: true,
-            key: true,
-            name: true,
-          },
-        },
-      },
+    const result = await addTrainerToTeamSeason({
+      tenantId,
+      teamId,
+      teamSeasonId,
+      personId,
+      status: status as TrainerTeamStatus,
+      roleLabel,
+      isWebsiteVisible,
+      sortOrder,
+      remarks,
     });
 
-    if (!teamSeason) {
+    if (!result.ok) {
       return NextResponse.json(
-        { error: "Team-Saison nicht gefunden." },
-        { status: 404 }
+        { error: result.message },
+        { status: rosterErrorStatus(result.code) },
       );
     }
 
-    const person = await prisma.person.findFirst({
-      where: { id: personId, tenantId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        displayName: true,
-        isActive: true,
-        isTrainer: true,
-      },
-    });
-
-    if (!person) {
-      return NextResponse.json(
-        { error: "Person nicht gefunden." },
-        { status: 404 }
-      );
-    }
-
-    if (!person.isActive || !person.isTrainer) {
-      return NextResponse.json(
-        { error: "Diese Person ist kein aktiver Trainer." },
-        { status: 400 }
-      );
-    }
-
-    const existingAssignment = await prisma.trainerTeamMember.findUnique({
-      where: {
-        teamSeasonId_personId: {
-          teamSeasonId,
-          personId,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (existingAssignment) {
+    if (result.outcome === "ALREADY_ACTIVE") {
       return NextResponse.json(
         { error: "Diese Person ist diesem Trainerteam bereits zugewiesen." },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
-    const created = await prisma.trainerTeamMember.create({
-      data: {
-        teamSeasonId,
-        personId,
-        status: status as TrainerTeamStatus,
-        roleLabel,
-        isWebsiteVisible,
-        sortOrder,
-        remarks,
-      },
-      select: {
-        id: true,
-        status: true,
-        roleLabel: true,
-        isWebsiteVisible: true,
-        sortOrder: true,
-        remarks: true,
-        person: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            displayName: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    });
+    const { trainerMember, teamSeason, personSummary } = result;
 
     await logAction({
       actorUserId:
@@ -177,16 +116,16 @@ export async function POST(request: NextRequest, context: Context) {
         null,
       moduleKey: "teams",
       entityType: "TrainerTeamMember",
-      entityId: created.id,
-      action: "CREATE",
+      entityId: trainerMember.id,
+      action: result.outcome === "REACTIVATED" ? "UPDATE" : "CREATE",
       afterJson: {
         teamSeasonId,
         personId,
-        status,
-        roleLabel,
-        isWebsiteVisible,
-        sortOrder,
-        remarks,
+        status: trainerMember.status,
+        roleLabel: trainerMember.roleLabel,
+        isWebsiteVisible: trainerMember.isWebsiteVisible,
+        sortOrder: trainerMember.sortOrder,
+        remarks: trainerMember.remarks,
       },
       metadataJson: {
         teamId: teamSeason.team.id,
@@ -195,7 +134,10 @@ export async function POST(request: NextRequest, context: Context) {
         seasonId: teamSeason.season.id,
         seasonKey: teamSeason.season.key,
         seasonName: teamSeason.season.name,
-        personName: person.displayName || (person.firstName + " " + person.lastName),
+        personName:
+          personSummary.displayName ||
+          personSummary.firstName + " " + personSummary.lastName,
+        rosterOutcome: result.outcome,
       },
     });
 
@@ -204,10 +146,13 @@ export async function POST(request: NextRequest, context: Context) {
 
     return NextResponse.json(
       {
-        message: "Trainer erfolgreich dem Trainerteam hinzugefügt.",
-        trainerMember: created,
+        message:
+          result.outcome === "REACTIVATED"
+            ? "Trainer erfolgreich dem Trainerteam wieder zugeordnet."
+            : "Trainer erfolgreich dem Trainerteam hinzugefügt.",
+        trainerMember,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Create trainer member failed:", error);
@@ -216,34 +161,36 @@ export async function POST(request: NextRequest, context: Context) {
       if (error.code === "P2002") {
         return NextResponse.json(
           { error: "Diese Person ist diesem Trainerteam bereits zugewiesen." },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
       return NextResponse.json(
         { error: "Datenbankfehler: " + error.code + "." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (error instanceof Prisma.PrismaClientValidationError) {
       return NextResponse.json(
-        { error: "Prisma-Validierungsfehler. Wahrscheinlich stimmen Schema, Migration und generierter Client aktuell nicht überein." },
-        { status: 500 }
+        {
+          error:
+            "Prisma-Validierungsfehler. Wahrscheinlich stimmen Schema, Migration und generierter Client aktuell nicht überein.",
+        },
+        { status: 500 },
       );
     }
 
     if (error instanceof Error) {
       return NextResponse.json(
         { error: "Technischer Fehler: " + error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
       { error: "Trainer konnte nicht dem Trainerteam hinzugefügt werden." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

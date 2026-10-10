@@ -1,16 +1,19 @@
 ﻿import TeamSquadManagementCard from "@/components/admin/teams/TeamSquadManagementCard";
-import TeamTrainerManagementCard from "@/components/admin/teams/TeamTrainerManagementCard";
+import TeamTrainerRosterSection from "@/components/admin/teams/TeamTrainerRosterSection";
 import {
   TeamHistoricalSeasonRosters,
   type TeamRosterSeasonEntry,
 } from "@/components/admin/teams/TeamRosterSeasonSection";
+import { listTrainerAssignmentOnlySuggestions } from "@/lib/teams/roster-onboarding-queries";
 
 type RosterMode = "all" | "squad" | "trainer";
 
 type Props = {
+  tenantId: string;
   teamId: string;
   teamAgeGroup: string | null;
   canManage: boolean;
+  canManagePeople: boolean;
   teamSeasons: TeamRosterSeasonEntry[];
   currentTeamSeasonId: string | null;
   mode?: RosterMode;
@@ -24,10 +27,12 @@ function sortTeamSeasonsDesc(entries: TeamRosterSeasonEntry[]) {
   });
 }
 
-export default function TeamRosterOverviewCard({
+export default async function TeamRosterOverviewCard({
+  tenantId,
   teamId,
   teamAgeGroup,
   canManage,
+  canManagePeople,
   teamSeasons,
   currentTeamSeasonId,
   mode = "all",
@@ -36,26 +41,34 @@ export default function TeamRosterOverviewCard({
   const showTrainer = mode === "all" || mode === "trainer";
   const sortedSeasons = sortTeamSeasonsDesc(teamSeasons);
   const currentSeason = currentTeamSeasonId
-    ? sortedSeasons.find((entry) => entry.id === currentTeamSeasonId) ?? null
+    ? (sortedSeasons.find((entry) => entry.id === currentTeamSeasonId) ?? null)
     : null;
   const historicalSeasons = currentSeason
     ? sortedSeasons.filter((entry) => entry.id !== currentSeason.id)
     : sortedSeasons;
+
+  const assignmentOnlySuggestions =
+    currentSeason && showTrainer
+      ? await listTrainerAssignmentOnlySuggestions({
+          tenantId,
+          teamId,
+          teamSeasonId: currentSeason.id,
+        })
+      : [];
 
   return (
     <div className="space-y-6" data-testid="team-roster-overview">
       {currentSeason ? (
         <div
           className={
-            showSquad && showTrainer
-              ? "grid gap-8 xl:grid-cols-2"
-              : "grid gap-8"
+            showSquad && showTrainer ? "grid gap-8 xl:grid-cols-2" : "grid gap-8"
           }
         >
           {showSquad ? (
             <TeamSquadManagementCard
               teamId={teamId}
               canManage={canManage}
+              canManagePeople={canManagePeople}
               sectionId="spielerkader"
               teamSeason={{
                 id: currentSeason.id,
@@ -71,18 +84,19 @@ export default function TeamRosterOverviewCard({
           ) : null}
 
           {showTrainer ? (
-            <TeamTrainerManagementCard
+            <TeamTrainerRosterSection
               teamId={teamId}
               canManage={canManage}
-              sectionId="trainerteam"
+              canManagePeople={canManagePeople}
               teamSeason={{
                 id: currentSeason.id,
                 displayName: currentSeason.displayName,
-                trainerTeamWebsiteVisible:
-                  currentSeason.trainerTeamWebsiteVisible ?? true,
+                status: currentSeason.status,
+                trainerTeamWebsiteVisible: currentSeason.trainerTeamWebsiteVisible ?? true,
                 season: currentSeason.season,
                 trainerTeamMembers: currentSeason.trainerTeamMembers ?? [],
               }}
+              assignmentOnlySuggestions={assignmentOnlySuggestions}
             />
           ) : null}
         </div>
@@ -103,6 +117,7 @@ export default function TeamRosterOverviewCard({
           teamId={teamId}
           teamAgeGroup={teamAgeGroup}
           canManage={canManage}
+          canManagePeople={canManagePeople}
           seasons={historicalSeasons}
           mode={mode}
         />

@@ -5,13 +5,17 @@ import { getPersonByIdForTenant } from "@/lib/people/queries";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import PersonForm from "@/components/admin/persons/PersonForm";
 
-type PageProps = { params: Promise<{ id: string }> };
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
+};
 
-export default async function EditPersonPage({ params }: PageProps) {
+export default async function EditPersonPage({ params, searchParams }: PageProps) {
   await requirePermission(PERMISSIONS.PEOPLE_MANAGE);
   const tenantId = await requireActiveTenantId();
 
   const { id } = await params;
+  const { returnTo } = await searchParams;
   const person = await getPersonByIdForTenant(id, tenantId);
   if (!person) notFound();
 
@@ -19,6 +23,7 @@ export default async function EditPersonPage({ params }: PageProps) {
     <PersonForm
       mode="edit"
       personId={person.id}
+      returnTo={returnTo ?? null}
       defaultValues={{
         firstName: person.firstName,
         lastName: person.lastName,

@@ -3,10 +3,8 @@ import { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
   requireApiPermission: vi.fn(),
-  playerFindFirst: vi.fn(),
-  playerDelete: vi.fn(),
-  trainerFindFirst: vi.fn(),
-  trainerDelete: vi.fn(),
+  removePlayerSquadMembership: vi.fn(),
+  removeTrainerTeamMembership: vi.fn(),
   logAction: vi.fn(),
   revalidatePath: vi.fn(),
 }));
@@ -14,17 +12,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/permissions/require-api-permission", () => ({
   requireApiPermission: mocks.requireApiPermission,
 }));
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    playerSquadMember: {
-      findFirst: mocks.playerFindFirst,
-      delete: mocks.playerDelete,
-    },
-    trainerTeamMember: {
-      findFirst: mocks.trainerFindFirst,
-      delete: mocks.trainerDelete,
-    },
-  },
+vi.mock("@/lib/teams/roster-membership-service", () => ({
+  removePlayerSquadMembership: mocks.removePlayerSquadMembership,
+  removeTrainerTeamMembership: mocks.removeTrainerTeamMembership,
 }));
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.logAction }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
@@ -57,8 +47,14 @@ function trainerContext(trainerMemberId = "trainer-member-a") {
 const TEAM_SEASON = {
   id: "team-season-a",
   teamId: "team-a",
-  team: { id: "team-a", name: "Team A", slug: "team-a" },
-  season: { id: "season-1", key: "2026-27", name: "2026/27" },
+  status: "ACTIVE" as const,
+  team: { id: "team-a", name: "Team A", slug: "team-a", ageGroup: null },
+  season: {
+    id: "season-1",
+    key: "2026-27",
+    name: "2026/27",
+    startDate: new Date("2026-07-01T00:00:00Z"),
+  },
 };
 
 describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
@@ -68,38 +64,44 @@ describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
       ok: true,
       session: { user: { id: "user-a", activeTenantId: TENANT_A } },
     });
-    mocks.playerFindFirst.mockResolvedValue({
-      id: "player-member-a",
-      teamSeasonId: "team-season-a",
-      personId: "person-a",
-      status: "ACTIVE",
-      shirtNumber: null,
-      positionLabel: null,
-      isCaptain: false,
-      isViceCaptain: false,
-      isWebsiteVisible: true,
-      sortOrder: 0,
-      remarks: null,
-      teamSeason: TEAM_SEASON,
-      person: {
-        id: "person-a",
-        firstName: "Alice",
-        lastName: "A",
-        displayName: "Alice A",
-        email: null,
-        phone: null,
+    mocks.removePlayerSquadMembership.mockResolvedValue({
+      ok: true,
+      removed: {
+        id: "player-member-a",
+        teamSeasonId: "team-season-a",
+        personId: "person-a",
+        status: "ACTIVE",
+        shirtNumber: null,
+        positionLabel: null,
+        isCaptain: false,
+        isViceCaptain: false,
+        isWebsiteVisible: true,
+        sortOrder: 0,
+        remarks: null,
+        teamSeason: TEAM_SEASON,
+        person: {
+          id: "person-a",
+          firstName: "Alice",
+          lastName: "A",
+          displayName: "Alice A",
+          email: null,
+          phone: null,
+        },
       },
     });
-    mocks.trainerFindFirst.mockResolvedValue({
-      id: "trainer-member-a",
-      teamSeasonId: "team-season-a",
-      personId: "person-a",
-      status: "ACTIVE",
-      roleLabel: null,
-      isWebsiteVisible: true,
-      sortOrder: 0,
-      remarks: null,
-      person: { firstName: "Alice", lastName: "A", displayName: "Alice A" },
+    mocks.removeTrainerTeamMembership.mockResolvedValue({
+      ok: true,
+      removed: {
+        id: "trainer-member-a",
+        teamSeasonId: "team-season-a",
+        personId: "person-a",
+        status: "ACTIVE",
+        roleLabel: null,
+        isWebsiteVisible: true,
+        sortOrder: 0,
+        remarks: null,
+        person: { firstName: "Alice", lastName: "A", displayName: "Alice A" },
+      },
     });
   });
 
@@ -110,21 +112,20 @@ describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.playerFindFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          id: "player-member-a",
-          teamSeasonId: "team-season-a",
-          teamSeason: { teamId: "team-a", team: { tenantId: TENANT_A } },
-          person: { tenantId: TENANT_A },
-        },
-      }),
-    );
-    expect(mocks.playerDelete).toHaveBeenCalledOnce();
+    expect(mocks.removePlayerSquadMembership).toHaveBeenCalledWith({
+      tenantId: TENANT_A,
+      teamId: "team-a",
+      teamSeasonId: "team-season-a",
+      squadMemberId: "player-member-a",
+    });
   });
 
   it("cannot remove a foreign player relationship by id", async () => {
-    mocks.playerFindFirst.mockResolvedValue(null);
+    mocks.removePlayerSquadMembership.mockResolvedValue({
+      ok: false,
+      code: "MEMBERSHIP_NOT_FOUND",
+      message: "Kader-Eintrag nicht gefunden.",
+    });
 
     const response = await removePlayer(
       new NextRequest("http://localhost"),
@@ -132,7 +133,6 @@ describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
     );
 
     expect(response.status).toBe(404);
-    expect(mocks.playerDelete).not.toHaveBeenCalled();
   });
 
   it("removes an own-tenant trainer membership", async () => {
@@ -142,21 +142,20 @@ describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.trainerFindFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          id: "trainer-member-a",
-          teamSeasonId: "team-season-a",
-          teamSeason: { teamId: "team-a", team: { tenantId: TENANT_A } },
-          person: { tenantId: TENANT_A },
-        },
-      }),
-    );
-    expect(mocks.trainerDelete).toHaveBeenCalledOnce();
+    expect(mocks.removeTrainerTeamMembership).toHaveBeenCalledWith({
+      tenantId: TENANT_A,
+      teamId: "team-a",
+      teamSeasonId: "team-season-a",
+      trainerMemberId: "trainer-member-a",
+    });
   });
 
   it("cannot remove or change a foreign trainer relationship by id", async () => {
-    mocks.trainerFindFirst.mockResolvedValue(null);
+    mocks.removeTrainerTeamMembership.mockResolvedValue({
+      ok: false,
+      code: "MEMBERSHIP_NOT_FOUND",
+      message: "Trainerteam-Eintrag nicht gefunden.",
+    });
 
     const response = await removeTrainer(
       new Request("http://localhost"),
@@ -164,12 +163,19 @@ describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
     );
 
     expect(response.status).toBe(404);
-    expect(mocks.trainerDelete).not.toHaveBeenCalled();
   });
 
   it("returns equivalent not-found behavior for missing roster relationships", async () => {
-    mocks.playerFindFirst.mockResolvedValue(null);
-    mocks.trainerFindFirst.mockResolvedValue(null);
+    mocks.removePlayerSquadMembership.mockResolvedValue({
+      ok: false,
+      code: "MEMBERSHIP_NOT_FOUND",
+      message: "Kader-Eintrag nicht gefunden.",
+    });
+    mocks.removeTrainerTeamMembership.mockResolvedValue({
+      ok: false,
+      code: "MEMBERSHIP_NOT_FOUND",
+      message: "Trainerteam-Eintrag nicht gefunden.",
+    });
 
     const [playerResponse, trainerResponse] = await Promise.all([
       removePlayer(new NextRequest("http://localhost"), playerContext("missing")),
@@ -178,7 +184,5 @@ describe("SECURITY-GO-LIVE-01H-C — roster removal isolation", () => {
 
     expect(playerResponse.status).toBe(404);
     expect(trainerResponse.status).toBe(404);
-    expect(mocks.playerDelete).not.toHaveBeenCalled();
-    expect(mocks.trainerDelete).not.toHaveBeenCalled();
   });
 });

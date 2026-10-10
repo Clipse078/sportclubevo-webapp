@@ -28,7 +28,7 @@ export default function TeamStandingsView({ standings, hasProviderMapping }: Pro
 
       {!hasProviderMapping ? (
         <div
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-6"
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/80 px-4 py-3"
           data-testid="team-standings-no-mapping"
         >
           <p className="text-sm text-[var(--muted)]">
@@ -37,7 +37,7 @@ export default function TeamStandingsView({ standings, hasProviderMapping }: Pro
         </div>
       ) : standings == null || standings.rows.length === 0 ? (
         <div
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-6"
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/80 px-4 py-3"
           data-testid="team-standings-unavailable"
         >
           <p className="text-sm text-[var(--muted)]">Rangliste derzeit nicht verfügbar.</p>

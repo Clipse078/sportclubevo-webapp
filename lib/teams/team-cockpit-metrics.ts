@@ -37,12 +37,17 @@ export function buildTeamCockpitMetrics({
       ? "Keine Saison im aktuellen Geschäftsjahr"
       : "Keine Saison";
 
+  const activePlayerCount =
+    activeSeason?.playerSquadMembers?.filter((m) => m.status === "ACTIVE").length ?? 0;
+  const activeTrainerCount =
+    activeSeason?.trainerTeamMembers?.filter((m) => m.status === "ACTIVE").length ?? 0;
+
   return {
     seasonName: activeSeason?.season.name ?? null,
     seasonLabel,
     hasHistoricalSeasons,
-    playerCount: activeSeason?.playerSquadMembers?.length ?? 0,
-    trainerCount: activeSeason?.trainerTeamMembers?.length ?? 0,
+    playerCount: activePlayerCount,
+    trainerCount: activeTrainerCount,
     competitionLabel: team.competition?.shortName ?? team.competition?.name ?? null,
     orgUnitName: team.currentSeasonOrgUnit?.name ?? team.orgUnit?.name ?? null,
     categoryLabel: categoryLabels[team.category] ?? team.category,

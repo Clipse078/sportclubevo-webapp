@@ -219,7 +219,7 @@ describe("TEAM-COCKPIT-PREMIUM-01F — TeamUpcomingMatchesView", () => {
     );
 
     expect(screen.getByTestId("team-upcoming-matches-empty")).toHaveTextContent(
-      "Keine nächsten Spiele geplant.",
+      "Keine nächsten Spiele für 2026/2027 geplant.",
     );
   });
 

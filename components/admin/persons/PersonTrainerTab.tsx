@@ -31,6 +31,7 @@ import { UserCheck, Trophy, ChevronDown, ChevronRight, ExternalLink } from "luci
 import { useState } from "react";
 import type { PersonTrainerMembership, PersonAssignment } from "@/lib/people/queries";
 import { getPersonFunctionLabel, PERSON_FUNCTION_GROUPS } from "@/lib/people/functions";
+import { teamTrainerOnboardingHref } from "@/lib/teams/team-roster-navigation";
 import { EmptyState } from "@/components/ui/page";
 
 const TRAINER_FUNCTION_KEYS = new Set<string>(PERSON_FUNCTION_GROUPS.TRAINER_STAFF);
@@ -235,7 +236,7 @@ export default function PersonTrainerTab({
                   </p>
                   {a.team?.id ? (
                     <a
-                      href={`/dashboard/teams/${a.team.id}#trainerteam`}
+                      href={teamTrainerOnboardingHref(a.team.id)}
                       className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
                       data-testid="trainer-incomplete-team-link"
                     >
@@ -274,7 +275,7 @@ export default function PersonTrainerTab({
                   </p>
                   {a.team?.id ? (
                     <a
-                      href={`/dashboard/teams/${a.team.id}#trainerteam`}
+                      href={teamTrainerOnboardingHref(a.team.id)}
                       className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
                       data-testid="trainer-incomplete-team-link"
                     >

@@ -69,6 +69,7 @@ type Props = {
   teamId: string;
   teamAgeGroup: string | null;
   canManage: boolean;
+  canManagePeople?: boolean;
   entry: TeamRosterSeasonEntry;
   anchorTargets?: boolean;
   mode?: RosterMode;
@@ -78,6 +79,7 @@ export default function TeamRosterSeasonSection({
   teamId,
   teamAgeGroup,
   canManage,
+  canManagePeople = false,
   entry,
   anchorTargets = false,
   mode = "all",
@@ -101,6 +103,7 @@ export default function TeamRosterSeasonSection({
           <TeamSquadManagementCard
             teamId={teamId}
             canManage={canManage}
+            canManagePeople={canManagePeople}
             sectionId={anchorTargets ? "spielerkader" : undefined}
             teamSeason={{
               id: entry.id,
@@ -119,10 +122,12 @@ export default function TeamRosterSeasonSection({
           <TeamTrainerManagementCard
             teamId={teamId}
             canManage={canManage}
+            canManagePeople={canManagePeople}
             sectionId={anchorTargets ? "trainerteam" : undefined}
             teamSeason={{
               id: entry.id,
               displayName: entry.displayName,
+              status: entry.status,
               trainerTeamWebsiteVisible: entry.trainerTeamWebsiteVisible ?? true,
               season: entry.season,
               trainerTeamMembers: entry.trainerTeamMembers ?? [],
@@ -138,6 +143,7 @@ type HistoricalSeasonsProps = {
   teamId: string;
   teamAgeGroup: string | null;
   canManage: boolean;
+  canManagePeople?: boolean;
   seasons: TeamRosterSeasonEntry[];
   mode?: RosterMode;
 };
@@ -146,6 +152,7 @@ export function TeamHistoricalSeasonRosters({
   teamId,
   teamAgeGroup,
   canManage,
+  canManagePeople = false,
   seasons,
   mode = "all",
 }: HistoricalSeasonsProps) {
@@ -171,6 +178,7 @@ export function TeamHistoricalSeasonRosters({
             teamId={teamId}
             teamAgeGroup={teamAgeGroup}
             canManage={canManage}
+            canManagePeople={canManagePeople}
             entry={entry}
             mode={mode}
           />

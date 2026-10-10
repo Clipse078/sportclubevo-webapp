@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireApiTenantPermissionContext } from "@/lib/permissions/require-api-tenant-context";
 import { ROUTE_PERMISSION_SETS } from "@/lib/permissions/route-permission-sets";
-import { getAllowedBirthYearsForSeason } from "@/lib/teams/jahrgang-rules";
+import { resolveTeamBirthYearEligibility } from "@/lib/teams/player-birth-year-eligibility";
 
 export async function GET(request: NextRequest) {
   const access = await requireApiTenantPermissionContext(ROUTE_PERMISSION_SETS.PEOPLE_SEARCH);
@@ -25,8 +25,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Ungültiger Suchmodus." }, { status: 400 });
     }
 
-    let allowedBirthYears: number[] = [];
+    let juniorBirthYearFilter: number[] | null = null;
     let excludedPersonIds = new Set<string>();
+    const rosterTeamSeasonContext =
+      Boolean(teamSeasonId) && (mode === "player" || mode === "trainer");
 
     if (teamSeasonId && mode === "player") {
       const teamSeason = await prisma.teamSeason.findFirst({
@@ -43,6 +45,7 @@ export async function GET(request: NextRequest) {
             },
           },
           playerSquadMembers: {
+            where: { status: "ACTIVE" },
             select: {
               personId: true,
             },
@@ -54,10 +57,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Team-Saison nicht gefunden." }, { status: 404 });
       }
 
-      allowedBirthYears = getAllowedBirthYearsForSeason(
-        teamSeason.team.ageGroup,
-        teamSeason.season.startDate
-      );
+      const teamEligibility = resolveTeamBirthYearEligibility({
+        categoryCode: teamSeason.team.ageGroup,
+        seasonStartDate: teamSeason.season.startDate,
+      });
+
+      if (teamEligibility.mode === "JUNIOR_BIRTH_YEAR") {
+        juniorBirthYearFilter = teamEligibility.allowedBirthYears;
+      }
 
       excludedPersonIds = new Set(
         teamSeason.playerSquadMembers.map((entry) => entry.personId)
@@ -69,6 +76,7 @@ export async function GET(request: NextRequest) {
         where: { id: teamSeasonId, team: { tenantId } },
         select: {
           trainerTeamMembers: {
+            where: { status: "ACTIVE" },
             select: {
               personId: true,
             },
@@ -89,8 +97,8 @@ export async function GET(request: NextRequest) {
       where: {
         tenantId,
         isActive: true,
-        ...(mode === "player" ? { isPlayer: true } : {}),
-        ...(mode === "trainer" ? { isTrainer: true } : {}),
+        ...(mode === "player" && !rosterTeamSeasonContext ? { isPlayer: true } : {}),
+        ...(mode === "trainer" && !rosterTeamSeasonContext ? { isTrainer: true } : {}),
         OR: [
           { firstName: { contains: query, mode: "insensitive" } },
           { lastName: { contains: query, mode: "insensitive" } },
@@ -124,12 +132,20 @@ export async function GET(request: NextRequest) {
       }
 
       if (mode === "player") {
-        if (!person.dateOfBirth || allowedBirthYears.length === 0) {
-          return false;
+        if (rosterTeamSeasonContext) {
+          if (!juniorBirthYearFilter) {
+            return true;
+          }
+
+          if (!person.dateOfBirth) {
+            return true;
+          }
+
+          const birthYear = new Date(person.dateOfBirth).getUTCFullYear();
+          return juniorBirthYearFilter.includes(birthYear);
         }
 
-        const birthYear = new Date(person.dateOfBirth).getUTCFullYear();
-        return allowedBirthYears.includes(birthYear);
+        return Boolean(person.dateOfBirth);
       }
 
       if (mode === "trainer") {

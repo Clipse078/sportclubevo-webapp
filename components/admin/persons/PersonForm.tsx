@@ -31,6 +31,7 @@ import { Plus, X } from "lucide-react";
 import { Button, FormSection, ValidationSummary } from "@/components/ui";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { FormPagePattern } from "@/components/ui/patterns";
+import { sanitizeInternalDashboardReturnPath } from "@/lib/navigation/safe-internal-return-path";
 
 const MAX_CUSTOM_FUNCTION_LENGTH = 100;
 const MAX_CUSTOM_FUNCTIONS = 20;
@@ -38,6 +39,7 @@ const MAX_CUSTOM_FUNCTIONS = 20;
 type PersonFormProps = {
   mode: "create" | "edit";
   personId?: string;
+  returnTo?: string | null;
   defaultValues?: {
     firstName?: string;
     lastName?: string;
@@ -57,8 +59,14 @@ type PersonFormProps = {
   };
 };
 
-export default function PersonForm({ mode, personId, defaultValues }: PersonFormProps) {
+export default function PersonForm({
+  mode,
+  personId,
+  returnTo,
+  defaultValues,
+}: PersonFormProps) {
   const router = useRouter();
+  const safeReturnTo = sanitizeInternalDashboardReturnPath(returnTo);
 
   const [firstName, setFirstName] = useState(defaultValues?.firstName ?? "");
   const [lastName, setLastName] = useState(defaultValues?.lastName ?? "");
@@ -185,7 +193,7 @@ export default function PersonForm({ mode, personId, defaultValues }: PersonForm
         return;
       }
 
-      router.push("/dashboard/persons");
+      router.push(safeReturnTo ?? "/dashboard/persons");
       router.refresh();
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
