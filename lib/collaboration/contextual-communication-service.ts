@@ -36,6 +36,7 @@ import {
   parseActivityChangeOrchestrationMeta,
 } from "@/lib/collaboration/activity-change/orchestration-meta";
 import { loadTrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
+import { loadTrainingSeriesActivitySnapshots } from "@/lib/collaboration/training/load-training-series-activity-snapshots";
 import {
   buildTrainingActivityChangeSet,
   diffTrainingActivitySnapshots,
@@ -44,10 +45,7 @@ import { resolveContextualCommunicationSendAuthorization } from "@/lib/collabora
 import { buildActivityChangeFingerprint } from "@/lib/collaboration/activity-change/fingerprint";
 import type { MultiActivityChangeSet } from "@/lib/collaboration/multi-activity/types";
 import { buildMultiActivityBatchFingerprint } from "@/lib/collaboration/multi-activity/batch-fingerprint";
-import {
-  buildMultiTrainingChangeAnnouncementBody,
-  buildMultiTrainingChangeSubject,
-} from "@/lib/collaboration/multi-activity/multi-activity-presentation";
+import { buildMultiTrainingPresentationSummary } from "@/lib/collaboration/multi-activity/multi-activity-presentation";
 import { resolveMultiActivityTrainingDispatchPreview } from "@/lib/collaboration/multi-activity/multi-activity-dispatch-preview";
 import { filterCommunicationWorthyChanges } from "@/lib/collaboration/activity-change/policy";
 import type { TrainingActivitySnapshot } from "@/lib/collaboration/training/training-activity-snapshot";
@@ -1152,21 +1150,7 @@ export async function prepareMultiTrainingActivityChangeCommunicationDraft(input
 }): Promise<PrepareContextualCommunicationResult> {
   validateMultiActivityChangeSet(input.multiChangeSet);
 
-  const snapshots: TrainingActivitySnapshot[] = [];
-  for (const changeSet of input.multiChangeSet.changeSets) {
-    const snapshot = await loadTrainingActivitySnapshot({
-      tenantId: input.tenantId,
-      sessionId: changeSet.activityId,
-    });
-    if (!snapshot) {
-      throw new TeamCommunicationNotFoundError("training session not found");
-    }
-    validateChangeSetAgainstCurrentSnapshot(snapshot, changeSet);
-    snapshots.push(snapshot);
-  }
-
   const teamId = input.multiChangeSet.teamId;
-  const teamName = snapshots[0]?.teamName?.trim() || "Team";
 
   const { canCommunicate } = await resolveContextualCommunicationSendAuthorization({
     tenantId: input.tenantId,
@@ -1178,15 +1162,6 @@ export async function prepareMultiTrainingActivityChangeCommunicationDraft(input
     throw new TeamCommunicationForbiddenError("TEAM_COMMUNICATION_SEND_DENIED");
   }
 
-  const summaries = snapshots.map((snapshot, index) => ({
-    scheduleLine: snapshot.scheduleLine,
-    dateKey: snapshot.dateKey,
-    entries: input.multiChangeSet.changeSets[index]!.entries,
-  }));
-
-  const subject = buildMultiTrainingChangeSubject(teamName, summaries.length);
-  const bodyText = buildMultiTrainingChangeAnnouncementBody({ summaries });
-
   const existing = await findExistingMultiActivityChangeDraft({
     tenantId: input.tenantId,
     teamId,
@@ -1194,26 +1169,75 @@ export async function prepareMultiTrainingActivityChangeCommunicationDraft(input
     batchFingerprint: input.multiChangeSet.batchFingerprint,
   });
 
+  const snapshotMap = await loadTrainingSeriesActivitySnapshots({
+    tenantId: input.tenantId,
+    trainingSeriesId: input.trainingSeriesId,
+  });
+
+  const snapshots: TrainingActivitySnapshot[] = [];
+  for (const changeSet of input.multiChangeSet.changeSets) {
+    const snapshot = snapshotMap.get(changeSet.activityId);
+    if (!snapshot) {
+      throw new TeamCommunicationNotFoundError("training session not found");
+    }
+    validateChangeSetAgainstCurrentSnapshot(snapshot, changeSet);
+    snapshots.push(snapshot);
+  }
+
+  const teamName = snapshots[0]?.teamName?.trim() || "Team";
+  const trainingTitle = snapshots[0]?.title?.trim() || teamName;
+  const timezone = snapshots[0]?.timezone ?? "Europe/Zurich";
+  const locale = snapshots[0]?.locale ?? "de-CH";
+
+  const summaries = snapshots.map((snapshot, index) => ({
+    scheduleLine: snapshot.scheduleLine,
+    dateKey: snapshot.dateKey,
+    startTime: snapshot.startTime,
+    endTime: snapshot.endTime,
+    entries: input.multiChangeSet.changeSets[index]!.entries,
+  }));
+
+  const presentation = buildMultiTrainingPresentationSummary({
+    teamName,
+    trainingTitle,
+    timezone,
+    locale,
+    summaries,
+  });
+  const subject = presentation.subject;
+  const bodyText = presentation.bodyText;
+
   const anchorSessionId = input.multiChangeSet.changeSets[0]!.activityId;
   const anchorSnapshot = snapshots[0]!;
   const audienceSpec = defaultTeamOperationalAudience(teamId);
   const audienceLabel = teamName;
+  const sessionIds = input.multiChangeSet.changeSets.map((row) => row.activityId);
 
-  if (existing) {
-    return attachPrepareDispatchPreview({
+  async function attachMultiActivityDispatchPreview(
+    base: Omit<PrepareContextualCommunicationResult, "audienceLabel" | "recipientCount" | "canDispatch">,
+  ): Promise<PrepareContextualCommunicationResult> {
+    const unionPreview = await resolveMultiActivityTrainingDispatchPreview({
       tenantId: input.tenantId,
       senderUserId: input.senderUserId,
-      eventId: anchorSessionId,
-      audienceSpec,
+      sessionIds,
+      audience: audienceSpec,
+    });
+    return {
+      ...base,
       audienceLabel,
-      base: {
-        draftId: existing.id,
-        teamId,
-        redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${existing.id}`,
-        reusedExistingDraft: true,
-        subject,
-        bodyText,
-      },
+      recipientCount: unionPreview.recipientCount,
+      canDispatch: unionPreview.canDispatch,
+    };
+  }
+
+  if (existing) {
+    return attachMultiActivityDispatchPreview({
+      draftId: existing.id,
+      teamId,
+      redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${existing.id}`,
+      reusedExistingDraft: true,
+      subject,
+      bodyText,
     });
   }
 
@@ -1223,7 +1247,7 @@ export async function prepareMultiTrainingActivityChangeCommunicationDraft(input
     changeFingerprint: input.multiChangeSet.batchFingerprint,
     multiActivityBatch: true,
     batchOperationId: input.multiChangeSet.batchOperationId,
-    relatedActivityIds: input.multiChangeSet.changeSets.map((row) => row.activityId),
+    relatedActivityIds: sessionIds,
     relatedChangeFingerprints: input.multiChangeSet.changeSets.map((row) => row.fingerprint),
     eventAnchor: {
       eventKind: "TRAINING",
@@ -1245,24 +1269,14 @@ export async function prepareMultiTrainingActivityChangeCommunicationDraft(input
     orchestrationMetaJson: orchestrationMeta as unknown as import("@prisma/client").Prisma.InputJsonValue,
   });
 
-  const unionPreview = await resolveMultiActivityTrainingDispatchPreview({
-    tenantId: input.tenantId,
-    senderUserId: input.senderUserId,
-    sessionIds: input.multiChangeSet.changeSets.map((row) => row.activityId),
-    audience: audienceSpec,
-  });
-
-  return {
+  return attachMultiActivityDispatchPreview({
     draftId: draft.id,
     teamId,
     redirectPath: `/dashboard/teams/${teamId}/kommunikation?communicationId=${draft.id}`,
     reusedExistingDraft: false,
     subject,
     bodyText,
-    audienceLabel,
-    recipientCount: unionPreview.recipientCount,
-    canDispatch: unionPreview.canDispatch,
-  };
+  });
 }
 
 export async function publishPreparedMultiTrainingActivityChangeCommunication(input: {

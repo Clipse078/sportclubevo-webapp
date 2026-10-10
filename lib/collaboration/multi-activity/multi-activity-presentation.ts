@@ -4,48 +4,85 @@
 
 import type { ActivityChangeEntry } from "@/lib/collaboration/activity-change/types";
 import {
-  DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE,
-  summarizeActivityChangeLine,
-} from "@/lib/collaboration/activity-change/presentation";
+  buildMultiTrainingCommunicationSummary,
+  type MultiActivityCommunicationSummary,
+} from "@/lib/collaboration/multi-activity/multi-activity-communication-summary";
 
 export type MultiTrainingActivityChangeSummary = {
   scheduleLine: string | null;
   dateKey: string;
+  startTime: string;
+  endTime: string;
   entries: ActivityChangeEntry[];
 };
 
-function formatShortDateLine(dateKey: string): string {
-  const [year, month, day] = dateKey.split("-");
-  if (!year || !month || !day) return dateKey;
-  return `${day}.${month}.${year}`;
-}
-
 export function buildMultiTrainingChangeAnnouncementBody(input: {
   summaries: MultiTrainingActivityChangeSummary[];
+  teamName: string;
+  trainingTitle: string;
+  timezone: string;
+  locale?: string;
 }): string {
-  const count = input.summaries.length;
-  const intro =
-    count === 1
-      ? "Das Training wurde angepasst:"
-      : `Mehrere Trainings wurden geändert (${count}):`;
-
-  const parts: string[] = [intro, ""];
-
-  for (const summary of input.summaries) {
-    const dateLabel = summary.scheduleLine?.split(" · ")[0]?.trim() ?? formatShortDateLine(summary.dateKey);
-    parts.push(dateLabel);
-    for (const entry of summary.entries) {
-      parts.push(`• ${summarizeActivityChangeLine(entry, DEFAULT_ACTIVITY_CHANGE_FIELD_LABELS_DE)}`);
-    }
-    parts.push("");
-  }
-
-  return parts.join("\n").trim();
+  const summary = buildMultiTrainingCommunicationSummary({
+    teamName: input.teamName,
+    trainingTitle: input.trainingTitle,
+    timezone: input.timezone,
+    locale: input.locale ?? "de-CH",
+    activities: input.summaries.map((row, index) => ({
+      activityId: `activity-${index}`,
+      dateKey: row.dateKey,
+      scheduleLine: row.scheduleLine,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      entries: row.entries,
+    })),
+  });
+  return summary.bodyText;
 }
 
-export function buildMultiTrainingChangeSubject(teamName: string, activityCount: number): string {
-  if (activityCount <= 1) {
-    return `Änderung: Training ${teamName}`.trim();
-  }
-  return `Änderung: ${activityCount} Trainings · ${teamName}`.trim();
+export function buildMultiTrainingChangeSubject(input: {
+  teamName: string;
+  summaries: MultiTrainingActivityChangeSummary[];
+  trainingTitle: string;
+  timezone: string;
+  locale?: string;
+}): string {
+  const summary = buildMultiTrainingCommunicationSummary({
+    teamName: input.teamName,
+    trainingTitle: input.trainingTitle,
+    timezone: input.timezone,
+    locale: input.locale ?? "de-CH",
+    activities: input.summaries.map((row, index) => ({
+      activityId: `activity-${index}`,
+      dateKey: row.dateKey,
+      scheduleLine: row.scheduleLine,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      entries: row.entries,
+    })),
+  });
+  return summary.subject;
+}
+
+export function buildMultiTrainingPresentationSummary(input: {
+  teamName: string;
+  trainingTitle: string;
+  timezone: string;
+  locale?: string;
+  summaries: MultiTrainingActivityChangeSummary[];
+}): MultiActivityCommunicationSummary {
+  return buildMultiTrainingCommunicationSummary({
+    teamName: input.teamName,
+    trainingTitle: input.trainingTitle,
+    timezone: input.timezone,
+    locale: input.locale ?? "de-CH",
+    activities: input.summaries.map((row, index) => ({
+      activityId: `activity-${index}`,
+      dateKey: row.dateKey,
+      scheduleLine: row.scheduleLine,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      entries: row.entries,
+    })),
+  });
 }

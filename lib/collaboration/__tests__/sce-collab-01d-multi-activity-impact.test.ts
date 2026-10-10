@@ -134,17 +134,25 @@ describe("SCE-COLLAB-01D multi-activity grouping", () => {
     expect(multiChangeSet?.teamId).toBe("team-1");
   });
 
-  it("presentation — grouped body lists per-activity lines", () => {
+  it("presentation — heterogeneous small set lists per-activity lines", () => {
     const body = buildMultiTrainingChangeAnnouncementBody({
+      teamName: "Junioren F2",
+      trainingTitle: "Training",
+      timezone: "Europe/Zurich",
+      locale: "de-CH",
       summaries: [
         {
           dateKey: "2026-10-19",
           scheduleLine: "Montag, 19. Oktober 2026 · 18:00–19:00",
+          startTime: "18:00",
+          endTime: "19:00",
           entries: trainingChangeSet("s1", "START_TIME", "17:00", "18:00").entries,
         },
         {
           dateKey: "2026-10-21",
           scheduleLine: "Mittwoch, 21. Oktober 2026 · 19:00–20:00",
+          startTime: "19:00",
+          endTime: "20:00",
           entries: trainingChangeSet("s2", "START_TIME", "18:00", "19:00").entries,
         },
       ],
