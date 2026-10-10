@@ -37,6 +37,7 @@ export type TeamCockpitAccess = {
   tenant: TenantContext;
   team: TeamCockpitTeam;
   canManage: boolean;
+  canManagePeople: boolean;
   canDelete: boolean;
 };
 
@@ -69,6 +70,7 @@ export async function requireTeamCockpitAccess(
     tenant,
     team,
     canManage: hasPermission(session, PERMISSIONS.TEAMS_MANAGE),
+    canManagePeople: hasPermission(session, PERMISSIONS.PEOPLE_MANAGE),
     canDelete: hasPermission(session, PERMISSIONS.TEAMS_DELETE),
   };
 }

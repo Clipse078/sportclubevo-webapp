@@ -5,8 +5,9 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01A implemented / automated verified) |
+| **Mode** | IN_PROGRESS (01B UX ready for Human UAT) |
 | **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
+| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_PENDING |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
 | **PR** | #814 (DRAFT) |
@@ -21,7 +22,7 @@
 |--------|------|
 | `lib/teams/roster-membership-service.ts` | Single mutation seam for `PlayerSquadMember` / `TrainerTeamMember` (add, reactivate, remove). Used by existing team roster APIs. |
 | `lib/teams/resolve-current-team-season.ts` | Tenant-safe DB resolver for Team → canonical current `TeamSeason` (wraps `lib/teams/current-season.ts`). |
-| `lib/people/trainer-roster-alignment-diagnostic.ts` | Read-only PersonAssignment vs `TrainerTeamMember` alignment (States A–D) for future 01B UX. |
+| `lib/people/trainer-roster-alignment-diagnostic.ts` | Read-only PersonAssignment vs `TrainerTeamMember` alignment (States A–D). |
 
 ### Membership lifecycle
 
@@ -65,11 +66,73 @@ No automatic reconciliation in 01A; no STAGE data mutation.
 - `lib/teams/__tests__/sce-people-team-onboarding-01a-comm03-contract.test.ts`
 - Updated roster API security tests under `app/api/teams/__tests__/`
 
+## Slice 01B — Team Cockpit onboarding UX (implemented)
+
+### Entry points (Team Cockpit)
+
+| Surface | Route / anchor | Component |
+|---------|----------------|-----------|
+| Spielerkader | `/dashboard/teams/[teamId]/kader` · `#spielerkader` | `TeamSquadManagementCard` via `TeamRosterOverviewCard` |
+| Trainerteam | `/dashboard/teams/[teamId]/trainerteam` · `#trainerteam` | `TeamTrainerRosterSection` (assignment-only panel + `TeamTrainerManagementCard`) |
+
+Current season is resolved once server-side (`currentTeamSeasonId` from `getTeamDetailData` / `pickCurrentTeamSeason`). Cards show **Kader · Saison YYYY/YYYY** / **Trainerteam · Saison YYYY/YYYY** without exposing `TeamSeason` ids in copy.
+
+### Player flow
+
+1. **Spieler hinzufügen** opens SCE `Sheet` (not inline persistence jargon).
+2. `PeoplePicker` searches tenant People via `/api/people/search?mode=player&teamSeasonId=…` (roster context: non–player-capable persons remain visible; only **ACTIVE** squad rows excluded for reactivation).
+3. On select, `/api/teams/.../roster-onboarding/person-context` loads membership hints, multi-team info, and capacity flags.
+4. Confirm calls existing POST squad-members API (`teams.manage`). `router.refresh()` reconciles list/counts/empty state.
+5. **Als Spieler aktivieren** (explicit) uses existing PUT `/api/people/[id]` when actor has `people.manage`; otherwise link to People & Access.
+6. **Neue Person erfassen:** link to People & Access (no duplicate Person create form in Team Cockpit).
+
+### Trainer flow
+
+1. **Trainer hinzufügen** sheet + search (`mode=trainer` roster context).
+2. Optional `roleLabel` retained (display only).
+3. **Assignment-only (State B):** `listTrainerAssignmentOnlySuggestions` + `TeamTrainerAssignmentOnlyPanel` — copy *Als Trainer zugeordnet, aber noch nicht im Trainerteam dieser Saison* with **Zum Trainerteam hinzufügen** opening the add sheet (explicit confirm; no hidden PersonAssignment backfill).
+4. **ROSTER_ONLY:** no warning (sporting roster remains canonical).
+
+### Permissions & separation
+
+| Action | Permission |
+|--------|------------|
+| View roster / person context | `teams.view` |
+| Add/remove squad/trainer members | `teams.manage` |
+| Enable `isPlayer` / `isTrainer` on Person | `people.manage` |
+
+Roster membership does **not** create User, invitation, tenant access, guardian, or PersonAssignment.
+
+### Error UX
+
+Domain failures surface German actionable copy via `lib/teams/roster-onboarding-messages.ts` (duplicate active member, capacity, jahrgang, inactive TeamSeason, unauthorized). Foreign person/team ids remain non-enumerating 404.
+
+### Automated tests (01B)
+
+- `components/admin/teams/__tests__/sce-people-team-onboarding-01b-roster-ux.test.tsx`
+- `lib/teams/__tests__/sce-people-team-onboarding-01b-roster-onboarding-messages.test.ts`
+- `app/api/people/search/__tests__/sce-people-team-onboarding-01b-search.test.ts`
+- `app/api/teams/__tests__/sce-people-team-onboarding-01b-person-context.test.ts`
+- 01A regression suites unchanged green
+
+### Human UAT (01B — pending)
+
+Preferred team: **Junioren F2** (known ASSIGNMENT_ONLY trainer). Do **not** mutate FCA STAGE data during implementation.
+
+| Step | Check |
+|------|-------|
+| A | Open F2 Team Cockpit — current season visible; rosters empty/partial |
+| B | Spieler hinzufügen — search/select eligible Person **or** verify capacity/jahrgang guidance if none |
+| C | Assignment-only trainer surfaced; explicit add to Trainerteam if approved |
+| D | Roster updates without hard reload |
+| E | Person/User/access unchanged |
+
+If no safe player Person exists on STAGE (FCA ~4 persons), classify player portion **BLOCKED_BY_DATA** — do not seed club data without approval.
+
 ### Known gaps (deferred)
 
 | Gap | Target slice |
 |-----|----------------|
-| Team Cockpit onboarding UX (search/add flows) | 01B |
 | Invitations / User linking from roster | 01C |
 | Guardian onboarding at scale | 01D |
 | SFV / bulk import | 01E |

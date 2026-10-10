@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -8,7 +8,18 @@ import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { Button } from "@/components/ui/Button";
+import { Sheet } from "@/components/ui/Sheet";
+import TeamRosterRemoveDialog from "@/components/admin/teams/roster/TeamRosterRemoveDialog";
+import {
+  enablePersonCapacity,
+  fetchRosterPersonContext,
+} from "@/components/admin/teams/roster/roster-onboarding-client";
 import { getCanonicalSeasonLabel } from "@/lib/teams/jahrgang-rules";
+import {
+  mapRosterFetchErrorMessage,
+  trainerMembershipStatusHint,
+} from "@/lib/teams/roster-onboarding-messages";
+import type { RosterPersonOnboardingContext } from "@/lib/teams/roster-onboarding-queries";
 
 type TrainerMember = {
   id: string;
@@ -30,10 +41,12 @@ type TrainerMember = {
 type Props = {
   teamId: string;
   canManage: boolean;
+  canManagePeople?: boolean;
   sectionId?: string;
   teamSeason: {
     id: string;
     displayName: string;
+    status: string;
     trainerTeamWebsiteVisible: boolean;
     season: {
       id: string;
@@ -45,6 +58,9 @@ type Props = {
     };
     trainerTeamMembers: TrainerMember[];
   };
+  /** Pre-fill add sheet (e.g. assignment-only remediation). */
+  initialAddPerson?: PersonPickerResult | null;
+  onInitialAddPersonConsumed?: () => void;
 };
 
 const STATUS_OPTIONS = [
@@ -54,7 +70,7 @@ const STATUS_OPTIONS = [
 ];
 
 const fieldClass =
-  "w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]/30";
+  "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]/30";
 const labelClass = "block text-xs font-medium text-[var(--text-2)] mb-1.5";
 
 function getPersonName(person: {
@@ -68,18 +84,26 @@ function getPersonName(person: {
 export default function TeamTrainerManagementCard({
   teamId,
   canManage,
+  canManagePeople = false,
   sectionId,
   teamSeason,
+  initialAddPerson = null,
+  onInitialAddPersonConsumed,
 }: Props) {
   const router = useRouter();
-  const trainerCount = teamSeason.trainerTeamMembers.length;
+  const activeMembers = teamSeason.trainerTeamMembers.filter((m) => m.status === "ACTIVE");
+  const trainerCount = activeMembers.length;
 
   const saisonLabel = useMemo(() => {
     return getCanonicalSeasonLabel(teamSeason.season.startDate) ?? teamSeason.season.name;
   }, [teamSeason.season.startDate, teamSeason.season.name]);
 
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<PersonPickerResult | null>(null);
+  const [personContext, setPersonContext] = useState<RosterPersonOnboardingContext | null>(null);
+  const [contextLoading, setContextLoading] = useState(false);
+  const [contextError, setContextError] = useState<string | null>(null);
+
   const [assignStatus, setAssignStatus] = useState("ACTIVE");
   const [roleLabel, setRoleLabel] = useState("");
   const [isWebsiteVisible, setIsWebsiteVisible] = useState(true);
@@ -87,31 +111,118 @@ export default function TeamTrainerManagementCard({
   const [remarks, setRemarks] = useState("");
 
   const [assignLoading, setAssignLoading] = useState(false);
+  const [capacityLoading, setCapacityLoading] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignMessage, setAssignMessage] = useState<string | null>(null);
 
+  const [removeTarget, setRemoveTarget] = useState<TrainerMember | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
 
-  const existingTrainerPersonIds = useMemo(
-    () => teamSeason.trainerTeamMembers.map((member) => member.person.id),
-    [teamSeason.trainerTeamMembers],
+  const activeTrainerPersonIds = useMemo(
+    () => activeMembers.map((member) => member.person.id),
+    [activeMembers],
   );
 
+  const seasonMutable = teamSeason.status === "ACTIVE";
+
+  useEffect(() => {
+    if (!initialAddPerson) {
+      return;
+    }
+    setSelectedPerson(initialAddPerson);
+    setAddSheetOpen(true);
+    onInitialAddPersonConsumed?.();
+  }, [initialAddPerson, onInitialAddPersonConsumed]);
+
+  useEffect(() => {
+    if (!selectedPerson || !addSheetOpen) {
+      setPersonContext(null);
+      setContextError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setContextLoading(true);
+    setContextError(null);
+
+    fetchRosterPersonContext({
+      teamId,
+      teamSeasonId: teamSeason.id,
+      personId: selectedPerson.id,
+    })
+      .then((context) => {
+        if (!cancelled) {
+          setPersonContext(context);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setContextError(err instanceof Error ? err.message : "Kontext konnte nicht geladen werden.");
+          setPersonContext(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setContextLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [addSheetOpen, selectedPerson, teamId, teamSeason.id]);
+
   function resetAddForm() {
-    setShowAddForm(false);
+    setAddSheetOpen(false);
     setSelectedPerson(null);
+    setPersonContext(null);
+    setContextError(null);
     setRoleLabel("");
     setIsWebsiteVisible(true);
     setSortOrder("0");
     setRemarks("");
+    setAssignStatus("ACTIVE");
     setAssignError(null);
     setAssignMessage(null);
   }
 
+  const blockAssignBecauseActive =
+    personContext?.trainerMembership?.status === "ACTIVE";
+
+  async function handleEnableTrainerCapacity() {
+    if (!selectedPerson || !canManagePeople) {
+      return;
+    }
+
+    setCapacityLoading(true);
+    setAssignError(null);
+    try {
+      const updated = await enablePersonCapacity({
+        personId: selectedPerson.id,
+        capacity: "trainer",
+      });
+      setSelectedPerson(updated);
+      setAssignMessage("Trainer-Kapazität aktiviert. Sie können die Person jetzt dem Trainerteam hinzufügen.");
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : "Kapazität konnte nicht aktiviert werden.");
+    } finally {
+      setCapacityLoading(false);
+    }
+  }
+
   async function handleAssign() {
-    if (!canManage || !selectedPerson) {
-      setAssignError("Bitte zuerst eine Person auswählen.");
+    if (!canManage || !selectedPerson || !seasonMutable) {
+      setAssignError(
+        seasonMutable
+          ? "Bitte zuerst eine Person auswählen."
+          : "Trainerteam-Änderungen sind für diese Team-Saison nicht möglich.",
+      );
+      return;
+    }
+
+    if (blockAssignBecauseActive) {
+      setAssignError("Diese Person ist bereits im Trainerteam dieser Saison.");
       return;
     }
 
@@ -141,7 +252,10 @@ export default function TeamTrainerManagementCard({
 
       if (!response.ok) {
         throw new Error(
-          data?.error ?? "Trainer konnte nicht dem Trainerteam hinzugefügt werden.",
+          mapRosterFetchErrorMessage(
+            data?.error,
+            "Trainer konnte nicht dem Trainerteam hinzugefügt werden.",
+          ),
         );
       }
 
@@ -155,19 +269,12 @@ export default function TeamTrainerManagementCard({
     }
   }
 
-  async function handleRemove(member: TrainerMember) {
-    if (!canManage) {
+  async function handleRemoveConfirm() {
+    if (!canManage || !removeTarget) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Trainer "${getPersonName(member.person)}" wirklich aus dem Trainerteam entfernen?`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+    const member = removeTarget;
     setRemovingMemberId(member.id);
     setRemoveError(null);
 
@@ -181,10 +288,14 @@ export default function TeamTrainerManagementCard({
 
       if (!response.ok) {
         throw new Error(
-          data?.error ?? "Trainer konnte nicht aus dem Trainerteam entfernt werden.",
+          mapRosterFetchErrorMessage(
+            data?.error,
+            "Trainer konnte nicht aus dem Trainerteam entfernt werden.",
+          ),
         );
       }
 
+      setRemoveTarget(null);
       router.refresh();
     } catch (err) {
       setRemoveError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
@@ -192,6 +303,10 @@ export default function TeamTrainerManagementCard({
       setRemovingMemberId(null);
     }
   }
+
+  const membershipHint = personContext?.trainerMembership
+    ? trainerMembershipStatusHint(personContext.trainerMembership.status)
+    : null;
 
   return (
     <section
@@ -205,102 +320,189 @@ export default function TeamTrainerManagementCard({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">Trainerteam</h3>
-          <p className="mt-0.5 text-sm text-[var(--muted)]">
-            {trainerCount} Trainer · {saisonLabel}
-          </p>
+          <h3 className="text-base font-semibold text-[var(--foreground)]">
+            Trainerteam · {saisonLabel}
+          </h3>
+          <p className="mt-0.5 text-sm text-[var(--muted)]">{trainerCount} Trainer</p>
         </div>
 
-        {canManage ? (
+        {canManage && seasonMutable ? (
           <Button
             variant="secondary"
             size="sm"
             iconLeft={<Plus className="h-3.5 w-3.5" />}
-            onClick={() => setShowAddForm((current) => !current)}
+            onClick={() => setAddSheetOpen(true)}
             data-testid="team-trainer-add-button"
           >
-            Trainer
+            Trainer hinzufügen
           </Button>
         ) : null}
       </div>
 
-      {showAddForm && canManage ? (
-        <div className="mt-4 space-y-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
-          <div>
-            <p className="text-sm font-medium text-[var(--foreground)]">Trainer hinzufügen</p>
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              Neue Personen werden im People-Modul angelegt.
-            </p>
-          </div>
+      {!seasonMutable ? (
+        <p className="mt-3 text-sm text-[var(--muted)]">
+          Diese Team-Saison ist nicht aktiv — Trainerteam-Änderungen sind hier nicht möglich.
+        </p>
+      ) : null}
+
+      <Sheet
+        open={addSheetOpen}
+        onClose={resetAddForm}
+        title="Trainer hinzufügen"
+        description={`Person dem Trainerteam für ${saisonLabel} zuordnen.`}
+        footer={
+          <>
+            <Button variant="secondary" size="sm" onClick={resetAddForm}>
+              Abbrechen
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              loading={assignLoading}
+              disabled={!selectedPerson || blockAssignBecauseActive || !seasonMutable}
+              onClick={handleAssign}
+              data-testid="team-trainer-add-confirm"
+            >
+              {personContext?.trainerMembership &&
+              ["INACTIVE", "ARCHIVED"].includes(personContext.trainerMembership.status)
+                ? "Wieder zum Trainerteam hinzufügen"
+                : "Trainer hinzufügen"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-[var(--muted)]">
+            Bestehende Personen suchen. Neue Personen erfassen Sie unter{" "}
+            <Link href="/dashboard/persons" className="font-medium text-[var(--blue)] hover:underline">
+              People & Access
+            </Link>
+            .
+          </p>
 
           <PeoplePicker
             mode="trainer"
             teamSeasonId={teamSeason.id}
-            excludeIds={existingTrainerPersonIds}
+            excludeIds={activeTrainerPersonIds}
             selected={selectedPerson}
             onSelect={setSelectedPerson}
             onClearSelected={() => setSelectedPerson(null)}
-            placeholder="Trainer suchen nach Name, E-Mail…"
+            placeholder="Trainer suchen nach Name…"
           />
 
           {selectedPerson ? (
             <div className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                <label className="block">
-                  <span className={labelClass}>Status</span>
-                  <select
-                    value={assignStatus}
-                    onChange={(event) => setAssignStatus(event.target.value)}
-                    className={fieldClass}
-                  >
-                    {STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
+              {contextLoading ? (
+                <p className="text-xs text-[var(--muted)]">Prüfe Trainerteam-Status…</p>
+              ) : null}
+              {contextError ? (
+                <p className="text-sm text-[var(--sce-danger)]">{contextError}</p>
+              ) : null}
+
+              {membershipHint ? (
+                <p className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-[var(--text-2)]">
+                  {membershipHint}
+                </p>
+              ) : null}
+
+              {personContext && !personContext.person.isTrainer ? (
+                <div className="rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-3 text-sm">
+                  <p className="font-medium text-[var(--foreground)]">Keine Trainer-Kapazität</p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Diese Person ist nicht als Trainer/in markiert.
+                  </p>
+                  {canManagePeople ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-3"
+                      loading={capacityLoading}
+                      onClick={handleEnableTrainerCapacity}
+                      data-testid="team-trainer-enable-trainer-capacity"
+                    >
+                      Als Trainer aktivieren
+                    </Button>
+                  ) : (
+                    <p className="mt-2 text-xs text-[var(--muted)]">
+                      Bitte Kapazität unter People & Access anpassen (people.manage).
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+              {personContext && personContext.otherActiveTrainerTeams.length > 0 ? (
+                <div className="text-xs text-[var(--muted)]">
+                  <p className="font-medium text-[var(--text-2)]">Aktuell auch im Trainerteam:</p>
+                  <ul className="mt-1 list-inside list-disc">
+                    {personContext.otherActiveTrainerTeams.map((row) => (
+                      <li key={row.teamId}>
+                        {row.teamName} ({row.seasonLabel})
+                      </li>
                     ))}
-                  </select>
-                </label>
+                  </ul>
+                </div>
+              ) : null}
 
-                <label className="block">
-                  <span className={labelClass}>Rolle</span>
-                  <input
-                    type="text"
-                    value={roleLabel}
-                    onChange={(event) => setRoleLabel(event.target.value)}
-                    className={fieldClass}
-                    placeholder="z. B. Cheftrainer"
-                  />
-                </label>
+              {!blockAssignBecauseActive && personContext?.person.isTrainer !== false ? (
+                <>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <label className="block">
+                      <span className={labelClass}>Status</span>
+                      <select
+                        value={assignStatus}
+                        onChange={(event) => setAssignStatus(event.target.value)}
+                        className={fieldClass}
+                      >
+                        {STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
 
-                <label className="block">
-                  <span className={labelClass}>Sortierung</span>
-                  <input
-                    type="number"
-                    value={sortOrder}
-                    onChange={(event) => setSortOrder(event.target.value)}
-                    className={fieldClass}
-                  />
-                </label>
-              </div>
+                    <label className="block">
+                      <span className={labelClass}>Rolle</span>
+                      <input
+                        type="text"
+                        value={roleLabel}
+                        onChange={(event) => setRoleLabel(event.target.value)}
+                        className={fieldClass}
+                        placeholder="z. B. Cheftrainer"
+                      />
+                    </label>
 
-              <label className="block">
-                <span className={labelClass}>Bemerkungen</span>
-                <input
-                  type="text"
-                  value={remarks}
-                  onChange={(event) => setRemarks(event.target.value)}
-                  className={fieldClass}
-                />
-              </label>
+                    <label className="block">
+                      <span className={labelClass}>Sortierung</span>
+                      <input
+                        type="number"
+                        value={sortOrder}
+                        onChange={(event) => setSortOrder(event.target.value)}
+                        className={fieldClass}
+                      />
+                    </label>
+                  </div>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={isWebsiteVisible}
-                  onChange={(event) => setIsWebsiteVisible(event.target.checked)}
-                />
-                Website sichtbar
-              </label>
+                  <label className="block">
+                    <span className={labelClass}>Bemerkungen</span>
+                    <input
+                      type="text"
+                      value={remarks}
+                      onChange={(event) => setRemarks(event.target.value)}
+                      className={fieldClass}
+                    />
+                  </label>
+
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isWebsiteVisible}
+                      onChange={(event) => setIsWebsiteVisible(event.target.checked)}
+                    />
+                    Website sichtbar
+                  </label>
+                </>
+              ) : null}
 
               {assignError ? (
                 <p className="text-sm font-medium text-[var(--sce-danger)]">{assignError}</p>
@@ -308,25 +510,24 @@ export default function TeamTrainerManagementCard({
               {assignMessage ? (
                 <p className="text-sm font-medium text-emerald-600">{assignMessage}</p>
               ) : null}
-
-              <div className="flex justify-end gap-2">
-                <Button variant="secondary" size="sm" onClick={resetAddForm}>
-                  Abbrechen
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  loading={assignLoading}
-                  disabled={!selectedPerson}
-                  onClick={handleAssign}
-                >
-                  Trainer hinzufügen
-                </Button>
-              </div>
             </div>
           ) : null}
         </div>
-      ) : null}
+      </Sheet>
+
+      <TeamRosterRemoveDialog
+        open={removeTarget != null}
+        title="Trainer aus Trainerteam entfernen"
+        description={
+          removeTarget
+            ? `«${getPersonName(removeTarget.person)}» aus dem Trainerteam ${saisonLabel} entfernen?`
+            : ""
+        }
+        confirmLabel="Aus Trainerteam entfernen"
+        loading={removingMemberId != null}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={handleRemoveConfirm}
+      />
 
       {removeError ? (
         <p className="mt-3 text-sm font-medium text-[var(--sce-danger)]">{removeError}</p>
@@ -334,14 +535,16 @@ export default function TeamTrainerManagementCard({
 
       {trainerCount === 0 ? (
         <div className="mt-4" data-testid="team-trainer-empty">
-          <p className="text-sm text-[var(--muted)]">Noch keine Trainer im Trainerteam.</p>
-          {canManage && !showAddForm ? (
+          <p className="text-sm text-[var(--muted)]">
+            Noch keine Trainer im Trainerteam der Saison {saisonLabel}.
+          </p>
+          {canManage && seasonMutable ? (
             <Button
               variant="secondary"
               size="sm"
               className="mt-3"
               iconLeft={<Plus className="h-3.5 w-3.5" />}
-              onClick={() => setShowAddForm(true)}
+              onClick={() => setAddSheetOpen(true)}
             >
               Trainer hinzufügen
             </Button>
@@ -374,12 +577,12 @@ export default function TeamTrainerManagementCard({
                   label={member.status}
                   tone={member.status === "ACTIVE" ? "success" : "muted"}
                 />
-                {canManage ? (
+                {canManage && seasonMutable ? (
                   <Button
                     variant="secondary"
                     size="sm"
                     loading={removingMemberId === member.id}
-                    onClick={() => handleRemove(member)}
+                    onClick={() => setRemoveTarget(member)}
                   >
                     Entfernen
                   </Button>

@@ -7,13 +7,16 @@ type Props = {
 
 export default async function TeamTrainerteamPage({ params }: Props) {
   const { teamId } = await params;
-  const { team, canManage } = await requireTeamCockpitAccess(teamId);
+  const { tenantId, team, canManage, canManagePeople } =
+    await requireTeamCockpitAccess(teamId);
 
   return (
     <TeamRosterOverviewCard
+      tenantId={tenantId}
       teamId={team.id}
       teamAgeGroup={team.ageGroup}
       canManage={canManage}
+      canManagePeople={canManagePeople}
       teamSeasons={team.teamSeasons}
       currentTeamSeasonId={team.currentTeamSeasonId ?? null}
       mode="trainer"

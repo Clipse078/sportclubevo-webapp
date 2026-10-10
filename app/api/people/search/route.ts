@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
 
     let allowedBirthYears: number[] = [];
     let excludedPersonIds = new Set<string>();
+    const rosterTeamSeasonContext =
+      Boolean(teamSeasonId) && (mode === "player" || mode === "trainer");
 
     if (teamSeasonId && mode === "player") {
       const teamSeason = await prisma.teamSeason.findFirst({
@@ -43,6 +45,7 @@ export async function GET(request: NextRequest) {
             },
           },
           playerSquadMembers: {
+            where: { status: "ACTIVE" },
             select: {
               personId: true,
             },
@@ -69,6 +72,7 @@ export async function GET(request: NextRequest) {
         where: { id: teamSeasonId, team: { tenantId } },
         select: {
           trainerTeamMembers: {
+            where: { status: "ACTIVE" },
             select: {
               personId: true,
             },
@@ -89,8 +93,8 @@ export async function GET(request: NextRequest) {
       where: {
         tenantId,
         isActive: true,
-        ...(mode === "player" ? { isPlayer: true } : {}),
-        ...(mode === "trainer" ? { isTrainer: true } : {}),
+        ...(mode === "player" && !rosterTeamSeasonContext ? { isPlayer: true } : {}),
+        ...(mode === "trainer" && !rosterTeamSeasonContext ? { isTrainer: true } : {}),
         OR: [
           { firstName: { contains: query, mode: "insensitive" } },
           { lastName: { contains: query, mode: "insensitive" } },
@@ -124,6 +128,15 @@ export async function GET(request: NextRequest) {
       }
 
       if (mode === "player") {
+        if (rosterTeamSeasonContext) {
+          if (!person.dateOfBirth || allowedBirthYears.length === 0) {
+            return true;
+          }
+
+          const birthYear = new Date(person.dateOfBirth).getUTCFullYear();
+          return allowedBirthYears.includes(birthYear);
+        }
+
         if (!person.dateOfBirth || allowedBirthYears.length === 0) {
           return false;
         }
