@@ -8,9 +8,9 @@
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **CLOSED** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; merge `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` 2026-10-09) |
-| **SCE-COLLAB-01D** (Multi-activity impact) | **IMPLEMENTED / HUMAN_UAT_R2_RETEST_PENDING** (R1 save/history PASS; R2 composer prepare + semantic message; see `SCE-COLLAB-01D.md`) |
+| **SCE-COLLAB-01D** (Multi-activity impact) | **CLOSED** (PR [#816](https://github.com/Clipse078/sportclubevo-webapp/pull/816) → STAGE; Human UAT R2 **PASS** 2026-10-10; see `SCE-COLLAB-01D.md`) |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B + 01C closed; 01D Human UAT R2 retest pending) |
+| SCE-COLLAB-01 (foundation) | **CLOSED** (01A–01D delivered; explicit deferred scope preserved below) |
 
 ## Product principle
 
@@ -472,7 +472,7 @@ Evidence: user-provided explicit approval of COLLAB_UAT_01–06 (closure package
 | PR | #810 → `STAGE` |
 | Scope delivered | Training contextual collaboration only |
 
-**Not closed:** SCE-COLLAB-01 overall roadmap (01C Human UAT, 01D multi-activity impact, TRAINER-SPIELERBOERSE-01).
+**Deferred (separate packages):** TRAINER-SPIELERBOERSE-01; planner bulk multi-activity; SFV async inbox; Match Squad & Player Availability (`MATCH_SQUAD_PLAYER_AVAILABILITY`).
 
 ---
 
@@ -861,7 +861,39 @@ Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present o
 
 **01C status:** **CLOSED** (PR #812 → STAGE).
 
-**COLLAB-01 status:** **IN_PROGRESS** (01A/01B/01C CLOSED; 01D outstanding).
+**COLLAB-01 status:** **CLOSED** (01A–01D).
+
+### SCE-COLLAB-01 — foundation closure (2026-10-10)
+
+| Delivered slice | Vertical coverage |
+|-----------------|-------------------|
+| **01A** | Training contextual collaboration foundation |
+| **01B** | Match + Tournament adapters |
+| **01C** | Club Events / Veranstaltungen |
+| **01D** | Multi-activity impact via **Training Series** PUT (grouped impact, deduped audience, historical protection, semantic multi-activity communication) |
+
+**Product principle delivered:** **CHANGE → IMPACT → AUDIENCE → INFORM**
+
+**Explicit boundaries (not implied by closure):**
+
+- Not every future activity type or bulk workflow has a multi-activity adapter yet.
+- 01D vertical slice is **training series mutation** only; planner bulk DnD, SFV async inbox, match/tournament multi-activity batches remain **deferred** (see `SCE-COLLAB-01D.md`).
+
+**Next roadmap package (terminology only — not implemented here):** **Match Squad & Player Availability** (`MATCH_SQUAD_PLAYER_AVAILABILITY`). Remaining/unselected players are **not** automatically available to other teams; **Stammtrainer** retains control.
+
+### SCE-COLLAB-01D — STAGE merge closure (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| PR | [#816](https://github.com/Clipse078/sportclubevo-webapp/pull/816) |
+| Human UAT | R1 PASS (save/history); R2 **PASS** (composer + semantic summary) |
+| Feature head | `60d4377a57812afae9c17c33c2164bb914e9ca85` |
+| Pre-merge STAGE | `e16a6d983601a1cfde9ad9273f2e1036e8007000` |
+| Code merge SHA (STAGE) | *(recorded in post-merge closure doc commit)* |
+| Schema / migration / permission / COMM-03 semantic change | **NO** |
+| PROD | **Untouched** |
+
+Detail: `SCE-COLLAB-01D.md`.
 
 ### SCE-COLLAB-01C — STAGE merge closure (2026-10-09)
 
@@ -882,4 +914,4 @@ Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present o
 | PROD | **Untouched** |
 | Zero-recipient on STAGE | **EXPECTED_DATA_STATE** — follow **SCE-PEOPLE-TEAM-ONBOARDING-01** (no roster fabrication for UAT) |
 
-**Next package (recommended):** **SCE-PEOPLE-TEAM-ONBOARDING-01** — then **SCE-COLLAB-01D** (multi-activity impact).
+**Next package (roadmap):** **Match Squad & Player Availability** (`MATCH_SQUAD_PLAYER_AVAILABILITY`) — branch from canonical STAGE after PR #816 merge.

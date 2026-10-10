@@ -5,9 +5,11 @@
 | Field | Value |
 |-------|-------|
 | Package | **SCE-COLLAB-01D** |
-| Status | **IMPLEMENTED / HUMAN_UAT_R2_RETEST_PENDING** |
-| Parent SCE-COLLAB-01 | **IN_PROGRESS** (01A/01B/01C closed; 01D not closed until Human UAT) |
+| Status | **CLOSED** (PR [#816](https://github.com/Clipse078/sportclubevo-webapp/pull/816) → STAGE; Human UAT R2 **PASS** 2026-10-10) |
+| Parent SCE-COLLAB-01 | **CLOSED** (01A–01D delivered; see parent doc) |
+| Feature head (implementation) | `60d4377a57812afae9c17c33c2164bb914e9ca85` |
 | Schema / migration | **NO** |
+| STAGE baseline at slice start | `e16a6d983601a1cfde9ad9273f2e1036e8007000` |
 
 ## Human UAT R1 (2026-10-10) — FAIL → R1 remediation
 
@@ -37,7 +39,20 @@
 | Composer open | **Änderung kommunizieren** took tens of seconds before composer usable |
 | Generated message | **42** identical date blocks (`Startzeit: 19:00 → 18:45`) — poor recipient UX |
 
-**Classification after R1:** IMPLEMENTED / HUMAN_UAT_R2_REMEDIATION_REQUIRED
+**Classification after R1:** IMPLEMENTED / HUMAN_UAT_R2_REMEDIATION_REQUIRED (composer findings only)
+
+### Human UAT R2 (2026-10-10) — PASS (composer / communication)
+
+| Check | Result |
+|-------|--------|
+| Composer open (`Änderung kommunizieren`) | Performance **accepted** by Human UAT |
+| Generated message | **Semantic recurring-change summary** accepted (no 42 identical date blocks) |
+| Redundant per-date communication | **Removed** for uniform schedule change |
+| Communication editability | **PASS** — draft remains editable |
+| Detailed activity impact | **PASS** — operational list available separately from recipient summary |
+| Cancel / reopen lifecycle | **PASS** — unresolved impact retained; draft reuse on reopen |
+
+**Final classification:** **HUMAN_UAT_R2 = PASS** — no additional Human UAT required for 01D.
 
 ## Remediation (R1)
 
@@ -126,19 +141,53 @@ Activity mutation **never fails** when collaboration assembly fails (`multiActiv
 - `components/admin/collaboration/__tests__/ContextualMultiActivityChangeImpactSurface.test.tsx` — disclosure UX
 - Regression: 01A/01B/01C collaboration suites (run in CI batch)
 
-## Human UAT R2 re-test (safe)
+## Human UAT evidence (locked)
 
-**Do not** restore the nine historical Senioren 40+ sessions (known STAGE UAT contamination before R1 historical protection).
+| Round | Outcome |
+|-------|---------|
+| R1 initial | FAIL — save >60s; 51 impacts; historical sessions rewritten in list |
+| R1 remediation + re-UAT | PASS — fast save; 51 total / 42 changed / 9 protected; compact impact UX |
+| R2 initial | FAIL — slow composer; 42 redundant identical change blocks |
+| R2 remediation + re-UAT | **PASS** — fast prepare; semantic summary; editable draft; lifecycle OK |
 
-Preferred on existing unresolved **42-training** impact if still in client state after deploy:
+## Final invariants (closure)
 
-1. **Änderung kommunizieren** — composer usable in **≤ ~2s** (target **< 1s** after impact already prepared)
-2. Subject ≈ `Trainingszeit geändert · FC Allschwil Senioren 40+`
-3. Body: **one** recurring rule; effective date **14. Oktober 2026**; **Neu: 18:45–20:15** / **Bisher: 19:00–20:15**; no 42-date dump
-4. Cancel → impact retained; reopen → same draft, still fast
-5. Real send optional
+| Invariant | Closure verification |
+|-----------|------------------------|
+| **Multi-activity model** | One operation → many atomic `ActivityChangeImpact` items; grouping does not replace single-activity semantics |
+| **Operation boundary** | Training series PUT → many session changes → **one** grouped collaboration impact |
+| **Net impact** | Only changed activities; zero-diff excluded |
+| **Historical integrity** | Calendar-past sessions not re-synced on template edit; mutation boundary respected |
+| **Audience** | Equivalent team audience resolved once per distinct context |
+| **Recipient dedupe** | One COMM-03 PREVIEW per distinct team audience (impact + prepare) |
+| **Communication summary** | Recipient-facing compression separate from operational N-row impact detail |
+| **Failure isolation** | Collaboration assembly failure does not fail training series PUT |
+| **Lifecycle** | Cancel retains impact; send failure retains impact; successful send clears batch client state |
+| **Idempotency** | `batchFingerprint` prevents duplicate drafts for same unresolved batch |
+| **Security** | Activity edit auth separate from `communication.team.send`; tenant isolation unchanged |
 
-If impact state was lost (reload), use a **future-only** test series; do not mutate historical sessions.
+## Known STAGE UAT data (not an open product defect)
+
+During **pre-R1** Human UAT on STAGE, series **Senioren 40+ Training** (`cmsp4t1oa000004jvytoux8ju`) had **9** historical session rows altered by the old regeneration behavior.
+
+| Field | Value |
+|-------|-------|
+| Classification | **KNOWN_STAGE_UAT_DATA** |
+| Open product defect | **NO** — subsequent series mutations are protected |
+| Restoration via closure SQL | **NO** — use a supported product path later if desired |
+
+## Closure verification (2026-10-10)
+
+| Gate | Result |
+|------|--------|
+| Focused 01D + collaboration regression battery | **329/329 PASS** (29 files) |
+| Training generation sentinel | **38/38 PASS** |
+| ESLint (PR-changed TS/TSX) | **0 new errors** |
+| Build | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| Schema / migration / role / permission / COMM-03 semantic change | **NO** |
+| PROD | **Untouched** |
+
+**KNOWN_P2 (pre-existing):** `training-series-allocation-propagation.test.ts` — unhandled async rejection noise from dashboard/cache side effects in harness; **not** classified as 01D regression (tests still pass).
 
 ## Deferred
 
