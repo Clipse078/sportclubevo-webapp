@@ -350,9 +350,8 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
     );
 
     expect(screen.getByTestId("team-results-empty")).toHaveTextContent(
-      "Keine Resultate vorhanden.",
+      "Keine Resultate für 2026/2027 vorhanden.",
     );
-    expect(screen.getByTestId("team-results-empty")).toHaveTextContent("2026/2027");
   });
 
   it("P. renders safe score fallback for missing scores", () => {

@@ -26,15 +26,14 @@ export default function TeamResultsView({
 
       {results.length === 0 ? (
         <div
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-6"
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/80 px-4 py-3"
           data-testid="team-results-empty"
         >
-          <p className="text-sm text-[var(--muted)]">Keine Resultate vorhanden.</p>
-          {seasonName ? (
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Für {seasonName} sind derzeit keine abgeschlossenen Spiele hinterlegt.
-            </p>
-          ) : null}
+          <p className="text-sm text-[var(--muted)]">
+            {seasonName
+              ? `Keine Resultate für ${seasonName} vorhanden.`
+              : "Keine Resultate vorhanden."}
+          </p>
         </div>
       ) : (
         <ol

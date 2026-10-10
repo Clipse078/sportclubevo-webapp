@@ -97,7 +97,7 @@ beforeEach(() => {
 });
 
 describe("TeamSquadManagementCard onboarding UX", () => {
-  it("shows operational empty state with season label and opens add sheet", async () => {
+  it("shows operational empty state with season label and one primary add action", async () => {
     render(
       <TeamSquadManagementCard teamId="team-1" canManage teamSeason={teamSeason} />,
     );
@@ -106,7 +106,10 @@ describe("TeamSquadManagementCard onboarding UX", () => {
       "Noch keine Spieler im Kader der Saison 2026/2027",
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Spieler hinzufügen" })[0]!);
+    expect(screen.queryByTestId("team-squad-add-button")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Spieler hinzufügen" })).toHaveLength(1);
+
+    fireEvent.click(screen.getByTestId("team-squad-empty-add-button"));
     expect(screen.getByRole("dialog")).toHaveTextContent("Spieler hinzufügen");
   });
 
@@ -115,7 +118,7 @@ describe("TeamSquadManagementCard onboarding UX", () => {
       <TeamSquadManagementCard teamId="team-1" canManage teamSeason={teamSeason} />,
     );
 
-    fireEvent.click(screen.getByTestId("team-squad-add-button"));
+    fireEvent.click(screen.getByTestId("team-squad-empty-add-button"));
 
     const searchInput = screen.getByRole("combobox");
     fireEvent.change(searchInput, { target: { value: "Max" } });
@@ -190,7 +193,7 @@ describe("TeamSquadManagementCard onboarding UX", () => {
       <TeamSquadManagementCard teamId="team-1" canManage teamSeason={teamSeason} />,
     );
 
-    fireEvent.click(screen.getByTestId("team-squad-add-button"));
+    fireEvent.click(screen.getByTestId("team-squad-empty-add-button"));
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "No" } });
 
     await waitFor(() => {
@@ -203,6 +206,29 @@ describe("TeamSquadManagementCard onboarding UX", () => {
       expect(screen.getByText(/people\.manage/)).toBeInTheDocument();
       expect(screen.queryByTestId("team-squad-enable-player-capacity")).not.toBeInTheDocument();
     });
+  });
+
+  it("uses Switch toggles for captain, vice-captain, and website visibility", async () => {
+    render(
+      <TeamSquadManagementCard teamId="team-1" canManage teamSeason={teamSeason} />,
+    );
+
+    fireEvent.click(screen.getByTestId("team-squad-empty-add-button"));
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "Max" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Max Muster")).toBeInTheDocument();
+    });
+
+    fireEvent.mouseDown(screen.getByText("Max Muster"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("switch", { name: "Captain" })).toBeInTheDocument();
+      expect(screen.getByRole("switch", { name: "Vize-Captain" })).toBeInTheDocument();
+      expect(screen.getByRole("switch", { name: "Auf Website anzeigen" })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 });
 
@@ -239,7 +265,8 @@ describe("TeamTrainerRosterSection assignment-only remediation", () => {
     );
 
     expect(screen.getByTestId("team-trainer-assignment-only-panel")).toBeInTheDocument();
-    expect(screen.getByText(/Als Trainer zugeordnet/)).toBeInTheDocument();
+    expect(screen.getByText(/Trainer-Zuordnung vervollständigen/)).toBeInTheDocument();
+    expect(screen.getByText(/noch nicht im Trainerteam 2026\/2027/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("team-trainer-assignment-only-add-coach-1"));
     expect(screen.getByRole("dialog")).toHaveTextContent("Trainer hinzufügen");
   });

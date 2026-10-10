@@ -9,6 +9,7 @@ import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import TeamRosterRemoveDialog from "@/components/admin/teams/roster/TeamRosterRemoveDialog";
 import {
   enablePersonCapacity,
@@ -72,6 +73,8 @@ const STATUS_OPTIONS = [
 const fieldClass =
   "w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]/30";
 const labelClass = "block text-xs font-medium text-[var(--text-2)] mb-1.5";
+const rosterContextNoticeClass =
+  "rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-3 text-sm";
 
 function getPersonName(person: {
   firstName: string;
@@ -326,7 +329,7 @@ export default function TeamTrainerManagementCard({
           <p className="mt-0.5 text-sm text-[var(--muted)]">{trainerCount} Trainer</p>
         </div>
 
-        {canManage && seasonMutable ? (
+        {canManage && seasonMutable && trainerCount > 0 ? (
           <Button
             variant="secondary"
             size="sm"
@@ -406,7 +409,7 @@ export default function TeamTrainerManagementCard({
               ) : null}
 
               {personContext && !personContext.person.isTrainer ? (
-                <div className="rounded-lg border border-amber-200/80 bg-amber-50/60 px-3 py-3 text-sm">
+                <div className={rosterContextNoticeClass}>
                   <p className="font-medium text-[var(--foreground)]">Keine Trainer-Kapazität</p>
                   <p className="mt-1 text-xs text-[var(--muted)]">
                     Diese Person ist nicht als Trainer/in markiert.
@@ -493,14 +496,12 @@ export default function TeamTrainerManagementCard({
                     />
                   </label>
 
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={isWebsiteVisible}
-                      onChange={(event) => setIsWebsiteVisible(event.target.checked)}
-                    />
-                    Website sichtbar
-                  </label>
+                  <SwitchToggle
+                    id="team-trainer-add-website-visible"
+                    label="Auf Website anzeigen"
+                    checked={isWebsiteVisible}
+                    onChange={setIsWebsiteVisible}
+                  />
                 </>
               ) : null}
 
@@ -540,11 +541,12 @@ export default function TeamTrainerManagementCard({
           </p>
           {canManage && seasonMutable ? (
             <Button
-              variant="secondary"
+              variant="primary"
               size="sm"
               className="mt-3"
               iconLeft={<Plus className="h-3.5 w-3.5" />}
               onClick={() => setAddSheetOpen(true)}
+              data-testid="team-trainer-empty-add-button"
             >
               Trainer hinzufügen
             </Button>

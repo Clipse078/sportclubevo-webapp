@@ -8,6 +8,7 @@ import type { TrainerAssignmentOnlySuggestion } from "@/lib/teams/roster-onboard
 
 type Props = {
   suggestions: TrainerAssignmentOnlySuggestion[];
+  seasonLabel: string | null;
   canManage: boolean;
   addingPersonId: string | null;
   onAdd: (person: TrainerAssignmentOnlySuggestion["person"]) => void;
@@ -23,6 +24,7 @@ function getFunctionLabel(functionKey: string) {
 
 export default function TeamTrainerAssignmentOnlyPanel({
   suggestions,
+  seasonLabel,
   canManage,
   addingPersonId,
   onAdd,
@@ -31,26 +33,27 @@ export default function TeamTrainerAssignmentOnlyPanel({
     return null;
   }
 
+  const seasonHint = seasonLabel ?? "dieser Saison";
+
   return (
     <div
-      className="rounded-lg border border-amber-200/80 bg-amber-50/60 px-4 py-4"
+      className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 py-3"
       data-testid="team-trainer-assignment-only-panel"
     >
       <p className="text-sm font-semibold text-[var(--foreground)]">
-        Trainer-Zuordnung ohne Trainerteam
+        Trainer-Zuordnung vervollständigen
       </p>
-      <p className="mt-1 text-xs text-[var(--muted)]">
-        Diese Personen sind dem Team als Trainer/in zugeordnet, fehlen aber noch im Trainerteam
-        dieser Saison.
+      <p className="mt-0.5 text-xs text-[var(--muted)]">
+        Als Trainer/in zugeordnet, aber noch nicht im Trainerteam {seasonHint}.
       </p>
 
-      <ul className="mt-3 space-y-3">
+      <ul className="mt-3 space-y-2">
         {suggestions.map((entry) => {
           const name = getPersonName(entry.person);
           return (
             <li
               key={entry.person.id}
-              className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]/80 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
               data-testid={`team-trainer-assignment-only-${entry.person.id}`}
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -63,7 +66,7 @@ export default function TeamTrainerAssignmentOnlyPanel({
                     {name}
                   </Link>
                   <p className="truncate text-xs text-[var(--muted)]">
-                    Als Trainer zugeordnet ({getFunctionLabel(entry.functionKey)})
+                    {getFunctionLabel(entry.functionKey)}
                   </p>
                 </div>
               </div>

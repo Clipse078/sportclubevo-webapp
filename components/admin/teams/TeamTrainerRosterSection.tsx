@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { PersonPickerResult } from "@/components/shared/PeoplePicker";
 import TeamTrainerManagementCard from "@/components/admin/teams/TeamTrainerManagementCard";
 import TeamTrainerAssignmentOnlyPanel from "@/components/admin/teams/roster/TeamTrainerAssignmentOnlyPanel";
 import type { TrainerAssignmentOnlySuggestion } from "@/lib/teams/roster-onboarding-queries";
+import { getCanonicalSeasonLabel } from "@/lib/teams/jahrgang-rules";
 
 type TrainerMember = {
   id: string;
@@ -55,6 +56,11 @@ export default function TeamTrainerRosterSection({
   const [initialAddPerson, setInitialAddPerson] = useState<PersonPickerResult | null>(null);
   const [addingPersonId, setAddingPersonId] = useState<string | null>(null);
 
+  const seasonLabel = useMemo(
+    () => getCanonicalSeasonLabel(teamSeason.season.startDate) ?? teamSeason.season.name,
+    [teamSeason.season.startDate, teamSeason.season.name],
+  );
+
   const clearInitial = useCallback(() => setInitialAddPerson(null), []);
 
   function handleAssignmentOnlyAdd(person: TrainerAssignmentOnlySuggestion["person"]) {
@@ -75,6 +81,7 @@ export default function TeamTrainerRosterSection({
     <div className="space-y-4">
       <TeamTrainerAssignmentOnlyPanel
         suggestions={assignmentOnlySuggestions}
+        seasonLabel={seasonLabel}
         canManage={canManage}
         addingPersonId={addingPersonId}
         onAdd={handleAssignmentOnlyAdd}

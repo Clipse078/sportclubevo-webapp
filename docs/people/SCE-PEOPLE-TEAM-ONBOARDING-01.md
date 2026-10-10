@@ -5,9 +5,9 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01B UX ready for Human UAT) |
+| **Mode** | IN_PROGRESS (01B-R1 ready for Human UAT re-test) |
 | **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
-| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_PENDING |
+| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PENDING |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
 | **PR** | #814 (DRAFT) |
@@ -115,7 +115,20 @@ Domain failures surface German actionable copy via `lib/teams/roster-onboarding-
 - `app/api/teams/__tests__/sce-people-team-onboarding-01b-person-context.test.ts`
 - 01A regression suites unchanged green
 
-### Human UAT (01B — pending)
+### Slice 01B-R1 — Human UAT remediation (2026-03-28)
+
+Human UAT on PR #814 preview identified UX gaps (functionality largely present):
+
+| Finding | Remediation |
+|---------|-------------|
+| Team Cockpit visual inconsistency (light diagnostic panels, oversized empty areas) | Dark/translucent SCE contextual notices; compact empty states on Kader/Trainerteam/Spiele/Resultate/Rangliste |
+| Duplicate **Spieler hinzufügen** / **Trainer hinzufügen** on empty rosters | One primary CTA: empty-state button when roster count is 0; header action when roster has members |
+| Checkbox boolean controls in onboarding sheets | Canonical `SwitchToggle` (Captain, Vize-Captain, Auf Website anzeigen) — payload unchanged |
+| Person Übersicht: F2 trainer shown under **Trainer & Staff** and again under **Weitere Funktionen** | `lib/people/person-overview-assignment-projection.ts` suppresses redundant sporting `PersonAssignment` rows when `TrainerTeamMember` / `PlayerSquadMember` already represents the same team context (distinct org roles such as Teammanager retained) |
+
+Tests: `lib/people/__tests__/sce-people-team-onboarding-01b-r1-person-overview-projection.test.ts` + extended `sce-people-team-onboarding-01b-roster-ux.test.tsx`.
+
+### Human UAT (01B-R1 — pending)
 
 Preferred team: **Junioren F2** (known ASSIGNMENT_ONLY trainer). Do **not** mutate FCA STAGE data during implementation.
 
