@@ -4,6 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import { Loader2, Minus, Plus } from "lucide-react";
+import MatchAvailabilityStatusBadge, {
+  MatchAvailabilityConflictBadge,
+} from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";
+import MatchSquadCountsSummary from "@/components/admin/matchcenter/MatchSquadCountsSummary";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
@@ -19,10 +23,12 @@ type SquadPayload = {
     rosterTotal: number;
     available: number;
     unavailable: number;
-    unknown: number;
+    maybe: number;
+    open: number;
     selected: number;
     selectedAvailable: number;
-    selectedUnknown: number;
+    selectedMaybe: number;
+    selectedOpen: number;
     conflicts: number;
   };
 };
@@ -61,17 +67,6 @@ function resolveLoadErrorMessage(body: SquadApiBody, response: Response): string
   return "Aufgebot konnte nicht geladen werden.";
 }
 
-function availabilityIcon(availability: MatchSquadPlayerPresentation["availability"]): string {
-  switch (availability) {
-    case "AVAILABLE":
-      return "✓";
-    case "UNAVAILABLE":
-      return "✕";
-    default:
-      return "○";
-  }
-}
-
 function PlayerCard({
   player,
   action,
@@ -91,19 +86,21 @@ function PlayerCard({
       <div className="shrink-0 scale-[0.72] origin-left">
         <AdminAvatar name={player.displayName} size="sm" />
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 space-y-1">
         <p className="truncate text-sm font-medium text-[var(--foreground)]">{player.displayName}</p>
-        <p
-          className={`truncate text-[10px] ${
-            player.availabilityConflict
-              ? "font-semibold text-[var(--warning)]"
-              : "text-[var(--muted)]"
-          }`}
+        <div
+          className="flex min-w-0 flex-wrap items-center gap-1.5"
           data-testid={`match-squad-availability-${player.personId}`}
         >
-          {availabilityIcon(player.availability)} {player.availabilityLabel}
-          {player.availabilityConflict ? " · Nicht verfügbar – Aufgebot prüfen" : ""}
-        </p>
+          <MatchAvailabilityStatusBadge
+            label={player.availabilityLabel}
+            tone={player.presentationTone}
+            icon={player.presentationIcon}
+          />
+          {player.availabilityConflict ? (
+            <MatchAvailabilityConflictBadge testId={`match-squad-conflict-${player.personId}`} />
+          ) : null}
+        </div>
         <p className="truncate text-[10px] text-[var(--muted)]">
           {player.shirtNumber != null ? `#${player.shirtNumber}` : "Kader"}
           {player.rosterIneligibleLabel ? ` · ${player.rosterIneligibleLabel}` : ""}
@@ -261,22 +258,7 @@ export default function MatchSquadSection({ matchId }: Props) {
         </p>
       ) : null}
 
-      {!loading && data?.counts ? (
-        <p
-          className="mb-4 text-xs text-[var(--muted)]"
-          data-testid="match-squad-counts-summary"
-        >
-          Kader: {data.counts.rosterTotal} · Verfügbar: {data.counts.available} · Nicht verfügbar:{" "}
-          {data.counts.unavailable} · Offen: {data.counts.unknown} · Aufgeboten: {data.counts.selected}
-          {data.counts.selectedAvailable > 0
-            ? ` · Aufgeboten & verfügbar: ${data.counts.selectedAvailable}`
-            : ""}
-          {data.counts.selectedUnknown > 0
-            ? ` · Aufgeboten mit offener Rückmeldung: ${data.counts.selectedUnknown}`
-            : ""}
-          {data.counts.conflicts > 0 ? ` · Konflikte: ${data.counts.conflicts}` : ""}
-        </p>
-      ) : null}
+      {!loading && data?.counts ? <MatchSquadCountsSummary counts={data.counts} /> : null}
 
       {!loading && data ? (
         <div className="space-y-6">

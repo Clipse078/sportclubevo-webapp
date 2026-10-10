@@ -10,8 +10,8 @@ import {
   canSelectForMatchSquad,
   hasMatchAvailabilityConflict,
   mapParticipationStatusToMatchAvailability,
-  MATCH_AVAILABILITY_LABELS,
 } from "@/lib/match-squad/availability-adapter";
+import { getMatchParticipationStatusPresentation } from "@/lib/match-squad/match-availability-presentation";
 import type { ParticipationResponseStatus, PlayerSquadStatus } from "@prisma/client";
 import type {
   MatchSquadCounts,
@@ -141,6 +141,10 @@ function buildPlayerPresentation(input: {
     selected: input.selected,
     availability,
   });
+  const presentation = getMatchParticipationStatusPresentation(
+    input.participation?.status ?? null,
+    { selected: input.selected, availability },
+  );
   const staleRosterSelection = input.selected && !input.rosterEligible;
   return {
     personId: input.personId,
@@ -151,7 +155,10 @@ function buildPlayerPresentation(input: {
     rosterIneligibleLabel: input.rosterEligible ? null : "Nicht mehr im Saison-Kader",
     rosterStatus: input.rosterStatus,
     availability,
-    availabilityLabel: MATCH_AVAILABILITY_LABELS[availability],
+    availabilityLabel: presentation.label,
+    presentationStatus: presentation.status,
+    presentationTone: presentation.tone,
+    presentationIcon: presentation.icon,
     participationStatus: input.participation?.status ?? null,
     participationNote: input.participation?.note ?? null,
     selected: input.selected,
@@ -169,21 +176,36 @@ function buildPlayerPresentation(input: {
 function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts {
   let available = 0;
   let unavailable = 0;
-  let unknown = 0;
+  let maybe = 0;
+  let open = 0;
   let selected = 0;
   let selectedAvailable = 0;
-  let selectedUnknown = 0;
+  let selectedMaybe = 0;
+  let selectedOpen = 0;
   let conflicts = 0;
 
   for (const player of players) {
-    if (player.availability === "AVAILABLE") available += 1;
-    else if (player.availability === "UNAVAILABLE") unavailable += 1;
-    else unknown += 1;
+    switch (player.presentationStatus) {
+      case "AVAILABLE":
+        available += 1;
+        break;
+      case "UNAVAILABLE":
+        unavailable += 1;
+        break;
+      case "MAYBE":
+        maybe += 1;
+        break;
+      case "OPEN":
+      default:
+        open += 1;
+        break;
+    }
 
     if (player.selected) {
       selected += 1;
-      if (player.availability === "AVAILABLE") selectedAvailable += 1;
-      if (player.availability === "UNKNOWN") selectedUnknown += 1;
+      if (player.presentationStatus === "AVAILABLE") selectedAvailable += 1;
+      if (player.presentationStatus === "MAYBE") selectedMaybe += 1;
+      if (player.presentationStatus === "OPEN") selectedOpen += 1;
       if (player.availabilityConflict) conflicts += 1;
     }
   }
@@ -192,10 +214,12 @@ function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts
     rosterTotal: players.length,
     available,
     unavailable,
-    unknown,
+    maybe,
+    open,
     selected,
     selectedAvailable,
-    selectedUnknown,
+    selectedMaybe,
+    selectedOpen,
     conflicts,
   };
 }

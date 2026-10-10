@@ -12,6 +12,7 @@ import {
   getParticipationResponseSourceLabel,
   getParticipationStatusLabel,
 } from "./labels";
+import { getMatchParticipationStatusPresentation } from "@/lib/match-squad/match-availability-presentation";
 import { resolveParticipationEventContext } from "./event-reference";
 import { buildParticipationSummary } from "./statistics";
 import type {
@@ -109,7 +110,10 @@ export async function getParticipationForEvent(
         shirtNumber: member.shirtNumber,
         responseId: response?.id ?? null,
         status,
-        statusLabel: getParticipationStatusLabel(status),
+        statusLabel:
+          eventContext.eventKind === "MATCH"
+            ? getMatchParticipationStatusPresentation(status).label
+            : getParticipationStatusLabel(status),
         responseSource: response?.responseSource ?? null,
         responseSourceLabel: getParticipationResponseSourceLabel(response?.responseSource ?? null),
         note: response?.note ?? null,

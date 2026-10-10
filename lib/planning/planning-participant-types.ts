@@ -1,4 +1,7 @@
 import type { ParticipationResponseStatus } from "@prisma/client";
+import type {
+  MatchAvailabilityTone,
+} from "@/lib/match-squad/match-availability-presentation";
 
 export type PlanningParticipantRole =
   | "TRAINER"
@@ -17,6 +20,8 @@ export type PlanningParticipantRow = {
   avatarUrl?: string | null;
   participationStatus?: ParticipationResponseStatus | null;
   participationStatusLabel?: string | null;
+  participationStatusTone?: MatchAvailabilityTone | null;
+  participationStatusIcon?: "check" | "x" | "help" | "circle" | null;
   subLabel?: string | null;
 };
 

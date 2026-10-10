@@ -151,6 +151,37 @@ describe("match-squad-service", () => {
 
     const view = await buildMatchSquadViewModel(TENANT, EVENT);
     expect(view.remaining.every((row) => row.availability === "UNKNOWN")).toBe(true);
+    expect(view.remaining.every((row) => row.presentationStatus === "OPEN")).toBe(true);
+    expect(view.remaining.every((row) => row.availabilityLabel === "Offen")).toBe(true);
+  });
+
+  it("buildMatchSquadViewModel counts split maybe and open", async () => {
+    mocks.playerFindMany.mockResolvedValue([
+      roster("p1"),
+      roster("p2"),
+      roster("p3"),
+      roster("p4"),
+    ]);
+    mocks.participationResponseFindMany.mockResolvedValue([
+      { personId: "p1", status: "YES", note: null },
+      { personId: "p2", status: "NO", note: null },
+      { personId: "p3", status: "MAYBE", note: null },
+    ]);
+
+    const view = await buildMatchSquadViewModel(TENANT, EVENT);
+    expect(view.counts).toMatchObject({
+      rosterTotal: 4,
+      available: 1,
+      unavailable: 1,
+      maybe: 1,
+      open: 1,
+    });
+    expect(
+      view.counts.available +
+        view.counts.unavailable +
+        view.counts.maybe +
+        view.counts.open,
+    ).toBe(view.counts.rosterTotal);
   });
 
   it("buildMatchSquadViewModel splits ACTIVE roster into selected and remaining", async () => {

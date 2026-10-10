@@ -7,12 +7,6 @@ import type { ParticipationResponseStatus } from "@prisma/client";
 
 export type MatchPlayerAvailability = "UNKNOWN" | "AVAILABLE" | "UNAVAILABLE";
 
-export const MATCH_AVAILABILITY_LABELS: Record<MatchPlayerAvailability, string> = {
-  UNKNOWN: "Rückmeldung offen",
-  AVAILABLE: "Verfügbar",
-  UNAVAILABLE: "Nicht verfügbar",
-};
-
 export function mapParticipationStatusToMatchAvailability(
   status: ParticipationResponseStatus | null | undefined,
 ): MatchPlayerAvailability {

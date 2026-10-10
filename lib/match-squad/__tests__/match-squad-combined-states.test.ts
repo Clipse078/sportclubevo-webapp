@@ -216,7 +216,36 @@ describe("match squad combined availability × selection", () => {
     const player = view.selected[0];
     expect(player.availability).toBe("UNAVAILABLE");
     expect(player.availabilityConflict).toBe(true);
+    expect(player.presentationStatus).toBe("UNAVAILABLE");
+    expect(player.availabilityLabel).toBe("Nicht verfügbar");
     expect(view.counts.conflicts).toBe(1);
+  });
+
+  it("MAYBE + not selected keeps domain UNKNOWN and presentation MAYBE", async () => {
+    mocks.participationResponseFindMany.mockResolvedValue([participation("p1", "MAYBE")]);
+    mocks.matchSquadMemberFindMany.mockResolvedValue([]);
+
+    const view = await buildMatchSquadViewModel(TENANT, EVENT);
+    const player = view.remaining.find((row) => row.personId === "p1");
+    expect(player?.availability).toBe("UNKNOWN");
+    expect(player?.presentationStatus).toBe("MAYBE");
+    expect(player?.availabilityLabel).toBe("Unsicher");
+    expect(player?.availabilityConflict).toBe(false);
+    expect(player?.canSelect).toBe(true);
+  });
+
+  it("MAYBE + selected is not a hard unavailable conflict", async () => {
+    mocks.participationResponseFindMany.mockResolvedValue([participation("p1", "MAYBE")]);
+    mocks.matchSquadMemberFindMany.mockResolvedValue([{ personId: "p1" }]);
+
+    const view = await buildMatchSquadViewModel(TENANT, EVENT);
+    const player = view.selected[0];
+    expect(player.availability).toBe("UNKNOWN");
+    expect(player.presentationStatus).toBe("MAYBE");
+    expect(player.availabilityLabel).toBe("Unsicher");
+    expect(player.availabilityConflict).toBe(false);
+    expect(view.counts.conflicts).toBe(0);
+    expect(view.counts.selectedMaybe).toBe(1);
   });
 
   it("availability YES does not create MatchSquadMember", async () => {

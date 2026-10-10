@@ -648,3 +648,53 @@ Selected + unavailable: secondary line uses **«Nicht verfügbar – Aufgebot pr
 ### 01A status
 
 `HUMAN_UAT_PENDING` — closure pending full human matrix on preview head including R3 empty-roster copy after deploy.
+
+---
+
+## 25. 01A Human UAT R4 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R4)
+
+**Status:** `IN_PROGRESS` — unified Match availability presentation (terminology + semantic badges).
+
+### UAT R4-01 — terminology fragmentation
+
+| Context | Before (mixed) | After (Match-only) |
+|---------|----------------|-------------------|
+| Teilnehmer (MATCH) | Dabei / Abwesend / … | Verfügbar / Nicht verfügbar / Unsicher / Offen |
+| Aufgebot | Rückmeldung offen / … | Same shared badges as Teilnehmer |
+| Summary | Dense «Kader: 6 · Verfügbar: …» line | Wrapped semantic status chips |
+
+### Canonical presentation mapping (persistence unchanged)
+
+| `ParticipationResponse` | Match label | Tone |
+|-------------------------|-------------|------|
+| `YES` | Verfügbar | positive / success |
+| `NO` | Nicht verfügbar | danger |
+| `MAYBE` | Unsicher | warning |
+| `OPEN` / missing row | Offen | muted / neutral |
+
+**Shared helper:** `lib/match-squad/match-availability-presentation.ts`  
+**UI badge:** `components/admin/matchcenter/MatchAvailabilityStatusBadge.tsx`
+
+### Domain vs presentation
+
+- **Persistence:** unchanged (`ParticipationResponse` only).
+- **Selection semantics:** unchanged (`mapParticipationStatusToMatchAvailability` still maps `OPEN` + `MAYBE` → `UNKNOWN` for operability).
+- **Presentation:** `MAYBE` and `OPEN` remain distinct in labels, tones, and summary counts (`maybe`, `open`).
+- **Counts invariant:** `available + unavailable + maybe + open === rosterTotal` (per roster row; stale selected non-roster handled separately).
+
+### Conflict UX (R4)
+
+| State | Treatment |
+|-------|-----------|
+| `NO` + selected | Status badge «Nicht verfügbar» + strong «Aufgebot prüfen» chip |
+| `MAYBE` + selected | «Unsicher» warning badge only — **not** a hard unavailable conflict |
+
+### Duplication note (Teilnehmer vs Aufgebot)
+
+Both sections remain in 01A; **recommendation for later UX (01B+):** **(C) integrate participation into Aufgebot** as the primary trainer workspace, with Teilnehmer collapsed or summary-only when Aufgebot is enabled — same roster, one scan path. Not removed in R4 (bounded scope).
+
+### Tests
+
+- `lib/match-squad/__tests__/match-availability-presentation.test.ts`
+- `lib/match-squad/__tests__/match-squad-counts.test.ts`
+- Extended `match-squad-service` / `match-squad-combined-states` for MAYBE presentation
