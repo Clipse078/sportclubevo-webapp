@@ -1238,3 +1238,28 @@ Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-rele
 | **Edit** | Change max minutes or validity on active rule |
 | **Revoke** | **Widerrufen** — history retained |
 | **Independence check** | Match `cmrzhj3je006a04kwhbepxvdz` — availability + Aufgebot unchanged by release CRUD |
+
+---
+
+## 32. 01C Human UAT R1 (schema readiness)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **BLOCKED_BY_SCHEMA** |
+| **PR / preview** | **#822** — Vercel preview on shared STAGE DB (`docs/deployment/stage-preview-migration-runbook.md`) |
+| **Observed** | Saison-Kader and section chrome OK; **Spielerfreigaben** showed «Das Spielerfreigabe-Schema ist auf dieser Umgebung noch nicht bereit…» (`SCHEMA_NOT_READY` / Prisma `P2021`) |
+| **Classification** | STAGE schema lag — same class as 01A R2 (`20261010153000_match_squad_player_availability_01a` pending before guarded deploy) |
+| **Product UX** | **Not evaluated** — blocker prevented workflow UAT |
+
+---
+
+## 33. 01C Human UAT R1.1 (STAGE migration remediation)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **READY_FOR_RETEST** |
+| **Migration** | `20261010190000_match_squad_player_availability_01c_player_release` applied to shared STAGE via guarded `db:migrate:deploy-if-enabled` (no manual DDL; **PROD** not targeted) |
+| **Post-check** | `prisma migrate status` → schema up to date; `PlayerRelease` + enums present; list service returns empty `[]` + target options on source `cmsoczv2t000504juhvod5hi9` |
+| **UAT scenario A target (resolved on STAGE)** | **FC Allschwil Junioren B2** · `cmsoczvt0000604ju1f1eindm` · player **SCE Testspieler 01** · 45 min · Spielpraxis |
+| **Scenarios B–D** | PO-led on preview after refresh — create / edit / revoke / second target (no agent-seeded `PlayerRelease` rows) |
+| **Signal independence** | Match `cmrzhj3je006a04kwhbepxvdz` baseline captured pre-UAT; release CRUD must not mutate MatchSquad / ParticipationResponse (§31 invariants) |
