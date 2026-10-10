@@ -1017,7 +1017,7 @@ Match-relative `participationResponseDueAt` on `Event` (timezone via tenant). No
 
 | Surface | Behaviour |
 |---------|-----------|
-| **Trainer / Aufgebot** | `MatchAvailabilityCollectionPanel` — Rückmeldung bis, Erinnerung (Offen only), provenance on rows, trainer «Rückmeldung eintragen / verwalten» proxy menu, Offen filter chip |
+| **Trainer / Aufgebot** | Compact `MatchAvailabilityCollectionPanel` summary + dialog «Verwalten»; full-width `MatchSquadPlayerRow` lists; trainer «Rückmeldung eintragen / verwalten» proxy menu; Offen filter chip |
 | **Player / guardian** | Match wording on activity detail + Meine Aufgaben inline (`Verfügbar` / `Nicht verfügbar` / `Unsicher`) when request active |
 | **APIs** | Reuse `PATCH …/participation-request`; new `POST …/participation-response`, `POST …/participation-reminder`; squad GET includes `availabilityCollection` meta |
 
@@ -1037,9 +1037,23 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 | **Canonical owner** | **Player** or **parent/guardian** answer «Can / will this player participate?» via `ParticipationResponse`. |
 | **Trainer role** | **Consume** responses for Aufgebot; **optionally record offline/proxy** responses with `responseSource = TRAINER` (never masquerade as PLAYER/PARENT). |
 | **DISPLAY STATE ≠ ACTOR** | Status badge shows canonical YES/NO/MAYBE/OPEN; trainer uses «Rückmeldung eintragen / verwalten» and «Rückmeldung zurücksetzen» (not «Offen» as a fourth affirmative choice). |
-| **Provenance** | Visible from `responseSource`: PLAYER → «Vom Spieler», PARENT → «Von Eltern bestätigt», TRAINER → «Vom Trainer eingetragen», STAFF → staff label; OPEN/missing → no invented provenance. |
+| **Provenance (domain)** | `responseSource` retained on `ParticipationResponse` for audit/support (`PLAYER`, `PARENT`, `TRAINER`, `STAFF`). |
+| **Provenance (Match Squad UI)** | Normal authorized-account responses show **status only** — no «Vom Spieler» / «Von Eltern bestätigt» in trainer overview rows. Exceptional trainer/staff proxy may show secondary «Vom Trainer eingetragen» (or staff equivalent). OPEN/missing → no invented provenance. |
 | **Existing responses without active request** | Legitimate (historical/offline); **KEINE ANFRAGE** does not delete or invalidate stored `ParticipationResponse`. |
 | **01C boundary** | Unchanged — no release, borrowing, or cross-team discovery in this remediation. |
+
+### 01B Human UAT R2 — squad row scanability & configuration hierarchy (2026-10-10)
+
+| Topic | Decision |
+|-------|----------|
+| **PO result** | **FAIL** — functionality broadly correct; card-grid layout, truncated names, and dominant configuration block rejected. |
+| **ONE PLAYER = ONE ROW** | Remove desktop/tablet two-column player grids; Aufgeboten and Weitere Kaderspieler are full-width vertical lists. |
+| **PLAYER NAME = PRIMARY** | Full display name on normal desktop widths; never sacrifice name for action buttons. |
+| **AVAILABILITY = SECONDARY SIGNAL** | Canonical badge column aligned across rows (Verfügbar / Nicht verfügbar / Unsicher / Offen). |
+| **NORMAL RESPONDENT IDENTITY = HIDDEN** | Do not expose player/parent/guardian relationship in overview; authorization is enforced server-side. |
+| **TRAINER PROXY = EXCEPTION INDICATOR** | `responseSource = TRAINER` (and staff proxy where applicable) may show subtle secondary provenance only. |
+| **SPORTING ACTION = PRIMARY ACTION** | Aufbieten / Entfernen visually primary; Rückmeldung eintragen/verwalten secondary. |
+| **REQUEST CONFIGURATION = SECONDARY / COLLAPSIBLE** | Summary line on workspace; deadline/reminder fields only behind «Rückmeldung anfragen» / «Verwalten». |
 
 ### Match lifecycle
 

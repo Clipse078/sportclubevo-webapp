@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
+import { Dialog } from "@/components/ui/Dialog";
 import type { MatchAvailabilityCollectionMetaView } from "@/lib/match-squad/types";
+import { formatDateTimeCompact } from "@/lib/tenant-runtime/formatters";
 
 type Props = {
   matchId: string;
@@ -22,6 +24,10 @@ export default function MatchAvailabilityCollectionPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [manageOpen, setManageOpen] = useState(false);
+
+  const formatCfg = { locale: "de-CH", timezone: timeZone };
+  const disabled = !canManage || Boolean(meta.readOnlyReason) || pending;
 
   function sendReminder() {
     setError(null);
@@ -58,94 +64,132 @@ export default function MatchAvailabilityCollectionPanel({
     });
   }
 
-  const disabled = !canManage || Boolean(meta.readOnlyReason) || pending;
+  const deadlineSummary =
+    meta.requestActive && meta.participationResponseDueAt
+      ? formatDateTimeCompact(meta.participationResponseDueAt, formatCfg)
+      : null;
+
+  const manageDialogTitle = meta.requestActive
+    ? "Verfügbarkeit verwalten"
+    : "Rückmeldung anfragen";
 
   return (
-    <div
-      className="mb-4 space-y-3 rounded-lg border border-[var(--border)]/60 bg-[var(--surface-2)] p-3"
-      data-testid="match-availability-collection-panel"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
+    <>
+      <div
+        className="mb-5 flex flex-col gap-3 border-b border-[var(--border)]/50 pb-4 sm:flex-row sm:items-start sm:justify-between"
+        data-testid="match-availability-collection-panel"
+      >
+        <div className="min-w-0 space-y-1">
           <h3 className="text-sm font-semibold text-[var(--foreground)]">Verfügbarkeit</h3>
-          <p className="text-xs text-[var(--muted)]">
-            Rückmeldungen der Spieler — getrennt vom Aufgebot.
-          </p>
+          {!meta.requestActive ? (
+            <p className="text-sm text-[var(--muted)]" data-testid="match-availability-no-request">
+              Noch keine Rückmeldung angefragt.
+            </p>
+          ) : (
+            <div className="space-y-0.5 text-sm text-[var(--foreground)]">
+              {deadlineSummary ? (
+                <p data-testid="match-availability-deadline-summary">
+                  Rückmeldung bis {deadlineSummary}
+                </p>
+              ) : null}
+              <p className="text-[var(--muted)]" data-testid="match-availability-outstanding-summary">
+                {meta.outstandingPlayerCount}{" "}
+                {meta.outstandingPlayerCount === 1 ? "Spieler offen" : "Spieler offen"}
+              </p>
+            </div>
+          )}
+
+          {meta.readOnlyReason ? (
+            <p className="text-xs text-[var(--muted)]" data-testid="match-availability-readonly">
+              {meta.readOnlyReason}
+            </p>
+          ) : null}
         </div>
-        {meta.requestActive ? (
-          <span
-            className="inline-flex rounded-md border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--primary)]"
-            data-testid="match-availability-request-active"
+
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+          {meta.canConfigureRequest && canManage && !meta.readOnlyReason ? (
+            <>
+              {!meta.requestActive ? (
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setManageOpen(true)}
+                  className="inline-flex min-h-9 items-center rounded-md border border-[var(--primary)]/40 bg-[var(--primary)]/10 px-3 py-1.5 text-xs font-semibold text-[var(--primary)] hover:bg-[var(--primary)]/15 disabled:opacity-50"
+                  data-testid="match-availability-request-cta"
+                >
+                  Rückmeldung anfragen
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setManageOpen(true)}
+                  className="inline-flex min-h-9 items-center rounded-md border border-[var(--border)] bg-[var(--surface-3)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-4)] disabled:opacity-50"
+                  data-testid="match-availability-manage-cta"
+                >
+                  Verwalten
+                </button>
+              )}
+            </>
+          ) : null}
+
+          {meta.requestActive && meta.canSendReminder && canManage && !meta.readOnlyReason ? (
+            <button
+              type="button"
+              disabled={disabled || meta.outstandingPlayerCount === 0}
+              onClick={sendReminder}
+              className="inline-flex min-h-9 items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-50"
+              data-testid="match-availability-send-reminder"
+            >
+              {pending ? "Sendet…" : "Offene erinnern"}
+            </button>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p className="w-full text-xs text-[var(--destructive)] sm:col-span-2" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {success ? (
+          <p
+            className="w-full text-xs text-[var(--foreground)]"
+            data-testid="match-availability-success"
           >
-            Anfrage aktiv
-          </span>
-        ) : (
-          <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
-            Keine Anfrage
-          </span>
-        )}
+            {success}
+          </p>
+        ) : null}
       </div>
 
-      {meta.readOnlyReason ? (
-        <p className="text-xs text-[var(--muted)]" data-testid="match-availability-readonly">
-          {meta.readOnlyReason}
-        </p>
-      ) : null}
-
-      {meta.canConfigureRequest ? (
-        <ParticipationRequestConfigEditor
-          apiPath={`/api/matchcenter/${matchId}/participation-request`}
-          timeZone={timeZone}
-          disabled={disabled}
-          values={{
-            participationResponseDueAt: meta.participationResponseDueAt,
-            participationReminder1At: meta.participationReminder1At,
-            participationReminder2At: meta.participationReminder2At,
-            participationReminder1PresetKey: meta.participationReminder1PresetKey,
-            participationReminder2PresetKey: meta.participationReminder2PresetKey,
-          }}
-          onSaved={() => {
-            setSuccess(null);
-            onChanged();
-          }}
-          onError={(message) => setError(message)}
-        />
-      ) : null}
-
-      {meta.requestActive && meta.canSendReminder && !meta.readOnlyReason ? (
-        <div className="space-y-2 border-t border-[var(--border)]/40 pt-3">
-          <p className="text-xs text-[var(--text-2)]" data-testid="match-availability-reminder-preview">
-            {meta.outstandingPlayerCount} Spieler ohne Rückmeldung (Offen)
-            {meta.reminderDeliveryTargetCount != null ? (
-              <>
-                {" "}
-                · ca. {meta.reminderDeliveryTargetCount} Benachrichtigungsempfänger
-              </>
-            ) : null}
-            . Unsicher (MAYBE) wird nicht erinnert.
-          </p>
-          <button
-            type="button"
-            disabled={disabled || meta.outstandingPlayerCount === 0}
-            onClick={sendReminder}
-            className="inline-flex min-h-9 items-center rounded-md border border-[var(--border)] bg-[var(--surface-3)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-4)] disabled:opacity-50"
-            data-testid="match-availability-send-reminder"
-          >
-            {pending ? "Sendet…" : "Erinnerung senden (nur Offen)"}
-          </button>
-        </div>
-      ) : null}
-
-      {error ? (
-        <p className="text-xs text-[var(--destructive)]" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {success ? (
-        <p className="text-xs text-[var(--foreground)]" data-testid="match-availability-success">
-          {success}
-        </p>
-      ) : null}
-    </div>
+      <Dialog
+        open={manageOpen}
+        onClose={() => setManageOpen(false)}
+        title={manageDialogTitle}
+        description="Deadline und Erinnerungen für Spieler-Rückmeldungen."
+        size="lg"
+      >
+        {meta.canConfigureRequest ? (
+          <ParticipationRequestConfigEditor
+            apiPath={`/api/matchcenter/${matchId}/participation-request`}
+            timeZone={timeZone}
+            disabled={disabled}
+            layout="sessionEdit"
+            values={{
+              participationResponseDueAt: meta.participationResponseDueAt,
+              participationReminder1At: meta.participationReminder1At,
+              participationReminder2At: meta.participationReminder2At,
+              participationReminder1PresetKey: meta.participationReminder1PresetKey,
+              participationReminder2PresetKey: meta.participationReminder2PresetKey,
+            }}
+            onSaved={() => {
+              setSuccess(null);
+              setManageOpen(false);
+              onChanged();
+            }}
+            onError={(message) => setError(message)}
+          />
+        ) : null}
+      </Dialog>
+    </>
   );
 }

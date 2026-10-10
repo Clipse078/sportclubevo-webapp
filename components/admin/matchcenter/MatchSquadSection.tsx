@@ -1,17 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
-import { Loader2, Minus, Plus } from "lucide-react";
-import MatchAvailabilityStatusBadge, {
-  MatchAvailabilityConflictBadge,
-} from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";
+import { Loader2 } from "lucide-react";
 import MatchSquadCountsSummary, {
   type MatchSquadAvailabilityFilter,
 } from "@/components/admin/matchcenter/MatchSquadCountsSummary";
 import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
-import MatchAvailabilityTrainerRecordMenu from "@/components/admin/matchcenter/MatchAvailabilityTrainerRecordMenu";
+import MatchSquadPlayerList from "@/components/admin/matchcenter/MatchSquadPlayerList";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
 import type {
   MatchAvailabilityCollectionMetaView,
@@ -85,109 +81,6 @@ function playerMatchesAvailabilityFilter(
   if (filter === "OPEN") return player.presentationStatus === "OPEN";
   if (filter === "MAYBE") return player.presentationStatus === "MAYBE";
   return true;
-}
-
-function PlayerCard({
-  player,
-  action,
-  onAction,
-  disabled,
-  matchId,
-  canManageAvailability,
-  onAvailabilityRecorded,
-}: {
-  player: MatchSquadPlayerPresentation;
-  action: "add" | "remove";
-  onAction: () => void;
-  disabled: boolean;
-  matchId: string;
-  canManageAvailability: boolean;
-  onAvailabilityRecorded: () => void;
-}) {
-  return (
-    <li
-      className="flex min-w-0 items-center gap-3 rounded-lg border border-[var(--border)]/60 bg-[var(--surface-2)] px-3 py-2.5"
-      data-testid={`match-squad-player-${player.personId}`}
-    >
-      <div className="shrink-0 scale-[0.72] origin-left">
-        <AdminAvatar name={player.displayName} size="sm" />
-      </div>
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="truncate text-sm font-medium text-[var(--foreground)]">{player.displayName}</p>
-        <div
-          className="flex min-w-0 flex-wrap items-center gap-1.5"
-          data-testid={`match-squad-availability-${player.personId}`}
-        >
-          <MatchAvailabilityStatusBadge
-            label={player.availabilityLabel}
-            tone={player.presentationTone}
-            icon={player.presentationIcon}
-          />
-          {player.responseProvenanceLabel ? (
-            <span
-              className="text-[10px] text-[var(--muted)]"
-              data-testid={`match-squad-provenance-${player.personId}`}
-            >
-              {player.responseProvenanceLabel}
-            </span>
-          ) : null}
-          {player.availabilityConflict ? (
-            <MatchAvailabilityConflictBadge testId={`match-squad-conflict-${player.personId}`} />
-          ) : null}
-        </div>
-        <p className="truncate text-[10px] text-[var(--muted)]">
-          {player.shirtNumber != null ? `#${player.shirtNumber}` : "Kader"}
-          {player.rosterIneligibleLabel ? ` · ${player.rosterIneligibleLabel}` : ""}
-        </p>
-      </div>
-      {canManageAvailability ? (
-        <MatchAvailabilityTrainerRecordMenu
-          matchId={matchId}
-          personId={player.personId}
-          displayName={player.displayName}
-          disabled={disabled}
-          hasParticipationResponse={player.participationStatus !== null}
-          onRecorded={onAvailabilityRecorded}
-        />
-      ) : null}
-      {action === "add" && !player.canSelect && player.availability === "UNAVAILABLE" ? (
-        <span
-          className="inline-flex shrink-0 items-center rounded-md border border-[var(--sce-danger-border)] bg-[var(--sce-danger-light)] px-2.5 py-1.5 text-xs font-semibold text-[var(--sce-danger)]"
-          data-testid={`match-squad-unavailable-action-${player.personId}`}
-        >
-          Nicht verfügbar
-        </span>
-      ) : (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onAction}
-          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface-3)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-4)] disabled:opacity-50"
-          data-testid={
-            action === "add" ? `match-squad-add-${player.personId}` : `match-squad-remove-${player.personId}`
-          }
-          aria-label={
-            action === "remove"
-              ? `${player.displayName} aus dem Aufgebot entfernen`
-              : `${player.displayName} aufbieten`
-          }
-        >
-          {action === "add" ? (
-            <>
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              Aufbieten
-            </>
-          ) : (
-            <>
-              <span className="sr-only">Aufgeboten — </span>
-              <Minus className="h-3.5 w-3.5" aria-hidden />
-              Entfernen
-            </>
-          )}
-        </button>
-      )}
-    </li>
-  );
 }
 
 export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" }: Props) {
@@ -361,11 +254,11 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
       ) : null}
 
       {!loading && data ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <section aria-labelledby="match-squad-selected-heading">
             <h3
               id="match-squad-selected-heading"
-              className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+              className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
             >
               Aufgeboten · {filteredSelected.length} Spieler
               {availabilityFilter !== "ALL" ? ` (gefiltert)` : ""}
@@ -375,27 +268,23 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
                 Noch keine Spieler aufgeboten.
               </p>
             ) : (
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {filteredSelected.map((player) => (
-                  <PlayerCard
-                    key={player.personId}
-                    player={player}
-                    action="remove"
-                    disabled={!canMutate || !player.canRemove}
-                    onAction={() => togglePerson(player.personId, false)}
-                    matchId={matchId}
-                    canManageAvailability={canManageAvailability}
-                    onAvailabilityRecorded={() => void load()}
-                  />
-                ))}
-              </ul>
+              <MatchSquadPlayerList
+                listTestId="match-squad-selected-list"
+                players={filteredSelected}
+                action="remove"
+                canMutate={canMutate}
+                onToggle={togglePerson}
+                matchId={matchId}
+                canManageAvailability={canManageAvailability}
+                onAvailabilityRecorded={() => void load()}
+              />
             )}
           </section>
 
           <section aria-labelledby="match-squad-remaining-heading">
             <h3
               id="match-squad-remaining-heading"
-              className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+              className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
             >
               Weitere Kaderspieler · {filteredRemaining.length} Spieler
               {availabilityFilter !== "ALL" ? ` (gefiltert)` : ""}
@@ -409,20 +298,16 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
                 {matchSquadRemainingEmptyMessage(data.counts?.rosterTotal ?? 0)}
               </p>
             ) : (
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {filteredRemaining.map((player) => (
-                  <PlayerCard
-                    key={player.personId}
-                    player={player}
-                    action="add"
-                    disabled={!canMutate || !player.canSelect}
-                    onAction={() => togglePerson(player.personId, true)}
-                    matchId={matchId}
-                    canManageAvailability={canManageAvailability}
-                    onAvailabilityRecorded={() => void load()}
-                  />
-                ))}
-              </ul>
+              <MatchSquadPlayerList
+                listTestId="match-squad-remaining-list"
+                players={filteredRemaining}
+                action="add"
+                canMutate={canMutate}
+                onToggle={togglePerson}
+                matchId={matchId}
+                canManageAvailability={canManageAvailability}
+                onAvailabilityRecorded={() => void load()}
+              />
             )}
           </section>
 

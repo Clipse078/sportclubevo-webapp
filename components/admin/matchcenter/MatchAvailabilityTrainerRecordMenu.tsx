@@ -55,7 +55,7 @@ export default function MatchAvailabilityTrainerRecordMenu({
         type="button"
         disabled={disabled || pending}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-8 max-w-[9.5rem] items-center rounded-md border border-[var(--border)]/80 bg-[var(--surface)] px-2 py-1 text-[10px] font-medium text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-50"
+        className="inline-flex min-h-9 items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--muted)] underline-offset-2 hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] hover:underline disabled:opacity-50"
         aria-expanded={open}
         aria-haspopup="menu"
         data-testid={`match-availability-manage-${personId}`}
