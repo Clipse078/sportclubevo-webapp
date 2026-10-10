@@ -5,9 +5,9 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01B-R4 ready for Human UAT) |
+| **Mode** | IN_PROGRESS (01B-R4 Human UAT closed; parent package closure pending) |
 | **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
-| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_SUPERSEDED_BY_R3 / HUMAN_UAT_R3_SUPERSEDED_BY_R4 / HUMAN_UAT_R4_PENDING |
+| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_SUPERSEDED_BY_R3 / HUMAN_UAT_R3_SUPERSEDED_BY_R4 / **HUMAN_UAT_R4_PASS** |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
 | **PR** | #814 (DRAFT) |
