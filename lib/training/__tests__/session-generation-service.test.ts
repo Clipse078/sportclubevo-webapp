@@ -205,6 +205,9 @@ describe("A. generateTrainingSessions", () => {
   });
 
   it("A8: re-run after the series' time changed updates only the schedule fields, never `status`", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-01T12:00:00.000Z"));
+
     vi.mocked(prisma.trainingSeries.findFirst).mockResolvedValue(
       makeSeriesRow({ startsAt: "19:00", endsAt: "20:30" }) as never,
     );
@@ -245,6 +248,54 @@ describe("A. generateTrainingSessions", () => {
     expect(updateCall.data).not.toHaveProperty("overrideDate");
     expect(updateCall.data).not.toHaveProperty("overrideStartAt");
     expect(updateCall.data).not.toHaveProperty("overrideEndAt");
+
+    vi.useRealTimers();
+  });
+
+  it("A8b: calendar dates before today in series TZ are not re-synced from template edits", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-10T12:00:00.000Z"));
+
+    vi.mocked(prisma.trainingSeries.findFirst).mockResolvedValue(
+      makeSeriesRow({ startsAt: "19:00", endsAt: "20:30" }) as never,
+    );
+
+    const existing = [
+      {
+        id: "past-1",
+        date: new Date("2026-08-03T00:00:00.000Z"),
+        weekday: "MONDAY",
+        startAt: new Date("2026-08-03T15:00:00.000Z"),
+        endAt: new Date("2026-08-03T16:00:00.000Z"),
+        timezone: "Europe/Zurich",
+        status: "SCHEDULED",
+      },
+      {
+        id: "future-1",
+        date: new Date("2026-10-19T00:00:00.000Z"),
+        weekday: "MONDAY",
+        startAt: new Date("2026-10-19T15:00:00.000Z"),
+        endAt: new Date("2026-10-19T16:00:00.000Z"),
+        timezone: "Europe/Zurich",
+        status: "SCHEDULED",
+      },
+    ];
+    vi.mocked(prisma.trainingSession.findMany).mockResolvedValue(existing as never);
+    vi.mocked(prisma.trainingSession.createMany).mockResolvedValue({ count: 0 } as never);
+
+    const extendedWindow = {
+      from: new Date("2026-08-01T00:00:00.000Z"),
+      to: new Date("2026-10-31T00:00:00.000Z"),
+    };
+    const result = await generateTrainingSessions(TENANT_A, SERIES_ID, extendedWindow);
+
+    expect(result.updated).toBe(1);
+    expect(prisma.trainingSession.update).toHaveBeenCalledOnce();
+    expect(vi.mocked(prisma.trainingSession.update).mock.calls[0][0].where).toEqual({
+      id: "future-1",
+    });
+
+    vi.useRealTimers();
   });
 
   it("A9: a CANCELLED (future-state) row is left untouched by regeneration when its schedule matches", async () => {

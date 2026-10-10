@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+
+const MULTI_ACTIVITY_INITIAL_VISIBLE = 5;
 import { Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui";
@@ -28,6 +30,7 @@ export function ContextualMultiActivityChangeImpactSurface({
   const t = useTranslations("Collaboration.activityChange");
   const { acknowledgeMultiCommunicationSent } = useActivityChangeCollaboration();
   const [composerOpen, setComposerOpen] = useState(false);
+  const [listExpanded, setListExpanded] = useState(false);
   const [prepareError, setPrepareError] = useState<string | null>(null);
   const [composerStale, setComposerStale] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -101,6 +104,11 @@ export function ContextualMultiActivityChangeImpactSurface({
   }
 
   const anchorActivityId = impact.items[0]?.activityId ?? trainingSeriesId;
+  const showDisclosure = impact.items.length > MULTI_ACTIVITY_INITIAL_VISIBLE;
+  const visibleItems =
+    showDisclosure && !listExpanded
+      ? impact.items.slice(0, MULTI_ACTIVITY_INITIAL_VISIBLE)
+      : impact.items;
 
   return (
     <div
@@ -132,11 +140,29 @@ export function ContextualMultiActivityChangeImpactSurface({
         </button>
       </div>
 
+      {impact.audience ? (
+        <div
+          className="mt-2 space-y-0.5 text-xs text-[var(--text-2)]"
+          data-testid="contextual-multi-activity-change-audience"
+        >
+          <p>
+            <span className="font-medium text-[var(--foreground)]">{t("audience")}: </span>
+            {impact.audience.teamNamesLabel ?? impact.audience.teamName}
+          </p>
+          {impact.audience.effectiveRecipientCount !== null ? (
+            <p data-testid="contextual-multi-activity-change-recipient-count">
+              <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
+              {impact.audience.effectiveRecipientCount}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       <ul
         className="mt-2 space-y-2 text-xs text-[var(--foreground)]"
         data-testid="contextual-multi-activity-change-list"
       >
-        {impact.items.map((item) => {
+        {visibleItems.map((item) => {
           const lines = (item.impact.changeSet?.entries ?? []).map((entry) =>
             summarizeActivityChangeLine(entry),
           );
@@ -157,22 +183,17 @@ export function ContextualMultiActivityChangeImpactSurface({
         })}
       </ul>
 
-      {impact.audience ? (
-        <div
-          className="mt-2 space-y-0.5 text-xs text-[var(--text-2)]"
-          data-testid="contextual-multi-activity-change-audience"
+      {showDisclosure ? (
+        <button
+          type="button"
+          className="mt-2 text-xs font-medium text-[var(--primary)] hover:underline"
+          onClick={() => setListExpanded((prev) => !prev)}
+          data-testid="contextual-multi-activity-change-list-toggle"
         >
-          <p>
-            <span className="font-medium text-[var(--foreground)]">{t("audience")}: </span>
-            {impact.audience.teamNamesLabel ?? impact.audience.teamName}
-          </p>
-          {impact.audience.effectiveRecipientCount !== null ? (
-            <p data-testid="contextual-multi-activity-change-recipient-count">
-              <span className="font-medium text-[var(--foreground)]">{t("recipients")}: </span>
-              {impact.audience.effectiveRecipientCount}
-            </p>
-          ) : null}
-        </div>
+          {listExpanded
+            ? "Weniger anzeigen"
+            : `Alle ${impact.activityCount} anzeigen`}
+        </button>
       ) : null}
 
       {composerStale ? (
