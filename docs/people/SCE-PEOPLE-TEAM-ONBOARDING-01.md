@@ -5,14 +5,32 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01B-R4 Human UAT closed; parent package closure pending) |
-| **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
-| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_SUPERSEDED_BY_R3 / HUMAN_UAT_R3_SUPERSEDED_BY_R4 / **HUMAN_UAT_R4_PASS** |
-| **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
+| **Mode** | **CLOSED** (merge gate 2026-10-10) |
+| **Slice 01A** | **CLOSED** — canonical roster service / resolver / COMM-03 contract |
+| **Slice 01B** | **CLOSED** — Team Cockpit onboarding UX + R1–R4 Human UAT |
+| **Canonical STAGE baseline (pre-#814)** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
+| **PR** | [#814](https://github.com/Clipse078/sportclubevo-webapp/pull/814) → STAGE |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
-| **PR** | #814 (DRAFT) |
+| **Feature HEAD (pre-merge)** | `74a8d1b0c18070b45d5ee0272dd5432fe9c40b02` |
+| **STAGE merge SHA** | *(set at merge — see closure gate below)* |
 | **STAGE data mutated during discovery / 01A** | No |
+| **STAGE data mutated during R4 Human UAT** | Yes — supported product UI only (`PlayerSquadMember` `cmv270j5v000006jqg6ui6ypv`) |
 | **Schema / migration / prod** | Untouched |
+
+### Closure gate (2026-10-10)
+
+| Criterion | Result |
+|-----------|--------|
+| Operational chain foundation (Team → TeamSeason → roster → Person) | **PASS** — 01A + 01B |
+| Person/User/access separation | **PASS** — roster APIs do not grant access |
+| Guardian data architecture | **PASS_CURRENT_FOUNDATION** — `GuardianRelationship` + Contact tab; no roster-driven guardian UX in scope |
+| Junior eligibility + adult unrestricted teams | **PASS** — R4 |
+| COMM-03 structural chain | **PASS** — roster-only; R4C + contract tests |
+| Human UAT R4 | **PASS** |
+| Blocking deferred slices (01C–01F) | **None** — all **DEFERRED_NON_BLOCKING** |
+| P0 / P1 package defects | **0** |
+
+**Next recommended package:** **SCE-COLLAB-01D** (multi-activity impact). Do not start in this closure run.
 
 ## Slice 01A — Canonical roster onboarding foundation (implemented)
 
@@ -197,11 +215,38 @@ Human UAT R3 finding (Senioren 40+ / Michael Duijster):
 
 **Tests:** `lib/teams/__tests__/sce-people-team-onboarding-01b-r4-player-eligibility.test.ts` + extended roster UX tests; 01A/01B regression suites.
 
-**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / **HUMAN_UAT_R4_PENDING**
+**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / **HUMAN_UAT_R4_PASS**
 
-### Human UAT (01B-R4 — pending)
+### Slice 01B-R4C — Post-UAT integrity verification (2026-10-10)
 
-See PR #814 R4 checklist: Senioren 40+ eligibility message, optional DOB remediation via Person edit + return to Kader, canonical `PlayerSquadMember` creation when eligible, F2 / Trainerteam / Person Overview / Team Directory regression.
+Automated STATE A/B/C reconciliation (`lib/teams/__tests__/sce-people-team-onboarding-01b-r4c-state-reconciliation.test.ts`):
+
+| State | Meaning | Kader / metrics | Person Overview | COMM-03 structural |
+|-------|---------|-----------------|-----------------|-------------------|
+| **A** | `PersonAssignment` only | 0 | incomplete Kaderzuordnung | 0 candidates |
+| **B** | Assignment + ACTIVE `PlayerSquadMember` | 1 ACTIVE | complete | person in candidate set |
+| **C** | Membership inactive/removed | 0 | incomplete again | 0 candidates |
+
+Read-only STAGE verification (requires `STAGE_DB_URL`, no mutations):
+
+`node --experimental-strip-types scripts/sce-people-team-onboarding-01b-r4c-post-uat-readonly.ts`
+
+### Human UAT (01B-R4 — final PASS)
+
+Evidence (supported product UI on PR #814 preview / STAGE; **no manual DB patch**):
+
+| Check | Result |
+|-------|--------|
+| Senioren 40+ false DOB/jahrgang blocker removed | PASS |
+| Kader 0 → 1 via **Spieler hinzufügen** | PASS |
+| Canonical `PlayerSquadMember` | PASS — `cmv270j5v000006jqg6ui6ypv` ACTIVE on TeamSeason `cmsod03tv000h04juo7wyen7w` |
+| Team Overview / cockpit metrics | PASS — ACTIVE filter |
+| Person Overview / Spieler tab | PASS — STATE B reconciled |
+| COMM-03 structural eligibility | PASS — Senioren 40+ positive path |
+| Duplicate / season / tenant integrity | PASS |
+| Focused regression battery + build | PASS |
+
+**Human UAT history:** R1 partial pass · R2 superseded by R3 · R3 superseded by R4 · **R4 final PASS**
 
 ### Human UAT (01B-R3 — superseded by R4)
 
@@ -221,18 +266,18 @@ Preferred team: **Junioren F2** (known ASSIGNMENT_ONLY trainer). Do **not** muta
 
 If no safe player Person exists on STAGE (FCA ~4 persons), classify player portion **BLOCKED_BY_DATA** — do not seed club data without approval.
 
-### Known gaps (deferred)
+### Deferred scope register (non-blocking for #814 closure)
 
-| Gap | Target slice |
-|-----|----------------|
-| Invitations / User linking from roster | 01C |
-| Guardian onboarding at scale | 01D |
-| SFV / bulk import | 01E |
-| Human UAT on FCA STAGE data | 01F (after 01B exposes workflows) |
+| Item | Description | Required for this release | Required for SCE-COLLAB-01D | Required for Weekend Squad & Player Exchange | Classification | Future package |
+|------|-------------|---------------------------|------------------------------|-----------------------------------------------|----------------|----------------|
+| **01C** | Invitation & tenant access convergence from roster/people surfaces | No | No (collab uses existing COMM/access) | Later (parent/player comms) | **DEFERRED_NON_BLOCKING** | SCE-PEOPLE-TEAM-ONBOARDING-01C or access slice |
+| **01D** | Guardian relationships at scale / youth onboarding UX | No | No | Later (parent communication) | **DEFERRED_NON_BLOCKING** | SCE-PEOPLE-TEAM-ONBOARDING-01D |
+| **01E** | SFV / CSV bulk Person + roster import | No | No | Helpful at club scale | **DEFERRED_NON_BLOCKING** | SCE-PEOPLE-TEAM-ONBOARDING-01E |
+| **01F** | Club-scale COMM-03 + collaboration Human UAT (Empfänger > 0 at FCA) | No | No | No | **DEFERRED_NON_BLOCKING** | SCE-PEOPLE-TEAM-ONBOARDING-01F |
 
-### Human UAT recommendation (01A closure)
+**Guardian scope decision:** Foundation requires safe guardian **data** support, not a dedicated guardian onboarding product in 01A/01B. Existing `GuardianRelationship`, Person Contact tab, and `/api/people/[id]/guardians` satisfy **PASS_CURRENT_FOUNDATION**. Roster membership does not create guardians; COMM-03 safeguarding unchanged.
 
-**01A can close on automated verification alone** (service/API foundation). Bounded Human UAT for roster population should run in **01B** when administrators use the guided Team Cockpit flows; **01F** remains the COMM-03 end-to-end club validation gate. Do not mark 01A CLOSED until product accepts that split or requests a minimal smoke UAT.
+**01A/01B closure:** Both slices **CLOSED** with 01B Human UAT R4 PASS; deferred items do not reopen the parent package.
 
 ## Problem
 
