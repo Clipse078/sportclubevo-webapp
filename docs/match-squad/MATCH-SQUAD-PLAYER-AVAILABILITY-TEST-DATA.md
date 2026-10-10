@@ -31,3 +31,12 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
 **FINAL_MODULE_CLEANUP_REQUIRED:** remove Persons + squad memberships + module-created participation rows; never remove real FC Allschwil roster data.
+
+## 01A closure (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **01A_TEST_DATA_CLEANUP** | `DEFERRED_INTENTIONALLY` |
+| **Reason** | SCE Testspieler 01–06 retained for 01B–01F development and UAT |
+| **Parent module** | `TEST_DATA_REMAINING = 0` still required at full `MATCH_SQUAD_PLAYER_AVAILABILITY` closure |
+| **Pre-existing FCA data** | Must not be deleted |

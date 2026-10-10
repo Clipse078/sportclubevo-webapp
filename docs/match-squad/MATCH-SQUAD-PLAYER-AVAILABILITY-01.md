@@ -383,8 +383,8 @@ Implement **`MATCH_SQUAD_PLAYER_AVAILABILITY-01A`** on branch from STAGE:
 
 ## 21. R1 — Availability × Trainer Selection (foundation correction)
 
-**Status:** `IMPLEMENTED` / `HUMAN_UAT_PENDING` (trainer combined view; availability creation UI unchanged)  
-**Branch / PR:** `cursor/match-squad-player-availability-01a-match-squad-foundation-b3de` / #819
+**Status:** `CLOSED` (01A foundation + R1 availability adapter)  
+**Branch / PR:** merged via #819 → `STAGE`
 
 ### Canonical formula (locked)
 
@@ -450,8 +450,8 @@ ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATC
 
 ## 22. Implementation — MATCH_SQUAD_PLAYER_AVAILABILITY-01A
 
-**Status:** `IMPLEMENTED` / `HUMAN_UAT_PENDING`  
-**Parent:** `MATCH_SQUAD_PLAYER_AVAILABILITY` → `IN_PROGRESS`
+**Status:** `CLOSED`  
+**Parent:** `MATCH_SQUAD_PLAYER_AVAILABILITY` → `IN_PROGRESS` (01A slice closed; module continues in 01B+)
 
 ### Identity decision
 
@@ -522,7 +522,7 @@ ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATC
 
 ### Human UAT
 
-Pending on STAGE preview — see §18 / product UAT plan (01A scope only).
+**PASS** — see §23–§27 (R2 JSON fix through R5 integrated workspace).
 
 ---
 
@@ -580,9 +580,9 @@ Additional STAGE future match with roster for functional UAT: `cmrzhj5a5006m04kw
 
 Recorded in agent final report after test battery + `NODE_OPTIONS=--max-old-space-size=8192 npm run build`.
 
-### 01A closure
+### 01A closure (superseded by §27)
 
-**Not CLOSED** until Human UAT matrix (§11) passes on preview after STAGE migration + redeployed head with client/API hardening.
+R2 blocker remediated; final closure in §27.
 
 ---
 
@@ -645,9 +645,9 @@ Vercel preview deployment protection blocked unattended browser pass; manual che
 
 Selected + unavailable: secondary line uses **«Nicht verfügbar – Aufgebot prüfen»** with warning emphasis (not grey-only technical text).
 
-### 01A status
+### 01A status (superseded by §27)
 
-`HUMAN_UAT_PENDING` — closure pending full human matrix on preview head including R3 empty-roster copy after deploy.
+R3 findings remediated; final closure recorded in §27 after R5 PO pass.
 
 ---
 
@@ -709,17 +709,66 @@ Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[
 
 ## 26. 01A Human UAT R5 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R5)
 
-**Status:** `IN_PROGRESS` — integrated workspace; duplicate Teilnehmer roster removed for MATCH.
+**Status:** `PASS` — Product Owner visual verification on STAGE preview (populated match).
 
 | Item | Result |
 |------|--------|
-| R4 badge visual PASS | Retained — no revert |
-| Duplicate Teilnehmer + Aufgebot roster | **Fixed** — Aufgebot primary |
-| Match-only consolidation | `shouldRenderMatchTeilnehmerDetailedPlayerRoster` |
-| Loading diagnosis | Transient client fetch; retry on error |
-| Responsive | Desktop / tablet / mobile — verify on preview |
+| R4 badge visual PASS | **PASS** — retained |
+| Duplicate Teilnehmer + Aufgebot roster | **PASS** — Aufgebot primary; duplicate detailed Teilnehmer roster removed |
+| Match-only consolidation | **PASS** — `shouldRenderMatchTeilnehmerDetailedPlayerRoster` |
+| Summary chips | **PASS** — clear, compact |
+| Aufgeboten / Weitere Kaderspieler split | **PASS** |
+| Selection actions | **PASS** — Aufbieten / Entfernen; unavailable not misleading |
+| Loading / retry | **PASS** — transient fetch; Erneut versuchen on error (R2) |
+
+**UAT match:** `eventId` `cmrzhj3je006a04kwhbepxvdz` (FC Allschwil Junioren B1).
 
 ### Tests (R5)
 
 - `lib/match-squad/__tests__/integrated-workspace.test.ts`
 - Unchanged R4 match-squad presentation / combined-state tests
+
+---
+
+## 27. 01A closure (MATCH_SQUAD_PLAYER_AVAILABILITY-01A)
+
+| Field | Value |
+|-------|-------|
+| **01A status** | **CLOSED** |
+| **Architecture #818** | **CLOSED / MERGED** (`2026-10-10`) |
+| **Implementation PR** | **#819** → merged to `STAGE` |
+| **Human UAT R5** | **PASS** (Product Owner) |
+| **Human UAT R2–R4** | **PASS** (recorded in §23–§25) |
+| **Regression battery** | **PASS** (closure run — see agent report) |
+| **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
+| **01B / 01C** | **NOT STARTED** |
+
+### Canonical 01A product model (locked)
+
+```text
+Saison-Kader (PlayerSquadMember)
+  + existing player/guardian availability (ParticipationResponse)
+  + trainer Match selection (MatchSquadMember)
+  = operational Match Aufgebot (read model)
+```
+
+**Domain ownership:** no persistence conflation — availability writes do not mutate squad rows; squad writes do not fabricate participation responses.
+
+### UX result (MATCH)
+
+- **Aufgebot** is the single integrated detailed player-preparation workspace.
+- No duplicate detailed Teilnehmer player roster when integrated squad workspace resolves.
+- Non-MATCH participant behaviour unchanged.
+
+### Roadmap handoff (documentation only — not implemented in 01A)
+
+Before **01C** implementation, refine product definition around explicit trainer-controlled **Player Release / Development Assignment**. Principles for later architecture:
+
+- player/guardian **availability** ≠ trainer **Match selection** ≠ trainer **cross-team release**.
+
+No schema, API, or UI for release/01C in 01A closure scope.
+
+### Deferred scope (later packages)
+
+Availability campaigns, deadlines, reminders, guardian workflows beyond existing participation, player release, cross-team availability, release conditions, max minutes, cross-team requests, assignment communication, recommendation logic — **01B–01F** only.
