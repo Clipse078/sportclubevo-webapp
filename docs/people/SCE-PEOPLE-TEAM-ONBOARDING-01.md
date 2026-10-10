@@ -561,7 +561,7 @@ Canonical roadmap key: **MATCH_SQUAD_PLAYER_AVAILABILITY** (squad planning and p
 | Question | Answer |
 |----------|--------|
 | **HOME_TEAM independent of temporary assignment?** | Today only `PlayerSquadMember` on one `TeamSeason`—suitable as **home** roster. |
-| **Temporary assignment model?** | **Missing**—need future entity (e.g. activity-scoped release/borrow) for weekend exchange. |
+| **Temporary assignment model?** | **Missing**—need future entity (e.g. activity-scoped release/borrow) for **Match Squad & Player Availability** (`MATCH_SQUAD_PLAYER_AVAILABILITY`; match-centric, not weekend-only). |
 | **Release conditions / notes?** | Not in schema. |
 | **Parent communication** | Guardian + COMM-03 safeguarding already support minor delivery when guardians have Users. |
 | **Recommendation** | Onboarding must populate **canonical** `PlayerSquadMember`; do not “borrow” by dual permanent squad rows. Record **FUTURE_GAP** for temporary assignment package. |

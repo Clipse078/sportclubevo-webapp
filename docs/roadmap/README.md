@@ -20,6 +20,7 @@
 | [08-post-v1-ideas.md](./08-post-v1-ideas.md) | Collected post-v1 modules — Training Designer, Finance, Polls, Volunteer Management, Analytics, i18n, Marketplace, and more |
 | [SCE-ACTIVITY-DESIGN-01.md](./SCE-ACTIVITY-DESIGN-01.md) | Follow-up to SCE-ACTIVITY-UX-01 — unified activity experience (01A–01E), Activity Detail, consume vs manage |
 | [sportclubevo-v1-master-backlog.md](./sportclubevo-v1-master-backlog.md) | **Master Backlog** — detailed feature backlog, 90-row status table, living progress checklist. This is the source of truth for feature scope and status. |
+| [../match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md](../match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md) | **Match Squad & Player Availability** (`MATCH_SQUAD_PLAYER_AVAILABILITY`) — architecture diagnosis and slice plan (replaces obsolete “Weekend Squad & Player Exchange” roadmap wording) |
 
 ---
 
