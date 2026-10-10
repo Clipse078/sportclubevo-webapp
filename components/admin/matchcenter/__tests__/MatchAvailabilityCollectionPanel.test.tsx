@@ -3,7 +3,15 @@
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
 import MatchAvailabilityCollectionPanel from "../MatchAvailabilityCollectionPanel";
 import type { MatchAvailabilityCollectionMetaView } from "@/lib/match-squad/types";
 
