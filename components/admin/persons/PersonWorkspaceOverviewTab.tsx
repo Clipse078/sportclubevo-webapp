@@ -64,6 +64,11 @@ import type {
 import type { PersonDetail } from "@/lib/people/queries";
 import { getPersonFunctionLabel } from "@/lib/people/functions";
 import { buildPersonOverviewAssignmentProjection } from "@/lib/people/person-overview-assignment-projection";
+import { normalizeOptionalPresentationLabel } from "@/lib/people/person-presentation-label";
+import {
+  PersonPresentationIconTile,
+  PersonSemanticPill,
+} from "@/components/admin/persons/PersonPresentationPill";
 import { EmptyState } from "@/components/ui/page";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
@@ -133,7 +138,7 @@ function RemoveButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="shrink-0 self-center rounded-md p-1.5 text-[var(--muted)] hover:bg-red-50 hover:text-red-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+      className="shrink-0 self-center rounded-md p-1.5 text-[var(--muted)] hover:bg-red-500/10 hover:text-red-400 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
       data-testid="remove-function-button"
     >
       <Trash2 className="h-3.5 w-3.5" />
@@ -161,23 +166,22 @@ function CapacityAssignmentCard({
   onRemove?: () => void;
   removeLabel?: string;
 }) {
+  const normalizedBadge = normalizeOptionalPresentationLabel(badge);
+  const visibleMeta = (meta ?? []).filter((m) =>
+    normalizeOptionalPresentationLabel(m.text),
+  );
+
   return (
     <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-      <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sce-accent)] text-[var(--sce-primary)]">
-        {icon}
-      </div>
+      <PersonPresentationIconTile>{icon}</PersonPresentationIconTile>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold text-[var(--foreground)]">{title}</span>
-          {badge ? (
-            <span className="inline-flex items-center rounded-full bg-[var(--sce-accent)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sce-primary)]">
-              {badge}
-            </span>
-          ) : null}
+          {normalizedBadge ? <PersonSemanticPill label={normalizedBadge} /> : null}
         </div>
-        {meta && meta.length > 0 ? (
+        {visibleMeta.length > 0 ? (
           <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
-            {meta.map((m, i) => (
+            {visibleMeta.map((m, i) => (
               <span key={i} className="flex items-center gap-1">
                 {m.icon}
                 {m.text}
@@ -269,18 +273,12 @@ function IncompleteAssignmentCard({
       className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
       data-testid="incomplete-assignment-card"
     >
-      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--sce-accent)] text-[var(--sce-primary)]">
-        {icon}
-      </div>
+      <PersonPresentationIconTile>{icon}</PersonPresentationIconTile>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold text-[var(--foreground)]">{teamName}</span>
-          <span className="inline-flex items-center rounded-full bg-[var(--sce-accent)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sce-primary)]">
-            {roleLabel}
-          </span>
-          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-            Zuordnung unvollständig
-          </span>
+          <PersonSemanticPill label={roleLabel} />
+          <PersonSemanticPill label="Zuordnung unvollständig" tone="warning" />
         </div>
         {seasonName ? (
           <div className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
@@ -334,6 +332,8 @@ function CapacitiesRow({ person }: { person: PersonOverviewTabProps["person"] })
   const customFunctions: string[] =
     "customFunctions" in person && Array.isArray(person.customFunctions)
       ? (person.customFunctions as string[])
+          .map((fn) => normalizeOptionalPresentationLabel(fn))
+          .filter((fn): fn is string => fn != null)
       : [];
 
   if (standardCapacities.length === 0 && customFunctions.length === 0) return null;
@@ -343,20 +343,10 @@ function CapacitiesRow({ person }: { person: PersonOverviewTabProps["person"] })
       <span className="shrink-0 text-[var(--muted)]">Profile</span>
       <div className="flex flex-wrap justify-end gap-1.5">
         {standardCapacities.map((c) => (
-          <span
-            key={c}
-            className="inline-flex items-center rounded-full bg-[var(--sce-accent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--sce-primary)]"
-          >
-            {c}
-          </span>
+          <PersonSemanticPill key={c} label={c} />
         ))}
         {customFunctions.map((fn) => (
-          <span
-            key={fn}
-            className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-2)]"
-          >
-            {fn}
-          </span>
+          <PersonSemanticPill key={fn} label={fn} tone="neutral" />
         ))}
       </div>
     </div>
@@ -587,7 +577,6 @@ export default function PersonWorkspaceOverviewTab({
                         key={sm.id}
                         icon={<ProductDomainSceIcon name="people" size={16} />}
                         title={sm.teamSeason.team.name}
-                        badge="Spieler/in"
                         meta={[
                           { icon: <Calendar className="h-3 w-3" />, text: sm.teamSeason.season.name },
                           ...(sm.positionLabel ? [{ text: sm.positionLabel }] : []),
@@ -670,7 +659,7 @@ export default function PersonWorkspaceOverviewTab({
                         key={tm.id}
                         icon={<UserCheck className="h-4 w-4" />}
                         title={tm.teamSeason.team.name}
-                        badge={tm.roleLabel ?? "Trainer/in"}
+                        badge={tm.roleLabel}
                         meta={[
                           { icon: <Calendar className="h-3 w-3" />, text: tm.teamSeason.season.name },
                         ]}

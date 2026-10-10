@@ -291,8 +291,7 @@ describe("2. Multiple simultaneous roles — all render, none collapsed", () => 
     expect(screen.getByText("Koordinator/in")).toBeTruthy();
     expect(screen.getByText("Vorstandsmitglied")).toBeTruthy();
 
-    // Must have at least 3 role cards (sce-accent badges)
-    const roleBadges = container.querySelectorAll(".rounded-full.bg-\\[var\\(--sce-accent\\)\\]");
+    const roleBadges = container.querySelectorAll("[data-testid='person-semantic-pill']");
     expect(roleBadges.length).toBeGreaterThanOrEqual(3);
   });
 });

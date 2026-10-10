@@ -35,7 +35,9 @@ import { createEffectivePermissionResolver } from "@/lib/permissions/services/ef
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
-import { Badge, StatusIndicator } from "@/components/ui";
+import { Badge } from "@/components/ui";
+import { PersonSemanticPill } from "@/components/admin/persons/PersonPresentationPill";
+import { normalizeOptionalPresentationLabel } from "@/lib/people/person-presentation-label";
 import { MetadataCard } from "@/components/ui/MetadataCard";
 import PersonHeaderPhotoAdmin from "@/components/admin/persons/PersonHeaderPhotoAdmin";
 import PersonDetailTabs from "@/components/admin/persons/PersonDetailTabs";
@@ -126,7 +128,9 @@ export default async function PersonDetailPage({ params }: PageProps) {
     ...new Set(
       assignments
         .filter((a) => a.status === "ACTIVE" && a.functionKey)
-        .map((a) => getPersonFunctionLabel(a.functionKey)),
+        .map((a) => getPersonFunctionLabel(a.functionKey))
+        .map((label) => normalizeOptionalPresentationLabel(label))
+        .filter((label): label is string => label != null),
     ),
   ];
 
@@ -146,16 +150,21 @@ export default async function PersonDetailPage({ params }: PageProps) {
     capacityLabels.push("Spieler/in");
   }
   if (isCurrentTrainer) {
-    const trainerLabel = activeTrainers[0]?.roleLabel ?? "Trainer/in";
+    const trainerLabel =
+      normalizeOptionalPresentationLabel(activeTrainers[0]?.roleLabel) ?? "Trainer/in";
     if (!assignmentFunctions.includes(trainerLabel)) {
       capacityLabels.push(trainerLabel);
     }
   }
   for (const fn of assignmentFunctions) {
     if (capacityLabels.length >= 4) break;
-    capacityLabels.push(fn);
+    const normalized = normalizeOptionalPresentationLabel(fn);
+    if (normalized) capacityLabels.push(normalized);
   }
-  const headerCapacities = capacityLabels.slice(0, 4);
+  const headerCapacities = capacityLabels
+    .map((cap) => normalizeOptionalPresentationLabel(cap))
+    .filter((cap): cap is string => cap != null)
+    .slice(0, 4);
 
   // ── AccessRolesCard data — moved to Zugang tab ──────────────────────────────
   let accessRolesCard: {
@@ -245,7 +254,7 @@ export default async function PersonDetailPage({ params }: PageProps) {
           </div>
         }
         summary={
-          <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 shadow-sm">
+          <div className="flex flex-wrap items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
             <PersonHeaderPhotoAdmin
               personId={person.id}
               personName={fullName}
@@ -253,22 +262,11 @@ export default async function PersonDetailPage({ params }: PageProps) {
               canManage={canManage}
             />
             <div className="min-w-0 flex-1">
-              {/* Capacity badges */}
               <div className="flex flex-wrap items-center gap-2">
-                <StatusIndicator
-                  variant={person.isActive ? "success" : "neutral"}
-                  label={person.isActive ? "Aktiv" : "Inaktiv"}
-                />
                 {headerCapacities.map((cap) => (
-                  <span
-                    key={cap}
-                    className="inline-flex items-center rounded-full bg-[var(--sce-accent)] px-2.5 py-1 text-xs font-semibold text-[var(--sce-primary)]"
-                  >
-                    {cap}
-                  </span>
+                  <PersonSemanticPill key={cap} label={cap} size="sm" />
                 ))}
               </div>
-              {/* Contact info + age */}
               <div className="mt-1.5 flex flex-wrap items-center gap-4 text-sm text-[var(--muted)]">
                 {person.dateOfBirth ? (
                   <span className="flex items-center gap-1.5">

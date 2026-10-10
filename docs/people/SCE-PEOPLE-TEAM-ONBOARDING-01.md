@@ -5,9 +5,9 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01B-R1 ready for Human UAT re-test) |
+| **Mode** | IN_PROGRESS (01B-R2 ready for Human UAT) |
 | **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
-| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PENDING |
+| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_PENDING |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
 | **PR** | #814 (DRAFT) |
@@ -128,7 +128,24 @@ Human UAT on PR #814 preview identified UX gaps (functionality largely present):
 
 Tests: `lib/people/__tests__/sce-people-team-onboarding-01b-r1-person-overview-projection.test.ts` + extended `sce-people-team-onboarding-01b-roster-ux.test.tsx`.
 
-### Human UAT (01B-R1 — pending)
+**Human UAT R1 (partial pass):** Kader action dedupe PASS · player toggles PASS · Trainerteam canonical membership PASS · duplicate F2 Person relationship PASS · Team cockpit dark surface direction PASS. Person Overview visual polish flagged for R2 (empty/unreadable orange pills).
+
+### Slice 01B-R2 — Person Overview presentation (2026-10-10)
+
+| Finding | Remediation |
+|---------|-------------|
+| Orange pills beside header, teams, and function cards with no readable text | Root cause: `bg-[var(--sce-accent)]` + `text-[var(--sce-primary)]` both resolve to the same orange token — text invisible but pill visible |
+| Redundant status/capacity clutter in Person header | Single **Aktiv** badge on title row; summary shows contact + meaningful capacity pills only |
+| Redundant **Spieler/in** badge on cards already under Spieler/in | Role pill omitted when section context is sufficient; optional trainer `roleLabel` only when non-empty |
+| Light incomplete-assignment warning chip | Warning pill uses SCE `--sce-warning-*` tokens on dark surfaces |
+
+Shared helpers: `lib/people/person-presentation-label.ts`, `components/admin/persons/PersonPresentationPill.tsx`.
+
+Tests: `lib/people/__tests__/sce-people-team-onboarding-01b-r2-person-presentation.test.tsx` + R1 projection suite unchanged.
+
+**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R2_PENDING
+
+### Human UAT (01B-R2 — pending)
 
 Preferred team: **Junioren F2** (known ASSIGNMENT_ONLY trainer). Do **not** mutate FCA STAGE data during implementation.
 
