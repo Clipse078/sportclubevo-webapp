@@ -92,12 +92,21 @@ export default function PlayerReleaseEditorSheet({
   const targetLoadSeq = useRef(0);
 
   const isActivity = context.mode === "ACTIVITY";
-  const lockedPersonId = editing?.personId ?? initialPersonId ?? "";
+  const playerSelectionLocked = Boolean(editing?.personId ?? initialPersonId);
+  const effectivePersonId = editing?.personId ?? initialPersonId ?? form.personId;
   const lockedPersonName =
-    editing?.personDisplayName ?? initialPersonDisplayName ?? rosterPlayers.find((p) => p.personId === lockedPersonId)?.displayName;
+    editing?.personDisplayName ??
+    initialPersonDisplayName ??
+    rosterPlayers.find((p) => p.personId === effectivePersonId)?.displayName;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      targetLoadSeq.current += 1;
+      setForm(EMPTY_FORM);
+      setTargetOptions([]);
+      setFormError(null);
+      return;
+    }
     if (editing) {
       setForm({
         personId: editing.personId,
@@ -119,11 +128,12 @@ export default function PlayerReleaseEditorSheet({
 
   const loadTargets = useCallback(
     async (personId: string) => {
+      const seq = ++targetLoadSeq.current;
       if (!personId) {
         setTargetOptions([]);
+        setTargetsLoading(false);
         return;
       }
-      const seq = ++targetLoadSeq.current;
       setTargetsLoading(true);
       try {
         const response = await fetch(
@@ -159,9 +169,8 @@ export default function PlayerReleaseEditorSheet({
 
   useEffect(() => {
     if (!open) return;
-    const personId = editing?.personId ?? initialPersonId ?? form.personId;
-    void loadTargets(personId);
-  }, [open, editing, initialPersonId, form.personId, loadTargets]);
+    void loadTargets(effectivePersonId);
+  }, [open, effectivePersonId, loadTargets]);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -263,7 +272,7 @@ export default function PlayerReleaseEditorSheet({
               onChange={(value) => setForm((prev) => ({ ...prev, targetTeamSeasonId: value }))}
               placeholder="Zielteam suchen…"
               emptyLabel="Keine passenden Zielteams gefunden."
-              disabled={targetsLoading || !lockedPersonId}
+              disabled={targetsLoading || !effectivePersonId}
               testId="player-release-target-picker"
             />
             <p className="mt-1 text-xs text-[var(--muted)]">

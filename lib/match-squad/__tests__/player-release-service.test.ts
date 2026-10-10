@@ -40,7 +40,7 @@ vi.mock("@/lib/audit/log-action", () => ({
 }));
 
 vi.mock("../player-release-target-discovery", () => ({
-  assertPlayerReleaseTargetEligible: vi.fn(),
+  assertPlayerReleaseTargetEligible: vi.fn().mockResolvedValue(undefined),
   mapTargetDiscoveryToPickerOptions: vi.fn(),
   resolvePlayerReleaseTargetTeams: vi.fn(),
 }));

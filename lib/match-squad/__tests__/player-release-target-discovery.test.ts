@@ -107,6 +107,117 @@ describe("player-release-target-discovery", () => {
     expect(rows.every((row) => row.eligibilityState === "ELIGIBLE")).toBe(true);
   });
 
+  it("returns plausible junior targets for 2010-born B1 player (SCE-style UAT)", async () => {
+    mocks.personFindFirst.mockResolvedValue({
+      dateOfBirth: new Date("2010-06-01T00:00:00.000Z"),
+    });
+    mocks.teamSeasonFindMany.mockResolvedValue([
+      {
+        id: "ts-b1",
+        teamId: "team-b1",
+        displayName: "Junioren B1",
+        shortName: null,
+        status: "ACTIVE",
+        seasonId: "season-1",
+        team: {
+          id: "team-b1",
+          name: "FC Allschwil Junioren B1",
+          shortName: null,
+          isActive: true,
+          tenantId: "tenant-a",
+          category: "JUNIOREN",
+          ageGroup: "B",
+          genderGroup: "JUNIOREN",
+        },
+      },
+      {
+        id: "ts-b2",
+        teamId: "team-b2",
+        displayName: "Junioren B2",
+        shortName: null,
+        status: "ACTIVE",
+        seasonId: "season-1",
+        team: {
+          id: "team-b2",
+          name: "FC Allschwil Junioren B2",
+          shortName: null,
+          isActive: true,
+          tenantId: "tenant-a",
+          category: "JUNIOREN",
+          ageGroup: "B",
+          genderGroup: "JUNIOREN",
+        },
+      },
+      {
+        id: "ts-c1",
+        teamId: "team-c1",
+        displayName: "Junioren C1",
+        shortName: null,
+        status: "ACTIVE",
+        seasonId: "season-1",
+        team: {
+          id: "team-c1",
+          name: "FC Allschwil Junioren C1",
+          shortName: null,
+          isActive: true,
+          tenantId: "tenant-a",
+          category: "JUNIOREN",
+          ageGroup: "C",
+          genderGroup: "JUNIOREN",
+        },
+      },
+      {
+        id: "ts-inactive",
+        teamId: "team-inactive",
+        displayName: "Junioren C1 (inaktiv)",
+        shortName: null,
+        status: "INACTIVE",
+        seasonId: "season-1",
+        team: {
+          id: "team-inactive",
+          name: "FC Allschwil Junioren C1",
+          shortName: null,
+          isActive: true,
+          tenantId: "tenant-a",
+          category: "JUNIOREN",
+          ageGroup: "C",
+          genderGroup: "JUNIOREN",
+        },
+      },
+      {
+        id: "ts-frauen",
+        teamId: "team-frauen",
+        displayName: "Frauen 1",
+        shortName: null,
+        status: "ACTIVE",
+        seasonId: "season-1",
+        team: {
+          id: "team-frauen",
+          name: "FC Allschwil Frauen 1",
+          shortName: null,
+          isActive: true,
+          tenantId: "tenant-a",
+          category: "FRAUEN",
+          ageGroup: "FRAUEN",
+          genderGroup: "FRAUEN",
+        },
+      },
+    ]);
+
+    const rows = await resolvePlayerReleaseTargetTeams({
+      tenantId: "tenant-a",
+      personId: "person-uat-03",
+      sourceTeamSeasonId: "ts-b1",
+    });
+
+    const ids = rows.map((row) => row.teamSeasonId);
+    expect(ids).toContain("ts-c1");
+    expect(ids).not.toContain("ts-b1");
+    expect(ids).not.toContain("ts-b2");
+    expect(ids).not.toContain("ts-inactive");
+    expect(ids).not.toContain("ts-frauen");
+  });
+
   it("maps eligible rows to picker options only", () => {
     const options = mapTargetDiscoveryToPickerOptions([
       {

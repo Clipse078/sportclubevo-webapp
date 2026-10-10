@@ -35,6 +35,7 @@ import {
   formatMaxMinutesLabel,
   formatReleaseActivityScopeLabel,
   formatReleaseValidityRange,
+  PLAYER_RELEASE_REASON_OPTIONS,
   playerReleaseReasonLabel,
 } from "@/lib/match-squad/player-release-presentation";
 
@@ -167,7 +168,7 @@ function parseCalendarDateInput(value: string, fieldLabel: string): Date {
 
 function parseReason(value: string): PlayerReleaseReason {
   const normalized = value.trim().toUpperCase();
-  const allowed = Object.values(PlayerReleaseReason);
+  const allowed = PLAYER_RELEASE_REASON_OPTIONS.map((option) => option.value);
   if (!allowed.includes(normalized as PlayerReleaseReason)) {
     throw new PlayerReleaseValidationError("Bitte einen gültigen Freigabe-Grund wählen.");
   }

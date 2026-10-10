@@ -1314,3 +1314,43 @@ Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-rele
 | **Training** | Planning → Trainings → *Termin bearbeiten* → secondary **Teilnahme** → Spielerliste → **Freigeben** |
 | **Tournament** | Planning → Turniere → *Turnier* → **Teilnahmen** player list → **Freigeben** |
 | **Responsive** | Desktop + tablet — actions wrap without clipping on all three activity rows |
+
+---
+
+## 36. 01C Human UAT R3 — result (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Human UAT R3** | **FAIL** |
+| **Team Cockpit period release** | Dialog opens; **Zielteam** picker empty for SCE Testspieler 03 (regression) |
+| **Match / Training / Tournament activity** | Surfaces present after R3; target discovery must match period contract |
+| **01C status** | **IN PROGRESS** |
+| **MERGE_ALLOWED** | **NO** |
+
+### Root cause (R3.1)
+
+| Area | Finding |
+|------|---------|
+| **UI (`PlayerReleaseEditorSheet`)** | R3 changed target picker `disabled` from `!form.personId` to `!lockedPersonId`. Period create has no `initialPersonId`, so after choosing a player the picker stayed disabled and looked empty. |
+| **Person resolution** | Canonical **`effectivePersonId`** = `editing?.personId ?? initialPersonId ?? form.personId` — used for fetch + picker enablement; locked UI only when `initialPersonId` or edit. |
+| **Async** | Empty `personId` loads now participate in request sequence; sheet close clears stale form/options. |
+| **Discovery service** | **`resolvePlayerReleaseTargetTeams`** unchanged; existing releases do **not** filter targets. |
+| **UAT data** | SCE Testspieler 01–06 share **`2010-06-01`** DOB; from B1 source, **C-band** (and unrestricted D) targets are eligible; same-band B targets are birth-year **INELIGIBLE** (not hidden by release rows). |
+
+### R3.1 remediation (PR **#822**)
+
+| Item | Change |
+|------|--------|
+| **Period + activity parity** | Same `GET …/target-teams?personId=` → `listTargetTeamSeasonOptionsForPerson` → `resolvePlayerReleaseTargetTeams` |
+| **Picker UX** | Enable when `effectivePersonId` set; helper text when no eligible targets |
+| **Tests** | Period player switch + stale fetch; 2010-born discovery; `player-release-service` mocks/`parseReason` |
+| **Migration** | **None** |
+
+### Human UAT R3.1 checklist (PO)
+
+| Surface | Steps |
+|---------|--------|
+| **Period** | FC Allschwil Junioren B1 → Kader → Spielerfreigaben → **Für anderes Team freigeben** → Testspieler **01 / 02 / 03** → eligible **Zielteams** visible |
+| **Match** | Event `cmrzhj3je006a04kwhbepxvdz` → Aufgebot → **Freigeben** → same targets for same player/source |
+| **Training** | Trainings → Termin → **Teilnahme** → **Freigeben** |
+| **Tournament** | Turnier → **Teilnahmen** → **Freigeben** |
