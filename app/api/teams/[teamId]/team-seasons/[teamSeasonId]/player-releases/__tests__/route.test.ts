@@ -46,7 +46,6 @@ describe("player-releases route", () => {
     mocks.listPlayerReleasesForSourceTeamSeason.mockResolvedValue({
       releases: [],
       rosterPlayers: [],
-      targetOptions: [],
     });
   });
 

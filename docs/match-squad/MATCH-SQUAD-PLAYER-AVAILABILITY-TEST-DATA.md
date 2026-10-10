@@ -88,6 +88,17 @@ Controlled match `cmrzhj3je006a04kwhbepxvdz` may show **KEINE ANFRAGE** while `P
 | **Resolved UAT target (STAGE data)** | **FC Allschwil Junioren B2** · `teamSeasonId=cmsoczvt0000604ju1f1eindm` · `teamId=cmrkh1mo4000k04ju4c4302w9` (Season 2026/2027, ACTIVE) |
 | **FINAL_PARENT_REQUIREMENT** | `TEST_DATA_REMAINING = 0` at parent module closure — **not cleaned now** |
 
+## 01C Human UAT R2 — refinements (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Result** | **READY_FOR_UAT** on PR **#822** |
+| **R1.1 PO** | Core create/edit/revoke accepted; toggle + eligibility picker + activity-context release required |
+| **Migration** | `20261010210000_match_squad_player_availability_01c_r2_activity_scope` (`scope`, `eventId`, `trainingSessionId`) applied to shared STAGE |
+| **UAT fixtures** | Unchanged — source B1 `cmsoczv2t000504juhvod5hi9`, players SCE Testspieler 01–06, match `cmrzhj3je006a04kwhbepxvdz` |
+| **Agent-seeded PlayerRelease** | **None** — PO-led UAT only |
+| **PROD** | Not targeted |
+
 ## 01A closure (2026-10-10)
 
 | Field | Value |

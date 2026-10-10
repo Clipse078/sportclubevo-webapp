@@ -10,12 +10,14 @@ import type {
   UpcomingParticipationEvent,
 } from "@/lib/participation/types";
 import { EventCommunicationPanel } from "@/components/admin/teams/EventCommunicationPanel";
+import ActivityPlayerReleaseButton from "@/components/admin/teams/ActivityPlayerReleaseButton";
 
 type Props = {
   teamId: string;
   teamSeasonId: string;
   initialUpcoming: TeamUpcomingParticipation;
   canSendEventCommunication?: boolean;
+  canManagePlayerRelease?: boolean;
 };
 
 function eventKey(event: UpcomingParticipationEvent): string {
@@ -39,6 +41,7 @@ export default function TeamParticipationSection({
   teamSeasonId,
   initialUpcoming,
   canSendEventCommunication = false,
+  canManagePlayerRelease = false,
 }: Props) {
   const upcoming = initialUpcoming;
   const [selectedEventKey, setSelectedEventKey] = useState<string | null>(
@@ -152,6 +155,9 @@ export default function TeamParticipationSection({
                           <th className="px-3 py-2.5 font-medium">Status</th>
                           <th className="px-3 py-2.5 font-medium">Rückmeldung</th>
                           <th className="px-3 py-2.5 font-medium">Hinweis</th>
+                          {canManagePlayerRelease ? (
+                            <th className="px-3 py-2.5 font-medium">Freigabe</th>
+                          ) : null}
                         </tr>
                       </thead>
                       <tbody>
@@ -172,6 +178,30 @@ export default function TeamParticipationSection({
                             <td className="px-3 py-2.5 text-[var(--muted)]">
                               {player.note ?? "—"}
                             </td>
+                            {canManagePlayerRelease && selectedEvent ? (
+                              <td className="px-3 py-2.5">
+                                <ActivityPlayerReleaseButton
+                                  teamId={teamId}
+                                  teamSeasonId={teamSeasonId}
+                                  personId={player.personId}
+                                  personDisplayName={player.displayName}
+                                  canManage={canManagePlayerRelease}
+                                  activityContext={{
+                                    mode: "ACTIVITY",
+                                    eventId:
+                                      selectedEvent.eventKind !== "TRAINING"
+                                        ? selectedEvent.eventId
+                                        : undefined,
+                                    trainingSessionId:
+                                      selectedEvent.eventKind === "TRAINING"
+                                        ? selectedEvent.trainingSessionId
+                                        : undefined,
+                                    scopeLabel: `${selectedEvent.eventKindLabel} · ${selectedEvent.title}`,
+                                  }}
+                                  testId={`team-participation-release-${player.personId}`}
+                                />
+                              </td>
+                            ) : null}
                           </tr>
                         ))}
                       </tbody>

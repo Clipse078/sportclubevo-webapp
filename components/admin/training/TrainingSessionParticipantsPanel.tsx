@@ -4,12 +4,21 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ParticipationResponseStatus } from "@prisma/client";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
+import ActivityPlayerReleaseButton from "@/components/admin/teams/ActivityPlayerReleaseButton";
 import type { TrainingSessionParticipantDto } from "@/lib/training/training-session-participants";
 
 const INITIAL_PLAYER_ROWS = 12;
 
 type Props = {
   participants: TrainingSessionParticipantDto[];
+  releaseContext?: {
+    teamId: string;
+    teamSeasonId: string;
+    trainingSessionId: string;
+    sessionLabel: string;
+    canManageRelease: boolean;
+    releaseReadOnly?: boolean;
+  };
 };
 
 function ParticipantStatusBadge({
@@ -33,10 +42,12 @@ function ParticipantRow({
   participant,
   roleLabel,
   statusLabel,
+  releaseContext,
 }: {
   participant: TrainingSessionParticipantDto;
   roleLabel?: string;
   statusLabel?: string;
+  releaseContext?: Props["releaseContext"];
 }) {
   return (
     <li
@@ -55,11 +66,27 @@ function ParticipantRow({
       {participant.participationStatus && statusLabel ? (
         <ParticipantStatusBadge status={participant.participationStatus} label={statusLabel} />
       ) : null}
+      {participant.role === "PLAYER" && releaseContext ? (
+        <ActivityPlayerReleaseButton
+          teamId={releaseContext.teamId}
+          teamSeasonId={releaseContext.teamSeasonId}
+          personId={participant.personId}
+          personDisplayName={participant.displayName}
+          canManage={releaseContext.canManageRelease}
+          disabled={releaseContext.releaseReadOnly}
+          activityContext={{
+            mode: "ACTIVITY",
+            trainingSessionId: releaseContext.trainingSessionId,
+            scopeLabel: releaseContext.sessionLabel,
+          }}
+          testId={`training-session-release-${participant.personId}`}
+        />
+      ) : null}
     </li>
   );
 }
 
-export function TrainingSessionParticipantsPanel({ participants }: Props) {
+export function TrainingSessionParticipantsPanel({ participants, releaseContext }: Props) {
   const t = useTranslations("TrainingCenter.sessionEdit");
   const [showAllPlayers, setShowAllPlayers] = useState(false);
 
@@ -131,6 +158,7 @@ export function TrainingSessionParticipantsPanel({ participants }: Props) {
                   <ParticipantRow
                     key={player.personId}
                     participant={player}
+                    releaseContext={releaseContext}
                     statusLabel={
                       player.participationStatus
                         ? statusLabel(player.participationStatus)

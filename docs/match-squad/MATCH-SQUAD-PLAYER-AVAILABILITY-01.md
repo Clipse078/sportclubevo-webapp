@@ -1263,3 +1263,20 @@ Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-rele
 | **UAT scenario A target (resolved on STAGE)** | **FC Allschwil Junioren B2** · `cmsoczvt0000604ju1f1eindm` · player **SCE Testspieler 01** · 45 min · Spielpraxis |
 | **Scenarios B–D** | PO-led on preview after refresh — create / edit / revoke / second target (no agent-seeded `PlayerRelease` rows) |
 | **Signal independence** | Match `cmrzhj3je006a04kwhbepxvdz` baseline captured pre-UAT; release CRUD must not mutate MatchSquad / ParticipationResponse (§31 invariants) |
+
+---
+
+## 34. 01C Human UAT R2 — refinements (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **READY_FOR_UAT** (PR **#822** preview; **01C not module-closed**) |
+| **PO R1.1** | Core Spielerfreigabe workflow accepted; three refinements required |
+| **Toggle UX** | «Vergangen / Widerrufen anzeigen» uses canonical `SwitchThumb` (no checkbox) |
+| **Target discovery** | `resolvePlayerReleaseTargetTeams` — birth-year + category/gender plausibility; UI uses `TeamSeasonSearchablePicker` + `GET …/player-releases/target-teams?personId=` |
+| **Eligibility stance** | **Freigegeben ≠ Einsatzberechtigt** — unknown/incomplete rules never shown as eligible |
+| **Activity scope** | `PlayerRelease.scope` = `PERIOD` \| `ACTIVITY`; `eventId` (Match/Tournament) or `trainingSessionId` (Training); migration `20261010210000_match_squad_player_availability_01c_r2_activity_scope` |
+| **Activity UX** | Match Aufgebot row **Freigeben**; Training session participants; Team Cockpit **Teilnahmen** (Match/Training/Tournament events) |
+| **Overlap policy** | Period↔period: existing date overlap block; activity↔activity: duplicate active same person+source+target+activity; period + activity may coexist (activity-specific rule for that term) |
+| **Signal independence** | Unchanged §31 — release CRUD does not mutate ParticipationResponse / MatchSquad |
+| **STAGE migration** | R2 migration applied via guarded `db:migrate:deploy-if-enabled`; **PROD untouched** |

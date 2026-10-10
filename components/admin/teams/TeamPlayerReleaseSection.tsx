@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { Plus, Pencil, Ban } from "lucide-react";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { Button } from "@/components/ui/Button";
-import { Sheet } from "@/components/ui/Sheet";
-import { PLAYER_RELEASE_REASON_OPTIONS } from "@/lib/match-squad/player-release-presentation";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import PlayerReleaseEditorSheet from "@/components/admin/teams/PlayerReleaseEditorSheet";
 import type { PlayerReleaseListItem } from "@/lib/match-squad/player-release-service";
 
 type Props = {
@@ -16,28 +16,7 @@ type Props = {
 type ListPayload = {
   releases: PlayerReleaseListItem[];
   rosterPlayers: { personId: string; displayName: string }[];
-  targetOptions: { teamSeasonId: string; label: string; teamId: string }[];
   canEdit: boolean;
-};
-
-type FormState = {
-  personId: string;
-  targetTeamSeasonId: string;
-  validFrom: string;
-  validUntil: string;
-  maxMinutes: string;
-  reason: string;
-  note: string;
-};
-
-const EMPTY_FORM: FormState = {
-  personId: "",
-  targetTeamSeasonId: "",
-  validFrom: "",
-  validUntil: "",
-  maxMinutes: "",
-  reason: "SPIELPRAXIS",
-  note: "",
 };
 
 function statusTone(phase: string): "success" | "warning" | "muted" | "default" {
@@ -56,15 +35,14 @@ function statusTone(phase: string): "success" | "warning" | "muted" | "default" 
 }
 
 export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props) {
+  const historyToggleId = useId();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ListPayload | null>(null);
   const [includeHistory, setIncludeHistory] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<PlayerReleaseListItem | null>(null);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const apiBase = `/api/teams/${teamId}/team-seasons/${teamSeasonId}/player-releases`;
 
@@ -103,67 +81,12 @@ export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props
 
   function openCreate() {
     setEditing(null);
-    setForm(EMPTY_FORM);
-    setFormError(null);
     setSheetOpen(true);
   }
 
   function openEdit(row: PlayerReleaseListItem) {
     setEditing(row);
-    setForm({
-      personId: row.personId,
-      targetTeamSeasonId: row.targetTeamSeasonId,
-      validFrom: row.validFrom,
-      validUntil: row.validUntil,
-      maxMinutes: row.maxMinutes != null ? String(row.maxMinutes) : "",
-      reason: row.reason,
-      note: row.note ?? "",
-    });
-    setFormError(null);
     setSheetOpen(true);
-  }
-
-  async function handleSubmit() {
-    if (!data?.canEdit) return;
-    setSubmitting(true);
-    setFormError(null);
-    try {
-      const payload = {
-        personId: form.personId,
-        targetTeamSeasonId: form.targetTeamSeasonId,
-        validFrom: form.validFrom,
-        validUntil: form.validUntil,
-        maxMinutes: form.maxMinutes === "" ? null : Number(form.maxMinutes),
-        reason: form.reason,
-        note: form.note.trim() || null,
-      };
-
-      const response = await fetch(
-        editing ? `${apiBase}/${editing.id}` : apiBase,
-        {
-          method: editing ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            editing
-              ? {
-                  ...payload,
-                  expectedVersion: editing.version,
-                }
-              : payload,
-          ),
-        },
-      );
-      const json = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(json.error ?? "Speichern fehlgeschlagen.");
-      }
-      setSheetOpen(false);
-      await load();
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
-    } finally {
-      setSubmitting(false);
-    }
   }
 
   async function handleRevoke(row: PlayerReleaseListItem) {
@@ -204,15 +127,16 @@ export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center gap-3 text-sm">
-        <label className="inline-flex items-center gap-2 text-[var(--text-2)]">
-          <input
-            type="checkbox"
-            checked={includeHistory}
-            onChange={(event) => setIncludeHistory(event.target.checked)}
-          />
+      <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+        <span className="text-[var(--text-2)]" id={`${historyToggleId}-label`}>
           Vergangen / Widerrufen anzeigen
-        </label>
+        </span>
+        <SwitchThumb
+          id={historyToggleId}
+          checked={includeHistory}
+          onChange={setIncludeHistory}
+          aria-label="Vergangen / Widerrufen anzeigen"
+        />
       </div>
 
       {loading ? (
@@ -242,8 +166,9 @@ export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props
                   <div className="min-w-0 space-y-1 text-sm">
                     <p className="font-medium text-[var(--text-1)]">{row.targetTeamLabel}</p>
                     <p className="text-[var(--text-2)]">
-                      {row.validityLabel} · {row.maxMinutesLabel} · {row.reasonLabel}
+                      {row.reasonLabel} · {row.maxMinutesLabel}
                     </p>
+                    <p className="text-[var(--text-2)]">{row.validityLabel}</p>
                     {!row.sourceRosterMember ? (
                       <p className="text-xs text-[var(--warning)]">
                         Spieler nicht mehr im aktuellen Saison-Kader (historische Freigabe).
@@ -284,127 +209,15 @@ export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props
         ))}
       </div>
 
-      <Sheet
+      <PlayerReleaseEditorSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        title={editing ? "Freigabe bearbeiten" : "Spieler freigeben"}
-      >
-        <div className="space-y-4 p-4">
-          {!editing ? (
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Spieler</span>
-              <select
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-                value={form.personId}
-                onChange={(event) => setForm((prev) => ({ ...prev, personId: event.target.value }))}
-              >
-                <option value="">Bitte wählen</option>
-                {(data?.rosterPlayers ?? []).map((player) => (
-                  <option key={player.personId} value={player.personId}>
-                    {player.displayName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <p className="text-sm text-[var(--text-2)]">
-              Spieler: <strong>{editing.personDisplayName}</strong>
-            </p>
-          )}
-
-          {!editing ? (
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Zielteam</span>
-              <select
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-                value={form.targetTeamSeasonId}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, targetTeamSeasonId: event.target.value }))
-                }
-              >
-                <option value="">Bitte wählen</option>
-                {(data?.targetOptions ?? []).map((target) => (
-                  <option key={target.teamSeasonId} value={target.teamSeasonId}>
-                    {target.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <p className="text-sm text-[var(--text-2)]">
-              Zielteam: <strong>{editing?.targetTeamLabel}</strong>
-            </p>
-          )}
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Gültig ab</span>
-              <input
-                type="date"
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-                value={form.validFrom}
-                onChange={(event) => setForm((prev) => ({ ...prev, validFrom: event.target.value }))}
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Gültig bis</span>
-              <input
-                type="date"
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-                value={form.validUntil}
-                onChange={(event) => setForm((prev) => ({ ...prev, validUntil: event.target.value }))}
-              />
-            </label>
-          </div>
-
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Max. Einsatzzeit (Minuten)</span>
-            <input
-              type="number"
-              min={1}
-              placeholder="Keine spezifische Begrenzung"
-              className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-              value={form.maxMinutes}
-              onChange={(event) => setForm((prev) => ({ ...prev, maxMinutes: event.target.value }))}
-            />
-          </label>
-
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Grund</span>
-            <select
-              className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-              value={form.reason}
-              onChange={(event) => setForm((prev) => ({ ...prev, reason: event.target.value }))}
-            >
-              {PLAYER_RELEASE_REASON_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Notiz (optional)</span>
-            <textarea
-              className="min-h-[80px] w-full rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
-              value={form.note}
-              onChange={(event) => setForm((prev) => ({ ...prev, note: event.target.value }))}
-            />
-          </label>
-
-          {formError ? <p className="text-sm text-[var(--danger)]">{formError}</p> : null}
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => setSheetOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button type="button" variant="primary" disabled={submitting} onClick={() => void handleSubmit()}>
-              {editing ? "Speichern" : "Freigabe erstellen"}
-            </Button>
-          </div>
-        </div>
-      </Sheet>
+        apiBase={apiBase}
+        editing={editing}
+        rosterPlayers={data?.rosterPlayers ?? []}
+        context={{ mode: "PERIOD" }}
+        onSaved={load}
+      />
     </section>
   );
 }

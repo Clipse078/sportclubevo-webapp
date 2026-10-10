@@ -11,7 +11,7 @@ export const MATCH_SQUAD_PLAYER_ROW_LAYOUT = "match-squad-player-row-grid" as co
 
 /** Fixed tracks: flexible player · status · squad action (never `auto`). */
 export const MATCH_SQUAD_PLAYER_ROW_GRID_CLASS =
-  "grid grid-cols-1 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_12rem_8.5rem] sm:items-center sm:gap-x-4";
+  "grid grid-cols-1 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_12rem_8.5rem_7.5rem] sm:items-center sm:gap-x-3";
 
 export const MATCH_SQUAD_PLAYER_ROW_PLAYER_COLUMN_CLASS = "flex min-w-0 items-center gap-3";
 

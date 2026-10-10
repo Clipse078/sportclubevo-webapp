@@ -29,6 +29,9 @@ const sampleRelease = {
   sourceRosterMember: true,
   updatedAt: "2026-10-10T10:00:00.000Z",
   version: "2026-10-10T10:00:00.000Z",
+  scope: "PERIOD" as const,
+  eventId: null,
+  trainingSessionId: null,
 };
 
 describe("TeamPlayerReleaseSection", () => {
@@ -41,7 +44,6 @@ describe("TeamPlayerReleaseSection", () => {
         json: async () => ({
           releases: [sampleRelease],
           rosterPlayers: [{ personId: "p1", displayName: "SCE Testspieler 01" }],
-          targetOptions: [{ teamSeasonId: "ts-2", label: "Junioren B2", teamId: "team-2" }],
           canEdit: true,
         }),
       }),
@@ -69,6 +71,14 @@ describe("TeamPlayerReleaseSection", () => {
         screen.getByRole("button", { name: /Für anderes Team freigeben/i }),
       ).toBeInTheDocument();
     });
+  });
+
+  it("uses SCE switch for history toggle (no checkbox)", async () => {
+    render(<TeamPlayerReleaseSection teamId="team-1" teamSeasonId="ts-1" />);
+    await waitFor(() => {
+      expect(screen.getByRole("switch", { name: /Vergangen \/ Widerrufen anzeigen/i })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 
   it("opens create sheet", async () => {
