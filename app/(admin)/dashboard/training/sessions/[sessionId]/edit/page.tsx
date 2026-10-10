@@ -161,12 +161,13 @@ export default async function TrainingSessionEditPage({ params }: Props) {
         })
       : null;
 
+  const trainingReleaseScopeLabel = `Training · ${trainingSession.teamName}`;
   const trainingReleaseContext = teamSeasonPublication
     ? {
         teamId: teamSeasonPublication.teamId,
         teamSeasonId: trainingSession.teamSeasonId,
         trainingSessionId: sessionId,
-        sessionLabel: pageTitle,
+        sessionLabel: trainingReleaseScopeLabel,
         canManageRelease: releaseAccess?.canManageSource === true,
         releaseReadOnly: false,
       }
@@ -235,6 +236,10 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                     participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
                   }}
                 />
+                <TrainingSessionParticipantsPanel
+                  participants={participantRoster.participants}
+                  releaseContext={trainingReleaseContext}
+                />
               </PlanningEditorSection>
             </>
           }
@@ -273,16 +278,6 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                   canManage={canManageOperationalAllocations}
                   sessionStartAt={trainingSession.startAt}
                   sessionEndAt={trainingSession.endAt}
-                />
-              </PlanningEditorSection>
-
-              <PlanningEditorSection
-                ariaLabelledBy="training-session-edit-participants-heading"
-                testId="training-session-edit-participants-panel"
-              >
-                <TrainingSessionParticipantsPanel
-                  participants={participantRoster.participants}
-                  releaseContext={trainingReleaseContext}
                 />
               </PlanningEditorSection>
 

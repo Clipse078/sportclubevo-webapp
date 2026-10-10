@@ -1280,3 +1280,37 @@ Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-rele
 | **Overlap policy** | Period↔period: existing date overlap block; activity↔activity: duplicate active same person+source+target+activity; period + activity may coexist (activity-specific rule for that term) |
 | **Signal independence** | Unchanged §31 — release CRUD does not mutate ParticipationResponse / MatchSquad |
 | **STAGE migration** | R2 migration applied via guarded `db:migrate:deploy-if-enabled`; **PROD untouched** |
+
+---
+
+## 35. 01C Human UAT R2 — result (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Human UAT R2** | **FAIL / INCOMPLETE** |
+| **Team Cockpit period release** | **PASS** — toggle, filtered targets, existing rows |
+| **Match Aufgebot Freigeben** | **PASS** — action visible; target picker sometimes empty (bug) |
+| **Training activity Freigeben** | **FAIL** — not on trainer-facing participation surface |
+| **Tournament activity Freigeben** | **FAIL** — only Team Cockpit Teilnahmen; not on individual Turnier prep |
+| **01C status** | **IN PROGRESS** |
+| **MERGE_ALLOWED** | **NO** |
+
+### R3 remediation (same PR **#822**, branch `cursor/match-squad-player-availability-01c-player-release-development`)
+
+| Item | Change |
+|------|--------|
+| **Training route** | Planning → Trainings → session edit → **Teilnahme** rail: roster + **Freigeben** (`TrainingSessionParticipantsPanel`) |
+| **Tournament route** | Planning → Turniere → tournament edit → **Teilnahmen (Hauptteam)** RSVP list + **Freigeben** |
+| **Match** | Keep Aufgebot **Freigeben**; fix activity target picker load (`initialPersonId` + stale fetch guard) |
+| **Target discovery** | Unchanged eligibility service; period releases must not suppress activity targets |
+| **Schema** | **No R3 migration** — `scope` / `eventId` / `trainingSessionId` sufficient |
+
+### Human UAT R3 checklist (PO)
+
+| Surface | Navigation |
+|---------|------------|
+| **Team period** | Club → Organisation → Teams → *Stammteam* → Kader → Spielerfreigaben |
+| **Match** | Planning → Spiele → *Match* → Aufgebot → **Freigeben** |
+| **Training** | Planning → Trainings → *Termin bearbeiten* → secondary **Teilnahme** → Spielerliste → **Freigeben** |
+| **Tournament** | Planning → Turniere → *Turnier* → **Teilnahmen** player list → **Freigeben** |
+| **Responsive** | Desktop + tablet — actions wrap without clipping on all three activity rows |

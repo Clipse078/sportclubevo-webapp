@@ -64,6 +64,32 @@ describe("TrainingSessionParticipantsPanel — UX-03R2", () => {
     expect(screen.getByText("Spieler 13")).toBeInTheDocument();
   });
 
+  it("renders Freigeben for players when release context allows manage", () => {
+    render(
+      <NextIntlClientProvider locale="de" messages={deMessages}>
+        <TrainingSessionParticipantsPanel
+          participants={[
+            {
+              personId: "p1",
+              displayName: "James Example",
+              avatarUrl: null,
+              role: "PLAYER",
+            },
+          ]}
+          releaseContext={{
+            teamId: "team-1",
+            teamSeasonId: "ts-1",
+            trainingSessionId: "session-1",
+            sessionLabel: "Training · Junioren B1",
+            canManageRelease: true,
+          }}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByTestId("training-session-release-p1")).toBeInTheDocument();
+  });
+
   it("P — roster is read-only (no edit controls)", () => {
     renderPanel([
       {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import TeamSeasonSearchablePicker, {
@@ -89,6 +89,7 @@ export default function PlayerReleaseEditorSheet({
   const [targetsLoading, setTargetsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const targetLoadSeq = useRef(0);
 
   const isActivity = context.mode === "ACTIVITY";
   const lockedPersonId = editing?.personId ?? initialPersonId ?? "";
@@ -122,6 +123,7 @@ export default function PlayerReleaseEditorSheet({
         setTargetOptions([]);
         return;
       }
+      const seq = ++targetLoadSeq.current;
       setTargetsLoading(true);
       try {
         const response = await fetch(
@@ -141,11 +143,15 @@ export default function PlayerReleaseEditorSheet({
         if (!response.ok) {
           throw new Error(json.error ?? "Zielteams konnten nicht geladen werden.");
         }
+        if (seq !== targetLoadSeq.current) return;
         setTargetOptions(mapTargetOptions(json.targetOptions ?? []));
       } catch {
+        if (seq !== targetLoadSeq.current) return;
         setTargetOptions([]);
       } finally {
-        setTargetsLoading(false);
+        if (seq === targetLoadSeq.current) {
+          setTargetsLoading(false);
+        }
       }
     },
     [apiBase],
@@ -153,9 +159,9 @@ export default function PlayerReleaseEditorSheet({
 
   useEffect(() => {
     if (!open) return;
-    const personId = editing?.personId ?? form.personId;
+    const personId = editing?.personId ?? initialPersonId ?? form.personId;
     void loadTargets(personId);
-  }, [open, editing, form.personId, loadTargets]);
+  }, [open, editing, initialPersonId, form.personId, loadTargets]);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -257,7 +263,7 @@ export default function PlayerReleaseEditorSheet({
               onChange={(value) => setForm((prev) => ({ ...prev, targetTeamSeasonId: value }))}
               placeholder="Zielteam suchen…"
               emptyLabel="Keine passenden Zielteams gefunden."
-              disabled={targetsLoading || !form.personId}
+              disabled={targetsLoading || !lockedPersonId}
               testId="player-release-target-picker"
             />
             <p className="mt-1 text-xs text-[var(--muted)]">

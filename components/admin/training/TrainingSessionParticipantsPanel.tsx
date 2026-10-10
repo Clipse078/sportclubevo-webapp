@@ -51,7 +51,7 @@ function ParticipantRow({
 }) {
   return (
     <li
-      className="flex min-w-0 items-center gap-2 py-1.5"
+      className="flex min-w-0 flex-wrap items-center gap-2 py-1.5 sm:flex-nowrap"
       data-testid={`training-session-participant-row-${participant.personId}`}
     >
       <div className="shrink-0 scale-[0.64] origin-left">
