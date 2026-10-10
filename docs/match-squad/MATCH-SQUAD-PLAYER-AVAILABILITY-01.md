@@ -13,15 +13,18 @@
 
 ## 1. Product vision
 
-Match-centric workflow for club trainers:
+Match-centric workflow for club trainers (canonical slice order **01A → 01F** — detail in **§28**):
 
 ```text
-MATCH → canonical TeamSeason → Match Squad (selected / not selected)
-  → explicit cross-team availability (never automatic from “not selected”)
-  → conditions → discovery in target-match context → request
-  → home-team (Stammtrainer) approval → player/guardian confirmation where required
-  → assignment → final squad → communication (domain state ≠ delivery)
+Saison-Kader + availability + trainer Match selection → Match Aufgebot (01A)
+  → availability collection UX (01B)
+  → proactive trainer Player Release & Development Assignment (01C)
+  → target-match discovery / request / approval (01D)
+  → assignment + communication (01E)
+  → operational intelligence + club UAT (01F)
 ```
+
+Release is **never** derived from Match Squad non-selection. Availability alone never creates release.
 
 **Obsolete terminology:** “Weekend Squad & Player Exchange” — the product is **not** weekend-specific. Matches may occur on any weekday, evening, tournament day, or rescheduled slot.
 
@@ -145,7 +148,7 @@ Deferred roadmap name **TRAINER-SPIELERBOERSE-01** is a **consumer** of collabor
 **Rules to enforce in 01A:**
 
 - **OWN_TEAM:** Mutations must validate `teamSeasonId` belongs to match’s resolved own-team season and `tenantId`.
-- **CROSS_TEAM:** Deny by default until 01C; no trainer may release another team’s players.
+- **CROSS_TEAM:** Deny by default until **01C** (release) and **01D** (target-team use); no trainer may release or assign another team’s players without explicit domain records.
 - **ADMIN:** Club admin / `teams.manage` may override per product — document in 01A tests.
 
 **NEW_PERMISSION_REQUIRED:** **Not for 01A** if squad edit is gated by existing `teams.manage` + server-side teamSeason ownership checks + optional trainer allocation (mirror `team-document-auth` / comm scope). Revisit **`match.squad.manage`** only if product requires delegating squad edit without `teams.manage`.
@@ -160,7 +163,7 @@ Deferred roadmap name **TRAINER-SPIELERBOERSE-01** is a **consumer** of collabor
 | **Personal programme** | `lib/personal-agenda/` | Loads activities for a user; **no** person-person overlap engine found |
 | **Participation/attendance** | Per-event records | Can **detect** same person on two events only if queried — no central service |
 
-**Recommendation:** For 01C+, introduce **person-time overlap queries** (matches + tournaments + training sessions + accepted borrow assignments) reusing **time window** helpers from publishing/planner (`getEffectiveEndAt`, operational intervals). Classify HARD vs WARNING; training overlap should not hard-block release without product rule.
+**Recommendation:** For **01D / 01F**, introduce **person-time overlap queries** (matches + tournaments + training sessions + accepted borrow assignments) reusing **time window** helpers from publishing/planner (`getEffectiveEndAt`, operational intervals). Classify HARD vs WARNING; training overlap should not hard-block release without product rule. **01C** defines release conditions; overlap evaluation consumes release + schedule context (§28).
 
 ---
 
@@ -191,20 +194,20 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 
 ## 9. Player availability / release model (later slices)
 
-Conceptual aggregates ( **not implemented** — schema in 01B–01C):
+**Superseded for product architecture by §28 (2026-10-10).** The early sketch below mixed release with source-match windows and assigned the wrong slices; keep only as historical diagnosis context.
 
-- **PlayerRelease** — home `teamSeasonId`, `personId`, `sourceEventId`, window, conditions (JSON or normalized later), status AVAILABLE|WITHDRAWN|EXPIRED|…
-- **PlayerRequest** — `releaseId`, requesting `teamSeasonId`, `targetEventId`, status REQUESTED|APPROVED|REJECTED|CANCELLED|…
-- **Assignment** — links approved request to target match squad member row
+<details>
+<summary>Historical sketch (pre-01C architecture lock — do not implement verbatim)</summary>
 
-**Multiple concurrent requests (design):**
+- Early text placed **release** in 01B and tied windows to **source match** operational intervals.
+- Early text implied release candidates from **remaining** (not-selected) roster rows.
+- **01B** is **availability collection only** (`ParticipationResponse` UX — §28).
+- **01C** is **Player Release & Development Assignment** (proactive, target-specific rules — §28).
+- **01D** owns cross-team **request / approval** aggregates (names TBD in 01D diagnosis).
 
-- Allow **multiple** `PlayerRequest` in REQUESTED for same release.
-- **Reservation** occurs at **HOME_TEAM_APPROVED** (or ASSIGNMENT) — not at REQUESTED.
-- Stammtrainer (or delegate) selects winning request; others → REJECTED or EXPIRED via transaction.
-- **No last-write-wins** on approval; use row-level status + unique partial index on `(releaseId) WHERE status IN ('APPROVED','ASSIGNED')` when product picks single-assign semantics.
+</details>
 
-**Availability window (product decision):** Default candidate for V1: **source match operational interval** (start → effective end) with explicit “whole day” override in 01B UI — do not guess in 01A.
+**Current direction:** five independent sporting signals (§28); **no boolean** `released = true`; **multiple target-specific rules** per player; **`maxMinutes` first-class** when implemented.
 
 ---
 
@@ -217,7 +220,7 @@ Conceptual aggregates ( **not implemented** — schema in 01B–01C):
 | Junior with guardian User(s) | `GuardianRelationship` + guardian expansion |
 | No digital recipient | Domain state still valid; UI shows **manual follow-up** (pattern from Probetraining / comm fail-closed) |
 
-**01D** implements accept/decline; **01A** must not block squad editing when `Person.userId` is null.
+**01B** extends player/guardian availability UX; **01A** must not block squad editing when `Person.userId` is null. (Slice **01D** is cross-team request/approval — not guardian RSVP — per §28.)
 
 ---
 
@@ -228,8 +231,8 @@ Conceptual aggregates ( **not implemented** — schema in 01B–01C):
 | **PRIMARY_ENTRY** | **Match-first:** `/dashboard/matchcenter/[matchId]` (Spiele) → section **Matchkader / Aufgebot**; secondary: Team cockpit → Spiele → deep link to match. |
 | **MATCH_SQUAD_LAYOUT** | Reuse Activity Detail / planning editor visual language (dark SCE, compact cards) — align with `MatchcenterDetail` + planning sections already on match page. |
 | **OWN_ROSTER** | Selected vs remaining from **same** ACTIVE roster list. |
-| **RELEASE_ACTION** | On **remaining** players only — explicit “Für andere Teams verfügbar machen” (01B). |
-| **CROSS_TEAM_DISCOVERY** | Inside **target match** squad prep: “Verfügbare Spieler aus anderen Teams” (01C) — not a standalone marketplace home. |
+| **RELEASE_ACTION** | **Superseded UX note:** release is **not** tied to “remaining / not selected” rows. Primary trainer action **01C:** **«Für andere Teams freigeben»** from player/squad context (proactive **Spielerfreigabe**). |
+| **CROSS_TEAM_DISCOVERY** | Inside **target match** squad prep ( **01D** ): e.g. suitable **released** players — not a standalone marketplace home. **01B** must not expose cross-team discovery. |
 | **MOBILE_COMPATIBILITY** | All mutations via API/services (`lib/match-squad/` future); personal programme already projects MATCH events. |
 
 ---
@@ -261,11 +264,20 @@ Conceptual aggregates ( **not implemented** — schema in 01B–01C):
 
 ---
 
-## 14. Package breakdown (superseded by §21 R1 table)
+## 14. Package breakdown (canonical — locked §28)
 
-See **§21 R1** for the current 01A–01F split.
+| Slice | Product | Status (STAGE) |
+|-------|---------|----------------|
+| **01A** | Match Squad Foundation — Saison-Kader + existing availability + trainer Match selection | **CLOSED** (§27) |
+| **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **NOT STARTED** |
+| **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **NOT STARTED** (architecture locked §28) |
+| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **NOT STARTED** |
+| **01E** | Assignment & Communication — operational assignment + inform audiences | **NOT STARTED** |
+| **01F** | Operational Intelligence & Club UAT | **NOT STARTED** |
 
-**Consolidation:** 01E may merge with COLLAB if “squad published” uses existing prepare/publish; 01F depends on domain attention patterns (`lib/domain-attention/`).
+Then: **Sponsor Commercial Workflows** → **Mobile App** (club roadmap).
+
+**Consolidation:** 01E should reuse SCE Collaboration **CHANGE → IMPACT → AUDIENCE → INFORM**; communication is never canonical assignment. 01F may use `lib/domain-attention/` patterns.
 
 ---
 
@@ -400,7 +412,7 @@ ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATC
 
 **No cross-signal mutation:** availability writes never create/delete squad members; squad mutations never fabricate participation responses.
 
-**Derived states (not persisted):** e.g. `UNKNOWN + selected`, `UNAVAILABLE + selected` → `availabilityConflict`; `AVAILABLE + selected` → operational ready candidate. `NOT_SELECTED + AVAILABLE` ≠ cross-team release (01C).
+**Derived states (not persisted):** e.g. `UNKNOWN + selected`, `UNAVAILABLE + selected` → `availabilityConflict`; `AVAILABLE + selected` → operational ready candidate. `NOT_SELECTED + AVAILABLE` ≠ cross-team release — explicit **01C** release required (§28).
 
 ### ParticipationResponse diagnosis (R1)
 
@@ -432,13 +444,15 @@ ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATC
 
 ### Package breakdown (01A–01F)
 
+**Superseded table — see §14 and §28 for canonical slice names and boundaries.**
+
 | Slice | Scope |
 |-------|--------|
 | **01A** | Match squad + availability-aware foundation (adapter, combined trainer workspace, counts, conflict flags; no release) |
-| **01B** | Availability collection & player/guardian UX (requests, deadlines, notes) |
-| **01C** | Explicit cross-team release |
-| **01D** | Cross-team discovery / request / approval |
-| **01E** | Assignment + communication |
+| **01B** | Availability collection & player/guardian UX (requests, deadlines, reminders, offline trainer capture) — **no release** |
+| **01C** | Player Release & Development Assignment (**Spielerfreigabe**) — proactive, target-specific conditions |
+| **01D** | Cross-team discovery, request & approval (match-contextual) |
+| **01E** | Assignment & communication |
 | **01F** | Operational intelligence + club-scale UAT |
 
 ### Tests added (R1)
@@ -761,14 +775,201 @@ Saison-Kader (PlayerSquadMember)
 - No duplicate detailed Teilnehmer player roster when integrated squad workspace resolves.
 - Non-MATCH participant behaviour unchanged.
 
-### Roadmap handoff (documentation only — not implemented in 01A)
+### Roadmap handoff
 
-Before **01C** implementation, refine product definition around explicit trainer-controlled **Player Release / Development Assignment**. Principles for later architecture:
-
-- player/guardian **availability** ≠ trainer **Match selection** ≠ trainer **cross-team release**.
-
-No schema, API, or UI for release/01C in 01A closure scope.
+**01C release architecture:** **LOCKED** in **§28** (2026-10-10) — documentation-only package on branch `cursor/match-squad-player-availability-01c-release-architecture`. **01B** may start only with §28 **01B boundary** guardrails respected.
 
 ### Deferred scope (later packages)
 
-Availability campaigns, deadlines, reminders, guardian workflows beyond existing participation, player release, cross-team availability, release conditions, max minutes, cross-team requests, assignment communication, recommendation logic — **01B–01F** only.
+See **§14** / **§28** — **01B–01F**; no release implementation in 01A scope.
+
+---
+
+## 28. Player Release & Development Assignment — Architecture Decision
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-10-10 |
+| **Status** | **LOCKED** (product architecture — no implementation in this package) |
+| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` (diagnosis/implementation **NOT STARTED**) |
+| **Product name** | **Player Release & Development Assignment** |
+| **Working German concept** | **Spielerfreigabe** |
+| **Primary trainer action** | **Für andere Teams freigeben** |
+| **Useful detail terms** | Freigabebedingungen, Max. Einsatzzeit, Gültigkeit, Grund |
+| **Do not use as primary product concept** | Spielerbörse, Transfer, Leihe, Überschüssige Spieler |
+
+### Decision
+
+**Player release** is an **explicit, proactive sporting decision** by the **Stammtrainer** (or future authorized sporting role). It defines **where**, **when**, and **under which conditions** a player may participate **outside** their Stammteam.
+
+Release is **not** derived from Match Squad omission.
+
+| Invariant | Rule |
+|-----------|------|
+| `NOT_SELECTED` | **≠** `RELEASED` |
+| `SELECTED` | **≠** `NOT_RELEASABLE` — selection and release may **coexist** |
+| `AVAILABLE` (participation) | **≠** `RELEASED` |
+| `RELEASED` | **≠** `ASSIGNED` to target Match Squad |
+| `RELEASE` | **≠** sporting **eligibility** (association/age/registration) |
+| Valid release | **≠** conflict-free or operationally feasible (evaluated later) |
+
+### Five independent sporting signals
+
+| Signal | Question | Canonical source (today / future) | Slice |
+|--------|----------|-----------------------------------|-------|
+| **A. Saison-Kader** | Who belongs structurally to this TeamSeason? | `PlayerSquadMember` | 01A |
+| **B. Player/guardian availability** | Can/will this player participate in this concrete activity? | `ParticipationResponse` | **01B** |
+| **C. Trainer Match selection** | Has the trainer selected this player for this Match? | `MatchSquad` / `MatchSquadMember` | **01A** (closed) |
+| **D. Player release** | Where, when, under which conditions may they play outside Stammteam? | **New 01C domain** (TBD in 01C diagnosis) | **01C** |
+| **E. Target-team request / assignment** | May the target team use the released player for this concrete Match? | **New 01D domain** (TBD) | **01D** |
+
+No signal may silently create another. Release does **not** create `ParticipationResponse`, `MatchSquadMember`, or target assignment.
+
+### Compact architecture model
+
+```text
+SAISON-KADER — "Who belongs to the team?"
+        |
+        +-------------------------+
+        |                         |
+        v                         v
+PLAYER AVAILABILITY          TRAINER SELECTION
+"Can I play?"                "Do I select you?"
+01B                          01A
+        |                         |
+        +------------+------------+
+                     |
+                     v
+             MATCH AUFGEBOT
+
+
+Separately:
+
+STAMMTRAINER RELEASE — "Where/how else may you play?"
+01C
+        |
+        v
+TARGET MATCH DISCOVERY / REQUEST — "Can I use you here?"
+01D
+        |
+        v
+ASSIGNMENT — 01E
+        |
+        v
+COMMUNICATION (downstream; not source of truth)
+```
+
+### Reject boolean release models
+
+Do **not** model future release as single flags such as `released = true`, `availableToOtherTeams = true`, or `borrowable = true`. A player may have **different conditions per target team** (e.g. F2 released max 45 min, E1 max 60 min, D9 not released). Final persistence shape is for **01C diagnosis** — not decided here.
+
+### Maximum playing time (first-class)
+
+**Max. Einsatzzeit** must eventually be **machine-readable** (e.g. `maxMinutes = 45`), not free-text only, to support future comparison of allowed vs planned vs actual minutes. **Actual minute tracking is not part of this package** and may not exist today; architecture must remain **compatible** without inventing that domain.
+
+### Two equally legitimate purposes
+
+1. **Squad support** — e.g. F2 short-handed; F1 player explicitly released for F2; target team may request (01D).
+2. **Player development** — e.g. **Spielpraxis**, rhythm, goalkeeper practice, controlled return-to-play, permitted age-group experience. Release is **not** only an emergency shortage feature.
+
+### FM-style inspiration (SCE translation only)
+
+Concept: a first-team manager deliberately makes a player available to another squad for **controlled playing time** with **target-specific rules**. SCE applies this to amateur/youth clubs via **trainer-controlled, target-specific release conditions** — without copying third-party terminology, UI, or proprietary data models.
+
+### Proactive release example
+
+| Field | Example |
+|-------|---------|
+| Player | Alexander |
+| Stammteam | F1 |
+| Release | F2 · max 45 minutes · valid Saturday · reason: Spielpraxis |
+| Simultaneous state | May be **selected for F1 Match** **and** **released for F2** — **not mutually exclusive** |
+| Feasibility | Future SCE evaluates schedule overlap, travel, etc. — **not** a domain invariant that selection invalidates release |
+
+### Intended 01C workflow (conceptual)
+
+Stammtrainer opens player/squad context → **Für andere Teams freigeben** → define target(s) + **Freigabebedingungen** → release becomes explicit sporting state → may later be **consumed by 01D**. No automatic target assignment; no automatic `MatchSquadMember`; no automatic `ParticipationResponse`.
+
+### Future release capabilities (01C diagnosis checklist)
+
+Evaluate whether the domain can represent at least: player; source TeamSeason (Stammteam); target TeamSeason(s) or scope; valid-from / valid-until; **maximum playing minutes**; position/role condition; time-of-day or activity condition; match-specific vs period-based scope; trainer note; sporting reason; status; createdBy / updatedBy; audit provenance; revoke/expire semantics. Not every condition requires its own column — diagnosis decides shape.
+
+### 01B architecture guard (implementation protection)
+
+| 01B purpose | Availability collection & player/guardian UX — “Can / will the player participate?” |
+| Persistence | Continue building on **`ParticipationResponse`** unless 01B diagnosis proves a concrete gap |
+| In scope (examples) | Availability request, response, outstanding response, deadline, reminder/follow-up, player/guardian UX, authorized trainer recording offline response |
+| **01B must NOT** | Create `PlayerRelease`; expose players to other teams because they are available; interpret non-selection as release; create cross-team discovery; create borrowing requests; equate `available + not selected` with release |
+
+### 01D direction (refined)
+
+**Cross-Team Discovery, Request & Approval** — primary UX **match-contextual** (not generic marketplace). Consumes Saison-Kader, availability, Match Squad state, **explicit releases**, target Match context. Example: F2 Match with 6 usable players → SCE may surface “2 suitable released players” with release + availability + eligibility + conflict hints → **[Anfragen]** — **no automatic assignment**. Approval policy (pre-approved release rules vs per-request approval) is an **01D diagnosis question**.
+
+### 01E direction (refined)
+
+**Assignment & Communication** — once assignment is canonical: reflect in target Match Squad; source/target trainer visibility; player/guardian communication via existing Collaboration foundation (**CHANGE → IMPACT → AUDIENCE → INFORM**). WhatsApp-like messages, notifications, or RSVP must **never** be the canonical assignment record.
+
+### 01F direction (refined)
+
+**Operational Intelligence & Club UAT** — shortage detection; missing availability responses; suitable released-player recommendations; release expiry; overlapping assignments; release-condition violations; max-minute awareness; pending requests; approved borrowed players; incomplete squads; reminders; club overview. Insights such as “already played 40 of 45 allowed minutes” require **future actual-minute data** — document as future-compatible only.
+
+### Sporting eligibility
+
+**RELEASE ≠ ELIGIBILITY.** Trainers cannot override association/competition/age/registration rules by releasing. **01D** must validate against whatever eligibility data SCE has — rules are **not** invented in this architecture package.
+
+### Conflict detection
+
+**RELEASE ≠ CONFLICT-FREE.** Person-level evaluation may need own-team Match, other squads, training, approved borrow assignment, time overlap, travel buffer. Facility planner conflict engine alone is insufficient. Requirement for **01D / 01F** — **not implemented** here.
+
+### Youth / guardian safeguard
+
+Trainer release is **sporting authorization**, not player consent, guardian consent, or availability. For youth: **release + ParticipationResponse availability** remain separate; **01C must not impersonate** a guardian response.
+
+### Authority model (defer)
+
+**01C implementation** must diagnose existing roles, permissions, TeamSeason trainer membership, delegation, tenant admin **before** adding permissions. Do **not** invent `players.release` (or similar) in this documentation package.
+
+### Release lifecycle (01C diagnosis questions)
+
+Potential states: **ACTIVE**, **REVOKED**, **EXPIRED**. Open questions: edit active release? effect on approved assignment? revocation vs existing assignment? expiry vs history? TeamSeason/season rollover? Prefer **historical auditability** over destructive mutation. **No answers locked here.**
+
+### Canonical example A — development (multi-target)
+
+| | |
+|-|-|
+| **Player** | SCE Example Player |
+| **Stammteam** | F1 |
+| **Availability** | Verfügbar |
+| **Release rules** | F2 · max 45 min · valid Saturday · Spielpraxis; E1 · max 60 min · valid Saturday · Entwicklung; D9 · not released |
+| **Result** | Not auto-assigned; 01D path required. If availability becomes **Nicht verfügbar**, rules may remain stored but are **not operationally usable** |
+
+### Canonical example B — own Match selected + release
+
+| | |
+|-|-|
+| **F1 Match** | Player **selected** in Match Squad |
+| **F2 release** | Active · max 45 minutes |
+| **Validity** | **Valid at domain level**; feasibility depends on kickoff/duration/travel (e.g. 09:00 F1 + 13:00 F2 vs overlapping 13:00–15:00 slots) |
+
+### Canonical example C — availability block
+
+| | |
+|-|-|
+| **Release** | F2 · max 45 min · **ACTIVE** |
+| **Availability (target Match)** | **Nicht verfügbar** |
+| **Operational result** | **NOT USABLE** — release **not** auto-deleted |
+
+### Obsolete assumptions corrected (documentation)
+
+| Obsolete assumption | Correction |
+|--------------------|------------|
+| Unselected player = release candidate | **Rejected** — release is proactive |
+| Surplus / remaining roster = released | **Rejected** |
+| Release only after Aufgebot / only non-selected | **Rejected** |
+| Available player auto visible to other teams | **Rejected** — explicit 01C + 01D |
+| Cross-team release as boolean | **Rejected** — target-specific rules |
+| Weekend-only workflow | **Rejected** (historical “weekend exchange” label superseded) |
+| Availability equivalent to release | **Rejected** |
+| Selection and release mutually exclusive | **Rejected** |
+
+Historical UAT records (01A R2–R5) that describe what was tested at the time remain **accurate history**; architecture text above is **current** for 01B+.
