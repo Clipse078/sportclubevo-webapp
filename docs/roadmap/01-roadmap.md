@@ -197,6 +197,16 @@ For full feature-level detail, acceptance criteria, and individual feature statu
 
 ---
 
+## Active follow-up track (post SCE-COLLAB-01 / People onboarding)
+
+| Package | Key | Status |
+|---------|-----|--------|
+| Match Squad & Player Availability | `MATCH_SQUAD_PLAYER_AVAILABILITY` | **Architecture** — [`docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md`](../match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md); first implementation slice **01A** (match squad foundation) pending product review |
+
+Canonical product name replaces obsolete roadmap label **“Weekend Squad & Player Exchange”**. The workflow is **match-centric** (any weekday), not weekend-only.
+
+---
+
 ## Post-v1 Roadmap Summary
 
 The following capabilities are explicitly deferred to after the first commercial release. See [`08-post-v1-ideas.md`](./08-post-v1-ideas.md) for detail.

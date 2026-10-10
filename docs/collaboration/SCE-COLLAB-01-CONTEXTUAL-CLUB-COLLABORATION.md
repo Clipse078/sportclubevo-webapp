@@ -9,7 +9,7 @@
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **CLOSED** (2026-10-10) |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **CLOSED** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; merge `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` 2026-10-09) |
 | **SCE-COLLAB-01D** (Multi-activity impact) | **CLOSED** (PR [#816](https://github.com/Clipse078/sportclubevo-webapp/pull/816) → STAGE; Human UAT R2 **PASS** 2026-10-10; see `SCE-COLLAB-01D.md`) |
-| **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
+| **TRAINER-SPIELERBOERSE-01** | **Superseded (terminology)** — implement as **Match Squad & Player Availability** (`MATCH_SQUAD_PLAYER_AVAILABILITY`; see `docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md`) |
 | SCE-COLLAB-01 (foundation) | **CLOSED** (01A–01D delivered; explicit deferred scope preserved below) |
 
 ## Product principle
