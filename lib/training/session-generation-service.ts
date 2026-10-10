@@ -86,6 +86,7 @@ import type {
   TrainingSessionStatus,
   Weekday,
 } from "./types";
+import { isTrainingSessionDateBeforeTodayInTimezone } from "@/lib/training/session-generation-date-boundary";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -301,6 +302,17 @@ export async function generateTrainingSessions(
     // SCHEDULED, CANCELLED, POSTPONED, MOVED — all keep their current status
     // (see updateTrainingSessionSchedule doc comment); only the derived
     // schedule is re-synced when it actually changed.
+    //
+    // Historical integrity: calendar dates before "today" in the series timezone
+    // are never re-synced from template edits (attendance/history expectations).
+    if (
+      scheduleChanged &&
+      isTrainingSessionDateBeforeTodayInTimezone(existing.date, series.timezone)
+    ) {
+      unchanged++;
+      continue;
+    }
+
     if (scheduleChanged) {
       const nextEffectiveStart = existing.overrideStartAt ?? occ.startAt;
       await assertTrainingSessionStartCompatibleWithParticipationDue(

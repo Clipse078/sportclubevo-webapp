@@ -4,9 +4,19 @@
  * TRAININGS-UX-02 — training record workspace (edit) focused tests.
  */
 
+import type { ComponentProps } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TrainingSeriesRecordWorkspace from "@/components/admin/training/record/TrainingSeriesRecordWorkspace";
+import { ActivityChangeCollaborationProvider } from "@/components/admin/collaboration/ActivityChangeCollaborationContext";
+
+function renderWorkspace(props: ComponentProps<typeof TrainingSeriesRecordWorkspace>) {
+  return render(
+    <ActivityChangeCollaborationProvider>
+      <TrainingSeriesRecordWorkspace {...props} />
+    </ActivityChangeCollaborationProvider>,
+  );
+}
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), back: vi.fn() }),
@@ -69,7 +79,7 @@ describe("TrainingSeriesRecordWorkspace", () => {
   });
 
   it("renders record header with team-based title and save action", () => {
-    render(<TrainingSeriesRecordWorkspace {...defaultProps} />);
+    renderWorkspace({ ...defaultProps });
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Junioren F2 Training");
     expect(screen.getByTestId("training-series-submit")).toHaveTextContent("Speichern");
@@ -77,7 +87,7 @@ describe("TrainingSeriesRecordWorkspace", () => {
   });
 
   it("shows unsaved hint and enables save when title changes", () => {
-    render(<TrainingSeriesRecordWorkspace {...defaultProps} />);
+    renderWorkspace({ ...defaultProps });
 
     const saveButton = screen.getByTestId("training-series-submit");
     expect(saveButton).toBeDisabled();
@@ -98,7 +108,7 @@ describe("TrainingSeriesRecordWorkspace", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<TrainingSeriesRecordWorkspace {...defaultProps} />);
+    renderWorkspace({ ...defaultProps });
 
     fireEvent.change(screen.getByTestId("training-series-title"), {
       target: { value: "Junioren F2 Training (Winter)" },
@@ -116,18 +126,18 @@ describe("TrainingSeriesRecordWorkspace", () => {
   });
 
   it("renders schedule section with duration for active weekday", () => {
-    render(<TrainingSeriesRecordWorkspace {...defaultProps} />);
+    renderWorkspace({ ...defaultProps });
     expect(screen.getByTestId("training-record-section-schedule")).toBeInTheDocument();
     expect(screen.getByText("1 h 30 min")).toBeInTheDocument();
   });
 
   it("does not overwrite persisted weekday end times on load", () => {
-    render(<TrainingSeriesRecordWorkspace {...defaultProps} defaultTrainingDurationMinutes={120} />);
+    renderWorkspace({ ...defaultProps, defaultTrainingDurationMinutes: 120 });
     expect(screen.getByTestId("training-series-weekday-monday-end")).toHaveValue("18:30");
   });
 
   it("uses canonical duration when enabling a new weekday slot", () => {
-    render(<TrainingSeriesRecordWorkspace {...defaultProps} defaultTrainingDurationMinutes={90} />);
+    renderWorkspace({ ...defaultProps, defaultTrainingDurationMinutes: 90 });
     fireEvent.click(screen.getByRole("button", { name: "Dienstag aktivieren" }));
     expect(screen.getByTestId("training-series-weekday-tuesday-start")).toHaveValue("17:00");
     expect(screen.getByTestId("training-series-weekday-tuesday-end")).toHaveValue("18:30");

@@ -270,7 +270,7 @@ If no safe player Person exists on STAGE (FCA ~4 persons), classify player porti
 
 ### Deferred scope register (non-blocking for #814 closure)
 
-| Item | Description | Required for this release | Required for SCE-COLLAB-01D | Required for Weekend Squad & Player Exchange | Classification | Future package |
+| Item | Description | Required for this release | Required for SCE-COLLAB-01D | Required for Match Squad & Player Availability | Classification | Future package |
 |------|-------------|---------------------------|------------------------------|-----------------------------------------------|----------------|----------------|
 | **01C** | Invitation & tenant access convergence from roster/people surfaces | No | No (collab uses existing COMM/access) | Later (parent/player comms) | **DEFERRED_NON_BLOCKING** | SCE-PEOPLE-TEAM-ONBOARDING-01C or access slice |
 | **01D** | Guardian relationships at scale / youth onboarding UX | No | No | Later (parent communication) | **DEFERRED_NON_BLOCKING** | SCE-PEOPLE-TEAM-ONBOARDING-01D |
@@ -554,7 +554,9 @@ Structural collaboration/audience UI is healthy. The break is **missing canonica
 
 **Domain vs auth:** Documented in schema comments and `PersonAssignment` / `GuardianRelationship` invariants. Team membership must not imply club admin rights.
 
-## Weekend Squad & Player Exchange — compatibility
+## Match Squad & Player Availability — compatibility
+
+Canonical roadmap key: **MATCH_SQUAD_PLAYER_AVAILABILITY** (squad planning and player availability for matches on any weekday, not only weekends).
 
 | Question | Answer |
 |----------|--------|

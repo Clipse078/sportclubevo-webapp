@@ -18,6 +18,14 @@ export function contextualPrepareCommunicationPath(
   }
 }
 
+export function contextualMultiTrainingSeriesPreparePath(trainingSeriesId: string): string {
+  return `/api/collaboration/training-series/${trainingSeriesId}/prepare-communication`;
+}
+
+export function contextualMultiTrainingSeriesPublishPath(trainingSeriesId: string): string {
+  return `/api/collaboration/training-series/${trainingSeriesId}/publish-communication`;
+}
+
 export function contextualPublishCommunicationPath(
   domain: ActivityCollaborationDomain,
   activityId: string,

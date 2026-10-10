@@ -81,6 +81,64 @@ function buildScheduleLine(input: {
   }
 }
 
+type LoadedTrainingSessionRow = {
+  id: string;
+  tenantId: string;
+  status: string;
+  date: Date;
+  startAt: Date;
+  endAt: Date;
+  overrideDate: Date | null;
+  overrideStartAt: Date | null;
+  overrideEndAt: Date | null;
+  teamSeasonId: string;
+  trainingSeriesId: string;
+  trainingSeries: { title: string; timezone: string };
+  teamSeason: { teamId: string; team: { name: string } };
+};
+
+export function buildTrainingActivitySnapshotFromLoadedSession(input: {
+  session: LoadedTrainingSessionRow;
+  seriesAllocations: TrainingAllocationDto[];
+  sessionAllocations: TrainingSessionAllocationDto[];
+  locale?: string;
+}): TrainingActivitySnapshot {
+  const timezone = input.session.trainingSeries.timezone;
+  const effectiveStart = input.session.overrideStartAt ?? input.session.startAt;
+  const effectiveEnd = input.session.overrideEndAt ?? input.session.endAt;
+  const effectiveDate = input.session.overrideDate ?? input.session.date;
+  const dateKey = dateKeyFromDate(effectiveDate);
+  const startTime = formatWallTime(effectiveStart, timezone);
+  const endTime = formatWallTime(effectiveEnd, timezone);
+
+  const resolved = resolveTrainingOccurrenceAllocations({
+    seriesRows: input.seriesAllocations.map(mapAllocationRow),
+    sessionOverrideRows: input.sessionAllocations.map(mapAllocationRow),
+  });
+
+  const locale = input.locale ?? "de-CH";
+  const playableVenueLabel = formatTrainingPlayableVenueLabel(resolved);
+  const dressingRoomLabel = formatTrainingDressingRoomLabel(resolved);
+
+  return {
+    sessionId: input.session.id,
+    tenantId: input.session.tenantId,
+    teamId: input.session.teamSeason.teamId,
+    teamName: input.session.teamSeason.team.name,
+    teamSeasonId: input.session.teamSeasonId,
+    title: input.session.trainingSeries.title,
+    status: input.session.status,
+    timezone,
+    locale,
+    dateKey,
+    startTime,
+    endTime,
+    playableVenueLabel,
+    dressingRoomLabel,
+    scheduleLine: buildScheduleLine({ dateKey, startTime, endTime, timezone, locale }),
+  };
+}
+
 export async function loadTrainingActivitySnapshot(input: {
   tenantId: string;
   sessionId: string;
@@ -106,43 +164,15 @@ export async function loadTrainingActivitySnapshot(input: {
   });
   if (!session) return null;
 
-  const timezone = session.trainingSeries.timezone;
-  const effectiveStart = session.overrideStartAt ?? session.startAt;
-  const effectiveEnd = session.overrideEndAt ?? session.endAt;
-  const effectiveDate = session.overrideDate ?? session.date;
-  const dateKey = dateKeyFromDate(effectiveDate);
-  const startTime = formatWallTime(effectiveStart, timezone);
-  const endTime = formatWallTime(effectiveEnd, timezone);
-
   const [seriesAllocations, sessionAllocations] = await Promise.all([
     listAllocationsByTrainingSeries(input.tenantId, session.trainingSeriesId),
     listAllocationsByTrainingSession(input.tenantId, session.id),
   ]);
 
-  const resolved = resolveTrainingOccurrenceAllocations({
-    seriesRows: seriesAllocations.map(mapAllocationRow),
-    sessionOverrideRows: sessionAllocations.map(mapAllocationRow),
+  return buildTrainingActivitySnapshotFromLoadedSession({
+    session,
+    seriesAllocations,
+    sessionAllocations,
+    locale: input.locale,
   });
-
-  const locale = input.locale ?? "de-CH";
-  const playableVenueLabel = formatTrainingPlayableVenueLabel(resolved);
-  const dressingRoomLabel = formatTrainingDressingRoomLabel(resolved);
-
-  return {
-    sessionId: session.id,
-    tenantId: session.tenantId,
-    teamId: session.teamSeason.teamId,
-    teamName: session.teamSeason.team.name,
-    teamSeasonId: session.teamSeasonId,
-    title: session.trainingSeries.title,
-    status: session.status,
-    timezone,
-    locale,
-    dateKey,
-    startTime,
-    endTime,
-    playableVenueLabel,
-    dressingRoomLabel,
-    scheduleLine: buildScheduleLine({ dateKey, startTime, endTime, timezone, locale }),
-  };
 }
