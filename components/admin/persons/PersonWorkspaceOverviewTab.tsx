@@ -64,6 +64,10 @@ import type {
 import type { PersonDetail } from "@/lib/people/queries";
 import { getPersonFunctionLabel } from "@/lib/people/functions";
 import { buildPersonOverviewAssignmentProjection } from "@/lib/people/person-overview-assignment-projection";
+import {
+  teamSquadOnboardingHref,
+  teamTrainerOnboardingHref,
+} from "@/lib/teams/team-roster-navigation";
 import { normalizeOptionalPresentationLabel } from "@/lib/people/person-presentation-label";
 import {
   PersonPresentationIconTile,
@@ -289,7 +293,11 @@ function IncompleteAssignmentCard({
         <p className="mt-1 text-xs text-[var(--text-2)]">{incompleteDescription}</p>
         {teamId ? (
           <a
-            href={`/dashboard/teams/${teamId}#${anchor}`}
+            href={
+              anchor === "spielerkader"
+                ? teamSquadOnboardingHref(teamId)
+                : teamTrainerOnboardingHref(teamId)
+            }
             className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[var(--sce-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition"
             data-testid="incomplete-assignment-team-link"
           >

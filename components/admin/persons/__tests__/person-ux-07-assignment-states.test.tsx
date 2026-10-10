@@ -741,8 +741,8 @@ describe("17. CTA State A (Trainer): Zur Organisation callback invoked", () => {
 // 18 + 19. CTA State B: team deep-link
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("18. CTA State B (Spieler): team link points to /dashboard/teams/:id#spielerkader", () => {
-  it("Spieler tab State B renders team link with #spielerkader anchor", () => {
+describe("18. CTA State B (Spieler): team link points to Kader onboarding route", () => {
+  it("Spieler tab State B renders team link with kader#spielerkader anchor", () => {
     render(
       <PersonSpielerTab
         squadMemberships={[]}
@@ -751,7 +751,9 @@ describe("18. CTA State B (Spieler): team link points to /dashboard/teams/:id#sp
     );
     const link = document.querySelector('[data-testid="spieler-incomplete-team-link"]');
     expect(link).not.toBeNull();
-    expect(link?.getAttribute("href")).toBe(`/dashboard/teams/${TEAM_F2.id}#spielerkader`);
+    expect(link?.getAttribute("href")).toBe(
+      `/dashboard/teams/${TEAM_F2.id}/kader#spielerkader`,
+    );
   });
 
   it("Spieler tab State B does NOT render 'Zur Organisation' button", () => {
@@ -766,8 +768,8 @@ describe("18. CTA State B (Spieler): team link points to /dashboard/teams/:id#sp
   });
 });
 
-describe("19. CTA State B (Trainer): team link points to /dashboard/teams/:id#trainerteam", () => {
-  it("Trainer tab State B renders team link with #trainerteam anchor", () => {
+describe("19. CTA State B (Trainer): team link points to Trainerteam onboarding route", () => {
+  it("Trainer tab State B renders team link with trainerteam#trainerteam anchor", () => {
     render(
       <PersonTrainerTab
         trainerMemberships={[]}
@@ -776,7 +778,9 @@ describe("19. CTA State B (Trainer): team link points to /dashboard/teams/:id#tr
     );
     const link = document.querySelector('[data-testid="trainer-incomplete-team-link"]');
     expect(link).not.toBeNull();
-    expect(link?.getAttribute("href")).toBe(`/dashboard/teams/${TEAM_F2.id}#trainerteam`);
+    expect(link?.getAttribute("href")).toBe(
+      `/dashboard/teams/${TEAM_F2.id}/trainerteam#trainerteam`,
+    );
   });
 
   it("Trainer tab State B does NOT render 'Zur Organisation' button", () => {

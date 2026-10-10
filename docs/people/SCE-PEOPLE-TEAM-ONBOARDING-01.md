@@ -5,9 +5,9 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | IN_PROGRESS (01B-R2 ready for Human UAT) |
+| **Mode** | IN_PROGRESS (01B-R3 ready for Human UAT) |
 | **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
-| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_PENDING |
+| **Slice 01B** | IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R1_PARTIAL_PASS / HUMAN_UAT_R2_SUPERSEDED_BY_R3 / HUMAN_UAT_R3_PENDING |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
 | **PR** | #814 (DRAFT) |
@@ -143,9 +143,36 @@ Shared helpers: `lib/people/person-presentation-label.ts`, `components/admin/per
 
 Tests: `lib/people/__tests__/sce-people-team-onboarding-01b-r2-person-presentation.test.tsx` + R1 projection suite unchanged.
 
-**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R2_PENDING
+**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R2_SUPERSEDED_BY_R3
 
-### Human UAT (01B-R2 — pending)
+### Slice 01B-R3 — Team Directory UX + Senioren 40+ roster integrity (2026-10-10)
+
+Human UAT R2 findings:
+
+| Area | Finding | Remediation |
+|------|---------|-------------|
+| Team Directory (`/dashboard/teams`) | Light Manuell / Web / Board pills; weak hierarchy; sparse admin list feel | Dark integrated rows (`TeamsOverviewGrid`): identity → context → competition → compact status + grouped publication/sync meta; bounded `max-w-6xl`; category headers tightened |
+| Team Directory | Heavy season header | `SeasonContextSelector` `variant="compact"` on Teams list; removed redundant header “Saison wechseln” |
+| Senioren 40+ (Michael Duijster) | Person shows incomplete Kaderzuordnung; team Kader shows 0 | **Read-only STAGE diagnosis:** STATE_A_INCOMPLETE_ONBOARDING — active `PersonAssignment` (`SPIELER`, Season 2026/2027) with **no** `PlayerSquadMember` rows for person or team season `cmsod03tv000h04juo7wyen7w`. Kader count is correct; not a read-model defect |
+| Onboarding CTA | “Jetzt Kaderzuordnung ergänzen” linked to overview `#spielerkader` (anchor removed in cockpit split) | `lib/teams/team-roster-navigation.ts` → `/dashboard/teams/:id/kader#spielerkader` and `/trainerteam#trainerteam` |
+| Team overview count | Potential mismatch vs Kader ACTIVE filter | `buildTeamCockpitMetrics` counts **ACTIVE** squad/trainer rows only (aligned with Kader UI) |
+
+**Canonical roster rule (unchanged):** PersonAssignment expresses relationship; seasonal Kader requires active `PlayerSquadMember` for the active `TeamSeason`. No fallback counting, no STAGE SQL patches.
+
+**Tests (R3):**
+
+- `components/admin/teams/__tests__/sce-people-team-onboarding-01b-r3-team-directory.test.tsx`
+- `lib/teams/__tests__/sce-people-team-onboarding-01b-r3-roster-integrity.test.ts`
+- `lib/teams/__tests__/team-roster-navigation.test.ts`
+- Updated person CTA expectations + `team-cockpit-metrics` ACTIVE filter
+
+**Status:** IMPLEMENTED / AUTOMATED_VERIFIED / HUMAN_UAT_R3_PENDING
+
+### Human UAT (01B-R3 — pending)
+
+See PR #814 R3 checklist: Team Directory dark UX, F2 cockpit regression, Person overview, Senioren 40+ completion via product UI (no manual DB edits).
+
+### Human UAT (01B-R2 — superseded by R3)
 
 Preferred team: **Junioren F2** (known ASSIGNMENT_ONLY trainer). Do **not** mutate FCA STAGE data during implementation.
 

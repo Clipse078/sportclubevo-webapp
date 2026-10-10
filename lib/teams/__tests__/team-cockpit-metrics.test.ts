@@ -132,6 +132,38 @@ function makeTeamDetail(overrides: Partial<TeamDetailData> = {}): TeamDetailData
 }
 
 describe("TEAM-COCKPIT-01 — buildTeamCockpitMetrics", () => {
+  it("counts only ACTIVE roster rows (aligned with Kader list)", () => {
+    const team = makeTeamDetail();
+    team.teamSeasons[0]!.playerSquadMembers.push({
+      id: "psm-inactive",
+      status: "INACTIVE",
+      shirtNumber: null,
+      positionLabel: null,
+      isCaptain: false,
+      isViceCaptain: false,
+      isWebsiteVisible: false,
+      sortOrder: 99,
+      remarks: null,
+      person: {
+        id: "person-inactive",
+        firstName: "In",
+        lastName: "Active",
+        displayName: null,
+        email: null,
+        phone: null,
+        dateOfBirth: null,
+      },
+    });
+
+    const metrics = buildTeamCockpitMetrics({
+      team,
+      categoryLabels: CATEGORY_LABELS,
+      participationTypeLabels: PARTICIPATION_LABELS,
+    });
+
+    expect(metrics.playerCount).toBe(2);
+  });
+
   it("derives player and trainer counts from the current season roster", () => {
     const metrics = buildTeamCockpitMetrics({
       team: makeTeamDetail(),
