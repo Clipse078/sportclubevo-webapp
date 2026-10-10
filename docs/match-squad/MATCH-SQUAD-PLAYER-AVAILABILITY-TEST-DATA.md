@@ -56,6 +56,15 @@ Controlled match `cmrzhj3je006a04kwhbepxvdz` may show **KEINE ANFRAGE** while `P
 | **LEDGER update** | No new Person/Squad rows in 01B code path |
 | **01B closure** | **CLOSED** 2026-10-10 — ledger unchanged; fixtures retained for 01C–01F |
 
+## 01C notes (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Module slice** | 01C Spielerfreigabe foundation |
+| **New schema** | `PlayerRelease` (+ enums) — migration `20261010190000_match_squad_player_availability_01c_player_release` |
+| **UAT records** | Create via Team Cockpit UI or API on preview — ledger rows added when seeded for Human UAT |
+| **Target TeamSeason** | Prefer existing ACTIVE FC Allschwil TeamSeason in Season 2026/2027 (e.g. Junioren B2) — do not fabricate real club data |
+
 ## 01A closure (2026-10-10)
 
 | Field | Value |
