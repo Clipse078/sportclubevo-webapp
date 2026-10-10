@@ -7,6 +7,7 @@
 
 import type { ParticipationResponseStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { structuralPlayerSquadMemberWhere } from "@/lib/teams/player-squad-structural-filter";
 import { resolveClubEventInviteePersonIds } from "@/lib/events/club-event-participation-audience-service";
 import type { EventAudiencePreset } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import { EVENT_PRESET_PARTICIPATION_FILTER } from "@/lib/communication/platform/seams/event-communication-seam";
@@ -61,7 +62,7 @@ async function loadEligiblePersonIds(anchor: ResolvedEventParticipationAnchor): 
 
   const squad = await prisma.playerSquadMember.findMany({
     where: {
-      teamSeasonId,
+      ...structuralPlayerSquadMemberWhere(teamSeasonId),
       teamSeason: { team: { tenantId } },
     },
     select: { personId: true },

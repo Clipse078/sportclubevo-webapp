@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
+import MatchAvailabilityStatusBadge from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";
 import type { PlanningParticipantRow } from "@/lib/planning/planning-participant-types";
 import { useTranslations } from "next-intl";
 
@@ -31,9 +32,18 @@ function ParticipantRow({ row }: { row: PlanningParticipantRow }) {
         ) : null}
       </div>
       {row.participationStatusLabel ? (
-        <span className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground)]">
-          {row.participationStatusLabel}
-        </span>
+        row.participationStatusTone ? (
+          <MatchAvailabilityStatusBadge
+            label={row.participationStatusLabel}
+            tone={row.participationStatusTone}
+            icon={row.participationStatusIcon ?? "circle"}
+            testId={`planning-participant-status-${row.id}`}
+          />
+        ) : (
+          <span className="shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-2 py-0.5 text-[10px] font-medium text-[var(--foreground)]">
+            {row.participationStatusLabel}
+          </span>
+        )
       ) : null}
     </li>
   );

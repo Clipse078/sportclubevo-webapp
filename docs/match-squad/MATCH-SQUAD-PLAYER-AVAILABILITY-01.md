@@ -261,16 +261,9 @@ Conceptual aggregates ( **not implemented** — schema in 01B–01C):
 
 ---
 
-## 14. Package breakdown (validated)
+## 14. Package breakdown (superseded by §21 R1 table)
 
-| Slice | Scope |
-|-------|--------|
-| **01A** | Match squad foundation: resolve roster → select/unselect → persist draft → auth |
-| **01B** | Explicit release + conditions + lifecycle |
-| **01C** | Cross-team discovery + request + home approval + concurrency |
-| **01D** | Player/guardian confirmation + safeguarding |
-| **01E** | Squad publish comm + Mein Programm integration |
-| **01F** | Match-relative reminders + club UAT |
+See **§21 R1** for the current 01A–01F split.
 
 **Consolidation:** 01E may merge with COLLAB if “squad published” uses existing prepare/publish; 01F depends on domain attention patterns (`lib/domain-attention/`).
 
@@ -385,3 +378,397 @@ Implement **`MATCH_SQUAD_PLAYER_AVAILABILITY-01A`** on branch from STAGE:
 5. Tests per §16; no COMM/SFV/release scope.
 
 **Merge:** not until Human UAT on STAGE after review of this document.
+
+---
+
+## 21. R1 — Availability × Trainer Selection (foundation correction)
+
+**Status:** `CLOSED` (01A foundation + R1 availability adapter)  
+**Branch / PR:** merged via #819 → `STAGE`
+
+### Canonical formula (locked)
+
+```text
+ROSTER ELIGIBILITY × MATCH AVAILABILITY × TRAINER SELECTION = OPERATIONAL MATCH-SQUAD STATE
+```
+
+| Signal | Canonical persistence | Owner |
+|--------|----------------------|--------|
+| Roster eligibility | `PlayerSquadMember` on resolved `TeamSeason` (`ACTIVE` \| `INJURED` \| `ABSENT` = current Kader) | Season roster |
+| Match availability | `ParticipationResponse` per `(personId, eventId)` for `eventKind = MATCH` | Player / guardian (`PLAYER` / `PARENT`); trainer offline via existing team API (`TRAINER` + `teams.manage`) |
+| Trainer selection | `MatchSquadMember` on `MatchSquad` | Authorized trainer / team management |
+
+**No cross-signal mutation:** availability writes never create/delete squad members; squad mutations never fabricate participation responses.
+
+**Derived states (not persisted):** e.g. `UNKNOWN + selected`, `UNAVAILABLE + selected` → `availabilityConflict`; `AVAILABLE + selected` → operational ready candidate. `NOT_SELECTED + AVAILABLE` ≠ cross-team release (01C).
+
+### ParticipationResponse diagnosis (R1)
+
+| Question | Answer |
+|----------|--------|
+| Event + person scoped? | **Yes** — `@@unique([personId, eventId])` for MATCH/TOURNAMENT/CLUB_EVENT |
+| One canonical response per player/event? | **Yes** |
+| Guardian on behalf of junior? | **Yes** — `assertActorCanRespondForPerson` + `responseSource: PARENT` |
+| Audit / provenance? | **Yes** — `respondedByUserId`, `responseSource`, `respondedAt`, `note` |
+| Match-specific? | **Yes** — same model for TRAINING / MATCH / TOURNAMENT / CLUB_EVENT via `eventKind` |
+| Safe as match availability? | **Yes (Option C)** — persistence unchanged; `lib/match-squad/availability-adapter.ts` maps `OPEN`/`MAYBE` → `UNKNOWN`, `YES` → `AVAILABLE`, `NO` → `UNAVAILABLE` |
+
+### Availability architecture decision
+
+- **Selected:** **Option C** — reuse `ParticipationResponse` persistence + match-squad domain adapter/read model.
+- **No** `MatchSquadMember.available` / duplicated availability column.
+
+### PlayerSquadMember status semantics (R1)
+
+| Status | Structurally in Kader? | Team comm / participation audience? | Match squad candidate? | Default availability implication |
+|--------|------------------------|-------------------------------------|------------------------|----------------------------------|
+| ACTIVE | Yes | Yes | Yes | None (use participation) |
+| INJURED | Yes | Yes | Yes | None — injury may end before match |
+| ABSENT | Yes | Yes | Yes | None — operational absence ≠ match RSVP |
+| INACTIVE | No | No | No | N/A |
+| ARCHIVED | No | No | No | N/A |
+
+**COMM-03 / participation audience (R1):** refined from pre-01A “all statuses” and incorrect 01A “ACTIVE-only” to **`ACTIVE` + `INJURED` + `ABSENT`** via `currentSeasonRosterPlayerSquadMemberWhere` — aligns with `team-communication-authorization-scope` without excluding injured/absent Kader members.
+
+### Package breakdown (01A–01F)
+
+| Slice | Scope |
+|-------|--------|
+| **01A** | Match squad + availability-aware foundation (adapter, combined trainer workspace, counts, conflict flags; no release) |
+| **01B** | Availability collection & player/guardian UX (requests, deadlines, notes) |
+| **01C** | Explicit cross-team release |
+| **01D** | Cross-team discovery / request / approval |
+| **01E** | Assignment + communication |
+| **01F** | Operational intelligence + club-scale UAT |
+
+### Tests added (R1)
+
+- `lib/match-squad/__tests__/availability-adapter.test.ts`
+- `lib/match-squad/__tests__/match-squad-combined-states.test.ts` — six combinations + cross-signal invariants
+
+---
+
+## 22. Implementation — MATCH_SQUAD_PLAYER_AVAILABILITY-01A
+
+**Status:** `CLOSED`  
+**Parent:** `MATCH_SQUAD_PLAYER_AVAILABILITY` → `IN_PROGRESS` (01A slice closed; module continues in 01B+)
+
+### Identity decision
+
+| Field | Value |
+|-------|-------|
+| `CAN_ONE_EVENT_HAVE_MULTIPLE_OWN_TEAMSEASONS` | **No** — one club-owned side / one resolved `TeamSeason` per MATCH Event in product scope. |
+| `BUSINESS_IDENTITY` | `(tenantId, eventId)` — one `MatchSquad` per tenant + match. |
+| `TEAMSEASON_ROLE` | Validated roster context column (`MatchSquad.teamSeasonId` must equal resolved match TeamSeason). |
+| `UNIQUE_CONSTRAINT` | `@@unique([tenantId, eventId])` |
+
+### Schema (01A)
+
+- `MatchSquad`: `id`, `tenantId`, `eventId`, `teamSeasonId`, `createdAt`, `updatedAt` (optimistic concurrency via `updatedAt`).
+- `MatchSquadMember`: `id`, `matchSquadId`, `personId`, `createdAt`.
+- Uniqueness: one person at most once per squad (`@@unique([matchSquadId, personId])`).
+- No publication / availability / release columns (DRAFT-only; no status field).
+
+### Candidate invariant
+
+- Source: current season Kader — `PlayerSquadMember.status ∈ { ACTIVE, INJURED, ABSENT }` on resolved `TeamSeason`.
+- `PersonAssignment` excluded; INACTIVE/ARCHIVED / wrong tenant / wrong TeamSeason rejected at mutation.
+
+### Authorization
+
+- Read: `events.view` or squad edit paths.
+- Write: `events.manage`, `teams.manage`, club admin, platform superadmin, or **ACTIVE** `TrainerTeamMember` on the resolved `TeamSeason`.
+- No new permission seed.
+
+### Concurrency
+
+- Client sends `expectedVersion` (ISO `MatchSquad.updatedAt`).
+- Stale write → HTTP 409 with canonical latest squad payload.
+
+### Cancelled match
+
+- Squad rows retained; UI/API read-only while event status is `CANCELLED` / `CANCELED`.
+- Reactivated sporting status → editable again under normal auth.
+
+### Stale roster member
+
+- Selected person no longer ACTIVE in `PlayerSquadMember`: shown as **«Nicht mehr im aktiven Kader»**, cannot be newly selected; trainer may remove; rows not silently deleted.
+
+### API
+
+- `GET /api/matchcenter/[matchId]/match-squad` — context, candidates, selected/remaining, version, editability.
+- `PUT` — `{ selectedPersonIds, expectedVersion? }`; server validates roster + tenant.
+
+### UX
+
+- Entry: `/dashboard/matchcenter/[matchId]` → section **Aufgebot**.
+- Desktop + responsive card rows; **Aufbieten** / **Entfernen**; no cross-team availability controls.
+
+### Participation roster filter (R1)
+
+- Shared `lib/teams/player-squad-structural-filter.ts` — `currentSeasonRosterPlayerSquadMemberWhere` for participation audience + squad candidates.
+- Regression: `lib/participation/__tests__/participation-roster-active-filter.test.ts`.
+
+### Availability overlay (R1)
+
+- Read model enriches each candidate with `availability`, `selected`, `availabilityConflict`, `canSelect`, `canRemove`, derived `counts`.
+- UX: Matchcenter **Aufgebot** section shows availability labels; **Aufbieten** disabled for `UNAVAILABLE` (no trainer override in 01A).
+
+### Tests (01A)
+
+- `lib/match-squad/__tests__/match-squad-service.test.ts`
+- `lib/match-squad/__tests__/match-squad-auth.test.ts`
+- Invariant: `remainingRosterIsNotCrossTeamAvailability()` assertion in service tests.
+
+### Human UAT
+
+**PASS** — see §23–§27 (R2 JSON fix through R5 integrated workspace).
+
+---
+
+## 23. 01A Human UAT R2 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-R2)
+
+**Status:** `IN_PROGRESS` — blocker remediated on STAGE; full UAT matrix pending credentials-led browser pass.
+
+### Original UAT blocker
+
+- **Symptom:** Matchcenter **Aufgebot** showed raw `Unexpected end of JSON input` instead of squad workspace.
+- **Client request:** `GET /api/matchcenter/[matchId]/match-squad` on PR #819 Vercel preview (shared STAGE DB).
+
+### Proven root cause
+
+| Item | Finding |
+|------|---------|
+| **Category** | STAGE schema lag — migration not applied before preview UAT |
+| **Migration** | `20261010153000_match_squad_player_availability_01a` was **pending** on STAGE (`prisma migrate status`) |
+| **Runtime failure** | Prisma `P2021` (table `MatchSquad` missing) during `buildMatchSquadViewModel` |
+| **API behavior (before fix)** | Unhandled exception → empty/non-JSON 500 response |
+| **Client behavior (before fix)** | Blind `response.json()` surfaced parser message to users |
+
+### Remediation
+
+1. **STAGE migration (canonical):**  
+   `APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled`  
+   → applied `20261010153000_match_squad_player_availability_01a` (no manual DDL).
+2. **API hardening:** `mapError` always returns JSON; `P2021` → `503` + `SCHEMA_NOT_READY`; unexpected → `500` + `INTERNAL`.
+3. **Client hardening:** safe body parse (`text` → JSON), German actionable errors, **Erneut versuchen** retry.
+4. **Tests:** empty squad (no `MatchSquad` row), missing participation → `UNKNOWN`, route JSON contract tests.
+
+### Match context (repro match — FC Allschwil STAGE)
+
+| Field | Example value |
+|-------|----------------|
+| `eventId` | `cmrzhj0mx005q04kwtr9etuk6` |
+| `event.type` | `MATCH` |
+| `tenantId` | `cmomwboak0000tsf3zzivrs46` (`fc-allschwil`) |
+| `teamId` | `cmrkh1mb1000i04jurtajh262` |
+| `seasonId` | `cmso85qmu000004l5d3q0xbi4` |
+| Resolved `teamSeasonId` | `cmsoczv2t000504juhvod5hi9` (ACTIVE) |
+| `Event.teamSeasonId` | `null` (resolved via team+season) |
+| Post-fix GET | Valid JSON; empty squad state when no roster rows on resolved TeamSeason |
+
+Additional STAGE future match with roster for functional UAT: `cmrzhj5a5006m04kwbsu1l3fd` (Senioren 40+ Meister).
+
+### TEST_DATA_LEDGER (R2)
+
+| Created | None (migration-only remediation; no fictional players added in R2) |
+| **PRE_EXISTING_DATA_DELETED** | No |
+| **RETAINED_FOR_LATER_MODULE_UAT** | N/A |
+| **FINAL_MODULE_CLEANUP_REQUIRED** | `TEST_DATA_REMAINING = 0` at module close (unchanged policy) |
+
+### Regression / build (R2 gate)
+
+Recorded in agent final report after test battery + `NODE_OPTIONS=--max-old-space-size=8192 npm run build`.
+
+### 01A closure (superseded by §27)
+
+R2 blocker remediated; final closure in §27.
+
+---
+
+## 24. 01A Human UAT R3 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R3)
+
+**Status:** `IN_PROGRESS` — R2 JSON blocker **PASS** (product owner); R3 empty-roster copy fixed; populated matrix exercised on STAGE data + SCE test roster.
+
+### UAT R2 (recorded)
+
+| Item | Result |
+|------|--------|
+| Original match `cmrzhj0mx005q04kwtr9etuk6` | Aufgebot loads; no JSON parse error |
+| Empty squad counts | Kader 0 / Verfügbar 0 / … / Aufgeboten 0 |
+| **UAT-R2 JSON BLOCKER** | **PASS** |
+
+### UAT R3-01 — zero roster wording
+
+| Before | After (rosterTotal = 0) |
+|--------|-------------------------|
+| «Alle aktiven Kaderspieler sind aufgeboten.» | «Für dieses Team sind aktuell keine Kaderspieler im Saison-Kader erfasst.» |
+
+When `rosterTotal > 0` and `remaining.length === 0`: «Alle Kaderspieler sind aufgeboten.» (no «aktive» qualifier).
+
+Regression: `lib/match-squad/__tests__/remaining-empty-copy.test.ts`.
+
+### Populated UAT match (STAGE)
+
+| Field | Value |
+|-------|-------|
+| `eventId` | `cmrzhj3je006a04kwhbepxvdz` |
+| Team | FC Allschwil Junioren B1 |
+| `teamSeasonId` | `cmsoczv2t000504juhvod5hi9` |
+| Match start | 2026-10-17T13:00:00Z |
+| Structural roster | 6 (5 ACTIVE, 1 INJURED, 1 ABSENT) — SCE Testspieler 01–06 |
+| Pre-existing FCA roster elsewhere | Senioren 40+ only (1 ACTIVE); no natural ≥5 roster without test data |
+
+**Test data:** fictional players authorized — see `docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`; seeded via `scripts/match-squad-01a-uat-seed-test-data.ts` (`addPlayerToTeamSeason`, `respondToParticipation`).
+
+### Availability distribution (initial seed)
+
+| AVAILABLE | UNAVAILABLE | UNKNOWN | Total |
+|-----------|-------------|---------|-------|
+| 2 | 1 | 3 | 6 |
+
+Reconciles with structural Kader count.
+
+### Domain verification (STAGE, service layer)
+
+- Roster filter: ACTIVE + INJURED + ABSENT; INACTIVE/ARCHIVED excluded (`currentSeasonRosterPlayerSquadMemberWhere`).
+- UNAVAILABLE unselected: `canSelect === false` (Testspieler 03).
+- Selected + response flipped to NO: `availabilityConflict === true`, selection retained (Testspieler 02 scenario).
+- Remove selection: participation NO unchanged.
+- No `PlayerRelease` model in schema (01A guard N/A at persistence).
+
+### Human browser UAT (agent)
+
+Vercel preview deployment protection blocked unattended browser pass; manual checklist artifacts under `/opt/cursor/artifacts/` (see agent UAT package). Product owner Human UAT R2 on preview remains authoritative for JSON fix.
+
+### Conflict UX (R3)
+
+Selected + unavailable: secondary line uses **«Nicht verfügbar – Aufgebot prüfen»** with warning emphasis (not grey-only technical text).
+
+### 01A status (superseded by §27)
+
+R3 findings remediated; final closure recorded in §27 after R5 PO pass.
+
+---
+
+## 25. 01A Human UAT R4 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R4)
+
+**Status:** `IN_PROGRESS` — unified Match availability presentation (terminology + semantic badges).
+
+### UAT R4-01 — terminology fragmentation
+
+| Context | Before (mixed) | After (Match-only) |
+|---------|----------------|-------------------|
+| Teilnehmer (MATCH) | Dabei / Abwesend / … | Verfügbar / Nicht verfügbar / Unsicher / Offen |
+| Aufgebot | Rückmeldung offen / … | Same shared badges as Teilnehmer |
+| Summary | Dense «Kader: 6 · Verfügbar: …» line | Wrapped semantic status chips |
+
+### Canonical presentation mapping (persistence unchanged)
+
+| `ParticipationResponse` | Match label | Tone |
+|-------------------------|-------------|------|
+| `YES` | Verfügbar | positive / success |
+| `NO` | Nicht verfügbar | danger |
+| `MAYBE` | Unsicher | warning |
+| `OPEN` / missing row | Offen | muted / neutral |
+
+**Shared helper:** `lib/match-squad/match-availability-presentation.ts`  
+**UI badge:** `components/admin/matchcenter/MatchAvailabilityStatusBadge.tsx`
+
+### Domain vs presentation
+
+- **Persistence:** unchanged (`ParticipationResponse` only).
+- **Selection semantics:** unchanged (`mapParticipationStatusToMatchAvailability` still maps `OPEN` + `MAYBE` → `UNKNOWN` for operability).
+- **Presentation:** `MAYBE` and `OPEN` remain distinct in labels, tones, and summary counts (`maybe`, `open`).
+- **Counts invariant:** `available + unavailable + maybe + open === rosterTotal` (per roster row; stale selected non-roster handled separately).
+
+### Conflict UX (R4)
+
+| State | Treatment |
+|-------|-----------|
+| `NO` + selected | Status badge «Nicht verfügbar» + strong «Aufgebot prüfen» chip |
+| `MAYBE` + selected | «Unsicher» warning badge only — **not** a hard unavailable conflict |
+
+### Duplication note (Teilnehmer vs Aufgebot) — superseded by R5
+
+R4 left both sections visible; Human UAT R5 confirmed duplicate roster UX. **Product decision (R5):** for MATCH with integrated Match Squad workspace, **Aufgebot is the primary player-preparation surface**; the detailed Teilnehmer player roster is **not rendered** (Match-only; TRAINING / TOURNAMENT / CLUB_EVENT unchanged).
+
+Gate: `lib/match-squad/integrated-workspace.ts` (`resolveIntegratedMatchSquadWorkspace` + `shouldRenderMatchTeilnehmerDetailedPlayerRoster`). Matchcenter detail page composes Aufgebot when the gate passes; otherwise legacy Teilnehmer list remains.
+
+### UAT R5 loading (Teilnehmer vs Aufgebot)
+
+Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[matchId]/match-squad`. A brief «Aufgebot wird geladen…» while Teilnehmer was already visible was **transient timing** in R4 screenshots, not a stuck state. Client provides **Erneut versuchen** on failure (R2).
+
+### Tests
+
+- `lib/match-squad/__tests__/match-availability-presentation.test.ts`
+- `lib/match-squad/__tests__/match-squad-counts.test.ts`
+- Extended `match-squad-service` / `match-squad-combined-states` for MAYBE presentation
+
+---
+
+## 26. 01A Human UAT R5 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R5)
+
+**Status:** `PASS` — Product Owner visual verification on STAGE preview (populated match).
+
+| Item | Result |
+|------|--------|
+| R4 badge visual PASS | **PASS** — retained |
+| Duplicate Teilnehmer + Aufgebot roster | **PASS** — Aufgebot primary; duplicate detailed Teilnehmer roster removed |
+| Match-only consolidation | **PASS** — `shouldRenderMatchTeilnehmerDetailedPlayerRoster` |
+| Summary chips | **PASS** — clear, compact |
+| Aufgeboten / Weitere Kaderspieler split | **PASS** |
+| Selection actions | **PASS** — Aufbieten / Entfernen; unavailable not misleading |
+| Loading / retry | **PASS** — transient fetch; Erneut versuchen on error (R2) |
+
+**UAT match:** `eventId` `cmrzhj3je006a04kwhbepxvdz` (FC Allschwil Junioren B1).
+
+### Tests (R5)
+
+- `lib/match-squad/__tests__/integrated-workspace.test.ts`
+- Unchanged R4 match-squad presentation / combined-state tests
+
+---
+
+## 27. 01A closure (MATCH_SQUAD_PLAYER_AVAILABILITY-01A)
+
+| Field | Value |
+|-------|-------|
+| **01A status** | **CLOSED** |
+| **Architecture #818** | **CLOSED / MERGED** (`2026-10-10`) |
+| **Implementation PR** | **#819** → merged to `STAGE` |
+| **Human UAT R5** | **PASS** (Product Owner) |
+| **Human UAT R2–R4** | **PASS** (recorded in §23–§25) |
+| **Regression battery** | **PASS** (closure run — see agent report) |
+| **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
+| **01B / 01C** | **NOT STARTED** |
+
+### Canonical 01A product model (locked)
+
+```text
+Saison-Kader (PlayerSquadMember)
+  + existing player/guardian availability (ParticipationResponse)
+  + trainer Match selection (MatchSquadMember)
+  = operational Match Aufgebot (read model)
+```
+
+**Domain ownership:** no persistence conflation — availability writes do not mutate squad rows; squad writes do not fabricate participation responses.
+
+### UX result (MATCH)
+
+- **Aufgebot** is the single integrated detailed player-preparation workspace.
+- No duplicate detailed Teilnehmer player roster when integrated squad workspace resolves.
+- Non-MATCH participant behaviour unchanged.
+
+### Roadmap handoff (documentation only — not implemented in 01A)
+
+Before **01C** implementation, refine product definition around explicit trainer-controlled **Player Release / Development Assignment**. Principles for later architecture:
+
+- player/guardian **availability** ≠ trainer **Match selection** ≠ trainer **cross-team release**.
+
+No schema, API, or UI for release/01C in 01A closure scope.
+
+### Deferred scope (later packages)
+
+Availability campaigns, deadlines, reminders, guardian workflows beyond existing participation, player release, cross-team availability, release conditions, max minutes, cross-team requests, assignment communication, recommendation logic — **01B–01F** only.

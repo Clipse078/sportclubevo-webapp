@@ -74,6 +74,7 @@ export type SpieleMatchRecordWorkspaceProps = {
   relatedTasksPanel?: ReactNode;
   relatedRequirementsPanel?: ReactNode;
   participantsSection?: ReactNode;
+  matchSquadSection?: ReactNode;
   collaborationSection?: ReactNode;
 };
 
@@ -124,6 +125,7 @@ export default function SpieleMatchRecordWorkspace({
   relatedTasksPanel,
   relatedRequirementsPanel,
   participantsSection,
+  matchSquadSection,
   collaborationSection,
 }: SpieleMatchRecordWorkspaceProps) {
   const canManageOperationalAllocations =
@@ -587,6 +589,8 @@ export default function SpieleMatchRecordWorkspace({
         </div>
 
         {participantsSection}
+
+        {matchSquadSection}
 
         <PlanningEditorWorkSection
           headingId="spiele-record-work-heading"

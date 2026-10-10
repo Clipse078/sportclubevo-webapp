@@ -1243,6 +1243,8 @@ model Tenant {
   attendanceRecords               AttendanceRecord[]               @relation("TenantAttendanceRecords")
   // TEAM-COCKPIT-03A: pre-event participation responses
   participationResponses          ParticipationResponse[]          @relation("TenantParticipationResponses")
+  // MATCH_SQUAD_PLAYER_AVAILABILITY-01A: per-match draft squad selection
+  matchSquads                     MatchSquad[]                     @relation("TenantMatchSquads")
   // COMM-01A: tenant-scoped communication/collaboration foundation
   communicationThreads            CommunicationThread[]
   communicationMessages           CommunicationMessage[]
@@ -2063,6 +2065,7 @@ model Person {
   attendanceRecords               AttendanceRecord[]       @relation("PersonAttendanceRecords")
   // TEAM-COCKPIT-03A: pre-event participation responses for this Person
   participationResponses          ParticipationResponse[]  @relation("PersonParticipationResponses")
+  matchSquadMembers               MatchSquadMember[]       @relation("PersonMatchSquadMembers")
   requirementDraftAudienceEntries RequirementDraftAudiencePerson[] @relation("RequirementDraftAudiencePerson")
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudiencePerson")
   requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
@@ -2406,6 +2409,7 @@ model TeamSeason {
   attendanceRecords      AttendanceRecord[]      @relation("TeamSeasonAttendanceRecords")
   // TEAM-COCKPIT-03A: roster-context participation responses for this TeamSeason
   participationResponses ParticipationResponse[] @relation("TeamSeasonParticipationResponses")
+  matchSquads            MatchSquad[]            @relation("TeamSeasonMatchSquads")
   // TEAM-PUBLIC-NEXT-EVENT-01A: canonical owning TeamSeason for tournament Events.
   tournamentEvents       Event[]                 @relation("TournamentTeamSeason")
 
@@ -2628,6 +2632,7 @@ model Event {
   attendanceRecords             AttendanceRecord[]             @relation("EventAttendanceRecords")
   // TEAM-COCKPIT-03A: per-player participation for match/tournament events
   participationResponses        ParticipationResponse[]        @relation("EventParticipationResponses")
+  matchSquads                   MatchSquad[]                   @relation("EventMatchSquads")
   // PLANNING-UX-05R1: configured participation audience for club events (type=OTHER)
   participationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceEntries")
   platformCommunicationPollsCreated PlatformCommunicationPoll[] @relation("PollCreatedEvent")
@@ -2655,6 +2660,39 @@ model Event {
   @@index([pitchCode])
   @@index([opponentExternalClubId])
   @@index([tenantId, teamSeasonId, type, startAt])
+}
+
+/// MATCH_SQUAD_PLAYER_AVAILABILITY-01A — trainer-selected players for a concrete MATCH Event.
+/// One squad per tenant + event (own-club roster context stored on teamSeasonId).
+model MatchSquad {
+  id           String   @id @default(cuid())
+  tenantId     String
+  eventId      String
+  teamSeasonId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant     Tenant     @relation("TenantMatchSquads", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event      Event      @relation("EventMatchSquads", fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  teamSeason TeamSeason @relation("TeamSeasonMatchSquads", fields: [teamSeasonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  members    MatchSquadMember[]
+
+  @@unique([tenantId, eventId], map: "match_squad_tenant_event_uq")
+  @@index([tenantId, teamSeasonId], map: "match_squad_tenant_team_season_idx")
+  @@index([eventId], map: "match_squad_event_idx")
+}
+
+model MatchSquadMember {
+  id           String   @id @default(cuid())
+  matchSquadId String
+  personId     String
+  createdAt    DateTime @default(now())
+
+  matchSquad MatchSquad @relation(fields: [matchSquadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person     Person     @relation("PersonMatchSquadMembers", fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([matchSquadId, personId], map: "match_squad_member_person_uq")
+  @@index([personId], map: "match_squad_member_person_idx")
 }
 
 model EventImportRun {

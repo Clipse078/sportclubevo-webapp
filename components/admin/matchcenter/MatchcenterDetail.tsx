@@ -24,6 +24,7 @@ type MatchcenterDetailProps = {
   isProtectedSource?: boolean;
   tenantLogoUrl?: string | null;
   participantsSection?: React.ReactNode;
+  matchSquadSection?: React.ReactNode;
   collaborationSection?: React.ReactNode;
 };
 
@@ -43,6 +44,7 @@ export default function MatchcenterDetail({
   isProtectedSource = false,
   tenantLogoUrl = null,
   participantsSection,
+  matchSquadSection,
   collaborationSection,
 }: MatchcenterDetailProps) {
   void canSubmitPlanning;
@@ -96,6 +98,7 @@ export default function MatchcenterDetail({
           />
         }
         participantsSection={participantsSection}
+        matchSquadSection={matchSquadSection}
         collaborationSection={collaborationSection}
       />
     </PageShell>

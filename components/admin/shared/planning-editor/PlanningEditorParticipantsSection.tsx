@@ -12,6 +12,8 @@ type Props = {
   persisted: boolean;
   children?: ReactNode;
   emptyNoticeKey?: "tasks" | "requirements" | "collaboration" | "generic";
+  title?: string;
+  description?: string;
 };
 
 export default function PlanningEditorParticipantsSection({
@@ -20,12 +22,18 @@ export default function PlanningEditorParticipantsSection({
   persisted,
   children,
   emptyNoticeKey = "generic",
+  title,
+  description,
 }: Props) {
   const t = useTranslations("PlanningEditor.operational.participants");
 
   return (
     <PlanningEditorSection testId={testId} ariaLabelledBy={headingId}>
-      <PlanningEditorSectionHeading id={headingId} title={t("heading")} description={t("description")} />
+      <PlanningEditorSectionHeading
+        id={headingId}
+        title={title ?? t("heading")}
+        description={description ?? t("description")}
+      />
       {!persisted ? (
         <PlanningEditorPrePersistNotice messageKey={emptyNoticeKey} testId={`${testId}-pre-persist`} />
       ) : (
