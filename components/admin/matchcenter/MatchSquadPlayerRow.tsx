@@ -14,6 +14,7 @@ import {
   MATCH_SQUAD_PLAYER_ROW_PLAYER_COLUMN_CLASS,
   MATCH_SQUAD_PLAYER_ROW_STATUS_COLUMN_CLASS,
 } from "@/components/admin/matchcenter/match-squad-player-row-layout";
+import ActivityPlayerReleaseButton from "@/components/admin/teams/ActivityPlayerReleaseButton";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
 export type MatchSquadPlayerRowAction = "add" | "remove";
@@ -23,6 +24,14 @@ type Props = {
   action: MatchSquadPlayerRowAction;
   onAction: () => void;
   disabled: boolean;
+  releaseContext?: {
+    teamId: string;
+    teamSeasonId: string;
+    matchId: string;
+    matchLabel: string;
+    canManageRelease: boolean;
+    releaseReadOnly?: boolean;
+  };
 };
 
 export default function MatchSquadPlayerRow({
@@ -30,6 +39,7 @@ export default function MatchSquadPlayerRow({
   action,
   onAction,
   disabled,
+  releaseContext,
 }: Props) {
   const showPrimaryAction =
     action === "remove" || (action === "add" && player.canSelect);
@@ -110,6 +120,25 @@ export default function MatchSquadPlayerRow({
               </>
             )}
           </button>
+        ) : null}
+      </div>
+
+      <div className={MATCH_SQUAD_PLAYER_ROW_ACTION_COLUMN_CLASS} data-column="release">
+        {releaseContext ? (
+          <ActivityPlayerReleaseButton
+            teamId={releaseContext.teamId}
+            teamSeasonId={releaseContext.teamSeasonId}
+            personId={player.personId}
+            personDisplayName={player.displayName}
+            canManage={releaseContext.canManageRelease}
+            disabled={releaseContext.releaseReadOnly}
+            activityContext={{
+              mode: "ACTIVITY",
+              eventId: releaseContext.matchId,
+              scopeLabel: releaseContext.matchLabel,
+            }}
+            testId={`match-squad-release-${player.personId}`}
+          />
         ) : null}
       </div>
     </li>

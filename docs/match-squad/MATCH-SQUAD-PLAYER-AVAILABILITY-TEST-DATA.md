@@ -56,6 +56,49 @@ Controlled match `cmrzhj3je006a04kwhbepxvdz` may show **KEINE ANFRAGE** while `P
 | **LEDGER update** | No new Person/Squad rows in 01B code path |
 | **01B closure** | **CLOSED** 2026-10-10 — ledger unchanged; fixtures retained for 01C–01F |
 
+## 01C notes (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Module slice** | 01C Spielerfreigabe foundation |
+| **New schema** | `PlayerRelease` (+ enums) — migration `20261010190000_match_squad_player_availability_01c_player_release` |
+| **UAT records** | Create via Team Cockpit UI or API on preview — ledger rows added when seeded for Human UAT |
+| **Target TeamSeason** | Prefer existing ACTIVE FC Allschwil TeamSeason in Season 2026/2027 (e.g. Junioren B2) — do not fabricate real club data |
+
+## 01C Human UAT R1 — schema blocker (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Result** | **BLOCKED_BY_SCHEMA** (not a product UX failure) |
+| **Observed** | Team Cockpit → Kader → **Spielerfreigaben** showed schema-not-ready copy on PR **#822** Vercel preview |
+| **Preview database** | Shared **STAGE** Neon (`SCE_DATA_ENVIRONMENT=STAGE`; preview `DATABASE_URL` fingerprint matches `STAGE_DB_URL`) |
+| **Root cause** | Migration `20261010190000_match_squad_player_availability_01c_player_release` was **pending** on STAGE (preview builds do not apply migrations) |
+| **PROD** | Not involved |
+
+## 01C Human UAT R1.1 — STAGE migration remediation (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Result** | **READY_FOR_RETEST** |
+| **Applied to** | Shared STAGE database (Neon `neondb`, FC Allschwil STAGE cluster) |
+| **Workflow** | `APP_ENV=stage NODE_ENV=production APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` with STAGE `DATABASE_URL` / `DIRECT_URL` |
+| **Manual DDL** | **No** |
+| **PlayerRelease rows created by agent** | **None** — PO creates releases during Human UAT R1.1 |
+| **SCE Testspieler 01–06** | Unchanged controlled fixtures (`RETAINED_FOR_01B_TO_01F`) |
+| **Resolved UAT target (STAGE data)** | **FC Allschwil Junioren B2** · `teamSeasonId=cmsoczvt0000604ju1f1eindm` · `teamId=cmrkh1mo4000k04ju4c4302w9` (Season 2026/2027, ACTIVE) |
+| **FINAL_PARENT_REQUIREMENT** | `TEST_DATA_REMAINING = 0` at parent module closure — **not cleaned now** |
+
+## 01C Human UAT R2 — refinements (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Result** | **READY_FOR_UAT** on PR **#822** |
+| **R1.1 PO** | Core create/edit/revoke accepted; toggle + eligibility picker + activity-context release required |
+| **Migration** | `20261010210000_match_squad_player_availability_01c_r2_activity_scope` (`scope`, `eventId`, `trainingSessionId`) applied to shared STAGE |
+| **UAT fixtures** | Unchanged — source B1 `cmsoczv2t000504juhvod5hi9`, players SCE Testspieler 01–06, match `cmrzhj3je006a04kwhbepxvdz` |
+| **Agent-seeded PlayerRelease** | **None** — PO-led UAT only |
+| **PROD** | Not targeted |
+
 ## 01A closure (2026-10-10)
 
 | Field | Value |

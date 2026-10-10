@@ -25,8 +25,9 @@ describe("Training session edit route — SCE workspace", () => {
     expect(source).toContain("training-session-edit-datetime-panel");
     expect(source).toContain("training-session-edit-participation-panel");
     expect(source).toContain("training-session-edit-allocations-panel");
-    expect(source).toContain("training-session-edit-participants-panel");
+    expect(source).toContain("TrainingSessionParticipantsPanel");
     expect(source).toContain("getTrainingSessionParticipantRoster");
+    expect(source).toContain("resolvePlayerReleaseAccess");
   });
 
   it("does not use legacy white card shells on the route", () => {

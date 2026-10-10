@@ -4,6 +4,7 @@ import { getUpcomingParticipationForTeam } from "@/lib/participation/queries";
 import { SectionCard } from "@/components/ui/page";
 import { auth } from "@/auth";
 import { resolveTeamCommunicationAuthorization } from "@/lib/communication/team/team-communication-authorization";
+import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
 
 type Props = {
   params: Promise<{ teamId: string }>;
@@ -43,12 +44,24 @@ export default async function TeamTeilnahmenPage({ params }: Props) {
     );
   }
 
+  const releaseAccess =
+    session?.user?.id != null && team.currentTeamSeasonId
+      ? await resolvePlayerReleaseAccess({
+          userId: session.user.id,
+          tenantId,
+          tenantKey,
+          teamId: team.id,
+          teamSeasonId: team.currentTeamSeasonId,
+        })
+      : null;
+
   return (
     <TeamParticipationSection
       teamId={team.id}
       teamSeasonId={upcomingParticipation.teamSeasonId}
       initialUpcoming={upcomingParticipation}
       canSendEventCommunication={commAuth?.canSend === true}
+      canManagePlayerRelease={releaseAccess?.canManageSource === true}
     />
   );
 }

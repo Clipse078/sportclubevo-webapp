@@ -38,6 +38,7 @@ import { getTranslations as getPlanningTranslations } from "next-intl/server";
 import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
 import { prisma } from "@/lib/db/prisma";
 import { resolveSeriesAllocationDisplay } from "@/lib/training/series-cockpit";
+import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -149,6 +150,29 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     timezone,
   });
 
+  const releaseAccess =
+    session.user?.id && teamSeasonPublication
+      ? await resolvePlayerReleaseAccess({
+          userId: session.user.id,
+          tenantId: tenantContext.id,
+          tenantKey: tenantContext.key,
+          teamId: teamSeasonPublication.teamId,
+          teamSeasonId: trainingSession.teamSeasonId,
+        })
+      : null;
+
+  const trainingReleaseScopeLabel = `Training · ${trainingSession.teamName}`;
+  const trainingReleaseContext = teamSeasonPublication
+    ? {
+        teamId: teamSeasonPublication.teamId,
+        teamSeasonId: trainingSession.teamSeasonId,
+        trainingSessionId: sessionId,
+        sessionLabel: trainingReleaseScopeLabel,
+        canManageRelease: releaseAccess?.canManageSource === true,
+        releaseReadOnly: false,
+      }
+    : undefined;
+
   return (
     <ToastProvider>
       <PlanningEditorShell testId="training-session-edit-page">
@@ -212,6 +236,10 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                     participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
                   }}
                 />
+                <TrainingSessionParticipantsPanel
+                  participants={participantRoster.participants}
+                  releaseContext={trainingReleaseContext}
+                />
               </PlanningEditorSection>
             </>
           }
@@ -251,13 +279,6 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                   sessionStartAt={trainingSession.startAt}
                   sessionEndAt={trainingSession.endAt}
                 />
-              </PlanningEditorSection>
-
-              <PlanningEditorSection
-                ariaLabelledBy="training-session-edit-participants-heading"
-                testId="training-session-edit-participants-panel"
-              >
-                <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
               </PlanningEditorSection>
 
               <PlanningEditorZeitstandardLink
