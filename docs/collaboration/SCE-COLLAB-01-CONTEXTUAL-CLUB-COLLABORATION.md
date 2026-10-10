@@ -6,7 +6,7 @@
 |---------|--------|
 | **SCE-COLLAB-01A** (Training vertical slice) | **CLOSED** (PR [#810](https://github.com/Clipse078/sportclubevo-webapp/pull/810) → STAGE) |
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
-| **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
+| **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **CLOSED** (2026-10-10) |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **CLOSED** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; merge `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` 2026-10-09) |
 | **SCE-COLLAB-01D** (Multi-activity impact) | **CLOSED** (PR [#816](https://github.com/Clipse078/sportclubevo-webapp/pull/816) → STAGE; Human UAT R2 **PASS** 2026-10-10; see `SCE-COLLAB-01D.md`) |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
@@ -889,7 +889,11 @@ Sample teams include Junioren A/B/C rows and 1./2. Mannschaft — data present o
 | Human UAT | R1 PASS (save/history); R2 **PASS** (composer + semantic summary) |
 | Feature head | `60d4377a57812afae9c17c33c2164bb914e9ca85` |
 | Pre-merge STAGE | `e16a6d983601a1cfde9ad9273f2e1036e8007000` |
-| Code merge SHA (STAGE) | *(recorded in post-merge closure doc commit)* |
+| Merge method | Merge commit |
+| Merged at | 2026-10-10T11:23:41Z |
+| Code merge SHA (STAGE) | `b90a617a7bd7ae28cadc59d776c8263bf3b54b4f` |
+| Canonical STAGE URL | https://fcallschwil.sportclubevo.com |
+| Deployed STAGE SHA (`/api/health/diag`) | Verify after Vercel promotion (expect `b90a617a…` when live) |
 | Schema / migration / permission / COMM-03 semantic change | **NO** |
 | PROD | **Untouched** |
 
