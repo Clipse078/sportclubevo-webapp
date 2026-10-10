@@ -1,19 +1,32 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { Prisma, PlayerSquadStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db/prisma";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { logAction } from "@/lib/audit/log-action";
-import { invalidatePersonalDashboardReadModelsForPerson } from "@/lib/dashboard/read-model/invalidate";
-import { notifyPersonalDashboardForTeamSeason } from "@/lib/dashboard/read-model/invalidate-audience";
-import { isBirthYearAllowedForTeamSeason } from "@/lib/teams/jahrgang-rules";
+import { addPlayerToTeamSeason } from "@/lib/teams/roster-membership-service";
 
 type Context = {
   params: Promise<{ teamId: string; teamSeasonId: string }>;
 };
 
 const ALLOWED_STATUSES = ["ACTIVE", "INACTIVE", "INJURED", "ABSENT", "ARCHIVED"] as const;
+
+function rosterErrorStatus(code: string): number {
+  switch (code) {
+    case "TEAM_SEASON_NOT_FOUND":
+    case "PERSON_NOT_FOUND":
+      return 404;
+    case "PERSON_NOT_ELIGIBLE":
+    case "JAHRGANG_NOT_ALLOWED":
+    case "TEAM_SEASON_NOT_MUTABLE":
+      return 400;
+    case "ALREADY_ACTIVE_MEMBER":
+      return 409;
+    default:
+      return 500;
+  }
+}
 
 export async function POST(request: NextRequest, context: Context) {
   const access = await requireApiPermission(PERMISSIONS.TEAMS_MANAGE);
@@ -59,164 +72,61 @@ export async function POST(request: NextRequest, context: Context) {
     if (!personId) {
       return NextResponse.json(
         { error: "Bitte eine Person auswählen." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!ALLOWED_STATUSES.includes(status as (typeof ALLOWED_STATUSES)[number])) {
       return NextResponse.json(
         { error: "Ungültiger Kader-Status." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (shirtNumber !== null && !Number.isInteger(shirtNumber)) {
       return NextResponse.json(
         { error: "Rückennummer muss eine ganze Zahl sein." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!Number.isFinite(sortOrder)) {
       return NextResponse.json(
         { error: "Sortierung muss eine Zahl sein." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const teamSeason = await prisma.teamSeason.findFirst({
-      where: { id: teamSeasonId, teamId, team: { tenantId } },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            ageGroup: true,
-          },
-        },
-        season: {
-          select: {
-            id: true,
-            key: true,
-            name: true,
-            startDate: true,
-          },
-        },
-      },
+    const result = await addPlayerToTeamSeason({
+      tenantId,
+      teamId,
+      teamSeasonId,
+      personId,
+      status: status as PlayerSquadStatus,
+      shirtNumber,
+      positionLabel,
+      isCaptain,
+      isViceCaptain,
+      isWebsiteVisible,
+      sortOrder,
+      remarks,
     });
 
-    if (!teamSeason) {
+    if (!result.ok) {
       return NextResponse.json(
-        { error: "Team-Saison nicht gefunden." },
-        { status: 404 }
+        { error: result.message },
+        { status: rosterErrorStatus(result.code) },
       );
     }
 
-    const person = await prisma.person.findFirst({
-      where: { id: personId, tenantId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        displayName: true,
-        email: true,
-        phone: true,
-        dateOfBirth: true,
-        isActive: true,
-        isPlayer: true,
-      },
-    });
-
-    if (!person) {
-      return NextResponse.json(
-        { error: "Person nicht gefunden." },
-        { status: 404 }
-      );
-    }
-
-    if (!person.isActive || !person.isPlayer) {
-      return NextResponse.json(
-        { error: "Diese Person ist kein aktiver Spieler." },
-        { status: 400 }
-      );
-    }
-
-    const jahrgangCheck = isBirthYearAllowedForTeamSeason({
-      categoryCode: teamSeason.team.ageGroup,
-      seasonStartDate: teamSeason.season.startDate,
-      birthDate: person.dateOfBirth,
-    });
-
-    if (!jahrgangCheck.ok) {
-      return NextResponse.json(
-        {
-          error:
-            "Spieler kann diesem Team nicht zugewiesen werden. " +
-            jahrgangCheck.reason +
-            " Erlaubte Jahrgänge: " +
-            jahrgangCheck.allowedBirthYears.join(", ") +
-            ".",
-        },
-        { status: 400 }
-      );
-    }
-
-    const existingAssignment = await prisma.playerSquadMember.findUnique({
-      where: {
-        teamSeasonId_personId: {
-          teamSeasonId,
-          personId,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (existingAssignment) {
+    if (result.outcome === "ALREADY_ACTIVE") {
       return NextResponse.json(
         { error: "Diese Person ist diesem Team-Saison-Kader bereits zugewiesen." },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
-    const created = await prisma.playerSquadMember.create({
-      data: {
-        teamSeasonId,
-        personId,
-        status: status as PlayerSquadStatus,
-        shirtNumber,
-        positionLabel,
-        isCaptain,
-        isViceCaptain,
-        isWebsiteVisible,
-        sortOrder,
-        remarks,
-      },
-      select: {
-        id: true,
-        status: true,
-        shirtNumber: true,
-        positionLabel: true,
-        isCaptain: true,
-        isViceCaptain: true,
-        isWebsiteVisible: true,
-        sortOrder: true,
-        remarks: true,
-        person: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            displayName: true,
-            email: true,
-            phone: true,
-            dateOfBirth: true,
-          },
-        },
-      },
-    });
+    const { squadMember, teamSeason, personSummary, jahrgang } = result;
 
     await logAction({
       actorUserId:
@@ -225,19 +135,19 @@ export async function POST(request: NextRequest, context: Context) {
         null,
       moduleKey: "teams",
       entityType: "PlayerSquadMember",
-      entityId: created.id,
-      action: "CREATE",
+      entityId: squadMember.id,
+      action: result.outcome === "REACTIVATED" ? "UPDATE" : "CREATE",
       afterJson: {
         teamSeasonId,
         personId,
-        status: status as PlayerSquadStatus,
-        shirtNumber,
-        positionLabel,
-        isCaptain,
-        isViceCaptain,
-        isWebsiteVisible,
-        sortOrder,
-        remarks,
+        status: squadMember.status,
+        shirtNumber: squadMember.shirtNumber,
+        positionLabel: squadMember.positionLabel,
+        isCaptain: squadMember.isCaptain,
+        isViceCaptain: squadMember.isViceCaptain,
+        isWebsiteVisible: squadMember.isWebsiteVisible,
+        sortOrder: squadMember.sortOrder,
+        remarks: squadMember.remarks,
       },
       metadataJson: {
         teamId: teamSeason.team.id,
@@ -247,9 +157,12 @@ export async function POST(request: NextRequest, context: Context) {
         seasonId: teamSeason.season.id,
         seasonKey: teamSeason.season.key,
         seasonName: teamSeason.season.name,
-        allowedBirthYears: jahrgangCheck.allowedBirthYears,
-        personBirthYear: jahrgangCheck.birthYear,
-        personName: person.displayName || (person.firstName + " " + person.lastName),
+        allowedBirthYears: jahrgang?.allowedBirthYears ?? [],
+        personBirthYear: jahrgang?.birthYear ?? null,
+        personName:
+          personSummary.displayName ||
+          personSummary.firstName + " " + personSummary.lastName,
+        rosterOutcome: result.outcome,
       },
     });
 
@@ -258,10 +171,13 @@ export async function POST(request: NextRequest, context: Context) {
 
     return NextResponse.json(
       {
-        message: "Spieler erfolgreich dem Team-Saison-Kader hinzugefügt.",
-        squadMember: created,
+        message:
+          result.outcome === "REACTIVATED"
+            ? "Spieler erfolgreich dem Team-Saison-Kader wieder zugeordnet."
+            : "Spieler erfolgreich dem Team-Saison-Kader hinzugefügt.",
+        squadMember,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Create squad member failed:", error);
@@ -270,34 +186,36 @@ export async function POST(request: NextRequest, context: Context) {
       if (error.code === "P2002") {
         return NextResponse.json(
           { error: "Diese Person ist diesem Team-Saison-Kader bereits zugewiesen." },
-          { status: 409 }
+          { status: 409 },
         );
       }
 
       return NextResponse.json(
         { error: "Datenbankfehler: " + error.code + "." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (error instanceof Prisma.PrismaClientValidationError) {
       return NextResponse.json(
-        { error: "Prisma-Validierungsfehler. Wahrscheinlich stimmen Schema, Migration und generierter Client aktuell nicht überein." },
-        { status: 500 }
+        {
+          error:
+            "Prisma-Validierungsfehler. Wahrscheinlich stimmen Schema, Migration und generierter Client aktuell nicht überein.",
+        },
+        { status: 500 },
       );
     }
 
     if (error instanceof Error) {
       return NextResponse.json(
         { error: "Technischer Fehler: " + error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
       { error: "Spieler konnte nicht dem Team-Saison-Kader hinzugefügt werden." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

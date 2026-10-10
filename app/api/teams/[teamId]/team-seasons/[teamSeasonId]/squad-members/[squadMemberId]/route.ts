@@ -1,10 +1,10 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db/prisma";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { logAction } from "@/lib/audit/log-action";
+import { removePlayerSquadMembership } from "@/lib/teams/roster-membership-service";
 
 type Context = {
   params: Promise<{
@@ -29,59 +29,21 @@ export async function DELETE(_: NextRequest, context: Context) {
   try {
     const { teamId, teamSeasonId, squadMemberId } = await context.params;
 
-    const existing = await prisma.playerSquadMember.findFirst({
-      where: {
-        id: squadMemberId,
-        teamSeasonId,
-        teamSeason: { teamId, team: { tenantId } },
-        person: { tenantId },
-      },
-      include: {
-        teamSeason: {
-          include: {
-            team: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
-            },
-            season: {
-              select: {
-                id: true,
-                key: true,
-                name: true,
-              },
-            },
-          },
-        },
-        person: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            displayName: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
+    const result = await removePlayerSquadMembership({
+      tenantId,
+      teamId,
+      teamSeasonId,
+      squadMemberId,
     });
 
-    if (!existing) {
+    if (!result.ok) {
       return NextResponse.json(
-        { error: "Kader-Eintrag nicht gefunden." },
-        { status: 404 }
+        { error: result.message },
+        { status: result.code === "MEMBERSHIP_NOT_FOUND" ? 404 : 500 },
       );
     }
 
-    await prisma.playerSquadMember.delete({
-      where: {
-        id: squadMemberId,
-        teamSeason: { teamId, team: { tenantId } },
-        person: { tenantId },
-      },
-    });
+    const existing = result.removed;
 
     await logAction({
       actorUserId:
@@ -114,7 +76,7 @@ export async function DELETE(_: NextRequest, context: Context) {
         seasonName: existing.teamSeason.season.name,
         personName:
           existing.person.displayName ||
-          (existing.person.firstName + " " + existing.person.lastName),
+          existing.person.firstName + " " + existing.person.lastName,
       },
     });
 
@@ -130,34 +92,40 @@ export async function DELETE(_: NextRequest, context: Context) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
         return NextResponse.json(
-          { error: "Kader-Eintrag konnte nicht geloescht werden, weil der Datensatz nicht mehr existiert." },
-          { status: 404 }
+          {
+            error:
+              "Kader-Eintrag konnte nicht geloescht werden, weil der Datensatz nicht mehr existiert.",
+          },
+          { status: 404 },
         );
       }
 
       return NextResponse.json(
         { error: "Datenbankfehler: " + error.code + "." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (error instanceof Prisma.PrismaClientValidationError) {
       return NextResponse.json(
-        { error: "Prisma Validierungsfehler. Wahrscheinlich stimmen Schema, Migration und generierter Client aktuell nicht ueberein." },
-        { status: 500 }
+        {
+          error:
+            "Prisma Validierungsfehler. Wahrscheinlich stimmen Schema, Migration und generierter Client aktuell nicht ueberein.",
+        },
+        { status: 500 },
       );
     }
 
     if (error instanceof Error) {
       return NextResponse.json(
         { error: "Technischer Fehler: " + error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
       { error: "Spieler konnte nicht aus dem Team-Saison-Kader entfernt werden." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

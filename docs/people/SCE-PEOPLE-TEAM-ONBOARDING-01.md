@@ -5,11 +5,79 @@
 | Field | Value |
 |-------|-------|
 | **Package** | SCE-PEOPLE-TEAM-ONBOARDING-01 |
-| **Mode** | DISCOVERY_COMPLETE / IMPLEMENTATION_PENDING |
+| **Mode** | IN_PROGRESS (01A implemented / automated verified) |
+| **Slice 01A** | IMPLEMENTED / AUTOMATED_VERIFIED |
 | **Canonical STAGE baseline** | `e9a1e5fba2557b99dca1f1e360a68c83160737db` |
 | **Feature branch** | `cursor/sce-people-team-onboarding-01` |
-| **STAGE data mutated during discovery** | No |
+| **PR** | #814 (DRAFT) |
+| **STAGE data mutated during discovery / 01A** | No |
 | **Schema / migration / prod** | Untouched |
+
+## Slice 01A — Canonical roster onboarding foundation (implemented)
+
+### Canonical roster service
+
+| Module | Role |
+|--------|------|
+| `lib/teams/roster-membership-service.ts` | Single mutation seam for `PlayerSquadMember` / `TrainerTeamMember` (add, reactivate, remove). Used by existing team roster APIs. |
+| `lib/teams/resolve-current-team-season.ts` | Tenant-safe DB resolver for Team → canonical current `TeamSeason` (wraps `lib/teams/current-season.ts`). |
+| `lib/people/trainer-roster-alignment-diagnostic.ts` | Read-only PersonAssignment vs `TrainerTeamMember` alignment (States A–D) for future 01B UX. |
+
+### Membership lifecycle
+
+- **Create:** Validates tenant, active `TeamSeason`, person capacity (`isPlayer` / `isTrainer`), jahrgang (players). Creates row when none exists.
+- **Duplicate active row:** Service returns `ALREADY_ACTIVE` (no second row); API preserves public **409** semantics.
+- **Reactivate:** Existing `INACTIVE` / `ARCHIVED` row is updated in place (no historical duplicate).
+- **Remove:** Hard delete (unchanged product semantics); person and other seasons preserved.
+- **Person without User:** Supported; roster APIs do not create `User`, `TenantMembership`, or `UserRole`.
+
+### Current-season resolution
+
+- Explicit season key wins; else `Season.isActive` via `pickCurrentTeamSeason`.
+- No silent fallback to “latest” season.
+- Actionable errors: missing current season, ambiguous multiple active global seasons, cross-tenant team masked as not found.
+
+### Tenant isolation & authorization
+
+- All service inputs scoped by `tenantId`; foreign person/team/membership IDs return non-enumerating not-found messages.
+- Roster mutation authorization unchanged: **`teams.manage` only** at API layer. `TrainerTeamMember.roleLabel` is display metadata only (not authorization).
+
+### PersonAssignment diagnostic (read-only)
+
+| State | Meaning |
+|-------|---------|
+| **ALIGNED** | Active trainer-function assignment + active `TrainerTeamMember` for team |
+| **ASSIGNMENT_ONLY** | Trainer assignment without current roster row (FCA F2 discovery state) |
+| **ROSTER_ONLY** | Active roster without matching trainer assignment |
+| **NEITHER** | No trainer evidence for team |
+
+No automatic reconciliation in 01A; no STAGE data mutation.
+
+### COMM-03 contract proof
+
+- Automated contract tests in `lib/teams/__tests__/sce-people-team-onboarding-01a-comm03-contract.test.ts` assert structural `teamIds` audience uses active roster rows only (via existing `resolveTeamAudiencePersonIds`). **No COMM-03 production code changed.**
+
+### Automated tests (01A)
+
+- `lib/teams/__tests__/sce-people-team-onboarding-01a-roster-service.test.ts`
+- `lib/teams/__tests__/sce-people-team-onboarding-01a-resolve-current-team-season.test.ts`
+- `lib/people/__tests__/sce-people-team-onboarding-01a-trainer-alignment.test.ts`
+- `lib/teams/__tests__/sce-people-team-onboarding-01a-comm03-contract.test.ts`
+- Updated roster API security tests under `app/api/teams/__tests__/`
+
+### Known gaps (deferred)
+
+| Gap | Target slice |
+|-----|----------------|
+| Team Cockpit onboarding UX (search/add flows) | 01B |
+| Invitations / User linking from roster | 01C |
+| Guardian onboarding at scale | 01D |
+| SFV / bulk import | 01E |
+| Human UAT on FCA STAGE data | 01F (after 01B exposes workflows) |
+
+### Human UAT recommendation (01A closure)
+
+**01A can close on automated verification alone** (service/API foundation). Bounded Human UAT for roster population should run in **01B** when administrators use the guided Team Cockpit flows; **01F** remains the COMM-03 end-to-end club validation gate. Do not mark 01A CLOSED until product accepts that split or requests a minimal smoke UAT.
 
 ## Problem
 

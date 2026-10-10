@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db/prisma";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { logAction } from "@/lib/audit/log-action";
+import { removeTrainerTeamMembership } from "@/lib/teams/roster-membership-service";
 
 type Context = {
   params: Promise<{ teamId: string; teamSeasonId: string; trainerMemberId: string }>;
@@ -24,46 +24,21 @@ export async function DELETE(_: Request, context: Context) {
   try {
     const { teamId, teamSeasonId, trainerMemberId } = await context.params;
 
-    const existing = await prisma.trainerTeamMember.findFirst({
-      where: {
-        id: trainerMemberId,
-        teamSeasonId,
-        teamSeason: { teamId, team: { tenantId } },
-        person: { tenantId },
-      },
-      select: {
-        id: true,
-        teamSeasonId: true,
-        personId: true,
-        status: true,
-        roleLabel: true,
-        isWebsiteVisible: true,
-        sortOrder: true,
-        remarks: true,
-        person: {
-          select: {
-            firstName: true,
-            lastName: true,
-            displayName: true,
-          },
-        },
-      },
+    const result = await removeTrainerTeamMembership({
+      tenantId,
+      teamId,
+      teamSeasonId,
+      trainerMemberId,
     });
 
-    if (!existing) {
+    if (!result.ok) {
       return NextResponse.json(
-        { error: "Trainerteam-Eintrag nicht gefunden." },
-        { status: 404 }
+        { error: result.message },
+        { status: result.code === "MEMBERSHIP_NOT_FOUND" ? 404 : 500 },
       );
     }
 
-    await prisma.trainerTeamMember.delete({
-      where: {
-        id: trainerMemberId,
-        teamSeason: { teamId, team: { tenantId } },
-        person: { tenantId },
-      },
-    });
+    const existing = result.removed;
 
     await logAction({
       actorUserId:
@@ -80,7 +55,7 @@ export async function DELETE(_: Request, context: Context) {
         teamSeasonId,
         personName:
           existing.person.displayName ||
-          (existing.person.firstName + " " + existing.person.lastName),
+          existing.person.firstName + " " + existing.person.lastName,
       },
     });
 
@@ -96,13 +71,13 @@ export async function DELETE(_: Request, context: Context) {
     if (error instanceof Error) {
       return NextResponse.json(
         { error: "Technischer Fehler: " + error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
       { error: "Trainer konnte nicht aus dem Trainerteam entfernt werden." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
