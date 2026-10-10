@@ -4,6 +4,7 @@
 
 import {
   PlayerReleaseReason,
+  PlayerReleaseScope,
   PlayerReleaseStatus,
   Prisma,
   type TeamSeasonStatus,
@@ -23,8 +24,16 @@ import {
   isPlayerReleaseOperationallyActive,
   resolvePlayerReleaseDisplayState,
 } from "@/lib/match-squad/player-release-lifecycle";
+import { resolvePlayerReleaseActivityContext } from "@/lib/match-squad/player-release-activity-context";
+import {
+  assertPlayerReleaseTargetEligible,
+  mapTargetDiscoveryToPickerOptions,
+  resolvePlayerReleaseTargetTeams,
+  type PlayerReleaseTargetPickerOption,
+} from "@/lib/match-squad/player-release-target-discovery";
 import {
   formatMaxMinutesLabel,
+  formatReleaseActivityScopeLabel,
   formatReleaseValidityRange,
   playerReleaseReasonLabel,
 } from "@/lib/match-squad/player-release-presentation";
@@ -37,6 +46,9 @@ const releaseSelect = {
   personId: true,
   sourceTeamSeasonId: true,
   targetTeamSeasonId: true,
+  scope: true,
+  eventId: true,
+  trainingSessionId: true,
   validFrom: true,
   validUntil: true,
   maxMinutes: true,
@@ -74,6 +86,22 @@ const releaseSelect = {
       team: { select: { id: true, name: true, shortName: true } },
     },
   },
+  event: {
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      startAt: true,
+    },
+  },
+  trainingSession: {
+    select: {
+      id: true,
+      date: true,
+      startAt: true,
+      trainingSeries: { select: { title: true } },
+    },
+  },
 } satisfies Prisma.PlayerReleaseSelect;
 
 export type PlayerReleaseRow = Prisma.PlayerReleaseGetPayload<{ select: typeof releaseSelect }>;
@@ -86,6 +114,9 @@ export type PlayerReleaseListItem = {
   sourceTeamLabel: string;
   targetTeamSeasonId: string;
   targetTeamLabel: string;
+  scope: PlayerReleaseScope;
+  eventId: string | null;
+  trainingSessionId: string | null;
   validFrom: string;
   validUntil: string;
   validityLabel: string;
@@ -103,7 +134,7 @@ export type PlayerReleaseListItem = {
   version: string;
 };
 
-export type PlayerReleaseTargetOption = {
+export type PlayerReleaseTargetOption = PlayerReleaseTargetPickerOption & {
   teamSeasonId: string;
   label: string;
   teamId: string;
@@ -169,6 +200,35 @@ function teamSeasonLabel(row: {
   return row.displayName || row.shortName || row.team.shortName || row.team.name;
 }
 
+function resolveValidityLabel(
+  row: PlayerReleaseRow,
+  timezone: string,
+): string {
+  if (row.scope === "ACTIVITY") {
+    if (row.event) {
+      const typeLabel =
+        row.event.type === "MATCH"
+          ? "Spiel"
+          : row.event.type === "TOURNAMENT"
+            ? "Turnier"
+            : "Termin";
+      return formatReleaseActivityScopeLabel({
+        activityDate: row.event.startAt,
+        activityLabel: `${typeLabel}: ${row.event.title}`,
+        timezone,
+      });
+    }
+    if (row.trainingSession) {
+      return formatReleaseActivityScopeLabel({
+        activityDate: row.trainingSession.date,
+        activityLabel: `Training: ${row.trainingSession.trainingSeries.title}`,
+        timezone,
+      });
+    }
+  }
+  return formatReleaseValidityRange(row.validFrom, row.validUntil);
+}
+
 function mapReleaseRow(
   row: PlayerReleaseRow,
   input: {
@@ -191,9 +251,12 @@ function mapReleaseRow(
     sourceTeamLabel: teamSeasonLabel(row.sourceTeamSeason),
     targetTeamSeasonId: row.targetTeamSeasonId,
     targetTeamLabel: teamSeasonLabel(row.targetTeamSeason),
+    scope: row.scope,
+    eventId: row.eventId,
+    trainingSessionId: row.trainingSessionId,
     validFrom: row.validFrom.toISOString().slice(0, 10),
     validUntil: row.validUntil.toISOString().slice(0, 10),
-    validityLabel: formatReleaseValidityRange(row.validFrom, row.validUntil),
+    validityLabel: resolveValidityLabel(row, input.timezone),
     maxMinutes: row.maxMinutes,
     maxMinutesLabel: formatMaxMinutesLabel(row.maxMinutes),
     reason: row.reason,
@@ -260,6 +323,7 @@ async function assertStructuralRosterMember(input: {
 
 async function assertTargetTeamSeason(input: {
   tenantId: string;
+  personId: string;
   sourceTeamSeasonId: string;
   sourceSeasonId: string;
   targetTeamSeasonId: string;
@@ -276,7 +340,7 @@ async function assertTargetTeamSeason(input: {
       id: input.targetTeamSeasonId,
       seasonId: input.sourceSeasonId,
       status: "ACTIVE",
-      team: { tenantId: input.tenantId },
+      team: { tenantId: input.tenantId, isActive: true },
     },
     select: { id: true },
   });
@@ -286,6 +350,13 @@ async function assertTargetTeamSeason(input: {
       "INVALID_TARGET",
     );
   }
+
+  await assertPlayerReleaseTargetEligible({
+    tenantId: input.tenantId,
+    personId: input.personId,
+    sourceTeamSeasonId: input.sourceTeamSeasonId,
+    targetTeamSeasonId: input.targetTeamSeasonId,
+  });
 }
 
 async function assertNoOverlappingActiveRelease(input: {
@@ -293,6 +364,9 @@ async function assertNoOverlappingActiveRelease(input: {
   personId: string;
   sourceTeamSeasonId: string;
   targetTeamSeasonId: string;
+  scope: PlayerReleaseScope;
+  eventId?: string | null;
+  trainingSessionId?: string | null;
   validFrom: Date;
   validUntil: Date;
   excludeReleaseId?: string;
@@ -306,10 +380,31 @@ async function assertNoOverlappingActiveRelease(input: {
       status: "ACTIVE",
       ...(input.excludeReleaseId ? { id: { not: input.excludeReleaseId } } : {}),
     },
-    select: { id: true, validFrom: true, validUntil: true },
+    select: {
+      id: true,
+      scope: true,
+      eventId: true,
+      trainingSessionId: true,
+      validFrom: true,
+      validUntil: true,
+    },
   });
 
   for (const candidate of candidates) {
+    if (input.scope === "ACTIVITY") {
+      const sameActivity =
+        (input.eventId && candidate.eventId === input.eventId) ||
+        (input.trainingSessionId && candidate.trainingSessionId === input.trainingSessionId);
+      if (sameActivity) {
+        throw new PlayerReleaseOverlapError();
+      }
+      continue;
+    }
+
+    if (candidate.scope === "ACTIVITY") {
+      continue;
+    }
+
     if (
       dateRangesOverlap(
         input.validFrom,
@@ -323,31 +418,21 @@ async function assertNoOverlappingActiveRelease(input: {
   }
 }
 
-export async function listTargetTeamSeasonOptions(input: {
+export async function listTargetTeamSeasonOptionsForPerson(input: {
   tenantId: string;
+  personId: string;
   sourceTeamSeasonId: string;
-  sourceSeasonId: string;
 }): Promise<PlayerReleaseTargetOption[]> {
-  const rows = await prisma.teamSeason.findMany({
-    where: {
-      id: { not: input.sourceTeamSeasonId },
-      seasonId: input.sourceSeasonId,
-      status: "ACTIVE",
-      team: { tenantId: input.tenantId },
-    },
-    select: {
-      id: true,
-      displayName: true,
-      shortName: true,
-      team: { select: { id: true, name: true, shortName: true } },
-    },
-    orderBy: [{ team: { name: "asc" } }, { displayName: "asc" }],
+  const rows = await resolvePlayerReleaseTargetTeams({
+    tenantId: input.tenantId,
+    personId: input.personId,
+    sourceTeamSeasonId: input.sourceTeamSeasonId,
   });
-
-  return rows.map((row) => ({
-    teamSeasonId: row.id,
-    teamId: row.team.id,
-    label: teamSeasonLabel(row),
+  return mapTargetDiscoveryToPickerOptions(rows).map((row) => ({
+    ...row,
+    teamSeasonId: row.teamSeasonId,
+    teamId: row.teamId,
+    label: row.label,
   }));
 }
 
@@ -382,7 +467,7 @@ export async function listPlayerReleasesForSourceTeamSeason(input: {
   sourceTeamSeasonId: string;
   timezone: string;
   includeHistory?: boolean;
-}): Promise<{ releases: PlayerReleaseListItem[]; rosterPlayers: PlayerReleaseRosterPlayerOption[]; targetOptions: PlayerReleaseTargetOption[] }> {
+}): Promise<{ releases: PlayerReleaseListItem[]; rosterPlayers: PlayerReleaseRosterPlayerOption[] }> {
   const source = await loadSourceTeamSeasonContext({
     tenantId: input.tenantId,
     teamId: input.teamId,
@@ -432,19 +517,18 @@ export async function listPlayerReleasesForSourceTeamSeason(input: {
           row.status === "REVOKED",
       );
 
-  const [rosterPlayers, targetOptions] = await Promise.all([
-    listRosterPlayerOptions({
-      tenantId: input.tenantId,
-      sourceTeamSeasonId: input.sourceTeamSeasonId,
-    }),
-    listTargetTeamSeasonOptions({
-      tenantId: input.tenantId,
-      sourceTeamSeasonId: input.sourceTeamSeasonId,
-      sourceSeasonId: source.seasonId,
-    }),
-  ]);
+  const rosterPlayers = await listRosterPlayerOptions({
+    tenantId: input.tenantId,
+    sourceTeamSeasonId: input.sourceTeamSeasonId,
+  });
 
-  return { releases, rosterPlayers, targetOptions };
+  return { releases, rosterPlayers };
+}
+
+function parseScope(value: unknown): PlayerReleaseScope {
+  const normalized = String(value ?? "PERIOD").trim().toUpperCase();
+  if (normalized === "ACTIVITY") return "ACTIVITY";
+  return "PERIOD";
 }
 
 export async function createPlayerRelease(input: {
@@ -454,8 +538,11 @@ export async function createPlayerRelease(input: {
   actorUserId: string;
   personId: string;
   targetTeamSeasonId: string;
-  validFrom: string;
-  validUntil: string;
+  scope?: string;
+  eventId?: string | null;
+  trainingSessionId?: string | null;
+  validFrom?: string;
+  validUntil?: string;
   maxMinutes?: unknown;
   reason: string;
   note?: string | null;
@@ -471,13 +558,41 @@ export async function createPlayerRelease(input: {
     throw new PlayerReleaseValidationError("Bitte einen Spieler wählen.");
   }
 
-  const validFrom = parseCalendarDateInput(input.validFrom, "Gültig ab");
-  const validUntil = parseCalendarDateInput(input.validUntil, "Gültig bis");
-  if (validFrom.getTime() > validUntil.getTime()) {
-    throw new PlayerReleaseValidationError(
-      "«Gültig ab» darf nicht nach «Gültig bis» liegen.",
-      "INVALID_DATE_RANGE",
-    );
+  const scope = parseScope(input.scope);
+  let eventId: string | null = null;
+  let trainingSessionId: string | null = null;
+  let validFrom: Date;
+  let validUntil: Date;
+
+  if (scope === "ACTIVITY") {
+    const activity = await resolvePlayerReleaseActivityContext({
+      tenantId: input.tenantId,
+      sourceTeamSeasonId: input.sourceTeamSeasonId,
+      eventId: input.eventId,
+      trainingSessionId: input.trainingSessionId,
+    });
+    if (!activity.activityEditable) {
+      throw new PlayerReleaseValidationError(
+        activity.readOnlyReason ?? "Aktivität ist schreibgeschützt.",
+        "ACTIVITY_READ_ONLY",
+      );
+    }
+    eventId = activity.eventId;
+    trainingSessionId = activity.trainingSessionId;
+    validFrom = activity.activityDate;
+    validUntil = activity.activityDate;
+  } else {
+    if (!input.validFrom || !input.validUntil) {
+      throw new PlayerReleaseValidationError("Gültigkeitszeitraum ist erforderlich.");
+    }
+    validFrom = parseCalendarDateInput(input.validFrom, "Gültig ab");
+    validUntil = parseCalendarDateInput(input.validUntil, "Gültig bis");
+    if (validFrom.getTime() > validUntil.getTime()) {
+      throw new PlayerReleaseValidationError(
+        "«Gültig ab» darf nicht nach «Gültig bis» liegen.",
+        "INVALID_DATE_RANGE",
+      );
+    }
   }
 
   const maxMinutes = parseMaxMinutes(input.maxMinutes);
@@ -493,6 +608,7 @@ export async function createPlayerRelease(input: {
 
   await assertTargetTeamSeason({
     tenantId: input.tenantId,
+    personId,
     sourceTeamSeasonId: input.sourceTeamSeasonId,
     sourceSeasonId: source.seasonId,
     targetTeamSeasonId: input.targetTeamSeasonId,
@@ -503,6 +619,9 @@ export async function createPlayerRelease(input: {
     personId,
     sourceTeamSeasonId: input.sourceTeamSeasonId,
     targetTeamSeasonId: input.targetTeamSeasonId,
+    scope,
+    eventId,
+    trainingSessionId,
     validFrom,
     validUntil,
   });
@@ -513,6 +632,9 @@ export async function createPlayerRelease(input: {
       personId,
       sourceTeamSeasonId: input.sourceTeamSeasonId,
       targetTeamSeasonId: input.targetTeamSeasonId,
+      scope,
+      eventId,
+      trainingSessionId,
       validFrom,
       validUntil,
       maxMinutes,
@@ -607,6 +729,9 @@ export async function updatePlayerRelease(input: {
     personId: existing.personId,
     sourceTeamSeasonId: existing.sourceTeamSeasonId,
     targetTeamSeasonId: existing.targetTeamSeasonId,
+    scope: existing.scope,
+    eventId: existing.eventId,
+    trainingSessionId: existing.trainingSessionId,
     validFrom,
     validUntil,
     excludeReleaseId: existing.id,

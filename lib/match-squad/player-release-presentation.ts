@@ -33,3 +33,18 @@ export function formatMaxMinutesLabel(maxMinutes: number | null | undefined): st
   }
   return `max. ${maxMinutes} Min.`;
 }
+
+export function formatReleaseActivityScopeLabel(input: {
+  activityDate: Date;
+  activityLabel: string;
+  timezone?: string;
+}): string {
+  const fmt = new Intl.DateTimeFormat("de-CH", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: input.timezone ?? "Europe/Zurich",
+  });
+  return `Nur für: ${fmt.format(input.activityDate)} · ${input.activityLabel}`;
+}

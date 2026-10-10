@@ -39,6 +39,12 @@ vi.mock("@/lib/audit/log-action", () => ({
   logAction: mocks.logAction,
 }));
 
+vi.mock("../player-release-target-discovery", () => ({
+  assertPlayerReleaseTargetEligible: vi.fn(),
+  mapTargetDiscoveryToPickerOptions: vi.fn(),
+  resolvePlayerReleaseTargetTeams: vi.fn(),
+}));
+
 import {
   PLAYER_RELEASE_SIGNAL_BOUNDARIES,
   createPlayerRelease,
@@ -59,6 +65,9 @@ function releaseRow(overrides: Record<string, unknown> = {}) {
     personId: PERSON,
     sourceTeamSeasonId: SOURCE_TS,
     targetTeamSeasonId: TARGET_TS,
+    scope: "PERIOD" as const,
+    eventId: null,
+    trainingSessionId: null,
     validFrom: new Date("2026-10-10T00:00:00.000Z"),
     validUntil: new Date("2026-11-30T00:00:00.000Z"),
     maxMinutes: 45,
@@ -170,6 +179,9 @@ describe("player-release-service", () => {
     mocks.playerReleaseFindMany.mockResolvedValue([
       {
         id: "existing",
+        scope: "PERIOD",
+        eventId: null,
+        trainingSessionId: null,
         validFrom: new Date("2026-10-01T00:00:00.000Z"),
         validUntil: new Date("2026-10-30T00:00:00.000Z"),
       },
