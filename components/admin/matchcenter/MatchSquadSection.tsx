@@ -106,25 +106,42 @@ function PlayerCard({
           {player.rosterIneligibleLabel ? ` · ${player.rosterIneligibleLabel}` : ""}
         </p>
       </div>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onAction}
-        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface-3)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-4)] disabled:opacity-50"
-        data-testid={action === "add" ? `match-squad-add-${player.personId}` : `match-squad-remove-${player.personId}`}
-      >
-        {action === "add" ? (
-          <>
-            <Plus className="h-3.5 w-3.5" aria-hidden />
-            Aufbieten
-          </>
-        ) : (
-          <>
-            <Minus className="h-3.5 w-3.5" aria-hidden />
-            Entfernen
-          </>
-        )}
-      </button>
+      {action === "add" && !player.canSelect && player.availability === "UNAVAILABLE" ? (
+        <span
+          className="inline-flex shrink-0 items-center rounded-md border border-[var(--sce-danger-border)] bg-[var(--sce-danger-light)] px-2.5 py-1.5 text-xs font-semibold text-[var(--sce-danger)]"
+          data-testid={`match-squad-unavailable-action-${player.personId}`}
+        >
+          Nicht verfügbar
+        </span>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onAction}
+          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface-3)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-4)] disabled:opacity-50"
+          data-testid={
+            action === "add" ? `match-squad-add-${player.personId}` : `match-squad-remove-${player.personId}`
+          }
+          aria-label={
+            action === "remove"
+              ? `${player.displayName} aus dem Aufgebot entfernen`
+              : `${player.displayName} aufbieten`
+          }
+        >
+          {action === "add" ? (
+            <>
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              Aufbieten
+            </>
+          ) : (
+            <>
+              <span className="sr-only">Aufgeboten — </span>
+              <Minus className="h-3.5 w-3.5" aria-hidden />
+              Entfernen
+            </>
+          )}
+        </button>
+      )}
     </li>
   );
 }

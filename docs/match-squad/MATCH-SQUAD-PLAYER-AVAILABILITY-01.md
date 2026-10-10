@@ -689,12 +689,37 @@ Selected + unavailable: secondary line uses **«Nicht verfügbar – Aufgebot pr
 | `NO` + selected | Status badge «Nicht verfügbar» + strong «Aufgebot prüfen» chip |
 | `MAYBE` + selected | «Unsicher» warning badge only — **not** a hard unavailable conflict |
 
-### Duplication note (Teilnehmer vs Aufgebot)
+### Duplication note (Teilnehmer vs Aufgebot) — superseded by R5
 
-Both sections remain in 01A; **recommendation for later UX (01B+):** **(C) integrate participation into Aufgebot** as the primary trainer workspace, with Teilnehmer collapsed or summary-only when Aufgebot is enabled — same roster, one scan path. Not removed in R4 (bounded scope).
+R4 left both sections visible; Human UAT R5 confirmed duplicate roster UX. **Product decision (R5):** for MATCH with integrated Match Squad workspace, **Aufgebot is the primary player-preparation surface**; the detailed Teilnehmer player roster is **not rendered** (Match-only; TRAINING / TOURNAMENT / CLUB_EVENT unchanged).
+
+Gate: `lib/match-squad/integrated-workspace.ts` (`resolveIntegratedMatchSquadWorkspace` + `shouldRenderMatchTeilnehmerDetailedPlayerRoster`). Matchcenter detail page composes Aufgebot when the gate passes; otherwise legacy Teilnehmer list remains.
+
+### UAT R5 loading (Teilnehmer vs Aufgebot)
+
+Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[matchId]/match-squad`. A brief «Aufgebot wird geladen…» while Teilnehmer was already visible was **transient timing** in R4 screenshots, not a stuck state. Client provides **Erneut versuchen** on failure (R2).
 
 ### Tests
 
 - `lib/match-squad/__tests__/match-availability-presentation.test.ts`
 - `lib/match-squad/__tests__/match-squad-counts.test.ts`
 - Extended `match-squad-service` / `match-squad-combined-states` for MAYBE presentation
+
+---
+
+## 26. 01A Human UAT R5 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R5)
+
+**Status:** `IN_PROGRESS` — integrated workspace; duplicate Teilnehmer roster removed for MATCH.
+
+| Item | Result |
+|------|--------|
+| R4 badge visual PASS | Retained — no revert |
+| Duplicate Teilnehmer + Aufgebot roster | **Fixed** — Aufgebot primary |
+| Match-only consolidation | `shouldRenderMatchTeilnehmerDetailedPlayerRoster` |
+| Loading diagnosis | Transient client fetch; retry on error |
+| Responsive | Desktop / tablet / mobile — verify on preview |
+
+### Tests (R5)
+
+- `lib/match-squad/__tests__/integrated-workspace.test.ts`
+- Unchanged R4 match-squad presentation / combined-state tests

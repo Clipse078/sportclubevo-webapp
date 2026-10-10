@@ -13,6 +13,10 @@ import PlanningEditorParticipantsSection from "@/components/admin/shared/plannin
 import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import MatchSquadSection from "@/components/admin/matchcenter/MatchSquadSection";
+import {
+  resolveIntegratedMatchSquadWorkspace,
+  shouldRenderMatchTeilnehmerDetailedPlayerRoster,
+} from "@/lib/match-squad/integrated-workspace";
 import { loadMatchPlanningParticipants } from "@/lib/planning/load-match-planning-participants";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import {
@@ -157,23 +161,42 @@ export default async function MatchcenterDetailPage({
 
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
-  const participantPresentation = await loadMatchPlanningParticipants(tenantContext.id, {
-    teamId: match.teamId,
-    seasonId: match.seasonId,
-    matchEventId: match.id,
+  const userId = session.user?.effectiveUserId ?? session.user?.id ?? "";
+  const integratedMatchSquadWorkspace = userId
+    ? await resolveIntegratedMatchSquadWorkspace({
+        tenantId: tenantContext.id,
+        tenantKey: tenantContext.key,
+        userId,
+        matchEventId: match.id,
+      })
+    : { available: false as const };
+
+  const showTeilnehmerDetailedPlayerRoster = shouldRenderMatchTeilnehmerDetailedPlayerRoster({
+    eventKind: "MATCH",
+    integratedMatchSquadWorkspaceAvailable: integratedMatchSquadWorkspace.available,
   });
 
-  const participantsSection = (
+  const participantPresentation = showTeilnehmerDetailedPlayerRoster
+    ? await loadMatchPlanningParticipants(tenantContext.id, {
+        teamId: match.teamId,
+        seasonId: match.seasonId,
+        matchEventId: match.id,
+      })
+    : null;
+
+  const participantsSection = showTeilnehmerDetailedPlayerRoster ? (
     <PlanningEditorParticipantsSection
       headingId="spiele-edit-participants-heading"
       testId="spiele-edit-participants-section"
       persisted
     >
-      <PlanningParticipantsList people={participantPresentation.people} />
+      <PlanningParticipantsList people={participantPresentation?.people ?? []} />
     </PlanningEditorParticipantsSection>
-  );
+  ) : null;
 
-  const matchSquadSection = <MatchSquadSection matchId={match.id} />;
+  const matchSquadSection = integratedMatchSquadWorkspace.available ? (
+    <MatchSquadSection matchId={match.id} />
+  ) : null;
 
   const collaborationSection = (
     <PlanningEditorCollaborationSection
