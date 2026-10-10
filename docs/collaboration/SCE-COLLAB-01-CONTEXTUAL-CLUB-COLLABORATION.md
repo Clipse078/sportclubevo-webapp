@@ -8,9 +8,9 @@
 | **SCE-COLLAB-01B** (Matches + Tournaments) | **CLOSED** (PR [#811](https://github.com/Clipse078/sportclubevo-webapp/pull/811) → STAGE; R7 closure 2026-10-09) |
 | **SCE-PEOPLE-TEAM-ONBOARDING-01** (operational roster → communication eligibility) | **FUTURE / PLANNED** |
 | **SCE-COLLAB-01C** (Club Events / broader activity adapters) | **CLOSED** (PR [#812](https://github.com/Clipse078/sportclubevo-webapp/pull/812) → STAGE; merge `a03c0f9d5f03c767b1650028ef1e47eec6c8510a` 2026-10-09) |
-| **SCE-COLLAB-01D** (Multi-activity impact) | **IMPLEMENTED / HUMAN_UAT_R1_RETEST_PENDING** (R1 remediation after >60s save + historical scope; see `SCE-COLLAB-01D.md`) |
+| **SCE-COLLAB-01D** (Multi-activity impact) | **IMPLEMENTED / HUMAN_UAT_R2_RETEST_PENDING** (R1 save/history PASS; R2 composer prepare + semantic message; see `SCE-COLLAB-01D.md`) |
 | **TRAINER-SPIELERBOERSE-01** | FUTURE (consumer of contextual collaboration seams) |
-| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B + 01C closed; 01D Human UAT R1 retest pending) |
+| SCE-COLLAB-01 (full roadmap) | **IN_PROGRESS** (01A + 01B + 01C closed; 01D Human UAT R2 retest pending) |
 
 ## Product principle
 
