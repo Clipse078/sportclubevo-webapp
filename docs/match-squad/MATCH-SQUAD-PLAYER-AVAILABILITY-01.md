@@ -756,7 +756,7 @@ Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[
 | **Regression battery** | **PASS** (closure run — see agent report) |
 | **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
 | **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
-| **01B** | **IN PROGRESS** (branch `cursor/match-squad-player-availability-01b-availability-collection`) |
+| **01B** | **CLOSED** — PR **#821** → merged to `STAGE` (see §30) |
 | **01C implementation** | **NOT STARTED** (architecture locked §28) |
 
 ### Canonical 01A product model (locked)
@@ -899,7 +899,7 @@ Evaluate whether the domain can represent at least: player; source TeamSeason (S
 
 | 01B purpose | Availability collection & player/guardian UX — “Can / will the player participate?” |
 | Persistence | Continue building on **`ParticipationResponse`** unless 01B diagnosis proves a concrete gap |
-| In scope (examples) | Availability request, response, outstanding response, deadline, reminder/follow-up, player/guardian UX, authorized trainer recording offline response |
+| In scope (examples) | Availability request, response, outstanding response, deadline, reminder/follow-up, player/guardian UX; trainer **read-only** availability in Match Squad (R2.2 — no trainer row write) |
 | **01B must NOT** | Create `PlayerRelease`; expose players to other teams because they are available; interpret non-selection as release; create cross-team discovery; create borrowing requests; equate `available + not selected` with release |
 
 ### 01D direction (refined)
@@ -1076,6 +1076,7 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 | **API** | `POST /api/matchcenter/[matchId]/participation-response` returns **403** (`MATCH_AVAILABILITY_TRAINER_WRITE_DISABLED`); unrelated participation routes unchanged. |
 | **Alignment** | Fixed grid tracks `minmax(0,1fr) · 12rem · 8.5rem`; **always** render player · status · action cells (empty action when no squad button). |
 | **Sporting actions** | **Aufbieten** = green/success semantic button; **Entfernen** = red/danger semantic button. |
+| **PO Human UAT** | **PASS** (2026-10-10) — controlled match `cmrzhj3je006a04kwhbepxvdz` |
 
 ### Match lifecycle
 
@@ -1084,3 +1085,43 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 | Upcoming SCHEDULED/LIVE | Allowed when due set | Allowed |
 | CANCELLED / past | Blocked with actionable DE message | Read-only / blocked |
 | SFV sync | Provider match facts only — does not overwrite club `ParticipationResponse` or deadline fields in this slice |
+
+---
+
+## 30. 01B closure (MATCH_SQUAD_PLAYER_AVAILABILITY-01B)
+
+| Field | Value |
+|-------|-------|
+| **01B status** | **CLOSED** |
+| **Implementation PR** | **#821** → merged to `STAGE` |
+| **Branch** | `cursor/match-squad-player-availability-01b-availability-collection` |
+| **STAGE base (pre-01B)** | `5de6fe1adf61830add419f15838f32477dbee0d2` |
+| **Feature HEAD (pre-merge)** | `363cd297b3a554506991f6b7cf1b6b679f5f5965` |
+| **Merge commit** | Recorded at merge time in agent closure report |
+| **Human UAT — initial delivery** | Delivered vertical slice (trainer proxy era — superseded) |
+| **Human UAT R1** | **PASS** — ownership correction (trainer proxy wording; domain provenance retained) |
+| **Human UAT R2** | **PASS** direction — row list, compact request summary (PO rejected card grid) |
+| **Human UAT R2.1** | **FAIL** — status column alignment + trainer row controls still present |
+| **Human UAT R2.2** | **PASS** — read-only trainer availability, shared status axis, sporting action semantics |
+| **Final PO Human UAT** | **PASS** — match `cmrzhj3je006a04kwhbepxvdz` |
+| **Regression battery** | **PASS** for 01B scope; known baseline failures unchanged (see closure report) |
+| **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| **Test data** | SCE Testspieler 01–06 **retained** for 01C–01F; `TEST_DATA_REMAINING = 0` still required at parent module closure |
+| **01C implementation** | **NOT STARTED** (architecture locked §28 / PR #820) |
+
+### Final 01B product rules (locked)
+
+| Rule | Detail |
+|------|--------|
+| **Availability owner** | Authorized **player-side** account writes `ParticipationResponse` for the Match |
+| **Trainer Match Squad** | **Read-only** availability; no row provenance; no response edit/reset |
+| **Trainer match-level** | May **request** availability (`participationResponseDueAt`) and run supported **reminder** workflow |
+| **No response** | **Offen** (`OPEN` / missing row) |
+| **MAYBE** | **Unsicher** — counts as a response; **not** outstanding for NOT_RESPONDED reminders |
+| **Match selection** | Independent — availability writes do not select; selection does not fabricate responses |
+| **Presentation** | One player per row; full name; shared availability column axis; green **Aufbieten**; red **Entfernen** |
+| **Trainer write route** | `POST /api/matchcenter/[matchId]/participation-response` → **403** `MATCH_AVAILABILITY_TRAINER_WRITE_DISABLED` (explicit guard — option **A**) |
+
+### UAT history preserved
+
+R1–R2.2 iterations (including failed R2.1 alignment attempt and superseded trainer-proxy UX) remain documented in §29 — not rewritten.
