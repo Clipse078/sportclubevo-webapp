@@ -6,6 +6,12 @@ import MatchAvailabilityStatusBadge, {
   MatchAvailabilityConflictBadge,
 } from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";
 import MatchAvailabilityTrainerRecordMenu from "@/components/admin/matchcenter/MatchAvailabilityTrainerRecordMenu";
+import {
+  MATCH_SQUAD_PLAYER_ROW_ACTIONS_COLUMN_CLASS,
+  MATCH_SQUAD_PLAYER_ROW_GRID_CLASS,
+  MATCH_SQUAD_PLAYER_ROW_LAYOUT,
+  MATCH_SQUAD_PLAYER_ROW_STATUS_COLUMN_CLASS,
+} from "@/components/admin/matchcenter/match-squad-player-row-layout";
 import { getMatchSquadRowProvenanceLabel } from "@/lib/match-squad/match-squad-provenance-presentation";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
@@ -36,10 +42,11 @@ export default function MatchSquadPlayerRow({
 
   return (
     <li
-      className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-4"
+      className={MATCH_SQUAD_PLAYER_ROW_GRID_CLASS}
       data-testid={`match-squad-player-${player.personId}`}
+      data-layout={MATCH_SQUAD_PLAYER_ROW_LAYOUT}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <div className="shrink-0 scale-[0.78] origin-left">
           <AdminAvatar name={player.displayName} size="sm" />
         </div>
@@ -58,18 +65,20 @@ export default function MatchSquadPlayerRow({
       </div>
 
       <div
-        className="flex min-w-0 flex-col gap-1 sm:w-52 sm:shrink-0"
+        className={MATCH_SQUAD_PLAYER_ROW_STATUS_COLUMN_CLASS}
         data-testid={`match-squad-availability-${player.personId}`}
+        data-column="status"
       >
         <MatchAvailabilityStatusBadge
           label={player.availabilityLabel}
           tone={player.presentationTone}
           icon={player.presentationIcon}
           size="md"
+          className="max-w-full justify-start"
         />
         {operationalProvenance ? (
           <span
-            className="text-xs text-[var(--muted)]"
+            className="text-left text-xs text-[var(--muted)]"
             data-testid={`match-squad-provenance-${player.personId}`}
           >
             {operationalProvenance}
@@ -80,7 +89,10 @@ export default function MatchSquadPlayerRow({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+      <div
+        className={MATCH_SQUAD_PLAYER_ROW_ACTIONS_COLUMN_CLASS}
+        data-column="actions"
+      >
         {canManageAvailability ? (
           <MatchAvailabilityTrainerRecordMenu
             matchId={matchId}

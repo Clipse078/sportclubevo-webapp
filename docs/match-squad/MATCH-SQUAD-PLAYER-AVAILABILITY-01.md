@@ -1055,6 +1055,15 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 | **SPORTING ACTION = PRIMARY ACTION** | Aufbieten / Entfernen visually primary; Rückmeldung eintragen/verwalten secondary. |
 | **REQUEST CONFIGURATION = SECONDARY / COLLAPSIBLE** | Summary line on workspace; deadline/reminder fields only behind «Rückmeldung anfragen» / «Verwalten». |
 
+### 01B Human UAT R2.1 — availability column alignment (2026-10-10)
+
+| Topic | Decision |
+|-------|----------|
+| **R2 direction** | Accepted — row list, name priority, compact request summary retained. |
+| **Remaining finding** | Availability badge left edge misaligned between Aufgeboten and Weitere Kaderspieler (e.g. «Nicht verfügbar» shifted right when Aufbieten absent). |
+| **Root cause** | Flex row let action-column width shift the status column start. |
+| **Correction** | Shared CSS grid on every `MatchSquadPlayerRow`: player `minmax(0,1fr)` · fixed status column · actions `auto`; status content left-aligned; trainer proxy line stacks below badge without horizontal offset. |
+
 ### Match lifecycle
 
 | State | Request / remind | Respond |
