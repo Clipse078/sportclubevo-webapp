@@ -583,3 +583,68 @@ Recorded in agent final report after test battery + `NODE_OPTIONS=--max-old-spac
 ### 01A closure
 
 **Not CLOSED** until Human UAT matrix (§11) passes on preview after STAGE migration + redeployed head with client/API hardening.
+
+---
+
+## 24. 01A Human UAT R3 (MATCH_SQUAD_PLAYER_AVAILABILITY-01A-UAT-R3)
+
+**Status:** `IN_PROGRESS` — R2 JSON blocker **PASS** (product owner); R3 empty-roster copy fixed; populated matrix exercised on STAGE data + SCE test roster.
+
+### UAT R2 (recorded)
+
+| Item | Result |
+|------|--------|
+| Original match `cmrzhj0mx005q04kwtr9etuk6` | Aufgebot loads; no JSON parse error |
+| Empty squad counts | Kader 0 / Verfügbar 0 / … / Aufgeboten 0 |
+| **UAT-R2 JSON BLOCKER** | **PASS** |
+
+### UAT R3-01 — zero roster wording
+
+| Before | After (rosterTotal = 0) |
+|--------|-------------------------|
+| «Alle aktiven Kaderspieler sind aufgeboten.» | «Für dieses Team sind aktuell keine Kaderspieler im Saison-Kader erfasst.» |
+
+When `rosterTotal > 0` and `remaining.length === 0`: «Alle Kaderspieler sind aufgeboten.» (no «aktive» qualifier).
+
+Regression: `lib/match-squad/__tests__/remaining-empty-copy.test.ts`.
+
+### Populated UAT match (STAGE)
+
+| Field | Value |
+|-------|-------|
+| `eventId` | `cmrzhj3je006a04kwhbepxvdz` |
+| Team | FC Allschwil Junioren B1 |
+| `teamSeasonId` | `cmsoczv2t000504juhvod5hi9` |
+| Match start | 2026-10-17T13:00:00Z |
+| Structural roster | 6 (5 ACTIVE, 1 INJURED, 1 ABSENT) — SCE Testspieler 01–06 |
+| Pre-existing FCA roster elsewhere | Senioren 40+ only (1 ACTIVE); no natural ≥5 roster without test data |
+
+**Test data:** fictional players authorized — see `docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`; seeded via `scripts/match-squad-01a-uat-seed-test-data.ts` (`addPlayerToTeamSeason`, `respondToParticipation`).
+
+### Availability distribution (initial seed)
+
+| AVAILABLE | UNAVAILABLE | UNKNOWN | Total |
+|-----------|-------------|---------|-------|
+| 2 | 1 | 3 | 6 |
+
+Reconciles with structural Kader count.
+
+### Domain verification (STAGE, service layer)
+
+- Roster filter: ACTIVE + INJURED + ABSENT; INACTIVE/ARCHIVED excluded (`currentSeasonRosterPlayerSquadMemberWhere`).
+- UNAVAILABLE unselected: `canSelect === false` (Testspieler 03).
+- Selected + response flipped to NO: `availabilityConflict === true`, selection retained (Testspieler 02 scenario).
+- Remove selection: participation NO unchanged.
+- No `PlayerRelease` model in schema (01A guard N/A at persistence).
+
+### Human browser UAT (agent)
+
+Vercel preview deployment protection blocked unattended browser pass; manual checklist artifacts under `/opt/cursor/artifacts/` (see agent UAT package). Product owner Human UAT R2 on preview remains authoritative for JSON fix.
+
+### Conflict UX (R3)
+
+Selected + unavailable: secondary line uses **«Nicht verfügbar – Aufgebot prüfen»** with warning emphasis (not grey-only technical text).
+
+### 01A status
+
+`HUMAN_UAT_PENDING` — closure pending full human matrix on preview head including R3 empty-roster copy after deploy.
