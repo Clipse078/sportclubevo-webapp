@@ -994,7 +994,7 @@ Historical UAT records (01A R2–R5) that describe what was tested at the time r
 | `NEW_REQUEST_METADATA_REQUIRED` | **NO** — active request = `Event.participationResponseDueAt` (`isParticipationResponseRequested`) |
 | `EXISTING_COMM_REMINDER_REUSABLE` | **YES** — SCE-SPIELBETRIEB-AUDIENCE-01 + `sendEventNoResponseSmartReminder` |
 | `GUARDIAN_PROXY_REUSABLE` | **YES** — `assertActorCanRespondForPerson` + COMM-18 expansion |
-| `TRAINER_OFFLINE_RESPONSE_REUSABLE` | **YES** — `responseSource = TRAINER` via matchcenter participation-response API |
+| `TRAINER_OFFLINE_RESPONSE_REUSABLE` | **NO (R2.2)** — Match Squad trainer does not write `ParticipationResponse`; historical 01B proxy API disabled for MATCH |
 
 ### ParticipationResponse (confirmed)
 
@@ -1017,7 +1017,7 @@ Match-relative `participationResponseDueAt` on `Event` (timezone via tenant). No
 
 | Surface | Behaviour |
 |---------|-----------|
-| **Trainer / Aufgebot** | Compact `MatchAvailabilityCollectionPanel` summary + dialog «Verwalten»; full-width `MatchSquadPlayerRow` lists; trainer «Rückmeldung eintragen / verwalten» proxy menu; Offen filter chip |
+| **Trainer / Aufgebot** | Compact `MatchAvailabilityCollectionPanel` summary + dialog «Verwalten»; read-only availability on `MatchSquadPlayerRow`; squad selection only (Aufbieten/Entfernen); Offen filter chip |
 | **Player / guardian** | Match wording on activity detail + Meine Aufgaben inline (`Verfügbar` / `Nicht verfügbar` / `Unsicher`) when request active |
 | **APIs** | Reuse `PATCH …/participation-request`; new `POST …/participation-response`, `POST …/participation-reminder`; squad GET includes `availabilityCollection` meta |
 
@@ -1061,8 +1061,21 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 |-------|----------|
 | **R2 direction** | Accepted — row list, name priority, compact request summary retained. |
 | **Remaining finding** | Availability badge left edge misaligned between Aufgeboten and Weitere Kaderspieler (e.g. «Nicht verfügbar» shifted right when Aufbieten absent). |
-| **Root cause** | Flex row let action-column width shift the status column start. |
-| **Correction** | Shared CSS grid on every `MatchSquadPlayerRow`: player `minmax(0,1fr)` · fixed status column · actions `auto`; status content left-aligned; trainer proxy line stacks below badge without horizontal offset. |
+| **Attempted fix** | Per-row CSS grid with `minmax(0,1fr) · 11rem · auto` and shared row classes. |
+| **Why visual still failed** | Each section is its own `<ul>` grid; the `auto` action track sized to the **section’s** widest action cell (Entfernen + trainer menu vs empty/narrow). Different action-track widths moved the status column start between Aufgeboten and Weitere Kaderspieler. |
+| **PO result** | FAIL — alignment not solved; trainer row controls still present. |
+
+### 01B Human UAT R2.2 — read-only trainer availability + alignment + actions (2026-10-10)
+
+| Topic | Decision |
+|-------|----------|
+| **Trainer availability** | **Read-only** in Match Squad — request/remind at match level only; no row-level response edit/reset. |
+| **Who writes** | Authorized player-side account (player, parent, guardian, …) via existing personal/participation flows. |
+| **No response** | Stays **Offen** — no trainer proxy recording in this workflow. |
+| **UI removed** | «Rückmeldung eintragen/verwalten/zurücksetzen», all row provenance («Vom Trainer/Staff/Spieler/Eltern …»). |
+| **API** | `POST /api/matchcenter/[matchId]/participation-response` returns **403** (`MATCH_AVAILABILITY_TRAINER_WRITE_DISABLED`); unrelated participation routes unchanged. |
+| **Alignment** | Fixed grid tracks `minmax(0,1fr) · 12rem · 8.5rem`; **always** render player · status · action cells (empty action when no squad button). |
+| **Sporting actions** | **Aufbieten** = green/success semantic button; **Entfernen** = red/danger semantic button. |
 
 ### Match lifecycle
 

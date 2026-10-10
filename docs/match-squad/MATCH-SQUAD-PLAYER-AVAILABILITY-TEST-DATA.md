@@ -30,6 +30,10 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
+## 01B Human UAT R2.2 (2026-10-10)
+
+Some retained UAT `ParticipationResponse` rows may still carry **historical** `responseSource = TRAINER` or `STAFF` from superseded 01B UAT iterations (proxy recording). **Do not SQL-rewrite** for prettier screenshots. Match Squad UI shows canonical status only (Verfügbar / Nicht verfügbar / Unsicher / Offen). **FINAL_MODULE_CLEANUP_REQUIRED:** `TEST_DATA_REMAINING = 0` at parent module closure (unchanged).
+
 **FINAL_MODULE_CLEANUP_REQUIRED:** remove Persons + squad memberships + module-created participation rows; never remove real FC Allschwil roster data.
 
 ## 01B Human UAT R1 (2026-10-10)

@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @deprecated R2.2 — not mounted in Match Squad. Match availability writes use
+ * authorized player-side flows only; POST …/participation-response is disabled.
+ */
+
 import { useState, useTransition } from "react";
 import type { ParticipationResponseStatus } from "@prisma/client";
 import MatchAvailabilityStatusBadge from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";

@@ -274,9 +274,6 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
                 action="remove"
                 canMutate={canMutate}
                 onToggle={togglePerson}
-                matchId={matchId}
-                canManageAvailability={canManageAvailability}
-                onAvailabilityRecorded={() => void load()}
               />
             )}
           </section>
@@ -304,9 +301,6 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
                 action="add"
                 canMutate={canMutate}
                 onToggle={togglePerson}
-                matchId={matchId}
-                canManageAvailability={canManageAvailability}
-                onAvailabilityRecorded={() => void load()}
               />
             )}
           </section>

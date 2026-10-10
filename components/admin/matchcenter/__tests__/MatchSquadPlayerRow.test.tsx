@@ -2,19 +2,19 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 import MatchSquadPlayerRow from "../MatchSquadPlayerRow";
 import {
+  MATCH_SQUAD_PLAYER_ROW_ACTION_COLUMN_CLASS,
+  MATCH_SQUAD_PLAYER_ROW_AUFBIETEN_CLASS,
+  MATCH_SQUAD_PLAYER_ROW_ENTFERNEN_CLASS,
   MATCH_SQUAD_PLAYER_ROW_GRID_CLASS,
   MATCH_SQUAD_PLAYER_ROW_LAYOUT,
+  MATCH_SQUAD_PLAYER_ROW_PLAYER_COLUMN_CLASS,
   MATCH_SQUAD_PLAYER_ROW_STATUS_COLUMN_CLASS,
 } from "../match-squad-player-row-layout";
-
-vi.mock("@/components/admin/matchcenter/MatchAvailabilityTrainerRecordMenu", () => ({
-  default: () => <div data-testid="trainer-record-menu" />,
-}));
 
 function player(
   overrides: Partial<MatchSquadPlayerPresentation> = {},
@@ -34,8 +34,8 @@ function player(
     presentationIcon: "circle",
     participationStatus: null,
     participationNote: null,
-    responseSource: null,
-    responseProvenanceLabel: "Vom Spieler",
+    responseSource: "STAFF",
+    responseProvenanceLabel: "Vom Staff eingetragen",
     selected: false,
     availabilityConflict: false,
     staleRosterSelection: false,
@@ -45,17 +45,32 @@ function player(
   };
 }
 
+function expectRowGeometry(container: HTMLElement) {
+  const row = container.querySelector(`[data-layout="${MATCH_SQUAD_PLAYER_ROW_LAYOUT}"]`);
+  expect(row).toHaveClass(...MATCH_SQUAD_PLAYER_ROW_GRID_CLASS.split(" "));
+
+  expect(container.querySelector('[data-column="player"]')).toHaveClass(
+    ...MATCH_SQUAD_PLAYER_ROW_PLAYER_COLUMN_CLASS.split(" "),
+  );
+  expect(container.querySelector('[data-column="status"]')).toHaveClass(
+    ...MATCH_SQUAD_PLAYER_ROW_STATUS_COLUMN_CLASS.split(" "),
+  );
+  expect(container.querySelector('[data-column="action"]')).toHaveClass(
+    ...MATCH_SQUAD_PLAYER_ROW_ACTION_COLUMN_CLASS.split(" "),
+  );
+}
+
 describe("MatchSquadPlayerRow", () => {
-  it("renders full player name without hiding normal provenance labels", () => {
+  it("renders full player name and no availability provenance or response actions", () => {
     render(
       <MatchSquadPlayerRow
-        player={player({ responseSource: "PARENT", responseProvenanceLabel: "Von Eltern bestätigt" })}
+        player={player({
+          responseSource: "PARENT",
+          responseProvenanceLabel: "Von Eltern bestätigt",
+        })}
         action="add"
         onAction={() => {}}
         disabled={false}
-        matchId="m1"
-        canManageAvailability
-        onAvailabilityRecorded={() => {}}
       />,
     );
 
@@ -64,78 +79,93 @@ describe("MatchSquadPlayerRow", () => {
     );
     expect(screen.queryByTestId("match-squad-provenance-p1")).not.toBeInTheDocument();
     expect(screen.queryByText("Von Eltern bestätigt")).not.toBeInTheDocument();
-  });
-
-  it("shows trainer proxy indicator when responseSource is TRAINER", () => {
-    render(
-      <MatchSquadPlayerRow
-        player={player({
-          responseSource: "TRAINER",
-          availabilityLabel: "Unsicher",
-          presentationStatus: "MAYBE",
-          presentationTone: "warning",
-          presentationIcon: "help",
-        })}
-        action="remove"
-        onAction={() => {}}
-        disabled={false}
-        matchId="m1"
-        canManageAvailability
-        onAvailabilityRecorded={() => {}}
-      />,
-    );
-
-    expect(screen.getByTestId("match-squad-provenance-p1")).toHaveTextContent(
-      "Vom Trainer eingetragen",
-    );
-  });
-
-  it("shows conflict badge for selected unavailable players", () => {
-    render(
-      <MatchSquadPlayerRow
-        player={player({
-          availability: "UNAVAILABLE",
-          availabilityLabel: "Nicht verfügbar",
-          presentationStatus: "UNAVAILABLE",
-          presentationTone: "danger",
-          presentationIcon: "x",
-          availabilityConflict: true,
-          canSelect: false,
-        })}
-        action="remove"
-        onAction={() => {}}
-        disabled={false}
-        matchId="m1"
-        canManageAvailability={false}
-        onAvailabilityRecorded={() => {}}
-      />,
-    );
-
-    expect(screen.getByTestId("match-squad-conflict-p1")).toHaveTextContent("Aufgebot prüfen");
-    expect(screen.getByTestId("match-squad-remove-p1")).toBeInTheDocument();
+    expect(screen.queryByText("Vom Staff eingetragen")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rückmeldung verwalten")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rückmeldung eintragen")).not.toBeInTheDocument();
   });
 
   it.each([
     {
-      label: "OPEN",
+      caseId: "selected-open",
+      action: "remove" as const,
       overrides: {
         availabilityLabel: "Offen",
         presentationStatus: "OPEN" as const,
         presentationTone: "muted" as const,
         presentationIcon: "circle" as const,
+        canRemove: true,
       },
     },
     {
-      label: "YES",
+      caseId: "selected-yes",
+      action: "remove" as const,
       overrides: {
         availabilityLabel: "Verfügbar",
         presentationStatus: "AVAILABLE" as const,
         presentationTone: "success" as const,
         presentationIcon: "check" as const,
+        canRemove: true,
       },
     },
     {
-      label: "NO",
+      caseId: "selected-maybe",
+      action: "remove" as const,
+      overrides: {
+        availabilityLabel: "Unsicher",
+        presentationStatus: "MAYBE" as const,
+        presentationTone: "warning" as const,
+        presentationIcon: "help" as const,
+        canRemove: true,
+      },
+    },
+    {
+      caseId: "selected-no",
+      action: "remove" as const,
+      overrides: {
+        availabilityLabel: "Nicht verfügbar",
+        presentationStatus: "UNAVAILABLE" as const,
+        presentationTone: "danger" as const,
+        presentationIcon: "x" as const,
+        availabilityConflict: true,
+        canRemove: true,
+      },
+    },
+    {
+      caseId: "remaining-open",
+      action: "add" as const,
+      overrides: {
+        availabilityLabel: "Offen",
+        presentationStatus: "OPEN" as const,
+        presentationTone: "muted" as const,
+        presentationIcon: "circle" as const,
+        canSelect: true,
+      },
+    },
+    {
+      caseId: "remaining-yes",
+      action: "add" as const,
+      overrides: {
+        availabilityLabel: "Verfügbar",
+        presentationStatus: "AVAILABLE" as const,
+        presentationTone: "success" as const,
+        presentationIcon: "check" as const,
+        canSelect: true,
+      },
+    },
+    {
+      caseId: "remaining-maybe",
+      action: "add" as const,
+      overrides: {
+        availabilityLabel: "Unsicher",
+        presentationStatus: "MAYBE" as const,
+        presentationTone: "warning" as const,
+        presentationIcon: "help" as const,
+        canSelect: true,
+      },
+    },
+    {
+      caseId: "remaining-no",
+      action: "add" as const,
       overrides: {
         availabilityLabel: "Nicht verfügbar",
         presentationStatus: "UNAVAILABLE" as const,
@@ -144,109 +174,86 @@ describe("MatchSquadPlayerRow", () => {
         canSelect: false,
       },
     },
-    {
-      label: "MAYBE",
-      overrides: {
-        availabilityLabel: "Unsicher",
-        presentationStatus: "MAYBE" as const,
-        presentationTone: "warning" as const,
-        presentationIcon: "help" as const,
-      },
-    },
-  ])("uses shared grid row geometry for $label", ({ overrides }) => {
-    const { container, unmount } = render(
+  ])("uses identical three-column geometry for $caseId", ({ action, overrides }) => {
+    const { container } = render(
       <MatchSquadPlayerRow
         player={player(overrides)}
-        action="add"
+        action={action}
         onAction={() => {}}
         disabled={false}
-        matchId="m1"
-        canManageAvailability
-        onAvailabilityRecorded={() => {}}
       />,
     );
 
-    const row = container.querySelector(`[data-layout="${MATCH_SQUAD_PLAYER_ROW_LAYOUT}"]`);
-    expect(row).toHaveClass(...MATCH_SQUAD_PLAYER_ROW_GRID_CLASS.split(" "));
-
-    const statusColumn = screen.getByTestId("match-squad-availability-p1");
-    expect(statusColumn).toHaveAttribute("data-column", "status");
-    expect(statusColumn).toHaveClass(...MATCH_SQUAD_PLAYER_ROW_STATUS_COLUMN_CLASS.split(" "));
-
-    unmount();
+    expectRowGeometry(container);
+    expect(container.querySelector('[data-column="action"]')).toBeInTheDocument();
   });
 
-  it("uses identical row geometry for selected remove vs remaining without Aufbieten", () => {
-    const selected = render(
+  it("styles Aufbieten as positive and Entfernen as destructive", () => {
+    const add = render(
+      <MatchSquadPlayerRow
+        player={player({ canSelect: true })}
+        action="add"
+        onAction={() => {}}
+        disabled={false}
+      />,
+    );
+    expect(add.getByTestId("match-squad-add-p1")).toHaveClass(
+      ...MATCH_SQUAD_PLAYER_ROW_AUFBIETEN_CLASS.split(" "),
+    );
+    add.unmount();
+
+    render(
+      <MatchSquadPlayerRow
+        player={player({ canRemove: true })}
+        action="remove"
+        onAction={() => {}}
+        disabled={false}
+      />,
+    );
+    expect(screen.getByTestId("match-squad-remove-p1")).toHaveClass(
+      ...MATCH_SQUAD_PLAYER_ROW_ENTFERNEN_CLASS.split(" "),
+    );
+  });
+
+  it("keeps empty action cell for unavailable remaining players", () => {
+    const { container } = render(
       <MatchSquadPlayerRow
         player={player({
-          availabilityLabel: "Verfügbar",
-          presentationStatus: "AVAILABLE",
-          presentationTone: "success",
-          presentationIcon: "check",
+          availabilityLabel: "Nicht verfügbar",
+          presentationStatus: "UNAVAILABLE",
+          presentationTone: "danger",
+          presentationIcon: "x",
+          canSelect: false,
+        })}
+        action="add"
+        onAction={() => {}}
+        disabled={false}
+      />,
+    );
+
+    const actionCell = container.querySelector('[data-column="action"]');
+    expect(actionCell).toBeInTheDocument();
+    expect(within(actionCell as HTMLElement).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("shows conflict badge and Entfernen for selected unavailable", () => {
+    render(
+      <MatchSquadPlayerRow
+        player={player({
+          availabilityLabel: "Nicht verfügbar",
+          presentationStatus: "UNAVAILABLE",
+          presentationTone: "danger",
+          presentationIcon: "x",
+          availabilityConflict: true,
+          canRemove: true,
         })}
         action="remove"
         onAction={() => {}}
         disabled={false}
-        matchId="m1"
-        canManageAvailability
-        onAvailabilityRecorded={() => {}}
       />,
     );
 
-    const remaining = render(
-      <MatchSquadPlayerRow
-        player={player({
-          availabilityLabel: "Nicht verfügbar",
-          presentationStatus: "UNAVAILABLE",
-          presentationTone: "danger",
-          presentationIcon: "x",
-          canSelect: false,
-        })}
-        action="add"
-        onAction={() => {}}
-        disabled={false}
-        matchId="m1"
-        canManageAvailability
-        onAvailabilityRecorded={() => {}}
-      />,
-    );
-
-    const selectedRow = selected.container.querySelector(
-      `[data-layout="${MATCH_SQUAD_PLAYER_ROW_LAYOUT}"]`,
-    );
-    const remainingRow = remaining.container.querySelector(
-      `[data-layout="${MATCH_SQUAD_PLAYER_ROW_LAYOUT}"]`,
-    );
-
-    expect(selectedRow?.className).toBe(remainingRow?.className);
-
-    const selectedStatus = selected.container.querySelector('[data-column="status"]');
-    const remainingStatus = remaining.container.querySelector('[data-column="status"]');
-    expect(selectedStatus?.className).toBe(remainingStatus?.className);
-  });
-
-  it("omits Aufbieten when player cannot be selected", () => {
-    render(
-      <MatchSquadPlayerRow
-        player={player({
-          availability: "UNAVAILABLE",
-          availabilityLabel: "Nicht verfügbar",
-          presentationStatus: "UNAVAILABLE",
-          presentationTone: "danger",
-          presentationIcon: "x",
-          canSelect: false,
-        })}
-        action="add"
-        onAction={() => {}}
-        disabled={false}
-        matchId="m1"
-        canManageAvailability={false}
-        onAvailabilityRecorded={() => {}}
-      />,
-    );
-
-    expect(screen.queryByTestId("match-squad-add-p1")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("match-squad-unavailable-action-p1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("match-squad-conflict-p1")).toHaveTextContent("Aufgebot prüfen");
+    expect(screen.getByTestId("match-squad-remove-p1")).toBeInTheDocument();
   });
 });

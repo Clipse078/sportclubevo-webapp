@@ -10,9 +10,6 @@ type Props = {
   action: MatchSquadPlayerRowAction;
   onToggle: (personId: string, select: boolean) => void;
   canMutate: boolean;
-  matchId: string;
-  canManageAvailability: boolean;
-  onAvailabilityRecorded: () => void;
   listTestId?: string;
 };
 
@@ -21,9 +18,6 @@ export default function MatchSquadPlayerList({
   action,
   onToggle,
   canMutate,
-  matchId,
-  canManageAvailability,
-  onAvailabilityRecorded,
   listTestId,
 }: Props) {
   return (
@@ -43,9 +37,6 @@ export default function MatchSquadPlayerList({
           onAction={() =>
             onToggle(player.personId, action === "add")
           }
-          matchId={matchId}
-          canManageAvailability={canManageAvailability}
-          onAvailabilityRecorded={onAvailabilityRecorded}
         />
       ))}
     </ul>
