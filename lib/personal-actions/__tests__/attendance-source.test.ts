@@ -109,7 +109,7 @@ describe("AUFGABEN-05 — attendance PersonalAction source", () => {
 
     const actions = await attendancePersonalActionSource.loadActionable(ctx);
     expect(actions[0].actionKind).toBe("PARTICIPATION_RESPONSE");
-    expect(actions[0].inlineActions?.participation?.allowedResponses).toEqual(["YES", "NO"]);
+    expect(actions[0].inlineActions?.participation?.allowedResponses).toEqual(["YES", "NO", "MAYBE"]);
   });
 
   it("C — runs without tasks.view permission keys", async () => {

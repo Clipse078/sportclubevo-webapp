@@ -51,8 +51,8 @@ function mapCandidateToPersonalAction(
         eventKind: candidate.eventKind,
         trainingSessionId: candidate.trainingSessionId,
         eventId: candidate.eventId,
-        /** Domain supports MAYBE; member RSVP surfaces omit Unsicher until a shared flow exists. */
-        allowedResponses: ["YES", "NO"],
+        allowedResponses:
+          candidate.eventKind === "MATCH" ? (["YES", "NO", "MAYBE"] as const) : (["YES", "NO"] as const),
       },
     },
   };

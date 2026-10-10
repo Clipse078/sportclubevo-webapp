@@ -51,6 +51,8 @@ function player(
     presentationIcon: "circle",
     participationStatus: null,
     participationNote: null,
+    responseSource: null,
+    responseProvenanceLabel: null,
     selected: false,
     availabilityConflict: false,
     staleRosterSelection: false,

@@ -756,7 +756,8 @@ Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[
 | **Regression battery** | **PASS** (closure run — see agent report) |
 | **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
 | **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
-| **01B / 01C** | **NOT STARTED** |
+| **01B** | **IN PROGRESS** (branch `cursor/match-squad-player-availability-01b-availability-collection`) |
+| **01C implementation** | **NOT STARTED** (architecture locked §28) |
 
 ### Canonical 01A product model (locked)
 
@@ -973,3 +974,65 @@ Potential states: **ACTIVE**, **REVOKED**, **EXPIRED**. Open questions: edit act
 | Selection and release mutually exclusive | **Rejected** |
 
 Historical UAT records (01A R2–R5) that describe what was tested at the time remain **accurate history**; architecture text above is **current** for 01B+.
+
+---
+
+## 29. 01B — Availability Collection & Player/Guardian UX (diagnosis + slice)
+
+| Field | Value |
+|-------|-------|
+| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01B` |
+| **Branch** | `cursor/match-squad-player-availability-01b-availability-collection` |
+| **Base** | `STAGE` @ `5de6fe1adf61830add419f15838f32477dbee0d2` |
+
+### Diagnosis decisions
+
+| Question | Decision |
+|----------|----------|
+| `EXISTING_PARTICIPATION_RESPONSE_SUFFICIENT` | **YES** — canonical writes via `lib/participation/participation-service.ts` |
+| `NEW_AVAILABILITY_TABLE_REQUIRED` | **NO** |
+| `NEW_REQUEST_METADATA_REQUIRED` | **NO** — active request = `Event.participationResponseDueAt` (`isParticipationResponseRequested`) |
+| `EXISTING_COMM_REMINDER_REUSABLE` | **YES** — SCE-SPIELBETRIEB-AUDIENCE-01 + `sendEventNoResponseSmartReminder` |
+| `GUARDIAN_PROXY_REUSABLE` | **YES** — `assertActorCanRespondForPerson` + COMM-18 expansion |
+| `TRAINER_OFFLINE_RESPONSE_REUSABLE` | **YES** — `responseSource = TRAINER` via matchcenter participation-response API |
+
+### ParticipationResponse (confirmed)
+
+| Topic | Finding |
+|-------|---------|
+| Statuses | `OPEN`, `YES`, `NO`, `MAYBE` |
+| Unique keys | `(personId, eventId)` for MATCH; `(personId, trainingSessionId)` for TRAINING |
+| Missing row vs OPEN | Both treated as outstanding (`NOT_RESPONDED` / `PENDING` = **OPEN only**; **MAYBE excluded**) |
+| Provenance | `ParticipationResponseSource`: `PLAYER`, `PARENT`, `TRAINER`, `STAFF` |
+
+### MAYBE reminder policy (01B)
+
+Automatic/manual **NOT_RESPONDED** reminders target **OPEN / missing row only**. **MAYBE** is a response; trainers may follow up separately — not silently merged with Offen.
+
+### Deadline model
+
+Match-relative `participationResponseDueAt` on `Event` (timezone via tenant). No weekend assumptions. Expired deadline does **not** mutate player status.
+
+### 01B implementation (vertical slice)
+
+| Surface | Behaviour |
+|---------|-----------|
+| **Trainer / Aufgebot** | `MatchAvailabilityCollectionPanel` — Rückmeldung bis, Erinnerung (Offen only), provenance on rows, trainer «Verfügbarkeit» menu, Offen filter chip |
+| **Player / guardian** | Match wording on activity detail + Meine Aufgaben inline (`Verfügbar` / `Nicht verfügbar` / `Unsicher`) when request active |
+| **APIs** | Reuse `PATCH …/participation-request`; new `POST …/participation-response`, `POST …/participation-reminder`; squad GET includes `availabilityCollection` meta |
+
+### 01C guardrail (01B)
+
+No `PlayerRelease`, no cross-team visibility, no selection mutation from availability writes.
+
+### Reschedule policy
+
+Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirmation after material reschedule = future product policy.
+
+### Match lifecycle
+
+| State | Request / remind | Respond |
+|-------|------------------|---------|
+| Upcoming SCHEDULED/LIVE | Allowed when due set | Allowed |
+| CANCELLED / past | Blocked with actionable DE message | Read-only / blocked |
+| SFV sync | Provider match facts only — does not overwrite club `ParticipationResponse` or deadline fields in this slice |

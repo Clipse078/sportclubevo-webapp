@@ -7,9 +7,16 @@ import { Loader2, Minus, Plus } from "lucide-react";
 import MatchAvailabilityStatusBadge, {
   MatchAvailabilityConflictBadge,
 } from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";
-import MatchSquadCountsSummary from "@/components/admin/matchcenter/MatchSquadCountsSummary";
+import MatchSquadCountsSummary, {
+  type MatchSquadAvailabilityFilter,
+} from "@/components/admin/matchcenter/MatchSquadCountsSummary";
+import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
+import MatchAvailabilityTrainerRecordMenu from "@/components/admin/matchcenter/MatchAvailabilityTrainerRecordMenu";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
-import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
+import type {
+  MatchAvailabilityCollectionMetaView,
+  MatchSquadPlayerPresentation,
+} from "@/lib/match-squad/types";
 
 type SquadPayload = {
   version: string;
@@ -31,10 +38,13 @@ type SquadPayload = {
     selectedOpen: number;
     conflicts: number;
   };
+  availabilityCollection?: MatchAvailabilityCollectionMetaView;
+  canManageAvailability?: boolean;
 };
 
 type Props = {
   matchId: string;
+  timeZone?: string;
 };
 
 type SquadApiBody = SquadPayload & { error?: string; code?: string; squad?: SquadPayload };
@@ -67,16 +77,32 @@ function resolveLoadErrorMessage(body: SquadApiBody, response: Response): string
   return "Aufgebot konnte nicht geladen werden.";
 }
 
+function playerMatchesAvailabilityFilter(
+  player: MatchSquadPlayerPresentation,
+  filter: MatchSquadAvailabilityFilter,
+): boolean {
+  if (filter === "ALL") return true;
+  if (filter === "OPEN") return player.presentationStatus === "OPEN";
+  if (filter === "MAYBE") return player.presentationStatus === "MAYBE";
+  return true;
+}
+
 function PlayerCard({
   player,
   action,
   onAction,
   disabled,
+  matchId,
+  canManageAvailability,
+  onAvailabilityRecorded,
 }: {
   player: MatchSquadPlayerPresentation;
   action: "add" | "remove";
   onAction: () => void;
   disabled: boolean;
+  matchId: string;
+  canManageAvailability: boolean;
+  onAvailabilityRecorded: () => void;
 }) {
   return (
     <li
@@ -104,8 +130,18 @@ function PlayerCard({
         <p className="truncate text-[10px] text-[var(--muted)]">
           {player.shirtNumber != null ? `#${player.shirtNumber}` : "Kader"}
           {player.rosterIneligibleLabel ? ` · ${player.rosterIneligibleLabel}` : ""}
+          {player.responseProvenanceLabel ? ` · ${player.responseProvenanceLabel}` : ""}
         </p>
       </div>
+      {canManageAvailability ? (
+        <MatchAvailabilityTrainerRecordMenu
+          matchId={matchId}
+          personId={player.personId}
+          displayName={player.displayName}
+          disabled={disabled}
+          onRecorded={onAvailabilityRecorded}
+        />
+      ) : null}
       {action === "add" && !player.canSelect && player.availability === "UNAVAILABLE" ? (
         <span
           className="inline-flex shrink-0 items-center rounded-md border border-[var(--sce-danger-border)] bg-[var(--sce-danger-light)] px-2.5 py-1.5 text-xs font-semibold text-[var(--sce-danger)]"
@@ -146,13 +182,15 @@ function PlayerCard({
   );
 }
 
-export default function MatchSquadSection({ matchId }: Props) {
+export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SquadPayload | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [version, setVersion] = useState<string>("");
+  const [availabilityFilter, setAvailabilityFilter] =
+    useState<MatchSquadAvailabilityFilter>("ALL");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -238,6 +276,13 @@ export default function MatchSquadSection({ matchId }: Props) {
     (row) => !selectedSet.has(row.personId),
   );
 
+  const filterPlayers = (rows: MatchSquadPlayerPresentation[]) =>
+    rows.filter((row) => playerMatchesAvailabilityFilter(row, availabilityFilter));
+
+  const filteredSelected = filterPlayers(optimisticSelected);
+  const filteredRemaining = filterPlayers(optimisticRemaining);
+  const canManageAvailability = Boolean(data?.canManageAvailability);
+
   return (
     <PlanningEditorParticipantsSection
       headingId="spiele-edit-match-squad-heading"
@@ -275,7 +320,37 @@ export default function MatchSquadSection({ matchId }: Props) {
         </p>
       ) : null}
 
-      {!loading && data?.counts ? <MatchSquadCountsSummary counts={data.counts} /> : null}
+      {!loading && data?.availabilityCollection ? (
+        <MatchAvailabilityCollectionPanel
+          matchId={matchId}
+          timeZone={timeZone}
+          meta={data.availabilityCollection}
+          canManage={canManageAvailability}
+          onChanged={() => void load()}
+        />
+      ) : null}
+
+      {!loading && data?.counts ? (
+        <MatchSquadCountsSummary
+          counts={data.counts}
+          activeFilter={availabilityFilter}
+          onFilterChange={setAvailabilityFilter}
+        />
+      ) : null}
+
+      {!loading && availabilityFilter !== "ALL" ? (
+        <p className="mb-2 text-xs text-[var(--muted)]" data-testid="match-squad-availability-filter-active">
+          Filter: {availabilityFilter === "OPEN" ? "Nur Offen" : "Nur Unsicher"}
+          {" · "}
+          <button
+            type="button"
+            className="font-semibold text-[var(--foreground)] underline-offset-2 hover:underline"
+            onClick={() => setAvailabilityFilter("ALL")}
+          >
+            Alle anzeigen
+          </button>
+        </p>
+      ) : null}
 
       {!loading && data ? (
         <div className="space-y-6">
@@ -284,21 +359,25 @@ export default function MatchSquadSection({ matchId }: Props) {
               id="match-squad-selected-heading"
               className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
             >
-              Aufgeboten · {optimisticSelected.length} Spieler
+              Aufgeboten · {filteredSelected.length} Spieler
+              {availabilityFilter !== "ALL" ? ` (gefiltert)` : ""}
             </h3>
-            {optimisticSelected.length === 0 ? (
+            {filteredSelected.length === 0 ? (
               <p className="text-sm text-[var(--muted)]" data-testid="match-squad-empty-selected">
                 Noch keine Spieler aufgeboten.
               </p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2">
-                {optimisticSelected.map((player) => (
+                {filteredSelected.map((player) => (
                   <PlayerCard
                     key={player.personId}
                     player={player}
                     action="remove"
                     disabled={!canMutate || !player.canRemove}
                     onAction={() => togglePerson(player.personId, false)}
+                    matchId={matchId}
+                    canManageAvailability={canManageAvailability}
+                    onAvailabilityRecorded={() => void load()}
                   />
                 ))}
               </ul>
@@ -310,9 +389,10 @@ export default function MatchSquadSection({ matchId }: Props) {
               id="match-squad-remaining-heading"
               className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
             >
-              Weitere Kaderspieler · {optimisticRemaining.length} Spieler
+              Weitere Kaderspieler · {filteredRemaining.length} Spieler
+              {availabilityFilter !== "ALL" ? ` (gefiltert)` : ""}
             </h3>
-            {optimisticRemaining.length === 0 ? (
+            {filteredRemaining.length === 0 ? (
               <p
                 className="text-sm text-[var(--muted)]"
                 data-testid="match-squad-empty-remaining"
@@ -322,13 +402,16 @@ export default function MatchSquadSection({ matchId }: Props) {
               </p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2">
-                {optimisticRemaining.map((player) => (
+                {filteredRemaining.map((player) => (
                   <PlayerCard
                     key={player.personId}
                     player={player}
                     action="add"
                     disabled={!canMutate || !player.canSelect}
                     onAction={() => togglePerson(player.personId, true)}
+                    matchId={matchId}
+                    canManageAvailability={canManageAvailability}
+                    onAvailabilityRecorded={() => void load()}
                   />
                 ))}
               </ul>

@@ -32,6 +32,15 @@ ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created vi
 
 **FINAL_MODULE_CLEANUP_REQUIRED:** remove Persons + squad memberships + module-created participation rows; never remove real FC Allschwil roster data.
 
+## 01B notes (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Module slice** | 01B availability collection UX |
+| **New persistent records** | None required — reuses existing ParticipationResponse + Event deadline fields |
+| **UAT match** | `cmrzhj3je006a04kwhbepxvdz` (configure `participationResponseDueAt` for request-active UAT) |
+| **LEDGER update** | No new Person/Squad rows in 01B code path |
+
 ## 01A closure (2026-10-10)
 
 | Field | Value |

@@ -20,6 +20,7 @@ export type PersonalActionInlineParticipation = {
   eventKind: "TRAINING" | "MATCH" | "TOURNAMENT";
   trainingSessionId?: string;
   eventId?: string;
+  allowedResponses: readonly ("YES" | "NO" | "MAYBE")[];
 };
 
 export type PersonalActionInlineRequirement = {
@@ -160,6 +161,7 @@ export function mapPersonalActionToListItem(
             eventKind: participation.eventKind,
             trainingSessionId: participation.trainingSessionId,
             eventId: participation.eventId,
+            allowedResponses: participation.allowedResponses,
           }
         : undefined;
 

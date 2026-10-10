@@ -15,6 +15,7 @@ export type SportingActivityDetailParticipation = {
   /** When true, detail may offer inline response using canonical participation service. */
   canRespond: boolean;
   personalActionId?: string;
+  allowedResponses?: readonly ("YES" | "NO" | "MAYBE")[];
 };
 
 export type SportingActivityDetailInformationItem = {

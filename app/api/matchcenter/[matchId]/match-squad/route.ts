@@ -3,82 +3,25 @@
  * MATCH_SQUAD_PLAYER_AVAILABILITY-01A
  */
 
-import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { resolveMatchSquadEventContext } from "@/lib/match-squad/event-context";
-import { resolveMatchSquadAccess, assertMatchSquadMutationAllowed } from "@/lib/match-squad/auth";
+import { assertMatchSquadMutationAllowed } from "@/lib/match-squad/auth";
 import {
   buildMatchSquadViewModel,
   setMatchSquadMembers,
 } from "@/lib/match-squad/match-squad-service";
+import { loadMatchAvailabilityCollectionMeta } from "@/lib/match-squad/match-availability-collection-service";
+import {
+  mapMatchSquadRouteError,
+  resolveAccessForMatch,
+} from "@/lib/match-squad/match-squad-route-access";
 import { MatchSquadError } from "@/lib/match-squad/errors";
 
 type Params = { params: Promise<{ matchId: string }> };
 
 function mapError(error: unknown): NextResponse {
-  if (error instanceof MatchSquadError) {
-    return NextResponse.json({ error: error.message, code: error.code }, { status: error.httpStatus });
-  }
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
-    console.error("[match-squad] required table missing (migration pending)", error);
-    return NextResponse.json(
-      {
-        error:
-          "Das Aufgebot-Schema ist auf dieser Umgebung noch nicht bereit. Bitte wenden Sie sich an den Support.",
-        code: "SCHEMA_NOT_READY",
-      },
-      { status: 503 },
-    );
-  }
-  console.error("[match-squad]", error);
-  return NextResponse.json(
-    { error: "Aufgebot konnte nicht verarbeitet werden.", code: "INTERNAL" },
-    { status: 500 },
-  );
-}
-
-async function resolveAccessForMatch(matchId: string) {
-  const session = await auth();
-  if (!session?.user) {
-    return { ok: false as const, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  }
-
-  const tenant = await getActiveTenant();
-  if (!tenant) {
-    return {
-      ok: false as const,
-      response: NextResponse.json({ error: "Tenant context required" }, { status: 400 }),
-    };
-  }
-
-  const userId = session.user.effectiveUserId ?? session.user.id;
-  let context;
-  try {
-    context = await resolveMatchSquadEventContext(tenant.id, matchId);
-  } catch (error) {
-    return { ok: false as const, response: mapError(error) };
-  }
-
-  const access = await resolveMatchSquadAccess({
-    userId,
-    tenantId: tenant.id,
-    tenantKey: tenant.key,
-    teamId: context.teamId,
-    teamSeasonId: context.teamSeasonId,
-  });
-
-  if (!access) {
-    return {
-      ok: false as const,
-      response: NextResponse.json({ error: "Spiel nicht gefunden." }, { status: 404 }),
-    };
-  }
-
-  return { ok: true as const, tenant, userId, access, context };
+  return mapMatchSquadRouteError(error);
 }
 
 export async function GET(_request: NextRequest, { params }: Params) {
@@ -97,9 +40,16 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
   try {
     const squad = await buildMatchSquadViewModel(resolved.tenant.id, matchId);
+    const availabilityCollection = await loadMatchAvailabilityCollectionMeta({
+      tenantId: resolved.tenant.id,
+      eventId: matchId,
+      userId: resolved.userId,
+    }).catch(() => null);
     return NextResponse.json({
       ...squad,
+      availabilityCollection: availabilityCollection ?? undefined,
       canEdit: resolved.access.canEdit && squad.editable,
+      canManageAvailability: resolved.access.canEdit,
     });
   } catch (error) {
     return mapError(error);
