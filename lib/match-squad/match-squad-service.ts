@@ -12,6 +12,7 @@ import {
   mapParticipationStatusToMatchAvailability,
 } from "@/lib/match-squad/availability-adapter";
 import { getMatchParticipationStatusPresentation } from "@/lib/match-squad/match-availability-presentation";
+import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-squad-presentation-order";
 import type {
   ParticipationResponseSource,
   ParticipationResponseStatus,
@@ -364,7 +365,9 @@ export async function buildMatchSquadViewModel(
       }),
     );
 
-  const counts = deriveCounts([...remaining, ...selected]);
+  const sortedSelected = sortMatchSquadPlayersForPresentation(selected);
+  const sortedRemaining = sortMatchSquadPlayersForPresentation(remaining);
+  const counts = deriveCounts([...sortedRemaining, ...sortedSelected]);
 
   return {
     eventId: context.eventId,
@@ -374,10 +377,10 @@ export async function buildMatchSquadViewModel(
     version: (squad?.updatedAt ?? new Date(0)).toISOString(),
     editable: editability.editable,
     readOnlyReason: editability.reason,
-    selected,
-    remaining,
-    selectedPersonIds: selected.map((row) => row.personId),
-    remainingPersonIds: remaining.map((row) => row.personId),
+    selected: sortedSelected,
+    remaining: sortedRemaining,
+    selectedPersonIds: sortedSelected.map((row) => row.personId),
+    remainingPersonIds: sortedRemaining.map((row) => row.personId),
     counts,
   };
 }

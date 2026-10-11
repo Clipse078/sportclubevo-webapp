@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getMatchAvailabilitySortPriority,
   getMatchParticipationStatusPresentation,
   mapParticipationStatusToMatchPresentationStatus,
 } from "../match-availability-presentation";
@@ -43,6 +44,18 @@ describe("match-availability-presentation", () => {
     expect(mapParticipationStatusToMatchPresentationStatus("OPEN")).toBe("OPEN");
     expect(mapParticipationStatusToMatchPresentationStatus("MAYBE")).toBe("MAYBE");
     expect(mapParticipationStatusToMatchPresentationStatus(null)).toBe("OPEN");
+  });
+
+  it("exposes presentation sort priority for squad grouping", () => {
+    expect(getMatchAvailabilitySortPriority("AVAILABLE")).toBeLessThan(
+      getMatchAvailabilitySortPriority("MAYBE"),
+    );
+    expect(getMatchAvailabilitySortPriority("MAYBE")).toBeLessThan(
+      getMatchAvailabilitySortPriority("OPEN"),
+    );
+    expect(getMatchAvailabilitySortPriority("OPEN")).toBeLessThan(
+      getMatchAvailabilitySortPriority("UNAVAILABLE"),
+    );
   });
 
   it("marks conflict only for selected unavailable", () => {

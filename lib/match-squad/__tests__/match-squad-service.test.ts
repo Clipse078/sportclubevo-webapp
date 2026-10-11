@@ -197,6 +197,33 @@ describe("match-squad-service", () => {
     expect(view.remainingPersonIds).toEqual(["p2"]);
   });
 
+  it("buildMatchSquadViewModel sorts each group by availability presentation priority", async () => {
+    mocks.playerFindMany.mockResolvedValue([
+      {
+        personId: "p-open",
+        shirtNumber: 5,
+        sortOrder: 5,
+        status: "ACTIVE" as const,
+        person: { firstName: "Open", lastName: "Player", displayName: "SCE Open" },
+      },
+      {
+        personId: "p-no",
+        shirtNumber: 2,
+        sortOrder: 2,
+        status: "ACTIVE" as const,
+        person: { firstName: "No", lastName: "Player", displayName: "SCE No" },
+      },
+    ]);
+    mocks.participationResponseFindMany.mockResolvedValue([
+      { personId: "p-open", status: "OPEN", note: null, responseSource: null },
+      { personId: "p-no", status: "NO", note: null, responseSource: null },
+    ]);
+
+    const view = await buildMatchSquadViewModel(TENANT, EVENT);
+    expect(view.remainingPersonIds).toEqual(["p-open", "p-no"]);
+    expect(view.remaining.map((row) => row.presentationStatus)).toEqual(["OPEN", "UNAVAILABLE"]);
+  });
+
   it("setMatchSquadMembers rejects person not on ACTIVE roster", async () => {
     mocks.personFindFirst.mockResolvedValue({ id: "foreign" });
     await expect(

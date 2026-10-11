@@ -1501,3 +1501,54 @@ Implementation plan must be evidence-based.
 01D discovery/request/approval; new PlayerRelease / availability / Match Squad semantics; mobile native app; broad visual redesign; new sports rules; new SFV integration; new permission model; new communication domain; arbitrary schema changes.
 
 NAV-01 is primarily information architecture, routing, and UX consistency.
+
+---
+
+## 44. MATCH_SQUAD_AVAILABILITY_SORTING-01 — post-01C presentation correction
+
+**Package key:** `MATCH_SQUAD_AVAILABILITY_SORTING-01`  
+**Name:** Match Squad Availability Presentation Ordering  
+**Type:** Bounded post-01C UX consistency correction (not 01C reopen, not 01D, not Activity Navigation)
+
+| Flag | Value |
+|------|--------|
+| `SORTING_IS_PRESENTATION_ONLY` | **YES** |
+| `DOMAIN_CHANGE` | **NO** |
+| `SCHEMA_CHANGE` | **NO** |
+| `01C_REOPENED` | **NO** |
+
+### PO finding
+
+Within each Match Squad group, availability rows must render in operational priority order:
+
+**Verfügbar → Unsicher → Offen → Nicht verfügbar**
+
+Groups remain authoritative and separate:
+
+- **AUFGEBOTEN** (selected `MatchSquadMember` rows)
+- **WEITERE KADERSPIELER** (remaining season roster)
+
+Pipeline: roster / squad data → selected vs remaining split → **independent** availability sort per group → render. Never global sort-then-regroup.
+
+### Canonical sort priorities
+
+| Presentation | Priority |
+|--------------|----------|
+| AVAILABLE / YES / Verfügbar | 1 |
+| MAYBE / Unsicher | 2 |
+| OPEN / UNKNOWN / missing `ParticipationResponse` / Offen | 3 |
+| UNAVAILABLE / NO / Nicht verfügbar | 4 |
+
+Implementation: `getMatchAvailabilitySortPriority` in `lib/match-squad/match-availability-presentation.ts`; group sort via `sortMatchSquadPlayersForPresentation` in `lib/match-squad/match-squad-presentation-order.ts`; applied in `buildMatchSquadViewModel` and Match Squad workspace UI.
+
+**Secondary order (same availability):** roster `sortOrder` ascending, then shirt number, then `displayName` (`de` locale).
+
+Selected + unavailable players stay selected with existing conflict semantics; sorting does not mutate `MatchSquadMember` or `ParticipationResponse`.
+
+### Human UAT
+
+| Field | Value |
+|-------|--------|
+| Match (STAGE) | `cmrzhj3je006a04kwhbepxvdz` |
+| Status | **READY_FOR_PO_UAT** (awaiting PO visual pass on preview) |
+| Expected remaining order (among current states) | SCE Testspieler 05 (Offen) before SCE Testspieler 02/03 (Nicht verfügbar) |
