@@ -14,7 +14,15 @@ type InboundReleaseRow = {
   releaseReason: string;
   maxMinutesLabel: string | null;
   validityLabel: string;
-  request: { id: string; status: string; statusLabel: string } | null;
+  request: {
+    id: string;
+    status: string;
+    statusLabel: string;
+    assigned: boolean;
+    operationalLabel: string;
+    operationalSecondaryLabel: string | null;
+    operationalTone: "success" | "warning" | "muted" | "danger" | "default";
+  } | null;
 };
 
 type Payload = {
@@ -145,17 +153,25 @@ export default function TeamInboundPlayerReleaseSection({
                       ) : null}
                     </div>
                     {row.request ? (
-                      <div className="mt-3">
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         <AdminStatusPill
-                          label={row.request.statusLabel}
+                          label={row.request.operationalLabel}
                           tone={
-                            row.request.status === "APPROVED"
+                            row.request.operationalTone === "success"
                               ? "success"
-                              : row.request.status === "REJECTED"
+                              : row.request.operationalTone === "muted"
                                 ? "muted"
-                                : "warning"
+                                : row.request.operationalTone === "warning" ||
+                                    row.request.operationalTone === "danger"
+                                  ? "warning"
+                                  : "default"
                           }
                         />
+                        {row.request.operationalSecondaryLabel ? (
+                          <span className="text-xs text-[var(--muted)]">
+                            {row.request.operationalSecondaryLabel}
+                          </span>
+                        ) : null}
                       </div>
                     ) : null}
                   </SceFeatureCard>

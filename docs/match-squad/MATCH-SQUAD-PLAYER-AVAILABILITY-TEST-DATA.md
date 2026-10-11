@@ -30,6 +30,18 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
+## 01F (2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **Package status** | **OPEN** — PO Club UAT **PASS** (2026-10-11); cleanup APPLY still deferred |
+| **Cleanup script** | `scripts/match-squad-01f-controlled-test-data-cleanup.ts` (dry-run default) |
+| **Readiness scan** | `scripts/match-squad-01f-club-uat-readiness.ts` |
+| **Operational snapshot** | `scripts/match-squad-01f-operational-tracks-snapshot.ts` (read-only) |
+| **Latest DRY RUN** | **25** controlled rows (`TOTAL_CONTROLLED_ROWS`) — APPLY **not** executed |
+| **CLEANUP_STATUS** | `RETAINED_FOR_01F` until post-merge closure APPLY |
+| **TEST_DATA_REMAINING** | **> 0** (unchanged until closure APPLY) |
+
 ## 01E closure (2026-10-11)
 
 | Field | Value |

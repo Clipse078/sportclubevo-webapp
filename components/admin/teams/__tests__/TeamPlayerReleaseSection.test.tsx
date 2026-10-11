@@ -52,6 +52,35 @@ describe("TeamPlayerReleaseSection", () => {
           json: async () => ({
             releases: [sampleRelease],
             rosterPlayers: [{ personId: "p1", displayName: "SCE Testspieler 01" }],
+            operationalTracksByReleaseId: {
+              "release-1": [
+                {
+                  releaseId: "release-1",
+                  requestId: "req-1",
+                  personId: "p1",
+                  targetTeamSeasonId: "ts-2",
+                  targetTeamLabel: "Junioren B2",
+                  targetEventId: "match-b2",
+                  targetEventType: "MATCH",
+                  targetActivityLabel: "BSC Old Boys B2",
+                  targetActivityStartAt: "2026-10-18T13:00:00.000Z",
+                  activityHref: "/dashboard/matchcenter/match-b2?tab=aufgebot",
+                  releaseReasonLabel: "Spielpraxis",
+                  releaseMaxMinutesLabel: "max. 45 Min.",
+                  requestStatus: "APPROVED",
+                  requestStatusLabel: "Genehmigt",
+                  assigned: false,
+                  releaseValidForActivity: true,
+                  eventCancelled: false,
+                  presentation: {
+                    operationalKey: "APPROVED_UNASSIGNED",
+                    operationalLabel: "Genehmigt",
+                    operationalSecondaryLabel: "Noch nicht aufgeboten",
+                    operationalTone: "success",
+                  },
+                },
+              ],
+            },
             canEdit: true,
           }),
         };
@@ -71,6 +100,8 @@ describe("TeamPlayerReleaseSection", () => {
     expect(screen.getByText(/max\. 45 Min\./)).toBeInTheDocument();
     expect(screen.getByText(/Spielpraxis/)).toBeInTheDocument();
     expect(screen.getByText("Aktiv")).toBeInTheDocument();
+    expect(screen.getByText("Genehmigt")).toBeInTheDocument();
+    expect(screen.getByText(/Noch nicht aufgeboten/)).toBeInTheDocument();
   });
 
   it("shows create action", async () => {

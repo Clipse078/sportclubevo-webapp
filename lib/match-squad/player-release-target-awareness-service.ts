@@ -11,6 +11,8 @@ import {
   playerReleaseReasonLabel,
 } from "@/lib/match-squad/player-release-presentation";
 import { isPlayerReleaseOperationallyActive } from "@/lib/match-squad/player-release-lifecycle";
+import { loadCrossTeamOperationalTracksForTargetInbound } from "@/lib/match-squad/cross-team-player-operational-state-service";
+import type { OperationalPresentationTone } from "@/lib/match-squad/cross-team-player-operational-state";
 
 export type InboundTargetedPlayerReleaseItem = {
   releaseId: string;
@@ -28,6 +30,10 @@ export type InboundTargetedPlayerReleaseItem = {
     id: string;
     status: PlayerReleaseRequestStatus;
     statusLabel: string;
+    assigned: boolean;
+    operationalLabel: string;
+    operationalSecondaryLabel: string | null;
+    operationalTone: OperationalPresentationTone;
   } | null;
 };
 
@@ -175,6 +181,13 @@ export async function listInboundTargetedPlayerReleases(input: {
     }
   }
 
+  const operationalByRelease = await loadCrossTeamOperationalTracksForTargetInbound({
+    tenantId: input.tenantId,
+    targetTeamSeasonId: input.targetTeamSeasonId,
+    releaseIds: actionable.map((row) => row.id),
+    timezone: input.timezone,
+  });
+
   return actionable.map((row) => {
     const request = requestByRelease.get(row.id);
     const activityLabel =
@@ -194,11 +207,19 @@ export async function listInboundTargetedPlayerReleases(input: {
       maxMinutesLabel: formatMaxMinutesLabel(row.maxMinutes),
       validityLabel: formatReleaseValidityRange(row.validFrom, row.validUntil),
       request: request
-        ? {
-            id: request.id,
-            status: request.status,
-            statusLabel: requestStatusLabel[request.status],
-          }
+        ? (() => {
+            const operational = operationalByRelease.get(row.id);
+            return {
+              id: request.id,
+              status: request.status,
+              statusLabel: requestStatusLabel[request.status],
+              assigned: operational?.assigned ?? false,
+              operationalLabel:
+                operational?.operationalLabel ?? requestStatusLabel[request.status],
+              operationalSecondaryLabel: operational?.operationalSecondaryLabel ?? null,
+              operationalTone: operational?.operationalTone ?? "default",
+            };
+          })()
         : null,
     };
   });
