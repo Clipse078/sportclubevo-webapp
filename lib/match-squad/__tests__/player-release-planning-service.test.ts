@@ -13,6 +13,16 @@ const mocks = vi.hoisted(() => ({
   emitAwareness: vi.fn(),
 }));
 
+const txMock = {
+  playerSquadMember: { findMany: mocks.rosterFindMany },
+  teamSeason: {
+    findMany: mocks.teamSeasonFindMany,
+    findFirst: mocks.teamSeasonFindFirst,
+  },
+  event: { findMany: mocks.eventFindMany },
+  playerRelease: { findFirst: mocks.playerReleaseFindFirst, create: vi.fn() },
+};
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     playerSquadMember: { findMany: mocks.rosterFindMany },
@@ -22,6 +32,7 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     event: { findMany: mocks.eventFindMany },
     playerRelease: { findFirst: mocks.playerReleaseFindFirst },
+    $transaction: vi.fn(async (fn: (tx: typeof txMock) => Promise<string[]>) => fn(txMock)),
   },
 }));
 
@@ -102,6 +113,7 @@ describe("player-release-planning-service", () => {
       {
         id: B2_TS,
         teamId: "team-b2",
+        seasonId: "season-1",
         displayName: "Junioren B2",
         shortName: null,
         team: { name: "B2", shortName: null },
@@ -109,38 +121,47 @@ describe("player-release-planning-service", () => {
       {
         id: A2_TS,
         teamId: "team-a2",
+        seasonId: "season-1",
         displayName: "Junioren A2",
         shortName: null,
         team: { name: "A2", shortName: null },
       },
     ]);
-    mocks.eventFindMany.mockImplementation(({ where }: { where: { teamSeasonId?: { in: string[] } } }) => {
-      if (where.teamSeasonId?.in) {
-        return Promise.resolve([
-          {
-            id: EVENT_B2,
-            type: "MATCH",
-            title: "FC X",
-            startAt: new Date("2026-10-17T12:00:00.000Z"),
-            endAt: null,
-            location: "Heim",
-            teamSeasonId: B2_TS,
-            teamId: "team-b2",
-          },
-          {
-            id: EVENT_A2,
-            type: "MATCH",
-            title: "FC Y",
-            startAt: new Date("2026-10-21T18:00:00.000Z"),
-            endAt: null,
-            location: "Auswärts",
-            teamSeasonId: A2_TS,
-            teamId: "team-a2",
-          },
-        ]);
-      }
-      return Promise.resolve([]);
-    });
+    const planningTargetEvents = [
+      {
+        id: EVENT_B2,
+        type: "MATCH" as const,
+        title: "FC X",
+        startAt: new Date("2026-10-17T12:00:00.000Z"),
+        endAt: null,
+        location: "Heim",
+        teamSeasonId: B2_TS,
+        teamId: "team-b2",
+        seasonId: "season-1",
+      },
+      {
+        id: EVENT_A2,
+        type: "MATCH" as const,
+        title: "FC Y",
+        startAt: new Date("2026-10-21T18:00:00.000Z"),
+        endAt: null,
+        location: "Auswärts",
+        teamSeasonId: A2_TS,
+        teamId: "team-a2",
+        seasonId: "season-1",
+      },
+    ];
+    mocks.eventFindMany.mockImplementation(
+      ({ where }: { where: { teamSeasonId?: string | { in: string[] }; OR?: unknown[] } }) => {
+        if (where.teamSeasonId === SOURCE_TS) {
+          return Promise.resolve([]);
+        }
+        if (where.OR || where.teamSeasonId?.in) {
+          return Promise.resolve(planningTargetEvents);
+        }
+        return Promise.resolve([]);
+      },
+    );
     mocks.resolveTargetTeams.mockImplementation(({ personId }: { personId: string }) => {
       if (personId === P1) {
         return Promise.resolve([eligibleTarget(B2_TS), eligibleTarget(A2_TS)]);
@@ -171,6 +192,27 @@ describe("player-release-planning-service", () => {
 
     expect(review.validReleaseCount).toBe(3);
     expect(review.invalidCombinationCount).toBe(1);
+  });
+
+  it("createPlayerReleasePlan rolls back all releases when one create fails", async () => {
+    mocks.createPlayerRelease
+      .mockResolvedValueOnce({ id: "release-1" })
+      .mockRejectedValueOnce(new Error("simulated write failure"));
+
+    await expect(
+      createPlayerReleasePlan({
+        tenantId: TENANT,
+        teamId: TEAM_ID,
+        sourceTeamSeasonId: SOURCE_TS,
+        actorUserId: "user-1",
+        personIds: [P1, P2],
+        eventIds: [EVENT_B2, EVENT_A2],
+        timezone: "Europe/Zurich",
+      }),
+    ).rejects.toThrow("simulated write failure");
+
+    expect(mocks.createPlayerRelease).toHaveBeenCalledTimes(2);
+    expect(mocks.emitAwareness).not.toHaveBeenCalled();
   });
 
   it("createPlayerReleasePlan emits activity-scoped awareness groups", async () => {

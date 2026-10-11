@@ -217,6 +217,7 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
           select: {
             id: true,
             teamId: true,
+            seasonId: true,
             displayName: true,
             shortName: true,
             team: { select: { name: true, shortName: true } },
@@ -224,26 +225,43 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
         })
       : Promise.resolve([]),
     unionTargetTeamSeasonIds.size
-      ? prisma.event.findMany({
-          where: {
-            tenantId: input.tenantId,
-            type: { in: ["MATCH", "TOURNAMENT"] },
-            teamSeasonId: { in: [...unionTargetTeamSeasonIds] },
-            startAt: { gte: now, lte: horizonEnd },
-            status: { notIn: TERMINAL_EVENT_STATUSES },
-          },
-          select: {
-            id: true,
-            type: true,
-            title: true,
-            startAt: true,
-            endAt: true,
-            location: true,
-            teamSeasonId: true,
-            teamId: true,
-          },
-          orderBy: { startAt: "asc" },
-        })
+      ? prisma.teamSeason
+          .findMany({
+            where: { id: { in: [...unionTargetTeamSeasonIds] } },
+            select: { teamId: true, seasonId: true },
+          })
+          .then((seasonRows) => {
+            const teamIds = [...new Set(seasonRows.map((row) => row.teamId))];
+            const seasonIds = [...new Set(seasonRows.map((row) => row.seasonId))];
+            return prisma.event.findMany({
+              where: {
+                tenantId: input.tenantId,
+                type: { in: ["MATCH", "TOURNAMENT"] },
+                startAt: { gte: now, lte: horizonEnd },
+                status: { notIn: TERMINAL_EVENT_STATUSES },
+                OR: [
+                  { teamSeasonId: { in: [...unionTargetTeamSeasonIds] } },
+                  {
+                    teamSeasonId: null,
+                    teamId: { in: teamIds },
+                    seasonId: { in: seasonIds },
+                  },
+                ],
+              },
+              select: {
+                id: true,
+                type: true,
+                title: true,
+                startAt: true,
+                endAt: true,
+                location: true,
+                teamSeasonId: true,
+                teamId: true,
+                seasonId: true,
+              },
+              orderBy: { startAt: "asc" },
+            });
+          })
       : Promise.resolve([]),
     prisma.event.findMany({
       where: {
@@ -268,17 +286,30 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
   ]);
 
   const teamSeasonById = new Map(targetTeamSeasons.map((row) => [row.id, row]));
+  const teamSeasonIdByTeamAndSeason = new Map(
+    targetTeamSeasons.map((row) => [`${row.teamId}:${row.seasonId}`, row.id]),
+  );
 
   const activities: PlayerReleasePlanningActivityCandidate[] = [];
   for (const event of events) {
-    if (!event.teamSeasonId || event.type !== "MATCH" && event.type !== "TOURNAMENT") {
+    if (event.type !== "MATCH" && event.type !== "TOURNAMENT") {
       continue;
     }
-    const ts = teamSeasonById.get(event.teamSeasonId);
+
+    let resolvedTeamSeasonId = event.teamSeasonId;
+    if (!resolvedTeamSeasonId && event.teamId && event.seasonId) {
+      resolvedTeamSeasonId =
+        teamSeasonIdByTeamAndSeason.get(`${event.teamId}:${event.seasonId}`) ?? null;
+    }
+    if (!resolvedTeamSeasonId || !unionTargetTeamSeasonIds.has(resolvedTeamSeasonId)) {
+      continue;
+    }
+
+    const ts = teamSeasonById.get(resolvedTeamSeasonId);
     if (!ts) continue;
 
     const eligiblePlayers = uniquePersonIds.filter((personId) =>
-      eligibleByPerson.get(personId)?.has(event.teamSeasonId!),
+      eligibleByPerson.get(personId)?.has(resolvedTeamSeasonId),
     );
     const { dateGroupKey, dateLine, timeLine } = formatDateParts(event.startAt, input.timezone);
     const targetTeamLabel = teamSeasonLabel(ts);
@@ -287,7 +318,7 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
     activities.push({
       eventId: event.id,
       eventType: event.type,
-      targetTeamSeasonId: event.teamSeasonId,
+      targetTeamSeasonId: resolvedTeamSeasonId,
       targetTeamId: ts.teamId,
       targetTeamLabel,
       startAt: event.startAt.toISOString(),
@@ -550,31 +581,34 @@ export async function createPlayerReleasePlan(input: {
 
   const planId = randomUUID();
   const burstKey = `plan:${planId}`;
-  const createdReleaseIds: string[] = [];
-
   const validCombinations = review.combinations.filter((row) => row.state !== "INVALID");
 
-  for (const combo of validCombinations) {
-    const activity = review.activities.find((row) => row.eventId === combo.eventId);
-    if (!activity) continue;
+  const createdReleaseIds = await prisma.$transaction(async (tx) => {
+    const ids: string[] = [];
+    for (const combo of validCombinations) {
+      const activity = review.activities.find((row) => row.eventId === combo.eventId);
+      if (!activity) continue;
 
-    const release = await createPlayerRelease({
-      tenantId: input.tenantId,
-      teamId: input.teamId,
-      sourceTeamSeasonId: input.sourceTeamSeasonId,
-      actorUserId: input.actorUserId,
-      personId: combo.personId,
-      targetTeamSeasonId: combo.targetTeamSeasonId,
-      scope: "ACTIVITY",
-      eventId: combo.eventId,
-      maxMinutes: combo.maxMinutes,
-      reason: combo.reason,
-      awarenessBurstKey: `${burstKey}:${activity.targetTeamSeasonId}:${activity.eventId}`,
-      targetEventId: activity.eventId,
-      skipTargetAwareness: true,
-    });
-    createdReleaseIds.push(release.id);
-  }
+      const release = await createPlayerRelease({
+        tenantId: input.tenantId,
+        teamId: input.teamId,
+        sourceTeamSeasonId: input.sourceTeamSeasonId,
+        actorUserId: input.actorUserId,
+        personId: combo.personId,
+        targetTeamSeasonId: combo.targetTeamSeasonId,
+        scope: "ACTIVITY",
+        eventId: combo.eventId,
+        maxMinutes: combo.maxMinutes,
+        reason: combo.reason,
+        awarenessBurstKey: `${burstKey}:${activity.targetTeamSeasonId}:${activity.eventId}`,
+        targetEventId: activity.eventId,
+        skipTargetAwareness: true,
+        transactionClient: tx,
+      });
+      ids.push(release.id);
+    }
+    return ids;
+  });
 
   const awarenessGroups = new Map<string, { targetTeamSeasonId: string; eventId: string }>();
   for (const activity of review.activities) {
