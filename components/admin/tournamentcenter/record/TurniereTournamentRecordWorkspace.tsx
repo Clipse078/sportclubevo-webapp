@@ -49,6 +49,7 @@ import TurniereTournamentRecordDeleteDialog from "./TurniereTournamentRecordDele
 import TurniereTournamentRecordReadinessPill from "./TurniereTournamentRecordReadinessPill";
 import TurniereTournamentRecordResourceSummary from "./TurniereTournamentRecordResourceSummary";
 import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "./turniere-record-layout";
+import TurniereTournamentActivityTabShell from "@/components/admin/tournamentcenter/TurniereTournamentActivityTabShell";
 import TournamentOrganizerClubField from "@/components/admin/tournamentcenter/TournamentOrganizerClubField";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
@@ -156,6 +157,7 @@ export type TurniereTournamentRecordWorkspaceProps = {
   relatedRequirementsPanel?: ReactNode;
   collaborationSection?: ReactNode;
   participantsSection?: ReactNode;
+  tournamentSquadSection?: ReactNode;
 };
 
 export default function TurniereTournamentRecordWorkspace({
@@ -175,6 +177,7 @@ export default function TurniereTournamentRecordWorkspace({
   relatedRequirementsPanel,
   collaborationSection,
   participantsSection,
+  tournamentSquadSection,
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -586,34 +589,17 @@ export default function TurniereTournamentRecordWorkspace({
         breadcrumbs={breadcrumbs}
         header={header}
         testId="turniere-tournament-record-workspace"
-        contextRail={
-          <div className="space-y-4" data-testid="turniere-record-right-rail">
-            <PlanningPublicationPanel testId="turniere-record-publication-panel">
-              <TournamentPublicationToggles
-                value={publication}
-                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-                disabled={!isEditable || saving}
-                testIdPrefix="turniere-record-publication"
-                showHeading={false}
-              />
-            </PlanningPublicationPanel>
-            <TurniereTournamentRecordContextRail
-              statusLabel={statusPresentation.label}
-              assessment={assessment}
-              tournamentTitle={displayTitle}
-              scheduleLine={formatTurniereRecordScheduleRailLine(tournament.startAt, locale, timezone)}
-              timeLine={formatTurniereRecordTimeOnly(tournament.startAt, locale, timezone)}
-              participantSummary={participantSummary}
-              facilityLine={resourcePresentation.facilityName ?? venueLine}
-              publicationLabel={identity.publication.label}
-              lastChangedLabel={resolveTurniereRecordLastChangedLabel(tournament, locale, timezone)}
-              wochenplanerHref={wochenplanerHref}
-              showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
-            />
-          </div>
-        }
       >
-        <div className="space-y-6">
+        <TurniereTournamentActivityTabShell
+          isDirty={isDirty}
+          participationAvailable={tournament.status !== "CANCELLED"}
+          tournamentSquadAvailable={Boolean(tournamentSquadSection)}
+          aufgebot={
+            tournamentSquadSection ? (
+              <div className={TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS}>{tournamentSquadSection}</div>
+            ) : undefined
+          }
+          uebersicht={
         <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
           <TurniereRecordSection title="Übersicht" testId="turniere-record-section-overview">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -767,104 +753,137 @@ export default function TurniereTournamentRecordWorkspace({
               </div>
             </div>
           </TurniereRecordSection>
+        </div>
+          }
+          teilnahme={
+            <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} space-y-4`}>
+              <TurniereRecordSection
+                title="Teilnehmer"
+                description={
+                  participants.length > 0
+                    ? `${participants.length} ${participants.length === 1 ? "Team" : "Teams"}`
+                    : undefined
+                }
+                testId="turniere-canonical-participants-section"
+              >
+                <TournamentParticipantsEditor
+                  tournamentId={tournament.id}
+                  canManage={isEditable}
+                  homeAway={homeAway}
+                  initialParticipants={tournament.participants}
+                  dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                  dressingRoomAvailability={dressingRoomAvailability}
+                  tenantLogoUrl={tenantLogoUrl}
+                  hideDressingRoomAllocation={isTenantHostedTournament({ homeAway })}
+                  onParticipantsChange={setParticipants}
+                />
+              </TurniereRecordSection>
 
-          {isTenantHostedTournament({ homeAway }) ? (
-            <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                    Spielfeld / Halle
-                  </p>
-                  <TurniereTournamentRecordResourceSummary presentation={resourcePresentation} />
-                  <TournamentResourceAllocationEditor
-                    tournamentId={tournament.id}
-                    canManage={isAllocationEditable}
-                    initialAllocations={tournament.resourceAllocations}
-                    facilityGroups={pitchHallFacilityGroups}
-                    availabilityByResourceId={pitchAvailability}
+              {tournament.status !== "CANCELLED" ? (
+                <TurniereRecordSection title="Teilnahme" testId="turniere-record-section-participation">
+                  <ParticipationRequestConfigEditor
+                    apiPath={`/api/tournaments/${tournament.id}/participation-request`}
+                    timeZone={timezone}
+                    disabled={!isEditable}
+                    values={{
+                      participationResponseDueAt: tournament.participationResponseDueAt,
+                      participationReminder1At: tournament.participationReminder1At,
+                      participationReminder2At: tournament.participationReminder2At,
+                      participationReminder1PresetKey: tournament.participationReminder1PresetKey,
+                      participationReminder2PresetKey: tournament.participationReminder2PresetKey,
+                    }}
+                    onSaved={() => router.refresh()}
                   />
-                </div>
+                </TurniereRecordSection>
+              ) : null}
 
-                <div className="space-y-3">
-                  <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                    <TournamentDressingRoomLabelIcon />
-                    Garderoben
-                  </p>
-                  <TournamentParticipantDressingRoomPanel
-                    tournamentId={tournament.id}
-                    canManage={isAllocationEditable}
-                    participants={participants}
-                    dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-                    dressingRoomAvailability={dressingRoomAvailability}
-                    onParticipantsChange={setParticipants}
-                    onError={setResourceAllocationError}
-                  />
-                </div>
+              {participantsSection}
+            </div>
+          }
+          planung={
+            <div className="space-y-4">
+              {isTenantHostedTournament({ homeAway }) ? (
+                <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                        Spielfeld / Halle
+                      </p>
+                      <TurniereTournamentRecordResourceSummary presentation={resourcePresentation} />
+                      <TournamentResourceAllocationEditor
+                        tournamentId={tournament.id}
+                        canManage={isAllocationEditable}
+                        initialAllocations={tournament.resourceAllocations}
+                        facilityGroups={pitchHallFacilityGroups}
+                        availabilityByResourceId={pitchAvailability}
+                      />
+                    </div>
 
-                {resourceAllocationError ? (
-                  <p className="text-sm text-[var(--sce-danger)]" role="alert">
-                    {resourceAllocationError}
-                  </p>
-                ) : null}
-              </div>
-            </TurniereRecordSection>
-          ) : null}
+                    <div className="space-y-3">
+                      <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                        <TournamentDressingRoomLabelIcon />
+                        Garderoben
+                      </p>
+                      <TournamentParticipantDressingRoomPanel
+                        tournamentId={tournament.id}
+                        canManage={isAllocationEditable}
+                        participants={participants}
+                        dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                        dressingRoomAvailability={dressingRoomAvailability}
+                        onParticipantsChange={setParticipants}
+                        onError={setResourceAllocationError}
+                      />
+                    </div>
 
-          <TurniereRecordSection
-            title="Teilnehmer"
-            description={
-              participants.length > 0
-                ? `${participants.length} ${participants.length === 1 ? "Team" : "Teams"}`
-                : undefined
-            }
-            testId="turniere-canonical-participants-section"
-          >
-            <TournamentParticipantsEditor
-              tournamentId={tournament.id}
-              canManage={isEditable}
-              homeAway={homeAway}
-              initialParticipants={tournament.participants}
-              dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-              dressingRoomAvailability={dressingRoomAvailability}
-              tenantLogoUrl={tenantLogoUrl}
-              hideDressingRoomAllocation={isTenantHostedTournament({ homeAway })}
-              onParticipantsChange={setParticipants}
-            />
-          </TurniereRecordSection>
+                    {resourceAllocationError ? (
+                      <p className="text-sm text-[var(--sce-danger)]" role="alert">
+                        {resourceAllocationError}
+                      </p>
+                    ) : null}
+                  </div>
+                </TurniereRecordSection>
+              ) : null}
 
-          {tournament.status !== "CANCELLED" ? (
-            <TurniereRecordSection title="Teilnahme" testId="turniere-record-section-participation">
-              <ParticipationRequestConfigEditor
-                apiPath={`/api/tournaments/${tournament.id}/participation-request`}
-                timeZone={timezone}
-                disabled={!isEditable}
-                values={{
-                  participationResponseDueAt: tournament.participationResponseDueAt,
-                  participationReminder1At: tournament.participationReminder1At,
-                  participationReminder2At: tournament.participationReminder2At,
-                  participationReminder1PresetKey: tournament.participationReminder1PresetKey,
-                  participationReminder2PresetKey: tournament.participationReminder2PresetKey,
-                }}
-                onSaved={() => router.refresh()}
+              <PlanningEditorWorkSection
+                headingId="turniere-record-work-heading"
+                testId="turniere-record-work-section"
+                persisted
+                locale={locale}
+                tasksPanel={relatedTasksPanel}
+                requirementsPanel={relatedRequirementsPanel}
               />
-            </TurniereRecordSection>
-          ) : null}
-
-        </div>
-
-        {participantsSection}
-
-        <PlanningEditorWorkSection
-          headingId="turniere-record-work-heading"
-          testId="turniere-record-work-section"
-          persisted
-          locale={locale}
-          tasksPanel={relatedTasksPanel}
-          requirementsPanel={relatedRequirementsPanel}
+            </div>
+          }
+          kommunikation={collaborationSection ?? null}
+          mehr={
+            <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4" data-testid="turniere-record-mehr-grid">
+              <div className="md:col-span-2">
+                <PlanningPublicationPanel testId="turniere-record-publication-panel">
+                  <TournamentPublicationToggles
+                    value={publication}
+                    onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+                    disabled={!isEditable || saving}
+                    testIdPrefix="turniere-record-publication"
+                    showHeading={false}
+                  />
+                </PlanningPublicationPanel>
+              </div>
+              <TurniereTournamentRecordContextRail
+                statusLabel={statusPresentation.label}
+                assessment={assessment}
+                tournamentTitle={displayTitle}
+                scheduleLine={formatTurniereRecordScheduleRailLine(tournament.startAt, locale, timezone)}
+                timeLine={formatTurniereRecordTimeOnly(tournament.startAt, locale, timezone)}
+                participantSummary={participantSummary}
+                facilityLine={resourcePresentation.facilityName ?? venueLine}
+                publicationLabel={identity.publication.label}
+                lastChangedLabel={resolveTurniereRecordLastChangedLabel(tournament, locale, timezone)}
+                wochenplanerHref={wochenplanerHref}
+                showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
+              />
+            </div>
+          }
         />
-
-        {collaborationSection}
-        </div>
       </TurniereRecordWorkspaceShell>
 
       <TurniereTournamentRecordDeleteDialog

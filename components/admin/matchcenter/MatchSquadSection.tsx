@@ -43,10 +43,27 @@ type SquadPayload = {
   teamSeasonId?: string;
 };
 
+export type MatchSquadSectionVariant = "match" | "tournament";
+
 type Props = {
   matchId: string;
   timeZone?: string;
+  /** Defaults to match API; tournament uses tournamentcenter activity-squad. */
+  variant?: MatchSquadSectionVariant;
+  squadApiPath?: string;
 };
+
+function resolveSquadApiPath(
+  eventId: string,
+  variant: MatchSquadSectionVariant,
+  override?: string,
+): string {
+  if (override?.trim()) return override.trim();
+  if (variant === "tournament") {
+    return `/api/tournamentcenter/${eventId}/activity-squad`;
+  }
+  return `/api/matchcenter/${eventId}/match-squad`;
+}
 
 type SquadApiBody = SquadPayload & { error?: string; code?: string; squad?: SquadPayload };
 
@@ -88,7 +105,13 @@ function playerMatchesAvailabilityFilter(
   return true;
 }
 
-export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" }: Props) {
+export default function MatchSquadSection({
+  matchId,
+  timeZone = "Europe/Zurich",
+  variant = "match",
+  squadApiPath,
+}: Props) {
+  const apiPath = resolveSquadApiPath(matchId, variant, squadApiPath);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +125,7 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/matchcenter/${matchId}/match-squad`, {
+      const response = await fetch(apiPath, {
         cache: "no-store",
       });
       const json = await readSquadApiBody(response);
@@ -117,7 +140,7 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
     } finally {
       setLoading(false);
     }
-  }, [matchId]);
+  }, [apiPath]);
 
   useEffect(() => {
     void load();
@@ -129,7 +152,7 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(`/api/matchcenter/${matchId}/match-squad`, {
+      const response = await fetch(apiPath, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -197,25 +220,37 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
           teamId: data.teamId,
           teamSeasonId: data.teamSeasonId,
           matchId,
-          matchLabel: data.teamDisplayName
-            ? `Spiel · ${data.teamDisplayName}`
-            : "Aktuelles Spiel",
+          matchLabel:
+            variant === "tournament"
+              ? data.teamDisplayName
+                ? `Turnier · ${data.teamDisplayName}`
+                : "Aktuelles Turnier"
+              : data.teamDisplayName
+                ? `Spiel · ${data.teamDisplayName}`
+                : "Aktuelles Spiel",
           canManageRelease: Boolean(data.canManageRelease),
           releaseReadOnly: Boolean(data.releaseReadOnly),
         }
       : undefined;
 
+  const sectionTestId =
+    variant === "tournament" ? "turniere-edit-tournament-squad-section" : "spiele-edit-match-squad-section";
+  const squadDescription =
+    variant === "tournament"
+      ? data?.teamDisplayName
+        ? `Saison-Kader ${data.teamDisplayName} — Turnier-spezifische Spielerauswahl`
+        : "Turnier-spezifische Spielerauswahl aus dem aktiven Saison-Kader (Hauptteam)"
+      : data?.teamDisplayName
+        ? `Saison-Kader ${data.teamDisplayName} — Match-spezifische Spielerauswahl`
+        : "Match-spezifische Spielerauswahl aus dem aktiven Saison-Kader";
+
   return (
     <PlanningEditorParticipantsSection
       headingId="spiele-edit-match-squad-heading"
-      testId="spiele-edit-match-squad-section"
+      testId={sectionTestId}
       persisted
       title="Aufgebot"
-      description={
-        data?.teamDisplayName
-          ? `Saison-Kader ${data.teamDisplayName} — Match-spezifische Spielerauswahl`
-          : "Match-spezifische Spielerauswahl aus dem aktiven Saison-Kader"
-      }
+      description={squadDescription}
     >
       {loading ? (
         <div className="flex items-center gap-2 py-6 text-sm text-[var(--muted)]" data-testid="match-squad-loading">
@@ -242,7 +277,7 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
         </p>
       ) : null}
 
-      {!loading && data?.availabilityCollection ? (
+      {!loading && variant === "match" && data?.availabilityCollection ? (
         <MatchAvailabilityCollectionPanel
           matchId={matchId}
           timeZone={timeZone}

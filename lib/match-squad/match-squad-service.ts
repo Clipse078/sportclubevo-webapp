@@ -24,7 +24,12 @@ import type {
   MatchSquadPlayerPresentation,
   MatchSquadViewModel,
 } from "@/lib/match-squad/types";
+import type { ActivitySquadEventKind } from "@/lib/match-squad/activity-squad-kind";
+import { participationEventKindForActivitySquad } from "@/lib/match-squad/activity-squad-kind";
 import { resolveMatchSquadEventContext } from "@/lib/match-squad/event-context";
+import { resolveTournamentSquadEventContext } from "@/lib/match-squad/tournament-squad-event-context";
+import type { ResolvedMatchSquadEventContext } from "@/lib/match-squad/event-context";
+import type { ResolvedTournamentSquadEventContext } from "@/lib/match-squad/tournament-squad-event-context";
 import {
   MatchSquadConflictError,
   MatchSquadReadOnlyError,
@@ -108,10 +113,26 @@ async function loadCurrentRosterRows(teamSeasonId: string, tenantId: string): Pr
   });
 }
 
+type ResolvedActivitySquadContext =
+  | ResolvedMatchSquadEventContext
+  | ResolvedTournamentSquadEventContext;
+
+async function resolveActivitySquadEventContext(
+  tenantId: string,
+  eventId: string,
+  kind: ActivitySquadEventKind,
+): Promise<ResolvedActivitySquadContext> {
+  if (kind === "MATCH") {
+    return resolveMatchSquadEventContext(tenantId, eventId);
+  }
+  return resolveTournamentSquadEventContext(tenantId, eventId);
+}
+
 async function loadParticipationByPerson(
   tenantId: string,
   eventId: string,
   personIds: string[],
+  activityKind: ActivitySquadEventKind,
 ): Promise<Map<string, ParticipationRow>> {
   if (personIds.length === 0) {
     return new Map();
@@ -120,7 +141,7 @@ async function loadParticipationByPerson(
     where: {
       tenantId,
       eventId,
-      eventKind: "MATCH",
+      eventKind: participationEventKindForActivitySquad(activityKind),
       personId: { in: personIds },
     },
     select: {
@@ -245,11 +266,12 @@ async function loadSelectedPersonIds(matchSquadId: string): Promise<string[]> {
   return rows.map((row) => row.personId);
 }
 
-export async function getOrCreateDraftMatchSquad(
+async function getOrCreateDraftActivitySquad(
   tenantId: string,
   eventId: string,
+  activityKind: ActivitySquadEventKind,
 ): Promise<{ id: string; updatedAt: Date; teamSeasonId: string }> {
-  const context = await resolveMatchSquadEventContext(tenantId, eventId);
+  const context = await resolveActivitySquadEventContext(tenantId, eventId, activityKind);
 
   const existing = await prisma.matchSquad.findUnique({
     where: {
@@ -283,11 +305,19 @@ export async function getOrCreateDraftMatchSquad(
   return created;
 }
 
-export async function buildMatchSquadViewModel(
+export async function getOrCreateDraftMatchSquad(
   tenantId: string,
   eventId: string,
+): Promise<{ id: string; updatedAt: Date; teamSeasonId: string }> {
+  return getOrCreateDraftActivitySquad(tenantId, eventId, "MATCH");
+}
+
+async function buildActivitySquadViewModel(
+  tenantId: string,
+  eventId: string,
+  activityKind: ActivitySquadEventKind,
 ): Promise<MatchSquadViewModel> {
-  const context = await resolveMatchSquadEventContext(tenantId, eventId);
+  const context = await resolveActivitySquadEventContext(tenantId, eventId, activityKind);
   const editability = isMatchSquadEditable(context.status);
 
   const [rosterRows, squad] = await Promise.all([
@@ -307,6 +337,7 @@ export async function buildMatchSquadViewModel(
     tenantId,
     eventId,
     participationPersonIds,
+    activityKind,
   );
 
   const selected: MatchSquadPlayerPresentation[] = [];
@@ -385,14 +416,34 @@ export async function buildMatchSquadViewModel(
   };
 }
 
-export async function setMatchSquadMembers(input: {
+export async function buildMatchSquadViewModel(
+  tenantId: string,
+  eventId: string,
+): Promise<MatchSquadViewModel> {
+  return buildActivitySquadViewModel(tenantId, eventId, "MATCH");
+}
+
+export async function buildTournamentSquadViewModel(
+  tenantId: string,
+  eventId: string,
+): Promise<MatchSquadViewModel> {
+  return buildActivitySquadViewModel(tenantId, eventId, "TOURNAMENT");
+}
+
+async function setActivitySquadMembers(input: {
   tenantId: string;
   eventId: string;
+  activityKind: ActivitySquadEventKind;
   actorUserId: string | null;
   desiredPersonIds: string[];
   expectedVersion?: string | null;
+  auditModuleKey: string;
 }): Promise<MatchSquadViewModel> {
-  const context = await resolveMatchSquadEventContext(input.tenantId, input.eventId);
+  const context = await resolveActivitySquadEventContext(
+    input.tenantId,
+    input.eventId,
+    input.activityKind,
+  );
   const editability = isMatchSquadEditable(context.status);
   if (!editability.editable) {
     throw new MatchSquadReadOnlyError(editability.reason ?? undefined);
@@ -418,7 +469,11 @@ export async function setMatchSquadMembers(input: {
     }
   }
 
-  const squad = await getOrCreateDraftMatchSquad(input.tenantId, input.eventId);
+  const squad = await getOrCreateDraftActivitySquad(
+    input.tenantId,
+    input.eventId,
+    input.activityKind,
+  );
   const beforeIds = await loadSelectedPersonIds(squad.id);
 
   await prisma.$transaction(async (tx) => {
@@ -469,12 +524,15 @@ export async function setMatchSquadMembers(input: {
     }
   });
 
-  const afterView = await buildMatchSquadViewModel(input.tenantId, input.eventId);
+  const afterView =
+    input.activityKind === "MATCH"
+      ? await buildMatchSquadViewModel(input.tenantId, input.eventId)
+      : await buildTournamentSquadViewModel(input.tenantId, input.eventId);
 
   void logAction({
     actorUserId: input.actorUserId,
     tenantId: input.tenantId,
-    moduleKey: "matchcenter",
+    moduleKey: input.auditModuleKey,
     entityType: "MatchSquad",
     entityId: squad.id,
     action: beforeIds.length === 0 ? "CREATE" : "UPDATE",
@@ -488,6 +546,34 @@ export async function setMatchSquadMembers(input: {
   });
 
   return afterView;
+}
+
+export async function setMatchSquadMembers(input: {
+  tenantId: string;
+  eventId: string;
+  actorUserId: string | null;
+  desiredPersonIds: string[];
+  expectedVersion?: string | null;
+}): Promise<MatchSquadViewModel> {
+  return setActivitySquadMembers({
+    ...input,
+    activityKind: "MATCH",
+    auditModuleKey: "matchcenter",
+  });
+}
+
+export async function setTournamentSquadMembers(input: {
+  tenantId: string;
+  eventId: string;
+  actorUserId: string | null;
+  desiredPersonIds: string[];
+  expectedVersion?: string | null;
+}): Promise<MatchSquadViewModel> {
+  return setActivitySquadMembers({
+    ...input,
+    activityKind: "TOURNAMENT",
+    auditModuleKey: "tournamentcenter",
+  });
 }
 
 /** Product invariant for 01B: remaining roster players are NOT cross-team available. */

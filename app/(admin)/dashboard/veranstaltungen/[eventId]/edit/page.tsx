@@ -101,48 +101,50 @@ export default async function VeranstaltungEditPage({ params }: Props) {
     />
   );
 
-  const operationalPrimarySections = (
-    <>
-      <PlanningEditorParticipantsSection
-        headingId="veranstaltung-edit-participants-heading"
-        testId="veranstaltung-edit-participants-section"
-        persisted
-      >
-        <ClubEventParticipationAudienceEditor eventId={event.id} disabled={!canManage} />
-        <PlanningParticipantsList
-          people={participantsPresentation.people}
-          teams={participantsPresentation.teams ?? []}
+  const operationalTeilnahmeSections = (
+    <PlanningEditorParticipantsSection
+      headingId="veranstaltung-edit-participants-heading"
+      testId="veranstaltung-edit-participants-section"
+      persisted
+    >
+      <ClubEventParticipationAudienceEditor eventId={event.id} disabled={!canManage} />
+      <PlanningParticipantsList
+        people={participantsPresentation.people}
+        teams={participantsPresentation.teams ?? []}
+      />
+    </PlanningEditorParticipantsSection>
+  );
+
+  const operationalPlanungSections = (
+    <PlanningEditorWorkSection
+      headingId="veranstaltung-edit-work-heading"
+      testId="veranstaltung-edit-work-section"
+      persisted
+      locale={locale}
+      tasksPanel={tasksPanel}
+      requirementsPanel={
+        <ContextRelatedRequirementsPanel
+          resourceType="CLUB_EVENT"
+          resourceId={event.id}
+          locale={locale}
         />
-      </PlanningEditorParticipantsSection>
+      }
+    />
+  );
 
-      <PlanningEditorWorkSection
-        headingId="veranstaltung-edit-work-heading"
-        testId="veranstaltung-edit-work-section"
-        persisted
-        locale={locale}
-        tasksPanel={tasksPanel}
-        requirementsPanel={
-          <ContextRelatedRequirementsPanel
-            resourceType="CLUB_EVENT"
-            resourceId={event.id}
-            locale={locale}
-          />
-        }
-      />
-
-      <PlanningEditorCollaborationSection
-        headingId="veranstaltung-edit-collaboration-heading"
-        testId="veranstaltung-edit-collaboration-section"
-        persisted
-        tenantSlug={tenantContext.key}
-        targetType="CLUB_EVENT"
-        targetId={event.id}
-        canEdit={canManage}
-        currentUserId={session.user?.id ?? null}
-        locale={locale}
-        timezone={timeZone}
-      />
-    </>
+  const operationalKommunikationSections = (
+    <PlanningEditorCollaborationSection
+      headingId="veranstaltung-edit-collaboration-heading"
+      testId="veranstaltung-edit-collaboration-section"
+      persisted
+      tenantSlug={tenantContext.key}
+      targetType="CLUB_EVENT"
+      targetId={event.id}
+      canEdit={canManage}
+      currentUserId={session.user?.id ?? null}
+      locale={locale}
+      timezone={timeZone}
+    />
   );
 
   const operationalRailSections = (
@@ -216,7 +218,9 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           event={event}
           timeZone={tenantContext.timezone}
           canManage={canManage}
-          operationalPrimarySections={operationalPrimarySections}
+          operationalTeilnahmeSections={operationalTeilnahmeSections}
+          operationalPlanungSections={operationalPlanungSections}
+          operationalKommunikationSections={operationalKommunikationSections}
           operationalRailSections={operationalRailSections}
           pitchHallFacilityGroups={pitchHallFacilityGroups}
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}

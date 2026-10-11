@@ -20,6 +20,8 @@ import PlanningParticipantsList from "@/components/admin/shared/planning-editor/
 import { loadTournamentPlanningParticipants } from "@/lib/planning/load-tournament-planning-participants";
 import { resolveTeamSeasonIdForTeamAndSeason } from "@/lib/planning/resolve-team-season-id";
 import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
+import { resolveIntegratedTournamentSquadWorkspace } from "@/lib/match-squad/integrated-workspace";
+import MatchSquadSection from "@/components/admin/matchcenter/MatchSquadSection";
 
 type Props = { params: Promise<{ tournamentId: string }> };
 
@@ -81,6 +83,20 @@ export default async function TournamentEditPage({ params }: Props) {
 
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
+  const userId = session.user?.effectiveUserId ?? session.user?.id ?? "";
+  const integratedTournamentSquadWorkspace = userId
+    ? await resolveIntegratedTournamentSquadWorkspace({
+        tenantId: tenantContext.id,
+        tenantKey: tenantContext.key,
+        userId,
+        tournamentEventId: tournament.id,
+      })
+    : { available: false as const };
+
+  const tournamentSquadSection = integratedTournamentSquadWorkspace.available ? (
+    <MatchSquadSection matchId={tournament.id} timeZone={timeZone} variant="tournament" />
+  ) : null;
+
   const participantPresentation = await loadTournamentPlanningParticipants(tenantContext.id, tournament);
 
   const hostTeamSeasonId = await resolveTeamSeasonIdForTeamAndSeason(
@@ -183,6 +199,7 @@ export default async function TournamentEditPage({ params }: Props) {
           }
           participantsSection={participantsSection}
           collaborationSection={collaborationSection}
+          tournamentSquadSection={tournamentSquadSection}
         />
       </ToastProvider>
     </PageShell>

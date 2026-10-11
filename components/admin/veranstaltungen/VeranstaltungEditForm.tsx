@@ -9,8 +9,10 @@ import { VERANSTALTUNG_EDIT_FORM_ID } from "@/components/admin/veranstaltungen/v
 import { useVeranstaltungEditSubmitState } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
-import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import ClubEventActivityTabShell from "@/components/admin/veranstaltungen/ClubEventActivityTabShell";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { getSceActivitySemanticIcon } from "@/lib/sce/workspace/sce-activity-semantic-icons";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import {
   clubEventScheduleFormFromPersisted,
@@ -59,9 +61,13 @@ type VeranstaltungEditFormProps = {
   };
   timeZone?: string | null;
   canManage?: boolean;
-  /** Participation, tasks, collaboration — primary operational column. */
-  operationalPrimarySections?: ReactNode;
-  /** Compact participation / status controls for the right rail. */
+  /** Teilnahme tab — audience, roster, participation request rail content. */
+  operationalTeilnahmeSections?: ReactNode;
+  /** Planung tab — tasks and requirements. */
+  operationalPlanungSections?: ReactNode;
+  /** Kommunikation tab — contextual collaboration. */
+  operationalKommunikationSections?: ReactNode;
+  /** Compact participation / status controls (Teilnahme tab). */
   operationalRailSections?: ReactNode;
   pitchHallFacilityGroups?: FacilityGroup[];
   dressingRoomFacilityGroups?: FacilityGroup[];
@@ -73,7 +79,9 @@ export default function VeranstaltungEditForm({
   event,
   timeZone,
   canManage = true,
-  operationalPrimarySections,
+  operationalTeilnahmeSections,
+  operationalPlanungSections,
+  operationalKommunikationSections,
   operationalRailSections,
   pitchHallFacilityGroups = [],
   dressingRoomFacilityGroups = [],
@@ -127,6 +135,21 @@ export default function VeranstaltungEditForm({
   });
 
   const [error, setError] = useState<string | null>(null);
+
+  const isDirty =
+    title.trim() !== event.title.trim() ||
+    (description ?? "") !== (event.description ?? "") ||
+    (location ?? "") !== (event.location ?? "") ||
+    (organizerName ?? "") !== (event.organizerName ?? "") ||
+    (remarks ?? "") !== (event.remarks ?? "") ||
+    ausspielung.websiteVisible !== event.websiteVisible ||
+    ausspielung.homepageVisible !== event.homepageVisible ||
+    ausspielung.wochenplanVisible !== event.wochenplanVisible ||
+    schedule.allDay !== initialSchedule.allDay ||
+    schedule.startDate !== initialSchedule.startDate ||
+    (schedule.endDate ?? "") !== (initialSchedule.endDate ?? initialSchedule.startDate) ||
+    (schedule.startTime ?? "") !== (initialSchedule.startTime ?? "18:00") ||
+    (schedule.endTime ?? "") !== (initialSchedule.endTime ?? "");
 
   const scheduleInterval = useMemo(() => {
     if (!schedule.startDate) return null;
@@ -257,10 +280,130 @@ export default function VeranstaltungEditForm({
         title={title.trim() || event.title}
         scheduleLine={timingSummary}
       />
-      <PlanningEditorOperationalWorkspace
-        testId="veranstaltung-edit-operational-workspace"
-        secondaryRail={
-          <>
+      <ClubEventActivityTabShell
+        isDirty={isDirty}
+        uebersicht={
+          <div className="space-y-3" data-testid="veranstaltung-edit-operational-workspace">
+            <PlanningEditorSection
+              testId="veranstaltung-edit-details-section"
+              ariaLabelledBy="veranstaltung-edit-details-heading"
+            >
+              <div className="space-y-3">
+                <PlanningEditorSectionHeading
+                  id="veranstaltung-edit-details-heading"
+                  title={t("sections.details")}
+                />
+                {event.season ? (
+                  <p className="text-xs text-[var(--text-2)]">
+                    {tf("season")}: {event.season.name}
+                  </p>
+                ) : null}
+                <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+                  <label className="block space-y-2 md:col-span-2">
+                    <span className="fca-label">{tf("title")}</span>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="fca-input h-8 text-sm"
+                      required
+                      disabled={isReadonly}
+                    />
+                  </label>
+
+                  <VeranstaltungScheduleFields
+                    values={schedule}
+                    onChange={handleScheduleChange}
+                    disabled={isReadonly}
+                  />
+
+                  <label className="block space-y-2 md:col-span-2">
+                    <span className="fca-label">{tf("description")}</span>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="fca-textarea min-h-[96px] text-sm"
+                      disabled={isReadonly}
+                    />
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="fca-label">{tf("location")}</span>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="fca-input h-8 text-sm"
+                      disabled={isReadonly}
+                    />
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="fca-label">{tf("organizer")}</span>
+                    <input
+                      type="text"
+                      value={organizerName}
+                      onChange={(e) => setOrganizerName(e.target.value)}
+                      className="fca-input h-8 text-sm"
+                      disabled={isReadonly}
+                    />
+                  </label>
+
+                  <label className="block space-y-2 md:col-span-2">
+                    <span className="fca-label">{tf("remarks")}</span>
+                    <input
+                      type="text"
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      className="fca-input h-8 text-sm"
+                      disabled={isReadonly}
+                    />
+                  </label>
+                </div>
+              </div>
+            </PlanningEditorSection>
+          </div>
+        }
+        teilnahme={
+          <div className="space-y-3">
+            {operationalRailSections}
+            {operationalTeilnahmeSections}
+          </div>
+        }
+        planung={
+          <div className="space-y-3">
+            <PlanningEditorSection
+              testId="veranstaltung-edit-resources-section"
+              ariaLabelledBy="veranstaltung-edit-resources-heading"
+            >
+              <div className="space-y-3">
+                <PlanningEditorSectionHeading
+                  id="veranstaltung-edit-resources-heading"
+                  title={t("sections.resources")}
+                />
+                <VeranstaltungFacilityAllocationEditor
+                  eventId={event.id}
+                  canManage={!isReadonly}
+                  initialAllocations={initialFacilityAllocations}
+                  pitchHallFacilityGroups={pitchHallFacilityGroups}
+                  dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                  otherFacilityGroups={otherFacilityGroups}
+                  pitchAvailabilityByResourceId={pitchAvailability}
+                  dressingRoomAvailabilityByResourceId={dressingRoomAvailability}
+                />
+              </div>
+            </PlanningEditorSection>
+            {operationalPlanungSections}
+          </div>
+        }
+        kommunikation={operationalKommunikationSections ?? null}
+        mehr={
+          <SceFeatureCard
+            title="Publikation"
+            description="Steuere, wo diese Veranstaltung veröffentlicht wird."
+            icon={getSceActivitySemanticIcon("publication")}
+            testId="veranstaltung-edit-mehr-publication"
+          >
             <PlanningPublicationPanel testId="veranstaltung-edit-publication-panel">
               <VeranstaltungAusspielungFields
                 values={ausspielung}
@@ -270,108 +413,7 @@ export default function VeranstaltungEditForm({
                 testIdPrefix="veranstaltung-edit-publication"
               />
             </PlanningPublicationPanel>
-            {operationalRailSections}
-          </>
-        }
-        primary={
-          <div className="space-y-3">
-          <PlanningEditorSection testId="veranstaltung-edit-details-section" ariaLabelledBy="veranstaltung-edit-details-heading">
-        <div className="space-y-3">
-          <PlanningEditorSectionHeading id="veranstaltung-edit-details-heading" title={t("sections.details")} />
-          {event.season ? (
-            <p className="text-xs text-[var(--text-2)]">
-              {tf("season")}: {event.season.name}
-            </p>
-          ) : null}
-          <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-            <label className="block space-y-2 md:col-span-2">
-              <span className="fca-label">{tf("title")}</span>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="fca-input h-8 text-sm"
-                required
-                disabled={isReadonly}
-              />
-            </label>
-
-            <VeranstaltungScheduleFields
-              values={schedule}
-              onChange={handleScheduleChange}
-              disabled={isReadonly}
-            />
-
-            <label className="block space-y-2 md:col-span-2">
-              <span className="fca-label">{tf("description")}</span>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="fca-textarea min-h-[96px] text-sm"
-                disabled={isReadonly}
-              />
-            </label>
-
-            <label className="block space-y-2">
-              <span className="fca-label">{tf("location")}</span>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="fca-input h-8 text-sm"
-                disabled={isReadonly}
-              />
-            </label>
-
-            <label className="block space-y-2">
-              <span className="fca-label">{tf("organizer")}</span>
-              <input
-                type="text"
-                value={organizerName}
-                onChange={(e) => setOrganizerName(e.target.value)}
-                className="fca-input h-8 text-sm"
-                disabled={isReadonly}
-              />
-            </label>
-
-            <label className="block space-y-2 md:col-span-2">
-              <span className="fca-label">{tf("remarks")}</span>
-              <input
-                type="text"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                className="fca-input h-8 text-sm"
-                disabled={isReadonly}
-              />
-            </label>
-          </div>
-        </div>
-      </PlanningEditorSection>
-
-      <PlanningEditorSection
-        testId="veranstaltung-edit-resources-section"
-        ariaLabelledBy="veranstaltung-edit-resources-heading"
-      >
-        <div className="space-y-3">
-          <PlanningEditorSectionHeading
-            id="veranstaltung-edit-resources-heading"
-            title={t("sections.resources")}
-          />
-          <VeranstaltungFacilityAllocationEditor
-            eventId={event.id}
-            canManage={!isReadonly}
-            initialAllocations={initialFacilityAllocations}
-            pitchHallFacilityGroups={pitchHallFacilityGroups}
-            dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-            otherFacilityGroups={otherFacilityGroups}
-            pitchAvailabilityByResourceId={pitchAvailability}
-            dressingRoomAvailabilityByResourceId={dressingRoomAvailability}
-          />
-        </div>
-      </PlanningEditorSection>
-
-          {operationalPrimarySections}
-          </div>
+          </SceFeatureCard>
         }
       />
 

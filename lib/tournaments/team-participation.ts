@@ -7,6 +7,16 @@
 
 import type { TournamentDto, TournamentTeamReference } from "./types";
 
+/**
+ * Canonical Tournament Hauptteam (Teamseite / Wochenplan) — Event.teamId only.
+ * Teilnahme participants must not determine primary Aufgebot or record header identity.
+ */
+export function resolveTournamentHauptteamReference(
+  tournament: Pick<TournamentDto, "team">,
+): TournamentTeamReference | null {
+  return tournament.team ?? null;
+}
+
 /** Distinct tenant teams participating in a tournament (participants, then legacy team). */
 export function getTournamentParticipatingTeams(
   tournament: Pick<TournamentDto, "participants" | "team">,

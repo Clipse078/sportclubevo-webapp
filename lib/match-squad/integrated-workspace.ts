@@ -5,6 +5,7 @@
 
 import { resolveMatchSquadAccess } from "@/lib/match-squad/auth";
 import { resolveMatchSquadEventContext } from "@/lib/match-squad/event-context";
+import { resolveTournamentSquadEventContext } from "@/lib/match-squad/tournament-squad-event-context";
 import { MatchSquadError } from "@/lib/match-squad/errors";
 
 export type IntegratedMatchSquadWorkspace = {
@@ -42,6 +43,55 @@ export async function resolveIntegratedMatchSquadWorkspace(input: {
   let context;
   try {
     context = await resolveMatchSquadEventContext(input.tenantId, input.matchEventId);
+  } catch (error) {
+    if (error instanceof MatchSquadError) {
+      return { available: false };
+    }
+    throw error;
+  }
+
+  const access = await resolveMatchSquadAccess({
+    userId: input.userId,
+    tenantId: input.tenantId,
+    tenantKey: input.tenantKey,
+    teamId: context.teamId,
+    teamSeasonId: context.teamSeasonId,
+  });
+
+  if (!access?.canView) {
+    return { available: false };
+  }
+
+  return {
+    available: true,
+    teamId: context.teamId,
+    teamSeasonId: context.teamSeasonId,
+  };
+}
+
+export type IntegratedTournamentSquadWorkspace = {
+  available: true;
+  teamId: string;
+  teamSeasonId: string;
+};
+
+export type IntegratedTournamentSquadWorkspaceResolution =
+  | IntegratedTournamentSquadWorkspace
+  | { available: false };
+
+/**
+ * Tournament Aufgebot is available when the Event has a manageable Hauptteam (teamSeason)
+ * and the user may view squad management for that team.
+ */
+export async function resolveIntegratedTournamentSquadWorkspace(input: {
+  tenantId: string;
+  tenantKey: string;
+  userId: string;
+  tournamentEventId: string;
+}): Promise<IntegratedTournamentSquadWorkspaceResolution> {
+  let context;
+  try {
+    context = await resolveTournamentSquadEventContext(input.tenantId, input.tournamentEventId);
   } catch (error) {
     if (error instanceof MatchSquadError) {
       return { available: false };

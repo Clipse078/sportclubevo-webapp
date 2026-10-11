@@ -13,6 +13,8 @@ import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/matchcenter/match-1",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function renderWorkspace(ui: React.ReactElement) {
@@ -285,7 +287,8 @@ describe("SpieleMatchRecordWorkspace", () => {
     );
 
     expect(screen.getByTestId("spiele-record-kickoff")).toHaveTextContent("Zeit offen");
-    expect(screen.getByTestId("spiele-record-context-rail")).toHaveTextContent("Zeit offen");
+    expect(screen.queryByTestId("spiele-record-right-rail")).toBeNull();
+    expect(screen.queryByTestId("spiele-record-context-rail")).toBeNull();
     expect(screen.queryByText("02:00")).not.toBeInTheDocument();
   });
 

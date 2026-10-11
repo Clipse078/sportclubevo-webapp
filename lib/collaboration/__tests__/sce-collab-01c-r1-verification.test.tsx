@@ -68,6 +68,8 @@ vi.mock("@/lib/collaboration/club-event/resolve-club-event-audience-preview", as
 });
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/dashboard/veranstaltungen/evt-gv/edit",
+  useSearchParams: () => new URLSearchParams("tab=uebersicht"),
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 

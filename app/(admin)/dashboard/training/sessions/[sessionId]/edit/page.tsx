@@ -23,7 +23,7 @@ import {
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
-import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import TrainingSessionActivityTabShell from "@/components/admin/training/TrainingSessionActivityTabShell";
 import { getTranslations } from "next-intl/server";
 import { getTrainingSessionParticipantRoster } from "@/lib/training/training-session-participants";
 import { TrainingSessionParticipantsPanel } from "@/components/admin/training/TrainingSessionParticipantsPanel";
@@ -33,6 +33,8 @@ import PlanningEditorCollaborationSection from "@/components/admin/shared/planni
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { getSceActivitySemanticIcon } from "@/lib/sce/workspace/sce-activity-semantic-icons";
 import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import { getTranslations as getPlanningTranslations } from "next-intl/server";
 import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
@@ -191,60 +193,9 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           {t("inheritanceIntro")}
         </p>
 
-        <PlanningEditorOperationalWorkspace
-          testId="training-session-edit-operational-workspace"
-          secondaryRail={
-            <>
-              {teamSeasonPublication ? (
-                <PlanningPublicationPanel
-                  testId="training-session-edit-publication-panel"
-                  showIntro={false}
-                >
-                  <TrainingRecordPublicationSection
-                    teamId={teamSeasonPublication.teamId}
-                    teamSeasonId={trainingSession.teamSeasonId}
-                    initialPublication={{
-                      trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
-                      infoboardVisible: teamSeasonPublication.infoboardVisible,
-                    }}
-                    canEditTeamPublication={canEditTeamPublication}
-                    teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
-                  />
-                </PlanningPublicationPanel>
-              ) : null}
-
-              <PlanningEditorSection
-                className="space-y-2"
-                ariaLabelledBy="training-session-edit-participation-heading"
-                testId="training-session-edit-participation-panel"
-              >
-                <PlanningEditorSectionHeading
-                  id="training-session-edit-participation-heading"
-                  title={t("participationHeading")}
-                  description={t("participationDescription")}
-                />
-                <ParticipationRequestConfigEditor
-                  apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
-                  timeZone={timezone}
-                  disabled={!canManage}
-                  layout="sessionEdit"
-                  values={{
-                    participationResponseDueAt: trainingSession.participationResponseDueAt,
-                    participationReminder1At: trainingSession.participationReminder1At,
-                    participationReminder2At: trainingSession.participationReminder2At,
-                    participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
-                    participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
-                  }}
-                />
-                <TrainingSessionParticipantsPanel
-                  participants={participantRoster.participants}
-                  releaseContext={trainingReleaseContext}
-                />
-              </PlanningEditorSection>
-            </>
-          }
-          primary={
-            <div className="space-y-3">
+        <TrainingSessionActivityTabShell
+          uebersicht={
+            <div className="space-y-3" data-testid="training-session-edit-operational-workspace">
               <PlanningEditorSection
                 ariaLabelledBy="training-session-edit-datetime-heading"
                 testId="training-session-edit-datetime-panel"
@@ -285,42 +236,102 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                 canManageFacilities={canManageFacilities}
                 label={tPlanning("zeitstandardLink")}
               />
-
-              <PlanningEditorWorkSection
-                headingId="training-session-edit-work-heading"
-                testId="training-session-edit-work-section"
-                persisted
-                locale={locale}
-                tasksPanel={
-                  <ContextRelatedTasksPanel
-                    contextType="TRAINING"
-                    contextId={trainingSession.trainingSeriesId}
-                    locale={locale}
-                    timeZone={timezone}
-                  />
-                }
-                requirementsPanel={
-                  <ContextRelatedRequirementsPanel
-                    resourceType="TRAINING"
-                    resourceId={trainingSession.trainingSeriesId}
-                    locale={locale}
-                  />
-                }
-              />
-
-              <PlanningEditorCollaborationSection
-                headingId="training-session-edit-collaboration-heading"
-                testId="training-session-edit-collaboration-section"
-                persisted
-                tenantSlug={tenantContext.key}
-                targetType="TRAINING"
-                targetId={sessionId}
-                canEdit={canManage}
-                currentUserId={session.user?.id ?? null}
-                locale={locale}
-                timezone={timezone}
-              />
             </div>
+          }
+          teilnahme={
+            <PlanningEditorSection
+              className="space-y-2"
+              ariaLabelledBy="training-session-edit-participation-heading"
+              testId="training-session-edit-participation-panel"
+            >
+              <PlanningEditorSectionHeading
+                id="training-session-edit-participation-heading"
+                title={t("participationHeading")}
+                description={t("participationDescription")}
+              />
+              <ParticipationRequestConfigEditor
+                apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
+                timeZone={timezone}
+                disabled={!canManage}
+                layout="sessionEdit"
+                values={{
+                  participationResponseDueAt: trainingSession.participationResponseDueAt,
+                  participationReminder1At: trainingSession.participationReminder1At,
+                  participationReminder2At: trainingSession.participationReminder2At,
+                  participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
+                  participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
+                }}
+              />
+              <TrainingSessionParticipantsPanel
+                participants={participantRoster.participants}
+                releaseContext={trainingReleaseContext}
+              />
+            </PlanningEditorSection>
+          }
+          planung={
+            <PlanningEditorWorkSection
+              headingId="training-session-edit-work-heading"
+              testId="training-session-edit-work-section"
+              persisted
+              locale={locale}
+              tasksPanel={
+                <ContextRelatedTasksPanel
+                  contextType="TRAINING"
+                  contextId={trainingSession.trainingSeriesId}
+                  locale={locale}
+                  timeZone={timezone}
+                />
+              }
+              requirementsPanel={
+                <ContextRelatedRequirementsPanel
+                  resourceType="TRAINING"
+                  resourceId={trainingSession.trainingSeriesId}
+                  locale={locale}
+                />
+              }
+            />
+          }
+          kommunikation={
+            <PlanningEditorCollaborationSection
+              headingId="training-session-edit-collaboration-heading"
+              testId="training-session-edit-collaboration-section"
+              persisted
+              tenantSlug={tenantContext.key}
+              targetType="TRAINING"
+              targetId={sessionId}
+              canEdit={canManage}
+              currentUserId={session.user?.id ?? null}
+              locale={locale}
+              timezone={timezone}
+            />
+          }
+          mehr={
+            teamSeasonPublication ? (
+              <SceFeatureCard
+                title="Publikation"
+                description="Steuere, wo diese Trainingseinheit sichtbar ist."
+                icon={getSceActivitySemanticIcon("publication")}
+                testId="training-session-edit-mehr-publication"
+              >
+                <PlanningPublicationPanel
+                  testId="training-session-edit-publication-panel"
+                  showIntro={false}
+                >
+                  <TrainingRecordPublicationSection
+                    teamId={teamSeasonPublication.teamId}
+                    teamSeasonId={trainingSession.teamSeasonId}
+                    initialPublication={{
+                      trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
+                      infoboardVisible: teamSeasonPublication.infoboardVisible,
+                    }}
+                    canEditTeamPublication={canEditTeamPublication}
+                    teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+                  />
+                </PlanningPublicationPanel>
+              </SceFeatureCard>
+            ) : (
+              <p className="text-sm text-[var(--text-2)]">Keine weiteren Optionen.</p>
+            )
           }
         />
       </PlanningEditorShell>

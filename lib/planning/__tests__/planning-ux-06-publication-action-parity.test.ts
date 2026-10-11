@@ -9,7 +9,7 @@ function read(rel: string): string {
 describe("PLANNING-UX-06 publication + action parity", () => {
   it("shared PlanningPublicationPanel is used on active operational surfaces", () => {
     const surfaces = [
-      "components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx",
+      "components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx",
       "components/admin/tournamentcenter/record/TurniereTournamentRecordWorkspace.tsx",
       "components/admin/veranstaltungen/VeranstaltungEditForm.tsx",
       "components/admin/veranstaltungen/VeranstaltungCreateForm.tsx",
@@ -23,11 +23,14 @@ describe("PLANNING-UX-06 publication + action parity", () => {
     }
   });
 
-  it("match record exposes canonical publication toggles in the right rail", () => {
+  it("match record exposes exactly one canonical publication editor in Mehr (NAV-01 UAT R1)", () => {
     const workspace = read("components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx");
-    expect(workspace).toContain("spiele-record-publication-panel");
-    expect(workspace).toContain("MatchPublicationToggles");
-    expect(workspace).toContain("suppressPublicationUI");
+    expect(workspace).not.toContain("spiele-record-publication-panel");
+    expect(workspace).not.toContain("contextRail=");
+    const panels = read("components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx");
+    expect(panels).toContain('testId="spiele-record-publication-panel"');
+    expect(panels).toContain("MatchPublicationToggles");
+    expect(panels).toContain("suppressPublicationUI");
   });
 
   it("match PATCH route persists extended publication fields", () => {
