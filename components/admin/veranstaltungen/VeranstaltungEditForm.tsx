@@ -11,6 +11,8 @@ import PlanningEditorSection from "@/components/admin/shared/planning-editor/Pla
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import ClubEventActivityTabShell from "@/components/admin/veranstaltungen/ClubEventActivityTabShell";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { getSceActivitySemanticIcon } from "@/lib/sce/workspace/sce-activity-semantic-icons";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import {
   clubEventScheduleFormFromPersisted,
@@ -396,15 +398,22 @@ export default function VeranstaltungEditForm({
         }
         kommunikation={operationalKommunikationSections ?? null}
         mehr={
-          <PlanningPublicationPanel testId="veranstaltung-edit-publication-panel">
-            <VeranstaltungAusspielungFields
-              values={ausspielung}
-              onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-              disabled={isReadonly}
-              showHeading={false}
-              testIdPrefix="veranstaltung-edit-publication"
-            />
-          </PlanningPublicationPanel>
+          <SceFeatureCard
+            title="Publikation"
+            description="Steuere, wo diese Veranstaltung veröffentlicht wird."
+            icon={getSceActivitySemanticIcon("publication")}
+            testId="veranstaltung-edit-mehr-publication"
+          >
+            <PlanningPublicationPanel testId="veranstaltung-edit-publication-panel">
+              <VeranstaltungAusspielungFields
+                values={ausspielung}
+                onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+                disabled={isReadonly}
+                showHeading={false}
+                testIdPrefix="veranstaltung-edit-publication"
+              />
+            </PlanningPublicationPanel>
+          </SceFeatureCard>
         }
       />
 

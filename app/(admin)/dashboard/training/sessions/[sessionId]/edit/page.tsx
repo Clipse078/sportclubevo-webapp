@@ -33,6 +33,8 @@ import PlanningEditorCollaborationSection from "@/components/admin/shared/planni
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { getSceActivitySemanticIcon } from "@/lib/sce/workspace/sce-activity-semantic-icons";
 import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import { getTranslations as getPlanningTranslations } from "next-intl/server";
 import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
@@ -305,21 +307,28 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           }
           mehr={
             teamSeasonPublication ? (
-              <PlanningPublicationPanel
-                testId="training-session-edit-publication-panel"
-                showIntro={false}
+              <SceFeatureCard
+                title="Publikation"
+                description="Steuere, wo diese Trainingseinheit sichtbar ist."
+                icon={getSceActivitySemanticIcon("publication")}
+                testId="training-session-edit-mehr-publication"
               >
-                <TrainingRecordPublicationSection
-                  teamId={teamSeasonPublication.teamId}
-                  teamSeasonId={trainingSession.teamSeasonId}
-                  initialPublication={{
-                    trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
-                    infoboardVisible: teamSeasonPublication.infoboardVisible,
-                  }}
-                  canEditTeamPublication={canEditTeamPublication}
-                  teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
-                />
-              </PlanningPublicationPanel>
+                <PlanningPublicationPanel
+                  testId="training-session-edit-publication-panel"
+                  showIntro={false}
+                >
+                  <TrainingRecordPublicationSection
+                    teamId={teamSeasonPublication.teamId}
+                    teamSeasonId={trainingSession.teamSeasonId}
+                    initialPublication={{
+                      trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
+                      infoboardVisible: teamSeasonPublication.infoboardVisible,
+                    }}
+                    canEditTeamPublication={canEditTeamPublication}
+                    teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+                  />
+                </PlanningPublicationPanel>
+              </SceFeatureCard>
             ) : (
               <p className="text-sm text-[var(--text-2)]">Keine weiteren Optionen.</p>
             )
