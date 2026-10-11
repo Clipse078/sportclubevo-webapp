@@ -8,6 +8,7 @@ import MatchSquadCountsSummary, {
 } from "@/components/admin/matchcenter/MatchSquadCountsSummary";
 import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
 import MatchSquadPlayerList from "@/components/admin/matchcenter/MatchSquadPlayerList";
+import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-squad-presentation-order";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
 import type {
   MatchAvailabilityCollectionMetaView,
@@ -174,11 +175,13 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
     if (!candidateMap.has(row.personId)) candidateMap.set(row.personId, row);
   }
   const selectedSet = new Set(selectedIds);
-  const optimisticSelected = selectedIds
-    .map((id) => candidateMap.get(id))
-    .filter((row): row is MatchSquadPlayerPresentation => Boolean(row));
-  const optimisticRemaining = [...candidateMap.values()].filter(
-    (row) => !selectedSet.has(row.personId),
+  const optimisticSelected = sortMatchSquadPlayersForPresentation(
+    selectedIds
+      .map((id) => candidateMap.get(id))
+      .filter((row): row is MatchSquadPlayerPresentation => Boolean(row)),
+  );
+  const optimisticRemaining = sortMatchSquadPlayersForPresentation(
+    [...candidateMap.values()].filter((row) => !selectedSet.has(row.personId)),
   );
 
   const filterPlayers = (rows: MatchSquadPlayerPresentation[]) =>

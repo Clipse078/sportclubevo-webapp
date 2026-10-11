@@ -96,3 +96,21 @@ export function getMatchParticipationStatusPresentation(
 
   return { ...base, isConflictRelevant };
 }
+
+/** Presentation-only sort priority within a Match Squad group (AUFGEBOTEN / WEITERE KADERSPIELER). */
+export function getMatchAvailabilitySortPriority(
+  status: MatchParticipationPresentationStatus,
+): number {
+  switch (status) {
+    case "AVAILABLE":
+      return 1;
+    case "MAYBE":
+      return 2;
+    case "OPEN":
+      return 3;
+    case "UNAVAILABLE":
+      return 4;
+    default:
+      return 3;
+  }
+}

@@ -129,4 +129,74 @@ describe("MatchSquadSection", () => {
       "SCE Testspieler 01",
     );
   });
+
+  it("sorts remaining players by availability presentation order (UAT B1 regression)", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify(
+          squadPayload({
+            remaining: [
+              player({
+                personId: "p02",
+                displayName: "SCE Testspieler 02",
+                sortOrder: 2,
+                shirtNumber: 2,
+                presentationStatus: "UNAVAILABLE",
+                availability: "UNAVAILABLE",
+                availabilityLabel: "Nicht verfügbar",
+                participationStatus: "NO",
+              }),
+              player({
+                personId: "p03",
+                displayName: "SCE Testspieler 03",
+                sortOrder: 3,
+                shirtNumber: 3,
+                presentationStatus: "UNAVAILABLE",
+                availability: "UNAVAILABLE",
+                availabilityLabel: "Nicht verfügbar",
+                participationStatus: "NO",
+              }),
+              player({
+                personId: "p05",
+                displayName: "SCE Testspieler 05",
+                sortOrder: 5,
+                shirtNumber: 5,
+                canSelect: true,
+                availability: "UNKNOWN",
+                availabilityLabel: "Offen",
+                presentationStatus: "OPEN",
+                presentationTone: "muted",
+                presentationIcon: "circle",
+                participationStatus: null,
+              }),
+            ],
+            counts: {
+              rosterTotal: 3,
+              available: 0,
+              unavailable: 2,
+              maybe: 0,
+              open: 1,
+              selected: 0,
+              selectedAvailable: 0,
+              selectedMaybe: 0,
+              selectedOpen: 0,
+              conflicts: 0,
+            },
+          }),
+        ),
+    });
+
+    render(<MatchSquadSection matchId="match-1" />);
+
+    const list = await screen.findByTestId("match-squad-remaining-list");
+    const names = Array.from(list.querySelectorAll("[data-testid^='match-squad-player-name-']")).map(
+      (el) => el.textContent?.trim(),
+    );
+    expect(names).toEqual([
+      "SCE Testspieler 05",
+      "SCE Testspieler 02",
+      "SCE Testspieler 03",
+    ]);
+  });
 });
