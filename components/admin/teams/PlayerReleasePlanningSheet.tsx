@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { Check, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Check, ChevronDown, ChevronRight, ChevronUp, Loader2 } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { PLAYER_RELEASE_REASON_OPTIONS } from "@/lib/match-squad/player-release-presentation";
@@ -10,9 +10,14 @@ import { buildPlannerCandidatesRequestBody } from "@/lib/match-squad/player-rele
 import type {
   PlayerReleasePlanningActivityCandidate,
   PlayerReleasePlanningCandidatesResult,
+  PlayerReleasePlanningTargetTeam,
   PlayerReleasePlanReview,
 } from "@/lib/match-squad/player-release-planning-service";
 import { partitionTargetTeamActivities } from "@/lib/match-squad/player-release-planning-sort";
+
+const TARGET_TEAM_SEARCH_THRESHOLD = 10;
+
+type PlannerView = "teams" | "activities";
 
 type Props = {
   open: boolean;
@@ -37,6 +42,24 @@ function selectedCountForTeam(
   return activities.filter(
     (row) => row.targetTeamSeasonId === teamSeasonId && selectedEventIds.has(row.eventId),
   ).length;
+}
+
+function eventIdsForTeam(team: PlayerReleasePlanningTargetTeam): Set<string> {
+  return new Set(team.activities.map((row) => row.eventId));
+}
+
+function assertTeamActivitiesOwnership(
+  teamSeasonId: string,
+  activities: PlayerReleasePlanningActivityCandidate[],
+): void {
+  if (process.env.NODE_ENV === "production") return;
+  for (const activity of activities) {
+    if (activity.targetTeamSeasonId !== teamSeasonId) {
+      throw new Error(
+        `Activity ${activity.eventId} belongs to ${activity.targetTeamSeasonId}, expected ${teamSeasonId}`,
+      );
+    }
+  }
 }
 
 function ActivitySelectRow({
@@ -114,8 +137,14 @@ export default function PlayerReleasePlanningSheet({
   const [defaultReason, setDefaultReason] = useState("SPIELPRAXIS");
   const [activityDefaults, setActivityDefaults] = useState<ActivityDefaults>({});
   const [successCount, setSuccessCount] = useState<number | null>(null);
-  const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
-  const [showMoreTeamIds, setShowMoreTeamIds] = useState<Set<string>>(new Set());
+  const [plannerView, setPlannerView] = useState<PlannerView>("teams");
+  const [activeTargetTeamSeasonId, setActiveTargetTeamSeasonId] = useState<string | null>(null);
+  const [draftEventIds, setDraftEventIds] = useState<Set<string>>(new Set());
+  const [showMoreActivities, setShowMoreActivities] = useState(false);
+  const [teamSearchQuery, setTeamSearchQuery] = useState("");
+  const teamRowRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const activitiesHeadingRef = useRef<HTMLHeadingElement>(null);
+  const focusTeamRowOnTeamsView = useRef<string | null>(null);
 
   const apiPlanBase = `/api/teams/${teamId}/team-seasons/${teamSeasonId}/player-releases/plan`;
 
@@ -127,8 +156,12 @@ export default function PlayerReleasePlanningSheet({
     setActivityDefaults({});
     setError(null);
     setSuccessCount(null);
-    setExpandedTeamIds(new Set());
-    setShowMoreTeamIds(new Set());
+    setPlannerView("teams");
+    setActiveTargetTeamSeasonId(null);
+    setDraftEventIds(new Set());
+    setShowMoreActivities(false);
+    setTeamSearchQuery("");
+    focusTeamRowOnTeamsView.current = null;
   }, []);
 
   useEffect(() => {
@@ -161,9 +194,8 @@ export default function PlayerReleasePlanningSheet({
         }
         if (!cancelled) {
           setCandidates(json);
-          if (json.targetTeams?.length === 1) {
-            setExpandedTeamIds(new Set([json.targetTeams[0].targetTeamSeasonId]));
-          }
+          setPlannerView("teams");
+          setActiveTargetTeamSeasonId(null);
         }
       })
       .catch((err) => {
@@ -199,9 +231,86 @@ export default function PlayerReleasePlanningSheet({
     return startAt ? new Date(startAt) : null;
   }, [candidates?.sourceEventContext?.startAt]);
 
-  function toggleActivity(eventId: string) {
+  const activeTargetTeam = useMemo(() => {
+    if (!candidates || !activeTargetTeamSeasonId) return null;
+    return (
+      candidates.targetTeams.find((team) => team.targetTeamSeasonId === activeTargetTeamSeasonId) ??
+      null
+    );
+  }, [activeTargetTeamSeasonId, candidates]);
+
+  const visibleTargetTeams = useMemo(() => {
+    if (!candidates) return [];
+    return candidates.targetTeams.filter((team) => team.activityCount > 0 && team.activities.length > 0);
+  }, [candidates]);
+
+  const filteredTargetTeams = useMemo(() => {
+    const query = teamSearchQuery.trim().toLowerCase();
+    if (!query) return visibleTargetTeams;
+    return visibleTargetTeams.filter((team) => team.targetTeamLabel.toLowerCase().includes(query));
+  }, [teamSearchQuery, visibleTargetTeams]);
+
+  useEffect(() => {
+    if (plannerView !== "activities") return;
+    activitiesHeadingRef.current?.focus();
+  }, [plannerView, activeTargetTeamSeasonId]);
+
+  useEffect(() => {
+    if (plannerView !== "teams" || !focusTeamRowOnTeamsView.current) return;
+    const row = teamRowRefs.current.get(focusTeamRowOnTeamsView.current);
+    focusTeamRowOnTeamsView.current = null;
+    row?.focus();
+  }, [plannerView, filteredTargetTeams]);
+
+  function openTeamActivities(teamSeasonId: string) {
+    const team = candidates?.targetTeams.find((row) => row.targetTeamSeasonId === teamSeasonId);
+    if (!team) return;
+    assertTeamActivitiesOwnership(teamSeasonId, team.activities);
+    const committed = new Set<string>();
+    for (const activity of team.activities) {
+      if (selectedEventIds.has(activity.eventId)) committed.add(activity.eventId);
+    }
+    setReview(null);
+    setShowDetails(false);
+    setShowMoreActivities(false);
+    setDraftEventIds(committed);
+    setActiveTargetTeamSeasonId(teamSeasonId);
+    setPlannerView("activities");
+  }
+
+  function backToTeamsWithoutApply() {
+    if (activeTargetTeamSeasonId) {
+      focusTeamRowOnTeamsView.current = activeTargetTeamSeasonId;
+    }
+    setShowDetails(false);
+    setShowMoreActivities(false);
+    setDraftEventIds(new Set());
+    setActiveTargetTeamSeasonId(null);
+    setPlannerView("teams");
+  }
+
+  function applyTeamActivities() {
+    if (!activeTargetTeam) return;
+    const teamEventIds = eventIdsForTeam(activeTargetTeam);
     setReview(null);
     setSelectedEventIds((prev) => {
+      const next = new Set(prev);
+      for (const eventId of teamEventIds) next.delete(eventId);
+      for (const eventId of draftEventIds) {
+        if (teamEventIds.has(eventId)) next.add(eventId);
+      }
+      return next;
+    });
+    focusTeamRowOnTeamsView.current = activeTargetTeam.targetTeamSeasonId;
+    setShowDetails(false);
+    setShowMoreActivities(false);
+    setDraftEventIds(new Set());
+    setActiveTargetTeamSeasonId(null);
+    setPlannerView("teams");
+  }
+
+  function toggleDraftActivity(eventId: string) {
+    setDraftEventIds((prev) => {
       const next = new Set(prev);
       if (next.has(eventId)) next.delete(eventId);
       else next.add(eventId);
@@ -209,18 +318,8 @@ export default function PlayerReleasePlanningSheet({
     });
   }
 
-  function toggleTeamExpanded(teamSeasonId: string) {
-    setExpandedTeamIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(teamSeasonId)) next.delete(teamSeasonId);
-      else next.add(teamSeasonId);
-      return next;
-    });
-  }
-
-  function selectAllInTeam(activities: PlayerReleasePlanningActivityCandidate[]) {
-    setReview(null);
-    setSelectedEventIds((prev) => {
+  function selectAllDraftInTeam(activities: PlayerReleasePlanningActivityCandidate[]) {
+    setDraftEventIds((prev) => {
       const next = new Set(prev);
       for (const activity of activities) {
         if (activity.selectable) next.add(activity.eventId);
@@ -314,6 +413,7 @@ export default function PlayerReleasePlanningSheet({
   const playerSummary = personIds.length;
   const activitySummary = selectedEventIds.size;
   const releasePreview = playerSummary * activitySummary;
+  const draftSelectionCount = draftEventIds.size;
 
   const reviewByTeam = useMemo(() => {
     if (!review) return [];
@@ -337,14 +437,47 @@ export default function PlayerReleasePlanningSheet({
 
   const sheetDescription =
     entryPoint === "MATCH_AUFGEBOT"
-      ? `${playerSummary} Spieler · Zielteams und Einsätze in einem Plan wählen.`
-      : `${playerSummary} Spieler · Einsätze über mehrere Teams hinweg wählen.`;
+      ? `${playerSummary} Spieler · Zielteam wählen, dann passende Einsätze.`
+      : `${playerSummary} Spieler · Zielteams und Einsätze schrittweise wählen.`;
+
+  const activityPartition = useMemo(() => {
+    if (!activeTargetTeam) return { primary: [] as PlayerReleasePlanningActivityCandidate[], more: [] };
+    assertTeamActivitiesOwnership(activeTargetTeamSeasonId!, activeTargetTeam.activities);
+    return partitionTargetTeamActivities(activeTargetTeam, sourceStartAt, timeZone);
+  }, [activeTargetTeam, activeTargetTeamSeasonId, sourceStartAt, timeZone]);
+
+  const visibleTeamActivities = showMoreActivities
+    ? [...activityPartition.primary, ...activityPartition.more]
+    : activityPartition.primary;
 
   const footer =
     successCount != null ? (
       <Button variant="primary" size="sm" onClick={onClose}>
         Schliessen
       </Button>
+    ) : plannerView === "activities" && !review ? (
+      <>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={backToTeamsWithoutApply}
+          disabled={submitting}
+          data-testid="player-release-plan-back-teams"
+        >
+          ← Teams
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={applyTeamActivities}
+          disabled={loading}
+          data-testid="player-release-plan-apply-team"
+        >
+          {draftSelectionCount > 0
+            ? `${draftSelectionCount} Einsatz${draftSelectionCount === 1 ? "" : "e"} übernehmen`
+            : "Übernehmen"}
+        </Button>
+      </>
     ) : (
       <>
         <Button variant="secondary" size="sm" onClick={onClose} disabled={submitting}>
@@ -451,181 +584,216 @@ export default function PlayerReleasePlanningSheet({
             </ul>
           </div>
 
-          <div>
-            <div className="flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <p className="text-sm font-semibold text-[var(--text-1)]">Freigeben für</p>
-                <p className="text-xs text-[var(--muted)]">
-                  {entryPoint === "MATCH_AUFGEBOT"
-                    ? "Zielteams · passende Einsätze in der Nähe des Spiels"
-                    : "Zielteams · kommende Einsätze"}
+          {plannerView === "teams" ? (
+            <div>
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-1)]">Freigeben für</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {entryPoint === "MATCH_AUFGEBOT"
+                      ? "Mannschaft wählen · Einsätze im nächsten Schritt"
+                      : "Mannschaft wählen · Einsätze im nächsten Schritt"}
+                  </p>
+                </div>
+                <p
+                  className="text-xs text-[var(--text-2)]"
+                  data-testid="player-release-plan-preview-counts"
+                >
+                  {playerSummary} Spieler · {activitySummary} Einsätze · {releasePreview} Freigaben
                 </p>
               </div>
-              <p className="text-xs text-[var(--text-2)]" data-testid="player-release-plan-preview-counts">
-                {playerSummary} Spieler · {activitySummary} Einsätze · {releasePreview} Freigaben
-              </p>
-            </div>
 
-            <div className="mt-3 space-y-2" data-testid="player-release-plan-target-teams">
-              {candidates.targetTeams.length === 0 ? (
-                <p className="text-sm text-[var(--muted)]">
-                  Keine passenden Einsätze in den nächsten Wochen.
-                </p>
+              {visibleTargetTeams.length >= TARGET_TEAM_SEARCH_THRESHOLD ? (
+                <div className="mt-3">
+                  <input
+                    type="search"
+                    value={teamSearchQuery}
+                    onChange={(event) => setTeamSearchQuery(event.target.value)}
+                    placeholder="Team suchen…"
+                    className="fca-input h-9 w-full text-sm"
+                    data-testid="player-release-plan-team-search"
+                    aria-label="Team suchen"
+                  />
+                </div>
               ) : null}
-              {candidates.targetTeams.map((team) => {
-                const selectedInTeam = selectedCountForTeam(
-                  team.targetTeamSeasonId,
-                  team.activities,
-                  selectedEventIds,
-                );
-                const expanded = expandedTeamIds.has(team.targetTeamSeasonId);
-                const showMore = showMoreTeamIds.has(team.targetTeamSeasonId);
-                const { primary, more } = partitionTargetTeamActivities(
-                  team,
-                  sourceStartAt,
-                  timeZone,
-                );
-                const visibleActivities = showMore ? [...primary, ...more] : primary;
 
-                const summaryLine =
-                  selectedInTeam > 0
-                    ? `${selectedInTeam} Einsatz${selectedInTeam === 1 ? "" : "e"} ausgewählt`
-                    : `${team.activityCount} passende Einsätze`;
+              <div className="mt-3 space-y-2" data-testid="player-release-plan-target-teams">
+                {filteredTargetTeams.length === 0 ? (
+                  <p className="text-sm text-[var(--muted)]">
+                    {visibleTargetTeams.length === 0
+                      ? "Keine passenden Einsätze in den nächsten Wochen."
+                      : "Kein Team entspricht der Suche."}
+                  </p>
+                ) : null}
+                {filteredTargetTeams.map((team) => {
+                  const selectedInTeam = selectedCountForTeam(
+                    team.targetTeamSeasonId,
+                    team.activities,
+                    selectedEventIds,
+                  );
+                  const summaryLine =
+                    selectedInTeam > 0
+                      ? `${selectedInTeam} Einsatz${selectedInTeam === 1 ? "" : "e"} ausgewählt`
+                      : `${team.activityCount} passende Einsätze`;
 
-                return (
-                  <div
-                    key={team.targetTeamSeasonId}
-                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)]"
-                    data-testid={`player-release-plan-team-${team.targetTeamSeasonId}`}
-                  >
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left"
-                      aria-expanded={expanded}
-                      onClick={() => toggleTeamExpanded(team.targetTeamSeasonId)}
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-[var(--text-1)]">
-                          {team.targetTeamLabel}
-                        </span>
-                        <span className="block text-xs text-[var(--text-2)]">{summaryLine}</span>
-                      </span>
-                      {expanded ? (
-                        <ChevronUp className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-                      )}
-                    </button>
-                    {expanded ? (
-                      <div className="border-t border-[var(--border)] px-3 py-3">
-                        {team.activities.filter((row) => row.selectable).length > 1 ? (
-                          <button
-                            type="button"
-                            className="mb-2 text-xs font-semibold text-[var(--sce-primary)]"
-                            onClick={() => selectAllInTeam(team.activities)}
-                            data-testid={`player-release-plan-select-all-${team.targetTeamSeasonId}`}
-                          >
-                            Alle auswählen
-                          </button>
-                        ) : null}
-                        <ul className="space-y-2">
-                          {visibleActivities.map((activity) => (
-                            <ActivitySelectRow
-                              key={activity.eventId}
-                              activity={activity}
-                              selected={selectedEventIds.has(activity.eventId)}
-                              onToggle={() => toggleActivity(activity.eventId)}
-                            />
-                          ))}
-                        </ul>
-                        {more.length > 0 && !showMore ? (
-                          <button
-                            type="button"
-                            className="mt-3 text-xs font-semibold text-[var(--text-2)] underline-offset-2 hover:underline"
-                            onClick={() =>
-                              setShowMoreTeamIds((prev) => {
-                                const next = new Set(prev);
-                                next.add(team.targetTeamSeasonId);
-                                return next;
-                              })
-                            }
-                            data-testid={`player-release-plan-more-${team.targetTeamSeasonId}`}
-                          >
-                            Weitere Einsätze ({more.length})
-                          </button>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-[var(--border)]">
-            <button
-              type="button"
-              className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-[var(--text-1)]"
-              aria-expanded={showDetails}
-              aria-controls={detailsPanelId}
-              onClick={() => setShowDetails((value) => !value)}
-              data-testid="player-release-plan-details-toggle"
-            >
-              Details anpassen
-              {showDetails ? (
-                <ChevronUp className="h-4 w-4" aria-hidden />
-              ) : (
-                <ChevronDown className="h-4 w-4" aria-hidden />
-              )}
-            </button>
-            {showDetails ? (
-              <div id={detailsPanelId} className="space-y-4 border-t border-[var(--border)] px-3 py-3">
-                <label className="block text-sm">
-                  <span className="text-xs font-medium text-[var(--text-2)]">Standard-Grund</span>
-                  <select
-                    className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-                    value={defaultReason}
-                    onChange={(event) => setDefaultReason(event.target.value)}
-                  >
-                    {PLAYER_RELEASE_REASON_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {[...selectedEventIds].map((eventId) => {
-                  const activity = flatActivities.find((row) => row.eventId === eventId);
-                  const state = activityDefaults[eventId] ?? { maxMinutes: "", reason: defaultReason };
                   return (
-                    <div key={eventId} className="rounded-md border border-[var(--border)] p-3 text-sm">
-                      <p className="font-medium text-[var(--text-1)]">
-                        {activity?.targetTeamLabel} · {activity?.dateLine} · {activity?.headline}
-                      </p>
-                      <label className="mt-2 block">
-                        <span className="text-xs text-[var(--text-2)]">Max. Minuten (optional)</span>
-                        <input
-                          type="number"
-                          min={1}
-                          className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                          value={state.maxMinutes}
-                          onChange={(event) =>
-                            setActivityDefaults((prev) => ({
-                              ...prev,
-                              [eventId]: { ...state, maxMinutes: event.target.value },
-                            }))
-                          }
-                          data-testid={`player-release-plan-max-${eventId}`}
-                        />
-                      </label>
+                    <div
+                      key={team.targetTeamSeasonId}
+                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+                      data-testid={`player-release-plan-team-${team.targetTeamSeasonId}`}
+                    >
+                      <button
+                        type="button"
+                        ref={(node) => {
+                          if (node) teamRowRefs.current.set(team.targetTeamSeasonId, node);
+                          else teamRowRefs.current.delete(team.targetTeamSeasonId);
+                        }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left"
+                        aria-label={`${team.targetTeamLabel}, ${summaryLine}`}
+                        onClick={() => openTeamActivities(team.targetTeamSeasonId)}
+                        data-testid={`player-release-plan-team-open-${team.targetTeamSeasonId}`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[var(--text-1)]">
+                            {team.targetTeamLabel}
+                          </span>
+                          <span className="block text-xs text-[var(--text-2)]">{summaryLine}</span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                      </button>
                     </div>
                   );
                 })}
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
-          {review ? (
+          {plannerView === "activities" && activeTargetTeam ? (
+            <div data-testid="player-release-plan-team-activities-view">
+              <button
+                type="button"
+                className="text-xs font-semibold text-[var(--sce-primary)]"
+                onClick={backToTeamsWithoutApply}
+                data-testid="player-release-plan-back-teams-inline"
+              >
+                ← Freigeben für
+              </button>
+              <h3
+                ref={activitiesHeadingRef}
+                tabIndex={-1}
+                className="mt-2 text-sm font-semibold text-[var(--text-1)] outline-none"
+              >
+                {activeTargetTeam.targetTeamLabel}
+              </h3>
+              <p className="text-xs text-[var(--muted)]">
+                {activeTargetTeam.activityCount} passende Einsätze
+              </p>
+
+              {activeTargetTeam.activities.filter((row) => row.selectable).length > 1 ? (
+                <button
+                  type="button"
+                  className="mt-3 text-xs font-semibold text-[var(--sce-primary)]"
+                  onClick={() => selectAllDraftInTeam(activeTargetTeam.activities)}
+                  data-testid={`player-release-plan-select-all-${activeTargetTeam.targetTeamSeasonId}`}
+                >
+                  Alle auswählen
+                </button>
+              ) : null}
+
+              <ul className="mt-3 space-y-2">
+                {visibleTeamActivities.map((activity) => (
+                  <ActivitySelectRow
+                    key={activity.eventId}
+                    activity={activity}
+                    selected={draftEventIds.has(activity.eventId)}
+                    onToggle={() => toggleDraftActivity(activity.eventId)}
+                  />
+                ))}
+              </ul>
+
+              {activityPartition.more.length > 0 && !showMoreActivities ? (
+                <button
+                  type="button"
+                  className="mt-3 text-xs font-semibold text-[var(--text-2)] underline-offset-2 hover:underline"
+                  onClick={() => setShowMoreActivities(true)}
+                  data-testid={`player-release-plan-more-${activeTargetTeam.targetTeamSeasonId}`}
+                >
+                  Weitere Einsätze ({activityPartition.more.length})
+                </button>
+              ) : null}
+
+              <div className="mt-4 rounded-lg border border-[var(--border)]">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-[var(--text-1)]"
+                  aria-expanded={showDetails}
+                  aria-controls={detailsPanelId}
+                  onClick={() => setShowDetails((value) => !value)}
+                  data-testid="player-release-plan-details-toggle"
+                >
+                  Details anpassen
+                  {showDetails ? (
+                    <ChevronUp className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" aria-hidden />
+                  )}
+                </button>
+                {showDetails ? (
+                  <div
+                    id={detailsPanelId}
+                    className="space-y-4 border-t border-[var(--border)] px-3 py-3"
+                  >
+                    <label className="block text-sm">
+                      <span className="text-xs font-medium text-[var(--text-2)]">Standard-Grund</span>
+                      <select
+                        className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                        value={defaultReason}
+                        onChange={(event) => setDefaultReason(event.target.value)}
+                      >
+                        {PLAYER_RELEASE_REASON_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {[...draftEventIds].map((eventId) => {
+                      const activity = activeTargetTeam.activities.find((row) => row.eventId === eventId);
+                      const state = activityDefaults[eventId] ?? { maxMinutes: "", reason: defaultReason };
+                      return (
+                        <div
+                          key={eventId}
+                          className="rounded-md border border-[var(--border)] p-3 text-sm"
+                        >
+                          <p className="font-medium text-[var(--text-1)]">
+                            {activity?.dateLine} · {activity?.headline}
+                          </p>
+                          <label className="mt-2 block">
+                            <span className="text-xs text-[var(--text-2)]">Max. Minuten (optional)</span>
+                            <input
+                              type="number"
+                              min={1}
+                              className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                              value={state.maxMinutes}
+                              onChange={(event) =>
+                                setActivityDefaults((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...state, maxMinutes: event.target.value },
+                                }))
+                              }
+                              data-testid={`player-release-plan-max-${eventId}`}
+                            />
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {review && plannerView === "teams" ? (
             <div
               className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm"
               data-testid="player-release-plan-review-panel"
