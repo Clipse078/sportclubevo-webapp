@@ -11,3 +11,7 @@ export {
 } from "./href";
 export { loadSportingActivityDetail } from "./load-sporting-activity-detail";
 export type { SportingActivityDetailRef } from "./load-sporting-activity-detail";
+export {
+  auditDetailMatchClubPair,
+  resolveSceActivityPresentationFromDetail,
+} from "./resolve-canonical-presentation";

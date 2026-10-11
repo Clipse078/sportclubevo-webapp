@@ -26,8 +26,9 @@ Presentation is **derived**. It must not mutate provider-owned fields (ADR-08).
 
 | Layer | Module | Role |
 |-------|--------|------|
-| Serializable contract | `lib/sporting-activity-presentation/types.ts` — `SportingActivityPresentation` | Programme/calendar embedding |
-| Builders | `lib/sporting-activity-presentation/builders.ts`, `compact.ts`, `format.ts` | Row/card text lines |
+| Serializable contract | `lib/sporting-activity-presentation/types.ts` — `SportingActivityPresentation` | Programme/calendar embedding (UX-01) |
+| **Canonical 01C model** | `lib/sporting-activity-presentation/canonical` — `SceActivityPresentationModel`, `resolveSceActivityPresentation` | Typed discriminated contract for all kinds |
+| Builders | `lib/sporting-activity-presentation/builders.ts`, `compact.ts`, `format.ts` | Row/card text lines (legacy consumers until 01D–01G) |
 | Management adapters | `management-match-presentation.ts`, `management-training-presentation.ts`, `management-tournament-presentation.ts` | Spiele/Trainings/Turniere lists |
 | Location | `location.ts` | Host → venue → resource |
 | Time | `time-range.ts` | Schedule formatting |

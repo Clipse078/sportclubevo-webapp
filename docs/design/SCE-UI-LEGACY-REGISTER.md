@@ -108,6 +108,21 @@ Known examples (non-exhaustive; expand during domain adoptions):
 
 ---
 
+## 01C reconciliation note (2026-10-11)
+
+**SCE-UI-ROLLOUT-01C** introduced `SceActivityPresentationModel` and resolvers only. Visual consumers (Matchcenter rows, Infoboard fallback, Wochenplan local formatters, etc.) are **not** marked migrated in this pass.
+
+| Register totals | Unchanged |
+|-----------------|-----------|
+| TOTAL | 28 |
+| MUST_MIGRATE | 22 |
+| CAN_RETAIN | 6 |
+| HIGH_RISK | 5 |
+
+Formatter/route legacy rows remain **MUST_MIGRATE** until **01D–01L** adoption and **01N** cleanup.
+
+---
+
 ## Usage
 
 When closing **01N**, every **MUST_MIGRATE** row must be **RESOLVED** (migrated) or **JUSTIFIED** with PO sign-off and ADR update.
