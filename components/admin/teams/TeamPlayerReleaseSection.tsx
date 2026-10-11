@@ -8,6 +8,8 @@ import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import PlayerReleaseEditorSheet from "@/components/admin/teams/PlayerReleaseEditorSheet";
 import TeamPlayerReleaseRequestsPanel from "@/components/admin/teams/TeamPlayerReleaseRequestsPanel";
 import type { PlayerReleaseListItem } from "@/lib/match-squad/player-release-service";
+import type { CrossTeamOperationalTrack } from "@/lib/match-squad/cross-team-player-operational-state";
+import Link from "next/link";
 
 type Props = {
   teamId: string;
@@ -17,8 +19,41 @@ type Props = {
 type ListPayload = {
   releases: PlayerReleaseListItem[];
   rosterPlayers: { personId: string; displayName: string }[];
+  operationalTracksByReleaseId?: Record<string, CrossTeamOperationalTrack[]>;
   canEdit: boolean;
 };
+
+function formatActivityScheduleLine(iso: string, timezone = "Europe/Zurich"): string {
+  const date = new Date(iso);
+  const dateFmt = new Intl.DateTimeFormat("de-CH", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: timezone,
+  });
+  const timeFmt = new Intl.DateTimeFormat("de-CH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  });
+  return `${dateFmt.format(date)} · ${timeFmt.format(date)}`;
+}
+
+function operationalTone(
+  tone: CrossTeamOperationalTrack["presentation"]["operationalTone"],
+): "success" | "warning" | "muted" | "default" {
+  switch (tone) {
+    case "success":
+      return "success";
+    case "warning":
+    case "danger":
+      return "warning";
+    case "muted":
+      return "muted";
+    default:
+      return "default";
+  }
+}
 
 function statusTone(phase: string): "success" | "warning" | "muted" | "default" {
   switch (phase) {
@@ -174,6 +209,49 @@ export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props
                       <p className="text-xs text-[var(--warning)]">
                         Spieler nicht mehr im aktuellen Saison-Kader (historische Freigabe).
                       </p>
+                    ) : null}
+                    {(data?.operationalTracksByReleaseId?.[row.id] ?? []).length > 0 ? (
+                      <ul
+                        className="mt-2 space-y-2 border-t border-[var(--border)] pt-2"
+                        data-testid={`release-operational-tracks-${row.id}`}
+                      >
+                        {(data?.operationalTracksByReleaseId?.[row.id] ?? []).map((track) => (
+                          <li
+                            key={track.requestId ?? track.targetEventId ?? track.targetTeamSeasonId}
+                            className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
+                          >
+                            {track.targetActivityLabel && track.targetActivityStartAt ? (
+                              track.activityHref ? (
+                                <Link
+                                  href={track.activityHref}
+                                  className="text-xs font-medium text-[var(--text-1)] underline-offset-2 hover:underline"
+                                >
+                                  {formatActivityScheduleLine(track.targetActivityStartAt)} ·{" "}
+                                  {track.targetActivityLabel}
+                                </Link>
+                              ) : (
+                                <span className="text-xs text-[var(--text-2)]">
+                                  {formatActivityScheduleLine(track.targetActivityStartAt)} ·{" "}
+                                  {track.targetActivityLabel}
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-xs text-[var(--text-2)]">
+                                {track.targetTeamLabel}
+                              </span>
+                            )}
+                            <AdminStatusPill
+                              tone={operationalTone(track.presentation.operationalTone)}
+                              label={track.presentation.operationalLabel}
+                            />
+                            {track.presentation.operationalSecondaryLabel ? (
+                              <span className="text-xs text-[var(--muted)]">
+                                {track.presentation.operationalSecondaryLabel}
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
                     ) : null}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

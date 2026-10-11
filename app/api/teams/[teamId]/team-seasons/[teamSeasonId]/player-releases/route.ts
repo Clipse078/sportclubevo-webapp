@@ -3,6 +3,7 @@ import {
   createPlayerRelease,
   listPlayerReleasesForSourceTeamSeason,
 } from "@/lib/match-squad/player-release-service";
+import { loadCrossTeamOperationalTracksForSourceTeamSeason } from "@/lib/match-squad/cross-team-player-operational-state-service";
 import {
   mapPlayerReleaseRouteError,
   resolvePlayerReleaseRouteAccess,
@@ -21,16 +22,26 @@ export async function GET(request: NextRequest, context: Context) {
   const includeHistory = request.nextUrl.searchParams.get("includeHistory") === "true";
 
   try {
+    const timezone = resolved.tenant.timezone ?? "Europe/Zurich";
     const payload = await listPlayerReleasesForSourceTeamSeason({
       tenantId: resolved.tenant.id,
       teamId,
       sourceTeamSeasonId: teamSeasonId,
-      timezone: resolved.tenant.timezone ?? "Europe/Zurich",
+      timezone,
       includeHistory,
     });
 
+    const operationalTracksByReleaseId =
+      await loadCrossTeamOperationalTracksForSourceTeamSeason({
+        tenantId: resolved.tenant.id,
+        sourceTeamSeasonId: teamSeasonId,
+        releaseIds: payload.releases.map((row) => row.id),
+        timezone,
+      });
+
     return NextResponse.json({
       ...payload,
+      operationalTracksByReleaseId,
       canEdit: resolved.access.canManageSource,
     });
   } catch (error) {
