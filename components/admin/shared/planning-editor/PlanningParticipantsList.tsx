@@ -3,21 +3,44 @@
 import { useState } from "react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import MatchAvailabilityStatusBadge from "@/components/admin/matchcenter/MatchAvailabilityStatusBadge";
+import ActivityPlayerReleaseButton from "@/components/admin/teams/ActivityPlayerReleaseButton";
 import type { PlanningParticipantRow } from "@/lib/planning/planning-participant-types";
 import { useTranslations } from "next-intl";
 
 const INITIAL_VISIBLE = 12;
 
+export type PlanningParticipantReleaseContext = {
+  teamId: string;
+  teamSeasonId: string;
+  canManageRelease: boolean;
+  releaseReadOnly?: boolean;
+  activity:
+    | { kind: "EVENT"; eventId: string; scopeLabel: string }
+    | { kind: "TRAINING"; trainingSessionId: string; scopeLabel: string };
+};
+
 type Props = {
   people: PlanningParticipantRow[];
   teams?: PlanningParticipantRow[];
   testId?: string;
+  releaseContext?: PlanningParticipantReleaseContext;
 };
 
-function ParticipantRow({ row }: { row: PlanningParticipantRow }) {
+function ParticipantRow({
+  row,
+  releaseContext,
+}: {
+  row: PlanningParticipantRow;
+  releaseContext?: PlanningParticipantReleaseContext;
+}) {
+  const showRelease =
+    releaseContext &&
+    row.role === "PLAYER" &&
+    releaseContext.canManageRelease;
+
   return (
     <li
-      className="flex min-w-0 items-center gap-2 py-1.5"
+      className="flex min-w-0 flex-wrap items-center gap-2 py-1.5 sm:flex-nowrap"
       data-testid={`planning-participant-row-${row.id}`}
     >
       <div className="shrink-0 scale-[0.64] origin-left">
@@ -45,11 +68,39 @@ function ParticipantRow({ row }: { row: PlanningParticipantRow }) {
           </span>
         )
       ) : null}
+      {showRelease ? (
+        <ActivityPlayerReleaseButton
+          teamId={releaseContext.teamId}
+          teamSeasonId={releaseContext.teamSeasonId}
+          personId={row.id}
+          personDisplayName={row.displayName}
+          canManage={releaseContext.canManageRelease}
+          disabled={releaseContext.releaseReadOnly}
+          activityContext={{
+            mode: "ACTIVITY",
+            eventId:
+              releaseContext.activity.kind === "EVENT"
+                ? releaseContext.activity.eventId
+                : undefined,
+            trainingSessionId:
+              releaseContext.activity.kind === "TRAINING"
+                ? releaseContext.activity.trainingSessionId
+                : undefined,
+            scopeLabel: releaseContext.activity.scopeLabel,
+          }}
+          testId={`planning-participant-release-${row.id}`}
+        />
+      ) : null}
     </li>
   );
 }
 
-export default function PlanningParticipantsList({ people, teams = [], testId = "planning-participants-list" }: Props) {
+export default function PlanningParticipantsList({
+  people,
+  teams = [],
+  testId = "planning-participants-list",
+  releaseContext,
+}: Props) {
   const t = useTranslations("PlanningEditor.operational.participants");
   const [showAll, setShowAll] = useState(false);
 
@@ -80,7 +131,11 @@ export default function PlanningParticipantsList({ people, teams = [], testId = 
           ) : null}
           <ul className="divide-y divide-[var(--border)]/50">
             {visiblePeople.map((person) => (
-              <ParticipantRow key={person.id} row={person} />
+              <ParticipantRow
+                key={person.id}
+                row={person}
+                releaseContext={releaseContext}
+              />
             ))}
           </ul>
           {hiddenCount > 0 && !showAll ? (

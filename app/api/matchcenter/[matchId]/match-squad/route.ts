@@ -17,6 +17,7 @@ import {
   resolveAccessForMatch,
 } from "@/lib/match-squad/match-squad-route-access";
 import { MatchSquadError } from "@/lib/match-squad/errors";
+import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
 
 type Params = { params: Promise<{ matchId: string }> };
 
@@ -45,11 +46,22 @@ export async function GET(_request: NextRequest, { params }: Params) {
       eventId: matchId,
       userId: resolved.userId,
     }).catch(() => null);
+    const releaseAccess = squad.teamId
+      ? await resolvePlayerReleaseAccess({
+          userId: resolved.userId,
+          tenantId: resolved.tenant.id,
+          tenantKey: resolved.tenant.key,
+          teamId: squad.teamId,
+          teamSeasonId: squad.teamSeasonId,
+        })
+      : null;
     return NextResponse.json({
       ...squad,
       availabilityCollection: availabilityCollection ?? undefined,
       canEdit: resolved.access.canEdit && squad.editable,
       canManageAvailability: resolved.access.canEdit,
+      canManageRelease: Boolean(releaseAccess?.canManageSource) && squad.editable,
+      releaseReadOnly: !squad.editable,
     });
   } catch (error) {
     return mapError(error);

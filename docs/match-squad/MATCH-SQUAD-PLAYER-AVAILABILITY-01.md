@@ -269,11 +269,12 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 | Slice | Product | Status (STAGE) |
 |-------|---------|----------------|
 | **01A** | Match Squad Foundation — Saison-Kader + existing availability + trainer Match selection | **CLOSED** (§27) |
-| **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **NOT STARTED** |
-| **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **NOT STARTED** (architecture locked §28) |
-| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **NOT STARTED** |
-| **01E** | Assignment & Communication — operational assignment + inform audiences | **NOT STARTED** |
-| **01F** | Operational Intelligence & Club UAT | **NOT STARTED** |
+| **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **CLOSED** (§30) |
+| **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **CLOSED** (§39) |
+| **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **NEXT** (§40) |
+| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **PLANNED — AFTER SCE-ACTIVITY-NAV-01** (§28) |
+| **01E** | Assignment & Communication — operational assignment + inform audiences | **PLANNED** |
+| **01F** | Operational Intelligence & Club UAT | **PLANNED** |
 
 Then: **Sponsor Commercial Workflows** → **Mobile App** (club roadmap).
 
@@ -757,7 +758,7 @@ Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[
 | **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
 | **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
 | **01B** | **CLOSED** — PR **#821** → merged to `STAGE` (see §30) |
-| **01C implementation** | **NOT STARTED** (architecture locked §28) |
+| **01C implementation** | **CLOSED** — PR **#822** → merged to `STAGE` (see §39) |
 
 ### Canonical 01A product model (locked)
 
@@ -792,7 +793,7 @@ See **§14** / **§28** — **01B–01F**; no release implementation in 01A scop
 |-------|-------|
 | **Date** | 2026-10-10 |
 | **Status** | **LOCKED** (product architecture — no implementation in this package) |
-| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` (diagnosis/implementation **NOT STARTED**) |
+| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` — **CLOSED** (§39) |
 | **Product name** | **Player Release & Development Assignment** |
 | **Working German concept** | **Spielerfreigabe** |
 | **Primary trainer action** | **Für andere Teams freigeben** |
@@ -1107,7 +1108,7 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 | **Regression battery** | **PASS** for 01B scope; known baseline failures unchanged (see closure report) |
 | **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
 | **Test data** | SCE Testspieler 01–06 **retained** for 01C–01F; `TEST_DATA_REMAINING = 0` still required at parent module closure |
-| **01C implementation** | **NOT STARTED** (architecture locked §28 / PR #820) |
+| **01C implementation** | **CLOSED** — see §39 |
 
 ### Final 01B product rules (locked)
 
@@ -1125,3 +1126,378 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 ### UAT history preserved
 
 R1–R2.2 iterations (including failed R2.1 alignment attempt and superseded trainer-proxy UX) remain documented in §29 — not rewritten.
+
+---
+
+## 31. 01C — Player Release & Development Assignment (diagnosis + foundation)
+
+| Field | Value |
+|-------|-------|
+| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` |
+| **Branch** | `cursor/match-squad-player-availability-01c-player-release-development` |
+| **Base** | `STAGE` @ `1469a7bf85f4521548e346c3ceba9ad17116903a` |
+| **01C status** | **CLOSED** (see §39) |
+
+### Existing domain diagnosis
+
+| Area | Finding |
+|------|---------|
+| **Saison-Kader** | `PlayerSquadMember` — structural roster via `currentSeasonRosterPlayerSquadMemberWhere` (ACTIVE, INJURED, ABSENT) |
+| **Availability** | `ParticipationResponse` — 01B closed; independent signal |
+| **Match selection** | `MatchSquad` / `MatchSquadMember` — 01A closed; no FK to release |
+| **Prior release model** | **None** — no loan/guest/borrow canonical model suitable for Spielerfreigabe |
+| **PersonAssignment** | Organisational label only — **not** used for sporting release |
+| **DevelopmentAssessment** | Person development snapshots — unrelated to cross-team release authorization |
+
+### Sporting eligibility diagnosis
+
+| Topic | Finding |
+|-------|---------|
+| **Canonical cross-team eligibility engine** | **NO** — only roster birth-year helpers (`evaluatePlayerBirthYearEligibility`) for Saison-Kader onboarding |
+| **RELEASE = ELIGIBLE** | **Rejected** — UI/domain distinguish **Freigegeben** vs future **Einsatzberechtigt** (01D/association rules) |
+
+### Conflict diagnosis
+
+| Topic | Finding |
+|-------|---------|
+| **Person-level conflict engine** | **Not present** for 01C consumption |
+| **Facility planner conflicts** | Historical facility/resource focus remains |
+| **Release blocked by conflict** | **NO** — release persists; operational blocking deferred to 01D/01F |
+
+### Authorization diagnosis
+
+| Actor | Rule |
+|-------|------|
+| **Source Stammtrainer** | Active `TrainerTeamMember` on source `TeamSeason` → create / edit / revoke |
+| **Sporting coordinator** | `events.manage` override (same pattern as Match Squad) |
+| **Club admin / super admin** | Override |
+| **Target-team trainer** | **Cannot** create release for source team; future read-only target visibility via separate access helper |
+| **New permission seed** | **None** — reuses existing trainer + events/teams manage patterns |
+
+### Final 01C domain model
+
+| Field | Decision |
+|-------|----------|
+| **Model** | `PlayerRelease` — one row per **target-specific** rule |
+| **Player** | `personId` (tenant-scoped) |
+| **Source** | `sourceTeamSeasonId` (Stammteam) |
+| **Target** | `targetTeamSeasonId` (same `seasonId`, ACTIVE target TeamSeason, same tenant) |
+| **Validity** | `validFrom` / `validUntil` — `@db.Date` calendar semantics (UTC date storage) |
+| **maxMinutes** | Nullable `Int` — null = no release-specific minute cap (1–120 when set) |
+| **reason** | Enum `PlayerReleaseReason` + optional `note` |
+| **status** | `ACTIVE` \| `REVOKED`; **EXPIRED** derived from `validUntil` + tenant timezone |
+| **Audit** | `createdByUserId`, `updatedByUserId`, `revokedByUserId`, `revokedAt`, `logAction` on mutations |
+| **Overlap policy** | Forbid overlapping **ACTIVE** rules for same person + source + target (409 + German message) |
+| **Indexes** | Source list, target discovery (`tenantId`, `targetTeamSeasonId`, validity), person+source |
+
+### Signal independence (locked)
+
+| Invariant | Enforcement |
+|-----------|-------------|
+| AVAILABLE ≠ RELEASED | Separate models; adapter tests retained |
+| NOT SELECTED ≠ RELEASED | No MatchSquadMember dependency on create |
+| SELECTED + RELEASED | Valid — no mutual exclusion in service |
+| Release ↔ ParticipationResponse | No cross-writes (boundary constants + tests) |
+| Release ↔ MatchSquadMember | No cross-writes |
+
+### API (01C)
+
+| Method | Route |
+|--------|-------|
+| **GET** | `/api/teams/[teamId]/team-seasons/[teamSeasonId]/player-releases` |
+| **POST** | same — create |
+| **PATCH** | `…/player-releases/[releaseId]` — edit active rule |
+| **POST** | `…/player-releases/[releaseId]/revoke` — widerrufen (no hard delete) |
+
+Optional optimistic concurrency: `expectedVersion` = `updatedAt` ISO → 409 on stale write.
+
+### UX (01C)
+
+| Topic | Location |
+|-------|----------|
+| **Primary surface** | Team Cockpit → **Kader** → section **Spielerfreigaben** (below Saison-Kader) |
+| **Primary action** | **Für anderes Team freigeben** |
+| **Overview** | Grouped by player; one target rule per row (team, validity, max minutes, reason, status) |
+| **Out of scope** | Marketplace, target-trainer «Anfragen», auto Match Squad assignment (01D/01E) |
+
+### 01D boundary
+
+01C ends at **canonical ACTIVE/REVOKED/EXPIRED release state** with query-friendly indexes for future discovery: «active releases targeting TeamSeason X at date Y».
+
+### Test strategy
+
+Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-release*` and team cockpit component test. Regression: existing 01A/01B match-squad tests remain green.
+
+### Controlled UAT setup (preview)
+
+| Item | Value |
+|------|-------|
+| **Navigate** | Dashboard → Teams → **FC Allschwil Junioren B1** → **Kader** → scroll **Spielerfreigaben** |
+| **Source TeamSeason** | `cmsoczv2t000504juhvod5hi9` |
+| **Player A** | SCE Testspieler 01 — target another ACTIVE FC Allschwil TeamSeason same season (e.g. Junioren B2) · 45 min · Spielpraxis · 10.10.–30.11.2026 |
+| **Player B** | SCE Testspieler 02 — second target if available · 60 min · Entwicklung |
+| **Edit** | Change max minutes or validity on active rule |
+| **Revoke** | **Widerrufen** — history retained |
+| **Independence check** | Match `cmrzhj3je006a04kwhbepxvdz` — availability + Aufgebot unchanged by release CRUD |
+
+---
+
+## 32. 01C Human UAT R1 (schema readiness)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **BLOCKED_BY_SCHEMA** |
+| **PR / preview** | **#822** — Vercel preview on shared STAGE DB (`docs/deployment/stage-preview-migration-runbook.md`) |
+| **Observed** | Saison-Kader and section chrome OK; **Spielerfreigaben** showed «Das Spielerfreigabe-Schema ist auf dieser Umgebung noch nicht bereit…» (`SCHEMA_NOT_READY` / Prisma `P2021`) |
+| **Classification** | STAGE schema lag — same class as 01A R2 (`20261010153000_match_squad_player_availability_01a` pending before guarded deploy) |
+| **Product UX** | **Not evaluated** — blocker prevented workflow UAT |
+
+---
+
+## 33. 01C Human UAT R1.1 (STAGE migration remediation)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **READY_FOR_RETEST** |
+| **Migration** | `20261010190000_match_squad_player_availability_01c_player_release` applied to shared STAGE via guarded `db:migrate:deploy-if-enabled` (no manual DDL; **PROD** not targeted) |
+| **Post-check** | `prisma migrate status` → schema up to date; `PlayerRelease` + enums present; list service returns empty `[]` + target options on source `cmsoczv2t000504juhvod5hi9` |
+| **UAT scenario A target (resolved on STAGE)** | **FC Allschwil Junioren B2** · `cmsoczvt0000604ju1f1eindm` · player **SCE Testspieler 01** · 45 min · Spielpraxis |
+| **Scenarios B–D** | PO-led on preview after refresh — create / edit / revoke / second target (no agent-seeded `PlayerRelease` rows) |
+| **Signal independence** | Match `cmrzhj3je006a04kwhbepxvdz` baseline captured pre-UAT; release CRUD must not mutate MatchSquad / ParticipationResponse (§31 invariants) |
+
+---
+
+## 34. 01C Human UAT R2 — refinements (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **READY_FOR_UAT** (PR **#822** preview; **01C not module-closed**) |
+| **PO R1.1** | Core Spielerfreigabe workflow accepted; three refinements required |
+| **Toggle UX** | «Vergangen / Widerrufen anzeigen» uses canonical `SwitchThumb` (no checkbox) |
+| **Target discovery** | `resolvePlayerReleaseTargetTeams` — birth-year + category/gender plausibility; UI uses `TeamSeasonSearchablePicker` + `GET …/player-releases/target-teams?personId=` |
+| **Eligibility stance** | **Freigegeben ≠ Einsatzberechtigt** — unknown/incomplete rules never shown as eligible |
+| **Activity scope** | `PlayerRelease.scope` = `PERIOD` \| `ACTIVITY`; `eventId` (Match/Tournament) or `trainingSessionId` (Training); migration `20261010210000_match_squad_player_availability_01c_r2_activity_scope` |
+| **Activity UX** | Match Aufgebot row **Freigeben**; Training session participants; Team Cockpit **Teilnahmen** (Match/Training/Tournament events) |
+| **Overlap policy** | Period↔period: existing date overlap block; activity↔activity: duplicate active same person+source+target+activity; period + activity may coexist (activity-specific rule for that term) |
+| **Signal independence** | Unchanged §31 — release CRUD does not mutate ParticipationResponse / MatchSquad |
+| **STAGE migration** | R2 migration applied via guarded `db:migrate:deploy-if-enabled`; **PROD untouched** |
+
+---
+
+## 35. 01C Human UAT R2 — result (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Human UAT R2** | **FAIL / INCOMPLETE** |
+| **Team Cockpit period release** | **PASS** — toggle, filtered targets, existing rows |
+| **Match Aufgebot Freigeben** | **PASS** — action visible; target picker sometimes empty (bug) |
+| **Training activity Freigeben** | **FAIL** — not on trainer-facing participation surface |
+| **Tournament activity Freigeben** | **FAIL** — only Team Cockpit Teilnahmen; not on individual Turnier prep |
+| **01C status** | **IN PROGRESS** |
+| **MERGE_ALLOWED** | **NO** |
+
+### R3 remediation (same PR **#822**, branch `cursor/match-squad-player-availability-01c-player-release-development`)
+
+| Item | Change |
+|------|--------|
+| **Training route** | Planning → Trainings → session edit → **Teilnahme** rail: roster + **Freigeben** (`TrainingSessionParticipantsPanel`) |
+| **Tournament route** | Planning → Turniere → tournament edit → **Teilnahmen (Hauptteam)** RSVP list + **Freigeben** |
+| **Match** | Keep Aufgebot **Freigeben**; fix activity target picker load (`initialPersonId` + stale fetch guard) |
+| **Target discovery** | Unchanged eligibility service; period releases must not suppress activity targets |
+| **Schema** | **No R3 migration** — `scope` / `eventId` / `trainingSessionId` sufficient |
+
+### Human UAT R3 checklist (PO)
+
+| Surface | Navigation |
+|---------|------------|
+| **Team period** | Club → Organisation → Teams → *Stammteam* → Kader → Spielerfreigaben |
+| **Match** | Planning → Spiele → *Match* → Aufgebot → **Freigeben** |
+| **Training** | Planning → Trainings → *Termin bearbeiten* → secondary **Teilnahme** → Spielerliste → **Freigeben** |
+| **Tournament** | Planning → Turniere → *Turnier* → **Teilnahmen** player list → **Freigeben** |
+| **Responsive** | Desktop + tablet — actions wrap without clipping on all three activity rows |
+
+---
+
+## 36. 01C Human UAT R3 — result (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Human UAT R3** | **FAIL** |
+| **Team Cockpit period release** | Dialog opens; **Zielteam** picker empty for SCE Testspieler 03 (regression) |
+| **Match / Training / Tournament activity** | Surfaces present after R3; target discovery must match period contract |
+| **01C status** | **IN PROGRESS** |
+| **MERGE_ALLOWED** | **NO** |
+
+### Root cause (R3.1)
+
+| Area | Finding |
+|------|---------|
+| **UI (`PlayerReleaseEditorSheet`)** | R3 changed target picker `disabled` from `!form.personId` to `!lockedPersonId`. Period create has no `initialPersonId`, so after choosing a player the picker stayed disabled and looked empty. |
+| **Person resolution** | Canonical **`effectivePersonId`** = `editing?.personId ?? initialPersonId ?? form.personId` — used for fetch + picker enablement; locked UI only when `initialPersonId` or edit. |
+| **Async** | Empty `personId` loads now participate in request sequence; sheet close clears stale form/options. |
+| **Discovery service** | **`resolvePlayerReleaseTargetTeams`** unchanged; existing releases do **not** filter targets. |
+| **UAT data** | SCE Testspieler 01–06 share **`2010-06-01`** DOB; from B1 source, **C-band** (and unrestricted D) targets are eligible; same-band B targets are birth-year **INELIGIBLE** (not hidden by release rows). |
+
+### R3.1 remediation (PR **#822**)
+
+| Item | Change |
+|------|--------|
+| **Period + activity parity** | Same `GET …/target-teams?personId=` → `listTargetTeamSeasonOptionsForPerson` → `resolvePlayerReleaseTargetTeams` |
+| **Picker UX** | Enable when `effectivePersonId` set; helper text when no eligible targets |
+| **Tests** | Period player switch + stale fetch; 2010-born discovery; `player-release-service` mocks/`parseReason` |
+| **Migration** | **None** |
+
+### Human UAT R3.1 checklist (PO)
+
+| Surface | Steps |
+|---------|--------|
+| **Period** | FC Allschwil Junioren B1 → Kader → Spielerfreigaben → **Für anderes Team freigeben** → Testspieler **01 / 02 / 03** → eligible **Zielteams** visible |
+| **Match** | Event `cmrzhj3je006a04kwhbepxvdz` → Aufgebot → **Freigeben** → same targets for same player/source |
+| **Training** | Trainings → Termin → **Teilnahme** → **Freigeben** |
+| **Tournament** | Turnier → **Teilnahmen** → **Freigeben** |
+
+---
+
+## 37. Pre-merge action color correction (PR **#822**, 2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **PRE_MERGE_ACTION_COLOR_CORRECTION** | **PASS** |
+| **Rule** | **Status colors** = availability/lifecycle state; **action colors** = reversible operational interaction |
+| **Aufbieten** | SCE orange/gold accent outline (`OPERATIONAL_ACTION_ACCENT_CLASS`) — **not** green |
+| **Entfernen** | Neutral slate secondary (`OPERATIONAL_ACTION_NEUTRAL_CLASS`) — **not** red |
+| **Freigeben** | Neutral compact secondary (`OPERATIONAL_ACTION_NEUTRAL_COMPACT_CLASS`) — shared with training/tournament/match activity rows |
+| **Unchanged** | `MatchAvailabilityStatusBadge` and all availability/status pills (Verfügbar, Nicht verfügbar, Unsicher, Offen, …) |
+| **Shared module** | `components/ui/operational-action-button-classes.ts` |
+| **Tests** | `operational-action-button-classes.test.ts`, `MatchSquadPlayerRow.test.tsx`, `ActivityPlayerReleaseButton.test.tsx` |
+| **Destructive `Button variant="danger"`** | Unchanged for true delete/irreversible flows elsewhere |
+
+---
+
+## 38. 01C Human UAT R3.1 — result (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Human UAT R3.1** | **PASS** |
+| **Period target discovery** | **PASS** — Zielteam picker loads for SCE Testspieler 01 / 02 / 03 after `effectivePersonId` fix |
+| **Match / Training / Tournament** | **PASS** — same canonical `resolvePlayerReleaseTargetTeams` contract across entry points |
+| **01C status (post-R3.1)** | **READY_FOR_FINAL_PO** — pending pre-merge action-color pass |
+
+Historical UAT sequence preserved: R1 **BLOCKED_BY_SCHEMA** → R1.1 remediation → R2 partial **FAIL** (training/tournament surfaces) → R3 **FAIL** (period picker regression) → R3.1 **PASS**.
+
+---
+
+## 39. 01C closure (MATCH_SQUAD_PLAYER_AVAILABILITY-01C)
+
+| Field | Value |
+|-------|-------|
+| **01C status** | **CLOSED** |
+| **Implementation PR** | **#822** → merged to **`STAGE`** |
+| **Branch** | `cursor/match-squad-player-availability-01c-player-release-development` |
+| **STAGE base (pre-01C)** | `1469a7bf85f4521548e346c3ceba9ad17116903a` |
+| **Feature HEAD (pre-merge)** | `6f3aa6a811d91008a71e2d2e6203b50464978fad` |
+| **Human UAT R1** | **BLOCKED_BY_SCHEMA** — STAGE migration subsequently deployed (§33) |
+| **Human UAT R1.1** | Core release workflow operational; PO requested toggle, eligibility-aware targets, activity-level release |
+| **Human UAT R2** | Period **PASS**; toggle **PASS**; target filter **PASS**; match action **PASS**; training/tournament/activity discovery **FAIL** |
+| **Human UAT R3** | Activity surfaces added; period target picker regression; **FAIL** |
+| **Human UAT R3.1** | Period discovery fixed; canonical discovery restored; **PASS** (§38) |
+| **Pre-merge action color** | **PASS** — status vs action semantics (§37) |
+| **Final PO Human UAT** | **PASS** |
+| **HUMAN_UAT_01C** | **PASS** |
+| **PO_APPROVED** | **YES** |
+| **MERGE_ALLOWED** | **YES** (executed at closure) |
+| **Regression battery** | **PASS** for 01C scope; known matchcenter view-model baseline failures unchanged |
+| **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| **Migrations (STAGE)** | `20261010190000_match_squad_player_availability_01c_player_release`; `20261010210000_match_squad_player_availability_01c_r2_activity_scope` — no closure migration |
+| **PROD** | **Not targeted** |
+| **Test data** | SCE Testspieler 01–06 **retained** for 01D–01F; `TEST_DATA_REMAINING = 0` at parent module closure only |
+
+### Final 01C product definition (locked)
+
+**Owns:** Player Release & Development Assignment — “Where and under what conditions may this player play outside the normal Stammteam?”
+
+**Does not own:** availability (`ParticipationResponse` / 01B); Stammteam match selection (`MatchSquad` / 01A); target Match Squad assignment or cross-team request workflow (01D/01E).
+
+**Period release (`scope = PERIOD`):** player, source `TeamSeason`, target `TeamSeason`, `validFrom` / `validUntil`, `maxMinutes`, `reason`, optional `note`, lifecycle status, audit provenance.
+
+**Activity release (`scope = ACTIVITY`):** canonical anchors — `Event.id` for MATCH/TOURNAMENT; `trainingSessionId` for TRAINING (no synthetic Event for training).
+
+**Target discovery:** `resolvePlayerReleaseTargetTeams` — same tenant/season, active teams, source excluded, birth-year/category plausibility; **Freigegeben ≠ Einsatzberechtigt**; not a complete SFV regulatory engine.
+
+**UX surfaces:** Team Kader → Spielerfreigaben; Match Aufgebot **Freigeben**; Training session **Teilnahme**; Tournament **Teilnahmen**; history toggle via `SwitchThumb`.
+
+**Signal independence:** AVAILABILITY ≠ MATCH SELECTION ≠ PLAYER RELEASE ≠ TARGET ASSIGNMENT — no silent cross-writes (§31, tests).
+
+### Deferred scope (not 01C)
+
+Cross-team candidate discovery for a target match; target-trainer request; source approval/rejection workflow; actual target Match Squad assignment; automated recommendation; workload intelligence; actual minutes tracking; complete SFV regulatory eligibility engine.
+
+### Roadmap handoff
+
+**NEXT package:** `SCE-ACTIVITY-NAV-01` — Unified Activity Detail Navigation (§40–§43). **01D** follows NAV-01 — not parallel.
+
+---
+
+## 40. SCE-ACTIVITY-NAV-01 — package registration
+
+| Field | Value |
+|-------|-------|
+| **Canonical key** | `SCE-ACTIVITY-NAV-01` |
+| **Product name** | Unified Activity Detail Navigation |
+| **Status** | **NEXT** (registered at 01C closure — **not implemented**) |
+| **Goal** | One consistent SCE detail-navigation architecture for sports activities: users move between operational areas without navigating very long vertical forms. |
+| **Principle** | **ONE ACTIVITY → ONE STABLE DETAIL CONTEXT → CLEAR TASK-ORIENTED TABS** |
+
+**Applies to individual:** Training sessions, Matches, Tournaments, Club events / Veranstaltungen.
+
+**Center/list pages remain list pages** (`/dashboard/training`, `/dashboard/matchcenter`, `/dashboard/tournamentcenter`, `/dashboard/veranstaltungen`) unless diagnosis finds a specific detail-context reason for tabs there.
+
+**Design reference:** Team detail navigation (Übersicht, Kader, Trainerteam, …) — philosophy, not mechanical tab-name copy.
+
+---
+
+## 41. SCE-ACTIVITY-NAV-01 — target direction (hypothesis)
+
+**Not frozen implementation** — diagnosis in NAV-01 must inventory real routes/components first.
+
+| Activity | Initial tab hypothesis |
+|----------|------------------------|
+| **TRAINING** | Übersicht · Teilnahme · Planung · Kommunikation · Mehr |
+| **MATCH** | Übersicht · Aufgebot · Teilnahme · Spielbetrieb · Kommunikation · Mehr |
+| **TOURNAMENT** | Übersicht · Teilnahme · Kader/Aufgebot · Planung · Kommunikation · Mehr |
+| **CLUB EVENT** | Übersicht · Teilnahme · Planung · Kommunikation · Mehr |
+
+Terminology may change after workflow/permission diagnosis.
+
+---
+
+## 42. SCE-ACTIVITY-NAV-01 — architecture principles (mandatory)
+
+| ID | Principle |
+|----|-----------|
+| **A** | **Shared architecture** — reusable primitive (e.g. `ActivityDetailTabs`); each activity type supplies tabs, permissions, metadata — not four unrelated hard-coded tab bars. |
+| **B** | **Preserve domain ownership** — navigation reorganizes presentation only; Availability, Match Squad, Player Release remain independent models. |
+| **C** | **Permission aware** — hidden/disabled tabs are not authorization; server-side checks remain canonical. |
+| **D** | **Deep linking** — stable URL per meaningful tab; refresh and back/forward retain context. |
+| **E** | **Responsive** — horizontal nav desktop; scroll/`Mehr` overflow tablet/mobile — no broken multi-line wraps. |
+| **F** | **Counts / indicators** — architecture future-compatible (e.g. Aufgebot 6/8) without requiring all counters in NAV-01. |
+| **G** | **Low-frequency content** — `Mehr` or equivalent; avoid 8–12 permanent tabs. |
+| **H** | **No data loss** — moving editors preserves unsaved-change handling, validation, permissions, SFV restrictions, lifecycle. |
+| **I** | **No duplication** — one canonical presentation per editor (not both Übersicht and another tab). |
+| **J** | **SCE visual language** — Team detail navigation as visual reference. |
+
+---
+
+## 43. SCE-ACTIVITY-NAV-01 — required diagnosis & non-goals
+
+### Required diagnosis (start of NAV-01)
+
+Inventory real routes/components for TRAINING, MATCH, TOURNAMENT, VERANSTALTUNG (list + detail, participation, planning, communication, documents/settings); Team tab implementation; shared navigation components; deep-link conventions; responsive behavior; permission and save-form boundaries; dirty-form protection; nested layouts; read/edit state; URL stability when introducing tabs.
+
+Implementation plan must be evidence-based.
+
+### Non-goals (unless strictly necessary for navigation migration)
+
+01D discovery/request/approval; new PlayerRelease / availability / Match Squad semantics; mobile native app; broad visual redesign; new sports rules; new SFV integration; new permission model; new communication domain; arbitrary schema changes.
+
+NAV-01 is primarily information architecture, routing, and UX consistency.

@@ -36,6 +36,10 @@ type SquadPayload = {
   };
   availabilityCollection?: MatchAvailabilityCollectionMetaView;
   canManageAvailability?: boolean;
+  canManageRelease?: boolean;
+  releaseReadOnly?: boolean;
+  teamId?: string;
+  teamSeasonId?: string;
 };
 
 type Props = {
@@ -184,6 +188,20 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
   const filteredRemaining = filterPlayers(optimisticRemaining);
   const canManageAvailability = Boolean(data?.canManageAvailability);
 
+  const releaseContext =
+    data?.teamId && data?.teamSeasonId
+      ? {
+          teamId: data.teamId,
+          teamSeasonId: data.teamSeasonId,
+          matchId,
+          matchLabel: data.teamDisplayName
+            ? `Spiel · ${data.teamDisplayName}`
+            : "Aktuelles Spiel",
+          canManageRelease: Boolean(data.canManageRelease),
+          releaseReadOnly: Boolean(data.releaseReadOnly),
+        }
+      : undefined;
+
   return (
     <PlanningEditorParticipantsSection
       headingId="spiele-edit-match-squad-heading"
@@ -274,6 +292,7 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
                 action="remove"
                 canMutate={canMutate}
                 onToggle={togglePerson}
+                releaseContext={releaseContext}
               />
             )}
           </section>
@@ -301,6 +320,7 @@ export default function MatchSquadSection({ matchId, timeZone = "Europe/Zurich" 
                 action="add"
                 canMutate={canMutate}
                 onToggle={togglePerson}
+                releaseContext={releaseContext}
               />
             )}
           </section>

@@ -18,6 +18,8 @@ import PlanningEditorCollaborationSection from "@/components/admin/shared/planni
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
 import { loadTournamentPlanningParticipants } from "@/lib/planning/load-tournament-planning-participants";
+import { resolveTeamSeasonIdForTeamAndSeason } from "@/lib/planning/resolve-team-season-id";
+import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
 
 type Props = { params: Promise<{ tournamentId: string }> };
 
@@ -81,6 +83,36 @@ export default async function TournamentEditPage({ params }: Props) {
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
   const participantPresentation = await loadTournamentPlanningParticipants(tenantContext.id, tournament);
 
+  const hostTeamSeasonId = await resolveTeamSeasonIdForTeamAndSeason(
+    tenantContext.id,
+    tournament.team?.id ?? null,
+    tournament.season?.id ?? null,
+  );
+  const releaseAccess =
+    session.user?.id && hostTeamSeasonId && tournament.team?.id
+      ? await resolvePlayerReleaseAccess({
+          userId: session.user.id,
+          tenantId: tenantContext.id,
+          tenantKey: tenantContext.key,
+          teamId: tournament.team.id,
+          teamSeasonId: hostTeamSeasonId,
+        })
+      : null;
+  const tournamentReleaseContext =
+    hostTeamSeasonId && tournament.team?.id
+      ? {
+          teamId: tournament.team.id,
+          teamSeasonId: hostTeamSeasonId,
+          canManageRelease: releaseAccess?.canManageSource === true,
+          releaseReadOnly: tournament.status === "CANCELLED",
+          activity: {
+            kind: "EVENT" as const,
+            eventId: tournament.id,
+            scopeLabel: `Turnier · ${tournament.title}`,
+          },
+        }
+      : undefined;
+
   const participantsSection =
     participantPresentation.people.length > 0 ? (
       <PlanningEditorParticipantsSection
@@ -88,7 +120,11 @@ export default async function TournamentEditPage({ params }: Props) {
         testId="turniere-edit-rsvp-participants-section"
         persisted
       >
-        <PlanningParticipantsList people={participantPresentation.people} teams={[]} />
+        <PlanningParticipantsList
+          people={participantPresentation.people}
+          teams={[]}
+          releaseContext={tournamentReleaseContext}
+        />
       </PlanningEditorParticipantsSection>
     ) : null;
 

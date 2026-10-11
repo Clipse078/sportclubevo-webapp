@@ -11,6 +11,14 @@ type Props = {
   onToggle: (personId: string, select: boolean) => void;
   canMutate: boolean;
   listTestId?: string;
+  releaseContext?: {
+    teamId: string;
+    teamSeasonId: string;
+    matchId: string;
+    matchLabel: string;
+    canManageRelease: boolean;
+    releaseReadOnly?: boolean;
+  };
 };
 
 export default function MatchSquadPlayerList({
@@ -19,6 +27,7 @@ export default function MatchSquadPlayerList({
   onToggle,
   canMutate,
   listTestId,
+  releaseContext,
 }: Props) {
   return (
     <ul
@@ -37,6 +46,7 @@ export default function MatchSquadPlayerList({
           onAction={() =>
             onToggle(player.personId, action === "add")
           }
+          releaseContext={releaseContext}
         />
       ))}
     </ul>

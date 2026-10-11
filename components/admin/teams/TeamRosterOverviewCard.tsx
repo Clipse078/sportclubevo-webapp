@@ -1,4 +1,5 @@
 ﻿import TeamSquadManagementCard from "@/components/admin/teams/TeamSquadManagementCard";
+import TeamPlayerReleaseSection from "@/components/admin/teams/TeamPlayerReleaseSection";
 import TeamTrainerRosterSection from "@/components/admin/teams/TeamTrainerRosterSection";
 import {
   TeamHistoricalSeasonRosters,
@@ -65,22 +66,25 @@ export default async function TeamRosterOverviewCard({
           }
         >
           {showSquad ? (
-            <TeamSquadManagementCard
-              teamId={teamId}
-              canManage={canManage}
-              canManagePeople={canManagePeople}
-              sectionId="spielerkader"
-              teamSeason={{
-                id: currentSeason.id,
-                displayName: currentSeason.displayName,
-                shortName: currentSeason.shortName,
-                status: currentSeason.status,
-                squadWebsiteVisible: currentSeason.squadWebsiteVisible ?? true,
-                season: currentSeason.season,
-                teamAgeGroup,
-                playerSquadMembers: currentSeason.playerSquadMembers ?? [],
-              }}
-            />
+            <div className="space-y-6">
+              <TeamSquadManagementCard
+                teamId={teamId}
+                canManage={canManage}
+                canManagePeople={canManagePeople}
+                sectionId="spielerkader"
+                teamSeason={{
+                  id: currentSeason.id,
+                  displayName: currentSeason.displayName,
+                  shortName: currentSeason.shortName,
+                  status: currentSeason.status,
+                  squadWebsiteVisible: currentSeason.squadWebsiteVisible ?? true,
+                  season: currentSeason.season,
+                  teamAgeGroup,
+                  playerSquadMembers: currentSeason.playerSquadMembers ?? [],
+                }}
+              />
+              <TeamPlayerReleaseSection teamId={teamId} teamSeasonId={currentSeason.id} />
+            </div>
           ) : null}
 
           {showTrainer ? (

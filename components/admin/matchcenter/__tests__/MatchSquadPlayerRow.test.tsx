@@ -188,7 +188,7 @@ describe("MatchSquadPlayerRow", () => {
     expect(container.querySelector('[data-column="action"]')).toBeInTheDocument();
   });
 
-  it("styles Aufbieten as positive and Entfernen as destructive", () => {
+  it("styles Aufbieten as SCE accent action and Entfernen as neutral (not status colors)", () => {
     const add = render(
       <MatchSquadPlayerRow
         player={player({ canSelect: true })}
@@ -197,9 +197,9 @@ describe("MatchSquadPlayerRow", () => {
         disabled={false}
       />,
     );
-    expect(add.getByTestId("match-squad-add-p1")).toHaveClass(
-      ...MATCH_SQUAD_PLAYER_ROW_AUFBIETEN_CLASS.split(" "),
-    );
+    const aufbieten = add.getByTestId("match-squad-add-p1");
+    expect(aufbieten).toHaveClass("text-[var(--sce-primary)]");
+    expect(aufbieten.className).not.toMatch(/sce-success/);
     add.unmount();
 
     render(
@@ -210,9 +210,29 @@ describe("MatchSquadPlayerRow", () => {
         disabled={false}
       />,
     );
-    expect(screen.getByTestId("match-squad-remove-p1")).toHaveClass(
-      ...MATCH_SQUAD_PLAYER_ROW_ENTFERNEN_CLASS.split(" "),
+    const entfernen = screen.getByTestId("match-squad-remove-p1");
+    expect(entfernen).toHaveClass("text-[var(--text-2)]");
+    expect(entfernen.className).not.toMatch(/sce-danger/);
+  });
+
+  it("keeps availability badge on status semantics separate from action buttons", () => {
+    render(
+      <MatchSquadPlayerRow
+        player={player({
+          availabilityLabel: "Verfügbar",
+          presentationStatus: "AVAILABLE",
+          presentationTone: "success",
+          presentationIcon: "check",
+          canRemove: true,
+        })}
+        action="remove"
+        onAction={() => {}}
+        disabled={false}
+      />,
     );
+    const badge = screen.getByTestId("match-squad-availability-p1");
+    expect(badge.innerHTML).toContain("sce-success");
+    expect(screen.getByTestId("match-squad-remove-p1").className).not.toMatch(/sce-success/);
   });
 
   it("keeps empty action cell for unavailable remaining players", () => {
