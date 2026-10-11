@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   matchSquadMemberFindMany: vi.fn(),
   matchSquadMemberDeleteMany: vi.fn(),
   matchSquadMemberCreateMany: vi.fn(),
+  playerReleaseRequestFindMany: vi.fn(),
   matchSquadUpdateMany: vi.fn(),
   matchSquadUpdate: vi.fn(),
   participationResponseUpdate: vi.fn(),
@@ -50,6 +51,7 @@ vi.mock("@/lib/db/prisma", () => ({
       deleteMany: mocks.matchSquadMemberDeleteMany,
       createMany: mocks.matchSquadMemberCreateMany,
     },
+    playerReleaseRequest: { findMany: mocks.playerReleaseRequestFindMany },
     $transaction: mocks.transaction,
   },
 }));
@@ -134,6 +136,7 @@ describe("match squad combined availability × selection", () => {
       teamSeasonId: TS,
     });
     mocks.matchSquadMemberFindMany.mockResolvedValue([]);
+    mocks.playerReleaseRequestFindMany.mockResolvedValue([]);
     mocks.personFindFirst.mockImplementation(async ({ where }: { where: { id: string } }) => ({
       id: where.id,
     }));

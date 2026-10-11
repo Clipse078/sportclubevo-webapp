@@ -16,6 +16,8 @@ import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-sq
 import type {
   ParticipationResponseSource,
   ParticipationResponseStatus,
+  PlayerReleaseScope,
+  PlayerReleaseStatus,
   PlayerSquadStatus,
 } from "@prisma/client";
 import { getParticipationResponseProvenanceLabel } from "@/lib/match-squad/participation-provenance-labels";
@@ -35,6 +37,9 @@ import {
   MatchSquadReadOnlyError,
   MatchSquadValidationError,
 } from "@/lib/match-squad/errors";
+import { listApprovedReleaseAssignmentCandidates } from "@/lib/match-squad/player-release-assignment-candidates";
+import { isPlayerReleaseOperationallyActive } from "@/lib/match-squad/player-release-lifecycle";
+import { isPlayerReleaseValidForTargetActivity } from "@/lib/match-squad/player-release-target-validity";
 
 function formatPersonName(input: {
   firstName: string;
@@ -154,6 +159,14 @@ async function loadParticipationByPerson(
   return new Map(rows.map((row) => [row.personId, row]));
 }
 
+function teamSeasonDisplayLabel(row: {
+  displayName: string;
+  shortName: string | null;
+  team: { name: string; shortName: string | null };
+}): string {
+  return row.displayName || row.shortName || row.team.shortName || row.team.name;
+}
+
 function buildPlayerPresentation(input: {
   personId: string;
   displayName: string;
@@ -164,6 +177,7 @@ function buildPlayerPresentation(input: {
   participation: ParticipationRow | undefined;
   selected: boolean;
   editable: boolean;
+  externalRelease: MatchSquadPlayerPresentation["externalRelease"];
 }): MatchSquadPlayerPresentation {
   const availability = mapParticipationStatusToMatchAvailability(input.participation?.status);
   const availabilityConflict = hasMatchAvailabilityConflict({
@@ -174,14 +188,19 @@ function buildPlayerPresentation(input: {
     input.participation?.status ?? null,
     { selected: input.selected, availability },
   );
-  const staleRosterSelection = input.selected && !input.rosterEligible;
+  const staleRosterSelection = input.selected && !input.rosterEligible && !input.externalRelease;
+  const rosterIneligibleLabel = input.externalRelease
+    ? `${input.externalRelease.sourceTeamLabel} · freigegeben`
+    : input.rosterEligible
+      ? null
+      : "Nicht mehr im Saison-Kader";
   return {
     personId: input.personId,
     displayName: input.displayName,
     shirtNumber: input.shirtNumber,
     sortOrder: input.sortOrder,
     rosterEligible: input.rosterEligible,
-    rosterIneligibleLabel: input.rosterEligible ? null : "Nicht mehr im Saison-Kader",
+    rosterIneligibleLabel,
     rosterStatus: input.rosterStatus,
     availability,
     availabilityLabel: presentation.label,
@@ -203,10 +222,15 @@ function buildPlayerPresentation(input: {
       availability,
     }),
     canRemove: canRemoveFromMatchSquad({ selected: input.selected, editable: input.editable }),
+    externalRelease: input.externalRelease,
   };
 }
 
-function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts {
+function deriveCounts(input: {
+  structuralPlayers: MatchSquadPlayerPresentation[];
+  selectedPlayers: MatchSquadPlayerPresentation[];
+  structuralRosterTotal: number;
+}): MatchSquadCounts {
   let available = 0;
   let unavailable = 0;
   let maybe = 0;
@@ -217,7 +241,7 @@ function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts
   let selectedOpen = 0;
   let conflicts = 0;
 
-  for (const player of players) {
+  for (const player of input.structuralPlayers) {
     switch (player.presentationStatus) {
       case "AVAILABLE":
         available += 1;
@@ -233,18 +257,19 @@ function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts
         open += 1;
         break;
     }
+  }
 
-    if (player.selected) {
-      selected += 1;
-      if (player.presentationStatus === "AVAILABLE") selectedAvailable += 1;
-      if (player.presentationStatus === "MAYBE") selectedMaybe += 1;
-      if (player.presentationStatus === "OPEN") selectedOpen += 1;
-      if (player.availabilityConflict) conflicts += 1;
-    }
+  for (const player of input.selectedPlayers) {
+    if (!player.selected) continue;
+    selected += 1;
+    if (player.presentationStatus === "AVAILABLE") selectedAvailable += 1;
+    if (player.presentationStatus === "MAYBE") selectedMaybe += 1;
+    if (player.presentationStatus === "OPEN") selectedOpen += 1;
+    if (player.availabilityConflict) conflicts += 1;
   }
 
   return {
-    rosterTotal: players.length,
+    rosterTotal: input.structuralRosterTotal,
     available,
     unavailable,
     maybe,
@@ -257,13 +282,116 @@ function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts
   };
 }
 
-async function loadSelectedPersonIds(matchSquadId: string): Promise<string[]> {
-  const rows = await prisma.matchSquadMember.findMany({
+type SelectedMemberRow = {
+  personId: string;
+  playerReleaseRequestId: string | null;
+  playerReleaseRequest: {
+    id: string;
+    sourceTeamSeasonId: string;
+    sourceTeamSeason: {
+      displayName: string;
+      shortName: string | null;
+      team: { name: string; shortName: string | null };
+    };
+    playerRelease: {
+      status: string;
+      revokedAt: Date | null;
+      scope: string;
+      eventId: string | null;
+      trainingSessionId: string | null;
+      validFrom: Date;
+      validUntil: Date;
+      targetTeamSeasonId: string;
+      sourceTeamSeasonId: string;
+    };
+    targetEvent: { startAt: Date; type: string };
+  } | null;
+};
+
+async function loadSelectedMembers(matchSquadId: string): Promise<SelectedMemberRow[]> {
+  return prisma.matchSquadMember.findMany({
     where: { matchSquadId },
-    select: { personId: true },
+    select: {
+      personId: true,
+      playerReleaseRequestId: true,
+      playerReleaseRequest: {
+        select: {
+          id: true,
+          sourceTeamSeasonId: true,
+          sourceTeamSeason: {
+            select: {
+              displayName: true,
+              shortName: true,
+              team: { select: { name: true, shortName: true } },
+            },
+          },
+          playerRelease: {
+            select: {
+              status: true,
+              revokedAt: true,
+              scope: true,
+              eventId: true,
+              trainingSessionId: true,
+              validFrom: true,
+              validUntil: true,
+              targetTeamSeasonId: true,
+              sourceTeamSeasonId: true,
+            },
+          },
+          targetEvent: { select: { startAt: true, type: true } },
+        },
+      },
+    },
     orderBy: { createdAt: "asc" },
   });
+}
+
+async function loadSelectedPersonIds(matchSquadId: string): Promise<string[]> {
+  const rows = await loadSelectedMembers(matchSquadId);
   return rows.map((row) => row.personId);
+}
+
+function resolveExternalReleasePresentation(
+  member: SelectedMemberRow,
+  context: ResolvedActivitySquadContext,
+  activityKind: ActivitySquadEventKind,
+  timezone: string,
+): MatchSquadPlayerPresentation["externalRelease"] {
+  const request = member.playerReleaseRequest;
+  if (!request || !member.playerReleaseRequestId) {
+    return null;
+  }
+  const release = request.playerRelease;
+  const releaseActive =
+    isPlayerReleaseOperationallyActive({
+      status: release.status as PlayerReleaseStatus,
+      validFrom: release.validFrom,
+      validUntil: release.validUntil,
+      timezone,
+    }) &&
+    isPlayerReleaseValidForTargetActivity({
+      release: {
+        status: release.status as PlayerReleaseStatus,
+        scope: release.scope as PlayerReleaseScope,
+        targetTeamSeasonId: release.targetTeamSeasonId,
+        eventId: release.eventId,
+        trainingSessionId: release.trainingSessionId,
+        validFrom: release.validFrom,
+        validUntil: release.validUntil,
+      },
+      targetTeamSeasonId: context.teamSeasonId,
+      targetEventId: context.eventId,
+      targetEventType: activityKind === "TOURNAMENT" ? "TOURNAMENT" : "MATCH",
+      targetActivityStartAt: request.targetEvent.startAt,
+      timezone,
+    });
+  return {
+    sourceTeamSeasonId: request.sourceTeamSeasonId,
+    sourceTeamLabel: teamSeasonDisplayLabel(request.sourceTeamSeason),
+    playerReleaseRequestId: request.id,
+    releaseRevoked: !releaseActive,
+    releaseRevokedLabel: releaseActive ? null : "Freigabe widerrufen",
+  };
 }
 
 async function getOrCreateDraftActivitySquad(
@@ -316,6 +444,7 @@ async function buildActivitySquadViewModel(
   tenantId: string,
   eventId: string,
   activityKind: ActivitySquadEventKind,
+  timezone = "Europe/Zurich",
 ): Promise<MatchSquadViewModel> {
   const context = await resolveActivitySquadEventContext(tenantId, eventId, activityKind);
   const editability = isMatchSquadEditable(context.status);
@@ -329,7 +458,8 @@ async function buildActivitySquadViewModel(
   ]);
 
   const rosterByPerson = new Map(rosterRows.map((row) => [row.personId, row]));
-  const selectedIds = squad ? await loadSelectedPersonIds(squad.id) : [];
+  const selectedMembers = squad ? await loadSelectedMembers(squad.id) : [];
+  const selectedIds = selectedMembers.map((row) => row.personId);
   const participationPersonIds = [
     ...new Set([...rosterRows.map((row) => row.personId), ...selectedIds]),
   ];
@@ -341,7 +471,14 @@ async function buildActivitySquadViewModel(
   );
 
   const selected: MatchSquadPlayerPresentation[] = [];
-  for (const personId of selectedIds) {
+  for (const member of selectedMembers) {
+    const personId = member.personId;
+    const externalRelease = resolveExternalReleasePresentation(
+      member,
+      context,
+      activityKind,
+      timezone,
+    );
     const rosterRow = rosterByPerson.get(personId);
     if (rosterRow) {
       selected.push(
@@ -355,6 +492,7 @@ async function buildActivitySquadViewModel(
           participation: participationByPerson.get(personId),
           selected: true,
           editable: editability.editable,
+          externalRelease,
         }),
       );
       continue;
@@ -375,6 +513,7 @@ async function buildActivitySquadViewModel(
         participation: participationByPerson.get(personId),
         selected: true,
         editable: editability.editable,
+        externalRelease,
       }),
     );
   }
@@ -393,12 +532,30 @@ async function buildActivitySquadViewModel(
         participation: participationByPerson.get(row.personId),
         selected: false,
         editable: editability.editable,
+        externalRelease: null,
       }),
     );
 
+  const targetEventType = activityKind === "TOURNAMENT" ? "TOURNAMENT" : "MATCH";
+  const approvedReleaseCandidates = await listApprovedReleaseAssignmentCandidates({
+    tenantId,
+    targetTeamSeasonId: context.teamSeasonId,
+    targetEventId: eventId,
+    targetEventType,
+    timezone,
+  });
+
   const sortedSelected = sortMatchSquadPlayersForPresentation(selected);
   const sortedRemaining = sortMatchSquadPlayersForPresentation(remaining);
-  const counts = deriveCounts([...sortedRemaining, ...sortedSelected]);
+  const structuralPresentation = [
+    ...sortedRemaining,
+    ...sortedSelected.filter((row) => row.rosterEligible),
+  ];
+  const counts = deriveCounts({
+    structuralPlayers: structuralPresentation,
+    selectedPlayers: sortedSelected,
+    structuralRosterTotal: rosterRows.length,
+  });
 
   return {
     eventId: context.eventId,
@@ -413,6 +570,7 @@ async function buildActivitySquadViewModel(
     selectedPersonIds: sortedSelected.map((row) => row.personId),
     remainingPersonIds: sortedRemaining.map((row) => row.personId),
     counts,
+    approvedReleaseCandidates,
   };
 }
 
@@ -453,6 +611,19 @@ async function setActivitySquadMembers(input: {
   const rosterRows = await loadCurrentRosterRows(context.teamSeasonId, input.tenantId);
   const eligibleIds = new Set(rosterRows.map((row) => row.personId));
 
+  const squad = await getOrCreateDraftActivitySquad(
+    input.tenantId,
+    input.eventId,
+    input.activityKind,
+  );
+
+  const existingMembers = await loadSelectedMembers(squad.id);
+  const externalReleasePersonIds = new Set(
+    existingMembers
+      .filter((row) => row.playerReleaseRequestId)
+      .map((row) => row.personId),
+  );
+
   for (const personId of desired) {
     const person = await prisma.person.findFirst({
       where: { id: personId, tenantId: input.tenantId },
@@ -461,7 +632,7 @@ async function setActivitySquadMembers(input: {
     if (!person) {
       throw new MatchSquadValidationError("Unbekannte Person — kann nicht aufgeboten werden.");
     }
-    if (!eligibleIds.has(personId)) {
+    if (!eligibleIds.has(personId) && !externalReleasePersonIds.has(personId)) {
       throw new MatchSquadValidationError(
         "Person ist nicht im Saison-Kader dieses Teams.",
         "NOT_ROSTER_MEMBER",
@@ -469,11 +640,6 @@ async function setActivitySquadMembers(input: {
     }
   }
 
-  const squad = await getOrCreateDraftActivitySquad(
-    input.tenantId,
-    input.eventId,
-    input.activityKind,
-  );
   const beforeIds = await loadSelectedPersonIds(squad.id);
 
   await prisma.$transaction(async (tx) => {
@@ -493,7 +659,7 @@ async function setActivitySquadMembers(input: {
 
     const currentRows = await tx.matchSquadMember.findMany({
       where: { matchSquadId: squad.id },
-      select: { id: true, personId: true },
+      select: { id: true, personId: true, playerReleaseRequestId: true },
     });
     const currentIds = new Set(currentRows.map((row) => row.personId));
     const desiredSet = new Set(desired);
@@ -502,6 +668,20 @@ async function setActivitySquadMembers(input: {
     const toAdd = desired.filter((personId) => !currentIds.has(personId));
 
     if (toRemove.length > 0) {
+      const removedWithRelease = currentRows.filter(
+        (row) => !desiredSet.has(row.personId) && row.playerReleaseRequestId,
+      );
+      for (const row of removedWithRelease) {
+        void logAction({
+          actorUserId: input.actorUserId,
+          tenantId: input.tenantId,
+          moduleKey: input.auditModuleKey,
+          entityType: "PlayerReleaseRequest",
+          entityId: row.playerReleaseRequestId!,
+          action: "UNASSIGN",
+          afterJson: { matchSquadMemberId: row.id, eventId: input.eventId },
+        });
+      }
       await tx.matchSquadMember.deleteMany({
         where: { id: { in: toRemove.map((row) => row.id) } },
       });

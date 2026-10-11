@@ -46,6 +46,9 @@ export default function MatchSquadPlayerRow({
 }: Props) {
   const showPrimaryAction =
     action === "remove" || (action === "add" && player.canSelect);
+  const showReleaseAction =
+    player.rosterEligible &&
+    Boolean(releaseContext?.canManageRelease && onOpenReleasePlanner);
 
   return (
     <li
@@ -67,6 +70,11 @@ export default function MatchSquadPlayerRow({
           </p>
           {player.rosterIneligibleLabel ? (
             <p className="mt-0.5 text-xs text-[var(--muted)]">{player.rosterIneligibleLabel}</p>
+          ) : null}
+          {player.externalRelease?.releaseRevokedLabel ? (
+            <p className="mt-0.5 text-xs font-medium text-[var(--destructive)]">
+              {player.externalRelease.releaseRevokedLabel}
+            </p>
           ) : null}
         </div>
       </div>
@@ -127,7 +135,7 @@ export default function MatchSquadPlayerRow({
       </div>
 
       <div className={MATCH_SQUAD_PLAYER_ROW_ACTION_COLUMN_CLASS} data-column="release">
-        {releaseContext?.canManageRelease && onOpenReleasePlanner ? (
+        {showReleaseAction && releaseContext && onOpenReleasePlanner ? (
           <button
             type="button"
             disabled={releaseContext.releaseReadOnly}

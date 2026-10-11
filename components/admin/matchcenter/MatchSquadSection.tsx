@@ -9,40 +9,19 @@ import MatchSquadCountsSummary, {
 import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
 import MatchSquadPlayerList from "@/components/admin/matchcenter/MatchSquadPlayerList";
 import ReleasedPlayersDiscoveryPanel from "@/components/admin/matchcenter/ReleasedPlayersDiscoveryPanel";
+import ApprovedReleaseAssignmentPanel from "@/components/admin/matchcenter/ApprovedReleaseAssignmentPanel";
+import type { ApprovedReleaseAssignmentCandidate } from "@/lib/match-squad/player-release-assignment-candidates";
 import PlayerReleasePlanningSheet from "@/components/admin/teams/PlayerReleasePlanningSheet";
 import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-squad-presentation-order";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
-import type {
-  MatchAvailabilityCollectionMetaView,
-  MatchSquadPlayerPresentation,
-} from "@/lib/match-squad/types";
+import {
+  mergeActivitySquadClientPayload,
+  type ActivitySquadClientPayload,
+} from "@/lib/match-squad/activity-squad-client-payload";
+import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
-type SquadPayload = {
-  version: string;
-  editable: boolean;
-  canEdit?: boolean;
-  readOnlyReason: string | null;
-  selected: MatchSquadPlayerPresentation[];
-  remaining: MatchSquadPlayerPresentation[];
-  teamDisplayName: string | null;
-  counts?: {
-    rosterTotal: number;
-    available: number;
-    unavailable: number;
-    maybe: number;
-    open: number;
-    selected: number;
-    selectedAvailable: number;
-    selectedMaybe: number;
-    selectedOpen: number;
-    conflicts: number;
-  };
-  availabilityCollection?: MatchAvailabilityCollectionMetaView;
-  canManageAvailability?: boolean;
-  canManageRelease?: boolean;
-  releaseReadOnly?: boolean;
-  teamId?: string;
-  teamSeasonId?: string;
+type SquadPayload = ActivitySquadClientPayload & {
+  approvedReleaseCandidates?: ApprovedReleaseAssignmentCandidate[];
 };
 
 export type MatchSquadSectionVariant = "match" | "tournament";
@@ -107,6 +86,11 @@ function playerMatchesAvailabilityFilter(
   return true;
 }
 
+/** Only structural target-TeamSeason roster rows belong in «Weitere Kaderspieler». */
+function isStructuralRemainingRow(player: MatchSquadPlayerPresentation): boolean {
+  return player.rosterEligible && !player.externalRelease;
+}
+
 export default function MatchSquadSection({
   matchId,
   timeZone = "Europe/Zurich",
@@ -137,7 +121,7 @@ export default function MatchSquadSection({
       if (!response.ok) {
         throw new Error(resolveLoadErrorMessage(json, response));
       }
-      setData(json);
+      setData((prev) => mergeActivitySquadClientPayload(prev, json));
       setSelectedIds(json.selected.map((row) => row.personId));
       setVersion(json.version);
     } catch (err) {
@@ -154,6 +138,7 @@ export default function MatchSquadSection({
   const canMutate = Boolean(data?.canEdit ?? data?.editable) && !saving;
 
   async function persist(nextSelectedIds: string[]) {
+    const previousSelectedIds = selectedIds;
     setSaving(true);
     setError(null);
     try {
@@ -167,7 +152,7 @@ export default function MatchSquadSection({
       });
       const json = await readSquadApiBody(response);
       if (response.status === 409 && json.squad) {
-        setData({ ...json.squad, canEdit: json.squad.canEdit });
+        setData((prev) => mergeActivitySquadClientPayload(prev, json.squad as SquadPayload));
         setSelectedIds(json.squad.selected.map((row) => row.personId));
         setVersion(json.squad.version);
         setError(json.error ?? "Konflikt — bitte erneut speichern.");
@@ -176,10 +161,11 @@ export default function MatchSquadSection({
       if (!response.ok) {
         throw new Error(json.error ?? "Speichern fehlgeschlagen.");
       }
-      setData(json);
+      setData((prev) => mergeActivitySquadClientPayload(prev, json));
       setSelectedIds(json.selected.map((row) => row.personId));
       setVersion(json.version);
     } catch (err) {
+      setSelectedIds(previousSelectedIds);
       setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
     } finally {
       setSaving(false);
@@ -209,7 +195,9 @@ export default function MatchSquadSection({
       .filter((row): row is MatchSquadPlayerPresentation => Boolean(row)),
   );
   const optimisticRemaining = sortMatchSquadPlayersForPresentation(
-    [...candidateMap.values()].filter((row) => !selectedSet.has(row.personId)),
+    [...candidateMap.values()].filter(
+      (row) => !selectedSet.has(row.personId) && isStructuralRemainingRow(row),
+    ),
   );
 
   const filterPlayers = (rows: MatchSquadPlayerPresentation[]) =>
@@ -352,6 +340,14 @@ export default function MatchSquadSection({
               />
             )}
           </section>
+
+          <ApprovedReleaseAssignmentPanel
+            eventId={matchId}
+            variant={variant}
+            canMutateSquad={canMutate}
+            candidates={data.approvedReleaseCandidates ?? []}
+            onAssigned={() => void load()}
+          />
 
           <section aria-labelledby="match-squad-remaining-heading">
             <h3

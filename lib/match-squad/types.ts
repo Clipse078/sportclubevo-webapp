@@ -8,6 +8,15 @@ import type {
   MatchAvailabilityTone,
   MatchParticipationPresentationStatus,
 } from "@/lib/match-squad/match-availability-presentation";
+import type { ApprovedReleaseAssignmentCandidate } from "@/lib/match-squad/player-release-assignment-candidates";
+
+export type MatchSquadExternalReleasePresentation = {
+  sourceTeamSeasonId: string;
+  sourceTeamLabel: string;
+  playerReleaseRequestId: string;
+  releaseRevoked: boolean;
+  releaseRevokedLabel: string | null;
+};
 
 export type MatchSquadPlayerPresentation = {
   personId: string;
@@ -31,6 +40,7 @@ export type MatchSquadPlayerPresentation = {
   staleRosterSelection: boolean;
   canSelect: boolean;
   canRemove: boolean;
+  externalRelease: MatchSquadExternalReleasePresentation | null;
 };
 
 export type MatchSquadCounts = {
@@ -75,4 +85,5 @@ export type MatchSquadViewModel = {
   remainingPersonIds: string[];
   counts: MatchSquadCounts;
   availabilityCollection?: MatchAvailabilityCollectionMetaView;
+  approvedReleaseCandidates?: ApprovedReleaseAssignmentCandidate[];
 };

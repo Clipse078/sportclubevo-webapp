@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
@@ -40,6 +41,7 @@ function player(
     staleRosterSelection: false,
     canSelect: false,
     canRemove: false,
+    externalRelease: null,
     ...overrides,
   };
 }
@@ -50,6 +52,10 @@ function squadPayload(overrides: Record<string, unknown> = {}) {
     editable: true,
     canEdit: true,
     readOnlyReason: null,
+    teamId: "team-b1",
+    teamSeasonId: "ts-b1",
+    canManageRelease: true,
+    releaseReadOnly: false,
     selected: [],
     remaining: [player()],
     teamDisplayName: "Junioren B1",
@@ -199,4 +205,184 @@ describe("MatchSquadSection", () => {
       "SCE Testspieler 03",
     ]);
   });
+
+  it("does not move removed external assignments into Weitere Kaderspieler (01E-R2)", async () => {
+    const externalSelected = player({
+      personId: "p-ext",
+      displayName: "SCE Testspieler 01",
+      rosterEligible: false,
+      rosterIneligibleLabel: "FC Allschwil Junioren B1 · freigegeben",
+      selected: true,
+      canRemove: true,
+      externalRelease: {
+        sourceTeamSeasonId: "ts-b1",
+        sourceTeamLabel: "FC Allschwil Junioren B1",
+        playerReleaseRequestId: "req-1",
+        releaseRevoked: false,
+        releaseRevokedLabel: null,
+      },
+    });
+    const approvedCandidate = {
+      requestId: "req-1",
+      personId: "p-ext",
+      personDisplayName: "SCE Testspieler 01",
+      sourceTeamSeasonId: "ts-b1",
+      sourceTeamLabel: "FC Allschwil Junioren B1",
+      statusLabel: "Genehmigt",
+      availabilityLabel: "Offen",
+      availabilityTone: "muted" as const,
+      conflictHints: [],
+      canAssign: true,
+      assignBlockedReason: null,
+      assignWarning: null,
+      version: "v1",
+    };
+
+    mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (!init?.method || init.method === "GET") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify(
+              squadPayload({
+                teamSeasonId: "ts-b2",
+                teamDisplayName: "Junioren B2",
+                selected: [externalSelected],
+                remaining: [],
+                approvedReleaseCandidates: [],
+                counts: {
+                  rosterTotal: 0,
+                  available: 0,
+                  unavailable: 0,
+                  maybe: 0,
+                  open: 0,
+                  selected: 1,
+                  selectedAvailable: 0,
+                  selectedMaybe: 0,
+                  selectedOpen: 0,
+                  conflicts: 0,
+                },
+              }),
+            ),
+        };
+      }
+      if (init.method === "PUT") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify(
+              squadPayload({
+                teamSeasonId: "ts-b2",
+                teamDisplayName: "Junioren B2",
+                version: "v2",
+                selected: [],
+                remaining: [],
+                approvedReleaseCandidates: [approvedCandidate],
+                counts: {
+                  rosterTotal: 0,
+                  available: 0,
+                  unavailable: 0,
+                  maybe: 0,
+                  open: 0,
+                  selected: 0,
+                  selectedAvailable: 0,
+                  selectedMaybe: 0,
+                  selectedOpen: 0,
+                  conflicts: 0,
+                },
+              }),
+            ),
+        };
+      }
+      throw new Error(`Unexpected fetch ${url} ${init?.method}`);
+    });
+
+    render(<MatchSquadSection matchId="match-b2" />);
+    await screen.findByTestId("match-squad-remove-p-ext");
+
+    await userEvent.click(screen.getByTestId("match-squad-remove-p-ext"));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("match-squad-player-p-ext")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/Genehmigte Freigaben · 1/)).toBeInTheDocument();
+    expect(screen.getByText("SCE Testspieler 01")).toBeInTheDocument();
+  });
+
+  it("keeps Freigeben on structural players after squad save when PUT omits release flags (01E-R1)", async () => {
+    const remainingPlayer = player({
+      personId: "p-open",
+      displayName: "SCE Testspieler 05",
+      canSelect: true,
+      availability: "UNKNOWN",
+      availabilityLabel: "Offen",
+      presentationStatus: "OPEN",
+      presentationTone: "muted",
+      presentationIcon: "circle",
+      participationStatus: null,
+    });
+    const selectedPlayer = player({
+      personId: "p-selected",
+      displayName: "SCE Testspieler 01",
+      selected: true,
+      canRemove: true,
+      availability: "AVAILABLE",
+      availabilityLabel: "Verfügbar",
+      presentationStatus: "AVAILABLE",
+      presentationTone: "success",
+      presentationIcon: "check",
+      participationStatus: "YES",
+    });
+
+    mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (!init?.method || init.method === "GET") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify(
+              squadPayload({
+                remaining: [remainingPlayer],
+                selected: [selectedPlayer],
+              }),
+            ),
+        };
+      }
+      if (init.method === "PUT") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify({
+              version: "v2",
+              editable: true,
+              canEdit: true,
+              readOnlyReason: null,
+              teamId: "team-b1",
+              teamSeasonId: "ts-b1",
+              teamDisplayName: "Junioren B1",
+              selected: [remainingPlayer, selectedPlayer],
+              remaining: [],
+              counts: squadPayload().counts,
+            }),
+        };
+      }
+      throw new Error(`Unexpected fetch ${url} ${init?.method}`);
+    });
+
+    render(<MatchSquadSection matchId="match-1" />);
+    await screen.findByTestId("match-squad-release-p-open");
+    expect(screen.getByTestId("match-squad-release-p-selected")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId("match-squad-add-p-open"));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/match-squad"),
+        expect.objectContaining({ method: "PUT" }),
+      );
+    });
+
+    expect(await screen.findByTestId("match-squad-release-p-open")).toBeInTheDocument();
+    expect(screen.getByTestId("match-squad-release-p-selected")).toBeInTheDocument();
+  });
+
 });

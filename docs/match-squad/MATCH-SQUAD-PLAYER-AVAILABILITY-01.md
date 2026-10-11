@@ -276,8 +276,8 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 | **SCE-UI-STANDARD-01** | SCE Workspace Surface Standard — Communication-inspired hierarchy; first adoption via NAV-01 | **FOUNDATION ESTABLISHED / FIRST ADOPTION COMPLETE** ([`docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md)) |
 | **SCE-UI-ROLLOUT-01+** | Incremental webapp-wide workspace surface adoption | **PARALLEL / INCREMENTAL / NOT STARTED** |
 | **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **CLOSED** ([`MATCH-SQUAD-PLAYER-AVAILABILITY-01D.md`](MATCH-SQUAD-PLAYER-AVAILABILITY-01D.md)) |
-| **01E** | Assignment & Communication — operational assignment + inform audiences | **NEXT** |
-| **01F** | Operational Intelligence & Club UAT | **PLANNED** |
+| **01E** | Assignment & Communication — operational assignment + inform audiences | **CLOSED** ([`MATCH-SQUAD-PLAYER-AVAILABILITY-01E.md`](MATCH-SQUAD-PLAYER-AVAILABILITY-01E.md)) |
+| **01F** | Operational Intelligence & Club UAT | **NEXT** |
 
 Then: **Sponsor Commercial Workflows** → **Mobile App** (club roadmap).
 

@@ -186,8 +186,17 @@ export function notificationTypeCategory(
   ) {
     return "REQUIREMENT";
   }
-  if (type === "PLAYER_RELEASE_TARGETED") {
+  if (type === "PLAYER_RELEASE_TARGETED" || type === "PLAYER_RELEASE_ASSIGNED") {
     return "MATCH_SQUAD";
   }
   return "TASK";
+}
+
+/** Idempotent assignment notification per recipient + assignment member row. */
+export function buildPlayerReleaseAssignmentDedupKey(input: {
+  matchSquadMemberId: string;
+  recipientUserId: string;
+  purpose: "PLAYER_GUARDIAN" | "SOURCE_TRAINER";
+}): string {
+  return `PLAYER_RELEASE_ASSIGNED:${input.matchSquadMemberId}:${input.purpose}:${input.recipientUserId}`;
 }
