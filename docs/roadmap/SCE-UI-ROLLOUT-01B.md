@@ -4,9 +4,11 @@
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01B` |
 | **Programme** | [`SCE-UI-ROLLOUT-01+`](./SCE-UI-ROLLOUT-01.md) |
-| **Status** | **IMPLEMENTATION COMPLETE / PO UAT PENDING** |
+| **Status** | **CLOSED** |
 | **Branch** | `cursor/sce-ui-rollout-01b-universal-context-tabs` |
+| **PR** | [#830](https://github.com/Clipse078/sportclubevo-webapp/pull/830) → `STAGE` |
 | **Base** | `STAGE` @ `344353148b2688f28fd62ef2202a7e6117657a23` |
+| **Feature HEAD (pre-merge)** | `22d10e7a9b04840b005cd3d8a3ede17c9a3477c9` |
 | **Schema / PROD** | **No changes** |
 
 ---
@@ -85,6 +87,15 @@ Permission-filtered overflow tabs; menu pattern (`role="menu"` / `menuitem`).
 
 Existing activity deep links (`?tab=uebersicht`, etc.) remain valid.
 
+### Observed canonical tab language (PO visual UAT 2026-10-11)
+
+| Domain | Primary tabs |
+|--------|----------------|
+| Training | Übersicht · Teilnahme · Planung · Kommunikation · Mehr |
+| Match | Übersicht · Aufgebot · Teilnahme · Spielbetrieb · Kommunikation · Mehr |
+| Tournament | Übersicht · Aufgebot · Teilnahme · Planung · Kommunikation · Mehr |
+| Club Event | Übersicht · Teilnahme · Planung · Kommunikation · Mehr |
+
 ---
 
 ## 5. Non-activity proof
@@ -101,35 +112,29 @@ Existing activity deep links (`?tab=uebersicht`, etc.) remain valid.
 - `components/sce/context-tabs/__tests__/SceContextTabs.test.tsx`
 - Activity navigation regression tests (unchanged suite paths)
 - Architecture guardrails: `context-tabs-architecture.test.ts`
+- Design system: `lib/design-system/__tests__/sce-binary-control-standard.test.ts`
 - `npm run build` (TypeScript + Next build)
 
 ---
 
-## 7. Human UAT checklist (PO — PENDING)
+## 7. PO Human UAT
 
-**Match / Training / Tournament / Club Event (each):**
+| Field | Result |
+|-------|--------|
+| **Status** | **PASS** |
+| **Date** | **2026-10-11** |
+| **Scope** | Focused **visual** acceptance — Training, Match, Tournament, Club Event context navigation |
 
-- [ ] Open detail workspace
-- [ ] Switch primary tabs
-- [ ] Open **Mehr** and navigate to overflow tab
-- [ ] Direct deep link `?tab=<operational-tab>`
-- [ ] Browser Back / Forward retains tab
+| Domain | Result | Notes |
+|--------|--------|-------|
+| **Training** | **PASS** | Canonical context navigation visible and consistent |
+| **Match** | **PASS** | Canonical context navigation visible and consistent |
+| **Tournament** | **PASS** | Canonical context navigation visible and consistent |
+| **Club Event** | **PASS** | Canonical context navigation visible and consistent |
 
-**Responsive:**
+**Confirmed visually:** same navigation family; consistent tab placement and typography; restrained orange active indicator; single-row presentation; consistent Mehr placement; **no unintended page redesign** observed.
 
-- [ ] Narrow viewport: tabs do not wrap; horizontal scroll usable
-
-**Permissions:**
-
-- [ ] Tabs without capability do not appear
-
-**Dirty state:**
-
-- [ ] Editable surface: tab switch prompts when dirty (where applicable)
-
-**Accessibility sanity:**
-
-- [ ] Keyboard focus visible; Arrow keys change tab
+**Automated suite remains authoritative** for URL resolution, registry behaviour, keyboard behaviour, and activity navigation regression. PO UAT does not claim manual verification of every interaction in §7 checklist (deep link, back/forward, dirty-state prompt, permission matrix) unless separately exercised — closure relies on focused visual PASS plus automated regression evidence.
 
 ---
 
@@ -143,6 +148,22 @@ Existing activity deep links (`?tab=uebersicht`, etc.) remain valid.
 
 ---
 
-## 9. Definition of done (01B implementation)
+## 9. Closure evidence (01B)
 
-Implementation items for PO UAT are complete in code/docs/tests/build. **01B is not CLOSED** until PO Human UAT PASS.
+- Generic Context Tabs implemented (`lib/context-tabs/*`, `SceContextTabs`, `SceContextTabsBoundary`)
+- Four canonical activity consumers migrated
+- URL / deep-link compatibility preserved
+- Deterministic fallback implemented
+- Permission boundary implemented
+- Dirty-state architecture implemented
+- Responsive foundation implemented
+- Keyboard / accessibility foundation implemented
+- Design System navigation language documented ([`SCE-CONTEXT-TABS-STANDARD.md`](../design/SCE-CONTEXT-TABS-STANDARD.md))
+- SCE Design System master specification established ([`SCE-DESIGN-SYSTEM.md`](../design/SCE-DESIGN-SYSTEM.md))
+- Future-module compliance contract established (including **Toggle First** binary control gate)
+- **SCE Control Standard — Toggle First** documented
+- Automated tests passed; build passed; CI passed (PR #830)
+- PO Human UAT **PASS** (2026-10-11)
+- PR **#830** merged to **STAGE**
+
+**NEXT programme package:** [`SCE-UI-ROLLOUT-01C`](./SCE-UI-ROLLOUT-01.md) — Universal Activity Presentation Model (start from post-merge canonical `STAGE`).
