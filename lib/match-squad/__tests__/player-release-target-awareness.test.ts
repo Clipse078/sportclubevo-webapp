@@ -179,6 +179,21 @@ describe("player-release-target-awareness", () => {
     expect(copy.title).toBe("Junioren B1 hat 3 Spieler für Junioren B2 freigegeben.");
   });
 
+  it("SAME ACTIVITY — match-specific notification copy", () => {
+    const copy = buildTargetedPlayerReleaseAwarenessCopy({
+      sourceTeamLabel: "Junioren B1",
+      targetTeamLabel: "Junioren B2",
+      playerCount: 2,
+      activityKind: "MATCH",
+      activityTitle: "FC Basel",
+      activityScheduleLine: "Sa. 17.10 · 14:00",
+    });
+    expect(copy.title).toBe(
+      "Junioren B1 hat 2 Spieler für euer Spiel gegen FC Basel freigegeben.",
+    );
+    expect(copy.body).toBe("Sa. 17.10 · 14:00");
+  });
+
   it("THREE TARGETED RELEASES — single notification with player count 3", async () => {
     mocks.trainerTeamMemberFindMany.mockResolvedValue([{ person: { userId: "user-a" } }]);
     mocks.teamSeasonFindMany.mockResolvedValue([

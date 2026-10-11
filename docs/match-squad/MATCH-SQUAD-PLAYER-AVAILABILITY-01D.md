@@ -120,6 +120,37 @@ STOP — assignment & communication belong to 01E
 
 ---
 
+## 7b. Multi-Activity / Multi-Team Release Planning (01D R2)
+
+| Topic | Behaviour |
+|-------|-----------|
+| **Domain atomicity** | One `PlayerRelease` row per **player × target team × target activity** (`scope=ACTIVITY`, `eventId`). Batch UX creates many atomic rows in one planning action — no arrays on `PlayerRelease`. |
+| **Entry** | Source **Kader** → multi-select players → **Für andere Teams freigeben** → planning sheet. |
+| **Activities** | Upcoming **MATCH** / **TOURNAMENT** across eligible target teams (union of per-player eligibility). Chronological grouping; target team on each row. |
+| **Eligibility matrix** | Player × activity combinations validated server-side; invalid pairs skipped with summary note (e.g. «1 Kombination ist nicht möglich»). |
+| **Defaults** | Plan-level purpose; optional **per-activity max minutes** via «Details anpassen». |
+| **Review** | Compact counts: Spieler · Einsätze · Freigaben — confirm once (`POST …/player-releases/plan` with `action=create`). |
+| **Awareness (R2)** | Aggregated **per target activity** — B2 Match A notification does not mention A2 Match B. Dedup key includes `eventId`. Deep link prefers Match/Tournament center route. |
+| **Discovery** | Activity-scoped releases match only their `eventId`; **PERIOD** releases unchanged. |
+| **Status** | **01D R1 UAT = PASS** · **01D R2 = IN PROGRESS** |
+
+### API (STAGE)
+
+| Method | Route |
+|--------|-------|
+| POST | `/api/teams/…/player-releases/plan/candidates` — `{ personIds[] }` |
+| POST | `/api/teams/…/player-releases/plan` — `{ action: "review" \| "create", personIds[], eventIds[], activityDefaults?, … }` |
+
+### Human UAT R2 (prepared)
+
+1. **B1** Kader: select SCE Testspieler **01** + **06** → plan releases for **B2 Saturday match** + **A2 Wednesday match** (nearest STAGE fixtures).
+2. Review **2 · 2 · 4** (or **3** if mixed eligibility) → set Match A **max 30 Min.** → confirm once.
+3. **B2** trainer: activity-specific awareness for B2 match only; Aufgebot discovery shows both players for that match.
+4. **A2** trainer (if available): separate awareness for A2 match; no B2 leakage.
+5. Request / approve one combination — other activity release unchanged.
+
+---
+
 ## 8. 01E boundary
 
 01D **does not**: assign to target squad, send guardian/player comms, or mutate `PlayerRelease` on approve/reject.

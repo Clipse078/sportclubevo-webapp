@@ -152,8 +152,12 @@ export function buildPlayerReleaseTargetedAwarenessDedupKey(input: {
   targetTeamSeasonId: string;
   recipientUserId: string;
   aggregationBucket: string;
+  targetEventId?: string | null;
 }): string {
-  return `PLAYER_RELEASE_TARGETED:${input.sourceTeamSeasonId}:${input.targetTeamSeasonId}:${input.recipientUserId}:${input.aggregationBucket}`;
+  const activityPart = input.targetEventId?.trim()
+    ? `:event:${input.targetEventId.trim()}`
+    : "";
+  return `PLAYER_RELEASE_TARGETED:${input.sourceTeamSeasonId}:${input.targetTeamSeasonId}${activityPart}:${input.recipientUserId}:${input.aggregationBucket}`;
 }
 
 export function notificationTypeCategory(

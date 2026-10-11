@@ -18,6 +18,7 @@ import { createNotificationIdempotent } from "@/lib/notifications/notification-s
 import { loadEffectivePreferencesForUsers } from "@/lib/notifications/preference-service";
 import {
   buildTargetedPlayerReleaseAwarenessCopy,
+  inboundPlayerReleaseActivityHref,
   inboundPlayerReleaseTeamKaderHref,
 } from "@/lib/match-squad/player-release-target-awareness-copy";
 import { countActionableInboundTargetedReleases } from "@/lib/match-squad/player-release-target-awareness-service";
@@ -30,6 +31,7 @@ export type EmitTargetedPlayerReleaseAwarenessInput = {
   tenantId: string;
   sourceTeamSeasonId: string;
   targetTeamSeasonId: string;
+  targetEventId?: string | null;
   actorUserId: string;
   awarenessBurstKey?: string | null;
   emittedAtMs?: number;
@@ -144,22 +146,57 @@ async function emitTargetedPlayerReleaseAwarenessInner(
   });
   const timezone = tenant?.timezone ?? "Europe/Zurich";
 
+  const targetEventId = input.targetEventId?.trim() || null;
+
   const playerCount = await countActionableInboundTargetedReleases({
     tenantId: input.tenantId,
     targetTeamSeasonId: input.targetTeamSeasonId,
     sourceTeamSeasonId: input.sourceTeamSeasonId,
+    targetEventId,
     timezone,
   });
 
   if (playerCount === 0) return;
 
+  let activityKind: "MATCH" | "TOURNAMENT" | null = null;
+  let activityTitle: string | null = null;
+  let activityScheduleLine: string | null = null;
+
+  if (targetEventId) {
+    const event = await prisma.event.findFirst({
+      where: { id: targetEventId, tenantId: input.tenantId },
+      select: { type: true, title: true, startAt: true },
+    });
+    if (event?.type === "MATCH" || event?.type === "TOURNAMENT") {
+      activityKind = event.type;
+      activityTitle = event.title;
+      const dateFmt = new Intl.DateTimeFormat("de-CH", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        timeZone: timezone,
+      });
+      const timeFmt = new Intl.DateTimeFormat("de-CH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: timezone,
+      });
+      activityScheduleLine = `${dateFmt.format(event.startAt)} · ${timeFmt.format(event.startAt)}`;
+    }
+  }
+
   const { title, body } = buildTargetedPlayerReleaseAwarenessCopy({
     sourceTeamLabel: labels.sourceTeamLabel,
     targetTeamLabel: labels.targetTeamLabel,
     playerCount,
+    activityKind,
+    activityTitle,
+    activityScheduleLine,
   });
 
-  const href = inboundPlayerReleaseTeamKaderHref(labels.targetTeamId);
+  const href = targetEventId && activityKind
+    ? inboundPlayerReleaseActivityHref({ eventType: activityKind, eventId: targetEventId })
+    : inboundPlayerReleaseTeamKaderHref(labels.targetTeamId);
 
   const recipients = await resolveTargetTeamTrainerRecipientUserIds({
     tenantId: input.tenantId,
@@ -188,6 +225,7 @@ async function emitTargetedPlayerReleaseAwarenessInner(
       const deduplicationKey = buildPlayerReleaseTargetedAwarenessDedupKey({
         sourceTeamSeasonId: input.sourceTeamSeasonId,
         targetTeamSeasonId: input.targetTeamSeasonId,
+        targetEventId,
         recipientUserId,
         aggregationBucket,
       });

@@ -65,5 +65,9 @@ export function isPlayerReleaseValidForTargetActivity(input: {
     return false;
   }
 
-  return true;
+  if (input.release.eventId) {
+    return input.release.eventId === input.targetEventId;
+  }
+
+  return false;
 }

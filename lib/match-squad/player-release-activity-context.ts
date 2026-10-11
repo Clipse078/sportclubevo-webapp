@@ -47,6 +47,8 @@ function calendarDateFromInstant(instant: Date): Date {
 export async function resolvePlayerReleaseActivityContext(input: {
   tenantId: string;
   sourceTeamSeasonId: string;
+  /** When set, event/training may belong to target TeamSeason (cross-team activity release). */
+  targetTeamSeasonId?: string | null;
   eventId?: string | null;
   trainingSessionId?: string | null;
 }): Promise<PlayerReleaseActivityContext> {
@@ -85,9 +87,13 @@ export async function resolvePlayerReleaseActivityContext(input: {
       });
       teamSeasonId = resolved?.id ?? null;
     }
-    if (!teamSeasonId || teamSeasonId !== input.sourceTeamSeasonId) {
+    const allowedTeamSeasonIds = new Set<string>([input.sourceTeamSeasonId]);
+    if (input.targetTeamSeasonId?.trim()) {
+      allowedTeamSeasonIds.add(input.targetTeamSeasonId.trim());
+    }
+    if (!teamSeasonId || !allowedTeamSeasonIds.has(teamSeasonId)) {
       throw new PlayerReleaseValidationError(
-        "Aktivität gehört nicht zum Stammteam dieser Freigabe.",
+        "Aktivität gehört weder zum Stamm- noch zum Zielteam dieser Freigabe.",
         "INVALID_ACTIVITY",
       );
     }

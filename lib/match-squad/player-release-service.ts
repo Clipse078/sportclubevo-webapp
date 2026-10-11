@@ -549,6 +549,8 @@ export async function createPlayerRelease(input: {
   reason: string;
   note?: string | null;
   awarenessBurstKey?: string | null;
+  targetEventId?: string | null;
+  skipTargetAwareness?: boolean;
 }): Promise<PlayerReleaseListItem> {
   const source = await loadSourceTeamSeasonContext({
     tenantId: input.tenantId,
@@ -571,6 +573,7 @@ export async function createPlayerRelease(input: {
     const activity = await resolvePlayerReleaseActivityContext({
       tenantId: input.tenantId,
       sourceTeamSeasonId: input.sourceTeamSeasonId,
+      targetTeamSeasonId: input.targetTeamSeasonId,
       eventId: input.eventId,
       trainingSessionId: input.trainingSessionId,
     });
@@ -668,13 +671,16 @@ export async function createPlayerRelease(input: {
     },
   });
 
-  void emitTargetedPlayerReleaseAwareness({
-    tenantId: input.tenantId,
-    sourceTeamSeasonId: input.sourceTeamSeasonId,
-    targetTeamSeasonId: input.targetTeamSeasonId,
-    actorUserId: input.actorUserId,
-    awarenessBurstKey: input.awarenessBurstKey,
-  });
+  if (!input.skipTargetAwareness) {
+    void emitTargetedPlayerReleaseAwareness({
+      tenantId: input.tenantId,
+      sourceTeamSeasonId: input.sourceTeamSeasonId,
+      targetTeamSeasonId: input.targetTeamSeasonId,
+      targetEventId: input.targetEventId ?? eventId,
+      actorUserId: input.actorUserId,
+      awarenessBurstKey: input.awarenessBurstKey,
+    });
+  }
 
   const rosterIds = new Set([personId]);
   return mapReleaseRow(created, {

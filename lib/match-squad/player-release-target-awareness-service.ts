@@ -18,6 +18,9 @@ export type InboundTargetedPlayerReleaseItem = {
   personDisplayName: string;
   sourceTeamSeasonId: string;
   sourceTeamLabel: string;
+  scope: string;
+  targetEventId: string | null;
+  activityLabel: string | null;
   releaseReason: string;
   maxMinutesLabel: string | null;
   validityLabel: string;
@@ -47,9 +50,40 @@ export async function countActionableInboundTargetedReleases(input: {
   tenantId: string;
   targetTeamSeasonId: string;
   sourceTeamSeasonId?: string;
+  targetEventId?: string | null;
   timezone: string;
   now?: Date;
 }): Promise<number> {
+  if (input.targetEventId?.trim()) {
+    const eventId = input.targetEventId.trim();
+    const releases = await prisma.playerRelease.findMany({
+      where: {
+        tenantId: input.tenantId,
+        targetTeamSeasonId: input.targetTeamSeasonId,
+        status: "ACTIVE",
+        scope: "ACTIVITY",
+        eventId,
+        ...(input.sourceTeamSeasonId
+          ? { sourceTeamSeasonId: input.sourceTeamSeasonId }
+          : {}),
+      },
+      select: {
+        id: true,
+        validFrom: true,
+        validUntil: true,
+        status: true,
+      },
+    });
+    return releases.filter((row) =>
+      isPlayerReleaseOperationallyActive({
+        status: row.status,
+        validFrom: row.validFrom,
+        validUntil: row.validUntil,
+        timezone: input.timezone,
+        now: input.now,
+      }),
+    ).length;
+  }
   const rows = await listInboundTargetedPlayerReleases(input);
   return rows.length;
 }
@@ -74,11 +108,16 @@ export async function listInboundTargetedPlayerReleases(input: {
       id: true,
       personId: true,
       sourceTeamSeasonId: true,
+      scope: true,
+      eventId: true,
       validFrom: true,
       validUntil: true,
       maxMinutes: true,
       reason: true,
       status: true,
+      event: {
+        select: { id: true, title: true, type: true, startAt: true },
+      },
       person: {
         select: { id: true, firstName: true, lastName: true, displayName: true },
       },
@@ -138,12 +177,19 @@ export async function listInboundTargetedPlayerReleases(input: {
 
   return actionable.map((row) => {
     const request = requestByRelease.get(row.id);
+    const activityLabel =
+      row.scope === "ACTIVITY" && row.event
+        ? row.event.title
+        : null;
     return {
       releaseId: row.id,
       personId: row.personId,
       personDisplayName: formatPersonName(row.person),
       sourceTeamSeasonId: row.sourceTeamSeasonId,
       sourceTeamLabel: teamSeasonLabel(row.sourceTeamSeason),
+      scope: row.scope,
+      targetEventId: row.eventId,
+      activityLabel,
       releaseReason: playerReleaseReasonLabel(row.reason),
       maxMinutesLabel: formatMaxMinutesLabel(row.maxMinutes),
       validityLabel: formatReleaseValidityRange(row.validFrom, row.validUntil),

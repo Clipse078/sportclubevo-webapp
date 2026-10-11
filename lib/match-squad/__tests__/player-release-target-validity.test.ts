@@ -51,6 +51,38 @@ describe("isPlayerReleaseValidForTargetActivity", () => {
     ).toBe(false);
   });
 
+  it("activity-scoped release requires matching target event id", () => {
+    expect(
+      isPlayerReleaseValidForTargetActivity({
+        release: {
+          ...baseRelease,
+          scope: "ACTIVITY",
+          eventId: "event-a",
+        },
+        targetTeamSeasonId: "target-ts",
+        targetEventId: "event-a",
+        targetEventType: "MATCH",
+        targetActivityStartAt: new Date("2026-10-17T13:00:00.000Z"),
+        timezone: "Europe/Zurich",
+      }),
+    ).toBe(true);
+
+    expect(
+      isPlayerReleaseValidForTargetActivity({
+        release: {
+          ...baseRelease,
+          scope: "ACTIVITY",
+          eventId: "event-a",
+        },
+        targetTeamSeasonId: "target-ts",
+        targetEventId: "event-b",
+        targetEventType: "MATCH",
+        targetActivityStartAt: new Date("2026-10-17T13:00:00.000Z"),
+        timezone: "Europe/Zurich",
+      }),
+    ).toBe(false);
+  });
+
   it("rejects training-scoped release for match discovery", () => {
     expect(
       isPlayerReleaseValidForTargetActivity({
