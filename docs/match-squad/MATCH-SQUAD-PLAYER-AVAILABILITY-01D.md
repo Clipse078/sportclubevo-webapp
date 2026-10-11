@@ -134,13 +134,27 @@ STOP — assignment & communication belong to 01E
 | **Activity discovery** | Includes canonical MATCH/TOURNAMENT rows keyed by `teamId` + `seasonId` when `teamSeasonId` is null (STAGE league imports). |
 | **Awareness (R2)** | Aggregated **per target activity** — B2 Match A notification does not mention A2 Match B. Dedup key includes `eventId`. Deep link prefers Match/Tournament center route. |
 | **Discovery** | Activity-scoped releases match only their `eventId`; **PERIOD** releases unchanged. |
-| **Status** | **01D R1 UAT = PASS** · **01D R2 implementation COMPLETE** · **01D R2 Human UAT = READY (PO pending)** |
+| **Status** | **01D R1 UAT = PASS** · **01D R2 Kader UAT = PASS** · **01D R2.1 Match/Kader uniform planner = READY FOR PO UAT** |
+
+## 7c. Uniform Match + Kader release planner (01D R2.1)
+
+| Topic | Behaviour |
+|-------|-----------|
+| **Canonical UI** | One `PlayerReleasePlanningSheet` for **TEAM → Kader** and **Match → Aufgebot → Freigeben**. Legacy `PlayerReleaseEditorSheet` via `ActivityPlayerReleaseButton` remains for **training** and **generic planning-editor** activity rows only — not Match Aufgebot. |
+| **Entry contract** | `PlayerReleasePlannerContext`: `sourceTeamSeasonId`, `selectedPersonIds`, optional `sourceEventId`, `entryPoint` (`TEAM_KADER` \| `MATCH_AUFGEBOT`). |
+| **Match context** | `sourceEventId` = current match (planner context only). Target activities selected independently; `PlayerRelease.eventId` always references **target** activity. |
+| **Target UX** | Progressive disclosure by **target team** (expand → multi-activity checkboxes; collapsed summary «2 Einsätze ausgewählt»). Optional **Alle auswählen** per team; **Weitere Einsätze** for valid activities outside ±7 days of source match. |
+| **Ranking** | With `sourceEventId`: proximity to source match date, then chronology. Kader without source: chronological within team. |
+| **Multi-player Match Aufgebot** | Planner API supports multiple `personIds`; row-level **Freigeben** opens with one preselected player (bulk Match selection deferred — no disruptive Aufgebot redesign in R2.1). |
+| **Schema** | **No change** — source match not persisted on `PlayerRelease`. |
+
+Human UAT scan: `scripts/match-squad-01d-r2-1-uat-readiness.ts`
 
 ### API (STAGE)
 
 | Method | Route |
 |--------|-------|
-| POST | `/api/teams/…/player-releases/plan/candidates` — `{ personIds[] }` |
+| POST | `/api/teams/…/player-releases/plan/candidates` — `{ personIds[], sourceEventId? }` |
 | POST | `/api/teams/…/player-releases/plan` — `{ action: "review" \| "create", personIds[], eventIds[], activityDefaults?, … }` |
 
 ### Human UAT R2 — deterministic STAGE scenario (2026-10-11)

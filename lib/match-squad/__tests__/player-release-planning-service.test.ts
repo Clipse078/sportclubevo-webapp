@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   teamSeasonFindMany: vi.fn(),
   teamSeasonFindFirst: vi.fn(),
   eventFindMany: vi.fn(),
+  eventFindFirst: vi.fn(),
   playerReleaseFindFirst: vi.fn(),
   resolveTargetTeams: vi.fn(),
   resolveActivityContext: vi.fn(),
@@ -19,7 +20,7 @@ const txMock = {
     findMany: mocks.teamSeasonFindMany,
     findFirst: mocks.teamSeasonFindFirst,
   },
-  event: { findMany: mocks.eventFindMany },
+    event: { findMany: mocks.eventFindMany, findFirst: mocks.eventFindFirst },
   playerRelease: { findFirst: mocks.playerReleaseFindFirst, create: vi.fn() },
 };
 
@@ -30,7 +31,7 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: mocks.teamSeasonFindMany,
       findFirst: mocks.teamSeasonFindFirst,
     },
-    event: { findMany: mocks.eventFindMany },
+    event: { findMany: mocks.eventFindMany, findFirst: mocks.eventFindFirst },
     playerRelease: { findFirst: mocks.playerReleaseFindFirst },
     $transaction: vi.fn(async (fn: (tx: typeof txMock) => Promise<string[]>) => fn(txMock)),
   },
@@ -59,6 +60,7 @@ vi.mock("@/lib/match-squad/player-release-awareness-producer", () => ({
 import {
   buildPlayerReleasePlan,
   createPlayerReleasePlan,
+  resolvePlayerReleasePlanningCandidates,
 } from "@/lib/match-squad/player-release-planning-service";
 
 const TENANT = "tenant-1";
@@ -70,6 +72,7 @@ const B2_TS = "ts-b2";
 const A2_TS = "ts-a2";
 const EVENT_B2 = "event-b2-a";
 const EVENT_A2 = "event-a2-b";
+const SOURCE_MATCH = "event-b1-source";
 
 function eligibleTarget(teamSeasonId: string) {
   return {
@@ -178,6 +181,90 @@ describe("player-release-planning-service", () => {
     mocks.playerReleaseFindFirst.mockResolvedValue(null);
     mocks.conflictHints.mockResolvedValue([]);
     mocks.createPlayerRelease.mockResolvedValue({ id: "release-new" });
+    mocks.eventFindFirst.mockResolvedValue(null);
+  });
+
+  it("KADER_ENTRY — candidates without source event context", async () => {
+    const result = await resolvePlayerReleasePlanningCandidates({
+      tenantId: TENANT,
+      sourceTeamSeasonId: SOURCE_TS,
+      personIds: [P1],
+      timezone: "Europe/Zurich",
+    });
+
+    expect(result.planningMode).toBe("KADER");
+    expect(result.sourceEventContext).toBeNull();
+    expect(result.targetTeams.length).toBeGreaterThan(0);
+  });
+
+  it("MATCH_ENTRY — uses sourceEventId for context and target ordering", async () => {
+    mocks.eventFindFirst.mockResolvedValueOnce({
+      id: SOURCE_MATCH,
+      title: "FC Concordia Basel b",
+      startAt: new Date("2026-10-17T13:00:00.000Z"),
+      teamSeasonId: SOURCE_TS,
+      teamId: TEAM_ID,
+    });
+
+    const result = await resolvePlayerReleasePlanningCandidates({
+      tenantId: TENANT,
+      sourceTeamSeasonId: SOURCE_TS,
+      personIds: [P1],
+      timezone: "Europe/Zurich",
+      sourceEventId: SOURCE_MATCH,
+    });
+
+    expect(result.planningMode).toBe("MATCH_SOURCE");
+    expect(result.sourceEventContext?.eventId).toBe(SOURCE_MATCH);
+    expect(result.targetTeams[0]?.activities[0]?.eventId).toBe(EVENT_B2);
+  });
+
+  it("DOMAIN_EQUIVALENCE — same plan from kader vs match entry", async () => {
+    const kaderReview = await buildPlayerReleasePlan({
+      tenantId: TENANT,
+      teamId: TEAM_ID,
+      sourceTeamSeasonId: SOURCE_TS,
+      personIds: [P1],
+      eventIds: [EVENT_B2],
+      timezone: "Europe/Zurich",
+    });
+
+    mocks.eventFindFirst.mockResolvedValueOnce({
+      id: SOURCE_MATCH,
+      title: "FC Concordia Basel b",
+      startAt: new Date("2026-10-17T13:00:00.000Z"),
+      teamSeasonId: SOURCE_TS,
+      teamId: TEAM_ID,
+    });
+
+    const matchReview = await buildPlayerReleasePlan({
+      tenantId: TENANT,
+      teamId: TEAM_ID,
+      sourceTeamSeasonId: SOURCE_TS,
+      personIds: [P1],
+      eventIds: [EVENT_B2],
+      timezone: "Europe/Zurich",
+      sourceEventId: SOURCE_MATCH,
+    });
+
+    expect(matchReview.validReleaseCount).toBe(kaderReview.validReleaseCount);
+    expect(matchReview.combinations[0]?.eventId).toBe(EVENT_B2);
+  });
+
+  it("SOURCE_NOT_TARGET — release eventId is target activity", async () => {
+    await createPlayerReleasePlan({
+      tenantId: TENANT,
+      teamId: TEAM_ID,
+      sourceTeamSeasonId: SOURCE_TS,
+      actorUserId: "user-1",
+      personIds: [P1],
+      eventIds: [EVENT_B2],
+      timezone: "Europe/Zurich",
+      sourceEventId: SOURCE_MATCH,
+    });
+
+    expect(mocks.createPlayerRelease.mock.calls[0]?.[0]?.eventId).toBe(EVENT_B2);
+    expect(mocks.createPlayerRelease.mock.calls[0]?.[0]?.eventId).not.toBe(SOURCE_MATCH);
   });
 
   it("MULTI_PLAYER_MULTI_ACTIVITY — 4 valid combinations when all eligible", async () => {

@@ -42,6 +42,34 @@ describe("PlayerReleasePlanningSheet", () => {
                 },
               ],
               sourceTeamContext: { label: "B1", lines: [] },
+              targetTeams: [
+                {
+                  targetTeamSeasonId: "ts-b2",
+                  targetTeamId: "team-b2",
+                  targetTeamLabel: "Junioren B2",
+                  activityCount: 1,
+                  activities: [
+                    {
+                      eventId: "event-1",
+                      eventType: "MATCH",
+                      targetTeamSeasonId: "ts-b2",
+                      targetTeamId: "team-b2",
+                      targetTeamLabel: "Junioren B2",
+                      startAt: "2026-10-17T12:00:00.000Z",
+                      dateGroupKey: "2026-10-17",
+                      dateLine: "Sa 17.10.",
+                      timeLine: "14:00",
+                      headline: "FC X",
+                      subline: "Junioren B2 · Spiel",
+                      locationLine: null,
+                      selectable: true,
+                      partialEligibilityNote: null,
+                    },
+                  ],
+                },
+              ],
+              sourceEventContext: null,
+              planningMode: "KADER",
             }),
             { status: 200 },
           );
@@ -80,9 +108,10 @@ describe("PlayerReleasePlanningSheet", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("player-release-plan-activity-event-1")).toBeInTheDocument();
+      expect(screen.getByTestId("player-release-plan-team-ts-b2")).toBeInTheDocument();
     });
 
+    fireEvent.click(screen.getByTestId("player-release-plan-team-ts-b2"));
     fireEvent.click(screen.getByTestId("player-release-plan-activity-event-1"));
     fireEvent.click(screen.getByTestId("player-release-plan-review"));
 

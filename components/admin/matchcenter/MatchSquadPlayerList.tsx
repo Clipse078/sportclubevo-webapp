@@ -19,6 +19,7 @@ type Props = {
     canManageRelease: boolean;
     releaseReadOnly?: boolean;
   };
+  onOpenReleasePlanner?: (personId: string) => void;
 };
 
 export default function MatchSquadPlayerList({
@@ -28,6 +29,7 @@ export default function MatchSquadPlayerList({
   canMutate,
   listTestId,
   releaseContext,
+  onOpenReleasePlanner,
 }: Props) {
   return (
     <ul
@@ -47,6 +49,7 @@ export default function MatchSquadPlayerList({
             onToggle(player.personId, action === "add")
           }
           releaseContext={releaseContext}
+          onOpenReleasePlanner={onOpenReleasePlanner}
         />
       ))}
     </ul>

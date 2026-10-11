@@ -852,6 +852,7 @@ export default function TeamSquadManagementCard({
         personLabels={Object.fromEntries(
           releasableMembers.map((member) => [member.person.id, getPersonName(member.person)]),
         )}
+        entryPoint="TEAM_KADER"
         onCompleted={() => router.refresh()}
       />
     </section>

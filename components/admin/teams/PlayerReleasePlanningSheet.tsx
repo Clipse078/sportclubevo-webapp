@@ -5,11 +5,14 @@ import { Check, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { PLAYER_RELEASE_REASON_OPTIONS } from "@/lib/match-squad/player-release-presentation";
+import type { PlayerReleasePlannerEntryPoint } from "@/lib/match-squad/player-release-planner-context";
+import { buildPlannerCandidatesRequestBody } from "@/lib/match-squad/player-release-planner-context";
 import type {
   PlayerReleasePlanningActivityCandidate,
   PlayerReleasePlanningCandidatesResult,
   PlayerReleasePlanReview,
 } from "@/lib/match-squad/player-release-planning-service";
+import { partitionTargetTeamActivities } from "@/lib/match-squad/player-release-planning-sort";
 
 type Props = {
   open: boolean;
@@ -19,9 +22,74 @@ type Props = {
   personIds: string[];
   personLabels: Record<string, string>;
   onCompleted: () => void | Promise<void>;
+  entryPoint?: PlayerReleasePlannerEntryPoint;
+  sourceEventId?: string;
+  timeZone?: string;
 };
 
 type ActivityDefaults = Record<string, { maxMinutes: string; reason: string }>;
+
+function selectedCountForTeam(
+  teamSeasonId: string,
+  activities: PlayerReleasePlanningActivityCandidate[],
+  selectedEventIds: Set<string>,
+): number {
+  return activities.filter(
+    (row) => row.targetTeamSeasonId === teamSeasonId && selectedEventIds.has(row.eventId),
+  ).length;
+}
+
+function ActivitySelectRow({
+  activity,
+  selected,
+  onToggle,
+}: {
+  activity: PlayerReleasePlanningActivityCandidate;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={!activity.selectable}
+        onClick={onToggle}
+        className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition ${
+          selected
+            ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/8"
+            : "border-[var(--border)] bg-[var(--surface)]"
+        } ${!activity.selectable ? "opacity-50" : "hover:border-[var(--sce-primary)]/40"}`}
+        data-testid={`player-release-plan-activity-${activity.eventId}`}
+        aria-pressed={selected}
+      >
+        <span
+          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+            selected
+              ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
+              : "border-[var(--border)]"
+          }`}
+          aria-hidden
+        >
+          {selected ? <Check className="h-3.5 w-3.5" /> : null}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="font-medium text-[var(--text-1)]">
+            {activity.dateLine} · {activity.timeLine}
+          </span>
+          <span className="mt-0.5 block text-[var(--text-2)]">{activity.headline}</span>
+          {activity.locationLine ? (
+            <span className="mt-0.5 block text-xs text-[var(--muted)]">{activity.locationLine}</span>
+          ) : null}
+          {activity.partialEligibilityNote ? (
+            <span className="mt-1 block text-xs text-[var(--warning)]">
+              {activity.partialEligibilityNote}
+            </span>
+          ) : null}
+        </span>
+      </button>
+    </li>
+  );
+}
 
 export default function PlayerReleasePlanningSheet({
   open,
@@ -31,6 +99,9 @@ export default function PlayerReleasePlanningSheet({
   personIds,
   personLabels,
   onCompleted,
+  entryPoint = "TEAM_KADER",
+  sourceEventId,
+  timeZone = "Europe/Zurich",
 }: Props) {
   const detailsPanelId = useId();
   const [loading, setLoading] = useState(false);
@@ -43,6 +114,8 @@ export default function PlayerReleasePlanningSheet({
   const [defaultReason, setDefaultReason] = useState("SPIELPRAXIS");
   const [activityDefaults, setActivityDefaults] = useState<ActivityDefaults>({});
   const [successCount, setSuccessCount] = useState<number | null>(null);
+  const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
+  const [showMoreTeamIds, setShowMoreTeamIds] = useState<Set<string>>(new Set());
 
   const apiPlanBase = `/api/teams/${teamId}/team-seasons/${teamSeasonId}/player-releases/plan`;
 
@@ -54,6 +127,8 @@ export default function PlayerReleasePlanningSheet({
     setActivityDefaults({});
     setError(null);
     setSuccessCount(null);
+    setExpandedTeamIds(new Set());
+    setShowMoreTeamIds(new Set());
   }, []);
 
   useEffect(() => {
@@ -69,7 +144,13 @@ export default function PlayerReleasePlanningSheet({
     void fetch(`${apiPlanBase}/candidates`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ personIds }),
+      body: JSON.stringify(
+        buildPlannerCandidatesRequestBody({
+          personIds,
+          sourceEventId,
+          entryPoint,
+        }),
+      ),
     })
       .then(async (response) => {
         const json = (await response.json()) as PlayerReleasePlanningCandidatesResult & {
@@ -80,6 +161,9 @@ export default function PlayerReleasePlanningSheet({
         }
         if (!cancelled) {
           setCandidates(json);
+          if (json.targetTeams?.length === 1) {
+            setExpandedTeamIds(new Set([json.targetTeams[0].targetTeamSeasonId]));
+          }
         }
       })
       .catch((err) => {
@@ -94,15 +178,26 @@ export default function PlayerReleasePlanningSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, apiPlanBase, personIds, reset]);
+  }, [open, apiPlanBase, personIds, sourceEventId, entryPoint, reset]);
 
   const flatActivities = useMemo(() => {
     const rows: PlayerReleasePlanningActivityCandidate[] = [];
+    if (candidates?.targetTeams?.length) {
+      for (const team of candidates.targetTeams) {
+        rows.push(...team.activities);
+      }
+      return rows;
+    }
     for (const group of candidates?.activitiesByDate ?? []) {
       rows.push(...group.activities);
     }
     return rows;
-  }, [candidates?.activitiesByDate]);
+  }, [candidates?.activitiesByDate, candidates?.targetTeams]);
+
+  const sourceStartAt = useMemo(() => {
+    const startAt = candidates?.sourceEventContext?.startAt;
+    return startAt ? new Date(startAt) : null;
+  }, [candidates?.sourceEventContext?.startAt]);
 
   function toggleActivity(eventId: string) {
     setReview(null);
@@ -110,6 +205,26 @@ export default function PlayerReleasePlanningSheet({
       const next = new Set(prev);
       if (next.has(eventId)) next.delete(eventId);
       else next.add(eventId);
+      return next;
+    });
+  }
+
+  function toggleTeamExpanded(teamSeasonId: string) {
+    setExpandedTeamIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamSeasonId)) next.delete(teamSeasonId);
+      else next.add(teamSeasonId);
+      return next;
+    });
+  }
+
+  function selectAllInTeam(activities: PlayerReleasePlanningActivityCandidate[]) {
+    setReview(null);
+    setSelectedEventIds((prev) => {
+      const next = new Set(prev);
+      for (const activity of activities) {
+        if (activity.selectable) next.add(activity.eventId);
+      }
       return next;
     });
   }
@@ -141,6 +256,7 @@ export default function PlayerReleasePlanningSheet({
           eventIds: [...selectedEventIds],
           defaultReason,
           activityDefaults: defaultsPayload,
+          sourceEventId,
         }),
       });
       const json = (await response.json()) as { review?: PlayerReleasePlanReview; error?: string };
@@ -179,6 +295,7 @@ export default function PlayerReleasePlanningSheet({
           eventIds: [...selectedEventIds],
           defaultReason,
           activityDefaults: defaultsPayload,
+          sourceEventId,
         }),
       });
       const json = (await response.json()) as { createdReleaseIds?: string[]; error?: string };
@@ -198,49 +315,75 @@ export default function PlayerReleasePlanningSheet({
   const activitySummary = selectedEventIds.size;
   const releasePreview = playerSummary * activitySummary;
 
-  const footer = successCount != null ? (
-    <Button variant="primary" size="sm" onClick={onClose}>
-      Schliessen
-    </Button>
-  ) : (
-    <>
-      <Button variant="secondary" size="sm" onClick={onClose} disabled={submitting}>
-        Abbrechen
+  const reviewByTeam = useMemo(() => {
+    if (!review) return [];
+    const map = new Map<
+      string,
+      { label: string; rows: { activity: PlayerReleasePlanningActivityCandidate; count: number }[] }
+    >();
+    for (const activity of review.activities) {
+      const count = review.combinations.filter(
+        (row) => row.eventId === activity.eventId && row.state !== "INVALID",
+      ).length;
+      const bucket = map.get(activity.targetTeamSeasonId) ?? {
+        label: activity.targetTeamLabel,
+        rows: [],
+      };
+      bucket.rows.push({ activity, count });
+      map.set(activity.targetTeamSeasonId, bucket);
+    }
+    return [...map.values()];
+  }, [review]);
+
+  const sheetDescription =
+    entryPoint === "MATCH_AUFGEBOT"
+      ? `${playerSummary} Spieler · Zielteams und Einsätze in einem Plan wählen.`
+      : `${playerSummary} Spieler · Einsätze über mehrere Teams hinweg wählen.`;
+
+  const footer =
+    successCount != null ? (
+      <Button variant="primary" size="sm" onClick={onClose}>
+        Schliessen
       </Button>
-      {review ? (
-        <Button
-          variant="primary"
-          size="sm"
-          loading={submitting}
-          disabled={review.validReleaseCount === 0}
-          onClick={() => void handleConfirm()}
-          data-testid="player-release-plan-confirm"
-        >
-          {review.validReleaseCount === 1
-            ? "1 Freigabe erstellen"
-            : `${review.validReleaseCount} Freigaben erstellen`}
+    ) : (
+      <>
+        <Button variant="secondary" size="sm" onClick={onClose} disabled={submitting}>
+          Abbrechen
         </Button>
-      ) : (
-        <Button
-          variant="primary"
-          size="sm"
-          loading={submitting}
-          disabled={selectedEventIds.size === 0 || loading}
-          onClick={() => void runReview()}
-          data-testid="player-release-plan-review"
-        >
-          Übersicht
-        </Button>
-      )}
-    </>
-  );
+        {review ? (
+          <Button
+            variant="primary"
+            size="sm"
+            loading={submitting}
+            disabled={review.validReleaseCount === 0}
+            onClick={() => void handleConfirm()}
+            data-testid="player-release-plan-confirm"
+          >
+            {review.validReleaseCount === 1
+              ? "1 Freigabe erstellen"
+              : `${review.validReleaseCount} Freigaben erstellen`}
+          </Button>
+        ) : (
+          <Button
+            variant="primary"
+            size="sm"
+            loading={submitting}
+            disabled={selectedEventIds.size === 0 || loading}
+            onClick={() => void runReview()}
+            data-testid="player-release-plan-review"
+          >
+            Übersicht
+          </Button>
+        )}
+      </>
+    );
 
   return (
     <Sheet
       open={open}
       onClose={onClose}
       title="Spielerfreigaben planen"
-      description={`${playerSummary} Spieler · Einsätze über mehrere Teams hinweg wählen.`}
+      description={sheetDescription}
       footer={footer}
       data-testid="player-release-planning-sheet"
     >
@@ -264,7 +407,27 @@ export default function PlayerReleasePlanningSheet({
 
       {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
 
-      {successCount == null && candidates?.sourceTeamContext.lines.length ? (
+      {successCount == null && candidates?.sourceEventContext ? (
+        <div
+          className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+          data-testid="player-release-plan-source-match"
+        >
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+            Ausgehend von
+          </p>
+          <p className="mt-1 font-medium text-[var(--text-1)]">
+            {candidates.sourceTeamContext.label} · {candidates.sourceEventContext.dateLine} ·{" "}
+            {candidates.sourceEventContext.timeLine}
+          </p>
+          {candidates.sourceEventContext.title ? (
+            <p className="text-[var(--text-2)]">vs {candidates.sourceEventContext.title}</p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {successCount == null &&
+      candidates?.sourceTeamContext.lines.length &&
+      !candidates.sourceEventContext ? (
         <div className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs text-[var(--text-2)]">
           {candidates.sourceTeamContext.lines.map((line) => (
             <p key={line}>{line}</p>
@@ -291,73 +454,111 @@ export default function PlayerReleasePlanningSheet({
           <div>
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <p className="text-sm font-semibold text-[var(--text-1)]">Einsätze</p>
-                <p className="text-xs text-[var(--muted)]">Chronologisch · Zielteam sichtbar</p>
+                <p className="text-sm font-semibold text-[var(--text-1)]">Freigeben für</p>
+                <p className="text-xs text-[var(--muted)]">
+                  {entryPoint === "MATCH_AUFGEBOT"
+                    ? "Zielteams · passende Einsätze in der Nähe des Spiels"
+                    : "Zielteams · kommende Einsätze"}
+                </p>
               </div>
               <p className="text-xs text-[var(--text-2)]" data-testid="player-release-plan-preview-counts">
                 {playerSummary} Spieler · {activitySummary} Einsätze · {releasePreview} Freigaben
               </p>
             </div>
 
-            <div className="mt-3 space-y-4">
-              {candidates.activitiesByDate.length === 0 ? (
-                <p className="text-sm text-[var(--muted)]">Keine passenden Einsätze in den nächsten Wochen.</p>
+            <div className="mt-3 space-y-2" data-testid="player-release-plan-target-teams">
+              {candidates.targetTeams.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">
+                  Keine passenden Einsätze in den nächsten Wochen.
+                </p>
               ) : null}
-              {candidates.activitiesByDate.map((group) => (
-                <div key={group.dateGroupKey}>
-                  <p className="text-xs font-semibold text-[var(--text-2)]">{group.dateLine}</p>
-                  <ul className="mt-2 space-y-2">
-                    {group.activities.map((activity) => {
-                      const selected = selectedEventIds.has(activity.eventId);
-                      return (
-                        <li key={activity.eventId}>
+              {candidates.targetTeams.map((team) => {
+                const selectedInTeam = selectedCountForTeam(
+                  team.targetTeamSeasonId,
+                  team.activities,
+                  selectedEventIds,
+                );
+                const expanded = expandedTeamIds.has(team.targetTeamSeasonId);
+                const showMore = showMoreTeamIds.has(team.targetTeamSeasonId);
+                const { primary, more } = partitionTargetTeamActivities(
+                  team,
+                  sourceStartAt,
+                  timeZone,
+                );
+                const visibleActivities = showMore ? [...primary, ...more] : primary;
+
+                const summaryLine =
+                  selectedInTeam > 0
+                    ? `${selectedInTeam} Einsatz${selectedInTeam === 1 ? "" : "e"} ausgewählt`
+                    : `${team.activityCount} passende Einsätze`;
+
+                return (
+                  <div
+                    key={team.targetTeamSeasonId}
+                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+                    data-testid={`player-release-plan-team-${team.targetTeamSeasonId}`}
+                  >
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left"
+                      aria-expanded={expanded}
+                      onClick={() => toggleTeamExpanded(team.targetTeamSeasonId)}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-[var(--text-1)]">
+                          {team.targetTeamLabel}
+                        </span>
+                        <span className="block text-xs text-[var(--text-2)]">{summaryLine}</span>
+                      </span>
+                      {expanded ? (
+                        <ChevronUp className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                      )}
+                    </button>
+                    {expanded ? (
+                      <div className="border-t border-[var(--border)] px-3 py-3">
+                        {team.activities.filter((row) => row.selectable).length > 1 ? (
                           <button
                             type="button"
-                            disabled={!activity.selectable}
-                            onClick={() => toggleActivity(activity.eventId)}
-                            className={`flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-left text-sm transition ${
-                              selected
-                                ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/8"
-                                : "border-[var(--border)] bg-[var(--surface)]"
-                            } ${!activity.selectable ? "opacity-50" : "hover:border-[var(--sce-primary)]/40"}`}
-                            data-testid={`player-release-plan-activity-${activity.eventId}`}
-                            aria-pressed={selected}
+                            className="mb-2 text-xs font-semibold text-[var(--sce-primary)]"
+                            onClick={() => selectAllInTeam(team.activities)}
+                            data-testid={`player-release-plan-select-all-${team.targetTeamSeasonId}`}
                           >
-                            <span
-                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                                selected
-                                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
-                                  : "border-[var(--border)]"
-                              }`}
-                              aria-hidden
-                            >
-                              {selected ? <Check className="h-3.5 w-3.5" /> : null}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="font-medium text-[var(--text-1)]">
-                                {activity.timeLine} · {activity.headline}
-                              </span>
-                              {activity.subline ? (
-                                <span className="mt-0.5 block text-[var(--text-2)]">{activity.subline}</span>
-                              ) : null}
-                              {activity.locationLine ? (
-                                <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                                  {activity.locationLine}
-                                </span>
-                              ) : null}
-                              {activity.partialEligibilityNote ? (
-                                <span className="mt-1 block text-xs text-[var(--warning)]">
-                                  {activity.partialEligibilityNote}
-                                </span>
-                              ) : null}
-                            </span>
+                            Alle auswählen
                           </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+                        ) : null}
+                        <ul className="space-y-2">
+                          {visibleActivities.map((activity) => (
+                            <ActivitySelectRow
+                              key={activity.eventId}
+                              activity={activity}
+                              selected={selectedEventIds.has(activity.eventId)}
+                              onToggle={() => toggleActivity(activity.eventId)}
+                            />
+                          ))}
+                        </ul>
+                        {more.length > 0 && !showMore ? (
+                          <button
+                            type="button"
+                            className="mt-3 text-xs font-semibold text-[var(--text-2)] underline-offset-2 hover:underline"
+                            onClick={() =>
+                              setShowMoreTeamIds((prev) => {
+                                const next = new Set(prev);
+                                next.add(team.targetTeamSeasonId);
+                                return next;
+                              })
+                            }
+                            data-testid={`player-release-plan-more-${team.targetTeamSeasonId}`}
+                          >
+                            Weitere Einsätze ({more.length})
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -399,7 +600,7 @@ export default function PlayerReleasePlanningSheet({
                   return (
                     <div key={eventId} className="rounded-md border border-[var(--border)] p-3 text-sm">
                       <p className="font-medium text-[var(--text-1)]">
-                        {activity?.dateLine} · {activity?.headline}
+                        {activity?.targetTeamLabel} · {activity?.dateLine} · {activity?.headline}
                       </p>
                       <label className="mt-2 block">
                         <span className="text-xs text-[var(--text-2)]">Max. Minuten (optional)</span>
@@ -446,22 +647,28 @@ export default function PlayerReleasePlanningSheet({
               {review.invalidNote ? (
                 <p className="mt-3 text-xs text-[var(--warning)]">{review.invalidNote}</p>
               ) : null}
-              <ul className="mt-3 space-y-2">
-                {review.activities.map((activity) => {
-                  const count = review.combinations.filter(
-                    (row) => row.eventId === activity.eventId && row.state !== "INVALID",
-                  ).length;
-                  const maxDefault = activityDefaults[activity.eventId]?.maxMinutes;
-                  return (
-                    <li key={activity.eventId} className="text-[var(--text-2)]">
-                      {activity.dateLine} · {activity.headline}
-                      <span className="text-[var(--text-1)]"> — {count} Spieler</span>
-                      {maxDefault?.trim() ? (
-                        <span className="text-[var(--muted)]"> · Max. {maxDefault} Min.</span>
-                      ) : null}
-                    </li>
-                  );
-                })}
+              <ul className="mt-3 space-y-3">
+                {reviewByTeam.map((group) => (
+                  <li key={group.label}>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
+                      {group.label}
+                    </p>
+                    <ul className="mt-1 space-y-1">
+                      {group.rows.map(({ activity, count }) => {
+                        const maxDefault = activityDefaults[activity.eventId]?.maxMinutes;
+                        return (
+                          <li key={activity.eventId} className="text-[var(--text-2)]">
+                            {activity.dateLine} · {activity.headline}
+                            <span className="text-[var(--text-1)]"> — {count} Spieler</span>
+                            {maxDefault?.trim() ? (
+                              <span className="text-[var(--muted)]"> · Max. {maxDefault} Min.</span>
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </li>
+                ))}
               </ul>
             </div>
           ) : null}
