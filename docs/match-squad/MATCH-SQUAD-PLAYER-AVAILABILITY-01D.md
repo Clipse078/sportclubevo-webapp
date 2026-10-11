@@ -130,9 +130,11 @@ STOP — assignment & communication belong to 01E
 | **Eligibility matrix** | Player × activity combinations validated server-side; invalid pairs skipped with summary note (e.g. «1 Kombination ist nicht möglich»). |
 | **Defaults** | Plan-level purpose; optional **per-activity max minutes** via «Details anpassen». |
 | **Review** | Compact counts: Spieler · Einsätze · Freigaben — confirm once (`POST …/player-releases/plan` with `action=create`). |
+| **Persistence (R2)** | Pre-validated plan → **`prisma.$transaction`** creates all reviewed non-INVALID releases → commit → grouped awareness per target activity (post-commit). Mid-batch write failure rolls back the whole plan (no partial «4 Freigaben erstellt»). |
+| **Activity discovery** | Includes canonical MATCH/TOURNAMENT rows keyed by `teamId` + `seasonId` when `teamSeasonId` is null (STAGE league imports). |
 | **Awareness (R2)** | Aggregated **per target activity** — B2 Match A notification does not mention A2 Match B. Dedup key includes `eventId`. Deep link prefers Match/Tournament center route. |
 | **Discovery** | Activity-scoped releases match only their `eventId`; **PERIOD** releases unchanged. |
-| **Status** | **01D R1 UAT = PASS** · **01D R2 = IN PROGRESS** |
+| **Status** | **01D R1 UAT = PASS** · **01D R2 implementation COMPLETE** · **01D R2 Human UAT = READY (PO pending)** |
 
 ### API (STAGE)
 
@@ -141,13 +143,29 @@ STOP — assignment & communication belong to 01E
 | POST | `/api/teams/…/player-releases/plan/candidates` — `{ personIds[] }` |
 | POST | `/api/teams/…/player-releases/plan` — `{ action: "review" \| "create", personIds[], eventIds[], activityDefaults?, … }` |
 
-### Human UAT R2 (prepared)
+### Human UAT R2 — deterministic STAGE scenario (2026-10-11)
 
-1. **B1** Kader: select SCE Testspieler **01** + **06** → plan releases for **B2 Saturday match** + **A2 Wednesday match** (nearest STAGE fixtures).
-2. Review **2 · 2 · 4** (or **3** if mixed eligibility) → set Match A **max 30 Min.** → confirm once.
-3. **B2** trainer: activity-specific awareness for B2 match only; Aufgebot discovery shows both players for that match.
-4. **A2** trainer (if available): separate awareness for A2 match; no B2 leakage.
-5. Request / approve one combination — other activity release unchanged.
+Scan: `scripts/match-squad-01d-r2-uat-readiness.ts` · fixture/cleanup: `scripts/match-squad-01d-r2-uat-stage-fixture.ts`
+
+| Role | Context |
+|------|---------|
+| **Source** | FC Allschwil Junioren **B1** (`teamSeasonId=cmsoczv2t000504juhvod5hi9`) · impersonate **FC Allschwil Club Admin** (`Person` `cmsnqz0qz000004l8g2efoyhw`) |
+| **Players** | SCE Testspieler **01** + **06** |
+| **Activity A (B2)** | **Sonntag 18.10.2026 · 15:00** · `cmrzhj6qc006w04kwxd2d01lj` · vs BSC Old Boys B2 · `/dashboard/matchcenter/cmrzhj6qc006w04kwxd2d01lj` |
+| **Activity B (Junioren A)** | STAGE has no literal «A2» team — use **FC Allschwil Junioren A** as second target. **Sonntag 18.10.2026 · 20:00** · `cmuk7th5s004z04kxj153wp33` · vs SC Binningen · `/dashboard/matchcenter/cmuk7th5s004z04kxj153wp33` |
+| **B2 target trainer** | **Patrick Scotton** (`Person` `cmuo3i77h000g04ibl09t7t2p`) |
+| **A target trainer** | **Spielbetrieb** (`Person` `cmuo26ofc000004l6l5ousho7`) — bounded R2 fixture trainer on Junioren A |
+| **Expected plan** | **2 · 2 · 4** · Activity A: **Kaderausgleich**, max **30** Min. · Activity B: **Spielpraxis**, no max minutes |
+
+**Source flow:** B1 Kader → multi-select 01+06 → **Für andere Teams freigeben** → pick both activities in one sheet → review **2 Spieler · 2 Einsätze · 4 Freigaben** → **Details anpassen** → confirm **4 Freigaben erstellen** → success **4 Freigaben erstellt**.
+
+**B2 awareness:** Patrick — proactive notice references **B2 match 18.10** only; Aufgebot shows 01+06; no Junioren A leakage.
+
+**A awareness:** Spielbetrieb — separate notice for **Junioren A match 18.10** only; no B2 leakage.
+
+**UX criteria (PO):** fast; clear multi-player / multi-activity / multi-team; date+time obvious; progressive disclosure; safe single confirm; calm sheet.
+
+**Request slice:** B2 requests Testspieler 01 for Activity A → B1 **Anfragen für freigegebene Spieler** → approve → B2 **Genehmigt**, not auto-assigned; release 01→Activity B unchanged.
 
 ---
 

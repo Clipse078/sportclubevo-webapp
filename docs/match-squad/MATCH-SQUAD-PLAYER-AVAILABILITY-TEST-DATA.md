@@ -37,6 +37,20 @@ ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created vi
 | **New agent-seeded rows** | **None required** — reuse SCE Testspieler 01–06 + PO-created `PlayerRelease` rows from 01C UAT (B1 → B2). |
 | **Optional 01D UAT** | Create bounded `PlayerReleaseRequest` via Match Aufgebot UI; tag any agent-created rows here with `CLEANUP_STATUS = RETAINED_FOR_01F`. |
 
+## 01D Human UAT R2 — STAGE preparation (2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **Readiness scan** | `scripts/match-squad-01d-r2-uat-readiness.ts` (read-only; fingerprint `acd3b37682911890`) |
+| **Bounded fixture** | `scripts/match-squad-01d-r2-uat-stage-fixture.ts` — Junioren **A** trainer for R2 multi-team awareness |
+| **A target trainer (fixture)** | Spielbetrieb `Person` `cmuo26ofc000004l6l5ousho7` · `User` `cmuo26owq000104l6p21xdbe5` · `TrainerTeamMember` on Junioren A `cmsoczuce000404jum730xbwu` · `isTrainer=true` |
+| **Note on «A2»** | STAGE tenant has **Junioren A**, not a separate «A2» team — R2 second target = Junioren A |
+| **Primary activities** | B2 match `cmrzhj6qc006w04kwxd2d01lj` (2026-10-18 15:00) · Junioren A match `cmuk7th5s004z04kxj153wp33` (2026-10-18 20:00) |
+| **Controlled players** | SCE Testspieler **01** + **06** |
+| **Initial state** | 0 active `PlayerRelease` rows for 01/06 × above events (fixture revokes controlled rows only) |
+| **B2 target trainer** | Unchanged R1 — Patrick Scotton on B2 |
+| **CLEANUP_STATUS** | Fixture rows `RETAINED_FOR_01F` |
+
 ## 01D Human UAT R1 — STAGE preparation (2026-10-11)
 
 | Field | Value |
