@@ -56,11 +56,11 @@ describe("PLANNING-UX-07 canonical operational editor parity", () => {
 
   it("match record workspace remains protected canonical reference", () => {
     const workspace = read("components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx");
-    expect(workspace).toContain("spiele-record-publication-panel");
+    expect(workspace).not.toContain("contextRail=");
     expect(workspace).toContain("SpieleMatchRecordTabPanels");
-    expect(read("components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx")).toContain(
-      "suppressPublicationUI",
-    );
+    const panels = read("components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx");
+    expect(panels).toContain("spiele-record-publication-panel");
+    expect(panels).toContain("suppressPublicationUI");
   });
 
   it("no duplicate plus Aufgabe labels in active planning surfaces", () => {

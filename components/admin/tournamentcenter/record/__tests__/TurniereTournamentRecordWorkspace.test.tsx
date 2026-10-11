@@ -12,6 +12,8 @@ import { TURNIERE_RECORD_MAIN_RAIL_GRID } from "../turniere-record-layout";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/tournamentcenter/tournament-1/edit",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("next-intl", () => ({
@@ -28,6 +30,16 @@ vi.mock("@/components/admin/participation/ParticipationRequestConfigEditor", () 
 
 vi.mock("@/components/admin/shared/planning-editor/PlanningEditorWorkSection", () => ({
   default: () => <div data-testid="turniere-record-work-section-mock" />,
+}));
+
+vi.mock("@/lib/collaboration/client/use-collaboration-mutation", () => ({
+  useCollaborationMutation: () => ({
+    attachCycleBaseline: vi.fn((body: Record<string, unknown>) => ({
+      payload: body,
+      cycleRequested: false,
+    })),
+    applyMutationCollaboration: vi.fn(),
+  }),
 }));
 
 const BASE_TOURNAMENT: TournamentDto = {
@@ -136,7 +148,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
     expect(screen.getByTestId("turniere-record-context-rail")).toBeInTheDocument();
   });
 
-  it("uses the wide-desktop main/rail grid contract", () => {
+  it("NAV-01 UAT R1: no persistent right rail; publication lives in Mehr only", () => {
     render(
       <TurniereTournamentRecordWorkspace
         tournament={BASE_TOURNAMENT}
@@ -147,9 +159,10 @@ describe("TURNIERE-UX-02 record workspace", () => {
         defaultTournamentDurationMinutes={120}
       />,
     );
-    expect(screen.getByTestId("turniere-record-main-rail-grid").className).toContain(
-      TURNIERE_RECORD_MAIN_RAIL_GRID,
-    );
+    expect(screen.queryByTestId("turniere-record-right-rail")).toBeNull();
+    expect(screen.getAllByTestId("turniere-record-publication-panel")).toHaveLength(1);
+    const main = screen.getByTestId("turniere-record-main-rail-grid");
+    expect(main.className).not.toContain(TURNIERE_RECORD_MAIN_RAIL_GRID);
   });
 
   it("uses searchable Verein picker for Veranstalter (not free text)", () => {

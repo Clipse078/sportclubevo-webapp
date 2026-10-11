@@ -272,7 +272,9 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 | **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **CLOSED** (§30) |
 | **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **CLOSED** (§39) |
 | **MATCH_SQUAD_AVAILABILITY_SORTING-01** | Match Squad availability presentation ordering within AUFGEBOTEN / WEITERE KADERSPIELER | **CLOSED** (§44) |
-| **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **NEXT** (§40) |
+| **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **IN PROGRESS** (§40 — UAT R1) |
+| **SCE-UI-STANDARD-01** | SCE Workspace Surface Standard — Communication-inspired hierarchy; first adoption via NAV-01 | **FOUNDATION / FIRST ADOPTION** ([`docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md)) |
+| **SCE-UI-ROLLOUT-01+** | Incremental webapp-wide workspace surface adoption | **FUTURE** (after NAV-01 closure) |
 | **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **PLANNED — AFTER SCE-ACTIVITY-NAV-01** (§28) |
 | **01E** | Assignment & Communication — operational assignment + inform audiences | **PLANNED** |
 | **01F** | Operational Intelligence & Club UAT | **PLANNED** |

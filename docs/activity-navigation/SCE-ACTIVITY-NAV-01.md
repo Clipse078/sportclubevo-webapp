@@ -1,6 +1,6 @@
 # SCE-ACTIVITY-NAV-01 — Unified Activity Detail Navigation
 
-**Status:** IN PROGRESS (implementation on STAGE branch; awaiting PO Human UAT)  
+**Status:** IN PROGRESS — UAT refinement R1 (SCE-UI-STANDARD-01 first adoption; awaiting PO Human UAT)  
 **Baseline:** `origin/STAGE` @ `7ec9e3695446bfdb8f996c29ff2b8b1224169ab0` (includes PR #822, #823)
 
 ## Purpose
@@ -35,6 +35,8 @@ Introduce one SCE activity-detail navigation pattern (Team Cockpit visual langua
 | Mehr | ✓ | ✓ | ✓ | ✓ |
 
 **Mehr** holds lower-frequency surfaces (publication, technical metadata, match tasks/requirements).
+
+**UAT R1 (SCE-UI-STANDARD-01):** Match right rail removed; single Publikation surface in Mehr; Communication-inspired card grids; semantic section icons; activity tab scroll fix (`.sce-activity-nav-tablist`). See [`docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md).
 
 ## Shared architecture
 

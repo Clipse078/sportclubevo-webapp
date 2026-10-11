@@ -23,10 +23,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import {
   assessSpieleRecordOperationalState,
-  formatSpieleRecordDate,
   formatSpieleRecordDateTimeLineForMatch,
-  formatSpieleKickoffPresentation,
-  formatSpieleOperationalEndPresentation,
   resolveHomeAwaySemanticLabel,
   resolveSpieleRecordLastChangedLabel,
   resolveSpieleRecordSourceLabel,
@@ -35,12 +32,9 @@ import {
 } from "@/lib/matchcenter/spiele-record-presentation";
 import { formatOperationalHistoryLabel } from "@/lib/matchcenter/operational-history";
 import SpieleRecordWorkspaceShell from "./SpieleRecordWorkspaceShell";
-import SpieleMatchRecordContextRail from "./SpieleMatchRecordContextRail";
 import SpieleMatchRecordContextMenu from "./SpieleMatchRecordContextMenu";
 import SpieleMatchRecordDeleteDialog from "./SpieleMatchRecordDeleteDialog";
 import SpieleMatchRecordReadinessPill from "./SpieleMatchRecordReadinessPill";
-import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
-import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
 import ActivityDetailNavigationBoundary from "@/components/admin/activity-navigation/ActivityDetailNavigationBoundary";
 import { ActivityDirtyNavigationProvider } from "@/lib/activity-navigation/ActivityDirtyNavigationContext";
 import { buildActivityTabNavigationConfig } from "@/lib/activity-navigation/configs";
@@ -363,40 +357,6 @@ export default function SpieleMatchRecordWorkspace({
         breadcrumbs={breadcrumbs}
         header={header}
         testId="spiele-match-record-workspace"
-        contextRail={
-          <div className="space-y-4" data-testid="spiele-record-right-rail">
-            <PlanningPublicationPanel testId="spiele-record-publication-panel">
-              <MatchPublicationToggles
-                value={publication}
-                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-                disabled={!canManageMappings || saving}
-                disabledChannelKeys={isAway ? ["infoboardVisible"] : []}
-                testIdPrefix="spiele-record-publication"
-                showHeading={false}
-              />
-            </PlanningPublicationPanel>
-            <SpieleMatchRecordContextRail
-              statusLabel={railStatusLabel}
-              assessment={assessment}
-              homeAway={match.homeAway}
-              homeName={homeName}
-              awayName={awayName}
-              scheduleLine={formatSpieleRecordDate(match.startAt, locale, timezone)}
-              kickoffTime={formatSpieleKickoffPresentation(match, locale, timezone)}
-              facilityLine={
-                isHome && match.operational.pitchCode
-                  ? pitchOptions.find((o) => o.code === match.operational.pitchCode)?.name ??
-                    match.operational.pitchCode
-                  : null
-              }
-              dressingLine={isHome ? facilityHistory : null}
-              sourceLabel={sourceLabel}
-              isProtectedSource={isProtectedSource}
-              lastChangedLabel={lastChangedLabel}
-              wochenplanerHref={wochenplanerHref}
-            />
-          </div>
-        }
       >
         <ActivityDirtyNavigationProvider>
           <ActivityDetailNavigationBoundary
@@ -411,6 +371,17 @@ export default function SpieleMatchRecordWorkspace({
               homeName={homeName}
               awayName={awayName}
               sourceLabel={sourceLabel}
+              lastChangedLabel={lastChangedLabel}
+              railStatusLabel={railStatusLabel}
+              assessment={assessment}
+              wochenplanerHref={wochenplanerHref}
+              facilityLine={
+                isHome && match.operational.pitchCode
+                  ? pitchOptions.find((o) => o.code === match.operational.pitchCode)?.name ??
+                    match.operational.pitchCode
+                  : null
+              }
+              dressingLine={isHome ? facilityHistory : null}
               isProtectedSource={isProtectedSource}
               canManageMappings={canManageMappings}
               canManageOperationalAllocations={canManageOperationalAllocations}

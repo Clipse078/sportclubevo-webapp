@@ -587,32 +587,6 @@ export default function TurniereTournamentRecordWorkspace({
         breadcrumbs={breadcrumbs}
         header={header}
         testId="turniere-tournament-record-workspace"
-        contextRail={
-          <div className="space-y-4" data-testid="turniere-record-right-rail">
-            <PlanningPublicationPanel testId="turniere-record-publication-panel">
-              <TournamentPublicationToggles
-                value={publication}
-                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-                disabled={!isEditable || saving}
-                testIdPrefix="turniere-record-publication"
-                showHeading={false}
-              />
-            </PlanningPublicationPanel>
-            <TurniereTournamentRecordContextRail
-              statusLabel={statusPresentation.label}
-              assessment={assessment}
-              tournamentTitle={displayTitle}
-              scheduleLine={formatTurniereRecordScheduleRailLine(tournament.startAt, locale, timezone)}
-              timeLine={formatTurniereRecordTimeOnly(tournament.startAt, locale, timezone)}
-              participantSummary={participantSummary}
-              facilityLine={resourcePresentation.facilityName ?? venueLine}
-              publicationLabel={identity.publication.label}
-              lastChangedLabel={resolveTurniereRecordLastChangedLabel(tournament, locale, timezone)}
-              wochenplanerHref={wochenplanerHref}
-              showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
-            />
-          </div>
-        }
       >
         <TurniereTournamentActivityTabShell
           isDirty={isDirty}
@@ -874,14 +848,32 @@ export default function TurniereTournamentRecordWorkspace({
           }
           kommunikation={collaborationSection ?? null}
           mehr={
-            <PlanningPublicationPanel testId="turniere-record-publication-panel-mehr">
-              <TournamentPublicationToggles
-                value={publication}
-                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-                disabled={!isEditable || saving}
-                testIdPrefix="turniere-record-publication"
+            <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4" data-testid="turniere-record-mehr-grid">
+              <div className="md:col-span-2">
+                <PlanningPublicationPanel testId="turniere-record-publication-panel">
+                  <TournamentPublicationToggles
+                    value={publication}
+                    onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+                    disabled={!isEditable || saving}
+                    testIdPrefix="turniere-record-publication"
+                    showHeading={false}
+                  />
+                </PlanningPublicationPanel>
+              </div>
+              <TurniereTournamentRecordContextRail
+                statusLabel={statusPresentation.label}
+                assessment={assessment}
+                tournamentTitle={displayTitle}
+                scheduleLine={formatTurniereRecordScheduleRailLine(tournament.startAt, locale, timezone)}
+                timeLine={formatTurniereRecordTimeOnly(tournament.startAt, locale, timezone)}
+                participantSummary={participantSummary}
+                facilityLine={resourcePresentation.facilityName ?? venueLine}
+                publicationLabel={identity.publication.label}
+                lastChangedLabel={resolveTurniereRecordLastChangedLabel(tournament, locale, timezone)}
+                wochenplanerHref={wochenplanerHref}
+                showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
               />
-            </PlanningPublicationPanel>
+            </div>
           }
         />
       </TurniereRecordWorkspaceShell>

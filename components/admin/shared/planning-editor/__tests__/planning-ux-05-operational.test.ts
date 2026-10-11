@@ -73,9 +73,9 @@ describe("PLANNING-UX-05 operational primitives", () => {
     expect(form).not.toContain("turniere-create-section-publication");
   });
 
-  it("match record publication is owned by the record workspace right rail (UX-06)", () => {
-    const workspace = read("components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx");
-    expect(workspace).toContain("spiele-record-publication-panel");
-    expect(workspace).toContain("suppressPublicationUI");
+  it("match record publication is owned by Mehr tab panels (NAV-01 / UX-06)", () => {
+    const panels = read("components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx");
+    expect(panels).toContain("spiele-record-publication-panel");
+    expect(panels).toContain("suppressPublicationUI");
   });
 });

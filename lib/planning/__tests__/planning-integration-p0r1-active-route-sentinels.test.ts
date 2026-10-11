@@ -117,9 +117,9 @@ describe("PLANNING-INTEGRATION-P0R1 create/edit parity — shared planning primi
   });
 
   it("active edit surfaces wire publication panel in canonical layout (UX-06)", () => {
-    expect(readRelative("components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx")).toContain(
-      "spiele-record-publication-panel",
-    );
+    expect(
+      readRelative("components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx"),
+    ).toContain("spiele-record-publication-panel");
     expect(paritySources.tournamentEdit).toContain("turniere-record-publication-panel");
     expect(paritySources.eventCreate).toContain("veranstaltung-create-publication-panel");
     expect(readRelative("components/admin/veranstaltungen/VeranstaltungEditForm.tsx")).toContain(

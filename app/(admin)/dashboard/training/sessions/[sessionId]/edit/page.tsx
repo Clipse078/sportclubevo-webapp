@@ -320,7 +320,9 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                   teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
                 />
               </PlanningPublicationPanel>
-            ) : null
+            ) : (
+              <p className="text-sm text-[var(--text-2)]">Keine weiteren Optionen.</p>
+            )
           }
         />
       </PlanningEditorShell>

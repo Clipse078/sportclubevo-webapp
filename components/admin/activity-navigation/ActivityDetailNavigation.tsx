@@ -11,6 +11,7 @@ import {
 import { useActivityDetailTab } from "@/lib/activity-navigation/use-activity-detail-tab";
 import { useOptionalActivityDirtyNavigation } from "@/lib/activity-navigation/ActivityDirtyNavigationContext";
 import type { ActivityTabKey } from "@/lib/activity-navigation/types";
+import { SCE_ACTIVITY_NAV_TABLIST_CLASS } from "@/lib/sce/workspace/sce-workspace-layout";
 
 type Props = {
   config: ActivityTabNavigationConfig;
@@ -54,13 +55,16 @@ export default function ActivityDetailNavigation({
   return (
     <nav
       aria-label={ariaLabel}
-      className="flex items-end gap-3 border-b border-[var(--border)]"
+      className="flex min-w-0 items-stretch gap-2 border-b border-[var(--border)] sm:gap-3"
       data-testid={testId}
     >
       <div
         role="tablist"
         aria-label={`${ariaLabel} Bereiche`}
-        className="-mb-px flex min-w-0 flex-1 gap-1 overflow-x-auto scrollbar-thin"
+        className={cn(
+          SCE_ACTIVITY_NAV_TABLIST_CLASS,
+          "-mb-px flex min-h-[2.75rem] min-w-0 flex-1 flex-nowrap items-end gap-1",
+        )}
       >
         {primaryTabs.map((tab) => {
           const href = hrefForTab(tab.key);
@@ -90,7 +94,7 @@ export default function ActivityDetailNavigation({
       </div>
 
       {overflowTabs.length > 0 ? (
-        <div className="relative shrink-0 pb-2.5">
+        <div className="relative mb-px flex shrink-0 items-end self-stretch pb-0">
           <details className="group relative">
             <summary
               className={cn(

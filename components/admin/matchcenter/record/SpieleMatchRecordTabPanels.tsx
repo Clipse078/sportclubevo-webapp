@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
@@ -10,7 +11,6 @@ import MatchcenterDetailOperational from "@/components/admin/matchcenter/Matchce
 import MatchEndTimeOperationalCallout from "@/components/admin/matchcenter/MatchEndTimeOperationalCallout";
 import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
 import PlanningWorkflowActionsClient from "@/components/admin/shared/PlanningWorkflowActionsClient";
-import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import ActivityTabPanel from "@/lib/activity-navigation/ActivityTabPanel";
 import { useActivityDetailTab } from "@/lib/activity-navigation/use-activity-detail-tab";
@@ -22,10 +22,15 @@ import {
   formatSpieleRecordTime,
 } from "@/lib/matchcenter/spiele-record-presentation";
 import SpieleMatchRecordTechnicalDetails from "./SpieleMatchRecordTechnicalDetails";
-import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "./spiele-record-layout";
+import SpieleMatchRecordReadinessPill from "./SpieleMatchRecordReadinessPill";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
 import type { MatchOperationalActionsBinding } from "@/components/admin/matchcenter/MatchcenterDetailOperational";
+import type { MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { SCE_WORKSPACE_CARD_GRID_CLASS } from "@/lib/sce/workspace/sce-workspace-layout";
+import { getSceActivitySemanticIcon } from "@/lib/sce/workspace/sce-activity-semantic-icons";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 type RecordFieldProps = {
   label: string;
@@ -57,6 +62,12 @@ export type SpieleMatchRecordTabPanelsProps = {
   homeName: string;
   awayName: string;
   sourceLabel: string;
+  lastChangedLabel: string;
+  railStatusLabel: string;
+  assessment: MatchcenterOperationalAssessment;
+  wochenplanerHref: string;
+  facilityLine: string | null;
+  dressingLine: string | null;
   isProtectedSource: boolean;
   canManageMappings: boolean;
   canManageOperationalAllocations: boolean;
@@ -98,6 +109,12 @@ export default function SpieleMatchRecordTabPanels({
   homeName,
   awayName,
   sourceLabel,
+  lastChangedLabel,
+  railStatusLabel,
+  assessment,
+  wochenplanerHref,
+  facilityLine,
+  dressingLine,
   isProtectedSource,
   canManageMappings,
   canManageOperationalAllocations,
@@ -134,6 +151,19 @@ export default function SpieleMatchRecordTabPanels({
     return () => dirtyNav.setDirty(false);
   }, [dirtyNav, isDirty]);
 
+  const publicationEditors = (
+    <PlanningPublicationPanel testId="spiele-record-publication-panel">
+      <MatchPublicationToggles
+        value={publication}
+        onChange={(patch) => onPublicationChange(patch)}
+        disabled={!canManageMappings || saving}
+        disabledChannelKeys={isAway ? ["infoboardVisible"] : []}
+        testIdPrefix="spiele-record-publication"
+        showHeading={false}
+      />
+    </PlanningPublicationPanel>
+  );
+
   return (
     <div className="space-y-4" data-testid="match-activity-tab-panels">
       <ActivityTabPanel tabKey="uebersicht" activeTab={activeTab}>
@@ -160,8 +190,13 @@ export default function SpieleMatchRecordTabPanels({
           </div>
         ) : null}
 
-        <div className={`${SPIELE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
-          <TrainingRecordSection title="Übersicht" testId="spiele-record-section-overview">
+        <div className={SCE_WORKSPACE_CARD_GRID_CLASS} data-testid="spiele-record-overview-grid">
+          <SceFeatureCard
+            title="Spielinformationen"
+            description="Teams, Wettbewerb und betrieblicher Status."
+            icon={getSceActivitySemanticIcon("matchInfo")}
+            testId="spiele-record-section-overview"
+          >
             <dl className="grid gap-4 sm:grid-cols-2">
               <RecordField label="Heimteam" value={homeName} locked={isProtectedSource} testId="spiele-record-home" />
               <RecordField label="Gastteam" value={awayName} locked={isProtectedSource} testId="spiele-record-away" />
@@ -170,17 +205,28 @@ export default function SpieleMatchRecordTabPanels({
                 value={match.competitionLabel ?? "Nicht hinterlegt"}
                 locked={isProtectedSource}
               />
-              <RecordField label="Spielort" value={match.location ?? "Nicht hinterlegt"} locked={isProtectedSource} />
-              <RecordField label="Quelle" value={sourceLabel} testId="spiele-record-source" />
+              <RecordField
+                label="Status"
+                value={railStatusLabel}
+                testId="spiele-record-overview-status"
+              />
+              <div className="sm:col-span-2">
+                <SpieleMatchRecordReadinessPill assessment={assessment} homeAway={match.homeAway} />
+              </div>
               {match.description ? (
                 <div className="sm:col-span-2">
                   <RecordField label="Beschreibung" value={match.description} />
                 </div>
               ) : null}
             </dl>
-          </TrainingRecordSection>
+          </SceFeatureCard>
 
-          <TrainingRecordSection title="Spieltermin" testId="spiele-record-section-schedule">
+          <SceFeatureCard
+            title="Termin & Ort"
+            description="Anpfiff, Endzeit und Spielort."
+            icon={getSceActivitySemanticIcon("schedule")}
+            testId="spiele-record-section-schedule"
+          >
             <dl className="grid gap-4 sm:grid-cols-2">
               <RecordField
                 label="Datum"
@@ -204,42 +250,66 @@ export default function SpieleMatchRecordTabPanels({
                   locked={isProtectedSource}
                 />
               ) : null}
+              <RecordField
+                label="Spielort"
+                value={match.location ?? "Nicht hinterlegt"}
+                locked={isProtectedSource}
+              />
+              {isHome && facilityLine ? (
+                <RecordField label="Anlage" value={facilityLine} testId="spiele-record-facility" />
+              ) : null}
+              {isHome && dressingLine ? (
+                <div className="sm:col-span-2">
+                  <RecordField label="Garderoben" value={dressingLine} />
+                </div>
+              ) : null}
             </dl>
-          </TrainingRecordSection>
-
-          {isAway ? (
-            <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-away">
-              <p className="text-sm text-[var(--text-2)]" data-testid="spiele-record-away-context">
-                Auswärtsspiel — keine Heimkabinen- oder Spielfeldvorbereitung erforderlich.
-                {match.location ? (
-                  <>
-                    {" "}
-                    Spielort: <span className="font-medium text-[var(--foreground)]">{match.location}</span>
-                  </>
-                ) : null}
-              </p>
-            </TrainingRecordSection>
-          ) : null}
-
-          {result || (match.scoreHome !== null && match.scoreAway !== null) ? (
-            <TrainingRecordSection title="Resultat" testId="spiele-record-section-result">
-              <div
-                className="flex flex-wrap items-center gap-4 text-sm"
-                data-testid="spiele-record-result-display"
-              >
-                <div className="min-w-[8rem] font-medium text-[var(--foreground)]">{homeName}</div>
-                <div className="text-lg font-bold tabular-nums">{match.scoreHome ?? "–"}</div>
-                <div className="min-w-[8rem] font-medium text-[var(--foreground)]">{awayName}</div>
-                <div className="text-lg font-bold tabular-nums">{match.scoreAway ?? "–"}</div>
-                {isProtectedSource ? (
-                  <p className="w-full text-xs text-[var(--muted)]">
-                    Resultat vom SFV synchronisiert — nicht manuell editierbar.
-                  </p>
-                ) : null}
-              </div>
-            </TrainingRecordSection>
-          ) : null}
+          </SceFeatureCard>
         </div>
+
+        {isAway ? (
+          <SceFeatureCard
+            title="Matchvorbereitung"
+            description="Auswärtsspiel — keine Heimvorbereitung."
+            icon={getSceActivitySemanticIcon("location")}
+            className="mt-3"
+            testId="spiele-record-section-away"
+          >
+            <p className="text-sm text-[var(--text-2)]" data-testid="spiele-record-away-context">
+              Auswärtsspiel — keine Heimkabinen- oder Spielfeldvorbereitung erforderlich.
+              {match.location ? (
+                <>
+                  {" "}
+                  Spielort: <span className="font-medium text-[var(--foreground)]">{match.location}</span>
+                </>
+              ) : null}
+            </p>
+          </SceFeatureCard>
+        ) : null}
+
+        {result || (match.scoreHome !== null && match.scoreAway !== null) ? (
+          <SceFeatureCard
+            title="Resultat"
+            icon={getSceActivitySemanticIcon("operations")}
+            className="mt-3"
+            testId="spiele-record-section-result"
+          >
+            <div
+              className="flex flex-wrap items-center gap-4 text-sm"
+              data-testid="spiele-record-result-display"
+            >
+              <div className="min-w-[8rem] font-medium text-[var(--foreground)]">{homeName}</div>
+              <div className="text-lg font-bold tabular-nums">{match.scoreHome ?? "–"}</div>
+              <div className="min-w-[8rem] font-medium text-[var(--foreground)]">{awayName}</div>
+              <div className="text-lg font-bold tabular-nums">{match.scoreAway ?? "–"}</div>
+              {isProtectedSource ? (
+                <p className="w-full text-xs text-[var(--muted)]">
+                  Resultat vom SFV synchronisiert — nicht manuell editierbar.
+                </p>
+              ) : null}
+            </div>
+          </SceFeatureCard>
+        ) : null}
       </ActivityTabPanel>
 
       {matchSquadSection ? (
@@ -250,7 +320,12 @@ export default function SpieleMatchRecordTabPanels({
 
       <ActivityTabPanel tabKey="teilnahme" activeTab={activeTab}>
         {match.status !== "CANCELLED" ? (
-          <TrainingRecordSection title="Teilnahme" testId="spiele-record-section-participation">
+          <SceFeatureCard
+            title="Teilnahme"
+            description="Rückmeldungen und Fristen steuern."
+            icon={getSceActivitySemanticIcon("participation")}
+            testId="spiele-record-section-participation"
+          >
             <ParticipationRequestConfigEditor
               apiPath={`/api/matchcenter/${match.id}/participation-request`}
               timeZone={timezone}
@@ -264,13 +339,19 @@ export default function SpieleMatchRecordTabPanels({
               }}
               onSaved={() => router.refresh()}
             />
-          </TrainingRecordSection>
+          </SceFeatureCard>
         ) : null}
         {participantsSection}
       </ActivityTabPanel>
 
       <ActivityTabPanel tabKey="spielbetrieb" activeTab={activeTab}>
-        <div className={SPIELE_RECORD_WORKSPACE_SURFACE_CLASS}>
+        <SceFeatureCard
+          title="Spielbetrieb"
+          description="Ressourcen, Zeiten und operative Steuerung."
+          icon={getSceActivitySemanticIcon("operations")}
+          testId="spiele-record-spielbetrieb-card"
+          className="overflow-hidden p-0"
+        >
           <MatchcenterDetailOperational
             matchId={match.id}
             homeAway={match.homeAway}
@@ -303,7 +384,7 @@ export default function SpieleMatchRecordTabPanels({
             hideFooterActions
             onActionsBinding={onActionsBinding}
           />
-        </div>
+        </SceFeatureCard>
       </ActivityTabPanel>
 
       <ActivityTabPanel tabKey="kommunikation" activeTab={activeTab}>
@@ -311,27 +392,55 @@ export default function SpieleMatchRecordTabPanels({
       </ActivityTabPanel>
 
       <ActivityTabPanel tabKey="mehr" activeTab={activeTab}>
-        <div className="space-y-4">
-          <PlanningPublicationPanel testId="spiele-record-publication-panel-mehr">
-            <MatchPublicationToggles
-              value={publication}
-              onChange={(patch) => onPublicationChange(patch)}
-              disabled={!canManageMappings || saving}
-              disabledChannelKeys={isAway ? ["infoboardVisible"] : []}
-              testIdPrefix="spiele-record-publication"
+        <div className={SCE_WORKSPACE_CARD_GRID_CLASS} data-testid="spiele-record-mehr-grid">
+          <div className="md:col-span-2">{publicationEditors}</div>
+
+          <div className="md:col-span-2">
+            <PlanningEditorWorkSection
+              headingId="spiele-record-work-heading"
+              testId="spiele-record-work-section"
+              persisted
+              locale={locale}
+              tasksPanel={relatedTasksPanel}
+              requirementsPanel={relatedRequirementsPanel}
             />
-          </PlanningPublicationPanel>
+          </div>
 
-          <PlanningEditorWorkSection
-            headingId="spiele-record-work-heading"
-            testId="spiele-record-work-section"
-            persisted
-            locale={locale}
-            tasksPanel={relatedTasksPanel}
-            requirementsPanel={relatedRequirementsPanel}
-          />
+          <SceFeatureCard
+            title="Technische Informationen"
+            description="Quelle, Synchronisation und letzte Änderung."
+            icon={getSceActivitySemanticIcon("settings")}
+            testId="spiele-record-technical-summary"
+          >
+            <dl className="grid gap-3">
+              <RecordField label="Quelle" value={sourceLabel} testId="spiele-record-source" />
+              {isProtectedSource ? (
+                <RecordField label="Synchronisation" value="SFV · synchronisiert" testId="spiele-record-sync" />
+              ) : null}
+              <RecordField
+                label="Letzte Änderung"
+                value={lastChangedLabel}
+                testId="spiele-record-last-changed"
+              />
+            </dl>
+            <SpieleMatchRecordTechnicalDetails match={match} locale={locale} timezone={timezone} />
+          </SceFeatureCard>
 
-          <SpieleMatchRecordTechnicalDetails match={match} locale={locale} timezone={timezone} />
+          <SceFeatureCard
+            title="Weitere Optionen"
+            description="Planung und Wochenplaner."
+            icon={getSceActivitySemanticIcon("planning")}
+            testId="spiele-record-mehr-options"
+          >
+            <Link
+              href={wochenplanerHref}
+              className="fca-button-secondary inline-flex w-full items-center justify-center gap-1.5 text-sm"
+              data-testid="spiele-record-rail-wochenplaner"
+            >
+              <ProductDomainSceIcon name="season" size={12} className="h-3.5 w-3.5" />
+              Im Wochenplaner anzeigen
+            </Link>
+          </SceFeatureCard>
         </div>
       </ActivityTabPanel>
     </div>
