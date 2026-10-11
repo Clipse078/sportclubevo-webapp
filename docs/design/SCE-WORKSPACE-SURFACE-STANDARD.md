@@ -1,7 +1,7 @@
 # SCE Workspace Surface Standard
 
 **Canonical key:** `SCE-UI-STANDARD-01`  
-**Status:** FOUNDATION / FIRST ADOPTION (via SCE-ACTIVITY-NAV-01)  
+**Status:** **FOUNDATION ESTABLISHED / FIRST ADOPTION COMPLETE** (PO UAT PASS via SCE-ACTIVITY-NAV-01, PR #824 → STAGE)  
 **Reference implementation:** `/dashboard/communication` (Communication hub — not a literal copy target)
 
 ## Purpose
@@ -102,4 +102,6 @@ Major **destinations** and **functional groups** use a semantic icon from `lib/s
 
 ## Future rollout
 
-Incremental adoption across remaining SCE modules (`SCE-UI-ROLLOUT-01+`) — not bundled with Match Squad 01D.
+**SCE-UI-ROLLOUT-01+** = **PARALLEL / INCREMENTAL / NOT STARTED**
+
+Future modules should progressively adopt this standard. UI rollout does **not** block or displace the functional roadmap (e.g. Match Squad 01D follows NAV-01 closure on STAGE, not a broad UI sweep).

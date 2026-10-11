@@ -272,10 +272,10 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 | **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **CLOSED** (§30) |
 | **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **CLOSED** (§39) |
 | **MATCH_SQUAD_AVAILABILITY_SORTING-01** | Match Squad availability presentation ordering within AUFGEBOTEN / WEITERE KADERSPIELER | **CLOSED** (§44) |
-| **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **IN PROGRESS** (§40 — UAT R1) |
-| **SCE-UI-STANDARD-01** | SCE Workspace Surface Standard — Communication-inspired hierarchy; first adoption via NAV-01 | **FOUNDATION / FIRST ADOPTION** ([`docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md)) |
-| **SCE-UI-ROLLOUT-01+** | Incremental webapp-wide workspace surface adoption | **FUTURE** (after NAV-01 closure) |
-| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **PLANNED — AFTER SCE-ACTIVITY-NAV-01** (§28) |
+| **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **CLOSED** (§45 — PO UAT PASS) |
+| **SCE-UI-STANDARD-01** | SCE Workspace Surface Standard — Communication-inspired hierarchy; first adoption via NAV-01 | **FOUNDATION ESTABLISHED / FIRST ADOPTION COMPLETE** ([`docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md)) |
+| **SCE-UI-ROLLOUT-01+** | Incremental webapp-wide workspace surface adoption | **PARALLEL / INCREMENTAL / NOT STARTED** |
+| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **NEXT — from STAGE** (§28, §45) |
 | **01E** | Assignment & Communication — operational assignment + inform audiences | **PLANNED** |
 | **01F** | Operational Intelligence & Club UAT | **PLANNED** |
 
@@ -1448,7 +1448,7 @@ Cross-team candidate discovery for a target match; target-trainer request; sourc
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-NAV-01` |
 | **Product name** | Unified Activity Detail Navigation |
-| **Status** | **IN PROGRESS** (SCE-ACTIVITY-NAV-01 on STAGE — awaiting PO UAT) |
+| **Status** | **CLOSED** — see §45 (PO UAT PASS, PR #824 → STAGE) |
 | **Goal** | One consistent SCE detail-navigation architecture for sports activities: users move between operational areas without navigating very long vertical forms. |
 | **Principle** | **ONE ACTIVITY → ONE STABLE DETAIL CONTEXT → CLEAR TASK-ORIENTED TABS** |
 
@@ -1588,3 +1588,48 @@ Historical 01C UAT records (§32–§38) are unchanged; this section records sor
 | **Test data** | SCE Testspieler 01–06 **retained** for 01D–01F; `TEST_DATA_REMAINING = 0` at parent module closure only |
 
 **Original visual regression:** remaining-group Offen vs Nicht verfügbar ordering — **resolved**.
+
+---
+
+## 45. SCE-ACTIVITY-NAV-01 — closure (Unified Activity Detail Navigation)
+
+**Package key:** `SCE-ACTIVITY-NAV-01`  
+**Canonical doc:** [`docs/activity-navigation/SCE-ACTIVITY-NAV-01.md`](../activity-navigation/SCE-ACTIVITY-NAV-01.md)
+
+| Field | Value |
+|-------|-------|
+| **Package status** | **CLOSED** |
+| **PO UAT** | **PASS** (R1 → R2 → R2.1 → final) |
+| **Implementation PR** | **#824** → **`STAGE`** |
+| **Branch** | `cursor/sce-activity-nav-01-unified-activity-detail-navigation-e2fb` |
+| **STAGE base (pre-merge)** | `7ec9e3695446bfdb8f996c29ff2b8b1224169ab0` |
+| **SCHEMA_CHANGE** | **NO** |
+| **MIGRATION** | **NO** |
+| **01D started** | **NO** |
+| **PROD** | **Not targeted** |
+
+### PO UAT summary (preserved)
+
+| Round | Highlights |
+|-------|------------|
+| **R1** | SCE Workspace Surface Standard; Match publication deduplication; right rail removal; tab-scroll fix; four activity families |
+| **R2** | Tournament Aufgebot tab; Aufgebot vs Teilnahme separation |
+| **R2.1** | Hauptteam/header/Aufgebot alignment; participant order must not drive Hauptteam; stale `TeamSeason` safety |
+
+### Tournament invariant (locked)
+
+`Event.teamId` / Hauptteam = displayed header team = Aufgebot team = resolved `TeamSeason` = roster source. One primary Aufgebot per tournament event in NAV-01 scope.
+
+### SCE-UI-STANDARD-01
+
+First PO-accepted adoption via activity detail workspaces (Training, Match, Tournament, Veranstaltung). **SCE-UI-ROLLOUT-01+** remains future incremental work.
+
+### Test data
+
+**SCE Testspieler 01–06** retained for **01D–01F**; no NAV-01 closure test-data creation.
+
+### Roadmap handoff
+
+**NEXT package:** **`MATCH_SQUAD_PLAYER_AVAILABILITY-01D`** — Cross-Team Discovery, Request & Approval. Run the next implementation prompt from **`STAGE`** after merge (new feature branch required; not authorized in NAV-01 closure prompt).
+
+Then: **01E** → **01F** → Sponsor Commercial Workflows → Mobile App.
