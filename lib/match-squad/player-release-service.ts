@@ -38,6 +38,7 @@ import {
   PLAYER_RELEASE_REASON_OPTIONS,
   playerReleaseReasonLabel,
 } from "@/lib/match-squad/player-release-presentation";
+import { emitTargetedPlayerReleaseAwareness } from "@/lib/match-squad/player-release-awareness-producer";
 
 const MAX_MINUTES_HARD_CAP = 120;
 
@@ -547,6 +548,7 @@ export async function createPlayerRelease(input: {
   maxMinutes?: unknown;
   reason: string;
   note?: string | null;
+  awarenessBurstKey?: string | null;
 }): Promise<PlayerReleaseListItem> {
   const source = await loadSourceTeamSeasonContext({
     tenantId: input.tenantId,
@@ -664,6 +666,14 @@ export async function createPlayerRelease(input: {
       maxMinutes,
       reason,
     },
+  });
+
+  void emitTargetedPlayerReleaseAwareness({
+    tenantId: input.tenantId,
+    sourceTeamSeasonId: input.sourceTeamSeasonId,
+    targetTeamSeasonId: input.targetTeamSeasonId,
+    actorUserId: input.actorUserId,
+    awarenessBurstKey: input.awarenessBurstKey,
   });
 
   const rosterIds = new Set([personId]);

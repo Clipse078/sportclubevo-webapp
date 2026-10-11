@@ -69,6 +69,8 @@ export async function POST(request: NextRequest, context: Context) {
       maxMinutes: body.maxMinutes,
       reason: String(body.reason ?? ""),
       note: body.note,
+      awarenessBurstKey:
+        body.awarenessBurstKey != null ? String(body.awarenessBurstKey) : undefined,
     });
 
     return NextResponse.json({ release }, { status: 201 });

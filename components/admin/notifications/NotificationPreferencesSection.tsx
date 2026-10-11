@@ -19,6 +19,7 @@ const TYPE_LABELS: Record<string, string> = {
   REQUIREMENT_OVERDUE: "Anforderung überfällig",
   REQUIREMENT_CHANGED: "Anforderung geändert",
   REQUIREMENT_CANCELLED: "Anforderung aufgehoben",
+  PLAYER_RELEASE_TARGETED: "Spielerfreigabe für dein Team",
 };
 
 type Props = {

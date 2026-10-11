@@ -81,6 +81,13 @@ export async function resolvePlayerReleaseAccess(input: {
     ]);
 
   const isSourceTrainer = await resolveTrainerOnTeamSeason(personId, input.teamSeasonId);
+  const canViewAsTarget =
+    isSuperAdmin ||
+    isClubAdmin ||
+    hasEventsView ||
+    hasEventsManage ||
+    hasTeamsManage ||
+    isSourceTrainer;
 
   const canViewSource =
     isSuperAdmin ||
@@ -93,7 +100,7 @@ export async function resolvePlayerReleaseAccess(input: {
   const canManageSource =
     isSuperAdmin || isClubAdmin || hasEventsManage || hasTeamsManage || isSourceTrainer;
 
-  if (!canViewSource && !canManageSource) {
+  if (!canViewSource && !canManageSource && !canViewAsTarget) {
     return null;
   }
 
@@ -105,7 +112,7 @@ export async function resolvePlayerReleaseAccess(input: {
     teamSeasonId: input.teamSeasonId,
     canViewSource,
     canManageSource,
-    canViewAsTarget: false,
+    canViewAsTarget,
   };
 }
 
