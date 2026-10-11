@@ -100,8 +100,8 @@ Major **destinations** and **functional groups** use a semantic icon from `lib/s
 - Tournament record
 - Veranstaltung edit
 
-## Future rollout
+## Rollout programme
 
-**SCE-UI-ROLLOUT-01+** = **PARALLEL / INCREMENTAL / NOT STARTED**
+**SCE-UI-STANDARD-01** = **FOUNDATION ESTABLISHED / INCORPORATED INTO SCE-UI-ROLLOUT-01+**
 
-Future modules should progressively adopt this standard. UI rollout does **not** block or displace the functional roadmap (e.g. Match Squad 01D follows NAV-01 closure on STAGE, not a broad UI sweep).
+**SCE-UI-ROLLOUT-01+** = **NEXT COMMITTED PROGRAMME** after `MATCH_SQUAD_PLAYER_AVAILABILITY` closure — see [`docs/roadmap/SCE-UI-ROLLOUT-01.md`](../roadmap/SCE-UI-ROLLOUT-01.md). Unified workspace surfaces, universal context tabs, and universal activity presentation across the webapp.

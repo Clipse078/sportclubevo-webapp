@@ -273,11 +273,12 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 | **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **CLOSED** (§39) |
 | **MATCH_SQUAD_AVAILABILITY_SORTING-01** | Match Squad availability presentation ordering within AUFGEBOTEN / WEITERE KADERSPIELER | **CLOSED** (§44) |
 | **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **CLOSED** (§45 — PO UAT PASS) |
-| **SCE-UI-STANDARD-01** | SCE Workspace Surface Standard — Communication-inspired hierarchy; first adoption via NAV-01 | **FOUNDATION ESTABLISHED / FIRST ADOPTION COMPLETE** ([`docs/design/SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md)) |
-| **SCE-UI-ROLLOUT-01+** | Incremental webapp-wide workspace surface adoption | **PARALLEL / INCREMENTAL / NOT STARTED** |
 | **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **CLOSED** ([`MATCH-SQUAD-PLAYER-AVAILABILITY-01D.md`](MATCH-SQUAD-PLAYER-AVAILABILITY-01D.md)) |
 | **01E** | Assignment & Communication — operational assignment + inform audiences | **CLOSED** ([`MATCH-SQUAD-PLAYER-AVAILABILITY-01E.md`](MATCH-SQUAD-PLAYER-AVAILABILITY-01E.md)) |
-| **01F** | Operational Intelligence & Club UAT | **NEXT** |
+| **01F** | Operational Intelligence & Club UAT | **CLOSED** ([`MATCH-SQUAD-PLAYER-AVAILABILITY-01F.md`](MATCH-SQUAD-PLAYER-AVAILABILITY-01F.md)) |
+| **Parent** | `MATCH_SQUAD_PLAYER_AVAILABILITY` | **CLOSED** — `TEST_DATA_REMAINING = 0` on STAGE (2026-10-11) |
+| **SCE-UI-STANDARD-01** | Workspace surface standard | **FOUNDATION ESTABLISHED / INCORPORATED INTO SCE-UI-ROLLOUT-01+** |
+| **SCE-UI-ROLLOUT-01+** | Unified Product Experience System | **NEXT COMMITTED PROGRAMME** ([`docs/roadmap/SCE-UI-ROLLOUT-01.md`](../roadmap/SCE-UI-ROLLOUT-01.md)) |
 
 Then: **Sponsor Commercial Workflows** → **Mobile App** (club roadmap).
 
