@@ -70,7 +70,19 @@ export async function resolveTournamentSquadEventContext(
     );
   }
 
-  let teamSeasonId = event.teamSeasonId?.trim() ?? null;
+  const storedTeamSeasonId = event.teamSeasonId?.trim() ?? null;
+  let teamSeasonId =
+    storedTeamSeasonId &&
+    (await prisma.teamSeason.findFirst({
+      where: {
+        id: storedTeamSeasonId,
+        teamId,
+        seasonId,
+        team: { tenantId },
+      },
+      select: { id: true },
+    }))?.id;
+
   if (!teamSeasonId) {
     teamSeasonId = await resolveTeamSeasonIdForTeamAndSeason(tenantId, teamId, seasonId);
   }

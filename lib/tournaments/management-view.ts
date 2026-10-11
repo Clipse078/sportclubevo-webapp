@@ -20,7 +20,10 @@ import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-acti
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { TournamentDto } from "./types";
 import type { TournamentOperationalAssessment } from "./operational-state";
-import { getTournamentParticipatingTeams } from "./team-participation";
+import {
+  getTournamentParticipatingTeams,
+  resolveTournamentHauptteamReference,
+} from "./team-participation";
 import { TOURNAMENT_STATUS_LABELS } from "./presentation";
 import {
   buildTournamentWorkspaceViewModel,
@@ -207,8 +210,10 @@ export function resolveTournamentManagementMetadataLine(tournament: TournamentDt
 export function resolveTournamentCategoryAgeLine(
   tournament: Pick<TournamentDto, "participants" | "team">,
 ): string | null {
-  const teams = getTournamentParticipatingTeams(tournament);
-  const primary = teams[0];
+  const primary =
+    resolveTournamentHauptteamReference(tournament) ??
+    getTournamentParticipatingTeams(tournament)[0] ??
+    null;
   if (!primary) return null;
 
   const categoryLabel =

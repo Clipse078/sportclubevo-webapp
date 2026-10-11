@@ -79,4 +79,31 @@ describe("resolveTournamentSquadEventContext", () => {
       MatchSquadNotFoundError,
     );
   });
+
+  it("ignores stale teamSeasonId that belongs to another Hauptteam and resolves from teamId", async () => {
+    mocks.eventFindFirst.mockResolvedValue({
+      id: EVENT,
+      tenantId: TENANT,
+      teamId: "team-f2",
+      teamSeasonId: "ts-f3-stale",
+      seasonId: "season-1",
+      status: "SCHEDULED",
+      title: "PlayMore Turnier",
+      team: { id: "team-f2", name: "Junioren F2" },
+    });
+    mocks.teamSeasonFindFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: "ts-f2",
+        status: "ACTIVE",
+        displayName: "Junioren F2",
+        teamId: "team-f2",
+      });
+    mocks.resolveTeamSeasonId.mockResolvedValue("ts-f2");
+
+    const ctx = await resolveTournamentSquadEventContext(TENANT, EVENT);
+    expect(ctx.teamId).toBe("team-f2");
+    expect(ctx.teamSeasonId).toBe("ts-f2");
+    expect(mocks.resolveTeamSeasonId).toHaveBeenCalledWith(TENANT, "team-f2", "season-1");
+  });
 });

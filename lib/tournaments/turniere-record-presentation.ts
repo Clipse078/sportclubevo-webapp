@@ -139,10 +139,18 @@ export function shouldShowTurniereRecordReadinessPill(
   return true;
 }
 
+export function resolveTurniereRecordHauptteamMetaLine(
+  tournament: Pick<TournamentDto, "team">,
+): string | null {
+  return tournament.team?.name?.trim() || null;
+}
+
 export function resolveTurniereRecordIdentity(tournament: TournamentDto, tenantLogoUrl: string | null) {
+  const hauptteamLine = resolveTurniereRecordHauptteamMetaLine(tournament);
   return {
     crest: resolveTournamentRowCrest(tournament, tenantLogoUrl),
-    categoryLine: resolveTournamentCategoryAgeLine(tournament),
+    hauptteamLine,
+    categoryLine: hauptteamLine ?? resolveTournamentCategoryAgeLine(tournament),
     competitionLabel: tournament.competitionLabel?.trim() || null,
     participantCount: tournament.participants.length,
     publication: resolveTournamentPublicationPresentation(tournament),

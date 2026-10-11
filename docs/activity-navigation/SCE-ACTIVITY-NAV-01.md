@@ -1,6 +1,6 @@
 # SCE-ACTIVITY-NAV-01 — Unified Activity Detail Navigation
 
-**Status:** IN PROGRESS — UAT refinement R1 (SCE-UI-STANDARD-01 first adoption; awaiting PO Human UAT)  
+**Status:** IN PROGRESS — UAT R2.1 (Tournament Hauptteam / Aufgebot team-context consistency)  
 **Baseline:** `origin/STAGE` @ `7ec9e3695446bfdb8f996c29ff2b8b1224169ab0` (includes PR #822, #823)
 
 ## Purpose
@@ -26,6 +26,16 @@ Introduce one SCE activity-detail navigation pattern (Team Cockpit visual langua
 - **Teilnahme** — tournament **participant teams** (internal + external clubs), RSVP / participation request config, optional planning participant roster. Unchanged.
 
 Additional own-club teams listed only under Teilnahme do **not** receive separate tournament squads in NAV-01 R2 (one squad per event; Hauptteam context only).
+
+**UAT R2.1 team-context invariant:**
+
+| Surface | Source |
+|---------|--------|
+| Tournament record header team line | `Event.team` (Hauptteam) — never first/sorted `TournamentParticipant` |
+| Tournament Aufgebot / activity-squad | `Event.teamId` + consistent `TeamSeason` for that team + `Event.seasonId` |
+| Teilnahme | `TournamentParticipant` rows (unchanged) |
+
+`TournamentParticipant` ordering or alphabetical participant lists must **not** influence primary Aufgebot or header identity. If `Event.teamSeasonId` is stale (points at another team’s season), Aufgebot resolution re-derives `TeamSeason` from `Event.teamId` + season — it must not expose another team’s Saison-Kader.
 
 ## Final tab matrix
 
