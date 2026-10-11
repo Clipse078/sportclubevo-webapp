@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { ActivityTabKey } from "./types";
-import { cn } from "@/lib/cn";
+import SceContextTabPanel from "@/lib/context-tabs/ContextTabPanel";
 
 type Props = {
   tabKey: ActivityTabKey;
@@ -13,7 +13,7 @@ type Props = {
 };
 
 /**
- * Keeps tab panel content mounted while hidden so editor local state survives tab switches.
+ * Activity tab panel — delegates to generic SCE Context Tab panel (preserves activity DOM ids).
  */
 export default function ActivityTabPanel({
   tabKey,
@@ -22,19 +22,15 @@ export default function ActivityTabPanel({
   className,
   testId,
 }: Props) {
-  const isActive = tabKey === activeTab;
-
   return (
-    <section
-      role="tabpanel"
-      id={`activity-tabpanel-${tabKey}`}
-      aria-labelledby={`activity-tab-${tabKey}`}
-      hidden={!isActive}
-      aria-hidden={!isActive}
-      className={cn(!isActive && "hidden", className)}
-      data-testid={testId ?? `activity-tabpanel-${tabKey}`}
+    <SceContextTabPanel
+      tabKey={tabKey}
+      activeTab={activeTab}
+      className={className}
+      testId={testId}
+      idPrefix="activity-tab"
     >
       {children}
-    </section>
+    </SceContextTabPanel>
   );
 }

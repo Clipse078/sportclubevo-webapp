@@ -2,11 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import ActivityDetailNavigationBoundary from "@/components/admin/activity-navigation/ActivityDetailNavigationBoundary";
-import {
-  ActivityDirtyNavigationProvider,
-  useActivityDirtyNavigation,
-} from "@/lib/activity-navigation/ActivityDirtyNavigationContext";
+import SceContextTabsBoundary from "@/components/sce/context-tabs/SceContextTabsBoundary";
+import { SceContextDirtyGuardProvider, useContextDirtyNavigation } from "@/lib/context-tabs";
 import { buildActivityTabNavigationConfig } from "@/lib/activity-navigation/configs";
 import ActivityTabPanel from "@/lib/activity-navigation/ActivityTabPanel";
 import { useActivityDetailTab } from "@/lib/activity-navigation/use-activity-detail-tab";
@@ -22,7 +19,7 @@ type Props = {
 
 function ClubEventTabPanels({ isDirty = false, ...panels }: Props) {
   const { activeTab } = useActivityDetailTab();
-  const dirtyNav = useActivityDirtyNavigation();
+  const dirtyNav = useContextDirtyNavigation();
 
   useEffect(() => {
     dirtyNav.setDirty(isDirty);
@@ -54,14 +51,15 @@ export default function ClubEventActivityTabShell(props: Props) {
   const config = buildActivityTabNavigationConfig({ kind: "CLUB_EVENT" });
 
   return (
-    <ActivityDirtyNavigationProvider>
-      <ActivityDetailNavigationBoundary
+    <SceContextDirtyGuardProvider>
+      <SceContextTabsBoundary
         config={config}
         ariaLabel="Veranstaltung"
         testId="veranstaltung-activity-nav"
+        idPrefix="activity-tab"
       >
         <ClubEventTabPanels {...props} />
-      </ActivityDetailNavigationBoundary>
-    </ActivityDirtyNavigationProvider>
+      </SceContextTabsBoundary>
+    </SceContextDirtyGuardProvider>
   );
 }

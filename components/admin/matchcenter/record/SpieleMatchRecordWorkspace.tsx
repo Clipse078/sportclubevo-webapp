@@ -35,8 +35,8 @@ import SpieleRecordWorkspaceShell from "./SpieleRecordWorkspaceShell";
 import SpieleMatchRecordContextMenu from "./SpieleMatchRecordContextMenu";
 import SpieleMatchRecordDeleteDialog from "./SpieleMatchRecordDeleteDialog";
 import SpieleMatchRecordReadinessPill from "./SpieleMatchRecordReadinessPill";
-import ActivityDetailNavigationBoundary from "@/components/admin/activity-navigation/ActivityDetailNavigationBoundary";
-import { ActivityDirtyNavigationProvider } from "@/lib/activity-navigation/ActivityDirtyNavigationContext";
+import SceContextTabsBoundary from "@/components/sce/context-tabs/SceContextTabsBoundary";
+import { SceContextDirtyGuardProvider } from "@/lib/context-tabs";
 import { buildActivityTabNavigationConfig } from "@/lib/activity-navigation/configs";
 import SpieleMatchRecordTabPanels from "./SpieleMatchRecordTabPanels";
 
@@ -358,11 +358,12 @@ export default function SpieleMatchRecordWorkspace({
         header={header}
         testId="spiele-match-record-workspace"
       >
-        <ActivityDirtyNavigationProvider>
-          <ActivityDetailNavigationBoundary
+        <SceContextDirtyGuardProvider>
+          <SceContextTabsBoundary
             config={activityNavConfig}
             ariaLabel="Spiel"
             testId="match-activity-nav"
+            idPrefix="activity-tab"
           >
             <SpieleMatchRecordTabPanels
               match={match}
@@ -409,8 +410,8 @@ export default function SpieleMatchRecordWorkspace({
               relatedTasksPanel={relatedTasksPanel}
               relatedRequirementsPanel={relatedRequirementsPanel}
             />
-          </ActivityDetailNavigationBoundary>
-        </ActivityDirtyNavigationProvider>
+          </SceContextTabsBoundary>
+        </SceContextDirtyGuardProvider>
       </SpieleRecordWorkspaceShell>
 
       {canDelete ? (

@@ -1,6 +1,11 @@
 /**
- * SCE-ACTIVITY-NAV-01 — shared activity detail navigation types.
+ * SCE-ACTIVITY-NAV-01 — activity detail navigation types (01B: extends generic context tabs).
  */
+
+import type {
+  ContextTabDefinition,
+  ContextTabNavigationConfig,
+} from "@/lib/context-tabs/types";
 
 export type ActivityNavigationKind = "TRAINING" | "MATCH" | "TOURNAMENT" | "CLUB_EVENT";
 
@@ -14,19 +19,8 @@ export type ActivityTabKey =
   | "kommunikation"
   | "mehr";
 
-export type ActivityTabDefinition = {
-  key: ActivityTabKey;
-  label: string;
-  /** Primary row vs overflow (Mehr dropdown). */
-  placement: "primary" | "overflow";
-  /** When false, tab is omitted from navigation entirely. */
-  visible?: boolean;
-  /** Optional future badge/count (not rendered unless provided). */
-  count?: number | string | null;
-};
+export type ActivityTabDefinition = ContextTabDefinition<ActivityTabKey>;
 
-export type ActivityTabNavigationConfig = {
+export type ActivityTabNavigationConfig = ContextTabNavigationConfig<ActivityTabKey> & {
   kind: ActivityNavigationKind;
-  defaultTab: ActivityTabKey;
-  tabs: ActivityTabDefinition[];
 };
