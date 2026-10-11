@@ -257,6 +257,59 @@ describe("MatchSquadPlayerRow", () => {
     expect(within(actionCell as HTMLElement).queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("shows Freigeben for structural roster players when release context allows manage", () => {
+    render(
+      <MatchSquadPlayerRow
+        player={player({ canSelect: true })}
+        action="add"
+        onAction={() => {}}
+        disabled={false}
+        releaseContext={{
+          teamId: "team-1",
+          teamSeasonId: "ts-1",
+          matchId: "match-1",
+          matchLabel: "Spiel",
+          canManageRelease: true,
+        }}
+        onOpenReleasePlanner={() => {}}
+      />,
+    );
+
+    expect(screen.getByTestId("match-squad-release-p1")).toBeInTheDocument();
+  });
+
+  it("does not show Freigeben for externally assigned non-roster players", () => {
+    render(
+      <MatchSquadPlayerRow
+        player={player({
+          rosterEligible: false,
+          canRemove: true,
+          externalRelease: {
+            sourceTeamSeasonId: "ts-b2",
+            sourceTeamLabel: "Junioren B2",
+            playerReleaseRequestId: "req-1",
+            releaseRevoked: false,
+            releaseRevokedLabel: null,
+          },
+        })}
+        action="remove"
+        onAction={() => {}}
+        disabled={false}
+        releaseContext={{
+          teamId: "team-1",
+          teamSeasonId: "ts-1",
+          matchId: "match-1",
+          matchLabel: "Spiel",
+          canManageRelease: true,
+        }}
+        onOpenReleasePlanner={() => {}}
+      />,
+    );
+
+    expect(screen.queryByTestId("match-squad-release-p1")).not.toBeInTheDocument();
+    expect(screen.getByTestId("match-squad-remove-p1")).toBeInTheDocument();
+  });
+
   it("shows conflict badge and Entfernen for selected unavailable", () => {
     render(
       <MatchSquadPlayerRow

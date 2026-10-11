@@ -14,7 +14,7 @@ import {
 import { mapMatchSquadRouteError } from "@/lib/match-squad/match-squad-route-access";
 import { resolveAccessForTournamentSquad } from "@/lib/match-squad/tournament-squad-route-access";
 import { MatchSquadError } from "@/lib/match-squad/errors";
-import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
+import { buildActivitySquadApiPayload } from "@/lib/match-squad/activity-squad-api-payload";
 
 type Params = { params: Promise<{ tournamentId: string }> };
 
@@ -38,22 +38,14 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
   try {
     const squad = await buildTournamentSquadViewModel(resolved.tenant.id, tournamentId);
-    const releaseAccess = squad.teamId
-      ? await resolvePlayerReleaseAccess({
-          userId: resolved.userId,
-          tenantId: resolved.tenant.id,
-          tenantKey: resolved.tenant.key,
-          teamId: squad.teamId,
-          teamSeasonId: squad.teamSeasonId,
-        })
-      : null;
-    return NextResponse.json({
-      ...squad,
-      canEdit: resolved.access.canEdit && squad.editable,
-      canManageAvailability: resolved.access.canEdit,
-      canManageRelease: Boolean(releaseAccess?.canManageSource) && squad.editable,
-      releaseReadOnly: !squad.editable,
-    });
+    return NextResponse.json(
+      await buildActivitySquadApiPayload({
+        squad,
+        userId: resolved.userId,
+        tenant: resolved.tenant,
+        accessCanEdit: resolved.access.canEdit,
+      }),
+    );
   } catch (error) {
     return mapError(error);
   }
@@ -87,15 +79,25 @@ export async function PUT(request: NextRequest, { params }: Params) {
       expectedVersion:
         typeof body.expectedVersion === "string" ? body.expectedVersion : null,
     });
-    return NextResponse.json({
-      ...squad,
-      canEdit: resolved.access.canEdit && squad.editable,
-    });
+    return NextResponse.json(
+      await buildActivitySquadApiPayload({
+        squad,
+        userId: resolved.userId,
+        tenant: resolved.tenant,
+        accessCanEdit: resolved.access.canEdit,
+      }),
+    );
   } catch (error) {
     if (error instanceof MatchSquadError && error.code === "CONFLICT") {
       const latest = await buildTournamentSquadViewModel(resolved.tenant.id, tournamentId);
+      const squadPayload = await buildActivitySquadApiPayload({
+        squad: latest,
+        userId: resolved.userId,
+        tenant: resolved.tenant,
+        accessCanEdit: resolved.access.canEdit,
+      });
       return NextResponse.json(
-        { error: error.message, code: error.code, squad: latest },
+        { error: error.message, code: error.code, squad: squadPayload },
         { status: 409 },
       );
     }

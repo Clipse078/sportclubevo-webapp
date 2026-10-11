@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { MatchSquadPlayerPresentation } from "@/lib/match-squad/types";
 
@@ -51,6 +52,10 @@ function squadPayload(overrides: Record<string, unknown> = {}) {
     editable: true,
     canEdit: true,
     readOnlyReason: null,
+    teamId: "team-b1",
+    teamSeasonId: "ts-b1",
+    canManageRelease: true,
+    releaseReadOnly: false,
     selected: [],
     remaining: [player()],
     teamDisplayName: "Junioren B1",
@@ -200,4 +205,81 @@ describe("MatchSquadSection", () => {
       "SCE Testspieler 03",
     ]);
   });
+
+  it("keeps Freigeben on structural players after squad save when PUT omits release flags (01E-R1)", async () => {
+    const remainingPlayer = player({
+      personId: "p-open",
+      displayName: "SCE Testspieler 05",
+      canSelect: true,
+      availability: "UNKNOWN",
+      availabilityLabel: "Offen",
+      presentationStatus: "OPEN",
+      presentationTone: "muted",
+      presentationIcon: "circle",
+      participationStatus: null,
+    });
+    const selectedPlayer = player({
+      personId: "p-selected",
+      displayName: "SCE Testspieler 01",
+      selected: true,
+      canRemove: true,
+      availability: "AVAILABLE",
+      availabilityLabel: "Verfügbar",
+      presentationStatus: "AVAILABLE",
+      presentationTone: "success",
+      presentationIcon: "check",
+      participationStatus: "YES",
+    });
+
+    mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (!init?.method || init.method === "GET") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify(
+              squadPayload({
+                remaining: [remainingPlayer],
+                selected: [selectedPlayer],
+              }),
+            ),
+        };
+      }
+      if (init.method === "PUT") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify({
+              version: "v2",
+              editable: true,
+              canEdit: true,
+              readOnlyReason: null,
+              teamId: "team-b1",
+              teamSeasonId: "ts-b1",
+              teamDisplayName: "Junioren B1",
+              selected: [remainingPlayer, selectedPlayer],
+              remaining: [],
+              counts: squadPayload().counts,
+            }),
+        };
+      }
+      throw new Error(`Unexpected fetch ${url} ${init?.method}`);
+    });
+
+    render(<MatchSquadSection matchId="match-1" />);
+    await screen.findByTestId("match-squad-release-p-open");
+    expect(screen.getByTestId("match-squad-release-p-selected")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId("match-squad-add-p-open"));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/match-squad"),
+        expect.objectContaining({ method: "PUT" }),
+      );
+    });
+
+    expect(await screen.findByTestId("match-squad-release-p-open")).toBeInTheDocument();
+    expect(screen.getByTestId("match-squad-release-p-selected")).toBeInTheDocument();
+  });
+
 });
