@@ -226,7 +226,11 @@ function buildPlayerPresentation(input: {
   };
 }
 
-function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts {
+function deriveCounts(input: {
+  structuralPlayers: MatchSquadPlayerPresentation[];
+  selectedPlayers: MatchSquadPlayerPresentation[];
+  structuralRosterTotal: number;
+}): MatchSquadCounts {
   let available = 0;
   let unavailable = 0;
   let maybe = 0;
@@ -237,7 +241,7 @@ function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts
   let selectedOpen = 0;
   let conflicts = 0;
 
-  for (const player of players) {
+  for (const player of input.structuralPlayers) {
     switch (player.presentationStatus) {
       case "AVAILABLE":
         available += 1;
@@ -253,18 +257,19 @@ function deriveCounts(players: MatchSquadPlayerPresentation[]): MatchSquadCounts
         open += 1;
         break;
     }
+  }
 
-    if (player.selected) {
-      selected += 1;
-      if (player.presentationStatus === "AVAILABLE") selectedAvailable += 1;
-      if (player.presentationStatus === "MAYBE") selectedMaybe += 1;
-      if (player.presentationStatus === "OPEN") selectedOpen += 1;
-      if (player.availabilityConflict) conflicts += 1;
-    }
+  for (const player of input.selectedPlayers) {
+    if (!player.selected) continue;
+    selected += 1;
+    if (player.presentationStatus === "AVAILABLE") selectedAvailable += 1;
+    if (player.presentationStatus === "MAYBE") selectedMaybe += 1;
+    if (player.presentationStatus === "OPEN") selectedOpen += 1;
+    if (player.availabilityConflict) conflicts += 1;
   }
 
   return {
-    rosterTotal: players.length,
+    rosterTotal: input.structuralRosterTotal,
     available,
     unavailable,
     maybe,
@@ -542,7 +547,15 @@ async function buildActivitySquadViewModel(
 
   const sortedSelected = sortMatchSquadPlayersForPresentation(selected);
   const sortedRemaining = sortMatchSquadPlayersForPresentation(remaining);
-  const counts = deriveCounts([...sortedRemaining, ...sortedSelected]);
+  const structuralPresentation = [
+    ...sortedRemaining,
+    ...sortedSelected.filter((row) => row.rosterEligible),
+  ];
+  const counts = deriveCounts({
+    structuralPlayers: structuralPresentation,
+    selectedPlayers: sortedSelected,
+    structuralRosterTotal: rosterRows.length,
+  });
 
   return {
     eventId: context.eventId,

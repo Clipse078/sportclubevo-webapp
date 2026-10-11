@@ -86,6 +86,11 @@ function playerMatchesAvailabilityFilter(
   return true;
 }
 
+/** Only structural target-TeamSeason roster rows belong in «Weitere Kaderspieler». */
+function isStructuralRemainingRow(player: MatchSquadPlayerPresentation): boolean {
+  return player.rosterEligible && !player.externalRelease;
+}
+
 export default function MatchSquadSection({
   matchId,
   timeZone = "Europe/Zurich",
@@ -133,6 +138,7 @@ export default function MatchSquadSection({
   const canMutate = Boolean(data?.canEdit ?? data?.editable) && !saving;
 
   async function persist(nextSelectedIds: string[]) {
+    const previousSelectedIds = selectedIds;
     setSaving(true);
     setError(null);
     try {
@@ -159,6 +165,7 @@ export default function MatchSquadSection({
       setSelectedIds(json.selected.map((row) => row.personId));
       setVersion(json.version);
     } catch (err) {
+      setSelectedIds(previousSelectedIds);
       setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
     } finally {
       setSaving(false);
@@ -188,7 +195,9 @@ export default function MatchSquadSection({
       .filter((row): row is MatchSquadPlayerPresentation => Boolean(row)),
   );
   const optimisticRemaining = sortMatchSquadPlayersForPresentation(
-    [...candidateMap.values()].filter((row) => !selectedSet.has(row.personId)),
+    [...candidateMap.values()].filter(
+      (row) => !selectedSet.has(row.personId) && isStructuralRemainingRow(row),
+    ),
   );
 
   const filterPlayers = (rows: MatchSquadPlayerPresentation[]) =>

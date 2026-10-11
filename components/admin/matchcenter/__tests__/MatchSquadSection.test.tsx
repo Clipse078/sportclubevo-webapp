@@ -206,6 +206,109 @@ describe("MatchSquadSection", () => {
     ]);
   });
 
+  it("does not move removed external assignments into Weitere Kaderspieler (01E-R2)", async () => {
+    const externalSelected = player({
+      personId: "p-ext",
+      displayName: "SCE Testspieler 01",
+      rosterEligible: false,
+      rosterIneligibleLabel: "FC Allschwil Junioren B1 · freigegeben",
+      selected: true,
+      canRemove: true,
+      externalRelease: {
+        sourceTeamSeasonId: "ts-b1",
+        sourceTeamLabel: "FC Allschwil Junioren B1",
+        playerReleaseRequestId: "req-1",
+        releaseRevoked: false,
+        releaseRevokedLabel: null,
+      },
+    });
+    const approvedCandidate = {
+      requestId: "req-1",
+      personId: "p-ext",
+      personDisplayName: "SCE Testspieler 01",
+      sourceTeamSeasonId: "ts-b1",
+      sourceTeamLabel: "FC Allschwil Junioren B1",
+      statusLabel: "Genehmigt",
+      availabilityLabel: "Offen",
+      availabilityTone: "muted" as const,
+      conflictHints: [],
+      canAssign: true,
+      assignBlockedReason: null,
+      assignWarning: null,
+      version: "v1",
+    };
+
+    mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (!init?.method || init.method === "GET") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify(
+              squadPayload({
+                teamSeasonId: "ts-b2",
+                teamDisplayName: "Junioren B2",
+                selected: [externalSelected],
+                remaining: [],
+                approvedReleaseCandidates: [],
+                counts: {
+                  rosterTotal: 0,
+                  available: 0,
+                  unavailable: 0,
+                  maybe: 0,
+                  open: 0,
+                  selected: 1,
+                  selectedAvailable: 0,
+                  selectedMaybe: 0,
+                  selectedOpen: 0,
+                  conflicts: 0,
+                },
+              }),
+            ),
+        };
+      }
+      if (init.method === "PUT") {
+        return {
+          ok: true,
+          text: async () =>
+            JSON.stringify(
+              squadPayload({
+                teamSeasonId: "ts-b2",
+                teamDisplayName: "Junioren B2",
+                version: "v2",
+                selected: [],
+                remaining: [],
+                approvedReleaseCandidates: [approvedCandidate],
+                counts: {
+                  rosterTotal: 0,
+                  available: 0,
+                  unavailable: 0,
+                  maybe: 0,
+                  open: 0,
+                  selected: 0,
+                  selectedAvailable: 0,
+                  selectedMaybe: 0,
+                  selectedOpen: 0,
+                  conflicts: 0,
+                },
+              }),
+            ),
+        };
+      }
+      throw new Error(`Unexpected fetch ${url} ${init?.method}`);
+    });
+
+    render(<MatchSquadSection matchId="match-b2" />);
+    await screen.findByTestId("match-squad-remove-p-ext");
+
+    await userEvent.click(screen.getByTestId("match-squad-remove-p-ext"));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("match-squad-player-p-ext")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/Genehmigte Freigaben · 1/)).toBeInTheDocument();
+    expect(screen.getByText("SCE Testspieler 01")).toBeInTheDocument();
+  });
+
   it("keeps Freigeben on structural players after squad save when PUT omits release flags (01E-R1)", async () => {
     const remainingPlayer = player({
       personId: "p-open",
