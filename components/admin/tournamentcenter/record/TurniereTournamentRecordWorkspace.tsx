@@ -157,6 +157,7 @@ export type TurniereTournamentRecordWorkspaceProps = {
   relatedRequirementsPanel?: ReactNode;
   collaborationSection?: ReactNode;
   participantsSection?: ReactNode;
+  tournamentSquadSection?: ReactNode;
 };
 
 export default function TurniereTournamentRecordWorkspace({
@@ -176,6 +177,7 @@ export default function TurniereTournamentRecordWorkspace({
   relatedRequirementsPanel,
   collaborationSection,
   participantsSection,
+  tournamentSquadSection,
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -591,6 +593,12 @@ export default function TurniereTournamentRecordWorkspace({
         <TurniereTournamentActivityTabShell
           isDirty={isDirty}
           participationAvailable={tournament.status !== "CANCELLED"}
+          tournamentSquadAvailable={Boolean(tournamentSquadSection)}
+          aufgebot={
+            tournamentSquadSection ? (
+              <div className={TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS}>{tournamentSquadSection}</div>
+            ) : undefined
+          }
           uebersicht={
         <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
           <TurniereRecordSection title="Übersicht" testId="turniere-record-section-overview">

@@ -12,7 +12,9 @@ import { useEffect } from "react";
 type Props = {
   isDirty: boolean;
   participationAvailable?: boolean;
+  tournamentSquadAvailable?: boolean;
   uebersicht: ReactNode;
+  aufgebot?: ReactNode;
   teilnahme: ReactNode;
   planung: ReactNode;
   kommunikation: ReactNode;
@@ -22,6 +24,7 @@ type Props = {
 function TurniereTabPanels({
   isDirty,
   uebersicht,
+  aufgebot,
   teilnahme,
   planung,
   kommunikation,
@@ -40,6 +43,11 @@ function TurniereTabPanels({
       <ActivityTabPanel tabKey="uebersicht" activeTab={activeTab}>
         {uebersicht}
       </ActivityTabPanel>
+      {aufgebot ? (
+        <ActivityTabPanel tabKey="aufgebot" activeTab={activeTab}>
+          {aufgebot}
+        </ActivityTabPanel>
+      ) : null}
       <ActivityTabPanel tabKey="teilnahme" activeTab={activeTab}>
         {teilnahme}
       </ActivityTabPanel>
@@ -59,11 +67,13 @@ function TurniereTabPanels({
 export default function TurniereTournamentActivityTabShell({
   isDirty,
   participationAvailable,
+  tournamentSquadAvailable,
   ...panels
 }: Props) {
   const config = buildActivityTabNavigationConfig({
     kind: "TOURNAMENT",
     participationAvailable,
+    tournamentSquadAvailable,
   });
 
   return (

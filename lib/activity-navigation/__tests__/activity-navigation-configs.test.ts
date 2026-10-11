@@ -22,9 +22,17 @@ describe("SCE-ACTIVITY-NAV-01 — activity tab configs", () => {
     expect(listAllVisibleTabs(withSquad).some((t) => t.key === "aufgebot")).toBe(true);
   });
 
-  it("tournament omits aufgebot (no fake Match Squad)", () => {
-    const config = buildActivityTabNavigationConfig({ kind: "TOURNAMENT" });
-    expect(listAllVisibleTabs(config).some((t) => t.key === "aufgebot")).toBe(false);
+  it("tournament shows Aufgebot only when squad workspace is available", () => {
+    const without = buildActivityTabNavigationConfig({ kind: "TOURNAMENT" });
+    expect(listAllVisibleTabs(without).some((t) => t.key === "aufgebot")).toBe(false);
+
+    const withSquad = buildActivityTabNavigationConfig({
+      kind: "TOURNAMENT",
+      tournamentSquadAvailable: true,
+    });
+    const keys = listAllVisibleTabs(withSquad).map((t) => t.key);
+    expect(keys.indexOf("aufgebot")).toBeGreaterThan(keys.indexOf("uebersicht"));
+    expect(keys.indexOf("aufgebot")).toBeLessThan(keys.indexOf("teilnahme"));
   });
 
   it("club event uses Veranstaltung tab set without sport-specific tabs", () => {

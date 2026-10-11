@@ -20,14 +20,19 @@ Introduce one SCE activity-detail navigation pattern (Team Cockpit visual langua
 
 **Match semantics preserved:** Aufgebot = `MatchSquadSection`; Teilnahme = participation request + optional planning participant roster when integrated Aufgebot suppresses duplicate roster (`integrated-workspace.ts`).
 
-**Tournament:** No fake Match Squad / Kader-Aufgebot tab — team participants + RSVP remain under Teilnahme.
+**Tournament Aufgebot vs Teilnahme (UAT R2):**
+
+- **Aufgebot** — player selection for the tenant **Hauptteam** (`Event.teamId` / `teamSeasonId`, Teamseite / Wochenplan). Uses the same `MatchSquad` aggregate keyed by `Event.id` (type `TOURNAMENT`), via `/api/tournamentcenter/{id}/activity-squad`. Tab visible only when `resolveIntegratedTournamentSquadWorkspace` succeeds (`tournamentSquadAvailable`).
+- **Teilnahme** — tournament **participant teams** (internal + external clubs), RSVP / participation request config, optional planning participant roster. Unchanged.
+
+Additional own-club teams listed only under Teilnahme do **not** receive separate tournament squads in NAV-01 R2 (one squad per event; Hauptteam context only).
 
 ## Final tab matrix
 
 | Tab | Training | Match | Tournament | Veranstaltung |
 |-----|----------|-------|------------|---------------|
 | Übersicht | ✓ | ✓ | ✓ | ✓ |
-| Aufgebot | — | ✓ (when squad workspace available) | — | — |
+| Aufgebot | — | ✓ (when squad workspace available) | ✓ (Hauptteam squad workspace) | — |
 | Teilnahme | ✓ | ✓ | ✓ | ✓ |
 | Planung | ✓ | — | ✓ | ✓ |
 | Spielbetrieb | — | ✓ | — | — |
@@ -77,7 +82,7 @@ Use tenant-scoped records already available to the PO account:
 |--------|----------------|
 | Training | `/dashboard/training/sessions/{sessionId}/edit?tab=teilnahme` |
 | Match | `/dashboard/matchcenter/{eventId}?tab=aufgebot` |
-| Tournament | `/dashboard/tournamentcenter/{tournamentId}/edit?tab=teilnahme` |
+| Tournament | `/dashboard/tournamentcenter/{tournamentId}/edit?tab=aufgebot` (when Hauptteam + auth) |
 | Veranstaltung | `/dashboard/veranstaltungen/{eventId}/edit?tab=planung` |
 
 Verify: tabs, active state, refresh/back, Match Squad sorting/colors, Player Release entry points, responsive overflow/Mehr, no silent data loss on tab change.

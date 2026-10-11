@@ -4,6 +4,8 @@ export type ActivityTabVisibilityInput = {
   kind: ActivityNavigationKind;
   /** Match: integrated Aufgebot workspace available. */
   matchSquadAvailable?: boolean;
+  /** Tournament: Hauptteam squad workspace available (not Teilnahme). */
+  tournamentSquadAvailable?: boolean;
   /** Match / tournament: participation surfaces available (not cancelled). */
   participationAvailable?: boolean;
   /** Collaboration host mounted and user can open section. */
@@ -98,12 +100,19 @@ export function buildActivityTabNavigationConfig(
       };
     }
 
-    case "TOURNAMENT":
+    case "TOURNAMENT": {
+      const aufgebotAvailable = input.tournamentSquadAvailable === true;
       return {
         kind: "TOURNAMENT",
         defaultTab: "uebersicht",
         tabs: [
           { key: "uebersicht", label: "Übersicht", placement: "primary", visible: true },
+          {
+            key: "aufgebot",
+            label: "Aufgebot",
+            placement: "primary",
+            visible: aufgebotAvailable,
+          },
           {
             key: "teilnahme",
             label: "Teilnahme",
@@ -125,6 +134,7 @@ export function buildActivityTabNavigationConfig(
           { key: "mehr", label: "Mehr", placement: "overflow", visible: mehrAvailable },
         ],
       };
+    }
 
     case "CLUB_EVENT":
       return {

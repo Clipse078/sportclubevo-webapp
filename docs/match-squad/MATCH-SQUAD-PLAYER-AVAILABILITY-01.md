@@ -348,7 +348,7 @@ Then: **Sponsor Commercial Workflows** → **Mobile App** (club roadmap).
 | 4 | Multiple trainers same squad? | No locking today — 01A should allow concurrent editors with clear conflict policy. |
 | 5 | Publication state? | **Not implemented** — recommend DRAFT vs PUBLISHED on `MatchSquad` (01A can start with DRAFT-only). |
 | 6 | SFV reschedule same identity? | **Same Event.id** on reschedule. |
-| 7 | Tournaments same aggregate? | **Possible** — same pattern keyed by TOURNAMENT `Event` + `teamSeasonId` (01A scope: MATCH only). |
+| 7 | Tournaments same aggregate? | **Adopted (SCE-ACTIVITY-NAV-01 UAT R2)** — `MatchSquad` keyed by TOURNAMENT `Event.id` + Hauptteam `teamSeasonId` (`resolveTournamentSquadEventContext`, `/api/tournamentcenter/{id}/activity-squad`). One squad per event; not per `TournamentParticipant`. Teilnahme remains team-participant management. |
 | 8 | Multiple match requests same player? | **Design yes** at REQUESTED; single winner at approval — **product confirm**. |
 | 9 | Block other requests when? | Recommend at **APPROVED**, not REQUESTED. |
 | 10 | Guardian confirmation mandatory? | **Configurable later** — participation already supports guardian response paths. |
