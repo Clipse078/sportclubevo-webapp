@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Check, Plus, Share2, X } from "lucide-react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
@@ -22,6 +22,7 @@ import {
   presentRosterBirthYearEligibility,
 } from "@/lib/teams/roster-eligibility-presentation";
 import TeamRosterEligibilityNotice from "@/components/admin/teams/roster/TeamRosterEligibilityNotice";
+import PlayerReleasePlanningSheet from "@/components/admin/teams/PlayerReleasePlanningSheet";
 import {
   mapRosterFetchErrorMessage,
   squadMembershipStatusHint,
@@ -130,6 +131,9 @@ export default function TeamSquadManagementCard({
 }: Props) {
   const router = useRouter();
   const activeMembers = teamSeason.playerSquadMembers.filter((m) => m.status === "ACTIVE");
+  const releasableMembers = teamSeason.playerSquadMembers.filter((m) =>
+    ["ACTIVE", "INJURED", "ABSENT"].includes(m.status),
+  );
   const playerCount = activeMembers.length;
 
   const saisonLabel = useMemo(() => {
@@ -165,6 +169,12 @@ export default function TeamSquadManagementCard({
   const [capacityLoading, setCapacityLoading] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignMessage, setAssignMessage] = useState<string | null>(null);
+
+  const [releaseSelectMode, setReleaseSelectMode] = useState(false);
+  const [selectedReleasePersonIds, setSelectedReleasePersonIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [releasePlanningOpen, setReleasePlanningOpen] = useState(false);
 
   const [removeTarget, setRemoveTarget] = useState<SquadMember | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
@@ -403,17 +413,37 @@ export default function TeamSquadManagementCard({
           <p className="mt-0.5 text-sm text-[var(--muted)]">{playerCount} Spieler</p>
         </div>
 
-        {canManage && seasonMutable && playerCount > 0 ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            iconLeft={<Plus className="h-3.5 w-3.5" />}
-            onClick={() => setAddSheetOpen(true)}
-            data-testid="team-squad-add-button"
-          >
-            Spieler hinzufügen
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {canManage && seasonMutable && releasableMembers.length > 0 ? (
+            <Button
+              variant={releaseSelectMode ? "primary" : "secondary"}
+              size="sm"
+              iconLeft={<Share2 className="h-3.5 w-3.5" />}
+              onClick={() => {
+                if (releaseSelectMode) {
+                  setReleaseSelectMode(false);
+                  setSelectedReleasePersonIds(new Set());
+                } else {
+                  setReleaseSelectMode(true);
+                }
+              }}
+              data-testid="team-squad-release-select-toggle"
+            >
+              Für andere Teams freigeben
+            </Button>
+          ) : null}
+          {canManage && seasonMutable && playerCount > 0 ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              iconLeft={<Plus className="h-3.5 w-3.5" />}
+              onClick={() => setAddSheetOpen(true)}
+              data-testid="team-squad-add-button"
+            >
+              Spieler hinzufügen
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {!seasonMutable ? (
@@ -690,12 +720,38 @@ export default function TeamSquadManagementCard({
         </div>
       ) : (
         <div className="mt-4 divide-y divide-[var(--border)]" data-testid="team-squad-list">
-          {teamSeason.playerSquadMembers.map((member) => (
+          {teamSeason.playerSquadMembers.map((member) => {
+            const releasable = ["ACTIVE", "INJURED", "ABSENT"].includes(member.status);
+            const releaseSelected = selectedReleasePersonIds.has(member.person.id);
+            return (
             <div
               key={member.id}
               className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-3">
+                {releaseSelectMode && releasable ? (
+                  <button
+                    type="button"
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded border ${
+                      releaseSelected
+                        ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
+                        : "border-[var(--border)] bg-[var(--surface)]"
+                    }`}
+                    aria-pressed={releaseSelected}
+                    aria-label={`${getPersonName(member.person)} für Freigabe auswählen`}
+                    onClick={() => {
+                      setSelectedReleasePersonIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(member.person.id)) next.delete(member.person.id);
+                        else next.add(member.person.id);
+                        return next;
+                      });
+                    }}
+                    data-testid={`team-squad-release-select-${member.person.id}`}
+                  >
+                    {releaseSelected ? <Check className="h-4 w-4" aria-hidden /> : null}
+                  </button>
+                ) : null}
                 <AdminAvatar name={getPersonName(member.person)} size="md" />
                 <div className="min-w-0">
                   <Link
@@ -743,9 +799,62 @@ export default function TeamSquadManagementCard({
                 ) : null}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
+
+      {releaseSelectMode ? (
+        <div
+          className="sticky bottom-3 z-10 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-sm"
+          data-testid="team-squad-release-action-bar"
+        >
+          <p className="text-sm font-medium text-[var(--text-1)]">
+            {selectedReleasePersonIds.size === 1
+              ? "1 Spieler ausgewählt"
+              : `${selectedReleasePersonIds.size} Spieler ausgewählt`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              iconLeft={<X className="h-3.5 w-3.5" />}
+              onClick={() => {
+                setReleaseSelectMode(false);
+                setSelectedReleasePersonIds(new Set());
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={selectedReleasePersonIds.size === 0}
+              onClick={() => setReleasePlanningOpen(true)}
+              data-testid="team-squad-release-plan-open"
+            >
+              Freigaben planen
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <PlayerReleasePlanningSheet
+        open={releasePlanningOpen}
+        onClose={() => {
+          setReleasePlanningOpen(false);
+          setReleaseSelectMode(false);
+          setSelectedReleasePersonIds(new Set());
+        }}
+        teamId={teamId}
+        teamSeasonId={teamSeason.id}
+        personIds={[...selectedReleasePersonIds]}
+        personLabels={Object.fromEntries(
+          releasableMembers.map((member) => [member.person.id, getPersonName(member.person)]),
+        )}
+        entryPoint="TEAM_KADER"
+        onCompleted={() => router.refresh()}
+      />
     </section>
   );
 }

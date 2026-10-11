@@ -10,6 +10,8 @@ import {
   type TeamSeasonStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+
+type PlayerReleaseDb = Prisma.TransactionClient | typeof prisma;
 import { logAction } from "@/lib/audit/log-action";
 import { currentSeasonRosterPlayerSquadMemberWhere } from "@/lib/teams/player-squad-structural-filter";
 import { formatPersonName } from "@/lib/communication/personalisation/formatters";
@@ -38,6 +40,7 @@ import {
   PLAYER_RELEASE_REASON_OPTIONS,
   playerReleaseReasonLabel,
 } from "@/lib/match-squad/player-release-presentation";
+import { emitTargetedPlayerReleaseAwareness } from "@/lib/match-squad/player-release-awareness-producer";
 
 const MAX_MINUTES_HARD_CAP = 120;
 
@@ -278,16 +281,19 @@ function mapReleaseRow(
   };
 }
 
-async function loadSourceTeamSeasonContext(input: {
-  tenantId: string;
-  teamId: string;
-  teamSeasonId: string;
-}): Promise<{
+async function loadSourceTeamSeasonContext(
+  db: PlayerReleaseDb,
+  input: {
+    tenantId: string;
+    teamId: string;
+    teamSeasonId: string;
+  },
+): Promise<{
   id: string;
   seasonId: string;
   status: TeamSeasonStatus;
 }> {
-  const teamSeason = await prisma.teamSeason.findFirst({
+  const teamSeason = await db.teamSeason.findFirst({
     where: {
       id: input.teamSeasonId,
       teamId: input.teamId,
@@ -301,12 +307,15 @@ async function loadSourceTeamSeasonContext(input: {
   return teamSeason;
 }
 
-async function assertStructuralRosterMember(input: {
-  tenantId: string;
-  sourceTeamSeasonId: string;
-  personId: string;
-}): Promise<void> {
-  const member = await prisma.playerSquadMember.findFirst({
+async function assertStructuralRosterMember(
+  db: PlayerReleaseDb,
+  input: {
+    tenantId: string;
+    sourceTeamSeasonId: string;
+    personId: string;
+  },
+): Promise<void> {
+  const member = await db.playerSquadMember.findFirst({
     where: {
       ...currentSeasonRosterPlayerSquadMemberWhere(input.sourceTeamSeasonId),
       personId: input.personId,
@@ -322,13 +331,16 @@ async function assertStructuralRosterMember(input: {
   }
 }
 
-async function assertTargetTeamSeason(input: {
-  tenantId: string;
-  personId: string;
-  sourceTeamSeasonId: string;
-  sourceSeasonId: string;
-  targetTeamSeasonId: string;
-}): Promise<void> {
+async function assertTargetTeamSeason(
+  db: PlayerReleaseDb,
+  input: {
+    tenantId: string;
+    personId: string;
+    sourceTeamSeasonId: string;
+    sourceSeasonId: string;
+    targetTeamSeasonId: string;
+  },
+): Promise<void> {
   if (input.targetTeamSeasonId === input.sourceTeamSeasonId) {
     throw new PlayerReleaseValidationError(
       "Zielteam muss ein anderes Team als das Stammteam sein.",
@@ -336,7 +348,7 @@ async function assertTargetTeamSeason(input: {
     );
   }
 
-  const target = await prisma.teamSeason.findFirst({
+  const target = await db.teamSeason.findFirst({
     where: {
       id: input.targetTeamSeasonId,
       seasonId: input.sourceSeasonId,
@@ -360,19 +372,22 @@ async function assertTargetTeamSeason(input: {
   });
 }
 
-async function assertNoOverlappingActiveRelease(input: {
-  tenantId: string;
-  personId: string;
-  sourceTeamSeasonId: string;
-  targetTeamSeasonId: string;
-  scope: PlayerReleaseScope;
-  eventId?: string | null;
-  trainingSessionId?: string | null;
-  validFrom: Date;
-  validUntil: Date;
-  excludeReleaseId?: string;
-}): Promise<void> {
-  const candidates = await prisma.playerRelease.findMany({
+async function assertNoOverlappingActiveRelease(
+  db: PlayerReleaseDb,
+  input: {
+    tenantId: string;
+    personId: string;
+    sourceTeamSeasonId: string;
+    targetTeamSeasonId: string;
+    scope: PlayerReleaseScope;
+    eventId?: string | null;
+    trainingSessionId?: string | null;
+    validFrom: Date;
+    validUntil: Date;
+    excludeReleaseId?: string;
+  },
+): Promise<void> {
+  const candidates = await db.playerRelease.findMany({
     where: {
       tenantId: input.tenantId,
       personId: input.personId,
@@ -469,7 +484,7 @@ export async function listPlayerReleasesForSourceTeamSeason(input: {
   timezone: string;
   includeHistory?: boolean;
 }): Promise<{ releases: PlayerReleaseListItem[]; rosterPlayers: PlayerReleaseRosterPlayerOption[] }> {
-  const source = await loadSourceTeamSeasonContext({
+  const source = await loadSourceTeamSeasonContext(prisma, {
     tenantId: input.tenantId,
     teamId: input.teamId,
     teamSeasonId: input.sourceTeamSeasonId,
@@ -547,8 +562,14 @@ export async function createPlayerRelease(input: {
   maxMinutes?: unknown;
   reason: string;
   note?: string | null;
+  awarenessBurstKey?: string | null;
+  targetEventId?: string | null;
+  skipTargetAwareness?: boolean;
+  transactionClient?: Prisma.TransactionClient;
 }): Promise<PlayerReleaseListItem> {
-  const source = await loadSourceTeamSeasonContext({
+  const db: PlayerReleaseDb = input.transactionClient ?? prisma;
+
+  const source = await loadSourceTeamSeasonContext(db, {
     tenantId: input.tenantId,
     teamId: input.teamId,
     teamSeasonId: input.sourceTeamSeasonId,
@@ -569,6 +590,7 @@ export async function createPlayerRelease(input: {
     const activity = await resolvePlayerReleaseActivityContext({
       tenantId: input.tenantId,
       sourceTeamSeasonId: input.sourceTeamSeasonId,
+      targetTeamSeasonId: input.targetTeamSeasonId,
       eventId: input.eventId,
       trainingSessionId: input.trainingSessionId,
     });
@@ -601,13 +623,13 @@ export async function createPlayerRelease(input: {
   const note =
     input.note === null || input.note === undefined ? null : String(input.note).trim() || null;
 
-  await assertStructuralRosterMember({
+  await assertStructuralRosterMember(db, {
     tenantId: input.tenantId,
     sourceTeamSeasonId: input.sourceTeamSeasonId,
     personId,
   });
 
-  await assertTargetTeamSeason({
+  await assertTargetTeamSeason(db, {
     tenantId: input.tenantId,
     personId,
     sourceTeamSeasonId: input.sourceTeamSeasonId,
@@ -615,7 +637,7 @@ export async function createPlayerRelease(input: {
     targetTeamSeasonId: input.targetTeamSeasonId,
   });
 
-  await assertNoOverlappingActiveRelease({
+  await assertNoOverlappingActiveRelease(db, {
     tenantId: input.tenantId,
     personId,
     sourceTeamSeasonId: input.sourceTeamSeasonId,
@@ -627,7 +649,7 @@ export async function createPlayerRelease(input: {
     validUntil,
   });
 
-  const created = await prisma.playerRelease.create({
+  const created = await db.playerRelease.create({
     data: {
       tenantId: input.tenantId,
       personId,
@@ -665,6 +687,17 @@ export async function createPlayerRelease(input: {
       reason,
     },
   });
+
+  if (!input.skipTargetAwareness) {
+    void emitTargetedPlayerReleaseAwareness({
+      tenantId: input.tenantId,
+      sourceTeamSeasonId: input.sourceTeamSeasonId,
+      targetTeamSeasonId: input.targetTeamSeasonId,
+      targetEventId: input.targetEventId ?? eventId,
+      actorUserId: input.actorUserId,
+      awarenessBurstKey: input.awarenessBurstKey,
+    });
+  }
 
   const rosterIds = new Set([personId]);
   return mapReleaseRow(created, {
@@ -725,7 +758,7 @@ export async function updatePlayerRelease(input: {
         : String(input.note).trim() || null
       : existing.note;
 
-  await assertNoOverlappingActiveRelease({
+  await assertNoOverlappingActiveRelease(prisma, {
     tenantId: input.tenantId,
     personId: existing.personId,
     sourceTeamSeasonId: existing.sourceTeamSeasonId,

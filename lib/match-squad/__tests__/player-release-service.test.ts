@@ -39,6 +39,10 @@ vi.mock("@/lib/audit/log-action", () => ({
   logAction: mocks.logAction,
 }));
 
+vi.mock("../player-release-awareness-producer", () => ({
+  emitTargetedPlayerReleaseAwareness: vi.fn(),
+}));
+
 vi.mock("../player-release-target-discovery", () => ({
   assertPlayerReleaseTargetEligible: vi.fn().mockResolvedValue(undefined),
   mapTargetDiscoveryToPickerOptions: vi.fn(),

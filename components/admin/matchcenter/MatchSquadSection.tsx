@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import { Loader2 } from "lucide-react";
 import MatchSquadCountsSummary, {
@@ -8,6 +8,8 @@ import MatchSquadCountsSummary, {
 } from "@/components/admin/matchcenter/MatchSquadCountsSummary";
 import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
 import MatchSquadPlayerList from "@/components/admin/matchcenter/MatchSquadPlayerList";
+import ReleasedPlayersDiscoveryPanel from "@/components/admin/matchcenter/ReleasedPlayersDiscoveryPanel";
+import PlayerReleasePlanningSheet from "@/components/admin/teams/PlayerReleasePlanningSheet";
 import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-squad-presentation-order";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
 import type {
@@ -120,6 +122,9 @@ export default function MatchSquadSection({
   const [version, setVersion] = useState<string>("");
   const [availabilityFilter, setAvailabilityFilter] =
     useState<MatchSquadAvailabilityFilter>("ALL");
+  const [releasePlanningPersonIds, setReleasePlanningPersonIds] = useState<string[] | null>(
+    null,
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -233,6 +238,18 @@ export default function MatchSquadSection({
         }
       : undefined;
 
+  const releasePersonLabels = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const row of [...(data?.selected ?? []), ...(data?.remaining ?? [])]) {
+      map[row.personId] = row.displayName;
+    }
+    return map;
+  }, [data?.remaining, data?.selected]);
+
+  function openReleasePlanner(personId: string) {
+    setReleasePlanningPersonIds([personId]);
+  }
+
   const sectionTestId =
     variant === "tournament" ? "turniere-edit-tournament-squad-section" : "spiele-edit-match-squad-section";
   const squadDescription =
@@ -331,6 +348,7 @@ export default function MatchSquadSection({
                 canMutate={canMutate}
                 onToggle={togglePerson}
                 releaseContext={releaseContext}
+                onOpenReleasePlanner={releaseContext?.canManageRelease ? openReleasePlanner : undefined}
               />
             )}
           </section>
@@ -359,6 +377,7 @@ export default function MatchSquadSection({
                 canMutate={canMutate}
                 onToggle={togglePerson}
                 releaseContext={releaseContext}
+                onOpenReleasePlanner={releaseContext?.canManageRelease ? openReleasePlanner : undefined}
               />
             )}
           </section>
@@ -368,7 +387,31 @@ export default function MatchSquadSection({
               Speichert…
             </p>
           ) : null}
+
+          <ReleasedPlayersDiscoveryPanel
+            eventId={matchId}
+            variant={variant}
+            canMutateSquad={canMutate}
+          />
         </div>
+      ) : null}
+
+      {releaseContext && releasePlanningPersonIds ? (
+        <PlayerReleasePlanningSheet
+          open={releasePlanningPersonIds.length > 0}
+          onClose={() => setReleasePlanningPersonIds(null)}
+          teamId={releaseContext.teamId}
+          teamSeasonId={releaseContext.teamSeasonId}
+          personIds={releasePlanningPersonIds}
+          personLabels={releasePersonLabels}
+          entryPoint="MATCH_AUFGEBOT"
+          sourceEventId={matchId}
+          timeZone={timeZone}
+          onCompleted={() => {
+            setReleasePlanningPersonIds(null);
+            void load();
+          }}
+        />
       ) : null}
     </PlanningEditorParticipantsSection>
   );

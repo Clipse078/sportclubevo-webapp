@@ -3,10 +3,12 @@ import { requireTeamCockpitAccess } from "@/lib/teams/team-cockpit-layout";
 
 type Props = {
   params: Promise<{ teamId: string }>;
+  searchParams: Promise<{ freigegebeneSpieler?: string }>;
 };
 
-export default async function TeamKaderPage({ params }: Props) {
+export default async function TeamKaderPage({ params, searchParams }: Props) {
   const { teamId } = await params;
+  const query = await searchParams;
   const { tenantId, team, canManage, canManagePeople } =
     await requireTeamCockpitAccess(teamId);
 
@@ -20,6 +22,7 @@ export default async function TeamKaderPage({ params }: Props) {
       teamSeasons={team.teamSeasons}
       currentTeamSeasonId={team.currentTeamSeasonId ?? null}
       mode="squad"
+      highlightInboundPlayerReleases={query.freigegebeneSpieler === "1"}
     />
   );
 }

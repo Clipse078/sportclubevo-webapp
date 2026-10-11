@@ -1,4 +1,5 @@
 ﻿import TeamSquadManagementCard from "@/components/admin/teams/TeamSquadManagementCard";
+import TeamInboundPlayerReleaseSection from "@/components/admin/teams/TeamInboundPlayerReleaseSection";
 import TeamPlayerReleaseSection from "@/components/admin/teams/TeamPlayerReleaseSection";
 import TeamTrainerRosterSection from "@/components/admin/teams/TeamTrainerRosterSection";
 import {
@@ -18,6 +19,7 @@ type Props = {
   teamSeasons: TeamRosterSeasonEntry[];
   currentTeamSeasonId: string | null;
   mode?: RosterMode;
+  highlightInboundPlayerReleases?: boolean;
 };
 
 function sortTeamSeasonsDesc(entries: TeamRosterSeasonEntry[]) {
@@ -37,6 +39,7 @@ export default async function TeamRosterOverviewCard({
   teamSeasons,
   currentTeamSeasonId,
   mode = "all",
+  highlightInboundPlayerReleases = false,
 }: Props) {
   const showSquad = mode === "all" || mode === "squad";
   const showTrainer = mode === "all" || mode === "trainer";
@@ -67,6 +70,11 @@ export default async function TeamRosterOverviewCard({
         >
           {showSquad ? (
             <div className="space-y-6">
+              <TeamInboundPlayerReleaseSection
+                teamId={teamId}
+                teamSeasonId={currentSeason.id}
+                highlightFromDeepLink={highlightInboundPlayerReleases}
+              />
               <TeamSquadManagementCard
                 teamId={teamId}
                 canManage={canManage}

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import {
   resolvePlayerReleaseAccess,
+  resolvePlayerReleaseTargetViewAccess,
   type PlayerReleaseAccess,
 } from "@/lib/match-squad/player-release-auth";
 import { PlayerReleaseError } from "@/lib/match-squad/player-release-errors";
@@ -75,5 +76,53 @@ export async function resolvePlayerReleaseRouteAccess(input: {
     tenant: { id: tenant.id, key: tenant.key, timezone: tenant.timezone ?? "Europe/Zurich" },
     userId,
     access,
+  };
+}
+
+export async function resolveInboundPlayerReleaseRouteAccess(input: {
+  teamId: string;
+  teamSeasonId: string;
+}): Promise<
+  | {
+      ok: true;
+      tenant: { id: string; key: string; timezone: string | null };
+      userId: string;
+      canView: boolean;
+    }
+  | { ok: false; response: NextResponse }
+> {
+  const session = await auth();
+  if (!session?.user) {
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  const tenant = await getActiveTenant();
+  if (!tenant) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Tenant context required" }, { status: 400 }),
+    };
+  }
+
+  const userId = session.user.effectiveUserId ?? session.user.id;
+  const canView = await resolvePlayerReleaseTargetViewAccess({
+    userId,
+    tenantId: tenant.id,
+    tenantKey: tenant.key,
+    targetTeamSeasonId: input.teamSeasonId,
+  });
+
+  if (!canView) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Keine Berechtigung." }, { status: 403 }),
+    };
+  }
+
+  return {
+    ok: true,
+    tenant: { id: tenant.id, key: tenant.key, timezone: tenant.timezone ?? "Europe/Zurich" },
+    userId,
+    canView,
   };
 }

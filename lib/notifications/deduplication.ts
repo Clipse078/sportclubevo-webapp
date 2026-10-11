@@ -147,9 +147,22 @@ export function buildParticipationOverdueDedupKey(input: {
   return `participation-overdue:${input.tenantId}:${input.personId}:${input.kind}:${input.entityId}:${input.recipientUserId}:${input.dueAtIso}`;
 }
 
+export function buildPlayerReleaseTargetedAwarenessDedupKey(input: {
+  sourceTeamSeasonId: string;
+  targetTeamSeasonId: string;
+  recipientUserId: string;
+  aggregationBucket: string;
+  targetEventId?: string | null;
+}): string {
+  const activityPart = input.targetEventId?.trim()
+    ? `:event:${input.targetEventId.trim()}`
+    : "";
+  return `PLAYER_RELEASE_TARGETED:${input.sourceTeamSeasonId}:${input.targetTeamSeasonId}${activityPart}:${input.recipientUserId}:${input.aggregationBucket}`;
+}
+
 export function notificationTypeCategory(
   type: NotificationType,
-): "TASK" | "PARTICIPATION" | "REQUIREMENT" | "COMMUNICATION" {
+): "TASK" | "PARTICIPATION" | "REQUIREMENT" | "COMMUNICATION" | "MATCH_SQUAD" {
   if (type === "PARTICIPATION_REMINDER" || type === "PARTICIPATION_OVERDUE") {
     return "PARTICIPATION";
   }
@@ -172,6 +185,9 @@ export function notificationTypeCategory(
     type === "REQUIREMENT_CANCELLED"
   ) {
     return "REQUIREMENT";
+  }
+  if (type === "PLAYER_RELEASE_TARGETED") {
+    return "MATCH_SQUAD";
   }
   return "TASK";
 }
