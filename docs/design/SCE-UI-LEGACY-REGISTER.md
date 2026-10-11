@@ -90,6 +90,24 @@
 
 ---
 
+## Control-level legacy backlog (not in register totals)
+
+Separate from the **28** inventory rows above. Tracks **binary-setting checkboxes** that should migrate to `SwitchToggle` per [`SCE-DESIGN-SYSTEM.md`](./SCE-DESIGN-SYSTEM.md) (**Toggle First**).
+
+| Policy | Detail |
+|--------|--------|
+| **Scope** | Legacy **settings** checkboxes only — not table row selection, bulk pickers, or third-party primitives |
+| **When to migrate** | During the owning SCE-UI-ROLLOUT adoption package or **01N** cleanup |
+| **01B closure** | Rule documented + compliance gate; **no** product-wide checkbox replacement in 01B |
+| **Counting** | Do **not** add these rows to **TOTAL 28 / MUST_MIGRATE 22** unless a future inventory pass explicitly rebaselines the register |
+
+Known examples (non-exhaustive; expand during domain adoptions):
+
+- Communication composer “review before send” confirmation checkbox (semantic: confirm action — evaluate radio/confirm pattern vs toggle during Comm UX hardening)
+- Legacy admin permission read-only switches displayed as non-canonical controls (see People & Access docs)
+
+---
+
 ## Usage
 
 When closing **01N**, every **MUST_MIGRATE** row must be **RESOLVED** (migrated) or **JUSTIFIED** with PO sign-off and ADR update.

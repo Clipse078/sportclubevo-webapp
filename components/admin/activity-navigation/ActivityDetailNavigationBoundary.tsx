@@ -1,9 +1,8 @@
 "use client";
 
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { ActivityTabNavigationConfig } from "@/lib/activity-navigation/types";
-import { ActivityDetailTabProvider } from "@/lib/activity-navigation/use-activity-detail-tab";
-import ActivityDetailNavigation from "./ActivityDetailNavigation";
+import SceContextTabsBoundary from "@/components/sce/context-tabs/SceContextTabsBoundary";
 
 type Props = {
   config: ActivityTabNavigationConfig;
@@ -22,18 +21,13 @@ export default function ActivityDetailNavigationBoundary({
   children,
 }: Props) {
   return (
-    <Suspense
-      fallback={
-        <div
-          className="h-11 border-b border-[var(--border)]"
-          data-testid={testId ? `${testId}-loading` : "activity-detail-nav-loading"}
-        />
-      }
+    <SceContextTabsBoundary
+      config={config}
+      ariaLabel={ariaLabel}
+      testId={testId}
+      idPrefix="activity-tab"
     >
-      <ActivityDetailTabProvider config={config}>
-        <ActivityDetailNavigation ariaLabel={ariaLabel} testId={testId} config={config} />
-        {children}
-      </ActivityDetailTabProvider>
-    </Suspense>
+      {children}
+    </SceContextTabsBoundary>
   );
 }

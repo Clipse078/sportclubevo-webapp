@@ -1,7 +1,7 @@
 # SCE Context Tabs Standard
 
 > **Programme:** SCE-UI-ROLLOUT-01+  
-> **Implementation gate:** **01B** (this document is the contract)  
+> **Implementation gate:** **01B** (implemented — see [`SCE-UI-ROLLOUT-01B.md`](../roadmap/SCE-UI-ROLLOUT-01B.md))  
 > **Foundation:** [`SCE-ACTIVITY-NAV-01`](../activity-navigation/SCE-ACTIVITY-NAV-01.md) (**CLOSED**)
 
 ---
@@ -38,23 +38,25 @@ Future eligible domains (e.g. Team detail) may use domain-specific labels (Über
 
 ---
 
-## 2. Existing canonical implementation (evolve in 01B)
+## 2. Canonical implementation (01B)
 
 | Concern | Location |
 |---------|----------|
-| Types & tab keys | `lib/activity-navigation/types.ts` |
-| Tab matrices | `lib/activity-navigation/configs.ts` — `buildActivityTabNavigationConfig` |
-| URL / deep link | `lib/activity-navigation/url.ts` — `?tab=` |
-| Active tab state | `lib/activity-navigation/use-activity-detail-tab.tsx` |
-| Dirty guard | `lib/activity-navigation/ActivityDirtyNavigationContext.tsx` |
-| Panel visibility | `lib/activity-navigation/ActivityTabPanel.tsx` |
-| UI | `components/admin/activity-navigation/ActivityDetailNavigation.tsx` |
-| Provider boundary | `ActivityDetailNavigationBoundary.tsx` |
+| **Generic contract** | `lib/context-tabs/types.ts`, `registry.ts`, `url.ts` |
+| **Entry point** | `lib/context-tabs/index.ts` |
+| Tab matrices (activity) | `lib/activity-navigation/configs.ts` — `buildActivityTabNavigationConfig` |
+| URL / deep link | `buildContextTabHref` / `resolveContextTabFromSearchParams`; activity aliases in `lib/activity-navigation/url.ts` |
+| Active tab state | `SceContextTabProvider`, `useContextDetailTab` |
+| Dirty guard | `SceContextDirtyGuardProvider` |
+| Panel | `SceContextTabPanel` (activity wrapper: `ActivityTabPanel`) |
+| UI | `components/sce/context-tabs/SceContextTabs.tsx` |
+| Boundary | `components/sce/context-tabs/SceContextTabsBoundary.tsx` |
+| Activity compatibility | `ActivityDetailNavigation.tsx`, `ActivityDetailNavigationBoundary.tsx` |
 | Layout class | `SCE_ACTIVITY_NAV_TABLIST_CLASS` in `lib/sce/workspace/sce-workspace-layout.ts` |
 
 **Visual reference:** `TeamCockpitNav` (route-based sibling pattern).
 
-**Do not** introduce parallel primitives unless extracted from the above with identical behaviour.
+**Do not** introduce parallel tab frameworks; extend `lib/context-tabs`.
 
 ---
 
@@ -108,13 +110,14 @@ Future eligible domains (e.g. Team detail) may use domain-specific labels (Über
 
 ### 3.8 Keyboard & ARIA
 
-| Requirement | Current / target |
-|-------------|------------------|
-| Tablist | `role="tablist"` on primary row |
-| Tab | `role="tab"`, `aria-selected`, `aria-controls` → panel id |
-| Panel | `ActivityTabPanel` — `role="tabpanel"`, `aria-labelledby` |
-| Arrow keys | **Gap:** 01B should add roving tabindex / arrow navigation per WAI-ARIA tabs pattern |
-| Mehr menu | `role="menu"` on overflow — not tablist; document as menu pattern |
+| Requirement | Behaviour (01B) |
+|-------------|-----------------|
+| Tablist | `role="tablist"`, `aria-orientation="horizontal"` on primary row |
+| Tab | `role="tab"`, roving `tabIndex`, `aria-selected`, `aria-controls` → panel id |
+| Panel | `SceContextTabPanel` — `role="tabpanel"`, `aria-labelledby` |
+| Arrow keys | **Implemented:** ArrowLeft/ArrowRight cycle primary tabs; **automatic activation** (router navigation, same as click) |
+| Home / End | First / last primary tab |
+| Mehr menu | `role="menu"` / `menuitem` — not part of tablist arrow cycle |
 
 ### 3.9 Badges / counts
 
@@ -138,21 +141,19 @@ Future eligible domains (e.g. Team detail) may use domain-specific labels (Über
 
 ---
 
-## 5. Target extraction (01B — names indicative)
+## 5. Registry pattern (implemented)
 
-Prefer **rename/export** from existing modules:
-
-- Registry: extend `buildActivityTabNavigationConfig` pattern for non-activity entities.
-- Dirty guard: keep `ActivityDirtyNavigationContext`.
-- Optional future export names: `SceContextTabs` = `ActivityDetailNavigation` evolution.
+- Generic lists: `listVisiblePrimaryTabs`, `listVisibleOverflowTabs`, `listAllVisibleTabs` in `lib/context-tabs/registry.ts`.
+- Activity: `buildActivityTabNavigationConfig` supplies domain tab matrices from capability flags.
+- Non-activity example: `lib/context-tabs/fixtures/example-team-context-tabs.ts`.
 
 ---
 
-## 6. Accessibility gaps (recorded)
+## 6. Accessibility gaps (remaining)
 
-1. Arrow-key tab navigation not implemented on activity nav.
-2. Overflow **Mehr** uses `<details>` — document focus trap behaviour.
-3. Deep-link focus: no move-focus-to-panel on tab change (01M candidate).
+1. ~~Arrow-key tab navigation~~ — **closed in 01B** on `SceContextTabs`.
+2. Overflow **Mehr** uses `<details>` — focus trap behaviour documented; full audit in **01M**.
+3. Deep-link focus: no move-focus-to-panel on tab change (**01M** candidate).
 
 ---
 

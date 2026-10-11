@@ -1,3 +1,8 @@
+import {
+  listAllVisibleTabs,
+  listVisibleOverflowTabs,
+  listVisiblePrimaryTabs,
+} from "@/lib/context-tabs/registry";
 import type { ActivityNavigationKind, ActivityTabNavigationConfig } from "./types";
 
 export type ActivityTabVisibilityInput = {
@@ -18,10 +23,6 @@ export type ActivityTabVisibilityInput = {
   mehrAvailable?: boolean;
 };
 
-function visible(def: { visible?: boolean }): boolean {
-  return def.visible !== false;
-}
-
 /**
  * Builds the tab matrix for an activity detail workspace after diagnosis.
  * Callers pass capability flags; tabs with no meaningful destination stay hidden.
@@ -37,6 +38,7 @@ export function buildActivityTabNavigationConfig(
   switch (input.kind) {
     case "TRAINING":
       return {
+        contextKind: "TRAINING",
         kind: "TRAINING",
         defaultTab: "uebersicht",
         tabs: [
@@ -67,6 +69,7 @@ export function buildActivityTabNavigationConfig(
       const aufgebotAvailable = input.matchSquadAvailable === true;
       const spielbetriebAvailable = input.spielbetriebAvailable !== false;
       return {
+        contextKind: "MATCH",
         kind: "MATCH",
         defaultTab: "uebersicht",
         tabs: [
@@ -103,6 +106,7 @@ export function buildActivityTabNavigationConfig(
     case "TOURNAMENT": {
       const aufgebotAvailable = input.tournamentSquadAvailable === true;
       return {
+        contextKind: "TOURNAMENT",
         kind: "TOURNAMENT",
         defaultTab: "uebersicht",
         tabs: [
@@ -138,6 +142,7 @@ export function buildActivityTabNavigationConfig(
 
     case "CLUB_EVENT":
       return {
+        contextKind: "CLUB_EVENT",
         kind: "CLUB_EVENT",
         defaultTab: "uebersicht",
         tabs: [
@@ -171,14 +176,4 @@ export function buildActivityTabNavigationConfig(
   }
 }
 
-export function listVisiblePrimaryTabs(config: ActivityTabNavigationConfig) {
-  return config.tabs.filter((t) => t.placement === "primary" && visible(t));
-}
-
-export function listVisibleOverflowTabs(config: ActivityTabNavigationConfig) {
-  return config.tabs.filter((t) => t.placement === "overflow" && visible(t));
-}
-
-export function listAllVisibleTabs(config: ActivityTabNavigationConfig) {
-  return config.tabs.filter(visible);
-}
+export { listVisiblePrimaryTabs, listVisibleOverflowTabs, listAllVisibleTabs };
