@@ -34,8 +34,10 @@ ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created vi
 
 | Field | Value |
 |-------|-------|
+| **Package status** | **CLOSED** (PR **#825** → STAGE, 2026-10-11) |
 | **New agent-seeded rows** | **None required** — reuse SCE Testspieler 01–06 + PO-created `PlayerRelease` rows from 01C UAT (B1 → B2). |
 | **Optional 01D UAT** | Create bounded `PlayerReleaseRequest` via Match Aufgebot UI; tag any agent-created rows here with `CLEANUP_STATUS = RETAINED_FOR_01F`. |
+| **Closure cleanup** | **Do not** delete SCE Testspieler 01–06 or bounded fixtures — required for **01E** / **01F**. |
 
 ## 01D Human UAT R2 — STAGE preparation (2026-10-11)
 

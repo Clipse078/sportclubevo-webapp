@@ -4,9 +4,11 @@
 |-------|-------|
 | **Package** | Cross-Team Discovery, Request & Approval |
 | **Canonical key** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01D` |
-| **Status** | **IN PROGRESS** (implementation on STAGE preview branch) |
-| **Branch** | `cursor/match-squad-player-availability-01d-3805` |
-| **Base** | `STAGE` @ `21086013390bcb88d8f9d03c1752108b0c5d5da9` |
+| **Status** | **CLOSED** (merged to STAGE via PR **#825**) |
+| **Branch** | `cursor/match-squad-player-availability-01d-3805` (historical) |
+| **Base (pre-merge)** | `STAGE` @ `21086013390bcb88d8f9d03c1752108b0c5d5da9` |
+| **Feature HEAD (merge)** | `587a7e2ab902e1a583d19fe8e803e3fe1168d3fa` |
+| **Closure** | 2026-10-11 · PO UAT **PASS** · regression **NEW_FAILURES = 0** · build **PASS** |
 
 ---
 
@@ -134,7 +136,7 @@ STOP — assignment & communication belong to 01E
 | **Activity discovery** | Includes canonical MATCH/TOURNAMENT rows keyed by `teamId` + `seasonId` when `teamSeasonId` is null (STAGE league imports). |
 | **Awareness (R2)** | Aggregated **per target activity** — B2 Match A notification does not mention A2 Match B. Dedup key includes `eventId`. Deep link prefers Match/Tournament center route. |
 | **Discovery** | Activity-scoped releases match only their `eventId`; **PERIOD** releases unchanged. |
-| **Status** | **01D R1 UAT = PASS** · **01D R2 Kader UAT = PASS** · **01D R2.1 = PASS (functionally)** · **01D R2.2 team-first hierarchy = READY FOR PO UAT** |
+| **Status** | **01D R1 UAT = PASS** · **01D R2 UAT = PASS** · **01D R2.1 UAT = PASS** · **01D R2.2 UAT = PASS** · **PO_UAT = PASS** |
 
 ## 7c. Uniform Match + Kader release planner (01D R2.1)
 
@@ -223,6 +225,97 @@ Scan: `scripts/match-squad-01d-r2-uat-readiness.ts` · fixture/cleanup: `scripts
 
 ---
 
-## 10. Test data ledger
+## 10. Canonical entry points (final)
 
-See `docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md` — 01D may add bounded `PlayerRelease` / `PlayerReleaseRequest` rows tagged for 01F cleanup.
+| Entry | Route / action | Planner | Notes |
+|-------|----------------|---------|-------|
+| **A — Kader** | Team → **Kader** → multi-select → **Freigaben planen** / **Für andere Teams freigeben** | `PlayerReleasePlanningSheet` | No source Match; activities in chronological order within each target team. |
+| **B — Match Aufgebot** | Match → **Aufgebot** → **Freigeben** | `PlayerReleasePlanningSheet` | `sourceEventId` + Match context banner; target activities ranked by proximity to source match, then chronology. |
+
+Both entry points share: candidate resolution, eligibility, conflict hints, selection state, conditions, plan validation, transactional batch persistence, target awareness, review, and confirmation.
+
+**Legacy:** `PlayerReleaseEditorSheet` remains only for **training** and **generic planning-editor** activity rows via `ActivityPlayerReleaseButton`, plus **single-release edit** in `TeamPlayerReleaseSection` — not Match Aufgebot release planning.
+
+---
+
+## 11. Human UAT — final PO sign-off (2026-10-11)
+
+| Round | Scope | Result |
+|-------|-------|--------|
+| **R1** | Target trainer-team release awareness | **PASS** |
+| **R2** | Multi-player / multi-team / multi-activity Kader planning | **PASS** |
+| **R2.1** | Uniform Match + Kader `PlayerReleasePlanningSheet` | **PASS** |
+| **R2.2** | Team-first target activity selection (master → detail → master) | **PASS** |
+| **Overall** | **PO_UAT** | **PASS** |
+
+Accepted UX hierarchy:
+
+```text
+PLAYER(S)
+  → TARGET TEAM
+  → TARGET ACTIVITY / ACTIVITIES
+  → OPTIONAL NEXT TARGET TEAM
+  → REVIEW
+  → CONFIRM
+```
+
+---
+
+## 12. Product invariants (final)
+
+| Signal / action | Independent of |
+|-----------------|----------------|
+| Availability | Selection |
+| Selection | Release |
+| Release | Request |
+| Request | Approval |
+| Approval | Assignment |
+
+German operational labels (unchanged):
+
+- `NOT_SELECTED ≠ RELEASED`
+- `SELECTED ≠ NOT RELEASABLE`
+- `Freigegeben ≠ Einsatzberechtigt`
+- `Freigegeben ≠ Angefragt`
+- `Angefragt ≠ Genehmigt`
+- `Genehmigt ≠ Zugewiesen`
+
+**01D stops at APPROVED REQUEST.** No `MatchSquadMember` creation, no target Aufgebot mutation, no guardian/player assignment communication — those belong to **01E**.
+
+---
+
+## 13. Closure verification
+
+| Gate | Result |
+|------|--------|
+| Automated regression (01C/01D/match-squad battery) | **153 passed**, **NEW_FAILURES = 0** |
+| `TeamPlayerReleaseSection.test.tsx` | **4 passed** (requests-panel fetch mock + defensive `requests ?? []`) |
+| Known STAGE baseline (e.g. `MatchcenterDetail` jsdom suite) | Reproduced on `origin/STAGE` — not counted as 01D regressions |
+| Build | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` — **PASS** |
+| Migrations | `20261011120000_match_squad_player_availability_01d_release_request` + `20261011130000_match_squad_player_availability_01d_r1_target_awareness` only; **no R2/R2.1/R2.2 schema migration** |
+| PROD | **Untouched** |
+
+---
+
+## 14. Roadmap (post-01D)
+
+| Package | Status |
+|---------|--------|
+| 01A | CLOSED |
+| 01B | CLOSED |
+| 01C | CLOSED |
+| MATCH_SQUAD_AVAILABILITY_SORTING-01 | CLOSED |
+| SCE-ACTIVITY-NAV-01 | CLOSED |
+| SCE-UI-STANDARD-01 | Foundation established / first adoption complete |
+| **01D** | **CLOSED** |
+| **01E** | **NEXT** — input: approved 01D request → actual target assignment + operational communication/confirmation |
+| 01F | PLANNED |
+| Sponsor Commercial Workflows | After 01F |
+| Mobile App | After Sponsor |
+| SCE-UI-ROLLOUT-01+ | Parallel / incremental — not a blocker for 01E |
+
+---
+
+## 15. Test data ledger
+
+See `docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md` — SCE Testspieler **01–06** and bounded fixtures **retained** for 01E/01F; final module cleanup remains **01F**.
