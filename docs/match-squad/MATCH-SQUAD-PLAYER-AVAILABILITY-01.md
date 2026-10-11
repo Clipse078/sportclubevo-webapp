@@ -271,6 +271,7 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 | **01A** | Match Squad Foundation — Saison-Kader + existing availability + trainer Match selection | **CLOSED** (§27) |
 | **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **CLOSED** (§30) |
 | **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **CLOSED** (§39) |
+| **MATCH_SQUAD_AVAILABILITY_SORTING-01** | Match Squad availability presentation ordering within AUFGEBOTEN / WEITERE KADERSPIELER | **CLOSED** (§44) |
 | **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **NEXT** (§40) |
 | **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **PLANNED — AFTER SCE-ACTIVITY-NAV-01** (§28) |
 | **01E** | Assignment & Communication — operational assignment + inform audiences | **PLANNED** |
@@ -759,6 +760,7 @@ Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[
 | **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
 | **01B** | **CLOSED** — PR **#821** → merged to `STAGE` (see §30) |
 | **01C implementation** | **CLOSED** — PR **#822** → merged to `STAGE` (see §39) |
+| **MATCH_SQUAD_AVAILABILITY_SORTING-01** | **CLOSED** — PR **#823** → merged to `STAGE` (see §44) |
 
 ### Canonical 01A product model (locked)
 
@@ -1549,6 +1551,38 @@ Selected + unavailable players stay selected with existing conflict semantics; s
 
 | Field | Value |
 |-------|--------|
-| Match (STAGE) | `cmrzhj3je006a04kwhbepxvdz` |
-| Status | **READY_FOR_PO_UAT** (awaiting PO visual pass on preview) |
-| Expected remaining order (among current states) | SCE Testspieler 05 (Offen) before SCE Testspieler 02/03 (Nicht verfügbar) |
+| Match (STAGE preview) | `cmrzhj3je006a04kwhbepxvdz` |
+| **HUMAN_UAT** | **PASS** |
+| **PO_APPROVED** | **YES** |
+| **MERGE_ALLOWED** | **YES** (executed at closure) |
+
+**AUFGEBOTEN (observed):** SCE Testspieler 06 — Verfügbar; SCE Testspieler 04 — Unsicher; SCE Testspieler 01 — Offen → canonical order Verfügbar → Unsicher → Offen → Nicht verfügbar — **PASS**.
+
+**WEITERE KADERSPIELER (observed):** SCE Testspieler 05 — Offen; SCE Testspieler 02 — Nicht verfügbar; SCE Testspieler 03 — Nicht verfügbar → Offen before Nicht verfügbar — **PASS** (original PO finding corrected).
+
+**Group boundary:** AUFGEBOTEN and WEITERE KADERSPIELER remained separate; no player moved between groups — **PASS**.
+
+**Action colors:** Aufbieten → SCE orange/accent; Entfernen → neutral/slate; Freigeben → neutral/slate; availability badges retain semantic status colors — **PASS**.
+
+Historical 01C UAT records (§32–§38) are unchanged; this section records sorting-package UAT only.
+
+### Closure (MATCH_SQUAD_AVAILABILITY_SORTING-01)
+
+| Field | Value |
+|-------|--------|
+| **Package status** | **CLOSED** |
+| **Implementation PR** | **#823** → merged to **`STAGE`** |
+| **Branch** | `cursor/match-squad-availability-status-sorting-9309` |
+| **STAGE base (pre-sorting)** | `7068205e360d172614fd1f4dfa41fcd1d7128ac7` |
+| **Feature HEAD (pre-merge)** | `b4d62c5354622c443020ba69b49489500f7fb787` |
+| **PRESENTATION_ONLY** | **YES** |
+| **DOMAIN_CHANGE** | **NO** |
+| **SCHEMA_CHANGE** | **NO** |
+| **MIGRATION** | **NO** |
+| **01C_REOPENED** | **NO** |
+| **Regression battery** | **PASS** for sorting scope; known Matchcenter `view-model` / `management-view` baseline failures unchanged vs canonical STAGE (no new failures from #823) |
+| **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| **PROD** | **Not targeted** |
+| **Test data** | SCE Testspieler 01–06 **retained** for 01D–01F; `TEST_DATA_REMAINING = 0` at parent module closure only |
+
+**Original visual regression:** remaining-group Offen vs Nicht verfügbar ordering — **resolved**.
