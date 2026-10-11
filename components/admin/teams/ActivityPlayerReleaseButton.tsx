@@ -5,6 +5,7 @@ import { Share2 } from "lucide-react";
 import PlayerReleaseEditorSheet, {
   type PlayerReleaseEditorContext,
 } from "@/components/admin/teams/PlayerReleaseEditorSheet";
+import { OPERATIONAL_ACTION_NEUTRAL_COMPACT_CLASS } from "@/components/ui/operational-action-button-classes";
 
 type Props = {
   teamId: string;
@@ -40,7 +41,7 @@ export default function ActivityPlayerReleaseButton({
         type="button"
         disabled={disabled}
         onClick={() => setOpen(true)}
-        className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-3)] disabled:opacity-50"
+        className={OPERATIONAL_ACTION_NEUTRAL_COMPACT_CLASS}
         data-testid={testId ?? `player-release-action-${personId}`}
         aria-label={`${personDisplayName} für anderes Team freigeben`}
       >

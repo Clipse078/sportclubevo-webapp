@@ -1354,3 +1354,19 @@ Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-rele
 | **Match** | Event `cmrzhj3je006a04kwhbepxvdz` → Aufgebot → **Freigeben** → same targets for same player/source |
 | **Training** | Trainings → Termin → **Teilnahme** → **Freigeben** |
 | **Tournament** | Turnier → **Teilnahmen** → **Freigeben** |
+
+---
+
+## 37. Pre-merge action color correction (PR **#822**, 2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **PRE_MERGE_ACTION_COLOR_CORRECTION** | **PASS** |
+| **Rule** | **Status colors** = availability/lifecycle state; **action colors** = reversible operational interaction |
+| **Aufbieten** | SCE orange/gold accent outline (`OPERATIONAL_ACTION_ACCENT_CLASS`) — **not** green |
+| **Entfernen** | Neutral slate secondary (`OPERATIONAL_ACTION_NEUTRAL_CLASS`) — **not** red |
+| **Freigeben** | Neutral compact secondary (`OPERATIONAL_ACTION_NEUTRAL_COMPACT_CLASS`) — shared with training/tournament/match activity rows |
+| **Unchanged** | `MatchAvailabilityStatusBadge` and all availability/status pills (Verfügbar, Nicht verfügbar, Unsicher, Offen, …) |
+| **Shared module** | `components/ui/operational-action-button-classes.ts` |
+| **Tests** | `operational-action-button-classes.test.ts`, `MatchSquadPlayerRow.test.tsx`, `ActivityPlayerReleaseButton.test.tsx` |
+| **Destructive `Button variant="danger"`** | Unchanged for true delete/irreversible flows elsewhere |
