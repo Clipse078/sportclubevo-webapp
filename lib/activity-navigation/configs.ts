@@ -1,0 +1,174 @@
+import type { ActivityNavigationKind, ActivityTabNavigationConfig } from "./types";
+
+export type ActivityTabVisibilityInput = {
+  kind: ActivityNavigationKind;
+  /** Match: integrated Aufgebot workspace available. */
+  matchSquadAvailable?: boolean;
+  /** Match / tournament: participation surfaces available (not cancelled). */
+  participationAvailable?: boolean;
+  /** Collaboration host mounted and user can open section. */
+  communicationAvailable?: boolean;
+  /** Planung / work surfaces (tasks, resources planning). */
+  planningAvailable?: boolean;
+  /** Spielbetrieb operational editor (match). */
+  spielbetriebAvailable?: boolean;
+  /** Overflow destinations (publication, technical metadata, …). */
+  mehrAvailable?: boolean;
+};
+
+function visible(def: { visible?: boolean }): boolean {
+  return def.visible !== false;
+}
+
+/**
+ * Builds the tab matrix for an activity detail workspace after diagnosis.
+ * Callers pass capability flags; tabs with no meaningful destination stay hidden.
+ */
+export function buildActivityTabNavigationConfig(
+  input: ActivityTabVisibilityInput,
+): ActivityTabNavigationConfig {
+  const participationAvailable = input.participationAvailable !== false;
+  const communicationAvailable = input.communicationAvailable !== false;
+  const planningAvailable = input.planningAvailable !== false;
+  const mehrAvailable = input.mehrAvailable !== false;
+
+  switch (input.kind) {
+    case "TRAINING":
+      return {
+        kind: "TRAINING",
+        defaultTab: "uebersicht",
+        tabs: [
+          { key: "uebersicht", label: "Übersicht", placement: "primary", visible: true },
+          {
+            key: "teilnahme",
+            label: "Teilnahme",
+            placement: "primary",
+            visible: participationAvailable,
+          },
+          {
+            key: "planung",
+            label: "Planung",
+            placement: "primary",
+            visible: planningAvailable,
+          },
+          {
+            key: "kommunikation",
+            label: "Kommunikation",
+            placement: "primary",
+            visible: communicationAvailable,
+          },
+          { key: "mehr", label: "Mehr", placement: "overflow", visible: mehrAvailable },
+        ],
+      };
+
+    case "MATCH": {
+      const aufgebotAvailable = input.matchSquadAvailable === true;
+      const spielbetriebAvailable = input.spielbetriebAvailable !== false;
+      return {
+        kind: "MATCH",
+        defaultTab: "uebersicht",
+        tabs: [
+          { key: "uebersicht", label: "Übersicht", placement: "primary", visible: true },
+          {
+            key: "aufgebot",
+            label: "Aufgebot",
+            placement: "primary",
+            visible: aufgebotAvailable,
+          },
+          {
+            key: "teilnahme",
+            label: "Teilnahme",
+            placement: "primary",
+            visible: participationAvailable,
+          },
+          {
+            key: "spielbetrieb",
+            label: "Spielbetrieb",
+            placement: "primary",
+            visible: spielbetriebAvailable,
+          },
+          {
+            key: "kommunikation",
+            label: "Kommunikation",
+            placement: "primary",
+            visible: communicationAvailable,
+          },
+          { key: "mehr", label: "Mehr", placement: "overflow", visible: mehrAvailable },
+        ],
+      };
+    }
+
+    case "TOURNAMENT":
+      return {
+        kind: "TOURNAMENT",
+        defaultTab: "uebersicht",
+        tabs: [
+          { key: "uebersicht", label: "Übersicht", placement: "primary", visible: true },
+          {
+            key: "teilnahme",
+            label: "Teilnahme",
+            placement: "primary",
+            visible: participationAvailable,
+          },
+          {
+            key: "planung",
+            label: "Planung",
+            placement: "primary",
+            visible: planningAvailable,
+          },
+          {
+            key: "kommunikation",
+            label: "Kommunikation",
+            placement: "primary",
+            visible: communicationAvailable,
+          },
+          { key: "mehr", label: "Mehr", placement: "overflow", visible: mehrAvailable },
+        ],
+      };
+
+    case "CLUB_EVENT":
+      return {
+        kind: "CLUB_EVENT",
+        defaultTab: "uebersicht",
+        tabs: [
+          { key: "uebersicht", label: "Übersicht", placement: "primary", visible: true },
+          {
+            key: "teilnahme",
+            label: "Teilnahme",
+            placement: "primary",
+            visible: participationAvailable,
+          },
+          {
+            key: "planung",
+            label: "Planung",
+            placement: "primary",
+            visible: planningAvailable,
+          },
+          {
+            key: "kommunikation",
+            label: "Kommunikation",
+            placement: "primary",
+            visible: communicationAvailable,
+          },
+          { key: "mehr", label: "Mehr", placement: "overflow", visible: mehrAvailable },
+        ],
+      };
+
+    default: {
+      const _exhaustive: never = input.kind;
+      return _exhaustive;
+    }
+  }
+}
+
+export function listVisiblePrimaryTabs(config: ActivityTabNavigationConfig) {
+  return config.tabs.filter((t) => t.placement === "primary" && visible(t));
+}
+
+export function listVisibleOverflowTabs(config: ActivityTabNavigationConfig) {
+  return config.tabs.filter((t) => t.placement === "overflow" && visible(t));
+}
+
+export function listAllVisibleTabs(config: ActivityTabNavigationConfig) {
+  return config.tabs.filter(visible);
+}
