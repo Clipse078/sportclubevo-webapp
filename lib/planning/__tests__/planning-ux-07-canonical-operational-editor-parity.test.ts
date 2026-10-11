@@ -7,9 +7,9 @@ function read(rel: string): string {
 }
 
 describe("PLANNING-UX-07 canonical operational editor parity", () => {
-  it("training session edit uses PlanningEditorOperationalWorkspace with integrated primary flow", () => {
+  it("training session edit uses activity tab shell with integrated primary flow", () => {
     const page = read("app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx");
-    expect(page).toContain("PlanningEditorOperationalWorkspace");
+    expect(page).toContain("TrainingSessionActivityTabShell");
     expect(page).toContain("training-session-edit-operational-workspace");
     expect(page).toContain("training-session-edit-allocations-panel");
     expect(page).toContain("training-session-edit-publication-panel");
@@ -43,21 +43,24 @@ describe("PLANNING-UX-07 canonical operational editor parity", () => {
     expect(rail).toContain("participation-request");
   });
 
-  it("veranstaltung edit composes operational sections inside PlanningEditorOperationalWorkspace", () => {
+  it("veranstaltung edit composes operational sections inside activity tab shell", () => {
     const form = read("components/admin/veranstaltungen/VeranstaltungEditForm.tsx");
-    expect(form).toContain("operationalPrimarySections");
+    expect(form).toContain("ClubEventActivityTabShell");
+    expect(form).toContain("operationalTeilnahmeSections");
     expect(form).toContain("operationalRailSections");
     const page = read("app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx");
     expect(page).toContain("veranstaltung-edit-work-section");
     expect(page).toContain("veranstaltung-edit-participation-rail");
-    expect(page).toContain("operationalPrimarySections");
+    expect(page).toContain("operationalTeilnahmeSections");
   });
 
   it("match record workspace remains protected canonical reference", () => {
     const workspace = read("components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx");
     expect(workspace).toContain("spiele-record-publication-panel");
-    expect(workspace).toContain("PlanningEditorWorkSection");
-    expect(workspace).toContain("suppressPublicationUI");
+    expect(workspace).toContain("SpieleMatchRecordTabPanels");
+    expect(read("components/admin/matchcenter/record/SpieleMatchRecordTabPanels.tsx")).toContain(
+      "suppressPublicationUI",
+    );
   });
 
   it("no duplicate plus Aufgabe labels in active planning surfaces", () => {

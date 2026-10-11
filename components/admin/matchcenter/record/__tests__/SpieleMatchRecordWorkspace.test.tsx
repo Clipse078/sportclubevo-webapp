@@ -13,6 +13,8 @@ import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/matchcenter/match-1",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function renderWorkspace(ui: React.ReactElement) {

@@ -1446,7 +1446,7 @@ Cross-team candidate discovery for a target match; target-trainer request; sourc
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-NAV-01` |
 | **Product name** | Unified Activity Detail Navigation |
-| **Status** | **NEXT** (registered at 01C closure — **not implemented**) |
+| **Status** | **IN PROGRESS** (SCE-ACTIVITY-NAV-01 on STAGE — awaiting PO UAT) |
 | **Goal** | One consistent SCE detail-navigation architecture for sports activities: users move between operational areas without navigating very long vertical forms. |
 | **Principle** | **ONE ACTIVITY → ONE STABLE DETAIL CONTEXT → CLEAR TASK-ORIENTED TABS** |
 
