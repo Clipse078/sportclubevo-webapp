@@ -41,6 +41,7 @@ function player(
     staleRosterSelection: false,
     canSelect: true,
     canRemove: false,
+    externalRelease: null,
     ...overrides,
   };
 }

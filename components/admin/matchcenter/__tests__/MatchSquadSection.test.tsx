@@ -40,6 +40,7 @@ function player(
     staleRosterSelection: false,
     canSelect: false,
     canRemove: false,
+    externalRelease: null,
     ...overrides,
   };
 }

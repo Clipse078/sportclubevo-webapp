@@ -9,6 +9,8 @@ import MatchSquadCountsSummary, {
 import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
 import MatchSquadPlayerList from "@/components/admin/matchcenter/MatchSquadPlayerList";
 import ReleasedPlayersDiscoveryPanel from "@/components/admin/matchcenter/ReleasedPlayersDiscoveryPanel";
+import ApprovedReleaseAssignmentPanel from "@/components/admin/matchcenter/ApprovedReleaseAssignmentPanel";
+import type { ApprovedReleaseAssignmentCandidate } from "@/lib/match-squad/player-release-assignment-candidates";
 import PlayerReleasePlanningSheet from "@/components/admin/teams/PlayerReleasePlanningSheet";
 import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-squad-presentation-order";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
@@ -43,6 +45,7 @@ type SquadPayload = {
   releaseReadOnly?: boolean;
   teamId?: string;
   teamSeasonId?: string;
+  approvedReleaseCandidates?: ApprovedReleaseAssignmentCandidate[];
 };
 
 export type MatchSquadSectionVariant = "match" | "tournament";
@@ -352,6 +355,14 @@ export default function MatchSquadSection({
               />
             )}
           </section>
+
+          <ApprovedReleaseAssignmentPanel
+            eventId={matchId}
+            variant={variant}
+            canMutateSquad={canMutate}
+            candidates={data.approvedReleaseCandidates ?? []}
+            onAssigned={() => void load()}
+          />
 
           <section aria-labelledby="match-squad-remaining-heading">
             <h3

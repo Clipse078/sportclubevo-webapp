@@ -30,6 +30,16 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
+## 01E (2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **Package status** | **IN PROGRESS** (01E assignment slice) |
+| **Reuse** | SCE Testspieler 01–06, 01D releases/requests on STAGE |
+| **Primary UAT match** | B2 `cmrzhj6qc006w04kwxd2d01lj` — APPROVED request, not assigned before UAT |
+| **Fixture** | `scripts/match-squad-01e-uat-stage-fixture.ts` (drops assignment row only) |
+| **CLEANUP_STATUS** | `RETAINED_FOR_01F` |
+
 ## 01D (2026-10-11)
 
 | Field | Value |

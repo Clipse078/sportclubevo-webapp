@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   matchSquadFindUnique: vi.fn(),
   matchSquadCreate: vi.fn(),
   matchSquadMemberFindMany: vi.fn(),
+  playerReleaseRequestFindMany: vi.fn(),
   matchSquadMemberDeleteMany: vi.fn(),
   matchSquadMemberCreateMany: vi.fn(),
   matchSquadUpdateMany: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock("@/lib/db/prisma", () => ({
       deleteMany: mocks.matchSquadMemberDeleteMany,
       createMany: mocks.matchSquadMemberCreateMany,
     },
+    playerReleaseRequest: { findMany: mocks.playerReleaseRequestFindMany },
     $transaction: mocks.transaction,
   },
 }));
@@ -109,6 +111,7 @@ describe("match-squad-service", () => {
     mocks.playerFindMany.mockResolvedValue([roster("p1"), roster("p2")]);
     mocks.matchSquadFindUnique.mockResolvedValue(null);
     mocks.matchSquadMemberFindMany.mockResolvedValue([]);
+    mocks.playerReleaseRequestFindMany.mockResolvedValue([]);
     mocks.participationResponseFindMany.mockResolvedValue([]);
     mocks.transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
@@ -243,10 +246,16 @@ describe("match-squad-service", () => {
       updatedAt: new Date("2026-10-10T12:00:00.000Z"),
       teamSeasonId: TS,
     });
+    const selectedMemberRow = {
+      personId: "p1",
+      playerReleaseRequestId: null,
+      playerReleaseRequest: null,
+    };
     mocks.matchSquadMemberFindMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ personId: "p1" }]);
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([selectedMemberRow]);
 
     const view = await setMatchSquadMembers({
       tenantId: TENANT,

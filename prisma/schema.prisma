@@ -654,6 +654,7 @@ enum NotificationType {
   CLUB_ALERT_PUBLISHED
   CLUB_CAMPAIGN_PUBLISHED
   PLAYER_RELEASE_TARGETED
+  PLAYER_RELEASE_ASSIGNED
 }
 
 enum NotificationEntityType {
@@ -1386,6 +1387,7 @@ model User {
   playerReleaseRequestsCreated    PlayerReleaseRequest[]  @relation("PlayerReleaseRequestCreatedBy")
   playerReleaseRequestsDecided      PlayerReleaseRequest[] @relation("PlayerReleaseRequestDecidedBy")
   playerReleaseRequestsCancelled  PlayerReleaseRequest[]  @relation("PlayerReleaseRequestCancelledBy")
+  matchSquadMembersAssigned       MatchSquadMember[]      @relation("MatchSquadMemberAssignedBy")
 
   // COMM-01A: communication foundation back-relations
   createdCommunicationThreads  CommunicationThread[]  @relation("CommunicationThreadCreatedBy")
@@ -2709,10 +2711,16 @@ model MatchSquadMember {
   id           String   @id @default(cuid())
   matchSquadId String
   personId     String
+  /// When set, this row is a temporary cross-team assignment (01E), not structural Kader membership.
+  playerReleaseRequestId String?   @unique
+  assignedByUserId       String?
+  assignedAt             DateTime?
   createdAt    DateTime @default(now())
 
-  matchSquad MatchSquad @relation(fields: [matchSquadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  person     Person     @relation("PersonMatchSquadMembers", fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  matchSquad           MatchSquad            @relation(fields: [matchSquadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person               Person                @relation("PersonMatchSquadMembers", fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  playerReleaseRequest PlayerReleaseRequest? @relation("PlayerReleaseRequestAssignment", fields: [playerReleaseRequestId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  assignedByUser         User?                 @relation("MatchSquadMemberAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([matchSquadId, personId], map: "match_squad_member_person_uq")
   @@index([personId], map: "match_squad_member_person_idx")
@@ -2822,6 +2830,7 @@ model PlayerReleaseRequest {
   requestedByUser  User?      @relation("PlayerReleaseRequestCreatedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   decidedByUser    User?      @relation("PlayerReleaseRequestDecidedBy", fields: [decidedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   cancelledByUser  User?      @relation("PlayerReleaseRequestCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assignmentMatchSquadMember MatchSquadMember? @relation("PlayerReleaseRequestAssignment")
 
   @@index([tenantId, targetTeamSeasonId, targetEventId, status], map: "player_release_request_target_event_status_idx")
   @@index([tenantId, sourceTeamSeasonId, status], map: "player_release_request_source_status_idx")

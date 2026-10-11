@@ -68,6 +68,11 @@ export default function MatchSquadPlayerRow({
           {player.rosterIneligibleLabel ? (
             <p className="mt-0.5 text-xs text-[var(--muted)]">{player.rosterIneligibleLabel}</p>
           ) : null}
+          {player.externalRelease?.releaseRevokedLabel ? (
+            <p className="mt-0.5 text-xs font-medium text-[var(--destructive)]">
+              {player.externalRelease.releaseRevokedLabel}
+            </p>
+          ) : null}
         </div>
       </div>
 
