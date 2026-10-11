@@ -38,6 +38,11 @@ export async function POST(request: NextRequest, context: Context) {
   const action = String(body.action ?? "review").trim().toLowerCase();
   const timezone = resolved.tenant.timezone ?? "Europe/Zurich";
 
+  const sourceEventId =
+    typeof body.sourceEventId === "string" && body.sourceEventId.trim()
+      ? body.sourceEventId.trim()
+      : undefined;
+
   const shared = {
     tenantId: resolved.tenant.id,
     teamId,
@@ -45,6 +50,7 @@ export async function POST(request: NextRequest, context: Context) {
     personIds: parsePersonIds(body),
     eventIds: parseEventIds(body),
     timezone,
+    sourceEventId,
     defaultReason: body.defaultReason != null ? String(body.defaultReason) : undefined,
     activityDefaults: body.activityDefaults as Record<string, { maxMinutes?: number | null; reason?: string }> | undefined,
     excludedCombinations: body.excludedCombinations as { personId: string; eventId: string }[] | undefined,

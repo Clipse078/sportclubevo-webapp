@@ -23,6 +23,10 @@ export async function POST(request: NextRequest, context: Context) {
   const personIds = Array.isArray(body?.personIds)
     ? body.personIds.map((value: unknown) => String(value))
     : [];
+  const sourceEventId =
+    typeof body?.sourceEventId === "string" && body.sourceEventId.trim()
+      ? body.sourceEventId.trim()
+      : undefined;
 
   try {
     const payload = await resolvePlayerReleasePlanningCandidates({
@@ -30,6 +34,7 @@ export async function POST(request: NextRequest, context: Context) {
       sourceTeamSeasonId: teamSeasonId,
       personIds,
       timezone: resolved.tenant.timezone ?? "Europe/Zurich",
+      sourceEventId,
     });
     return NextResponse.json(payload);
   } catch (error) {

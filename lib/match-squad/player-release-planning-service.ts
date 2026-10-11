@@ -16,6 +16,10 @@ import {
   resolvePlayerReleaseTargetTeams,
   type PlayerReleaseTargetEligibilityState,
 } from "@/lib/match-squad/player-release-target-discovery";
+import {
+  activitySortKey,
+  formatPlanningDateParts,
+} from "@/lib/match-squad/player-release-planning-sort";
 
 const PLANNING_HORIZON_DAYS = 56;
 const TERMINAL_EVENT_STATUSES: EventStatus[] = ["CANCELLED", "POSTPONED"];
@@ -44,10 +48,30 @@ export type PlayerReleasePlanningActivityCandidate = {
   partialEligibilityNote: string | null;
 };
 
+export type PlayerReleasePlanningTargetTeam = {
+  targetTeamSeasonId: string;
+  targetTeamId: string;
+  targetTeamLabel: string;
+  activityCount: number;
+  activities: PlayerReleasePlanningActivityCandidate[];
+};
+
+export type PlayerReleasePlanningSourceEventContext = {
+  eventId: string;
+  startAt: string;
+  dateLine: string;
+  timeLine: string;
+  title: string;
+  headline: string;
+} | null;
+
 export type PlayerReleasePlanningCandidatesResult = {
   players: PlayerReleasePlanningPlayer[];
   activitiesByDate: { dateGroupKey: string; dateLine: string; activities: PlayerReleasePlanningActivityCandidate[] }[];
+  targetTeams: PlayerReleasePlanningTargetTeam[];
   sourceTeamContext: { label: string; lines: string[] };
+  sourceEventContext: PlayerReleasePlanningSourceEventContext;
+  planningMode: "MATCH_SOURCE" | "KADER";
 };
 
 export type PlayerReleasePlanActivityDefaults = {
@@ -97,31 +121,6 @@ function teamSeasonLabel(row: {
   return row.displayName || row.shortName || row.team.shortName || row.team.name;
 }
 
-function formatDateParts(startAt: Date, timezone: string): {
-  dateGroupKey: string;
-  dateLine: string;
-  timeLine: string;
-} {
-  const dateGroupKey = new Intl.DateTimeFormat("en-CA", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(startAt);
-  const dateLine = new Intl.DateTimeFormat("de-CH", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: timezone,
-  }).format(startAt);
-  const timeLine = new Intl.DateTimeFormat("de-CH", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: timezone,
-  }).format(startAt);
-  return { dateGroupKey, dateLine, timeLine };
-}
-
 function parseReason(value: string | undefined, fallback: PlayerReleaseReason): PlayerReleaseReason {
   const normalized = String(value ?? fallback).trim().toUpperCase();
   const allowed: PlayerReleaseReason[] = [
@@ -164,6 +163,7 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
   sourceTeamSeasonId: string;
   personIds: string[];
   timezone: string;
+  sourceEventId?: string;
 }): Promise<PlayerReleasePlanningCandidatesResult> {
   const uniquePersonIds = [...new Set(input.personIds.map((id) => id.trim()).filter(Boolean))];
   if (uniquePersonIds.length === 0) {
@@ -210,7 +210,10 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
   const now = new Date();
   const horizonEnd = addDays(now, PLANNING_HORIZON_DAYS);
 
-  const [targetTeamSeasons, events, sourceEvents, sourceTeamSeason] = await Promise.all([
+  const sourceEventId = input.sourceEventId?.trim() || null;
+
+  const [targetTeamSeasons, events, sourceEvents, sourceTeamSeason, explicitSourceEvent] =
+    await Promise.all([
     unionTargetTeamSeasonIds.size
       ? prisma.teamSeason.findMany({
           where: { id: { in: [...unionTargetTeamSeasonIds] } },
@@ -263,18 +266,20 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
             });
           })
       : Promise.resolve([]),
-    prisma.event.findMany({
-      where: {
-        tenantId: input.tenantId,
-        teamSeasonId: input.sourceTeamSeasonId,
-        type: "MATCH",
-        startAt: { gte: now, lte: horizonEnd },
-        status: { notIn: TERMINAL_EVENT_STATUSES },
-      },
-      select: { title: true, startAt: true },
-      orderBy: { startAt: "asc" },
-      take: 2,
-    }),
+    sourceEventId
+      ? Promise.resolve([])
+      : prisma.event.findMany({
+          where: {
+            tenantId: input.tenantId,
+            teamSeasonId: input.sourceTeamSeasonId,
+            type: "MATCH",
+            startAt: { gte: now, lte: horizonEnd },
+            status: { notIn: TERMINAL_EVENT_STATUSES },
+          },
+          select: { title: true, startAt: true },
+          orderBy: { startAt: "asc" },
+          take: 2,
+        }),
     prisma.teamSeason.findFirst({
       where: { id: input.sourceTeamSeasonId },
       select: {
@@ -283,6 +288,16 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
         team: { select: { name: true, shortName: true } },
       },
     }),
+    sourceEventId
+      ? prisma.event.findFirst({
+          where: {
+            id: sourceEventId,
+            tenantId: input.tenantId,
+            type: { in: ["MATCH", "TOURNAMENT"] },
+          },
+          select: { id: true, title: true, startAt: true, teamSeasonId: true, teamId: true },
+        })
+      : Promise.resolve(null),
   ]);
 
   const teamSeasonById = new Map(targetTeamSeasons.map((row) => [row.id, row]));
@@ -311,7 +326,7 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
     const eligiblePlayers = uniquePersonIds.filter((personId) =>
       eligibleByPerson.get(personId)?.has(resolvedTeamSeasonId),
     );
-    const { dateGroupKey, dateLine, timeLine } = formatDateParts(event.startAt, input.timezone);
+    const { dateGroupKey, dateLine, timeLine } = formatPlanningDateParts(event.startAt, input.timezone);
     const targetTeamLabel = teamSeasonLabel(ts);
     const typeLabel = event.type === "MATCH" ? "Spiel" : "Turnier";
 
@@ -325,8 +340,8 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
       dateGroupKey,
       dateLine,
       timeLine,
-      headline: `${targetTeamLabel} · ${typeLabel}`,
-      subline: event.title,
+      headline: event.title?.trim() || `${targetTeamLabel} · ${typeLabel}`,
+      subline: event.title?.trim() ? `${targetTeamLabel} · ${typeLabel}` : null,
       locationLine: event.location?.trim() || null,
       selectable: eligiblePlayers.length > 0,
       partialEligibilityNote:
@@ -335,6 +350,21 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
           : null,
     });
   }
+
+  const sourceStartAt =
+    explicitSourceEvent &&
+    (explicitSourceEvent.teamSeasonId === input.sourceTeamSeasonId ||
+      explicitSourceEvent.teamSeasonId == null)
+      ? explicitSourceEvent.startAt
+      : null;
+
+  activities.sort((a, b) => {
+    const [tierA, timeA] = activitySortKey(new Date(a.startAt), sourceStartAt, input.timezone);
+    const [tierB, timeB] = activitySortKey(new Date(b.startAt), sourceStartAt, input.timezone);
+    if (tierA !== tierB) return tierA - tierB;
+    if (timeA !== timeB) return timeA - timeB;
+    return a.targetTeamLabel.localeCompare(b.targetTeamLabel, "de");
+  });
 
   const grouped = new Map<string, PlayerReleasePlanningActivityCandidate[]>();
   for (const activity of activities) {
@@ -348,19 +378,89 @@ export async function resolvePlayerReleasePlanningCandidates(input: {
     .map(([dateGroupKey, list]) => ({
       dateGroupKey,
       dateLine: list[0]?.dateLine ?? dateGroupKey,
-      activities: list,
+      activities: list.sort((a, b) => {
+        const [tierA, timeA] = activitySortKey(new Date(a.startAt), sourceStartAt, input.timezone);
+        const [tierB, timeB] = activitySortKey(new Date(b.startAt), sourceStartAt, input.timezone);
+        if (tierA !== tierB) return tierA - tierB;
+        return timeA - timeB;
+      }),
     }));
 
+  const teamMap = new Map<string, PlayerReleasePlanningActivityCandidate[]>();
+  for (const activity of activities) {
+    const list = teamMap.get(activity.targetTeamSeasonId) ?? [];
+    list.push(activity);
+    teamMap.set(activity.targetTeamSeasonId, list);
+  }
+
+  const targetTeams: PlayerReleasePlanningTargetTeam[] = [...teamMap.entries()]
+    .map(([targetTeamSeasonId, teamActivities]) => {
+      const sorted = [...teamActivities].sort((a, b) => {
+        const [tierA, timeA] = activitySortKey(new Date(a.startAt), sourceStartAt, input.timezone);
+        const [tierB, timeB] = activitySortKey(new Date(b.startAt), sourceStartAt, input.timezone);
+        if (tierA !== tierB) return tierA - tierB;
+        return timeA - timeB;
+      });
+      const first = sorted[0];
+      return {
+        targetTeamSeasonId,
+        targetTeamId: first?.targetTeamId ?? "",
+        targetTeamLabel: first?.targetTeamLabel ?? targetTeamSeasonId,
+        activityCount: sorted.length,
+        activities: sorted,
+      };
+    })
+    .sort((a, b) => {
+      const aStart = a.activities[0]?.startAt;
+      const bStart = b.activities[0]?.startAt;
+      if (aStart && bStart) {
+        const [tierA, timeA] = activitySortKey(new Date(aStart), sourceStartAt, input.timezone);
+        const [tierB, timeB] = activitySortKey(new Date(bStart), sourceStartAt, input.timezone);
+        if (tierA !== tierB) return tierA - tierB;
+        if (timeA !== timeB) return timeA - timeB;
+      }
+      return a.targetTeamLabel.localeCompare(b.targetTeamLabel, "de");
+    });
+
   const sourceLabel = sourceTeamSeason ? teamSeasonLabel(sourceTeamSeason) : "Stammteam";
+  const sourceEventContext: PlayerReleasePlanningSourceEventContext = explicitSourceEvent
+    ? (() => {
+        const { dateLine, timeLine } = formatPlanningDateParts(
+          explicitSourceEvent.startAt,
+          input.timezone,
+        );
+        return {
+          eventId: explicitSourceEvent.id,
+          startAt: explicitSourceEvent.startAt.toISOString(),
+          dateLine,
+          timeLine,
+          title: explicitSourceEvent.title,
+          headline: `${sourceLabel} · ${dateLine} · ${timeLine}`,
+        };
+      })()
+    : null;
+
   const sourceTeamContext = {
     label: sourceLabel,
-    lines: sourceEvents.map((event) => {
-      const { dateLine, timeLine } = formatDateParts(event.startAt, input.timezone);
-      return `Eigenes Spiel: ${dateLine} · ${timeLine} · ${event.title}`;
-    }),
+    lines: sourceEventContext
+      ? [
+          `Ausgehend von: ${sourceEventContext.headline}`,
+          sourceEventContext.title ? `vs ${sourceEventContext.title}` : "",
+        ].filter(Boolean)
+      : sourceEvents.map((event) => {
+          const { dateLine, timeLine } = formatPlanningDateParts(event.startAt, input.timezone);
+          return `Eigenes Spiel: ${dateLine} · ${timeLine} · ${event.title}`;
+        }),
   };
 
-  return { players, activitiesByDate, sourceTeamContext };
+  return {
+    players,
+    activitiesByDate,
+    targetTeams,
+    sourceTeamContext,
+    sourceEventContext,
+    planningMode: sourceEventContext ? "MATCH_SOURCE" : "KADER",
+  };
 }
 
 async function hasDuplicateActiveRelease(input: {
@@ -392,6 +492,7 @@ export async function buildPlayerReleasePlan(input: {
   personIds: string[];
   eventIds: string[];
   timezone: string;
+  sourceEventId?: string;
   defaultReason?: string;
   activityDefaults?: Record<string, PlayerReleasePlanActivityDefaults>;
   excludedCombinations?: { personId: string; eventId: string }[];
@@ -407,6 +508,7 @@ export async function buildPlayerReleasePlan(input: {
     sourceTeamSeasonId: input.sourceTeamSeasonId,
     personIds: input.personIds,
     timezone: input.timezone,
+    sourceEventId: input.sourceEventId,
   });
 
   const activityById = new Map<string, PlayerReleasePlanningActivityCandidate>();
