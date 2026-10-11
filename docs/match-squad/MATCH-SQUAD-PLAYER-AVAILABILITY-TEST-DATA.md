@@ -99,6 +99,17 @@ Controlled match `cmrzhj3je006a04kwhbepxvdz` may show **KEINE ANFRAGE** while `P
 | **Agent-seeded PlayerRelease** | **None** — PO-led UAT only |
 | **PROD** | Not targeted |
 
+## 01C closure (2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **01C slice status** | **CLOSED** (PR **#822** → `STAGE`) |
+| **HUMAN_UAT_01C** | **PASS** (final PO sign-off after R3.1 + action-color correction) |
+| **01C_CREATED_OR_CHANGED_TEST_FIXTURES** | **None by agent** — controlled SCE Testspieler 01–06 unchanged; any `PlayerRelease` rows from PO Human UAT remain as STAGE UAT history (not ledger-seeded) |
+| **RETAINED_FOR** | **01D–01F** development/UAT |
+| **FINAL_PARENT_REQUIREMENT** | `TEST_DATA_REMAINING = 0` at `MATCH_SQUAD_PLAYER_AVAILABILITY` parent closure only |
+| **PROD** | Not targeted |
+
 ## 01A closure (2026-10-10)
 
 | Field | Value |

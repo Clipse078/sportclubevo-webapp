@@ -270,10 +270,11 @@ Add e.g. `nominated: boolean` on `ParticipationResponse`.
 |-------|---------|----------------|
 | **01A** | Match Squad Foundation — Saison-Kader + existing availability + trainer Match selection | **CLOSED** (§27) |
 | **01B** | Availability Collection & Player/Guardian UX — “Can / will the player participate?” | **CLOSED** (§30) |
-| **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **IN PROGRESS** (§31) |
-| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **NOT STARTED** |
-| **01E** | Assignment & Communication — operational assignment + inform audiences | **NOT STARTED** |
-| **01F** | Operational Intelligence & Club UAT | **NOT STARTED** |
+| **01C** | Player Release & Development Assignment — “Where, when, under which conditions outside Stammteam?” | **CLOSED** (§39) |
+| **SCE-ACTIVITY-NAV-01** | Unified Activity Detail Navigation — consistent task-oriented tabs on activity detail | **NEXT** (§40) |
+| **01D** | Cross-Team Discovery, Request & Approval — “May target team use released player for this Match?” | **PLANNED — AFTER SCE-ACTIVITY-NAV-01** (§28) |
+| **01E** | Assignment & Communication — operational assignment + inform audiences | **PLANNED** |
+| **01F** | Operational Intelligence & Club UAT | **PLANNED** |
 
 Then: **Sponsor Commercial Workflows** → **Mobile App** (club roadmap).
 
@@ -757,7 +758,7 @@ Teilnehmer is server-rendered; Aufgebot loads via client `GET /api/matchcenter/[
 | **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
 | **Test data** | Intentionally retained for 01B–01F — `01A_TEST_DATA_CLEANUP = DEFERRED_INTENTIONALLY` (ledger: `MATCH-SQUAD-PLAYER-AVAILABILITY-TEST-DATA.md`) |
 | **01B** | **CLOSED** — PR **#821** → merged to `STAGE` (see §30) |
-| **01C implementation** | **NOT STARTED** (architecture locked §28) |
+| **01C implementation** | **CLOSED** — PR **#822** → merged to `STAGE` (see §39) |
 
 ### Canonical 01A product model (locked)
 
@@ -792,7 +793,7 @@ See **§14** / **§28** — **01B–01F**; no release implementation in 01A scop
 |-------|-------|
 | **Date** | 2026-10-10 |
 | **Status** | **LOCKED** (product architecture — no implementation in this package) |
-| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` (diagnosis/implementation **NOT STARTED**) |
+| **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` — **CLOSED** (§39) |
 | **Product name** | **Player Release & Development Assignment** |
 | **Working German concept** | **Spielerfreigabe** |
 | **Primary trainer action** | **Für andere Teams freigeben** |
@@ -1107,7 +1108,7 @@ Responses retained on stable `eventId` — **no silent reset** in 01B. Reconfirm
 | **Regression battery** | **PASS** for 01B scope; known baseline failures unchanged (see closure report) |
 | **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
 | **Test data** | SCE Testspieler 01–06 **retained** for 01C–01F; `TEST_DATA_REMAINING = 0` still required at parent module closure |
-| **01C implementation** | **IN PROGRESS** — see §31 |
+| **01C implementation** | **CLOSED** — see §39 |
 
 ### Final 01B product rules (locked)
 
@@ -1135,7 +1136,7 @@ R1–R2.2 iterations (including failed R2.1 alignment attempt and superseded tra
 | **Package** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01C` |
 | **Branch** | `cursor/match-squad-player-availability-01c-player-release-development` |
 | **Base** | `STAGE` @ `1469a7bf85f4521548e346c3ceba9ad17116903a` |
-| **01C status** | **IN PROGRESS** (foundation + trainer UX; not module-closed) |
+| **01C status** | **CLOSED** (see §39) |
 
 ### Existing domain diagnosis
 
@@ -1370,3 +1371,133 @@ Domain + auth + API + UI unit tests under `lib/match-squad/__tests__/player-rele
 | **Shared module** | `components/ui/operational-action-button-classes.ts` |
 | **Tests** | `operational-action-button-classes.test.ts`, `MatchSquadPlayerRow.test.tsx`, `ActivityPlayerReleaseButton.test.tsx` |
 | **Destructive `Button variant="danger"`** | Unchanged for true delete/irreversible flows elsewhere |
+
+---
+
+## 38. 01C Human UAT R3.1 — result (2026-10-10)
+
+| Field | Value |
+|-------|-------|
+| **Human UAT R3.1** | **PASS** |
+| **Period target discovery** | **PASS** — Zielteam picker loads for SCE Testspieler 01 / 02 / 03 after `effectivePersonId` fix |
+| **Match / Training / Tournament** | **PASS** — same canonical `resolvePlayerReleaseTargetTeams` contract across entry points |
+| **01C status (post-R3.1)** | **READY_FOR_FINAL_PO** — pending pre-merge action-color pass |
+
+Historical UAT sequence preserved: R1 **BLOCKED_BY_SCHEMA** → R1.1 remediation → R2 partial **FAIL** (training/tournament surfaces) → R3 **FAIL** (period picker regression) → R3.1 **PASS**.
+
+---
+
+## 39. 01C closure (MATCH_SQUAD_PLAYER_AVAILABILITY-01C)
+
+| Field | Value |
+|-------|-------|
+| **01C status** | **CLOSED** |
+| **Implementation PR** | **#822** → merged to **`STAGE`** |
+| **Branch** | `cursor/match-squad-player-availability-01c-player-release-development` |
+| **STAGE base (pre-01C)** | `1469a7bf85f4521548e346c3ceba9ad17116903a` |
+| **Feature HEAD (pre-merge)** | `6f3aa6a811d91008a71e2d2e6203b50464978fad` |
+| **Human UAT R1** | **BLOCKED_BY_SCHEMA** — STAGE migration subsequently deployed (§33) |
+| **Human UAT R1.1** | Core release workflow operational; PO requested toggle, eligibility-aware targets, activity-level release |
+| **Human UAT R2** | Period **PASS**; toggle **PASS**; target filter **PASS**; match action **PASS**; training/tournament/activity discovery **FAIL** |
+| **Human UAT R3** | Activity surfaces added; period target picker regression; **FAIL** |
+| **Human UAT R3.1** | Period discovery fixed; canonical discovery restored; **PASS** (§38) |
+| **Pre-merge action color** | **PASS** — status vs action semantics (§37) |
+| **Final PO Human UAT** | **PASS** |
+| **HUMAN_UAT_01C** | **PASS** |
+| **PO_APPROVED** | **YES** |
+| **MERGE_ALLOWED** | **YES** (executed at closure) |
+| **Regression battery** | **PASS** for 01C scope; known matchcenter view-model baseline failures unchanged |
+| **Build** | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| **Migrations (STAGE)** | `20261010190000_match_squad_player_availability_01c_player_release`; `20261010210000_match_squad_player_availability_01c_r2_activity_scope` — no closure migration |
+| **PROD** | **Not targeted** |
+| **Test data** | SCE Testspieler 01–06 **retained** for 01D–01F; `TEST_DATA_REMAINING = 0` at parent module closure only |
+
+### Final 01C product definition (locked)
+
+**Owns:** Player Release & Development Assignment — “Where and under what conditions may this player play outside the normal Stammteam?”
+
+**Does not own:** availability (`ParticipationResponse` / 01B); Stammteam match selection (`MatchSquad` / 01A); target Match Squad assignment or cross-team request workflow (01D/01E).
+
+**Period release (`scope = PERIOD`):** player, source `TeamSeason`, target `TeamSeason`, `validFrom` / `validUntil`, `maxMinutes`, `reason`, optional `note`, lifecycle status, audit provenance.
+
+**Activity release (`scope = ACTIVITY`):** canonical anchors — `Event.id` for MATCH/TOURNAMENT; `trainingSessionId` for TRAINING (no synthetic Event for training).
+
+**Target discovery:** `resolvePlayerReleaseTargetTeams` — same tenant/season, active teams, source excluded, birth-year/category plausibility; **Freigegeben ≠ Einsatzberechtigt**; not a complete SFV regulatory engine.
+
+**UX surfaces:** Team Kader → Spielerfreigaben; Match Aufgebot **Freigeben**; Training session **Teilnahme**; Tournament **Teilnahmen**; history toggle via `SwitchThumb`.
+
+**Signal independence:** AVAILABILITY ≠ MATCH SELECTION ≠ PLAYER RELEASE ≠ TARGET ASSIGNMENT — no silent cross-writes (§31, tests).
+
+### Deferred scope (not 01C)
+
+Cross-team candidate discovery for a target match; target-trainer request; source approval/rejection workflow; actual target Match Squad assignment; automated recommendation; workload intelligence; actual minutes tracking; complete SFV regulatory eligibility engine.
+
+### Roadmap handoff
+
+**NEXT package:** `SCE-ACTIVITY-NAV-01` — Unified Activity Detail Navigation (§40–§43). **01D** follows NAV-01 — not parallel.
+
+---
+
+## 40. SCE-ACTIVITY-NAV-01 — package registration
+
+| Field | Value |
+|-------|-------|
+| **Canonical key** | `SCE-ACTIVITY-NAV-01` |
+| **Product name** | Unified Activity Detail Navigation |
+| **Status** | **NEXT** (registered at 01C closure — **not implemented**) |
+| **Goal** | One consistent SCE detail-navigation architecture for sports activities: users move between operational areas without navigating very long vertical forms. |
+| **Principle** | **ONE ACTIVITY → ONE STABLE DETAIL CONTEXT → CLEAR TASK-ORIENTED TABS** |
+
+**Applies to individual:** Training sessions, Matches, Tournaments, Club events / Veranstaltungen.
+
+**Center/list pages remain list pages** (`/dashboard/training`, `/dashboard/matchcenter`, `/dashboard/tournamentcenter`, `/dashboard/veranstaltungen`) unless diagnosis finds a specific detail-context reason for tabs there.
+
+**Design reference:** Team detail navigation (Übersicht, Kader, Trainerteam, …) — philosophy, not mechanical tab-name copy.
+
+---
+
+## 41. SCE-ACTIVITY-NAV-01 — target direction (hypothesis)
+
+**Not frozen implementation** — diagnosis in NAV-01 must inventory real routes/components first.
+
+| Activity | Initial tab hypothesis |
+|----------|------------------------|
+| **TRAINING** | Übersicht · Teilnahme · Planung · Kommunikation · Mehr |
+| **MATCH** | Übersicht · Aufgebot · Teilnahme · Spielbetrieb · Kommunikation · Mehr |
+| **TOURNAMENT** | Übersicht · Teilnahme · Kader/Aufgebot · Planung · Kommunikation · Mehr |
+| **CLUB EVENT** | Übersicht · Teilnahme · Planung · Kommunikation · Mehr |
+
+Terminology may change after workflow/permission diagnosis.
+
+---
+
+## 42. SCE-ACTIVITY-NAV-01 — architecture principles (mandatory)
+
+| ID | Principle |
+|----|-----------|
+| **A** | **Shared architecture** — reusable primitive (e.g. `ActivityDetailTabs`); each activity type supplies tabs, permissions, metadata — not four unrelated hard-coded tab bars. |
+| **B** | **Preserve domain ownership** — navigation reorganizes presentation only; Availability, Match Squad, Player Release remain independent models. |
+| **C** | **Permission aware** — hidden/disabled tabs are not authorization; server-side checks remain canonical. |
+| **D** | **Deep linking** — stable URL per meaningful tab; refresh and back/forward retain context. |
+| **E** | **Responsive** — horizontal nav desktop; scroll/`Mehr` overflow tablet/mobile — no broken multi-line wraps. |
+| **F** | **Counts / indicators** — architecture future-compatible (e.g. Aufgebot 6/8) without requiring all counters in NAV-01. |
+| **G** | **Low-frequency content** — `Mehr` or equivalent; avoid 8–12 permanent tabs. |
+| **H** | **No data loss** — moving editors preserves unsaved-change handling, validation, permissions, SFV restrictions, lifecycle. |
+| **I** | **No duplication** — one canonical presentation per editor (not both Übersicht and another tab). |
+| **J** | **SCE visual language** — Team detail navigation as visual reference. |
+
+---
+
+## 43. SCE-ACTIVITY-NAV-01 — required diagnosis & non-goals
+
+### Required diagnosis (start of NAV-01)
+
+Inventory real routes/components for TRAINING, MATCH, TOURNAMENT, VERANSTALTUNG (list + detail, participation, planning, communication, documents/settings); Team tab implementation; shared navigation components; deep-link conventions; responsive behavior; permission and save-form boundaries; dirty-form protection; nested layouts; read/edit state; URL stability when introducing tabs.
+
+Implementation plan must be evidence-based.
+
+### Non-goals (unless strictly necessary for navigation migration)
+
+01D discovery/request/approval; new PlayerRelease / availability / Match Squad semantics; mobile native app; broad visual redesign; new sports rules; new SFV integration; new permission model; new communication domain; arbitrary schema changes.
+
+NAV-01 is primarily information architecture, routing, and UX consistency.
