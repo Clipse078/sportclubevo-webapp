@@ -293,6 +293,12 @@ Task `ASSIGNEES_ONLY` currently limits visibility to creator plus explicit assig
 
 ---
 
+## SCE-UI-ROLLOUT programme ADRs (ADR-01 … ADR-10)
+
+Product-wide UI unification decisions for packages **01B–01N** are recorded in [`docs/design/SCE-UI-ROLLOUT-ADRS.md`](../design/SCE-UI-ROLLOUT-ADRS.md) (established by **SCE-UI-ROLLOUT-01A**).
+
+---
+
 ## ADR Template
 
 Copy this template to add a new ADR.

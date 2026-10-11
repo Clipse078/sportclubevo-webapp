@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01+` |
-| **Status** | **NEXT COMMITTED PROGRAMME** (after `MATCH_SQUAD_PLAYER_AVAILABILITY` parent closure) |
+| **Status** | **IN_PROGRESS** — **01A** inventory/architecture closed on branch; **01B+** not started |
 | **Predecessor** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01F` **CLOSED** |
 | **Not in scope for planning doc** | Implementation branches, component code, PROD deploy |
 
@@ -109,7 +109,7 @@ Planning baseline only — **01A must gather repository evidence** before treati
 
 | Package | Scope |
 |---------|--------|
-| **SCE-UI-ROLLOUT-01A** | Product-wide UI inventory + canonical UX architecture + component/view-model contracts |
+| **SCE-UI-ROLLOUT-01A** | Product-wide UI inventory + canonical UX architecture + component/view-model contracts — **[closure doc](./SCE-UI-ROLLOUT-01A.md)** |
 | **SCE-UI-ROLLOUT-01B** | Universal Context Tabs architecture |
 | **SCE-UI-ROLLOUT-01C** | Universal Activity Presentation Model |
 | **SCE-UI-ROLLOUT-01D** | Canonical Match Card family |
