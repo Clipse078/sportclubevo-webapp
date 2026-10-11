@@ -39,7 +39,7 @@ export default function TeamPlayerReleaseRequestsPanel({
       if (!response.ok) {
         throw new Error(json.error ?? "Anfragen konnten nicht geladen werden.");
       }
-      setRequests(json.requests);
+      setRequests(json.requests ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
     } finally {

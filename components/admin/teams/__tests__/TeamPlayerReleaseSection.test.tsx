@@ -39,13 +39,22 @@ describe("TeamPlayerReleaseSection", () => {
     vi.restoreAllMocks();
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          releases: [sampleRelease],
-          rosterPlayers: [{ personId: "p1", displayName: "SCE Testspieler 01" }],
-          canEdit: true,
-        }),
+      vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
+        if (url.includes("/player-release-requests")) {
+          return {
+            ok: true,
+            json: async () => ({ requests: [] }),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            releases: [sampleRelease],
+            rosterPlayers: [{ personId: "p1", displayName: "SCE Testspieler 01" }],
+            canEdit: true,
+          }),
+        };
       }),
     );
   });
