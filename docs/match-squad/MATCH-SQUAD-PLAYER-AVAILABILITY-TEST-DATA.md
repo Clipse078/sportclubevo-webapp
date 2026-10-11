@@ -30,6 +30,13 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
+## 01D (2026-10-11)
+
+| Field | Value |
+|-------|-------|
+| **New agent-seeded rows** | **None required** — reuse SCE Testspieler 01–06 + PO-created `PlayerRelease` rows from 01C UAT (B1 → B2). |
+| **Optional 01D UAT** | Create bounded `PlayerReleaseRequest` via Match Aufgebot UI; tag any agent-created rows here with `CLEANUP_STATUS = RETAINED_FOR_01F`. |
+
 ## 01B Human UAT R2.2 (2026-10-10)
 
 | Field | Value |

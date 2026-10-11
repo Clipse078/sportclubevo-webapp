@@ -1247,6 +1247,8 @@ model Tenant {
   matchSquads                     MatchSquad[]                     @relation("TenantMatchSquads")
   // MATCH_SQUAD_PLAYER_AVAILABILITY-01C: proactive Spielerfreigabe rules
   playerReleases                  PlayerRelease[]                  @relation("TenantPlayerReleases")
+  // MATCH_SQUAD_PLAYER_AVAILABILITY-01D: cross-team release requests
+  playerReleaseRequests           PlayerReleaseRequest[]           @relation("TenantPlayerReleaseRequests")
   // COMM-01A: tenant-scoped communication/collaboration foundation
   communicationThreads            CommunicationThread[]
   communicationMessages           CommunicationMessage[]
@@ -1377,6 +1379,10 @@ model User {
   playerReleasesCreated           PlayerRelease[]         @relation("PlayerReleaseCreatedBy")
   playerReleasesUpdated           PlayerRelease[]         @relation("PlayerReleaseUpdatedBy")
   playerReleasesRevoked           PlayerRelease[]         @relation("PlayerReleaseRevokedBy")
+  // MATCH_SQUAD_PLAYER_AVAILABILITY-01D: release request audit
+  playerReleaseRequestsCreated    PlayerReleaseRequest[]  @relation("PlayerReleaseRequestCreatedBy")
+  playerReleaseRequestsDecided      PlayerReleaseRequest[] @relation("PlayerReleaseRequestDecidedBy")
+  playerReleaseRequestsCancelled  PlayerReleaseRequest[]  @relation("PlayerReleaseRequestCancelledBy")
 
   // COMM-01A: communication foundation back-relations
   createdCommunicationThreads  CommunicationThread[]  @relation("CommunicationThreadCreatedBy")
@@ -2073,6 +2079,7 @@ model Person {
   participationResponses          ParticipationResponse[]  @relation("PersonParticipationResponses")
   matchSquadMembers               MatchSquadMember[]       @relation("PersonMatchSquadMembers")
   playerReleases                  PlayerRelease[]          @relation("PersonPlayerReleases")
+  playerReleaseRequests           PlayerReleaseRequest[]   @relation("PersonPlayerReleaseRequests")
   requirementDraftAudienceEntries RequirementDraftAudiencePerson[] @relation("RequirementDraftAudiencePerson")
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudiencePerson")
   requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
@@ -2417,8 +2424,10 @@ model TeamSeason {
   // TEAM-COCKPIT-03A: roster-context participation responses for this TeamSeason
   participationResponses ParticipationResponse[] @relation("TeamSeasonParticipationResponses")
   matchSquads            MatchSquad[]            @relation("TeamSeasonMatchSquads")
-  sourcePlayerReleases   PlayerRelease[]         @relation("SourceTeamSeasonPlayerReleases")
-  targetPlayerReleases   PlayerRelease[]         @relation("TargetTeamSeasonPlayerReleases")
+  sourcePlayerReleases        PlayerRelease[]         @relation("SourceTeamSeasonPlayerReleases")
+  targetPlayerReleases        PlayerRelease[]         @relation("TargetTeamSeasonPlayerReleases")
+  sourcePlayerReleaseRequests PlayerReleaseRequest[] @relation("SourceTeamSeasonPlayerReleaseRequests")
+  targetPlayerReleaseRequests PlayerReleaseRequest[] @relation("TargetTeamSeasonPlayerReleaseRequests")
   // TEAM-PUBLIC-NEXT-EVENT-01A: canonical owning TeamSeason for tournament Events.
   tournamentEvents       Event[]                 @relation("TournamentTeamSeason")
 
@@ -2643,6 +2652,7 @@ model Event {
   participationResponses        ParticipationResponse[]        @relation("EventParticipationResponses")
   matchSquads                   MatchSquad[]                   @relation("EventMatchSquads")
   playerReleases                PlayerRelease[]                @relation("EventPlayerReleases")
+  playerReleaseRequests         PlayerReleaseRequest[]         @relation("EventPlayerReleaseRequests")
   // PLANNING-UX-05R1: configured participation audience for club events (type=OTHER)
   participationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceEntries")
   platformCommunicationPollsCreated PlatformCommunicationPoll[] @relation("PollCreatedEvent")
@@ -2759,6 +2769,7 @@ model PlayerRelease {
   revokedByUser    User?            @relation("PlayerReleaseRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdByUser    User?            @relation("PlayerReleaseCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   updatedByUser    User?            @relation("PlayerReleaseUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  releaseRequests  PlayerReleaseRequest[] @relation("PlayerReleaseRequestRelease")
 
   @@index([tenantId, sourceTeamSeasonId, status], map: "player_release_source_status_idx")
   @@index([tenantId, targetTeamSeasonId, status], map: "player_release_target_status_idx")
@@ -2766,6 +2777,53 @@ model PlayerRelease {
   @@index([tenantId, targetTeamSeasonId, validFrom, validUntil], map: "player_release_target_validity_idx")
   @@index([tenantId, eventId], map: "player_release_event_idx")
   @@index([tenantId, trainingSessionId], map: "player_release_training_session_idx")
+}
+
+enum PlayerReleaseRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+/// MATCH_SQUAD_PLAYER_AVAILABILITY-01D — trainer request to use a released player for a target activity.
+/// Approval ≠ assignment (01E). Independent from ParticipationResponse and MatchSquadMember.
+model PlayerReleaseRequest {
+  id                 String                     @id @default(cuid())
+  tenantId           String
+  playerReleaseId    String
+  personId           String
+  sourceTeamSeasonId String
+  targetTeamSeasonId String
+  targetEventId      String
+  requestedMinutes   Int?
+  requestNote        String?
+  status             PlayerReleaseRequestStatus @default(PENDING)
+  decisionNote       String?
+  releaseMaxMinutesSnapshot Int?
+  releaseReasonSnapshot     PlayerReleaseReason?
+  requestedByUserId  String?
+  decidedByUserId    String?
+  decidedAt          DateTime?
+  cancelledByUserId  String?
+  cancelledAt        DateTime?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  tenant           Tenant     @relation("TenantPlayerReleaseRequests", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  playerRelease    PlayerRelease @relation("PlayerReleaseRequestRelease", fields: [playerReleaseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  person           Person     @relation("PersonPlayerReleaseRequests", fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceTeamSeason TeamSeason @relation("SourceTeamSeasonPlayerReleaseRequests", fields: [sourceTeamSeasonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  targetTeamSeason TeamSeason @relation("TargetTeamSeasonPlayerReleaseRequests", fields: [targetTeamSeasonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  targetEvent      Event      @relation("EventPlayerReleaseRequests", fields: [targetEventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  requestedByUser  User?      @relation("PlayerReleaseRequestCreatedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  decidedByUser    User?      @relation("PlayerReleaseRequestDecidedBy", fields: [decidedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  cancelledByUser  User?      @relation("PlayerReleaseRequestCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, targetTeamSeasonId, targetEventId, status], map: "player_release_request_target_event_status_idx")
+  @@index([tenantId, sourceTeamSeasonId, status], map: "player_release_request_source_status_idx")
+  @@index([tenantId, playerReleaseId, targetEventId], map: "player_release_request_release_event_idx")
+  @@index([tenantId, personId, targetEventId], map: "player_release_request_person_event_idx")
 }
 
 model EventImportRun {

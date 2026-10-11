@@ -8,6 +8,7 @@ import MatchSquadCountsSummary, {
 } from "@/components/admin/matchcenter/MatchSquadCountsSummary";
 import MatchAvailabilityCollectionPanel from "@/components/admin/matchcenter/MatchAvailabilityCollectionPanel";
 import MatchSquadPlayerList from "@/components/admin/matchcenter/MatchSquadPlayerList";
+import ReleasedPlayersDiscoveryPanel from "@/components/admin/matchcenter/ReleasedPlayersDiscoveryPanel";
 import { sortMatchSquadPlayersForPresentation } from "@/lib/match-squad/match-squad-presentation-order";
 import { matchSquadRemainingEmptyMessage } from "@/lib/match-squad/remaining-empty-copy";
 import type {
@@ -368,6 +369,12 @@ export default function MatchSquadSection({
               Speichert…
             </p>
           ) : null}
+
+          <ReleasedPlayersDiscoveryPanel
+            eventId={matchId}
+            variant={variant}
+            canMutateSquad={canMutate}
+          />
         </div>
       ) : null}
     </PlanningEditorParticipantsSection>

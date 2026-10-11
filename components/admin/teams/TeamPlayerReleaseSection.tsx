@@ -6,6 +6,7 @@ import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { Button } from "@/components/ui/Button";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import PlayerReleaseEditorSheet from "@/components/admin/teams/PlayerReleaseEditorSheet";
+import TeamPlayerReleaseRequestsPanel from "@/components/admin/teams/TeamPlayerReleaseRequestsPanel";
 import type { PlayerReleaseListItem } from "@/lib/match-squad/player-release-service";
 
 type Props = {
@@ -208,6 +209,12 @@ export default function TeamPlayerReleaseSection({ teamId, teamSeasonId }: Props
           </div>
         ))}
       </div>
+
+      <TeamPlayerReleaseRequestsPanel
+        teamId={teamId}
+        teamSeasonId={teamSeasonId}
+        canDecide={Boolean(data?.canEdit)}
+      />
 
       <PlayerReleaseEditorSheet
         open={sheetOpen}
