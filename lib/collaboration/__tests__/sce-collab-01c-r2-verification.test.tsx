@@ -72,6 +72,8 @@ vi.mock("@/lib/communication/club/club-communication-authorization", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/dashboard/veranstaltungen/evt-gv/edit",
+  useSearchParams: () => new URLSearchParams("tab=uebersicht"),
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
