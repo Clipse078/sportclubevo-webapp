@@ -2,6 +2,8 @@
 
 Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** required at parent module closure. Do not delete pre-existing FC Allschwil data during cleanup.
 
+**Parent closure (2026-10-11):** ledger programme rows **DELETED** on STAGE via `scripts/match-squad-01f-controlled-test-data-cleanup.ts` — **TEST_DATA_REMAINING = 0**. Historical table below documents IDs for audit only.
+
 | Field | Value |
 |-------|-------|
 | **Module** | MATCH_SQUAD_PLAYER_AVAILABILITY-01A |
@@ -30,17 +32,17 @@ Policy: fictional records for 01A–01F UAT; **TEST_DATA_REMAINING = 0** require
 
 ParticipationResponse rows for event `cmrzhj3je006a04kwhbepxvdz` were created via `respondToParticipation` (STAFF source) for players 01–04 and 06; player 05 intentionally has no row.
 
-## 01F (2026-10-11)
+## 01F closure (2026-10-11)
 
 | Field | Value |
 |-------|-------|
-| **Package status** | **OPEN** — PO Club UAT **PASS** (2026-10-11); cleanup APPLY still deferred |
-| **Cleanup script** | `scripts/match-squad-01f-controlled-test-data-cleanup.ts` (dry-run default) |
-| **Readiness scan** | `scripts/match-squad-01f-club-uat-readiness.ts` |
-| **Operational snapshot** | `scripts/match-squad-01f-operational-tracks-snapshot.ts` (read-only) |
-| **Latest DRY RUN** | **25** controlled rows (`TOTAL_CONTROLLED_ROWS`) — APPLY **not** executed |
-| **CLEANUP_STATUS** | `RETAINED_FOR_01F` until post-merge closure APPLY |
-| **TEST_DATA_REMAINING** | **> 0** (unchanged until closure APPLY) |
+| **Package status** | **CLOSED** — PR **#827** @ `c6b7b3d9`; parent programme **CLOSED** |
+| **Cleanup script** | `scripts/match-squad-01f-controlled-test-data-cleanup.ts` |
+| **Pre-APPLY DRY RUN** | **25** ledger-scoped rows (6 persons, 6 PSM, 3 releases, 1 request, 4 MSM, 5 participation; 0 notifications) |
+| **APPLY** | STAGE only — **25** deleted; authorization `match-squad-01f-controlled-test-data-cleanup:stage` |
+| **Post-APPLY DRY RUN** | **TEST_DATA_REMAINING = 0** |
+| **Unrelated FCA data** | Tenant persons **10 → 4** (programme persons only); B1/B2/A TeamSeasons and host events unchanged |
+| **CLEANUP_STATUS (ledger rows below)** | **DELETED** at parent closure |
 
 ## 01E closure (2026-10-11)
 

@@ -4,13 +4,12 @@
 |-------|-------|
 | **Package** | Operational Intelligence & Club UAT |
 | **Canonical key** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01F` |
-| **Status** | **OPEN** (PO Club UAT **PASS** recorded; merge + cleanup APPLY deferred) |
-| **Branch** | `cursor/match-squad-player-availability-01f-operational-intelligence-44b0` |
-| **Feature HEAD** | `a914e77b795766dd37e2b71c7eb664122e8849a5` |
-| **Base STAGE** | `0315716bfd3c0ed30cbdc8e3e21059ef35827a91` |
+| **Status** | **CLOSED** |
+| **STAGE HEAD** | `c6b7b3d95fe160c295f78f8467c5dbba0ea8aa7b` |
+| **Merge** | PR **#827** → `STAGE` (2026-10-11) |
 | **Predecessor** | 01E **CLOSED** (PR **#826**) |
-| **PR** | **#827** (draft → `STAGE`) |
-| **Preview** | Vercel preview @ `a914e77` (shared STAGE Neon) |
+| **Parent programme** | `MATCH_SQUAD_PLAYER_AVAILABILITY` **CLOSED** |
+| **Next programme** | [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) |
 
 ---
 
@@ -83,15 +82,13 @@ Readiness: `npx tsx scripts/match-squad-01f-club-uat-readiness.ts`
 
 ---
 
-## 7. Test-data cleanup (prepared, not applied)
+## 7. Test-data cleanup
 
 Script: `scripts/match-squad-01f-controlled-test-data-cleanup.ts`
 
-- Default **DRY RUN**
-- **APPLY** only with `APP_ENV=stage` (or `SCE_DATA_ENVIRONMENT=STAGE`), operational DB guard, and `--confirm MATCH-SQUAD-01F-CLEANUP`
+- Default **DRY RUN**; **APPLY** requires `APP_ENV=stage` (or `SCE_DATA_ENVIRONMENT=STAGE`), `SCE_OPERATION_AUTHORIZATION=match-squad-01f-controlled-test-data-cleanup:stage`, and `--confirm MATCH-SQUAD-01F-CLEANUP`
 - Deletes **ledger-scoped** programme rows only (SCE Testspieler 01–06 and linked artefacts)
-
-**Do not APPLY until PO declares Club UAT PASS.**
+- **Parent closure APPLY (2026-10-11):** **25** rows deleted on STAGE; post-APPLY **TEST_DATA_REMAINING = 0**
 
 ---
 
@@ -133,18 +130,23 @@ Scan: `npx tsx scripts/match-squad-01f-club-uat-readiness.ts` · tracks: `npx ts
 
 ---
 
-## 12. Closure gates (partial — merge/cleanup deferred)
+## 12. Formal closure (2026-10-11)
 
 | Gate | Result |
 |------|--------|
-| Implementation on branch `…-44b0` | **COMPLETE** |
-| PO Club UAT | **PASS** (§11) |
-| Automated regression | **PASS** (§8) |
-| Build | **PASS** (§8) |
-| Cleanup **DRY RUN** | **PASS** — 25 controlled rows inventoried |
-| Cleanup **APPLY** | **NOT RUN** (await explicit closure prompt after merge) |
-| PR merge → `STAGE` | **NOT DONE** (per guardrails) |
-| Package **CLOSED** | **NO** (open until merge + optional cleanup closure) |
+| PO UAT | **PASS** (§11) |
+| Club UAT | **PASS** (§11) |
+| PR **#827** merged → `STAGE` | **PASS** — merge commit `c6b7b3d95fe160c295f78f8467c5dbba0ea8aa7b` |
+| Cleanup **DRY RUN** (pre-APPLY) | **PASS** — **25** ledger-scoped controlled rows |
+| Cleanup **APPLY** (STAGE only) | **PASS** — **25** deleted; **0** errors |
+| Post-cleanup **DRY RUN** | **TEST_DATA_REMAINING = 0** |
+| Post-cleanup integrity | SCE Testspieler **0**; B1/B2/A TeamSeasons intact; host matches intact; tenant persons **10 → 4** (six programme persons removed only) |
+| Product integrity (STAGE read model) | B1 Spielerfreigaben **0** synthetic; B2 inbound **0**; B2 Aufgebot synthetic rows **0**; dangling synthetic FK refs **0** |
+| Regression `lib/match-squad` | **138 passed**, **NEW_FAILURES = 0** |
+| Build | `NODE_OPTIONS=--max-old-space-size=8192 npm run build` — **PASS** |
+| PROD | **Untouched** |
+| Package **01F** | **CLOSED** |
+| Parent **MATCH_SQUAD_PLAYER_AVAILABILITY** | **CLOSED** |
 
 ---
 
@@ -160,6 +162,6 @@ Scan: `npx tsx scripts/match-squad-01f-club-uat-readiness.ts` · tracks: `npx ts
 
 | Item | Status |
 |------|--------|
-| 01A–01E | CLOSED |
-| **01F** | OPEN — PO UAT **PASS**; draft PR **#827**; merge + `TEST_DATA_REMAINING = 0` deferred |
-| Sponsor / Mobile / SCE-UI-ROLLOUT | Not started |
+| 01A–01F | **CLOSED** |
+| **NEXT** | [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) — Unified Product Experience System |
+| **Then** | Sponsor Commercial Workflows → Mobile App |

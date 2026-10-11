@@ -120,7 +120,7 @@ NAV-01 delivered the first PO-accepted implementation of [`docs/design/SCE-WORKS
 
 **First formal adopters:** Training, Match, Tournament, Veranstaltung activity detail workspaces.
 
-**SCE-UI-ROLLOUT-01+:** parallel / incremental / future — remaining modules adopt progressively; rollout does **not** block the functional roadmap.
+**SCE-UI-ROLLOUT-01+:** **next committed programme** after Match Squad closure — universal context tabs and activity presentation; see [`docs/roadmap/SCE-UI-ROLLOUT-01.md`](../roadmap/SCE-UI-ROLLOUT-01.md).
 
 ## Shared architecture
 
@@ -166,7 +166,7 @@ Tournament squad reuse remains bounded to accepted implementation (Hauptteam `Ma
 
 ## Test data
 
-Controlled Match Squad UAT fixtures **SCE Testspieler 01–06** are **retained** for upcoming **01D / 01E / 01F**. No new NAV-01-specific test data created (`NAV_01_TEST_DATA_CREATED = 0`). Parent module `TEST_DATA_REMAINING = 0` applies only after **01F** closure.
+Match Squad programme UAT fixtures **SCE Testspieler 01–06** were **removed** at **01F** parent closure (2026-10-11); `TEST_DATA_REMAINING = 0` on STAGE. No NAV-01-specific test data was ever created (`NAV_01_TEST_DATA_CREATED = 0`).
 
 ## Known baseline failures (unchanged at closure)
 

@@ -201,7 +201,10 @@ For full feature-level detail, acceptance criteria, and individual feature statu
 
 | Package | Key | Status |
 |---------|-----|--------|
-| Match Squad & Player Availability | `MATCH_SQUAD_PLAYER_AVAILABILITY` | **IN_PROGRESS** — [`docs/match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md`](../match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01.md): **01A–01E CLOSED**; **01F NEXT**; Sponsor commercial workflows after 01F; Mobile App after Sponsor; SCE-UI-ROLLOUT-01+ parallel / non-blocking |
+| Match Squad & Player Availability | `MATCH_SQUAD_PLAYER_AVAILABILITY` | **CLOSED** — 01A–01F + sorting; [`01F closure`](../match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01F.md); STAGE test-data cleanup **TEST_DATA_REMAINING = 0** |
+| Unified Product Experience | `SCE-UI-ROLLOUT-01+` | **NEXT** — [`docs/roadmap/SCE-UI-ROLLOUT-01.md`](./SCE-UI-ROLLOUT-01.md); incorporates **SCE-UI-STANDARD-01** foundation |
+| Sponsor Commercial Workflows | — | **After UI rollout** |
+| Mobile App | — | **After Sponsor** |
 
 Canonical product name replaces obsolete roadmap label **“Weekend Squad & Player Exchange”**. The workflow is **match-centric** (any weekday), not weekend-only.
 
