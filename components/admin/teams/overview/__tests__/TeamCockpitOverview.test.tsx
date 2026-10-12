@@ -20,38 +20,22 @@ import TeamSportingSnapshot from "../TeamSportingSnapshot";
 import TeamTrainingSummary from "../TeamTrainingSummary";
 import TeamCompositionSummary from "../TeamCompositionSummary";
 import TeamCockpitOverviewContent from "../TeamCockpitOverviewContent";
-import type {
-  TeamCockpitMatch,
-  TeamCockpitResult,
-  TeamCockpitStandings,
-} from "@/lib/teams/team-cockpit-sporting-data";
+import type { TeamCockpitResult, TeamCockpitStandings } from "@/lib/teams/team-cockpit-sporting-data";
+import { createTeamCockpitMatchFixture } from "@/lib/teams/__tests__/team-cockpit-match-test-fixtures";
 
 const TEAM_ID = "team-1";
 const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
 
-const NEXT_MATCH: TeamCockpitMatch = {
+const NEXT_MATCH = createTeamCockpitMatchFixture({
   eventId: "event-upcoming",
   startAt: new Date("2026-08-29T16:00:00.000Z"),
-  side: "HOME",
-  status: "SCHEDULED",
-  lifecycle: "UPCOMING",
-  opponentName: "FC Example",
   home: {
     displayName: "FC Allschwil",
     isOwnTeam: true,
     clubName: "FC Allschwil",
     logoUrl: "/tenant-crest.svg",
   },
-  away: {
-    displayName: "FC Example",
-    isOwnTeam: false,
-    clubName: "FC Example",
-    logoUrl: "/example-crest.svg",
-  },
-  venueName: "Im Brüel",
-  location: "Im Brüel",
-  competitionName: "Junioren A Promotion",
-};
+});
 
 const LATEST_RESULT: TeamCockpitResult = {
   ...NEXT_MATCH,

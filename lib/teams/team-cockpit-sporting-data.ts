@@ -39,6 +39,8 @@ import {
 } from "@/lib/club-directory/standings-club-enrichment";
 import { presentStandingsRows } from "@/lib/sporting-data/standings-row-presentation";
 import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
+import type { SceMatchPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import { resolveTeamCockpitMatchPresentation } from "@/lib/teams/team-cockpit-match-presentation";
 
 export const TEAM_COCKPIT_NEXT_MATCHES_DEFAULT_LIMIT = 5;
 export const TEAM_COCKPIT_NEXT_MATCHES_DETAIL_LIMIT = 10;
@@ -64,6 +66,8 @@ export type TeamCockpitMatch = {
   venueName: string | null;
   location: string | null;
   competitionName: string | null;
+  /** Canonical 01C/01D presentation — fixture-authoritative home/away. */
+  scePresentation: SceMatchPresentationModel;
 };
 
 export type TeamCockpitResultPerspective = "WON" | "DRAW" | "LOST" | "UNKNOWN";
@@ -180,7 +184,7 @@ function mapCockpitMatch(
   item: TeamSeasonMatchItem,
   input: Pick<
     GetTeamCockpitSportingDataInput,
-    "teamId" | "tenantClubName" | "tenantLogoUrl"
+    "teamId" | "teamShortName" | "tenantClubName" | "tenantLogoUrl"
   >,
 ): TeamCockpitMatch {
   return {
@@ -205,6 +209,13 @@ function mapCockpitMatch(
     venueName: item.venueName,
     location: item.location,
     competitionName: resolveCockpitMatchCompetitionName(item.competition),
+    scePresentation: resolveTeamCockpitMatchPresentation({
+      item,
+      teamId: input.teamId,
+      teamShortName: input.teamShortName,
+      tenantClubName: input.tenantClubName,
+      tenantLogoUrl: input.tenantLogoUrl,
+    }),
   };
 }
 

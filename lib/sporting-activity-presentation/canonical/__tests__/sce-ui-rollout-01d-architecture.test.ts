@@ -41,6 +41,23 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(detail).toContain("scePresentation");
   });
 
+  it("Team Nächste Spiele consumes SceMatchCard via canonical scePresentation", () => {
+    const row = readFileSync(
+      join(repoRoot, "components/admin/teams/upcoming-matches/TeamUpcomingMatchRow.tsx"),
+      "utf8",
+    );
+    expect(row).toContain("SceMatchCard");
+    expect(row).toContain("scePresentation");
+    expect(row).not.toContain("SportingTeamLogo");
+    expect(row).not.toContain("TeamMatchCard");
+
+    const sportingData = readFileSync(
+      join(repoRoot, "lib/teams/team-cockpit-sporting-data.ts"),
+      "utf8",
+    );
+    expect(sportingData).toContain("resolveTeamCockpitMatchPresentation");
+  });
+
   it("load-event-detail attaches resolveSceMatchPresentation for MATCH", () => {
     const loader = readFileSync(
       join(repoRoot, "lib/sporting-activity-detail/load-event-detail.ts"),

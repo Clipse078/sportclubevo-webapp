@@ -55,9 +55,10 @@ Identity order **never** changes by density.
 | Surface | Path | Notes |
 |---------|------|-------|
 | Activity Detail (MATCH) | `SportingActivityDetailContent` | HERO + `detail-embed`; uses `detail.match.scePresentation` when loaded |
-| Server bridge | `loadMatchActivityDetail` | `resolveSceMatchPresentation` attached to detail match section |
+| Team → Nächste Spiele | `/dashboard/teams/[teamId]/spiele` | COMPACT `SceMatchCard` via `TeamCockpitMatch.scePresentation` |
+| Server bridge | `loadMatchActivityDetail` / `getTeamCockpitSportingData` | `resolveSceMatchPresentation` / `resolveTeamCockpitMatchPresentation` |
 
-**Not migrated in 01D:** Matchcenter `MatchCard.tsx`, Dashboard today cards, Wochenplaner, Infoboard (see legacy register).
+**Not migrated in 01D:** Matchcenter `MatchCard.tsx`, Dashboard today cards, Wochenplaner, Infoboard, Team Resultate (see legacy register).
 
 ---
 
@@ -72,10 +73,11 @@ Canonical `SceMatchCard` supports fixture-authoritative HOME/AWAY grammar. **Bro
 | Asset | Location |
 |-------|----------|
 | Preview route | `/sce-preview/match-card` |
-| Automated render coverage | `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx` |
-| PO screenshots | Capture from preview route during UAT (artifacts under `/opt/cursor/artifacts/` when recorded) |
+| Real product route | `/dashboard/teams/[teamId]/spiele` (Team → Nächste Spiele) |
+| Automated render coverage | `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`, `components/admin/teams/upcoming-matches/__tests__/TeamUpcomingMatchesView.test.tsx` |
+| PO screenshots | Gallery **and** Team → Nächste Spiele (artifacts under `/opt/cursor/artifacts/` when recorded) |
 
-**PO_VISUAL_UAT:** **PENDING** — do not merge until PO accepts the visual family.
+**PO_VISUAL_UAT:** **PENDING** — PO must sign off on **both** the preview gallery and Team → Nächste Spiele; do not merge until accepted.
 
 ---
 
