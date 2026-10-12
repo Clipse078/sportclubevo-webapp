@@ -7,14 +7,26 @@ import type { MatchcenterSide } from "@/lib/matchcenter/types";
 
 /**
  * Match side logo hierarchy (see lib/matchcenter/club-identity.ts history):
- *   own team → Tenant.logoUrl
+ *   tenant club participant (internal Team) → Tenant.logoUrl (club crest)
  *   external → ExternalTeam/ExternalClub crest (externalLogoUrl on side)
+ *
+ * Crest availability is identity-driven — not fixture result state.
  */
+export type MatchSideClubLogoInput = Pick<
+  MatchcenterSide,
+  "isOwnTeam" | "externalLogoUrl"
+> & {
+  canonicalTeamId?: MatchcenterSide["canonicalTeamId"];
+};
+
 export function resolveMatchSideClubLogoUrl(
-  side: Pick<MatchcenterSide, "isOwnTeam" | "externalLogoUrl">,
+  side: MatchSideClubLogoInput,
   tenantLogoUrl: string | null | undefined,
 ): string | null {
-  if (side.isOwnTeam) {
+  const isTenantClubParticipant =
+    side.isOwnTeam || Boolean(side.canonicalTeamId?.trim());
+
+  if (isTenantClubParticipant) {
     return tenantLogoUrl?.trim() || null;
   }
   return side.externalLogoUrl?.trim() || null;

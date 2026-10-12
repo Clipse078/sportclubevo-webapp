@@ -118,6 +118,31 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(row).not.toContain("SpieleManagementMatchIdentity");
     expect(row).not.toContain("ClubLogo");
     expect(row).not.toMatch(/grid-cols-\[minmax\(0,1\.85fr\)/);
+    expect(row).not.toMatch(/md:grid-cols-\[minmax\(0,auto\)_minmax\(0,1fr\)\]/);
+    expect(row).toContain("stacked-card-operations-below");
+    expect(row).toContain("matchcenter-open-points-panel");
+  });
+
+  it("logo resolution uses tenant club crest for internal Team participants", () => {
+    const resolver = readFileSync(
+      join(repoRoot, "lib/sporting-activity-design/logo-resolution.ts"),
+      "utf8",
+    );
+    expect(resolver).toContain("canonicalTeamId");
+    expect(resolver).not.toMatch(/lifecycle|COMPLETED|UPCOMING/i);
+  });
+
+  it("defines canonical match result foreground token", () => {
+    const css = readFileSync(join(repoRoot, "app/globals.css"), "utf8");
+    expect(css).toContain("--sce-match-result-foreground:");
+    const scale = readFileSync(
+      join(repoRoot, "lib/sporting-activity-presentation/canonical/match-card-rich-density.ts"),
+      "utf8",
+    );
+    expect(scale).toContain("--sce-match-result-foreground");
+    expect(scale).toMatch(/HERO:[\s\S]*text-5xl/);
+    expect(scale).toMatch(/STANDARD:[\s\S]*text-3xl/);
+    expect(scale).toMatch(/COMPACT:[\s\S]*text-2xl/);
   });
 
   it("Matchcenter Resultate row consumes SceMatchCard (no legacy table fixture)", () => {
@@ -198,7 +223,7 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
 
   it("result score typography is stronger than VS at each density", () => {
     const weight = (cls: string) => {
-      const result = cls.match(/text-\[(.+?)rem\]|text-(xs|sm|base|lg|xl|2xl|3xl|4xl)/);
+      const result = cls.match(/text-\[(.+?)rem\]|text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl)/);
       if (!result) return 0;
       if (result[1]) return parseFloat(result[1]);
       const map: Record<string, number> = {
@@ -210,6 +235,7 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
         "2xl": 1.5,
         "3xl": 1.875,
         "4xl": 2.25,
+        "5xl": 3,
       };
       return map[result[2]] ?? 0;
     };

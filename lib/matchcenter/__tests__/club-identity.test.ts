@@ -18,6 +18,15 @@ const externalSide = { isOwnTeam: false, externalLogoUrl: EXTERNAL_LOGO };
 const externalSideNoLogo = { isOwnTeam: false, externalLogoUrl: null };
 
 describe("resolveClubIdentityLogoUrl", () => {
+  it("uses tenant logo when canonicalTeamId marks an internal team participant", () => {
+    expect(
+      resolveClubIdentityLogoUrl(
+        { isOwnTeam: false, canonicalTeamId: "team-1", externalLogoUrl: null },
+        TENANT_LOGO,
+      ),
+    ).toBe(TENANT_LOGO);
+  });
+
   describe("internal team (isOwnTeam: true)", () => {
     it("returns tenantLogoUrl when tenant has a logo", () => {
       expect(resolveClubIdentityLogoUrl(ownSide, TENANT_LOGO)).toBe(TENANT_LOGO);

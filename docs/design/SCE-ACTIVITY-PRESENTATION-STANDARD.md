@@ -130,7 +130,7 @@ ActivityCard (shared shell)
 
 **Match (01D shipped):** `components/sporting-activity/SceMatchCard.tsx` consumes `resolveSceMatchPresentation` output; fixture row uses `MatchClubPair` / `ClubIdentityDisplay` with `data-sce-match-side` invariants. Legacy `MatchCard.tsx` (Matchcenter) remains until **01H**.
 
-**Match crest & result (01D R8+):** Real club logos render via `ClubCrest` with **`object-contain`** inside square layout bounds — **never** as circular avatar pills. Missing/broken crests use the **circular initials/icon fallback**. Completed/live **result scores** use the canonical density scale (`SCE_MATCH_RICH_DENSITY_SCALE`, `SCE_MATCH_MICRO_DENSITY_SCALE`) and must dominate VS text and metadata; **0:0** is a valid result when `result` is present.
+**Match crest & result (01D R9+):** Real club logos render via `ClubCrest` with **`object-contain`** inside square layout bounds — **never** as circular avatar pills. Missing/broken crests use the **circular initials/icon fallback**; while a valid URL loads, the same fallback may show underneath (no empty crest gap). Crest URLs come from **`resolveMatchSideClubLogoUrl`** (tenant internal `canonicalTeamId` → club crest; external → `externalLogoUrl`) and **must not vary by upcoming vs completed** when identity is unchanged. Completed/live **result scores** use the R9 density scale and **`--sce-match-result-foreground`** (invariant across win/loss/draw); **0:0** is valid when `result` is present. **Matchcenter open-points** panels stack **below** the canonical card — never compress card width.
 
 ### World-class card UX rules
 

@@ -53,7 +53,8 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     scheduleTextClass: "text-sm text-[var(--text-2)]",
     scheduleIconClass: "h-4 w-4 shrink-0 text-[var(--text-2)]",
     vsTextClass: "text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-[var(--muted)]",
-    resultTextClass: "text-4xl font-bold tabular-nums tracking-tight text-[var(--foreground)]",
+    resultTextClass:
+      "text-5xl font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
     completedMissingResultClass: "text-sm font-semibold",
   },
   STANDARD: {
@@ -69,7 +70,8 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     scheduleTextClass: "text-xs text-[var(--text-2)]",
     scheduleIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--text-2)]",
     vsTextClass: "text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-[var(--muted)]",
-    resultTextClass: "text-2xl font-bold tabular-nums tracking-tight text-[var(--foreground)]",
+    resultTextClass:
+      "text-3xl font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
     completedMissingResultClass: "text-xs font-semibold",
   },
   COMPACT: {
@@ -85,7 +87,8 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     scheduleTextClass: "text-xs text-[var(--text-2)]",
     scheduleIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--text-2)]",
     vsTextClass: "text-[0.625rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]",
-    resultTextClass: "text-xl font-bold tabular-nums tracking-tight text-[var(--foreground)]",
+    resultTextClass:
+      "text-2xl font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
     completedMissingResultClass: "text-xs font-semibold",
   },
 };
@@ -98,7 +101,8 @@ export type SceMatchMicroDensityScale = Pick<
 
 export const SCE_MATCH_MICRO_DENSITY_SCALE: SceMatchMicroDensityScale = {
   vsTextClass: "text-[0.625rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]",
-  resultTextClass: "text-sm font-bold tabular-nums tracking-tight text-[var(--foreground)]",
+  resultTextClass:
+    "text-lg font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
   completedMissingResultClass: "text-xs font-semibold",
 };
 

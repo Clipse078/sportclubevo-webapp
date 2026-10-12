@@ -143,6 +143,15 @@ export function ClubCrest({
       )}
       data-testid="club-crest-bounds"
     >
+      {!showImage ? (
+        <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+          <ClubCrestFallback
+            identity={identity}
+            density={density}
+            emphasized={emphasized}
+          />
+        </span>
+      ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element -- tenant/provider crest URLs */}
       <img
         src={logoUrl}
@@ -152,8 +161,8 @@ export function ClubCrest({
         onError={onError}
         onLoad={onLoad}
         className={cn(
-          "max-h-full max-w-full object-contain",
-          !showImage && "opacity-0",
+          "relative z-[1] max-h-full max-w-full object-contain transition-opacity duration-150",
+          showImage ? "opacity-100" : "opacity-0",
         )}
         data-testid="club-crest-image"
       />

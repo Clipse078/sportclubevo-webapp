@@ -31,7 +31,7 @@ export function SceMatchCardResult({ model, density, className }: SceMatchCardRe
 
   return (
     <span
-      className={cn("shrink-0 tabular-nums text-[var(--foreground)]", className)}
+      className={cn("shrink-0 tabular-nums", className)}
       data-testid="sce-match-result"
       data-sce-match-center
       aria-label={`Ergebnis ${text}`}

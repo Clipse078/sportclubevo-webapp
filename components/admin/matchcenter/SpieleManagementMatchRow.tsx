@@ -75,9 +75,11 @@ function ReadinessPill({ label, tone }: { label: string; tone: "ready" | "open" 
 function PreparationPanel({
   match,
   assessment,
+  openPointsLabel,
 }: {
   match: MatchcenterMatchSummary;
   assessment: MatchcenterOperationalAssessment;
+  openPointsLabel: string | null;
 }) {
   const homeAway = match.homeAway?.trim().toUpperCase();
   if (homeAway !== "HOME") {
@@ -87,35 +89,46 @@ function PreparationPanel({
   const items = buildHomeReadinessChecklist(match);
 
   return (
-    <div className={cn("min-w-0", SCE_SURFACE_DENSE_PANEL, "px-3 py-2.5")}>
-      <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
-        Matchvorbereitung
+    <div
+      className={cn("min-w-0 overflow-hidden", SCE_SURFACE_DENSE_PANEL, "px-3 py-2.5")}
+      data-testid="matchcenter-open-points-panel"
+    >
+      {openPointsLabel ? (
+        <p className="text-xs font-semibold text-[var(--foreground)]">{openPointsLabel}</p>
+      ) : null}
+      <p
+        className={cn(
+          "text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]",
+          openPointsLabel ? "mt-1.5" : undefined,
+        )}
+      >
+        Spielvorbereitung
       </p>
-      <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1" aria-label="Matchvorbereitung">
+      <ul className="mt-1.5 space-y-1.5" aria-label="Spielvorbereitung">
         {items.map((item) => (
-          <li key={item.key} className="flex min-w-[8.5rem] items-start gap-1.5 text-xs">
+          <li key={item.key} className="flex items-start gap-2 text-xs">
             {item.ready ? (
-              <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" aria-hidden="true" />
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden="true" />
             ) : (
               <span
-                className="mt-0.5 h-3 w-3 shrink-0 rounded-full border border-amber-500/60"
+                className="mt-1 h-2 w-2 shrink-0 rounded-full border border-amber-500/70"
                 aria-hidden="true"
               />
             )}
-            <span className="shrink-0 text-[var(--muted)]">{item.label}</span>
-            <span
-              className={cn(
-                "min-w-0 break-words font-medium leading-snug",
-                item.ready ? "text-[var(--text-2)]" : "text-amber-600/90",
-              )}
-            >
-              {item.ready ? item.value ?? "✓" : "—"}
+            <span className="min-w-0 flex-1 leading-snug">
+              <span className="text-[var(--muted)]">{item.label}</span>
+              {item.ready && item.value ? (
+                <span className="mt-0.5 block font-medium text-[var(--text-2)]">{item.value}</span>
+              ) : null}
+              {!item.ready ? (
+                <span className="mt-0.5 block font-medium text-[var(--text-2)]">Offen</span>
+              ) : null}
             </span>
           </li>
         ))}
       </ul>
       {assessment.teamUnresolved ? (
-        <p className="mt-1 text-[0.6875rem] text-amber-600">Team nicht zugeordnet</p>
+        <p className="mt-2 text-[0.6875rem] font-medium text-amber-600/90">Team nicht zugeordnet</p>
       ) : null}
     </div>
   );
@@ -182,7 +195,7 @@ export default function SpieleManagementMatchRow({
         isSelecting && isSelected && "ring-2 ring-emerald-500/40",
       )}
       data-testid={`matchcenter-spielplanung-row-${match.id}`}
-      data-sce-matchcenter-composition="bounded-card-with-operations"
+      data-sce-matchcenter-composition="stacked-card-operations-below"
     >
       {isSelecting ? (
         <label className="relative z-[2] flex items-center gap-2">
@@ -208,28 +221,32 @@ export default function SpieleManagementMatchRow({
         </div>
       ) : null}
 
-      <div
-        className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,auto)_minmax(0,1fr)] md:items-start md:gap-4"
-        data-testid={`matchcenter-team-matchup-${match.id}`}
-      >
-        <div className="min-w-0 max-md:pr-8">
+      <div className="min-w-0 flex flex-col gap-2.5" data-testid={`matchcenter-team-matchup-${match.id}`}>
+        <div className="min-w-0 w-full max-md:pr-8">
           <SceMatchCard
             model={scePresentation}
             density={cardDensity}
             fmtCfg={fmtCfg}
             linkToDetail
+            className="w-full max-w-none"
             testId={`matchcenter-sce-match-${match.id}`}
           />
         </div>
 
         <div
-          className="flex min-w-0 flex-col gap-2 border-t border-[var(--border)]/45 pt-2.5 md:border-l md:border-t-0 md:pl-4 md:pt-0"
+          className="flex min-w-0 flex-col gap-2 border-t border-[var(--border)]/45 pt-2.5"
           data-testid={`matchcenter-action-${match.id}`}
         >
           {showReadiness ? (
             <ReadinessPill label={status.label} tone={live ? "ready" : readinessTone} />
           ) : null}
-          <PreparationPanel match={match} assessment={assessment} />
+          <PreparationPanel
+            match={match}
+            assessment={assessment}
+            openPointsLabel={
+              status.label.includes("offen") ? status.label : null
+            }
+          />
         </div>
       </div>
     </article>

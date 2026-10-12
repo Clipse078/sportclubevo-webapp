@@ -5,14 +5,16 @@
  * This module re-exports the canonical match-side logo rule for existing Matchcenter consumers.
  */
 
-import { resolveMatchSideClubLogoUrl } from "@/lib/sporting-activity-design/logo-resolution";
-import type { MatchcenterSide } from "./types";
+import {
+  resolveMatchSideClubLogoUrl,
+  type MatchSideClubLogoInput,
+} from "@/lib/sporting-activity-design/logo-resolution";
 
 /**
  * Resolves the effective logo URL for one match side.
  */
 export function resolveClubIdentityLogoUrl(
-  side: Pick<MatchcenterSide, "isOwnTeam" | "externalLogoUrl">,
+  side: MatchSideClubLogoInput,
   tenantLogoUrl: string | null | undefined,
 ): string | null {
   return resolveMatchSideClubLogoUrl(side, tenantLogoUrl);

@@ -41,12 +41,14 @@ describe("ClubCrest accessibility", () => {
     expect(screen.getByTestId("club-crest-bounds").className).not.toContain("rounded-full");
   });
 
-  it("does not show initials fallback while a valid logo is still loading", () => {
+  it("shows initials fallback underneath until the logo finishes loading", () => {
     const identity = buildNameOnlyClubIdentity("FC Example");
     identity.logoUrl = "https://cdn.example.com/ok.png";
     render(<ClubCrest identity={identity} />);
-    expect(screen.queryByTestId("club-crest-fallback-initials")).toBeNull();
+    expect(screen.getByTestId("club-crest-fallback-initials")).toBeInTheDocument();
     expect(screen.getByTestId("club-crest-image")).toBeInTheDocument();
+    fireEvent.load(screen.getByTestId("club-crest-image"));
+    expect(screen.queryByTestId("club-crest-fallback-initials")).toBeNull();
   });
 
   it("keeps circular treatment for missing-logo fallback only", () => {
