@@ -173,10 +173,11 @@ export default function SpieleManagementMatchRow({
   return (
     <article
       className={cn(
-        "relative flex min-w-0 flex-col gap-2.5",
-        isSelecting && isSelected && "rounded-xl ring-2 ring-emerald-500/40",
+        "relative flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/55 p-2.5 sm:p-3",
+        isSelecting && isSelected && "ring-2 ring-emerald-500/40",
       )}
       data-testid={`matchcenter-spielplanung-row-${match.id}`}
+      data-sce-matchcenter-composition="bounded-card-with-operations"
     >
       {isSelecting ? (
         <label className="relative z-[2] flex items-center gap-2">
@@ -191,8 +192,22 @@ export default function SpieleManagementMatchRow({
         </label>
       ) : null}
 
-      <div className="flex min-w-0 items-start justify-between gap-2">
-        <div className="min-w-0 flex-1" data-testid={`matchcenter-team-matchup-${match.id}`}>
+      {!isSelecting ? (
+        <div className="absolute right-2 top-2 z-[2] sm:right-3 sm:top-3">
+          <SpieleMatchRowContextMenu
+            matchId={match.id}
+            detailHref={detailHref}
+            wochenplanerHref={wochenplanerHref}
+            canManage={canManage}
+          />
+        </div>
+      ) : null}
+
+      <div
+        className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,auto)_minmax(0,1fr)] md:items-start md:gap-4"
+        data-testid={`matchcenter-team-matchup-${match.id}`}
+      >
+        <div className="min-w-0 max-md:pr-8">
           <SceMatchCard
             model={scePresentation}
             density={cardDensity}
@@ -201,26 +216,16 @@ export default function SpieleManagementMatchRow({
             testId={`matchcenter-sce-match-${match.id}`}
           />
         </div>
-        {!isSelecting ? (
-          <div className="relative z-[2] shrink-0 pt-1">
-            <SpieleMatchRowContextMenu
-              matchId={match.id}
-              detailHref={detailHref}
-              wochenplanerHref={wochenplanerHref}
-              canManage={canManage}
-            />
-          </div>
-        ) : null}
-      </div>
 
-      <div
-        className="flex min-w-0 flex-col gap-2 border-t border-[var(--border)]/50 pt-2.5"
-        data-testid={`matchcenter-action-${match.id}`}
-      >
-        {showReadiness ? (
-          <ReadinessPill label={status.label} tone={live ? "ready" : readinessTone} />
-        ) : null}
-        <PreparationPanel match={match} assessment={assessment} />
+        <div
+          className="flex min-w-0 flex-col gap-2 border-t border-[var(--border)]/45 pt-2.5 md:border-l md:border-t-0 md:pl-4 md:pt-0"
+          data-testid={`matchcenter-action-${match.id}`}
+        >
+          {showReadiness ? (
+            <ReadinessPill label={status.label} tone={live ? "ready" : readinessTone} />
+          ) : null}
+          <PreparationPanel match={match} assessment={assessment} />
+        </div>
       </div>
     </article>
   );

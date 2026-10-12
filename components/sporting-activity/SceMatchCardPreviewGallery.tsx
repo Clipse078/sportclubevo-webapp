@@ -34,7 +34,7 @@ export function SceMatchCardPreviewGallery() {
       data-testid="sce-match-card-preview-gallery"
     >
       <header className="mx-auto mb-8 max-w-5xl space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">SCE Match Card — 01D Preview</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">SCE Match Card — 01D / R6 Preview</h1>
         <p className="text-sm text-[var(--text-2)]">
           Deterministische Fixtures · keine Datenbank · PO Visual UAT
         </p>
