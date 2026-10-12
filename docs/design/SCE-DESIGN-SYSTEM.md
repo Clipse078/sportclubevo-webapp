@@ -34,7 +34,34 @@ Detailed workspace rules: [`SCE-WORKSPACE-SURFACE-STANDARD.md`](./SCE-WORKSPACE-
 | Binary on/off settings | `SwitchToggle`, `SwitchThumb` (`components/ui/SwitchToggle.tsx`) | **SCE Control Standard — Toggle First** (this document) |
 | Activity tab registries | `lib/activity-navigation/configs.ts` | Activity keys on generic contract |
 | Workspace surface | `SceWorkspaceSurface` | [`SCE-WORKSPACE-SURFACE-STANDARD.md`](./SCE-WORKSPACE-SURFACE-STANDARD.md) |
-| Activity presentation (planned) | `lib/sporting-activity-presentation` | [`SCE-ACTIVITY-PRESENTATION-STANDARD.md`](./SCE-ACTIVITY-PRESENTATION-STANDARD.md) — **01C** |
+| Activity presentation | `lib/sporting-activity-presentation/canonical` (`SceActivityPresentationModel`) | [`SCE-ACTIVITY-PRESENTATION-STANDARD.md`](./SCE-ACTIVITY-PRESENTATION-STANDARD.md) — **01C** |
+
+---
+
+## Activity presentation (01C)
+
+Canonical pipeline for every SCE sporting activity surface:
+
+```text
+domain data (authoritative)
+  → typed adapter / resolver (01C)
+  → SceActivityPresentationModel (discriminated: MATCH | TRAINING | TOURNAMENT | CLUB_EVENT)
+  → shared activity component family (01D–01G)
+  → density renderer (HERO | STANDARD | COMPACT | MICRO)
+```
+
+**Rules:**
+
+1. Future modules **must consume** `resolveSceActivityPresentation` / `SceActivityPresentationModel` (or the Activity Detail bridge `resolveSceActivityPresentationFromDetail`) when representing an SCE activity — not ad-hoc title/subtitle strings.
+2. **Match identity** is always fixture-authoritative: **home left, away right** via `buildMatchClubIdentityPair` — never tenant-relative reordering.
+3. **Training location** uses structured `SportingActivityLocation` and `formatSceActivityLocationHierarchy` (host → venue → resource).
+4. **Tournament organiser** remains visible via `buildTournamentOrganiserClubIdentity` — tournaments are not matches.
+5. **Routes** use `buildSceActivityRoute` / existing `buildSportingActivityDetailHref*` — no duplicate URL policy in cards.
+6. **Formatting** (locale strings) stays at the presentation boundary; adapters preserve structured schedule/location/status.
+
+Parallel local presentation models require an ADR exception ([`SCE-UI-ROLLOUT-ADRS.md`](./SCE-UI-ROLLOUT-ADRS.md)).
+
+Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01c-architecture.test.ts`.
 
 ---
 
@@ -135,10 +162,11 @@ Every future SCE package must declare **`SCE_DESIGN_SYSTEM_COMPLIANCE`** in its 
 
 Any introduction of a **new binary checkbox** for settings must fail **`BINARY_CONTROL_COMPLIANCE`** unless an explicit architecture / design-system exception is approved and recorded (ADR or package closure exception).
 
-Automated guardrails (01B):
+Automated guardrails (01B / 01C):
 
 - Context tabs: `lib/context-tabs/__tests__/context-tabs-architecture.test.ts`
 - Binary control standard (doc + canonical primitive): `lib/design-system/__tests__/sce-binary-control-standard.test.ts`
+- Activity presentation model: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01c-architecture.test.ts`
 
 Product-wide static enforcement of “no new setting checkboxes” is deferred to a future UI rollout / design-system hardening package if AST-based rules are required; the compliance contract and Toggle First rule are authoritative from 01B closure onward.
 

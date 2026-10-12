@@ -51,3 +51,27 @@ export {
 export { loadTrainingSessionFacilityHints } from "./training-facility-batch";
 
 export { buildTrainingManagementActivityPresentation } from "./management-adapters";
+
+export {
+  assertSceActivityKind,
+  buildSceActivityPresentationStatus,
+  buildSceActivityRoute,
+  formatSceActivityLocationHierarchy,
+  isSceActivityPresentationModel,
+  mapLegacySportingActivityKindToSceKind,
+  mapPersonalProgrammeStatusToSemantic,
+  mapSportingActivityDensityToSceDensity,
+  parseActivityIdFromResourceKey,
+  resolveSceActivityPresentation,
+  resolveSceActivityPresentationFromLegacy,
+  resolveSceMatchPresentation,
+  resolveSceTournamentPresentation,
+  resolveSceTrainingPresentationFromLegacy,
+  SCE_ACTIVITY_DENSITY_CONTRACT,
+  SCE_ACTIVITY_LOCATION_HIERARCHY_SEPARATOR,
+  type SceActivityKind,
+  type SceActivityPresentationDensity,
+  type SceActivityPresentationModel,
+  type SceActivityPresentationSource,
+  type SceActivityRoute,
+} from "./canonical";
