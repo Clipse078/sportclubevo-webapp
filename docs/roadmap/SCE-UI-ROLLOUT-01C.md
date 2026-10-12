@@ -4,9 +4,11 @@
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01C` |
 | **Programme** | [`SCE-UI-ROLLOUT-01+`](./SCE-UI-ROLLOUT-01.md) |
-| **Status** | **IMPLEMENTATION COMPLETE / PR OPEN** (awaiting merge for formal closure) |
+| **Status** | **IMPLEMENTATION COMPLETE** — formal **CLOSED** after PR #831 merge (see §10) |
 | **Branch** | `cursor/sce-ui-rollout-01c-universal-activity-presentation` |
+| **PR** | [#831](https://github.com/Clipse078/sportclubevo-webapp/pull/831) → `STAGE` |
 | **Base** | `STAGE` @ `d7273d9393c4219cc6f6ce3442614db30b576881` |
+| **Feature HEAD (pre-merge)** | `49b1a8cc461711893f338a8be5b0783680aefeb2` |
 | **Schema / PROD** | **No changes** |
 
 ---
@@ -103,3 +105,19 @@ Do **not** mark Infoboard legacy rows migrated in this package.
 ---
 
 **NEXT programme package after closure:** [`SCE-UI-ROLLOUT-01D`](./SCE-UI-ROLLOUT-01.md) — Canonical Match Card family.
+
+---
+
+## 10. Closure evidence (2026-10-12)
+
+| Gate | Result |
+|------|--------|
+| IMPLEMENTATION | **PASS** |
+| AUTOMATED_VALIDATION | **PASS** — 20 canonical tests; 112 sporting-activity / design / detail regressions |
+| BUILD | **PASS** — `NODE_OPTIONS=--max-old-space-size=8192 npm run build` |
+| HUMAN_UAT | **NOT_REQUIRED** — `VISIBLE_UI_CHANGE = NO` |
+| CI (PR #831) | **PASS** — Vercel, Vercel Preview Comments |
+| SCE_DESIGN_SYSTEM_COMPLIANCE | **PASS** |
+| PR merged | Record merge commit SHA in programme doc after merge lands on `STAGE` |
+
+Repository-wide `tsc --noEmit` reports **pre-existing** failures (including `scripts/__tests__/*` TS2339/TS2783 and unrelated app test fixtures). **01C production modules** typecheck via Next.js build; no new production TypeScript errors attributable to 01C scope.
