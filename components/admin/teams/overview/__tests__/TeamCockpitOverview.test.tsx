@@ -207,8 +207,9 @@ describe("TEAM-COCKPIT-PREMIUM-01E — sporting snapshot", () => {
       />,
     );
 
-    expect(container.querySelectorAll("img")).toHaveLength(1);
-    expect(container.querySelectorAll("svg.lucide-shield")).toHaveLength(1);
+    const crestImages = container.querySelectorAll("img");
+    expect(crestImages).toHaveLength(1);
+    expect(crestImages[0]?.getAttribute("src")).toBe("/tenant-crest.svg");
   });
 
   it("D. renders result empty state", () => {
