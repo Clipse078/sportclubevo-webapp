@@ -9,6 +9,7 @@ import {
   resolveSeriesAllocationDisplay,
 } from "@/lib/training/series-cockpit";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
+import type { SceTrainingPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 import type { TrainingAllocationDto, TrainingSeriesDto, TrainingSeriesStatus, Weekday } from "@/lib/training/types";
 
 const WEEKDAY_SHORT: Record<Weekday, string> = {
@@ -74,6 +75,8 @@ export type TrainingSeriesManagementRow = {
   seriesEntries: TrainingSeriesManagementSeriesEntry[];
   /** Attached on the server in training management page load (SCE-ACTIVITY-UX-01R8). */
   activityPresentation?: SportingActivityPresentation;
+  /** Canonical 01E training card model — server-attached with activityPresentation. */
+  sceTrainingPresentation?: SceTrainingPresentationModel;
 };
 
 export type TrainingSeriesManagementFilters = {

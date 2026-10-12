@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import TrainingSeriesManagementRow from "@/components/admin/training/TrainingSeriesManagementRow";
 import type { TrainingSeriesManagementRow as Row } from "@/lib/training/management-series-view";
 import { buildTrainingManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-adapters";
+import { resolveSceTrainingPresentationFromManagementRow } from "@/lib/sporting-activity-presentation/canonical/adapters/training-management";
 
 const BASE_ROW: Row = {
   seriesId: "series-1",
@@ -48,6 +49,21 @@ const BASE_ROW: Row = {
     },
     "FC Allschwil",
   ),
+  sceTrainingPresentation: resolveSceTrainingPresentationFromManagementRow(
+    {
+      teamSeasonId: "ts-1",
+      title: "Junioren F2 Training",
+      teamDisplayName: "1. Mannschaft",
+      weekdays: ["MONDAY", "WEDNESDAY", "FRIDAY"],
+      rhythmLabel: "Mo · Mi · Fr",
+      timeLabel: "18:45–20:15",
+      timeDetailLines: null,
+      facilityVenueName: "Kunstrasen 2",
+      facilityResourceLabel: "Kunstrasen 2 A",
+      status: "ACTIVE",
+    },
+    "FC Allschwil",
+  ),
   facilityVenueName: "Kunstrasen 2",
   facilityResourceLabel: "Kunstrasen 2 A",
   facilityLabels: ["Kunstrasen 2 A"],
@@ -64,16 +80,13 @@ describe("TrainingSeriesManagementRow", () => {
       />,
     );
 
-    expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
-    expect(screen.getByTestId("sporting-activity-meta-rail-time")).toHaveTextContent(
-      "18:45–20:15",
-    );
-    expect(screen.queryByText("18:45–20:15", { selector: "p" })).toBeNull();
-    expect(screen.getByText("TRAINING").getAttribute("data-activity-type-pill")).toBe(
-      "training-blue",
-    );
-    expect(screen.getByText("FC Allschwil - Kunstrasen 2")).toBeInTheDocument();
-    expect(screen.queryByText(/FC Allschwil ·/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("training-management-sce-card")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Junioren F2 Training");
+    expect(screen.getByTestId("sce-training-compact-time")).toHaveTextContent("18:45–20:15");
+    expect(screen.getByTestId("sce-training-compact-weekdays")).toHaveTextContent("Mo · Mi · Fr");
+    expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("FC Allschwil");
+    expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("Kunstrasen 2 A");
+    expect(screen.queryByTestId("sporting-activity-meta-rail-time")).toBeNull();
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Mo");
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Fr");
     expect(screen.getByTestId("training-facility-cell")).toHaveTextContent("Kunstrasen 2 A");

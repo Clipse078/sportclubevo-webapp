@@ -76,11 +76,31 @@ export type SceMatchPresentationModel = SceActivityPresentationBase & {
   contextBadges?: SceMatchContextBadge[];
 };
 
+/** Session uses `schedule` on the base model; recurring series uses `recurrence`. */
+export type SceTrainingRecurrencePresentation = {
+  weekdayShortLabels: string[];
+  /** e.g. Mo · Mi · Fr when labels are joined for display */
+  rhythmLabel?: string;
+  timeLabel: string;
+  timeDetailLines?: string[] | null;
+};
+
+export type SceTrainingSchedulePresentation =
+  | { kind: "SESSION" }
+  | { kind: "RECURRING_DEFINITION"; recurrence: SceTrainingRecurrencePresentation };
+
 export type SceTrainingPresentationModel = SceActivityPresentationBase & {
   kind: "TRAINING";
   trainingTitle: string;
   team?: { name: string };
+  schedulePresentation?: SceTrainingSchedulePresentation;
 };
+
+export function isSceTrainingPresentationModel(
+  value: SceActivityPresentationModel,
+): value is SceTrainingPresentationModel {
+  return value.kind === "TRAINING";
+}
 
 export type SceTournamentPresentationModel = SceActivityPresentationBase & {
   kind: "TOURNAMENT";

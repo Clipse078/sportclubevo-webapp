@@ -22,6 +22,7 @@ export function resolveSceTrainingPresentationFromLegacy(
     trainingTitle: presentation.identity.title,
     team: presentation.team?.name ? { name: presentation.team.name } : undefined,
     schedule: { ...presentation.schedule },
+    schedulePresentation: { kind: "SESSION" },
     location: { ...presentation.location },
     route: buildSceActivityRoute("TRAINING", resourceKey),
     status: presentation.status

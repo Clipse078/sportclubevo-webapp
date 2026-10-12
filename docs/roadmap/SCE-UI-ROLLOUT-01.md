@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01+` |
-| **Status** | **IN_PROGRESS** — **01A** closed; **01B** closed; **01C** closed; **01D** closed; **01E** next (not started) |
+| **Status** | **IN_PROGRESS** — **01A–01E** closed; **01F** next (Tournament Card family) |
 | **Predecessor** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01F` **CLOSED** |
 | **Not in scope for planning doc** | Implementation branches, component code, PROD deploy |
 
@@ -123,6 +123,28 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **SCE-UI-ROLLOUT-01L** | Remaining eligible contextual-detail pages → Universal Context Tabs |
 | **SCE-UI-ROLLOUT-01M** | Responsive/mobile-readiness + accessibility + visual-consistency audit |
 | **SCE-UI-ROLLOUT-01N** | Product-wide integrity/UAT sweep + legacy presentation removal |
+
+### Package rollout status
+
+| Package | Status |
+|---------|--------|
+| **01A** | **CLOSED** |
+| **01B** | **CLOSED** |
+| **01C** | **CLOSED** |
+| **01D** | **CLOSED** |
+| **01E** | **CLOSED** |
+| **01F** | **NEXT / NOT STARTED** |
+| **01G** | **NOT STARTED** |
+| **01H** | **NOT STARTED** |
+| **01I** | **NOT STARTED** |
+| **01J** | **NOT STARTED** |
+| **01K** | **NOT STARTED** |
+| **01L** | **NOT STARTED** |
+| **01M** | **NOT STARTED** |
+| **01N** | **NOT STARTED** |
+
+**Sponsor Commercial Workflows:** AFTER COMPLETE UI ROLLOUT  
+**Mobile App:** AFTER SPONSOR
 
 ---
 
