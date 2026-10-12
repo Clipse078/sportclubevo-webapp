@@ -40,17 +40,14 @@ export function resolveSceMatchPresentation(
   const assessment = input.assessment ?? assessMatchOperationalState(match);
   const spieleStatus = resolveSpieleStatusPresentation(match, assessment);
 
-  const canonicalResultLabel = getMatchcenterResultLabel(match);
-  const rawResultLabel = match.resultLabel?.trim() || null;
-  const displayLabel = canonicalResultLabel ?? rawResultLabel;
-  const result =
-    displayLabel || match.scoreHome != null || match.scoreAway != null
-      ? {
-          scoreHome: match.scoreHome,
-          scoreAway: match.scoreAway,
-          displayLabel,
-        }
-      : null;
+  const displayLabel = getMatchcenterResultLabel(match);
+  const result = displayLabel
+    ? {
+        scoreHome: match.scoreHome,
+        scoreAway: match.scoreAway,
+        displayLabel,
+      }
+    : null;
 
   const mode = normalizeSportingLocationMode(match.homeAway);
   const pitch =
