@@ -12,7 +12,7 @@ type Props = {
 export default function TeamUpcomingMatchRow({ match, formatConfig }: Props) {
   return (
     <div
-      className="px-4 py-2.5"
+      className="min-w-0 h-full"
       data-testid={`team-upcoming-match-${match.eventId}`}
       data-side={match.side}
       data-status={match.status}
@@ -23,7 +23,6 @@ export default function TeamUpcomingMatchRow({ match, formatConfig }: Props) {
         density="STANDARD"
         fmtCfg={formatConfig}
         linkToDetail
-        surface="list-row"
         testId={`team-upcoming-sce-match-${match.eventId}`}
       />
     </div>

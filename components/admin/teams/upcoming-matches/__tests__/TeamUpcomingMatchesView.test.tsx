@@ -11,6 +11,21 @@ import { createTeamCockpitMatchFixture } from "@/lib/teams/team-cockpit-match-fi
 const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
 
 describe("SCE-UI-ROLLOUT-01D — TeamUpcomingMatchesView (canonical SceMatchCard)", () => {
+  it("renders upcoming fixtures in a responsive card grid (not full-width rows)", () => {
+    render(
+      <TeamUpcomingMatchesView
+        matches={[createTeamCockpitMatchFixture()]}
+        seasonName="2026/2027"
+        formatConfig={FORMAT_CONFIG}
+      />,
+    );
+
+    const list = screen.getByTestId("team-upcoming-matches-list");
+    expect(list.className).toMatch(/grid/);
+    expect(list.className).toMatch(/xl:grid-cols-3/);
+    expect(list.className).not.toMatch(/divide-y/);
+  });
+
   it("renders multiple upcoming fixtures in ascending order", () => {
     const matches = [
       createTeamCockpitMatchFixture({ eventId: "event-earlier" }),

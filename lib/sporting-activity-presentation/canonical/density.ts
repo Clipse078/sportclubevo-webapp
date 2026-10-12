@@ -45,7 +45,7 @@ export const SCE_ACTIVITY_DENSITY_CONTRACT: Record<
     status: "preferred",
     location: "optional",
     teamOrOrganiserContext: "hidden",
-    competitionOrResult: "hidden",
+    competitionOrResult: "optional",
     crests: "optional",
   },
   MICRO: {
@@ -55,7 +55,7 @@ export const SCE_ACTIVITY_DENSITY_CONTRACT: Record<
     location: "hidden",
     teamOrOrganiserContext: "hidden",
     competitionOrResult: "hidden",
-    crests: "hidden",
+    crests: "optional",
   },
 };
 

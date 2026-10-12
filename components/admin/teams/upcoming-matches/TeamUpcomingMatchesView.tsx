@@ -37,11 +37,11 @@ export default function TeamUpcomingMatchesView({
         </div>
       ) : (
         <ol
-          className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+          className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
           data-testid="team-upcoming-matches-list"
         >
           {matches.map((match) => (
-            <li key={match.eventId}>
+            <li key={match.eventId} className="min-w-0">
               <TeamUpcomingMatchRow match={match} formatConfig={formatConfig} />
             </li>
           ))}

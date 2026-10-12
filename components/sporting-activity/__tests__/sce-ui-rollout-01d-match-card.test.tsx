@@ -34,6 +34,17 @@ function homeAwaySides(container: HTMLElement) {
   return { home, away, fixture };
 }
 
+function stackedIdentityOrder(sideEl: Element | null | undefined) {
+  expect(sideEl).toBeTruthy();
+  const crest = sideEl!.querySelector('[data-sce-match-region$="-crest"]');
+  const name = sideEl!.querySelector('[data-sce-match-region$="-name"]');
+  expect(name).toBeTruthy();
+  if (crest && name) {
+    expect(crest.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  }
+  return { crest, name };
+}
+
 describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
   it.each(DENSITIES)("renders fixture home left / away right at density %s", (density) => {
     const { container } = renderCard({}, density);
@@ -129,10 +140,52 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     expect(status.textContent?.length).toBeGreaterThan(0);
   });
 
-  it("MICRO omits crest images per density contract", () => {
-    renderCard({}, "MICRO");
-    expect(screen.queryByTestId("club-crest-image")).toBeNull();
+  it("STANDARD stacks crest above club name (not inline Resultate row)", () => {
+    const { container } = renderCard({}, "STANDARD");
+    const card = container.querySelector('[data-sce-match-card]')!;
+    const competition = card.querySelector('[data-sce-match-region="competition"]');
+    const fixture = card.querySelector('[data-sce-match-region="fixture"]');
+    const schedule = card.querySelector('[data-sce-match-region="schedule"]');
+    const location = card.querySelector('[data-sce-match-region="location"]');
+
+    expect(competition && fixture).toBeTruthy();
+    if (competition && fixture) {
+      expect(
+        competition.compareDocumentPosition(fixture) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    if (fixture && schedule) {
+      expect(
+        fixture.compareDocumentPosition(schedule) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    if (schedule && location) {
+      expect(
+        schedule.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+
+    const { home, away } = homeAwaySides(container);
+    stackedIdentityOrder(home);
+    stackedIdentityOrder(away);
+
+    expect(container.querySelector(".sm\\:grid-cols-\\[minmax\\(0\\,8\\.75rem\\)")).toBeNull();
   });
+
+  it("MICRO uses horizontal identity with optional crests", () => {
+    renderCard({}, "MICRO");
+    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
+    expect(screen.getByTestId("club-crest-image")).toBeTruthy();
+  });
+
+  it.each(["HERO", "STANDARD", "COMPACT"] as const)(
+    "rich density %s uses stacked fixture panel",
+    (density) => {
+      const { container } = renderCard({}, density);
+      const { home } = homeAwaySides(container);
+      stackedIdentityOrder(home);
+    },
+  );
 
   it("adapter-backed model is consumed without local DTO fields on card", () => {
     const model = resolveSceMatchPresentation({

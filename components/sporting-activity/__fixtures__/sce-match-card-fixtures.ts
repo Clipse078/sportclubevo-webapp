@@ -120,6 +120,12 @@ export const SCE_MATCH_CARD_PREVIEW_MODELS = {
   cancelled: resolveSceMatchCardFixture({
     status: "CANCELLED",
   }),
+  liveWithScore: resolveSceMatchCardFixture({
+    status: "LIVE",
+    resultLabel: "2:1",
+    scoreHome: 2,
+    scoreAway: 1,
+  }),
   longNames: resolveSceMatchCardFixture({
     home: side({
       displayName: "FC Allschwil Sportverein Region Basel",
