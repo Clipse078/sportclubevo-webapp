@@ -129,7 +129,24 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
       "utf8",
     );
     expect(resolver).toContain("canonicalTeamId");
+    expect(resolver).toContain("resolveTenantClubCrestUrl");
     expect(resolver).not.toMatch(/lifecycle|COMPLETED|UPCOMING/i);
+  });
+
+  it("R11 — single canonical sce-club-visual-identity module backs match crest resolution", () => {
+    const canonical = readFileSync(
+      join(repoRoot, "lib/sporting-data/sce-club-crest-resolution.ts"),
+      "utf8",
+    );
+    expect(canonical).toContain("resolveSceClubCrestUrl");
+    expect(canonical).toContain("resolveTenantClubCrestUrl");
+
+    const matchBridge = readFileSync(
+      join(repoRoot, "lib/sporting-data/match-external-crest-resolution.ts"),
+      "utf8",
+    );
+    expect(matchBridge).toContain("resolveSceClubCrestUrl");
+    expect(matchBridge).toContain("loadSceClubCrestResolutionContext");
   });
 
   it("R10 — consumers delegate crest resolution to canonical presentation (no local logo rebuild)", () => {

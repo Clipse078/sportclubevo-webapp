@@ -374,6 +374,7 @@ function toSideIdentity(input: {
           externalTeam: input.canonicalExternalTeam,
           externalClub: input.canonicalExternalClub,
           providerTeamId: input.providerTeamId,
+          providerTeamName: input.providerTeamName,
           context: input.crestContext,
         }),
     providerTeamId: input.providerTeamId,

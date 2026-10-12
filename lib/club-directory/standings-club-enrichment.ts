@@ -174,10 +174,10 @@ export async function buildStandingsClubEnrichmentByProviderTeamId(
     collectProviderClubIdsFromExternalTeams(explicitExternalTeams),
   );
 
-  const resolvedProviderTeamIds = new Set<number>();
+  const autoResolutionIndexes = buildCanonicalClubNameIndexes(canonicalClubs);
 
   for (const externalTeam of explicitExternalTeams) {
-    const logoUrl = resolveExternalTeamLogoWithCanonicalFallback(
+    let logoUrl = resolveExternalTeamLogoWithCanonicalFallback(
       {
         team: externalTeam,
         directClub: externalTeam.externalClub,
@@ -187,21 +187,34 @@ export async function buildStandingsClubEnrichmentByProviderTeamId(
     );
 
     for (const providerMapping of externalTeam.providerMappings) {
-      resolvedProviderTeamIds.add(providerMapping.providerTeamId);
+      const providerTeamName =
+        providerMapping.providerTeamName ??
+        uniqueRows.get(providerMapping.providerTeamId) ??
+        "";
+
+      if (!logoUrl && providerTeamName.trim()) {
+        const autoResolved = resolveCanonicalClubFromProviderTeamName(
+          providerTeamName,
+          autoResolutionIndexes,
+        );
+        logoUrl = autoResolved?.logoUrl ?? null;
+      }
+
       enrichmentByProviderTeamId.set(providerMapping.providerTeamId, {
         canonicalClubId: externalTeam.externalClub.id,
         shortName: externalTeam.shortName ?? externalTeam.externalClub.shortName,
         logoUrl,
-        resolutionSource: "explicit_provider_mapping",
+        resolutionSource: logoUrl
+          ? "explicit_provider_mapping"
+          : "unresolved",
         providerTeamName: providerMapping.providerTeamName,
       });
     }
   }
 
-  const autoResolutionIndexes = buildCanonicalClubNameIndexes(canonicalClubs);
-
   for (const [providerTeamId, providerTeamName] of uniqueRows) {
-    if (resolvedProviderTeamIds.has(providerTeamId)) {
+    const existing = enrichmentByProviderTeamId.get(providerTeamId);
+    if (existing?.logoUrl?.trim()) {
       continue;
     }
 
@@ -215,11 +228,11 @@ export async function buildStandingsClubEnrichmentByProviderTeamId(
       resolved
         ? toAutoResolvedEnrichment(resolved)
         : {
-            canonicalClubId: null,
-            shortName: null,
+            canonicalClubId: existing?.canonicalClubId ?? null,
+            shortName: existing?.shortName ?? null,
             logoUrl: null,
             resolutionSource: "unresolved",
-            providerTeamName: null,
+            providerTeamName: existing?.providerTeamName ?? null,
           },
     );
   }

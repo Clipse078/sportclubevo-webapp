@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { cn } from "@/lib/cn";
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
@@ -86,6 +86,15 @@ function ClubCrestFallback({
   );
 }
 
+function markImageLoaded(
+  img: HTMLImageElement | null,
+  setLoaded: (value: boolean) => void,
+): void {
+  if (img?.complete && img.naturalWidth > 0) {
+    setLoaded(true);
+  }
+}
+
 /**
  * Canonical club crest primitive — resolved logo or intentional initials/icon fallback.
  * Real crests render naturally (object-contain); fallbacks may use circular treatment.
@@ -100,23 +109,20 @@ export function ClubCrest({
 }: ClubCrestProps) {
   const initialUrl = resolveClubIdentityEffectiveLogoUrl(identity);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setFailedUrl(null);
-    setLoaded(false);
+    markImageLoaded(imgRef.current, () => {
+      /* loaded state only needed when showing image — checked via ref on render */
+    });
   }, [initialUrl]);
 
   const onError = useCallback(() => {
     if (initialUrl) {
       setFailedUrl(initialUrl);
-      setLoaded(false);
     }
   }, [initialUrl]);
-
-  const onLoad = useCallback(() => {
-    setLoaded(true);
-  }, []);
 
   const logoUrl = initialUrl && failedUrl !== initialUrl ? initialUrl : null;
   const boundsClass = BOUNDS_CLASSES[density];
@@ -132,8 +138,6 @@ export function ClubCrest({
     );
   }
 
-  const showImage = loaded && failedUrl !== initialUrl;
-
   return (
     <span
       className={cn(
@@ -143,27 +147,16 @@ export function ClubCrest({
       )}
       data-testid="club-crest-bounds"
     >
-      {!showImage ? (
-        <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-          <ClubCrestFallback
-            identity={identity}
-            density={density}
-            emphasized={emphasized}
-          />
-        </span>
-      ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element -- tenant/provider crest URLs */}
       <img
+        ref={imgRef}
         src={logoUrl}
         alt={decorative ? "" : identity.displayName}
         aria-hidden={decorative ? true : undefined}
         title={identity.displayName}
         onError={onError}
-        onLoad={onLoad}
-        className={cn(
-          "relative z-[1] max-h-full max-w-full object-contain transition-opacity duration-150",
-          showImage ? "opacity-100" : "opacity-0",
-        )}
+        onLoad={(event) => markImageLoaded(event.currentTarget, () => undefined)}
+        className="max-h-full max-w-full object-contain"
         data-testid="club-crest-image"
       />
     </span>

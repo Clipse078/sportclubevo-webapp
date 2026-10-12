@@ -4,6 +4,7 @@
  */
 
 import type { MatchcenterSide } from "@/lib/matchcenter/types";
+import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
 
 /**
  * Match club visual identity (01D R10):
@@ -23,15 +24,24 @@ export type MatchSideClubLogoInput = Pick<
   canonicalTeamId?: MatchcenterSide["canonicalTeamId"];
 };
 
+export type MatchSideClubLogoTenantContext = {
+  readonly tenantLogoUrl?: string | null;
+  readonly ownCanonicalClubLogoUrl?: string | null;
+};
+
 export function resolveMatchSideClubLogoUrl(
   side: MatchSideClubLogoInput,
   tenantLogoUrl: string | null | undefined,
+  tenantContext?: MatchSideClubLogoTenantContext,
 ): string | null {
   const isTenantClubParticipant =
     side.isOwnTeam || Boolean(side.canonicalTeamId?.trim());
 
   if (isTenantClubParticipant) {
-    return tenantLogoUrl?.trim() || null;
+    return resolveTenantClubCrestUrl({
+      tenantLogoUrl: tenantContext?.tenantLogoUrl ?? tenantLogoUrl,
+      ownCanonicalClubLogoUrl: tenantContext?.ownCanonicalClubLogoUrl,
+    });
   }
   return side.externalLogoUrl?.trim() || null;
 }

@@ -1,6 +1,7 @@
 import TeamStandingsView from "@/components/admin/teams/standings/TeamStandingsView";
 import { requireTeamCockpitAccess } from "@/lib/teams/team-cockpit-layout";
 import { getTeamCockpitSportingData } from "@/lib/teams/team-cockpit-sporting-data";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 type Props = {
   params: Promise<{ teamId: string }>;
@@ -14,12 +15,14 @@ export default async function TeamRanglistePage({ params }: Props) {
     team.teamSeasons.find((entry) => entry.id === team.currentTeamSeasonId) ?? null;
   const hasProviderMapping = team.currentSeasonSfvMapping != null;
 
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantId);
+
   const sportingData =
     team.currentTeamSeasonId && activeSeason
       ? await getTeamCockpitSportingData({
           tenantId,
           tenantClubName: tenant.name,
-          tenantLogoUrl: tenant.logoUrl,
+          tenantLogoUrl: tenantClubCrestUrl,
           teamId: team.id,
           teamSeasonId: team.currentTeamSeasonId,
           seasonKey: activeSeason.season.key,

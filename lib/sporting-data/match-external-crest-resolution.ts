@@ -1,7 +1,5 @@
 /**
- * Canonical external-club crest resolution for admin match read models
- * (Matchcenter, Team Cockpit season matches). Aligns with
- * resolveMatchParticipantIdentity / public feeds — no network I/O.
+ * Match-shaped crest resolution — delegates to sce-club-visual-identity.
  */
 
 import {
@@ -17,29 +15,24 @@ import {
   type StandingsClubEnrichment,
   type StandingsProviderTeamRow,
 } from "@/lib/club-directory/standings-club-enrichment";
+import {
+  collectExternalProviderTeamRowsFromEvents,
+  EMPTY_SCE_CLUB_CREST_RESOLUTION_CONTEXT,
+  resolveSceClubCrestUrl,
+  type MatchExternalClubLogoRecord,
+  type MatchExternalTeamLogoRecord,
+  type SceClubCrestResolutionContext,
+} from "@/lib/sporting-data/sce-club-crest-resolution";
+import { loadSceClubCrestResolutionContext } from "@/lib/sporting-data/sce-club-visual-identity";
 
 export { CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT };
 
-export type MatchExternalTeamLogoRecord = {
-  readonly logoUrl: string | null;
-  readonly externalClub: { readonly logoUrl: string | null };
-  readonly providerMappings?: readonly ProviderClubIdMappingRow[] | null;
-};
+export type { MatchExternalClubLogoRecord, MatchExternalTeamLogoRecord };
 
-export type MatchExternalClubLogoRecord = {
-  readonly logoUrl: string | null;
-};
+export type MatchExternalCrestResolutionContext = SceClubCrestResolutionContext;
 
-export type MatchExternalCrestResolutionContext = {
-  readonly canonicalLogoByProviderClubId: ReadonlyMap<number, string | null>;
-  readonly logoByProviderTeamId: ReadonlyMap<number, string | null>;
-};
-
-export const EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT: MatchExternalCrestResolutionContext =
-  {
-    canonicalLogoByProviderClubId: new Map(),
-    logoByProviderTeamId: new Map(),
-  };
+export const EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT =
+  EMPTY_SCE_CLUB_CREST_RESOLUTION_CONTEXT;
 
 type MatchExternalMappingLike = {
   readonly providerHomeTeamId: number;
@@ -57,102 +50,25 @@ type MatchEventWithMappingLike = {
 };
 
 /**
- * Priority (deterministic):
- * 1. Linked ExternalTeam + canonical Verein fallback chain
- * 2. Guest ExternalClub crest (manual opponent club)
- * 3. Provider-team enrichment (explicit mapping / canonical name match)
- * 4. null — ClubCrest initials fallback
+ * @deprecated Prefer resolveSceClubCrestUrl from sce-club-visual-identity.
  */
 export function resolveMatchExternalCrestUrl(input: {
   readonly externalTeam: MatchExternalTeamLogoRecord | null | undefined;
   readonly externalClub: MatchExternalClubLogoRecord | null | undefined;
   readonly providerTeamId: number | null;
+  readonly providerTeamName?: string | null;
   readonly context: MatchExternalCrestResolutionContext;
 }): string | null {
-  if (input.externalTeam) {
-    const fromExternalTeam = resolveExternalTeamLogoWithCanonicalFallback(
-      {
-        team: input.externalTeam,
-        directClub: input.externalTeam.externalClub,
-        providerMappings: input.externalTeam.providerMappings,
-      },
-      input.context.canonicalLogoByProviderClubId,
-    );
-    if (fromExternalTeam) {
-      return fromExternalTeam;
-    }
-  }
-
-  if (input.externalClub) {
-    const fromClub = resolveExternalClubLogoUrl(input.externalClub);
-    if (fromClub) {
-      return fromClub;
-    }
-  }
-
-  const providerTeamId = input.providerTeamId;
-  if (providerTeamId !== null && Number.isInteger(providerTeamId)) {
-    const enriched = input.context.logoByProviderTeamId.get(providerTeamId);
-    if (enriched?.trim()) {
-      return enriched.trim();
-    }
-  }
-
-  return null;
+  return resolveSceClubCrestUrl({
+    externalTeam: input.externalTeam,
+    externalClub: input.externalClub,
+    providerTeamId: input.providerTeamId,
+    providerTeamName: input.providerTeamName ?? null,
+    context: input.context,
+  });
 }
 
-export function collectExternalProviderTeamRowsFromEvents(
-  events: readonly MatchEventWithMappingLike[],
-): StandingsProviderTeamRow[] {
-  const rows = new Map<number, string>();
-
-  for (const event of events) {
-    const mapping = event.matchExternalMapping;
-    if (!mapping) {
-      continue;
-    }
-
-    if (mapping.homeTeam === null) {
-      rows.set(
-        mapping.providerHomeTeamId,
-        mapping.providerHomeTeamName?.trim() || "Home team",
-      );
-    }
-
-    if (mapping.awayTeam === null) {
-      rows.set(
-        mapping.providerAwayTeamId,
-        mapping.providerAwayTeamName?.trim() || "Away team",
-      );
-    }
-  }
-
-  return [...rows.entries()].map(([providerTeamId, providerTeamName]) => ({
-    providerTeamId,
-    providerTeamName,
-  }));
-}
-
-function collectExternalTeamsFromEvents(
-  events: readonly MatchEventWithMappingLike[],
-): MatchExternalTeamLogoRecord[] {
-  const teams: MatchExternalTeamLogoRecord[] = [];
-
-  for (const event of events) {
-    const mapping = event.matchExternalMapping;
-    if (!mapping) {
-      continue;
-    }
-    if (mapping.homeExternalTeam) {
-      teams.push(mapping.homeExternalTeam);
-    }
-    if (mapping.awayExternalTeam) {
-      teams.push(mapping.awayExternalTeam);
-    }
-  }
-
-  return teams;
-}
+export { collectExternalProviderTeamRowsFromEvents };
 
 function logoMapFromStandingsEnrichment(
   enrichment: ReadonlyMap<number, StandingsClubEnrichment>,
@@ -164,32 +80,30 @@ function logoMapFromStandingsEnrichment(
   return map;
 }
 
-/**
- * Batched crest context for a set of match events (one tenant).
- */
 export async function loadMatchExternalCrestResolutionContext(input: {
   readonly tenantId: string;
   readonly events: readonly MatchEventWithMappingLike[];
 }): Promise<MatchExternalCrestResolutionContext> {
   const providerRows = collectExternalProviderTeamRowsFromEvents(input.events);
-  const externalTeams = collectExternalTeamsFromEvents(input.events);
 
-  const [enrichmentByProviderTeamId, canonicalLogoByProviderClubId] =
-    await Promise.all([
-      providerRows.length > 0
-        ? buildStandingsClubEnrichmentByProviderTeamId({
-            tenantId: input.tenantId,
-            rows: providerRows,
-          })
-        : Promise.resolve(new Map<number, StandingsClubEnrichment>()),
-      loadCanonicalClubLogoIndex(
-        input.tenantId,
-        collectProviderClubIdsFromExternalTeams(externalTeams),
-      ),
-    ]);
+  const enrichmentByProviderTeamId =
+    providerRows.length > 0
+      ? await buildStandingsClubEnrichmentByProviderTeamId({
+          tenantId: input.tenantId,
+          rows: providerRows,
+        })
+      : new Map<number, StandingsClubEnrichment>();
 
-  return {
-    canonicalLogoByProviderClubId,
+  return loadSceClubCrestResolutionContext({
+    tenantId: input.tenantId,
+    events: input.events,
     logoByProviderTeamId: logoMapFromStandingsEnrichment(enrichmentByProviderTeamId),
-  };
+  });
 }
+
+export {
+  collectProviderClubIdsFromExternalTeams,
+  loadCanonicalClubLogoIndex,
+  resolveExternalClubLogoUrl,
+  resolveExternalTeamLogoWithCanonicalFallback,
+};

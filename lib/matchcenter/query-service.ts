@@ -420,6 +420,7 @@ function createSide(input: {
           externalTeam: input.externalTeamSource,
           externalClub: input.canonicalExternalClub,
           providerTeamId: input.providerTeamId,
+          providerTeamName: input.providerTeamName,
           context: input.crestContext,
         }),
     displayName: resolvedName || fallbackName || "Unknown team",
