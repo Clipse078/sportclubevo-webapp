@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01C` |
 | **Programme** | [`SCE-UI-ROLLOUT-01+`](./SCE-UI-ROLLOUT-01.md) |
-| **Status** | **IMPLEMENTATION COMPLETE** — formal **CLOSED** after PR #831 merge (see §10) |
+| **Status** | **CLOSED** |
 | **Branch** | `cursor/sce-ui-rollout-01c-universal-activity-presentation` |
 | **PR** | [#831](https://github.com/Clipse078/sportclubevo-webapp/pull/831) → `STAGE` |
 | **Base** | `STAGE` @ `d7273d9393c4219cc6f6ce3442614db30b576881` |
@@ -118,6 +118,7 @@ Do **not** mark Infoboard legacy rows migrated in this package.
 | HUMAN_UAT | **NOT_REQUIRED** — `VISIBLE_UI_CHANGE = NO` |
 | CI (PR #831) | **PASS** — Vercel, Vercel Preview Comments |
 | SCE_DESIGN_SYSTEM_COMPLIANCE | **PASS** |
-| PR merged | Record merge commit SHA in programme doc after merge lands on `STAGE` |
+| PR #831 merged | **YES** @ `2026-10-12T07:47:18Z` — merge commit `bed933f151199c586a3121a200689b122ec1f1f9` |
+| Canonical `STAGE` | `bed933f151199c586a3121a200689b122ec1f1f9` |
 
 Repository-wide `tsc --noEmit` reports **pre-existing** failures (including `scripts/__tests__/*` TS2339/TS2783 and unrelated app test fixtures). **01C production modules** typecheck via Next.js build; no new production TypeScript errors attributable to 01C scope.
