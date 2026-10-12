@@ -1,3 +1,4 @@
+import { ScePreviewPitchCanvas } from "@/components/sce/preview/ScePreviewPitchCanvas";
 import TeamUpcomingMatchesView from "@/components/admin/teams/upcoming-matches/TeamUpcomingMatchesView";
 import { buildTeamUpcomingMatchesPreviewFixtures } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-preview-fixtures";
 
@@ -14,7 +15,8 @@ const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
  */
 export default function SceTeamNextMatchesPreviewPage() {
   return (
-    <div className="mx-auto max-w-7xl p-6" data-testid="sce-preview-team-next-matches">
+    <ScePreviewPitchCanvas className="p-6" testId="sce-preview-team-next-matches">
+    <div className="mx-auto max-w-7xl">
       <p className="mb-4 text-sm text-[var(--muted)]">
         Integration preview — same view as Team → Nächste Spiele (authenticated team cockpit).
       </p>
@@ -24,5 +26,6 @@ export default function SceTeamNextMatchesPreviewPage() {
         formatConfig={FORMAT_CONFIG}
       />
     </div>
+    </ScePreviewPitchCanvas>
   );
 }

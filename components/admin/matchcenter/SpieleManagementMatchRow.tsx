@@ -13,6 +13,10 @@ import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
 import { cn } from "@/lib/cn";
+import {
+  SCE_SURFACE_DENSE_PANEL,
+  SCE_SURFACE_STANDARD_PANEL,
+} from "@/lib/shell/sce-surface-system";
 
 type Props = {
   match: MatchcenterMatchSummary;
@@ -83,7 +87,7 @@ function PreparationPanel({
   const items = buildHomeReadinessChecklist(match);
 
   return (
-    <div className="min-w-0 rounded-lg border border-[var(--border)]/60 bg-[var(--surface-2)]/30 px-3 py-2.5">
+    <div className={cn("min-w-0", SCE_SURFACE_DENSE_PANEL, "px-3 py-2.5")}>
       <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
         Matchvorbereitung
       </p>
@@ -173,7 +177,8 @@ export default function SpieleManagementMatchRow({
   return (
     <article
       className={cn(
-        "relative flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/55 p-2.5 sm:p-3",
+        "relative flex min-w-0 flex-col gap-2 p-2.5 sm:p-3",
+        SCE_SURFACE_STANDARD_PANEL,
         isSelecting && isSelected && "ring-2 ring-emerald-500/40",
       )}
       data-testid={`matchcenter-spielplanung-row-${match.id}`}

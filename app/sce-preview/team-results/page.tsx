@@ -1,3 +1,4 @@
+import { ScePreviewPitchCanvas } from "@/components/sce/preview/ScePreviewPitchCanvas";
 import TeamResultsView from "@/components/admin/teams/results/TeamResultsView";
 import { createTeamCockpitResultFixture } from "@/lib/teams/team-cockpit-match-fixtures";
 
@@ -28,7 +29,8 @@ export default function SceTeamResultsPreviewPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl p-6" data-testid="sce-preview-team-results">
+    <ScePreviewPitchCanvas className="p-6" testId="sce-preview-team-results">
+    <div className="mx-auto max-w-3xl">
       <p className="mb-4 text-sm text-[var(--muted)]">
         Integration preview — Team → Resultate (COMPACT `SceMatchCard` per row).
       </p>
@@ -38,5 +40,6 @@ export default function SceTeamResultsPreviewPage() {
         formatConfig={FORMAT_CONFIG}
       />
     </div>
+    </ScePreviewPitchCanvas>
   );
 }

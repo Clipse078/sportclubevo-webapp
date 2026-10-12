@@ -81,6 +81,8 @@
   --sce-surface-standard:       rgb(18 26 46 / 88%);
   --sce-surface-dense:          rgb(10 15 30 / 96%);
   --sce-surface-elevated:       rgb(20 28 48 / 98%);
+  /* Match identity cards — opaque on pitch (no backdrop blur; see SCE_MATCH_CARD_SHELL_CLASS) */
+  --sce-match-card-surface:     rgb(14 20 36 / 99.2%);
 
   --sce-surface-border-subtle:  rgb(255 255 255 / 6%);
   --sce-surface-border:         var(--border);

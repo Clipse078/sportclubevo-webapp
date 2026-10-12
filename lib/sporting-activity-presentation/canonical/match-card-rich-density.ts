@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn";
 import type { ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
+import { SCE_SURFACE_TOKEN_MATCH_CARD } from "@/lib/shell/sce-surface-system";
 import type { SceActivityPresentationDensity } from "./types";
 
 /** Rich card densities share one DOM skeleton — scale tokens only. */
@@ -26,12 +27,14 @@ export type SceMatchRichDensityScale = {
   completedMissingResultClass: string;
 };
 
-/** Canonical bounded match card surface — separates from SCE pitch background. */
+/** Canonical bounded match card surface — pitch-opaque identity layer (no backdrop blur). */
 export const SCE_MATCH_CARD_SHELL_CLASS = cn(
   "rounded-xl border border-[var(--sce-surface-border-elevated)]",
-  "bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow)]",
-  "backdrop-blur-[var(--sce-surface-blur)]",
+  "bg-[var(--sce-match-card-surface)] shadow-[var(--sce-surface-shadow-elevated)]",
 );
+
+/** Resolved CSS variable name for guardrails and design-system docs. */
+export const SCE_MATCH_CARD_SURFACE_VAR = SCE_SURFACE_TOKEN_MATCH_CARD;
 
 export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
   SceMatchRichCardDensity,

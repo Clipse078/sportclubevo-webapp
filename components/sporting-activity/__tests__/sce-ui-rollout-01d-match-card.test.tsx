@@ -291,11 +291,13 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     expect(awayCrest?.querySelector('[data-testid="club-crest-image"]')).toBeNull();
   });
 
-  it("uses elevated SCE surface tokens on the card shell", () => {
+  it("uses pitch-opaque match card surface tokens on the card shell", () => {
     const { container } = renderCard({}, "STANDARD");
     const card = container.querySelector("[data-sce-match-card]")!;
-    expect(card.className).toContain("--sce-surface-elevated");
+    expect(card.className).toContain("--sce-match-card-surface");
     expect(card.className).toContain("--sce-surface-border-elevated");
+    expect(card.className).not.toContain("backdrop-blur");
+    expect(card.className).not.toContain("--surface-1");
   });
 
   it("adapter-backed model is consumed without local DTO fields on card", () => {

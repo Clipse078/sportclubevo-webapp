@@ -1,3 +1,4 @@
+import { ScePreviewPitchCanvas } from "@/components/sce/preview/ScePreviewPitchCanvas";
 import TeamSportingSnapshot from "@/components/admin/teams/overview/TeamSportingSnapshot";
 import {
   createTeamCockpitMatchFixture,
@@ -13,7 +14,8 @@ const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
 
 export default function SceTeamOverviewMatchesPreviewPage() {
   return (
-    <div className="mx-auto max-w-4xl p-6" data-testid="sce-preview-team-overview-matches">
+    <ScePreviewPitchCanvas className="p-6" testId="sce-preview-team-overview-matches">
+    <div className="mx-auto max-w-4xl">
       <p className="mb-4 text-sm text-[var(--muted)]">
         Integration preview — Team → Übersicht Nächstes Spiel / Letztes Resultat (COMPACT).
       </p>
@@ -34,5 +36,6 @@ export default function SceTeamOverviewMatchesPreviewPage() {
         formatConfig={FORMAT_CONFIG}
       />
     </div>
+    </ScePreviewPitchCanvas>
   );
 }

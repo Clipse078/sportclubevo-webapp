@@ -1,5 +1,6 @@
 "use client";
 
+import { ScePreviewPitchCanvas } from "@/components/sce/preview/ScePreviewPitchCanvas";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { SCE_MATCH_CARD_PREVIEW_MODELS } from "@/components/sporting-activity/__fixtures__/sce-match-card-fixtures";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
@@ -29,12 +30,12 @@ const SECTIONS: GallerySection[] = [
 
 export function SceMatchCardPreviewGallery() {
   return (
-    <div
-      className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] sm:px-6"
-      data-testid="sce-match-card-preview-gallery"
+    <ScePreviewPitchCanvas
+      className="px-4 py-8 text-[var(--foreground)] sm:px-6"
+      testId="sce-match-card-preview-gallery"
     >
       <header className="mx-auto mb-8 max-w-5xl space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">SCE Match Card — 01D / R6 Preview</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">SCE Match Card — 01D / R7 Preview</h1>
         <p className="text-sm text-[var(--text-2)]">
           Deterministische Fixtures · keine Datenbank · PO Visual UAT
         </p>
@@ -78,6 +79,6 @@ export function SceMatchCardPreviewGallery() {
           </div>
         </section>
       </div>
-    </div>
+    </ScePreviewPitchCanvas>
   );
 }

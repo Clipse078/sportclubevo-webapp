@@ -36,6 +36,32 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     );
     expect(scale).toContain("SCE_MATCH_RICH_DENSITY_SCALE");
     expect(scale).toContain("maxWidthClass");
+    expect(scale).toContain("SCE_MATCH_CARD_SHELL_CLASS");
+    expect(scale).toContain("--sce-match-card-surface");
+    expect(scale).not.toContain("backdrop-blur");
+  });
+
+  it("migrated consumers do not override SceMatchCard with transparent backgrounds", () => {
+    const consumerPaths = [
+      "components/admin/teams/upcoming-matches/TeamUpcomingMatchRow.tsx",
+      "components/admin/teams/results/TeamResultRow.tsx",
+      "components/admin/teams/overview/TeamNextMatchSummary.tsx",
+      "components/admin/teams/overview/TeamLatestResultSummary.tsx",
+      "components/admin/matchcenter/SpieleManagementMatchRow.tsx",
+      "components/admin/matchcenter/SpieleManagementResultRow.tsx",
+      "components/admin/planner/WeekplannerMatchIdentityCard.tsx",
+    ];
+    for (const relativePath of consumerPaths) {
+      const src = readFileSync(join(repoRoot, relativePath), "utf8");
+      expect(src, relativePath).toContain("SceMatchCard");
+      expect(src, relativePath).not.toMatch(/SceMatchCard[\s\S]*className=.*bg-transparent/);
+      expect(src, relativePath).not.toMatch(/SceMatchCard[\s\S]*className=.*--surface-1/);
+    }
+  });
+
+  it("defines pitch-opaque match card surface token in globals.css", () => {
+    const css = readFileSync(join(repoRoot, "app/globals.css"), "utf8");
+    expect(css).toContain("--sce-match-card-surface:");
   });
 
   it("does not resolve logo URLs inside the visual card (uses ClubIdentity / ClubCrest)", () => {

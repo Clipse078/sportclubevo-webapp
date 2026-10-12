@@ -1,5 +1,6 @@
 "use client";
 
+import { ScePreviewPitchCanvas } from "@/components/sce/preview/ScePreviewPitchCanvas";
 import SpieleManagementMatchRow from "@/components/admin/matchcenter/SpieleManagementMatchRow";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import { createSceMatchCardFixtureMatch } from "@/components/sporting-activity/__fixtures__/sce-match-card-fixtures";
@@ -21,12 +22,12 @@ export default function SceMatchcenterRowPreviewPage() {
   const assessment = assessMatchOperationalState(match);
 
   return (
-    <div className="mx-auto max-w-5xl p-6" data-testid="sce-preview-matchcenter-row">
+    <ScePreviewPitchCanvas className="p-6" testId="sce-preview-matchcenter-row">
+    <div className="mx-auto max-w-5xl">
       <p className="mb-4 text-sm text-[var(--muted)]">
         Integration preview — Matchcenter Spielplanung (bounded canonical card + operational panel).
       </p>
-      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-        <SpieleManagementMatchRow
+      <SpieleManagementMatchRow
           match={match}
           assessment={assessment}
           locale="de-CH"
@@ -34,7 +35,7 @@ export default function SceMatchcenterRowPreviewPage() {
           tenantClubName="FC Allschwil"
           canManage={false}
         />
-      </div>
     </div>
+    </ScePreviewPitchCanvas>
   );
 }
