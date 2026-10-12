@@ -5,6 +5,18 @@ import {
   vi,
 } from "vitest";
 
+vi.mock("@/lib/sporting-data/match-external-crest-resolution", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/sporting-data/match-external-crest-resolution")>();
+  return {
+    ...actual,
+    loadMatchExternalCrestResolutionContext: vi
+      .fn()
+      .mockResolvedValue(actual.EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT),
+  };
+});
+
+import * as matchExternalCrestResolution from "@/lib/sporting-data/match-external-crest-resolution";
 import {
   getMatchcenterMatchDetail,
   listMatchcenterMatches,
@@ -251,6 +263,44 @@ describe("Matchcenter query service", () => {
         isOwnTeam: false,
       }),
     );
+  });
+
+  it("R10: resolves canonical Verein crest when direct ExternalClub shell has no logo", async () => {
+    const canonicalCrest = "https://cdn.example.com/fc-therwil-verein.png";
+    vi.mocked(matchExternalCrestResolution.loadMatchExternalCrestResolutionContext).mockResolvedValueOnce(
+      {
+        canonicalLogoByProviderClubId: new Map([[4242, canonicalCrest]]),
+        logoByProviderTeamId: new Map(),
+      },
+    );
+
+    const database = createDatabase({
+      list: [
+        createEvent({
+          matchExternalMapping: {
+            ...createEvent().matchExternalMapping,
+            awayTeam: null,
+            awayExternalTeam: {
+              id: "ext-team-shell",
+              name: "FC Therwil C2",
+              shortName: null,
+              alternativeName: null,
+              logoUrl: null,
+              externalClub: { id: "ext-club-shell", logoUrl: null },
+              providerMappings: [{ providerClubId: 4242 }],
+            },
+          },
+        }),
+      ],
+    });
+
+    const result = await listMatchcenterMatches(database, {
+      tenantId: "tenant-1",
+      from: new Date("2026-08-01T00:00:00.000Z"),
+      to: new Date("2026-09-01T00:00:00.000Z"),
+    });
+
+    expect(result[0].away.externalLogoUrl).toBe(canonicalCrest);
   });
 
   it("CLUB-DIRECTORY-02B: resolves a SFV-enriched data: URI club crest the same as any other logoUrl value", async () => {

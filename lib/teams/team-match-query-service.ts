@@ -9,7 +9,14 @@ import {
   isSportingMatchPastKickoff,
   type SportingMatchLifecycle,
 } from "@/lib/sporting-data/lifecycle";
-import { resolveExternalTeamLogoUrl } from "@/lib/club-directory/logo";
+import {
+  CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT,
+  EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT,
+  loadMatchExternalCrestResolutionContext,
+  resolveMatchExternalCrestUrl,
+  type MatchExternalCrestResolutionContext,
+  type MatchExternalTeamLogoRecord,
+} from "@/lib/sporting-data/match-external-crest-resolution";
 
 export type TeamMatchPerspectiveSide = "HOME" | "AWAY";
 
@@ -104,7 +111,7 @@ interface TeamMatchTeamRecord {
   tenantId: string | null;
 }
 
-interface TeamMatchExternalTeamRecord {
+interface TeamMatchExternalTeamRecord extends MatchExternalTeamLogoRecord {
   id: string;
   name: string;
   shortName: string | null;
@@ -114,6 +121,12 @@ interface TeamMatchExternalTeamRecord {
     name: string;
     logoUrl: string | null;
   };
+  providerMappings?: ReadonlyArray<{ providerClubId: number | null }>;
+}
+
+interface TeamMatchExternalClubRecord {
+  name: string;
+  logoUrl: string | null;
 }
 
 interface TeamMatchMappingRecord {
@@ -160,6 +173,7 @@ interface TeamMatchEventRecord {
   resultLabel: string | null;
   intermediateResultLabel: string | null;
   team: TeamMatchTeamRecord | null;
+  opponentExternalClub: TeamMatchExternalClubRecord | null;
   matchExternalMapping: TeamMatchMappingRecord | null;
 }
 
@@ -244,6 +258,7 @@ const teamMatchRelations = {
               logoUrl: true,
             },
           },
+          providerMappings: CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT,
         },
       },
       awayExternalTeam: {
@@ -259,8 +274,15 @@ const teamMatchRelations = {
               logoUrl: true,
             },
           },
+          providerMappings: CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT,
         },
       },
+    },
+  },
+  opponentExternalClub: {
+    select: {
+      name: true,
+      logoUrl: true,
     },
   },
 } as const;
@@ -325,7 +347,9 @@ function toSideIdentity(input: {
   providerTeamName: string | null;
   canonicalTeam: TeamMatchTeamRecord | null;
   canonicalExternalTeam: TeamMatchExternalTeamRecord | null;
+  canonicalExternalClub: TeamMatchExternalClubRecord | null;
   fallbackName: string;
+  crestContext: MatchExternalCrestResolutionContext;
 }): TeamMatchSideIdentity {
   const resolvedName = resolveLongTeamName({
     teamName: input.canonicalTeam?.name ?? input.canonicalExternalTeam?.name ?? null,
@@ -340,19 +364,27 @@ function toSideIdentity(input: {
     canonicalTeamId: input.canonicalTeam?.id ?? null,
     canonicalExternalTeamId: input.canonicalExternalTeam?.id ?? null,
     displayName: resolvedName || input.fallbackName.trim() || "Unknown team",
-    clubName: input.canonicalExternalTeam?.externalClub?.name ?? null,
-    externalLogoUrl: input.canonicalExternalTeam
-      ? resolveExternalTeamLogoUrl(
-          input.canonicalExternalTeam,
-          input.canonicalExternalTeam.externalClub ?? { logoUrl: null },
-        )
-      : null,
+    clubName:
+      input.canonicalExternalTeam?.externalClub?.name ??
+      input.canonicalExternalClub?.name ??
+      null,
+    externalLogoUrl: input.canonicalTeam
+      ? null
+      : resolveMatchExternalCrestUrl({
+          externalTeam: input.canonicalExternalTeam,
+          externalClub: input.canonicalExternalClub,
+          providerTeamId: input.providerTeamId,
+          context: input.crestContext,
+        }),
     providerTeamId: input.providerTeamId,
     providerTeamName: input.providerTeamName,
   };
 }
 
-function resolveSides(event: TeamMatchEventRecord): {
+function resolveSides(
+  event: TeamMatchEventRecord,
+  crestContext: MatchExternalCrestResolutionContext,
+): {
   home: TeamMatchSideIdentity;
   away: TeamMatchSideIdentity;
 } {
@@ -367,26 +399,31 @@ function resolveSides(event: TeamMatchEventRecord): {
         providerTeamName: mapping.providerHomeTeamName,
         canonicalTeam: mapping.homeTeam,
         canonicalExternalTeam: mapping.homeExternalTeam,
+        canonicalExternalClub: null,
         fallbackName:
           homeAway === "AWAY"
             ? event.opponentName ?? "Home team"
             : event.team?.name ?? event.title,
+        crestContext,
       }),
       away: toSideIdentity({
         providerTeamId: mapping.providerAwayTeamId,
         providerTeamName: mapping.providerAwayTeamName,
         canonicalTeam: mapping.awayTeam,
         canonicalExternalTeam: mapping.awayExternalTeam,
+        canonicalExternalClub: null,
         fallbackName:
           homeAway === "HOME"
             ? event.opponentName ?? "Away team"
             : event.team?.name ?? event.title,
+        crestContext,
       }),
     };
   }
 
   const homeAway = normalizeHomeAway(event.homeAway);
   const ownTeamIsAway = homeAway === "AWAY";
+  const opponentClub = event.opponentExternalClub;
 
   return {
     home: toSideIdentity({
@@ -394,18 +431,22 @@ function resolveSides(event: TeamMatchEventRecord): {
       providerTeamName: null,
       canonicalTeam: ownTeamIsAway ? null : event.team,
       canonicalExternalTeam: null,
+      canonicalExternalClub: ownTeamIsAway ? opponentClub : null,
       fallbackName: ownTeamIsAway
-        ? event.opponentName ?? "Home team"
+        ? event.opponentName ?? opponentClub?.name ?? "Home team"
         : event.team?.name ?? event.title,
+      crestContext,
     }),
     away: toSideIdentity({
       providerTeamId: null,
       providerTeamName: null,
       canonicalTeam: ownTeamIsAway ? event.team : null,
       canonicalExternalTeam: null,
+      canonicalExternalClub: ownTeamIsAway ? null : opponentClub,
       fallbackName: ownTeamIsAway
         ? event.team?.name ?? event.title
-        : event.opponentName ?? "Away team",
+        : event.opponentName ?? opponentClub?.name ?? "Away team",
+      crestContext,
     }),
   };
 }
@@ -485,6 +526,7 @@ function toTeamSeasonMatchItem(
   teamSeason: TeamSeasonContextRecord,
   side: TeamMatchPerspectiveSide,
   now: Date,
+  crestContext: MatchExternalCrestResolutionContext,
 ): TeamSeasonMatchItem {
   if (event.tenantId === null) {
     throw new Error(`Team match event ${event.id} has no tenantId.`);
@@ -495,7 +537,7 @@ function toTeamSeasonMatchItem(
   }
 
   const mapping = event.matchExternalMapping;
-  const sides = resolveSides(event);
+  const sides = resolveSides(event, crestContext);
   const lifecycleClassification = getMatchcenterLifecycleClassification(
     {
       status: event.status,
@@ -658,6 +700,14 @@ export async function listTeamSeasonMatches(
     ],
   });
 
+  const crestContext =
+    events.length > 0
+      ? await loadMatchExternalCrestResolutionContext({
+          tenantId,
+          events,
+        })
+      : EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT;
+
   const upcoming: TeamSeasonMatchItem[] = [];
   const completed: TeamSeasonMatchItem[] = [];
 
@@ -672,7 +722,7 @@ export async function listTeamSeasonMatches(
       continue;
     }
 
-    const item = toTeamSeasonMatchItem(event, teamSeason, side, now);
+    const item = toTeamSeasonMatchItem(event, teamSeason, side, now, crestContext);
 
     if (item.lifecycleStage === "COMPLETED") {
       completed.push(item);

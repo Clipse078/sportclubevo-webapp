@@ -1,5 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/sporting-data/match-external-crest-resolution", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/sporting-data/match-external-crest-resolution")>();
+  return {
+    ...actual,
+    loadMatchExternalCrestResolutionContext: vi
+      .fn()
+      .mockResolvedValue(actual.EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT),
+  };
+});
+
 import {
   listTeamSeasonMatches,
   resolveTeamMatchPerspectiveSide,

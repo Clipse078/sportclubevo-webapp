@@ -6,6 +6,14 @@ import {
 import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 import { resolveLongTeamName } from "@/lib/teams/team-naming";
 import { resolveExternalClubLogoUrl, resolveExternalTeamLogoUrl } from "@/lib/club-directory/logo";
+import {
+  CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT,
+  EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT,
+  loadMatchExternalCrestResolutionContext,
+  resolveMatchExternalCrestUrl,
+  type MatchExternalCrestResolutionContext,
+  type MatchExternalTeamLogoRecord,
+} from "@/lib/sporting-data/match-external-crest-resolution";
 import type {
   MatchcenterDetailInput,
   MatchcenterListInput,
@@ -36,7 +44,7 @@ interface MatchcenterTeamRecord {
  * Reuses the canonical ExternalClub/ExternalTeam directory (CLUB-DIRECTORY-01)
  * rather than introducing a second opponent representation.
  */
-interface MatchcenterExternalTeamRecord {
+interface MatchcenterExternalTeamRecord extends MatchExternalTeamLogoRecord {
   id: string;
   name: string;
   shortName: string | null;
@@ -46,6 +54,7 @@ interface MatchcenterExternalTeamRecord {
     id: string;
     logoUrl: string | null;
   };
+  providerMappings?: ReadonlyArray<{ providerClubId: number | null }>;
 }
 
 interface MatchcenterMappingRecord {
@@ -185,6 +194,7 @@ const matchcenterRelations = {
           alternativeName: true,
           logoUrl: true,
           externalClub: { select: { id: true, logoUrl: true } },
+          providerMappings: CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT,
         },
       },
       awayExternalTeam: {
@@ -195,6 +205,7 @@ const matchcenterRelations = {
           alternativeName: true,
           logoUrl: true,
           externalClub: { select: { id: true, logoUrl: true } },
+          providerMappings: CANONICAL_EXTERNAL_TEAM_PROVIDER_MAPPING_SELECT,
         },
       },
     },
@@ -364,6 +375,7 @@ function createSide(input: {
    * tenant's own team or a Club Directory opponent, never both.
    */
   canonicalExternalTeam: MatchcenterExternalTeamReference | null;
+  externalTeamSource: MatchcenterExternalTeamRecord | null;
   /**
    * MATCHCENTER-CANONICAL-OPPONENT-01B: canonical Club Directory guest-club
    * identity for manually created matches without MatchExternalMapping.
@@ -372,6 +384,7 @@ function createSide(input: {
   canonicalExternalClub: MatchcenterExternalClubReference | null;
   fallbackName: string;
   isOwnTeam: boolean;
+  crestContext: MatchExternalCrestResolutionContext;
 }): MatchcenterSide {
   const fallbackName = input.fallbackName.trim();
 
@@ -401,8 +414,14 @@ function createSide(input: {
     canonicalExternalTeamShortName: input.canonicalExternalTeam?.shortName ?? null,
     canonicalExternalTeamAlternativeName:
       input.canonicalExternalTeam?.alternativeName ?? null,
-    externalLogoUrl:
-      input.canonicalExternalTeam?.logoUrl ?? input.canonicalExternalClub?.logoUrl ?? null,
+    externalLogoUrl: input.canonicalTeam
+      ? null
+      : resolveMatchExternalCrestUrl({
+          externalTeam: input.externalTeamSource,
+          externalClub: input.canonicalExternalClub,
+          providerTeamId: input.providerTeamId,
+          context: input.crestContext,
+        }),
     displayName: resolvedName || fallbackName || "Unknown team",
     resolution:
       input.canonicalTeam === null
@@ -412,7 +431,10 @@ function createSide(input: {
   };
 }
 
-function resolveSides(event: MatchcenterEventRecord): {
+function resolveSides(
+  event: MatchcenterEventRecord,
+  crestContext: MatchExternalCrestResolutionContext,
+): {
   home: MatchcenterSide;
   away: MatchcenterSide;
 } {
@@ -430,24 +452,28 @@ function resolveSides(event: MatchcenterEventRecord): {
         providerTeamName: mapping.providerHomeTeamName,
         canonicalTeam: homeTeam,
         canonicalExternalTeam: homeExternalTeam,
+        externalTeamSource: mapping.homeExternalTeam ?? null,
         canonicalExternalClub: null,
         fallbackName:
           normalizeHomeAway(event.homeAway) === "AWAY"
             ? event.opponentName ?? "Home team"
             : event.team?.name ?? event.title,
         isOwnTeam: homeTeam !== null,
+        crestContext,
       }),
       away: createSide({
         providerTeamId: mapping.providerAwayTeamId,
         providerTeamName: mapping.providerAwayTeamName,
         canonicalTeam: awayTeam,
         canonicalExternalTeam: awayExternalTeam,
+        externalTeamSource: mapping.awayExternalTeam ?? null,
         canonicalExternalClub: null,
         fallbackName:
           normalizeHomeAway(event.homeAway) === "HOME"
             ? event.opponentName ?? "Away team"
             : event.team?.name ?? event.title,
         isOwnTeam: awayTeam !== null,
+        crestContext,
       }),
     };
   }
@@ -464,29 +490,34 @@ function resolveSides(event: MatchcenterEventRecord): {
       providerTeamName: null,
       canonicalTeam: ownTeamIsAway ? null : eventTeam,
       canonicalExternalTeam: null,
+      externalTeamSource: null,
       canonicalExternalClub: ownTeamIsAway ? opponentExternalClub : null,
       fallbackName: ownTeamIsAway
         ? opponentFallbackName
         : event.team?.name ?? event.title,
       isOwnTeam: !ownTeamIsAway && eventTeam !== null,
+      crestContext,
     }),
     away: createSide({
       providerTeamId: null,
       providerTeamName: null,
       canonicalTeam: ownTeamIsAway ? eventTeam : null,
       canonicalExternalTeam: null,
+      externalTeamSource: null,
       canonicalExternalClub: ownTeamIsAway ? null : opponentExternalClub,
       fallbackName: ownTeamIsAway
         ? event.team?.name ?? event.title
         : opponentFallbackName,
       isOwnTeam: ownTeamIsAway && eventTeam !== null,
+      crestContext,
     }),
   };
 }
 
 function toSummary(
   event: MatchcenterEventRecord,
-  matchOperationalPolicy?: TenantMatchOperationalPolicyResolved,
+  matchOperationalPolicy: TenantMatchOperationalPolicyResolved | undefined,
+  crestContext: MatchExternalCrestResolutionContext,
 ): MatchcenterMatchSummary {
   if (event.tenantId === null) {
     throw new Error(
@@ -495,7 +526,7 @@ function toSummary(
   }
 
   const mapping = event.matchExternalMapping;
-  const sides = resolveSides(event);
+  const sides = resolveSides(event, crestContext);
   const kickoffKnown = isKnownKickoffForMatch({
     startAt: event.startAt,
     eventSource: event.source,
@@ -589,9 +620,10 @@ function toSummary(
 
 function toDetail(
   event: MatchcenterEventRecord,
-  matchOperationalPolicy?: TenantMatchOperationalPolicyResolved,
+  matchOperationalPolicy: TenantMatchOperationalPolicyResolved | undefined,
+  crestContext: MatchExternalCrestResolutionContext,
 ): MatchcenterMatchDetail {
-  const summary = toSummary(event, matchOperationalPolicy);
+  const summary = toSummary(event, matchOperationalPolicy, crestContext);
   const mapping = event.matchExternalMapping;
 
   return {
@@ -661,7 +693,17 @@ export async function listMatchcenterMatches(
     policyPromise,
   ]);
 
-  return events.map((event) => toSummary(event, matchOperationalPolicy));
+  const crestContext =
+    events.length > 0
+      ? await loadMatchExternalCrestResolutionContext({
+          tenantId,
+          events,
+        })
+      : EMPTY_MATCH_EXTERNAL_CREST_RESOLUTION_CONTEXT;
+
+  return events.map((event) =>
+    toSummary(event, matchOperationalPolicy, crestContext),
+  );
 }
 
 export async function getMatchcenterMatchDetail(
@@ -688,5 +730,14 @@ export async function getMatchcenterMatchDetail(
     include: matchcenterRelations,
   });
 
-  return event === null ? null : toDetail(event, input.matchOperationalPolicy);
+  if (event === null) {
+    return null;
+  }
+
+  const crestContext = await loadMatchExternalCrestResolutionContext({
+    tenantId,
+    events: [event],
+  });
+
+  return toDetail(event, input.matchOperationalPolicy, crestContext);
 }

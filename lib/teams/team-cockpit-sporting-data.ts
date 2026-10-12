@@ -173,7 +173,8 @@ function mapCockpitMatchSide(
     clubName: isInternalTeam ? meaningful(tenantClubName) : side.clubName,
     logoUrl: resolveClubIdentityLogoUrl(
       {
-        isOwnTeam: isInternalTeam,
+        isOwnTeam,
+        canonicalTeamId: side.canonicalTeamId,
         externalLogoUrl: side.externalLogoUrl,
       },
       tenantLogoUrl,

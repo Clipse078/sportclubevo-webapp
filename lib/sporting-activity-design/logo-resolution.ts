@@ -6,9 +6,13 @@
 import type { MatchcenterSide } from "@/lib/matchcenter/types";
 
 /**
+ * Match club visual identity (01D R10):
+ *   - Participant display name = team/participant label (e.g. Junioren B1).
+ *   - Crest = owning club logo (tenant club or external club), never a team glyph.
+ *
  * Match side logo hierarchy (see lib/matchcenter/club-identity.ts history):
- *   tenant club participant (internal Team) → Tenant.logoUrl (club crest)
- *   external → ExternalTeam/ExternalClub crest (externalLogoUrl on side)
+ *   internal tenant Team (canonicalTeamId or isOwnTeam) → tenantLogoUrl (club crest)
+ *   external → externalLogoUrl pre-resolved upstream (ExternalTeam/Club + provider enrichment)
  *
  * Crest availability is identity-driven — not fixture result state.
  */

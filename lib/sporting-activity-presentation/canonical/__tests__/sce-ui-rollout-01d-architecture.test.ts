@@ -132,6 +132,47 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(resolver).not.toMatch(/lifecycle|COMPLETED|UPCOMING/i);
   });
 
+  it("R10 — consumers delegate crest resolution to canonical presentation (no local logo rebuild)", () => {
+    const paths: Record<string, string> = {
+      TEAM_OVERVIEW_CREST_PATH:
+        "components/admin/teams/overview/TeamNextMatchSummary.tsx",
+      TEAM_NEXT_MATCH_CREST_PATH:
+        "components/admin/teams/upcoming-matches/TeamUpcomingMatchRow.tsx",
+      TEAM_RESULTS_CREST_PATH:
+        "components/admin/teams/results/TeamResultRow.tsx",
+      MATCHCENTER_PLANNING_CREST_PATH:
+        "components/admin/matchcenter/SpieleManagementMatchRow.tsx",
+      MATCHCENTER_RESULTS_CREST_PATH:
+        "components/admin/matchcenter/SpieleManagementResultRow.tsx",
+      WEEKPLANNER_CREST_PATH:
+        "components/admin/planner/WeekplannerMatchIdentityCard.tsx",
+    };
+
+    for (const [label, relativePath] of Object.entries(paths)) {
+      const src = readFileSync(join(repoRoot, relativePath), "utf8");
+      expect(src, label).toContain("SceMatchCard");
+      expect(src, label).not.toMatch(/resolveMatchSideClubLogoUrl|buildMatchClubIdentityPair/);
+    }
+
+    const teamBridge = readFileSync(
+      join(repoRoot, "lib/teams/team-cockpit-match-presentation.ts"),
+      "utf8",
+    );
+    expect(teamBridge).toContain("resolveSceMatchPresentation");
+
+    const matchAdapter = readFileSync(
+      join(repoRoot, "lib/sporting-activity-presentation/canonical/adapters/match.ts"),
+      "utf8",
+    );
+    expect(matchAdapter).toContain("buildMatchClubIdentityPair");
+
+    const weekAdapter = readFileSync(
+      join(repoRoot, "lib/sporting-activity-presentation/canonical/adapters/weekplanner-match.ts"),
+      "utf8",
+    );
+    expect(weekAdapter).toContain("buildClubIdentity");
+  });
+
   it("defines canonical match result foreground token", () => {
     const css = readFileSync(join(repoRoot, "app/globals.css"), "utf8");
     expect(css).toContain("--sce-match-result-foreground:");
