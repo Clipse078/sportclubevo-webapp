@@ -75,6 +75,49 @@ describe("buildStandingsClubEnrichmentByProviderTeamId", () => {
     });
   });
 
+  it("auto-resolves explicit mapping rows that lack a crest via canonical club-name match", async () => {
+    const externalTeamFindMany = vi.fn().mockResolvedValue([
+      {
+        shortName: null,
+        logoUrl: null,
+        externalClub: {
+          id: "club-shell",
+          name: "FC Therwil FF-17",
+          shortName: null,
+          logoUrl: null,
+        },
+        providerMappings: [
+          {
+            providerTeamId: 300,
+            providerClubId: null,
+            providerTeamName: "FC Therwil FF-17",
+          },
+        ],
+      },
+    ]);
+    const externalClubFindMany = vi.fn().mockResolvedValue([
+      {
+        id: "club-therwil",
+        name: "FC Therwil",
+        shortName: null,
+        alternativeName: null,
+        logoUrl: AUTO_LOGO,
+        providerMappings: [],
+      },
+    ]);
+
+    const enrichment = await buildStandingsClubEnrichmentByProviderTeamId({
+      tenantId: TENANT_ID,
+      rows: [{ providerTeamId: 300, providerTeamName: "FC Therwil FF-17" }],
+      database: {
+        externalTeam: { findMany: externalTeamFindMany },
+        externalClub: { findMany: externalClubFindMany },
+      },
+    });
+
+    expect(enrichment.get(300)?.logoUrl).toBe(AUTO_LOGO);
+  });
+
   it("auto-resolves unmapped provider team names and exposes canonical logoUrl", async () => {
     const externalTeamFindMany = vi.fn().mockResolvedValue([]);
     const externalClubFindMany = vi.fn().mockResolvedValue([

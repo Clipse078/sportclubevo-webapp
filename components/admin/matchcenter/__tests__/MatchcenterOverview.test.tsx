@@ -170,7 +170,7 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     expect(screen.getByTestId("spiele-view-switcher")).toBeTruthy();
     expect(screen.getByTestId("spiele-schnellfilter")).toBeTruthy();
     expect(screen.getByTestId("spiele-month-calendar")).toBeTruthy();
-    expect(screen.getByTestId("matchcenter-month-label")).toHaveTextContent(
+    expect(screen.getByTestId("month-activity-grid-label")).toHaveTextContent(
       "August 2026",
     );
   });
@@ -178,11 +178,11 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
   it("month navigation links preserve the active tab and filter", () => {
     renderOverview([createMatch()], { actionFilter: "OFFEN" });
 
-    expect(screen.getByTestId("matchcenter-month-previous")).toHaveAttribute(
+    expect(screen.getByTestId("month-activity-grid-previous")).toHaveAttribute(
       "href",
       "/dashboard/matchcenter?tab=spielplanung&month=2026-07&status=offen&filter=offen",
     );
-    expect(screen.getByTestId("matchcenter-month-next")).toHaveAttribute(
+    expect(screen.getByTestId("month-activity-grid-next")).toHaveAttribute(
       "href",
       "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen",
     );
@@ -260,7 +260,7 @@ describe("MatchcenterOverview — Spielplanung", () => {
     ]);
 
     expect(screen.queryByText("0:0")).toBeNull();
-    expect(screen.queryByTestId("matchcenter-live-score-match-1")).toBeNull();
+    expect(screen.queryByTestId("sce-match-result")).toBeNull();
   });
 
   it("F. shows Bereit for a fully set-up future HOME match", () => {
@@ -323,9 +323,11 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getAllByText(/Auswärtsspiel/i).length).toBeGreaterThanOrEqual(
-      1,
-    );
+    expect(
+      within(screen.getByTestId("matchcenter-sce-match-match-1")).getByTestId(
+        "sce-match-context-auswaerts",
+      ),
+    ).toHaveTextContent("Auswärts");
     expect(screen.queryByText("Spielfeld")).toBeNull();
     expect(screen.queryByText("Heimkabine")).toBeNull();
     expect(screen.queryByText("Gastkabine")).toBeNull();
@@ -399,9 +401,11 @@ describe("MatchcenterOverview — Spielplanung", () => {
     expect(
       within(screen.getByTestId("matchcenter-action-match-1")).getByText("Live"),
     ).toBeTruthy();
-    expect(screen.getByTestId("matchcenter-live-score-match-1")).toHaveTextContent(
-      "1:0",
-    );
+    expect(
+      within(screen.getByTestId("matchcenter-sce-match-match-1")).getByTestId(
+        "sce-match-result",
+      ),
+    ).toHaveTextContent("1:0");
   });
 
   it("K. Offen filter link is active and shows only open matches", () => {
@@ -470,9 +474,11 @@ describe("MatchcenterOverview — Resultate", () => {
       { tab: "RESULTATE" },
     );
 
-    expect(screen.getByTestId("matchcenter-result-match-draw")).toHaveTextContent(
-      "0:0",
-    );
+    expect(
+      within(screen.getByTestId("matchcenter-result-sce-match-match-draw")).getByTestId(
+        "sce-match-result",
+      ),
+    ).toHaveTextContent("0:0");
   });
 
   it("renders the mapped score when available", () => {
@@ -491,9 +497,11 @@ describe("MatchcenterOverview — Resultate", () => {
       { tab: "RESULTATE" },
     );
 
-    expect(screen.getByTestId("matchcenter-result-match-1")).toHaveTextContent(
-      "3:1",
-    );
+    expect(
+      within(screen.getByTestId("matchcenter-result-sce-match-match-1")).getByTestId(
+        "sce-match-result",
+      ),
+    ).toHaveTextContent("3:1");
   });
 
   it("falls back to resultLabel when mapped scores are absent", () => {
@@ -511,9 +519,11 @@ describe("MatchcenterOverview — Resultate", () => {
       { tab: "RESULTATE" },
     );
 
-    expect(screen.getByTestId("matchcenter-result-match-1")).toHaveTextContent(
-      "2:2",
-    );
+    expect(
+      within(screen.getByTestId("matchcenter-result-sce-match-match-1")).getByTestId(
+        "sce-match-result",
+      ),
+    ).toHaveTextContent("2:2");
   });
 
   it("does not show operational warnings in Resultate", () => {
@@ -563,9 +573,9 @@ describe("MatchcenterOverview — Resultate", () => {
     );
 
     const link = screen.getByRole("link", {
-      name: "Details zu FC Allschwil – Gegner anzeigen",
+      name: "FC Allschwil E1 gegen FC Basel E1 — Details öffnen",
     });
-    expect(link).toHaveAttribute("href", "/dashboard/matchcenter/match-1");
+    expect(link).toHaveAttribute("href", "/dashboard/activity/event/match-1");
   });
 });
 
@@ -697,7 +707,7 @@ describe("MatchcenterOverview — team filter", () => {
   it("preserves team and month query state together", () => {
     renderOverview([createMatch()], { teamFilter: "team-2", actionFilter: "OFFEN" });
 
-    expect(screen.getByTestId("matchcenter-month-next")).toHaveAttribute(
+    expect(screen.getByTestId("month-activity-grid-next")).toHaveAttribute(
       "href",
       "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen&team=team-2",
     );

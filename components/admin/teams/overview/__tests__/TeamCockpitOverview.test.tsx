@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
@@ -20,41 +20,27 @@ import TeamSportingSnapshot from "../TeamSportingSnapshot";
 import TeamTrainingSummary from "../TeamTrainingSummary";
 import TeamCompositionSummary from "../TeamCompositionSummary";
 import TeamCockpitOverviewContent from "../TeamCockpitOverviewContent";
-import type {
-  TeamCockpitMatch,
-  TeamCockpitResult,
-  TeamCockpitStandings,
-} from "@/lib/teams/team-cockpit-sporting-data";
+import type { TeamCockpitResult, TeamCockpitStandings } from "@/lib/teams/team-cockpit-sporting-data";
+import {
+  createTeamCockpitMatchFixture,
+  createTeamCockpitResultFixture,
+} from "@/lib/teams/team-cockpit-match-fixtures";
 
 const TEAM_ID = "team-1";
 const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
 
-const NEXT_MATCH: TeamCockpitMatch = {
+const NEXT_MATCH = createTeamCockpitMatchFixture({
   eventId: "event-upcoming",
   startAt: new Date("2026-08-29T16:00:00.000Z"),
-  side: "HOME",
-  status: "SCHEDULED",
-  lifecycle: "UPCOMING",
-  opponentName: "FC Example",
   home: {
     displayName: "FC Allschwil",
     isOwnTeam: true,
     clubName: "FC Allschwil",
     logoUrl: "/tenant-crest.svg",
   },
-  away: {
-    displayName: "FC Example",
-    isOwnTeam: false,
-    clubName: "FC Example",
-    logoUrl: "/example-crest.svg",
-  },
-  venueName: "Im Brüel",
-  location: "Im Brüel",
-  competitionName: "Junioren A Promotion",
-};
+});
 
-const LATEST_RESULT: TeamCockpitResult = {
-  ...NEXT_MATCH,
+const LATEST_RESULT: TeamCockpitResult = createTeamCockpitResultFixture({
   eventId: "event-completed",
   startAt: new Date("2026-08-20T16:00:00.000Z"),
   side: "AWAY",
@@ -63,7 +49,7 @@ const LATEST_RESULT: TeamCockpitResult = {
   teamScore: 2,
   opponentScore: 1,
   resultPerspective: "WON",
-};
+});
 
 const STANDINGS: TeamCockpitStandings = {
   competition: {
@@ -135,9 +121,12 @@ describe("TEAM-COCKPIT-PREMIUM-01E — sporting snapshot", () => {
     );
     expect(screen.getByText("FC Allschwil")).toBeInTheDocument();
     expect(screen.getByText("FC Example")).toBeInTheDocument();
-    expect(screen.getByText("Im Brüel")).toBeInTheDocument();
+    expect(screen.getByTestId("team-next-match-sce-card")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-match-location")).toHaveTextContent("Im Brüel");
     expect(
-      Array.from(container.querySelectorAll("img")).map((image) => image.getAttribute("src")),
+      Array.from(container.querySelectorAll('[data-testid="club-crest-image"]')).map((image) =>
+        image.getAttribute("src"),
+      ),
     ).toEqual(["/tenant-crest.svg", "/example-crest.svg"]);
   });
 
@@ -172,16 +161,22 @@ describe("TEAM-COCKPIT-PREMIUM-01E — sporting snapshot", () => {
       "href",
       `/dashboard/teams/${TEAM_ID}/resultate`,
     );
-    expect(screen.getByTestId("team-latest-result-score")).toHaveTextContent("1 : 2");
-    expect(screen.getByTestId("team-latest-result-perspective")).toHaveTextContent("Sieg");
+    const card = screen.getByTestId("team-latest-result-sce-card");
+    expect(within(card).getByTestId("sce-match-result")).toHaveTextContent("1:2");
+    expect(within(card).getByTestId("sce-match-context-perspective")).toHaveTextContent("Sieg");
     expect(
-      Array.from(container.querySelectorAll("img")).map((image) => image.getAttribute("src")),
-    ).toEqual(["/tenant-crest.svg", "/example-crest.svg"]);
+      Array.from(card.querySelectorAll('[data-testid="club-crest-image"]')).map((image) =>
+        image.getAttribute("src"),
+      ),
+    ).toEqual(["/example-crest.svg", "/tenant-crest.svg"]);
   });
 
   it("C2. keeps the tenant crest with the own team when it is away", () => {
-    const awayResult: TeamCockpitResult = {
-      ...LATEST_RESULT,
+    const awayResult = createTeamCockpitResultFixture({
+      eventId: "event-completed-away",
+      side: "AWAY",
+      scoreHome: 1,
+      scoreAway: 2,
       home: {
         displayName: "Host FC",
         isOwnTeam: false,
@@ -194,9 +189,10 @@ describe("TEAM-COCKPIT-PREMIUM-01E — sporting snapshot", () => {
         clubName: "FC Allschwil",
         logoUrl: "/tenant-crest.svg",
       },
-    };
+      resultPerspective: "WON",
+    });
 
-    const { container } = render(
+    render(
       <TeamSportingSnapshot
         teamId={TEAM_ID}
         nextMatch={null}
@@ -206,25 +202,54 @@ describe("TEAM-COCKPIT-PREMIUM-01E — sporting snapshot", () => {
       />,
     );
 
+    const card = screen.getByTestId("team-latest-result-sce-card");
     expect(
-      Array.from(container.querySelectorAll("img")).map((image) => image.getAttribute("src")),
+      Array.from(card.querySelectorAll('[data-testid="club-crest-image"]')).map((image) =>
+        image.getAttribute("src"),
+      ),
     ).toEqual(["/host-crest.svg", "/tenant-crest.svg"]);
-    expect(screen.getByTestId("team-latest-result-score")).toHaveTextContent("1 : 2");
+    expect(within(card).getByTestId("sce-match-result")).toHaveTextContent("1:2");
   });
 
   it("C3. uses the shield fallback for a missing compact-summary logo", () => {
+    const nextMatch = createTeamCockpitMatchFixture(
+      {
+        away: {
+          displayName: "FC Example",
+          isOwnTeam: false,
+          clubName: "FC Example",
+          logoUrl: null,
+        },
+      },
+      {
+        away: {
+          canonicalTeamId: null,
+          canonicalExternalTeamId: "ext-away",
+          displayName: "FC Example",
+          clubName: "FC Example",
+          externalLogoUrl: null,
+          providerTeamId: 200,
+          providerTeamName: "FC Example",
+        },
+      },
+    );
+
     const { container } = render(
       <TeamSportingSnapshot
         teamId={TEAM_ID}
-        nextMatch={{ ...NEXT_MATCH, away: { ...NEXT_MATCH.away, logoUrl: null } }}
+        nextMatch={nextMatch}
         latestResult={null}
         standings={null}
         formatConfig={FORMAT_CONFIG}
       />,
     );
 
-    expect(container.querySelectorAll("img")).toHaveLength(1);
-    expect(container.querySelectorAll("svg.lucide-shield")).toHaveLength(1);
+    expect(
+      container.querySelector(
+        '[data-testid="club-crest-fallback-icon"], [data-testid="club-crest-fallback-initials"]',
+      ),
+    ).toBeTruthy();
+    expect(container.querySelectorAll('[data-testid="club-crest-image"]')).toHaveLength(1);
   });
 
   it("D. renders result empty state", () => {

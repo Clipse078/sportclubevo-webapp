@@ -27,6 +27,7 @@ import {
 } from "@/lib/matchcenter/navigation";
 import {
   getTeamsListDataCached,
+  getTenantClubCrestUrlCached,
   getTenantMatchOperationalPolicyCached,
 } from "@/lib/server/request-cache";
 import {
@@ -110,7 +111,7 @@ export default async function MatchcenterPage({
   // the full season — only the selected month's window is fetched, for
   // both Spielplanung and Resultate (they share one month filter).
   const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenantId);
-  const [matches, tenantTeams] = await Promise.all([
+  const [matches, tenantTeams, tenantClubCrestUrl] = await Promise.all([
     listMatchcenterMatches(matchcenterDatabase, {
       tenantId,
       from: resolvedMonth.from,
@@ -118,6 +119,7 @@ export default async function MatchcenterPage({
       matchOperationalPolicy,
     }),
     getTeamsListDataCached(tenantId),
+    getTenantClubCrestUrlCached(tenantId),
   ]);
   perfTimer?.mark("match-loader-teams");
   const activeTeams = tenantTeams.filter((team) => team.isActive);
@@ -158,7 +160,7 @@ export default async function MatchcenterPage({
           locale={locale}
           canManage={canManage}
           currentMonthParam={currentMonthParam}
-          tenantLogoUrl={tenantContext.logoUrl}
+          tenantLogoUrl={tenantClubCrestUrl}
           tenantClubName={tenantContext.name}
           searchQuery={searchQuery}
           sortParam={params.sort ?? null}

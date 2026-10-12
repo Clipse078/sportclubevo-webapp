@@ -95,6 +95,7 @@ import {
 } from "@/lib/match/resolve-match-operational-interval";
 import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 import {
+  getTenantClubCrestUrlCached,
   getTenantDressingRoomOccupancyPresetsCached,
   getTenantMatchOperationalPolicyCached,
 } from "@/lib/server/request-cache";
@@ -1182,7 +1183,7 @@ export async function getWeekplannerWeek(
           resolveWeekplannerPlanBaselineMode(tenantId, planId),
           getTenantDressingRoomOccupancyPresetsCached(tenantId),
           tenantMatchPolicyPromise,
-          prisma.tenant.findUnique({ where: { id: tenantId }, select: { logoUrl: true } }),
+          getTenantClubCrestUrlCached(tenantId),
         ]),
       { requiredInitial: true },
     );
@@ -1269,7 +1270,7 @@ export async function getWeekplannerWeek(
     );
 
     const [
-      [overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantRow],
+      [overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantClubCrestUrl],
       resourceByCode,
       trainingItems,
       matchSummaries,
@@ -1287,7 +1288,7 @@ export async function getWeekplannerWeek(
     ]);
 
     endWeekQueryParallelGroup();
-    const tenantLogoUrl = tenantRow?.logoUrl ?? null;
+    const tenantLogoUrl = tenantClubCrestUrl ?? null;
     perfTimer?.mark("parallel-domain-reads");
 
     const homeMatches = matchSummaries.filter(

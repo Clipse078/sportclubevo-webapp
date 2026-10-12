@@ -138,7 +138,7 @@ export function WeekplannerActivityIdentityCard({
       </div>
 
       {item.type === "MATCH" ? (
-        <WeekplannerMatchIdentityCard home={item.homeSide} away={item.awaySide} />
+        <WeekplannerMatchIdentityCard item={item} timezone={timezone} />
       ) : (
         <p className="text-base font-semibold text-[var(--foreground)]">{item.title}</p>
       )}
@@ -147,9 +147,11 @@ export function WeekplannerActivityIdentityCard({
         <p className="text-sm text-[var(--text-2)]">{item.teamNames[0]}</p>
       )}
 
-      <p className="text-sm text-[var(--text-2)]" data-testid="weekplanner-activity-identity-schedule">
-        {scheduleSummary}
-      </p>
+      {item.type !== "MATCH" ? (
+        <p className="text-sm text-[var(--text-2)]" data-testid="weekplanner-activity-identity-schedule">
+          {scheduleSummary}
+        </p>
+      ) : null}
     </div>
   );
 }

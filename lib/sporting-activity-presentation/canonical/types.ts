@@ -60,6 +60,12 @@ export type SceMatchResult = {
   displayLabel: string | null;
 };
 
+/** Quiet contextual metadata (tenant side, result perspective) — not primary lifecycle. */
+export type SceMatchContextBadge = {
+  kind: "tenant-side" | "result-perspective";
+  label: string;
+};
+
 export type SceMatchPresentationModel = SceActivityPresentationBase & {
   kind: "MATCH";
   fixture: SceMatchFixtureIdentity;
@@ -67,6 +73,7 @@ export type SceMatchPresentationModel = SceActivityPresentationBase & {
   teamContext?: { name: string };
   result: SceMatchResult | null;
   matchLifecycle?: SceActivityPresentationStatus;
+  contextBadges?: SceMatchContextBadge[];
 };
 
 export type SceTrainingPresentationModel = SceActivityPresentationBase & {
@@ -105,4 +112,10 @@ export function isSceActivityPresentationModel(
     kind === "TOURNAMENT" ||
     kind === "CLUB_EVENT"
   );
+}
+
+export function isSceMatchPresentationModel(
+  value: SceActivityPresentationModel,
+): value is SceMatchPresentationModel {
+  return value.kind === "MATCH";
 }

@@ -30,4 +30,30 @@ describe("ClubCrest accessibility", () => {
     render(<ClubCrest identity={identity} decorative />);
     expect(screen.getByTestId("club-crest-image")).toHaveAttribute("alt", "");
   });
+
+  it("uses object-contain without circular pill for real crest images", () => {
+    const identity = buildNameOnlyClubIdentity("FC Example");
+    identity.logoUrl = "https://cdn.example.com/ok.png";
+    render(<ClubCrest identity={identity} />);
+    const img = screen.getByTestId("club-crest-image");
+    expect(img.className).toContain("object-contain");
+    expect(img.className).not.toContain("rounded-full");
+    expect(screen.getByTestId("club-crest-bounds").className).not.toContain("rounded-full");
+  });
+
+  it("does not show initials while a real crest URL is present (only the image)", () => {
+    const identity = buildNameOnlyClubIdentity("FC Example");
+    identity.logoUrl = "https://cdn.example.com/ok.png";
+    render(<ClubCrest identity={identity} />);
+    expect(screen.getByTestId("club-crest-image")).toBeInTheDocument();
+    expect(screen.queryByTestId("club-crest-fallback-initials")).toBeNull();
+  });
+
+  it("keeps circular treatment for missing-logo fallback only", () => {
+    const identity = buildNameOnlyClubIdentity("FC Binningen");
+    render(<ClubCrest identity={identity} />);
+    expect(screen.getByTestId("club-crest-fallback-initials").className).toContain(
+      "rounded-full",
+    );
+  });
 });

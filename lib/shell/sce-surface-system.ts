@@ -9,6 +9,8 @@ export const SCE_SURFACE_TOKEN_SUBTLE = "--sce-surface-subtle";
 export const SCE_SURFACE_TOKEN_STANDARD = "--sce-surface-standard";
 export const SCE_SURFACE_TOKEN_DENSE = "--sce-surface-dense";
 export const SCE_SURFACE_TOKEN_ELEVATED = "--sce-surface-elevated";
+/** Canonical SceMatchCard shell — pitch-opaque identity surface (SCE-UI-ROLLOUT-01D). */
+export const SCE_SURFACE_TOKEN_MATCH_CARD = "--sce-match-card-surface";
 
 export const SCE_SURFACE_BORDER_TOKEN_SUBTLE = "--sce-surface-border-subtle";
 export const SCE_SURFACE_BORDER_TOKEN = "--sce-surface-border";

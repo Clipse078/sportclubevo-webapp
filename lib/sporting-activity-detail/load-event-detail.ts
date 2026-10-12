@@ -12,6 +12,7 @@ import {
   buildTournamentActivityPresentation,
 } from "@/lib/sporting-activity-presentation/builders";
 import { buildMatchClubIdentityPair } from "@/lib/sporting-activity-design";
+import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
 import { buildTournamentOrganiserClubIdentity } from "@/lib/sporting-activity-design/tournament-organiser-identity";
 import { loadMatchEventPoliciesByEventId } from "@/lib/website/public-matches-identity";
 import {
@@ -129,6 +130,12 @@ export async function loadMatchActivityDetail(input: {
   }
 
   const clubPair = buildMatchClubIdentityPair(matchDetail, input.tenantLogoUrl);
+  const scePresentation = resolveSceMatchPresentation({
+    match: matchDetail,
+    tenantLogoUrl: input.tenantLogoUrl,
+    tenantClubName: input.tenantClubName,
+    pitchLabel,
+  });
 
   const participation = await loadSportingActivityDetailParticipation({
     tenantId: input.tenantId,
@@ -161,7 +168,7 @@ export async function loadMatchActivityDetail(input: {
     routeTarget: resolveSportingActivityDetailRouteTarget(presentation),
     participation,
     participantInformation: participantInformation.length > 0 ? participantInformation : undefined,
-    match: { clubPair },
+    match: { clubPair, scePresentation },
   };
 
   return { ok: true, detail };

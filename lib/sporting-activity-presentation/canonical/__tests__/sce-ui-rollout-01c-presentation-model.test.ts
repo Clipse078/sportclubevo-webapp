@@ -244,6 +244,7 @@ describe("SCE-UI-ROLLOUT-01C — MATCH", () => {
   it("includes result when domain provides score label", () => {
     const model = resolveSceMatchPresentation({
       match: createMatch({
+        status: "COMPLETED",
         resultLabel: "2:1",
         scoreHome: 2,
         scoreAway: 1,
@@ -252,6 +253,32 @@ describe("SCE-UI-ROLLOUT-01C — MATCH", () => {
     });
     expect(model.result?.displayLabel).toBe("2:1");
     expect(model.result?.scoreHome).toBe(2);
+  });
+
+  it("does not treat zero scores as a result for upcoming fixtures", () => {
+    const model = resolveSceMatchPresentation({
+      match: createMatch({
+        status: "SCHEDULED",
+        scoreHome: 0,
+        scoreAway: 0,
+        resultLabel: null,
+      }),
+      tenantLogoUrl: tenantLogo,
+    });
+    expect(model.result).toBeNull();
+  });
+
+  it("includes actual 0:0 when lifecycle is completed", () => {
+    const model = resolveSceMatchPresentation({
+      match: createMatch({
+        status: "COMPLETED",
+        resultLabel: "0:0",
+        scoreHome: 0,
+        scoreAway: 0,
+      }),
+      tenantLogoUrl: tenantLogo,
+    });
+    expect(model.result?.displayLabel).toBe("0:0");
   });
 
   it("degrades when crests missing", () => {

@@ -4,6 +4,7 @@ import {
   getTeamCockpitSportingData,
   TEAM_COCKPIT_RESULTS_DETAIL_LIMIT,
 } from "@/lib/teams/team-cockpit-sporting-data";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 type Props = {
   params: Promise<{ teamId: string }>;
@@ -16,12 +17,14 @@ export default async function TeamResultatePage({ params }: Props) {
   const activeSeason =
     team.teamSeasons.find((entry) => entry.id === team.currentTeamSeasonId) ?? null;
 
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantId);
+
   const sportingData =
     team.currentTeamSeasonId && activeSeason
       ? await getTeamCockpitSportingData({
           tenantId,
           tenantClubName: tenant.name,
-          tenantLogoUrl: tenant.logoUrl,
+          tenantLogoUrl: tenantClubCrestUrl,
           teamId: team.id,
           teamSeasonId: team.currentTeamSeasonId,
           seasonKey: activeSeason.season.key,

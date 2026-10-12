@@ -24,6 +24,12 @@ export {
 } from "./density";
 
 export {
+  isSceActivityDimensionVisible,
+  sceActivityDensityContract,
+  sceActivityDimensionPolicy,
+} from "./match-card-policy";
+
+export {
   formatSceActivityLocationHierarchy,
   SCE_ACTIVITY_LOCATION_HIERARCHY_SEPARATOR,
 } from "./location-format";
@@ -31,8 +37,18 @@ export {
 export {
   buildSceActivityPresentationStatus,
   mapPersonalProgrammeStatusToSemantic,
+  mapScePresentationSemanticToBadgeVariant,
   mapSpieleStatusLabelToSemantic,
 } from "./status";
+
+export {
+  buildSceMatchResultPerspectiveContextBadge,
+  buildSceMatchTenantSideContextBadge,
+  resolveSceMatchResultPerspectiveStatus,
+  withSceMatchContextBadges,
+} from "./match-context-badges";
+
+export { resolveSceMatchLifecycleStatus } from "./match-lifecycle-status";
 
 export { buildSceActivityRoute, parseActivityIdFromResourceKey } from "./route";
 

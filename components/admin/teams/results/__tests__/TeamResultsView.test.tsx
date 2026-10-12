@@ -8,6 +8,7 @@ import TeamResultsView from "../TeamResultsView";
 import TeamLatestResultSummary from "@/components/admin/teams/overview/TeamLatestResultSummary";
 import type { TeamCockpitResult } from "@/lib/teams/team-cockpit-sporting-data";
 import { TEAM_COCKPIT_RESULTS_DETAIL_LIMIT } from "@/lib/teams/team-cockpit-sporting-data";
+import { createTeamCockpitResultFixture } from "@/lib/teams/team-cockpit-match-fixtures";
 import {
   formatResultScore,
   resolveResultPerspectiveLabel,
@@ -26,25 +27,12 @@ function createSide(displayName: string, isOwnTeam: boolean) {
 }
 
 function createResult(overrides: Partial<TeamCockpitResult> = {}): TeamCockpitResult {
-  return {
-    eventId: "event-1",
-    startAt: new Date("2026-08-20T16:00:00.000Z"),
-    side: "HOME",
-    status: "COMPLETED",
-    lifecycle: "COMPLETED",
-    opponentName: "FC Example",
-    home: createSide("1. Mannschaft", true),
-    away: createSide("FC Example", false),
-    venueName: "Im Brüel",
-    location: "Im Brüel",
-    competitionName: "Junioren A Promotion",
-    scoreHome: 2,
-    scoreAway: 1,
-    teamScore: 2,
-    opponentScore: 1,
-    resultPerspective: "WON",
-    ...overrides,
-  };
+  return createTeamCockpitResultFixture(overrides);
+}
+
+function sideText(row: HTMLElement, side: "home" | "away"): string {
+  const el = row.querySelector(`[data-sce-match-side="${side}"]`);
+  return el?.textContent?.trim() ?? "";
 }
 
 describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
@@ -92,9 +80,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
     );
 
     const row = screen.getByTestId("team-result-event-1");
-    expect(within(row).getByTestId("team-result-home")).toHaveTextContent("1. Mannschaft");
-    expect(within(row).getByTestId("team-result-away")).toHaveTextContent("FC Example");
-    expect(within(row).getByTestId("team-result-homeaway-event-1")).toHaveTextContent("Heim");
+    expect(sideText(row, "home")).toContain("1. Mannschaft");
+    expect(sideText(row, "away")).toContain("FC Example");
+    expect(within(row).getByTestId("sce-match-context-heim")).toHaveTextContent("Heim");
   });
 
   it("C. renders away fixture orientation with Auswärts label", () => {
@@ -114,11 +102,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
     );
 
     const row = screen.getByTestId("team-result-event-away");
-    expect(within(row).getByTestId("team-result-home")).toHaveTextContent("FC Example");
-    expect(within(row).getByTestId("team-result-away")).toHaveTextContent("1. Mannschaft");
-    expect(within(row).getByTestId("team-result-homeaway-event-away")).toHaveTextContent(
-      "Auswärts",
-    );
+    expect(sideText(row, "home")).toContain("FC Example");
+    expect(sideText(row, "away")).toContain("1. Mannschaft");
+    expect(within(row).getByTestId("sce-match-context-auswaerts")).toHaveTextContent("Auswärts");
   });
 
   it("D. keeps canonical homeScore : awayScore orientation", () => {
@@ -139,7 +125,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-score-home-win")).toHaveTextContent("3 : 1");
+    expect(within(screen.getByTestId("team-result-home-win")).getByTestId("sce-match-result")).toHaveTextContent(
+      "3:1",
+    );
   });
 
   it("E. away-team win shows Sieg without reversing score", () => {
@@ -163,8 +151,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-score-away-win")).toHaveTextContent("1 : 3");
-    expect(screen.getByTestId("team-result-perspective-away-win")).toHaveTextContent("Sieg");
+    const row = screen.getByTestId("team-result-away-win");
+    expect(within(row).getByTestId("sce-match-result")).toHaveTextContent("1:3");
+    expect(within(row).getByTestId("sce-match-context-perspective")).toHaveTextContent("Sieg");
   });
 
   it("renders both crests in home/away order without changing away perspective", () => {
@@ -193,12 +182,12 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
 
     const row = screen.getByTestId("team-result-crest-order");
     expect(
-      Array.from(row.querySelectorAll("img"), (logo) => logo.getAttribute("src")),
+      Array.from(row.querySelectorAll('[data-testid="club-crest-image"]'), (logo) =>
+        logo.getAttribute("src"),
+      ),
     ).toEqual(["/zurich-crest.svg", "/tenant-crest.svg"]);
-    expect(within(row).getByTestId("team-result-score-crest-order")).toHaveTextContent(
-      "4 : 1",
-    );
-    expect(within(row).getByTestId("team-result-perspective-crest-order")).toHaveTextContent(
+    expect(within(row).getByTestId("sce-match-result")).toHaveTextContent("4:1");
+    expect(within(row).getByTestId("sce-match-context-perspective")).toHaveTextContent(
       "Niederlage",
     );
   });
@@ -218,9 +207,7 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
 
     const row = screen.getByTestId("team-result-event-1");
     expect(row.querySelector("svg")).toBeInTheDocument();
-    expect(within(row).getByTestId("team-result-score-event-1")).toHaveTextContent(
-      "2 : 1",
-    );
+    expect(within(row).getByTestId("sce-match-result")).toHaveTextContent("2:1");
     expect(row).toHaveAttribute("data-perspective", "WON");
   });
 
@@ -233,7 +220,7 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-perspective-event-1")).toHaveTextContent("Sieg");
+    expect(screen.getByTestId("sce-match-context-perspective")).toHaveTextContent("Sieg");
   });
 
   it("G. maps DRAW to Unentschieden", () => {
@@ -254,7 +241,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-perspective-draw")).toHaveTextContent("Unentschieden");
+    expect(
+      within(screen.getByTestId("team-result-draw")).getByTestId("sce-match-context-perspective"),
+    ).toHaveTextContent("Unentschieden");
   });
 
   it("H. maps LOST to Niederlage", () => {
@@ -275,7 +264,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-perspective-lost")).toHaveTextContent("Niederlage");
+    expect(
+      within(screen.getByTestId("team-result-lost")).getByTestId("sce-match-context-perspective"),
+    ).toHaveTextContent("Niederlage");
   });
 
   it("I. handles UNKNOWN without fabricated outcome label", () => {
@@ -296,7 +287,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.queryByTestId("team-result-perspective-unknown")).not.toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("team-result-unknown")).queryByTestId("sce-match-context-perspective"),
+    ).not.toBeInTheDocument();
     expect(resolveResultPerspectiveLabel("UNKNOWN")).toBe("");
   });
 
@@ -309,9 +302,11 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    const dateBlock = screen.getByTestId("team-result-date-event-1");
-    expect(dateBlock.textContent).toMatch(/2026|20\.|August/i);
-    expect(dateBlock.textContent).toMatch(/18:00|16:00/);
+    const row = screen.getByTestId("team-result-event-1");
+    expect(within(row).getByTestId("sce-match-schedule-date").textContent).toMatch(
+      /2026|20\.|August/i,
+    );
+    expect(within(row).getByTestId("sce-match-schedule-time").textContent).toMatch(/18:00|16:00/);
   });
 
   it("K. renders venue when present", () => {
@@ -323,7 +318,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-venue-event-1")).toHaveTextContent("Im Brüel");
+    expect(within(screen.getByTestId("team-result-event-1")).getByTestId("sce-match-location")).toHaveTextContent(
+      "Im Brüel",
+    );
   });
 
   it("L. renders competition when present", () => {
@@ -335,9 +332,9 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-competition-event-1")).toHaveTextContent(
-      "Junioren A Promotion",
-    );
+    expect(
+      within(screen.getByTestId("team-result-event-1")).getByTestId("sce-match-competition"),
+    ).toHaveTextContent("Junioren A Promotion");
   });
 
   it("O. renders empty state when no completed results", () => {
@@ -372,10 +369,13 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("team-result-score-missing-score")).toHaveTextContent("–");
-    expect(screen.getByTestId("team-result-score-missing-score")).not.toHaveTextContent("null");
-    expect(screen.getByTestId("team-result-score-missing-score")).not.toHaveTextContent("NaN");
-    expect(screen.getByTestId("team-result-score-missing-score")).not.toHaveTextContent("0 : 0");
+    const score = within(screen.getByTestId("team-result-missing-score")).getByTestId(
+      "sce-match-result",
+    );
+    expect(score).toHaveTextContent("–");
+    expect(score).not.toHaveTextContent("null");
+    expect(score).not.toHaveTextContent("NaN");
+    expect(score).not.toHaveTextContent("0 : 0");
   });
 
   it("Q. first detailed result matches overview latest-result semantics", () => {
@@ -400,8 +400,11 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
       />,
     );
 
-    const overviewScore = screen.getByTestId("team-latest-result-score").textContent;
-    const overviewPerspective = screen.getByTestId("team-latest-result-perspective").textContent;
+    const overviewCard = screen.getByTestId("team-latest-result-sce-card");
+    const overviewScore = within(overviewCard).getByTestId("sce-match-result").textContent;
+    const overviewPerspective = within(overviewCard).getByTestId(
+      "sce-match-context-perspective",
+    ).textContent;
     unmountOverview();
 
     render(
@@ -413,16 +416,18 @@ describe("TEAM-COCKPIT-PREMIUM-01G — TeamResultsView", () => {
     );
 
     const detailRow = screen.getByTestId("team-result-latest");
-    expect(within(detailRow).getByTestId("team-result-score-latest")).toHaveTextContent(
+    expect(within(detailRow).getByTestId("sce-match-result")).toHaveTextContent(
       overviewScore ?? "",
     );
-    expect(within(detailRow).getByTestId("team-result-perspective-latest")).toHaveTextContent(
+    expect(within(detailRow).getByTestId("sce-match-context-perspective")).toHaveTextContent(
       overviewPerspective ?? "",
     );
-    expect(within(detailRow).getByTestId("team-result-homeaway-latest")).toHaveTextContent(
+    expect(within(detailRow).getByTestId("sce-match-context-auswaerts")).toHaveTextContent(
       "Auswärts",
     );
-    expect(formatResultScore(latestResult)).toBe(overviewScore);
+    expect(formatResultScore(latestResult).replace(/\s/g, "")).toBe(
+      overviewScore?.replace(/\s/g, "") ?? "",
+    );
   });
 });
 

@@ -122,11 +122,15 @@ Conceptual tree (implementations may reuse `components/sporting-activity`):
 ```text
 ActivityCard (shared shell)
 ├── shared: SceActivityIdentity, SceActivityMeta, SceActivityStatus, SceActivityActions
-├── MatchCard — MatchClubPair center; ADR-05 order
+├── SceMatchCard (01D) — `SceMatchPresentationModel` + densities HERO|STANDARD|COMPACT|MICRO
 ├── TrainingCard — team + schedule + location hierarchy
 ├── TournamentCard — organiser + Hauptteam badge; never Match layout
 └── ClubEventCard — event identity + organiser
 ```
+
+**Match (01D shipped):** `components/sporting-activity/SceMatchCard.tsx` consumes `resolveSceMatchPresentation` output; fixture row uses `MatchClubPair` / `ClubIdentityDisplay` with `data-sce-match-side` invariants. Legacy `MatchCard.tsx` (Matchcenter) remains until **01H**.
+
+**Match crest & result (01D R9+):** Real club logos render via `ClubCrest` with **`object-contain`** inside square layout bounds — **never** as circular avatar pills. Missing/broken crests use the **circular initials/icon fallback**; while a valid URL loads, the same fallback may show underneath (no empty crest gap). Crest URLs come from **`resolveMatchSideClubLogoUrl`** (tenant internal `canonicalTeamId` → club crest; external → `externalLogoUrl`) and **must not vary by upcoming vs completed** when identity is unchanged. Completed/live **result scores** use the R9 density scale and **`--sce-match-result-foreground`** (invariant across win/loss/draw); **0:0** is valid when `result` is present. **Matchcenter open-points** panels stack **below** the canonical card — never compress card width.
 
 ### World-class card UX rules
 
@@ -136,7 +140,7 @@ ActivityCard (shared shell)
 4. **Orange** — interaction/accent only (ADR from SCE-UI-STANDARD-01).
 5. **Primary click** — opens canonical **consume** detail (`buildSportingActivityDetailHref`) unless surface is explicitly manage-only (Matchcenter record).
 6. **Secondary actions** — high-value only (e.g. availability context → `?tab=teilnahme`); defer complexity to detail workspace.
-7. **Logos** — graceful `onError` hide; initials fallback (`ClubCrest`).
+7. **Logos** — real crests: natural aspect ratio, `object-contain`, no circular pill; graceful `onError` → circular initials/icon fallback (`ClubCrest`).
 8. **Long names** — truncate with tooltip/title; no layout break.
 9. **Responsive** — reflow fields; do not scale unreadable desktop micro type on mobile.
 10. **Loading / error / empty** — skeleton on identity block; explicit empty states for missing opponent/logo data.

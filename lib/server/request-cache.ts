@@ -10,6 +10,10 @@ import { getTenantDressingRoomOccupancyPresets as loadTenantDressingRoomOccupanc
 import { operationalPolicyToMatchResolved } from "@/lib/match/tenant-operational-policy-service";
 import { getTenantOperationalDurationPolicy as loadTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { getCurrentTenantContextById as loadCurrentTenantContextById } from "@/lib/tenants/context";
+import {
+  loadTenantOwnCanonicalClubCrestUrl,
+  resolveTenantClubCrestUrl,
+} from "@/lib/sporting-data/sce-club-visual-identity";
 import { getTeamsListData as loadTeamsListData } from "@/lib/teams/queries";
 import { getPersonProfileByUserId as loadPersonProfileByUserId } from "@/lib/people/queries";
 import { listWochenplanPlans as loadWochenplanPlans } from "@/lib/wochenplan/plan-service";
@@ -34,6 +38,19 @@ export const getTenantMatchOperationalPolicyCached = cache(async (tenantId: stri
 export const getCurrentTenantContextByIdCached = cache((tenantId: string) =>
   loadCurrentTenantContextById(tenantId),
 );
+
+/** Canonical tenant club crest for match/tournament presentation (Tenant.logoUrl → own Verein). */
+export const getTenantClubCrestUrlCached = cache(async (tenantId: string) => {
+  const [tenant, ownCanonicalClubLogoUrl] = await Promise.all([
+    getCurrentTenantContextByIdCached(tenantId),
+    loadTenantOwnCanonicalClubCrestUrl(tenantId),
+  ]);
+
+  return resolveTenantClubCrestUrl({
+    tenantLogoUrl: tenant?.logoUrl ?? null,
+    ownCanonicalClubLogoUrl,
+  });
+});
 
 export const getTeamsListDataCached = cache(
   (tenantId: string, selectedSeasonKey?: string) =>

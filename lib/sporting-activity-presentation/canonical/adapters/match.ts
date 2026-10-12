@@ -1,10 +1,11 @@
 import { buildMatchClubIdentityPair } from "@/lib/sporting-activity-design";
 import { getMatchcenterResultLabel } from "@/lib/matchcenter/match-lifecycle";
-import { resolveSpieleStatusPresentation } from "@/lib/matchcenter/management-view";
 import {
   assessMatchOperationalState,
   type MatchcenterOperationalAssessment,
 } from "@/lib/matchcenter/operational-state";
+import { buildSceMatchTenantSideContextBadge } from "../match-context-badges";
+import { resolveSceMatchLifecycleStatus } from "../match-lifecycle-status";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import {
   buildSportingActivityLocation,
@@ -12,10 +13,7 @@ import {
 } from "@/lib/sporting-activity-presentation/location";
 import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
 import { buildSceActivityRoute } from "../route";
-import {
-  buildSceActivityPresentationStatus,
-  mapSpieleStatusLabelToSemantic,
-} from "../status";
+import { buildSceActivityPresentationStatus } from "../status";
 import type { SceMatchPresentationModel } from "../types";
 
 export type ResolveSceMatchPresentationInput = {
@@ -24,6 +22,8 @@ export type ResolveSceMatchPresentationInput = {
   tenantClubName?: string | null;
   assessment?: MatchcenterOperationalAssessment;
   pitchLabel?: string | null;
+  now?: Date;
+  timezone?: string;
 };
 
 export function resolveSceMatchPresentation(
@@ -38,19 +38,15 @@ export function resolveSceMatchPresentation(
 
   const clubPair = buildMatchClubIdentityPair(match, input.tenantLogoUrl);
   const assessment = input.assessment ?? assessMatchOperationalState(match);
-  const spieleStatus = resolveSpieleStatusPresentation(match, assessment);
 
-  const canonicalResultLabel = getMatchcenterResultLabel(match);
-  const rawResultLabel = match.resultLabel?.trim() || null;
-  const displayLabel = canonicalResultLabel ?? rawResultLabel;
-  const result =
-    displayLabel || match.scoreHome != null || match.scoreAway != null
-      ? {
-          scoreHome: match.scoreHome,
-          scoreAway: match.scoreAway,
-          displayLabel,
-        }
-      : null;
+  const displayLabel = getMatchcenterResultLabel(match, input.now);
+  const result = displayLabel
+    ? {
+        scoreHome: match.scoreHome,
+        scoreAway: match.scoreAway,
+        displayLabel,
+      }
+    : null;
 
   const mode = normalizeSportingLocationMode(match.homeAway);
   const pitch =
@@ -64,6 +60,12 @@ export function resolveSceMatchPresentation(
       venueName: match.location,
       facilityResource: pitch,
     });
+
+  const normalizedSide = match.homeAway?.trim().toUpperCase();
+  const tenantSide = buildSceMatchTenantSideContextBadge(
+    normalizedSide === "HOME" || normalizedSide === "AWAY" ? normalizedSide : null,
+  );
+  const contextBadges = tenantSide ? [tenantSide] : undefined;
 
   return {
     kind: "MATCH",
@@ -88,10 +90,11 @@ export function resolveSceMatchPresentation(
       ? { name: legacyPresentation.team.name }
       : undefined,
     result,
-    matchLifecycle: buildSceActivityPresentationStatus({
-      domain: match.status,
-      label: spieleStatus.label,
-      semantic: mapSpieleStatusLabelToSemantic(spieleStatus.label),
+    matchLifecycle: resolveSceMatchLifecycleStatus({
+      match,
+      now: input.now,
+      timezone: input.timezone,
     }),
+    contextBadges,
   };
 }

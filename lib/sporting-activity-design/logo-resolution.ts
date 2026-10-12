@@ -4,18 +4,44 @@
  */
 
 import type { MatchcenterSide } from "@/lib/matchcenter/types";
+import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
 
 /**
+ * Match club visual identity (01D R10):
+ *   - Participant display name = team/participant label (e.g. Junioren B1).
+ *   - Crest = owning club logo (tenant club or external club), never a team glyph.
+ *
  * Match side logo hierarchy (see lib/matchcenter/club-identity.ts history):
- *   own team → Tenant.logoUrl
- *   external → ExternalTeam/ExternalClub crest (externalLogoUrl on side)
+ *   internal tenant Team (canonicalTeamId or isOwnTeam) → tenantLogoUrl (club crest)
+ *   external → externalLogoUrl pre-resolved upstream (ExternalTeam/Club + provider enrichment)
+ *
+ * Crest availability is identity-driven — not fixture result state.
  */
+export type MatchSideClubLogoInput = Pick<
+  MatchcenterSide,
+  "isOwnTeam" | "externalLogoUrl"
+> & {
+  canonicalTeamId?: MatchcenterSide["canonicalTeamId"];
+};
+
+export type MatchSideClubLogoTenantContext = {
+  readonly tenantLogoUrl?: string | null;
+  readonly ownCanonicalClubLogoUrl?: string | null;
+};
+
 export function resolveMatchSideClubLogoUrl(
-  side: Pick<MatchcenterSide, "isOwnTeam" | "externalLogoUrl">,
+  side: MatchSideClubLogoInput,
   tenantLogoUrl: string | null | undefined,
+  tenantContext?: MatchSideClubLogoTenantContext,
 ): string | null {
-  if (side.isOwnTeam) {
-    return tenantLogoUrl?.trim() || null;
+  const isTenantClubParticipant =
+    side.isOwnTeam || Boolean(side.canonicalTeamId?.trim());
+
+  if (isTenantClubParticipant) {
+    return resolveTenantClubCrestUrl({
+      tenantLogoUrl: tenantContext?.tenantLogoUrl ?? tenantLogoUrl,
+      ownCanonicalClubLogoUrl: tenantContext?.ownCanonicalClubLogoUrl,
+    });
   }
   return side.externalLogoUrl?.trim() || null;
 }

@@ -7,6 +7,7 @@ import {
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import MatchcenterDetail from "@/components/admin/matchcenter/MatchcenterDetail";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
@@ -161,6 +162,7 @@ export default async function MatchcenterDetailPage({
 
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantId);
   const userId = session.user?.effectiveUserId ?? session.user?.id ?? "";
   const integratedMatchSquadWorkspace = userId
     ? await resolveIntegratedMatchSquadWorkspace({
@@ -229,7 +231,7 @@ export default async function MatchcenterDetailPage({
         canSubmitPlanning={canSubmitPlanning}
         canValidatePlanning={canValidatePlanning}
         isProtectedSource={isProtectedSource}
-        tenantLogoUrl={tenantContext.logoUrl}
+        tenantLogoUrl={tenantClubCrestUrl}
         participantsSection={participantsSection}
         matchSquadSection={matchSquadSection}
         collaborationSection={collaborationSection}

@@ -12,6 +12,7 @@ import { getOrgUnits } from "@/lib/org/queries";
 import { getEligibleCompetitions } from "@/lib/competitions/queries";
 import { auth } from "@/auth";
 import { resolveTeamDocumentAccess } from "@/lib/teams/team-document-auth";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 type Props = {
   params: Promise<{
@@ -39,6 +40,8 @@ export default async function TeamOverviewPage({ params }: Props) {
   const activeSeason =
     team.teamSeasons.find((entry) => entry.id === team.currentTeamSeasonId) ?? null;
 
+  const tenantClubCrestUrlPromise = getTenantClubCrestUrlCached(tenantId);
+
   const [availableOrgUnits, availableCompetitions, trainingSchedule, sportingData] =
     await Promise.all([
       getOrgUnits(tenantId),
@@ -47,12 +50,13 @@ export default async function TeamOverviewPage({ params }: Props) {
         ? getTeamTrainingSchedule(tenantId, team.currentTeamSeasonId)
         : Promise.resolve([]),
       team.currentTeamSeasonId && activeSeason
-        ? getTeamCockpitSportingData({
+        ? tenantClubCrestUrlPromise.then((tenantLogoUrl) =>
+            getTeamCockpitSportingData({
             tenantId,
             tenantClubName: tenant.name,
-            tenantLogoUrl: tenant.logoUrl,
+            tenantLogoUrl,
             teamId: team.id,
-            teamSeasonId: team.currentTeamSeasonId,
+            teamSeasonId: team.currentTeamSeasonId!,
             seasonKey: activeSeason.season.key,
             teamDisplayName: team.displayName ?? team.name,
             teamShortName: team.shortName,
@@ -64,7 +68,8 @@ export default async function TeamOverviewPage({ params }: Props) {
               : null,
             sfvMapping: team.currentSeasonSfvMapping,
             limits: { nextMatches: 1, results: 1 },
-          })
+          }),
+          )
         : Promise.resolve(null),
     ]);
 
