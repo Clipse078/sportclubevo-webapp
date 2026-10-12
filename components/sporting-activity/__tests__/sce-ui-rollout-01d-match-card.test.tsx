@@ -175,7 +175,7 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
   it("MICRO uses horizontal identity with optional crests", () => {
     renderCard({}, "MICRO");
     expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
-    expect(screen.getByTestId("club-crest-image")).toBeTruthy();
+    expect(screen.getAllByTestId("club-crest-image").length).toBeGreaterThanOrEqual(1);
   });
 
   it.each(["HERO", "STANDARD", "COMPACT"] as const)(

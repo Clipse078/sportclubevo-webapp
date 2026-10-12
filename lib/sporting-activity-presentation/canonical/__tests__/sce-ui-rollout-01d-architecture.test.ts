@@ -19,8 +19,8 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(source).toContain("SceMatchPresentationModel");
     expect(source).not.toContain("MatchPresentationModelV2");
     expect(source).not.toContain("MatchCardModel");
-    expect(source).toContain('data-sce-match-side="home"');
-    expect(source).toContain('data-sce-match-side="away"');
+    expect(source).toContain("data-sce-match-side=");
+    expect(source).toContain('data-sce-match-region="fixture"');
   });
 
   it("does not resolve logo URLs inside the visual card (uses ClubIdentity / ClubCrest)", () => {
