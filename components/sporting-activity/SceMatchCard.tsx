@@ -25,6 +25,7 @@ import {
   isSceMatchRichCardDensity,
   SCE_MATCH_CARD_SHELL_CLASS,
   sceMatchCardBoundedWidthClass,
+  sceMatchCenterTypographyScale,
   sceMatchCrestVisualSizeForDensity,
   sceMatchRichDensityScale,
 } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
@@ -80,14 +81,14 @@ function SceMatchFixtureSeparator({
   model: SceMatchPresentationModel;
   density: SceActivityPresentationDensity;
 }) {
-  const scale = richScale(density);
+  const centerScale = sceMatchCenterTypographyScale(density);
 
   if (model.result) {
     return (
       <SceMatchCardResult
         model={model}
         density={density}
-        className={scale.resultTextClass}
+        className={centerScale.resultTextClass}
       />
     );
   }
@@ -97,7 +98,7 @@ function SceMatchFixtureSeparator({
       <span
         className={cn(
           "shrink-0 font-semibold tabular-nums text-[var(--muted)]",
-          scale.completedMissingResultClass,
+          centerScale.completedMissingResultClass,
         )}
         data-testid="sce-match-result"
         aria-label="Ergebnis nicht verfügbar"
@@ -111,7 +112,7 @@ function SceMatchFixtureSeparator({
     <span
       className={cn(
         "shrink-0 uppercase text-[var(--muted)]",
-        scale.vsTextClass,
+        centerScale.vsTextClass,
       )}
       aria-hidden
       data-testid="sce-match-vs"

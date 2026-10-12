@@ -10,6 +10,7 @@ import {
   resolveSceMatchCardFixture,
 } from "../__fixtures__/sce-match-card-fixtures";
 import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
+import { sceMatchCenterTypographyScale } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
 
 const FMT = { locale: "de-CH", timezone: "Europe/Zurich" };
@@ -102,6 +103,31 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
       scoreAway: 1,
     });
     expect(screen.getByTestId("sce-match-result")).toHaveTextContent("3:1");
+  });
+
+  it.each(DENSITIES)("result score uses canonical density typography at %s", (density) => {
+    renderCard(
+      {
+        status: "COMPLETED",
+        resultLabel: "12:11",
+        scoreHome: 12,
+        scoreAway: 11,
+      },
+      density,
+    );
+    const result = screen.getByTestId("sce-match-result");
+    expect(result).toHaveTextContent("12:11");
+    expect(result.className).toContain(
+      sceMatchCenterTypographyScale(density).resultTextClass.split(" ")[0],
+    );
+  });
+
+  it.each(DENSITIES)("real crest images are not circular pills at density %s", (density) => {
+    renderCard({}, density);
+    for (const img of screen.getAllByTestId("club-crest-image")) {
+      expect(img.className).toContain("object-contain");
+      expect(img.className).not.toContain("rounded-full");
+    }
   });
 
   it("uses canonical consume route when linked", () => {

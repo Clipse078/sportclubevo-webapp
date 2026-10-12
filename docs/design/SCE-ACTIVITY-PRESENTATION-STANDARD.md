@@ -130,6 +130,8 @@ ActivityCard (shared shell)
 
 **Match (01D shipped):** `components/sporting-activity/SceMatchCard.tsx` consumes `resolveSceMatchPresentation` output; fixture row uses `MatchClubPair` / `ClubIdentityDisplay` with `data-sce-match-side` invariants. Legacy `MatchCard.tsx` (Matchcenter) remains until **01H**.
 
+**Match crest & result (01D R8+):** Real club logos render via `ClubCrest` with **`object-contain`** inside square layout bounds — **never** as circular avatar pills. Missing/broken crests use the **circular initials/icon fallback**. Completed/live **result scores** use the canonical density scale (`SCE_MATCH_RICH_DENSITY_SCALE`, `SCE_MATCH_MICRO_DENSITY_SCALE`) and must dominate VS text and metadata; **0:0** is a valid result when `result` is present.
+
 ### World-class card UX rules
 
 1. **Identity before metadata** — user must see what the activity is before operational fields.
@@ -138,7 +140,7 @@ ActivityCard (shared shell)
 4. **Orange** — interaction/accent only (ADR from SCE-UI-STANDARD-01).
 5. **Primary click** — opens canonical **consume** detail (`buildSportingActivityDetailHref`) unless surface is explicitly manage-only (Matchcenter record).
 6. **Secondary actions** — high-value only (e.g. availability context → `?tab=teilnahme`); defer complexity to detail workspace.
-7. **Logos** — graceful `onError` hide; initials fallback (`ClubCrest`).
+7. **Logos** — real crests: natural aspect ratio, `object-contain`, no circular pill; graceful `onError` → circular initials/icon fallback (`ClubCrest`).
 8. **Long names** — truncate with tooltip/title; no layout break.
 9. **Responsive** — reflow fields; do not scale unreadable desktop micro type on mobile.
 10. **Loading / error / empty** — skeleton on identity block; explicit empty states for missing opponent/logo data.

@@ -9,18 +9,26 @@ import type { SportingActivityDensity } from "@/lib/sporting-activity-design/den
 
 export type ClubCrestVisualSize = SportingActivityDensity | "detail";
 
-const SIZE_CLASSES: Record<ClubCrestVisualSize, string> = {
-  compact: "h-7 w-7 text-[0.5625rem]",
-  planner: "h-11 w-11 text-[0.6875rem]",
-  management: "h-9 w-9 text-[0.625rem]",
-  detail: "h-[4.25rem] w-[4.25rem] text-[0.8125rem]",
+/** Square layout bounds — real logos use object-contain inside (not circular pills). */
+const BOUNDS_CLASSES: Record<ClubCrestVisualSize, string> = {
+  compact: "h-8 w-8",
+  planner: "h-12 w-12",
+  management: "h-10 w-10",
+  detail: "h-[5rem] w-[5rem]",
+};
+
+const FALLBACK_SIZE_CLASSES: Record<ClubCrestVisualSize, string> = {
+  compact: "h-8 w-8 text-[0.5625rem]",
+  planner: "h-12 w-12 text-[0.75rem]",
+  management: "h-10 w-10 text-[0.625rem]",
+  detail: "h-[5rem] w-[5rem] text-[0.875rem]",
 };
 
 const ICON_SIZE = {
   compact: 12,
-  planner: 20,
+  planner: 24,
   management: 16,
-  detail: 24,
+  detail: 32,
 } as const;
 
 export type ClubCrestProps = {
@@ -38,7 +46,7 @@ function ClubCrestFallback({
   className,
   emphasized,
 }: Omit<ClubCrestProps, "decorative">) {
-  const sizeClass = SIZE_CLASSES[density ?? "management"];
+  const sizeClass = FALLBACK_SIZE_CLASSES[density ?? "management"];
   const containerClassName = cn(
     sizeClass,
     "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border font-semibold uppercase tracking-wide",
@@ -80,6 +88,7 @@ function ClubCrestFallback({
 
 /**
  * Canonical club crest primitive — resolved logo or intentional initials/icon fallback.
+ * Real crests render naturally (object-contain); fallbacks may use circular treatment.
  * Never renders a broken image (failed loads revert to fallback).
  */
 export function ClubCrest({
@@ -110,7 +119,7 @@ export function ClubCrest({
   }, []);
 
   const logoUrl = initialUrl && failedUrl !== initialUrl ? initialUrl : null;
-  const sizeClass = SIZE_CLASSES[density];
+  const boundsClass = BOUNDS_CLASSES[density];
 
   if (!logoUrl) {
     return (
@@ -126,15 +135,14 @@ export function ClubCrest({
   const showImage = loaded && failedUrl !== initialUrl;
 
   return (
-    <span className={cn("relative inline-flex shrink-0", sizeClass, className)}>
-      {!showImage ? (
-        <ClubCrestFallback
-          identity={identity}
-          density={density}
-          className="absolute inset-0"
-          emphasized={emphasized}
-        />
-      ) : null}
+    <span
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center",
+        boundsClass,
+        className,
+      )}
+      data-testid="club-crest-bounds"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- tenant/provider crest URLs */}
       <img
         src={logoUrl}
@@ -144,9 +152,7 @@ export function ClubCrest({
         onError={onError}
         onLoad={onLoad}
         className={cn(
-          sizeClass,
-          "rounded-full border object-cover",
-          emphasized ? "border-[var(--border-strong)]" : "border-[var(--border)]",
+          "max-h-full max-w-full object-contain",
           !showImage && "opacity-0",
         )}
         data-testid="club-crest-image"

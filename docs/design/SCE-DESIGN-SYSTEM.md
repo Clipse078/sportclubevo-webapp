@@ -78,7 +78,9 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 | **Surface layout** | Grouping, columns, readiness rails, and actions belong to the **surface** — they must not relocate competition, badges, fixture, schedule, or location inside the card |
 | **Identity grammar** | **HOME** name/crest · **vs** · **AWAY** crest/name — fixture-authoritative (`homeLeftAwayRightInvariant`) |
 | **Crests** | `ClubCrest` / `ClubIdentity` from 01C — cards do not resolve logo URLs locally |
+| **SCE Match crest rule** | When a **valid club logo** exists, render the **full crest artwork** with **`object-contain`**, preserving aspect ratio. Real crests **MUST NOT** appear inside avatar-style **circular pills** (`rounded-full`, circular masks, or circular crop). **Circular initials/icon treatment is reserved for missing or broken crest fallbacks** only. |
 | **Results** | Show only when 01C `result` is non-null; **no fake 0:0** for upcoming fixtures |
+| **SCE Match result rule** | A real match score (including **0:0**) is the **primary numeric focal point** of completed/live match presentation. Result typography **MUST** use the canonical match density scale (`resultTextClass` / `sceMatchCenterTypographyScale`) and be **materially larger** than VS text and schedule/competition metadata. **Do not** style scores as accent/orange decoration. |
 | **Status** | `matchLifecycle` via `resolveSceMatchLifecycleStatus` — **Heute** (warning), **Morgen** (info), **Live** (success), **Beendet** (success), **Abgesagt** (danger); rendered with DS `Badge` (`SceMatchCardStatus`) — text first, colour supplementary |
 | **Tenant context** | **Heim** / **Auswärts** on `contextBadges` — quiet `ActivityContextBadge`; never reorder fixture sides |
 | **Result context** | **Sieg** / **Unentschieden** / **Niederlage** on `contextBadges` — semantic badge, not a second fixture layout |

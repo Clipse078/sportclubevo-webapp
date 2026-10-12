@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import {
+  SCE_MATCH_MICRO_DENSITY_SCALE,
+  SCE_MATCH_RICH_DENSITY_SCALE,
+} from "../match-card-rich-density";
 
 const repoRoot = process.cwd();
 
@@ -159,5 +163,63 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     );
     expect(loader).toContain("resolveSceMatchPresentation");
     expect(loader).toContain("scePresentation");
+  });
+
+  it("ClubCrest renders real logos with object-contain (no circular pill)", () => {
+    const crest = readFileSync(
+      join(repoRoot, "components/sporting-activity/ClubCrest.tsx"),
+      "utf8",
+    );
+    expect(crest).toContain("object-contain");
+    expect(crest).toMatch(/data-testid="club-crest-image"/);
+    expect(crest).not.toMatch(/data-testid="club-crest-image"[\s\S]*rounded-full/);
+    expect(crest).toMatch(/rounded-full[\s\S]*club-crest-fallback-initials/);
+  });
+
+  it("match density scale defines result typography for all densities including MICRO", () => {
+    const scale = readFileSync(
+      join(repoRoot, "lib/sporting-activity-presentation/canonical/match-card-rich-density.ts"),
+      "utf8",
+    );
+    expect(scale).toContain("SCE_MATCH_MICRO_DENSITY_SCALE");
+    expect(scale).toContain("sceMatchCenterTypographyScale");
+    for (const density of ["HERO", "STANDARD", "COMPACT"] as const) {
+      expect(scale).toMatch(new RegExp(`${density}:[\\s\\S]*resultTextClass:`));
+    }
+    expect(scale).toMatch(/SCE_MATCH_MICRO_DENSITY_SCALE[\s\S]*resultTextClass:/);
+
+    const card = readFileSync(
+      join(repoRoot, "components/sporting-activity/SceMatchCard.tsx"),
+      "utf8",
+    );
+    expect(card).toContain("sceMatchCenterTypographyScale");
+    expect(card).not.toMatch(/SceMatchCardResult[\s\S]*text-(lg|xl|2xl|3xl|4xl)/);
+  });
+
+  it("result score typography is stronger than VS at each density", () => {
+    const weight = (cls: string) => {
+      const result = cls.match(/text-\[(.+?)rem\]|text-(xs|sm|base|lg|xl|2xl|3xl|4xl)/);
+      if (!result) return 0;
+      if (result[1]) return parseFloat(result[1]);
+      const map: Record<string, number> = {
+        xs: 0.75,
+        sm: 0.875,
+        base: 1,
+        lg: 1.125,
+        xl: 1.25,
+        "2xl": 1.5,
+        "3xl": 1.875,
+        "4xl": 2.25,
+      };
+      return map[result[2]] ?? 0;
+    };
+
+    for (const density of ["HERO", "STANDARD", "COMPACT"] as const) {
+      const { resultTextClass, vsTextClass } = SCE_MATCH_RICH_DENSITY_SCALE[density];
+      expect(weight(resultTextClass)).toBeGreaterThan(weight(vsTextClass));
+    }
+    expect(
+      weight(SCE_MATCH_MICRO_DENSITY_SCALE.resultTextClass),
+    ).toBeGreaterThan(weight(SCE_MATCH_MICRO_DENSITY_SCALE.vsTextClass));
   });
 });
