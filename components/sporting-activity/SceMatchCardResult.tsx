@@ -29,16 +29,9 @@ export function SceMatchCardResult({ model, density, className }: SceMatchCardRe
   const text = resolveResultText(model);
   if (!text) return null;
 
-  const prominent =
-    density === "HERO" || density === "STANDARD" || model.matchLifecycle?.semantic === "completed";
-
   return (
     <span
-      className={cn(
-        "shrink-0 font-semibold tabular-nums text-[var(--foreground)]",
-        prominent ? "text-[0.9375rem]" : "text-[0.8125rem]",
-        className,
-      )}
+      className={cn("shrink-0 tabular-nums text-[var(--foreground)]", className)}
       data-testid="sce-match-result"
       data-sce-match-center
       aria-label={`Ergebnis ${text}`}

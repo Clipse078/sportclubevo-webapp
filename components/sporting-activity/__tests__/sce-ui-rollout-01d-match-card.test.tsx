@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { SceMatchCard } from "../SceMatchCard";
 import {
   createSceMatchCardFixtureMatch,
@@ -243,6 +243,60 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
       expect(card?.className).toMatch(/max-w-/);
     },
   );
+
+  it("renders canonical crest fallbacks when both crest URLs are missing", () => {
+    const model = resolveSceMatchPresentation({
+      match: createSceMatchCardFixtureMatch({
+        home: {
+          ...createSceMatchCardFixtureMatch().home,
+          displayName: "Home United",
+          isOwnTeam: true,
+          externalLogoUrl: null,
+        },
+        away: {
+          ...createSceMatchCardFixtureMatch().away,
+          displayName: "Away City",
+          externalLogoUrl: null,
+        },
+      }),
+      tenantLogoUrl: null,
+      tenantClubName: "Home United",
+    });
+    render(
+      <SceMatchCard model={model} density="STANDARD" fmtCfg={FMT} linkToDetail={false} />,
+    );
+    expect(screen.queryAllByTestId("club-crest-image")).toHaveLength(0);
+    expect(screen.getAllByTestId(/club-crest-fallback-/).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("replaces failed crest image loads with the same canonical fallback", () => {
+    renderCard(
+      {
+        away: {
+          ...createSceMatchCardFixtureMatch().away,
+          externalLogoUrl: "https://cdn.example/broken-away.png",
+        },
+      },
+      "STANDARD",
+    );
+    const broken = screen
+      .getAllByTestId("club-crest-image")
+      .find((img) => img.getAttribute("src")?.includes("broken-away"));
+    expect(broken).toBeTruthy();
+    fireEvent.error(broken!);
+    const awayCrest = screen
+      .getByTestId("sce-match-fixture")
+      .querySelector('[data-sce-match-side="away"] [data-sce-match-region="away-crest"]');
+    expect(awayCrest?.querySelector('[data-testid^="club-crest-fallback-"]')).toBeTruthy();
+    expect(awayCrest?.querySelector('[data-testid="club-crest-image"]')).toBeNull();
+  });
+
+  it("uses elevated SCE surface tokens on the card shell", () => {
+    const { container } = renderCard({}, "STANDARD");
+    const card = container.querySelector("[data-sce-match-card]")!;
+    expect(card.className).toContain("--sce-surface-elevated");
+    expect(card.className).toContain("--sce-surface-border-elevated");
+  });
 
   it("adapter-backed model is consumed without local DTO fields on card", () => {
     const model = resolveSceMatchPresentation({

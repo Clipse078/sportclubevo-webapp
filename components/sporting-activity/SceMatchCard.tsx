@@ -23,7 +23,9 @@ import { SceMatchCardResult } from "./SceMatchCardResult";
 import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
 import {
   isSceMatchRichCardDensity,
+  SCE_MATCH_CARD_SHELL_CLASS,
   sceMatchCardBoundedWidthClass,
+  sceMatchCrestVisualSizeForDensity,
   sceMatchRichDensityScale,
 } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceMatchContextBadge } from "@/lib/sporting-activity-presentation/canonical/types";
@@ -43,16 +45,7 @@ export type SceMatchCardProps = {
 };
 
 function crestSizeForDensity(density: SceActivityPresentationDensity): ClubCrestVisualSize {
-  switch (density) {
-    case "HERO":
-      return "detail";
-    case "STANDARD":
-      return "planner";
-    case "COMPACT":
-      return "management";
-    case "MICRO":
-      return "compact";
-  }
+  return sceMatchCrestVisualSizeForDensity(density);
 }
 
 function buildFixtureAccessibleLabel(model: SceMatchPresentationModel): string {
@@ -117,7 +110,7 @@ function SceMatchFixtureSeparator({
   return (
     <span
       className={cn(
-        "shrink-0 font-semibold uppercase tracking-wide text-[var(--muted)]",
+        "shrink-0 uppercase text-[var(--muted)]",
         scale.vsTextClass,
       )}
       aria-hidden
@@ -204,7 +197,10 @@ function SceMatchStackedIdentityColumn({
     <div
       data-sce-match-side={side}
       data-sce-match-region={`${side}-identity`}
-      className="flex min-w-0 flex-col items-center gap-1.5 text-center"
+      className={cn(
+        "flex min-w-0 flex-col items-center text-center",
+        richScale(density).identityStackGapClass,
+      )}
     >
       {showCrests ? (
         <div data-sce-match-region={`${side}-crest`}>
@@ -352,7 +348,10 @@ function SceMatchLocationRow({
 
   return (
     <div
-      className="flex min-w-0 items-start gap-1.5 text-xs text-[var(--text-2)]"
+      className={cn(
+        "flex min-w-0 items-start gap-1.5",
+        richScale(density).scheduleTextClass,
+      )}
       data-testid="sce-match-location"
       data-sce-match-region="location"
       data-sce-match-location
@@ -402,7 +401,7 @@ function SceMatchRichCardContent({
         >
           {showCompetition && model.competition?.label ? (
             <p
-              className="min-w-0 line-clamp-2 text-xs text-[var(--muted)]"
+              className={cn("min-w-0", scale.competitionTextClass)}
               data-testid="sce-match-competition"
               data-sce-match-region="competition"
             >
@@ -538,7 +537,7 @@ export function SceMatchCard({
   const shellClass = cn(
     "relative min-w-0 text-[var(--foreground)]",
     richBounded,
-    !embed && "rounded-xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm",
+    !embed && SCE_MATCH_CARD_SHELL_CLASS,
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
     richPadding,
     className,

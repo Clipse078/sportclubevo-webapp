@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { cn } from "@/lib/cn";
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
@@ -11,9 +11,9 @@ export type ClubCrestVisualSize = SportingActivityDensity | "detail";
 
 const SIZE_CLASSES: Record<ClubCrestVisualSize, string> = {
   compact: "h-7 w-7 text-[0.5625rem]",
-  planner: "h-10 w-10 text-[0.625rem]",
-  management: "h-8 w-8 text-[0.625rem]",
-  detail: "h-16 w-16 text-[0.75rem]",
+  planner: "h-11 w-11 text-[0.6875rem]",
+  management: "h-9 w-9 text-[0.625rem]",
+  detail: "h-[4.25rem] w-[4.25rem] text-[0.8125rem]",
 };
 
 const ICON_SIZE = {
@@ -91,12 +91,23 @@ export function ClubCrest({
 }: ClubCrestProps) {
   const initialUrl = resolveClubIdentityEffectiveLogoUrl(identity);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setFailedUrl(null);
+    setLoaded(false);
+  }, [initialUrl]);
 
   const onError = useCallback(() => {
     if (initialUrl) {
       setFailedUrl(initialUrl);
+      setLoaded(false);
     }
   }, [initialUrl]);
+
+  const onLoad = useCallback(() => {
+    setLoaded(true);
+  }, []);
 
   const logoUrl = initialUrl && failedUrl !== initialUrl ? initialUrl : null;
   const sizeClass = SIZE_CLASSES[density];
@@ -112,21 +123,34 @@ export function ClubCrest({
     );
   }
 
+  const showImage = loaded && failedUrl !== initialUrl;
+
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- tenant/provider crest URLs
-    <img
-      src={logoUrl}
-      alt={decorative ? "" : identity.displayName}
-      aria-hidden={decorative ? true : undefined}
-      title={identity.displayName}
-      onError={onError}
-      className={cn(
-        sizeClass,
-        "shrink-0 rounded-full border object-cover",
-        emphasized ? "border-[var(--border-strong)]" : "border-[var(--border)]",
-        className,
-      )}
-      data-testid="club-crest-image"
-    />
+    <span className={cn("relative inline-flex shrink-0", sizeClass, className)}>
+      {!showImage ? (
+        <ClubCrestFallback
+          identity={identity}
+          density={density}
+          className="absolute inset-0"
+          emphasized={emphasized}
+        />
+      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element -- tenant/provider crest URLs */}
+      <img
+        src={logoUrl}
+        alt={decorative ? "" : identity.displayName}
+        aria-hidden={decorative ? true : undefined}
+        title={identity.displayName}
+        onError={onError}
+        onLoad={onLoad}
+        className={cn(
+          sizeClass,
+          "rounded-full border object-cover",
+          emphasized ? "border-[var(--border-strong)]" : "border-[var(--border)]",
+          !showImage && "opacity-0",
+        )}
+        data-testid="club-crest-image"
+      />
+    </span>
   );
 }
