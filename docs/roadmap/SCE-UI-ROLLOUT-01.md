@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01+` |
-| **Status** | **IN_PROGRESS** — **01A** closed; **01B** closed; **01C** closed; **01D** next |
+| **Status** | **IN_PROGRESS** — **01A** closed; **01B** closed; **01C** closed; **01D** implementation complete / PO visual UAT pending |
 | **Predecessor** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01F` **CLOSED** |
 | **Not in scope for planning doc** | Implementation branches, component code, PROD deploy |
 

@@ -24,6 +24,12 @@ export {
 } from "./density";
 
 export {
+  isSceActivityDimensionVisible,
+  sceActivityDensityContract,
+  sceActivityDimensionPolicy,
+} from "./match-card-policy";
+
+export {
   formatSceActivityLocationHierarchy,
   SCE_ACTIVITY_LOCATION_HIERARCHY_SEPARATOR,
 } from "./location-format";

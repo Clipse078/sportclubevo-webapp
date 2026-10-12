@@ -122,11 +122,13 @@ Conceptual tree (implementations may reuse `components/sporting-activity`):
 ```text
 ActivityCard (shared shell)
 ├── shared: SceActivityIdentity, SceActivityMeta, SceActivityStatus, SceActivityActions
-├── MatchCard — MatchClubPair center; ADR-05 order
+├── SceMatchCard (01D) — `SceMatchPresentationModel` + densities HERO|STANDARD|COMPACT|MICRO
 ├── TrainingCard — team + schedule + location hierarchy
 ├── TournamentCard — organiser + Hauptteam badge; never Match layout
 └── ClubEventCard — event identity + organiser
 ```
+
+**Match (01D shipped):** `components/sporting-activity/SceMatchCard.tsx` consumes `resolveSceMatchPresentation` output; fixture row uses `MatchClubPair` / `ClubIdentityDisplay` with `data-sce-match-side` invariants. Legacy `MatchCard.tsx` (Matchcenter) remains until **01H**.
 
 ### World-class card UX rules
 

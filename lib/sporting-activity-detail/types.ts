@@ -1,5 +1,6 @@
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import type { MatchClubIdentityPair } from "@/lib/sporting-activity-design/match-identity";
+import type { SceMatchPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 
 export type SportingActivityDetailKind = "TRAINING" | "MATCH" | "TOURNAMENT";
@@ -30,6 +31,8 @@ export type SportingActivityDetailRouteTarget = {
 
 export type SportingActivityDetailMatchSection = {
   clubPair: MatchClubIdentityPair;
+  /** 01C canonical model when match summary is loaded server-side (01D card consumer). */
+  scePresentation?: SceMatchPresentationModel;
 };
 
 export type SportingActivityDetailTournamentSection = {

@@ -65,6 +65,30 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 
 ---
 
+## Canonical Match card family (01D)
+
+| Item | Contract |
+|------|----------|
+| **Component** | `SceMatchCard` (`components/sporting-activity/SceMatchCard.tsx`) |
+| **Model** | `SceMatchPresentationModel` via `resolveSceMatchPresentation` — **no parallel Match card model** |
+| **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
+| **Identity grammar** | **HOME** name/crest · **vs** · **AWAY** crest/name — fixture-authoritative (`homeLeftAwayRightInvariant`) |
+| **Crests** | `ClubCrest` / `ClubIdentity` from 01C — cards do not resolve logo URLs locally |
+| **Results** | Show only when 01C `result` is non-null; **no fake 0:0** for upcoming fixtures |
+| **Status** | `matchLifecycle` / `status` semantic labels — text + token; not colour-only |
+| **Routes** | `model.route.consumeHref` for primary navigation — no local href builders |
+| **Responsive** | Truncation + grid reflow; narrow-safe (see preview gallery) |
+| **Accessibility** | Fixture `aria-label`, decorative crests when adjacent text exists, focus ring on card link |
+| **Preview / UAT** | `/sce-preview/match-card` (deterministic fixtures, no DB) |
+
+Representative integration (01D): Activity Detail match header (`SportingActivityDetailContent`) + server `scePresentation` on `loadMatchActivityDetail`.
+
+Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-architecture.test.ts`.
+
+Future Match surfaces (**01H–01L**) must adopt `SceMatchCard` — not local card variants.
+
+---
+
 ## Controls — binary state (Toggle First)
 
 **SCE Control Standard — Toggle First** (established with SCE-UI-ROLLOUT-01B closure, 2026-10-11):

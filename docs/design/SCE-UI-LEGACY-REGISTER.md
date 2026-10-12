@@ -39,7 +39,8 @@
 | LEGACY-TABS-001 | TABS | `PersonDetailTabs.tsx` | Person detail pages | MED | 01L | Context tabs + URL | All person tabs deep-linkable |
 | LEGACY-TABS-002 | TABS | `RegistrationDrawerTabShell.tsx` | Registration drawer | LOW | Backlog | Drawer pattern ADR | Product prioritizes |
 | LEGACY-TABS-003 | TABS | Inline section nav in legacy forms | Various admin forms | MED | 01L | Context tabs | Form migrated to workspace |
-| LEGACY-MATCH-CARD-001 | MATCH-CARD | `MatchCard.tsx` | Matchcenter views | MED | 01D | `ActivityCard/Match` + `MatchClubPair` | Zero imports |
+| LEGACY-MATCH-CARD-001 | MATCH-CARD | `MatchCard.tsx` | Matchcenter views | MED | 01H | **`SceMatchCard`** | Zero imports |
+| CANONICAL-MATCH-CARD-001 | MATCH-CARD | `SceMatchCard.tsx` | Activity Detail + preview | — | **01D** | 01C model | Representative integration |
 | LEGACY-MATCH-CARD-002 | MATCH-CARD | Inline crest rows in `SpieleManagement*Row.tsx` | Spiele management | MED | 01D | Shared Match STANDARD density | Rows use shared component |
 | LEGACY-MATCH-CARD-003 | MATCH-CARD | `InfoboardScreen1.tsx` fallback branch | Kiosk | **HIGH** | 01D+01K | `matchPresentation` required | Loader always sets pair; fallback deleted |
 | LEGACY-MATCH-CARD-004 | MATCH-CARD | `InfoboardScreen2.tsx` | Kiosk | **HIGH** | 01D+01K | `MatchClubPair` layout | Same as 003 |
