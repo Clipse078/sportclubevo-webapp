@@ -10,9 +10,10 @@ import {
   resolveTournamentPublicationPresentation,
   resolveTournamentStatusPresentation,
 } from "@/lib/tournaments/management-view";
-import { buildTurniereManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-tournament-presentation";
 import { formatTournamentDatePresentation } from "@/lib/tournaments/presentation";
-import { TournamentManagementIdentity } from "@/components/sporting-activity/TournamentManagementIdentity";
+import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
+import { resolveSceTournamentPresentation } from "@/lib/sporting-activity-presentation/canonical/adapters/tournament";
+import { buildSceActivityPresentationStatus } from "@/lib/sporting-activity-presentation/canonical/status";
 import TurniereRowContextMenu from "./TurniereRowContextMenu";
 import {
   TURNIERE_ROW_INTERMEDIATE_GRID,
@@ -80,26 +81,23 @@ export default function TurniereManagementRow({
     locale,
     timezone,
   );
-  const kickoffTime = new Intl.DateTimeFormat("de-CH", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: timezone,
-  }).format(new Date(tournament.startAt));
-  const endTime =
-    tournament.endAt &&
-    new Intl.DateTimeFormat("de-CH", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: timezone,
-    }).format(new Date(tournament.endAt));
   const categoryLine = resolveTournamentCategoryAgeLine(tournament);
   const operationalSegments = resolveTournamentOperationalLine(tournament, timezone, locale);
   const status = resolveTournamentStatusPresentation(tournament, assessment);
   const publication = resolveTournamentPublicationPresentation(tournament);
-  const activityPresentation = buildTurniereManagementActivityPresentation(
+  const sceTournamentPresentation = resolveSceTournamentPresentation({
     tournament,
     tenantClubName,
-  );
+  });
+  const presentationWithStatus = status.label
+    ? {
+        ...sceTournamentPresentation,
+        status: buildSceActivityPresentationStatus({
+          domain: tournament.status,
+          label: status.label,
+        }),
+      }
+    : sceTournamentPresentation;
   const editHref = `/dashboard/tournamentcenter/${tournament.id}/edit`;
   const wochenplanerHref = buildTournamentWochenplanerHref({
     startAt: tournament.startAt,
@@ -144,11 +142,15 @@ export default function TurniereManagementRow({
         className="relative z-[1] min-w-0 space-y-1 md:col-span-2 min-[105rem]:col-span-2"
         data-testid={`turniere-row-crest-${tournament.id}`}
       >
-        <TournamentManagementIdentity
-          tournament={tournament}
-          activityPresentation={activityPresentation}
-          startTimeLabel={kickoffTime}
-          endTimeLabel={endTime && endTime !== kickoffTime ? endTime : undefined}
+        <SceTournamentCard
+          model={presentationWithStatus}
+          density="COMPACT"
+          fmtCfg={{ locale, timezone }}
+          linkToDetail={false}
+          showStatus={false}
+          surface="list-row"
+          className="border-0 bg-transparent p-0 shadow-none"
+          testId={`turniere-sce-card-${tournament.id}`}
         />
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-2)]">

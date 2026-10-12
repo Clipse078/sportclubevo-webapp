@@ -139,6 +139,32 @@ Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not lo
 
 ---
 
+## Canonical Tournament card family (01F)
+
+| Item | Contract |
+|------|----------|
+| **Component** | `SceTournamentCard` (`components/sporting-activity/SceTournamentCard.tsx`) |
+| **Model** | `SceTournamentPresentationModel` via `resolveSceTournamentPresentation` / Wochenplaner adapter — **no parallel Tournament card model** |
+| **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
+| **Identity grammar** | Tournament title → **organiser** (always when data exists) → optional **Hauptteam** → schedule → location → status — **never** Match semantics (no VS, home/away pairing, scores) |
+| **Organiser invariant** | Organiser is a first-class field (`ClubIdentity`); must remain visible at HERO, STANDARD, COMPACT, and identifiable at MICRO — not tooltip-only |
+| **Hauptteam** | Distinct from organiser; do not substitute organiser with Hauptteam or venue |
+| **Location** | Venue → resource on card; **omit** organiser/host from location line when organiser is rendered separately |
+| **Schedule** | Concrete `schedule.startAt` / `endAt` from domain — no Training-style recurring definition |
+| **Status** | Domain-backed labels via `SceTournamentCardStatus` / DS `Badge` — text first |
+| **Routes** | `model.route.consumeHref` / `manageHref` — no local href builders |
+| **Management boundary** | `SceTournamentCard` owns **presentation**; Tournamentcenter rows keep date column, operational pills, context menu, filters |
+| **Club crest** | No Tournament-specific crest resolver; cards use text organiser by default (crest optional elsewhere via canonical `ClubCrest` only) |
+| **Preview / UAT** | `/sce-preview/tournament-card`, `/sce-preview/weekplanner-tournament` |
+
+Representative integration (01F): Activity Detail tournament embed (HERO), Turniere management row identity (`COMPACT`, status in row column), Wochenplaner “Planung bearbeiten” tournament summary (`WeekplannerTournamentIdentityCard`).
+
+Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01f-tournament-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01f-architecture.test.ts`.
+
+Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — not local card variants.
+
+---
+
 ## Controls — binary state (Toggle First)
 
 **SCE Control Standard — Toggle First** (established with SCE-UI-ROLLOUT-01B closure, 2026-10-11):

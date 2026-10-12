@@ -19,6 +19,7 @@ export type {
 export {
   isSceActivityPresentationModel,
   isSceTrainingPresentationModel,
+  isSceTournamentPresentationModel,
 } from "./types";
 
 export {
@@ -70,6 +71,14 @@ export {
   sceTrainingRichDensityScale,
 } from "./training-card-rich-density";
 export { resolveSceTournamentPresentation } from "./adapters/tournament";
+export { resolveSceTournamentPresentationFromWeekplannerTournament } from "./adapters/weekplanner-tournament";
+export {
+  SCE_TOURNAMENT_CARD_SHELL_CLASS,
+  SCE_TOURNAMENT_RICH_DENSITY_SCALE,
+  isSceTournamentRichCardDensity,
+  sceTournamentCardBoundedWidthClass,
+  sceTournamentRichDensityScale,
+} from "./tournament-card-rich-density";
 export { resolveSceClubEventPresentationFromLegacy } from "./adapters/club-event";
 export {
   mapLegacySportingActivityKindToSceKind,

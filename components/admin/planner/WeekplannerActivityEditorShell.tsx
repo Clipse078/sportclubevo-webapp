@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { Sheet } from "@/components/ui/Sheet";
 import { WeekplannerMatchIdentityCard } from "@/components/admin/planner/WeekplannerMatchIdentityCard";
 import { WeekplannerTrainingIdentityCard } from "@/components/admin/planner/WeekplannerTrainingIdentityCard";
+import { WeekplannerTournamentIdentityCard } from "@/components/admin/planner/WeekplannerTournamentIdentityCard";
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import { ActivityContextBadge } from "@/components/sporting-activity/ActivityContextBadge";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
@@ -142,11 +143,13 @@ export function WeekplannerActivityIdentityCard({
         <WeekplannerMatchIdentityCard item={item} timezone={timezone} />
       ) : item.type === "TRAINING" ? (
         <WeekplannerTrainingIdentityCard item={item} timezone={timezone} />
+      ) : item.type === "TOURNAMENT" ? (
+        <WeekplannerTournamentIdentityCard item={item} timezone={timezone} />
       ) : (
         <p className="text-base font-semibold text-[var(--foreground)]">{item.title}</p>
       )}
 
-      {item.type !== "MATCH" && item.type !== "TRAINING" ? (
+      {item.type !== "MATCH" && item.type !== "TRAINING" && item.type !== "TOURNAMENT" ? (
         <p className="text-sm text-[var(--text-2)]" data-testid="weekplanner-activity-identity-schedule">
           {scheduleSummary}
         </p>

@@ -49,7 +49,8 @@
 | CANONICAL-TRAINING-CARD-001 | ACTIVITY | `SceTrainingCard.tsx` | Activity Detail, Trainings management identity, Wochenplaner editor | — | **01E** | 01C model | Representative integration |
 | LEGACY-ACTIVITY-TRAIN-001 | ACTIVITY | `TrainingSessionRow.tsx` local meta | Training list | MED | 01H | **`SceTrainingCard` STANDARD** | Row refactored |
 | LEGACY-ACTIVITY-PLAN-002 | ACTIVITY | `PlanningHubActivityBlock` training identity strings | Wochenplaner grid | MED | 01H | **`SceTrainingCard` MICRO** | Block uses resolver + card |
-| LEGACY-ACTIVITY-TURN-001 | ACTIVITY | `TurniereManagementRow.tsx` partial organiser | Tournament list | MED | 01F | Tournament STANDARD | Organiser always from resolver |
+| CANONICAL-TOURNAMENT-CARD-001 | ACTIVITY | `SceTournamentCard.tsx` | Activity Detail, Turniere row, Wochenplaner editor | — | **01F** | 01C model | Representative integration |
+| LEGACY-ACTIVITY-TURN-001 | ACTIVITY | `TournamentManagementIdentity.tsx` | Legacy tournament forms / residual | MED | 01H | **`SceTournamentCard`** | Zero imports outside deferred surfaces |
 | LEGACY-ACTIVITY-EVENT-001 | ACTIVITY | `VeranstaltungCard.tsx` | Veranstaltungen overview | MED | 01G | Club Event card family | Overview uses 01G |
 | LEGACY-ACTIVITY-EVENT-002 | ACTIVITY | `EventListCard.tsx` | Legacy events module | LOW | Backlog | Veranstaltung or remove hub | Module retired |
 | LEGACY-FORMAT-DATE-001 | FORMATTER | Ad-hoc date formatting in admin rows | Multiple | LOW | 01C | `time-range.ts` | Grep-clean |
