@@ -41,7 +41,6 @@ export function buildTeamUpcomingMatchesPreviewFixtures(): TeamCockpitMatch[] {
         providerTeamId: 20,
         providerTeamName: "SC Binningen a",
       },
-      competition: { eventCompetitionLabel: "Junioren B" },
     },
   );
 
@@ -87,7 +86,6 @@ export function buildTeamUpcomingMatchesPreviewFixtures(): TeamCockpitMatch[] {
         providerTeamId: 10,
         providerTeamName: "FC Allschwil Junioren B1",
       },
-      competition: { eventCompetitionLabel: "Junioren B" },
     },
   );
 

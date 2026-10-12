@@ -104,6 +104,14 @@ export function createTeamCockpitMatchFixture(
       externalLogoUrl: overrides.away.isOwnTeam ? null : overrides.away.logoUrl,
     };
   }
+  const competitionLabel = overrides.competitionName?.trim();
+  if (competitionLabel) {
+    item.competition = {
+      ...item.competition,
+      eventCompetitionLabel: competitionLabel,
+    };
+  }
+
   if (overrides.side === "AWAY") {
     item.side = "AWAY";
     item.home = {
