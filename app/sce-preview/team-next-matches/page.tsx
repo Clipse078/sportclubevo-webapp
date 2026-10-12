@@ -14,7 +14,7 @@ const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
  */
 export default function SceTeamNextMatchesPreviewPage() {
   return (
-    <div className="mx-auto max-w-3xl p-6" data-testid="sce-preview-team-next-matches">
+    <div className="mx-auto max-w-7xl p-6" data-testid="sce-preview-team-next-matches">
       <p className="mb-4 text-sm text-[var(--muted)]">
         Integration preview — same view as Team → Nächste Spiele (authenticated team cockpit).
       </p>
