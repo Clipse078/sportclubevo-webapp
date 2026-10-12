@@ -72,6 +72,10 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 | **Component** | `SceMatchCard` (`components/sporting-activity/SceMatchCard.tsx`) |
 | **Model** | `SceMatchPresentationModel` via `resolveSceMatchPresentation` — **no parallel Match card model** |
 | **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
+| **Rich skeleton** | `HERO`, `STANDARD`, and `COMPACT` are **scale variants of one DOM** (`SceMatchRichCardContent` + `SCE_MATCH_RICH_DENSITY_SCALE`) — not separate layouts |
+| **MICRO** | Only permitted **structural** variant (inline fixture row) for genuinely constrained contexts |
+| **Bounded width** | Rich cards use density max-width tokens (`max-w-lg` / `max-w-md` / `max-w-sm`); surfaces use grids/columns — cards must not stretch to full page width |
+| **Surface layout** | Grouping, columns, readiness rails, and actions belong to the **surface** — they must not relocate competition, badges, fixture, schedule, or location inside the card |
 | **Identity grammar** | **HOME** name/crest · **vs** · **AWAY** crest/name — fixture-authoritative (`homeLeftAwayRightInvariant`) |
 | **Crests** | `ClubCrest` / `ClubIdentity` from 01C — cards do not resolve logo URLs locally |
 | **Results** | Show only when 01C `result` is non-null; **no fake 0:0** for upcoming fixtures |
@@ -83,7 +87,7 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 | **Accessibility** | Fixture `aria-label`, decorative crests when adjacent text exists, focus ring on card link |
 | **Preview / UAT** | `/sce-preview/match-card` (deterministic fixtures, no DB) |
 
-Representative integration (01D R4): Activity Detail (HERO), Team → Nächste Spiele (STANDARD), Team → Resultate (COMPACT), Team → Übersicht next/last (COMPACT), Matchcenter Spielplanung rows (COMPACT `list-row`); all via `scePresentation` / `resolveSceMatchPresentation`.
+Representative integration (01D R5): Activity Detail (HERO), Team → Nächste Spiele (STANDARD grid), Team → Resultate (COMPACT grid), Team → Übersicht next/last (COMPACT), Matchcenter Spielplanung + Resultate (bounded card grids + operational panels), Planner “Planung bearbeiten” match summary (COMPACT); all via `scePresentation` / `resolveSceMatchPresentation`.
 
 Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-architecture.test.ts`.
 

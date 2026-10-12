@@ -23,8 +23,7 @@ export default function SceMatchcenterRowPreviewPage() {
   return (
     <div className="mx-auto max-w-5xl p-6" data-testid="sce-preview-matchcenter-row">
       <p className="mb-4 text-sm text-[var(--muted)]">
-        Integration preview — Matchcenter Spielplanung row (COMPACT `SceMatchCard` list-row +
-        operational readiness column unchanged).
+        Integration preview — Matchcenter Spielplanung (bounded canonical card + operational panel).
       </p>
       <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         <SpieleManagementMatchRow

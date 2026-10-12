@@ -208,6 +208,42 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     },
   );
 
+  function richSemanticRegionKeys(container: HTMLElement): string[] {
+    const card = container.querySelector("[data-sce-match-card]")!;
+    const regions: Array<[string, Element]> = [];
+    for (const el of card.querySelectorAll("[data-sce-match-header], [data-sce-match-region='fixture'], [data-sce-match-schedule], [data-sce-match-location]")) {
+      const key =
+        el.getAttribute("data-sce-match-header") != null
+          ? "header"
+          : el.getAttribute("data-sce-match-region") === "fixture"
+            ? "fixture"
+            : el.getAttribute("data-sce-match-schedule") != null
+              ? "schedule"
+              : "location";
+      regions.push([key, el]);
+    }
+    regions.sort((a, b) =>
+      a[1].compareDocumentPosition(b[1]) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+    );
+    return regions.map(([key]) => key);
+  }
+
+  it.each(["HERO", "STANDARD", "COMPACT"] as const)(
+    "rich density %s preserves canonical semantic region order",
+    (density) => {
+      const { container } = renderCard({}, density);
+      expect(richSemanticRegionKeys(container)).toEqual([
+        "header",
+        "fixture",
+        "schedule",
+        "location",
+      ]);
+      const card = container.querySelector("[data-sce-match-card]");
+      expect(card).toHaveAttribute("data-sce-match-density", density);
+      expect(card?.className).toMatch(/max-w-/);
+    },
+  );
+
   it("adapter-backed model is consumed without local DTO fields on card", () => {
     const model = resolveSceMatchPresentation({
       match: createSceMatchCardFixtureMatch(),

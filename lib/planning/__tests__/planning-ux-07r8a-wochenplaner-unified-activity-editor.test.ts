@@ -65,12 +65,11 @@ describe("PLANNING-UX-07R8A unified Wochenplaner activity editor", () => {
       expect(queries).toContain("awaySide");
     });
 
-    it("match identity card uses bare ClubLogo", () => {
+    it("match identity card delegates to canonical SceMatchCard", () => {
       const card = read("components/admin/planner/WeekplannerMatchIdentityCard.tsx");
-      expect(card).toContain("ClubLogo");
-      expect(card).toContain("bare");
-      expect(card).toContain("weekplanner-match-home-crest");
-      expect(card).toContain("weekplanner-match-away-crest");
+      expect(card).toContain("SceMatchCard");
+      expect(card).toContain("resolveSceMatchPresentationFromWeekplannerMatch");
+      expect(card).not.toContain("ClubLogo");
     });
   });
 

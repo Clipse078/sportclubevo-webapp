@@ -21,6 +21,21 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(source).not.toContain("MatchCardModel");
     expect(source).toContain("data-sce-match-side=");
     expect(source).toContain('data-sce-match-region="fixture"');
+    expect(source).toContain("data-sce-match-density");
+    expect(source).toContain("data-sce-match-header");
+    expect(source).toContain("sceMatchRichDensityScale");
+    expect(source).not.toMatch(/function\s+SceMatchHero/);
+    expect(source).not.toMatch(/function\s+SceMatchStandard/);
+    expect(source).not.toMatch(/function\s+SceMatchCompactRich/);
+  });
+
+  it("rich densities share one scale module (no separate structural renderers)", () => {
+    const scale = readFileSync(
+      join(repoRoot, "lib/sporting-activity-presentation/canonical/match-card-rich-density.ts"),
+      "utf8",
+    );
+    expect(scale).toContain("SCE_MATCH_RICH_DENSITY_SCALE");
+    expect(scale).toContain("maxWidthClass");
   });
 
   it("does not resolve logo URLs inside the visual card (uses ClubIdentity / ClubCrest)", () => {
@@ -71,6 +86,27 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(row).toContain("SceMatchCard");
     expect(row).toContain("resolveSceMatchPresentation");
     expect(row).not.toContain("SpieleManagementMatchIdentity");
+    expect(row).not.toContain("ClubLogo");
+    expect(row).not.toMatch(/grid-cols-\[minmax\(0,1\.85fr\)/);
+  });
+
+  it("Matchcenter Resultate row consumes SceMatchCard (no legacy table fixture)", () => {
+    const row = readFileSync(
+      join(repoRoot, "components/admin/matchcenter/SpieleManagementResultRow.tsx"),
+      "utf8",
+    );
+    expect(row).toContain("SceMatchCard");
+    expect(row).not.toContain("ClubLogo");
+    expect(row).not.toContain("getMatchcenterResultLabel");
+  });
+
+  it("Planner edit drawer match summary uses SceMatchCard", () => {
+    const card = readFileSync(
+      join(repoRoot, "components/admin/planner/WeekplannerMatchIdentityCard.tsx"),
+      "utf8",
+    );
+    expect(card).toContain("SceMatchCard");
+    expect(card).not.toContain("ClubLogo");
   });
 
   it("Team Nächste Spiele consumes SceMatchCard via canonical scePresentation", () => {

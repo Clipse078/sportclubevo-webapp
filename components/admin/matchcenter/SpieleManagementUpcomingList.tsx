@@ -187,7 +187,10 @@ export default function SpieleManagementUpcomingList({
                   {count} {count === 1 ? "Spiel" : "Spiele"}
                 </p>
               </div>
-              <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <div
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                data-testid={`spiele-day-grid-${group.dayKey}`}
+              >
                 {group.rows.map((row) => (
                   <SpieleManagementMatchRow
                     key={row.match.id}

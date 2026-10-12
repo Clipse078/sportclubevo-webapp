@@ -37,11 +37,11 @@ export default function TeamResultsView({
         </div>
       ) : (
         <ol
-          className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+          className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
           data-testid="team-results-list"
         >
           {results.map((result) => (
-            <li key={result.eventId}>
+            <li key={result.eventId} className="min-w-0">
               <TeamResultRow result={result} formatConfig={formatConfig} />
             </li>
           ))}

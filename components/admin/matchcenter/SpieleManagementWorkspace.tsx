@@ -29,8 +29,6 @@ import SpieleManagementFilterRail from "./SpieleManagementFilterRail";
 import SpieleManagementQuickAccess from "./SpieleManagementQuickAccess";
 import { cn } from "@/lib/cn";
 import {
-  SPIELE_RESULT_LIST_INTERMEDIATE_GRID,
-  SPIELE_RESULT_LIST_WIDE_GRID,
   SPIELE_WORKSPACE_MAIN_RAIL_GRID,
   SPIELE_WORKSPACE_RAIL_ASIDE,
   SPIELE_WORKSPACE_RAIL_STACK,
@@ -82,12 +80,6 @@ const DOMAIN_TABS: DomainTab[] = [
   { key: "ressourcen", label: "Ressourcen", disabled: true },
   { key: "archiv", label: "Archiv", disabled: true },
 ];
-
-const RESULT_LIST_HEADER = cn(
-  "hidden border-b border-[var(--border)]/60 bg-[var(--surface-2)]/25 px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)] md:gap-x-4",
-  SPIELE_RESULT_LIST_INTERMEDIATE_GRID,
-  SPIELE_RESULT_LIST_WIDE_GRID,
-);
 
 function buildHref(
   basePath: string,
@@ -499,35 +491,26 @@ export default function SpieleManagementWorkspace({
               </p>
             </div>
           ) : (
-            <div
-              className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/70"
-              data-testid="matchcenter-resultate-list"
-            >
-              <div className={RESULT_LIST_HEADER}>
-                <span>Datum</span>
-                <span>Spiel</span>
-                <span className="hidden min-[105rem]:block">Ort</span>
-                <span className="hidden min-[105rem]:block">Status</span>
-                <span className="sr-only">Aktionen</span>
-              </div>
+            <div className="space-y-6" data-testid="matchcenter-resultate-list">
               {resultateGroups.map((group) => (
-                <div key={group.dayKey}>
-                  <div className="border-b border-[var(--border)]/50 bg-[var(--surface-2)]/20 px-4 py-2">
-                    <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                      {group.label}
-                    </p>
+                <section key={group.dayKey} className="space-y-3">
+                  <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                    {group.label}
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {group.rows.map((match) => (
+                      <SpieleManagementResultRow
+                        key={match.id}
+                        match={match}
+                        locale={locale}
+                        timezone={timezone}
+                        tenantLogoUrl={tenantLogoUrl}
+                        tenantClubName={tenantClubName}
+                        canManage={canManage}
+                      />
+                    ))}
                   </div>
-                  {group.rows.map((match) => (
-                    <SpieleManagementResultRow
-                      key={match.id}
-                      match={match}
-                      locale={locale}
-                      timezone={timezone}
-                      tenantLogoUrl={tenantLogoUrl}
-                      canManage={canManage}
-                    />
-                  ))}
-                </div>
+                </section>
               ))}
             </div>
           )}

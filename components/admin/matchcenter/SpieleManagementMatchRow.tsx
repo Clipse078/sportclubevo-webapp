@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type { MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
@@ -13,10 +12,6 @@ import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentatio
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
-import {
-  SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
-  SPIELE_MATCH_ROW_WIDE_GRID,
-} from "./spiele-management-layout";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -73,53 +68,28 @@ function ReadinessPill({ label, tone }: { label: string; tone: "ready" | "open" 
   );
 }
 
-function PreparationColumn({
+function PreparationPanel({
   match,
   assessment,
-  layout,
 }: {
   match: MatchcenterMatchSummary;
   assessment: MatchcenterOperationalAssessment;
-  layout: "wide" | "compact";
 }) {
   const homeAway = match.homeAway?.trim().toUpperCase();
-  const isHome = homeAway === "HOME";
-  const isAway = homeAway === "AWAY";
-
-  if (isAway) {
+  if (homeAway !== "HOME") {
     return null;
   }
 
-  if (!isHome) {
-    return layout === "wide" ? <span className="text-xs text-[var(--muted)]">—</span> : null;
-  }
-
   const items = buildHomeReadinessChecklist(match);
-  const listClass =
-    layout === "wide"
-      ? "mt-1.5 space-y-1"
-      : "mt-0.5 flex flex-wrap gap-x-2.5 gap-y-0.5";
 
   return (
-    <div className="min-w-0">
-      {layout === "wide" ? (
-        <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
-          Matchvorbereitung
-        </p>
-      ) : null}
-      <ul
-        className={listClass}
-        aria-label="Matchvorbereitung"
-      >
+    <div className="min-w-0 rounded-lg border border-[var(--border)]/60 bg-[var(--surface-2)]/30 px-3 py-2.5">
+      <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
+        Matchvorbereitung
+      </p>
+      <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1" aria-label="Matchvorbereitung">
         {items.map((item) => (
-          <li
-            key={item.key}
-            className={cn(
-              "flex items-start gap-1.5 text-xs",
-              layout === "wide" && "min-w-[8.5rem] gap-2",
-              layout === "compact" && "max-w-full shrink-0 basis-auto",
-            )}
-          >
+          <li key={item.key} className="flex min-w-[8.5rem] items-start gap-1.5 text-xs">
             {item.ready ? (
               <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" aria-hidden="true" />
             ) : (
@@ -143,34 +113,6 @@ function PreparationColumn({
       {assessment.teamUnresolved ? (
         <p className="mt-1 text-[0.6875rem] text-amber-600">Team nicht zugeordnet</p>
       ) : null}
-    </div>
-  );
-}
-
-function StatusPillsRow({
-  homeAway,
-  statusLabel,
-  live,
-  readinessTone,
-}: {
-  homeAway: "HOME" | "AWAY" | null;
-  statusLabel: string;
-  live: boolean;
-  readinessTone: "ready" | "open" | "neutral";
-}) {
-  const showReadiness = shouldShowReadinessPill({
-    homeAway,
-    statusLabel,
-    live,
-  });
-
-  if (!showReadiness) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-      <ReadinessPill label={statusLabel} tone={live ? "ready" : readinessTone} />
     </div>
   );
 }
@@ -220,19 +162,24 @@ export default function SpieleManagementMatchRow({
         ? "open"
         : "neutral";
 
+  const showReadiness = shouldShowReadinessPill({
+    homeAway,
+    statusLabel: status.label,
+    live,
+  });
+
+  const cardDensity = compact ? "COMPACT" : "STANDARD";
+
   return (
     <article
       className={cn(
-        "group relative grid grid-cols-1 gap-2 border-b border-[var(--border)]/60 px-4 py-2.5 transition last:border-b-0 hover:bg-[var(--surface-2)]/40",
-        SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
-        SPIELE_MATCH_ROW_WIDE_GRID,
-        compact && "py-2",
-        isSelecting && isSelected && "bg-emerald-500/5",
+        "relative flex min-w-0 flex-col gap-2.5",
+        isSelecting && isSelected && "rounded-xl ring-2 ring-emerald-500/40",
       )}
       data-testid={`matchcenter-spielplanung-row-${match.id}`}
     >
       {isSelecting ? (
-        <label className="relative z-[2] flex items-center gap-2 md:col-span-3 min-[105rem]:col-span-1">
+        <label className="relative z-[2] flex items-center gap-2">
           <input
             type="checkbox"
             checked={isSelected}
@@ -240,61 +187,41 @@ export default function SpieleManagementMatchRow({
             className="h-4 w-4 rounded border-[var(--border)]"
             data-testid={`spiele-select-${match.id}`}
           />
+          <span className="text-xs text-[var(--muted)]">Auswählen</span>
         </label>
       ) : null}
 
-      <div className="relative z-[1] min-w-0 md:col-span-2 md:col-start-1 md:row-start-1 min-[105rem]:col-span-2">
-        <div data-testid={`matchcenter-team-matchup-${match.id}`}>
-          <Link
-            href={detailHref}
-            className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-            aria-label={`Details zu ${match.title} anzeigen`}
-          >
-            <SceMatchCard
-              model={scePresentation}
-              density="COMPACT"
-              fmtCfg={fmtCfg}
-              linkToDetail={false}
-              surface="list-row"
-              testId={`matchcenter-sce-match-${match.id}`}
-            />
-          </Link>
-        </div>
-      </div>
-
-      <div
-        className="relative z-[2] flex items-start justify-end md:col-start-3 md:row-start-1 min-[105rem]:col-start-5 min-[105rem]:items-center"
-      >
-        {!isSelecting ? (
-          <SpieleMatchRowContextMenu
-            matchId={match.id}
-            detailHref={detailHref}
-            wochenplanerHref={wochenplanerHref}
-            canManage={canManage}
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="min-w-0 flex-1" data-testid={`matchcenter-team-matchup-${match.id}`}>
+          <SceMatchCard
+            model={scePresentation}
+            density={cardDensity}
+            fmtCfg={fmtCfg}
+            linkToDetail
+            testId={`matchcenter-sce-match-${match.id}`}
           />
+        </div>
+        {!isSelecting ? (
+          <div className="relative z-[2] shrink-0 pt-1">
+            <SpieleMatchRowContextMenu
+              matchId={match.id}
+              detailHref={detailHref}
+              wochenplanerHref={wochenplanerHref}
+              canManage={canManage}
+            />
+          </div>
         ) : null}
       </div>
 
       <div
-        className="relative z-[1] flex min-w-0 flex-col gap-1 md:col-span-2 md:col-start-2 md:row-start-2 min-[105rem]:col-start-3 min-[105rem]:col-span-1 min-[105rem]:row-start-1 min-[105rem]:justify-center"
+        className="flex min-w-0 flex-col gap-2 border-t border-[var(--border)]/50 pt-2.5"
         data-testid={`matchcenter-action-${match.id}`}
       >
-        <StatusPillsRow
-          homeAway={homeAway}
-          statusLabel={status.label}
-          live={live}
-          readinessTone={readinessTone}
-        />
+        {showReadiness ? (
+          <ReadinessPill label={status.label} tone={live ? "ready" : readinessTone} />
+        ) : null}
+        <PreparationPanel match={match} assessment={assessment} />
       </div>
-
-      <div className="relative z-[1] min-w-0 md:col-span-2 md:col-start-2 md:row-start-3 min-[105rem]:col-start-4 min-[105rem]:col-span-1 min-[105rem]:row-start-1">
-        <PreparationColumn
-          match={match}
-          assessment={assessment}
-          layout={compact ? "compact" : "wide"}
-        />
-      </div>
-
     </article>
   );
 }

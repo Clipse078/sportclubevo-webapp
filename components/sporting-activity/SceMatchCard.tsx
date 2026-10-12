@@ -21,6 +21,11 @@ import { ActivityContextBadge } from "./ActivityContextBadge";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchCardResult } from "./SceMatchCardResult";
 import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
+import {
+  isSceMatchRichCardDensity,
+  sceMatchCardBoundedWidthClass,
+  sceMatchRichDensityScale,
+} from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceMatchContextBadge } from "@/lib/sporting-activity-presentation/canonical/types";
 
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
@@ -54,24 +59,17 @@ function buildFixtureAccessibleLabel(model: SceMatchPresentationModel): string {
   return `${model.fixture.home.displayName} gegen ${model.fixture.away.displayName}`;
 }
 
-function scheduleIconClass(density: SceActivityPresentationDensity): string {
-  return cn(
-    "shrink-0 text-[var(--muted)]",
-    density === "HERO" ? "h-4 w-4" : "h-3.5 w-3.5",
-  );
+function richScale(density: SceActivityPresentationDensity) {
+  return isSceMatchRichCardDensity(density)
+    ? sceMatchRichDensityScale(density)
+    : sceMatchRichDensityScale("COMPACT");
 }
 
 function clubNameClassForDensity(density: SceActivityPresentationDensity): string {
-  switch (density) {
-    case "HERO":
-      return "line-clamp-2 text-base font-semibold leading-snug";
-    case "STANDARD":
-      return "line-clamp-2 text-sm font-semibold leading-snug";
-    case "COMPACT":
-      return "line-clamp-2 text-[0.8125rem] font-medium leading-snug";
-    case "MICRO":
-      return "truncate text-[0.8125rem] font-medium";
+  if (density === "MICRO") {
+    return "truncate text-[0.8125rem] font-medium";
   }
+  return richScale(density).clubNameClass;
 }
 
 function isCompletedWithoutResult(model: SceMatchPresentationModel): boolean {
@@ -89,16 +87,14 @@ function SceMatchFixtureSeparator({
   model: SceMatchPresentationModel;
   density: SceActivityPresentationDensity;
 }) {
+  const scale = richScale(density);
+
   if (model.result) {
     return (
       <SceMatchCardResult
         model={model}
         density={density}
-        className={cn(
-          density === "HERO" && "text-xl",
-          density === "STANDARD" && "text-base",
-          density === "COMPACT" && "text-sm",
-        )}
+        className={scale.resultTextClass}
       />
     );
   }
@@ -108,7 +104,7 @@ function SceMatchFixtureSeparator({
       <span
         className={cn(
           "shrink-0 font-semibold tabular-nums text-[var(--muted)]",
-          density === "HERO" ? "text-sm" : "text-xs",
+          scale.completedMissingResultClass,
         )}
         data-testid="sce-match-result"
         aria-label="Ergebnis nicht verfügbar"
@@ -122,11 +118,12 @@ function SceMatchFixtureSeparator({
     <span
       className={cn(
         "shrink-0 font-semibold uppercase tracking-wide text-[var(--muted)]",
-        density === "HERO" ? "text-sm" : "text-xs",
+        scale.vsTextClass,
       )}
       aria-hidden
       data-testid="sce-match-vs"
       data-sce-match-region="separator"
+      data-sce-match-center
     >
       VS
     </span>
@@ -160,7 +157,6 @@ function SceMatchContextBadges({
             <ActivityContextBadge
               key={`${badge.kind}-${badge.label}`}
               label={badge.label}
-              className="text-[0.625rem]"
               data-testid={contextBadgeTestId(badge)}
             />
           );
@@ -184,7 +180,6 @@ function SceMatchContextBadges({
             key={`${badge.kind}-${badge.label}`}
             status={status}
             testId={contextBadgeTestId(badge)}
-            className="text-[0.625rem]"
           />
         );
       })}
@@ -237,11 +232,14 @@ function SceMatchStackedFixturePanel({
   const showCrests = isSceActivityDimensionVisible(density, "crests");
   const fixtureLabel = buildFixtureAccessibleLabel(model);
 
+  const scale = richScale(density);
+
   return (
     <div
       className={cn(
-        "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2",
-        density === "HERO" ? "gap-y-2 py-1" : "gap-y-1",
+        "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center py-1",
+        scale.fixtureGridGapXClass,
+        scale.fixtureGapYClass,
       )}
       data-testid="sce-match-fixture"
       data-sce-match-region="fixture"
@@ -256,6 +254,7 @@ function SceMatchStackedFixturePanel({
       <div
         className="flex items-center justify-center px-1"
         data-sce-match-region="center"
+        data-sce-match-center
       >
         <SceMatchFixtureSeparator model={model} density={density} />
       </div>
@@ -313,17 +312,16 @@ function SceMatchScheduleIconRow({
   density: SceActivityPresentationDensity;
 }) {
   const startAt = new Date(model.schedule.startAt);
-  const iconClass = scheduleIconClass(density);
-  const textClass =
-    density === "HERO"
-      ? "text-sm text-[var(--text-2)]"
-      : "text-xs text-[var(--text-2)]";
+  const scale = richScale(density);
+  const iconClass = scale.scheduleIconClass;
+  const textClass = scale.scheduleTextClass;
 
   return (
     <div
       className="flex min-w-0 items-center justify-between gap-3"
       data-testid="sce-match-schedule"
       data-sce-match-region="schedule"
+      data-sce-match-schedule
     >
       <span
         className={cn("inline-flex min-w-0 items-center gap-1.5", textClass)}
@@ -350,13 +348,14 @@ function SceMatchLocationRow({
   locationLine: string;
   density: SceActivityPresentationDensity;
 }) {
-  const iconClass = scheduleIconClass(density);
+  const iconClass = richScale(density).scheduleIconClass;
 
   return (
     <div
       className="flex min-w-0 items-start gap-1.5 text-xs text-[var(--text-2)]"
       data-testid="sce-match-location"
       data-sce-match-region="location"
+      data-sce-match-location
     >
       <MapPin className={cn(iconClass, "mt-0.5")} aria-hidden />
       <p className="min-w-0 line-clamp-2">{locationLine}</p>
@@ -387,22 +386,19 @@ function SceMatchRichCardContent({
       : undefined;
   const status = model.matchLifecycle ?? model.status;
   const contextBadges = model.contextBadges ?? [];
+  const scale = richScale(density);
   const hasMetaHeader =
     (showCompetition && model.competition?.label) ||
     (showStatus && status?.label) ||
     contextBadges.length > 0;
 
   return (
-    <div
-      className={cn(
-        "min-w-0",
-        density === "HERO" ? "space-y-4" : density === "COMPACT" ? "space-y-2" : "space-y-2.5",
-      )}
-    >
+    <div className={cn("min-w-0", scale.contentSpaceYClass)}>
       {hasMetaHeader ? (
         <div
           className="flex min-w-0 items-start justify-between gap-3"
           data-sce-match-region="meta"
+          data-sce-match-header
         >
           {showCompetition && model.competition?.label ? (
             <p
@@ -415,7 +411,7 @@ function SceMatchRichCardContent({
           ) : (
             <span className="min-w-0 flex-1" />
           )}
-          <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
             {contextBadges.length > 0 ? (
               <SceMatchContextBadges badges={contextBadges} />
             ) : null}
@@ -517,7 +513,6 @@ export function SceMatchCard({
   testId = "sce-match-card",
 }: SceMatchCardProps) {
   const embed = surface === "detail-embed";
-  const listRow = surface === "list-row";
   const showSchedule =
     !embed && isSceActivityDimensionVisible(density, "schedule");
   const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
@@ -527,17 +522,25 @@ export function SceMatchCard({
 
   const href = linkToDetail ? model.route.consumeHref : null;
 
+  const richBounded =
+    !embed && isSceMatchRichCardDensity(density)
+      ? sceMatchCardBoundedWidthClass(density)
+      : !embed
+        ? "w-full max-w-sm"
+        : "";
+  const richPadding =
+    !embed && isSceMatchRichCardDensity(density)
+      ? sceMatchRichDensityScale(density).shellPaddingClass
+      : !embed && density === "MICRO"
+        ? "p-2.5"
+        : "";
+
   const shellClass = cn(
-    "relative min-w-0 w-full text-[var(--foreground)]",
-    !listRow &&
-      !embed &&
-      "rounded-xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm",
-    listRow && "bg-transparent",
+    "relative min-w-0 text-[var(--foreground)]",
+    richBounded,
+    !embed && "rounded-xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm",
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
-    !listRow && !embed && density === "HERO" && "p-4 sm:p-5",
-    !listRow && !embed && density === "STANDARD" && "p-3.5 sm:p-4",
-    !listRow && !embed && density === "COMPACT" && "p-3 sm:p-3.5",
-    !listRow && !embed && density === "MICRO" && "p-2.5",
+    richPadding,
     className,
   );
 
@@ -584,6 +587,7 @@ export function SceMatchCard({
         data-testid={testId}
         data-density={density}
         data-sce-match-card
+        data-sce-match-density={density}
         data-surface={surface}
         aria-label={buildFixtureAccessibleLabel(model)}
       >
@@ -594,17 +598,17 @@ export function SceMatchCard({
 
   return (
     <article
-      className={cn(shellClass, !listRow && "transition-colors hover:border-[var(--border-strong)]")}
+      className={cn(shellClass, !embed && "transition-colors hover:border-[var(--border-strong)]")}
       data-testid={testId}
       data-density={density}
       data-sce-match-card
+      data-sce-match-density={density}
       data-surface={surface}
     >
       <Link
         href={href}
         className={cn(
-          "absolute inset-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]",
-          listRow ? "rounded-none" : "rounded-xl",
+          "absolute inset-0 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]",
         )}
         aria-label={`${buildFixtureAccessibleLabel(model)} — Details öffnen`}
         data-testid="sce-match-card-link"

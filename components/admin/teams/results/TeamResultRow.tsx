@@ -12,7 +12,7 @@ type Props = {
 export default function TeamResultRow({ result, formatConfig }: Props) {
   return (
     <div
-      className="min-w-0 px-3 py-3 sm:px-4 sm:py-3.5"
+      className="min-w-0 h-full"
       data-testid={`team-result-${result.eventId}`}
       data-side={result.side}
       data-perspective={result.resultPerspective}

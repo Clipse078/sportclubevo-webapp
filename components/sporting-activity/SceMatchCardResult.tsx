@@ -40,6 +40,7 @@ export function SceMatchCardResult({ model, density, className }: SceMatchCardRe
         className,
       )}
       data-testid="sce-match-result"
+      data-sce-match-center
       aria-label={`Ergebnis ${text}`}
     >
       {text}
