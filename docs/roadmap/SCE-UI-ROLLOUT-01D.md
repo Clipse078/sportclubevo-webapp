@@ -4,16 +4,16 @@
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01D` |
 | **Programme** | [`SCE-UI-ROLLOUT-01+`](./SCE-UI-ROLLOUT-01.md) |
-| **Status** | **IMPLEMENTATION COMPLETE / PO VISUAL UAT PENDING** |
+| **Status** | **R4 IMPLEMENTATION / PO VISUAL UAT PENDING** |
 | **Branch** | `cursor/sce-ui-rollout-01d-match-card-family` |
-| **Base** | `STAGE` @ `266e4511b0c14f0e3c100ef2cceeb5fe0e40ed32` |
+| **PR** | #832 |
 | **Schema / PROD** | **No changes** |
 
 ---
 
 ## 1. Objective
 
-Deliver the canonical **Match visual family** on top of the 01C `SceMatchPresentationModel` — **one identity grammar, four densities**, without broad product migration.
+Deliver the canonical **Match visual family** on top of the 01C `SceMatchPresentationModel` — **one identity grammar, four densities**, with semantic lifecycle badges and product-wide adoption of direct Match surfaces listed in R4.
 
 ---
 
@@ -32,7 +32,8 @@ Deliver the canonical **Match visual family** on top of the 01C `SceMatchPresent
 | Export | Location |
 |--------|----------|
 | `SceMatchCard` | `components/sporting-activity/SceMatchCard.tsx` |
-| Density policy helpers | `lib/sporting-activity-presentation/canonical/match-card-policy.ts` |
+| Lifecycle badges | `resolveSceMatchLifecycleStatus` |
+| Context badges | `match-context-badges.ts` (Heim/Auswärts, Sieg/Unentschieden/Niederlage) |
 | Preview fixtures | `components/sporting-activity/__fixtures__/sce-match-card-fixtures.ts` |
 
 ---
@@ -42,70 +43,77 @@ Deliver the canonical **Match visual family** on top of the 01C `SceMatchPresent
 | Density | Role |
 |---------|------|
 | **HERO** | Prominent fixture identity, balanced crests, result/status |
-| **STANDARD** | Default rich lists / planning-adjacent surfaces |
-| **COMPACT** | Dense programmes — retains home/away grammar |
-| **MICRO** | Text-first fixture line; crests hidden per contract |
+| **STANDARD** | Default rich cards / Team → Nächste Spiele grid |
+| **COMPACT** | Dense lists — Team Resultate, Matchcenter rows, Team Übersicht tiles |
+| **MICRO** | Constrained horizontal identity (preview / narrow embeds) |
 
-Identity order **never** changes by density.
-
----
-
-## 4. Representative integration
-
-| Surface | Path | Notes |
-|---------|------|-------|
-| Activity Detail (MATCH) | `SportingActivityDetailContent` | HERO + `detail-embed`; uses `detail.match.scePresentation` when loaded |
-| Team → Nächste Spiele | `/dashboard/teams/[teamId]/spiele` | COMPACT `SceMatchCard` via `TeamCockpitMatch.scePresentation` |
-| Server bridge | `loadMatchActivityDetail` / `getTeamCockpitSportingData` | `resolveSceMatchPresentation` / `resolveTeamCockpitMatchPresentation` |
-
-**Not migrated in 01D:** Matchcenter `MatchCard.tsx`, Dashboard today cards, Wochenplaner, Infoboard, Team Resultate (see legacy register).
+Identity order **never** changes by density (HOME left, AWAY right).
 
 ---
 
-## 5. Infoboard (HIGH RISK deferral)
+## 4. R4 Match presentation adoption matrix
 
-Canonical `SceMatchCard` supports fixture-authoritative HOME/AWAY grammar. **Broad Infoboard migration remains 01D+01K** — kiosk loaders must continue supplying `matchPresentation`; wrappers must consume 01C identity, not reconstruct sides.
+| Surface | Classification | Density | Notes |
+|---------|----------------|---------|-------|
+| `SceMatchCard` / preview gallery | **CANONICAL_ALREADY** | all | `/sce-preview/match-card` |
+| Activity Detail MATCH | **CANONICAL_ALREADY** | HERO | `SportingActivityDetailContent` |
+| Team → Nächste Spiele | **MIGRATED_R4** (revalidated) | STANDARD | `TeamUpcomingMatchRow` |
+| Team → Resultate | **MIGRATED_R4** | COMPACT | `TeamResultRow` |
+| Team → Übersicht Nächstes Spiel | **MIGRATED_R4** | COMPACT | `TeamNextMatchSummary` |
+| Team → Übersicht Letztes Resultat | **MIGRATED_R4** | COMPACT | `TeamLatestResultSummary` |
+| Matchcenter Spielplanung row | **MIGRATED_R4** | COMPACT `list-row` | `SpieleManagementMatchRow` — operational readiness unchanged |
+| `MatchCard.tsx` (Matchcenter legacy card) | **DEFERRED_01H** | STANDARD | Non-row surfaces |
+| Wochenplaner match blocks | **DEFERRED_01H** | COMPACT | `WeekplannerMatchIdentityCard` |
+| Dashboard / Mein Programm today | **DEFERRED_01I** | COMPACT/MICRO | `DashboardTodayEventCards` |
+| Team programme / related activity | **DEFERRED_01J** | COMPACT | Broader cockpit adoption |
+| Communication / notification refs | **DEFERRED_01K** | MICRO | Inline refs |
+| Infoboard match rails | **DEFERRED_01K** | COMPACT | HIGH RISK — loader + kiosk |
+| `SpieleManagementMatchIdentity` | **LEGITIMATE_NON_VISUAL** | — | Retained for non-row tooling/tests until 01H retires imports |
+| Domain/query `home`/`away` fields | **LEGITIMATE_NON_VISUAL** | — | Data layer only |
 
 ---
 
-## 6. Visual UAT evidence
+## 5. Visual UAT evidence
 
 | Asset | Location |
 |-------|----------|
 | Preview route | `/sce-preview/match-card` |
-| Real product route | `/dashboard/teams/[teamId]/spiele` (Team → Nächste Spiele) |
-| Local integration preview | `/sce-preview/team-next-matches` (same `TeamUpcomingMatchesView`, fixture data) |
-| Automated render coverage | `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`, `components/admin/teams/upcoming-matches/__tests__/TeamUpcomingMatchesView.test.tsx` |
-| PO screenshots | Gallery **and** Team → Nächste Spiele (artifacts under `/opt/cursor/artifacts/` when recorded) |
+| Team preview | `/sce-preview/team-next-matches` |
+| Product routes | Team Spiele / Resultate / Übersicht, Matchcenter Spielplanung |
+| Automated coverage | 01D + Team + Matchcenter row tests (see §8) |
 
-**PO_VISUAL_UAT:** **PENDING** — PO must sign off on **both** the preview gallery and Team → Nächste Spiele; do not merge until accepted.
+**PO_VISUAL_UAT:** **PENDING** — PO sign-off on gallery **and** four migrated product surfaces.
 
 ---
 
-## 7. Downstream ownership
+## 6. Downstream ownership (unchanged deferrals)
 
 | Legacy register ID | Owner |
 |--------------------|-------|
-| LEGACY-MATCH-CARD-001 … 002 | 01H (Matchcenter / Spiele rows) |
-| LEGACY-MATCH-CARD-003 … 004 | 01K + Infoboard loader |
+| LEGACY-MATCH-CARD-001 | 01H |
+| LEGACY-MATCH-CARD-003 … 004 | 01K |
 | LEGACY-MATCH-CARD-005 | 01H |
-| LEGACY-MATCH-CARD-006 | 01J |
 | LEGACY-MATCH-CARD-007 | 01I |
+
+**Retired / delegating (R4):** LEGACY-MATCH-CARD-002 (Spiele row identity), LEGACY-MATCH-CARD-006 (Team upcoming row — now canonical).
 
 ---
 
-## 8. Validation
+## 7. Validation
 
-- Match card + architecture guardrail tests (01D)
-- Existing 01C presentation tests (regression)
+- `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`
+- `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-architecture.test.ts`
+- `lib/sporting-activity-presentation/canonical/__tests__/match-lifecycle-status.test.ts`
+- Team + Matchcenter integration tests
+- 01C presentation regression tests
 - `NODE_OPTIONS=--max-old-space-size=8192 npm run build`
 
 ---
 
-## 9. Closure criteria (PO)
+## 8. Closure criteria (PO)
 
-- [ ] PO visual sign-off on HERO / STANDARD / COMPACT / MICRO + narrow width
-- [ ] PR merged to `STAGE`
+- [ ] PO visual sign-off on HERO / STANDARD / COMPACT / MICRO + R4 product surfaces
+- [ ] PR #832 merged to `STAGE`
 - [ ] Roadmap status → **CLOSED**
 
 **NEXT after closure:** [`SCE-UI-ROLLOUT-01E`](./SCE-UI-ROLLOUT-01.md) — Training Card family.

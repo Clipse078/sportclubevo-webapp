@@ -4,22 +4,19 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type { MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
-import { getMatchcenterResultLabel, isMatchLive } from "@/lib/matchcenter/match-lifecycle";
+import { isMatchLive } from "@/lib/matchcenter/match-lifecycle";
 import {
   buildHomeReadinessChecklist,
-  formatSpieleEndTime,
-  formatSpieleKickoffForMatch,
-  resolveSpieleOperationalEndTime,
   resolveSpieleStatusPresentation,
 } from "@/lib/matchcenter/management-view";
-import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
+import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
+import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
 import {
   SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
   SPIELE_MATCH_ROW_WIDE_GRID,
 } from "./spiele-management-layout";
-import { SpieleManagementMatchIdentity } from "@/components/sporting-activity/SpieleManagementMatchIdentity";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -199,15 +196,13 @@ export default function SpieleManagementMatchRow({
     timezone,
   });
 
-  const kickoff = formatSpieleKickoffForMatch(match, locale, timezone);
-  const endTime = formatSpieleEndTime(
-    resolveSpieleOperationalEndTime(match),
-    locale,
-    timezone,
-  );
-
-  const activityPresentation = buildSpieleManagementActivityPresentation(match, {
+  const fmtCfg = { locale, timezone };
+  const scePresentation = resolveSceMatchPresentation({
+    match,
+    tenantLogoUrl,
     tenantClubName,
+    assessment,
+    timezone,
   });
 
   const normalizedHomeAway = match.homeAway?.trim().toUpperCase() ?? null;
@@ -217,7 +212,6 @@ export default function SpieleManagementMatchRow({
       : null;
 
   const live = isMatchLive(match);
-  const liveScore = getMatchcenterResultLabel(match);
 
   const readinessTone =
     status.label === "Bereit"
@@ -225,8 +219,6 @@ export default function SpieleManagementMatchRow({
       : status.label.includes("offen")
         ? "open"
         : "neutral";
-
-  const competitionLabel = match.competitionLabel?.trim();
 
   return (
     <article
@@ -252,30 +244,22 @@ export default function SpieleManagementMatchRow({
       ) : null}
 
       <div className="relative z-[1] min-w-0 md:col-span-2 md:col-start-1 md:row-start-1 min-[105rem]:col-span-2">
-        <Link
-          href={detailHref}
-          className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-          aria-label={`Details zu ${match.title} anzeigen`}
-        >
-          <div data-testid={`matchcenter-team-matchup-${match.id}`}>
-            <SpieleManagementMatchIdentity
-              match={match}
-              activityPresentation={activityPresentation}
-              tenantLogoUrl={tenantLogoUrl}
-              kickoffLabel={kickoff}
-              endTimeLabel={endTime && endTime !== kickoff ? endTime : null}
-              competitionLabel={competitionLabel ?? null}
+        <div data-testid={`matchcenter-team-matchup-${match.id}`}>
+          <Link
+            href={detailHref}
+            className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+            aria-label={`Details zu ${match.title} anzeigen`}
+          >
+            <SceMatchCard
+              model={scePresentation}
+              density="COMPACT"
+              fmtCfg={fmtCfg}
+              linkToDetail={false}
+              surface="list-row"
+              testId={`matchcenter-sce-match-${match.id}`}
             />
-          </div>
-          {live && liveScore ? (
-            <p
-              className="mt-1 text-xs font-bold tabular-nums text-[var(--foreground)]"
-              data-testid={`matchcenter-live-score-${match.id}`}
-            >
-              Ergebnis {liveScore}
-            </p>
-          ) : null}
-        </Link>
+          </Link>
+        </div>
       </div>
 
       <div

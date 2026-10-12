@@ -41,6 +41,38 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(detail).toContain("scePresentation");
   });
 
+  it("Team Resultate and Übersicht consume SceMatchCard via scePresentation", () => {
+    const resultRow = readFileSync(
+      join(repoRoot, "components/admin/teams/results/TeamResultRow.tsx"),
+      "utf8",
+    );
+    expect(resultRow).toContain("SceMatchCard");
+    expect(resultRow).toContain("scePresentation");
+    expect(resultRow).not.toContain("SportingTeamLogo");
+
+    const nextSummary = readFileSync(
+      join(repoRoot, "components/admin/teams/overview/TeamNextMatchSummary.tsx"),
+      "utf8",
+    );
+    expect(nextSummary).toContain("SceMatchCard");
+
+    const latestSummary = readFileSync(
+      join(repoRoot, "components/admin/teams/overview/TeamLatestResultSummary.tsx"),
+      "utf8",
+    );
+    expect(latestSummary).toContain("SceMatchCard");
+  });
+
+  it("Matchcenter Spiele row consumes SceMatchCard instead of local fixture markup", () => {
+    const row = readFileSync(
+      join(repoRoot, "components/admin/matchcenter/SpieleManagementMatchRow.tsx"),
+      "utf8",
+    );
+    expect(row).toContain("SceMatchCard");
+    expect(row).toContain("resolveSceMatchPresentation");
+    expect(row).not.toContain("SpieleManagementMatchIdentity");
+  });
+
   it("Team Nächste Spiele consumes SceMatchCard via canonical scePresentation", () => {
     const row = readFileSync(
       join(repoRoot, "components/admin/teams/upcoming-matches/TeamUpcomingMatchRow.tsx"),

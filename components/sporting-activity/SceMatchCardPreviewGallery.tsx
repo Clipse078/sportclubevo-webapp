@@ -16,6 +16,8 @@ type GallerySection = {
 
 const SECTIONS: GallerySection[] = [
   { title: "Bevorstehend", modelKey: "upcomingStandard" },
+  { title: "Heute (Badge)", modelKey: "heuteBadge" },
+  { title: "Morgen (Badge)", modelKey: "morgenBadge" },
   { title: "Live", modelKey: "liveWithScore" },
   { title: "Abgeschlossen mit Ergebnis", modelKey: "completedWithResult" },
   { title: "0:0 (echtes Ergebnis)", modelKey: "actualZeroZero" },

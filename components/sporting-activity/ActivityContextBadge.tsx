@@ -1,12 +1,17 @@
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 export type ActivityContextBadgeProps = {
   label: string;
   className?: string;
-};
+} & Omit<HTMLAttributes<HTMLSpanElement>, "children">;
 
 /** Neutral home/away/venue context — not an activity type color. */
-export function ActivityContextBadge({ label, className }: ActivityContextBadgeProps) {
+export function ActivityContextBadge({
+  label,
+  className,
+  ...props
+}: ActivityContextBadgeProps) {
   return (
     <span
       className={cn(
@@ -14,6 +19,7 @@ export function ActivityContextBadge({ label, className }: ActivityContextBadgeP
         className,
       )}
       data-activity-context-badge
+      {...props}
     >
       {label}
     </span>

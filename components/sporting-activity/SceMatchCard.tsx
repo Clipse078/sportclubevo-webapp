@@ -17,8 +17,11 @@ import type {
 } from "@/lib/sporting-activity-presentation/canonical/types";
 import { formatSportingActivityScheduleLine } from "@/lib/sporting-activity-presentation/format";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import { ActivityContextBadge } from "./ActivityContextBadge";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchCardResult } from "./SceMatchCardResult";
+import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
+import type { SceMatchContextBadge } from "@/lib/sporting-activity-presentation/canonical/types";
 
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
@@ -71,6 +74,14 @@ function clubNameClassForDensity(density: SceActivityPresentationDensity): strin
   }
 }
 
+function isCompletedWithoutResult(model: SceMatchPresentationModel): boolean {
+  if (model.result) {
+    return false;
+  }
+  const lifecycle = model.matchLifecycle ?? model.status;
+  return lifecycle?.semantic === "completed";
+}
+
 function SceMatchFixtureSeparator({
   model,
   density,
@@ -92,6 +103,21 @@ function SceMatchFixtureSeparator({
     );
   }
 
+  if (isCompletedWithoutResult(model)) {
+    return (
+      <span
+        className={cn(
+          "shrink-0 font-semibold tabular-nums text-[var(--muted)]",
+          density === "HERO" ? "text-sm" : "text-xs",
+        )}
+        data-testid="sce-match-result"
+        aria-label="Ergebnis nicht verfügbar"
+      >
+        –
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
@@ -104,6 +130,65 @@ function SceMatchFixtureSeparator({
     >
       VS
     </span>
+  );
+}
+
+function contextBadgeTestId(badge: SceMatchContextBadge): string {
+  if (badge.kind === "tenant-side") {
+    return badge.label === "Heim" ? "sce-match-context-heim" : "sce-match-context-auswaerts";
+  }
+  return "sce-match-context-perspective";
+}
+
+function SceMatchContextBadges({
+  badges,
+}: {
+  badges: SceMatchContextBadge[];
+}) {
+  if (badges.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center justify-end gap-1"
+      data-sce-match-region="context"
+    >
+      {badges.map((badge) => {
+        if (badge.kind === "tenant-side") {
+          return (
+            <ActivityContextBadge
+              key={`${badge.kind}-${badge.label}`}
+              label={badge.label}
+              className="text-[0.625rem]"
+              data-testid={contextBadgeTestId(badge)}
+            />
+          );
+        }
+
+        const perspective =
+          badge.label === "Sieg"
+            ? "WON"
+            : badge.label === "Niederlage"
+              ? "LOST"
+              : badge.label === "Unentschieden"
+                ? "DRAW"
+                : "UNKNOWN";
+        const status = resolveSceMatchResultPerspectiveStatus(perspective);
+        if (!status) {
+          return null;
+        }
+
+        return (
+          <SceMatchCardStatus
+            key={`${badge.kind}-${badge.label}`}
+            status={status}
+            testId={contextBadgeTestId(badge)}
+            className="text-[0.625rem]"
+          />
+        );
+      })}
+    </div>
   );
 }
 
@@ -301,8 +386,11 @@ function SceMatchRichCardContent({
       ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
       : undefined;
   const status = model.matchLifecycle ?? model.status;
+  const contextBadges = model.contextBadges ?? [];
   const hasMetaHeader =
-    (showCompetition && model.competition?.label) || (showStatus && status?.label);
+    (showCompetition && model.competition?.label) ||
+    (showStatus && status?.label) ||
+    contextBadges.length > 0;
 
   return (
     <div
@@ -327,11 +415,16 @@ function SceMatchRichCardContent({
           ) : (
             <span className="min-w-0 flex-1" />
           )}
-          {showStatus && status?.label ? (
-            <div className="shrink-0" data-sce-match-region="status">
-              <SceMatchCardStatus status={status} testId="sce-match-status" />
-            </div>
-          ) : null}
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {contextBadges.length > 0 ? (
+              <SceMatchContextBadges badges={contextBadges} />
+            ) : null}
+            {showStatus && status?.label ? (
+              <div data-sce-match-region="status">
+                <SceMatchCardStatus status={status} testId="sce-match-status" />
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 

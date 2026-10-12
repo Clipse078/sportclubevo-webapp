@@ -1,17 +1,7 @@
+import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
+import { mapScePresentationSemanticToBadgeVariant } from "@/lib/sporting-activity-presentation/canonical/status";
 import type { SceActivityPresentationStatus } from "@/lib/sporting-activity-presentation/canonical/types";
-
-const SEMANTIC_CLASS: Record<
-  NonNullable<SceActivityPresentationStatus["semantic"]>,
-  string
-> = {
-  neutral: "bg-[var(--surface-2)] text-[var(--text-2)]",
-  active: "bg-[var(--status-active-bg, rgba(34,197,94,0.12))] text-[var(--status-active-fg,var(--foreground))]",
-  planned: "bg-[var(--surface-2)] text-[var(--text-2)]",
-  completed: "bg-[var(--surface-2)] text-[var(--text-2)]",
-  cancelled: "bg-[var(--surface-2)] text-[var(--muted)] line-through",
-  warning: "bg-[var(--surface-2)] text-[var(--foreground)]",
-};
 
 export type SceMatchCardStatusProps = {
   status: SceActivityPresentationStatus;
@@ -19,7 +9,7 @@ export type SceMatchCardStatusProps = {
   className?: string;
 };
 
-/** Lifecycle status — label always visible; colour is supplementary. */
+/** Lifecycle / semantic status — label always visible; colour is supplementary. */
 export function SceMatchCardStatus({
   status,
   testId = "sce-match-status",
@@ -29,16 +19,14 @@ export function SceMatchCardStatus({
   if (!label) return null;
 
   return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[0.6875rem] font-medium",
-        SEMANTIC_CLASS[status.semantic],
-        className,
-      )}
+    <Badge
+      variant={mapScePresentationSemanticToBadgeVariant(status.semantic)}
+      size="sm"
+      className={cn("shrink-0 font-medium", className)}
       data-testid={testId}
       data-semantic={status.semantic}
     >
       {label}
-    </span>
+    </Badge>
   );
 }

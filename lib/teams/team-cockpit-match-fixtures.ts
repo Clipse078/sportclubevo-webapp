@@ -1,4 +1,8 @@
-import type { TeamCockpitMatch } from "@/lib/teams/team-cockpit-sporting-data";
+import type {
+  TeamCockpitMatch,
+  TeamCockpitResult,
+  TeamCockpitResultPerspective,
+} from "@/lib/teams/team-cockpit-sporting-data";
 import { resolveTeamCockpitMatchPresentation } from "@/lib/teams/team-cockpit-match-presentation";
 import type { TeamSeasonMatchItem } from "@/lib/teams/team-match-query-service";
 
@@ -172,4 +176,82 @@ export function createTeamCockpitMatchFixture(
   };
 
   return { ...base, ...overrides, scePresentation: base.scePresentation };
+}
+
+export function createTeamCockpitResultFixture(
+  overrides: Partial<TeamCockpitResult> = {},
+  itemOverrides: Partial<TeamSeasonMatchItem> = {},
+): TeamCockpitResult {
+  const scoreHome = overrides.scoreHome !== undefined ? overrides.scoreHome : 2;
+  const scoreAway = overrides.scoreAway !== undefined ? overrides.scoreAway : 1;
+  const resultLabel =
+    scoreHome != null && scoreAway != null ? `${scoreHome}:${scoreAway}` : null;
+  const side = overrides.side ?? "HOME";
+  const resultPerspective: TeamCockpitResultPerspective =
+    overrides.resultPerspective ?? "WON";
+
+  const item = defaultSeasonItem({
+    eventId: overrides.eventId ?? "event-1",
+    side,
+    startAt: overrides.startAt ?? new Date("2026-08-20T16:00:00.000Z"),
+    status: "COMPLETED",
+    lifecycle: "COMPLETED",
+    scoreHome,
+    scoreAway,
+    resultLabel,
+    location: overrides.location ?? "Im Brüel",
+    venueName: overrides.venueName ?? "Im Brüel",
+    ...itemOverrides,
+  });
+
+  if (side === "AWAY") {
+    item.side = "AWAY";
+    item.home = {
+      canonicalTeamId: null,
+      canonicalExternalTeamId: "ext-home",
+      displayName: overrides.home?.displayName ?? "FC Example",
+      clubName: overrides.home?.clubName ?? "FC Example",
+      externalLogoUrl: overrides.home?.logoUrl ?? "/example-crest.svg",
+      providerTeamId: 200,
+      providerTeamName: "FC Example",
+    };
+    item.away = {
+      canonicalTeamId: DEFAULT_TEAM_ID,
+      canonicalExternalTeamId: null,
+      displayName: overrides.away?.displayName ?? "1. Mannschaft",
+      clubName: overrides.away?.clubName ?? "FC Allschwil",
+      externalLogoUrl: null,
+      providerTeamId: 100,
+      providerTeamName: "FC Allschwil",
+    };
+  }
+
+  const match = createTeamCockpitMatchFixture(
+    {
+      ...overrides,
+      side,
+      status: "COMPLETED",
+      lifecycle: "COMPLETED",
+    },
+    item,
+  );
+
+  const teamScore = side === "HOME" ? scoreHome : scoreAway;
+  const opponentScore = side === "HOME" ? scoreAway : scoreHome;
+
+  return {
+    ...match,
+    scoreHome,
+    scoreAway,
+    teamScore: overrides.teamScore ?? teamScore,
+    opponentScore: overrides.opponentScore ?? opponentScore,
+    resultPerspective,
+    scePresentation: resolveTeamCockpitMatchPresentation({
+      item,
+      teamId: DEFAULT_TEAM_ID,
+      tenantClubName: "FC Allschwil",
+      tenantLogoUrl: "/tenant-crest.svg",
+      resultPerspective,
+    }),
+  };
 }

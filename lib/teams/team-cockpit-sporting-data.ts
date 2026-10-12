@@ -113,6 +113,7 @@ export type GetTeamCockpitSportingDataInput = {
   tenantId: string;
   tenantClubName?: string | null;
   tenantLogoUrl?: string | null;
+  timezone?: string;
   teamId: string;
   teamSeasonId: string;
   seasonKey: string;
@@ -184,7 +185,7 @@ function mapCockpitMatch(
   item: TeamSeasonMatchItem,
   input: Pick<
     GetTeamCockpitSportingDataInput,
-    "teamId" | "teamShortName" | "tenantClubName" | "tenantLogoUrl"
+    "teamId" | "teamShortName" | "tenantClubName" | "tenantLogoUrl" | "now" | "timezone"
   >,
 ): TeamCockpitMatch {
   return {
@@ -215,6 +216,8 @@ function mapCockpitMatch(
       teamShortName: input.teamShortName,
       tenantClubName: input.tenantClubName,
       tenantLogoUrl: input.tenantLogoUrl,
+      now: input.now,
+      timezone: input.timezone,
     }),
   };
 }
@@ -223,11 +226,12 @@ function mapCockpitResult(
   item: TeamSeasonMatchItem,
   input: Pick<
     GetTeamCockpitSportingDataInput,
-    "teamId" | "tenantClubName" | "tenantLogoUrl"
+    "teamId" | "teamShortName" | "tenantClubName" | "tenantLogoUrl" | "now" | "timezone"
   >,
 ): TeamCockpitResult {
   const teamScore = item.side === "HOME" ? item.scoreHome : item.scoreAway;
   const opponentScore = item.side === "HOME" ? item.scoreAway : item.scoreHome;
+  const resultPerspective = resolvePublicTeamResultPerspective(item);
 
   return {
     ...mapCockpitMatch(item, input),
@@ -235,7 +239,17 @@ function mapCockpitResult(
     scoreAway: item.scoreAway,
     teamScore,
     opponentScore,
-    resultPerspective: resolvePublicTeamResultPerspective(item),
+    resultPerspective,
+    scePresentation: resolveTeamCockpitMatchPresentation({
+      item,
+      teamId: input.teamId,
+      teamShortName: input.teamShortName,
+      tenantClubName: input.tenantClubName,
+      tenantLogoUrl: input.tenantLogoUrl,
+      now: input.now,
+      timezone: input.timezone,
+      resultPerspective,
+    }),
   };
 }
 
@@ -263,11 +277,12 @@ export async function getTeamCockpitSportingData(
     now,
   });
 
+  const mappingInput = { ...input, now };
   const nextMatches = filterPublicTeamNextMatches(upcoming, now, nextMatchesLimit).map((item) =>
-    mapCockpitMatch(item, input),
+    mapCockpitMatch(item, mappingInput),
   );
   const results = filterPublicTeamResults(completed, resultsLimit).map((item) =>
-    mapCockpitResult(item, input),
+    mapCockpitResult(item, mappingInput),
   );
 
   let standings: TeamCockpitStandings | null = null;

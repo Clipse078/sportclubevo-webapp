@@ -145,4 +145,24 @@ export const SCE_MATCH_CARD_PREVIEW_MODELS = {
     home: side({ displayName: "FC Liestal", externalLogoUrl: "https://cdn.example/h.png" }),
     away: side({ displayName: "FC Allschwil", isOwnTeam: true }),
   }),
+  heuteBadge: (() => {
+    const model = resolveSceMatchCardFixture({
+      startAt: new Date("2026-10-12T18:15:00.000Z"),
+    });
+    return {
+      ...model,
+      matchLifecycle: { domain: "scheduled", label: "Heute", semantic: "warning" as const },
+      contextBadges: [{ kind: "tenant-side" as const, label: "Heim" }],
+    };
+  })(),
+  morgenBadge: (() => {
+    const model = resolveSceMatchCardFixture({
+      startAt: new Date("2026-10-13T18:15:00.000Z"),
+    });
+    return {
+      ...model,
+      matchLifecycle: { domain: "scheduled", label: "Morgen", semantic: "planned" as const },
+      contextBadges: [{ kind: "tenant-side" as const, label: "Auswärts" }],
+    };
+  })(),
 } as const;

@@ -37,8 +37,18 @@ export {
 export {
   buildSceActivityPresentationStatus,
   mapPersonalProgrammeStatusToSemantic,
+  mapScePresentationSemanticToBadgeVariant,
   mapSpieleStatusLabelToSemantic,
 } from "./status";
+
+export {
+  buildSceMatchResultPerspectiveContextBadge,
+  buildSceMatchTenantSideContextBadge,
+  resolveSceMatchResultPerspectiveStatus,
+  withSceMatchContextBadges,
+} from "./match-context-badges";
+
+export { resolveSceMatchLifecycleStatus } from "./match-lifecycle-status";
 
 export { buildSceActivityRoute, parseActivityIdFromResourceKey } from "./route";
 

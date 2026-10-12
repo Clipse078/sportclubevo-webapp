@@ -5,7 +5,9 @@
 
 import type { MatchcenterMatchSummary, MatchcenterSide } from "@/lib/matchcenter/types";
 import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
+import { buildSceMatchResultPerspectiveContextBadge } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
 import type { SceMatchPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import type { TeamCockpitResultPerspective } from "@/lib/teams/team-cockpit-sporting-data";
 import type {
   TeamMatchSideIdentity,
   TeamSeasonMatchCompetitionContext,
@@ -161,6 +163,9 @@ export type ResolveTeamCockpitMatchPresentationInput = {
   teamShortName?: string | null;
   tenantClubName?: string | null;
   tenantLogoUrl?: string | null;
+  now?: Date;
+  timezone?: string;
+  resultPerspective?: TeamCockpitResultPerspective;
 };
 
 export function resolveTeamCockpitMatchPresentation(
@@ -171,9 +176,22 @@ export function resolveTeamCockpitMatchPresentation(
     teamShortName: input.teamShortName,
   });
 
-  return resolveSceMatchPresentation({
+  const model = resolveSceMatchPresentation({
     match,
     tenantClubName: input.tenantClubName,
     tenantLogoUrl: input.tenantLogoUrl,
+    now: input.now,
+    timezone: input.timezone,
   });
+
+  const perspectiveBadge = input.resultPerspective
+    ? buildSceMatchResultPerspectiveContextBadge(input.resultPerspective)
+    : null;
+
+  if (!perspectiveBadge) {
+    return model;
+  }
+
+  const contextBadges = [...(model.contextBadges ?? []), perspectiveBadge];
+  return { ...model, contextBadges };
 }

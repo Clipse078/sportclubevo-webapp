@@ -75,13 +75,15 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 | **Identity grammar** | **HOME** name/crest · **vs** · **AWAY** crest/name — fixture-authoritative (`homeLeftAwayRightInvariant`) |
 | **Crests** | `ClubCrest` / `ClubIdentity` from 01C — cards do not resolve logo URLs locally |
 | **Results** | Show only when 01C `result` is non-null; **no fake 0:0** for upcoming fixtures |
-| **Status** | `matchLifecycle` / `status` semantic labels — text + token; not colour-only |
+| **Status** | `matchLifecycle` via `resolveSceMatchLifecycleStatus` — **Heute** (warning), **Morgen** (info), **Live** (success), **Beendet** (success), **Abgesagt** (danger); rendered with DS `Badge` (`SceMatchCardStatus`) — text first, colour supplementary |
+| **Tenant context** | **Heim** / **Auswärts** on `contextBadges` — quiet `ActivityContextBadge`; never reorder fixture sides |
+| **Result context** | **Sieg** / **Unentschieden** / **Niederlage** on `contextBadges` — semantic badge, not a second fixture layout |
 | **Routes** | `model.route.consumeHref` for primary navigation — no local href builders |
 | **Responsive** | Truncation + grid reflow; narrow-safe (see preview gallery) |
 | **Accessibility** | Fixture `aria-label`, decorative crests when adjacent text exists, focus ring on card link |
 | **Preview / UAT** | `/sce-preview/match-card` (deterministic fixtures, no DB) |
 
-Representative integration (01D): Activity Detail match header (`SportingActivityDetailContent`) + server `scePresentation` on `loadMatchActivityDetail`.
+Representative integration (01D R4): Activity Detail (HERO), Team → Nächste Spiele (STANDARD), Team → Resultate (COMPACT), Team → Übersicht next/last (COMPACT), Matchcenter Spielplanung rows (COMPACT `list-row`); all via `scePresentation` / `resolveSceMatchPresentation`.
 
 Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-architecture.test.ts`.
 

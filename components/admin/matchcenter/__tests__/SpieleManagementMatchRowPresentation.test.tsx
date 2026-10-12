@@ -1,11 +1,11 @@
 /**
- * SPIELE-UX-01D / SCE-ACTIVITY-UX-01R8 — match row identity presentation.
+ * SPIELE-UX-01D / SCE-UI-ROLLOUT-01D — match row canonical SceMatchCard presentation.
  * @vitest-environment jsdom
  */
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -117,8 +117,8 @@ function renderRowHtml(match: MatchcenterMatchSummary) {
   );
 }
 
-describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
-  it("MATCH AWAY — fixture, SPIEL red, Auswärts, host club - location", () => {
+describe("SCE-UI-ROLLOUT-01D — Spiele management canonical match card", () => {
+  it("MATCH AWAY — home left / away right, Auswärts context, location on card", () => {
     renderRow(
       createMatch({
         home: side({ isOwnTeam: false, displayName: "BSC Old Boys" }),
@@ -128,17 +128,20 @@ describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
       }),
     );
 
-    expect(screen.getByTestId("match-club-pair")).toBeInTheDocument();
-    expect(screen.getByText("BSC Old Boys")).toBeInTheDocument();
-    expect(screen.getByText("FC Allschwil E1")).toBeInTheDocument();
-    expect(screen.getByText("SPIEL").getAttribute("data-activity-type-pill")).toBe("match-red");
-    expect(screen.getByText("Auswärts")).toHaveAttribute("data-activity-context-badge");
-    expect(screen.getByText("BSC Old Boys - Schützenmatte")).toBeInTheDocument();
-    expect(screen.queryByText("FC Allschwil - Schützenmatte")).not.toBeInTheDocument();
-    expect(screen.getByText("Meisterschaft")).toBeInTheDocument();
+    const card = screen.getByTestId("matchcenter-sce-match-match-away-1");
+    const fixture = within(card).getByTestId("sce-match-fixture");
+    expect(fixture.querySelector('[data-sce-match-side="home"]')?.textContent).toContain(
+      "BSC Old Boys",
+    );
+    expect(fixture.querySelector('[data-sce-match-side="away"]')?.textContent).toContain(
+      "FC Allschwil E1",
+    );
+    expect(within(card).getByTestId("sce-match-context-auswaerts")).toHaveTextContent("Auswärts");
+    expect(within(card).getByTestId("sce-match-location")).toHaveTextContent("Schützenmatte");
+    expect(within(card).getByTestId("sce-match-competition")).toHaveTextContent("Meisterschaft");
   });
 
-  it("MATCH HOME — SPIEL red, Eigener Verein, tenant club - location", () => {
+  it("MATCH HOME — Heim context and canonical fixture", () => {
     renderRow(
       createMatch({
         id: "match-home-1",
@@ -152,11 +155,9 @@ describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
       }),
     );
 
-    expect(screen.getByTestId("match-club-pair")).toBeInTheDocument();
-    expect(screen.getByText("FC Allschwil E1")).toBeInTheDocument();
-    expect(screen.getByText("FC Binningen")).toBeInTheDocument();
-    expect(screen.getByText("Eigener Verein")).toHaveAttribute("data-activity-context-badge");
-    expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
+    const card = screen.getByTestId("matchcenter-sce-match-match-home-1");
+    expect(within(card).getByTestId("sce-match-context-heim")).toHaveTextContent("Heim");
+    expect(within(card).getByTestId("sce-match-fixture").textContent).toContain("FC Binningen");
   });
 
   it("HOME row retains preparation checklist operational metadata", () => {
@@ -200,11 +201,10 @@ describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
     expect(html).not.toContain('aria-label="Matchvorbereitung"');
   });
 
-  it("does not fabricate location or context when home/away unknown", () => {
+  it("does not fabricate tenant context when home/away unknown", () => {
     renderRow(createMatch({ homeAway: null, location: null }));
-    expect(screen.queryByText("Eigener Verein")).not.toBeInTheDocument();
-    expect(screen.queryByText("Auswärts")).not.toBeInTheDocument();
-    expect(screen.queryByText(/undefined|-\s*$/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sce-match-context-heim")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sce-match-context-auswaerts")).not.toBeInTheDocument();
   });
 
   it("row source does not add client data fetching", () => {
@@ -214,5 +214,7 @@ describe("SCE-ACTIVITY-UX-01R8 — Spiele management identity", () => {
     );
     expect(rowSource).not.toMatch(/\buseQuery\b/);
     expect(rowSource).not.toMatch(/\bfetch\s*\(/);
+    expect(rowSource).toContain("SceMatchCard");
+    expect(rowSource).not.toContain("SpieleManagementMatchIdentity");
   });
 });

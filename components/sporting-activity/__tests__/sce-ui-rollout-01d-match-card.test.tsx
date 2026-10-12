@@ -138,6 +138,27 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
     renderCard({ status: "CANCELLED" });
     const status = screen.getByTestId("sce-match-status");
     expect(status.textContent?.length).toBeGreaterThan(0);
+    expect(status).toHaveAttribute("data-semantic", "cancelled");
+  });
+
+  it("renders tenant-side context badges without replacing lifecycle status", () => {
+    const model = resolveSceMatchCardFixture({ homeAway: "AWAY" });
+    render(
+      <SceMatchCard model={model} density="STANDARD" fmtCfg={FMT} linkToDetail={false} />,
+    );
+    expect(screen.getByTestId("sce-match-context-auswaerts")).toHaveTextContent("Auswärts");
+    expect(screen.getByTestId("sce-match-status")).toBeTruthy();
+  });
+
+  it("does not show VS for upcoming fixtures with raw 0/0 scores", () => {
+    renderCard({
+      status: "SCHEDULED",
+      scoreHome: 0,
+      scoreAway: 0,
+      resultLabel: null,
+    });
+    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
+    expect(screen.queryByTestId("sce-match-result")).toBeNull();
   });
 
   it("STANDARD stacks crest above club name (not inline Resultate row)", () => {
