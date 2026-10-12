@@ -13,8 +13,13 @@ export type {
   ScePresentationStatusSemantic,
   SceTournamentPresentationModel,
   SceTrainingPresentationModel,
+  SceTrainingRecurrencePresentation,
+  SceTrainingSchedulePresentation,
 } from "./types";
-export { isSceActivityPresentationModel } from "./types";
+export {
+  isSceActivityPresentationModel,
+  isSceTrainingPresentationModel,
+} from "./types";
 
 export {
   SCE_ACTIVITY_DENSITY_CONTRACT,
@@ -54,6 +59,16 @@ export { buildSceActivityRoute, parseActivityIdFromResourceKey } from "./route";
 
 export { resolveSceMatchPresentation } from "./adapters/match";
 export { resolveSceTrainingPresentationFromLegacy } from "./adapters/training";
+export { resolveSceTrainingPresentationFromManagementRow } from "./adapters/training-management";
+export { resolveSceTrainingPresentationFromWeekplannerTraining } from "./adapters/weekplanner-training";
+export { resolveSceTrainingManagementStatus } from "./training-management-status";
+export {
+  SCE_TRAINING_CARD_SHELL_CLASS,
+  SCE_TRAINING_RICH_DENSITY_SCALE,
+  isSceTrainingRichCardDensity,
+  sceTrainingCardBoundedWidthClass,
+  sceTrainingRichDensityScale,
+} from "./training-card-rich-density";
 export { resolveSceTournamentPresentation } from "./adapters/tournament";
 export { resolveSceClubEventPresentationFromLegacy } from "./adapters/club-event";
 export {

@@ -114,6 +114,31 @@ Future Match surfaces (**01H–01L**) must adopt `SceMatchCard` — not local ca
 
 ---
 
+## Canonical Training card family (01E)
+
+| Item | Contract |
+|------|----------|
+| **Component** | `SceTrainingCard` (`components/sporting-activity/SceTrainingCard.tsx`) |
+| **Model** | `SceTrainingPresentationModel` via `resolveSceTrainingPresentationFromLegacy` / typed management & Wochenplaner adapters — **no parallel Training card model** |
+| **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
+| **Rich skeleton** | `HERO` and `STANDARD` share one rich DOM; `COMPACT` uses the management/list grid variant; `MICRO` is the only other structural variant |
+| **Identity grammar** | Training title → team → schedule → location → status — **never** home/away, VS, or result semantics |
+| **Location** | Structured `SportingActivityLocation` + `formatSceActivityLocationHierarchy` (club/host → venue → resource) with clean degradation |
+| **Schedule** | `schedulePresentation`: `SESSION` (instant `schedule`) vs `RECURRING_DEFINITION` (weekday rhythm + time label) — do not render epoch placeholders for series |
+| **Status** | Domain-backed labels (`Aktiv`, `Inaktiv`, …) via `SceTrainingCardStatus` / DS `Badge` — text first |
+| **Routes** | `model.route.consumeHref` only — no local href builders |
+| **Management boundary** | `SceTrainingCard` owns **presentation**; Trainings management rows keep actions, filters, weekday column, facility column, and status column |
+| **MICRO / planner** | Narrow-safe team + time + resource; full planner grid adoption deferred to **01H** (`PlanningHubActivityBlock` remains legacy identity until then) |
+| **Preview / UAT** | `/sce-preview/training-card`, `/sce-preview/weekplanner-training` |
+
+Representative integration (01E): Activity Detail training embed (HERO), Trainings management row identity (`COMPACT`, status in row column), Wochenplaner “Planung bearbeiten” training summary (`WeekplannerTrainingIdentityCard`).
+
+Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01e-training-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01e-architecture.test.ts`.
+
+Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not local card variants.
+
+---
+
 ## Controls — binary state (Toggle First)
 
 **SCE Control Standard — Toggle First** (established with SCE-UI-ROLLOUT-01B closure, 2026-10-11):

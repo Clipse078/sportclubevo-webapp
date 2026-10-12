@@ -5,6 +5,7 @@ import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Sheet } from "@/components/ui/Sheet";
 import { WeekplannerMatchIdentityCard } from "@/components/admin/planner/WeekplannerMatchIdentityCard";
+import { WeekplannerTrainingIdentityCard } from "@/components/admin/planner/WeekplannerTrainingIdentityCard";
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import { ActivityContextBadge } from "@/components/sporting-activity/ActivityContextBadge";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
@@ -139,15 +140,13 @@ export function WeekplannerActivityIdentityCard({
 
       {item.type === "MATCH" ? (
         <WeekplannerMatchIdentityCard item={item} timezone={timezone} />
+      ) : item.type === "TRAINING" ? (
+        <WeekplannerTrainingIdentityCard item={item} timezone={timezone} />
       ) : (
         <p className="text-base font-semibold text-[var(--foreground)]">{item.title}</p>
       )}
 
-      {item.type === "TRAINING" && item.teamNames[0] && item.teamNames[0] !== item.title && (
-        <p className="text-sm text-[var(--text-2)]">{item.teamNames[0]}</p>
-      )}
-
-      {item.type !== "MATCH" ? (
+      {item.type !== "MATCH" && item.type !== "TRAINING" ? (
         <p className="text-sm text-[var(--text-2)]" data-testid="weekplanner-activity-identity-schedule">
           {scheduleSummary}
         </p>

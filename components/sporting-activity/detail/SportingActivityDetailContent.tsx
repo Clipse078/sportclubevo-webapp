@@ -3,8 +3,12 @@
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
+import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard";
 import { resolveSceActivityPresentationFromDetail } from "@/lib/sporting-activity-detail/resolve-canonical-presentation";
-import { isSceMatchPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import {
+  isSceMatchPresentationModel,
+  isSceTrainingPresentationModel,
+} from "@/lib/sporting-activity-presentation/canonical/types";
 import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
 import {
   resolveSportingActivityCompactAgendaTypeLine,
@@ -125,6 +129,23 @@ export function SportingActivityDetailContent({
             linkToDetail={false}
             surface="detail-embed"
             testId="sporting-activity-detail-match-card"
+          />
+        ) : null}
+
+        {detail.kind === "TRAINING" ? (
+          <SceTrainingCard
+            model={(() => {
+              const resolved = resolveSceActivityPresentationFromDetail(detail);
+              if (!isSceTrainingPresentationModel(resolved)) {
+                throw new Error("Expected TRAINING presentation model");
+              }
+              return resolved;
+            })()}
+            density="HERO"
+            fmtCfg={fmtCfg}
+            linkToDetail={false}
+            surface="detail-embed"
+            testId="sporting-activity-detail-training-card"
           />
         ) : null}
 

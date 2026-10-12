@@ -11,6 +11,7 @@ import {
   resolveTeamIdentityAccentClass,
   trainingManagementStatusPresentation,
 } from "@/lib/training/management-presentation";
+import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard";
 import { SportingActivityIdentity } from "@/components/sporting-activity/SportingActivityIdentity";
 import { SportingActivityMetaRail } from "@/components/sporting-activity/SportingActivityMetaRail";
 import { cn } from "@/lib/cn";
@@ -41,12 +42,25 @@ export default function TrainingSeriesManagementRow({
   const primaryTimeToken = row.timeLabel.split(" · ")[0]?.trim() ?? row.timeLabel;
   const parsedPrimaryTime = splitSportingActivityTimeRangeLabel(primaryTimeToken);
   const isVariableTimeLabel = row.timeLabel === "Unterschiedliche Zeiten";
-  const showMetaRailTime = Boolean(row.activityPresentation) && !isVariableTimeLabel;
-  const hideDuplicateTimeColumn = showMetaRailTime && !row.timeDetailLines?.length;
+  const showMetaRailTime =
+    Boolean(row.activityPresentation) && !row.sceTrainingPresentation && !isVariableTimeLabel;
+  const hideDuplicateTimeColumn =
+    (Boolean(row.sceTrainingPresentation) || showMetaRailTime) && !row.timeDetailLines?.length;
 
   const identityBlock = (
     <div className="flex min-w-0 items-start gap-3">
-      {row.activityPresentation ? (
+      {row.sceTrainingPresentation ? (
+        <SceTrainingCard
+          model={row.sceTrainingPresentation}
+          density="COMPACT"
+          fmtCfg={{ locale: "de-CH", timezone: "Europe/Zurich" }}
+          linkToDetail={false}
+          showStatus={false}
+          surface="list-row"
+          className="flex-1 border-0 bg-transparent p-0 shadow-none"
+          testId="training-management-sce-card"
+        />
+      ) : row.activityPresentation ? (
         <>
           <SportingActivityMetaRail
             activityKind="TRAINING"
