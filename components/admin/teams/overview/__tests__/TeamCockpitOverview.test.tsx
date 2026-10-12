@@ -21,7 +21,7 @@ import TeamTrainingSummary from "../TeamTrainingSummary";
 import TeamCompositionSummary from "../TeamCompositionSummary";
 import TeamCockpitOverviewContent from "../TeamCockpitOverviewContent";
 import type { TeamCockpitResult, TeamCockpitStandings } from "@/lib/teams/team-cockpit-sporting-data";
-import { createTeamCockpitMatchFixture } from "@/lib/teams/__tests__/team-cockpit-match-test-fixtures";
+import { createTeamCockpitMatchFixture } from "@/lib/teams/team-cockpit-match-fixtures";
 
 const TEAM_ID = "team-1";
 const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };

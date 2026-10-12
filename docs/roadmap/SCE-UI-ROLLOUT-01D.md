@@ -74,6 +74,7 @@ Canonical `SceMatchCard` supports fixture-authoritative HOME/AWAY grammar. **Bro
 |-------|----------|
 | Preview route | `/sce-preview/match-card` |
 | Real product route | `/dashboard/teams/[teamId]/spiele` (Team → Nächste Spiele) |
+| Local integration preview | `/sce-preview/team-next-matches` (same `TeamUpcomingMatchesView`, fixture data) |
 | Automated render coverage | `components/sporting-activity/__tests__/sce-ui-rollout-01d-match-card.test.tsx`, `components/admin/teams/upcoming-matches/__tests__/TeamUpcomingMatchesView.test.tsx` |
 | PO screenshots | Gallery **and** Team → Nächste Spiele (artifacts under `/opt/cursor/artifacts/` when recorded) |
 

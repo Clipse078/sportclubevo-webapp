@@ -6,7 +6,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import TeamUpcomingMatchesView from "../TeamUpcomingMatchesView";
 import { TEAM_COCKPIT_NEXT_MATCHES_DETAIL_LIMIT } from "@/lib/teams/team-cockpit-sporting-data";
-import { createTeamCockpitMatchFixture } from "@/lib/teams/__tests__/team-cockpit-match-test-fixtures";
+import { createTeamCockpitMatchFixture } from "@/lib/teams/team-cockpit-match-fixtures";
 
 const FORMAT_CONFIG = { locale: "de-CH", timezone: "Europe/Zurich" };
 
