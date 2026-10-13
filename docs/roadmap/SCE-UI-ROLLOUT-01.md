@@ -141,8 +141,9 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **01G** | **CLOSED** — [`SCE-UI-ROLLOUT-01G.md`](./SCE-UI-ROLLOUT-01G.md); PO visual UAT **PASS (01G-R1)** |
 | **SCE-CLUB-EVENT-AUDIENCE-01** | **CLOSED** — [`SCE-CLUB-EVENT-AUDIENCE-01.md`](./SCE-CLUB-EVENT-AUDIENCE-01.md); PO UAT **PASS**; PR **#837** |
 | **SCE-ACTIVITY-CREATE-01A** | **CLOSED** — [`SCE-ACTIVITY-CREATE-01A.md`](./SCE-ACTIVITY-CREATE-01A.md); ADR-11 **ACCEPTED**; PR **#838** |
-| **SCE-ACTIVITY-CREATE-01B** | **NOT_STARTED** |
-| **SCE-ACTIVITY-CREATE-01C–01G** | **NOT_STARTED** |
+| **SCE-ACTIVITY-CREATE-01B** | **CLOSED** — R1/R2/R3; PO visual UAT **PASS**; PR **#839** |
+| **SCE-ACTIVITY-CREATE-01C** | **NOT_STARTED** — Club Event reference adoption |
+| **SCE-ACTIVITY-CREATE-01D–01G** | **NOT_STARTED** |
 | **01H** | **NOT STARTED** |
 | **01I** | **NOT STARTED** |
 | **01J** | **NOT STARTED** |
