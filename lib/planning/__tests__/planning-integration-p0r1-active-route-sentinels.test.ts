@@ -112,8 +112,13 @@ describe("PLANNING-INTEGRATION-P0R1 create/edit parity — shared planning primi
     expect(paritySources.matchEdit).toContain("relatedRequirementsPanel");
     expect(paritySources.tournamentCreate).toContain("PlanningEditorWorkSection");
     expect(paritySources.tournamentEdit).toContain("PlanningEditorWorkSection");
-    expect(paritySources.eventCreate).toContain("PlanningEditorWorkSection");
     expect(paritySources.eventEdit).toContain("PlanningEditorWorkSection");
+  });
+
+  it("club event create omits post-create work placeholders (Audience-01 R1.1)", () => {
+    expect(paritySources.eventCreate).not.toContain("PlanningEditorWorkSection");
+    expect(paritySources.eventCreate).not.toContain("PlanningEditorParticipantsSection");
+    expect(paritySources.eventCreate).not.toContain("PlanningEditorCollaborationSection");
   });
 
   it("active edit surfaces wire publication panel in canonical layout (UX-06)", () => {
