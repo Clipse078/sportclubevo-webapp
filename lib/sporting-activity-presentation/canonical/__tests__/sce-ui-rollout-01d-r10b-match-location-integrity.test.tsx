@@ -14,6 +14,7 @@ import {
   isUnlabeledInternalResourceKey,
   resolveCanonicalMatchFacilityResourceLabel,
 } from "@/lib/sporting-activity-presentation/match-location";
+import { sanitizeImportedVenuePresentation } from "@/lib/sporting-activity-presentation/location";
 import { formatSportingActivityLocationLines } from "@/lib/sporting-activity-presentation/location";
 import {
   formatSceActivityLocationHierarchy,
@@ -56,7 +57,7 @@ function createAwaySissachMatch(
     endAt: new Date("2026-10-13T16:00:00.000Z"),
     operationalEndAtOverride: null,
     operationalEndAt: new Date("2026-10-13T16:00:00.000Z"),
-    location: "Sportzentrum Tannenbrunn, Sissach",
+    location: "Sportzentrum Tannenbrunn, Sissach - 2",
     competitionLabel: "Meisterschaft",
     homeAway: "AWAY",
     resultLabel: null,
@@ -107,7 +108,26 @@ function createAwaySissachMatch(
   };
 }
 
+const SFV_SISSACH_VENUE = "Sportzentrum Tannenbrunn, Sissach - 2";
+const AWAY_SISSACH_LOCATION_LINE = `SV Sissach · ${SFV_SISSACH_VENUE}`;
+
 describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () => {
+  it("A0 — authoritative SFV venue suffix is preserved (not tenant-resource cleanup)", () => {
+    expect(sanitizeImportedVenuePresentation(SFV_SISSACH_VENUE)).toBe(SFV_SISSACH_VENUE);
+    const location = buildMatchSportingActivityLocation({
+      homeAway: "AWAY",
+      homeSideDisplayName: "SV Sissach",
+      venueName: SFV_SISSACH_VENUE,
+      operationalPitchCode: "KUNSTRASEN_2",
+    });
+    expect(formatSceActivityLocationHierarchy(location, { includeHostClub: false })).toBe(
+      AWAY_SISSACH_LOCATION_LINE,
+    );
+    expect(formatSceActivityLocationHierarchy(location, { includeHostClub: false })).not.toMatch(
+      /KUNSTRASEN/i,
+    );
+  });
+
   it("A — HOME match uses tenant club, venue, and registry resource label", () => {
     const location = buildMatchSportingActivityLocation({
       homeAway: "HOME",
@@ -127,21 +147,21 @@ describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () =>
       tenantClubName: "FC Allschwil",
     });
     const line = formatSceActivityLocationHierarchy(model.location, { includeHostClub: false });
-    expect(line).toBe("SV Sissach · Sportzentrum Tannenbrunn, Sissach");
+    expect(line).toBe(AWAY_SISSACH_LOCATION_LINE);
     expect(line).not.toMatch(/KUNSTRASEN/i);
-    expect(line).not.toMatch(/Kunstrasen 2/);
+    expect(line).not.toMatch(/\bKunstrasen 2\b/);
   });
 
   it("C — AWAY match may include authoritative external pitch label", () => {
     const location = buildMatchSportingActivityLocation({
       homeAway: "AWAY",
       homeSideDisplayName: "SV Sissach",
-      venueName: "Sportzentrum Tannenbrunn, Sissach",
+      venueName: SFV_SISSACH_VENUE,
       operationalPitchCode: "KUNSTRASEN_2",
       externalPitchLabel: "Kunstrasen 2",
     });
     expect(formatSceActivityLocationHierarchy(location, { includeHostClub: false })).toBe(
-      "SV Sissach · Sportzentrum Tannenbrunn, Sissach · Kunstrasen 2",
+      `${AWAY_SISSACH_LOCATION_LINE} · Kunstrasen 2`,
     );
   });
 
@@ -158,11 +178,9 @@ describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () =>
     const location = buildMatchSportingActivityLocation({
       homeAway: "AWAY",
       homeSideDisplayName: "SV Sissach",
-      venueName: "Sportzentrum Tannenbrunn, Sissach",
+      venueName: SFV_SISSACH_VENUE,
     });
-    expect(formatSceActivityLocationHierarchy(location)).toBe(
-      "SV Sissach · Sportzentrum Tannenbrunn, Sissach",
-    );
+    expect(formatSceActivityLocationHierarchy(location)).toBe(AWAY_SISSACH_LOCATION_LINE);
     expect(formatSceActivityLocationHierarchy(location)).not.toContain(" ·  · ");
   });
 
@@ -191,7 +209,7 @@ describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () =>
     });
     expect(model.result?.displayLabel).toBeTruthy();
     expect(formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })).toBe(
-      "SV Sissach · Sportzentrum Tannenbrunn, Sissach",
+      AWAY_SISSACH_LOCATION_LINE,
     );
   });
 
@@ -200,7 +218,7 @@ describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () =>
       match: createAwaySissachMatch(),
       tenantClubName: "FC Allschwil",
     });
-    const expected = "SV Sissach · Sportzentrum Tannenbrunn, Sissach";
+    const expected = AWAY_SISSACH_LOCATION_LINE;
     const densities: SceActivityPresentationDensity[] = ["HERO", "STANDARD", "COMPACT", "MICRO"];
     for (const density of densities) {
       if (!isSceActivityDimensionVisible(density, "location")) continue;
@@ -285,7 +303,7 @@ describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () =>
       teamName: "Juniorinnen FF-14",
       opponentName: "SV Sissach",
       homeAway: "AWAY",
-      location: "Sportzentrum Tannenbrunn, Sissach",
+      location: "Sportzentrum Tannenbrunn, Sissach - 2",
       pitchCode: "KUNSTRASEN_2",
       pitchLabel: "Kunstrasen 2",
       startAt: new Date("2026-10-13T14:00:00.000Z"),
@@ -293,7 +311,7 @@ describe("SCE-UI-ROLLOUT-01D-R10B — canonical Match location integrity", () =>
     });
     expect(formatSportingActivityLocationLines(presentation.location)).toEqual([
       "SV Sissach",
-      "Sportzentrum Tannenbrunn, Sissach",
+      SFV_SISSACH_VENUE,
     ]);
   });
 });
