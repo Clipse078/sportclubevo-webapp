@@ -1,11 +1,18 @@
 import { buildClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import { buildSportingActivityLocation } from "@/lib/sporting-activity-presentation/location";
+import {
+  SCE_CANONICAL_EXTERNAL_ORGANISER_CREST_URL,
+  SCE_CANONICAL_TENANT_ORGANISER_CREST_URL,
+  SCE_TOURNAMENT_FIXTURE_CREST_URLS,
+} from "@/lib/sporting-activity-presentation/canonical/__fixtures__/sce-tournament-organiser-crest-fixtures";
 import { buildSceActivityRoute } from "@/lib/sporting-activity-presentation/canonical/route";
 import { buildSceActivityPresentationStatus } from "@/lib/sporting-activity-presentation/canonical/status";
 import type { SceTournamentPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 
-const TENANT_CREST = "https://cdn.example.com/fca-tenant-crest.png";
-const EXTERNAL_CREST = "https://cdn.example.com/arisdorf.png";
+export { SCE_TOURNAMENT_FIXTURE_CREST_URLS };
+
+const TENANT_CREST = SCE_CANONICAL_TENANT_ORGANISER_CREST_URL;
+const EXTERNAL_CREST = SCE_CANONICAL_EXTERNAL_ORGANISER_CREST_URL;
 
 export function createSceTournamentCardFixture(
   overrides: Partial<SceTournamentPresentationModel> = {},
@@ -60,8 +67,8 @@ export function createSceTournamentTenantOrganiserFixture(): SceTournamentPresen
 export function createSceTournamentExternalOrganiserFixture(): SceTournamentPresentationModel {
   return createSceTournamentCardFixture({
     organiser: buildClubIdentity({
-      id: "club-external-arisdorf",
-      displayName: "FC Arisdorf",
+      id: "club-external-aesch",
+      displayName: "FC Aesch",
       logoUrl: EXTERNAL_CREST,
     }),
   });
@@ -77,7 +84,3 @@ export function createSceTournamentOrganiserFallbackFixture(): SceTournamentPres
   });
 }
 
-export const SCE_TOURNAMENT_FIXTURE_CREST_URLS = {
-  tenant: TENANT_CREST,
-  external: EXTERNAL_CREST,
-} as const;

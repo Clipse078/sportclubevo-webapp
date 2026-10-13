@@ -8,6 +8,9 @@ import { render, screen, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { SceTournamentCard } from "../SceTournamentCard";
+import { SceTournamentCardPreviewGallery } from "../SceTournamentCardPreviewGallery";
+import { WeekplannerTournamentIdentityCard } from "@/components/admin/planner/WeekplannerTournamentIdentityCard";
+import { createSceWeekplannerTournamentTenantPreviewItem } from "@/lib/sporting-activity-presentation/canonical/__fixtures__/sce-weekplanner-tournament-preview-fixtures";
 import {
   createSceTournamentCardFixture,
   createSceTournamentExternalOrganiserFixture,
@@ -216,5 +219,37 @@ describe("SCE-UI-ROLLOUT-01F-R1 — SceTournamentCard", () => {
   it("uses ActivityTypePill for tournament semantic accent", () => {
     renderCard(undefined, "STANDARD");
     expect(document.querySelector('[data-activity-type-pill="tournament-orange"]')).toBeTruthy();
+  });
+
+  it("preview gallery distinguishes tenant crest, external crest, and fallback", () => {
+    render(<SceTournamentCardPreviewGallery />);
+    const tenantSection = screen.getByTestId("sce-tournament-preview-tenant-real-crest");
+    const externalSection = screen.getByTestId("sce-tournament-preview-external-real-crest");
+    const fallbackSection = screen.getByTestId("sce-tournament-preview-no-crest-fallback");
+
+    expect(
+      within(tenantSection).getAllByTestId("club-crest-image").length,
+    ).toBeGreaterThan(0);
+    expect(within(externalSection).getByTestId("club-crest-image")).toHaveAttribute(
+      "src",
+      SCE_TOURNAMENT_FIXTURE_CREST_URLS.external,
+    );
+    expect(within(fallbackSection).getByTestId("club-crest-fallback-initials")).toBeTruthy();
+    expect(within(fallbackSection).queryByTestId("club-crest-image")).toBeNull();
+  });
+
+  it("weekplanner COMPACT shows tenant organiser crest via canonical adapter", () => {
+    render(
+      <WeekplannerTournamentIdentityCard
+        item={createSceWeekplannerTournamentTenantPreviewItem()}
+        timezone="Europe/Zurich"
+        density="COMPACT"
+      />,
+    );
+    const crest = screen.getByTestId("sce-tournament-organiser-crest");
+    expect(within(crest).getByTestId("club-crest-image")).toHaveAttribute(
+      "src",
+      SCE_TOURNAMENT_FIXTURE_CREST_URLS.tenant,
+    );
   });
 });

@@ -74,11 +74,11 @@ describe("SCE-UI-ROLLOUT-01F — architecture guardrails", () => {
     const model = resolveSceTournamentPresentationFromWeekplannerTournament({
       ...item,
       organizerName: "FC Allschwil",
-      organizerLogoUrl: "https://cdn.example.com/fca-crest.png",
+      organizerLogoUrl: "/images/logos/fc-allschwil.png",
     });
     expect(model.kind).toBe("TOURNAMENT");
     expect(model.organiser.displayName).toBe("FC Allschwil");
-    expect(model.organiser.logoUrl).toBe("https://cdn.example.com/fca-crest.png");
+    expect(model.organiser.logoUrl).toBe("/images/logos/fc-allschwil.png");
     expect(model.hauptteam?.name).toBe("Junioren F2");
     expect(formatSceActivityLocationHierarchy(
       { ...model.location, hostOrOrganiser: undefined },
@@ -103,7 +103,16 @@ describe("SCE-UI-ROLLOUT-01F — architecture guardrails", () => {
       join(repoRoot, "app/sce-preview/weekplanner-tournament/page.tsx"),
       "utf8",
     );
-    expect(preview).toContain("organizerLogoUrl");
+    const fixture = readFileSync(
+      join(
+        repoRoot,
+        "lib/sporting-activity-presentation/canonical/__fixtures__/sce-weekplanner-tournament-preview-fixtures.ts",
+      ),
+      "utf8",
+    );
+    expect(preview).toContain("createSceWeekplannerTournamentTenantPreviewItem");
+    expect(fixture).toContain("organizerLogoUrl");
+    expect(fixture).toContain("SCE_CANONICAL_TENANT_ORGANISER_CREST_URL");
     expect(preview).not.toContain("tenantLogoUrl");
   });
 

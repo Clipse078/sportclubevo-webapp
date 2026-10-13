@@ -2,48 +2,9 @@
 
 import { ScePreviewPitchCanvas } from "@/components/sce/preview/ScePreviewPitchCanvas";
 import { WeekplannerTournamentIdentityCard } from "@/components/admin/planner/WeekplannerTournamentIdentityCard";
-import type { WeekplannerTournamentItem } from "@/lib/weekplanner/types";
+import { createSceWeekplannerTournamentTenantPreviewItem } from "@/lib/sporting-activity-presentation/canonical/__fixtures__/sce-weekplanner-tournament-preview-fixtures";
 
-const PREVIEW_TOURNAMENT: WeekplannerTournamentItem = {
-  id: "preview-wp-tournament",
-  tenantId: "preview-tenant",
-  type: "TOURNAMENT",
-  startAt: new Date("2026-10-10T07:30:00.000Z"),
-  endAt: new Date("2026-10-10T09:30:00.000Z"),
-  canonicalStartAt: new Date("2026-10-10T07:30:00.000Z"),
-  canonicalEndAt: new Date("2026-10-10T09:30:00.000Z"),
-  timeOverridden: false,
-  title: "Junioren F Turnier",
-  organizerName: "FC Allschwil",
-  organizerLogoUrl: "https://cdn.example.com/fca-preview-crest.png",
-  teamNames: ["Junioren F2"],
-  pitchAllocations: [
-    {
-      facilityResourceId: "r-preview",
-      facilityId: "f-preview",
-      code: "P1",
-      name: "Platz 1",
-      facilityName: "Gemeindesportplatz",
-      occupancyBeforeMinutes: 0,
-      occupancyAfterMinutes: 0,
-    },
-  ],
-  dressingRoomAllocations: [],
-  canonicalPitchAllocations: [],
-  canonicalDressingRoomAllocations: [],
-  pitchOverridden: false,
-  dressingRoomOverridden: false,
-  conflicts: [],
-  dressingRoomOccupancyMode: "DEFAULT",
-  dressingRoomOccupancyBeforeMinutes: null,
-  dressingRoomOccupancyAfterMinutes: null,
-  dressingRoomResolvedBeforeMinutes: 0,
-  dressingRoomResolvedAfterMinutes: 0,
-  eventId: "tournament-preview",
-  homeAway: "HOME",
-  teamSeasonIds: ["ts-preview"],
-  participantAllocations: [],
-};
+const PREVIEW_TOURNAMENT = createSceWeekplannerTournamentTenantPreviewItem();
 
 export default function SceWeekplannerTournamentPreviewPage() {
   return (

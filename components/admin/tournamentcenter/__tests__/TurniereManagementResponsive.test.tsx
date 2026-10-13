@@ -23,10 +23,13 @@ describe("TURNIERE-UX-01 — responsive composition contract", () => {
     expect(workspace).toContain('data-testid="turniere-management-rail"');
   });
 
-  it("tournament rows use intermediate layout before wide desktop grid", () => {
+  it("tournament rows use tablet intermediate layout and xl desktop four-zone grid", () => {
     const row = readSource("components/admin/tournamentcenter/TurniereManagementRow.tsx");
+    const layout = readSource("components/admin/tournamentcenter/turniere-management-layout.ts");
     expect(row).toContain("TURNIERE_ROW_INTERMEDIATE_GRID");
-    expect(row).toContain("TURNIERE_ROW_WIDE_GRID");
+    expect(row).toContain("TURNIERE_ROW_DESKTOP_GRID");
+    expect(layout).toContain("xl:grid-cols-[4.75rem_minmax(18rem,1fr)_minmax(15rem,22rem)_2.5rem]");
+    expect(layout).not.toContain("min-[105rem]:col-start-3");
   });
 
   it("right rail components remain mounted in workspace", () => {

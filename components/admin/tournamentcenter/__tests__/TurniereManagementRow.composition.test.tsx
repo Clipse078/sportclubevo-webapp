@@ -2,11 +2,14 @@
  * @vitest-environment jsdom
  */
 
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import TurniereManagementRow from "../TurniereManagementRow";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import { assessTournamentOperationalState } from "@/lib/tournaments/operational-state";
+import { SCE_CANONICAL_TENANT_ORGANISER_CREST_URL } from "@/lib/sporting-activity-presentation/canonical/__fixtures__/sce-tournament-organiser-crest-fixtures";
 
 function baseTournament(overrides: Partial<TournamentDto> = {}): TournamentDto {
   return {
@@ -14,7 +17,7 @@ function baseTournament(overrides: Partial<TournamentDto> = {}): TournamentDto {
     tenantId: "tenant-1",
     title: "PlayMore Turnier",
     organizerName: "FC Allschwil",
-    organizerLogoUrl: "https://cdn.example.com/fca.png",
+    organizerLogoUrl: SCE_CANONICAL_TENANT_ORGANISER_CREST_URL,
     location: "Im Brüel",
     homeAway: "HOME",
     status: "SCHEDULED",
@@ -106,5 +109,22 @@ describe("TurniereManagementRow — SCE-UI-ROLLOUT-01F-R2 list-row composition",
 
     const scheduleInCard = within(card).queryByTestId("sce-tournament-compact-date");
     expect(scheduleInCard).toBeNull();
+
+    const crest = within(card).getByTestId("sce-tournament-organiser-crest");
+    expect(within(crest).getByTestId("club-crest-image")).toHaveAttribute(
+      "src",
+      SCE_CANONICAL_TENANT_ORGANISER_CREST_URL,
+    );
+  });
+
+  it("uses xl desktop grid (not ultra-wide 105rem) for four-zone row composition", () => {
+    const layout = readFileSync(
+      resolve(__dirname, "../turniere-management-layout.ts"),
+      "utf8",
+    );
+    expect(layout).toContain("xl:grid-cols-[4.75rem_minmax(18rem,1fr)_minmax(15rem,22rem)_2.5rem]");
+    expect(layout).toContain("xl:col-start-3");
+    expect(layout).not.toContain("min-[105rem]:col-start-3");
+    expect(layout).toContain("TURNIERE_ROW_DESKTOP_BREAKPOINT");
   });
 });

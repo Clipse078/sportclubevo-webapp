@@ -2,12 +2,18 @@ import { describe, expect, it } from "vitest";
 import { resolveSceTournamentPresentation } from "../adapters/tournament";
 import { resolveSceTournamentPresentationFromWeekplannerTournament } from "../adapters/weekplanner-tournament";
 import { buildTournamentOrganiserClubIdentity } from "@/lib/sporting-activity-design/tournament-organiser-identity";
+import {
+  SCE_CANONICAL_EXTERNAL_ORGANISER_CREST_URL,
+  SCE_CANONICAL_TENANT_ORGANISER_CREST_URL,
+} from "../__fixtures__/sce-tournament-organiser-crest-fixtures";
+import { createSceWeekplannerTournamentTenantPreviewItem } from "../__fixtures__/sce-weekplanner-tournament-preview-fixtures";
+import { createSceTournamentTenantOrganiserFixture } from "@/components/sporting-activity/__fixtures__/sce-tournament-card-fixtures";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { WeekplannerTournamentItem } from "@/lib/weekplanner/types";
 
 const ORGANISER = {
   organizerName: "FC Allschwil",
-  organizerLogoUrl: "https://cdn.example.com/fca-crest.png",
+  organizerLogoUrl: SCE_CANONICAL_TENANT_ORGANISER_CREST_URL,
   organizerExternalClubId: null as string | null,
 };
 
@@ -98,8 +104,17 @@ describe("SCE-UI-ROLLOUT-01F-R2 — canonical tournament organiser crest pipelin
     expect(direct.logoUrl).toBe(ORGANISER.organizerLogoUrl);
   });
 
+  it("preview weekplanner fixture resolves same tenant crest as tournament-card fixture", () => {
+    const cardModel = createSceTournamentTenantOrganiserFixture();
+    const wpModel = resolveSceTournamentPresentationFromWeekplannerTournament(
+      createSceWeekplannerTournamentTenantPreviewItem(),
+    );
+    expect(wpModel.organiser.logoUrl).toBe(cardModel.organiser.logoUrl);
+    expect(wpModel.organiser.logoUrl).toBe(SCE_CANONICAL_TENANT_ORGANISER_CREST_URL);
+  });
+
   it("external organiser uses domain organizerLogoUrl without tenant crest bypass", () => {
-    const externalLogo = "https://cdn.example.com/external.png";
+    const externalLogo = SCE_CANONICAL_EXTERNAL_ORGANISER_CREST_URL;
     const dto = tournamentDto({
       organizerName: "FC Arisdorf",
       organizerLogoUrl: externalLogo,

@@ -26,9 +26,9 @@ export function SceTournamentCardPreviewGallery() {
         for PO R1 visual UAT.
       </p>
 
-      <section className="space-y-4">
+      <section className="space-y-4" data-testid="sce-tournament-preview-tenant-real-crest">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Tenant organiser + real crest (PlayMore)
+          TENANT ORGANISER — REAL CREST
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {DENSITIES.map((density) => (
@@ -43,24 +43,28 @@ export function SceTournamentCardPreviewGallery() {
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4" data-testid="sce-tournament-preview-external-real-crest">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
-          External organiser + crest · fallback organiser
+          EXTERNAL ORGANISER — REAL CREST
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SceTournamentCard
-            model={externalFixture}
-            density="STANDARD"
-            fmtCfg={FMT}
-            linkToDetail={false}
-          />
-          <SceTournamentCard
-            model={fallbackFixture}
-            density="STANDARD"
-            fmtCfg={FMT}
-            linkToDetail={false}
-          />
-        </div>
+        <SceTournamentCard
+          model={externalFixture}
+          density="STANDARD"
+          fmtCfg={FMT}
+          linkToDetail={false}
+        />
+      </section>
+
+      <section className="space-y-4" data-testid="sce-tournament-preview-no-crest-fallback">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+          NO CREST — FALLBACK
+        </h2>
+        <SceTournamentCard
+          model={fallbackFixture}
+          density="STANDARD"
+          fmtCfg={FMT}
+          linkToDetail={false}
+        />
       </section>
 
       <section className="space-y-4">

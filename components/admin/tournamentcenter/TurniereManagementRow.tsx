@@ -27,7 +27,7 @@ import {
   TURNIERE_ROW_DATE_CELL,
   TURNIERE_ROW_IDENTITY_CELL,
   TURNIERE_ROW_INTERMEDIATE_GRID,
-  TURNIERE_ROW_WIDE_GRID,
+  TURNIERE_ROW_DESKTOP_GRID,
 } from "./turniere-management-layout";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { cn } from "@/lib/cn";
@@ -194,7 +194,7 @@ export default function TurniereManagementRow({
       className={cn(
         "relative grid gap-3 border-b border-[var(--border)]/60 px-4 py-3 transition last:border-b-0 hover:bg-[var(--surface-2)]/40",
         TURNIERE_ROW_INTERMEDIATE_GRID,
-        TURNIERE_ROW_WIDE_GRID,
+        TURNIERE_ROW_DESKTOP_GRID,
         compact && "py-2",
       )}
     >
