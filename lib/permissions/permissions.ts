@@ -88,6 +88,8 @@ export const PERMISSIONS = {
   EVENTS_DELETE: "events.delete",
   /** SCE-ACTIVITY-CREATE-01C — approve Club Event submissions (independent from create). */
   ACTIVITIES_CLUB_EVENT_APPROVE: "activities.club_event.approve",
+  /** SCE-ACTIVITY-CREATE-01D — approve Training submissions (independent from create). */
+  ACTIVITIES_TRAINING_APPROVE: "activities.training.approve",
   // ADMIN-DELETE-02A: canonical permanent-deletion permissions for the
   // MatchCenter/TournamentCenter modules, following the "<module>.delete"
   // convention established by TEAMS_DELETE (ADMIN-DELETE-01A/01B). Both

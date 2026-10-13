@@ -80,7 +80,7 @@ export async function getTeamTrainingSchedule(
   },
 ): Promise<TeamTrainingScheduleEntry[]> {
   const [seriesList, teamSeasonRow] = await Promise.all([
-    listTrainingSeries(tenantId, { teamSeasonId }),
+    listTrainingSeries(tenantId, { teamSeasonId, publishedProgrammeOnly: true }),
     prisma.teamSeason.findFirst({
       where: { id: teamSeasonId, team: { tenantId } },
       select: {

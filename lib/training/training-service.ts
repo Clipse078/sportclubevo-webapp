@@ -485,6 +485,7 @@ export async function listTrainingSeries(
     teamSeasonId: filter.teamSeasonId,
     status: filter.status,
     includeArchived: filter.includeArchived,
+    publishedProgrammeOnly: filter.publishedProgrammeOnly,
   });
   return rows.map(toDto);
 }

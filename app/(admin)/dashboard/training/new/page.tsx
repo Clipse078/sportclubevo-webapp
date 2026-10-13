@@ -1,32 +1,41 @@
 import { notFound } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { findTeamSeasonsForTenant } from "@/lib/training/queries";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import TrainingSeriesCreateForm from "@/components/admin/training/TrainingSeriesCreateForm";
+import TrainingCreateForm from "@/components/admin/training/TrainingCreateForm";
 import TrainingRecordWorkspaceShell from "@/components/admin/training/record/TrainingRecordWorkspaceShell";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import type { BreadcrumbItem } from "@/components/ui/page";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { loadTrainingEffectiveGovernanceForSession } from "@/lib/training/composer/load-effective-governance-server";
+import { getTrainingComposerDraftForCreatorResume } from "@/lib/training/composer/training-composer-draft-access.server";
+import type { TrainingComposerDraftPayload } from "@/lib/training/composer/training-composer-draft-types";
+import { resolvePersonIdForUser } from "@/lib/sce/activity-governance/persistence/resolve-person-id";
+import { auth } from "@/auth";
+import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
-export default async function NewTrainingSeriesPage() {
+type SearchParams = Promise<{ draftId?: string }>;
+
+export default async function NewTrainingSeriesPage({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_MANAGE,
     PERMISSIONS.TRAININGS_VIEW,
   ]);
 
-  const tenantId = session.user?.activeTenantId;
-  if (!tenantId) notFound();
+  const tenantContext = await getActiveTenant();
+  if (!tenantContext) notFound();
 
+  const tenantId = tenantContext.id;
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   if (!userId) notFound();
-
-  const canValidateDirectly = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
-  const canManageFacilities = hasPermission(session, PERMISSIONS.FACILITIES_MANAGE);
-  const canEditTeamPublication = hasPermission(session, PERMISSIONS.TEAMS_MANAGE);
 
   const policy = createPlanningAuthorizationPolicy(prisma);
 
@@ -68,6 +77,50 @@ export default async function NewTrainingSeriesPage() {
   const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
+  const effectiveGovernance = await loadTrainingEffectiveGovernanceForSession({ tenantId });
+
+  const params = (await searchParams) ?? {};
+  const draftId = params.draftId?.trim() || null;
+  let reviewerComment: string | null = null;
+  let initialResumeDraft: { draftId: string; payload: TrainingComposerDraftPayload } | null = null;
+
+  if (draftId) {
+    const authSession = await auth();
+    const personId =
+      authSession?.user?.id != null
+        ? await resolvePersonIdForUser(tenantId, authSession.user.id)
+        : null;
+    if (!personId) {
+      notFound();
+    }
+    const draft = await getTrainingComposerDraftForCreatorResume({
+      tenantId,
+      draftId,
+      creatorPersonId: personId,
+    });
+    if (!draft) {
+      notFound();
+    }
+    initialResumeDraft = { draftId: draft.id, payload: draft.payload };
+    if (draft.lifecycleState === "CHANGES_REQUESTED") {
+      const revision = await prisma.sceActivityGovernanceRevision.findFirst({
+        where: {
+          tenantId,
+          trainingDraftId: draft.id,
+          isCurrentSubmission: true,
+        },
+        include: {
+          decisions: {
+            where: { decision: "REQUEST_CHANGES" },
+            orderBy: { decidedAt: "desc" },
+            take: 1,
+          },
+        },
+      });
+      reviewerComment = revision?.decisions[0]?.comment?.trim() ?? null;
+    }
+  }
+
   const breadcrumbs: BreadcrumbItem[] = [
     { label: "Planung", href: "/dashboard/planner" },
     { label: "Trainings", href: "/dashboard/training" },
@@ -78,19 +131,15 @@ export default async function NewTrainingSeriesPage() {
     <div className="space-y-1 pt-1">
       <p className="text-xs font-medium text-[var(--text-2)]">Neue Trainingsserie</p>
       <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-        Training erstellen
+        {initialResumeDraft ? "Training-Entwurf fortsetzen" : "Training erstellen"}
       </h1>
-      <p className="text-sm text-[var(--text-2)]">Team, Termin und Ressourcen für die neue Serie erfassen.</p>
+      <p className="text-sm text-[var(--text-2)]">Team, Termin, Wiederholung und Ressourcen im Composer erfassen.</p>
     </div>
   );
 
   return (
-    <TrainingRecordWorkspaceShell
-      breadcrumbs={breadcrumbs}
-      header={header}
-      testId="training-create-page"
-    >
-      <TrainingSeriesCreateForm
+    <TrainingRecordWorkspaceShell breadcrumbs={breadcrumbs} header={header} testId="training-create-page">
+      <TrainingCreateForm
         teamSeasons={filteredTeamSeasons.map((ts) => ({
           id: ts.id,
           teamId: ts.teamId,
@@ -101,10 +150,21 @@ export default async function NewTrainingSeriesPage() {
         }))}
         pitchHallFacilityGroups={pitchHallFacilityGroups}
         dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-        canValidateDirectly={canValidateDirectly}
+        timeZone={tenantContext.timezone ?? "Europe/Zurich"}
         defaultTrainingDurationMinutes={defaultTrainingDurationMinutes}
-        canManageFacilities={canManageFacilities}
-        canEditTeamPublication={canEditTeamPublication}
+        initialDraftId={draftId}
+        initialResumeDraft={initialResumeDraft}
+        reviewerComment={reviewerComment}
+        effectiveGovernance={
+          effectiveGovernance ?? {
+            activityType: "TRAINING",
+            personId: "anonymous",
+            mayCreate: true,
+            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
+            approvalStrategy: "ANY_ONE",
+            validatorPersonIds: [],
+          }
+        }
       />
     </TrainingRecordWorkspaceShell>
   );

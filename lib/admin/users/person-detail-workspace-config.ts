@@ -46,7 +46,7 @@ export function buildPersonDetailTabNavigationConfig(input: {
   if (input.showClubEventGovernance) {
     tabs.push({
       key: "veranstaltungs-freigaben",
-      label: "Veranstaltungs-Freigaben",
+      label: "Aktivitäten & Freigaben",
       placement: "primary",
     });
   }

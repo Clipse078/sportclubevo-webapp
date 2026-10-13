@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { CalendarClock, CheckCircle2, Plus } from "lucide-react";
 import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
@@ -60,6 +61,7 @@ type Props = {
   teamHrefByValue: Record<string, string>;
   statusHrefByValue: Record<string, string>;
   resetFiltersHref: string;
+  createTrigger?: ReactNode;
 };
 
 const LIST_HEADER =
@@ -86,7 +88,8 @@ export default function TrainingManagementWorkspace({
   archivedCount,
   teamHrefByValue,
   statusHrefByValue,
-  resetFiltersHref }: Props) {
+  resetFiltersHref,
+  createTrigger }: Props) {
   void _isCoordinator;
   void _locale;
 
@@ -119,14 +122,16 @@ export default function TrainingManagementWorkspace({
               </Link>
             ) : null}
             {canCreate ? (
-              <Link
-                href="/dashboard/training/new"
-                className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-                data-testid="training-create-link"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Training erstellen
-              </Link>
+              createTrigger ?? (
+                <Link
+                  href="/dashboard/training/new"
+                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="training-create-link"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Training erstellen
+                </Link>
+              )
             ) : null}
           </>
         }

@@ -3,6 +3,9 @@
 /**
  * components/admin/training/TrainingSeriesCreateForm.tsx
  *
+ * @deprecated SCE-ACTIVITY-CREATE-01D — production create uses `TrainingCreateForm`
+ * with `SceActivityComposer`. Retained for legacy unit tests and reference only.
+ *
  * PLANNING-CREATION-UX-01B — guided TrainingCenter creation workflow.
  *
  * Replaces the generic TrainingSeriesForm (mode="create") on

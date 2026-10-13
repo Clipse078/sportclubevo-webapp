@@ -189,6 +189,8 @@ export interface ListTrainingSeriesFilter {
   status?: TrainingSeriesStatus;
   /** Include archived series in results. Defaults to false. */
   includeArchived?: boolean;
+  /** SCE-ACTIVITY-CREATE-01D — exclude non-published planning stages from programme surfaces. */
+  publishedProgrammeOnly?: boolean;
 }
 
 // TRAINING-PLANS-01 input shapes

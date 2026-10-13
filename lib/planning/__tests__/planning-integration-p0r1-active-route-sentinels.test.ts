@@ -22,7 +22,7 @@ const ROUTES: RouteContract[] = [
   {
     domain: "TRAINING_CREATE",
     routeFile: "app/(admin)/dashboard/training/new/page.tsx",
-    mustContain: ["TrainingRecordWorkspaceShell", "TrainingSeriesCreateForm"],
+    mustContain: ["TrainingRecordWorkspaceShell", "TrainingCreateForm"],
   },
   {
     domain: "TRAINING_SESSION_EDIT",
