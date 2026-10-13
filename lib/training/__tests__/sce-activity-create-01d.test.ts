@@ -97,6 +97,15 @@ describe("SCE-ACTIVITY-CREATE-01D — Training adoption", () => {
     expect(existsSync(join(root, "app/api/activity/route.ts"))).toBe(false);
   });
 
+  it("surfaces draft discovery on training management", () => {
+    expect(read("components/admin/training/TrainingComposerDraftList.tsx")).toContain(
+      "training-composer-draft-list",
+    );
+    expect(read("app/(admin)/dashboard/training/page.tsx")).toContain(
+      "listTrainingComposerDraftsForManagementView",
+    );
+  });
+
   it("persists training composer drafts via dedicated API", () => {
     expect(existsSync(join(root, "app/api/training/composer/drafts/route.ts"))).toBe(true);
     expect(read("prisma/migrations/20261013180000_sce_activity_create_01d_training/migration.sql")).toContain(

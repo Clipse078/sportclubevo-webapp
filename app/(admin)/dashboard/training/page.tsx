@@ -40,6 +40,7 @@ import { prisma } from "@/lib/db/prisma";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { loadTrainingEffectiveGovernanceForSession } from "@/lib/training/composer/load-effective-governance-server";
+import { listTrainingComposerDraftsForManagementView } from "@/lib/training/composer/list-composer-drafts-for-management-view";
 import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
 type TrainingPageSearchParams = {
@@ -194,6 +195,10 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     teamOptions.map((team) => team.id),
   );
 
+  const composerDrafts = canManage
+    ? await listTrainingComposerDraftsForManagementView(tenantContext.id)
+    : [];
+
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   let createTrigger = undefined;
   if (canCreate && userId) {
@@ -266,6 +271,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
   return (
     <div className="w-full">
       <TrainingManagementWorkspace
+        composerDrafts={composerDrafts}
         createTrigger={createTrigger}
         canCreate={canCreate}
         canManage={canManage}

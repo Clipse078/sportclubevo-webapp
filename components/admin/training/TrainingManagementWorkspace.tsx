@@ -16,6 +16,9 @@ import TrainingManagementPagination from "./TrainingManagementPagination";
 import TrainingSeriesManagementRow from "./TrainingSeriesManagementRow";
 import TrainingManagementFilterRail from "./TrainingManagementFilterRail";
 import TrainingManagementQuickAccess from "./TrainingManagementQuickAccess";
+import TrainingComposerDraftList, {
+  type TrainingComposerDraftListItem,
+} from "./TrainingComposerDraftList";
 import type { TrainingSeriesManagementRow as SeriesRow } from "@/lib/training/management-series-view";
 import type { TrainingSeriesManagementSort } from "@/lib/training/management-series-view";
 import { buildTrainingManagementPaginationNavigation } from "@/lib/training/management-pagination";
@@ -62,6 +65,7 @@ type Props = {
   statusHrefByValue: Record<string, string>;
   resetFiltersHref: string;
   createTrigger?: ReactNode;
+  composerDrafts?: TrainingComposerDraftListItem[];
 };
 
 const LIST_HEADER =
@@ -89,7 +93,8 @@ export default function TrainingManagementWorkspace({
   teamHrefByValue,
   statusHrefByValue,
   resetFiltersHref,
-  createTrigger }: Props) {
+  createTrigger,
+  composerDrafts = [] }: Props) {
   void _isCoordinator;
   void _locale;
 
@@ -136,6 +141,8 @@ export default function TrainingManagementWorkspace({
           </>
         }
       />
+
+      <TrainingComposerDraftList drafts={composerDrafts} />
 
       <PlanningManagementKpiCards
         testId="training-kpi-cards"
