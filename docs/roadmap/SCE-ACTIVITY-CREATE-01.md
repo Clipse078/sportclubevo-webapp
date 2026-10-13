@@ -4,10 +4,11 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **IMPLEMENTED_PENDING_PO_UAT** (PR **#840**, R7 final person workspace polish gate — awaiting PO UAT) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**, PO final visual UAT **PASS**) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
-| **Next slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption (**IMPLEMENTED_PENDING_PO_UAT**) |
+| **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
+| **Next slice** | **SCE-ACTIVITY-CREATE-01D** — Training domain adoption (**NOT_STARTED**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -40,7 +41,7 @@ Research and, **only if an architecture / feasibility gate passes**, establish o
 SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01A — Research & Architecture — CLOSED (CONDITIONAL_PASS_ACCEPTED)
   → SCE-ACTIVITY-CREATE-01B — Composer foundation + R1/R2/R3 — CLOSED
-  → SCE-ACTIVITY-CREATE-01C — Club Event reference adoption — IMPLEMENTED_PENDING_PO_UAT
+  → SCE-ACTIVITY-CREATE-01C — Club Event reference adoption — CLOSED (PR #840)
   → SCE-ACTIVITY-CREATE-01D–01G — Domain adoption & planning integration — NOT_STARTED
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
@@ -119,4 +120,77 @@ Deliverables: `SceActivityComposer` (overlay / page / fullscreen), `SceActivityC
 | **Governance deep link** | `?returnContext=club-event-governance&tab=veranstaltungs-freigaben` |
 | **Effektiver Zugriff** | Own tab **Zugriff**; progressive disclosure; provenance labels when resolver data supports it |
 | **Governance copy** | Distinguish form/domain validation from human Freigabe; zero-validator blocking preserved |
-| **Closure** | **01C not closed** until PO R7 UAT |
+| **Closure** | **01C CLOSED** — PO R7 UAT **PASS** (see closure section below) |
+
+---
+
+## SCE-ACTIVITY-CREATE-01C closure (PR **#840**)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **CLOSED** |
+| **Branch** | `cursor/sce-activity-create-01c-club-event-reference-adoption` |
+| **PR** | **#840** → `STAGE` |
+| **Feature HEAD (pre-merge)** | `af0453679a76c71632d3b242acd98339b6dd4b40` |
+| **STAGE baseline (merge-base)** | `1d63101e2492cf6586ebdf976d4c3b45460944dc` |
+| **STAGE drift at closure** | **None** — `origin/STAGE` unchanged from baseline |
+| **Reference implementation** | **Yes** — subsequent activity-creation adoption packages (01D–01G) follow this vertical slice |
+| **01D / 01H** | **NOT_STARTED** |
+
+### PO UAT (owner-owned — Cursor did not perform manual visual UAT)
+
+| Gate | Result |
+|------|--------|
+| **R3_DRAFT_UAT** | **PASS** |
+| **R4_ACCESS_UAT** | **PASS** |
+| **R5_GOVERNANCE_DISCOVERABILITY** | **PASS** |
+| **R6_PERSON_WORKSPACE** | **PASS** |
+| **R7_FINAL_VISUAL_UAT** | **PASS** |
+| **SCE-ACTIVITY-CREATE-01C** | **APPROVED_FOR_CLOSURE** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+### Architecture delivered
+
+| Area | Contract |
+|------|----------|
+| **Composer** | Club Event create/edit/resume on canonical **`SceActivityComposer`** (overlay from Veranstaltungen management + full-page `/dashboard/veranstaltungen/new`); shared tab bodies and footer actions |
+| **Tabs** | Übersicht · Gültigkeit · Termin · Ressourcen · Publikation |
+| **Draft lifecycle** | `ClubEventComposerDraft` persistence, draft list discovery, resume via `/new?draftId=` + GET draft API; tenant/creator scoping; non-published drafts excluded from public/programme surfaces |
+| **Audience** | Existing organisational audience model; **Composer-safe** embedded selector (no nested Sheet/modal focus traps inside composer) |
+| **Governance persistence** | Separates **creation authority**, **publication authority** (single-choice), **approval authority** (optional; central validator pool multi-select); `DIRECT_PUBLISH` default; zero-validator guard when approval required |
+| **Approval workflow** | DRAFT → SUBMITTED_FOR_APPROVAL → APPROVE / REQUEST_CHANGES / REJECT → PUBLISHED; server-side authorization (`activities.club_event.approve`, validator pool, no self-approval, tenant-scoped revisions) |
+| **Governance administration** | Veranstaltungen → Freigaben → Freigaben verwalten (People & Access governance context); Person Workspace **Veranstaltungs-Freigaben** tab when applicable; coherent `returnContext` back-navigation |
+| **Person Workspace** | Übersicht · Rollen & Funktionen · Bereiche & Zuständigkeiten · Veranstaltungs-Freigaben (when linked) · Zugriff; Quick View remains lighter (no governance editor duplication) |
+| **Approval inbox** | `/dashboard/veranstaltungen/freigaben` validator workspace |
+| **Visibility** | Only **PUBLISHED** Club Events enter published-facing queries; DRAFT / SUBMITTED_FOR_APPROVAL / CHANGES_REQUESTED / REJECTED excluded via `clubEventPublishedVisibilityWhere` |
+
+### Migrations (01C — do not rewrite)
+
+| Migration | Purpose |
+|-----------|---------|
+| `20261013143000_sce_activity_create_01c_club_event` | Composer drafts, governance policy/revision/validator pool, approve permission seed |
+| `20261013210000_sce_club_admin_club_event_approve_backfill` | Backfill `activities.club_event.approve` onto canonical Club Admin roles (permission availability — **not** automatic validator pool membership) |
+
+Predecessor audience/recurrence migrations from **SCE-CLUB-EVENT-AUDIENCE-01** remain authoritative: `20261013103000_sce_club_event_audience_01`, `20261013120000_sce_club_event_audience_01_r1`.
+
+### Design system & Toggle First
+
+| Check | Result |
+|-------|--------|
+| **SCE_DESIGN_SYSTEM_COMPLIANCE** | **PASS** |
+| **BINARY_CONTROL_COMPLIANCE** | **PASS** |
+| **NEW_BINARY_CHECKBOXES** | **0** |
+| **CANONICAL_TOGGLES_USED** | `SwitchToggle` |
+| **MULTI_SELECTION_PATTERN** | `SceChipMultiSelectorField` (validator pool, audience targets) |
+
+### Legacy / compatibility
+
+| Item | Disposition |
+|------|-------------|
+| `ClubEventCreateWorkflowShell` | **Retained** — `@deprecated`; not used by production create path (Composer tabs only) |
+| Other domains `/new` | **Unmigrated** — guardrails from 01B still apply until 01D–01F |
+
+### Automated validation (closure)
+
+Vitest: **26** files · **209** tests (01C R1–R7, governance, Freigaben routes, draft resume, audience, person workspace, context-tabs, visibility/policy) — **0 failures**. Prisma validate **PASS**. Production build **PASS** (TypeScript check requires elevated Node heap in CI-like environments).

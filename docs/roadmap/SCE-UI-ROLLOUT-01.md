@@ -142,7 +142,7 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **SCE-CLUB-EVENT-AUDIENCE-01** | **CLOSED** — [`SCE-CLUB-EVENT-AUDIENCE-01.md`](./SCE-CLUB-EVENT-AUDIENCE-01.md); PO UAT **PASS**; PR **#837** |
 | **SCE-ACTIVITY-CREATE-01A** | **CLOSED** — [`SCE-ACTIVITY-CREATE-01A.md`](./SCE-ACTIVITY-CREATE-01A.md); ADR-11 **ACCEPTED**; PR **#838** |
 | **SCE-ACTIVITY-CREATE-01B** | **CLOSED** — R1/R2/R3; PO visual UAT **PASS**; PR **#839** |
-| **SCE-ACTIVITY-CREATE-01C** | **NOT_STARTED** — Club Event reference adoption |
+| **SCE-ACTIVITY-CREATE-01C** | **CLOSED** — Club Event reference adoption; PO R7 UAT **PASS**; PR **#840** |
 | **SCE-ACTIVITY-CREATE-01D–01G** | **NOT_STARTED** |
 | **01H** | **NOT STARTED** |
 | **01I** | **NOT STARTED** |
@@ -161,8 +161,9 @@ Planning baseline only — **01A must gather repository evidence** before treati
 01G Club Event Card Family — CLOSED
   → SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED (R1 + R1.1)
   → SCE-ACTIVITY-CREATE-01A Unified Activity Creation — Research & Architecture — CLOSED
-  → SCE-ACTIVITY-CREATE-01B Activity Composer Foundation — NOT_STARTED
-  → SCE-ACTIVITY-CREATE-01C–01G Domain adoption & planning integration — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01B Activity Composer Foundation — CLOSED (PR #839)
+  → SCE-ACTIVITY-CREATE-01C Club Event reference adoption — CLOSED (PR #840)
+  → SCE-ACTIVITY-CREATE-01D–01G Domain adoption & planning integration — NOT_STARTED
   → 01H Core Planning Surfaces Adoption — NOT_STARTED
   → 01I Team Programme & Calendar Adoption — NOT_STARTED
   → 01J Dashboard + Mein Programm Adoption — NOT_STARTED

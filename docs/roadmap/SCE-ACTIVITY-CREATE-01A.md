@@ -8,7 +8,7 @@
 | **Architecture decision** | **APPROVED** (Option C — adaptive `SceActivityComposer`) |
 | **ADR-11** | **ACCEPTED** |
 | **ACTIVITY_COMPOSER_ARCHITECTURE_GATE** | **CONDITIONAL_PASS_ACCEPTED** |
-| **Next package** | [`SCE-ACTIVITY-CREATE-01C`](./SCE-ACTIVITY-CREATE-01.md) — Club Event Reference Adoption (**NOT_STARTED**; 01B **CLOSED** PR **#839**) |
+| **Next package** | **SCE-ACTIVITY-CREATE-01D** — Training domain adoption (**NOT_STARTED**; 01C **CLOSED** PR **#840**) |
 | **STAGE baseline** | `d61782b8c8f7d54f74746fa9bdb62ee71b789a9a` |
 | **Branch** | `cursor/sce-activity-create-01a-research-architecture` |
 | **Predecessor** | [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) **CLOSED** (PR #837 merged) |
