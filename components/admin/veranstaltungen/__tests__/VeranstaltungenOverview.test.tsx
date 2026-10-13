@@ -94,7 +94,7 @@ describe("VeranstaltungenOverview", () => {
     expect(screen.getByTestId("veranstaltungen-management-rail")).toBeInTheDocument();
     expect(screen.getByTestId("spiele-month-calendar")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-filter-rail")).toBeInTheDocument();
-    expect(screen.getByText("Planung")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-quick-access")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-create-link")).toBeInTheDocument();
   });
 });

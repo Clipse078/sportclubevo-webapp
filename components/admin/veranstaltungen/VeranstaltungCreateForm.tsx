@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -13,7 +13,6 @@ import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
-import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
@@ -33,6 +32,16 @@ import ClubEventOrganisationalAudienceEditor, {
   clubEventOrganisationalAudienceEditorToApiPayload,
   type ClubEventOrganisationalAudienceEditorValue,
 } from "./ClubEventOrganisationalAudienceEditor";
+import ClubEventCreateWorkflowShell from "./ClubEventCreateWorkflowShell";
+import VeranstaltungRecurrenceFields, {
+  recurrenceValuesToApiPayload,
+  type VeranstaltungRecurrenceFieldValues,
+} from "./VeranstaltungRecurrenceFields";
+import { buildContextTabHref } from "@/lib/context-tabs/url";
+import {
+  computeClubEventCreateTabErrors,
+  firstInvalidClubEventCreateTab,
+} from "@/lib/veranstaltungen/club-event-create-validation";
 
 type SeasonItem = {
   id: string;
@@ -99,6 +108,7 @@ export default function VeranstaltungCreateForm({
   timeZone = "Europe/Zurich",
 }: VeranstaltungCreateFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
   const tc = useTranslations("PlanningEditor.common");
@@ -137,8 +147,49 @@ export default function VeranstaltungCreateForm({
   const [otherDrafts, setOtherDrafts] = useState<ResourceDraftRow[]>([]);
   const [otherPickerOpen, setOtherPickerOpen] = useState(false);
 
+  const [recurrence, setRecurrence] = useState<VeranstaltungRecurrenceFieldValues>({
+    enabled: false,
+    frequency: "MONTHLY",
+    intervalCount: 1,
+    weekday: "TUESDAY",
+    monthlyPatternKind: "ORDINAL_WEEKDAY",
+    monthDay: 15,
+    monthOrdinal: "FIRST",
+    endMode: "AFTER_COUNT",
+    endDate: "",
+    occurrenceCount: 8,
+  });
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const tabErrors = useMemo(
+    () =>
+      submitAttempted
+        ? computeClubEventCreateTabErrors({
+            seasonId,
+            title,
+            schedule,
+            audience,
+            recurrenceEnabled: recurrence.enabled,
+            recurrenceEndDate: recurrence.endDate,
+            recurrenceOccurrenceCount: String(recurrence.occurrenceCount),
+            recurrenceEndMode: recurrence.endMode,
+          })
+        : {},
+    [
+      submitAttempted,
+      seasonId,
+      title,
+      schedule,
+      audience,
+      recurrence.enabled,
+      recurrence.endDate,
+      recurrence.occurrenceCount,
+      recurrence.endMode,
+    ],
+  );
 
   const scheduleInterval = useMemo(() => {
     if (!schedule.startDate) return null;
@@ -293,8 +344,33 @@ export default function VeranstaltungCreateForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSubmitAttempted(true);
+
+    const validationErrors = computeClubEventCreateTabErrors({
+      seasonId,
+      title,
+      schedule,
+      audience,
+      recurrenceEnabled: recurrence.enabled,
+      recurrenceEndDate: recurrence.endDate,
+      recurrenceOccurrenceCount: String(recurrence.occurrenceCount),
+      recurrenceEndMode: recurrence.endMode,
+    });
+    const invalidTab = firstInvalidClubEventCreateTab(validationErrors);
+    if (invalidTab) {
+      router.push(buildContextTabHref(pathname, invalidTab));
+      setError("Bitte prüfen Sie die markierten Bereiche.");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
+
+    const facilityResourceIds = [
+      pitchDraft?.facilityResourceId,
+      dressingDraft?.facilityResourceId,
+      ...otherDrafts.map((row) => row.facilityResourceId),
+    ].filter(Boolean);
 
     try {
       const res = await fetch("/api/events", {
@@ -320,30 +396,24 @@ export default function VeranstaltungCreateForm({
           trainingsplanVisible: false,
           teamPageVisible: false,
           audience: clubEventOrganisationalAudienceEditorToApiPayload(audience),
+          recurrence: recurrenceValuesToApiPayload(schedule, recurrence),
+          facilityResourceIds,
         }),
       });
 
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        field?: string;
+        eventIds?: string[];
+      } | null;
 
       if (!res.ok) {
         setError(data?.error ?? t("errors.createFailed"));
         return;
       }
 
-      const created = data as { eventIds?: string[] } | null;
-      const firstEventId = created?.eventIds?.[0];
+      const firstEventId = data?.eventIds?.[0];
       if (firstEventId) {
-        for (const draft of [pitchDraft, dressingDraft, ...otherDrafts].filter(Boolean)) {
-          const allocRes = await fetch(`/api/events/${firstEventId}/facility-allocations`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ facilityResourceId: draft!.facilityResourceId }),
-          });
-          if (!allocRes.ok) {
-            const allocData = (await allocRes.json().catch(() => null)) as { error?: string } | null;
-            throw new Error(allocData?.error ?? t("errors.createFailed"));
-          }
-        }
         router.push(`/dashboard/veranstaltungen/${firstEventId}/edit`);
       } else {
         router.push("/dashboard/veranstaltungen?submitted=1");
@@ -363,20 +433,9 @@ export default function VeranstaltungCreateForm({
         typeLabel="VERANSTALTUNG"
         title="Neue Veranstaltung"
       />
-      <PlanningEditorOperationalWorkspace
-        testId="veranstaltung-create-operational-workspace"
-        secondaryRail={
-          <PlanningPublicationPanel testId="veranstaltung-create-publication-panel">
-            <VeranstaltungAusspielungFields
-              values={ausspielung}
-              onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-              showHeading={false}
-              testIdPrefix="veranstaltung-create-publication"
-            />
-          </PlanningPublicationPanel>
-        }
-        primary={
-          <>
+      <ClubEventCreateWorkflowShell
+        tabErrors={tabErrors}
+        uebersicht={
       <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
@@ -443,17 +502,6 @@ export default function VeranstaltungCreateForm({
             </label>
 
             <label className="block space-y-2">
-              <span className="fca-label">{tf("location")}</span>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="fca-input h-8 text-sm"
-                placeholder={tf("locationPlaceholder")}
-              />
-            </label>
-
-            <label className="block space-y-2">
               <span className="fca-label">{tf("organizer")}</span>
               <input
                 type="text"
@@ -477,7 +525,8 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-
+        }
+        gueltigkeit={
       <PlanningEditorSection
         testId="veranstaltung-create-audience-section"
         ariaLabelledBy="veranstaltung-create-audience-heading"
@@ -487,22 +536,45 @@ export default function VeranstaltungCreateForm({
             id="veranstaltung-create-audience-heading"
             title="Gültigkeit"
           />
+          <p className="text-sm text-[var(--text-2)]">
+            Wählen Sie die Organisationseinheiten und Teams, für die diese Veranstaltung gilt.
+          </p>
           <ClubEventOrganisationalAudienceEditor
             initial={{ scope: "CLUB_WIDE", teamIds: [], orgUnitIds: [], targets: [] }}
             onChange={setAudience}
           />
         </div>
       </PlanningEditorSection>
-
+        }
+        termin={
       <PlanningEditorSection testId="veranstaltung-create-schedule-section" ariaLabelledBy="veranstaltung-create-schedule-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-schedule-heading" title={t("sections.schedule")} />
           <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
             <VeranstaltungScheduleFields values={schedule} onChange={handleScheduleChange} />
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">{tf("location")}</span>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="fca-input h-8 text-sm"
+                placeholder={tf("locationPlaceholder")}
+              />
+            </label>
+            <div className="md:col-span-2">
+              <VeranstaltungRecurrenceFields
+                schedule={schedule}
+                values={recurrence}
+                onChange={(patch) => setRecurrence((current) => ({ ...current, ...patch }))}
+                timeZone={timeZone ?? "Europe/Zurich"}
+              />
+            </div>
           </div>
         </div>
       </PlanningEditorSection>
-
+        }
+        ressourcen={
       <PlanningEditorSection
         testId="veranstaltung-create-resources-section"
         ariaLabelledBy="veranstaltung-create-resources-heading"
@@ -609,7 +681,16 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-          </>
+        }
+        publikation={
+          <PlanningPublicationPanel testId="veranstaltung-create-publication-panel">
+            <VeranstaltungAusspielungFields
+              values={ausspielung}
+              onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+              showHeading={false}
+              testIdPrefix="veranstaltung-create-publication"
+            />
+          </PlanningPublicationPanel>
         }
       />
 
@@ -643,7 +724,7 @@ export default function VeranstaltungCreateForm({
       <PlanningEditorActions testId="veranstaltung-create-actions">
         <button
           type="submit"
-          disabled={submitting || loadingSeasons || !seasonId || !schedule.startDate}
+          disabled={submitting || loadingSeasons}
           className="fca-button-primary"
           data-testid="veranstaltung-create-submit"
         >

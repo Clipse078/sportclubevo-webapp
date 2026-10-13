@@ -197,6 +197,25 @@ Future Club Event surfaces (**01H–01K**) must adopt `SceClubEventCard` — not
 
 ---
 
+## Club Event create/edit workflow (Audience-01 R1)
+
+| Item | Contract |
+|------|----------|
+| **Navigation** | Canonical `SceContextTabs` / `SceContextTabsBoundary` — **no** parallel form-tab or wizard stepper |
+| **Create route** | `/dashboard/veranstaltungen/new` with `?tab=` URL continuity (`uebersicht` · `gueltigkeit` · `termin` · `ressourcen` · `publikation`) |
+| **Edit route** | Activity detail tabs (`ClubEventActivityTabShell`) remain authoritative; **Übersicht** stacks Grunddaten · Gültigkeit · Termin sections; Ressourcen/Planung · Publikation/Mehr unchanged |
+| **Dirty guard** | `SceContextDirtyGuardProvider` on create + edit shells |
+| **Actions** | Persistent **Abbrechen** / **Veranstaltung erstellen** (or save) outside tab panels — not gated by active tab |
+| **Gültigkeit** | `ClubEventOrganisationalAudienceEditor` + `SceSegmentedControl` scope · `SceChipMultiSelectorField` targets — applicability wording, not marketing «Zielgruppe» |
+| **Termin** | `VeranstaltungScheduleFields` + canonical **Wiederholung** / **Ganztägig** switches (`SwitchThumb`) — no checkboxes |
+| **Recurrence UX** | Human-readable summary + bounded occurrence preview (German locale); no raw RRULE |
+| **Series model** | `ClubEventSeries` + materialized `Event` occurrences (`clubEventSeriesId` + `clubEventOccurrenceDateKey`); programme consumers read occurrences, not rules |
+| **Recurrence indicator** | Restrained «Wiederkehrend» on series members in edit context — same `SceClubEventCard` family, no new activity color |
+
+Automated guardrails: `lib/events/__tests__/club-event-recurrence.test.ts`, `lib/veranstaltungen/__tests__/club-event-create-workflow.test.ts`.
+
+---
+
 ## Activity card semantic color language (01D R10 / 01F / 01G)
 
 Shared **information hierarchy** for Match, Training, Tournament, and Club Event cards — one SCE semantic visual language. Cards stay domain-specific in layout and identity grammar; **color encodes meaning**, not decoration.

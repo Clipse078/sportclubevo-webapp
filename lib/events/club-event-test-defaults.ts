@@ -11,6 +11,8 @@ export function applyClubEventOrganisationalAudienceTestDefaults(
     ...event,
     clubEventOrganisationalScope:
       event.clubEventOrganisationalScope ?? organisationalAudience.scope,
+    clubEventSeriesId: event.clubEventSeriesId ?? null,
+    clubEventOccurrenceDateKey: event.clubEventOccurrenceDateKey ?? null,
     organisationalAudience,
   };
 }

@@ -23,7 +23,11 @@ import { TournamentValidationError } from "@/lib/tournaments/errors";
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import { resolveTournamentPublicationDefaultsForCreate } from "@/lib/publishing/policy/tournament-publication-defaults";
 import { parseClubEventOrganisationalAudienceFromApiBody } from "@/lib/events/club-event-organisational-audience-api";
-import { applyClubEventOrganisationalAudienceOnCreate } from "@/lib/events/club-events-service";
+import {
+  applyClubEventOrganisationalAudienceOnCreate,
+  ClubEventValidationError,
+} from "@/lib/events/club-events-service";
+import { createClubEventFromRequest } from "@/lib/events/club-event-create-service";
 
 const ALLOWED_TYPES = ["MATCH", "TOURNAMENT", "TRAINING", "OTHER"] as const;
 const ALLOWED_SOURCES = ["CLUBCORNER_FVNWS", "MANUAL", "CSV_EXCEL_IMPORT"] as const;
@@ -565,6 +569,113 @@ export async function POST(request: NextRequest) {
 
     const durationMs = endAt ? endAt.getTime() - startAt.getTime() : null;
     const meetingOffsetMs = meetingTime ? startAt.getTime() - meetingTime.getTime() : null;
+
+    if (type === "OTHER") {
+      try {
+        const facilityResourceIds = Array.isArray(body.facilityResourceIds)
+          ? body.facilityResourceIds.map((id: unknown) => String(id).trim()).filter(Boolean)
+          : [];
+
+        const clubCreateResult = await createClubEventFromRequest({
+          tenantId: actorTenantId,
+          actorUserId,
+          seasonId,
+          title,
+          description,
+          location,
+          organizerName,
+          remarks,
+          source: source as "MANUAL" | "CLUBCORNER_FVNWS" | "CSV_EXCEL_IMPORT",
+          status,
+          reviewStage: initialReviewStage,
+          reviewRequestedAt,
+          reviewedAt,
+          reviewedByUserId,
+          approvedByUserId,
+          websiteVisible,
+          infoboardVisible,
+          homepageVisible,
+          wochenplanVisible,
+          trainingsplanVisible,
+          teamPageVisible,
+          sortOrder,
+          audience: clubEventAudienceInput,
+          scheduleBody: {
+            allDay: Boolean(body.allDay),
+            startAt: startAtRaw,
+            endAt: endAtRaw,
+            startDate:
+              body.startDate === null || body.startDate === undefined
+                ? undefined
+                : String(body.startDate),
+            endDate:
+              body.endDate === null || body.endDate === undefined
+                ? undefined
+                : String(body.endDate),
+            startTime:
+              body.startTime === null || body.startTime === undefined
+                ? undefined
+                : String(body.startTime),
+            endTime:
+              body.endTime === null || body.endTime === undefined
+                ? undefined
+                : String(body.endTime),
+          },
+          recurrenceBody: body.recurrence,
+          facilityResourceIds,
+          timezone: tenantTimeZone,
+        });
+
+        const auditAction = eventReviewDecision.allowsDirectExecution
+          ? "CREATE_DIRECT"
+          : "SUBMIT_FOR_REVIEW";
+
+        for (const eventId of clubCreateResult.eventIds) {
+          await logAction({
+            actorUserId,
+            moduleKey: "events",
+            entityType: "Event",
+            entityId: eventId,
+            action: auditAction,
+            afterJson: {
+              seasonId,
+              type: "OTHER",
+              title,
+              seriesId: clubCreateResult.seriesId,
+              occurrenceCount: clubCreateResult.occurrenceCount,
+            },
+          });
+        }
+
+        const occurrenceCount = clubCreateResult.occurrenceCount;
+        const createdLabel =
+          occurrenceCount === 1 ? "Event" : `${occurrenceCount} Events`;
+        const message = eventReviewDecision.allowsDirectExecution
+          ? `${createdLabel} wurden direkt erstellt.`
+          : `${createdLabel} wurden zur Prüfung eingereicht.`;
+
+        return NextResponse.json(
+          {
+            message,
+            eventIds: clubCreateResult.eventIds,
+            seriesId: clubCreateResult.seriesId,
+            reviewStage: initialReviewStage,
+            occurrenceCount,
+            requiresReview: eventReviewDecision.requiresReview,
+            allowsDirectExecution: eventReviewDecision.allowsDirectExecution,
+          },
+          { status: 201 },
+        );
+      } catch (err) {
+        if (err instanceof ClubEventValidationError) {
+          return NextResponse.json(
+            { error: err.message, field: err.field },
+            { status: 400 },
+          );
+        }
+        throw err;
+      }
+    }
 
     const occurrenceStarts = isRecurring && recurrenceUntil
       ? buildRecurringDates(startAt, recurrenceUntil)

@@ -56,6 +56,7 @@ type VeranstaltungEditFormProps = {
     remarks: string | null;
     status: string;
     source: string;
+    clubEventSeriesId?: string | null;
     websiteVisible: boolean;
     infoboardVisible: boolean;
     homepageVisible: boolean;
@@ -297,6 +298,11 @@ export default function VeranstaltungEditForm({
         title={title.trim() || event.title}
         scheduleLine={timingSummary}
       />
+      {event.clubEventSeriesId ? (
+        <p className="text-sm text-[var(--text-2)]" data-testid="veranstaltung-edit-series-indicator">
+          Wiederkehrend · Teil einer Serienveranstaltung
+        </p>
+      ) : null}
       <ClubEventActivityTabShell
         isDirty={isDirty}
         uebersicht={
@@ -315,11 +321,6 @@ export default function VeranstaltungEditForm({
                     {tf("season")}: {event.season.name}
                   </p>
                 ) : null}
-                <ClubEventOrganisationalAudienceEditor
-                  initial={event.organisationalAudience}
-                  disabled={isReadonly}
-                  onChange={setAudience}
-                />
                 <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
                   <label className="block space-y-2 md:col-span-2">
                     <span className="fca-label">{tf("title")}</span>
@@ -333,29 +334,12 @@ export default function VeranstaltungEditForm({
                     />
                   </label>
 
-                  <VeranstaltungScheduleFields
-                    values={schedule}
-                    onChange={handleScheduleChange}
-                    disabled={isReadonly}
-                  />
-
                   <label className="block space-y-2 md:col-span-2">
                     <span className="fca-label">{tf("description")}</span>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="fca-textarea min-h-[96px] text-sm"
-                      disabled={isReadonly}
-                    />
-                  </label>
-
-                  <label className="block space-y-2">
-                    <span className="fca-label">{tf("location")}</span>
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="fca-input h-8 text-sm"
                       disabled={isReadonly}
                     />
                   </label>
@@ -382,6 +366,53 @@ export default function VeranstaltungEditForm({
                     />
                   </label>
                 </div>
+              </div>
+            </PlanningEditorSection>
+
+            <PlanningEditorSection
+              testId="veranstaltung-edit-gueltigkeit-section"
+              ariaLabelledBy="veranstaltung-edit-gueltigkeit-heading"
+            >
+              <div className="space-y-3">
+                <PlanningEditorSectionHeading
+                  id="veranstaltung-edit-gueltigkeit-heading"
+                  title="Gültigkeit"
+                />
+                <p className="text-sm text-[var(--text-2)]">
+                  Wählen Sie die Organisationseinheiten und Teams, für die diese Veranstaltung gilt.
+                </p>
+                <ClubEventOrganisationalAudienceEditor
+                  initial={event.organisationalAudience}
+                  disabled={isReadonly}
+                  onChange={setAudience}
+                />
+              </div>
+            </PlanningEditorSection>
+
+            <PlanningEditorSection
+              testId="veranstaltung-edit-termin-section"
+              ariaLabelledBy="veranstaltung-edit-termin-heading"
+            >
+              <div className="space-y-3">
+                <PlanningEditorSectionHeading
+                  id="veranstaltung-edit-termin-heading"
+                  title={t("sections.schedule")}
+                />
+                <VeranstaltungScheduleFields
+                  values={schedule}
+                  onChange={handleScheduleChange}
+                  disabled={isReadonly}
+                />
+                <label className="block space-y-2">
+                  <span className="fca-label">{tf("location")}</span>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="fca-input h-8 text-sm"
+                    disabled={isReadonly}
+                  />
+                </label>
               </div>
             </PlanningEditorSection>
           </div>

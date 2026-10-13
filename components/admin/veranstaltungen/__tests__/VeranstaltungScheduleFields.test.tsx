@@ -15,8 +15,11 @@ import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "@/components/admin/veranstaltungen/VeranstaltungScheduleFields";
 
+let mockSearchParams = "tab=termin";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/veranstaltungen/new",
+  useSearchParams: () => new URLSearchParams(mockSearchParams),
 }));
 
 vi.mock("@/lib/collaboration/client/use-collaboration-mutation", () => ({
@@ -142,13 +145,14 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
       }),
     }) as typeof fetch;
 
+    mockSearchParams = "";
     const { unmount: unmountCreate } = renderWithIntl(<VeranstaltungCreateForm />);
-    expect(await screen.findByRole("switch", { name: "Ganztägig" })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    );
+    expect(
+      await screen.findByRole("switch", { name: "Ganztägig", hidden: true }),
+    ).toHaveAttribute("aria-checked", "false");
     unmountCreate();
 
+    mockSearchParams = "tab=uebersicht";
     renderWithIntl(
       <VeranstaltungEditSubmitProvider>
       <VeranstaltungEditForm
@@ -172,6 +176,7 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
           trainingsplanVisible: false,
           teamPageVisible: false,
           season: { id: "season-1", key: "2026-27", name: "2026/27" },
+          organisationalAudience: { scope: "CLUB_WIDE", teamIds: [], orgUnitIds: [], targets: [] },
         }}
       />
       </VeranstaltungEditSubmitProvider>,
@@ -182,6 +187,6 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
       "true",
     );
     expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(0);
-    expect(screen.getAllByRole("switch")).toHaveLength(4);
+    expect(screen.getByRole("switch", { name: "Ganztägig" })).toBeInTheDocument();
   });
 });

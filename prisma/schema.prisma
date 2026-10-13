@@ -745,6 +745,40 @@ enum ClubEventOrganisationalScope {
   SELECTED_ORG_UNITS
 }
 
+/// SCE-CLUB-EVENT-AUDIENCE-01-R1 — club event recurrence frequency.
+enum ClubEventRecurrenceFrequency {
+  WEEKLY
+  MONTHLY
+}
+
+enum ClubEventMonthlyPatternKind {
+  DAY_OF_MONTH
+  ORDINAL_WEEKDAY
+}
+
+/// 1 = first … 4 = fourth; 5 = last weekday in month.
+enum ClubEventMonthOrdinal {
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+  LAST
+}
+
+enum ClubEventRecurrenceEndMode {
+  ON_DATE
+  AFTER_COUNT
+}
+
+enum ClubEventSeriesStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ClubEventSeriesOccurrenceExceptionKind {
+  CANCELLED
+}
+
 // TEAM-COCKPIT-02B — canonical per-event attendance status.
 // OPEN is the default until explicitly recorded. Attendance is never inferred
 // from event occurrence alone.
@@ -1176,6 +1210,10 @@ model Tenant {
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("TenantEventParticipationAudienceEntries")
   clubEventOrganisationalAudienceTeams    ClubEventOrganisationalAudienceTeam[]    @relation("TenantClubEventOrganisationalAudienceTeam")
   clubEventOrganisationalAudienceOrgUnits ClubEventOrganisationalAudienceOrgUnit[] @relation("TenantClubEventOrganisationalAudienceOrgUnit")
+  clubEventSeries                         ClubEventSeries[]                        @relation("TenantClubEventSeries")
+  clubEventSeriesOrganisationalAudienceTeams    ClubEventSeriesOrganisationalAudienceTeam[]    @relation("TenantClubEventSeriesOrganisationalAudienceTeam")
+  clubEventSeriesOrganisationalAudienceOrgUnits ClubEventSeriesOrganisationalAudienceOrgUnit[] @relation("TenantClubEventSeriesOrganisationalAudienceOrgUnit")
+  clubEventSeriesOccurrenceExceptions     ClubEventSeriesOccurrenceException[]     @relation("TenantClubEventSeriesOccurrenceException")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   notificationPushDeliveryAttempts   NotificationPushDeliveryAttempt[]
@@ -1853,6 +1891,7 @@ model Season {
 
   teamSeasons            TeamSeason[]
   events                 Event[]
+  clubEventSeries        ClubEventSeries[] @relation("ClubEventSeriesSeason")
   eventImportRuns        EventImportRun[]
   orgUnitMemberships     OrgUnitMembership[]
   trainingPlans          TrainingPlan[]
@@ -2300,6 +2339,7 @@ model Team {
   requirementDraftAudienceTeams RequirementDraftAudienceTeam[] @relation("RequirementDraftAudienceTeam")
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceTeam")
   clubEventOrganisationalAudienceTargets ClubEventOrganisationalAudienceTeam[] @relation("ClubEventOrganisationalAudienceTeam")
+  clubEventSeriesOrganisationalAudienceTargets ClubEventSeriesOrganisationalAudienceTeam[] @relation("ClubEventSeriesOrganisationalAudienceTeam")
   // TEAM-COCKPIT-PREMIUM-01J-A: team-bound private documents
   teamDocuments            TeamDocument[]          @relation("TeamDocuments")
   platformCommunicationConversations PlatformCommunicationConversation[]
@@ -2592,6 +2632,10 @@ model Event {
   allDay Boolean @default(false)
   /// SCE-CLUB-EVENT-AUDIENCE-01 — authoritative «Gültig für» scope for type=OTHER only.
   clubEventOrganisationalScope ClubEventOrganisationalScope @default(CLUB_WIDE)
+  /// SCE-CLUB-EVENT-AUDIENCE-01-R1 — recurring Veranstaltung series membership (type=OTHER).
+  clubEventSeriesId String?
+  /// Tenant-local occurrence date key (YYYY-MM-DD) — stable slot identity within a series.
+  clubEventOccurrenceDateKey String?
 
   externalSource   String?
   externalSourceId String?
@@ -2674,6 +2718,8 @@ model Event {
   // SCE-CLUB-EVENT-AUDIENCE-01: organisational scope targets (separate from participation)
   clubEventOrganisationalAudienceTeams    ClubEventOrganisationalAudienceTeam[]    @relation("ClubEventOrganisationalAudienceTeams")
   clubEventOrganisationalAudienceOrgUnits ClubEventOrganisationalAudienceOrgUnit[] @relation("ClubEventOrganisationalAudienceOrgUnits")
+  clubEventSeries                       ClubEventSeries?                       @relation("ClubEventSeriesOccurrences", fields: [clubEventSeriesId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  clubEventSeriesOccurrenceException    ClubEventSeriesOccurrenceException?    @relation("ClubEventSeriesOccurrenceExceptionEvent")
   platformCommunicationPollsCreated PlatformCommunicationPoll[] @relation("PollCreatedEvent")
   platformCommunicationRequestsLinked PlatformCommunicationRequest[] @relation("RequestLinkedEvent")
 
@@ -2696,6 +2742,8 @@ model Event {
   @@index([tenantId, participationReminder1At])
   @@index([tenantId, participationReminder2At])
   @@index([importBatchKey])
+  @@unique([clubEventSeriesId, clubEventOccurrenceDateKey])
+  @@index([clubEventSeriesId])
   @@index([pitchCode])
   @@index([opponentExternalClubId])
   @@index([tenantId, teamSeasonId, type, startAt])
@@ -3062,6 +3110,7 @@ model OrgUnit {
   requirementDraftAudienceOrgUnits RequirementDraftAudienceOrgUnit[] @relation("RequirementDraftAudienceOrgUnit")
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceOrgUnit")
   clubEventOrganisationalAudienceTargets ClubEventOrganisationalAudienceOrgUnit[] @relation("ClubEventOrganisationalAudienceOrgUnit")
+  clubEventSeriesOrganisationalAudienceTargets ClubEventSeriesOrganisationalAudienceOrgUnit[] @relation("ClubEventSeriesOrganisationalAudienceOrgUnit")
   // PERSONS-02: person assignment back-relation (dedicated model, not OrgUnitMembership)
   personAssignments  PersonAssignment[]  @relation("OrgUnitPersonAssignments")
   // REG-WAIT-01: waiting list entries scoped to this OrgUnit
@@ -9605,6 +9654,111 @@ model ClubEventOrganisationalAudienceOrgUnit {
   @@index([tenantId])
   @@index([tenantId, eventId])
   @@index([tenantId, orgUnitId])
+}
+
+// ---------------------------------------------------------------------------
+// SCE-CLUB-EVENT-AUDIENCE-01-R1 — recurring club event series (Event.type=OTHER)
+// ---------------------------------------------------------------------------
+
+model ClubEventSeries {
+  id        String               @id @default(cuid())
+  tenantId  String
+  seasonId  String?
+  status    ClubEventSeriesStatus @default(ACTIVE)
+  title     String
+  description String?
+  location  String?
+  organizerName String?
+  remarks   String?
+
+  frequency           ClubEventRecurrenceFrequency
+  intervalCount       Int                         @default(1)
+  weekday             Weekday?
+  monthlyPatternKind  ClubEventMonthlyPatternKind?
+  monthDay            Int?
+  monthOrdinal        ClubEventMonthOrdinal?
+  allDay              Boolean                     @default(false)
+  startsAtTime        String?
+  endsAtTime          String?
+  timezone            String
+  seriesStartDateKey  String
+  endMode             ClubEventRecurrenceEndMode
+  endDateKey          String?
+  occurrenceCountLimit Int?
+
+  websiteVisible    Boolean @default(true)
+  infoboardVisible  Boolean @default(false)
+  homepageVisible   Boolean @default(false)
+  wochenplanVisible Boolean @default(false)
+  trainingsplanVisible Boolean @default(false)
+  teamPageVisible   Boolean @default(false)
+
+  clubEventOrganisationalScope ClubEventOrganisationalScope @default(CLUB_WIDE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant     Tenant  @relation("TenantClubEventSeries", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  season     Season? @relation("ClubEventSeriesSeason", fields: [seasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  occurrences Event[] @relation("ClubEventSeriesOccurrences")
+  organisationalAudienceTeams    ClubEventSeriesOrganisationalAudienceTeam[]    @relation("ClubEventSeriesOrganisationalAudienceTeams")
+  organisationalAudienceOrgUnits ClubEventSeriesOrganisationalAudienceOrgUnit[] @relation("ClubEventSeriesOrganisationalAudienceOrgUnits")
+  occurrenceExceptions ClubEventSeriesOccurrenceException[] @relation("ClubEventSeriesOccurrenceExceptions")
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([seasonId])
+}
+
+model ClubEventSeriesOrganisationalAudienceTeam {
+  id        String   @id @default(cuid())
+  tenantId  String
+  seriesId  String
+  teamId    String
+  createdAt DateTime @default(now())
+
+  tenant Tenant          @relation("TenantClubEventSeriesOrganisationalAudienceTeam", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  series ClubEventSeries @relation("ClubEventSeriesOrganisationalAudienceTeams", fields: [seriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team   Team            @relation("ClubEventSeriesOrganisationalAudienceTeam", fields: [teamId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([seriesId, teamId])
+  @@index([tenantId])
+  @@index([tenantId, seriesId])
+}
+
+model ClubEventSeriesOrganisationalAudienceOrgUnit {
+  id        String   @id @default(cuid())
+  tenantId  String
+  seriesId  String
+  orgUnitId String
+  createdAt DateTime @default(now())
+
+  tenant  Tenant          @relation("TenantClubEventSeriesOrganisationalAudienceOrgUnit", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  series  ClubEventSeries @relation("ClubEventSeriesOrganisationalAudienceOrgUnits", fields: [seriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit OrgUnit         @relation("ClubEventSeriesOrganisationalAudienceOrgUnit", fields: [orgUnitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([seriesId, orgUnitId])
+  @@index([tenantId])
+  @@index([tenantId, seriesId])
+}
+
+model ClubEventSeriesOccurrenceException {
+  id             String                                 @id @default(cuid())
+  tenantId       String
+  seriesId       String
+  occurrenceDateKey String
+  kind           ClubEventSeriesOccurrenceExceptionKind
+  eventId        String?                                @unique
+  createdAt      DateTime                               @default(now())
+  updatedAt      DateTime                               @updatedAt
+
+  tenant Tenant          @relation("TenantClubEventSeriesOccurrenceException", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  series ClubEventSeries @relation("ClubEventSeriesOccurrenceExceptions", fields: [seriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event  Event?          @relation("ClubEventSeriesOccurrenceExceptionEvent", fields: [eventId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([seriesId, occurrenceDateKey])
+  @@index([tenantId])
+  @@index([tenantId, seriesId])
 }
 
 // ---------------------------------------------------------------------------

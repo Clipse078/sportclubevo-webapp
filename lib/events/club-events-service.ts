@@ -66,6 +66,8 @@ export type ClubEvent = {
     name: string;
   } | null;
   clubEventOrganisationalScope: "CLUB_WIDE" | "SELECTED_ORG_UNITS";
+  clubEventSeriesId: string | null;
+  clubEventOccurrenceDateKey: string | null;
   organisationalAudience: ClubEventOrganisationalAudienceDto;
 };
 
@@ -101,6 +103,8 @@ const CLUB_EVENT_SELECT = {
     },
   },
   clubEventOrganisationalScope: true,
+  clubEventSeriesId: true,
+  clubEventOccurrenceDateKey: true,
   clubEventOrganisationalAudienceTeams: {
     select: {
       teamId: true,
@@ -163,6 +167,8 @@ function mapClubEventRow(row: NonNullable<ClubEventRow>): ClubEvent {
     updatedAt: row.updatedAt,
     season: row.season,
     clubEventOrganisationalScope: scope,
+    clubEventSeriesId: row.clubEventSeriesId,
+    clubEventOccurrenceDateKey: row.clubEventOccurrenceDateKey,
     organisationalAudience: {
       scope,
       teamIds: row.clubEventOrganisationalAudienceTeams.map((t) => t.teamId),
