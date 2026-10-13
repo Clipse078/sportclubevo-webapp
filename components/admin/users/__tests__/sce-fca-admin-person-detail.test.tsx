@@ -46,6 +46,24 @@ describe("SCE-FCA Person Detail UX", () => {
     expect(screen.queryByText("planning.allocations.view")).toBeNull();
   });
 
+  it("collapsible effective access uses details for progressive disclosure", () => {
+    render(
+      <PersonNavEffectiveAccessView
+        collapsible
+        sections={[
+          {
+            label: "Tagesbetrieb",
+            modules: ["Wochenplaner"],
+            items: [{ label: "Wochenplaner", access: "Ansehen" }],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByTestId("person-effective-access")).toBeTruthy();
+    expect(document.querySelector("details")).toBeTruthy();
+  });
+
   it("pending invitation does not show Zugriff gesperrt in membership control", () => {
     render(
       <MembershipAccessControl

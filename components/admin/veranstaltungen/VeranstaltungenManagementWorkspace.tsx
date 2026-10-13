@@ -6,6 +6,12 @@ import {
 } from "@/components/icons/domain-sce-icon-components";
 import { CalendarClock, MapPin, Plus } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
+import VeranstaltungenComposerCreateTrigger from "./VeranstaltungenComposerCreateTrigger";
+import ClubEventComposerDraftList, {
+  type ClubEventComposerDraftListItem,
+} from "./ClubEventComposerDraftList";
 import {
   formatMonthLabel,
   resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
@@ -59,6 +65,11 @@ type Props = {
   locationFilter?: string | null;
   reviewFilter?: VeranstaltungenReviewFilter;
   publicationFilter?: VeranstaltungenPublicationFilter;
+  composerDrafts?: ClubEventComposerDraftListItem[];
+  pitchHallFacilityGroups?: FacilityGroup[];
+  dressingRoomFacilityGroups?: FacilityGroup[];
+  otherFacilityGroups?: FacilityGroup[];
+  effectiveGovernance?: SceActivityEffectiveGovernance;
 };
 
 export default function VeranstaltungenManagementWorkspace({
@@ -73,7 +84,13 @@ export default function VeranstaltungenManagementWorkspace({
   searchQuery = "",
   locationFilter = null,
   reviewFilter = "ALLE",
-  publicationFilter = "ALLE" }: Props) {
+  publicationFilter = "ALLE",
+  composerDrafts = [],
+  pitchHallFacilityGroups = [],
+  dressingRoomFacilityGroups = [],
+  otherFacilityGroups = [],
+  effectiveGovernance,
+}: Props) {
   const tz = timeZone ?? "Europe/Zurich";
   const now = new Date();
 
@@ -162,14 +179,33 @@ export default function VeranstaltungenManagementWorkspace({
         subtitleTestId="veranstaltungen-header-subtitle"
         actions={
           canManage ? (
-            <Link
-              href="/dashboard/veranstaltungen/new"
-              className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-              data-testid="veranstaltungen-create-link"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Veranstaltung erstellen
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/dashboard/veranstaltungen/freigaben"
+                className="fca-button-secondary text-sm"
+                data-testid="veranstaltungen-approvals-link"
+              >
+                Freigaben
+              </Link>
+              {effectiveGovernance ? (
+                <VeranstaltungenComposerCreateTrigger
+                  pitchHallFacilityGroups={pitchHallFacilityGroups}
+                  dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                  otherFacilityGroups={otherFacilityGroups}
+                  timeZone={tz}
+                  effectiveGovernance={effectiveGovernance}
+                />
+              ) : (
+                <Link
+                  href="/dashboard/veranstaltungen/new"
+                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="veranstaltungen-create-link"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Veranstaltung erstellen
+                </Link>
+              )}
+            </div>
           ) : null
         }
       />
@@ -198,6 +234,10 @@ export default function VeranstaltungenManagementWorkspace({
           );
         })}
       </nav>
+
+      {canManage && composerDrafts.length > 0 ? (
+        <ClubEventComposerDraftList drafts={composerDrafts} />
+      ) : null}
 
       <PlanningManagementKpiCards
         testId="veranstaltungen-kpi-cards"

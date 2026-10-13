@@ -19,6 +19,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Plus, Shield, Trash2, X } from "lucide-react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/page/EmptyState";
 
 export type ScopedRoleItem = {
   id: string;
@@ -123,9 +124,12 @@ export default function ScopedRoleManagementControl({
     <div className="space-y-3">
       {/* Existing assignments */}
       {assignments.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">
-          Keine Bereichszuständigkeiten zugewiesen.
-        </p>
+        <EmptyState
+          icon={<Building2 className="h-7 w-7" />}
+          heading="Keine Bereiche zugewiesen"
+          description="Diese Person hat derzeit keine zusätzlichen Zuständigkeiten für einzelne Teams oder organisatorische Bereiche."
+          className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] bg-[var(--surface-2)]/40 py-8"
+        />
       ) : (
         <ul className="space-y-2">
           {assignments.map((a) => (
@@ -265,7 +269,7 @@ export default function ScopedRoleManagementControl({
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition"
             >
               <Plus className="h-3.5 w-3.5" />
-              Bereichszuständigkeit hinzufügen
+              Zuständigkeit hinzufügen
             </button>
           ) : null
         )

@@ -86,6 +86,32 @@ describe("VeranstaltungenManagementWorkspace", () => {
     expect(screen.queryByText("November Event")).toBeNull();
   });
 
+  it("renders exactly one canonical composer create trigger in the header", () => {
+    render(
+      <VeranstaltungenManagementWorkspace
+        events={[createEvent()]}
+        tab="BEVORSTEHEND"
+        canManage
+        timeZone="Europe/Zurich"
+        effectiveGovernance={{
+          activityType: "CLUB_EVENT",
+          personId: "person-1",
+          mayCreate: true,
+          publicationAuthority: "DIRECT_PUBLISH",
+          approvalStrategy: "ANY_ONE",
+          validatorPersonIds: [],
+        }}
+      />,
+    );
+
+    expect(screen.getAllByTestId("veranstaltungen-create-overlay-trigger")).toHaveLength(1);
+    expect(screen.getByTestId("veranstaltungen-create-page-fallback")).toHaveClass("sr-only");
+    expect(screen.getByRole("link", { name: /Veranstaltung erstellen \(Seite\)/ })).toHaveAttribute(
+      "href",
+      "/dashboard/veranstaltungen/new",
+    );
+  });
+
   it("reset link clears month filter", () => {
     render(
       <VeranstaltungenManagementWorkspace

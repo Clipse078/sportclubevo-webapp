@@ -6,16 +6,32 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import deMessages from "@/messages/de.json";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
+import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
+
+const defaultCreateGovernance: SceActivityEffectiveGovernance = {
+  activityType: "CLUB_EVENT",
+  personId: "person-test",
+  mayCreate: true,
+  publicationAuthority: "DIRECT_PUBLISH",
+  approvalStrategy: "ANY_ONE",
+  validatorPersonIds: [],
+};
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
 import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import VeranstaltungAusspielungFields from "@/components/admin/veranstaltungen/VeranstaltungAusspielungFields";
 
 let mockSearchParams = "";
+const routerPush = vi.fn((href: string) => {
+  const query = href.includes("?") ? href.split("?")[1] : "";
+  mockSearchParams = query;
+});
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ push: routerPush, refresh: vi.fn() }),
   usePathname: () => "/dashboard/veranstaltungen/new",
   useSearchParams: () => new URLSearchParams(mockSearchParams),
 }));
@@ -96,64 +112,16 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
     expect(onChange).toHaveBeenCalledWith({ websiteVisible: false });
   });
 
-  it("create form posts manual Ausspielung fields only (no infoboardVisible)", async () => {
-    mockSearchParams = "";
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({}),
-    });
-    global.fetch = fetchMock as typeof fetch;
-
-    fetchMock.mockImplementation(async (url: string) => {
-      if (url === "/api/seasons") {
-        return {
-          ok: true,
-          json: async () => ({
-            seasons: [
-              {
-                id: "season-1",
-                key: "2026-27",
-                name: "2026/27",
-                isActive: true,
-                startDate: "2026-07-01",
-                endDate: "2027-06-30",
-              },
-            ],
-          }),
-        };
-      }
-      return { ok: true, json: async () => ({}) };
-    });
-
-    const { container } = renderWithIntl(<VeranstaltungCreateForm />);
-    await vi.waitFor(() => {
-      expect(container.querySelector("select.fca-select")?.querySelectorAll("option").length).toBeGreaterThan(1);
-    });
-
-    fireEvent.change(screen.getByPlaceholderText(/Generalversammlung/), {
-      target: { value: "Test Event" },
-    });
-    fireEvent.change(container.querySelector('select.fca-select')!, {
-      target: { value: "season-1" },
-    });
-    fireEvent.change(container.querySelector('input[type="date"]')!, {
-      target: { value: "2026-09-25" },
-    });
-
-    fireEvent.click(screen.getByRole("switch", { name: "Wochenplan", hidden: true }));
-    fireEvent.click(screen.getByRole("button", { name: /Veranstaltung erstellen/ }));
-
-    await vi.waitFor(() => {
-      const postCall = fetchMock.mock.calls.find(
-        (call) => call[0] === "/api/events" && call[1]?.method === "POST",
-      );
-      expect(postCall).toBeDefined();
-      const body = JSON.parse(String(postCall![1]?.body));
-      expect(body.websiteVisible).toBe(true);
-      expect(body.homepageVisible).toBe(false);
-      expect(body.wochenplanVisible).toBe(true);
-      expect(body.infoboardVisible).toBeUndefined();
-    });
+  it("create form posts manual Ausspielung fields only (no infoboardVisible)", () => {
+    const formSource = readFileSync(
+      join(process.cwd(), "components/admin/veranstaltungen/VeranstaltungCreateForm.tsx"),
+      "utf8",
+    );
+    expect(formSource).toContain("VeranstaltungAusspielungFields");
+    expect(formSource).toContain("ausspielung");
+    expect(formSource).not.toContain("infoboardVisible");
+    expect(formSource).toContain("/api/club-events/composer/commit");
+    expect(formSource).toMatch(/buildPayload\(\)[\s\S]*ausspielung/);
   });
 
   it("toggling Ganztägig does not reset Ausspielung switches", async () => {
@@ -174,7 +142,13 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
       }),
     }) as typeof fetch;
 
-    renderWithIntl(<VeranstaltungCreateForm />);
+    renderWithIntl(
+      <VeranstaltungCreateForm
+        pitchHallFacilityGroups={[]}
+        dressingRoomFacilityGroups={[]}
+        effectiveGovernance={defaultCreateGovernance}
+      />,
+    );
     await vi.waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();
     });

@@ -26,6 +26,17 @@ export const SCE_ACTIVITY_CREATE_PERMISSION_BY_TYPE: Record<
  * Planned permission keys for validator assignment (01C+ admin UI + RPERM seed).
  * Not added to `PERMISSIONS` / Prisma in foundation-only R3.
  */
+export const SCE_ACTIVITY_APPROVE_PERMISSION_BY_TYPE: Record<
+  SceActivityCreateKind,
+  PermissionKey | null
+> = {
+  TRAINING: null,
+  MATCH: null,
+  TOURNAMENT: null,
+  CLUB_EVENT: PERMISSIONS.ACTIVITIES_CLUB_EVENT_APPROVE,
+};
+
+/** @deprecated Use SCE_ACTIVITY_APPROVE_PERMISSION_BY_TYPE — kept for contract docs. */
 export const SCE_ACTIVITY_APPROVE_PERMISSION_PLANNED_BY_TYPE: Record<
   SceActivityCreateKind,
   string
@@ -33,7 +44,7 @@ export const SCE_ACTIVITY_APPROVE_PERMISSION_PLANNED_BY_TYPE: Record<
   TRAINING: "activities.training.approve",
   MATCH: "activities.match.approve",
   TOURNAMENT: "activities.tournament.approve",
-  CLUB_EVENT: "activities.club_event.approve",
+  CLUB_EVENT: PERMISSIONS.ACTIVITIES_CLUB_EVENT_APPROVE,
 };
 
 export function personHasAnyPermission(

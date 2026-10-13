@@ -949,6 +949,33 @@ enum ReviewWorkflowStage {
   PUBLISHED
 }
 
+/// SCE-ACTIVITY-CREATE-01C — reusable governance activity kinds (not a generic Activity entity).
+enum SceActivityGovernanceActivityType {
+  TRAINING
+  MATCH
+  TOURNAMENT
+  CLUB_EVENT
+}
+
+enum SceActivityPublicationAuthorityMode {
+  DIRECT_PUBLISH
+  APPROVAL_REQUIRED
+}
+
+enum SceActivityGovernanceLifecycleState {
+  DRAFT
+  PENDING_APPROVAL
+  CHANGES_REQUESTED
+  REJECTED
+  PUBLISHED
+}
+
+enum SceActivityApprovalDecisionType {
+  APPROVE
+  REQUEST_CHANGES
+  REJECT
+}
+
 enum WorkflowDomain {
   EVENTS
   SEASONS
@@ -1214,6 +1241,12 @@ model Tenant {
   clubEventSeriesOrganisationalAudienceTeams    ClubEventSeriesOrganisationalAudienceTeam[]    @relation("TenantClubEventSeriesOrganisationalAudienceTeam")
   clubEventSeriesOrganisationalAudienceOrgUnits ClubEventSeriesOrganisationalAudienceOrgUnit[] @relation("TenantClubEventSeriesOrganisationalAudienceOrgUnit")
   clubEventSeriesOccurrenceExceptions     ClubEventSeriesOccurrenceException[]     @relation("TenantClubEventSeriesOccurrenceException")
+  sceActivityGovernanceTypeConfigs        SceActivityGovernanceTypeConfig[]        @relation("TenantSceActivityGovernanceTypeConfig")
+  sceActivityGovernanceCreatorPolicies    SceActivityGovernanceCreatorPolicy[]     @relation("TenantSceActivityGovernanceCreatorPolicy")
+  sceActivityGovernanceValidators         SceActivityGovernanceValidator[]         @relation("TenantSceActivityGovernanceValidator")
+  clubEventComposerDrafts                 ClubEventComposerDraft[]                 @relation("TenantClubEventComposerDraft")
+  sceActivityGovernanceRevisions          SceActivityGovernanceRevision[]          @relation("TenantSceActivityGovernanceRevision")
+  sceActivityGovernanceDecisions          SceActivityGovernanceDecision[]          @relation("TenantSceActivityGovernanceDecision")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   notificationPushDeliveryAttempts   NotificationPushDeliveryAttempt[]
@@ -9820,4 +9853,119 @@ model ParticipationResponse {
   @@index([trainingSessionId])
   @@index([eventId])
   @@index([tenantId, status])
+}
+
+// ---------------------------------------------------------------------------
+// SCE-ACTIVITY-CREATE-01C — Club Event reference adoption (governance + drafts)
+// ---------------------------------------------------------------------------
+
+model SceActivityGovernanceTypeConfig {
+  id                          String                              @id @default(cuid())
+  tenantId                    String
+  activityType                SceActivityGovernanceActivityType
+  defaultPublicationAuthority SceActivityPublicationAuthorityMode @default(DIRECT_PUBLISH)
+  createdAt                   DateTime                            @default(now())
+  updatedAt                   DateTime                            @updatedAt
+
+  tenant          Tenant                             @relation("TenantSceActivityGovernanceTypeConfig", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  creatorPolicies SceActivityGovernanceCreatorPolicy[]
+  validators      SceActivityGovernanceValidator[]
+
+  @@unique([tenantId, activityType])
+  @@index([tenantId])
+}
+
+model SceActivityGovernanceCreatorPolicy {
+  id                   String                               @id @default(cuid())
+  tenantId             String
+  typeConfigId         String
+  personId             String
+  createEnabled        Boolean                              @default(true)
+  publicationAuthority SceActivityPublicationAuthorityMode?
+  createdAt            DateTime                             @default(now())
+  updatedAt            DateTime                             @updatedAt
+
+  tenant     Tenant                        @relation("TenantSceActivityGovernanceCreatorPolicy", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  typeConfig SceActivityGovernanceTypeConfig @relation(fields: [typeConfigId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([typeConfigId, personId])
+  @@index([tenantId, personId])
+}
+
+model SceActivityGovernanceValidator {
+  id           String   @id @default(cuid())
+  tenantId     String
+  typeConfigId String
+  personId     String
+  createdAt    DateTime @default(now())
+
+  tenant     Tenant                        @relation("TenantSceActivityGovernanceValidator", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  typeConfig SceActivityGovernanceTypeConfig @relation(fields: [typeConfigId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([typeConfigId, personId])
+  @@index([tenantId, personId])
+}
+
+/// Persisted Club Event composer drafts and approval-bound revisions (domain payload JSON).
+model ClubEventComposerDraft {
+  id                      String                              @id @default(cuid())
+  tenantId                String
+  createdByPersonId       String
+  updatedByPersonId       String?
+  lifecycleState          SceActivityGovernanceLifecycleState @default(DRAFT)
+  payload                 Json
+  draftResourceSelections Json                                @default("[]")
+  revisionNumber          Int                                 @default(1)
+  submittedAt             DateTime?
+  publishedPrimaryEventId String?
+  createdAt               DateTime                            @default(now())
+  updatedAt               DateTime                            @updatedAt
+
+  tenant    Tenant                        @relation("TenantClubEventComposerDraft", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  revisions SceActivityGovernanceRevision[] @relation("ClubEventDraftRevisions")
+
+  @@index([tenantId, lifecycleState])
+  @@index([tenantId, createdByPersonId])
+}
+
+model SceActivityGovernanceRevision {
+  id                     String                              @id @default(cuid())
+  tenantId               String
+  activityType           SceActivityGovernanceActivityType
+  clubEventDraftId       String?
+  domainPublishedEventId String?
+  revisionNumber         Int
+  lifecycleState         SceActivityGovernanceLifecycleState
+  creatorPersonId        String
+  submittedAt            DateTime?
+  publishedAt            DateTime?
+  policySnapshot         Json
+  payloadSnapshot        Json
+  isCurrentSubmission    Boolean                             @default(true)
+  createdAt              DateTime                            @default(now())
+  updatedAt              DateTime                            @updatedAt
+
+  tenant         Tenant                  @relation("TenantSceActivityGovernanceRevision", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  clubEventDraft ClubEventComposerDraft? @relation("ClubEventDraftRevisions", fields: [clubEventDraftId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  decisions      SceActivityGovernanceDecision[]
+
+  @@unique([clubEventDraftId, revisionNumber])
+  @@index([tenantId, activityType, lifecycleState])
+  @@index([tenantId, isCurrentSubmission, lifecycleState])
+}
+
+model SceActivityGovernanceDecision {
+  id               String                          @id @default(cuid())
+  tenantId         String
+  revisionId       String
+  decision         SceActivityApprovalDecisionType
+  approverPersonId String
+  comment          String?
+  decidedAt        DateTime                        @default(now())
+
+  tenant   Tenant                        @relation("TenantSceActivityGovernanceDecision", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  revision SceActivityGovernanceRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([revisionId, approverPersonId, decision])
+  @@index([tenantId, revisionId])
 }

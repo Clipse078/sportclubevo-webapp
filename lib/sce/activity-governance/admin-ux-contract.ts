@@ -36,6 +36,6 @@ export type SceActivityGovernanceCentricView = {
   sections: readonly SceActivityGovernanceCentricTypeSection[];
 };
 
-/** Full production Admin UI deferred to post-01B package with RPERM seed + persistence. */
-export const SCE_ACTIVITY_GOVERNANCE_ADMIN_UI_DEFERRED =
-  "01B-R3 defines contracts and policy primitives only; Club Admin Person/Governance views ship with governance persistence and RPERM integration (follow 01C gate).";
+/** 01C-R1 ships Person-centric create/publication controls and club validator pool multi-select. */
+export const SCE_ACTIVITY_GOVERNANCE_ADMIN_UI_STATUS =
+  "IMPLEMENTED_PENDING_PO_UAT — Person detail Club Event section + Freigabeberechtigte multi-select; raw permission keys remain secondary.";

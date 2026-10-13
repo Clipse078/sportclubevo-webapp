@@ -78,7 +78,7 @@ export type {
   SceActivityPersonCentricGovernanceView,
 } from "./admin-ux-contract";
 
-export { SCE_ACTIVITY_GOVERNANCE_ADMIN_UI_DEFERRED } from "./admin-ux-contract";
+export { SCE_ACTIVITY_GOVERNANCE_ADMIN_UI_STATUS } from "./admin-ux-contract";
 
 export type {
   SceActivityApprovalInboxItem,

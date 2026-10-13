@@ -1,7 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import SceActivityComposer from "@/components/sce/activity-composer/SceActivityComposer";
+import type { SceActivityCreateDefinition } from "@/lib/sce/activity-composer/types";
+import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
+import type { SceActivityCreateSuccessResult } from "@/lib/sce/activity-composer/success-result";
+import type { ClubEventComposerDraftPayload } from "@/lib/club-events/composer/club-event-composer-draft-types";
+import { resolveClubEventComposerTitleForResume } from "@/lib/club-events/composer/club-event-composer-draft-access";
+import {
+  clubEventAudienceToEditorInitial,
+  hydrateClubEventComposerFormFromDraft,
+} from "@/lib/club-events/composer/hydrate-club-event-composer-form-from-draft";
+import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
+import { buildClubEventCreateTabNavigationConfig } from "@/lib/veranstaltungen/club-event-create-workflow-config";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -29,12 +41,10 @@ import ClubEventOrganisationalAudienceEditor, {
   clubEventOrganisationalAudienceEditorToApiPayload,
   type ClubEventOrganisationalAudienceEditorValue,
 } from "./ClubEventOrganisationalAudienceEditor";
-import ClubEventCreateWorkflowShell from "./ClubEventCreateWorkflowShell";
 import VeranstaltungRecurrenceFields, {
   recurrenceValuesToApiPayload,
   type VeranstaltungRecurrenceFieldValues,
 } from "./VeranstaltungRecurrenceFields";
-import { buildContextTabHref } from "@/lib/context-tabs/url";
 import {
   computeClubEventCreateTabErrors,
   firstInvalidClubEventCreateTab,
@@ -79,6 +89,14 @@ type VeranstaltungCreateFormProps = {
   dressingRoomFacilityGroups: FacilityGroup[];
   otherFacilityGroups?: FacilityGroup[];
   timeZone?: string | null;
+  containerMode?: "page" | "overlay";
+  effectiveGovernance: SceActivityEffectiveGovernance;
+  open?: boolean;
+  onClose?: () => void;
+  onSuccess?: (result: SceActivityCreateSuccessResult<{ eventIds: string[]; outcome: string }>) => void;
+  initialDraftId?: string | null;
+  initialResumeDraft?: { draftId: string; payload: ClubEventComposerDraftPayload } | null;
+  reviewerComment?: string | null;
 };
 
 function resolveResourceDisplay(
@@ -103,62 +121,90 @@ export default function VeranstaltungCreateForm({
   dressingRoomFacilityGroups,
   otherFacilityGroups = [],
   timeZone = "Europe/Zurich",
+  containerMode = "page",
+  effectiveGovernance,
+  open = true,
+  onClose,
+  onSuccess,
+  initialDraftId = null,
+  initialResumeDraft = null,
+  reviewerComment = null,
 }: VeranstaltungCreateFormProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
   const tc = useTranslations("PlanningEditor.common");
 
-  const [seasonId, setSeasonId] = useState("");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string>("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [organizerName, setOrganizerName] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const [schedule, setSchedule] = useState<VeranstaltungScheduleFieldValues>({
-    allDay: false,
-    startDate: "",
-    endDate: "",
-    startTime: DEFAULT_TIMES.startTime,
-    endTime: DEFAULT_TIMES.endTime,
-  });
+  const serverHydrated = initialResumeDraft?.payload
+    ? hydrateClubEventComposerFormFromDraft(initialResumeDraft.payload, nextLocalId)
+    : null;
+
+  const [seasonId, setSeasonId] = useState(serverHydrated?.seasonId ?? "");
+  const [title, setTitle] = useState(serverHydrated?.title ?? "");
+  const [category, setCategory] = useState<string>(serverHydrated?.category ?? "");
+  const [description, setDescription] = useState(serverHydrated?.description ?? "");
+  const [location, setLocation] = useState(serverHydrated?.location ?? "");
+  const [organizerName, setOrganizerName] = useState(serverHydrated?.organizerName ?? "");
+  const [remarks, setRemarks] = useState(serverHydrated?.remarks ?? "");
+  const [schedule, setSchedule] = useState<VeranstaltungScheduleFieldValues>(
+    serverHydrated?.schedule ?? {
+      allDay: false,
+      startDate: "",
+      endDate: "",
+      startTime: DEFAULT_TIMES.startTime,
+      endTime: DEFAULT_TIMES.endTime,
+    },
+  );
   const rememberedTimes = useRef({ ...DEFAULT_TIMES });
 
-  const [audience, setAudience] = useState<ClubEventOrganisationalAudienceEditorValue>({
-    scope: "CLUB_WIDE",
-    targets: [],
-  });
+  const [audience, setAudience] = useState<ClubEventOrganisationalAudienceEditorValue>(
+    serverHydrated?.audience ?? { scope: "CLUB_WIDE", targets: [] },
+  );
+  const [audienceEditorKey, setAudienceEditorKey] = useState(
+    () => initialResumeDraft?.draftId ?? "new",
+  );
 
-  const [ausspielung, setAusspielung] = useState<VeranstaltungAusspielungValues>({
-    websiteVisible: true,
-    homepageVisible: false,
-    wochenplanVisible: false,
-  });
+  const [ausspielung, setAusspielung] = useState<VeranstaltungAusspielungValues>(
+    serverHydrated?.ausspielung ?? {
+      websiteVisible: true,
+      homepageVisible: false,
+      wochenplanVisible: false,
+    },
+  );
 
   const [seasonOptions, setSeasonOptions] = useState<SeasonItem[]>([]);
   const [loadingSeasons, setLoadingSeasons] = useState(true);
-  const [pitchDraft, setPitchDraft] = useState<ResourceDraftRow | null>(null);
-  const [dressingDraft, setDressingDraft] = useState<ResourceDraftRow | null>(null);
-  const [otherDrafts, setOtherDrafts] = useState<ResourceDraftRow[]>([]);
+  const [pitchDraft, setPitchDraft] = useState<ResourceDraftRow | null>(
+    serverHydrated?.pitchDraft ?? null,
+  );
+  const [dressingDraft, setDressingDraft] = useState<ResourceDraftRow | null>(
+    serverHydrated?.dressingDraft ?? null,
+  );
+  const [otherDrafts, setOtherDrafts] = useState<ResourceDraftRow[]>(serverHydrated?.otherDrafts ?? []);
   const [otherPickerOpen, setOtherPickerOpen] = useState(false);
 
-  const [recurrence, setRecurrence] = useState<VeranstaltungRecurrenceFieldValues>({
-    enabled: false,
-    frequency: "MONTHLY",
-    intervalCount: 1,
-    weekday: "TUESDAY",
-    monthlyPatternKind: "ORDINAL_WEEKDAY",
-    monthDay: 15,
-    monthOrdinal: "FIRST",
-    endMode: "AFTER_COUNT",
-    endDate: "",
-    occurrenceCount: 8,
-  });
+  const [recurrence, setRecurrence] = useState<VeranstaltungRecurrenceFieldValues>(
+    serverHydrated?.recurrence ?? {
+      enabled: false,
+      frequency: "MONTHLY",
+      intervalCount: 1,
+      weekday: "TUESDAY",
+      monthlyPatternKind: "ORDINAL_WEEKDAY",
+      monthDay: 15,
+      monthOrdinal: "FIRST",
+      endMode: "AFTER_COUNT",
+      endDate: "",
+      occurrenceCount: 8,
+    },
+  );
 
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(
+    initialResumeDraft?.draftId ?? initialDraftId,
+  );
+  const [persistedBaseline, setPersistedBaseline] = useState<ClubEventComposerDraftPayload | null>(
+    initialResumeDraft?.payload ?? null,
+  );
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const tabErrors = useMemo(
@@ -288,11 +334,13 @@ export default function VeranstaltungCreateForm({
         const seasons = Array.isArray(data.seasons) ? data.seasons : [];
         setSeasonOptions(seasons);
 
-        const preferred = seasons.find((s) => s.isActive) ?? seasons[0] ?? null;
-        setSeasonId(preferred?.id ?? "");
+        if (!initialDraftId && !initialResumeDraft) {
+          const preferred = seasons.find((s) => s.isActive) ?? seasons[0] ?? null;
+          setSeasonId(preferred?.id ?? "");
+        }
       } catch (err) {
         if (!active) return;
-        setError(err instanceof Error ? err.message : t("errors.createFailed"));
+        setLoadError(err instanceof Error ? err.message : t("errors.createFailed"));
       } finally {
         if (active) setLoadingSeasons(false);
       }
@@ -302,7 +350,73 @@ export default function VeranstaltungCreateForm({
     return () => {
       active = false;
     };
-  }, [tf, t]);
+  }, [initialDraftId, initialResumeDraft, tf, t]);
+
+  function applyHydratedDraftPayload(d: ClubEventComposerDraftPayload, resolvedDraftId: string) {
+    const hydrated = hydrateClubEventComposerFormFromDraft(d, nextLocalId);
+    setSeasonId(hydrated.seasonId);
+    setTitle(hydrated.title);
+    setCategory(hydrated.category);
+    setDescription(hydrated.description);
+    setLocation(hydrated.location);
+    setOrganizerName(hydrated.organizerName);
+    setRemarks(hydrated.remarks);
+    setSchedule(hydrated.schedule);
+    setAudience(hydrated.audience);
+    setAudienceEditorKey(resolvedDraftId);
+    setAusspielung(hydrated.ausspielung);
+    setRecurrence(hydrated.recurrence);
+    setPitchDraft(hydrated.pitchDraft);
+    setDressingDraft(hydrated.dressingDraft);
+    setOtherDrafts(hydrated.otherDrafts);
+    setDraftId(resolvedDraftId);
+    setPersistedBaseline(d);
+  }
+
+  useEffect(() => {
+    if (!initialDraftId || initialResumeDraft) return;
+    let active = true;
+
+    async function loadDraft() {
+      try {
+        const res = await fetch(`/api/club-events/composer/drafts/${initialDraftId}`, {
+          cache: "no-store",
+        });
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+          draft?: ClubEventComposerDraftPayload & { lifecycleState?: string };
+          draftId?: string;
+        } | null;
+        if (!res.ok || !data?.draft) {
+          throw new Error(data?.error ?? "Entwurf konnte nicht geladen werden.");
+        }
+        if (!active) return;
+        applyHydratedDraftPayload(data.draft, data.draftId ?? initialDraftId!);
+      } catch (err) {
+        if (!active) return;
+        setLoadError(err instanceof Error ? err.message : "Entwurf konnte nicht geladen werden.");
+      }
+    }
+
+    void loadDraft();
+    return () => {
+      active = false;
+    };
+  }, [initialDraftId, initialResumeDraft]);
+
+  const resumeDraft = useMemo((): SceActivityCreateResumeDraft<ClubEventComposerDraftPayload> | undefined => {
+    if (!draftId || !persistedBaseline) {
+      return undefined;
+    }
+    return { draftId, baselineDraft: persistedBaseline };
+  }, [draftId, persistedBaseline]);
+
+  const composerTitle = useMemo(() => {
+    if (!resumeDraft) {
+      return "Neue Veranstaltung";
+    }
+    return resolveClubEventComposerTitleForResume(persistedBaseline?.title ?? title);
+  }, [persistedBaseline?.title, resumeDraft, title]);
 
   function handleCategoryChange(value: string) {
     setCategory(value);
@@ -339,98 +453,163 @@ export default function VeranstaltungCreateForm({
     });
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitAttempted(true);
-
-    const validationErrors = computeClubEventCreateTabErrors({
+  const buildPayload = useCallback((): ClubEventComposerDraftPayload => {
+    const resources: ClubEventComposerDraftPayload["resources"] = [];
+    if (pitchDraft) {
+      resources.push({
+        facilityResourceId: pitchDraft.facilityResourceId,
+        facilityResourceName: pitchDraft.facilityResourceName,
+        kind: "pitch_hall",
+      });
+    }
+    if (dressingDraft) {
+      resources.push({
+        facilityResourceId: dressingDraft.facilityResourceId,
+        facilityResourceName: dressingDraft.facilityResourceName,
+        kind: "dressing_room",
+      });
+    }
+    for (const row of otherDrafts) {
+      resources.push({
+        facilityResourceId: row.facilityResourceId,
+        facilityResourceName: row.facilityResourceName,
+        kind: "other",
+      });
+    }
+    return {
       seasonId,
       title,
+      category,
+      description,
+      location,
+      organizerName,
+      remarks,
       schedule,
       audience,
-      recurrenceEnabled: recurrence.enabled,
-      recurrenceEndDate: recurrence.endDate,
-      recurrenceOccurrenceCount: String(recurrence.occurrenceCount),
-      recurrenceEndMode: recurrence.endMode,
-    });
-    const invalidTab = firstInvalidClubEventCreateTab(validationErrors);
-    if (invalidTab) {
-      router.push(buildContextTabHref(pathname, invalidTab));
-      setError("Bitte prüfen Sie die markierten Bereiche.");
-      return;
-    }
+      ausspielung,
+      recurrence,
+      resources,
+    };
+  }, [
+    seasonId,
+    title,
+    category,
+    description,
+    location,
+    organizerName,
+    remarks,
+    schedule,
+    audience,
+    ausspielung,
+    recurrence,
+    pitchDraft,
+    dressingDraft,
+    otherDrafts,
+  ]);
 
-    setSubmitting(true);
-    setError(null);
+  const definition = useMemo((): SceActivityCreateDefinition<
+    ClubEventComposerDraftPayload,
+    { eventIds: string[]; outcome: string }
+  > => {
+    return {
+      activityKind: "CLUB_EVENT",
+      title: composerTitle,
+      createActionLabel: "Veranstaltung erstellen",
+      defaultTab: "uebersicht",
+      buildTabNavigationConfig: buildClubEventCreateTabNavigationConfig,
+      initialDraft: buildPayload(),
+      validateDraft: (draft) => {
+        const tabErrors = computeClubEventCreateTabErrors({
+          seasonId: draft.seasonId,
+          title: draft.title,
+          schedule: draft.schedule,
+          audience: draft.audience,
+          recurrenceEnabled: draft.recurrence.enabled,
+          recurrenceEndDate: draft.recurrence.endDate,
+          recurrenceOccurrenceCount: String(draft.recurrence.occurrenceCount),
+          recurrenceEndMode: draft.recurrence.endMode,
+        });
+        const valid = Object.keys(tabErrors).length === 0;
+        return {
+          valid,
+          tabErrors,
+          firstInvalidTab: firstInvalidClubEventCreateTab(tabErrors) ?? undefined,
+        };
+      },
+      submitDraft: async (draft) => {
+        setSubmitAttempted(true);
+        const payload = { ...buildPayload(), ...draft };
+        const res = await fetch("/api/club-events/composer/commit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ draftId, payload }),
+        });
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+          outcome?: string;
+          eventIds?: string[];
+        } | null;
+        if (!res.ok) {
+          return { ok: false as const, error: data?.error ?? t("errors.createFailed") };
+        }
+        return {
+          ok: true as const,
+          result: {
+            eventIds: data?.eventIds ?? [],
+            outcome: data?.outcome ?? "PUBLISHED",
+          },
+        };
+      },
+      draftPersistence: {
+        supportsDraftPersistence: true,
+        validateDraftForSave: () => ({ valid: true, tabErrors: {} }),
+        saveDraft: async ({ draft, draftId: existingDraftId }) => {
+          const payload = { ...buildPayload(), ...draft };
+          const res = await fetch("/api/club-events/composer/drafts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ draftId: existingDraftId ?? draftId, payload }),
+          });
+          const data = (await res.json().catch(() => null)) as { error?: string; draftId?: string } | null;
+          if (!res.ok || !data?.draftId) {
+            return { ok: false as const, error: data?.error ?? "Entwurf speichern fehlgeschlagen." };
+          }
+          setDraftId(data.draftId);
+          setPersistedBaseline(payload);
+          return { ok: true as const, result: { draftId: data.draftId }, draftId: data.draftId };
+        },
+      },
+      tabs: [],
+    };
+  }, [
+    audience,
+    buildPayload,
+    composerTitle,
+    draftId,
+    recurrence,
+    schedule,
+    seasonId,
+    t,
+    title,
+  ]);
 
-    const facilityResourceIds = [
-      pitchDraft?.facilityResourceId,
-      dressingDraft?.facilityResourceId,
-      ...otherDrafts.map((row) => row.facilityResourceId),
-    ].filter(Boolean);
-
-    try {
-      const res = await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "OTHER",
-          source: "MANUAL",
-          seasonId,
-          title: title.trim(),
-          description: description || null,
-          location: location || null,
-          allDay: schedule.allDay,
-          startDate: schedule.startDate,
-          endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
-          startTime: schedule.allDay ? null : schedule.startTime,
-          endTime: schedule.allDay ? null : schedule.endTime || null,
-          organizerName: organizerName || null,
-          remarks: remarks || null,
-          websiteVisible: ausspielung.websiteVisible,
-          homepageVisible: ausspielung.homepageVisible,
-          wochenplanVisible: ausspielung.wochenplanVisible,
-          trainingsplanVisible: false,
-          teamPageVisible: false,
-          audience: clubEventOrganisationalAudienceEditorToApiPayload(audience),
-          recurrence: recurrenceValuesToApiPayload(schedule, recurrence),
-          facilityResourceIds,
-        }),
-      });
-
-      const data = (await res.json().catch(() => null)) as {
-        error?: string;
-        field?: string;
-        eventIds?: string[];
-      } | null;
-
-      if (!res.ok) {
-        setError(data?.error ?? t("errors.createFailed"));
-        return;
-      }
-
-      const firstEventId = data?.eventIds?.[0];
-      if (firstEventId) {
-        router.push(`/dashboard/veranstaltungen/${firstEventId}/edit`);
+  const handleComposerSuccess = useCallback(
+    (result: SceActivityCreateSuccessResult<{ eventIds: string[]; outcome: string }>) => {
+      onSuccess?.(result);
+      const eventIds = result.domainPayload?.eventIds ?? [];
+      if (result.outcome === "PUBLISHED" && eventIds[0]) {
+        router.push(`/dashboard/veranstaltungen/${eventIds[0]}/edit`);
+      } else if (result.outcome === "SUBMITTED_FOR_APPROVAL") {
+        router.push("/dashboard/veranstaltungen?submittedForApproval=1");
       } else {
-        router.push("/dashboard/veranstaltungen?submitted=1");
+        router.push("/dashboard/veranstaltungen");
       }
       router.refresh();
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    },
+    [onSuccess, router],
+  );
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
-      <SportingActivityFormIdentitySummary
-        activityKind="VERANSTALTUNG"
-        typeLabel="VERANSTALTUNG"
-        title="Neue Veranstaltung"
-      />
-      <ClubEventCreateWorkflowShell
-        tabErrors={tabErrors}
-        uebersicht={
+  const uebersichtPanel = (
       <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
@@ -520,8 +699,9 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-        }
-        gueltigkeit={
+  );
+
+  const gueltigkeitPanel = (
       <PlanningEditorSection
         testId="veranstaltung-create-audience-section"
         ariaLabelledBy="veranstaltung-create-audience-heading"
@@ -535,13 +715,16 @@ export default function VeranstaltungCreateForm({
             Wählen Sie die Organisationseinheiten und Teams, für die diese Veranstaltung gilt.
           </p>
           <ClubEventOrganisationalAudienceEditor
-            initial={{ scope: "CLUB_WIDE", teamIds: [], orgUnitIds: [], targets: [] }}
+            key={audienceEditorKey}
+            initial={clubEventAudienceToEditorInitial(audience)}
             onChange={setAudience}
+            composerSafeSelector
           />
         </div>
       </PlanningEditorSection>
-        }
-        termin={
+  );
+
+  const terminPanel = (
       <PlanningEditorSection testId="veranstaltung-create-schedule-section" ariaLabelledBy="veranstaltung-create-schedule-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-schedule-heading" title={t("sections.schedule")} />
@@ -568,8 +751,9 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-        }
-        ressourcen={
+  );
+
+  const ressourcenPanel = (
       <PlanningEditorSection
         testId="veranstaltung-create-resources-section"
         ariaLabelledBy="veranstaltung-create-resources-heading"
@@ -676,8 +860,9 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-        }
-        publikation={
+  );
+
+  const publikationPanel = (
           <PlanningPublicationPanel testId="veranstaltung-create-publication-panel">
             <VeranstaltungAusspielungFields
               values={ausspielung}
@@ -686,28 +871,39 @@ export default function VeranstaltungCreateForm({
               testIdPrefix="veranstaltung-create-publication"
             />
           </PlanningPublicationPanel>
-        }
+  );
+
+  definition.tabs = [
+    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
+    { key: "gueltigkeit", label: "Gültigkeit", render: () => gueltigkeitPanel },
+    { key: "termin", label: "Termin", render: () => terminPanel },
+    { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
+    { key: "publikation", label: "Publikation", render: () => publikationPanel },
+  ];
+
+  return (
+    <div data-testid="veranstaltung-create-form">
+      {reviewerComment ? (
+        <div
+          className="fca-status-box mb-3 border-amber-200 bg-amber-50 text-amber-900"
+          data-testid="club-event-reviewer-comment"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide">Rückmeldung Freigabe</p>
+          <p className="mt-1 text-sm">{reviewerComment}</p>
+        </div>
+      ) : null}
+      {loadError ? <div className="fca-status-box fca-status-box-error mb-3">{loadError}</div> : null}
+      <SceActivityComposer
+        key={resumeDraft?.draftId ?? "club-event-create-new"}
+        definition={definition}
+        containerMode={containerMode}
+        open={open}
+        onClose={onClose ?? (() => router.push("/dashboard/veranstaltungen"))}
+        onSuccess={handleComposerSuccess}
+        effectiveGovernance={effectiveGovernance}
+        resumeDraft={resumeDraft}
+        testId="club-event-create-composer"
       />
-
-      {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
-
-      <PlanningEditorActions testId="veranstaltung-create-actions">
-        <button
-          type="submit"
-          disabled={submitting || loadingSeasons}
-          className="fca-button-primary"
-          data-testid="veranstaltung-create-submit"
-        >
-          {submitting ? t("create.submitting") : t("create.submit")}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard/veranstaltungen")}
-          className="fca-button-secondary"
-        >
-          {tc("cancel")}
-        </button>
-      </PlanningEditorActions>
-    </form>
+    </div>
   );
 }

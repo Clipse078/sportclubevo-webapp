@@ -87,9 +87,11 @@ describe("SCE-ACTIVITY-CREATE-01B — architecture guardrails", () => {
     expect(migrations).toContain("DIRECT_PUBLISH");
   });
 
-  it("does not migrate production domain /new routes in 01B", () => {
+  it("01C migrates Club Event /new; other domains remain unmigrated in 01B scope", () => {
+    expect(read("components/admin/veranstaltungen/VeranstaltungCreateForm.tsx")).toContain(
+      "SceActivityComposer",
+    );
     for (const route of [
-      "app/(admin)/dashboard/veranstaltungen/new/page.tsx",
       "app/(admin)/dashboard/training/new/page.tsx",
       "app/(admin)/dashboard/matchcenter/new/page.tsx",
       "app/(admin)/dashboard/tournamentcenter/new/page.tsx",

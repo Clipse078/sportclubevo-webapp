@@ -1,5 +1,6 @@
 "use client";
 
+/** @deprecated Use SceActivityComposer tab navigation — retained for legacy tests only. */
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
 import SceContextTabsBoundary from "@/components/sce/context-tabs/SceContextTabsBoundary";

@@ -7,6 +7,8 @@ import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import EffectiveAccessSummary from "@/components/admin/users/EffectiveAccessSummary";
 import PeopleAccessPermissionPanel from "@/components/admin/users/people-access/PeopleAccessPermissionPanel";
+import SceContextTabsBoundary from "@/components/sce/context-tabs/SceContextTabsBoundary";
+import { SceContextTabPanel, useContextDetailTab } from "@/lib/context-tabs";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import type { TenantUserItem } from "@/lib/users/queries";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
@@ -18,8 +20,15 @@ import {
 } from "@/lib/admin/people-access/date-format";
 import ImpersonateButton from "@/components/admin/users/ImpersonateButton";
 import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
+import {
+  buildPersonDetailAdminHref,
+  buildPersonDetailZugriffHref,
+  buildPersonQuickViewTabNavigationConfig,
+  type PersonQuickViewTabId,
+} from "@/lib/admin/users/person-quick-view-config";
 
-type Tab = "overview" | "functions" | "access" | "activity";
+const QUICK_VIEW_TAB_PREFIX = "person-quick-view-tab";
+const quickViewTabConfig = buildPersonQuickViewTabNavigationConfig();
 
 type Props = {
   user: TenantUserItem | null;
@@ -42,6 +51,188 @@ function getStatus(user: TenantUserItem) {
   return { label: "Deaktiviert", tone: "muted" as const };
 }
 
+function PersonQuickViewPanels({
+  user,
+  isSelf,
+  status,
+  roleChips,
+  scopeLabels,
+  canInvite,
+  canManage,
+  permissionModuleGroups,
+  summaryGroups,
+  permissionKeys,
+  roleNamesByKey,
+  overrideDraft,
+  overrideSaving,
+  onOverrideDraftChange,
+  onResetOverrides,
+}: {
+  user: TenantUserItem;
+  isSelf: boolean;
+  status: ReturnType<typeof getStatus>;
+  roleChips: ReturnType<typeof groupRoleChipsForDisplay>;
+  scopeLabels: string[];
+  canInvite: boolean;
+  canManage: boolean;
+  permissionModuleGroups: PermissionMatrixModuleGroup[];
+  summaryGroups: EffectiveAccessModuleGroup[];
+  permissionKeys: string[];
+  roleNamesByKey: Record<string, readonly string[]>;
+  overrideDraft: Record<string, PermissionOverrideEffect>;
+  overrideSaving: boolean;
+  onOverrideDraftChange: (next: Record<string, PermissionOverrideEffect>) => void;
+  onResetOverrides: () => void;
+}) {
+  const { activeTab } = useContextDetailTab<PersonQuickViewTabId>();
+
+  return (
+    <div data-testid="person-quick-view-panels">
+      <SceContextTabPanel
+        tabKey="uebersicht"
+        activeTab={activeTab}
+        idPrefix={QUICK_VIEW_TAB_PREFIX}
+        testId="person-quick-view-panel-uebersicht"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-[var(--muted)]">
+            Schnellüberblick — für vollständige Verwaltung die Detailseite öffnen.
+          </p>
+          <div className="flex items-center gap-3">
+            <AdminAvatar name={user.name} size="md" />
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold">{user.name}</p>
+                {isSelf ? (
+                  <span className="rounded-full border border-amber-500/40 bg-amber-950/30 px-2 text-[0.65rem] font-semibold text-amber-200">
+                    Ich
+                  </span>
+                ) : null}
+                {user.isPlatformSystemIdentity ? (
+                  <span className="rounded-full border border-slate-500/30 bg-slate-900/40 px-2 text-[0.65rem] font-semibold text-slate-200">
+                    Systemzugang
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-sm text-[var(--muted)]">{user.email}</p>
+            </div>
+          </div>
+          <AdminStatusPill label={status.label} tone={status.tone} />
+          <dl className="space-y-2 text-sm text-[var(--text-2)]">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Kontoaktivität
+              </dt>
+              <dd>
+                Letzter Login:{" "}
+                {user.lastLoginAt
+                  ? formatPeopleAccessDateTime(user.lastLoginAt)
+                  : "Kein Login registriert"}
+              </dd>
+            </div>
+            {user.joinedAt ? (
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Mitgliedschaft
+                </dt>
+                <dd>Beitritt: {formatPeopleAccessDate(user.joinedAt)}</dd>
+              </div>
+            ) : null}
+          </dl>
+          {canInvite && user.pendingInvitation ? (
+            <p className="text-sm text-amber-200/90">
+              Einladung ausstehend — erneut senden oder widerrufen über das Aktionsmenü in der
+              Liste.
+            </p>
+          ) : null}
+        </div>
+      </SceContextTabPanel>
+
+      <SceContextTabPanel
+        tabKey="rollen"
+        activeTab={activeTab}
+        idPrefix={QUICK_VIEW_TAB_PREFIX}
+        testId="person-quick-view-panel-rollen"
+      >
+        <ul className="space-y-3">
+          {roleChips.map((chip) => (
+            <li key={chip.id} className="rounded-[var(--radius-lg)] border border-[var(--border)] p-3">
+              <p className="font-medium">{chip.name}</p>
+              <p className="text-xs text-[var(--muted)]">Clubweite Rolle</p>
+              {chip.assignmentCount > 1 ? (
+                <p className="mt-1 text-xs text-amber-200/90">
+                  {chip.assignmentCount} separate Rollenzuweisungen (Legacy-Daten)
+                </p>
+              ) : null}
+            </li>
+          ))}
+          {scopeLabels.map((label, i) => (
+            <li key={i} className="rounded-[var(--radius-lg)] border border-[var(--border)] p-3">
+              <p className="font-medium">{label}</p>
+              <p className="text-xs text-[var(--muted)]">Bereichsbezogene Zuständigkeit</p>
+            </li>
+          ))}
+          {roleChips.length === 0 && scopeLabels.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">Keine Rollen oder Zuständigkeiten zugewiesen.</p>
+          ) : null}
+        </ul>
+      </SceContextTabPanel>
+
+      <SceContextTabPanel
+        tabKey="zugriff"
+        activeTab={activeTab}
+        idPrefix={QUICK_VIEW_TAB_PREFIX}
+        testId="person-quick-view-panel-zugriff"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--text-2)]">
+            Kurzüberblick über effektiven Zugriff. Umfassende Prüfung und Anpassungen erfolgen in
+            der Personen-Detailseite unter «Zugriff».
+          </p>
+          {permissionModuleGroups.length > 0 ? (
+            <>
+              <PeopleAccessPermissionPanel
+                moduleGroups={permissionModuleGroups}
+                permissionKeys={permissionKeys}
+                roleNamesByKey={roleNamesByKey}
+                primaryRoleLabel={roleChips.map((c) => c.name).join(", ") || undefined}
+                scopeLabel={
+                  scopeLabels.length > 0
+                    ? scopeLabels.join(" · ")
+                    : roleChips.length > 0
+                      ? "Gesamter Verein"
+                      : undefined
+                }
+                interactive={canManage && !user.isPlatformSystemIdentity}
+                overrideDraft={overrideDraft}
+                onOverrideDraftChange={onOverrideDraftChange}
+                onResetToRoleBaseline={onResetOverrides}
+              />
+              {overrideSaving ? (
+                <p className="text-xs text-[var(--muted)]">Anpassungen werden gespeichert…</p>
+              ) : null}
+            </>
+          ) : (
+            <EffectiveAccessSummary groups={summaryGroups} />
+          )}
+          <ul className="space-y-2 text-sm text-[var(--text-2)]">
+            {user.roles.map((r) => (
+              <li key={r.id}>
+                {r.name} → Gesamter Verein
+              </li>
+            ))}
+            {user.scopedRoles?.map((s, i) => (
+              <li key={`${s.id}-${i}`}>
+                {s.name} → {s.orgUnitName}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </SceContextTabPanel>
+    </div>
+  );
+}
+
 export default function PersonAccessDrawer({
   user,
   open,
@@ -54,26 +245,14 @@ export default function PersonAccessDrawer({
   permissionModuleGroups = [],
   onEditAccess,
 }: Props) {
-  const [tab, setTab] = useState<Tab>("overview");
   const [summaryGroups, setSummaryGroups] = useState<EffectiveAccessModuleGroup[]>([]);
   const [permissionKeys, setPermissionKeys] = useState<string[]>([]);
   const [roleNamesByKey, setRoleNamesByKey] = useState<Record<string, readonly string[]>>({});
   const [overrideDraft, setOverrideDraft] = useState<Record<string, PermissionOverrideEffect>>({});
   const [overrideSaving, setOverrideSaving] = useState(false);
-  const [accessView, setAccessView] = useState<{
-    assignedRoles: Array<{ name: string; key: string }>;
-    platformRoles: Array<{ name: string; key: string }>;
-    effectiveTenantPermissionKeys: string[];
-  } | null>(null);
 
   useEffect(() => {
     if (!open || !user) return;
-    fetch(`/api/tenant/effective-access?userId=${encodeURIComponent(user.userId)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setAccessView(data.view ?? null);
-      })
-      .catch(() => setAccessView(null));
 
     fetch("/api/tenant/effective-access/preview", {
       method: "POST",
@@ -166,12 +345,8 @@ export default function PersonAccessDrawer({
   const scopeLabels =
     user.scopedRoles?.map((s) => `${s.name} · ${s.orgUnitName}`) ?? [];
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "overview", label: "Übersicht" },
-    { id: "functions", label: "Funktionen" },
-    { id: "access", label: "Zugriff" },
-    { id: "activity", label: "Aktivität" },
-  ];
+  const detailHref = buildPersonDetailAdminHref(user.userId);
+  const zugriffHref = buildPersonDetailZugriffHref(user.userId);
 
   return (
     <Sheet
@@ -187,18 +362,24 @@ export default function PersonAccessDrawer({
             ) : null}
             {canManage && !user.isPlatformSystemIdentity ? (
               <>
-                <button
-                  type="button"
+                <Link
+                  href={zugriffHref}
                   className={
                     canImpersonateTarget ? "fca-button-secondary text-sm" : "fca-button-primary text-sm"
                   }
-                  onClick={() => onEditAccess(user.userId)}
+                  data-testid="person-quick-view-edit-access"
+                  onClick={() => {
+                    onClose();
+                    onEditAccess(user.userId);
+                  }}
                 >
                   Zugriff bearbeiten
-                </button>
+                </Link>
                 <Link
-                  href={`/dashboard/admin/users/${user.userId}`}
+                  href={detailHref}
                   className="fca-button-secondary text-sm"
+                  data-testid="person-quick-view-detail"
+                  title="Umfassende Personenverwaltung: Rollen, Bereiche, Veranstaltungs-Freigaben und Zugriff"
                 >
                   Detailseite
                 </Link>
@@ -210,160 +391,34 @@ export default function PersonAccessDrawer({
         ) : null
       }
     >
-      <div className="mb-4 flex flex-wrap gap-2">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              tab === t.id
-                ? "bg-[var(--blue,#2563EB)] text-white"
-                : "bg-[var(--surface-2)] text-[var(--muted)]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "overview" ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <AdminAvatar name={user.name} size="md" />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold">{user.name}</p>
-                {isSelf ? (
-                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2 text-[0.65rem] font-semibold text-amber-700">
-                    Ich
-                  </span>
-                ) : null}
-                {user.isPlatformSystemIdentity ? (
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 text-[0.65rem] font-semibold text-slate-700">
-                    Systemzugang
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-sm text-[var(--muted)]">{user.email}</p>
-            </div>
-          </div>
-          <AdminStatusPill label={status.label} tone={status.tone} />
-          <p className="text-sm text-[var(--muted)]">
-            Letzte Aktivität:{" "}
-            {formatPeopleAccessDate(user.lastLoginAt)}
-          </p>
-          {canInvite && user.pendingInvitation ? (
-            <p className="text-sm text-amber-700">Einladung ausstehend — erneut senden oder widerrufen über das Aktionsmenü.</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {tab === "functions" ? (
-        <ul className="space-y-3">
-          {roleChips.map((chip) => (
-            <li key={chip.id} className="rounded-[var(--radius-lg)] border border-[var(--border)] p-3">
-              <p className="font-medium">{chip.name}</p>
-              <p className="text-xs text-[var(--muted)]">Gesamter Verein</p>
-              {chip.assignmentCount > 1 ? (
-                <p className="mt-1 text-xs text-amber-700">
-                  {chip.assignmentCount} separate Rollenzuweisungen (Legacy-Daten)
-                </p>
-              ) : null}
-            </li>
-          ))}
-          {scopeLabels.map((label, i) => (
-            <li key={i} className="rounded-[var(--radius-lg)] border border-[var(--border)] p-3">
-              <p className="font-medium">{label}</p>
-            </li>
-          ))}
-          {roleChips.length === 0 && scopeLabels.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">Keine Funktion zugewiesen.</p>
-          ) : null}
-        </ul>
-      ) : null}
-
-      {tab === "access" ? (
-        <div className="space-y-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Rollenbasierter Zugriff
-            </p>
-            {permissionModuleGroups.length > 0 ? (
-              <>
-                <PeopleAccessPermissionPanel
-                  moduleGroups={permissionModuleGroups}
-                  permissionKeys={permissionKeys}
-                  roleNamesByKey={roleNamesByKey}
-                  primaryRoleLabel={roleChips.map((c) => c.name).join(", ") || undefined}
-                  scopeLabel={
-                    scopeLabels.length > 0
-                      ? scopeLabels.join(" · ")
-                      : roleChips.length > 0
-                        ? "Gesamter Verein"
-                        : undefined
-                  }
-                  className="mt-2"
-                  interactive={canManage && !user.isPlatformSystemIdentity}
-                  overrideDraft={overrideDraft}
-                  onOverrideDraftChange={(next) => {
-                    setOverrideDraft(next);
-                    void persistOverrides(next);
-                  }}
-                  onResetToRoleBaseline={() => void persistOverrides({})}
-                />
-                {overrideSaving ? (
-                  <p className="mt-2 text-xs text-[var(--muted)]">Anpassungen werden gespeichert…</p>
-                ) : null}
-              </>
-            ) : (
-              <EffectiveAccessSummary groups={summaryGroups} />
-            )}
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Warum hat diese Person Zugriff?
-            </p>
-            <ul className="mt-2 space-y-2 text-sm">
-              {user.roles.map((r) => (
-                <li key={r.id}>
-                  {r.name} → Gesamter Verein → Modulzugriff über Rolle
-                </li>
-              ))}
-              {user.scopedRoles?.map((s, i) => (
-                <li key={`${s.id}-${i}`}>
-                  {s.name} → {s.orgUnitName} → Bereichsbezogener Zugriff
-                </li>
-              ))}
-            </ul>
-            {accessView?.effectiveTenantPermissionKeys?.length ? (
-              <details className="mt-4">
-                <summary className="cursor-pointer text-xs text-[var(--muted)]">Technische Berechtigungsschlüssel</summary>
-                <ul className="mt-2 max-h-40 overflow-y-auto font-mono text-[0.65rem] text-[var(--muted)]">
-                  {accessView.effectiveTenantPermissionKeys.slice(0, 40).map((k) => (
-                    <li key={k}>{k}</li>
-                  ))}
-                </ul>
-              </details>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-
-      {tab === "activity" ? (
-        <ul className="space-y-2 text-sm text-[var(--muted)]">
-          {user.lastLoginAt ? (
-            <li>Letzter Login: {formatPeopleAccessDateTime(user.lastLoginAt)}</li>
-          ) : (
-            <li>Kein Login registriert.</li>
-          )}
-          {user.pendingInvitation ? <li>Einladung ausstehend</li> : null}
-          {user.joinedAt ? (
-            <li>Beitritt: {formatPeopleAccessDate(user.joinedAt)}</li>
-          ) : null}
-          <li className="text-xs">Weitere Audit-Ereignisse folgen in einer späteren Governance-Erweiterung.</li>
-        </ul>
-      ) : null}
+      <SceContextTabsBoundary
+        config={quickViewTabConfig}
+        tabStateMode="local"
+        ariaLabel="Person Schnellansicht"
+        testId="person-quick-view-nav"
+        idPrefix={QUICK_VIEW_TAB_PREFIX}
+      >
+        <PersonQuickViewPanels
+          user={user}
+          isSelf={isSelf}
+          status={status}
+          roleChips={roleChips}
+          scopeLabels={scopeLabels}
+          canInvite={canInvite}
+          canManage={canManage}
+          permissionModuleGroups={permissionModuleGroups}
+          summaryGroups={summaryGroups}
+          permissionKeys={permissionKeys}
+          roleNamesByKey={roleNamesByKey}
+          overrideDraft={overrideDraft}
+          overrideSaving={overrideSaving}
+          onOverrideDraftChange={(next) => {
+            setOverrideDraft(next);
+            void persistOverrides(next);
+          }}
+          onResetOverrides={() => void persistOverrides({})}
+        />
+      </SceContextTabsBoundary>
     </Sheet>
   );
 }
