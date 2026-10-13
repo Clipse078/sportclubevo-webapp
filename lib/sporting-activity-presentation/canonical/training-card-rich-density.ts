@@ -7,6 +7,10 @@ import {
   type SceMatchRichCardDensity,
   type SceMatchRichDensityScale,
 } from "./match-card-rich-density";
+import {
+  sceActivityLocationIconClass,
+  sceActivityLocationTextClass,
+} from "./activity-card-semantic-tokens";
 import type { SceActivityPresentationDensity } from "./types";
 
 /** Training cards reuse the pitch-opaque activity card surface from 01D. */
@@ -27,6 +31,8 @@ export type SceTrainingRichDensityScale = {
   titleClass: string;
   teamClass: string;
   contextLineClass: string;
+  locationTextClass: string;
+  locationIconClass: string;
 };
 
 function mapRichScale(density: SceTrainingRichCardDensity): SceTrainingRichDensityScale {
@@ -44,6 +50,8 @@ function mapRichScale(density: SceTrainingRichCardDensity): SceTrainingRichDensi
     titleClass: match.clubNameClass,
     teamClass: match.scheduleTextClass,
     contextLineClass: match.scheduleTextClass,
+    locationTextClass: sceActivityLocationTextClass(match.scheduleTextClass),
+    locationIconClass: sceActivityLocationIconClass(match.scheduleIconClass),
   };
 }
 

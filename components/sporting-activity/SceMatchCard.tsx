@@ -17,10 +17,12 @@ import type {
 } from "@/lib/sporting-activity-presentation/canonical/types";
 import { formatSportingActivityScheduleLine } from "@/lib/sporting-activity-presentation/format";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import { ActivityTypePill } from "./ActivityTypePill";
 import { ActivityContextBadge } from "./ActivityContextBadge";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchCardResult } from "./SceMatchCardResult";
 import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
+import { SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
 import {
   isSceMatchRichCardDensity,
   SCE_MATCH_CARD_SHELL_CLASS,
@@ -345,20 +347,54 @@ function SceMatchLocationRow({
   locationLine: string;
   density: SceActivityPresentationDensity;
 }) {
-  const iconClass = richScale(density).scheduleIconClass;
+  const iconClass = richScale(density).locationIconClass;
 
   return (
     <div
-      className={cn(
-        "flex min-w-0 items-start gap-1.5",
-        richScale(density).scheduleTextClass,
-      )}
+      className={cn("flex min-w-0 items-start gap-1.5", richScale(density).locationTextClass)}
       data-testid="sce-match-location"
       data-sce-match-region="location"
       data-sce-match-location
     >
       <MapPin className={cn(iconClass, "mt-0.5")} aria-hidden />
       <p className="min-w-0 line-clamp-2">{locationLine}</p>
+    </div>
+  );
+}
+
+function SceMatchTypeHeader({
+  model,
+  showStatus,
+}: {
+  model: SceMatchPresentationModel;
+  showStatus: boolean;
+}) {
+  const status = model.matchLifecycle ?? model.status;
+  const contextBadges = model.contextBadges ?? [];
+  const hasTrailingMeta =
+    contextBadges.length > 0 || (showStatus && status?.label);
+
+  return (
+    <div
+      className="flex min-w-0 items-start justify-between gap-2"
+      data-sce-match-region="meta"
+      data-sce-match-header
+    >
+      <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
+      {hasTrailingMeta ? (
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+          {contextBadges.length > 0 ? (
+            <SceMatchContextBadges badges={contextBadges} />
+          ) : null}
+          {showStatus && status?.label ? (
+            <div data-sce-match-region="status">
+              <SceMatchCardStatus status={status} testId="sce-match-status" />
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <span className="min-w-0 flex-1" />
+      )}
     </div>
   );
 }
@@ -384,44 +420,20 @@ function SceMatchRichCardContent({
     showLocation && model.location
       ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
       : undefined;
-  const status = model.matchLifecycle ?? model.status;
-  const contextBadges = model.contextBadges ?? [];
   const scale = richScale(density);
-  const hasMetaHeader =
-    (showCompetition && model.competition?.label) ||
-    (showStatus && status?.label) ||
-    contextBadges.length > 0;
 
   return (
     <div className={cn("min-w-0", scale.contentSpaceYClass)}>
-      {hasMetaHeader ? (
-        <div
-          className="flex min-w-0 items-start justify-between gap-3"
-          data-sce-match-region="meta"
-          data-sce-match-header
+      <SceMatchTypeHeader model={model} showStatus={showStatus} />
+
+      {showCompetition && model.competition?.label ? (
+        <p
+          className={cn("min-w-0", scale.competitionTextClass)}
+          data-testid="sce-match-competition"
+          data-sce-match-region="competition"
         >
-          {showCompetition && model.competition?.label ? (
-            <p
-              className={cn("min-w-0", scale.competitionTextClass)}
-              data-testid="sce-match-competition"
-              data-sce-match-region="competition"
-            >
-              {model.competition.label}
-            </p>
-          ) : (
-            <span className="min-w-0 flex-1" />
-          )}
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
-            {contextBadges.length > 0 ? (
-              <SceMatchContextBadges badges={contextBadges} />
-            ) : null}
-            {showStatus && status?.label ? (
-              <div data-sce-match-region="status">
-                <SceMatchCardStatus status={status} testId="sce-match-status" />
-              </div>
-            ) : null}
-          </div>
-        </div>
+          {model.competition.label}
+        </p>
       ) : null}
 
       <SceMatchStackedFixturePanel model={model} density={density} />
@@ -454,7 +466,8 @@ function SceMatchMicroContent({
   const startAt = new Date(model.schedule.startAt);
 
   return (
-    <div className="min-w-0 space-y-1.5">
+    <div className="min-w-0 space-y-1.5" data-sce-match-density="MICRO">
+      <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
       <div
         className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5"
         data-testid="sce-match-fixture"
@@ -478,7 +491,10 @@ function SceMatchMicroContent({
         <div className="flex min-w-0 items-center justify-between gap-2">
           {showSchedule ? (
             <p
-              className="min-w-0 truncate font-mono text-[0.75rem] tabular-nums text-[var(--text-2)]"
+              className={cn(
+                "min-w-0 truncate font-mono text-[0.75rem] tabular-nums",
+                SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS,
+              )}
               data-testid="sce-match-schedule"
               data-sce-match-region="schedule"
             >

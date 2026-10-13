@@ -256,11 +256,11 @@ function SceTrainingLocationRow({
   const scale = richScale(density);
   return (
     <div
-      className={cn("flex min-w-0 items-start gap-1.5", scale.scheduleTextClass)}
+      className={cn("flex min-w-0 items-start gap-1.5", scale.locationTextClass)}
       data-testid="sce-training-location"
       data-sce-training-region="location"
     >
-      <MapPin className={cn(scale.scheduleIconClass, "mt-0.5")} aria-hidden />
+      <MapPin className={cn(scale.locationIconClass, "mt-0.5")} aria-hidden />
       <p className="min-w-0 line-clamp-2">{locationLine}</p>
     </div>
   );

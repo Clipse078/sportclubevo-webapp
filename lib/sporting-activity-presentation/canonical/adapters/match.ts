@@ -7,10 +7,8 @@ import {
 import { buildSceMatchTenantSideContextBadge } from "../match-context-badges";
 import { resolveSceMatchLifecycleStatus } from "../match-lifecycle-status";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
-import {
-  buildSportingActivityLocation,
-  normalizeSportingLocationMode,
-} from "@/lib/sporting-activity-presentation/location";
+import { buildMatchSportingActivityLocation } from "@/lib/sporting-activity-presentation/match-location";
+import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
 import { buildSceActivityRoute } from "../route";
 import { buildSceActivityPresentationStatus } from "../status";
@@ -48,18 +46,19 @@ export function resolveSceMatchPresentation(
       }
     : null;
 
-  const mode = normalizeSportingLocationMode(match.homeAway);
-  const pitch =
-    input.pitchLabel?.trim() || match.operational.pitchCode?.trim() || undefined;
+  const homeDisplayName =
+    resolveMatchcenterCompactSideName(match.home)?.trim() ||
+    match.home.displayName?.trim() ||
+    "";
 
-  const location =
-    legacyPresentation.location ??
-    buildSportingActivityLocation({
-      mode,
-      hostOrOrganiser: undefined,
-      venueName: match.location,
-      facilityResource: pitch,
-    });
+  const location = buildMatchSportingActivityLocation({
+    homeAway: match.homeAway,
+    tenantClubName: input.tenantClubName,
+    homeSideDisplayName: homeDisplayName,
+    venueName: match.location,
+    operationalPitchCode: match.operational.pitchCode,
+    resolvedPitchLabel: input.pitchLabel,
+  });
 
   const normalizedSide = match.homeAway?.trim().toUpperCase();
   const tenantSide = buildSceMatchTenantSideContextBadge(
@@ -71,7 +70,7 @@ export function resolveSceMatchPresentation(
     kind: "MATCH",
     activityId: match.id,
     resourceKey,
-    typeLabel: legacyPresentation.identity.typeLabel,
+    typeLabel: "SPIEL",
     schedule: legacyPresentation.schedule,
     location,
     route: buildSceActivityRoute("MATCH", resourceKey),

@@ -26,6 +26,10 @@ import type {
 import { formatSportingActivityScheduleLine } from "@/lib/sporting-activity-presentation/format";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import {
+  SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS,
+  SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTournamentCardStatus } from "./SceTournamentCardStatus";
 
@@ -228,10 +232,7 @@ function SceTournamentHauptteamLine({
 
   const microTeamClass =
     density === "MICRO"
-      ? cn(
-          "truncate text-[0.6875rem] font-semibold leading-tight",
-          "text-[color-mix(in_srgb,var(--sce-info)_88%,var(--foreground)_12%)]",
-        )
+      ? cn("truncate text-[0.6875rem] font-semibold leading-tight", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS)
       : scale.hauptteamNameClass;
   const microIconClass =
     density === "MICRO" ? "h-3 w-3 shrink-0 opacity-80 text-[var(--text-2)]" : scale.hauptteamIconClass;
@@ -505,7 +506,7 @@ function SceTournamentMicroContent({
       ) : null}
       {locationLine ? (
         <p
-          className="truncate text-[0.6875rem] text-[color-mix(in_srgb,var(--sce-info)_55%,var(--text-2)_45%)]"
+          className={cn("truncate text-[0.6875rem]", SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS)}
           data-testid="sce-tournament-micro-location"
           title={locationLine}
         >
