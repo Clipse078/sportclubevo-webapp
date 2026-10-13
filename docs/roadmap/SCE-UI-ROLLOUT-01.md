@@ -116,10 +116,12 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **SCE-UI-ROLLOUT-01E** | Canonical Training Card family |
 | **SCE-UI-ROLLOUT-01F** | Canonical Tournament Card family |
 | **SCE-UI-ROLLOUT-01G** | Canonical Club Event Card family |
-| **SCE-CLUB-EVENT-AUDIENCE-01** | Club Event audience & team scope (`CLUB_WIDE` \| `SELECTED_TEAMS`, N:M teams) — **[contract doc](./SCE-CLUB-EVENT-AUDIENCE-01.md)** |
+| **SCE-CLUB-EVENT-AUDIENCE-01** | Club Event organisational audience, create workflow, recurring series (R1 + R1.1) — **[closure doc](./SCE-CLUB-EVENT-AUDIENCE-01.md)** |
+| **SCE-ACTIVITY-CREATE-01A** | Unified Activity Creation — research & architecture ([`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md)) |
+| **SCE-ACTIVITY-CREATE-01B+** | Activity Composer foundation & domain adoption (after architecture gate) |
 | **SCE-UI-ROLLOUT-01H** | Core planning surface adoption (Matchcenter / Trainings / Tournamentcenter / Veranstaltungen) — adopts audience-aware Club Event contract |
-| **SCE-UI-ROLLOUT-01I** | Dashboard + Mein Programm adoption |
-| **SCE-UI-ROLLOUT-01J** | Team / programme / calendar / related-activity adoption |
+| **SCE-UI-ROLLOUT-01I** | Team programme & calendar adoption |
+| **SCE-UI-ROLLOUT-01J** | Dashboard + Mein Programm adoption |
 | **SCE-UI-ROLLOUT-01K** | Communication / notifications / cross-module activity references |
 | **SCE-UI-ROLLOUT-01L** | Remaining eligible contextual-detail pages → Universal Context Tabs |
 | **SCE-UI-ROLLOUT-01M** | Responsive/mobile-readiness + accessibility + visual-consistency audit |
@@ -136,7 +138,8 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **01E** | **CLOSED** |
 | **01F** | **CLOSED** — [`SCE-UI-ROLLOUT-01F.md`](./SCE-UI-ROLLOUT-01F.md); PO visual UAT **PASS (R4)** |
 | **01G** | **CLOSED** — [`SCE-UI-ROLLOUT-01G.md`](./SCE-UI-ROLLOUT-01G.md); PO visual UAT **PASS (01G-R1)** |
-| **SCE-CLUB-EVENT-AUDIENCE-01** | **NOT STARTED** — [`SCE-CLUB-EVENT-AUDIENCE-01.md`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
+| **SCE-CLUB-EVENT-AUDIENCE-01** | **CLOSED** — [`SCE-CLUB-EVENT-AUDIENCE-01.md`](./SCE-CLUB-EVENT-AUDIENCE-01.md); PO UAT **PASS**; PR **#837** |
+| **SCE-ACTIVITY-CREATE-01A** | **NOT STARTED** — [`SCE-ACTIVITY-CREATE-01A.md`](./SCE-ACTIVITY-CREATE-01A.md) |
 | **01H** | **NOT STARTED** |
 | **01I** | **NOT STARTED** |
 | **01J** | **NOT STARTED** |
@@ -152,14 +155,18 @@ Planning baseline only — **01A must gather repository evidence** before treati
 
 ```text
 01G Club Event Card Family — CLOSED
-  → SCE-CLUB-EVENT-AUDIENCE-01 — NEXT
+  → SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED (R1 + R1.1)
+  → SCE-ACTIVITY-CREATE-01A Unified Activity Creation — Research & Architecture — NOT_STARTED
+  → (gate) SCE-ACTIVITY-CREATE-01B+ Activity Composer foundation — NOT_STARTED
   → 01H Core Planning Surfaces Adoption — NOT_STARTED
-  → 01I Dashboard + Mein Programm
-  → 01J Team/programme/calendar adoption
-  → 01K Communication/activity references
-  → 01L Remaining contextual pages
-  → 01M Responsive/accessibility audit
-  → 01N Product-wide integrity sweep
+  → 01I Team Programme & Calendar Adoption — NOT_STARTED
+  → 01J Dashboard + Mein Programm Adoption — NOT_STARTED
+  → 01K Communication / Notifications / Activity References — NOT_STARTED
+  → 01L Remaining Contextual Detail Pages — NOT_STARTED
+  → 01M Responsive / Accessibility / Visual Consistency — NOT_STARTED
+  → 01N Product-wide Integrity / Legacy Removal — NOT_STARTED
+  → Sponsor Commercial Workflows
+  → Mobile App
 ```
 
 **01H+** must adopt the **audience-aware** Club Event contract from `SCE-CLUB-EVENT-AUDIENCE-01`, not the legacy single-team `Event.teamId` compatibility model.
