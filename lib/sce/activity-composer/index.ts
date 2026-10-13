@@ -14,6 +14,8 @@ export type {
   SceActivityCreateSuccessResult,
 } from "./success-result";
 
+export { normalizeActivityCreateSuccessOutcome } from "./success-result";
+
 export type {
   SceActivityCreateDraftPersistenceCapability,
   SceActivityCreateResumeDraft,

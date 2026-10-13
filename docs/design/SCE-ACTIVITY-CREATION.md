@@ -87,13 +87,18 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | `draftPersistence.saveDraft` | Explicit draft persistence adapter — **01C+** supplies real domain storage |
 | `firstInvalidTab` | Ordered tab walk |
 | `submitDraft` | Domain adapter → create/commit APIs |
-| Success `outcome` | `DRAFT_SAVED` \| `CREATED` — host chooses post-save navigation (no hard-coded policy) |
+| Success `outcome` | `DRAFT_SAVED` \| `PUBLISHED` \| `SUBMITTED_FOR_APPROVAL` (`CREATED` = legacy alias for `PUBLISHED`) |
+| `effectiveGovernance` | Host-resolved create + publication authority — Composer does not reconstruct role logic |
 | Cancel / dirty | `SceContextDirtyGuardProvider` — dirty = local ≠ last persisted baseline |
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
 
-**Lifecycle (01B-R2 foundation):** Start → Compose → Save Draft (optional) → Resume → Validate → Create/Commit → Success.
+**Lifecycle (01B-R3 — canonical):** START → COMPOSE → optional SAVE DRAFT / RESUME → **COMMIT VALIDATION** → publication authority (`DIRECT_PUBLISH` \| `APPROVAL_REQUIRED`) → `PUBLISHED` or `PENDING_APPROVAL` workflow.
 
-**Product principle:** *Saving preserves work. Creating activates the activity.*
+**Terminology:** **Form/commit validation** (technical/domain) is separate from **governance approval / Freigabe** (club policy). Never use generic «validation» for both.
+
+**Product principle:** *Saving preserves work. Submitting commits the activity. Publication follows the creator's effective governance policy.*
+
+**Governance defaults (01B-R3 — APPROVED):** Optional approval; **OFF by default**; creator-specific publication authority; activity-type validator pools; create permission ≠ publish authority; saving a draft **never** triggers approval.
 
 **No server autosave in 01B** — explicit user-triggered draft/create only; recovery/autosave is a separate evaluation (resources, conflicts, publication, audit).
 
@@ -115,7 +120,19 @@ Domain components remain authoritative (`VeranstaltungCreateForm` panels, future
 
 ---
 
-## 5. Validation (**REUSABLE** pattern from Club Event)
+## 5. Form validation vs governance approval (**FOUNDATION_IMPLEMENTED** — 01B-R3 contracts)
+
+| Layer | When | Owner |
+|-------|------|--------|
+| **Draft validation** | Save draft | `validateDraftForSave` — minimum safe persistence |
+| **Commit validation** | Primary commit | `validateDraft` — full domain requirements before any governance transition |
+| **Governance approval** | After successful commit when `APPROVAL_REQUIRED` | Validator pool + revision-bound decisions — **not** a Composer content tab |
+
+Module: `lib/sce/activity-governance/` — policy resolver, invariants, revision/audit/notification contracts. **No production schema** in 01B-R3.
+
+---
+
+## 6. Validation tabs & Club Event pattern (**REUSABLE**)
 
 | Rule | Source |
 |------|--------|
@@ -130,7 +147,7 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 
 ---
 
-## 6. Action footer (**FOUNDATION_IMPLEMENTED** — 01B-R2 hierarchy)
+## 7. Action footer (**FOUNDATION_IMPLEMENTED** — 01B-R2 + 01B-R3 policy-aware primary)
 
 Canonical composer footer (left → right):
 
@@ -138,7 +155,7 @@ Canonical composer footer (left → right):
 |------|---------|--------|
 | Left / quiet | **Abbrechen** | Ghost |
 | Right / secondary | **Als Entwurf speichern** or **Änderungen speichern** | Secondary (never second primary) |
-| Right / primary | Domain commit (`Training erstellen`, …) | Primary |
+| Right / primary | Direct publish: domain label (`Training erstellen`, …) · Approval required: **Zur Freigabe einreichen** (or domain equivalent) | Primary |
 
 - Save Draft is **not** hidden inside the primary dropdown; no wizard **Weiter/Zurück**.
 - **Destructive draft deletion** is **not** a standard footer action — use a separate confirmed command (01C+).
@@ -154,7 +171,7 @@ Legacy domain footers (pre-adoption):
 
 ---
 
-## 7. Dirty guard (**REUSABLE** + **NEW_REQUIRED**)
+## 8. Dirty guard (**REUSABLE** + **NEW_REQUIRED**)
 
 **EXISTING:** Tab switch confirmation via `SceContextTabs` + dirty provider.
 

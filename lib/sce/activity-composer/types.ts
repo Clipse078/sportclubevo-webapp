@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { ContextTabId, ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 import type { SceActivityCreateOriginContext } from "./origin-context";
 import type { SceActivityCreateSuccessResult } from "./success-result";
+import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
 import type {
   SceActivityCreateDraftPersistenceCapability,
   SceActivityCreateResumeDraft,
@@ -65,7 +66,7 @@ export type SceActivityCreateDefinition<
   title: string;
   /** Optional accessible description (`aria-describedby`). */
   description?: string;
-  /** Domain primary action label — never generic «Erstellen» alone. */
+  /** Domain primary action label for direct publish — never generic «Erstellen» alone. */
   createActionLabel: string;
   defaultTab: TTabId;
   tabs: SceActivityCreateTabDefinition<TTabId, TDraft>[];
@@ -104,6 +105,11 @@ export type SceActivityComposerProps<
   onDirtyChange?: (dirty: boolean) => void;
   /** Resume an existing persisted draft (01C+ hydrates; preview uses in-memory). */
   resumeDraft?: SceActivityCreateResumeDraft<TDraft>;
+  /**
+   * Resolved governance for this creator + activity type (host/server supplies).
+   * When omitted, Composer assumes DIRECT_PUBLISH for foundation backwards compatibility.
+   */
+  effectiveGovernance?: SceActivityEffectiveGovernance | null;
   /** Composer-owned embedded region for complex selectors (01C+); not a nested dialog. */
   secondaryPanel?: ReactNode;
   testId?: string;

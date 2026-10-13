@@ -15,6 +15,8 @@ import type {
 } from "@/lib/sce/activity-composer/types";
 import type { SceActivityCreateOriginContext } from "@/lib/sce/activity-composer/origin-context";
 import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
+import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
+import { SCE_ACTIVITY_DEFAULT_APPROVAL_STRATEGY } from "@/lib/sce/activity-governance/types";
 
 const ACTIVITY_KINDS: SceActivityCreateKind[] = [
   "CLUB_EVENT",
@@ -47,6 +49,9 @@ export function SceActivityComposerPreviewHarness({
   const [overlayOpen, setOverlayOpen] = useState(initialContainerMode === "overlay");
   const [draft, setDraft] = useState<PreviewComposerDraft>(INITIAL_PREVIEW_DRAFT);
   const [lastOutcome, setLastOutcome] = useState<string | null>(null);
+  const [publicationMode, setPublicationMode] = useState<"DIRECT_PUBLISH" | "APPROVAL_REQUIRED">(
+    "DIRECT_PUBLISH",
+  );
 
   const resumeDraft: SceActivityCreateResumeDraft<PreviewComposerDraft> | undefined =
     scenario === "RESUME_DRAFT"
@@ -97,34 +102,6 @@ export function SceActivityComposerPreviewHarness({
             </div>
           ),
         },
-        {
-          key: "validierung",
-          label: "Validierung",
-          render: ({ draft: d, setDraft: setD, fieldErrors }) => (
-            <div className="space-y-4">
-              <p className="text-sm text-[var(--text-2)]">
-                Fiktive Validierung — Entwurf vs. Erstellen (Toggle First).
-              </p>
-              <SwitchToggle
-                id="preview-force-validation"
-                checked={d.forceValidationError}
-                onChange={(checked) => setD({ ...d, forceValidationError: checked })}
-                label="Commit-/API-Fehler erzwingen"
-              />
-              <SwitchToggle
-                id="preview-force-draft-save-error"
-                checked={d.forceDraftSaveError}
-                onChange={(checked) => setD({ ...d, forceDraftSaveError: checked })}
-                label="Entwurf-Speicherfehler erzwingen"
-              />
-              {fieldErrors?.title ? (
-                <p role="alert" className="text-sm text-[var(--sce-danger)]">
-                  {fieldErrors.title}
-                </p>
-              ) : null}
-            </div>
-          ),
-        },
       ],
     [],
   );
@@ -140,7 +117,16 @@ export function SceActivityComposerPreviewHarness({
     selectedWeek: "2026-W42",
   };
 
-  const composerKey = `${activityKind}-${scenario}-${initialContainerMode}`;
+  const effectiveGovernance: SceActivityEffectiveGovernance = {
+    activityType: activityKind,
+    personId: "preview-person",
+    mayCreate: true,
+    publicationAuthority: publicationMode,
+    approvalStrategy: SCE_ACTIVITY_DEFAULT_APPROVAL_STRATEGY,
+    validatorPersonIds: publicationMode === "APPROVAL_REQUIRED" ? ["validator-1"] : [],
+  };
+
+  const composerKey = `${activityKind}-${scenario}-${initialContainerMode}-${publicationMode}`;
 
   const composer = (
     <SceActivityComposer
@@ -154,6 +140,7 @@ export function SceActivityComposerPreviewHarness({
       resumeDraft={resumeDraft}
       onSuccess={(result) => setLastOutcome(result.outcome)}
       originContext={origin}
+      effectiveGovernance={effectiveGovernance}
       testId={
         initialContainerMode === "page"
           ? "sce-activity-composer-preview-page"
@@ -173,6 +160,10 @@ export function SceActivityComposerPreviewHarness({
         setLastOutcome(null);
       }}
       lastOutcome={lastOutcome}
+      draft={draft}
+      onDraftChange={setDraft}
+      publicationMode={publicationMode}
+      onPublicationMode={setPublicationMode}
     />
   );
 
@@ -210,15 +201,27 @@ function PreviewControls({
   scenario,
   onScenario,
   lastOutcome,
+  draft,
+  onDraftChange,
+  publicationMode,
+  onPublicationMode,
 }: {
   activityKind: SceActivityCreateKind;
   onActivityKind: (k: SceActivityCreateKind) => void;
   scenario: "NEW" | "RESUME_DRAFT";
   onScenario: (s: "NEW" | "RESUME_DRAFT") => void;
   lastOutcome: string | null;
+  draft: PreviewComposerDraft;
+  onDraftChange: (draft: PreviewComposerDraft) => void;
+  publicationMode: "DIRECT_PUBLISH" | "APPROVAL_REQUIRED";
+  onPublicationMode: (mode: "DIRECT_PUBLISH" | "APPROVAL_REQUIRED") => void;
 }) {
   return (
-    <div className="flex flex-wrap items-end gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+    <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+        Vorschau-Steuerung (kein Produktions-Composer-Tab)
+      </p>
+      <div className="flex flex-wrap items-end gap-4">
       <label className="text-sm font-medium text-[var(--foreground)]">
         Aktivitätstyp
         <select
@@ -246,11 +249,46 @@ function PreviewControls({
           <option value="RESUME_DRAFT">Gespeicherter Entwurf</option>
         </select>
       </label>
+      <label className="text-sm font-medium text-[var(--foreground)]">
+        Freigabe-Policy (Vorschau)
+        <select
+          className="mt-1 block rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+          value={publicationMode}
+          onChange={(e) =>
+            onPublicationMode(e.target.value as "DIRECT_PUBLISH" | "APPROVAL_REQUIRED")
+          }
+          data-testid="preview-publication-mode"
+        >
+          <option value="DIRECT_PUBLISH">Direct publishing</option>
+          <option value="APPROVAL_REQUIRED">Approval required</option>
+        </select>
+      </label>
       {lastOutcome ? (
         <p className="text-sm text-[var(--text-2)]" data-testid="preview-last-outcome">
           Letztes Ergebnis: {lastOutcome}
         </p>
       ) : null}
+      </div>
+      <div
+        className="flex flex-col gap-3 border-t border-[var(--border)] pt-4"
+        data-testid="preview-debug-governance-region"
+      >
+        <p className="text-sm text-[var(--text-2)]">
+          Commit-Validierung / API-Simulation — außerhalb der Domain-Tabs (01B-R3).
+        </p>
+        <SwitchToggle
+          id="preview-force-validation"
+          checked={draft.forceValidationError}
+          onChange={(checked) => onDraftChange({ ...draft, forceValidationError: checked })}
+          label="Commit-/API-Fehler erzwingen"
+        />
+        <SwitchToggle
+          id="preview-force-draft-save-error"
+          checked={draft.forceDraftSaveError}
+          onChange={(checked) => onDraftChange({ ...draft, forceDraftSaveError: checked })}
+          label="Entwurf-Speicherfehler erzwingen"
+        />
+      </div>
     </div>
   );
 }

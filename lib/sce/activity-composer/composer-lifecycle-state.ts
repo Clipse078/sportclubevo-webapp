@@ -40,7 +40,9 @@ export function resolveComposerLifecyclePhase(input: {
 
 export function resolveComposerPersistenceStatusLabel(
   phase: SceActivityComposerLifecyclePhase,
+  options?: { commitIsApprovalSubmission?: boolean },
 ): string | null {
+  const commitVerb = options?.commitIsApprovalSubmission ? "eingereicht" : "erstellt";
   switch (phase) {
     case "NEW_CLEAN":
     case "NEW_DIRTY":
@@ -53,7 +55,7 @@ export function resolveComposerPersistenceStatusLabel(
     case "SAVING_DRAFT":
       return "ENTWURF · Wird gespeichert…";
     case "SUBMITTING":
-      return "ENTWURF · Wird erstellt…";
+      return `ENTWURF · Wird ${commitVerb}…`;
     case "SUBMIT_ERROR":
       return null;
     default:

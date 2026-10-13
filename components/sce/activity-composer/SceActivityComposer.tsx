@@ -37,6 +37,11 @@ import {
 import type { ContextTabId } from "@/lib/context-tabs/types";
 import type { SceActivityComposerProps } from "@/lib/sce/activity-composer/types";
 import type { SceActivityCreateSuccessResult } from "@/lib/sce/activity-composer/success-result";
+import {
+  resolveCommitSuccessOutcome,
+  resolveComposerCommitActionLabelFromGovernance,
+  resolveComposerEffectiveGovernanceOrDefault,
+} from "@/lib/sce/activity-governance";
 import { cn } from "@/lib/cn";
 import { SceActivityComposerShell } from "./SceActivityComposerShell";
 
@@ -129,6 +134,7 @@ function ComposerWorkspace<
   hasPersistedDraft,
   persistedDraftId,
   onDraftPersisted,
+  effectiveGovernance,
 }: {
   definition: SceActivityComposerProps<TDraft, TResult, TTabId>["definition"];
   containerMode: SceActivityComposerProps<TDraft, TResult, TTabId>["containerMode"];
@@ -151,6 +157,7 @@ function ComposerWorkspace<
   hasPersistedDraft: boolean;
   persistedDraftId?: string;
   onDraftPersisted: (input: { draft: TDraft; draftId: string }) => void;
+  effectiveGovernance: ReturnType<typeof resolveComposerEffectiveGovernanceOrDefault>;
 }) {
   const [tabErrors, setTabErrors] = useState<Partial<Record<TTabId, boolean>>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | undefined>();
@@ -174,8 +181,15 @@ function ComposerWorkspace<
     draftSaveError,
     submitError,
   });
+  const commitActionLabel = resolveComposerCommitActionLabelFromGovernance({
+    directPublishLabel: definition.createActionLabel,
+    effectiveGovernance,
+  });
+  const commitIsApprovalSubmission =
+    effectiveGovernance.publicationAuthority === "APPROVAL_REQUIRED";
+
   const persistenceStatusLabel = supportsDraftPersistence
-    ? resolveComposerPersistenceStatusLabel(lifecyclePhase)
+    ? resolveComposerPersistenceStatusLabel(lifecyclePhase, { commitIsApprovalSubmission })
     : null;
 
   const tabConfig = useMemo(
@@ -271,7 +285,9 @@ function ComposerWorkspace<
         return;
       }
       const success: SceActivityCreateSuccessResult<TResult> = {
-        outcome: "CREATED",
+        outcome: resolveCommitSuccessOutcome({
+          publicationAuthority: effectiveGovernance.publicationAuthority,
+        }),
         activityKind: definition.activityKind,
         activityId:
           typeof outcome.result === "object" &&
@@ -296,6 +312,7 @@ function ComposerWorkspace<
     onDirtyChange,
     onSuccess,
     orderedTabKeys,
+    effectiveGovernance.publicationAuthority,
     originContext,
   ]);
 
@@ -304,7 +321,7 @@ function ComposerWorkspace<
       activityKind={definition.activityKind}
       title={definition.title}
       description={definition.description}
-      createActionLabel={definition.createActionLabel}
+      createActionLabel={commitActionLabel}
       persistenceStatusLabel={persistenceStatusLabel}
       presentation={presentation}
       onClose={isModalSurface ? guardedClose : undefined}
@@ -370,7 +387,13 @@ function ComposerOrchestration<
     resumeDraft,
     secondaryPanel,
     testId,
+    effectiveGovernance: effectiveGovernanceProp,
   } = props;
+
+  const effectiveGovernance = resolveComposerEffectiveGovernanceOrDefault({
+    activityType: definition.activityKind,
+    effectiveGovernance: effectiveGovernanceProp,
+  });
 
   const supportsDraftPersistence = Boolean(definition.draftPersistence?.supportsDraftPersistence);
 
@@ -488,6 +511,7 @@ function ComposerOrchestration<
         hasPersistedDraft={hasPersistedDraft}
         persistedDraftId={persistedDraftId}
         onDraftPersisted={handleDraftPersisted}
+        effectiveGovernance={effectiveGovernance}
       />
     </TabProvider>
   );

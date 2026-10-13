@@ -72,6 +72,21 @@ describe("SCE-ACTIVITY-CREATE-01B — architecture guardrails", () => {
     expect(footer).toContain('variant="secondary"');
   });
 
+  it("R3 — preview removes Validierung from canonical domain tabs", () => {
+    const previewDef = read("lib/sce/activity-composer/build-preview-definition.ts");
+    expect(previewDef).not.toContain('"validierung"');
+    const harness = read("components/sce/activity-composer/SceActivityComposerPreviewHarness.tsx");
+    expect(harness).toContain("preview-debug-governance-region");
+    expect(harness).not.toMatch(/key:\s*["']validierung["']/);
+  });
+
+  it("R3 — governance module exists without prisma migrations", () => {
+    expect(existsSync(join(root, "lib/sce/activity-governance/index.ts"))).toBe(true);
+    expect(existsSync(join(root, "prisma/migrations"))).toBe(true);
+    const migrations = read("lib/sce/activity-governance/types.ts");
+    expect(migrations).toContain("DIRECT_PUBLISH");
+  });
+
   it("does not migrate production domain /new routes in 01B", () => {
     for (const route of [
       "app/(admin)/dashboard/veranstaltungen/new/page.tsx",

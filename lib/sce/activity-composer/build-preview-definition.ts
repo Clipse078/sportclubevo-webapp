@@ -1,7 +1,7 @@
 import type { ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 import type { SceActivityCreateDefinition, SceActivityCreateKind } from "./types";
 
-export type PreviewComposerTabId = "grunddaten" | "details" | "ressourcen" | "validierung";
+export type PreviewComposerTabId = "grunddaten" | "details" | "ressourcen";
 
 export type PreviewComposerDraft = {
   title: string;
@@ -24,7 +24,6 @@ export function buildPreviewTabNavigationConfig(input?: {
       { key: "grunddaten", label: mark("grunddaten", "Grunddaten"), placement: "primary" },
       { key: "details", label: mark("details", "Details"), placement: "primary" },
       { key: "ressourcen", label: mark("ressourcen", "Ressourcen"), placement: "primary" },
-      { key: "validierung", label: mark("validierung", "Validierung"), placement: "primary" },
     ],
   };
 }
@@ -88,11 +87,10 @@ export function createPreviewActivityCreateDefinition(
       return {
         valid: false,
         tabErrors: {
-          grunddaten: titleMissing,
-          validierung: draft.forceValidationError,
+          grunddaten: titleMissing || draft.forceValidationError,
         },
         fieldErrors,
-        firstInvalidTab: titleMissing ? "grunddaten" : "validierung",
+        firstInvalidTab: "grunddaten",
       };
     },
     submitDraft: async (draft) => {

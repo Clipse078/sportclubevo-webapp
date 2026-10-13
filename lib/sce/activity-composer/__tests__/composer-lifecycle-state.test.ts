@@ -56,5 +56,9 @@ describe("composer lifecycle state (01B-R2)", () => {
   it("maps persistence status labels for assistive/header display", () => {
     expect(resolveComposerPersistenceStatusLabel("DRAFT_SAVED")).toContain("Gespeichert");
     expect(resolveComposerPersistenceStatusLabel("DRAFT_DIRTY")).toContain("Nicht gespeicherte");
+    expect(resolveComposerPersistenceStatusLabel("SUBMITTING")).toContain("erstellt");
+    expect(
+      resolveComposerPersistenceStatusLabel("SUBMITTING", { commitIsApprovalSubmission: true }),
+    ).toContain("eingereicht");
   });
 });

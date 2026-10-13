@@ -254,18 +254,22 @@ PO visual UAT for 01B foundation: **`/sce-preview/activity-composer`**, **`/sce-
 
 *Shared workflow does not require identical container geometry.*
 
-**Draft / action contract (01B-R2):**
+**Draft / action / governance contract (01B-R2 + 01B-R3):**
 
 | Topic | Contract |
 |-------|----------|
-| Lifecycle | Start → Compose → Save Draft → Resume → Validate → Create → Success |
-| Principle | *Saving preserves work. Creating activates the activity.* |
-| Footer | Ghost **Abbrechen** · secondary **Als Entwurf speichern** / **Änderungen speichern** · primary domain commit |
-| Validation | `validateDraftForSave` (draft) vs `validateDraft` (commit) |
+| Lifecycle | START → COMPOSE → optional draft → **commit validation** → direct publish **or** submit for **Freigabe** |
+| Principle | *Saving preserves work. Submitting commits the activity. Publication follows effective governance policy.* |
+| Footer | Ghost **Abbrechen** · secondary draft save · policy-aware primary (`Training erstellen` vs **Zur Freigabe einreichen**) |
+| Validation vs approval | **Draft/commit validation** (form) ≠ **governance approval** (optional, admin-controlled, creator-specific) |
+| Governance default | **DIRECT_PUBLISH** — approval never globally mandatory |
+| Validators | 1:n pool per activity type; **ANY_ONE** approve in V1; no self-approval |
+| Approval UX | **Not** a Composer content tab — workflow state + future **Freigaben** inbox |
+| Admin (future) | Person-centric + governance-centric views over **one** policy store; create = Toggle; publication mode = single-choice |
 | Dirty vs draft | Dirty = local changes; draft = persisted incomplete activity |
 | Autosave | **Not in 01B** — explicit persistence only |
-| Success | `SceActivityCreateSuccessResult.outcome`: `DRAFT_SAVED` \| `CREATED` |
-| Domain persistence | **01C+** — no Prisma/API in foundation preview |
+| Success | `DRAFT_SAVED` \| `PUBLISHED` \| `SUBMITTED_FOR_APPROVAL` (`CREATED` legacy alias) |
+| Domain persistence | **01C+** — governance DB deferred unless 01C gate requires it |
 
 ---
 

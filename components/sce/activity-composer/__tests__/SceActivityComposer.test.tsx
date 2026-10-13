@@ -48,11 +48,6 @@ function previewDefinition() {
       label: "Ressourcen",
       render: () => <p>Ressourcen</p>,
     },
-    {
-      key: "validierung",
-      label: "Validierung",
-      render: () => <p>Validierung</p>,
-    },
   ]);
 }
 
@@ -92,10 +87,10 @@ describe("SceActivityComposer foundation (01B)", () => {
 
   it("E — first invalid tab resolution helper", () => {
     const first = resolveFirstInvalidTab(
-      ["grunddaten", "details", "validierung"] as PreviewComposerTabId[],
-      { validierung: true },
+      ["grunddaten", "details", "ressourcen"] as PreviewComposerTabId[],
+      { details: true },
     );
-    expect(first).toBe("validierung");
+    expect(first).toBe("details");
   });
 
   it("F/G — persistent footer with domain label", () => {
@@ -329,7 +324,7 @@ describe("SceActivityComposer foundation (01B)", () => {
     );
     fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
-    expect(onSuccess.mock.calls[0][0].outcome).toBe("CREATED");
+    expect(onSuccess.mock.calls[0][0].outcome).toBe("PUBLISHED");
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -492,6 +487,67 @@ describe("SceActivityComposer foundation (01B)", () => {
     expect(window.confirm).toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByDisplayValue("Geändert")).toBeTruthy();
+  });
+
+  it("R3 — approval-required primary label and SUBMITTED_FOR_APPROVAL outcome", async () => {
+    const onSuccess = vi.fn();
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={vi.fn()}
+        onSuccess={onSuccess}
+        effectiveGovernance={{
+          activityType: "TRAINING",
+          personId: "max",
+          mayCreate: true,
+          publicationAuthority: "APPROVAL_REQUIRED",
+          approvalStrategy: "ANY_ONE",
+          validatorPersonIds: ["fabio"],
+        }}
+        draft={{
+          title: "Gültiger Titel",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("sce-activity-composer-submit").textContent).toContain(
+      "Zur Freigabe einreichen",
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(onSuccess.mock.calls[0][0].outcome).toBe("SUBMITTED_FOR_APPROVAL");
+  });
+
+  it("R3 — draft save never submits for approval", async () => {
+    const onSuccess = vi.fn();
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={vi.fn()}
+        onSuccess={onSuccess}
+        effectiveGovernance={{
+          activityType: "TRAINING",
+          personId: "max",
+          mayCreate: true,
+          publicationAuthority: "APPROVAL_REQUIRED",
+          approvalStrategy: "ANY_ONE",
+          validatorPersonIds: ["fabio"],
+        }}
+        draft={{
+          title: "ab",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-save-draft"));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(onSuccess.mock.calls[0][0].outcome).toBe("DRAFT_SAVED");
   });
 
   it("R2 — draft save success keeps composer open and reports DRAFT_SAVED", async () => {
