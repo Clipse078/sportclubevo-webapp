@@ -14,6 +14,7 @@ import type {
   SceActivityCreateTabDefinition,
 } from "@/lib/sce/activity-composer/types";
 import type { SceActivityCreateOriginContext } from "@/lib/sce/activity-composer/origin-context";
+import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
 
 const ACTIVITY_KINDS: SceActivityCreateKind[] = [
   "CLUB_EVENT",
@@ -22,19 +23,35 @@ const ACTIVITY_KINDS: SceActivityCreateKind[] = [
   "TOURNAMENT",
 ];
 
+const INITIAL_PREVIEW_DRAFT: PreviewComposerDraft = {
+  title: "",
+  notes: "",
+  forceValidationError: false,
+  forceDraftSaveError: false,
+};
+
+const SAVED_PREVIEW_DRAFT: PreviewComposerDraft = {
+  title: "Gespeicherter Entwurf",
+  notes: "Vorschau — ohne API",
+  forceValidationError: false,
+  forceDraftSaveError: false,
+};
+
 export function SceActivityComposerPreviewHarness({
   initialContainerMode,
 }: {
   initialContainerMode: "overlay" | "page";
 }) {
   const [activityKind, setActivityKind] = useState<SceActivityCreateKind>("TRAINING");
+  const [scenario, setScenario] = useState<"NEW" | "RESUME_DRAFT">("NEW");
   const [overlayOpen, setOverlayOpen] = useState(initialContainerMode === "overlay");
-  const [isDirty, setIsDirty] = useState(false);
-  const [draft, setDraft] = useState<PreviewComposerDraft>({
-    title: "Vorschau-Titel",
-    notes: "",
-    forceValidationError: false,
-  });
+  const [draft, setDraft] = useState<PreviewComposerDraft>(INITIAL_PREVIEW_DRAFT);
+  const [lastOutcome, setLastOutcome] = useState<string | null>(null);
+
+  const resumeDraft: SceActivityCreateResumeDraft<PreviewComposerDraft> | undefined =
+    scenario === "RESUME_DRAFT"
+      ? { draftId: "preview-resume-id", baselineDraft: SAVED_PREVIEW_DRAFT }
+      : undefined;
 
   const tabRenderers = useMemo((): SceActivityCreateTabDefinition<
     PreviewComposerTabId,
@@ -50,6 +67,7 @@ export function SceActivityComposerPreviewHarness({
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
                 value={d.title}
                 onChange={(e) => setD({ ...d, title: e.target.value })}
+                data-testid="preview-title-input"
               />
             </label>
           ),
@@ -85,13 +103,19 @@ export function SceActivityComposerPreviewHarness({
           render: ({ draft: d, setDraft: setD, fieldErrors }) => (
             <div className="space-y-4">
               <p className="text-sm text-[var(--text-2)]">
-                Domain-Validierung (Toggle First — kein Checkbox-Control).
+                Fiktive Validierung — Entwurf vs. Erstellen (Toggle First).
               </p>
               <SwitchToggle
                 id="preview-force-validation"
                 checked={d.forceValidationError}
                 onChange={(checked) => setD({ ...d, forceValidationError: checked })}
-                label="Validierungsfehler erzwingen"
+                label="Commit-/API-Fehler erzwingen"
+              />
+              <SwitchToggle
+                id="preview-force-draft-save-error"
+                checked={d.forceDraftSaveError}
+                onChange={(checked) => setD({ ...d, forceDraftSaveError: checked })}
+                label="Entwurf-Speicherfehler erzwingen"
               />
               {fieldErrors?.title ? (
                 <p role="alert" className="text-sm text-[var(--sce-danger)]">
@@ -116,38 +140,54 @@ export function SceActivityComposerPreviewHarness({
     selectedWeek: "2026-W42",
   };
 
+  const composerKey = `${activityKind}-${scenario}-${initialContainerMode}`;
+
+  const composer = (
+    <SceActivityComposer
+      key={composerKey}
+      definition={definition}
+      containerMode={initialContainerMode === "page" ? "page" : "overlay"}
+      open={initialContainerMode === "overlay" ? overlayOpen : undefined}
+      onClose={() => setOverlayOpen(false)}
+      draft={scenario === "RESUME_DRAFT" ? draft : draft}
+      onDraftChange={setDraft}
+      resumeDraft={resumeDraft}
+      onSuccess={(result) => setLastOutcome(result.outcome)}
+      originContext={origin}
+      testId={
+        initialContainerMode === "page"
+          ? "sce-activity-composer-preview-page"
+          : "sce-activity-composer-preview-overlay"
+      }
+    />
+  );
+
+  const controls = (
+    <PreviewControls
+      activityKind={activityKind}
+      onActivityKind={setActivityKind}
+      scenario={scenario}
+      onScenario={(next) => {
+        setScenario(next);
+        setDraft(next === "RESUME_DRAFT" ? SAVED_PREVIEW_DRAFT : INITIAL_PREVIEW_DRAFT);
+        setLastOutcome(null);
+      }}
+      lastOutcome={lastOutcome}
+    />
+  );
+
   if (initialContainerMode === "page") {
     return (
       <div className="space-y-6" data-testid="sce-activity-composer-preview-page-root">
-        <PreviewControls
-          activityKind={activityKind}
-          onActivityKind={setActivityKind}
-          isDirty={isDirty}
-          onDirty={setIsDirty}
-        />
-        <SceActivityComposer
-          definition={definition}
-          containerMode="page"
-          onClose={() => undefined}
-          draft={draft}
-          onDraftChange={setDraft}
-          isDirty={isDirty}
-          onDirtyChange={setIsDirty}
-          originContext={origin}
-          testId="sce-activity-composer-preview-page"
-        />
+        {controls}
+        {composer}
       </div>
     );
   }
 
   return (
     <div className="space-y-6" data-testid="sce-activity-composer-preview-overlay-root">
-      <PreviewControls
-        activityKind={activityKind}
-        onActivityKind={setActivityKind}
-        isDirty={isDirty}
-        onDirty={setIsDirty}
-      />
+      {controls}
       <div
         className="relative min-h-[28rem] rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-6"
         data-sce-modal-background
@@ -159,18 +199,7 @@ export function SceActivityComposerPreviewHarness({
           Composer öffnen (Overlay)
         </Button>
       </div>
-      <SceActivityComposer
-        definition={definition}
-        containerMode="overlay"
-        open={overlayOpen}
-        onClose={() => setOverlayOpen(false)}
-        draft={draft}
-        onDraftChange={setDraft}
-        isDirty={isDirty}
-        onDirtyChange={setIsDirty}
-        originContext={origin}
-        testId="sce-activity-composer-preview-overlay"
-      />
+      {composer}
     </div>
   );
 }
@@ -178,13 +207,15 @@ export function SceActivityComposerPreviewHarness({
 function PreviewControls({
   activityKind,
   onActivityKind,
-  isDirty,
-  onDirty,
+  scenario,
+  onScenario,
+  lastOutcome,
 }: {
   activityKind: SceActivityCreateKind;
   onActivityKind: (k: SceActivityCreateKind) => void;
-  isDirty: boolean;
-  onDirty: (dirty: boolean) => void;
+  scenario: "NEW" | "RESUME_DRAFT";
+  onScenario: (s: "NEW" | "RESUME_DRAFT") => void;
+  lastOutcome: string | null;
 }) {
   return (
     <div className="flex flex-wrap items-end gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
@@ -203,12 +234,23 @@ function PreviewControls({
           ))}
         </select>
       </label>
-      <SwitchToggle
-        id="preview-dirty-toggle"
-        checked={isDirty}
-        onChange={onDirty}
-        label="Entwurf als geändert markieren (Dirty)"
-      />
+      <label className="text-sm font-medium text-[var(--foreground)]">
+        Szenario
+        <select
+          className="mt-1 block rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+          value={scenario}
+          onChange={(e) => onScenario(e.target.value as "NEW" | "RESUME_DRAFT")}
+          data-testid="preview-scenario"
+        >
+          <option value="NEW">Neue Aktivität</option>
+          <option value="RESUME_DRAFT">Gespeicherter Entwurf</option>
+        </select>
+      </label>
+      {lastOutcome ? (
+        <p className="text-sm text-[var(--text-2)]" data-testid="preview-last-outcome">
+          Letztes Ergebnis: {lastOutcome}
+        </p>
+      ) : null}
     </div>
   );
 }

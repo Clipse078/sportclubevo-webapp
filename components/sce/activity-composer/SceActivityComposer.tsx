@@ -20,6 +20,15 @@ import {
 } from "@/lib/sce/activity-composer/use-composer-close-guard";
 import { useComposerResponsivePresentation } from "@/lib/sce/activity-composer/use-composer-responsive-presentation";
 import { mergeValidationWithFirstTab } from "@/lib/sce/activity-composer/validation-orchestration";
+import { sceActivityDraftsEqual } from "@/lib/sce/activity-composer/draft-equality";
+import {
+  SCE_ACTIVITY_CREATE_SAVE_EXISTING_DRAFT_LABEL,
+  SCE_ACTIVITY_CREATE_SAVE_NEW_DRAFT_LABEL,
+} from "@/lib/sce/activity-composer/draft-persistence-capability";
+import {
+  resolveComposerLifecyclePhase,
+  resolveComposerPersistenceStatusLabel,
+} from "@/lib/sce/activity-composer/composer-lifecycle-state";
 import {
   SceContextDirtyGuardProvider,
   useContextDetailTab,
@@ -45,7 +54,9 @@ function ComposerTabPanels<TDraft, TTabId extends ContextTabId>({
   draft,
   setDraft,
   isSubmitting,
+  isSavingDraft,
   submitError,
+  draftSaveError,
   fieldErrors,
   tabErrors,
   idPrefix,
@@ -54,7 +65,9 @@ function ComposerTabPanels<TDraft, TTabId extends ContextTabId>({
   draft: TDraft;
   setDraft: (updater: TDraft | ((prev: TDraft) => TDraft)) => void;
   isSubmitting: boolean;
+  isSavingDraft: boolean;
   submitError: string | null;
+  draftSaveError: string | null;
   fieldErrors?: Record<string, string>;
   tabErrors?: Partial<Record<TTabId, boolean>>;
   idPrefix: string;
@@ -79,7 +92,9 @@ function ComposerTabPanels<TDraft, TTabId extends ContextTabId>({
             draft,
             setDraft,
             isSubmitting,
+            isSavingDraft,
             submitError,
+            draftSaveError,
             fieldErrors,
           })}
         </SceContextTabPanel>
@@ -110,6 +125,10 @@ function ComposerWorkspace<
   panelRef,
   titleRef,
   guardedClose,
+  supportsDraftPersistence,
+  hasPersistedDraft,
+  persistedDraftId,
+  onDraftPersisted,
 }: {
   definition: SceActivityComposerProps<TDraft, TResult, TTabId>["definition"];
   containerMode: SceActivityComposerProps<TDraft, TResult, TTabId>["containerMode"];
@@ -128,12 +147,36 @@ function ComposerWorkspace<
   panelRef: React.RefObject<HTMLDivElement | null>;
   titleRef: React.RefObject<HTMLHeadingElement | null>;
   guardedClose: () => void;
+  supportsDraftPersistence: boolean;
+  hasPersistedDraft: boolean;
+  persistedDraftId?: string;
+  onDraftPersisted: (input: { draft: TDraft; draftId: string }) => void;
 }) {
   const [tabErrors, setTabErrors] = useState<Partial<Record<TTabId, boolean>>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | undefined>();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [draftSaveError, setDraftSaveError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [validationAnnouncement, setValidationAnnouncement] = useState<string | null>(null);
+  const [draftSaveAnnouncement, setDraftSaveAnnouncement] = useState<string | null>(null);
+
+  const draftPersistence = definition.draftPersistence;
+  const saveDraftLabel = hasPersistedDraft
+    ? (draftPersistence?.saveExistingDraftLabel ?? SCE_ACTIVITY_CREATE_SAVE_EXISTING_DRAFT_LABEL)
+    : (draftPersistence?.saveNewDraftLabel ?? SCE_ACTIVITY_CREATE_SAVE_NEW_DRAFT_LABEL);
+
+  const lifecyclePhase = resolveComposerLifecyclePhase({
+    hasPersistedDraft,
+    isDirty,
+    isSavingDraft,
+    isSubmitting,
+    draftSaveError,
+    submitError,
+  });
+  const persistenceStatusLabel = supportsDraftPersistence
+    ? resolveComposerPersistenceStatusLabel(lifecyclePhase)
+    : null;
 
   const tabConfig = useMemo(
     () => definition.buildTabNavigationConfig({ tabErrors }),
@@ -148,8 +191,65 @@ function ComposerWorkspace<
     [definition.tabs],
   );
 
+  const handleSaveDraft = useCallback(async () => {
+    if (!draftPersistence) {
+      return;
+    }
+    setDraftSaveError(null);
+    setSubmitError(null);
+    setDraftSaveAnnouncement(null);
+    const rawValidation = draftPersistence.validateDraftForSave(draft);
+    const validation = mergeValidationWithFirstTab(orderedTabKeys, rawValidation);
+    setTabErrors(validation.tabErrors);
+    setFieldErrors(validation.fieldErrors);
+
+    if (!validation.valid) {
+      setValidationAnnouncement("Bitte prüfen Sie die markierten Bereiche.");
+      if (validation.firstInvalidTab) {
+        navigateToTab(validation.firstInvalidTab);
+      }
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      const outcome = await draftPersistence.saveDraft({
+        draft,
+        draftId: persistedDraftId,
+      });
+      if (!outcome.ok) {
+        setDraftSaveError(outcome.error);
+        return;
+      }
+      onDraftPersisted({ draft, draftId: outcome.draftId });
+      setDraftSaveAnnouncement("Entwurf gespeichert.");
+      const success: SceActivityCreateSuccessResult<typeof outcome.result> = {
+        outcome: "DRAFT_SAVED",
+        activityKind: definition.activityKind,
+        activityId: outcome.draftId,
+        draftId: outcome.draftId,
+        domainPayload: outcome.result,
+        presentation: originContext ? { highlightToken: originContext.kind } : undefined,
+      };
+      onSuccess?.(success as SceActivityCreateSuccessResult<TResult>);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [
+    definition.activityKind,
+    draft,
+    draftPersistence,
+    navigateToTab,
+    onDraftPersisted,
+    onSuccess,
+    orderedTabKeys,
+    originContext,
+    persistedDraftId,
+  ]);
+
   const handleSubmit = useCallback(async () => {
     setSubmitError(null);
+    setDraftSaveError(null);
     const rawValidation = definition.validateDraft(draft);
     const validation = mergeValidationWithFirstTab(orderedTabKeys, rawValidation);
     setTabErrors(validation.tabErrors);
@@ -171,6 +271,7 @@ function ComposerWorkspace<
         return;
       }
       const success: SceActivityCreateSuccessResult<TResult> = {
+        outcome: "CREATED",
         activityKind: definition.activityKind,
         activityId:
           typeof outcome.result === "object" &&
@@ -204,12 +305,19 @@ function ComposerWorkspace<
       title={definition.title}
       description={definition.description}
       createActionLabel={definition.createActionLabel}
+      persistenceStatusLabel={persistenceStatusLabel}
       presentation={presentation}
       onClose={isModalSurface ? guardedClose : undefined}
       onCancel={guardedClose}
       onSubmit={() => void handleSubmit()}
+      onSaveDraft={supportsDraftPersistence ? () => void handleSaveDraft() : undefined}
+      saveDraftLabel={saveDraftLabel}
+      showSaveDraft={supportsDraftPersistence}
       isSubmitting={isSubmitting}
+      isSavingDraft={isSavingDraft}
       submitError={submitError}
+      draftSaveError={draftSaveError}
+      draftSaveAnnouncement={draftSaveAnnouncement}
       validationAnnouncement={validationAnnouncement}
       secondaryPanel={secondaryPanel}
       dialogRef={panelRef}
@@ -232,7 +340,9 @@ function ComposerWorkspace<
         draft={draft}
         setDraft={setDraft}
         isSubmitting={isSubmitting}
+        isSavingDraft={isSavingDraft}
         submitError={submitError}
+        draftSaveError={draftSaveError}
         fieldErrors={fieldErrors}
         tabErrors={tabErrors}
         idPrefix={idPrefix}
@@ -255,20 +365,38 @@ function ComposerOrchestration<
     originContext,
     draft: controlledDraft,
     onDraftChange,
-    isDirty = false,
+    isDirty: isDirtyProp = false,
     onDirtyChange,
+    resumeDraft,
     secondaryPanel,
     testId,
   } = props;
 
+  const supportsDraftPersistence = Boolean(definition.draftPersistence?.supportsDraftPersistence);
+
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const guardedClose = useComposerCloseGuard(onClose);
   const presentation = useComposerResponsivePresentation(containerMode);
   const isModalSurface = presentation === "overlay" || presentation === "fullscreen";
 
-  const [internalDraft, setInternalDraft] = useState(definition.initialDraft);
+  const [internalDraft, setInternalDraft] = useState(
+    () => resumeDraft?.baselineDraft ?? definition.initialDraft,
+  );
   const draft = controlledDraft ?? internalDraft;
+
+  const [baselineDraft, setBaselineDraft] = useState<TDraft>(
+    () => resumeDraft?.baselineDraft ?? definition.initialDraft,
+  );
+  const [hasPersistedDraft, setHasPersistedDraft] = useState(Boolean(resumeDraft));
+  const [persistedDraftId, setPersistedDraftId] = useState<string | undefined>(
+    resumeDraft?.draftId,
+  );
+
+  const derivedDirty = supportsDraftPersistence
+    ? !sceActivityDraftsEqual(draft, baselineDraft)
+    : isDirtyProp;
+
+  const guardedClose = useComposerCloseGuard(onClose);
 
   const setDraft = useCallback(
     (updater: TDraft | ((prev: TDraft) => TDraft)) => {
@@ -281,10 +409,34 @@ function ComposerOrchestration<
       } else {
         setInternalDraft(next);
       }
-      onDirtyChange?.(true);
+      if (supportsDraftPersistence) {
+        onDirtyChange?.(!sceActivityDraftsEqual(next, baselineDraft));
+      } else {
+        onDirtyChange?.(true);
+      }
     },
-    [draft, onDraftChange, onDirtyChange],
+    [baselineDraft, draft, onDraftChange, onDirtyChange, supportsDraftPersistence],
   );
+
+  const handleDraftPersisted = useCallback(
+    ({ draft: savedDraft, draftId }: { draft: TDraft; draftId: string }) => {
+      setBaselineDraft(savedDraft);
+      setHasPersistedDraft(true);
+      setPersistedDraftId(draftId);
+      onDirtyChange?.(false);
+    },
+    [onDirtyChange],
+  );
+
+  useEffect(() => {
+    if (!resumeDraft) {
+      return;
+    }
+    setBaselineDraft(resumeDraft.baselineDraft);
+    setHasPersistedDraft(true);
+    setPersistedDraftId(resumeDraft.draftId);
+    onDirtyChange?.(false);
+  }, [onDirtyChange, resumeDraft]);
 
   useSceModalDialog({
     open: isModalSurface && open,
@@ -293,7 +445,7 @@ function ComposerOrchestration<
   });
 
   useEffect(() => {
-    if (containerMode !== "page" || !isDirty) {
+    if (containerMode !== "page" || !derivedDirty) {
       return;
     }
     function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -302,7 +454,7 @@ function ComposerOrchestration<
     }
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [containerMode, isDirty]);
+  }, [containerMode, derivedDirty]);
 
   const tabConfig = useMemo(
     () => definition.buildTabNavigationConfig({}),
@@ -323,7 +475,7 @@ function ComposerOrchestration<
         originContext={originContext}
         draft={draft}
         setDraft={setDraft}
-        isDirty={isDirty}
+        isDirty={derivedDirty}
         onDirtyChange={onDirtyChange}
         secondaryPanel={secondaryPanel}
         testId={testId}
@@ -332,6 +484,10 @@ function ComposerOrchestration<
         panelRef={panelRef}
         titleRef={titleRef}
         guardedClose={guardedClose}
+        supportsDraftPersistence={supportsDraftPersistence}
+        hasPersistedDraft={hasPersistedDraft}
+        persistedDraftId={persistedDraftId}
+        onDraftPersisted={handleDraftPersisted}
       />
     </TabProvider>
   );

@@ -76,7 +76,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={vi.fn()}
-        draft={{ title: "OK Titel", notes: "", forceValidationError: false }}
+        draft={{
+          title: "OK Titel",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
         testId="composer-test"
       />,
     );
@@ -99,7 +104,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={vi.fn()}
-        draft={{ title: "abc", notes: "", forceValidationError: false }}
+        draft={{
+          title: "abc",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     expect(screen.getByTestId("sce-activity-composer-footer")).toBeTruthy();
@@ -114,7 +124,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={vi.fn()}
-        draft={{ title: "Gültiger Titel", notes: "", forceValidationError: false }}
+        draft={{
+          title: "Gültiger Titel",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
@@ -140,6 +155,7 @@ describe("SceActivityComposer foundation (01B)", () => {
           title: "Gültiger Titel",
           notes: "",
           forceValidationError: false,
+          forceDraftSaveError: false,
         }}
       />,
     );
@@ -158,8 +174,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={onClose}
-        isDirty
-        draft={{ title: "x", notes: "", forceValidationError: false }}
+        draft={{
+          title: "Geändert",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     fireEvent.click(screen.getByText("Abbrechen"));
@@ -174,8 +194,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={onClose}
-        isDirty={false}
-        draft={{ title: "x", notes: "", forceValidationError: false }}
+        draft={{
+          title: "",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     fireEvent.click(screen.getByText("Abbrechen"));
@@ -189,7 +213,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         containerMode="overlay"
         open
         onClose={vi.fn()}
-        draft={{ title: "abc", notes: "", forceValidationError: false }}
+        draft={{
+          title: "abc",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     const dialog = screen.getByRole("dialog");
@@ -202,7 +231,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={vi.fn()}
-        draft={{ title: "abc", notes: "", forceValidationError: false }}
+        draft={{
+          title: "abc",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -215,7 +249,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         containerMode="page"
         onClose={vi.fn()}
         originContext={{ kind: "PLANNING_SURFACE", teamId: "t1" }}
-        draft={{ title: "abc", notes: "", forceValidationError: false }}
+        draft={{
+          title: "abc",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     expect(document.querySelector('[data-origin="PLANNING_SURFACE"]')).toBeTruthy();
@@ -228,7 +267,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         containerMode="overlay"
         open
         onClose={vi.fn()}
-        draft={{ title: "abc", notes: "", forceValidationError: false }}
+        draft={{
+          title: "abc",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     const panel = screen.getByTestId("sce-activity-composer");
@@ -250,7 +294,12 @@ describe("SceActivityComposer foundation (01B)", () => {
         definition={previewDefinition()}
         containerMode="page"
         onClose={vi.fn()}
-        draft={{ title: "abc", notes: "", forceValidationError: false }}
+        draft={{
+          title: "abc",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     const panel = screen.getByTestId("sce-activity-composer");
@@ -270,11 +319,227 @@ describe("SceActivityComposer foundation (01B)", () => {
         containerMode="page"
         onClose={onClose}
         onSuccess={onSuccess}
-        draft={{ title: "Gültiger Titel", notes: "", forceValidationError: false }}
+        draft={{
+          title: "Gültiger Titel",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
       />,
     );
     fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(onSuccess.mock.calls[0][0].outcome).toBe("CREATED");
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("R2 — footer exposes cancel, save draft, and primary hierarchy", () => {
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={vi.fn()}
+        draft={{
+          title: "x",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("sce-activity-composer-cancel")).toBeTruthy();
+    expect(screen.getByTestId("sce-activity-composer-save-draft").textContent).toContain(
+      "Als Entwurf speichern",
+    );
+    expect(screen.getByTestId("sce-activity-composer-submit").textContent).toContain(
+      "Training erstellen",
+    );
+  });
+
+  it("R2 — incomplete draft saves but commit fails and navigates to invalid tab", async () => {
+    const onClose = vi.fn();
+    const def = previewDefinition();
+    render(
+      <SceActivityComposer
+        definition={def}
+        containerMode="page"
+        onClose={onClose}
+        draft={{
+          title: "ab",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    expect(
+      def.draftPersistence!.validateDraftForSave({
+        title: "ab",
+        notes: "",
+        forceValidationError: false,
+        forceDraftSaveError: false,
+      }).valid,
+    ).toBe(true);
+    expect(
+      def.validateDraft({
+        title: "ab",
+        notes: "",
+        forceValidationError: false,
+        forceDraftSaveError: false,
+      }).valid,
+    ).toBe(false);
+
+    fireEvent.click(screen.getByTestId("sce-activity-composer-save-draft"));
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-activity-composer-persistence-status").textContent).toContain(
+        "Gespeichert",
+      ),
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
+    await waitFor(() =>
+      expect(screen.getAllByRole("status").some((el) => el.textContent?.includes("markierten"))),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByTestId("sce-activity-composer-tabs-grunddaten").textContent).toContain("•");
+  });
+
+  it("R2 — resume draft uses Änderungen speichern label", () => {
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={vi.fn()}
+        resumeDraft={{
+          draftId: "d1",
+          baselineDraft: {
+            title: "Entwurf",
+            notes: "",
+            forceValidationError: false,
+            forceDraftSaveError: false,
+          },
+        }}
+        draft={{
+          title: "Entwurf",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("sce-activity-composer-save-draft").textContent).toContain(
+      "Änderungen speichern",
+    );
+    expect(screen.getByTestId("sce-activity-composer-persistence-status").textContent).toContain(
+      "Gespeichert",
+    );
+  });
+
+  it("R2 — saved clean draft closes without dirty confirm", () => {
+    const onClose = vi.fn();
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={onClose}
+        resumeDraft={{
+          draftId: "d1",
+          baselineDraft: {
+            title: "Entwurf",
+            notes: "",
+            forceValidationError: false,
+            forceDraftSaveError: false,
+          },
+        }}
+        draft={{
+          title: "Entwurf",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-cancel"));
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("R2 — draft save error retains values and keeps dirty guard", async () => {
+    const onClose = vi.fn();
+    vi.mocked(window.confirm).mockReturnValueOnce(false);
+    const def = previewDefinition();
+    def.draftPersistence!.saveDraft = async () => ({
+      ok: false,
+      error: "Entwurf konnte nicht gespeichert werden (Test).",
+    });
+    render(
+      <SceActivityComposer
+        definition={def}
+        containerMode="page"
+        onClose={onClose}
+        draft={{
+          title: "Geändert",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-save-draft"));
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-activity-composer-draft-save-error")).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-cancel"));
+    expect(window.confirm).toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("Geändert")).toBeTruthy();
+  });
+
+  it("R2 — draft save success keeps composer open and reports DRAFT_SAVED", async () => {
+    const onSuccess = vi.fn();
+    const onClose = vi.fn();
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={onClose}
+        onSuccess={onSuccess}
+        draft={{
+          title: "ab",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-save-draft"));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(onSuccess.mock.calls[0][0].outcome).toBe("DRAFT_SAVED");
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe("SceActivityComposer without draft persistence", () => {
+  function definitionWithoutDraft() {
+    const def = previewDefinition();
+    delete def.draftPersistence;
+    return def;
+  }
+
+  it("hides save draft when capability omitted", () => {
+    render(
+      <SceActivityComposer
+        definition={definitionWithoutDraft()}
+        containerMode="page"
+        onClose={vi.fn()}
+        isDirty
+        draft={{
+          title: "x",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("sce-activity-composer-save-draft")).toBeNull();
   });
 });

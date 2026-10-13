@@ -15,6 +15,7 @@ export type SceActivityComposerShellProps = {
   title: string;
   description?: string;
   createActionLabel: string;
+  persistenceStatusLabel?: string | null;
   presentation: SceActivityComposerResolvedPresentation;
   tabsRegion: ReactNode;
   children: ReactNode;
@@ -22,9 +23,15 @@ export type SceActivityComposerShellProps = {
   onClose?: () => void;
   onCancel: () => void;
   onSubmit: () => void;
+  onSaveDraft?: () => void;
+  saveDraftLabel?: string;
+  showSaveDraft?: boolean;
   isSubmitting?: boolean;
+  isSavingDraft?: boolean;
   submitDisabled?: boolean;
   submitError?: string | null;
+  draftSaveError?: string | null;
+  draftSaveAnnouncement?: string | null;
   validationAnnouncement?: string | null;
   dialogRef?: RefObject<HTMLDivElement | null>;
   titleRef?: RefObject<HTMLHeadingElement | null>;
@@ -37,6 +44,7 @@ export function SceActivityComposerShell({
   title,
   description,
   createActionLabel,
+  persistenceStatusLabel,
   presentation,
   tabsRegion,
   children,
@@ -44,9 +52,15 @@ export function SceActivityComposerShell({
   onClose,
   onCancel,
   onSubmit,
+  onSaveDraft,
+  saveDraftLabel,
+  showSaveDraft,
   isSubmitting,
+  isSavingDraft,
   submitDisabled,
   submitError,
+  draftSaveError,
+  draftSaveAnnouncement,
   validationAnnouncement,
   dialogRef,
   titleRef,
@@ -86,6 +100,7 @@ export function SceActivityComposerShell({
         onClose={onClose}
         presentation={presentation}
         titleRef={titleRef}
+        persistenceStatusLabel={persistenceStatusLabel}
       />
 
       <SceActivityComposerBody
@@ -101,9 +116,15 @@ export function SceActivityComposerShell({
         createActionLabel={createActionLabel}
         onCancel={onCancel}
         onSubmit={onSubmit}
+        onSaveDraft={onSaveDraft}
+        saveDraftLabel={saveDraftLabel}
+        showSaveDraft={showSaveDraft}
         isSubmitting={isSubmitting}
+        isSavingDraft={isSavingDraft}
         submitDisabled={submitDisabled}
         submitError={submitError}
+        draftSaveError={draftSaveError}
+        draftSaveAnnouncement={draftSaveAnnouncement}
       />
     </div>
   );

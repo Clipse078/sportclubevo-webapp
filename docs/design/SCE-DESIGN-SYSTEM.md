@@ -254,6 +254,19 @@ PO visual UAT for 01B foundation: **`/sce-preview/activity-composer`**, **`/sce-
 
 *Shared workflow does not require identical container geometry.*
 
+**Draft / action contract (01B-R2):**
+
+| Topic | Contract |
+|-------|----------|
+| Lifecycle | Start → Compose → Save Draft → Resume → Validate → Create → Success |
+| Principle | *Saving preserves work. Creating activates the activity.* |
+| Footer | Ghost **Abbrechen** · secondary **Als Entwurf speichern** / **Änderungen speichern** · primary domain commit |
+| Validation | `validateDraftForSave` (draft) vs `validateDraft` (commit) |
+| Dirty vs draft | Dirty = local changes; draft = persisted incomplete activity |
+| Autosave | **Not in 01B** — explicit persistence only |
+| Success | `SceActivityCreateSuccessResult.outcome`: `DRAFT_SAVED` \| `CREATED` |
+| Domain persistence | **01C+** — no Prisma/API in foundation preview |
+
 ---
 
 ## Activity card semantic color language (01D R10 / 01F / 01G)

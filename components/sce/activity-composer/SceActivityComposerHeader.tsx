@@ -17,6 +17,8 @@ export type SceActivityComposerHeaderProps = {
   closeLabel?: string;
   presentation: "overlay" | "fullscreen" | "page";
   titleRef?: RefObject<HTMLHeadingElement | null>;
+  /** Secondary persistence hint — shown only when semantically useful. */
+  persistenceStatusLabel?: string | null;
 };
 
 export function SceActivityComposerHeader({
@@ -29,6 +31,7 @@ export function SceActivityComposerHeader({
   closeLabel = "Schließen",
   presentation,
   titleRef,
+  persistenceStatusLabel,
 }: SceActivityComposerHeaderProps) {
   const identity = resolveSceActivityComposerSemanticIdentity(activityKind);
 
@@ -43,6 +46,14 @@ export function SceActivityComposerHeader({
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <ActivityTypePill activityKind={identity.activityKind} label={identity.typeLabel} />
+          {persistenceStatusLabel ? (
+            <span
+              className="text-xs font-medium uppercase tracking-wide text-[var(--text-2)]"
+              data-testid="sce-activity-composer-persistence-status"
+            >
+              {persistenceStatusLabel}
+            </span>
+          ) : null}
         </div>
         <h1
           ref={titleRef}

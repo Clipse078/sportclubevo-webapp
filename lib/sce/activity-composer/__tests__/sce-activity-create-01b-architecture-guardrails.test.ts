@@ -54,6 +54,24 @@ describe("SCE-ACTIVITY-CREATE-01B — architecture guardrails", () => {
     expect(body).toContain("overflow-y-auto");
   });
 
+  it("R2 — documents explicit draft action contract and no autosave", () => {
+    const capability = read("lib/sce/activity-composer/draft-persistence-capability.ts");
+    expect(capability).toContain("Als Entwurf speichern");
+    expect(capability).toContain("DELETION_NOT_IN_FOOTER");
+    const lifecycle = read("lib/sce/activity-composer/composer-lifecycle-state.ts");
+    expect(lifecycle).toContain("NO_SERVER_AUTOSAVE");
+    const composer = read("components/sce/activity-composer/SceActivityComposer.tsx");
+    expect(composer).not.toMatch(/setInterval\s*\(/);
+    expect(composer).not.toContain("debounce");
+  });
+
+  it("R2 — footer uses ghost cancel and secondary save draft", () => {
+    const footer = read("components/sce/activity-composer/SceActivityComposerFooter.tsx");
+    expect(footer).toContain('variant="ghost"');
+    expect(footer).toContain("sce-activity-composer-save-draft");
+    expect(footer).toContain('variant="secondary"');
+  });
+
   it("does not migrate production domain /new routes in 01B", () => {
     for (const route of [
       "app/(admin)/dashboard/veranstaltungen/new/page.tsx",

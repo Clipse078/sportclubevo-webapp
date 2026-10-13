@@ -7,6 +7,7 @@ export type PreviewComposerDraft = {
   title: string;
   notes: string;
   forceValidationError: boolean;
+  forceDraftSaveError: boolean;
 };
 
 export function buildPreviewTabNavigationConfig(input?: {
@@ -58,8 +59,23 @@ export function createPreviewActivityCreateDefinition(
       title: "",
       notes: "",
       forceValidationError: false,
+      forceDraftSaveError: false,
     },
     tabs: tabRenderers,
+    draftPersistence: {
+      supportsDraftPersistence: true,
+      validateDraftForSave: () => ({ valid: true, tabErrors: {} }),
+      saveDraft: async ({ draft }) => {
+        await new Promise((r) => setTimeout(r, 250));
+        if (draft.forceDraftSaveError) {
+          return {
+            ok: false,
+            error: "Entwurf konnte nicht gespeichert werden (Vorschau).",
+          };
+        }
+        return { ok: true, result: { draftId: "preview-draft-id" }, draftId: "preview-draft-id" };
+      },
+    },
     validateDraft: (draft) => {
       const titleMissing = draft.title.trim().length < 3;
       if (!draft.forceValidationError && !titleMissing) {

@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 import type { ContextTabId, ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 import type { SceActivityCreateOriginContext } from "./origin-context";
 import type { SceActivityCreateSuccessResult } from "./success-result";
+import type {
+  SceActivityCreateDraftPersistenceCapability,
+  SceActivityCreateResumeDraft,
+} from "./draft-persistence-capability";
 
 /** Canonical activity kinds for unified creation (01B foundation). */
 export type SceActivityCreateKind = "TRAINING" | "MATCH" | "TOURNAMENT" | "CLUB_EVENT";
@@ -27,7 +31,9 @@ export type SceActivityCreateTabRenderContext<TDraft> = {
   draft: TDraft;
   setDraft: (updater: TDraft | ((prev: TDraft) => TDraft)) => void;
   isSubmitting: boolean;
+  isSavingDraft: boolean;
   submitError: string | null;
+  draftSaveError: string | null;
   fieldErrors: Record<string, string> | undefined;
 };
 
@@ -67,8 +73,15 @@ export type SceActivityCreateDefinition<
     tabErrors?: Partial<Record<TTabId, boolean>>;
   }) => ContextTabNavigationConfig<TTabId>;
   initialDraft: TDraft;
+  /** Commit/create validation — full domain requirements. */
   validateDraft: (draft: TDraft) => SceActivityCreateValidationResult<TTabId>;
   submitDraft: (draft: TDraft) => Promise<SceActivityCreateSubmitOutcome<TResult>>;
+  /** Optional explicit draft persistence (01B-R2). Omit when drafts are unsupported. */
+  draftPersistence?: SceActivityCreateDraftPersistenceCapability<
+    TDraft,
+    { draftId: string },
+    TTabId
+  >;
 };
 
 export type SceActivityComposerProps<
@@ -86,9 +99,11 @@ export type SceActivityComposerProps<
   /** Controlled draft integration (optional). */
   draft?: TDraft;
   onDraftChange?: (draft: TDraft) => void;
-  /** Marks draft dirty for close/tab guards. */
+  /** Marks draft dirty for close/tab guards (optional override when no draft persistence). */
   isDirty?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
+  /** Resume an existing persisted draft (01C+ hydrates; preview uses in-memory). */
+  resumeDraft?: SceActivityCreateResumeDraft<TDraft>;
   /** Composer-owned embedded region for complex selectors (01C+); not a nested dialog. */
   secondaryPanel?: ReactNode;
   testId?: string;

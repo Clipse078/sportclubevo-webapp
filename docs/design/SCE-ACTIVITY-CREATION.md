@@ -82,14 +82,22 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | Semantic title / description | i18n keys |
 | Tab config factory | `build*CreateTabNavigationConfig({ tabErrors })` |
 | Initial draft | Server-hydrated props → client state |
-| `validateDraft` → tab error map + field errors | Club Event pattern: `computeClubEventCreateTabErrors` |
+| `validateDraft` → tab error map + field errors | **Commit validation** — full create requirements (Club Event: `computeClubEventCreateTabErrors`) |
+| `draftPersistence.validateDraftForSave` | **Draft validation** — minimum safe persistence only (optional capability) |
+| `draftPersistence.saveDraft` | Explicit draft persistence adapter — **01C+** supplies real domain storage |
 | `firstInvalidTab` | Ordered tab walk |
-| `submit` | Domain adapter → existing APIs |
-| Success | Close composer, restore origin, toast, optional highlight |
-| Cancel / dirty | `SceContextDirtyGuardProvider` |
+| `submitDraft` | Domain adapter → create/commit APIs |
+| Success `outcome` | `DRAFT_SAVED` \| `CREATED` — host chooses post-save navigation (no hard-coded policy) |
+| Cancel / dirty | `SceContextDirtyGuardProvider` — dirty = local ≠ last persisted baseline |
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
 
-Domain components remain authoritative (`VeranstaltungCreateForm` panels, future tabbed Training/Match/Tournament bodies).
+**Lifecycle (01B-R2 foundation):** Start → Compose → Save Draft (optional) → Resume → Validate → Create/Commit → Success.
+
+**Product principle:** *Saving preserves work. Creating activates the activity.*
+
+**No server autosave in 01B** — explicit user-triggered draft/create only; recovery/autosave is a separate evaluation (resources, conflicts, publication, audit).
+
+Domain components remain authoritative (`VeranstaltungCreateForm` panels, future tabbed Training/Match/Tournament bodies). **Shared workflow does not imply identical domain persistence models** (01C+).
 
 ---
 
@@ -112,8 +120,9 @@ Domain components remain authoritative (`VeranstaltungCreateForm` panels, future
 | Rule | Source |
 |------|--------|
 | Free tab navigation — not a forced wizard | Club Event + PO direction |
-| Submit validates full draft | `VeranstaltungCreateForm` |
-| First invalid tab activated | `firstInvalidClubEventCreateTab` |
+| **Draft save** uses `validateDraftForSave` only | 01B-R2 foundation — may allow incomplete data |
+| **Create/commit** uses `validateDraft` (full draft) | `VeranstaltungCreateForm` |
+| First invalid tab activated on commit failure | `firstInvalidClubEventCreateTab` |
 | Restrained tab invalid marker (`•`) | `buildClubEventCreateTabNavigationConfig` |
 | Field-level errors unchanged | Domain components |
 
@@ -121,7 +130,21 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 
 ---
 
-## 6. Action footer (**REUSABLE** partial)
+## 6. Action footer (**FOUNDATION_IMPLEMENTED** — 01B-R2 hierarchy)
+
+Canonical composer footer (left → right):
+
+| Slot | Control | Visual |
+|------|---------|--------|
+| Left / quiet | **Abbrechen** | Ghost |
+| Right / secondary | **Als Entwurf speichern** or **Änderungen speichern** | Secondary (never second primary) |
+| Right / primary | Domain commit (`Training erstellen`, …) | Primary |
+
+- Save Draft is **not** hidden inside the primary dropdown; no wizard **Weiter/Zurück**.
+- **Destructive draft deletion** is **not** a standard footer action — use a separate confirmed command (01C+).
+- When `draftPersistence` is omitted, the secondary save action is hidden (commit-only definitions).
+
+Legacy domain footers (pre-adoption):
 
 | Domain | Current pattern |
 |--------|-----------------|
@@ -129,15 +152,23 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 | Training | Sticky footer in `TrainingSeriesCreateForm` |
 | Match / Tournament | Inline footer buttons in guided surface |
 
-**PROPOSED:** Shell-owned footer slot; domain supplies primary label (preserve domain verbs).
-
 ---
 
 ## 7. Dirty guard (**REUSABLE** + **NEW_REQUIRED**)
 
 **EXISTING:** Tab switch confirmation via `SceContextTabs` + dirty provider.
 
-**FOUNDATION_IMPLEMENTED (01B) for composer close/backdrop/Escape:**
+**FOUNDATION_IMPLEMENTED (01B / 01B-R2) for composer close/backdrop/Escape:**
+
+| State | Close behaviour |
+|-------|-----------------|
+| Clean (never edited) | Close immediately |
+| Dirty (local ≠ baseline) | Guarded close |
+| Saved draft, unchanged | No unsaved-change warning |
+| Saved draft, modified again | Guarded close |
+| Failed draft save | Values retained, still dirty, guarded close |
+
+**Persistence status (secondary header):** e.g. `ENTWURF · Gespeichert` / `ENTWURF · Nicht gespeicherte Änderungen` — only when semantically useful; not a banner.
 
 **Still NOT YET IMPLEMENTED (domain adoption / 01G):**
 
