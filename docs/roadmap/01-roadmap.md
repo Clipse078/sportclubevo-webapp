@@ -202,7 +202,7 @@ For full feature-level detail, acceptance criteria, and individual feature statu
 | Package | Key | Status |
 |---------|-----|--------|
 | Match Squad & Player Availability | `MATCH_SQUAD_PLAYER_AVAILABILITY` | **CLOSED** — 01A–01F + sorting; [`01F closure`](../match-squad/MATCH-SQUAD-PLAYER-AVAILABILITY-01F.md); STAGE test-data cleanup **TEST_DATA_REMAINING = 0** |
-| Unified Product Experience | `SCE-UI-ROLLOUT-01+` | **IN_PROGRESS** — **01A** closed [`SCE-UI-ROLLOUT-01A.md`](./SCE-UI-ROLLOUT-01A.md); **01B** closed [`SCE-UI-ROLLOUT-01B.md`](./SCE-UI-ROLLOUT-01B.md); **01C** next; incorporates **SCE-UI-STANDARD-01** |
+| Unified Product Experience | `SCE-UI-ROLLOUT-01+` | **IN_PROGRESS** — **01A–01F** closed (latest: [`SCE-UI-ROLLOUT-01F.md`](./SCE-UI-ROLLOUT-01F.md)); **01G** next; incorporates **SCE-UI-STANDARD-01** |
 | Sponsor Commercial Workflows | — | **After UI rollout** |
 | Mobile App | — | **After Sponsor** |
 

@@ -1,6 +1,6 @@
 import type { TournamentDto } from "@/lib/tournaments/types";
+import { resolveTournamentOrganiserCrestUrlFromDomain } from "@/lib/sporting-data/sce-club-crest-resolution";
 import { buildClubIdentity, type ClubIdentity } from "./club-identity";
-import { resolveTournamentOrganiserClubLogoUrl } from "./logo-resolution";
 
 /**
  * Organising club identity for tournaments — distinct from participating SCE team.
@@ -18,7 +18,7 @@ export function buildTournamentOrganiserClubIdentity(
   return buildClubIdentity({
     id: tournament.organizerExternalClubId ?? undefined,
     displayName,
-    logoUrl: resolveTournamentOrganiserClubLogoUrl(tournament.organizerLogoUrl),
+    logoUrl: resolveTournamentOrganiserCrestUrlFromDomain(tournament.organizerLogoUrl),
   });
 }
 

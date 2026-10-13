@@ -102,6 +102,12 @@ export function isSceTrainingPresentationModel(
   return value.kind === "TRAINING";
 }
 
+export function isSceTournamentPresentationModel(
+  value: SceActivityPresentationModel,
+): value is SceTournamentPresentationModel {
+  return value.kind === "TOURNAMENT";
+}
+
 export type SceTournamentPresentationModel = SceActivityPresentationBase & {
   kind: "TOURNAMENT";
   tournamentTitle: string;

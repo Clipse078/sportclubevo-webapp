@@ -46,12 +46,4 @@ export function resolveMatchSideClubLogoUrl(
   return side.externalLogoUrl?.trim() || null;
 }
 
-/**
- * Tournament organiser crest — only explicit organizerLogoUrl from canonical tournament resolution.
- * Does not infer organiser from participating team or HOME/Away tenant branding.
- */
-export function resolveTournamentOrganiserClubLogoUrl(
-  organizerLogoUrl: string | null | undefined,
-): string | null {
-  return organizerLogoUrl?.trim() || null;
-}
+export { resolveTournamentOrganiserCrestUrlFromDomain as resolveTournamentOrganiserClubLogoUrl } from "@/lib/sporting-data/sce-club-crest-resolution";

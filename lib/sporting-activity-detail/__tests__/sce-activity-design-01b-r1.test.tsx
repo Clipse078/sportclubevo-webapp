@@ -211,7 +211,8 @@ describe("SCE-ACTIVITY-DESIGN-01B-R1 — tournament hero", () => {
 
     render(<SportingActivityDetailContent detail={detail} fmtCfg={fmtCfg} />);
 
-    expect(screen.getByRole("heading", { name: "PlayMore Turnier" })).toBeTruthy();
+    expect(screen.getByTestId("sce-tournament-title")).toHaveTextContent("PlayMore Turnier");
+    expect(screen.getByTestId("sce-tournament-organiser")).toHaveTextContent("FC Arisdorf");
     expect(screen.getAllByText(/FC Arisdorf/).length).toBe(1);
     expect(screen.queryByText("Teams")).toBeNull();
     expect(screen.queryByText("Treffpunkt")).toBeNull();
@@ -245,7 +246,7 @@ describe("SCE-ACTIVITY-DESIGN-01B-R1 — training detail surface", () => {
 
     render(<SportingActivityDetailContent detail={detail} fmtCfg={fmtCfg} />);
 
-    expect(screen.getByRole("heading", { name: "Junioren F2 Training" })).toBeTruthy();
+    expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Junioren F2 Training");
     expect(screen.getByText("FC Allschwil")).toBeTruthy();
     expect(screen.getByText("Kunstrasen 2")).toBeTruthy();
     expect(screen.getByTestId("activity-detail-schedule")).toBeTruthy();

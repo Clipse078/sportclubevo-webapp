@@ -95,6 +95,17 @@ export function resolveTenantClubCrestUrl(input: {
   return ownClubLogo || null;
 }
 
+/**
+ * Tournament organiser crest — domain must pre-resolve via resolveTournamentOrganizerIdentity.
+ * Presentation adapters MUST NOT re-apply tenant or HOME heuristics here.
+ */
+export function resolveTournamentOrganiserCrestUrlFromDomain(
+  organizerLogoUrl: string | null | undefined,
+): string | null {
+  const url = organizerLogoUrl?.trim();
+  return url || null;
+}
+
 export function resolveSceClubCrestUrl(input: ResolveSceClubCrestUrlInput): string | null {
   if (input.externalTeam) {
     const fromExternalTeam = resolveExternalTeamLogoWithCanonicalFallback(

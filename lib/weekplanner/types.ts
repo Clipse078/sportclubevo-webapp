@@ -169,6 +169,10 @@ export type WeekplannerTournamentItem = WeekplannerItemBase & {
   /** Canonical TeamSeason ids for tenant TEAM participants — hub team filter keys. */
   teamSeasonIds: string[];
   participantAllocations: WeekplannerTournamentParticipantAllocation[];
+  /** Pre-resolved organiser identity from TournamentDto (same pipeline as Tournamentcenter). */
+  organizerName?: string | null;
+  organizerLogoUrl?: string | null;
+  organizerExternalClubId?: string | null;
 };
 
 /** CLUB-EVENTS / PLANNING-HUB-01 — tenant Veranstaltungen (Event.type=OTHER). */

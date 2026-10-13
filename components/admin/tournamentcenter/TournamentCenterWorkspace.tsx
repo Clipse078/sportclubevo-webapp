@@ -448,7 +448,6 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
                         assessment={row.assessment}
                         locale={locale}
                         timezone={timezone}
-                        tenantLogoUrl={tenantLogoUrl}
                         tenantClubName={tenantClubName}
                         canManage={canCreate}
                         compact={compactRows}

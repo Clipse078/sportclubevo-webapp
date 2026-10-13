@@ -1,13 +1,14 @@
 "use client";
 
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
-import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard";
+import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
 import { resolveSceActivityPresentationFromDetail } from "@/lib/sporting-activity-detail/resolve-canonical-presentation";
 import {
   isSceMatchPresentationModel,
   isSceTrainingPresentationModel,
+  isSceTournamentPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
 import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
 import {
@@ -87,11 +88,6 @@ export function SportingActivityDetailContent({
   const showOrtSection =
     (detail.kind === "MATCH" || detail.kind === "TOURNAMENT") && ortLocationLines.length > 0;
 
-  const organiserName =
-    detail.kind === "TOURNAMENT" && detail.tournament
-      ? detail.tournament.organiserClubIdentity.displayName
-      : presentation.context?.organiser;
-
   return (
     <article
       className="min-w-0 space-y-5 pb-4 text-[var(--foreground)]"
@@ -150,26 +146,23 @@ export function SportingActivityDetailContent({
         ) : null}
 
         {detail.kind === "TOURNAMENT" && detail.tournament ? (
-          <div className="flex items-start gap-3">
-            <ClubCrest
-              identity={detail.tournament.organiserClubIdentity}
-              density="detail"
-              decorative
-              className="shrink-0"
-            />
-            <div className="min-w-0 space-y-1">
-              <h2 className="text-xl font-semibold leading-snug tracking-tight">{primaryTitle}</h2>
-              {organiserName ? (
-                <p className="text-[0.875rem] text-[var(--text-2)]">
-                  Veranstalter:{" "}
-                  <span className="font-medium text-[var(--foreground)]">{organiserName}</span>
-                </p>
-              ) : null}
-            </div>
-          </div>
-        ) : (
+          <SceTournamentCard
+            model={(() => {
+              const resolved = resolveSceActivityPresentationFromDetail(detail);
+              if (!isSceTournamentPresentationModel(resolved)) {
+                throw new Error("Expected TOURNAMENT presentation model");
+              }
+              return resolved;
+            })()}
+            density="HERO"
+            fmtCfg={fmtCfg}
+            linkToDetail={false}
+            surface="detail-embed"
+            testId="sporting-activity-detail-tournament-card"
+          />
+        ) : detail.kind !== "MATCH" && detail.kind !== "TRAINING" ? (
           <h2 className="text-xl font-semibold leading-snug tracking-tight">{primaryTitle}</h2>
-        )}
+        ) : null}
 
         <ActivityDetailScheduleGroup parts={scheduleParts} />
 

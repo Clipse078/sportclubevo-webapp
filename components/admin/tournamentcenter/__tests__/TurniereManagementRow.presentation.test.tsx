@@ -46,8 +46,8 @@ function baseTournament(overrides: Partial<TournamentDto> = {}): TournamentDto {
   } as TournamentDto;
 }
 
-describe("TurniereManagementRow — SCE-ACTIVITY-UX-01R8 identity", () => {
-  it("AWAY — TURNIER orange, Auswärts, organiser - location", () => {
+describe("TurniereManagementRow — SCE-UI-ROLLOUT-01F canonical card", () => {
+  it("AWAY — organiser visible separately from venue on SceTournamentCard", () => {
     const tournament = baseTournament();
     const assessment = assessTournamentOperationalState(tournament);
 
@@ -62,17 +62,17 @@ describe("TurniereManagementRow — SCE-ACTIVITY-UX-01R8 identity", () => {
       />,
     );
 
-    expect(screen.getByText("PlayMore Turnier")).toBeInTheDocument();
-    expect(screen.getByText("TURNIER").getAttribute("data-activity-type-pill")).toBe(
-      "tournament-orange",
-    );
-    expect(screen.getByText("Auswärts")).toHaveAttribute("data-activity-context-badge");
-    expect(screen.getByText("FC Arisdorf - Gemeindesportplatz")).toBeInTheDocument();
-    expect(screen.getByText(/1 Team/)).toBeInTheDocument();
-    expect(screen.queryByText("FC Allschwil Junioren F2 - Gemeindesportplatz")).not.toBeInTheDocument();
+    const card = screen.getByTestId("turniere-sce-card-tournament-1");
+    const context = screen.getByTestId("turniere-row-context-zone");
+    expect(card).toHaveTextContent("PlayMore Turnier");
+    expect(card).toHaveTextContent("FC Arisdorf");
+    expect(context).toHaveTextContent("Gemeindesportplatz");
+    expect(card).not.toHaveTextContent("Gemeindesportplatz");
+    expect(card).not.toHaveTextContent("FC Arisdorf · Gemeindesportplatz");
+    expect(card).toHaveAttribute("data-surface", "list-row");
   });
 
-  it("HOME — Eigener Verein and tenant club - location", () => {
+  it("HOME — organiser and venue without duplicating organiser in location line", () => {
     const tournament = baseTournament({
       homeAway: "HOME",
       organizerName: "FC Allschwil",
@@ -91,8 +91,11 @@ describe("TurniereManagementRow — SCE-ACTIVITY-UX-01R8 identity", () => {
       />,
     );
 
-    expect(screen.getByText("Eigener Verein")).toHaveAttribute("data-activity-context-badge");
-    expect(screen.getByText("FC Allschwil - Im Brüel")).toBeInTheDocument();
+    const card = screen.getByTestId("turniere-sce-card-tournament-1");
+    const context = screen.getByTestId("turniere-row-context-zone");
+    expect(card).toHaveTextContent("FC Allschwil");
+    expect(context).toHaveTextContent("Im Brüel");
+    expect(card).not.toHaveTextContent("Im Brüel");
   });
 
   it("does not fabricate organiser from participating team", () => {
@@ -110,7 +113,9 @@ describe("TurniereManagementRow — SCE-ACTIVITY-UX-01R8 identity", () => {
       />,
     );
 
-    expect(screen.queryByText(/FC Allschwil Junioren F2 -/)).not.toBeInTheDocument();
-    expect(screen.getByText("Gemeindesportplatz")).toBeInTheDocument();
+    const card = screen.getByTestId("turniere-sce-card-tournament-1");
+    const context = screen.getByTestId("turniere-row-context-zone");
+    expect(card).not.toHaveTextContent("FC Allschwil Junioren F2");
+    expect(context).toHaveTextContent("Gemeindesportplatz");
   });
 });

@@ -139,6 +139,36 @@ Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not lo
 
 ---
 
+## Canonical Tournament card family (01F)
+
+| Item | Contract |
+|------|----------|
+| **Component** | `SceTournamentCard` (`components/sporting-activity/SceTournamentCard.tsx`) |
+| **Model** | `SceTournamentPresentationModel` via `resolveSceTournamentPresentation` / Wochenplaner adapter — **no parallel Tournament card model** |
+| **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
+| **Identity grammar** | Tournament title → **organiser** (always when data exists) → optional **Hauptteam** → schedule → location → status — **never** Match semantics (no VS, home/away pairing, scores) |
+| **Organiser invariant** | Organiser is a first-class field (`ClubIdentity`); must remain visible at HERO, STANDARD, COMPACT, and identifiable at MICRO — not tooltip-only |
+| **Hauptteam** | Distinct from organiser; do not substitute organiser with Hauptteam or venue |
+| **Location** | Venue → resource on card; **omit** organiser/host from location line when organiser is rendered separately |
+| **Schedule** | Concrete `schedule.startAt` / `endAt` from domain — no Training-style recurring definition |
+| **Status** | Domain-backed labels via `SceTournamentCardStatus` / DS `Badge` — text first |
+| **Routes** | `model.route.consumeHref` / `manageHref` — no local href builders |
+| **Management boundary** | `SceTournamentCard` owns **identity/context presentation**; `TurniereManagementRow` owns date column, context rail (schedule/location), operational status/visibility, and action menu |
+| **TOURNAMENT_LIST_ROW_COMPOSITION** | Four zones on `/dashboard/tournamentcenter`: **date** (compact weekday/day/month) · **identity** (`SceTournamentCard` `surface="list-row"` — type, crest, title, organiser, Hauptteam only) · **context** (calendar date, time range, location icons; status + visibility) · **action** (row menu). **Desktop (xl+):** DATE \| IDENTITY \| CONTEXT \| ACTION on one row. **Tablet (md–lg):** DATE \| IDENTITY \| ACTION with CONTEXT under identity. **Mobile:** stack. Tablet grid placement uses `md:max-xl:` so xl desktop column/row placement is explicit. No duplicated organiser/Hauptteam/time/location/status; no nested card shell in list-row |
+| **List-row surface** | `surface="list-row"` — embedded presentation: no competing border/background; `max-w-none`; organiser crest uses list-row sizing (`planner` bounds) |
+| **Organiser crest pipeline** | Domain `resolveTournamentOrganizerIdentity` → `organizerLogoUrl` on DTO / Weekplanner item → `buildTournamentOrganiserClubIdentity` → `resolveTournamentOrganiserCrestUrlFromDomain` → `ClubCrest`. **No** consumer-local `tenantLogoUrl` bypass; preview fixtures must supply domain organiser fields |
+| **Club crest** | Organiser `ClubIdentity` → canonical `ClubCrest` at HERO/STANDARD/COMPACT and MICRO when width allows; **no** Tournament-local logo resolver; real crests use `object-contain` (no circular mask on PNG/SVG); initials/icon fallback only when no usable crest |
+| **Semantic hierarchy** | Tournament type pill (orange/gold) → title → organiser + crest → Hauptteam (team accent) → date/time → location → status text |
+| **Preview / UAT** | `/sce-preview/tournament-card`, `/sce-preview/weekplanner-tournament` |
+
+Representative integration (01F): Activity Detail tournament embed (HERO), Turniere management row identity (`COMPACT`, status in row column), Wochenplaner “Planung bearbeiten” tournament summary (`WeekplannerTournamentIdentityCard`).
+
+Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01f-tournament-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01f-architecture.test.ts`.
+
+Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — not local card variants.
+
+---
+
 ## Controls — binary state (Toggle First)
 
 **SCE Control Standard — Toggle First** (established with SCE-UI-ROLLOUT-01B closure, 2026-10-11):

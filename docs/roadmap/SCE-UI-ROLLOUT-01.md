@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01+` |
-| **Status** | **IN_PROGRESS** — **01A–01E** closed; **01F** next (Tournament Card family) |
+| **Status** | **IN_PROGRESS** — **01A–01F** closed; **01G** next |
 | **Predecessor** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01F` **CLOSED** |
 | **Not in scope for planning doc** | Implementation branches, component code, PROD deploy |
 
@@ -133,7 +133,7 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **01C** | **CLOSED** |
 | **01D** | **CLOSED** |
 | **01E** | **CLOSED** |
-| **01F** | **NEXT / NOT STARTED** |
+| **01F** | **CLOSED** — [`SCE-UI-ROLLOUT-01F.md`](./SCE-UI-ROLLOUT-01F.md); PO visual UAT **PASS (R4)** |
 | **01G** | **NOT STARTED** |
 | **01H** | **NOT STARTED** |
 | **01I** | **NOT STARTED** |
