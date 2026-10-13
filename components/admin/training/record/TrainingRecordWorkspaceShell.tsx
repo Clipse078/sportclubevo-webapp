@@ -9,7 +9,8 @@ type Props = {
   breadcrumbs: BreadcrumbItem[];
   backHref?: string;
   backLabel?: string;
-  header: ReactNode;
+  /** Optional page chrome above the composer; omit when the composer owns the creation title. */
+  header?: ReactNode;
   children: ReactNode;
   contextRail?: ReactNode;
   testId?: string;
@@ -36,7 +37,7 @@ export default function TrainingRecordWorkspaceShell({
           <ChevronRight className="h-3.5 w-3.5 rotate-180" aria-hidden />
           {backLabel}
         </Link>
-        {header}
+        {header ?? null}
       </div>
 
       <div className={cn(contextRail ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,22rem)] xl:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]" : undefined)}>

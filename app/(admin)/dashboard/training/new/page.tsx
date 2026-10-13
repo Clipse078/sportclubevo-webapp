@@ -124,21 +124,11 @@ export default async function NewTrainingSeriesPage({
   const breadcrumbs: BreadcrumbItem[] = [
     { label: "Planung", href: "/dashboard/planner" },
     { label: "Trainings", href: "/dashboard/training" },
-    { label: "Training erstellen" },
+    { label: initialResumeDraft ? "Entwurf fortsetzen" : "Erstellen" },
   ];
 
-  const header = (
-    <div className="space-y-1 pt-1">
-      <p className="text-xs font-medium text-[var(--text-2)]">Neue Trainingsserie</p>
-      <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-        {initialResumeDraft ? "Training-Entwurf fortsetzen" : "Training erstellen"}
-      </h1>
-      <p className="text-sm text-[var(--text-2)]">Team, Termin, Wiederholung und Ressourcen im Composer erfassen.</p>
-    </div>
-  );
-
   return (
-    <TrainingRecordWorkspaceShell breadcrumbs={breadcrumbs} header={header} testId="training-create-page">
+    <TrainingRecordWorkspaceShell breadcrumbs={breadcrumbs} testId="training-create-page">
       <TrainingCreateForm
         teamSeasons={filteredTeamSeasons.map((ts) => ({
           id: ts.id,

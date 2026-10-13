@@ -47,7 +47,6 @@ export function firstInvalidTrainingCreateTab(
     "termin",
     "wiederholung",
     "ressourcen",
-    "publikation",
   ];
   return order.find((tab) => tabErrors[tab]) ?? null;
 }

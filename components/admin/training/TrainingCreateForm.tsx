@@ -15,7 +15,6 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
-import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import { PLANNING_EDITOR_FORM_GRID_CLASS, PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import TeamSeasonSearchablePicker from "@/components/admin/shared/TeamSeasonSearchablePicker";
 import TrainingWeekdayScheduleEditor, {
@@ -193,6 +192,25 @@ export default function TrainingCreateForm({
     setWeekdayRows(buildDefaultWeekdayRows(validFrom, startsAt, endsAt));
   }, [validFrom, serverHydrated?.weekdaySchedules.length, startsAt, endsAt]);
 
+  useEffect(() => {
+    if (recurrenceEnabled) return;
+    if (!validFrom) return;
+    let anchorWeekday: Weekday | null = null;
+    try {
+      anchorWeekday = weekdayFromDate(new Date(`${validFrom}T00:00:00.000Z`));
+    } catch {
+      anchorWeekday = null;
+    }
+    if (!anchorWeekday) return;
+    setWeekdayRows((rows) =>
+      rows.map((row) =>
+        row.weekday === anchorWeekday
+          ? { ...row, enabled: true, startsAt, endsAt }
+          : { ...row, enabled: false, startsAt, endsAt },
+      ),
+    );
+  }, [recurrenceEnabled, validFrom, startsAt, endsAt]);
+
   function handleStartsAtChange(value: string) {
     setStartsAt(value);
     if (!endsAtManualRef.current) {
@@ -293,13 +311,14 @@ export default function TrainingCreateForm({
   const recurrenceSummary = useMemo(() => {
     const active = weekdayRows.filter((row) => row.enabled);
     if (!recurrenceEnabled) {
+      if (!validFrom) return "Ein Training ohne Wiederholung.";
       return active.length
-        ? `Einzeltermin · ${WEEKDAY_LABELS[active[0]!.weekday]} ${active[0]!.startsAt}–${active[0]!.endsAt}`
-        : "Einzeltermin";
+        ? `Ein Training am ${validFrom} (${WEEKDAY_LABELS[active[0]!.weekday]}) · ${active[0]!.startsAt}–${active[0]!.endsAt}`
+        : "Ein Training ohne Wiederholung — bitte Datum wählen.";
     }
     const days = active.map((row) => WEEKDAY_LABELS[row.weekday]).join(", ");
-    return `Wöchentlich · ${days || "—"} · bis ${validUntil || "—"}`;
-  }, [weekdayRows, recurrenceEnabled, validUntil]);
+    return `Wöchentlich ab ${validFrom || "—"} · ${days || "keine Trainingstage"} · bis ${validUntil || "—"}`;
+  }, [weekdayRows, recurrenceEnabled, validFrom, validUntil]);
 
   const definition = useMemo((): SceActivityCreateDefinition<
     TrainingComposerDraftPayload,
@@ -477,16 +496,27 @@ export default function TrainingCreateForm({
   const terminPanel = (
     <PlanningEditorSection testId="training-create-schedule-section" ariaLabelledBy="training-create-schedule-heading">
       <PlanningEditorSectionHeading id="training-create-schedule-heading" title="Termin" />
+      <p className="mb-3 text-sm text-[var(--text-2)]" data-testid="training-create-termin-hint">
+        {recurrenceEnabled
+          ? "Startdatum und Uhrzeit legen den Beginn der Serie fest. Die Trainingstage pro Woche legen Sie unter Wiederholung fest."
+          : "Datum und Uhrzeit definieren das eine Training — ohne Wiederholung entsteht genau ein Termin."}
+      </p>
       <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
         <label className="block space-y-2">
-          <span className="fca-label">Datum (Start)</span>
+          <span className="fca-label">{recurrenceEnabled ? "Startdatum" : "Datum"}</span>
           <input
             type="date"
             value={validFrom}
             onChange={(e) => setValidFrom(e.target.value)}
             className="fca-input h-8 text-sm"
             data-testid="training-create-date"
+            aria-describedby="training-create-termin-date-hint"
           />
+          <span id="training-create-termin-date-hint" className="block text-xs text-[var(--text-2)]">
+            {recurrenceEnabled
+              ? "Ab diesem Datum werden die gewählten Trainingstage geplant (erster Termin am passenden Wochentag)."
+              : "Der Termin fällt auf diesen Kalendertag."}
+          </span>
         </label>
         <label className="block space-y-2">
           <span className="fca-label">Start</span>
@@ -519,34 +549,51 @@ export default function TrainingCreateForm({
           checked={recurrenceEnabled}
           onChange={setRecurrenceEnabled}
           label="Wöchentliche Wiederholung"
-          description="Bei deaktivierter Wiederholung entsteht ein Einzeltermin."
+          description={
+            recurrenceEnabled
+              ? "Mehrere Termine pro Woche im gewählten Zeitraum."
+              : "Aus — es wird genau ein Training erstellt (Termin-Tab)."
+          }
         />
         {recurrenceEnabled ? (
-          <label className="block max-w-xs space-y-2">
-            <span className="fca-label">Serie gültig bis</span>
-            <input
-              type="date"
-              value={validUntil}
-              onChange={(e) => setValidUntil(e.target.value)}
-              className="fca-input h-8 text-sm"
-              data-testid="training-create-valid-until"
+          <>
+            <p className="text-sm text-[var(--text-2)]">
+              Wählen Sie die Trainingstage und optional unterschiedliche Zeiten pro Tag. Der erste Termin
+              liegt am nächsten gewählten Wochentag ab Startdatum.
+            </p>
+            <label className="block max-w-xs space-y-2">
+              <span className="fca-label">Serie gültig bis</span>
+              <input
+                type="date"
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
+                className="fca-input h-8 text-sm"
+                data-testid="training-create-valid-until"
+              />
+              <span className="block text-xs text-[var(--text-2)]">
+                Letzter Kalendertag, an dem noch ein Training geplant wird.
+              </span>
+            </label>
+            <TrainingWeekdayScheduleEditor
+              rows={weekdayRows}
+              onToggle={(weekday) =>
+                setWeekdayRows((rows) =>
+                  rows.map((row) => (row.weekday === weekday ? { ...row, enabled: !row.enabled } : row)),
+                )
+              }
+              onTimeChange={(weekday, field, value) =>
+                setWeekdayRows((rows) =>
+                  rows.map((row) => (row.weekday === weekday ? { ...row, [field]: value } : row)),
+                )
+              }
+              testIdPrefix="training-create-weekday"
             />
-          </label>
-        ) : null}
-        <TrainingWeekdayScheduleEditor
-          rows={weekdayRows}
-          onToggle={(weekday) =>
-            setWeekdayRows((rows) =>
-              rows.map((row) => (row.weekday === weekday ? { ...row, enabled: !row.enabled } : row)),
-            )
-          }
-          onTimeChange={(weekday, field, value) =>
-            setWeekdayRows((rows) =>
-              rows.map((row) => (row.weekday === weekday ? { ...row, [field]: value } : row)),
-            )
-          }
-          testIdPrefix="training-create-weekday"
-        />
+          </>
+        ) : (
+          <p className="text-sm text-[var(--text-2)]" data-testid="training-create-recurrence-off-note">
+            Datum und Uhrzeit stehen im Tab Termin. Aktivieren Sie die Wiederholung für eine wöchentliche Serie.
+          </p>
+        )}
         <p className="text-sm text-[var(--text-2)]" data-testid="training-create-recurrence-summary">
           {recurrenceSummary}
         </p>
@@ -608,22 +655,12 @@ export default function TrainingCreateForm({
     </PlanningEditorSection>
   );
 
-  const publikationPanel = (
-    <PlanningPublicationPanel testId="training-create-publication-panel">
-      <p className="text-sm text-[var(--text-2)]">
-        Trainings erscheinen nach Veröffentlichung in den bestehenden Team-Programm- und Planungsflächen gemäss
-        Team-Saison-Einstellungen. Kanalsteuerung erfolgt über die Team-Publikation.
-      </p>
-    </PlanningPublicationPanel>
-  );
-
   definition.tabs = [
     { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
     { key: "team", label: "Team", render: () => teamPanel },
     { key: "termin", label: "Termin", render: () => terminPanel },
     { key: "wiederholung", label: "Wiederholung", render: () => wiederholungPanel },
     { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
-    { key: "publikation", label: "Publikation", render: () => publikationPanel },
   ];
 
   return (

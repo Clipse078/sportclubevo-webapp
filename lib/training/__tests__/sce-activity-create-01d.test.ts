@@ -29,14 +29,7 @@ describe("SCE-ACTIVITY-CREATE-01D — Training adoption", () => {
   it("uses canonical training tabs", () => {
     const config = buildTrainingCreateTabNavigationConfig();
     const labels = config.tabs.map((tab) => tab.key);
-    expect(labels).toEqual([
-      "uebersicht",
-      "team",
-      "termin",
-      "wiederholung",
-      "ressourcen",
-      "publikation",
-    ]);
+    expect(labels).toEqual(["uebersicht", "team", "termin", "wiederholung", "ressourcen"]);
   });
 
   it("routes validation to first invalid tab", () => {
