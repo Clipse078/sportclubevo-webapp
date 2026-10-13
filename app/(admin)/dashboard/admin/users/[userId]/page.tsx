@@ -14,7 +14,13 @@ import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import TenantRoleAssignmentControl from "@/components/admin/users/TenantRoleAssignmentControl";
 import ScopedRoleManagementControl from "@/components/admin/users/ScopedRoleManagementControl";
-import PersonNavEffectiveAccessCard from "@/components/admin/users/PersonNavEffectiveAccessCard";
+import PersonNavEffectiveAccessPanel from "@/components/admin/users/PersonNavEffectiveAccessPanel";
+import PersonBereicheEmptyState from "@/components/admin/users/PersonBereicheEmptyState";
+import { getTenantPermissionCatalog } from "@/lib/roles/tenant-queries";
+import { getPersonNavEffectiveAccessSections } from "@/lib/admin/users/person-nav-effective-access";
+import { buildPersonDetailAccessOverviewLine } from "@/lib/admin/users/person-detail-access-summary";
+import { loadSceActivityClubGovernancePolicy } from "@/lib/sce/activity-governance/persistence/load-club-governance-policy";
+import { resolvePersonClubEventGovernanceOverview } from "@/lib/admin/users/person-detail-governance-summary";
 import PersonAdminActionsPanel from "@/components/admin/users/PersonAdminActionsPanel";
 import PersonClubEventGovernanceSection from "@/components/admin/users/people-access/PersonClubEventGovernanceSection";
 import PersonDetailWorkspace from "@/components/admin/users/PersonDetailWorkspace";
@@ -135,6 +141,25 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
     ? CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_CONTEXT
     : undefined;
 
+  const [moduleGroups, governancePolicy] = await Promise.all([
+    getTenantPermissionCatalog(),
+    showClubEventGovernanceTab
+      ? loadSceActivityClubGovernancePolicy(tenantId)
+      : Promise.resolve(null),
+  ]);
+  const accessSections = await getPersonNavEffectiveAccessSections(tenantId, userId, moduleGroups);
+  const accessOverviewLine = buildPersonDetailAccessOverviewLine(accessSections);
+  const clubEventTypePolicy = governancePolicy?.activityTypes.find(
+    (row) => row.activityType === "CLUB_EVENT",
+  );
+  const clubEventGovernanceOverview =
+    linkedPerson && clubEventTypePolicy
+      ? resolvePersonClubEventGovernanceOverview({
+          clubEventTypePolicy,
+          personId: linkedPerson.id,
+        })
+      : null;
+
   const tabLinks = {
     rollenFunktionen: buildPersonDetailTabHref({
       userId,
@@ -239,6 +264,8 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                   tenantRoleNames={tenantRoleNames}
                   scopedAssignmentCount={scopedItems.length}
                   showClubEventGovernanceTab={showClubEventGovernanceTab}
+                  clubEventGovernanceOverview={clubEventGovernanceOverview}
+                  accessOverviewLine={accessOverviewLine}
                   tabLinks={tabLinks}
                 />
                 <PersonAdminActionsPanel
@@ -288,17 +315,23 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                     Bereichsbezogene Rollen und organisatorische Zuständigkeiten.
                   </p>
                 </div>
-                {scopedItems.length === 0 ? (
-                  <p className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--surface-2)]/50 px-4 py-3 text-sm text-[var(--muted)]">
-                    Keine bereichsbezogenen Zuständigkeiten zugewiesen.
-                  </p>
+                {canManage && !accessStatus.isPendingInvitation ? (
+                  <ScopedRoleManagementControl
+                    userId={userId}
+                    assignments={scopedItems}
+                    availableRoles={availableScopedRoles}
+                    availableOrgUnits={availableOrgUnits}
+                    canManage
+                  />
+                ) : scopedItems.length === 0 ? (
+                  <PersonBereicheEmptyState />
                 ) : (
                   <ScopedRoleManagementControl
                     userId={userId}
                     assignments={scopedItems}
                     availableRoles={availableScopedRoles}
                     availableOrgUnits={availableOrgUnits}
-                    canManage={canManage && !accessStatus.isPendingInvitation}
+                    canManage={false}
                   />
                 )}
               </div>
@@ -308,7 +341,7 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                 <PersonClubEventGovernanceSection personId={linkedPerson.id} canManage={canManage} />
               ) : null
             }
-            zugriff={<PersonNavEffectiveAccessCard tenantId={tenantId} userId={userId} />}
+            zugriff={<PersonNavEffectiveAccessPanel sections={accessSections} />}
           />
         </div>
       </div>

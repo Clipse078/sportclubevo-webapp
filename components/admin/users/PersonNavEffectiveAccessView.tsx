@@ -26,7 +26,8 @@ export default function PersonNavEffectiveAccessView({
   return (
     <div className="space-y-4" data-testid="person-effective-access">
       <p className="text-sm text-[var(--text-2)]">
-        Effektiver Zugriff aus allen zugewiesenen Rollen ({sections.length} Bereich
+        Effektiver Zugriff ist das Ergebnis aus Rollen, Zuständigkeiten und individuellen
+        Anpassungen ({sections.length} Bereich
         {sections.length === 1 ? "" : "e"}, {totalItems} Eintrag
         {totalItems === 1 ? "" : "e"}).
       </p>
@@ -53,6 +54,9 @@ export default function PersonNavEffectiveAccessView({
                     >
                       <span className="font-medium text-[var(--foreground)]">{item.label}</span>
                       <span className="text-[var(--text-2)]">· {item.access}</span>
+                      {"provenance" in item && item.provenance ? (
+                        <span className="text-xs text-[var(--muted)]">({item.provenance})</span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -81,6 +85,9 @@ export default function PersonNavEffectiveAccessView({
                     >
                       <span className="font-medium text-[var(--foreground)]">{item.label}</span>
                       <span className="text-[var(--text-2)]">· {item.access}</span>
+                      {"provenance" in item && item.provenance ? (
+                        <span className="text-xs text-[var(--muted)]">({item.provenance})</span>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

@@ -11,6 +11,7 @@ import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import UserRowActionsMenu from "@/components/admin/users/UserRowActionsMenu";
 import PeopleAccessWizardDialog from "@/components/admin/users/people-access/PeopleAccessWizardDialog";
 import PersonAccessDrawer from "@/components/admin/users/people-access/PersonAccessDrawer";
+import { buildPersonDetailZugriffHref } from "@/lib/admin/users/person-quick-view-config";
 import type { WizardRoleOption } from "@/components/admin/users/people-access/PeopleAccessWizard";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
@@ -457,7 +458,7 @@ export default function TenantUsersSearchableList({
                     isSelf={user.userId === actorUserId}
                     canImpersonateTarget={canImpersonateTarget}
                     canShowAdminShortcuts={canManage && !user.isPlatformSystemIdentity}
-                    onEditAccess={(userId) => router.push(`/dashboard/admin/users/${userId}`)}
+                    onEditAccess={(userId) => router.push(buildPersonDetailZugriffHref(userId))}
                     linkedPersonName={user.linkedPersonName ?? null}
                     tenantRoleNames={user.roles.map((r) => r.name)}
                   />
@@ -536,7 +537,7 @@ export default function TenantUsersSearchableList({
         permissionModuleGroups={wizardConfig?.permissionModuleGroups ?? []}
         onEditAccess={(userId) => {
           setDrawerUser(null);
-          router.push(`/dashboard/admin/users/${userId}`);
+          router.push(buildPersonDetailZugriffHref(userId));
         }}
       />
     </div>

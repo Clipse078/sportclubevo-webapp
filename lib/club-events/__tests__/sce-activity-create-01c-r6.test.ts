@@ -94,7 +94,7 @@ describe("SCE-ACTIVITY-CREATE-01C-R6 — person detail contextual workspace", ()
 
   it("H — effective access moved to Zugriff tab with progressive disclosure", () => {
     const page = read("app/(admin)/dashboard/admin/users/[userId]/page.tsx");
-    expect(page).toContain("PersonNavEffectiveAccessCard");
+    expect(page).toMatch(/PersonNavEffectiveAccess(Panel|Card)/);
     expect(page).toContain("PersonClubEventGovernanceSection");
     expect(page).toContain("PersonDetailWorkspace");
     const accessView = read("components/admin/users/PersonNavEffectiveAccessView.tsx");

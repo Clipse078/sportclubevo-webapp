@@ -8,18 +8,39 @@ const CLUB_EVENT_GOVERNANCE_MANAGE_PERMISSIONS = [
   PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
 ] as const;
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { prisma } from "@/lib/db/prisma";
 import { loadSceActivityClubGovernancePolicy } from "@/lib/sce/activity-governance/persistence/load-club-governance-policy";
 import {
   setClubEventValidatorPool,
   upsertPersonClubEventGovernance,
 } from "@/lib/sce/activity-governance/persistence/upsert-person-club-event-governance";
+import type { SceActivityClubGovernancePolicy } from "@/lib/sce/activity-governance/types";
+
+async function buildClubEventGovernancePayload(tenantId: string, policy: SceActivityClubGovernancePolicy) {
+  const clubEventPolicy = policy.activityTypes.find((row) => row.activityType === "CLUB_EVENT");
+  const validatorPersonIds = clubEventPolicy?.validatorPersonIds ?? [];
+  const validatorPeople =
+    validatorPersonIds.length === 0
+      ? []
+      : (
+          await prisma.person.findMany({
+            where: { tenantId, id: { in: [...validatorPersonIds] } },
+            select: { id: true, firstName: true, lastName: true },
+          })
+        ).map((person) => ({
+          personId: person.id,
+          displayName: `${person.firstName} ${person.lastName}`.trim(),
+        }));
+
+  return { policy, validatorPeople };
+}
 
 export async function GET() {
   await requireAnyPermission([...CLUB_EVENT_GOVERNANCE_MANAGE_PERMISSIONS]);
   const tenant = await getActiveTenant();
   if (!tenant) return NextResponse.json({ error: "Tenant fehlt." }, { status: 404 });
   const policy = await loadSceActivityClubGovernancePolicy(tenant.id);
-  return NextResponse.json({ policy });
+  return NextResponse.json(await buildClubEventGovernancePayload(tenant.id, policy));
 }
 
 export async function PUT(request: Request) {
@@ -59,5 +80,5 @@ export async function PUT(request: Request) {
   void session;
 
   const policy = await loadSceActivityClubGovernancePolicy(tenant.id);
-  return NextResponse.json({ policy });
+  return NextResponse.json(await buildClubEventGovernancePayload(tenant.id, policy));
 }

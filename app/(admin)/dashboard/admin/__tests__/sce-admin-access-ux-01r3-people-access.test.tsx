@@ -95,7 +95,7 @@ describe("SCE-ADMIN-ACCESS-UX-01R3", () => {
         onEditAccess={vi.fn()}
       />,
     );
-    expect(await screen.findByText(/Letzte Aktivität:/i)).toBeTruthy();
+    expect(await screen.findByText(/Letzter Login:/i)).toBeTruthy();
     expect(screen.getByText(/2025/)).toBeTruthy();
   });
 

@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **IMPLEMENTED_PENDING_PO_UAT** (PR **#840**, R1 completion) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **IMPLEMENTED_PENDING_PO_UAT** (PR **#840**, R7 final person workspace polish gate — awaiting PO UAT) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Next slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption (**IMPLEMENTED_PENDING_PO_UAT**) |
@@ -108,3 +108,15 @@ Deliverables: `SceActivityComposer` (overlay / page / fullscreen), `SceActivityC
 | Draft resume | Management draft list → `/new?draftId=` + GET draft API |
 | Contextual create proof | Veranstaltungen management **+ Veranstaltung** opens overlay composer (page mode unchanged at `/new`) |
 | **01G boundary** | Full planning-hub contextual integration remains **01G**; overlay proof uses Veranstaltungen management only |
+
+## SCE-ACTIVITY-CREATE-01C-R7 — FINAL PERSON WORKSPACE UX POLISH GATE (PR **#840**)
+
+| Topic | Contract |
+|-------|----------|
+| **Person Quick View** (Personen & Zugänge drawer) | Fast inspection: tabs **Übersicht · Rollen · Zugriff** — no Veranstaltungs-Freigaben governance editor |
+| **Person Detail Workspace** | Canonical admin: **Übersicht · Rollen & Funktionen · Bereiche & Zuständigkeiten · Veranstaltungs-Freigaben · Zugriff** at `/dashboard/admin/users/{userId}?tab=…` |
+| **Übersicht** | Administrative summary (Konto, Rollen, Bereiche, Veranstaltungs-Freigaben when linked, Zugriff) with deep links — not a duplicate of the header |
+| **Governance deep link** | `?returnContext=club-event-governance&tab=veranstaltungs-freigaben` |
+| **Effektiver Zugriff** | Own tab **Zugriff**; progressive disclosure; provenance labels when resolver data supports it |
+| **Governance copy** | Distinguish form/domain validation from human Freigabe; zero-validator blocking preserved |
+| **Closure** | **01C not closed** until PO R7 UAT |

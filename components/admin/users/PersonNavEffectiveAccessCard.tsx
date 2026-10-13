@@ -16,8 +16,9 @@ export default async function PersonNavEffectiveAccessCard({ tenantId, userId }:
       <div className="space-y-1">
         <h2 className="text-base font-semibold text-[var(--foreground)]">Effektiver Zugriff</h2>
         <p className="max-w-3xl text-sm text-[var(--text-2)]">
-          Aus Rollen und Zuständigkeiten abgeleitete Berechtigungen — gruppiert nach Produktbereich.
-          Klappe Bereiche auf, um Details zu prüfen.
+          Effektiver Zugriff ist das Ergebnis aus Rollen, Zuständigkeiten und individuellen
+          Anpassungen — gruppiert nach Produktbereich. Klappe Bereiche auf, um Details inklusive
+          Herkunft zu prüfen.
         </p>
       </div>
       <PersonNavEffectiveAccessView sections={sections} collapsible />

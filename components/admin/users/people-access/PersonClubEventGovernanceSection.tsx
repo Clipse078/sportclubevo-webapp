@@ -13,10 +13,13 @@ type Props = {
 
 const PUBLICATION_COPY = {
   DIRECT_PUBLISH:
-    "Von dieser Person erstellte Veranstaltungen werden nach erfolgreicher Prüfung der Eingaben direkt veröffentlicht.",
+    "Von dieser Person erstellte Veranstaltungen werden nach erfolgreicher Prüfung der Eingaben und fachlichen Validierung direkt veröffentlicht — ohne separate menschliche Freigabe.",
   APPROVAL_REQUIRED:
-    "Von dieser Person eingereichte Veranstaltungen müssen zuerst von einer freigabeberechtigten Person geprüft werden.",
+    "Von dieser Person erstellte Veranstaltungen werden zur Freigabe eingereicht und benötigen eine Entscheidung durch eine freigabeberechtigte Person, bevor sie veröffentlicht werden.",
 } as const;
+
+const ZERO_VALIDATOR_MESSAGE =
+  "Keine freigabeberechtigte Person hinterlegt. «Freigabe erforderlich» kann erst aktiviert werden, wenn mindestens eine freigabeberechtigte Person auf Club-Ebene hinterlegt ist.";
 
 export default function PersonClubEventGovernanceSection({ personId, canManage }: Props) {
   const [createEnabled, setCreateEnabled] = useState(true);
@@ -24,6 +27,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
     "DIRECT_PUBLISH" | "APPROVAL_REQUIRED"
   >("DIRECT_PUBLISH");
   const [validatorCount, setValidatorCount] = useState(0);
+  const [validatorNames, setValidatorNames] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +38,15 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
         const typePolicy = data.policy?.activityTypes?.find(
           (row: { activityType: string }) => row.activityType === "CLUB_EVENT",
         );
-        setValidatorCount(typePolicy?.validatorPersonIds?.length ?? 0);
+        const people = Array.isArray(data.validatorPeople)
+          ? (data.validatorPeople as Array<{ displayName?: string }>)
+          : [];
+        setValidatorNames(
+          people
+            .map((row) => row.displayName)
+            .filter((name): name is string => typeof name === "string" && name.length > 0),
+        );
+        setValidatorCount(typePolicy?.validatorPersonIds?.length ?? people.length ?? 0);
         const creator = typePolicy?.creatorPolicies?.find(
           (row: { personId: string; createEnabled?: boolean }) => row.personId === personId,
         );
@@ -56,9 +68,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
       next.publicationAuthority === "APPROVAL_REQUIRED" &&
       validatorCount === 0
     ) {
-      setError(
-        "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Lege zuerst mindestens eine freigabeberechtigte Person auf Club-Ebene an.",
-      );
+      setError(ZERO_VALIDATOR_MESSAGE);
       return;
     }
     setSaving(true);
@@ -75,10 +85,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
       });
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        setError(
-          data?.error ??
-            "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Lege zuerst mindestens eine freigabeberechtigte Person auf Club-Ebene an.",
-        );
+        setError(data?.error ?? ZERO_VALIDATOR_MESSAGE);
       }
     } finally {
       setSaving(false);
@@ -87,7 +94,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
 
   const validatorSummary =
     validatorCount === 0
-      ? "Es sind noch keine freigabeberechtigten Personen hinterlegt."
+      ? ZERO_VALIDATOR_MESSAGE
       : validatorCount === 1
         ? "1 freigabeberechtigte Person ist auf Club-Ebene hinterlegt."
         : `${validatorCount} freigabeberechtigte Personen sind auf Club-Ebene hinterlegt.`;
@@ -137,9 +144,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
               value={publicationAuthority}
               onChange={(value) => {
                 if (value === "APPROVAL_REQUIRED" && validatorCount === 0) {
-                  setError(
-                    "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Lege zuerst mindestens eine freigabeberechtigte Person auf Club-Ebene an.",
-                  );
+                  setError(ZERO_VALIDATOR_MESSAGE);
                   return;
                 }
                 setPublicationAuthority(value);
@@ -156,6 +161,36 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
             <p className="text-xs leading-relaxed text-[var(--text-2)]" data-testid="person-club-event-publication-copy">
               {PUBLICATION_COPY[publicationAuthority]}
             </p>
+            {publicationAuthority === "APPROVAL_REQUIRED" ? (
+              <div
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-3 py-2 text-xs text-[var(--text-2)]"
+                data-testid="person-club-event-approval-context"
+              >
+                <p className="font-semibold text-[var(--foreground)]">Freigabe durch</p>
+                {validatorCount === 0 ? (
+                  <p className="mt-1 text-rose-200/90" role="status">
+                    {ZERO_VALIDATOR_MESSAGE}
+                  </p>
+                ) : (
+                  <p className="mt-1">
+                    {validatorNames.length > 0
+                      ? validatorNames.join(" · ")
+                      : `${validatorCount} freigabeberechtigte Person${validatorCount === 1 ? "" : "en"}`}
+                    {" — "}
+                    eine berechtigte Person reicht für die Freigabe (V1).
+                  </p>
+                )}
+                {canManage ? (
+                  <Link
+                    href={CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF}
+                    className="mt-2 inline-block font-semibold text-[var(--sce-primary)] hover:underline"
+                    data-testid="person-club-event-approval-manage-validators"
+                  >
+                    Freigabeberechtigte verwalten
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -164,7 +199,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
             <p className="text-xs text-rose-200" role="alert">
               {error}
             </p>
-            {error.includes("freigabeberechtigte") ? (
+            {error.includes("freigabeberechtigte") || error.includes("Freigabe erforderlich") ? (
               <Link
                 href={CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF}
                 className="inline-block text-xs font-semibold text-[var(--sce-primary)] hover:underline"
