@@ -28,7 +28,11 @@ export {
   useOptionalContextDirtyNavigation,
 } from "./ContextDirtyNavigationContext";
 
-export { SceContextTabProvider, useContextDetailTab } from "./use-context-detail-tab";
+export {
+  SceContextTabProvider,
+  SceLocalContextTabProvider,
+  useContextDetailTab,
+} from "./use-context-detail-tab";
 
 export { default as SceContextTabPanel } from "./ContextTabPanel";
 

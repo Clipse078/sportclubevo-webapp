@@ -1,6 +1,6 @@
 # SCE Activity Creation — Design & Architecture Contracts (01A)
 
-> **Status:** **APPROVED** (architecture locked — `SCE-ACTIVITY-CREATE-01A` **CLOSED**; product implementation **01B+**, not shipped)  
+> **Status:** **FOUNDATION_IMPLEMENTED** (`SCE-ACTIVITY-CREATE-01B` — composer shell + contracts; domain adoption **01C+** not shipped)  
 > **Programme:** [`SCE-ACTIVITY-CREATE-01`](../roadmap/SCE-ACTIVITY-CREATE-01.md)  
 > **Product principle:** *One creation language, domain-specific workflows.*
 
@@ -14,8 +14,9 @@ This document defines the **target** contracts for unified activity creation. It
 |-----|---------|
 | **EXISTING** | On STAGE; reuse as-is |
 | **REUSABLE** | On STAGE; adapt/wrap for composer |
-| **NEW_REQUIRED** | Not implemented; 01B+ scope |
-| **APPROVED** | Locked at 01A closure — implement in 01B+ |
+| **NEW_REQUIRED** | Not implemented; 01C+ domain adoption |
+| **APPROVED** | Locked at 01A closure |
+| **FOUNDATION_IMPLEMENTED** | Shipped in 01B (composer foundation only) |
 
 ---
 
@@ -32,7 +33,7 @@ This document defines the **target** contracts for unified activity creation. It
 
 ---
 
-## 2. Composer shell (**NEW_REQUIRED**)
+## 2. Composer shell (**FOUNDATION_IMPLEMENTED** — 01B)
 
 | Responsibility | Owner |
 |----------------|--------|
@@ -58,7 +59,7 @@ This document defines the **target** contracts for unified activity creation. It
 
 ---
 
-## 3. Creation contract (**NEW_REQUIRED**)
+## 3. Creation contract (**FOUNDATION_IMPLEMENTED** — 01B)
 
 Conceptual type (orchestration only — **not** a generic field renderer):
 
@@ -128,7 +129,9 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 
 **EXISTING:** Tab switch confirmation via `SceContextTabs` + dirty provider.
 
-**NEW_REQUIRED for composer:**
+**FOUNDATION_IMPLEMENTED (01B) for composer close/backdrop/Escape:**
+
+**Still NOT YET IMPLEMENTED (domain adoption / 01G):**
 
 - Close X, backdrop, Escape → same confirm message
 - Optional: disable backdrop dismiss when dirty

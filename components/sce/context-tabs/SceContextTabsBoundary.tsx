@@ -2,7 +2,10 @@
 
 import { Suspense, type ReactNode } from "react";
 import type { ContextTabId, ContextTabNavigationConfig } from "@/lib/context-tabs/types";
-import { SceContextTabProvider } from "@/lib/context-tabs/use-context-detail-tab";
+import {
+  SceContextTabProvider,
+  SceLocalContextTabProvider,
+} from "@/lib/context-tabs/use-context-detail-tab";
 import SceContextTabs from "./SceContextTabs";
 
 type Props<TTabId extends ContextTabId = ContextTabId> = {
@@ -11,6 +14,9 @@ type Props<TTabId extends ContextTabId = ContextTabId> = {
   testId?: string;
   idPrefix?: string;
   children: ReactNode;
+  localNavigation?: boolean;
+  /** When set, uses in-memory tab provider instead of URL-backed provider. */
+  tabStateMode?: "url" | "local";
 };
 
 /**
@@ -22,7 +28,12 @@ export default function SceContextTabsBoundary<TTabId extends ContextTabId = Con
   testId,
   idPrefix,
   children,
+  localNavigation = false,
+  tabStateMode = "url",
 }: Props<TTabId>) {
+  const TabProvider = tabStateMode === "local" ? SceLocalContextTabProvider : SceContextTabProvider;
+  const resolvedLocalNavigation = localNavigation || tabStateMode === "local";
+
   return (
     <Suspense
       fallback={
@@ -32,15 +43,16 @@ export default function SceContextTabsBoundary<TTabId extends ContextTabId = Con
         />
       }
     >
-      <SceContextTabProvider config={config}>
+      <TabProvider config={config}>
         <SceContextTabs
           ariaLabel={ariaLabel}
           testId={testId}
           config={config}
           idPrefix={idPrefix}
+          localNavigation={resolvedLocalNavigation}
         />
         {children}
-      </SceContextTabProvider>
+      </TabProvider>
     </Suspense>
   );
 }

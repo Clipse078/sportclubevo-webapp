@@ -19,6 +19,8 @@ type Props<TTabId extends ContextTabId = ContextTabId> = {
   testId?: string;
   /** DOM id prefix for tab/tabpanel wiring (activity shells use `activity-tab`). */
   idPrefix?: string;
+  /** When true, tabs use buttons (composer overlay local state) instead of URL Links. */
+  localNavigation?: boolean;
 };
 
 function formatTabLabel(label: string, count?: number | string | null): string {
@@ -37,6 +39,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
   ariaLabel = "Kontext",
   testId = "sce-context-tabs",
   idPrefix = "sce-context-tab",
+  localNavigation = false,
 }: Props<TTabId>) {
   const { activeTab, navigateToTab, hrefForTab } = useContextDetailTab(config);
   const dirtyNav = useOptionalContextDirtyNavigation();
@@ -47,10 +50,13 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
   const overflowActive = overflowTabs.some((tab) => tab.key === activeTab);
 
   function handleTabClick(event: React.MouseEvent, tabKey: TTabId) {
+    if (localNavigation) {
+      event.preventDefault();
+    }
     if (tabKey === activeTab) {
       return;
     }
-    if (dirtyNav?.isDirty) {
+    if (dirtyNav?.isDirty || localNavigation) {
       event.preventDefault();
       navigateToTab(tabKey);
     }
@@ -136,6 +142,33 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
           const tabDomId = `${idPrefix}-${tab.key}`;
           const panelDomId = `${idPrefix}panel-${tab.key}`;
 
+          const tabClassName = cn(
+            "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors sm:px-4",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+            isActive
+              ? "border-[var(--sce-primary)] text-[var(--sce-primary)]"
+              : "border-transparent text-[var(--text-2)] hover:text-[var(--foreground)]",
+          );
+
+          if (localNavigation) {
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                id={tabDomId}
+                tabIndex={isActive ? 0 : -1}
+                aria-selected={isActive}
+                aria-controls={panelDomId}
+                data-testid={`${testId}-${tab.key}`}
+                onClick={(event) => handleTabClick(event, tab.key)}
+                className={tabClassName}
+              >
+                {formatTabLabel(tab.label, tab.count)}
+              </button>
+            );
+          }
+
           return (
             <Link
               key={tab.key}
@@ -147,13 +180,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
               aria-controls={panelDomId}
               data-testid={`${testId}-${tab.key}`}
               onClick={(event) => handleTabClick(event, tab.key)}
-              className={cn(
-                "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors sm:px-4",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-                isActive
-                  ? "border-[var(--sce-primary)] text-[var(--sce-primary)]"
-                  : "border-transparent text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
+              className={tabClassName}
             >
               {formatTabLabel(tab.label, tab.count)}
             </Link>
@@ -188,6 +215,28 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                 const href = hrefForTab(tab.key);
                 const isActive = activeTab === tab.key;
 
+                const overflowClassName = cn(
+                  "block w-full px-3 py-2 text-left text-sm font-medium transition-colors",
+                  isActive
+                    ? "text-[var(--sce-primary)]"
+                    : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
+                );
+
+                if (localNavigation) {
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      role="menuitem"
+                      data-testid={`${testId}-${tab.key}`}
+                      onClick={(event) => handleTabClick(event, tab.key)}
+                      className={overflowClassName}
+                    >
+                      {formatTabLabel(tab.label, tab.count)}
+                    </button>
+                  );
+                }
+
                 return (
                   <Link
                     key={tab.key}
@@ -195,12 +244,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
                     role="menuitem"
                     data-testid={`${testId}-${tab.key}`}
                     onClick={(event) => handleTabClick(event, tab.key)}
-                    className={cn(
-                      "block px-3 py-2 text-sm font-medium transition-colors",
-                      isActive
-                        ? "text-[var(--sce-primary)]"
-                        : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
-                    )}
+                    className={overflowClassName}
                   >
                     {formatTabLabel(tab.label, tab.count)}
                   </Link>

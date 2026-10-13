@@ -1250,6 +1250,25 @@ html[data-sidebar-collapsed="1"] {
   }
 }
 
+/* SCE-ACTIVITY-CREATE-01B — Activity Composer overlay/fullscreen adaptation */
+.sce-activity-composer-panel--overlay {
+  width: min(100%, var(--sce-dialog-workspace-max-width));
+}
+
+.sce-modal-overlay-content-viewport.sce-activity-composer-overlay-viewport--fullscreen {
+  left: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+.sce-activity-composer-panel--fullscreen {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
 .sce-sidebar-resizing {
   transition: none;
 }
