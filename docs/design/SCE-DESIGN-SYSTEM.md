@@ -176,6 +176,17 @@ Shared **information hierarchy** for Match, Training, and Tournament cards — o
 | Concept | Module | Tailwind / token contract | Used for |
 |---------|--------|---------------------------|----------|
 | **ACTIVITY_TYPE_ACCENT** | `ActivityTypePill` / `activity-color-tokens` | Training blue · Match red · Tournament orange | Activity kind only — not schedule/location |
+
+**Activity-type marker contract (01D R10A):** one shared `ActivityTypePill` primitive on Match, Training, and Tournament cards. Labels are fixed SCE vocabulary (not free-form identity subtitles):
+
+| Activity kind | Card label | Semantic accent |
+|---------------|------------|-----------------|
+| `MATCH` | **SPIEL** | match red |
+| `TRAINING` | **TRAINING** | training blue |
+| `TOURNAMENT` | **TURNIER** | tournament orange |
+| `CLUB_EVENT` | **VERANSTALTUNG** | (future 01G) |
+
+Density rules suppress the pill only via the shared activity density contract — not Match-only exceptions.
 | **PRIMARY_IDENTITY** | `activity-card-semantic-tokens` → `SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS` | `text-[var(--foreground)]` | Club names (match fixture), tournament title, training title |
 | **SECONDARY_IDENTITY** | `SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS` | `text-[var(--text-2)]` | Match competition, tournament organiser, quiet type context |
 | **TEAM_CONTEXT** | `SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS` | info-tinted `color-mix` on foreground | Hauptteam, training team emphasis |

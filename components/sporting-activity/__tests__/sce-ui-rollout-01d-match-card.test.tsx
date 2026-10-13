@@ -2,9 +2,13 @@
  * @vitest-environment jsdom
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { SceMatchCard } from "../SceMatchCard";
+import { SceTournamentCard } from "../SceTournamentCard";
+import { createSceTournamentCardFixture } from "../__fixtures__/sce-tournament-card-fixtures";
 import {
   createSceMatchCardFixtureMatch,
   resolveSceMatchCardFixture,
@@ -349,8 +353,65 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
       tenantClubName: "FC Allschwil",
     });
     expect(model.kind).toBe("MATCH");
+    expect(model.typeLabel).toBe("SPIEL");
     render(<SceMatchCard model={model} density="STANDARD" fmtCfg={FMT} linkToDetail={false} />);
     expect(screen.getByTestId("sce-match-card")).toHaveAttribute("data-density", "STANDARD");
+  });
+});
+
+describe("SCE-UI-ROLLOUT-01D-R10A — canonical activity-type pill", () => {
+  it.each(DENSITIES)("renders SPIEL with match-red accent at density %s", (density) => {
+    renderCard({}, density);
+    const pill = screen.getByText("SPIEL");
+    expect(pill.getAttribute("data-activity-type-pill")).toBe("match-red");
+    expect(screen.queryByText("TURNIER")).toBeNull();
+  });
+
+  it("shows SPIEL on upcoming and result cards without displacing result typography", () => {
+    renderCard({}, "STANDARD");
+    expect(screen.getByText("SPIEL")).toBeTruthy();
+    expect(screen.getByTestId("sce-match-vs")).toBeTruthy();
+
+    renderCard(
+      { status: "COMPLETED", resultLabel: "2:0", scoreHome: 2, scoreAway: 0 },
+      "STANDARD",
+    );
+    expect(screen.getAllByText("SPIEL").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId("sce-match-result")).toHaveTextContent("2:0");
+  });
+
+  it("keeps competition below the activity-type header", () => {
+    renderCard({ competitionLabel: "Meisterschaft" }, "STANDARD");
+    const header = screen.getByText("SPIEL").closest("[data-sce-match-header]");
+    const competition = screen.getByTestId("sce-match-competition");
+    expect(header).toBeTruthy();
+    expect(
+      header!.compareDocumentPosition(competition) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(competition).toHaveTextContent("Meisterschaft");
+  });
+
+  it("uses ActivityTypePill in SceMatchCard (no Match-only duplicate pill)", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/sporting-activity/SceMatchCard.tsx"),
+      "utf8",
+    );
+    expect(source).toContain("ActivityTypePill");
+    expect(source).not.toMatch(/function\s+SceMatchActivityTypePill/);
+    expect(source).not.toMatch(/MatchTypeBadge/);
+  });
+
+  it("Tournament card still uses TURNIER family pill separately from Match", () => {
+    render(
+      <SceTournamentCard
+        model={createSceTournamentCardFixture({ typeLabel: "TURNIER" })}
+        density="STANDARD"
+        fmtCfg={FMT}
+        linkToDetail={false}
+      />,
+    );
+    expect(document.querySelector('[data-activity-type-pill="tournament-orange"]')).toBeTruthy();
+    expect(screen.getByText("TURNIER")).toBeTruthy();
   });
 });
 

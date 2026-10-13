@@ -53,7 +53,18 @@ describe("SCE-UI-ROLLOUT-01D-R10 — shared activity semantic colors", () => {
     expect(source).not.toMatch(/SceMatchLocationRow[\s\S]*scheduleTextClass/);
     expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(source).toContain("data-sce-match-side=");
-    expect(source).not.toContain("ActivityTypePill");
+    expect(source).toContain("ActivityTypePill");
+    expect(source).toContain('activityKind="MATCH"');
+    expect(source).not.toContain('activityKind="TOURNAMENT"');
+  });
+
+  it("documents canonical activity-type label contract in SCE-DESIGN-SYSTEM.md", () => {
+    const doc = readFileSync(join(repoRoot, "docs/design/SCE-DESIGN-SYSTEM.md"), "utf8");
+    expect(doc).toContain("Activity-type marker contract");
+    expect(doc).toMatch(/MATCH.*SPIEL/s);
+    expect(doc).toMatch(/TOURNAMENT.*TURNIER/s);
+    expect(doc).toMatch(/TRAINING.*TRAINING/s);
+    expect(doc).toMatch(/CLUB_EVENT.*VERANSTALTUNG/s);
   });
 
   it("Tournament card does not duplicate local location color-mix literals", () => {

@@ -71,7 +71,7 @@ export function resolveSceMatchPresentation(
     kind: "MATCH",
     activityId: match.id,
     resourceKey,
-    typeLabel: legacyPresentation.identity.typeLabel,
+    typeLabel: "SPIEL",
     schedule: legacyPresentation.schedule,
     location,
     route: buildSceActivityRoute("MATCH", resourceKey),
