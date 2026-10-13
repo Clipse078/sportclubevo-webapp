@@ -28,17 +28,9 @@ export default function VeranstaltungenComposerCreateTrigger({
     <>
       <button
         type="button"
-        className="fca-button-primary inline-flex items-center gap-1.5 text-sm md:hidden"
-        data-testid="veranstaltungen-create-overlay-trigger-mobile"
-        onClick={() => setOpen(true)}
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        Veranstaltung
-      </button>
-      <button
-        type="button"
-        className="fca-button-primary hidden items-center gap-1.5 text-sm md:inline-flex"
+        className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
         data-testid="veranstaltungen-create-overlay-trigger"
+        aria-haspopup="dialog"
         onClick={() => setOpen(true)}
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
