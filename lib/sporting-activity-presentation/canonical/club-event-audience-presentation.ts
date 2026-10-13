@@ -4,10 +4,9 @@ import type { SceClubEventAudiencePresentation } from "./types";
  * Target event **scope** (who the event concerns) — not participation invitees,
  * not publication visibility, not organiser/host.
  *
- * Persistence for CLUB_WIDE vs multi-team scope is not wired in 01G-R1; see
- * docs/roadmap/SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md.
+ * Authoritative scope persistence: SCE-CLUB-EVENT-AUDIENCE-01.
  */
-export type SceClubEventAudienceScope = "CLUB_WIDE" | "SELECTED_TEAMS";
+export type SceClubEventAudienceScope = "CLUB_WIDE" | "SELECTED_ORG_UNITS";
 
 export function formatSceClubEventAudiencePrimaryLabel(
   audience: SceClubEventAudiencePresentation,
@@ -22,8 +21,15 @@ export function formatSceClubEventAudienceCompactLabel(
   if (audience.compactLabel?.trim()) {
     return audience.compactLabel.trim();
   }
-  if (audience.scope === "SELECTED_TEAMS" && audience.teamCount && audience.teamCount > 1) {
-    return `${audience.teamCount} Teams`;
+  if (
+    audience.scope === "SELECTED_ORG_UNITS" &&
+    audience.targetCount &&
+    audience.targetCount > 1
+  ) {
+    if (audience.teamCount && audience.teamCount === audience.targetCount) {
+      return `${audience.targetCount} Teams`;
+    }
+    return `${audience.targetCount} Organisationseinheiten`;
   }
   return formatSceClubEventAudiencePrimaryLabel(audience);
 }

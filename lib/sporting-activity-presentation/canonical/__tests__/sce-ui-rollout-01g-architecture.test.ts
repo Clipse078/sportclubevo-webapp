@@ -2,13 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ClubEvent } from "@/lib/events/club-events-service";
+import { applyClubEventOrganisationalAudienceTestDefaults } from "@/lib/events/club-event-test-defaults";
 import { resolveSceClubEventPresentation } from "../adapters/club-event";
 import { formatSceClubEventTimeLabel } from "../club-event-schedule-presentation";
 
 const repoRoot = process.cwd();
 
 function createClubEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
-  return {
+  return applyClubEventOrganisationalAudienceTestDefaults({
     id: "ev-club-1",
     title: "Clubabend",
     description: null,
@@ -34,7 +35,7 @@ function createClubEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
     updatedAt: new Date(),
     season: null,
     ...overrides,
-  };
+  });
 }
 
 describe("SCE-UI-ROLLOUT-01G — architecture guardrails", () => {

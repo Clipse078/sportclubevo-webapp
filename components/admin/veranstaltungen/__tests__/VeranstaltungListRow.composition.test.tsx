@@ -6,9 +6,10 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import VeranstaltungListRow from "../VeranstaltungListRow";
 import type { ClubEvent } from "@/lib/events/club-events-service";
+import { applyClubEventOrganisationalAudienceTestDefaults } from "@/lib/events/club-event-test-defaults";
 
 function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
-  return {
+  return applyClubEventOrganisationalAudienceTestDefaults({
     id: "ev-1",
     title: "118. Mitgliederversammlung",
     description: null,
@@ -34,7 +35,7 @@ function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
     updatedAt: new Date(),
     season: null,
     ...overrides,
-  };
+  });
 }
 
 describe("VeranstaltungListRow composition (01G-R1)", () => {

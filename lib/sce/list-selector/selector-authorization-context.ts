@@ -16,6 +16,7 @@ export const SCE_SELECTOR_AUTHORIZATION_CONTEXTS = [
   "WORKSPACE_ACCESS",
   "PEOPLE_ACCESS_ADMIN",
   "CLUB_REFERENCE",
+  "CLUB_EVENT_ORGANISATIONAL_AUDIENCE",
 ] as const;
 
 export type SceSelectorAuthorizationContext = (typeof SCE_SELECTOR_AUTHORIZATION_CONTEXTS)[number];
@@ -74,6 +75,11 @@ const CLUB_REFERENCE_SOURCES: readonly SceSelectorSourceType[] = [
   "ROLE",
 ];
 
+const CLUB_EVENT_ORGANISATIONAL_AUDIENCE_SOURCES: readonly SceSelectorSourceType[] = [
+  "TEAM",
+  "ORG_UNIT",
+];
+
 export function isSceSelectorAuthorizationContext(
   value: string | null | undefined,
 ): value is SceSelectorAuthorizationContext {
@@ -84,7 +90,8 @@ export function isSceSelectorAuthorizationContext(
     value === "REQUIREMENT_AUDIENCE" ||
     value === "WORKSPACE_ACCESS" ||
     value === "PEOPLE_ACCESS_ADMIN" ||
-    value === "CLUB_REFERENCE"
+    value === "CLUB_REFERENCE" ||
+    value === "CLUB_EVENT_ORGANISATIONAL_AUDIENCE"
   );
 }
 
@@ -142,6 +149,9 @@ export function routePermissionsForSelectorAuthorizationContext(
   if (context === "CLUB_REFERENCE") {
     return [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE];
   }
+  if (context === "CLUB_EVENT_ORGANISATIONAL_AUDIENCE") {
+    return [PERMISSIONS.EVENTS_VIEW, PERMISSIONS.EVENTS_MANAGE];
+  }
   return [PERMISSIONS.COMMUNICATION_CLUB_SEND, PERMISSIONS.COMMUNICATION_CLUB_VIEW];
 }
 
@@ -165,6 +175,9 @@ export function allowedSourceTypesForSelectorAuthorizationContext(
   }
   if (context === "CLUB_REFERENCE") {
     return CLUB_REFERENCE_SOURCES;
+  }
+  if (context === "CLUB_EVENT_ORGANISATIONAL_AUDIENCE") {
+    return CLUB_EVENT_ORGANISATIONAL_AUDIENCE_SOURCES;
   }
   return COMMUNICATION_SEND_SOURCES;
 }

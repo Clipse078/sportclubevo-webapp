@@ -7,9 +7,10 @@ import {
 describe("club-event audience presentation", () => {
   it("formats primary and compact team-count labels without inventing names", () => {
     const audience = {
-      scope: "SELECTED_TEAMS" as const,
+      scope: "SELECTED_ORG_UNITS" as const,
       primaryLabel: "Junioren F1 · Junioren F2",
       detailLabels: ["Junioren F1", "Junioren F2"],
+      targetCount: 2,
       teamCount: 2,
     };
     expect(formatSceClubEventAudiencePrimaryLabel(audience)).toBe("Junioren F1 · Junioren F2");

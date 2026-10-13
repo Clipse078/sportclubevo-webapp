@@ -29,6 +29,10 @@ import VeranstaltungAusspielungFields, {
 import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
+import ClubEventOrganisationalAudienceEditor, {
+  clubEventOrganisationalAudienceEditorToApiPayload,
+  type ClubEventOrganisationalAudienceEditorValue,
+} from "./ClubEventOrganisationalAudienceEditor";
 
 type SeasonItem = {
   id: string;
@@ -114,6 +118,11 @@ export default function VeranstaltungCreateForm({
     endTime: DEFAULT_TIMES.endTime,
   });
   const rememberedTimes = useRef({ ...DEFAULT_TIMES });
+
+  const [audience, setAudience] = useState<ClubEventOrganisationalAudienceEditorValue>({
+    scope: "CLUB_WIDE",
+    targets: [],
+  });
 
   const [ausspielung, setAusspielung] = useState<VeranstaltungAusspielungValues>({
     websiteVisible: true,
@@ -310,6 +319,7 @@ export default function VeranstaltungCreateForm({
           wochenplanVisible: ausspielung.wochenplanVisible,
           trainingsplanVisible: false,
           teamPageVisible: false,
+          audience: clubEventOrganisationalAudienceEditorToApiPayload(audience),
         }),
       });
 
@@ -465,6 +475,22 @@ export default function VeranstaltungCreateForm({
               />
             </label>
           </div>
+        </div>
+      </PlanningEditorSection>
+
+      <PlanningEditorSection
+        testId="veranstaltung-create-audience-section"
+        ariaLabelledBy="veranstaltung-create-audience-heading"
+      >
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading
+            id="veranstaltung-create-audience-heading"
+            title="Gültigkeit"
+          />
+          <ClubEventOrganisationalAudienceEditor
+            initial={{ scope: "CLUB_WIDE", teamIds: [], orgUnitIds: [], targets: [] }}
+            onChange={setAudience}
+          />
         </div>
       </PlanningEditorSection>
 

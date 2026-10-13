@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-CLUB-EVENT-AUDIENCE-01` |
 | **Programme** | [`SCE-UI-ROLLOUT-01+`](./SCE-UI-ROLLOUT-01.md) |
-| **Status** | **NOT_STARTED** |
+| **Status** | **IMPLEMENTED_PENDING_PO_UAT** |
 | **Predecessor** | [`SCE-UI-ROLLOUT-01G`](./SCE-UI-ROLLOUT-01G.md) **CLOSED** |
 | **Successor** | [`SCE-UI-ROLLOUT-01H`](./SCE-UI-ROLLOUT-01.md) — Core planning surface adoption |
 | **Architecture input** | [`SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md`](./SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md) |
@@ -18,16 +18,15 @@ Deliver the **authoritative Club Event audience / team scope** model so create/e
 | Mode | Meaning |
 |------|---------|
 | `CLUB_WIDE` | Event concerns the whole club |
-| `SELECTED_TEAMS` | Event concerns **1..N** selected teams |
+| `SELECTED_ORG_UNITS` | Event concerns **1..N** selected organisational targets (Teams and/or OrgUnits) |
 
-**Target persistence (N:M):**
+**Target persistence (canonical, superseding earlier SELECTED_TEAMS-only proposal):**
 
 ```text
-ClubEvent (Event.type = OTHER)
-  ↕
-ClubEventTeam (proposed join)
-  ↕
-Team
+Event.type = OTHER
+  clubEventOrganisationalScope: CLUB_WIDE | SELECTED_ORG_UNITS
+  ClubEventOrganisationalAudienceTeam (N:M → Team)
+  ClubEventOrganisationalAudienceOrgUnit (N:M → OrgUnit)
 ```
 
 ## Separation of concerns (non-negotiable)

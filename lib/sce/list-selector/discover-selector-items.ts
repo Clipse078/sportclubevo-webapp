@@ -38,6 +38,10 @@ import {
   browseTaskOrgUnitSelectorItems,
   searchTaskOrgUnitSelectorItems,
 } from "@/lib/sce/list-selector/sources/task-org-unit-selector-source";
+import {
+  browseClubEventOrgAudienceOrgUnitItems,
+  searchClubEventOrgAudienceOrgUnitItems,
+} from "@/lib/sce/list-selector/sources/club-event-org-audience-org-unit-source";
 import { withSceSelectorSourceTimeout } from "@/lib/sce/list-selector/source-query-timeout";
 import type { SceSelectorSourcePage } from "@/lib/sce/list-selector/source-pagination";
 
@@ -94,6 +98,14 @@ async function querySourceType(
           return searchTaskOrgUnitSelectorItems({
             tenantId: input.tenantId,
             actorUserId: input.actorUserId,
+            query: term,
+            limit,
+            cursor,
+          });
+        }
+        if (authContext === "CLUB_EVENT_ORGANISATIONAL_AUDIENCE") {
+          return searchClubEventOrgAudienceOrgUnitItems({
+            tenantId: input.tenantId,
             query: term,
             limit,
             cursor,
@@ -163,6 +175,13 @@ async function querySourceType(
         return browseTaskOrgUnitSelectorItems({
           tenantId: input.tenantId,
           actorUserId: input.actorUserId,
+          limit,
+          cursor,
+        });
+      }
+      if (authContext === "CLUB_EVENT_ORGANISATIONAL_AUDIENCE") {
+        return browseClubEventOrgAudienceOrgUnitItems({
+          tenantId: input.tenantId,
           limit,
           cursor,
         });

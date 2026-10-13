@@ -183,13 +183,13 @@ Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — no
 | **Location** | `formatSceActivityLocationHierarchy` on resolved `SportingActivityLocation`; omit organiser from location line when shown as secondary identity; no raw resource keys |
 | **Status vs publication** | Lifecycle `status` on card (`SceClubEventCardStatus`); publication/visibility labels stay in management row columns — do not collapse |
 | **Routes** | `model.route.consumeHref` / `manageHref` from `buildSceActivityRoute("CLUB_EVENT", …)` |
-| **Event audience** | Optional `model.audience` (`CLUB_WIDE` \| `SELECTED_TEAMS`) — **separate** from organiser, publication, and participation; render via `SceClubEventAudienceLine` when authoritative data exists |
+| **Event audience («Gültig für»)** | Optional `model.audience` (`CLUB_WIDE` \| `SELECTED_ORG_UNITS`) — authoritative organisational scope (Teams + OrgUnits via `ClubEventOrganisationalAudience*` relations). **Separate** from organiser, publication, participation, and authorization. Render via `SceClubEventAudienceLine` (contextual identity — **not** a second activity accent). Reduced density: compact labels e.g. «3 Organisationseinheiten» / «2 Teams». Parent OrgUnit selection = **exact unit** (no silent descendant expansion). |
 | **Management boundary** | `SceClubEventCard` owns **identity** (`list-row`); `VeranstaltungListRow` owns date block, **context zone** (schedule/location), lifecycle + publication — no duplicated schedule/location on the card in list rows |
 | **VERANSTALTUNGEN_LIST_ROW_COMPOSITION** | **Date** (weekday/day/month + compact time) · **Identity** (`SceClubEventCard` `list-row` — VERANSTALTUNG pill, title, organiser/audience) · **Context** (date line, time/Ganztägig, location, status + publication). Responsive grid reuses Turniere row contract (without action column) |
 | **Detail context** | Edit workspace header uses `SceClubEventCard` `surface="context-header"` (`VeranstaltungEditPlanningHeader`) — canonical hierarchy, not ad-hoc subtitle strings |
 | **Preview / UAT** | `/sce-preview/club-event-card` |
 
-Representative integration (01G-R1): Veranstaltungen management list + edit context header; team **scope** architecture documented in [`SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md`](../roadmap/SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md).
+Representative integration: Veranstaltungen create/edit (`ClubEventOrganisationalAudienceEditor`), management list + edit context header. Persistence: [`SCE-CLUB-EVENT-AUDIENCE-01`](../roadmap/SCE-CLUB-EVENT-AUDIENCE-01.md) — no parallel organisational hierarchy; `Event.teamId` remains compatibility-only.
 
 Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01g-club-event-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01g-architecture.test.ts`.
 

@@ -22,6 +22,8 @@ import { resolveTournamentTeamSeasonId } from "@/lib/tournaments/team-season-res
 import { TournamentValidationError } from "@/lib/tournaments/errors";
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import { resolveTournamentPublicationDefaultsForCreate } from "@/lib/publishing/policy/tournament-publication-defaults";
+import { parseClubEventOrganisationalAudienceFromApiBody } from "@/lib/events/club-event-organisational-audience-api";
+import { applyClubEventOrganisationalAudienceOnCreate } from "@/lib/events/club-events-service";
 
 const ALLOWED_TYPES = ["MATCH", "TOURNAMENT", "TRAINING", "OTHER"] as const;
 const ALLOWED_SOURCES = ["CLUBCORNER_FVNWS", "MANUAL", "CSV_EXCEL_IMPORT"] as const;
@@ -157,6 +159,18 @@ export async function POST(request: NextRequest) {
       body.teamId === null || body.teamId === undefined || body.teamId === ""
         ? null
         : String(body.teamId).trim();
+
+    let clubEventAudienceInput = undefined;
+    if (body.audience !== undefined && body.audience !== null) {
+      try {
+        clubEventAudienceInput = parseClubEventOrganisationalAudienceFromApiBody(body.audience);
+      } catch {
+        return NextResponse.json(
+          { error: "Ungültiger Gültigkeitsbereich.", field: "audience" },
+          { status: 400 },
+        );
+      }
+    }
 
     const title = String(body.title ?? "").trim();
     const description =
@@ -649,6 +663,14 @@ export async function POST(request: NextRequest) {
     const auditAction = eventReviewDecision.allowsDirectExecution
       ? "CREATE_DIRECT"
       : "SUBMIT_FOR_REVIEW";
+
+    if (type === "OTHER" && clubEventAudienceInput && createdEvents[0]) {
+      await applyClubEventOrganisationalAudienceOnCreate(
+        actorTenantId,
+        createdEvents[0].id,
+        clubEventAudienceInput,
+      );
+    }
 
     for (const created of createdEvents) {
       await logAction({

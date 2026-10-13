@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ClubEvent } from "@/lib/events/club-events-service";
+import { applyClubEventOrganisationalAudienceTestDefaults } from "@/lib/events/club-event-test-defaults";
 import {
   computeVeranstaltungenKpis,
   filterVeranstaltungenEvents,
@@ -9,7 +10,7 @@ import {
 import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 
 function event(overrides: Partial<ClubEvent> = {}): ClubEvent {
-  return {
+  return applyClubEventOrganisationalAudienceTestDefaults({
     id: "e1",
     title: "Generalversammlung",
     description: null,
@@ -35,7 +36,7 @@ function event(overrides: Partial<ClubEvent> = {}): ClubEvent {
     updatedAt: new Date(),
     season: { id: "s1", key: "2026-27", name: "2026/27" },
     ...overrides,
-  };
+  });
 }
 
 describe("veranstaltungen management-view", () => {
