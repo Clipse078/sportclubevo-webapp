@@ -51,7 +51,9 @@
 | LEGACY-ACTIVITY-PLAN-002 | ACTIVITY | `PlanningHubActivityBlock` training identity strings | Wochenplaner grid | MED | 01H | **`SceTrainingCard` MICRO** | Block uses resolver + card |
 | CANONICAL-TOURNAMENT-CARD-001 | ACTIVITY | `SceTournamentCard.tsx` | Activity Detail, Turniere row, Wochenplaner editor | — | **01F** | 01C model | Representative integration |
 | LEGACY-ACTIVITY-TURN-001 | ACTIVITY | `TournamentManagementIdentity.tsx` | Legacy tournament forms / residual | MED | 01H | **`SceTournamentCard`** | Zero imports outside deferred surfaces |
-| LEGACY-ACTIVITY-EVENT-001 | ACTIVITY | `VeranstaltungCard.tsx` | Veranstaltungen overview | MED | 01G | Club Event card family | Overview uses 01G |
+| CANONICAL-CLUB-EVENT-CARD-001 | ACTIVITY | `SceClubEventCard.tsx` | Veranstaltungen management list row identity | — | **01G** | 01C model | Representative integration |
+| LEGACY-ACTIVITY-EVENT-001 | ACTIVITY | `VeranstaltungCard.tsx` | Veranstaltungen card grid (residual) | MED | 01H | **`SceClubEventCard`** | Not migrated in 01G |
+| LEGACY-ACTIVITY-EVENT-003 | ACTIVITY | `VeranstaltungListRow.tsx` inline title/timing formatters | — | — | **01G** | **`SceClubEventCard` list-row** | Identity column migrated |
 | LEGACY-ACTIVITY-EVENT-002 | ACTIVITY | `EventListCard.tsx` | Legacy events module | LOW | Backlog | Veranstaltung or remove hub | Module retired |
 | LEGACY-FORMAT-DATE-001 | FORMATTER | Ad-hoc date formatting in admin rows | Multiple | LOW | 01C | `time-range.ts` | Grep-clean |
 | LEGACY-FORMAT-STATUS-001 | FORMATTER | Parallel status maps matchcenter/tournaments/training | Lists | MED | 01C | Unified status translation table | All lists on 01C |

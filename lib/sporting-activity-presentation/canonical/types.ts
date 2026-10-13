@@ -115,10 +115,23 @@ export type SceTournamentPresentationModel = SceActivityPresentationBase & {
   hauptteam?: { name: string };
 };
 
+/** Event scope / «Gültig für» — separate from organiser, publication, and participation. */
+export type SceClubEventAudiencePresentation = {
+  scope: "CLUB_WIDE" | "SELECTED_TEAMS";
+  /** Primary line: «Gesamter Verein», single team name, or joined team names when space allows. */
+  primaryLabel: string;
+  /** Optional short label for MICRO / list-row (e.g. «3 Teams»). */
+  compactLabel?: string;
+  /** Authoritative team names for tooltips / screen readers when primary is abbreviated. */
+  detailLabels?: string[];
+  teamCount?: number;
+};
+
 export type SceClubEventPresentationModel = SceActivityPresentationBase & {
   kind: "CLUB_EVENT";
   eventTitle: string;
   organiser?: ClubIdentity;
+  audience?: SceClubEventAudiencePresentation;
 };
 
 export type SceActivityPresentationModel =
@@ -144,4 +157,10 @@ export function isSceMatchPresentationModel(
   value: SceActivityPresentationModel,
 ): value is SceMatchPresentationModel {
   return value.kind === "MATCH";
+}
+
+export function isSceClubEventPresentationModel(
+  value: SceActivityPresentationModel,
+): value is SceClubEventPresentationModel {
+  return value.kind === "CLUB_EVENT";
 }

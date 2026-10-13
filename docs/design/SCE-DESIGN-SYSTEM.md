@@ -169,13 +169,41 @@ Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — no
 
 ---
 
-## Activity card semantic color language (01D R10 / 01F)
+## Canonical Club Event card family (01G)
 
-Shared **information hierarchy** for Match, Training, and Tournament cards — one SCE semantic visual language. Cards stay domain-specific in layout and identity grammar; **color encodes meaning**, not decoration.
+| Item | Contract |
+|------|----------|
+| **Component** | `SceClubEventCard` (`components/sporting-activity/SceClubEventCard.tsx`) |
+| **Model** | `SceClubEventPresentationModel` via `resolveSceClubEventPresentation` / `resolveSceClubEventPresentationFromLegacy` — **no parallel Club Event card model** |
+| **Activity label** | **VERANSTALTUNG** (`activityKind: EVENT` on `ActivityTypePill`) |
+| **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
+| **Identity grammar** | Event title (primary) → optional **organiser/host** → schedule → location → lifecycle **status** — **never** Match (VS, home/away, scores), Tournament-only (Hauptteam, organiser invariant crest), or Training-only (recurrence/coach) semantics |
+| **Organiser / crest** | Optional `ClubIdentity`; crest only when a usable logo exists — **not** mandatory; event title stays primary |
+| **All-day** | Domain `schedule.allDay` → **Ganztägig** via `formatClubEventTimingLabel` / `formatSceClubEventTimeLabel` — never fake `00:00–23:59` |
+| **Location** | `formatSceActivityLocationHierarchy` on resolved `SportingActivityLocation`; omit organiser from location line when shown as secondary identity; no raw resource keys |
+| **Status vs publication** | Lifecycle `status` on card (`SceClubEventCardStatus`); publication/visibility labels stay in management row columns — do not collapse |
+| **Routes** | `model.route.consumeHref` / `manageHref` from `buildSceActivityRoute("CLUB_EVENT", …)` |
+| **Event audience** | Optional `model.audience` (`CLUB_WIDE` \| `SELECTED_TEAMS`) — **separate** from organiser, publication, and participation; render via `SceClubEventAudienceLine` when authoritative data exists |
+| **Management boundary** | `SceClubEventCard` owns **identity** (`list-row`); `VeranstaltungListRow` owns date block, **context zone** (schedule/location), lifecycle + publication — no duplicated schedule/location on the card in list rows |
+| **VERANSTALTUNGEN_LIST_ROW_COMPOSITION** | **Date** (weekday/day/month + compact time) · **Identity** (`SceClubEventCard` `list-row` — VERANSTALTUNG pill, title, organiser/audience) · **Context** (date line, time/Ganztägig, location, status + publication). Responsive grid reuses Turniere row contract (without action column) |
+| **Detail context** | Edit workspace header uses `SceClubEventCard` `surface="context-header"` (`VeranstaltungEditPlanningHeader`) — canonical hierarchy, not ad-hoc subtitle strings |
+| **Preview / UAT** | `/sce-preview/club-event-card` |
+
+Representative integration (01G-R1): Veranstaltungen management list + edit context header; team **scope** architecture documented in [`SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md`](../roadmap/SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md).
+
+Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01g-club-event-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01g-architecture.test.ts`.
+
+Future Club Event surfaces (**01H–01K**) must adopt `SceClubEventCard` — not local card variants.
+
+---
+
+## Activity card semantic color language (01D R10 / 01F / 01G)
+
+Shared **information hierarchy** for Match, Training, Tournament, and Club Event cards — one SCE semantic visual language. Cards stay domain-specific in layout and identity grammar; **color encodes meaning**, not decoration.
 
 | Concept | Module | Tailwind / token contract | Used for |
 |---------|--------|---------------------------|----------|
-| **ACTIVITY_TYPE_ACCENT** | `ActivityTypePill` / `activity-color-tokens` | Training blue · Match red · Tournament orange | Activity kind only — not schedule/location |
+| **ACTIVITY_TYPE_ACCENT** | `ActivityTypePill` / `activity-color-tokens` | Training blue · Match red · Tournament orange · Club Event violet | Activity kind only — not schedule/location |
 
 **Activity-type marker contract (01D R10A):** one shared `ActivityTypePill` primitive on Match, Training, and Tournament cards. Labels are fixed SCE vocabulary (not free-form identity subtitles):
 
@@ -184,7 +212,7 @@ Shared **information hierarchy** for Match, Training, and Tournament cards — o
 | `MATCH` | **SPIEL** | match red |
 | `TRAINING` | **TRAINING** | training blue |
 | `TOURNAMENT` | **TURNIER** | tournament orange |
-| `CLUB_EVENT` | **VERANSTALTUNG** | (future 01G) |
+| `CLUB_EVENT` | **VERANSTALTUNG** | club event violet (`--sce-club-event`) |
 
 Density rules suppress the pill only via the shared activity density contract — not Match-only exceptions.
 | **PRIMARY_IDENTITY** | `activity-card-semantic-tokens` → `SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS` | `text-[var(--foreground)]` | Club names (match fixture), tournament title, training title |
@@ -203,7 +231,9 @@ Density rules suppress the pill only via the shared activity density contract �
 2. **Do not** import Tournament orange or Training blue into Match fixture/result presentation.
 3. Location lines **must** use location tokens — not raw schedule classes without the location tint.
 4. **`CANONICAL_ACTIVITY_LOCATION`** — structured `SportingActivityLocation` + `formatSceActivityLocationHierarchy` (host → venue → resource). Presentation uses **human-facing labels** only; raw resource keys/slugs/enums (e.g. `KUNSTRASEN_2`) **never** render. Each hierarchy level must belong to the **same authoritative activity location**. **Match** home/away venue ownership is resolved in `buildMatchSportingActivityLocation` before cards consume the model; tenant operational pitch allocation applies to **HOME** matches only and must not leak into **AWAY** external venues. **Provider location text (01D R10B):** for **AWAY** / external matches, SFV (or other provider) `venueName` / `location` strings are **authoritative** — preserve them as supplied (e.g. `Sportzentrum Tannenbrunn, Sissach - 2`). Do **not** strip pitch-like suffixes such as ` - 2` from provider venue text merely because they resemble internal pitch metadata. Do **not** append tenant operational resource codes (e.g. `KUNSTRASEN_2` from FC Allschwil allocation) to away presentation. **HOME** matches may use tenant venue/resource hierarchy with registry human labels (e.g. `Im Brüel · Kunstrasen 2`). Import tail cleanup via `sanitizeImportedVenuePresentation` applies only to comma-before-dash import artifacts (e.g. `, - 3` at end), not to legitimate provider ` - N` suffixes embedded in the venue string. Shared location **visual** semantics do not imply shared domain-resolution logic (Training vs Match vs Tournament).
-5. Future Club Event / Sponsor cards should extend this table, not introduce a parallel palette.
+5. Club Event cards consume the same schedule/location/status tokens; activity accent uses `--sce-club-event` / `club-event-violet` on `ActivityTypePill` only (including MICRO — no local violet badge markup).
+6. **Event audience ≠ publication ≠ participation ≠ organiser** — only `model.audience` renders scope; publication stays in management context columns.
+7. Future Sponsor cards should extend this table, not introduce a parallel palette.
 
 Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-r10-semantic-alignment.test.ts`.
 

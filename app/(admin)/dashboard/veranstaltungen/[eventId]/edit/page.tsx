@@ -8,7 +8,8 @@ import { listEventFacilityAllocations } from "@/lib/events/event-facility-alloca
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
-import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
+import VeranstaltungEditPlanningHeader from "@/components/admin/veranstaltungen/VeranstaltungEditPlanningHeader";
+import { resolveSceClubEventPresentation } from "@/lib/sporting-activity-presentation/canonical/adapters/club-event";
 import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import VeranstaltungEditTopSaveButton from "@/components/admin/veranstaltungen/VeranstaltungEditTopSaveButton";
 import VeranstaltungEditTopCancelButton from "@/components/admin/veranstaltungen/VeranstaltungEditTopCancelButton";
@@ -90,7 +91,11 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   const tWork = await getTranslations("PlanningEditor.operational.work");
   const tParticipation = await getTranslations("TrainingCenter.sessionEdit");
 
-  const scheduleContext = [t("eyebrow"), event.season?.name].filter(Boolean).join(" · ");
+  const sceContextModel = resolveSceClubEventPresentation({
+    event,
+    tenantClubName: tenantContext.name ?? null,
+    tenantLogoUrl: tenantContext.logoUrl ?? null,
+  });
 
   const tasksPanel = (
     <ContextRelatedTasksPanel
@@ -182,11 +187,11 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   return (
     <VeranstaltungEditSubmitProvider>
       <PlanningEditorShell testId="veranstaltung-edit-page">
-        <PlanningEditorHeader
+        <VeranstaltungEditPlanningHeader
           backHref="/dashboard/veranstaltungen"
           backLabel={t("backNav")}
-          title={event.title}
-          scheduleContext={scheduleContext}
+          model={sceContextModel}
+          fmtCfg={{ locale, timezone: timeZone }}
           backLinkTestId="veranstaltung-edit-back-link"
           testId="veranstaltung-edit-header"
           contextTestId="veranstaltung-edit-schedule-context"

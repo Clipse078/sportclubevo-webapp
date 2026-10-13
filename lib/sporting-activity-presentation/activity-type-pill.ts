@@ -9,7 +9,8 @@ import type { SportingActivityKind } from "./types";
 export type SportingActivityTypePillVariantKey =
   | "training-blue"
   | "match-red"
-  | "tournament-orange";
+  | "tournament-orange"
+  | "club-event-violet";
 
 const PILL_VARIANT_BY_KIND: Partial<
   Record<SportingActivityKind, SportingActivityTypePillVariantKey>
@@ -17,6 +18,7 @@ const PILL_VARIANT_BY_KIND: Partial<
   TRAINING: "training-blue",
   MATCH: "match-red",
   TOURNAMENT: "tournament-orange",
+  EVENT: "club-event-violet",
 };
 
 export function resolveSportingActivityTypePillVariant(
@@ -53,6 +55,12 @@ export function sportingActivityTypePillClassName(
         base,
         "bg-[var(--sce-primary-light)]",
         "text-[color-mix(in_srgb,var(--sce-primary)_92%,var(--foreground)_8%)]",
+      );
+    case "club-event-violet":
+      return cn(
+        base,
+        "bg-[var(--sce-club-event-light)]",
+        "text-[color-mix(in_srgb,var(--sce-club-event)_92%,var(--foreground)_8%)]",
       );
   }
 }
