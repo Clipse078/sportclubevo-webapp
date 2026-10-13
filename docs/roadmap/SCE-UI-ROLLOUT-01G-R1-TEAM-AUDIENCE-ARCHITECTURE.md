@@ -76,6 +76,6 @@ Eligibility for team programme, Mein Programm, Dashboard, Wochenplaner, mobile p
 | Item | Value |
 |------|-------|
 | **REQUIRED** | YES |
-| **PROPOSED_PACKAGE** | `SCE-CLUB-EVENT-AUDIENCE-01` (schema + API + create/edit UX + adapter wiring into `resolveSceClubEventPresentation`) |
+| **PACKAGE** | [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) (schema + API + create/edit UX + adapter wiring into `resolveSceClubEventPresentation`) — **scheduled immediately after 01G closure** |
 | **DB_CHANGE_REQUIRED** | YES — `ClubEventTeam` (or equivalent) + scope mode on club event |
 | **WHY** | Existing schema conflates compatibility `teamId` and participation audience; PO requires distinct **event scope** with N teams |

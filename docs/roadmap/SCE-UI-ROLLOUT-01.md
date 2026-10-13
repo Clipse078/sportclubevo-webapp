@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01+` |
-| **Status** | **IN_PROGRESS** — **01A–01F** closed; **01G** implemented (PO UAT pending) |
+| **Status** | **IN_PROGRESS** — **01A–01G** closed; **SCE-CLUB-EVENT-AUDIENCE-01** next |
 | **Predecessor** | `MATCH_SQUAD_PLAYER_AVAILABILITY-01F` **CLOSED** |
 | **Not in scope for planning doc** | Implementation branches, component code, PROD deploy |
 
@@ -116,7 +116,8 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **SCE-UI-ROLLOUT-01E** | Canonical Training Card family |
 | **SCE-UI-ROLLOUT-01F** | Canonical Tournament Card family |
 | **SCE-UI-ROLLOUT-01G** | Canonical Club Event Card family |
-| **SCE-UI-ROLLOUT-01H** | Core planning surface adoption (Matchcenter / Trainings / Tournamentcenter / Veranstaltungen) |
+| **SCE-CLUB-EVENT-AUDIENCE-01** | Club Event audience & team scope (`CLUB_WIDE` \| `SELECTED_TEAMS`, N:M teams) — **[contract doc](./SCE-CLUB-EVENT-AUDIENCE-01.md)** |
+| **SCE-UI-ROLLOUT-01H** | Core planning surface adoption (Matchcenter / Trainings / Tournamentcenter / Veranstaltungen) — adopts audience-aware Club Event contract |
 | **SCE-UI-ROLLOUT-01I** | Dashboard + Mein Programm adoption |
 | **SCE-UI-ROLLOUT-01J** | Team / programme / calendar / related-activity adoption |
 | **SCE-UI-ROLLOUT-01K** | Communication / notifications / cross-module activity references |
@@ -134,7 +135,8 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **01D** | **CLOSED** |
 | **01E** | **CLOSED** |
 | **01F** | **CLOSED** — [`SCE-UI-ROLLOUT-01F.md`](./SCE-UI-ROLLOUT-01F.md); PO visual UAT **PASS (R4)** |
-| **01G** | **IMPLEMENTED** — [`SCE-UI-ROLLOUT-01G.md`](./SCE-UI-ROLLOUT-01G.md); PO visual UAT **PENDING** |
+| **01G** | **CLOSED** — [`SCE-UI-ROLLOUT-01G.md`](./SCE-UI-ROLLOUT-01G.md); PO visual UAT **PASS (01G-R1)** |
+| **SCE-CLUB-EVENT-AUDIENCE-01** | **NOT STARTED** — [`SCE-CLUB-EVENT-AUDIENCE-01.md`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
 | **01H** | **NOT STARTED** |
 | **01I** | **NOT STARTED** |
 | **01J** | **NOT STARTED** |
@@ -145,6 +147,22 @@ Planning baseline only — **01A must gather repository evidence** before treati
 
 **Sponsor Commercial Workflows:** AFTER COMPLETE UI ROLLOUT  
 **Mobile App:** AFTER SPONSOR
+
+### Committed 01G+ sequence (post Club Event card closure)
+
+```text
+01G Club Event Card Family — CLOSED
+  → SCE-CLUB-EVENT-AUDIENCE-01 — NEXT
+  → 01H Core Planning Surfaces Adoption — NOT_STARTED
+  → 01I Dashboard + Mein Programm
+  → 01J Team/programme/calendar adoption
+  → 01K Communication/activity references
+  → 01L Remaining contextual pages
+  → 01M Responsive/accessibility audit
+  → 01N Product-wide integrity sweep
+```
+
+**01H+** must adopt the **audience-aware** Club Event contract from `SCE-CLUB-EVENT-AUDIENCE-01`, not the legacy single-team `Event.teamId` compatibility model.
 
 ---
 
