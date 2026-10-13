@@ -206,9 +206,10 @@ Future Club Event surfaces (**01H–01K**) must adopt `SceClubEventCard` — not
 | **Edit route** | Activity detail tabs (`ClubEventActivityTabShell`) remain authoritative; **Übersicht** stacks Grunddaten · Gültigkeit · Termin sections; Ressourcen/Planung · Publikation/Mehr unchanged |
 | **Dirty guard** | `SceContextDirtyGuardProvider` on create + edit shells |
 | **Actions** | Persistent **Abbrechen** / **Veranstaltung erstellen** (or save) outside tab panels — not gated by active tab |
+| **Create scope** | Tab panels contain **create-time** fields only — no post-create placeholders (Teilnehmer · Aufgaben · Zusammenarbeit); those surfaces stay on persisted edit/activity context |
 | **Gültigkeit** | `ClubEventOrganisationalAudienceEditor` + `SceSegmentedControl` scope · `SceChipMultiSelectorField` targets — applicability wording, not marketing «Zielgruppe» |
 | **Termin** | `VeranstaltungScheduleFields` + canonical **Wiederholung** / **Ganztägig** switches (`SwitchThumb`) — no checkboxes |
-| **Recurrence UX** | Human-readable summary + bounded occurrence preview (German locale); no raw RRULE |
+| **Recurrence UX** | Natural-language interval/end controls (e.g. «Alle … Wochen/Monate», «Nach … Terminen») · **Zusammenfassung** with `formatClubEventRecurrenceSummaryDe` + bounded occurrence preview from canonical generation — no raw RRULE; short tab content is acceptable (no filler panels) |
 | **Series model** | `ClubEventSeries` + materialized `Event` occurrences (`clubEventSeriesId` + `clubEventOccurrenceDateKey`); programme consumers read occurrences, not rules |
 | **Recurrence indicator** | Restrained «Wiederkehrend» on series members in edit context — same `SceClubEventCard` family, no new activity color |
 

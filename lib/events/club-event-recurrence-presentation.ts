@@ -40,9 +40,10 @@ export function formatClubEventRecurrenceSummaryDe(rule: ClubEventRecurrenceRule
   }
 
   if (rule.weekday && rule.monthOrdinal) {
-    const interval =
-      rule.intervalCount === 1 ? "Jeden Monat" : `Alle ${rule.intervalCount} Monate`;
-    return `${interval} am ${ORDINAL_LABELS_DE[rule.monthOrdinal]} ${WEEKDAY_LABELS_DE[rule.weekday]} · ${timePart}`;
+    if (rule.intervalCount === 1) {
+      return `Jeden ${ORDINAL_LABELS_DE[rule.monthOrdinal]} ${WEEKDAY_LABELS_DE[rule.weekday]} im Monat · ${timePart}`;
+    }
+    return `Alle ${rule.intervalCount} Monate am ${ORDINAL_LABELS_DE[rule.monthOrdinal]} ${WEEKDAY_LABELS_DE[rule.weekday]} · ${timePart}`;
   }
 
   return timePart;

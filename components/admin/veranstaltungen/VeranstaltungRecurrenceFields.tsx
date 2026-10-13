@@ -4,10 +4,7 @@ import { useId, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { SceSegmentedControl } from "@/components/admin/shared/SceSegmentedControl";
-import {
-  generateClubEventOccurrences,
-  listClubEventRecurrenceDateKeys,
-} from "@/lib/events/club-event-recurrence";
+import { listClubEventRecurrenceDateKeys } from "@/lib/events/club-event-recurrence";
 import type { ClubEventRecurrenceRule } from "@/lib/events/club-event-recurrence-types";
 import {
   formatClubEventRecurrenceSummaryDe,
@@ -47,12 +44,21 @@ const WEEKDAY_OPTIONS = [
 ];
 
 const ORDINAL_OPTIONS = [
-  { value: "FIRST", label: "Ersten" },
-  { value: "SECOND", label: "Zweiten" },
-  { value: "THIRD", label: "Dritten" },
-  { value: "FOURTH", label: "Vierten" },
-  { value: "LAST", label: "Letzten" },
+  { value: "FIRST", label: "Erster" },
+  { value: "SECOND", label: "Zweiter" },
+  { value: "THIRD", label: "Dritter" },
+  { value: "FOURTH", label: "Vierter" },
+  { value: "LAST", label: "Letzter" },
 ];
+
+const PREVIEW_DATE_LIMIT = 5;
+
+function intervalUnitDe(frequency: VeranstaltungRecurrenceFieldValues["frequency"], count: number): string {
+  if (frequency === "WEEKLY") {
+    return count === 1 ? "Woche" : "Wochen";
+  }
+  return count === 1 ? "Monat" : "Monate";
+}
 
 function buildRule(
   schedule: VeranstaltungScheduleFieldValues,
@@ -60,13 +66,16 @@ function buildRule(
   timeZone: string,
 ): ClubEventRecurrenceRule | null {
   if (!values.enabled || !schedule.startDate) return null;
+  if (values.endMode === "ON_DATE" && !values.endDate) return null;
+  if (values.endMode === "AFTER_COUNT" && values.occurrenceCount < 1) return null;
   try {
     return {
       frequency: values.frequency,
       intervalCount: values.intervalCount,
-      weekday: values.frequency === "WEEKLY" || values.monthlyPatternKind === "ORDINAL_WEEKDAY"
-        ? (values.weekday as ClubEventRecurrenceRule["weekday"])
-        : null,
+      weekday:
+        values.frequency === "WEEKLY" || values.monthlyPatternKind === "ORDINAL_WEEKDAY"
+          ? (values.weekday as ClubEventRecurrenceRule["weekday"])
+          : null,
       monthlyPatternKind: values.frequency === "MONTHLY" ? values.monthlyPatternKind : null,
       monthDay: values.monthlyPatternKind === "DAY_OF_MONTH" ? values.monthDay : null,
       monthOrdinal:
@@ -94,21 +103,31 @@ export default function VeranstaltungRecurrenceFields({
   disabled,
 }: Props) {
   const switchId = useId();
+  const intervalInputId = useId();
+  const endDateInputId = useId();
+  const occurrenceCountInputId = useId();
   const t = useTranslations("Veranstaltungen.editor.fields");
 
   const preview = useMemo(() => {
+    if (!values.enabled) return null;
+    if (!schedule.startDate) {
+      return { needsStartDate: true as const };
+    }
     const rule = buildRule(schedule, values, timeZone);
-    if (!rule || !values.enabled) return null;
+    if (!rule) return null;
     try {
       const dateKeys = listClubEventRecurrenceDateKeys(rule);
-      const formatted = formatOccurrenceDateListDe(dateKeys.slice(0, 8));
+      const previewKeys = dateKeys.slice(0, PREVIEW_DATE_LIMIT);
+      const formatted = formatOccurrenceDateListDe(previewKeys);
       return {
+        needsStartDate: false as const,
         summary: formatClubEventRecurrenceSummaryDe(rule),
         count: dateKeys.length,
-        sample: formatted,
+        previewDates: formatted,
+        hasMore: dateKeys.length > previewKeys.length,
       };
     } catch {
-      return { summary: null, count: 0, sample: [] as string[] };
+      return null;
     }
   }, [schedule, values, timeZone]);
 
@@ -144,18 +163,26 @@ export default function VeranstaltungRecurrenceFields({
             testId="veranstaltung-recurrence-frequency"
           />
 
-          <label className="block max-w-xs space-y-2">
-            <span className="fca-label">Intervall</span>
+          <div
+            className="flex max-w-md flex-wrap items-center gap-2"
+            data-testid="veranstaltung-recurrence-interval-sentence"
+          >
+            <span className="text-sm text-[var(--text-2)]">Alle</span>
             <input
+              id={intervalInputId}
               type="number"
               min={1}
               max={12}
               value={values.intervalCount}
               onChange={(e) => onChange({ intervalCount: Number(e.target.value) || 1 })}
-              className="fca-input h-8 w-24 text-sm"
+              className="fca-input h-8 w-16 text-sm"
               disabled={disabled}
+              aria-label={`Wiederholung alle ${values.intervalCount} ${intervalUnitDe(values.frequency, values.intervalCount)}`}
             />
-          </label>
+            <span className="text-sm text-[var(--text-2)]">
+              {intervalUnitDe(values.frequency, values.intervalCount)}
+            </span>
+          </div>
 
           {values.frequency === "WEEKLY" ? (
             <label className="block space-y-2">
@@ -165,6 +192,7 @@ export default function VeranstaltungRecurrenceFields({
                 onChange={(e) => onChange({ weekday: e.target.value })}
                 className="fca-select text-sm"
                 disabled={disabled}
+                data-testid="veranstaltung-recurrence-weekday"
               >
                 {WEEKDAY_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -201,6 +229,7 @@ export default function VeranstaltungRecurrenceFields({
                     onChange={(e) => onChange({ monthDay: Number(e.target.value) || 1 })}
                     className="fca-input h-8 w-24 text-sm"
                     disabled={disabled}
+                    data-testid="veranstaltung-recurrence-month-day"
                   />
                 </label>
               ) : (
@@ -217,6 +246,7 @@ export default function VeranstaltungRecurrenceFields({
                       }
                       className="fca-select text-sm"
                       disabled={disabled}
+                      data-testid="veranstaltung-recurrence-month-ordinal"
                     >
                       {ORDINAL_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -232,6 +262,7 @@ export default function VeranstaltungRecurrenceFields({
                       onChange={(e) => onChange({ weekday: e.target.value })}
                       className="fca-select text-sm"
                       disabled={disabled}
+                      data-testid="veranstaltung-recurrence-ordinal-weekday"
                     >
                       {WEEKDAY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -252,7 +283,7 @@ export default function VeranstaltungRecurrenceFields({
             }
             options={[
               { value: "ON_DATE", label: "Bis Datum" },
-              { value: "AFTER_COUNT", label: "Nach X Terminen" },
+              { value: "AFTER_COUNT", label: "Nach Terminen" },
             ]}
             aria-label="Serien-Ende"
             disabled={disabled}
@@ -260,43 +291,75 @@ export default function VeranstaltungRecurrenceFields({
           />
 
           {values.endMode === "ON_DATE" ? (
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Enddatum</span>
+            <div
+              className="flex max-w-md flex-wrap items-center gap-2"
+              data-testid="veranstaltung-recurrence-end-by-date"
+            >
+              <span className="text-sm text-[var(--text-2)]">Bis Datum</span>
               <input
+                id={endDateInputId}
                 type="date"
                 value={values.endDate}
                 min={schedule.startDate}
                 onChange={(e) => onChange({ endDate: e.target.value })}
                 className="fca-input h-8 text-sm"
                 disabled={disabled}
+                aria-label="Enddatum der Serie"
               />
-            </label>
+            </div>
           ) : (
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Anzahl Termine</span>
+            <div
+              className="flex max-w-md flex-wrap items-center gap-2"
+              data-testid="veranstaltung-recurrence-end-by-count"
+            >
+              <span className="text-sm text-[var(--text-2)]">Nach</span>
               <input
+                id={occurrenceCountInputId}
                 type="number"
                 min={1}
                 max={104}
                 value={values.occurrenceCount}
                 onChange={(e) => onChange({ occurrenceCount: Number(e.target.value) || 1 })}
-                className="fca-input h-8 w-24 text-sm"
+                className="fca-input h-8 w-16 text-sm"
                 disabled={disabled}
+                aria-label="Anzahl Termine"
               />
-            </label>
+              <span className="text-sm text-[var(--text-2)]">Terminen</span>
+            </div>
           )}
 
-          {preview?.summary ? (
-            <div className="space-y-2 text-sm" data-testid="veranstaltung-recurrence-preview">
+          {preview?.needsStartDate ? (
+            <p
+              className="text-sm text-[var(--text-2)]"
+              data-testid="veranstaltung-recurrence-missing-start-date"
+            >
+              Datum festlegen, um die Termine der Serie anzuzeigen.
+            </p>
+          ) : null}
+
+          {preview && !preview.needsStartDate && preview.summary ? (
+            <section
+              className="space-y-2 border-t border-[var(--border)] pt-4 text-sm"
+              data-testid="veranstaltung-recurrence-preview"
+              aria-live="polite"
+            >
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
+                Zusammenfassung
+              </h4>
               <p className="font-medium text-[var(--foreground)]">{preview.summary}</p>
-              <p className="text-[var(--text-2)]">{preview.count} Termine</p>
-              <ul className="text-[var(--text-2)]">
-                {preview.sample.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-                {preview.count > preview.sample.length ? <li>…</li> : null}
-              </ul>
-            </div>
+              <p className="text-[var(--text-2)]">
+                {preview.count} {preview.count === 1 ? "Termin" : "Termine"}
+              </p>
+              {preview.previewDates.length > 0 ? (
+                <p className="text-[var(--text-2)]">
+                  {preview.previewDates.join(" · ")}
+                  {preview.hasMore ? " · …" : ""}
+                </p>
+              ) : null}
+              {preview.hasMore ? (
+                <p className="text-xs text-[var(--text-2)]">+ weitere Termine</p>
+              ) : null}
+            </section>
           ) : null}
         </div>
       ) : null}
@@ -331,5 +394,5 @@ export function previewOccurrenceCount(
 ): number {
   const rule = buildRule(schedule, values, timeZone);
   if (!rule) return 0;
-  return generateClubEventOccurrences(rule).length;
+  return listClubEventRecurrenceDateKeys(rule).length;
 }

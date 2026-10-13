@@ -15,9 +15,6 @@ import PlanningEditorSectionHeading from "@/components/admin/shared/planning-edi
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
 import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
-import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
-import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
-import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import {
   PLANNING_EDITOR_FORM_GRID_CLASS,
   PLANNING_RESOURCE_SECTION_LABEL_CLASS,
@@ -424,8 +421,6 @@ export default function VeranstaltungCreateForm({
     }
   }
 
-  const locale = "de-CH";
-
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
       <SportingActivityFormIdentitySummary
@@ -692,31 +687,6 @@ export default function VeranstaltungCreateForm({
             />
           </PlanningPublicationPanel>
         }
-      />
-
-      <PlanningEditorParticipantsSection
-        headingId="veranstaltung-create-participants-heading"
-        testId="veranstaltung-create-participants-section"
-        persisted={false}
-      />
-
-      <PlanningEditorWorkSection
-        headingId="veranstaltung-create-work-heading"
-        testId="veranstaltung-create-work-section"
-        persisted={false}
-        locale={locale}
-        tasksPanel={null}
-      />
-
-      <PlanningEditorCollaborationSection
-        headingId="veranstaltung-create-collaboration-heading"
-        testId="veranstaltung-create-collaboration-section"
-        persisted={false}
-        tenantSlug=""
-        canEdit={false}
-        currentUserId={null}
-        locale={locale}
-        timezone="Europe/Zurich"
       />
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
