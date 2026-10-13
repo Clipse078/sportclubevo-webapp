@@ -27,6 +27,7 @@ import {
   logPlannerServerTiming,
 } from "@/lib/planning-hub/planner-server-timing";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
+import { loadTrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
 
 type PlannerWeekPageProps = {
   searchParams?: Promise<{
@@ -166,6 +167,16 @@ export default async function PlannerWeekPageRoute({
     logPlannerServerTiming(perfTimer.finish());
   }
 
+  const userId = session.user?.effectiveUserId ?? session.user?.id;
+  const trainingComposer =
+    canCreateTraining && userId
+      ? await loadTrainingComposerCreateSurfaceProps({
+          tenantId: tenantContext.id,
+          userId,
+          timeZone: timezone,
+        })
+      : null;
+
   return (
     <PlannerWeekStreamingRoot
       weekNav={{
@@ -188,6 +199,7 @@ export default async function PlannerWeekPageRoute({
         tournament: canManageEvents,
         veranstaltung: canManageEvents,
       }}
+      trainingComposer={trainingComposer}
     >
       <Suspense
         fallback={

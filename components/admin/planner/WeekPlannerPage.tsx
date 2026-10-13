@@ -5,6 +5,7 @@ import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
 import type { PlanningHubCreatePermissions } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
+import type { TrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import { buildPlanningHubTeamOptions } from "@/lib/planning-hub/team-filter";
@@ -49,6 +50,7 @@ type WeekPlannerPageProps = {
   urlState?: PlanningHubUrlState;
   facilityOptions?: { value: string; label: string }[];
   createPermissions?: PlanningHubCreatePermissions;
+  trainingComposer?: TrainingComposerCreateSurfaceProps | null;
   dressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
 };
 
@@ -79,6 +81,7 @@ export default function WeekPlannerPage({
   urlState: urlStateProp,
   facilityOptions = [],
   createPermissions,
+  trainingComposer = null,
   dressingRoomOccupancyPresets,
 }: WeekPlannerPageProps) {
   const urlState: PlanningHubUrlState = urlStateProp ?? {
@@ -130,6 +133,7 @@ export default function WeekPlannerPage({
         materializedWeekplannerPlanId={materializedWeekplannerPlanId}
         canManagePlans={canManagePlans}
         createPermissions={createPermissions}
+        trainingComposer={trainingComposer}
         teamOptions={teamOptions}
         facilityOptions={facilityOptions}
         week={week}

@@ -13,6 +13,8 @@ import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/d
 import { buildTrainingCreateTabNavigationConfig } from "@/lib/training/training-create-workflow-config";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
+import type { SceActivityCreateOriginContext } from "@/lib/sce/activity-composer/origin-context";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import { PLANNING_EDITOR_FORM_GRID_CLASS, PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
@@ -69,6 +71,9 @@ type Props = {
   initialDraftId?: string | null;
   initialResumeDraft?: { draftId: string; payload: TrainingComposerDraftPayload } | null;
   reviewerComment?: string | null;
+  originContext?: SceActivityCreateOriginContext;
+  /** When "stay", success closes overlay and refreshes without navigating to Training detail. */
+  successBehavior?: "navigate" | "stay";
 };
 
 let localIdCounter = 0;
@@ -121,6 +126,8 @@ export default function TrainingCreateForm({
   initialDraftId = null,
   initialResumeDraft = null,
   reviewerComment = null,
+  originContext,
+  successBehavior = "navigate",
 }: Props) {
   const router = useRouter();
   const serverHydrated = initialResumeDraft?.payload
@@ -390,6 +397,10 @@ export default function TrainingCreateForm({
   const handleComposerSuccess = useCallback(
     (result: SceActivityCreateSuccessResult<{ seriesId: string; outcome: string }>) => {
       onSuccess?.(result);
+      if (successBehavior === "stay") {
+        router.refresh();
+        return;
+      }
       if (result.outcome === "SUBMITTED_FOR_APPROVAL") {
         router.push("/dashboard/training");
         router.refresh();
@@ -403,7 +414,7 @@ export default function TrainingCreateForm({
       }
       router.refresh();
     },
-    [onSuccess, router],
+    [onSuccess, router, successBehavior],
   );
 
   useEffect(() => {
@@ -606,10 +617,17 @@ export default function TrainingCreateForm({
       <PlanningEditorSectionHeading id="training-create-resources-heading" title="Ressourcen" />
       <div className="space-y-4">
         <div className="space-y-2">
-          <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
+          <div className="flex items-center gap-2">
+            <PlanningResourceAssignmentKindIcon
+              kind="pitch_hall"
+              testId="training-create-pitch-kind-icon"
+            />
+            <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
+          </div>
           <PlanningSingleResourceAssignment
             kind="pitch_hall"
             showSubjectLabel={false}
+            suppressKindIcon
             subjectLabel="Spielfeld / Halle"
             resourceName={pitchDraft?.facilityResourceName ?? null}
             unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
@@ -629,10 +647,17 @@ export default function TrainingCreateForm({
           />
         </div>
         <div className="space-y-2">
-          <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Garderobe</p>
+          <div className="flex items-center gap-2">
+            <PlanningResourceAssignmentKindIcon
+              kind="dressing_room"
+              testId="training-create-dressing-kind-icon"
+            />
+            <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Garderobe</p>
+          </div>
           <PlanningSingleResourceAssignment
             kind="dressing_room"
             showSubjectLabel={false}
+            suppressKindIcon
             subjectLabel="Garderobe"
             resourceName={dressingDraft?.facilityResourceName ?? null}
             unassignedLabel="Noch keine Garderobe zugewiesen."
@@ -681,6 +706,7 @@ export default function TrainingCreateForm({
         onSuccess={handleComposerSuccess}
         effectiveGovernance={effectiveGovernance}
         resumeDraft={resumeDraft}
+        originContext={originContext}
         testId="training-create-composer"
       />
     </div>

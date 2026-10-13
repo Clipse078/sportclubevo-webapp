@@ -14,6 +14,7 @@ import {
   PlanningResourcePicker,
   type PlanningResourcePickerProps,
 } from "@/components/admin/shared/planning/PlanningResourcePicker";
+import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 
 export type PlanningSingleResourceAssignmentProps = {
   kind: PlanningResourcePickerProps["kind"];
@@ -31,6 +32,8 @@ export type PlanningSingleResourceAssignmentProps = {
   availabilityByResourceId?: Map<string, ResourceAvailabilityAnnotation>;
   canManage: boolean;
   disabled?: boolean;
+  /** When true, omit the default kind icon (e.g. section heading already shows it). */
+  suppressKindIcon?: boolean;
   testId?: string;
 };
 
@@ -49,11 +52,20 @@ export function PlanningSingleResourceAssignment({
   availabilityByResourceId,
   canManage,
   disabled = false,
+  suppressKindIcon = false,
   testId = "planning-single-resource-assignment",
 }: PlanningSingleResourceAssignmentProps) {
   const t = useTranslations("PlanningResources");
   const [open, setOpen] = useState(false);
   const assigned = Boolean(resourceName?.trim());
+  const resolvedSubjectLeading =
+    subjectLeading ??
+    (suppressKindIcon || kind === "other" ? undefined : (
+      <PlanningResourceAssignmentKindIcon
+        kind={kind as "pitch_hall" | "dressing_room"}
+        testId={`${testId}-kind-icon`}
+      />
+    ));
   const pickerTitle =
     kind === "dressing_room"
       ? t("pickerTitleDressingRoom", { subject: subjectLabel })
@@ -70,7 +82,7 @@ export function PlanningSingleResourceAssignment({
   return (
     <PlanningResourceAssignment
       testId={testId}
-      subjectLeading={subjectLeading}
+      subjectLeading={resolvedSubjectLeading}
       subjectLabel={subjectLabel}
       showSubjectLabel={showSubjectLabel}
       subjectSecondary={subjectSecondary}
