@@ -71,11 +71,14 @@ describe("SCE-UI-ROLLOUT-01F — architecture guardrails", () => {
       teamSeasonIds: ["ts-1"],
       participantAllocations: [],
     };
-    const model = resolveSceTournamentPresentationFromWeekplannerTournament(item, {
-      tenantClubName: "FC Allschwil",
+    const model = resolveSceTournamentPresentationFromWeekplannerTournament({
+      ...item,
+      organizerName: "FC Allschwil",
+      organizerLogoUrl: "https://cdn.example.com/fca-crest.png",
     });
     expect(model.kind).toBe("TOURNAMENT");
     expect(model.organiser.displayName).toBe("FC Allschwil");
+    expect(model.organiser.logoUrl).toBe("https://cdn.example.com/fca-crest.png");
     expect(model.hauptteam?.name).toBe("Junioren F2");
     expect(formatSceActivityLocationHierarchy(
       { ...model.location, hostOrOrganiser: undefined },
@@ -93,6 +96,15 @@ describe("SCE-UI-ROLLOUT-01F — architecture guardrails", () => {
       const src = readFileSync(join(repoRoot, relativePath), "utf8");
       expect(src, relativePath).toContain("SceTournamentCard");
     }
+  });
+
+  it("weekplanner preview uses canonical organiser fields — no tenantLogoUrl bypass", () => {
+    const preview = readFileSync(
+      join(repoRoot, "app/sce-preview/weekplanner-tournament/page.tsx"),
+      "utf8",
+    );
+    expect(preview).toContain("organizerLogoUrl");
+    expect(preview).not.toContain("tenantLogoUrl");
   });
 
   it("does not introduce new binary checkboxes in 01F tournament card sources", () => {

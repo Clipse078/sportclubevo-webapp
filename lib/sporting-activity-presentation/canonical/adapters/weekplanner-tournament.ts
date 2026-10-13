@@ -1,16 +1,15 @@
-import { buildClubIdentity } from "@/lib/sporting-activity-design/club-identity";
-import { buildNameOnlyClubIdentity } from "@/lib/sporting-activity-design/tournament-organiser-identity";
+import { buildTournamentOrganiserClubIdentity } from "@/lib/sporting-activity-design/tournament-organiser-identity";
 import { buildSportingActivityLocation } from "@/lib/sporting-activity-presentation/location";
-import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
 import type { WeekplannerTournamentItem } from "@/lib/weekplanner/types";
 import { buildSceActivityRoute } from "../route";
 import type { SceTournamentPresentationModel } from "../types";
 
 export type ResolveSceTournamentFromWeekplannerOptions = {
-  /** HOME tournaments on the tenant plan — organiser context when domain name is not on the item. */
+  /**
+   * Legacy fallback when domain organiser name is absent on the item.
+   * Crest resolution still uses item.organizerLogoUrl from domain — never a parallel tenant URL prop.
+   */
   tenantClubName?: string | null;
-  /** Tenant club crest for HOME organiser (canonical 01D tenant crest pipeline). */
-  tenantLogoUrl?: string | null;
 };
 
 export function resolveSceTournamentPresentationFromWeekplannerTournament(
@@ -19,7 +18,8 @@ export function resolveSceTournamentPresentationFromWeekplannerTournament(
 ): SceTournamentPresentationModel {
   const resourceKey = `event:${item.eventId}`;
   const pitch = item.pitchAllocations[0] ?? item.canonicalPitchAllocations[0];
-  const organiserName = options.tenantClubName?.trim() || undefined;
+  const organiserName =
+    item.organizerName?.trim() || options.tenantClubName?.trim() || undefined;
 
   const location = buildSportingActivityLocation({
     mode: "HOME",
@@ -30,15 +30,12 @@ export function resolveSceTournamentPresentationFromWeekplannerTournament(
 
   const hauptteamName = item.teamNames[0]?.trim() || undefined;
 
-  const organiser =
-    organiserName != null
-      ? buildClubIdentity({
-          displayName: organiserName,
-          logoUrl: resolveTenantClubCrestUrl({
-            tenantLogoUrl: options.tenantLogoUrl,
-          }),
-        })
-      : buildNameOnlyClubIdentity(item.title);
+  const organiser = buildTournamentOrganiserClubIdentity({
+    title: item.title,
+    organizerName: organiserName ?? null,
+    organizerLogoUrl: item.organizerLogoUrl ?? null,
+    organizerExternalClubId: item.organizerExternalClubId ?? null,
+  });
 
   return {
     kind: "TOURNAMENT",

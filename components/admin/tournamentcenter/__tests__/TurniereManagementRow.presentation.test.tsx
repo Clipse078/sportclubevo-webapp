@@ -63,11 +63,13 @@ describe("TurniereManagementRow — SCE-UI-ROLLOUT-01F canonical card", () => {
     );
 
     const card = screen.getByTestId("turniere-sce-card-tournament-1");
+    const context = screen.getByTestId("turniere-row-context-zone");
     expect(card).toHaveTextContent("PlayMore Turnier");
     expect(card).toHaveTextContent("FC Arisdorf");
-    expect(card).toHaveTextContent("Gemeindesportplatz");
+    expect(context).toHaveTextContent("Gemeindesportplatz");
+    expect(card).not.toHaveTextContent("Gemeindesportplatz");
     expect(card).not.toHaveTextContent("FC Arisdorf · Gemeindesportplatz");
-    expect(screen.getByText(/1 Team/)).toBeInTheDocument();
+    expect(card).toHaveAttribute("data-surface", "list-row");
   });
 
   it("HOME — organiser and venue without duplicating organiser in location line", () => {
@@ -90,8 +92,10 @@ describe("TurniereManagementRow — SCE-UI-ROLLOUT-01F canonical card", () => {
     );
 
     const card = screen.getByTestId("turniere-sce-card-tournament-1");
+    const context = screen.getByTestId("turniere-row-context-zone");
     expect(card).toHaveTextContent("FC Allschwil");
-    expect(card).toHaveTextContent("Im Brüel");
+    expect(context).toHaveTextContent("Im Brüel");
+    expect(card).not.toHaveTextContent("Im Brüel");
   });
 
   it("does not fabricate organiser from participating team", () => {
@@ -110,7 +114,8 @@ describe("TurniereManagementRow — SCE-UI-ROLLOUT-01F canonical card", () => {
     );
 
     const card = screen.getByTestId("turniere-sce-card-tournament-1");
+    const context = screen.getByTestId("turniere-row-context-zone");
     expect(card).not.toHaveTextContent("FC Allschwil Junioren F2");
-    expect(card).toHaveTextContent("Gemeindesportplatz");
+    expect(context).toHaveTextContent("Gemeindesportplatz");
   });
 });

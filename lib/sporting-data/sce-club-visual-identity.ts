@@ -25,6 +25,7 @@ export {
   EMPTY_SCE_CLUB_CREST_RESOLUTION_CONTEXT,
   resolveSceClubCrestUrl,
   resolveTenantClubCrestUrl,
+  resolveTournamentOrganiserCrestUrlFromDomain,
   type MatchExternalClubLogoRecord,
   type MatchExternalTeamLogoRecord,
   type ResolveSceClubCrestUrlInput,

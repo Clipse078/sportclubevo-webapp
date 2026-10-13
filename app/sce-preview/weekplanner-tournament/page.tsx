@@ -14,6 +14,8 @@ const PREVIEW_TOURNAMENT: WeekplannerTournamentItem = {
   canonicalEndAt: new Date("2026-10-10T09:30:00.000Z"),
   timeOverridden: false,
   title: "Junioren F Turnier",
+  organizerName: "FC Allschwil",
+  organizerLogoUrl: "https://cdn.example.com/fca-preview-crest.png",
   teamNames: ["Junioren F2"],
   pitchAllocations: [
     {
@@ -53,16 +55,12 @@ export default function SceWeekplannerTournamentPreviewPage() {
         <WeekplannerTournamentIdentityCard
           item={PREVIEW_TOURNAMENT}
           timezone="Europe/Zurich"
-          tenantClubName="FC Allschwil"
-          tenantLogoUrl="https://cdn.example.com/fca-preview-crest.png"
           density="COMPACT"
         />
         <div className="max-w-[9rem]">
           <WeekplannerTournamentIdentityCard
             item={PREVIEW_TOURNAMENT}
             timezone="Europe/Zurich"
-            tenantClubName="FC Allschwil"
-            tenantLogoUrl="https://cdn.example.com/fca-preview-crest.png"
             density="MICRO"
           />
         </div>

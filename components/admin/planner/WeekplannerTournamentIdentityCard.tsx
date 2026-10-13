@@ -8,7 +8,6 @@ type Props = {
   item: WeekplannerTournamentItem;
   timezone: string;
   tenantClubName?: string | null;
-  tenantLogoUrl?: string | null;
   density?: "COMPACT" | "MICRO";
   testId?: string;
 };
@@ -17,13 +16,11 @@ export function WeekplannerTournamentIdentityCard({
   item,
   timezone,
   tenantClubName,
-  tenantLogoUrl,
   density = "COMPACT",
   testId = "weekplanner-tournament-identity",
 }: Props) {
   const model = resolveSceTournamentPresentationFromWeekplannerTournament(item, {
     tenantClubName,
-    tenantLogoUrl,
   });
 
   return (

@@ -157,13 +157,15 @@ function SceTournamentOrganiserCrest({
   density,
   narrowMicro,
   emphasized,
+  listRow,
 }: {
   model: SceTournamentPresentationModel;
   density: SceActivityPresentationDensity;
   narrowMicro?: boolean;
   emphasized?: boolean;
+  listRow?: boolean;
 }) {
-  const crestSize = sceTournamentOrganiserCrestVisualSizeForDensity(density, { narrowMicro });
+  const crestSize = sceTournamentOrganiserCrestVisualSizeForDensity(density, { narrowMicro, listRow });
   if (!crestSize) {
     return null;
   }
@@ -253,11 +255,13 @@ function SceTournamentIdentityBlock({
   density,
   narrowMicro,
   showCrest = true,
+  listRow = false,
 }: {
   model: SceTournamentPresentationModel;
   density: SceActivityPresentationDensity;
   narrowMicro?: boolean;
   showCrest?: boolean;
+  listRow?: boolean;
 }) {
   const scale = richScale(density);
 
@@ -271,7 +275,8 @@ function SceTournamentIdentityBlock({
           model={model}
           density={density}
           narrowMicro={narrowMicro}
-          emphasized={density === "HERO" || density === "STANDARD"}
+          listRow={listRow}
+          emphasized={density === "HERO" || density === "STANDARD" || listRow}
         />
       ) : null}
       <div className="min-w-0 flex-1 space-y-0.5">
@@ -373,6 +378,21 @@ function SceTournamentRichCardContent({
       <SceTournamentIdentityBlock model={model} density={density} />
       {showSchedule ? <SceTournamentScheduleRows model={model} fmtCfg={fmtCfg} density={density} /> : null}
       {locationLine ? <SceTournamentLocationRow locationLine={locationLine} density={density} /> : null}
+    </div>
+  );
+}
+
+function SceTournamentListRowIdentityContent({
+  model,
+  density,
+}: {
+  model: SceTournamentPresentationModel;
+  density: SceActivityPresentationDensity;
+}) {
+  return (
+    <div className="min-w-0 space-y-1" data-sce-tournament-density={density} data-sce-tournament-list-row-identity>
+      <SceTournamentTypeHeader model={model} showStatus={false} />
+      <SceTournamentIdentityBlock model={model} density={density} listRow />
     </div>
   );
 }
@@ -506,7 +526,8 @@ export function SceTournamentCard({
   showStatus = true,
   testId = "sce-tournament-card",
 }: SceTournamentCardProps) {
-  const embed = surface === "detail-embed";
+  const listRow = surface === "list-row";
+  const embed = surface === "detail-embed" || listRow;
   const showSchedule = !embed && isSceActivityDimensionVisible(density, "schedule");
   const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
   const statusVisible = showStatus && isSceActivityDimensionVisible(density, "status");
@@ -514,13 +535,15 @@ export function SceTournamentCard({
   const href = linkToDetail ? model.route.consumeHref ?? model.route.manageHref : null;
 
   const richBounded =
-    !embed && isSceTournamentRichCardDensity(density) && density !== "COMPACT"
-      ? sceTournamentCardBoundedWidthClass(density)
-      : !embed && density === "MICRO"
-        ? "w-full max-w-[12rem]"
-        : !embed
-          ? "w-full max-w-sm"
-          : "";
+    listRow
+      ? "w-full max-w-none"
+      : !embed && isSceTournamentRichCardDensity(density) && density !== "COMPACT"
+        ? sceTournamentCardBoundedWidthClass(density)
+        : !embed && density === "MICRO"
+          ? "w-full max-w-[12rem]"
+          : !embed
+            ? "w-full max-w-sm"
+            : "";
 
   const richPadding =
     !embed && isSceTournamentRichCardDensity(density)
@@ -535,13 +558,16 @@ export function SceTournamentCard({
     !embed && density !== "MICRO" && SCE_TOURNAMENT_CARD_SHELL_CLASS,
     !embed && density === "MICRO" && "rounded-md border border-[var(--border)]/80 bg-[var(--surface)]",
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
+    listRow && "shadow-none",
     richPadding,
     className,
   );
 
   let content: ReactNode;
 
-  if (embed) {
+  if (listRow) {
+    content = <SceTournamentListRowIdentityContent model={model} density={density} />;
+  } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">
         <SceTournamentIdentityBlock model={model} density={density} />

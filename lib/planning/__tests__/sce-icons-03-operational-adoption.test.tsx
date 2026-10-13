@@ -404,9 +404,9 @@ describe("SCE-ICONS-03 TournamentCenter records", () => {
         canManage
       />,
     );
-    expect(screen.getByText("TURNIER")).toBeInTheDocument();
+    expect(screen.getByText("Turnier")).toBeInTheDocument();
     expect(container.querySelector('[data-activity-type-pill="tournament-orange"]')).toBeTruthy();
-    expect(container.querySelector(`[data-testid="turniere-row-crest-${tournament.id}"]`)).toBeTruthy();
+    expect(container.querySelector(`[data-testid="turniere-row-identity-${tournament.id}"]`)).toBeTruthy();
   });
 });
 

@@ -153,7 +153,10 @@ Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not lo
 | **Schedule** | Concrete `schedule.startAt` / `endAt` from domain — no Training-style recurring definition |
 | **Status** | Domain-backed labels via `SceTournamentCardStatus` / DS `Badge` — text first |
 | **Routes** | `model.route.consumeHref` / `manageHref` — no local href builders |
-| **Management boundary** | `SceTournamentCard` owns **presentation**; Tournamentcenter rows keep date column, operational pills, context menu, filters |
+| **Management boundary** | `SceTournamentCard` owns **identity/context presentation**; `TurniereManagementRow` owns date column, context rail (schedule/location), operational status/visibility, and action menu |
+| **TOURNAMENT_LIST_ROW_COMPOSITION** | Four zones on `/dashboard/tournamentcenter`: **date** (compact weekday/day/month) · **identity** (`SceTournamentCard` `surface="list-row"` — type, crest, title, organiser, Hauptteam only) · **context** (calendar date, time range, location icons; status + visibility) · **action** (row menu). No duplicated organiser/Hauptteam/time/location/status; no nested card shell in list-row |
+| **List-row surface** | `surface="list-row"` — embedded presentation: no competing border/background; `max-w-none`; organiser crest uses list-row sizing (`planner` bounds) |
+| **Organiser crest pipeline** | Domain `resolveTournamentOrganizerIdentity` → `organizerLogoUrl` on DTO / Weekplanner item → `buildTournamentOrganiserClubIdentity` → `resolveTournamentOrganiserCrestUrlFromDomain` → `ClubCrest`. **No** consumer-local `tenantLogoUrl` bypass; preview fixtures must supply domain organiser fields |
 | **Club crest** | Organiser `ClubIdentity` → canonical `ClubCrest` at HERO/STANDARD/COMPACT and MICRO when width allows; **no** Tournament-local logo resolver; real crests use `object-contain` (no circular mask on PNG/SVG); initials/icon fallback only when no usable crest |
 | **Semantic hierarchy** | Tournament type pill (orange/gold) → title → organiser + crest → Hauptteam (team accent) → date/time → location → status text |
 | **Preview / UAT** | `/sce-preview/tournament-card`, `/sce-preview/weekplanner-tournament` |

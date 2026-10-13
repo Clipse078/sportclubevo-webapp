@@ -102,8 +102,11 @@ export function sceTournamentMicroShellClass(): string {
 /** Organiser crest sizing — tournament organiser is not a match fixture crest. */
 export function sceTournamentOrganiserCrestVisualSizeForDensity(
   density: SceActivityPresentationDensity,
-  options?: { narrowMicro?: boolean },
+  options?: { narrowMicro?: boolean; listRow?: boolean },
 ): ClubCrestVisualSize | null {
+  if (options?.listRow) {
+    return "planner";
+  }
   if (density === "MICRO") {
     return options?.narrowMicro ? null : "compact";
   }
