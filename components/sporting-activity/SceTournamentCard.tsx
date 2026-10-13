@@ -2,18 +2,21 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatFixtureDateLine, formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
+import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import {
   formatSceActivityLocationHierarchy,
   isSceActivityDimensionVisible,
 } from "@/lib/sporting-activity-presentation/canonical";
+import { resolveSceTournamentHauptteamDisplayName } from "@/lib/sporting-activity-presentation/canonical/tournament-hauptteam-display";
 import {
   SCE_TOURNAMENT_CARD_SHELL_CLASS,
   isSceTournamentRichCardDensity,
   sceTournamentCardBoundedWidthClass,
   sceTournamentMicroShellClass,
+  sceTournamentOrganiserCrestVisualSizeForDensity,
   sceTournamentRichDensityScale,
 } from "@/lib/sporting-activity-presentation/canonical/tournament-card-rich-density";
 import type {
@@ -45,9 +48,16 @@ function richScale(density: SceActivityPresentationDensity) {
     : sceTournamentRichDensityScale("COMPACT");
 }
 
+function resolveHauptteamLabel(model: SceTournamentPresentationModel): string | undefined {
+  return resolveSceTournamentHauptteamDisplayName({
+    hauptteamName: model.hauptteam?.name,
+    organiserDisplayName: model.organiser.displayName,
+  });
+}
+
 export function buildTournamentAccessibleLabel(model: SceTournamentPresentationModel): string {
   const organiser = model.organiser.displayName?.trim();
-  const team = model.hauptteam?.name?.trim();
+  const team = resolveHauptteamLabel(model);
   const parts = [model.typeLabel, model.tournamentTitle, organiser, team].filter(Boolean);
   return parts.join(" — ");
 }
@@ -117,11 +127,9 @@ function formatCompactDateToken(model: SceTournamentPresentationModel, fmtCfg: T
 
 function SceTournamentTypeHeader({
   model,
-  density,
   showStatus,
 }: {
   model: SceTournamentPresentationModel;
-  density: SceActivityPresentationDensity;
   showStatus: boolean;
 }) {
   const status = model.status;
@@ -144,6 +152,35 @@ function SceTournamentTypeHeader({
   );
 }
 
+function SceTournamentOrganiserCrest({
+  model,
+  density,
+  narrowMicro,
+  emphasized,
+}: {
+  model: SceTournamentPresentationModel;
+  density: SceActivityPresentationDensity;
+  narrowMicro?: boolean;
+  emphasized?: boolean;
+}) {
+  const crestSize = sceTournamentOrganiserCrestVisualSizeForDensity(density, { narrowMicro });
+  if (!crestSize) {
+    return null;
+  }
+
+  return (
+    <span data-testid="sce-tournament-organiser-crest" className="self-start">
+      <ClubCrest
+        identity={model.organiser}
+        density={crestSize}
+        decorative
+        emphasized={emphasized}
+        className="self-start"
+      />
+    </span>
+  );
+}
+
 function SceTournamentOrganiserLine({
   model,
   density,
@@ -157,9 +194,14 @@ function SceTournamentOrganiserLine({
   const organiser = model.organiser.displayName?.trim();
   if (!organiser) return null;
 
+  const microClass =
+    density === "MICRO"
+      ? "truncate text-[0.6875rem] font-medium leading-tight text-[var(--text-2)]"
+      : scale.organiserNameClass;
+
   return (
     <p
-      className={cn("min-w-0 truncate", scale.contextLineClass)}
+      className={cn("min-w-0", microClass)}
       data-testid={testId}
       data-sce-tournament-region="organiser"
       title={organiser}
@@ -169,47 +211,80 @@ function SceTournamentOrganiserLine({
   );
 }
 
-function SceTournamentIdentityBlock({
+function SceTournamentHauptteamLine({
   model,
   density,
-  includeHauptteamInSubtitle,
+  testId = "sce-tournament-hauptteam",
 }: {
   model: SceTournamentPresentationModel;
   density: SceActivityPresentationDensity;
-  includeHauptteamInSubtitle?: boolean;
+  testId?: string;
 }) {
   const scale = richScale(density);
-  const organiser = model.organiser.displayName?.trim();
-  const compactSubtitle =
-    includeHauptteamInSubtitle && organiser && model.hauptteam?.name
-      ? [organiser, model.hauptteam.name].filter(Boolean).join(" · ")
-      : includeHauptteamInSubtitle
-        ? organiser
-        : undefined;
+  const teamLabel = resolveHauptteamLabel(model);
+  if (!teamLabel) return null;
+
+  const microTeamClass =
+    density === "MICRO"
+      ? cn(
+          "truncate text-[0.6875rem] font-semibold leading-tight",
+          "text-[color-mix(in_srgb,var(--sce-info)_88%,var(--foreground)_12%)]",
+        )
+      : scale.hauptteamNameClass;
+  const microIconClass =
+    density === "MICRO" ? "h-3 w-3 shrink-0 opacity-80 text-[var(--text-2)]" : scale.hauptteamIconClass;
 
   return (
-    <div className="min-w-0 space-y-0.5" data-sce-tournament-region="identity">
-      <p
-        className={cn(scale.titleClass)}
-        data-testid="sce-tournament-title"
-        title={model.tournamentTitle}
-      >
-        {model.tournamentTitle}
+    <div
+      className="flex min-w-0 items-center gap-1.5"
+      data-testid={testId}
+      data-sce-tournament-region="hauptteam"
+    >
+      <Users className={microIconClass} aria-hidden />
+      <p className={cn("min-w-0", microTeamClass)} title={teamLabel}>
+        {teamLabel}
       </p>
-      {!includeHauptteamInSubtitle ? <SceTournamentOrganiserLine model={model} density={density} /> : null}
-      {model.hauptteam?.name && !includeHauptteamInSubtitle ? (
-        <p className={cn("min-w-0 truncate", scale.teamClass)} data-testid="sce-tournament-hauptteam">
-          {model.hauptteam.name}
-        </p>
+    </div>
+  );
+}
+
+function SceTournamentIdentityBlock({
+  model,
+  density,
+  narrowMicro,
+  showCrest = true,
+}: {
+  model: SceTournamentPresentationModel;
+  density: SceActivityPresentationDensity;
+  narrowMicro?: boolean;
+  showCrest?: boolean;
+}) {
+  const scale = richScale(density);
+
+  return (
+    <div
+      className={cn("flex min-w-0 gap-2.5", scale.identityStackGapClass)}
+      data-sce-tournament-region="identity"
+    >
+      {showCrest ? (
+        <SceTournamentOrganiserCrest
+          model={model}
+          density={density}
+          narrowMicro={narrowMicro}
+          emphasized={density === "HERO" || density === "STANDARD"}
+        />
       ) : null}
-      {compactSubtitle ? (
+      <div className="min-w-0 flex-1 space-y-0.5">
         <p
-          className={cn("min-w-0 line-clamp-2", scale.contextLineClass)}
-          data-testid="sce-tournament-context-line"
+          className={cn(scale.titleClass)}
+          data-testid="sce-tournament-title"
+          title={model.tournamentTitle}
         >
-          {compactSubtitle}
+          {model.tournamentTitle}
         </p>
-      ) : null}
+        <SceTournamentOrganiserLine model={model} density={density} />
+        <SceTournamentHauptteamLine model={model} density={density} />
+      </div>
     </div>
   );
 }
@@ -229,11 +304,11 @@ function SceTournamentScheduleRows({
 
   return (
     <div
-      className="flex min-w-0 items-center justify-between gap-3"
+      className="flex min-w-0 items-center justify-between gap-3 border-t border-[var(--border)]/50 pt-2"
       data-testid="sce-tournament-schedule"
       data-sce-tournament-region="schedule"
     >
-      <span className={cn("inline-flex min-w-0 items-center gap-1.5", scale.scheduleTextClass)}>
+      <span className={cn("inline-flex min-w-0 items-center gap-1.5 font-medium", scale.scheduleTextClass)}>
         <Calendar className={scale.scheduleIconClass} aria-hidden />
         <span className="truncate">{formatFixtureDateLine(startAt, fmtCfg)}</span>
       </span>
@@ -264,11 +339,11 @@ function SceTournamentLocationRow({
   const scale = richScale(density);
   return (
     <div
-      className={cn("flex min-w-0 items-start gap-1.5", scale.scheduleTextClass)}
+      className={cn("flex min-w-0 items-start gap-1.5", scale.locationTextClass)}
       data-testid="sce-tournament-location"
       data-sce-tournament-region="location"
     >
-      <MapPin className={cn(scale.scheduleIconClass, "mt-0.5")} aria-hidden />
+      <MapPin className={cn(scale.locationIconClass, "mt-0.5")} aria-hidden />
       <p className="min-w-0 line-clamp-2">{locationLine}</p>
     </div>
   );
@@ -289,11 +364,12 @@ function SceTournamentRichCardContent({
   showLocation: boolean;
   showStatus: boolean;
 }) {
+  const scale = richScale(density);
   const locationLine = showLocation ? resolveTournamentLocationLine(model, density) : undefined;
 
   return (
-    <div className={cn("min-w-0", richScale(density).contentSpaceYClass)}>
-      <SceTournamentTypeHeader model={model} density={density} showStatus={showStatus} />
+    <div className={cn("min-w-0", scale.contentSpaceYClass)}>
+      <SceTournamentTypeHeader model={model} showStatus={showStatus} />
       <SceTournamentIdentityBlock model={model} density={density} />
       {showSchedule ? <SceTournamentScheduleRows model={model} fmtCfg={fmtCfg} density={density} /> : null}
       {locationLine ? <SceTournamentLocationRow locationLine={locationLine} density={density} /> : null}
@@ -305,39 +381,49 @@ function SceTournamentCompactContent({
   model,
   fmtCfg,
   showStatus,
+  showSchedule,
+  showLocation,
 }: {
   model: SceTournamentPresentationModel;
   fmtCfg: TenantFormatConfig;
   showStatus: boolean;
+  showSchedule: boolean;
+  showLocation: boolean;
 }) {
-  const locationLine = resolveTournamentLocationLine(model, "COMPACT");
+  const scale = richScale("COMPACT");
+  const locationLine = showLocation ? resolveTournamentLocationLine(model, "COMPACT") : undefined;
   const dateToken = formatCompactDateToken(model, fmtCfg);
   const timeLine = formatSessionTimeOnly(model, fmtCfg);
 
   return (
-    <div
-      className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] sm:items-start sm:gap-3"
-      data-sce-tournament-density="COMPACT"
-    >
-      <div className="min-w-0 space-y-1">
-        <SceTournamentTypeHeader model={model} density="COMPACT" showStatus={false} />
-        <SceTournamentIdentityBlock model={model} density="COMPACT" includeHauptteamInSubtitle />
-      </div>
-      <div className="min-w-0 space-y-1 sm:text-right">
-        <p className="text-xs font-medium text-[var(--text-2)]" data-testid="sce-tournament-compact-date">
-          {dateToken} · {timeLine}
+    <div className="min-w-0 space-y-1.5" data-sce-tournament-density="COMPACT">
+      <SceTournamentTypeHeader model={model} showStatus={false} />
+      <SceTournamentIdentityBlock model={model} density="COMPACT" />
+      {showSchedule ? (
+        <p
+          className={cn(
+            "inline-flex min-w-0 flex-wrap items-center gap-x-1.5 text-xs font-medium tabular-nums",
+            scale.scheduleTextClass,
+          )}
+          data-testid="sce-tournament-compact-date"
+        >
+          <Calendar className={scale.scheduleIconClass} aria-hidden />
+          <span>{dateToken}</span>
+          <span className="text-[var(--muted)]" aria-hidden>
+            ·
+          </span>
+          <Clock className={scale.scheduleIconClass} aria-hidden />
+          <span className="font-mono">{timeLine}</span>
         </p>
-        {locationLine ? (
-          <p className="text-xs text-[var(--text-2)]" data-testid="sce-tournament-compact-location">
-            {locationLine}
-          </p>
-        ) : null}
-        {showStatus && model.status?.label ? (
-          <div className="flex sm:justify-end" data-sce-tournament-region="status">
-            <SceTournamentCardStatus status={model.status} />
-          </div>
-        ) : null}
-      </div>
+      ) : null}
+      {locationLine ? (
+        <SceTournamentLocationRow locationLine={locationLine} density="COMPACT" />
+      ) : null}
+      {showStatus && model.status?.label ? (
+        <div className="flex pt-0.5" data-sce-tournament-region="status">
+          <SceTournamentCardStatus status={model.status} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -355,24 +441,40 @@ function SceTournamentMicroContent({
 }) {
   const locationLine = resolveMicroLocationLine(model);
   const timeLabel = formatSessionTimeOnly(model, fmtCfg);
+  const showCrest = !narrow && Boolean(model.organiser.displayName?.trim());
 
   return (
     <div className="min-w-0 space-y-0.5" data-sce-tournament-density="MICRO">
-      <p className="text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+      <p
+        className="text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[color-mix(in_srgb,var(--sce-primary)_92%,var(--foreground)_8%)]"
+        data-activity-type-pill="tournament-orange"
+      >
         {model.typeLabel}
       </p>
-      <p
-        className="truncate text-[0.8125rem] font-semibold leading-tight text-[var(--foreground)]"
-        data-testid="sce-tournament-micro-title"
-        title={model.tournamentTitle}
-      >
-        {model.tournamentTitle}
-      </p>
-      <SceTournamentOrganiserLine
-        model={model}
-        density="MICRO"
-        testId="sce-tournament-micro-organiser"
-      />
+      <div className="flex min-w-0 gap-1.5">
+        {showCrest ? (
+          <SceTournamentOrganiserCrest model={model} density="MICRO" narrowMicro={narrow} />
+        ) : null}
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p
+            className="truncate text-[0.8125rem] font-semibold leading-tight text-[var(--foreground)]"
+            data-testid="sce-tournament-micro-title"
+            title={model.tournamentTitle}
+          >
+            {model.tournamentTitle}
+          </p>
+          <SceTournamentOrganiserLine
+            model={model}
+            density="MICRO"
+            testId="sce-tournament-micro-organiser"
+          />
+          <SceTournamentHauptteamLine
+            model={model}
+            density="MICRO"
+            testId="sce-tournament-micro-hauptteam"
+          />
+        </div>
+      </div>
       {showSchedule && timeLabel ? (
         <p
           className="truncate font-mono text-[0.75rem] tabular-nums text-[var(--text-2)]"
@@ -383,7 +485,7 @@ function SceTournamentMicroContent({
       ) : null}
       {locationLine ? (
         <p
-          className="truncate text-[0.6875rem] text-[var(--text-2)]"
+          className="truncate text-[0.6875rem] text-[color-mix(in_srgb,var(--sce-info)_55%,var(--text-2)_45%)]"
           data-testid="sce-tournament-micro-location"
           title={locationLine}
         >
@@ -458,7 +560,15 @@ export function SceTournamentCard({
       />
     );
   } else if (density === "COMPACT") {
-    content = <SceTournamentCompactContent model={model} fmtCfg={fmtCfg} showStatus={statusVisible} />;
+    content = (
+      <SceTournamentCompactContent
+        model={model}
+        fmtCfg={fmtCfg}
+        showStatus={statusVisible}
+        showSchedule={showSchedule}
+        showLocation={showLocation}
+      />
+    );
   } else {
     content = (
       <SceTournamentRichCardContent
