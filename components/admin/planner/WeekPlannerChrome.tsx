@@ -11,6 +11,7 @@ import PlanningHubCreateMenu, {
   type PlanningHubCreatePermissions,
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import type { TrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
+import type { MatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
 import PlanningHubListeToolbar from "@/components/admin/planning-hub/PlanningHubListeToolbar";
@@ -51,6 +52,7 @@ export type WeekPlannerChromeProps = {
   canManagePlans?: boolean;
   createPermissions?: PlanningHubCreatePermissions;
   trainingComposer?: TrainingComposerCreateSurfaceProps | null;
+  matchComposer?: MatchComposerCreateSurfaceProps | null;
   teamOptions?: { value: string; label: string }[];
   facilityOptions?: { value: string; label: string }[];
   week?: WeekplannerWeek;
@@ -75,6 +77,7 @@ export default function WeekPlannerChrome({
   canManagePlans = false,
   createPermissions,
   trainingComposer = null,
+  matchComposer = null,
   teamOptions = [],
   facilityOptions = [],
   week,
@@ -119,6 +122,7 @@ export default function WeekPlannerChrome({
             <PlanningHubCreateMenu
               permissions={createPermissions}
               trainingComposer={trainingComposer}
+              matchComposer={matchComposer}
               plannerUrlState={resolvedUrlState}
             />
           ) : null

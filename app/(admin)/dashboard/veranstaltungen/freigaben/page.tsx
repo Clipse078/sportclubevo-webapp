@@ -7,10 +7,13 @@ import { notFound } from "next/navigation";
 import ClubEventFreigabenUnauthorizedState from "@/components/admin/veranstaltungen/ClubEventFreigabenUnauthorizedState";
 import ClubEventFreigabenWorkspaceContent from "@/components/admin/veranstaltungen/ClubEventFreigabenWorkspaceContent";
 import TrainingFreigabenWorkspaceContent from "@/components/admin/training/TrainingFreigabenWorkspaceContent";
+import MatchFreigabenWorkspaceContent from "@/components/admin/matchcenter/MatchFreigabenWorkspaceContent";
 import type { ClubEventComposerDraftPayload } from "@/lib/club-events/composer/club-event-composer-draft-types";
 import type { TrainingComposerDraftPayload } from "@/lib/training/composer/training-composer-draft-types";
+import type { MatchComposerDraftPayload } from "@/lib/matchcenter/composer/match-composer-draft-types";
 import { loadClubEventFreigabenAccess } from "@/lib/club-events/governance/load-club-event-freigaben-access";
 import { loadTrainingFreigabenAccess } from "@/lib/training/governance/load-training-freigaben-access";
+import { loadMatchFreigabenAccess } from "@/lib/matchcenter/governance/load-match-freigaben-access";
 
 export default async function VeranstaltungenFreigabenPage() {
   const session = await requireAnyPermission([
@@ -22,9 +25,10 @@ export default async function VeranstaltungenFreigabenPage() {
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
-  const [clubAccess, trainingAccess] = await Promise.all([
+  const [clubAccess, trainingAccess, matchAccess] = await Promise.all([
     loadClubEventFreigabenAccess({ session, tenantId: tenant.id }),
     loadTrainingFreigabenAccess({ session, tenantId: tenant.id }),
+    loadMatchFreigabenAccess({ session, tenantId: tenant.id }),
   ]);
 
   let clubWorkspace = null;
@@ -109,8 +113,51 @@ export default async function VeranstaltungenFreigabenPage() {
     );
   }
 
+  let matchWorkspace = null;
+  if (matchAccess.kind === "authorized") {
+    const pending = await prisma.sceActivityGovernanceRevision.findMany({
+      where: {
+        tenantId: tenant.id,
+        activityType: "MATCH",
+        lifecycleState: "PENDING_APPROVAL",
+        isCurrentSubmission: true,
+      },
+      orderBy: { submittedAt: "desc" },
+      take: 50,
+      include: { matchDraft: true },
+    });
+
+    const creatorIds = [...new Set(pending.map((r) => r.creatorPersonId))];
+    const creators = creatorIds.length
+      ? await prisma.person.findMany({
+          where: { id: { in: creatorIds }, tenantId: tenant.id },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
+    const creatorNameById = new Map(
+      creators.map((p) => [p.id, `${p.firstName} ${p.lastName}`.trim()]),
+    );
+
+    matchWorkspace = (
+      <MatchFreigabenWorkspaceContent
+        access={matchAccess}
+        pending={pending.map((revision) => ({
+          id: revision.id,
+          creatorPersonId: revision.creatorPersonId,
+          lifecycleState: revision.lifecycleState,
+          submittedAt: revision.submittedAt,
+          revisionNumber: revision.revisionNumber,
+          payloadSnapshot: revision.payloadSnapshot as MatchComposerDraftPayload,
+        }))}
+        creatorNameById={creatorNameById}
+      />
+    );
+  }
+
   const unauthorized =
-    clubAccess.kind === "unauthorized" && trainingAccess.kind === "unauthorized";
+    clubAccess.kind === "unauthorized" &&
+    trainingAccess.kind === "unauthorized" &&
+    matchAccess.kind === "unauthorized";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4" data-testid="veranstaltungen-freigaben-page">
@@ -142,6 +189,14 @@ export default async function VeranstaltungenFreigabenPage() {
               trainingWorkspace
             ) : (
               <p className="text-sm text-[var(--text-2)]">Keine Berechtigung für Trainings-Freigaben.</p>
+            )}
+          </section>
+          <section className="space-y-3" data-testid="freigaben-section-match">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">Spiele</h2>
+            {matchAccess.kind === "authorized" ? (
+              matchWorkspace
+            ) : (
+              <p className="text-sm text-[var(--text-2)]">Keine Berechtigung für Spiel-Freigaben.</p>
             )}
           </section>
         </>

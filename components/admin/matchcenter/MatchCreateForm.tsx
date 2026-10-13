@@ -1,892 +1,690 @@
 "use client";
 
-/**
- * components/admin/matchcenter/MatchCreateForm.tsx
- *
- * PLANNING-CREATION-UX-01C — guided MatchCenter creation workflow.
- *
- * Adds a compact, single-surface guided "Match erstellen" flow next to the
- * existing generic MatchEventCreateForm (still reachable at
- * /dashboard/events/matches/new — untouched), following the SAME numbered
- * guided-step pattern proven on STAGE by TrainingSeriesCreateForm
- * (PLANNING-CREATION-UX-01B/-01B-C1) and TournamentCreateForm
- * (TOURNAMENTCENTER-01D):
- *
- *   1 · Team              — tenant Team (Event.teamId)
- *   2 · Heim / Auswärts    — Event.homeAway
- *   3 · Ort                — Event.location (descriptive venue text only)
- *   4 · Gegner             — searchable Club-Directory ExternalClub picker
- *                            (same ExternalClubPicker as TournamentCenter)
- *                            that prefills the EXISTING editable
- *                            Event.opponentName text field — never a second
- *                            opponent identity.
- *   5 · Termin             — Event.startAt / endAt
- *   6 · Spielfeld/Halle    — HOME only, canonical FacilityResource selection
- *                            + live Frei/Belegt (lib/facilities/availability-service.ts)
- *   7 · Garderobe          — HOME only, same live availability, Heim + Gast
- *   8 · Prüfen & Einreichen
- *
- * Preserves the EXISTING canonical architecture end to end:
- *   - Still posts to POST /api/events (type=MATCH) — the SAME endpoint
- *     MatchEventCreateForm already uses. reviewStage (APPROVED vs SUBMITTED)
- *     is decided entirely server-side by the EXISTING
- *     lib/workflow/event-review-policy.ts — this form never guesses or
- *     gates on that decision, it only reflects it via `canValidateDirectly`
- *     (same permission the server checks) for copy purposes.
- *   - Spielfeld/Halle + Garderobe are still written through the EXISTING
- *     legacy Event.pitchCode / homeDressingRoomCode / awayDressingRoomCode
- *     string fields via PATCH /api/matchcenter/:matchId (the SAME endpoint
- *     MatchcenterDetailOperational already uses) — sequenced by
- *     lib/matchcenter/create-match-orchestration.ts. FacilityResource IDs
- *     are only used client-side to drive the picker + live availability;
- *     the resource's `code` is what's actually persisted, matching the
- *     documented "not migrated to FacilityResource ids yet" state (see
- *     lib/facilities/availability-service.ts module doc). No schema/
- *     migration work is introduced here.
- *   - Gegner never creates a MatchExternalMapping — that linkage is
- *     exclusively created by the SFV sync/discovery flow (see
- *     prisma/schema.prisma MatchExternalMapping doc). Selecting a
- *     Club-Directory team here only prefills the free-text opponentName
- *     field, exactly like the generic form already allows manually.
- *   - AWAY matches never touch facility availability/allocation — no
- *     fetch, no Spielfeld/Halle or Garderobe section rendered at all.
- */
-
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
-import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
-import { SportingActivityFormIdentitySummary } from "@/components/sporting-activity/SportingActivityFormIdentitySummary";
-import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
-import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
-import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
-import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
-import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
-import type { FocusEvent, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check } from "lucide-react";
-import {
-  type FacilityGroup,
-  type ResourceAvailabilityAnnotation,
-} from "@/components/admin/training/FacilityResourceSelector";
+import SceActivityComposer from "@/components/sce/activity-composer/SceActivityComposer";
+import type { SceActivityCreateDefinition } from "@/lib/sce/activity-composer/types";
+import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
+import type { SceActivityCreateSuccessResult } from "@/lib/sce/activity-composer/success-result";
+import type { MatchComposerDraftPayload } from "@/lib/matchcenter/composer/match-composer-draft-types";
+import { resolveMatchComposerTitleForResume } from "@/lib/matchcenter/composer/match-composer-draft-access";
+import { hydrateMatchComposerFormFromDraft } from "@/lib/matchcenter/composer/hydrate-match-composer-form-from-draft";
+import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
+import { buildMatchCreateTabNavigationConfig } from "@/lib/matchcenter/match-create-workflow-config";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import type { SceActivityCreateOriginContext } from "@/lib/sce/activity-composer/origin-context";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
+import { PLANNING_EDITOR_FORM_GRID_CLASS, PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
+import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
+import { ExternalClubPicker, type ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
+import { useFacilityAvailability } from "@/hooks/use-facility-availability";
+import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
+import {
+  computeMatchCreateTabErrors,
+  firstInvalidMatchCreateTab,
+} from "@/lib/matchcenter/match-create-validation";
+import type { MatchTeamOption } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
+import { MatchClubPair } from "@/components/sporting-activity/MatchClubPair";
+import { buildMatchCreatePreviewClubPair } from "@/lib/matchcenter/composer/build-match-create-preview-pair";
 import { useTranslations } from "next-intl";
-import {
-  orchestrateMatchCreation,
-  type MatchCreationPlan,
-} from "@/lib/matchcenter/create-match-orchestration";
-import {
-  ExternalClubPicker,
-  type ExternalClubPickerResult,
-} from "@/components/admin/tournamentcenter/ExternalClubPicker";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-type SeasonItem = { id: string; key: string; name: string; isActive: boolean };
-
-type TeamOption = {
-  id: string;
-  name: string;
-  ageGroup: string | null;
-  genderGroup: string | null;
-  isActive: boolean;
-};
-
-/** Shape of one row in GET /api/facilities/availability's `availability` array. */
-type ResourceAvailabilityRow = ResourceAvailabilityAnnotation & { resourceId: string };
-
-type ResourceSlot = { facilityResourceId: string; facilityResourceName: string; facilityName: string; code: string };
-
-export type MatchCreateFormProps = {
+type Props = {
+  activeSeasonId: string;
+  teamOptions: MatchTeamOption[];
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
-  /**
-   * Whether the current actor can create-and-approve a Match directly,
-   * sourced from the SAME server-side check POST /api/events performs
-   * (EVENTS_PUBLISH_WEBSITE or EVENTS_PUBLISH_INFOBOARD — see
-   * lib/workflow/event-review-policy.ts). Purely informational here: the
-   * server always decides the real reviewStage, this only drives copy.
-   */
-  canValidateDirectly: boolean;
+  tenantClubName: string;
+  tenantLogoUrl: string | null;
+  containerMode?: "page" | "overlay";
+  effectiveGovernance: SceActivityEffectiveGovernance;
+  open?: boolean;
+  onClose?: () => void;
+  onSuccess?: (result: SceActivityCreateSuccessResult<{ eventId: string; outcome: string }>) => void;
+  initialDraftId?: string | null;
+  initialResumeDraft?: { draftId: string; payload: MatchComposerDraftPayload } | null;
+  reviewerComment?: string | null;
+  originContext?: SceActivityCreateOriginContext;
+  successBehavior?: "navigate" | "stay";
 };
 
-function formatTeamLabel(team: { name: string; ageGroup: string | null; genderGroup: string | null }): string {
+function formatTeamLabel(team: MatchTeamOption): string {
   const suffix = [team.ageGroup, team.genderGroup].filter(Boolean).join(" / ");
   return suffix ? `${team.name} · ${suffix}` : team.name;
 }
 
-function resolveResourceSlot(facilityGroups: FacilityGroup[], facilityResourceId: string): ResourceSlot | null {
+function resolveResourceDisplay(facilityGroups: FacilityGroup[], facilityResourceId: string): string {
   for (const group of facilityGroups) {
     const resource = group.resources.find((r) => r.id === facilityResourceId);
-    if (resource) {
-      return {
-        facilityResourceId,
-        facilityResourceName: resource.name,
-        facilityName: group.facilityName,
-        code: resource.code,
-      };
-    }
+    if (resource) return resource.name;
   }
-  return null;
+  return facilityResourceId;
 }
 
-/** Collapses a step to a one-line summary once its own info is complete — plain local UI state, not a wizard. */
-function handleStepBlur(event: FocusEvent<HTMLDivElement>, isComplete: boolean, collapse: () => void): void {
-  if (!isComplete) return;
-  const next = event.relatedTarget as Node | null;
-  if (next && event.currentTarget.contains(next)) return;
-  collapse();
+function resolveResourceCode(facilityGroups: FacilityGroup[], facilityResourceId: string): string {
+  for (const group of facilityGroups) {
+    const resource = group.resources.find((r) => r.id === facilityResourceId);
+    if (resource) return resource.code;
+  }
+  return facilityResourceId;
 }
-
-type GuidedStepProps = {
-  index: number;
-  title: string;
-  hint: ReactNode;
-  complete: boolean;
-  collapsed: boolean;
-  summary?: ReactNode;
-  onExpand?: () => void;
-  onBlurCapture?: (event: FocusEvent<HTMLDivElement>) => void;
-  children: ReactNode;
-};
-
-function GuidedStep({ index, title, hint, complete, collapsed, summary, onExpand, onBlurCapture, children }: GuidedStepProps) {
-  const isCollapsed = complete && collapsed;
-  return (
-    <div className="px-4 py-3" onBlur={onBlurCapture}>
-      <div className="flex items-center gap-2.5">
-        <span
-          className={
-            complete
-              ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--sce-primary)] text-white"
-              : "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[0.7rem] font-semibold text-[var(--text-2)]"
-          }
-          aria-hidden
-        >
-          {complete ? <Check className="h-3.5 w-3.5" /> : index}
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">{title}</h2>
-          {isCollapsed && summary ? (
-            <p className="truncate text-xs text-[var(--text-2)]">{summary}</p>
-          ) : (
-            <p className="text-xs text-[var(--text-2)]">{hint}</p>
-          )}
-        </div>
-        {isCollapsed && onExpand ? (
-          <button type="button" onClick={onExpand} className="shrink-0 text-xs font-medium text-[var(--sce-primary)] hover:underline">
-            Bearbeiten
-          </button>
-        ) : null}
-      </div>
-      {isCollapsed ? null : <div className="mt-2.5 pl-[2.125rem]">{children}</div>}
-    </div>
-  );
-}
-
-
-// ── Component ────────────────────────────────────────────────────────────
 
 export default function MatchCreateForm({
+  activeSeasonId,
+  teamOptions,
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
-  canValidateDirectly,
-}: MatchCreateFormProps) {
+  tenantClubName,
+  tenantLogoUrl,
+  containerMode = "page",
+  effectiveGovernance,
+  open = true,
+  onClose,
+  onSuccess,
+  initialDraftId = null,
+  initialResumeDraft = null,
+  reviewerComment = null,
+  originContext,
+  successBehavior = "navigate",
+}: Props) {
   const router = useRouter();
-  const formId = useId();
   const tResources = useTranslations("PlanningResources");
+  const serverHydrated = initialResumeDraft?.payload
+    ? hydrateMatchComposerFormFromDraft(initialResumeDraft.payload)
+    : null;
 
-  // ── 1 · Team ─────────────────────────────────────────────────────────
-  const [teamId, setTeamId] = useState("");
-  const [teamOptions, setTeamOptions] = useState<TeamOption[]>([]);
-  const [loadingTeams, setLoadingTeams] = useState(true);
+  const [seasonId, setSeasonId] = useState(serverHydrated?.seasonId || activeSeasonId);
+  const [teamId, setTeamId] = useState(serverHydrated?.teamId ?? "");
+  const [homeAway, setHomeAway] = useState<"HOME" | "AWAY">(serverHydrated?.homeAway ?? "HOME");
+  const [location, setLocation] = useState(serverHydrated?.location ?? "");
+  const [opponentName, setOpponentName] = useState(serverHydrated?.opponentName ?? "");
+  const [selectedExternalClub, setSelectedExternalClub] = useState<ExternalClubPickerResult | null>(
+    serverHydrated?.opponentExternalClubId
+      ? {
+          id: serverHydrated.opponentExternalClubId,
+          name: serverHydrated.opponentExternalClubName ?? "",
+          shortName: null,
+        }
+      : null,
+  );
+  const [startAt, setStartAt] = useState(serverHydrated?.startAt ?? "");
+  const [endAt, setEndAt] = useState(serverHydrated?.endAt ?? "");
+  const [competitionLabel, setCompetitionLabel] = useState(serverHydrated?.spielbetrieb.competitionLabel ?? "");
+  const [remarks, setRemarks] = useState(serverHydrated?.spielbetrieb.remarks ?? "");
 
-  // Season is resolved automatically (active season) — not a guided step;
-  // POST /api/events still requires it, mirroring how TournamentCreateForm
-  // auto-selects the active season without exposing it as its own step.
-  const [seasonId, setSeasonId] = useState("");
+  const initialPub = serverHydrated?.publication ?? resolveMatchPublicationDefaultsForCreate(homeAway);
+  const [websiteVisible, setWebsiteVisible] = useState(initialPub.websiteVisible);
+  const [infoboardVisible, setInfoboardVisible] = useState(initialPub.infoboardVisible);
+  const [homepageVisible, setHomepageVisible] = useState(initialPub.homepageVisible);
+  const [wochenplanVisible, setWochenplanVisible] = useState(initialPub.wochenplanVisible);
+  const [teamPageVisible, setTeamPageVisible] = useState(initialPub.teamPageVisible);
 
-  // ── 2 · Heim / Auswärts ────────────────────────────────────────────────
-  const [homeAway, setHomeAway] = useState<"HOME" | "AWAY">("HOME");
+  const [pitchResourceId, setPitchResourceId] = useState<string | null>(
+    serverHydrated?.resources.find((r) => r.kind === "pitch_hall")?.facilityResourceId ?? null,
+  );
+  const [homeDressingResourceId, setHomeDressingResourceId] = useState<string | null>(
+    serverHydrated?.resources.find((r) => r.kind === "dressing_room_home")?.facilityResourceId ?? null,
+  );
+  const [awayDressingResourceId, setAwayDressingResourceId] = useState<string | null>(
+    serverHydrated?.resources.find((r) => r.kind === "dressing_room_away")?.facilityResourceId ?? null,
+  );
 
-  const initialMatchPublication = resolveMatchPublicationDefaultsForCreate("HOME");
-  const [websiteVisible, setWebsiteVisible] = useState(initialMatchPublication.websiteVisible);
-  const [infoboardVisible, setInfoboardVisible] = useState(initialMatchPublication.infoboardVisible);
-  const [wochenplanVisible, setWochenplanVisible] = useState(initialMatchPublication.wochenplanVisible);
-  const [homepageVisible, setHomepageVisible] = useState(initialMatchPublication.homepageVisible);
-  const [teamPageVisible, setTeamPageVisible] = useState(initialMatchPublication.teamPageVisible);
+  const [draftId, setDraftId] = useState<string | null>(initialResumeDraft?.draftId ?? initialDraftId);
+  const [persistedBaseline, setPersistedBaseline] = useState<MatchComposerDraftPayload | null>(
+    initialResumeDraft?.payload ?? null,
+  );
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const selectedTeam = useMemo(() => teamOptions.find((t) => t.id === teamId) ?? null, [teamId, teamOptions]);
 
   useEffect(() => {
+    if (serverHydrated?.publication) return;
     const defaults = resolveMatchPublicationDefaultsForCreate(homeAway);
     setWebsiteVisible(defaults.websiteVisible);
     setInfoboardVisible(defaults.infoboardVisible);
     setWochenplanVisible(defaults.wochenplanVisible);
     setHomepageVisible(defaults.homepageVisible);
     setTeamPageVisible(defaults.teamPageVisible);
-  }, [homeAway]);
-
-  // ── 3 · Ort ──────────────────────────────────────────────────────────
-  const [location, setLocation] = useState("");
-
-  // ── 4 · Gegner ───────────────────────────────────────────────────────
-  const [opponentName, setOpponentName] = useState("");
-  /** Canonical Club-Directory Verein — searched on demand via ExternalClubPicker. */
-  const [selectedExternalClub, setSelectedExternalClub] = useState<ExternalClubPickerResult | null>(null);
-
-  // ── 5 · Termin ───────────────────────────────────────────────────────
-  const [startAt, setStartAt] = useState("");
-  const [endAt, setEndAt] = useState("");
-
-  // ── 6/7 · Spielfeld/Halle + Garderobe (HOME only, draft pre-creation) ──
-  const [pitchSlot, setPitchSlot] = useState<ResourceSlot | null>(null);
-  const [homeDressingRoomSlot, setHomeDressingRoomSlot] = useState<ResourceSlot | null>(null);
-  const [awayDressingRoomSlot, setAwayDressingRoomSlot] = useState<ResourceSlot | null>(null);
-
-  const [pitchAvailability, setPitchAvailability] = useState<Map<string, ResourceAvailabilityAnnotation>>(new Map());
-  const [dressingRoomAvailability, setDressingRoomAvailability] = useState<Map<string, ResourceAvailabilityAnnotation>>(
-    new Map(),
-  );
-
-  // ── Collapse state (steps 1–4 only — see GuidedStep doc comment) ──────
-  const [teamCollapsed, setTeamCollapsed] = useState(false);
-  const [homeAwayCollapsed, setHomeAwayCollapsed] = useState(false);
-  const [opponentCollapsed, setOpponentCollapsed] = useState(false);
-  const [terminCollapsed, setTerminCollapsed] = useState(false);
-
-  // ── Submission ─────────────────────────────────────────────────────────
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ eventId: string } | null>(null);
-  const [partialError, setPartialError] = useState<string | null>(null);
+  }, [homeAway, serverHydrated?.publication]);
 
   useEffect(() => {
-    let active = true;
+    if (activeSeasonId) setSeasonId(activeSeasonId);
+  }, [activeSeasonId]);
 
-    async function loadSeasons() {
-      try {
-        const res = await fetch("/api/seasons", { cache: "no-store" });
-        const data = (await res.json().catch(() => null)) as { seasons?: SeasonItem[] } | null;
-        if (!res.ok) throw new Error((data as { error?: string } | null)?.error ?? "Saisons konnten nicht geladen werden.");
-        if (!active || !data) return;
-        const seasons = Array.isArray(data.seasons) ? data.seasons : [];
-        setSeasonId((seasons.find((s) => s.isActive) ?? seasons[0])?.id ?? "");
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
-      }
+  const scheduleInterval = useMemo(() => {
+    if (!startAt) return null;
+    try {
+      const start = new Date(startAt);
+      if (Number.isNaN(start.getTime())) return null;
+      const end = endAt ? new Date(endAt) : null;
+      return {
+        startAt: start.toISOString(),
+        endAt: end && !Number.isNaN(end.getTime()) ? end.toISOString() : undefined,
+      };
+    } catch {
+      return null;
     }
+  }, [startAt, endAt]);
 
-    async function loadTeams() {
-      setLoadingTeams(true);
-      try {
-        // ORG-ACCESS-03: use writable-teams endpoint so scoped users see only
-        // teams within their OrgUnit write scope; coordinators get all teams.
-        const res = await fetch("/api/planning/writable-teams?domain=match", { cache: "no-store" });
-        const data = (await res.json().catch(() => null)) as
-          | { teams?: TeamOption[] }
-          | { error?: string }
-          | null;
-        if (!res.ok) throw new Error((data as { error?: string } | null)?.error ?? "Teams konnten nicht geladen werden.");
-        if (!active) return;
-        setTeamOptions((data as { teams?: TeamOption[] } | null)?.teams ?? []);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
-      } finally {
-        if (active) setLoadingTeams(false);
-      }
-    }
-
-    loadSeasons();
-    loadTeams();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const selectedTeam = useMemo(() => teamOptions.find((t) => t.id === teamId) ?? null, [teamId, teamOptions]);
-
-  function handleSelectExternalClub(club: ExternalClubPickerResult) {
-    setSelectedExternalClub(club);
-  }
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: homeAway === "HOME" && scheduleInterval != null,
+    startAt: scheduleInterval?.startAt ?? "",
+    endAt: scheduleInterval?.endAt,
+  });
 
   function getEffectiveOpponentDisplayName(): string {
     const override = opponentName.trim();
-    if (selectedExternalClub) {
-      return override || selectedExternalClub.name;
-    }
+    if (selectedExternalClub) return override || selectedExternalClub.name;
     return override;
   }
 
-  // PLANNING-CREATION-UX-01C: HOME-only live Spielfeld/Halle + Garderobe
-  // availability for the currently selected interval, reusing the EXISTING
-  // GET /api/facilities/availability endpoint — identical fetch shape to
-  // TournamentCreateForm/TrainingSeriesCreateForm.
-  useEffect(() => {
-    if (homeAway !== "HOME" || !startAt) {
-      setPitchAvailability(new Map());
-      setDressingRoomAvailability(new Map());
-      return;
+  const buildPayload = useCallback((): MatchComposerDraftPayload => {
+    const resources: MatchComposerDraftPayload["resources"] = [];
+    if (homeAway === "HOME" && pitchResourceId) {
+      resources.push({
+        kind: "pitch_hall",
+        facilityResourceId: pitchResourceId,
+        facilityResourceName: resolveResourceDisplay(pitchHallFacilityGroups, pitchResourceId),
+        code: resolveResourceCode(pitchHallFacilityGroups, pitchResourceId),
+      });
+    }
+    if (homeAway === "HOME" && homeDressingResourceId) {
+      resources.push({
+        kind: "dressing_room_home",
+        facilityResourceId: homeDressingResourceId,
+        facilityResourceName: resolveResourceDisplay(dressingRoomFacilityGroups, homeDressingResourceId),
+        code: resolveResourceCode(dressingRoomFacilityGroups, homeDressingResourceId),
+      });
+    }
+    if (homeAway === "HOME" && awayDressingResourceId) {
+      resources.push({
+        kind: "dressing_room_away",
+        facilityResourceId: awayDressingResourceId,
+        facilityResourceName: resolveResourceDisplay(dressingRoomFacilityGroups, awayDressingResourceId),
+        code: resolveResourceCode(dressingRoomFacilityGroups, awayDressingResourceId),
+      });
     }
 
-    let active = true;
+    return {
+      seasonId,
+      teamId,
+      teamDisplayName: selectedTeam ? formatTeamLabel(selectedTeam) : "",
+      homeAway,
+      location,
+      opponentName,
+      opponentExternalClubId: selectedExternalClub?.id ?? null,
+      opponentExternalClubName: selectedExternalClub?.name ?? null,
+      startAt,
+      endAt,
+      resources,
+      publication: {
+        websiteVisible,
+        infoboardVisible,
+        homepageVisible,
+        wochenplanVisible,
+        teamPageVisible,
+      },
+      spielbetrieb: { competitionLabel, remarks },
+    };
+  }, [
+    seasonId,
+    teamId,
+    selectedTeam,
+    homeAway,
+    location,
+    opponentName,
+    selectedExternalClub,
+    startAt,
+    endAt,
+    pitchResourceId,
+    homeDressingResourceId,
+    awayDressingResourceId,
+    pitchHallFacilityGroups,
+    dressingRoomFacilityGroups,
+    websiteVisible,
+    infoboardVisible,
+    homepageVisible,
+    wochenplanVisible,
+    teamPageVisible,
+    competitionLabel,
+    remarks,
+  ]);
 
-    async function loadAvailability() {
-      const params = new URLSearchParams({ startAt });
-      if (endAt) params.set("endAt", endAt);
+  const tabErrors = useMemo(
+    () => (submitAttempted ? computeMatchCreateTabErrors(buildPayload()) : {}),
+    [submitAttempted, buildPayload],
+  );
 
-      async function fetchGroup(group: "PITCH_HALL" | "DRESSING_ROOM") {
-        try {
-          const res = await fetch(`/api/facilities/availability?${params.toString()}&group=${group}`, {
-            cache: "no-store",
-          });
-          const data = (await res.json().catch(() => null)) as { availability?: ResourceAvailabilityRow[] } | null;
-          if (!res.ok || !data?.availability) return new Map<string, ResourceAvailabilityAnnotation>();
-          return new Map(data.availability.map((a) => [a.resourceId, a]));
-        } catch {
-          return new Map<string, ResourceAvailabilityAnnotation>();
+  const resumeDraft = useMemo((): SceActivityCreateResumeDraft<MatchComposerDraftPayload> | undefined => {
+    if (!draftId || !persistedBaseline) return undefined;
+    return { draftId, baselineDraft: persistedBaseline };
+  }, [draftId, persistedBaseline]);
+
+  const composerTitle = useMemo(() => {
+    if (!resumeDraft) return "Spiel erstellen";
+    return resolveMatchComposerTitleForResume(
+      persistedBaseline?.teamDisplayName,
+      getEffectiveOpponentDisplayName(),
+    );
+  }, [persistedBaseline?.teamDisplayName, resumeDraft, opponentName, selectedExternalClub]);
+
+  const identityPreview = useMemo(() => {
+    if (!selectedTeam && !getEffectiveOpponentDisplayName()) return null;
+    return buildMatchCreatePreviewClubPair({
+      tenantClubName,
+      tenantLogoUrl,
+      teamDisplayName: selectedTeam ? formatTeamLabel(selectedTeam) : tenantClubName,
+      homeAway,
+      opponentDisplayName: getEffectiveOpponentDisplayName() || "Gegner",
+      opponentExternalClubId: selectedExternalClub?.id ?? null,
+      opponentExternalLogoUrl: selectedExternalClub?.logoUrl ?? null,
+    });
+  }, [tenantClubName, tenantLogoUrl, selectedTeam, homeAway, opponentName, selectedExternalClub]);
+
+  const definition = useMemo((): SceActivityCreateDefinition<
+    MatchComposerDraftPayload,
+    { eventId: string; outcome: string }
+  > => {
+    return {
+      activityKind: "MATCH",
+      title: composerTitle,
+      createActionLabel: "Spiel erstellen",
+      defaultTab: "uebersicht",
+      buildTabNavigationConfig: buildMatchCreateTabNavigationConfig,
+      initialDraft: buildPayload(),
+      validateDraft: (draft) => {
+        const errors = computeMatchCreateTabErrors(draft);
+        return {
+          valid: Object.keys(errors).length === 0,
+          tabErrors: errors,
+          firstInvalidTab: firstInvalidMatchCreateTab(errors) ?? undefined,
+        };
+      },
+      submitDraft: async (draft) => {
+        setSubmitAttempted(true);
+        const payload = { ...buildPayload(), ...draft };
+        const res = await fetch("/api/match/composer/commit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ draftId, payload }),
+        });
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+          outcome?: string;
+          eventId?: string;
+          firstInvalidTab?: string;
+        } | null;
+        if (!res.ok) {
+          return { ok: false as const, error: data?.error ?? "Spiel konnte nicht erstellt werden." };
         }
+        return {
+          ok: true as const,
+          result: {
+            eventId: data?.eventId ?? "",
+            outcome: data?.outcome ?? "PUBLISHED",
+          },
+        };
+      },
+      draftPersistence: {
+        supportsDraftPersistence: true,
+        validateDraftForSave: () => ({ valid: true, tabErrors: {} }),
+        saveDraft: async ({ draft, draftId: existingDraftId }) => {
+          const payload = { ...buildPayload(), ...draft };
+          const res = await fetch("/api/match/composer/drafts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ draftId: existingDraftId ?? draftId, payload }),
+          });
+          const data = (await res.json().catch(() => null)) as { error?: string; draftId?: string } | null;
+          if (!res.ok || !data?.draftId) {
+            return { ok: false as const, error: data?.error ?? "Entwurf speichern fehlgeschlagen." };
+          }
+          setDraftId(data.draftId);
+          setPersistedBaseline(payload);
+          return { ok: true as const, result: { draftId: data.draftId }, draftId: data.draftId };
+        },
+      },
+      tabs: [],
+    };
+  }, [buildPayload, composerTitle, draftId]);
+
+  const handleComposerSuccess = useCallback(
+    (result: SceActivityCreateSuccessResult<{ eventId: string; outcome: string }>) => {
+      onSuccess?.(result);
+      if (successBehavior === "stay") {
+        router.refresh();
+        return;
       }
+      if (result.outcome === "SUBMITTED_FOR_APPROVAL") {
+        router.push("/dashboard/matchcenter?submitted=1");
+        router.refresh();
+        return;
+      }
+      router.push("/dashboard/matchcenter?submitted=1");
+      router.refresh();
+    },
+    [onSuccess, router, successBehavior],
+  );
 
-      const [pitch, room] = await Promise.all([fetchGroup("PITCH_HALL"), fetchGroup("DRESSING_ROOM")]);
+  useEffect(() => {
+    if (initialResumeDraft || !initialDraftId) return;
+    let active = true;
+    async function loadDraft() {
+      setLoadError(null);
+      const res = await fetch(`/api/match/composer/drafts/${encodeURIComponent(initialDraftId!)}`);
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        draftId?: string;
+        payload?: MatchComposerDraftPayload;
+      } | null;
       if (!active) return;
-      setPitchAvailability(pitch);
-      setDressingRoomAvailability(room);
+      if (!res.ok || !data?.payload || !data.draftId) {
+        setLoadError(data?.error ?? "Entwurf konnte nicht geladen werden.");
+        return;
+      }
+      const hydrated = hydrateMatchComposerFormFromDraft(data.payload);
+      setDraftId(data.draftId);
+      setPersistedBaseline(data.payload);
+      setSeasonId(hydrated.seasonId);
+      setTeamId(hydrated.teamId);
+      setHomeAway(hydrated.homeAway);
+      setLocation(hydrated.location);
+      setOpponentName(hydrated.opponentName);
+      setSelectedExternalClub(
+        hydrated.opponentExternalClubId
+          ? {
+              id: hydrated.opponentExternalClubId,
+              name: hydrated.opponentExternalClubName ?? "",
+              shortName: null,
+            }
+          : null,
+      );
+      setStartAt(hydrated.startAt);
+      setEndAt(hydrated.endAt);
+      setCompetitionLabel(hydrated.spielbetrieb.competitionLabel);
+      setRemarks(hydrated.spielbetrieb.remarks);
+      setPitchResourceId(hydrated.resources.find((r) => r.kind === "pitch_hall")?.facilityResourceId ?? null);
+      setHomeDressingResourceId(
+        hydrated.resources.find((r) => r.kind === "dressing_room_home")?.facilityResourceId ?? null,
+      );
+      setAwayDressingResourceId(
+        hydrated.resources.find((r) => r.kind === "dressing_room_away")?.facilityResourceId ?? null,
+      );
     }
-
-    loadAvailability();
-
+    void loadDraft();
     return () => {
       active = false;
     };
-  }, [homeAway, startAt, endAt]);
+  }, [initialDraftId, initialResumeDraft]);
 
-  const addPitchSlot = useCallback(
-    (facilityResourceId: string) => setPitchSlot(resolveResourceSlot(pitchHallFacilityGroups, facilityResourceId)),
-    [pitchHallFacilityGroups],
+  const uebersichtPanel = (
+    <PlanningEditorSection testId="match-create-overview-section" ariaLabelledBy="match-create-overview-heading">
+      <PlanningEditorSectionHeading id="match-create-overview-heading" title="Übersicht" />
+      {identityPreview ? (
+        <div className="mb-4 space-y-2" data-testid="match-create-identity-preview">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Heim links · Auswärts rechts
+          </p>
+          <MatchClubPair pair={identityPreview} density="management" />
+        </div>
+      ) : null}
+      <p className="text-sm text-[var(--text-2)]">
+        Manuelles Spiel — SFV/importierte Spiele werden durch diese Maske nicht verändert.
+      </p>
+    </PlanningEditorSection>
   );
-  const addHomeDressingRoomSlot = useCallback(
-    (facilityResourceId: string) =>
-      setHomeDressingRoomSlot(resolveResourceSlot(dressingRoomFacilityGroups, facilityResourceId)),
-    [dressingRoomFacilityGroups],
+
+  const teamsPanel = (
+    <PlanningEditorSection testId="match-create-teams-section" ariaLabelledBy="match-create-teams-heading">
+      <PlanningEditorSectionHeading id="match-create-teams-heading" title="Teams" />
+      <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+        <label className="block space-y-2 md:col-span-2">
+          <span className="fca-label">Eigenes Team</span>
+          {teamOptions.length === 0 ? (
+            <p className="text-sm text-amber-700">Kein Team mit Schreibzugriff verfügbar.</p>
+          ) : (
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              className="fca-select"
+              data-testid="match-create-team-select"
+            >
+              <option value="">— Auswählen —</option>
+              {teamOptions.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {formatTeamLabel(t)}
+                </option>
+              ))}
+            </select>
+          )}
+        </label>
+        <div className="md:col-span-2 space-y-2">
+          <span className="fca-label">Heim / Auswärts (Sportsemantik)</span>
+          <HomeAwaySegmentedControl value={homeAway} onChange={setHomeAway} testId="match-create-home-away" />
+          <p className="text-xs text-[var(--text-2)]">
+            {homeAway === "HOME"
+              ? "Heimspiel — FC Allschwil ist Heim (links in der Identität)."
+              : "Auswärtsspiel — FC Allschwil ist Auswärts (rechts in der Identität)."}
+          </p>
+        </div>
+        <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
+          <div className="block space-y-1">
+            <span className="fca-label">Gegner (Vereinsverzeichnis)</span>
+            <ExternalClubPicker
+              selected={selectedExternalClub}
+              onSelect={setSelectedExternalClub}
+              onClearSelected={() => setSelectedExternalClub(null)}
+              placeholder="Verein suchen…"
+              testId="match-create-opponent-club-search"
+            />
+          </div>
+          <label className="block space-y-1">
+            <span className="fca-label">Anzeigename Gegner</span>
+            <input
+              type="text"
+              value={opponentName}
+              onChange={(e) => setOpponentName(e.target.value)}
+              className="fca-input"
+              data-testid="match-create-opponent-name"
+            />
+          </label>
+        </div>
+      </div>
+    </PlanningEditorSection>
   );
-  const addAwayDressingRoomSlot = useCallback(
-    (facilityResourceId: string) =>
-      setAwayDressingRoomSlot(resolveResourceSlot(dressingRoomFacilityGroups, facilityResourceId)),
-    [dressingRoomFacilityGroups],
+
+  const terminPanel = (
+    <PlanningEditorSection testId="match-create-schedule-section" ariaLabelledBy="match-create-schedule-heading">
+      <PlanningEditorSectionHeading id="match-create-schedule-heading" title="Termin" />
+      <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+        <label className="block space-y-2">
+          <span className="fca-label">Start</span>
+          <input
+            type="datetime-local"
+            value={startAt}
+            onChange={(e) => setStartAt(e.target.value)}
+            className="fca-input h-8 text-sm"
+            data-testid="match-create-start-at"
+          />
+        </label>
+        <label className="block space-y-2">
+          <span className="fca-label">Ende</span>
+          <input
+            type="datetime-local"
+            value={endAt}
+            onChange={(e) => setEndAt(e.target.value)}
+            className="fca-input h-8 text-sm"
+            data-testid="match-create-end-at"
+          />
+        </label>
+        <label className="block space-y-2 md:col-span-2">
+          <span className="fca-label">
+            {homeAway === "AWAY" ? "Ort (authoritative Auswärtsangabe)" : "Ort (optional)"}
+          </span>
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="fca-input"
+            placeholder={
+              homeAway === "AWAY"
+                ? "z. B. SV Sissach · Sportzentrum Tannenbrunn, Sissach - 2"
+                : "z. B. Sportanlage Brüel"
+            }
+            data-testid="match-create-location"
+          />
+          {homeAway === "AWAY" ? (
+            <span className="block text-xs text-[var(--text-2)]">
+              Externe/Provider-Ortsstrings werden unverändert übernommen (inkl. Suffixe wie « - 2»).
+            </span>
+          ) : null}
+        </label>
+      </div>
+    </PlanningEditorSection>
   );
 
-  // ── Guided-progress nudge (compact, never blocks submission) ───────────
-  const teamStepComplete = !!teamId;
-  const homeAwayStepComplete = true; // always has a default
-  const opponentStepComplete = !!selectedExternalClub || !!opponentName.trim();
-  const terminStepComplete = !!startAt;
+  const ressourcenPanel =
+    homeAway === "HOME" ? (
+      <PlanningEditorSection testId="match-create-resources-section" ariaLabelledBy="match-create-resources-heading">
+        <PlanningEditorSectionHeading id="match-create-resources-heading" title="Ressourcen" />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <PlanningResourceAssignmentKindIcon kind="pitch_hall" testId="match-create-pitch-kind-icon" />
+              <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
+            </div>
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              showSubjectLabel={false}
+              suppressKindIcon
+              subjectLabel="Spielfeld / Halle"
+              resourceName={
+                pitchResourceId ? resolveResourceDisplay(pitchHallFacilityGroups, pitchResourceId) : null
+              }
+              unassignedLabel={tResources("unassignedPitchHall")}
+              facilityGroups={pitchHallFacilityGroups}
+              selectedResourceIds={new Set(pitchResourceId ? [pitchResourceId] : [])}
+              onSelect={setPitchResourceId}
+              onDeselect={() => setPitchResourceId(null)}
+              availabilityByResourceId={pitchAvailability}
+              canManage
+              testId="match-create-pitch"
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <PlanningResourceAssignmentKindIcon kind="dressing_room" testId="match-create-dressing-kind-icon" />
+              <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Garderoben</p>
+            </div>
+            <PlanningMatchDressingRoomAssignments
+              homeLabel={tResources("matchHomeSide")}
+              awayLabel={tResources("matchAwaySide")}
+              homeCode={homeDressingResourceId}
+              awayCode={awayDressingResourceId}
+              homeDisplayName={selectedTeam?.name ?? "Heim"}
+              awayDisplayName={getEffectiveOpponentDisplayName() || "Gast"}
+              canManage
+              facilityGroups={dressingRoomFacilityGroups}
+              dressingRoomAvailability={dressingRoomAvailability}
+              onSelectHome={setHomeDressingResourceId}
+              onSelectAway={setAwayDressingResourceId}
+              onDeselectHome={() => setHomeDressingResourceId(null)}
+              onDeselectAway={() => setAwayDressingResourceId(null)}
+              testId="match-create-dressing-room"
+            />
+          </div>
+        </div>
+      </PlanningEditorSection>
+    ) : (
+      <PlanningEditorSection testId="match-create-resources-away-section" ariaLabelledBy="match-create-resources-away-heading">
+        <PlanningEditorSectionHeading id="match-create-resources-away-heading" title="Ressourcen" />
+        <p className="text-sm text-[var(--text-2)]">
+          Auswärtsspiele nutzen keine FC-Allschwil-Anlagen — Ressourcen bleiben leer; der Ort steht unter Termin.
+        </p>
+      </PlanningEditorSection>
+    );
 
-  const missingItems = useMemo(() => {
-    const items: string[] = [];
-    if (!teamId) items.push("Team auswählen");
-    if (!selectedExternalClub && !opponentName.trim()) items.push("Gegner angeben");
-    if (!startAt) items.push("Termin angeben");
-    if (homeAway === "HOME" && startAt) {
-      if (!pitchSlot) items.push("Spielfeld / Halle zuweisen");
-      if (!homeDressingRoomSlot) items.push("Garderobe Heimteam zuweisen");
-      if (!awayDressingRoomSlot) items.push("Garderobe Gastteam zuweisen");
-    }
-    return items;
-  }, [teamId, selectedExternalClub, opponentName, startAt, homeAway, pitchSlot, homeDressingRoomSlot, awayDressingRoomSlot]);
-
-  const hasRequiredFields =
-    !!seasonId && !!teamId && (!!selectedExternalClub || !!opponentName.trim()) && !!startAt;
-  const hasUnresolvedPartialFailure = !!result && !!partialError;
-  const canSubmit = !submitting && !hasUnresolvedPartialFailure && hasRequiredFields;
-
-  const submitLabel = canValidateDirectly ? "Freigeben & Match erstellen" : "Zur Prüfung einreichen";
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    if (hasUnresolvedPartialFailure) return;
-    if (!hasRequiredFields) {
-      setError("Bitte alle erforderlichen Angaben ausfüllen.");
-      return;
-    }
-
-    setSubmitting(true);
-    setPartialError(null);
-
-    const isHome = homeAway === "HOME";
-    const plan: MatchCreationPlan = {
-      homeAway,
-      pitchCode: isHome ? pitchSlot?.code ?? null : null,
-      homeDressingRoomCode: isHome ? homeDressingRoomSlot?.code ?? null : null,
-      awayDressingRoomCode: isHome ? awayDressingRoomSlot?.code ?? null : null,
-    };
-
-    const effectiveOpponentName = getEffectiveOpponentDisplayName();
-    const title = selectedTeam
-      ? `${selectedTeam.name} vs. ${effectiveOpponentName}`
-      : `Match vs. ${effectiveOpponentName}`;
-
-    try {
-      const orchestration = await orchestrateMatchCreation(plan, {
-        createEvent: async () => {
-          const res = await fetch("/api/events", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "MATCH",
-              source: "MANUAL",
-              seasonId,
-              teamId,
-              title,
-              location: location.trim() || null,
-              startAt,
-              endAt: endAt || null,
-              opponentName: opponentName.trim() || null,
-              opponentExternalClubId: selectedExternalClub?.id ?? null,
-              homeAway,
+  const spielbetriebPanel = (
+    <PlanningEditorSection testId="match-create-spielbetrieb-section" ariaLabelledBy="match-create-spielbetrieb-heading">
+      <PlanningEditorSectionHeading id="match-create-spielbetrieb-heading" title="Spielbetrieb" />
+      <div className="space-y-4">
+        <label className="block space-y-2">
+          <span className="fca-label">Wettbewerb (optional)</span>
+          <input
+            type="text"
+            value={competitionLabel}
+            onChange={(e) => setCompetitionLabel(e.target.value)}
+            className="fca-input h-8 text-sm"
+          />
+        </label>
+        <label className="block space-y-2">
+          <span className="fca-label">Bemerkungen (optional)</span>
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            className="fca-input min-h-[4rem] text-sm"
+            rows={3}
+          />
+        </label>
+        <div>
+          <p className="fca-label mb-2">Ausspielung</p>
+          <MatchPublicationToggles
+            value={{
               websiteVisible,
               infoboardVisible,
               homepageVisible,
               wochenplanVisible,
-              trainingsplanVisible: false,
               teamPageVisible,
-            }),
-          });
-          const data = (await res.json().catch(() => null)) as
-            | { eventIds?: string[]; reviewStage?: string; allowsDirectExecution?: boolean; error?: string }
-            | null;
-          if (!res.ok || !data?.eventIds?.[0]) {
-            throw new Error(data?.error ?? "Match konnte nicht erstellt werden.");
-          }
-          return {
-            eventId: data.eventIds[0],
-            reviewStage: data.reviewStage ?? "SUBMITTED",
-            allowsDirectExecution: !!data.allowsDirectExecution,
-          };
-        },
-        updateOperationalFields: async (eventId, fields) => {
-          const res = await fetch(`/api/matchcenter/${eventId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(fields),
-          });
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          if (!res.ok) {
-            throw new Error(data?.error ?? "Zuteilung konnte nicht gespeichert werden.");
-          }
-        },
-      });
+            }}
+            onChange={(patch) => {
+              if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+              if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+              if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+              if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+              if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+            }}
+            disabledChannelKeys={homeAway === "AWAY" ? ["infoboardVisible"] : []}
+            testIdPrefix="match-create-publication"
+          />
+        </div>
+      </div>
+    </PlanningEditorSection>
+  );
 
-      setResult({ eventId: orchestration.eventId });
-
-      if (!orchestration.ok) {
-        setPartialError(orchestration.operationalFieldsError);
-        return;
-      }
-
-      router.push("/dashboard/matchcenter?submitted=1");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Match konnte nicht erstellt werden.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  definition.tabs = [
+    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
+    { key: "teams", label: "Teams", render: () => teamsPanel },
+    { key: "termin", label: "Termin", render: () => terminPanel },
+    { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
+    { key: "spielbetrieb", label: "Spielbetrieb", render: () => spielbetriebPanel },
+  ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" data-testid="match-create-form">
-      {missingItems.length > 0 ? (
-        <div className="fca-status-box fca-status-box-muted text-sm" data-testid="match-create-guided-progress">
-          <p className="font-semibold">
-            Noch {missingItems.length} {missingItems.length === 1 ? "Angabe fehlt" : "Angaben fehlen"}
-          </p>
-          <ul className="mt-1.5 list-inside list-disc space-y-0.5" data-testid="match-create-guided-progress-list">
-            {missingItems.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <div className="fca-status-box fca-status-box-success text-sm" data-testid="match-create-guided-progress">
-          Alle Angaben vollständig — bereit zum Einreichen.
-        </div>
-      )}
-
-      <SportingActivityFormIdentitySummary
-        activityKind="MATCH"
-        typeLabel="SPIEL"
-        title="Neues Spiel"
-      />
-
-      <PlanningEditorOperationalWorkspace
-        testId="match-create-operational-workspace"
-        secondaryRail={
-          <PlanningPublicationPanel testId="match-create-publication-panel">
-            <MatchPublicationToggles
-              value={{
-                websiteVisible,
-                infoboardVisible,
-                homepageVisible,
-                wochenplanVisible,
-                teamPageVisible,
-              }}
-              onChange={(patch) => {
-                if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
-                if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
-                if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
-                if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
-                if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
-              }}
-              disabledChannelKeys={homeAway === "AWAY" ? ["infoboardVisible"] : []}
-              testIdPrefix="match-create-publication"
-              showHeading={false}
-            />
-          </PlanningPublicationPanel>
-        }
-        primary={
-      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-        <GuidedStep
-          index={1}
-          title="Team"
-          hint="Das FC-Allschwil-Team für dieses Match."
-          complete={teamStepComplete}
-          collapsed={teamCollapsed}
-          summary={selectedTeam ? formatTeamLabel(selectedTeam) : undefined}
-          onExpand={() => setTeamCollapsed(false)}
-          onBlurCapture={(e) => handleStepBlur(e, teamStepComplete, () => setTeamCollapsed(true))}
-        >
-          <label className="block space-y-1">
-            <span className="fca-label">Team</span>
-            {!loadingTeams && teamOptions.length === 0 ? (
-              <p className="mt-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
-                Kein Team mit Schreibzugriff verfügbar. Bitte wenden Sie sich an die Koordination.
-              </p>
-            ) : (
-              <select
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                className="fca-select"
-                required
-                disabled={loadingTeams}
-                data-testid="match-create-team-select"
-              >
-                <option value="">{loadingTeams ? "Teams laden…" : "— Auswählen —"}</option>
-                {teamOptions.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {formatTeamLabel(t)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </label>
-        </GuidedStep>
-
-        <GuidedStep
-          index={2}
-          title="Heim / Auswärts"
-          hint="Bestimmt, ob Spielfeld/Halle und Garderoben zugewiesen werden."
-          complete={homeAwayStepComplete}
-          collapsed={homeAwayCollapsed}
-          summary={homeAway === "HOME" ? "Heim (FC Allschwil ausrichtend)" : "Auswärts (extern ausgerichtet)"}
-          onExpand={() => setHomeAwayCollapsed(false)}
-          onBlurCapture={(e) => handleStepBlur(e, homeAwayStepComplete, () => setHomeAwayCollapsed(true))}
-        >
-          <HomeAwaySegmentedControl
-            value={homeAway}
-            onChange={setHomeAway}
-            testId="match-create-home-away"
-          />
-
-          <div className="mt-3">
-            <span className="fca-label">Ort</span>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="fca-input mt-1"
-              placeholder="z. B. Sportanlage Brüel"
-              data-testid="match-create-location"
-            />
-          </div>
-        </GuidedStep>
-
-        <GuidedStep
-          index={3}
-          title="Gegner"
-          hint="Aus dem Vereinsverzeichnis auswählen oder frei erfassen — Anzeigename bleibt editierbar."
-          complete={opponentStepComplete}
-          collapsed={opponentCollapsed}
-          summary={getEffectiveOpponentDisplayName() || undefined}
-          onExpand={() => setOpponentCollapsed(false)}
-          onBlurCapture={(e) => handleStepBlur(e, opponentStepComplete, () => setOpponentCollapsed(true))}
-        >
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="block space-y-1">
-              <span className="fca-label">Aus Vereinsverzeichnis</span>
-              <ExternalClubPicker
-                selected={selectedExternalClub}
-                onSelect={handleSelectExternalClub}
-                onClearSelected={() => setSelectedExternalClub(null)}
-                placeholder="Verein suchen…"
-                testId="match-create-opponent-club-search"
-              />
-            </div>
-
-            <label className="block space-y-1">
-              <span className="fca-label">
-                Anzeigename{selectedExternalClub ? " (optional)" : ""}
-              </span>
-              <input
-                type="text"
-                value={opponentName}
-                onChange={(e) => setOpponentName(e.target.value)}
-                className="fca-input"
-                placeholder={
-                  selectedExternalClub
-                    ? `Leer lassen für «${selectedExternalClub.name}»`
-                    : "z. B. FC Concordia Basel"
-                }
-                required={!selectedExternalClub}
-                data-testid="match-create-opponent-name"
-              />
-            </label>
-          </div>
-        </GuidedStep>
-
-        <GuidedStep
-          index={4}
-          title="Termin"
-          hint="Start- und Endzeit des Matches."
-          complete={terminStepComplete}
-          collapsed={terminCollapsed}
-          summary={startAt ? `${startAt}${endAt ? ` – ${endAt}` : ""}` : undefined}
-          onExpand={() => setTerminCollapsed(false)}
-          onBlurCapture={(e) => handleStepBlur(e, terminStepComplete, () => setTerminCollapsed(true))}
-        >
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="block space-y-1">
-              <span className="fca-label">Start</span>
-              <input
-                type="datetime-local"
-                value={startAt}
-                onChange={(e) => setStartAt(e.target.value)}
-                className="fca-input"
-                required
-                data-testid="match-create-start-at"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="fca-label">Ende</span>
-              <input
-                type="datetime-local"
-                value={endAt}
-                onChange={(e) => setEndAt(e.target.value)}
-                className="fca-input"
-                data-testid="match-create-end-at"
-              />
-            </label>
-          </div>
-        </GuidedStep>
-
-        {homeAway === "HOME" ? (
-          <>
-            <div className="px-4 py-3">
-              <div className="mb-3 flex items-center gap-2.5">
-                <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[0.7rem] font-semibold text-[var(--text-2)]"
-                  aria-hidden
-                >
-                  5
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-sm font-semibold text-[var(--foreground)]">Spielfeld / Halle</h2>
-                </div>
-              </div>
-              <div className="pl-[2.125rem]">
-                <PlanningSingleResourceAssignment
-                  kind="pitch_hall"
-                  showSubjectLabel={false}
-                  subjectLabel="Spielfeld / Halle"
-                  resourceName={pitchSlot?.facilityResourceName ?? null}
-                  unassignedLabel={tResources("unassignedPitchHall")}
-                  facilityGroups={pitchHallFacilityGroups}
-                  selectedResourceIds={pitchSlot ? new Set([pitchSlot.facilityResourceId]) : new Set()}
-                  onSelect={addPitchSlot}
-                  onDeselect={() => setPitchSlot(null)}
-                  availabilityByResourceId={pitchAvailability}
-                  canManage
-                  testId="match-create-pitch"
-                />
-              </div>
-            </div>
-
-            <div className="px-4 py-3">
-              <div className="mb-3 flex items-center gap-2.5">
-                <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[0.7rem] font-semibold text-[var(--text-2)]"
-                  aria-hidden
-                >
-                  6
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-sm font-semibold text-[var(--foreground)]">Garderoben</h2>
-                </div>
-              </div>
-              <div className="pl-[2.125rem]">
-                <PlanningMatchDressingRoomAssignments
-                  homeLabel={tResources("matchHomeSide")}
-                  awayLabel={tResources("matchAwaySide")}
-                  homeCode={homeDressingRoomSlot?.facilityResourceId ?? null}
-                  awayCode={awayDressingRoomSlot?.facilityResourceId ?? null}
-                  homeDisplayName={selectedTeam?.name ?? "Heim"}
-                  awayDisplayName={getEffectiveOpponentDisplayName() || "Gast"}
-                  canManage
-                  facilityGroups={dressingRoomFacilityGroups}
-                  dressingRoomAvailability={dressingRoomAvailability}
-                  onSelectHome={addHomeDressingRoomSlot}
-                  onSelectAway={addAwayDressingRoomSlot}
-                  onDeselectHome={() => setHomeDressingRoomSlot(null)}
-                  onDeselectAway={() => setAwayDressingRoomSlot(null)}
-                  testId="match-create-dressing-room"
-                />
-              </div>
-            </div>
-          </>
-        ) : null}
-
-        <div className="px-4 py-3">
-          <div className="mb-2.5 flex items-center gap-2.5">
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[0.7rem] font-semibold text-[var(--text-2)]"
-              aria-hidden
-            >
-              {homeAway === "HOME" ? 7 : 5}
-            </span>
-            <h2 className="text-sm font-semibold text-[var(--foreground)]">Prüfen &amp; Einreichen</h2>
-          </div>
-          <dl className="grid gap-x-6 gap-y-1.5 pl-[2.125rem] text-sm md:grid-cols-2">
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Team</dt>
-              <dd className="text-[var(--foreground)]">{selectedTeam ? formatTeamLabel(selectedTeam) : "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Heim / Auswärts</dt>
-              <dd className="text-[var(--foreground)]">{homeAway === "HOME" ? "Heim" : "Auswärts"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ort</dt>
-              <dd className="text-[var(--foreground)]">{location || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Gegner</dt>
-              <dd className="text-[var(--foreground)]">{getEffectiveOpponentDisplayName() || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Termin</dt>
-              <dd className="text-[var(--foreground)]">{startAt ? `${startAt}${endAt ? ` – ${endAt}` : ""}` : "—"}</dd>
-            </div>
-            {homeAway === "HOME" ? (
-              <>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Spielfeld / Halle</dt>
-                  <dd className="text-[var(--foreground)]">{pitchSlot?.facilityResourceName ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Garderoben</dt>
-                  <dd className="text-[var(--foreground)]">
-                    {[homeDressingRoomSlot?.facilityResourceName, awayDressingRoomSlot?.facilityResourceName]
-                      .filter(Boolean)
-                      .join(" · ") || "—"}
-                  </dd>
-                </div>
-              </>
-            ) : null}
-          </dl>
-
-          <div
-            className={canValidateDirectly ? "fca-status-box fca-status-box-muted ml-[2.125rem] mt-3 text-xs" : "fca-status-box fca-status-box-warn ml-[2.125rem] mt-3 text-xs"}
-            data-testid="match-create-validation-note"
-          >
-            {canValidateDirectly
-              ? `Mit „${submitLabel}“ wird das Match sofort erstellt und freigegeben (Berechtigung zur direkten Veröffentlichung vorhanden).`
-              : `Mit „${submitLabel}“ wird das Match zur Prüfung eingereicht — die Veröffentlichung erfolgt erst nach Freigabe durch eine Person mit Freigaberecht.`}
-          </div>
-        </div>
-      </div>
-        }
-      />
-
-      {result && partialError ? (
-        <div className="fca-status-box fca-status-box-warn text-sm" data-testid="match-create-partial-warning">
-          <p className="font-semibold">Match wurde erstellt, aber Spielfeld/Garderobe konnten nicht gespeichert werden.</p>
-          <p className="mt-1">{partialError}</p>
-          <p className="mt-2 text-xs text-[var(--text-2)]">
-            „{submitLabel}“ ist deaktiviert, um ein doppeltes Match zu vermeiden — bitte die Zuteilung direkt am
-            bereits angelegten Match nachtragen.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push(`/dashboard/matchcenter/${result.eventId}`)}
-            className="fca-button-secondary mt-3"
-            data-testid="match-create-goto-detail"
-          >
-            Zum Match wechseln und korrigieren
-          </button>
+    <div data-testid="match-create-form">
+      {reviewerComment ? (
+        <div className="fca-status-box mb-3 border-amber-200 bg-amber-50 text-amber-900" data-testid="match-reviewer-comment">
+          <p className="text-xs font-semibold uppercase tracking-wide">Rückmeldung Freigabe</p>
+          <p className="mt-1 text-sm">{reviewerComment}</p>
         </div>
       ) : null}
-
-      {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
-
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          data-testid="match-create-submit"
-          title={
-            hasUnresolvedPartialFailure
-              ? 'Match wurde bereits angelegt — bitte über "Zum Match wechseln und korrigieren" fortsetzen.'
-              : undefined
-          }
-          className="fca-button-primary"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Wird erstellt…
-            </>
-          ) : (
-            submitLabel
-          )}
-        </button>
-
-        <button type="button" onClick={() => router.push("/dashboard/matchcenter")} className="fca-button-secondary">
-          Abbrechen
-        </button>
-      </div>
-
-      <PlanningEditorWorkSection
-        headingId="match-create-work-heading"
-        testId="match-create-work-section"
-        persisted={false}
-        locale="de-CH"
-        tasksPanel={null}
+      {loadError ? <div className="fca-status-box fca-status-box-error mb-3">{loadError}</div> : null}
+      <SceActivityComposer
+        key={resumeDraft?.draftId ?? "match-create-new"}
+        definition={definition}
+        containerMode={containerMode}
+        open={open}
+        onClose={onClose ?? (() => router.push("/dashboard/matchcenter"))}
+        onSuccess={handleComposerSuccess}
+        effectiveGovernance={effectiveGovernance}
+        resumeDraft={resumeDraft}
+        originContext={originContext}
+        testId="match-create-composer"
       />
-
-      <PlanningEditorCollaborationSection
-        headingId="match-create-collaboration-heading"
-        testId="match-create-collaboration-section"
-        persisted={false}
-        tenantSlug=""
-        canEdit={false}
-        currentUserId={null}
-        locale="de-CH"
-        timezone="Europe/Zurich"
-      />
-
-      <p className="sr-only" id={`${formId}-hint`}>
-        Team, Gegner und Termin sind erforderlich, um ein Match zu erstellen.
-      </p>
-    </form>
+    </div>
   );
 }

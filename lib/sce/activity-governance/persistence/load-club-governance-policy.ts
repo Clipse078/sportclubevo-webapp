@@ -66,3 +66,7 @@ export async function ensureClubEventGovernanceTypeConfig(tenantId: string) {
 export async function ensureTrainingGovernanceTypeConfig(tenantId: string) {
   return ensureActivityGovernanceTypeConfig(tenantId, "TRAINING");
 }
+
+export async function ensureMatchGovernanceTypeConfig(tenantId: string) {
+  return ensureActivityGovernanceTypeConfig(tenantId, "MATCH");
+}

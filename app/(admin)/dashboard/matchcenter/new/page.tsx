@@ -2,53 +2,61 @@ import MatchCreateForm from "@/components/admin/matchcenter/MatchCreateForm";
 import SpieleRecordWorkspaceShell from "@/components/admin/matchcenter/record/SpieleRecordWorkspaceShell";
 import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/matchcenter/record/spiele-record-layout";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { auth } from "@/auth";
+import { loadMatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
+import { loadMatchEffectiveGovernanceForSession } from "@/lib/matchcenter/composer/load-effective-governance-server";
+import { getMatchComposerDraftForCreatorResume } from "@/lib/matchcenter/composer/match-composer-draft-access.server";
+import { resolvePersonIdForUser } from "@/lib/sce/activity-governance/persistence/resolve-person-id";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
-export default async function NewMatchCenterPage() {
-  const session = await requireAnyPermission([
-    PERMISSIONS.EVENTS_MANAGE,
-    PERMISSIONS.EVENTS_VIEW,
+type Props = {
+  searchParams?: Promise<{ draftId?: string }>;
+};
+
+export default async function NewMatchCenterPage({ searchParams }: Props) {
+  await requireAnyPermission([PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW]);
+
+  const tenantContext = await getActiveTenant();
+  if (!tenantContext) notFound();
+
+  const authSession = await auth();
+  const userId = authSession?.user?.effectiveUserId ?? authSession?.user?.id;
+  if (!userId) notFound();
+
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
+
+  const [surfaceProps, effectiveGovernance, resolvedParams, personId] = await Promise.all([
+    loadMatchComposerCreateSurfaceProps({
+      tenantId: tenantContext.id,
+      userId,
+      tenantClubName: tenantContext.name,
+      tenantLogoUrl: tenantClubCrestUrl,
+    }),
+    loadMatchEffectiveGovernanceForSession({ tenantId: tenantContext.id }),
+    searchParams ?? Promise.resolve(undefined),
+    resolvePersonIdForUser(tenantContext.id, userId),
   ]);
 
-  const tenantId = session.user?.activeTenantId;
-  if (!tenantId) notFound();
-
-  const canValidateDirectly =
-    hasPermission(session, PERMISSIONS.EVENTS_PUBLISH_WEBSITE) ||
-    hasPermission(session, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD);
-
-  const facilities = await getFacilitiesForTenant(tenantId);
-  const t = await getTranslations("PlanningEditor.match.create");
-
-  function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
-    return facilities
-      .filter((f) => f.status !== "ARCHIVED")
-      .map((f) => ({
-        facilityId: f.id,
-        facilityName: f.name,
-        facilityType: f.type as string,
-        resources: f.resources
-          .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
-          .map((r) => ({
-            id: r.id,
-            name: r.name,
-            code: r.code,
-            type: r.type,
-            facilityId: f.id,
-            facilityName: f.name,
-            facilityType: f.type as string,
-          })),
-      }))
-      .filter((fg) => fg.resources.length > 0);
+  const params = resolvedParams ?? {};
+  const draftId = params.draftId?.trim() || null;
+  let initialResumeDraft = null;
+  if (draftId && personId) {
+    const personDraft = await getMatchComposerDraftForCreatorResume({
+      tenantId: tenantContext.id,
+      draftId,
+      actorPersonId: personId,
+    });
+    if (personDraft) {
+      initialResumeDraft = { draftId: personDraft.draftId, payload: personDraft.payload };
+    }
   }
 
-  const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
-  const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
+  const t = await getTranslations("PlanningEditor.match.create");
 
   const header = (
     <div className="space-y-1 pt-1" data-testid="spiele-match-create-header">
@@ -70,9 +78,25 @@ export default async function NewMatchCenterPage() {
     >
       <div className={SPIELE_RECORD_WORKSPACE_SURFACE_CLASS}>
         <MatchCreateForm
-          pitchHallFacilityGroups={pitchHallFacilityGroups}
-          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-          canValidateDirectly={canValidateDirectly}
+          activeSeasonId={surfaceProps.activeSeasonId}
+          teamOptions={surfaceProps.teamOptions}
+          pitchHallFacilityGroups={surfaceProps.pitchHallFacilityGroups}
+          dressingRoomFacilityGroups={surfaceProps.dressingRoomFacilityGroups}
+          tenantClubName={surfaceProps.tenantClubName}
+          tenantLogoUrl={surfaceProps.tenantLogoUrl}
+          containerMode="page"
+          effectiveGovernance={
+            effectiveGovernance ?? {
+              activityType: "MATCH",
+              personId: "anonymous",
+              mayCreate: true,
+              publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
+              approvalStrategy: "ANY_ONE",
+              validatorPersonIds: [],
+            }
+          }
+          initialDraftId={draftId}
+          initialResumeDraft={initialResumeDraft}
         />
       </div>
     </SpieleRecordWorkspaceShell>

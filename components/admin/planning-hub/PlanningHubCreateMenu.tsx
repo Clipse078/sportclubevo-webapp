@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import TrainingCreateForm from "@/components/admin/training/TrainingCreateForm";
+import MatchCreateForm from "@/components/admin/matchcenter/MatchCreateForm";
 import type { TrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
+import type { MatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { SceActivityCreateOriginContext } from "@/lib/sce/activity-composer/origin-context";
 
@@ -21,6 +23,8 @@ type PlanningHubCreateMenuProps = {
   permissions: PlanningHubCreatePermissions;
   /** When set, Training opens as SceActivityComposer overlay instead of /dashboard/training/new. */
   trainingComposer?: TrainingComposerCreateSurfaceProps | null;
+  /** When set, Match opens as SceActivityComposer overlay instead of /dashboard/matchcenter/new. */
+  matchComposer?: MatchComposerCreateSurfaceProps | null;
   plannerUrlState?: PlanningHubUrlState;
 };
 
@@ -28,10 +32,10 @@ const NAV_CREATE_LINKS: Array<{
   key: Exclude<keyof PlanningHubCreatePermissions, never>;
   label: string;
   href: string;
-  overlayKey?: "training";
+  overlayKey?: "training" | "match";
 }> = [
   { key: "training", label: "Training", href: "/dashboard/training/new", overlayKey: "training" },
-  { key: "match", label: "Spiel", href: "/dashboard/matchcenter/new" },
+  { key: "match", label: "Spiel", href: "/dashboard/matchcenter/new", overlayKey: "match" },
   { key: "tournament", label: "Turnier", href: "/dashboard/tournamentcenter/new" },
   { key: "veranstaltung", label: "Veranstaltung", href: "/dashboard/veranstaltungen/new" },
 ];
@@ -39,19 +43,22 @@ const NAV_CREATE_LINKS: Array<{
 export default function PlanningHubCreateMenu({
   permissions,
   trainingComposer = null,
+  matchComposer = null,
   plannerUrlState,
 }: PlanningHubCreateMenuProps) {
   const [open, setOpen] = useState(false);
   const [trainingOverlayOpen, setTrainingOverlayOpen] = useState(false);
+  const [matchOverlayOpen, setMatchOverlayOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const trainingMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const matchMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const allowed = NAV_CREATE_LINKS.filter((entry) => permissions[entry.key]);
 
   const originContext = useMemo((): SceActivityCreateOriginContext | undefined => {
-    if (!trainingOverlayOpen) return undefined;
+    if (!trainingOverlayOpen && !matchOverlayOpen) return undefined;
     const params: Record<string, string> = {};
     searchParams.forEach((value, key) => {
       params[key] = value;
@@ -62,7 +69,7 @@ export default function PlanningHubCreateMenu({
       searchParams: params,
       selectedWeek: plannerUrlState?.week,
     };
-  }, [pathname, plannerUrlState?.week, searchParams, trainingOverlayOpen]);
+  }, [pathname, plannerUrlState?.week, searchParams, trainingOverlayOpen, matchOverlayOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -88,9 +95,25 @@ export default function PlanningHubCreateMenu({
     }
   }, []);
 
+  const handleMatchOverlayClose = useCallback(() => {
+    setMatchOverlayOpen(false);
+    matchMenuTriggerRef.current?.focus();
+  }, []);
+
+  const handleMatchSuccess = useCallback(async () => {
+    setMatchOverlayOpen(false);
+    matchMenuTriggerRef.current?.focus();
+    try {
+      await fetch("/api/planning-hub/planner-revalidate", { method: "POST" });
+    } catch {
+      /* refresh still runs via router.refresh in form */
+    }
+  }, []);
+
   if (allowed.length === 0) return null;
 
   const trainingUsesOverlay = permissions.training && trainingComposer != null;
+  const matchUsesOverlay = permissions.match && matchComposer != null;
 
   return (
     <>
@@ -128,6 +151,23 @@ export default function PlanningHubCreateMenu({
                   </button>
                 );
               }
+              if (entry.overlayKey === "match" && matchUsesOverlay) {
+                return (
+                  <button
+                    key={entry.key}
+                    type="button"
+                    ref={matchMenuTriggerRef}
+                    className="block w-full px-3 py-2 text-left text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+                    data-testid="planning-hub-create-match-overlay"
+                    onClick={() => {
+                      setOpen(false);
+                      setMatchOverlayOpen(true);
+                    }}
+                  >
+                    {entry.label}
+                  </button>
+                );
+              }
               return (
                 <Link
                   key={entry.key}
@@ -151,6 +191,15 @@ export default function PlanningHubCreateMenu({
             Training erstellen (Seite)
           </Link>
         ) : null}
+        {matchUsesOverlay ? (
+          <Link
+            href="/dashboard/matchcenter/new"
+            className="sr-only"
+            data-testid="planning-hub-create-match-page-fallback"
+          >
+            Spiel erstellen (Seite)
+          </Link>
+        ) : null}
       </div>
       {trainingUsesOverlay && trainingOverlayOpen && trainingComposer ? (
         <TrainingCreateForm
@@ -164,6 +213,23 @@ export default function PlanningHubCreateMenu({
           open={trainingOverlayOpen}
           onClose={handleTrainingOverlayClose}
           onSuccess={handleTrainingSuccess}
+          successBehavior="stay"
+          originContext={originContext}
+        />
+      ) : null}
+      {matchUsesOverlay && matchOverlayOpen && matchComposer ? (
+        <MatchCreateForm
+          activeSeasonId={matchComposer.activeSeasonId}
+          teamOptions={matchComposer.teamOptions}
+          pitchHallFacilityGroups={matchComposer.pitchHallFacilityGroups}
+          dressingRoomFacilityGroups={matchComposer.dressingRoomFacilityGroups}
+          tenantClubName={matchComposer.tenantClubName}
+          tenantLogoUrl={matchComposer.tenantLogoUrl}
+          effectiveGovernance={matchComposer.effectiveGovernance}
+          containerMode="overlay"
+          open={matchOverlayOpen}
+          onClose={handleMatchOverlayClose}
+          onSuccess={handleMatchSuccess}
           successBehavior="stay"
           originContext={originContext}
         />

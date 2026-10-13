@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type {
   MatchcenterActionFilter,
@@ -63,6 +64,7 @@ type Props = {
   competitionFilter?: string | null;
   venueFilter?: string | null;
   statusMask?: readonly SpieleStatusMaskKey[] | null;
+  matchCreateTrigger?: ReactNode;
 };
 
 type DomainTab = {
@@ -134,6 +136,7 @@ export default function SpieleManagementWorkspace({
   competitionFilter = null,
   venueFilter = null,
   statusMask: statusMaskProp = null,
+  matchCreateTrigger = null,
 }: Props) {
   const statusMask = statusMaskProp ?? normalizeSpieleStatusMask(undefined, actionFilter);
 
@@ -537,6 +540,7 @@ export default function SpieleManagementWorkspace({
           <SpieleManagementQuickAccess
             canManage={canManage}
             wochenplanerHref={wochenplanerHref}
+            matchCreateTrigger={matchCreateTrigger}
           />
           <SpieleManagementFilterRail
             tab={tab}
