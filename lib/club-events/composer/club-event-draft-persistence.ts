@@ -39,6 +39,7 @@ export async function saveClubEventComposerDraft(input: {
       where: {
         id: input.draftId,
         tenantId: input.tenantId,
+        createdByPersonId: input.actorPersonId,
         lifecycleState: { in: ["DRAFT", "CHANGES_REQUESTED"] },
       },
     });

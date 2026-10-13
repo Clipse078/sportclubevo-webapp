@@ -455,6 +455,7 @@ function ComposerOrchestration<
     if (!resumeDraft) {
       return;
     }
+    setInternalDraft(resumeDraft.baselineDraft);
     setBaselineDraft(resumeDraft.baselineDraft);
     setHasPersistedDraft(true);
     setPersistedDraftId(resumeDraft.draftId);

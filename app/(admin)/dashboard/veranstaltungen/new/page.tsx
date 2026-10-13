@@ -10,7 +10,10 @@ import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/Veransta
 import { loadClubEventEffectiveGovernanceForSession } from "@/lib/club-events/composer/load-effective-governance-server";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { getClubEventComposerDraft } from "@/lib/club-events/composer/club-event-draft-persistence";
+import { getClubEventComposerDraftForCreatorResume } from "@/lib/club-events/composer/club-event-composer-draft-access.server";
+import type { ClubEventComposerDraftPayload } from "@/lib/club-events/composer/club-event-composer-draft-types";
+import { resolvePersonIdForUser } from "@/lib/sce/activity-governance/persistence/resolve-person-id";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 
 type SearchParams = Promise<{ draftId?: string }>;
@@ -60,8 +63,26 @@ export default async function NewVeranstaltungPage({
   const params = (await searchParams) ?? {};
   const draftId = params.draftId?.trim() || null;
   let reviewerComment: string | null = null;
+  let initialResumeDraft: { draftId: string; payload: ClubEventComposerDraftPayload } | null = null;
+
   if (draftId) {
-    const draft = await getClubEventComposerDraft(tenantContext.id, draftId);
+    const session = await auth();
+    const personId =
+      session?.user?.id != null
+        ? await resolvePersonIdForUser(tenantContext.id, session.user.id)
+        : null;
+    if (!personId) {
+      notFound();
+    }
+    const draft = await getClubEventComposerDraftForCreatorResume({
+      tenantId: tenantContext.id,
+      draftId,
+      creatorPersonId: personId,
+    });
+    if (!draft) {
+      notFound();
+    }
+    initialResumeDraft = { draftId: draft.id, payload: draft.payload };
     if (draft?.lifecycleState === "CHANGES_REQUESTED") {
       const revision = await prisma.sceActivityGovernanceRevision.findFirst({
         where: {
@@ -87,8 +108,8 @@ export default async function NewVeranstaltungPage({
         <PlanningEditorHeader
           backHref="/dashboard/veranstaltungen"
           backLabel={t("backNav")}
-          title={t("title")}
-          scheduleContext={t("description")}
+          title={initialResumeDraft ? t("draftTitle") : t("title")}
+          scheduleContext={initialResumeDraft ? t("draftDescription") : t("description")}
           backLinkTestId="veranstaltung-create-back-link"
           testId="veranstaltung-create-header"
         />
@@ -101,6 +122,7 @@ export default async function NewVeranstaltungPage({
           otherFacilityGroups={otherFacilityGroups}
           timeZone={tenantContext.timezone ?? "Europe/Zurich"}
           initialDraftId={draftId}
+          initialResumeDraft={initialResumeDraft}
           reviewerComment={reviewerComment}
           effectiveGovernance={
             effectiveGovernance ?? {

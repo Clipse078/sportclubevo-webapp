@@ -72,7 +72,7 @@ export default async function VeranstaltungenFreigabenPage() {
       </div>
 
       {access.kind === "unauthorized" ? (
-        <ClubEventFreigabenUnauthorizedState reason={access.reason} />
+        <ClubEventFreigabenUnauthorizedState reason={access.reason} display={access.display} />
       ) : (
         workspace
       )}

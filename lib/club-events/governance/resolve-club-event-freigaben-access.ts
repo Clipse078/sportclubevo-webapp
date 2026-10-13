@@ -6,6 +6,11 @@ export type ClubEventFreigabenUnauthorizedReason =
   | "NOT_IN_VALIDATOR_POOL"
   | "NO_PERSON_LINK";
 
+/** Role-aware unauthorized presentation (approval vs governance administration). */
+export type ClubEventFreigabenUnauthorizedDisplay =
+  | "STANDARD"
+  | "GOVERNANCE_ADMIN_NON_VALIDATOR";
+
 export type ClubEventFreigabenAccess =
   | {
       kind: "authorized";
@@ -15,6 +20,7 @@ export type ClubEventFreigabenAccess =
   | {
       kind: "unauthorized";
       reason: ClubEventFreigabenUnauthorizedReason;
+      display: ClubEventFreigabenUnauthorizedDisplay;
     };
 
 export function tenantHasPermission(
@@ -25,12 +31,27 @@ export function tenantHasPermission(
   return platform.includes(permissionKey) || tenant.includes(permissionKey);
 }
 
+function resolveFreigabenUnauthorizedDisplay(input: {
+  reason: ClubEventFreigabenUnauthorizedReason;
+  canManageGovernance: boolean;
+}): ClubEventFreigabenUnauthorizedDisplay {
+  if (!input.canManageGovernance) {
+    return "STANDARD";
+  }
+  if (input.reason === "NO_PERSON_LINK") {
+    return "STANDARD";
+  }
+  return "GOVERNANCE_ADMIN_NON_VALIDATOR";
+}
+
 export function resolveClubEventFreigabenAccessFromContext(input: {
   platformPermissions: readonly PermissionKey[];
   tenantPermissions: readonly PermissionKey[];
   personId: string | null;
   validatorPersonIds: readonly string[];
+  canManageGovernance?: boolean;
 }): ClubEventFreigabenAccess {
+  const canManageGovernance = input.canManageGovernance ?? false;
   const heldApprove = tenantHasPermission(
     input.platformPermissions,
     input.tenantPermissions,
@@ -38,15 +59,33 @@ export function resolveClubEventFreigabenAccessFromContext(input: {
   );
 
   if (!heldApprove) {
-    return { kind: "unauthorized", reason: "MISSING_APPROVE_PERMISSION" };
+    return {
+      kind: "unauthorized",
+      reason: "MISSING_APPROVE_PERMISSION",
+      display: resolveFreigabenUnauthorizedDisplay({
+        reason: "MISSING_APPROVE_PERMISSION",
+        canManageGovernance,
+      }),
+    };
   }
 
   if (!input.personId) {
-    return { kind: "unauthorized", reason: "NO_PERSON_LINK" };
+    return {
+      kind: "unauthorized",
+      reason: "NO_PERSON_LINK",
+      display: "STANDARD",
+    };
   }
 
   if (!input.validatorPersonIds.includes(input.personId)) {
-    return { kind: "unauthorized", reason: "NOT_IN_VALIDATOR_POOL" };
+    return {
+      kind: "unauthorized",
+      reason: "NOT_IN_VALIDATOR_POOL",
+      display: resolveFreigabenUnauthorizedDisplay({
+        reason: "NOT_IN_VALIDATOR_POOL",
+        canManageGovernance,
+      }),
+    };
   }
 
   return {

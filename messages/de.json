@@ -768,7 +768,9 @@
       "create": {
         "backNav": "Veranstaltungen",
         "title": "Veranstaltung erstellen",
+        "draftTitle": "Entwurf bearbeiten",
         "description": "Manuelle Erfassung von Vereinsanlässen wie Generalversammlung, Trainersitzung, Sponsorenanlass, Helfereinsatz oder interne Veranstaltungen.",
+        "draftDescription": "Gespeicherten Veranstaltungsentwurf fortsetzen, anpassen und erneut speichern oder einreichen.",
         "intro": "Termin, Ort und Sichtbarkeit für diesen Vereinsanlass festlegen.",
         "submit": "Veranstaltung erstellen",
         "submitting": "Wird erstellt…"

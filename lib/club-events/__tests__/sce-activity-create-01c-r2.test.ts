@@ -72,6 +72,7 @@ describe("SCE-ACTIVITY-CREATE-01C-R2 — PO UAT corrections", () => {
       expect(access).toEqual({
         kind: "unauthorized",
         reason: "MISSING_APPROVE_PERMISSION",
+        display: "STANDARD",
       });
     });
 
@@ -85,6 +86,7 @@ describe("SCE-ACTIVITY-CREATE-01C-R2 — PO UAT corrections", () => {
       expect(access).toEqual({
         kind: "unauthorized",
         reason: "NOT_IN_VALIDATOR_POOL",
+        display: "STANDARD",
       });
     });
 
