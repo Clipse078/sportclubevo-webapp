@@ -21,6 +21,7 @@ import { ActivityContextBadge } from "./ActivityContextBadge";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchCardResult } from "./SceMatchCardResult";
 import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
+import { SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
 import {
   isSceMatchRichCardDensity,
   SCE_MATCH_CARD_SHELL_CLASS,
@@ -345,14 +346,11 @@ function SceMatchLocationRow({
   locationLine: string;
   density: SceActivityPresentationDensity;
 }) {
-  const iconClass = richScale(density).scheduleIconClass;
+  const iconClass = richScale(density).locationIconClass;
 
   return (
     <div
-      className={cn(
-        "flex min-w-0 items-start gap-1.5",
-        richScale(density).scheduleTextClass,
-      )}
+      className={cn("flex min-w-0 items-start gap-1.5", richScale(density).locationTextClass)}
       data-testid="sce-match-location"
       data-sce-match-region="location"
       data-sce-match-location
@@ -478,7 +476,10 @@ function SceMatchMicroContent({
         <div className="flex min-w-0 items-center justify-between gap-2">
           {showSchedule ? (
             <p
-              className="min-w-0 truncate font-mono text-[0.75rem] tabular-nums text-[var(--text-2)]"
+              className={cn(
+                "min-w-0 truncate font-mono text-[0.75rem] tabular-nums",
+                SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS,
+              )}
               data-testid="sce-match-schedule"
               data-sce-match-region="schedule"
             >

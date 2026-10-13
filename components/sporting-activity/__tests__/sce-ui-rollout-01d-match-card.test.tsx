@@ -10,7 +10,14 @@ import {
   resolveSceMatchCardFixture,
 } from "../__fixtures__/sce-match-card-fixtures";
 import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical";
-import { sceMatchCenterTypographyScale } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
+import {
+  SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS,
+  SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import {
+  sceMatchCenterTypographyScale,
+  SCE_MATCH_RICH_DENSITY_SCALE,
+} from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
 
 const FMT = { locale: "de-CH", timezone: "Europe/Zurich" };
@@ -315,6 +322,15 @@ describe("SCE-UI-ROLLOUT-01D — SceMatchCard", () => {
       .querySelector('[data-sce-match-side="away"] [data-sce-match-region="away-crest"]');
     expect(awayCrest?.querySelector('[data-testid^="club-crest-fallback-"]')).toBeTruthy();
     expect(awayCrest?.querySelector('[data-testid="club-crest-image"]')).toBeNull();
+  });
+
+  it("applies shared secondary and location semantic tokens at STANDARD", () => {
+    renderCard({ competitionLabel: "Meisterschaft" }, "STANDARD");
+    const competition = screen.getByTestId("sce-match-competition");
+    expect(competition.className).toContain(SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS);
+    const location = screen.getByTestId("sce-match-location");
+    expect(location.className).toContain(SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS);
+    expect(SCE_MATCH_RICH_DENSITY_SCALE.STANDARD.scheduleTextClass).toContain("font-medium");
   });
 
   it("uses pitch-opaque match card surface tokens on the card shell", () => {

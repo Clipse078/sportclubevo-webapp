@@ -1,6 +1,14 @@
 import { cn } from "@/lib/cn";
 import type { ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
 import { SCE_SURFACE_TOKEN_MATCH_CARD } from "@/lib/shell/sce-surface-system";
+import {
+  SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+  SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
+  SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS,
+  SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+  sceActivityLocationIconClass,
+  sceActivityLocationTextClass,
+} from "./activity-card-semantic-tokens";
 import type { SceActivityPresentationDensity } from "./types";
 
 /** Rich card densities share one DOM skeleton — scale tokens only. */
@@ -22,6 +30,8 @@ export type SceMatchRichDensityScale = {
   competitionTextClass: string;
   scheduleTextClass: string;
   scheduleIconClass: string;
+  locationTextClass: string;
+  locationIconClass: string;
   vsTextClass: string;
   resultTextClass: string;
   completedMissingResultClass: string;
@@ -36,11 +46,38 @@ export const SCE_MATCH_CARD_SHELL_CLASS = cn(
 /** Resolved CSS variable name for guardrails and design-system docs. */
 export const SCE_MATCH_CARD_SURFACE_VAR = SCE_SURFACE_TOKEN_MATCH_CARD;
 
+function buildMatchRichScale(
+  density: SceMatchRichCardDensity,
+  sizes: Pick<
+    SceMatchRichDensityScale,
+    | "maxWidthClass"
+    | "shellPaddingClass"
+    | "contentSpaceYClass"
+    | "fixtureGapYClass"
+    | "fixtureGridGapXClass"
+    | "identityStackGapClass"
+    | "crestVisualSize"
+    | "clubNameClass"
+    | "competitionTextClass"
+    | "scheduleTextClass"
+    | "scheduleIconClass"
+    | "vsTextClass"
+    | "resultTextClass"
+    | "completedMissingResultClass"
+  >,
+): SceMatchRichDensityScale {
+  return {
+    ...sizes,
+    locationTextClass: sceActivityLocationTextClass(sizes.scheduleTextClass),
+    locationIconClass: sceActivityLocationIconClass(sizes.scheduleIconClass),
+  };
+}
+
 export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
   SceMatchRichCardDensity,
   SceMatchRichDensityScale
 > = {
-  HERO: {
+  HERO: buildMatchRichScale("HERO", {
     maxWidthClass: "max-w-lg",
     shellPaddingClass: "p-4 sm:p-5",
     contentSpaceYClass: "space-y-3.5",
@@ -48,16 +85,25 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     fixtureGridGapXClass: "gap-x-3.5",
     identityStackGapClass: "gap-2",
     crestVisualSize: "detail",
-    clubNameClass: "line-clamp-2 text-[1.0625rem] font-semibold leading-snug text-[var(--foreground)]",
-    competitionTextClass: "line-clamp-2 text-[0.6875rem] font-medium leading-snug text-[var(--muted)]",
-    scheduleTextClass: "text-sm text-[var(--text-2)]",
-    scheduleIconClass: "h-4 w-4 shrink-0 text-[var(--text-2)]",
-    vsTextClass: "text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-[var(--muted)]",
+    clubNameClass: cn(
+      "line-clamp-2 text-[1.0625rem] font-semibold leading-snug",
+      SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
+    ),
+    competitionTextClass: cn(
+      "line-clamp-2 text-[0.6875rem] font-medium leading-snug",
+      SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+    ),
+    scheduleTextClass: cn("text-sm font-medium", SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS),
+    scheduleIconClass: cn("h-4 w-4 shrink-0", SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS),
+    vsTextClass: cn(
+      "text-[0.6875rem] font-medium uppercase tracking-[0.12em]",
+      SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+    ),
     resultTextClass:
       "text-5xl font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
     completedMissingResultClass: "text-sm font-semibold",
-  },
-  STANDARD: {
+  }),
+  STANDARD: buildMatchRichScale("STANDARD", {
     maxWidthClass: "max-w-md",
     shellPaddingClass: "p-3.5 sm:p-4",
     contentSpaceYClass: "space-y-2.5",
@@ -65,16 +111,25 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     fixtureGridGapXClass: "gap-x-3",
     identityStackGapClass: "gap-1.5",
     crestVisualSize: "planner",
-    clubNameClass: "line-clamp-2 text-sm font-semibold leading-snug text-[var(--foreground)]",
-    competitionTextClass: "line-clamp-2 text-[0.6875rem] font-medium leading-snug text-[var(--muted)]",
-    scheduleTextClass: "text-xs text-[var(--text-2)]",
-    scheduleIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--text-2)]",
-    vsTextClass: "text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-[var(--muted)]",
+    clubNameClass: cn(
+      "line-clamp-2 text-sm font-semibold leading-snug",
+      SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
+    ),
+    competitionTextClass: cn(
+      "line-clamp-2 text-[0.6875rem] font-medium leading-snug",
+      SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+    ),
+    scheduleTextClass: cn("text-xs font-medium", SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS),
+    scheduleIconClass: cn("h-3.5 w-3.5 shrink-0", SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS),
+    vsTextClass: cn(
+      "text-[0.6875rem] font-medium uppercase tracking-[0.1em]",
+      SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+    ),
     resultTextClass:
       "text-3xl font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
     completedMissingResultClass: "text-xs font-semibold",
-  },
-  COMPACT: {
+  }),
+  COMPACT: buildMatchRichScale("COMPACT", {
     maxWidthClass: "max-w-sm",
     shellPaddingClass: "p-3 sm:p-3.5",
     contentSpaceYClass: "space-y-2",
@@ -82,15 +137,24 @@ export const SCE_MATCH_RICH_DENSITY_SCALE: Record<
     fixtureGridGapXClass: "gap-x-2.5",
     identityStackGapClass: "gap-1.5",
     crestVisualSize: "management",
-    clubNameClass: "line-clamp-2 text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]",
-    competitionTextClass: "line-clamp-2 text-[0.625rem] font-medium leading-snug text-[var(--muted)]",
-    scheduleTextClass: "text-xs text-[var(--text-2)]",
-    scheduleIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--text-2)]",
-    vsTextClass: "text-[0.625rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]",
+    clubNameClass: cn(
+      "line-clamp-2 text-[0.8125rem] font-semibold leading-snug",
+      SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
+    ),
+    competitionTextClass: cn(
+      "line-clamp-2 text-[0.625rem] font-medium leading-snug",
+      SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+    ),
+    scheduleTextClass: cn("text-xs font-medium", SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS),
+    scheduleIconClass: cn("h-3.5 w-3.5 shrink-0", SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS),
+    vsTextClass: cn(
+      "text-[0.625rem] font-medium uppercase tracking-[0.08em]",
+      SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+    ),
     resultTextClass:
       "text-2xl font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
     completedMissingResultClass: "text-xs font-semibold",
-  },
+  }),
 };
 
 /** Inline MICRO fixture — same typography contract as rich densities. */
@@ -100,7 +164,10 @@ export type SceMatchMicroDensityScale = Pick<
 >;
 
 export const SCE_MATCH_MICRO_DENSITY_SCALE: SceMatchMicroDensityScale = {
-  vsTextClass: "text-[0.625rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]",
+  vsTextClass: cn(
+    "text-[0.625rem] font-medium uppercase tracking-[0.08em]",
+    SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+  ),
   resultTextClass:
     "text-lg font-bold tabular-nums tracking-tight text-[var(--sce-match-result-foreground)]",
   completedMissingResultClass: "text-xs font-semibold",

@@ -15,18 +15,18 @@ import {
   type SceTrainingRichCardDensity,
   type SceTrainingRichDensityScale,
 } from "./training-card-rich-density";
+import {
+  SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+  SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
+  sceActivityLocationIconClass,
+  sceActivityLocationTextClass,
+} from "./activity-card-semantic-tokens";
 import type { SceActivityPresentationDensity } from "./types";
 
 /** Tournament cards reuse the same rich-density scale as Training (01E) / Match (01D). */
 export const SCE_TOURNAMENT_CARD_SHELL_CLASS = SCE_TRAINING_CARD_SHELL_CLASS;
 
 export type SceTournamentRichCardDensity = SceTrainingRichCardDensity;
-
-const TEAM_CONTEXT_FOREGROUND =
-  "text-[color-mix(in_srgb,var(--sce-info)_88%,var(--foreground)_12%)]";
-
-const LOCATION_FOREGROUND =
-  "text-[color-mix(in_srgb,var(--sce-info)_55%,var(--text-2)_45%)]";
 
 export type SceTournamentRichDensityScale = SceTrainingRichDensityScale & {
   crestVisualSize: ClubCrestVisualSize;
@@ -42,15 +42,15 @@ function mapTournamentRichScale(density: SceTournamentRichCardDensity): SceTourn
   const training = sceTrainingRichDensityScale(density);
 
   const organiserByDensity: Record<SceTournamentRichCardDensity, string> = {
-    HERO: "truncate text-sm font-medium leading-snug text-[var(--text-2)]",
-    STANDARD: "truncate text-xs font-medium leading-snug text-[var(--text-2)]",
-    COMPACT: "truncate text-xs font-medium leading-snug text-[var(--text-2)]",
+    HERO: cn("truncate text-sm font-medium leading-snug", SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS),
+    STANDARD: cn("truncate text-xs font-medium leading-snug", SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS),
+    COMPACT: cn("truncate text-xs font-medium leading-snug", SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS),
   };
 
   const hauptteamByDensity: Record<SceTournamentRichCardDensity, string> = {
-    HERO: cn("truncate text-sm font-semibold leading-snug", TEAM_CONTEXT_FOREGROUND),
-    STANDARD: cn("truncate text-xs font-semibold leading-snug", TEAM_CONTEXT_FOREGROUND),
-    COMPACT: cn("truncate text-[0.6875rem] font-semibold leading-snug", TEAM_CONTEXT_FOREGROUND),
+    HERO: cn("truncate text-sm font-semibold leading-snug", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS),
+    STANDARD: cn("truncate text-xs font-semibold leading-snug", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS),
+    COMPACT: cn("truncate text-[0.6875rem] font-semibold leading-snug", SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS),
   };
 
   return {
@@ -63,10 +63,10 @@ function mapTournamentRichScale(density: SceTournamentRichCardDensity): SceTourn
     hauptteamIconClass: cn(
       "shrink-0 opacity-80",
       density === "HERO" ? "h-4 w-4" : "h-3.5 w-3.5",
-      TEAM_CONTEXT_FOREGROUND,
+      SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
     ),
-    locationTextClass: cn(training.scheduleTextClass, LOCATION_FOREGROUND),
-    locationIconClass: cn(training.scheduleIconClass, LOCATION_FOREGROUND),
+    locationTextClass: sceActivityLocationTextClass(training.scheduleTextClass),
+    locationIconClass: sceActivityLocationIconClass(training.scheduleIconClass),
   };
 }
 
