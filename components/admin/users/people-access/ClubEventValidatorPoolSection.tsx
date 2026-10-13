@@ -10,11 +10,15 @@ import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 type Props = {
   canManage: boolean;
   onValidatorCountChange?: (count: number) => void;
+  showAnyOneHint?: boolean;
+  showEmptyState?: boolean;
 };
 
 export default function ClubEventValidatorPoolSection({
   canManage,
   onValidatorCountChange,
+  showAnyOneHint = false,
+  showEmptyState = false,
 }: Props) {
   const [validatorIds, setValidatorIds] = useState<string[]>([]);
   const [chips, setChips] = useState<SceChipSelection[]>([]);
@@ -101,8 +105,24 @@ export default function ClubEventValidatorPoolSection({
         <p className="text-xs text-[var(--text-2)]">
           Diese Personen können eingereichte Veranstaltungen freigeben, Änderungen anfordern oder
           ablehnen.
+          {showAnyOneHint ? (
+            <>
+              {" "}
+              Es genügt die Freigabe durch eine der hinterlegten Personen.
+            </>
+          ) : null}
         </p>
       </div>
+      {showEmptyState && validatorIds.length === 0 ? (
+        <p
+          className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-3 text-xs text-[var(--text-2)]"
+          data-testid="club-event-validator-pool-empty"
+          role="status"
+        >
+          Es sind noch keine freigabeberechtigten Personen hinterlegt. Füge mindestens eine Person
+          hinzu, bevor Ersteller auf «Freigabe erforderlich» gestellt werden können.
+        </p>
+      ) : null}
       <SceChipMultiSelectorField
         label="Personen"
         selected={chips}

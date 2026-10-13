@@ -19,9 +19,14 @@ import PersonAdminActionsPanel from "@/components/admin/users/PersonAdminActions
 import PersonClubEventGovernanceSection from "@/components/admin/users/people-access/PersonClubEventGovernanceSection";
 import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
 import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
+import {
+  CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF,
+  parseClubEventGovernanceReturnContext,
+} from "@/lib/club-events/governance/club-event-governance-people-access-context";
 
 type Props = {
   params: Promise<{ userId: string }>;
+  searchParams?: Promise<{ returnContext?: string | string[] }>;
 };
 
 function formatDate(date: Date): string {
@@ -32,7 +37,7 @@ function formatDate(date: Date): string {
   });
 }
 
-export default async function AdminUserDetailPage({ params }: Props) {
+export default async function AdminUserDetailPage({ params, searchParams }: Props) {
   const session = await requireAnyPermission([
     PERMISSIONS.USERS_VIEW,
     PERMISSIONS.USERS_MANAGE,
@@ -42,6 +47,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
   if (!tenantId) notFound();
 
   const { userId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const fromClubEventGovernance = parseClubEventGovernanceReturnContext(
+    resolvedSearchParams?.returnContext,
+  );
+  const peopleAccessBackHref = fromClubEventGovernance
+    ? CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF
+    : "/dashboard/admin/people-access";
+  const peopleAccessBackLabel = fromClubEventGovernance
+    ? "Zurück zu Veranstaltungs-Freigaben"
+    : "Übersicht";
 
   const [membership, allTenantRoles, scopedAssignments, orgUnits] = await Promise.all([
     getTenantUserDetail(tenantId, userId),
@@ -102,9 +117,14 @@ export default async function AdminUserDetailPage({ params }: Props) {
         eyebrow="Personen & Zugänge"
         title={displayName}
         actions={
-          <Link href="/dashboard/admin/people-access" className="fca-button-secondary inline-flex items-center gap-1.5">
+          <Link
+            href={peopleAccessBackHref}
+            className="fca-button-secondary inline-flex items-center gap-1.5"
+            data-testid="people-access-back-link"
+            data-return-context={fromClubEventGovernance ? "club-event-governance" : "default"}
+          >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Übersicht
+            {peopleAccessBackLabel}
           </Link>
         }
       />

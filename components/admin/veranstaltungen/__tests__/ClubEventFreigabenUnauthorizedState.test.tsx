@@ -32,7 +32,7 @@ describe("ClubEventFreigabenUnauthorizedState", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Freigaben verwalten" })).toHaveAttribute(
       "href",
-      "/dashboard/admin/people-access",
+      "/dashboard/admin/people-access?context=club-event-governance",
     );
     expect(screen.queryByText(/activities\.club_event\.approve/)).not.toBeInTheDocument();
   });

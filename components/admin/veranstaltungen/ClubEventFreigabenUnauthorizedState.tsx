@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/page/EmptyState";
+import { CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF } from "@/lib/club-events/governance/club-event-governance-people-access-context";
 import type {
   ClubEventFreigabenUnauthorizedDisplay,
   ClubEventFreigabenUnauthorizedReason,
@@ -24,7 +25,7 @@ function resolveCopy(
       heading: "Keine Freigabeberechtigung",
       description:
         "Du bist aktuell nicht als freigabeberechtigte Person für Veranstaltungen hinterlegt. Die Freigabeberechtigungen können unter Admin → Personen & Zugänge verwaltet werden.",
-      adminActionHref: "/dashboard/admin/people-access",
+      adminActionHref: CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF,
       adminActionLabel: "Freigaben verwalten",
     };
   }

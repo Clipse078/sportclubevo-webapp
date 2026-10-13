@@ -150,7 +150,7 @@ describe("SCE-ACTIVITY-CREATE-01C-R4 — Club Admin governance access resolution
       "components/admin/veranstaltungen/ClubEventFreigabenUnauthorizedState.tsx",
     );
     const peopleAccess = read("app/(admin)/dashboard/admin/people-access/page.tsx");
-    expect(unauthorized).toContain('adminActionHref: "/dashboard/admin/people-access"');
+    expect(unauthorized).toContain("CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF");
     expect(peopleAccess).toContain("PERMISSIONS.USERS_VIEW");
     expect(peopleAccess).toContain("PERMISSIONS.USERS_MANAGE");
     expect(
