@@ -8,7 +8,7 @@
 | **Architecture decision** | **APPROVED** (Option C — adaptive `SceActivityComposer`) |
 | **ADR-11** | **ACCEPTED** |
 | **ACTIVITY_COMPOSER_ARCHITECTURE_GATE** | **CONDITIONAL_PASS_ACCEPTED** |
-| **Next package** | [`SCE-ACTIVITY-CREATE-01B`](./SCE-ACTIVITY-CREATE-01.md) — Activity Composer Foundation (**NOT_STARTED**) |
+| **Next package** | [`SCE-ACTIVITY-CREATE-01C`](./SCE-ACTIVITY-CREATE-01.md) — Club Event Reference Adoption (**NOT_STARTED**; 01B **CLOSED** PR **#839**) |
 | **STAGE baseline** | `d61782b8c8f7d54f74746fa9bdb62ee71b789a9a` |
 | **Branch** | `cursor/sce-activity-create-01a-research-architecture` |
 | **Predecessor** | [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) **CLOSED** (PR #837 merged) |
@@ -560,7 +560,7 @@ Then:
 | **ADR-11** | **ACCEPTED** |
 | **ACTIVITY_COMPOSER_ARCHITECTURE_GATE** | **CONDITIONAL_PASS_ACCEPTED** |
 | **CONDITION** | Composer-safe child interaction architecture required, beginning with Club Event audience selector in **01C** |
-| **NEXT_PACKAGE** | **SCE-ACTIVITY-CREATE-01B** |
-| **01B_STARTED** | **NO** |
+| **NEXT_PACKAGE** | **SCE-ACTIVITY-CREATE-01C** (see [`SCE-ACTIVITY-CREATE-01.md`](./SCE-ACTIVITY-CREATE-01.md) §01B closure) |
+| **SCE-ACTIVITY-CREATE-01B** | **CLOSED** (PR **#839**) |
 | **01H_STARTED** | **NO** |
-| **PR** | **#838** |
+| **PR (01A)** | **#838** |

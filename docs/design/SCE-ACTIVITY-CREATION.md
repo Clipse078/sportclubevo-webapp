@@ -92,9 +92,24 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | Cancel / dirty | `SceContextDirtyGuardProvider` — dirty = local ≠ last persisted baseline |
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
 
-**Lifecycle (01B-R3 — canonical):** START → COMPOSE → optional SAVE DRAFT / RESUME → **COMMIT VALIDATION** → publication authority (`DIRECT_PUBLISH` \| `APPROVAL_REQUIRED`) → `PUBLISHED` or `PENDING_APPROVAL` workflow.
+**Lifecycle (01B-R3 — canonical):**
 
-**Terminology:** **Form/commit validation** (technical/domain) is separate from **governance approval / Freigabe** (club policy). Never use generic «validation» for both.
+```text
+START
+  → COMPOSE
+  → optional SAVE DRAFT / RESUME
+  → COMMIT VALIDATION
+  → governance decision (effective publication authority)
+       ├ DIRECT_PUBLISH → PUBLISHED
+       └ APPROVAL_REQUIRED → PENDING_APPROVAL
+            ├ APPROVE → PUBLISHED
+            ├ REQUEST_CHANGES → edit / resubmit (revision-bound)
+            └ REJECT → REJECTED
+```
+
+**Terminology:** **Form/commit validation** (technical/domain) is separate from **governance approval / Freigabe** (club policy). Never use generic «validation» for both. **Approval is not a Composer content tab.**
+
+**Governance foundation (01B-R3 — contracts only):** optional approval **OFF by default**; **creator-specific** and **activity-type-specific**; Club Admin configuration and production persistence ship with **01C** (reference adoption) and later vertical slices — not in 01B. **Freigaben** inbox UI may follow **01H** unless 01C requires a minimal validator path earlier.
 
 **Product principle:** *Saving preserves work. Submitting commits the activity. Publication follows the creator's effective governance policy.*
 
@@ -318,9 +333,16 @@ Same domain workflow component tree; **page shell** replaces composer chrome (`P
 
 ---
 
-## 16. Automated test targets (future 01B+)
+## 16. Automated test targets (**FOUNDATION_IMPLEMENTED** — 01B)
 
-See [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md) §29.
+| Area | Module tests |
+|------|----------------|
+| Composer shell / R1 geometry / guardrails | `lib/sce/activity-composer/__tests__/`, `components/sce/activity-composer/__tests__/` |
+| R2 draft lifecycle | `composer-lifecycle-state.test.ts` |
+| R3 governance contracts | `lib/sce/activity-governance/__tests__/sce-activity-governance-r3.test.ts` |
+| 01A docs gate | `lib/planning/__tests__/sce-activity-create-01a-architecture-gate.test.ts` |
+
+See [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md) §29 for domain adoption coverage (01C+).
 
 ---
 

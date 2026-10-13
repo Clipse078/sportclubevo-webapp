@@ -4,9 +4,10 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; **01B** next (foundation) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** next |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
-| **Next slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation (**NOT_STARTED**) |
+| **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
+| **Next slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption (**NOT_STARTED**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -38,8 +39,9 @@ Research and, **only if an architecture / feasibility gate passes**, establish o
 ```text
 SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01A — Research & Architecture — CLOSED (CONDITIONAL_PASS_ACCEPTED)
-  → SCE-ACTIVITY-CREATE-01B — Composer foundation — NOT_STARTED
-  → SCE-ACTIVITY-CREATE-01C–01G — Domain adoption & planning integration — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01B — Composer foundation + R1/R2/R3 — CLOSED
+  → SCE-ACTIVITY-CREATE-01C — Club Event reference adoption — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01D–01G — Domain adoption & planning integration — NOT_STARTED
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
 ```
@@ -57,3 +59,39 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
 - Implementing domain create migrations before the matching adoption package (01C–01F)
 - Generic Activity persistence/API or parallel domain modal implementations
 - PROD deploy unless explicitly scheduled
+
+---
+
+## SCE-ACTIVITY-CREATE-01B closure (PR **#839**)
+
+| Field | Value |
+|-------|-------|
+| **Status** | **CLOSED** |
+| **Sub-packages** | **01B-R1** workspace geometry · **01B-R2** draft/action contract · **01B-R3** governance/validation foundation |
+| **PO visual UAT** | **PASS** (preview routes — PO-owned; no Cursor manual UAT) |
+| **Schema / migration** | **NONE** — foundation contracts + preview harness only |
+| **Production `/new` routes** | **Unmigrated** — guardrail tests enforce |
+| **Autosave** | **Not introduced** — explicit draft/commit only |
+| **Next package** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption |
+
+Deliverables: `SceActivityComposer` (overlay / page / fullscreen), `SceActivityCreateDefinition`, context tabs + dirty guard integration, policy-aware footer, `lib/sce/activity-governance/` contracts, `/sce-preview/activity-composer` harness.
+
+---
+
+## SCE-ACTIVITY-CREATE-01C boundary (locked at 01B closure)
+
+**Reference domain:** Club Event — first production vertical slice on the canonical Composer.
+
+| Must deliver (01C) | Must not (01C) |
+|--------------------|----------------|
+| Real Club Event create via `SceActivityComposer` (overlay/page/fullscreen as applicable) | Generic Activity DB entity |
+| Canonical tabs: Übersicht · Gültigkeit · Termin · Ressourcen · Publikation | Generic `POST /api/activity` |
+| Existing audience architecture; **Composer-safe** audience selection (no stacked Sheet/modal) | Four parallel domain governance systems |
+| Recurrence, resources/conflicts, publication settings | |
+| Real draft persistence + governance persistence + effective publication authority | |
+| RPERM / permission integration; Club Admin governance config for usable feature | |
+| Usable validator review/decision path; revision/audit persistence; material-change handling | |
+
+**Deferred unless 01C gate requires earlier:** broad canonical **Freigaben** inbox (may remain **01H** / later planning-surface package if 01C ships a minimal validator path).
+
+**Then:** 01D Training · 01E Match · 01F Tournament adoption/refinement · 01G planning-surface integration · **01H** core planning surfaces · 01I–01N per [`SCE-UI-ROLLOUT-01`](./SCE-UI-ROLLOUT-01.md).
