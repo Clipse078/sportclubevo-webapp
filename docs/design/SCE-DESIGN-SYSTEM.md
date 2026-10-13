@@ -202,7 +202,8 @@ Density rules suppress the pill only via the shared activity density contract �
 1. Consume `lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens.ts` and density scale modules — **no ad-hoc `color-mix` or hex** on card surfaces.
 2. **Do not** import Tournament orange or Training blue into Match fixture/result presentation.
 3. Location lines **must** use location tokens — not raw schedule classes without the location tint.
-4. Future Club Event / Sponsor cards should extend this table, not introduce a parallel palette.
+4. **`CANONICAL_ACTIVITY_LOCATION`** — structured `SportingActivityLocation` + `formatSceActivityLocationHierarchy` (host → venue → resource). Presentation uses **human-facing labels** only; raw resource keys/slugs/enums (e.g. `KUNSTRASEN_2`) **never** render. Each hierarchy level must belong to the **same authoritative activity location**. **Match** home/away venue ownership is resolved in `buildMatchSportingActivityLocation` before cards consume the model; tenant operational pitch allocation applies to **HOME** matches only and must not leak into **AWAY** external venues. Shared location **visual** semantics do not imply shared domain-resolution logic (Training vs Match vs Tournament).
+5. Future Club Event / Sponsor cards should extend this table, not introduce a parallel palette.
 
 Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-r10-semantic-alignment.test.ts`.
 

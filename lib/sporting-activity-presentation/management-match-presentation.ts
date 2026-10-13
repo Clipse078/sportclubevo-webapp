@@ -1,9 +1,7 @@
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
-import {
-  buildSportingActivityLocation,
-  normalizeSportingLocationMode,
-} from "./location";
+import { normalizeSportingLocationMode } from "./location";
+import { buildMatchSportingActivityLocation } from "./match-location";
 import type { SportingActivityPresentation } from "./types";
 
 function resolveOpponentSideLabel(match: MatchcenterMatchSummary): string | null {
@@ -48,15 +46,6 @@ export function buildSpieleManagementActivityPresentation(
   const homeName = resolveMatchcenterCompactSideName(match.home);
   const awayName = resolveMatchcenterCompactSideName(match.away);
   const mode = normalizeSportingLocationMode(match.homeAway);
-  const pitch =
-    options.pitchLabel?.trim() || match.operational.pitchCode?.trim() || undefined;
-
-  const hostOrOrganiser =
-    mode === "HOME"
-      ? resolveSpieleTenantClubName(match, options.tenantClubName) || undefined
-      : mode === "AWAY"
-        ? homeName || undefined
-        : undefined;
 
   const fixtureLine =
     homeName && awayName ? `${homeName} – ${awayName}` : match.title.trim();
@@ -80,11 +69,13 @@ export function buildSpieleManagementActivityPresentation(
     context: match.competitionLabel?.trim()
       ? { competitionLabel: match.competitionLabel.trim() }
       : undefined,
-    location: buildSportingActivityLocation({
-      mode,
-      hostOrOrganiser,
+    location: buildMatchSportingActivityLocation({
+      homeAway: match.homeAway,
+      tenantClubName: resolveSpieleTenantClubName(match, options.tenantClubName),
+      homeSideDisplayName: homeName ?? match.home.displayName,
       venueName: match.location,
-      facilityResource: pitch,
+      operationalPitchCode: match.operational.pitchCode,
+      resolvedPitchLabel: options.pitchLabel,
     }),
   };
 }

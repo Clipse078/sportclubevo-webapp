@@ -1,5 +1,6 @@
 import type { EventType } from "@prisma/client";
 import { resolvePitchPresentationLabel } from "@/lib/dashboard/event-venue-presentation";
+import { buildMatchSportingActivityLocation } from "./match-location";
 import { resolveMatchParticipantIdentity } from "@/lib/sporting-data/match-participant-identity";
 import type { CanonicalEventPolicyRow } from "@/lib/publishing/infoboard/canonical-source-loader";
 import type { PersonalProgrammePresentationStatus } from "@/lib/personal-agenda/personal-programme-types";
@@ -70,6 +71,8 @@ export type BuildMatchPresentationInput = {
   location?: string | null;
   pitchCode?: string | null;
   pitchLabel?: string | null;
+  /** Human-facing away/neutral pitch when provider data supplies it explicitly. */
+  authoritativeExternalPitchLabel?: string | null;
   competitionLabel?: string | null;
   startAt: Date;
   endAt?: Date | null;
@@ -83,7 +86,6 @@ export function buildMatchActivityPresentation(
   input: BuildMatchPresentationInput,
 ): SportingActivityPresentation {
   const mode = normalizeSportingLocationMode(input.homeAway);
-  const pitch = resolvePitchPresentationLabel(input.pitchCode, input.pitchLabel);
 
   const identity = input.policy
     ? resolveMatchParticipantIdentity(
@@ -111,28 +113,25 @@ export function buildMatchActivityPresentation(
     fixtureLine = `${ownTeam} – ${opponent}`;
   }
 
-  const awayHost =
-    mode === "AWAY"
-      ? meaningful(identity?.home.displayName) ??
-        meaningful(input.opponentName) ??
-        undefined
-      : undefined;
+  const homeSideDisplayName =
+    meaningful(identity?.home.displayName) ??
+    (mode === "AWAY" ? meaningful(input.opponentName) : meaningful(input.teamName)) ??
+    "";
 
-  const homeClub = meaningful(input.tenantClubName);
-  const hostOrOrganiser =
-    mode === "HOME"
-      ? homeClub
-      : mode === "AWAY"
-        ? awayHost
-        : mode === "NEUTRAL"
-          ? homeClub
-          : undefined;
-
-  const location = buildSportingActivityLocation({
-    mode,
-    hostOrOrganiser,
+  const location = buildMatchSportingActivityLocation({
+    homeAway: input.homeAway,
+    tenantClubName: input.tenantClubName,
+    homeSideDisplayName,
     venueName: input.location,
-    facilityResource: pitch,
+    operationalPitchCode: mode === "HOME" ? input.pitchCode : null,
+    resolvedPitchLabel:
+      mode === "HOME"
+        ? resolvePitchPresentationLabel(input.pitchCode, input.pitchLabel)
+        : null,
+    externalPitchLabel:
+      mode === "AWAY" || mode === "NEUTRAL"
+        ? input.authoritativeExternalPitchLabel
+        : null,
   });
 
   return {
