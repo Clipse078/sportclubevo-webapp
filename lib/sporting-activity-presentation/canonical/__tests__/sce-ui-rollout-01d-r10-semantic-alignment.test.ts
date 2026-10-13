@@ -9,6 +9,7 @@ import {
 import { SCE_MATCH_RICH_DENSITY_SCALE } from "../match-card-rich-density";
 import { SCE_TOURNAMENT_RICH_DENSITY_SCALE } from "../tournament-card-rich-density";
 import { SCE_TRAINING_RICH_DENSITY_SCALE } from "../training-card-rich-density";
+import { SCE_CLUB_EVENT_RICH_DENSITY_SCALE } from "../club-event-card-rich-density";
 
 const repoRoot = process.cwd();
 
@@ -32,13 +33,15 @@ describe("SCE-UI-ROLLOUT-01D-R10 — shared activity semantic colors", () => {
     }
   });
 
-  it("Tournament and Training location scales consume the same location helper output as Match", () => {
+  it("Tournament, Training, and Club Event location scales consume the same location helper output as Match", () => {
     for (const density of ["HERO", "STANDARD", "COMPACT"] as const) {
       const match = SCE_MATCH_RICH_DENSITY_SCALE[density];
       const tournament = SCE_TOURNAMENT_RICH_DENSITY_SCALE[density];
       const training = SCE_TRAINING_RICH_DENSITY_SCALE[density];
+      const clubEvent = SCE_CLUB_EVENT_RICH_DENSITY_SCALE[density];
       expect(tournament.locationTextClass).toBe(match.locationTextClass);
       expect(training.locationTextClass).toBe(match.locationTextClass);
+      expect(clubEvent.locationTextClass).toBe(match.locationTextClass);
       expect(tournament.locationIconClass).toBe(match.locationIconClass);
     }
   });

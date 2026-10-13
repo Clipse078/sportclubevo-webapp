@@ -14,6 +14,7 @@ export const SPORTING_ACTIVITY_COLOR_BY_KIND: Partial<
   TRAINING: "training-blue",
   MATCH: "match-red",
   TOURNAMENT: "tournament-orange",
+  EVENT: "club-event-violet",
 };
 
 export function resolveSportingActivityColorToken(

@@ -29,7 +29,7 @@ Presentation is **derived**. It must not mutate provider-owned fields (ADR-08).
 | Serializable contract | `lib/sporting-activity-presentation/types.ts` — `SportingActivityPresentation` | Programme/calendar embedding (UX-01) |
 | **Canonical 01C model** | `lib/sporting-activity-presentation/canonical` — `SceActivityPresentationModel`, `resolveSceActivityPresentation` | Typed discriminated contract for all kinds |
 | Builders | `lib/sporting-activity-presentation/builders.ts`, `compact.ts`, `format.ts` | Row/card text lines (legacy consumers until 01D–01G) |
-| Management adapters | `management-match-presentation.ts`, `management-training-presentation.ts`, `management-tournament-presentation.ts` | Spiele/Trainings/Turniere lists |
+| Management adapters | `management-match-presentation.ts`, `management-training-presentation.ts`, `management-tournament-presentation.ts`, `management-club-event-presentation.ts` | Spiele/Trainings/Turniere/Veranstaltungen lists |
 | Location | `location.ts` | Host → venue → resource |
 | Time | `time-range.ts` | Schedule formatting |
 | Design / crests | `lib/sporting-activity-design/*` | `ClubIdentity`, `MatchClubPair`, density |
@@ -90,9 +90,13 @@ Presentation is **derived**. It must not mutate provider-owned fields (ADR-08).
 
 | Field | Rule |
 |-------|------|
-| `eventIdentity` | Veranstaltung title |
-| `organiserClub` | When applicable |
-| `eventStatus` | Cancellation/postponement |
+| `eventTitle` | Primary identity on `SceClubEventCard` |
+| `organiser` | Optional `ClubIdentity` — not a mandatory crest |
+| `schedule.allDay` | **Ganztägig** presentation; iCal exclusive `endAt` for multi-day all-day |
+| `location` | `buildVeranstaltungenManagementActivityPresentation` + facility label merge via `formatClubEventPlayableVenueLabel` |
+| `lifecycle status` | `event.status` → `SceClubEventCardStatus` |
+| `publication` | `reviewStage` + channel flags — management row only, not collapsed into lifecycle badge |
+| **Card family** | `SceClubEventCard` (01G) — label **VERANSTALTUNG** |
 
 ---
 

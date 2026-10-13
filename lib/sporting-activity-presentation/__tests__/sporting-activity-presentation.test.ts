@@ -785,7 +785,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
       expect(resolveSportingActivityTypePillVariant("TRAINING")).toBe("training-blue");
       expect(resolveSportingActivityTypePillVariant("MATCH")).toBe("match-red");
       expect(resolveSportingActivityTypePillVariant("TOURNAMENT")).toBe("tournament-orange");
-      expect(resolveSportingActivityTypePillVariant("EVENT")).toBeUndefined();
+      expect(resolveSportingActivityTypePillVariant("EVENT")).toBe("club-event-violet");
     });
 
     it("uses SCE token-backed classes per variant", () => {

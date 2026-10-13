@@ -145,3 +145,9 @@ export function isSceMatchPresentationModel(
 ): value is SceMatchPresentationModel {
   return value.kind === "MATCH";
 }
+
+export function isSceClubEventPresentationModel(
+  value: SceActivityPresentationModel,
+): value is SceClubEventPresentationModel {
+  return value.kind === "CLUB_EVENT";
+}

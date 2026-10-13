@@ -10,33 +10,24 @@ import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 import { cn } from "@/lib/cn";
 import { EventDomainMetaRail } from "@/components/sporting-activity/EventDomainMetaRail";
-
-const REVIEW_STAGE_LABEL: Record<string, string> = {
-  DRAFT: "Entwurf",
-  SUBMITTED: "Zur Prüfung",
-  APPROVED: "Freigegeben",
-  REJECTED: "Abgelehnt",
-  PUBLISHED: "Veröffentlicht",
-};
+import { SceClubEventCard } from "@/components/sporting-activity/SceClubEventCard";
+import { resolveSceClubEventPresentation } from "@/lib/sporting-activity-presentation/canonical/adapters/club-event";
+import { resolveClubEventPublicationPresentationLabel } from "@/lib/sporting-activity-presentation/canonical/club-event-status-presentation";
 
 type VeranstaltungListRowProps = {
   event: ClubEvent;
   timeZone?: string | null;
   canManage: boolean;
+  tenantClubName?: string | null;
+  tenantLogoUrl?: string | null;
 };
-
-function operationalState(event: ClubEvent): string {
-  if (event.reviewStage === "PUBLISHED") return "Veröffentlicht";
-  if (!event.websiteVisible && !event.homepageVisible && !event.wochenplanVisible) {
-    return "Intern";
-  }
-  return REVIEW_STAGE_LABEL[event.reviewStage] ?? event.reviewStage;
-}
 
 export default function VeranstaltungListRow({
   event,
   timeZone,
   canManage,
+  tenantClubName = null,
+  tenantLogoUrl = null,
 }: VeranstaltungListRowProps) {
   const tz = resolveTenantEventTimezone(timeZone);
   const start = new Date(event.startAt);
@@ -61,6 +52,13 @@ export default function VeranstaltungListRow({
     timeZone: tz,
   }).format(start);
 
+  const publicationLabel = resolveClubEventPublicationPresentationLabel(event);
+  const sceModel = resolveSceClubEventPresentation({
+    event,
+    tenantClubName,
+    tenantLogoUrl,
+  });
+
   return (
     <Link
       href={canManage ? getVeranstaltungHref(event.id) : "#"}
@@ -69,27 +67,40 @@ export default function VeranstaltungListRow({
         !canManage && "pointer-events-none",
       )}
       data-testid={`veranstaltung-row-${event.id}`}
+      data-sce-club-event-list-row
     >
       <EventDomainMetaRail
         domainLabel="VERANSTALTUNG"
         dateStack={{ weekdayShort, day, monthShort }}
       />
-      <div className="min-w-0 space-y-0.5">
-        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{event.title}</p>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--text-2)]">
-          <span>{timing}</span>
-          {event.organizerName ? <span className="truncate">{event.organizerName}</span> : null}
-        </div>
-        {event.location ? (
-          <p className="truncate text-[0.6875rem] text-[var(--muted)]">{event.location}</p>
-        ) : null}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 md:justify-end">
-        <span className="inline-flex shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[0.625rem] font-semibold text-[var(--muted)]">
-          {operationalState(event)}
+      <div className="min-w-0">
+        <SceClubEventCard
+          model={sceModel}
+          density="COMPACT"
+          fmtCfg={{ locale: "de-CH", timezone: tz }}
+          linkToDetail={false}
+          surface="list-row"
+          showStatus={false}
+          testId={`veranstaltung-row-card-${event.id}`}
+        />
+        <span className="sr-only">
+          {longDate} · {timing}
+          {event.location ? ` · ${event.location}` : ""}
         </span>
       </div>
-      <span className="sr-only">{longDate}</span>
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        {sceModel.status?.label ? (
+          <span className="inline-flex shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[0.625rem] font-semibold text-[var(--muted)]">
+            {sceModel.status.label}
+          </span>
+        ) : null}
+        <span
+          className="inline-flex shrink-0 rounded-full border border-[var(--border)]/80 bg-[var(--surface)] px-2 py-0.5 text-[0.625rem] font-semibold text-[var(--text-2)]"
+          data-testid={`veranstaltung-row-publication-${event.id}`}
+        >
+          {publicationLabel}
+        </span>
+      </div>
     </Link>
   );
 }

@@ -18,6 +18,7 @@ export type {
 } from "./types";
 export {
   isSceActivityPresentationModel,
+  isSceClubEventPresentationModel,
   isSceTrainingPresentationModel,
   isSceTournamentPresentationModel,
 } from "./types";
@@ -79,7 +80,26 @@ export {
   sceTournamentCardBoundedWidthClass,
   sceTournamentRichDensityScale,
 } from "./tournament-card-rich-density";
-export { resolveSceClubEventPresentationFromLegacy } from "./adapters/club-event";
+export {
+  resolveSceClubEventPresentation,
+  resolveSceClubEventPresentationFromLegacy,
+} from "./adapters/club-event";
+export {
+  SCE_CLUB_EVENT_CARD_SHELL_CLASS,
+  SCE_CLUB_EVENT_RICH_DENSITY_SCALE,
+  isSceClubEventRichCardDensity,
+  sceClubEventCardBoundedWidthClass,
+  sceClubEventRichDensityScale,
+} from "./club-event-card-rich-density";
+export {
+  formatSceClubEventDateLine,
+  formatSceClubEventTimeLabel,
+} from "./club-event-schedule-presentation";
+export {
+  mapClubEventLifecycleStatusToSemantic,
+  resolveClubEventLifecycleStatusLabel,
+  resolveClubEventPublicationPresentationLabel,
+} from "./club-event-status-presentation";
 export {
   mapLegacySportingActivityKindToSceKind,
   resolveSceActivityPresentationFromLegacy,
