@@ -1,6 +1,6 @@
 # SCE Activity Creation — Design & Architecture Contracts (01A)
 
-> **Status:** **APPROVED** (architecture locked — `SCE-ACTIVITY-CREATE-01A` **CLOSED**; product implementation **01B+**, not shipped)  
+> **Status:** **FOUNDATION_IMPLEMENTED** (`SCE-ACTIVITY-CREATE-01B` — composer shell + contracts; domain adoption **01C+** not shipped)  
 > **Programme:** [`SCE-ACTIVITY-CREATE-01`](../roadmap/SCE-ACTIVITY-CREATE-01.md)  
 > **Product principle:** *One creation language, domain-specific workflows.*
 
@@ -14,8 +14,9 @@ This document defines the **target** contracts for unified activity creation. It
 |-----|---------|
 | **EXISTING** | On STAGE; reuse as-is |
 | **REUSABLE** | On STAGE; adapt/wrap for composer |
-| **NEW_REQUIRED** | Not implemented; 01B+ scope |
-| **APPROVED** | Locked at 01A closure — implement in 01B+ |
+| **NEW_REQUIRED** | Not implemented; 01C+ domain adoption |
+| **APPROVED** | Locked at 01A closure |
+| **FOUNDATION_IMPLEMENTED** | Shipped in 01B (composer foundation only) |
 
 ---
 
@@ -32,7 +33,7 @@ This document defines the **target** contracts for unified activity creation. It
 
 ---
 
-## 2. Composer shell (**NEW_REQUIRED**)
+## 2. Composer shell (**FOUNDATION_IMPLEMENTED** — 01B)
 
 | Responsibility | Owner |
 |----------------|--------|
@@ -50,15 +51,23 @@ This document defines the **target** contracts for unified activity creation. It
 - `lib/shell/responsive-layout.ts` — `SCE_DIALOG_WORKSPACE_PANEL`, `SCE_DIALOG_VARIANT_FORM`, `max-h-[var(--sce-dialog-max-height)]`
 - `components/ui/Dialog.tsx` — focus trap reference (composer may be a sibling variant, not necessarily `Dialog` size presets)
 
-**PROPOSED sizing strategy (evidence-based):**
+**Container geometry (01B-R1 — shared workflow, mode-specific layout):**
 
-- Width: bounded by `--sce-dialog-workspace-max-width` / form variant (~960px cap), centered in `--sce-content-viewport-width`
-- Height: `max-h-[var(--sce-dialog-max-height)]`; internal body scroll
+| Mode | Height / scroll | Footer |
+|------|-----------------|--------|
+| **Overlay** (desktop) | Stable bounded workspace: `--sce-activity-composer-overlay-workspace-height` (~72.5dvh, capped by `--sce-dialog-max-height` and minimum token). Header + tabs + footer fixed; **content region** `flex: 1`, `min-height: 0`, internal scroll (`.sce-scroll-region-dark`). | Persistent inside panel |
+| **Fullscreen** (≤768px overlay host) | Viewport-filling (`100dvh`); same internal scroll contract as overlay | Persistent |
+| **Page** (`/new`, preview page-mode) | **Content-aware** — panel grows with tab content; no overlay min-height. Normal document scroll; **no** nested internal scroll container | Follows content (border/spacing separation) |
+
+**Principle:** *Shared workflow does not require identical container geometry.*
+
+- Width: bounded by `--sce-dialog-workspace-max-width` (~1160px cap), centered in `--sce-content-viewport-width`
 - Underlying planner: `data-sce-modal-background` + de-emphasis (not a second theme)
+- Dark internal scroll: reusable `.sce-scroll-region-dark` in `app/globals.css` (sidebar/explorer language)
 
 ---
 
-## 3. Creation contract (**NEW_REQUIRED**)
+## 3. Creation contract (**FOUNDATION_IMPLEMENTED** — 01B)
 
 Conceptual type (orchestration only — **not** a generic field renderer):
 
@@ -73,14 +82,42 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | Semantic title / description | i18n keys |
 | Tab config factory | `build*CreateTabNavigationConfig({ tabErrors })` |
 | Initial draft | Server-hydrated props → client state |
-| `validateDraft` → tab error map + field errors | Club Event pattern: `computeClubEventCreateTabErrors` |
+| `validateDraft` → tab error map + field errors | **Commit validation** — full create requirements (Club Event: `computeClubEventCreateTabErrors`) |
+| `draftPersistence.validateDraftForSave` | **Draft validation** — minimum safe persistence only (optional capability) |
+| `draftPersistence.saveDraft` | Explicit draft persistence adapter — **01C+** supplies real domain storage |
 | `firstInvalidTab` | Ordered tab walk |
-| `submit` | Domain adapter → existing APIs |
-| Success | Close composer, restore origin, toast, optional highlight |
-| Cancel / dirty | `SceContextDirtyGuardProvider` |
+| `submitDraft` | Domain adapter → create/commit APIs |
+| Success `outcome` | `DRAFT_SAVED` \| `PUBLISHED` \| `SUBMITTED_FOR_APPROVAL` (`CREATED` = legacy alias for `PUBLISHED`) |
+| `effectiveGovernance` | Host-resolved create + publication authority — Composer does not reconstruct role logic |
+| Cancel / dirty | `SceContextDirtyGuardProvider` — dirty = local ≠ last persisted baseline |
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
 
-Domain components remain authoritative (`VeranstaltungCreateForm` panels, future tabbed Training/Match/Tournament bodies).
+**Lifecycle (01B-R3 — canonical):**
+
+```text
+START
+  → COMPOSE
+  → optional SAVE DRAFT / RESUME
+  → COMMIT VALIDATION
+  → governance decision (effective publication authority)
+       ├ DIRECT_PUBLISH → PUBLISHED
+       └ APPROVAL_REQUIRED → PENDING_APPROVAL
+            ├ APPROVE → PUBLISHED
+            ├ REQUEST_CHANGES → edit / resubmit (revision-bound)
+            └ REJECT → REJECTED
+```
+
+**Terminology:** **Form/commit validation** (technical/domain) is separate from **governance approval / Freigabe** (club policy). Never use generic «validation» for both. **Approval is not a Composer content tab.**
+
+**Governance foundation (01B-R3 — contracts only):** optional approval **OFF by default**; **creator-specific** and **activity-type-specific**; Club Admin configuration and production persistence ship with **01C** (reference adoption) and later vertical slices — not in 01B. **Freigaben** inbox UI may follow **01H** unless 01C requires a minimal validator path earlier.
+
+**Product principle:** *Saving preserves work. Submitting commits the activity. Publication follows the creator's effective governance policy.*
+
+**Governance defaults (01B-R3 — APPROVED):** Optional approval; **OFF by default**; creator-specific publication authority; activity-type validator pools; create permission ≠ publish authority; saving a draft **never** triggers approval.
+
+**No server autosave in 01B** — explicit user-triggered draft/create only; recovery/autosave is a separate evaluation (resources, conflicts, publication, audit).
+
+Domain components remain authoritative (`VeranstaltungCreateForm` panels, future tabbed Training/Match/Tournament bodies). **Shared workflow does not imply identical domain persistence models** (01C+).
 
 ---
 
@@ -98,13 +135,26 @@ Domain components remain authoritative (`VeranstaltungCreateForm` panels, future
 
 ---
 
-## 5. Validation (**REUSABLE** pattern from Club Event)
+## 5. Form validation vs governance approval (**FOUNDATION_IMPLEMENTED** — 01B-R3 contracts)
+
+| Layer | When | Owner |
+|-------|------|--------|
+| **Draft validation** | Save draft | `validateDraftForSave` — minimum safe persistence |
+| **Commit validation** | Primary commit | `validateDraft` — full domain requirements before any governance transition |
+| **Governance approval** | After successful commit when `APPROVAL_REQUIRED` | Validator pool + revision-bound decisions — **not** a Composer content tab |
+
+Module: `lib/sce/activity-governance/` — policy resolver, invariants, revision/audit/notification contracts. **No production schema** in 01B-R3.
+
+---
+
+## 6. Validation tabs & Club Event pattern (**REUSABLE**)
 
 | Rule | Source |
 |------|--------|
 | Free tab navigation — not a forced wizard | Club Event + PO direction |
-| Submit validates full draft | `VeranstaltungCreateForm` |
-| First invalid tab activated | `firstInvalidClubEventCreateTab` |
+| **Draft save** uses `validateDraftForSave` only | 01B-R2 foundation — may allow incomplete data |
+| **Create/commit** uses `validateDraft` (full draft) | `VeranstaltungCreateForm` |
+| First invalid tab activated on commit failure | `firstInvalidClubEventCreateTab` |
 | Restrained tab invalid marker (`•`) | `buildClubEventCreateTabNavigationConfig` |
 | Field-level errors unchanged | Domain components |
 
@@ -112,7 +162,21 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 
 ---
 
-## 6. Action footer (**REUSABLE** partial)
+## 7. Action footer (**FOUNDATION_IMPLEMENTED** — 01B-R2 + 01B-R3 policy-aware primary)
+
+Canonical composer footer (left → right):
+
+| Slot | Control | Visual |
+|------|---------|--------|
+| Left / quiet | **Abbrechen** | Ghost |
+| Right / secondary | **Als Entwurf speichern** or **Änderungen speichern** | Secondary (never second primary) |
+| Right / primary | Direct publish: domain label (`Training erstellen`, …) · Approval required: **Zur Freigabe einreichen** (or domain equivalent) | Primary |
+
+- Save Draft is **not** hidden inside the primary dropdown; no wizard **Weiter/Zurück**.
+- **Destructive draft deletion** is **not** a standard footer action — use a separate confirmed command (01C+).
+- When `draftPersistence` is omitted, the secondary save action is hidden (commit-only definitions).
+
+Legacy domain footers (pre-adoption):
 
 | Domain | Current pattern |
 |--------|-----------------|
@@ -120,15 +184,25 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 | Training | Sticky footer in `TrainingSeriesCreateForm` |
 | Match / Tournament | Inline footer buttons in guided surface |
 
-**PROPOSED:** Shell-owned footer slot; domain supplies primary label (preserve domain verbs).
-
 ---
 
-## 7. Dirty guard (**REUSABLE** + **NEW_REQUIRED**)
+## 8. Dirty guard (**REUSABLE** + **NEW_REQUIRED**)
 
 **EXISTING:** Tab switch confirmation via `SceContextTabs` + dirty provider.
 
-**NEW_REQUIRED for composer:**
+**FOUNDATION_IMPLEMENTED (01B / 01B-R2) for composer close/backdrop/Escape:**
+
+| State | Close behaviour |
+|-------|-----------------|
+| Clean (never edited) | Close immediately |
+| Dirty (local ≠ baseline) | Guarded close |
+| Saved draft, unchanged | No unsaved-change warning |
+| Saved draft, modified again | Guarded close |
+| Failed draft save | Values retained, still dirty, guarded close |
+
+**Persistence status (secondary header):** e.g. `ENTWURF · Gespeichert` / `ENTWURF · Nicht gespeicherte Änderungen` — only when semantically useful; not a banner.
+
+**Still NOT YET IMPLEMENTED (domain adoption / 01G):**
 
 - Close X, backdrop, Escape → same confirm message
 - Optional: disable backdrop dismiss when dirty
@@ -259,9 +333,16 @@ Same domain workflow component tree; **page shell** replaces composer chrome (`P
 
 ---
 
-## 16. Automated test targets (future 01B+)
+## 16. Automated test targets (**FOUNDATION_IMPLEMENTED** — 01B)
 
-See [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md) §29.
+| Area | Module tests |
+|------|----------------|
+| Composer shell / R1 geometry / guardrails | `lib/sce/activity-composer/__tests__/`, `components/sce/activity-composer/__tests__/` |
+| R2 draft lifecycle | `composer-lifecycle-state.test.ts` |
+| R3 governance contracts | `lib/sce/activity-governance/__tests__/sce-activity-governance-r3.test.ts` |
+| 01A docs gate | `lib/planning/__tests__/sce-activity-create-01a-architecture-gate.test.ts` |
+
+See [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md) §29 for domain adoption coverage (01C+).
 
 ---
 

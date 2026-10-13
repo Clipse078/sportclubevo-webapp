@@ -217,7 +217,7 @@ Automated guardrails: `lib/events/__tests__/club-event-recurrence.test.ts`, `lib
 
 ---
 
-## SCE Activity Creation (**APPROVED** — ADR-11 / 01A closed; ships in **01B+**)
+## SCE Activity Creation (**FOUNDATION_IMPLEMENTED** — 01B; domain adoption **01C+**)
 
 Product principle: **«One creation language, domain-specific workflows.»**
 
@@ -231,17 +231,45 @@ A modal **Activity Composer must not launch another independent modal, dialog, s
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **`SceActivityComposer`** shell (overlay / page / fullscreen) | **NEW_REQUIRED** | Reuse `SceModalOverlay`, workspace dialog tokens |
-| **Creation contract** (`SceActivityCreateDefinition`) | **NEW_REQUIRED** | Orchestrates domain components — not JSON CRUD |
+| **`SceActivityComposer`** shell (overlay / page / fullscreen) | **FOUNDATION_IMPLEMENTED** | `components/sce/activity-composer/` + `SceModalOverlay` |
+| **Creation contract** (`SceActivityCreateDefinition`) | **FOUNDATION_IMPLEMENTED** | `lib/sce/activity-composer/` — not JSON CRUD |
 | **Context tabs on create** | **REUSABLE** | `SceContextTabs` — Club Event reference on STAGE |
 | **Guided Training/Match/Tournament create** | **EXISTING** | Migrate to tabs in 01D–01F before overlay parity |
 | **Full-page `/new` routes** | **EXISTING** | Remain canonical deep links |
-| **Dirty guard** | **REUSABLE** | Extend to composer close/backdrop/Escape |
+| **Dirty guard** | **FOUNDATION_IMPLEMENTED** | Reuses `SceContextDirtyGuardProvider` for close/backdrop/Escape |
 | **Nested Sheet selectors** | **Gate — refactor in 01C** | Audience picker must not stack on composer overlay |
 | **Toggle First on create** | **EXISTING** target | No new binary checkboxes in composer adoption |
-| **Activity identity header** | **PROPOSED** | VERANSTALTUNG / TRAINING / SPIEL / TURNIER accents |
+| **Activity identity header** | **FOUNDATION_IMPLEMENTED** | `ActivityTypePill` in composer header |
+| **Domain create workflows on production `/new`** | **NOT YET IMPLEMENTED** | 01C–01F adoption |
 
-Do not mark composer primitives as shipped until **01B+** PO acceptance.
+PO visual UAT for 01B foundation: **`/sce-preview/activity-composer`**, **`/sce-preview/activity-composer/page-mode`**.
+
+**Presentation geometry (01B-R1):**
+
+| Mode | Contract |
+|------|----------|
+| **Overlay** | Stable bounded creation workspace; scroll only in composer body (`.sce-scroll-region-dark`) |
+| **Page** | Natural content-driven flow — same tabs/workflow, no overlay height inheritance |
+| **Fullscreen** | Viewport-filling responsive adaptation |
+
+*Shared workflow does not require identical container geometry.*
+
+**Draft / action / governance contract (01B-R2 + 01B-R3):**
+
+| Topic | Contract |
+|-------|----------|
+| Lifecycle | START → COMPOSE → optional draft → **commit validation** → direct publish **or** submit for **Freigabe** |
+| Principle | *Saving preserves work. Submitting commits the activity. Publication follows effective governance policy.* |
+| Footer | Ghost **Abbrechen** · secondary draft save · policy-aware primary (`Training erstellen` vs **Zur Freigabe einreichen**) |
+| Validation vs approval | **Draft/commit validation** (form) ≠ **governance approval** (optional, admin-controlled, creator-specific) |
+| Governance default | **DIRECT_PUBLISH** — approval never globally mandatory |
+| Validators | 1:n pool per activity type; **ANY_ONE** approve in V1; no self-approval |
+| Approval UX | **Not** a Composer content tab — workflow state + future **Freigaben** inbox |
+| Admin (future) | Person-centric + governance-centric views over **one** policy store; create = Toggle; publication mode = single-choice |
+| Dirty vs draft | Dirty = local changes; draft = persisted incomplete activity |
+| Autosave | **Not in 01B** — explicit persistence only |
+| Success | `DRAFT_SAVED` \| `PUBLISHED` \| `SUBMITTED_FOR_APPROVAL` (`CREATED` legacy alias) |
+| Domain persistence | **01C+** — governance DB deferred unless 01C gate requires it |
 
 ---
 

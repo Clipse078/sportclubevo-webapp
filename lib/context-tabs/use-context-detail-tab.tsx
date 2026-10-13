@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ContextTabDefinition, ContextTabId, ContextTabNavigationConfig } from "./types";
 import { listAllVisibleTabs } from "./registry";
@@ -29,6 +36,22 @@ export function SceContextTabProvider<TTabId extends ContextTabId>({
   children: ReactNode;
 }) {
   const value = useContextDetailTabState(config);
+  return (
+    <ContextDetailTabContext.Provider value={value as unknown as ContextDetailTabState}>
+      {children}
+    </ContextDetailTabContext.Provider>
+  );
+}
+
+/** In-memory tab state for composer overlay (avoids polluting underlying planning URLs). */
+export function SceLocalContextTabProvider<TTabId extends ContextTabId>({
+  config,
+  children,
+}: {
+  config: ContextTabNavigationConfig<TTabId>;
+  children: ReactNode;
+}) {
+  const value = useLocalContextDetailTabState(config);
   return (
     <ContextDetailTabContext.Provider value={value as unknown as ContextDetailTabState}>
       {children}
@@ -88,6 +111,40 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
   const hrefForTab = useCallback(
     (tabKey: TTabId) => buildContextTabHref(basePath, tabKey),
     [basePath],
+  );
+
+  return {
+    activeTab,
+    visibleTabs,
+    navigateToTab,
+    hrefForTab,
+    config,
+  };
+}
+
+function useLocalContextDetailTabState<TTabId extends ContextTabId>(
+  config: ContextTabNavigationConfig<TTabId>,
+): ContextDetailTabState<TTabId> {
+  const dirtyNav = useOptionalContextDirtyNavigation();
+  const visibleTabs = useMemo(() => listAllVisibleTabs(config), [config]);
+  const [activeTab, setActiveTab] = useState<TTabId>(() => config.defaultTab);
+
+  const navigateToTab = useCallback(
+    (tabKey: TTabId) => {
+      if (tabKey === activeTab) {
+        return;
+      }
+      if (dirtyNav && !dirtyNav.confirmNavigationIfDirty()) {
+        return;
+      }
+      setActiveTab(tabKey);
+    },
+    [activeTab, dirtyNav],
+  );
+
+  const hrefForTab = useCallback(
+    (tabKey: TTabId) => `#sce-local-tab-${String(tabKey)}`,
+    [],
   );
 
   return {
