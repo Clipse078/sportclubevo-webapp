@@ -22,6 +22,13 @@ describe("Veranstaltungen create/edit — PLANNING-UX-04 SCE editor", () => {
     expect(source).toContain("requireAnyPermission");
     expect(source).toContain("PERMISSIONS.EVENTS_MANAGE");
     expect(source).toContain("PlanningEditorShell");
+    expect(source).toContain("VeranstaltungEditPlanningHeader");
+    expect(source).toContain("resolveSceClubEventPresentation");
+    const header = readFileSync(
+      join(process.cwd(), "components/admin/veranstaltungen/VeranstaltungEditPlanningHeader.tsx"),
+      "utf8",
+    );
+    expect(header).toContain('surface="context-header"');
   });
 
   it("forms drop legacy AdminSurfaceCard shells", () => {

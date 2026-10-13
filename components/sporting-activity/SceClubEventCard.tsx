@@ -21,7 +21,14 @@ import {
   sceClubEventOrganiserCrestVisualSizeForDensity,
   sceClubEventRichDensityScale,
 } from "@/lib/sporting-activity-presentation/canonical/club-event-card-rich-density";
-import { SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import {
+  SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS,
+  SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import {
+  formatSceClubEventAudienceCompactLabel,
+  sceClubEventAudienceAccessibleDetail,
+} from "@/lib/sporting-activity-presentation/canonical/club-event-audience-presentation";
 import type {
   SceActivityPresentationDensity,
   SceClubEventPresentationModel,
@@ -30,7 +37,11 @@ import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceClubEventCardStatus } from "./SceClubEventCardStatus";
 
-export type SceClubEventCardSurface = "standalone" | "detail-embed" | "list-row";
+export type SceClubEventCardSurface =
+  | "standalone"
+  | "detail-embed"
+  | "context-header"
+  | "list-row";
 
 export type SceClubEventCardProps = {
   model: SceClubEventPresentationModel;
@@ -51,7 +62,8 @@ function richScale(density: SceActivityPresentationDensity) {
 
 export function buildClubEventAccessibleLabel(model: SceClubEventPresentationModel): string {
   const organiser = model.organiser?.displayName?.trim();
-  const parts = [model.typeLabel, model.eventTitle, organiser].filter(Boolean);
+  const audience = model.audience?.primaryLabel?.trim();
+  const parts = [model.typeLabel, model.eventTitle, audience, organiser].filter(Boolean);
   return parts.join(" — ");
 }
 
@@ -93,12 +105,24 @@ function formatCompactDateToken(model: SceClubEventPresentationModel, fmtCfg: Te
   return `${weekday} ${day}`;
 }
 
+function sceClubEventTypePillClass(density: SceActivityPresentationDensity): string | undefined {
+  if (density === "HERO") {
+    return "text-[0.6875rem] px-2 py-1";
+  }
+  if (density === "STANDARD") {
+    return "text-[0.6875rem]";
+  }
+  return undefined;
+}
+
 function SceClubEventTypeHeader({
   model,
   showStatus,
+  density = "STANDARD",
 }: {
   model: SceClubEventPresentationModel;
   showStatus: boolean;
+  density?: SceActivityPresentationDensity;
 }) {
   const status = model.status;
 
@@ -108,7 +132,11 @@ function SceClubEventTypeHeader({
       data-sce-club-event-region="meta"
       data-sce-club-event-header
     >
-      <ActivityTypePill activityKind="EVENT" label={model.typeLabel} className="shrink-0" />
+      <ActivityTypePill
+        activityKind="EVENT"
+        label={model.typeLabel}
+        className={cn("shrink-0", sceClubEventTypePillClass(density))}
+      />
       {showStatus && status?.label ? (
         <div className="shrink-0" data-sce-club-event-region="status">
           <SceClubEventCardStatus status={status} />
@@ -143,6 +171,41 @@ function SceClubEventOrganiserCrest({
     <span data-testid="sce-club-event-organiser-crest" className="self-start">
       <ClubCrest identity={model.organiser} density={crestSize} decorative className="self-start" />
     </span>
+  );
+}
+
+function SceClubEventAudienceLine({
+  model,
+  density,
+  listRow = false,
+}: {
+  model: SceClubEventPresentationModel;
+  density: SceActivityPresentationDensity;
+  listRow?: boolean;
+}) {
+  const audience = model.audience;
+  if (!audience?.primaryLabel?.trim()) return null;
+
+  const useCompact =
+    listRow || density === "MICRO" || density === "COMPACT";
+  const label = useCompact
+    ? formatSceClubEventAudienceCompactLabel(audience)
+    : audience.primaryLabel.trim();
+  const detail = sceClubEventAudienceAccessibleDetail(audience);
+
+  return (
+    <p
+      className={cn(
+        "min-w-0 truncate text-xs font-medium leading-snug",
+        SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+        density === "MICRO" && "text-[0.6875rem]",
+      )}
+      data-testid="sce-club-event-audience"
+      data-sce-club-event-region="audience"
+      title={detail && detail !== label ? detail : label}
+    >
+      {label}
+    </p>
   );
 }
 
@@ -182,14 +245,27 @@ function SceClubEventIdentityBlock({
   narrowMicro,
   showCrest = true,
   listRow = false,
+  titleAsHeading = false,
 }: {
   model: SceClubEventPresentationModel;
   density: SceActivityPresentationDensity;
   narrowMicro?: boolean;
   showCrest?: boolean;
   listRow?: boolean;
+  titleAsHeading?: boolean;
 }) {
   const scale = richScale(density);
+  const titleClass = cn(scale.titleClass, listRow && "line-clamp-2");
+
+  const titleNode = titleAsHeading ? (
+    <h1 className={titleClass} data-testid="sce-club-event-title" title={model.eventTitle}>
+      {model.eventTitle}
+    </h1>
+  ) : (
+    <p className={titleClass} data-testid="sce-club-event-title" title={model.eventTitle}>
+      {model.eventTitle}
+    </p>
+  );
 
   return (
     <div
@@ -205,13 +281,8 @@ function SceClubEventIdentityBlock({
         />
       ) : null}
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p
-          className={cn(scale.titleClass)}
-          data-testid="sce-club-event-title"
-          title={model.eventTitle}
-        >
-          {model.eventTitle}
-        </p>
+        {titleNode}
+        <SceClubEventAudienceLine model={model} density={density} listRow={listRow} />
         <SceClubEventOrganiserLine model={model} density={density} />
       </div>
     </div>
@@ -299,7 +370,7 @@ function SceClubEventRichCardContent({
 
   return (
     <div className={cn("min-w-0", scale.contentSpaceYClass)}>
-      <SceClubEventTypeHeader model={model} showStatus={showStatus} />
+      <SceClubEventTypeHeader model={model} showStatus={showStatus} density={density} />
       <SceClubEventIdentityBlock model={model} density={density} />
       {showSchedule ? <SceClubEventScheduleRows model={model} fmtCfg={fmtCfg} density={density} /> : null}
       {locationLine ? <SceClubEventLocationRow locationLine={locationLine} density={density} /> : null}
@@ -315,8 +386,8 @@ function SceClubEventListRowIdentityContent({
   density: SceActivityPresentationDensity;
 }) {
   return (
-    <div className="min-w-0 space-y-1" data-sce-club-event-density={density} data-sce-club-event-list-row-identity>
-      <SceClubEventTypeHeader model={model} showStatus={false} />
+    <div className="min-w-0 space-y-1.5" data-sce-club-event-density={density} data-sce-club-event-list-row-identity>
+      <SceClubEventTypeHeader model={model} showStatus={false} density={density} />
       <SceClubEventIdentityBlock model={model} density={density} listRow />
     </div>
   );
@@ -342,7 +413,7 @@ function SceClubEventCompactContent({
 
   return (
     <div className="min-w-0 space-y-1.5" data-sce-club-event-density="COMPACT">
-      <SceClubEventTypeHeader model={model} showStatus={false} />
+      <SceClubEventTypeHeader model={model} showStatus={false} density="COMPACT" />
       <SceClubEventIdentityBlock model={model} density="COMPACT" />
       {showSchedule ? (
         <p
@@ -389,12 +460,7 @@ function SceClubEventMicroContent({
 
   return (
     <div className="min-w-0 space-y-0.5" data-sce-club-event-density="MICRO">
-      <p
-        className="text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[color-mix(in_srgb,var(--sce-club-event)_92%,var(--foreground)_8%)]"
-        data-activity-type-pill="club-event-violet"
-      >
-        {model.typeLabel}
-      </p>
+      <ActivityTypePill activityKind="EVENT" label={model.typeLabel} className="shrink-0" />
       <div className="flex min-w-0 gap-1.5">
         {showCrest && model.organiser ? (
           <SceClubEventOrganiserCrest model={model} density="MICRO" narrowMicro={narrow} />
@@ -407,6 +473,7 @@ function SceClubEventMicroContent({
           >
             {model.eventTitle}
           </p>
+          <SceClubEventAudienceLine model={model} density="MICRO" />
           <SceClubEventOrganiserLine
             model={model}
             density="MICRO"
@@ -438,6 +505,33 @@ function SceClubEventMicroContent({
   );
 }
 
+function SceClubEventContextHeaderContent({
+  model,
+  density,
+  fmtCfg,
+  showStatus,
+}: {
+  model: SceClubEventPresentationModel;
+  density: SceActivityPresentationDensity;
+  fmtCfg: TenantFormatConfig;
+  showStatus: boolean;
+}) {
+  const locationLine = resolveClubEventLocationLine(model, density);
+
+  return (
+    <div
+      className="min-w-0 space-y-2.5 rounded-lg border border-[var(--border)]/70 bg-[var(--surface)]/40 px-3 py-2.5 sm:px-4"
+      data-sce-club-event-density={density}
+      data-sce-club-event-context-header
+    >
+      <SceClubEventTypeHeader model={model} showStatus={showStatus} density={density} />
+      <SceClubEventIdentityBlock model={model} density={density} titleAsHeading />
+      <SceClubEventScheduleRows model={model} fmtCfg={fmtCfg} density={density} />
+      {locationLine ? <SceClubEventLocationRow locationLine={locationLine} density={density} /> : null}
+    </div>
+  );
+}
+
 export function SceClubEventCard({
   model,
   density,
@@ -449,10 +543,15 @@ export function SceClubEventCard({
   testId = "sce-club-event-card",
 }: SceClubEventCardProps) {
   const listRow = surface === "list-row";
-  const embed = surface === "detail-embed" || listRow;
-  const showSchedule = !embed && isSceActivityDimensionVisible(density, "schedule");
-  const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
-  const statusVisible = showStatus && isSceActivityDimensionVisible(density, "status");
+  const contextHeader = surface === "context-header" || surface === "detail-embed";
+  const embed = contextHeader || listRow;
+  const showSchedule =
+    contextHeader || (!embed && isSceActivityDimensionVisible(density, "schedule"));
+  const showLocation =
+    contextHeader || (!embed && isSceActivityDimensionVisible(density, "location"));
+  const statusVisible =
+    showStatus &&
+    (contextHeader || isSceActivityDimensionVisible(density, "status"));
 
   const href = linkToDetail ? model.route.consumeHref ?? model.route.manageHref : null;
 
@@ -489,14 +588,14 @@ export function SceClubEventCard({
 
   if (listRow) {
     content = <SceClubEventListRowIdentityContent model={model} density={density} />;
-  } else if (surface === "detail-embed") {
+  } else if (contextHeader) {
     content = (
-      <div className="min-w-0 space-y-2">
-        <SceClubEventIdentityBlock model={model} density={density} />
-        {statusVisible && model.status?.label ? (
-          <SceClubEventCardStatus status={model.status} />
-        ) : null}
-      </div>
+      <SceClubEventContextHeaderContent
+        model={model}
+        density={density === "MICRO" ? "STANDARD" : density}
+        fmtCfg={fmtCfg}
+        showStatus={statusVisible}
+      />
     );
   } else if (density === "MICRO") {
     content = (

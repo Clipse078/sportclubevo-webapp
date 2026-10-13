@@ -47,7 +47,30 @@ describe("SCE-UI-ROLLOUT-01G — SceClubEventCard", () => {
 
   it("shows VERANSTALTUNG activity type text via ActivityTypePill", () => {
     renderCard();
-    expect(screen.getByText("VERANSTALTUNG")).toBeTruthy();
+    const pill = screen.getByText("VERANSTALTUNG");
+    expect(pill.getAttribute("data-activity-type-pill")).toBe("club-event-violet");
+  });
+
+  it("context-header surface renders schedule and location without nested card link", () => {
+    renderCard(createSceClubEventTimedFixture(), "STANDARD", {
+      surface: "context-header",
+    });
+    expect(screen.getByTestId("sce-club-event-schedule")).toBeTruthy();
+    expect(screen.getByTestId("sce-club-event-location")).toBeTruthy();
+    expect(screen.queryByTestId("sce-club-event-card-link")).toBeNull();
+  });
+
+  it("renders optional audience line when model provides authoritative scope", () => {
+    renderCard(
+      createSceClubEventTimedFixture({
+        audience: {
+          scope: "CLUB_WIDE",
+          primaryLabel: "FC Allschwil / Gesamter Verein",
+        },
+      }),
+      "STANDARD",
+    );
+    expect(screen.getByTestId("sce-club-event-audience")).toHaveTextContent("Gesamter Verein");
   });
 
   it("all-day events show Ganztägig — not 00:00–23:59", () => {

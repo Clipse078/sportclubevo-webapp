@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-UI-ROLLOUT-01G` |
 | **Programme** | [`SCE-UI-ROLLOUT-01+`](./SCE-UI-ROLLOUT-01.md) |
-| **Status** | **IMPLEMENTED** — pending PO visual UAT |
+| **Status** | **01G-R1 corrections** — pending PO visual UAT |
 | **STAGE baseline (01G start)** | `3ad12b25720565ca3fd778a94a0dc89cbdbcf766` |
 | **Branch** | `cursor/sce-ui-rollout-01g-club-event-card-family` |
 
@@ -19,7 +19,8 @@ Fourth canonical activity presentation family: **`SceClubEventCard`** consuming 
 - All-day semantics: **Ganztägig** (no fake midnight ranges)
 - Semantic accent: `--sce-club-event` / `club-event-violet` on `ActivityTypePill`
 - Preview: `/sce-preview/club-event-card`
-- Representative consumer: **`VeranstaltungListRow`** identity via `surface="list-row"` (publication column unchanged)
+- Representative consumers: **`VeranstaltungListRow`** (Turniere-style row composition) + **`VeranstaltungEditPlanningHeader`** (`context-header`)
+- Team audience architecture: [`SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md`](./SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md)
 
 ## Out of scope (01H+)
 

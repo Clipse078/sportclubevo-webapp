@@ -90,6 +90,8 @@ describe("SCE-UI-ROLLOUT-01G — architecture guardrails", () => {
     );
     expect(src).toContain("SceClubEventCard");
     expect(src).toContain("resolveSceClubEventPresentation");
+    expect(src).toContain("veranstaltung-row-context-zone");
+    expect(src).toContain("VERANSTALTUNGEN_ROW_DESKTOP_GRID");
   });
 
   it("does not introduce new binary checkboxes in 01G club event card sources", () => {

@@ -183,10 +183,13 @@ Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — no
 | **Location** | `formatSceActivityLocationHierarchy` on resolved `SportingActivityLocation`; omit organiser from location line when shown as secondary identity; no raw resource keys |
 | **Status vs publication** | Lifecycle `status` on card (`SceClubEventCardStatus`); publication/visibility labels stay in management row columns — do not collapse |
 | **Routes** | `model.route.consumeHref` / `manageHref` from `buildSceActivityRoute("CLUB_EVENT", …)` |
-| **Management boundary** | `SceClubEventCard` owns identity; `VeranstaltungListRow` keeps date meta rail, publication column, and row link — `surface="list-row"` without nested card chrome |
+| **Event audience** | Optional `model.audience` (`CLUB_WIDE` \| `SELECTED_TEAMS`) — **separate** from organiser, publication, and participation; render via `SceClubEventAudienceLine` when authoritative data exists |
+| **Management boundary** | `SceClubEventCard` owns **identity** (`list-row`); `VeranstaltungListRow` owns date block, **context zone** (schedule/location), lifecycle + publication — no duplicated schedule/location on the card in list rows |
+| **VERANSTALTUNGEN_LIST_ROW_COMPOSITION** | **Date** (weekday/day/month + compact time) · **Identity** (`SceClubEventCard` `list-row` — VERANSTALTUNG pill, title, organiser/audience) · **Context** (date line, time/Ganztägig, location, status + publication). Responsive grid reuses Turniere row contract (without action column) |
+| **Detail context** | Edit workspace header uses `SceClubEventCard` `surface="context-header"` (`VeranstaltungEditPlanningHeader`) — canonical hierarchy, not ad-hoc subtitle strings |
 | **Preview / UAT** | `/sce-preview/club-event-card` |
 
-Representative integration (01G): Veranstaltungen management list row identity (`COMPACT`, `surface="list-row"`, lifecycle + publication in row columns).
+Representative integration (01G-R1): Veranstaltungen management list + edit context header; team **scope** architecture documented in [`SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md`](../roadmap/SCE-UI-ROLLOUT-01G-R1-TEAM-AUDIENCE-ARCHITECTURE.md).
 
 Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01g-club-event-card.test.tsx`, `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01g-architecture.test.ts`.
 
@@ -228,8 +231,9 @@ Density rules suppress the pill only via the shared activity density contract �
 2. **Do not** import Tournament orange or Training blue into Match fixture/result presentation.
 3. Location lines **must** use location tokens — not raw schedule classes without the location tint.
 4. **`CANONICAL_ACTIVITY_LOCATION`** — structured `SportingActivityLocation` + `formatSceActivityLocationHierarchy` (host → venue → resource). Presentation uses **human-facing labels** only; raw resource keys/slugs/enums (e.g. `KUNSTRASEN_2`) **never** render. Each hierarchy level must belong to the **same authoritative activity location**. **Match** home/away venue ownership is resolved in `buildMatchSportingActivityLocation` before cards consume the model; tenant operational pitch allocation applies to **HOME** matches only and must not leak into **AWAY** external venues. **Provider location text (01D R10B):** for **AWAY** / external matches, SFV (or other provider) `venueName` / `location` strings are **authoritative** — preserve them as supplied (e.g. `Sportzentrum Tannenbrunn, Sissach - 2`). Do **not** strip pitch-like suffixes such as ` - 2` from provider venue text merely because they resemble internal pitch metadata. Do **not** append tenant operational resource codes (e.g. `KUNSTRASEN_2` from FC Allschwil allocation) to away presentation. **HOME** matches may use tenant venue/resource hierarchy with registry human labels (e.g. `Im Brüel · Kunstrasen 2`). Import tail cleanup via `sanitizeImportedVenuePresentation` applies only to comma-before-dash import artifacts (e.g. `, - 3` at end), not to legitimate provider ` - N` suffixes embedded in the venue string. Shared location **visual** semantics do not imply shared domain-resolution logic (Training vs Match vs Tournament).
-5. Club Event cards consume the same schedule/location/status tokens; activity accent uses `--sce-club-event` / `club-event-violet` on `ActivityTypePill` only.
-6. Future Sponsor cards should extend this table, not introduce a parallel palette.
+5. Club Event cards consume the same schedule/location/status tokens; activity accent uses `--sce-club-event` / `club-event-violet` on `ActivityTypePill` only (including MICRO — no local violet badge markup).
+6. **Event audience ≠ publication ≠ participation ≠ organiser** — only `model.audience` renders scope; publication stays in management context columns.
+7. Future Sponsor cards should extend this table, not introduce a parallel palette.
 
 Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-r10-semantic-alignment.test.ts`.
 

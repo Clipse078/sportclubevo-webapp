@@ -1,0 +1,13 @@
+/**
+ * Veranstaltungen management list — reuses Turniere row composition contract
+ * (date | identity | context/status) without action column.
+ */
+
+export {
+  TURNIERE_ROW_DESKTOP_BREAKPOINT as VERANSTALTUNGEN_ROW_DESKTOP_BREAKPOINT,
+  TURNIERE_ROW_INTERMEDIATE_GRID as VERANSTALTUNGEN_ROW_INTERMEDIATE_GRID,
+  TURNIERE_ROW_DESKTOP_GRID as VERANSTALTUNGEN_ROW_DESKTOP_GRID,
+  TURNIERE_ROW_DATE_CELL as VERANSTALTUNGEN_ROW_DATE_CELL,
+  TURNIERE_ROW_IDENTITY_CELL as VERANSTALTUNGEN_ROW_IDENTITY_CELL,
+  TURNIERE_ROW_CONTEXT_CELL as VERANSTALTUNGEN_ROW_CONTEXT_CELL,
+} from "@/components/admin/tournamentcenter/turniere-management-layout";
