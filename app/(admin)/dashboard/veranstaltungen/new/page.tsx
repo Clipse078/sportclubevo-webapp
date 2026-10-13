@@ -10,8 +10,16 @@ import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/Veransta
 import { loadClubEventEffectiveGovernanceForSession } from "@/lib/club-events/composer/load-effective-governance-server";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { getClubEventComposerDraft } from "@/lib/club-events/composer/club-event-draft-persistence";
+import { prisma } from "@/lib/db/prisma";
 
-export default async function NewVeranstaltungPage() {
+type SearchParams = Promise<{ draftId?: string }>;
+
+export default async function NewVeranstaltungPage({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
   await requirePermission(PERMISSIONS.EVENTS_MANAGE);
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
@@ -49,6 +57,30 @@ export default async function NewVeranstaltungPage() {
     tenantId: tenantContext.id,
   });
 
+  const params = (await searchParams) ?? {};
+  const draftId = params.draftId?.trim() || null;
+  let reviewerComment: string | null = null;
+  if (draftId) {
+    const draft = await getClubEventComposerDraft(tenantContext.id, draftId);
+    if (draft?.lifecycleState === "CHANGES_REQUESTED") {
+      const revision = await prisma.sceActivityGovernanceRevision.findFirst({
+        where: {
+          tenantId: tenantContext.id,
+          clubEventDraftId: draft.id,
+          isCurrentSubmission: true,
+        },
+        include: {
+          decisions: {
+            where: { decision: "REQUEST_CHANGES" },
+            orderBy: { decidedAt: "desc" },
+            take: 1,
+          },
+        },
+      });
+      reviewerComment = revision?.decisions[0]?.comment?.trim() ?? null;
+    }
+  }
+
   return (
     <ToastProvider>
       <PlanningEditorShell testId="veranstaltung-create-page">
@@ -68,6 +100,8 @@ export default async function NewVeranstaltungPage() {
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
           otherFacilityGroups={otherFacilityGroups}
           timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+          initialDraftId={draftId}
+          reviewerComment={reviewerComment}
           effectiveGovernance={
             effectiveGovernance ?? {
               activityType: "CLUB_EVENT",

@@ -19,10 +19,9 @@ describe("Veranstaltung create workflow — R1.1 UX cleanup", () => {
     expect(createForm).not.toContain("veranstaltung-create-collaboration-section");
   });
 
-  it("keeps canonical create tabs and persistent actions", () => {
-    expect(createForm).toContain("ClubEventCreateWorkflowShell");
-    expect(createForm).toContain("PlanningEditorActions");
-    expect(createForm).toContain("veranstaltung-create-submit");
+  it("keeps canonical create tabs via SceActivityComposer shell", () => {
+    expect(createForm).toContain("SceActivityComposer");
+    expect(createForm).not.toContain("ClubEventCreateWorkflowShell");
     expect(createForm).not.toContain("wizard");
   });
 

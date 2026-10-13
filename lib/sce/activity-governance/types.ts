@@ -28,6 +28,7 @@ export type SceActivityGovernancePersonRef = {
 /** Creator-specific publication override within an activity type. */
 export type SceActivityCreatorPublicationPolicy = {
   personId: string;
+  createEnabled?: boolean;
   publicationAuthority: SceActivityPublicationAuthority;
 };
 

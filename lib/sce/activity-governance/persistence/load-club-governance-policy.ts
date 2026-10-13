@@ -32,6 +32,7 @@ export async function loadSceActivityClubGovernancePolicy(
       validatorPersonIds: config.validators.map((v) => v.personId),
       creatorPolicies: config.creatorPolicies.map((p) => ({
         personId: p.personId,
+        createEnabled: p.createEnabled,
         publicationAuthority:
           p.publicationAuthority ?? config.defaultPublicationAuthority,
       })),

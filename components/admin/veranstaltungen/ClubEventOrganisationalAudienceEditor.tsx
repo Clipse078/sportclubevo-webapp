@@ -19,6 +19,8 @@ type Props = {
   initial: ClubEventOrganisationalAudienceDto;
   disabled?: boolean;
   onChange: (value: ClubEventOrganisationalAudienceEditorValue) => void;
+  /** Use embedded selector inside Activity Composer (no nested Sheet). */
+  composerSafeSelector?: boolean;
 };
 
 function targetPickKey(kind: "TEAM" | "ORG_UNIT", id: string): string {
@@ -39,6 +41,7 @@ export default function ClubEventOrganisationalAudienceEditor({
   initial,
   disabled = false,
   onChange,
+  composerSafeSelector = false,
 }: Props) {
   const [scope, setScope] = useState<"CLUB_WIDE" | "SELECTED_ORG_UNITS">(initial.scope);
   const [targets, setTargets] = useState(initial.targets);
@@ -153,6 +156,7 @@ export default function ClubEventOrganisationalAudienceEditor({
           dialogDescription="Wählen Sie die Zielgruppe, für die diese Veranstaltung gilt."
           testIdPrefix="club-event-organisational-audience-targets"
           committedPickKeys={new Set(selectedKeys)}
+          panelHost={composerSafeSelector ? "embedded" : "sheet"}
         />
       ) : null}
 

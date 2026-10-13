@@ -13,6 +13,17 @@ export default function ClubEventApprovalDecisionForm({ revisionId }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
 
   async function decide(decision: "APPROVE" | "REQUEST_CHANGES" | "REJECT") {
+    if (
+      (decision === "REQUEST_CHANGES" || decision === "REJECT") &&
+      !comment.trim()
+    ) {
+      setError(
+        decision === "REJECT"
+          ? "Bitte geben Sie einen Ablehnungsgrund an."
+          : "Bitte geben Sie einen Kommentar für die Änderungsanforderung an.",
+      );
+      return;
+    }
     setLoading(decision);
     setError(null);
     try {

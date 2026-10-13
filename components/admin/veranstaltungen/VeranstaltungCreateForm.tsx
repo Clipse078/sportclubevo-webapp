@@ -35,7 +35,6 @@ import ClubEventOrganisationalAudienceEditor, {
   clubEventOrganisationalAudienceEditorToApiPayload,
   type ClubEventOrganisationalAudienceEditorValue,
 } from "./ClubEventOrganisationalAudienceEditor";
-import ClubEventCreateWorkflowShell from "./ClubEventCreateWorkflowShell";
 import VeranstaltungRecurrenceFields, {
   recurrenceValuesToApiPayload,
   type VeranstaltungRecurrenceFieldValues,
@@ -89,6 +88,8 @@ type VeranstaltungCreateFormProps = {
   open?: boolean;
   onClose?: () => void;
   onSuccess?: (result: SceActivityCreateSuccessResult<{ eventIds: string[]; outcome: string }>) => void;
+  initialDraftId?: string | null;
+  reviewerComment?: string | null;
 };
 
 function resolveResourceDisplay(
@@ -118,6 +119,8 @@ export default function VeranstaltungCreateForm({
   open = true,
   onClose,
   onSuccess,
+  initialDraftId = null,
+  reviewerComment = null,
 }: VeranstaltungCreateFormProps) {
   const router = useRouter();
   const t = useTranslations("Veranstaltungen.editor");
@@ -171,7 +174,7 @@ export default function VeranstaltungCreateForm({
     occurrenceCount: 8,
   });
 
-  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(initialDraftId);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
@@ -317,6 +320,78 @@ export default function VeranstaltungCreateForm({
       active = false;
     };
   }, [tf, t]);
+
+  useEffect(() => {
+    if (!initialDraftId) return;
+    let active = true;
+
+    async function loadDraft() {
+      try {
+        const res = await fetch(`/api/club-events/composer/drafts/${initialDraftId}`, {
+          cache: "no-store",
+        });
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+          draft?: ClubEventComposerDraftPayload & { lifecycleState?: string };
+        } | null;
+        if (!res.ok || !data?.draft) {
+          throw new Error(data?.error ?? "Entwurf konnte nicht geladen werden.");
+        }
+        if (!active) return;
+        const d = data.draft;
+        setSeasonId(d.seasonId);
+        setTitle(d.title);
+        setCategory(d.category);
+        setDescription(d.description);
+        setLocation(d.location);
+        setOrganizerName(d.organizerName);
+        setRemarks(d.remarks);
+        setSchedule(d.schedule);
+        setAudience(d.audience);
+        setAusspielung(d.ausspielung);
+        setRecurrence(d.recurrence);
+        setPitchDraft(
+          d.resources.find((r) => r.kind === "pitch_hall")
+            ? {
+                localId: nextLocalId("pitch"),
+                facilityResourceId: d.resources.find((r) => r.kind === "pitch_hall")!.facilityResourceId,
+                facilityResourceName:
+                  d.resources.find((r) => r.kind === "pitch_hall")!.facilityResourceName,
+              }
+            : null,
+        );
+        setDressingDraft(
+          d.resources.find((r) => r.kind === "dressing_room")
+            ? {
+                localId: nextLocalId("dressing"),
+                facilityResourceId: d.resources.find((r) => r.kind === "dressing_room")!
+                  .facilityResourceId,
+                facilityResourceName: d.resources.find((r) => r.kind === "dressing_room")!
+                  .facilityResourceName,
+              }
+            : null,
+        );
+        setOtherDrafts(
+          d.resources
+            .filter((r) => r.kind === "other")
+            .map((r) => ({
+              localId: nextLocalId("other"),
+              facilityResourceId: r.facilityResourceId,
+              facilityResourceName: r.facilityResourceName,
+            })),
+        );
+        setDraftId(initialDraftId);
+      } catch (err) {
+        if (!active) return;
+        setLoadError(err instanceof Error ? err.message : "Entwurf konnte nicht geladen werden.");
+      }
+    }
+
+    void loadDraft();
+    return () => {
+      active = false;
+    };
+  }, [initialDraftId]);
 
   function handleCategoryChange(value: string) {
     setCategory(value);
@@ -507,10 +582,7 @@ export default function VeranstaltungCreateForm({
     [onSuccess, router],
   );
 
-  const workflowPanels = (
-      <ClubEventCreateWorkflowShell
-        tabErrors={tabErrors}
-        uebersicht={
+  const uebersichtPanel = (
       <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
@@ -600,8 +672,9 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-        }
-        gueltigkeit={
+  );
+
+  const gueltigkeitPanel = (
       <PlanningEditorSection
         testId="veranstaltung-create-audience-section"
         ariaLabelledBy="veranstaltung-create-audience-heading"
@@ -617,11 +690,13 @@ export default function VeranstaltungCreateForm({
           <ClubEventOrganisationalAudienceEditor
             initial={{ scope: "CLUB_WIDE", teamIds: [], orgUnitIds: [], targets: [] }}
             onChange={setAudience}
+            composerSafeSelector
           />
         </div>
       </PlanningEditorSection>
-        }
-        termin={
+  );
+
+  const terminPanel = (
       <PlanningEditorSection testId="veranstaltung-create-schedule-section" ariaLabelledBy="veranstaltung-create-schedule-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-schedule-heading" title={t("sections.schedule")} />
@@ -648,8 +723,9 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-        }
-        ressourcen={
+  );
+
+  const ressourcenPanel = (
       <PlanningEditorSection
         testId="veranstaltung-create-resources-section"
         ariaLabelledBy="veranstaltung-create-resources-heading"
@@ -756,8 +832,9 @@ export default function VeranstaltungCreateForm({
           </div>
         </div>
       </PlanningEditorSection>
-        }
-        publikation={
+  );
+
+  const publikationPanel = (
           <PlanningPublicationPanel testId="veranstaltung-create-publication-panel">
             <VeranstaltungAusspielungFields
               values={ausspielung}
@@ -766,20 +843,27 @@ export default function VeranstaltungCreateForm({
               testIdPrefix="veranstaltung-create-publication"
             />
           </PlanningPublicationPanel>
-        }
-      />
   );
 
   definition.tabs = [
-    { key: "uebersicht", label: "Übersicht", render: () => workflowPanels },
-    { key: "gueltigkeit", label: "Gültigkeit", render: () => workflowPanels },
-    { key: "termin", label: "Termin", render: () => workflowPanels },
-    { key: "ressourcen", label: "Ressourcen", render: () => workflowPanels },
-    { key: "publikation", label: "Publikation", render: () => workflowPanels },
+    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
+    { key: "gueltigkeit", label: "Gültigkeit", render: () => gueltigkeitPanel },
+    { key: "termin", label: "Termin", render: () => terminPanel },
+    { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
+    { key: "publikation", label: "Publikation", render: () => publikationPanel },
   ];
 
   return (
     <div data-testid="veranstaltung-create-form">
+      {reviewerComment ? (
+        <div
+          className="fca-status-box mb-3 border-amber-200 bg-amber-50 text-amber-900"
+          data-testid="club-event-reviewer-comment"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide">Rückmeldung Freigabe</p>
+          <p className="mt-1 text-sm">{reviewerComment}</p>
+        </div>
+      ) : null}
       {loadError ? <div className="fca-status-box fca-status-box-error mb-3">{loadError}</div> : null}
       <SceActivityComposer
         definition={definition}

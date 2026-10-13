@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { SceListSelectorPanel } from "@/components/sce/list-selector/SceListSelectorPanel";
+import {
+  SceListSelectorPanel,
+  type SceListSelectorPanelHost,
+} from "@/components/sce/list-selector/SceListSelectorPanel";
 import { sceGenericDiscoverFetch } from "@/lib/sce/list-selector/sce-generic-discover-client";
 import type { SceSelectorAuthorizationContext } from "@/lib/sce/list-selector/selector-authorization-context";
 import type { SceSelectorPick, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
@@ -39,6 +42,8 @@ type Props = {
   /** When ids in selectedIds differ from selector pick ids (e.g. task assignee userId vs personId). */
   committedPickKeys?: ReadonlySet<string>;
   searchPlaceholder?: string;
+  /** Sheet for standalone forms; embedded for Activity Composer (no nested sheet). */
+  panelHost?: SceListSelectorPanelHost;
 };
 
 export function SceChipMultiSelectorField({
@@ -65,6 +70,7 @@ export function SceChipMultiSelectorField({
   excludeUserIds,
   committedPickKeys,
   searchPlaceholder,
+  panelHost = "sheet",
 }: Props) {
   const [open, setOpen] = useState(false);
   const locked = useMemo(() => new Set(lockedIds), [lockedIds]);
@@ -164,6 +170,7 @@ export function SceChipMultiSelectorField({
         disabled={disabled}
         testIdPrefix={testIdPrefix}
         searchPlaceholder={searchPlaceholder ?? "Name oder E-Mail suchen …"}
+        host={panelHost}
       />
     </div>
   );

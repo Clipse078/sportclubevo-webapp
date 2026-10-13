@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** next |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **IMPLEMENTED_PENDING_PO_UAT** (PR **#840**, R1 completion) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Next slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption (**IMPLEMENTED_PENDING_PO_UAT**) |
@@ -52,7 +52,7 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
 |-------|-------|
 | **Decision** | Option C — adaptive `SceActivityComposer` + `/new` fallback |
 | **Gate** | **CONDITIONAL_PASS_ACCEPTED** |
-| **Condition** | Composer-safe child interactions (Club Event audience selector in **01C**) |
+| **Condition** | Composer-safe child interactions — **delivered in 01C-R1** (embedded audience selector) |
 
 ## Out of scope for 01A (unchanged for 01B+ discipline)
 
@@ -95,3 +95,16 @@ Deliverables: `SceActivityComposer` (overlay / page / fullscreen), `SceActivityC
 **Deferred unless 01C gate requires earlier:** broad canonical **Freigaben** inbox (may remain **01H** / later planning-surface package if 01C ships a minimal validator path).
 
 **Then:** 01D Training · 01E Match · 01F Tournament adoption/refinement · 01G planning-surface integration · **01H** core planning surfaces · 01I–01N per [`SCE-UI-ROLLOUT-01`](./SCE-UI-ROLLOUT-01.md).
+
+---
+
+## SCE-ACTIVITY-CREATE-01C-R1 (PR **#840**)
+
+| Delivered in R1 | Notes |
+|-----------------|-------|
+| Composer-safe org audience selector | `SceListSelectorPanel` **embedded** host; no nested Sheet inside `SceActivityComposer` |
+| Sole workflow shell | Tab bodies on `SceActivityComposer` only; legacy `ClubEventCreateWorkflowShell` deprecated |
+| Validator pool admin UX | `Freigabeberechtigte Personen` multi-select + zero-validator guard |
+| Draft resume | Management draft list → `/new?draftId=` + GET draft API |
+| Contextual create proof | Veranstaltungen management **+ Veranstaltung** opens overlay composer (page mode unchanged at `/new`) |
+| **01G boundary** | Full planning-hub contextual integration remains **01G**; overlay proof uses Veranstaltungen management only |

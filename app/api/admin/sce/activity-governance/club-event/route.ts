@@ -29,20 +29,25 @@ export async function PUT(request: Request) {
     validatorPersonIds?: string[];
   } | null;
 
-  if (body?.personId && body.publicationAuthority) {
-    await upsertPersonClubEventGovernance({
-      tenantId: tenant.id,
-      personId: body.personId,
-      createEnabled: body.createEnabled ?? true,
-      publicationAuthority: body.publicationAuthority,
-    });
-  }
+  try {
+    if (body?.personId && body.publicationAuthority) {
+      await upsertPersonClubEventGovernance({
+        tenantId: tenant.id,
+        personId: body.personId,
+        createEnabled: body.createEnabled ?? true,
+        publicationAuthority: body.publicationAuthority,
+      });
+    }
 
-  if (body?.validatorPersonIds) {
-    await setClubEventValidatorPool({
-      tenantId: tenant.id,
-      validatorPersonIds: body.validatorPersonIds,
-    });
+    if (body?.validatorPersonIds) {
+      await setClubEventValidatorPool({
+        tenantId: tenant.id,
+        validatorPersonIds: body.validatorPersonIds,
+      });
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Speichern fehlgeschlagen.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const session = await auth();

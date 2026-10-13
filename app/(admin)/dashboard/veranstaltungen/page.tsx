@@ -4,6 +4,10 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listClubEvents } from "@/lib/events/club-events-service";
+import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { loadClubEventEffectiveGovernanceForSession } from "@/lib/club-events/composer/load-effective-governance-server";
+import { listClubEventComposerDraftsForManagementView } from "@/lib/club-events/composer/list-composer-drafts-for-management";
 import {
   createAdminServerTimer,
   isScePerfTimingEnabled,
@@ -67,6 +71,40 @@ export default async function VeranstaltungenPage({
     !monthParam && parseMonthParam(params.cal) ? params.cal!.trim() : null;
 
   const events = await listClubEvents(tenantContext.id);
+  const composerDrafts = canManage
+    ? await listClubEventComposerDraftsForManagementView(tenantContext.id)
+    : [];
+  const facilities = canManage ? await getFacilitiesForTenant(tenantContext.id) : [];
+  const effectiveGovernance = canManage
+    ? await loadClubEventEffectiveGovernanceForSession({ tenantId: tenantContext.id })
+    : null;
+
+  function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
+    return facilities
+      .filter((f) => f.status !== "ARCHIVED")
+      .map((f) => ({
+        facilityId: f.id,
+        facilityName: f.name,
+        facilityType: f.type as string,
+        resources: f.resources
+          .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
+          .map((r) => ({
+            id: r.id,
+            name: r.name,
+            code: r.code,
+            type: r.type,
+            facilityId: f.id,
+            facilityName: f.name,
+            facilityType: f.type as string,
+          })),
+      }))
+      .filter((fg) => fg.resources.length > 0);
+  }
+
+  const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
+  const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
+  const otherFacilityGroups = facilityGroupsForTypes(["OTHER"]);
+
   perfTimer?.mark("club-event-loader");
 
   if (perfTimer) {
@@ -99,6 +137,20 @@ export default async function VeranstaltungenPage({
           locationFilter={params.location?.trim() || null}
           reviewFilter={normalizeVeranstaltungenReviewFilter(params.review)}
           publicationFilter={normalizeVeranstaltungenPublicationFilter(params.pub)}
+          composerDrafts={composerDrafts}
+          pitchHallFacilityGroups={pitchHallFacilityGroups}
+          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+          otherFacilityGroups={otherFacilityGroups}
+          effectiveGovernance={
+            effectiveGovernance ?? {
+              activityType: "CLUB_EVENT",
+              personId: "anonymous",
+              mayCreate: true,
+              publicationAuthority: "DIRECT_PUBLISH",
+              approvalStrategy: "ANY_ONE",
+              validatorPersonIds: [],
+            }
+          }
         />
       </div>
     </ToastProvider>

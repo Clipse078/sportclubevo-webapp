@@ -54,6 +54,8 @@ function DiscoverRowSkeleton() {
   );
 }
 
+export type SceListSelectorPanelHost = "sheet" | "embedded";
+
 export type SceListSelectorPanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -81,6 +83,8 @@ export type SceListSelectorPanelProps = {
   emptyStateTestId?: string;
   /** When false, single-select rows apply without closing the sheet (Communication composer). */
   dismissOnSinglePick?: boolean;
+  /** Sheet (default) or composer-safe embedded region without a second focus trap. */
+  host?: SceListSelectorPanelHost;
 };
 
 export function SceListSelectorPanel({
@@ -104,6 +108,7 @@ export function SceListSelectorPanel({
   confirmTestId,
   emptyStateTestId,
   dismissOnSinglePick = true,
+  host = "sheet",
 }: SceListSelectorPanelProps) {
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -408,114 +413,141 @@ export function SceListSelectorPanel({
     </>
   );
 
+  const multipleFooter =
+    mode === "multiple" ? (
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        <p
+          className="text-sm font-medium text-[var(--foreground)]"
+          data-testid={`${testIdPrefix}-pending-count`}
+        >
+          {pendingCount} ausgewählt
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+            Abbrechen
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            disabled={pendingCount === 0 || disabled}
+            data-testid={confirmTestId ?? `${testIdPrefix}-confirm`}
+            onClick={handleConfirm}
+          >
+            {pendingCount === 1 ? "1 übernehmen" : `${pendingCount} übernehmen`}
+          </Button>
+        </div>
+      </div>
+    ) : null;
+
+  const singleFooter =
+    mode === "single" ? (
+      <div className="flex w-full justify-end">
+        <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+          Schliessen
+        </Button>
+      </div>
+    ) : null;
+
+  const panelBody = (
+    <div
+      className="flex min-h-0 flex-1 flex-col gap-4"
+      data-testid={panelTestId ?? `${testIdPrefix}-panel`}
+    >
+      <div className="relative shrink-0">
+        <Search
+          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]"
+          aria-hidden="true"
+        />
+        <input
+          ref={searchRef}
+          type="search"
+          autoComplete="off"
+          className="fca-input fca-search-input w-full text-base"
+          placeholder={searchPlaceholder}
+          value={queryState.query}
+          onChange={(e) => queryState.setQuery(e.target.value)}
+          data-testid={searchTestId ?? `${testIdPrefix}-search`}
+          aria-label="Suche"
+          disabled={disabled}
+        />
+      </div>
+      <div
+        className="flex shrink-0 gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="tablist"
+        aria-label="Kategorien"
+        onKeyDown={(event) => handleCategoryKeyDown(event, visibleTabs)}
+      >
+        {visibleTabs.map((tab) => {
+          const categoryId: SceSelectorCategoryId =
+            tab.id === "all"
+              ? "all"
+              : sceSelectorTypeToCategoryId(tab.type as SceSelectorSourceType);
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={queryState.category === categoryId}
+              className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
+                queryState.category === categoryId
+                  ? "bg-[var(--sce-primary)] text-white"
+                  : "bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+              }`}
+              onClick={() => queryState.setCategory(categoryId)}
+              data-testid={
+                getCategoryTestId?.(categoryId) ?? `${testIdPrefix}-category-${categoryId}`
+              }
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      <p id={statusId} className="sr-only" aria-live="polite">
+        {queryState.statusMessage}
+      </p>
+      <div
+        ref={listRef}
+        className="min-h-[12rem] max-h-[min(24rem,50vh)] flex-1 overflow-y-auto pr-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+        tabIndex={0}
+        aria-live="polite"
+        aria-busy={queryState.loading || queryState.loadingMore}
+        onKeyDown={handleListKeyDown}
+      >
+        {listContent}
+      </div>
+    </div>
+  );
+
+  if (host === "embedded") {
+    if (!open) return null;
+    return (
+      <section
+        className="mt-2 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] p-3"
+        aria-label={title}
+        data-testid={`${testIdPrefix}-embedded-host`}
+      >
+        <div className="space-y-1">
+          <h4 className="text-sm font-semibold text-[var(--foreground)]">{title}</h4>
+          {description ? (
+            <p className="text-xs text-[var(--text-2)]">{description}</p>
+          ) : null}
+        </div>
+        {panelBody}
+        {multipleFooter ?? singleFooter}
+      </section>
+    );
+  }
+
   return (
     <Sheet
       open={open}
       onClose={() => onOpenChange(false)}
       title={title}
       description={description}
-      footer={
-        mode === "multiple" ? (
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <p
-              className="text-sm font-medium text-[var(--foreground)]"
-              data-testid={`${testIdPrefix}-pending-count`}
-            >
-              {pendingCount} ausgewählt
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                Abbrechen
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                disabled={pendingCount === 0 || disabled}
-                data-testid={confirmTestId ?? `${testIdPrefix}-confirm`}
-                onClick={handleConfirm}
-              >
-                {pendingCount === 1 ? "1 übernehmen" : `${pendingCount} übernehmen`}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex w-full justify-end">
-            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-              Schliessen
-            </Button>
-          </div>
-        )
-      }
+      footer={multipleFooter ?? singleFooter}
     >
-      <div
-        className="flex min-h-0 flex-1 flex-col gap-4"
-        data-testid={panelTestId ?? `${testIdPrefix}-panel`}
-      >
-        <div className="relative shrink-0">
-          <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]"
-            aria-hidden="true"
-          />
-          <input
-            ref={searchRef}
-            type="search"
-            autoComplete="off"
-            className="fca-input fca-search-input w-full text-base"
-            placeholder={searchPlaceholder}
-            value={queryState.query}
-            onChange={(e) => queryState.setQuery(e.target.value)}
-            data-testid={searchTestId ?? `${testIdPrefix}-search`}
-            aria-label="Suche"
-            disabled={disabled}
-          />
-        </div>
-        <div
-          className="flex shrink-0 gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          role="tablist"
-          aria-label="Kategorien"
-          onKeyDown={(event) => handleCategoryKeyDown(event, visibleTabs)}
-        >
-          {visibleTabs.map((tab) => {
-            const categoryId: SceSelectorCategoryId =
-              tab.id === "all"
-                ? "all"
-                : sceSelectorTypeToCategoryId(tab.type as SceSelectorSourceType);
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={queryState.category === categoryId}
-                className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
-                  queryState.category === categoryId
-                    ? "bg-[var(--sce-primary)] text-white"
-                    : "bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)]"
-                }`}
-                onClick={() => queryState.setCategory(categoryId)}
-                data-testid={
-                  getCategoryTestId?.(categoryId) ??
-                  `${testIdPrefix}-category-${categoryId}`
-                }
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-        <p id={statusId} className="sr-only" aria-live="polite">
-          {queryState.statusMessage}
-        </p>
-        <div
-          ref={listRef}
-          className="min-h-[12rem] flex-1 overflow-y-auto pr-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-          tabIndex={0}
-          aria-live="polite"
-          aria-busy={queryState.loading || queryState.loadingMore}
-          onKeyDown={handleListKeyDown}
-        >
-          {listContent}
-        </div>
-      </div>
+      {panelBody}
     </Sheet>
   );
 }

@@ -35,7 +35,9 @@ export async function upsertPersonClubEventGovernance(input: {
   const policy = await loadSceActivityClubGovernancePolicy(input.tenantId);
   const issues = validateActivityGovernanceConfiguration(policy);
   if (issues.length > 0) {
-    throw new Error(issues[0]?.message ?? "Ungültige Freigabe-Konfiguration.");
+    throw new Error(
+      "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Füge zuerst mindestens eine Person für die Freigabe hinzu.",
+    );
   }
 }
 
@@ -55,5 +57,13 @@ export async function setClubEventValidatorPool(input: {
         personId,
       })),
     });
+  }
+
+  const policy = await loadSceActivityClubGovernancePolicy(input.tenantId);
+  const issues = validateActivityGovernanceConfiguration(policy);
+  if (issues.length > 0) {
+    throw new Error(
+      "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Füge zuerst mindestens eine Person für die Freigabe hinzu.",
+    );
   }
 }
