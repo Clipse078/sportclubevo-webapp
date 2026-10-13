@@ -217,6 +217,34 @@ Automated guardrails: `lib/events/__tests__/club-event-recurrence.test.ts`, `lib
 
 ---
 
+## SCE Activity Creation (**APPROVED** — ADR-11 / 01A closed; ships in **01B+**)
+
+Product principle: **«One creation language, domain-specific workflows.»**
+
+The Activity Composer is an **adaptive container** for canonical domain creation workflows — not a generic CRUD generator, forced wizard, generic Activity API, or four independent modals.
+
+Full contracts: [`SCE-ACTIVITY-CREATION.md`](./SCE-ACTIVITY-CREATION.md) · Architecture: [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md) · **ADR-11** (**Accepted**)
+
+### Nested interaction rule (Activity Composer)
+
+A modal **Activity Composer must not launch another independent modal, dialog, sheet, or drawer** over itself for normal creation interactions. Prefer inline controls, combobox/search, popover, expandable region, or Composer-owned embedded panel. If the interaction is genuinely too complex, use **full-page `/new` mode** — not stacked dialogs. **Club Event organisational audience selector** is the first mandated application (**01C**).
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **`SceActivityComposer`** shell (overlay / page / fullscreen) | **NEW_REQUIRED** | Reuse `SceModalOverlay`, workspace dialog tokens |
+| **Creation contract** (`SceActivityCreateDefinition`) | **NEW_REQUIRED** | Orchestrates domain components — not JSON CRUD |
+| **Context tabs on create** | **REUSABLE** | `SceContextTabs` — Club Event reference on STAGE |
+| **Guided Training/Match/Tournament create** | **EXISTING** | Migrate to tabs in 01D–01F before overlay parity |
+| **Full-page `/new` routes** | **EXISTING** | Remain canonical deep links |
+| **Dirty guard** | **REUSABLE** | Extend to composer close/backdrop/Escape |
+| **Nested Sheet selectors** | **Gate — refactor in 01C** | Audience picker must not stack on composer overlay |
+| **Toggle First on create** | **EXISTING** target | No new binary checkboxes in composer adoption |
+| **Activity identity header** | **PROPOSED** | VERANSTALTUNG / TRAINING / SPIEL / TURNIER accents |
+
+Do not mark composer primitives as shipped until **01B+** PO acceptance.
+
+---
+
 ## Activity card semantic color language (01D R10 / 01F / 01G)
 
 Shared **information hierarchy** for Match, Training, Tournament, and Club Event cards — one SCE semantic visual language. Cards stay domain-specific in layout and identity grammar; **color encodes meaning**, not decoration.

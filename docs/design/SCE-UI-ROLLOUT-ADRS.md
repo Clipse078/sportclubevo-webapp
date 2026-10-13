@@ -193,3 +193,50 @@ Migrate surface-by-surface per 01H–01L. Legacy components/formatters are **dep
 
 - 01A documents legacy IDs; no mass deletion in inventory phase.
 - Each package ships with scoped tests on touched surfaces.
+
+---
+
+## ADR-11 — Unified activity creation uses an adaptive composer with full-page fallback
+
+**Status:** **Accepted** (SCE-ACTIVITY-CREATE-01A **CLOSED** — Product Owner approved Option C, 2026-10-13)
+
+### Context
+
+Four planning domains (Training, Match, Tournament, Club Event) each have working **full-page** create flows. Club Event (Audience-01) adopted **Universal Context Tabs** on `/dashboard/veranstaltungen/new`. Training, Match, and Tournament use **guided single-page** workflows. Product direction prioritizes **contextual continuity** when creating from planning surfaces (filters, month, scroll position preserved).
+
+Alternatives considered: (A) full-page only, (B) per-domain modals, (C) shared adaptive `SceActivityComposer` + `/new` fallback, (D) forced wizard/stepper.
+
+### Decision
+
+Adopt **Option C** — a shared **`SceActivityComposer`** with container modes (`overlay`, `page`, `fullscreen`) that renders the **same domain creation workflow** (orchestrated by a typed creation contract) without a generic CRUD renderer or a unified `POST /api/activity`.
+
+- **Desktop contextual create:** large composer overlay using existing SCE modal/overlay tokens (`SceModalOverlay`, workspace dialog sizing).
+- **Narrow viewports:** full-screen composer (same state/components).
+- **Deep links:** canonical `/dashboard/*/new` routes remain; shared inner workflow.
+- **Tabs:** extend `lib/context-tabs` — no parallel tab framework.
+- **APIs:** domain endpoints and existing orchestration modules unchanged.
+
+### Consequences
+
+- **01B** implements composer shell + contract types only; **01C** adopts Club Event first (reference tabs).
+- **01D–01F** refactor Training/Match/Tournament guided flows into tabbed create configs before overlay triggers ship broadly.
+- **Conditional gate:** `SceChipMultiSelectorField` Sheet selector must not stack atop composer overlay — refactor to inline/composer-embedded discover before Club Event overlay UAT.
+- **01G** owns planning-surface triggers and origin restoration; **01H** owns post-create **presentation** on surfaces, not create form duplication.
+- Dirty guard, resource engine, and permission flags remain canonical (ADR-09).
+
+### Scoring (qualitative)
+
+| Criterion | A | B | C | D |
+|-----------|---|---|---|---|
+| Contextual continuity | Low | Medium | **High** | Low |
+| Implementation complexity | Low | High | Medium | Medium |
+| Accessibility | Medium | Medium | **High** (reuse modal) | Medium |
+| Mobile readiness | Medium | Medium | **High** | Medium |
+| Deep linking | High | Medium | **High** | Low |
+| Domain flexibility | Medium | Medium | **High** | Low |
+| Nested interaction risk | Low | High | Medium (mitigated) | Medium |
+| Maintainability | Medium | Low | **High** | Low |
+| Design System consistency | Medium | Low | **High** | Low |
+| Testing complexity | Low | High | Medium | Medium |
+
+**Recommendation:** **C**, with **CONDITIONAL_PASS_ACCEPTED** — audience selector refactor in **01C** and tri-domain UX convergence in **01D–01F** (see [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md)).
