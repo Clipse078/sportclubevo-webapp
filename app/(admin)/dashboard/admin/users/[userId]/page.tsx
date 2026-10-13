@@ -17,16 +17,24 @@ import ScopedRoleManagementControl from "@/components/admin/users/ScopedRoleMana
 import PersonNavEffectiveAccessCard from "@/components/admin/users/PersonNavEffectiveAccessCard";
 import PersonAdminActionsPanel from "@/components/admin/users/PersonAdminActionsPanel";
 import PersonClubEventGovernanceSection from "@/components/admin/users/people-access/PersonClubEventGovernanceSection";
+import PersonDetailWorkspace from "@/components/admin/users/PersonDetailWorkspace";
+import PersonDetailOverviewTab from "@/components/admin/users/PersonDetailOverviewTab";
 import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
 import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
 import {
+  buildPersonDetailTabHref,
+  buildPersonDetailTabNavigationConfig,
+  resolvePersonDetailDefaultTab,
+} from "@/lib/admin/users/person-detail-workspace-config";
+import {
+  CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_CONTEXT,
   CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF,
   parseClubEventGovernanceReturnContext,
 } from "@/lib/club-events/governance/club-event-governance-people-access-context";
 
 type Props = {
   params: Promise<{ userId: string }>;
-  searchParams?: Promise<{ returnContext?: string | string[] }>;
+  searchParams?: Promise<{ returnContext?: string | string[]; tab?: string | string[] }>;
 };
 
 function formatDate(date: Date): string {
@@ -110,9 +118,48 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
   }));
 
   const tenantRoleNames = user.userRoles.map((ur) => ur.role.name);
+  const showClubEventGovernanceTab = Boolean(linkedPerson);
+
+  const personDetailTabConfig = buildPersonDetailTabNavigationConfig({
+    showClubEventGovernance: showClubEventGovernanceTab,
+    defaultTab: resolvePersonDetailDefaultTab({
+      fromClubEventGovernance,
+      hasLinkedPerson: showClubEventGovernanceTab,
+    }),
+  });
+
+  const primaryRoleLabel =
+    tenantRoleNames.length > 0 ? tenantRoleNames[0]! : "Keine clubweite Rolle";
+
+  const governanceReturnContext = fromClubEventGovernance
+    ? CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_CONTEXT
+    : undefined;
+
+  const tabLinks = {
+    rollenFunktionen: buildPersonDetailTabHref({
+      userId,
+      tab: "rollen-funktionen",
+      returnContext: governanceReturnContext,
+    }),
+    bereiche: buildPersonDetailTabHref({
+      userId,
+      tab: "bereiche",
+      returnContext: governanceReturnContext,
+    }),
+    veranstaltungsFreigaben: buildPersonDetailTabHref({
+      userId,
+      tab: "veranstaltungs-freigaben",
+      returnContext: governanceReturnContext,
+    }),
+    zugriff: buildPersonDetailTabHref({
+      userId,
+      tab: "zugriff",
+      returnContext: governanceReturnContext,
+    }),
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6" data-testid="person-detail-workspace-root">
       <AdminSectionHeader
         eyebrow="Personen & Zugänge"
         title={displayName}
@@ -129,15 +176,17 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
         }
       />
 
-      {/* Person hero */}
-      <section className="sce-detail-section overflow-hidden">
+      <header
+        className="sce-detail-section overflow-hidden"
+        data-testid="person-detail-header"
+      >
         <div className="sce-detail-section-body">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-start gap-4">
               <AdminAvatar name={displayName} size="lg" />
               <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-semibold text-[var(--foreground)]">{displayName}</h2>
+                  <h1 className="text-xl font-semibold text-[var(--foreground)]">{displayName}</h1>
                   {isSelf ? (
                     <span className="rounded-full border border-amber-500/40 bg-amber-950/30 px-2 py-0.5 text-[0.65rem] font-semibold text-amber-200">
                       Ich
@@ -146,8 +195,16 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                   <AdminStatusPill label={accessStatus.primaryLabel} tone={accessStatus.tone} />
                 </div>
                 <p className="flex items-center gap-2 text-sm text-[var(--text-2)]">
-                  <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
+                  <ProductDomainSceIcon
+                    name="communication"
+                    size={12}
+                    className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]"
+                  />
                   {user.email}
+                </p>
+                <p className="text-xs text-[var(--muted)]">
+                  Primäre Rolle:{" "}
+                  <span className="font-medium text-[var(--text-2)]">{primaryRoleLabel}</span>
                 </p>
                 <p className="flex items-center gap-2 text-sm text-[var(--muted)]">
                   <Calendar className="h-3.5 w-3.5 shrink-0" />
@@ -168,21 +225,51 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-5">
-          <div className="sce-detail-section">
-            <div className="sce-detail-section-header">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                Funktionen & Rollen
-              </p>
-            </div>
-            <div className="sce-detail-section-body space-y-5">
-              <div>
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  Clubweit
-                </p>
+      <div className="sce-detail-section overflow-hidden">
+        <div className="sce-detail-section-body pt-2">
+          <PersonDetailWorkspace
+            config={personDetailTabConfig}
+            uebersicht={
+              <div className="space-y-5">
+                <PersonDetailOverviewTab
+                  accessStatus={accessStatus}
+                  membershipJoinedLabel={formatDate(membership.joinedAt)}
+                  tenantRoleNames={tenantRoleNames}
+                  scopedAssignmentCount={scopedItems.length}
+                  showClubEventGovernanceTab={showClubEventGovernanceTab}
+                  tabLinks={tabLinks}
+                />
+                <PersonAdminActionsPanel
+                  userId={userId}
+                  userName={displayName}
+                  userEmail={user.email}
+                  membershipIsActive={membership.isActive}
+                  userIsActive={user.isActive}
+                  pendingInvitation={pendingInvitation}
+                  canManage={canManage}
+                  canInvite={canInvite}
+                  canImpersonate={canImpersonate}
+                  isSelf={isSelf}
+                  linkedPersonName={
+                    linkedPerson ? `${linkedPerson.firstName} ${linkedPerson.lastName}` : null
+                  }
+                  tenantRoleNames={tenantRoleNames}
+                  accessStatus={accessStatus}
+                />
+              </div>
+            }
+            rollenFunktionen={
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h2 className="text-base font-semibold text-[var(--foreground)]">
+                    Rollen &amp; Funktionen
+                  </h2>
+                  <p className="text-sm text-[var(--text-2)]">
+                    Clubweite Rollen und Funktionen für diese Person.
+                  </p>
+                </div>
                 <TenantRoleAssignmentControl
                   userId={userId}
                   availableRoles={availableRoles}
@@ -190,10 +277,17 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                   canManage={canManage && !accessStatus.isPendingInvitation}
                 />
               </div>
-              <div>
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  Bereiche / Zuständigkeiten
-                </p>
+            }
+            bereiche={
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h2 className="text-base font-semibold text-[var(--foreground)]">
+                    Bereiche &amp; Zuständigkeiten
+                  </h2>
+                  <p className="text-sm text-[var(--text-2)]">
+                    Bereichsbezogene Rollen und organisatorische Zuständigkeiten.
+                  </p>
+                </div>
                 {scopedItems.length === 0 ? (
                   <p className="rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--surface-2)]/50 px-4 py-3 text-sm text-[var(--muted)]">
                     Keine bereichsbezogenen Zuständigkeiten zugewiesen.
@@ -208,52 +302,15 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
                   />
                 )}
               </div>
-            </div>
-          </div>
-
-          <PersonNavEffectiveAccessCard tenantId={tenantId} userId={userId} />
-          {linkedPerson ? (
-            <PersonClubEventGovernanceSection personId={linkedPerson.id} canManage={canManage} />
-          ) : null}
-        </div>
-
-        <aside className="space-y-5">
-          <PersonAdminActionsPanel
-            userId={userId}
-            userName={displayName}
-            userEmail={user.email}
-            membershipIsActive={membership.isActive}
-            userIsActive={user.isActive}
-            pendingInvitation={pendingInvitation}
-            canManage={canManage}
-            canInvite={canInvite}
-            canImpersonate={canImpersonate}
-            isSelf={isSelf}
-            linkedPersonName={
-              linkedPerson ? `${linkedPerson.firstName} ${linkedPerson.lastName}` : null
             }
-            tenantRoleNames={tenantRoleNames}
-            accessStatus={accessStatus}
+            veranstaltungsFreigaben={
+              linkedPerson ? (
+                <PersonClubEventGovernanceSection personId={linkedPerson.id} canManage={canManage} />
+              ) : null
+            }
+            zugriff={<PersonNavEffectiveAccessCard tenantId={tenantId} userId={userId} />}
           />
-
-          <div className="sce-detail-section">
-            <div className="sce-detail-section-header">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                Mitgliedschaft
-              </p>
-            </div>
-            <div className="sce-detail-section-body space-y-3">
-              <div className="sce-data-field">
-                <span className="sce-data-label">Beigetreten</span>
-                <span className="sce-data-value">{formatDate(membership.joinedAt)}</span>
-              </div>
-              <div className="sce-data-field">
-                <span className="sce-data-label">Kontostatus</span>
-                <span className="sce-data-value">{accessStatus.primaryLabel}</span>
-              </div>
-            </div>
-          </div>
-        </aside>
+        </div>
       </div>
     </div>
   );

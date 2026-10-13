@@ -12,15 +12,15 @@ export default async function PersonNavEffectiveAccessCard({ tenantId, userId }:
   const sections = await getPersonNavEffectiveAccessSections(tenantId, userId, moduleGroups);
 
   return (
-    <div className="sce-detail-section">
-      <div className="sce-detail-section-header">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-          Effektiver Zugriff
+    <div className="space-y-3" data-testid="person-zugriff-panel">
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold text-[var(--foreground)]">Effektiver Zugriff</h2>
+        <p className="max-w-3xl text-sm text-[var(--text-2)]">
+          Aus Rollen und Zuständigkeiten abgeleitete Berechtigungen — gruppiert nach Produktbereich.
+          Klappe Bereiche auf, um Details zu prüfen.
         </p>
       </div>
-      <div className="sce-detail-section-body">
-        <PersonNavEffectiveAccessView sections={sections} />
-      </div>
+      <PersonNavEffectiveAccessView sections={sections} collapsible />
     </div>
   );
 }

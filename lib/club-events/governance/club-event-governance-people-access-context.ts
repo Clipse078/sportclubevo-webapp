@@ -25,7 +25,7 @@ export function parseClubEventGovernanceReturnContext(
 }
 
 export function buildClubEventGovernanceUserDetailHref(userId: string): string {
-  return `/dashboard/admin/users/${encodeURIComponent(userId)}?returnContext=${CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_CONTEXT}`;
+  return `/dashboard/admin/users/${encodeURIComponent(userId)}?returnContext=${CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_CONTEXT}&tab=veranstaltungs-freigaben`;
 }
 
 export type ClubEventCreatorGovernanceRow = {

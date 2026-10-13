@@ -126,7 +126,7 @@ describe("SCE-ACTIVITY-CREATE-01C-R5 — governance configuration discoverabilit
     expect(upsert).toContain("validateActivityGovernanceConfiguration");
     const person = read("components/admin/users/people-access/PersonClubEventGovernanceSection.tsx");
     expect(person).toContain("validatorCount === 0");
-    expect(person).toContain("Freigabeberechtigte konfigurieren");
+    expect(person).toContain("Freigabeberechtigte verwalten");
   });
 
   it("H — governance admin can navigate back to Freigaben", () => {
@@ -140,6 +140,7 @@ describe("SCE-ACTIVITY-CREATE-01C-R5 — governance configuration discoverabilit
     expect(buildClubEventGovernanceUserDetailHref("user-1")).toContain(
       CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_CONTEXT,
     );
+    expect(buildClubEventGovernanceUserDetailHref("user-1")).toContain("tab=veranstaltungs-freigaben");
     const detail = read("app/(admin)/dashboard/admin/users/[userId]/page.tsx");
     expect(detail).toContain("parseClubEventGovernanceReturnContext");
     expect(detail).toContain("Zurück zu Veranstaltungs-Freigaben");

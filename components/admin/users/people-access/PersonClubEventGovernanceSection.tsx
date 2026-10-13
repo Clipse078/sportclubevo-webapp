@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { SceSegmentedControl } from "@/components/admin/shared/SceSegmentedControl";
-import ClubEventValidatorPoolSection from "./ClubEventValidatorPoolSection";
+import { CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF } from "@/lib/club-events/governance/club-event-governance-people-access-context";
 
 type Props = {
   personId: string;
   canManage: boolean;
 };
+
+const PUBLICATION_COPY = {
+  DIRECT_PUBLISH:
+    "Von dieser Person erstellte Veranstaltungen werden nach erfolgreicher Prüfung der Eingaben direkt veröffentlicht.",
+  APPROVAL_REQUIRED:
+    "Von dieser Person eingereichte Veranstaltungen müssen zuerst von einer freigabeberechtigten Person geprüft werden.",
+} as const;
 
 export default function PersonClubEventGovernanceSection({ personId, canManage }: Props) {
   const [createEnabled, setCreateEnabled] = useState(true);
@@ -18,7 +26,6 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
   const [validatorCount, setValidatorCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const validatorPoolRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/admin/sce/activity-governance/club-event")
@@ -50,7 +57,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
       validatorCount === 0
     ) {
       setError(
-        "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Füge zuerst mindestens eine Person für die Freigabe hinzu.",
+        "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Lege zuerst mindestens eine freigabeberechtigte Person auf Club-Ebene an.",
       );
       return;
     }
@@ -70,7 +77,7 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
       if (!res.ok) {
         setError(
           data?.error ??
-            "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Füge zuerst mindestens eine Person für die Freigabe hinzu.",
+            "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Lege zuerst mindestens eine freigabeberechtigte Person auf Club-Ebene an.",
         );
       }
     } finally {
@@ -78,38 +85,60 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
     }
   }
 
-  function focusValidatorPool() {
-    document.getElementById("club-event-validator-pool")?.scrollIntoView({ behavior: "smooth" });
-  }
+  const validatorSummary =
+    validatorCount === 0
+      ? "Es sind noch keine freigabeberechtigten Personen hinterlegt."
+      : validatorCount === 1
+        ? "1 freigabeberechtigte Person ist auf Club-Ebene hinterlegt."
+        : `${validatorCount} freigabeberechtigte Personen sind auf Club-Ebene hinterlegt.`;
 
   return (
-    <div className="space-y-4" data-testid="person-club-event-governance-block">
+    <div className="space-y-6" data-testid="person-club-event-governance-block">
+      <div className="space-y-2">
+        <h2 className="text-base font-semibold text-[var(--foreground)]">Veranstaltungs-Freigaben</h2>
+        <p className="max-w-3xl text-sm text-[var(--text-2)]">
+          Steuert, ob diese Person Veranstaltungen erstellen darf und ob eingereichte Veranstaltungen
+          direkt veröffentlicht werden oder eine Freigabe benötigen. Freigabeberechtigte Personen werden
+          zentral auf Club-Ebene verwaltet — nicht pro Person dupliziert.
+        </p>
+      </div>
+
       <section
-        className="space-y-3 rounded-xl border border-[var(--border)] p-3"
+        className="space-y-5 rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-4 sm:p-5"
         data-testid="person-club-event-governance"
       >
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-2)]">
-          Club Event
-        </h3>
-        <SwitchToggle
-          id={`person-club-event-create-${personId}`}
-          checked={createEnabled}
-          onChange={(checked) => {
-            setCreateEnabled(checked);
-            void persist({ createEnabled: checked, publicationAuthority });
-          }}
-          disabled={!canManage || saving}
-          label="Aktivitäten erstellen"
-        />
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Erstellberechtigung</h3>
+          <SwitchToggle
+            id={`person-club-event-create-${personId}`}
+            checked={createEnabled}
+            onChange={(checked) => {
+              setCreateEnabled(checked);
+              void persist({ createEnabled: checked, publicationAuthority });
+            }}
+            disabled={!canManage || saving}
+            label="Veranstaltungen erstellen"
+          />
+          <p className="text-xs text-[var(--text-2)]">
+            Erlaubt das Anlegen von Veranstaltungen im Namen dieser Person im Club.
+          </p>
+        </div>
+
         {createEnabled ? (
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-[var(--text-2)]">Veröffentlichung</span>
+          <div className="space-y-3 border-t border-[var(--border)] pt-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">Veröffentlichung</h3>
+              <p className="text-xs text-[var(--text-2)]">
+                Wähle genau eine Regel — direkte Veröffentlichung oder Freigabe durch eine berechtigte
+                Person.
+              </p>
+            </div>
             <SceSegmentedControl<"DIRECT_PUBLISH" | "APPROVAL_REQUIRED">
               value={publicationAuthority}
               onChange={(value) => {
                 if (value === "APPROVAL_REQUIRED" && validatorCount === 0) {
                   setError(
-                    "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Füge zuerst mindestens eine Person für die Freigabe hinzu.",
+                    "Für Veranstaltungen ist noch keine freigabeberechtigte Person hinterlegt. Lege zuerst mindestens eine freigabeberechtigte Person auf Club-Ebene an.",
                   );
                   return;
                 }
@@ -124,31 +153,50 @@ export default function PersonClubEventGovernanceSection({ personId, canManage }
               aria-label="Veröffentlichung Veranstaltung"
               testId="person-club-event-publication-authority"
             />
+            <p className="text-xs leading-relaxed text-[var(--text-2)]" data-testid="person-club-event-publication-copy">
+              {PUBLICATION_COPY[publicationAuthority]}
+            </p>
           </div>
         ) : null}
+
         {error ? (
-          <div className="space-y-2">
-            <p className="text-xs text-rose-600" role="alert">
+          <div className="space-y-2 rounded-lg border border-rose-500/30 bg-rose-950/20 px-3 py-2">
+            <p className="text-xs text-rose-200" role="alert">
               {error}
             </p>
             {error.includes("freigabeberechtigte") ? (
-              <button
-                type="button"
-                className="text-xs font-semibold text-[var(--sce-primary)] hover:underline"
-                onClick={focusValidatorPool}
+              <Link
+                href={CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF}
+                className="inline-block text-xs font-semibold text-[var(--sce-primary)] hover:underline"
+                data-testid="person-club-event-manage-validators"
               >
-                Freigabeberechtigte konfigurieren
-              </button>
+                Freigabeberechtigte verwalten
+              </Link>
             ) : null}
           </div>
         ) : null}
       </section>
-      <div ref={validatorPoolRef}>
-        <ClubEventValidatorPoolSection
-          canManage={canManage}
-          onValidatorCountChange={setValidatorCount}
-        />
-      </div>
+
+      <aside
+        className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/50 p-4"
+        data-testid="person-club-event-validator-context"
+      >
+        <h3 className="text-sm font-semibold text-[var(--foreground)]">Freigabe auf Club-Ebene</h3>
+        <p className="text-xs leading-relaxed text-[var(--text-2)]">{validatorSummary}</p>
+        <p className="text-xs text-[var(--text-2)]">
+          Freigabeberechtigte prüfen eingereichte Veranstaltungen — unabhängig von dieser
+          Ersteller-Konfiguration.
+        </p>
+        {canManage ? (
+          <Link
+            href={CLUB_EVENT_GOVERNANCE_PEOPLE_ACCESS_HREF}
+            className="fca-button-secondary inline-flex text-xs"
+            data-testid="person-club-event-validator-context-link"
+          >
+            Freigabeberechtigte verwalten
+          </Link>
+        ) : null}
+      </aside>
     </div>
   );
 }

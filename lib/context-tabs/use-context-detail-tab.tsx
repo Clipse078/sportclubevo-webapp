@@ -12,6 +12,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ContextTabDefinition, ContextTabId, ContextTabNavigationConfig } from "./types";
 import { listAllVisibleTabs } from "./registry";
 import {
+  CONTEXT_TAB_QUERY_PARAM,
   buildContextTabHref,
   readContextTabParam,
   resolveContextTabFromSearchParams,
@@ -94,6 +95,27 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
 
   const basePath = pathname;
 
+  const hrefForTab = useCallback(
+    (tabKey: TTabId) => {
+      const preserved = new URLSearchParams();
+      searchParams.forEach((value, key) => {
+        if (key !== CONTEXT_TAB_QUERY_PARAM) {
+          preserved.set(key, value);
+        }
+      });
+      const baseHref = buildContextTabHref(basePath, tabKey);
+      if (preserved.toString().length === 0) {
+        return baseHref;
+      }
+      const url = new URL(baseHref, "http://local");
+      preserved.forEach((value, key) => {
+        url.searchParams.set(key, value);
+      });
+      return `${url.pathname}${url.search}`;
+    },
+    [basePath, searchParams],
+  );
+
   const navigateToTab = useCallback(
     (tabKey: TTabId) => {
       if (tabKey === activeTab) {
@@ -102,15 +124,9 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
       if (dirtyNav && !dirtyNav.confirmNavigationIfDirty()) {
         return;
       }
-      const href = buildContextTabHref(basePath, tabKey);
-      router.push(href);
+      router.push(hrefForTab(tabKey));
     },
-    [activeTab, basePath, dirtyNav, router],
-  );
-
-  const hrefForTab = useCallback(
-    (tabKey: TTabId) => buildContextTabHref(basePath, tabKey),
-    [basePath],
+    [activeTab, dirtyNav, hrefForTab, router],
   );
 
   return {
