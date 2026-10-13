@@ -7,6 +7,7 @@ import { ToastProvider } from "@/components/ui/ToastProvider";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
+import { loadClubEventEffectiveGovernanceForSession } from "@/lib/club-events/composer/load-effective-governance-server";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
@@ -44,6 +45,9 @@ export default async function NewVeranstaltungPage() {
   const otherFacilityGroups = facilityGroupsForTypes(["OTHER"]);
 
   const t = await getTranslations("Veranstaltungen.editor.create");
+  const effectiveGovernance = await loadClubEventEffectiveGovernanceForSession({
+    tenantId: tenantContext.id,
+  });
 
   return (
     <ToastProvider>
@@ -64,6 +68,16 @@ export default async function NewVeranstaltungPage() {
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
           otherFacilityGroups={otherFacilityGroups}
           timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+          effectiveGovernance={
+            effectiveGovernance ?? {
+              activityType: "CLUB_EVENT",
+              personId: "anonymous",
+              mayCreate: true,
+              publicationAuthority: "DIRECT_PUBLISH",
+              approvalStrategy: "ANY_ONE",
+              validatorPersonIds: [],
+            }
+          }
         />
       </PlanningEditorShell>
     </ToastProvider>

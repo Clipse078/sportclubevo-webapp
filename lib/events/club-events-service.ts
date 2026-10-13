@@ -18,6 +18,7 @@ import type {
   ClubEventOrganisationalAudienceInput,
 } from "@/lib/events/club-event-organisational-audience-types";
 import { prisma } from "@/lib/db/prisma";
+import { clubEventPublishedVisibilityWhere } from "@/lib/events/club-event-published-visibility";
 
 export class ClubEventNotFoundError extends Error {
   constructor() {
@@ -184,8 +185,8 @@ function mapClubEventRow(row: NonNullable<ClubEventRow>): ClubEvent {
 export async function listClubEvents(tenantId: string): Promise<ClubEvent[]> {
   const rows = await prisma.event.findMany({
     where: {
-      type: "OTHER",
       tenantId,
+      ...clubEventPublishedVisibilityWhere(),
     },
     orderBy: [{ startAt: "asc" }, { createdAt: "desc" }],
     select: CLUB_EVENT_SELECT,

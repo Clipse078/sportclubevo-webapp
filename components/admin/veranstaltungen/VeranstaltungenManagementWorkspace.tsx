@@ -162,14 +162,23 @@ export default function VeranstaltungenManagementWorkspace({
         subtitleTestId="veranstaltungen-header-subtitle"
         actions={
           canManage ? (
-            <Link
-              href="/dashboard/veranstaltungen/new"
-              className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-              data-testid="veranstaltungen-create-link"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Veranstaltung erstellen
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/dashboard/veranstaltungen/freigaben"
+                className="fca-button-secondary text-sm"
+                data-testid="veranstaltungen-approvals-link"
+              >
+                Freigaben
+              </Link>
+              <Link
+                href="/dashboard/veranstaltungen/new"
+                className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                data-testid="veranstaltungen-create-link"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Veranstaltung erstellen
+              </Link>
+            </div>
           ) : null
         }
       />

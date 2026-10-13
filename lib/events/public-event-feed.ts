@@ -276,6 +276,7 @@ export async function getPublicEvents(input: GetPublicEventsInput): Promise<Publ
   const where: Record<string, unknown> = {
     ...surfaceFilters,
     tenantId: input.tenantId,
+    reviewStage: { in: ["APPROVED", "PUBLISHED"] },
     // A malformed historical cross-tenant Event → Team relation must not
     // expose the related Team through a tenant-owned Event.
     AND: [

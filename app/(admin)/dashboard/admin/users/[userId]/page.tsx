@@ -16,6 +16,7 @@ import TenantRoleAssignmentControl from "@/components/admin/users/TenantRoleAssi
 import ScopedRoleManagementControl from "@/components/admin/users/ScopedRoleManagementControl";
 import PersonNavEffectiveAccessCard from "@/components/admin/users/PersonNavEffectiveAccessCard";
 import PersonAdminActionsPanel from "@/components/admin/users/PersonAdminActionsPanel";
+import PersonClubEventGovernanceSection from "@/components/admin/users/people-access/PersonClubEventGovernanceSection";
 import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
 import { actorHasImpersonateTenantPermission } from "@/lib/admin/users/tenant-impersonation";
 
@@ -191,6 +192,9 @@ export default async function AdminUserDetailPage({ params }: Props) {
           </div>
 
           <PersonNavEffectiveAccessCard tenantId={tenantId} userId={userId} />
+          {linkedPerson ? (
+            <PersonClubEventGovernanceSection personId={linkedPerson.id} canManage={canManage} />
+          ) : null}
         </div>
 
         <aside className="space-y-5">

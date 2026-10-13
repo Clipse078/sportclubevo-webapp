@@ -7,7 +7,7 @@
 | **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** next |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
-| **Next slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption (**NOT_STARTED**) |
+| **Next slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption (**IMPLEMENTED_PENDING_PO_UAT**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -40,7 +40,7 @@ Research and, **only if an architecture / feasibility gate passes**, establish o
 SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01A — Research & Architecture — CLOSED (CONDITIONAL_PASS_ACCEPTED)
   → SCE-ACTIVITY-CREATE-01B — Composer foundation + R1/R2/R3 — CLOSED
-  → SCE-ACTIVITY-CREATE-01C — Club Event reference adoption — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01C — Club Event reference adoption — IMPLEMENTED_PENDING_PO_UAT
   → SCE-ACTIVITY-CREATE-01D–01G — Domain adoption & planning integration — NOT_STARTED
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
