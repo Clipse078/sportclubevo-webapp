@@ -9,6 +9,7 @@ import {
 } from "../club-event-status-presentation";
 import { buildSceActivityRoute, parseActivityIdFromResourceKey } from "../route";
 import { buildSceActivityPresentationStatus } from "../status";
+import { buildSceClubEventAudiencePresentation } from "@/lib/events/club-event-organisational-audience-presentation";
 import type { SceClubEventPresentationModel } from "../types";
 
 export type ResolveSceClubEventPresentationInput = {
@@ -47,10 +48,16 @@ export function resolveSceClubEventPresentation(
   const legacy = buildVeranstaltungenManagementActivityPresentation(input.event, {
     facilityResourceLabel: input.facilityResourceLabel,
   });
+  const audience = buildSceClubEventAudiencePresentation({
+    scope: input.event.organisationalAudience.scope,
+    targets: input.event.organisationalAudience.targets,
+  });
+
   return resolveSceClubEventPresentationFromLegacy(legacy, {
     organiserDisplayName: input.event.organizerName,
     organiserIdentity: resolveClubEventOrganiserIdentity(input.event, input),
     lifecycleStatus: input.event.status,
+    audience,
   });
 }
 
@@ -60,6 +67,7 @@ export function resolveSceClubEventPresentationFromLegacy(
     organiserDisplayName?: string | null;
     organiserIdentity?: ReturnType<typeof buildNameOnlyClubIdentity>;
     lifecycleStatus?: string;
+    audience?: SceClubEventPresentationModel["audience"];
   } = {},
 ): SceClubEventPresentationModel {
   const kind = presentation.identity.activityKind;
@@ -89,6 +97,7 @@ export function resolveSceClubEventPresentationFromLegacy(
     typeLabel: presentation.identity.typeLabel?.trim() || "VERANSTALTUNG",
     eventTitle: presentation.identity.title,
     organiser,
+    audience: options.audience,
     schedule: { ...presentation.schedule },
     location: { ...presentation.location },
     route: buildSceActivityRoute("CLUB_EVENT", resourceKey),

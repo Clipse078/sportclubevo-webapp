@@ -11,10 +11,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 import type { ClubEvent } from "@/lib/events/club-events-service";
+import { applyClubEventOrganisationalAudienceTestDefaults } from "@/lib/events/club-event-test-defaults";
 import VeranstaltungenManagementWorkspace from "../VeranstaltungenManagementWorkspace";
 
 function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
-  return {
+  return applyClubEventOrganisationalAudienceTestDefaults({
     id: overrides.id ?? "event-1",
     title: overrides.title ?? "Event",
     description: null,
@@ -40,7 +41,7 @@ function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
     updatedAt: new Date(),
     season: { id: "season-1", key: "2026-27", name: "2026/27" },
     ...overrides,
-  };
+  });
 }
 
 describe("VeranstaltungenManagementWorkspace", () => {

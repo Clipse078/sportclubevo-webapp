@@ -56,6 +56,6 @@ Design System contract: [`SCE-DESIGN-SYSTEM.md`](../design/SCE-DESIGN-SYSTEM.md)
 - [x] PR #836 merge to `STAGE` (closure commit)
 - [x] Roadmap status → **CLOSED**
 
-**NEXT (not started):** [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) — Club Event audience & team scope.
+**NEXT:** [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) — **CLOSED** (PR #837).
 
-**Then:** [`SCE-UI-ROLLOUT-01H`](./SCE-UI-ROLLOUT-01.md) — Core planning surface adoption.
+**Then:** [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) → (gate) **01B+** → [`SCE-UI-ROLLOUT-01H`](./SCE-UI-ROLLOUT-01.md).

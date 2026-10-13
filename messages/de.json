@@ -811,6 +811,7 @@
         "timeEnd": "Ende",
         "allDay": "Ganztägig",
         "allDaySummary": "Ganztägig",
+        "recurrence": "Wiederholung",
         "teamSelectPlaceholder": "Team auswählen",
         "teamSelectEmpty": "Keine Teams verfügbar"
       },

@@ -117,14 +117,16 @@ export type SceTournamentPresentationModel = SceActivityPresentationBase & {
 
 /** Event scope / «Gültig für» — separate from organiser, publication, and participation. */
 export type SceClubEventAudiencePresentation = {
-  scope: "CLUB_WIDE" | "SELECTED_TEAMS";
-  /** Primary line: «Gesamter Verein», single team name, or joined team names when space allows. */
+  scope: "CLUB_WIDE" | "SELECTED_ORG_UNITS";
+  /** Primary line: «Gesamter Verein», single target name, or joined names when space allows. */
   primaryLabel: string;
-  /** Optional short label for MICRO / list-row (e.g. «3 Teams»). */
+  /** Optional short label for MICRO / list-row (e.g. «3 Organisationseinheiten»). */
   compactLabel?: string;
-  /** Authoritative team names for tooltips / screen readers when primary is abbreviated. */
+  /** Authoritative target names for tooltips / screen readers when primary is abbreviated. */
   detailLabels?: string[];
+  targetCount?: number;
   teamCount?: number;
+  orgUnitCount?: number;
 };
 
 export type SceClubEventPresentationModel = SceActivityPresentationBase & {

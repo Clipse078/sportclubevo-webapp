@@ -5,6 +5,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { ClubEvent } from "@/lib/events/club-events-service";
+import { applyClubEventOrganisationalAudienceTestDefaults } from "@/lib/events/club-event-test-defaults";
 import VeranstaltungenOverview from "@/components/admin/veranstaltungen/VeranstaltungenOverview";
 
 vi.mock("next/navigation", () => ({
@@ -14,7 +15,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
-  return {
+  return applyClubEventOrganisationalAudienceTestDefaults({
     id: overrides.id ?? "event-1",
     title: overrides.title ?? "Generalversammlung",
     description: null,
@@ -40,7 +41,7 @@ function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
     updatedAt: new Date("2026-08-01T00:00:00.000Z"),
     season: { id: "season-1", key: "2026-27", name: "2026/27" },
     ...overrides,
-  };
+  });
 }
 
 describe("VeranstaltungenOverview", () => {
@@ -93,7 +94,7 @@ describe("VeranstaltungenOverview", () => {
     expect(screen.getByTestId("veranstaltungen-management-rail")).toBeInTheDocument();
     expect(screen.getByTestId("spiele-month-calendar")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-filter-rail")).toBeInTheDocument();
-    expect(screen.getByText("Planung")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-quick-access")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-create-link")).toBeInTheDocument();
   });
 });

@@ -7,6 +7,16 @@
  */
 
 import { notifyPersonalDashboardForClubEventAudience } from "@/lib/dashboard/read-model/invalidate-audience";
+import {
+  getClubEventOrganisationalAudienceDto,
+  persistClubEventOrganisationalAudienceInTransaction,
+  prepareClubEventOrganisationalAudienceWrite,
+  replaceClubEventOrganisationalAudience,
+} from "@/lib/events/club-event-organisational-audience-service";
+import type {
+  ClubEventOrganisationalAudienceDto,
+  ClubEventOrganisationalAudienceInput,
+} from "@/lib/events/club-event-organisational-audience-types";
 import { prisma } from "@/lib/db/prisma";
 
 export class ClubEventNotFoundError extends Error {
@@ -55,6 +65,10 @@ export type ClubEvent = {
     key: string;
     name: string;
   } | null;
+  clubEventOrganisationalScope: "CLUB_WIDE" | "SELECTED_ORG_UNITS";
+  clubEventSeriesId: string | null;
+  clubEventOccurrenceDateKey: string | null;
+  organisationalAudience: ClubEventOrganisationalAudienceDto;
 };
 
 const CLUB_EVENT_SELECT = {
@@ -88,13 +102,87 @@ const CLUB_EVENT_SELECT = {
       name: true,
     },
   },
+  clubEventOrganisationalScope: true,
+  clubEventSeriesId: true,
+  clubEventOccurrenceDateKey: true,
+  clubEventOrganisationalAudienceTeams: {
+    select: {
+      teamId: true,
+      team: { select: { name: true, alternativeName: true } },
+    },
+    orderBy: { createdAt: "asc" as const },
+  },
+  clubEventOrganisationalAudienceOrgUnits: {
+    select: {
+      orgUnitId: true,
+      orgUnit: { select: { name: true } },
+    },
+    orderBy: { createdAt: "asc" as const },
+  },
 } as const;
+
+type ClubEventRow = Awaited<
+  ReturnType<typeof prisma.event.findFirst<{ select: typeof CLUB_EVENT_SELECT }>>
+>;
+
+function mapClubEventRow(row: NonNullable<ClubEventRow>): ClubEvent {
+  const targets = [
+    ...row.clubEventOrganisationalAudienceTeams.map((entry) => ({
+      kind: "TEAM" as const,
+      id: entry.teamId,
+      label: entry.team.alternativeName?.trim() || entry.team.name.trim(),
+    })),
+    ...row.clubEventOrganisationalAudienceOrgUnits.map((entry) => ({
+      kind: "ORG_UNIT" as const,
+      id: entry.orgUnitId,
+      label: entry.orgUnit.name.trim(),
+    })),
+  ];
+
+  const scope = row.clubEventOrganisationalScope as ClubEvent["clubEventOrganisationalScope"];
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    location: row.location,
+    startAt: row.startAt,
+    endAt: row.endAt,
+    allDay: row.allDay,
+    organizerName: row.organizerName,
+    remarks: row.remarks,
+    status: row.status,
+    reviewStage: row.reviewStage,
+    source: row.source,
+    websiteVisible: row.websiteVisible,
+    infoboardVisible: row.infoboardVisible,
+    homepageVisible: row.homepageVisible,
+    wochenplanVisible: row.wochenplanVisible,
+    trainingsplanVisible: row.trainingsplanVisible,
+    teamPageVisible: row.teamPageVisible,
+    tenantId: row.tenantId,
+    seasonId: row.seasonId,
+    teamId: row.teamId,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    season: row.season,
+    clubEventOrganisationalScope: scope,
+    clubEventSeriesId: row.clubEventSeriesId,
+    clubEventOccurrenceDateKey: row.clubEventOccurrenceDateKey,
+    organisationalAudience: {
+      scope,
+      teamIds: row.clubEventOrganisationalAudienceTeams.map((t) => t.teamId),
+      orgUnitIds: row.clubEventOrganisationalAudienceOrgUnits.map((o) => o.orgUnitId),
+      targets,
+    },
+  };
+}
 
 /**
  * List all type=OTHER events for the given tenant, ordered by startAt asc.
  */
 export async function listClubEvents(tenantId: string): Promise<ClubEvent[]> {
-  return prisma.event.findMany({
+  const rows = await prisma.event.findMany({
     where: {
       type: "OTHER",
       tenantId,
@@ -102,6 +190,7 @@ export async function listClubEvents(tenantId: string): Promise<ClubEvent[]> {
     orderBy: [{ startAt: "asc" }, { createdAt: "desc" }],
     select: CLUB_EVENT_SELECT,
   });
+  return rows.map(mapClubEventRow);
 }
 
 /**
@@ -112,7 +201,7 @@ export async function getClubEvent(
   tenantId: string,
   eventId: string,
 ): Promise<ClubEvent | null> {
-  return prisma.event.findFirst({
+  const row = await prisma.event.findFirst({
     where: {
       id: eventId,
       type: "OTHER",
@@ -120,6 +209,7 @@ export async function getClubEvent(
     },
     select: CLUB_EVENT_SELECT,
   });
+  return row ? mapClubEventRow(row) : null;
 }
 
 export type UpdateClubEventInput = {
@@ -137,6 +227,7 @@ export type UpdateClubEventInput = {
   wochenplanVisible?: boolean;
   trainingsplanVisible?: boolean;
   teamPageVisible?: boolean;
+  audience?: ClubEventOrganisationalAudienceInput;
 };
 
 /**
@@ -218,14 +309,50 @@ export async function updateClubEvent(
   if (input.teamPageVisible !== undefined)
     data.teamPageVisible = Boolean(input.teamPageVisible);
 
-  const updated = await prisma.event.update({
-    where: { id: eventId, tenantId, type: "OTHER" },
-    data,
-    select: CLUB_EVENT_SELECT,
+  const audiencePrepared =
+    input.audience !== undefined
+      ? await prepareClubEventOrganisationalAudienceWrite(tenantId, input.audience)
+      : null;
+
+  const updated = await prisma.$transaction(async (tx) => {
+    if (Object.keys(data).length > 0) {
+      await tx.event.update({
+        where: { id: eventId, tenantId, type: "OTHER" },
+        data,
+      });
+    }
+    if (audiencePrepared) {
+      await persistClubEventOrganisationalAudienceInTransaction(
+        tx,
+        tenantId,
+        eventId,
+        audiencePrepared,
+      );
+    }
+    return tx.event.findFirst({
+      where: { id: eventId, tenantId, type: "OTHER" },
+      select: CLUB_EVENT_SELECT,
+    });
   });
+
+  if (!updated) {
+    throw new ClubEventNotFoundError();
+  }
+
   void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
-  return updated;
+  return mapClubEventRow(updated);
 }
+
+export async function applyClubEventOrganisationalAudienceOnCreate(
+  tenantId: string,
+  eventId: string,
+  audience: ClubEventOrganisationalAudienceInput | undefined,
+): Promise<void> {
+  if (!audience) return;
+  await replaceClubEventOrganisationalAudience(tenantId, eventId, audience);
+}
+
+export { getClubEventOrganisationalAudienceDto };
 
 /**
  * Archive (soft-delete) a type=OTHER event: sets status=ARCHIVED.
@@ -250,7 +377,7 @@ export async function archiveClubEvent(
     select: CLUB_EVENT_SELECT,
   });
   void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
-  return archived;
+  return mapClubEventRow(archived);
 }
 
 /**
@@ -276,7 +403,7 @@ export async function restoreClubEvent(
     select: CLUB_EVENT_SELECT,
   });
   void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
-  return restored;
+  return mapClubEventRow(restored);
 }
 
 /**

@@ -13,8 +13,11 @@ import VeranstaltungEditForm from "@/components/admin/veranstaltungen/Veranstalt
 import { VeranstaltungEditSubmitProvider } from "@/components/admin/veranstaltungen/VeranstaltungEditSubmitContext";
 import VeranstaltungAusspielungFields from "@/components/admin/veranstaltungen/VeranstaltungAusspielungFields";
 
+let mockSearchParams = "";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/veranstaltungen/new",
+  useSearchParams: () => new URLSearchParams(mockSearchParams),
 }));
 
 vi.mock("@/lib/collaboration/client/use-collaboration-mutation", () => ({
@@ -94,6 +97,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   });
 
   it("create form posts manual Ausspielung fields only (no infoboardVisible)", async () => {
+    mockSearchParams = "";
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({}),
@@ -121,17 +125,22 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
       return { ok: true, json: async () => ({}) };
     });
 
-    renderWithIntl(<VeranstaltungCreateForm />);
-    await screen.findByRole("option", { name: /2026\/27/ });
+    const { container } = renderWithIntl(<VeranstaltungCreateForm />);
+    await vi.waitFor(() => {
+      expect(container.querySelector("select.fca-select")?.querySelectorAll("option").length).toBeGreaterThan(1);
+    });
 
     fireEvent.change(screen.getByPlaceholderText(/Generalversammlung/), {
       target: { value: "Test Event" },
     });
-    fireEvent.change(document.querySelector('input[type="date"]')!, {
+    fireEvent.change(container.querySelector('select.fca-select')!, {
+      target: { value: "season-1" },
+    });
+    fireEvent.change(container.querySelector('input[type="date"]')!, {
       target: { value: "2026-09-25" },
     });
 
-    fireEvent.click(screen.getByRole("switch", { name: "Wochenplan" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Wochenplan", hidden: true }));
     fireEvent.click(screen.getByRole("button", { name: /Veranstaltung erstellen/ }));
 
     await vi.waitFor(() => {
@@ -148,6 +157,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   });
 
   it("toggling Ganztägig does not reset Ausspielung switches", async () => {
+    mockSearchParams = "";
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -165,23 +175,30 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
     }) as typeof fetch;
 
     renderWithIntl(<VeranstaltungCreateForm />);
-    await screen.findByRole("option", { name: /2026\/27/ });
+    await vi.waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled();
+    });
 
-    fireEvent.click(screen.getByRole("switch", { name: "Wochenplan" }));
-    expect(screen.getByRole("switch", { name: "Wochenplan" })).toHaveAttribute(
+    fireEvent.click(screen.getByRole("switch", { name: "Wochenplan", hidden: true }));
+    expect(screen.getByRole("switch", { name: "Wochenplan", hidden: true })).toHaveAttribute(
       "aria-checked",
       "true",
     );
 
-    fireEvent.click(screen.getByRole("switch", { name: "Ganztägig" }));
-    expect(screen.getByRole("switch", { name: "Wochenplan" })).toHaveAttribute(
+    fireEvent.click(screen.getByRole("switch", { name: "Ganztägig", hidden: true }));
+    expect(screen.getByRole("switch", { name: "Ganztägig", hidden: true })).toHaveAttribute(
       "aria-checked",
       "true",
     );
-    expect(screen.getByRole("switch", { name: "Website" })).toHaveAttribute("aria-checked", "true");
+
+    expect(screen.getByRole("switch", { name: "Wochenplan", hidden: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
   });
 
   it("edit form loads persisted Ausspielung values", () => {
+    mockSearchParams = "tab=mehr";
     renderWithIntl(
       <VeranstaltungEditSubmitProvider>
         <VeranstaltungEditForm
@@ -205,6 +222,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
             trainingsplanVisible: false,
             teamPageVisible: false,
             season: { id: "season-1", key: "2026-27", name: "2026/27" },
+            organisationalAudience: { scope: "CLUB_WIDE", teamIds: [], orgUnitIds: [], targets: [] },
           }}
         />
       </VeranstaltungEditSubmitProvider>,

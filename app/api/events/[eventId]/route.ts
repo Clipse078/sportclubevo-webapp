@@ -50,6 +50,7 @@ import {
 } from "@/lib/collaboration/activity-change/cycle-baseline";
 import { resolveTenantKeyForCollaboration } from "@/lib/collaboration/resolve-tenant-key";
 import { buildClubEventApiCollaborationPayload } from "@/lib/collaboration/club-event/club-event-api-collaboration";
+import { parseClubEventOrganisationalAudienceFromApiBody } from "@/lib/events/club-event-organisational-audience-api";
 
 export const dynamic = "force-dynamic";
 
@@ -286,6 +287,17 @@ export async function PATCH(
     input.trainingsplanVisible = Boolean(mutationBody.trainingsplanVisible);
   if (mutationBody.teamPageVisible !== undefined)
     input.teamPageVisible = Boolean(mutationBody.teamPageVisible);
+
+  if (mutationBody.audience !== undefined) {
+    try {
+      input.audience = parseClubEventOrganisationalAudienceFromApiBody(mutationBody.audience);
+    } catch {
+      return NextResponse.json(
+        { error: "Ungültiger Gültigkeitsbereich.", field: "audience" },
+        { status: 400 },
+      );
+    }
+  }
 
   try {
     const tenantKey = await resolveTenantKeyForCollaboration(tenantId);
