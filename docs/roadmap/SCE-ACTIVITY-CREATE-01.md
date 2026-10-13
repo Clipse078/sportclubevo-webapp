@@ -4,8 +4,8 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **ROADMAP — NOT STARTED** |
-| **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — Research & Architecture |
+| **Status** | **IN_PROGRESS** — 01A research complete pending PO architecture review |
+| **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **IMPLEMENTED_PENDING_ARCHITECTURE_REVIEW** |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -36,7 +36,7 @@ Research and, **only if an architecture / feasibility gate passes**, establish o
 
 ```text
 SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
-  → SCE-ACTIVITY-CREATE-01A — Research & Architecture (NOT STARTED)
+  → SCE-ACTIVITY-CREATE-01A — Research & Architecture (IMPLEMENTED_PENDING_ARCHITECTURE_REVIEW)
   → (gate) SCE-ACTIVITY-CREATE-01B+ — Composer foundation & domain adoption
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
