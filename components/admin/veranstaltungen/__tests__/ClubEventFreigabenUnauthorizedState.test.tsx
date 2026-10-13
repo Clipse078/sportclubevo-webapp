@@ -15,6 +15,17 @@ describe("ClubEventFreigabenUnauthorizedState", () => {
       />,
     );
 
+    expect(screen.getByRole("link", { name: "Freigaben verwalten" })).toBeInTheDocument();
+  });
+
+  it("shows governance manage action when admin lacks approve permission", () => {
+    render(
+      <ClubEventFreigabenUnauthorizedState
+        reason="MISSING_APPROVE_PERMISSION"
+        display="GOVERNANCE_ADMIN_NON_VALIDATOR"
+      />,
+    );
+
     expect(screen.getByText("Keine Freigabeberechtigung")).toBeInTheDocument();
     expect(
       screen.getByText(/nicht als freigabeberechtigte Person für Veranstaltungen hinterlegt/),

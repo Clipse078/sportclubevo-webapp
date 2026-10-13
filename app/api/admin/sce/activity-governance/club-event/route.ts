@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { requirePermission } from "@/lib/permissions/require-permission";
+import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+
+const CLUB_EVENT_GOVERNANCE_MANAGE_PERMISSIONS = [
+  PERMISSIONS.USERS_MANAGE,
+  PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
+] as const;
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { loadSceActivityClubGovernancePolicy } from "@/lib/sce/activity-governance/persistence/load-club-governance-policy";
 import {
@@ -10,7 +15,7 @@ import {
 } from "@/lib/sce/activity-governance/persistence/upsert-person-club-event-governance";
 
 export async function GET() {
-  await requirePermission(PERMISSIONS.USERS_MANAGE);
+  await requireAnyPermission([...CLUB_EVENT_GOVERNANCE_MANAGE_PERMISSIONS]);
   const tenant = await getActiveTenant();
   if (!tenant) return NextResponse.json({ error: "Tenant fehlt." }, { status: 404 });
   const policy = await loadSceActivityClubGovernancePolicy(tenant.id);
@@ -18,7 +23,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  await requirePermission(PERMISSIONS.USERS_MANAGE);
+  await requireAnyPermission([...CLUB_EVENT_GOVERNANCE_MANAGE_PERMISSIONS]);
   const tenant = await getActiveTenant();
   if (!tenant) return NextResponse.json({ error: "Tenant fehlt." }, { status: 404 });
 

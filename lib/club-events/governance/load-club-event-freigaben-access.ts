@@ -1,8 +1,6 @@
 import type { Session } from "next-auth";
 import type { PermissionKey } from "@/lib/permissions/permissions";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { tenantHasPermission } from "@/lib/club-events/governance/resolve-club-event-freigaben-access";
 import { prisma } from "@/lib/db/prisma";
 import { resolvePersonIdForUser } from "@/lib/sce/activity-governance/persistence/resolve-person-id";
 import {
@@ -35,17 +33,10 @@ export async function loadClubEventFreigabenAccess(input: {
 
   const validatorPersonIds = typeConfig?.validators.map((row) => row.personId) ?? [];
 
-  const canManageGovernance = tenantHasPermission(
-    platform as readonly PermissionKey[],
-    tenant as readonly PermissionKey[],
-    PERMISSIONS.USERS_MANAGE,
-  );
-
   return resolveClubEventFreigabenAccessFromContext({
     platformPermissions: platform as readonly PermissionKey[],
     tenantPermissions: tenant as readonly PermissionKey[],
     personId,
     validatorPersonIds,
-    canManageGovernance,
   });
 }

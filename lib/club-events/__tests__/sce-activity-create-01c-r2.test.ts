@@ -62,12 +62,12 @@ describe("SCE-ACTIVITY-CREATE-01C-R2 — PO UAT corrections", () => {
       });
     });
 
-    it("denies club admin without approve permission explicitly", () => {
+    it("denies events-only user without governance administration", () => {
       const access = resolveClubEventFreigabenAccessFromContext({
         platformPermissions: [],
         tenantPermissions: [PERMISSIONS.EVENTS_MANAGE],
-        personId: "person-admin",
-        validatorPersonIds: ["person-admin"],
+        personId: "person-user",
+        validatorPersonIds: ["person-validator"],
       });
       expect(access).toEqual({
         kind: "unauthorized",
@@ -76,17 +76,49 @@ describe("SCE-ACTIVITY-CREATE-01C-R2 — PO UAT corrections", () => {
       });
     });
 
-    it("denies holder of approve permission outside validator pool", () => {
+    it("shows governance-admin state for club admin without approve permission", () => {
+      const access = resolveClubEventFreigabenAccessFromContext({
+        platformPermissions: [],
+        tenantPermissions: [
+          PERMISSIONS.EVENTS_MANAGE,
+          PERMISSIONS.USERS_VIEW,
+          PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
+        ],
+        personId: "person-admin",
+        validatorPersonIds: ["person-validator"],
+      });
+      expect(access).toEqual({
+        kind: "unauthorized",
+        reason: "MISSING_APPROVE_PERMISSION",
+        display: "GOVERNANCE_ADMIN_NON_VALIDATOR",
+      });
+    });
+
+    it("denies holder of approve permission outside validator pool without governance admin", () => {
       const access = resolveClubEventFreigabenAccessFromContext({
         platformPermissions: [],
         tenantPermissions: [approve],
-        personId: "person-admin",
+        personId: "person-user",
         validatorPersonIds: ["person-validator"],
       });
       expect(access).toEqual({
         kind: "unauthorized",
         reason: "NOT_IN_VALIDATOR_POOL",
         display: "STANDARD",
+      });
+    });
+
+    it("shows governance-admin state for approve holder outside validator pool", () => {
+      const access = resolveClubEventFreigabenAccessFromContext({
+        platformPermissions: [],
+        tenantPermissions: [approve, PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
+        personId: "person-admin",
+        validatorPersonIds: ["person-validator"],
+      });
+      expect(access).toEqual({
+        kind: "unauthorized",
+        reason: "NOT_IN_VALIDATOR_POOL",
+        display: "GOVERNANCE_ADMIN_NON_VALIDATOR",
       });
     });
 

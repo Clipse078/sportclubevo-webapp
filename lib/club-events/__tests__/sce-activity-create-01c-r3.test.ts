@@ -134,10 +134,9 @@ describe("SCE-ACTIVITY-CREATE-01C-R3 — draft resume + Freigaben UX", () => {
     it("shows governance-admin copy for club admin outside validator pool", () => {
       const access = resolveClubEventFreigabenAccessFromContext({
         platformPermissions: [],
-        tenantPermissions: [approve, PERMISSIONS.USERS_MANAGE],
+        tenantPermissions: [approve, PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
         personId: "person-admin",
         validatorPersonIds: ["person-validator"],
-        canManageGovernance: true,
       });
       expect(access).toEqual({
         kind: "unauthorized",

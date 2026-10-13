@@ -31,6 +31,24 @@ export function tenantHasPermission(
   return platform.includes(permissionKey) || tenant.includes(permissionKey);
 }
 
+/**
+ * Governance administration for Club Events (validator pool, create/publish rules).
+ * Matches Personen & Zugänge manage affordances — not platform-only `users.manage`.
+ */
+export function tenantCanAdministerClubEventGovernance(
+  platformPermissions: readonly PermissionKey[],
+  tenantPermissions: readonly PermissionKey[],
+): boolean {
+  return (
+    tenantHasPermission(platformPermissions, tenantPermissions, PERMISSIONS.USERS_MANAGE) ||
+    tenantHasPermission(
+      platformPermissions,
+      tenantPermissions,
+      PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
+    )
+  );
+}
+
 function resolveFreigabenUnauthorizedDisplay(input: {
   reason: ClubEventFreigabenUnauthorizedReason;
   canManageGovernance: boolean;
@@ -51,7 +69,12 @@ export function resolveClubEventFreigabenAccessFromContext(input: {
   validatorPersonIds: readonly string[];
   canManageGovernance?: boolean;
 }): ClubEventFreigabenAccess {
-  const canManageGovernance = input.canManageGovernance ?? false;
+  const canManageGovernance =
+    input.canManageGovernance ??
+    tenantCanAdministerClubEventGovernance(
+      input.platformPermissions,
+      input.tenantPermissions,
+    );
   const heldApprove = tenantHasPermission(
     input.platformPermissions,
     input.tenantPermissions,
