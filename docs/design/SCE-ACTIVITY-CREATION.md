@@ -51,11 +51,19 @@ This document defines the **target** contracts for unified activity creation. It
 - `lib/shell/responsive-layout.ts` — `SCE_DIALOG_WORKSPACE_PANEL`, `SCE_DIALOG_VARIANT_FORM`, `max-h-[var(--sce-dialog-max-height)]`
 - `components/ui/Dialog.tsx` — focus trap reference (composer may be a sibling variant, not necessarily `Dialog` size presets)
 
-**PROPOSED sizing strategy (evidence-based):**
+**Container geometry (01B-R1 — shared workflow, mode-specific layout):**
 
-- Width: bounded by `--sce-dialog-workspace-max-width` / form variant (~960px cap), centered in `--sce-content-viewport-width`
-- Height: `max-h-[var(--sce-dialog-max-height)]`; internal body scroll
+| Mode | Height / scroll | Footer |
+|------|-----------------|--------|
+| **Overlay** (desktop) | Stable bounded workspace: `--sce-activity-composer-overlay-workspace-height` (~72.5dvh, capped by `--sce-dialog-max-height` and minimum token). Header + tabs + footer fixed; **content region** `flex: 1`, `min-height: 0`, internal scroll (`.sce-scroll-region-dark`). | Persistent inside panel |
+| **Fullscreen** (≤768px overlay host) | Viewport-filling (`100dvh`); same internal scroll contract as overlay | Persistent |
+| **Page** (`/new`, preview page-mode) | **Content-aware** — panel grows with tab content; no overlay min-height. Normal document scroll; **no** nested internal scroll container | Follows content (border/spacing separation) |
+
+**Principle:** *Shared workflow does not require identical container geometry.*
+
+- Width: bounded by `--sce-dialog-workspace-max-width` (~1160px cap), centered in `--sce-content-viewport-width`
 - Underlying planner: `data-sce-modal-background` + de-emphasis (not a second theme)
+- Dark internal scroll: reusable `.sce-scroll-region-dark` in `app/globals.css` (sidebar/explorer language)
 
 ---
 

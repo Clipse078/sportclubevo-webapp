@@ -221,6 +221,46 @@ describe("SceActivityComposer foundation (01B)", () => {
     expect(document.querySelector('[data-origin="PLANNING_SURFACE"]')).toBeTruthy();
   });
 
+  it("T — overlay keeps bounded workspace panel and internal scroll region", () => {
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="overlay"
+        open
+        onClose={vi.fn()}
+        draft={{ title: "abc", notes: "", forceValidationError: false }}
+      />,
+    );
+    const panel = screen.getByTestId("sce-activity-composer");
+    expect(panel.className).toContain("sce-activity-composer-panel--overlay");
+    expect(panel.className).toContain("overflow-hidden");
+    const bodyScroll = screen.getByTestId("sce-activity-composer-body");
+    expect(bodyScroll.getAttribute("data-composer-scroll")).toBe("internal");
+    expect(bodyScroll.className).toContain("overflow-y-auto");
+    expect(bodyScroll.className).toContain("sce-scroll-region-dark");
+    const footer = screen.getByTestId("sce-activity-composer-footer");
+    expect(footer.className).toContain("shrink-0");
+    expect(panel.contains(footer)).toBe(true);
+    expect(bodyScroll.contains(footer)).toBe(false);
+  });
+
+  it("U — page mode avoids overlay min-height and nested scroll container", () => {
+    render(
+      <SceActivityComposer
+        definition={previewDefinition()}
+        containerMode="page"
+        onClose={vi.fn()}
+        draft={{ title: "abc", notes: "", forceValidationError: false }}
+      />,
+    );
+    const panel = screen.getByTestId("sce-activity-composer");
+    expect(panel.className).not.toContain("sce-activity-composer-panel--overlay");
+    expect(panel.className).not.toContain("min-h-[min(100dvh");
+    const bodyScroll = screen.getByTestId("sce-activity-composer-body");
+    expect(bodyScroll.getAttribute("data-composer-scroll")).toBe("document");
+    expect(bodyScroll.className).not.toContain("overflow-y-auto");
+  });
+
   it("S — success callback on happy path", async () => {
     const onSuccess = vi.fn();
     const onClose = vi.fn();

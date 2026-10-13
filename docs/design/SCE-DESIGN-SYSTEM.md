@@ -244,6 +244,16 @@ A modal **Activity Composer must not launch another independent modal, dialog, s
 
 PO visual UAT for 01B foundation: **`/sce-preview/activity-composer`**, **`/sce-preview/activity-composer/page-mode`**.
 
+**Presentation geometry (01B-R1):**
+
+| Mode | Contract |
+|------|----------|
+| **Overlay** | Stable bounded creation workspace; scroll only in composer body (`.sce-scroll-region-dark`) |
+| **Page** | Natural content-driven flow — same tabs/workflow, no overlay height inheritance |
+| **Fullscreen** | Viewport-filling responsive adaptation |
+
+*Shared workflow does not require identical container geometry.*
+
 ---
 
 ## Activity card semantic color language (01D R10 / 01F / 01G)

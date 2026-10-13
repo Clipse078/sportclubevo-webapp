@@ -2,6 +2,7 @@
 
 import type { ReactNode, RefObject } from "react";
 import { cn } from "@/lib/cn";
+import { SCE_ACTIVITY_COMPOSER_PANEL_CLASS } from "@/lib/sce/activity-composer/composer-layout";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { SceActivityComposerResolvedPresentation } from "@/lib/sce/activity-composer/types";
 import { SceActivityComposerHeader } from "./SceActivityComposerHeader";
@@ -57,12 +58,12 @@ export function SceActivityComposerShell({
 
   const panelClassName = cn(
     presentation === "page"
-      ? "flex min-h-[min(100dvh,48rem)] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)]"
+      ? "flex w-full min-w-0 flex-col rounded-2xl border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)]"
       : SCE_DIALOG_WORKSPACE_PANEL,
     presentation === "fullscreen" &&
       "sce-activity-composer-panel--fullscreen h-[100dvh] max-h-[100dvh] rounded-none",
     presentation === "overlay" && "sce-activity-composer-panel--overlay",
-    "sce-activity-composer-panel",
+    SCE_ACTIVITY_COMPOSER_PANEL_CLASS,
   );
 
   return (
@@ -88,6 +89,7 @@ export function SceActivityComposerShell({
       />
 
       <SceActivityComposerBody
+        presentation={presentation}
         tabsRegion={tabsRegion}
         secondaryPanel={secondaryPanel}
         validationAnnouncement={validationAnnouncement}
