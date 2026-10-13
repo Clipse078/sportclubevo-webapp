@@ -6,21 +6,29 @@ import { prisma } from "@/lib/db/prisma";
 import { notFound } from "next/navigation";
 import ClubEventFreigabenUnauthorizedState from "@/components/admin/veranstaltungen/ClubEventFreigabenUnauthorizedState";
 import ClubEventFreigabenWorkspaceContent from "@/components/admin/veranstaltungen/ClubEventFreigabenWorkspaceContent";
+import TrainingFreigabenWorkspaceContent from "@/components/admin/training/TrainingFreigabenWorkspaceContent";
 import type { ClubEventComposerDraftPayload } from "@/lib/club-events/composer/club-event-composer-draft-types";
+import type { TrainingComposerDraftPayload } from "@/lib/training/composer/training-composer-draft-types";
 import { loadClubEventFreigabenAccess } from "@/lib/club-events/governance/load-club-event-freigaben-access";
+import { loadTrainingFreigabenAccess } from "@/lib/training/governance/load-training-freigaben-access";
 
 export default async function VeranstaltungenFreigabenPage() {
   const session = await requireAnyPermission([
     PERMISSIONS.EVENTS_VIEW,
     PERMISSIONS.EVENTS_MANAGE,
+    PERMISSIONS.TRAININGS_VIEW,
+    PERMISSIONS.TRAININGS_MANAGE,
   ]);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
-  const access = await loadClubEventFreigabenAccess({ session, tenantId: tenant.id });
+  const [clubAccess, trainingAccess] = await Promise.all([
+    loadClubEventFreigabenAccess({ session, tenantId: tenant.id }),
+    loadTrainingFreigabenAccess({ session, tenantId: tenant.id }),
+  ]);
 
-  let workspace = null;
-  if (access.kind === "authorized") {
+  let clubWorkspace = null;
+  if (clubAccess.kind === "authorized") {
     const pending = await prisma.sceActivityGovernanceRevision.findMany({
       where: {
         tenantId: tenant.id,
@@ -30,9 +38,7 @@ export default async function VeranstaltungenFreigabenPage() {
       },
       orderBy: { submittedAt: "desc" },
       take: 50,
-      include: {
-        clubEventDraft: true,
-      },
+      include: { clubEventDraft: true },
     });
 
     const creatorIds = [...new Set(pending.map((r) => r.creatorPersonId))];
@@ -46,9 +52,9 @@ export default async function VeranstaltungenFreigabenPage() {
       creators.map((p) => [p.id, `${p.firstName} ${p.lastName}`.trim()]),
     );
 
-    workspace = (
+    clubWorkspace = (
       <ClubEventFreigabenWorkspaceContent
-        access={access}
+        access={clubAccess}
         pending={pending.map((revision) => ({
           id: revision.id,
           creatorPersonId: revision.creatorPersonId,
@@ -62,19 +68,83 @@ export default async function VeranstaltungenFreigabenPage() {
     );
   }
 
+  let trainingWorkspace = null;
+  if (trainingAccess.kind === "authorized") {
+    const pending = await prisma.sceActivityGovernanceRevision.findMany({
+      where: {
+        tenantId: tenant.id,
+        activityType: "TRAINING",
+        lifecycleState: "PENDING_APPROVAL",
+        isCurrentSubmission: true,
+      },
+      orderBy: { submittedAt: "desc" },
+      take: 50,
+      include: { trainingDraft: true },
+    });
+
+    const creatorIds = [...new Set(pending.map((r) => r.creatorPersonId))];
+    const creators = creatorIds.length
+      ? await prisma.person.findMany({
+          where: { id: { in: creatorIds }, tenantId: tenant.id },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : [];
+    const creatorNameById = new Map(
+      creators.map((p) => [p.id, `${p.firstName} ${p.lastName}`.trim()]),
+    );
+
+    trainingWorkspace = (
+      <TrainingFreigabenWorkspaceContent
+        access={trainingAccess}
+        pending={pending.map((revision) => ({
+          id: revision.id,
+          creatorPersonId: revision.creatorPersonId,
+          lifecycleState: revision.lifecycleState,
+          submittedAt: revision.submittedAt,
+          revisionNumber: revision.revisionNumber,
+          payloadSnapshot: revision.payloadSnapshot as TrainingComposerDraftPayload,
+        }))}
+        creatorNameById={creatorNameById}
+      />
+    );
+  }
+
+  const unauthorized =
+    clubAccess.kind === "unauthorized" && trainingAccess.kind === "unauthorized";
+
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4" data-testid="veranstaltungen-freigaben-page">
+    <div className="mx-auto max-w-3xl space-y-6 p-4" data-testid="veranstaltungen-freigaben-page">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold">Veranstaltungen — Freigaben</h1>
+        <h1 className="text-lg font-semibold">Freigaben</h1>
         <Link href="/dashboard/veranstaltungen" className="fca-button-secondary text-sm">
           Zurück
         </Link>
       </div>
 
-      {access.kind === "unauthorized" ? (
-        <ClubEventFreigabenUnauthorizedState reason={access.reason} display={access.display} />
+      {unauthorized ? (
+        <ClubEventFreigabenUnauthorizedState
+          reason={clubAccess.kind === "unauthorized" ? clubAccess.reason : "MISSING_APPROVE_PERMISSION"}
+          display={clubAccess.kind === "unauthorized" ? clubAccess.display : "STANDARD"}
+        />
       ) : (
-        workspace
+        <>
+          <section className="space-y-3" data-testid="freigaben-section-club-event">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">Veranstaltungen</h2>
+            {clubAccess.kind === "authorized" ? (
+              clubWorkspace
+            ) : (
+              <p className="text-sm text-[var(--text-2)]">Keine Berechtigung für Veranstaltungs-Freigaben.</p>
+            )}
+          </section>
+          <section className="space-y-3" data-testid="freigaben-section-training">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">Trainings</h2>
+            {trainingAccess.kind === "authorized" ? (
+              trainingWorkspace
+            ) : (
+              <p className="text-sm text-[var(--text-2)]">Keine Berechtigung für Trainings-Freigaben.</p>
+            )}
+          </section>
+        </>
       )}
     </div>
   );

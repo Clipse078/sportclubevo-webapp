@@ -10,6 +10,7 @@ import PlanningWeekNavigation from "@/components/admin/planning/PlanningWeekNavi
 import PlanningHubCreateMenu, {
   type PlanningHubCreatePermissions,
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
+import type { TrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
 import PlanningHubListeToolbar from "@/components/admin/planning-hub/PlanningHubListeToolbar";
@@ -49,6 +50,7 @@ export type WeekPlannerChromeProps = {
   materializedWeekplannerPlanId?: string | null;
   canManagePlans?: boolean;
   createPermissions?: PlanningHubCreatePermissions;
+  trainingComposer?: TrainingComposerCreateSurfaceProps | null;
   teamOptions?: { value: string; label: string }[];
   facilityOptions?: { value: string; label: string }[];
   week?: WeekplannerWeek;
@@ -72,6 +74,7 @@ export default function WeekPlannerChrome({
   materializedWeekplannerPlanId = null,
   canManagePlans = false,
   createPermissions,
+  trainingComposer = null,
   teamOptions = [],
   facilityOptions = [],
   week,
@@ -111,7 +114,15 @@ export default function WeekPlannerChrome({
         title="Wochenplaner"
         subtitle="Zentrale Wochenplanung und operative Übersicht über Trainings, Spiele, Turniere und Veranstaltungen."
         subtitleTestId="weekplanner-header-subtitle"
-        actions={createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : null}
+        actions={
+          createPermissions ? (
+            <PlanningHubCreateMenu
+              permissions={createPermissions}
+              trainingComposer={trainingComposer}
+              plannerUrlState={resolvedUrlState}
+            />
+          ) : null
+        }
       />
 
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">

@@ -22,7 +22,7 @@ import { buildPersonDetailAccessOverviewLine } from "@/lib/admin/users/person-de
 import { loadSceActivityClubGovernancePolicy } from "@/lib/sce/activity-governance/persistence/load-club-governance-policy";
 import { resolvePersonClubEventGovernanceOverview } from "@/lib/admin/users/person-detail-governance-summary";
 import PersonAdminActionsPanel from "@/components/admin/users/PersonAdminActionsPanel";
-import PersonClubEventGovernanceSection from "@/components/admin/users/people-access/PersonClubEventGovernanceSection";
+import PersonActivityGovernanceTabContent from "@/components/admin/users/people-access/PersonActivityGovernanceTabContent";
 import PersonDetailWorkspace from "@/components/admin/users/PersonDetailWorkspace";
 import PersonDetailOverviewTab from "@/components/admin/users/PersonDetailOverviewTab";
 import { resolvePersonAccessStatus } from "@/lib/admin/users/person-access-status";
@@ -338,7 +338,7 @@ export default async function AdminUserDetailPage({ params, searchParams }: Prop
             }
             veranstaltungsFreigaben={
               linkedPerson ? (
-                <PersonClubEventGovernanceSection personId={linkedPerson.id} canManage={canManage} />
+                <PersonActivityGovernanceTabContent personId={linkedPerson.id} canManage={canManage} />
               ) : null
             }
             zugriff={<PersonNavEffectiveAccessPanel sections={accessSections} />}

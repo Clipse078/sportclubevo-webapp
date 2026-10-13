@@ -17,6 +17,39 @@ import {
 
 export type FacilityResourceVisualKind = "pitch" | "hall" | "dressing_room" | "other";
 
+/** Canonical assignment category icons (pitch/hall row vs dressing room). */
+export type PlanningResourceAssignmentKind = "pitch_hall" | "dressing_room";
+
+export function resolvePlanningResourceAssignmentKindIconType(
+  kind: PlanningResourceAssignmentKind,
+): FacilityResourceType {
+  return kind === "dressing_room" ? "DRESSING_ROOM" : "FULL_PITCH";
+}
+
+export function PlanningResourceAssignmentKindIcon({
+  kind,
+  compact = true,
+  semanticColors = true,
+  className,
+  testId = "planning-resource-assignment-kind-icon",
+}: {
+  kind: PlanningResourceAssignmentKind;
+  compact?: boolean;
+  semanticColors?: boolean;
+  className?: string;
+  testId?: string;
+}) {
+  return (
+    <PlanningResourceSemanticIconTile
+      resourceType={resolvePlanningResourceAssignmentKindIconType(kind)}
+      compact={compact}
+      semanticColors={semanticColors}
+      className={className}
+      testId={testId}
+    />
+  );
+}
+
 export function resolveFacilityResourceVisualKind(
   resourceType: FacilityResourceType,
   facilityType?: string,

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { CalendarClock, CheckCircle2, Plus } from "lucide-react";
 import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
@@ -15,6 +16,9 @@ import TrainingManagementPagination from "./TrainingManagementPagination";
 import TrainingSeriesManagementRow from "./TrainingSeriesManagementRow";
 import TrainingManagementFilterRail from "./TrainingManagementFilterRail";
 import TrainingManagementQuickAccess from "./TrainingManagementQuickAccess";
+import TrainingComposerDraftList, {
+  type TrainingComposerDraftListItem,
+} from "./TrainingComposerDraftList";
 import type { TrainingSeriesManagementRow as SeriesRow } from "@/lib/training/management-series-view";
 import type { TrainingSeriesManagementSort } from "@/lib/training/management-series-view";
 import { buildTrainingManagementPaginationNavigation } from "@/lib/training/management-pagination";
@@ -60,6 +64,8 @@ type Props = {
   teamHrefByValue: Record<string, string>;
   statusHrefByValue: Record<string, string>;
   resetFiltersHref: string;
+  createTrigger?: ReactNode;
+  composerDrafts?: TrainingComposerDraftListItem[];
 };
 
 const LIST_HEADER =
@@ -86,7 +92,9 @@ export default function TrainingManagementWorkspace({
   archivedCount,
   teamHrefByValue,
   statusHrefByValue,
-  resetFiltersHref }: Props) {
+  resetFiltersHref,
+  createTrigger,
+  composerDrafts = [] }: Props) {
   void _isCoordinator;
   void _locale;
 
@@ -119,18 +127,22 @@ export default function TrainingManagementWorkspace({
               </Link>
             ) : null}
             {canCreate ? (
-              <Link
-                href="/dashboard/training/new"
-                className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-                data-testid="training-create-link"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Training erstellen
-              </Link>
+              createTrigger ?? (
+                <Link
+                  href="/dashboard/training/new"
+                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="training-create-link"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Training erstellen
+                </Link>
+              )
             ) : null}
           </>
         }
       />
+
+      <TrainingComposerDraftList drafts={composerDrafts} />
 
       <PlanningManagementKpiCards
         testId="training-kpi-cards"

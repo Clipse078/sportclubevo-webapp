@@ -95,15 +95,21 @@ export async function findAllTrainingSeries(
     teamSeasonId?: string;
     status?: TrainingSeriesStatus;
     includeArchived?: boolean;
+    publishedProgrammeOnly?: boolean;
   } = {},
 ): Promise<TrainingSeriesRow[]> {
-  const { teamSeasonId, status, includeArchived = false } = opts;
+  const { teamSeasonId, status, includeArchived = false, publishedProgrammeOnly = false } = opts;
+
+  const { trainingSeriesPublishedVisibilityWhere } = await import(
+    "@/lib/training/training-published-visibility"
+  );
 
   return prisma.trainingSeries.findMany({
     where: {
       tenantId,
       ...(teamSeasonId ? { teamSeasonId } : {}),
       ...(status ? { status } : !includeArchived ? { NOT: { status: "ARCHIVED" } } : {}),
+      ...(publishedProgrammeOnly ? trainingSeriesPublishedVisibilityWhere() : {}),
     },
     include: trainingSeriesFullInclude,
     orderBy: [{ teamSeasonId: "asc" }, { title: "asc" }],

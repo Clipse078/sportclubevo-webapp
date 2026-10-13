@@ -31,7 +31,17 @@ import {
 } from "@/lib/training/management-data";
 import { listAllocationsGroupedBySeries } from "@/lib/training/training-allocation-service";
 import TrainingManagementWorkspace from "@/components/admin/training/TrainingManagementWorkspace";
+import TrainingComposerCreateTrigger from "@/components/admin/training/TrainingComposerCreateTrigger";
 import { buildTrainingFilterHrefMaps } from "@/lib/training/management-navigation";
+import { findTeamSeasonsForTenant } from "@/lib/training/queries";
+import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { prisma } from "@/lib/db/prisma";
+import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
+import { loadTrainingEffectiveGovernanceForSession } from "@/lib/training/composer/load-effective-governance-server";
+import { listTrainingComposerDraftsForManagementView } from "@/lib/training/composer/list-composer-drafts-for-management-view";
+import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
 type TrainingPageSearchParams = {
   tab?: string;
@@ -185,9 +195,84 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     teamOptions.map((team) => team.id),
   );
 
+  const composerDrafts = canManage
+    ? await listTrainingComposerDraftsForManagementView(tenantContext.id)
+    : [];
+
+  const userId = session.user?.effectiveUserId ?? session.user?.id;
+  let createTrigger = undefined;
+  if (canCreate && userId) {
+    const policy = createPlanningAuthorizationPolicy(prisma);
+    const [teamSeasons, facilities, writableTeamIds, operationalDurationPolicy, effectiveGovernance] =
+      await Promise.all([
+        findTeamSeasonsForTenant(tenantContext.id),
+        getFacilitiesForTenant(tenantContext.id),
+        policy.getWritableTeamIds({ userId, tenantId: tenantContext.id }, "training"),
+        getTenantOperationalDurationPolicy(tenantContext.id),
+        loadTrainingEffectiveGovernanceForSession({ tenantId: tenantContext.id }),
+      ]);
+
+    function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
+      return facilities
+        .filter((f) => f.status !== "ARCHIVED")
+        .map((f) => ({
+          facilityId: f.id,
+          facilityName: f.name,
+          facilityType: f.type as string,
+          resources: f.resources
+            .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
+            .map((r) => ({
+              id: r.id,
+              name: r.name,
+              code: r.code,
+              type: r.type,
+              facilityId: f.id,
+              facilityName: f.name,
+              facilityType: f.type as string,
+            })),
+        }))
+        .filter((fg) => fg.resources.length > 0);
+    }
+
+    const writableTeamIdSet = new Set(writableTeamIds);
+    const filteredTeamSeasons =
+      writableTeamIds.length > 0
+        ? teamSeasons.filter((ts) => writableTeamIdSet.has(ts.teamId))
+        : teamSeasons;
+
+    createTrigger = (
+      <TrainingComposerCreateTrigger
+        teamSeasons={filteredTeamSeasons.map((ts) => ({
+          id: ts.id,
+          teamId: ts.teamId,
+          teamName: ts.teamName,
+          seasonName: ts.seasonName,
+          category: ts.category,
+          genderGroup: ts.genderGroup,
+        }))}
+        pitchHallFacilityGroups={facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"])}
+        dressingRoomFacilityGroups={facilityGroupsForTypes(["DRESSING_ROOM"])}
+        timeZone={timezone}
+        defaultTrainingDurationMinutes={operationalDurationPolicy.TRAINING.durationMinutes}
+        effectiveGovernance={
+          effectiveGovernance ?? {
+            activityType: "TRAINING",
+            personId: "anonymous",
+            mayCreate: true,
+            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
+            approvalStrategy: "ANY_ONE",
+            validatorPersonIds: [],
+          }
+        }
+      />
+    );
+  }
+
   return (
     <div className="w-full">
       <TrainingManagementWorkspace
+        composerDrafts={composerDrafts}
+        createTrigger={createTrigger}
         canCreate={canCreate}
         canManage={canManage}
         canDelete={canDelete}

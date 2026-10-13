@@ -42,16 +42,27 @@ export async function loadSceActivityClubGovernancePolicy(
   return { tenantId, activityTypes };
 }
 
-export async function ensureClubEventGovernanceTypeConfig(tenantId: string) {
+export async function ensureActivityGovernanceTypeConfig(
+  tenantId: string,
+  activityType: SceActivityCreateKind,
+) {
   return prisma.sceActivityGovernanceTypeConfig.upsert({
     where: {
-      tenantId_activityType: { tenantId, activityType: "CLUB_EVENT" },
+      tenantId_activityType: { tenantId, activityType },
     },
     create: {
       tenantId,
-      activityType: "CLUB_EVENT",
+      activityType,
       defaultPublicationAuthority: "DIRECT_PUBLISH",
     },
     update: {},
   });
+}
+
+export async function ensureClubEventGovernanceTypeConfig(tenantId: string) {
+  return ensureActivityGovernanceTypeConfig(tenantId, "CLUB_EVENT");
+}
+
+export async function ensureTrainingGovernanceTypeConfig(tenantId: string) {
+  return ensureActivityGovernanceTypeConfig(tenantId, "TRAINING");
 }

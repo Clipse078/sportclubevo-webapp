@@ -4,11 +4,12 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**, PO final visual UAT **PASS**) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**, PO 01D-R2 visual UAT **PASS**) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
-| **Next slice** | **SCE-ACTIVITY-CREATE-01D** — Training domain adoption (**NOT_STARTED**) |
+| **Training slice** | [`SCE-ACTIVITY-CREATE-01D`](./SCE-ACTIVITY-CREATE-01D.md) — Training Adoption — **CLOSED** (PR **#841**) |
+| **Next slice** | **SCE-ACTIVITY-CREATE-01E** — Match domain adoption (**NOT_STARTED**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -42,7 +43,8 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01A — Research & Architecture — CLOSED (CONDITIONAL_PASS_ACCEPTED)
   → SCE-ACTIVITY-CREATE-01B — Composer foundation + R1/R2/R3 — CLOSED
   → SCE-ACTIVITY-CREATE-01C — Club Event reference adoption — CLOSED (PR #840)
-  → SCE-ACTIVITY-CREATE-01D–01G — Domain adoption & planning integration — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01D — Training adoption — CLOSED (PR #841)
+  → SCE-ACTIVITY-CREATE-01E–01G — Domain adoption & planning integration — NOT_STARTED
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
 ```
@@ -194,3 +196,52 @@ Predecessor audience/recurrence migrations from **SCE-CLUB-EVENT-AUDIENCE-01** r
 ### Automated validation (closure)
 
 Vitest: **26** files · **209** tests (01C R1–R7, governance, Freigaben routes, draft resume, audience, person workspace, context-tabs, visibility/policy) — **0 failures**. Prisma validate **PASS**. Production build **PASS** (TypeScript check requires elevated Node heap in CI-like environments).
+
+---
+
+## SCE-ACTIVITY-CREATE-01D closure (PR **#841**)
+
+Full record: [`SCE-ACTIVITY-CREATE-01D.md`](./SCE-ACTIVITY-CREATE-01D.md).
+
+| Field | Value |
+|-------|-------|
+| **Status** | **CLOSED / MERGED** |
+| **Branch** | `cursor/sce-activity-create-01d-training-adoption` |
+| **PR** | **#841** → `STAGE` |
+| **Feature HEAD (pre-merge)** | `99bbda0191d5a34cc9770ef434499fbf5a949f29` |
+| **STAGE baseline (merge-base)** | `08539acd58d74738a5e84a21076ca400fc116b96` |
+| **STAGE drift at closure** | **None** |
+| **01E / 01H** | **NOT_STARTED** |
+
+### PO UAT
+
+| Gate | Result |
+|------|--------|
+| **01D-R2 visual PO UAT** | **PASS** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+### Architecture delivered (frozen)
+
+| Area | Contract |
+|------|----------|
+| **Composer** | Training create on **`SceActivityComposer`** — Wochenplaner overlay, management overlay, full-page **`/dashboard/training/new`** (same `TrainingCreateForm`) |
+| **Tabs** | Übersicht · Team · Termin · Wiederholung · Ressourcen — **no Publikation**; legacy `tab=publikation` → Übersicht |
+| **Modal-first** | Contextual create uses overlay where supported; `/new` fallback uses same components |
+| **Recurrence** | R1 domain semantics preserved (single vs recurring window, weekday times) |
+| **Resources** | Shared `PlanningResourceAssignmentKindIcon` / `FacilityResourceIdentity` with text labels |
+| **Draft lifecycle** | `TrainingComposerDraft`, API, management list, resume via `draftId` |
+| **Governance** | Training-specific validator pool, `DIRECT_PUBLISH` default, no self-approval, separate from operational series status |
+| **Visibility** | `trainingSeriesPublishedVisibilityWhere()` — non-published composer states excluded from published surfaces |
+
+### Migrations (01D)
+
+`20261013180000_sce_activity_create_01d_training` — see package doc §I.
+
+### Automated validation (closure)
+
+Vitest: **15** files · **137** tests (01D + 01C sentinels + Composer guardrails + Wochenplaner menu) — **0 failures**. Prisma validate/generate **PASS**. Production build **PASS**.
+
+### Next
+
+**SCE-ACTIVITY-CREATE-01E** — Match Adoption (inherit Composer, modal-first, shared resource icons, governance, Toggle First).
