@@ -5,8 +5,16 @@
 import type { ComponentProps } from "react";
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { SceTournamentCard } from "../SceTournamentCard";
-import { createSceTournamentCardFixture } from "../__fixtures__/sce-tournament-card-fixtures";
+import {
+  createSceTournamentCardFixture,
+  createSceTournamentExternalOrganiserFixture,
+  createSceTournamentOrganiserFallbackFixture,
+  createSceTournamentTenantOrganiserFixture,
+  SCE_TOURNAMENT_FIXTURE_CREST_URLS,
+} from "../__fixtures__/sce-tournament-card-fixtures";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
 import { buildClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 
@@ -24,7 +32,7 @@ function renderCard(
   );
 }
 
-describe("SCE-UI-ROLLOUT-01F — SceTournamentCard", () => {
+describe("SCE-UI-ROLLOUT-01F-R1 — SceTournamentCard", () => {
   it.each(DENSITIES)("renders tournament identity without match fixture semantics at %s", (density) => {
     renderCard(undefined, density);
     expect(screen.queryByText(/^VS$/i)).toBeNull();
@@ -38,12 +46,59 @@ describe("SCE-UI-ROLLOUT-01F — SceTournamentCard", () => {
     }
   });
 
+  it.each(["HERO", "STANDARD", "COMPACT"] as const)(
+    "renders organiser crest at %s when logo URL exists",
+    (density) => {
+      renderCard(createSceTournamentExternalOrganiserFixture(), density);
+      const crest = screen.getByTestId("sce-tournament-organiser-crest");
+      expect(within(crest).getByTestId("club-crest-image")).toHaveAttribute(
+        "src",
+        SCE_TOURNAMENT_FIXTURE_CREST_URLS.external,
+      );
+    },
+  );
+
+  it("tenant organiser crest uses canonical ClubIdentity logo URL", () => {
+    renderCard(createSceTournamentTenantOrganiserFixture(), "STANDARD");
+    const img = within(screen.getByTestId("sce-tournament-organiser-crest")).getByTestId(
+      "club-crest-image",
+    );
+    expect(img).toHaveAttribute("src", SCE_TOURNAMENT_FIXTURE_CREST_URLS.tenant);
+    expect(img.className).toContain("object-contain");
+    expect(img.className).not.toContain("rounded-full");
+  });
+
+  it("external organiser without crest uses fallback initials only", () => {
+    renderCard(createSceTournamentOrganiserFallbackFixture(), "STANDARD");
+    expect(screen.getByTestId("club-crest-fallback-initials")).toBeTruthy();
+    expect(screen.queryByTestId("club-crest-image")).toBeNull();
+  });
+
+  it("real crest is not wrapped in circular avatar treatment", () => {
+    renderCard(createSceTournamentExternalOrganiserFixture(), "HERO");
+    const bounds = within(screen.getByTestId("sce-tournament-organiser-crest")).getByTestId(
+      "club-crest-bounds",
+    );
+    expect(bounds.className).not.toContain("rounded-full");
+  });
+
+  it("narrow MICRO omits organiser crest", () => {
+    renderCard(createSceTournamentTenantOrganiserFixture(), "MICRO", {
+      className: "sce-tournament-micro-narrow max-w-[9rem]",
+    });
+    expect(screen.queryByTestId("sce-tournament-organiser-crest")).toBeNull();
+    expect(screen.getByTestId("sce-tournament-micro-organiser")).toHaveTextContent("FC Allschwil");
+  });
+
+  it("MICRO at default width keeps organiser crest when recognisable", () => {
+    renderCard(createSceTournamentTenantOrganiserFixture(), "MICRO");
+    expect(screen.getByTestId("sce-tournament-organiser-crest")).toBeTruthy();
+  });
+
   it.each(DENSITIES)("organiser remains visible at %s", (density) => {
     renderCard(undefined, density);
     if (density === "MICRO") {
       expect(screen.getByTestId("sce-tournament-micro-organiser")).toHaveTextContent("FC Arisdorf");
-    } else if (density === "COMPACT") {
-      expect(screen.getByTestId("sce-tournament-context-line")).toHaveTextContent("FC Arisdorf");
     } else {
       expect(screen.getByTestId("sce-tournament-organiser")).toHaveTextContent("FC Arisdorf");
     }
@@ -53,6 +108,27 @@ describe("SCE-UI-ROLLOUT-01F — SceTournamentCard", () => {
     renderCard(createSceTournamentCardFixture(), "STANDARD");
     expect(screen.getByTestId("sce-tournament-organiser")).toHaveTextContent("FC Arisdorf");
     expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren F2");
+  });
+
+  it("strips redundant club prefix from hauptteam beside tenant organiser", () => {
+    renderCard(createSceTournamentTenantOrganiserFixture(), "COMPACT");
+    expect(screen.getByTestId("sce-tournament-organiser")).toHaveTextContent("FC Allschwil");
+    expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren F3");
+    expect(screen.queryByText(/FC Allschwil Junioren F3/)).toBeNull();
+  });
+
+  it("COMPACT keeps organiser and hauptteam on separate lines", () => {
+    renderCard(createSceTournamentCardFixture(), "COMPACT");
+    expect(screen.getByTestId("sce-tournament-organiser")).toHaveTextContent("FC Arisdorf");
+    expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren F2");
+    expect(screen.queryByTestId("sce-tournament-context-line")).toBeNull();
+  });
+
+  it("schedule and location rows expose canonical icons", () => {
+    renderCard(createSceTournamentCardFixture(), "STANDARD");
+    const schedule = screen.getByTestId("sce-tournament-schedule");
+    expect(schedule.querySelector("svg")).toBeTruthy();
+    expect(screen.getByTestId("sce-tournament-location").querySelector("svg")).toBeTruthy();
   });
 
   it("location line excludes organiser duplication", () => {
@@ -85,12 +161,6 @@ describe("SCE-UI-ROLLOUT-01F — SceTournamentCard", () => {
       "STANDARD",
     );
     expect(screen.queryByTestId("sce-tournament-location")).toBeNull();
-  });
-
-  it("COMPACT combines organiser and hauptteam on identity line", () => {
-    renderCard(createSceTournamentCardFixture(), "COMPACT");
-    expect(screen.getByTestId("sce-tournament-context-line")).toHaveTextContent("FC Arisdorf");
-    expect(screen.getByTestId("sce-tournament-context-line")).toHaveTextContent("Junioren F2");
   });
 
   it("status label is visible text not color-only", () => {
@@ -130,6 +200,21 @@ describe("SCE-UI-ROLLOUT-01F — SceTournamentCard", () => {
       }),
       "STANDARD",
     );
-    expect(screen.getByLabelText(/FC Therwil/)).toBeTruthy();
+    expect(screen.getByTestId("sce-tournament-card").getAttribute("aria-label")).toMatch(/FC Therwil/);
+  });
+
+  it("does not introduce a local tournament crest resolver in SceTournamentCard", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/sporting-activity/SceTournamentCard.tsx"),
+      "utf8",
+    );
+    expect(source).toContain("ClubCrest");
+    expect(source).not.toMatch(/resolveTournamentOrganiserClubLogoUrl/);
+    expect(source).not.toMatch(/resolveClubIdentityEffectiveLogoUrl/);
+  });
+
+  it("uses ActivityTypePill for tournament semantic accent", () => {
+    renderCard(undefined, "STANDARD");
+    expect(document.querySelector('[data-activity-type-pill="tournament-orange"]')).toBeTruthy();
   });
 });

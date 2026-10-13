@@ -54,6 +54,7 @@ export default function SceWeekplannerTournamentPreviewPage() {
           item={PREVIEW_TOURNAMENT}
           timezone="Europe/Zurich"
           tenantClubName="FC Allschwil"
+          tenantLogoUrl="https://cdn.example.com/fca-preview-crest.png"
           density="COMPACT"
         />
         <div className="max-w-[9rem]">
@@ -61,6 +62,7 @@ export default function SceWeekplannerTournamentPreviewPage() {
             item={PREVIEW_TOURNAMENT}
             timezone="Europe/Zurich"
             tenantClubName="FC Allschwil"
+            tenantLogoUrl="https://cdn.example.com/fca-preview-crest.png"
             density="MICRO"
           />
         </div>

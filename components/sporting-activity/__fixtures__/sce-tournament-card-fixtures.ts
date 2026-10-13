@@ -4,6 +4,9 @@ import { buildSceActivityRoute } from "@/lib/sporting-activity-presentation/cano
 import { buildSceActivityPresentationStatus } from "@/lib/sporting-activity-presentation/canonical/status";
 import type { SceTournamentPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 
+const TENANT_CREST = "https://cdn.example.com/fca-tenant-crest.png";
+const EXTERNAL_CREST = "https://cdn.example.com/arisdorf.png";
+
 export function createSceTournamentCardFixture(
   overrides: Partial<SceTournamentPresentationModel> = {},
 ): SceTournamentPresentationModel {
@@ -34,3 +37,47 @@ export function createSceTournamentCardFixture(
     ...overrides,
   };
 }
+
+/** Tenant-organised tournament with resolved tenant club crest (Tournamentcenter-style). */
+export function createSceTournamentTenantOrganiserFixture(): SceTournamentPresentationModel {
+  return createSceTournamentCardFixture({
+    tournamentTitle: "PlayMore Turnier",
+    organiser: buildClubIdentity({
+      displayName: "FC Allschwil",
+      logoUrl: TENANT_CREST,
+    }),
+    hauptteam: { name: "FC Allschwil Junioren F3" },
+    location: buildSportingActivityLocation({
+      mode: "HOME",
+      hostOrOrganiser: "FC Allschwil",
+      venueName: "Im Brüel",
+      facilityResource: "Kunstrasen 2",
+    }),
+  });
+}
+
+/** External organiser with explicit crest URL from canonical tournament resolution. */
+export function createSceTournamentExternalOrganiserFixture(): SceTournamentPresentationModel {
+  return createSceTournamentCardFixture({
+    organiser: buildClubIdentity({
+      id: "club-external-arisdorf",
+      displayName: "FC Arisdorf",
+      logoUrl: EXTERNAL_CREST,
+    }),
+  });
+}
+
+/** Organiser without usable crest — initials/icon fallback only. */
+export function createSceTournamentOrganiserFallbackFixture(): SceTournamentPresentationModel {
+  return createSceTournamentCardFixture({
+    organiser: buildClubIdentity({
+      displayName: "FC Therwil",
+      logoUrl: null,
+    }),
+  });
+}
+
+export const SCE_TOURNAMENT_FIXTURE_CREST_URLS = {
+  tenant: TENANT_CREST,
+  external: EXTERNAL_CREST,
+} as const;

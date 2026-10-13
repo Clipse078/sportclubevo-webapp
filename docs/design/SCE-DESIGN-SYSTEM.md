@@ -154,7 +154,8 @@ Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not lo
 | **Status** | Domain-backed labels via `SceTournamentCardStatus` / DS `Badge` — text first |
 | **Routes** | `model.route.consumeHref` / `manageHref` — no local href builders |
 | **Management boundary** | `SceTournamentCard` owns **presentation**; Tournamentcenter rows keep date column, operational pills, context menu, filters |
-| **Club crest** | No Tournament-specific crest resolver; cards use text organiser by default (crest optional elsewhere via canonical `ClubCrest` only) |
+| **Club crest** | Organiser `ClubIdentity` → canonical `ClubCrest` at HERO/STANDARD/COMPACT and MICRO when width allows; **no** Tournament-local logo resolver; real crests use `object-contain` (no circular mask on PNG/SVG); initials/icon fallback only when no usable crest |
+| **Semantic hierarchy** | Tournament type pill (orange/gold) → title → organiser + crest → Hauptteam (team accent) → date/time → location → status text |
 | **Preview / UAT** | `/sce-preview/tournament-card`, `/sce-preview/weekplanner-tournament` |
 
 Representative integration (01F): Activity Detail tournament embed (HERO), Turniere management row identity (`COMPACT`, status in row column), Wochenplaner “Planung bearbeiten” tournament summary (`WeekplannerTournamentIdentityCard`).

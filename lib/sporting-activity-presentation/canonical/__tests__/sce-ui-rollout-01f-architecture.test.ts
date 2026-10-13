@@ -23,10 +23,13 @@ describe("SCE-UI-ROLLOUT-01F — architecture guardrails", () => {
     expect(source).not.toContain("TournamentCardModel");
     expect(source).not.toContain("TournamentPresentationModelV2");
     expect(source).toContain("data-sce-tournament-density");
+    expect(source).toContain("ClubCrest");
     expect(source).not.toMatch(/function\s+SceTournamentHero/);
     expect(source).not.toContain("fixture");
     expect(source).not.toContain(" VS ");
     expect(source).not.toMatch(/\bhomeLeftAwayRight\b/);
+    expect(source).not.toMatch(/resolveTournamentOrganiserClubLogoUrl/);
+    expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 
   it("weekplanner adapter maps HOME tournament item to canonical model", () => {
