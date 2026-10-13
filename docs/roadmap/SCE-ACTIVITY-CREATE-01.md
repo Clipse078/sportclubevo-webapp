@@ -207,7 +207,9 @@ Full record: [`SCE-ACTIVITY-CREATE-01D.md`](./SCE-ACTIVITY-CREATE-01D.md).
 |-------|-------|
 | **Status** | **CLOSED / MERGED** |
 | **Branch** | `cursor/sce-activity-create-01d-training-adoption` |
-| **PR** | **#841** → `STAGE` |
+| **PR** | **#841** → `STAGE` — **MERGED** |
+| **Merge commit** | `62d96645d8abc923067a512871b69ebc8dbb971a` |
+| **Canonical STAGE HEAD (post-merge)** | `62d96645d8abc923067a512871b69ebc8dbb971a` |
 | **Feature HEAD (pre-merge)** | `99bbda0191d5a34cc9770ef434499fbf5a949f29` |
 | **STAGE baseline (merge-base)** | `08539acd58d74738a5e84a21076ca400fc116b96` |
 | **STAGE drift at closure** | **None** |
