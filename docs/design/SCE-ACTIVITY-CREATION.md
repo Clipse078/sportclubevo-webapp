@@ -1,6 +1,6 @@
 # SCE Activity Creation — Design & Architecture Contracts (01A)
 
-> **Status:** **PROPOSED** (research package `SCE-ACTIVITY-CREATE-01A` — not shipped)  
+> **Status:** **APPROVED** (architecture locked — `SCE-ACTIVITY-CREATE-01A` **CLOSED**; product implementation **01B+**, not shipped)  
 > **Programme:** [`SCE-ACTIVITY-CREATE-01`](../roadmap/SCE-ACTIVITY-CREATE-01.md)  
 > **Product principle:** *One creation language, domain-specific workflows.*
 
@@ -15,7 +15,7 @@ This document defines the **target** contracts for unified activity creation. It
 | **EXISTING** | On STAGE; reuse as-is |
 | **REUSABLE** | On STAGE; adapt/wrap for composer |
 | **NEW_REQUIRED** | Not implemented; 01B+ scope |
-| **PROPOSED** | Architecture decision pending PO review |
+| **APPROVED** | Locked at 01A closure — implement in 01B+ |
 
 ---
 
@@ -148,7 +148,19 @@ Training/Match/Tournament today use **guided numbered sections** on one scroll s
 | Org audience targets | `SceChipMultiSelectorField` → **Sheet** (`SceListSelectorPanel`) | **Risk** — sheet over composer overlay |
 | Tournament participants | Inline workflow | Yes (no modal in create path) |
 
-**PROPOSED rule:** **No nested modal/dialog stacks.** Prefer inline discover, combobox, or **in-composer side panel** (single overlay host). Sheet-based selectors must be refactored to composer-safe pattern before Club Event overlay adoption (01C).
+**Design System rule (ADR-11 / 01A closure):** A modal **Activity Composer must not launch another independent modal, dialog, sheet, or drawer** over itself for normal creation interactions.
+
+Prefer, in order:
+
+1. Inline controls
+2. Combobox / searchable selection
+3. Popover (where accessibility and space permit)
+4. Expandable region
+5. Composer-owned embedded panel / side region
+
+If none is suitable because the interaction is genuinely too complex, use the **canonical full-page `/new` creation mode** — not stacked dialogs.
+
+**First application:** Club Event organisational audience selector (`SceChipMultiSelectorField` → Sheet today) — **01C** must refactor before overlay adoption is complete.
 
 ---
 
@@ -179,7 +191,22 @@ Accent is **header/chip only** — shell stays premium dark SCE.
 
 ---
 
-## 11. Success & context restoration (**NEW_REQUIRED**)
+## 11. Context continuity (**MANDATORY** — implementation requirement)
+
+Creation must preserve the user's planning context wherever technically possible. **Do not require DB persistence** for transient UI context.
+
+| Origin | Expectation |
+|--------|-------------|
+| Wochenplaner week | Return to same week after create |
+| Veranstaltungen filters / month | Same filters / month |
+| Matchcenter / Tournamentcenter | Same operational context |
+| Future Team Programme (**01I**) | Team + season prefilled; return to same programme surface |
+
+Continuity includes where appropriate: search params, filters, selected date/week/month, scroll context, origin token, cache refresh (`router.refresh()` / targeted invalidation), restrained success feedback, optional highlight of the new activity row.
+
+---
+
+## 12. Success & context restoration (**NEW_REQUIRED**)
 
 | Step | Behaviour |
 |------|-----------|
@@ -192,7 +219,20 @@ Accent is **header/chip only** — shell stays premium dark SCE.
 
 ---
 
-## 12. Full-page fallback (**EXISTING** routes)
+## 13. Responsive container strategy (**APPROVED**)
+
+| Viewport | Composer presentation |
+|----------|-------------------------|
+| **Desktop** | Large contextual Composer overlay |
+| **Tablet** | Bounded adaptive overlay where space permits |
+| **Narrow / mobile** | Fullscreen Composer — **same** draft and components |
+| **Direct `/new` route** | Full-page Composer rendering via existing record/editor shells |
+
+There must **not** be separate mobile-only create forms.
+
+---
+
+## 14. Full-page fallback (**EXISTING** routes)
 
 | Domain | Route |
 |--------|-------|
@@ -205,7 +245,7 @@ Same domain workflow component tree; **page shell** replaces composer chrome (`P
 
 ---
 
-## 13. External UX principles (PO research → SCE mapping)
+## 15. External UX principles (PO research → SCE mapping)
 
 | Principle | SCE mapping |
 |-----------|-------------|
@@ -219,7 +259,7 @@ Same domain workflow component tree; **page shell** replaces composer chrome (`P
 
 ---
 
-## 14. Automated test targets (future 01B+)
+## 16. Automated test targets (future 01B+)
 
 See [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md) §29.
 

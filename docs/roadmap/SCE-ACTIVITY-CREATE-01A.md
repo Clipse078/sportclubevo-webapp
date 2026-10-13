@@ -4,7 +4,11 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01A` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
-| **Status** | **IMPLEMENTED_PENDING_ARCHITECTURE_REVIEW** |
+| **Status** | **CLOSED** |
+| **Architecture decision** | **APPROVED** (Option C — adaptive `SceActivityComposer`) |
+| **ADR-11** | **ACCEPTED** |
+| **ACTIVITY_COMPOSER_ARCHITECTURE_GATE** | **CONDITIONAL_PASS_ACCEPTED** |
+| **Next package** | [`SCE-ACTIVITY-CREATE-01B`](./SCE-ACTIVITY-CREATE-01.md) — Activity Composer Foundation (**NOT_STARTED**) |
 | **STAGE baseline** | `d61782b8c8f7d54f74746fa9bdb62ee71b789a9a` |
 | **Branch** | `cursor/sce-activity-create-01a-research-architecture` |
 | **Predecessor** | [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) **CLOSED** (PR #837 merged) |
@@ -331,39 +335,44 @@ See [`SCE-UI-ROLLOUT-ADRS.md`](../design/SCE-UI-ROLLOUT-ADRS.md) **ADR-11**.
 | ACCESSIBILITY_FEASIBLE | **YES** |
 | RESPONSIVE_FEASIBLE | **YES** |
 
-### ACTIVITY_COMPOSER_ARCHITECTURE_GATE: **CONDITIONAL_PASS**
+### ACTIVITY_COMPOSER_ARCHITECTURE_GATE: **CONDITIONAL_PASS** → **CONDITIONAL_PASS_ACCEPTED**
 
-**Prerequisites:**
+Product Owner accepted Option C and the conditional gate on **2026-10-13**, with this explicit prerequisite:
 
-1. Composer-safe org-audience selector (no Sheet-on-overlay)
-2. Extract shared create bodies from Training/Match/Tournament for dual container render
-3. Composer dirty-close parity (X, backdrop, Escape)
-4. Define `SceActivityCreateOriginContext` + success contract for planning launches
-5. PO approval of tab maps per domain
+> Club Event organisational audience selection must **not** stack an independent modal/sheet above the Activity Composer. **01C** must replace/adapt that interaction into a Composer-safe pattern (inline searchable selection, embedded selector, popover where accessibility/space permits, or Composer-owned side region/panel) before Club Event Composer adoption is considered complete.
+
+**Remaining implementation prerequisites (01B–01G):**
+
+1. Composer-safe org-audience selector (no Sheet-on-overlay) — **01C gate**
+2. Extract shared create bodies from Training/Match/Tournament for dual container render — **01D–01F**
+3. Composer dirty-close parity (X, backdrop, Escape) — **01B**
+4. `SceActivityCreateOriginContext` + success contract for planning launches — **01B / 01G**
+5. Tab maps per domain — **approved** (§5); converge Training/Match/Tournament UX in adoption packages
 
 ---
 
 ## 16. Proposed implementation packages
 
-### 01B — Activity Composer Foundation
+### 01B — Activity Composer Foundation (**01B scope gate**)
 
 | | |
 |-|-|
-| **OBJECTIVE** | `SceActivityComposer` shell, modes, origin context, creation contract types, dirty-close |
-| **IN_SCOPE** | Overlay/page/fullscreen, focus/scroll, footer slot, tests A–H |
-| **OUT_OF_SCOPE** | Domain migration |
-| **DEPENDENCIES** | 01A approval |
+| **OBJECTIVE** | Shared foundation only — no production domain create migration |
+| **IN_SCOPE** | `SceActivityComposer` shell; `SceActivityCreateDefinition` contract; overlay / page / fullscreen container architecture; semantic activity identity header; Universal Context Tabs integration; persistent action footer; dirty-close integration; focus management; responsive adaptation; validation orchestration; first-invalid-tab behaviour; origin/context contract; success contract; Design System implementation foundation; automated accessibility/architecture tests |
+| **OUT_OF_SCOPE** | Migrating Club Event, Training, Match, or Tournament production create workflows (01C–01F) |
+| **PREVIEW** | Lightweight preview/test harness acceptable |
+| **DEPENDENCIES** | 01A **CLOSED** |
 | **MIGRATION_RISK** | Low — additive |
 | **AUTOMATED_GATES** | Shell a11y, focus trap, responsive mode tests |
 | **PO_UAT_TARGET** | Shell prototype on sce-preview route (optional) |
 
-### 01C — Club Event reference adoption
+### 01C — Club Event reference adoption (**01C reference gate**)
 
 | | |
 |-|-|
-| **OBJECTIVE** | First domain on composer; overlay from Veranstaltungen |
-| **IN_SCOPE** | Wire `VeranstaltungCreateForm` / tabs; audience selector refactor |
-| **OUT_OF_SCOPE** | Edit flow changes |
+| **OBJECTIVE** | Reference implementation — first domain on composer |
+| **CLOSE_CRITERIA** | Current Club Event workflow uses Composer; `/dashboard/veranstaltungen/new` uses same workflow in **page** mode; overlay uses same draft/components; **audience selector Composer-safe** (no nested independent modal/sheet); recurrence, resources, publication, audience semantics, and recurrence series architecture **intact**; context return works; accessibility passes; Toggle First passes |
+| **OUT_OF_SCOPE** | Business-domain rewrite merely for Composer adoption; edit flow changes |
 | **DEPENDENCIES** | 01B |
 | **MIGRATION_RISK** | Medium — selector refactor |
 | **PO_UAT** | Contextual create from filtered list |
@@ -451,4 +460,107 @@ Minimum coverage listed in prompt §29 — implement in 01B+ (not bulk-added in 
 | 01H_STARTED | No |
 | 01B_STARTED | No |
 
-**NEXT_DECISION:** PO architecture review
+---
+
+## 22. Locked architecture (PO approval — do not alter without new ADR)
+
+**Product principle:** *One creation language, domain-specific workflows.*
+
+The Activity Composer is an **adaptive container** for canonical **domain** creation workflows. It is **not**: a generic CRUD generator; a forced wizard; a replacement domain model; a generic Activity API; four independently implemented modals.
+
+```text
+                    SceActivityComposer
+                           │
+                SceActivityCreateDefinition
+                           │
+       ┌──────────┬────────┼─────────┬───────────┐
+       │          │        │         │
+    Training    Match   Tournament  Club Event
+       │          │        │         │
+       └──────────┴────────┼─────────┴───────────┘
+                           │
+               existing domain services/APIs
+```
+
+| Container mode | Behaviour |
+|----------------|-----------|
+| **Desktop** | Large contextual Composer **overlay** |
+| **Tablet** | Bounded adaptive overlay where space permits |
+| **Narrow / mobile** | **Fullscreen** Composer — same draft/components; **no separate mobile forms** |
+| **Direct / deep link** | Full-page `/new` shell — same domain workflow contract |
+
+**Validation model:** Workflows are freely navigable (not Step 1 → Next → Step 2). Tabs may be switched freely; **submit** validates the whole draft; first invalid tab becomes active; field errors remain canonical; restrained invalid tab indication allowed; assistive technology receives error state.
+
+**Action model:** Persistent footer actions remain domain-specific — Abbrechen; **Training erstellen** / **Spiel erstellen** / **Turnier erstellen** / **Veranstaltung erstellen** — not generic «Erstellen».
+
+**Activity identity (restrained accents only — do not recolor the complete Composer):**
+
+| Kind | Label | Accent |
+|------|-------|--------|
+| MATCH | SPIEL | match-red |
+| TRAINING | TRAINING | training-blue |
+| TOURNAMENT | TURNIER | tournament-orange |
+| CLUB_EVENT | VERANSTALTUNG | club-event-violet |
+
+**Toggle First (permanent):** `BINARY_CONTROL_COMPLIANCE = PASS`, `NEW_BINARY_CHECKBOXES = 0`. Training recurrence control normalized during Training adoption (01D) where appropriate.
+
+**Nested interaction rule:** A modal Activity Composer must **not** launch another independent modal, dialog, sheet, or drawer over itself for normal creation interactions. Prefer: (1) inline controls, (2) combobox/search, (3) popover, (4) expandable region, (5) Composer-owned embedded panel. If genuinely too complex, use canonical **full-page** creation mode — not stacked dialogs. First application: Club Event organisational audience selector (01C).
+
+---
+
+## 23. Context continuity (mandatory implementation requirement)
+
+Creation must preserve the user's planning context wherever technically possible. **No DB persistence required** for transient UI context.
+
+| Surface | Example |
+|---------|---------|
+| Wochenplaner week | Create → return to same week |
+| Veranstaltungen filters/month | Create → same filters/month |
+| Matchcenter / Tournamentcenter | Create → same operational context |
+| Future Team Programme | Create with team context → return to same Team Programme |
+
+Includes where appropriate: search params, filters, selected date/week/month, scroll context, origin, cache refresh, restrained success feedback, optional new-activity highlight.
+
+**Future contract (01I — not implemented in 01A–01G):** Same Composer supports `origin = TEAM_PROGRAMME`, team context prefilled, season context prefilled where appropriate.
+
+---
+
+## 24. Approved implementation sequence
+
+| Package | Title |
+|---------|-------|
+| **SCE-ACTIVITY-CREATE-01B** | Activity Composer Foundation |
+| **SCE-ACTIVITY-CREATE-01C** | Club Event Reference Adoption |
+| **SCE-ACTIVITY-CREATE-01D** | Training Adoption |
+| **SCE-ACTIVITY-CREATE-01E** | Match Adoption |
+| **SCE-ACTIVITY-CREATE-01F** | Tournament Adoption |
+| **SCE-ACTIVITY-CREATE-01G** | Planning Surface Integration & Closure |
+
+Then:
+
+| Package | Title |
+|---------|-------|
+| **SCE-UI-ROLLOUT-01H** | Core Planning Surfaces Adoption |
+| **01I** | Team Programme & Calendar |
+| **01J** | Dashboard + Mein Programm |
+| **01K–01N** | Communication … legacy removal |
+| **Sponsor** | Commercial workflows |
+| **Mobile** | Native shell (after Sponsor) |
+
+**01H boundary:** `ACTIVITY-CREATE-01` = **creation experience**. **01H** = activity **presentation and management** on core planning surfaces. **01G** may integrate creation triggers; **01H** must not rebuild Composer creation architecture.
+
+---
+
+## 25. Closure record
+
+| Field | Value |
+|-------|-------|
+| **SCE-ACTIVITY-CREATE-01A** | **CLOSED** |
+| **ARCHITECTURE_DECISION** | **APPROVED** |
+| **ADR-11** | **ACCEPTED** |
+| **ACTIVITY_COMPOSER_ARCHITECTURE_GATE** | **CONDITIONAL_PASS_ACCEPTED** |
+| **CONDITION** | Composer-safe child interaction architecture required, beginning with Club Event audience selector in **01C** |
+| **NEXT_PACKAGE** | **SCE-ACTIVITY-CREATE-01B** |
+| **01B_STARTED** | **NO** |
+| **01H_STARTED** | **NO** |
+| **PR** | **#838** |

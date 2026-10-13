@@ -4,8 +4,9 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A research complete pending PO architecture review |
-| **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **IMPLEMENTED_PENDING_ARCHITECTURE_REVIEW** |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; **01B** next (foundation) |
+| **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
+| **Next slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation (**NOT_STARTED**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -36,14 +37,23 @@ Research and, **only if an architecture / feasibility gate passes**, establish o
 
 ```text
 SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
-  → SCE-ACTIVITY-CREATE-01A — Research & Architecture (IMPLEMENTED_PENDING_ARCHITECTURE_REVIEW)
-  → (gate) SCE-ACTIVITY-CREATE-01B+ — Composer foundation & domain adoption
+  → SCE-ACTIVITY-CREATE-01A — Research & Architecture — CLOSED (CONDITIONAL_PASS_ACCEPTED)
+  → SCE-ACTIVITY-CREATE-01B — Composer foundation — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01C–01G — Domain adoption & planning integration — NOT_STARTED
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
 ```
 
-## Out of scope until gate passes
+## Architecture gate (01A closure)
 
-- Implementing `SceActivityComposer` in research-only packages
-- Replacing working domain create flows without adoption plan
+| Field | Value |
+|-------|-------|
+| **Decision** | Option C — adaptive `SceActivityComposer` + `/new` fallback |
+| **Gate** | **CONDITIONAL_PASS_ACCEPTED** |
+| **Condition** | Composer-safe child interactions (Club Event audience selector in **01C**) |
+
+## Out of scope for 01A (unchanged for 01B+ discipline)
+
+- Implementing domain create migrations before the matching adoption package (01C–01F)
+- Generic Activity persistence/API or parallel domain modal implementations
 - PROD deploy unless explicitly scheduled

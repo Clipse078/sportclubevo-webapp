@@ -198,7 +198,7 @@ Migrate surface-by-surface per 01H–01L. Legacy components/formatters are **dep
 
 ## ADR-11 — Unified activity creation uses an adaptive composer with full-page fallback
 
-**Status:** Proposed (SCE-ACTIVITY-CREATE-01A — pending Product Owner acceptance)
+**Status:** **Accepted** (SCE-ACTIVITY-CREATE-01A **CLOSED** — Product Owner approved Option C, 2026-10-13)
 
 ### Context
 
@@ -239,4 +239,4 @@ Adopt **Option C** — a shared **`SceActivityComposer`** with container modes (
 | Design System consistency | Medium | Low | **High** | Low |
 | Testing complexity | Low | High | Medium | Medium |
 
-**Recommendation:** **C**, with **CONDITIONAL_PASS** until audience selector and tri-domain UX convergence prerequisites close (see [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md)).
+**Recommendation:** **C**, with **CONDITIONAL_PASS_ACCEPTED** — audience selector refactor in **01C** and tri-domain UX convergence in **01D–01F** (see [`SCE-ACTIVITY-CREATE-01A.md`](../roadmap/SCE-ACTIVITY-CREATE-01A.md)).

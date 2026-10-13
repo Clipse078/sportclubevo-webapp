@@ -118,7 +118,8 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **SCE-UI-ROLLOUT-01G** | Canonical Club Event Card family |
 | **SCE-CLUB-EVENT-AUDIENCE-01** | Club Event organisational audience, create workflow, recurring series (R1 + R1.1) — **[closure doc](./SCE-CLUB-EVENT-AUDIENCE-01.md)** |
 | **SCE-ACTIVITY-CREATE-01A** | Unified Activity Creation — research & architecture ([`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md)) |
-| **SCE-ACTIVITY-CREATE-01B+** | Activity Composer foundation & domain adoption (after architecture gate) |
+| **SCE-ACTIVITY-CREATE-01B** | Activity Composer foundation (shell + contract) |
+| **SCE-ACTIVITY-CREATE-01C–01G** | Domain adoption (Club Event reference) & planning-surface integration |
 | **SCE-UI-ROLLOUT-01H** | Core planning surface adoption (Matchcenter / Trainings / Tournamentcenter / Veranstaltungen) — adopts audience-aware Club Event contract |
 | **SCE-UI-ROLLOUT-01I** | Team programme & calendar adoption |
 | **SCE-UI-ROLLOUT-01J** | Dashboard + Mein Programm adoption |
@@ -139,7 +140,9 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **01F** | **CLOSED** — [`SCE-UI-ROLLOUT-01F.md`](./SCE-UI-ROLLOUT-01F.md); PO visual UAT **PASS (R4)** |
 | **01G** | **CLOSED** — [`SCE-UI-ROLLOUT-01G.md`](./SCE-UI-ROLLOUT-01G.md); PO visual UAT **PASS (01G-R1)** |
 | **SCE-CLUB-EVENT-AUDIENCE-01** | **CLOSED** — [`SCE-CLUB-EVENT-AUDIENCE-01.md`](./SCE-CLUB-EVENT-AUDIENCE-01.md); PO UAT **PASS**; PR **#837** |
-| **SCE-ACTIVITY-CREATE-01A** | **NOT STARTED** — [`SCE-ACTIVITY-CREATE-01A.md`](./SCE-ACTIVITY-CREATE-01A.md) |
+| **SCE-ACTIVITY-CREATE-01A** | **CLOSED** — [`SCE-ACTIVITY-CREATE-01A.md`](./SCE-ACTIVITY-CREATE-01A.md); ADR-11 **ACCEPTED**; PR **#838** |
+| **SCE-ACTIVITY-CREATE-01B** | **NOT_STARTED** |
+| **SCE-ACTIVITY-CREATE-01C–01G** | **NOT_STARTED** |
 | **01H** | **NOT STARTED** |
 | **01I** | **NOT STARTED** |
 | **01J** | **NOT STARTED** |
@@ -156,8 +159,9 @@ Planning baseline only — **01A must gather repository evidence** before treati
 ```text
 01G Club Event Card Family — CLOSED
   → SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED (R1 + R1.1)
-  → SCE-ACTIVITY-CREATE-01A Unified Activity Creation — Research & Architecture — NOT_STARTED
-  → (gate) SCE-ACTIVITY-CREATE-01B+ Activity Composer foundation — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01A Unified Activity Creation — Research & Architecture — CLOSED
+  → SCE-ACTIVITY-CREATE-01B Activity Composer Foundation — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01C–01G Domain adoption & planning integration — NOT_STARTED
   → 01H Core Planning Surfaces Adoption — NOT_STARTED
   → 01I Team Programme & Calendar Adoption — NOT_STARTED
   → 01J Dashboard + Mein Programm Adoption — NOT_STARTED
