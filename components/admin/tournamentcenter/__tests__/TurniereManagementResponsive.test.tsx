@@ -30,6 +30,8 @@ describe("TURNIERE-UX-01 — responsive composition contract", () => {
     expect(row).toContain("TURNIERE_ROW_DESKTOP_GRID");
     expect(layout).toContain("xl:grid-cols-[4.75rem_minmax(18rem,1fr)_minmax(15rem,22rem)_2.5rem]");
     expect(layout).not.toContain("min-[105rem]:col-start-3");
+    expect(layout).toContain("md:max-xl:row-start-2");
+    expect(layout).toContain("xl:row-start-1");
   });
 
   it("right rail components remain mounted in workspace", () => {

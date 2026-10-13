@@ -127,4 +127,55 @@ describe("TurniereManagementRow — SCE-UI-ROLLOUT-01F-R2 list-row composition",
     expect(layout).not.toContain("min-[105rem]:col-start-3");
     expect(layout).toContain("TURNIERE_ROW_DESKTOP_BREAKPOINT");
   });
+
+  it("scopes tablet grid placement to md–lg so xl desktop row 1 placement is explicit", () => {
+    const layout = readFileSync(
+      resolve(__dirname, "../turniere-management-layout.ts"),
+      "utf8",
+    );
+    expect(layout).toContain("md:max-xl:row-start-2");
+    expect(layout).not.toContain("md:col-start-2 md:row-start-2");
+    expect(layout).toContain('TURNIERE_ROW_CONTEXT_CELL =\n  "min-w-0 md:max-xl:col-span-2');
+    expect(layout).toContain("xl:col-start-3 xl:row-start-1 xl:self-start");
+    expect(layout).toContain("xl:col-start-2 xl:row-start-1 xl:col-span-1");
+    expect(layout).toContain("xl:col-start-1 xl:row-start-1 xl:row-span-1");
+    expect(layout).toContain("xl:col-start-4 xl:row-start-1 xl:self-start");
+  });
+
+  it("applies desktop placement classes on rendered row cells", () => {
+    const tournament = baseTournament();
+    const assessment = assessTournamentOperationalState(tournament);
+
+    render(
+      <TurniereManagementRow
+        tournament={tournament}
+        assessment={assessment}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
+        canManage={false}
+      />,
+    );
+
+    const row = screen.getByTestId("turniere-row-tournament-1");
+    expect(row.className).toContain("xl:grid-cols-[4.75rem_minmax(18rem,1fr)_minmax(15rem,22rem)_2.5rem]");
+
+    const date = screen.getByTestId("turniere-row-date-block");
+    expect(date.className).toContain("xl:col-start-1");
+    expect(date.className).toContain("xl:row-start-1");
+
+    const identity = screen.getByTestId("turniere-row-identity-tournament-1");
+    expect(identity.className).toContain("xl:col-start-2");
+    expect(identity.className).toContain("xl:row-start-1");
+
+    const context = screen.getByTestId("turniere-row-context-zone").parentElement;
+    expect(context?.className).toContain("xl:col-start-3");
+    expect(context?.className).toContain("xl:row-start-1");
+    expect(context?.className).toContain("xl:col-span-1");
+    expect(context?.className).not.toContain("md:row-start-2");
+
+    const actionCell = screen.getByTestId("turniere-row-open-tournament-1").parentElement;
+    expect(actionCell?.className).toContain("xl:col-start-4");
+    expect(actionCell?.className).toContain("xl:row-start-1");
+  });
 });
