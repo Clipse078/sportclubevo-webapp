@@ -11,3 +11,6 @@ export const SCE_SCROLL_REGION_DARK_CLASS = "sce-scroll-region-dark";
 
 /** Internal scroll region in overlay/fullscreen (header/tabs/footer stay fixed). */
 export const SCE_ACTIVITY_COMPOSER_BODY_SCROLL_TEST_ID = "sce-activity-composer-body";
+
+/** Safe inset so sticky header/footer do not clip first/last form fields. */
+export const SCE_ACTIVITY_COMPOSER_BODY_SCROLL_INSET_CLASS = "scroll-pt-3 pb-8 pt-2 sm:pb-10";

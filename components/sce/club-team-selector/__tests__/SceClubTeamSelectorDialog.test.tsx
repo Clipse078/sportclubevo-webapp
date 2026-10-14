@@ -4,6 +4,7 @@
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SCE_CLUB_GRID_CLASS } from "../SceClubGrid";
 import { SceClubTeamSelectorDialog } from "../SceClubTeamSelectorDialog";
 
 const CLUBS = [
@@ -51,6 +52,13 @@ describe("SceClubTeamSelectorDialog", () => {
       expect(screen.getByTestId("sce-club-team-selector-grid")).toBeTruthy();
     });
     expect(screen.getByText("BSC Old Boys")).toBeTruthy();
+    const grid = screen.getByTestId("sce-club-team-selector-grid");
+    expect(SCE_CLUB_GRID_CLASS.split(" ").every((token) => grid.className.includes(token))).toBe(
+      true,
+    );
+    expect(screen.getByTestId("sce-club-team-selector-club-scroll").className).toContain(
+      "sce-scroll-region-dark",
+    );
   });
 
   it("filters visible clubs when search changes", async () => {

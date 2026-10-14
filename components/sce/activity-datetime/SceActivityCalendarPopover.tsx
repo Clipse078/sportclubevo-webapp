@@ -75,7 +75,9 @@ export function SceActivityCalendarPopover({
       role="dialog"
       matchAnchorWidth={false}
       maxHeight={320}
+      floatingLayer="composer"
       className="w-[17.5rem] bg-[var(--sce-surface-elevated)] p-3 text-[var(--foreground)]"
+      data-testid="sce-activity-calendar-popover"
     >
       <div className="mb-2 flex items-center justify-between gap-2">
         <button

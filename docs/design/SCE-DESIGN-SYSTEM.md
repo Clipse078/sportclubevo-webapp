@@ -426,19 +426,22 @@ Product-wide static enforcement of “no new setting checkboxes” is deferred t
 
 ---
 
-## SCE Club & Team Selector (01E-R3)
+## SCE Club & Team Selector (01E-R3 / R4 visual polish)
 
 One canonical engine for club and team selection across SCE — **visual-first**, **browse-first**, **search-assisted**, **crest-led**, backed by the **same Club Directory data** as `/dashboard/vereine` (no parallel opponent lists or Match-specific caches).
 
 | Principle | Rule |
 |-----------|------|
-| **VISUAL-FIRST** | Crest + club name on grid cards (`ClubLogo` bare — no avatar chrome) |
+| **VISUAL-FIRST** | Crest + club name on grid cards (`ClubLogo` **bare** — fixed crest bounding box, `object-contain`, no avatar circle) |
 | **BROWSE-FIRST** | Eligible clubs visible when the selector opens; search **filters** that universe |
-| **SEARCH-ASSISTED** | Case-insensitive normalized match on name / shortName / alternativeName |
+| **SEARCH-ASSISTED** | `SceClubTeamSearch` — leading icon slot + `.fca-search-input` padding contract; optional trailing clear |
 | **CANONICAL-DATA** | `GET /api/clubs/selectable` + Club Directory query service (Vereine source of truth) |
 | **ONE-ENGINE** | `SceClubTeamSelectorDialog` modes: `CLUB_ONLY` · `TEAM_ONLY` · `CLUB_THEN_TEAM` |
+| **GRID DENSITY** | `SceClubGrid` ≈ **4 columns** at form-dialog width (`grid-cols-2 sm:3 lg:4`); club names **line-clamp-2**, centered |
+| **TEAM ROWS** | `SceTeamList` card rows; secondary line via `formatSelectableTeamMetadata` (deduped, localized gender labels) |
+| **SCROLL** | Dialog owns layout; results region uses `.sce-scroll-region-dark` (no nested white scrollbar chrome) |
 | **KEYBOARD-ACCESSIBLE** | Dialog focus trap, Esc, return focus to invoking control |
-| **RESPONSIVE** | Grid columns adapt (≈2–6); full-screen-friendly on small viewports |
+| **RESPONSIVE** | Grid columns increase only while cards stay comfortably wide; full-screen-friendly on small viewports |
 
 **Composer subordinate dialog exception:** Activity creation may open this selector as an **elevated** modal (`Dialog` `stackLayer="elevated"`) above the Activity Composer. It must not close the composer or trigger leave-intent guards; focus returns to «Team ändern» / «Gegner ändern» on dismiss.
 
@@ -449,6 +452,26 @@ Modules:
 - `app/api/clubs/selectable/*`
 
 Future club/team pickers **must** consume this engine unless an ADR documents an exception.
+
+---
+
+## SCE overlay layering (01E-R4)
+
+Portalled floating surfaces use explicit stack tokens (`lib/ui/sce-overlay-layering.ts`, `app/globals.css`):
+
+| Layer | z-index | Usage |
+|-------|---------|--------|
+| App popover | 70 | Combobox / filter dropdowns in main workspace |
+| Modal overlay root | 100 | Activity Composer, standard dialogs |
+| Composer popover | 105 | `SceActivityCalendarPopover`, other composer-owned popovers (`PopoverContent` `floatingLayer="composer"`) |
+| Elevated modal | 110 | Club/team selector over composer |
+
+---
+
+## SCE Activity Date & Time (01E-R2 / R4 layout)
+
+- Manual **DD.MM.YYYY** + **HH:MM** via `SceActivityDateTimeInput` (termin row grid at `sm+`).
+- Calendar assistance via `SceActivityCalendarPopover` on the **composer popover** layer (never behind composer overlay).
 
 ---
 

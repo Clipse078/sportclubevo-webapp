@@ -15,6 +15,7 @@ import {
   sortSelectableClubsDeterministic,
 } from "@/lib/sce/club-team-selector/club-search";
 import { applyClubSelectorFilters, applyTeamSelectorFilters } from "@/lib/sce/club-team-selector/apply-selector-filters";
+import { cn } from "@/lib/cn";
 import type {
   SceClubTeamSelectionResult,
   SceClubTeamSelectorFilters,
@@ -23,9 +24,12 @@ import type {
   SceSelectableTeam,
   SceTenantClubContext,
 } from "@/lib/sce/club-team-selector/types";
+import { SCE_SCROLL_REGION_DARK_CLASS } from "@/lib/sce/activity-composer/composer-layout";
 import { SceClubGrid } from "./SceClubGrid";
 import { SceClubTeamSearch } from "./SceClubTeamSearch";
 import { SceTeamList } from "./SceTeamList";
+
+const SELECTOR_SCROLL_CLASS = cn("min-h-0 flex-1 overflow-y-auto", SCE_SCROLL_REGION_DARK_CLASS);
 
 export type SceClubTeamSelectorDialogProps = {
   open: boolean;
@@ -214,16 +218,19 @@ export function SceClubTeamSelectorDialog({
     if (mode === "TEAM_ONLY") {
       if (tenantClub) {
         return (
-          <div className="space-y-4">
-            <div className="flex flex-col items-center gap-2 border-b border-[var(--border)] pb-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div
+              className="flex shrink-0 items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/30 px-4 py-3"
+              data-testid={`${testIdPrefix}-tenant-club-identity`}
+            >
               <ClubLogo
                 logoUrl={tenantClub.logoUrl}
                 name={tenantClub.clubName}
-                size="xl"
+                size="lg"
                 bare
                 decorative
               />
-              <p className="text-center text-lg font-semibold text-[var(--foreground)]">
+              <p className="min-w-0 text-base font-semibold leading-snug text-[var(--foreground)]">
                 {tenantClub.clubName}
               </p>
             </div>
@@ -240,11 +247,13 @@ export function SceClubTeamSelectorDialog({
                   : "Keine Teams verfügbar."}
               </p>
             ) : (
-              <SceTeamList
-                teams={visibleTenantTeams}
-                onSelectTeam={handleTeamPick}
-                testId={`${testIdPrefix}-tenant-teams`}
-              />
+              <div className={SELECTOR_SCROLL_CLASS} data-testid={`${testIdPrefix}-team-scroll`}>
+                <SceTeamList
+                  teams={visibleTenantTeams}
+                  onSelectTeam={handleTeamPick}
+                  testId={`${testIdPrefix}-tenant-teams`}
+                />
+              </div>
             )}
           </div>
         );
@@ -260,10 +269,10 @@ export function SceClubTeamSelectorDialog({
             placeholder={searchPlaceholder}
             testId={`${testIdPrefix}-search`}
           />
-          <p className="text-xs text-[var(--text-2)]" aria-live="polite">
+          <p className="shrink-0 text-xs font-medium text-[var(--text-2)]" aria-live="polite">
             {clubsLoading
               ? "Vereine werden geladen…"
-              : `${visibleClubs.length} Verein${visibleClubs.length === 1 ? "" : "e"} sichtbar`}
+              : `${visibleClubs.length} Verein${visibleClubs.length === 1 ? "" : "e"}`}
           </p>
           {clubsLoading ? (
             <SceClubGrid.Skeleton />
@@ -292,7 +301,7 @@ export function SceClubTeamSelectorDialog({
               )}
             </div>
           ) : (
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className={SELECTOR_SCROLL_CLASS} data-testid={`${testIdPrefix}-club-scroll`}>
               <SceClubGrid clubs={visibleClubs} onSelectClub={handleClubPick} testId={`${testIdPrefix}-grid`} />
             </div>
           )}
@@ -318,9 +327,11 @@ export function SceClubTeamSelectorDialog({
             Vereine
           </button>
           {selectedClub ? (
-            <div className="flex flex-col items-center gap-2 border-b border-[var(--border)] pb-4">
-              <ClubLogo logoUrl={selectedClub.logoUrl} name={selectedClub.name} size="xl" bare decorative />
-              <p className="text-center text-lg font-semibold text-[var(--foreground)]">{selectedClub.name}</p>
+            <div className="flex shrink-0 items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/30 px-4 py-3">
+              <ClubLogo logoUrl={selectedClub.logoUrl} name={selectedClub.name} size="lg" bare decorative />
+              <p className="min-w-0 text-base font-semibold leading-snug text-[var(--foreground)]">
+                {selectedClub.name}
+              </p>
             </div>
           ) : null}
           {phase === "manual-team" ? (
@@ -387,7 +398,7 @@ export function SceClubTeamSelectorDialog({
                   ) : null}
                 </div>
               ) : (
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className={SELECTOR_SCROLL_CLASS} data-testid={`${testIdPrefix}-team-scroll`}>
                   <SceTeamList
                     teams={visibleExternalTeams}
                     onSelectTeam={handleTeamPick}
@@ -418,7 +429,10 @@ export function SceClubTeamSelectorDialog({
         </Button>
       }
     >
-      <div className="flex min-h-[min(70vh,640px)] flex-col" data-testid={testIdPrefix}>
+      <div
+        className="flex min-h-[min(58vh,520px)] flex-1 flex-col"
+        data-testid={testIdPrefix}
+      >
         {body}
       </div>
     </Dialog>

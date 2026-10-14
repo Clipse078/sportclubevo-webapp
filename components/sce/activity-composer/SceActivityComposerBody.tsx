@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import {
+  SCE_ACTIVITY_COMPOSER_BODY_SCROLL_INSET_CLASS,
   SCE_ACTIVITY_COMPOSER_BODY_SCROLL_TEST_ID,
   SCE_SCROLL_REGION_DARK_CLASS,
 } from "@/lib/sce/activity-composer/composer-layout";
@@ -57,6 +58,7 @@ export function SceActivityComposerBody({
               cn(
                 "min-h-0 overflow-y-auto",
                 SCE_SCROLL_REGION_DARK_CLASS,
+                SCE_ACTIVITY_COMPOSER_BODY_SCROLL_INSET_CLASS,
               ),
           )}
           data-testid={SCE_ACTIVITY_COMPOSER_BODY_SCROLL_TEST_ID}

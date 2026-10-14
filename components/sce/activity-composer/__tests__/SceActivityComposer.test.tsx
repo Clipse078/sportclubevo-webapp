@@ -277,6 +277,7 @@ describe("SceActivityComposer foundation (01B)", () => {
     expect(bodyScroll.getAttribute("data-composer-scroll")).toBe("internal");
     expect(bodyScroll.className).toContain("overflow-y-auto");
     expect(bodyScroll.className).toContain("sce-scroll-region-dark");
+    expect(bodyScroll.className).toContain("pb-8");
     const footer = screen.getByTestId("sce-activity-composer-footer");
     expect(footer.className).toContain("shrink-0");
     expect(panel.contains(footer)).toBe(true);

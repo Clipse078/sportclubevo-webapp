@@ -71,10 +71,11 @@ export function SceActivityDateTimeInput({
   return (
     <div
       className={cn(
-        "grid gap-4 sm:grid-cols-3",
+        "grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-[minmax(11rem,1.35fr)_minmax(6.5rem,1fr)_minmax(6.5rem,1fr)]",
         className,
       )}
       data-testid={testId}
+      data-sce-activity-datetime-layout="termin-row"
     >
       <SceActivityDateInput
         label="Datum"
