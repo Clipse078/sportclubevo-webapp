@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **CLOSED** (PR **#844**, PO UAT **PASS**) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **CLOSED** (PR **#844**, PO UAT **PASS**); **01H** **CLOSED** (PR **#845**, PO UAT **PASS**) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
@@ -12,7 +12,7 @@
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
 | **Tournament slice** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption — **CLOSED** (PR **#843**) |
 | **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**CLOSED**) |
-| **Next slice after 01G** | **SCE-ACTIVITY-CREATE-01H** — Core planning surfaces adoption (**IN_PROGRESS** — see [`SCE-ACTIVITY-CREATE-01H.md`](./SCE-ACTIVITY-CREATE-01H.md)) |
+| **Next slice after 01H** | **SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine (Team + Club) — **NOT STARTED** |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -50,8 +50,10 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01E — Match adoption — CLOSED (PR #842)
   → SCE-ACTIVITY-CREATE-01F — Tournament adoption — CLOSED (PR #843)
   → SCE-ACTIVITY-CREATE-01G — Global create integration — CLOSED (PR #844)
-  → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — IN_PROGRESS
-  → … (01I–01N per SCE-UI-ROLLOUT-01)
+  → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — CLOSED (PR #845)
+  → SCE-ACTIVITY-CREATE-01I — Programme & Calendar Engine — NOT STARTED
+  → Navbar Upgrade — PLANNED after 01I
+  → … (01J–01N per SCE-UI-ROLLOUT-01)
 ```
 
 ## Architecture gate (01A closure)
@@ -305,4 +307,43 @@ Vitest: **24** files · **290** tests (01A–01G activity-create regression + `S
 
 ### Next
 
-**SCE-ACTIVITY-CREATE-01H** — Core Planning Surfaces Adoption (**NOT_STARTED**). **SCE-TOURNAMENT-PLANNER-01** — **PLANNED — NOT STARTED**.
+**SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine (Team + Club) — **NOT STARTED**. **Navbar Upgrade** — **PLANNED** directly after **01I**.
+
+---
+
+## SCE-ACTIVITY-CREATE-01H closure (PR **#845**)
+
+Full record: [`SCE-ACTIVITY-CREATE-01H.md`](./SCE-ACTIVITY-CREATE-01H.md).
+
+| Field | Value |
+| --- | --- |
+| **Status** | **CLOSED / ACCEPTED** |
+| **Branch** | `cursor/sce-activity-create-01h-core-planning-surfaces` |
+| **PR** | **#845** → `STAGE` |
+| **PO visual UAT** | **PASS** (R4.4) |
+
+### Product rules (frozen)
+
+- Core planning surfaces consume the **canonical World Activity Card family** — same card, different density; **no** Wochenplaner-specific activity-card family.
+- Wochenplaner **Liste**: **TIME | IDENTITY | LOCATION | STATUS | ACTIONS** with row-owned operational columns and deterministic shared desktop grid geometry (**R4.4**).
+- Training management: weekday chips in **TRAININGSTAGE**, time in **ZEIT**; Liste/Match/Tournament/Club Event semantics per 01H closure doc.
+
+### Delivered slices
+
+**R1** STAGE migration integrity · **R2** training weekday dedupe · **R3** training column ownership · **R4** Liste canonical cards · **R4.1–R4.4** dedupe, polish, MICRO crests, fixed LOCATION axis.
+
+### Migrations (01H)
+
+**01D permission seed correction only** (committed SQL fix — no new 01H migration). **PROD untouched.**
+
+### Automated validation (closure)
+
+Vitest closure suite: **12** files · **94** tests — **0 failures**. `prisma validate` **PASS**. Production build **PASS**.
+
+### Design system & Toggle First
+
+**SCE_DESIGN_SYSTEM_COMPLIANCE = PASS** · **PARALLEL_LEGACY_PATTERN_INTRODUCED = NO** · **WORLD_ACTIVITY_CARD_COMPLIANCE = PASS** · **PLANNER_SPECIFIC_ACTIVITY_CARD_FAMILY = NO** · **BINARY_CONTROL_COMPLIANCE = PASS** · **NEW_BINARY_CHECKBOXES = 0**
+
+### Next
+
+**SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine — **NOT STARTED**. **SCE-TOURNAMENT-PLANNER-01** — **PLANNED — NOT STARTED** (after **01J** in near-term sequence).

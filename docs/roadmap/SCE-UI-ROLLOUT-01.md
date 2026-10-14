@@ -143,10 +143,12 @@ Planning baseline only — **01A must gather repository evidence** before treati
 | **SCE-ACTIVITY-CREATE-01A** | **CLOSED** — [`SCE-ACTIVITY-CREATE-01A.md`](./SCE-ACTIVITY-CREATE-01A.md); ADR-11 **ACCEPTED**; PR **#838** |
 | **SCE-ACTIVITY-CREATE-01B** | **CLOSED** — R1/R2/R3; PO visual UAT **PASS**; PR **#839** |
 | **SCE-ACTIVITY-CREATE-01C** | **CLOSED** — Club Event reference adoption; PO R7 UAT **PASS**; PR **#840** |
-| **SCE-ACTIVITY-CREATE-01D–01G** | **NOT_STARTED** |
-| **01H** | **NOT STARTED** |
-| **01I** | **NOT STARTED** |
-| **01J** | **NOT STARTED** |
+| **SCE-ACTIVITY-CREATE-01D–01G** | **CLOSED** — PRs **#841–#844** |
+| **SCE-ACTIVITY-CREATE-01H** | **CLOSED / ACCEPTED** — [`SCE-ACTIVITY-CREATE-01H.md`](./SCE-ACTIVITY-CREATE-01H.md); PO UAT **PASS (R4.4)**; PR **#845** |
+| **01H** (UI rollout alias) | **CLOSED** — core planning surface World Activity Card adoption |
+| **01I** | **NEXT — NOT STARTED** — Programme & Calendar Engine |
+| **Navbar Upgrade** | **PLANNED** — directly after **01I** |
+| **01J** | **PLANNED** — after Navbar Upgrade |
 | **01K** | **NOT STARTED** |
 | **01L** | **NOT STARTED** |
 | **01M** | **NOT STARTED** |
@@ -163,10 +165,11 @@ Planning baseline only — **01A must gather repository evidence** before treati
   → SCE-ACTIVITY-CREATE-01A Unified Activity Creation — Research & Architecture — CLOSED
   → SCE-ACTIVITY-CREATE-01B Activity Composer Foundation — CLOSED (PR #839)
   → SCE-ACTIVITY-CREATE-01C Club Event reference adoption — CLOSED (PR #840)
-  → SCE-ACTIVITY-CREATE-01D–01G Domain adoption & planning integration — NOT_STARTED
-  → 01H Core Planning Surfaces Adoption — NOT_STARTED
-  → 01I Team Programme & Calendar Adoption — NOT_STARTED
-  → 01J Dashboard + Mein Programm Adoption — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01D–01G Domain adoption & planning integration — CLOSED
+  → SCE-ACTIVITY-CREATE-01H Core Planning Surfaces Adoption — CLOSED (PR #845)
+  → 01I Programme & Calendar Engine — Team + Club — NOT STARTED
+  → Navbar Upgrade — PLANNED after 01I
+  → 01J Dashboard + Mein Programm Adoption — PLANNED after Navbar Upgrade
   → 01K Communication / Notifications / Activity References — NOT_STARTED
   → 01L Remaining Contextual Detail Pages — NOT_STARTED
   → 01M Responsive / Accessibility / Visual Consistency — NOT_STARTED
