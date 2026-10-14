@@ -29,7 +29,7 @@ ALTER TABLE "SceActivityGovernanceRevision" ADD CONSTRAINT "SceActivityGovernanc
 
 INSERT INTO "Permission" ("id", "key", "name", "module", "scope", "grantableByAdmin", "createdAt", "updatedAt")
 VALUES
-  (gen_random_uuid()::text, 'activities.training.approve', 'Training — approve / reject submissions', 'TRAINING', 'TENANT', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  (gen_random_uuid()::text, 'activities.training.approve', 'Training — approve / reject submissions', 'TRAININGS', 'TENANT', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT ("key") DO NOTHING;
 
 INSERT INTO "SceActivityGovernanceTypeConfig" ("id", "tenantId", "activityType", "defaultPublicationAuthority", "createdAt", "updatedAt")
