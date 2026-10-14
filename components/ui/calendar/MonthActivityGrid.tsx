@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import type { MonthActivityGridDay, MonthActivityGridNavigation } from "./month-activity-grid-types";
 import { PersonalProgrammeActivityIndicator } from "./PersonalProgrammeActivityIndicator";
 import { CalendarMonthLegend } from "./CalendarMonthLegend";
+import { ProgrammeCalendarMicroEntry } from "@/components/programme/ProgrammeCalendarMicroEntry";
 
 export type MonthActivityGridProps = {
   monthLabel: string;
@@ -23,8 +24,8 @@ export type MonthActivityGridProps = {
   selectable?: boolean;
   onSelectDay?: (dayKey: string) => void;
   getDayHref?: (dayKey: string) => string | undefined;
-  /** Matchcenter uses non-interactive cells; dashboard uses compact dot cells. */
-  cellVariant?: "matchcenter" | "personal";
+  /** Matchcenter uses non-interactive cells; dashboard uses compact dot cells; programme uses micro activity tiles. */
+  cellVariant?: "matchcenter" | "personal" | "programme";
   showLegend?: boolean;
 };
 
@@ -74,7 +75,7 @@ function DayCell({
   href,
 }: {
   day: MonthActivityGridDay;
-  variant: "matchcenter" | "personal";
+  variant: "matchcenter" | "personal" | "programme";
   selectable: boolean;
   onSelectDay?: (dayKey: string) => void;
   href?: string;
@@ -86,6 +87,21 @@ function DayCell({
     !day.inMonth && "text-[var(--muted)]/50",
     day.inMonth && "text-[var(--text-2)]",
     day.isToday && "bg-[var(--sce-primary)] font-semibold text-white",
+  );
+
+  const programmeClass = cn(
+    "relative flex min-h-[5.25rem] min-w-0 flex-col items-stretch justify-start gap-0.5 rounded-lg border border-transparent px-0.5 pb-1 pt-0.5 text-left text-xs tabular-nums sm:min-h-[5.5rem]",
+    !day.inMonth && "opacity-55",
+    day.inMonth && day.activityCount > 0 && "border-[color-mix(in_srgb,var(--border)_65%,transparent)] bg-[color-mix(in_srgb,var(--surface-2)_35%,var(--surface))]",
+    day.isToday &&
+      !day.isSelected &&
+      "ring-1 ring-inset ring-[var(--primary)]/50 bg-[color-mix(in_srgb,var(--primary)_6%,var(--surface))]",
+    day.isSelected &&
+      !day.isToday &&
+      "ring-2 ring-inset ring-[var(--primary)]/70 bg-[color-mix(in_srgb,var(--primary)_10%,var(--surface))]",
+    day.isSelected &&
+      day.isToday &&
+      "ring-2 ring-inset ring-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_12%,var(--surface))]",
   );
 
   const personalClass = cn(
@@ -103,12 +119,49 @@ function DayCell({
       "bg-[color-mix(in_srgb,var(--primary)_16%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-inset ring-[var(--primary)] ring-offset-0",
   );
 
-  const cellClassName = variant === "matchcenter" ? matchcenterClass : personalClass;
+  const cellClassName =
+    variant === "matchcenter"
+      ? matchcenterClass
+      : variant === "programme"
+        ? programmeClass
+        : personalClass;
   const showMatchcenterDot =
     variant === "matchcenter" ? day.activityCount > 0 && !day.isToday : false;
 
+  const programmeEntries = day.programmeCalendarEntries ?? [];
+  const programmeOverflow = day.programmeCalendarOverflow ?? 0;
+
   const inner =
-    variant === "personal" ? (
+    variant === "programme" ? (
+      <>
+        <time
+          dateTime={day.dayKey}
+          className={cn(
+            "self-center text-[0.6875rem] leading-none tabular-nums",
+            day.isToday && "font-bold text-[var(--primary)]",
+            !day.isToday && day.inMonth && "font-medium text-[var(--foreground)]",
+            !day.inMonth && "text-[var(--muted)]",
+          )}
+          aria-current={day.isToday ? "date" : undefined}
+        >
+          {day.dayNumber}
+        </time>
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-0.5 overflow-hidden">
+          {programmeEntries.map((entry) => (
+            <ProgrammeCalendarMicroEntry key={entry.id} entry={entry} />
+          ))}
+          {programmeOverflow > 0 ? (
+            <span
+              className="truncate text-center text-[0.5rem] font-semibold text-[var(--muted)]"
+              aria-label={`${programmeOverflow} weitere Aktivitäten`}
+              data-testid={`programme-calendar-overflow-${day.dayKey}`}
+            >
+              +{programmeOverflow} weitere
+            </span>
+          ) : null}
+        </div>
+      </>
+    ) : variant === "personal" ? (
       <>
         <time
           dateTime={day.dayKey}
@@ -136,7 +189,11 @@ function DayCell({
     return (
       <button
         type="button"
-        data-testid={`personal-calendar-day-${day.dayKey}`}
+        data-testid={
+          variant === "programme"
+            ? `programme-calendar-day-${day.dayKey}`
+            : `personal-calendar-day-${day.dayKey}`
+        }
         data-day-key={day.dayKey}
         aria-label={ariaLabel}
         aria-pressed={day.isSelected}
@@ -284,7 +341,7 @@ export default function MonthActivityGrid({
         ))}
       </div>
 
-      {cellVariant === "personal" && showLegend ? (
+      {(cellVariant === "personal" || cellVariant === "programme") && showLegend ? (
         <CalendarMonthLegend className="mb-2 mt-1" compact />
       ) : null}
 

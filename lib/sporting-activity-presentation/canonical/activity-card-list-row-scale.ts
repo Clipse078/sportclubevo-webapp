@@ -34,6 +34,24 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
   crestBoundsClass: "h-9 w-9",
   fixtureGridClass:
     "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-0.5",
+  /** Programme list — tighter fixture band, larger crests (~44–48px). */
+  programmeMatchCrestBoundsClass: "h-11 w-11 sm:h-12 sm:w-12",
+  programmeFixtureGridClass:
+    "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-1.5 gap-y-0",
+  programmeFixtureKickoffClass:
+    "font-mono text-sm font-bold tabular-nums leading-none text-[var(--foreground)]",
+  programmeFixtureVsClass: cn(
+    "text-[0.5rem] font-semibold uppercase tracking-[0.14em]",
+    SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+  ),
+  programmeCompetitionClass: cn(
+    "min-w-0 truncate text-[0.6875rem] font-medium",
+    SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+  ),
+  programmeLocationClass: cn(
+    "min-w-0 truncate text-[0.6875rem]",
+    SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
+  ),
 } as const;
 
 export function sceActivityListRowTypePillClass(): string {

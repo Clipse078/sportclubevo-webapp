@@ -52,6 +52,7 @@ export default function ProgrammeSceActivityCard({
         fmtCfg={fmtCfg}
         linkToDetail
         surface="list-row"
+        listRowPresentation="programme-fixture"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
       />

@@ -1,4 +1,5 @@
 import type { PersonalProgrammeSourceType } from "@/lib/personal-agenda/personal-programme-types";
+import type { ProgrammeCalendarMicroEntry } from "@/lib/programme-engine/programme-calendar-presentation";
 
 export type MonthActivityGridDay = {
   /** Tenant-local yyyy-MM-dd */
@@ -19,6 +20,10 @@ export type MonthActivityGridDay = {
   activityMarkerOverflow?: number;
   /** Optional tooltip / supplemental label for marker row. */
   activityMarkerTooltip?: string;
+  /** Programme Kalender — compact in-cell activity tiles (same ProgrammeItem projection). */
+  programmeCalendarEntries?: readonly ProgrammeCalendarMicroEntry[];
+  /** Programme Kalender — +N beyond visible micro entries. */
+  programmeCalendarOverflow?: number;
 };
 
 export type MonthActivityGridNavigation = {
