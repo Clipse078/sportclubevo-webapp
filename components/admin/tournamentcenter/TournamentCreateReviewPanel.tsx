@@ -11,7 +11,8 @@ import {
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
-import { SceTournamentParticipantLobby } from "@/components/sce/tournament/SceTournamentParticipantLobby";
+import { SceTournamentParticipantTile } from "@/components/sce/tournament/SceTournamentParticipantTile";
+import { cn } from "@/lib/cn";
 
 type Props = {
   payload: TournamentComposerDraftPayload;
@@ -27,6 +28,42 @@ function SummaryRow({ label, children }: { label: string; children: ReactNode })
     <div className="space-y-1">
       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <div className="text-sm text-[var(--foreground)]">{children}</div>
+    </div>
+  );
+}
+
+function reviewGridClass(density: ReturnType<typeof resolveTournamentLobbyGridDensity>): string {
+  if (density === "spacious") return "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3";
+  if (density === "balanced") return "grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4";
+  return "grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5";
+}
+
+function ReviewParticipantSection({
+  title,
+  identities,
+  testId,
+}: {
+  title: string;
+  identities: ReturnType<typeof buildTournamentLobbyParticipantIdentities>;
+  testId: string;
+}) {
+  if (identities.length === 0) return null;
+  const density = resolveTournamentLobbyGridDensity(identities.length);
+  return (
+    <div data-testid={testId} className="space-y-2">
+      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">{title}</p>
+      <div className={cn(reviewGridClass(density))}>
+        {identities.map((model) => (
+          <SceTournamentParticipantTile
+            key={model.localId}
+            variant="participant"
+            model={model}
+            density={density}
+            readOnly
+            testId={`${testId}-tile-${model.localId}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -50,7 +87,10 @@ export default function TournamentCreateReviewPanel({
     tenantClubName,
     tenantLogoUrl,
   });
-  const lobbyDensity = resolveTournamentLobbyGridDensity(participantIdentities.length);
+  const ownTeams = participantIdentities.filter((p) => p.kind === "TEAM");
+  const externalClubs = participantIdentities.filter((p) => p.kind === "EXTERNAL_CLUB");
+  const manualParticipants = participantIdentities.filter((p) => p.kind === "MANUAL");
+
   const organiserIdentity = organizer
     ? buildClubIdentity({
         id: organizer.id,
@@ -79,7 +119,7 @@ export default function TournamentCreateReviewPanel({
 
       {organiserIdentity ? (
         <div data-testid="tournament-create-review-organiser">
-          <SummaryRow label="Organisator">
+          <SummaryRow label="Veranstalter">
             <div className="flex items-center gap-3">
               <ClubCrest identity={organiserIdentity} density="management" decorative />
               <span className="font-medium">{summary.organiserLabel}</span>
@@ -87,25 +127,36 @@ export default function TournamentCreateReviewPanel({
           </SummaryRow>
         </div>
       ) : (
-        <SummaryRow label="Organisator">
+        <SummaryRow label="Veranstalter">
           <span className="text-[var(--text-2)]">Nicht angegeben</span>
         </SummaryRow>
       )}
 
-      {participantIdentities.length > 0 ? (
-        <SceTournamentParticipantLobby
-          participants={participantIdentities}
-          onRemoveParticipant={() => undefined}
-          addParticipantSlot={null}
-          density={lobbyDensity}
-          reviewMode
-          testId="tournament-create-review-participant-lobby"
-        />
-      ) : (
-        <p className="text-sm text-[var(--sce-danger)]" role="alert">
-          Mindestens ein Teilnehmer erforderlich.
-        </p>
-      )}
+      <div className="space-y-4" data-testid="tournament-create-review-participant-lobby">
+        {participantIdentities.length > 0 ? (
+          <>
+            <ReviewParticipantSection
+              title="Eigene Teams"
+              identities={ownTeams}
+              testId="tournament-create-review-own-teams"
+            />
+            <ReviewParticipantSection
+              title="Teilnehmende Vereine"
+              identities={externalClubs}
+              testId="tournament-create-review-external-clubs"
+            />
+            <ReviewParticipantSection
+              title="Manuelle Teilnehmer"
+              identities={manualParticipants}
+              testId="tournament-create-review-manual-participants"
+            />
+          </>
+        ) : (
+          <p className="text-sm text-[var(--sce-danger)]" role="alert">
+            Mindestens ein Teilnehmer erforderlich.
+          </p>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SummaryRow label="Termin">
@@ -152,9 +203,9 @@ export default function TournamentCreateReviewPanel({
         )}
       </SummaryRow>
 
-      <p className="text-xs text-[var(--text-2)]">
-        Eigenes Team: {summary.ownTeamCount} · Externe Vereine: {summary.externalClubCount} · Manuell:{" "}
-        {summary.manualCount}
+      <p className="text-xs text-[var(--text-2)]" data-testid="tournament-create-review-participant-total">
+        {summary.participantCount} Teilnehmer gesamt · Eigenes Team: {summary.ownTeamCount} · Externe Vereine:{" "}
+        {summary.externalClubCount} · Manuell: {summary.manualCount}
       </p>
     </div>
   );

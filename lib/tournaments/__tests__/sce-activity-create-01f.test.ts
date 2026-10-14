@@ -31,10 +31,10 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
     expect(read("components/admin/tournamentcenter/TournamentCreateForm.tsx")).toContain('finalReviewTab: "uebersicht"');
   });
   it("participant CLUB_ONLY selector", () => {
-    expect(read("components/admin/tournamentcenter/TournamentParticipantAddWorkflow.tsx")).toContain('mode="CLUB_ONLY"');
+    expect(read("components/admin/tournamentcenter/TournamentExternalClubsSection.tsx")).toContain('mode="CLUB_ONLY"');
   });
   it("participant TEAM_ONLY selector", () => {
-    expect(read("components/admin/tournamentcenter/TournamentParticipantAddWorkflow.tsx")).toContain('mode="TEAM_ONLY"');
+    expect(read("components/admin/tournamentcenter/TournamentOwnTeamsSection.tsx")).toContain('mode="TEAM_ONLY"');
   });
   it("draft API exists", () => {
     expect(read("app/api/tournament/composer/drafts/route.ts")).toContain("saveTournamentComposerDraft");

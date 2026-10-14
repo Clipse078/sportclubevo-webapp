@@ -127,6 +127,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         timezone="Europe/Zurich"
         tenantLogoUrl="https://example.com/tenant.png"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 
@@ -138,7 +139,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
       "https://example.com/crest.png",
     );
     expect(screen.getByTestId("turniere-record-organizer-club")).toHaveTextContent("FC Allschwil");
-    expect(within(screen.getByTestId("turniere-record-organizer-club")).queryByAltText(/FC Allschwil/i)).toBeNull();
+    expect(screen.getByTestId("turniere-record-organizer-club-tenant-identity")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-section-overview")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-section-schedule")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-canonical-participants-section")).toHaveTextContent("1 Team");
@@ -157,6 +158,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
     expect(screen.queryByTestId("turniere-record-right-rail")).toBeNull();
@@ -174,6 +176,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 
@@ -203,16 +206,17 @@ describe("TURNIERE-UX-02 record workspace", () => {
 
     render(
       <TurniereTournamentRecordWorkspace
-        tournament={BASE_TOURNAMENT}
+        tournament={{ ...BASE_TOURNAMENT, homeAway: "AWAY", organizerExternalClubId: "club-fca" }}
         canManage
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 
-    fireEvent.click(screen.getByTestId("turniere-record-organizer-club-picker-clear"));
+    fireEvent.click(screen.getByTestId("turniere-record-organizer-club-change"));
     fireEvent.change(screen.getByTestId("turniere-record-organizer-club-picker-input"), {
       target: { value: "Ae" },
     });
@@ -240,6 +244,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 
@@ -261,6 +266,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 
@@ -279,6 +285,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 
@@ -295,6 +302,7 @@ describe("TURNIERE-UX-02 record workspace", () => {
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
         defaultTournamentDurationMinutes={120}
+        tenantClubName="FC Allschwil"
       />,
     );
 

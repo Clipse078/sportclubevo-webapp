@@ -23,21 +23,21 @@ describe("SCE-ACTIVITY-CREATE-01F-R3 — tournament lobby + 1:n own teams", () =
     );
     expect(read("components/sce/tournament/SceTournamentParticipantTile.tsx")).toContain("ClubCrest");
     expect(read("components/admin/tournamentcenter/TournamentCreateForm.tsx")).toContain(
-      "SceTournamentParticipantLobby",
+      "TournamentOwnTeamsSection",
     );
     expect(read("components/admin/tournamentcenter/TournamentCreateReviewPanel.tsx")).toContain(
       "tournament-create-review-participant-lobby",
     );
   });
 
-  it("add participant flow uses single Teilnehmer hinzufügen entry", () => {
-    const workflow = read("components/admin/tournamentcenter/TournamentParticipantAddWorkflow.tsx");
-    expect(workflow).toContain("Teilnehmer hinzufügen");
-    expect(workflow).toContain("Eigenes Team");
-    expect(workflow).toContain("Externer Verein");
-    expect(workflow).toContain('mode="TEAM_ONLY"');
-    expect(workflow).toContain('mode="CLUB_ONLY"');
-    expect(workflow).not.toContain('mode="CLUB_THEN_TEAM"');
+  it("composer exposes direct own-team and external-club add actions (R4)", () => {
+    const own = read("components/admin/tournamentcenter/TournamentOwnTeamsSection.tsx");
+    const external = read("components/admin/tournamentcenter/TournamentExternalClubsSection.tsx");
+    expect(own).toContain("Eigenes Team hinzufügen");
+    expect(own).toContain('mode="TEAM_ONLY"');
+    expect(external).toContain("Verein hinzufügen");
+    expect(external).toContain('mode="CLUB_ONLY"');
+    expect(external).not.toContain('mode="CLUB_THEN_TEAM"');
   });
 
   it("allows multiple distinct tenant teams as participants", () => {

@@ -23,14 +23,18 @@ import PlanningEditorSection from "@/components/admin/shared/planning-editor/Pla
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import { PLANNING_EDITOR_FORM_GRID_CLASS, PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
-import TournamentParticipantAddWorkflow from "@/components/admin/tournamentcenter/TournamentParticipantAddWorkflow";
 import TournamentOrganizerClubField from "@/components/admin/tournamentcenter/TournamentOrganizerClubField";
+import TournamentOwnTeamsSection from "@/components/admin/tournamentcenter/TournamentOwnTeamsSection";
+import TournamentExternalClubsSection from "@/components/admin/tournamentcenter/TournamentExternalClubsSection";
+import TournamentManualParticipantSection from "@/components/admin/tournamentcenter/TournamentManualParticipantSection";
+import {
+  resolveEffectiveOrganiserSelection,
+  sanitizeOrganiserDraftFields,
+} from "@/lib/tournaments/composer/tournament-composer-organiser";
 import TournamentCreateReviewPanel from "@/components/admin/tournamentcenter/TournamentCreateReviewPanel";
-import { SceTournamentParticipantLobby } from "@/components/sce/tournament/SceTournamentParticipantLobby";
 import {
   buildTournamentLobbyParticipantIdentities,
   isDuplicateTournamentParticipant,
-  resolveTournamentLobbyGridDensity,
 } from "@/lib/tournaments/tournament-participant-presentation";
 import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
@@ -134,7 +138,7 @@ export default function TournamentCreateForm({
   const [endAt, setEndAt] = useState(serverHydrated?.endAt ?? "");
   const [meetingTime, setMeetingTime] = useState(serverHydrated?.meetingTime ?? "");
   const [organizerSelection, setOrganizerSelection] = useState<ExternalClubPickerResult | null>(
-    serverHydrated?.organizerExternalClubId
+    serverHydrated?.homeAway === "AWAY" && serverHydrated.organizerExternalClubId
       ? {
           id: serverHydrated.organizerExternalClubId,
           name: serverHydrated.organizerExternalClubName ?? "",
@@ -166,6 +170,12 @@ export default function TournamentCreateForm({
     if (activeSeasonId) setSeasonId(activeSeasonId);
   }, [activeSeasonId]);
 
+  useEffect(() => {
+    if (homeAway === "HOME") {
+      setOrganizerSelection(null);
+    }
+  }, [homeAway]);
+
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
     try {
@@ -194,6 +204,11 @@ export default function TournamentCreateForm({
   const availableTeams = teamOptions.filter((t) => !assignedTeamIds.has(t.id));
 
   const buildPayload = useCallback((): TournamentComposerDraftPayload => {
+    const organiserFields = sanitizeOrganiserDraftFields(
+      homeAway,
+      organizerSelection?.id ?? null,
+      organizerSelection?.name ?? null,
+    );
     return {
       seasonId,
       title,
@@ -206,8 +221,8 @@ export default function TournamentCreateForm({
       startAt,
       endAt,
       meetingTime,
-      organizerExternalClubId: organizerSelection?.id ?? null,
-      organizerExternalClubName: organizerSelection?.name ?? null,
+      organizerExternalClubId: organiserFields.organizerExternalClubId,
+      organizerExternalClubName: organiserFields.organizerExternalClubName,
       participants,
       resourceAllocations,
       publication: {
@@ -382,7 +397,7 @@ export default function TournamentCreateForm({
       setEndAt(hydrated.endAt);
       setMeetingTime(hydrated.meetingTime);
       setOrganizerSelection(
-        hydrated.organizerExternalClubId
+        hydrated.homeAway === "AWAY" && hydrated.organizerExternalClubId
           ? { id: hydrated.organizerExternalClubId, name: hydrated.organizerExternalClubName ?? "", shortName: null }
           : null,
       );
@@ -402,10 +417,35 @@ export default function TournamentCreateForm({
       }),
     [participants, tenantClubName, tenantLogoUrl],
   );
-  const lobbyDensity = useMemo(
-    () => resolveTournamentLobbyGridDensity(participants.length),
-    [participants.length],
+
+  const ownTeamIdentities = useMemo(
+    () => participantIdentities.filter((p) => p.kind === "TEAM"),
+    [participantIdentities],
   );
+  const externalClubIdentities = useMemo(
+    () => participantIdentities.filter((p) => p.kind === "EXTERNAL_CLUB"),
+    [participantIdentities],
+  );
+  const manualIdentities = useMemo(
+    () => participantIdentities.filter((p) => p.kind === "MANUAL"),
+    [participantIdentities],
+  );
+
+  const effectiveOrganiserSelection = useMemo(
+    () =>
+      resolveEffectiveOrganiserSelection({
+        homeAway,
+        externalSelection: organizerSelection,
+        tenantClubName,
+        tenantLogoUrl,
+      }),
+    [homeAway, organizerSelection, tenantClubName, tenantLogoUrl],
+  );
+
+  function removeParticipant(localId: string) {
+    setParticipants((prev) => prev.filter((row) => row.localId !== localId));
+    setParticipantNotice(null);
+  }
 
   function rejectDuplicateParticipant(): boolean {
     setParticipantNotice("Dieser Teilnehmer ist bereits im Turnier.");
@@ -499,33 +539,41 @@ export default function TournamentCreateForm({
             <span className="fca-label">Heim / Auswärts</span>
             <HomeAwaySegmentedControl value={homeAway} onChange={setHomeAway} testId="tournament-create-home-away" aria-label="Heim / Auswärts" />
           </div>
-          <TournamentOrganizerClubField selected={organizerSelection} onChange={setOrganizerSelection} testId="tournament-create-organizer-club" />
+          <TournamentOrganizerClubField
+            homeAway={homeAway}
+            tenantClubName={tenantClubName}
+            tenantLogoUrl={tenantLogoUrl}
+            selected={organizerSelection}
+            onChange={setOrganizerSelection}
+            testId="tournament-create-organizer-club"
+          />
         </div>
         {participantNotice ? (
           <p role="status" className="mt-4 text-sm text-[var(--sce-danger)]" data-testid="tournament-participant-duplicate-notice">
             {participantNotice}
           </p>
         ) : null}
-        <div className="mt-5">
-          <SceTournamentParticipantLobby
-            participants={participantIdentities}
-            onRemoveParticipant={(localId) => {
-              setParticipants((prev) => prev.filter((row) => row.localId !== localId));
-              setParticipantNotice(null);
-            }}
-            addParticipantSlot={
-              <TournamentParticipantAddWorkflow
-                availableTeams={availableTeams.map((t) => ({ ...t, isActive: true }))}
-                tenantLogoUrl={tenantLogoUrl}
-                tenantClubName={tenantClubName}
-                onAddTeam={addTeamParticipant}
-                onAddExternalClub={addExternalClubParticipant}
-                onAddManual={addManualParticipant}
-                lobbyDensity={lobbyDensity}
-              />
-            }
-            density={lobbyDensity}
-            testId="tournament-create-participant-lobby"
+        <div className="mt-6 space-y-6" data-testid="tournament-create-participant-lobby">
+          <p className="text-sm text-[var(--text-2)]" data-testid="tournament-create-participant-total">
+            {participants.length} Teilnehmer gesamt
+          </p>
+          <TournamentOwnTeamsSection
+            identities={ownTeamIdentities}
+            availableTeams={availableTeams.map((t) => ({ ...t, isActive: true }))}
+            tenantLogoUrl={tenantLogoUrl}
+            tenantClubName={tenantClubName}
+            onAddTeam={addTeamParticipant}
+            onRemoveParticipant={removeParticipant}
+          />
+          <TournamentExternalClubsSection
+            identities={externalClubIdentities}
+            onAddExternalClub={addExternalClubParticipant}
+            onRemoveParticipant={removeParticipant}
+          />
+          <TournamentManualParticipantSection
+            identities={manualIdentities}
+            onAddManual={addManualParticipant}
+            onRemoveParticipant={removeParticipant}
           />
         </div>
       </PlanningEditorSection>
@@ -662,7 +710,7 @@ export default function TournamentCreateForm({
       <PlanningEditorSectionHeading id="tournament-create-review-heading" title="Übersicht" />
       <TournamentCreateReviewPanel
         payload={buildPayload()}
-        organizer={organizerSelection}
+        organizer={effectiveOrganiserSelection}
         tenantClubName={tenantClubName}
         tenantLogoUrl={tenantLogoUrl}
         pitchHallFacilityGroups={pitchHallFacilityGroups}

@@ -171,6 +171,7 @@ export default async function TournamentEditPage({ params }: Props) {
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
           timezone={tenantContext.timezone ?? "Europe/Zurich"}
           tenantLogoUrl={tenantContext.logoUrl}
+          tenantClubName={tenantContext.name}
           defaultTournamentDurationMinutes={operationalDurationPolicy.TOURNAMENT.durationMinutes}
           canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
           createTaskAction={

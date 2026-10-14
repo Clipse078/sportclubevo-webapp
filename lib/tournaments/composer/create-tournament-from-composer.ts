@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { parseTenantLocalDateTimeInput, resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
-import { organizerNameFromPickerSelection } from "@/lib/tournaments/organizer-picker-state";
+import { resolvePersistedOrganizerNameFromComposerPayload } from "@/lib/tournaments/composer/tournament-composer-organiser";
 import {
   orchestrateTournamentCreation,
   type TournamentCreationOrchestrationResult,
@@ -43,7 +43,7 @@ export async function createTournamentFromComposerPayload(input: {
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: input.tenantId },
-    select: { timezone: true },
+    select: { timezone: true, name: true },
   });
   const tenantTimeZone = resolveTenantEventTimezone(tenant?.timezone);
 
@@ -66,13 +66,10 @@ export async function createTournamentFromComposerPayload(input: {
   const now = new Date();
   const approved = input.reviewStage === "APPROVED";
 
-  const organizerName = payload.organizerExternalClubId
-    ? organizerNameFromPickerSelection({
-        id: payload.organizerExternalClubId,
-        name: payload.organizerExternalClubName ?? "",
-        shortName: null,
-      })
-    : null;
+  const organizerName = resolvePersistedOrganizerNameFromComposerPayload(
+    payload,
+    tenant?.name ?? "",
+  );
 
   const event = await prisma.event.create({
     data: {
