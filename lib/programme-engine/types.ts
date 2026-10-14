@@ -1,0 +1,73 @@
+import type { SceActivityPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import type { PersonalProgrammePresentationStatus } from "@/lib/personal-agenda/personal-programme-types";
+
+/** Initial production scopes; PERSON reserved for 01J without engine redesign. */
+export type ProgrammeScope =
+  | {
+      kind: "TEAM";
+      teamId: string;
+      teamSeasonId: string;
+      /** Team's assigned org unit (exact-unit Club Event relevance). */
+      orgUnitId: string | null;
+    }
+  | {
+      kind: "CLUB";
+    };
+
+export type ProgrammeActivityKind = "TRAINING" | "MATCH" | "TOURNAMENT" | "CLUB_EVENT";
+
+export const PROGRAMME_ACTIVITY_KINDS: readonly ProgrammeActivityKind[] = [
+  "TRAINING",
+  "MATCH",
+  "TOURNAMENT",
+  "CLUB_EVENT",
+] as const;
+
+export type ProgrammeTemporalMode = "upcoming" | "past" | "range";
+
+export type ProgrammeFilters = {
+  teamIds?: readonly string[];
+  orgUnitIds?: readonly string[];
+  activityKinds?: readonly ProgrammeActivityKind[];
+  /** Normalized presentation statuses where meaningful (scheduled, cancelled, …). */
+  statuses?: readonly PersonalProgrammePresentationStatus[];
+};
+
+export type ProgrammeQueryInput = {
+  tenantId: string;
+  timeZone: string;
+  now?: Date;
+  scope: ProgrammeScope;
+  temporal?: ProgrammeTemporalMode;
+  from?: Date;
+  to?: Date;
+  filters?: ProgrammeFilters;
+  userId: string;
+  permissionKeys: readonly string[];
+  tenantClubName?: string | null;
+  tenantLogoUrl?: string | null;
+};
+
+export type ProgrammeItem = {
+  /** Stable deterministic identity for list/calendar views. */
+  id: string;
+  kind: ProgrammeActivityKind;
+  domainId: string;
+  resourceKey: string;
+  startsAt: Date;
+  endsAt: Date | null;
+  allDay: boolean;
+  presentation: SceActivityPresentationModel;
+  teamId: string | null;
+  teamSeasonId: string | null;
+  orgUnitId: string | null;
+  status?: PersonalProgrammePresentationStatus | string;
+  /** Canonical consume navigation target (activity detail). */
+  navigationTarget: string;
+};
+
+export type ProgrammeQueryResult = {
+  items: ProgrammeItem[];
+  range: { rangeStart: Date; rangeEnd: Date };
+  scope: ProgrammeScope;
+};
