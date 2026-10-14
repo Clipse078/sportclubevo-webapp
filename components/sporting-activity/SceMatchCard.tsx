@@ -276,15 +276,20 @@ function SceMatchInlineIdentitySide({
   identity,
   showCrests,
   listRow = false,
+  microListCrest = false,
 }: {
   side: "home" | "away";
   identity: SceMatchPresentationModel["fixture"]["home"];
   showCrests: boolean;
   listRow?: boolean;
+  /** MICRO density shares list-row crest bounds (planner list presentation). */
+  microListCrest?: boolean;
 }) {
   const nameClass = listRow
     ? SCE_ACTIVITY_LIST_ROW_SCALE.fixtureClubNameClass
     : cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity("MICRO"));
+
+  const useMicroCrestBounds = listRow || microListCrest;
 
   return (
     <div
@@ -297,12 +302,12 @@ function SceMatchInlineIdentitySide({
       )}
     >
       {showCrests ? (
-        <div data-sce-match-region={`${side}-crest`}>
+        <div data-sce-match-region={`${side}-crest`} className="shrink-0">
           <ClubCrest
             identity={identity}
             density="compact"
             decorative
-            className={listRow ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass : undefined}
+            className={useMicroCrestBounds ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass : undefined}
           />
         </div>
       ) : null}
@@ -437,31 +442,29 @@ function SceMatchListRowIdentityContent({
 }) {
   const showCrests = isSceActivityDimensionVisible(density, "crests");
   const tenantSide = resolveMatchTenantSideBadge(model.contextBadges);
+  const tenantSideAccessibleLabel =
+    tenantSide?.label === "Heim"
+      ? "Heimspiel"
+      : tenantSide?.label === "Auswärts"
+        ? "Auswärtsspiel"
+        : tenantSide?.label;
 
   return (
     <div
-      className={cn("min-w-0", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-match-density={density}
       data-sce-match-list-row-identity
     >
       <SceMatchTypeHeader model={model} showStatus={false} listRow />
+      {tenantSideAccessibleLabel ? (
+        <span className="sr-only">{tenantSideAccessibleLabel}</span>
+      ) : null}
       <div
-        className={cn(SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass, tenantSide && "gap-y-1")}
+        className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass}
         data-testid="sce-match-fixture"
         data-sce-match-region="fixture"
         aria-label={buildFixtureAccessibleLabel(model)}
       >
-        {tenantSide ? (
-          <div
-            className="col-span-full flex min-w-0 items-center"
-            data-sce-match-region="tenant-side-marker"
-          >
-            <ActivityContextBadge
-              label={tenantSide.label}
-              data-testid={contextBadgeTestId(tenantSide)}
-            />
-          </div>
-        ) : null}
         <SceMatchInlineIdentitySide
           side="home"
           identity={model.fixture.home}
@@ -568,12 +571,14 @@ function SceMatchMicroContent({
           side="home"
           identity={model.fixture.home}
           showCrests={showCrests}
+          microListCrest
         />
         <SceMatchFixtureSeparator model={model} density="MICRO" />
         <SceMatchInlineIdentitySide
           side="away"
           identity={model.fixture.away}
           showCrests={showCrests}
+          microListCrest
         />
       </div>
 

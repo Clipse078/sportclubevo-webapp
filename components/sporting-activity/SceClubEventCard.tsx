@@ -401,7 +401,7 @@ function SceClubEventListRowIdentityContent({
 }) {
   return (
     <div
-      className={cn("min-w-0", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-club-event-density={density}
       data-sce-club-event-list-row-identity
     >

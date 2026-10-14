@@ -30,7 +30,8 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
     "shrink-0 px-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.1em]",
     SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
   ),
-  crestBoundsClass: "h-7 w-7",
+  /** Canonical MICRO / Wochenplaner list-row crest bounding box (~36px). */
+  crestBoundsClass: "h-9 w-9",
   fixtureGridClass:
     "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-0.5",
 } as const;

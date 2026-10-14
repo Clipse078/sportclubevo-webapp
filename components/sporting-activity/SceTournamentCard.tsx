@@ -430,11 +430,13 @@ function SceTournamentListRowIdentityContent({
     teamNames: model.ownTeams ?? (model.hauptteam?.name ? [model.hauptteam.name] : []),
     organiserDisplayName: organiser,
   });
-  const hideOrganiserText = showOrganiserCrest && organiser;
+  const hideOrganiserText =
+    Boolean(organiser) &&
+    organiser.localeCompare(model.tournamentTitle.trim(), "de-CH", { sensitivity: "accent" }) === 0;
 
   return (
     <div
-      className={cn("min-w-0", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-tournament-density={density}
       data-sce-tournament-list-row-identity
     >
@@ -451,6 +453,7 @@ function SceTournamentListRowIdentityContent({
           <div
             className="flex min-w-0 items-center gap-1.5"
             data-sce-tournament-region="organiser-row"
+            data-sce-tournament-organiser-composition
           >
             {showOrganiserCrest ? (
               <span data-testid="sce-tournament-organiser-crest" className="shrink-0 self-center">
@@ -465,7 +468,10 @@ function SceTournamentListRowIdentityContent({
             ) : null}
             {!hideOrganiserText ? (
               <p
-                className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
+                className={cn(
+                  SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass,
+                  showOrganiserCrest && "min-w-0 flex-1",
+                )}
                 data-testid="sce-tournament-organiser"
                 data-sce-tournament-region="organiser"
                 title={organiser}

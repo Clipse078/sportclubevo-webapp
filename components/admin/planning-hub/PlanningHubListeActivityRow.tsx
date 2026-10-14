@@ -8,6 +8,7 @@ import {
   type ListOperationalRowStatus,
 } from "@/lib/planning-hub/list-operational";
 import {
+  PLANNING_HUB_LISTE_ROW_COLUMN_CLASS,
   PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS,
   PLANNING_HUB_LISTE_ROW_GRID_CLASS,
 } from "@/lib/planning-hub/planning-hub-liste-grid";
@@ -215,14 +216,22 @@ export default function PlanningHubListeActivityRow({
           )}
         >
           <p
-            className="inline-flex min-w-0 items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums leading-snug text-[var(--foreground)] md:flex-col md:items-start md:gap-0"
+            className={cn(
+              "inline-flex min-w-0 items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums leading-snug text-[var(--foreground)] md:flex-col md:items-start md:gap-0",
+              PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.time,
+            )}
             data-testid="planning-hub-liste-row-time"
+            data-sce-planning-hub-liste-column="TIME"
           >
             <Clock className="hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
             <span>{formatListeRowTime(item, dayKey, locale, timezone)}</span>
           </p>
 
-          <div className="min-w-0 md:min-w-0" data-testid="planning-hub-liste-row-identity">
+          <div
+            className={PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.identity}
+            data-testid="planning-hub-liste-row-identity"
+            data-sce-planning-hub-liste-column="IDENTITY"
+          >
             <SceListeActivityCard
               item={item}
               locale={locale}
@@ -241,10 +250,14 @@ export default function PlanningHubListeActivityRow({
           </div>
 
           <p
-            className="inline-flex min-w-0 items-start gap-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)] md:min-w-0 md:pt-0.5"
+            className={cn(
+              "inline-flex min-w-0 items-start gap-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)] md:pt-0.5",
+              PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.location,
+            )}
             title={locationTitle}
             data-testid="planning-hub-liste-row-resources"
             data-sce-planning-hub-liste-location-owner
+            data-sce-planning-hub-liste-column="LOCATION"
           >
             <MapPin className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline md:shrink-0" aria-hidden />
             <span className="min-w-0 line-clamp-2">{locationLine}</span>
@@ -252,16 +265,21 @@ export default function PlanningHubListeActivityRow({
 
           <span
             className={cn(
-              "inline-flex w-fit max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide md:justify-self-start",
+              "inline-flex w-fit max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
+              PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.status,
               statusBadgeClass(status),
             )}
             data-testid="planning-hub-liste-row-status"
+            data-sce-planning-hub-liste-column="STATUS"
           >
             {listOperationalStatusLabel(status)}
           </span>
         </button>
 
-        <div className="flex items-center justify-end md:col-start-5 md:row-start-1">
+        <div
+          className={cn("flex min-w-0 items-center justify-end", PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.actions)}
+          data-sce-planning-hub-liste-column="ACTIONS"
+        >
           <PlanningHubListeRowMenu
             item={item}
             permissionContext={permissionContext}

@@ -248,11 +248,11 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren B1");
   });
 
-  it("associates HEIM marker with match fixture identity block", () => {
+  it("R4.3 — omits visible HEIM/AUSWÄRTS marker from list-row match fixture", () => {
     renderListe([match("match:1")]);
     const fixture = screen.getByTestId("sce-match-fixture");
-    expect(fixture.querySelector('[data-sce-match-region="tenant-side-marker"]')).toBeTruthy();
-    expect(screen.getByTestId("sce-match-context-heim")).toBeInTheDocument();
+    expect(fixture.querySelector('[data-sce-match-region="tenant-side-marker"]')).toBeNull();
+    expect(screen.queryByTestId("sce-match-context-heim")).not.toBeInTheDocument();
   });
 
   it("exposes shared desktop grid contract on every activity row", () => {

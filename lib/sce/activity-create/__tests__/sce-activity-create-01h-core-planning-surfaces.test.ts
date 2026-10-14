@@ -395,6 +395,17 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
       expect(row).toContain("planning-hub-liste-row-status");
     });
 
+    it("R4.3 — pins operational columns on the shared liste row grid", () => {
+      const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
+      const grid = read("lib/planning-hub/planning-hub-liste-grid.ts");
+      expect(row).toContain("PLANNING_HUB_LISTE_ROW_COLUMN_CLASS");
+      expect(row).toContain('data-sce-planning-hub-liste-column="LOCATION"');
+      expect(grid).toContain("md:col-start-3");
+      const matchCard = read("components/sporting-activity/SceMatchCard.tsx");
+      expect(matchCard).not.toContain('data-sce-match-region="tenant-side-marker"');
+      expect(matchCard).toContain("Heimspiel");
+    });
+
     it("R4.2 — shares list-row typography scale across canonical cards", () => {
       const scale = read(
         "lib/sporting-activity-presentation/canonical/activity-card-list-row-scale.ts",

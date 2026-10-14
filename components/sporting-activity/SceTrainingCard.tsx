@@ -323,7 +323,7 @@ function SceTrainingListRowIdentityContent({
 
   return (
     <div
-      className={cn("min-w-0", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-training-density={density}
       data-sce-training-list-row-identity
     >
