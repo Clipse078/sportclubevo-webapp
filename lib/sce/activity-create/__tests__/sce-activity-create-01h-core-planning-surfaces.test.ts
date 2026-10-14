@@ -382,6 +382,24 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
     });
   });
 
+  describe("training management list — R3 column ownership", () => {
+    it("places recurring schedule time in ZEIT column, not inside SceTrainingCard list-row", () => {
+      const rowSource = read("components/admin/training/TrainingSeriesManagementRow.tsx");
+      const cardSource = read("components/sporting-activity/SceTrainingCard.tsx");
+      expect(rowSource).toContain('data-testid="training-series-row-time"');
+      expect(rowSource).toContain("TrainingWeekdayPills");
+      expect(rowSource).not.toContain("hideDuplicateTimeColumn");
+      expect(cardSource).toContain("hideCompactTime");
+      expect(cardSource).toContain('surface === "list-row"');
+    });
+
+    it("keeps session management time column separate from series grid semantics", () => {
+      const sessionRow = read("components/admin/training/TrainingSessionManagementRow.tsx");
+      expect(sessionRow).toContain('data-testid="training-session-row-time"');
+      expect(sessionRow).toContain('surface="list-row"');
+    });
+  });
+
   describe("design system + toggle guardrails", () => {
     it("does not introduce new binary checkboxes in 01H touched surfaces", () => {
       const paths = [

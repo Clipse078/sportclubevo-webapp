@@ -82,7 +82,8 @@ describe("TrainingSeriesManagementRow", () => {
 
     expect(screen.getByTestId("training-management-sce-card")).toBeInTheDocument();
     expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Junioren F2 Training");
-    expect(screen.getByTestId("sce-training-compact-time")).toHaveTextContent("18:45–20:15");
+    expect(screen.queryByTestId("sce-training-compact-time")).toBeNull();
+    expect(screen.getByTestId("training-series-row-time")).toHaveTextContent("18:45–20:15");
     expect(screen.queryByTestId("sce-training-compact-weekdays")).toBeNull();
     expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("FC Allschwil");
     expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("Kunstrasen 2 A");
@@ -144,14 +145,16 @@ describe("TrainingSeriesManagementRow", () => {
     expect(screen.getByText("Nicht zugewiesen")).toBeInTheDocument();
     expect(screen.getAllByText("Unterschiedliche Zeiten")).toHaveLength(1);
     expect(screen.queryByTestId("sce-training-compact-weekdays")).toBeNull();
+    expect(screen.queryByTestId("sce-training-compact-time")).toBeNull();
     expect(screen.queryByText("Mo · Mi · Fr")).not.toBeInTheDocument();
     expect(screen.queryByText("Mo 18:45–20:15")).not.toBeInTheDocument();
-    const compactTime = screen.getByTestId("sce-training-compact-time");
-    expect(compactTime).toHaveAttribute(
+    const zeitCell = screen.getByTestId("training-series-row-time");
+    expect(zeitCell).toHaveTextContent("Unterschiedliche Zeiten");
+    expect(zeitCell.querySelector("p")).toHaveAttribute(
       "title",
       "Mo 18:45–20:15 · Mi 19:45–21:15",
     );
-    expect(compactTime).toHaveAttribute(
+    expect(zeitCell.querySelector("p")).toHaveAttribute(
       "aria-label",
       "Unterschiedliche Zeiten: Mo 18:45–20:15 · Mi 19:45–21:15",
     );

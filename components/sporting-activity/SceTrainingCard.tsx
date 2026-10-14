@@ -307,7 +307,10 @@ function SceTrainingCompactContent({
 }) {
   const locationLine = resolveLocationLine(model, "COMPACT");
   const recurring = isRecurringDefinition(model) ? model.schedulePresentation : null;
-  const hideWeekdayRhythm = surface === "list-row" && recurring?.kind === "RECURRING_DEFINITION";
+  const managementListRowRecurring =
+    surface === "list-row" && recurring?.kind === "RECURRING_DEFINITION";
+  const hideWeekdayRhythm = managementListRowRecurring;
+  const hideCompactTime = managementListRowRecurring;
   const weekdayLine =
     recurring?.kind === "RECURRING_DEFINITION"
       ? recurring.recurrence.rhythmLabel?.trim() ||
@@ -343,18 +346,20 @@ function SceTrainingCompactContent({
             {weekdayLine}
           </p>
         ) : null}
-        <p
-          className="font-mono text-xs tabular-nums text-[var(--foreground)]"
-          data-testid="sce-training-compact-time"
-          title={timeDetailTitle}
-          aria-label={
-            timeDetailTitle && timeLine === "Unterschiedliche Zeiten"
-              ? `${timeLine}: ${timeDetailTitle}`
-              : undefined
-          }
-        >
-          {timeLine}
-        </p>
+        {!hideCompactTime ? (
+          <p
+            className="font-mono text-xs tabular-nums text-[var(--foreground)]"
+            data-testid="sce-training-compact-time"
+            title={timeDetailTitle}
+            aria-label={
+              timeDetailTitle && timeLine === "Unterschiedliche Zeiten"
+                ? `${timeLine}: ${timeDetailTitle}`
+                : undefined
+            }
+          >
+            {timeLine}
+          </p>
+        ) : null}
         {showStatus && model.status?.label ? (
           <div className="flex sm:justify-end" data-sce-training-region="status">
             <SceTrainingCardStatus status={model.status} />
