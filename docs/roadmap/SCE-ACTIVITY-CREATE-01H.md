@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01H` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
-| **Status** | **IN_PROGRESS** — adoption package (not closed) |
+| **Status** | **IN_PROGRESS** — adoption package (not closed); **01H-R1** STAGE database integrity repair applied |
 | **Depends on** | **01G CLOSED** — global **`+ Erstellen`**, composers, permissions |
 | **Boundary** | **01I** owns Programme & Calendar Engine (Team + Club Liste \| Kalender). **01J** owns Dashboard + Mein Programm. **SCE-TOURNAMENT-PLANNER-01** remains **PLANNED / NOT STARTED**. |
 
@@ -106,6 +106,19 @@ See [`SCE-UI-LEGACY-REGISTER`](../design/SCE-UI-LEGACY-REGISTER.md):
 
 - `lib/sce/activity-create/__tests__/sce-activity-create-01h-core-planning-surfaces.test.ts` — cross-surface consistency + guardrails
 - Existing suites: Activity Presentation, Context Tabs, 01A–01G, Wochenplaner planning UX, management row tests
+
+## 01H-R1 — STAGE Trainings runtime / migration integrity
+
+| Field | Value |
+|-------|-------|
+| **Trigger** | PO UAT: `/dashboard/training` server error — `TrainingComposerDraft` table missing on shared STAGE |
+| **Root cause** | Preview/STAGE app deploy **without** guarded `db:migrate:deploy-if-enabled` after **01D–01F** merges. Pending migrations through `20261014130000_sce_activity_create_01f_tournament`. |
+| **01D defect** | Migration `20261013180000_sce_activity_create_01d_training` seeded `activities.training.approve` with invalid `PermissionModule` value **`TRAINING`** (canonical enum value is **`TRAININGS`**). First STAGE apply failed after DDL; blocked chain. |
+| **Repair (STAGE only)** | (1) Fix committed migration SQL (`TRAININGS`). (2) Idempotent completion of 01D seed DML. (3) `prisma migrate resolve --applied` for failed 01D row. (4) Guarded deploy for `20261013210000_*`, `20261014120000_*`, `20261014130000_*`. **PROD untouched.** |
+| **Verification** | `scripts/sce-activity-create-01h-stage-migration-verify-readonly.ts` → `schemaHealthy: true`; `prisma migrate status` → up to date; `listTrainingComposerDraftsForManagementView` executes without Prisma table errors. |
+| **Guardrail** | `lib/sce/activity-create/__tests__/sce-activity-create-migration-integrity.test.ts` — permission seeds must use valid `PermissionModule` enum values; documents 01C–01F draft table migrations. |
+
+Operator runbook: [`docs/deployment/stage-preview-migration-runbook.md`](../deployment/stage-preview-migration-runbook.md).
 
 ## Manual UAT
 
