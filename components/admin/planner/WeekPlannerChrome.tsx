@@ -12,6 +12,7 @@ import PlanningHubCreateMenu, {
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import type { TrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
 import type { MatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
+import type { TournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
 import PlanningHubListeToolbar from "@/components/admin/planning-hub/PlanningHubListeToolbar";
@@ -53,6 +54,7 @@ export type WeekPlannerChromeProps = {
   createPermissions?: PlanningHubCreatePermissions;
   trainingComposer?: TrainingComposerCreateSurfaceProps | null;
   matchComposer?: MatchComposerCreateSurfaceProps | null;
+  tournamentComposer?: TournamentComposerCreateSurfaceProps | null;
   teamOptions?: { value: string; label: string }[];
   facilityOptions?: { value: string; label: string }[];
   week?: WeekplannerWeek;
@@ -78,6 +80,7 @@ export default function WeekPlannerChrome({
   createPermissions,
   trainingComposer = null,
   matchComposer = null,
+  tournamentComposer = null,
   teamOptions = [],
   facilityOptions = [],
   week,
@@ -123,6 +126,7 @@ export default function WeekPlannerChrome({
               permissions={createPermissions}
               trainingComposer={trainingComposer}
               matchComposer={matchComposer}
+              tournamentComposer={tournamentComposer}
               plannerUrlState={resolvedUrlState}
             />
           ) : null

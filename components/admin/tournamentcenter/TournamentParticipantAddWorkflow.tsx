@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
-import TeamSearchablePicker, { type TeamPickerOption } from "@/components/admin/shared/TeamSearchablePicker";
-import { ExternalClubPicker, type ExternalClubPickerResult } from "./ExternalClubPicker";
+import type { TeamPickerOption } from "@/components/admin/shared/TeamSearchablePicker";
+import type { ExternalClubPickerResult } from "./ExternalClubPicker";
+import { SceClubTeamSelectorDialog } from "@/components/sce/club-team-selector/SceClubTeamSelectorDialog";
+import type { SceSelectableTeam } from "@/lib/sce/club-team-selector/types";
 
 type Props = {
   availableTeams: TeamPickerOption[];
   teamsLoading?: boolean;
   tenantLogoUrl?: string | null;
+  tenantClubName?: string;
   onAddTeam: (teamId: string) => void;
   onAddExternalClub: (club: ExternalClubPickerResult) => void;
   onAddManual: (label: string) => void;
@@ -24,6 +27,7 @@ export default function TournamentParticipantAddWorkflow({
   availableTeams,
   teamsLoading = false,
   tenantLogoUrl = null,
+  tenantClubName = "",
   onAddTeam,
   onAddExternalClub,
   onAddManual,
@@ -34,10 +38,24 @@ export default function TournamentParticipantAddWorkflow({
   manualButtonTestId = "tournament-participant-add-manual-button",
   noWritableTeamsMessage,
 }: Props) {
-  const [teamPickId, setTeamPickId] = useState("");
-  const [selectedClub, setSelectedClub] = useState<ExternalClubPickerResult | null>(null);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [clubDialogOpen, setClubDialogOpen] = useState(false);
   const [manualLabel, setManualLabel] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const teamTriggerRef = useRef<HTMLButtonElement>(null);
+  const clubTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const tenantSelectableTeams = useMemo((): SceSelectableTeam[] => {
+    return availableTeams.map((team) => ({
+      id: team.id,
+      clubId: "tenant",
+      name: team.name,
+      shortName: team.name,
+      categoryLabel: [team.ageGroup, team.genderGroup].filter(Boolean).join(" / ") || null,
+      ageGroup: team.ageGroup ?? null,
+      genderGroup: team.genderGroup ?? null,
+    }));
+  }, [availableTeams]);
 
   return (
     <div
@@ -48,101 +66,103 @@ export default function TournamentParticipantAddWorkflow({
 
       {noWritableTeamsMessage}
 
-      <div className="flex flex-col gap-3 lg:max-w-2xl">
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
-          <div className="min-w-0 space-y-1">
-            <p className="text-[11px] font-medium text-[var(--text-2)]">Team</p>
-            <TeamSearchablePicker
-              options={availableTeams}
-              value={teamPickId}
-              onChange={setTeamPickId}
-              tenantLogoUrl={tenantLogoUrl}
-              disabled={teamsLoading || pending || availableTeams.length === 0}
-              testId={teamSelectTestId}
-              placeholder={teamsLoading ? "Teams laden…" : "Team suchen…"}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (!teamPickId) return;
-              onAddTeam(teamPickId);
-              setTeamPickId("");
-            }}
-            disabled={!teamPickId || pending}
-            data-testid={`${teamSelectTestId}-button`}
-            className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
-          >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Team
-          </button>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
-          <div className="min-w-0 space-y-1">
-            <p className="text-[11px] font-medium text-[var(--text-2)]">Externer Verein</p>
-            <ExternalClubPicker
-              selected={selectedClub}
-              onSelect={setSelectedClub}
-              onClearSelected={() => setSelectedClub(null)}
-              disabled={pending}
-              placeholder="Verein aus Verzeichnis suchen…"
-              testId={externalClubTestId}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (!selectedClub) return;
-              onAddExternalClub(selectedClub);
-              setSelectedClub(null);
-            }}
-            disabled={!selectedClub || pending}
-            data-testid={`${externalClubTestId}-button`}
-            className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
-          >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Externer Verein
-          </button>
-        </div>
-
-        {showManualEntry ? (
-          <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
-            <input
-              type="text"
-              value={manualLabel}
-              onChange={(e) => setManualLabel(e.target.value)}
-              placeholder="z. B. unbekanntes Gastteam"
-              disabled={pending}
-              data-testid={manualInputTestId}
-              className="fca-input h-9"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const trimmed = manualLabel.trim();
-                if (!trimmed) return;
-                onAddManual(trimmed);
-                setManualLabel("");
-              }}
-              disabled={!manualLabel.trim() || pending}
-              data-testid={manualButtonTestId}
-              className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
-            >
-              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Manuell erfassen
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowManualEntry(true)}
-            className="text-left text-xs font-medium text-[var(--muted)] underline-offset-2 hover:text-[var(--foreground)] hover:underline"
-          >
-            Manuell erfassen…
-          </button>
-        )}
+      <div className="flex flex-wrap gap-2">
+        <button
+          ref={teamTriggerRef}
+          type="button"
+          onClick={() => setTeamDialogOpen(true)}
+          disabled={teamsLoading || pending || availableTeams.length === 0}
+          data-testid={`${teamSelectTestId}-button`}
+          className="fca-button-secondary h-9"
+        >
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          Team
+        </button>
+        <button
+          ref={clubTriggerRef}
+          type="button"
+          onClick={() => setClubDialogOpen(true)}
+          disabled={pending}
+          data-testid={`${externalClubTestId}-button`}
+          className="fca-button-secondary h-9"
+        >
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          Externer Verein
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowManualEntry((v) => !v)}
+          className="fca-button-secondary h-9"
+          data-testid="tournament-participant-toggle-manual"
+        >
+          Manuell
+        </button>
       </div>
+
+      {showManualEntry ? (
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+          <input
+            type="text"
+            value={manualLabel}
+            onChange={(e) => setManualLabel(e.target.value)}
+            placeholder="z. B. unbekanntes Gastteam"
+            disabled={pending}
+            data-testid={manualInputTestId}
+            className="fca-input h-9"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const label = manualLabel.trim();
+              if (!label) return;
+              onAddManual(label);
+              setManualLabel("");
+            }}
+            disabled={!manualLabel.trim() || pending}
+            data-testid={manualButtonTestId}
+            className="fca-button-secondary h-9"
+          >
+            Hinzufügen
+          </button>
+        </div>
+      ) : null}
+
+      <SceClubTeamSelectorDialog
+        open={teamDialogOpen}
+        onOpenChange={setTeamDialogOpen}
+        mode="TEAM_ONLY"
+        tenantClub={{ clubName: tenantClubName, logoUrl: tenantLogoUrl }}
+        tenantTeams={tenantSelectableTeams}
+        filters={{ allowedTeamIds: availableTeams.map((t) => t.id), activeOnly: true }}
+        onConfirm={({ team }) => {
+          if (team) onAddTeam(team.id);
+          setTeamDialogOpen(false);
+          teamTriggerRef.current?.focus();
+        }}
+        testIdPrefix="tournament-participant-team-selector"
+        returnFocusRef={teamTriggerRef}
+      />
+
+      <SceClubTeamSelectorDialog
+        open={clubDialogOpen}
+        onOpenChange={setClubDialogOpen}
+        mode="CLUB_ONLY"
+        filters={{ activeOnly: true, externalClubsOnly: true }}
+        onConfirm={({ club }) => {
+          if (club) {
+            onAddExternalClub({
+              id: club.id,
+              name: club.name,
+              shortName: club.shortName,
+              logoUrl: club.logoUrl,
+            });
+          }
+          setClubDialogOpen(false);
+          clubTriggerRef.current?.focus();
+        }}
+        testIdPrefix="tournament-participant-club-selector"
+        returnFocusRef={clubTriggerRef}
+      />
     </div>
   );
 }

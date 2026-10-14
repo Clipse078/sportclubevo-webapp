@@ -1247,6 +1247,7 @@ model Tenant {
   clubEventComposerDrafts                 ClubEventComposerDraft[]                 @relation("TenantClubEventComposerDraft")
   trainingComposerDrafts                  TrainingComposerDraft[]                  @relation("TenantTrainingComposerDraft")
   matchComposerDrafts                     MatchComposerDraft[]                     @relation("TenantMatchComposerDraft")
+  tournamentComposerDrafts                TournamentComposerDraft[]                @relation("TenantTournamentComposerDraft")
   sceActivityGovernanceRevisions          SceActivityGovernanceRevision[]          @relation("TenantSceActivityGovernanceRevision")
   sceActivityGovernanceDecisions          SceActivityGovernanceDecision[]          @relation("TenantSceActivityGovernanceDecision")
   notifications                      Notification[]
@@ -9974,6 +9975,28 @@ model MatchComposerDraft {
   @@index([tenantId, createdByPersonId])
 }
 
+/// SCE-ACTIVITY-CREATE-01F — persisted Tournament composer drafts (domain JSON payload).
+model TournamentComposerDraft {
+  id                      String                              @id @default(cuid())
+  tenantId                String
+  createdByPersonId       String
+  updatedByPersonId       String?
+  lifecycleState          SceActivityGovernanceLifecycleState @default(DRAFT)
+  payload                 Json
+  draftResourceSelections Json                                @default("[]")
+  revisionNumber          Int                                 @default(1)
+  submittedAt             DateTime?
+  publishedPrimaryEventId String?
+  createdAt               DateTime                            @default(now())
+  updatedAt               DateTime                            @updatedAt
+
+  tenant    Tenant                        @relation("TenantTournamentComposerDraft", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  revisions SceActivityGovernanceRevision[] @relation("TournamentDraftRevisions")
+
+  @@index([tenantId, lifecycleState])
+  @@index([tenantId, createdByPersonId])
+}
+
 model SceActivityGovernanceRevision {
   id                     String                              @id @default(cuid())
   tenantId               String
@@ -9981,6 +10004,7 @@ model SceActivityGovernanceRevision {
   clubEventDraftId       String?
   trainingDraftId        String?
   matchDraftId           String?
+  tournamentDraftId      String?
   domainPublishedEventId String?
   revisionNumber         Int
   lifecycleState         SceActivityGovernanceLifecycleState
@@ -9997,11 +10021,13 @@ model SceActivityGovernanceRevision {
   clubEventDraft ClubEventComposerDraft? @relation("ClubEventDraftRevisions", fields: [clubEventDraftId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   trainingDraft  TrainingComposerDraft?  @relation("TrainingDraftRevisions", fields: [trainingDraftId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   matchDraft     MatchComposerDraft?     @relation("MatchDraftRevisions", fields: [matchDraftId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tournamentDraft TournamentComposerDraft? @relation("TournamentDraftRevisions", fields: [tournamentDraftId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   decisions      SceActivityGovernanceDecision[]
 
   @@unique([clubEventDraftId, revisionNumber])
   @@unique([trainingDraftId, revisionNumber])
   @@unique([matchDraftId, revisionNumber])
+  @@unique([tournamentDraftId, revisionNumber])
   @@index([tenantId, activityType, lifecycleState])
   @@index([tenantId, isCurrentSubmission, lifecycleState])
 }
