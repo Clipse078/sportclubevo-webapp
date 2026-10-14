@@ -128,3 +128,44 @@ export function buildTournamentLobbyParticipantIdentities(input: {
     }),
   );
 }
+
+/** Compact resource-assignment row labels derived from the same lobby identity model. */
+export type TournamentResourceDressingRoomSubjectPresentation = {
+  localId: string;
+  subjectLabel: string;
+  subjectSecondary: string | null;
+  accessibleLabel: string;
+  identity: ClubIdentity;
+};
+
+function resourceRowSecondaryLabel(
+  identity: TournamentLobbyParticipantIdentity,
+): string | null {
+  const secondary = identity.designationLine?.trim() || null;
+  if (!secondary || secondary === identity.clubLine) return null;
+  if (identity.kind === "EXTERNAL_CLUB" && secondary === "Externer Verein") return null;
+  if (identity.kind === "MANUAL" && secondary === "Manuell") return null;
+  return secondary;
+}
+
+export function buildTournamentResourceDressingRoomSubjectPresentation(
+  model: TournamentLobbyParticipantIdentity,
+): TournamentResourceDressingRoomSubjectPresentation {
+  return {
+    localId: model.localId,
+    subjectLabel: model.clubLine,
+    subjectSecondary: resourceRowSecondaryLabel(model),
+    accessibleLabel: model.accessibleLabel,
+    identity: model.identity,
+  };
+}
+
+export function buildTournamentResourceDressingRoomSubjectPresentations(input: {
+  participants: readonly TournamentComposerParticipantRow[];
+  tenantClubName: string;
+  tenantLogoUrl: string | null;
+}): TournamentResourceDressingRoomSubjectPresentation[] {
+  return buildTournamentLobbyParticipantIdentities(input).map((model) =>
+    buildTournamentResourceDressingRoomSubjectPresentation(model),
+  );
+}

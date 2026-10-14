@@ -34,8 +34,10 @@ import {
 import TournamentCreateReviewPanel from "@/components/admin/tournamentcenter/TournamentCreateReviewPanel";
 import {
   buildTournamentLobbyParticipantIdentities,
+  buildTournamentResourceDressingRoomSubjectPresentations,
   isDuplicateTournamentParticipant,
 } from "@/lib/tournaments/tournament-participant-presentation";
+import { SceTournamentResourceParticipantCrest } from "@/components/sce/tournament/SceTournamentResourceParticipantCrest";
 import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
@@ -431,6 +433,21 @@ export default function TournamentCreateForm({
     [participantIdentities],
   );
 
+  const resourceDressingRoomSubjectPresentations = useMemo(
+    () =>
+      buildTournamentResourceDressingRoomSubjectPresentations({
+        participants,
+        tenantClubName,
+        tenantLogoUrl,
+      }),
+    [participants, tenantClubName, tenantLogoUrl],
+  );
+
+  const resourceDressingRoomPresentationByLocalId = useMemo(
+    () => new Map(resourceDressingRoomSubjectPresentations.map((row) => [row.localId, row])),
+    [resourceDressingRoomSubjectPresentations],
+  );
+
   const effectiveOrganiserSelection = useMemo(
     () =>
       resolveEffectiveOrganiserSelection({
@@ -653,14 +670,24 @@ export default function TournamentCreateForm({
           />
           {participants.length > 0 ? (
             <PlanningSubjectDressingRoomAssignments
-              subjects={participants.map((p) => ({
-                id: p.localId,
-                displayName: p.displayName,
-                dressingRoomAllocations: p.dressingRooms.map((d) => ({
-                  facilityResourceId: d.facilityResourceId,
-                  facilityResourceName: d.facilityResourceName,
-                })),
-              }))}
+              subjects={participants.map((p) => {
+                const presentation = resourceDressingRoomPresentationByLocalId.get(p.localId);
+                return {
+                  id: p.localId,
+                  displayName: presentation?.subjectLabel ?? p.displayName,
+                  secondaryLabel: presentation?.subjectSecondary ?? null,
+                  crest: presentation ? (
+                    <SceTournamentResourceParticipantCrest
+                      identity={presentation.identity}
+                      testId={`tournament-create-dressing-crest-${p.localId}`}
+                    />
+                  ) : undefined,
+                  dressingRoomAllocations: p.dressingRooms.map((d) => ({
+                    facilityResourceId: d.facilityResourceId,
+                    facilityResourceName: d.facilityResourceName,
+                  })),
+                };
+              })}
               facilityGroups={dressingRoomFacilityGroups}
               dressingRoomAvailability={dressingRoomAvailability}
               canManage
