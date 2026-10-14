@@ -36,10 +36,10 @@ describe("SPIELE-UX-01B — production interactivity", () => {
     }
   });
 
-  it("create action uses canonical route without fake dropdown chevron", () => {
+  it("create action uses global SceActivityCreateMenu trigger in header", () => {
     const source = readSource("components/admin/matchcenter/SpieleManagementHeaderMenu.tsx");
-    expect(source).toContain('href="/dashboard/matchcenter/new"');
-    expect(source).not.toContain("ChevronDown");
+    expect(source).toContain("activityCreateTrigger");
+    expect(source).not.toMatch(/Spiel erstellen/);
   });
 
   it("ViewSwitcher is a Server Component (link-only view control)", () => {

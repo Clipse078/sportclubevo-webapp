@@ -54,8 +54,7 @@ describe("SCE-ACTIVITY-CREATE-01D-R1 — PO UAT corrections", () => {
   });
 
   it("overlay create trigger remains wired", () => {
-    expect(read("components/admin/training/TrainingComposerCreateTrigger.tsx")).toContain("containerMode");
-    expect(read("components/admin/training/TrainingComposerCreateTrigger.tsx")).toContain("overlay");
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).toContain('containerMode="overlay"');
   });
 
   it("first-invalid-tab order excludes removed Publikation tab", () => {

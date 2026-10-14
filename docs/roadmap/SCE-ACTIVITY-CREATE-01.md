@@ -4,14 +4,15 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **IN_PROGRESS** |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
 | **Training slice** | [`SCE-ACTIVITY-CREATE-01D`](./SCE-ACTIVITY-CREATE-01D.md) — Training Adoption — **CLOSED** (PR **#841**) |
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
 | **Tournament slice** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption — **CLOSED** (PR **#843**) |
-| **Next slice** | **SCE-ACTIVITY-CREATE-01G** — Planning Surface Integration (**NOT_STARTED**) |
+| **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**IN_PROGRESS**) |
+| **Next slice after 01G** | **SCE-UI-ROLLOUT-01H** — Core planning surfaces adoption (**NOT_STARTED**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -48,7 +49,7 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01D — Training adoption — CLOSED (PR #841)
   → SCE-ACTIVITY-CREATE-01E — Match adoption — CLOSED (PR #842)
   → SCE-ACTIVITY-CREATE-01F — Tournament adoption — CLOSED (PR #843)
-  → SCE-ACTIVITY-CREATE-01G — Planning surface integration — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01G — Global create integration — IN_PROGRESS
   → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
   → … (01I–01N per SCE-UI-ROLLOUT-01)
 ```

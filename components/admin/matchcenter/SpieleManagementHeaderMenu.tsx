@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, MoreHorizontal, Plus } from "lucide-react";
+import { CalendarDays, MoreHorizontal } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
 type Props = {
   canManage: boolean;
   wochenplanerHref: string;
+  activityCreateTrigger?: ReactNode;
 };
 
 export default function SpieleManagementHeaderMenu({
   canManage,
   wochenplanerHref,
+  activityCreateTrigger = null,
 }: Props) {
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -30,16 +33,7 @@ export default function SpieleManagementHeaderMenu({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {canManage ? (
-        <Link
-          href="/dashboard/matchcenter/new"
-          className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-          data-testid="spiele-create-link"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Spiel erstellen
-        </Link>
-      ) : null}
+      {canManage && activityCreateTrigger ? activityCreateTrigger : null}
       <div ref={overflowRef} className="relative">
         <button
           type="button"

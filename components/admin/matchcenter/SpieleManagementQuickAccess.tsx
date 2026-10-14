@@ -5,13 +5,13 @@ import type { ReactNode } from "react";
 type Props = {
   canManage: boolean;
   wochenplanerHref: string;
-  matchCreateTrigger?: ReactNode;
+  activityCreateTrigger?: ReactNode;
 };
 
 export default function SpieleManagementQuickAccess({
   canManage,
   wochenplanerHref,
-  matchCreateTrigger = null,
+  activityCreateTrigger = null,
 }: Props) {
   return (
     <section
@@ -21,7 +21,11 @@ export default function SpieleManagementQuickAccess({
     >
       <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">Schnellzugriff</h3>
       <ul className="space-y-1">
-        {canManage && matchCreateTrigger ? <li>{matchCreateTrigger}</li> : null}
+        {canManage && activityCreateTrigger ? (
+          <li data-testid="spiele-quick-create-menu">
+            {activityCreateTrigger}
+          </li>
+        ) : null}
         <li>
           <Link
             href={wochenplanerHref}

@@ -48,9 +48,10 @@ describe("SCE-ACTIVITY-CREATE-01C-R1 — reference UX completion", () => {
   });
 
   it("provides contextual overlay create entry on management surface", () => {
-    const trigger = read("components/admin/veranstaltungen/VeranstaltungenComposerCreateTrigger.tsx");
+    const trigger = read("components/sce/activity-create/SceActivityCreateMenu.tsx");
     expect(trigger).toContain('containerMode="overlay"');
     expect(trigger).toContain("VeranstaltungCreateForm");
+    expect(read("app/(admin)/dashboard/veranstaltungen/page.tsx")).toContain("SceActivityCreateMenu");
   });
 
   it("maps canonical governance status labels", () => {

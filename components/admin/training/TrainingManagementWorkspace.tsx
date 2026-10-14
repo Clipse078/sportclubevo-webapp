@@ -65,6 +65,7 @@ type Props = {
   statusHrefByValue: Record<string, string>;
   resetFiltersHref: string;
   createTrigger?: ReactNode;
+  activityCreateQuickAccessTrigger?: ReactNode;
   composerDrafts?: TrainingComposerDraftListItem[];
 };
 
@@ -94,6 +95,7 @@ export default function TrainingManagementWorkspace({
   statusHrefByValue,
   resetFiltersHref,
   createTrigger,
+  activityCreateQuickAccessTrigger,
   composerDrafts = [] }: Props) {
   void _isCoordinator;
   void _locale;
@@ -269,7 +271,11 @@ export default function TrainingManagementWorkspace({
           className={cn(PLANNING_WORKSPACE_RAIL_ASIDE, PLANNING_WORKSPACE_RAIL_STACK)}
           data-testid="training-management-rail"
         >
-          <TrainingManagementQuickAccess canCreate={canCreate} wochenplanerHref={wochenplanerHref} />
+          <TrainingManagementQuickAccess
+            canCreate={canCreate}
+            wochenplanerHref={wochenplanerHref}
+            activityCreateTrigger={activityCreateQuickAccessTrigger ?? createTrigger}
+          />
           <TrainingManagementFilterRail
             resetHref={resetFiltersHref}
             teamValue={filters.seriesTeam}

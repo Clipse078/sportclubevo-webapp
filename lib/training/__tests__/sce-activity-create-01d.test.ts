@@ -75,10 +75,10 @@ describe("SCE-ACTIVITY-CREATE-01D — Training adoption", () => {
   });
 
   it("provides contextual overlay create on training management", () => {
-    expect(read("components/admin/training/TrainingComposerCreateTrigger.tsx")).toContain(
-      "training-create-overlay-trigger",
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).toContain(
+      "sce-activity-create",
     );
-    expect(read("app/(admin)/dashboard/training/page.tsx")).toContain("TrainingComposerCreateTrigger");
+    expect(read("app/(admin)/dashboard/training/page.tsx")).toContain("SceActivityCreateMenu");
   });
 
   it("extends person workspace with training governance section", () => {

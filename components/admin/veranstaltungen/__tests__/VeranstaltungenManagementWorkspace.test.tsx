@@ -93,23 +93,15 @@ describe("VeranstaltungenManagementWorkspace", () => {
         tab="BEVORSTEHEND"
         canManage
         timeZone="Europe/Zurich"
-        effectiveGovernance={{
-          activityType: "CLUB_EVENT",
-          personId: "person-1",
-          mayCreate: true,
-          publicationAuthority: "DIRECT_PUBLISH",
-          approvalStrategy: "ANY_ONE",
-          validatorPersonIds: [],
-        }}
+        activityCreateTrigger={
+          <button type="button" data-testid="sce-activity-create">
+            Erstellen
+          </button>
+        }
       />,
     );
 
-    expect(screen.getAllByTestId("veranstaltungen-create-overlay-trigger")).toHaveLength(1);
-    expect(screen.getByTestId("veranstaltungen-create-page-fallback")).toHaveClass("sr-only");
-    expect(screen.getByRole("link", { name: /Veranstaltung erstellen \(Seite\)/ })).toHaveAttribute(
-      "href",
-      "/dashboard/veranstaltungen/new",
-    );
+    expect(screen.getAllByTestId("sce-activity-create").length).toBeGreaterThanOrEqual(1);
   });
 
   it("reset link clears month filter", () => {

@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, ChevronDown, MoreHorizontal, Plus, Trophy } from "lucide-react";
+import { CalendarDays, MoreHorizontal, Trophy } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
 type Props = {
   canCreate: boolean;
-  createHref: string;
   wochenplanerHref: string;
+  activityCreateTrigger?: ReactNode;
 };
 
 export default function TurniereManagementHeaderMenu({
   canCreate,
-  createHref,
   wochenplanerHref,
+  activityCreateTrigger = null,
 }: Props) {
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
@@ -32,17 +33,7 @@ export default function TurniereManagementHeaderMenu({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {canCreate ? (
-        <Link
-          href={createHref}
-          className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-          data-testid="turniere-create-link"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Turnier erstellen
-          <ChevronDown className="h-3.5 w-3.5 opacity-80" aria-hidden="true" />
-        </Link>
-      ) : null}
+      {canCreate && activityCreateTrigger ? activityCreateTrigger : null}
       <div ref={overflowRef} className="relative">
         <button
           type="button"

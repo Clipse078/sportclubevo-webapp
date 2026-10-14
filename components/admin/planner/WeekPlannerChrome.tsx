@@ -7,12 +7,13 @@ import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
 import PlanningWeekNavigation from "@/components/admin/planning/PlanningWeekNavigation";
-import PlanningHubCreateMenu, {
-  type PlanningHubCreatePermissions,
-} from "@/components/admin/planning-hub/PlanningHubCreateMenu";
+import SceActivityCreateMenu, {
+  type SceActivityCreatePermissions,
+} from "@/components/sce/activity-create/SceActivityCreateMenu";
 import type { TrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
 import type { MatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
 import type { TournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
+import type { ClubEventComposerCreateSurfaceProps } from "@/lib/club-events/composer/load-club-event-composer-create-surface-props.server";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
 import PlanningHubListeToolbar from "@/components/admin/planning-hub/PlanningHubListeToolbar";
@@ -51,10 +52,11 @@ export type WeekPlannerChromeProps = {
   selectedPlanParam?: string | null;
   materializedWeekplannerPlanId?: string | null;
   canManagePlans?: boolean;
-  createPermissions?: PlanningHubCreatePermissions;
+  createPermissions?: SceActivityCreatePermissions;
   trainingComposer?: TrainingComposerCreateSurfaceProps | null;
   matchComposer?: MatchComposerCreateSurfaceProps | null;
   tournamentComposer?: TournamentComposerCreateSurfaceProps | null;
+  clubEventComposer?: ClubEventComposerCreateSurfaceProps | null;
   teamOptions?: { value: string; label: string }[];
   facilityOptions?: { value: string; label: string }[];
   week?: WeekplannerWeek;
@@ -81,6 +83,7 @@ export default function WeekPlannerChrome({
   trainingComposer = null,
   matchComposer = null,
   tournamentComposer = null,
+  clubEventComposer = null,
   teamOptions = [],
   facilityOptions = [],
   week,
@@ -122,12 +125,14 @@ export default function WeekPlannerChrome({
         subtitleTestId="weekplanner-header-subtitle"
         actions={
           createPermissions ? (
-            <PlanningHubCreateMenu
+            <SceActivityCreateMenu
               permissions={createPermissions}
               trainingComposer={trainingComposer}
               matchComposer={matchComposer}
               tournamentComposer={tournamentComposer}
+              clubEventComposer={clubEventComposer}
               plannerUrlState={resolvedUrlState}
+              reconcilePlanningHub
             />
           ) : null
         }

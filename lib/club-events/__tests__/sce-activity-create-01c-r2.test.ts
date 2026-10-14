@@ -30,19 +30,15 @@ describe("SCE-ACTIVITY-CREATE-01C-R2 — PO UAT corrections", () => {
     expect(migration).toContain("club_admin__%");
   });
 
-  it("renders exactly one visible composer create trigger", () => {
-    const trigger = read("components/admin/veranstaltungen/VeranstaltungenComposerCreateTrigger.tsx");
-    expect(trigger).not.toContain("veranstaltungen-create-overlay-trigger-mobile");
-    expect((trigger.match(/data-testid="veranstaltungen-create-overlay-trigger"/g) ?? []).length).toBe(
-      1,
-    );
-    expect((trigger.match(/<button/g) ?? []).length).toBe(1);
+  it("global create menu exposes single canonical trigger test id", () => {
+    const menu = read("components/sce/activity-create/SceActivityCreateMenu.tsx");
+    expect((menu.match(/data-testid="sce-activity-create"/g) ?? []).length).toBe(1);
   });
 
   it("keeps /new page fallback link without a second visible CTA", () => {
-    const trigger = read("components/admin/veranstaltungen/VeranstaltungenComposerCreateTrigger.tsx");
-    expect(trigger).toContain('href="/dashboard/veranstaltungen/new"');
-    expect(trigger).toContain("sr-only");
+    const menu = read("components/sce/activity-create/SceActivityCreateMenu.tsx");
+    expect(menu).toContain('href="/dashboard/veranstaltungen/new"');
+    expect(menu).toContain("sr-only");
   });
 
   describe("Freigaben access resolution", () => {

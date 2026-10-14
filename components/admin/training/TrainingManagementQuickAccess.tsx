@@ -1,14 +1,17 @@
 import Link from "next/link";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import type { ReactNode } from "react";
 
 type Props = {
   canCreate: boolean;
   wochenplanerHref: string;
+  activityCreateTrigger?: ReactNode;
 };
 
 export default function TrainingManagementQuickAccess({
   canCreate,
   wochenplanerHref,
+  activityCreateTrigger = null,
 }: Props) {
   return (
     <section
@@ -18,17 +21,8 @@ export default function TrainingManagementQuickAccess({
     >
       <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">Schnellzugriff</h3>
       <ul className="space-y-1">
-        {canCreate ? (
-          <li>
-            <Link
-              href="/dashboard/training/new"
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-              data-testid="training-quick-create"
-            >
-              <Plus className="h-4 w-4 text-[var(--sce-primary)]" aria-hidden="true" />
-              Training erstellen
-            </Link>
-          </li>
+        {canCreate && activityCreateTrigger ? (
+          <li data-testid="training-quick-create-menu">{activityCreateTrigger}</li>
         ) : null}
         <li>
           <Link
