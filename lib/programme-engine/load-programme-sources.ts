@@ -27,6 +27,11 @@ import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/
 import { buildSceActivityRoute } from "@/lib/sporting-activity-presentation/canonical/route";
 import type { PersonalEventProjectionActor } from "@/lib/personal-agenda/event-projection-access";
 import { isClubEventRelevantToTeamProgrammeContext } from "./club-event-team-relevance";
+import {
+  isMatchRelevantToTeamProgrammeScope,
+  resolveProgrammeMatchTeamSeasonIdForTeam,
+} from "./match-team-relevance";
+import { loadTeamSeasonIdByTeamAndSeasonForMatches } from "@/lib/weekplanner/match-team-season-resolution";
 import { buildProgrammeItemId, buildProgrammeResourceKey } from "./programme-item-id";
 import type { ProgrammeItem, ProgrammeScope } from "./types";
 
@@ -178,9 +183,16 @@ async function loadMatchProgrammeItems(
     to: ctx.rangeEnd,
   });
 
+  const teamSeasonIdByTeamAndSeason =
+    scope.kind === "TEAM"
+      ? await loadTeamSeasonIdByTeamAndSeasonForMatches(ctx.tenantId, matches)
+      : new Map<string, string>();
+
   const filtered =
     scope.kind === "TEAM"
-      ? matches.filter((m) => m.teamSeasonId === scope.teamSeasonId)
+      ? matches.filter((m) =>
+          isMatchRelevantToTeamProgrammeScope(m, scope, teamSeasonIdByTeamAndSeason),
+        )
       : matches;
 
   if (filtered.length === 0) return [];
@@ -224,6 +236,17 @@ async function loadMatchProgrammeItems(
     const domainId = match.id;
     const resourceKey = buildProgrammeResourceKey("MATCH", domainId);
 
+    const programmeTeamId =
+      scope.kind === "TEAM" ? scope.teamId : (match.teamId ?? null);
+    const programmeTeamSeasonId =
+      scope.kind === "TEAM"
+        ? resolveProgrammeMatchTeamSeasonIdForTeam(
+            match,
+            scope.teamId,
+            teamSeasonIdByTeamAndSeason,
+          )
+        : (match.teamSeasonId ?? null);
+
     items.push({
       id: buildProgrammeItemId("MATCH", domainId),
       kind: "MATCH",
@@ -233,8 +256,8 @@ async function loadMatchProgrammeItems(
       endsAt: match.endAt,
       allDay: false,
       presentation,
-      teamId: match.teamId,
-      teamSeasonId: match.teamSeasonId,
+      teamId: programmeTeamId,
+      teamSeasonId: programmeTeamSeasonId,
       orgUnitId: null,
       status,
       navigationTarget:
