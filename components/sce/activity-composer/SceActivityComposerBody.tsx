@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import {
+  SCE_ACTIVITY_COMPOSER_BODY_SCROLL_INSET_CLASS,
   SCE_ACTIVITY_COMPOSER_BODY_SCROLL_TEST_ID,
   SCE_SCROLL_REGION_DARK_CLASS,
 } from "@/lib/sce/activity-composer/composer-layout";
@@ -35,7 +36,12 @@ export function SceActivityComposerBody({
     >
       <div className="shrink-0 px-5 sm:px-6">{tabsRegion}</div>
       {validationAnnouncement ? (
-        <p className="sr-only" role="status" aria-live="polite">
+        <p
+          role="alert"
+          aria-live="polite"
+          className="mx-5 mt-2 rounded-lg border border-[var(--sce-danger)]/30 bg-[var(--sce-danger)]/10 px-3 py-2 text-sm text-[var(--sce-danger)] sm:mx-6"
+          data-testid="sce-activity-composer-validation-banner"
+        >
           {validationAnnouncement}
         </p>
       ) : null}
@@ -52,6 +58,7 @@ export function SceActivityComposerBody({
               cn(
                 "min-h-0 overflow-y-auto",
                 SCE_SCROLL_REGION_DARK_CLASS,
+                SCE_ACTIVITY_COMPOSER_BODY_SCROLL_INSET_CLASS,
               ),
           )}
           data-testid={SCE_ACTIVITY_COMPOSER_BODY_SCROLL_TEST_ID}

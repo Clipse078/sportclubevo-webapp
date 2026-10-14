@@ -44,13 +44,13 @@ describe("SCE-ACTIVITY-CREATE-01D-R2 — contextual overlay + resource icons", (
     );
   });
 
-  it("training tabs remain five without Publikation", () => {
+  it("training tabs remain five without Publikation (final Übersicht review)", () => {
     expect(buildTrainingCreateTabNavigationConfig().tabs.map((t) => t.key)).toEqual([
-      "uebersicht",
       "team",
       "termin",
       "wiederholung",
       "ressourcen",
+      "pruefen",
     ]);
   });
 

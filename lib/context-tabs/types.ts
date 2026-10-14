@@ -23,4 +23,6 @@ export type ContextTabNavigationConfig<TTabId extends ContextTabId = ContextTabI
   contextKind: string;
   defaultTab: TTabId;
   tabs: ContextTabDefinition<TTabId>[];
+  /** Optional legacy `?tab=` normalization before resolving visible tabs. */
+  resolveTabParam?: (raw: string | null | undefined) => string | null | undefined;
 };

@@ -28,6 +28,8 @@ import {
 } from "@/lib/planning-hub/planner-server-timing";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import { loadTrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
+import { loadMatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 type PlannerWeekPageProps = {
   searchParams?: Promise<{
@@ -168,14 +170,25 @@ export default async function PlannerWeekPageRoute({
   }
 
   const userId = session.user?.effectiveUserId ?? session.user?.id;
-  const trainingComposer =
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
+
+  const [trainingComposer, matchComposer] = await Promise.all([
     canCreateTraining && userId
-      ? await loadTrainingComposerCreateSurfaceProps({
+      ? loadTrainingComposerCreateSurfaceProps({
           tenantId: tenantContext.id,
           userId,
           timeZone: timezone,
         })
-      : null;
+      : Promise.resolve(null),
+    canManageEvents && userId
+      ? loadMatchComposerCreateSurfaceProps({
+          tenantId: tenantContext.id,
+          userId,
+          tenantClubName: tenantContext.name,
+          tenantLogoUrl: tenantClubCrestUrl,
+        })
+      : Promise.resolve(null),
+  ]);
 
   return (
     <PlannerWeekStreamingRoot
@@ -200,6 +213,7 @@ export default async function PlannerWeekPageRoute({
         veranstaltung: canManageEvents,
       }}
       trainingComposer={trainingComposer}
+      matchComposer={matchComposer}
     >
       <Suspense
         fallback={

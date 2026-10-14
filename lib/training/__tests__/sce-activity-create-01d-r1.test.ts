@@ -22,11 +22,11 @@ describe("SCE-ACTIVITY-CREATE-01D-R1 — PO UAT corrections", () => {
   it("Training composer exposes five tabs without Publikation", () => {
     const config = buildTrainingCreateTabNavigationConfig();
     expect(config.tabs.map((t) => t.key)).toEqual([
-      "uebersicht",
       "team",
       "termin",
       "wiederholung",
       "ressourcen",
+      "pruefen",
     ]);
     const form = read("components/admin/training/TrainingCreateForm.tsx");
     expect(form).not.toContain('key: "publikation"');
@@ -34,14 +34,15 @@ describe("SCE-ACTIVITY-CREATE-01D-R1 — PO UAT corrections", () => {
   });
 
   it("obsolete tab=publikation resolves to a valid Training tab", () => {
-    expect(normalizeTrainingCreateTabParam("publikation")).toBe("uebersicht");
+    expect(normalizeTrainingCreateTabParam("publikation")).toBe("pruefen");
+    expect(normalizeTrainingCreateTabParam("uebersicht")).toBe("team");
     const config = buildTrainingCreateTabNavigationConfig();
     const resolved = resolveContextTabFromSearchParams({
-      tabParam: "publikation",
+      tabParam: config.resolveTabParam?.("publikation") ?? "publikation",
       defaultTab: config.defaultTab,
       visibleTabs: config.tabs,
     });
-    expect(resolved).toBe("uebersicht");
+    expect(resolved).toBe("pruefen");
   });
 
   it("full-page /training/new does not duplicate composer creation heading", () => {

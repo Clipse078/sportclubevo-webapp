@@ -19,10 +19,15 @@ import {
 } from "./url";
 import { useOptionalContextDirtyNavigation } from "./ContextDirtyNavigationContext";
 
+export type ContextTabNavigateOptions = {
+  /** Guided composer step changes stay in the same draft session — no leave confirm. */
+  skipDirtyConfirm?: boolean;
+};
+
 export type ContextDetailTabState<TTabId extends ContextTabId = ContextTabId> = {
   activeTab: TTabId;
   visibleTabs: ContextTabDefinition<TTabId>[];
-  navigateToTab: (tabKey: TTabId) => void;
+  navigateToTab: (tabKey: TTabId, options?: ContextTabNavigateOptions) => void;
   hrefForTab: (tabKey: TTabId) => string;
   config: ContextTabNavigationConfig<TTabId>;
 };
@@ -83,15 +88,15 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
 
   const visibleTabs = useMemo(() => listAllVisibleTabs(config), [config]);
 
-  const activeTab = useMemo(
-    () =>
-      resolveContextTabFromSearchParams({
-        tabParam: readContextTabParam(searchParams),
-        defaultTab: config.defaultTab,
-        visibleTabs,
-      }),
-    [config.defaultTab, searchParams, visibleTabs],
-  );
+  const activeTab = useMemo(() => {
+    const rawParam = readContextTabParam(searchParams);
+    const tabParam = config.resolveTabParam?.(rawParam) ?? rawParam;
+    return resolveContextTabFromSearchParams({
+      tabParam,
+      defaultTab: config.defaultTab,
+      visibleTabs,
+    });
+  }, [config, searchParams, visibleTabs]);
 
   const basePath = pathname;
 
@@ -117,11 +122,11 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
   );
 
   const navigateToTab = useCallback(
-    (tabKey: TTabId) => {
+    (tabKey: TTabId, options?: ContextTabNavigateOptions) => {
       if (tabKey === activeTab) {
         return;
       }
-      if (dirtyNav && !dirtyNav.confirmNavigationIfDirty()) {
+      if (!options?.skipDirtyConfirm && dirtyNav && !dirtyNav.confirmNavigationIfDirty()) {
         return;
       }
       router.push(hrefForTab(tabKey));
@@ -146,11 +151,11 @@ function useLocalContextDetailTabState<TTabId extends ContextTabId>(
   const [activeTab, setActiveTab] = useState<TTabId>(() => config.defaultTab);
 
   const navigateToTab = useCallback(
-    (tabKey: TTabId) => {
+    (tabKey: TTabId, options?: ContextTabNavigateOptions) => {
       if (tabKey === activeTab) {
         return;
       }
-      if (dirtyNav && !dirtyNav.confirmNavigationIfDirty()) {
+      if (!options?.skipDirtyConfirm && dirtyNav && !dirtyNav.confirmNavigationIfDirty()) {
         return;
       }
       setActiveTab(tabKey);

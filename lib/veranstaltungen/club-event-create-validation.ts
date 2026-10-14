@@ -51,6 +51,7 @@ export function firstInvalidClubEventCreateTab(
     "termin",
     "ressourcen",
     "publikation",
+    "pruefen",
   ];
   return order.find((tab) => tabErrors[tab]) ?? null;
 }

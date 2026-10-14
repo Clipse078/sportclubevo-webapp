@@ -36,8 +36,11 @@ import {
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
 import SpieleManagementWorkspace from "@/components/admin/matchcenter/SpieleManagementWorkspace";
+import MatchComposerCreateTrigger from "@/components/admin/matchcenter/MatchComposerCreateTrigger";
 import { normalizeSpieleSearchQuery } from "@/lib/matchcenter/management-view";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { loadMatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
+import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
 type MatchcenterPageProps = {
   searchParams?: Promise<{
@@ -145,6 +148,39 @@ export default async function MatchcenterPage({
   const venueFilter = params.venue?.trim() || null;
   const statusMask = normalizeSpieleStatusMask(params.status, actionFilter);
 
+  const userId = session.user?.effectiveUserId ?? session.user?.id;
+  const matchComposerSurface =
+    canManage && userId
+      ? await loadMatchComposerCreateSurfaceProps({
+          tenantId,
+          userId,
+          tenantClubName: tenantContext.name,
+          tenantLogoUrl: tenantClubCrestUrl,
+        })
+      : null;
+
+  const matchCreateTrigger =
+    matchComposerSurface != null ? (
+      <MatchComposerCreateTrigger
+        activeSeasonId={matchComposerSurface.activeSeasonId}
+        teamOptions={matchComposerSurface.teamOptions}
+        pitchHallFacilityGroups={matchComposerSurface.pitchHallFacilityGroups}
+        dressingRoomFacilityGroups={matchComposerSurface.dressingRoomFacilityGroups}
+        effectiveGovernance={
+          matchComposerSurface.effectiveGovernance ?? {
+            activityType: "MATCH",
+            personId: "anonymous",
+            mayCreate: true,
+            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
+            approvalStrategy: "ANY_ONE",
+            validatorPersonIds: [],
+          }
+        }
+        tenantClubName={matchComposerSurface.tenantClubName}
+        tenantLogoUrl={matchComposerSurface.tenantLogoUrl}
+      />
+    ) : null;
+
   return (
     <ToastProvider>
       <div className="w-full">
@@ -169,6 +205,7 @@ export default async function MatchcenterPage({
           competitionFilter={competitionFilter}
           venueFilter={venueFilter}
           statusMask={statusMask}
+          matchCreateTrigger={matchCreateTrigger}
         />
       </div>
     </ToastProvider>

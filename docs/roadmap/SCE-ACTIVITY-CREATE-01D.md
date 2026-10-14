@@ -11,7 +11,7 @@
 | **Feature HEAD (pre-merge)** | `99bbda0191d5a34cc9770ef434499fbf5a949f29` |
 | **STAGE baseline (merge-base)** | `08539acd58d74738a5e84a21076ca400fc116b96` |
 | **STAGE drift at closure** | **None** — `origin/STAGE` unchanged from 01D baseline |
-| **Next package** | **SCE-ACTIVITY-CREATE-01E** — Match Adoption (**NOT_STARTED**) |
+| **Next package** | **SCE-ACTIVITY-CREATE-01E** — Match Adoption (**CLOSED** PR **#842**); **01F** Tournament (**NOT_STARTED**) |
 
 ## Sub-packages
 

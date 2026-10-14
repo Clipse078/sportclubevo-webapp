@@ -14,7 +14,7 @@ export function computeTrainingCreateTabErrors(
   const errors: Partial<Record<TrainingCreateTabId, boolean>> = {};
 
   if (!payload.title.trim()) {
-    errors.uebersicht = true;
+    errors.team = true;
   }
 
   if (!payload.teamSeasonId) {
@@ -42,11 +42,11 @@ export function firstInvalidTrainingCreateTab(
   tabErrors: Partial<Record<TrainingCreateTabId, boolean>>,
 ): TrainingCreateTabId | null {
   const order: TrainingCreateTabId[] = [
-    "uebersicht",
     "team",
     "termin",
     "wiederholung",
     "ressourcen",
+    "pruefen",
   ];
   return order.find((tab) => tabErrors[tab]) ?? null;
 }

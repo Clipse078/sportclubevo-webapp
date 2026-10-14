@@ -29,12 +29,16 @@ describe("SCE-ACTIVITY-CREATE-01D — Training adoption", () => {
   it("uses canonical training tabs", () => {
     const config = buildTrainingCreateTabNavigationConfig();
     const labels = config.tabs.map((tab) => tab.key);
-    expect(labels).toEqual(["uebersicht", "team", "termin", "wiederholung", "ressourcen"]);
+    expect(labels).toEqual(["team", "termin", "wiederholung", "ressourcen", "pruefen"]);
   });
 
   it("routes validation to first invalid tab", () => {
     const errors = computeTrainingCreateTabErrors(createEmptyTrainingComposerDraft());
-    expect(firstInvalidTrainingCreateTab(errors)).toBe("uebersicht");
+    expect(firstInvalidTrainingCreateTab(errors)).toBe("team");
+  });
+
+  it("R1 — guided composer enabled on training form", () => {
+    expect(read("components/admin/training/TrainingCreateForm.tsx")).toContain("guidedWorkflow");
   });
 
   it("seeds training approve permission key", () => {

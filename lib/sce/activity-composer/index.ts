@@ -46,6 +46,17 @@ export {
   resolveFirstInvalidTab,
 } from "./validation-orchestration";
 
+export {
+  isGuidedFinalReviewStep,
+  resolveGuidedNextStep,
+  resolveGuidedPreviousStep,
+  resolveGuidedStepIndex,
+  resolveGuidedStepVisualState,
+  resolveGuidedWorkflowEnabled,
+  type SceActivityGuidedStepVisualState,
+  type SceActivityGuidedWorkflowConfig,
+} from "./guided-workflow";
+
 export { SCE_ACTIVITY_COMPOSER_NESTED_INTERACTION_RULE } from "./nested-interaction-rule";
 
 export {

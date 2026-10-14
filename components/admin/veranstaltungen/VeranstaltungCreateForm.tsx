@@ -13,7 +13,14 @@ import {
   hydrateClubEventComposerFormFromDraft,
 } from "@/lib/club-events/composer/hydrate-club-event-composer-form-from-draft";
 import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
-import { buildClubEventCreateTabNavigationConfig } from "@/lib/veranstaltungen/club-event-create-workflow-config";
+import {
+  buildClubEventCreateTabNavigationConfig,
+  type ClubEventCreateTabId,
+} from "@/lib/veranstaltungen/club-event-create-workflow-config";
+import {
+  resolveClubEventCreateStepValid,
+  validateClubEventCreateWorkflowStep,
+} from "@/lib/veranstaltungen/club-event-create-step-validation";
 import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -507,9 +514,12 @@ export default function VeranstaltungCreateForm({
     otherDrafts,
   ]);
 
+  const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
+
   const definition = useMemo((): SceActivityCreateDefinition<
     ClubEventComposerDraftPayload,
-    { eventIds: string[]; outcome: string }
+    { eventIds: string[]; outcome: string },
+    ClubEventCreateTabId
   > => {
     return {
       activityKind: "CLUB_EVENT",
@@ -517,6 +527,11 @@ export default function VeranstaltungCreateForm({
       createActionLabel: "Veranstaltung erstellen",
       defaultTab: "uebersicht",
       buildTabNavigationConfig: buildClubEventCreateTabNavigationConfig,
+      guidedWorkflow: {
+        finalReviewTab: "pruefen",
+        validateStep: validateClubEventCreateWorkflowStep,
+        resolveStepValid: resolveClubEventCreateStepValid,
+      },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {
         const tabErrors = computeClubEventCreateTabErrors({
@@ -873,12 +888,32 @@ export default function VeranstaltungCreateForm({
           </PlanningPublicationPanel>
   );
 
+  const pruefenPanel = (
+    <PlanningEditorSection testId="veranstaltung-create-review-section" ariaLabelledBy="veranstaltung-create-review-heading">
+      <PlanningEditorSectionHeading id="veranstaltung-create-review-heading" title="Übersicht" />
+      <SportingActivityFormIdentitySummary
+        activityKind="VERANSTALTUNG"
+        title={title.trim() || "—"}
+        typeLabel={category || "Veranstaltung"}
+        scheduleLine={
+          schedule.startDate
+            ? `${schedule.startDate}${schedule.startTime ? ` · ${schedule.startTime}` : ""}`
+            : "Termin offen"
+        }
+      />
+      <p className="mt-3 text-sm text-[var(--text-2)]">
+        {description.trim() || "Keine Beschreibung"}
+      </p>
+    </PlanningEditorSection>
+  );
+
   definition.tabs = [
-    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
+    { key: "uebersicht", label: "Grunddaten", render: () => uebersichtPanel },
     { key: "gueltigkeit", label: "Gültigkeit", render: () => gueltigkeitPanel },
     { key: "termin", label: "Termin", render: () => terminPanel },
     { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
     { key: "publikation", label: "Publikation", render: () => publikationPanel },
+    { key: "pruefen", label: "Übersicht", render: () => pruefenPanel },
   ];
 
   return (
@@ -896,6 +931,7 @@ export default function VeranstaltungCreateForm({
       <SceActivityComposer
         key={resumeDraft?.draftId ?? "club-event-create-new"}
         definition={definition}
+        draft={composerDraft}
         containerMode={containerMode}
         open={open}
         onClose={onClose ?? (() => router.push("/dashboard/veranstaltungen"))}

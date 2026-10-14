@@ -10,7 +10,15 @@ import type { TrainingComposerDraftPayload } from "@/lib/training/composer/train
 import { resolveTrainingComposerTitleForResume } from "@/lib/training/composer/training-composer-draft-access";
 import { hydrateTrainingComposerFormFromDraft } from "@/lib/training/composer/hydrate-training-composer-form-from-draft";
 import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
-import { buildTrainingCreateTabNavigationConfig } from "@/lib/training/training-create-workflow-config";
+import {
+  buildTrainingCreateTabNavigationConfig,
+  type TrainingCreateTabId,
+} from "@/lib/training/training-create-workflow-config";
+import {
+  validateTrainingCreateWorkflowStep,
+  resolveTrainingCreateStepValid,
+} from "@/lib/training/training-create-step-validation";
+import { buildTrainingCreateRecurrenceSummary } from "@/lib/training/training-create-recurrence-summary";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
@@ -35,6 +43,8 @@ import {
   DEFAULT_TRAINING_WALL_CLOCK_START,
 } from "@/lib/training/training-schedule-presentation";
 import { defaultTrainingCreateEndTime } from "@/lib/training/training-create-schedule-defaults";
+import { SceActivityDateInput } from "@/components/sce/activity-datetime/SceActivityDateInput";
+import { SceActivityTimeInput } from "@/components/sce/activity-datetime/SceActivityTimeInput";
 import type { TeamSeasonOption } from "@/components/admin/training/TrainingSeriesCreateForm";
 
 const WEEKDAY_ORDER: Weekday[] = [
@@ -300,6 +310,8 @@ export default function TrainingCreateForm({
     dressingDraft,
   ]);
 
+  const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
+
   const tabErrors = useMemo(
     () => (submitAttempted ? computeTrainingCreateTabErrors(buildPayload()) : {}),
     [submitAttempted, buildPayload],
@@ -315,28 +327,34 @@ export default function TrainingCreateForm({
     return resolveTrainingComposerTitleForResume(persistedBaseline?.title ?? title);
   }, [persistedBaseline?.title, resumeDraft, title]);
 
-  const recurrenceSummary = useMemo(() => {
-    const active = weekdayRows.filter((row) => row.enabled);
-    if (!recurrenceEnabled) {
-      if (!validFrom) return "Ein Training ohne Wiederholung.";
-      return active.length
-        ? `Ein Training am ${validFrom} (${WEEKDAY_LABELS[active[0]!.weekday]}) · ${active[0]!.startsAt}–${active[0]!.endsAt}`
-        : "Ein Training ohne Wiederholung — bitte Datum wählen.";
-    }
-    const days = active.map((row) => WEEKDAY_LABELS[row.weekday]).join(", ");
-    return `Wöchentlich ab ${validFrom || "—"} · ${days || "keine Trainingstage"} · bis ${validUntil || "—"}`;
-  }, [weekdayRows, recurrenceEnabled, validFrom, validUntil]);
+  const recurrenceSummary = useMemo(
+    () =>
+      buildTrainingCreateRecurrenceSummary({
+        recurrenceEnabled,
+        validFrom,
+        validUntil,
+        weekdayRows,
+        weekdayLabels: WEEKDAY_LABELS,
+      }),
+    [weekdayRows, recurrenceEnabled, validFrom, validUntil],
+  );
 
   const definition = useMemo((): SceActivityCreateDefinition<
     TrainingComposerDraftPayload,
-    { seriesId: string; outcome: string }
+    { seriesId: string; outcome: string },
+    TrainingCreateTabId
   > => {
     return {
       activityKind: "TRAINING",
       title: composerTitle,
       createActionLabel: "Training erstellen",
-      defaultTab: "uebersicht",
+      defaultTab: "team",
       buildTabNavigationConfig: buildTrainingCreateTabNavigationConfig,
+      guidedWorkflow: {
+        finalReviewTab: "pruefen",
+        validateStep: validateTrainingCreateWorkflowStep,
+        resolveStepValid: resolveTrainingCreateStepValid,
+      },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {
         const errors = computeTrainingCreateTabErrors(draft);
@@ -465,10 +483,47 @@ export default function TrainingCreateForm({
     };
   }, [initialDraftId, initialResumeDraft, defaultTrainingDurationMinutes]);
 
-  const uebersichtPanel = (
-    <PlanningEditorSection testId="training-create-overview-section" ariaLabelledBy="training-create-overview-heading">
-      <PlanningEditorSectionHeading id="training-create-overview-heading" title="Übersicht" />
+  const pruefenPanel = (
+    <PlanningEditorSection testId="training-create-review-section" ariaLabelledBy="training-create-review-heading">
+      <PlanningEditorSectionHeading id="training-create-review-heading" title="Übersicht" />
+      <dl className="space-y-3 text-sm">
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Training</dt>
+          <dd className="font-medium text-[var(--foreground)]">{title.trim() || "—"}</dd>
+          {description.trim() ? <dd className="text-[var(--text-2)]">{description}</dd> : null}
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Team</dt>
+          <dd>{teamSeasons.find((t) => t.id === teamSeasonId)?.teamName ?? "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Termin / Wiederholung</dt>
+          <dd>{recurrenceSummary}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ressourcen</dt>
+          <dd>
+            {pitchDraft?.facilityResourceName ?? "Spielfeld / Halle nicht zugewiesen"}
+            {" · "}
+            {dressingDraft?.facilityResourceName ?? "Garderobe nicht zugewiesen"}
+          </dd>
+        </div>
+      </dl>
+    </PlanningEditorSection>
+  );
+
+  const teamPanel = (
+    <PlanningEditorSection testId="training-create-team-section" ariaLabelledBy="training-create-team-heading">
+      <PlanningEditorSectionHeading id="training-create-team-heading" title="Team" />
       <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+        <div className="md:col-span-2">
+          <TeamSeasonSearchablePicker
+            options={teamSeasons}
+            value={teamSeasonId}
+            onChange={setTeamSeasonId}
+            testId="training-create-team-season-select"
+          />
+        </div>
         <label className="block space-y-2 md:col-span-2">
           <span className="fca-label">Trainingsname</span>
           <input
@@ -492,18 +547,6 @@ export default function TrainingCreateForm({
     </PlanningEditorSection>
   );
 
-  const teamPanel = (
-    <PlanningEditorSection testId="training-create-team-section" ariaLabelledBy="training-create-team-heading">
-      <PlanningEditorSectionHeading id="training-create-team-heading" title="Team" />
-      <TeamSeasonSearchablePicker
-        options={teamSeasons}
-        value={teamSeasonId}
-        onChange={setTeamSeasonId}
-        testId="training-create-team-season-select"
-      />
-    </PlanningEditorSection>
-  );
-
   const terminPanel = (
     <PlanningEditorSection testId="training-create-schedule-section" ariaLabelledBy="training-create-schedule-heading">
       <PlanningEditorSectionHeading id="training-create-schedule-heading" title="Termin" />
@@ -513,40 +556,37 @@ export default function TrainingCreateForm({
           : "Datum und Uhrzeit definieren das eine Training — ohne Wiederholung entsteht genau ein Termin."}
       </p>
       <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-        <label className="block space-y-2">
-          <span className="fca-label">{recurrenceEnabled ? "Startdatum" : "Datum"}</span>
-          <input
-            type="date"
+        <div className="space-y-1">
+          <SceActivityDateInput
+            label={recurrenceEnabled ? "Startdatum" : "Datum"}
             value={validFrom}
-            onChange={(e) => setValidFrom(e.target.value)}
-            className="fca-input h-8 text-sm"
-            data-testid="training-create-date"
-            aria-describedby="training-create-termin-date-hint"
+            onChange={setValidFrom}
+            required
+            testId="training-create-date"
+            inputClassName="h-8"
           />
           <span id="training-create-termin-date-hint" className="block text-xs text-[var(--text-2)]">
             {recurrenceEnabled
               ? "Ab diesem Datum werden die gewählten Trainingstage geplant (erster Termin am passenden Wochentag)."
               : "Der Termin fällt auf diesen Kalendertag."}
           </span>
-        </label>
-        <label className="block space-y-2">
-          <span className="fca-label">Start</span>
-          <input
-            type="time"
-            value={startsAt}
-            onChange={(e) => handleStartsAtChange(e.target.value)}
-            className="fca-input h-8 text-sm"
-          />
-        </label>
-        <label className="block space-y-2">
-          <span className="fca-label">Ende</span>
-          <input
-            type="time"
-            value={endsAt}
-            onChange={(e) => handleEndsAtChange(e.target.value)}
-            className="fca-input h-8 text-sm"
-          />
-        </label>
+        </div>
+        <SceActivityTimeInput
+          label="Startzeit"
+          value={startsAt}
+          onChange={handleStartsAtChange}
+          required
+          testId="training-create-start-time"
+          inputClassName="h-8"
+        />
+        <SceActivityTimeInput
+          label="Endzeit"
+          value={endsAt}
+          onChange={handleEndsAtChange}
+          required
+          testId="training-create-end-time"
+          inputClassName="h-8"
+        />
       </div>
     </PlanningEditorSection>
   );
@@ -572,19 +612,18 @@ export default function TrainingCreateForm({
               Wählen Sie die Trainingstage und optional unterschiedliche Zeiten pro Tag. Der erste Termin
               liegt am nächsten gewählten Wochentag ab Startdatum.
             </p>
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Serie gültig bis</span>
-              <input
-                type="date"
+            <div className="max-w-xs space-y-1">
+              <SceActivityDateInput
+                label="Serie gültig bis"
                 value={validUntil}
-                onChange={(e) => setValidUntil(e.target.value)}
-                className="fca-input h-8 text-sm"
-                data-testid="training-create-valid-until"
+                onChange={setValidUntil}
+                testId="training-create-valid-until"
+                inputClassName="h-8"
               />
               <span className="block text-xs text-[var(--text-2)]">
                 Letzter Kalendertag, an dem noch ein Training geplant wird.
               </span>
-            </label>
+            </div>
             <TrainingWeekdayScheduleEditor
               rows={weekdayRows}
               onToggle={(weekday) =>
@@ -681,11 +720,11 @@ export default function TrainingCreateForm({
   );
 
   definition.tabs = [
-    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
     { key: "team", label: "Team", render: () => teamPanel },
     { key: "termin", label: "Termin", render: () => terminPanel },
     { key: "wiederholung", label: "Wiederholung", render: () => wiederholungPanel },
     { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
+    { key: "pruefen", label: "Übersicht", render: () => pruefenPanel },
   ];
 
   return (
@@ -700,6 +739,7 @@ export default function TrainingCreateForm({
       <SceActivityComposer
         key={resumeDraft?.draftId ?? "training-create-new"}
         definition={definition}
+        draft={composerDraft}
         containerMode={containerMode}
         open={open}
         onClose={onClose ?? (() => router.push("/dashboard/training"))}

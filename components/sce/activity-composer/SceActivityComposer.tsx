@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import SceContextTabs from "@/components/sce/context-tabs/SceContextTabs";
+import SceActivityComposerWorkflowNav from "./SceActivityComposerWorkflowNav";
 import { SceContextTabProvider, SceLocalContextTabProvider } from "@/lib/context-tabs";
 import SceContextTabPanel from "@/lib/context-tabs/ContextTabPanel";
 import { SceModalOverlay } from "@/components/ui/SceModalOverlay";
@@ -20,6 +21,13 @@ import {
 } from "@/lib/sce/activity-composer/use-composer-close-guard";
 import { useComposerResponsivePresentation } from "@/lib/sce/activity-composer/use-composer-responsive-presentation";
 import { mergeValidationWithFirstTab } from "@/lib/sce/activity-composer/validation-orchestration";
+import {
+  isGuidedFinalReviewStep,
+  resolveGuidedNextStep,
+  resolveGuidedPreviousStep,
+  resolveGuidedWorkflowEnabled,
+} from "@/lib/sce/activity-composer/guided-workflow";
+import { useGuidedWorkflowStepInteraction } from "@/lib/sce/activity-composer/use-guided-workflow-step-interaction";
 import { sceActivityDraftsEqual } from "@/lib/sce/activity-composer/draft-equality";
 import {
   SCE_ACTIVITY_CREATE_SAVE_EXISTING_DRAFT_LABEL,
@@ -196,7 +204,7 @@ function ComposerWorkspace<
     () => definition.buildTabNavigationConfig({ tabErrors }),
     [definition, tabErrors],
   );
-  const { navigateToTab } = useContextDetailTab(tabConfig);
+  const { activeTab, navigateToTab } = useContextDetailTab(tabConfig);
   const tabStateMode = containerMode === "page" ? "url" : "local";
   const idPrefix = "sce-activity-composer-tab";
 
@@ -204,6 +212,86 @@ function ComposerWorkspace<
     () => definition.tabs.map((t) => t.key),
     [definition.tabs],
   );
+
+  const guidedWorkflow = definition.guidedWorkflow;
+  const guidedEnabled = resolveGuidedWorkflowEnabled(guidedWorkflow);
+  const isFinalReviewStep =
+    guidedEnabled && isGuidedFinalReviewStep(guidedWorkflow, activeTab);
+  const guidedPreviousStep = guidedEnabled
+    ? resolveGuidedPreviousStep(orderedTabKeys, activeTab)
+    : null;
+  const guidedNextStep = guidedEnabled
+    ? resolveGuidedNextStep(orderedTabKeys, activeTab)
+    : null;
+
+  const guidedStepInteraction = useGuidedWorkflowStepInteraction(
+    guidedEnabled
+      ? {
+          orderedTabKeys,
+          activeTab,
+          guidedWorkflow,
+          draft,
+          tabErrors,
+        }
+      : {
+          orderedTabKeys,
+          activeTab,
+          guidedWorkflow: { finalReviewTab: orderedTabKeys[0]! },
+          draft,
+          tabErrors,
+        },
+  );
+
+  const handleGuidedPrevious = useCallback(() => {
+    if (guidedPreviousStep) {
+      navigateToTab(guidedPreviousStep, { skipDirtyConfirm: true });
+    }
+  }, [guidedPreviousStep, navigateToTab]);
+
+  const handleGuidedNext = useCallback(() => {
+    if (!guidedEnabled || !guidedNextStep) {
+      return;
+    }
+    if (guidedWorkflow.validateStep) {
+      const rawValidation = guidedWorkflow.validateStep(draft, activeTab);
+      const validation = mergeValidationWithFirstTab([activeTab], rawValidation);
+      setTabErrors((prev) => ({ ...prev, ...validation.tabErrors }));
+      setFieldErrors(validation.fieldErrors);
+      if (!validation.valid) {
+        const firstFieldMessage = validation.fieldErrors
+          ? Object.values(validation.fieldErrors)[0]
+          : null;
+        setValidationAnnouncement(
+          firstFieldMessage ?? "Bitte prüfen Sie die markierten Bereiche.",
+        );
+        requestAnimationFrame(() => {
+          const panel =
+            panelRef.current ??
+            document.querySelector<HTMLElement>(
+              `[data-testid="${testId ?? "sce-activity-composer"}"]`,
+            );
+          const firstInvalid =
+            panel?.querySelector<HTMLElement>("[aria-invalid='true']") ??
+            panel?.querySelector<HTMLElement>("[data-testid$='-input']");
+          firstInvalid?.focus();
+        });
+        return;
+      }
+    }
+    setValidationAnnouncement(null);
+    guidedStepInteraction.markStepReviewed(activeTab);
+    navigateToTab(guidedNextStep, { skipDirtyConfirm: true });
+  }, [
+    activeTab,
+    draft,
+    guidedEnabled,
+    guidedNextStep,
+    guidedStepInteraction,
+    guidedWorkflow,
+    navigateToTab,
+    panelRef,
+    testId,
+  ]);
 
   const handleSaveDraft = useCallback(async () => {
     if (!draftPersistence) {
@@ -341,14 +429,35 @@ function ComposerWorkspace<
       titleRef={titleRef}
       isModalSurface={isModalSurface && open}
       testId={testId}
+      showPrimarySubmit={!guidedEnabled || Boolean(isFinalReviewStep)}
+      showGuidedPrevious={guidedEnabled && guidedPreviousStep != null}
+      showGuidedNext={guidedEnabled && guidedNextStep != null}
+      onGuidedPrevious={guidedEnabled ? handleGuidedPrevious : undefined}
+      onGuidedNext={guidedEnabled ? handleGuidedNext : undefined}
       tabsRegion={
-        <SceContextTabs
-          config={tabConfig}
-          ariaLabel={definition.title}
-          testId="sce-activity-composer-tabs"
-          idPrefix={idPrefix}
-          localNavigation={tabStateMode === "local"}
-        />
+        guidedEnabled ? (
+          <SceActivityComposerWorkflowNav
+            config={tabConfig}
+            orderedTabKeys={orderedTabKeys}
+            tabErrors={tabErrors}
+            resolveStepVisualState={
+              guidedEnabled ? guidedStepInteraction.resolveStepVisualState : undefined
+            }
+            finalReviewTab={guidedWorkflow.finalReviewTab}
+            ariaLabel={definition.title}
+            testId="sce-activity-composer-workflow"
+            idPrefix={idPrefix}
+            localNavigation={tabStateMode === "local"}
+          />
+        ) : (
+          <SceContextTabs
+            config={tabConfig}
+            ariaLabel={definition.title}
+            testId="sce-activity-composer-tabs"
+            idPrefix={idPrefix}
+            localNavigation={tabStateMode === "local"}
+          />
+        )
       }
     >
       <ComposerDirtySync isDirty={isDirty} />

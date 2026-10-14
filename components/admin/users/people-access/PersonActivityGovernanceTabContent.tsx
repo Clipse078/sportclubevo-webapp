@@ -1,4 +1,5 @@
 import PersonClubEventGovernanceSection from "./PersonClubEventGovernanceSection";
+import PersonMatchGovernanceSection from "./PersonMatchGovernanceSection";
 import PersonTrainingGovernanceSection from "./PersonTrainingGovernanceSection";
 
 type Props = {
@@ -11,6 +12,7 @@ export default function PersonActivityGovernanceTabContent({ personId, canManage
     <div className="space-y-6" data-testid="person-activity-governance-tab">
       <PersonClubEventGovernanceSection personId={personId} canManage={canManage} />
       <PersonTrainingGovernanceSection personId={personId} canManage={canManage} />
+      <PersonMatchGovernanceSection personId={personId} canManage={canManage} />
     </div>
   );
 }

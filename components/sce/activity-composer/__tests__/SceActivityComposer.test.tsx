@@ -277,6 +277,7 @@ describe("SceActivityComposer foundation (01B)", () => {
     expect(bodyScroll.getAttribute("data-composer-scroll")).toBe("internal");
     expect(bodyScroll.className).toContain("overflow-y-auto");
     expect(bodyScroll.className).toContain("sce-scroll-region-dark");
+    expect(bodyScroll.className).toContain("pb-8");
     const footer = screen.getByTestId("sce-activity-composer-footer");
     expect(footer.className).toContain("shrink-0");
     expect(panel.contains(footer)).toBe(true);
@@ -571,6 +572,96 @@ describe("SceActivityComposer foundation (01B)", () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(onSuccess.mock.calls[0][0].outcome).toBe("DRAFT_SAVED");
     expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+function guidedPreviewDefinition() {
+  const def = previewDefinition();
+  def.guidedWorkflow = {
+    finalReviewTab: "ressourcen",
+    validateStep: (draft, stepKey) => {
+      if (stepKey !== "grunddaten") {
+        return { valid: true, tabErrors: {} };
+      }
+      const titleMissing = draft.title.trim().length < 3;
+      if (!titleMissing && !draft.forceValidationError) {
+        return { valid: true, tabErrors: {} };
+      }
+      return {
+        valid: false,
+        tabErrors: { grunddaten: true },
+        firstInvalidTab: "grunddaten",
+      };
+    },
+  };
+  return def;
+}
+
+describe("SceActivityComposer guided workflow (01E R1)", () => {
+  it("shows progress label and hides primary submit until final step", () => {
+    render(
+      <SceActivityComposer
+        definition={guidedPreviewDefinition()}
+        containerMode="overlay"
+        open
+        onClose={vi.fn()}
+        draft={{
+          title: "Gültiger Titel",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("sce-activity-composer-workflow-progress-label")).toHaveTextContent(
+      "Schritt 1 von 3",
+    );
+    expect(screen.queryByTestId("sce-activity-composer-submit")).toBeNull();
+    expect(screen.getByTestId("sce-activity-composer-next")).toBeTruthy();
+  });
+
+  it("shows primary submit on final review step only", async () => {
+    render(
+      <SceActivityComposer
+        definition={guidedPreviewDefinition()}
+        containerMode="overlay"
+        open
+        onClose={vi.fn()}
+        draft={{
+          title: "Gültiger Titel",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
+    fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-activity-composer-submit")).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("sce-activity-composer-next")).toBeNull();
+  });
+
+  it("Weiter validates current step before advancing", () => {
+    render(
+      <SceActivityComposer
+        definition={guidedPreviewDefinition()}
+        containerMode="overlay"
+        open
+        onClose={vi.fn()}
+        draft={{
+          title: "x",
+          notes: "",
+          forceValidationError: false,
+          forceDraftSaveError: false,
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
+    expect(screen.getByTestId("sce-activity-composer-workflow-progress-label")).toHaveTextContent(
+      "Schritt 1 von 3",
+    );
   });
 });
 

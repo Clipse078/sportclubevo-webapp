@@ -54,6 +54,7 @@ import {
   fetchAllClubDirectorySearchMatches,
 } from "@/lib/club-directory/club-directory-client";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import { PopoverContent } from "@/components/ui/Popover";
 
 export type ExternalClubPickerResult = {
   id: string;
@@ -73,6 +74,8 @@ export type ExternalClubPickerProps = {
   disabled?: boolean;
   /** Stable identifier prefix for data-testid hooks. */
   testId?: string;
+  /** Portal listbox outside overflow-hidden composer scroll regions. */
+  portalResults?: boolean;
 };
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -107,6 +110,7 @@ export function ExternalClubPicker({
   placeholder = "Verein suchen…",
   disabled = false,
   testId,
+  portalResults = false,
 }: ExternalClubPickerProps) {
   const instanceId = useId();
   const listboxId = `external-club-picker-listbox-${instanceId}`;
@@ -120,6 +124,7 @@ export function ExternalClubPicker({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // Aborts a still-in-flight multi-page search when a newer search starts
   // (or the component unmounts) — a full-directory-page walk takes longer
@@ -220,6 +225,47 @@ export function ExternalClubPicker({
     }
   }
 
+  const resultsList = (
+    <ul
+      id={listboxId}
+      role="listbox"
+      className={
+        portalResults
+          ? "max-h-64 overflow-y-auto"
+          : "absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]"
+      }
+      data-testid={testId ? `${testId}-results` : undefined}
+    >
+      {results.map((club, index) => {
+        const isFocused = index === focusedIndex;
+        return (
+          <li key={club.id} role="option" aria-selected={isFocused}>
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(club);
+              }}
+              onMouseEnter={() => setFocusedIndex(index)}
+              data-testid={testId ? `${testId}-option-${club.id}` : undefined}
+              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors${
+                isFocused ? " bg-[var(--surface-2)]" : " hover:bg-[var(--surface-2)]"
+              }`}
+            >
+              <PickerClubLogo logoUrl={club.logoUrl} name={club.name} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-[var(--foreground)]">{club.name}</p>
+                {club.shortName ? (
+                  <p className="truncate text-xs text-[var(--muted)]">{club.shortName}</p>
+                ) : null}
+              </div>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
     <div ref={containerRef} className="relative w-full" data-testid={testId}>
       {selected ? (
@@ -250,6 +296,7 @@ export function ExternalClubPicker({
         </div>
       ) : (
         <div
+          ref={anchorRef}
           className={`sce-page-search${disabled ? " pointer-events-none opacity-50" : ""}`}
           onClick={() => !disabled && inputRef.current?.focus()}
         >
@@ -310,41 +357,20 @@ export function ExternalClubPicker({
       ) : null}
 
       {open && results.length > 0 ? (
-        <ul
-          id={listboxId}
-          role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]"
-          data-testid={testId ? `${testId}-results` : undefined}
-        >
-          {results.map((club, index) => {
-            const isFocused = index === focusedIndex;
-            return (
-              <li key={club.id} role="option" aria-selected={isFocused}>
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    // Prevent input blur before click registers.
-                    e.preventDefault();
-                    handleSelect(club);
-                  }}
-                  onMouseEnter={() => setFocusedIndex(index)}
-                  data-testid={testId ? `${testId}-option-${club.id}` : undefined}
-                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors${
-                    isFocused ? " bg-[var(--surface-2)]" : " hover:bg-[var(--surface-2)]"
-                  }`}
-                >
-                  <PickerClubLogo logoUrl={club.logoUrl} name={club.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--foreground)]">{club.name}</p>
-                    {club.shortName ? (
-                      <p className="truncate text-xs text-[var(--muted)]">{club.shortName}</p>
-                    ) : null}
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        portalResults ? (
+          <PopoverContent
+            open={open}
+            onOpenChange={setOpen}
+            anchorRef={anchorRef}
+            id={listboxId}
+            role="listbox"
+            maxHeight={256}
+          >
+            {resultsList}
+          </PopoverContent>
+        ) : (
+          resultsList
+        )
       ) : null}
     </div>
   );

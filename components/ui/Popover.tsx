@@ -22,6 +22,10 @@ import {
   type Placement,
 } from "@floating-ui/react";
 import { cn } from "@/lib/cn";
+import {
+  resolveSceFloatingLayerClass,
+  type SceFloatingLayer,
+} from "@/lib/ui/sce-overlay-layering";
 
 type PopoverContentProps = {
   open: boolean;
@@ -38,6 +42,8 @@ type PopoverContentProps = {
   /** When false, do not clamp height (short action menus — avoids internal scroll). */
   constrainHeight?: boolean;
   className?: string;
+  /** Stacking layer when portalled — composer popovers must sit above modal overlay roots. */
+  floatingLayer?: SceFloatingLayer;
 };
 
 export function PopoverContent({
@@ -53,6 +59,7 @@ export function PopoverContent({
   clipOverflow = true,
   constrainHeight = true,
   className,
+  floatingLayer = "app",
 }: PopoverContentProps) {
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -107,10 +114,12 @@ export function PopoverContent({
         style={floatingStyles}
         id={id}
         className={cn(
-          "z-[70] rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]",
+          resolveSceFloatingLayerClass(floatingLayer),
+          "rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]",
           clipOverflow ? "overflow-y-auto" : "overflow-visible",
           className,
         )}
+        data-floating-layer={floatingLayer}
         {...getFloatingProps()}
       >
         {children}
