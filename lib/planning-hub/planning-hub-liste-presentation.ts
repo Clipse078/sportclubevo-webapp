@@ -46,16 +46,24 @@ export function resolvePlanningHubListePresentationModel(
   }
 }
 
+function formatPlannerListLocationFromModel(model: SceActivityPresentationModel): string {
+  if (!("location" in model) || !model.location) {
+    return "";
+  }
+  return (
+    formatSceActivityLocationHierarchy(model.location, {
+      includeHostClub: false,
+      mostSpecificResourceOnly: true,
+    }) ?? ""
+  );
+}
+
 /** Canonical location line for Liste rows; falls back to operational resource codes when empty. */
 export function planningHubListeLocationLine(
   item: WeekplannerItem,
   model: SceActivityPresentationModel,
 ): string {
-  const canonical =
-    "location" in model && model.location
-      ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false }) ?? ""
-      : "";
-  const normalized = canonical.trim();
+  const normalized = formatPlannerListLocationFromModel(model).trim();
   if (normalized) {
     return normalized;
   }

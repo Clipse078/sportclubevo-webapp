@@ -210,6 +210,7 @@ const TOURNAMENT_ITEM = {
       dressingRoomOverridden: false,
     },
   ],
+  teamSeasonIds: ["ts-tournament-1"],
   conflicts: [],
 };
 

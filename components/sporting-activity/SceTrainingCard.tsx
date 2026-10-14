@@ -301,10 +301,27 @@ function SceTrainingListRowIdentityContent({
   model: SceTrainingPresentationModel;
   density: SceActivityPresentationDensity;
 }) {
+  const scale = richScale(density);
+  const teamName = model.team?.name?.trim();
+  const title = model.trainingTitle;
+  const showTeamLine =
+    teamName &&
+    teamName.localeCompare(title.trim(), "de-CH", { sensitivity: "accent" }) !== 0 &&
+    !title.trim().toLocaleLowerCase("de-CH").includes(teamName.toLocaleLowerCase("de-CH"));
+
   return (
     <div className="min-w-0 space-y-1" data-sce-training-density={density} data-sce-training-list-row-identity>
       <SceTrainingTypeHeader model={model} density={density} showStatus={false} />
-      <SceTrainingIdentityBlock model={model} density={density} includeTeamInSubtitle />
+      <div className="min-w-0 space-y-0.5" data-sce-training-region="identity">
+        <p className={cn(scale.titleClass)} data-testid="sce-training-title" title={title}>
+          {title}
+        </p>
+        {showTeamLine ? (
+          <p className={cn("min-w-0 truncate", scale.teamClass)} data-testid="sce-training-team">
+            {teamName}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

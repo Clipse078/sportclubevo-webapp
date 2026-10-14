@@ -141,6 +141,8 @@ function WeekPlannerWorkspaceBody({
   const todayDayKey = dayKeyInTimeZone(new Date(), timezone);
 
   const isStandardplan = activePlanId === null;
+  const activeAlternativePlanName =
+    activePlanId != null ? plans.find((plan) => plan.id === activePlanId)?.name ?? null : null;
   const incompleteCount = isStandardplan
     ? filteredWeek.days.reduce(
         (sum, day) =>
@@ -433,6 +435,7 @@ function WeekPlannerWorkspaceBody({
         timezone={timezone}
         tenantClubName={tenantClubName}
         tenantLogoUrl={tenantLogoUrl}
+        activeAlternativePlanName={activeAlternativePlanName}
         onItemOpen={handleItemActivate}
         onItemEditPlanning={(item) => {
           if (activePlanId && overrideEditing) {

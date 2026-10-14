@@ -187,6 +187,11 @@ function SceTournamentOrganiserCrest({
   );
 }
 
+function organiserCrestVisibleForListRow(model: SceTournamentPresentationModel, listRow: boolean): boolean {
+  if (!listRow) return false;
+  return Boolean(model.organiser.logoUrl?.trim());
+}
+
 function SceTournamentOrganiserLine({
   model,
   density,
@@ -220,15 +225,25 @@ function SceTournamentOrganiserLine({
 function SceTournamentHauptteamLine({
   model,
   density,
+  listRow = false,
   testId = "sce-tournament-hauptteam",
 }: {
   model: SceTournamentPresentationModel;
   density: SceActivityPresentationDensity;
+  listRow?: boolean;
   testId?: string;
 }) {
   const scale = richScale(density);
   const teamLabel = resolveHauptteamLabel(model);
   if (!teamLabel) return null;
+  const organiser = model.organiser.displayName?.trim();
+  if (
+    listRow &&
+    organiser &&
+    teamLabel.trim().localeCompare(organiser, "de-CH", { sensitivity: "accent" }) === 0
+  ) {
+    return null;
+  }
 
   const microTeamClass =
     density === "MICRO"
@@ -265,6 +280,7 @@ function SceTournamentIdentityBlock({
   listRow?: boolean;
 }) {
   const scale = richScale(density);
+  const hideOrganiserText = listRow && showCrest && organiserCrestVisibleForListRow(model, listRow);
 
   return (
     <div
@@ -288,8 +304,12 @@ function SceTournamentIdentityBlock({
         >
           {model.tournamentTitle}
         </p>
-        <SceTournamentOrganiserLine model={model} density={density} />
-        <SceTournamentHauptteamLine model={model} density={density} />
+        {!hideOrganiserText ? (
+          <SceTournamentOrganiserLine model={model} density={density} />
+        ) : model.organiser.displayName?.trim() ? (
+          <span className="sr-only">{model.organiser.displayName.trim()}</span>
+        ) : null}
+        <SceTournamentHauptteamLine model={model} density={density} listRow={listRow} />
       </div>
     </div>
   );

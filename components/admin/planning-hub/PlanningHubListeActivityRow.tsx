@@ -8,6 +8,10 @@ import {
   type ListOperationalRowStatus,
 } from "@/lib/planning-hub/list-operational";
 import {
+  PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS,
+  PLANNING_HUB_LISTE_ROW_GRID_CLASS,
+} from "@/lib/planning-hub/planning-hub-liste-grid";
+import {
   planningHubListeLocationLine,
   resolvePlanningHubListePresentationModel,
 } from "@/lib/planning-hub/planning-hub-liste-presentation";
@@ -24,11 +28,12 @@ import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentC
 import { SceClubEventCard } from "@/components/sporting-activity/SceClubEventCard";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
 import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
+import WeekplannerListeOverrideIndicator from "./WeekplannerListeOverrideIndicator";
 
 const LISTE_ROW_GRID = cn(
-  "group relative grid grid-cols-1 gap-2 rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2.5 shadow-sm transition",
-  "hover:border-[var(--border)] hover:bg-[var(--surface-2)]/35",
-  "md:grid-cols-[minmax(4.75rem,0.55fr)_minmax(0,1.65fr)_minmax(0,1fr)_auto_2.5rem] md:items-center md:gap-x-3 md:py-2.5",
+  "group relative rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2.5 shadow-sm transition",
+  "hover:border-[var(--border)] hover:bg-[var(--surface-2)]/35 md:py-2.5",
+  PLANNING_HUB_LISTE_ROW_GRID_CLASS,
 );
 
 function statusBadgeClass(status: ListOperationalRowStatus): string {
@@ -52,6 +57,7 @@ type PlanningHubListeActivityRowProps = {
   timezone: string;
   tenantClubName?: string | null;
   tenantLogoUrl?: string | null;
+  activeAlternativePlanName?: string | null;
   onItemOpen: (item: WeekplannerItem) => void;
   onItemEditPlanning: (item: WeekplannerItem) => void;
   onReviewConflictForItem: (item: WeekplannerItem) => void;
@@ -166,6 +172,7 @@ export default function PlanningHubListeActivityRow({
   timezone,
   tenantClubName,
   tenantLogoUrl,
+  activeAlternativePlanName,
   onItemOpen,
   onItemEditPlanning,
   onReviewConflictForItem,
@@ -181,12 +188,6 @@ export default function PlanningHubListeActivityRow({
   });
   const locationLine = planningHubListeLocationLine(item, presentationModel);
   const locationTitle = locationLine.length > 48 ? locationLine : undefined;
-  const assignedTeam = item.teamNames[0]?.trim();
-
-  const innerRowGrid = cn(
-    "col-span-full grid grid-cols-1 gap-2 min-w-0 text-left",
-    "md:col-span-4 md:col-start-1 md:grid-cols-[minmax(4.75rem,0.55fr)_minmax(0,1.65fr)_minmax(0,1fr)_auto] md:items-center md:gap-x-3",
-  );
 
   return (
     <li>
@@ -200,6 +201,7 @@ export default function PlanningHubListeActivityRow({
         data-testid={`planning-hub-liste-row-${item.id}`}
         data-sce-planning-hub-liste-row
         data-sce-planning-hub-liste-activity-kind={item.type}
+        data-sce-planning-hub-liste-grid={PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS}
       >
         <button
           type="button"
@@ -207,8 +209,8 @@ export default function PlanningHubListeActivityRow({
           data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
           aria-label={weekplannerAccessibleName(item, locale, timezone)}
           className={cn(
-            innerRowGrid,
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 rounded-md",
+            "contents",
+            "focus-visible:outline-none [&_*:focus-visible]:ring-2 [&_*:focus-visible]:ring-[var(--sce-primary)]",
           )}
         >
           <p
@@ -219,7 +221,7 @@ export default function PlanningHubListeActivityRow({
             <span>{formatListeRowTime(item, dayKey, locale, timezone)}</span>
           </p>
 
-          <div className="min-w-0" data-testid="planning-hub-liste-row-identity">
+          <div className="min-w-0 md:min-w-0" data-testid="planning-hub-liste-row-identity">
             <SceListeActivityCard
               item={item}
               locale={locale}
@@ -227,15 +229,21 @@ export default function PlanningHubListeActivityRow({
               tenantClubName={tenantClubName}
               tenantLogoUrl={tenantLogoUrl}
             />
-            {assignedTeam && item.type !== "VERANSTALTUNG" ? (
-              <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-2)]">{assignedTeam}</p>
+            {activeAlternativePlanName ? (
+              <WeekplannerListeOverrideIndicator
+                item={item}
+                planName={activeAlternativePlanName}
+                locale={locale}
+                timezone={timezone}
+              />
             ) : null}
           </div>
 
           <p
-            className="inline-flex min-w-0 items-start gap-1.5 text-xs text-[var(--text-2)]"
+            className="inline-flex min-w-0 items-start gap-1.5 text-xs text-[var(--text-2)] md:min-w-0"
             title={locationTitle}
             data-testid="planning-hub-liste-row-resources"
+            data-sce-planning-hub-liste-location-owner
           >
             <MapPin className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
             <span className="min-w-0 line-clamp-2">{locationLine}</span>
@@ -243,7 +251,7 @@ export default function PlanningHubListeActivityRow({
 
           <span
             className={cn(
-              "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide md:justify-self-start",
               statusBadgeClass(status),
             )}
             data-testid="planning-hub-liste-row-status"

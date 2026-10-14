@@ -20,6 +20,7 @@ type PlanningHubListeViewProps = {
   timezone: string;
   tenantClubName?: string | null;
   tenantLogoUrl?: string | null;
+  activeAlternativePlanName?: string | null;
   onItemOpen: (item: WeekplannerItem) => void;
   onItemEditPlanning: (item: WeekplannerItem) => void;
   onReviewConflictForItem: (item: WeekplannerItem) => void;
@@ -44,6 +45,7 @@ export default function PlanningHubListeView({
   timezone,
   tenantClubName,
   tenantLogoUrl,
+  activeAlternativePlanName = null,
   onItemOpen,
   onItemEditPlanning,
   onReviewConflictForItem,
@@ -115,6 +117,7 @@ export default function PlanningHubListeView({
                   timezone={timezone}
                   tenantClubName={tenantClubName}
                   tenantLogoUrl={tenantLogoUrl}
+                  activeAlternativePlanName={activeAlternativePlanName}
                   onItemOpen={onItemOpen}
                   onItemEditPlanning={onItemEditPlanning}
                   onReviewConflictForItem={onReviewConflictForItem}

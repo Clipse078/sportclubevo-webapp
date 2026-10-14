@@ -407,9 +407,6 @@ function SceMatchListRowIdentityContent({
   density: SceActivityPresentationDensity;
 }) {
   const showCrests = isSceActivityDimensionVisible(density, "crests");
-  const locationLine = model.location
-    ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
-    : undefined;
 
   return (
     <div className="min-w-0 space-y-1" data-sce-match-density={density} data-sce-match-list-row-identity>
@@ -432,7 +429,6 @@ function SceMatchListRowIdentityContent({
           showCrests={showCrests}
         />
       </div>
-      {locationLine ? <SceMatchLocationRow locationLine={locationLine} density={density} /> : null}
     </div>
   );
 }

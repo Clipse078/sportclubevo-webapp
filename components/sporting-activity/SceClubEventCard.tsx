@@ -256,6 +256,8 @@ function SceClubEventIdentityBlock({
 }) {
   const scale = richScale(density);
   const titleClass = cn(scale.titleClass, listRow && "line-clamp-2");
+  const hideOrganiserText =
+    listRow && showCrest && Boolean(model.organiser?.logoUrl?.trim());
 
   const titleNode = titleAsHeading ? (
     <h1 className={titleClass} data-testid="sce-club-event-title" title={model.eventTitle}>
@@ -283,7 +285,7 @@ function SceClubEventIdentityBlock({
       <div className="min-w-0 flex-1 space-y-0.5">
         {titleNode}
         <SceClubEventAudienceLine model={model} density={density} listRow={listRow} />
-        <SceClubEventOrganiserLine model={model} density={density} />
+        {!hideOrganiserText ? <SceClubEventOrganiserLine model={model} density={density} /> : null}
       </div>
     </div>
   );
