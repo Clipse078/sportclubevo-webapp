@@ -120,12 +120,13 @@ describe("MatchCreateForm — composer tabs (01E)", () => {
     fireEvent.click(screen.getByTestId("sce-team-row-team-1"));
   }
 
-  async function pickOpponentClubAndTeam() {
+  async function pickOpponentClubOnly() {
     fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
     await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-grid")).toBeTruthy());
     fireEvent.click(screen.getByTestId("sce-club-card-club-1"));
-    await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-teams")).toBeTruthy());
-    fireEvent.click(screen.getByTestId("sce-team-row-et-1"));
+    await waitFor(() =>
+      expect(screen.queryByTestId("match-create-opponent-selector-grid")).toBeNull(),
+    );
   }
 
   it("shows identity preview after team and opponent are set", async () => {
@@ -135,11 +136,6 @@ describe("MatchCreateForm — composer tabs (01E)", () => {
         if (url.startsWith("/api/club-directory/clubs")) {
           return jsonResponse({ clubs: [CLUB_CONCORDIA], meta: { total: 1, limit: 200, skip: 0, hasMore: false } });
         }
-        if (url.includes("/api/clubs/selectable/") && url.endsWith("/teams")) {
-          return jsonResponse({
-            teams: [{ id: "et-1", clubId: "club-1", name: "FC Rival", shortName: null, categoryLabel: null }],
-          });
-        }
         if (url.startsWith("/api/facilities/availability")) {
           return jsonResponse({ availability: [] });
         }
@@ -148,7 +144,7 @@ describe("MatchCreateForm — composer tabs (01E)", () => {
     );
     renderForm();
     await pickOwnTeam();
-    await pickOpponentClubAndTeam();
+    await pickOpponentClubOnly();
     fireEvent.change(screen.getByTestId("match-create-schedule-date-input"), {
       target: { value: "20.09.2026" },
     });

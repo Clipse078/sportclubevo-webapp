@@ -8,7 +8,7 @@
 | **Architecture decision** | **APPROVED** (Option C — adaptive `SceActivityComposer`) |
 | **ADR-11** | **ACCEPTED** |
 | **ACTIVITY_COMPOSER_ARCHITECTURE_GATE** | **CONDITIONAL_PASS_ACCEPTED** |
-| **Next package** | **SCE-ACTIVITY-CREATE-01E** — Match domain adoption (**NOT_STARTED**; 01D **CLOSED** PR **#841**) |
+| **Next package** | **SCE-ACTIVITY-CREATE-01F** — Tournament Adoption (**NOT_STARTED**; 01E **CLOSED** PR **#842**) |
 | **STAGE baseline** | `d61782b8c8f7d54f74746fa9bdb62ee71b789a9a` |
 | **Branch** | `cursor/sce-activity-create-01a-research-architecture` |
 | **Predecessor** | [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) **CLOSED** (PR #837 merged) |

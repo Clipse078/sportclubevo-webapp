@@ -3,17 +3,21 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01E` |
-| **Status** | **OPEN** — 01E-R3 on branch `cursor/sce-activity-create-01e-match-adoption`; PO UAT pending after R3 |
-| **Baseline** | STAGE after merge of PR #841 (`62d96645…`) |
-| **Scope** | Adopt manual Match creation onto `SceActivityComposer` with overlay + page parity, drafts, governance, Wochenplaner overlay |
+| **Status** | **CLOSED / MERGED** |
+| **Branch** | `cursor/sce-activity-create-01e-match-adoption` |
+| **PR** | **#842** → `STAGE` — **MERGED** |
+| **STAGE baseline (package start)** | `62d96645d8abc923067a512871b69ebc8dbb971a` (post PR #841) |
+| **STAGE at feature branch point** | `9064374eced0b3e862dd7320679ce00c2e08e498` (docs-only drift after #841; no 01E conflict) |
+| **Feature HEAD (pre-merge)** | `2f14d838e5cc60479763ed9cf3bead1f9fcf0cd3` (+ closure commit on branch) |
+| **Next package** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01.md) — Tournament Adoption (**NOT_STARTED**) |
 
 ## Architecture
 
 - **Canonical form:** `MatchCreateForm` (single workflow)
 - **Composer:** `SceActivityComposer` with `containerMode` `overlay` | `page`
-- **Tabs (01E-R1 guided order):** Teams · Termin · Ressourcen · Spielbetrieb · **Übersicht** (final review — not an opening placeholder)
+- **Tabs (guided order):** Teams · Termin · Ressourcen · Spielbetrieb · **Übersicht** (final review)
 - **Guided composer:** shared `guidedWorkflow` on `SceActivityCreateDefinition` — freely navigable steps, «Zurück» / «Weiter», primary create only on final review
-- **Match Teams:** visual **Matchup Selector** (`MatchCreateMatchupSelector`) — HOME left / AWAY right, portal-safe opponent search
+- **Match Teams:** visual **Matchup Selector** (`MatchCreateMatchupSelector`) — HOME left / AWAY right, canonical club/team selector
 - **Contextual create:** Wochenplaner `+ Erstellen → Spiel` opens overlay; Matchcenter quick access opens same form overlay
 - **Fallback:** `/dashboard/matchcenter/new` page mode unchanged route, same form
 - **Drafts:** `MatchComposerDraft` + `/api/match/composer/drafts|commit`
@@ -25,49 +29,88 @@
 
 - Identity preview uses `MatchClubPair` — HOME always left, AWAY always right
 - AWAY location strings persisted verbatim (`resolveMatchComposerPersistedLocation`); no tenant facility assignment on AWAY
+- Authoritative external/provider location suffixes (e.g. `… Sissach - 2`) preserved
 
-## Tests
+## Resource optionality (01E-R5)
 
-- `lib/matchcenter/__tests__/sce-activity-create-01e.test.ts`
-- `lib/matchcenter/__tests__/match-location-integrity.test.ts`
-- Updated `MatchCreateForm` component tests
+- Match HOME may commit with **zero** pitch/hall and dressing-room assignments (draft, direct publish, approval submission)
+- When resources **are** assigned, availability/conflict behavior and canonical facility identities remain active
+
+## Opponent selection (01E-R5)
+
+- External opponent = **`CLUB_ONLY`** — Verein pick completes opponent selection; `opponentExternalClubId` authoritative; `opponentName` display/override compatibility
+- Own team = **`TEAM_ONLY`**
+
+## Guided step state semantics (01E-R6)
+
+| State | Meaning |
+| --- | --- |
+| **UNVISITED** | Neutral / not reviewed |
+| **CURRENT** | Active step |
+| **COMPLETED** | **Reviewed + valid** (not merely optional or currently valid) |
+| **ERROR** | Validation-triggered invalid |
+
+**Mandatory principle (all adopters, including 01F Tournament):** step completion represents reviewed and valid, not merely currently valid. `OPTIONAL ≠ COMPLETED`, `VALID ≠ COMPLETED`.
 
 ## Migration
 
-- `20261014120000_sce_activity_create_01e_match` — `MatchComposerDraft`, `matchDraftId` on governance revisions, `activities.match.approve` permission seed
+- **`20261014120000_sce_activity_create_01e_match`** — `MatchComposerDraft`, `matchDraftId` on governance revisions, `activities.match.approve` permission seed
+- **No** R4/R5/R6 migrations
 
-## 01E-R1 PO decisions (guided, product-wide)
+## PO UAT (final — R6)
 
-- Guided Activity Composer is **canonical for all composer adopters** (Training, Match, Club Event); not Match-only
-- Context Tabs remain the navigation primitive; workflow nav adds progress + footer guidance without a parallel wizard framework
-- Free tab navigation preserved; «Weiter» validates the current step only; full validation on final submit
-- Final canonical review label: **Übersicht** (Training/Club Event final tab key `pruefen` where legacy `?tab=uebersicht` must remain valid)
-- Tournament **not** migrated early (01F boundary unchanged)
+| Result | **PASS** |
+| --- | --- |
+| **Training initial** | Team **CURRENT**; Termin, Wiederholung, Ressourcen, Übersicht **UNVISITED**; no premature checkmarks |
+| **Match initial** | Teams **CURRENT**; Termin, Ressourcen, Spielbetrieb, Übersicht **UNVISITED**; no premature checkmarks |
+| **Cursor manual UAT** | **SKIPPED** (PO-owned) |
 
-## 01E-R1 PO UAT
+## Revision history (R1–R6)
 
-- **Result:** FAIL — blocking interaction regressions (Weiter, matchup/resources) + rejected browser-native combined datetime UX
+| Slice | Summary |
+| --- | --- |
+| **01E-R1** | Guided composer on Context Tabs; five Match tabs incl. Übersicht; product-wide guided pattern |
+| **01E-R2** | Live draft sync; canonical SCE date/time; field-level validation |
+| **01E-R3** | `SceClubTeamSelectorDialog`; browse-first club grid; elevated selector layering |
+| **01E-R4** | Selector layout/crest/scrolling/search spacing; overlay layering; date/time responsive contracts |
+| **01E-R5** | **CLUB_ONLY** opponent; optional Match resources; architecture docs |
+| **01E-R6** | Canonical guided **reviewed + valid** completion semantics; Training/Match/Club Event alignment |
 
-## 01E-R2 corrections
+Prior R1–R5 PO decisions and fixes retained.
 
-- **Composer draft sync:** Match/Training/Club Event pass live `draft={buildPayload()}` so guided «Weiter» validates user input (fixes silent/stale validation)
-- **Match matchup:** identity preview always rendered — team/opponent selection available on empty drafts
-- **Guided validation:** field-level errors + visible composer banner; step completion requires domain validity (not tab visit order)
-- **Canonical SCE date/time:** `SceActivityDateInput` / `SceActivityTimeInput` / `SceActivityDateTimeInput` — DD.MM.YYYY + HH:MM manual entry, optional calendar popover; adopted on Training, Match, Club Event schedule fields; Tournament create start/end (+ meeting time) only (**01F** composer/governance unchanged)
+## Design system & Toggle First (closure)
 
-## 01E-R2 PO UAT
+| Check | Result |
+| --- | --- |
+| **SCE_DESIGN_SYSTEM_COMPLIANCE** | **PASS** — `SceActivityComposer`, `SceContextTabs`, canonical date/time, resource assignment, matchup identity, club/team selector, overlay layering |
+| **PARALLEL_PATTERN_INTRODUCED** | **NO** |
+| **BINARY_CONTROL_COMPLIANCE** | **PASS** |
+| **NEW_BINARY_CHECKBOXES (Match/Training/Club Event create paths)** | **0** |
+| **CANONICAL_TOGGLES_USED** | Training recurrence (`SwitchToggle` in `TrainingCreateForm`); Club Event recurrence/schedule (`SwitchThumb`); Match governance workspace (`SwitchToggle` in `PersonMatchGovernanceSection`) |
 
-- **Result:** NOT ACCEPTED — Match opponent picker still search-only / unreliable for creation UX
+## Automated validation (closure)
 
-## 01E-R3 — Canonical Club & Team Selector Engine
+- Vitest closure suite: **32** files, **235** tests — **0** failures
+- Prisma: **valid**
+- Production build: **`NODE_OPTIONS='--max-old-space-size=8192' npm run build`** — **PASS**
 
-- **Source of truth:** Club Directory / `/dashboard/vereine` (`listExternalClubs` — no duplicated datasets)
-- **Engine:** `SceClubTeamSelectorDialog` with browse-first club grid + optional club→team drilldown
-- **API:** `GET /api/clubs/selectable` (+ per-club teams route)
-- **Match adoption:** «Team ändern» / «Gegner ändern» open the canonical selector; inline `<select>` and `ExternalClubPicker` removed from matchup cards
-- **Reuse rule:** future SCE club/team selection should consume this engine (Tournament / other pickers deferred to their adoption packages)
+## Safety
+
+| Item | Value |
+| --- | --- |
+| **PROD** | **Not touched** |
+| **Persistent test data** | **0** |
+
+## Tests (reference)
+
+- `lib/matchcenter/__tests__/sce-activity-create-01e.test.ts`
+- `lib/matchcenter/__tests__/sce-activity-create-01e-r5.test.ts`
+- `lib/sce/activity-composer/__tests__/sce-activity-create-01e-r6.test.tsx`
+- `lib/matchcenter/__tests__/match-location-integrity.test.ts`
+- `components/admin/matchcenter/__tests__/MatchCreate*.test.*`
+- Shared: 01B/01C/01D architecture + regression tests (see closure run)
 
 ## Deferred
 
-- Match validator pool admin UI (club-level) — mirror Club Event validator pool section in a follow-up if required
-- 01F+ packages not started (Tournament full SCE composer adoption remains 01F)
+- Match validator pool admin UI (club-level) — follow-up if required
+- **01F** Tournament full SCE composer adoption — **NOT_STARTED** (inherits guided semantics + design system from this package)
