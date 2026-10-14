@@ -10,7 +10,7 @@
 | **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
 | **Training slice** | [`SCE-ACTIVITY-CREATE-01D`](./SCE-ACTIVITY-CREATE-01D.md) — Training Adoption — **CLOSED** (PR **#841**) |
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
-| **Next slice** | **SCE-ACTIVITY-CREATE-01F** — Tournament Adoption (**NOT_STARTED**) |
+| **Next slice** | **SCE-ACTIVITY-CREATE-01F** — Tournament Adoption (**IMPLEMENTED** on branch; PO UAT pending) · **01G** **NOT_STARTED** |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
