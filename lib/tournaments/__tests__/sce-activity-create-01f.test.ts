@@ -8,6 +8,7 @@ import { computeTournamentCreateTabErrors, firstInvalidTournamentCreateTab, reso
 import { resolveTournamentCreateStepValid, validateTournamentCreateWorkflowStep } from "@/lib/tournaments/tournament-create-step-validation";
 import { classifyTournamentMaterialChanges } from "@/lib/tournaments/composer/tournament-material-change";
 import { validateActivityGovernanceConfiguration } from "@/lib/sce/activity-governance/configuration-validation";
+import { parseDisplayDateInput } from "@/lib/sce/activity-datetime/sce-activity-datetime";
 
 const root = process.cwd();
 function read(rel: string): string { return readFileSync(join(root, rel), "utf8"); }
@@ -78,6 +79,15 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
   });
   it("permission constant value", () => {
     expect(PERMISSIONS.ACTIVITIES_TOURNAMENT_APPROVE).toBe("activities.tournament.approve");
+  });
+  it("Termin compact date entry normalizes before validation (01F-R1)", () => {
+    const parsed = parseDisplayDateInput("17102026");
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const d = validDraft();
+    d.startAt = `${parsed.isoDateKey}T10:00`;
+    expect(validateTournamentCreateWorkflowStep(d, "termin").valid).toBe(true);
+    expect(computeTournamentCreateTabErrors(d).termin).toBeUndefined();
   });
   it("routes validation to teams when empty", () => {
     expect(firstInvalidTournamentCreateTab(computeTournamentCreateTabErrors(createEmptyTournamentComposerDraft()))).toBe("teams");
