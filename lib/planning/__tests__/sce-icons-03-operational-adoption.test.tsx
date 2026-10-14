@@ -208,6 +208,7 @@ function trainingSessionRow(overrides: Partial<TrainingSessionRow> = {}): Traini
   return {
     sessionId: "sess-1",
     trainingSeriesId: "series-1",
+    seriesTitle: "Junioren F2 Training",
     date: "2026-09-27",
     startAt: "2026-09-27T16:00:00.000Z",
     endAt: "2026-09-27T17:30:00.000Z",

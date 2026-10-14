@@ -85,8 +85,8 @@ describe("TrainingSeriesManagementRow", () => {
     expect(screen.queryByTestId("sce-training-compact-time")).toBeNull();
     expect(screen.getByTestId("training-series-row-time")).toHaveTextContent("18:45–20:15");
     expect(screen.queryByTestId("sce-training-compact-weekdays")).toBeNull();
-    expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("FC Allschwil");
-    expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("Kunstrasen 2 A");
+    expect(screen.queryByTestId("sce-training-context-line")).toBeNull();
+    expect(screen.getByTestId("sce-training-team")).toHaveTextContent("1. Mannschaft");
     expect(screen.queryByTestId("sporting-activity-meta-rail-time")).toBeNull();
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Mo");
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Fr");
