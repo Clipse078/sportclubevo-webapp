@@ -28,7 +28,8 @@ export function resolveSceTournamentPresentationFromWeekplannerTournament(
     facilityResource: pitch?.name?.trim() || pitch?.code?.trim() || undefined,
   });
 
-  const hauptteamName = item.teamNames[0]?.trim() || undefined;
+  const ownTeams = item.teamNames.map((name) => name.trim()).filter((name) => name.length > 0);
+  const hauptteamName = ownTeams[0] || undefined;
 
   const organiser = buildTournamentOrganiserClubIdentity({
     title: item.title,
@@ -45,6 +46,7 @@ export function resolveSceTournamentPresentationFromWeekplannerTournament(
     tournamentTitle: item.title,
     organiser,
     hauptteam: hauptteamName ? { name: hauptteamName } : undefined,
+    ownTeams: ownTeams.length > 0 ? ownTeams : undefined,
     schedule: {
       startAt: item.startAt.toISOString(),
       endAt: item.endAt.toISOString(),

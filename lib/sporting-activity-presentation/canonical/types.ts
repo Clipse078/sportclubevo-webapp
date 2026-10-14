@@ -113,6 +113,8 @@ export type SceTournamentPresentationModel = SceActivityPresentationBase & {
   tournamentTitle: string;
   organiser: ClubIdentity;
   hauptteam?: { name: string };
+  /** Own SCE teams (0:n) — compact list-row / MICRO rendering uses {@link formatSceTournamentOwnTeamsCompactLabel}. */
+  ownTeams?: readonly string[];
 };
 
 /** Event scope / «Gültig für» — separate from organiser, publication, and participation. */

@@ -23,6 +23,10 @@ import type {
 import { formatSportingActivityScheduleLine } from "@/lib/sporting-activity-presentation/format";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import {
+  SCE_ACTIVITY_LIST_ROW_SCALE,
+  sceActivityListRowTypePillClass,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
 
@@ -97,20 +101,29 @@ function SceTrainingTypeHeader({
   model,
   density,
   showStatus,
+  listRow = false,
 }: {
   model: SceTrainingPresentationModel;
   density: SceActivityPresentationDensity;
   showStatus: boolean;
+  listRow?: boolean;
 }) {
   const status = model.status;
 
   return (
     <div
-      className="flex min-w-0 items-start justify-between gap-2"
+      className={cn(
+        "flex min-w-0 items-start justify-between gap-2",
+        listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
+      )}
       data-sce-training-region="meta"
       data-sce-training-header
     >
-      <ActivityTypePill activityKind="TRAINING" label={model.typeLabel} className="shrink-0" />
+      <ActivityTypePill
+        activityKind="TRAINING"
+        label={model.typeLabel}
+        className={cn("shrink-0", listRow && sceActivityListRowTypePillClass())}
+      />
       {showStatus && status?.label ? (
         <div className="shrink-0" data-sce-training-region="status">
           <SceTrainingCardStatus status={status} />
@@ -301,7 +314,6 @@ function SceTrainingListRowIdentityContent({
   model: SceTrainingPresentationModel;
   density: SceActivityPresentationDensity;
 }) {
-  const scale = richScale(density);
   const teamName = model.team?.name?.trim();
   const title = model.trainingTitle;
   const showTeamLine =
@@ -310,14 +322,25 @@ function SceTrainingListRowIdentityContent({
     !title.trim().toLocaleLowerCase("de-CH").includes(teamName.toLocaleLowerCase("de-CH"));
 
   return (
-    <div className="min-w-0 space-y-1" data-sce-training-density={density} data-sce-training-list-row-identity>
-      <SceTrainingTypeHeader model={model} density={density} showStatus={false} />
+    <div
+      className={cn("min-w-0", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-training-density={density}
+      data-sce-training-list-row-identity
+    >
+      <SceTrainingTypeHeader model={model} density={density} showStatus={false} listRow />
       <div className="min-w-0 space-y-0.5" data-sce-training-region="identity">
-        <p className={cn(scale.titleClass)} data-testid="sce-training-title" title={title}>
+        <p
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+          data-testid="sce-training-title"
+          title={title}
+        >
           {title}
         </p>
         {showTeamLine ? (
-          <p className={cn("min-w-0 truncate", scale.teamClass)} data-testid="sce-training-team">
+          <p
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
+            data-testid="sce-training-team"
+          >
             {teamName}
           </p>
         ) : null}

@@ -31,8 +31,9 @@ import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
 import WeekplannerListeOverrideIndicator from "./WeekplannerListeOverrideIndicator";
 
 const LISTE_ROW_GRID = cn(
-  "group relative rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2.5 shadow-sm transition",
-  "hover:border-[var(--border)] hover:bg-[var(--surface-2)]/35 md:py-2.5",
+  "group relative rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2 shadow-sm transition",
+  "hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]/40",
+  "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--sce-primary)] has-[:focus-visible]:ring-offset-0",
   PLANNING_HUB_LISTE_ROW_GRID_CLASS,
 );
 
@@ -214,7 +215,7 @@ export default function PlanningHubListeActivityRow({
           )}
         >
           <p
-            className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold tabular-nums text-[var(--foreground)] md:flex-col md:items-start md:gap-0 md:leading-tight"
+            className="inline-flex min-w-0 items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums leading-snug text-[var(--foreground)] md:flex-col md:items-start md:gap-0"
             data-testid="planning-hub-liste-row-time"
           >
             <Clock className="hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
@@ -240,18 +241,18 @@ export default function PlanningHubListeActivityRow({
           </div>
 
           <p
-            className="inline-flex min-w-0 items-start gap-1.5 text-xs text-[var(--text-2)] md:min-w-0"
+            className="inline-flex min-w-0 items-start gap-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)] md:min-w-0 md:pt-0.5"
             title={locationTitle}
             data-testid="planning-hub-liste-row-resources"
             data-sce-planning-hub-liste-location-owner
           >
-            <MapPin className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
+            <MapPin className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline md:shrink-0" aria-hidden />
             <span className="min-w-0 line-clamp-2">{locationLine}</span>
           </p>
 
           <span
             className={cn(
-              "inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide md:justify-self-start",
+              "inline-flex w-fit max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide md:justify-self-start",
               statusBadgeClass(status),
             )}
             data-testid="planning-hub-liste-row-status"

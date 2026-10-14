@@ -244,7 +244,32 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     );
     expect(screen.getByText(/Frühlingscup/i)).toBeInTheDocument();
     expect(screen.queryByTestId("sce-match-vs")).not.toBeInTheDocument();
-    expect(screen.getByText(/FC Allschwil/i)).toBeInTheDocument();
+    expect(screen.getByTestId("sce-tournament-organiser-crest")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren B1");
+  });
+
+  it("associates HEIM marker with match fixture identity block", () => {
+    renderListe([match("match:1")]);
+    const fixture = screen.getByTestId("sce-match-fixture");
+    expect(fixture.querySelector('[data-sce-match-region="tenant-side-marker"]')).toBeTruthy();
+    expect(screen.getByTestId("sce-match-context-heim")).toBeInTheDocument();
+  });
+
+  it("exposes shared desktop grid contract on every activity row", () => {
+    const { container } = renderListe([
+      training("training:1", "Junioren F2"),
+      match("match:1"),
+      tournament("tournament:1"),
+      veranstaltung("veranstaltung:1"),
+    ]);
+    const rows = container.querySelectorAll("[data-sce-planning-hub-liste-row]");
+    expect(rows.length).toBe(4);
+    for (const row of rows) {
+      expect(row).toHaveAttribute("data-sce-planning-hub-liste-grid");
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-time"]')).toBeTruthy();
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-resources"]')).toBeTruthy();
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-status"]')).toBeTruthy();
+    }
   });
 
   it("renders club event with VERANSTALTUNG identity", () => {

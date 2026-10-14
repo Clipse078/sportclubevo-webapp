@@ -395,6 +395,21 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
       expect(row).toContain("planning-hub-liste-row-status");
     });
 
+    it("R4.2 — shares list-row typography scale across canonical cards", () => {
+      const scale = read(
+        "lib/sporting-activity-presentation/canonical/activity-card-list-row-scale.ts",
+      );
+      expect(scale).toContain("SCE_ACTIVITY_LIST_ROW_SCALE");
+      for (const card of [
+        "components/sporting-activity/SceTrainingCard.tsx",
+        "components/sporting-activity/SceMatchCard.tsx",
+        "components/sporting-activity/SceTournamentCard.tsx",
+        "components/sporting-activity/SceClubEventCard.tsx",
+      ]) {
+        expect(read(card), card).toContain("SCE_ACTIVITY_LIST_ROW_SCALE");
+      }
+    });
+
     it("documents weekplanner veranstaltung presentation adapter", () => {
       expect(
         read("lib/sporting-activity-presentation/canonical/adapters/weekplanner-veranstaltung.ts"),

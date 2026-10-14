@@ -30,6 +30,11 @@ import {
   SCE_ACTIVITY_LOCATION_FOREGROUND_CLASS,
   SCE_ACTIVITY_TEAM_CONTEXT_FOREGROUND_CLASS,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import {
+  SCE_ACTIVITY_LIST_ROW_SCALE,
+  sceActivityListRowTypePillClass,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import { formatSceTournamentOwnTeamsCompactLabel } from "@/lib/sporting-activity-presentation/canonical/tournament-own-teams-display";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTournamentCardStatus } from "./SceTournamentCardStatus";
 
@@ -132,19 +137,28 @@ function formatCompactDateToken(model: SceTournamentPresentationModel, fmtCfg: T
 function SceTournamentTypeHeader({
   model,
   showStatus,
+  listRow = false,
 }: {
   model: SceTournamentPresentationModel;
   showStatus: boolean;
+  listRow?: boolean;
 }) {
   const status = model.status;
 
   return (
     <div
-      className="flex min-w-0 items-start justify-between gap-2"
+      className={cn(
+        "flex min-w-0 items-start justify-between gap-2",
+        listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
+      )}
       data-sce-tournament-region="meta"
       data-sce-tournament-header
     >
-      <ActivityTypePill activityKind="TOURNAMENT" label={model.typeLabel} className="shrink-0" />
+      <ActivityTypePill
+        activityKind="TOURNAMENT"
+        label={model.typeLabel}
+        className={cn("shrink-0", listRow && sceActivityListRowTypePillClass())}
+      />
       {showStatus && status?.label ? (
         <div className="shrink-0" data-sce-tournament-region="status">
           <SceTournamentCardStatus status={status} />
@@ -410,10 +424,70 @@ function SceTournamentListRowIdentityContent({
   model: SceTournamentPresentationModel;
   density: SceActivityPresentationDensity;
 }) {
+  const organiser = model.organiser.displayName?.trim();
+  const showOrganiserCrest = Boolean(model.organiser.logoUrl?.trim());
+  const ownTeamsLabel = formatSceTournamentOwnTeamsCompactLabel({
+    teamNames: model.ownTeams ?? (model.hauptteam?.name ? [model.hauptteam.name] : []),
+    organiserDisplayName: organiser,
+  });
+  const hideOrganiserText = showOrganiserCrest && organiser;
+
   return (
-    <div className="min-w-0 space-y-1" data-sce-tournament-density={density} data-sce-tournament-list-row-identity>
-      <SceTournamentTypeHeader model={model} showStatus={false} />
-      <SceTournamentIdentityBlock model={model} density={density} listRow />
+    <div
+      className={cn("min-w-0", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-tournament-density={density}
+      data-sce-tournament-list-row-identity
+    >
+      <SceTournamentTypeHeader model={model} showStatus={false} listRow />
+      <div className="min-w-0 space-y-0.5" data-sce-tournament-region="identity">
+        <p
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+          data-testid="sce-tournament-title"
+          title={model.tournamentTitle}
+        >
+          {model.tournamentTitle}
+        </p>
+        {organiser ? (
+          <div
+            className="flex min-w-0 items-center gap-1.5"
+            data-sce-tournament-region="organiser-row"
+          >
+            {showOrganiserCrest ? (
+              <span data-testid="sce-tournament-organiser-crest" className="shrink-0 self-center">
+                <ClubCrest
+                  identity={model.organiser}
+                  density="compact"
+                  decorative
+                  emphasized
+                  className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
+                />
+              </span>
+            ) : null}
+            {!hideOrganiserText ? (
+              <p
+                className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
+                data-testid="sce-tournament-organiser"
+                data-sce-tournament-region="organiser"
+                title={organiser}
+              >
+                {organiser}
+              </p>
+            ) : (
+              <span className="sr-only">{organiser}</span>
+            )}
+          </div>
+        ) : null}
+        {ownTeamsLabel ? (
+          <p
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
+            data-testid="sce-tournament-hauptteam"
+            data-sce-tournament-region="hauptteam"
+            title={ownTeamsLabel}
+          >
+            {ownTeamsLabel}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
