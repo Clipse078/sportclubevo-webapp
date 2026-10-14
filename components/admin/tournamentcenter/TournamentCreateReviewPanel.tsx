@@ -135,6 +135,12 @@ export default function TournamentCreateReviewPanel({
       <div className="space-y-4" data-testid="tournament-create-review-participant-lobby">
         {participantIdentities.length > 0 ? (
           <>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Teilnehmer</p>
+              <p className="text-sm text-[var(--text-2)]" data-testid="tournament-create-review-participant-total">
+                {summary.participantCount} gesamt
+              </p>
+            </div>
             <ReviewParticipantSection
               title="Eigene Teams"
               identities={ownTeams}
@@ -195,7 +201,7 @@ export default function TournamentCreateReviewPanel({
         )}
       </SummaryRow>
 
-      <SummaryRow label="Ausspielung">
+      <SummaryRow label="Publikation">
         {summary.publicationLabels.length > 0 ? (
           <p>{summary.publicationLabels.join(" · ")}</p>
         ) : (
@@ -203,10 +209,6 @@ export default function TournamentCreateReviewPanel({
         )}
       </SummaryRow>
 
-      <p className="text-xs text-[var(--text-2)]" data-testid="tournament-create-review-participant-total">
-        {summary.participantCount} Teilnehmer gesamt · Eigenes Team: {summary.ownTeamCount} · Externe Vereine:{" "}
-        {summary.externalClubCount} · Manuell: {summary.manualCount}
-      </p>
     </div>
   );
 }

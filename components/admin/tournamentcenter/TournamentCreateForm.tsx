@@ -545,6 +545,7 @@ export default function TournamentCreateForm({
             tenantLogoUrl={tenantLogoUrl}
             selected={organizerSelection}
             onChange={setOrganizerSelection}
+            fieldError={fieldErrors?.organizer}
             testId="tournament-create-organizer-club"
           />
         </div>
@@ -554,9 +555,15 @@ export default function TournamentCreateForm({
           </p>
         ) : null}
         <div className="mt-6 space-y-6" data-testid="tournament-create-participant-lobby">
-          <p className="text-sm text-[var(--text-2)]" data-testid="tournament-create-participant-total">
-            {participants.length} Teilnehmer gesamt
-          </p>
+          <div
+            className="flex flex-wrap items-baseline justify-between gap-2"
+            data-testid="tournament-create-participant-lobby-header"
+          >
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Teilnehmer</h3>
+            <p className="text-sm text-[var(--text-2)]" data-testid="tournament-create-participant-total">
+              {participants.length} gesamt
+            </p>
+          </div>
           <TournamentOwnTeamsSection
             identities={ownTeamIdentities}
             availableTeams={availableTeams.map((t) => ({ ...t, isActive: true }))}
@@ -594,7 +601,7 @@ export default function TournamentCreateForm({
           testId="tournament-create-schedule"
         />
         <label className="mt-4 block space-y-2">
-          <span className="fca-label">{homeAway === "AWAY" ? "Ort (authoritative Auswärtsangabe)" : "Ort (optional)"}</span>
+          <span className="fca-label">{homeAway === "AWAY" ? "Austragungsort" : "Ort (optional)"}</span>
           <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="fca-input" data-testid="tournament-create-location" />
         </label>
       </PlanningEditorSection>

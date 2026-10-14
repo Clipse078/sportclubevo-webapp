@@ -34,7 +34,7 @@ export type SceTournamentParticipantTileProps =
 export function SceTournamentParticipantTile(props: SceTournamentParticipantTileProps) {
   const density = props.density;
   const tilePadding =
-    density === "spacious" ? "p-4 min-h-[11rem]" : density === "balanced" ? "p-3 min-h-[9rem]" : "p-2.5 min-h-[7.5rem]";
+    density === "spacious" ? "p-3 min-h-[8rem]" : density === "balanced" ? "p-2.5 min-h-[7rem]" : "p-2 min-h-[6.5rem]";
 
   if (props.variant === "add") {
     return (
@@ -52,8 +52,13 @@ export function SceTournamentParticipantTile(props: SceTournamentParticipantTile
           tilePadding,
         )}
       >
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-1)]">
-          <Plus className="h-6 w-6" aria-hidden />
+        <span
+          className={cn(
+            "inline-flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-1)]",
+            density === "spacious" ? "h-11 w-11" : density === "balanced" ? "h-10 w-10" : "h-9 w-9",
+          )}
+        >
+          <Plus className={density === "dense" ? "h-5 w-5" : "h-6 w-6"} aria-hidden />
         </span>
         <span className="text-center text-sm font-semibold text-[var(--foreground)]">Teilnehmer hinzufügen</span>
       </button>
@@ -77,7 +82,7 @@ export function SceTournamentParticipantTile(props: SceTournamentParticipantTile
       data-testid={props.testId ?? `tournament-participant-tile-${model.localId}`}
       aria-label={model.accessibleLabel}
     >
-      <div className="mb-2 flex flex-1 flex-col items-center justify-center gap-2">
+      <div className="mb-1 flex flex-col items-center justify-center gap-1.5">
         <ClubCrest identity={model.identity} density={crestSize} decorative className="mx-auto" />
         <div className="space-y-0.5 px-1">
           <p className={cn(titleClass, "leading-tight text-[var(--foreground)]")}>{model.clubLine}</p>

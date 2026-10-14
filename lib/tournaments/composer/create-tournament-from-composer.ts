@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { parseTenantLocalDateTimeInput, resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
-import { resolvePersistedOrganizerNameFromComposerPayload } from "@/lib/tournaments/composer/tournament-composer-organiser";
+import {
+  isAwayTournamentOrganiserMissing,
+  resolvePersistedOrganizerNameFromComposerPayload,
+} from "@/lib/tournaments/composer/tournament-composer-organiser";
 import {
   orchestrateTournamentCreation,
   type TournamentCreationOrchestrationResult,
@@ -39,6 +42,9 @@ export async function createTournamentFromComposerPayload(input: {
   const payload = input.payload;
   if (!payload.seasonId || !payload.title.trim() || !payload.startAt || payload.participants.length === 0) {
     throw new Error("Pflichtfelder fehlen.");
+  }
+  if (isAwayTournamentOrganiserMissing(payload)) {
+    throw new Error("Bitte einen Veranstalter auswählen.");
   }
 
   const tenant = await prisma.tenant.findUnique({

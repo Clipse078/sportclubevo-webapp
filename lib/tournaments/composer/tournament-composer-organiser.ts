@@ -41,6 +41,14 @@ export function sanitizeOrganiserDraftFields(
   return { organizerExternalClubId, organizerExternalClubName };
 }
 
+export const AWAY_TOURNAMENT_ORGANISER_REQUIRED_MESSAGE = "Bitte einen Veranstalter auswählen.";
+
+export function isAwayTournamentOrganiserMissing(
+  draft: Pick<TournamentComposerDraftPayload, "homeAway" | "organizerExternalClubId">,
+): boolean {
+  return draft.homeAway === "AWAY" && !(draft.organizerExternalClubId?.trim());
+}
+
 export function resolvePersistedOrganizerNameFromComposerPayload(
   payload: Pick<
     TournamentComposerDraftPayload,

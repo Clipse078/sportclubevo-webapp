@@ -19,6 +19,7 @@ export type TournamentOrganizerClubFieldProps = {
   disabled?: boolean;
   testId?: string;
   label?: string;
+  fieldError?: string;
 };
 
 export default function TournamentOrganizerClubField({
@@ -30,6 +31,7 @@ export default function TournamentOrganizerClubField({
   disabled = false,
   testId = "tournament-organizer-club",
   label = "Veranstalter",
+  fieldError,
 }: TournamentOrganizerClubFieldProps) {
   if (homeAway === "HOME") {
     const tenantOrganiser = buildTenantOrganiserPickerResult(tenantClubName, tenantLogoUrl);
@@ -69,6 +71,11 @@ export default function TournamentOrganizerClubField({
   return (
     <div className="block space-y-2 sm:col-span-2" data-testid={testId}>
       <span className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">{label}</span>
+      {fieldError ? (
+        <p role="alert" className="text-sm text-[var(--sce-danger)]" data-testid={`${testId}-error`}>
+          {fieldError}
+        </p>
+      ) : null}
       {organiserIdentity ? (
         <div
           className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-2"

@@ -8,9 +8,18 @@ import {
   parseDisplayDateInput,
   splitDateTimeLocalValue,
 } from "@/lib/sce/activity-datetime/sce-activity-datetime";
+import {
+  AWAY_TOURNAMENT_ORGANISER_REQUIRED_MESSAGE,
+  isAwayTournamentOrganiserMissing,
+} from "@/lib/tournaments/composer/tournament-composer-organiser";
 
 function teamsStepInvalid(draft: TournamentComposerDraftPayload): boolean {
-  return !draft.title.trim() || !draft.seasonId || draft.participants.length === 0;
+  return (
+    !draft.title.trim() ||
+    !draft.seasonId ||
+    draft.participants.length === 0 ||
+    isAwayTournamentOrganiserMissing(draft)
+  );
 }
 
 function terminStepInvalid(draft: TournamentComposerDraftPayload): boolean {
@@ -27,6 +36,9 @@ function buildTeamsFieldErrors(draft: TournamentComposerDraftPayload): Record<st
   }
   if (draft.participants.length === 0) {
     fieldErrors.participants = "Mindestens ein teilnehmendes Team ist erforderlich.";
+  }
+  if (isAwayTournamentOrganiserMissing(draft)) {
+    fieldErrors.organizer = AWAY_TOURNAMENT_ORGANISER_REQUIRED_MESSAGE;
   }
   return fieldErrors;
 }

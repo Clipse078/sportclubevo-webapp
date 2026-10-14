@@ -117,7 +117,8 @@ describe("SCE-ACTIVITY-CREATE-01F-R4 — HOME organiser + participant sections +
     expect(review).toContain("tournament-create-review-own-teams");
     expect(review).toContain("tournament-create-review-external-clubs");
     expect(review).toContain("tournament-create-review-manual-participants");
-    expect(review).toContain("Teilnehmer gesamt");
+    expect(review).toContain("tournament-create-review-participant-total");
+    expect(review).toContain("gesamt");
   });
 
   it("buildTenantOrganiserPickerResult uses synthetic tenant id", () => {
