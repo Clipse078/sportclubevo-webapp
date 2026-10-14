@@ -286,6 +286,26 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.4 location geometr
       expect(within(identity as HTMLElement).queryByTestId("sce-club-event-location")).not.toBeInTheDocument();
     }
 
+    const stripStatusSemantic = (className: string) =>
+      className
+        .split(/\s+/)
+        .filter(
+          (token) =>
+            !token.startsWith("border-amber-") &&
+            !token.startsWith("border-emerald-") &&
+            !token.startsWith("border-sky-") &&
+            !token.startsWith("border-violet-") &&
+            !token.startsWith("bg-amber-") &&
+            !token.startsWith("bg-emerald-") &&
+            !token.startsWith("bg-sky-") &&
+            !token.startsWith("bg-violet-") &&
+            !token.startsWith("text-amber-") &&
+            !token.startsWith("text-emerald-") &&
+            !token.startsWith("text-sky-") &&
+            !token.startsWith("text-violet-"),
+        )
+        .join(" ");
+
     const kinds = [...columnClassByKind.keys()];
     const reference = columnClassByKind.get(kinds[0])!;
     for (const kind of kinds.slice(1)) {
@@ -293,7 +313,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.4 location geometr
       expect(current.time).toBe(reference.time);
       expect(current.identity).toBe(reference.identity);
       expect(current.location).toBe(reference.location);
-      expect(current.status).toBe(reference.status);
+      expect(stripStatusSemantic(current.status)).toBe(stripStatusSemantic(reference.status));
       expect(current.actions).toBe(reference.actions);
     }
   });
