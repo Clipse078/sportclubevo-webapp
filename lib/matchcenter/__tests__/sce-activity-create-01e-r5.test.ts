@@ -49,11 +49,21 @@ describe("SCE-ACTIVITY-CREATE-01E-R5 — opponent club-only + optional resources
     expect(selector).not.toContain('mode="CLUB_THEN_TEAM"');
   });
 
-  it("Tournament external club add workflow is club-only (no team drilldown)", () => {
+  it("Tournament external participant uses canonical CLUB_ONLY SceClubTeamSelectorDialog (01F)", () => {
+    const section = read("components/admin/tournamentcenter/TournamentExternalClubsSection.tsx");
+    expect(section).toContain("SceClubTeamSelectorDialog");
+    expect(section).toContain('mode="CLUB_ONLY"');
+    expect(section).toContain('testIdPrefix="tournament-participant-club-selector"');
+    expect(section).toContain("onAddExternalClub");
+    expect(section).not.toContain('mode="CLUB_THEN_TEAM"');
+    expect(section).not.toContain("<ExternalClubPicker");
+  });
+
+  it("Tournament participant workflow does not adopt Match HOME/AWAY identity semantics", () => {
     const workflow = read("components/admin/tournamentcenter/TournamentParticipantAddWorkflow.tsx");
-    expect(workflow).toContain("ExternalClubPicker");
-    expect(workflow).not.toContain("SceClubTeamSelectorDialog");
-    expect(workflow).not.toContain("CLUB_THEN_TEAM");
+    expect(workflow).not.toContain("homeAway");
+    expect(workflow).not.toContain("MatchCreateMatchupSelector");
+    expect(workflow).not.toContain("match-create-home-away-switch");
   });
 
   it("HOME left / AWAY right when tenant is away with club-only opponent", () => {

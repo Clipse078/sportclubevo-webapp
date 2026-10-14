@@ -29,6 +29,7 @@ import {
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import { loadTrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
 import { loadMatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
+import { loadTournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
 import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 type PlannerWeekPageProps = {
@@ -172,7 +173,7 @@ export default async function PlannerWeekPageRoute({
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
 
-  const [trainingComposer, matchComposer] = await Promise.all([
+  const [trainingComposer, matchComposer, tournamentComposer] = await Promise.all([
     canCreateTraining && userId
       ? loadTrainingComposerCreateSurfaceProps({
           tenantId: tenantContext.id,
@@ -182,6 +183,14 @@ export default async function PlannerWeekPageRoute({
       : Promise.resolve(null),
     canManageEvents && userId
       ? loadMatchComposerCreateSurfaceProps({
+          tenantId: tenantContext.id,
+          userId,
+          tenantClubName: tenantContext.name,
+          tenantLogoUrl: tenantClubCrestUrl,
+        })
+      : Promise.resolve(null),
+    canManageEvents && userId
+      ? loadTournamentComposerCreateSurfaceProps({
           tenantId: tenantContext.id,
           userId,
           tenantClubName: tenantContext.name,
@@ -214,6 +223,7 @@ export default async function PlannerWeekPageRoute({
       }}
       trainingComposer={trainingComposer}
       matchComposer={matchComposer}
+      tournamentComposer={tournamentComposer}
     >
       <Suspense
         fallback={

@@ -28,6 +28,10 @@ import {
   normalizeTournamentSortMode,
 } from "@/lib/tournaments/workspace-view-model";
 import TournamentCenterWorkspace from "@/components/admin/tournamentcenter/TournamentCenterWorkspace";
+import TournamentComposerCreateTrigger from "@/components/admin/tournamentcenter/TournamentComposerCreateTrigger";
+import { loadTournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
 type TournamentCenterPageProps = {
   searchParams?: Promise<{
@@ -97,8 +101,47 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
     logAdminServerTiming(perfTimer.finish());
   }
 
+  const userId = session.user?.effectiveUserId ?? session.user?.id;
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
+  const tournamentComposerSurface =
+    canCreate && userId
+      ? await loadTournamentComposerCreateSurfaceProps({
+          tenantId: tenantContext.id,
+          userId,
+          tenantClubName: tenantContext.name,
+          tenantLogoUrl: tenantClubCrestUrl,
+        })
+      : null;
+
+  const tournamentCreateTrigger =
+    tournamentComposerSurface != null ? (
+      <TournamentComposerCreateTrigger
+        activeSeasonId={tournamentComposerSurface.activeSeasonId}
+        seasonOptions={tournamentComposerSurface.seasonOptions}
+        teamOptions={tournamentComposerSurface.teamOptions}
+        pitchHallFacilityGroups={tournamentComposerSurface.pitchHallFacilityGroups}
+        dressingRoomFacilityGroups={tournamentComposerSurface.dressingRoomFacilityGroups}
+        defaultTournamentDurationMinutes={tournamentComposerSurface.defaultTournamentDurationMinutes}
+        effectiveGovernance={
+          tournamentComposerSurface.effectiveGovernance ?? {
+            activityType: "TOURNAMENT",
+            personId: "anonymous",
+            mayCreate: true,
+            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
+            approvalStrategy: "ANY_ONE",
+            validatorPersonIds: [],
+          }
+        }
+        tenantClubName={tournamentComposerSurface.tenantClubName}
+        tenantLogoUrl={tournamentComposerSurface.tenantLogoUrl}
+      />
+    ) : null;
+
   return (
     <div className="w-full max-w-none space-y-6">
+      <div className="hidden" aria-hidden="true">
+        {tournamentCreateTrigger}
+      </div>
       <TournamentCenterWorkspace
         tournaments={tournaments}
         scope={scope}

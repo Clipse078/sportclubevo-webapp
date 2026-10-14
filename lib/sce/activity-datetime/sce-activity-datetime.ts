@@ -6,6 +6,8 @@
 const ISO_DATE_KEY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DATETIME_LOCAL_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/;
 const DISPLAY_DATE_RE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
+/** DDMMYYYY or DDMMYY (YY → 20YY for activity wall-clock dates). */
+const COMPACT_DATE_DIGITS_RE = /^(\d{2})(\d{2})(\d{2}|\d{4})$/;
 const TIME_RE = /^(\d{1,2}):(\d{2})$/;
 
 export type SceActivityDateParseResult =
@@ -52,6 +54,20 @@ export function parseDisplayDateInput(raw: string): SceActivityDateParseResult {
       return { ok: false, error: "Bitte ein gültiges Datum im Format TT.MM.JJJJ eingeben." };
     }
     return { ok: true, isoDateKey: trimmed, display: formatIsoDateKeyToDisplay(trimmed) };
+  }
+
+  const compactDigits = trimmed.replace(/\D/g, "");
+  if (compactDigits === trimmed && COMPACT_DATE_DIGITS_RE.test(compactDigits)) {
+    const match = compactDigits.match(COMPACT_DATE_DIGITS_RE)!;
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const yearPart = match[3];
+    const year = yearPart.length === 4 ? Number(yearPart) : 2000 + Number(yearPart);
+    if (!isValidCalendarDate(year, month, day)) {
+      return { ok: false, error: "Bitte ein gültiges Datum im Format TT.MM.JJJJ eingeben." };
+    }
+    const isoDateKey = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return { ok: true, isoDateKey, display: formatIsoDateKeyToDisplay(isoDateKey) };
   }
 
   return { ok: false, error: "Bitte ein gültiges Datum im Format TT.MM.JJJJ eingeben." };

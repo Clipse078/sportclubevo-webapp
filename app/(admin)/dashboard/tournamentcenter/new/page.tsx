@@ -1,61 +1,110 @@
-import { notFound } from "next/navigation";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
+import TurniereRecordWorkspaceShell from "@/components/admin/tournamentcenter/record/TurniereRecordWorkspaceShell";
+import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/tournamentcenter/record/turniere-record-layout";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
+import { notFound } from "next/navigation";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import { PageShell } from "@/components/ui/page";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { auth } from "@/auth";
+import { loadTournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
+import { loadTournamentEffectiveGovernanceForSession } from "@/lib/tournaments/composer/load-effective-governance-server";
+import { getTournamentComposerDraftForCreatorResume } from "@/lib/tournaments/composer/tournament-composer-draft-access.server";
+import { resolvePersonIdForUser } from "@/lib/sce/activity-governance/persistence/resolve-person-id";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
+import { hasPermission } from "@/lib/permissions/has-permission";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 
-export default async function NewTournamentCenterPage() {
+type Props = {
+  searchParams?: Promise<{ draftId?: string }>;
+};
+
+export default async function NewTournamentCenterPage({ searchParams }: Props) {
   const session = await requireAnyPermission([PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW]);
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
 
+  const authSession = await auth();
+  const userId = authSession?.user?.effectiveUserId ?? authSession?.user?.id;
+  if (!userId) notFound();
+
+  const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
   const canManageFacilitiesTimeStandards = hasPermission(session, PERMISSIONS.FACILITIES_MANAGE);
 
-  const [facilities, operationalDurationPolicy] = await Promise.all([
-    getFacilitiesForTenant(tenantContext.id),
-    getTenantOperationalDurationPolicy(tenantContext.id),
-  ]);
+  const [surfaceProps, effectiveGovernance, resolvedParams, personId, operationalDurationPolicy] =
+    await Promise.all([
+      loadTournamentComposerCreateSurfaceProps({
+        tenantId: tenantContext.id,
+        userId,
+        tenantClubName: tenantContext.name,
+        tenantLogoUrl: tenantClubCrestUrl,
+      }),
+      loadTournamentEffectiveGovernanceForSession({ tenantId: tenantContext.id }),
+      searchParams ?? Promise.resolve(undefined),
+      resolvePersonIdForUser(tenantContext.id, userId),
+      getTenantOperationalDurationPolicy(tenantContext.id),
+    ]);
 
-  function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
-    return facilities
-      .filter((f) => f.status !== "ARCHIVED")
-      .map((f) => ({
-        facilityId: f.id,
-        facilityName: f.name,
-        facilityType: f.type as string,
-        resources: f.resources
-          .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
-          .map((r) => ({
-            id: r.id,
-            name: r.name,
-            code: r.code,
-            type: r.type,
-            facilityId: f.id,
-            facilityName: f.name,
-            facilityType: f.type as string,
-          })),
-      }))
-      .filter((fg) => fg.resources.length > 0);
+  const params = resolvedParams ?? {};
+  const draftId = params.draftId?.trim() || null;
+  let initialResumeDraft = null;
+  if (draftId && personId) {
+    const personDraft = await getTournamentComposerDraftForCreatorResume({
+      tenantId: tenantContext.id,
+      draftId,
+      actorPersonId: personId,
+    });
+    if (personDraft) {
+      initialResumeDraft = { draftId: personDraft.draftId, payload: personDraft.payload };
+    }
   }
 
-  const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
-  const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
+  const header = (
+    <div className="space-y-1 pt-1" data-testid="turniere-tournament-create-header">
+      <p className="text-xs text-[var(--text-2)]">Turniercenter</p>
+      <h1 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">Neues Turnier</h1>
+      <p className="max-w-2xl text-sm text-[var(--text-2)]">
+        Teilnehmende Teams, Termin, Ressourcen und Publikation im geführten Composer.
+      </p>
+    </div>
+  );
 
   return (
-    <PageShell fullWidth>
-      <TournamentCreateForm
-        pitchHallFacilityGroups={pitchHallFacilityGroups}
-        dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-        tenantLogoUrl={tenantContext.logoUrl}
-        defaultTournamentDurationMinutes={operationalDurationPolicy.TOURNAMENT.durationMinutes}
-        canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
-      />
-    </PageShell>
+    <TurniereRecordWorkspaceShell
+      breadcrumbs={[
+        { label: "Turniere", href: "/dashboard/tournamentcenter" },
+        { label: "Neues Turnier" },
+      ]}
+      header={header}
+      testId="turniere-tournament-create-workspace"
+    >
+      <div className={TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS}>
+        <TournamentCreateForm
+          activeSeasonId={surfaceProps.activeSeasonId}
+          seasonOptions={surfaceProps.seasonOptions}
+          teamOptions={surfaceProps.teamOptions}
+          pitchHallFacilityGroups={surfaceProps.pitchHallFacilityGroups}
+          dressingRoomFacilityGroups={surfaceProps.dressingRoomFacilityGroups}
+          defaultTournamentDurationMinutes={operationalDurationPolicy.TOURNAMENT.durationMinutes}
+          canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
+          tenantClubName={surfaceProps.tenantClubName}
+          tenantLogoUrl={surfaceProps.tenantLogoUrl}
+          containerMode="page"
+          effectiveGovernance={
+            effectiveGovernance ?? {
+              activityType: "TOURNAMENT",
+              personId: "anonymous",
+              mayCreate: true,
+              publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
+              approvalStrategy: "ANY_ONE",
+              validatorPersonIds: [],
+            }
+          }
+          initialDraftId={draftId}
+          initialResumeDraft={initialResumeDraft}
+        />
+      </div>
+    </TurniereRecordWorkspaceShell>
   );
 }

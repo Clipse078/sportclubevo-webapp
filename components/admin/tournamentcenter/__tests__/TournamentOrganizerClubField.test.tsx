@@ -15,13 +15,34 @@ function jsonResponse(data: unknown): Response {
 const FC_ALLSCHWIL = { id: "club-fca", name: "FC Allschwil", shortName: null, logoUrl: "https://cdn/fca.png" };
 const FC_AESCH = { id: "club-aesch", name: "FC Aesch", shortName: null, logoUrl: null };
 
+const awayProps = {
+  homeAway: "AWAY" as const,
+  tenantClubName: "FC Allschwil",
+  tenantLogoUrl: "https://cdn/fca.png",
+};
+
 beforeEach(() => {
   vi.restoreAllMocks();
 });
 
 describe("TournamentOrganizerClubField", () => {
-  it("does not render a free-text input for Veranstalter", () => {
-    render(<TournamentOrganizerClubField selected={null} onChange={() => {}} />);
+  it("HOME resolves tenant organiser without editable search", () => {
+    render(
+      <TournamentOrganizerClubField
+        {...awayProps}
+        homeAway="HOME"
+        selected={null}
+        onChange={() => {}}
+        testId="organizer-test"
+      />,
+    );
+    expect(screen.getByTestId("organizer-test-tenant-identity")).toBeInTheDocument();
+    expect(screen.getByText("FC Allschwil")).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Verein suchen…")).not.toBeInTheDocument();
+  });
+
+  it("AWAY does not render a free-text input for Veranstalter", () => {
+    render(<TournamentOrganizerClubField {...awayProps} selected={null} onChange={() => {}} />);
     expect(screen.queryByRole("textbox", { name: /veranstalter/i })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText("Verein suchen…")).toBeInTheDocument();
   });
@@ -40,7 +61,9 @@ describe("TournamentOrganizerClubField", () => {
     );
 
     const onChange = vi.fn();
-    render(<TournamentOrganizerClubField selected={null} onChange={onChange} testId="organizer-test" />);
+    render(
+      <TournamentOrganizerClubField {...awayProps} selected={null} onChange={onChange} testId="organizer-test" />,
+    );
 
     fireEvent.change(screen.getByTestId("organizer-test-picker-input"), { target: { value: "Al" } });
     await screen.findByTestId("organizer-test-picker-option-club-fca");
@@ -52,6 +75,7 @@ describe("TournamentOrganizerClubField", () => {
   it("renders legacy organizer chip when Verein is no longer in directory", () => {
     render(
       <TournamentOrganizerClubField
+        {...awayProps}
         selected={{
           id: "__legacy-organizer__",
           name: "Deleted Verein AG",

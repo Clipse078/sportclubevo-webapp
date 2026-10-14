@@ -70,3 +70,7 @@ export async function ensureTrainingGovernanceTypeConfig(tenantId: string) {
 export async function ensureMatchGovernanceTypeConfig(tenantId: string) {
   return ensureActivityGovernanceTypeConfig(tenantId, "MATCH");
 }
+
+export async function ensureTournamentGovernanceTypeConfig(tenantId: string) {
+  return ensureActivityGovernanceTypeConfig(tenantId, "TOURNAMENT");
+}

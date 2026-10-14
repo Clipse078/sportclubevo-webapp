@@ -149,6 +149,7 @@ export type TurniereTournamentRecordWorkspaceProps = {
   dressingRoomFacilityGroups: FacilityGroup[];
   timezone: string;
   tenantLogoUrl?: string | null;
+  tenantClubName: string;
   defaultTournamentDurationMinutes: number;
   canManageFacilitiesTimeStandards?: boolean;
   locale?: string;
@@ -169,6 +170,7 @@ export default function TurniereTournamentRecordWorkspace({
   dressingRoomFacilityGroups,
   timezone,
   tenantLogoUrl = null,
+  tenantClubName,
   defaultTournamentDurationMinutes,
   canManageFacilitiesTimeStandards = false,
   locale = "de-CH",
@@ -617,6 +619,9 @@ export default function TurniereTournamentRecordWorkspace({
               </label>
 
               <TournamentOrganizerClubField
+                homeAway={homeAway}
+                tenantClubName={tenantClubName}
+                tenantLogoUrl={tenantLogoUrl}
                 selected={organizerSelection}
                 onChange={setOrganizerSelection}
                 disabled={!isEditable || saving}
