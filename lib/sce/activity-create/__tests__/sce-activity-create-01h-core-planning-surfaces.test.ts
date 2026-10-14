@@ -406,6 +406,17 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
       expect(matchCard).toContain("Heimspiel");
     });
 
+    it("R4.4 — immutable LOCATION geometry via fixed operational tracks + canonical location cell", () => {
+      const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
+      const grid = read("lib/planning-hub/planning-hub-liste-grid.ts");
+      expect(row).toContain("PLANNING_HUB_LISTE_LOCATION_CELL_CLASS");
+      expect(row).toContain("PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS");
+      expect(grid).toContain("PLANNING_HUB_LISTE_LOCATION_CELL_CLASS");
+      expect(grid).toContain("PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS");
+      expect(grid).toContain("md:grid-cols-[5rem_minmax(0,1fr)_10rem_6.5rem_2.5rem]");
+      expect(grid).not.toMatch(/grid-cols-\[[^\]]*auto/);
+    });
+
     it("R4.2 — shares list-row typography scale across canonical cards", () => {
       const scale = read(
         "lib/sporting-activity-presentation/canonical/activity-card-list-row-scale.ts",

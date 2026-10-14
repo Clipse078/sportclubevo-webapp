@@ -8,6 +8,8 @@ import {
   type ListOperationalRowStatus,
 } from "@/lib/planning-hub/list-operational";
 import {
+  PLANNING_HUB_LISTE_LOCATION_CELL_CLASS,
+  PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS,
   PLANNING_HUB_LISTE_ROW_COLUMN_CLASS,
   PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS,
   PLANNING_HUB_LISTE_ROW_GRID_CLASS,
@@ -250,22 +252,25 @@ export default function PlanningHubListeActivityRow({
           </div>
 
           <p
-            className={cn(
-              "inline-flex min-w-0 items-start gap-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)] md:pt-0.5",
-              PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.location,
-            )}
+            className={PLANNING_HUB_LISTE_LOCATION_CELL_CLASS}
             title={locationTitle}
             data-testid="planning-hub-liste-row-resources"
             data-sce-planning-hub-liste-location-owner
             data-sce-planning-hub-liste-column="LOCATION"
           >
-            <MapPin className="mt-0.5 hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline md:shrink-0" aria-hidden />
-            <span className="min-w-0 line-clamp-2">{locationLine}</span>
+            <span
+              className={PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS}
+              data-sce-planning-hub-liste-location-icon-slot
+              aria-hidden
+            >
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1 line-clamp-2">{locationLine}</span>
           </p>
 
           <span
             className={cn(
-              "inline-flex w-fit max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
+              "inline-flex w-full max-w-full items-center justify-center truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
               PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.status,
               statusBadgeClass(status),
             )}
