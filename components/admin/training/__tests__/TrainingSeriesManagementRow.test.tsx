@@ -83,12 +83,14 @@ describe("TrainingSeriesManagementRow", () => {
     expect(screen.getByTestId("training-management-sce-card")).toBeInTheDocument();
     expect(screen.getByTestId("sce-training-title")).toHaveTextContent("Junioren F2 Training");
     expect(screen.getByTestId("sce-training-compact-time")).toHaveTextContent("18:45–20:15");
-    expect(screen.getByTestId("sce-training-compact-weekdays")).toHaveTextContent("Mo · Mi · Fr");
+    expect(screen.queryByTestId("sce-training-compact-weekdays")).toBeNull();
     expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("FC Allschwil");
     expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("Kunstrasen 2 A");
     expect(screen.queryByTestId("sporting-activity-meta-rail-time")).toBeNull();
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Mo");
     expect(screen.getByTestId("training-weekday-pills")).toHaveTextContent("Fr");
+    expect(screen.getByLabelText("Montag")).toBeInTheDocument();
+    expect(screen.getByLabelText("Freitag")).toBeInTheDocument();
     expect(screen.getByTestId("training-facility-cell")).toHaveTextContent("Kunstrasen 2 A");
     expect(screen.getByText("Aktiv")).toBeInTheDocument();
     expect(screen.queryByText("APPROVED")).not.toBeInTheDocument();
@@ -99,6 +101,7 @@ describe("TrainingSeriesManagementRow", () => {
   });
 
   it("shows missing facility state and compact variable time label", () => {
+    const timeDetailLines = ["Mo 18:45–20:15", "Mi 19:45–21:15"];
     render(
       <TrainingSeriesManagementRow
         row={{
@@ -115,7 +118,22 @@ describe("TrainingSeriesManagementRow", () => {
             "FC Allschwil",
           ),
           timeLabel: "Unterschiedliche Zeiten",
-          timeDetailLines: ["Mo 18:45–20:15", "Mi 19:45–21:15"],
+          timeDetailLines,
+          sceTrainingPresentation: resolveSceTrainingPresentationFromManagementRow(
+            {
+              teamSeasonId: "ts-1",
+              title: "Junioren F2 Training",
+              teamDisplayName: "1. Mannschaft",
+              weekdays: ["MONDAY", "WEDNESDAY", "FRIDAY"],
+              rhythmLabel: "Mo · Mi · Fr",
+              timeLabel: "Unterschiedliche Zeiten",
+              timeDetailLines,
+              facilityVenueName: null,
+              facilityResourceLabel: null,
+              status: "ACTIVE",
+            },
+            "FC Allschwil",
+          ),
         }}
         wochenplanerHref="/dashboard/planner/week"
         canManage
@@ -125,6 +143,17 @@ describe("TrainingSeriesManagementRow", () => {
 
     expect(screen.getByText("Nicht zugewiesen")).toBeInTheDocument();
     expect(screen.getAllByText("Unterschiedliche Zeiten")).toHaveLength(1);
+    expect(screen.queryByTestId("sce-training-compact-weekdays")).toBeNull();
+    expect(screen.queryByText("Mo · Mi · Fr")).not.toBeInTheDocument();
     expect(screen.queryByText("Mo 18:45–20:15")).not.toBeInTheDocument();
+    const compactTime = screen.getByTestId("sce-training-compact-time");
+    expect(compactTime).toHaveAttribute(
+      "title",
+      "Mo 18:45–20:15 · Mi 19:45–21:15",
+    );
+    expect(compactTime).toHaveAttribute(
+      "aria-label",
+      "Unterschiedliche Zeiten: Mo 18:45–20:15 · Mi 19:45–21:15",
+    );
   });
 });

@@ -45,7 +45,8 @@ export default function TrainingSeriesManagementRow({
   const showMetaRailTime =
     Boolean(row.activityPresentation) && !row.sceTrainingPresentation && !isVariableTimeLabel;
   const hideDuplicateTimeColumn =
-    (Boolean(row.sceTrainingPresentation) || showMetaRailTime) && !row.timeDetailLines?.length;
+    (Boolean(row.sceTrainingPresentation) || showMetaRailTime) &&
+    (!row.timeDetailLines?.length || isVariableTimeLabel);
 
   const identityBlock = (
     <div className="flex min-w-0 items-start gap-3">
@@ -120,7 +121,12 @@ export default function TrainingSeriesManagementRow({
 
       <div className="text-sm tabular-nums text-[var(--foreground)] md:col-span-1">
         {hideDuplicateTimeColumn ? (
-          <span className="sr-only" aria-label={`Zeit: ${row.timeLabel}`} />
+          <span
+            className="sr-only"
+            aria-label={
+              timeDetails ? `${row.timeLabel}: ${timeDetails}` : `Zeit: ${row.timeLabel}`
+            }
+          />
         ) : timeDetails ? (
           <p title={timeDetails} aria-label={`${row.timeLabel}: ${timeDetails}`}>
             {row.timeLabel}

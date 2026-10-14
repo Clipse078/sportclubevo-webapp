@@ -298,13 +298,16 @@ function SceTrainingCompactContent({
   model,
   fmtCfg,
   showStatus,
+  surface,
 }: {
   model: SceTrainingPresentationModel;
   fmtCfg: TenantFormatConfig;
   showStatus: boolean;
+  surface: SceTrainingCardSurface;
 }) {
   const locationLine = resolveLocationLine(model, "COMPACT");
   const recurring = isRecurringDefinition(model) ? model.schedulePresentation : null;
+  const hideWeekdayRhythm = surface === "list-row" && recurring?.kind === "RECURRING_DEFINITION";
   const weekdayLine =
     recurring?.kind === "RECURRING_DEFINITION"
       ? recurring.recurrence.rhythmLabel?.trim() ||
@@ -314,6 +317,10 @@ function SceTrainingCompactContent({
     recurring?.kind === "RECURRING_DEFINITION"
       ? recurring.recurrence.timeLabel
       : formatSessionTimeOnly(model, fmtCfg);
+  const timeDetailTitle =
+    recurring?.kind === "RECURRING_DEFINITION"
+      ? recurring.recurrence.timeDetailLines?.join(" · ") ?? undefined
+      : undefined;
 
   return (
     <div
@@ -328,15 +335,23 @@ function SceTrainingCompactContent({
         ) : null}
       </div>
       <div className="min-w-0 space-y-1 sm:text-right">
-        <p
-          className="text-xs font-medium text-[var(--text-2)]"
-          data-testid="sce-training-compact-weekdays"
-        >
-          {weekdayLine}
-        </p>
+        {!hideWeekdayRhythm ? (
+          <p
+            className="text-xs font-medium text-[var(--text-2)]"
+            data-testid="sce-training-compact-weekdays"
+          >
+            {weekdayLine}
+          </p>
+        ) : null}
         <p
           className="font-mono text-xs tabular-nums text-[var(--foreground)]"
           data-testid="sce-training-compact-time"
+          title={timeDetailTitle}
+          aria-label={
+            timeDetailTitle && timeLine === "Unterschiedliche Zeiten"
+              ? `${timeLine}: ${timeDetailTitle}`
+              : undefined
+          }
         >
           {timeLine}
         </p>
@@ -468,7 +483,12 @@ export function SceTrainingCard({
     );
   } else if (density === "COMPACT") {
     content = (
-      <SceTrainingCompactContent model={model} fmtCfg={fmtCfg} showStatus={statusVisible} />
+      <SceTrainingCompactContent
+        model={model}
+        fmtCfg={fmtCfg}
+        showStatus={statusVisible}
+        surface={surface}
+      />
     );
   } else {
     content = (
