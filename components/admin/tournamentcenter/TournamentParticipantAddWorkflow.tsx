@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import type { TeamPickerOption } from "@/components/admin/shared/TeamSearchablePicker";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
 import { SceClubTeamSelectorDialog } from "@/components/sce/club-team-selector/SceClubTeamSelectorDialog";
 import type { SceSelectableTeam } from "@/lib/sce/club-team-selector/types";
+import { PopoverContent } from "@/components/ui/Popover";
+import { SceTournamentParticipantTile } from "@/components/sce/tournament/SceTournamentParticipantTile";
+import type { TournamentLobbyGridDensity } from "@/lib/tournaments/tournament-participant-presentation";
 
 type Props = {
   availableTeams: TeamPickerOption[];
@@ -21,6 +24,8 @@ type Props = {
   manualInputTestId?: string;
   manualButtonTestId?: string;
   noWritableTeamsMessage?: React.ReactNode;
+  triggerVariant?: "lobby-tile" | "standalone";
+  lobbyDensity?: TournamentLobbyGridDensity;
 };
 
 export default function TournamentParticipantAddWorkflow({
@@ -37,13 +42,18 @@ export default function TournamentParticipantAddWorkflow({
   manualInputTestId = "tournament-participant-manual-input",
   manualButtonTestId = "tournament-participant-add-manual-button",
   noWritableTeamsMessage,
+  triggerVariant = "lobby-tile",
+  lobbyDensity = "spacious",
 }: Props) {
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [clubDialogOpen, setClubDialogOpen] = useState(false);
   const [manualLabel, setManualLabel] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const teamTriggerRef = useRef<HTMLButtonElement>(null);
   const clubTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
 
   const tenantSelectableTeams = useMemo((): SceSelectableTeam[] => {
     return availableTeams.map((team) => ({
@@ -57,50 +67,100 @@ export default function TournamentParticipantAddWorkflow({
     }));
   }, [availableTeams]);
 
+  function openOwnTeamDialog() {
+    setMenuOpen(false);
+    setTeamDialogOpen(true);
+  }
+
+  function openExternalClubDialog() {
+    setMenuOpen(false);
+    setClubDialogOpen(true);
+  }
+
+  function openManualEntry() {
+    setMenuOpen(false);
+    setShowManualEntry(true);
+  }
+
+  const triggerDisabled = pending;
+
+  const menuTrigger =
+    triggerVariant === "lobby-tile" ? (
+      <SceTournamentParticipantTile
+        variant="add"
+        density={lobbyDensity}
+        disabled={triggerDisabled}
+        triggerRef={menuTriggerRef}
+        onActivate={() => setMenuOpen(true)}
+        testId="tournament-participant-add-tile"
+      />
+    ) : (
+      <button
+        ref={menuTriggerRef}
+        type="button"
+        onClick={() => setMenuOpen(true)}
+        disabled={triggerDisabled}
+        data-testid="tournament-participant-add-trigger"
+        className="fca-button-secondary h-9"
+      >
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+        Teilnehmer hinzufügen
+      </button>
+    );
+
   return (
-    <div
-      className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3"
-      data-testid="tournament-participant-add-workflow"
-    >
-      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Teilnehmer hinzufügen</p>
+    <div data-testid="tournament-participant-add-workflow" className={triggerVariant === "standalone" ? "space-y-3" : undefined}>
+      {menuTrigger}
 
-      {noWritableTeamsMessage}
+      <PopoverContent
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        anchorRef={menuTriggerRef}
+        role="listbox"
+        id={menuId}
+        placement="bottom-start"
+      >
+        <ul className="min-w-[12rem] py-1" role="listbox" aria-label="Teilnehmer hinzufügen">
+          <li>
+            <button
+              type="button"
+              className="flex w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
+              onClick={openOwnTeamDialog}
+              disabled={teamsLoading || availableTeams.length === 0}
+              data-testid={`${teamSelectTestId}-menu-option`}
+            >
+              Eigenes Team
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="flex w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
+              onClick={openExternalClubDialog}
+              data-testid={`${externalClubTestId}-menu-option`}
+            >
+              Externer Verein
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="flex w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
+              onClick={openManualEntry}
+              data-testid="tournament-participant-manual-menu-option"
+            >
+              Manuell
+            </button>
+          </li>
+        </ul>
+      </PopoverContent>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          ref={teamTriggerRef}
-          type="button"
-          onClick={() => setTeamDialogOpen(true)}
-          disabled={teamsLoading || pending || availableTeams.length === 0}
-          data-testid={`${teamSelectTestId}-button`}
-          className="fca-button-secondary h-9"
-        >
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          Team
-        </button>
-        <button
-          ref={clubTriggerRef}
-          type="button"
-          onClick={() => setClubDialogOpen(true)}
-          disabled={pending}
-          data-testid={`${externalClubTestId}-button`}
-          className="fca-button-secondary h-9"
-        >
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          Externer Verein
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowManualEntry((v) => !v)}
-          className="fca-button-secondary h-9"
-          data-testid="tournament-participant-toggle-manual"
-        >
-          Manuell
-        </button>
-      </div>
+      {triggerVariant === "standalone" && noWritableTeamsMessage ? (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3">{noWritableTeamsMessage}</div>
+      ) : null}
 
       {showManualEntry ? (
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="mt-3 grid gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
           <input
             type="text"
             value={manualLabel}
@@ -117,6 +177,7 @@ export default function TournamentParticipantAddWorkflow({
               if (!label) return;
               onAddManual(label);
               setManualLabel("");
+              setShowManualEntry(false);
             }}
             disabled={!manualLabel.trim() || pending}
             data-testid={manualButtonTestId}
@@ -140,7 +201,7 @@ export default function TournamentParticipantAddWorkflow({
           teamTriggerRef.current?.focus();
         }}
         testIdPrefix="tournament-participant-team-selector"
-        returnFocusRef={teamTriggerRef}
+        returnFocusRef={menuTriggerRef}
       />
 
       <SceClubTeamSelectorDialog
@@ -161,7 +222,7 @@ export default function TournamentParticipantAddWorkflow({
           clubTriggerRef.current?.focus();
         }}
         testIdPrefix="tournament-participant-club-selector"
-        returnFocusRef={clubTriggerRef}
+        returnFocusRef={menuTriggerRef}
       />
     </div>
   );
