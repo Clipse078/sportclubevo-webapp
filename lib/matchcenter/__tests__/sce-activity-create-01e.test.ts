@@ -80,17 +80,14 @@ describe("SCE-ACTIVITY-CREATE-01E — Match adoption", () => {
   });
 
   it("Wochenplaner opens match overlay", () => {
-    expect(read("components/admin/planning-hub/PlanningHubCreateMenu.tsx")).toContain(
-      "planning-hub-create-match-overlay",
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).toContain(
+      "sce-activity-create-match-overlay",
     );
-    expect(read("app/(admin)/dashboard/planner/week/page.tsx")).toContain("loadMatchComposerCreateSurfaceProps");
+    expect(read("app/(admin)/dashboard/planner/week/page.tsx")).toContain("buildSceActivityCreateMenuProps");
   });
 
   it("match management uses overlay trigger", () => {
-    expect(read("components/admin/matchcenter/MatchComposerCreateTrigger.tsx")).toContain(
-      "match-create-overlay-trigger",
-    );
-    expect(read("app/(admin)/dashboard/matchcenter/page.tsx")).toContain("MatchComposerCreateTrigger");
+    expect(read("app/(admin)/dashboard/matchcenter/page.tsx")).toContain("SceActivityCreateMenu");
   });
 
   it("uses shared resource kind icons in form", () => {

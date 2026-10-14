@@ -52,13 +52,13 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
     expect(read("prisma/migrations/20261014130000_sce_activity_create_01f_tournament/migration.sql")).toContain("TournamentComposerDraft");
   });
   it("planning hub tournament overlay", () => {
-    expect(read("components/admin/planning-hub/PlanningHubCreateMenu.tsx")).toContain("planning-hub-create-tournament-overlay");
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).toContain("sce-activity-create-tournament-overlay");
   });
   it("planner week loads tournament surface", () => {
-    expect(read("app/(admin)/dashboard/planner/week/page.tsx")).toContain("loadTournamentComposerCreateSurfaceProps");
+    expect(read("app/(admin)/dashboard/planner/week/page.tsx")).toContain("buildSceActivityCreateMenuProps");
   });
   it("tournament center overlay trigger", () => {
-    expect(read("components/admin/tournamentcenter/TournamentComposerCreateTrigger.tsx")).toContain("tournament-create-overlay-trigger");
+    expect(read("app/(admin)/dashboard/tournamentcenter/page.tsx")).toContain("SceActivityCreateMenu");
   });
   it("person tournament governance section", () => {
     expect(read("components/admin/users/people-access/PersonTournamentGovernanceSection.tsx")).toContain("SwitchToggle");

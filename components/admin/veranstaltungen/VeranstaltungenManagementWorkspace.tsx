@@ -1,14 +1,12 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   CompetitionSceIcon,
   FacilitySceIcon,
   HistorySceIcon,
 } from "@/components/icons/domain-sce-icon-components";
-import { CalendarClock, MapPin, Plus } from "lucide-react";
+import { CalendarClock, MapPin } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
-import VeranstaltungenComposerCreateTrigger from "./VeranstaltungenComposerCreateTrigger";
 import ClubEventComposerDraftList, {
   type ClubEventComposerDraftListItem,
 } from "./ClubEventComposerDraftList";
@@ -66,10 +64,8 @@ type Props = {
   reviewFilter?: VeranstaltungenReviewFilter;
   publicationFilter?: VeranstaltungenPublicationFilter;
   composerDrafts?: ClubEventComposerDraftListItem[];
-  pitchHallFacilityGroups?: FacilityGroup[];
-  dressingRoomFacilityGroups?: FacilityGroup[];
-  otherFacilityGroups?: FacilityGroup[];
-  effectiveGovernance?: SceActivityEffectiveGovernance;
+  activityCreateTrigger?: ReactNode;
+  activityCreateQuickAccessTrigger?: ReactNode;
 };
 
 export default function VeranstaltungenManagementWorkspace({
@@ -86,10 +82,8 @@ export default function VeranstaltungenManagementWorkspace({
   reviewFilter = "ALLE",
   publicationFilter = "ALLE",
   composerDrafts = [],
-  pitchHallFacilityGroups = [],
-  dressingRoomFacilityGroups = [],
-  otherFacilityGroups = [],
-  effectiveGovernance,
+  activityCreateTrigger = null,
+  activityCreateQuickAccessTrigger = null,
 }: Props) {
   const tz = timeZone ?? "Europe/Zurich";
   const now = new Date();
@@ -187,24 +181,7 @@ export default function VeranstaltungenManagementWorkspace({
               >
                 Freigaben
               </Link>
-              {effectiveGovernance ? (
-                <VeranstaltungenComposerCreateTrigger
-                  pitchHallFacilityGroups={pitchHallFacilityGroups}
-                  dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-                  otherFacilityGroups={otherFacilityGroups}
-                  timeZone={tz}
-                  effectiveGovernance={effectiveGovernance}
-                />
-              ) : (
-                <Link
-                  href="/dashboard/veranstaltungen/new"
-                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-                  data-testid="veranstaltungen-create-link"
-                >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  Veranstaltung erstellen
-                </Link>
-              )}
+              {activityCreateTrigger}
             </div>
           ) : null
         }
@@ -312,12 +289,9 @@ export default function VeranstaltungenManagementWorkspace({
                     <Link href={resetHref} className="fca-button-secondary text-sm">
                       Filter zurücksetzen
                     </Link>
-                  ) : tab === "BEVORSTEHEND" && canManage ? (
-                    <Link href="/dashboard/veranstaltungen/new" className="fca-button-primary">
-                      <Plus className="h-4 w-4" />
-                      Veranstaltung erstellen
-                    </Link>
-                  ) : undefined
+                  ) : tab === "BEVORSTEHEND" && canManage && activityCreateTrigger
+                    ? activityCreateTrigger
+                    : undefined
                 }
               />
             </div>
@@ -356,7 +330,10 @@ export default function VeranstaltungenManagementWorkspace({
             previousMonthHref={calendarPreviousHref}
             nextMonthHref={calendarNextHref}
           />
-          <VeranstaltungenManagementQuickAccess canManage={canManage} />
+          <VeranstaltungenManagementQuickAccess
+            canManage={canManage}
+            activityCreateTrigger={activityCreateQuickAccessTrigger ?? activityCreateTrigger}
+          />
           <VeranstaltungenManagementFilterRail
             resetHref={resetHref}
             monthParam={monthParam}

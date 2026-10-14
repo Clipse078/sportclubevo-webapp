@@ -28,10 +28,10 @@ import {
   normalizeTournamentSortMode,
 } from "@/lib/tournaments/workspace-view-model";
 import TournamentCenterWorkspace from "@/components/admin/tournamentcenter/TournamentCenterWorkspace";
-import TournamentComposerCreateTrigger from "@/components/admin/tournamentcenter/TournamentComposerCreateTrigger";
-import { loadTournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
+import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
+import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
+import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
 import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
-import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 
 type TournamentCenterPageProps = {
   searchParams?: Promise<{
@@ -70,6 +70,7 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
   const timezone = tenantContext.timezone ?? "Europe/Zurich";
   const locale = tenantContext.locale ?? "de-CH";
   const canCreate = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
 
   const params = (await searchParams) ?? {};
   const scope = resolveTournamentTimeScopeFromParams(params);
@@ -103,45 +104,29 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
 
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
-  const tournamentComposerSurface =
-    canCreate && userId
-      ? await loadTournamentComposerCreateSurfaceProps({
-          tenantId: tenantContext.id,
-          userId,
-          tenantClubName: tenantContext.name,
-          tenantLogoUrl: tenantClubCrestUrl,
-        })
-      : null;
-
-  const tournamentCreateTrigger =
-    tournamentComposerSurface != null ? (
-      <TournamentComposerCreateTrigger
-        activeSeasonId={tournamentComposerSurface.activeSeasonId}
-        seasonOptions={tournamentComposerSurface.seasonOptions}
-        teamOptions={tournamentComposerSurface.teamOptions}
-        pitchHallFacilityGroups={tournamentComposerSurface.pitchHallFacilityGroups}
-        dressingRoomFacilityGroups={tournamentComposerSurface.dressingRoomFacilityGroups}
-        defaultTournamentDurationMinutes={tournamentComposerSurface.defaultTournamentDurationMinutes}
-        effectiveGovernance={
-          tournamentComposerSurface.effectiveGovernance ?? {
-            activityType: "TOURNAMENT",
-            personId: "anonymous",
-            mayCreate: true,
-            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
-            approvalStrategy: "ANY_ONE",
-            validatorPersonIds: [],
-          }
-        }
-        tenantClubName={tournamentComposerSurface.tenantClubName}
-        tenantLogoUrl={tournamentComposerSurface.tenantLogoUrl}
-      />
-    ) : null;
+  let activityCreateTrigger = null;
+  let activityCreateQuickAccessTrigger = null;
+  if (canCreate && userId) {
+    const permissions = resolveSceActivityCreatePermissionsFromFlags({
+      canManageTrainings,
+      canManageEvents: canCreate,
+    });
+    const menuProps = await buildSceActivityCreateMenuProps({
+      tenantId: tenantContext.id,
+      userId,
+      timeZone: timezone,
+      tenantClubName: tenantContext.name,
+      tenantLogoUrl: tenantClubCrestUrl,
+      permissions,
+    });
+    activityCreateTrigger = <SceActivityCreateMenu {...menuProps} />;
+    activityCreateQuickAccessTrigger = (
+      <SceActivityCreateMenu {...menuProps} presentation="quick-access" />
+    );
+  }
 
   return (
     <div className="w-full max-w-none space-y-6">
-      <div className="hidden" aria-hidden="true">
-        {tournamentCreateTrigger}
-      </div>
       <TournamentCenterWorkspace
         tournaments={tournaments}
         scope={scope}
@@ -164,6 +149,8 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
         timezone={timezone}
         locale={locale}
         canCreate={canCreate}
+        activityCreateTrigger={activityCreateTrigger}
+        activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
       />
     </div>
   );

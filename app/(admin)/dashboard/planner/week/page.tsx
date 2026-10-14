@@ -27,10 +27,9 @@ import {
   logPlannerServerTiming,
 } from "@/lib/planning-hub/planner-server-timing";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
-import { loadTrainingComposerCreateSurfaceProps } from "@/lib/training/composer/load-training-composer-create-surface-props.server";
-import { loadMatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
-import { loadTournamentComposerCreateSurfaceProps } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
 import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
+import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
 
 type PlannerWeekPageProps = {
   searchParams?: Promise<{
@@ -173,31 +172,28 @@ export default async function PlannerWeekPageRoute({
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
 
-  const [trainingComposer, matchComposer, tournamentComposer] = await Promise.all([
-    canCreateTraining && userId
-      ? loadTrainingComposerCreateSurfaceProps({
+  const createPermissions = resolveSceActivityCreatePermissionsFromFlags({
+    canManageTrainings: canCreateTraining,
+    canManageEvents,
+  });
+
+  const activityCreateMenuProps =
+    userId &&
+    (createPermissions.training ||
+      createPermissions.match ||
+      createPermissions.tournament ||
+      createPermissions.veranstaltung)
+      ? await buildSceActivityCreateMenuProps({
           tenantId: tenantContext.id,
           userId,
           timeZone: timezone,
-        })
-      : Promise.resolve(null),
-    canManageEvents && userId
-      ? loadMatchComposerCreateSurfaceProps({
-          tenantId: tenantContext.id,
-          userId,
           tenantClubName: tenantContext.name,
           tenantLogoUrl: tenantClubCrestUrl,
+          permissions: createPermissions,
+          plannerUrlState: resolvedUrlState,
+          reconcilePlanningHub: true,
         })
-      : Promise.resolve(null),
-    canManageEvents && userId
-      ? loadTournamentComposerCreateSurfaceProps({
-          tenantId: tenantContext.id,
-          userId,
-          tenantClubName: tenantContext.name,
-          tenantLogoUrl: tenantClubCrestUrl,
-        })
-      : Promise.resolve(null),
-  ]);
+      : null;
 
   return (
     <PlannerWeekStreamingRoot
@@ -215,15 +211,11 @@ export default async function PlannerWeekPageRoute({
       selectedPlanParam={requestedPlanId ?? defaultWochenplanPlan?.id ?? null}
       materializedWeekplannerPlanId={activePlan?.id ?? null}
       canManagePlans={canManagePlans}
-      createPermissions={{
-        training: canCreateTraining,
-        match: canManageEvents,
-        tournament: canManageEvents,
-        veranstaltung: canManageEvents,
-      }}
-      trainingComposer={trainingComposer}
-      matchComposer={matchComposer}
-      tournamentComposer={tournamentComposer}
+      createPermissions={activityCreateMenuProps?.permissions}
+      trainingComposer={activityCreateMenuProps?.trainingComposer ?? null}
+      matchComposer={activityCreateMenuProps?.matchComposer ?? null}
+      tournamentComposer={activityCreateMenuProps?.tournamentComposer ?? null}
+      clubEventComposer={activityCreateMenuProps?.clubEventComposer ?? null}
     >
       <Suspense
         fallback={

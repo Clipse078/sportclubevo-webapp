@@ -130,4 +130,5 @@ Compact keyboard entry (Training · Match · Tournament · Club Event):
 | --- | --- |
 | **SCE-ACTIVITY-CREATE-01F** | **CLOSED** |
 | **SCE-TOURNAMENT-PLANNER-01** | **PLANNED — NOT STARTED** (fixture vs schedule principle documented; no 01F implementation) |
-| **SCE-ACTIVITY-CREATE-01G** | **NEXT — NOT STARTED** (global **+ Erstellen** entry for all permitted activity types) |
+| **SCE-ACTIVITY-CREATE-01G** | **CLOSED** (PR **#844** — global **+ Erstellen** integration) |
+| **SCE-ACTIVITY-CREATE-01H** | **NEXT — NOT STARTED** — Core Planning Surfaces Adoption |

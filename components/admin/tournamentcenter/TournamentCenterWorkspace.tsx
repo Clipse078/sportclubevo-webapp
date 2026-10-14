@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lightbulb, Plus } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { TournamentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { TournamentDto, TournamentStatus } from "@/lib/tournaments/types";
 import {
@@ -66,6 +67,8 @@ export type TournamentCenterWorkspaceProps = {
   timezone?: string;
   locale?: string;
   canCreate?: boolean;
+  activityCreateTrigger?: ReactNode;
+  activityCreateQuickAccessTrigger?: ReactNode;
 };
 
 type WorkspaceOverrides = Partial<{
@@ -127,6 +130,8 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     timezone = "Europe/Zurich",
     locale = "de-CH",
     canCreate = true,
+    activityCreateTrigger = null,
+    activityCreateQuickAccessTrigger = null,
   } = props;
 
   const router = useRouter();
@@ -254,7 +259,6 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     : resolveMatchcenterMonthWindow({ timeZone: timezone });
 
   const wochenplanerHref = buildTurniereManagementWochenplanerHref({ timezone });
-  const createHref = "/dashboard/tournamentcenter/new";
 
   const filtersActive = hasActiveTournamentWorkspaceFilters({
     search: initialSearch,
@@ -314,8 +318,8 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
           </div>
           <TurniereManagementHeaderMenu
             canCreate={canCreate}
-            createHref={createHref}
             wochenplanerHref={wochenplanerHref}
+            activityCreateTrigger={activityCreateTrigger}
           />
         </div>
       </header>
@@ -384,14 +388,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
                 icon={<TournamentSceIcon className="h-8 w-8" />}
                 heading="Noch keine Turniere"
                 description="Erstellen Sie das erste Turnier für Ihren Verein."
-                action={
-                  canCreate ? (
-                    <Link href={createHref} className="fca-button-primary">
-                      <Plus className="h-4 w-4" />
-                      Turnier erstellen
-                    </Link>
-                  ) : undefined
-                }
+                action={canCreate && activityCreateTrigger ? activityCreateTrigger : undefined}
               />
             </div>
           ) : viewModel.emptyKind === "no_scope" ? (
@@ -472,7 +469,10 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
             previousMonthHref={buildHref({ month: calendarMonthWindow.previousParam })}
             nextMonthHref={buildHref({ month: calendarMonthWindow.nextParam })}
           />
-          <TurniereManagementQuickAccess canCreate={canCreate} createHref={createHref} />
+          <TurniereManagementQuickAccess
+            canCreate={canCreate}
+            activityCreateTrigger={activityCreateQuickAccessTrigger ?? activityCreateTrigger}
+          />
           <TurniereManagementFilterRail
             resetHref={resetHref}
             categoryFilter={categoryFilter}

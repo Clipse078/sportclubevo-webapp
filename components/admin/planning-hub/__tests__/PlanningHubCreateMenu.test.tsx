@@ -40,7 +40,7 @@ const trainingComposer: TrainingComposerCreateSurfaceProps = {
   },
 };
 
-describe("PlanningHubCreateMenu — Training contextual create", () => {
+describe("PlanningHubCreateMenu — canonical re-export", () => {
   it("opens Training composer overlay without /dashboard/training/new navigation", () => {
     render(
       <PlanningHubCreateMenu
@@ -57,29 +57,17 @@ describe("PlanningHubCreateMenu — Training contextual create", () => {
           resourceCategory: "pitch",
           resourceFilterIds: null,
         }}
+        reconcilePlanningHub
       />,
     );
 
-    fireEvent.click(screen.getByTestId("planning-hub-create"));
-    const trainingItem = screen.getByTestId("planning-hub-create-training-overlay");
+    fireEvent.click(screen.getByTestId("sce-activity-create"));
+    const trainingItem = screen.getByTestId("sce-activity-create-training-overlay");
     expect(trainingItem.tagName).toBe("BUTTON");
-    expect(screen.queryByRole("link", { name: "Training" })).not.toBeInTheDocument();
-
     fireEvent.click(trainingItem);
-    const form = screen.getByTestId("training-create-form-mock");
-    expect(form).toHaveAttribute("data-container-mode", "overlay");
-  });
-
-  it("keeps page fallback link for accessibility when overlay props are provided", () => {
-    render(
-      <PlanningHubCreateMenu
-        permissions={{ training: true, match: false, tournament: false, veranstaltung: false }}
-        trainingComposer={trainingComposer}
-      />,
-    );
-    expect(screen.getByTestId("planning-hub-create-training-page-fallback")).toHaveAttribute(
-      "href",
-      "/dashboard/training/new",
+    expect(screen.getByTestId("training-create-form-mock")).toHaveAttribute(
+      "data-container-mode",
+      "overlay",
     );
   });
 });

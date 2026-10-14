@@ -14,11 +14,11 @@ function read(rel: string): string {
 
 describe("SCE-ACTIVITY-CREATE-01D-R2 — contextual overlay + resource icons", () => {
   it("Wochenplaner Training menu uses overlay trigger, not navigation link", () => {
-    const menu = read("components/admin/planning-hub/PlanningHubCreateMenu.tsx");
-    expect(menu).toContain("planning-hub-create-training-overlay");
+    const menu = read("components/sce/activity-create/SceActivityCreateMenu.tsx");
+    expect(menu).toContain("sce-activity-create-training-overlay");
     expect(menu).toContain("TrainingCreateForm");
     expect(menu).toContain('containerMode="overlay"');
-    expect(menu).toContain('overlayKey: "training"');
+    expect(read("lib/sce/activity-create/activity-create-menu-config.ts")).toContain('overlayKey: "training"');
     expect(menu).toContain("trainingUsesOverlay");
     expect(menu).toContain("successBehavior=\"stay\"");
     expect(menu).toContain("planner-revalidate");
@@ -26,8 +26,8 @@ describe("SCE-ACTIVITY-CREATE-01D-R2 — contextual overlay + resource icons", (
 
   it("planner week route loads shared training composer surface props", () => {
     const page = read("app/(admin)/dashboard/planner/week/page.tsx");
-    expect(page).toContain("loadTrainingComposerCreateSurfaceProps");
-    expect(page).toContain("trainingComposer={trainingComposer}");
+    expect(page).toContain("buildSceActivityCreateMenuProps");
+    expect(page).toContain("trainingComposer={activityCreateMenuProps?.trainingComposer");
   });
 
   it("page fallback /dashboard/training/new still renders TrainingCreateForm", () => {
@@ -36,10 +36,7 @@ describe("SCE-ACTIVITY-CREATE-01D-R2 — contextual overlay + resource icons", (
   });
 
   it("overlay and page share TrainingCreateForm workflow", () => {
-    expect(read("components/admin/training/TrainingComposerCreateTrigger.tsx")).toContain(
-      "TrainingCreateForm",
-    );
-    expect(read("components/admin/planning-hub/PlanningHubCreateMenu.tsx")).toContain(
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).toContain(
       "TrainingCreateForm",
     );
   });
@@ -67,22 +64,20 @@ describe("SCE-ACTIVITY-CREATE-01D-R2 — contextual overlay + resource icons", (
   });
 
   it("training management overlay trigger preserved", () => {
-    expect(read("components/admin/training/TrainingComposerCreateTrigger.tsx")).toContain(
-      "training-create-overlay-trigger",
-    );
+    expect(read("app/(admin)/dashboard/training/page.tsx")).toContain("SceActivityCreateMenu");
   });
 
   it("no new binary checkboxes in touched Training create surfaces", () => {
     const form = read("components/admin/training/TrainingCreateForm.tsx");
     expect(form).toContain("SwitchToggle");
     expect(form).not.toMatch(/type=["']checkbox["']/);
-    expect(read("components/admin/planning-hub/PlanningHubCreateMenu.tsx")).not.toMatch(
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).not.toMatch(
       /type=["']checkbox["']/,
     );
   });
 
   it("origin context wired for planning surface overlay", () => {
-    expect(read("components/admin/planning-hub/PlanningHubCreateMenu.tsx")).toContain(
+    expect(read("components/sce/activity-create/SceActivityCreateMenu.tsx")).toContain(
       "PLANNING_SURFACE",
     );
     expect(read("components/admin/training/TrainingCreateForm.tsx")).toContain("originContext");

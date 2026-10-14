@@ -4,9 +4,10 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listClubEvents } from "@/lib/events/club-events-service";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import { loadClubEventEffectiveGovernanceForSession } from "@/lib/club-events/composer/load-effective-governance-server";
+import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
+import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
+import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import { listClubEventComposerDraftsForManagementView } from "@/lib/club-events/composer/list-composer-drafts-for-management";
 import {
   createAdminServerTimer,
@@ -59,6 +60,7 @@ export default async function VeranstaltungenPage({
   perfTimer?.mark("tenant");
 
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.EVENTS_DELETE);
   void canDelete;
   const params = (await searchParams) ?? {};
@@ -74,36 +76,28 @@ export default async function VeranstaltungenPage({
   const composerDrafts = canManage
     ? await listClubEventComposerDraftsForManagementView(tenantContext.id)
     : [];
-  const facilities = canManage ? await getFacilitiesForTenant(tenantContext.id) : [];
-  const effectiveGovernance = canManage
-    ? await loadClubEventEffectiveGovernanceForSession({ tenantId: tenantContext.id })
-    : null;
-
-  function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
-    return facilities
-      .filter((f) => f.status !== "ARCHIVED")
-      .map((f) => ({
-        facilityId: f.id,
-        facilityName: f.name,
-        facilityType: f.type as string,
-        resources: f.resources
-          .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
-          .map((r) => ({
-            id: r.id,
-            name: r.name,
-            code: r.code,
-            type: r.type,
-            facilityId: f.id,
-            facilityName: f.name,
-            facilityType: f.type as string,
-          })),
-      }))
-      .filter((fg) => fg.resources.length > 0);
+  const userId = session.user?.effectiveUserId ?? session.user?.id;
+  let activityCreateTrigger = null;
+  let activityCreateQuickAccessTrigger = null;
+  if (canManage && userId) {
+    const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
+    const permissions = resolveSceActivityCreatePermissionsFromFlags({
+      canManageTrainings,
+      canManageEvents: canManage,
+    });
+    const menuProps = await buildSceActivityCreateMenuProps({
+      tenantId: tenantContext.id,
+      userId,
+      timeZone: timezone,
+      tenantClubName: tenantContext.name,
+      tenantLogoUrl: tenantClubCrestUrl,
+      permissions,
+    });
+    activityCreateTrigger = <SceActivityCreateMenu {...menuProps} />;
+    activityCreateQuickAccessTrigger = (
+      <SceActivityCreateMenu {...menuProps} presentation="quick-access" />
+    );
   }
-
-  const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
-  const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
-  const otherFacilityGroups = facilityGroupsForTypes(["OTHER"]);
 
   perfTimer?.mark("club-event-loader");
 
@@ -138,19 +132,8 @@ export default async function VeranstaltungenPage({
           reviewFilter={normalizeVeranstaltungenReviewFilter(params.review)}
           publicationFilter={normalizeVeranstaltungenPublicationFilter(params.pub)}
           composerDrafts={composerDrafts}
-          pitchHallFacilityGroups={pitchHallFacilityGroups}
-          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-          otherFacilityGroups={otherFacilityGroups}
-          effectiveGovernance={
-            effectiveGovernance ?? {
-              activityType: "CLUB_EVENT",
-              personId: "anonymous",
-              mayCreate: true,
-              publicationAuthority: "DIRECT_PUBLISH",
-              approvalStrategy: "ANY_ONE",
-              validatorPersonIds: [],
-            }
-          }
+          activityCreateTrigger={activityCreateTrigger}
+          activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
         />
       </div>
     </ToastProvider>

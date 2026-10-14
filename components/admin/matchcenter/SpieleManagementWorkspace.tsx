@@ -64,7 +64,8 @@ type Props = {
   competitionFilter?: string | null;
   venueFilter?: string | null;
   statusMask?: readonly SpieleStatusMaskKey[] | null;
-  matchCreateTrigger?: ReactNode;
+  activityCreateTrigger?: ReactNode;
+  activityCreateQuickAccessTrigger?: ReactNode;
 };
 
 type DomainTab = {
@@ -136,7 +137,8 @@ export default function SpieleManagementWorkspace({
   competitionFilter = null,
   venueFilter = null,
   statusMask: statusMaskProp = null,
-  matchCreateTrigger = null,
+  activityCreateTrigger = null,
+  activityCreateQuickAccessTrigger = null,
 }: Props) {
   const statusMask = statusMaskProp ?? normalizeSpieleStatusMask(undefined, actionFilter);
 
@@ -386,6 +388,7 @@ export default function SpieleManagementWorkspace({
           <SpieleManagementHeaderMenu
             canManage={canManage}
             wochenplanerHref={wochenplanerHref}
+            activityCreateTrigger={activityCreateTrigger}
           />
         </div>
       </header>
@@ -540,7 +543,9 @@ export default function SpieleManagementWorkspace({
           <SpieleManagementQuickAccess
             canManage={canManage}
             wochenplanerHref={wochenplanerHref}
-            matchCreateTrigger={matchCreateTrigger}
+            activityCreateTrigger={
+              activityCreateQuickAccessTrigger ?? activityCreateTrigger
+            }
           />
           <SpieleManagementFilterRail
             tab={tab}

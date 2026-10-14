@@ -31,17 +31,12 @@ import {
 } from "@/lib/training/management-data";
 import { listAllocationsGroupedBySeries } from "@/lib/training/training-allocation-service";
 import TrainingManagementWorkspace from "@/components/admin/training/TrainingManagementWorkspace";
-import TrainingComposerCreateTrigger from "@/components/admin/training/TrainingComposerCreateTrigger";
+import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
 import { buildTrainingFilterHrefMaps } from "@/lib/training/management-navigation";
-import { findTeamSeasonsForTenant } from "@/lib/training/queries";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import { prisma } from "@/lib/db/prisma";
-import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
-import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
-import { loadTrainingEffectiveGovernanceForSession } from "@/lib/training/composer/load-effective-governance-server";
 import { listTrainingComposerDraftsForManagementView } from "@/lib/training/composer/list-composer-drafts-for-management-view";
-import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
+import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
+import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 type TrainingPageSearchParams = {
   tab?: string;
@@ -94,6 +89,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
   perfTimer?.mark("tenant");
 
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
+  const canManageEvents = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
   const canCreate = canManage || hasPermission(session, PERMISSIONS.TRAININGS_VIEW);
   const canDelete = hasPermission(session, PERMISSIONS.TRAININGS_DELETE);
   const params: TrainingPageSearchParams = searchParams ? await searchParams : {};
@@ -201,70 +197,24 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
 
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   let createTrigger = undefined;
-  if (canCreate && userId) {
-    const policy = createPlanningAuthorizationPolicy(prisma);
-    const [teamSeasons, facilities, writableTeamIds, operationalDurationPolicy, effectiveGovernance] =
-      await Promise.all([
-        findTeamSeasonsForTenant(tenantContext.id),
-        getFacilitiesForTenant(tenantContext.id),
-        policy.getWritableTeamIds({ userId, tenantId: tenantContext.id }, "training"),
-        getTenantOperationalDurationPolicy(tenantContext.id),
-        loadTrainingEffectiveGovernanceForSession({ tenantId: tenantContext.id }),
-      ]);
-
-    function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
-      return facilities
-        .filter((f) => f.status !== "ARCHIVED")
-        .map((f) => ({
-          facilityId: f.id,
-          facilityName: f.name,
-          facilityType: f.type as string,
-          resources: f.resources
-            .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
-            .map((r) => ({
-              id: r.id,
-              name: r.name,
-              code: r.code,
-              type: r.type,
-              facilityId: f.id,
-              facilityName: f.name,
-              facilityType: f.type as string,
-            })),
-        }))
-        .filter((fg) => fg.resources.length > 0);
-    }
-
-    const writableTeamIdSet = new Set(writableTeamIds);
-    const filteredTeamSeasons =
-      writableTeamIds.length > 0
-        ? teamSeasons.filter((ts) => writableTeamIdSet.has(ts.teamId))
-        : teamSeasons;
-
-    createTrigger = (
-      <TrainingComposerCreateTrigger
-        teamSeasons={filteredTeamSeasons.map((ts) => ({
-          id: ts.id,
-          teamId: ts.teamId,
-          teamName: ts.teamName,
-          seasonName: ts.seasonName,
-          category: ts.category,
-          genderGroup: ts.genderGroup,
-        }))}
-        pitchHallFacilityGroups={facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"])}
-        dressingRoomFacilityGroups={facilityGroupsForTypes(["DRESSING_ROOM"])}
-        timeZone={timezone}
-        defaultTrainingDurationMinutes={operationalDurationPolicy.TRAINING.durationMinutes}
-        effectiveGovernance={
-          effectiveGovernance ?? {
-            activityType: "TRAINING",
-            personId: "anonymous",
-            mayCreate: true,
-            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
-            approvalStrategy: "ANY_ONE",
-            validatorPersonIds: [],
-          }
-        }
-      />
+  let activityCreateQuickAccessTrigger = undefined;
+  if (canManage && userId) {
+    const tenantClubCrestUrl = await getTenantClubCrestUrlCached(tenantContext.id);
+    const permissions = resolveSceActivityCreatePermissionsFromFlags({
+      canManageTrainings: canManage,
+      canManageEvents,
+    });
+    const menuProps = await buildSceActivityCreateMenuProps({
+      tenantId: tenantContext.id,
+      userId,
+      timeZone: timezone,
+      tenantClubName: tenantContext.name,
+      tenantLogoUrl: tenantClubCrestUrl,
+      permissions,
+    });
+    createTrigger = <SceActivityCreateMenu {...menuProps} />;
+    activityCreateQuickAccessTrigger = (
+      <SceActivityCreateMenu {...menuProps} presentation="quick-access" />
     );
   }
 
@@ -273,6 +223,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
       <TrainingManagementWorkspace
         composerDrafts={composerDrafts}
         createTrigger={createTrigger}
+        activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
         canCreate={canCreate}
         canManage={canManage}
         canDelete={canDelete}

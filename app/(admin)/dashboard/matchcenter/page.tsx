@@ -36,11 +36,11 @@ import {
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
 import SpieleManagementWorkspace from "@/components/admin/matchcenter/SpieleManagementWorkspace";
-import MatchComposerCreateTrigger from "@/components/admin/matchcenter/MatchComposerCreateTrigger";
+import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
 import { normalizeSpieleSearchQuery } from "@/lib/matchcenter/management-view";
 import { ToastProvider } from "@/components/ui/ToastProvider";
-import { loadMatchComposerCreateSurfaceProps } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
-import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
+import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
+import { resolveSceActivityCreatePermissionsFromFlags } from "@/lib/sce/activity-create/activity-create-permissions";
 
 type MatchcenterPageProps = {
   searchParams?: Promise<{
@@ -88,6 +88,7 @@ export default async function MatchcenterPage({
   const actionFilter = normalizeMatchcenterActionFilter(params.filter);
   const wochenplanFilter = normalizeMatchcenterWochenplanFilter(params.wochenplan);
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const resolvedMonth = resolveMatchcenterMonthWindow({
     monthParam: params.month,
     timeZone: timezone,
@@ -149,37 +150,26 @@ export default async function MatchcenterPage({
   const statusMask = normalizeSpieleStatusMask(params.status, actionFilter);
 
   const userId = session.user?.effectiveUserId ?? session.user?.id;
-  const matchComposerSurface =
-    canManage && userId
-      ? await loadMatchComposerCreateSurfaceProps({
-          tenantId,
-          userId,
-          tenantClubName: tenantContext.name,
-          tenantLogoUrl: tenantClubCrestUrl,
-        })
-      : null;
-
-  const matchCreateTrigger =
-    matchComposerSurface != null ? (
-      <MatchComposerCreateTrigger
-        activeSeasonId={matchComposerSurface.activeSeasonId}
-        teamOptions={matchComposerSurface.teamOptions}
-        pitchHallFacilityGroups={matchComposerSurface.pitchHallFacilityGroups}
-        dressingRoomFacilityGroups={matchComposerSurface.dressingRoomFacilityGroups}
-        effectiveGovernance={
-          matchComposerSurface.effectiveGovernance ?? {
-            activityType: "MATCH",
-            personId: "anonymous",
-            mayCreate: true,
-            publicationAuthority: SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY,
-            approvalStrategy: "ANY_ONE",
-            validatorPersonIds: [],
-          }
-        }
-        tenantClubName={matchComposerSurface.tenantClubName}
-        tenantLogoUrl={matchComposerSurface.tenantLogoUrl}
-      />
-    ) : null;
+  let activityCreateTrigger = null;
+  let activityCreateQuickAccessTrigger = null;
+  if (canManage && userId) {
+    const permissions = resolveSceActivityCreatePermissionsFromFlags({
+      canManageTrainings,
+      canManageEvents: canManage,
+    });
+    const menuProps = await buildSceActivityCreateMenuProps({
+      tenantId,
+      userId,
+      timeZone: timezone,
+      tenantClubName: tenantContext.name,
+      tenantLogoUrl: tenantClubCrestUrl,
+      permissions,
+    });
+    activityCreateTrigger = <SceActivityCreateMenu {...menuProps} />;
+    activityCreateQuickAccessTrigger = (
+      <SceActivityCreateMenu {...menuProps} presentation="quick-access" />
+    );
+  }
 
   return (
     <ToastProvider>
@@ -205,7 +195,8 @@ export default async function MatchcenterPage({
           competitionFilter={competitionFilter}
           venueFilter={venueFilter}
           statusMask={statusMask}
-          matchCreateTrigger={matchCreateTrigger}
+          activityCreateTrigger={activityCreateTrigger}
+          activityCreateQuickAccessTrigger={activityCreateQuickAccessTrigger}
         />
       </div>
     </ToastProvider>
