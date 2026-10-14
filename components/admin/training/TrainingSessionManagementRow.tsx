@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { CalendarDays, MoreHorizontal, Pencil } from "lucide-react";
+import { Calendar, CalendarDays, Clock, MapPin, MoreHorizontal, Pencil } from "lucide-react";
 import { PopoverContent } from "@/components/ui/Popover";
 import TrainingSessionCancelButton from "./TrainingSessionCancelButton";
 import { buildTrainingSeriesEditHref } from "@/lib/training/series-cockpit";
 import type { TrainingSessionManagementRow as Row } from "@/lib/training/management-session-view";
-import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
+import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard";
+import { resolveSceTrainingPresentationFromSessionManagementRow } from "@/lib/sporting-activity-presentation/canonical/adapters/training-session-management";
+import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -16,12 +19,8 @@ type Props = {
   canManage: boolean;
   locale: string;
   timezone: string;
+  tenantClubName?: string | null;
 };
-
-function formatTimeRange(startAt: string, endAt: string, locale: string, timezone: string): string {
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone: timezone });
-  return `${fmt.format(new Date(startAt))}–${fmt.format(new Date(endAt))}`;
-}
 
 function formatShortDate(date: string, locale: string, timezone: string): string {
   const parsed = new Date(`${date}T12:00:00.000Z`);
@@ -33,14 +32,24 @@ function formatShortDate(date: string, locale: string, timezone: string): string
   }).format(parsed);
 }
 
+function formatTimeRange(startAt: string, endAt: string, locale: string, timezone: string): string {
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone: timezone });
+  return (
+    formatSportingActivityTimeRange({
+      startLabel: fmt.format(new Date(startAt)),
+      endLabel: fmt.format(new Date(endAt)),
+    }) ?? fmt.format(new Date(startAt))
+  );
+}
+
 function statusClasses(status: Row["displayStatus"]): string {
   switch (status) {
     case "AUSNAHME":
-      return "border-amber-200 bg-amber-50 text-amber-800";
+      return "border-amber-200/80 bg-amber-500/10 text-amber-300";
     case "ABGESAGT":
-      return "border-slate-200 bg-slate-100 text-slate-600";
+      return "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]";
     default:
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
   }
 }
 
@@ -53,35 +62,65 @@ export default function TrainingSessionManagementRow({
   canManage,
   locale,
   timezone,
+  tenantClubName = "",
 }: Props) {
   const menuRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const isCancelled = row.status !== "SCHEDULED";
+  const fmtCfg = { locale, timezone };
+  const sceModel = resolveSceTrainingPresentationFromSessionManagementRow(row, tenantClubName ?? "");
+  const locationLine =
+    formatSceActivityLocationHierarchy(sceModel.location, { includeHostClub: false }) ||
+    row.facilityLabel ||
+    "—";
+  const statusLabel =
+    row.displayStatus === "GEPLANT" ? "Geplant" : row.displayStatus === "AUSNAHME" ? "Ausnahme" : "Abgesagt";
 
   return (
-    <article className={GRID} data-testid={`training-session-row-${row.sessionId}`}>
+    <article
+      className={GRID}
+      data-testid={`training-session-row-${row.sessionId}`}
+      data-sce-training-session-list-row
+    >
       <p className="text-sm font-medium text-[var(--foreground)]">{formatShortDate(row.date, locale, timezone)}</p>
-      <div className="min-w-0">
-        <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-[var(--foreground)]">
-          <ActivitySceIcon activityKind="TRAINING" size={16} />
-          <span className="truncate">{row.teamName}</span>
-        </p>
-        <p className="truncate text-xs text-[var(--text-2)]">{row.contextLabel}</p>
+      <div className="min-w-0" data-testid="training-session-row-identity">
+        <SceTrainingCard
+          model={sceModel}
+          density="COMPACT"
+          fmtCfg={fmtCfg}
+          linkToDetail={false}
+          showStatus={false}
+          surface="list-row"
+          className="border-0 bg-transparent p-0 shadow-none"
+          testId={`training-session-sce-card-${row.sessionId}`}
+        />
+        <p className="mt-0.5 truncate text-xs text-[var(--text-2)]">{row.contextLabel}</p>
         {row.displayStatus === "AUSNAHME" && row.exceptionReasons.length > 0 ? (
           <p className="text-[0.65rem] text-amber-700">{row.exceptionReasons.join(" · ")}</p>
         ) : null}
       </div>
-      <p className="text-sm tabular-nums text-[var(--foreground)]">
-        {formatTimeRange(row.startAt, row.endAt, locale, timezone)}
+      <p
+        className="inline-flex min-w-0 items-center gap-1 text-sm tabular-nums text-[var(--foreground)]"
+        data-testid="training-session-row-time"
+      >
+        <Clock className="hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
+        <span>{formatTimeRange(row.startAt, row.endAt, locale, timezone)}</span>
       </p>
-      <p className="truncate text-sm text-[var(--text-2)]">{row.facilityLabel ?? "—"}</p>
+      <p
+        className="inline-flex min-w-0 items-center gap-1 truncate text-sm text-[var(--text-2)]"
+        data-testid="training-session-row-location"
+      >
+        <MapPin className="hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
+        <span className="truncate">{locationLine}</span>
+      </p>
       <span
         className={cn(
           "inline-flex h-5 w-fit items-center rounded-full border px-2 text-[0.62rem] font-semibold",
           statusClasses(row.displayStatus),
         )}
+        data-testid="training-session-row-status"
       >
-        {row.displayStatus === "GEPLANT" ? "Geplant" : row.displayStatus === "AUSNAHME" ? "Ausnahme" : "Abgesagt"}
+        {statusLabel}
       </span>
       <div className="flex items-center justify-end gap-1">
         <Link
@@ -143,6 +182,13 @@ export default function TrainingSessionManagementRow({
         <Link href={wochenplanerHref} className="text-xs font-medium text-[var(--blue)]">
           Wochenplaner
         </Link>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-2)] md:hidden">
+        <span className="inline-flex items-center gap-1">
+          <Calendar className="h-3.5 w-3.5 opacity-70" aria-hidden />
+          {formatShortDate(row.date, locale, timezone)}
+        </span>
       </div>
     </article>
   );

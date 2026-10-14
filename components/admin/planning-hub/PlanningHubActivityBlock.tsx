@@ -29,7 +29,7 @@ import {
 import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
-import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
+import { resolvePlannerSportingActivityTypePresentation } from "@/lib/planning-hub/planner-sporting-activity-type-label";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
 import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
@@ -140,18 +140,7 @@ export default function PlanningHubActivityBlock({
   const semantic = activityVisualStyle(item.type);
   const activitySceIcon = getWeekplannerActivitySceIconName(item.type);
   const activityIconSize = compact ? 12 : 16;
-  const sportingKindForPill: SportingActivityKind | undefined =
-    item.type === "TRAINING" || item.type === "MATCH" || item.type === "TOURNAMENT"
-      ? item.type
-      : undefined;
-  const plannerTypeLabel =
-    item.type === "TRAINING"
-      ? "TRAINING"
-      : item.type === "MATCH"
-        ? "SPIEL"
-        : item.type === "TOURNAMENT"
-          ? "TURNIER"
-          : null;
+  const plannerTypePresentation = resolvePlannerSportingActivityTypePresentation(item.type);
 
   const isGhost = visualVariant === "ghost";
   const isPreview = visualVariant === "preview" || visualVariant === "preview-warning";
@@ -270,9 +259,12 @@ export default function PlanningHubActivityBlock({
       >
         <div className="flex items-start gap-1">
           <div className="min-w-0 flex-1" data-planning-hub-activity-content="true">
-            {sportingKindForPill && plannerTypeLabel ? (
+            {plannerTypePresentation ? (
               <div className="mb-0.5 flex items-center gap-1">
-                <ActivityTypePill activityKind={sportingKindForPill} label={plannerTypeLabel} />
+                <ActivityTypePill
+                  activityKind={plannerTypePresentation.kind}
+                  label={plannerTypePresentation.label}
+                />
                 <span className="truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--text-2)]">
                   {time}
                 </span>
@@ -304,7 +296,7 @@ export default function PlanningHubActivityBlock({
                 </span>
               </p>
             )}
-            {!compact && !sportingKindForPill ? (
+            {!compact && !plannerTypePresentation ? (
               <p className="truncate text-[var(--text-2)]">{time}</p>
             ) : null}
             {!compact && resources && (

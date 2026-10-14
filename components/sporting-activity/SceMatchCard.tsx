@@ -32,6 +32,10 @@ import {
   sceMatchRichDensityScale,
 } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceMatchContextBadge } from "@/lib/sporting-activity-presentation/canonical/types";
+import {
+  SCE_ACTIVITY_LIST_ROW_SCALE,
+  sceActivityListRowTypePillClass,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
@@ -271,30 +275,43 @@ function SceMatchInlineIdentitySide({
   side,
   identity,
   showCrests,
+  listRow = false,
+  microListCrest = false,
 }: {
   side: "home" | "away";
   identity: SceMatchPresentationModel["fixture"]["home"];
   showCrests: boolean;
+  listRow?: boolean;
+  /** MICRO density shares list-row crest bounds (planner list presentation). */
+  microListCrest?: boolean;
 }) {
+  const nameClass = listRow
+    ? SCE_ACTIVITY_LIST_ROW_SCALE.fixtureClubNameClass
+    : cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity("MICRO"));
+
+  const useMicroCrestBounds = listRow || microListCrest;
+
   return (
     <div
       data-sce-match-side={side}
       data-sce-match-region={`${side}-identity`}
       className={cn(
-        "flex min-w-0 max-w-[min(100%,12rem)] items-center gap-1.5",
-        side === "away" && "flex-row-reverse text-right",
+        "flex min-w-0 items-center gap-1.5",
+        listRow ? "max-w-none" : "max-w-[min(100%,12rem)]",
+        side === "away" && "flex-row-reverse justify-self-end text-right",
       )}
     >
       {showCrests ? (
-        <div data-sce-match-region={`${side}-crest`}>
-          <ClubCrest identity={identity} density="compact" decorative />
+        <div data-sce-match-region={`${side}-crest`} className="shrink-0">
+          <ClubCrest
+            identity={identity}
+            density="compact"
+            decorative
+            className={useMicroCrestBounds ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass : undefined}
+          />
         </div>
       ) : null}
-      <span
-        className={cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity("MICRO"))}
-        title={identity.displayName}
-        data-sce-match-region={`${side}-name`}
-      >
+      <span className={nameClass} title={identity.displayName} data-sce-match-region={`${side}-name`}>
         {identity.displayName}
       </span>
     </div>
@@ -362,25 +379,42 @@ function SceMatchLocationRow({
   );
 }
 
+function resolveMatchTenantSideBadge(
+  badges: SceMatchContextBadge[] | undefined,
+): SceMatchContextBadge | undefined {
+  return badges?.find((badge) => badge.kind === "tenant-side");
+}
+
 function SceMatchTypeHeader({
   model,
   showStatus,
+  listRow = false,
 }: {
   model: SceMatchPresentationModel;
   showStatus: boolean;
+  listRow?: boolean;
 }) {
   const status = model.matchLifecycle ?? model.status;
-  const contextBadges = model.contextBadges ?? [];
+  const contextBadges = listRow
+    ? (model.contextBadges ?? []).filter((badge) => badge.kind !== "tenant-side")
+    : (model.contextBadges ?? []);
   const hasTrailingMeta =
     contextBadges.length > 0 || (showStatus && status?.label);
 
   return (
     <div
-      className="flex min-w-0 items-start justify-between gap-2"
+      className={cn(
+        "flex min-w-0 items-start justify-between gap-2",
+        listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
+      )}
       data-sce-match-region="meta"
       data-sce-match-header
     >
-      <ActivityTypePill activityKind="MATCH" label={model.typeLabel} className="shrink-0" />
+      <ActivityTypePill
+        activityKind="MATCH"
+        label={model.typeLabel}
+        className={cn("shrink-0", listRow && sceActivityListRowTypePillClass())}
+      />
       {hasTrailingMeta ? (
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
           {contextBadges.length > 0 ? (
@@ -395,6 +429,65 @@ function SceMatchTypeHeader({
       ) : (
         <span className="min-w-0 flex-1" />
       )}
+    </div>
+  );
+}
+
+function SceMatchListRowIdentityContent({
+  model,
+  density,
+}: {
+  model: SceMatchPresentationModel;
+  density: SceActivityPresentationDensity;
+}) {
+  const showCrests = isSceActivityDimensionVisible(density, "crests");
+  const tenantSide = resolveMatchTenantSideBadge(model.contextBadges);
+  const tenantSideAccessibleLabel =
+    tenantSide?.label === "Heim"
+      ? "Heimspiel"
+      : tenantSide?.label === "Auswärts"
+        ? "Auswärtsspiel"
+        : tenantSide?.label;
+
+  return (
+    <div
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-match-density={density}
+      data-sce-match-list-row-identity
+    >
+      <SceMatchTypeHeader model={model} showStatus={false} listRow />
+      {tenantSideAccessibleLabel ? (
+        <span className="sr-only">{tenantSideAccessibleLabel}</span>
+      ) : null}
+      <div
+        className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass}
+        data-testid="sce-match-fixture"
+        data-sce-match-region="fixture"
+        aria-label={buildFixtureAccessibleLabel(model)}
+      >
+        <SceMatchInlineIdentitySide
+          side="home"
+          identity={model.fixture.home}
+          showCrests={showCrests}
+          listRow
+        />
+        <div className="flex items-center justify-center px-0.5" data-sce-match-center>
+          <span
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureVsClass}
+            aria-hidden
+            data-testid="sce-match-vs"
+            data-sce-match-region="separator"
+          >
+            VS
+          </span>
+        </div>
+        <SceMatchInlineIdentitySide
+          side="away"
+          identity={model.fixture.away}
+          showCrests={showCrests}
+          listRow
+        />
+      </div>
     </div>
   );
 }
@@ -478,12 +571,14 @@ function SceMatchMicroContent({
           side="home"
           identity={model.fixture.home}
           showCrests={showCrests}
+          microListCrest
         />
         <SceMatchFixtureSeparator model={model} density="MICRO" />
         <SceMatchInlineIdentitySide
           side="away"
           identity={model.fixture.away}
           showCrests={showCrests}
+          microListCrest
         />
       </div>
 
@@ -528,7 +623,8 @@ export function SceMatchCard({
   surface = "standalone",
   testId = "sce-match-card",
 }: SceMatchCardProps) {
-  const embed = surface === "detail-embed";
+  const listRow = surface === "list-row";
+  const embed = surface === "detail-embed" || listRow;
   const showSchedule =
     !embed && isSceActivityDimensionVisible(density, "schedule");
   const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
@@ -539,11 +635,13 @@ export function SceMatchCard({
   const href = linkToDetail ? model.route.consumeHref : null;
 
   const richBounded =
-    !embed && isSceMatchRichCardDensity(density)
-      ? sceMatchCardBoundedWidthClass(density)
-      : !embed
-        ? "w-full max-w-sm"
-        : "";
+    listRow
+      ? "w-full max-w-none"
+      : !embed && isSceMatchRichCardDensity(density)
+        ? sceMatchCardBoundedWidthClass(density)
+        : !embed
+          ? "w-full max-w-sm"
+          : "";
   const richPadding =
     !embed && isSceMatchRichCardDensity(density)
       ? sceMatchRichDensityScale(density).shellPaddingClass
@@ -556,13 +654,16 @@ export function SceMatchCard({
     richBounded,
     !embed && SCE_MATCH_CARD_SHELL_CLASS,
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
+    listRow && "shadow-none",
     richPadding,
     className,
   );
 
   let content: ReactNode;
 
-  if (embed) {
+  if (listRow) {
+    content = <SceMatchListRowIdentityContent model={model} density={density} />;
+  } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">
         <SceMatchStackedFixturePanel model={model} density={density} />

@@ -23,6 +23,10 @@ import type {
 import { formatSportingActivityScheduleLine } from "@/lib/sporting-activity-presentation/format";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import {
+  SCE_ACTIVITY_LIST_ROW_SCALE,
+  sceActivityListRowTypePillClass,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
 
@@ -97,20 +101,29 @@ function SceTrainingTypeHeader({
   model,
   density,
   showStatus,
+  listRow = false,
 }: {
   model: SceTrainingPresentationModel;
   density: SceActivityPresentationDensity;
   showStatus: boolean;
+  listRow?: boolean;
 }) {
   const status = model.status;
 
   return (
     <div
-      className="flex min-w-0 items-start justify-between gap-2"
+      className={cn(
+        "flex min-w-0 items-start justify-between gap-2",
+        listRow && SCE_ACTIVITY_LIST_ROW_SCALE.metaRowClass,
+      )}
       data-sce-training-region="meta"
       data-sce-training-header
     >
-      <ActivityTypePill activityKind="TRAINING" label={model.typeLabel} className="shrink-0" />
+      <ActivityTypePill
+        activityKind="TRAINING"
+        label={model.typeLabel}
+        className={cn("shrink-0", listRow && sceActivityListRowTypePillClass())}
+      />
       {showStatus && status?.label ? (
         <div className="shrink-0" data-sce-training-region="status">
           <SceTrainingCardStatus status={status} />
@@ -294,17 +307,65 @@ function SceTrainingRichCardContent({
   );
 }
 
+function SceTrainingListRowIdentityContent({
+  model,
+  density,
+}: {
+  model: SceTrainingPresentationModel;
+  density: SceActivityPresentationDensity;
+}) {
+  const teamName = model.team?.name?.trim();
+  const title = model.trainingTitle;
+  const showTeamLine =
+    teamName &&
+    teamName.localeCompare(title.trim(), "de-CH", { sensitivity: "accent" }) !== 0 &&
+    !title.trim().toLocaleLowerCase("de-CH").includes(teamName.toLocaleLowerCase("de-CH"));
+
+  return (
+    <div
+      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-training-density={density}
+      data-sce-training-list-row-identity
+    >
+      <SceTrainingTypeHeader model={model} density={density} showStatus={false} listRow />
+      <div className="min-w-0 space-y-0.5" data-sce-training-region="identity">
+        <p
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+          data-testid="sce-training-title"
+          title={title}
+        >
+          {title}
+        </p>
+        {showTeamLine ? (
+          <p
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
+            data-testid="sce-training-team"
+          >
+            {teamName}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function SceTrainingCompactContent({
   model,
   fmtCfg,
   showStatus,
+  surface,
 }: {
   model: SceTrainingPresentationModel;
   fmtCfg: TenantFormatConfig;
   showStatus: boolean;
+  surface: SceTrainingCardSurface;
 }) {
   const locationLine = resolveLocationLine(model, "COMPACT");
   const recurring = isRecurringDefinition(model) ? model.schedulePresentation : null;
+  const managementListRowRecurring =
+    surface === "list-row" && recurring?.kind === "RECURRING_DEFINITION";
+  const hideWeekdayRhythm = managementListRowRecurring;
+  const hideCompactTime = managementListRowRecurring;
   const weekdayLine =
     recurring?.kind === "RECURRING_DEFINITION"
       ? recurring.recurrence.rhythmLabel?.trim() ||
@@ -314,6 +375,10 @@ function SceTrainingCompactContent({
     recurring?.kind === "RECURRING_DEFINITION"
       ? recurring.recurrence.timeLabel
       : formatSessionTimeOnly(model, fmtCfg);
+  const timeDetailTitle =
+    recurring?.kind === "RECURRING_DEFINITION"
+      ? recurring.recurrence.timeDetailLines?.join(" · ") ?? undefined
+      : undefined;
 
   return (
     <div
@@ -328,18 +393,28 @@ function SceTrainingCompactContent({
         ) : null}
       </div>
       <div className="min-w-0 space-y-1 sm:text-right">
-        <p
-          className="text-xs font-medium text-[var(--text-2)]"
-          data-testid="sce-training-compact-weekdays"
-        >
-          {weekdayLine}
-        </p>
-        <p
-          className="font-mono text-xs tabular-nums text-[var(--foreground)]"
-          data-testid="sce-training-compact-time"
-        >
-          {timeLine}
-        </p>
+        {!hideWeekdayRhythm ? (
+          <p
+            className="text-xs font-medium text-[var(--text-2)]"
+            data-testid="sce-training-compact-weekdays"
+          >
+            {weekdayLine}
+          </p>
+        ) : null}
+        {!hideCompactTime ? (
+          <p
+            className="font-mono text-xs tabular-nums text-[var(--foreground)]"
+            data-testid="sce-training-compact-time"
+            title={timeDetailTitle}
+            aria-label={
+              timeDetailTitle && timeLine === "Unterschiedliche Zeiten"
+                ? `${timeLine}: ${timeDetailTitle}`
+                : undefined
+            }
+          >
+            {timeLine}
+          </p>
+        ) : null}
         {showStatus && model.status?.label ? (
           <div className="flex sm:justify-end" data-sce-training-region="status">
             <SceTrainingCardStatus status={model.status} />
@@ -413,7 +488,8 @@ export function SceTrainingCard({
   showStatus = true,
   testId = "sce-training-card",
 }: SceTrainingCardProps) {
-  const embed = surface === "detail-embed";
+  const listRow = surface === "list-row";
+  const embed = surface === "detail-embed" || listRow;
   const showSchedule = !embed && isSceActivityDimensionVisible(density, "schedule");
   const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
   const statusVisible = showStatus && isSceActivityDimensionVisible(density, "status");
@@ -421,13 +497,15 @@ export function SceTrainingCard({
   const href = linkToDetail ? model.route.consumeHref : null;
 
   const richBounded =
-    !embed && isSceTrainingRichCardDensity(density) && density !== "COMPACT"
-      ? sceTrainingCardBoundedWidthClass(density)
-      : !embed && density === "MICRO"
-        ? "w-full max-w-[12rem]"
-        : !embed
-          ? "w-full max-w-sm"
-          : "";
+    listRow
+      ? "w-full max-w-none"
+      : !embed && isSceTrainingRichCardDensity(density) && density !== "COMPACT"
+        ? sceTrainingCardBoundedWidthClass(density)
+        : !embed && density === "MICRO"
+          ? "w-full max-w-[12rem]"
+          : !embed
+            ? "w-full max-w-sm"
+            : "";
 
   const richPadding =
     !embed && isSceTrainingRichCardDensity(density)
@@ -442,13 +520,16 @@ export function SceTrainingCard({
     !embed && density !== "MICRO" && SCE_TRAINING_CARD_SHELL_CLASS,
     !embed && density === "MICRO" && "rounded-md border border-[var(--border)]/80 bg-[var(--surface)]",
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
+    listRow && "shadow-none",
     richPadding,
     className,
   );
 
   let content: ReactNode;
 
-  if (embed) {
+  if (listRow) {
+    content = <SceTrainingListRowIdentityContent model={model} density={density} />;
+  } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">
         <SceTrainingIdentityBlock model={model} density={density} />
@@ -468,7 +549,12 @@ export function SceTrainingCard({
     );
   } else if (density === "COMPACT") {
     content = (
-      <SceTrainingCompactContent model={model} fmtCfg={fmtCfg} showStatus={statusVisible} />
+      <SceTrainingCompactContent
+        model={model}
+        fmtCfg={fmtCfg}
+        showStatus={statusVisible}
+        surface={surface}
+      />
     );
   } else {
     content = (

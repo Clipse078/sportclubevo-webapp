@@ -95,7 +95,11 @@ describe("PlanningHubListeRowMenu", () => {
 
   it("hides planning edit when item is not editable", async () => {
     const user = userEvent.setup();
-    renderMenu(false, { ...permissionContext, canManageTrainings: false });
+    renderMenu(false, {
+      ...permissionContext,
+      canManageTrainings: false,
+      canViewTrainings: true,
+    });
 
     await user.click(screen.getByTestId("planning-hub-liste-row-menu-training:1"));
 

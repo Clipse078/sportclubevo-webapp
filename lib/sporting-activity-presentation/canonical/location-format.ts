@@ -13,7 +13,21 @@ function pushPart(parts: string[], value: string | undefined) {
 export type FormatSceActivityLocationHierarchyOptions = {
   /** When true (default), HOME mode includes host/club before venue/resource (training contract). */
   includeHostClub?: boolean;
+  /**
+   * Compact planner-list rule: when a concrete playing resource is assigned, omit redundant
+   * parent venue labels (e.g. show "Kunstrasen 3 B" not "Kunstrasen 3 · Kunstrasen 3 B").
+   */
+  mostSpecificResourceOnly?: boolean;
 };
+
+function venueIsRedundantParentOfResource(venue: string, resource: string): boolean {
+  const venueNorm = venue.trim().toLocaleLowerCase("de-CH");
+  const resourceNorm = resource.trim().toLocaleLowerCase("de-CH");
+  if (!venueNorm || !resourceNorm || venueNorm === resourceNorm) {
+    return venueNorm === resourceNorm;
+  }
+  return resourceNorm.startsWith(`${venueNorm} `) || resourceNorm.startsWith(venueNorm);
+}
 
 /**
  * Deterministic host → venue → resource line for cards and compact surfaces.
@@ -24,7 +38,21 @@ export function formatSceActivityLocationHierarchy(
   options: FormatSceActivityLocationHierarchyOptions = {},
 ): string | undefined {
   const includeHost = options.includeHostClub !== false;
+  const mostSpecificOnly = options.mostSpecificResourceOnly === true;
+  const resource = location.facilityResource?.trim();
+  const venue = location.venueName?.trim();
   const parts: string[] = [];
+
+  if (mostSpecificOnly && resource) {
+    if (venue && !venueIsRedundantParentOfResource(venue, resource)) {
+      pushPart(parts, venue);
+    }
+    pushPart(parts, resource);
+    if (parts.length === 0) {
+      return undefined;
+    }
+    return parts.join(SCE_ACTIVITY_LOCATION_HIERARCHY_SEPARATOR);
+  }
 
   switch (location.mode) {
     case "HOME": {

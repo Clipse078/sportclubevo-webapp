@@ -105,7 +105,7 @@ export function sceTournamentOrganiserCrestVisualSizeForDensity(
   options?: { narrowMicro?: boolean; listRow?: boolean },
 ): ClubCrestVisualSize | null {
   if (options?.listRow) {
-    return "planner";
+    return "compact";
   }
   if (density === "MICRO") {
     return options?.narrowMicro ? null : "compact";

@@ -346,6 +346,27 @@ describe("SCE-UI-ROLLOUT-01C — TRAINING", () => {
       ),
     ).toBe("KR2");
   });
+
+  it("planner-list location omits redundant parent venue before child resource", () => {
+    const location = {
+      mode: "HOME" as const,
+      hostOrOrganiser: "FC Allschwil",
+      venueName: "Kunstrasen 3",
+      facilityResource: "Kunstrasen 3 B",
+    };
+    expect(
+      formatSceActivityLocationHierarchy(location, {
+        includeHostClub: false,
+        mostSpecificResourceOnly: true,
+      }),
+    ).toBe("Kunstrasen 3 B");
+    expect(
+      formatSceActivityLocationHierarchy(location, {
+        includeHostClub: false,
+        mostSpecificResourceOnly: true,
+      }),
+    ).not.toContain("Kunstrasen 3 · Kunstrasen 3 B");
+  });
 });
 
 describe("SCE-UI-ROLLOUT-01C — TOURNAMENT", () => {

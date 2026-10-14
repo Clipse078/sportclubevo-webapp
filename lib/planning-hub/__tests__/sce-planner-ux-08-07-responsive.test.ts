@@ -17,9 +17,13 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
 
   it("Liste hierarchy and row menu collision settings remain intact", () => {
     const liste = read("components/admin/planning-hub/PlanningHubListeView.tsx");
-    expect(liste).toContain("planning-hub-liste-row-time");
-    expect(liste).toContain("ActivityTypePill");
+    expect(liste).toContain("PlanningHubListeActivityRow");
     expect(liste).not.toContain("checkbox");
+
+    const listeRow = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
+    expect(listeRow).toContain("planning-hub-liste-row-time");
+    expect(listeRow).toContain("SceMatchCard");
+    expect(listeRow).toContain('surface="list-row"');
 
     const menu = read("components/admin/planning-hub/PlanningHubListeRowMenu.tsx");
     expect(menu).toContain("constrainHeight={false}");

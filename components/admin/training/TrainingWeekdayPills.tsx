@@ -1,5 +1,6 @@
 import type { Weekday } from "@/lib/training/types";
 import { MANAGEMENT_WEEKDAY_SHORT } from "@/lib/training/management-series-view";
+import { COCKPIT_WEEKDAY_LABELS } from "@/lib/training/series-cockpit";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -18,6 +19,7 @@ export default function TrainingWeekdayPills({ weekdays, className }: Props) {
         <span
           key={weekday}
           className="inline-flex h-[1.625rem] min-w-[1.875rem] items-center justify-center rounded-md bg-[var(--surface-2)] px-1.5 text-[0.6875rem] font-semibold tabular-nums text-[var(--foreground)]/85 ring-1 ring-[var(--border)]/90"
+          aria-label={COCKPIT_WEEKDAY_LABELS[weekday]}
         >
           {MANAGEMENT_WEEKDAY_SHORT[weekday]}
         </span>

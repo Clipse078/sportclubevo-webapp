@@ -307,6 +307,14 @@ describe("AggregatedActivityInspectionDialog", () => {
         onOpenItem={onOpen}
         onEditItem={onEdit}
         canEditItem={() => true}
+        permissionContext={{
+          canManageTrainings: true,
+          canManageEvents: false,
+          canManageAllocations: true,
+          isStandardplan: true,
+          alternativePlanId: null,
+          canViewTrainings: true,
+        }}
       />,
     );
 

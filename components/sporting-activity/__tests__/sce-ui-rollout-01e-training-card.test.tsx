@@ -85,6 +85,12 @@ describe("SCE-UI-ROLLOUT-01E — SceTrainingCard", () => {
     expect(screen.getByTestId("sce-training-context-line")).toHaveTextContent("KR2");
   });
 
+  it("COMPACT list-row omits weekday rhythm and time when management grid owns schedule columns", () => {
+    renderCard(createSceTrainingCardFixtureRecurring(), "COMPACT", { surface: "list-row" });
+    expect(screen.queryByTestId("sce-training-compact-weekdays")).toBeNull();
+    expect(screen.queryByTestId("sce-training-compact-time")).toBeNull();
+  });
+
   it("MICRO prioritises team, time, and resource", () => {
     renderCard(createSceTrainingCardFixtureSession(), "MICRO");
     expect(screen.getByTestId("sce-training-micro-identity")).toHaveTextContent("Junioren B1");
