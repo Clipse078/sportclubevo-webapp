@@ -12,7 +12,7 @@
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
 | **Tournament slice** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption — **CLOSED** (PR **#843**) |
 | **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**CLOSED**) |
-| **Next slice after 01G** | **SCE-ACTIVITY-CREATE-01H** — Core planning surfaces adoption (**NOT_STARTED**) |
+| **Next slice after 01G** | **SCE-ACTIVITY-CREATE-01H** — Core planning surfaces adoption (**IN_PROGRESS** — see [`SCE-ACTIVITY-CREATE-01H.md`](./SCE-ACTIVITY-CREATE-01H.md)) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -50,7 +50,7 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01E — Match adoption — CLOSED (PR #842)
   → SCE-ACTIVITY-CREATE-01F — Tournament adoption — CLOSED (PR #843)
   → SCE-ACTIVITY-CREATE-01G — Global create integration — CLOSED (PR #844)
-  → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — NOT_STARTED
+  → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — IN_PROGRESS
   → … (01I–01N per SCE-UI-ROLLOUT-01)
 ```
 

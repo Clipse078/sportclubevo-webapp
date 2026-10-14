@@ -45,9 +45,9 @@
 | LEGACY-MATCH-CARD-003 | MATCH-CARD | `InfoboardScreen1.tsx` fallback branch | Kiosk | **HIGH** | 01D+01K | `matchPresentation` required | Loader always sets pair; fallback deleted |
 | LEGACY-MATCH-CARD-004 | MATCH-CARD | `InfoboardScreen2.tsx` | Kiosk | **HIGH** | 01D+01K | `MatchClubPair` layout | Same as 003 |
 | LEGACY-MATCH-CARD-005 | MATCH-CARD | `WeekplannerMatchIdentityCard.tsx` | Wochenplaner | MED | 01H | 01D planner density | Component wraps canonical |
-| LEGACY-ACTIVITY-LOCATION-001 | ACTIVITY | `WochenplanEventCard.tsx` | Wochenplan | MED | 01H | Location density formatter | Uses 01C location API |
+| LEGACY-ACTIVITY-LOCATION-001 | ACTIVITY | `WochenplanEventCard.tsx` category shell | Wochenplan board | MED | 01H / 01N | **ActivityTypePill** type identity (01H); full card migration optional | Board DnD preserved |
 | CANONICAL-TRAINING-CARD-001 | ACTIVITY | `SceTrainingCard.tsx` | Activity Detail, Trainings management identity, Wochenplaner editor | — | **01E** | 01C model | Representative integration |
-| LEGACY-ACTIVITY-TRAIN-001 | ACTIVITY | `TrainingSessionRow.tsx` local meta | Training list | MED | 01H | **`SceTrainingCard` STANDARD** | Row refactored |
+| LEGACY-ACTIVITY-TRAIN-001 | ACTIVITY | `TrainingSessionManagementRow.tsx` (pre-01H local meta) | Training session list | MED | 01H | **`SceTrainingCard` COMPACT** | **01H adopted** — series list unchanged |
 | LEGACY-ACTIVITY-PLAN-002 | ACTIVITY | `PlanningHubActivityBlock` training identity strings | Wochenplaner grid | MED | 01H | **`SceTrainingCard` MICRO** | Block uses resolver + card |
 | CANONICAL-TOURNAMENT-CARD-001 | ACTIVITY | `SceTournamentCard.tsx` | Activity Detail, Turniere row, Wochenplaner editor | — | **01F** | 01C model | Representative integration |
 | LEGACY-ACTIVITY-TURN-001 | ACTIVITY | `TournamentManagementIdentity.tsx` | Legacy tournament forms / residual | MED | 01H | **`SceTournamentCard`** | Zero imports outside deferred surfaces |

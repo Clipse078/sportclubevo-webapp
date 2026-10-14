@@ -8,6 +8,8 @@ import type { WochenplanBoardEvent } from "@/lib/wochenplan/types";
 import { FacilitySceIcon, TeamSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
+import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
+import { resolveWochenplanBoardEventTypePresentation } from "@/lib/planning-hub/planner-sporting-activity-type-label";
 
 type WochenplanEventCardProps = {
   event: WochenplanBoardEvent;
@@ -34,19 +36,6 @@ function getCategoryClasses(categoryKey: WochenplanBoardEvent["categoryKey"]) {
       return "border-neutral-300 bg-neutral-50 text-neutral-800";
     default:
       return "border-slate-300 bg-slate-50 text-slate-800";
-  }
-}
-
-function getTypeDotClass(eventType: string) {
-  switch (eventType) {
-    case "MATCH":
-      return "bg-red-500";
-    case "TOURNAMENT":
-      return "bg-amber-500";
-    case "TRAINING":
-      return "bg-blue-500";
-    default:
-      return "bg-slate-500";
   }
 }
 
@@ -104,6 +93,7 @@ export default function WochenplanEventCard({
   const missingAllocations = getMissingAllocations(event);
   const hasIncomplete = !hasConflict && missingAllocations.length > 0;
   const planningHref = getPlanningEditHref(event);
+  const typePresentation = resolveWochenplanBoardEventTypePresentation(event.eventType);
 
   return (
     <button
@@ -141,8 +131,16 @@ export default function WochenplanEventCard({
 
       <div className="flex items-start justify-between gap-2 pr-10">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className={"h-2.5 w-2.5 shrink-0 rounded-full " + getTypeDotClass(event.eventType)} />
+          <div className="flex min-w-0 items-center gap-2">
+            {typePresentation ? (
+              <ActivityTypePill
+                activityKind={typePresentation.kind}
+                label={typePresentation.label}
+                className="shrink-0 scale-[0.85] origin-left"
+              />
+            ) : (
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-500" aria-hidden />
+            )}
             <p className="truncate text-xs font-bold">{event.title}</p>
           </div>
         </div>

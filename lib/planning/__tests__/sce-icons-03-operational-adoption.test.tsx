@@ -103,6 +103,7 @@ function baseWeekplannerItem(
     dressingRoomResolvedAfterMinutes: 0,
     awayDressingRoomAllocations: [],
     tournamentParticipantAllocations: [],
+    participantAllocations: [],
     ...partial,
   } as WeekplannerItem;
 }
@@ -357,7 +358,7 @@ describe("SCE-ICONS-03 Wochenplaner activity blocks", () => {
 });
 
 describe("SCE-ICONS-03 TrainingCenter records", () => {
-  it("renders SCE training icon on session management rows", () => {
+  it("renders canonical SceTrainingCard on session management rows (01H)", () => {
     const { container } = render(
       <TrainingSessionManagementRow
         row={trainingSessionRow()}
@@ -365,9 +366,11 @@ describe("SCE-ICONS-03 TrainingCenter records", () => {
         canManage
         locale="de-CH"
         timezone="Europe/Zurich"
+        tenantClubName="FC Allschwil"
       />,
     );
-    expectApprovedActivityIcon(container, "TRAINING", "training");
+    expect(container.querySelector('[data-testid^="training-session-sce-card-"]')).toBeTruthy();
+    expect(screen.getByText("TRAINING")).toBeInTheDocument();
   });
 });
 
@@ -386,7 +389,7 @@ describe("SCE-ICONS-03 MatchCenter records", () => {
     );
     expect(screen.getByText("SPIEL")).toBeInTheDocument();
     expect(container.querySelector('[data-activity-type-pill="match-red"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="spiele-management-match-identity"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid^="matchcenter-sce-match-"]')).toBeTruthy();
     expect(screen.getByText("VS")).toBeInTheDocument();
   });
 });
@@ -412,15 +415,15 @@ describe("SCE-ICONS-03 TournamentCenter records", () => {
 
 describe("SCE-ICONS-03 fidelity on adopted surfaces", () => {
   it("routes calendar/planner/training surfaces through ActivitySceIcon instead of Lucide substitutes", () => {
-    const iconPaths = [
-      "components/admin/planning-hub/PlanningHubActivityBlock.tsx",
-      "components/admin/training/TrainingSessionManagementRow.tsx",
-    ];
+    const iconPaths = ["components/admin/planning-hub/PlanningHubActivityBlock.tsx"];
     for (const path of iconPaths) {
       const source = readRelative(path);
       expect(source).toContain("ActivitySceIcon");
       expect(source).not.toMatch(/\b(Dumbbell|Trophy)\b.*activityKind/);
     }
+    const sessionRow = readRelative("components/admin/training/TrainingSessionManagementRow.tsx");
+    expect(sessionRow).toContain("SceTrainingCard");
+    expect(sessionRow).toContain("resolveSceTrainingPresentationFromSessionManagementRow");
 
     const programmeSource = readRelative("components/ui/dashboard/PersonalProgrammeAgendaRow.tsx");
     expect(programmeSource).toContain("SportingActivityMetaRail");

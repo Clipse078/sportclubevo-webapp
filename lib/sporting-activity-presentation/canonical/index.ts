@@ -63,7 +63,9 @@ export { resolveSceMatchPresentation } from "./adapters/match";
 export { resolveSceTrainingPresentationFromLegacy } from "./adapters/training";
 export { resolveSceTrainingPresentationFromManagementRow } from "./adapters/training-management";
 export { resolveSceTrainingPresentationFromWeekplannerTraining } from "./adapters/weekplanner-training";
+export { resolveSceTrainingPresentationFromSessionManagementRow } from "./adapters/training-session-management";
 export { resolveSceTrainingManagementStatus } from "./training-management-status";
+export { resolveSceTrainingSessionDisplayStatus } from "./training-session-display-status";
 export {
   SCE_TRAINING_CARD_SHELL_CLASS,
   SCE_TRAINING_RICH_DENSITY_SCALE,
