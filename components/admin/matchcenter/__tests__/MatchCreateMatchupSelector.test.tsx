@@ -41,6 +41,45 @@ beforeEach(() => {
 });
 
 describe("MatchCreateMatchupSelector — canonical selector", () => {
+  it("selecting a club completes opponent selection without team drilldown", async () => {
+    const onSelectExternalClub = vi.fn();
+    const onOpponentDisplayNameChange = vi.fn();
+
+    render(
+      <MatchCreateMatchupSelector
+        pair={pair}
+        homeAway="HOME"
+        onHomeAwayChange={() => {}}
+        teamOptions={[{ id: "team-1", name: "1. Mannschaft", ageGroup: null, genderGroup: null }]}
+        teamId=""
+        onTeamIdChange={() => {}}
+        formatTeamLabel={(t) => t.name}
+        tenantClubName="FC Allschwil"
+        tenantLogoUrl={null}
+        selectedExternalClub={null}
+        onSelectExternalClub={onSelectExternalClub}
+        onClearExternalClub={() => {}}
+        opponentDisplayName=""
+        onOpponentDisplayNameChange={onOpponentDisplayNameChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
+    await waitFor(() => {
+      expect(screen.getByTestId("match-create-opponent-selector-grid")).toBeTruthy();
+    });
+    fireEvent.click(screen.getByTestId("sce-club-card-club-1"));
+
+    await waitFor(() => {
+      expect(onSelectExternalClub).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "club-1", name: "BSC Old Boys" }),
+      );
+    });
+    expect(onOpponentDisplayNameChange).toHaveBeenCalledWith("BSC Old Boys");
+    expect(screen.queryByTestId("match-create-opponent-selector-manual-team-input")).toBeNull();
+    expect(screen.queryByTestId("match-create-opponent-selector-back-to-clubs")).toBeNull();
+  });
+
   it("opens opponent selector with clubs visible before typing", async () => {
     render(
       <MatchCreateMatchupSelector

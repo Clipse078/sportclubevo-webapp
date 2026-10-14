@@ -284,12 +284,7 @@ export default function MatchCreateForm({
 
   const identityPreview = useMemo(() => {
     const opponentClubName = selectedExternalClub?.name ?? getEffectiveOpponentDisplayName() ?? "Gegner";
-    const opponentTeamName =
-      selectedExternalClub && opponentName.trim() && opponentName.trim() !== selectedExternalClub.name
-        ? opponentName.trim()
-        : selectedExternalClub
-          ? ""
-          : opponentName.trim();
+    const opponentTeamName = selectedExternalClub ? "" : opponentName.trim();
     return buildMatchCreatePreviewClubPair({
       tenantClubName,
       tenantLogoUrl,
@@ -480,19 +475,27 @@ export default function MatchCreateForm({
             </div>
           </div>
           {homeAway === "HOME" ? (
-            <div>
+            <div data-testid="match-create-review-resources">
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ressourcen</p>
-              <ul className="mt-1 space-y-0.5 text-sm text-[var(--foreground)]">
-                {pitchResourceId ? (
-                  <li>Spielfeld / Halle: {resolveResourceDisplay(pitchHallFacilityGroups, pitchResourceId)}</li>
-                ) : null}
-                {homeDressingResourceId ? (
-                  <li>Heim-Garderobe: {resolveResourceDisplay(dressingRoomFacilityGroups, homeDressingResourceId)}</li>
-                ) : null}
-                {awayDressingResourceId ? (
-                  <li>Gast-Garderobe: {resolveResourceDisplay(dressingRoomFacilityGroups, awayDressingResourceId)}</li>
-                ) : null}
-              </ul>
+              {pitchResourceId || homeDressingResourceId || awayDressingResourceId ? (
+                <ul className="mt-1 space-y-0.5 text-sm text-[var(--foreground)]">
+                  {pitchResourceId ? (
+                    <li>Spielfeld / Halle: {resolveResourceDisplay(pitchHallFacilityGroups, pitchResourceId)}</li>
+                  ) : null}
+                  {homeDressingResourceId ? (
+                    <li>
+                      Heim-Garderobe: {resolveResourceDisplay(dressingRoomFacilityGroups, homeDressingResourceId)}
+                    </li>
+                  ) : null}
+                  {awayDressingResourceId ? (
+                    <li>
+                      Gast-Garderobe: {resolveResourceDisplay(dressingRoomFacilityGroups, awayDressingResourceId)}
+                    </li>
+                  ) : null}
+                </ul>
+              ) : (
+                <p className="mt-1 text-sm text-[var(--text-2)]">Nicht zugewiesen</p>
+              )}
             </div>
           ) : (
             <p className="text-sm text-[var(--text-2)]">
@@ -607,6 +610,9 @@ export default function MatchCreateForm({
     return homeAway === "HOME" ? (
       <PlanningEditorSection testId="match-create-resources-section" ariaLabelledBy="match-create-resources-heading">
         <PlanningEditorSectionHeading id="match-create-resources-heading" title="Ressourcen" />
+        <p className="mb-3 text-xs text-[var(--text-2)]" data-testid="match-create-resources-optional-hint">
+          Optional — Ressourcen können auch später zugewiesen werden.
+        </p>
         {fieldErrors?.pitch ? (
           <p role="alert" className="mb-2 text-sm text-[var(--sce-danger)]" data-testid="match-create-pitch-error">
             {fieldErrors.pitch}

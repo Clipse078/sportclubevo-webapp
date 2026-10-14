@@ -20,15 +20,6 @@ export function computeMatchCreateTabErrors(
     errors.termin = true;
   }
 
-  if (draft.homeAway === "HOME") {
-    const pitch = draft.resources.find((r) => r.kind === "pitch_hall");
-    const homeRoom = draft.resources.find((r) => r.kind === "dressing_room_home");
-    const awayRoom = draft.resources.find((r) => r.kind === "dressing_room_away");
-    if (!pitch || !homeRoom || !awayRoom) {
-      errors.ressourcen = true;
-    }
-  }
-
   return errors;
 }
 

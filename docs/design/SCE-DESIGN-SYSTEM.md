@@ -437,6 +437,9 @@ One canonical engine for club and team selection across SCE — **visual-first**
 | **SEARCH-ASSISTED** | `SceClubTeamSearch` — leading icon slot + `.fca-search-input` padding contract; optional trailing clear |
 | **CANONICAL-DATA** | `GET /api/clubs/selectable` + Club Directory query service (Vereine source of truth) |
 | **ONE-ENGINE** | `SceClubTeamSelectorDialog` modes: `CLUB_ONLY` · `TEAM_ONLY` · `CLUB_THEN_TEAM` |
+| **CLUB_ONLY** | Match **Gegner**, Tournament **externer Verein** (participant/opponent club identity only — no second team drilldown) |
+| **TEAM_ONLY** | Match **eigenes Team**, tenant team assignment |
+| **CLUB_THEN_TEAM** | Only when the domain genuinely requires external club **and** structured external team (not merely because ExternalTeam rows exist) |
 | **GRID DENSITY** | `SceClubGrid` ≈ **4 columns** at form-dialog width (`grid-cols-2 sm:3 lg:4`); club names **line-clamp-2**, centered |
 | **TEAM ROWS** | `SceTeamList` card rows; secondary line via `formatSelectableTeamMetadata` (deduped, localized gender labels) |
 | **SCROLL** | Dialog owns layout; results region uses `.sce-scroll-region-dark` (no nested white scrollbar chrome) |

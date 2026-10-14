@@ -129,12 +129,8 @@ export function MatchCreateMatchupSelector({
   }, [teamOptions]);
 
   const opponentClubLabel = selectedExternalClub?.name ?? (opponentDisplayName.trim() || "Gegner");
-  const opponentTeamLabel =
-    opponentDisplayName.trim() && opponentDisplayName.trim() !== opponentClubLabel
-      ? opponentDisplayName.trim()
-      : opponentDisplayName.trim() && !selectedExternalClub
-        ? opponentDisplayName.trim()
-        : opponentDisplayName.trim() || null;
+  /** Opponent identity is club-level (CLUB_ONLY); no structured external team line in Match composer. */
+  const opponentTeamLabel = selectedExternalClub ? null : opponentDisplayName.trim() || null;
 
   const tenantClubLabel = tenantClubName;
   const tenantTeamLabel = selectedTeam ? formatTeamLabel(selectedTeam) : null;
@@ -241,9 +237,9 @@ export function MatchCreateMatchupSelector({
         onOpenChange={(next) => {
           if (!next) setSelectorKind(null);
         }}
-        mode="CLUB_THEN_TEAM"
+        mode="CLUB_ONLY"
         filters={{ activeOnly: true, externalClubsOnly: true }}
-        onConfirm={({ club, team, manualTeamLabel }) => {
+        onConfirm={({ club }) => {
           if (club) {
             onSelectExternalClub({
               id: club.id,
@@ -251,12 +247,10 @@ export function MatchCreateMatchupSelector({
               shortName: club.shortName,
               logoUrl: club.logoUrl,
             });
+            onOpponentDisplayNameChange(club.name);
           } else {
             onClearExternalClub();
           }
-          const label = team?.name ?? manualTeamLabel?.trim() ?? "";
-          if (label) onOpponentDisplayNameChange(label);
-          else if (club) onOpponentDisplayNameChange(club.name);
           setSelectorKind(null);
         }}
         testIdPrefix="match-create-opponent-selector"

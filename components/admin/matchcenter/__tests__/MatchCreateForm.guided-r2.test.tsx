@@ -100,15 +100,13 @@ async function pickOwnTeam() {
   fireEvent.click(screen.getByTestId("sce-team-row-team-1"));
 }
 
-async function pickOpponentWithNameOnly() {
+async function pickOpponentClubOnly() {
   fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
   await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-grid")).toBeTruthy());
   fireEvent.click(screen.getByTestId("sce-club-card-club-1"));
-  await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-manual-team-input")).toBeTruthy());
-  fireEvent.change(screen.getByTestId("match-create-opponent-selector-manual-team-input"), {
-    target: { value: "FC Concordia Basel" },
-  });
-  fireEvent.click(screen.getByTestId("match-create-opponent-selector-manual-team-confirm"));
+  await waitFor(() =>
+    expect(screen.queryByTestId("match-create-opponent-selector-grid")).toBeNull(),
+  );
 }
 
 beforeEach(() => {
@@ -164,7 +162,7 @@ describe("MatchCreateForm guided R2 interactions", () => {
   it("advances after teams and termin are valid", async () => {
     renderForm();
     await pickOwnTeam();
-    await pickOpponentWithNameOnly();
+    await pickOpponentClubOnly();
 
     fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
     await waitFor(() =>
@@ -197,7 +195,7 @@ describe("MatchCreateForm guided R2 interactions", () => {
   it("exposes pitch assignment on HOME ressourcen step after Termin", async () => {
     renderForm();
     await pickOwnTeam();
-    await pickOpponentWithNameOnly();
+    await pickOpponentClubOnly();
 
     fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
     await waitFor(() =>
@@ -221,5 +219,38 @@ describe("MatchCreateForm guided R2 interactions", () => {
     expect(screen.getByTestId("match-create-resources-section")).toBeVisible();
     expect(screen.getByTestId("match-create-pitch-action")).toBeVisible();
     expect(screen.getByTestId("match-create-dressing-room")).toBeTruthy();
+  });
+
+  it("Weiter from Ressourcen succeeds with zero assigned resources", async () => {
+    renderForm();
+    await pickOwnTeam();
+    await pickOpponentClubOnly();
+
+    fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-activity-composer-workflow-progress-label")).toHaveTextContent(
+        "Schritt 2 von 5",
+      ),
+    );
+
+    fireEvent.change(screen.getByTestId("match-create-schedule-date-input"), { target: { value: "14.10.2026" } });
+    fireEvent.blur(screen.getByTestId("match-create-schedule-date-input"));
+    fireEvent.change(screen.getByTestId("match-create-schedule-start-time-input"), { target: { value: "09:35" } });
+    fireEvent.blur(screen.getByTestId("match-create-schedule-start-time-input"));
+
+    fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-activity-composer-workflow-progress-label")).toHaveTextContent(
+        "Schritt 3 von 5",
+      ),
+    );
+
+    expect(screen.queryByTestId("match-create-pitch-error")).toBeNull();
+    fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-activity-composer-workflow-progress-label")).toHaveTextContent(
+        "Schritt 4 von 5",
+      ),
+    );
   });
 });

@@ -19,16 +19,6 @@ function terminStepInvalid(draft: MatchComposerDraftPayload): boolean {
   return !draft.startAt;
 }
 
-function ressourcenStepInvalid(draft: MatchComposerDraftPayload): boolean {
-  if (draft.homeAway !== "HOME") {
-    return false;
-  }
-  const pitch = draft.resources.find((r) => r.kind === "pitch_hall");
-  const homeRoom = draft.resources.find((r) => r.kind === "dressing_room_home");
-  const awayRoom = draft.resources.find((r) => r.kind === "dressing_room_away");
-  return !pitch || !homeRoom || !awayRoom;
-}
-
 function buildTeamsFieldErrors(draft: MatchComposerDraftPayload): Record<string, string> {
   const fieldErrors: Record<string, string> = {};
   const hasOpponent =
@@ -93,26 +83,6 @@ function buildTerminFieldErrors(draft: MatchComposerDraftPayload): Record<string
   return fieldErrors;
 }
 
-function buildRessourcenFieldErrors(draft: MatchComposerDraftPayload): Record<string, string> {
-  const fieldErrors: Record<string, string> = {};
-  if (draft.homeAway !== "HOME") {
-    return fieldErrors;
-  }
-  const pitch = draft.resources.find((r) => r.kind === "pitch_hall");
-  const homeRoom = draft.resources.find((r) => r.kind === "dressing_room_home");
-  const awayRoom = draft.resources.find((r) => r.kind === "dressing_room_away");
-  if (!pitch) {
-    fieldErrors.pitch = "Bitte ein Spielfeld / eine Halle zuweisen.";
-  }
-  if (!homeRoom) {
-    fieldErrors.dressingHome = "Bitte eine Heim-Garderobe zuweisen.";
-  }
-  if (!awayRoom) {
-    fieldErrors.dressingAway = "Bitte eine Gast-Garderobe zuweisen.";
-  }
-  return fieldErrors;
-}
-
 export function validateMatchCreateWorkflowStep(
   draft: MatchComposerDraftPayload,
   stepKey: MatchCreateTabId,
@@ -134,10 +104,6 @@ export function validateMatchCreateWorkflowStep(
       }
       break;
     case "ressourcen":
-      if (ressourcenStepInvalid(draft)) {
-        tabErrors.ressourcen = true;
-        fieldErrors = buildRessourcenFieldErrors(draft);
-      }
       break;
     case "spielbetrieb":
     case "uebersicht":
@@ -165,7 +131,7 @@ export function resolveMatchCreateStepComplete(
     case "termin":
       return !terminStepInvalid(draft) && Object.keys(buildTerminFieldErrors(draft)).length === 0;
     case "ressourcen":
-      return draft.homeAway === "AWAY" || !ressourcenStepInvalid(draft);
+      return true;
     case "spielbetrieb":
       return true;
     case "uebersicht":
