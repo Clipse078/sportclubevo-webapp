@@ -82,6 +82,8 @@ export type WeekPlannerWorkspaceProps = {
   week: WeekplannerWeek;
   locale?: string;
   timezone?: string;
+  tenantClubName?: string | null;
+  tenantLogoUrl?: string | null;
   plans?: WeekplannerPlanDto[];
   activePlanId?: string | null;
   overrideEditing?: OverrideEditingContext;
@@ -108,6 +110,8 @@ function WeekPlannerWorkspaceBody({
   week,
   locale = "de-CH",
   timezone = "Europe/Zurich",
+  tenantClubName = null,
+  tenantLogoUrl = null,
   plans = [],
   activePlanId = null,
   overrideEditing,
@@ -427,7 +431,9 @@ function WeekPlannerWorkspaceBody({
         urlState={resolvedUrlState}
         locale={locale}
         timezone={timezone}
-        onItemOpen={handleItemOpen}
+        tenantClubName={tenantClubName}
+        tenantLogoUrl={tenantLogoUrl}
+        onItemOpen={handleItemActivate}
         onItemEditPlanning={(item) => {
           if (activePlanId && overrideEditing) {
             handleOperationalEdit(item);

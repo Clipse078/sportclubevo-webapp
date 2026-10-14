@@ -75,6 +75,7 @@ export {
 } from "./training-card-rich-density";
 export { resolveSceTournamentPresentation } from "./adapters/tournament";
 export { resolveSceTournamentPresentationFromWeekplannerTournament } from "./adapters/weekplanner-tournament";
+export { resolveSceClubEventPresentationFromWeekplannerVeranstaltung } from "./adapters/weekplanner-veranstaltung";
 export {
   SCE_TOURNAMENT_CARD_SHELL_CLASS,
   SCE_TOURNAMENT_RICH_DENSITY_SCALE,

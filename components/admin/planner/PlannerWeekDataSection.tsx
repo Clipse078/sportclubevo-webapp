@@ -36,6 +36,8 @@ export type PlannerWeekDataSectionProps = {
   urlState: PlanningHubUrlState;
   plans: WeekplannerPlanDto[];
   needsEagerFacilityGroups: boolean;
+  tenantClubName?: string | null;
+  tenantLogoUrl?: string | null;
 };
 
 export default async function PlannerWeekDataSection({
@@ -57,6 +59,8 @@ export default async function PlannerWeekDataSection({
   urlState,
   plans,
   needsEagerFacilityGroups,
+  tenantClubName = null,
+  tenantLogoUrl = null,
 }: PlannerWeekDataSectionProps) {
   const perfTimer = isPlannerPerfTimingEnabled() ? createPlannerServerTimer() : null;
 
@@ -124,6 +128,8 @@ export default async function PlannerWeekDataSection({
         week={week}
         locale={locale}
         timezone={timezone}
+        tenantClubName={tenantClubName}
+        tenantLogoUrl={tenantLogoUrl}
         plans={plans}
         activePlanId={activePlan?.id ?? null}
         overrideEditing={overrideEditing}

@@ -399,6 +399,44 @@ function SceMatchTypeHeader({
   );
 }
 
+function SceMatchListRowIdentityContent({
+  model,
+  density,
+}: {
+  model: SceMatchPresentationModel;
+  density: SceActivityPresentationDensity;
+}) {
+  const showCrests = isSceActivityDimensionVisible(density, "crests");
+  const locationLine = model.location
+    ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
+    : undefined;
+
+  return (
+    <div className="min-w-0 space-y-1" data-sce-match-density={density} data-sce-match-list-row-identity>
+      <SceMatchTypeHeader model={model} showStatus={false} />
+      <div
+        className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5"
+        data-testid="sce-match-fixture"
+        data-sce-match-region="fixture"
+        aria-label={buildFixtureAccessibleLabel(model)}
+      >
+        <SceMatchInlineIdentitySide
+          side="home"
+          identity={model.fixture.home}
+          showCrests={showCrests}
+        />
+        <SceMatchFixtureSeparator model={model} density={density} />
+        <SceMatchInlineIdentitySide
+          side="away"
+          identity={model.fixture.away}
+          showCrests={showCrests}
+        />
+      </div>
+      {locationLine ? <SceMatchLocationRow locationLine={locationLine} density={density} /> : null}
+    </div>
+  );
+}
+
 function SceMatchRichCardContent({
   model,
   density,
@@ -528,7 +566,8 @@ export function SceMatchCard({
   surface = "standalone",
   testId = "sce-match-card",
 }: SceMatchCardProps) {
-  const embed = surface === "detail-embed";
+  const listRow = surface === "list-row";
+  const embed = surface === "detail-embed" || listRow;
   const showSchedule =
     !embed && isSceActivityDimensionVisible(density, "schedule");
   const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
@@ -539,11 +578,13 @@ export function SceMatchCard({
   const href = linkToDetail ? model.route.consumeHref : null;
 
   const richBounded =
-    !embed && isSceMatchRichCardDensity(density)
-      ? sceMatchCardBoundedWidthClass(density)
-      : !embed
-        ? "w-full max-w-sm"
-        : "";
+    listRow
+      ? "w-full max-w-none"
+      : !embed && isSceMatchRichCardDensity(density)
+        ? sceMatchCardBoundedWidthClass(density)
+        : !embed
+          ? "w-full max-w-sm"
+          : "";
   const richPadding =
     !embed && isSceMatchRichCardDensity(density)
       ? sceMatchRichDensityScale(density).shellPaddingClass
@@ -556,13 +597,16 @@ export function SceMatchCard({
     richBounded,
     !embed && SCE_MATCH_CARD_SHELL_CLASS,
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
+    listRow && "shadow-none",
     richPadding,
     className,
   );
 
   let content: ReactNode;
 
-  if (embed) {
+  if (listRow) {
+    content = <SceMatchListRowIdentityContent model={model} density={density} />;
+  } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">
         <SceMatchStackedFixturePanel model={model} density={density} />

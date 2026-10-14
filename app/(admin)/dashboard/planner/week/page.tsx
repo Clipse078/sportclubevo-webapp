@@ -231,6 +231,8 @@ export default async function PlannerWeekPageRoute({
           dressingPresetsLoad={dressingPresetsLoad}
           locale={tenantContext.locale ?? "de-CH"}
           timezone={timezone}
+          tenantClubName={tenantContext.name}
+          tenantLogoUrl={tenantClubCrestUrl}
           activePlan={activePlan}
           canManagePlans={canManagePlans}
           canManageTrainings={canManageTrainings}

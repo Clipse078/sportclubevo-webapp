@@ -294,6 +294,21 @@ function SceTrainingRichCardContent({
   );
 }
 
+function SceTrainingListRowIdentityContent({
+  model,
+  density,
+}: {
+  model: SceTrainingPresentationModel;
+  density: SceActivityPresentationDensity;
+}) {
+  return (
+    <div className="min-w-0 space-y-1" data-sce-training-density={density} data-sce-training-list-row-identity>
+      <SceTrainingTypeHeader model={model} density={density} showStatus={false} />
+      <SceTrainingIdentityBlock model={model} density={density} includeTeamInSubtitle />
+    </div>
+  );
+}
+
 function SceTrainingCompactContent({
   model,
   fmtCfg,
@@ -433,7 +448,8 @@ export function SceTrainingCard({
   showStatus = true,
   testId = "sce-training-card",
 }: SceTrainingCardProps) {
-  const embed = surface === "detail-embed";
+  const listRow = surface === "list-row";
+  const embed = surface === "detail-embed" || listRow;
   const showSchedule = !embed && isSceActivityDimensionVisible(density, "schedule");
   const showLocation = !embed && isSceActivityDimensionVisible(density, "location");
   const statusVisible = showStatus && isSceActivityDimensionVisible(density, "status");
@@ -441,13 +457,15 @@ export function SceTrainingCard({
   const href = linkToDetail ? model.route.consumeHref : null;
 
   const richBounded =
-    !embed && isSceTrainingRichCardDensity(density) && density !== "COMPACT"
-      ? sceTrainingCardBoundedWidthClass(density)
-      : !embed && density === "MICRO"
-        ? "w-full max-w-[12rem]"
-        : !embed
-          ? "w-full max-w-sm"
-          : "";
+    listRow
+      ? "w-full max-w-none"
+      : !embed && isSceTrainingRichCardDensity(density) && density !== "COMPACT"
+        ? sceTrainingCardBoundedWidthClass(density)
+        : !embed && density === "MICRO"
+          ? "w-full max-w-[12rem]"
+          : !embed
+            ? "w-full max-w-sm"
+            : "";
 
   const richPadding =
     !embed && isSceTrainingRichCardDensity(density)
@@ -462,13 +480,16 @@ export function SceTrainingCard({
     !embed && density !== "MICRO" && SCE_TRAINING_CARD_SHELL_CLASS,
     !embed && density === "MICRO" && "rounded-md border border-[var(--border)]/80 bg-[var(--surface)]",
     embed && "rounded-none border-0 bg-transparent p-0 shadow-none",
+    listRow && "shadow-none",
     richPadding,
     className,
   );
 
   let content: ReactNode;
 
-  if (embed) {
+  if (listRow) {
+    content = <SceTrainingListRowIdentityContent model={model} density={density} />;
+  } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">
         <SceTrainingIdentityBlock model={model} density={density} />
