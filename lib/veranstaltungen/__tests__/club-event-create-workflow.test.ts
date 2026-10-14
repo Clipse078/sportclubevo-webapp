@@ -8,7 +8,7 @@ import {
 } from "@/lib/veranstaltungen/club-event-create-validation";
 
 describe("club event create workflow tabs", () => {
-  it("uses canonical five-tab configuration", () => {
+  it("uses guided six-step configuration with final Übersicht", () => {
     const config = buildClubEventCreateTabNavigationConfig();
     expect(config.contextKind).toBe("CLUB_EVENT_CREATE");
     expect(config.defaultTab).toBe("uebersicht");
@@ -18,6 +18,7 @@ describe("club event create workflow tabs", () => {
       "termin",
       "ressourcen",
       "publikation",
+      "pruefen",
     ]);
   });
 

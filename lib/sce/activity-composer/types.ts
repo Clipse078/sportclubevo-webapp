@@ -7,6 +7,7 @@ import type {
   SceActivityCreateDraftPersistenceCapability,
   SceActivityCreateResumeDraft,
 } from "./draft-persistence-capability";
+import type { SceActivityGuidedWorkflowConfig } from "./guided-workflow";
 
 /** Canonical activity kinds for unified creation (01B foundation). */
 export type SceActivityCreateKind = "TRAINING" | "MATCH" | "TOURNAMENT" | "CLUB_EVENT";
@@ -83,6 +84,8 @@ export type SceActivityCreateDefinition<
     { draftId: string },
     TTabId
   >;
+  /** Freely navigable, clearly guided — shared workflow navigation (01E R1). */
+  guidedWorkflow?: SceActivityGuidedWorkflowConfig<TDraft, TTabId>;
 };
 
 export type SceActivityComposerProps<

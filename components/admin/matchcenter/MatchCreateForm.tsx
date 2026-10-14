@@ -10,7 +10,10 @@ import type { MatchComposerDraftPayload } from "@/lib/matchcenter/composer/match
 import { resolveMatchComposerTitleForResume } from "@/lib/matchcenter/composer/match-composer-draft-access";
 import { hydrateMatchComposerFormFromDraft } from "@/lib/matchcenter/composer/hydrate-match-composer-form-from-draft";
 import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
-import { buildMatchCreateTabNavigationConfig } from "@/lib/matchcenter/match-create-workflow-config";
+import {
+  buildMatchCreateTabNavigationConfig,
+  type MatchCreateTabId,
+} from "@/lib/matchcenter/match-create-workflow-config";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
@@ -19,9 +22,9 @@ import type { SceActivityCreateOriginContext } from "@/lib/sce/activity-composer
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import { PLANNING_EDITOR_FORM_GRID_CLASS, PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
-import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
-import { ExternalClubPicker, type ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
+import { MatchCreateMatchupSelector } from "@/components/admin/matchcenter/MatchCreateMatchupSelector";
+import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import {
@@ -31,6 +34,10 @@ import {
 import type { MatchTeamOption } from "@/lib/matchcenter/composer/load-match-composer-create-surface-props.server";
 import { MatchClubPair } from "@/components/sporting-activity/MatchClubPair";
 import { buildMatchCreatePreviewClubPair } from "@/lib/matchcenter/composer/build-match-create-preview-pair";
+import {
+  resolveMatchCreateStepComplete,
+  validateMatchCreateWorkflowStep,
+} from "@/lib/matchcenter/match-create-step-validation";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -288,14 +295,20 @@ export default function MatchCreateForm({
 
   const definition = useMemo((): SceActivityCreateDefinition<
     MatchComposerDraftPayload,
-    { eventId: string; outcome: string }
+    { eventId: string; outcome: string },
+    MatchCreateTabId
   > => {
     return {
       activityKind: "MATCH",
       title: composerTitle,
       createActionLabel: "Spiel erstellen",
-      defaultTab: "uebersicht",
+      defaultTab: "teams",
       buildTabNavigationConfig: buildMatchCreateTabNavigationConfig,
+      guidedWorkflow: {
+        finalReviewTab: "uebersicht",
+        validateStep: validateMatchCreateWorkflowStep,
+        resolveStepComplete: resolveMatchCreateStepComplete,
+      },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {
         const errors = computeMatchCreateTabErrors(draft);
@@ -422,18 +435,70 @@ export default function MatchCreateForm({
     };
   }, [initialDraftId, initialResumeDraft]);
 
+  const publicationSummary = [
+    websiteVisible ? "Website" : null,
+    infoboardVisible ? "Infoboard" : null,
+    homepageVisible ? "Homepage" : null,
+    wochenplanVisible ? "Wochenplan" : null,
+  ].filter(Boolean);
+
   const uebersichtPanel = (
-    <PlanningEditorSection testId="match-create-overview-section" ariaLabelledBy="match-create-overview-heading">
-      <PlanningEditorSectionHeading id="match-create-overview-heading" title="Übersicht" />
+    <PlanningEditorSection testId="match-create-review-section" ariaLabelledBy="match-create-review-heading">
+      <PlanningEditorSectionHeading id="match-create-review-heading" title="Übersicht" />
+      <p className="mb-4 text-sm text-[var(--text-2)]">
+        Prüfen Sie die Spielidentität, bevor Sie das Spiel erstellen oder zur Freigabe einreichen.
+      </p>
       {identityPreview ? (
-        <div className="mb-4 space-y-2" data-testid="match-create-identity-preview">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Heim links · Auswärts rechts
-          </p>
-          <MatchClubPair pair={identityPreview} density="management" />
+        <div className="mb-5 space-y-3" data-testid="match-create-identity-preview">
+          <MatchClubPair pair={identityPreview} density="planner" />
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Termin</p>
+              <p className="font-medium text-[var(--foreground)]">
+                {startAt ? new Date(startAt).toLocaleString("de-CH") : "—"}
+                {endAt ? ` – ${new Date(endAt).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}` : ""}
+              </p>
+              {location.trim() ? (
+                <p className="mt-1 text-[var(--text-2)]">{location}</p>
+              ) : null}
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Spielbetrieb</p>
+              <p className="text-[var(--foreground)]">{competitionLabel.trim() || "—"}</p>
+              {remarks.trim() ? <p className="mt-1 text-[var(--text-2)]">{remarks}</p> : null}
+            </div>
+          </div>
+          {homeAway === "HOME" ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ressourcen</p>
+              <ul className="mt-1 space-y-0.5 text-sm text-[var(--foreground)]">
+                {pitchResourceId ? (
+                  <li>Spielfeld / Halle: {resolveResourceDisplay(pitchHallFacilityGroups, pitchResourceId)}</li>
+                ) : null}
+                {homeDressingResourceId ? (
+                  <li>Heim-Garderobe: {resolveResourceDisplay(dressingRoomFacilityGroups, homeDressingResourceId)}</li>
+                ) : null}
+                {awayDressingResourceId ? (
+                  <li>Gast-Garderobe: {resolveResourceDisplay(dressingRoomFacilityGroups, awayDressingResourceId)}</li>
+                ) : null}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--text-2)]">
+              Auswärtsspiel — keine Vereinsressourcen zugewiesen.
+            </p>
+          )}
+          {publicationSummary.length > 0 ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ausspielung</p>
+              <p className="text-sm text-[var(--foreground)]">{publicationSummary.join(" · ")}</p>
+            </div>
+          ) : null}
         </div>
-      ) : null}
-      <p className="text-sm text-[var(--text-2)]">
+      ) : (
+        <p className="text-sm text-[var(--text-2)]">Teams und Termin fehlen noch.</p>
+      )}
+      <p className="text-xs text-[var(--text-2)]">
         Manuelles Spiel — SFV/importierte Spiele werden durch diese Maske nicht verändert.
       </p>
     </PlanningEditorSection>
@@ -442,59 +507,23 @@ export default function MatchCreateForm({
   const teamsPanel = (
     <PlanningEditorSection testId="match-create-teams-section" ariaLabelledBy="match-create-teams-heading">
       <PlanningEditorSectionHeading id="match-create-teams-heading" title="Teams" />
-      <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-        <label className="block space-y-2 md:col-span-2">
-          <span className="fca-label">Eigenes Team</span>
-          {teamOptions.length === 0 ? (
-            <p className="text-sm text-amber-700">Kein Team mit Schreibzugriff verfügbar.</p>
-          ) : (
-            <select
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-              className="fca-select"
-              data-testid="match-create-team-select"
-            >
-              <option value="">— Auswählen —</option>
-              {teamOptions.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {formatTeamLabel(t)}
-                </option>
-              ))}
-            </select>
-          )}
-        </label>
-        <div className="md:col-span-2 space-y-2">
-          <span className="fca-label">Heim / Auswärts (Sportsemantik)</span>
-          <HomeAwaySegmentedControl value={homeAway} onChange={setHomeAway} testId="match-create-home-away" />
-          <p className="text-xs text-[var(--text-2)]">
-            {homeAway === "HOME"
-              ? "Heimspiel — FC Allschwil ist Heim (links in der Identität)."
-              : "Auswärtsspiel — FC Allschwil ist Auswärts (rechts in der Identität)."}
-          </p>
-        </div>
-        <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
-          <div className="block space-y-1">
-            <span className="fca-label">Gegner (Vereinsverzeichnis)</span>
-            <ExternalClubPicker
-              selected={selectedExternalClub}
-              onSelect={setSelectedExternalClub}
-              onClearSelected={() => setSelectedExternalClub(null)}
-              placeholder="Verein suchen…"
-              testId="match-create-opponent-club-search"
-            />
-          </div>
-          <label className="block space-y-1">
-            <span className="fca-label">Anzeigename Gegner</span>
-            <input
-              type="text"
-              value={opponentName}
-              onChange={(e) => setOpponentName(e.target.value)}
-              className="fca-input"
-              data-testid="match-create-opponent-name"
-            />
-          </label>
-        </div>
-      </div>
+      {teamOptions.length === 0 ? (
+        <p className="mb-4 text-sm text-amber-700">Kein Team mit Schreibzugriff verfügbar.</p>
+      ) : null}
+      <MatchCreateMatchupSelector
+        pair={identityPreview}
+        homeAway={homeAway}
+        onHomeAwayChange={setHomeAway}
+        teamOptions={teamOptions}
+        teamId={teamId}
+        onTeamIdChange={setTeamId}
+        formatTeamLabel={formatTeamLabel}
+        selectedExternalClub={selectedExternalClub}
+        onSelectExternalClub={setSelectedExternalClub}
+        onClearExternalClub={() => setSelectedExternalClub(null)}
+        opponentDisplayName={opponentName}
+        onOpponentDisplayNameChange={setOpponentName}
+      />
     </PlanningEditorSection>
   );
 
@@ -603,9 +632,14 @@ export default function MatchCreateForm({
     ) : (
       <PlanningEditorSection testId="match-create-resources-away-section" ariaLabelledBy="match-create-resources-away-heading">
         <PlanningEditorSectionHeading id="match-create-resources-away-heading" title="Ressourcen" />
-        <p className="text-sm text-[var(--text-2)]">
-          Auswärtsspiele nutzen keine FC-Allschwil-Anlagen — Ressourcen bleiben leer; der Ort steht unter Termin.
+        <p className="text-sm text-[var(--text-2)]" data-testid="match-create-resources-away-message">
+          Bei Auswärtsspielen werden keine Vereinsressourcen zugewiesen.
         </p>
+        {location.trim() ? (
+          <p className="mt-2 text-sm text-[var(--text-2)]">
+            Ort (Auswärts): {location}
+          </p>
+        ) : null}
       </PlanningEditorSection>
     );
 
@@ -657,11 +691,11 @@ export default function MatchCreateForm({
   );
 
   definition.tabs = [
-    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
     { key: "teams", label: "Teams", render: () => teamsPanel },
     { key: "termin", label: "Termin", render: () => terminPanel },
     { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
     { key: "spielbetrieb", label: "Spielbetrieb", render: () => spielbetriebPanel },
+    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
   ];
 
   return (

@@ -232,6 +232,9 @@ A modal **Activity Composer must not launch another independent modal, dialog, s
 | Item | Status | Notes |
 |------|--------|-------|
 | **`SceActivityComposer`** shell (overlay / page / fullscreen) | **FOUNDATION_IMPLEMENTED** | `components/sce/activity-composer/` + `SceModalOverlay` |
+| **SCE Guided Activity Composer** (`guidedWorkflow` on create definition) | **CANONICAL (01E-R1)** | Progress «Schritt X von Y», step states (current/completed/error), footer «Zurück» / «Weiter», draft save on every step, domain primary action **only** on final **Übersicht** review — freely navigable, clearly guided; no locked wizard |
+| **`SceActivityComposerWorkflowNav`** | **CANONICAL (01E-R1)** | Workflow presentation over Context Tabs (`aria-current="step"`) |
+| **`MatchCreateMatchupSelector`** | **CANONICAL (01E-R1, Match)** | Football matchup identity — HOME left / AWAY right, large bare crests, composer-safe opponent picker |
 | **Creation contract** (`SceActivityCreateDefinition`) | **FOUNDATION_IMPLEMENTED** | `lib/sce/activity-composer/` — not JSON CRUD |
 | **Context tabs on create** | **REUSABLE** | `SceContextTabs` — Club Event reference on STAGE |
 | **Guided Training/Match/Tournament create** | **EXISTING** | Migrate to tabs in 01D–01F before overlay parity |

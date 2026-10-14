@@ -1,15 +1,16 @@
 import type { ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 
 export type TrainingCreateTabId =
-  | "uebersicht"
   | "team"
   | "termin"
   | "wiederholung"
-  | "ressourcen";
+  | "ressourcen"
+  | "pruefen";
 
-/** Legacy deep links (01D R1 removed Publikation from the Training composer). */
+/** Legacy deep links — editable fields moved off the old first «Übersicht» tab. */
 const OBSOLETE_TRAINING_CREATE_TAB_ALIASES: Partial<Record<string, TrainingCreateTabId>> = {
-  publikation: "uebersicht",
+  uebersicht: "team",
+  publikation: "pruefen",
 };
 
 export function normalizeTrainingCreateTabParam(
@@ -33,13 +34,14 @@ export function buildTrainingCreateTabNavigationConfig(input?: {
 
   return {
     contextKind: "TRAINING_CREATE",
-    defaultTab: "uebersicht",
+    defaultTab: "team",
+    resolveTabParam: (raw) => normalizeTrainingCreateTabParam(raw),
     tabs: [
-      { key: "uebersicht", label: mark("uebersicht", "Übersicht"), placement: "primary" },
       { key: "team", label: mark("team", "Team"), placement: "primary" },
       { key: "termin", label: mark("termin", "Termin"), placement: "primary" },
       { key: "wiederholung", label: mark("wiederholung", "Wiederholung"), placement: "primary" },
       { key: "ressourcen", label: mark("ressourcen", "Ressourcen"), placement: "primary" },
+      { key: "pruefen", label: mark("pruefen", "Übersicht"), placement: "primary" },
     ],
   };
 }

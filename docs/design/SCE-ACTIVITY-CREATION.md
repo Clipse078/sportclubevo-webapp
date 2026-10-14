@@ -91,6 +91,7 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | `effectiveGovernance` | Host-resolved create + publication authority — Composer does not reconstruct role logic |
 | Cancel / dirty | `SceContextDirtyGuardProvider` — dirty = local ≠ last persisted baseline |
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
+| **`guidedWorkflow` (01E-R1)** | Optional `finalReviewTab`, `validateStep`, `resolveStepComplete` — footer «Zurück» / «Weiter», progress UI over Context Tabs; **freely navigable, clearly guided** (not a locked wizard); domain primary action only on final **Übersicht** review |
 
 **Lifecycle (01B-R3 — canonical):**
 

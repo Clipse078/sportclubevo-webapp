@@ -35,7 +35,7 @@ export function computeMatchCreateTabErrors(
 export function firstInvalidMatchCreateTab(
   errors: Partial<Record<MatchCreateTabId, boolean>>,
 ): MatchCreateTabId | null {
-  const order: MatchCreateTabId[] = ["uebersicht", "teams", "termin", "ressourcen", "spielbetrieb"];
+  const order: MatchCreateTabId[] = ["teams", "termin", "ressourcen", "spielbetrieb", "uebersicht"];
   for (const tab of order) {
     if (errors[tab]) return tab;
   }

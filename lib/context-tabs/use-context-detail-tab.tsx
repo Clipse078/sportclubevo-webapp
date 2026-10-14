@@ -83,15 +83,15 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
 
   const visibleTabs = useMemo(() => listAllVisibleTabs(config), [config]);
 
-  const activeTab = useMemo(
-    () =>
-      resolveContextTabFromSearchParams({
-        tabParam: readContextTabParam(searchParams),
-        defaultTab: config.defaultTab,
-        visibleTabs,
-      }),
-    [config.defaultTab, searchParams, visibleTabs],
-  );
+  const activeTab = useMemo(() => {
+    const rawParam = readContextTabParam(searchParams);
+    const tabParam = config.resolveTabParam?.(rawParam) ?? rawParam;
+    return resolveContextTabFromSearchParams({
+      tabParam,
+      defaultTab: config.defaultTab,
+      visibleTabs,
+    });
+  }, [config, searchParams, visibleTabs]);
 
   const basePath = pathname;
 

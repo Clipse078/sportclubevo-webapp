@@ -10,7 +10,14 @@ import type { TrainingComposerDraftPayload } from "@/lib/training/composer/train
 import { resolveTrainingComposerTitleForResume } from "@/lib/training/composer/training-composer-draft-access";
 import { hydrateTrainingComposerFormFromDraft } from "@/lib/training/composer/hydrate-training-composer-form-from-draft";
 import type { SceActivityCreateResumeDraft } from "@/lib/sce/activity-composer/draft-persistence-capability";
-import { buildTrainingCreateTabNavigationConfig } from "@/lib/training/training-create-workflow-config";
+import {
+  buildTrainingCreateTabNavigationConfig,
+  type TrainingCreateTabId,
+} from "@/lib/training/training-create-workflow-config";
+import {
+  resolveTrainingCreateStepComplete,
+  validateTrainingCreateWorkflowStep,
+} from "@/lib/training/training-create-step-validation";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
@@ -329,14 +336,20 @@ export default function TrainingCreateForm({
 
   const definition = useMemo((): SceActivityCreateDefinition<
     TrainingComposerDraftPayload,
-    { seriesId: string; outcome: string }
+    { seriesId: string; outcome: string },
+    TrainingCreateTabId
   > => {
     return {
       activityKind: "TRAINING",
       title: composerTitle,
       createActionLabel: "Training erstellen",
-      defaultTab: "uebersicht",
+      defaultTab: "team",
       buildTabNavigationConfig: buildTrainingCreateTabNavigationConfig,
+      guidedWorkflow: {
+        finalReviewTab: "pruefen",
+        validateStep: validateTrainingCreateWorkflowStep,
+        resolveStepComplete: resolveTrainingCreateStepComplete,
+      },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {
         const errors = computeTrainingCreateTabErrors(draft);
@@ -465,10 +478,47 @@ export default function TrainingCreateForm({
     };
   }, [initialDraftId, initialResumeDraft, defaultTrainingDurationMinutes]);
 
-  const uebersichtPanel = (
-    <PlanningEditorSection testId="training-create-overview-section" ariaLabelledBy="training-create-overview-heading">
-      <PlanningEditorSectionHeading id="training-create-overview-heading" title="Übersicht" />
+  const pruefenPanel = (
+    <PlanningEditorSection testId="training-create-review-section" ariaLabelledBy="training-create-review-heading">
+      <PlanningEditorSectionHeading id="training-create-review-heading" title="Übersicht" />
+      <dl className="space-y-3 text-sm">
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Training</dt>
+          <dd className="font-medium text-[var(--foreground)]">{title.trim() || "—"}</dd>
+          {description.trim() ? <dd className="text-[var(--text-2)]">{description}</dd> : null}
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Team</dt>
+          <dd>{teamSeasons.find((t) => t.id === teamSeasonId)?.teamName ?? "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Termin / Wiederholung</dt>
+          <dd>{recurrenceSummary}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ressourcen</dt>
+          <dd>
+            {pitchDraft?.facilityResourceName ?? "Kein Spielfeld / keine Halle"}
+            {" · "}
+            {dressingDraft?.facilityResourceName ?? "Keine Garderobe"}
+          </dd>
+        </div>
+      </dl>
+    </PlanningEditorSection>
+  );
+
+  const teamPanel = (
+    <PlanningEditorSection testId="training-create-team-section" ariaLabelledBy="training-create-team-heading">
+      <PlanningEditorSectionHeading id="training-create-team-heading" title="Team" />
       <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+        <div className="md:col-span-2">
+          <TeamSeasonSearchablePicker
+            options={teamSeasons}
+            value={teamSeasonId}
+            onChange={setTeamSeasonId}
+            testId="training-create-team-season-select"
+          />
+        </div>
         <label className="block space-y-2 md:col-span-2">
           <span className="fca-label">Trainingsname</span>
           <input
@@ -489,18 +539,6 @@ export default function TrainingCreateForm({
           />
         </label>
       </div>
-    </PlanningEditorSection>
-  );
-
-  const teamPanel = (
-    <PlanningEditorSection testId="training-create-team-section" ariaLabelledBy="training-create-team-heading">
-      <PlanningEditorSectionHeading id="training-create-team-heading" title="Team" />
-      <TeamSeasonSearchablePicker
-        options={teamSeasons}
-        value={teamSeasonId}
-        onChange={setTeamSeasonId}
-        testId="training-create-team-season-select"
-      />
     </PlanningEditorSection>
   );
 
@@ -681,11 +719,11 @@ export default function TrainingCreateForm({
   );
 
   definition.tabs = [
-    { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
     { key: "team", label: "Team", render: () => teamPanel },
     { key: "termin", label: "Termin", render: () => terminPanel },
     { key: "wiederholung", label: "Wiederholung", render: () => wiederholungPanel },
     { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
+    { key: "pruefen", label: "Übersicht", render: () => pruefenPanel },
   ];
 
   return (

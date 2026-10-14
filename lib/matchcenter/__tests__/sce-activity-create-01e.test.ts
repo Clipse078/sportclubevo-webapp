@@ -30,7 +30,7 @@ describe("SCE-ACTIVITY-CREATE-01E — Match adoption", () => {
   it("uses canonical match tabs", () => {
     const config = buildMatchCreateTabNavigationConfig();
     const labels = config.tabs.map((tab) => tab.key);
-    expect(labels).toEqual(["uebersicht", "teams", "termin", "ressourcen", "spielbetrieb"]);
+    expect(labels).toEqual(["teams", "termin", "ressourcen", "spielbetrieb", "uebersicht"]);
   });
 
   it("routes validation to first invalid tab", () => {
@@ -95,6 +95,19 @@ describe("SCE-ACTIVITY-CREATE-01E — Match adoption", () => {
   it("uses shared resource kind icons in form", () => {
     expect(read("components/admin/matchcenter/MatchCreateForm.tsx")).toContain(
       "PlanningResourceAssignmentKindIcon",
+    );
+  });
+
+  it("R1 — guided composer, matchup selector, and portal opponent search", () => {
+    const form = read("components/admin/matchcenter/MatchCreateForm.tsx");
+    expect(form).toContain("guidedWorkflow");
+    expect(form).toContain("MatchCreateMatchupSelector");
+    expect(form).toContain('finalReviewTab: "uebersicht"');
+    expect(read("components/admin/matchcenter/MatchCreateMatchupSelector.tsx")).toContain(
+      "portalResults",
+    );
+    expect(read("components/sce/activity-composer/SceActivityComposer.tsx")).toContain(
+      "SceActivityComposerWorkflowNav",
     );
   });
 

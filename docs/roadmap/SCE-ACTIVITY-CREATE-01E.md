@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01E` |
-| **Status** | **OPEN** — implementation on branch `cursor/sce-activity-create-01e-match-adoption`; PO UAT pending |
+| **Status** | **OPEN** — 01E + **01E-R1** guided composer on branch `cursor/sce-activity-create-01e-match-adoption`; PO visual UAT pending |
 | **Baseline** | STAGE after merge of PR #841 (`62d96645…`) |
 | **Scope** | Adopt manual Match creation onto `SceActivityComposer` with overlay + page parity, drafts, governance, Wochenplaner overlay |
 
@@ -11,7 +11,9 @@
 
 - **Canonical form:** `MatchCreateForm` (single workflow)
 - **Composer:** `SceActivityComposer` with `containerMode` `overlay` | `page`
-- **Tabs:** Übersicht · Teams · Termin · Ressourcen · Spielbetrieb (no fake Publikation tab — Ausspielung lives under Spielbetrieb)
+- **Tabs (01E-R1 guided order):** Teams · Termin · Ressourcen · Spielbetrieb · **Übersicht** (final review — not an opening placeholder)
+- **Guided composer:** shared `guidedWorkflow` on `SceActivityCreateDefinition` — freely navigable steps, «Zurück» / «Weiter», primary create only on final review
+- **Match Teams:** visual **Matchup Selector** (`MatchCreateMatchupSelector`) — HOME left / AWAY right, portal-safe opponent search
 - **Contextual create:** Wochenplaner `+ Erstellen → Spiel` opens overlay; Matchcenter quick access opens same form overlay
 - **Fallback:** `/dashboard/matchcenter/new` page mode unchanged route, same form
 - **Drafts:** `MatchComposerDraft` + `/api/match/composer/drafts|commit`
@@ -33,6 +35,14 @@
 ## Migration
 
 - `20261014120000_sce_activity_create_01e_match` — `MatchComposerDraft`, `matchDraftId` on governance revisions, `activities.match.approve` permission seed
+
+## 01E-R1 PO decisions (guided, product-wide)
+
+- Guided Activity Composer is **canonical for all composer adopters** (Training, Match, Club Event); not Match-only
+- Context Tabs remain the navigation primitive; workflow nav adds progress + footer guidance without a parallel wizard framework
+- Free tab navigation preserved; «Weiter» validates the current step only; full validation on final submit
+- Final canonical review label: **Übersicht** (Training/Club Event final tab key `pruefen` where legacy `?tab=uebersicht` must remain valid)
+- Tournament **not** migrated early (01F boundary unchanged)
 
 ## Deferred
 

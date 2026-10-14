@@ -17,6 +17,12 @@ export type SceActivityComposerFooterProps = {
   submitError?: string | null;
   draftSaveError?: string | null;
   draftSaveAnnouncement?: string | null;
+  /** Guided workflow — show primary create only on final review step. */
+  showPrimarySubmit?: boolean;
+  showGuidedPrevious?: boolean;
+  showGuidedNext?: boolean;
+  onGuidedPrevious?: () => void;
+  onGuidedNext?: () => void;
 };
 
 export function SceActivityComposerFooter({
@@ -32,6 +38,11 @@ export function SceActivityComposerFooter({
   submitError,
   draftSaveError,
   draftSaveAnnouncement,
+  showPrimarySubmit = true,
+  showGuidedPrevious = false,
+  showGuidedNext = false,
+  onGuidedPrevious,
+  onGuidedNext,
 }: SceActivityComposerFooterProps) {
   const busy = isSubmitting || isSavingDraft;
 
@@ -90,17 +101,41 @@ export function SceActivityComposerFooter({
               {saveDraftLabel}
             </Button>
           ) : null}
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onSubmit}
-            loading={isSubmitting}
-            disabled={submitDisabled || busy}
-            aria-busy={isSubmitting}
-            data-testid="sce-activity-composer-submit"
-          >
-            {createActionLabel}
-          </Button>
+          {showGuidedPrevious && onGuidedPrevious ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onGuidedPrevious}
+              disabled={busy}
+              data-testid="sce-activity-composer-previous"
+            >
+              ← Zurück
+            </Button>
+          ) : null}
+          {showGuidedNext && onGuidedNext ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onGuidedNext}
+              disabled={busy}
+              data-testid="sce-activity-composer-next"
+            >
+              Weiter →
+            </Button>
+          ) : null}
+          {showPrimarySubmit ? (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={onSubmit}
+              loading={isSubmitting}
+              disabled={submitDisabled || busy}
+              aria-busy={isSubmitting}
+              data-testid="sce-activity-composer-submit"
+            >
+              {createActionLabel}
+            </Button>
+          ) : null}
         </div>
       </div>
     </footer>

@@ -5,7 +5,8 @@ export type ClubEventCreateTabId =
   | "gueltigkeit"
   | "termin"
   | "ressourcen"
-  | "publikation";
+  | "publikation"
+  | "pruefen";
 
 export function buildClubEventCreateTabNavigationConfig(input?: {
   tabErrors?: Partial<Record<ClubEventCreateTabId, boolean>>;
@@ -18,11 +19,12 @@ export function buildClubEventCreateTabNavigationConfig(input?: {
     contextKind: "CLUB_EVENT_CREATE",
     defaultTab: "uebersicht",
     tabs: [
-      { key: "uebersicht", label: mark("uebersicht", "Übersicht"), placement: "primary" },
+      { key: "uebersicht", label: mark("uebersicht", "Grunddaten"), placement: "primary" },
       { key: "gueltigkeit", label: mark("gueltigkeit", "Gültigkeit"), placement: "primary" },
       { key: "termin", label: mark("termin", "Termin"), placement: "primary" },
       { key: "ressourcen", label: mark("ressourcen", "Ressourcen"), placement: "primary" },
       { key: "publikation", label: mark("publikation", "Publikation"), placement: "primary" },
+      { key: "pruefen", label: mark("pruefen", "Übersicht"), placement: "primary" },
     ],
   };
 }

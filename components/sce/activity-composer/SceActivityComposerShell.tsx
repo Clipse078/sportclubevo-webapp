@@ -33,6 +33,11 @@ export type SceActivityComposerShellProps = {
   draftSaveError?: string | null;
   draftSaveAnnouncement?: string | null;
   validationAnnouncement?: string | null;
+  showPrimarySubmit?: boolean;
+  showGuidedPrevious?: boolean;
+  showGuidedNext?: boolean;
+  onGuidedPrevious?: () => void;
+  onGuidedNext?: () => void;
   dialogRef?: RefObject<HTMLDivElement | null>;
   titleRef?: RefObject<HTMLHeadingElement | null>;
   isModalSurface?: boolean;
@@ -62,6 +67,11 @@ export function SceActivityComposerShell({
   draftSaveError,
   draftSaveAnnouncement,
   validationAnnouncement,
+  showPrimarySubmit,
+  showGuidedPrevious,
+  showGuidedNext,
+  onGuidedPrevious,
+  onGuidedNext,
   dialogRef,
   titleRef,
   isModalSurface = false,
@@ -125,6 +135,11 @@ export function SceActivityComposerShell({
         submitError={submitError}
         draftSaveError={draftSaveError}
         draftSaveAnnouncement={draftSaveAnnouncement}
+        showPrimarySubmit={showPrimarySubmit}
+        showGuidedPrevious={showGuidedPrevious}
+        showGuidedNext={showGuidedNext}
+        onGuidedPrevious={onGuidedPrevious}
+        onGuidedNext={onGuidedNext}
       />
     </div>
   );
