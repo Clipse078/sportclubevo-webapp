@@ -1,14 +1,11 @@
 "use client";
 
-import { useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { cn } from "@/lib/cn";
-import {
-  PLANNING_EDITOR_COMPACT_TIME_INPUT_CLASS,
-  PLANNING_EDITOR_DATETIME_GRID_CLASS,
-  PLANNING_EDITOR_DATE_INPUT_CLASS,
-} from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import { PLANNING_EDITOR_DATETIME_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import { SceActivityDateInput } from "@/components/sce/activity-datetime/SceActivityDateInput";
+import { SceActivityTimeInput } from "@/components/sce/activity-datetime/SceActivityTimeInput";
 
 export type VeranstaltungScheduleFieldValues = {
   allDay: boolean;
@@ -22,16 +19,18 @@ type VeranstaltungScheduleFieldsProps = {
   values: VeranstaltungScheduleFieldValues;
   onChange: (patch: Partial<VeranstaltungScheduleFieldValues>) => void;
   disabled?: boolean;
+  fieldErrors?: Partial<Record<keyof VeranstaltungScheduleFieldValues | "range", string>>;
 };
 
 export default function VeranstaltungScheduleFields({
   values,
   onChange,
   disabled,
+  fieldErrors,
 }: VeranstaltungScheduleFieldsProps) {
-  const allDaySwitchId = useId();
   const t = useTranslations("Veranstaltungen.editor.fields");
   const locale = useLocale();
+  const allDaySwitchId = "veranstaltung-all-day-switch";
 
   const summaryDate = values.startDate
     ? new Intl.DateTimeFormat(locale, {
@@ -45,67 +44,52 @@ export default function VeranstaltungScheduleFields({
     <div className="space-y-4 md:col-span-2" data-testid="veranstaltung-schedule-fields">
       {values.allDay ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-2">
-            <span className="fca-label">
-              {t("dateStart")} <span className="text-rose-500">*</span>
-            </span>
-            <input
-              type="date"
-              value={values.startDate}
-              onChange={(e) => onChange({ startDate: e.target.value })}
-              className={PLANNING_EDITOR_DATE_INPUT_CLASS}
-              required
-              disabled={disabled}
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="fca-label">{t("dateEnd")}</span>
-            <input
-              type="date"
-              value={values.endDate || values.startDate}
-              min={values.startDate}
-              onChange={(e) => onChange({ endDate: e.target.value })}
-              className={PLANNING_EDITOR_DATE_INPUT_CLASS}
-              disabled={disabled}
-            />
-          </label>
+          <SceActivityDateInput
+            label={t("dateStart")}
+            value={values.startDate}
+            onChange={(iso) => onChange({ startDate: iso })}
+            disabled={disabled}
+            required
+            error={fieldErrors?.startDate}
+            testId="veranstaltung-start-date"
+          />
+          <SceActivityDateInput
+            label={t("dateEnd")}
+            value={values.endDate || values.startDate}
+            onChange={(iso) => onChange({ endDate: iso })}
+            disabled={disabled}
+            error={fieldErrors?.endDate}
+            testId="veranstaltung-end-date"
+          />
         </div>
       ) : (
         <div className={cn(PLANNING_EDITOR_DATETIME_GRID_CLASS, "md:col-span-2")}>
-          <label className="block min-w-0 space-y-2">
-            <span className="fca-label">
-              {t("date")} <span className="text-rose-500">*</span>
-            </span>
-            <input
-              type="date"
-              value={values.startDate}
-              onChange={(e) => onChange({ startDate: e.target.value })}
-              className={PLANNING_EDITOR_DATE_INPUT_CLASS}
-              required
-              disabled={disabled}
-            />
-          </label>
-          <label className="block min-w-0 space-y-2">
-            <span className="fca-label">{t("timeStart")}</span>
-            <input
-              type="time"
-              value={values.startTime}
-              onChange={(e) => onChange({ startTime: e.target.value })}
-              className={PLANNING_EDITOR_COMPACT_TIME_INPUT_CLASS}
-              required
-              disabled={disabled}
-            />
-          </label>
-          <label className="block min-w-0 space-y-2">
-            <span className="fca-label">{t("timeEnd")}</span>
-            <input
-              type="time"
-              value={values.endTime}
-              onChange={(e) => onChange({ endTime: e.target.value })}
-              className={PLANNING_EDITOR_COMPACT_TIME_INPUT_CLASS}
-              disabled={disabled}
-            />
-          </label>
+          <SceActivityDateInput
+            label={t("date")}
+            value={values.startDate}
+            onChange={(iso) => onChange({ startDate: iso })}
+            disabled={disabled}
+            required
+            error={fieldErrors?.startDate}
+            testId="veranstaltung-date"
+          />
+          <SceActivityTimeInput
+            label={t("timeStart")}
+            value={values.startTime}
+            onChange={(time) => onChange({ startTime: time })}
+            disabled={disabled}
+            required
+            error={fieldErrors?.startTime}
+            testId="veranstaltung-start-time"
+          />
+          <SceActivityTimeInput
+            label={t("timeEnd")}
+            value={values.endTime}
+            onChange={(time) => onChange({ endTime: time })}
+            disabled={disabled}
+            error={fieldErrors?.endTime ?? fieldErrors?.range}
+            testId="veranstaltung-end-time"
+          />
         </div>
       )}
 

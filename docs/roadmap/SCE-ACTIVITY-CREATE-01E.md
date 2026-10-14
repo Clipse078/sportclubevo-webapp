@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01E` |
-| **Status** | **OPEN** — 01E + **01E-R1** guided composer on branch `cursor/sce-activity-create-01e-match-adoption`; PO visual UAT pending |
+| **Status** | **OPEN** — 01E-R2 on branch `cursor/sce-activity-create-01e-match-adoption`; PO visual UAT pending after R2 |
 | **Baseline** | STAGE after merge of PR #841 (`62d96645…`) |
 | **Scope** | Adopt manual Match creation onto `SceActivityComposer` with overlay + page parity, drafts, governance, Wochenplaner overlay |
 
@@ -44,7 +44,18 @@
 - Final canonical review label: **Übersicht** (Training/Club Event final tab key `pruefen` where legacy `?tab=uebersicht` must remain valid)
 - Tournament **not** migrated early (01F boundary unchanged)
 
+## 01E-R1 PO UAT
+
+- **Result:** FAIL — blocking interaction regressions (Weiter, matchup/resources) + rejected browser-native combined datetime UX
+
+## 01E-R2 corrections
+
+- **Composer draft sync:** Match/Training/Club Event pass live `draft={buildPayload()}` so guided «Weiter» validates user input (fixes silent/stale validation)
+- **Match matchup:** identity preview always rendered — team/opponent selection available on empty drafts
+- **Guided validation:** field-level errors + visible composer banner; step completion requires domain validity (not tab visit order)
+- **Canonical SCE date/time:** `SceActivityDateInput` / `SceActivityTimeInput` / `SceActivityDateTimeInput` — DD.MM.YYYY + HH:MM manual entry, optional calendar popover; adopted on Training, Match, Club Event schedule fields; Tournament create start/end (+ meeting time) only (**01F** composer/governance unchanged)
+
 ## Deferred
 
 - Match validator pool admin UI (club-level) — mirror Club Event validator pool section in a follow-up if required
-- 01F+ packages not started
+- 01F+ packages not started (Tournament full SCE composer adoption remains 01F)

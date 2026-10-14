@@ -35,7 +35,12 @@ export function SceActivityComposerBody({
     >
       <div className="shrink-0 px-5 sm:px-6">{tabsRegion}</div>
       {validationAnnouncement ? (
-        <p className="sr-only" role="status" aria-live="polite">
+        <p
+          role="alert"
+          aria-live="polite"
+          className="mx-5 mt-2 rounded-lg border border-[var(--sce-danger)]/30 bg-[var(--sce-danger)]/10 px-3 py-2 text-sm text-[var(--sce-danger)] sm:mx-6"
+          data-testid="sce-activity-composer-validation-banner"
+        >
           {validationAnnouncement}
         </p>
       ) : null}

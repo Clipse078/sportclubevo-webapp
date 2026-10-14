@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { SceActivityTimeInput } from "@/components/sce/activity-datetime/SceActivityTimeInput";
 import { formatTrainingSlotDuration } from "@/lib/training/training-schedule-presentation";
 import type { Weekday } from "@/lib/training/types";
 import {
@@ -91,23 +92,25 @@ export default function TrainingWeekdayScheduleEditor({
 
               {row.enabled ? (
                 <>
-                  <input
-                    type="time"
+                  <SceActivityTimeInput
+                    label={`${row.label} Beginn`}
                     value={row.startsAt}
-                    onChange={(e) => onTimeChange(row.weekday, "startsAt", e.target.value)}
-                    className={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
+                    onChange={(value) => onTimeChange(row.weekday, "startsAt", value)}
                     required
-                    aria-label={`${row.label} Beginn`}
-                    data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}-start`}
+                    compact
+                    helperText=""
+                    testId={`${testIdPrefix}-${row.weekday.toLowerCase()}-start`}
+                    inputClassName={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
                   />
-                  <input
-                    type="time"
+                  <SceActivityTimeInput
+                    label={`${row.label} Ende`}
                     value={row.endsAt}
-                    onChange={(e) => onTimeChange(row.weekday, "endsAt", e.target.value)}
-                    className={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
+                    onChange={(value) => onTimeChange(row.weekday, "endsAt", value)}
                     required
-                    aria-label={`${row.label} Ende`}
-                    data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}-end`}
+                    compact
+                    helperText=""
+                    testId={`${testIdPrefix}-${row.weekday.toLowerCase()}-end`}
+                    inputClassName={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
                   />
                   <p className="text-xs tabular-nums text-[var(--text-2)] sm:text-right" aria-live="polite">
                     {duration ?? "—"}

@@ -32,6 +32,14 @@ describe("SCE Guided Activity Composer workflow helpers", () => {
         activeTab: "c",
         orderedTabKeys: ORDER,
       }),
+    ).toBe("pending");
+    expect(
+      resolveGuidedStepVisualState({
+        tabKey: "a",
+        activeTab: "c",
+        orderedTabKeys: ORDER,
+        stepComplete: true,
+      }),
     ).toBe("completed");
     expect(
       resolveGuidedStepVisualState({

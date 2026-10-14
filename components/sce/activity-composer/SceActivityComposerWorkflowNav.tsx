@@ -104,7 +104,7 @@ export default function SceActivityComposerWorkflowNav<TTabId extends ContextTab
     }
     if (dirtyNav?.isDirty || localNavigation) {
       event.preventDefault();
-      navigateToTab(tabKey);
+      navigateToTab(tabKey, { skipDirtyConfirm: true });
     }
   }
 
@@ -128,7 +128,7 @@ export default function SceActivityComposerWorkflowNav<TTabId extends ContextTab
         focusTabAtIndex(index);
         return;
       }
-      navigateToTab(tab.key);
+      navigateToTab(tab.key, { skipDirtyConfirm: true });
       focusTabAtIndex(index);
     },
     [activeTab, focusTabAtIndex, navigateToTab, primaryTabs],

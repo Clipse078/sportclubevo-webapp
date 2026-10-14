@@ -225,7 +225,7 @@ function ComposerWorkspace<
 
   const handleGuidedPrevious = useCallback(() => {
     if (guidedPreviousStep) {
-      navigateToTab(guidedPreviousStep);
+      navigateToTab(guidedPreviousStep, { skipDirtyConfirm: true });
     }
   }, [guidedPreviousStep, navigateToTab]);
 
@@ -239,13 +239,29 @@ function ComposerWorkspace<
       setTabErrors((prev) => ({ ...prev, ...validation.tabErrors }));
       setFieldErrors(validation.fieldErrors);
       if (!validation.valid) {
-        setValidationAnnouncement("Bitte prüfen Sie die markierten Bereiche.");
+        const firstFieldMessage = validation.fieldErrors
+          ? Object.values(validation.fieldErrors)[0]
+          : null;
+        setValidationAnnouncement(
+          firstFieldMessage ?? "Bitte prüfen Sie die markierten Bereiche.",
+        );
+        requestAnimationFrame(() => {
+          const panel =
+            panelRef.current ??
+            document.querySelector<HTMLElement>(
+              `[data-testid="${testId ?? "sce-activity-composer"}"]`,
+            );
+          const firstInvalid =
+            panel?.querySelector<HTMLElement>("[aria-invalid='true']") ??
+            panel?.querySelector<HTMLElement>("[data-testid$='-input']");
+          firstInvalid?.focus();
+        });
         return;
       }
     }
     setValidationAnnouncement(null);
-    navigateToTab(guidedNextStep);
-  }, [activeTab, draft, guidedEnabled, guidedNextStep, guidedWorkflow, navigateToTab]);
+    navigateToTab(guidedNextStep, { skipDirtyConfirm: true });
+  }, [activeTab, draft, guidedEnabled, guidedNextStep, guidedWorkflow, navigateToTab, panelRef, testId]);
 
   const handleSaveDraft = useCallback(async () => {
     if (!draftPersistence) {

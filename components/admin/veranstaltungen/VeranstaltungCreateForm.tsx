@@ -514,6 +514,8 @@ export default function VeranstaltungCreateForm({
     otherDrafts,
   ]);
 
+  const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
+
   const definition = useMemo((): SceActivityCreateDefinition<
     ClubEventComposerDraftPayload,
     { eventIds: string[]; outcome: string },
@@ -929,6 +931,7 @@ export default function VeranstaltungCreateForm({
       <SceActivityComposer
         key={resumeDraft?.draftId ?? "club-event-create-new"}
         definition={definition}
+        draft={composerDraft}
         containerMode={containerMode}
         open={open}
         onClose={onClose ?? (() => router.push("/dashboard/veranstaltungen"))}

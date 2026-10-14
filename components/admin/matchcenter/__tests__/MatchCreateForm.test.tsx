@@ -30,7 +30,7 @@ vi.mock("@/components/sce/activity-composer/SceActivityComposer", () => ({
     <div data-testid={testId ?? "match-create-composer-mock"}>
       {definition.tabs.map((tab) => (
         <section key={tab.key} data-testid={`match-create-tab-${tab.key}`}>
-          {tab.render()}
+          {tab.render({})}
         </section>
       ))}
     </div>
@@ -114,17 +114,28 @@ describe("MatchCreateForm — composer tabs (01E)", () => {
     expect(screen.getByTestId("match-create-location")).toBeTruthy();
   });
 
-  it("shows identity preview after team selection", () => {
+  it("shows identity preview after team and opponent are set", () => {
     renderForm();
     fireEvent.change(screen.getByTestId("match-create-team-select"), { target: { value: "team-1" } });
+    fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
+    fireEvent.change(screen.getByTestId("match-create-opponent-name-away"), {
+      target: { value: "FC Rival" },
+    });
+    fireEvent.change(screen.getByTestId("match-create-schedule-date-input"), {
+      target: { value: "20.09.2026" },
+    });
+    fireEvent.blur(screen.getByTestId("match-create-schedule-date-input"));
+    fireEvent.change(screen.getByTestId("match-create-schedule-start-time-input"), {
+      target: { value: "17:00" },
+    });
+    fireEvent.blur(screen.getByTestId("match-create-schedule-start-time-input"));
     expect(screen.getByTestId("match-create-identity-preview")).toBeTruthy();
-    expect(screen.getByText(/Heim links/)).toBeTruthy();
   });
 
   it("AWAY ressourcen tab explains no tenant facilities", () => {
     renderForm();
-    fireEvent.click(screen.getByRole("radio", { name: "Auswärts" }));
-    expect(screen.getByText(/keine FC-Allschwil-Anlagen/)).toBeTruthy();
+    fireEvent.click(screen.getByTestId("match-create-home-away-switch"));
+    expect(screen.getByText(/keine Vereinsressourcen zugewiesen/)).toBeTruthy();
   });
 });
 
@@ -146,7 +157,8 @@ describe("MatchCreateForm — Gegner", () => {
     );
 
     renderForm();
-    const input = screen.getByTestId("match-create-opponent-club-search-input");
+    fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
+    const input = screen.getByTestId("match-create-opponent-club-search-away-input");
     fireEvent.change(input, { target: { value: "Concord" } });
 
     await waitFor(() => {
@@ -170,9 +182,14 @@ describe("MatchCreateForm — HOME availability", () => {
     );
 
     renderForm();
-    fireEvent.change(screen.getByTestId("match-create-start-at"), {
-      target: { value: "2026-09-20T17:00" },
+    fireEvent.change(screen.getByTestId("match-create-schedule-date-input"), {
+      target: { value: "20.09.2026" },
     });
+    fireEvent.blur(screen.getByTestId("match-create-schedule-date-input"));
+    fireEvent.change(screen.getByTestId("match-create-schedule-start-time-input"), {
+      target: { value: "17:00" },
+    });
+    fireEvent.blur(screen.getByTestId("match-create-schedule-start-time-input"));
 
     await waitFor(() => {
       expect(availabilityCalls.length).toBeGreaterThan(0);

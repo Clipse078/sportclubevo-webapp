@@ -34,6 +34,12 @@ import TurniereRecordSection from "@/components/admin/tournamentcenter/record/Tu
 import TurniereRecordWorkspaceShell from "@/components/admin/tournamentcenter/record/TurniereRecordWorkspaceShell";
 import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/tournamentcenter/record/turniere-record-layout";
 import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
+import { SceActivityDateTimeInput } from "@/components/sce/activity-datetime/SceActivityDateTimeInput";
+import { SceActivityTimeInput } from "@/components/sce/activity-datetime/SceActivityTimeInput";
+import {
+  combineIsoDateAndTimeToDateTimeLocal,
+  splitDateTimeLocalValue,
+} from "@/lib/sce/activity-datetime/sce-activity-datetime";
 import {
   TournamentDressingRoomLabelIcon,
   TournamentTeamLogo,
@@ -818,32 +824,39 @@ export default function TournamentCreateForm({
 
       <TurniereRecordSection title="Termin" testId="turniere-create-section-termin">
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block space-y-2">
-            <span className="fca-label">Start</span>
-            <input
-              type="datetime-local"
-              value={startAt}
-              onChange={(e) => setStartAt(e.target.value)}
-              className="fca-input"
-              required
-              data-testid="tournament-create-start-at"
+          <div className="sm:col-span-2">
+            <SceActivityDateTimeInput
+              value={{ startAt, endAt }}
+              onChange={({ startAt: nextStart, endAt: nextEnd }) => {
+                setStartAt(nextStart);
+                setEndAt(nextEnd);
+                if (meetingTime) {
+                  const meetingParts = splitDateTimeLocalValue(meetingTime);
+                  const startParts = splitDateTimeLocalValue(nextStart);
+                  if (meetingParts && startParts) {
+                    setMeetingTime(
+                      combineIsoDateAndTimeToDateTimeLocal(startParts.isoDateKey, meetingParts.time),
+                    );
+                  }
+                }
+              }}
+              testId="tournament-create-schedule"
             />
-          </label>
+          </div>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Ende</span>
-            <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className="fca-input" />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">Treffpunkt</span>
-            <input
-              type="datetime-local"
-              value={meetingTime}
-              onChange={(e) => setMeetingTime(e.target.value)}
-              className="fca-input"
-            />
-          </label>
+          <SceActivityTimeInput
+            label="Treffpunkt"
+            value={splitDateTimeLocalValue(meetingTime)?.time ?? ""}
+            onChange={(time) => {
+              const startParts = splitDateTimeLocalValue(startAt);
+              if (!startParts || !time) {
+                setMeetingTime("");
+                return;
+              }
+              setMeetingTime(combineIsoDateAndTimeToDateTimeLocal(startParts.isoDateKey, time));
+            }}
+            testId="tournament-create-meeting-time"
+          />
 
           <div className="sm:col-span-2">
             <TournamentStandardDurationHint

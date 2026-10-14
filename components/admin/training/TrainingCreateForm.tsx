@@ -42,6 +42,8 @@ import {
   DEFAULT_TRAINING_WALL_CLOCK_START,
 } from "@/lib/training/training-schedule-presentation";
 import { defaultTrainingCreateEndTime } from "@/lib/training/training-create-schedule-defaults";
+import { SceActivityDateInput } from "@/components/sce/activity-datetime/SceActivityDateInput";
+import { SceActivityTimeInput } from "@/components/sce/activity-datetime/SceActivityTimeInput";
 import type { TeamSeasonOption } from "@/components/admin/training/TrainingSeriesCreateForm";
 
 const WEEKDAY_ORDER: Weekday[] = [
@@ -307,6 +309,8 @@ export default function TrainingCreateForm({
     dressingDraft,
   ]);
 
+  const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
+
   const tabErrors = useMemo(
     () => (submitAttempted ? computeTrainingCreateTabErrors(buildPayload()) : {}),
     [submitAttempted, buildPayload],
@@ -551,40 +555,37 @@ export default function TrainingCreateForm({
           : "Datum und Uhrzeit definieren das eine Training — ohne Wiederholung entsteht genau ein Termin."}
       </p>
       <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-        <label className="block space-y-2">
-          <span className="fca-label">{recurrenceEnabled ? "Startdatum" : "Datum"}</span>
-          <input
-            type="date"
+        <div className="space-y-1">
+          <SceActivityDateInput
+            label={recurrenceEnabled ? "Startdatum" : "Datum"}
             value={validFrom}
-            onChange={(e) => setValidFrom(e.target.value)}
-            className="fca-input h-8 text-sm"
-            data-testid="training-create-date"
-            aria-describedby="training-create-termin-date-hint"
+            onChange={setValidFrom}
+            required
+            testId="training-create-date"
+            inputClassName="h-8"
           />
           <span id="training-create-termin-date-hint" className="block text-xs text-[var(--text-2)]">
             {recurrenceEnabled
               ? "Ab diesem Datum werden die gewählten Trainingstage geplant (erster Termin am passenden Wochentag)."
               : "Der Termin fällt auf diesen Kalendertag."}
           </span>
-        </label>
-        <label className="block space-y-2">
-          <span className="fca-label">Start</span>
-          <input
-            type="time"
-            value={startsAt}
-            onChange={(e) => handleStartsAtChange(e.target.value)}
-            className="fca-input h-8 text-sm"
-          />
-        </label>
-        <label className="block space-y-2">
-          <span className="fca-label">Ende</span>
-          <input
-            type="time"
-            value={endsAt}
-            onChange={(e) => handleEndsAtChange(e.target.value)}
-            className="fca-input h-8 text-sm"
-          />
-        </label>
+        </div>
+        <SceActivityTimeInput
+          label="Startzeit"
+          value={startsAt}
+          onChange={handleStartsAtChange}
+          required
+          testId="training-create-start-time"
+          inputClassName="h-8"
+        />
+        <SceActivityTimeInput
+          label="Endzeit"
+          value={endsAt}
+          onChange={handleEndsAtChange}
+          required
+          testId="training-create-end-time"
+          inputClassName="h-8"
+        />
       </div>
     </PlanningEditorSection>
   );
@@ -610,19 +611,18 @@ export default function TrainingCreateForm({
               Wählen Sie die Trainingstage und optional unterschiedliche Zeiten pro Tag. Der erste Termin
               liegt am nächsten gewählten Wochentag ab Startdatum.
             </p>
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Serie gültig bis</span>
-              <input
-                type="date"
+            <div className="max-w-xs space-y-1">
+              <SceActivityDateInput
+                label="Serie gültig bis"
                 value={validUntil}
-                onChange={(e) => setValidUntil(e.target.value)}
-                className="fca-input h-8 text-sm"
-                data-testid="training-create-valid-until"
+                onChange={setValidUntil}
+                testId="training-create-valid-until"
+                inputClassName="h-8"
               />
               <span className="block text-xs text-[var(--text-2)]">
                 Letzter Kalendertag, an dem noch ein Training geplant wird.
               </span>
-            </label>
+            </div>
             <TrainingWeekdayScheduleEditor
               rows={weekdayRows}
               onToggle={(weekday) =>
@@ -738,6 +738,7 @@ export default function TrainingCreateForm({
       <SceActivityComposer
         key={resumeDraft?.draftId ?? "training-create-new"}
         definition={definition}
+        draft={composerDraft}
         containerMode={containerMode}
         open={open}
         onClose={onClose ?? (() => router.push("/dashboard/training"))}

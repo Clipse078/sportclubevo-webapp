@@ -77,11 +77,6 @@ export function resolveGuidedStepVisualState<TTabId extends ContextTabId>(input:
     return "completed";
   }
 
-  const tabIndex = orderedTabKeys.indexOf(tabKey);
-  const activeIndex = orderedTabKeys.indexOf(activeTab);
-  if (tabIndex >= 0 && activeIndex >= 0 && tabIndex < activeIndex) {
-    return "completed";
-  }
   return "pending";
 }
 

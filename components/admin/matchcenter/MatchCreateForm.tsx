@@ -39,6 +39,8 @@ import {
   validateMatchCreateWorkflowStep,
 } from "@/lib/matchcenter/match-create-step-validation";
 import { useTranslations } from "next-intl";
+import { SceActivityDateTimeInput } from "@/components/sce/activity-datetime/SceActivityDateTimeInput";
+import { cn } from "@/lib/cn";
 
 type Props = {
   activeSeasonId: string;
@@ -281,7 +283,6 @@ export default function MatchCreateForm({
   }, [persistedBaseline?.teamDisplayName, resumeDraft, opponentName, selectedExternalClub]);
 
   const identityPreview = useMemo(() => {
-    if (!selectedTeam && !getEffectiveOpponentDisplayName()) return null;
     return buildMatchCreatePreviewClubPair({
       tenantClubName,
       tenantLogoUrl,
@@ -292,6 +293,8 @@ export default function MatchCreateForm({
       opponentExternalLogoUrl: selectedExternalClub?.logoUrl ?? null,
     });
   }, [tenantClubName, tenantLogoUrl, selectedTeam, homeAway, opponentName, selectedExternalClub]);
+
+  const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
 
   const definition = useMemo((): SceActivityCreateDefinition<
     MatchComposerDraftPayload,
@@ -448,7 +451,7 @@ export default function MatchCreateForm({
       <p className="mb-4 text-sm text-[var(--text-2)]">
         Prüfen Sie die Spielidentität, bevor Sie das Spiel erstellen oder zur Freigabe einreichen.
       </p>
-      {identityPreview ? (
+      {selectedTeam && getEffectiveOpponentDisplayName() && startAt ? (
         <div className="mb-5 space-y-3" data-testid="match-create-identity-preview">
           <MatchClubPair pair={identityPreview} density="planner" />
           <div className="grid gap-3 text-sm sm:grid-cols-2">
@@ -504,53 +507,65 @@ export default function MatchCreateForm({
     </PlanningEditorSection>
   );
 
-  const teamsPanel = (
-    <PlanningEditorSection testId="match-create-teams-section" ariaLabelledBy="match-create-teams-heading">
-      <PlanningEditorSectionHeading id="match-create-teams-heading" title="Teams" />
-      {teamOptions.length === 0 ? (
-        <p className="mb-4 text-sm text-amber-700">Kein Team mit Schreibzugriff verfügbar.</p>
-      ) : null}
-      <MatchCreateMatchupSelector
-        pair={identityPreview}
-        homeAway={homeAway}
-        onHomeAwayChange={setHomeAway}
-        teamOptions={teamOptions}
-        teamId={teamId}
-        onTeamIdChange={setTeamId}
-        formatTeamLabel={formatTeamLabel}
-        selectedExternalClub={selectedExternalClub}
-        onSelectExternalClub={setSelectedExternalClub}
-        onClearExternalClub={() => setSelectedExternalClub(null)}
-        opponentDisplayName={opponentName}
-        onOpponentDisplayNameChange={setOpponentName}
-      />
-    </PlanningEditorSection>
-  );
+  function renderTeamsPanel(fieldErrors?: Record<string, string>) {
+    return (
+      <PlanningEditorSection testId="match-create-teams-section" ariaLabelledBy="match-create-teams-heading">
+        <PlanningEditorSectionHeading id="match-create-teams-heading" title="Teams" />
+        {fieldErrors?.teams ? (
+          <p role="alert" className="mb-3 text-sm text-[var(--sce-danger)]" data-testid="match-create-teams-error">
+            {fieldErrors.teams}
+          </p>
+        ) : null}
+        {fieldErrors?.teamId ? (
+          <p role="alert" className="mb-3 text-sm text-[var(--sce-danger)]" data-testid="match-create-team-error">
+            {fieldErrors.teamId}
+          </p>
+        ) : null}
+        {fieldErrors?.opponent ? (
+          <p role="alert" className="mb-3 text-sm text-[var(--sce-danger)]" data-testid="match-create-opponent-error">
+            {fieldErrors.opponent}
+          </p>
+        ) : null}
+        {teamOptions.length === 0 ? (
+          <p className="mb-4 text-sm text-amber-700">Kein Team mit Schreibzugriff verfügbar.</p>
+        ) : null}
+        <MatchCreateMatchupSelector
+          pair={identityPreview}
+          homeAway={homeAway}
+          onHomeAwayChange={setHomeAway}
+          teamOptions={teamOptions}
+          teamId={teamId}
+          onTeamIdChange={setTeamId}
+          formatTeamLabel={formatTeamLabel}
+          selectedExternalClub={selectedExternalClub}
+          onSelectExternalClub={setSelectedExternalClub}
+          onClearExternalClub={() => setSelectedExternalClub(null)}
+          opponentDisplayName={opponentName}
+          onOpponentDisplayNameChange={setOpponentName}
+        />
+      </PlanningEditorSection>
+    );
+  }
 
-  const terminPanel = (
-    <PlanningEditorSection testId="match-create-schedule-section" ariaLabelledBy="match-create-schedule-heading">
-      <PlanningEditorSectionHeading id="match-create-schedule-heading" title="Termin" />
-      <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-        <label className="block space-y-2">
-          <span className="fca-label">Start</span>
-          <input
-            type="datetime-local"
-            value={startAt}
-            onChange={(e) => setStartAt(e.target.value)}
-            className="fca-input h-8 text-sm"
-            data-testid="match-create-start-at"
-          />
-        </label>
-        <label className="block space-y-2">
-          <span className="fca-label">Ende</span>
-          <input
-            type="datetime-local"
-            value={endAt}
-            onChange={(e) => setEndAt(e.target.value)}
-            className="fca-input h-8 text-sm"
-            data-testid="match-create-end-at"
-          />
-        </label>
+  function renderTerminPanel(fieldErrors?: Record<string, string>) {
+    return (
+      <PlanningEditorSection testId="match-create-schedule-section" ariaLabelledBy="match-create-schedule-heading">
+        <PlanningEditorSectionHeading id="match-create-schedule-heading" title="Termin" />
+        <SceActivityDateTimeInput
+          value={{ startAt, endAt }}
+          onChange={({ startAt: nextStart, endAt: nextEnd }) => {
+            setStartAt(nextStart);
+            setEndAt(nextEnd);
+          }}
+          fieldErrors={{
+            date: fieldErrors?.date,
+            startTime: fieldErrors?.startTime,
+            endTime: fieldErrors?.endTime,
+            range: fieldErrors?.range,
+          }}
+          testId="match-create-schedule"
+        />
+        <div className={cn(PLANNING_EDITOR_FORM_GRID_CLASS, "mt-4")}>
         <label className="block space-y-2 md:col-span-2">
           <span className="fca-label">
             {homeAway === "AWAY" ? "Ort (authoritative Auswärtsangabe)" : "Ort (optional)"}
@@ -575,12 +590,28 @@ export default function MatchCreateForm({
         </label>
       </div>
     </PlanningEditorSection>
-  );
+    );
+  }
 
-  const ressourcenPanel =
-    homeAway === "HOME" ? (
+  function renderRessourcenPanel(fieldErrors?: Record<string, string>) {
+    return homeAway === "HOME" ? (
       <PlanningEditorSection testId="match-create-resources-section" ariaLabelledBy="match-create-resources-heading">
         <PlanningEditorSectionHeading id="match-create-resources-heading" title="Ressourcen" />
+        {fieldErrors?.pitch ? (
+          <p role="alert" className="mb-2 text-sm text-[var(--sce-danger)]" data-testid="match-create-pitch-error">
+            {fieldErrors.pitch}
+          </p>
+        ) : null}
+        {fieldErrors?.dressingHome ? (
+          <p role="alert" className="mb-2 text-sm text-[var(--sce-danger)]" data-testid="match-create-dressing-home-error">
+            {fieldErrors.dressingHome}
+          </p>
+        ) : null}
+        {fieldErrors?.dressingAway ? (
+          <p role="alert" className="mb-2 text-sm text-[var(--sce-danger)]" data-testid="match-create-dressing-away-error">
+            {fieldErrors.dressingAway}
+          </p>
+        ) : null}
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -642,6 +673,7 @@ export default function MatchCreateForm({
         ) : null}
       </PlanningEditorSection>
     );
+  }
 
   const spielbetriebPanel = (
     <PlanningEditorSection testId="match-create-spielbetrieb-section" ariaLabelledBy="match-create-spielbetrieb-heading">
@@ -691,9 +723,21 @@ export default function MatchCreateForm({
   );
 
   definition.tabs = [
-    { key: "teams", label: "Teams", render: () => teamsPanel },
-    { key: "termin", label: "Termin", render: () => terminPanel },
-    { key: "ressourcen", label: "Ressourcen", render: () => ressourcenPanel },
+    {
+      key: "teams",
+      label: "Teams",
+      render: (ctx) => renderTeamsPanel(ctx?.fieldErrors),
+    },
+    {
+      key: "termin",
+      label: "Termin",
+      render: (ctx) => renderTerminPanel(ctx?.fieldErrors),
+    },
+    {
+      key: "ressourcen",
+      label: "Ressourcen",
+      render: (ctx) => renderRessourcenPanel(ctx?.fieldErrors),
+    },
     { key: "spielbetrieb", label: "Spielbetrieb", render: () => spielbetriebPanel },
     { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },
   ];
@@ -710,6 +754,7 @@ export default function MatchCreateForm({
       <SceActivityComposer
         key={resumeDraft?.draftId ?? "match-create-new"}
         definition={definition}
+        draft={composerDraft}
         containerMode={containerMode}
         open={open}
         onClose={onClose ?? (() => router.push("/dashboard/matchcenter"))}
