@@ -9,7 +9,7 @@
 | **STAGE baseline (package start)** | `62d96645d8abc923067a512871b69ebc8dbb971a` (post PR #841) |
 | **STAGE at feature branch point** | `9064374eced0b3e862dd7320679ce00c2e08e498` (docs-only drift after #841; no 01E conflict) |
 | **Feature HEAD (pre-merge)** | `2f14d838e5cc60479763ed9cf3bead1f9fcf0cd3` (+ closure commit on branch) |
-| **Next package** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption (**IMPLEMENTED / PO UAT**) |
+| **Next package** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption (**CLOSED** PR **#843**) |
 
 ## Architecture
 
@@ -113,4 +113,4 @@ Prior R1–R5 PO decisions and fixes retained.
 ## Deferred
 
 - Match validator pool admin UI (club-level) — follow-up if required
-- **01F** Tournament full SCE composer adoption — **NOT_STARTED** (inherits guided semantics + design system from this package)
+- **01F** Tournament full SCE composer adoption — **CLOSED** (PR **#843**; inherits guided semantics + design system from this package)
