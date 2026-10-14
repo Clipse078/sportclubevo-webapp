@@ -4,9 +4,10 @@ import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 export function buildMatchCreatePreviewSummary(input: {
   tenantClubName: string;
   tenantLogoUrl: string | null;
-  teamDisplayName: string;
+  tenantTeamName: string;
   homeAway: "HOME" | "AWAY";
-  opponentDisplayName: string;
+  opponentClubName: string;
+  opponentTeamName: string;
   opponentExternalClubId: string | null;
   opponentExternalLogoUrl?: string | null;
 }): Pick<MatchcenterMatchSummary, "home" | "away"> {
@@ -14,8 +15,9 @@ export function buildMatchCreatePreviewSummary(input: {
     providerTeamId: null,
     providerTeamName: null,
     canonicalTeamId: "tenant-team",
-    canonicalTeamName: input.teamDisplayName || input.tenantClubName,
-    displayName: input.teamDisplayName || input.tenantClubName,
+    canonicalTeamName: input.tenantTeamName || null,
+    canonicalTeamShortName: input.tenantTeamName || null,
+    displayName: input.tenantClubName,
     resolution: "RESOLVED" as const,
     isOwnTeam: true,
     externalLogoUrl: input.tenantLogoUrl,
@@ -26,7 +28,9 @@ export function buildMatchCreatePreviewSummary(input: {
     providerTeamName: null,
     canonicalTeamId: null,
     canonicalTeamName: null,
-    displayName: input.opponentDisplayName || "Gegner",
+    canonicalExternalTeamName: input.opponentTeamName || null,
+    canonicalExternalTeamShortName: input.opponentTeamName || null,
+    displayName: input.opponentClubName || input.opponentTeamName || "Gegner",
     resolution: "RESOLVED" as const,
     isOwnTeam: false,
     canonicalExternalClubId: input.opponentExternalClubId,

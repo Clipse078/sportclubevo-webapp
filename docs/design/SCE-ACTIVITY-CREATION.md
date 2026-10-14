@@ -93,6 +93,7 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
 | **`guidedWorkflow` (01E-R1)** | Optional `finalReviewTab`, `validateStep`, `resolveStepComplete` — footer «Zurück» / «Weiter», progress UI over Context Tabs; **freely navigable, clearly guided** (not a locked wizard); domain primary action only on final **Übersicht** review |
 | **SCE Activity Date & Time (01E-R2)** | Shared `SceActivityDateInput` / `SceActivityTimeInput` / `SceActivityDateTimeInput` — DD.MM.YYYY + HH:MM manual entry, optional SCE calendar popover; domain drafts still store tenant-local wall-clock via existing boundaries (`parseTenantLocalDateTimeInput`); **no** browser-native combined datetime control in canonical composers |
+| **SCE Club & Team Selector (01E-R3)** | Canonical `SceClubTeamSelectorDialog` — browse-first club grid from Vereine/Club Directory data; elevated subordinate dialog in Match composer for «Team ändern» / «Gegner ändern»; persist identity IDs in drafts, resolve crests/names at render time |
 
 **Lifecycle (01B-R3 — canonical):**
 

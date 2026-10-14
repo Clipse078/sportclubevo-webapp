@@ -94,6 +94,23 @@ function renderForm() {
   );
 }
 
+async function pickOwnTeam() {
+  fireEvent.click(screen.getByTestId("match-create-change-own-team"));
+  await waitFor(() => expect(screen.getByTestId("match-create-own-team-selector-tenant-teams")).toBeTruthy());
+  fireEvent.click(screen.getByTestId("sce-team-row-team-1"));
+}
+
+async function pickOpponentWithNameOnly() {
+  fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
+  await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-grid")).toBeTruthy());
+  fireEvent.click(screen.getByTestId("sce-club-card-club-1"));
+  await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-manual-team-input")).toBeTruthy());
+  fireEvent.change(screen.getByTestId("match-create-opponent-selector-manual-team-input"), {
+    target: { value: "FC Concordia Basel" },
+  });
+  fireEvent.click(screen.getByTestId("match-create-opponent-selector-manual-team-confirm"));
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   pushMock.mockClear();
@@ -101,7 +118,13 @@ beforeEach(() => {
     "fetch",
     vi.fn(async (url: string) => {
       if (url.startsWith("/api/club-directory/clubs")) {
-        return jsonResponse({ clubs: [CLUB_CONCORDIA] });
+        return jsonResponse({
+          clubs: [CLUB_CONCORDIA],
+          meta: { total: 1, limit: 200, skip: 0, hasMore: false },
+        });
+      }
+      if (url.includes("/api/clubs/selectable/") && url.endsWith("/teams")) {
+        return jsonResponse({ teams: [] });
       }
       if (url.startsWith("/api/facilities/availability")) {
         return jsonResponse({ availability: [] });
@@ -124,7 +147,7 @@ describe("MatchCreateForm guided R2 interactions", () => {
   it("shows matchup selector before team is chosen", () => {
     renderForm();
     expect(screen.getByTestId("match-create-matchup-selector")).toBeTruthy();
-    expect(screen.getByTestId("match-create-team-select")).toBeTruthy();
+    expect(screen.getByTestId("match-create-change-own-team")).toBeTruthy();
   });
 
   it("Weiter shows validation when teams incomplete", () => {
@@ -140,12 +163,8 @@ describe("MatchCreateForm guided R2 interactions", () => {
 
   it("advances after teams and termin are valid", async () => {
     renderForm();
-    fireEvent.change(screen.getByTestId("match-create-team-select"), { target: { value: "team-1" } });
-
-    fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
-    fireEvent.change(screen.getByTestId("match-create-opponent-name-away"), {
-      target: { value: "FC Concordia Basel" },
-    });
+    await pickOwnTeam();
+    await pickOpponentWithNameOnly();
 
     fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
     await waitFor(() =>
@@ -177,11 +196,8 @@ describe("MatchCreateForm guided R2 interactions", () => {
 
   it("exposes pitch assignment on HOME ressourcen step after Termin", async () => {
     renderForm();
-    fireEvent.change(screen.getByTestId("match-create-team-select"), { target: { value: "team-1" } });
-    fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
-    fireEvent.change(screen.getByTestId("match-create-opponent-name-away"), {
-      target: { value: "FC Concordia Basel" },
-    });
+    await pickOwnTeam();
+    await pickOpponentWithNameOnly();
 
     fireEvent.click(screen.getByTestId("sce-activity-composer-next"));
     await waitFor(() =>

@@ -426,6 +426,32 @@ Product-wide static enforcement of “no new setting checkboxes” is deferred t
 
 ---
 
+## SCE Club & Team Selector (01E-R3)
+
+One canonical engine for club and team selection across SCE — **visual-first**, **browse-first**, **search-assisted**, **crest-led**, backed by the **same Club Directory data** as `/dashboard/vereine` (no parallel opponent lists or Match-specific caches).
+
+| Principle | Rule |
+|-----------|------|
+| **VISUAL-FIRST** | Crest + club name on grid cards (`ClubLogo` bare — no avatar chrome) |
+| **BROWSE-FIRST** | Eligible clubs visible when the selector opens; search **filters** that universe |
+| **SEARCH-ASSISTED** | Case-insensitive normalized match on name / shortName / alternativeName |
+| **CANONICAL-DATA** | `GET /api/clubs/selectable` + Club Directory query service (Vereine source of truth) |
+| **ONE-ENGINE** | `SceClubTeamSelectorDialog` modes: `CLUB_ONLY` · `TEAM_ONLY` · `CLUB_THEN_TEAM` |
+| **KEYBOARD-ACCESSIBLE** | Dialog focus trap, Esc, return focus to invoking control |
+| **RESPONSIVE** | Grid columns adapt (≈2–6); full-screen-friendly on small viewports |
+
+**Composer subordinate dialog exception:** Activity creation may open this selector as an **elevated** modal (`Dialog` `stackLayer="elevated"`) above the Activity Composer. It must not close the composer or trigger leave-intent guards; focus returns to «Team ändern» / «Gegner ändern» on dismiss.
+
+Modules:
+
+- `components/sce/club-team-selector/*`
+- `lib/sce/club-team-selector/*`
+- `app/api/clubs/selectable/*`
+
+Future club/team pickers **must** consume this engine unless an ADR documents an exception.
+
+---
+
 ## Related documents
 
 - [`SCE-CONTEXT-TABS-STANDARD.md`](./SCE-CONTEXT-TABS-STANDARD.md)

@@ -114,13 +114,41 @@ describe("MatchCreateForm — composer tabs (01E)", () => {
     expect(screen.getByTestId("match-create-location")).toBeTruthy();
   });
 
-  it("shows identity preview after team and opponent are set", () => {
-    renderForm();
-    fireEvent.change(screen.getByTestId("match-create-team-select"), { target: { value: "team-1" } });
+  async function pickOwnTeam() {
+    fireEvent.click(screen.getByTestId("match-create-change-own-team"));
+    await waitFor(() => expect(screen.getByTestId("match-create-own-team-selector-tenant-teams")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("sce-team-row-team-1"));
+  }
+
+  async function pickOpponentClubAndTeam() {
     fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
-    fireEvent.change(screen.getByTestId("match-create-opponent-name-away"), {
-      target: { value: "FC Rival" },
-    });
+    await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-grid")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("sce-club-card-club-1"));
+    await waitFor(() => expect(screen.getByTestId("match-create-opponent-selector-teams")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("sce-team-row-et-1"));
+  }
+
+  it("shows identity preview after team and opponent are set", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url.startsWith("/api/club-directory/clubs")) {
+          return jsonResponse({ clubs: [CLUB_CONCORDIA], meta: { total: 1, limit: 200, skip: 0, hasMore: false } });
+        }
+        if (url.includes("/api/clubs/selectable/") && url.endsWith("/teams")) {
+          return jsonResponse({
+            teams: [{ id: "et-1", clubId: "club-1", name: "FC Rival", shortName: null, categoryLabel: null }],
+          });
+        }
+        if (url.startsWith("/api/facilities/availability")) {
+          return jsonResponse({ availability: [] });
+        }
+        throw new Error(`Unexpected fetch: ${url}`);
+      }),
+    );
+    renderForm();
+    await pickOwnTeam();
+    await pickOpponentClubAndTeam();
     fireEvent.change(screen.getByTestId("match-create-schedule-date-input"), {
       target: { value: "20.09.2026" },
     });
@@ -140,14 +168,17 @@ describe("MatchCreateForm — composer tabs (01E)", () => {
 });
 
 describe("MatchCreateForm — Gegner", () => {
-  it("searches club directory on demand", async () => {
-    const clubSearchCalls: string[] = [];
+  it("loads browseable clubs when opponent selector opens", async () => {
+    const clubBrowseCalls: string[] = [];
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) => {
         if (url.startsWith("/api/club-directory/clubs")) {
-          clubSearchCalls.push(url);
-          return jsonResponse({ clubs: [CLUB_CONCORDIA] });
+          clubBrowseCalls.push(url);
+          return jsonResponse({
+            clubs: [CLUB_CONCORDIA],
+            meta: { total: 1, limit: 200, skip: 0, hasMore: false },
+          });
         }
         if (url.startsWith("/api/facilities/availability")) {
           return jsonResponse({ availability: [] });
@@ -158,12 +189,15 @@ describe("MatchCreateForm — Gegner", () => {
 
     renderForm();
     fireEvent.click(screen.getByTestId("match-create-change-opponent-away"));
-    const input = screen.getByTestId("match-create-opponent-club-search-away-input");
-    fireEvent.change(input, { target: { value: "Concord" } });
 
     await waitFor(() => {
-      expect(clubSearchCalls.some((u) => u.includes("search="))).toBe(true);
+      expect(clubBrowseCalls.length).toBeGreaterThan(0);
+      expect(screen.getByText("FC Concordia Basel")).toBeTruthy();
     });
+    fireEvent.change(screen.getByTestId("match-create-opponent-selector-search"), {
+      target: { value: "Concord" },
+    });
+    expect(screen.getByText("FC Concordia Basel")).toBeTruthy();
   });
 });
 

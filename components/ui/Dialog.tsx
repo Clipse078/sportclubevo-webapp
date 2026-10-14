@@ -37,6 +37,8 @@ export type DialogProps = {
   size?: DialogSize;
   /** When "flex", body does not scroll — child layout owns a single scroll region. */
   bodyLayout?: "scroll" | "flex";
+  /** Elevated stack layer for subordinate dialogs over an existing modal (e.g. Activity Composer). */
+  stackLayer?: "default" | "elevated";
 };
 
 const sizeClass: Record<DialogSize, string> = {
@@ -83,6 +85,7 @@ export function Dialog({
   footer,
   size = "md",
   bodyLayout = "scroll",
+  stackLayer = "default",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -100,7 +103,12 @@ export function Dialog({
   }
 
   return (
-    <SceModalOverlay open={open} onBackdropClick={onClose} initialFocusRef={titleRef}>
+    <SceModalOverlay
+      open={open}
+      onBackdropClick={onClose}
+      initialFocusRef={titleRef}
+      stackLayer={stackLayer}
+    >
       <div
         ref={panelRef}
         role="dialog"

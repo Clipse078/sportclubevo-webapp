@@ -283,12 +283,20 @@ export default function MatchCreateForm({
   }, [persistedBaseline?.teamDisplayName, resumeDraft, opponentName, selectedExternalClub]);
 
   const identityPreview = useMemo(() => {
+    const opponentClubName = selectedExternalClub?.name ?? getEffectiveOpponentDisplayName() ?? "Gegner";
+    const opponentTeamName =
+      selectedExternalClub && opponentName.trim() && opponentName.trim() !== selectedExternalClub.name
+        ? opponentName.trim()
+        : selectedExternalClub
+          ? ""
+          : opponentName.trim();
     return buildMatchCreatePreviewClubPair({
       tenantClubName,
       tenantLogoUrl,
-      teamDisplayName: selectedTeam ? formatTeamLabel(selectedTeam) : tenantClubName,
+      tenantTeamName: selectedTeam ? formatTeamLabel(selectedTeam) : "",
       homeAway,
-      opponentDisplayName: getEffectiveOpponentDisplayName() || "Gegner",
+      opponentClubName,
+      opponentTeamName,
       opponentExternalClubId: selectedExternalClub?.id ?? null,
       opponentExternalLogoUrl: selectedExternalClub?.logoUrl ?? null,
     });
@@ -537,6 +545,8 @@ export default function MatchCreateForm({
           teamId={teamId}
           onTeamIdChange={setTeamId}
           formatTeamLabel={formatTeamLabel}
+          tenantClubName={tenantClubName}
+          tenantLogoUrl={tenantLogoUrl}
           selectedExternalClub={selectedExternalClub}
           onSelectExternalClub={setSelectedExternalClub}
           onClearExternalClub={() => setSelectedExternalClub(null)}

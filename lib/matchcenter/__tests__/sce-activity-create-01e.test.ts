@@ -50,9 +50,10 @@ describe("SCE-ACTIVITY-CREATE-01E — Match adoption", () => {
     const sides = buildMatchCreatePreviewSummary({
       tenantClubName: "FC Allschwil",
       tenantLogoUrl: null,
-      teamDisplayName: "Team A",
+      tenantTeamName: "Team A",
       homeAway: "AWAY",
-      opponentDisplayName: "FC Rival",
+      opponentClubName: "FC Rival",
+      opponentTeamName: "",
       opponentExternalClubId: null,
     });
     expect(sides.home.displayName).toContain("Rival");
@@ -98,14 +99,15 @@ describe("SCE-ACTIVITY-CREATE-01E — Match adoption", () => {
     );
   });
 
-  it("R1 — guided composer, matchup selector, and portal opponent search", () => {
+  it("R3 — guided composer, matchup selector, and canonical club-team selector", () => {
     const form = read("components/admin/matchcenter/MatchCreateForm.tsx");
     expect(form).toContain("guidedWorkflow");
     expect(form).toContain("MatchCreateMatchupSelector");
     expect(form).toContain('finalReviewTab: "uebersicht"');
     expect(read("components/admin/matchcenter/MatchCreateMatchupSelector.tsx")).toContain(
-      "portalResults",
+      "SceClubTeamSelectorDialog",
     );
+    expect(existsSync(join(root, "app/api/clubs/selectable/route.ts"))).toBe(true);
     expect(read("components/sce/activity-composer/SceActivityComposer.tsx")).toContain(
       "SceActivityComposerWorkflowNav",
     );

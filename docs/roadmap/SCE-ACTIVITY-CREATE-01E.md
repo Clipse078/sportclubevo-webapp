@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01E` |
-| **Status** | **OPEN** — 01E-R2 on branch `cursor/sce-activity-create-01e-match-adoption`; PO visual UAT pending after R2 |
+| **Status** | **OPEN** — 01E-R3 on branch `cursor/sce-activity-create-01e-match-adoption`; PO UAT pending after R3 |
 | **Baseline** | STAGE after merge of PR #841 (`62d96645…`) |
 | **Scope** | Adopt manual Match creation onto `SceActivityComposer` with overlay + page parity, drafts, governance, Wochenplaner overlay |
 
@@ -54,6 +54,18 @@
 - **Match matchup:** identity preview always rendered — team/opponent selection available on empty drafts
 - **Guided validation:** field-level errors + visible composer banner; step completion requires domain validity (not tab visit order)
 - **Canonical SCE date/time:** `SceActivityDateInput` / `SceActivityTimeInput` / `SceActivityDateTimeInput` — DD.MM.YYYY + HH:MM manual entry, optional calendar popover; adopted on Training, Match, Club Event schedule fields; Tournament create start/end (+ meeting time) only (**01F** composer/governance unchanged)
+
+## 01E-R2 PO UAT
+
+- **Result:** NOT ACCEPTED — Match opponent picker still search-only / unreliable for creation UX
+
+## 01E-R3 — Canonical Club & Team Selector Engine
+
+- **Source of truth:** Club Directory / `/dashboard/vereine` (`listExternalClubs` — no duplicated datasets)
+- **Engine:** `SceClubTeamSelectorDialog` with browse-first club grid + optional club→team drilldown
+- **API:** `GET /api/clubs/selectable` (+ per-club teams route)
+- **Match adoption:** «Team ändern» / «Gegner ändern» open the canonical selector; inline `<select>` and `ExternalClubPicker` removed from matchup cards
+- **Reuse rule:** future SCE club/team selection should consume this engine (Tournament / other pickers deferred to their adoption packages)
 
 ## Deferred
 
