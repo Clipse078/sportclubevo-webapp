@@ -14,7 +14,7 @@ type TabDef = {
 
 const PRIMARY_TABS: TabDef[] = [
   { key: "uebersicht", label: "Übersicht", href: "", exact: true },
-  { key: "spiele", label: "Nächste Spiele", href: "/spiele" },
+  { key: "programm", label: "Programm", href: "/programm" },
   { key: "resultate", label: "Resultate", href: "/resultate" },
   { key: "rangliste", label: "Rangliste", href: "/rangliste" },
   { key: "kader", label: "Kader", href: "/kader" },
@@ -25,6 +25,7 @@ const PRIMARY_TABS: TabDef[] = [
 ];
 
 const MORE_TABS: TabDef[] = [
+  { key: "spiele", label: "Nächste Spiele", href: "/spiele" },
   { key: "anwesenheit", label: "Anwesenheit", href: "/anwesenheit" },
   { key: "teilnahmen", label: "Teilnahmen", href: "/teilnahmen" },
 ];

@@ -12,7 +12,7 @@
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
 | **Tournament slice** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption — **CLOSED** (PR **#843**) |
 | **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**CLOSED**) |
-| **Next slice after 01H** | **SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine (Team + Club) — **NOT STARTED** |
+| **Current slice** | **SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine (Team + Club) — **IN PROGRESS** |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -51,7 +51,7 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01F — Tournament adoption — CLOSED (PR #843)
   → SCE-ACTIVITY-CREATE-01G — Global create integration — CLOSED (PR #844)
   → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — CLOSED (PR #845)
-  → SCE-ACTIVITY-CREATE-01I — Programme & Calendar Engine — NOT STARTED
+  → SCE-ACTIVITY-CREATE-01I — Programme & Calendar Engine — IN PROGRESS
   → Navbar Upgrade — PLANNED after 01I
   → … (01J–01N per SCE-UI-ROLLOUT-01)
 ```
