@@ -4,15 +4,15 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **IN_PROGRESS** |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **CLOSED** (PR **#844**, PO UAT **PASS**) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
 | **Training slice** | [`SCE-ACTIVITY-CREATE-01D`](./SCE-ACTIVITY-CREATE-01D.md) — Training Adoption — **CLOSED** (PR **#841**) |
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
 | **Tournament slice** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption — **CLOSED** (PR **#843**) |
-| **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**IN_PROGRESS**) |
-| **Next slice after 01G** | **SCE-UI-ROLLOUT-01H** — Core planning surfaces adoption (**NOT_STARTED**) |
+| **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**CLOSED**) |
+| **Next slice after 01G** | **SCE-ACTIVITY-CREATE-01H** — Core planning surfaces adoption (**NOT_STARTED**) |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -49,8 +49,8 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01D — Training adoption — CLOSED (PR #841)
   → SCE-ACTIVITY-CREATE-01E — Match adoption — CLOSED (PR #842)
   → SCE-ACTIVITY-CREATE-01F — Tournament adoption — CLOSED (PR #843)
-  → SCE-ACTIVITY-CREATE-01G — Global create integration — IN_PROGRESS
-  → SCE-UI-ROLLOUT-01H — Core planning surfaces adoption
+  → SCE-ACTIVITY-CREATE-01G — Global create integration — CLOSED (PR #844)
+  → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — NOT_STARTED
   → … (01I–01N per SCE-UI-ROLLOUT-01)
 ```
 
@@ -252,3 +252,57 @@ Vitest: **15** files · **137** tests (01D + 01C sentinels + Composer guardrails
 ### Next
 
 **SCE-ACTIVITY-CREATE-01E** — Match Adoption (inherit Composer, modal-first, shared resource icons, governance, Toggle First).
+
+---
+
+## SCE-ACTIVITY-CREATE-01G closure (PR **#844**)
+
+Full record: [`SCE-ACTIVITY-CREATE-01G.md`](./SCE-ACTIVITY-CREATE-01G.md).
+
+| Field | Value |
+| --- | --- |
+| **Status** | **CLOSED / ACCEPTED** |
+| **Branch** | `cursor/sce-activity-create-01g-global-create-integration` |
+| **PR** | **#844** → `STAGE` |
+| **Feature HEAD (approved implementation)** | `9e41e6c8d2a1b2c863026f8c142b9dc6b598efd8` |
+| **STAGE baseline (pre-merge)** | `603eff2e6888c8103625a6db3c9eccb57ca84347` |
+| **Merge commit** | _(post-merge — see STAGE HEAD below)_ |
+| **Canonical STAGE HEAD (post-merge)** | _(post-merge)_ |
+
+### Product rule (frozen)
+
+One global **`+ Erstellen`** trigger; same menu, permissions, and Composer family on all eligible planning surfaces. Page context drives origin only — cross-domain create (e.g. Matchcenter → Turnier) is supported.
+
+### PO UAT
+
+| Gate | Result |
+| --- | --- |
+| **01G PO UAT** | **PASS** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+### Architecture delivered (frozen)
+
+| Area | Contract |
+| --- | --- |
+| **Global trigger** | `SceActivityCreateMenu` + `buildSceActivityCreateMenuProps` |
+| **Surfaces** | Wochenplaner, Trainings, Matchcenter, Tournamentcenter, Veranstaltungen, Planning Hub re-export |
+| **Permissions** | `TRAININGS_MANAGE` / `EVENTS_MANAGE` mapping; page-independent resolver |
+| **Composers** | Four families unchanged — overlay contextual create; `/new` fallbacks retained |
+| **Legacy parallel CTAs** | **0** on eligible surfaces; deprecated `*ComposerCreateTrigger` re-exports only |
+
+### Migrations (01G)
+
+**NONE**
+
+### Automated validation (closure)
+
+Vitest: **24** files · **290** tests (01A–01G activity-create regression + `SceActivityCreateMenu` component tests) — **0 failures**. Prisma validate **PASS**. Production build **PASS** (`NODE_OPTIONS='--max-old-space-size=8192' npm run build`).
+
+### Design system & Toggle First
+
+**SCE_DESIGN_SYSTEM_COMPLIANCE = PASS** · **PARALLEL_LEGACY_PATTERN = NO** (eligible surfaces) · **BINARY_CONTROL_COMPLIANCE = PASS** · **NEW_BINARY_CHECKBOXES = 0**
+
+### Next
+
+**SCE-ACTIVITY-CREATE-01H** — Core Planning Surfaces Adoption (**NOT_STARTED**). **SCE-TOURNAMENT-PLANNER-01** — **PLANNED — NOT STARTED**.
