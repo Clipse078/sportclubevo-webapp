@@ -44,6 +44,7 @@ const WORLD_ACTIVITY_CARD_CONSUMERS = [
   "components/admin/planner/WeekplannerTrainingIdentityCard.tsx",
   "components/admin/planner/WeekplannerTournamentIdentityCard.tsx",
   "components/admin/planning-hub/PlanningHubActivityBlock.tsx",
+  "components/admin/planning-hub/PlanningHubListeActivityRow.tsx",
 ] as const;
 
 function side(partial: Partial<MatchcenterSide> & Pick<MatchcenterSide, "displayName">): MatchcenterSide {
@@ -379,6 +380,25 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
       });
       expect(model.typeLabel).toBe("VERANSTALTUNG");
       expect(model.kind).toBe("CLUB_EVENT");
+    });
+  });
+
+  describe("Wochenplaner Liste — 01H-R4 canonical cards", () => {
+    it("routes week items through presentation adapters and World Activity Cards", () => {
+      const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
+      expect(row).toContain("resolvePlanningHubListePresentationModel");
+      expect(row).toContain("SceTrainingCard");
+      expect(row).toContain("SceMatchCard");
+      expect(row).toContain("SceTournamentCard");
+      expect(row).toContain("SceClubEventCard");
+      expect(row).toContain('surface="list-row"');
+      expect(row).toContain("planning-hub-liste-row-status");
+    });
+
+    it("documents weekplanner veranstaltung presentation adapter", () => {
+      expect(
+        read("lib/sporting-activity-presentation/canonical/adapters/weekplanner-veranstaltung.ts"),
+      ).toContain("resolveSceClubEventPresentationFromWeekplannerVeranstaltung");
     });
   });
 
