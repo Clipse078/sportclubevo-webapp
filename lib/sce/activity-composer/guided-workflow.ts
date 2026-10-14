@@ -1,7 +1,14 @@
 import type { ContextTabId } from "@/lib/context-tabs/types";
 import type { SceActivityCreateValidationResult } from "./types";
 
-export type SceActivityGuidedStepVisualState = "current" | "completed" | "pending" | "error";
+export type SceActivityGuidedStepVisualState =
+  | "current"
+  | "unvisited"
+  | "completed"
+  | "error";
+
+/** @deprecated Use `unvisited` — kept for transitional imports. */
+export type SceActivityGuidedStepVisualStateLegacy = SceActivityGuidedStepVisualState | "pending";
 
 export type SceActivityGuidedWorkflowConfig<
   TDraft,
@@ -17,7 +24,15 @@ export type SceActivityGuidedWorkflowConfig<
     draft: TDraft,
     stepKey: TTabId,
   ) => SceActivityCreateValidationResult<TTabId>;
-  /** Optional domain completion signal for progress checkmarks. */
+  /**
+   * Domain validity for a step (does not imply reviewed/completed).
+   * When omitted, `validateStep` validity is used when present.
+   */
+  resolveStepValid?: (draft: TDraft, stepKey: TTabId) => boolean;
+  /**
+   * @deprecated 01E-R6 — composer derives checkmarks from reviewed + `resolveStepValid`.
+   * Kept temporarily for adopters migrating to `resolveStepValid`.
+   */
   resolveStepComplete?: (draft: TDraft, stepKey: TTabId) => boolean;
 };
 
@@ -62,22 +77,46 @@ export function resolveGuidedStepVisualState<TTabId extends ContextTabId>(input:
   activeTab: TTabId;
   orderedTabKeys: readonly TTabId[];
   tabErrors?: Partial<Record<TTabId, boolean>>;
+  /** @deprecated Use `reviewed` + `stepValid` (01E-R6). */
   stepComplete?: boolean;
+  /** User has visited/reviewed this step in the current composer session. */
+  reviewed?: boolean;
+  /** Current domain validity for the step (optional ≠ valid for UX). */
+  stepValid?: boolean;
+  finalReviewTab?: TTabId;
 }): SceActivityGuidedStepVisualState {
-  const { tabKey, activeTab, orderedTabKeys, tabErrors, stepComplete } = input;
+  const {
+    tabKey,
+    activeTab,
+    tabErrors,
+    stepComplete,
+    reviewed = false,
+    stepValid = true,
+    finalReviewTab,
+  } = input;
   const hasError = Boolean(tabErrors?.[tabKey]);
+  const isFinalReview = finalReviewTab != null && tabKey === finalReviewTab;
 
   if (tabKey === activeTab) {
-    return hasError ? "error" : "current";
+    if (hasError || (reviewed && !stepValid)) {
+      return "error";
+    }
+    return "current";
   }
-  if (hasError) {
+
+  if (hasError || (reviewed && !stepValid)) {
     return "error";
   }
-  if (stepComplete) {
+
+  const legacyCompleted = stepComplete === true;
+  const r6Completed =
+    reviewed && stepValid && !isFinalReview;
+
+  if (legacyCompleted || r6Completed) {
     return "completed";
   }
 
-  return "pending";
+  return "unvisited";
 }
 
 export function resolveGuidedStepCompleteDefault<TTabId extends ContextTabId>(input: {

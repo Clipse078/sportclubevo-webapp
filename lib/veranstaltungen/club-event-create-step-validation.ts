@@ -27,7 +27,8 @@ export function validateClubEventCreateWorkflowStep(
   };
 }
 
-export function resolveClubEventCreateStepComplete(
+/** Step validity only — composer pairs with reviewed state for checkmarks (01E-R6). */
+export function resolveClubEventCreateStepValid(
   draft: ClubEventComposerDraftPayload,
   stepKey: ClubEventCreateTabId,
 ): boolean {
@@ -43,3 +44,6 @@ export function resolveClubEventCreateStepComplete(
   });
   return !allErrors[stepKey];
 }
+
+/** @deprecated Use `resolveClubEventCreateStepValid` — validity ≠ completed. */
+export const resolveClubEventCreateStepComplete = resolveClubEventCreateStepValid;

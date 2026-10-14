@@ -18,7 +18,11 @@ type Props<TTabId extends ContextTabId = ContextTabId> = {
   config: ContextTabNavigationConfig<TTabId>;
   orderedTabKeys: readonly TTabId[];
   tabErrors?: Partial<Record<TTabId, boolean>>;
+  /** 01E-R6 — when set, overrides legacy completion inference. */
+  resolveStepVisualState?: (stepKey: TTabId) => SceActivityGuidedStepVisualState;
+  /** @deprecated Prefer `resolveStepVisualState` (01E-R6). */
   resolveStepComplete?: (stepKey: TTabId) => boolean;
+  finalReviewTab?: TTabId;
   ariaLabel?: string;
   testId?: string;
   idPrefix?: string;
@@ -79,7 +83,9 @@ export default function SceActivityComposerWorkflowNav<TTabId extends ContextTab
   config,
   orderedTabKeys,
   tabErrors,
+  resolveStepVisualState,
   resolveStepComplete,
+  finalReviewTab,
   ariaLabel = "Erstellungsworkflow",
   testId = "sce-activity-composer-workflow",
   idPrefix = "sce-activity-composer-tab",
@@ -198,13 +204,16 @@ export default function SceActivityComposerWorkflowNav<TTabId extends ContextTab
             const isActive = activeTab === tab.key;
             const tabDomId = `${idPrefix}-${tab.key}`;
             const panelDomId = `${idPrefix}panel-${tab.key}`;
-            const visualState = resolveGuidedStepVisualState({
-              tabKey: tab.key,
-              activeTab,
-              orderedTabKeys,
-              tabErrors,
-              stepComplete: resolveStepComplete?.(tab.key),
-            });
+            const visualState =
+              resolveStepVisualState?.(tab.key) ??
+              resolveGuidedStepVisualState({
+                tabKey: tab.key,
+                activeTab,
+                orderedTabKeys,
+                tabErrors,
+                stepComplete: resolveStepComplete?.(tab.key),
+                finalReviewTab,
+              });
             const cleanLabel = stripErrorMarker(tab.label);
 
             const tabClassName = cn(
@@ -237,6 +246,7 @@ export default function SceActivityComposerWorkflowNav<TTabId extends ContextTab
                   aria-current={isActive ? "step" : undefined}
                   aria-controls={panelDomId}
                   data-testid={`sce-activity-composer-tabs-${tab.key}`}
+                  data-guided-step-state={visualState}
                   onClick={(event) => handleTabClick(event, tab.key)}
                   className={tabClassName}
                 >
@@ -256,6 +266,7 @@ export default function SceActivityComposerWorkflowNav<TTabId extends ContextTab
                 aria-current={isActive ? "step" : undefined}
                 aria-controls={panelDomId}
                 data-testid={`sce-activity-composer-tabs-${tab.key}`}
+                data-guided-step-state={visualState}
                 onClick={(event) => handleTabClick(event, tab.key)}
                 className={tabClassName}
               >

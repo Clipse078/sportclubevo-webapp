@@ -15,9 +15,10 @@ import {
   type TrainingCreateTabId,
 } from "@/lib/training/training-create-workflow-config";
 import {
-  resolveTrainingCreateStepComplete,
   validateTrainingCreateWorkflowStep,
+  resolveTrainingCreateStepValid,
 } from "@/lib/training/training-create-step-validation";
+import { buildTrainingCreateRecurrenceSummary } from "@/lib/training/training-create-recurrence-summary";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import { PlanningResourceAssignmentKindIcon } from "@/components/admin/shared/planning/FacilityResourceIdentity";
@@ -326,17 +327,17 @@ export default function TrainingCreateForm({
     return resolveTrainingComposerTitleForResume(persistedBaseline?.title ?? title);
   }, [persistedBaseline?.title, resumeDraft, title]);
 
-  const recurrenceSummary = useMemo(() => {
-    const active = weekdayRows.filter((row) => row.enabled);
-    if (!recurrenceEnabled) {
-      if (!validFrom) return "Ein Training ohne Wiederholung.";
-      return active.length
-        ? `Ein Training am ${validFrom} (${WEEKDAY_LABELS[active[0]!.weekday]}) · ${active[0]!.startsAt}–${active[0]!.endsAt}`
-        : "Ein Training ohne Wiederholung — bitte Datum wählen.";
-    }
-    const days = active.map((row) => WEEKDAY_LABELS[row.weekday]).join(", ");
-    return `Wöchentlich ab ${validFrom || "—"} · ${days || "keine Trainingstage"} · bis ${validUntil || "—"}`;
-  }, [weekdayRows, recurrenceEnabled, validFrom, validUntil]);
+  const recurrenceSummary = useMemo(
+    () =>
+      buildTrainingCreateRecurrenceSummary({
+        recurrenceEnabled,
+        validFrom,
+        validUntil,
+        weekdayRows,
+        weekdayLabels: WEEKDAY_LABELS,
+      }),
+    [weekdayRows, recurrenceEnabled, validFrom, validUntil],
+  );
 
   const definition = useMemo((): SceActivityCreateDefinition<
     TrainingComposerDraftPayload,
@@ -352,7 +353,7 @@ export default function TrainingCreateForm({
       guidedWorkflow: {
         finalReviewTab: "pruefen",
         validateStep: validateTrainingCreateWorkflowStep,
-        resolveStepComplete: resolveTrainingCreateStepComplete,
+        resolveStepValid: resolveTrainingCreateStepValid,
       },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {
@@ -502,9 +503,9 @@ export default function TrainingCreateForm({
         <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Ressourcen</dt>
           <dd>
-            {pitchDraft?.facilityResourceName ?? "Kein Spielfeld / keine Halle"}
+            {pitchDraft?.facilityResourceName ?? "Spielfeld / Halle nicht zugewiesen"}
             {" · "}
-            {dressingDraft?.facilityResourceName ?? "Keine Garderobe"}
+            {dressingDraft?.facilityResourceName ?? "Garderobe nicht zugewiesen"}
           </dd>
         </div>
       </dl>

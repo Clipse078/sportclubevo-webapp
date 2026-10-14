@@ -18,10 +18,17 @@ export function validateTrainingCreateWorkflowStep(
   };
 }
 
-export function resolveTrainingCreateStepComplete(
+/** Step validity only — composer pairs with reviewed state for checkmarks (01E-R6). */
+export function resolveTrainingCreateStepValid(
   draft: TrainingComposerDraftPayload,
   stepKey: TrainingCreateTabId,
 ): boolean {
   const allErrors = computeTrainingCreateTabErrors(draft);
+  if (stepKey === "ressourcen" || stepKey === "pruefen") {
+    return true;
+  }
   return !allErrors[stepKey];
 }
+
+/** @deprecated Use `resolveTrainingCreateStepValid` — validity ≠ completed. */
+export const resolveTrainingCreateStepComplete = resolveTrainingCreateStepValid;

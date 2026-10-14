@@ -18,7 +18,7 @@ import {
   type ClubEventCreateTabId,
 } from "@/lib/veranstaltungen/club-event-create-workflow-config";
 import {
-  resolveClubEventCreateStepComplete,
+  resolveClubEventCreateStepValid,
   validateClubEventCreateWorkflowStep,
 } from "@/lib/veranstaltungen/club-event-create-step-validation";
 import { useTranslations } from "next-intl";
@@ -530,7 +530,7 @@ export default function VeranstaltungCreateForm({
       guidedWorkflow: {
         finalReviewTab: "pruefen",
         validateStep: validateClubEventCreateWorkflowStep,
-        resolveStepComplete: resolveClubEventCreateStepComplete,
+        resolveStepValid: resolveClubEventCreateStepValid,
       },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {

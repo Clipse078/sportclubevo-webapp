@@ -27,6 +27,7 @@ import {
   resolveGuidedPreviousStep,
   resolveGuidedWorkflowEnabled,
 } from "@/lib/sce/activity-composer/guided-workflow";
+import { useGuidedWorkflowStepInteraction } from "@/lib/sce/activity-composer/use-guided-workflow-step-interaction";
 import { sceActivityDraftsEqual } from "@/lib/sce/activity-composer/draft-equality";
 import {
   SCE_ACTIVITY_CREATE_SAVE_EXISTING_DRAFT_LABEL,
@@ -223,6 +224,24 @@ function ComposerWorkspace<
     ? resolveGuidedNextStep(orderedTabKeys, activeTab)
     : null;
 
+  const guidedStepInteraction = useGuidedWorkflowStepInteraction(
+    guidedEnabled
+      ? {
+          orderedTabKeys,
+          activeTab,
+          guidedWorkflow,
+          draft,
+          tabErrors,
+        }
+      : {
+          orderedTabKeys,
+          activeTab,
+          guidedWorkflow: { finalReviewTab: orderedTabKeys[0]! },
+          draft,
+          tabErrors,
+        },
+  );
+
   const handleGuidedPrevious = useCallback(() => {
     if (guidedPreviousStep) {
       navigateToTab(guidedPreviousStep, { skipDirtyConfirm: true });
@@ -260,8 +279,19 @@ function ComposerWorkspace<
       }
     }
     setValidationAnnouncement(null);
+    guidedStepInteraction.markStepReviewed(activeTab);
     navigateToTab(guidedNextStep, { skipDirtyConfirm: true });
-  }, [activeTab, draft, guidedEnabled, guidedNextStep, guidedWorkflow, navigateToTab, panelRef, testId]);
+  }, [
+    activeTab,
+    draft,
+    guidedEnabled,
+    guidedNextStep,
+    guidedStepInteraction,
+    guidedWorkflow,
+    navigateToTab,
+    panelRef,
+    testId,
+  ]);
 
   const handleSaveDraft = useCallback(async () => {
     if (!draftPersistence) {
@@ -410,11 +440,10 @@ function ComposerWorkspace<
             config={tabConfig}
             orderedTabKeys={orderedTabKeys}
             tabErrors={tabErrors}
-            resolveStepComplete={
-              guidedWorkflow.resolveStepComplete
-                ? (stepKey) => guidedWorkflow.resolveStepComplete!(draft, stepKey)
-                : undefined
+            resolveStepVisualState={
+              guidedEnabled ? guidedStepInteraction.resolveStepVisualState : undefined
             }
+            finalReviewTab={guidedWorkflow.finalReviewTab}
             ariaLabel={definition.title}
             testId="sce-activity-composer-workflow"
             idPrefix={idPrefix}

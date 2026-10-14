@@ -121,7 +121,8 @@ export function validateMatchCreateWorkflowStep(
   };
 }
 
-export function resolveMatchCreateStepComplete(
+/** Step validity only — composer pairs with reviewed state for checkmarks (01E-R6). */
+export function resolveMatchCreateStepValid(
   draft: MatchComposerDraftPayload,
   stepKey: MatchCreateTabId,
 ): boolean {
@@ -131,15 +132,16 @@ export function resolveMatchCreateStepComplete(
     case "termin":
       return !terminStepInvalid(draft) && Object.keys(buildTerminFieldErrors(draft)).length === 0;
     case "ressourcen":
-      return true;
     case "spielbetrieb":
-      return true;
     case "uebersicht":
-      return false;
+      return true;
     default:
       return false;
   }
 }
+
+/** @deprecated Use `resolveMatchCreateStepValid` — validity ≠ completed. */
+export const resolveMatchCreateStepComplete = resolveMatchCreateStepValid;
 
 export function resolveMatchCreateGuidedValidationMessage(
   fieldErrors: Record<string, string> | undefined,

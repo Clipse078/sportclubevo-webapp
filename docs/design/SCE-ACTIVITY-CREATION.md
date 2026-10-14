@@ -91,11 +91,26 @@ SceActivityCreateDefinition<TDraft, TResult, TTabId extends ContextTabId>
 | `effectiveGovernance` | Host-resolved create + publication authority — Composer does not reconstruct role logic |
 | Cancel / dirty | `SceContextDirtyGuardProvider` — dirty = local ≠ last persisted baseline |
 | Container hint | `overlay` \| `page` \| `fullscreen` — selected by host, not domain |
-| **`guidedWorkflow` (01E-R1)** | Optional `finalReviewTab`, `validateStep`, `resolveStepComplete` — footer «Zurück» / «Weiter», progress UI over Context Tabs; **freely navigable, clearly guided** (not a locked wizard); domain primary action only on final **Übersicht** review |
+| **`guidedWorkflow` (01E-R1 / R6)** | `finalReviewTab`, `validateStep`, `resolveStepValid` — footer «Zurück» / «Weiter», progress UI over Context Tabs; **freely navigable, clearly guided** (not a locked wizard); domain primary action only on final **Übersicht** review; **reviewed-step UI state** is composer-session only (see **GUIDED STEP STATE SEMANTICS** below) |
 | **SCE Activity Date & Time (01E-R2)** | Shared `SceActivityDateInput` / `SceActivityTimeInput` / `SceActivityDateTimeInput` — DD.MM.YYYY + HH:MM manual entry, optional SCE calendar popover; domain drafts still store tenant-local wall-clock via existing boundaries (`parseTenantLocalDateTimeInput`); **no** browser-native combined datetime control in canonical composers |
 | **SCE Club & Team Selector (01E-R3 / R5)** | Canonical `SceClubTeamSelectorDialog` — browse-first club grid from Vereine/Club Directory data; elevated subordinate dialog in Match composer for «Team ändern» (`TEAM_ONLY`) / «Gegner ändern» (`CLUB_ONLY`, commits on club pick); persist `opponentExternalClubId` in drafts, resolve crests/names at render time; **no** opponent ExternalTeam requirement |
 | **Resource assignment default (01E-R5)** | **OPTIONAL** during activity creation unless a domain documents an explicit business requirement; Match HOME may commit with zero pitch/dressing-room assignments |
 | **TOURNAMENT_EXTERNAL_CLUB_SELECTION** | **CLUB_ONLY** — external participant/opponent club identity via directory picker (today `ExternalClubPicker`; same semantics as selector `CLUB_ONLY`; full Tournament composer adoption remains **01F**) |
+
+#### GUIDED STEP STATE SEMANTICS (01E-R6 — canonical)
+
+Step completion represents **reviewed and valid**, not merely currently valid.
+
+| State | Meaning | Visual |
+|-------|---------|--------|
+| **UNVISITED** | Not yet reviewed by the user | Neutral empty circle — **no checkmark** |
+| **CURRENT** | Active step (`aria-current="step"`) | Orange activity indicator |
+| **COMPLETED** | User reviewed/visited **and** step is valid | Checkmark |
+| **ERROR** | Validation meaningfully triggered **and** step invalid | Error indicator (not color-only) |
+
+**Principles:** **OPTIONAL ≠ COMPLETED** · **VALID ≠ COMPLETED** · untouched optional steps with valid defaults remain **UNVISITED** until reviewed.
+
+Domain `resolveStepValid` supplies validity only; `SceActivityComposer` tracks **reviewed** steps in UI session (not DB). Draft restore does not auto-complete every technically valid optional step. Future adopters (**01F Tournament**) must use this shared model — **no** parallel wizard stepper.
 
 **Lifecycle (01B-R3 — canonical):**
 

@@ -5,7 +5,7 @@ import {
   firstInvalidMatchCreateTab,
 } from "@/lib/matchcenter/match-create-validation";
 import {
-  resolveMatchCreateStepComplete,
+  resolveMatchCreateStepValid,
   validateMatchCreateWorkflowStep,
 } from "@/lib/matchcenter/match-create-step-validation";
 import { buildMatchCreatePreviewSummary } from "@/lib/matchcenter/composer/build-match-create-preview-pair";
@@ -37,9 +37,9 @@ describe("SCE-ACTIVITY-CREATE-01E-R5 — opponent club-only + optional resources
     expect(firstInvalidMatchCreateTab(errors)).toBeNull();
   });
 
-  it("ressourcen guided step is always complete (optional assignment)", () => {
+  it("ressourcen guided step is valid without assignment (optional)", () => {
     const draft = validHomeMatchDraft();
-    expect(resolveMatchCreateStepComplete(draft, "ressourcen")).toBe(true);
+    expect(resolveMatchCreateStepValid(draft, "ressourcen")).toBe(true);
     expect(validateMatchCreateWorkflowStep(draft, "ressourcen").valid).toBe(true);
   });
 

@@ -35,7 +35,7 @@ import type { MatchTeamOption } from "@/lib/matchcenter/composer/load-match-comp
 import { MatchClubPair } from "@/components/sporting-activity/MatchClubPair";
 import { buildMatchCreatePreviewClubPair } from "@/lib/matchcenter/composer/build-match-create-preview-pair";
 import {
-  resolveMatchCreateStepComplete,
+  resolveMatchCreateStepValid,
   validateMatchCreateWorkflowStep,
 } from "@/lib/matchcenter/match-create-step-validation";
 import { useTranslations } from "next-intl";
@@ -313,7 +313,7 @@ export default function MatchCreateForm({
       guidedWorkflow: {
         finalReviewTab: "uebersicht",
         validateStep: validateMatchCreateWorkflowStep,
-        resolveStepComplete: resolveMatchCreateStepComplete,
+        resolveStepValid: resolveMatchCreateStepValid,
       },
       initialDraft: buildPayload(),
       validateDraft: (draft) => {
