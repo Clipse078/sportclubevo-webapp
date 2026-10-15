@@ -29,6 +29,7 @@ import {
   calendarMicroVisualIdentityFromClub,
   type CalendarMicroVisualIdentity,
 } from "./calendar-micro-visual-identity";
+import { formatCalendarMicroAccessibleTimePhrase } from "./calendar-micro-time-label";
 
 /** Month-grid MICRO tiles: compact resource, no host club line. */
 export const SCE_CALENDAR_MICRO_LOCATION_HIERARCHY_OPTIONS = {
@@ -411,10 +412,11 @@ export function buildCalendarMicroAccessibleLabel(input: {
   statusLabel?: string;
 }): string {
   const identityForA11y = input.accessibleIdentityPhrase?.trim() || input.identityLabel;
+  const timeForA11y = formatCalendarMicroAccessibleTimePhrase(input.timeLabel);
   return [
     input.typeLabel,
     identityForA11y,
-    input.timeLabel,
+    timeForA11y,
     input.locationLabel,
     input.statusLabel,
   ]

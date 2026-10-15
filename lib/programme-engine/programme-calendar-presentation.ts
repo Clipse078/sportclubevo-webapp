@@ -1,5 +1,5 @@
-import { formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
 import type { PersonalProgrammeSourceType } from "@/lib/personal-agenda/personal-programme-types";
+import { formatCalendarMicroTimeLabel } from "@/lib/calendar/sce-calendar-engine/calendar-micro-time-label";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { resolvePersonalCalendarDayMarkerSlots } from "@/lib/personal-agenda/personal-calendar-day-marker-slots";
 import {
@@ -66,9 +66,12 @@ export function buildProgrammeCalendarMicroEntry(
 ): ProgrammeCalendarMicroEntry {
   const sourceType = programmeKindToCalendarSourceType(item.kind);
   const palette = getProgrammeSourcePresentation(sourceType);
-  const timeLabel = item.allDay
-    ? "Ganztägig"
-    : formatFixtureTime(item.startsAt, fmtCfg);
+  const timeLabel = formatCalendarMicroTimeLabel({
+    allDay: item.allDay,
+    startAt: item.startsAt,
+    endAt: item.endsAt,
+    fmtCfg,
+  });
   const typeLabel = KIND_TYPE_LABEL[item.kind];
   const { identityLabel, locationLabel, visualIdentity, accessibleIdentityPhrase } =
     resolveProgrammeCalendarMicroSemantics(item);

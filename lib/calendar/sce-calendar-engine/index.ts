@@ -23,3 +23,11 @@ export {
   formatTeamScopeMatchMicroIdentityLabel,
 } from "./calendar-micro-match-identity";
 export { SCE_CALENDAR_MICRO_VISUAL } from "./calendar-micro-visual-tokens";
+export {
+  formatCalendarMicroAccessibleTimePhrase,
+  formatCalendarMicroTimeLabel,
+} from "./calendar-micro-time-label";
+export type {
+  CalendarMicroTimeSemanticKind,
+  FormatCalendarMicroTimeLabelInput,
+} from "./calendar-micro-time-label";

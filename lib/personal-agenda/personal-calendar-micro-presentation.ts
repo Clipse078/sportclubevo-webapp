@@ -1,5 +1,5 @@
-import { formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
 import type { ProgrammeCalendarMicroEntry } from "@/lib/programme-engine/programme-calendar-presentation";
+import { formatCalendarMicroTimeLabel } from "@/lib/calendar/sce-calendar-engine/calendar-micro-time-label";
 import { getCalendarItemPresentation } from "@/lib/personal-agenda/calendar-item-presentation";
 import {
   buildCalendarMicroAccessibleLabel,
@@ -23,18 +23,15 @@ function resolvePersonalMicroTypeLabel(item: NormalizedCalendarItem): string {
 
 function resolvePersonalMicroTimeLabel(
   item: NormalizedCalendarItem,
-  timeLabelById: Record<string, string>,
   fmtCfg: TenantFormatConfig,
 ): string {
-  if (item.semanticType === "TASK" && item.allDay) {
-    return "Fällig";
-  }
-  if (item.allDay) {
-    return "Ganztägig";
-  }
-  const fromMap = timeLabelById[item.id]?.trim();
-  if (fromMap) return fromMap;
-  return formatFixtureTime(item.startAt, fmtCfg);
+  return formatCalendarMicroTimeLabel({
+    allDay: item.allDay,
+    startAt: item.startAt,
+    endAt: item.endAt,
+    fmtCfg,
+    semanticKind: item.semanticType === "TASK" ? "TASK" : "ACTIVITY",
+  });
 }
 
 export function buildPersonalCalendarMicroEntry(
@@ -46,7 +43,7 @@ export function buildPersonalCalendarMicroEntry(
   const sourceType = mapCalendarSemanticTypeToProgrammeSource(item.semanticType);
   const palette = getCalendarItemPresentation(item.semanticType);
   const typeLabel = resolvePersonalMicroTypeLabel(item);
-  const timeLabel = resolvePersonalMicroTimeLabel(item, timeLabelById, fmtCfg);
+  const timeLabel = resolvePersonalMicroTimeLabel(item, fmtCfg);
   const { identityLabel, locationLabel, visualIdentity, accessibleIdentityPhrase } =
     resolvePersonalCalendarMicroSemantics(item);
   const href = item.deepLink ?? "#";
