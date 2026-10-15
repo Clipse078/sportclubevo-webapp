@@ -13,6 +13,7 @@ import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspac
 import { SCE_AUTHENTICATED_APP_SHELL_CLASS } from "@/lib/shell/sce-app-background";
 import { SCE_APP_SHELL_GLOBAL_NAV_CLASS } from "@/lib/shell/sce-app-shell-nav";
 import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
+import { SceApplicationPageGrid } from "@/components/sce/shell/SceApplicationPageGrid";
 import "./authenticated-shell.css";
 import "./global-app-navigation.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
@@ -144,8 +145,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       <div className={`${SCE_APP_MAIN_COLUMN} sce-app-main-with-mobile-nav`}>
-        {/* Page content */}
-        <main className="flex-1 px-5 py-6 lg:px-7 lg:py-7">
+        <SceApplicationPageGrid workspaceClassName="flex min-h-0 flex-1 flex-col py-6 lg:py-7">
           <SportingActivityDetailProvider
             fmtCfg={{
               locale: ctx?.locale ?? "de-CH",
@@ -154,7 +154,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           >
             {children}
           </SportingActivityDetailProvider>
-        </main>
+        </SceApplicationPageGrid>
       </div>
     </div>
   );
