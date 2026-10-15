@@ -484,7 +484,7 @@ Portalled floating surfaces use explicit stack tokens (`lib/ui/sce-overlay-layer
 |------|----------|
 | **Engine** | `SceCalendarEngine` + `MonthActivityGrid` — one month shell (header, navigation, weekday row, grid, today, legend, overflow) |
 | **MICRO renderer** | `ProgrammeCalendarMicroEntry` only — **no** `PersonalCalendar*Tile` / `MatchCalendarTile` parallel families |
-| **Semantic slots** | TYPE · TIME (+ Clock) · VISUAL IDENTITY (`ClubCrest`) · IDENTITY · LOCATION (+ MapPin) · STATUS |
+| **Semantic slots** | TYPE · VISUAL IDENTITY (`ClubCrest`) + IDENTITY · TIME (+ Clock) · LOCATION (+ MapPin) · STATUS |
 | **Location (MICRO)** | `formatSceActivityLocationHierarchy` with `{ includeHostClub: false }` — identity line owns host/opponent/organiser; location line is venue/resource only |
 | **TRAINING crest** | Tenant club via `SceTrainingPresentationModel.tenantClub` (canonical `ClubIdentity`) |
 | **MATCH crest (team scope)** | Opponent `ClubIdentity` — scope team never shown as opponent |

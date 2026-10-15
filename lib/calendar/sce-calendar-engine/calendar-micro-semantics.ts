@@ -413,8 +413,8 @@ export function buildCalendarMicroAccessibleLabel(input: {
   const identityForA11y = input.accessibleIdentityPhrase?.trim() || input.identityLabel;
   return [
     input.typeLabel,
-    input.timeLabel,
     identityForA11y,
+    input.timeLabel,
     input.locationLabel,
     input.statusLabel,
   ]
@@ -434,8 +434,8 @@ export function visibleCalendarMicroSemanticValues(entry: {
 }): string[] {
   return [
     entry.typeLabel,
-    entry.timeLabel,
     entry.identityLabel,
+    entry.timeLabel,
     entry.locationLabel,
     entry.statusLabel,
   ].filter((value): value is string => Boolean(value?.trim()));

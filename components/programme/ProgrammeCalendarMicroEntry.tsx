@@ -36,27 +36,33 @@ export function ProgrammeCalendarMicroEntry({ entry }: Props) {
       >
         {entry.typeLabel}
       </span>
-      <span className={SCE_CALENDAR_MICRO_VISUAL.metaRowClass} data-testid="sce-calendar-micro-time">
-        <Clock className={SCE_CALENDAR_MICRO_VISUAL.metaIconClass} aria-hidden />
-        <span className={SCE_CALENDAR_MICRO_VISUAL.timeClass}>{entry.timeLabel}</span>
-      </span>
       {entry.visualIdentity?.kind === "CLUB_CREST" ? (
-        <span className="flex min-w-0 items-center gap-0.5">
+        <span
+          className="flex min-w-0 items-center gap-0.5"
+          data-testid="sce-calendar-micro-identity"
+        >
           <ClubCrest
             identity={entry.visualIdentity.identity}
             density="micro"
             decorative
             className="shrink-0"
           />
-          <span className="min-w-0 truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
+          <span className="min-w-0 truncate text-[0.5625rem] font-semibold text-[var(--foreground)]">
             {entry.identityLabel ?? entry.title}
           </span>
         </span>
       ) : (
-        <span className="block truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
+        <span
+          className="block truncate text-[0.5625rem] font-semibold text-[var(--foreground)]"
+          data-testid="sce-calendar-micro-identity"
+        >
           {entry.identityLabel ?? entry.title}
         </span>
       )}
+      <span className={SCE_CALENDAR_MICRO_VISUAL.metaRowClass} data-testid="sce-calendar-micro-time">
+        <Clock className={SCE_CALENDAR_MICRO_VISUAL.metaIconClass} aria-hidden />
+        <span className={SCE_CALENDAR_MICRO_VISUAL.timeClass}>{entry.timeLabel}</span>
+      </span>
       {(entry.locationLabel ?? entry.contextLine) ? (
         <span
           className={SCE_CALENDAR_MICRO_VISUAL.locationRowClass}

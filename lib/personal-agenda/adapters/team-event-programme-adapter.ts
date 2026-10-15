@@ -27,6 +27,7 @@ import {
 import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
 import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import { resolveTournamentOrganizerIdentity } from "@/lib/tournaments/club-identity";
+import { resolveOrganizerClubsByName } from "@/lib/tournaments/organizer-club-resolver";
 import { normalizeSportingLocationMode } from "@/lib/sporting-activity-presentation/location";
 
 function getEventTypeLabel(type: EventType): string {
@@ -132,6 +133,16 @@ export async function loadTeamEventProgrammeItems(
     ctx.personal.tenantId,
   );
 
+  const tournamentOrganizerNames = candidates
+    .filter((event) => event.type === "TOURNAMENT")
+    .map((event) => event.organizerName)
+    .filter((name): name is string => Boolean(name?.trim()));
+
+  const organizerClubByName = await resolveOrganizerClubsByName(
+    ctx.personal.tenantId,
+    tournamentOrganizerNames,
+  );
+
   const items: PersonalProgrammeItem[] = [];
   const seen = new Set<string>();
 
@@ -184,12 +195,16 @@ export async function loadTeamEventProgrammeItems(
       const homeAwayMode = normalizeSportingLocationMode(event.homeAway);
       const tournamentHomeAway =
         homeAwayMode === "AWAY" ? ("AWAY" as const) : ("HOME" as const);
+      const organizerNameTrimmed = event.organizerName?.trim() ?? null;
+      const resolvedOrganizerClub = organizerNameTrimmed
+        ? (organizerClubByName.get(organizerNameTrimmed) ?? null)
+        : null;
       const organizerIdentity = resolveTournamentOrganizerIdentity({
         organizerName: event.organizerName,
         homeAway: tournamentHomeAway,
         tenantName: tenantClubName,
         tenantLogoUrl: tenantClubLogoUrl,
-        resolvedOrganizerClub: null,
+        resolvedOrganizerClub,
       });
       activityPresentation = buildTournamentActivityPresentation({
         resourceKey,

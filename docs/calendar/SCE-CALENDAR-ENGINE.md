@@ -27,9 +27,9 @@ There must **not** be parallel calendar shells (separate header/grid/tile langua
 | Slot | Field | Notes |
 |------|--------|--------|
 | TYPE | `typeLabel` | TRAINING · SPIEL · TURNIER · … |
+| VISUAL IDENTITY | `visualIdentity` | `ClubCrest` when domain supplies `ClubIdentity` (same row as IDENTITY) |
+| IDENTITY | `identityLabel` | Primary scanning line — opponent / team / title |
 | TIME | `timeLabel` | Clock icon (decorative when text follows) |
-| VISUAL IDENTITY | `visualIdentity` | `ClubCrest` when domain supplies `ClubIdentity` |
-| IDENTITY | `identityLabel` | One owner — opponent / team / title |
 | LOCATION | `locationLabel` | MapPin icon; **location-only** at MICRO density |
 | STATUS | row styling | Cancelled / postponed via chip classes |
 
