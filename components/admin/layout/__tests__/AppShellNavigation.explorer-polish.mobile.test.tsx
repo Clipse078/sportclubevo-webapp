@@ -64,7 +64,7 @@ describe("SCE-VISUAL-06R1 mobile explorer", () => {
         email="test@example.com"
       />,
     );
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     expect(screen.getAllByTestId("global-nav-explorer-search")).toHaveLength(1);
     const searchShell = screen.getByTestId("global-nav-explorer-search-shell");

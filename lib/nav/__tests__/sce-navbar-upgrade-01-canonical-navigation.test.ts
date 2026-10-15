@@ -29,7 +29,10 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(panel).toContain("sce-domain-nav-panel");
     expect(shell).toContain("SceGlobalUtilities");
     expect(shell).toContain("SceTenantIdentityBar");
-    expect(shell).toContain("showGlobalNavExplorer");
+    expect(shell).not.toContain("showGlobalNavExplorer");
+    expect(readRelative("components/sce/navigation/SceGlobalUtilities.tsx")).not.toContain(
+      "global-nav-hamburger",
+    );
   });
 
   it("uses distinct L1/L2/L3 style contracts in global navigation CSS", () => {

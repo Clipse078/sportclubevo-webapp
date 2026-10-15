@@ -83,7 +83,8 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
     expect(row2Season).toContain('displayMode="wide"');
     expect(row2Season).toContain('displayMode="medium"');
-    expect(row2Season).toContain('displayMode="icon"');
+    expect(row2Season).not.toContain('displayMode="icon"');
+    expect(row2Season).toMatch(/hidden lg:flex[\s\S]*displayMode="wide"/);
   });
 
   it("structures Wochenplaner chrome with hierarchical toolbars on page grid", () => {

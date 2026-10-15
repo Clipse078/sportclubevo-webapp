@@ -88,11 +88,12 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
     expect(row2Season).toContain('displayMode="wide"');
     expect(row2Season).toContain('displayMode="medium"');
-    expect(row2Season).toContain('displayMode="icon"');
+    expect(row2Season).not.toContain('displayMode="icon"');
 
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain("data-sce-utilities-tier");
+    expect(utilities).toContain('data-sce-utilities-tier="compact"');
     expect(utilities).not.toContain("SceGlobalSeasonSwitcher");
+    expect(utilities).not.toContain("global-nav-hamburger");
   });
 
   it("fits functional L1 domains after dashboard removal at laptop tier", () => {

@@ -103,7 +103,7 @@ describe("AppShellNavigation landmarks", () => {
     const wochenplaner = screen.getByRole("link", { name: "Wochenplaner" });
     expect(wochenplaner).toHaveAttribute("aria-current", "page");
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     expect(screen.getByTestId("global-nav-drawer")).toBeInTheDocument();
   });
 

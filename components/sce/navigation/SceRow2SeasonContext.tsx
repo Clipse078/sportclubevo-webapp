@@ -37,14 +37,11 @@ export function SceRow2SeasonContext({
       className={cn("sce-row2-season-context hidden md:flex items-center", className)}
       data-testid="sce-row2-season-context"
     >
-      <div className="hidden min-[1536px]:flex">
+      <div className="hidden lg:flex">
         <SceGlobalSeasonSwitcher {...seasonProps} displayMode="wide" />
       </div>
-      <div className="hidden min-[1280px]:flex min-[1536px]:hidden">
+      <div className="hidden md:flex lg:hidden">
         <SceGlobalSeasonSwitcher {...seasonProps} displayMode="medium" />
-      </div>
-      <div className="hidden md:flex min-[1280px]:hidden">
-        <SceGlobalSeasonSwitcher {...seasonProps} displayMode="icon" />
       </div>
     </div>
   );

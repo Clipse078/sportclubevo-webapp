@@ -42,9 +42,16 @@ describe("SCE-NAVBAR-UPGRADE-01-R10 tenant-first navigation shell", () => {
     expect(panel).toMatch(/moduleRow[\s\S]*shellBottom/);
   });
 
-  it("maps Vereinsprogramm to a canonical planning icon", () => {
+  it("maps Vereinsprogramm to a canonical monochrome planning icon", () => {
     expect(getNavDestinationSceIconName("vereinsprogramm")).toBe("calendar");
     expect(getNavDestinationSceIconName("wochenplanner")).toBe("week-planner");
+    const planningGlyphs = readRelative(
+      "components/design-system/icons/glyphs/planning/index.tsx",
+    );
+    const calendarBlock =
+      planningGlyphs.match(/export function CalendarGlyph[\s\S]*?^}/m)?.[0] ?? "";
+    expect(calendarBlock).toContain("monochrome");
+    expect(calendarBlock).not.toContain("--sce-icon-accent");
   });
 
   it("documents tenant-first hierarchy and single strong L1 selection in design system", () => {

@@ -121,11 +121,12 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(panel).toContain('data-testid="sce-domain-nav-panel"');
   });
 
-  it("exposes global navigation drawer on all breakpoints", () => {
+  it("exposes global navigation drawer via mobile menu without desktop hamburger", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("GlobalNavDrawer");
+    expect(shellNav).toContain('data-testid="global-nav-mobile-menu"');
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain('data-testid="global-nav-hamburger"');
+    expect(utilities).not.toContain("global-nav-hamburger");
     expect(shellNav).not.toContain("AdminSidebar");
     const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
     expect(drawer).toContain("z-[80]");

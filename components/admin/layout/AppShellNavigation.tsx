@@ -171,11 +171,6 @@ function AppShellNavigationInner({
     />
   );
 
-  const showGlobalNavExplorer =
-    layoutTier !== "desktop" ||
-    overflowDomains.length > 0 ||
-    inlineDomains.length < primaryRowDomains.length;
-
   const mobileBottomDomains = useMemo(
     () => selectMobileBottomDomains(model, active.activeDomainId, 3),
     [model, active.activeDomainId],
@@ -374,13 +369,6 @@ function AppShellNavigationInner({
           utilities={
             <SceGlobalUtilities
               platformWorkspace={isPlatformWorkspace}
-              globalNavDrawerOpen={globalNavDrawerOpen}
-              globalNavDrawerId={globalNavDrawerId}
-              openDrawerLabel={t("openDrawer")}
-              onToggleDrawer={() =>
-                globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
-              }
-              showGlobalNavExplorer={showGlobalNavExplorer}
               firstName={firstName}
               lastName={lastName}
               email={email}
@@ -470,6 +458,9 @@ function AppShellNavigationInner({
           type="button"
           className="sce-mobile-bottom-nav-item"
           aria-label={t("moreNavAria")}
+          aria-expanded={globalNavDrawerOpen}
+          aria-controls={globalNavDrawerId}
+          data-testid="global-nav-mobile-menu"
           onClick={openGlobalNavDrawer}
         >
           {t("more")}

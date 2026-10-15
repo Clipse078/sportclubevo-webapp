@@ -70,9 +70,10 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
     expect(weekLink.querySelector('[data-sce-nav-destination-icon="week-planner"]')).toBeTruthy();
 
     const programmeLink = within(panel).getByRole("link", { name: /Vereinsprogramm/i });
-    expect(
-      programmeLink.querySelector('[data-sce-nav-destination-icon="calendar"]'),
-    ).toBeTruthy();
+    const programmeIcon = programmeLink.querySelector('[data-sce-nav-destination-icon="calendar"]');
+    expect(programmeIcon).toBeTruthy();
+    expect(programmeIcon?.querySelector("svg")).toHaveClass("text-current");
+    expect(programmeIcon?.innerHTML).not.toContain("--sce-icon-accent");
 
     const eventsLink = within(panel).getByRole("link", { name: /Veranstaltungen/i });
     expect(eventsLink.querySelector('[data-sce-nav-destination-icon="events"]')).toBeTruthy();
@@ -95,7 +96,7 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     expect(
       screen
         .getByTestId("global-nav-drawer-tree")

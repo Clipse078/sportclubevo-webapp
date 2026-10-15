@@ -75,7 +75,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("exposes exactly one explorer search input before the workspace", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     const searches = screen.getAllByTestId("global-nav-explorer-search");
     expect(searches).toHaveLength(1);
@@ -91,7 +91,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("keeps header and search outside the module scroll region", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     const modulePane = screen.getByTestId("global-nav-explorer-module-pane");
     expect(modulePane.className).toMatch(/overflow-y-auto/);
@@ -102,7 +102,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("finds authorized modules and child destinations via search", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     const search = screen.getByTestId("global-nav-explorer-search");
     await user.type(search, "Train");
@@ -125,7 +125,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
         email="test@example.com"
       />,
     );
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.type(screen.getByTestId("global-nav-explorer-search"), "Website");
     expect(screen.queryByText("Website")).not.toBeInTheDocument();
   });
@@ -133,7 +133,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("closes explorer when selecting a search result link", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.type(screen.getByTestId("global-nav-explorer-search"), "Train");
     const searchResults = screen.getByTestId("global-nav-explorer-search-results");
     await user.click(within(searchResults).getByRole("link", { name: /Trainings/i }));
@@ -143,7 +143,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("keeps domain rail structurally separate from module pane", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     const workspace = screen.getByTestId("global-nav-explorer-workspace");
     expect(within(workspace).getByTestId("global-nav-explorer-domain-rail")).toBeInTheDocument();
@@ -153,7 +153,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("preserves progressive disclosure for module children", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.click(screen.getByTestId("global-nav-explorer-domain-club"));
 
     const expandButtons = within(screen.getByTestId("global-nav-drawer-tree")).queryAllByRole(
@@ -168,7 +168,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("preserves dialog accessibility and close interactions", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     const drawer = screen.getByTestId("global-nav-drawer");
     expect(drawer).toHaveAttribute("role", "dialog");
@@ -177,11 +177,11 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
     await user.click(screen.getByTestId("global-nav-drawer-close"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.keyboard("{Escape}");
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.click(screen.getByTestId("global-nav-drawer-backdrop"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
   });
@@ -189,7 +189,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("keeps sensible keyboard tab order with close before search in the drawer", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     const drawer = screen.getByTestId("global-nav-drawer");
     const close = within(drawer).getByTestId("global-nav-drawer-close");
@@ -200,7 +200,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
   it("closes explorer when selecting a module link from the tree", async () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     const moduleLink = within(screen.getByTestId("global-nav-drawer-tree")).getByRole("link", {
       name: "Wochenplaner",
     });

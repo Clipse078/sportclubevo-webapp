@@ -556,6 +556,16 @@
   min-width: 0;
 }
 
+.sce-domain-nav-panel-l2-label [data-sce-nav-destination-icon] .sce-icon {
+  color: currentColor;
+  opacity: 0.88;
+}
+
+.sce-domain-nav-panel-l2-link--active .sce-domain-nav-panel-l2-label [data-sce-nav-destination-icon] .sce-icon,
+.sce-domain-nav-panel-l2-control--active .sce-domain-nav-panel-l2-label [data-sce-nav-destination-icon] .sce-icon {
+  opacity: 1;
+}
+
 .sce-domain-nav-panel-l2-link,
 .sce-domain-nav-panel-l2-control,
 .sce-domain-nav-panel-l3-link {

@@ -187,7 +187,8 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
   it("preserves responsive explorer entry points without authorization bypass", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("GlobalNavDrawer");
-    expect(shell).toContain('data-testid="global-nav-hamburger"');
+    expect(shell).toContain('data-testid="global-nav-mobile-menu"');
+    expect(shell).not.toContain("showGlobalNavExplorer");
     expect(shell).toContain("SCE_MOBILE_BOTTOM_NAV_CLASS");
 
     const planningOnly = buildAppNavigationModelForUser(

@@ -63,7 +63,7 @@ describe("AppShellNavigation application explorer", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     expect(screen.getByTestId("global-nav-drawer")).toBeVisible();
     expect(screen.getByTestId("global-nav-explorer-domain-rail")).toBeInTheDocument();
     expect(screen.getByTestId("global-nav-explorer-module-pane")).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe("AppShellNavigation application explorer", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     const search = screen.getByTestId("global-nav-explorer-search");
     await user.type(search, "Train");
     expect(screen.getByTestId("global-nav-explorer-search-results")).toHaveTextContent("Trainings");
@@ -103,11 +103,11 @@ describe("AppShellNavigation application explorer", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.keyboard("{Escape}");
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.click(screen.getByTestId("global-nav-drawer-backdrop"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
   });

@@ -519,7 +519,9 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 
 **Global utilities (right cluster)**
 
-- `SceGlobalUtilities` (Row 1): global app explorer when tier/overflow requires it (hamburger → `GlobalNavDrawer`), contextual `AdminPageActions` (module pages only), notifications, account. Season lives on Row 2 (`SceRow2SeasonContext`).
+- `SceGlobalUtilities` (Row 1): contextual `AdminPageActions` (module pages only), notifications, account. Season lives on Row 2 (`SceRow2SeasonContext`). **Desktop module discovery** is L1 domains + `SceDomainNavigationPanel` — not a global hamburger/overflow trigger in Row 1.
+- **Primary navigation icons** use canonical state-driven monochrome foreground (`currentColor`). Individual navigation icons must not introduce independent semantic colors (orange/blue/accent fills) in inactive rows — state controls color, not icon artwork.
+- **Season context** uses the Row 2 width budget. The **full localized season label** is the default desktop representation (`lg` and up) and must not collapse based on Row 1 width pressure; compact variants apply only on genuinely constrained tablet tiers.
 - Global **`+ Erstellen`** remains the accepted `SceActivityCreateMenu` contract on module surfaces (01G) — not duplicated in the shell.
 
 **Responsive**
