@@ -115,11 +115,12 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(shellNav).toContain("domainSecondaryItems");
     expect(shellNav).toContain("moduleLocalChildren");
     expect(shellNav).toContain("SceModuleNavigation");
-    expect(shellNav).toContain("SceContextNavigation");
+    expect(shellNav).toContain("moduleLocalChildren");
     const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
     expect(moduleNav).toContain('data-testid="domain-secondary-nav"');
-    const contextNav = readRelative("components/sce/navigation/SceContextNavigation.tsx");
-    expect(contextNav).toContain('data-testid="module-local-nav"');
+    expect(moduleNav).toContain("SceContextNavigationPanel");
+    const panel = readRelative("components/sce/navigation/SceContextNavigationPanel.tsx");
+    expect(panel).toContain('data-testid="sce-context-nav-panel"');
   });
 
   it("exposes global navigation drawer on all breakpoints", () => {

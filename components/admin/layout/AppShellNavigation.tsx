@@ -18,6 +18,7 @@ import {
   isDomainHeaderSecondaryItemActive,
   isModuleLocalChildPrimaryActive,
   resolveActiveAppNavigation,
+  resolveDesktopPrimaryNavigationDomains,
   resolvePrimaryDomainPresentation,
   selectMobileBottomDomains,
   type DomainSecondaryNavItem,
@@ -37,7 +38,6 @@ import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 import { cn } from "@/lib/cn";
 import { usePermissionAwareRoutePrefetch } from "@/lib/nav/use-permission-aware-route-prefetch";
 import {
-  SceContextNavigation,
   SceGlobalUtilities,
   SceModuleNavigation,
   SceNavigationSpineRow,
@@ -134,14 +134,24 @@ function AppShellNavigationInner({
     [t],
   );
 
-  const maxInline = maxInlineDomainsForTier(layoutTier);
-  const { inlineDomains, overflowDomains } = useMemo(
-    () => resolvePrimaryDomainPresentation(model.domains, active.activeDomainId, maxInline),
-    [model.domains, active.activeDomainId, maxInline],
+  const primaryRowDomains = useMemo(
+    () => resolveDesktopPrimaryNavigationDomains(model.domains, workspaceContext),
+    [model.domains, workspaceContext],
   );
 
+  const maxInline = maxInlineDomainsForTier(layoutTier);
+  const { inlineDomains, overflowDomains } = useMemo(
+    () =>
+      resolvePrimaryDomainPresentation(primaryRowDomains, active.activeDomainId, maxInline),
+    [primaryRowDomains, active.activeDomainId, maxInline],
+  );
+
+  const homeHref = resolveHref("/dashboard");
+
   const showGlobalNavExplorer =
-    layoutTier !== "desktop" || overflowDomains.length > 0 || inlineDomains.length < model.domains.length;
+    layoutTier !== "desktop" ||
+    overflowDomains.length > 0 ||
+    inlineDomains.length < primaryRowDomains.length;
 
   const mobileBottomDomains = useMemo(
     () => selectMobileBottomDomains(model, active.activeDomainId, 3),
@@ -149,7 +159,10 @@ function AppShellNavigationInner({
   );
 
   const isDomainActive = useCallback(
-    (domain: NavigationDomain) => active.activeDomainId === domain.id,
+    (domain: NavigationDomain) => {
+      if (active.activeDomainId === "dashboard") return false;
+      return active.activeDomainId === domain.id;
+    },
     [active.activeDomainId],
   );
 
@@ -211,7 +224,7 @@ function AppShellNavigationInner({
           className="sce-global-app-header-row sce-global-app-header-row--primary"
           brand={
             <>
-              <ScePlatformBrandRail className="hidden md:flex" />
+              <ScePlatformBrandRail className="hidden md:flex" homeHref={homeHref} />
               <div className="md:hidden w-full min-w-0">
                 <SceTenantIdentityBar
                   displayClubName={displayClubName}
@@ -260,30 +273,16 @@ function AppShellNavigationInner({
           }
         />
 
-        {active.activeDomain && active.domainSecondaryItems.length > 0 ? (
+        {active.activeDomain &&
+        active.activeDomainId !== "dashboard" &&
+        active.domainSecondaryItems.length > 0 ? (
           <SceModuleNavigation
             ariaLabel={t("moduleNavAria")}
+            domain={active.activeDomain}
             items={active.domainSecondaryItems}
             resolveHref={resolveHref}
             isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
-            brand={
-              <SceTenantContextRail
-                displayClubName={displayClubName}
-                logoUrl={logoUrl}
-                platformWorkspace={isPlatformWorkspace}
-                className="hidden md:flex"
-              />
-            }
-          />
-        ) : null}
-
-        {active.moduleLocalChildren.length > 0 ? (
-          <SceContextNavigation
-            ariaLabel={t("contextNavAria")}
-            items={active.moduleLocalChildren}
-            pathname={pathname}
-            resolveHref={resolveHref}
-            isItemActive={(child) =>
+            isContextChildActive={(child) =>
               isModuleLocalChildPrimaryActive(
                 pathname,
                 child,
@@ -292,6 +291,15 @@ function AppShellNavigationInner({
               )
             }
             onNavigateSibling={navigateToModuleLocalSibling}
+            brand={
+              <SceTenantContextRail
+                displayClubName={displayClubName}
+                logoUrl={logoUrl}
+                platformWorkspace={isPlatformWorkspace}
+                className="hidden md:flex"
+                homeHref={isPlatformWorkspace ? undefined : homeHref}
+              />
+            }
           />
         ) : null}
       </header>

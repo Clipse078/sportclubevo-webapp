@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * R9R2 — Infoboard Übersicht/Vorschau header module-local navigation
+ * R9R2 — Infoboard Übersicht/Vorschau contextual navigation (on-demand L3 panel)
  */
 
 import { render, screen, within } from "@testing-library/react";
@@ -55,8 +55,15 @@ const manageInfoboardKeys = [
   PERMISSIONS.WEBSITE_VIEW,
 ];
 
+async function openPublishingL3Panel(user: ReturnType<typeof userEvent.setup>) {
+  const disclosure = screen.getByRole("button", { name: /Kanäle: Unterbereiche anzeigen/i });
+  await user.click(disclosure);
+  return screen.getByTestId("sce-context-nav-panel");
+}
+
 describe("AppShellNavigation — Infoboard R9R2", () => {
-  it("from preview — Übersicht link targets overview and Vorschau is active", () => {
+  it("from preview — Übersicht link targets overview and Vorschau is active in the L3 panel", async () => {
+    const user = userEvent.setup();
     render(
       <AppShellNavigation
         permissionKeys={manageInfoboardKeys}
@@ -68,10 +75,9 @@ describe("AppShellNavigation — Infoboard R9R2", () => {
       />,
     );
 
-    const moduleNav = screen.getByTestId("module-local-nav");
-    const overview = within(moduleNav).getByRole("link", { name: "Übersicht" });
-    const preview = within(moduleNav).getByRole("link", { name: "Vorschau" });
-    expect(moduleNav).toContainElement(overview);
+    const panel = await openPublishingL3Panel(user);
+    const overview = within(panel).getByRole("link", { name: "Übersicht" });
+    const preview = within(panel).getByRole("link", { name: "Vorschau" });
     expect(overview).toHaveAttribute("href", "/dashboard/infoboard");
     expect(preview).toHaveAttribute("aria-current", "page");
     expect(overview).not.toHaveAttribute("aria-current");
@@ -91,8 +97,8 @@ describe("AppShellNavigation — Infoboard R9R2", () => {
       />,
     );
 
-    const moduleNav = screen.getByTestId("module-local-nav");
-    await user.click(within(moduleNav).getByRole("link", { name: "Übersicht" }));
+    const panel = await openPublishingL3Panel(user);
+    await user.click(within(panel).getByRole("link", { name: "Übersicht" }));
     expect(push).toHaveBeenCalled();
     const navigated = push.mock.calls.some(
       (call) => call[0] === "/dashboard/infoboard" || call[0]?.startsWith?.("/dashboard/infoboard"),

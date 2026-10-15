@@ -63,15 +63,12 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
     );
 
     const weekLink = screen.getByRole("link", { name: /Wochenplaner/i });
-    expect(weekLink).toHaveAttribute("data-sce-nav-icon", "week-planner");
     expect(weekLink.querySelector('[data-sce-nav-destination-icon="week-planner"]')).toBeTruthy();
 
     const eventsLink = screen.getByRole("link", { name: /Veranstaltungen/i });
-    expect(eventsLink).toHaveAttribute("data-sce-nav-icon", "events");
     expect(eventsLink.querySelector('[data-sce-nav-destination-icon="events"]')).toBeTruthy();
 
     const spieleLink = screen.getByRole("link", { name: /Spiele/i });
-    expect(spieleLink).toHaveAttribute("data-sce-nav-icon", "match");
     expect(spieleLink.querySelector('[data-sce-nav-destination-icon="match"]')).toBeTruthy();
     expect(spieleLink.querySelector("circle")).toBeTruthy();
   });

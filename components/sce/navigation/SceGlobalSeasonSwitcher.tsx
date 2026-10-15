@@ -12,7 +12,17 @@ export type SceGlobalSeasonSwitcherProps = {
   selectedSeasonKey?: string | null;
   className?: string;
   switchLabel?: string;
+  /** Shorter label (e.g. 2026/27) for constrained Row 1 widths. */
+  compact?: boolean;
 };
+
+export function formatCompactSeasonLabel(label: string): string {
+  const slashPair = label.match(/^(\d{4})\/(\d{4})$/);
+  if (slashPair) {
+    return `${slashPair[1]}/${slashPair[2]!.slice(-2)}`;
+  }
+  return label;
+}
 
 function buildSeasonsHref(selectedSeasonKey?: string | null, activeSeasonKey?: string | null) {
   const key = selectedSeasonKey ?? activeSeasonKey;
@@ -26,20 +36,33 @@ export function SceGlobalSeasonSwitcher({
   selectedSeasonKey,
   className,
   switchLabel = "Saison wechseln",
+  compact = false,
 }: SceGlobalSeasonSwitcherProps) {
-  const displayLabel = selectedSeasonKey ?? activeSeasonLabel ?? "Saison";
+  const fullLabel = selectedSeasonKey ?? activeSeasonLabel ?? "Saison";
+  const displayLabel = compact ? formatCompactSeasonLabel(fullLabel) : fullLabel;
   const href = buildSeasonsHref(selectedSeasonKey, activeSeasonKey);
 
   return (
     <Link
       href={href}
-      className={cn("sce-global-season-switcher", className)}
+      className={cn(
+        "sce-global-season-switcher",
+        compact && "sce-global-season-switcher--compact",
+        className,
+      )}
       data-testid="global-season-switcher"
-      aria-label={`${switchLabel}: ${displayLabel}`}
-      title={switchLabel}
+      aria-label={`${switchLabel}: ${fullLabel}`}
+      title={fullLabel}
     >
       <CalendarRange className="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
-      <span className="sce-global-season-switcher-label max-w-[7rem] truncate">{displayLabel}</span>
+      <span
+        className={cn(
+          "sce-global-season-switcher-label truncate",
+          compact ? "max-w-[4.5rem]" : "max-w-[7rem]",
+        )}
+      >
+        {displayLabel}
+      </span>
     </Link>
   );
 }

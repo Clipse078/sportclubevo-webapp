@@ -45,16 +45,31 @@ export function SceGlobalUtilities({
   showGlobalNavExplorer = true,
 }: SceGlobalUtilitiesProps) {
   return (
-    <div className="flex shrink-0 items-center gap-1 sce-global-header-utilities" data-testid="sce-global-utilities">
+    <div
+      className="flex min-w-0 shrink-0 items-center gap-0.5 sce-global-header-utilities md:gap-1"
+      data-testid="sce-global-utilities"
+      data-sce-utilities-tier={showGlobalNavExplorer ? "with-explorer" : "compact"}
+    >
       {!platformWorkspace ? (
-        <div className="hidden lg:flex">
-          <SceGlobalSeasonSwitcher
-            activeSeasonLabel={activeSeasonLabel}
-            activeSeasonKey={activeSeasonKey}
-            selectedSeasonKey={selectedSeasonKey}
-            switchLabel={seasonSwitchLabel}
-          />
-        </div>
+        <>
+          <div className="hidden min-[1280px]:flex">
+            <SceGlobalSeasonSwitcher
+              activeSeasonLabel={activeSeasonLabel}
+              activeSeasonKey={activeSeasonKey}
+              selectedSeasonKey={selectedSeasonKey}
+              switchLabel={seasonSwitchLabel}
+            />
+          </div>
+          <div className="hidden md:flex min-[1280px]:hidden">
+            <SceGlobalSeasonSwitcher
+              activeSeasonLabel={activeSeasonLabel}
+              activeSeasonKey={activeSeasonKey}
+              selectedSeasonKey={selectedSeasonKey}
+              switchLabel={seasonSwitchLabel}
+              compact
+            />
+          </div>
+        </>
       ) : null}
 
       {showGlobalNavExplorer ? (

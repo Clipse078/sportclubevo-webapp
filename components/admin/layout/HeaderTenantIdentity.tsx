@@ -1,3 +1,4 @@
+import Link from "next/link";
 import TenantLogo from "@/components/admin/branding/TenantLogo";
 import { cn } from "@/lib/cn";
 
@@ -9,6 +10,8 @@ type HeaderTenantIdentityProps = {
   compact?: boolean;
   layout?: "inline" | "under-product" | "under-product-compact" | "tenant-row-rail";
   className?: string;
+  homeHref?: string;
+  homeTitle?: string;
 };
 
 const CREST_SIZE: Record<NonNullable<HeaderTenantIdentityProps["layout"]>, number> = {
@@ -29,6 +32,8 @@ export default function HeaderTenantIdentity({
   compact = false,
   layout,
   className,
+  homeHref,
+  homeTitle = "Zum Dashboard",
 }: HeaderTenantIdentityProps) {
   const resolvedLayout =
     layout ?? (compact ? "under-product-compact" : "inline");
@@ -47,16 +52,8 @@ export default function HeaderTenantIdentity({
     );
   }
 
-  return (
-    <div
-      className={cn(
-        "flex min-w-0 items-center",
-        isStacked ? "gap-2 sce-global-tenant-context-inner" : "gap-2.5",
-        className,
-      )}
-      data-tenant-identity
-      data-tenant-layout={resolvedLayout}
-    >
+  const identity = (
+    <>
       <TenantLogo
         logoUrl={logoUrl}
         size={crestSize}
@@ -80,6 +77,40 @@ export default function HeaderTenantIdentity({
       >
         {displayName}
       </p>
+    </>
+  );
+
+  const shellClassName = cn(
+    "flex min-w-0 items-center",
+    isStacked ? "gap-2 sce-global-tenant-context-inner" : "gap-2.5",
+    homeHref &&
+      "sce-global-tenant-home-link rounded-sm transition-colors hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_srgb,var(--sce-primary)_55%,transparent)]",
+    className,
+  );
+
+  if (homeHref) {
+    return (
+      <Link
+        href={homeHref}
+        className={shellClassName}
+        data-tenant-identity
+        data-tenant-layout={resolvedLayout}
+        data-testid="sce-tenant-home-link"
+        aria-label={`${displayName}: ${homeTitle}`}
+        title={homeTitle}
+      >
+        {identity}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={shellClassName}
+      data-tenant-identity
+      data-tenant-layout={resolvedLayout}
+    >
+      {identity}
     </div>
   );
 }

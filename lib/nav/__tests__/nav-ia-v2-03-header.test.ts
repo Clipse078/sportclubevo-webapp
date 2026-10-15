@@ -189,7 +189,7 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toContain("--topnav-height: 3.5rem");
     expect(css).toContain("sce-global-module-nav-item--active");
-    expect(css).toContain("sce-global-context-nav-item--active");
-    expect(css).toContain("border-bottom-color: var(--sce-primary)");
+    expect(css).toContain("sce-context-nav-panel-link--active");
+    expect(css).toContain("box-shadow: inset 0 -2px 0 var(--sce-primary)");
   });
 });

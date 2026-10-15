@@ -23,15 +23,14 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(css).toMatch(/\.sce-global-primary-nav \{\s*\n\s*justify-content: flex-start;/);
   });
 
-  it("composes one spine primitive across L1, L2, and L3", () => {
+  it("composes one spine primitive across L1 and L2 (L3 is on-demand overlay)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    const contextNav = readRelative("components/sce/navigation/SceContextNavigation.tsx");
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
 
     expect(shell).toContain("SceNavigationSpineRow");
     expect(moduleNav).toContain("SceNavigationSpineRow");
-    expect(contextNav).toContain("SceNavigationSpineRow");
+    expect(moduleNav).toContain("SceContextNavigationPanel");
     expect(spine).toContain('data-sce-nav-brand-rail={brand ? "occupied" : "spacer"}');
     expect(spine).toContain("data-sce-nav-workspace");
     expect(spine).toContain("data-sce-nav-utilities");
@@ -48,7 +47,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(moduleNav).not.toContain("sce-global-module-nav-workspace-eyebrow");
   });
 
-  it("preserves brand rail occupancy on L1/L2 and intentional spacer on L3", () => {
+  it("preserves brand rail occupancy on L1/L2 without a permanent L3 row", () => {
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
     expect(spine).toContain('variant: SceNavigationSpineRowVariant');
     expect(spine).toContain("sce-nav-spine-row--sub");
@@ -56,8 +55,6 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
 
     const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
     expect(moduleNav).toContain("brand={brand}");
-    const contextNav = readRelative("components/sce/navigation/SceContextNavigation.tsx");
-    expect(contextNav).not.toContain("brand=");
   });
 
   it("bounds brand rail width for wide desktop without centering primary nav", () => {

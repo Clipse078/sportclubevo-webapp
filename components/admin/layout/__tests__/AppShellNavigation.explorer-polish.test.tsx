@@ -18,6 +18,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/planner/week",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -214,7 +215,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
     const report = auditNavigationCompleteness(sections, model);
     expect(report.orphanedDestinations).toEqual([]);
     expect(report.reachableDestinations).toBe(report.canonicalVisibleDestinations);
-    expect(report.canonicalVisibleDestinations).toBe(60);
+    expect(report.canonicalVisibleDestinations).toBe(63);
   });
 });
 

@@ -44,10 +44,12 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(moduleNav).toContain("brand={brand}");
   });
 
-  it("keeps row 3 rail intentionally empty while L2 carries tenant context", () => {
-    const contextNav = readRelative("components/sce/navigation/SceContextNavigation.tsx");
-    expect(contextNav).toContain('<SceNavigationSpineRow\n        variant="context"');
-    expect(contextNav).not.toContain("brand=");
+  it("removed permanent desktop Row 3 in favor of on-demand L3 panel from Row 2", () => {
+    const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
+    expect(shell).not.toContain("<SceContextNavigation");
+
+    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
+    expect(moduleNav).toContain("SceContextNavigationPanel");
 
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
     expect(spine).toContain('data-sce-nav-brand-rail={brand ? "occupied" : "spacer"}');

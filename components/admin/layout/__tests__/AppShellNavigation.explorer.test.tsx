@@ -13,6 +13,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/planner/week",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({

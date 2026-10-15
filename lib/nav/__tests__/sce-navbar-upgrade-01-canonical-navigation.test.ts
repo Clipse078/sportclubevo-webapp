@@ -23,7 +23,9 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("ScePrimaryNavigation");
     expect(shell).toContain("SceModuleNavigation");
-    expect(shell).toContain("SceContextNavigation");
+    expect(shell).not.toContain("<SceContextNavigation");
+    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
+    expect(moduleNav).toContain("SceContextNavigationPanel");
     expect(shell).toContain("SceGlobalUtilities");
     expect(shell).toContain("SceTenantIdentityBar");
     expect(shell).toContain("showGlobalNavExplorer");
@@ -33,7 +35,7 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toContain("sce-global-primary-nav-item--active");
     expect(css).toContain("sce-global-module-nav-item--active");
-    expect(css).toContain("sce-global-context-nav-item--active");
+    expect(css).toContain("sce-context-nav-panel-link--active");
     expect(css).toContain("--sce-nav-brand-rail-width");
     expect(css).toContain("--sce-nav-start-x");
     expect(css).toContain("sce-nav-spine-row");
@@ -44,7 +46,7 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
   it("maps module vs context nav landmarks to the correct aria labels", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain('ariaLabel={t("moduleNavAria")}');
-    expect(shell).toContain('ariaLabel={t("contextNavAria")}');
+    expect(shell).toContain("resolveDesktopPrimaryNavigationDomains");
   });
 
   it("resolves primary, module, and contextual active routes for Programme continuity", () => {

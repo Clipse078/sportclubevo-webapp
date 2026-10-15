@@ -165,6 +165,43 @@ export function resolveDomainSecondaryNavItems(
     }));
 }
 
+/** Desktop Row 1 excludes the dashboard/home domain; home is reached via brand + tenant identity. */
+export function resolveDesktopPrimaryNavigationDomains(
+  domains: readonly NavigationDomain[],
+  workspaceContext: WorkspaceContext = "club",
+): NavigationDomain[] {
+  if (workspaceContext === "platform") {
+    return [...domains];
+  }
+  return domains.filter((domain) => domain.id !== "dashboard");
+}
+
+/** Canonical L3 destinations for a Row 2 item (permission-filtered via nav-config children on the model). */
+export function resolveSecondaryNavItemModuleLocalChildren(
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+): NavItemChild[] {
+  if (isSingleHubNavigationDomain(domain)) {
+    return [];
+  }
+
+  const topLevel = domain.destinations.find((dest) => dest.key === item.key);
+  if (topLevel?.children?.length) {
+    return topLevel.children;
+  }
+
+  if (item.headerGroupNavKeys?.length) {
+    for (const navKey of item.headerGroupNavKeys) {
+      const groupedDest = domain.destinations.find((dest) => dest.key === navKey);
+      if (groupedDest?.children?.length) {
+        return groupedDest.children;
+      }
+    }
+  }
+
+  return [];
+}
+
 export type ExplorerDomainModule = DomainSecondaryNavItem & {
   children: NavItemChild[];
   explorerGroupId?: string;

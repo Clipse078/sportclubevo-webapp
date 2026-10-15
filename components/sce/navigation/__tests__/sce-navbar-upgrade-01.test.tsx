@@ -66,7 +66,7 @@ describe("SceGlobalSeasonSwitcher", () => {
 describe("AppShellNavigation landmarks", () => {
   const adminKeys = Object.values(PERMISSIONS);
 
-  it("exposes primary, module, and context nav regions with aria-current on active L1", async () => {
+  it("exposes primary and module nav with on-demand L3 disclosures", async () => {
     render(
       <AppShellNavigation
         permissionKeys={adminKeys}
@@ -97,6 +97,7 @@ describe("AppShellNavigation landmarks", () => {
 
     const wochenplaner = screen.getByRole("link", { name: "Wochenplaner" });
     expect(wochenplaner).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByTestId("sce-context-nav-panel")).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.click(screen.getByTestId("global-nav-hamburger"));
