@@ -102,4 +102,30 @@ describe("AppShellNavigation landmarks", () => {
     await user.click(screen.getByTestId("global-nav-hamburger"));
     expect(screen.getByTestId("global-nav-drawer")).toBeInTheDocument();
   });
+
+  it("aligns L1/L2 through the shared navigation spine grid", () => {
+    render(
+      <AppShellNavigation
+        permissionKeys={adminKeys}
+        workspaceContext="club"
+        clubName="FC Allschwil"
+        activeSeasonLabel="2025/2026"
+        activeSeasonKey="2025/2026"
+        firstName="Test"
+        lastName="User"
+        email="test@example.com"
+      />,
+    );
+
+    const primarySpine = document.querySelector('[data-sce-nav-spine-row="primary"]');
+    expect(primarySpine).toBeTruthy();
+    expect(primarySpine?.querySelector('[data-sce-nav-brand-rail="occupied"]')).toBeTruthy();
+    expect(primarySpine?.querySelector("[data-sce-nav-workspace]")).toBeTruthy();
+    expect(primarySpine?.querySelector("[data-sce-nav-utilities]")).toBeTruthy();
+
+    const moduleSpine = document.querySelector('[data-sce-nav-spine-row="module"]');
+    expect(moduleSpine).toBeTruthy();
+    expect(moduleSpine?.querySelector('[data-sce-nav-brand-rail="spacer"]')).toBeTruthy();
+    expect(moduleSpine?.querySelector("[data-sce-nav-workspace]")).toBeTruthy();
+  });
 });

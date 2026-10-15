@@ -3,6 +3,7 @@
 import type { MouseEvent } from "react";
 import type { NavItemChild } from "@/lib/nav/nav-config";
 import { SceNavigationItem } from "@/components/sce/navigation/SceNavigationItem";
+import { SceNavigationSpineRow } from "@/components/sce/navigation/SceNavigationSpineRow";
 
 type SceContextNavigationProps = {
   ariaLabel: string;
@@ -16,6 +17,7 @@ type SceContextNavigationProps = {
 export function SceContextNavigation({
   ariaLabel,
   items,
+  pathname: _pathname,
   resolveHref,
   isItemActive,
   onNavigateSibling,
@@ -28,18 +30,23 @@ export function SceContextNavigation({
       className="sce-global-context-nav hidden md:block"
       data-testid="module-local-nav"
     >
-      <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto">
-        {items.map((child) => (
-          <SceNavigationItem
-            key={child.key}
-            level="context"
-            href={resolveHref(child.href)}
-            label={child.label}
-            isActive={isItemActive(child)}
-            onClick={(event) => onNavigateSibling(event, child)}
-          />
-        ))}
-      </div>
+      <SceNavigationSpineRow
+        variant="context"
+        workspace={
+          <div className="sce-global-context-nav-track flex min-w-0 w-full gap-1 overflow-x-auto">
+            {items.map((child) => (
+              <SceNavigationItem
+                key={child.key}
+                level="context"
+                href={resolveHref(child.href)}
+                label={child.label}
+                isActive={isItemActive(child)}
+                onClick={(event) => onNavigateSibling(event, child)}
+              />
+            ))}
+          </div>
+        }
+      />
     </nav>
   );
 }

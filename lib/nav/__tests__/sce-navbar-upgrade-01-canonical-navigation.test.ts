@@ -34,8 +34,9 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(css).toContain("sce-global-primary-nav-item--active");
     expect(css).toContain("sce-global-module-nav-item--active");
     expect(css).toContain("sce-global-context-nav-item--active");
-    expect(css).toContain("--topnav-height: 5rem");
-    expect(css).toContain("min-width: 13.75rem");
+    expect(css).toContain("--sce-nav-brand-rail-width");
+    expect(css).toContain("--sce-nav-start-x");
+    expect(css).toContain("sce-nav-spine-row");
     expect(css).toContain("sce-global-brand-tenant-stack");
     expect(css).not.toContain("backdrop-filter: blur");
   });

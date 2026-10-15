@@ -40,6 +40,7 @@ import {
   SceContextNavigation,
   SceGlobalUtilities,
   SceModuleNavigation,
+  SceNavigationSpineRow,
   ScePrimaryNavigation,
   SceTenantIdentityBar,
 } from "@/components/sce/navigation";
@@ -203,55 +204,58 @@ function AppShellNavigationInner({
   return (
     <>
       <header className={SCE_GLOBAL_APP_HEADER_CLASS} data-testid="sce-global-navigation">
-        <div className="sce-global-app-header-row sce-global-app-header-row--primary">
-          <SceTenantIdentityBar
-            displayClubName={displayClubName}
-            logoUrl={logoUrl}
-            platformWorkspace={isPlatformWorkspace}
-          />
-
-          <ScePrimaryNavigation
-            ariaLabel={t("primaryNavAria")}
-            className="sce-global-primary-nav hidden md:flex min-w-0 flex-1 justify-center"
-            inlineDomains={inlineDomains}
-            overflowDomains={overflowDomains}
-            activeDomainId={active.activeDomainId}
-            activeDestination={active.activeDestination}
-            overflowOpen={overflowOpen}
-            onOverflowToggle={() => setOverflowOpen((v) => !v)}
-            onOverflowNavigate={() => setOverflowOpen(false)}
-            resolveHref={resolveHref}
-            domainLabel={domainLabel}
-            isDomainActive={isDomainActive}
-            moreLabel={t("more")}
-          />
-
-          <SceGlobalUtilities
-            platformWorkspace={isPlatformWorkspace}
-            activeSeasonLabel={activeSeasonLabel}
-            activeSeasonKey={activeSeasonKey}
-            selectedSeasonKey={selectedSeason}
-            seasonSwitchLabel={t("seasonSwitchAria")}
-            globalNavDrawerOpen={globalNavDrawerOpen}
-            globalNavDrawerId={globalNavDrawerId}
-            openDrawerLabel={t("openDrawer")}
-            onToggleDrawer={() =>
-              globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
-            }
-            showGlobalNavExplorer={showGlobalNavExplorer}
-            firstName={firstName}
-            lastName={lastName}
-            email={email}
-            imageUrl={imageUrl}
-          />
-        </div>
+        <SceNavigationSpineRow
+          variant="primary"
+          className="sce-global-app-header-row sce-global-app-header-row--primary"
+          brand={
+            <SceTenantIdentityBar
+              displayClubName={displayClubName}
+              logoUrl={logoUrl}
+              platformWorkspace={isPlatformWorkspace}
+            />
+          }
+          workspace={
+            <ScePrimaryNavigation
+              ariaLabel={t("primaryNavAria")}
+              className="sce-global-primary-nav hidden md:flex min-w-0 w-full"
+              inlineDomains={inlineDomains}
+              overflowDomains={overflowDomains}
+              activeDomainId={active.activeDomainId}
+              activeDestination={active.activeDestination}
+              overflowOpen={overflowOpen}
+              onOverflowToggle={() => setOverflowOpen((v) => !v)}
+              onOverflowNavigate={() => setOverflowOpen(false)}
+              resolveHref={resolveHref}
+              domainLabel={domainLabel}
+              isDomainActive={isDomainActive}
+              moreLabel={t("more")}
+            />
+          }
+          utilities={
+            <SceGlobalUtilities
+              platformWorkspace={isPlatformWorkspace}
+              activeSeasonLabel={activeSeasonLabel}
+              activeSeasonKey={activeSeasonKey}
+              selectedSeasonKey={selectedSeason}
+              seasonSwitchLabel={t("seasonSwitchAria")}
+              globalNavDrawerOpen={globalNavDrawerOpen}
+              globalNavDrawerId={globalNavDrawerId}
+              openDrawerLabel={t("openDrawer")}
+              onToggleDrawer={() =>
+                globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
+              }
+              showGlobalNavExplorer={showGlobalNavExplorer}
+              firstName={firstName}
+              lastName={lastName}
+              email={email}
+              imageUrl={imageUrl}
+            />
+          }
+        />
 
         {active.activeDomain && active.domainSecondaryItems.length > 0 ? (
           <SceModuleNavigation
             ariaLabel={t("moduleNavAria")}
-            workspaceEyebrow={t("moduleWorkspaceEyebrow", {
-              domain: domainLabel(active.activeDomain),
-            })}
             items={active.domainSecondaryItems}
             resolveHref={resolveHref}
             isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}

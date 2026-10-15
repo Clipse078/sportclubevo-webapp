@@ -1,4 +1,5 @@
 export { SceContextNavigation } from "./SceContextNavigation";
+export { SceNavigationSpineRow } from "./SceNavigationSpineRow";
 export { SceGlobalSeasonSwitcher } from "./SceGlobalSeasonSwitcher";
 export { SceGlobalUtilities } from "./SceGlobalUtilities";
 export { SceModuleNavigation } from "./SceModuleNavigation";
