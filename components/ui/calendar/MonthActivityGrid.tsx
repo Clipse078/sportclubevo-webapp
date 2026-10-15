@@ -286,64 +286,77 @@ export default function MonthActivityGrid({
       aria-label={ariaLabel}
       data-testid={dataTestId}
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <Heading
-          className="text-sm font-semibold capitalize text-[var(--foreground)]"
-          data-testid="month-activity-grid-label"
-        >
-          {monthLabel}
-        </Heading>
-        <div className="flex items-center gap-0.5">
-          <NavControl
-            href={navigation.previousMonthHref}
-            onClick={navigation.onPreviousMonth}
-            label={previousMonthLabel}
-            testId="month-activity-grid-previous"
+      <div
+        className="mb-2 space-y-2"
+        data-testid="month-activity-grid-header"
+        data-sce-calendar-region="header"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <Heading
+            className="shrink-0 text-sm font-semibold capitalize text-[var(--foreground)]"
+            data-testid="month-activity-grid-label"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </NavControl>
-          {todayLabel && (navigation.todayHref || navigation.onToday) ? (
-            navigation.todayHref ? (
-              <Link
-                href={navigation.todayHref}
-                className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-                data-testid="month-activity-grid-today"
-              >
-                {todayLabel}
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={navigation.onToday}
-                className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-                data-testid="month-activity-grid-today"
-              >
-                {todayLabel}
-              </button>
-            )
+            {monthLabel}
+          </Heading>
+          {(cellVariant === "personal" || cellVariant === "programme") && showLegend ? (
+            <CalendarMonthLegend
+              className="order-3 min-w-0 flex-1 basis-full justify-center sm:order-none sm:basis-auto lg:justify-center"
+              compact
+              data-testid="month-activity-grid-legend"
+            />
           ) : null}
-          <NavControl
-            href={navigation.nextMonthHref}
-            onClick={navigation.onNextMonth}
-            label={nextMonthLabel}
-            testId="month-activity-grid-next"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </NavControl>
+          <div className="ml-auto flex shrink-0 items-center gap-0.5">
+            <NavControl
+              href={navigation.previousMonthHref}
+              onClick={navigation.onPreviousMonth}
+              label={previousMonthLabel}
+              testId="month-activity-grid-previous"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </NavControl>
+            {todayLabel && (navigation.todayHref || navigation.onToday) ? (
+              navigation.todayHref ? (
+                <Link
+                  href={navigation.todayHref}
+                  className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                  data-testid="month-activity-grid-today"
+                >
+                  {todayLabel}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={navigation.onToday}
+                  className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                  data-testid="month-activity-grid-today"
+                >
+                  {todayLabel}
+                </button>
+              )
+            ) : null}
+            <NavControl
+              href={navigation.nextMonthHref}
+              onClick={navigation.onNextMonth}
+              label={nextMonthLabel}
+              testId="month-activity-grid-next"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </NavControl>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 text-center text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div
+        className="grid grid-cols-7 gap-0.5 text-center text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]"
+        data-testid="month-activity-grid-weekdays"
+        data-sce-calendar-region="weekdays"
+      >
         {weekdayLabels.map((label) => (
-          <span key={label} className="py-1">
+          <span key={label} className="py-1" data-testid={`month-activity-grid-weekday-${label}`}>
             {label}
           </span>
         ))}
       </div>
-
-      {(cellVariant === "personal" || cellVariant === "programme") && showLegend ? (
-        <CalendarMonthLegend className="mb-2 mt-1" compact />
-      ) : null}
 
       <div
         ref={gridRef}
@@ -351,6 +364,7 @@ export default function MonthActivityGrid({
         role={selectable ? "grid" : undefined}
         onKeyDown={selectable ? handleGridKeyDown : undefined}
         data-testid="month-activity-grid-days"
+        data-sce-calendar-region="date-grid"
       >
         {days.map((day) => (
           <DayCell

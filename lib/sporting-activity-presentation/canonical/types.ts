@@ -89,11 +89,16 @@ export type SceTrainingSchedulePresentation =
   | { kind: "SESSION" }
   | { kind: "RECURRING_DEFINITION"; recurrence: SceTrainingRecurrencePresentation };
 
+export type SceTrainingDressingRoomPresentation = {
+  label: string;
+};
+
 export type SceTrainingPresentationModel = SceActivityPresentationBase & {
   kind: "TRAINING";
   trainingTitle: string;
   team?: { name: string };
   schedulePresentation?: SceTrainingSchedulePresentation;
+  dressingRoom?: SceTrainingDressingRoomPresentation;
 };
 
 export function isSceTrainingPresentationModel(

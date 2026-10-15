@@ -37,8 +37,15 @@ import {
 import { formatSceTournamentOwnTeamsCompactLabel } from "@/lib/sporting-activity-presentation/canonical/tournament-own-teams-display";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTournamentCardStatus } from "./SceTournamentCardStatus";
+import {
+  SceActivityListRowLocationMeta,
+  SceActivityListRowOperationalMetaRow,
+  SceActivityListRowTimeMeta,
+} from "./SceActivityListRowOperationalMeta";
 
 export type SceTournamentCardSurface = "standalone" | "detail-embed" | "list-row";
+
+export type SceTournamentListRowPresentation = "default" | "operational";
 
 export type SceTournamentCardProps = {
   model: SceTournamentPresentationModel;
@@ -47,6 +54,7 @@ export type SceTournamentCardProps = {
   className?: string;
   linkToDetail?: boolean;
   surface?: SceTournamentCardSurface;
+  listRowPresentation?: SceTournamentListRowPresentation;
   showStatus?: boolean;
   testId?: string;
 };
@@ -420,9 +428,15 @@ function SceTournamentRichCardContent({
 function SceTournamentListRowIdentityContent({
   model,
   density,
+  fmtCfg,
+  listRowPresentation = "default",
+  showStatus = false,
 }: {
   model: SceTournamentPresentationModel;
   density: SceActivityPresentationDensity;
+  fmtCfg?: TenantFormatConfig;
+  listRowPresentation?: SceTournamentListRowPresentation;
+  showStatus?: boolean;
 }) {
   const organiser = model.organiser.displayName?.trim();
   const showOrganiserCrest = Boolean(model.organiser.logoUrl?.trim());
@@ -494,6 +508,42 @@ function SceTournamentListRowIdentityContent({
           </p>
         ) : null}
       </div>
+      {listRowPresentation === "operational" && fmtCfg ? (
+        (() => {
+          const timeLabel = formatSessionTimeOnly(model, fmtCfg);
+          const locationLine = resolveTournamentLocationLine(model, density);
+          const status = model.status;
+          const showExceptionalStatus =
+            showStatus &&
+            status?.label &&
+            (status.semantic === "cancelled" || status.semantic === "warning");
+          return (
+            <>
+              {showExceptionalStatus ? (
+                <div className="pt-0.5" data-sce-tournament-region="status">
+                  <SceTournamentCardStatus status={status} />
+                </div>
+              ) : null}
+              {timeLabel || locationLine ? (
+                <SceActivityListRowOperationalMetaRow testId="sce-tournament-list-row-operational-meta">
+                  {timeLabel ? (
+                    <SceActivityListRowTimeMeta
+                      label={timeLabel}
+                      testId="sce-tournament-list-row-time"
+                    />
+                  ) : null}
+                  {locationLine ? (
+                    <SceActivityListRowLocationMeta
+                      label={locationLine}
+                      testId="sce-tournament-list-row-location"
+                    />
+                  ) : null}
+                </SceActivityListRowOperationalMetaRow>
+              ) : null}
+            </>
+          );
+        })()
+      ) : null}
     </div>
   );
 }
@@ -624,6 +674,7 @@ export function SceTournamentCard({
   className,
   linkToDetail = true,
   surface = "standalone",
+  listRowPresentation = "default",
   showStatus = true,
   testId = "sce-tournament-card",
 }: SceTournamentCardProps) {
@@ -667,7 +718,15 @@ export function SceTournamentCard({
   let content: ReactNode;
 
   if (listRow) {
-    content = <SceTournamentListRowIdentityContent model={model} density={density} />;
+    content = (
+      <SceTournamentListRowIdentityContent
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        listRowPresentation={listRowPresentation}
+        showStatus={showStatus}
+      />
+    );
   } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">

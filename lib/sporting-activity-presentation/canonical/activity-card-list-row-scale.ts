@@ -52,6 +52,11 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
     "min-w-0 truncate text-[0.6875rem]",
     SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
   ),
+  operationalMetaRowClass:
+    "flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[0.8125rem] leading-snug text-[var(--text-2)]",
+  operationalMetaItemClass: "inline-flex min-w-0 max-w-full items-center gap-1.5",
+  operationalMetaIconClass: "h-3.5 w-3.5 shrink-0 text-[var(--muted)]",
+  operationalMetaTimeClass: "font-mono tabular-nums text-[var(--foreground)]",
 } as const;
 
 export function sceActivityListRowTypePillClass(): string {

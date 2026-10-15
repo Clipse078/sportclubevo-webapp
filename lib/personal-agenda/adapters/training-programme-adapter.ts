@@ -130,6 +130,7 @@ export async function loadTrainingProgrammeItems(
       status,
       facilityName: facility?.facilityName,
       pitchResourceName: facility?.pitchResourceName,
+      dressingRoomName: facility?.dressingRoomName,
     });
 
     const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {

@@ -5,6 +5,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import {
+  resolveTrainingOccurrenceAllocations,
   resolveTrainingOccurrencePrimaryPlayableAllocation,
   type TrainingAllocationResourceRow,
 } from "@/lib/training/effective-training-allocation-resolution";
@@ -12,6 +13,7 @@ import {
 export type TrainingSessionFacilityHint = {
   facilityName: string | null;
   pitchResourceName: string | null;
+  dressingRoomName: string | null;
 };
 
 type SessionRef = {
@@ -30,6 +32,17 @@ function pickPitchResourceName(
 function pickFacilityName(rows: readonly TrainingAllocationResourceRow[]): string | null {
   const resource = rows[0]?.facilityResource;
   return resource?.facility.name?.trim() || null;
+}
+
+function pickDressingRoomName(rows: readonly TrainingAllocationResourceRow[]): string | null {
+  const labels = rows
+    .map((row) => {
+      const resource = row.facilityResource;
+      return resource?.name?.trim() || resource?.code?.trim() || null;
+    })
+    .filter((value): value is string => Boolean(value));
+  if (labels.length === 0) return null;
+  return labels.join(", ");
 }
 
 export async function loadTrainingSessionFacilityHints(
@@ -107,14 +120,24 @@ export async function loadTrainingSessionFacilityHints(
     const sessionRows = sessionRowsBySessionId.get(session.id) ?? [];
     const seriesRows = seriesRowsBySeriesId.get(session.trainingSeriesId) ?? [];
 
-    const primaryPlayable = resolveTrainingOccurrencePrimaryPlayableAllocation({
+    const resolved = resolveTrainingOccurrenceAllocations({
       seriesRows,
       sessionOverrideRows: sessionRows,
     });
+    const primaryPlayable =
+      resolved.pitch.length > 0
+        ? resolved.pitch
+        : resolved.otherPlayable.length > 0
+          ? resolved.otherPlayable
+          : resolveTrainingOccurrencePrimaryPlayableAllocation({
+              seriesRows,
+              sessionOverrideRows: sessionRows,
+            });
 
     result.set(session.id, {
       facilityName: pickFacilityName(primaryPlayable),
       pitchResourceName: pickPitchResourceName(primaryPlayable),
+      dressingRoomName: pickDressingRoomName(resolved.dressingRoom),
     });
   }
 

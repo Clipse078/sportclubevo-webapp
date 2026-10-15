@@ -38,6 +38,7 @@ describe("loadTrainingSessionFacilityHints — SCE-ACTIVITY-UX-01R3", () => {
     expect(hints.get("sess-oct")).toEqual({
       facilityName: "Im Brüel",
       pitchResourceName: "KR2",
+      dressingRoomName: null,
     });
   });
 
@@ -78,6 +79,7 @@ describe("loadTrainingSessionFacilityHints — SCE-ACTIVITY-UX-01R3", () => {
     expect(hints.get("sess-nov")).toEqual({
       facilityName: "Gartenschul Halle",
       pitchResourceName: "Halle 1",
+      dressingRoomName: null,
     });
   });
 
@@ -104,6 +106,7 @@ describe("loadTrainingSessionFacilityHints — SCE-ACTIVITY-UX-01R3", () => {
     expect(hints.get("sess-kr2")).toEqual({
       facilityName: "Kunstrasen 2",
       pitchResourceName: "Kunstrasen 2 A",
+      dressingRoomName: null,
     });
   });
 
@@ -130,6 +133,46 @@ describe("loadTrainingSessionFacilityHints — SCE-ACTIVITY-UX-01R3", () => {
     expect(hints.get("sess-indoor")).toEqual({
       facilityName: "Gartenschul Halle",
       pitchResourceName: "Halle 1",
+      dressingRoomName: null,
+    });
+  });
+
+  it("resolves dressing room allocation in the same batch query", async () => {
+    vi.mocked(prisma.trainingAllocation.findMany).mockResolvedValue([
+      {
+        trainingSeriesId: "series-1",
+        displayOrder: 0,
+        createdAt: new Date("2026-01-01"),
+        facilityResource: {
+          id: "res-kr2",
+          code: "KR2",
+          name: "KR2",
+          type: "HALF_PITCH",
+          facility: { id: "fac-brueel", name: "Im Brüel" },
+        },
+      },
+      {
+        trainingSeriesId: "series-1",
+        displayOrder: 1,
+        createdAt: new Date("2026-01-02"),
+        facilityResource: {
+          id: "res-g4",
+          code: "G4",
+          name: "Garderobe 4",
+          type: "DRESSING_ROOM",
+          facility: { id: "fac-gard", name: "Garderobentrakt" },
+        },
+      },
+    ] as never);
+
+    const hints = await loadTrainingSessionFacilityHints("tenant-a", [
+      { id: "sess-dress", trainingSeriesId: "series-1" },
+    ]);
+
+    expect(hints.get("sess-dress")).toEqual({
+      facilityName: "Im Brüel",
+      pitchResourceName: "KR2",
+      dressingRoomName: "Garderobe 4",
     });
   });
 });

@@ -93,6 +93,7 @@ export async function loadTrainingActivityDetail(input: {
     status,
     facilityName: facility?.facilityName,
     pitchResourceName: facility?.pitchResourceName,
+    dressingRoomName: facility?.dressingRoomName,
   });
 
   const participation = await loadSportingActivityDetailParticipation({

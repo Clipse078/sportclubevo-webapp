@@ -38,6 +38,7 @@ export default function ProgrammeSceActivityCard({
         linkToDetail
         showStatus
         surface="list-row"
+        listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
       />
@@ -68,6 +69,7 @@ export default function ProgrammeSceActivityCard({
         linkToDetail
         showStatus
         surface="list-row"
+        listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
       />
@@ -83,6 +85,7 @@ export default function ProgrammeSceActivityCard({
         linkToDetail
         showStatus
         surface="list-row"
+        listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
       />

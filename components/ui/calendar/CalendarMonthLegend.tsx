@@ -7,9 +7,14 @@ import { cn } from "@/lib/cn";
 export type CalendarMonthLegendProps = {
   className?: string;
   compact?: boolean;
+  "data-testid"?: string;
 };
 
-export function CalendarMonthLegend({ className, compact = false }: CalendarMonthLegendProps) {
+export function CalendarMonthLegend({
+  className,
+  compact = false,
+  "data-testid": dataTestId = "personal-calendar-month-legend",
+}: CalendarMonthLegendProps) {
   const t = useTranslations("PersonalDashboard.calendar");
 
   const entries = [
@@ -27,7 +32,8 @@ export function CalendarMonthLegend({ className, compact = false }: CalendarMont
         className,
       )}
       aria-label={t("legendAria")}
-      data-testid="personal-calendar-month-legend"
+      data-testid={dataTestId}
+      data-sce-calendar-region="legend"
     >
       {entries.map(({ type, label }) => (
         <li key={type} className="inline-flex list-none items-center gap-1">

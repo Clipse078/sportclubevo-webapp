@@ -31,6 +31,7 @@ export type BuildTrainingPresentationInput = {
   status?: PersonalProgrammePresentationStatus;
   facilityName?: string | null;
   pitchResourceName?: string | null;
+  dressingRoomName?: string | null;
 };
 
 export function buildTrainingActivityPresentation(
@@ -57,6 +58,7 @@ export function buildTrainingActivityPresentation(
     },
     team: input.teamName?.trim() ? { name: input.teamName.trim() } : undefined,
     location,
+    dressingRoomLabel: meaningful(input.dressingRoomName),
     status: input.status,
   };
 }

@@ -68,6 +68,8 @@ export type SportingActivityPresentation = {
   participants?: SportingActivityParticipants;
   context?: SportingActivityCompetitionContext;
   location: SportingActivityLocation;
+  /** Primary supporting resource (e.g. allocated dressing room) when known from batch resolution. */
+  dressingRoomLabel?: string;
   status?: PersonalProgrammePresentationStatus;
   participation?: SportingActivityParticipation;
   eventType?: EventType;

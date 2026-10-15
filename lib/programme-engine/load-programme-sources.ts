@@ -143,6 +143,7 @@ async function loadTrainingProgrammeItems(
       clubName: ctx.tenantClubName,
       facilityName: facility?.facilityName ?? undefined,
       pitchResourceName: facility?.pitchResourceName ?? undefined,
+      dressingRoomName: facility?.dressingRoomName ?? undefined,
       startAt: new Date(session.startAt),
       endAt: session.endAt ? new Date(session.endAt) : null,
       status,
