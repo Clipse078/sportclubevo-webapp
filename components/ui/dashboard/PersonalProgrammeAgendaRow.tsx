@@ -16,6 +16,8 @@ import {
 import { formatTodayEventTypeBadge } from "@/lib/dashboard/today-event-card-presentation";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import { resolveSportingActivityCompactAgendaTypeLine } from "@/lib/sporting-activity-presentation/compact";
+import { resolvePersonalProgrammeActivityPresentation } from "@/lib/personal-agenda/resolve-personal-programme-presentation";
+import { PersonalProgrammeCanonicalAgendaRow } from "./PersonalProgrammeCanonicalAgendaRow";
 
 export type PersonalProgrammeAgendaRowProps = {
   item: PersonalProgrammeItem;
@@ -59,6 +61,22 @@ export function PersonalProgrammeAgendaRow({
   highlighted = false,
   className,
 }: PersonalProgrammeAgendaRowProps) {
+  if (item.canonicalPresentation) {
+    return (
+      <PersonalProgrammeCanonicalAgendaRow
+        item={item}
+        highlighted={highlighted}
+        className={className}
+      />
+    );
+  }
+
+  const resolvedPresentation = resolvePersonalProgrammeActivityPresentation(item);
+  const presentationItem =
+    resolvedPresentation && !item.activityPresentation
+      ? { ...item, activityPresentation: resolvedPresentation }
+      : item;
+
   const t = useTranslations("PersonalDashboard.programme");
   const statusLabel =
     item.status === "cancelled"
@@ -69,9 +87,9 @@ export function PersonalProgrammeAgendaRow({
 
   const markerPresentation = getProgrammeSourcePresentation(item.sourceType);
 
-  const displayTitle = item.activityPresentation
-    ? formatSportingActivityCompactPrimaryText(item.activityPresentation)
-    : item.title;
+  const displayTitle = presentationItem.activityPresentation
+    ? formatSportingActivityCompactPrimaryText(presentationItem.activityPresentation)
+    : presentationItem.title;
 
   const operationalSourceKinds = new Set<SportingActivityKind>([
     "TRAINING",
@@ -79,13 +97,13 @@ export function PersonalProgrammeAgendaRow({
     "TOURNAMENT",
   ]);
   const activityKindForTypePill: SportingActivityKind | undefined =
-    item.activityPresentation?.identity.activityKind ??
-    (operationalSourceKinds.has(item.sourceType as SportingActivityKind)
-      ? (item.sourceType as SportingActivityKind)
+    presentationItem.activityPresentation?.identity.activityKind ??
+    (operationalSourceKinds.has(presentationItem.sourceType as SportingActivityKind)
+      ? (presentationItem.sourceType as SportingActivityKind)
       : undefined);
   const typePillVariant = resolveSportingActivityTypePillVariant(activityKindForTypePill);
-  const typeLabel = resolveTypeLabelForItem(item);
-  const resolvedEnd = resolveEndTimeLabel(item, endTimeLabel);
+  const typeLabel = resolveTypeLabelForItem(presentationItem);
+  const resolvedEnd = resolveEndTimeLabel(presentationItem, endTimeLabel);
 
   const row = (
     <div
@@ -99,27 +117,27 @@ export function PersonalProgrammeAgendaRow({
       <SportingActivityMetaRail
         activityKind={activityKindForTypePill}
         typeLabel={typeLabel}
-        startTimeLabel={item.allDay ? t("allDay") : timeLabel}
-        endTimeLabel={item.allDay ? undefined : resolvedEnd}
-        allDay={item.allDay}
+        startTimeLabel={presentationItem.allDay ? t("allDay") : timeLabel}
+        endTimeLabel={presentationItem.allDay ? undefined : resolvedEnd}
+        allDay={presentationItem.allDay}
         allDayLabel={t("allDay")}
         density="compact"
       />
       <div className="flex min-w-0 items-start gap-2">
-        {!item.activityPresentation ? (
+        {!presentationItem.activityPresentation ? (
           <span
             className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", markerPresentation.markerAccentClass)}
             data-programme-palette={markerPresentation.paletteKey}
-            data-programme-source={item.sourceType}
+            data-programme-source={presentationItem.sourceType}
             aria-hidden
           />
         ) : null}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              {item.activityPresentation ? (
+              {presentationItem.activityPresentation ? (
                 <SportingActivityIdentity
-                  presentation={item.activityPresentation}
+                  presentation={presentationItem.activityPresentation}
                   mode="compact"
                   showTypeLine={false}
                 />
@@ -145,7 +163,7 @@ export function PersonalProgrammeAgendaRow({
                 </>
               )}
             </div>
-            {item.deepLink ? (
+            {presentationItem.deepLink ? (
               <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
             ) : null}
           </div>
@@ -161,12 +179,12 @@ export function PersonalProgrammeAgendaRow({
     </div>
   );
 
-  if (item.deepLink) {
+  if (presentationItem.deepLink) {
     return (
       <SportingActivityDetailLink
-        href={item.deepLink}
+        href={presentationItem.deepLink}
         className="block rounded-[var(--radius-md)] no-underline motion-safe:transition-colors motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_45%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-        aria-label={item.ariaLabel}
+        aria-label={presentationItem.ariaLabel}
       >
         {row}
       </SportingActivityDetailLink>
@@ -174,7 +192,7 @@ export function PersonalProgrammeAgendaRow({
   }
 
   return (
-    <div aria-label={item.ariaLabel} className="block">
+    <div aria-label={presentationItem.ariaLabel} className="block">
       {row}
     </div>
   );

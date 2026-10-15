@@ -27,6 +27,7 @@ import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
 import {
@@ -38,7 +39,7 @@ import {
 
 export type SceTrainingCardSurface = "standalone" | "detail-embed" | "list-row";
 
-export type SceTrainingListRowPresentation = "default" | "operational";
+export type SceTrainingListRowPresentation = "default" | "operational" | "dashboard-agenda";
 
 export type SceTrainingCardProps = {
   model: SceTrainingPresentationModel;
@@ -414,6 +415,84 @@ function SceTrainingListRowOperationalContent({
   );
 }
 
+function SceTrainingDashboardAgendaListRowContent({
+  model,
+  density,
+  fmtCfg,
+  showStatus,
+}: {
+  model: SceTrainingPresentationModel;
+  density: SceActivityPresentationDensity;
+  fmtCfg: TenantFormatConfig;
+  showStatus: boolean;
+}) {
+  const teamLabel = model.team?.name?.trim() || model.trainingTitle;
+  const crestIdentity = model.tenantClub;
+  const timeLabel = resolveListRowOperationalTimeLabel(model, fmtCfg);
+  const locationLine = resolveListRowOperationalLocationLine(model);
+  const dressingRoomLabel = model.dressingRoom?.label?.trim();
+  const status = model.status;
+  const showExceptionalStatus = Boolean(
+    showStatus &&
+      status?.label &&
+      (status.semantic === "cancelled" ||
+        status.semantic === "warning" ||
+        status.domain === "postponed" ||
+        status.domain === "cancelled"),
+  );
+
+  return (
+    <div
+      className={cn("min-w-0 w-full max-w-full space-y-1", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-training-density={density}
+      data-sce-training-list-row-identity
+      data-sce-training-list-row-presentation="dashboard-agenda"
+    >
+      <SceTrainingTypeHeader
+        model={model}
+        density={density}
+        showStatus={showExceptionalStatus}
+        listRow
+      />
+      <div
+        className="flex min-w-0 items-center gap-2"
+        data-sce-training-region="identity"
+        data-testid="sce-training-dashboard-agenda-identity"
+      >
+        {crestIdentity ? (
+          <ClubCrest identity={crestIdentity} density="compact" decorative className="shrink-0" />
+        ) : null}
+        <p
+          className={cn(SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass, "line-clamp-2 flex-1")}
+          data-testid="sce-training-title"
+          title={teamLabel}
+        >
+          {teamLabel}
+        </p>
+      </div>
+      {timeLabel || locationLine || dressingRoomLabel ? (
+        <SceActivityListRowOperationalMetaRow testId="sce-training-list-row-operational-meta">
+          {timeLabel ? (
+            <SceActivityListRowTimeMeta label={timeLabel} testId="sce-training-list-row-time" />
+          ) : null}
+          {locationLine ? (
+            <SceActivityListRowLocationMeta
+              label={locationLine}
+              testId="sce-training-list-row-location"
+            />
+          ) : null}
+          {dressingRoomLabel ? (
+            <SceActivityListRowDressingRoomMeta
+              label={dressingRoomLabel}
+              testId="sce-training-list-row-dressing-room"
+            />
+          ) : null}
+        </SceActivityListRowOperationalMetaRow>
+      ) : null}
+    </div>
+  );
+}
+
 function SceTrainingListRowIdentityContent({
   model,
   density,
@@ -639,6 +718,13 @@ export function SceTrainingCard({
     content =
       listRowPresentation === "operational" ? (
         <SceTrainingListRowOperationalContent
+          model={model}
+          density={density}
+          fmtCfg={fmtCfg}
+          showStatus={showStatus}
+        />
+      ) : listRowPresentation === "dashboard-agenda" ? (
+        <SceTrainingDashboardAgendaListRowContent
           model={model}
           density={density}
           fmtCfg={fmtCfg}

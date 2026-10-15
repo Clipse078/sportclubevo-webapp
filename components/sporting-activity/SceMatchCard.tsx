@@ -45,10 +45,15 @@ import {
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
+import {
+  formatProgrammeMatchMicroIdentityFallback,
+  formatTeamScopeMatchMicroIdentityLabel,
+  resolveTeamScopeMatchOpponent,
+} from "@/lib/calendar/sce-calendar-engine/calendar-micro-match-identity";
 
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
-export type SceMatchListRowPresentation = "default" | "programme-fixture";
+export type SceMatchListRowPresentation = "default" | "programme-fixture" | "dashboard-opponent";
 
 export type SceMatchCardProps = {
   model: SceMatchPresentationModel;
@@ -61,6 +66,8 @@ export type SceMatchCardProps = {
   surface?: SceMatchCardSurface;
   /** Programme Liste — richer horizontal fixture composition (still list-row surface). */
   listRowPresentation?: SceMatchListRowPresentation;
+  /** PERSON / TEAM programme scope — opponent identity for dashboard agenda rows. */
+  scopeTeamId?: string | null;
   testId?: string;
 };
 
@@ -465,12 +472,70 @@ function SceMatchListRowIdentityContent({
   density,
   fmtCfg,
   listRowPresentation = "default",
+  scopeTeamId,
 }: {
   model: SceMatchPresentationModel;
   density: SceActivityPresentationDensity;
   fmtCfg: TenantFormatConfig;
   listRowPresentation?: SceMatchListRowPresentation;
+  scopeTeamId?: string | null;
 }) {
+  if (listRowPresentation === "dashboard-opponent") {
+    const scoped = scopeTeamId
+      ? resolveTeamScopeMatchOpponent(model.fixture, scopeTeamId)
+      : null;
+    const opponent = scoped?.opponent;
+    const identityLabel = opponent
+      ? formatTeamScopeMatchMicroIdentityLabel(opponent)
+      : formatProgrammeMatchMicroIdentityFallback(model.fixture);
+    const startAt = new Date(model.schedule.startAt);
+    const kickoffLabel = formatFixtureTime(startAt, fmtCfg);
+    const locationLine = model.location
+      ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
+      : undefined;
+    const lifecycle = model.matchLifecycle ?? model.status;
+    const showCancelledStatus = lifecycle?.semantic === "cancelled";
+
+    return (
+      <div
+        className={cn("min-w-0 w-full max-w-full space-y-1", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+        data-sce-match-density={density}
+        data-sce-match-list-row-identity
+        data-sce-match-list-row-presentation="dashboard-opponent"
+      >
+        <SceMatchTypeHeader model={model} showStatus={showCancelledStatus} listRow />
+        <div
+          className="flex min-w-0 items-center gap-2"
+          data-sce-match-region="identity"
+          data-testid="sce-match-dashboard-agenda-identity"
+        >
+          {opponent ? (
+            <ClubCrest identity={opponent} density="compact" decorative className="shrink-0" />
+          ) : null}
+          <p className={cn(SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass, "line-clamp-2 flex-1")}>
+            {identityLabel}
+          </p>
+        </div>
+        {kickoffLabel || locationLine ? (
+          <SceActivityListRowOperationalMetaRow testId="sce-match-list-row-operational-meta">
+            {kickoffLabel ? (
+              <SceActivityListRowTimeMeta
+                label={kickoffLabel}
+                testId="sce-match-list-row-time"
+              />
+            ) : null}
+            {locationLine ? (
+              <SceActivityListRowLocationMeta
+                label={locationLine}
+                testId="sce-match-list-row-location"
+              />
+            ) : null}
+          </SceActivityListRowOperationalMetaRow>
+        ) : null}
+      </div>
+    );
+  }
+
   const showCrests = isSceActivityDimensionVisible(density, "crests");
   const tenantSide = resolveMatchTenantSideBadge(model.contextBadges);
   const tenantSideAccessibleLabel =
@@ -728,6 +793,7 @@ export function SceMatchCard({
   linkToDetail = true,
   surface = "standalone",
   listRowPresentation = "default",
+  scopeTeamId,
   testId = "sce-match-card",
 }: SceMatchCardProps) {
   const listRow = surface === "list-row";
@@ -775,6 +841,7 @@ export function SceMatchCard({
         density={density}
         fmtCfg={fmtCfg}
         listRowPresentation={listRowPresentation}
+        scopeTeamId={scopeTeamId}
       />
     );
   } else if (surface === "detail-embed") {
