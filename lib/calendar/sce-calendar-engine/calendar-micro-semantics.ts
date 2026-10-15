@@ -13,6 +13,16 @@ import type {
   SportingActivityLocation,
   SportingActivityPresentation,
 } from "@/lib/sporting-activity-presentation/types";
+import {
+  formatPersonalScopeMatchMicroIdentityLabel,
+  formatProgrammeMatchMicroIdentityFallback,
+  formatTeamScopeMatchMicroIdentityLabel,
+  resolveTeamScopeMatchOpponent,
+} from "./calendar-micro-match-identity";
+import {
+  calendarMicroVisualIdentityFromClub,
+  type CalendarMicroVisualIdentity,
+} from "./calendar-micro-visual-identity";
 
 /** Month-grid MICRO tiles: compact resource, no host club line. */
 export const SCE_CALENDAR_MICRO_LOCATION_HIERARCHY_OPTIONS = {
@@ -22,7 +32,12 @@ export const SCE_CALENDAR_MICRO_LOCATION_HIERARCHY_OPTIONS = {
 export type CalendarMicroSemanticFields = {
   identityLabel: string;
   locationLabel?: string;
+  visualIdentity?: CalendarMicroVisualIdentity;
+  /** Screen-reader phrasing for match opponent (e.g. "gegen FC X") when distinct from visible identity. */
+  accessibleIdentityPhrase?: string;
 };
+
+export type { CalendarMicroVisualIdentity } from "./calendar-micro-visual-identity";
 
 function normalizeComparable(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -82,32 +97,51 @@ function omitLocationDuplicatingIdentity(
   return location;
 }
 
-function resolveProgrammeMicroIdentity(item: ProgrammeItem): string {
+function resolveProgrammeMicroIdentity(item: ProgrammeItem): Pick<
+  CalendarMicroSemanticFields,
+  "identityLabel" | "visualIdentity" | "accessibleIdentityPhrase"
+> {
   const model = item.presentation;
   switch (item.kind) {
     case "MATCH":
       if (isSceMatchPresentationModel(model)) {
-        return `vs ${model.fixture.away.displayName}`;
+        const scoped = resolveTeamScopeMatchOpponent(model.fixture, item.teamId);
+        if (scoped) {
+          const label = formatTeamScopeMatchMicroIdentityLabel(scoped.opponent);
+          return {
+            identityLabel: label,
+            visualIdentity: calendarMicroVisualIdentityFromClub(scoped.opponent),
+            accessibleIdentityPhrase: `gegen ${label}`,
+          };
+        }
+        const fallback = formatProgrammeMatchMicroIdentityFallback(model.fixture);
+        return {
+          identityLabel: fallback,
+          accessibleIdentityPhrase: fallback,
+        };
       }
-      return item.kind;
+      return { identityLabel: item.kind };
     case "TRAINING":
       if (isSceTrainingPresentationModel(model)) {
-        return model.team?.name?.trim() || model.trainingTitle;
+        return { identityLabel: model.team?.name?.trim() || model.trainingTitle };
       }
-      return item.kind;
+      return { identityLabel: item.kind };
     case "TOURNAMENT":
       if (isSceTournamentPresentationModel(model)) {
-        return model.tournamentTitle;
+        return {
+          identityLabel: model.tournamentTitle,
+          visualIdentity: calendarMicroVisualIdentityFromClub(model.organiser),
+        };
       }
-      return item.kind;
+      return { identityLabel: item.kind };
     case "CLUB_EVENT":
       if (isSceClubEventPresentationModel(model)) {
-        return model.eventTitle;
+        return { identityLabel: model.eventTitle };
       }
-      return item.kind;
+      return { identityLabel: item.kind };
     default: {
       const _exhaustive: never = item.kind;
-      return _exhaustive;
+      return { identityLabel: _exhaustive };
     }
   }
 }
@@ -213,12 +247,12 @@ function resolveNormalizedMicroLocation(
 export function resolveProgrammeCalendarMicroSemantics(
   item: ProgrammeItem,
 ): CalendarMicroSemanticFields {
-  const identityLabel = resolveProgrammeMicroIdentity(item);
+  const identity = resolveProgrammeMicroIdentity(item);
   const locationLabel = omitLocationDuplicatingIdentity(
-    identityLabel,
+    identity.identityLabel,
     locationFromActivityPresentation(item.presentation),
   );
-  return { identityLabel, locationLabel };
+  return { ...identity, locationLabel };
 }
 
 export function resolvePersonalCalendarMicroSemantics(
@@ -233,13 +267,15 @@ export function buildCalendarMicroAccessibleLabel(input: {
   typeLabel: string;
   timeLabel: string;
   identityLabel: string;
+  accessibleIdentityPhrase?: string;
   locationLabel?: string;
   statusLabel?: string;
 }): string {
+  const identityForA11y = input.accessibleIdentityPhrase?.trim() || input.identityLabel;
   return [
     input.typeLabel,
     input.timeLabel,
-    input.identityLabel,
+    identityForA11y,
     input.locationLabel,
     input.statusLabel,
   ]

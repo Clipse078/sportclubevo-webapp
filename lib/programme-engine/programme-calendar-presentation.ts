@@ -5,6 +5,7 @@ import { resolvePersonalCalendarDayMarkerSlots } from "@/lib/personal-agenda/per
 import {
   buildCalendarMicroAccessibleLabel,
   resolveProgrammeCalendarMicroSemantics,
+  type CalendarMicroVisualIdentity,
 } from "@/lib/calendar/sce-calendar-engine/calendar-micro-semantics";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { sortProgrammeItems } from "./programme-sort";
@@ -30,6 +31,7 @@ export type ProgrammeCalendarMicroEntry = {
   identityLabel: string;
   /** Compact location / resource (one owner). */
   locationLabel?: string;
+  visualIdentity?: CalendarMicroVisualIdentity;
   /** @deprecated Use identityLabel — kept for transitional consumers. */
   title: string;
   /** @deprecated Use locationLabel — kept for transitional consumers. */
@@ -68,11 +70,13 @@ export function buildProgrammeCalendarMicroEntry(
     ? "Ganztägig"
     : formatFixtureTime(item.startsAt, fmtCfg);
   const typeLabel = KIND_TYPE_LABEL[item.kind];
-  const { identityLabel, locationLabel } = resolveProgrammeCalendarMicroSemantics(item);
+  const { identityLabel, locationLabel, visualIdentity, accessibleIdentityPhrase } =
+    resolveProgrammeCalendarMicroSemantics(item);
   const accessibleLabel = buildCalendarMicroAccessibleLabel({
     typeLabel,
     timeLabel,
     identityLabel,
+    accessibleIdentityPhrase,
     locationLabel,
   });
 
@@ -83,6 +87,7 @@ export function buildProgrammeCalendarMicroEntry(
     timeLabel,
     identityLabel,
     locationLabel,
+    visualIdentity,
     title: identityLabel,
     contextLine: locationLabel,
     href: item.navigationTarget,

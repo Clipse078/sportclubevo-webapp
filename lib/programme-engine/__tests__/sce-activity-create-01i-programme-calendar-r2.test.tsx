@@ -165,9 +165,12 @@ describe("SCE-ACTIVITY-CREATE-01I-R2 — Programme Kalender", () => {
     expect(trainingDay.entries[0]?.typeLabel).toBe("TRAINING");
     expect(trainingDay.entries[0]?.title).toContain("Junioren B1");
 
-    const matchDay = buildProgrammeCalendarMicroEntry(items[1]!, FMT);
+    const matchDay = buildProgrammeCalendarMicroEntry(
+      { ...items[1]!, teamId: "team-1" },
+      FMT,
+    );
     expect(matchDay.typeLabel).toBe("SPIEL");
-    expect(matchDay.title).toMatch(/^vs /);
+    expect(matchDay.title).toBe("FC Therwil");
   });
 
   it("H–J: ProgrammeCalendarView renders October activities in-month only", () => {

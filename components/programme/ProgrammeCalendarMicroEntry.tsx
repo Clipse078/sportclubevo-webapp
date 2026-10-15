@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { cn } from "@/lib/cn";
 import type { ProgrammeCalendarMicroEntry as ProgrammeCalendarMicroEntryModel } from "@/lib/programme-engine/programme-calendar-presentation";
 
@@ -36,9 +37,23 @@ export function ProgrammeCalendarMicroEntry({ entry }: Props) {
       <span className="block truncate font-mono text-[0.5625rem] tabular-nums text-[var(--foreground)]">
         {entry.timeLabel}
       </span>
-      <span className="block truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
-        {entry.identityLabel ?? entry.title}
-      </span>
+      {entry.visualIdentity?.kind === "CLUB_CREST" ? (
+        <span className="flex min-w-0 items-center gap-0.5">
+          <ClubCrest
+            identity={entry.visualIdentity.identity}
+            density="micro"
+            decorative
+            className="shrink-0"
+          />
+          <span className="min-w-0 truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
+            {entry.identityLabel ?? entry.title}
+          </span>
+        </span>
+      ) : (
+        <span className="block truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
+          {entry.identityLabel ?? entry.title}
+        </span>
+      )}
       {(entry.locationLabel ?? entry.contextLine) ? (
         <span className="block truncate text-[0.5rem] text-[var(--text-2)]">
           {entry.locationLabel ?? entry.contextLine}

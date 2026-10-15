@@ -47,12 +47,14 @@ export function buildPersonalCalendarMicroEntry(
   const palette = getCalendarItemPresentation(item.semanticType);
   const typeLabel = resolvePersonalMicroTypeLabel(item);
   const timeLabel = resolvePersonalMicroTimeLabel(item, timeLabelById, fmtCfg);
-  const { identityLabel, locationLabel } = resolvePersonalCalendarMicroSemantics(item);
+  const { identityLabel, locationLabel, visualIdentity, accessibleIdentityPhrase } =
+    resolvePersonalCalendarMicroSemantics(item);
   const href = item.deepLink ?? "#";
   const accessibleLabel = buildCalendarMicroAccessibleLabel({
     typeLabel,
     timeLabel,
     identityLabel,
+    accessibleIdentityPhrase,
     locationLabel,
   });
   const cancelled =
@@ -76,6 +78,7 @@ export function buildPersonalCalendarMicroEntry(
     timeLabel,
     identityLabel,
     locationLabel,
+    visualIdentity,
     title: identityLabel,
     contextLine: locationLabel,
     href,

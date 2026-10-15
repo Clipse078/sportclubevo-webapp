@@ -216,7 +216,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R5 — calendar MICRO information hierarchy", 
         endsAt: null,
         allDay: false,
         presentation: matchModel,
-        teamId: null,
+        teamId: "team-1",
         teamSeasonId: null,
         orgUnitId: null,
         navigationTarget: "/match/1",
@@ -224,7 +224,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R5 — calendar MICRO information hierarchy", 
       FMT,
     );
     expect(programmeEntry.typeLabel).toBe("SPIEL");
-    expect(programmeEntry.identityLabel).toMatch(/^vs /);
+    expect(programmeEntry.identityLabel).toBe("FC Therwil");
     expect(programmeEntry.locationLabel).toBeTruthy();
     expect(countSubstringInVisible(programmeEntry, programmeEntry.locationLabel!)).toBe(1);
   });

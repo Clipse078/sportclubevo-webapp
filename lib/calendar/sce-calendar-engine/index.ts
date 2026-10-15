@@ -14,4 +14,11 @@ export {
   visibleCalendarMicroSemanticValues,
   SCE_CALENDAR_MICRO_LOCATION_HIERARCHY_OPTIONS,
 } from "./calendar-micro-semantics";
-export type { CalendarMicroSemanticFields } from "./calendar-micro-semantics";
+export type {
+  CalendarMicroSemanticFields,
+  CalendarMicroVisualIdentity,
+} from "./calendar-micro-semantics";
+export {
+  resolveTeamScopeMatchOpponent,
+  formatTeamScopeMatchMicroIdentityLabel,
+} from "./calendar-micro-match-identity";
