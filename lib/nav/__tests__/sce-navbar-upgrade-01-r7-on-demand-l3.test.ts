@@ -55,7 +55,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
 
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRow");
-    expect(shell).toContain("showDomainModuleNav");
+    expect(shell).toContain("SceDomainNavigationPanel");
     expect(shell).toContain('if (active.activeDomainId === "dashboard") return false');
   });
 
@@ -69,14 +69,13 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(l3.some((child) => child.key === "org-units")).toBe(true);
   });
 
-  it("uses module navigation disclosures and overlay panel instead of permanent Row 3", () => {
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).toContain("SceContextNavigationPanel");
-    expect(moduleNav).toContain("module-l3-disclosure");
-    expect(moduleNav).not.toContain('variant="context"');
+  it("uses hierarchical domain panel instead of permanent Row 3 or horizontal L2 strip", () => {
+    const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
+    expect(panel).toContain("sce-domain-nav-panel");
+    expect(panel).toContain("resolveDomainPanelRightColumnEntries");
 
     const css = readRelative("app/(admin)/global-app-navigation.css");
-    expect(css).toContain("sce-context-nav-panel");
+    expect(css).toContain("sce-domain-nav-panel");
     expect(css).not.toContain("--sce-nav-context-row-height");
     expect(css).not.toContain(".sce-global-context-nav {");
   });

@@ -34,7 +34,7 @@ export function SceTenantContextRow({
         workspace={
           workspace ?? (
             <div
-              className="sce-global-module-nav-track min-w-0 w-full min-h-[var(--sce-nav-module-row-height)]"
+              className="sce-global-module-nav-track sce-tenant-context-workspace-empty min-w-0 w-full min-h-[var(--sce-nav-module-row-height)]"
               data-testid={emptyWorkspaceTestId}
               aria-hidden
             />

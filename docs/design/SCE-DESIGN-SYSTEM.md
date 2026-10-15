@@ -498,18 +498,24 @@ Authoritative engine doc: [`docs/calendar/SCE-CALENDAR-ENGINE.md`](../calendar/S
 
 ## Canonical global navigation (NAVBAR-UPGRADE-01)
 
-Three explicit levels in the authenticated shell header — **must not look equally important**.
+Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, **on-demand hierarchical navigation panel** — L2/L3 are not a permanent horizontal strip.
 
-| Level | Role | Implementation | Active language |
-|-------|------|----------------|-----------------|
-| **L1 Product** | Dashboard · Planung · Kommunikation · Club · Publizieren · Admin | `ScePrimaryNavigation` + `app-navigation-model` domains | Confident 0.875rem / 800 active weight, 20px SCE icons, inset surface + bottom orange edge (`sce-global-primary-nav-item--active`) |
-| **L2 Module** | Domain groups (e.g. Organisation under Club) | `SceModuleNavigation` (`domainSecondaryItems`) + workspace eyebrow | Quieter 0.75rem labels on tinted row (`sce-global-module-nav-item--active`) |
-| **L3 Context** | Module-local siblings (tabs within a destination) | `SceContextNavigation` (`moduleLocalChildren`) or page-level `SceContextTabs` where already canonical | Compact muted labels + subtle inset underline (`sce-global-context-nav-item--active`) |
+| Surface | Role | Implementation | Rules |
+|---------|------|----------------|-------|
+| **Row 1 — L1 Product** | Planung · Kommunikation · Club · Publizieren · Admin (Dashboard via brand/tenant only) | `ScePrimaryNavigation` + `app-navigation-model` | Active domain: `sce-global-primary-nav-item--active`. Domains with children open `SceDomainNavigationPanel` (disclosure); do not use L1 as simultaneous link + ambiguous disclosure. |
+| **Row 2 — Tenant** | Club crest + name (persistent context) | `SceTenantContextRow` + `SceTenantContextRail` | Always visible on desktop; **no** horizontal L2 destination strip; empty workspace is intentional (subtle divider only). |
+| **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. |
+
+**Navigation rules (canonical)**
+
+1. **Do not use horizontally scrolling navigation as the primary desktop mechanism for module discovery.**
+2. **Where L2 and L3 coexist, prefer one coherent hierarchical navigation surface** rather than stacked/nested disclosures.
+3. **Navigation panels overlay content and never create additional persistent shell rows.**
 
 **Branding**
 
-- **Product identity:** `SidebarPlatformBrand` (SCE wordmark) in the **top** row of `SceTenantIdentityBar` (`sce-global-brand-tenant-stack`).
-- **Tenant identity:** **below** the wordmark — `HeaderTenantIdentity` `layout="under-product"` + `TenantLogo` `variant="header-crest"` (~26px transparent crest; no horizontal “SCE | Club” composition).
+- **Product identity:** `ScePlatformBrandRail` / SportClubEvo wordmark on Row 1 → `/dashboard`.
+- **Tenant identity:** Row 2 — `HeaderTenantIdentity` `layout="tenant-row-rail"` + transparent crest → `/dashboard`.
 
 **Global utilities (right cluster)**
 

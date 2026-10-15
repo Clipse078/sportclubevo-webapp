@@ -62,7 +62,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
   it("always renders desktop Row 2 including dashboard with empty contextual workspace", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRow");
-    expect(shell).toContain("showDomainModuleNav");
+    expect(shell).not.toContain("SceModuleNavigation");
     expect(shell).toMatch(/SceTenantContextRow[\s\S]*brand=\{tenantContextRail\}/);
 
     const row = readRelative("components/sce/navigation/SceTenantContextRow.tsx");

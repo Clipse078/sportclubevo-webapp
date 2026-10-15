@@ -1,3 +1,4 @@
+export { SceDomainNavigationPanel } from "./SceDomainNavigationPanel";
 export { SceContextNavigationPanel } from "./SceContextNavigationPanel";
 export { SceContextNavigation } from "./SceContextNavigation";
 export { SceNavigationSpineRow } from "./SceNavigationSpineRow";

@@ -14,6 +14,8 @@ type SceNavigationOverflowProps = {
   resolveHref: (href: string) => string;
   domainLabel: (domain: NavigationDomain) => string;
   moreLabel: string;
+  domainHasNavigationPanel?: (domain: NavigationDomain) => boolean;
+  onDomainPanelOpen?: (domain: NavigationDomain, trigger: HTMLButtonElement | null) => void;
 };
 
 export function SceNavigationOverflow({
@@ -25,6 +27,8 @@ export function SceNavigationOverflow({
   resolveHref,
   domainLabel,
   moreLabel,
+  domainHasNavigationPanel,
+  onDomainPanelOpen,
 }: SceNavigationOverflowProps) {
   if (overflowDomains.length === 0) return null;
 
@@ -52,17 +56,37 @@ export function SceNavigationOverflow({
           className="sce-global-nav-overflow-panel absolute right-0 top-[calc(100%+4px)] z-50 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--sce-app-chrome)] py-1 shadow-lg"
           data-testid="primary-nav-overflow-panel"
         >
-          {overflowDomains.map((domain) => (
-            <Link
-              key={domain.id}
-              role="menuitem"
-              href={resolveHref(domain.defaultDestination.href)}
-              className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-              onClick={onNavigate}
-            >
-              {domainLabel(domain)}
-            </Link>
-          ))}
+          {overflowDomains.map((domain) => {
+            const hasPanel = domainHasNavigationPanel?.(domain) ?? false;
+            if (hasPanel && onDomainPanelOpen) {
+              return (
+                <button
+                  key={domain.id}
+                  type="button"
+                  role="menuitem"
+                  className="block w-full px-3 py-2 text-left text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+                  onClick={(event) => {
+                    onNavigate();
+                    onDomainPanelOpen(domain, event.currentTarget);
+                  }}
+                >
+                  {domainLabel(domain)}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={domain.id}
+                role="menuitem"
+                href={resolveHref(domain.defaultDestination.href)}
+                className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+                onClick={onNavigate}
+              >
+                {domainLabel(domain)}
+              </Link>
+            );
+          })}
         </div>
       ) : null}
     </div>

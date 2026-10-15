@@ -5,8 +5,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Suspense,
   useCallback,
+  useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type MouseEvent,
 } from "react";
@@ -19,6 +21,8 @@ import {
   isModuleLocalChildPrimaryActive,
   resolveActiveAppNavigation,
   resolveDesktopPrimaryNavigationDomains,
+  resolveDomainNavigationPanelInitialL2Key,
+  resolveDomainSecondaryNavItems,
   resolvePrimaryDomainPresentation,
   selectMobileBottomDomains,
   type DomainSecondaryNavItem,
@@ -38,8 +42,8 @@ import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 import { cn } from "@/lib/cn";
 import { usePermissionAwareRoutePrefetch } from "@/lib/nav/use-permission-aware-route-prefetch";
 import {
+  SceDomainNavigationPanel,
   SceGlobalUtilities,
-  SceModuleNavigation,
   SceNavigationSpineRow,
   ScePrimaryNavigation,
   ScePlatformBrandRail,
@@ -95,7 +99,14 @@ function AppShellNavigationInner({
   const [globalNavDrawerOpen, setGlobalNavDrawerOpen] = useState(false);
   const [globalNavExplorerResetKey, setGlobalNavExplorerResetKey] = useState(0);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const [openDomainPanelId, setOpenDomainPanelId] = useState<AppNavigationDomainId | null>(
+    null,
+  );
   const globalNavDrawerId = useId();
+  const domainPanelId = useId();
+  const headerRef = useRef<HTMLElement>(null);
+  const domainPanelTriggerRefs = useRef(new Map<AppNavigationDomainId, HTMLButtonElement>());
+  const lastDomainPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const layoutTier = usePrimaryNavLayoutTier();
   const t = useTranslations("AppShell");
 
@@ -159,11 +170,6 @@ function AppShellNavigationInner({
     />
   );
 
-  const showDomainModuleNav =
-    Boolean(active.activeDomain) &&
-    active.activeDomainId !== "dashboard" &&
-    active.domainSecondaryItems.length > 0;
-
   const showGlobalNavExplorer =
     layoutTier !== "desktop" ||
     overflowDomains.length > 0 ||
@@ -207,6 +213,93 @@ function AppShellNavigationInner({
 
   const closeGlobalNavDrawer = useCallback(() => setGlobalNavDrawerOpen(false), []);
 
+  const domainHasNavigationPanel = useCallback(
+    (domain: NavigationDomain) => resolveDomainSecondaryNavItems(domain).length > 0,
+    [],
+  );
+
+  const registerDomainPanelTrigger = useCallback(
+    (domainId: AppNavigationDomainId, node: HTMLButtonElement | null) => {
+      if (node) {
+        domainPanelTriggerRefs.current.set(domainId, node);
+        return;
+      }
+      domainPanelTriggerRefs.current.delete(domainId);
+    },
+    [],
+  );
+
+  const domainPanelControlsId = useCallback(
+    (domainId: AppNavigationDomainId) => `${domainPanelId}-${domainId}`,
+    [domainPanelId],
+  );
+
+  const closeDomainPanel = useCallback(() => {
+    setOpenDomainPanelId(null);
+  }, []);
+
+  const onDomainPanelToggle = useCallback(
+    (domain: NavigationDomain, trigger: HTMLButtonElement | null) => {
+      lastDomainPanelTriggerRef.current = trigger;
+      setOverflowOpen(false);
+      setOpenDomainPanelId((current) => (current === domain.id ? null : domain.id));
+    },
+    [],
+  );
+
+  const openDomainPanel = useMemo(() => {
+    if (!openDomainPanelId) return null;
+    return model.domains.find((domain) => domain.id === openDomainPanelId) ?? null;
+  }, [model.domains, openDomainPanelId]);
+
+  const openDomainPanelItems = useMemo(
+    () => resolveDomainSecondaryNavItems(openDomainPanel),
+    [openDomainPanel],
+  );
+
+  const openDomainPanelInitialL2Key = useMemo(() => {
+    if (!openDomainPanel) return null;
+    return resolveDomainNavigationPanelInitialL2Key(openDomainPanel, openDomainPanelItems, active);
+  }, [active, openDomainPanel, openDomainPanelItems]);
+
+  useEffect(() => {
+    closeDomainPanel();
+  }, [pathname, closeDomainPanel]);
+
+  useEffect(() => {
+    if (!openDomainPanelId) return;
+
+    const onPointerDown = (event: Event) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      const panel = document.querySelector('[data-testid="sce-domain-nav-panel"]');
+      if (panel?.contains(target)) return;
+      if (target instanceof Element && target.closest("button[data-nav-domain]")) {
+        return;
+      }
+      closeDomainPanel();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeDomainPanel();
+      const restore =
+        lastDomainPanelTriggerRef.current ??
+        (openDomainPanelId
+          ? domainPanelTriggerRefs.current.get(openDomainPanelId)
+          : undefined);
+      restore?.focus();
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [openDomainPanelId, closeDomainPanel]);
+
   const navigateToModuleLocalSibling = useCallback(
     (event: MouseEvent<HTMLAnchorElement>, child: NavItemChild) => {
       const childHref = resolveHref(child.href);
@@ -234,7 +327,11 @@ function AppShellNavigationInner({
 
   return (
     <>
-      <header className={SCE_GLOBAL_APP_HEADER_CLASS} data-testid="sce-global-navigation">
+      <header
+        ref={headerRef}
+        className={SCE_GLOBAL_APP_HEADER_CLASS}
+        data-testid="sce-global-navigation"
+      >
         <SceNavigationSpineRow
           variant="primary"
           className="sce-global-app-header-row sce-global-app-header-row--primary"
@@ -265,6 +362,11 @@ function AppShellNavigationInner({
               domainLabel={domainLabel}
               isDomainActive={isDomainActive}
               moreLabel={t("more")}
+              openDomainPanelId={openDomainPanelId}
+              onDomainPanelToggle={onDomainPanelToggle}
+              domainHasNavigationPanel={domainHasNavigationPanel}
+              registerDomainPanelTrigger={registerDomainPanelTrigger}
+              domainPanelControlsId={domainPanelControlsId}
             />
           }
           utilities={
@@ -289,27 +391,38 @@ function AppShellNavigationInner({
           }
         />
 
-        {showDomainModuleNav ? (
-          <SceModuleNavigation
-            ariaLabel={t("moduleNavAria")}
-            domain={active.activeDomain!}
-            items={active.domainSecondaryItems}
+        <SceTenantContextRow ariaLabel={t("moduleNavAria")} brand={tenantContextRail} />
+
+        {openDomainPanel && openDomainPanelItems.length > 0 ? (
+          <SceDomainNavigationPanel
+            panelId={domainPanelControlsId(openDomainPanel.id)}
+            open={openDomainPanelId === openDomainPanel.id}
+            headerRef={headerRef}
+            domain={openDomainPanel}
+            domainHeading={domainLabel(openDomainPanel)}
+            items={openDomainPanelItems}
+            initialL2Key={openDomainPanelInitialL2Key}
             resolveHref={resolveHref}
-            isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
-            isContextChildActive={(child) =>
-              isModuleLocalChildPrimaryActive(
+            isL2Active={(item) => isDomainSecondaryItemActive(openDomainPanel, item)}
+            isL3Active={(child) => {
+              if (child.key.endsWith("__domain-panel-overview")) {
+                const parentKey = child.key.replace("__domain-panel-overview", "");
+                const parent = openDomainPanelItems.find((entry) => entry.key === parentKey);
+                if (!parent) return false;
+                if (active.activeChildKey != null) return false;
+                return isDomainSecondaryItemActive(openDomainPanel, parent);
+              }
+              return isModuleLocalChildPrimaryActive(
                 pathname,
                 child,
                 active.moduleLocalChildren,
                 active.activeChildKey,
-              )
-            }
+              );
+            }}
             onNavigateSibling={navigateToModuleLocalSibling}
-            brand={tenantContextRail}
+            onClose={closeDomainPanel}
           />
-        ) : (
-          <SceTenantContextRow ariaLabel={t("moduleNavAria")} brand={tenantContextRail} />
-        )}
+        ) : null}
       </header>
 
       <nav

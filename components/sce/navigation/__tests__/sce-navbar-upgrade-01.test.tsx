@@ -66,7 +66,7 @@ describe("SceGlobalSeasonSwitcher", () => {
 describe("AppShellNavigation landmarks", () => {
   const adminKeys = Object.values(PERMISSIONS);
 
-  it("exposes primary and module nav with on-demand L3 disclosures", async () => {
+  it("exposes primary nav and tenant row with on-demand domain panel disclosures", async () => {
     render(
       <AppShellNavigation
         permissionKeys={adminKeys}
@@ -89,17 +89,20 @@ describe("AppShellNavigation landmarks", () => {
     const moduleNav = screen.getByTestId("domain-secondary-nav");
     expect(moduleNav).toHaveAttribute("aria-label", "moduleNavAria");
 
-    const planningLink = screen
-      .getAllByRole("link", { name: /domains.planning/i })
-      .find((el) => el.getAttribute("data-nav-domain") === "planning");
-    expect(planningLink).toBeTruthy();
-    expect(planningLink).toHaveAttribute("aria-current", "page");
+    const planningTrigger = screen.getByTestId("primary-domain-panel-trigger-planning");
+    expect(planningTrigger).toHaveAttribute("aria-expanded", "false");
+    expect(planningTrigger).toHaveClass("sce-global-primary-nav-item--active");
 
-    const wochenplaner = screen.getByRole("link", { name: "Wochenplaner" });
-    expect(wochenplaner).toHaveAttribute("aria-current", "page");
-    expect(screen.queryByTestId("sce-context-nav-panel")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Wochenplaner" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sce-domain-nav-panel")).not.toBeInTheDocument();
 
     const user = userEvent.setup();
+    await user.click(planningTrigger);
+    expect(planningTrigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByTestId("sce-domain-nav-panel")).toBeInTheDocument();
+    const wochenplaner = screen.getByRole("link", { name: "Wochenplaner" });
+    expect(wochenplaner).toHaveAttribute("aria-current", "page");
+
     await user.click(screen.getByTestId("global-nav-hamburger"));
     expect(screen.getByTestId("global-nav-drawer")).toBeInTheDocument();
   });

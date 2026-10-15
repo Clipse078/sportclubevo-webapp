@@ -110,17 +110,15 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(active.moduleLocalChildren.map((child) => child.key)).toContain("website-pages");
   });
 
-  it("wires AppShell secondary row to domain destinations", () => {
+  it("wires AppShell tenant row and domain panel to canonical destinations", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("domainSecondaryItems");
     expect(shellNav).toContain("moduleLocalChildren");
-    expect(shellNav).toContain("SceModuleNavigation");
-    expect(shellNav).toContain("moduleLocalChildren");
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).toContain('data-testid="domain-secondary-nav"');
-    expect(moduleNav).toContain("SceContextNavigationPanel");
-    const panel = readRelative("components/sce/navigation/SceContextNavigationPanel.tsx");
-    expect(panel).toContain('data-testid="sce-context-nav-panel"');
+    expect(shellNav).toContain("SceTenantContextRow");
+    expect(shellNav).toContain("SceDomainNavigationPanel");
+    expect(shellNav).toContain("resolveDomainSecondaryNavItems");
+    const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
+    expect(panel).toContain('data-testid="sce-domain-nav-panel"');
   });
 
   it("exposes global navigation drawer on all breakpoints", () => {

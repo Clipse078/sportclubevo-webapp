@@ -22,10 +22,11 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
   it("wires AppShell through sce/navigation primitives", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("ScePrimaryNavigation");
-    expect(shell).toContain("SceModuleNavigation");
+    expect(shell).toContain("SceDomainNavigationPanel");
     expect(shell).not.toContain("<SceContextNavigation");
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).toContain("SceContextNavigationPanel");
+    expect(shell).not.toContain("SceModuleNavigation");
+    const panel = readRelative("components/sce/navigation/SceDomainNavigationPanel.tsx");
+    expect(panel).toContain("sce-domain-nav-panel");
     expect(shell).toContain("SceGlobalUtilities");
     expect(shell).toContain("SceTenantIdentityBar");
     expect(shell).toContain("showGlobalNavExplorer");

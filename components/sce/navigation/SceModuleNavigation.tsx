@@ -1,5 +1,7 @@
 "use client";
 
+/** @deprecated Desktop R9+ uses {@link SceDomainNavigationPanel} from L1; retained for mobile/legacy references only. */
+
 import type { MouseEvent, ReactNode } from "react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { NavigationDomain } from "@/lib/nav/app-navigation-domains";

@@ -25,12 +25,12 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
 
   it("composes one spine primitive across L1 and L2 (L3 is on-demand overlay)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
+    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
 
     expect(shell).toContain("SceNavigationSpineRow");
-    expect(moduleNav).toContain("SceNavigationSpineRow");
-    expect(moduleNav).toContain("SceContextNavigationPanel");
+    expect(tenantRow).toContain("SceNavigationSpineRow");
+    expect(shell).toContain("SceDomainNavigationPanel");
     expect(spine).toContain('data-sce-nav-brand-rail={brand ? "occupied" : "spacer"}');
     expect(spine).toContain("data-sce-nav-workspace");
     expect(spine).toContain("data-sce-nav-utilities");
@@ -42,9 +42,9 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(shell).not.toContain("workspaceEyebrow");
     expect(shell).not.toContain("moduleWorkspaceEyebrow");
 
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).not.toContain("workspaceEyebrow");
-    expect(moduleNav).not.toContain("sce-global-module-nav-workspace-eyebrow");
+    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
+    expect(tenantRow).not.toContain("workspaceEyebrow");
+    expect(tenantRow).not.toContain("sce-global-module-nav-workspace-eyebrow");
   });
 
   it("preserves brand rail occupancy on L1/L2 without a permanent L3 row", () => {
@@ -53,8 +53,8 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(spine).toContain("sce-nav-spine-row--sub");
     expect(spine).toMatch(/data-sce-nav-spine-row=\{variant\}/);
 
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).toContain("brand={brand}");
+    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
+    expect(tenantRow).toContain("brand={brand}");
   });
 
   it("bounds brand rail width for wide desktop without centering primary nav", () => {

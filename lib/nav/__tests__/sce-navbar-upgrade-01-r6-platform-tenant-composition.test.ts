@@ -21,7 +21,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(shell).toContain('className="hidden md:flex"');
     expect(shell).toContain("SceTenantContextRail");
     expect(shell).toContain('className="hidden md:flex"');
-    expect(shell).toMatch(/SceModuleNavigation[\s\S]*brand=\{/);
+    expect(shell).toMatch(/SceTenantContextRow[\s\S]*brand=\{tenantContextRail\}/);
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("ScePlatformBrandRail");
@@ -39,17 +39,15 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(primaryBrandBlock).not.toContain("SceTenantContextRail");
     expect(primaryBrandBlock).toContain("md:hidden");
 
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).toContain("brand?: ReactNode");
-    expect(moduleNav).toContain("brand={brand}");
+    const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
+    expect(tenantRow).toContain("brand: ReactNode");
+    expect(tenantRow).toContain("brand={brand}");
   });
 
-  it("removed permanent desktop Row 3 in favor of on-demand L3 panel from Row 2", () => {
+  it("removed permanent desktop Row 3 in favor of on-demand hierarchical domain panel", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).not.toContain("<SceContextNavigation");
-
-    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
-    expect(moduleNav).toContain("SceContextNavigationPanel");
+    expect(shell).toContain("SceDomainNavigationPanel");
 
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
     expect(spine).toContain('data-sce-nav-brand-rail={brand ? "occupied" : "spacer"}');
