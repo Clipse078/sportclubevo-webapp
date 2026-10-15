@@ -53,6 +53,7 @@ describe("NAV_SECTIONS static structure", () => {
     const childKeys = planung!.children?.map((c) => c.key) ?? [];
     expect(childKeys).toEqual([
       "wochenplanner",
+      "vereinsprogramm",
       "trainingcenter",
       "matchcenter",
       "tournamentcenter",

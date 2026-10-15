@@ -141,6 +141,7 @@
       "legendMatch": "Match",
       "legendTournament": "Tournament",
       "legendEvent": "Event",
+      "legendTask": "Task",
       "dayAriaTrainingCount": "{count, plural, =1 {1 training} other {# trainings}}",
       "dayAriaMatchCount": "{count, plural, =1 {1 match} other {# matches}}",
       "dayAriaTournamentCount": "{count, plural, =1 {1 tournament} other {# tournaments}}",

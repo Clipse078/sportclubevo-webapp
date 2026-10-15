@@ -23,6 +23,7 @@ import {
 } from "@/lib/sporting-activity-presentation/builders";
 import { loadTrainingSessionFacilityHints } from "@/lib/sporting-activity-presentation/training-facility-batch";
 import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 
 function normalizeTrainingProgrammeStatus(
   status: string,
@@ -66,7 +67,7 @@ export async function loadTrainingProgrammeItems(
     dateTo,
   });
 
-  const [facilityHints, tenant] = await Promise.all([
+  const [facilityHints, tenant, tenantClubLogoUrl] = await Promise.all([
     loadTrainingSessionFacilityHints(
       ctx.personal.tenantId,
       sessions.map((session) => ({
@@ -78,6 +79,7 @@ export async function loadTrainingProgrammeItems(
       where: { id: ctx.personal.tenantId },
       select: { name: true },
     }),
+    getTenantClubCrestUrlCached(ctx.personal.tenantId),
   ]);
   const tenantClubName = tenant?.name?.trim() || "Verein";
 
@@ -125,11 +127,13 @@ export async function loadTrainingProgrammeItems(
       typeLabel: "Training",
       teamName,
       clubName: tenantClubName,
+      tenantClubLogoUrl: tenantClubLogoUrl,
       startAt: startsAt,
       endAt: endsAt,
       status,
       facilityName: facility?.facilityName,
       pitchResourceName: facility?.pitchResourceName,
+      dressingRoomName: facility?.dressingRoomName,
     });
 
     const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {

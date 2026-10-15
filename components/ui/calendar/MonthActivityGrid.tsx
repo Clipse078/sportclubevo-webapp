@@ -7,6 +7,9 @@ import { cn } from "@/lib/cn";
 import type { MonthActivityGridDay, MonthActivityGridNavigation } from "./month-activity-grid-types";
 import { PersonalProgrammeActivityIndicator } from "./PersonalProgrammeActivityIndicator";
 import { CalendarMonthLegend } from "./CalendarMonthLegend";
+import { ProgrammeCalendarMicroEntry } from "@/components/programme/ProgrammeCalendarMicroEntry";
+import type { SceCalendarLegendEntry } from "@/lib/calendar/sce-calendar-engine";
+import type { ReactNode } from "react";
 
 export type MonthActivityGridProps = {
   monthLabel: string;
@@ -23,9 +26,12 @@ export type MonthActivityGridProps = {
   selectable?: boolean;
   onSelectDay?: (dayKey: string) => void;
   getDayHref?: (dayKey: string) => string | undefined;
-  /** Matchcenter uses non-interactive cells; dashboard uses compact dot cells. */
-  cellVariant?: "matchcenter" | "personal";
+  /** Matchcenter uses non-interactive cells; dashboard uses compact dot cells; programme uses micro activity tiles. */
+  cellVariant?: "matchcenter" | "personal" | "programme";
   showLegend?: boolean;
+  legendEntries?: readonly SceCalendarLegendEntry[];
+  /** Scope-specific controls (e.g. Personal Kalender Alle/Termine/Aufgaben). */
+  toolbar?: ReactNode;
 };
 
 function NavControl({
@@ -74,7 +80,7 @@ function DayCell({
   href,
 }: {
   day: MonthActivityGridDay;
-  variant: "matchcenter" | "personal";
+  variant: "matchcenter" | "personal" | "programme";
   selectable: boolean;
   onSelectDay?: (dayKey: string) => void;
   href?: string;
@@ -86,6 +92,21 @@ function DayCell({
     !day.inMonth && "text-[var(--muted)]/50",
     day.inMonth && "text-[var(--text-2)]",
     day.isToday && "bg-[var(--sce-primary)] font-semibold text-white",
+  );
+
+  const programmeClass = cn(
+    "relative flex min-h-[5.25rem] min-w-0 flex-col items-stretch justify-start gap-0.5 rounded-lg border border-transparent px-0.5 pb-1 pt-0.5 text-left text-xs tabular-nums sm:min-h-[5.5rem]",
+    !day.inMonth && "opacity-55",
+    day.inMonth && day.activityCount > 0 && "border-[color-mix(in_srgb,var(--border)_65%,transparent)] bg-[color-mix(in_srgb,var(--surface-2)_35%,var(--surface))]",
+    day.isToday &&
+      !day.isSelected &&
+      "ring-1 ring-inset ring-[var(--primary)]/50 bg-[color-mix(in_srgb,var(--primary)_6%,var(--surface))]",
+    day.isSelected &&
+      !day.isToday &&
+      "ring-2 ring-inset ring-[var(--primary)]/70 bg-[color-mix(in_srgb,var(--primary)_10%,var(--surface))]",
+    day.isSelected &&
+      day.isToday &&
+      "ring-2 ring-inset ring-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_12%,var(--surface))]",
   );
 
   const personalClass = cn(
@@ -103,12 +124,49 @@ function DayCell({
       "bg-[color-mix(in_srgb,var(--primary)_16%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-inset ring-[var(--primary)] ring-offset-0",
   );
 
-  const cellClassName = variant === "matchcenter" ? matchcenterClass : personalClass;
+  const cellClassName =
+    variant === "matchcenter"
+      ? matchcenterClass
+      : variant === "programme"
+        ? programmeClass
+        : personalClass;
   const showMatchcenterDot =
     variant === "matchcenter" ? day.activityCount > 0 && !day.isToday : false;
 
+  const programmeEntries = day.sceCalendarEntries ?? day.programmeCalendarEntries ?? [];
+  const programmeOverflow = day.sceCalendarOverflow ?? day.programmeCalendarOverflow ?? 0;
+
   const inner =
-    variant === "personal" ? (
+    variant === "programme" ? (
+      <>
+        <time
+          dateTime={day.dayKey}
+          className={cn(
+            "self-center text-[0.6875rem] leading-none tabular-nums",
+            day.isToday && "font-bold text-[var(--primary)]",
+            !day.isToday && day.inMonth && "font-medium text-[var(--foreground)]",
+            !day.inMonth && "text-[var(--muted)]",
+          )}
+          aria-current={day.isToday ? "date" : undefined}
+        >
+          {day.dayNumber}
+        </time>
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-0.5 overflow-hidden">
+          {programmeEntries.map((entry) => (
+            <ProgrammeCalendarMicroEntry key={entry.id} entry={entry} />
+          ))}
+          {programmeOverflow > 0 ? (
+            <span
+              className="truncate text-center text-[0.5rem] font-semibold text-[var(--muted)]"
+              aria-label={`${programmeOverflow} weitere Aktivitäten`}
+              data-testid={`programme-calendar-overflow-${day.dayKey}`}
+            >
+              +{programmeOverflow} weitere
+            </span>
+          ) : null}
+        </div>
+      </>
+    ) : variant === "personal" ? (
       <>
         <time
           dateTime={day.dayKey}
@@ -136,7 +194,11 @@ function DayCell({
     return (
       <button
         type="button"
-        data-testid={`personal-calendar-day-${day.dayKey}`}
+        data-testid={
+          variant === "programme"
+            ? `programme-calendar-day-${day.dayKey}`
+            : `personal-calendar-day-${day.dayKey}`
+        }
         data-day-key={day.dayKey}
         aria-label={ariaLabel}
         aria-pressed={day.isSelected}
@@ -183,6 +245,8 @@ export default function MonthActivityGrid({
   getDayHref,
   cellVariant = "personal",
   showLegend = false,
+  legendEntries,
+  toolbar,
 }: MonthActivityGridProps) {
   const Heading = headingLevel;
   const gridRef = useRef<HTMLDivElement>(null);
@@ -229,64 +293,86 @@ export default function MonthActivityGrid({
       aria-label={ariaLabel}
       data-testid={dataTestId}
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <Heading
-          className="text-sm font-semibold capitalize text-[var(--foreground)]"
-          data-testid="month-activity-grid-label"
-        >
-          {monthLabel}
-        </Heading>
-        <div className="flex items-center gap-0.5">
-          <NavControl
-            href={navigation.previousMonthHref}
-            onClick={navigation.onPreviousMonth}
-            label={previousMonthLabel}
-            testId="month-activity-grid-previous"
+      <div
+        className="mb-2 space-y-2"
+        data-testid="month-activity-grid-header"
+        data-sce-calendar-region="header"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <Heading
+            className="shrink-0 text-sm font-semibold capitalize text-[var(--foreground)]"
+            data-testid="month-activity-grid-label"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </NavControl>
-          {todayLabel && (navigation.todayHref || navigation.onToday) ? (
-            navigation.todayHref ? (
-              <Link
-                href={navigation.todayHref}
-                className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-                data-testid="month-activity-grid-today"
-              >
-                {todayLabel}
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={navigation.onToday}
-                className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-                data-testid="month-activity-grid-today"
-              >
-                {todayLabel}
-              </button>
-            )
+            {monthLabel}
+          </Heading>
+          {toolbar ? (
+            <div
+              className="order-2 flex min-w-0 flex-wrap items-center gap-1 sm:order-none"
+              data-sce-calendar-region="toolbar"
+            >
+              {toolbar}
+            </div>
           ) : null}
-          <NavControl
-            href={navigation.nextMonthHref}
-            onClick={navigation.onNextMonth}
-            label={nextMonthLabel}
-            testId="month-activity-grid-next"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </NavControl>
+          {(cellVariant === "personal" || cellVariant === "programme") && showLegend ? (
+            <CalendarMonthLegend
+              className="order-3 min-w-0 flex-1 basis-full justify-center sm:order-none sm:basis-auto lg:justify-center"
+              compact
+              entries={legendEntries}
+              data-testid="month-activity-grid-legend"
+            />
+          ) : null}
+          <div className="ml-auto flex shrink-0 items-center gap-0.5">
+            <NavControl
+              href={navigation.previousMonthHref}
+              onClick={navigation.onPreviousMonth}
+              label={previousMonthLabel}
+              testId="month-activity-grid-previous"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </NavControl>
+            {todayLabel && (navigation.todayHref || navigation.onToday) ? (
+              navigation.todayHref ? (
+                <Link
+                  href={navigation.todayHref}
+                  className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                  data-testid="month-activity-grid-today"
+                >
+                  {todayLabel}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={navigation.onToday}
+                  className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                  data-testid="month-activity-grid-today"
+                >
+                  {todayLabel}
+                </button>
+              )
+            ) : null}
+            <NavControl
+              href={navigation.nextMonthHref}
+              onClick={navigation.onNextMonth}
+              label={nextMonthLabel}
+              testId="month-activity-grid-next"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </NavControl>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 text-center text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div
+        className="grid grid-cols-7 gap-0.5 text-center text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]"
+        data-testid="month-activity-grid-weekdays"
+        data-sce-calendar-region="weekdays"
+      >
         {weekdayLabels.map((label) => (
-          <span key={label} className="py-1">
+          <span key={label} className="py-1" data-testid={`month-activity-grid-weekday-${label}`}>
             {label}
           </span>
         ))}
       </div>
-
-      {cellVariant === "personal" && showLegend ? (
-        <CalendarMonthLegend className="mb-2 mt-1" compact />
-      ) : null}
 
       <div
         ref={gridRef}
@@ -294,6 +380,7 @@ export default function MonthActivityGrid({
         role={selectable ? "grid" : undefined}
         onKeyDown={selectable ? handleGridKeyDown : undefined}
         data-testid="month-activity-grid-days"
+        data-sce-calendar-region="date-grid"
       >
         {days.map((day) => (
           <DayCell

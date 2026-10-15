@@ -1,4 +1,5 @@
 import type { PersonalProgrammeSourceType } from "@/lib/personal-agenda/personal-programme-types";
+import type { ProgrammeCalendarMicroEntry } from "@/lib/programme-engine/programme-calendar-presentation";
 
 export type MonthActivityGridDay = {
   /** Tenant-local yyyy-MM-dd */
@@ -19,6 +20,14 @@ export type MonthActivityGridDay = {
   activityMarkerOverflow?: number;
   /** Optional tooltip / supplemental label for marker row. */
   activityMarkerTooltip?: string;
+  /** Canonical SCE Calendar Engine — compact in-cell activity tiles. */
+  sceCalendarEntries?: readonly ProgrammeCalendarMicroEntry[];
+  /** @deprecated Prefer sceCalendarEntries — alias retained for Programme consumers. */
+  programmeCalendarEntries?: readonly ProgrammeCalendarMicroEntry[];
+  /** +N beyond visible micro entries. */
+  sceCalendarOverflow?: number;
+  /** @deprecated Prefer sceCalendarOverflow. */
+  programmeCalendarOverflow?: number;
 };
 
 export type MonthActivityGridNavigation = {

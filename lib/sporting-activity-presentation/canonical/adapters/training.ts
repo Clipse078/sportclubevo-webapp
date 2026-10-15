@@ -25,6 +25,9 @@ export function resolveSceTrainingPresentationFromLegacy(
     schedulePresentation: { kind: "SESSION" },
     location: { ...presentation.location },
     route: buildSceActivityRoute("TRAINING", resourceKey),
+    dressingRoom: presentation.dressingRoomLabel?.trim()
+      ? { label: presentation.dressingRoomLabel.trim() }
+      : undefined,
     status: presentation.status
       ? buildSceActivityPresentationStatus({ domain: presentation.status })
       : undefined,

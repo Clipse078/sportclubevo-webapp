@@ -25,6 +25,10 @@ import {
   buildTournamentActivityPresentation,
 } from "@/lib/sporting-activity-presentation/builders";
 import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { resolveTournamentOrganizerIdentity } from "@/lib/tournaments/club-identity";
+import { resolveOrganizerClubsByName } from "@/lib/tournaments/organizer-club-resolver";
+import { normalizeSportingLocationMode } from "@/lib/sporting-activity-presentation/location";
 
 function getEventTypeLabel(type: EventType): string {
   switch (type) {
@@ -101,10 +105,13 @@ export async function loadTeamEventProgrammeItems(
     },
   });
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: ctx.personal.tenantId },
-    select: { name: true },
-  });
+  const [tenant, tenantClubLogoUrl] = await Promise.all([
+    prisma.tenant.findUnique({
+      where: { id: ctx.personal.tenantId },
+      select: { name: true },
+    }),
+    getTenantClubCrestUrlCached(ctx.personal.tenantId),
+  ]);
   const tenantClubName = tenant?.name?.trim() || "Verein";
 
   const matchAndTournamentIds = candidates
@@ -124,6 +131,16 @@ export async function loadTeamEventProgrammeItems(
       awayDressingRoomCode: null,
     })),
     ctx.personal.tenantId,
+  );
+
+  const tournamentOrganizerNames = candidates
+    .filter((event) => event.type === "TOURNAMENT")
+    .map((event) => event.organizerName)
+    .filter((name): name is string => Boolean(name?.trim()));
+
+  const organizerClubByName = await resolveOrganizerClubsByName(
+    ctx.personal.tenantId,
+    tournamentOrganizerNames,
   );
 
   const items: PersonalProgrammeItem[] = [];
@@ -175,12 +192,28 @@ export async function loadTeamEventProgrammeItems(
         tenantClubName,
       });
     } else if (event.type === "TOURNAMENT") {
+      const homeAwayMode = normalizeSportingLocationMode(event.homeAway);
+      const tournamentHomeAway =
+        homeAwayMode === "AWAY" ? ("AWAY" as const) : ("HOME" as const);
+      const organizerNameTrimmed = event.organizerName?.trim() ?? null;
+      const resolvedOrganizerClub = organizerNameTrimmed
+        ? (organizerClubByName.get(organizerNameTrimmed) ?? null)
+        : null;
+      const organizerIdentity = resolveTournamentOrganizerIdentity({
+        organizerName: event.organizerName,
+        homeAway: tournamentHomeAway,
+        tenantName: tenantClubName,
+        tenantLogoUrl: tenantClubLogoUrl,
+        resolvedOrganizerClub,
+      });
       activityPresentation = buildTournamentActivityPresentation({
         resourceKey,
         title: event.title,
         typeLabel,
         teamName,
         organiserName: event.organizerName,
+        organiserLogoUrl: organizerIdentity.logoUrl,
+        organiserExternalClubId: organizerIdentity.externalClubId,
         homeAway: event.homeAway,
         tenantClubName,
         location: event.location,

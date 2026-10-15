@@ -40,6 +40,13 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceClubEventCardStatus } from "./SceClubEventCardStatus";
+import {
+  SceActivityListRowLocationMeta,
+  SceActivityListRowOperationalMetaRow,
+  SceActivityListRowTimeMeta,
+} from "./SceActivityListRowOperationalMeta";
+
+export type SceClubEventListRowPresentation = "default" | "operational";
 
 export type SceClubEventCardSurface =
   | "standalone"
@@ -54,6 +61,7 @@ export type SceClubEventCardProps = {
   className?: string;
   linkToDetail?: boolean;
   surface?: SceClubEventCardSurface;
+  listRowPresentation?: SceClubEventListRowPresentation;
   showStatus?: boolean;
   testId?: string;
 };
@@ -395,17 +403,41 @@ function SceClubEventRichCardContent({
 function SceClubEventListRowIdentityContent({
   model,
   density,
+  fmtCfg,
+  listRowPresentation = "default",
+  showStatus = false,
 }: {
   model: SceClubEventPresentationModel;
   density: SceActivityPresentationDensity;
+  fmtCfg?: TenantFormatConfig;
+  listRowPresentation?: SceClubEventListRowPresentation;
+  showStatus?: boolean;
 }) {
+  const timeLabel = fmtCfg ? formatSceClubEventTimeLabel(model, fmtCfg) : undefined;
+  const locationLine =
+    listRowPresentation === "operational"
+      ? resolveClubEventLocationLine(model, density)
+      : undefined;
+  const status = model.status;
+  const showExceptionalStatus = Boolean(
+    showStatus &&
+      status?.label &&
+      (status.semantic === "cancelled" || status.semantic === "warning"),
+  );
+
   return (
     <div
       className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
       data-sce-club-event-density={density}
       data-sce-club-event-list-row-identity
+      data-sce-club-event-list-row-presentation={listRowPresentation}
     >
-      <SceClubEventTypeHeader model={model} showStatus={false} density={density} listRow />
+      <SceClubEventTypeHeader
+        model={model}
+        showStatus={showExceptionalStatus}
+        density={density}
+        listRow
+      />
       <div className="min-w-0 space-y-0.5" data-sce-club-event-region="identity">
         <p
           className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
@@ -416,6 +448,19 @@ function SceClubEventListRowIdentityContent({
         </p>
         <SceClubEventAudienceLine model={model} density={density} listRow />
       </div>
+      {listRowPresentation === "operational" && (timeLabel || locationLine) ? (
+        <SceActivityListRowOperationalMetaRow testId="sce-club-event-list-row-operational-meta">
+          {timeLabel ? (
+            <SceActivityListRowTimeMeta label={timeLabel} testId="sce-club-event-list-row-time" />
+          ) : null}
+          {locationLine ? (
+            <SceActivityListRowLocationMeta
+              label={locationLine}
+              testId="sce-club-event-list-row-location"
+            />
+          ) : null}
+        </SceActivityListRowOperationalMetaRow>
+      ) : null}
     </div>
   );
 }
@@ -566,6 +611,7 @@ export function SceClubEventCard({
   className,
   linkToDetail = true,
   surface = "standalone",
+  listRowPresentation = "default",
   showStatus = true,
   testId = "sce-club-event-card",
 }: SceClubEventCardProps) {
@@ -614,7 +660,15 @@ export function SceClubEventCard({
   let content: ReactNode;
 
   if (listRow) {
-    content = <SceClubEventListRowIdentityContent model={model} density={density} />;
+    content = (
+      <SceClubEventListRowIdentityContent
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        listRowPresentation={listRowPresentation}
+        showStatus={showStatus}
+      />
+    );
   } else if (contextHeader) {
     content = (
       <SceClubEventContextHeaderContent

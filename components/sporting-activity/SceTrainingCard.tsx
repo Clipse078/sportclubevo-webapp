@@ -29,8 +29,16 @@ import {
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { ActivityTypePill } from "./ActivityTypePill";
 import { SceTrainingCardStatus } from "./SceTrainingCardStatus";
+import {
+  SceActivityListRowDressingRoomMeta,
+  SceActivityListRowLocationMeta,
+  SceActivityListRowOperationalMetaRow,
+  SceActivityListRowTimeMeta,
+} from "./SceActivityListRowOperationalMeta";
 
 export type SceTrainingCardSurface = "standalone" | "detail-embed" | "list-row";
+
+export type SceTrainingListRowPresentation = "default" | "operational";
 
 export type SceTrainingCardProps = {
   model: SceTrainingPresentationModel;
@@ -39,6 +47,8 @@ export type SceTrainingCardProps = {
   className?: string;
   linkToDetail?: boolean;
   surface?: SceTrainingCardSurface;
+  /** Programme / activity feeds — surface time, location, and dressing room on list rows. */
+  listRowPresentation?: SceTrainingListRowPresentation;
   /** When false, status badge is omitted (e.g. management row owns status column). */
   showStatus?: boolean;
   testId?: string;
@@ -54,6 +64,20 @@ function buildTrainingAccessibleLabel(model: SceTrainingPresentationModel): stri
   const team = model.team?.name?.trim();
   const parts = [model.typeLabel, model.trainingTitle, team].filter(Boolean);
   return parts.join(" — ");
+}
+
+function resolveListRowOperationalLocationLine(model: SceTrainingPresentationModel): string | undefined {
+  return formatSceActivityLocationHierarchy(model.location, { includeHostClub: false });
+}
+
+function resolveListRowOperationalTimeLabel(
+  model: SceTrainingPresentationModel,
+  fmtCfg: TenantFormatConfig,
+): string | undefined {
+  if (isRecurringDefinition(model) && model.schedulePresentation?.kind === "RECURRING_DEFINITION") {
+    return model.schedulePresentation.recurrence.timeLabel;
+  }
+  return formatSessionTimeOnly(model, fmtCfg);
 }
 
 function resolveLocationLine(model: SceTrainingPresentationModel, density: SceActivityPresentationDensity) {
@@ -307,6 +331,89 @@ function SceTrainingRichCardContent({
   );
 }
 
+function SceTrainingListRowOperationalContent({
+  model,
+  density,
+  fmtCfg,
+  showStatus,
+}: {
+  model: SceTrainingPresentationModel;
+  density: SceActivityPresentationDensity;
+  fmtCfg: TenantFormatConfig;
+  showStatus: boolean;
+}) {
+  const teamName = model.team?.name?.trim();
+  const title = model.trainingTitle;
+  const showTeamLine =
+    teamName &&
+    teamName.localeCompare(title.trim(), "de-CH", { sensitivity: "accent" }) !== 0 &&
+    !title.trim().toLocaleLowerCase("de-CH").includes(teamName.toLocaleLowerCase("de-CH"));
+  const timeLabel = resolveListRowOperationalTimeLabel(model, fmtCfg);
+  const locationLine = resolveListRowOperationalLocationLine(model);
+  const dressingRoomLabel = model.dressingRoom?.label?.trim();
+  const status = model.status;
+  const showExceptionalStatus = Boolean(
+    showStatus &&
+      status?.label &&
+      (status.semantic === "cancelled" ||
+        status.semantic === "warning" ||
+        status.domain === "postponed" ||
+        status.domain === "cancelled"),
+  );
+
+  return (
+    <div
+      className={cn("min-w-0 w-full max-w-full space-y-1", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      data-sce-training-density={density}
+      data-sce-training-list-row-identity
+      data-sce-training-list-row-presentation="operational"
+    >
+      <SceTrainingTypeHeader
+        model={model}
+        density={density}
+        showStatus={showExceptionalStatus}
+        listRow
+      />
+      <div className="min-w-0 space-y-0.5" data-sce-training-region="identity">
+        <p
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+          data-testid="sce-training-title"
+          title={title}
+        >
+          {title}
+        </p>
+        {showTeamLine ? (
+          <p
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
+            data-testid="sce-training-team"
+          >
+            {teamName}
+          </p>
+        ) : null}
+      </div>
+      {timeLabel || locationLine || dressingRoomLabel ? (
+        <SceActivityListRowOperationalMetaRow testId="sce-training-list-row-operational-meta">
+          {timeLabel ? (
+            <SceActivityListRowTimeMeta label={timeLabel} testId="sce-training-list-row-time" />
+          ) : null}
+          {locationLine ? (
+            <SceActivityListRowLocationMeta
+              label={locationLine}
+              testId="sce-training-list-row-location"
+            />
+          ) : null}
+          {dressingRoomLabel ? (
+            <SceActivityListRowDressingRoomMeta
+              label={dressingRoomLabel}
+              testId="sce-training-list-row-dressing-room"
+            />
+          ) : null}
+        </SceActivityListRowOperationalMetaRow>
+      ) : null}
+    </div>
+  );
+}
+
 function SceTrainingListRowIdentityContent({
   model,
   density,
@@ -485,6 +592,7 @@ export function SceTrainingCard({
   className,
   linkToDetail = true,
   surface = "standalone",
+  listRowPresentation = "default",
   showStatus = true,
   testId = "sce-training-card",
 }: SceTrainingCardProps) {
@@ -528,7 +636,17 @@ export function SceTrainingCard({
   let content: ReactNode;
 
   if (listRow) {
-    content = <SceTrainingListRowIdentityContent model={model} density={density} />;
+    content =
+      listRowPresentation === "operational" ? (
+        <SceTrainingListRowOperationalContent
+          model={model}
+          density={density}
+          fmtCfg={fmtCfg}
+          showStatus={showStatus}
+        />
+      ) : (
+        <SceTrainingListRowIdentityContent model={model} density={density} />
+      );
   } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">

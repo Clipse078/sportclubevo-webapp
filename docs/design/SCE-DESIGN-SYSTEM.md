@@ -478,6 +478,24 @@ Portalled floating surfaces use explicit stack tokens (`lib/ui/sce-overlay-layer
 
 ---
 
+## CANONICAL SCE CALENDAR SYSTEM (01I R6.1)
+
+| Item | Contract |
+|------|----------|
+| **Engine** | `SceCalendarEngine` + `MonthActivityGrid` — one month shell (header, navigation, weekday row, grid, today, legend, overflow) |
+| **MICRO renderer** | `ProgrammeCalendarMicroEntry` only — **no** `PersonalCalendar*Tile` / `MatchCalendarTile` parallel families |
+| **Semantic slots** | TYPE · VISUAL IDENTITY (`ClubCrest`) + IDENTITY · TIME (+ Clock) · LOCATION (+ MapPin) · STATUS |
+| **Location (MICRO)** | `formatSceActivityLocationHierarchy` with `{ includeHostClub: false }` — identity line owns host/opponent/organiser; location line is venue/resource only |
+| **TRAINING crest** | Tenant club via `SceTrainingPresentationModel.tenantClub` (canonical `ClubIdentity`) |
+| **MATCH crest (team scope)** | Opponent `ClubIdentity` — scope team never shown as opponent |
+| **TOURNAMENT crest** | Organiser `ClubIdentity`; tournament title remains identity text |
+| **CLUB EVENT** | Title identity — no automatic crest |
+| **TASK** | Non-sporting — no crest; Clock/MapPin only when time/location exist |
+
+Authoritative engine doc: [`docs/calendar/SCE-CALENDAR-ENGINE.md`](../calendar/SCE-CALENDAR-ENGINE.md) (consumer matrix + adoption status).
+
+---
+
 ## Related documents
 
 - [`SCE-CONTEXT-TABS-STANDARD.md`](./SCE-CONTEXT-TABS-STANDARD.md)

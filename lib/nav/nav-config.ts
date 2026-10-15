@@ -256,6 +256,18 @@ export const NAV_SECTIONS: NavSection[] = [
             permissionKeys: [...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS],
           },
           {
+            key: "vereinsprogramm",
+            label: "Vereinsprogramm",
+            href: "/dashboard/programm",
+            permissionKeys: [
+              PERMISSIONS.EVENTS_VIEW,
+              PERMISSIONS.EVENTS_MANAGE,
+              PERMISSIONS.TRAININGS_VIEW,
+              PERMISSIONS.TRAININGS_MANAGE,
+              PERMISSIONS.WOCHENPLAN_MANAGE,
+            ],
+          },
+          {
             key: "trainingcenter",
             label: "Trainings",
             href: "/dashboard/training",

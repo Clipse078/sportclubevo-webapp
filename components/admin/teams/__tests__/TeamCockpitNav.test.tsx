@@ -31,7 +31,7 @@ describe("TEAM-COCKPIT-PREMIUM-01D — TeamCockpitNav active state", () => {
 
     const uebersicht = screen.getByTestId("team-cockpit-nav-uebersicht");
     expect(uebersicht).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByTestId("team-cockpit-nav-spiele")).toHaveAttribute(
+    expect(screen.getByTestId("team-cockpit-nav-programm")).toHaveAttribute(
       "aria-selected",
       "false",
     );
@@ -53,7 +53,7 @@ describe("TEAM-COCKPIT-PREMIUM-01D — TeamCockpitNav active state", () => {
 
   it("marks each primary route active on its own path", () => {
     const routes = [
-      { key: "spiele", path: "/spiele", label: "Nächste Spiele" },
+      { key: "programm", path: "/programm", label: "Programm" },
       { key: "resultate", path: "/resultate", label: "Resultate" },
       { key: "rangliste", path: "/rangliste", label: "Rangliste" },
       { key: "trainerteam", path: "/trainerteam", label: "Trainerteam" },

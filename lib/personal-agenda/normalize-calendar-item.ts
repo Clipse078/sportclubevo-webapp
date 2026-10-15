@@ -53,6 +53,8 @@ export function normalizePersonalProgrammeItem(item: PersonalProgrammeItem): Nor
     eventType: item.eventType,
     ariaLabel: item.ariaLabel,
     activityPresentation: item.activityPresentation,
+    canonicalPresentation: item.canonicalPresentation,
+    programmeScopeTeamId: item.programmeScopeTeamId,
   };
 }
 
@@ -110,6 +112,8 @@ export function normalizedCalendarItemToProgrammeItem(
     eventType: item.eventType,
     ariaLabel: item.ariaLabel,
     activityPresentation: item.activityPresentation,
+    canonicalPresentation: item.canonicalPresentation,
+    programmeScopeTeamId: item.programmeScopeTeamId,
   };
 }
 

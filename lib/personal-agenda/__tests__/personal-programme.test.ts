@@ -7,9 +7,27 @@ vi.mock("@/lib/db/prisma", () => ({
     event: { findMany: vi.fn() },
     meeting: { findMany: vi.fn() },
     tenant: { findUnique: vi.fn() },
+    tenantSfvConfig: { findUnique: vi.fn().mockResolvedValue(null) },
+    teamSeason: { findMany: vi.fn().mockResolvedValue([]) },
+    team: { findMany: vi.fn().mockResolvedValue([]) },
     trainingSessionAllocation: { findMany: vi.fn() },
     trainingAllocation: { findMany: vi.fn() },
+    playerSquadMember: { findFirst: vi.fn().mockResolvedValue(null) },
+    trainerTeamMember: { findFirst: vi.fn().mockResolvedValue(null) },
+    orgUnitMembership: { findFirst: vi.fn().mockResolvedValue(null) },
   },
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantClubCrestUrlCached: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/matchcenter/query-service", () => ({
+  listMatchcenterMatches: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@/lib/tournaments/tournament-service", () => ({
+  listTournaments: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/facilities/display-helpers", async (importOriginal) => {
@@ -106,6 +124,7 @@ describe("DASHBOARD-02 — personal programme", () => {
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue({ name: "FC Allschwil" } as never);
     vi.mocked(prisma.trainingSessionAllocation.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.trainingAllocation.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.event.findMany).mockResolvedValue([] as never);
   });
 
   describe("TRAINING", () => {
@@ -470,25 +489,7 @@ describe("DASHBOARD-02 — personal programme", () => {
       vi.mocked(resolvePersonalContext).mockResolvedValue(
         buildContext({ teams: [], hasLinkedPerson: false, personId: null }),
       );
-      vi.mocked(prisma.event.findMany).mockResolvedValue([
-        {
-          id: "club-wide",
-          tenantId: "tenant-a",
-          teamId: "team-x",
-          type: "MATCH",
-          status: "SCHEDULED",
-          reviewStage: "PUBLISHED",
-          title: "Club Match",
-          startAt: new Date("2026-10-02T12:00:00.000Z"),
-          endAt: null,
-          allDay: false,
-          opponentName: "X",
-          homeAway: null,
-          location: null,
-          pitchCode: null,
-          team: { name: "X" },
-        },
-      ] as never);
+      vi.mocked(prisma.event.findMany).mockResolvedValue([] as never);
 
       const result = await loadPersonalProgramme({
         tenantId: "tenant-a",

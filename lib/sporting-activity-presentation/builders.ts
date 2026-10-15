@@ -31,6 +31,8 @@ export type BuildTrainingPresentationInput = {
   status?: PersonalProgrammePresentationStatus;
   facilityName?: string | null;
   pitchResourceName?: string | null;
+  dressingRoomName?: string | null;
+  tenantClubLogoUrl?: string | null;
 };
 
 export function buildTrainingActivityPresentation(
@@ -57,7 +59,11 @@ export function buildTrainingActivityPresentation(
     },
     team: input.teamName?.trim() ? { name: input.teamName.trim() } : undefined,
     location,
+    dressingRoomLabel: meaningful(input.dressingRoomName),
     status: input.status,
+    tenantClub: input.clubName?.trim()
+      ? { logoUrl: input.tenantClubLogoUrl ?? null }
+      : undefined,
   };
 }
 
@@ -176,6 +182,8 @@ export type BuildTournamentPresentationInput = {
   endAt?: Date | null;
   allDay?: boolean;
   status?: PersonalProgrammePresentationStatus;
+  organiserLogoUrl?: string | null;
+  organiserExternalClubId?: string | null;
 };
 
 export function buildTournamentActivityPresentation(
@@ -207,7 +215,13 @@ export function buildTournamentActivityPresentation(
       allDay: input.allDay,
     },
     team: input.teamName?.trim() ? { name: input.teamName.trim() } : undefined,
-    context: organiser ? { organiser } : undefined,
+    context: organiser
+      ? {
+          organiser,
+          organiserLogoUrl: input.organiserLogoUrl ?? null,
+          organiserExternalClubId: input.organiserExternalClubId ?? null,
+        }
+      : undefined,
     location,
     status: input.status,
     eventType: "TOURNAMENT",

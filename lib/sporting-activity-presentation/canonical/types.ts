@@ -89,11 +89,18 @@ export type SceTrainingSchedulePresentation =
   | { kind: "SESSION" }
   | { kind: "RECURRING_DEFINITION"; recurrence: SceTrainingRecurrencePresentation };
 
+export type SceTrainingDressingRoomPresentation = {
+  label: string;
+};
+
 export type SceTrainingPresentationModel = SceActivityPresentationBase & {
   kind: "TRAINING";
   trainingTitle: string;
   team?: { name: string };
+  /** Tenant / owning club for MICRO crest (distinct from opponent / organiser semantics). */
+  tenantClub?: ClubIdentity;
   schedulePresentation?: SceTrainingSchedulePresentation;
+  dressingRoom?: SceTrainingDressingRoomPresentation;
 };
 
 export function isSceTrainingPresentationModel(
@@ -135,6 +142,8 @@ export type SceClubEventPresentationModel = SceActivityPresentationBase & {
   kind: "CLUB_EVENT";
   eventTitle: string;
   organiser?: ClubIdentity;
+  /** Tenant club crest for MICRO identity (distinct from optional event organiser). */
+  tenantClub?: ClubIdentity;
   audience?: SceClubEventAudiencePresentation;
 };
 

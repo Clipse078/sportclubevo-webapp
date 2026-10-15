@@ -22,7 +22,10 @@ import { ActivityContextBadge } from "./ActivityContextBadge";
 import { SceMatchCardStatus } from "./SceMatchCardStatus";
 import { SceMatchCardResult } from "./SceMatchCardResult";
 import { resolveSceMatchResultPerspectiveStatus } from "@/lib/sporting-activity-presentation/canonical/match-context-badges";
-import { SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import {
+  SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
+  SCE_ACTIVITY_SCHEDULE_FOREGROUND_CLASS,
+} from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
 import {
   isSceMatchRichCardDensity,
   SCE_MATCH_CARD_SHELL_CLASS,
@@ -36,8 +39,16 @@ import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import {
+  SceActivityListRowLocationMeta,
+  SceActivityListRowOperationalMetaRow,
+  SceActivityListRowTimeMeta,
+} from "./SceActivityListRowOperationalMeta";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
+
+export type SceMatchListRowPresentation = "default" | "programme-fixture";
 
 export type SceMatchCardProps = {
   model: SceMatchPresentationModel;
@@ -48,6 +59,8 @@ export type SceMatchCardProps = {
   linkToDetail?: boolean;
   /** Detail header embed — fixture/result/status only (schedule/location elsewhere). */
   surface?: SceMatchCardSurface;
+  /** Programme Liste — richer horizontal fixture composition (still list-row surface). */
+  listRowPresentation?: SceMatchListRowPresentation;
   testId?: string;
 };
 
@@ -277,6 +290,7 @@ function SceMatchInlineIdentitySide({
   showCrests,
   listRow = false,
   microListCrest = false,
+  programmeFixture = false,
 }: {
   side: "home" | "away";
   identity: SceMatchPresentationModel["fixture"]["home"];
@@ -284,12 +298,23 @@ function SceMatchInlineIdentitySide({
   listRow?: boolean;
   /** MICRO density shares list-row crest bounds (planner list presentation). */
   microListCrest?: boolean;
+  programmeFixture?: boolean;
 }) {
-  const nameClass = listRow
-    ? SCE_ACTIVITY_LIST_ROW_SCALE.fixtureClubNameClass
-    : cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity("MICRO"));
+  const nameClass = programmeFixture
+    ? cn(
+        "min-w-0 line-clamp-2 text-[0.8125rem] font-semibold leading-snug",
+        SCE_ACTIVITY_PRIMARY_IDENTITY_FOREGROUND_CLASS,
+      )
+    : listRow
+      ? SCE_ACTIVITY_LIST_ROW_SCALE.fixtureClubNameClass
+      : cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity("MICRO"));
 
   const useMicroCrestBounds = listRow || microListCrest;
+  const crestBoundsClass = programmeFixture
+    ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeMatchCrestBoundsClass
+    : useMicroCrestBounds
+      ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass
+      : undefined;
 
   return (
     <div
@@ -297,17 +322,19 @@ function SceMatchInlineIdentitySide({
       data-sce-match-region={`${side}-identity`}
       className={cn(
         "flex min-w-0 items-center gap-1.5",
-        listRow ? "max-w-none" : "max-w-[min(100%,12rem)]",
-        side === "away" && "flex-row-reverse justify-self-end text-right",
+        listRow || programmeFixture ? "max-w-none" : "max-w-[min(100%,12rem)]",
+        programmeFixture && side === "home" && "justify-self-start",
+        programmeFixture && side === "away" && "flex-row-reverse justify-self-end text-right",
+        !programmeFixture && side === "away" && "flex-row-reverse justify-self-end text-right",
       )}
     >
       {showCrests ? (
         <div data-sce-match-region={`${side}-crest`} className="shrink-0">
           <ClubCrest
             identity={identity}
-            density="compact"
+            density={programmeFixture ? "management" : "compact"}
             decorative
-            className={useMicroCrestBounds ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass : undefined}
+            className={crestBoundsClass}
           />
         </div>
       ) : null}
@@ -436,9 +463,13 @@ function SceMatchTypeHeader({
 function SceMatchListRowIdentityContent({
   model,
   density,
+  fmtCfg,
+  listRowPresentation = "default",
 }: {
   model: SceMatchPresentationModel;
   density: SceActivityPresentationDensity;
+  fmtCfg: TenantFormatConfig;
+  listRowPresentation?: SceMatchListRowPresentation;
 }) {
   const showCrests = isSceActivityDimensionVisible(density, "crests");
   const tenantSide = resolveMatchTenantSideBadge(model.contextBadges);
@@ -448,19 +479,57 @@ function SceMatchListRowIdentityContent({
       : tenantSide?.label === "Auswärts"
         ? "Auswärtsspiel"
         : tenantSide?.label;
+  const programmeFixture = listRowPresentation === "programme-fixture";
+  const lifecycle = model.matchLifecycle ?? model.status;
+  const showCancelledStatus = lifecycle?.semantic === "cancelled";
+  const startAt = new Date(model.schedule.startAt);
+  const endAt = model.schedule.endAt ? new Date(model.schedule.endAt) : null;
+  const kickoffLabel = formatFixtureTime(startAt, fmtCfg);
+  const operationalTimeLabel =
+    programmeFixture && !model.schedule.allDay
+      ? formatSportingActivityTimeRange({
+          startLabel: kickoffLabel,
+          endLabel: endAt ? formatFixtureTime(endAt, fmtCfg) : undefined,
+        }) ?? kickoffLabel
+      : undefined;
+  const locationLine =
+    programmeFixture && model.location
+      ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
+      : undefined;
 
   return (
     <div
-      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn(
+        "min-w-0 w-full max-w-full",
+        programmeFixture ? "space-y-1" : SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass,
+      )}
       data-sce-match-density={density}
       data-sce-match-list-row-identity
+      data-sce-match-list-row-presentation={listRowPresentation}
     >
-      <SceMatchTypeHeader model={model} showStatus={false} listRow />
+      <SceMatchTypeHeader
+        model={model}
+        showStatus={showCancelledStatus}
+        listRow
+      />
+      {programmeFixture && model.competition?.label ? (
+        <p
+          className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeCompetitionClass}
+          data-testid="sce-match-competition"
+          data-sce-match-region="competition"
+        >
+          {model.competition.label}
+        </p>
+      ) : null}
       {tenantSideAccessibleLabel ? (
         <span className="sr-only">{tenantSideAccessibleLabel}</span>
       ) : null}
       <div
-        className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass}
+        className={
+          programmeFixture
+            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureGridClass
+            : SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass
+        }
         data-testid="sce-match-fixture"
         data-sce-match-region="fixture"
         aria-label={buildFixtureAccessibleLabel(model)}
@@ -469,25 +538,62 @@ function SceMatchListRowIdentityContent({
           side="home"
           identity={model.fixture.home}
           showCrests={showCrests}
-          listRow
+          listRow={!programmeFixture}
+          programmeFixture={programmeFixture}
         />
-        <div className="flex items-center justify-center px-0.5" data-sce-match-center>
-          <span
-            className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureVsClass}
-            aria-hidden
-            data-testid="sce-match-vs"
-            data-sce-match-region="separator"
-          >
-            VS
-          </span>
+        <div
+          className="flex min-w-[2.75rem] flex-col items-center justify-center px-0.5 text-center"
+          data-sce-match-center
+          data-sce-match-region="center"
+        >
+          {programmeFixture ? (
+            model.result ? (
+              <SceMatchFixtureSeparator model={model} density={density} />
+            ) : (
+              <span
+                className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureVsClass}
+                aria-hidden
+                data-testid="sce-match-vs"
+                data-sce-match-region="separator"
+              >
+                VS
+              </span>
+            )
+          ) : (
+            <span
+              className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureVsClass}
+              aria-hidden
+              data-testid="sce-match-vs"
+              data-sce-match-region="separator"
+            >
+              VS
+            </span>
+          )}
         </div>
         <SceMatchInlineIdentitySide
           side="away"
           identity={model.fixture.away}
           showCrests={showCrests}
-          listRow
+          listRow={!programmeFixture}
+          programmeFixture={programmeFixture}
         />
       </div>
+      {programmeFixture && (operationalTimeLabel || locationLine) ? (
+        <SceActivityListRowOperationalMetaRow testId="sce-match-list-row-operational-meta">
+          {operationalTimeLabel ? (
+            <SceActivityListRowTimeMeta
+              label={operationalTimeLabel}
+              testId="sce-match-list-row-time"
+            />
+          ) : null}
+          {locationLine ? (
+            <SceActivityListRowLocationMeta
+              label={locationLine}
+              testId="sce-match-list-row-location"
+            />
+          ) : null}
+        </SceActivityListRowOperationalMetaRow>
+      ) : null}
     </div>
   );
 }
@@ -621,6 +727,7 @@ export function SceMatchCard({
   className,
   linkToDetail = true,
   surface = "standalone",
+  listRowPresentation = "default",
   testId = "sce-match-card",
 }: SceMatchCardProps) {
   const listRow = surface === "list-row";
@@ -662,7 +769,14 @@ export function SceMatchCard({
   let content: ReactNode;
 
   if (listRow) {
-    content = <SceMatchListRowIdentityContent model={model} density={density} />;
+    content = (
+      <SceMatchListRowIdentityContent
+        model={model}
+        density={density}
+        fmtCfg={fmtCfg}
+        listRowPresentation={listRowPresentation}
+      />
+    );
   } else if (surface === "detail-embed") {
     content = (
       <div className="min-w-0 space-y-2">

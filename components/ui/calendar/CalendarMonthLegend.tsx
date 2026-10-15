@@ -3,21 +3,31 @@
 import { useTranslations } from "next-intl";
 import { CalendarActivityMarkerDot } from "./CalendarActivityMarkers";
 import { cn } from "@/lib/cn";
+import type { SceCalendarLegendEntry } from "@/lib/calendar/sce-calendar-engine";
 
 export type CalendarMonthLegendProps = {
   className?: string;
   compact?: boolean;
+  entries?: readonly SceCalendarLegendEntry[];
+  "data-testid"?: string;
 };
 
-export function CalendarMonthLegend({ className, compact = false }: CalendarMonthLegendProps) {
+export function CalendarMonthLegend({
+  className,
+  compact = false,
+  entries: entriesProp,
+  "data-testid": dataTestId = "personal-calendar-month-legend",
+}: CalendarMonthLegendProps) {
   const t = useTranslations("PersonalDashboard.calendar");
 
-  const entries = [
-    { type: "TRAINING" as const, label: t("legendTraining") },
-    { type: "MATCH" as const, label: t("legendMatch") },
-    { type: "TOURNAMENT" as const, label: t("legendTournament") },
-    { type: "EVENT" as const, label: t("legendEvent") },
-  ];
+  const entries =
+    entriesProp ??
+    ([
+      { sourceType: "TRAINING" as const, label: t("legendTraining") },
+      { sourceType: "MATCH" as const, label: t("legendMatch") },
+      { sourceType: "TOURNAMENT" as const, label: t("legendTournament") },
+      { sourceType: "EVENT" as const, label: t("legendEvent") },
+    ] satisfies readonly SceCalendarLegendEntry[]);
 
   return (
     <ul
@@ -27,11 +37,20 @@ export function CalendarMonthLegend({ className, compact = false }: CalendarMont
         className,
       )}
       aria-label={t("legendAria")}
-      data-testid="personal-calendar-month-legend"
+      data-testid={dataTestId}
+      data-sce-calendar-region="legend"
     >
-      {entries.map(({ type, label }) => (
-        <li key={type} className="inline-flex list-none items-center gap-1">
-          <CalendarActivityMarkerDot sourceType={type} className="h-1.5 w-1.5" />
+      {entries.map(({ sourceType, label }) => (
+        <li key={sourceType} className="inline-flex list-none items-center gap-1">
+          {sourceType === "TASK" ? (
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--muted)]"
+              aria-hidden
+              data-legend-task
+            />
+          ) : (
+            <CalendarActivityMarkerDot sourceType={sourceType} className="h-1.5 w-1.5" />
+          )}
           <span>{label}</span>
         </li>
       ))}
