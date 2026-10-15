@@ -125,7 +125,8 @@ describe("AppShellNavigation landmarks", () => {
 
     const moduleSpine = document.querySelector('[data-sce-nav-spine-row="module"]');
     expect(moduleSpine).toBeTruthy();
-    expect(moduleSpine?.querySelector('[data-sce-nav-brand-rail="spacer"]')).toBeTruthy();
+    expect(moduleSpine?.querySelector('[data-sce-nav-brand-rail="occupied"]')).toBeTruthy();
     expect(moduleSpine?.querySelector("[data-sce-nav-workspace]")).toBeTruthy();
+    expect(screen.getAllByTestId("tenant-identity").length).toBeGreaterThan(0);
   });
 });

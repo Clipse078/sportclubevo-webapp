@@ -6,4 +6,8 @@ export { SceModuleNavigation } from "./SceModuleNavigation";
 export { SceNavigationItem } from "./SceNavigationItem";
 export { SceNavigationOverflow } from "./SceNavigationOverflow";
 export { ScePrimaryNavigation } from "./ScePrimaryNavigation";
-export { SceTenantIdentityBar } from "./SceTenantIdentityBar";
+export {
+  ScePlatformBrandRail,
+  SceTenantContextRail,
+  SceTenantIdentityBar,
+} from "./SceTenantIdentityBar";

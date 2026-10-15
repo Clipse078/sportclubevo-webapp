@@ -7,7 +7,7 @@ type HeaderTenantIdentityProps = {
   platformWorkspace?: boolean;
   /** @deprecated use layout */
   compact?: boolean;
-  layout?: "inline" | "under-product" | "under-product-compact";
+  layout?: "inline" | "under-product" | "under-product-compact" | "tenant-row-rail";
   className?: string;
 };
 
@@ -15,6 +15,7 @@ const CREST_SIZE: Record<NonNullable<HeaderTenantIdentityProps["layout"]>, numbe
   inline: 36,
   "under-product": 26,
   "under-product-compact": 22,
+  "tenant-row-rail": 24,
 };
 
 /**
@@ -34,7 +35,9 @@ export default function HeaderTenantIdentity({
   const displayName = platformWorkspace ? "SportClubEvo Platform" : tenantName;
   const crestSize = CREST_SIZE[resolvedLayout];
   const isStacked =
-    resolvedLayout === "under-product" || resolvedLayout === "under-product-compact";
+    resolvedLayout === "under-product" ||
+    resolvedLayout === "under-product-compact" ||
+    resolvedLayout === "tenant-row-rail";
 
   if (platformWorkspace) {
     return (
@@ -67,7 +70,9 @@ export default function HeaderTenantIdentity({
           isStacked
             ? resolvedLayout === "under-product-compact"
               ? "max-w-[9rem] truncate text-xs"
-              : "max-w-[12rem] truncate text-[0.8125rem]"
+              : resolvedLayout === "tenant-row-rail"
+                ? "max-w-[13rem] truncate text-[0.8125rem]"
+                : "max-w-[12rem] truncate text-[0.8125rem]"
             : compact
               ? "max-w-[8rem] truncate text-sm"
               : "max-w-[14rem] truncate text-[0.9375rem] font-bold text-[var(--foreground)]",

@@ -48,11 +48,16 @@ describe("SCE-NAVBAR-UPGRADE-01-R4 shared navigation spine", () => {
     expect(moduleNav).not.toContain("sce-global-module-nav-workspace-eyebrow");
   });
 
-  it("preserves brand rail occupancy on L1 and intentional spacer on L2/L3", () => {
+  it("preserves brand rail occupancy on L1/L2 and intentional spacer on L3", () => {
     const spine = readRelative("components/sce/navigation/SceNavigationSpineRow.tsx");
     expect(spine).toContain('variant: SceNavigationSpineRowVariant');
     expect(spine).toContain("sce-nav-spine-row--sub");
     expect(spine).toMatch(/data-sce-nav-spine-row=\{variant\}/);
+
+    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
+    expect(moduleNav).toContain("brand={brand}");
+    const contextNav = readRelative("components/sce/navigation/SceContextNavigation.tsx");
+    expect(contextNav).not.toContain("brand=");
   });
 
   it("bounds brand rail width for wide desktop without centering primary nav", () => {

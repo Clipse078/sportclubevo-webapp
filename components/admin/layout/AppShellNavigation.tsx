@@ -42,6 +42,8 @@ import {
   SceModuleNavigation,
   SceNavigationSpineRow,
   ScePrimaryNavigation,
+  ScePlatformBrandRail,
+  SceTenantContextRail,
   SceTenantIdentityBar,
 } from "@/components/sce/navigation";
 
@@ -208,11 +210,16 @@ function AppShellNavigationInner({
           variant="primary"
           className="sce-global-app-header-row sce-global-app-header-row--primary"
           brand={
-            <SceTenantIdentityBar
-              displayClubName={displayClubName}
-              logoUrl={logoUrl}
-              platformWorkspace={isPlatformWorkspace}
-            />
+            <>
+              <ScePlatformBrandRail className="hidden md:flex" />
+              <div className="md:hidden w-full min-w-0">
+                <SceTenantIdentityBar
+                  displayClubName={displayClubName}
+                  logoUrl={logoUrl}
+                  platformWorkspace={isPlatformWorkspace}
+                />
+              </div>
+            </>
           }
           workspace={
             <ScePrimaryNavigation
@@ -259,6 +266,14 @@ function AppShellNavigationInner({
             items={active.domainSecondaryItems}
             resolveHref={resolveHref}
             isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
+            brand={
+              <SceTenantContextRail
+                displayClubName={displayClubName}
+                logoUrl={logoUrl}
+                platformWorkspace={isPlatformWorkspace}
+                className="hidden md:flex"
+              />
+            }
           />
         ) : null}
 

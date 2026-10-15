@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { DomainSecondaryNavItem } from "@/lib/nav/app-navigation-model";
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
@@ -11,6 +12,8 @@ type SceModuleNavigationProps = {
   items: DomainSecondaryNavItem[];
   resolveHref: (href: string) => string;
   isItemActive: (item: DomainSecondaryNavItem) => boolean;
+  /** Tenant / module context rail (Row 2 left column on desktop). */
+  brand?: ReactNode;
 };
 
 export function SceModuleNavigation({
@@ -18,6 +21,7 @@ export function SceModuleNavigation({
   items,
   resolveHref,
   isItemActive,
+  brand,
 }: SceModuleNavigationProps) {
   if (items.length === 0) return null;
 
@@ -29,6 +33,7 @@ export function SceModuleNavigation({
     >
       <SceNavigationSpineRow
         variant="module"
+        brand={brand}
         workspace={
           <div className="sce-global-module-nav-track flex min-w-0 w-full gap-1 overflow-x-auto">
             {items.map((item) => {

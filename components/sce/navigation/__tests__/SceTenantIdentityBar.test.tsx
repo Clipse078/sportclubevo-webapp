@@ -15,7 +15,7 @@ vi.mock("@/components/admin/branding/TenantLogo", () => ({
 }));
 
 describe("SceTenantIdentityBar brand hierarchy", () => {
-  it("stacks tenant under product wordmark without horizontal separator", () => {
+  it("stacks tenant under product wordmark for mobile row-1 without horizontal separator", () => {
     render(
       <SceTenantIdentityBar
         displayClubName="FC Allschwil"

@@ -94,12 +94,15 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(inlineIds).toContain("club");
   });
 
-  it("stacks tenant identity under the SCE product wordmark", () => {
+  it("separates platform row-1 identity from tenant row-2 context on desktop", () => {
+    const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
+    expect(shell).toContain("ScePlatformBrandRail");
+    expect(shell).toContain("SceTenantContextRail");
+
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
-    expect(tenantBar).toContain("sce-global-brand-tenant-stack");
+    expect(tenantBar).toContain("tenant-row-rail");
     expect(tenantBar).not.toContain("sce-product-tenant-separator");
-    expect(tenantBar).toContain('layout="under-product"');
-    expect(tenantBar).toContain("data-tenant-under-sce=");
+    expect(tenantBar).toContain("sce-global-brand-tenant-stack");
   });
 
   it("uses header-crest tenant treatment without legacy navbar season pills", () => {

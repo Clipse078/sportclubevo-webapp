@@ -17,8 +17,8 @@
       var(--sce-shell-workspace-gutter)
   );
   --sce-nav-start-x: var(--sce-shell-workspace-start);
-  --topnav-height: 4.25rem;
-  --sce-nav-module-row-height: 2.75rem;
+  --topnav-height: 3.5rem;
+  --sce-nav-module-row-height: 2.625rem;
   --sce-nav-context-row-height: 2.125rem;
 }
 
@@ -80,6 +80,10 @@
   pointer-events: none;
 }
 
+.sce-nav-spine-row--sub .sce-nav-spine-brand-cell[data-sce-nav-brand-rail="occupied"] {
+  pointer-events: auto;
+}
+
 .sce-nav-spine-workspace-cell {
   display: flex;
   align-items: center;
@@ -96,8 +100,34 @@
   padding-left: 0.75rem;
 }
 
-/* ── Brand / tenant stack (product over club) ─────────────────────────────── */
+/* ── Platform / tenant identity rails ─────────────────────────────────────── */
 
+.sce-global-platform-brand-rail {
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.125rem 0;
+}
+
+.sce-global-platform-brand-rail .sce-global-sce-brand--wordmark img {
+  height: 1.5rem !important;
+  max-width: 9.5rem !important;
+}
+
+.sce-global-platform-brand-rail .sce-global-sce-brand--compact img {
+  height: 1.625rem !important;
+}
+
+.sce-global-tenant-row-rail {
+  min-height: 0;
+  width: 100%;
+}
+
+.sce-global-tenant-row-rail[data-tenant-layout="tenant-row-rail"] {
+  gap: 0.4375rem;
+}
+
+/* Mobile-only stacked product + tenant in row 1 */
 .sce-global-brand-tenant-stack {
   display: flex;
   flex-direction: column;
@@ -224,9 +254,9 @@
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
   .sce-global-module-nav {
-  border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
   min-height: var(--sce-nav-module-row-height);
-  background: color-mix(in srgb, var(--surface-1) 35%, var(--sce-app-chrome));
+  background: color-mix(in srgb, var(--surface-1) 32%, var(--sce-app-chrome));
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
