@@ -82,6 +82,7 @@ export function programmeItemToPersonalProgrammeItem(
     eventType: programmeKindToEventType(item.kind),
     ariaLabel: `${typeLabel}: ${title}`,
     canonicalPresentation: item.presentation,
+    programmeScopeTeamId: item.teamId,
   };
 }
 

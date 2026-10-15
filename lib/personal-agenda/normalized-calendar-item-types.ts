@@ -59,4 +59,6 @@ export type NormalizedCalendarItem = {
   activityPresentation?: SportingActivityPresentation;
   /** When set, personal calendar MICRO uses the same semantics as Team/Club programme. */
   canonicalPresentation?: SceActivityPresentationModel;
+  /** Programme scope team for canonical match opponent resolution (PERSON calendar). */
+  programmeScopeTeamId?: string | null;
 };

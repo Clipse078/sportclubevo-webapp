@@ -24,7 +24,10 @@ import { resolveSceTournamentPresentation } from "@/lib/sporting-activity-presen
 import { resolveSceTrainingPresentationFromLegacy } from "@/lib/sporting-activity-presentation/canonical/adapters/training";
 import { buildClubIdentity } from "@/lib/sporting-activity-design";
 import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
-import type { SceTrainingPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import type {
+  SceClubEventPresentationModel,
+  SceTrainingPresentationModel,
+} from "@/lib/sporting-activity-presentation/canonical/types";
 import { resolveSceClubEventPresentationFromLegacy } from "@/lib/sporting-activity-presentation/canonical/adapters/club-event";
 import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
 import { buildSceActivityRoute } from "@/lib/sporting-activity-presentation/canonical/route";
@@ -56,6 +59,21 @@ function attachTrainingTenantClubIdentity(
   presentation: SceTrainingPresentationModel,
   ctx: LoadContext,
 ): SceTrainingPresentationModel {
+  const displayName = ctx.tenantClubName.trim();
+  if (!displayName) return presentation;
+  return {
+    ...presentation,
+    tenantClub: buildClubIdentity({
+      displayName,
+      logoUrl: resolveTenantClubCrestUrl({ tenantLogoUrl: ctx.tenantLogoUrl }),
+    }),
+  };
+}
+
+function attachClubEventTenantClubIdentity(
+  presentation: SceClubEventPresentationModel,
+  ctx: LoadContext,
+): SceClubEventPresentationModel {
   const displayName = ctx.tenantClubName.trim();
   if (!displayName) return presentation;
   return {
@@ -495,9 +513,12 @@ async function loadClubEventProgrammeItems(
       eventType: "OTHER",
     });
 
-    const presentation = resolveSceClubEventPresentationFromLegacy(legacyPresentation, {
-      organiserDisplayName: event.organizerName ?? ctx.tenantClubName,
-    });
+    const presentation = attachClubEventTenantClubIdentity(
+      resolveSceClubEventPresentationFromLegacy(legacyPresentation, {
+        organiserDisplayName: event.organizerName ?? ctx.tenantClubName,
+      }),
+      ctx,
+    );
 
     const status = normalizeEventProgrammeStatus(event.status);
     const domainId = event.id;

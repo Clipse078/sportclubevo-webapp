@@ -211,7 +211,10 @@ function resolveProgrammeMicroIdentity(item: ProgrammeItem): Pick<
       return { identityLabel: item.kind };
     case "CLUB_EVENT":
       if (isSceClubEventPresentationModel(model)) {
-        return { identityLabel: model.eventTitle };
+        return {
+          identityLabel: model.eventTitle,
+          visualIdentity: calendarMicroVisualIdentityFromClub(model.tenantClub),
+        };
       }
       return { identityLabel: item.kind };
     default: {
@@ -417,7 +420,7 @@ function resolvePersonalCalendarMicroSemanticsFromCanonical(
     endsAt: item.endAt ?? null,
     allDay: item.allDay,
     presentation: model,
-    teamId: null,
+    teamId: item.programmeScopeTeamId ?? null,
     teamSeasonId: null,
     orgUnitId: null,
     navigationTarget: item.deepLink ?? "#",

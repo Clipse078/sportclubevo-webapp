@@ -52,6 +52,8 @@ export type PersonalProgrammeItem = {
   activityPresentation?: SportingActivityPresentation;
   /** Programme Engine SCE presentation — preferred for calendar MICRO (01I). */
   canonicalPresentation?: SceActivityPresentationModel;
+  /** Participating / scoped SCE team id for PERSON-scope match opponent resolution (01I R6.5). */
+  programmeScopeTeamId?: string | null;
 };
 
 export function eventTypeToProgrammeSourceType(type: EventType): PersonalProgrammeSourceType {

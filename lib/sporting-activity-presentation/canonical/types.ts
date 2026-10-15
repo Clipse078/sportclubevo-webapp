@@ -142,6 +142,8 @@ export type SceClubEventPresentationModel = SceActivityPresentationBase & {
   kind: "CLUB_EVENT";
   eventTitle: string;
   organiser?: ClubIdentity;
+  /** Tenant club crest for MICRO identity (distinct from optional event organiser). */
+  tenantClub?: ClubIdentity;
   audience?: SceClubEventAudiencePresentation;
 };
 

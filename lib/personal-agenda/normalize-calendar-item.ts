@@ -54,6 +54,7 @@ export function normalizePersonalProgrammeItem(item: PersonalProgrammeItem): Nor
     ariaLabel: item.ariaLabel,
     activityPresentation: item.activityPresentation,
     canonicalPresentation: item.canonicalPresentation,
+    programmeScopeTeamId: item.programmeScopeTeamId,
   };
 }
 
@@ -112,6 +113,7 @@ export function normalizedCalendarItemToProgrammeItem(
     ariaLabel: item.ariaLabel,
     activityPresentation: item.activityPresentation,
     canonicalPresentation: item.canonicalPresentation,
+    programmeScopeTeamId: item.programmeScopeTeamId,
   };
 }
 
