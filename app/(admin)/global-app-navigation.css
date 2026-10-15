@@ -17,14 +17,30 @@
       var(--sce-shell-workspace-gutter)
   );
   --sce-nav-start-x: var(--sce-shell-workspace-start);
-  --topnav-height: 3.5rem;
-  --sce-nav-module-row-height: 2.625rem;
+  --sce-page-gutter: 1rem;
+  --sce-page-max-width-dashboard: 87.5rem;
+  --sce-page-max-width-readable: 75rem;
+  --topnav-height: 3.25rem;
+  --sce-nav-module-row-height: 2.375rem;
   --sce-context-nav-panel-z: 45;
 }
 
 @media (min-width: 768px) {
   [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
     --sce-shell-outer-inline-padding: 1.25rem;
+    --sce-page-gutter: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
+    --sce-page-gutter: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
+    --sce-page-gutter: 2rem;
   }
 }
 
@@ -32,7 +48,8 @@
   position: relative;
   z-index: 0;
   background: var(--sce-app-chrome);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--foreground) 4%, transparent);
 }
 
 /* ── Shared navigation spine (brand rail | workspace | utilities) ─────────── */
@@ -182,10 +199,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.375rem;
-  height: 1.375rem;
+  width: 1.25rem;
+  height: 1.25rem;
   color: currentColor;
-  opacity: 0.88;
+  opacity: 0.86;
 }
 
 .sce-global-primary-nav-item--active .sce-global-primary-nav-domain-icon {
@@ -201,8 +218,8 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 2.5rem;
-  padding: 0 0.75rem;
+  min-height: 2.375rem;
+  padding: 0 0.625rem;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 700;
@@ -261,6 +278,7 @@
 
 .sce-global-header-utilities {
   flex-shrink: 0;
+  min-height: var(--topnav-height);
 }
 
 .sce-global-primary-nav-overflow {
@@ -460,6 +478,28 @@
 
 .sce-global-season-switcher-label {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sce-global-season-switcher--icon-only .sce-global-season-switcher-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sce-global-header-utilities .sce-icon-button,
+.sce-global-header-utilities .sce-global-season-switcher {
+  min-height: 2.25rem;
+}
+
+.sce-global-nav-explorer-trigger {
+  color: var(--text-2);
 }
 
 [data-sce-mobile-bottom-nav].sce-mobile-bottom-nav {
@@ -503,76 +543,57 @@
   color: var(--sce-primary);
 }
 
-/* ── Application page grid (brand rail + shared workspace column) ─────────── */
+/* ── Application page grid (independent from navigation identity rail) ─────── */
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
   .sce-app-shell-page-grid {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
   flex: 1;
-  grid-template-columns: var(--sce-shell-rail-width) minmax(0, 1fr);
-  padding-inline: var(--sce-shell-outer-inline-padding);
-  column-gap: 0;
-}
-
-[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-  .sce-app-shell-rail-spacer {
-  min-width: 0;
-  max-width: var(--sce-shell-rail-width);
-  pointer-events: none;
+  padding-inline: var(--sce-page-gutter);
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
   .sce-app-shell-workspace {
   min-width: 0;
-  padding-left: var(--sce-shell-workspace-gutter);
+  width: 100%;
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
   [data-sce-page-shell] {
-  max-width: none;
+  width: 100%;
   margin-inline: 0;
   padding-inline: 0;
 }
 
-@media (max-width: 767px) {
-  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-    .sce-app-shell-page-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  [data-sce-page-shell][data-sce-page-width="operational"] {
+  max-width: none;
+}
 
-  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-    .sce-app-shell-rail-spacer {
-    display: none;
-  }
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  [data-sce-page-shell][data-sce-page-width="readable"] {
+  max-width: var(--sce-page-max-width-readable);
+  margin-inline: auto;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  [data-sce-page-shell][data-sce-page-width="dashboard"] {
+  max-width: var(--sce-page-max-width-dashboard);
+  margin-inline: auto;
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
   .sce-app-shell-full-bleed-surface {
-  margin-left: calc(-1 * (var(--sce-shell-workspace-gutter) + var(--sce-shell-rail-width)));
-  margin-right: calc(-1 * var(--sce-shell-outer-inline-padding));
-  width: calc(
-    100% + var(--sce-shell-workspace-gutter) + var(--sce-shell-rail-width) +
-      var(--sce-shell-outer-inline-padding)
-  );
-}
-
-@media (max-width: 767px) {
-  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
-    .sce-app-shell-full-bleed-surface {
-    margin-left: calc(-1 * (var(--sce-shell-outer-inline-padding) + var(--sce-shell-workspace-gutter)));
-    margin-right: calc(-1 * var(--sce-shell-outer-inline-padding));
-    width: calc(
-      100% + (2 * var(--sce-shell-outer-inline-padding)) + var(--sce-shell-workspace-gutter)
-    );
-  }
+  margin-inline: calc(-1 * var(--sce-page-gutter));
+  width: calc(100% + (2 * var(--sce-page-gutter)));
 }
 
 [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
   .sce-app-shell-full-bleed-inner {
-  padding-left: var(--sce-shell-workspace-gutter);
-  padding-right: var(--sce-shell-outer-inline-padding);
+  padding-inline: var(--sce-page-gutter);
 }
 
 .sce-app-main-with-mobile-nav {

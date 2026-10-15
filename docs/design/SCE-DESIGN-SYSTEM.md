@@ -529,6 +529,24 @@ Three explicit levels in the authenticated shell header — **must not look equa
 
 Styles: `app/(admin)/global-app-navigation.css` · Shell composer: `components/admin/layout/AppShellNavigation.tsx`.
 
+### Page shell vs navigation grid (NAVBAR-UPGRADE-01-R8)
+
+**Navigation grid** (Row 1 / Row 2 only): brand or tenant identity rail (`--sce-nav-brand-rail-width`) + navigation workspace + utilities. Horizontal alignment for L1/L2 uses `--sce-shell-workspace-start` inside the header — **not** for page bodies.
+
+**Page grid** (`SceApplicationPageGrid` + `PageShell`): responsive horizontal gutters via `--sce-page-gutter` (16px mobile → 32px large desktop). Page content is **never** offset by the navigation brand rail.
+
+**Width modes** (`data-sce-page-width` on `PageShell`):
+
+| Mode | Use |
+|------|-----|
+| `operational` | Wochenplaner, dense planners — full width within gutters |
+| `readable` | Default admin pages — optional max-width (~75rem) |
+| `dashboard` | Card home — centered max-width (~87.5rem) |
+
+Rule (canonical): *Navigation identity rails never dictate the left edge of application page content. Pages use canonical responsive page gutters and an appropriate content-width mode.*
+
+Implementation: `lib/shell/sce-page-layout.ts` · `components/sce/shell/SceApplicationPageGrid.tsx`.
+
 ---
 
 ## Related documents

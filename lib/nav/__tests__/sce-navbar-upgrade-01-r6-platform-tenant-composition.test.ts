@@ -55,11 +55,12 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(spine).toContain('data-sce-nav-brand-rail={brand ? "occupied" : "spacer"}');
   });
 
-  it("preserves R5 canonical application grid and shared workspace start", () => {
+  it("preserves navigation spine tokens and R8 decoupled page grid", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toContain(SCE_SHELL_RAIL_WIDTH_VAR);
     expect(css).toContain(SCE_SHELL_WORKSPACE_START_VAR);
     expect(css).toContain("sce-app-shell-page-grid");
+    expect(css).toContain("--sce-page-gutter");
     expect(css).not.toContain("max-w-screen-xl");
 
     const layout = readRelative("app/(admin)/layout.tsx");

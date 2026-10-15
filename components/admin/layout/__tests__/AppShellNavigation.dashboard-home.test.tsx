@@ -45,7 +45,7 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
 }));
 
 describe("AppShellNavigation dashboard home", () => {
-  it("hides Row 2, omits dashboard from L1, and exposes platform home link", () => {
+  it("shows Row 2 tenant context with empty workspace, omits dashboard from L1, and exposes platform home link", () => {
     render(
       <AppShellNavigation
         permissionKeys={Object.values(PERMISSIONS)}
@@ -57,7 +57,8 @@ describe("AppShellNavigation dashboard home", () => {
       />,
     );
 
-    expect(screen.queryByTestId("domain-secondary-nav")).not.toBeInTheDocument();
+    expect(screen.getByTestId("domain-secondary-nav")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-row2-context-workspace-empty")).toBeInTheDocument();
     const primaryNav = screen.getByTestId("sce-primary-navigation");
     expect(
       within(primaryNav).queryByRole("link", { name: /domains.dashboard/i }),

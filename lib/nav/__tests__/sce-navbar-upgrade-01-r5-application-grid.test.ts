@@ -69,17 +69,18 @@ describe("SCE-NAVBAR-UPGRADE-01-R5 application grid", () => {
     expect(css).toContain(".sce-app-shell-full-bleed-inner");
   });
 
-  it("does not preserve desktop empty rail on mobile", () => {
+  it("uses page gutters on mobile without navigation rail spacer column", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).toMatch(
-      /@media \(max-width: 767px\)[\s\S]*\.sce-app-shell-rail-spacer[\s\S]*display:\s*none/,
+      /\.sce-app-shell-page-grid[\s\S]*padding-inline:\s*var\(--sce-page-gutter\)/,
     );
+    expect(css).not.toContain(".sce-app-shell-rail-spacer");
   });
 
   it("does not introduce a parallel layout framework", () => {
     const grid = readRelative("components/sce/shell/SceApplicationPageGrid.tsx");
     expect(grid).toContain(SCE_APP_SHELL_PAGE_GRID_CLASS);
-    expect(grid).toContain(SCE_APP_SHELL_RAIL_SPACER_CLASS);
+    expect(grid).not.toContain(SCE_APP_SHELL_RAIL_SPACER_CLASS);
     expect(grid).toContain(SCE_APP_SHELL_WORKSPACE_CLASS);
     expect(grid).not.toContain("Sidebar");
   });

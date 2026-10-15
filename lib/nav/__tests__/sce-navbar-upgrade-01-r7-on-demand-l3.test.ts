@@ -46,7 +46,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(tenant).toContain("sce-tenant-home-link");
   });
 
-  it("does not render Row 2 on dashboard home and avoids false L1 active domain", () => {
+  it("keeps Row 2 on dashboard with empty L2 workspace and avoids false L1 active domain", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const active = resolveActiveAppNavigation("/dashboard", model);
     expect(active.activeDomainId).toBe("dashboard");
@@ -54,7 +54,8 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(active.moduleLocalChildren).toEqual([]);
 
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shell).toContain('active.activeDomainId !== "dashboard"');
+    expect(shell).toContain("SceTenantContextRow");
+    expect(shell).toContain("showDomainModuleNav");
     expect(shell).toContain('if (active.activeDomainId === "dashboard") return false');
   });
 
@@ -86,8 +87,9 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     expect(css).toMatch(/@media \(max-width: 1279px\)[\s\S]*sce-global-primary-nav-item/);
 
     const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain("min-[1280px]:flex");
-    expect(utilities).toContain("compact");
+    expect(utilities).toContain('displayMode="wide"');
+    expect(utilities).toContain('displayMode="medium"');
+    expect(utilities).toContain('displayMode="icon"');
     expect(utilities).toContain("data-sce-utilities-tier");
   });
 

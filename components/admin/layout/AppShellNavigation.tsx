@@ -45,6 +45,7 @@ import {
   ScePlatformBrandRail,
   SceTenantContextRail,
   SceTenantIdentityBar,
+  SceTenantContextRow,
 } from "@/components/sce/navigation";
 
 type AppShellNavigationProps = {
@@ -147,6 +148,21 @@ function AppShellNavigationInner({
   );
 
   const homeHref = resolveHref("/dashboard");
+
+  const tenantContextRail = (
+    <SceTenantContextRail
+      displayClubName={displayClubName}
+      logoUrl={logoUrl}
+      platformWorkspace={isPlatformWorkspace}
+      className="hidden md:flex"
+      homeHref={isPlatformWorkspace ? undefined : homeHref}
+    />
+  );
+
+  const showDomainModuleNav =
+    Boolean(active.activeDomain) &&
+    active.activeDomainId !== "dashboard" &&
+    active.domainSecondaryItems.length > 0;
 
   const showGlobalNavExplorer =
     layoutTier !== "desktop" ||
@@ -273,12 +289,10 @@ function AppShellNavigationInner({
           }
         />
 
-        {active.activeDomain &&
-        active.activeDomainId !== "dashboard" &&
-        active.domainSecondaryItems.length > 0 ? (
+        {showDomainModuleNav ? (
           <SceModuleNavigation
             ariaLabel={t("moduleNavAria")}
-            domain={active.activeDomain}
+            domain={active.activeDomain!}
             items={active.domainSecondaryItems}
             resolveHref={resolveHref}
             isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
@@ -291,17 +305,11 @@ function AppShellNavigationInner({
               )
             }
             onNavigateSibling={navigateToModuleLocalSibling}
-            brand={
-              <SceTenantContextRail
-                displayClubName={displayClubName}
-                logoUrl={logoUrl}
-                platformWorkspace={isPlatformWorkspace}
-                className="hidden md:flex"
-                homeHref={isPlatformWorkspace ? undefined : homeHref}
-              />
-            }
+            brand={tenantContextRail}
           />
-        ) : null}
+        ) : (
+          <SceTenantContextRow ariaLabel={t("moduleNavAria")} brand={tenantContextRail} />
+        )}
       </header>
 
       <nav

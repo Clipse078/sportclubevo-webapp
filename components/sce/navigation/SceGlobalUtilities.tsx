@@ -44,6 +44,13 @@ export function SceGlobalUtilities({
   trailingSlot,
   showGlobalNavExplorer = true,
 }: SceGlobalUtilitiesProps) {
+  const seasonProps = {
+    activeSeasonLabel,
+    activeSeasonKey,
+    selectedSeasonKey,
+    switchLabel: seasonSwitchLabel,
+  };
+
   return (
     <div
       className="flex min-w-0 shrink-0 items-center gap-0.5 sce-global-header-utilities md:gap-1"
@@ -52,22 +59,14 @@ export function SceGlobalUtilities({
     >
       {!platformWorkspace ? (
         <>
-          <div className="hidden min-[1280px]:flex">
-            <SceGlobalSeasonSwitcher
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeasonKey}
-              switchLabel={seasonSwitchLabel}
-            />
+          <div className="hidden min-[1536px]:flex">
+            <SceGlobalSeasonSwitcher {...seasonProps} displayMode="wide" />
+          </div>
+          <div className="hidden min-[1280px]:flex min-[1536px]:hidden">
+            <SceGlobalSeasonSwitcher {...seasonProps} displayMode="medium" />
           </div>
           <div className="hidden md:flex min-[1280px]:hidden">
-            <SceGlobalSeasonSwitcher
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeasonKey}
-              switchLabel={seasonSwitchLabel}
-              compact
-            />
+            <SceGlobalSeasonSwitcher {...seasonProps} displayMode="icon" />
           </div>
         </>
       ) : null}
@@ -76,7 +75,7 @@ export function SceGlobalUtilities({
         <button
           type="button"
           className={cn(
-            "sce-icon-button sce-global-nav-explorer-trigger min-h-[2.75rem] min-w-[2.75rem]",
+            "sce-icon-button sce-global-nav-explorer-trigger min-h-[2.25rem] min-w-[2.25rem]",
             globalNavDrawerOpen && "sce-global-primary-nav-item--active",
           )}
           aria-label={openDrawerLabel}
@@ -85,7 +84,7 @@ export function SceGlobalUtilities({
           data-testid="global-nav-hamburger"
           onClick={onToggleDrawer}
         >
-          <Menu className="h-5 w-5" aria-hidden="true" />
+          <Menu className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
         </button>
       ) : null}
 
