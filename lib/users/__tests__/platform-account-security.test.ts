@@ -104,10 +104,10 @@ describe("platform account lifecycle safety", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           isActive: false,
-          passwordChangedAt: expect.any(Date),
         }),
       }),
     );
+    expect(mocks.userUpdate.mock.calls[0]?.[0]?.data?.passwordChangedAt).toBeUndefined();
     expect(mocks.auditLogCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         actorUserId: "actor",
@@ -140,10 +140,10 @@ describe("platform account lifecycle safety", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           email: "new-admin@example.test",
-          passwordChangedAt: expect.any(Date),
         }),
       }),
     );
+    expect(mocks.userUpdate.mock.calls[0]?.[0]?.data?.passwordChangedAt).toBeUndefined();
   });
 
   it("rejects an invalid privileged identity before opening a transaction", () => {

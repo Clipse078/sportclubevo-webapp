@@ -15,11 +15,32 @@ describe("protected credential mutation", () => {
     ).toThrow(/protected identity/i);
   });
 
-  it("allows interactive context for protected identity", () => {
+  it("allows USER_CHANGE intent in interactive context for protected identity", () => {
     expect(() =>
       assertProtectedCredentialMutationAllowed("it@fcallschwil.ch", {
         isCreate: false,
         context: "interactive",
+        intent: "USER_CHANGE",
+      }),
+    ).not.toThrow();
+  });
+
+  it("blocks ADMIN_RESET for protected identity", () => {
+    expect(() =>
+      assertProtectedCredentialMutationAllowed("it@fcallschwil.ch", {
+        isCreate: false,
+        context: "automated",
+        intent: "ADMIN_RESET",
+      }),
+    ).toThrow(/protected identity/i);
+  });
+
+  it("allows EMERGENCY_RECOVERY for protected identity", () => {
+    expect(() =>
+      assertProtectedCredentialMutationAllowed("it@fcallschwil.ch", {
+        isCreate: false,
+        context: "automated",
+        intent: "EMERGENCY_RECOVERY",
       }),
     ).not.toThrow();
   });

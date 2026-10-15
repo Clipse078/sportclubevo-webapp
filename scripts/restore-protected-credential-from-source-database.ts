@@ -17,6 +17,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
+import { applyAuthorizedCredentialUpdate } from "@/lib/auth/authorized-credential-update";
 import {
   getDatabaseFingerprintFromUrl,
   resolveDeploymentIdentity,
@@ -82,12 +83,21 @@ async function main(): Promise<void> {
       return;
     }
 
-    await targetPrisma.user.update({
-      where: { id: targetUser.id },
-      data: {
+    await targetPrisma.$transaction(async (tx) => {
+      await applyAuthorizedCredentialUpdate(tx, {
+        userId: targetUser.id,
+        email,
         passwordHash: sourceUser.passwordHash,
-        passwordChangedAt: sourceUser.passwordChangedAt,
-      },
+        intent: "EMERGENCY_RECOVERY",
+        operatorId: process.env.EMERGENCY_RESTORE_OPERATOR_ID?.trim() ?? "restore-from-source-database",
+        auditAction: "EMERGENCY_PITR_CREDENTIAL_RESTORE",
+      });
+      if (sourceUser.passwordChangedAt) {
+        await tx.user.update({
+          where: { id: targetUser.id },
+          data: { passwordChangedAt: sourceUser.passwordChangedAt },
+        });
+      }
     });
 
     console.log(

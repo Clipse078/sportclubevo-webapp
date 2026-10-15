@@ -28,6 +28,8 @@
     "acceptance:verify-fixture-passwords": "tsx scripts/acceptance-verify-fixture-passwords.ts",
     "acceptance:security-smoke": "tsx scripts/acceptance-security-smoke.ts",
     "db:break-glass-superadmin": "tsx scripts/break-glass-superadmin-password.ts",
+    "stage:emergency-restore-po-credential": "tsx scripts/emergency-restore-po-supplied-credential.ts",
+    "stage:verify-credential-contract": "tsx scripts/verify-stage-credential-contract.ts",
     "sync-workspace-permissions": "tsx scripts/sync-workspace-permissions.ts",
     "sync-training-permissions": "tsx scripts/sync-training-permissions.ts",
     "sync-task-permissions": "tsx scripts/sync-task-permissions.ts",

@@ -6,6 +6,7 @@
  * with context "interactive" and skip the automated block.
  */
 
+import type { PasswordMutationIntent } from "@/lib/auth/password-mutation-intent";
 import {
   assertProtectedAuthAllowed,
   evaluateProtectedAuthGuard,
@@ -18,10 +19,14 @@ export function assertProtectedCredentialMutationAllowed(
   options: {
     isCreate: boolean;
     context: CredentialMutationContext;
+    intent?: PasswordMutationIntent;
   },
   processEnv: NodeJS.ProcessEnv = process.env,
 ): void {
-  if (options.context === "interactive") {
+  if (options.intent === "EMERGENCY_RECOVERY") {
+    return;
+  }
+  if (options.context === "interactive" && options.intent === "USER_CHANGE") {
     return;
   }
   assertProtectedAuthAllowed(email, { isCreate: options.isCreate }, processEnv);
