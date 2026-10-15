@@ -3,7 +3,8 @@ import type { ProgrammeCalendarMicroEntry } from "@/lib/programme-engine/program
 
 /**
  * Canonical month-grid calendar tile contract (presentation-only).
- * Domain models (Training, Match, Task, …) adapt into this shape via scope-specific builders.
+ * Semantic ownership: typeLabel, timeLabel, identityLabel, locationLabel, status (cancelled flag).
+ * Domain models adapt into this shape via scope-specific builders — one fact per slot, no duplication.
  */
 export type SceCalendarMicroEntry = ProgrammeCalendarMicroEntry;
 

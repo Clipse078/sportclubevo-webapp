@@ -37,10 +37,12 @@ export function ProgrammeCalendarMicroEntry({ entry }: Props) {
         {entry.timeLabel}
       </span>
       <span className="block truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
-        {entry.title}
+        {entry.identityLabel ?? entry.title}
       </span>
-      {entry.contextLine ? (
-        <span className="block truncate text-[0.5rem] text-[var(--text-2)]">{entry.contextLine}</span>
+      {(entry.locationLabel ?? entry.contextLine) ? (
+        <span className="block truncate text-[0.5rem] text-[var(--text-2)]">
+          {entry.locationLabel ?? entry.contextLine}
+        </span>
       ) : null}
     </Link>
   );

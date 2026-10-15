@@ -1,7 +1,10 @@
 import { formatFixtureTime } from "@/components/admin/teams/upcoming-matches/team-upcoming-matches-formatters";
 import type { ProgrammeCalendarMicroEntry } from "@/lib/programme-engine/programme-calendar-presentation";
 import { getCalendarItemPresentation } from "@/lib/personal-agenda/calendar-item-presentation";
-import { buildCalendarEventBlockLines } from "@/lib/personal-agenda/calendar-event-block-lines";
+import {
+  buildCalendarMicroAccessibleLabel,
+  resolvePersonalCalendarMicroSemantics,
+} from "@/lib/calendar/sce-calendar-engine/calendar-micro-semantics";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 import { mapCalendarSemanticTypeToProgrammeSource } from "@/lib/personal-agenda/map-calendar-semantic-to-programme-source";
 import { resolvePersonalCalendarDayMarkerSlots } from "@/lib/personal-agenda/personal-calendar-day-marker-slots";
@@ -10,17 +13,6 @@ import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { PROGRAMME_CALENDAR_VISIBLE_ENTRIES } from "@/lib/programme-engine/programme-calendar-presentation";
 
 const TASK_TYPE_LABEL = "AUFGABE";
-
-function resolvePersonalMicroTitle(item: NormalizedCalendarItem): string {
-  const lines = buildCalendarEventBlockLines(item);
-  if (item.semanticType === "MATCH") {
-    return lines.secondary?.trim() || lines.primary;
-  }
-  if (item.semanticType === "TASK") {
-    return lines.primary;
-  }
-  return lines.secondary?.trim() || lines.primary || item.title;
-}
 
 function resolvePersonalMicroTypeLabel(item: NormalizedCalendarItem): string {
   if (item.semanticType === "TASK") {
@@ -55,18 +47,14 @@ export function buildPersonalCalendarMicroEntry(
   const palette = getCalendarItemPresentation(item.semanticType);
   const typeLabel = resolvePersonalMicroTypeLabel(item);
   const timeLabel = resolvePersonalMicroTimeLabel(item, timeLabelById, fmtCfg);
-  const title = resolvePersonalMicroTitle(item);
-  const lines = buildCalendarEventBlockLines(item, {
-    tenantDisplayNames: options.tenantDisplayNames,
-  });
-  const contextLine =
-    item.semanticType === "TASK"
-      ? undefined
-      : lines.secondary && lines.secondary !== title
-        ? lines.secondary
-        : item.location?.trim() || undefined;
+  const { identityLabel, locationLabel } = resolvePersonalCalendarMicroSemantics(item);
   const href = item.deepLink ?? "#";
-  const accessibleLabel = [typeLabel, timeLabel, title, contextLine].filter(Boolean).join(", ");
+  const accessibleLabel = buildCalendarMicroAccessibleLabel({
+    typeLabel,
+    timeLabel,
+    identityLabel,
+    locationLabel,
+  });
   const cancelled =
     item.status === "cancelled" || item.status === "postponed" || item.taskStatus === "CANCELLED";
 
@@ -86,8 +74,10 @@ export function buildPersonalCalendarMicroEntry(
     kind,
     typeLabel,
     timeLabel,
-    title,
-    contextLine,
+    identityLabel,
+    locationLabel,
+    title: identityLabel,
+    contextLine: locationLabel,
     href,
     accessibleLabel,
     paletteKey: palette.paletteKey,

@@ -2,7 +2,10 @@ import { formatFixtureTime } from "@/components/admin/teams/upcoming-matches/tea
 import type { PersonalProgrammeSourceType } from "@/lib/personal-agenda/personal-programme-types";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { resolvePersonalCalendarDayMarkerSlots } from "@/lib/personal-agenda/personal-calendar-day-marker-slots";
-import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
+import {
+  buildCalendarMicroAccessibleLabel,
+  resolveProgrammeCalendarMicroSemantics,
+} from "@/lib/calendar/sce-calendar-engine/calendar-micro-semantics";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { sortProgrammeItems } from "./programme-sort";
 import type { ProgrammeActivityKind, ProgrammeItem } from "./types";
@@ -23,8 +26,13 @@ export type ProgrammeCalendarMicroEntry = {
   kind: ProgrammeCalendarMicroEntryKind;
   typeLabel: string;
   timeLabel: string;
+  /** Team / fixture / event identity (one owner). */
+  identityLabel: string;
+  /** Compact location / resource (one owner). */
+  locationLabel?: string;
+  /** @deprecated Use identityLabel — kept for transitional consumers. */
   title: string;
-  /** Optional second line (location/resource) when micro density allows. */
+  /** @deprecated Use locationLabel — kept for transitional consumers. */
   contextLine?: string;
   href: string;
   accessibleLabel: string;
@@ -40,39 +48,6 @@ export function programmeKindToCalendarSourceType(
 ): PersonalProgrammeSourceType {
   if (kind === "CLUB_EVENT") return "EVENT";
   return kind;
-}
-
-function resolveMicroTitle(item: ProgrammeItem): string {
-  const model = item.presentation;
-  switch (item.kind) {
-    case "MATCH":
-      if (model.kind !== "MATCH") return item.kind;
-      return `vs ${model.fixture.away.displayName}`;
-    case "TRAINING":
-      if (model.kind !== "TRAINING") return item.kind;
-      return model.team?.name?.trim() || model.trainingTitle;
-    case "TOURNAMENT":
-      if (model.kind !== "TOURNAMENT") return item.kind;
-      return model.tournamentTitle;
-    case "CLUB_EVENT":
-      if (model.kind !== "CLUB_EVENT") return item.kind;
-      return model.eventTitle;
-    default: {
-      const _exhaustive: never = item.kind;
-      return _exhaustive;
-    }
-  }
-}
-
-function resolveMicroContextLine(item: ProgrammeItem): string | undefined {
-  const model = item.presentation;
-  if (!model || typeof model !== "object" || !("location" in model)) {
-    return undefined;
-  }
-  const location = (model as { location?: Parameters<typeof formatSceActivityLocationHierarchy>[0] })
-    .location;
-  if (!location) return undefined;
-  return formatSceActivityLocationHierarchy(location, { includeHostClub: false });
 }
 
 function isCancelledItem(item: ProgrammeItem): boolean {
@@ -93,17 +68,23 @@ export function buildProgrammeCalendarMicroEntry(
     ? "Ganztägig"
     : formatFixtureTime(item.startsAt, fmtCfg);
   const typeLabel = KIND_TYPE_LABEL[item.kind];
-  const title = resolveMicroTitle(item);
-  const contextLine = resolveMicroContextLine(item);
-  const accessibleLabel = [typeLabel, timeLabel, title, contextLine].filter(Boolean).join(", ");
+  const { identityLabel, locationLabel } = resolveProgrammeCalendarMicroSemantics(item);
+  const accessibleLabel = buildCalendarMicroAccessibleLabel({
+    typeLabel,
+    timeLabel,
+    identityLabel,
+    locationLabel,
+  });
 
   return {
     id: item.id,
     kind: item.kind,
     typeLabel,
     timeLabel,
-    title,
-    contextLine,
+    identityLabel,
+    locationLabel,
+    title: identityLabel,
+    contextLine: locationLabel,
     href: item.navigationTarget,
     accessibleLabel,
     paletteKey: palette.paletteKey,
