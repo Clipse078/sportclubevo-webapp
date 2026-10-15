@@ -531,7 +531,7 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 
 **Accessibility**
 
-- Distinct `nav` landmarks: `primaryNavAria`, `moduleNavAria`, `contextNavAria`.
+- Distinct `nav` landmarks: `primaryNavAria` (Row 1 L1), `moduleNavAria` (Row 2 platform bar), `mobilePrimaryNavAria` (bottom nav). On-demand L2/L3 uses `SceDomainNavigationPanel` with domain-scoped `aria-label` (not a permanent context row).
 - `aria-current="page"` on active links (`SceNavigationItem`).
 - Visible `:focus-visible` rings on all levels; overflow menu is keyboard-operable native links.
 

@@ -25,8 +25,8 @@ const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS) as PermissionKey[];
 describe("SCE-NAV-IA-V2-01 foundation", () => {
   it("recalculates club-admin navigation completeness baseline on STAGE", () => {
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(60);
-    expect(baseline.reachableDestinations).toBe(60);
+    expect(baseline.visibleDestinations).toBe(63);
+    expect(baseline.reachableDestinations).toBe(63);
     expect(baseline.orphanedDestinations).toEqual([]);
     expect(baseline.duplicateDestinations.length).toBeGreaterThan(0);
   });
@@ -43,7 +43,7 @@ describe("SCE-NAV-IA-V2-01 foundation", () => {
   it("closes organisation → club migration with REVIEW = 0", () => {
     const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
     const migration = buildOrganisationMigrationRecords(inventory);
-    expect(migration.length).toBe(15);
+    expect(migration.length).toBe(14);
     const review = migration.filter((row) => row.disposition === "REVIEW");
     expect(review).toEqual([]);
     const toClub = migration.filter((row) => row.disposition === "MOVE_TO_CLUB");
@@ -83,7 +83,7 @@ describe("SCE-NAV-IA-V2-01 foundation", () => {
     };
     const outPath = join(process.cwd(), "docs/navigation/SCE-NAV-IA-V2-01-target-ia-matrix.json");
     writeFileSync(outPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-    expect(matrix.length).toBe(60);
+    expect(matrix.length).toBe(63);
   });
 
   it("has no unexpected unregistered authenticated static routes after exclusions", () => {

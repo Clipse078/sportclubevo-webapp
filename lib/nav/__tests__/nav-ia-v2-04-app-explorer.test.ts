@@ -58,7 +58,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Publizieren");
   });
 
-  it("groups Club explorer destinations into six L2 groups without Administration (moved to Admin L1)", () => {
+  it("groups Club explorer destinations into seven L2 groups without Administration (moved to Admin L1)", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const groups = resolveExplorerDomainGroups(club)!;
     expect(groups.map((group) => group.label)).toEqual([
@@ -67,6 +67,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
       "Mitgliedschaft",
       "Vereinsentwicklung",
       "Club-Betrieb",
+      "Dokumente",
       "Finanzen & Partnerschaften",
     ]);
     expect(groups.some((group) => group.id === "administration")).toBe(false);
@@ -125,7 +126,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
       expect(explorerKeys.has(leaf.key), `explorer module tree missing ${leaf.key}`).toBe(true);
       expect(searchKeys.has(leaf.key), `search index missing ${leaf.key}`).toBe(true);
     }
-    expect(leaves.length).toBe(62);
+    expect(leaves.length).toBe(63);
   });
 
   it("does not hide Admin L1 destinations from explorer", () => {
@@ -200,8 +201,8 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
 
   it("maintains V2 completeness and matrix regression gates", () => {
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(62);
-    expect(baseline.reachableDestinations).toBe(62);
+    expect(baseline.visibleDestinations).toBe(63);
+    expect(baseline.reachableDestinations).toBe(63);
     expect(baseline.orphanedDestinations).toEqual([]);
 
     const sections = getVisibleNavSections(CLUB_ADMIN_KEYS, "club");

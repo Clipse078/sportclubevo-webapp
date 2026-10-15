@@ -131,7 +131,9 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     const item = readRelative("components/sce/navigation/SceNavigationItem.tsx");
     expect(item).toContain('aria-current={isActive ? "page" : undefined}');
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shellNav).toContain("isItemActive");
+    expect(shellNav).toContain("isDomainActive");
+    expect(shellNav).toContain("isDomainSecondaryItemActive");
+    expect(shellNav).toContain("isModuleLocalChildPrimaryActive");
   });
 
   it("excludes public, infoboard display, and auth surfaces from shell nav scope", () => {
@@ -160,7 +162,8 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     expect(shellNav).toContain('useTranslations("AppShell")');
     expect(shellNav).toContain('t("primaryNavAria")');
     expect(shellNav).toContain('t("moduleNavAria")');
-    expect(shellNav).toContain('t("contextNavAria")');
+    expect(shellNav).toContain("SceDomainNavigationPanel");
+    expect(shellNav).toContain('t("mobilePrimaryNavAria")');
   });
 
   it("derives Planning children from canonical nav-config", () => {

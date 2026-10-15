@@ -1,4 +1,7 @@
 {
+  "programme": "SCE-NAV-IA-V2-01",
+  "generatedFrom": "lib/nav/nav-config.ts",
+  "clubAdminPermissionCount": 125,
   "destinations": [
     {
       "key": "dashboard",
@@ -34,11 +37,13 @@
         "mobileEligible": true
       },
       "permissionKeys": [
+        "planning.allocations.view",
+        "planning.allocations.manage",
         "trainings.view",
         "trainings.manage",
-        "trainings.delete",
         "events.view",
-        "events.manage"
+        "events.manage",
+        "trainings.delete"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -60,6 +65,8 @@
         "mobileEligible": true
       },
       "permissionKeys": [
+        "planning.allocations.view",
+        "planning.allocations.manage",
         "trainings.view",
         "trainings.manage",
         "events.view",
@@ -75,7 +82,7 @@
       "route": "/dashboard/programm",
       "label": "Vereinsprogramm",
       "labelV2": "Vereinsprogramm",
-      "icon": "programme",
+      "icon": "calendar",
       "targetL1": "planung",
       "targetL2": "Sport & Termine",
       "targetLocalGroup": "planung",
@@ -94,7 +101,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "SCE-ACTIVITY-CREATE-01I: canonical Vereinsprogramm engine surface."
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
     },
     {
       "key": "trainingcenter",
@@ -528,7 +535,10 @@
         "mobileEligible": true
       },
       "permissionKeys": [
-        "users.manage_memberships"
+        "users.manage_memberships",
+        "communication.club.view",
+        "communication.club.send",
+        "communication.inbox.view"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -627,29 +637,6 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
-      "key": "workspace",
-      "route": "/dashboard/workspace",
-      "label": "Dokumente",
-      "labelV2": "Dokumente",
-      "icon": "documents",
-      "targetL1": "kommunikation",
-      "targetL2": "Dokumente",
-      "targetLocalGroup": null,
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "workspace.view",
-        "workspace.manage"
-      ],
-      "classification": "SECONDARY_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
       "key": "website",
       "route": "/dashboard/website",
       "label": "Website",
@@ -664,6 +651,10 @@
         "mobileEligible": true
       },
       "permissionKeys": [
+        "website.view",
+        "website.manage",
+        "news.manage",
+        "news.view",
         "news.manage",
         "website.manage"
       ],
@@ -710,6 +701,7 @@
         "mobileEligible": true
       },
       "permissionKeys": [
+        "news.view",
         "news.manage",
         "website.manage"
       ],
@@ -854,8 +846,8 @@
     {
       "key": "website-publishing",
       "route": "/dashboard/website/publishing",
-      "label": "Veröffentlichungen",
-      "labelV2": "Veröffentlichungen",
+      "label": "Publizieren",
+      "labelV2": "Publizieren",
       "icon": "publish",
       "targetL1": "publishing",
       "targetL2": "Kanäle",
@@ -866,6 +858,8 @@
         "mobileEligible": false
       },
       "permissionKeys": [
+        "news.view",
+        "website.view",
         "news.manage",
         "website.manage"
       ],
@@ -933,6 +927,7 @@
         "mobileEligible": true
       },
       "permissionKeys": [
+        "infoboard.view",
         "infoboard.manage",
         "events.publish_infoboard"
       ],
@@ -979,6 +974,7 @@
         "mobileEligible": false
       },
       "permissionKeys": [
+        "infoboard.view",
         "infoboard.manage",
         "events.publish_infoboard"
       ],
@@ -1023,6 +1019,15 @@
         "explorer": true,
         "mobileEligible": true
       },
+      "permissionKeys": [
+        "targets.view",
+        "targets.manage",
+        "meetings.view",
+        "meetings.manage",
+        "initiatives.view",
+        "initiatives.manage",
+        "users.manage_memberships"
+      ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1042,6 +1047,15 @@
         "explorer": true,
         "mobileEligible": true
       },
+      "permissionKeys": [
+        "targets.view",
+        "targets.manage",
+        "meetings.view",
+        "meetings.manage",
+        "initiatives.view",
+        "initiatives.manage",
+        "users.manage_memberships"
+      ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1061,6 +1075,15 @@
         "explorer": true,
         "mobileEligible": false
       },
+      "permissionKeys": [
+        "targets.view",
+        "targets.manage",
+        "meetings.view",
+        "meetings.manage",
+        "initiatives.view",
+        "initiatives.manage",
+        "users.manage_memberships"
+      ],
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1080,6 +1103,15 @@
         "explorer": true,
         "mobileEligible": false
       },
+      "permissionKeys": [
+        "targets.view",
+        "targets.manage",
+        "meetings.view",
+        "meetings.manage",
+        "initiatives.view",
+        "initiatives.manage",
+        "users.manage_memberships"
+      ],
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1099,6 +1131,11 @@
         "explorer": true,
         "mobileEligible": false
       },
+      "permissionKeys": [
+        "users.manage_memberships",
+        "targets.manage",
+        "meetings.manage"
+      ],
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1118,6 +1155,11 @@
         "explorer": true,
         "mobileEligible": true
       },
+      "permissionKeys": [
+        "users.manage_memberships",
+        "targets.manage",
+        "meetings.manage"
+      ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1137,6 +1179,11 @@
         "explorer": true,
         "mobileEligible": true
       },
+      "permissionKeys": [
+        "users.manage_memberships",
+        "targets.manage",
+        "meetings.manage"
+      ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
@@ -1158,6 +1205,29 @@
       },
       "permissionKeys": [
         "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "workspace",
+      "route": "/dashboard/workspace",
+      "label": "Dokumente",
+      "labelV2": "Dokumente",
+      "icon": "documents",
+      "targetL1": "club",
+      "targetL2": "Dokumente",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "workspace.view",
+        "workspace.manage"
       ],
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
@@ -1411,5 +1481,148 @@
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     }
-  ]
+  ],
+  "publishingL2": [
+    {
+      "id": "uebersicht",
+      "label": "Übersicht",
+      "headerVisible": true,
+      "keys": [
+        "website",
+        "website-overview"
+      ]
+    },
+    {
+      "id": "inhalte",
+      "label": "Inhalte",
+      "headerVisible": true,
+      "keys": [
+        "website-news",
+        "website-pages",
+        "website-editorial",
+        "website-components"
+      ]
+    },
+    {
+      "id": "website",
+      "label": "Website",
+      "headerVisible": false,
+      "keys": [
+        "website-homepage",
+        "website-navigation",
+        "website-blocks"
+      ]
+    },
+    {
+      "id": "medien",
+      "label": "Medien",
+      "headerVisible": true,
+      "keys": [
+        "website-media"
+      ]
+    },
+    {
+      "id": "kanaele",
+      "label": "Kanäle",
+      "headerVisible": true,
+      "keys": [
+        "website-publishing",
+        "infoboard",
+        "infoboard-overview",
+        "infoboard-preview"
+      ]
+    },
+    {
+      "id": "einstellungen",
+      "label": "Einstellungen",
+      "headerVisible": false,
+      "keys": [
+        "website-settings"
+      ]
+    }
+  ],
+  "clubL2": [
+    {
+      "id": "organisation",
+      "label": "Organisation",
+      "headerVisible": true,
+      "keys": [
+        "organisation",
+        "org-units",
+        "vereine",
+        "competitions"
+      ]
+    },
+    {
+      "id": "people-teams",
+      "label": "People & Teams",
+      "headerVisible": true,
+      "keys": [
+        "mitglieder",
+        "teams",
+        "trainer-staff",
+        "personen",
+        "provider-mapping"
+      ]
+    },
+    {
+      "id": "mitgliedschaft",
+      "label": "Mitgliedschaft",
+      "headerVisible": true,
+      "keys": [
+        "anmeldungen",
+        "registrierungen",
+        "warteliste",
+        "archiv"
+      ]
+    },
+    {
+      "id": "vereinsentwicklung",
+      "label": "Vereinsentwicklung",
+      "headerVisible": true,
+      "keys": [
+        "club-entwicklung",
+        "club-entwicklung-ziele",
+        "club-entwicklung-initiativen",
+        "club-entwicklung-prozesse"
+      ]
+    },
+    {
+      "id": "club-betrieb",
+      "label": "Club-Betrieb",
+      "headerVisible": true,
+      "keys": [
+        "meetings",
+        "material",
+        "helfereinsaetze",
+        "formulare-freigaben",
+        "vorfaelle-disziplin"
+      ]
+    },
+    {
+      "id": "dokumente",
+      "label": "Dokumente",
+      "headerVisible": true,
+      "keys": [
+        "workspace"
+      ]
+    },
+    {
+      "id": "finanzen",
+      "label": "Finanzen & Partnerschaften",
+      "headerVisible": true,
+      "keys": [
+        "finanzen",
+        "sponsoring"
+      ]
+    }
+  ],
+  "depthContract": {
+    "L1": "Verantwortungsdomäne (Dashboard, Planung, Kommunikation, Club, Publishing). Max. fünf sichtbare Club-L1-Domänen in Row 1.",
+    "L2": "Wesentliches Ziel / Verantwortungsbereich innerhalb der Domäne (z. B. Club → People & Teams). Erscheint in Header Row 2, wenn die Domäne aktiv ist.",
+    "L3": "Lokale Navigation innerhalb eines Moduls (Tabs, CMS-Unterseiten, Admin-Kindziele). Nur wenn der aktive Bereich echte lokale Struktur hat — keine globale dritte Zeile.",
+    "APP_EXPLORER": "Vollständige, berechtigungsgefilterte Entdeckung; gleiche L1-Taxonomie wie Header; tiefe/seltene Ziele ohne dauerhaften Header-Platz.",
+    "QUICK_ACCESS": "Persönliche Pins; ändert nie canonical parent/domain; Metadaten ausschliesslich aus nav-config / Ziel-Matrix; Berechtigungen bleiben aktiv.",
+    "DASHBOARD": "Persönliches Betriebs-Home (Programm, Kalender, Aufmerksamkeit, Aufgaben, Schnellzugriff) — kein Sammelbecken für Club-Module."
+  }
 }
