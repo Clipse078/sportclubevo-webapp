@@ -164,7 +164,7 @@ describe("SCE-CALENDAR-UX-02 — personal calendar", () => {
         todayDayKey="2026-10-03"
       />,
     );
-    expect(screen.getByTestId("personal-calendar-month-legend")).toBeTruthy();
+    expect(screen.getByTestId("month-activity-grid-legend")).toBeTruthy();
     expect(screen.getByText("Spiel")).toBeTruthy();
   });
 

@@ -8,6 +8,8 @@ import type { MonthActivityGridDay, MonthActivityGridNavigation } from "./month-
 import { PersonalProgrammeActivityIndicator } from "./PersonalProgrammeActivityIndicator";
 import { CalendarMonthLegend } from "./CalendarMonthLegend";
 import { ProgrammeCalendarMicroEntry } from "@/components/programme/ProgrammeCalendarMicroEntry";
+import type { SceCalendarLegendEntry } from "@/lib/calendar/sce-calendar-engine";
+import type { ReactNode } from "react";
 
 export type MonthActivityGridProps = {
   monthLabel: string;
@@ -27,6 +29,9 @@ export type MonthActivityGridProps = {
   /** Matchcenter uses non-interactive cells; dashboard uses compact dot cells; programme uses micro activity tiles. */
   cellVariant?: "matchcenter" | "personal" | "programme";
   showLegend?: boolean;
+  legendEntries?: readonly SceCalendarLegendEntry[];
+  /** Scope-specific controls (e.g. Personal Kalender Alle/Termine/Aufgaben). */
+  toolbar?: ReactNode;
 };
 
 function NavControl({
@@ -128,8 +133,8 @@ function DayCell({
   const showMatchcenterDot =
     variant === "matchcenter" ? day.activityCount > 0 && !day.isToday : false;
 
-  const programmeEntries = day.programmeCalendarEntries ?? [];
-  const programmeOverflow = day.programmeCalendarOverflow ?? 0;
+  const programmeEntries = day.sceCalendarEntries ?? day.programmeCalendarEntries ?? [];
+  const programmeOverflow = day.sceCalendarOverflow ?? day.programmeCalendarOverflow ?? 0;
 
   const inner =
     variant === "programme" ? (
@@ -240,6 +245,8 @@ export default function MonthActivityGrid({
   getDayHref,
   cellVariant = "personal",
   showLegend = false,
+  legendEntries,
+  toolbar,
 }: MonthActivityGridProps) {
   const Heading = headingLevel;
   const gridRef = useRef<HTMLDivElement>(null);
@@ -298,10 +305,19 @@ export default function MonthActivityGrid({
           >
             {monthLabel}
           </Heading>
+          {toolbar ? (
+            <div
+              className="order-2 flex min-w-0 flex-wrap items-center gap-1 sm:order-none"
+              data-sce-calendar-region="toolbar"
+            >
+              {toolbar}
+            </div>
+          ) : null}
           {(cellVariant === "personal" || cellVariant === "programme") && showLegend ? (
             <CalendarMonthLegend
               className="order-3 min-w-0 flex-1 basis-full justify-center sm:order-none sm:basis-auto lg:justify-center"
               compact
+              entries={legendEntries}
               data-testid="month-activity-grid-legend"
             />
           ) : null}

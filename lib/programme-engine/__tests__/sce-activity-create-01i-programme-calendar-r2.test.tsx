@@ -263,7 +263,8 @@ describe("SCE-ACTIVITY-CREATE-01I-R2 — Programme SceMatchCard", () => {
     if (home && away) {
       expect(home.compareDocumentPosition(away) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
-    expect(screen.getByTestId("sce-match-schedule-time")).toBeTruthy();
+    expect(screen.getByTestId("sce-match-list-row-time")).toBeTruthy();
+    expect(screen.queryByTestId("sce-match-schedule-time")).toBeNull();
     expect(screen.getByTestId("sce-match-vs")).toBeTruthy();
     const crest = container.querySelector('[data-sce-match-region="home-crest"]');
     expect(crest?.querySelector(".h-11")).toBeTruthy();

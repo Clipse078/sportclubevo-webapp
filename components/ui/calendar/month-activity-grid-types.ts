@@ -20,9 +20,13 @@ export type MonthActivityGridDay = {
   activityMarkerOverflow?: number;
   /** Optional tooltip / supplemental label for marker row. */
   activityMarkerTooltip?: string;
-  /** Programme Kalender — compact in-cell activity tiles (same ProgrammeItem projection). */
+  /** Canonical SCE Calendar Engine — compact in-cell activity tiles. */
+  sceCalendarEntries?: readonly ProgrammeCalendarMicroEntry[];
+  /** @deprecated Prefer sceCalendarEntries — alias retained for Programme consumers. */
   programmeCalendarEntries?: readonly ProgrammeCalendarMicroEntry[];
-  /** Programme Kalender — +N beyond visible micro entries. */
+  /** +N beyond visible micro entries. */
+  sceCalendarOverflow?: number;
+  /** @deprecated Prefer sceCalendarOverflow. */
   programmeCalendarOverflow?: number;
 };
 

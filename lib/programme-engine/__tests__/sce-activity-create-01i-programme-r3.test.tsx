@@ -142,8 +142,9 @@ describe("SCE-ACTIVITY-CREATE-01I-R3 — Programme Match card", () => {
     const fixture = screen.getByTestId("sce-match-fixture");
     expect(fixture.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
     expect(fixture.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
-    expect(screen.getByTestId("sce-match-schedule-time")).toBeTruthy();
+    expect(screen.getByTestId("sce-match-list-row-time")).toBeTruthy();
     expect(screen.getByTestId("sce-match-vs")).toBeTruthy();
+    expect(screen.queryByTestId("sce-match-schedule-time")).toBeNull();
   });
 
   it("AWAY location suffix integrity in presentation model", () => {
@@ -161,7 +162,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R3 — Programme Match card", () => {
         linkToDetail={false}
       />,
     );
-    expect(screen.getByTestId("sce-match-location")).toHaveTextContent("- 2");
+    expect(screen.getByTestId("sce-match-list-row-location")).toHaveTextContent("- 2");
   });
 });
 

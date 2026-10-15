@@ -13,9 +13,6 @@ vi.mock("@/lib/personal-agenda/use-personal-calendar-layout-mode", () => ({
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: { count?: number; title?: string }) => {
-    if (key === "dayOverflowMore" && values?.count != null) {
-      return `+${values.count} weitere`;
-    }
     if (key === "dayAriaActivitiesCount" && values?.count != null) {
       return `${values.count} Termine`;
     }
@@ -35,22 +32,17 @@ vi.mock("next-intl", () => ({
       weekdayFri: "Fr",
       weekdaySat: "Sa",
       weekdaySun: "So",
-      dayOverflowPanelAria: "Weitere Termine",
       filterGroupAria: "Filter",
       dueShort: "Fällig",
       mobileEmptyDay: "Keine Termine oder Aufgaben an diesem Tag.",
       mobileSelectedDayAgendaAria: "Agenda",
+      legendTraining: "Training",
+      legendMatch: "Spiel",
+      legendTournament: "Turnier",
+      legendEvent: "Veranstaltung",
     };
     return map[key] ?? key;
   },
-}));
-
-vi.mock("@/components/planning/ActivitySceIcon", () => ({
-  ActivitySceIcon: () => <span data-testid="activity-icon" />,
-}));
-
-vi.mock("@/components/icons/ProductDomainSceIcon", () => ({
-  ProductDomainSceIcon: () => <span data-testid="domain-icon" />,
 }));
 
 const navigation = {
@@ -104,12 +96,12 @@ describe("SCE-CALENDAR-UX-04 — accessibility & responsive contracts", () => {
       />,
     );
 
-    const todayControl = screen.getByTestId("personal-calendar-day-2026-09-27");
+    const todayControl = screen.getByTestId("programme-calendar-day-2026-09-27");
     expect(todayControl).toHaveAttribute("aria-pressed", "true");
     expect(todayControl.querySelector("time")).toHaveAttribute("aria-current", "date");
   });
 
-  it("uses meaningful event link accessible names", () => {
+  it("uses meaningful event link accessible names on micro tiles", () => {
     const dayKey = "2026-09-23";
     render(
       <PersonalKalenderMonthWorkspace
@@ -120,7 +112,7 @@ describe("SCE-CALENDAR-UX-04 — accessibility & responsive contracts", () => {
             normalized({
               id: "training:1",
               semanticType: "TRAINING",
-              ariaLabel: "Training, 17:00, F2, KR2",
+              title: "F2",
             }),
           ],
         }}
@@ -130,13 +122,13 @@ describe("SCE-CALENDAR-UX-04 — accessibility & responsive contracts", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Training, 17:00, F2, KR2" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Details öffnen/ })).toHaveAttribute(
       "href",
       "/dashboard/training/sessions/1/edit",
     );
   });
 
-  it("keeps overflow keyboard operable on desktop grid", () => {
+  it("exposes programme-style overflow affordance on desktop grid", () => {
     const dayKey = "2026-09-23";
     const items = Array.from({ length: 8 }).map((_, index) =>
       normalized({
@@ -157,10 +149,9 @@ describe("SCE-CALENDAR-UX-04 — accessibility & responsive contracts", () => {
       />,
     );
 
-    const overflow = screen.getByTestId(`personal-calendar-overflow-${dayKey}`);
-    expect(overflow.tagName).toBe("BUTTON");
-    fireEvent.click(overflow);
-    expect(overflow).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByTestId(`programme-calendar-overflow-${dayKey}`)).toHaveTextContent(
+      /weitere/,
+    );
   });
 });
 
@@ -174,7 +165,7 @@ describe("SCE-CALENDAR-UX-04 — mobile compact month + agenda", () => {
     vi.useRealTimers();
   });
 
-  it("renders compact grid without desktop event blocks and shows selected-day agenda", async () => {
+  it("renders canonical engine grid and selected-day mobile agenda", async () => {
     const { usePersonalCalendarLayoutMode } = await import(
       "@/lib/personal-agenda/use-personal-calendar-layout-mode"
     );
@@ -203,12 +194,11 @@ describe("SCE-CALENDAR-UX-04 — mobile compact month + agenda", () => {
       "data-layout-mode",
       "mobile-compact",
     );
-    const monthGrid = screen.getByTestId("personal-kalender-month-grid");
-    expect(within(monthGrid).queryAllByTestId(/^personal-calendar-event-/).length).toBe(0);
+    expect(screen.getByTestId("sce-calendar-engine")).toBeTruthy();
+    expect(screen.getByTestId("personal-kalender-month-grid")).toBeTruthy();
     expect(screen.getByTestId("personal-kalender-mobile-day-agenda")).toBeTruthy();
-    expect(screen.getByTestId("personal-calendar-compact-markers-2026-09-23")).toBeTruthy();
-    fireEvent.click(screen.getByTestId("personal-calendar-day-2026-09-23"));
-    expect(screen.getByRole("link", { name: "Training, 17:00, F2" })).toBeTruthy();
+    fireEvent.click(screen.getByTestId("programme-calendar-day-2026-09-23"));
+    expect(screen.getByRole("link", { name: /Training/ })).toBeTruthy();
   });
 
   it("shows compact empty state for selected day without items", async () => {

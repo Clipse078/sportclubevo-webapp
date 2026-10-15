@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import MonthActivityGrid from "@/components/ui/calendar/MonthActivityGrid";
+import SceCalendarEngine from "@/components/ui/calendar/SceCalendarEngine";
 import type { MonthActivityGridDay } from "@/components/ui/calendar/month-activity-grid-types";
 import { buildMonthGridCells } from "@/lib/calendar/month-grid";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
@@ -106,8 +106,8 @@ export default function ProgrammeCalendarView({
             ? programmeKindToCalendarSourceType(sortProgrammeItems(dayItems)[0]!.kind)
             : undefined,
         activityMarkerSourceTypes: dayPresentation.markerSourceTypes,
-        programmeCalendarEntries: dayPresentation.entries,
-        programmeCalendarOverflow:
+        sceCalendarEntries: dayPresentation.entries,
+        sceCalendarOverflow:
           dayPresentation.overflowCount > 0 ? dayPresentation.overflowCount : undefined,
       };
     });
@@ -125,7 +125,7 @@ export default function ProgrammeCalendarView({
 
   return (
     <div className="space-y-4" data-testid="programme-kalender">
-      <MonthActivityGrid
+      <SceCalendarEngine
         monthLabel={monthLabel}
         weekdayLabels={["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]}
         days={days}

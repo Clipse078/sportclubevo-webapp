@@ -39,6 +39,12 @@ import {
   SCE_ACTIVITY_LIST_ROW_SCALE,
   sceActivityListRowTypePillClass,
 } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
+import {
+  SceActivityListRowLocationMeta,
+  SceActivityListRowOperationalMetaRow,
+  SceActivityListRowTimeMeta,
+} from "./SceActivityListRowOperationalMeta";
+import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
@@ -476,7 +482,16 @@ function SceMatchListRowIdentityContent({
   const programmeFixture = listRowPresentation === "programme-fixture";
   const lifecycle = model.matchLifecycle ?? model.status;
   const showCancelledStatus = lifecycle?.semantic === "cancelled";
-  const kickoffLabel = formatFixtureTime(new Date(model.schedule.startAt), fmtCfg);
+  const startAt = new Date(model.schedule.startAt);
+  const endAt = model.schedule.endAt ? new Date(model.schedule.endAt) : null;
+  const kickoffLabel = formatFixtureTime(startAt, fmtCfg);
+  const operationalTimeLabel =
+    programmeFixture && !model.schedule.allDay
+      ? formatSportingActivityTimeRange({
+          startLabel: kickoffLabel,
+          endLabel: endAt ? formatFixtureTime(endAt, fmtCfg) : undefined,
+        }) ?? kickoffLabel
+      : undefined;
   const locationLine =
     programmeFixture && model.location
       ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
@@ -532,27 +547,18 @@ function SceMatchListRowIdentityContent({
           data-sce-match-region="center"
         >
           {programmeFixture ? (
-            <>
+            model.result ? (
+              <SceMatchFixtureSeparator model={model} density={density} />
+            ) : (
               <span
-                className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureKickoffClass}
-                data-testid="sce-match-schedule-time"
-                data-sce-match-region="schedule"
+                className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureVsClass}
+                aria-hidden
+                data-testid="sce-match-vs"
+                data-sce-match-region="separator"
               >
-                {kickoffLabel}
+                VS
               </span>
-              {model.result ? (
-                <SceMatchFixtureSeparator model={model} density={density} />
-              ) : (
-                <span
-                  className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureVsClass}
-                  aria-hidden
-                  data-testid="sce-match-vs"
-                  data-sce-match-region="separator"
-                >
-                  VS
-                </span>
-              )}
-            </>
+            )
           ) : (
             <span
               className={SCE_ACTIVITY_LIST_ROW_SCALE.fixtureVsClass}
@@ -572,14 +578,21 @@ function SceMatchListRowIdentityContent({
           programmeFixture={programmeFixture}
         />
       </div>
-      {locationLine ? (
-        <p
-          className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeLocationClass}
-          data-testid="sce-match-location"
-          data-sce-match-region="location"
-        >
-          {locationLine}
-        </p>
+      {programmeFixture && (operationalTimeLabel || locationLine) ? (
+        <SceActivityListRowOperationalMetaRow testId="sce-match-list-row-operational-meta">
+          {operationalTimeLabel ? (
+            <SceActivityListRowTimeMeta
+              label={operationalTimeLabel}
+              testId="sce-match-list-row-time"
+            />
+          ) : null}
+          {locationLine ? (
+            <SceActivityListRowLocationMeta
+              label={locationLine}
+              testId="sce-match-list-row-location"
+            />
+          ) : null}
+        </SceActivityListRowOperationalMetaRow>
       ) : null}
     </div>
   );

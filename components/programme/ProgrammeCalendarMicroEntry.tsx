@@ -39,6 +39,9 @@ export function ProgrammeCalendarMicroEntry({ entry }: Props) {
       <span className="block truncate text-[0.5625rem] font-medium text-[var(--foreground)]">
         {entry.title}
       </span>
+      {entry.contextLine ? (
+        <span className="block truncate text-[0.5rem] text-[var(--text-2)]">{entry.contextLine}</span>
+      ) : null}
     </Link>
   );
 }

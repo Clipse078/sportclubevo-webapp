@@ -2,6 +2,7 @@ import { formatFixtureTime } from "@/components/admin/teams/upcoming-matches/tea
 import type { PersonalProgrammeSourceType } from "@/lib/personal-agenda/personal-programme-types";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { resolvePersonalCalendarDayMarkerSlots } from "@/lib/personal-agenda/personal-calendar-day-marker-slots";
+import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { sortProgrammeItems } from "./programme-sort";
 import type { ProgrammeActivityKind, ProgrammeItem } from "./types";
@@ -15,12 +16,16 @@ const KIND_TYPE_LABEL: Record<ProgrammeActivityKind, string> = {
   CLUB_EVENT: "VERANSTALTUNG",
 };
 
+export type ProgrammeCalendarMicroEntryKind = ProgrammeActivityKind | "TASK";
+
 export type ProgrammeCalendarMicroEntry = {
   id: string;
-  kind: ProgrammeActivityKind;
+  kind: ProgrammeCalendarMicroEntryKind;
   typeLabel: string;
   timeLabel: string;
   title: string;
+  /** Optional second line (location/resource) when micro density allows. */
+  contextLine?: string;
   href: string;
   accessibleLabel: string;
   paletteKey: ReturnType<typeof getProgrammeSourcePresentation>["paletteKey"];
@@ -59,6 +64,17 @@ function resolveMicroTitle(item: ProgrammeItem): string {
   }
 }
 
+function resolveMicroContextLine(item: ProgrammeItem): string | undefined {
+  const model = item.presentation;
+  if (!model || typeof model !== "object" || !("location" in model)) {
+    return undefined;
+  }
+  const location = (model as { location?: Parameters<typeof formatSceActivityLocationHierarchy>[0] })
+    .location;
+  if (!location) return undefined;
+  return formatSceActivityLocationHierarchy(location, { includeHostClub: false });
+}
+
 function isCancelledItem(item: ProgrammeItem): boolean {
   const status = item.presentation.status ?? item.status;
   if (typeof status === "string") {
@@ -78,7 +94,8 @@ export function buildProgrammeCalendarMicroEntry(
     : formatFixtureTime(item.startsAt, fmtCfg);
   const typeLabel = KIND_TYPE_LABEL[item.kind];
   const title = resolveMicroTitle(item);
-  const accessibleLabel = `${typeLabel}, ${timeLabel}, ${title}`;
+  const contextLine = resolveMicroContextLine(item);
+  const accessibleLabel = [typeLabel, timeLabel, title, contextLine].filter(Boolean).join(", ");
 
   return {
     id: item.id,
@@ -86,6 +103,7 @@ export function buildProgrammeCalendarMicroEntry(
     typeLabel,
     timeLabel,
     title,
+    contextLine,
     href: item.navigationTarget,
     accessibleLabel,
     paletteKey: palette.paletteKey,

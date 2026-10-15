@@ -2,19 +2,15 @@
  * @vitest-environment jsdom
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import PersonalKalenderMonthWorkspace, {
-  resolvePersonalCalendarDayVisibleBlockLimit,
-} from "../PersonalKalenderMonthWorkspace";
+import PersonalKalenderMonthWorkspace from "../PersonalKalenderMonthWorkspace";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 import { buildMonthGridCells } from "@/lib/calendar/month-grid";
+import { PROGRAMME_CALENDAR_VISIBLE_ENTRIES } from "@/lib/programme-engine/programme-calendar-presentation";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: { count?: number; title?: string }) => {
-    if (key === "dayOverflowMore" && values?.count != null) {
-      return `+${values.count} weitere`;
-    }
     if (key === "dayAriaActivitiesCount" && values?.count != null) {
       return `${values.count} Termine`;
     }
@@ -34,20 +30,15 @@ vi.mock("next-intl", () => ({
       weekdayFri: "Fr",
       weekdaySat: "Sa",
       weekdaySun: "So",
-      dayOverflowPanelAria: "Weitere Termine",
       filterGroupAria: "Filter",
-      dueShort: "Fällig",
+      legendTraining: "Training",
+      legendMatch: "Spiel",
+      legendTournament: "Turnier",
+      legendEvent: "Veranstaltung",
+      legendTask: "Aufgabe",
     };
     return map[key] ?? key;
   },
-}));
-
-vi.mock("@/components/planning/ActivitySceIcon", () => ({
-  ActivitySceIcon: () => <span data-testid="activity-icon" />,
-}));
-
-vi.mock("@/components/icons/ProductDomainSceIcon", () => ({
-  ProductDomainSceIcon: () => <span data-testid="domain-icon" />,
 }));
 
 function normalized(
@@ -111,7 +102,7 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
         filterLinks={filterLinks}
       />,
     );
-    expect(screen.getByTestId("personal-kalender-month-grid")).toHaveAttribute("data-week-rows", "5");
+    expect(screen.getAllByTestId(/^programme-calendar-day-/).length).toBe(five * 7);
 
     rerender(
       <PersonalKalenderMonthWorkspace
@@ -123,10 +114,10 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
         filterLinks={filterLinks}
       />,
     );
-    expect(screen.getByTestId("personal-kalender-month-grid")).toHaveAttribute("data-week-rows", "6");
+    expect(screen.getAllByTestId(/^programme-calendar-day-/).length).toBe(six * 7);
   });
 
-  it("exposes compact toolbar navigation, month label, and filters with URL hrefs", () => {
+  it("exposes canonical engine navigation, month label, and filters with URL hrefs", () => {
     render(
       <PersonalKalenderMonthWorkspace
         monthParam="2026-09"
@@ -138,16 +129,16 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
       />,
     );
 
-    expect(screen.getByTestId("personal-kalender-previous-month")).toHaveAttribute(
+    expect(screen.getByTestId("month-activity-grid-previous")).toHaveAttribute(
       "href",
       navigation.previousMonthHref,
     );
-    expect(screen.getByTestId("personal-kalender-today")).toHaveAttribute("href", navigation.todayHref);
-    expect(screen.getByTestId("personal-kalender-next-month")).toHaveAttribute(
+    expect(screen.getByTestId("month-activity-grid-today")).toHaveAttribute("href", navigation.todayHref);
+    expect(screen.getByTestId("month-activity-grid-next")).toHaveAttribute(
       "href",
       navigation.nextMonthHref,
     );
-    expect(screen.getByTestId("personal-kalender-month-label").textContent?.length).toBeGreaterThan(3);
+    expect(screen.getByTestId("month-activity-grid-label").textContent?.length).toBeGreaterThan(3);
     expect(screen.getByTestId("personal-kalender-filter-alle")).toHaveAttribute("aria-current", "true");
     expect(screen.getByTestId("personal-kalender-filter-termine")).toHaveAttribute(
       "href",
@@ -155,17 +146,18 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
     );
   });
 
-  it("renders semantic event blocks with deep links and overflow control", () => {
+  it("renders canonical micro tiles with deep links and programme-style overflow", () => {
     const dayKey = "2026-09-23";
-    const weekRows = buildMonthGridCells("2026-09", "Europe/Zurich").length / 7;
-    const visibleLimit = resolvePersonalCalendarDayVisibleBlockLimit(weekRows);
-    const items = Array.from({ length: visibleLimit + 2 }).map(
+    const items = Array.from({ length: PROGRAMME_CALENDAR_VISIBLE_ENTRIES + 2 }).map(
       (_, index) =>
         normalized({
           id: `event:${index}`,
           semanticType: index % 2 === 0 ? "TRAINING" : "TASK",
           title: `Item ${index}`,
-          deepLink: index % 2 === 0 ? `/dashboard/training/sessions/${index}/edit` : `/dashboard/aufgaben/${index}`,
+          deepLink:
+            index % 2 === 0
+              ? `/dashboard/training/sessions/${index}/edit`
+              : `/dashboard/aufgaben/${index}`,
           typeLabel: index % 2 === 0 ? "Training" : "Aufgabe",
         }),
     );
@@ -181,35 +173,15 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
       />,
     );
 
-    expect(screen.getByTestId("personal-kalender-month-grid")).toHaveAttribute(
-      "data-visible-block-limit",
-      String(visibleLimit),
+    expect(screen.getAllByTestId(/^programme-calendar-entry-/).length).toBe(
+      PROGRAMME_CALENDAR_VISIBLE_ENTRIES,
     );
-    expect(screen.getAllByTestId(/^personal-calendar-event-/).length).toBe(visibleLimit);
-    const overflow = screen.getByTestId(`personal-calendar-overflow-${dayKey}`);
-    expect(overflow.textContent).toBe("+2 weitere");
-    fireEvent.click(overflow);
-    expect(screen.getAllByTestId(/^personal-calendar-event-/).length).toBeGreaterThan(visibleLimit);
+    expect(screen.getByTestId(`programme-calendar-overflow-${dayKey}`)).toHaveTextContent(
+      "+2 weitere",
+    );
     expect(
       document.querySelector('a[href="/dashboard/training/sessions/0/edit"]'),
     ).not.toBeNull();
-  });
-
-  it("shows more than three visible blocks on desktop when week geometry allows", () => {
-    render(
-      <PersonalKalenderMonthWorkspace
-        monthParam="2026-09"
-        timeZone="Europe/Zurich"
-        itemsByDayKey={{}}
-        timeLabelById={{}}
-        navigation={navigation}
-        filterLinks={filterLinks}
-      />,
-    );
-    const limit = Number(
-      screen.getByTestId("personal-kalender-month-grid").getAttribute("data-visible-block-limit"),
-    );
-    expect(limit).toBeGreaterThan(3);
   });
 
   it("does not render a permanent selected-day detail region below the grid", () => {

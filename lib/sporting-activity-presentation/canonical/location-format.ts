@@ -20,13 +20,46 @@ export type FormatSceActivityLocationHierarchyOptions = {
   mostSpecificResourceOnly?: boolean;
 };
 
-function venueIsRedundantParentOfResource(venue: string, resource: string): boolean {
-  const venueNorm = venue.trim().toLocaleLowerCase("de-CH");
-  const resourceNorm = resource.trim().toLocaleLowerCase("de-CH");
-  if (!venueNorm || !resourceNorm || venueNorm === resourceNorm) {
-    return venueNorm === resourceNorm;
+function tokenizeLocationPart(value: string): string[] {
+  return value
+    .trim()
+    .toLocaleLowerCase("de-CH")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/** Exported for unit tests — deterministic parent/child resource identity compaction. */
+export function venueIsRedundantParentOfResource(venue: string, resource: string): boolean {
+  const venueTrimmed = venue.trim();
+  const resourceTrimmed = resource.trim();
+  if (!venueTrimmed || !resourceTrimmed) {
+    return false;
   }
-  return resourceNorm.startsWith(`${venueNorm} `) || resourceNorm.startsWith(venueNorm);
+  if (venueTrimmed.toLocaleLowerCase("de-CH") === resourceTrimmed.toLocaleLowerCase("de-CH")) {
+    return true;
+  }
+  const venueTokens = tokenizeLocationPart(venueTrimmed);
+  const resourceTokens = tokenizeLocationPart(resourceTrimmed);
+  if (resourceTokens.length !== venueTokens.length + 1) {
+    return false;
+  }
+  for (let index = 0; index < venueTokens.length; index += 1) {
+    if (resourceTokens[index] !== venueTokens[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function pushVenueAndResourceParts(parts: string[], venue: string | undefined, resource: string | undefined) {
+  const venueTrimmed = venue?.trim();
+  const resourceTrimmed = resource?.trim();
+  if (resourceTrimmed && venueTrimmed && venueIsRedundantParentOfResource(venueTrimmed, resourceTrimmed)) {
+    pushPart(parts, resourceTrimmed);
+    return;
+  }
+  pushPart(parts, venueTrimmed);
+  pushPart(parts, resourceTrimmed);
 }
 
 /**
@@ -59,14 +92,12 @@ export function formatSceActivityLocationHierarchy(
       if (includeHost) {
         pushPart(parts, location.hostOrOrganiser);
       }
-      pushPart(parts, location.venueName);
-      pushPart(parts, location.facilityResource);
+      pushVenueAndResourceParts(parts, location.venueName, location.facilityResource);
       break;
     }
     case "AWAY": {
       pushPart(parts, location.hostOrOrganiser);
-      pushPart(parts, location.venueName);
-      pushPart(parts, location.facilityResource);
+      pushVenueAndResourceParts(parts, location.venueName, location.facilityResource);
       pushPart(parts, location.address);
       break;
     }
@@ -74,8 +105,7 @@ export function formatSceActivityLocationHierarchy(
     case "UNKNOWN":
     default: {
       pushPart(parts, location.hostOrOrganiser);
-      pushPart(parts, location.venueName);
-      pushPart(parts, location.facilityResource);
+      pushVenueAndResourceParts(parts, location.venueName, location.facilityResource);
       pushPart(parts, location.address);
       break;
     }
