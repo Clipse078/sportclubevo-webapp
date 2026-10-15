@@ -4,7 +4,7 @@
 |-------|-------|
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01` |
 | **Programme** | Post [`SCE-CLUB-EVENT-AUDIENCE-01`](./SCE-CLUB-EVENT-AUDIENCE-01.md) |
-| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **CLOSED** (PR **#844**, PO UAT **PASS**); **01H** **CLOSED** (PR **#845**, PO UAT **PASS**) |
+| **Status** | **IN_PROGRESS** — 01A **CLOSED**; 01B **CLOSED** (PR **#839**); **01C** **CLOSED** (PR **#840**); **01D** **CLOSED** (PR **#841**); **01E** **CLOSED** (PR **#842**); **01F** **CLOSED** (PR **#843**, PO UAT **PASS**); **01G** **CLOSED** (PR **#844**, PO UAT **PASS**); **01H** **CLOSED** (PR **#845**, PO UAT **PASS**); **01I** **CLOSED** (PR **#846**, PO UAT **PASS**) |
 | **First slice** | [`SCE-ACTIVITY-CREATE-01A`](./SCE-ACTIVITY-CREATE-01A.md) — **CLOSED** (PR **#838**, ADR-11 **ACCEPTED**) |
 | **Foundation slice** | **SCE-ACTIVITY-CREATE-01B** — Activity Composer Foundation + R1/R2/R3 — **CLOSED** (PR **#839**, PO visual UAT **PASS**) |
 | **Reference slice** | **SCE-ACTIVITY-CREATE-01C** — Club Event Reference Adoption — **CLOSED** (PR **#840**) |
@@ -12,7 +12,7 @@
 | **Match slice** | [`SCE-ACTIVITY-CREATE-01E`](./SCE-ACTIVITY-CREATE-01E.md) — Match Adoption — **CLOSED** (PR **#842**) |
 | **Tournament slice** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption — **CLOSED** (PR **#843**) |
 | **Integration slice** | [`SCE-ACTIVITY-CREATE-01G`](./SCE-ACTIVITY-CREATE-01G.md) — Global **`+ Erstellen`** entry (**CLOSED**) |
-| **Current slice** | **SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine (Team + Club) — **IN PROGRESS** |
+| **Current slice** | **Navbar Upgrade** (planned) → **SCE-ACTIVITY-CREATE-01J** — Dashboard + Mein Programm |
 
 ## Objective (approved direction — do not implement in Audience-01 closure)
 
@@ -51,8 +51,8 @@ SCE-CLUB-EVENT-AUDIENCE-01 — CLOSED
   → SCE-ACTIVITY-CREATE-01F — Tournament adoption — CLOSED (PR #843)
   → SCE-ACTIVITY-CREATE-01G — Global create integration — CLOSED (PR #844)
   → SCE-ACTIVITY-CREATE-01H — Core planning surfaces adoption — CLOSED (PR #845)
-  → SCE-ACTIVITY-CREATE-01I — Programme & Calendar Engine — IN PROGRESS
-  → Navbar Upgrade — PLANNED after 01I
+  → SCE-ACTIVITY-CREATE-01I — Programme & Calendar Engine — CLOSED (PR #846)
+  → Navbar Upgrade — PLANNED (next)
   → … (01J–01N per SCE-UI-ROLLOUT-01)
 ```
 
@@ -346,4 +346,37 @@ Vitest closure suite: **12** files · **94** tests — **0 failures**. `prisma v
 
 ### Next
 
-**SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine — **NOT STARTED**. **SCE-TOURNAMENT-PLANNER-01** — **PLANNED — NOT STARTED** (after **01J** in near-term sequence).
+**Navbar Upgrade** — **PLANNED** (next). **SCE-ACTIVITY-CREATE-01J** — Dashboard + Mein Programm. **SCE-TOURNAMENT-PLANNER-01** — **PLANNED — NOT STARTED** (after **01J** in near-term sequence).
+
+---
+
+## SCE-ACTIVITY-CREATE-01I closure (PR **#846**)
+
+Full record: [`SCE-ACTIVITY-CREATE-01I.md`](./SCE-ACTIVITY-CREATE-01I.md).
+
+| Field | Value |
+| --- | --- |
+| **Status** | **CLOSED / ACCEPTED / MERGED** |
+| **Branch** | `cursor/sce-activity-create-01i-programme-calendar-engine` |
+| **PR** | **#846** → `STAGE` |
+| **PO visual UAT** | **PASS** (R6.5 + full 01I) |
+
+### Product rules (frozen)
+
+- **One** `queryProgramme` Programme Engine for **TEAM**, **CLUB**, **PERSON** — no generic Activity entity, no materialized Programme table, no parallel engines.
+- Team + Club Programme: **Liste \| Kalender** on canonical **Sce*Card** list-row family + **SceCalendarEngine** / **ProgrammeCalendarMicroEntry** MICRO semantics.
+- Personal Calendar: PERSON scope population (R6.4) + R6.5 crest/identity contract — PO accepted.
+- Match relevance + Club Event exact OrgUnit audience (no descendant expansion).
+- Legacy dashboard/matchcenter/planning personal calendar consumers **documented**, not migrated in 01I.
+
+### Migrations (01I)
+
+**NONE** at closure. **PROD untouched.**
+
+### Automated validation (closure)
+
+Vitest 01I suite: **14** files · **111** tests — **0 failures**. `prisma validate` **PASS**. Production build **PASS**.
+
+### Next
+
+**Navbar Upgrade** → **01J** Dashboard + Mein Programm.
