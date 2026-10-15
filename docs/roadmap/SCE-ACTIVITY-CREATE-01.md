@@ -307,7 +307,7 @@ Vitest: **24** files · **290** tests (01A–01G activity-create regression + `S
 
 ### Next
 
-**SCE-ACTIVITY-CREATE-01I** — Programme & Calendar Engine (Team + Club) — **NOT STARTED**. **Navbar Upgrade** — **PLANNED** directly after **01I**.
+**Navbar Upgrade** — **PLANNED** (next after **01I CLOSED**).
 
 ---
 
