@@ -8,6 +8,7 @@ type SceTenantContextRowProps = {
   ariaLabel: string;
   brand: ReactNode;
   workspace?: ReactNode;
+  utilities?: ReactNode;
   className?: string;
   emptyWorkspaceTestId?: string;
 };
@@ -19,6 +20,7 @@ export function SceTenantContextRow({
   ariaLabel,
   brand,
   workspace,
+  utilities,
   className,
   emptyWorkspaceTestId = "sce-row2-context-workspace-empty",
 }: SceTenantContextRowProps) {
@@ -31,6 +33,7 @@ export function SceTenantContextRow({
       <SceNavigationSpineRow
         variant="module"
         brand={brand}
+        utilities={utilities}
         workspace={
           workspace ?? (
             <div

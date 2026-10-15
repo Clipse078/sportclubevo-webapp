@@ -5,15 +5,10 @@ import { Menu } from "lucide-react";
 import AdminPageActions from "@/components/admin/layout/AdminPageActions";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
 import NotificationBell from "@/components/admin/notifications/NotificationBell";
-import { SceGlobalSeasonSwitcher } from "@/components/sce/navigation/SceGlobalSeasonSwitcher";
 import { cn } from "@/lib/cn";
 
 type SceGlobalUtilitiesProps = {
   platformWorkspace: boolean;
-  activeSeasonLabel?: string | null;
-  activeSeasonKey?: string | null;
-  selectedSeasonKey?: string | null;
-  seasonSwitchLabel?: string;
   globalNavDrawerOpen: boolean;
   globalNavDrawerId: string;
   openDrawerLabel: string;
@@ -29,10 +24,6 @@ type SceGlobalUtilitiesProps = {
 
 export function SceGlobalUtilities({
   platformWorkspace,
-  activeSeasonLabel,
-  activeSeasonKey,
-  selectedSeasonKey,
-  seasonSwitchLabel,
   globalNavDrawerOpen,
   globalNavDrawerId,
   openDrawerLabel,
@@ -44,33 +35,12 @@ export function SceGlobalUtilities({
   trailingSlot,
   showGlobalNavExplorer = true,
 }: SceGlobalUtilitiesProps) {
-  const seasonProps = {
-    activeSeasonLabel,
-    activeSeasonKey,
-    selectedSeasonKey,
-    switchLabel: seasonSwitchLabel,
-  };
-
   return (
     <div
       className="flex min-w-0 shrink-0 items-center gap-0.5 sce-global-header-utilities md:gap-1"
       data-testid="sce-global-utilities"
       data-sce-utilities-tier={showGlobalNavExplorer ? "with-explorer" : "compact"}
     >
-      {!platformWorkspace ? (
-        <>
-          <div className="hidden min-[1536px]:flex">
-            <SceGlobalSeasonSwitcher {...seasonProps} displayMode="wide" />
-          </div>
-          <div className="hidden min-[1280px]:flex min-[1536px]:hidden">
-            <SceGlobalSeasonSwitcher {...seasonProps} displayMode="medium" />
-          </div>
-          <div className="hidden md:flex min-[1280px]:hidden">
-            <SceGlobalSeasonSwitcher {...seasonProps} displayMode="icon" />
-          </div>
-        </>
-      ) : null}
-
       {showGlobalNavExplorer ? (
         <button
           type="button"

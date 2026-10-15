@@ -5,6 +5,10 @@ import { SceIcon } from "@/components/design-system/icons/SceIcon";
 import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 import { SceNavigationItem } from "@/components/sce/navigation/SceNavigationItem";
 import { SceNavigationOverflow } from "@/components/sce/navigation/SceNavigationOverflow";
+import {
+  primaryL1VisualStateClass,
+  resolvePrimaryL1VisualState,
+} from "@/lib/nav/primary-l1-visual-state";
 import { cn } from "@/lib/cn";
 
 type ActiveDestination = { href: string } | null;
@@ -36,7 +40,7 @@ type ScePrimaryNavigationProps = {
 function PrimaryDomainTrigger({
   domain,
   label,
-  isActive,
+  visualStateClass,
   isOpen,
   controlsId,
   onToggle,
@@ -44,7 +48,7 @@ function PrimaryDomainTrigger({
 }: {
   domain: NavigationDomain;
   label: string;
-  isActive: boolean;
+  visualStateClass?: string;
   isOpen: boolean;
   controlsId: string;
   onToggle: (trigger: HTMLButtonElement | null) => void;
@@ -56,7 +60,7 @@ function PrimaryDomainTrigger({
       type="button"
       className={cn(
         "sce-global-primary-nav-item sce-global-primary-nav-domain shrink-0 inline-flex items-center",
-        (isActive || isOpen) && "sce-global-primary-nav-item--active",
+        visualStateClass,
       )}
       aria-expanded={isOpen}
       aria-controls={controlsId}
@@ -93,6 +97,8 @@ export function ScePrimaryNavigation({
   registerDomainPanelTrigger,
   domainPanelControlsId,
 }: ScePrimaryNavigationProps) {
+  const routeActiveDisabled = activeDomainId === "dashboard";
+
   return (
     <nav aria-label={ariaLabel} className={className} data-testid="sce-primary-navigation">
       <div className="sce-global-primary-nav-track flex min-w-0 items-center gap-0.5">
@@ -101,6 +107,13 @@ export function ScePrimaryNavigation({
           const isActive = isDomainActive(domain);
           const isOpen = openDomainPanelId === domain.id;
           const label = domainLabel(domain);
+          const visualState = resolvePrimaryL1VisualState(
+            domain.id,
+            activeDomainId,
+            openDomainPanelId,
+            routeActiveDisabled,
+          );
+          const visualStateClass = primaryL1VisualStateClass(visualState);
 
           if (hasPanel) {
             return (
@@ -108,7 +121,7 @@ export function ScePrimaryNavigation({
                 key={domain.id}
                 domain={domain}
                 label={label}
-                isActive={isActive}
+                visualStateClass={visualStateClass}
                 isOpen={isOpen}
                 controlsId={domainPanelControlsId(domain.id)}
                 onToggle={(trigger) => onDomainPanelToggle(domain, trigger)}
@@ -129,7 +142,8 @@ export function ScePrimaryNavigation({
               level="primary"
               href={href}
               label={label}
-              isActive={isActive}
+              isActive={visualState === "strong"}
+              activeVisualClass={visualStateClass}
               data-nav-domain={domain.id}
               icon={
                 <span className="sce-global-primary-nav-domain-icon">
@@ -143,6 +157,9 @@ export function ScePrimaryNavigation({
         <SceNavigationOverflow
           overflowDomains={overflowDomains}
           activeDomainId={activeDomainId}
+          openDomainPanelId={openDomainPanelId}
+          routeActiveDisabled={routeActiveDisabled}
+          isDomainActive={isDomainActive}
           overflowOpen={overflowOpen}
           onToggle={onOverflowToggle}
           onNavigate={onOverflowNavigate}

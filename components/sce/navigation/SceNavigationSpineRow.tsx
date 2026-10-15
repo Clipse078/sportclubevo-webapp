@@ -25,12 +25,14 @@ export function SceNavigationSpineRow({
   className,
 }: SceNavigationSpineRowProps) {
   const isPrimary = variant === "primary";
+  const showUtilities = isPrimary || utilities != null;
 
   return (
     <div
       className={cn(
         "sce-nav-spine-row",
         isPrimary ? "sce-nav-spine-row--primary" : "sce-nav-spine-row--sub",
+        !isPrimary && utilities != null && "sce-nav-spine-row--with-utilities",
         className,
       )}
       data-sce-nav-spine-row={variant}
@@ -44,7 +46,7 @@ export function SceNavigationSpineRow({
       <div className="sce-nav-spine-workspace-cell" data-sce-nav-workspace>
         {workspace}
       </div>
-      {isPrimary ? (
+      {showUtilities ? (
         <div className="sce-nav-spine-utilities-cell" data-sce-nav-utilities>
           {utilities}
         </div>

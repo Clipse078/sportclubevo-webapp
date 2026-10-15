@@ -4,7 +4,7 @@
  * SCE-ICONS-02 — explorer + planning nav SCE icon adoption
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
@@ -50,7 +50,8 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
 describe("AppShellNavigation SCE-ICONS-02", () => {
   const adminKeys = Object.values(PERMISSIONS);
 
-  it("renders approved SCE icons for planning secondary nav destinations", () => {
+  it("renders approved SCE icons for planning secondary nav destinations", async () => {
+    const user = userEvent.setup();
     render(
       <AppShellNavigation
         permissionKeys={adminKeys}
@@ -62,13 +63,21 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
       />,
     );
 
-    const weekLink = screen.getByRole("link", { name: /Wochenplaner/i });
+    await user.click(screen.getByTestId("primary-domain-panel-trigger-planning"));
+    const panel = screen.getByTestId("sce-domain-nav-panel");
+
+    const weekLink = within(panel).getByRole("link", { name: /Wochenplaner/i });
     expect(weekLink.querySelector('[data-sce-nav-destination-icon="week-planner"]')).toBeTruthy();
 
-    const eventsLink = screen.getByRole("link", { name: /Veranstaltungen/i });
+    const programmeLink = within(panel).getByRole("link", { name: /Vereinsprogramm/i });
+    expect(
+      programmeLink.querySelector('[data-sce-nav-destination-icon="calendar"]'),
+    ).toBeTruthy();
+
+    const eventsLink = within(panel).getByRole("link", { name: /Veranstaltungen/i });
     expect(eventsLink.querySelector('[data-sce-nav-destination-icon="events"]')).toBeTruthy();
 
-    const spieleLink = screen.getByRole("link", { name: /Spiele/i });
+    const spieleLink = within(panel).getByRole("link", { name: /Spiele/i });
     expect(spieleLink.querySelector('[data-sce-nav-destination-icon="match"]')).toBeTruthy();
     expect(spieleLink.querySelector("circle")).toBeTruthy();
   });

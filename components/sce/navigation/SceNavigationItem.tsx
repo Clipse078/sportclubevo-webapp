@@ -23,6 +23,8 @@ export type SceNavigationItemProps = {
   href: string;
   label: ReactNode;
   isActive?: boolean;
+  /** Optional override when route context uses a non-strong active treatment. */
+  activeVisualClass?: string;
   icon?: ReactNode;
   className?: string;
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
@@ -36,6 +38,7 @@ export function SceNavigationItem({
   href,
   label,
   isActive = false,
+  activeVisualClass,
   icon,
   className,
   onClick,
@@ -56,6 +59,7 @@ export function SceNavigationItem({
         level === "primary" && "sce-global-primary-nav-domain shrink-0 inline-flex items-center",
         level !== "primary" && icon && "inline-flex items-center gap-1.5",
         isActive && LEVEL_ACTIVE_CLASS[level],
+        !isActive && activeVisualClass,
         className,
       )}
     >

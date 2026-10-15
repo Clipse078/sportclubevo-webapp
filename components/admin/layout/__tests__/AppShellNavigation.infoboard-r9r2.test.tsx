@@ -56,9 +56,10 @@ const manageInfoboardKeys = [
 ];
 
 async function openPublishingL3Panel(user: ReturnType<typeof userEvent.setup>) {
-  const disclosure = screen.getByRole("button", { name: /Kanäle: Unterbereiche anzeigen/i });
-  await user.click(disclosure);
-  return screen.getByTestId("sce-context-nav-panel");
+  await user.click(screen.getByTestId("primary-domain-panel-trigger-publishing"));
+  const panel = screen.getByTestId("sce-domain-nav-panel");
+  await user.click(within(panel).getByRole("button", { name: /Kanäle/i }));
+  return panel;
 }
 
 describe("AppShellNavigation — Infoboard R9R2", () => {

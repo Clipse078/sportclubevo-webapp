@@ -4,7 +4,7 @@
  * SCE-NAVBAR-UPGRADE-01 — navigation semantics + utilities
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
@@ -131,6 +131,13 @@ describe("AppShellNavigation landmarks", () => {
     expect(moduleSpine).toBeTruthy();
     expect(moduleSpine?.querySelector('[data-sce-nav-brand-rail="occupied"]')).toBeTruthy();
     expect(moduleSpine?.querySelector("[data-sce-nav-workspace]")).toBeTruthy();
+    expect(moduleSpine?.querySelector("[data-sce-nav-utilities]")).toBeTruthy();
     expect(screen.getAllByTestId("tenant-identity").length).toBeGreaterThan(0);
+    const primaryUtilities = primarySpine?.querySelector("[data-sce-nav-utilities]");
+    expect(primaryUtilities).toBeTruthy();
+    expect(
+      within(primaryUtilities as HTMLElement).queryByTestId("global-season-switcher"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("sce-row2-season-context")).toBeInTheDocument();
   });
 });

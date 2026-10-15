@@ -13,7 +13,7 @@ type TenantContextProps = {
 };
 
 /**
- * Row 1 left rail — platform product identity only (desktop two-row composition).
+ * Row 1 left rail — tenant identity (desktop) or compact mobile stack entry.
  */
 export function ScePlatformBrandRail({
   className,
@@ -58,7 +58,7 @@ export function ScePlatformBrandRail({
 }
 
 /**
- * Row 2 left rail — tenant crest + club name (desktop) or compact context (mobile stack).
+ * Row 1 left rail — tenant crest + club name (desktop) or compact context (mobile stack).
  */
 export function SceTenantContextRail({
   displayClubName,
@@ -99,13 +99,14 @@ export function SceTenantContextRail({
 type SceTenantIdentityBarProps = TenantContextProps;
 
 /**
- * Mobile row-1 stack: product wordmark with tenant context beneath (not used on md+ desktop).
+ * Mobile row-1 stack: tenant-first with secondary platform wordmark (not used on md+ desktop).
  */
 export function SceTenantIdentityBar({
   displayClubName,
   logoUrl,
   platformWorkspace,
-}: SceTenantIdentityBarProps) {
+  homeHref,
+}: SceTenantIdentityBarProps & { homeHref?: string }) {
   return (
     <div
       className={cn(
@@ -113,13 +114,15 @@ export function SceTenantIdentityBar({
         platformWorkspace && "sce-global-brand-tenant-stack--platform",
       )}
       data-testid="sce-tenant-identity-bar"
-      data-tenant-under-sce={platformWorkspace ? "false" : "true"}
+      data-tenant-primary={platformWorkspace ? "false" : "true"}
     >
-      <ScePlatformBrandRail />
       {platformWorkspace ? (
-        <p className="sce-global-tenant-context-name sce-global-tenant-context-name--platform">
-          SportClubEvo Platform
-        </p>
+        <>
+          <ScePlatformBrandRail homeHref={homeHref} />
+          <p className="sce-global-tenant-context-name sce-global-tenant-context-name--platform">
+            SportClubEvo Platform
+          </p>
+        </>
       ) : (
         <>
           <SceTenantContextRail
@@ -128,6 +131,7 @@ export function SceTenantIdentityBar({
             platformWorkspace={false}
             compact={false}
             className="hidden min-[480px]:flex"
+            homeHref={homeHref}
           />
           <SceTenantContextRail
             displayClubName={displayClubName}
@@ -135,6 +139,11 @@ export function SceTenantIdentityBar({
             platformWorkspace={false}
             compact
             className="min-[480px]:hidden flex"
+            homeHref={homeHref}
+          />
+          <ScePlatformBrandRail
+            className="sce-global-platform-brand-rail--mobile-secondary"
+            homeHref={homeHref}
           />
         </>
       )}

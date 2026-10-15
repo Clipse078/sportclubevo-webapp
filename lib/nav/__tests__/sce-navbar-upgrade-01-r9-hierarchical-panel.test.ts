@@ -24,7 +24,7 @@ function readRelative(relativePath: string): string {
 const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS);
 
 describe("SCE-NAVBAR-UPGRADE-01-R9 hierarchical domain panel", () => {
-  it("keeps persistent tenant Row 2 without desktop horizontal L2 strip", () => {
+  it("keeps persistent Row 2 platform context without desktop horizontal L2 strip", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRow");
     expect(shell).not.toContain("SceModuleNavigation");

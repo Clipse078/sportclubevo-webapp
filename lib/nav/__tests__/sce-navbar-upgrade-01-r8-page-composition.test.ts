@@ -63,7 +63,7 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("SceTenantContextRow");
     expect(shell).not.toContain("SceModuleNavigation");
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*brand=\{tenantContextRail\}/);
+    expect(shell).toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
 
     const row = readRelative("components/sce/navigation/SceTenantContextRow.tsx");
     expect(row).toContain("sce-row2-context-workspace-empty");
@@ -80,10 +80,10 @@ describe("SCE-NAVBAR-UPGRADE-01-R8 page composition and shell polish", () => {
     expect(switcher).toContain("displayMode");
     expect(switcher).toContain("sce-global-season-switcher--icon-only");
 
-    const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain('displayMode="wide"');
-    expect(utilities).toContain('displayMode="medium"');
-    expect(utilities).toContain('displayMode="icon"');
+    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
+    expect(row2Season).toContain('displayMode="wide"');
+    expect(row2Season).toContain('displayMode="medium"');
+    expect(row2Season).toContain('displayMode="icon"');
   });
 
   it("structures Wochenplaner chrome with hierarchical toolbars on page grid", () => {

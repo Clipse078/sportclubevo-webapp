@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CalendarRange } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 
 export type SceSeasonDisplayMode = "wide" | "medium" | "icon";
@@ -27,14 +28,21 @@ export function formatCompactSeasonLabel(label: string): string {
   return trimmed.replace(/^Season\s+/i, "");
 }
 
-export function formatWideSeasonLabel(label: string): string {
+export function formatWideSeasonLabel(label: string, seasonWord = "Season"): string {
   const trimmed = label.trim();
-  if (/^Season\s+/i.test(trimmed)) {
+  const seasonPrefix = new RegExp(`^${seasonWord}\\s+`, "i");
+  if (seasonPrefix.test(trimmed)) {
     return trimmed;
+  }
+  if (/^Season\s+/i.test(trimmed)) {
+    return trimmed.replace(/^Season\s+/i, `${seasonWord} `);
+  }
+  if (/^Saison\s+/i.test(trimmed)) {
+    return trimmed.replace(/^Saison\s+/i, `${seasonWord} `);
   }
   const slashPair = trimmed.match(/^(\d{4})\/(\d{4})$/);
   if (slashPair) {
-    return `Season ${slashPair[1]}/${slashPair[2]}`;
+    return `${seasonWord} ${slashPair[1]}/${slashPair[2]}`;
   }
   return trimmed;
 }
@@ -42,14 +50,15 @@ export function formatWideSeasonLabel(label: string): string {
 export function formatSeasonLabelForDisplay(
   label: string,
   mode: SceSeasonDisplayMode,
+  seasonWord = "Season",
 ): string {
   if (mode === "icon") {
-    return formatWideSeasonLabel(label);
+    return formatWideSeasonLabel(label, seasonWord);
   }
   if (mode === "medium") {
     return formatCompactSeasonLabel(label);
   }
-  return formatWideSeasonLabel(label);
+  return formatWideSeasonLabel(label, seasonWord);
 }
 
 function buildSeasonsHref(selectedSeasonKey?: string | null, activeSeasonKey?: string | null) {
@@ -66,10 +75,13 @@ export function SceGlobalSeasonSwitcher({
   switchLabel = "Saison wechseln",
   displayMode = "wide",
 }: SceGlobalSeasonSwitcherProps) {
-  const fullLabel = selectedSeasonKey ?? activeSeasonLabel ?? "Saison";
-  const displayLabel = formatSeasonLabelForDisplay(fullLabel, displayMode);
+  const t = useTranslations("AppShell");
+  const seasonWord = t("seasonLabel");
+  const fullLabel = selectedSeasonKey ?? activeSeasonLabel ?? seasonWord;
+  const displayLabel = formatSeasonLabelForDisplay(fullLabel, displayMode, seasonWord);
   const href = buildSeasonsHref(selectedSeasonKey, activeSeasonKey);
   const iconOnly = displayMode === "icon";
+  const accessibleWide = formatWideSeasonLabel(fullLabel, seasonWord);
 
   return (
     <Link
@@ -81,8 +93,8 @@ export function SceGlobalSeasonSwitcher({
       )}
       data-testid="global-season-switcher"
       data-sce-season-display={displayMode}
-      aria-label={`${switchLabel}: ${formatWideSeasonLabel(fullLabel)}`}
-      title={formatWideSeasonLabel(fullLabel)}
+      aria-label={`${switchLabel}: ${accessibleWide}`}
+      title={accessibleWide}
     >
       <CalendarRange className="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
       <span className="sce-global-season-switcher-label">{displayLabel}</span>

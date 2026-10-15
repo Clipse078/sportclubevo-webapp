@@ -15,13 +15,12 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
-  it("places SportClubEvo on row 1 and tenant context on row 2 (desktop)", () => {
+  it("places tenant context on row 1 and SportClubEvo on row 2 (desktop)", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("ScePlatformBrandRail");
-    expect(shell).toContain('className="hidden md:flex"');
+    expect(shell).toContain("sce-global-platform-brand-rail--row2");
     expect(shell).toContain("SceTenantContextRail");
-    expect(shell).toContain('className="hidden md:flex"');
-    expect(shell).toMatch(/SceTenantContextRow[\s\S]*brand=\{tenantContextRail\}/);
+    expect(shell).toMatch(/SceTenantContextRow[\s\S]*ScePlatformBrandRail/);
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("ScePlatformBrandRail");
@@ -29,14 +28,14 @@ describe("SCE-NAVBAR-UPGRADE-01-R6 platform / tenant rows", () => {
     expect(tenantBar).toContain('layout={compact ? "under-product-compact" : "tenant-row-rail"}');
   });
 
-  it("does not duplicate tenant identity in row 1 brand rail on desktop", () => {
+  it("does not duplicate tenant identity in row 2 brand rail on desktop", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     const primaryBrandBlock = shell.match(
       /variant="primary"[\s\S]*?utilities=\{/,
     )?.[0];
     expect(primaryBrandBlock).toBeTruthy();
-    expect(primaryBrandBlock).toContain("ScePlatformBrandRail");
-    expect(primaryBrandBlock).not.toContain("SceTenantContextRail");
+    expect(primaryBrandBlock).toContain("tenantContextRail");
+    expect(primaryBrandBlock).not.toContain("ScePlatformBrandRail");
     expect(primaryBrandBlock).toContain("md:hidden");
 
     const tenantRow = readRelative("components/sce/navigation/SceTenantContextRow.tsx");

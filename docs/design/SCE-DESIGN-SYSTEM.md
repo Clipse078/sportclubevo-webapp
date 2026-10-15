@@ -502,8 +502,8 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 
 | Surface | Role | Implementation | Rules |
 |---------|------|----------------|-------|
-| **Row 1 — L1 Product** | Planung · Kommunikation · Club · Publizieren · Admin (Dashboard via brand/tenant only) | `ScePrimaryNavigation` + `app-navigation-model` | Active domain: `sce-global-primary-nav-item--active`. Domains with children open `SceDomainNavigationPanel` (disclosure); do not use L1 as simultaneous link + ambiguous disclosure. |
-| **Row 2 — Tenant** | Club crest + name (persistent context) | `SceTenantContextRow` + `SceTenantContextRail` | Always visible on desktop; **no** horizontal L2 destination strip; empty workspace is intentional (subtle divider only). |
+| **Row 1 — Tenant + L1 + utilities** | Tenant crest + name · Planung · Kommunikation · Club · Publizieren · Admin · global utilities | `SceTenantContextRail` + `ScePrimaryNavigation` + `SceGlobalUtilities` | **One strong L1 selection maximum** (`--active` or open panel). Route-active and panel-open are separate states: when a foreign panel is open, the route domain may use `--route-context` only — never two full active treatments. Domains with children open `SceDomainNavigationPanel` (`aria-expanded`); panel-open is not `aria-current`. |
+| **Row 2 — Platform + season** | SportClubEvo wordmark (left) · season context (right, under utilities) | `ScePlatformBrandRail` + `SceRow2SeasonContext` inside `SceTenantContextRow` | Always visible on desktop while panels overlay page content; **no** horizontal L2 strip; empty middle workspace is intentional. |
 | **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. |
 
 **Navigation rules (canonical)**
@@ -514,12 +514,12 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 
 **Branding**
 
-- **Product identity:** `ScePlatformBrandRail` / SportClubEvo wordmark on Row 1 → `/dashboard`.
-- **Tenant identity:** Row 2 — `HeaderTenantIdentity` `layout="tenant-row-rail"` + transparent crest → `/dashboard`.
+- **Primary workspace identity (tenant):** Row 1 — `HeaderTenantIdentity` `layout="tenant-row-rail"` + transparent crest → `/dashboard`.
+- **Secondary platform identity:** Row 2 — `ScePlatformBrandRail` / SportClubEvo wordmark → `/dashboard` (quieter visual weight than tenant).
 
 **Global utilities (right cluster)**
 
-- `SceGlobalUtilities`: compact borderless `SceGlobalSeasonSwitcher`, global app explorer when tier/overflow requires it (hamburger → `GlobalNavDrawer`), contextual `AdminPageActions` (module pages only), notifications, account.
+- `SceGlobalUtilities` (Row 1): global app explorer when tier/overflow requires it (hamburger → `GlobalNavDrawer`), contextual `AdminPageActions` (module pages only), notifications, account. Season lives on Row 2 (`SceRow2SeasonContext`).
 - Global **`+ Erstellen`** remains the accepted `SceActivityCreateMenu` contract on module surfaces (01G) — not duplicated in the shell.
 
 **Responsive**
@@ -537,7 +537,7 @@ Styles: `app/(admin)/global-app-navigation.css` · Shell composer: `components/a
 
 ### Page shell vs navigation grid (NAVBAR-UPGRADE-01-R8)
 
-**Navigation grid** (Row 1 / Row 2 only): brand or tenant identity rail (`--sce-nav-brand-rail-width`) + navigation workspace + utilities. Horizontal alignment for L1/L2 uses `--sce-shell-workspace-start` inside the header — **not** for page bodies.
+**Navigation grid** (Row 1 / Row 2 only): tenant or platform identity rail (`--sce-nav-brand-rail-width`) + navigation workspace + utilities (Row 1). Row 2 repeats the rail column for platform identity and right-aligns season under Row 1 utilities. Navigation identity rails **never** determine page content alignment (`--sce-page-gutter` only). Horizontal alignment for L1 uses `--sce-shell-workspace-start` inside the header — **not** for page bodies.
 
 **Page grid** (`SceApplicationPageGrid` + `PageShell`): responsive horizontal gutters via `--sce-page-gutter` (16px mobile → 32px large desktop). Page content is **never** offset by the navigation brand rail.
 

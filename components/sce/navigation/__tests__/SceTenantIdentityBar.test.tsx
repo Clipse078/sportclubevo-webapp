@@ -15,7 +15,7 @@ vi.mock("@/components/admin/branding/TenantLogo", () => ({
 }));
 
 describe("SceTenantIdentityBar brand hierarchy", () => {
-  it("stacks tenant under product wordmark for mobile row-1 without horizontal separator", () => {
+  it("stacks tenant above secondary product wordmark for mobile row-1 without horizontal separator", () => {
     render(
       <SceTenantIdentityBar
         displayClubName="FC Allschwil"
@@ -25,7 +25,7 @@ describe("SceTenantIdentityBar brand hierarchy", () => {
     );
 
     const stack = screen.getByTestId("sce-tenant-identity-bar");
-    expect(stack).toHaveAttribute("data-tenant-under-sce", "true");
+    expect(stack).toHaveAttribute("data-tenant-primary", "true");
     expect(stack).toHaveClass("sce-global-brand-tenant-stack");
     expect(screen.queryByTestId("sce-product-tenant-separator")).not.toBeInTheDocument();
 
@@ -34,7 +34,7 @@ describe("SceTenantIdentityBar brand hierarchy", () => {
     expect(stack.contains(wordmark)).toBe(true);
     expect(stack.contains(tenantRow)).toBe(true);
     expect(
-      wordmark.compareDocumentPosition(tenantRow) & Node.DOCUMENT_POSITION_FOLLOWING,
+      tenantRow.compareDocumentPosition(wordmark) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 });

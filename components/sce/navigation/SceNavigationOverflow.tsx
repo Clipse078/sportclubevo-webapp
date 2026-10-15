@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/cn";
-import type { NavigationDomain } from "@/lib/nav/app-navigation-domains";
+import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
 
 type SceNavigationOverflowProps = {
   overflowDomains: NavigationDomain[];
-  activeDomainId: string | null;
+  activeDomainId: AppNavigationDomainId | null;
+  openDomainPanelId: AppNavigationDomainId | null;
+  routeActiveDisabled: boolean;
+  isDomainActive: (domain: NavigationDomain) => boolean;
   overflowOpen: boolean;
   onToggle: () => void;
   onNavigate: () => void;
@@ -21,6 +24,9 @@ type SceNavigationOverflowProps = {
 export function SceNavigationOverflow({
   overflowDomains,
   activeDomainId,
+  openDomainPanelId,
+  routeActiveDisabled,
+  isDomainActive,
   overflowOpen,
   onToggle,
   onNavigate,
@@ -32,7 +38,9 @@ export function SceNavigationOverflow({
 }: SceNavigationOverflowProps) {
   if (overflowDomains.length === 0) return null;
 
-  const overflowActive = overflowDomains.some((d) => d.id === activeDomainId);
+  const overflowRouteActive = overflowDomains.some((d) => isDomainActive(d));
+  const overflowStrong =
+    overflowOpen || (overflowRouteActive && openDomainPanelId == null);
 
   return (
     <div className="relative sce-global-primary-nav-overflow shrink-0">
@@ -40,7 +48,7 @@ export function SceNavigationOverflow({
         type="button"
         className={cn(
           "sce-global-primary-nav-item",
-          (overflowOpen || overflowActive) && "sce-global-primary-nav-item--active",
+          overflowStrong && "sce-global-primary-nav-item--active",
         )}
         aria-expanded={overflowOpen}
         aria-haspopup="menu"

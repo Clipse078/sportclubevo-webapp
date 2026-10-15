@@ -97,10 +97,11 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(inlineIds).toContain("club");
   });
 
-  it("separates platform row-1 identity from tenant row-2 context on desktop", () => {
+  it("separates tenant row-1 identity from platform row-2 context on desktop", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("ScePlatformBrandRail");
     expect(shell).toContain("SceTenantContextRail");
+    expect(shell).toContain("sce-global-platform-brand-rail--row2");
 
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("tenant-row-rail");
@@ -113,8 +114,8 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(tenant).toContain('variant="header-crest"');
     const actions = readRelative("components/admin/layout/AdminPageActions.tsx");
     expect(actions).not.toContain("Saison wechseln");
-    const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
-    expect(utilities).toContain("SceGlobalSeasonSwitcher");
+    const row2Season = readRelative("components/sce/navigation/SceRow2SeasonContext.tsx");
+    expect(row2Season).toContain("SceGlobalSeasonSwitcher");
   });
 
   it("does not introduce binary checkbox controls in navigation package", () => {

@@ -45,7 +45,7 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
 }));
 
 describe("AppShellNavigation dashboard home", () => {
-  it("shows Row 2 tenant context with empty workspace, omits dashboard from L1, and exposes platform home link", () => {
+  it("shows Row 2 platform context with empty workspace, omits dashboard from L1, and exposes platform home link", () => {
     render(
       <AppShellNavigation
         permissionKeys={Object.values(PERMISSIONS)}
@@ -63,7 +63,10 @@ describe("AppShellNavigation dashboard home", () => {
     expect(
       within(primaryNav).queryByRole("link", { name: /domains.dashboard/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getByTestId("sce-platform-home-link")).toHaveAttribute("href", "/dashboard");
+    const moduleNav = screen.getByTestId("domain-secondary-nav");
+    expect(
+      within(moduleNav).getByTestId("sce-platform-home-link"),
+    ).toHaveAttribute("href", "/dashboard");
 
     const planningLinks = screen
       .getAllByRole("link")

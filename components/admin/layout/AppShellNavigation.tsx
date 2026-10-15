@@ -50,6 +50,7 @@ import {
   SceTenantContextRail,
   SceTenantIdentityBar,
   SceTenantContextRow,
+  SceRow2SeasonContext,
 } from "@/components/sce/navigation";
 
 type AppShellNavigationProps = {
@@ -337,12 +338,13 @@ function AppShellNavigationInner({
           className="sce-global-app-header-row sce-global-app-header-row--primary"
           brand={
             <>
-              <ScePlatformBrandRail className="hidden md:flex" homeHref={homeHref} />
+              {tenantContextRail}
               <div className="md:hidden w-full min-w-0">
                 <SceTenantIdentityBar
                   displayClubName={displayClubName}
                   logoUrl={logoUrl}
                   platformWorkspace={isPlatformWorkspace}
+                  homeHref={isPlatformWorkspace ? undefined : homeHref}
                 />
               </div>
             </>
@@ -372,10 +374,6 @@ function AppShellNavigationInner({
           utilities={
             <SceGlobalUtilities
               platformWorkspace={isPlatformWorkspace}
-              activeSeasonLabel={activeSeasonLabel}
-              activeSeasonKey={activeSeasonKey}
-              selectedSeasonKey={selectedSeason}
-              seasonSwitchLabel={t("seasonSwitchAria")}
               globalNavDrawerOpen={globalNavDrawerOpen}
               globalNavDrawerId={globalNavDrawerId}
               openDrawerLabel={t("openDrawer")}
@@ -391,7 +389,24 @@ function AppShellNavigationInner({
           }
         />
 
-        <SceTenantContextRow ariaLabel={t("moduleNavAria")} brand={tenantContextRail} />
+        <SceTenantContextRow
+          ariaLabel={t("moduleNavAria")}
+          brand={
+            <ScePlatformBrandRail
+              className="hidden md:flex sce-global-platform-brand-rail--row2"
+              homeHref={homeHref}
+            />
+          }
+          utilities={
+            <SceRow2SeasonContext
+              platformWorkspace={isPlatformWorkspace}
+              activeSeasonLabel={activeSeasonLabel}
+              activeSeasonKey={activeSeasonKey}
+              selectedSeasonKey={selectedSeason}
+              seasonSwitchLabel={t("seasonSwitchAria")}
+            />
+          }
+        />
 
         {openDomainPanel && openDomainPanelItems.length > 0 ? (
           <SceDomainNavigationPanel

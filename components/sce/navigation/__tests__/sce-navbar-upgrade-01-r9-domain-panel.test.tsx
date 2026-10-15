@@ -77,6 +77,34 @@ describe("SCE-NAVBAR-UPGRADE-01-R9 domain panel interactions", () => {
     expect(clubTrigger).toHaveFocus();
   });
 
+  it("allows only one strong L1 selection while a foreign panel is open", async () => {
+    render(
+      <AppShellNavigation
+        permissionKeys={adminKeys}
+        workspaceContext="club"
+        clubName="FC Allschwil"
+        activeSeasonLabel="2025/2026"
+        activeSeasonKey="2025/2026"
+        firstName="Test"
+        lastName="User"
+        email="test@example.com"
+      />,
+    );
+
+    const user = userEvent.setup();
+    const clubTrigger = screen.getByTestId("primary-domain-panel-trigger-club");
+    const planningTrigger = screen.getByTestId("primary-domain-panel-trigger-planning");
+
+    await user.click(planningTrigger);
+    expect(planningTrigger).toHaveClass("sce-global-primary-nav-item--active");
+    expect(clubTrigger).not.toHaveClass("sce-global-primary-nav-item--active");
+    expect(clubTrigger).toHaveClass("sce-global-primary-nav-item--route-context");
+
+    await user.keyboard("{Escape}");
+    expect(clubTrigger).toHaveClass("sce-global-primary-nav-item--active");
+    expect(planningTrigger).not.toHaveClass("sce-global-primary-nav-item--active");
+  });
+
   it("switches open panel when another L1 domain is toggled", async () => {
     render(
       <AppShellNavigation

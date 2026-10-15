@@ -51,6 +51,7 @@ function computePanelGeometry(
   );
 
   const primaryRow = header.querySelector('[data-sce-nav-spine-row="primary"]');
+  const moduleRow = header.querySelector('[data-sce-nav-spine-row="module"]');
   const workspace =
     primaryRow?.querySelector("[data-sce-nav-workspace]") ??
     header.querySelector("[data-sce-nav-workspace]");
@@ -58,8 +59,10 @@ function computePanelGeometry(
     workspace?.getBoundingClientRect() ??
     primaryRow?.getBoundingClientRect() ??
     header.getBoundingClientRect();
-  const top =
-    (primaryRow?.getBoundingClientRect() ?? header.getBoundingClientRect()).bottom + 4;
+  const shellBottom =
+    moduleRow?.getBoundingClientRect().bottom ??
+    header.getBoundingClientRect().bottom;
+  const top = shellBottom + 4;
 
   let left = anchorRect.left;
   if (left + width > window.innerWidth - viewportPadding) {
