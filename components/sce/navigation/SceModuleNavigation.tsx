@@ -7,6 +7,7 @@ import { SceNavigationItem } from "@/components/sce/navigation/SceNavigationItem
 
 type SceModuleNavigationProps = {
   ariaLabel: string;
+  workspaceEyebrow?: string | null;
   items: DomainSecondaryNavItem[];
   resolveHref: (href: string) => string;
   isItemActive: (item: DomainSecondaryNavItem) => boolean;
@@ -14,6 +15,7 @@ type SceModuleNavigationProps = {
 
 export function SceModuleNavigation({
   ariaLabel,
+  workspaceEyebrow,
   items,
   resolveHref,
   isItemActive,
@@ -27,6 +29,11 @@ export function SceModuleNavigation({
       data-testid="domain-secondary-nav"
     >
       <div className="sce-global-module-nav-track flex gap-1 overflow-x-auto">
+        {workspaceEyebrow ? (
+          <span className="sce-global-module-nav-workspace-eyebrow" aria-hidden="true">
+            {workspaceEyebrow}
+          </span>
+        ) : null}
         {items.map((item) => {
           const isActive = isItemActive(item);
           const sceIcon = getNavDestinationSceIconName(item.key);

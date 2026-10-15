@@ -59,7 +59,7 @@ export function ScePrimaryNavigation({
               data-nav-domain={domain.id}
               icon={
                 <span className="sce-global-primary-nav-domain-icon">
-                  <SceIcon name={domain.l1SceIconKey as SceIconRegistryName} size={18} />
+                  <SceIcon name={domain.l1SceIconKey as SceIconRegistryName} size={20} />
                 </span>
               }
             />

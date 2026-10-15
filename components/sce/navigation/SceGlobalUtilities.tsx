@@ -23,6 +23,8 @@ type SceGlobalUtilitiesProps = {
   email: string;
   imageUrl?: string | null;
   trailingSlot?: ReactNode;
+  /** Wide desktop: hide explorer trigger when primary nav already shows all domains. */
+  showGlobalNavExplorer?: boolean;
 };
 
 export function SceGlobalUtilities({
@@ -40,6 +42,7 @@ export function SceGlobalUtilities({
   email,
   imageUrl,
   trailingSlot,
+  showGlobalNavExplorer = true,
 }: SceGlobalUtilitiesProps) {
   return (
     <div className="flex shrink-0 items-center gap-1 sce-global-header-utilities" data-testid="sce-global-utilities">
@@ -54,20 +57,22 @@ export function SceGlobalUtilities({
         </div>
       ) : null}
 
-      <button
-        type="button"
-        className={cn(
-          "sce-icon-button min-h-[2.75rem] min-w-[2.75rem]",
-          globalNavDrawerOpen && "sce-global-primary-nav-item--active",
-        )}
-        aria-label={openDrawerLabel}
-        aria-expanded={globalNavDrawerOpen}
-        aria-controls={globalNavDrawerId}
-        data-testid="global-nav-hamburger"
-        onClick={onToggleDrawer}
-      >
-        <Menu className="h-5 w-5" aria-hidden="true" />
-      </button>
+      {showGlobalNavExplorer ? (
+        <button
+          type="button"
+          className={cn(
+            "sce-icon-button sce-global-nav-explorer-trigger min-h-[2.75rem] min-w-[2.75rem]",
+            globalNavDrawerOpen && "sce-global-primary-nav-item--active",
+          )}
+          aria-label={openDrawerLabel}
+          aria-expanded={globalNavDrawerOpen}
+          aria-controls={globalNavDrawerId}
+          data-testid="global-nav-hamburger"
+          onClick={onToggleDrawer}
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        </button>
+      ) : null}
 
       <div className="hidden md:flex items-center gap-1">
         <Suspense fallback={null}>

@@ -26,6 +26,7 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(shell).toContain("SceContextNavigation");
     expect(shell).toContain("SceGlobalUtilities");
     expect(shell).toContain("SceTenantIdentityBar");
+    expect(shell).toContain("showGlobalNavExplorer");
   });
 
   it("uses distinct L1/L2/L3 style contracts in global navigation CSS", () => {
@@ -33,7 +34,8 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     expect(css).toContain("sce-global-primary-nav-item--active");
     expect(css).toContain("sce-global-module-nav-item--active");
     expect(css).toContain("sce-global-context-nav-item--active");
-    expect(css).toContain("--topnav-height: 3.5rem");
+    expect(css).toContain("--topnav-height: 4.5rem");
+    expect(css).toContain("sce-global-brand-tenant-stack");
     expect(css).not.toContain("backdrop-filter: blur");
   });
 
@@ -88,6 +90,14 @@ describe("SCE-NAVBAR-UPGRADE-01 canonical navigation", () => {
     const overflowIds = presentation.overflowDomains.map((d) => d.id);
     expect(inlineIds.some((id) => overflowIds.includes(id))).toBe(false);
     expect(inlineIds).toContain("club");
+  });
+
+  it("stacks tenant identity under the SCE product wordmark", () => {
+    const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
+    expect(tenantBar).toContain("sce-global-brand-tenant-stack");
+    expect(tenantBar).not.toContain("sce-product-tenant-separator");
+    expect(tenantBar).toContain('layout="under-product"');
+    expect(tenantBar).toContain("data-tenant-under-sce=");
   });
 
   it("uses header-crest tenant treatment without legacy navbar season pills", () => {

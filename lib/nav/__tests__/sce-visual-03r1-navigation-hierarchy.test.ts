@@ -111,6 +111,8 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
     const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
     expect(tenantBar).toContain("SidebarPlatformBrand");
     expect(tenantBar).toContain("HeaderTenantIdentity");
+    expect(tenantBar).toContain("sce-global-brand-tenant-stack");
+    expect(tenantBar).not.toContain("sce-product-tenant-separator");
   });
 
   it("suppresses redundant Planung breadcrumbs on simple module pages by default", () => {

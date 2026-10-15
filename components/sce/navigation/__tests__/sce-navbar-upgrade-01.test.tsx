@@ -44,7 +44,7 @@ vi.mock("@/components/admin/layout/AccountMenu", () => ({
 }));
 
 vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
-  usePrimaryNavLayoutTier: () => "desktop",
+  usePrimaryNavLayoutTier: () => "laptop",
   maxInlineDomainsForTier: () => 8,
 }));
 

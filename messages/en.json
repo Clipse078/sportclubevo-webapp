@@ -418,6 +418,7 @@
     "primaryNavAria": "Main navigation",
     "contextNavAria": "Context navigation",
     "moduleNavAria": "Module navigation",
+    "moduleWorkspaceEyebrow": "{domain} workspace",
     "mobilePrimaryNavAria": "Mobile main navigation",
     "more": "More",
     "moreNavAria": "More navigation",

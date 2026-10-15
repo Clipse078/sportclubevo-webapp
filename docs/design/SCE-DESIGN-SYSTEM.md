@@ -502,18 +502,18 @@ Three explicit levels in the authenticated shell header — **must not look equa
 
 | Level | Role | Implementation | Active language |
 |-------|------|----------------|-----------------|
-| **L1 Product** | Dashboard · Planung · Kommunikation · Club · Publizieren · Admin | `ScePrimaryNavigation` + `app-navigation-model` domains | Strong label (0.875rem / 700), restrained orange **underline** (`sce-global-primary-nav-item--active`) |
-| **L2 Module** | Domain groups (e.g. Organisation under Club) | `SceModuleNavigation` (`domainSecondaryItems`) | Medium weight + orange underline (`sce-global-module-nav-item--active`) |
+| **L1 Product** | Dashboard · Planung · Kommunikation · Club · Publizieren · Admin | `ScePrimaryNavigation` + `app-navigation-model` domains | Confident 0.875rem / 800 active weight, 20px SCE icons, inset surface + bottom orange edge (`sce-global-primary-nav-item--active`) |
+| **L2 Module** | Domain groups (e.g. Organisation under Club) | `SceModuleNavigation` (`domainSecondaryItems`) + workspace eyebrow | Quieter 0.75rem labels on tinted row (`sce-global-module-nav-item--active`) |
 | **L3 Context** | Module-local siblings (tabs within a destination) | `SceContextNavigation` (`moduleLocalChildren`) or page-level `SceContextTabs` where already canonical | Compact muted labels + subtle inset underline (`sce-global-context-nav-item--active`) |
 
 **Branding**
 
-- **Product identity:** `SidebarPlatformBrand` (SCE wordmark) separated from tenant by a vertical rule.
-- **Tenant identity:** `SceTenantIdentityBar` → `HeaderTenantIdentity` with `TenantLogo` `variant="header-crest"` (transparent crest, object-contain; initials only when no URL resolves).
+- **Product identity:** `SidebarPlatformBrand` (SCE wordmark) in the **top** row of `SceTenantIdentityBar` (`sce-global-brand-tenant-stack`).
+- **Tenant identity:** **below** the wordmark — `HeaderTenantIdentity` `layout="under-product"` + `TenantLogo` `variant="header-crest"` (~26px transparent crest; no horizontal “SCE | Club” composition).
 
 **Global utilities (right cluster)**
 
-- `SceGlobalUtilities`: compact `SceGlobalSeasonSwitcher`, global app explorer (hamburger → `GlobalNavDrawer`), contextual `AdminPageActions` (module pages only), notifications, account.
+- `SceGlobalUtilities`: compact borderless `SceGlobalSeasonSwitcher`, global app explorer when tier/overflow requires it (hamburger → `GlobalNavDrawer`), contextual `AdminPageActions` (module pages only), notifications, account.
 - Global **`+ Erstellen`** remains the accepted `SceActivityCreateMenu` contract on module surfaces (01G) — not duplicated in the shell.
 
 **Responsive**

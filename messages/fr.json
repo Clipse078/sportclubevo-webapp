@@ -405,6 +405,7 @@
     "primaryNavAria": "Navigation principale",
     "contextNavAria": "Navigation contextuelle",
     "moduleNavAria": "Navigation du module",
+    "moduleWorkspaceEyebrow": "Espace {domain}",
     "mobilePrimaryNavAria": "Navigation mobile principale",
     "more": "Plus",
     "moreNavAria": "Plus de navigation",

@@ -137,6 +137,9 @@ function AppShellNavigationInner({
     [model.domains, active.activeDomainId, maxInline],
   );
 
+  const showGlobalNavExplorer =
+    layoutTier !== "desktop" || overflowDomains.length > 0 || inlineDomains.length < model.domains.length;
+
   const mobileBottomDomains = useMemo(
     () => selectMobileBottomDomains(model, active.activeDomainId, 3),
     [model, active.activeDomainId],
@@ -235,6 +238,7 @@ function AppShellNavigationInner({
             onToggleDrawer={() =>
               globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
             }
+            showGlobalNavExplorer={showGlobalNavExplorer}
             firstName={firstName}
             lastName={lastName}
             email={email}
@@ -245,6 +249,9 @@ function AppShellNavigationInner({
         {active.activeDomain && active.domainSecondaryItems.length > 0 ? (
           <SceModuleNavigation
             ariaLabel={t("moduleNavAria")}
+            workspaceEyebrow={t("moduleWorkspaceEyebrow", {
+              domain: domainLabel(active.activeDomain),
+            })}
             items={active.domainSecondaryItems}
             resolveHref={resolveHref}
             isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
