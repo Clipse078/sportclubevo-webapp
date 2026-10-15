@@ -84,7 +84,7 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     expect(matrix).toHaveLength(63);
 
     const approved = loadApprovedTargetMatrix().destinations;
-    expect(approved).toHaveLength(62);
+    expect(approved).toHaveLength(63);
 
     const sections = getVisibleNavSections(CLUB_ADMIN_KEYS, "club");
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
@@ -92,7 +92,7 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     expect(audit.unmapped).toEqual([]);
     expect(audit.mismatches).toEqual([]);
     expect(audit.duplicateCanonicalNodes).toEqual([]);
-    expect(audit.mapped).toBe(62);
+    expect(audit.mapped).toBe(63);
   });
 
   it("resolves deep routes against the V2 taxonomy without pathname hacks", () => {
@@ -175,10 +175,10 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     expect(audit.duplicateCanonicalNodes).toEqual([]);
   });
 
-  it("maintains club-admin navigation completeness at 62/62/0", () => {
+  it("maintains club-admin navigation completeness at 63/63/0", () => {
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(62);
-    expect(baseline.reachableDestinations).toBe(62);
+    expect(baseline.visibleDestinations).toBe(63);
+    expect(baseline.reachableDestinations).toBe(63);
     expect(baseline.orphanedDestinations).toEqual([]);
     expect(baseline.unregisteredAuthenticatedRoutes).toEqual([]);
 
