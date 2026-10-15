@@ -395,9 +395,45 @@ export function resolveProgrammeCalendarMicroSemantics(
   return { ...identity, locationLabel };
 }
 
+function resolvePersonalCalendarMicroSemanticsFromCanonical(
+  item: NormalizedCalendarItem,
+): CalendarMicroSemanticFields | null {
+  const model = item.canonicalPresentation;
+  if (!model) return null;
+
+  const pseudoProgrammeItem: ProgrammeItem = {
+    id: item.id,
+    kind:
+      item.semanticType === "TRAINING"
+        ? "TRAINING"
+        : item.semanticType === "MATCH"
+          ? "MATCH"
+          : item.semanticType === "TOURNAMENT"
+            ? "TOURNAMENT"
+            : "CLUB_EVENT",
+    domainId: item.sourceId,
+    resourceKey: item.id,
+    startsAt: item.startAt,
+    endsAt: item.endAt ?? null,
+    allDay: item.allDay,
+    presentation: model,
+    teamId: null,
+    teamSeasonId: null,
+    orgUnitId: null,
+    navigationTarget: item.deepLink ?? "#",
+  };
+
+  return resolveProgrammeCalendarMicroSemantics(pseudoProgrammeItem);
+}
+
 export function resolvePersonalCalendarMicroSemantics(
   item: NormalizedCalendarItem,
 ): CalendarMicroSemanticFields {
+  const fromCanonical = resolvePersonalCalendarMicroSemanticsFromCanonical(item);
+  if (fromCanonical) {
+    return fromCanonical;
+  }
+
   const identity = resolvePersonalMicroIdentityFields(item);
   const locationLabel = resolveNormalizedMicroLocation(item, identity.identityLabel);
   return { ...identity, locationLabel };

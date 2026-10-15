@@ -5,9 +5,12 @@ import {
 import type { PersonalContext } from "@/lib/dashboard/personal-context/types";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { loadTeamEventProgrammeItems } from "./adapters/team-event-programme-adapter";
-import { loadTrainingProgrammeItems } from "./adapters/training-programme-adapter";
 import { loadMeetingProgrammeItems } from "./adapters/meeting-programme-adapter";
+import { prisma } from "@/lib/db/prisma";
+import { queryProgramme } from "@/lib/programme-engine/query-programme";
+import { buildPersonProgrammeScope } from "@/lib/programme-engine/person-programme-scope";
+import { programmeItemsToPersonalProgrammeItems } from "@/lib/programme-engine/programme-item-personal-adapter";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
 import {
   resolvePersonalProgrammeRange,
   type PersonalProgrammeRange,
@@ -144,9 +147,31 @@ export async function loadPersonalProgramme(
     }
   };
 
-  const [teamEvents, trainings, meetings] = await Promise.all([
-    loadAdapter("programme-events", () => loadTeamEventProgrammeItems(adapterCtx)),
-    loadAdapter("programme-training", () => loadTrainingProgrammeItems(adapterCtx)),
+  const [programmeQuery, meetings] = await Promise.all([
+    loadAdapter("programme-engine-person", async () => {
+      const [tenant, tenantLogoUrl] = await Promise.all([
+        prisma.tenant.findUnique({
+          where: { id: args.tenantId },
+          select: { name: true },
+        }),
+        getTenantClubCrestUrlCached(args.tenantId),
+      ]);
+
+      const result = await queryProgramme({
+        tenantId: args.tenantId,
+        userId: args.userId!,
+        timeZone: args.timeZone,
+        now: args.now,
+        from: range.rangeStart,
+        to: range.rangeEnd,
+        permissionKeys: permissionKeys ?? [],
+        tenantClubName: tenant?.name ?? null,
+        tenantLogoUrl,
+        scope: buildPersonProgrammeScope(personalContext),
+      });
+
+      return programmeItemsToPersonalProgrammeItems(result.items, personalContext);
+    }),
     loadAdapter("programme-meetings", () => loadMeetingProgrammeItems(adapterCtx)),
   ]);
 
@@ -154,7 +179,7 @@ export async function loadPersonalProgramme(
     markSceHotfixLogin01StepStart("programme-merge");
   }
   let items = sortPersonalProgrammeItems(
-    dedupeProgrammeItems([...teamEvents, ...trainings, ...meetings]),
+    dedupeProgrammeItems([...programmeQuery, ...meetings]),
   );
   if (trace) {
     logSceHotfixLogin01StepFinished("programme-merge", { rowCount: items.length });

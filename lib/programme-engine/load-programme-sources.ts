@@ -31,10 +31,14 @@ import { buildSceActivityRoute } from "@/lib/sporting-activity-presentation/cano
 import type { PersonalEventProjectionActor } from "@/lib/personal-agenda/event-projection-access";
 import { isClubEventRelevantToTeamProgrammeContext } from "./club-event-team-relevance";
 import {
+  isMatchParticipatingTeam,
   isMatchRelevantToTeamProgrammeScope,
   resolveProgrammeMatchTeamSeasonIdForTeam,
 } from "./match-team-relevance";
 import { loadTeamSeasonIdByTeamAndSeasonForMatches } from "@/lib/weekplanner/match-team-season-resolution";
+import { isClubEventRelevantToPersonProgrammeScope } from "./person-club-event-relevance";
+import { isMatchRelevantToPersonProgrammeScope } from "./person-match-relevance";
+import { isTournamentRelevantToPersonProgrammeScope } from "./person-tournament-relevance";
 import { buildProgrammeItemId, buildProgrammeResourceKey } from "./programme-item-id";
 import type { ProgrammeItem, ProgrammeScope } from "./types";
 
@@ -93,7 +97,9 @@ async function loadTrainingProgrammeItems(
   const teamSeasonIds =
     scope.kind === "TEAM"
       ? [scope.teamSeasonId]
-      : undefined;
+      : scope.kind === "PERSON"
+        ? [...scope.relevantTeamSeasonIds]
+        : undefined;
 
   const { dateFrom, dateTo } = resolveTrainingSessionDateBoundsForProgrammeRange({
     rangeStart: ctx.rangeStart,
@@ -143,6 +149,13 @@ async function loadTrainingProgrammeItems(
     }
 
     if (scope.kind === "TEAM" && session.teamSeasonId !== scope.teamSeasonId) {
+      continue;
+    }
+
+    if (
+      scope.kind === "PERSON" &&
+      !scope.relevantTeamSeasonIds.includes(session.teamSeasonId)
+    ) {
       continue;
     }
 
@@ -206,17 +219,21 @@ async function loadMatchProgrammeItems(
     to: ctx.rangeEnd,
   });
 
-  const teamSeasonIdByTeamAndSeason =
-    scope.kind === "TEAM"
-      ? await loadTeamSeasonIdByTeamAndSeasonForMatches(ctx.tenantId, matches)
-      : new Map<string, string>();
+  const needsTeamSeasonLookup = scope.kind === "TEAM" || scope.kind === "PERSON";
+  const teamSeasonIdByTeamAndSeason = needsTeamSeasonLookup
+    ? await loadTeamSeasonIdByTeamAndSeasonForMatches(ctx.tenantId, matches)
+    : new Map<string, string>();
 
   const filtered =
     scope.kind === "TEAM"
       ? matches.filter((m) =>
           isMatchRelevantToTeamProgrammeScope(m, scope, teamSeasonIdByTeamAndSeason),
         )
-      : matches;
+      : scope.kind === "PERSON"
+        ? scope.relevantTeamIds.length === 0
+          ? []
+          : matches.filter((m) => isMatchRelevantToPersonProgrammeScope(m, scope))
+        : matches;
 
   if (filtered.length === 0) return [];
 
@@ -259,8 +276,17 @@ async function loadMatchProgrammeItems(
     const domainId = match.id;
     const resourceKey = buildProgrammeResourceKey("MATCH", domainId);
 
+    const personParticipatingTeamId =
+      scope.kind === "PERSON"
+        ? scope.relevantTeamIds.find((teamId) => isMatchParticipatingTeam(match, teamId))
+        : undefined;
+
     const programmeTeamId =
-      scope.kind === "TEAM" ? scope.teamId : (match.teamId ?? null);
+      scope.kind === "TEAM"
+        ? scope.teamId
+        : scope.kind === "PERSON"
+          ? (personParticipatingTeamId ?? match.teamId ?? null)
+          : (match.teamId ?? null);
     const programmeTeamSeasonId =
       scope.kind === "TEAM"
         ? resolveProgrammeMatchTeamSeasonIdForTeam(
@@ -268,7 +294,13 @@ async function loadMatchProgrammeItems(
             scope.teamId,
             teamSeasonIdByTeamAndSeason,
           )
-        : (match.teamSeasonId ?? null);
+        : scope.kind === "PERSON" && programmeTeamId
+          ? resolveProgrammeMatchTeamSeasonIdForTeam(
+              match,
+              programmeTeamId,
+              teamSeasonIdByTeamAndSeason,
+            )
+          : (match.teamSeasonId ?? null);
 
     items.push({
       id: buildProgrammeItemId("MATCH", domainId),
@@ -316,7 +348,9 @@ async function loadTournamentProgrammeItems(
       ? tournaments.filter((t) =>
           tournamentRelevantToTeam(t, scope.teamId, scope.teamSeasonId),
         )
-      : tournaments;
+      : scope.kind === "PERSON"
+        ? tournaments.filter((t) => isTournamentRelevantToPersonProgrammeScope(t, scope))
+        : tournaments;
 
   const items: ProgrammeItem[] = [];
 
@@ -433,6 +467,17 @@ async function loadClubEventProgrammeItems(
           orgUnitId: scope.orgUnitId,
         })
       ) {
+        continue;
+      }
+    }
+
+    if (scope.kind === "PERSON") {
+      const personRelevant = await isClubEventRelevantToPersonProgrammeScope({
+        tenantId: ctx.tenantId,
+        audience,
+        scope,
+      });
+      if (!personRelevant) {
         continue;
       }
     }

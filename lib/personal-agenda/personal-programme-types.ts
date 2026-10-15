@@ -1,5 +1,6 @@
 import type { EventType } from "@prisma/client";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
+import type { SceActivityPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 
 /** Canonical programme source types for Mein Programm (DASHBOARD-02). */
 export type PersonalProgrammeSourceType =
@@ -49,6 +50,8 @@ export type PersonalProgrammeItem = {
   ariaLabel: string;
   /** Canonical read-model presentation (SCE-ACTIVITY-UX-01). */
   activityPresentation?: SportingActivityPresentation;
+  /** Programme Engine SCE presentation — preferred for calendar MICRO (01I). */
+  canonicalPresentation?: SceActivityPresentationModel;
 };
 
 export function eventTypeToProgrammeSourceType(type: EventType): PersonalProgrammeSourceType {

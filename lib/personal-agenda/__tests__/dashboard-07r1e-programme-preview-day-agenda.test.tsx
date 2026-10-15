@@ -29,6 +29,9 @@ vi.mock("next-intl", () => ({
     if (key === "dayAriaActivitiesCount" && values?.count != null) {
       return `${values.count} Termine`;
     }
+    if (key === "dayAriaTrainingCount" && values?.count != null) {
+      return `${values.count} Trainings`;
+    }
     if (key === "dayAriaOneActivityNamed" && values?.title) {
       return `1 Termin: ${values.title}`;
     }
@@ -53,6 +56,7 @@ vi.mock("next-intl", () => ({
       ariaMonthGrid: "Grid",
       selectedDayPanel: "Selected",
       emptyDay: "Keine Termine an diesem Tag.",
+      emptyDayPersonal: "Keine Termine an diesem Tag.",
       weekdayMon: "Mo",
       weekdayTue: "Di",
       weekdayWed: "Mi",
@@ -198,8 +202,8 @@ describe("DASHBOARD-07R1E — multi-team Wednesday reference", () => {
     );
 
     const day = screen.getByTestId("personal-calendar-day-2026-09-30");
-    expect(day.textContent).toContain("+1");
-    expect(day.getAttribute("aria-label")).toContain("2 Termine");
+    expect(day.textContent).not.toContain("+1");
+    expect(day.getAttribute("aria-label")).toContain("2 Trainings");
 
     expect(screen.getByText("Junioren F2 Training")).toBeTruthy();
     expect(screen.getByText("Senioren 40+ Training")).toBeTruthy();
@@ -211,11 +215,11 @@ describe("DASHBOARD-07R1E — multi-team Wednesday reference", () => {
     );
   });
 
-  it("does not dedupe distinct trainings for activity markers (+1 overflow)", () => {
+  it("does not dedupe distinct trainings for activity markers (two fit in marker slots)", () => {
     const dayItems = [f2, senioren];
     const markers = buildPersonalProgrammeDayActivityMarkers(dayItems, dayItems.length);
-    expect(markers.overflowCount).toBe(1);
-    expect(markers.markerSourceTypes).toEqual(["TRAINING"]);
+    expect(markers.overflowCount).toBe(0);
+    expect(markers.markerSourceTypes).toEqual(["TRAINING", "TRAINING"]);
   });
 });
 

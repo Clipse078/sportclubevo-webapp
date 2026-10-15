@@ -1,6 +1,7 @@
 import type { EventType, TaskStatus } from "@prisma/client";
 import type { PersonalProgrammePresentationStatus } from "./personal-programme-types";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
+import type { SceActivityPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 
 /** Application-level semantic types for personal calendar (not a Prisma enum). */
 export type CalendarItemSemanticType =
@@ -56,4 +57,6 @@ export type NormalizedCalendarItem = {
   eventType?: EventType | "MEETING";
   ariaLabel: string;
   activityPresentation?: SportingActivityPresentation;
+  /** When set, personal calendar MICRO uses the same semantics as Team/Club programme. */
+  canonicalPresentation?: SceActivityPresentationModel;
 };

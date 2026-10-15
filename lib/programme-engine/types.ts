@@ -1,7 +1,7 @@
 import type { SceActivityPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 import type { PersonalProgrammePresentationStatus } from "@/lib/personal-agenda/personal-programme-types";
 
-/** Initial production scopes; PERSON reserved for 01J without engine redesign. */
+/** TEAM → CLUB → PERSON — one engine, scope-aware relevance. */
 export type ProgrammeScope =
   | {
       kind: "TEAM";
@@ -12,6 +12,15 @@ export type ProgrammeScope =
     }
   | {
       kind: "CLUB";
+    }
+  | {
+      kind: "PERSON";
+      personId: string | null;
+      /** Active sporting team relationships (trainer/player/assignment). */
+      relevantTeamIds: readonly string[];
+      relevantTeamSeasonIds: readonly string[];
+      /** Person org-unit memberships for exact-unit Club Event audience. */
+      orgUnitIds: readonly string[];
     };
 
 export type ProgrammeActivityKind = "TRAINING" | "MATCH" | "TOURNAMENT" | "CLUB_EVENT";
