@@ -24,6 +24,7 @@ vi.mock("@/lib/db/prisma", () => ({
 import {
   PlatformAccountDomainError,
   normalizePlatformAccountEmail,
+  resetPlatformAccountPassword,
   updatePlatformAccount,
 } from "@/lib/users/platform-account-service";
 
@@ -103,10 +104,10 @@ describe("platform account lifecycle safety", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           isActive: false,
-          passwordChangedAt: expect.any(Date),
         }),
       }),
     );
+    expect(mocks.userUpdate.mock.calls[0]?.[0]?.data?.passwordChangedAt).toBeUndefined();
     expect(mocks.auditLogCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         actorUserId: "actor",
@@ -139,10 +140,10 @@ describe("platform account lifecycle safety", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           email: "new-admin@example.test",
-          passwordChangedAt: expect.any(Date),
         }),
       }),
     );
+    expect(mocks.userUpdate.mock.calls[0]?.[0]?.data?.passwordChangedAt).toBeUndefined();
   });
 
   it("rejects an invalid privileged identity before opening a transaction", () => {
@@ -208,5 +209,23 @@ describe("platform account lifecycle safety", () => {
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
     expect([...active.values()].filter(Boolean)).toHaveLength(1);
+  });
+
+  it("blocks platform password reset for protected persistent club admin identity", async () => {
+    mocks.userFindUnique.mockResolvedValue({
+      id: "club-admin",
+      email: "it@fcallschwil.ch",
+      isActive: true,
+    });
+
+    await expect(
+      resetPlatformAccountPassword({
+        userId: "club-admin",
+        password: "SecurePassword123!",
+        actorUserId: "platform-actor",
+      }),
+    ).rejects.toThrow(/protected identity/i);
+
+    expect(mocks.userUpdate).not.toHaveBeenCalled();
   });
 });

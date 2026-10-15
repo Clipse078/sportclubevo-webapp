@@ -54,9 +54,11 @@ describe("SCE-VISUAL-03 global app navigation", () => {
 
   it("preserves SCE product logo component and tenant crest source", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shellNav).toContain("SidebarPlatformBrand");
-    expect(shellNav).toContain("HeaderTenantIdentity");
+    expect(shellNav).toContain("SceTenantIdentityBar");
     expect(shellNav).toContain("logoUrl");
+    const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
+    expect(tenantBar).toContain("SidebarPlatformBrand");
+    expect(tenantBar).toContain("HeaderTenantIdentity");
   });
 
   it("preserves permission filtering via getVisibleNavSections", () => {
@@ -118,18 +120,20 @@ describe("SCE-VISUAL-03 global app navigation", () => {
   it("defines overflow priority metadata and mobile bottom navigation", () => {
     expect(getPrimaryNavPriority("planung")).toBe(1);
     expect(getPrimaryNavPriority("finanzen")).toBe(3);
-    const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shellNav).toContain("sce-global-primary-nav-overflow");
-    expect(shellNav).toContain("data-nav-domain-priority");
+    const overflow = readRelative("components/sce/navigation/SceNavigationOverflow.tsx");
+    expect(overflow).toContain("sce-global-primary-nav-overflow");
     const navCss = readRelative("app/(admin)/global-app-navigation.css");
     expect(navCss).toContain("sce-mobile-bottom-nav");
     expect(navCss).toContain("data-sce-mobile-bottom-nav");
   });
 
   it("exposes aria-current on active navigation states", () => {
+    const item = readRelative("components/sce/navigation/SceNavigationItem.tsx");
+    expect(item).toContain('aria-current={isActive ? "page" : undefined}');
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shellNav).toContain('aria-current={isActive ? "page" : undefined}');
-    expect(shellNav).toContain('aria-current={isChildActive ? "page" : undefined}');
+    expect(shellNav).toContain("isDomainActive");
+    expect(shellNav).toContain("isDomainSecondaryItemActive");
+    expect(shellNav).toContain("isModuleLocalChildPrimaryActive");
   });
 
   it("excludes public, infoboard display, and auth surfaces from shell nav scope", () => {
@@ -157,7 +161,9 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     expect(shellNav).toContain(SCE_GLOBAL_APP_HEADER_CLASS);
     expect(shellNav).toContain('useTranslations("AppShell")');
     expect(shellNav).toContain('t("primaryNavAria")');
-    expect(shellNav).toContain('t("contextNavAria")');
+    expect(shellNav).toContain('t("moduleNavAria")');
+    expect(shellNav).toContain("SceDomainNavigationPanel");
+    expect(shellNav).toContain('t("mobilePrimaryNavAria")');
   });
 
   it("derives Planning children from canonical nav-config", () => {
@@ -169,6 +175,7 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     expect(planung?.children?.map((c) => c.href)).toEqual(
       expect.arrayContaining([
         "/dashboard/planner/week",
+        "/dashboard/programm",
         "/dashboard/training",
         "/dashboard/matchcenter",
         "/dashboard/tournamentcenter",

@@ -13,6 +13,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -63,7 +64,7 @@ describe("SCE-VISUAL-06R1 mobile explorer", () => {
         email="test@example.com"
       />,
     );
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
 
     expect(screen.getAllByTestId("global-nav-explorer-search")).toHaveLength(1);
     const searchShell = screen.getByTestId("global-nav-explorer-search-shell");

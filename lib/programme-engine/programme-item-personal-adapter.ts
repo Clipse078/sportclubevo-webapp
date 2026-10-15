@@ -7,6 +7,7 @@ import type {
   PersonalProgrammeSourceType,
 } from "@/lib/personal-agenda/personal-programme-types";
 import type { EventType } from "@prisma/client";
+import { resolveLegacySportingActivityPresentationFromSce } from "@/lib/sporting-activity-presentation/canonical/adapters/to-legacy-presentation";
 import type { ProgrammeActivityKind, ProgrammeItem } from "./types";
 
 function programmeKindToSourceType(kind: ProgrammeActivityKind): PersonalProgrammeSourceType {
@@ -81,6 +82,7 @@ export function programmeItemToPersonalProgrammeItem(
     typeLabel,
     eventType: programmeKindToEventType(item.kind),
     ariaLabel: `${typeLabel}: ${title}`,
+    activityPresentation: resolveLegacySportingActivityPresentationFromSce(item.presentation),
     canonicalPresentation: item.presentation,
     programmeScopeTeamId: item.teamId,
   };

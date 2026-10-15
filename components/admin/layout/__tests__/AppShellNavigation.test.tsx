@@ -13,6 +13,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -42,7 +43,7 @@ vi.mock("@/components/admin/layout/AccountMenu", () => ({
 }));
 
 vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
-  usePrimaryNavLayoutTier: () => "desktop",
+  usePrimaryNavLayoutTier: () => "laptop",
   maxInlineDomainsForTier: () => 8,
 }));
 
@@ -62,12 +63,13 @@ describe("AppShellNavigation global menu", () => {
       />,
     );
 
-    const hamburger = screen.getByTestId("global-nav-hamburger");
-    expect(hamburger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByTestId("global-nav-hamburger")).not.toBeInTheDocument();
+    const mobileMenu = screen.getByTestId("global-nav-mobile-menu");
+    expect(mobileMenu).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
 
-    await user.click(hamburger);
-    expect(hamburger).toHaveAttribute("aria-expanded", "true");
+    await user.click(mobileMenu);
+    expect(mobileMenu).toHaveAttribute("aria-expanded", "true");
     const drawer = screen.getByTestId("global-nav-drawer");
     expect(drawer).toBeVisible();
     expect(screen.getByTestId("global-nav-explorer-domain-rail")).toBeInTheDocument();
@@ -77,7 +79,7 @@ describe("AppShellNavigation global menu", () => {
 
     await user.click(screen.getByTestId("global-nav-drawer-close"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
-    expect(hamburger).toHaveAttribute("aria-expanded", "false");
+    expect(mobileMenu).toHaveAttribute("aria-expanded", "false");
   });
 
   it("closes the drawer when the backdrop is clicked", async () => {
@@ -93,7 +95,7 @@ describe("AppShellNavigation global menu", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     expect(screen.getByTestId("global-nav-drawer")).toBeInTheDocument();
     await user.click(screen.getByTestId("global-nav-drawer-backdrop"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();

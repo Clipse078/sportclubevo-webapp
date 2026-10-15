@@ -137,6 +137,7 @@ describe("STAGE-OPS-01 — Training Planner navigation regression", () => {
     const childKeys = planungItem?.children?.map((c) => c.key) ?? [];
     expect(childKeys).toEqual([
       "wochenplanner",
+      "vereinsprogramm",
       "trainingcenter",
       "matchcenter",
       "tournamentcenter",

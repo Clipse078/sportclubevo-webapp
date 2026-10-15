@@ -77,7 +77,12 @@ export default function PlannerWeekStreamingRoot({
   return (
     <WeekplannerVisibleTimeRangeProvider>
       <BridgeContext.Provider value={setBridge}>
-        <div className="space-y-2" data-testid="planning-hub-workspace">
+        <div
+          className="sce-page-shell sce-page-shell--operational w-full min-w-0 space-y-2"
+          data-sce-page-shell
+          data-sce-page-width="operational"
+          data-testid="planning-hub-workspace"
+        >
           {plannerReady ? <WeekPlannerChrome {...mergedChrome} /> : null}
           {children}
         </div>

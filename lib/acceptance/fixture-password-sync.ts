@@ -12,6 +12,7 @@ import {
   resolveAcceptanceBootstrapDatabaseUrl,
 } from "@/lib/acceptance/bootstrap-safe-runner";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { getProtectedAuthIdentities } from "@/lib/server/protected-auth-guard";
 
 export const ACCEPTANCE_FIXTURE_PASSWORD_SYNC_CONFIRM =
   "SYNC_ACCEPTANCE_FIXTURE_PASSWORDS";
@@ -141,6 +142,13 @@ export async function syncAcceptanceFixturePasswordHashes(
     }
     if (existing.id !== fixture.id) {
       throw new Error(`Existing user ${fixture.email} is not the Acceptance fixture.`);
+    }
+
+    const protectedIdentities = getProtectedAuthIdentities();
+    if (protectedIdentities.has(fixture.email.trim().toLowerCase())) {
+      throw new Error(
+        `Refusing fixture password sync for protected persistent identity ${fixture.email}.`,
+      );
     }
 
     const passwordHash = await passwordHasher(passwords[fixture.passwordEnv]);

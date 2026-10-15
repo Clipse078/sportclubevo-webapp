@@ -117,7 +117,7 @@ export default function WeekPlannerChrome({
   });
 
   return (
-    <div className="w-full space-y-2" data-testid="weekplanner-management-chrome">
+    <div className="w-full space-y-3" data-testid="weekplanner-management-chrome">
       <PlanningManagementPageHeader
         breadcrumbLeaf="Wochenplaner"
         title="Wochenplaner"
@@ -138,38 +138,42 @@ export default function WeekPlannerChrome({
         }
       />
 
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <PlanningWeekNavigation
-            rangeLabel={weekNav.rangeLabel}
-            previousWeekHref={weekHref(weekNav.previousParam, resolvedUrlState)}
-            nextWeekHref={weekHref(weekNav.nextParam, resolvedUrlState)}
-            todayHref={todayHref}
-          />
-          <WeekplannerPlanBar
-            weekParam={weekNav.param}
-            wochenplanPlans={wochenplanPlans}
-            weekplannerPlans={plans}
-            selectedPlanParam={selectedPlanParam ?? viewedWochenplanPlanId}
-            materializedWeekplannerPlanId={materializedWeekplannerPlanId}
-            canManage={canManagePlans}
-            compact
-          />
-        </div>
-
-        {week && onReviewConflicts ? (
-          <div className="flex min-w-0 shrink-0 items-center lg:justify-end">
-            <PlanningHubConflictAttention
-              week={week}
-              incompleteCount={incompleteCount}
-              onReviewConflicts={onReviewConflicts}
-            />
-          </div>
-        ) : null}
+      <div
+        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        data-testid="weekplanner-primary-planning-bar"
+      >
+        <PlanningWeekNavigation
+          rangeLabel={weekNav.rangeLabel}
+          previousWeekHref={weekHref(weekNav.previousParam, resolvedUrlState)}
+          nextWeekHref={weekHref(weekNav.nextParam, resolvedUrlState)}
+          todayHref={todayHref}
+        />
+        <WeekplannerPlanBar
+          weekParam={weekNav.param}
+          wochenplanPlans={wochenplanPlans}
+          weekplannerPlans={plans}
+          selectedPlanParam={selectedPlanParam ?? viewedWochenplanPlanId}
+          materializedWeekplannerPlanId={materializedWeekplannerPlanId}
+          canManage={canManagePlans}
+          compact
+        />
       </div>
 
+      {week && onReviewConflicts ? (
+        <div
+          className="flex min-w-0 items-center justify-end"
+          data-testid="weekplanner-conflict-context"
+        >
+          <PlanningHubConflictAttention
+            week={week}
+            incompleteCount={incompleteCount}
+            onReviewConflicts={onReviewConflicts}
+          />
+        </div>
+      ) : null}
+
       <div
-        className="flex flex-col gap-2 border-t border-[var(--border)]/70 pt-2"
+        className="flex flex-col gap-2 border-t border-[var(--border)]/70 pt-3"
         data-testid="planning-hub-toolbar"
       >
         <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">

@@ -100,7 +100,9 @@ export default async function ClubDashboardView({
 
   return (
     <div
-      className="mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-2.5 lg:gap-3"
+      className="sce-page-shell sce-page-shell--dashboard flex w-full min-w-0 flex-col gap-2.5 lg:gap-3"
+      data-sce-page-shell
+      data-sce-page-width="dashboard"
       data-testid="personal-command-center"
     >
       <PersonalDashboardCockpitGreeting

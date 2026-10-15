@@ -7,6 +7,7 @@ import type { SceIconRegistryName } from "@/components/design-system/icons/regis
 export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   dashboard: "dashboard",
   wochenplanner: "week-planner",
+  vereinsprogramm: "calendar",
   trainingcenter: "training",
   matchcenter: "match",
   tournamentcenter: "tournament",

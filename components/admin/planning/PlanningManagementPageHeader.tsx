@@ -29,10 +29,13 @@ export default function PlanningManagementPageHeader({
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-[1.625rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+          <h1 className="text-[1.875rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
             {title}
           </h1>
-          <p className="text-sm text-[var(--text-2)]" data-testid={subtitleTestId}>
+          <p
+            className="text-sm leading-relaxed text-[var(--text-2)]"
+            data-testid={subtitleTestId}
+          >
             {subtitle}
           </p>
         </div>

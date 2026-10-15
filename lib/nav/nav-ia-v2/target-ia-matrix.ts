@@ -93,6 +93,7 @@ const CLUB_ADMIN_KEYS = new Set([
 const PLANUNG_KEYS = new Set([
   "planung",
   "wochenplanner",
+  "vereinsprogramm",
   "trainingcenter",
   "matchcenter",
   "tournamentcenter",

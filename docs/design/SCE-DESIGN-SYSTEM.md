@@ -496,6 +496,67 @@ Authoritative engine doc: [`docs/calendar/SCE-CALENDAR-ENGINE.md`](../calendar/S
 
 ---
 
+## Canonical global navigation (NAVBAR-UPGRADE-01)
+
+Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, **on-demand hierarchical navigation panel** — L2/L3 are not a permanent horizontal strip.
+
+| Surface | Role | Implementation | Rules |
+|---------|------|----------------|-------|
+| **Row 1 — Tenant + L1 + utilities** | Tenant crest + name · Planung · Kommunikation · Club · Publizieren · Admin · global utilities | `SceTenantContextRail` + `ScePrimaryNavigation` + `SceGlobalUtilities` | **One strong L1 selection maximum** (`--active` or open panel). Route-active and panel-open are separate states: when a foreign panel is open, the route domain may use `--route-context` only — never two full active treatments. Domains with children open `SceDomainNavigationPanel` (`aria-expanded`); panel-open is not `aria-current`. |
+| **Row 2 — Platform + season** | SportClubEvo wordmark (left) · season context (right, under utilities) | `ScePlatformBrandRail` + `SceRow2SeasonContext` inside `SceTenantContextRow` | Always visible on desktop while panels overlay page content; **no** horizontal L2 strip; empty middle workspace is intentional. |
+| **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. |
+
+**Navigation rules (canonical)**
+
+1. **Do not use horizontally scrolling navigation as the primary desktop mechanism for module discovery.**
+2. **Where L2 and L3 coexist, prefer one coherent hierarchical navigation surface** rather than stacked/nested disclosures.
+3. **Navigation panels overlay content and never create additional persistent shell rows.**
+
+**Branding**
+
+- **Primary workspace identity (tenant):** Row 1 — `HeaderTenantIdentity` `layout="tenant-row-rail"` + transparent crest → `/dashboard`.
+- **Secondary platform identity:** Row 2 — `ScePlatformBrandRail` / SportClubEvo wordmark → `/dashboard` (quieter visual weight than tenant).
+
+**Global utilities (right cluster)**
+
+- `SceGlobalUtilities` (Row 1): contextual `AdminPageActions` (module pages only), notifications, account. Season lives on Row 2 (`SceRow2SeasonContext`). **Desktop module discovery** is L1 domains + `SceDomainNavigationPanel` — not a global hamburger/overflow trigger in Row 1.
+- **Primary navigation icons** use canonical state-driven monochrome foreground (`currentColor`). Individual navigation icons must not introduce independent semantic colors (orange/blue/accent fills) in inactive rows — state controls color, not icon artwork.
+- **Season context** uses the Row 2 width budget. The **full localized season label** is the default desktop representation (`lg` and up) and must not collapse based on Row 1 width pressure; compact variants apply only on genuinely constrained tablet tiers.
+- Global **`+ Erstellen`** remains the accepted `SceActivityCreateMenu` contract on module surfaces (01G) — not duplicated in the shell.
+
+**Responsive**
+
+- Tiering via `usePrimaryNavLayoutTier` + `maxInlineDomainsForTier`; overflow via single `SceNavigationOverflow` (same domain list as inline — no parallel route arrays).
+- Mobile: existing bottom primary nav + drawer; desktop L2/L3 hidden below `md`.
+
+**Accessibility**
+
+- Distinct `nav` landmarks: `primaryNavAria` (Row 1 L1), `moduleNavAria` (Row 2 platform bar), `mobilePrimaryNavAria` (bottom nav). On-demand L2/L3 uses `SceDomainNavigationPanel` with domain-scoped `aria-label` (not a permanent context row).
+- `aria-current="page"` on active links (`SceNavigationItem`).
+- Visible `:focus-visible` rings on all levels; overflow menu is keyboard-operable native links.
+
+Styles: `app/(admin)/global-app-navigation.css` · Shell composer: `components/admin/layout/AppShellNavigation.tsx`.
+
+### Page shell vs navigation grid (NAVBAR-UPGRADE-01-R8)
+
+**Navigation grid** (Row 1 / Row 2 only): tenant or platform identity rail (`--sce-nav-brand-rail-width`) + navigation workspace + utilities (Row 1). Row 2 repeats the rail column for platform identity and right-aligns season under Row 1 utilities. Navigation identity rails **never** determine page content alignment (`--sce-page-gutter` only). Horizontal alignment for L1 uses `--sce-shell-workspace-start` inside the header — **not** for page bodies.
+
+**Page grid** (`SceApplicationPageGrid` + `PageShell`): responsive horizontal gutters via `--sce-page-gutter` (16px mobile → 32px large desktop). Page content is **never** offset by the navigation brand rail.
+
+**Width modes** (`data-sce-page-width` on `PageShell`):
+
+| Mode | Use |
+|------|-----|
+| `operational` | Wochenplaner, dense planners — full width within gutters |
+| `readable` | Default admin pages — optional max-width (~75rem) |
+| `dashboard` | Card home — centered max-width (~87.5rem) |
+
+Rule (canonical): *Navigation identity rails never dictate the left edge of application page content. Pages use canonical responsive page gutters and an appropriate content-width mode.*
+
+Implementation: `lib/shell/sce-page-layout.ts` · `components/sce/shell/SceApplicationPageGrid.tsx`.
+
+---
+
 ## Related documents
 
 - [`SCE-CONTEXT-TABS-STANDARD.md`](./SCE-CONTEXT-TABS-STANDARD.md)

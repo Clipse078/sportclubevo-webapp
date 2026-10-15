@@ -2,7 +2,9 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
+import { applyAuthorizedCredentialUpdate } from "@/lib/auth/authorized-credential-update";
 import { hashPassword } from "@/lib/auth/password";
+import { assertProtectedCredentialMutationAllowed } from "@/lib/auth/protected-credential-mutation";
 import {
   acquirePlatformSuperAdminMutationLock,
   platformSuperAdminAssignmentWhere,
@@ -100,9 +102,6 @@ export async function updatePlatformAccount(input: UpdatePlatformAccountInput) {
         }
       }
 
-      const securitySensitiveChange =
-        user.email !== email || (user.isActive && !input.isActive);
-
       const updated = await tx.user.update({
         where: { id: user.id },
         data: {
@@ -110,9 +109,6 @@ export async function updatePlatformAccount(input: UpdatePlatformAccountInput) {
           lastName,
           email,
           isActive: input.isActive,
-          ...(securitySensitiveChange
-            ? { passwordChangedAt: new Date() }
-            : {}),
         },
         select: {
           id: true,
@@ -168,7 +164,7 @@ export async function resetPlatformAccountPassword(input: {
     await acquirePlatformSuperAdminMutationLock(tx);
     const user = await tx.user.findUnique({
       where: { id: input.userId },
-      select: { id: true, isActive: true },
+      select: { id: true, email: true, isActive: true },
     });
     if (!user) {
       throw new PlatformAccountDomainError(
@@ -183,19 +179,19 @@ export async function resetPlatformAccountPassword(input: {
       );
     }
 
-    const changedAt = new Date();
-    await tx.user.update({
-      where: { id: user.id },
-      data: { passwordHash, passwordChangedAt: changedAt },
+    assertProtectedCredentialMutationAllowed(user.email, {
+      isCreate: false,
+      context: "automated",
+      intent: "ADMIN_RESET",
     });
-    await writeAuditRecord(tx, {
-      tenantId: null,
+
+    const changedAt = await applyAuthorizedCredentialUpdate(tx, {
+      userId: user.id,
+      email: user.email,
+      passwordHash,
+      intent: "ADMIN_RESET",
       actorUserId: input.actorUserId,
-      moduleKey: "users",
-      entityType: "User",
-      entityId: user.id,
-      action: "PLATFORM_PASSWORD_RESET",
-      metadataJson: { sessionsRevokedAt: changedAt },
+      auditAction: "PLATFORM_PASSWORD_RESET",
     });
   });
 }

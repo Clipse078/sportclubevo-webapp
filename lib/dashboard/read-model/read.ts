@@ -32,7 +32,9 @@ export function personalDashboardPayloadNeedsPresentationRefresh(
 ): boolean {
   return (
     payload.v < PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION ||
-    payload.programme.items.some((item) => !item.activityPresentation)
+    payload.programme.items.some(
+      (item) => !item.activityPresentation && !item.canonicalPresentation,
+    )
   );
 }
 

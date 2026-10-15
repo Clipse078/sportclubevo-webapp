@@ -13,6 +13,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/planner/week",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -42,7 +43,7 @@ vi.mock("@/components/admin/layout/AccountMenu", () => ({
 }));
 
 vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
-  usePrimaryNavLayoutTier: () => "desktop",
+  usePrimaryNavLayoutTier: () => "laptop",
   maxInlineDomainsForTier: () => 8,
 }));
 
@@ -62,7 +63,7 @@ describe("AppShellNavigation application explorer", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     expect(screen.getByTestId("global-nav-drawer")).toBeVisible();
     expect(screen.getByTestId("global-nav-explorer-domain-rail")).toBeInTheDocument();
     expect(screen.getByTestId("global-nav-explorer-module-pane")).toBeInTheDocument();
@@ -82,7 +83,7 @@ describe("AppShellNavigation application explorer", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     const search = screen.getByTestId("global-nav-explorer-search");
     await user.type(search, "Train");
     expect(screen.getByTestId("global-nav-explorer-search-results")).toHaveTextContent("Trainings");
@@ -102,11 +103,11 @@ describe("AppShellNavigation application explorer", () => {
       />,
     );
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.keyboard("{Escape}");
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
 
-    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.click(screen.getByTestId("global-nav-mobile-menu"));
     await user.click(screen.getByTestId("global-nav-drawer-backdrop"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
   });

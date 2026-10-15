@@ -165,6 +165,101 @@ export function resolveDomainSecondaryNavItems(
     }));
 }
 
+/** Desktop Row 1 excludes the dashboard/home domain; home is reached via brand + tenant identity. */
+export function resolveDesktopPrimaryNavigationDomains(
+  domains: readonly NavigationDomain[],
+  workspaceContext: WorkspaceContext = "club",
+): NavigationDomain[] {
+  if (workspaceContext === "platform") {
+    return [...domains];
+  }
+  return domains.filter((domain) => domain.id !== "dashboard");
+}
+
+/** Canonical L3 destinations for a Row 2 item (permission-filtered via nav-config children on the model). */
+export function resolveSecondaryNavItemModuleLocalChildren(
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+): NavItemChild[] {
+  if (isSingleHubNavigationDomain(domain)) {
+    return [];
+  }
+
+  const topLevel = domain.destinations.find((dest) => dest.key === item.key);
+  if (topLevel?.children?.length) {
+    return topLevel.children;
+  }
+
+  if (item.headerGroupNavKeys?.length) {
+    for (const navKey of item.headerGroupNavKeys) {
+      const groupedDest = domain.destinations.find((dest) => dest.key === navKey);
+      if (groupedDest?.children?.length) {
+        return groupedDest.children;
+      }
+    }
+  }
+
+  return [];
+}
+
+/** Whether the domain desktop panel should use the two-column L2/L3 layout. */
+export function resolveDomainNavigationPanelUsesHierarchy(
+  domain: NavigationDomain,
+  items: readonly DomainSecondaryNavItem[],
+): boolean {
+  return items.some((item) => resolveSecondaryNavItemModuleLocalChildren(domain, item).length > 0);
+}
+
+/** Initial L2 focus when opening the domain navigation panel for the active route. */
+export function resolveDomainNavigationPanelInitialL2Key(
+  domain: NavigationDomain,
+  items: readonly DomainSecondaryNavItem[],
+  active: Pick<
+    ActiveAppNavigation,
+    "activeDomainId" | "activeDestinationKey" | "activeChildKey"
+  >,
+): string | null {
+  if (items.length === 0) return null;
+
+  if (active.activeDomainId === domain.id) {
+    const activeKey = active.activeDestinationKey;
+    if (activeKey) {
+      const matched = items.find(
+        (item) =>
+          item.key === activeKey ||
+          item.headerGroupNavKeys?.includes(activeKey) ||
+          (active.activeChildKey != null &&
+            resolveSecondaryNavItemModuleLocalChildren(domain, item).some(
+              (child) => child.key === active.activeChildKey,
+            )),
+      );
+      if (matched) return matched.key;
+    }
+  }
+
+  const firstWithChildren = items.find(
+    (item) => resolveSecondaryNavItemModuleLocalChildren(domain, item).length > 0,
+  );
+  return firstWithChildren?.key ?? items[0]!.key;
+}
+
+/** Right-column entries for hierarchical panel mode (overview + module-local children). */
+export function resolveDomainPanelRightColumnEntries(
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+): NavItemChild[] {
+  const children = resolveSecondaryNavItemModuleLocalChildren(domain, item);
+  if (children.length === 0) return [];
+
+  const overview: NavItemChild = {
+    key: `${item.key}__domain-panel-overview`,
+    label: `${item.label} Übersicht`,
+    href: item.href,
+  };
+
+  return [overview, ...children];
+}
+
 export type ExplorerDomainModule = DomainSecondaryNavItem & {
   children: NavItemChild[];
   explorerGroupId?: string;

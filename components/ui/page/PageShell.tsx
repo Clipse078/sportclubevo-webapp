@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import type { ScePageWidthMode } from "@/lib/shell/sce-page-layout";
+import { SCE_PAGE_SHELL_WIDTH_CLASS } from "@/lib/shell/sce-page-layout";
 
 type PageShellProps = {
   /** Full-width scroll container. Wrap page body content here. */
@@ -11,6 +13,8 @@ type PageShellProps = {
    * standard horizontal padding (e.g. full-bleed map or table views).
    */
   fullWidth?: boolean;
+  /** Canonical content width within page gutters (see SCE_PAGE_LAYOUT_RULE). */
+  widthMode?: ScePageWidthMode;
 };
 
 /**
@@ -26,12 +30,22 @@ type PageShellProps = {
  *     <SectionCard> … </SectionCard>
  *   </PageShell>
  */
-export function PageShell({ children, className, fullWidth = false }: PageShellProps) {
+export function PageShell({
+  children,
+  className,
+  fullWidth = false,
+  widthMode = "readable",
+}: PageShellProps) {
   return (
     <main
+      data-sce-page-shell
+      data-sce-page-shell-full-width={fullWidth ? "true" : "false"}
+      data-sce-page-width={widthMode}
       className={cn(
-        "flex min-h-full flex-col",
-        !fullWidth && "mx-auto w-full max-w-screen-xl px-5 py-8 md:px-8 md:py-10",
+        "sce-page-shell flex min-h-full w-full min-w-0 flex-col",
+        SCE_PAGE_SHELL_WIDTH_CLASS[widthMode],
+        !fullWidth && "py-8 md:py-10",
+        fullWidth && "py-0",
         className,
       )}
     >

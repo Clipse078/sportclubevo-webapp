@@ -75,6 +75,16 @@ describe("authorize() logging invariants", () => {
     expect(source).not.toMatch(/email prefix/i);
     expect(source).not.toMatch(/user inactive/i);
     expect(source).not.toMatch(/bcrypt comparison failed/i);
-    expect(source).toContain("runLoginTimingMitigation");
+    expect(source).toContain("authorizeCredentialsUser");
+  });
+
+  it("credentials authorize module uses structured login failure categories", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "lib/auth/credentials-authorize.ts"),
+      "utf8",
+    );
+    expect(source).toContain("logLoginFailure");
+    expect(source).toContain("CREDENTIAL_VERIFICATION_FAILED");
+    expect(source).not.toMatch(/email prefix/i);
   });
 });
