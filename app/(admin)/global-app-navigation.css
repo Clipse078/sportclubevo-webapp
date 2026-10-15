@@ -7,7 +7,7 @@
   --sidebar-width: 0px;
   --sce-sidebar-effective-width: 0px;
   --sce-mobile-bottom-nav-height: 3.75rem;
-  --topnav-height: 4.5rem;
+  --topnav-height: 5rem;
   --sce-nav-module-row-height: 2.25rem;
   --sce-nav-context-row-height: 2rem;
 }
@@ -43,8 +43,8 @@
   flex-direction: column;
   justify-content: center;
   gap: 0.125rem;
-  min-width: 0;
-  max-width: 11.5rem;
+  min-width: 13.75rem;
+  max-width: 14.5rem;
   padding: 0.375rem 0;
   border-right: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
   padding-right: 0.875rem;
@@ -53,7 +53,8 @@
 
 @media (min-width: 1024px) {
   .sce-global-brand-tenant-stack {
-    max-width: 13rem;
+    min-width: 14rem;
+    max-width: 16.875rem;
     padding-right: 1rem;
   }
 }
