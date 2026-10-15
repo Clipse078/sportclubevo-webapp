@@ -1,21 +1,17 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db/prisma";
-import { verifyPassword } from "@/lib/auth/password";
-import { runLoginTimingMitigation } from "@/lib/auth/login-timing";
-import { logSecurityEvent } from "@/lib/security/security-events";
+import {
+  authorizeCredentialsUser,
+  type CredentialsInput,
+} from "@/lib/auth/credentials-authorize";
 import {
   applyTokenToSessionUser,
   applyTrustedJwtState,
   issueTrustedSessionUpdateIntent,
   revokeTrustedSessionUpdateIntent,
   trustedUpdatePayload,
-  type SessionUserShape,
 } from "@/lib/auth/trusted-session-state";
-import {
-  resolveSessionPermissionKeys,
-  resolveTenantMembershipContext,
-} from "@/lib/auth/session-context";
 
 const authResult = NextAuth({
   session: {
@@ -32,95 +28,14 @@ const authResult = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const email = String(credentials?.email ?? "").trim().toLowerCase();
-        const password = String(credentials?.password ?? "");
-
-        if (!email || !password) {
+        const result = await authorizeCredentialsUser(
+          prisma,
+          (credentials ?? {}) as CredentialsInput,
+        );
+        if (!result.ok) {
           return null;
         }
-
-        let user;
-        try {
-          user = await prisma.user.findUnique({
-            where: { email },
-          });
-        } catch (lookupErr) {
-          console.error(
-            "[auth] authorize: user lookup failed",
-            lookupErr instanceof Error ? lookupErr.message : String(lookupErr),
-          );
-          return null;
-        }
-
-        if (!user || !user.isActive) {
-          await runLoginTimingMitigation(password);
-          logSecurityEvent("LOGIN_FAILED", { surface: "login" });
-          return null;
-        }
-
-        const isPasswordValid = await verifyPassword(password, user.passwordHash);
-
-        if (!isPasswordValid) {
-          logSecurityEvent("LOGIN_FAILED", { surface: "login" });
-          return null;
-        }
-
-        // lastLoginAt is informational — a failure must never block a valid login.
-        try {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { lastLoginAt: new Date() },
-          });
-        } catch (updateErr) {
-          console.error(
-            "[auth] authorize: lastLoginAt update failed (non-fatal)",
-            updateErr instanceof Error ? updateErr.message : String(updateErr),
-          );
-        }
-
-        // RPERM-04: tenant context and effective permissions are resolved via
-        // the single canonical model (TenantMembership + EffectivePermissionResolver),
-        // not via User.tenantId or a naive flatten of every assigned role's permissions.
-        let tenantContext: Awaited<ReturnType<typeof resolveTenantMembershipContext>>;
-        let permissionKeys: string[];
-        let roleKeys: string[];
-
-        try {
-          tenantContext = await resolveTenantMembershipContext(prisma, user.id);
-          permissionKeys = await resolveSessionPermissionKeys(
-            prisma,
-            user.id,
-            tenantContext.activeTenantId,
-          );
-
-          const userRoles = await prisma.userRole.findMany({
-            where: { userId: user.id },
-            select: { role: { select: { key: true } } },
-          });
-          roleKeys = Array.from(new Set(userRoles.map((ur) => ur.role.key)));
-        } catch (sessionErr) {
-          console.error(
-            "[auth] authorize: session-context build failed — tenant/permission/role query threw",
-            sessionErr instanceof Error ? sessionErr.message : String(sessionErr),
-          );
-          return null;
-        }
-
-        const authUser: SessionUserShape = {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          roleKeys,
-          permissionKeys,
-          isImpersonating: false,
-          effectiveUserId: user.id,
-          activeTenantId: tenantContext.activeTenantId,
-          activeMembershipId: tenantContext.activeMembershipId,
-          availableTenants: tenantContext.availableTenants,
-        };
-
-        return authUser;
+        return result.user;
       },
     }),
   ],

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { hashPassword } from "@/lib/auth/password";
+import { assertProtectedCredentialMutationAllowed } from "@/lib/auth/protected-credential-mutation";
 import {
   acquirePlatformSuperAdminMutationLock,
   platformSuperAdminAssignmentWhere,
@@ -168,7 +169,7 @@ export async function resetPlatformAccountPassword(input: {
     await acquirePlatformSuperAdminMutationLock(tx);
     const user = await tx.user.findUnique({
       where: { id: input.userId },
-      select: { id: true, isActive: true },
+      select: { id: true, email: true, isActive: true },
     });
     if (!user) {
       throw new PlatformAccountDomainError(
@@ -182,6 +183,11 @@ export async function resetPlatformAccountPassword(input: {
         "Das Passwort eines deaktivierten Kontos kann nicht geändert werden.",
       );
     }
+
+    assertProtectedCredentialMutationAllowed(user.email, {
+      isCreate: false,
+      context: "automated",
+    });
 
     const changedAt = new Date();
     await tx.user.update({
