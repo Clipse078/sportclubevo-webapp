@@ -3,6 +3,7 @@
 **Owner:** SCE Design System / Programme & Calendar (01I)  
 **Shell:** `components/ui/calendar/SceCalendarEngine.tsx`  
 **Grid primitive:** `components/ui/calendar/MonthActivityGrid.tsx`  
+**MICRO renderer:** `components/programme/ProgrammeCalendarMicroEntry.tsx`  
 **Item contract:** `lib/calendar/sce-calendar-engine/item-contract.ts`
 
 ## Product rule
@@ -10,6 +11,39 @@
 New month-calendar surfaces **must** consume the canonical SCE Calendar Engine unless an explicit architecture decision documents why they cannot.
 
 There must **not** be parallel calendar shells (separate header/grid/tile languages) for Team Programme, Personal Kalender, or future Club/Person scopes.
+
+## CANONICAL SCE CALENDAR SYSTEM (R6.1)
+
+| Layer | Owner |
+|-------|--------|
+| Calendar shell | `SceCalendarEngine` |
+| Month grid | `MonthActivityGrid` (`cellVariant="programme"`) |
+| MICRO renderer | `ProgrammeCalendarMicroEntry` (single renderer — no per-domain tile components) |
+| Semantic adapters | `resolveProgrammeCalendarMicroSemantics`, `resolvePersonalCalendarMicroSemantics` |
+| Day builders | `buildProgrammeCalendarDayPresentation`, `buildPersonalCalendarDayPresentation` |
+
+### MICRO semantic slots
+
+| Slot | Field | Notes |
+|------|--------|--------|
+| TYPE | `typeLabel` | TRAINING · SPIEL · TURNIER · … |
+| TIME | `timeLabel` | Clock icon (decorative when text follows) |
+| VISUAL IDENTITY | `visualIdentity` | `ClubCrest` when domain supplies `ClubIdentity` |
+| IDENTITY | `identityLabel` | One owner — opponent / team / title |
+| LOCATION | `locationLabel` | MapPin icon; **location-only** at MICRO density |
+| STATUS | row styling | Cancelled / postponed via chip classes |
+
+### Activity visual rules (MICRO)
+
+| Kind | Identity | Crest |
+|------|----------|--------|
+| TRAINING | Team name | Tenant / owning club (`SceTrainingPresentationModel.tenantClub`) |
+| MATCH (team scope) | Opponent | Opponent `ClubIdentity` |
+| TOURNAMENT | Tournament title | Organiser crest — title is not replaced by organiser name |
+| CLUB EVENT | Event title | No automatic crest |
+| TASK | Task title | No sporting crest; no Clock/MapPin without real time/location |
+
+Location hierarchy for MICRO uses `formatSceActivityLocationHierarchy` with `{ includeHostClub: false }` so host/opponent/organiser are not repeated on the location line when identity/crest already owns them.
 
 ## Architecture
 
@@ -28,12 +62,16 @@ ProgrammeCalendarMicroEntry tiles + scope toolbar + scope legend entries
 - **Legend is scope-aware** — pass `legendEntries`; default sporting legend when omitted.
 - **Timezone** — all day keys via tenant `Europe/Zurich` (or tenant config); never implicit browser TZ.
 
-## Adopted consumers (01I R4)
+## Calendar consumer matrix (R6.1)
 
-| Route / surface | Status |
-|-----------------|--------|
-| Team Programme `?ansicht=kalender` | Adopted |
-| `/dashboard/kalender` | Adopted |
+| Surface | Route | Engine | Canonical MICRO | R6.1 status | Follow-up |
+|---------|-------|--------|-----------------|-------------|-----------|
+| Team Programme | `/dashboard/teams/[teamId]/programm?ansicht=kalender` | `SceCalendarEngine` | `ProgrammeCalendarMicroEntry` | Migrated | — |
+| Club Programme | `/dashboard/programm?ansicht=kalender` (club scope) | `SceCalendarEngine` | `ProgrammeCalendarMicroEntry` | Migrated (shared programme path) | — |
+| Personal Calendar | `/dashboard/kalender?monat=YYYY-MM` | `SceCalendarEngine` | `ProgrammeCalendarMicroEntry` | Migrated | — |
+| Dashboard cockpit preview | Dashboard programme preview | `PersonalProgrammeMonthCalendar` | Legacy compact markers | Audit | Align shell + MICRO when product approves |
+| Matchcenter | Match management month grid | `MonthActivityGrid` (`matchcenter` variant) | Dots / non-MICRO cells | Legacy | MICRO adoption TBD |
+| Planning Hub | Planning calendar views | Custom cluster blocks | Legacy | Legacy | Adapter + engine adoption |
 
 ## Deferred consumers (audit)
 

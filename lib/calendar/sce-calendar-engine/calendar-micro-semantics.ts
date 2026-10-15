@@ -1,7 +1,13 @@
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 import type { ProgrammeItem } from "@/lib/programme-engine/types";
+import { buildClubIdentity, buildTournamentOrganiserClubIdentity } from "@/lib/sporting-activity-design";
 import { formatSceActivityLocationHierarchy } from "@/lib/sporting-activity-presentation/canonical";
-import type { SceActivityPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
+import { SCE_ACTIVITY_LOCATION_HIERARCHY_SEPARATOR } from "@/lib/sporting-activity-presentation/canonical/location-format";
+import type {
+  SceActivityPresentationModel,
+  SceTrainingPresentationModel,
+} from "@/lib/sporting-activity-presentation/canonical/types";
+import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
 import {
   isSceClubEventPresentationModel,
   isSceMatchPresentationModel,
@@ -84,17 +90,78 @@ function locationFromActivityPresentation(
   return formatCalendarMicroLocationLine(model.location);
 }
 
+function stripLeadingLocationParts(
+  locationLabel: string,
+  stripComparable: readonly string[],
+): string {
+  const sep = SCE_ACTIVITY_LOCATION_HIERARCHY_SEPARATOR;
+  let parts = locationLabel
+    .split(sep)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const targets = new Set(stripComparable.map((value) => normalizeComparable(value)).filter(Boolean));
+  while (parts.length > 0) {
+    const head = normalizeComparable(parts[0] ?? "");
+    if (targets.has(head)) {
+      parts = parts.slice(1);
+      continue;
+    }
+    break;
+  }
+  if (parts.length === 0) return locationLabel.trim();
+  return parts.join(sep);
+}
+
 function omitLocationDuplicatingIdentity(
   identityLabel: string,
   locationLabel: string | undefined,
+  options: { alsoStripLabels?: readonly string[] } = {},
 ): string | undefined {
   if (!locationLabel?.trim()) return undefined;
-  const location = locationLabel.trim();
+  const stripTargets = [identityLabel, ...(options.alsoStripLabels ?? [])].filter(Boolean);
+  const location = stripLeadingLocationParts(locationLabel.trim(), stripTargets);
   const identityNorm = normalizeComparable(identityLabel);
   const locationNorm = normalizeComparable(location);
   if (!locationNorm || identityNorm === locationNorm) return undefined;
   if (identityNorm.includes(locationNorm)) return undefined;
   return location;
+}
+
+function resolveTrainingTenantClubFromLegacy(
+  presentation: SportingActivityPresentation,
+): ReturnType<typeof calendarMicroVisualIdentityFromClub> {
+  const host = presentation.location.hostOrOrganiser?.trim();
+  if (!host) return undefined;
+  const logoUrl = resolveTenantClubCrestUrl({
+    tenantLogoUrl: presentation.tenantClub?.logoUrl,
+  });
+  return calendarMicroVisualIdentityFromClub(
+    buildClubIdentity({
+      displayName: host,
+      logoUrl,
+    }),
+  );
+}
+
+function resolveTrainingTenantClubFromModel(
+  model: SceTrainingPresentationModel,
+): ReturnType<typeof calendarMicroVisualIdentityFromClub> {
+  return calendarMicroVisualIdentityFromClub(model.tenantClub);
+}
+
+function resolveTournamentOrganiserFromLegacy(
+  presentation: SportingActivityPresentation,
+): ReturnType<typeof calendarMicroVisualIdentityFromClub> {
+  const organiserName =
+    presentation.context?.organiser?.trim() || presentation.location.hostOrOrganiser?.trim();
+  if (!organiserName) return undefined;
+  const organiser = buildTournamentOrganiserClubIdentity({
+    organizerName: organiserName,
+    organizerLogoUrl: presentation.context?.organiserLogoUrl ?? null,
+    organizerExternalClubId: presentation.context?.organiserExternalClubId ?? null,
+    title: presentation.identity.title,
+  });
+  return calendarMicroVisualIdentityFromClub(organiser);
 }
 
 function resolveProgrammeMicroIdentity(item: ProgrammeItem): Pick<
@@ -123,14 +190,21 @@ function resolveProgrammeMicroIdentity(item: ProgrammeItem): Pick<
       return { identityLabel: item.kind };
     case "TRAINING":
       if (isSceTrainingPresentationModel(model)) {
-        return { identityLabel: model.team?.name?.trim() || model.trainingTitle };
+        return {
+          identityLabel: model.team?.name?.trim() || model.trainingTitle,
+          visualIdentity: resolveTrainingTenantClubFromModel(model),
+        };
       }
       return { identityLabel: item.kind };
     case "TOURNAMENT":
       if (isSceTournamentPresentationModel(model)) {
+        const organiserName = model.organiser.displayName.trim();
         return {
           identityLabel: model.tournamentTitle,
           visualIdentity: calendarMicroVisualIdentityFromClub(model.organiser),
+          accessibleIdentityPhrase: organiserName
+            ? `${model.tournamentTitle}, organisiert von ${organiserName}`
+            : model.tournamentTitle,
         };
       }
       return { identityLabel: item.kind };
@@ -228,12 +302,34 @@ function resolveNormalizedMicroLocation(
 
   const fromPresentation = locationFromActivityPresentation(item.activityPresentation);
   if (fromPresentation) {
-    return omitLocationDuplicatingIdentity(identityLabel, fromPresentation);
+    const alsoStrip =
+      item.semanticType === "TOURNAMENT"
+        ? [
+            item.activityPresentation?.context?.organiser,
+            item.activityPresentation?.location.hostOrOrganiser,
+          ]
+        : item.semanticType === "MATCH"
+          ? [item.opponentName, item.team?.name, identityLabel]
+          : [];
+    return omitLocationDuplicatingIdentity(identityLabel, fromPresentation, {
+      alsoStripLabels: alsoStrip.filter((value): value is string => Boolean(value?.trim())),
+    });
   }
 
   if (item.semanticType === "MATCH" || item.semanticType === "TOURNAMENT" || item.semanticType === "EVENT") {
     const raw = item.location?.trim();
-    return omitLocationDuplicatingIdentity(identityLabel, raw);
+    const alsoStrip =
+      item.semanticType === "TOURNAMENT"
+        ? [
+            item.activityPresentation?.context?.organiser,
+            item.activityPresentation?.location.hostOrOrganiser,
+          ]
+        : item.semanticType === "MATCH"
+          ? [item.opponentName, item.team?.name]
+          : [];
+    return omitLocationDuplicatingIdentity(identityLabel, raw, {
+      alsoStripLabels: alsoStrip.filter((value): value is string => Boolean(value?.trim())),
+    });
   }
 
   if (item.semanticType === "TRAINING") {
@@ -244,13 +340,56 @@ function resolveNormalizedMicroLocation(
   return omitLocationDuplicatingIdentity(identityLabel, item.location?.trim());
 }
 
+function resolvePersonalMicroIdentityFields(
+  item: NormalizedCalendarItem,
+): Pick<CalendarMicroSemanticFields, "identityLabel" | "visualIdentity" | "accessibleIdentityPhrase"> {
+  const presentation = item.activityPresentation;
+  if (presentation?.identity.activityKind === "TRAINING") {
+    const team = presentation.team?.name?.trim();
+    const identityLabel = team || presentation.identity.title.trim() || resolveNormalizedTrainingIdentity(item);
+    return {
+      identityLabel,
+      visualIdentity: resolveTrainingTenantClubFromLegacy(presentation),
+    };
+  }
+  if (presentation?.identity.activityKind === "TOURNAMENT") {
+    const identityLabel = presentation.identity.title.trim() || resolveNormalizedTournamentIdentity(item);
+    const organiserName =
+      presentation.context?.organiser?.trim() || presentation.location.hostOrOrganiser?.trim();
+    return {
+      identityLabel,
+      visualIdentity: resolveTournamentOrganiserFromLegacy(presentation),
+      accessibleIdentityPhrase: organiserName
+        ? `${identityLabel}, organisiert von ${organiserName}`
+        : identityLabel,
+    };
+  }
+  if (presentation?.identity.activityKind === "MATCH") {
+    const identityLabel = resolveNormalizedMatchIdentity(item);
+    return { identityLabel };
+  }
+  const identityLabel = resolveNormalizedMicroIdentity(item);
+  return { identityLabel };
+}
+
 export function resolveProgrammeCalendarMicroSemantics(
   item: ProgrammeItem,
 ): CalendarMicroSemanticFields {
   const identity = resolveProgrammeMicroIdentity(item);
+  const organiserStrip =
+    item.kind === "TOURNAMENT" && isSceTournamentPresentationModel(item.presentation)
+      ? [item.presentation.organiser.displayName]
+      : item.kind === "MATCH" && isSceMatchPresentationModel(item.presentation)
+        ? [
+            identity.identityLabel,
+            item.presentation.fixture.home.displayName,
+            item.presentation.fixture.away.displayName,
+          ]
+        : [];
   const locationLabel = omitLocationDuplicatingIdentity(
     identity.identityLabel,
     locationFromActivityPresentation(item.presentation),
+    { alsoStripLabels: organiserStrip },
   );
   return { ...identity, locationLabel };
 }
@@ -258,9 +397,9 @@ export function resolveProgrammeCalendarMicroSemantics(
 export function resolvePersonalCalendarMicroSemantics(
   item: NormalizedCalendarItem,
 ): CalendarMicroSemanticFields {
-  const identityLabel = resolveNormalizedMicroIdentity(item);
-  const locationLabel = resolveNormalizedMicroLocation(item, identityLabel);
-  return { identityLabel, locationLabel };
+  const identity = resolvePersonalMicroIdentityFields(item);
+  const locationLabel = resolveNormalizedMicroLocation(item, identity.identityLabel);
+  return { ...identity, locationLabel };
 }
 
 export function buildCalendarMicroAccessibleLabel(input: {

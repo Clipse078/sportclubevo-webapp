@@ -22,6 +22,9 @@ import { loadTrainingSessionFacilityHints } from "@/lib/sporting-activity-presen
 import { resolveSceMatchPresentation } from "@/lib/sporting-activity-presentation/canonical/adapters/match";
 import { resolveSceTournamentPresentation } from "@/lib/sporting-activity-presentation/canonical/adapters/tournament";
 import { resolveSceTrainingPresentationFromLegacy } from "@/lib/sporting-activity-presentation/canonical/adapters/training";
+import { buildClubIdentity } from "@/lib/sporting-activity-design";
+import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
+import type { SceTrainingPresentationModel } from "@/lib/sporting-activity-presentation/canonical/types";
 import { resolveSceClubEventPresentationFromLegacy } from "@/lib/sporting-activity-presentation/canonical/adapters/club-event";
 import { buildSportingActivityDetailHref } from "@/lib/sporting-activity-detail/href";
 import { buildSceActivityRoute } from "@/lib/sporting-activity-presentation/canonical/route";
@@ -44,6 +47,21 @@ type LoadContext = {
   tenantClubName: string;
   tenantLogoUrl?: string | null;
 };
+
+function attachTrainingTenantClubIdentity(
+  presentation: SceTrainingPresentationModel,
+  ctx: LoadContext,
+): SceTrainingPresentationModel {
+  const displayName = ctx.tenantClubName.trim();
+  if (!displayName) return presentation;
+  return {
+    ...presentation,
+    tenantClub: buildClubIdentity({
+      displayName,
+      logoUrl: resolveTenantClubCrestUrl({ tenantLogoUrl: ctx.tenantLogoUrl }),
+    }),
+  };
+}
 
 function clubEventAudienceFromRow(row: {
   clubEventOrganisationalScope: string;
@@ -144,12 +162,16 @@ async function loadTrainingProgrammeItems(
       facilityName: facility?.facilityName ?? undefined,
       pitchResourceName: facility?.pitchResourceName ?? undefined,
       dressingRoomName: facility?.dressingRoomName ?? undefined,
+      tenantClubLogoUrl: ctx.tenantLogoUrl,
       startAt: new Date(session.startAt),
       endAt: session.endAt ? new Date(session.endAt) : null,
       status,
     });
 
-    const presentation = resolveSceTrainingPresentationFromLegacy(legacyPresentation);
+    const presentation = attachTrainingTenantClubIdentity(
+      resolveSceTrainingPresentationFromLegacy(legacyPresentation),
+      ctx,
+    );
     const domainId = session.id;
 
     items.push({

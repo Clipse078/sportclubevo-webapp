@@ -60,6 +60,17 @@ describe("SCE-ACTIVITY-CREATE-01I-R4 — resource hierarchy compaction", () => {
     );
   });
 
+  it("H: MICRO AWAY omits host club when includeHostClub is false", () => {
+    const location = buildSportingActivityLocation({
+      mode: "AWAY",
+      hostOrOrganiser: "FC Concordia Basel b",
+      venueName: "Sportanlagen St. Jakob, Basel - wird vor Ort zugeteilt",
+    });
+    expect(formatSceActivityLocationHierarchy(location, { includeHostClub: false })).toBe(
+      "Sportanlagen St. Jakob, Basel - wird vor Ort zugeteilt",
+    );
+  });
+
   it("F: preserves original display casing on compacted child resource", () => {
     const location = buildSportingActivityLocation({
       mode: "HOME",

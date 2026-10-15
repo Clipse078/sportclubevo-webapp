@@ -22,3 +22,4 @@ export {
   resolveTeamScopeMatchOpponent,
   formatTeamScopeMatchMicroIdentityLabel,
 } from "./calendar-micro-match-identity";
+export { SCE_CALENDAR_MICRO_VISUAL } from "./calendar-micro-visual-tokens";

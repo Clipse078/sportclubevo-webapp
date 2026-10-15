@@ -281,15 +281,21 @@ describe("SCE-ACTIVITY-CREATE-01I-R6 — calendar MICRO football identity", () =
     expect(entry.visualIdentity).toBeUndefined();
   });
 
-  it("K–M: training keeps team identity, single location, no crest", () => {
-    const presentation = createSceTrainingCardFixtureSession({
-      team: { name: "FC Allschwil Junioren B1" },
-      location: buildSportingActivityLocation({
-        mode: "HOME",
-        venueName: "Kunstrasen 2",
-        facilityResource: "Kunstrasen 2 B",
+  it("K–M: training keeps team identity, single location, tenant crest when canonical tenantClub resolves", () => {
+    const presentation = {
+      ...createSceTrainingCardFixtureSession({
+        team: { name: "FC Allschwil Junioren B1" },
+        location: buildSportingActivityLocation({
+          mode: "HOME",
+          venueName: "Kunstrasen 2",
+          facilityResource: "Kunstrasen 2 B",
+        }),
       }),
-    });
+      tenantClub: buildClubIdentity({
+        displayName: "FC Allschwil",
+        logoUrl: TENANT_LOGO,
+      }),
+    };
     const entry = buildProgrammeCalendarMicroEntry(
       {
         id: "TRAINING:tr1",
@@ -309,7 +315,7 @@ describe("SCE-ACTIVITY-CREATE-01I-R6 — calendar MICRO football identity", () =
     );
     expect(entry.identityLabel).toBe("FC Allschwil Junioren B1");
     expect(entry.locationLabel).toBe("Kunstrasen 2 B");
-    expect(entry.visualIdentity).toBeUndefined();
+    expect(entry.visualIdentity?.kind).toBe("CLUB_CREST");
   });
 
   it("G: PERSON scope match uses fixture line from presentation participants", () => {

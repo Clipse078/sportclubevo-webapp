@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Clock, MapPin } from "lucide-react";
 import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { cn } from "@/lib/cn";
+import { SCE_CALENDAR_MICRO_VISUAL } from "@/lib/calendar/sce-calendar-engine/calendar-micro-visual-tokens";
 import type { ProgrammeCalendarMicroEntry as ProgrammeCalendarMicroEntryModel } from "@/lib/programme-engine/programme-calendar-presentation";
 
 type Props = {
@@ -34,8 +36,9 @@ export function ProgrammeCalendarMicroEntry({ entry }: Props) {
       >
         {entry.typeLabel}
       </span>
-      <span className="block truncate font-mono text-[0.5625rem] tabular-nums text-[var(--foreground)]">
-        {entry.timeLabel}
+      <span className={SCE_CALENDAR_MICRO_VISUAL.metaRowClass} data-testid="sce-calendar-micro-time">
+        <Clock className={SCE_CALENDAR_MICRO_VISUAL.metaIconClass} aria-hidden />
+        <span className={SCE_CALENDAR_MICRO_VISUAL.timeClass}>{entry.timeLabel}</span>
       </span>
       {entry.visualIdentity?.kind === "CLUB_CREST" ? (
         <span className="flex min-w-0 items-center gap-0.5">
@@ -55,8 +58,14 @@ export function ProgrammeCalendarMicroEntry({ entry }: Props) {
         </span>
       )}
       {(entry.locationLabel ?? entry.contextLine) ? (
-        <span className="block truncate text-[0.5rem] text-[var(--text-2)]">
-          {entry.locationLabel ?? entry.contextLine}
+        <span
+          className={SCE_CALENDAR_MICRO_VISUAL.locationRowClass}
+          data-testid="sce-calendar-micro-location"
+        >
+          <MapPin className={SCE_CALENDAR_MICRO_VISUAL.metaIconClass} aria-hidden />
+          <span className={SCE_CALENDAR_MICRO_VISUAL.locationTextClass}>
+            {entry.locationLabel ?? entry.contextLine}
+          </span>
         </span>
       ) : null}
     </Link>

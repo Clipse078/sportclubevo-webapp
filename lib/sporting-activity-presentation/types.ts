@@ -42,6 +42,14 @@ export type SportingActivityParticipants = {
 export type SportingActivityCompetitionContext = {
   competitionLabel?: string;
   organiser?: string;
+  /** Pre-resolved organiser crest URL (Event.organizerLogoUrl / domain pipeline). */
+  organiserLogoUrl?: string | null;
+  organiserExternalClubId?: string | null;
+};
+
+export type SportingActivityTenantClubContext = {
+  /** Pre-resolved tenant club crest URL for training MICRO identity. */
+  logoUrl?: string | null;
 };
 
 export type SportingActivitySchedule = {
@@ -73,6 +81,7 @@ export type SportingActivityPresentation = {
   status?: PersonalProgrammePresentationStatus;
   participation?: SportingActivityParticipation;
   eventType?: EventType;
+  tenantClub?: SportingActivityTenantClubContext;
 };
 
 /**

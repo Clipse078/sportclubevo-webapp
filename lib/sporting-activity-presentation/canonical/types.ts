@@ -97,6 +97,8 @@ export type SceTrainingPresentationModel = SceActivityPresentationBase & {
   kind: "TRAINING";
   trainingTitle: string;
   team?: { name: string };
+  /** Tenant / owning club for MICRO crest (distinct from opponent / organiser semantics). */
+  tenantClub?: ClubIdentity;
   schedulePresentation?: SceTrainingSchedulePresentation;
   dressingRoom?: SceTrainingDressingRoomPresentation;
 };

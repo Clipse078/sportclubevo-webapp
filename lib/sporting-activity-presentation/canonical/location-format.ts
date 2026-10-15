@@ -96,7 +96,9 @@ export function formatSceActivityLocationHierarchy(
       break;
     }
     case "AWAY": {
-      pushPart(parts, location.hostOrOrganiser);
+      if (includeHost) {
+        pushPart(parts, location.hostOrOrganiser);
+      }
       pushVenueAndResourceParts(parts, location.venueName, location.facilityResource);
       pushPart(parts, location.address);
       break;
@@ -104,7 +106,9 @@ export function formatSceActivityLocationHierarchy(
     case "NEUTRAL":
     case "UNKNOWN":
     default: {
-      pushPart(parts, location.hostOrOrganiser);
+      if (includeHost) {
+        pushPart(parts, location.hostOrOrganiser);
+      }
       pushVenueAndResourceParts(parts, location.venueName, location.facilityResource);
       pushPart(parts, location.address);
       break;
