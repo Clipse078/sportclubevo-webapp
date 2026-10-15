@@ -1,5 +1,4 @@
 ﻿"use client";
-import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -8,19 +7,12 @@ import {
   CheckCircle2,
   Pencil,
   Plus,
-  ShieldPlus,
-  Trophy,
-  Users,
 } from "lucide-react";
 
 export default function AdminPageActions() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedSeason = searchParams.get("season");
-
-  const seasonsHref = selectedSeason
-    ? `/dashboard/seasons?season=${encodeURIComponent(selectedSeason)}`
-    : "/dashboard/seasons";
 
   const plannerHref = selectedSeason
     ? `/dashboard/planner?season=${encodeURIComponent(selectedSeason)}`
@@ -118,47 +110,11 @@ export default function AdminPageActions() {
   }
 
   if (pathname === "/dashboard/teams" || pathname.startsWith("/dashboard/teams/")) {
-    return (
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Link
-          href={seasonsHref}
-          className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50 hover:text-slate-900"
-        >
-          <ShieldPlus className="h-4 w-4" />
-          Saison wechseln
-        </Link>
-
-        <button
-          type="button"
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0b4aa2] px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-[1px] hover:bg-[#08357a]"
-        >
-          <ProductDomainSceIcon name="people" size={16} />
-          Neues Team
-        </button>
-      </div>
-    );
+    return null;
   }
 
   if (pathname === "/dashboard/events" || pathname.startsWith("/dashboard/events/")) {
-    return (
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Link
-          href={seasonsHref}
-          className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50 hover:text-slate-900"
-        >
-          <ShieldPlus className="h-4 w-4" />
-          Saison wechseln
-        </Link>
-
-        <button
-          type="button"
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0b4aa2] px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-[1px] hover:bg-[#08357a]"
-        >
-          <Trophy className="h-4 w-4" />
-          Neues Event
-        </button>
-      </div>
-    );
+    return null;
   }
 
   if (pathname === "/vereinsleitung/meetings" || pathname.startsWith("/vereinsleitung/meetings/")) {

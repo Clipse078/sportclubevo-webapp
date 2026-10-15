@@ -11,13 +11,7 @@ import {
   type MouseEvent,
 } from "react";
 import { useTranslations } from "next-intl";
-import { Menu, MoreHorizontal } from "lucide-react";
-import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
-import AdminPageActions from "@/components/admin/layout/AdminPageActions";
-import AccountMenu from "@/components/admin/layout/AccountMenu";
-import HeaderTenantIdentity from "@/components/admin/layout/HeaderTenantIdentity";
 import GlobalNavDrawer from "@/components/admin/layout/GlobalNavDrawer";
-import NotificationBell from "@/components/admin/notifications/NotificationBell";
 import {
   buildAppNavigationModelForUser,
   buildNavigationHref,
@@ -29,7 +23,7 @@ import {
   type DomainSecondaryNavItem,
 } from "@/lib/nav/app-navigation-model";
 import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
-import type { NavCapabilityContext } from "@/lib/nav/nav-config";
+import type { NavCapabilityContext, NavItemChild } from "@/lib/nav/nav-config";
 import {
   maxInlineDomainsForTier,
   usePrimaryNavLayoutTier,
@@ -40,12 +34,15 @@ import {
   SCE_MOBILE_BOTTOM_NAV_CLASS,
 } from "@/lib/shell/sce-app-shell-nav";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
-import { SceIcon } from "@/components/design-system/icons/SceIcon";
-import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
-import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
-import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
 import { cn } from "@/lib/cn";
 import { usePermissionAwareRoutePrefetch } from "@/lib/nav/use-permission-aware-route-prefetch";
+import {
+  SceContextNavigation,
+  SceGlobalUtilities,
+  SceModuleNavigation,
+  ScePrimaryNavigation,
+  SceTenantIdentityBar,
+} from "@/components/sce/navigation";
 
 type AppShellNavigationProps = {
   permissionKeys: string[];
@@ -53,6 +50,8 @@ type AppShellNavigationProps = {
   clubName?: string;
   logoUrl?: string | null;
   navCapabilities?: NavCapabilityContext;
+  activeSeasonLabel?: string | null;
+  activeSeasonKey?: string | null;
   firstName: string;
   lastName: string;
   email: string;
@@ -72,43 +71,14 @@ const DOMAIN_MESSAGE_KEY: Record<AppNavigationDomainId, `domains.${string}`> = {
   "platform-operations": "domains.platformOperations",
 };
 
-function DomainNavLink({
-  domain,
-  label,
-  href,
-  isActive,
-}: {
-  domain: NavigationDomain;
-  label: string;
-  href: string;
-  isActive: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={isActive ? "page" : undefined}
-      data-nav-domain={domain.id}
-      data-nav-domain-priority={domain.priority}
-      data-sce-nav-l1-icon={domain.l1SceIconKey}
-      className={cn(
-        "sce-global-primary-nav-item sce-global-primary-nav-domain shrink-0",
-        isActive && "sce-global-primary-nav-item--active",
-      )}
-    >
-      <span className="sce-global-primary-nav-domain-icon" aria-hidden>
-        <SceIcon name={domain.l1SceIconKey as SceIconRegistryName} size={18} />
-      </span>
-      <span className="sce-global-primary-nav-domain-label">{label}</span>
-    </Link>
-  );
-}
-
 function AppShellNavigationInner({
   permissionKeys,
   workspaceContext = "club",
   clubName,
   logoUrl,
   navCapabilities,
+  activeSeasonLabel,
+  activeSeasonKey,
   firstName,
   lastName,
   email,
@@ -202,221 +172,101 @@ function AppShellNavigationInner({
 
   const closeGlobalNavDrawer = useCallback(() => setGlobalNavDrawerOpen(false), []);
 
+  const navigateToModuleLocalSibling = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, child: NavItemChild) => {
+      const childHref = resolveHref(child.href);
+      if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
+        event.defaultPrevented
+      ) {
+        return;
+      }
+      const childPathname = childHref.split("?")[0] ?? childHref;
+      if (childPathname === pathname) return;
+      if (
+        pathname.startsWith(`${childPathname}/`) ||
+        (child.matchExact && pathname.startsWith(`${child.href}/`))
+      ) {
+        event.preventDefault();
+        router.push(childHref);
+      }
+    },
+    [pathname, resolveHref, router],
+  );
+
   return (
     <>
-      <header className={SCE_GLOBAL_APP_HEADER_CLASS}>
+      <header className={SCE_GLOBAL_APP_HEADER_CLASS} data-testid="sce-global-navigation">
         <div className="sce-global-app-header-row sce-global-app-header-row--primary">
-          <div className="flex min-w-0 items-center gap-2 md:gap-3">
-            <div className="hidden sm:block sce-global-sce-brand sce-global-sce-brand--wordmark">
-              <SidebarPlatformBrand collapsed={false} className="!py-0 !px-0" />
-            </div>
-            <div className="sm:hidden sce-global-sce-brand sce-global-sce-brand--compact">
-              <SidebarPlatformBrand collapsed className="!py-0 !px-0" />
-            </div>
+          <SceTenantIdentityBar
+            displayClubName={displayClubName}
+            logoUrl={logoUrl}
+            platformWorkspace={isPlatformWorkspace}
+          />
 
-            <span
-              className="hidden md:block h-5 w-px bg-[color-mix(in_srgb,var(--border)_70%,transparent)]"
-              aria-hidden="true"
-            />
-
-            <HeaderTenantIdentity
-              tenantName={displayClubName}
-              logoUrl={isPlatformWorkspace ? null : logoUrl}
-              platformWorkspace={isPlatformWorkspace}
-              compact={false}
-              className="hidden min-[480px]:flex"
-            />
-            <HeaderTenantIdentity
-              tenantName={displayClubName}
-              logoUrl={isPlatformWorkspace ? null : logoUrl}
-              platformWorkspace={isPlatformWorkspace}
-              compact
-              className="min-[480px]:hidden flex"
-            />
-          </div>
-
-          <nav
-            aria-label={t("primaryNavAria")}
+          <ScePrimaryNavigation
+            ariaLabel={t("primaryNavAria")}
             className="sce-global-primary-nav hidden md:flex min-w-0 flex-1 justify-center"
-          >
-            <div className="sce-global-primary-nav-track flex min-w-0 items-center gap-0.5">
-              {inlineDomains.map((domain) => {
-                const dest = active.activeDomainId === domain.id && active.activeDestination
-                  ? active.activeDestination
-                  : domain.defaultDestination;
-                const href = resolveHref(dest.href);
-                return (
-                  <DomainNavLink
-                    key={domain.id}
-                    domain={domain}
-                    label={domainLabel(domain)}
-                    href={href}
-                    isActive={isDomainActive(domain)}
-                  />
-                );
-              })}
+            inlineDomains={inlineDomains}
+            overflowDomains={overflowDomains}
+            activeDomainId={active.activeDomainId}
+            activeDestination={active.activeDestination}
+            overflowOpen={overflowOpen}
+            onOverflowToggle={() => setOverflowOpen((v) => !v)}
+            onOverflowNavigate={() => setOverflowOpen(false)}
+            resolveHref={resolveHref}
+            domainLabel={domainLabel}
+            isDomainActive={isDomainActive}
+            moreLabel={t("more")}
+          />
 
-              {overflowDomains.length > 0 ? (
-                <div className="relative sce-global-primary-nav-overflow shrink-0">
-                  <button
-                    type="button"
-                    className={cn(
-                      "sce-global-primary-nav-item",
-                      overflowOpen && "sce-global-primary-nav-item--active",
-                      overflowDomains.some((d) => d.id === active.activeDomainId) &&
-                        "sce-global-primary-nav-item--active",
-                    )}
-                    aria-expanded={overflowOpen}
-                    aria-haspopup="menu"
-                    onClick={() => setOverflowOpen((v) => !v)}
-                  >
-                    {t("more")}
-                    <MoreHorizontal className="ml-1 h-4 w-4 opacity-70" aria-hidden="true" />
-                  </button>
-                  {overflowOpen ? (
-                    <div
-                      role="menu"
-                      className="sce-global-nav-overflow-panel absolute right-0 top-[calc(100%+4px)] z-50 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--sce-app-chrome)] py-1 shadow-lg"
-                    >
-                      {overflowDomains.map((domain) => (
-                        <Link
-                          key={domain.id}
-                          role="menuitem"
-                          href={resolveHref(domain.defaultDestination.href)}
-                          className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-                          onClick={() => setOverflowOpen(false)}
-                        >
-                          {domainLabel(domain)}
-                        </Link>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </nav>
-
-          <div className="flex shrink-0 items-center gap-1 sce-global-header-utilities">
-            <button
-              type="button"
-              className={cn(
-                "sce-icon-button min-h-[2.75rem] min-w-[2.75rem]",
-                globalNavDrawerOpen && "sce-global-primary-nav-item--active",
-              )}
-              aria-label={t("openDrawer")}
-              aria-expanded={globalNavDrawerOpen}
-              aria-controls={globalNavDrawerId}
-              data-testid="global-nav-hamburger"
-              onClick={() =>
-                globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
-              }
-            >
-              <Menu className="h-5 w-5" aria-hidden="true" />
-            </button>
-
-            <div className="hidden md:flex items-center gap-1">
-              <Suspense fallback={null}>
-                <AdminPageActions />
-              </Suspense>
-            </div>
-
-            <NotificationBell />
-            <AccountMenu
-              firstName={firstName}
-              lastName={lastName}
-              email={email}
-              imageUrl={imageUrl}
-            />
-          </div>
+          <SceGlobalUtilities
+            platformWorkspace={isPlatformWorkspace}
+            activeSeasonLabel={activeSeasonLabel}
+            activeSeasonKey={activeSeasonKey}
+            selectedSeasonKey={selectedSeason}
+            seasonSwitchLabel={t("seasonSwitchAria")}
+            globalNavDrawerOpen={globalNavDrawerOpen}
+            globalNavDrawerId={globalNavDrawerId}
+            openDrawerLabel={t("openDrawer")}
+            onToggleDrawer={() =>
+              globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
+            }
+            firstName={firstName}
+            lastName={lastName}
+            email={email}
+            imageUrl={imageUrl}
+          />
         </div>
 
         {active.activeDomain && active.domainSecondaryItems.length > 0 ? (
-          <nav
-            aria-label={t("contextNavAria")}
-            className="sce-global-context-nav hidden md:block border-t border-[color-mix(in_srgb,var(--border)_55%,transparent)]"
-            data-testid="domain-secondary-nav"
-          >
-            <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto px-4 py-1.5">
-              {active.domainSecondaryItems.map((item) => {
-                const itemHref = resolveHref(item.href);
-                const isSecondaryActive = isDomainSecondaryItemActive(active.activeDomain!, item);
-                const sceIcon = getNavDestinationSceIconName(item.key);
-                return (
-                  <Link
-                    key={item.key}
-                    href={itemHref}
-                    aria-current={isSecondaryActive ? "page" : undefined}
-                    data-nav-destination={item.key}
-                    data-sce-nav-icon={sceIcon ?? undefined}
-                    className={cn(
-                      "sce-global-context-nav-item shrink-0",
-                      sceIcon && "inline-flex items-center gap-1.5",
-                      isSecondaryActive && "sce-global-context-nav-item--active",
-                    )}
-                  >
-                    {sceIcon ? (
-                      <NavDestinationSceIcon navItemKey={item.key} size={20} active={isSecondaryActive} />
-                    ) : null}
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
+          <SceModuleNavigation
+            ariaLabel={t("moduleNavAria")}
+            items={active.domainSecondaryItems}
+            resolveHref={resolveHref}
+            isItemActive={(item) => isDomainSecondaryItemActive(active.activeDomain!, item)}
+          />
         ) : null}
 
         {active.moduleLocalChildren.length > 0 ? (
-          <nav
-            aria-label={t("moduleNavAria")}
-            className="sce-global-module-nav hidden md:block border-t border-[color-mix(in_srgb,var(--border)_40%,transparent)]"
-            data-testid="module-local-nav"
-          >
-            <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto px-4 py-1.5">
-              {active.moduleLocalChildren.map((child) => {
-                const childHref = resolveHref(child.href);
-                const isChildActive = isModuleLocalChildPrimaryActive(
-                  pathname,
-                  child,
-                  active.moduleLocalChildren,
-                  active.activeChildKey,
-                );
-                const childPathname = childHref.split("?")[0] ?? childHref;
-                const navigateToModuleLocalSibling = (event: MouseEvent<HTMLAnchorElement>) => {
-                  if (
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.shiftKey ||
-                    event.altKey ||
-                    event.defaultPrevented
-                  ) {
-                    return;
-                  }
-                  if (childPathname === pathname) return;
-                  if (
-                    pathname.startsWith(`${childPathname}/`) ||
-                    (child.matchExact && pathname.startsWith(`${child.href}/`))
-                  ) {
-                    event.preventDefault();
-                    router.push(childHref);
-                  }
-                };
-                return (
-                  <Link
-                    key={child.key}
-                    href={childHref}
-                    aria-current={isChildActive ? "page" : undefined}
-                    onClick={navigateToModuleLocalSibling}
-                    className={cn(
-                      "sce-global-context-nav-item shrink-0 text-[0.75rem]",
-                      isChildActive && "sce-global-context-nav-item--active",
-                    )}
-                  >
-                    {child.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
+          <SceContextNavigation
+            ariaLabel={t("contextNavAria")}
+            items={active.moduleLocalChildren}
+            pathname={pathname}
+            resolveHref={resolveHref}
+            isItemActive={(child) =>
+              isModuleLocalChildPrimaryActive(
+                pathname,
+                child,
+                active.moduleLocalChildren,
+                active.activeChildKey,
+              )
+            }
+            onNavigateSibling={navigateToModuleLocalSibling}
+          />
         ) : null}
       </header>
 

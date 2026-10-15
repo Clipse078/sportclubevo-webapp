@@ -32,6 +32,8 @@ export default function HeaderTenantIdentity({
           logoUrl={logoUrl}
           size={compact ? 32 : 36}
           alt={`${tenantName} Logo`}
+          variant="header-crest"
+          displayName={tenantName}
         />
       ) : null}
       <p

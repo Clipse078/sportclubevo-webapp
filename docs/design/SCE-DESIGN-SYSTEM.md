@@ -496,6 +496,41 @@ Authoritative engine doc: [`docs/calendar/SCE-CALENDAR-ENGINE.md`](../calendar/S
 
 ---
 
+## Canonical global navigation (NAVBAR-UPGRADE-01)
+
+Three explicit levels in the authenticated shell header — **must not look equally important**.
+
+| Level | Role | Implementation | Active language |
+|-------|------|----------------|-----------------|
+| **L1 Product** | Dashboard · Planung · Kommunikation · Club · Publizieren · Admin | `ScePrimaryNavigation` + `app-navigation-model` domains | Strong label (0.875rem / 700), restrained orange **underline** (`sce-global-primary-nav-item--active`) |
+| **L2 Module** | Domain groups (e.g. Organisation under Club) | `SceModuleNavigation` (`domainSecondaryItems`) | Medium weight + orange underline (`sce-global-module-nav-item--active`) |
+| **L3 Context** | Module-local siblings (tabs within a destination) | `SceContextNavigation` (`moduleLocalChildren`) or page-level `SceContextTabs` where already canonical | Compact muted labels + subtle inset underline (`sce-global-context-nav-item--active`) |
+
+**Branding**
+
+- **Product identity:** `SidebarPlatformBrand` (SCE wordmark) separated from tenant by a vertical rule.
+- **Tenant identity:** `SceTenantIdentityBar` → `HeaderTenantIdentity` with `TenantLogo` `variant="header-crest"` (transparent crest, object-contain; initials only when no URL resolves).
+
+**Global utilities (right cluster)**
+
+- `SceGlobalUtilities`: compact `SceGlobalSeasonSwitcher`, global app explorer (hamburger → `GlobalNavDrawer`), contextual `AdminPageActions` (module pages only), notifications, account.
+- Global **`+ Erstellen`** remains the accepted `SceActivityCreateMenu` contract on module surfaces (01G) — not duplicated in the shell.
+
+**Responsive**
+
+- Tiering via `usePrimaryNavLayoutTier` + `maxInlineDomainsForTier`; overflow via single `SceNavigationOverflow` (same domain list as inline — no parallel route arrays).
+- Mobile: existing bottom primary nav + drawer; desktop L2/L3 hidden below `md`.
+
+**Accessibility**
+
+- Distinct `nav` landmarks: `primaryNavAria`, `moduleNavAria`, `contextNavAria`.
+- `aria-current="page"` on active links (`SceNavigationItem`).
+- Visible `:focus-visible` rings on all levels; overflow menu is keyboard-operable native links.
+
+Styles: `app/(admin)/global-app-navigation.css` · Shell composer: `components/admin/layout/AppShellNavigation.tsx`.
+
+---
+
 ## Related documents
 
 - [`SCE-CONTEXT-TABS-STANDARD.md`](./SCE-CONTEXT-TABS-STANDARD.md)

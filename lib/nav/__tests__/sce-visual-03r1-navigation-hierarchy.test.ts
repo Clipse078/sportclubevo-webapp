@@ -46,6 +46,7 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
     expect(planung?.children?.map((c) => c.label)).toEqual(
       expect.arrayContaining([
         "Wochenplaner",
+        "Vereinsprogramm",
         "Trainings",
         "Spiele",
         "Turniere",
@@ -105,9 +106,11 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
 
   it("preserves SCE and tenant identity hooks in the shell header", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    expect(shellNav).toContain("SidebarPlatformBrand");
-    expect(shellNav).toContain("HeaderTenantIdentity");
-    expect(shellNav).toContain("sce-global-header-utilities");
+    expect(shellNav).toContain("SceTenantIdentityBar");
+    expect(shellNav).toContain("SceGlobalUtilities");
+    const tenantBar = readRelative("components/sce/navigation/SceTenantIdentityBar.tsx");
+    expect(tenantBar).toContain("SidebarPlatformBrand");
+    expect(tenantBar).toContain("HeaderTenantIdentity");
   });
 
   it("suppresses redundant Planung breadcrumbs on simple module pages by default", () => {

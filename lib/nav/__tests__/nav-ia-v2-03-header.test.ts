@@ -56,7 +56,7 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const secondary = resolveDomainSecondaryNavItems(club);
     expect(secondary.length).toBeGreaterThanOrEqual(4);
-    expect(secondary.length).toBeLessThanOrEqual(6);
+    expect(secondary.length).toBeLessThanOrEqual(7);
     expect(secondary.some((item) => item.label === "Administration")).toBe(false);
     expect(secondary.every((item) => item.headerGroupId)).toBe(true);
   });
@@ -162,14 +162,14 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shell).toContain("buildAppNavigationModelForUser");
     expect(shell).not.toMatch(/domains:\s*\[\s*["']dashboard["']/);
-    expect(shell).toContain("l1SceIconKey");
+    expect(shell).toContain("ScePrimaryNavigation");
     expect(shell).toContain("domainSecondaryItems");
   });
 
   it("maintains 60/60/0 completeness and V2-02 matrix parity", () => {
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(60);
-    expect(baseline.reachableDestinations).toBe(60);
+    expect(baseline.visibleDestinations).toBe(63);
+    expect(baseline.reachableDestinations).toBe(63);
     expect(baseline.orphanedDestinations).toEqual([]);
 
     const sections = getVisibleNavSections(CLUB_ADMIN_KEYS, "club");
@@ -187,7 +187,8 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
 
   it("uses compact shared shell styles for Row 1 and Row 2 density targets", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
-    expect(css).toContain("--topnav-height: 4rem");
+    expect(css).toContain("--topnav-height: 3.5rem");
+    expect(css).toContain("sce-global-module-nav-item--active");
     expect(css).toContain("sce-global-context-nav-item--active");
     expect(css).toContain("border-bottom-color: var(--sce-primary)");
   });

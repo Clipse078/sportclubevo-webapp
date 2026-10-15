@@ -33,6 +33,13 @@ type TenantLogoProps = {
   alt?: string;
   /** Additional className for the wrapper element. */
   className?: string;
+  /**
+   * `platform-icon` — legacy sidebar trophy tile.
+   * `header-crest` — transparent nav crest; initials when no URL resolves.
+   */
+  variant?: "platform-icon" | "header-crest";
+  /** Used for header-crest initials when logoUrl is missing/invalid. */
+  displayName?: string;
 };
 
 /**
@@ -41,11 +48,20 @@ type TenantLogoProps = {
  * @example
  *   <TenantLogo logoUrl={ctx?.logoUrl} size={32} />
  */
+function headerCrestInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "SC";
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return `${parts[0]!.charAt(0)}${parts[1]!.charAt(0)}`.toUpperCase();
+}
+
 export default function TenantLogo({
   logoUrl,
   size = 32,
   alt = "Club logo",
   className,
+  variant = "platform-icon",
+  displayName,
 }: TenantLogoProps) {
   const hasLogo = isValidLogoUrl(logoUrl);
   const iconSize = Math.round(size * 0.44); // scale inner icon proportionally
@@ -59,12 +75,14 @@ export default function TenantLogo({
         width={size}
         height={size}
         className={className}
+        data-testid="tenant-logo-image"
         style={{
           width: size,
           height: size,
           objectFit: "contain",
-          borderRadius: 6,
+          borderRadius: variant === "header-crest" ? 0 : 6,
           display: "block",
+          background: "transparent",
         }}
         onError={(e) => {
           // On load failure, hide the broken image — parent can render fallback.
@@ -72,6 +90,34 @@ export default function TenantLogo({
           (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
       />
+    );
+  }
+
+  if (variant === "header-crest") {
+    const initials = headerCrestInitials(displayName ?? alt);
+    return (
+      <span
+        className={className}
+        data-testid="tenant-logo-header-initials"
+        aria-hidden="true"
+        style={{
+          width: size,
+          height: size,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          fontSize: Math.max(10, Math.round(size * 0.34)),
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          color: "var(--text-2)",
+          border: "1px solid color-mix(in srgb, var(--border) 85%, transparent)",
+          borderRadius: 4,
+          background: "transparent",
+        }}
+      >
+        {initials}
+      </span>
     );
   }
 

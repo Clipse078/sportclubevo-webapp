@@ -16,6 +16,7 @@ import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
 import "./authenticated-shell.css";
 import "./global-app-navigation.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
+import { getActiveSeasonForTenant } from "@/lib/people/queries";
 import {
   initSceHotfixLogin01DashboardTrace,
   logSceHotfixLogin01Milestone,
@@ -53,8 +54,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   // defaults when null, so the layout is always safe even for platform-only
   // administrators with no active tenant.
   const activeTenantId = session.user.activeTenantId ?? null;
+  const workspaceContext = resolveWorkspaceContextFromSessionUser(session.user);
 
-  const [ctx, linkedPersonProfile, participationNavCapable] = await Promise.all([
+  const [ctx, linkedPersonProfile, participationNavCapable, activeSeason] = await Promise.all([
     sceHotfixLogin01TraceEnabled()
       ? runWithSceHotfixLogin01Trace("layout-tenant", () => getActiveTenant())
       : getActiveTenant(),
@@ -72,6 +74,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             userId: session.user.id,
           })
       : Promise.resolve(false),
+    activeTenantId && workspaceContext !== "platform"
+      ? getActiveSeasonForTenant(activeTenantId)
+      : Promise.resolve(null),
   ]);
 
   if (sceHotfixLogin01TraceEnabled()) {
@@ -95,7 +100,6 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     tenantName: ctx?.name,
   });
   const shellImageUrl = linkedPersonProfile?.imageUrl ?? null;
-  const workspaceContext = resolveWorkspaceContextFromSessionUser(session.user);
 
   return (
     <div
@@ -113,6 +117,8 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             navCapabilities={{
               personalActionsModule: participationNavCapable,
             }}
+            activeSeasonLabel={activeSeason?.name ?? activeSeason?.key ?? null}
+            activeSeasonKey={activeSeason?.key ?? null}
             firstName={shellIdentity.firstName}
             lastName={shellIdentity.lastName}
             email={session.user.email}

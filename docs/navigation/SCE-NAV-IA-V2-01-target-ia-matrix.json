@@ -71,6 +71,32 @@
       "migrationReason": "Unverändert: operative Sport- und Terminplanung."
     },
     {
+      "key": "vereinsprogramm",
+      "route": "/dashboard/programm",
+      "label": "Vereinsprogramm",
+      "labelV2": "Vereinsprogramm",
+      "icon": "programme",
+      "targetL1": "planung",
+      "targetL2": "Sport & Termine",
+      "targetLocalGroup": "planung",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "events.view",
+        "events.manage",
+        "trainings.view",
+        "trainings.manage",
+        "wochenplan.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "SCE-ACTIVITY-CREATE-01I: canonical Vereinsprogramm engine surface."
+    },
+    {
       "key": "trainingcenter",
       "route": "/dashboard/training",
       "label": "Trainings",

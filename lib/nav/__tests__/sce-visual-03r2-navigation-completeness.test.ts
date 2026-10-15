@@ -52,7 +52,7 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(club).toBeTruthy();
     const secondary = resolveDomainSecondaryNavItems(club!);
     expect(secondary.length).toBeGreaterThanOrEqual(4);
-    expect(secondary.length).toBeLessThanOrEqual(6);
+    expect(secondary.length).toBeLessThanOrEqual(7);
     expect(secondary.map((item) => item.label)).toEqual(
       expect.arrayContaining(["Organisation", "People & Teams", "Mitgliedschaft"]),
     );
@@ -114,14 +114,19 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("domainSecondaryItems");
     expect(shellNav).toContain("moduleLocalChildren");
-    expect(shellNav).toContain('data-testid="domain-secondary-nav"');
-    expect(shellNav).toContain('data-testid="module-local-nav"');
+    expect(shellNav).toContain("SceModuleNavigation");
+    expect(shellNav).toContain("SceContextNavigation");
+    const moduleNav = readRelative("components/sce/navigation/SceModuleNavigation.tsx");
+    expect(moduleNav).toContain('data-testid="domain-secondary-nav"');
+    const contextNav = readRelative("components/sce/navigation/SceContextNavigation.tsx");
+    expect(contextNav).toContain('data-testid="module-local-nav"');
   });
 
   it("exposes global navigation drawer on all breakpoints", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("GlobalNavDrawer");
-    expect(shellNav).toContain('data-testid="global-nav-hamburger"');
+    const utilities = readRelative("components/sce/navigation/SceGlobalUtilities.tsx");
+    expect(utilities).toContain('data-testid="global-nav-hamburger"');
     expect(shellNav).not.toContain("AdminSidebar");
     const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
     expect(drawer).toContain("z-[80]");

@@ -81,7 +81,7 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
   it("matches the approved target matrix with zero mismatches", () => {
     const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
     const matrix = buildTargetMatrixFromInventory(inventory);
-    expect(matrix).toHaveLength(62);
+    expect(matrix).toHaveLength(63);
 
     const approved = loadApprovedTargetMatrix().destinations;
     expect(approved).toHaveLength(62);
