@@ -14,3 +14,4 @@ export * from "./competition-structure";
 export * from "./group-formation";
 export * from "./knockout-bracket";
 export * from "./qualification-mapping";
+export * from "./smart-timing";
