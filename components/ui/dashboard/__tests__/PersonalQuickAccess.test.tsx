@@ -8,7 +8,7 @@ import { NextIntlClientProvider } from "next-intl";
 import deMessages from "@/messages/de.json";
 import { PersonalQuickAccess } from "../PersonalQuickAccess";
 
-function renderQuickAccess() {
+function renderQuickAccess(createMenu?: React.ReactNode) {
   return render(
     <NextIntlClientProvider locale="de" messages={deMessages}>
       <PersonalQuickAccess
@@ -19,14 +19,8 @@ function renderQuickAccess() {
             label: "Aufgaben",
             href: "/dashboard/aufgaben",
           },
-          {
-            key: "action.create-match",
-            kind: "create",
-            label: "Spiel",
-            href: "/dashboard/events/matches/new",
-          },
         ]}
-        initialActiveKeys={["navigation.aufgaben", "action.create-match"]}
+        initialActiveKeys={["navigation.aufgaben"]}
         customizeCatalog={[
           {
             key: "navigation.aufgaben",
@@ -34,36 +28,30 @@ function renderQuickAccess() {
             label: "Aufgaben",
             href: "/dashboard/aufgaben",
           },
-          {
-            key: "action.create-match",
-            kind: "create",
-            label: "Spiel",
-            href: "/dashboard/events/matches/new",
-          },
         ]}
         maxPins={8}
+        createMenu={createMenu}
       />
     </NextIntlClientProvider>,
   );
 }
 
 describe("PersonalQuickAccess", () => {
-  it("renders navigation and create shortcuts with keyboard-accessible customize control", () => {
-    renderQuickAccess();
+  it("renders navigation shortcuts and optional canonical create menu slot", () => {
+    renderQuickAccess(
+      <button type="button" aria-label="Erstellen">
+        Erstellen
+      </button>,
+    );
 
     expect(screen.getByTestId("personal-quick-access")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Aufgaben" })).toHaveAttribute(
       "href",
       "/dashboard/aufgaben",
     );
-    expect(screen.getByRole("link", { name: "Spiel" })).toHaveAttribute(
-      "href",
-      "/dashboard/events/matches/new",
-    );
-
-    const customize = screen.getByRole("button", { name: "Anpassen" });
-    fireEvent.click(customize);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByTestId("personal-quick-access-create")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Erstellen" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Spiel planen/i })).not.toBeInTheDocument();
   });
 
   it("opens customizer with move controls for reorder without pointer-only dependency", () => {

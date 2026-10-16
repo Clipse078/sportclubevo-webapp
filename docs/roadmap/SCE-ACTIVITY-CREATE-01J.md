@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R4 canonical cards + Dashboard Mein Kalender** |
+| **Status** | **IN PROGRESS — R5 Dashboard Schnellzugriff + contextual Erstellen** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -89,7 +89,7 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **R2** | Mein Programm canonical PERSON workspace (list-first + view modes) |
 | **R3** | Dashboard Mein Programm preview polish |
 | **R4** | Dashboard Mein Kalender adoption |
-| **R5** | Contextual Erstellen + quick-action cleanup |
+| **R5** | Contextual Erstellen + quick-action cleanup (**complete**) |
 | **R6** | Responsive / a11y / empty / loading / error |
 | **R7** | Legacy audit + closure |
 
@@ -186,3 +186,21 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **REUSABLE** | Month navigation hrefs from personal command center; same `PersonalProgrammeItem[]` as programme preview |
 | **LEGACY** | `/dashboard/kalender` workspace for tasks-heavy flows — redirect compatibility only for `quelle=termine` |
 | **DUPLICATED** | **None** — no `DashboardCalendarEngine` / duplicate PERSON resolver |
+
+## 01J-R5 — Contextual Erstellen + Dashboard Schnellzugriff cleanup
+
+| Decision | Value |
+|----------|--------|
+| **DASHBOARD_QUICK_ACCESS_ROLE** | Fast navigation to frequent **workspace** destinations — not a second creation toolbar |
+| **RETAINED_NAVIGATION_SHORTCUTS** | Wochenplaner (`/dashboard/planner/week`), Trainings, Spiele, Vereinsprogramm, Turniere (+ other authorized nav leaves from `buildQuickAccessCatalog`) |
+| **REMOVED_DUPLICATE_SHORTCUTS** | Parent **Planung** nav row (same landing as Wochenplaner); all `action.create-*` Schnellzugriff pins |
+| **PLANNING_SHORTCUT_DECISION** | **Remove Planung parent** — catalog registers **children only** when a nav item has children; Wochenplaner remains the concrete planning workspace entry |
+| **DASHBOARD_CREATE_ENTRY** | Canonical `SceActivityCreateMenu` in `PersonalQuickAccess` via `createMenu` slot (`presentation="dashboard-strip"`) |
+| **CANONICAL_COMPOSER_USED** | **YES** — overlay composers from `buildSceActivityCreateMenuProps`; `/new` fallbacks unchanged |
+| **DASHBOARD_CREATION_ORIGIN** | `hostOriginContext={{ kind: "DASHBOARD", pathname: "/dashboard" }}` — no fabricated team/activity context |
+| **PERMISSION_BEHAVIOR** | `resolveSceActivityCreatePermissionsFromFlags` — menu hidden when no permitted activity types |
+| **SUCCESS_REFRESH_BEHAVIOR** | Composer `successBehavior="stay"` + `router.refresh()` in create forms; no manual programme row injection |
+| **CUSTOMIZATION_BEHAVIOR** | `QuickAccessCustomizer` / preference API unchanged — catalog and pins are **navigation-only**; stale create keys stripped on read |
+| **LEGACY_CREATE_LINKS_REMOVED** | Schnellzugriff links to `/dashboard/events/*/new` and legacy quick-action create pills |
+| **RESPONSIVE_BEHAVIOR** | `flex-wrap` nav strip + compact create pill; no horizontal page scroll dependency |
+| **NEW_CREATE_SYSTEM_INTRODUCED** | **NO** — no `DashboardActivityCreateMenu` / parallel modals |

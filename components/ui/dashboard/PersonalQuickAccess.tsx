@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useState } from "react";
-import { LayoutGrid, Plus } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import {
   getQuickAccessNavItemKey,
@@ -23,14 +24,25 @@ type Props = {
   initialActiveKeys: string[];
   customizeCatalog: QuickAccessCustomizeEntry[];
   maxPins: number;
+  /** Canonical global + Erstellen (SceActivityCreateMenu) — not a parallel create shortcut. */
+  createMenu?: ReactNode;
   className?: string;
 };
+
+const navLinkClassName = cn(
+  "inline-flex min-h-[2.25rem] items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-1 no-underline",
+  "border-[var(--border)] bg-[var(--surface)]/80",
+  "text-[0.8125rem] font-medium text-[var(--foreground)]",
+  "motion-safe:transition-[border-color,background-color] motion-safe:hover:border-[var(--border-strong)] motion-safe:hover:bg-[var(--surface-2)]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+);
 
 export function PersonalQuickAccess({
   initialItems,
   initialActiveKeys,
   customizeCatalog,
   maxPins,
+  createMenu,
   className,
 }: Props) {
   const t = useTranslations("PersonalDashboard.quickAccess");
@@ -38,7 +50,9 @@ export function PersonalQuickAccess({
   const [activeKeys, setActiveKeys] = useState(initialActiveKeys);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
-  if (items.length === 0 && customizeCatalog.length === 0) {
+  const navigationItems = items.filter((item) => item.kind === "navigate");
+
+  if (navigationItems.length === 0 && !createMenu && customizeCatalog.length === 0) {
     return null;
   }
 
@@ -74,48 +88,38 @@ export function PersonalQuickAccess({
         </Button>
       </div>
 
-      <ul className="flex list-none flex-wrap gap-2">
-        {items.map((item) => {
+      <ul className="flex list-none flex-wrap items-center gap-2">
+        {navigationItems.map((item) => {
           const sceIconName = getQuickAccessSceIconName(item.key);
           return (
-          <li key={item.key}>
-            <Link
-              href={item.href}
-              className={cn(
-                "inline-flex min-h-[2.25rem] items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-1 no-underline",
-                item.kind === "create"
-                  ? "border-[color-mix(in_srgb,var(--sce-primary)_40%,var(--border))] bg-[color-mix(in_srgb,var(--sce-primary)_6%,var(--surface))]"
-                  : "border-[var(--border)] bg-[var(--surface)]/80",
-                "text-[0.8125rem] font-medium text-[var(--foreground)]",
-                "motion-safe:transition-[border-color,background-color] motion-safe:hover:border-[var(--border-strong)] motion-safe:hover:bg-[var(--surface-2)]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-              )}
-            >
-              {item.kind === "create" ? (
-                <span className="text-[var(--sce-primary)]" aria-hidden>
-                  <Plus className="h-3.5 w-3.5" />
-                </span>
-              ) : sceIconName ? (
-                <NavDestinationSceIcon
-                  navItemKey={getQuickAccessNavItemKey(item.key) ?? ""}
-                  size={24}
-                />
-              ) : null}
-              <span>{item.label}</span>
-            </Link>
-          </li>
+            <li key={item.key}>
+              <Link href={item.href} className={navLinkClassName}>
+                {sceIconName ? (
+                  <NavDestinationSceIcon
+                    navItemKey={getQuickAccessNavItemKey(item.key) ?? ""}
+                    size={24}
+                  />
+                ) : null}
+                <span>{item.label}</span>
+              </Link>
+            </li>
           );
         })}
+        {createMenu ? (
+          <li className="relative shrink-0" data-testid="personal-quick-access-create">
+            {createMenu}
+          </li>
+        ) : null}
       </ul>
 
       <QuickAccessCustomizer
         open={customizeOpen}
         onClose={() => setCustomizeOpen(false)}
         initialPinnedKeys={activeKeys}
-        catalog={customizeCatalog}
+        catalog={customizeCatalog.filter((entry) => entry.kind === "navigate")}
         maxPins={maxPins}
         onSaved={({ items: nextItems, activeKeys: nextKeys }) => {
-          setItems(nextItems);
+          setItems(nextItems.filter((entry) => entry.kind === "navigate"));
           setActiveKeys(nextKeys);
         }}
       />

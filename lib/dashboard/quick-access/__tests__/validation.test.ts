@@ -27,6 +27,6 @@ describe("DASHBOARD-04 — quick access validation", () => {
       ["navigation.aufgaben", "navigation.removed", "action.create-match"],
       ALLOWED,
     );
-    expect(filtered).toEqual(["navigation.aufgaben", "action.create-match"]);
+    expect(filtered).toEqual(["navigation.aufgaben"]);
   });
 });

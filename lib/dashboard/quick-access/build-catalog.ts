@@ -4,11 +4,6 @@ import {
   type NavItem,
   type NavItemChild,
 } from "@/lib/nav/nav-config";
-import {
-  DASHBOARD_QUICK_ACTION_CATALOG,
-  QUICK_ACCESS_CREATE_ACTION_BINDINGS,
-} from "@/lib/dashboard/quick-actions";
-import type { PermissionKey } from "@/lib/permissions/permissions";
 import { navigationStableKey } from "./constants";
 import type { QuickAccessCatalogEntry, QuickAccessCatalogContext } from "./types";
 
@@ -59,13 +54,14 @@ function buildNavigationEntries(context: QuickAccessCatalogContext): QuickAccess
 
   for (const section of sections) {
     for (const item of section.items) {
-      pushNavEntry(entries, item, navDefaultPriority(order));
-      order += 1;
-      if (item.children) {
+      if (item.children && item.children.length > 0) {
         for (const child of item.children) {
           pushNavEntry(entries, child, navDefaultPriority(order));
           order += 1;
         }
+      } else {
+        pushNavEntry(entries, item, navDefaultPriority(order));
+        order += 1;
       }
     }
   }
@@ -73,45 +69,9 @@ function buildNavigationEntries(context: QuickAccessCatalogContext): QuickAccess
   return [...entries.values()];
 }
 
-function hasAnyPermission(userKeys: PermissionKey[], required: PermissionKey[]): boolean {
-  if (required.length === 0) {
-    return true;
-  }
-  return required.some((key) => userKeys.includes(key));
-}
-
-function buildCreateActionEntries(context: QuickAccessCatalogContext): QuickAccessCatalogEntry[] {
-  const catalogByKey = new Map(DASHBOARD_QUICK_ACTION_CATALOG.map((entry) => [entry.key, entry]));
-  const entries: QuickAccessCatalogEntry[] = [];
-
-  for (const binding of QUICK_ACCESS_CREATE_ACTION_BINDINGS) {
-    if (!hasAnyPermission(context.permissionKeys, [...binding.permissionKeys])) {
-      continue;
-    }
-    const source = catalogByKey.get(binding.catalogKey);
-    if (!source) {
-      continue;
-    }
-    entries.push({
-      key: binding.stableKey,
-      kind: "CREATE_ACTION",
-      href: source.href,
-      iconLabel: source.title,
-      messageKey: `PersonalDashboard.quickAccess.entries.${binding.stableKey.replace(/\./g, "_")}`,
-      catalogActionKey: binding.catalogKey,
-      permissionKeys: [...binding.permissionKeys],
-      defaultPriority: 40,
-    });
-  }
-
-  return entries;
-}
-
-/** Canonical Schnellzugriff registry derived from sidebar nav + create-action catalog. */
+/** Canonical Schnellzugriff registry: workspace navigation only (creation uses global + Erstellen). */
 export function buildQuickAccessCatalog(context: QuickAccessCatalogContext): QuickAccessCatalogEntry[] {
-  const navEntries = buildNavigationEntries(context);
-  const createEntries = buildCreateActionEntries(context);
-  return [...navEntries, ...createEntries];
+  return buildNavigationEntries(context);
 }
 
 export function catalogEntryMap(

@@ -18,6 +18,14 @@ import { formatSecondaryActivityPresentation } from "@/lib/dashboard/secondary-a
 import { resolvePersonalQuickAccess } from "@/lib/dashboard/quick-access/resolve-quick-access";
 import { getQuickAccessLabel } from "@/lib/dashboard/quick-access/labels";
 import { QUICK_ACCESS_MAX_PINS } from "@/lib/dashboard/quick-access/constants";
+import SceActivityCreateMenu from "@/components/sce/activity-create/SceActivityCreateMenu";
+import { buildSceActivityCreateMenuProps } from "@/lib/sce/activity-create/build-activity-create-menu-props.server";
+import {
+  resolveSceActivityCreatePermissionsFromFlags,
+  sceActivityCreatePermissionsHasAny,
+} from "@/lib/sce/activity-create/activity-create-permissions";
+import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { formatDate, formatTime } from "@/lib/tenant-runtime/formatters";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { ActorContext } from "@/lib/visibility/actor-context";
@@ -34,6 +42,7 @@ type StrategicActor = Pick<ActorContext, "tenantId" | "userId" | "permissionKeys
 export type ClubDashboardCommandCenterAsyncProps = {
   tenantId: string;
   userId: string;
+  tenantClubName: string;
   actor: StrategicActor | null;
   fmtCfg: { locale: string; timezone?: string };
   permissionKeys: PermissionKey[];
@@ -43,6 +52,7 @@ export type ClubDashboardCommandCenterAsyncProps = {
 export default async function ClubDashboardCommandCenterAsync({
   tenantId,
   userId,
+  tenantClubName,
   actor,
   fmtCfg,
   permissionKeys,
@@ -140,6 +150,33 @@ export default async function ClubDashboardCommandCenterAsync({
 
   finishSceHotfixLogin01DashboardTrace();
 
+  const canManageTrainings = permissionKeys.includes(PERMISSIONS.TRAININGS_MANAGE);
+  const canManageEvents = permissionKeys.includes(PERMISSIONS.EVENTS_MANAGE);
+  const createPermissions = resolveSceActivityCreatePermissionsFromFlags({
+    canManageTrainings,
+    canManageEvents,
+  });
+
+  let dashboardCreateMenu: ReactNode = null;
+  if (sceActivityCreatePermissionsHasAny(createPermissions) && userId) {
+    const tenantLogoUrl = await getTenantClubCrestUrlCached(tenantId);
+    const menuProps = await buildSceActivityCreateMenuProps({
+      tenantId,
+      userId,
+      timeZone: fmtCfg.timezone ?? "Europe/Zurich",
+      tenantClubName,
+      tenantLogoUrl,
+      permissions: createPermissions,
+    });
+    dashboardCreateMenu = (
+      <SceActivityCreateMenu
+        {...menuProps}
+        presentation="dashboard-strip"
+        hostOriginContext={{ kind: "DASHBOARD", pathname: "/dashboard" }}
+      />
+    );
+  }
+
   return (
     <>
       <SceHotfixLogin01DashboardClientMarks />
@@ -156,15 +193,20 @@ export default async function ClubDashboardCommandCenterAsync({
       />
 
       <PersonalQuickAccess
-        initialItems={quickAccessBundle.items}
-        initialActiveKeys={quickAccessBundle.activeKeys}
-        customizeCatalog={quickAccessBundle.catalog.map((entry) => ({
-          key: entry.key,
-          kind: entry.kind === "CREATE_ACTION" ? ("create" as const) : ("navigate" as const),
-          label: getQuickAccessLabel(entry, fmtCfg.locale),
-          href: entry.href,
-        }))}
+        initialItems={quickAccessBundle.items.filter((item) => item.kind === "navigate")}
+        initialActiveKeys={quickAccessBundle.activeKeys.filter(
+          (key) => !key.startsWith("action.create-"),
+        )}
+        customizeCatalog={quickAccessBundle.catalog
+          .filter((entry) => entry.kind === "NAVIGATION")
+          .map((entry) => ({
+            key: entry.key,
+            kind: "navigate" as const,
+            label: getQuickAccessLabel(entry, fmtCfg.locale),
+            href: entry.href,
+          }))}
         maxPins={QUICK_ACCESS_MAX_PINS}
+        createMenu={dashboardCreateMenu}
       />
 
       <PersonalDashboardSecondary

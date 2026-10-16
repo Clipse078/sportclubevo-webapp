@@ -33,8 +33,10 @@ export type SceActivityCreateMenuProps = {
   plannerUrlState?: PlanningHubUrlState;
   /** When true, post-success calls planning-hub revalidate (Wochenplaner / planning hub). */
   reconcilePlanningHub?: boolean;
-  /** Primary header button (default) or compact quick-access row item. */
-  presentation?: "header" | "quick-access";
+  /** Primary header button (default), compact quick-access row item, or dashboard nav strip pill. */
+  presentation?: "header" | "quick-access" | "dashboard-strip";
+  /** Fixed origin when host surface is not a planning module (e.g. personal dashboard). */
+  hostOriginContext?: SceActivityCreateOriginContext;
   className?: string;
 };
 
@@ -47,6 +49,7 @@ export default function SceActivityCreateMenu({
   plannerUrlState,
   reconcilePlanningHub = false,
   presentation = "header",
+  hostOriginContext,
   className,
 }: SceActivityCreateMenuProps) {
   const [open, setOpen] = useState(false);
@@ -78,6 +81,9 @@ export default function SceActivityCreateMenu({
     searchParams.forEach((value, key) => {
       params[key] = value;
     });
+    if (hostOriginContext) {
+      return hostOriginContext;
+    }
     return {
       kind: "PLANNING_SURFACE",
       pathname,
@@ -85,6 +91,7 @@ export default function SceActivityCreateMenu({
       selectedWeek: plannerUrlState?.week,
     };
   }, [
+    hostOriginContext,
     pathname,
     plannerUrlState?.week,
     searchParams,
@@ -177,7 +184,15 @@ export default function SceActivityCreateMenu({
   const triggerClassName =
     presentation === "quick-access"
       ? "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
-      : "fca-button-primary inline-flex items-center gap-1.5 text-sm";
+      : presentation === "dashboard-strip"
+        ? cn(
+            "inline-flex min-h-[2.25rem] items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-1 text-[0.8125rem] font-medium",
+            "border-[color-mix(in_srgb,var(--sce-primary)_40%,var(--border))] bg-[color-mix(in_srgb,var(--sce-primary)_6%,var(--surface))]",
+            "text-[var(--foreground)] motion-safe:transition-[border-color,background-color]",
+            "motion-safe:hover:border-[var(--border-strong)] motion-safe:hover:bg-[var(--surface-2)]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+          )
+        : "fca-button-primary inline-flex items-center gap-1.5 text-sm";
 
   return (
     <>
@@ -192,13 +207,20 @@ export default function SceActivityCreateMenu({
           aria-label="Erstellen"
           data-testid="sce-activity-create"
         >
-          <Plus className={presentation === "quick-access" ? "h-4 w-4 text-[var(--sce-primary)]" : "h-3.5 w-3.5"} />
+          <Plus
+            className={cn(
+              "h-3.5 w-3.5",
+              (presentation === "quick-access" || presentation === "dashboard-strip") &&
+                "text-[var(--sce-primary)]",
+            )}
+          />
           Erstellen
           <ChevronDown
             className={cn(
               "h-3.5 w-3.5 transition",
               open && "rotate-180",
               presentation === "quick-access" && "ml-auto opacity-70",
+              presentation === "dashboard-strip" && "opacity-70",
             )}
           />
         </button>
@@ -207,7 +229,9 @@ export default function SceActivityCreateMenu({
             role="menu"
             className={cn(
               "absolute z-20 mt-1 min-w-[200px] rounded-xl border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg",
-              presentation === "quick-access" ? "left-0" : "right-0",
+              presentation === "quick-access" || presentation === "dashboard-strip"
+                ? "left-0"
+                : "right-0",
             )}
             data-testid="sce-activity-create-menu"
           >

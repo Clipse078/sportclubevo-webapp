@@ -3,7 +3,8 @@ export type SceActivityCreateOriginKind =
   | "PLANNING_SURFACE"
   | "TEAM_PROGRAMME"
   | "QUICK_ACTION"
-  | "DIRECT_ROUTE";
+  | "DIRECT_ROUTE"
+  | "DASHBOARD";
 
 export type SceActivityCreateOriginContext = {
   kind: SceActivityCreateOriginKind;
