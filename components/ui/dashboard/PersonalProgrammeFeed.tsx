@@ -71,11 +71,11 @@ export function PersonalProgrammeFeed({
                 <p className="mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
                   {label}
                 </p>
-                <ol className="divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] pl-2">
+                <ol className="space-y-2">
                   {group.items.map((item) => (
                     <li
                       key={item.id}
-                      className="list-none"
+                      className="min-w-0 list-none"
                       data-programme-day-row={highlighted ? "highlighted" : undefined}
                     >
                       <PersonalProgrammePreviewRow

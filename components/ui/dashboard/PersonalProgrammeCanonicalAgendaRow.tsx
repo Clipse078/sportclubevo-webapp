@@ -8,6 +8,7 @@ import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
 import { SceClubEventCard } from "@/components/sporting-activity/SceClubEventCard";
 import { cn } from "@/lib/cn";
+import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import {
   isSceClubEventPresentationModel,
@@ -120,30 +121,37 @@ export function PersonalProgrammeCanonicalAgendaRow({
   fmtCfg = DEFAULT_FMT_CFG,
   density = "COMPACT",
 }: PersonalProgrammeCanonicalAgendaRowProps) {
+  const shellDensity = density === "COMPACT" ? "COMPACT" : "STANDARD";
+
   const body = (
-    <div
+    <SceProgrammeActivityCardShell
+      density={shellDensity}
       className={cn(
-        "flex min-w-0 items-start gap-2 py-2",
         highlighted &&
-          "rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_8%,transparent)] px-1",
+          "ring-1 ring-[color-mix(in_srgb,var(--sce-primary)_22%,transparent)]",
         className,
       )}
-      data-testid="personal-programme-canonical-agenda-row"
+      testId="personal-programme-canonical-agenda-row-shell"
     >
-      <div className="min-w-0 flex-1">
-        <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} density={density} />
+      <div
+        className="flex min-w-0 items-start gap-2"
+        data-testid="personal-programme-canonical-agenda-row"
+      >
+        <div className="min-w-0 flex-1">
+          <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} density={density} />
+        </div>
+        {item.deepLink ? (
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+        ) : null}
       </div>
-      {item.deepLink ? (
-        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-      ) : null}
-    </div>
+    </SceProgrammeActivityCardShell>
   );
 
   if (item.deepLink) {
     return (
       <SportingActivityDetailLink
         href={item.deepLink}
-        className="block rounded-[var(--radius-md)] no-underline motion-safe:transition-colors motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_45%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+        className="block rounded-xl no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
         aria-label={item.ariaLabel}
       >
         {body}

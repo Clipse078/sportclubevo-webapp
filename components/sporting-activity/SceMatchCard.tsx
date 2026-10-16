@@ -285,6 +285,16 @@ function SceMatchStackedFixturePanel({
   );
 }
 
+function buildProgrammeMatchOrganizationalContextLabel(
+  model: Pick<SceMatchPresentationModel, "teamContext" | "competition">,
+): string | undefined {
+  const parts = [
+    model.teamContext?.name?.trim(),
+    model.competition?.label?.trim(),
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : undefined;
+}
+
 function SceMatchInlineIdentitySide({
   side,
   identity,
@@ -317,31 +327,57 @@ function SceMatchInlineIdentitySide({
       ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass
       : undefined;
 
+  const crestNode = showCrests ? (
+    <div data-sce-match-region={`${side}-crest`} className="shrink-0">
+      <ClubCrest
+        identity={identity}
+        density={programmeFixture ? "management" : "compact"}
+        decorative
+        className={crestBoundsClass}
+      />
+    </div>
+  ) : null;
+
+  const nameNode = (
+    <span className={nameClass} title={identity.displayName} data-sce-match-region={`${side}-name`}>
+      {identity.displayName}
+    </span>
+  );
+
   return (
     <div
       data-sce-match-side={side}
       data-sce-match-region={`${side}-identity`}
       className={cn(
         "flex min-w-0 items-center gap-1.5",
-        listRow || programmeFixture ? "max-w-none" : "max-w-[min(100%,12rem)]",
-        programmeFixture && side === "home" && "justify-self-start",
-        programmeFixture && side === "away" && "flex-row-reverse justify-self-end text-right",
-        !programmeFixture && side === "away" && "flex-row-reverse justify-self-end text-right",
+        programmeFixture
+          ? side === "home"
+            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureSideHomeClass
+            : SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureSideAwayClass
+          : cn(
+              listRow ? "max-w-none" : "max-w-[min(100%,12rem)]",
+              side === "away" && "flex-row-reverse justify-self-end text-right",
+            ),
       )}
     >
-      {showCrests ? (
-        <div data-sce-match-region={`${side}-crest`} className="shrink-0">
-          <ClubCrest
-            identity={identity}
-            density={programmeFixture ? "management" : "compact"}
-            decorative
-            className={crestBoundsClass}
-          />
-        </div>
-      ) : null}
-      <span className={nameClass} title={identity.displayName} data-sce-match-region={`${side}-name`}>
-        {identity.displayName}
-      </span>
+      {programmeFixture ? (
+        side === "home" ? (
+          <>
+            {nameNode}
+            {crestNode}
+          </>
+        ) : (
+          <>
+            {crestNode}
+            {nameNode}
+          </>
+        )
+      ) : (
+        <>
+          {crestNode}
+          {nameNode}
+        </>
+      )}
     </div>
   );
 }
@@ -503,7 +539,9 @@ function SceMatchListRowIdentityContent({
     programmeFixture && model.location
       ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
       : undefined;
-  const teamContextLabel = programmeFixture ? model.teamContext?.name?.trim() : undefined;
+  const teamContextLabel = programmeFixture
+    ? buildProgrammeMatchOrganizationalContextLabel(model)
+    : undefined;
 
   return (
     <div
@@ -521,26 +559,18 @@ function SceMatchListRowIdentityContent({
         showStatus={showCancelledStatus}
         listRow
       />
-      {programmeFixture && model.competition?.label ? (
-        <p
-          className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeCompetitionClass}
-          data-testid="sce-match-competition"
-          data-sce-match-region="competition"
-        >
-          {model.competition.label}
-        </p>
-      ) : null}
       {tenantSideAccessibleLabel ? (
         <span className="sr-only">{tenantSideAccessibleLabel}</span>
       ) : null}
       <div
         className={
           programmeFixture
-            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureGridClass
+            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureBandClass
             : SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass
         }
         data-testid="sce-match-fixture"
         data-sce-match-region="fixture"
+        data-sce-match-programme-fixture={programmeFixture ? "inside-crests" : undefined}
         aria-label={buildFixtureAccessibleLabel(model)}
       >
         <SceMatchInlineIdentitySide

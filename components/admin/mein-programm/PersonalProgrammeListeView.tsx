@@ -8,8 +8,6 @@ import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-progr
 import { buildProgrammeFeedGroups } from "@/lib/personal-agenda/programme-feed-groups";
 import { PersonalProgrammeCanonicalAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeCanonicalAgendaRow";
 import { DashboardEmptyState } from "@/components/ui/dashboard/DashboardEmptyState";
-import { cn } from "@/lib/cn";
-
 type Props = {
   items: PersonalProgrammeItem[];
   timeZone: string;
@@ -82,11 +80,11 @@ export default function PersonalProgrammeListeView({
             >
               {label}
             </h2>
-            <ol className="space-y-1 divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] rounded-lg border border-[var(--border)]/80 bg-[var(--surface)]">
+            <ol className="space-y-2">
               {group.items.map((item) => (
                 <li
                   key={item.id}
-                  className={cn("list-none px-2 sm:px-3")}
+                  className="min-w-0 list-none"
                   data-testid={`personal-programme-liste-row-${item.id}`}
                 >
                   <PersonalProgrammeCanonicalAgendaRow

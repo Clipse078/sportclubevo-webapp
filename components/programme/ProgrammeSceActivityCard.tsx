@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard";
 import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
@@ -10,6 +11,7 @@ import {
   isSceClubEventPresentationModel,
   isSceTrainingPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
+import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 
 const LIST_ROW_CARD_CLASS = "border-0 bg-transparent p-0 shadow-none";
 
@@ -29,8 +31,18 @@ export default function ProgrammeSceActivityCard({
   const model = item.presentation;
   const testId = `${testIdPrefix}-sce-${item.kind.toLowerCase()}-${item.domainId}`;
 
-  if (item.kind === "TRAINING" && isSceTrainingPresentationModel(model)) {
+  const shellDensity = density === "COMPACT" ? "COMPACT" : "STANDARD";
+
+  function wrapCard(card: ReactNode) {
     return (
+      <SceProgrammeActivityCardShell density={shellDensity} testId={`${testId}-shell`}>
+        {card}
+      </SceProgrammeActivityCardShell>
+    );
+  }
+
+  if (item.kind === "TRAINING" && isSceTrainingPresentationModel(model)) {
+    return wrapCard(
       <SceTrainingCard
         model={model}
         density={density}
@@ -41,12 +53,12 @@ export default function ProgrammeSceActivityCard({
         listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
-      />
+      />,
     );
   }
 
   if (item.kind === "MATCH" && model.kind === "MATCH") {
-    return (
+    return wrapCard(
       <SceMatchCard
         model={model}
         density={density}
@@ -57,12 +69,12 @@ export default function ProgrammeSceActivityCard({
         scopeTeamId={item.teamId}
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
-      />
+      />,
     );
   }
 
   if (item.kind === "TOURNAMENT" && model.kind === "TOURNAMENT") {
-    return (
+    return wrapCard(
       <SceTournamentCard
         model={model}
         density={density}
@@ -73,12 +85,12 @@ export default function ProgrammeSceActivityCard({
         listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
-      />
+      />,
     );
   }
 
   if (item.kind === "CLUB_EVENT" && isSceClubEventPresentationModel(model)) {
-    return (
+    return wrapCard(
       <SceClubEventCard
         model={model}
         density={density}
@@ -89,7 +101,7 @@ export default function ProgrammeSceActivityCard({
         listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
-      />
+      />,
     );
   }
 

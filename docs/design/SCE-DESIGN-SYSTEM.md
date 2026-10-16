@@ -327,6 +327,17 @@ Density rules suppress the pill only via the shared activity density contract �
 
 Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-r10-semantic-alignment.test.ts`.
 
+### Programme list vs Resultate (01J R5.1)
+
+| Concept | Contract |
+|---------|----------|
+| **PROGRAMME_RESULTATE_VISUAL_FAMILY** | Programme surfaces wrap canonical `SceTrainingCard` / `SceMatchCard` / `SceTournamentCard` / `SceClubEventCard` list-row compositions in `SceProgrammeActivityCardShell` — **same shell tokens** as Resultate `SceMatchCard` (`SCE_MATCH_CARD_SHELL_CLASS`) |
+| **PURPOSE_BUILT_COMPOSITIONS** | Programme Match uses `listRowPresentation="programme-fixture"` three-row operational grammar; Resultate keeps rich score-centric card body — **do not** merge layouts |
+| **MATCH_INSIDE_CREST_RULE** | Programme fixture Row1 reading order: home club name → home crest → VS → away crest → away club name; centred compact band (`programmeFixtureBandClass`) — crests **inside** next to VS, not on outer card edges |
+| **DENSITY** | `COMPACT` programme shell on Dashboard preview; `STANDARD` on full programme workspaces; Resultate card density unchanged |
+
+Module: `lib/sporting-activity-presentation/canonical/activity-card-programme-shell.ts`.
+
 ---
 
 ## Controls — binary state (Toggle First)

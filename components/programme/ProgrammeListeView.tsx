@@ -59,12 +59,8 @@ export default function ProgrammeListeView({
           </h3>
           <ul className="space-y-2">
             {(grouped.get(dayKey) ?? []).map((item) => (
-              <li
-                key={item.id}
-                className="rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2 shadow-sm"
-                data-testid={`programme-liste-row-${item.id}`}
-              >
-                <ProgrammeSceActivityCard item={item} fmtCfg={fmtCfg} />
+              <li key={item.id} className="min-w-0 list-none" data-testid={`programme-liste-row-${item.id}`}>
+                <ProgrammeSceActivityCard item={item} fmtCfg={fmtCfg} density="STANDARD" />
               </li>
             ))}
           </ul>

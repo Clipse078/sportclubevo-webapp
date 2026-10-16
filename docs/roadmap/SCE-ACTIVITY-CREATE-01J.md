@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5 Dashboard Schnellzugriff + contextual Erstellen** |
+| **Status** | **IN PROGRESS — R5.1 Programme card visual family + match inside-crest fixture** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -186,6 +186,22 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **REUSABLE** | Month navigation hrefs from personal command center; same `PersonalProgrammeItem[]` as programme preview |
 | **LEGACY** | `/dashboard/kalender` workspace for tasks-heavy flows — redirect compatibility only for `quelle=termine` |
 | **DUPLICATED** | **None** — no `DashboardCalendarEngine` / duplicate PERSON resolver |
+
+## 01J-R5.1 — Programme card visual family + canonical match fixture (inside crests)
+
+| Decision | Value |
+|----------|--------|
+| **PROGRAMME_CARD_VISUAL_FAMILY** | Programme list rows use `SceProgrammeActivityCardShell` — same elevated match-card surface tokens as Team → Resultate (`SCE_MATCH_CARD_SHELL_CLASS` / `--sce-match-card-surface`) |
+| **RESULTATE_VISUAL_REFERENCE** | Team → Resultate `SceMatchCard` COMPACT standalone cards — geometry, pitch-opaque surface, subtle border, radius, hover/focus |
+| **PURPOSE_BUILT_COMPOSITION_RULE** | **Same SCE card family ≠ same internal layout** — Resultate stays score-centric; Programme keeps operational three-row compositions |
+| **PROGRAMME_THREE_ROW_CONTRACT** | TYPE label + Row1 identity/crest(s) + Row2 team/org/context + Row3 time + location (unchanged from R4) |
+| **MATCH_INSIDE_CREST_RULE** | Programme Match Row1: **HOME NAME → HOME CREST → VS → AWAY CREST → AWAY NAME** (crests inside, adjacent to VS; compact centred fixture band) |
+| **MATCH_HOME_AWAY_RULE** | HOME left, AWAY right — sporting semantics authoritative (never reorder for tenant display) |
+| **PROGRAMME_SURFACE_ADOPTION** | `/dashboard`, `/dashboard/mein-programm`, `/dashboard/programm`, `/dashboard/teams/[teamId]/programm` — canonical `Sce*` list-row + shared programme shell (no page-specific card forks) |
+| **DENSITY_RULE** | Dashboard preview **COMPACT** shell padding; full programme lists **STANDARD** — Resultate grid density unchanged |
+| **CALENDAR_MICRO_EXCLUSION** | Calendar MICRO cells frozen — no programme card shell on calendar tiles |
+
+Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShell.tsx`, `ProgrammeSceActivityCard`, `PersonalProgrammeCanonicalAgendaRow`.
 
 ## 01J-R5 — Contextual Erstellen + Dashboard Schnellzugriff cleanup
 
