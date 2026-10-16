@@ -1,4 +1,6 @@
 import type { HomeAwayRelevance } from "../smart-generator-architecture";
+
+export type { HomeAwayRelevance };
 import type { TournamentFixtureFormatId } from "./constants";
 
 /** Pure fixture row suitable for persistence (no schedule fields). */
@@ -28,8 +30,21 @@ export interface RoundRobinGenerationInput {
 
 export type TournamentFixtureGenerationStrategy = "ROUND_ROBIN" | "SMART_MIX";
 
+export interface SmartMixGenerationConfig {
+  stageKey?: string;
+  /** Product input — matches each participant should play (exact or parity-adjusted). */
+  targetMatchesPerParticipant: number;
+  homeAwayRelevance?: HomeAwayRelevance;
+}
+
+export interface SmartMixGenerationInput {
+  participantIds: readonly string[];
+  config: SmartMixGenerationConfig;
+}
+
 export interface TournamentFixtureGenerationRequest {
   strategy: TournamentFixtureGenerationStrategy;
   participantIds: readonly string[];
   roundRobin?: RoundRobinGenerationConfig;
+  smartMix?: SmartMixGenerationConfig;
 }

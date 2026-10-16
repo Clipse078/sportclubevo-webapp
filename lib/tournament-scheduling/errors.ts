@@ -10,6 +10,7 @@ export type TournamentSchedulingErrorCode =
   | "TOURNAMENT_PARTICIPANT_LIMIT_EXCEEDED"
   | "TOURNAMENT_FIXTURE_LIMIT_EXCEEDED"
   | "TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID"
+  | "TOURNAMENT_SMART_MIX_TARGET_INVALID"
   | "TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT"
   | "TOURNAMENT_FORMAT_UNSUPPORTED"
   | "TOURNAMENT_GENERATION_INVALID"
@@ -164,6 +165,13 @@ export class TournamentMeetingsPerOpponentInvalidError extends TournamentSchedul
   constructor(message: string) {
     super("TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID", message);
     this.name = "TournamentMeetingsPerOpponentInvalidError";
+  }
+}
+
+export class TournamentSmartMixTargetInvalidError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_SMART_MIX_TARGET_INVALID", message);
+    this.name = "TournamentSmartMixTargetInvalidError";
   }
 }
 

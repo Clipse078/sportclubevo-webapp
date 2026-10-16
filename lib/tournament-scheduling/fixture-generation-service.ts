@@ -16,6 +16,7 @@ import {
   TournamentScheduleParticipantInvalidError,
   TournamentFixtureLimitExceededError,
   TournamentMeetingsPerOpponentInvalidError,
+  TournamentSmartMixTargetInvalidError,
 } from "./errors";
 import {
   canonicalizeParticipantIds,
@@ -124,6 +125,8 @@ function mapPureValidationError(error: RoundRobinGenerationValidationError): nev
       throw new TournamentFixtureLimitExceededError(error.message);
     case "TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID":
       throw new TournamentMeetingsPerOpponentInvalidError(error.message);
+    case "TOURNAMENT_SMART_MIX_TARGET_INVALID":
+      throw new TournamentSmartMixTargetInvalidError(error.message);
     case "TOURNAMENT_FORMAT_UNSUPPORTED":
       throw new TournamentFormatUnsupportedError(error.message);
     default:
@@ -142,6 +145,8 @@ export interface GenerateTournamentRoundRobinFixturesInput {
 
 export interface GenerateTournamentFixturesInput extends GenerateTournamentRoundRobinFixturesInput {
   strategy?: TournamentFixtureGenerationStrategy;
+  /** Required when strategy is SMART_MIX. */
+  targetMatchesPerParticipant?: number;
 }
 
 /**
@@ -156,15 +161,6 @@ export async function generateTournamentFixturesForEvent(
   await requireTenantOrganisedTournament(tenantId, tournamentId);
 
   const strategy = input.strategy ?? "ROUND_ROBIN";
-  if (strategy !== "ROUND_ROBIN") {
-    throw new TournamentFormatUnsupportedError(`Unsupported tournament generation strategy: ${strategy}`);
-  }
-
-  const format = input.format ?? "ROUND_ROBIN";
-  if (format !== "ROUND_ROBIN") {
-    throw new TournamentFormatUnsupportedError(`Unsupported tournament format: ${format}`);
-  }
-
   const stageKey = input.stageKey ?? TOURNAMENT_FIXTURE_STAGE_MAIN;
   const homeAwayRelevance = input.homeAwayRelevance ?? HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT;
 
@@ -179,16 +175,41 @@ export async function generateTournamentFixturesForEvent(
 
   let generated;
   try {
-    generated = generateTournamentFixtures({
-      strategy: "ROUND_ROBIN",
-      participantIds: canonicalIds,
-      roundRobin: {
-        format: "ROUND_ROBIN",
-        stageKey,
-        meetingsPerOpponent: input.meetingsPerOpponent,
-        homeAwayRelevance,
-      },
-    });
+    if (strategy === "ROUND_ROBIN") {
+      const format = input.format ?? "ROUND_ROBIN";
+      if (format !== "ROUND_ROBIN") {
+        throw new TournamentFormatUnsupportedError(`Unsupported tournament format: ${format}`);
+      }
+      generated = generateTournamentFixtures({
+        strategy: "ROUND_ROBIN",
+        participantIds: canonicalIds,
+        roundRobin: {
+          format: "ROUND_ROBIN",
+          stageKey,
+          meetingsPerOpponent: input.meetingsPerOpponent,
+          homeAwayRelevance,
+        },
+      });
+    } else if (strategy === "SMART_MIX") {
+      if (input.targetMatchesPerParticipant === undefined) {
+        throw new TournamentSmartMixTargetInvalidError(
+          "targetMatchesPerParticipant is required for SMART_MIX generation",
+        );
+      }
+      generated = generateTournamentFixtures({
+        strategy: "SMART_MIX",
+        participantIds: canonicalIds,
+        smartMix: {
+          stageKey,
+          targetMatchesPerParticipant: input.targetMatchesPerParticipant,
+          homeAwayRelevance,
+        },
+      });
+    } else {
+      throw new TournamentFormatUnsupportedError(
+        `Unsupported tournament generation strategy: ${String(strategy)}`,
+      );
+    }
   } catch (error) {
     if (error instanceof RoundRobinGenerationValidationError) {
       if (error.code === "TOURNAMENT_GENERATION_INVALID" && error.message.includes("Duplicate")) {

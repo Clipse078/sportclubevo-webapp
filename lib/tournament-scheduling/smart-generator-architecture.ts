@@ -38,8 +38,9 @@ export const GROUP_MIX_GENERATORS: readonly GroupMixGenerationStrategy[] = [
 /** Default generation when configuration omitted (01C parity). */
 export const CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1;
 export const PRODUCT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = "1:n" as const;
-/** 01E1 implements repeated round robin; Smart Mix remains future. */
+/** 01E1+01E2 implement round robin and Smart Mix executable strategies. */
 export const ROUND_ROBIN_EXTENSION_REQUIRED = false;
+export const SMART_MIX_GENERATOR_IMPLEMENTED = true;
 export const IMPLEMENTED_ROUND_ROBIN_MEETINGS_PER_OPPONENT = "1:n" as const;
 
 /** Tournament Planner applies only when tenant organises the tournament. */

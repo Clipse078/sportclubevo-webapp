@@ -7,6 +7,10 @@ export const TOURNAMENT_FIXTURE_STAGE_MAIN = "MAIN";
  */
 export const TOURNAMENT_ROUND_ROBIN_TECHNICAL_MAX_FIXTURES = 2_000;
 
+/** Strategy-neutral fixture-count safety bound (same value as historical RR constant). */
+export const TOURNAMENT_GENERATION_TECHNICAL_MAX_FIXTURES =
+  TOURNAMENT_ROUND_ROBIN_TECHNICAL_MAX_FIXTURES;
+
 /** Minimum entrants for a meaningful round robin. */
 export const TOURNAMENT_ROUND_ROBIN_MIN_PARTICIPANTS = 2;
 

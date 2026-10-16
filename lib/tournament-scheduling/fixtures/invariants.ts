@@ -1,5 +1,10 @@
 import type { TournamentFixtureGenerationDefinition } from "./types";
 import {
+  deriveSmartMixDiagnostics,
+  planSmartMixTargetDegrees,
+  type SmartMixBalanceClassification,
+} from "./smart-mix";
+import {
   expectedRoundRobinFixtureCount,
   expectedRoundRobinGlobalRoundCount,
   expectedRoundRobinRoundCount,
@@ -93,4 +98,59 @@ export function validateRoundRobinInvariants(
       }
     }
   }
+}
+
+export function validateSmartMixInvariants(
+  participantIds: readonly string[],
+  fixtures: readonly TournamentFixtureGenerationDefinition[],
+  options: { targetMatchesPerParticipant: number },
+): SmartMixBalanceClassification {
+  const plan = planSmartMixTargetDegrees(participantIds, options.targetMatchesPerParticipant);
+  const diagnostics = deriveSmartMixDiagnostics(participantIds, fixtures, plan);
+
+  if (fixtures.length !== plan.expectedFixtureCount) {
+    throw new Error(
+      `Expected ${plan.expectedFixtureCount} fixtures, got ${fixtures.length} (target ${options.targetMatchesPerParticipant})`,
+    );
+  }
+
+  const idSet = new Set(participantIds);
+  for (const fixture of fixtures) {
+    if (fixture.sideAParticipantId === fixture.sideBParticipantId) {
+      throw new Error("Self-play fixture detected");
+    }
+    if (!idSet.has(fixture.sideAParticipantId) || !idSet.has(fixture.sideBParticipantId)) {
+      throw new Error("Fixture references unknown participant");
+    }
+  }
+
+  for (const id of participantIds) {
+    const count = diagnostics.participantMatchCounts[id] ?? 0;
+    if (plan.balanceClassification === "EXACT" && count !== options.targetMatchesPerParticipant) {
+      throw new Error(`Participant ${id} expected ${options.targetMatchesPerParticipant} matches, got ${count}`);
+    }
+    if (count > options.targetMatchesPerParticipant) {
+      throw new Error(`Participant ${id} exceeds target ${options.targetMatchesPerParticipant}: ${count}`);
+    }
+  }
+
+  if (
+    diagnostics.maxParticipantMatchCount - diagnostics.minParticipantMatchCount >
+    (plan.balanceClassification === "EXACT" ? 0 : 1)
+  ) {
+    throw new Error("Participant match-count spread exceeds allowed balance");
+  }
+
+  const keys = new Set<string>();
+  for (const fixture of fixtures) {
+    if (keys.has(fixture.generatorKey)) {
+      throw new Error(`Duplicate generatorKey ${fixture.generatorKey}`);
+    }
+    keys.add(fixture.generatorKey);
+    if (!fixture.generatorKey.startsWith("smart-mix:")) {
+      throw new Error(`Unexpected generatorKey ${fixture.generatorKey}`);
+    }
+  }
+
+  return plan.balanceClassification;
 }

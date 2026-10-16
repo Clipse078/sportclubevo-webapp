@@ -3,6 +3,7 @@ export * from "./types";
 export * from "./errors";
 export * from "./ordering";
 export * from "./round-robin";
+export * from "./smart-mix";
 export * from "./generate-tournament-fixtures";
 export * from "./invariants";
 export * from "./compare";
