@@ -5,9 +5,13 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **CLOSED / ACCEPTED / MERGE_READY** (R7 closure — PR #848 open, not merged) |
-| **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
-| **Pull request** | [#848](https://github.com/Clipse078/sportclubevo-webapp/pull/848) → `STAGE` |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (R8 — PR #848 merged to `STAGE`) |
+| **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` (historical) |
+| **Pull request** | [#848](https://github.com/Clipse078/sportclubevo-webapp/pull/848) — **MERGED** |
+| **Merge commit** | `ebb267ed6cccca3a9e9ef75cd75b8ac8028b3b5a` |
+| **Canonical STAGE** | `ebb267ed6cccca3a9e9ef75cd75b8ac8028b3b5a` (post-merge HEAD) |
+| **Feature head** | `7a076cf0ceb1e54f8fc25045cb7270a8bf7cf64a` |
+| **PO visual UAT** | **R6_PO_VISUAL_UAT = PASS** |
 
 ## Product principle
 
@@ -355,4 +359,13 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **Auth / credentials** | **No** password or credential mutation in R7 |
 | **Legacy deferred → 01N** | `training-programme-adapter.ts`, `team-event-programme-adapter.ts` (diagnostics); exported unwired `DashboardTodayEventCards` / `MeineAgendaWidget`; `planning-hub-liste-grid.ts` (unreferenced tokens); `PersonalProgrammeAgendaRow` (meetings + Kalender mobile fallback) — not 01J closure blockers |
 | **Automated validation (R7)** | 38 files / 296 tests (01J + planner + programme-engine + calendar-micro + dashboard composition); `prisma validate` OK; `npm run build` OK |
-| **Merge** | PR **#848** ready on `STAGE` — **not merged** in R7 |
+| **Merge** | PR **#848** **MERGED** to `STAGE` (`ebb267ed`) — R8 post-merge validation |
+
+## 01J-R8 — Post-merge (STAGE)
+
+| Gate | Result |
+|------|--------|
+| **Merge** | PR **#848** merge commit `ebb267ed6cccca3a9e9ef75cd75b8ac8028b3b5a` |
+| **R7 acceptance suite** | 598 tests PASS (01J + planner + programme-engine + calendar-micro + dashboard + 01J navbar guards) |
+| **Build / schema** | `prisma validate` OK; `npm run build` OK; no schema migration in merge |
+| **Follow-up (non-01J)** | `nav-ia-v2-02` / `03` / `04` matrix completeness baselines still expect **63** destinations; STAGE registers **64** after Mobile App nav (01J-R5.4.2) — update V2 regression baselines outside 01J scope |
