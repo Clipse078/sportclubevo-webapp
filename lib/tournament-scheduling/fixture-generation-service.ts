@@ -1,11 +1,11 @@
 /**
- * SCE-TOURNAMENT-PLANNER-01C — round-robin fixture generation + persistence bridge.
+ * SCE Tournament Planner — fixture generation + persistence bridge (01C → 01E1).
  */
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { TournamentFixtureDefinition } from "./types";
-import { requireTournamentEvent } from "./internal/require-tournament";
+import { requireTenantOrganisedTournament } from "./internal/require-tenant-organised-tournament";
 import {
   TournamentFixtureSetConflictError,
   TournamentFixturesAlreadyExistError,
@@ -14,11 +14,13 @@ import {
   TournamentParticipantsInsufficientError,
   TournamentFormatUnsupportedError,
   TournamentScheduleParticipantInvalidError,
+  TournamentFixtureLimitExceededError,
+  TournamentMeetingsPerOpponentInvalidError,
 } from "./errors";
 import {
   canonicalizeParticipantIds,
   compareParticipantId,
-  generateRoundRobinFixtures,
+  generateTournamentFixtures,
   RoundRobinGenerationValidationError,
   TOURNAMENT_FIXTURE_STAGE_MAIN,
   type RoundRobinGenerationConfig,
@@ -27,8 +29,11 @@ import {
   logicalFixtureSetsEqual,
   participantIdsFromFixtures,
   type TournamentFixtureGenerationDefinition,
+  type TournamentFixtureGenerationStrategy,
 } from "./fixtures";
 import { listTournamentFixtures } from "./fixture-service";
+import type { HomeAwayRelevance } from "./smart-generator-architecture";
+import { HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT } from "./smart-generator-architecture";
 
 function toDefinition(row: {
   id: string;
@@ -105,7 +110,7 @@ function reconcileExistingFixtures(
 
   throw new TournamentFixturesAlreadyExistError(
     tournamentId,
-    "Existing tournament fixtures differ from the deterministic round-robin set",
+    "Existing tournament fixtures differ from the deterministic generated set",
   );
 }
 
@@ -115,6 +120,10 @@ function mapPureValidationError(error: RoundRobinGenerationValidationError): nev
       throw new TournamentParticipantsInsufficientError(error.message);
     case "TOURNAMENT_PARTICIPANT_LIMIT_EXCEEDED":
       throw new TournamentParticipantLimitExceededError(error.message);
+    case "TOURNAMENT_FIXTURE_LIMIT_EXCEEDED":
+      throw new TournamentFixtureLimitExceededError(error.message);
+    case "TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID":
+      throw new TournamentMeetingsPerOpponentInvalidError(error.message);
     case "TOURNAMENT_FORMAT_UNSUPPORTED":
       throw new TournamentFormatUnsupportedError(error.message);
     default:
@@ -125,18 +134,31 @@ function mapPureValidationError(error: RoundRobinGenerationValidationError): nev
 export interface GenerateTournamentRoundRobinFixturesInput {
   format?: RoundRobinGenerationConfig["format"];
   stageKey?: string;
+  meetingsPerOpponent?: number;
+  homeAwayRelevance?: HomeAwayRelevance;
+  /** Future alias — same as format for ROUND_ROBIN-only 01E1 surface. */
+  strategy?: TournamentFixtureGenerationStrategy;
+}
+
+export interface GenerateTournamentFixturesInput extends GenerateTournamentRoundRobinFixturesInput {
+  strategy?: TournamentFixtureGenerationStrategy;
 }
 
 /**
- * Loads canonical participants, generates deterministic round-robin fixtures, persists atomically.
- * Idempotent when an identical fixture set already exists (no new rows).
+ * Loads canonical participants, generates deterministic fixtures, persists atomically.
+ * Tenant-organised tournaments only (organiser ownership guard).
  */
-export async function generateTournamentRoundRobinFixtures(
+export async function generateTournamentFixturesForEvent(
   tenantId: string,
   tournamentId: string,
-  input: GenerateTournamentRoundRobinFixturesInput = {},
+  input: GenerateTournamentFixturesInput = {},
 ): Promise<TournamentFixtureDefinition[]> {
-  await requireTournamentEvent(tenantId, tournamentId);
+  await requireTenantOrganisedTournament(tenantId, tournamentId);
+
+  const strategy = input.strategy ?? "ROUND_ROBIN";
+  if (strategy !== "ROUND_ROBIN") {
+    throw new TournamentFormatUnsupportedError(`Unsupported tournament generation strategy: ${strategy}`);
+  }
 
   const format = input.format ?? "ROUND_ROBIN";
   if (format !== "ROUND_ROBIN") {
@@ -144,6 +166,7 @@ export async function generateTournamentRoundRobinFixtures(
   }
 
   const stageKey = input.stageKey ?? TOURNAMENT_FIXTURE_STAGE_MAIN;
+  const homeAwayRelevance = input.homeAwayRelevance ?? HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT;
 
   const participantRows = await prisma.tournamentParticipant.findMany({
     where: { tenantId, eventId: tournamentId },
@@ -156,9 +179,15 @@ export async function generateTournamentRoundRobinFixtures(
 
   let generated;
   try {
-    generated = generateRoundRobinFixtures({
+    generated = generateTournamentFixtures({
+      strategy: "ROUND_ROBIN",
       participantIds: canonicalIds,
-      config: { format: "ROUND_ROBIN", stageKey },
+      roundRobin: {
+        format: "ROUND_ROBIN",
+        stageKey,
+        meetingsPerOpponent: input.meetingsPerOpponent,
+        homeAwayRelevance,
+      },
     });
   } catch (error) {
     if (error instanceof RoundRobinGenerationValidationError) {
@@ -214,4 +243,13 @@ export async function generateTournamentRoundRobinFixtures(
       "Concurrent fixture generation left a non-matching fixture set",
     );
   }
+}
+
+/** @deprecated Prefer `generateTournamentFixturesForEvent` — retained for 01C call sites. */
+export async function generateTournamentRoundRobinFixtures(
+  tenantId: string,
+  tournamentId: string,
+  input: GenerateTournamentRoundRobinFixturesInput = {},
+): Promise<TournamentFixtureDefinition[]> {
+  return generateTournamentFixturesForEvent(tenantId, tournamentId, input);
 }

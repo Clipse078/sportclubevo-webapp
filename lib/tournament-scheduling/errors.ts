@@ -8,6 +8,9 @@ export type TournamentSchedulingErrorCode =
   | "TOURNAMENT_FIXTURE_SET_CONFLICT"
   | "TOURNAMENT_PARTICIPANTS_INSUFFICIENT"
   | "TOURNAMENT_PARTICIPANT_LIMIT_EXCEEDED"
+  | "TOURNAMENT_FIXTURE_LIMIT_EXCEEDED"
+  | "TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID"
+  | "TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT"
   | "TOURNAMENT_FORMAT_UNSUPPORTED"
   | "TOURNAMENT_GENERATION_INVALID"
   | "TOURNAMENT_SCHEDULE_NOT_FOUND"
@@ -147,5 +150,29 @@ export class TournamentGenerationInvalidError extends TournamentSchedulingError 
   constructor(message: string) {
     super("TOURNAMENT_GENERATION_INVALID", message);
     this.name = "TournamentGenerationInvalidError";
+  }
+}
+
+export class TournamentFixtureLimitExceededError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_FIXTURE_LIMIT_EXCEEDED", message);
+    this.name = "TournamentFixtureLimitExceededError";
+  }
+}
+
+export class TournamentMeetingsPerOpponentInvalidError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID", message);
+    this.name = "TournamentMeetingsPerOpponentInvalidError";
+  }
+}
+
+export class TournamentPlannerNotOwnedByTenantError extends TournamentSchedulingError {
+  constructor(tournamentId: string) {
+    super(
+      "TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT",
+      `Tournament "${tournamentId}" is not organised by the current tenant; fixture generation is not available`,
+    );
+    this.name = "TournamentPlannerNotOwnedByTenantError";
   }
 }

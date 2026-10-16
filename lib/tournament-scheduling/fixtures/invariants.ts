@@ -1,8 +1,10 @@
 import type { TournamentFixtureGenerationDefinition } from "./types";
 import {
   expectedRoundRobinFixtureCount,
+  expectedRoundRobinGlobalRoundCount,
   expectedRoundRobinRoundCount,
 } from "./round-robin";
+import { TOURNAMENT_ROUND_ROBIN_DEFAULT_MEETINGS_PER_OPPONENT } from "./constants";
 
 import { compareParticipantId } from "./ordering";
 
@@ -16,12 +18,15 @@ function unorderedPairKey(a: string, b: string): string {
 export function validateRoundRobinInvariants(
   participantIds: readonly string[],
   fixtures: readonly TournamentFixtureGenerationDefinition[],
+  options: { meetingsPerOpponent?: number } = {},
 ): void {
+  const meetingsPerOpponent =
+    options.meetingsPerOpponent ?? TOURNAMENT_ROUND_ROBIN_DEFAULT_MEETINGS_PER_OPPONENT;
   const n = participantIds.length;
-  const expectedFixtures = expectedRoundRobinFixtureCount(n);
+  const expectedFixtures = expectedRoundRobinFixtureCount(n, meetingsPerOpponent);
   if (fixtures.length !== expectedFixtures) {
     throw new Error(
-      `Expected ${expectedFixtures} fixtures for ${n} participants, got ${fixtures.length}`,
+      `Expected ${expectedFixtures} fixtures for ${n} participants × ${meetingsPerOpponent} meetings, got ${fixtures.length}`,
     );
   }
 
@@ -37,13 +42,14 @@ export function validateRoundRobinInvariants(
   for (let i = 0; i < n; i += 1) {
     for (let j = i + 1; j < n; j += 1) {
       const key = unorderedPairKey(participantIds[i], participantIds[j]);
-      if (pairCounts.get(key) !== 1) {
-        throw new Error(`Pair ${key} must appear exactly once`);
+      if (pairCounts.get(key) !== meetingsPerOpponent) {
+        throw new Error(`Pair ${key} must appear exactly ${meetingsPerOpponent} times`);
       }
     }
   }
 
-  const rounds = expectedRoundRobinRoundCount(n);
+  const roundsPerCycle = expectedRoundRobinRoundCount(n);
+  const totalRounds = expectedRoundRobinGlobalRoundCount(n, meetingsPerOpponent);
   const byRound = new Map<number, TournamentFixtureGenerationDefinition[]>();
   for (const fixture of fixtures) {
     const list = byRound.get(fixture.roundIndex) ?? [];
@@ -51,11 +57,11 @@ export function validateRoundRobinInvariants(
     byRound.set(fixture.roundIndex, list);
   }
 
-  if (byRound.size !== rounds) {
-    throw new Error(`Expected ${rounds} rounds, got ${byRound.size}`);
+  if (byRound.size !== totalRounds) {
+    throw new Error(`Expected ${totalRounds} global rounds, got ${byRound.size}`);
   }
 
-  for (let roundIndex = 0; roundIndex < rounds; roundIndex += 1) {
+  for (let roundIndex = 0; roundIndex < totalRounds; roundIndex += 1) {
     const roundFixtures = byRound.get(roundIndex) ?? [];
     const appearances = new Map<string, number>();
     for (const fixture of roundFixtures) {
@@ -64,10 +70,12 @@ export function validateRoundRobinInvariants(
       }
     }
 
+    const roundInCycle = roundIndex % roundsPerCycle;
+
     if (n % 2 === 0) {
       for (const id of participantIds) {
         if (appearances.get(id) !== 1) {
-          throw new Error(`Participant ${id} must appear once in even round ${roundIndex}`);
+          throw new Error(`Participant ${id} must appear once in even round ${roundInCycle}`);
         }
       }
     } else {
@@ -77,11 +85,11 @@ export function validateRoundRobinInvariants(
         if (count === 0) {
           byeCount += 1;
         } else if (count !== 1) {
-          throw new Error(`Participant ${id} appears ${count} times in round ${roundIndex}`);
+          throw new Error(`Participant ${id} appears ${count} times in round ${roundInCycle}`);
         }
       }
       if (byeCount !== 1) {
-        throw new Error(`Round ${roundIndex} must have exactly one bye for odd N`);
+        throw new Error(`Round ${roundInCycle} must have exactly one bye for odd N`);
       }
     }
   }

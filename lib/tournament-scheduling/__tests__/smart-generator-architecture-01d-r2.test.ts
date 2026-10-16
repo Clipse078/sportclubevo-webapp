@@ -49,7 +49,7 @@ describe("SCE Smart Tournament Generator — 01D-R2 contracts", () => {
   it("records round-robin extension and MVP participant guard", () => {
     expect(CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT).toBe(1);
     expect(PRODUCT_ROUND_ROBIN_MEETINGS_PER_OPPONENT).toBe("1:n");
-    expect(ROUND_ROBIN_EXTENSION_REQUIRED).toBe(true);
+    expect(ROUND_ROBIN_EXTENSION_REQUIRED).toBe(false);
     expect(CURRENT_MVP_PARTICIPANT_LIMIT).toBe(16);
     expect(PARTICIPANT_LIMIT_IS_PRODUCT_RULE).toBe(false);
     expect(PARTICIPANT_LIMIT_REQUALIFICATION_RECORDED).toBe(true);

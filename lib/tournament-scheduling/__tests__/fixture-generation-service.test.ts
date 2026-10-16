@@ -26,8 +26,8 @@ import {
   TournamentFixturesAlreadyExistError,
   TournamentFixtureSetConflictError,
   TournamentParticipantsInsufficientError,
-  TournamentParticipantLimitExceededError,
   TournamentFormatUnsupportedError,
+  TournamentPlannerNotOwnedByTenantError,
 } from "../errors";
 import { TournamentNotFoundError } from "@/lib/tournaments/errors";
 
@@ -35,11 +35,14 @@ const TENANT_A = "tenant-a";
 const TENANT_B = "tenant-b";
 const TOURNAMENT_ID = "tournament-01";
 
-function mockTournament(tenantId: string = TENANT_A) {
+function mockTournament(
+  tenantId: string = TENANT_A,
+  homeAway: "HOME" | "AWAY" | null = "HOME",
+) {
   vi.mocked(prisma.event.findFirst).mockImplementation(async (args) => {
     const where = (args as { where: { id: string; tenantId: string; type: string } }).where;
     if (where.id === TOURNAMENT_ID && where.tenantId === tenantId && where.type === "TOURNAMENT") {
-      return { id: TOURNAMENT_ID } as never;
+      return { id: TOURNAMENT_ID, homeAway } as never;
     }
     return null;
   });
@@ -194,12 +197,25 @@ describe("generateTournamentRoundRobinFixtures", () => {
     );
   });
 
-  it("rejects more than 16 participants", async () => {
+  it("allows more than 16 participants when within technical fixture limit", async () => {
     mockTournament();
     mockParticipants(Array.from({ length: 17 }, (_, i) => `p${i}`));
+    vi.mocked(prisma.tournamentFixture.create).mockImplementation(async (args) => {
+      const data = (args as { data: Record<string, unknown> }).data;
+      return { id: "f", eventId: TOURNAMENT_ID, ...data } as never;
+    });
+    const result = await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
+    expect(result).toHaveLength((17 * 16) / 2);
+  });
+
+  it("rejects away / externally-organised tournaments before any writes", async () => {
+    mockTournament(TENANT_A, "AWAY");
+    mockParticipants(["p1", "p2", "p3"]);
     await expect(generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID)).rejects.toBeInstanceOf(
-      TournamentParticipantLimitExceededError,
+      TournamentPlannerNotOwnedByTenantError,
     );
+    expect(prisma.tournamentFixture.create).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it("rejects unsupported format", async () => {
@@ -307,7 +323,10 @@ describe("generateTournamentRoundRobinFixtures", () => {
     });
 
     await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
-    const expected = generateRoundRobinFixtures({ participantIds: ["p1", "p2", "p3"] });
+    const expected = generateRoundRobinFixtures({
+      participantIds: ["p1", "p2", "p3"],
+      config: { format: "ROUND_ROBIN" },
+    });
     expect(createdSides.sort()).toEqual(
       expected.map((f) => `${f.sideAParticipantId}:${f.sideBParticipantId}`).sort(),
     );

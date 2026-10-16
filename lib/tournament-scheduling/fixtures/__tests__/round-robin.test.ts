@@ -7,6 +7,8 @@ import {
   canonicalizeParticipantIds,
   compareParticipantId,
   ROUND_ROBIN_BYE_SENTINEL,
+  buildRoundRobinGeneratorKey,
+  generateTournamentFixtures,
 } from "../index";
 
 function ids(count: number, prefix = "p"): string[] {
@@ -59,8 +61,11 @@ describe("generateRoundRobinFixtures — matrix", () => {
     expect(() => generateRoundRobinFixtures({ participantIds: ids(1) })).toThrow();
   });
 
-  it("rejects more than 16 participants", () => {
-    expect(() => generateRoundRobinFixtures({ participantIds: ids(17) })).toThrow();
+  it("supports more than 16 participants within technical fixture limit", () => {
+    const participantIds = ids(20);
+    const fixtures = generateRoundRobinFixtures({ participantIds });
+    expect(fixtures).toHaveLength(expectedRoundRobinFixtureCount(20));
+    validateRoundRobinInvariants(participantIds, fixtures);
   });
 
   it("rejects duplicate participant ids", () => {
@@ -169,5 +174,148 @@ describe("ordering independence via canonicalize", () => {
       participantIds: canonicalizeParticipantIds(permuted),
     });
     expect(a).toEqual(b);
+  });
+});
+
+describe("repeated round robin — product matrix", () => {
+  const cases = [
+    { n: 2, m: 1 },
+    { n: 2, m: 2 },
+    { n: 3, m: 1 },
+    { n: 3, m: 2 },
+    { n: 4, m: 1 },
+    { n: 4, m: 2 },
+    { n: 5, m: 3 },
+    { n: 6, m: 4 },
+  ] as const;
+
+  for (const { n, m } of cases) {
+    it(`n=${n} meetings=${m}`, () => {
+      const participantIds = ids(n);
+      const fixtures = generateRoundRobinFixtures({
+        participantIds,
+        config: { format: "ROUND_ROBIN", meetingsPerOpponent: m },
+      });
+      expect(fixtures).toHaveLength(expectedRoundRobinFixtureCount(n, m));
+      validateRoundRobinInvariants(participantIds, fixtures, { meetingsPerOpponent: m });
+      expect(new Set(fixtures.map((f) => f.generatorKey)).size).toBe(fixtures.length);
+      for (const fixture of fixtures) {
+        expect(fixture.generatorKey).toMatch(/^round-robin:MAIN:\d+:\d+:\d+$/);
+      }
+    });
+  }
+
+  it("is deterministic on repeat for 6×4", () => {
+    const participantIds = ids(6);
+    const config = { format: "ROUND_ROBIN" as const, meetingsPerOpponent: 4 };
+    const first = generateRoundRobinFixtures({ participantIds, config });
+    const second = generateRoundRobinFixtures({ participantIds, config });
+    expect(second).toEqual(first);
+  });
+});
+
+describe("generator foundation dispatch", () => {
+  it("rejects SMART_MIX explicitly", () => {
+    expect(() =>
+      generateTournamentFixtures({
+        strategy: "SMART_MIX",
+        participantIds: ids(3),
+      }),
+    ).toThrow(/SMART_MIX/);
+  });
+});
+
+describe("duplicate source team participants", () => {
+  it("generates a pairing between two rows with the same teamId", () => {
+    const rot = "participant-rot-id";
+    const blau = "participant-blau-id";
+    const fixtures = generateRoundRobinFixtures({
+      participantIds: [rot, blau, "p-away"],
+      config: { format: "ROUND_ROBIN" },
+    });
+    const headToHead = fixtures.filter(
+      (f) =>
+        (f.sideAParticipantId === rot && f.sideBParticipantId === blau) ||
+        (f.sideAParticipantId === blau && f.sideBParticipantId === rot),
+    );
+    expect(headToHead).toHaveLength(1);
+  });
+});
+
+function homeSideCount(
+  fixtures: ReturnType<typeof generateRoundRobinFixtures>,
+  participantId: string,
+): number {
+  return fixtures.filter((f) => f.sideAParticipantId === participantId).length;
+}
+
+describe("fixture Home/Away relevance", () => {
+  it("OFF keeps neutral side A as code-unit-smaller id", () => {
+    const fixtures = generateRoundRobinFixtures({
+      participantIds: ["team-z", "team-a"],
+      config: { format: "ROUND_ROBIN", meetingsPerOpponent: 2, homeAwayRelevance: "OFF" },
+    });
+    for (const fixture of fixtures) {
+      expect(compareParticipantId(fixture.sideAParticipantId, fixture.sideBParticipantId)).toBeLessThanOrEqual(
+        0,
+      );
+    }
+  });
+
+  it("ON reverses sides on the second cycle for a pair", () => {
+    const a = "team-a";
+    const b = "team-b";
+    const fixtures = generateRoundRobinFixtures({
+      participantIds: [a, b],
+      config: { format: "ROUND_ROBIN", meetingsPerOpponent: 2, homeAwayRelevance: "ON" },
+    });
+    const meetings = fixtures.filter(
+      (f) =>
+        (f.sideAParticipantId === a && f.sideBParticipantId === b) ||
+        (f.sideAParticipantId === b && f.sideBParticipantId === a),
+    );
+    expect(meetings).toHaveLength(2);
+    expect(meetings[0].sideAParticipantId).toBe(a);
+    expect(meetings[1].sideAParticipantId).toBe(b);
+  });
+
+  for (const m of [1, 2, 3, 4] as const) {
+    it(`ON home/away balance for 4 participants × ${m} meetings`, () => {
+      const participantIds = ids(4);
+      const fixtures = generateRoundRobinFixtures({
+        participantIds,
+        config: { format: "ROUND_ROBIN", meetingsPerOpponent: m, homeAwayRelevance: "ON" },
+      });
+      for (let i = 0; i < participantIds.length; i += 1) {
+        for (let j = i + 1; j < participantIds.length; j += 1) {
+          const p = participantIds[i];
+          const q = participantIds[j];
+          const pairFixtures = fixtures.filter(
+            (f) =>
+              (f.sideAParticipantId === p && f.sideBParticipantId === q) ||
+              (f.sideAParticipantId === q && f.sideBParticipantId === p),
+          );
+          expect(pairFixtures).toHaveLength(m);
+          const pHome = pairFixtures.filter((f) => f.sideAParticipantId === p).length;
+          const qHome = pairFixtures.filter((f) => f.sideAParticipantId === q).length;
+          expect(Math.abs(pHome - qHome)).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+  }
+
+  it("documents generator key grammar", () => {
+    expect(buildRoundRobinGeneratorKey("MAIN", 2, 3, 1)).toBe("round-robin:MAIN:2:3:1");
+  });
+});
+
+describe("technical fixture limit", () => {
+  it("rejects excessive fixture counts", () => {
+    expect(() =>
+      generateRoundRobinFixtures({
+        participantIds: ids(100),
+        config: { format: "ROUND_ROBIN", meetingsPerOpponent: 10 },
+      }),
+    ).toThrow(/technical limit/i);
   });
 });

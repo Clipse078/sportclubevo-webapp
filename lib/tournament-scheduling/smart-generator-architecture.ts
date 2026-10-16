@@ -35,10 +35,15 @@ export const GROUP_MIX_GENERATORS: readonly GroupMixGenerationStrategy[] = [
   "SMART_MIX",
 ] as const;
 
-/** 01C MVP implements single round-robin only; product allows 1:n meetings. */
+/** Default generation when configuration omitted (01C parity). */
 export const CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1;
 export const PRODUCT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = "1:n" as const;
-export const ROUND_ROBIN_EXTENSION_REQUIRED = true;
+/** 01E1 implements repeated round robin; Smart Mix remains future. */
+export const ROUND_ROBIN_EXTENSION_REQUIRED = false;
+export const IMPLEMENTED_ROUND_ROBIN_MEETINGS_PER_OPPONENT = "1:n" as const;
+
+/** Tournament Planner applies only when tenant organises the tournament. */
+export const TOURNAMENT_PLANNER_SCOPE = "TENANT_ORGANISED_TOURNAMENTS_ONLY" as const;
 
 /** Explicit generation setting — side A/B stay neutral when OFF. */
 export type HomeAwayRelevance = "ON" | "OFF";
