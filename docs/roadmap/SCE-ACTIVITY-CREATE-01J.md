@@ -5,8 +5,9 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R6 responsive / a11y / integrity (closure prep)** |
+| **Status** | **CLOSED / ACCEPTED / MERGE_READY** (R7 closure — PR #848 open, not merged) |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
+| **Pull request** | [#848](https://github.com/Clipse078/sportclubevo-webapp/pull/848) → `STAGE` |
 
 ## Product principle
 
@@ -91,7 +92,7 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **R4** | Dashboard Mein Kalender adoption |
 | **R5** | Contextual Erstellen + quick-action cleanup (**complete**) |
 | **R6** | Responsive / a11y / integrity / legacy R4 test migration (**complete — automated**) |
-| **R7** | Legacy audit + closure |
+| **R7** | Legacy audit + closure + merge readiness (**complete — automated**) |
 
 ### Navbar
 
@@ -333,5 +334,25 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **Navbar / impersonation / auth** | **FROZEN** — fix only proven 01J regressions (none in R6) |
 | **Toggle-first** | Mein Programm multi-select filters remain `aria-pressed` buttons — **0** new binary checkboxes on 01J surfaces |
 | **Automated validation** | `sce-activity-create-01j-r6-integrity.test.ts` + full 01J / planner / programme-engine / calendar-micro suites |
-| **PO_UAT** | **READY_FOR_PO_VISUAL_REVIEW** — Cursor manual UAT skipped (PO-owned) |
-| **Closure readiness** | **READY pending PO final visual sign-off** — no schema change; PR #848 remains open |
+| **PO_UAT** | **R6_PO_VISUAL_UAT = PASS** (Product Owner final visual UAT) |
+| **Closure readiness** | Superseded by **01J-R7** |
+
+## 01J-R7 — Final closure / merge readiness
+
+| Gate | Result |
+|------|--------|
+| **PACKAGE** | `SCE-ACTIVITY-CREATE-01J` = **CLOSED / ACCEPTED / MERGE_READY** |
+| **PO final visual UAT** | **PASS** (`R6_PO_VISUAL_UAT`) — Cursor manual UAT **skipped (PO-owned)**; no R7 user-visible behaviour changes |
+| **Dashboard role** | Personal home — near-term programme preview + compact calendar orientation; not full programme workspace |
+| **Mein Programm role** | Canonical full personal programme workspace (`liste` default; `?ansicht=kalender` calendar) |
+| **Programme Engine** | **ONE** engine — PERSON via `loadPersonScopeSportingProgrammeItems`; CLUB via `/dashboard/programm` |
+| **Calendar ownership** | Shared PERSON pipeline → cockpit month grid + Mein Programm/Kalender `SceCalendarEngine` MICRO |
+| **Wochenplaner** | Default **Liste**; order Liste → Spielfeld → Garderobe → Kalender; canonical Sce* list composition + operational Planungsstatus |
+| **Activity cards** | `SceTrainingCard` / `SceMatchCard` / `SceTournamentCard` / `SceClubEventCard` — COMPACT (Dashboard preview), STANDARD (Mein Programm), MICRO (calendar), operational list (Wochenplaner) |
+| **Operational semantics** | `derivePlannerOperationalStatus` — card summary; hover/focus/open detail; healthy rows without warning chrome |
+| **Navbar / Publizieren / impersonation** | **Frozen** — no R7 shell changes |
+| **Schema / data / prod** | **No** schema change; **no** new migration; **no** persistent test data; **PROD untouched** |
+| **Auth / credentials** | **No** password or credential mutation in R7 |
+| **Legacy deferred → 01N** | `training-programme-adapter.ts`, `team-event-programme-adapter.ts` (diagnostics); exported unwired `DashboardTodayEventCards` / `MeineAgendaWidget`; `planning-hub-liste-grid.ts` (unreferenced tokens); `PersonalProgrammeAgendaRow` (meetings + Kalender mobile fallback) — not 01J closure blockers |
+| **Automated validation (R7)** | 38 files / 296 tests (01J + planner + programme-engine + calendar-micro + dashboard composition); `prisma validate` OK; `npm run build` OK |
+| **Merge** | PR **#848** ready on `STAGE` — **not merged** in R7 |
