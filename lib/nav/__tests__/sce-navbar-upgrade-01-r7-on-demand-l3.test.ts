@@ -102,10 +102,10 @@ describe("SCE-NAVBAR-UPGRADE-01-R7 on-demand L3 and home navigation", () => {
     const presentation = resolvePrimaryDomainPresentation(primary, "planning", 5);
     expect(presentation.overflowDomains).toEqual([]);
     expect(presentation.inlineDomains.map((d) => d.id)).toEqual([
-      "planning",
-      "communication",
       "club",
+      "planning",
       "publishing",
+      "communication",
       "admin",
     ]);
   });

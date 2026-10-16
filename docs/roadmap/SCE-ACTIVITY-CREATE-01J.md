@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5.1 Programme card visual family + match inside-crest fixture** |
+| **Status** | **IN PROGRESS — R5.2 canonical desktop L1 order correction** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -202,6 +202,16 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **CALENDAR_MICRO_EXCLUSION** | Calendar MICRO cells frozen — no programme card shell on calendar tiles |
 
 Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShell.tsx`, `ProgrammeSceActivityCard`, `PersonalProgrammeCanonicalAgendaRow`.
+
+## 01J-R5.2 — Canonical desktop L1 order (order-only)
+
+| Decision | Value |
+|----------|--------|
+| **CANONICAL_DESKTOP_L1_ORDER** | Club · Planung · Publizieren · Kommunikation · Admin |
+| **CANONICAL_SOURCE** | `NAVIGATION_DOMAIN_DEFINITIONS` `sortOrder` in `lib/nav/app-navigation-domains.ts` (+ `CLUB_L1_DOMAIN_ORDER` for club workspace taxonomy) |
+| **SCOPE** | Presentation order only — no domain ownership, route, permission, or domain-panel architecture changes |
+| **TENANT_IDENTITY** | FC Allschwil crest + name remain separate from L1 domains (not an L1 tab) |
+| **DASHBOARD_L1** | **NONE** on desktop Row 1 (home via tenant + platform identity links) |
 
 ## 01J-R5 — Contextual Erstellen + Dashboard Schnellzugriff cleanup
 
