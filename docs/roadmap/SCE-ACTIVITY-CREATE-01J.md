@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5.2 canonical desktop L1 order correction** |
+| **Status** | **IN PROGRESS — R5.3 Club Event tenant identity + Navbar corrections** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -202,6 +202,17 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **CALENDAR_MICRO_EXCLUSION** | Calendar MICRO cells frozen — no programme card shell on calendar tiles |
 
 Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShell.tsx`, `ProgrammeSceActivityCard`, `PersonalProgrammeCanonicalAgendaRow`.
+
+## 01J-R5.3 — Club Event tenant identity + Navbar corrections
+
+| Decision | Value |
+|----------|--------|
+| **CLUB_EVENT_TENANT_IDENTITY** | Tenant-owned Club Events use **tenant club crest** wherever SCE renders visual Club Event identity (`attachSceClubEventTenantClubIdentity` + `resolveSceClubEventPrimaryVisualIdentity` on `SceClubEventCard`) |
+| **TENANT_IDENTITY_VS_AUDIENCE** | Crest = **which club owns the event**; audience = **who it is relevant to** — independent |
+| **PROGRAMME_SURFACES** | `/dashboard`, `/dashboard/mein-programm`, `/dashboard/programm`, `/dashboard/teams/[teamId]/programm` — canonical programme adapter + card only |
+| **ACTIVE_L1_DOMAIN** | Selected desktop L1: **icon + label** → `--sce-primary`; inactive remain neutral; one strong active domain max |
+| **NAVBAR_CONTENT** | Identity · L1 navigation · global utilities · season (Row 2) — **not** contextual workflow CTAs |
+| **NAVBAR_QUICK_ACTIONS** | Removed/blocked — `SceGlobalUtilities` no longer mounts `AdminPageActions`; legacy component returns null |
 
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 

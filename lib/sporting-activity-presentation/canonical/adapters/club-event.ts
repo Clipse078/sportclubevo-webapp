@@ -10,6 +10,7 @@ import {
 import { buildSceActivityRoute, parseActivityIdFromResourceKey } from "../route";
 import { buildSceActivityPresentationStatus } from "../status";
 import { buildSceClubEventAudiencePresentation } from "@/lib/events/club-event-organisational-audience-presentation";
+import { attachSceClubEventTenantClubIdentity } from "../club-event-visual-identity";
 import type { SceClubEventPresentationModel } from "../types";
 
 export type ResolveSceClubEventPresentationInput = {
@@ -53,12 +54,15 @@ export function resolveSceClubEventPresentation(
     targets: input.event.organisationalAudience.targets,
   });
 
-  return resolveSceClubEventPresentationFromLegacy(legacy, {
-    organiserDisplayName: input.event.organizerName,
-    organiserIdentity: resolveClubEventOrganiserIdentity(input.event, input),
-    lifecycleStatus: input.event.status,
-    audience,
-  });
+  return attachSceClubEventTenantClubIdentity(
+    resolveSceClubEventPresentationFromLegacy(legacy, {
+      organiserDisplayName: input.event.organizerName,
+      organiserIdentity: resolveClubEventOrganiserIdentity(input.event, input),
+      lifecycleStatus: input.event.status,
+      audience,
+    }),
+    input,
+  );
 }
 
 export function resolveSceClubEventPresentationFromLegacy(

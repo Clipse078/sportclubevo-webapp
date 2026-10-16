@@ -1,8 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Suspense } from "react";
-import AdminPageActions from "@/components/admin/layout/AdminPageActions";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
 import NotificationBell from "@/components/admin/notifications/NotificationBell";
 
@@ -74,12 +72,6 @@ export default function AppTopNav({
 
       <div className="flex shrink-0 items-center gap-1">
         <NotificationBell />
-        <div className="hidden xl:flex items-center gap-1">
-          <Suspense fallback={null}>
-            <AdminPageActions />
-          </Suspense>
-        </div>
-
         <AccountMenu
           firstName={firstName}
           lastName={lastName}

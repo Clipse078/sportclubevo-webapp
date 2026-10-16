@@ -29,6 +29,10 @@ import {
   formatSceClubEventAudienceCompactLabel,
   sceClubEventAudienceAccessibleDetail,
 } from "@/lib/sporting-activity-presentation/canonical/club-event-audience-presentation";
+import {
+  resolveSceClubEventPrimaryVisualIdentity,
+  sceClubEventPrimaryVisualIdentityHasLogo,
+} from "@/lib/sporting-activity-presentation/canonical/club-event-visual-identity";
 import type {
   SceActivityPresentationDensity,
   SceClubEventPresentationModel,
@@ -169,7 +173,7 @@ function SceClubEventTypeHeader({
   );
 }
 
-function SceClubEventOrganiserCrest({
+function SceClubEventPrimaryVisualCrest({
   model,
   density,
   narrowMicro,
@@ -180,17 +184,18 @@ function SceClubEventOrganiserCrest({
   narrowMicro?: boolean;
   listRow?: boolean;
 }) {
-  const hasLogo = Boolean(model.organiser?.logoUrl?.trim());
+  const visualIdentity = resolveSceClubEventPrimaryVisualIdentity(model);
+  const hasLogo = sceClubEventPrimaryVisualIdentityHasLogo(model);
   const crestSize = sceClubEventOrganiserCrestVisualSizeForDensity(density, {
     narrowMicro,
     listRow,
     hasLogo,
   });
-  if (!crestSize || !model.organiser) return null;
+  if (!crestSize || !visualIdentity) return null;
 
   return (
     <span data-testid="sce-club-event-organiser-crest" className="self-start">
-      <ClubCrest identity={model.organiser} density={crestSize} decorative className="self-start" />
+      <ClubCrest identity={visualIdentity} density={crestSize} decorative className="self-start" />
     </span>
   );
 }
@@ -280,7 +285,7 @@ function SceClubEventIdentityBlock({
   const scale = richScale(density);
   const titleClass = cn(scale.titleClass, listRow && "line-clamp-2");
   const hideOrganiserText =
-    listRow && showCrest && Boolean(model.organiser?.logoUrl?.trim());
+    listRow && showCrest && sceClubEventPrimaryVisualIdentityHasLogo(model);
 
   const titleNode = titleAsHeading ? (
     <h1 className={titleClass} data-testid="sce-club-event-title" title={model.eventTitle}>
@@ -298,7 +303,7 @@ function SceClubEventIdentityBlock({
       data-sce-club-event-region="identity"
     >
       {showCrest ? (
-        <SceClubEventOrganiserCrest
+        <SceClubEventPrimaryVisualCrest
           model={model}
           density={density}
           narrowMicro={narrowMicro}
@@ -454,7 +459,7 @@ function SceClubEventListRowIdentityContent({
             titleTestId="sce-club-event-title"
             testId="sce-club-event-list-row-primary-identity"
             crest={
-              <SceClubEventOrganiserCrest model={model} density={density} listRow />
+              <SceClubEventPrimaryVisualCrest model={model} density={density} listRow />
             }
           />
           <SceClubEventAudienceLine model={model} density={density} listRow />
@@ -550,15 +555,14 @@ function SceClubEventMicroContent({
 }) {
   const locationLine = resolveMicroLocationLine(model);
   const timeLabel = formatSceClubEventTimeLabel(model, fmtCfg);
-  const hasLogo = Boolean(model.organiser?.logoUrl?.trim());
-  const showCrest = !narrow && hasLogo;
+  const showCrest = !narrow && sceClubEventPrimaryVisualIdentityHasLogo(model);
 
   return (
     <div className="min-w-0 space-y-0.5" data-sce-club-event-density="MICRO">
       <ActivityTypePill activityKind="EVENT" label={model.typeLabel} className="shrink-0" />
       <div className="flex min-w-0 gap-1.5">
-        {showCrest && model.organiser ? (
-          <SceClubEventOrganiserCrest model={model} density="MICRO" narrowMicro={narrow} />
+        {showCrest ? (
+          <SceClubEventPrimaryVisualCrest model={model} density="MICRO" narrowMicro={narrow} />
         ) : null}
         <div className="min-w-0 flex-1 space-y-0.5">
           <p

@@ -3,6 +3,7 @@ import { buildClubIdentity, buildNameOnlyClubIdentity } from "@/lib/sporting-act
 import { buildSportingActivityLocation } from "@/lib/sporting-activity-presentation/location";
 import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { WeekplannerVeranstaltungItem } from "@/lib/weekplanner/types";
+import { attachSceClubEventTenantClubIdentity } from "../club-event-visual-identity";
 import { resolveSceClubEventPresentationFromLegacy } from "./club-event";
 import type { SceClubEventPresentationModel } from "../types";
 
@@ -52,8 +53,11 @@ export function resolveSceClubEventPresentationFromWeekplannerVeranstaltung(
         ? buildNameOnlyClubIdentity(organiserName)
         : undefined;
 
-  return resolveSceClubEventPresentationFromLegacy(legacy, {
-    organiserDisplayName: organiserName,
-    organiserIdentity,
-  });
+  return attachSceClubEventTenantClubIdentity(
+    resolveSceClubEventPresentationFromLegacy(legacy, {
+      organiserDisplayName: organiserName,
+      organiserIdentity,
+    }),
+    options,
+  );
 }
