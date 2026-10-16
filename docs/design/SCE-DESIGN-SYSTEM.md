@@ -339,7 +339,10 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 | **DENSITY** | `COMPACT` programme shell on Dashboard preview; `STANDARD` on full programme workspaces; Resultate card density unchanged |
 | **PROGRAMME_BORDER_HIERARCHY (R5.4)** | Default programme cards: neutral elevated border only — **no** permanent `--sce-primary` outline on both day/group containers and cards. Day sync = label typography; next-upcoming = `SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS` (`--border-strong`) |
 | **PUBLISHING_CHANNEL_IA (R5.4)** | Publizieren L2 represents **channels** (Website, Infoboard, Mobile App, Medien) — not abstract “Inhalte” buckets; Website L3 leads with News |
-| **PLANNER_AUTOMATIC_DETAIL (R5.4)** | Wochenplaner clipped activity detail opens on **card hover/focus** — no separate info icon; progressive block density by measured width |
+| **PUBLISHING_CHANNEL_ICONS (R5.4.1)** | Every Publizieren L2 channel row carries a canonical SCE destination icon via `NAV_DESTINATION_SCE_ICON_BY_KEY` (incl. **Mobile App** → approved handset/contact glyph) — no page-local icon hacks |
+| **PLANNER_ADAPTIVE_DENSITY (R5.4.1)** | Wochenplaner activity blocks resolve **WIDE · MEDIUM · NARROW · MICRO** from **layout width** (`blockLayoutPx` / lane geometry), not viewport breakpoints; progressive disclosure hides pills, team/resource lines, and inline **Termin ändern** before text collides |
+| **PLANNER_AUTOMATIC_DETAIL (R5.4)** | Wochenplaner clipped activity detail opens on **card hover/focus/touch** — no separate info icon; hidden fields remain in the automatic detail surface |
+| **IMPERSONATION_SHELL (R5.4.1)** | Active impersonation banner renders **above** the complete authenticated shell (before `AppShellNavigation`), occupies normal layout space, and pushes navbar + domain panel downward — never below the global header |
 
 Module: `lib/sporting-activity-presentation/canonical/activity-card-programme-shell.ts`.
 

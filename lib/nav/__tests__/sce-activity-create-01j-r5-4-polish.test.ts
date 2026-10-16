@@ -126,6 +126,6 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.4 Wochenplaner detail + density", () => {
     expect(resolvePlannerActivityBlockDensity(200)).toBe("WIDE");
     expect(resolvePlannerActivityBlockDensity(100)).toBe("MEDIUM");
     expect(resolvePlannerActivityBlockDensity(70)).toBe("NARROW");
-    expect(resolvePlannerActivityBlockDensity(48)).toBe("VERY_NARROW");
+    expect(resolvePlannerActivityBlockDensity(48)).toBe("MICRO");
   });
 });

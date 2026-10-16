@@ -248,6 +248,17 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **ACCESSIBILITY** | Keyboard focus opens the same detail surface; Escape dismisses via floating-ui dismiss |
 | **REGRESSION** | R5.3.2 active ancestry, R5.1 programme card rows, R5 dashboard quick access — unchanged |
 
+## 01J-R5.4.1 — PO UAT corrections (Mobile App icon, planner adaptive cards, impersonation shell)
+
+| Decision | Value |
+|----------|--------|
+| **MOBILE_APP_ICON** | `mobile-app` → SCE **`contact`** master via `nav-destination-sce-icons.ts` (canonical nav registry; domain panel consumes `NavDestinationSceIcon`) |
+| **PLANNER_ADAPTIVE_CARD** | `resolvePlannerActivityBlockDensity` tiers **WIDE / MEDIUM / NARROW / MICRO** from layout width; NARROW/MICRO drop `ActivityTypePill`, inline **Termin ändern**, team/resource/end-time chrome; aggregates use matching compact rules |
+| **PLANNER_DETAIL** | Unchanged R5.4 automatic hover/focus detail — no info button |
+| **IMPERSONATION_SHELL** | `ImpersonationSafetyChrome` + STAGE stack **before** `AppShellNavigation` inside `sce-authenticated-sticky-shell-chrome` — global session banner pushes full navbar |
+| **SCOPE** | Presentation/shell only — no auth/credential/impersonation permission changes |
+| **PO_UAT** | **READY_FOR_PO_VISUAL_REVIEW** (Cursor manual UAT skipped) |
+
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 
 | Decision | Value |

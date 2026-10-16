@@ -16,11 +16,11 @@ describe("PEOPLE-ACCESS-IMPERSONATION-01 UAT-PERM-01R5 — persistent safety chr
     expect(layout.indexOf("sce-authenticated-sticky-shell-chrome")).toBeLessThan(
       layout.indexOf("sce-app-main-with-mobile-nav"),
     );
-    expect(layout.indexOf("ImpersonationSafetyChrome")).toBeGreaterThan(
-      layout.indexOf("AppShellNavigation"),
+    expect(layout.indexOf("<ImpersonationSafetyChrome")).toBeLessThan(
+      layout.indexOf("<AppShellNavigation"),
     );
-    expect(layout.indexOf("ImpersonationSafetyChrome")).toBeLessThan(
-      layout.indexOf("<main"),
+    expect(layout.indexOf("<ImpersonationSafetyChrome")).toBeLessThan(
+      layout.indexOf("sce-app-main-with-mobile-nav"),
     );
 
     expect(shellCss).toContain(".sce-authenticated-sticky-shell-chrome");

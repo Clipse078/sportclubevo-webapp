@@ -10,6 +10,12 @@ import {
   PLANNING_HUB_CONFLICT_BLOCK_CLASS,
 } from "@/lib/planning-hub/activity-visual-style";
 import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
+import {
+  plannerAggregateBlockShowsIdentityPreview,
+  plannerAggregateBlockShowsOperationalLabels,
+  plannerAggregateBlockShowsTime,
+  resolvePlannerActivityBlockDensity,
+} from "@/lib/planning-hub/planner-activity-block-density";
 import { summarizeAggregateCluster } from "@/lib/planning-hub/scheduler/aggregate-cluster";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import PlanningHubClusterInspector from "./PlanningHubClusterInspector";
@@ -51,6 +57,8 @@ export default function PlanningHubCalendarClusterBlock({
   const clusterSemantic = activityVisualStyle(aggregateClusterSemanticType(items));
   const blockWidthPx = parseBlockDimensionPx(style?.width, 240);
   const blockHeightPx = parseBlockDimensionPx(style?.height, 64);
+  const layoutWidthPx = blockLayoutPx?.width ?? blockWidthPx;
+  const density = resolvePlannerActivityBlockDensity(layoutWidthPx);
   const clippedDetailGeometry = {
     blockWidthPx,
     blockHeightPx,
@@ -74,6 +82,7 @@ export default function PlanningHubCalendarClusterBlock({
     <>
       <div
         style={style}
+        data-planning-hub-density={density}
         className={cn(
           "group absolute overflow-hidden rounded-md border border-[var(--border)] text-left shadow-sm",
           "border-l-[3px] hover:border-[var(--sce-primary)]/30",
@@ -107,25 +116,29 @@ export default function PlanningHubCalendarClusterBlock({
                 >
                   {summary.headline}
                 </p>
-                <p
-                  className="truncate text-[10px] text-[var(--text-2)]"
-                  data-planning-hub-clipped-text="true"
-                >
-                  {summary.identityPreview}
-                </p>
-                <p className="truncate text-[10px] tabular-nums text-[var(--muted)]">{timeLabel}</p>
-                {summary.endTimeActionLabel && (
+                {plannerAggregateBlockShowsIdentityPreview(density) ? (
+                  <p
+                    className="truncate text-[10px] text-[var(--text-2)]"
+                    data-planning-hub-clipped-text="true"
+                  >
+                    {summary.identityPreview}
+                  </p>
+                ) : null}
+                {plannerAggregateBlockShowsTime(density) ? (
+                  <p className="truncate text-[10px] tabular-nums text-[var(--muted)]">{timeLabel}</p>
+                ) : null}
+                {plannerAggregateBlockShowsOperationalLabels(density) && summary.endTimeActionLabel ? (
                   <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-amber-800/90">
                     <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-hidden />
                     {summary.endTimeActionLabel}
                   </p>
-                )}
-                {summary.conflictLabel && (
+                ) : null}
+                {plannerAggregateBlockShowsOperationalLabels(density) && summary.conflictLabel ? (
                   <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-amber-800/90">
                     <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-hidden />
                     {summary.conflictLabel}
                   </p>
-                )}
+                ) : null}
               </div>
             </button>
           )}
