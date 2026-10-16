@@ -3,13 +3,14 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E2 Smart Mix (current); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
 | **01C (round robin MVP)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic single round-robin (WHO, MVP) |
 | **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — **CLOSED / MERGED** — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
 | **01E1 (generator foundation + repeated RR)** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — **CLOSED / MERGED** — Smart Generator foundation, tenant-organised guard, repeated round robin |
+| **01E2 (Smart Mix)** | [`SCE-TOURNAMENT-PLANNER-01E2`](./SCE-TOURNAMENT-PLANNER-01E2.md) — **CURRENT** — deterministic Smart Mix (`targetMatchesPerParticipant`) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -77,7 +78,7 @@ One engine family — phases carry format semantics; not three unrelated tournam
 | Strategy | Meaning |
 | --- | --- |
 | **ROUND_ROBIN** | Every participant meets every other participant per configured encounter count |
-| **SMART_MIX** | Balanced subset from `targetMatchesPerParticipant` and constraints (future package) |
+| **SMART_MIX** | Balanced opponent mix from `targetMatchesPerParticipant` — **implemented in 01E2** |
 
 **CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1** (default when omitted). **PRODUCT = 1:n** — **implemented in 01E1**. **ROUND_ROBIN_EXTENSION_REQUIRED = NO** (01E1 delivered).
 

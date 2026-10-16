@@ -3,6 +3,7 @@
  */
 
 import { generateRoundRobinFixtures } from "./round-robin";
+import { generateSmartMixFixtures } from "./smart-mix";
 import { RoundRobinGenerationValidationError } from "./errors";
 import type {
   TournamentFixtureGenerationDefinition,
@@ -21,11 +22,19 @@ export function generateTournamentFixtures(
           ...request.roundRobin,
         },
       });
-    case "SMART_MIX":
-      throw new RoundRobinGenerationValidationError(
-        "TOURNAMENT_FORMAT_UNSUPPORTED",
-        "SMART_MIX generation is not implemented",
-      );
+    case "SMART_MIX": {
+      const config = request.smartMix;
+      if (!config?.targetMatchesPerParticipant) {
+        throw new RoundRobinGenerationValidationError(
+          "TOURNAMENT_SMART_MIX_TARGET_INVALID",
+          "targetMatchesPerParticipant is required for SMART_MIX",
+        );
+      }
+      return generateSmartMixFixtures({
+        participantIds: request.participantIds,
+        config,
+      });
+    }
     default: {
       const exhaustive: never = request.strategy;
       throw new RoundRobinGenerationValidationError(
