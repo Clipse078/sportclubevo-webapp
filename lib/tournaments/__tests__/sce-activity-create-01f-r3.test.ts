@@ -154,7 +154,8 @@ describe("SCE-ACTIVITY-CREATE-01F-R3 — tournament lobby + 1:n own teams", () =
     const doc = read("docs/roadmap/SCE-TOURNAMENT-PLANNER-01.md");
     expect(doc).toContain("SCE-TOURNAMENT-PLANNER-01A");
     expect(doc).toContain("ADR-014");
-    expect(doc).toContain("IN PROGRESS — 01A CLOSED");
+    expect(doc).toContain("SCE-TOURNAMENT-PLANNER-01B");
+    expect(doc).toMatch(/IN PROGRESS/);
     expect(doc).toContain("**WHO** plays whom");
     expect(doc).toContain("Per E-Mail senden");
     expect(doc).toContain("PDF herunterladen");
