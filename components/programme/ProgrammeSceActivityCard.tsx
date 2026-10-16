@@ -54,6 +54,7 @@ export default function ProgrammeSceActivityCard({
         linkToDetail
         surface="list-row"
         listRowPresentation="programme-fixture"
+        scopeTeamId={item.teamId}
         className={LIST_ROW_CARD_CLASS}
         testId={testId}
       />

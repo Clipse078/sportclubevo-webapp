@@ -43,6 +43,7 @@ import { SceClubEventCardStatus } from "./SceClubEventCardStatus";
 import {
   SceActivityListRowLocationMeta,
   SceActivityListRowOperationalMetaRow,
+  SceActivityListRowPrimaryIdentityRow,
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 
@@ -216,9 +217,11 @@ function SceClubEventAudienceLine({
   return (
     <p
       className={cn(
-        "min-w-0 truncate text-xs font-medium leading-snug",
-        SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS,
-        density === "MICRO" && "text-[0.6875rem]",
+        "min-w-0 truncate font-medium leading-snug",
+        listRow
+          ? SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass
+          : cn("text-xs", SCE_ACTIVITY_SECONDARY_IDENTITY_FOREGROUND_CLASS),
+        density === "MICRO" && !listRow && "text-[0.6875rem]",
       )}
       data-testid="sce-club-event-audience"
       data-sce-club-event-region="audience"
@@ -425,12 +428,18 @@ function SceClubEventListRowIdentityContent({
       (status.semantic === "cancelled" || status.semantic === "warning"),
   );
 
+  const operational = listRowPresentation === "operational";
+
   return (
     <div
-      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn(
+        "min-w-0 w-full max-w-full",
+        operational ? "space-y-1" : SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass,
+      )}
       data-sce-club-event-density={density}
       data-sce-club-event-list-row-identity
       data-sce-club-event-list-row-presentation={listRowPresentation}
+      data-sce-programme-card-contract={operational ? "three-row" : undefined}
     >
       <SceClubEventTypeHeader
         model={model}
@@ -438,17 +447,31 @@ function SceClubEventListRowIdentityContent({
         density={density}
         listRow
       />
-      <div className="min-w-0 space-y-0.5" data-sce-club-event-region="identity">
-        <p
-          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
-          data-testid="sce-club-event-title"
-          title={model.eventTitle}
-        >
-          {model.eventTitle}
-        </p>
-        <SceClubEventAudienceLine model={model} density={density} listRow />
-      </div>
-      {listRowPresentation === "operational" && (timeLabel || locationLine) ? (
+      {operational ? (
+        <>
+          <SceActivityListRowPrimaryIdentityRow
+            title={model.eventTitle}
+            titleTestId="sce-club-event-title"
+            testId="sce-club-event-list-row-primary-identity"
+            crest={
+              <SceClubEventOrganiserCrest model={model} density={density} listRow />
+            }
+          />
+          <SceClubEventAudienceLine model={model} density={density} listRow />
+        </>
+      ) : (
+        <div className="min-w-0 space-y-0.5" data-sce-club-event-region="identity">
+          <p
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+            data-testid="sce-club-event-title"
+            title={model.eventTitle}
+          >
+            {model.eventTitle}
+          </p>
+          <SceClubEventAudienceLine model={model} density={density} listRow />
+        </div>
+      )}
+      {operational && (timeLabel || locationLine) ? (
         <SceActivityListRowOperationalMetaRow testId="sce-club-event-list-row-operational-meta">
           {timeLabel ? (
             <SceActivityListRowTimeMeta label={timeLabel} testId="sce-club-event-list-row-time" />

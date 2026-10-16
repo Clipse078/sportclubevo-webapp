@@ -52,7 +52,7 @@ function CanonicalAgendaBody({
         linkToDetail={false}
         showStatus
         surface="list-row"
-        listRowPresentation="dashboard-agenda"
+        listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-training-${item.id}`}
       />
@@ -67,7 +67,7 @@ function CanonicalAgendaBody({
         fmtCfg={fmtCfg}
         linkToDetail={false}
         surface="list-row"
-        listRowPresentation="dashboard-opponent"
+        listRowPresentation="programme-fixture"
         scopeTeamId={item.programmeScopeTeamId}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-match-${item.id}`}
