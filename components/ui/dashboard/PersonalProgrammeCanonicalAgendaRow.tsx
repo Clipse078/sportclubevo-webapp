@@ -16,6 +16,7 @@ import {
   isSceTrainingPresentationModel,
   isSceTournamentPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
+import { SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-programme-shell";
 
 const LIST_ROW_CARD_CLASS = "border-0 bg-transparent p-0 shadow-none";
 
@@ -126,11 +127,7 @@ export function PersonalProgrammeCanonicalAgendaRow({
   const body = (
     <SceProgrammeActivityCardShell
       density={shellDensity}
-      className={cn(
-        highlighted &&
-          "ring-1 ring-[color-mix(in_srgb,var(--sce-primary)_22%,transparent)]",
-        className,
-      )}
+      className={cn(highlighted && SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS, className)}
       testId="personal-programme-canonical-agenda-row-shell"
     >
       <div

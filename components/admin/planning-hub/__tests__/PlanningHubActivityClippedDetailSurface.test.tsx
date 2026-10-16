@@ -47,7 +47,7 @@ const item: WeekplannerTrainingItem = {
 };
 
 describe("PlanningHubActivityClippedDetailSurface", () => {
-  it("renders touch detail trigger when geometry is constrained", () => {
+  it("does not render a separate info-button affordance on constrained cards", () => {
     render(
       <PlanningHubActivityClippedDetailSurface
         item={item}
@@ -63,11 +63,11 @@ describe("PlanningHubActivityClippedDetailSurface", () => {
       </PlanningHubActivityClippedDetailSurface>,
     );
 
-    expect(screen.getByTestId("planning-hub-activity-detail-touch-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Card" })).toBeInTheDocument();
   });
 
-  it("omits touch trigger when block is spacious", () => {
+  it("omits detail wiring when block is spacious", () => {
     render(
       <PlanningHubActivityClippedDetailSurface
         item={item}
@@ -84,27 +84,5 @@ describe("PlanningHubActivityClippedDetailSurface", () => {
     );
 
     expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
-  });
-
-  it("keeps info affordance discoverable on coarse pointer without activity-colored styling", () => {
-    render(
-      <PlanningHubActivityClippedDetailSurface
-        item={item}
-        locale="de-CH"
-        timezone="Europe/Zurich"
-        geometry={{ compact: true, blockWidthPx: 80, blockHeightPx: 34 }}
-      >
-        {(props) => (
-          <button type="button" {...props}>
-            Card
-          </button>
-        )}
-      </PlanningHubActivityClippedDetailSurface>,
-    );
-
-    const trigger = screen.getByTestId("planning-hub-activity-detail-touch-trigger");
-    expect(trigger.className).toContain("pointer-coarse:opacity-75");
-    expect(trigger.className).not.toContain("sce-info");
-    expect(trigger.className).not.toContain("sce-primary");
   });
 });

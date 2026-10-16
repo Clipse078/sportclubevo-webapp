@@ -25,8 +25,8 @@ const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS) as PermissionKey[];
 describe("SCE-NAV-IA-V2-01 foundation", () => {
   it("recalculates club-admin navigation completeness baseline on STAGE", () => {
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(63);
-    expect(baseline.reachableDestinations).toBe(63);
+    expect(baseline.visibleDestinations).toBe(64);
+    expect(baseline.reachableDestinations).toBe(64);
     expect(baseline.orphanedDestinations).toEqual([]);
     expect(baseline.duplicateDestinations.length).toBeGreaterThan(0);
   });
@@ -50,15 +50,12 @@ describe("SCE-NAV-IA-V2-01 foundation", () => {
     expect(toClub.length).toBe(migration.length);
   });
 
-  it("defines publishing L2 groups from live website/infoboard destinations only", () => {
-    const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
-    const publishingKeys = inventory
-      .filter((row) => row.key.startsWith("website") || row.key.startsWith("infoboard"))
-      .map((row) => row.key);
+  it("defines publishing L2 groups as publication channels (R5.4)", () => {
     const grouped = new Set<string>(PUBLISHING_TARGET_L2_GROUPS.flatMap((g) => [...g.keys]));
-    for (const key of publishingKeys) {
+    for (const key of ["website", "infoboard", "mobile-app", "website-media"]) {
       expect(grouped.has(key)).toBe(true);
     }
+    expect(PUBLISHING_TARGET_L2_GROUPS.some((group) => group.id === "inhalte")).toBe(false);
   });
 
   it("uses existing SCE V2 publish master for Publishing L1 icon", () => {
@@ -83,7 +80,7 @@ describe("SCE-NAV-IA-V2-01 foundation", () => {
     };
     const outPath = join(process.cwd(), "docs/navigation/SCE-NAV-IA-V2-01-target-ia-matrix.json");
     writeFileSync(outPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-    expect(matrix.length).toBe(63);
+    expect(matrix.length).toBe(64);
   });
 
   it("has no unexpected unregistered authenticated static routes after exclusions", () => {

@@ -197,6 +197,16 @@ export function resolveSecondaryNavItemModuleLocalChildren(
         return groupedDest.children;
       }
     }
+
+    if (domain.id === "publishing" && topLevel) {
+      return [
+        {
+          key: topLevel.key,
+          label: topLevel.label,
+          href: topLevel.href,
+        },
+      ];
+    }
   }
 
   return [];

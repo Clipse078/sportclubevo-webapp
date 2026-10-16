@@ -87,7 +87,7 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(resolveModuleLocalNavItems(planning!, active.activeDestination)).toEqual([]);
   });
 
-  it("keeps Website CMS tabs module-local while Publishing header row uses major L2 groups", () => {
+  it("keeps Website CMS tabs module-local while Publishing header row uses publication channels", () => {
     const model = buildAppNavigationModelForUser(
       [PERMISSIONS.WEBSITE_MANAGE, PERMISSIONS.NEWS_MANAGE, PERMISSIONS.INFOBOARD_MANAGE],
       "club",
@@ -97,15 +97,16 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(secondary.length).toBeGreaterThanOrEqual(4);
     expect(secondary.length).toBeLessThanOrEqual(6);
     expect(secondary.map((item) => item.label)).toEqual(
-      expect.arrayContaining(["Übersicht", "Inhalte", "Kanäle"]),
+      expect.arrayContaining(["Website", "Infoboard", "Medien"]),
     );
+    expect(secondary.map((item) => item.label)).not.toContain("Inhalte");
     expect(secondary.map((item) => item.key)).not.toContain("website-pages");
 
     const active = resolveActiveAppNavigation("/dashboard/website/pages", model);
     expect(active.activeDestinationKey).toBe("website");
     expect(active.activeDomainId).toBe("publishing");
     expect(
-      active.domainSecondaryItems.some((item) => item.headerGroupId === "inhalte"),
+      active.domainSecondaryItems.some((item) => item.headerGroupId === "website"),
     ).toBe(true);
     expect(active.moduleLocalChildren.map((child) => child.key)).toContain("website-pages");
   });

@@ -62,13 +62,19 @@ export function PersonalProgrammeFeed({
 
             const highlighted = highlightedDayKey === group.dayKey;
 
+            const dayHighlighted = highlighted;
+            const nextUpcomingForDay =
+              nextActivityId != null &&
+              group.items.some((entry) => entry.id === nextActivityId);
+
             return (
-              <div
-                key={group.dayKey}
-                data-day-key={group.dayKey}
-                className={cn("scroll-mt-28", highlighted && "rounded-[var(--radius-md)] ring-1 ring-[color-mix(in_srgb,var(--sce-primary)_30%,transparent)]")}
-              >
-                <p className="mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+              <div key={group.dayKey} data-day-key={group.dayKey} className="scroll-mt-28">
+                <p
+                  className={cn(
+                    "mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em]",
+                    dayHighlighted ? "text-[var(--foreground)]" : "text-[var(--muted)]",
+                  )}
+                >
                   {label}
                 </p>
                 <ol className="space-y-2">
@@ -76,14 +82,12 @@ export function PersonalProgrammeFeed({
                     <li
                       key={item.id}
                       className="min-w-0 list-none"
-                      data-programme-day-row={highlighted ? "highlighted" : undefined}
+                      data-programme-day-row={dayHighlighted ? "highlighted" : undefined}
                     >
                       <PersonalProgrammePreviewRow
                         item={item}
                         timeLabel={timeLabelById[item.id] ?? "—"}
-                        highlighted={
-                          highlighted || (nextActivityId != null && item.id === nextActivityId)
-                        }
+                        highlighted={nextUpcomingForDay && item.id === nextActivityId}
                       />
                     </li>
                   ))}

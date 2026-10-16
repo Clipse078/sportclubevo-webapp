@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useCallback, useId, useRef, useState } from "react";
 import {
   FloatingFocusManager,
   FloatingPortal,
@@ -15,8 +15,6 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
-import { Info } from "lucide-react";
-import { cn } from "@/lib/cn";
 import {
   buildActivityClippedDetailModel,
   buildAggregateClippedDetailModel,
@@ -35,7 +33,9 @@ type PlanningHubActivityClippedDetailSurfaceProps = {
   timezone: string;
   geometry: ActivityClippedDetailGeometry;
   children: (referenceProps: Record<string, unknown>) => ReactNode;
-  /** Touch / coarse-pointer detail trigger rendered beside the card when disclosure is offered. */
+  /**
+   * @deprecated R5.4 — detail opens from card hover/focus; no separate info control.
+   */
   touchDetailTrigger?: boolean;
 };
 
@@ -52,24 +52,19 @@ export default function PlanningHubActivityClippedDetailSurface({
   timezone,
   geometry,
   children,
-  touchDetailTrigger = true,
+  touchDetailTrigger: _touchDetailTrigger = false,
 }: PlanningHubActivityClippedDetailSurfaceProps) {
   const measureRootRef = useRef<HTMLDivElement>(null);
   const offerDisclosure = useActivityClippedDetailOffer(measureRootRef, geometry);
   const detailId = useId();
   const [open, setOpen] = useState(false);
-  const [touchPinned, setTouchPinned] = useState(false);
-  const touchTriggerRef = useRef<HTMLButtonElement>(null);
 
   const { refs, floatingStyles, context } = useFloating({
-    open: open || touchPinned,
-    onOpenChange: (next) => {
-      setOpen(next);
-      if (!next) setTouchPinned(false);
-    },
+    open,
+    onOpenChange: setOpen,
     placement: "top-start",
     strategy: "fixed",
-    whileElementsMounted: open || touchPinned ? autoUpdate : undefined,
+    whileElementsMounted: open ? autoUpdate : undefined,
     middleware: [
       offset(8),
       flip({ padding: 12, fallbackPlacements: ["bottom-start", "top-end", "bottom-end"] }),
@@ -91,12 +86,6 @@ export default function PlanningHubActivityClippedDetailSurface({
     measureRootRef.current = node;
   }, []);
 
-  useEffect(() => {
-    if (touchPinned && touchTriggerRef.current) {
-      refs.setReference(touchTriggerRef.current);
-    }
-  }, [touchPinned, refs]);
-
   const model =
     aggregateItems && aggregateItems.length > 0 && aggregateTimeLabel
       ? buildAggregateClippedDetailModel(aggregateItems, locale, timezone, aggregateTimeLabel)
@@ -105,7 +94,7 @@ export default function PlanningHubActivityClippedDetailSurface({
         : null;
 
   const kind = item ? sportingKind(item.type) : undefined;
-  const visible = offerDisclosure && (open || touchPinned) && model;
+  const visible = offerDisclosure && open && model;
 
   return (
     <>
@@ -116,7 +105,7 @@ export default function PlanningHubActivityClippedDetailSurface({
       >
         <div className="h-full w-full">
           {children(
-            offerDisclosure && !touchPinned
+            offerDisclosure
               ? {
                   ...getReferenceProps(),
                   ref: (node: HTMLElement | null) => {
@@ -126,34 +115,6 @@ export default function PlanningHubActivityClippedDetailSurface({
               : {},
           )}
         </div>
-        {offerDisclosure && touchDetailTrigger ? (
-          <button
-            ref={touchTriggerRef}
-            type="button"
-            className={cn(
-              "absolute right-0.5 top-0.5 z-[5] inline-flex h-7 w-7 items-center justify-center rounded-md",
-              "text-[var(--muted)] transition-[opacity,color] duration-150",
-              "opacity-0 group-hover:opacity-90 group-hover:text-[var(--text-2)]",
-              "group-focus-within:opacity-90 group-focus-within:text-[var(--text-2)]",
-              "pointer-coarse:opacity-75 pointer-coarse:text-[var(--text-2)]",
-              "pointer-coarse:border pointer-coarse:border-[var(--border)]/70 pointer-coarse:bg-[var(--surface)]/90",
-              "hover:opacity-100 focus-visible:opacity-100",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-strong)] focus-visible:ring-offset-1",
-            )}
-            aria-label="Vollständige Aktivitätsdetails anzeigen"
-            aria-expanded={touchPinned}
-            aria-controls={detailId}
-            data-testid="planning-hub-activity-detail-touch-trigger"
-            onClick={(event) => {
-              event.stopPropagation();
-              event.preventDefault();
-              setTouchPinned((value) => !value);
-              setOpen(false);
-            }}
-          >
-            <Info className="h-3.5 w-3.5" aria-hidden />
-          </button>
-        ) : null}
       </div>
 
       {visible && model ? (

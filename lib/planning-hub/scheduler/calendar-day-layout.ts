@@ -1,8 +1,8 @@
 import { assignIntervalLanes, type IntervalLaneLayout, type TimedInterval } from "./interval-lanes";
 import { buildOverlapClusters } from "./overlap-clusters";
 
-/** Comfortable minimum width for full activity detail. */
-export const CALENDAR_MIN_ACTIVITY_WIDTH_PX = 76;
+/** Comfortable minimum width for full activity detail (R5.4 readability floor). */
+export const CALENDAR_MIN_ACTIVITY_WIDTH_PX = 84;
 
 /** Below this lane width, overlap cluster aggregates instead of compact strips. */
 export const CALENDAR_AGGREGATE_BELOW_WIDTH_PX = 44;

@@ -35,6 +35,7 @@ const PUBLISHING_KEYS = new Set([
   "infoboard",
   "infoboard-overview",
   "infoboard-preview",
+  "mobile-app",
 ]);
 
 const CLUB_ORGANISATION_KEYS = new Set([
@@ -166,17 +167,12 @@ function resolveTargetL2(key: string): string {
     return "Aufgaben & Koordination";
   }
   if (PUBLISHING_KEYS.has(key)) {
-    if (key.startsWith("infoboard")) return "Kanäle";
-    if (key === "website-settings") return "Einstellungen";
+    if (key.startsWith("infoboard")) return "Infoboard";
+    if (key === "mobile-app") return "Mobile App";
     if (key === "website-media") return "Medien";
-    if (key === "website-publishing") return "Kanäle";
-    if (["website-homepage", "website-navigation", "website-blocks"].includes(key)) {
-      return "Website";
-    }
-    if (["website-news", "website-pages", "website-editorial", "website-components"].includes(key)) {
-      return "Inhalte";
-    }
-    return "Übersicht";
+    if (key === "website-settings") return "Website";
+    if (key === "website" || key === "website-overview") return "Website";
+    return "Website";
   }
   if (CLUB_ORGANISATION_KEYS.has(key)) return "Organisation";
   if (CLUB_PEOPLE_KEYS.has(key)) return "People & Teams";
@@ -305,43 +301,31 @@ export function buildOrganisationMigrationRecords(
   });
 }
 
-/** Publishing L2 taxonomy for V2 (every group maps to live routes). */
+/** Publishing L2 taxonomy — publication channels (R5.4), not abstract content buckets. */
 export const PUBLISHING_TARGET_L2_GROUPS = [
-  {
-    id: "uebersicht",
-    label: "Übersicht",
-    headerVisible: true,
-    keys: ["website", "website-overview"],
-  },
-  {
-    id: "inhalte",
-    label: "Inhalte",
-    headerVisible: true,
-    keys: ["website-news", "website-pages", "website-editorial", "website-components"],
-  },
   {
     id: "website",
     label: "Website",
-    headerVisible: false,
-    keys: ["website-homepage", "website-navigation", "website-blocks"],
+    headerVisible: true,
+    keys: ["website"],
+  },
+  {
+    id: "infoboard",
+    label: "Infoboard",
+    headerVisible: true,
+    keys: ["infoboard"],
+  },
+  {
+    id: "mobile-app",
+    label: "Mobile App",
+    headerVisible: true,
+    keys: ["mobile-app"],
   },
   {
     id: "medien",
     label: "Medien",
     headerVisible: true,
     keys: ["website-media"],
-  },
-  {
-    id: "kanaele",
-    label: "Kanäle",
-    headerVisible: true,
-    keys: ["website-publishing", "infoboard", "infoboard-overview", "infoboard-preview"],
-  },
-  {
-    id: "einstellungen",
-    label: "Einstellungen",
-    headerVisible: false,
-    keys: ["website-settings"],
   },
 ] as const;
 

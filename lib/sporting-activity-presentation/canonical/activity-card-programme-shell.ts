@@ -9,6 +9,13 @@ export const SCE_PROGRAMME_ACTIVITY_CARD_SHELL_CLASS = cn(
   "relative min-w-0 w-full transition-colors motion-safe:hover:border-[var(--border-strong)]",
 );
 
+/**
+ * R5.4 — restrained row emphasis without accent stacking on day/group containers.
+ * Use for calendar sync / next-upcoming only — not route selection.
+ */
+export const SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS =
+  "ring-1 ring-[var(--border-strong)] shadow-[var(--sce-surface-shadow-elevated)]";
+
 const PROGRAMME_SHELL_PADDING: Record<SceProgrammeActivityShellDensity, string> = {
   /** Dashboard Mein Programm preview — efficient vertical rhythm. */
   COMPACT: "p-2 sm:p-2.5",

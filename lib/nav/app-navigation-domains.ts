@@ -177,6 +177,8 @@ export const CLUB_NAV_ITEM_TO_DOMAIN: Record<string, AppNavigationDomainId> = {
   aufgaben: "communication",
   website: "publishing",
   infoboard: "publishing",
+  "mobile-app": "publishing",
+  "website-media": "publishing",
   meetings: "club",
   "club-entwicklung": "club",
   material: "club",
@@ -285,7 +287,7 @@ export const CLUB_DOMAIN_MAP_SUMMARY = {
     "workspace",
     "administration",
   ],
-  publishing: ["website", "infoboard"],
+  publishing: ["website", "infoboard", "mobile-app", "website-media"],
   admin: ["administration"],
 } as const;
 

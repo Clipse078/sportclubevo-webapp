@@ -33,6 +33,12 @@ import { resolvePlannerSportingActivityTypePresentation } from "@/lib/planning-h
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
 import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
 import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
+import {
+  plannerActivityBlockShowsActivityIcon,
+  plannerActivityBlockShowsInlineTypeSuffix,
+  plannerActivityBlockShowsTeamContext,
+  resolvePlannerActivityBlockDensity,
+} from "@/lib/planning-hub/planner-activity-block-density";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -125,8 +131,13 @@ export default function PlanningHubActivityBlock({
   const primary = schedulerDisplayIdentity(item);
   const typeLabel = schedulerBlockSubtitle(item);
   const teamContextRaw = schedulerAssignedTeamContext(item, { primaryLine: primary });
-  const blockWidthPx = parseBlockDimensionPx(style?.width, 240);
+  const blockWidthPx = parseBlockDimensionPx(
+    style?.width,
+    blockLayoutPx?.width ?? 240,
+  );
   const blockHeightPx = parseBlockDimensionPx(style?.height, compact ? 40 : 64);
+  const layoutWidthPx = blockLayoutPx?.width ?? blockWidthPx;
+  const density = resolvePlannerActivityBlockDensity(layoutWidthPx);
   const clippedDetailGeometry = {
     blockWidthPx,
     blockHeightPx,
@@ -139,7 +150,11 @@ export default function PlanningHubActivityBlock({
     : null;
   const semantic = activityVisualStyle(item.type);
   const activitySceIcon = getWeekplannerActivitySceIconName(item.type);
-  const activityIconSize = compact ? 12 : 16;
+  const activityIconSize = compact || density === "NARROW" || density === "VERY_NARROW" ? 12 : 16;
+  const showActivityIcon = plannerActivityBlockShowsActivityIcon(density);
+  const showInlineTypeSuffix = plannerActivityBlockShowsInlineTypeSuffix(density);
+  const showTeamContextLine =
+    plannerActivityBlockShowsTeamContext(density) && teamContext != null && teamContext.length > 0;
   const plannerTypePresentation = resolvePlannerSportingActivityTypePresentation(item.type);
 
   const isGhost = visualVariant === "ghost";
@@ -271,7 +286,7 @@ export default function PlanningHubActivityBlock({
               </div>
             ) : null}
             <p className="flex min-w-0 items-center gap-1 font-semibold text-[var(--foreground)]">
-              {activitySceIcon ? (
+              {activitySceIcon && showActivityIcon ? (
                 <ActivitySceIcon
                   activityKind={item.type}
                   size={activityIconSize}
@@ -283,12 +298,12 @@ export default function PlanningHubActivityBlock({
                   <span className="font-normal text-[var(--muted)]">{laneSegmentHint} · </span>
                 ) : null}
                 {primary}
-                {!compact && typeLabel && (
+                {!compact && showInlineTypeSuffix && typeLabel && (
                   <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>
                 )}
               </span>
             </p>
-            {teamContext && (
+            {showTeamContextLine && teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">
                 <ProductDomainSceIcon name="people" size={20} className="h-2.5 w-2.5 shrink-0 opacity-70" />
                 <span className="truncate" data-planning-hub-clipped-text="true">

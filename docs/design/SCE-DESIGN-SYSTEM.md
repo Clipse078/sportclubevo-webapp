@@ -337,6 +337,9 @@ Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sc
 | **PURPOSE_BUILT_COMPOSITIONS** | Programme Match uses `listRowPresentation="programme-fixture"` three-row operational grammar; Resultate keeps rich score-centric card body — **do not** merge layouts |
 | **MATCH_INSIDE_CREST_RULE** | Programme fixture Row1 reading order: home club name → home crest → VS → away crest → away club name; centred compact band (`programmeFixtureBandClass`) — crests **inside** next to VS, not on outer card edges |
 | **DENSITY** | `COMPACT` programme shell on Dashboard preview; `STANDARD` on full programme workspaces; Resultate card density unchanged |
+| **PROGRAMME_BORDER_HIERARCHY (R5.4)** | Default programme cards: neutral elevated border only — **no** permanent `--sce-primary` outline on both day/group containers and cards. Day sync = label typography; next-upcoming = `SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS` (`--border-strong`) |
+| **PUBLISHING_CHANNEL_IA (R5.4)** | Publizieren L2 represents **channels** (Website, Infoboard, Mobile App, Medien) — not abstract “Inhalte” buckets; Website L3 leads with News |
+| **PLANNER_AUTOMATIC_DETAIL (R5.4)** | Wochenplaner clipped activity detail opens on **card hover/focus** — no separate info icon; progressive block density by measured width |
 
 Module: `lib/sporting-activity-presentation/canonical/activity-card-programme-shell.ts`.
 

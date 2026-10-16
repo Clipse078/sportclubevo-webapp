@@ -235,6 +235,19 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **L3_LEAF** | Route-active L3: label (+ icon when present) → **`var(--sce-primary)`**; `aria-current="page"` on leaf links only |
 | **IMPLEMENTATION** | `lib/nav/app-navigation-model.ts` + `AppShellNavigation` panel `isL2Active` + `global-app-navigation.css` + `SceDomainNavigationPanel` |
 
+## 01J-R5.4 — Programme borders, publishing channels, Wochenplaner density
+
+| Decision | Value |
+|----------|--------|
+| **PROGRAMME_BORDER_HIERARCHY** | One restrained emphasis layer — day groups use typography/spacing only; programme cards keep neutral elevated shell border (`--sce-surface-border-elevated`); next-upcoming row uses `--border-strong` ring, not stacked `--sce-primary` rings |
+| **PUBLISHING_CHANNEL_IA** | Publizieren L2 = **Website · Infoboard · Mobile App · Medien** — remove abstract **Inhalte** / **Kanäle** header buckets |
+| **WEBSITE_NEWS_FIRST** | Website L3 panel order starts with **News**, then Übersicht, Seiten, Homepage Builder, Navigation, Block-Bibliothek, Wiederverwendbare Inhalte, Redaktion, Publizieren, Einstellungen; **Medien** route owned by **Medien** channel |
+| **MOBILE_APP_CHANNEL** | Navigation channel entry only — lands on existing **Website → Einstellungen** until dedicated mobile publication routes exist (no placeholder product pages) |
+| **PLANNER_RESPONSIVE_DENSITY** | `resolvePlannerActivityBlockDensity` + raised `CALENDAR_MIN_ACTIVITY_WIDTH_PX` (84) — progressive hide of icon/team/type suffix; overlap aggregation unchanged |
+| **AUTOMATIC_DETAIL_PATTERN** | `PlanningHubActivityClippedDetailSurface` — hover + focus on activity card opens clipped detail; **no visible “i” control** |
+| **ACCESSIBILITY** | Keyboard focus opens the same detail surface; Escape dismisses via floating-ui dismiss |
+| **REGRESSION** | R5.3.2 active ancestry, R5.1 programme card rows, R5 dashboard quick access — unchanged |
+
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 
 | Decision | Value |

@@ -39,9 +39,8 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
     const surface = read("components/admin/planning-hub/PlanningHubActivityClippedDetailSurface.tsx");
     expect(surface).toContain("useFocus");
     expect(surface).toContain("useHover");
-    expect(surface).toContain("planning-hub-activity-detail-touch-trigger");
+    expect(surface).not.toContain("planning-hub-activity-detail-touch-trigger");
     expect(surface).toContain("buildActivityClippedDetailModel");
-    expect(surface).toContain("pointer-coarse:opacity-75");
     expect(surface).not.toContain("ring-[var(--sce-primary)]");
     expect(surface).toContain("suppressActivityTypeHeader");
   });
