@@ -1290,6 +1290,13 @@ model Tenant {
   tournamentPitches                TournamentPitch[]
   tournamentBreaks                 TournamentBreak[]
   tournamentBreakPitches           TournamentBreakPitch[]
+  tournamentCompetitionConfigurations TournamentCompetitionConfiguration[]
+  tournamentPhases                 TournamentPhase[]
+  tournamentGroups                 TournamentGroup[]
+  tournamentGroupMemberships       TournamentGroupMembership[]
+  tournamentRankingConfigurations  TournamentRankingConfiguration[]
+  tournamentQualificationSources   TournamentQualificationSource[]
+  tournamentFixtureSides           TournamentFixtureSide[]
   // PLANNING-UX-07R6: canonical FacilityResource allocations for club events.
   eventFacilityAllocations         EventFacilityAllocation[]
   // WEEKPLANNER-01B: tenant-defined, week-scoped alternative planning
@@ -2752,6 +2759,12 @@ model Event {
   tournamentScheduleVersions    TournamentScheduleVersion[]
   tournamentPitches             TournamentPitch[]
   tournamentBreaks              TournamentBreak[]
+  tournamentCompetitionConfiguration TournamentCompetitionConfiguration?
+  tournamentPhases              TournamentPhase[]
+  tournamentGroups              TournamentGroup[]
+  tournamentGroupMemberships    TournamentGroupMembership[]
+  tournamentRankingConfiguration TournamentRankingConfiguration?
+  tournamentQualificationSources TournamentQualificationSource[]
   // PLANNING-UX-07R6 — Event.type=OTHER facility links (not MATCH/TOURNAMENT).
   eventFacilityAllocations      EventFacilityAllocation[]
   // TEAM-COCKPIT-02B: per-player attendance for match/tournament events
@@ -8813,6 +8826,10 @@ model TournamentParticipant {
   /// SCE-TOURNAMENT-PLANNER-01B — fixture sides (neutral A/B; not Event.homeAway hosting).
   fixtureSidesA           TournamentFixture[]               @relation("TournamentFixtureSideA")
   fixtureSidesB           TournamentFixture[]               @relation("TournamentFixtureSideB")
+  /// SCE-TOURNAMENT-PLANNER-01E3A — durable group membership.
+  groupMemberships        TournamentGroupMembership[]
+  /// SCE-TOURNAMENT-PLANNER-01E3A — concrete fixture-side sources.
+  fixtureSideSources      TournamentFixtureSide[]
 
   /// The same canonical Team MAY appear on multiple rows (01D-R2 — e.g. two
   /// squads "Rot"/"Blau" referencing FC Allschwil F2). Tournament-local
@@ -8908,11 +8925,213 @@ enum TournamentScheduleVersionStatus {
   SUPERSEDED
 }
 
+/// SCE-TOURNAMENT-PLANNER-01E3A — user-facing competition structure (above generation strategy).
+enum TournamentCompetitionFormat {
+  GROUP_MIX_ONLY
+  KNOCKOUT_ONLY
+  GROUP_PLUS_KNOCKOUT
+}
+
+enum TournamentPhaseType {
+  GROUP_MIX
+  KNOCKOUT
+}
+
+enum TournamentGroupMixGenerationStrategy {
+  ROUND_ROBIN
+  SMART_MIX
+}
+
+enum TournamentFixtureSideLabel {
+  A
+  B
+}
+
+enum TournamentFixtureSideSourceType {
+  CONCRETE_PARTICIPANT
+  QUALIFICATION_REFERENCE
+}
+
+enum TournamentQualificationSourceType {
+  GROUP_RANK
+  WINNER_OF_FIXTURE
+  LOSER_OF_FIXTURE
+}
+
+enum TournamentRankingTiebreakCriterion {
+  POINTS
+  GOAL_DIFFERENCE
+  GOALS_SCORED
+  HEAD_TO_HEAD
+}
+
+model TournamentCompetitionConfiguration {
+  id                String                      @id @default(cuid())
+  tenantId          String
+  eventId           String                      @unique
+  competitionFormat TournamentCompetitionFormat
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, eventId])
+}
+
+model TournamentPhase {
+  id          String              @id @default(cuid())
+  tenantId    String
+  eventId     String
+  displayOrder Int
+  phaseType   TournamentPhaseType
+  /// User-visible phase label (e.g. Gruppenphase, K.-o.-Phase).
+  label       String
+  /// Stable stage key — maps to legacy TournamentFixture.stageKey.
+  stageKey    String
+  /// Applicable when phaseType = GROUP_MIX.
+  groupMixStrategy TournamentGroupMixGenerationStrategy?
+  smartMixTargetMatchesPerParticipant Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event    Event             @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  groups   TournamentGroup[]
+  fixtures TournamentFixture[]
+
+  @@unique([eventId, displayOrder])
+  @@unique([eventId, stageKey])
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([tenantId, eventId])
+}
+
+model TournamentGroup {
+  id           String @id @default(cuid())
+  tenantId     String
+  eventId      String
+  tournamentPhaseId String
+  displayOrder Int
+  label        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event  Event           @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  phase  TournamentPhase @relation(fields: [tournamentPhaseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  memberships          TournamentGroupMembership[]
+  groupRankQualSources TournamentQualificationSource[] @relation("QualificationSourceGroup")
+
+  @@unique([tournamentPhaseId, displayOrder])
+  @@unique([tournamentPhaseId, label])
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([tournamentPhaseId])
+  @@index([tenantId, eventId])
+}
+
+model TournamentGroupMembership {
+  id                      String @id @default(cuid())
+  tenantId                String
+  eventId                 String
+  tournamentGroupId       String
+  tournamentParticipantId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant                Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event                 Event                 @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  group                 TournamentGroup       @relation(fields: [tournamentGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tournamentParticipant TournamentParticipant @relation(fields: [tournamentParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([tournamentGroupId, tournamentParticipantId])
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([tournamentParticipantId])
+  @@index([tenantId, eventId])
+}
+
+model TournamentRankingConfiguration {
+  id           String @id @default(cuid())
+  tenantId     String
+  eventId      String @unique
+  winPoints    Int    @default(3)
+  drawPoints   Int    @default(1)
+  lossPoints   Int    @default(0)
+  tiebreakOrder TournamentRankingTiebreakCriterion[] @default([POINTS, GOAL_DIFFERENCE, GOALS_SCORED, HEAD_TO_HEAD])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId])
+}
+
+model TournamentQualificationSource {
+  id              String                            @id @default(cuid())
+  tenantId        String
+  eventId         String
+  sourceType      TournamentQualificationSourceType
+  sourceGroupId   String?
+  rank            Int?
+  sourceFixtureId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant        Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event         Event              @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sourceGroup   TournamentGroup?   @relation("QualificationSourceGroup", fields: [sourceGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceFixture TournamentFixture? @relation("QualificationSourceFixture", fields: [sourceFixtureId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  fixtureSides  TournamentFixtureSide[]
+
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([sourceGroupId])
+  @@index([sourceFixtureId])
+}
+
+model TournamentFixtureSide {
+  id                    String                           @id @default(cuid())
+  tenantId              String
+  fixtureId             String
+  side                  TournamentFixtureSideLabel
+  sourceType            TournamentFixtureSideSourceType
+  participantId         String?
+  qualificationSourceId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant                Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fixture               TournamentFixture              @relation(fields: [fixtureId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  participant           TournamentParticipant?         @relation(fields: [participantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  qualificationSource   TournamentQualificationSource? @relation(fields: [qualificationSourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([fixtureId, side])
+  @@index([tenantId])
+  @@index([fixtureId])
+  @@index([participantId])
+  @@index([qualificationSourceId])
+}
+
 model TournamentFixture {
   id       String @id @default(cuid())
   tenantId String
   /// Canonical tournament container (Event, type=TOURNAMENT).
   eventId  String
+
+  /// SCE-TOURNAMENT-PLANNER-01E3A — durable competition phase (nullable for pre-migration rows until backfill).
+  tournamentPhaseId String?
 
   /// Stage identifier for future format evolution (e.g. group id, "MAIN").
   stageKey         String @default("MAIN")
@@ -8921,23 +9140,27 @@ model TournamentFixture {
   /// Optional deterministic generator correlation id (future 01C+).
   generatorKey     String?
 
-  /// Neutral fixture sides — NOT Event.homeAway tournament hosting semantics.
-  sideAParticipantId String
-  sideBParticipantId String
+  /// Legacy concrete-side columns — populated for concrete-participant fixtures; null when side is qualification-only.
+  sideAParticipantId String?
+  sideBParticipantId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  event            Event                 @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  sideAParticipant TournamentParticipant @relation("TournamentFixtureSideA", fields: [sideAParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  sideBParticipant TournamentParticipant @relation("TournamentFixtureSideB", fields: [sideBParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tenant           Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event            Event                  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  phase            TournamentPhase?       @relation(fields: [tournamentPhaseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sideAParticipant TournamentParticipant? @relation("TournamentFixtureSideA", fields: [sideAParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sideBParticipant TournamentParticipant? @relation("TournamentFixtureSideB", fields: [sideBParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sides            TournamentFixtureSide[]
+  qualificationSources TournamentQualificationSource[] @relation("QualificationSourceFixture")
   assignments      TournamentFixtureAssignment[]
 
   @@unique([eventId, stageKey, roundIndex, slotIndexInRound])
   @@index([tenantId])
   @@index([eventId])
   @@index([tenantId, eventId])
+  @@index([tournamentPhaseId])
   @@index([sideAParticipantId])
   @@index([sideBParticipantId])
 }

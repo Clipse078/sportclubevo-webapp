@@ -33,22 +33,28 @@ import {
   type TournamentFixtureGenerationStrategy,
 } from "./fixtures";
 import { listTournamentFixtures } from "./fixture-service";
+import {
+  ensureLegacyGroupMixPhaseForGeneration,
+  getTournamentPhase,
+} from "./competition-structure";
 import type { HomeAwayRelevance } from "./smart-generator-architecture";
 import { HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT } from "./smart-generator-architecture";
 
 function toDefinition(row: {
   id: string;
   eventId: string;
+  tournamentPhaseId?: string | null;
   stageKey: string;
   roundIndex: number;
   slotIndexInRound: number;
   generatorKey: string | null;
-  sideAParticipantId: string;
-  sideBParticipantId: string;
+  sideAParticipantId: string | null;
+  sideBParticipantId: string | null;
 }): TournamentFixtureDefinition {
   return {
     id: row.id,
     eventId: row.eventId,
+    tournamentPhaseId: row.tournamentPhaseId ?? null,
     stageKey: row.stageKey,
     roundIndex: row.roundIndex,
     slotIndexInRound: row.slotIndexInRound,
@@ -147,6 +153,8 @@ export interface GenerateTournamentFixturesInput extends GenerateTournamentRound
   strategy?: TournamentFixtureGenerationStrategy;
   /** Required when strategy is SMART_MIX. */
   targetMatchesPerParticipant?: number;
+  /** Phase-aware generation target (01E3A). When omitted, resolves legacy/default MAIN phase. */
+  phaseId?: string;
 }
 
 /**
@@ -163,6 +171,31 @@ export async function generateTournamentFixturesForEvent(
   const strategy = input.strategy ?? "ROUND_ROBIN";
   const stageKey = input.stageKey ?? TOURNAMENT_FIXTURE_STAGE_MAIN;
   const homeAwayRelevance = input.homeAwayRelevance ?? HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT;
+
+  let effectiveStageKey = stageKey;
+  let tournamentPhaseId: string;
+  if (input.phaseId) {
+    const phase = await getTournamentPhase(tenantId, tournamentId, input.phaseId);
+    if (phase.phaseType !== "GROUP_MIX") {
+      throw new TournamentFormatUnsupportedError(
+        "Fixture generation strategy applies only to GROUP_MIX phases in 01E1/01E2",
+      );
+    }
+    if (input.stageKey !== undefined && input.stageKey !== phase.stageKey) {
+      throw new TournamentGenerationInvalidError(
+        `stageKey "${input.stageKey}" does not match phase stageKey "${phase.stageKey}"`,
+      );
+    }
+    effectiveStageKey = phase.stageKey;
+    tournamentPhaseId = phase.id;
+  } else {
+    const phase = await ensureLegacyGroupMixPhaseForGeneration(
+      tenantId,
+      tournamentId,
+      effectiveStageKey,
+    );
+    tournamentPhaseId = phase.id;
+  }
 
   const participantRows = await prisma.tournamentParticipant.findMany({
     where: { tenantId, eventId: tournamentId },
@@ -185,7 +218,7 @@ export async function generateTournamentFixturesForEvent(
         participantIds: canonicalIds,
         roundRobin: {
           format: "ROUND_ROBIN",
-          stageKey,
+          stageKey: effectiveStageKey,
           meetingsPerOpponent: input.meetingsPerOpponent,
           homeAwayRelevance,
         },
@@ -200,7 +233,7 @@ export async function generateTournamentFixturesForEvent(
         strategy: "SMART_MIX",
         participantIds: canonicalIds,
         smartMix: {
-          stageKey,
+          stageKey: effectiveStageKey,
           targetMatchesPerParticipant: input.targetMatchesPerParticipant,
           homeAwayRelevance,
         },
@@ -234,6 +267,7 @@ export async function generateTournamentFixturesForEvent(
           data: {
             tenantId,
             eventId: tournamentId,
+            tournamentPhaseId,
             stageKey: definition.stageKey,
             roundIndex: definition.roundIndex,
             slotIndexInRound: definition.slotIndexInRound,
@@ -241,6 +275,24 @@ export async function generateTournamentFixturesForEvent(
             sideAParticipantId: definition.sideAParticipantId,
             sideBParticipantId: definition.sideBParticipantId,
           },
+        });
+        await tx.tournamentFixtureSide.createMany({
+          data: [
+            {
+              tenantId,
+              fixtureId: row.id,
+              side: "A",
+              sourceType: "CONCRETE_PARTICIPANT",
+              participantId: definition.sideAParticipantId,
+            },
+            {
+              tenantId,
+              fixtureId: row.id,
+              side: "B",
+              sourceType: "CONCRETE_PARTICIPANT",
+              participantId: definition.sideBParticipantId,
+            },
+          ],
         });
         rows.push(row);
       }

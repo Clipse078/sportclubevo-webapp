@@ -147,7 +147,8 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **CLOSED / MERGED** |
 | 5 | **01E1** | Smart generator foundation + repeated round robin — **CLOSED / MERGED** (PR **#859**) |
 | 5b | **01E2** | Smart Mix generator — **CLOSED / MERGED** (PR **#860**) |
-| 5c | **01E3** | Groups + knockout — **NEXT** (not started) |
+| 5c | **01E3A** | Competition phase + qualification architecture — **IN REVIEW** ([doc](./SCE-TOURNAMENT-PLANNER-01E3A.md)) |
+| 5d | **01E3B–D** | Group/knockout generation slices — **NOT STARTED** (see 01E3A roadmap) |
 | 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |
 | 7 | **01G** | Locks + partial regeneration |
 | 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |

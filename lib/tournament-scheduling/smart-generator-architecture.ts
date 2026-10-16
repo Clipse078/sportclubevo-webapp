@@ -51,8 +51,10 @@ export type HomeAwayRelevance = "ON" | "OFF";
 
 export const HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT: HomeAwayRelevance = "OFF";
 
-/** Logical phase identity — persisted `TournamentPhase` table deferred until Group+KO package. */
-export type TournamentPhaseKind = "GROUP_STAGE" | "KNOCKOUT" | "MIX";
+/** Logical phase identity — persisted as `TournamentPhase` (01E3A). */
+export type TournamentPhaseKind = "GROUP_MIX" | "KNOCKOUT";
+/** @deprecated Use GROUP_MIX */
+export type LegacyTournamentPhaseKindAlias = "GROUP_STAGE" | "MIX";
 
 export interface TournamentPhaseContract {
   /** Stable within tournament; maps to `TournamentFixture.stageKey` today. */
@@ -64,21 +66,24 @@ export interface TournamentPhaseContract {
   schedulingBoundary?: "SEQUENTIAL" | "MAY_OVERLAP";
 }
 
-/**
- * Future fixture-side resolution (knockout qualification).
- * Current persistence uses concrete `sideAParticipantId` / `sideBParticipantId` only.
- */
+/** Fixture-side resolution (01E3A durable `TournamentFixtureSide` + legacy participant columns). */
 export type FixtureSideSourceKind = "CONCRETE_PARTICIPANT" | "QUALIFICATION_REFERENCE";
 
 export type QualificationReferenceKind =
-  | "GROUP_POSITION"
+  | "GROUP_RANK"
   | "WINNER_OF_FIXTURE"
   | "LOSER_OF_FIXTURE";
+/** @deprecated Use GROUP_RANK */
+export type LegacyQualificationReferenceKind = "GROUP_POSITION";
 
 export interface QualificationReference {
   kind: QualificationReferenceKind;
-  /** e.g. GROUP_A + position 1 */
+  /** Persisted TournamentGroup.id for GROUP_RANK. */
+  groupId?: string;
+  /** @deprecated Display-only group key — prefer groupId. */
   groupKey?: string;
+  rank?: number;
+  /** @deprecated Use rank */
   position?: number;
   /** Correlates to TournamentFixture.id or generatorKey */
   sourceFixtureId?: string;
@@ -91,6 +96,7 @@ export interface FixtureSideSourceContract {
 }
 
 export const FUTURE_KNOCKOUT_QUALIFICATION_MODEL_DEFINED = true;
+export const TOURNAMENT_PHASE_PERSISTENCE_IMPLEMENTED = true;
 
 /** Feasibility operates on any valid concrete-participant fixture set. */
 export const FEASIBILITY_REQUIRES_ROUND_ROBIN_SOURCE = false;

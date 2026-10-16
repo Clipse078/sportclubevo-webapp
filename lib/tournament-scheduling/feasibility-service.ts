@@ -192,14 +192,20 @@ export async function analyseTournamentFeasibilityForTournament(
       transitionMinutes: schedulingConfig.transitionMinutes,
       minRestMinutes: schedulingConfig.minRestMinutes,
     },
-    fixtures: fixtures.map((f) => ({
-      fixtureId: f.id,
-      stageKey: f.stageKey,
-      roundIndex: f.roundIndex,
-      slotIndexInRound: f.slotIndexInRound,
-      sideAParticipantId: f.sideAParticipantId,
-      sideBParticipantId: f.sideBParticipantId,
-    })),
+    // 01E3A: participant-specific feasibility (incl. min rest) requires concrete sides only.
+    fixtures: fixtures
+      .filter(
+        (f): f is typeof f & { sideAParticipantId: string; sideBParticipantId: string } =>
+          f.sideAParticipantId != null && f.sideBParticipantId != null,
+      )
+      .map((f) => ({
+        fixtureId: f.id,
+        stageKey: f.stageKey,
+        roundIndex: f.roundIndex,
+        slotIndexInRound: f.slotIndexInRound,
+        sideAParticipantId: f.sideAParticipantId,
+        sideBParticipantId: f.sideBParticipantId,
+      })),
     participants: participants.map((p) => ({ participantId: p.id })),
     tournamentPitches: mapPitchesForEngine(pitches),
     breaks: mapBreaksForEngine(breaks),

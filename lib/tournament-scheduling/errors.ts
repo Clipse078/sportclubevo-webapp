@@ -12,6 +12,12 @@ export type TournamentSchedulingErrorCode =
   | "TOURNAMENT_MEETINGS_PER_OPPONENT_INVALID"
   | "TOURNAMENT_SMART_MIX_TARGET_INVALID"
   | "TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT"
+  | "TOURNAMENT_COMPETITION_NOT_FOUND"
+  | "TOURNAMENT_COMPETITION_VALIDATION"
+  | "TOURNAMENT_COMPETITION_CONFLICT"
+  | "TOURNAMENT_PHASE_NOT_FOUND"
+  | "TOURNAMENT_GROUP_NOT_FOUND"
+  | "TOURNAMENT_QUALIFICATION_SOURCE_NOT_FOUND"
   | "TOURNAMENT_FORMAT_UNSUPPORTED"
   | "TOURNAMENT_GENERATION_INVALID"
   | "TOURNAMENT_SCHEDULE_NOT_FOUND"
@@ -182,5 +188,53 @@ export class TournamentPlannerNotOwnedByTenantError extends TournamentScheduling
       `Tournament "${tournamentId}" is not organised by the current tenant; fixture generation is not available`,
     );
     this.name = "TournamentPlannerNotOwnedByTenantError";
+  }
+}
+
+export class TournamentCompetitionNotFoundError extends TournamentSchedulingError {
+  constructor(tournamentId: string) {
+    super(
+      "TOURNAMENT_COMPETITION_NOT_FOUND",
+      `Tournament "${tournamentId}" has no competition configuration`,
+    );
+    this.name = "TournamentCompetitionNotFoundError";
+  }
+}
+
+export class TournamentCompetitionValidationError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_COMPETITION_VALIDATION", message);
+    this.name = "TournamentCompetitionValidationError";
+  }
+}
+
+export class TournamentCompetitionConflictError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_COMPETITION_CONFLICT", message);
+    this.name = "TournamentCompetitionConflictError";
+  }
+}
+
+export class TournamentPhaseNotFoundError extends TournamentSchedulingError {
+  constructor(phaseId: string) {
+    super("TOURNAMENT_PHASE_NOT_FOUND", `Tournament phase not found: ${phaseId}`);
+    this.name = "TournamentPhaseNotFoundError";
+  }
+}
+
+export class TournamentGroupNotFoundError extends TournamentSchedulingError {
+  constructor(groupId: string) {
+    super("TOURNAMENT_GROUP_NOT_FOUND", `Tournament group not found: ${groupId}`);
+    this.name = "TournamentGroupNotFoundError";
+  }
+}
+
+export class TournamentQualificationSourceNotFoundError extends TournamentSchedulingError {
+  constructor(qualificationSourceId: string) {
+    super(
+      "TOURNAMENT_QUALIFICATION_SOURCE_NOT_FOUND",
+      `Tournament qualification source not found: ${qualificationSourceId}`,
+    );
+    this.name = "TournamentQualificationSourceNotFoundError";
   }
 }

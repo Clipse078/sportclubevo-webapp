@@ -13,16 +13,18 @@ import {
 function toDefinition(row: {
   id: string;
   eventId: string;
+  tournamentPhaseId?: string | null;
   stageKey: string;
   roundIndex: number;
   slotIndexInRound: number;
   generatorKey: string | null;
-  sideAParticipantId: string;
-  sideBParticipantId: string;
+  sideAParticipantId: string | null;
+  sideBParticipantId: string | null;
 }): TournamentFixtureDefinition {
   return {
     id: row.id,
     eventId: row.eventId,
+    tournamentPhaseId: row.tournamentPhaseId ?? null,
     stageKey: row.stageKey,
     roundIndex: row.roundIndex,
     slotIndexInRound: row.slotIndexInRound,
@@ -57,13 +59,40 @@ function validateDistinctSides(sideA: string, sideB: string): void {
   }
 }
 
+async function persistConcreteFixtureSides(
+  tenantId: string,
+  fixtureId: string,
+  sideAParticipantId: string,
+  sideBParticipantId: string,
+): Promise<void> {
+  await prisma.tournamentFixtureSide.deleteMany({ where: { fixtureId } });
+  await prisma.tournamentFixtureSide.createMany({
+    data: [
+      {
+        tenantId,
+        fixtureId,
+        side: "A",
+        sourceType: "CONCRETE_PARTICIPANT",
+        participantId: sideAParticipantId,
+      },
+      {
+        tenantId,
+        fixtureId,
+        side: "B",
+        sourceType: "CONCRETE_PARTICIPANT",
+        participantId: sideBParticipantId,
+      },
+    ],
+  });
+}
+
 /**
  * Creates a durable tournament fixture. Does not generate pairings (01C).
  */
 export async function createTournamentFixture(
   tenantId: string,
   tournamentId: string,
-  input: CreateTournamentFixtureInput,
+  input: CreateTournamentFixtureInput & { tournamentPhaseId?: string | null },
 ): Promise<TournamentFixtureDefinition> {
   await requireTournamentEvent(tenantId, tournamentId);
   validateDistinctSides(input.sideAParticipantId, input.sideBParticipantId);
@@ -84,6 +113,7 @@ export async function createTournamentFixture(
     data: {
       tenantId,
       eventId: tournamentId,
+      tournamentPhaseId: input.tournamentPhaseId ?? null,
       stageKey: input.stageKey ?? "MAIN",
       roundIndex: input.roundIndex,
       slotIndexInRound: input.slotIndexInRound,
@@ -92,6 +122,13 @@ export async function createTournamentFixture(
       sideBParticipantId: input.sideBParticipantId,
     },
   });
+
+  await persistConcreteFixtureSides(
+    tenantId,
+    row.id,
+    input.sideAParticipantId,
+    input.sideBParticipantId,
+  );
 
   return toDefinition(row);
 }
