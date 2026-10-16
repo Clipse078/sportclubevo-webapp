@@ -47,7 +47,6 @@ export function deriveDefaultQuickAccessKeys(
   personalContext: PersonalContext | null,
 ): string[] {
   const nav = catalog.filter((e) => e.kind === "NAVIGATION");
-  const create = catalog.filter((e) => e.kind === "CREATE_ACTION");
 
   const rankedNav = [...nav].sort((a, b) => {
     const scoreDiff =
@@ -58,26 +57,5 @@ export function deriveDefaultQuickAccessKeys(
     return a.key.localeCompare(b.key);
   });
 
-  const rankedCreate = [...create].sort((a, b) => a.key.localeCompare(b.key));
-
-  const combined = [...rankedNav.slice(0, 6), ...rankedCreate.slice(0, 2)];
-  const deduped: string[] = [];
-  for (const entry of combined) {
-    if (!deduped.includes(entry.key)) {
-      deduped.push(entry.key);
-    }
-  }
-
-  if (deduped.length < QUICK_ACCESS_MAX_PINS) {
-    for (const entry of rankedNav) {
-      if (deduped.length >= QUICK_ACCESS_MAX_PINS) {
-        break;
-      }
-      if (!deduped.includes(entry.key)) {
-        deduped.push(entry.key);
-      }
-    }
-  }
-
-  return deduped.slice(0, QUICK_ACCESS_MAX_PINS);
+  return rankedNav.slice(0, QUICK_ACCESS_MAX_PINS).map((entry) => entry.key);
 }

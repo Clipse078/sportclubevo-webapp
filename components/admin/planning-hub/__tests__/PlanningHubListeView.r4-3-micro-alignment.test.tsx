@@ -1,17 +1,12 @@
 /**
  * @vitest-environment jsdom
- * SCE-ACTIVITY-CREATE-01H-R4.3 — Wochenplaner Liste grid alignment + MICRO crest polish.
+ * SCE-ACTIVITY-CREATE-01H-R4.3 — Wochenplaner Liste alignment + crest polish.
+ * R6: obsolete TIME/IDENTITY/LOCATION grid columns replaced by canonical Sce* list-row semantics.
  */
 
 import { render, screen, within } from "@testing-library/react";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import PlanningHubListeView from "../PlanningHubListeView";
-import {
-  PLANNING_HUB_LISTE_ROW_COLUMN_CLASS,
-  PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS,
-} from "@/lib/planning-hub/planning-hub-liste-grid";
 import { SCE_ACTIVITY_LIST_ROW_SCALE } from "@/lib/sporting-activity-presentation/canonical/activity-card-list-row-scale";
 import { resolveSceMatchPresentationFromWeekplannerMatch } from "@/lib/sporting-activity-presentation/canonical/adapters/weekplanner-match";
 import type {
@@ -204,11 +199,16 @@ const permissionContext = {
   alternativePlanId: null,
 };
 
-describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3", () => {
-  it("assigns the same outer grid column classes to TIME, IDENTITY, LOCATION, STATUS, and ACTIONS for all activity kinds", () => {
-    render(
+describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3 (R6 migrated)", () => {
+  it("does not expose legacy desktop column markers on liste rows", () => {
+    const { container } = render(
       <PlanningHubListeView
-        week={week([training("training:1"), match("match:1"), tournament("tournament:1"), veranstaltung("veranstaltung:1")])}
+        week={week([
+          training("training:1"),
+          match("match:1"),
+          tournament("tournament:1"),
+          veranstaltung("veranstaltung:1"),
+        ])}
         urlState={baseUrlState}
         locale="de-CH"
         timezone="Europe/Zurich"
@@ -221,34 +221,18 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3", () => {
       />,
     );
 
-    const rows = screen.getAllByTestId(/^planning-hub-liste-row-/).filter((node) =>
-      node.hasAttribute("data-sce-planning-hub-liste-row"),
-    );
+    const rows = container.querySelectorAll("[data-sce-planning-hub-liste-row]");
     expect(rows).toHaveLength(4);
-
     for (const row of rows) {
-      expect(row).toHaveAttribute("data-sce-planning-hub-liste-grid", PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS);
-      const timeCol = row.querySelector('[data-sce-planning-hub-liste-column="TIME"]');
-      const identityCol = row.querySelector('[data-sce-planning-hub-liste-column="IDENTITY"]');
-      const locationCol = row.querySelector('[data-sce-planning-hub-liste-column="LOCATION"]');
-      const statusCol = row.querySelector('[data-sce-planning-hub-liste-column="STATUS"]');
-      const actionsCol = row.querySelector('[data-sce-planning-hub-liste-column="ACTIONS"]');
-      expect(timeCol?.className).toContain("md:col-start-1");
-      expect(identityCol?.className).toContain("md:col-start-2");
-      expect(locationCol?.className).toContain("md:col-start-3");
-      expect(statusCol?.className).toContain("md:col-start-4");
-      expect(actionsCol?.className).toContain("md:col-start-5");
+      expect(row.querySelector('[data-sce-planning-hub-liste-column="TIME"]')).toBeNull();
+      expect(row.querySelector('[data-sce-planning-hub-liste-column="IDENTITY"]')).toBeNull();
+      expect(row.querySelector('[data-sce-planning-hub-liste-column="LOCATION"]')).toBeNull();
+      expect(row.querySelector('[data-sce-planning-hub-liste-column="STATUS"]')).toBeNull();
+      expect(row.querySelector('[data-sce-planning-hub-liste-column="ACTIONS"]')).toBeTruthy();
     }
-
-    const rowSource = readFileSync(
-      join(process.cwd(), "components/admin/planning-hub/PlanningHubListeActivityRow.tsx"),
-      "utf8",
-    );
-    expect(rowSource).toContain("PLANNING_HUB_LISTE_ROW_COLUMN_CLASS");
-    expect(PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.location).toContain("md:col-start-3");
   });
 
-  it("keeps a single location owner on the row — identity cards do not own LOCATION column", () => {
+  it("keeps a single list-row location owner on match cards", () => {
     render(
       <PlanningHubListeView
         week={week([match("match:1")])}
@@ -264,13 +248,9 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3", () => {
       />,
     );
 
-    const identity = screen.getByTestId("planning-hub-liste-row-identity");
-    expect(within(identity).queryByTestId("sce-match-location")).not.toBeInTheDocument();
-    expect(screen.getAllByTestId("planning-hub-liste-row-resources")).toHaveLength(1);
-    expect(screen.getByTestId("planning-hub-liste-row-resources")).toHaveAttribute(
-      "data-sce-planning-hub-liste-column",
-      "LOCATION",
-    );
+    const card = screen.getByTestId("planning-hub-liste-sce-match-match:1");
+    expect(within(card).queryByTestId("sce-match-location")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("sce-match-list-row-location")).toHaveLength(1);
   });
 
   it("hides visible HEIM/AUSWÄRTS in list-row while preserving home/away in the presentation model", () => {
@@ -316,7 +296,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3", () => {
     expect(screen.getByTestId("sce-match-context-heim")).toBeInTheDocument();
   });
 
-  it("uses canonical MICRO list-row crest bounds on match fixture crests", () => {
+  it("uses programme-fixture crest bounds on Wochenplaner match list rows", () => {
     render(
       <PlanningHubListeView
         week={week([match("match:1")])}
@@ -332,12 +312,14 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3", () => {
       />,
     );
 
-    expect(SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass).toContain("h-9");
-    const bounds = document.querySelectorAll('[data-sce-match-region="home-crest"] [data-testid="club-crest-bounds"]');
+    expect(SCE_ACTIVITY_LIST_ROW_SCALE.programmeMatchCrestBoundsClass).toContain("h-11");
+    const bounds = document.querySelectorAll(
+      '[data-sce-match-region="home-crest"] [data-testid="club-crest-bounds"]',
+    );
     expect(bounds.length).toBeGreaterThan(0);
     for (const node of bounds) {
-      expect(node.className).toContain("h-9");
-      expect(node.className).toContain("w-9");
+      expect(node.className).toContain("h-11");
+      expect(node.className).toContain("w-11");
     }
   });
 
@@ -357,13 +339,8 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.3", () => {
       />,
     );
 
-    const composition = screen.getByTestId("sce-tournament-organiser-crest").closest(
-      "[data-sce-tournament-organiser-composition]",
-    );
-    expect(composition).toBeTruthy();
-    expect(within(composition as HTMLElement).getByTestId("sce-tournament-organiser")).toHaveTextContent(
-      "FC Allschwil",
-    );
+    expect(screen.getByTestId("sce-tournament-organiser-crest")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-tournament-hauptteam")).toHaveTextContent("Junioren F3");
     expect(screen.getByTestId("sce-tournament-title")).toHaveTextContent("PlayMore Turnier");
     expect(screen.queryByTestId("sce-match-vs")).not.toBeInTheDocument();
   });

@@ -31,7 +31,7 @@ const BRAND_HEX = /#(?:0b4aa2|f97316|fff|ffffff)\b/i;
 
 describe("SCE-ICONS-V2-02 authoritative artwork", () => {
   it("validates 90 V2 SVG masters (viewBox, currentColor, safety)", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       const src = readFileSync(join(process.cwd(), SCE_APPROVED_MASTER_ASSETS[name]), "utf8");
       expect(src).toMatch(/viewBox="0 0 64 64"/);
@@ -56,11 +56,11 @@ describe("SCE-ICONS-V2-02 authoritative artwork", () => {
 describe("SCE-ICONS-V2-02 manifest & React geometry", () => {
   it("marks all concepts APPROVED with currentColor-ready artwork", () => {
     const summary = summarizeSceV2MasterManifest();
-    expect(summary.concepts).toBe(90);
-    expect(summary.approved).toBe(90);
+    expect(summary.concepts).toBe(91);
+    expect(summary.approved).toBe(91);
     expect(summary.awaitingArtwork).toBe(0);
-    expect(summary.currentColorReady).toBe(90);
-    expect(summary.integrated).toBe(90);
+    expect(summary.currentColorReady).toBe(91);
+    expect(summary.integrated).toBe(91);
     const manifest = buildSceV2MasterManifest();
     for (const row of manifest) {
       expect(row.v2ArtworkStatus).toBe("APPROVED");
@@ -133,7 +133,7 @@ describe("SCE-ICONS-V2-02 specimen surface", () => {
     expect(specimen).toContain("V2 canonical");
     expect(specimen).toContain("STATE_PREVIEW");
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      90,
+      91,
     );
   });
 });

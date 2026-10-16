@@ -55,6 +55,7 @@ export const SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS = {
   "homepage-builder": "82984270671c6020afad8b5a2f614083c313f79da38dd60883d6131ac28145fe" as const,
   "import": "df6a5f4ab4e4290b4cf9296abb1597fa0a1e4ddd924afe8e040fac4359ffc7f3" as const,
   "infoboard": "538104a8d2e468be13a4942cc57dada2af904e44b680ee224d1af2b85e3e4dcb" as const,
+  "mobile-app": "1225fa2c33e199799f807d554b794dae43785df608f0a9e848e1d08efff3b2fb" as const,
   "initiative": "1111868c6acf87d0d1de3396b2e41342a0996f9815f2ba690051eb1dd808a48f" as const,
   "insight": "e6a5abfcca3983f1ecee7934fb15ff7f8ede33ddf693a25fee29fc253f5ae193" as const,
   "integration": "e2bb6ba3337cab4c6b216669331699313e9acfa1862dc26f61c939d3c1fdaac5" as const,

@@ -9,6 +9,7 @@ import { resolveSceMatchLifecycleStatus } from "../match-lifecycle-status";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import { buildMatchSportingActivityLocation } from "@/lib/sporting-activity-presentation/match-location";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
+import type { MatchcenterSide } from "@/lib/matchcenter/types";
 import { buildSpieleManagementActivityPresentation } from "@/lib/sporting-activity-presentation/management-match-presentation";
 import { buildSceActivityRoute } from "../route";
 import { buildSceActivityPresentationStatus } from "../status";
@@ -23,6 +24,22 @@ export type ResolveSceMatchPresentationInput = {
   now?: Date;
   timezone?: string;
 };
+
+function resolveSceMatchOwnTeamContextLabel(
+  match: Pick<MatchcenterMatchSummary, "home" | "away">,
+): string | undefined {
+  const ownSide: MatchcenterSide | null = match.home.isOwnTeam
+    ? match.home
+    : match.away.isOwnTeam
+      ? match.away
+      : null;
+  if (!ownSide) return undefined;
+  const short = ownSide.canonicalTeamShortName?.trim();
+  if (short) return short;
+  const canonical = ownSide.canonicalTeamName?.trim();
+  if (canonical) return canonical;
+  return resolveMatchcenterCompactSideName(ownSide)?.trim() || undefined;
+}
 
 export function resolveSceMatchPresentation(
   input: ResolveSceMatchPresentationInput,
@@ -78,16 +95,25 @@ export function resolveSceMatchPresentation(
       ? buildSceActivityPresentationStatus({ domain: legacyPresentation.status })
       : undefined,
     fixture: {
-      home: clubPair.homeClubIdentity,
-      away: clubPair.awayClubIdentity,
+      home: {
+        ...clubPair.homeClubIdentity,
+        displayName:
+          match.home.displayName?.trim() || clubPair.homeClubIdentity.displayName,
+      },
+      away: {
+        ...clubPair.awayClubIdentity,
+        displayName:
+          match.away.displayName?.trim() || clubPair.awayClubIdentity.displayName,
+      },
       homeLeftAwayRightInvariant: true,
     },
     competition: match.competitionLabel?.trim()
       ? { label: match.competitionLabel.trim() }
       : undefined,
-    teamContext: legacyPresentation.team?.name
-      ? { name: legacyPresentation.team.name }
-      : undefined,
+    teamContext: (() => {
+      const name = resolveSceMatchOwnTeamContextLabel(match);
+      return name ? { name } : undefined;
+    })(),
     result,
     matchLifecycle: resolveSceMatchLifecycleStatus({
       match,

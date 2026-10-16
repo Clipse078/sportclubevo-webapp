@@ -47,6 +47,7 @@ export function createSceMatchCardFixtureMatch(
       isOwnTeam: true,
       canonicalTeamId: "team-1",
       canonicalTeamName: "FC Allschwil",
+      canonicalTeamShortName: "Junioren B1",
     }),
     away: side({
       displayName: "FC Therwil",

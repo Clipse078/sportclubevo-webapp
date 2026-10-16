@@ -159,7 +159,7 @@ describe("DASHBOARD-07R1E — context removal and CTA", () => {
         groups={groups}
         supported
         timeLabelById={{ ctx: "17:00" }}
-        viewAllHref="/dashboard/kalender?monat=2026-09&quelle=termine"
+        viewAllHref="/dashboard/mein-programm"
       />,
     );
 
@@ -170,7 +170,7 @@ describe("DASHBOARD-07R1E — context removal and CTA", () => {
     expect(screen.queryByText(/FC Allschwil Junioren F2/)).toBeNull();
 
     const cta = screen.getByTestId("personal-programme-view-all");
-    expect(cta.getAttribute("href")).toBe("/dashboard/kalender?monat=2026-09&quelle=termine");
+    expect(cta.getAttribute("href")).toBe("/dashboard/mein-programm");
     expect(cta.textContent).toContain("Alle anzeigen");
   });
 });

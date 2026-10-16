@@ -38,6 +38,12 @@ export const SCE_ACTIVITY_LIST_ROW_SCALE = {
   programmeMatchCrestBoundsClass: "h-11 w-11 sm:h-12 sm:w-12",
   programmeFixtureGridClass:
     "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-1.5 gap-y-0",
+  /** Programme Match Row 1 — compact centred fixture (inside crests adjacent to VS). */
+  programmeFixtureBandClass:
+    "flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center sm:gap-x-2",
+  programmeFixtureSideHomeClass: "flex min-w-0 max-w-[min(100%,14rem)] items-center justify-end gap-1.5",
+  programmeFixtureSideAwayClass:
+    "flex min-w-0 max-w-[min(100%,14rem)] items-center justify-start gap-1.5 text-left",
   programmeFixtureKickoffClass:
     "font-mono text-sm font-bold tabular-nums leading-none text-[var(--foreground)]",
   programmeFixtureVsClass: cn(

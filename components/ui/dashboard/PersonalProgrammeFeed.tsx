@@ -1,12 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
 import type { ProgrammeFeedGroup } from "@/lib/personal-agenda/programme-feed-groups";
 import { cn } from "@/lib/cn";
 import { DashboardEmptyState } from "./DashboardEmptyState";
-import { PersonalProgrammeAgendaRow } from "./PersonalProgrammeAgendaRow";
+import { PersonalProgrammePreviewRow } from "./PersonalProgrammePreviewRow";
 
 export type PersonalProgrammeFeedProps = {
   groups: ProgrammeFeedGroup[];
@@ -29,6 +30,14 @@ export function PersonalProgrammeFeed({
   className,
 }: PersonalProgrammeFeedProps) {
   const t = useTranslations("PersonalDashboard.programme");
+
+  const nextActivityId = useMemo(() => {
+    for (const group of groups) {
+      const first = group.items[0];
+      if (first) return first.id;
+    }
+    return null;
+  }, [groups]);
 
   const body = (
     <>
@@ -53,26 +62,32 @@ export function PersonalProgrammeFeed({
 
             const highlighted = highlightedDayKey === group.dayKey;
 
+            const dayHighlighted = highlighted;
+            const nextUpcomingForDay =
+              nextActivityId != null &&
+              group.items.some((entry) => entry.id === nextActivityId);
+
             return (
-              <div
-                key={group.dayKey}
-                data-day-key={group.dayKey}
-                className={cn("scroll-mt-28", highlighted && "rounded-[var(--radius-md)] ring-1 ring-[color-mix(in_srgb,var(--sce-primary)_30%,transparent)]")}
-              >
-                <p className="mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+              <div key={group.dayKey} data-day-key={group.dayKey} className="scroll-mt-28">
+                <p
+                  className={cn(
+                    "mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em]",
+                    dayHighlighted ? "text-[var(--foreground)]" : "text-[var(--muted)]",
+                  )}
+                >
                   {label}
                 </p>
-                <ol className="divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] pl-2">
+                <ol className="space-y-2">
                   {group.items.map((item) => (
                     <li
                       key={item.id}
-                      className="list-none"
-                      data-programme-day-row={highlighted ? "highlighted" : undefined}
+                      className="min-w-0 list-none"
+                      data-programme-day-row={dayHighlighted ? "highlighted" : undefined}
                     >
-                      <PersonalProgrammeAgendaRow
+                      <PersonalProgrammePreviewRow
                         item={item}
                         timeLabel={timeLabelById[item.id] ?? "—"}
-                        highlighted={highlighted}
+                        highlighted={nextUpcomingForDay && item.id === nextActivityId}
                       />
                     </li>
                   ))}

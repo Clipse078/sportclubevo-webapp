@@ -17,7 +17,7 @@ import GlobalNavDrawer from "@/components/admin/layout/GlobalNavDrawer";
 import {
   buildAppNavigationModelForUser,
   buildNavigationHref,
-  isDomainHeaderSecondaryItemActive,
+  isDomainPanelSecondaryItemRouteActive,
   isModuleLocalChildPrimaryActive,
   resolveActiveAppNavigation,
   resolveDesktopPrimaryNavigationDomains,
@@ -186,7 +186,7 @@ function AppShellNavigationInner({
 
   const isDomainSecondaryItemActive = useCallback(
     (domain: NavigationDomain, item: DomainSecondaryNavItem) =>
-      isDomainHeaderSecondaryItemActive(
+      isDomainPanelSecondaryItemRouteActive(
         pathname,
         domain,
         item,

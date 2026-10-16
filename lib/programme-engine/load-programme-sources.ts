@@ -24,6 +24,7 @@ import { resolveSceTournamentPresentation } from "@/lib/sporting-activity-presen
 import { resolveSceTrainingPresentationFromLegacy } from "@/lib/sporting-activity-presentation/canonical/adapters/training";
 import { buildClubIdentity } from "@/lib/sporting-activity-design";
 import { resolveTenantClubCrestUrl } from "@/lib/sporting-data/sce-club-crest-resolution";
+import { attachSceClubEventTenantClubIdentity } from "@/lib/sporting-activity-presentation/canonical/club-event-visual-identity";
 import type {
   SceClubEventPresentationModel,
   SceTrainingPresentationModel,
@@ -59,21 +60,6 @@ function attachTrainingTenantClubIdentity(
   presentation: SceTrainingPresentationModel,
   ctx: LoadContext,
 ): SceTrainingPresentationModel {
-  const displayName = ctx.tenantClubName.trim();
-  if (!displayName) return presentation;
-  return {
-    ...presentation,
-    tenantClub: buildClubIdentity({
-      displayName,
-      logoUrl: resolveTenantClubCrestUrl({ tenantLogoUrl: ctx.tenantLogoUrl }),
-    }),
-  };
-}
-
-function attachClubEventTenantClubIdentity(
-  presentation: SceClubEventPresentationModel,
-  ctx: LoadContext,
-): SceClubEventPresentationModel {
   const displayName = ctx.tenantClubName.trim();
   if (!displayName) return presentation;
   return {
@@ -513,7 +499,7 @@ async function loadClubEventProgrammeItems(
       eventType: "OTHER",
     });
 
-    const presentation = attachClubEventTenantClubIdentity(
+    const presentation = attachSceClubEventTenantClubIdentity(
       resolveSceClubEventPresentationFromLegacy(legacyPresentation, {
         organiserDisplayName: event.organizerName ?? ctx.tenantClubName,
       }),

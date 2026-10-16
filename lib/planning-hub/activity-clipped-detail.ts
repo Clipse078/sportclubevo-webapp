@@ -49,9 +49,14 @@ export function parseBlockDimensionPx(value: number | string | undefined, fallba
   return fallback;
 }
 
+/** Individual Wochenplaner activity cards always expose hover/focus detail (R5.4.2). */
+export function shouldOfferIndividualActivityDetail(): boolean {
+  return true;
+}
+
 /**
  * Offer progressive disclosure when the card cannot show canonical useful detail at once.
- * Compact resource-timeline blocks use width/height thresholds; calendar blocks reuse 08-01 widths.
+ * Aggregate/cluster cards only — individual activities use {@link shouldOfferIndividualActivityDetail}.
  */
 export function shouldOfferActivityClippedDetailDisclosure(
   geometry: ActivityClippedDetailGeometry,

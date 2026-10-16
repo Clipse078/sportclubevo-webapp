@@ -88,6 +88,11 @@ export {
   resolveSceClubEventPresentationFromLegacy,
 } from "./adapters/club-event";
 export {
+  attachSceClubEventTenantClubIdentity,
+  resolveSceClubEventPrimaryVisualIdentity,
+  sceClubEventPrimaryVisualIdentityHasLogo,
+} from "./club-event-visual-identity";
+export {
   SCE_CLUB_EVENT_CARD_SHELL_CLASS,
   SCE_CLUB_EVENT_RICH_DENSITY_SCALE,
   isSceClubEventRichCardDensity,

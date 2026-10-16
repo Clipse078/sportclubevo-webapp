@@ -470,16 +470,17 @@ export const NAV_SECTIONS: NavSection[] = [
         permissionKeys: [...WEBSITE_READ_PERMISSIONS, ...NEWS_READ_PERMISSIONS],
         children: [
           {
-            key: "website-overview",
-            label: "CMS Übersicht",
-            href: "/dashboard/website",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
             key: "website-news",
             label: "News",
             href: "/dashboard/website/news",
             permissionKeys: [...NEWS_READ_PERMISSIONS],
+          },
+          {
+            key: "website-overview",
+            label: "Übersicht",
+            href: "/dashboard/website",
+            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+            matchExact: true,
           },
           {
             key: "website-pages",
@@ -506,10 +507,10 @@ export const NAV_SECTIONS: NavSection[] = [
             permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
           },
           {
-            key: "website-media",
-            label: "Medien",
-            href: "/dashboard/website/media",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+            key: "website-components",
+            label: "Wiederverwendbare Inhalte",
+            href: "/dashboard/website/components",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
           },
           {
             key: "website-editorial",
@@ -524,18 +525,24 @@ export const NAV_SECTIONS: NavSection[] = [
             permissionKeys: [...PUBLISHING_READ_PERMISSIONS],
           },
           {
-            key: "website-components",
-            label: "Wiederverwendbare Inhalte",
-            href: "/dashboard/website/components",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
             key: "website-settings",
             label: "Einstellungen",
             href: "/dashboard/website/settings",
             permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
           },
         ],
+      },
+      {
+        key: "website-media",
+        label: "Medien",
+        href: "/dashboard/website/media",
+        permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+      },
+      {
+        key: "mobile-app",
+        label: "Mobile App",
+        href: "/dashboard/website/settings",
+        permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
       },
       {
         key: "infoboard",

@@ -126,7 +126,7 @@ function WeekPlannerWorkspaceBody({
   const router = useRouter();
   const urlState: PlanningHubUrlState = urlStateProp ?? {
     week: week.param,
-    perspective: "kalender",
+    perspective: "liste",
     activity: "alle",
     team: null,
     facility: null,

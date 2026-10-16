@@ -137,6 +137,16 @@ Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01e
 
 Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not local card variants.
 
+### Mein Programm / PERSON programme list-row contract (01J-R4)
+
+| Item | Contract |
+|------|----------|
+| **Scope** | `surface="list-row"` with `listRowPresentation="operational"` (match: `programme-fixture`) — Dashboard preview, `/dashboard/mein-programm` Liste, Programme Engine list rows |
+| **Information rows** | Exactly **three** rows under the type label: **ROW 1** activity identity + club crest(s) · **ROW 2** team(s)/OrgUnit(s) · **ROW 3** time → location |
+| **Match ROW 1** | HOME club + crest \| VS \| away crest + club — home always left |
+| **Match ROW 3** | Kickoff only when provider end is not authoritative — never fabricate `-` end times |
+| **MICRO calendar** | **Excluded** — calendar cells keep MICRO grammar (TYPE → identity → time → location) |
+
 ---
 
 ## Canonical Tournament card family (01F)
@@ -178,7 +188,9 @@ Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — no
 | **Activity label** | **VERANSTALTUNG** (`activityKind: EVENT` on `ActivityTypePill`) |
 | **Densities** | `HERO` · `STANDARD` · `COMPACT` · `MICRO` — policy from `SCE_ACTIVITY_DENSITY_CONTRACT` |
 | **Identity grammar** | Event title (primary) → optional **organiser/host** → schedule → location → lifecycle **status** — **never** Match (VS, home/away, scores), Tournament-only (Hauptteam, organiser invariant crest), or Training-only (recurrence/coach) semantics |
-| **Organiser / crest** | Optional `ClubIdentity`; crest only when a usable logo exists — **not** mandatory; event title stays primary |
+| **Tenant visual identity (`CLUB_EVENT_TENANT_IDENTITY`)** | Tenant-owned Club Events **always** use the configured **tenant club crest** as primary visual ownership wherever SCE renders Club Event identity (programme rows, dashboard, calendar MICRO when crest slot applies). **`tenantClub` ≠ audience** — audience (Teams, OrgUnits, club-wide) communicates relevance, not crest selection. Optional explicit **external organiser** remains domain data; crest falls back to organiser only when tenant identity is absent. |
+| **Programme three-row contract (01J-R5.1+)** | Row 1: **tenant crest + event title** · Row 2: audience / scope · Row 3: time + location |
+| **Organiser line** | Optional organiser **name** when distinct from suppressed duplicate under crest; crest via `resolveSceClubEventPrimaryVisualIdentity` |
 | **All-day** | Domain `schedule.allDay` → **Ganztägig** via `formatClubEventTimingLabel` / `formatSceClubEventTimeLabel` — never fake `00:00–23:59` |
 | **Location** | `formatSceActivityLocationHierarchy` on resolved `SportingActivityLocation`; omit organiser from location line when shown as secondary identity; no raw resource keys |
 | **Status vs publication** | Lifecycle `status` on card (`SceClubEventCardStatus`); publication/visibility labels stay in management row columns — do not collapse |
@@ -316,6 +328,29 @@ Density rules suppress the pill only via the shared activity density contract �
 7. Future Sponsor cards should extend this table, not introduce a parallel palette.
 
 Automated guardrails: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01d-r10-semantic-alignment.test.ts`.
+
+### Programme list vs Resultate (01J R5.1)
+
+| Concept | Contract |
+|---------|----------|
+| **PROGRAMME_RESULTATE_VISUAL_FAMILY** | Programme surfaces wrap canonical `SceTrainingCard` / `SceMatchCard` / `SceTournamentCard` / `SceClubEventCard` list-row compositions in `SceProgrammeActivityCardShell` — **same shell tokens** as Resultate `SceMatchCard` (`SCE_MATCH_CARD_SHELL_CLASS`) |
+| **PURPOSE_BUILT_COMPOSITIONS** | Programme Match uses `listRowPresentation="programme-fixture"` three-row operational grammar; Resultate keeps rich score-centric card body — **do not** merge layouts |
+| **MATCH_INSIDE_CREST_RULE** | Programme fixture Row1 reading order: home club name → home crest → VS → away crest → away club name; centred compact band (`programmeFixtureBandClass`) — crests **inside** next to VS, not on outer card edges |
+| **DENSITY** | `COMPACT` programme shell on Dashboard preview; `STANDARD` on full programme workspaces; Resultate card density unchanged |
+| **PROGRAMME_BORDER_HIERARCHY (R5.4)** | Default programme cards: neutral elevated border only — **no** permanent `--sce-primary` outline on both day/group containers and cards. Day sync = label typography; next-upcoming = `SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS` (`--border-strong`) |
+| **PUBLISHING_CHANNEL_IA (R5.4)** | Publizieren L2 represents **channels** (Website, Infoboard, Mobile App, Medien) — not abstract “Inhalte” buckets; Website L3 leads with News |
+| **PUBLISHING_CHANNEL_ICONS (R5.4.1)** | Every Publizieren L2 channel row carries a canonical SCE destination icon via `NAV_DESTINATION_SCE_ICON_BY_KEY` (incl. **Mobile App** → approved handset/contact glyph) — no page-local icon hacks |
+| **PLANNER_ADAPTIVE_DENSITY (R5.4.1)** | Wochenplaner activity blocks resolve **WIDE · MEDIUM · NARROW · MICRO** from **layout width** (`blockLayoutPx` / lane geometry), not viewport breakpoints; progressive disclosure hides pills, team/resource lines, and inline **Termin ändern** before text collides |
+| **PLANNER_AUTOMATIC_DETAIL (R5.4)** | Wochenplaner clipped activity detail opens on **card hover/focus/touch** — no separate info icon; hidden fields remain in the automatic detail surface |
+| **WOCHENPLANER_DEFAULT_VIEW (R5.5)** | `/dashboard/planner/week` without `ansicht` resolves to **Liste** (`ansicht=liste` omitted when default) |
+| **WOCHENPLANER_VIEW_ORDER (R5.5)** | Perspective switcher order: **Liste → Spielfeld → Garderobe → Kalender** (consistent everywhere the hub tabs render) |
+| **WOCHENPLANER_LIST_CARDS (R5.5)** | Wochenplaner **Liste** uses the same canonical `SceTrainingCard` / `SceMatchCard` / `SceTournamentCard` / `SceClubEventCard` family as `/dashboard/programm`, wrapped in `SceProgrammeActivityCardShell` — **no** parallel planner card family or table-row imitation |
+| **CANONICAL_PROGRAMME_LIST_CONTRACT (R5.5.1)** | A programme/planner list row **is** `SceProgrammeActivityCardShell` at `w-full` — the shell is the visual list row. Activity-specific internal layouts may stay compact/purpose-built (`max-w-none` on list-row Sce* bodies). **NESTED_VISUAL_CARD_SHELL: NO** — do not wrap the shell in a second full-width planner row with border/hover. Planner operational status and the row action menu extend **inside** the shell (flex: card interaction surface + menu anchor), not in a detached outer column |
+| **PLANNER_OPERATIONAL_STATUS (R5.5)** | Conflicts and incomplete planning data compose onto canonical cards (`PlannerOperationalIssueSummary` + shared `PlannerOperationalStatusSection`) — not a separate card type |
+| **PLANNER_ISSUE_DISCLOSURE (R5.5)** | Issue **summary** visible on the card without hover; **specific** conflict/incomplete lines in hover/focus detail and opened planning workspace (`Planungsstatus`) |
+| **IMPERSONATION_SHELL (R5.4.1)** | Active impersonation banner renders **above** the complete authenticated shell (before `AppShellNavigation`), occupies normal layout space, and pushes navbar + domain panel downward — never below the global header |
+
+Module: `lib/sporting-activity-presentation/canonical/activity-card-programme-shell.ts`.
 
 ---
 
@@ -502,9 +537,25 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 
 | Surface | Role | Implementation | Rules |
 |---------|------|----------------|-------|
-| **Row 1 — Tenant + L1 + utilities** | Tenant crest + name · Planung · Kommunikation · Club · Publizieren · Admin · global utilities | `SceTenantContextRail` + `ScePrimaryNavigation` + `SceGlobalUtilities` | **One strong L1 selection maximum** (`--active` or open panel). Route-active and panel-open are separate states: when a foreign panel is open, the route domain may use `--route-context` only — never two full active treatments. Domains with children open `SceDomainNavigationPanel` (`aria-expanded`); panel-open is not `aria-current`. |
+| **Row 1 — Tenant + L1 + utilities** | Tenant crest + name · Club · Planung · Publizieren · Kommunikation · Admin · global utilities | `SceTenantContextRail` + `ScePrimaryNavigation` + `SceGlobalUtilities` | **One strong L1 selection maximum** (`--active` or open panel). **Active L1 domain:** icon **and** label use canonical `--sce-primary` (orange) while retaining underline/background and `aria-current` — color alone is not the only active signal. Route-active and panel-open are separate states: when a foreign panel is open, the route domain may use `--route-context` only — never two full active treatments. Domains with children open `SceDomainNavigationPanel` (`aria-expanded`); panel-open is not `aria-current`. |
 | **Row 2 — Platform + season** | SportClubEvo wordmark (left) · season context (right, under utilities) | `ScePlatformBrandRail` + `SceRow2SeasonContext` inside `SceTenantContextRow` | Always visible on desktop while panels overlay page content; **no** horizontal L2 strip; empty middle workspace is intentional. |
-| **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. |
+| **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. **Selected route item:** icon + label use canonical `--sce-primary` (same token as L1); restrained selected surface may remain. **Panel browse (`--selected`) ≠ route selected (`--active`)** — opening another L2 column to preview L3 must not paint orange unless canonical route resolution marks that item active. |
+
+**Canonical navigation active route path (01J-R5.3.2)**
+
+When the current route resolves to an **L3 destination**, the **full ancestry** is route-active:
+
+| Level | Route rule | Visual (token `var(--sce-primary)`) |
+|-------|------------|-------------------------------------|
+| **L1 domain** | Current route belongs to this domain | Icon + label |
+| **L2 category** | Direct L2 match **or** owns the active L3 descendant (**active ancestor**) | Icon + label + disclosure chevron (when present) |
+| **L3 destination** | Current route resolves here | Label + icon when present |
+
+**Active descendant ⇒ active ancestor:** if Teams is the current L3 under Organisation, Organisation is route-active even when another L2 row was only **browsed** to preview a different L3 column. **Browse / open panel (`--selected`) ≠ route active (`--active`).** Hover and focus do not imply route-active.
+
+Leaf L3 links use `aria-current="page"`. Active L2 ancestors are visually active but do **not** claim `aria-current="page"` when they are not the leaf route.
+
+Inactive items stay neutral/muted; hover may brighten but must not mimic route-active orange. Focus uses `:focus-visible` independently. Orange reinforces the path alongside `aria-current` and surface indicators — not as the sole accessibility signal.
 
 **Navigation rules (canonical)**
 
@@ -519,7 +570,7 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 
 **Global utilities (right cluster)**
 
-- `SceGlobalUtilities` (Row 1): contextual `AdminPageActions` (module pages only), notifications, account. Season lives on Row 2 (`SceRow2SeasonContext`). **Desktop module discovery** is L1 domains + `SceDomainNavigationPanel` — not a global hamburger/overflow trigger in Row 1.
+- `SceGlobalUtilities` (Row 1): **notifications + account only** — **no contextual workflow quick actions** in the Navbar (no «Meeting planen», no path-keyed create CTAs). Contextual actions belong on workspace/page surfaces (`headerActions`, module toolbars). Season lives on Row 2 (`SceRow2SeasonContext`). **Desktop module discovery** is L1 domains + `SceDomainNavigationPanel` — not a global hamburger/overflow trigger in Row 1.
 - **Primary navigation icons** use canonical state-driven monochrome foreground (`currentColor`). Individual navigation icons must not introduce independent semantic colors (orange/blue/accent fills) in inactive rows — state controls color, not icon artwork.
 - **Season context** uses the Row 2 width budget. The **full localized season label** is the default desktop representation (`lg` and up) and must not collapse based on Row 1 width pressure; compact variants apply only on genuinely constrained tablet tiers.
 - Global **`+ Erstellen`** remains the accepted `SceActivityCreateMenu` contract on module surfaces (01G) — not duplicated in the shell.

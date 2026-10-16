@@ -34,8 +34,12 @@
  * top: var(--topnav-height) while the sticky global header includes contextual
  * navigation rows taller than --topnav-height — the banner slid under that layer.
  *
- * Stacking (low → high): page content → module sticky controls → shell safety
- * chrome (with global header) → mobile bottom nav → modal overlays.
+ * Vertical shell order (top → bottom): global safety chrome (STAGE + impersonation)
+ * → global navbar rows → page content. Safety chrome must precede AppShellNavigation
+ * so session/account banners push the full shell downward (R5.4.1).
+ *
+ * Stacking (low → high): page content → module sticky controls → sticky shell block
+ * (safety + header) → mobile bottom nav → modal overlays.
  */
 [data-sce-modal-background].sce-authenticated-app-shell {
   --sce-shell-sticky-chrome-z-index: 35;

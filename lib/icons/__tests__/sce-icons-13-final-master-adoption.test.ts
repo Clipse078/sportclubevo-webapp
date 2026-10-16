@@ -23,7 +23,7 @@ const FINAL_TWELVE = [...SCE_APPROVED_FINAL_SEMANTIC_MASTER_ICON_NAMES] as const
 
 describe("SCE-ICONS-13 final semantic masters", () => {
   it("registers all 12 final masters with approved geometry", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
     for (const name of FINAL_TWELVE) {
       const entry = SCE_ICON_REGISTRY[name];
       expect(entry.geometrySource).toBe("approved-master");
@@ -52,7 +52,7 @@ describe("SCE-ICONS-13 final semantic masters", () => {
         SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS[name],
       );
     }
-    expect(Object.keys(SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS).length).toBe(90);
+    expect(Object.keys(SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS).length).toBe(91);
   });
 
   it("clears domain icon debt across the webapp audit", () => {
@@ -78,6 +78,6 @@ describe("SCE-ICONS-13 final semantic masters", () => {
     const svgCount = readdirSync(join(process.cwd(), "public/images/icons")).filter((f) =>
       f.endsWith(".svg"),
     ).length;
-    expect(svgCount).toBe(90);
+    expect(svgCount).toBe(91);
   });
 });

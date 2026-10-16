@@ -117,7 +117,8 @@ export default async function ClubDashboardView({
         <Suspense fallback={<ClubDashboardCommandCenterSkeleton />}>
           <ClubDashboardCommandCenterAsync
             tenantId={tenantId}
-            userId={session.user.id}
+            userId={session.user.effectiveUserId ?? session.user.id}
+            tenantClubName={ctx?.name ?? ""}
             actor={actor}
             fmtCfg={fmtCfg}
             permissionKeys={permissionKeys}

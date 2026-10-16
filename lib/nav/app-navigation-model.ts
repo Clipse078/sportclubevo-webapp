@@ -197,6 +197,16 @@ export function resolveSecondaryNavItemModuleLocalChildren(
         return groupedDest.children;
       }
     }
+
+    if (domain.id === "publishing" && topLevel) {
+      return [
+        {
+          key: topLevel.key,
+          label: topLevel.label,
+          href: topLevel.href,
+        },
+      ];
+    }
   }
 
   return [];
@@ -575,6 +585,63 @@ export function isDomainHeaderSecondaryItemActive(
   }
 
   return false;
+}
+
+function domainSecondaryItemHasRouteActiveModuleLocalChild(
+  pathname: string,
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+  activeChildKey: string | null,
+): boolean {
+  const panelChildren = resolveSecondaryNavItemModuleLocalChildren(domain, item);
+  if (panelChildren.length === 0) return false;
+  return panelChildren.some((child) =>
+    isModuleLocalChildPrimaryActive(pathname, child, panelChildren, activeChildKey),
+  );
+}
+
+/**
+ * Domain panel L2 route-active state: direct L2 match or active L3 descendant (active ancestor).
+ * Browsed/open panel branch must not influence this — callers pass route-derived keys only.
+ */
+export function isDomainPanelSecondaryItemRouteActive(
+  pathname: string,
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+  activeDestinationKey: string | null,
+  activeChildKey: string | null = null,
+  secondaryItems: readonly DomainSecondaryNavItem[] | null = null,
+): boolean {
+  const rowItems = secondaryItems ?? resolveDomainSecondaryNavItems(domain);
+
+  if (domainSecondaryItemHasRouteActiveModuleLocalChild(pathname, domain, item, activeChildKey)) {
+    return true;
+  }
+
+  if (
+    !isDomainHeaderSecondaryItemActive(
+      pathname,
+      domain,
+      item,
+      activeDestinationKey,
+      activeChildKey,
+      rowItems,
+    )
+  ) {
+    return false;
+  }
+
+  const siblingOwnsActiveL3 = rowItems.some(
+    (other) =>
+      other.key !== item.key &&
+      domainSecondaryItemHasRouteActiveModuleLocalChild(
+        pathname,
+        domain,
+        other,
+        activeChildKey,
+      ),
+  );
+  return !siblingOwnsActiveL3;
 }
 
 export function resolveModuleLocalNavItems(

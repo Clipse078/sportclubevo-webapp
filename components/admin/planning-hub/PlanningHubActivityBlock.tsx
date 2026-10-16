@@ -31,8 +31,24 @@ import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-i
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import { resolvePlannerSportingActivityTypePresentation } from "@/lib/planning-hub/planner-sporting-activity-type-label";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
-import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
+import PlanningHubActivityDetailSurface from "./PlanningHubActivityDetailSurface";
 import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
+import {
+  plannerActivityBlockMicroShowsTypeOnly,
+  plannerActivityBlockShowsActivityIcon,
+  plannerActivityBlockShowsCompactTypeLabel,
+  plannerActivityBlockShowsEndTimeActionInline,
+  plannerActivityBlockShowsInlineManipulationEdit,
+  plannerActivityBlockShowsInlineTypeSuffix,
+  plannerActivityBlockShowsOperationalIndicators,
+  plannerActivityBlockShowsPrimaryIdentityLine,
+  plannerActivityBlockShowsResourceLine,
+  plannerActivityBlockShowsStandaloneTimeLine,
+  plannerActivityBlockShowsTeamContext,
+  plannerActivityBlockShowsTimeWithTypePresentation,
+  plannerActivityBlockShowsTypePill,
+  resolvePlannerActivityBlockDensity,
+} from "@/lib/planning-hub/planner-activity-block-density";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -125,13 +141,16 @@ export default function PlanningHubActivityBlock({
   const primary = schedulerDisplayIdentity(item);
   const typeLabel = schedulerBlockSubtitle(item);
   const teamContextRaw = schedulerAssignedTeamContext(item, { primaryLine: primary });
-  const blockWidthPx = parseBlockDimensionPx(style?.width, 240);
+  const layoutWidthPx =
+    blockLayoutPx?.width ?? parseBlockDimensionPx(style?.width, 240);
+  const blockWidthPx = layoutWidthPx;
   const blockHeightPx = parseBlockDimensionPx(style?.height, compact ? 40 : 64);
-  const clippedDetailGeometry = {
+  const density = resolvePlannerActivityBlockDensity(layoutWidthPx);
+  const detailGeometry = {
     blockWidthPx,
     blockHeightPx,
     compact,
-    layoutWidthPx: blockLayoutPx?.width,
+    layoutWidthPx: blockLayoutPx?.width ?? layoutWidthPx,
     layoutHeightPx: blockLayoutPx?.height,
   };
   const teamContext = teamContextRaw
@@ -139,16 +158,43 @@ export default function PlanningHubActivityBlock({
     : null;
   const semantic = activityVisualStyle(item.type);
   const activitySceIcon = getWeekplannerActivitySceIconName(item.type);
-  const activityIconSize = compact ? 12 : 16;
   const plannerTypePresentation = resolvePlannerSportingActivityTypePresentation(item.type);
-
   const isGhost = visualVariant === "ghost";
   const isPreview = visualVariant === "preview" || visualVariant === "preview-warning";
+  const activityIconSize =
+    density === "MICRO" ? 10 : compact || density === "NARROW" ? 12 : 16;
+  const showActivityIcon = plannerActivityBlockShowsActivityIcon(density);
+  const showInlineTypeSuffix = plannerActivityBlockShowsInlineTypeSuffix(density);
+  const showTeamContextLine =
+    plannerActivityBlockShowsTeamContext(density) && teamContext != null && teamContext.length > 0;
+  const showTypePill = plannerTypePresentation && plannerActivityBlockShowsTypePill(density);
+  const showCompactTypeLabel =
+    plannerTypePresentation && plannerActivityBlockShowsCompactTypeLabel(density);
+  const showTimeWithTypePresentation =
+    plannerActivityBlockShowsTimeWithTypePresentation(density) && Boolean(plannerTypePresentation);
+  const showPrimaryIdentityLine = plannerActivityBlockShowsPrimaryIdentityLine(density);
+  const microShowsTypeOnly = plannerActivityBlockMicroShowsTypeOnly(
+    density,
+    Boolean(plannerTypePresentation),
+  );
+  const showOperationalIndicators = plannerActivityBlockShowsOperationalIndicators(density);
+  const showResourceLine = !compact && plannerActivityBlockShowsResourceLine(density) && resources;
+  const showStandaloneTimeLine = plannerActivityBlockShowsStandaloneTimeLine(
+    density,
+    Boolean(plannerTypePresentation),
+  );
+  const showEndTimeActionInline =
+    !compact && requiresEndTimeAction && plannerActivityBlockShowsEndTimeActionInline(density);
+  const showInlineManipulationEdit =
+    onOpenManipulationEdit &&
+    !isGhost &&
+    plannerActivityBlockShowsInlineManipulationEdit(density, layoutWidthPx);
 
   return (
     <div
       style={style}
       data-testid={`planning-hub-activity-block-${item.type.toLowerCase()}`}
+      data-planning-hub-density={density}
       className={cn(
         "absolute overflow-hidden rounded-md border text-left shadow-sm",
         "border-l-[3px]",
@@ -193,11 +239,11 @@ export default function PlanningHubActivityBlock({
           aria-hidden
         />
       )}
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale={locale}
         timezone={timezone}
-        geometry={clippedDetailGeometry}
+        geometry={detailGeometry}
       >
         {(detailReferenceProps) => (
       <button
@@ -257,38 +303,70 @@ export default function PlanningHubActivityBlock({
           releaseCapturedPointer(event.currentTarget, event.pointerId);
         }}
       >
-        <div className="flex items-start gap-1">
+        <div
+          className={cn(
+            "flex gap-1",
+            density === "MICRO" ? "h-full min-w-0 items-center" : "items-start",
+          )}
+        >
           <div className="min-w-0 flex-1" data-planning-hub-activity-content="true">
-            {plannerTypePresentation ? (
-              <div className="mb-0.5 flex items-center gap-1">
+            {showTypePill && plannerTypePresentation ? (
+              <div className="mb-0.5 flex min-w-0 items-center gap-1">
                 <ActivityTypePill
                   activityKind={plannerTypePresentation.kind}
                   label={plannerTypePresentation.label}
+                  className={density === "MEDIUM" ? "px-1 py-0 text-[8px] leading-tight" : undefined}
                 />
-                <span className="truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--text-2)]">
-                  {time}
-                </span>
+                {showTimeWithTypePresentation ? (
+                  <span className="min-w-0 truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--text-2)]">
+                    {time}
+                  </span>
+                ) : null}
               </div>
             ) : null}
-            <p className="flex min-w-0 items-center gap-1 font-semibold text-[var(--foreground)]">
-              {activitySceIcon ? (
-                <ActivitySceIcon
-                  activityKind={item.type}
-                  size={activityIconSize}
-                  className="shrink-0"
-                />
-              ) : null}
-                <span className="min-w-0 truncate" data-planning-hub-clipped-text="true">
-                {laneSegmentHint ? (
-                  <span className="font-normal text-[var(--muted)]">{laneSegmentHint} · </span>
+            {showCompactTypeLabel && plannerTypePresentation && density === "NARROW" ? (
+              <p className="mb-0.5 min-w-0 truncate text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
+                <span data-planning-hub-compact-type="true">{plannerTypePresentation.label}</span>
+              </p>
+            ) : null}
+            {microShowsTypeOnly && plannerTypePresentation ? (
+              <p className="flex min-w-0 items-center font-semibold leading-none text-[var(--foreground)]">
+                <span
+                  className="min-w-0 truncate text-[9px] font-bold uppercase tracking-[0.06em]"
+                  data-planning-hub-compact-type="true"
+                >
+                  {plannerTypePresentation.label}
+                </span>
+              </p>
+            ) : null}
+            {showPrimaryIdentityLine ? (
+              <p className="flex min-w-0 items-center gap-1 font-semibold text-[var(--foreground)]">
+                {activitySceIcon && showActivityIcon ? (
+                  <ActivitySceIcon
+                    activityKind={item.type}
+                    size={activityIconSize}
+                    className="shrink-0"
+                  />
                 ) : null}
-                {primary}
-                {!compact && typeLabel && (
-                  <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>
-                )}
-              </span>
-            </p>
-            {teamContext && (
+                <span className="min-w-0 truncate" data-planning-hub-clipped-text="true">
+                  {laneSegmentHint ? (
+                    <span className="font-normal text-[var(--muted)]">{laneSegmentHint} · </span>
+                  ) : null}
+                  {primary}
+                  {!compact && showInlineTypeSuffix && typeLabel && (
+                    <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>
+                  )}
+                </span>
+              </p>
+            ) : null}
+            {density === "MICRO" && !microShowsTypeOnly ? (
+              <p className="flex min-w-0 items-center gap-0.5 font-semibold leading-none text-[var(--foreground)]">
+                <span className="min-w-0 truncate text-[9px]" data-planning-hub-clipped-text="true">
+                  {primary}
+                </span>
+              </p>
+            ) : null}
+            {showTeamContextLine && teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">
                 <ProductDomainSceIcon name="people" size={20} className="h-2.5 w-2.5 shrink-0 opacity-70" />
                 <span className="truncate" data-planning-hub-clipped-text="true">
@@ -296,17 +374,17 @@ export default function PlanningHubActivityBlock({
                 </span>
               </p>
             )}
-            {!compact && !plannerTypePresentation ? (
+            {showStandaloneTimeLine ? (
               <p className="truncate text-[var(--text-2)]">{time}</p>
             ) : null}
-            {!compact && resources && (
+            {showResourceLine ? (
               <p className="truncate text-[var(--muted)]">{resources}</p>
-            )}
-            {!compact && requiresEndTimeAction && (
+            ) : null}
+            {showEndTimeActionInline ? (
               <p className="truncate font-medium text-amber-800/90">{MATCH_END_TIME_ACTION_LABEL}</p>
-            )}
+            ) : null}
           </div>
-          {onOpenManipulationEdit && !isGhost && (
+          {showInlineManipulationEdit ? (
             <button
               type="button"
               className="shrink-0 rounded border border-[var(--border)] px-1 py-0.5 text-[9px] font-semibold text-[var(--text-2)] opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
@@ -319,8 +397,8 @@ export default function PlanningHubActivityBlock({
             >
               {manipulationEditLabel}
             </button>
-          )}
-          {(hasConflict || requiresEndTimeAction) && !isGhost && (
+          ) : null}
+          {showOperationalIndicators && (hasConflict || requiresEndTimeAction) && !isGhost && (
             <span
               title={hasConflict ? "Planungskonflikt" : MATCH_END_TIME_ACTION_LABEL}
               className="shrink-0 opacity-70 group-hover:opacity-100"
@@ -331,7 +409,7 @@ export default function PlanningHubActivityBlock({
         </div>
       </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>
+      </PlanningHubActivityDetailSurface>
 
       {canResize && onPointerDownResize && !isGhost && resizeOrientation === "vertical" && (
         <>

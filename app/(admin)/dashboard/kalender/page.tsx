@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
@@ -7,6 +7,7 @@ import { loadPersonalCalendarMonthBundle } from "@/lib/personal-agenda/load-pers
 import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { parsePersonalKalenderUrlState } from "@/lib/personal-agenda/kalender-url";
 import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
+import { buildLegacyTermineKalenderRedirectTarget } from "@/lib/personal-agenda/mein-programm-url";
 import { PageHeader, PageShell } from "@/components/ui/page";
 import { buildCalendarTimeLabelById } from "@/lib/personal-agenda/build-calendar-time-labels";
 
@@ -27,6 +28,10 @@ export default async function PersonalKalenderPage({ searchParams }: PageProps) 
   const now = new Date();
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
   const urlState = parsePersonalKalenderUrlState(params, now, timeZone);
+
+  if (urlState.quelle === "termine") {
+    redirect(buildLegacyTermineKalenderRedirectTarget(urlState.month));
+  }
 
   const { platform, tenant } = await getRequestEffectivePermissions(
     session.user.id,

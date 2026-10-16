@@ -175,20 +175,22 @@ export function SceDomainNavigationPanel({
                       type="button"
                       className={cn(
                         "sce-domain-nav-panel-l2-control",
-                        (active || selected) && "sce-domain-nav-panel-l2-control--active",
+                        active && "sce-domain-nav-panel-l2-control--active",
                         selected && "sce-domain-nav-panel-l2-control--selected",
                       )}
-                      aria-current={active ? "true" : undefined}
                       data-nav-destination={item.key}
                       onClick={() => setSelectedL2Key(item.key)}
                     >
                       <span className="sce-domain-nav-panel-l2-label">
                         {sceIcon ? (
-                          <NavDestinationSceIcon navItemKey={item.key} size={16} active={active || selected} />
+                          <NavDestinationSceIcon navItemKey={item.key} size={16} active={active} />
                         ) : null}
                         {item.label}
                       </span>
-                      <ChevronRight className="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      <ChevronRight
+                        className="sce-domain-nav-panel-l2-chevron h-3.5 w-3.5"
+                        aria-hidden="true"
+                      />
                     </button>
                   </li>
                 );

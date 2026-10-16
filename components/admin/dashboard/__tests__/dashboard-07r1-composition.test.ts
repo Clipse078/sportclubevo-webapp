@@ -7,6 +7,11 @@ const clubDashboardSource = readFileSync(
   "utf8",
 );
 
+const commandCenterSource = readFileSync(
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  "utf8",
+);
+
 const quickAccessSource = readFileSync(
   join(process.cwd(), "components/ui/dashboard/PersonalQuickAccess.tsx"),
   "utf8",
@@ -27,18 +32,21 @@ describe("DASHBOARD-07R1 — visual remediation composition", () => {
   });
 
   it("keeps Schnellzugriff after cockpit without horizontal scroll strip", () => {
-    const greetingIndex = clubDashboardSource.indexOf("<PersonalDashboardCockpitGreeting");
-    const workspaceIndex = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
-    const quickAccessIndex = clubDashboardSource.indexOf("<PersonalQuickAccess");
-    expect(greetingIndex).toBeGreaterThan(-1);
-    expect(workspaceIndex).toBeGreaterThan(greetingIndex);
+    expect(clubDashboardSource).toContain("ClubDashboardCommandCenterAsync");
+    expect(commandCenterSource).toContain("<PersonalDashboardWorkspace");
+    expect(commandCenterSource).toContain("<PersonalQuickAccess");
+
+    const workspaceIndex = commandCenterSource.indexOf("<PersonalDashboardWorkspace");
+    const quickAccessIndex = commandCenterSource.indexOf("<PersonalQuickAccess");
+    expect(workspaceIndex).toBeGreaterThan(-1);
     expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
+
     expect(quickAccessSource).toContain("flex-wrap");
     expect(quickAccessSource).not.toContain("overflow-x-auto");
   });
 
   it("uses cockpit grid and preserves primary workspace surfaces", () => {
-    expect(clubDashboardSource).toContain("<PersonalDashboardWorkspace");
+    expect(commandCenterSource).toContain("<PersonalDashboardWorkspace");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");
     expect(clubDashboardSource).not.toContain("HeuteImVereinWidget");
     expect(clubDashboardSource).not.toContain("DashboardQuickActionStrip");

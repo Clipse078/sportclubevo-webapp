@@ -1,58 +1,16 @@
 "use client";
 
-import { Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
-import {
-  listOperationalRowStatus,
-  listOperationalStatusLabel,
-  type ListOperationalRowStatus,
-} from "@/lib/planning-hub/list-operational";
-import {
-  PLANNING_HUB_LISTE_LOCATION_CELL_CLASS,
-  PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS,
-  PLANNING_HUB_LISTE_ROW_COLUMN_CLASS,
-  PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS,
-  PLANNING_HUB_LISTE_ROW_GRID_CLASS,
-} from "@/lib/planning-hub/planning-hub-liste-grid";
-import {
-  planningHubListeLocationLine,
-  resolvePlanningHubListePresentationModel,
-} from "@/lib/planning-hub/planning-hub-liste-presentation";
-import { resolveSceTrainingPresentationFromWeekplannerTraining } from "@/lib/sporting-activity-presentation/canonical/adapters/weekplanner-training";
-import { resolveSceMatchPresentationFromWeekplannerMatch } from "@/lib/sporting-activity-presentation/canonical/adapters/weekplanner-match";
-import { resolveSceTournamentPresentationFromWeekplannerTournament } from "@/lib/sporting-activity-presentation/canonical/adapters/weekplanner-tournament";
-import { resolveSceClubEventPresentationFromWeekplannerVeranstaltung } from "@/lib/sporting-activity-presentation/canonical/adapters/weekplanner-veranstaltung";
-import { weekplannerAccessibleName, weekplannerTimeColumnLabel, weekplannerTimingDetail } from "@/lib/planning-hub/item-presenters";
 import { activityVisualStyle } from "@/lib/planning-hub/activity-visual-style";
-import type { WeekplannerItem } from "@/lib/weekplanner/types";
-import { SceTrainingCard } from "@/components/sporting-activity/SceTrainingCard";
-import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
-import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
-import { SceClubEventCard } from "@/components/sporting-activity/SceClubEventCard";
+import { weekplannerAccessibleName } from "@/lib/planning-hub/item-presenters";
 import type { ManipulationPermissionContext } from "@/lib/planning-hub/manipulation-capabilities";
+import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
+import PlanningHubActivityDetailSurface from "./PlanningHubActivityDetailSurface";
 import PlanningHubListeRowMenu from "./PlanningHubListeRowMenu";
+import PlanningHubListeSceActivityCard from "./PlanningHubListeSceActivityCard";
+import PlannerOperationalIssueSummary from "./PlannerOperationalIssueSummary";
 import WeekplannerListeOverrideIndicator from "./WeekplannerListeOverrideIndicator";
-
-const LISTE_ROW_GRID = cn(
-  "group relative rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] p-2 shadow-sm transition",
-  "hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]/40",
-  "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--sce-primary)] has-[:focus-visible]:ring-offset-0",
-  PLANNING_HUB_LISTE_ROW_GRID_CLASS,
-);
-
-function statusBadgeClass(status: ListOperationalRowStatus): string {
-  switch (status) {
-    case "conflict":
-      return "border-amber-300/80 bg-amber-500/12 text-amber-200";
-    case "incomplete":
-      return "border-sky-300/70 bg-sky-500/10 text-sky-200";
-    case "open":
-      return "border-violet-300/70 bg-violet-500/10 text-violet-200";
-    case "ready":
-    default:
-      return "border-emerald-300/70 bg-emerald-500/10 text-emerald-200";
-  }
-}
 
 type PlanningHubListeActivityRowProps = {
   item: WeekplannerItem;
@@ -79,99 +37,15 @@ type PlanningHubListeActivityRowProps = {
   };
 };
 
-function formatListeRowTime(
-  item: WeekplannerItem,
-  dayKey: string,
-  locale: string,
-  timezone: string,
-): string {
-  if (item.type === "VERANSTALTUNG" && item.allDay) {
-    return weekplannerTimeColumnLabel(item, locale, timezone, dayKey);
-  }
-  return weekplannerTimingDetail(item, locale, timezone);
-}
-
-function SceListeActivityCard({
-  item,
-  locale,
-  timezone,
-  tenantClubName,
-  tenantLogoUrl,
-}: {
-  item: WeekplannerItem;
-  locale: string;
-  timezone: string;
-  tenantClubName?: string | null;
-  tenantLogoUrl?: string | null;
-}) {
-  const fmtCfg = { locale, timezone };
-  const cardClass = "border-0 bg-transparent p-0 shadow-none";
-
-  switch (item.type) {
-    case "TRAINING":
-      return (
-        <SceTrainingCard
-          model={resolveSceTrainingPresentationFromWeekplannerTraining(item, { tenantClubName })}
-          density="COMPACT"
-          fmtCfg={fmtCfg}
-          linkToDetail={false}
-          showStatus={false}
-          surface="list-row"
-          className={cardClass}
-          testId={`planning-hub-liste-sce-training-${item.id}`}
-        />
-      );
-    case "MATCH":
-      return (
-        <SceMatchCard
-          model={resolveSceMatchPresentationFromWeekplannerMatch(item, { timezone })}
-          density="COMPACT"
-          fmtCfg={fmtCfg}
-          linkToDetail={false}
-          surface="list-row"
-          className={cardClass}
-          testId={`planning-hub-liste-sce-match-${item.id}`}
-        />
-      );
-    case "TOURNAMENT":
-      return (
-        <SceTournamentCard
-          model={resolveSceTournamentPresentationFromWeekplannerTournament(item, { tenantClubName })}
-          density="COMPACT"
-          fmtCfg={fmtCfg}
-          linkToDetail={false}
-          showStatus={false}
-          surface="list-row"
-          className={cardClass}
-          testId={`planning-hub-liste-sce-tournament-${item.id}`}
-        />
-      );
-    case "VERANSTALTUNG":
-      return (
-        <SceClubEventCard
-          model={resolveSceClubEventPresentationFromWeekplannerVeranstaltung(item, {
-            tenantClubName,
-            tenantLogoUrl,
-          })}
-          density="COMPACT"
-          fmtCfg={fmtCfg}
-          linkToDetail={false}
-          showStatus={false}
-          surface="list-row"
-          className={cardClass}
-          testId={`planning-hub-liste-sce-club-event-${item.id}`}
-        />
-      );
-    default: {
-      const exhaustive: never = item;
-      return exhaustive;
-    }
-  }
-}
+const LISTE_CARD_DETAIL_GEOMETRY = {
+  blockWidthPx: 480,
+  blockHeightPx: 96,
+  compact: false,
+} as const;
 
 export default function PlanningHubListeActivityRow({
   item,
-  dayKey,
+  dayKey: _dayKey,
   locale,
   timezone,
   tenantClubName,
@@ -183,118 +57,79 @@ export default function PlanningHubListeActivityRow({
   canEditItem,
   permissionContext,
 }: PlanningHubListeActivityRowProps) {
-  const status = listOperationalRowStatus(item);
   const semantic = activityVisualStyle(item.type);
-  const presentationModel = resolvePlanningHubListePresentationModel(item, {
-    tenantClubName,
-    tenantLogoUrl,
-    timezone,
-  });
-  const locationLine = planningHubListeLocationLine(item, presentationModel);
-  const locationTitle = locationLine.length > 48 ? locationLine : undefined;
+  const fmtCfg = { locale, timezone };
 
   return (
-    <li>
-      <div
+    <li className="min-w-0 list-none">
+      <SceProgrammeActivityCardShell
+        density="STANDARD"
+        testId={`planning-hub-liste-row-${item.id}`}
         className={cn(
-          LISTE_ROW_GRID,
+          "group w-full min-w-0",
           semantic.listLeftEdgeClass,
           "border-l-[3px]",
-          status === "conflict" && "ring-1 ring-inset ring-amber-500/20",
+          item.conflicts.length > 0 && "ring-1 ring-inset ring-amber-500/15",
         )}
-        data-testid={`planning-hub-liste-row-${item.id}`}
         data-sce-planning-hub-liste-row
         data-sce-planning-hub-liste-activity-kind={item.type}
-        data-sce-planning-hub-liste-grid={PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS}
+        data-sce-planning-hub-liste-full-width-contract="canonical-shell"
       >
-        <button
-          type="button"
-          onClick={() => onItemOpen(item)}
-          data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
-          aria-label={weekplannerAccessibleName(item, locale, timezone)}
-          className={cn(
-            "contents",
-            "focus-visible:outline-none [&_*:focus-visible]:ring-2 [&_*:focus-visible]:ring-[var(--sce-primary)]",
-          )}
-        >
-          <p
-            className={cn(
-              "inline-flex min-w-0 items-center gap-1.5 text-[0.9375rem] font-semibold tabular-nums leading-snug text-[var(--foreground)] md:flex-col md:items-start md:gap-0",
-              PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.time,
-            )}
-            data-testid="planning-hub-liste-row-time"
-            data-sce-planning-hub-liste-column="TIME"
+        <div className="flex min-w-0 items-stretch gap-1">
+          <PlanningHubActivityDetailSurface
+            item={item}
+            locale={locale}
+            timezone={timezone}
+            geometry={LISTE_CARD_DETAIL_GEOMETRY}
           >
-            <Clock className="hidden h-3.5 w-3.5 shrink-0 opacity-70 md:inline" aria-hidden />
-            <span>{formatListeRowTime(item, dayKey, locale, timezone)}</span>
-          </p>
+            {(referenceProps) => (
+              <button
+                type="button"
+                onClick={() => onItemOpen(item)}
+                data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
+                aria-label={weekplannerAccessibleName(item, locale, timezone)}
+                className={cn(
+                  "min-w-0 flex-1 self-stretch rounded-[inherit] text-left",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-inset",
+                )}
+                {...referenceProps}
+              >
+                <PlanningHubListeSceActivityCard
+                  item={item}
+                  fmtCfg={fmtCfg}
+                  density="STANDARD"
+                  tenantClubName={tenantClubName}
+                  tenantLogoUrl={tenantLogoUrl}
+                  issueSummary={<PlannerOperationalIssueSummary item={item} />}
+                />
+                {activeAlternativePlanName ? (
+                  <WeekplannerListeOverrideIndicator
+                    item={item}
+                    planName={activeAlternativePlanName}
+                    locale={locale}
+                    timezone={timezone}
+                  />
+                ) : null}
+              </button>
+            )}
+          </PlanningHubActivityDetailSurface>
 
           <div
-            className={PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.identity}
-            data-testid="planning-hub-liste-row-identity"
-            data-sce-planning-hub-liste-column="IDENTITY"
+            className="flex shrink-0 items-start justify-end self-stretch pt-2 pr-0.5 sm:pt-2.5 sm:pr-1"
+            data-sce-planning-hub-liste-column="ACTIONS"
+            data-sce-planning-hub-liste-menu-anchor
           >
-            <SceListeActivityCard
+            <PlanningHubListeRowMenu
               item={item}
-              locale={locale}
-              timezone={timezone}
-              tenantClubName={tenantClubName}
-              tenantLogoUrl={tenantLogoUrl}
+              permissionContext={permissionContext}
+              canEditItem={canEditItem}
+              onOpenItem={() => onItemOpen(item)}
+              onEditPlanning={() => onItemEditPlanning(item)}
+              onReviewConflict={() => onReviewConflictForItem(item)}
             />
-            {activeAlternativePlanName ? (
-              <WeekplannerListeOverrideIndicator
-                item={item}
-                planName={activeAlternativePlanName}
-                locale={locale}
-                timezone={timezone}
-              />
-            ) : null}
           </div>
-
-          <p
-            className={PLANNING_HUB_LISTE_LOCATION_CELL_CLASS}
-            title={locationTitle}
-            data-testid="planning-hub-liste-row-resources"
-            data-sce-planning-hub-liste-location-owner
-            data-sce-planning-hub-liste-column="LOCATION"
-          >
-            <span
-              className={PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS}
-              data-sce-planning-hub-liste-location-icon-slot
-              aria-hidden
-            >
-              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1 line-clamp-2">{locationLine}</span>
-          </p>
-
-          <span
-            className={cn(
-              "inline-flex w-full max-w-full items-center justify-center truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
-              PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.status,
-              statusBadgeClass(status),
-            )}
-            data-testid="planning-hub-liste-row-status"
-            data-sce-planning-hub-liste-column="STATUS"
-          >
-            {listOperationalStatusLabel(status)}
-          </span>
-        </button>
-
-        <div
-          className={cn("flex min-w-0 items-center justify-end", PLANNING_HUB_LISTE_ROW_COLUMN_CLASS.actions)}
-          data-sce-planning-hub-liste-column="ACTIONS"
-        >
-          <PlanningHubListeRowMenu
-            item={item}
-            permissionContext={permissionContext}
-            canEditItem={canEditItem}
-            onOpenItem={() => onItemOpen(item)}
-            onEditPlanning={() => onItemEditPlanning(item)}
-            onReviewConflict={() => onReviewConflictForItem(item)}
-          />
         </div>
-      </div>
+      </SceProgrammeActivityCardShell>
     </li>
   );
 }

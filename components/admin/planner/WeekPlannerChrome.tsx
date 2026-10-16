@@ -185,10 +185,10 @@ export default function WeekPlannerChrome({
           >
             {(
               [
-                ["kalender", "Kalender"],
+                ["liste", "Liste"],
                 ["spielfeld", "Spielfeld"],
                 ["garderobe", "Garderobe"],
-                ["liste", "Liste"],
+                ["kalender", "Kalender"],
               ] as const
             ).map(([perspective, label]) => {
               const active = urlState.perspective === perspective;

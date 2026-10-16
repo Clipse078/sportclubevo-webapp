@@ -15,18 +15,26 @@ describe("DASHBOARD-04 — quick access catalog", () => {
     expect(navKeys).not.toContain(navigationStableKey("dashboard"));
   });
 
-  it("includes create actions only when manage permissions allow creation", () => {
-    const viewOnly = buildQuickAccessCatalog({
-      permissionKeys: [PERMISSIONS.EVENTS_VIEW],
-      navCapabilities: { personalActionsModule: false },
-    });
-    expect(viewOnly.some((e) => e.key === "action.create-match")).toBe(false);
-
+  it("does not expose legacy create-action shortcuts (canonical + Erstellen on dashboard)", () => {
     const manage = buildQuickAccessCatalog({
-      permissionKeys: [PERMISSIONS.EVENTS_MANAGE],
+      permissionKeys: [PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.TRAININGS_MANAGE],
       navCapabilities: { personalActionsModule: false },
     });
-    expect(manage.some((e) => e.key === "action.create-match")).toBe(true);
+    expect(manage.every((e) => e.kind === "NAVIGATION")).toBe(true);
+    expect(manage.some((e) => e.key.startsWith("action.create-"))).toBe(false);
+  });
+
+  it("omits Planung parent when children exist (Wochenplaner is the concrete destination)", () => {
+    const catalog = buildQuickAccessCatalog({
+      permissionKeys: [
+        PERMISSIONS.EVENTS_VIEW,
+        PERMISSIONS.EVENTS_MANAGE,
+        PERMISSIONS.WOCHENPLAN_MANAGE,
+      ],
+      navCapabilities: { personalActionsModule: false },
+    });
+    expect(catalog.some((e) => e.navItemKey === "planung")).toBe(false);
+    expect(catalog.some((e) => e.navItemKey === "wochenplanner")).toBe(true);
   });
 
   it("exposes aufgaben via personal actions nav fallback capability", () => {

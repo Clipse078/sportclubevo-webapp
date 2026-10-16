@@ -103,17 +103,18 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
       />,
     );
 
-    expect(screen.getByTestId("planning-hub-activity-detail-touch-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     const cardButton = screen.getByRole("button", { name: /FCA Senioren Mannschaftslang/i });
     await user.hover(cardButton);
 
-    const detail = await screen.findByTestId("planning-hub-activity-clipped-detail");
+    const detail = await screen.findByTestId("planning-hub-activity-detail");
     expect(detail.textContent).toContain("FCA Senioren Mannschaftslang");
   });
 
-  it("spacious activity does not offer clipped-detail controls", () => {
+  it("spacious individual activity still opens universal detail on hover", async () => {
+    vi.useRealTimers();
     const item = training("t-wide", "Team A", 10);
     render(
       <PlanningHubActivityBlock
@@ -128,6 +129,9 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
     );
 
     expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.hover(screen.getByRole("button", { name: /Team A/i }));
+    expect(await screen.findByTestId("planning-hub-activity-detail")).toBeInTheDocument();
   });
 
   function match(id: string, team: string, hour: number): WeekplannerItem {
@@ -155,12 +159,12 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
     );
 
     expect(screen.getByText("7 Trainings")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-activity-detail-touch-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.hover(screen.getByTestId("planning-hub-calendar-cluster"));
 
-    const detail = await screen.findByTestId("planning-hub-activity-clipped-detail");
+    const detail = await screen.findByTestId("planning-hub-activity-detail");
     expect(detail).toBeInTheDocument();
     expect(detail.textContent).toContain("Team 1");
     expect(detail.textContent).toContain("Team 7");
@@ -189,7 +193,7 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
     const user = userEvent.setup();
     await user.hover(screen.getByTestId("planning-hub-calendar-cluster"));
 
-    const detail = await screen.findByTestId("planning-hub-activity-clipped-detail");
+    const detail = await screen.findByTestId("planning-hub-activity-detail");
     expect(detail.textContent).toContain("10 Aktivitäten");
     expect(detail.textContent).not.toContain("10 Trainings");
     expect(detail.textContent).not.toMatch(/\bSPIEL\b/);
@@ -232,11 +236,12 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
 
     await user.tab();
     await waitFor(() => {
-      expect(screen.getByTestId("planning-hub-activity-clipped-detail")).toBeInTheDocument();
+      expect(screen.getByTestId("planning-hub-activity-detail")).toBeInTheDocument();
     });
   });
 
-  it("touch info affordance remains on constrained cards", () => {
+  it("constrained cards expose detail through card focus without a separate info control", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
     const item = training("t-touch", "FCA Senioren", 13);
     render(
       <PlanningHubActivityBlock
@@ -250,7 +255,11 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
       />,
     );
 
-    expect(screen.getByTestId("planning-hub-activity-detail-touch-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
+    await user.tab();
+    await waitFor(() => {
+      expect(screen.getByTestId("planning-hub-activity-detail")).toBeInTheDocument();
+    });
   });
 
   it("activity click still fires when detail is not pinned", async () => {
@@ -289,8 +298,8 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
       </WeekplannerVisibleTimeRangeProvider>,
     );
 
-    const triggers = screen.getAllByTestId("planning-hub-activity-detail-touch-trigger");
-    expect(triggers.length).toBeGreaterThan(0);
+    expect(screen.queryAllByTestId("planning-hub-activity-detail-touch-trigger")).toHaveLength(0);
+    expect(screen.getAllByTestId("planning-hub-calendar-day-column").length).toBeGreaterThan(0);
   });
 
   it("re-measure after resize can enable disclosure", async () => {
@@ -321,8 +330,10 @@ describe("PlanningHubCalendarClippedDetail SCE-PLANNER-UX-08-07R1", () => {
       />,
     );
 
+    const user = userEvent.setup();
+    await user.hover(screen.getByRole("button", { name: /Training/i }));
     await waitFor(() => {
-      expect(screen.getByTestId("planning-hub-activity-detail-touch-trigger")).toBeInTheDocument();
+      expect(screen.getByTestId("planning-hub-activity-detail")).toBeInTheDocument();
     });
   });
 });

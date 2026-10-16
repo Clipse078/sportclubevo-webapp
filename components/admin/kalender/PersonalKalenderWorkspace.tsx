@@ -14,7 +14,15 @@ type Props = {
   tenantDisplayNames?: string[];
 };
 
-const BASE = "/dashboard/kalender";
+type PersonalKalenderWorkspaceProps = Props & {
+  /** Base route for month/source navigation (default Mein Kalender). */
+  basePath?: string;
+  /** Override link builder (e.g. Mein Programm canonical route with view state). */
+  buildNavigationHref?: (
+    patch: Partial<PersonalKalenderUrlState>,
+    current: PersonalKalenderUrlState,
+  ) => string;
+};
 
 export default function PersonalKalenderWorkspace({
   itemsByDayKey,
@@ -24,7 +32,14 @@ export default function PersonalKalenderWorkspace({
   supported,
   todayHref,
   tenantDisplayNames,
-}: Props) {
+  basePath = "/dashboard/kalender",
+  buildNavigationHref,
+}: PersonalKalenderWorkspaceProps) {
+  const hrefFor = (patch: Partial<PersonalKalenderUrlState>) =>
+    buildNavigationHref
+      ? buildNavigationHref(patch, urlState)
+      : buildPersonalKalenderHref(basePath, patch, urlState);
+
   const monthStart = parseMonthParam(urlState.month, new Date());
   const prevMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
   const nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
@@ -51,22 +66,14 @@ export default function PersonalKalenderWorkspace({
       itemsByDayKey={itemsByDayKey}
       timeLabelById={timeLabelById}
       navigation={{
-        previousMonthHref: buildPersonalKalenderHref(
-          BASE,
-          { month: formatMonthParam(prevMonth) },
-          urlState,
-        ),
-        nextMonthHref: buildPersonalKalenderHref(
-          BASE,
-          { month: formatMonthParam(nextMonth) },
-          urlState,
-        ),
+        previousMonthHref: hrefFor({ month: formatMonthParam(prevMonth) }),
+        nextMonthHref: hrefFor({ month: formatMonthParam(nextMonth) }),
         todayHref,
       }}
       filterLinks={filterLinks.map((filter) => ({
         key: filter.key,
         label: filter.label,
-        href: buildPersonalKalenderHref(BASE, { quelle: filter.key }, urlState),
+        href: hrefFor({ quelle: filter.key }),
         active: urlState.quelle === filter.key,
       }))}
       tenantDisplayNames={tenantDisplayNames}

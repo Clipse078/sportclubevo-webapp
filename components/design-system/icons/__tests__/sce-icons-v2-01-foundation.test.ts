@@ -25,13 +25,13 @@ import { runIconContainerAudit } from "@/lib/icons/icon-container-audit";
 import { runLegacyProvisionalVisualAudit } from "@/lib/icons/legacy-provisional-visual-audit";
 
 describe("SCE-ICONS-V2-01 V1 baseline freeze", () => {
-  it("captures 90 approved masters and registry identities without mutating fingerprints", () => {
+  it("captures approved masters and registry identities without mutating fingerprints", () => {
     const baseline = buildSceV1SystemBaseline();
     expect(baseline.system).toBe("SCE Icon System V1");
-    expect(baseline.approvedMasters).toBe(90);
+    expect(baseline.approvedMasters).toBe(91);
     expect(baseline.registryNames).toBe(SCE_ICON_REGISTRY_NAMES.length);
     expect(baseline.registryNames).toBeGreaterThanOrEqual(104);
-    expect(baseline.masters).toHaveLength(90);
+    expect(baseline.masters).toHaveLength(91);
     for (const row of baseline.masters) {
       expect(row.baselineFingerprint).toMatch(/^[a-f0-9]{64}$/);
       expect(row.currentFingerprint).toMatch(/^[a-f0-9]{64}$/);
@@ -43,20 +43,20 @@ describe("SCE-ICONS-V2-01 V1 baseline freeze", () => {
   });
 });
 
-describe("SCE-ICONS-V2-01 90-master optical audit", () => {
+describe("SCE-ICONS-V2-01 approved-master optical audit", () => {
   it("audits every approved master with structured recommendations", () => {
     const records = buildV1MasterOpticalAudit();
-    expect(records).toHaveLength(90);
+    expect(records).toHaveLength(91);
     const names = new Set(records.map((r) => r.name));
-    expect(names.size).toBe(90);
+    expect(names.size).toBe(91);
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       expect(names.has(name)).toBe(true);
     }
     const summary = summarizeV1MasterOpticalAudit(records);
-    expect(summary.total).toBe(90);
-    expect(summary.keepGeometryMonochrome + summary.simplify + summary.redraw).toBe(90);
+    expect(summary.total).toBe(91);
+    expect(summary.keepGeometryMonochrome + summary.simplify + summary.redraw).toBe(91);
     expect(summary.legibility20PxPass + summary.legibility20PxReview + summary.legibility20PxFail).toBe(
-      90,
+      91,
     );
   });
 
@@ -72,9 +72,9 @@ describe("SCE-ICONS-V2-01 90-master optical audit", () => {
 describe("SCE-ICONS-V2-01 manifest & handoff", () => {
   it("builds V2 manifest rows for every approved master concept", () => {
     const manifest = buildSceV2MasterManifest();
-    expect(manifest).toHaveLength(90);
+    expect(manifest).toHaveLength(91);
     const summary = summarizeSceV2MasterManifest(manifest);
-    expect(summary.concepts).toBe(90);
+    expect(summary.concepts).toBe(91);
     expect(summary.replacementRequired).toBe(0);
     for (const row of manifest) {
       expect(row.replacementFingerprint).toMatch(/^[a-f0-9]{64}$/);
@@ -86,7 +86,7 @@ describe("SCE-ICONS-V2-01 manifest & handoff", () => {
     const batched = new Set(
       SCE_V2_ARTWORK_HANDOFF_BATCHES.flatMap((b) => b.iconNames),
     );
-    expect(batched.size).toBe(90);
+    expect(batched.size).toBe(91);
     expect(SCE_V2_ARTWORK_HANDOFF_BATCHES.length).toBe(5);
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       expect(batched.has(name)).toBe(true);

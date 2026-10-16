@@ -44,7 +44,7 @@ const WORLD_ACTIVITY_CARD_CONSUMERS = [
   "components/admin/planner/WeekplannerTrainingIdentityCard.tsx",
   "components/admin/planner/WeekplannerTournamentIdentityCard.tsx",
   "components/admin/planning-hub/PlanningHubActivityBlock.tsx",
-  "components/admin/planning-hub/PlanningHubListeActivityRow.tsx",
+  "components/admin/planning-hub/PlanningHubListeSceActivityCard.tsx",
 ] as const;
 
 function side(partial: Partial<MatchcenterSide> & Pick<MatchcenterSide, "displayName">): MatchcenterSide {
@@ -383,38 +383,42 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
     });
   });
 
-  describe("Wochenplaner Liste — 01H-R4 canonical cards", () => {
-    it("routes week items through presentation adapters and World Activity Cards", () => {
+  describe("Wochenplaner Liste — 01H-R4 / R5.5 canonical cards", () => {
+    it("routes week items through PlanningHubListeSceActivityCard and World Activity Cards", () => {
       const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
-      expect(row).toContain("resolvePlanningHubListePresentationModel");
-      expect(row).toContain("SceTrainingCard");
-      expect(row).toContain("SceMatchCard");
-      expect(row).toContain("SceTournamentCard");
-      expect(row).toContain("SceClubEventCard");
-      expect(row).toContain('surface="list-row"');
-      expect(row).toContain("planning-hub-liste-row-status");
+      const card = read("components/admin/planning-hub/PlanningHubListeSceActivityCard.tsx");
+      expect(row).toContain("PlanningHubListeSceActivityCard");
+      expect(row).toContain("SceProgrammeActivityCardShell");
+      expect(card).toContain("SceTrainingCard");
+      expect(card).toContain("SceMatchCard");
+      expect(card).toContain("SceTournamentCard");
+      expect(card).toContain("SceClubEventCard");
+      expect(card).toContain('surface="list-row"');
+      expect(row).toContain("PlannerOperationalIssueSummary");
     });
 
-    it("R4.3 — pins operational columns on the shared liste row grid", () => {
+    it("R5.5 / R5.5.1 — no parallel planner card family, table grid, or nested visual row shell", () => {
       const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
-      const grid = read("lib/planning-hub/planning-hub-liste-grid.ts");
-      expect(row).toContain("PLANNING_HUB_LISTE_ROW_COLUMN_CLASS");
-      expect(row).toContain('data-sce-planning-hub-liste-column="LOCATION"');
-      expect(grid).toContain("md:col-start-3");
+      expect(row).not.toContain("PLANNING_HUB_LISTE_ROW_GRID_CLASS");
+      expect(row).not.toContain("planning-hub-liste-row-status");
+      expect(row).toContain("data-sce-planning-hub-liste-full-width-contract");
+      expect(row).not.toMatch(
+        /rounded-lg border border-\[var\(--border\)\]\/80 bg-\[var\(--surface\)\] shadow-sm/,
+      );
+      const forbidden = [
+        "PlanningTrainingCard",
+        "PlanningMatchCard",
+        "WochenplanActivityCard",
+      ];
+      for (const name of forbidden) {
+        expect(row).not.toContain(name);
+      }
+    });
+
+    it("R4.3 — match list-row fixture semantics preserved", () => {
       const matchCard = read("components/sporting-activity/SceMatchCard.tsx");
       expect(matchCard).not.toContain('data-sce-match-region="tenant-side-marker"');
       expect(matchCard).toContain("Heimspiel");
-    });
-
-    it("R4.4 — immutable LOCATION geometry via fixed operational tracks + canonical location cell", () => {
-      const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
-      const grid = read("lib/planning-hub/planning-hub-liste-grid.ts");
-      expect(row).toContain("PLANNING_HUB_LISTE_LOCATION_CELL_CLASS");
-      expect(row).toContain("PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS");
-      expect(grid).toContain("PLANNING_HUB_LISTE_LOCATION_CELL_CLASS");
-      expect(grid).toContain("PLANNING_HUB_LISTE_LOCATION_ICON_SLOT_CLASS");
-      expect(grid).toContain("md:grid-cols-[5rem_minmax(0,1fr)_10rem_6.5rem_2.5rem]");
-      expect(grid).not.toMatch(/grid-cols-\[[^\]]*auto/);
     });
 
     it("R4.2 — shares list-row typography scale across canonical cards", () => {

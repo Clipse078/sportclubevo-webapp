@@ -62,6 +62,7 @@ import {
 } from "@/lib/weekplanner/weekplanner-match-schedule";
 import { parseClubEventScheduleFromApiBody } from "@/lib/events/club-event-api-scheduling";
 import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-allocation-types";
+import PlannerOperationalStatusSection from "@/components/admin/planning-hub/PlannerOperationalStatusSection";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -241,6 +242,13 @@ function TrainingEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        <PlannerOperationalStatusSection
+          item={item}
+          locale="de-CH"
+          timezone={timezone}
+          variant="editor-sheet"
+          testId="weekplanner-editor-planungsstatus"
+        />
         {error ? <WeekplannerEditorError message={error} /> : null}
 
         {canEditSchedule ? (
@@ -464,6 +472,13 @@ function MatchEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        <PlannerOperationalStatusSection
+          item={item}
+          locale="de-CH"
+          timezone={timezone}
+          variant="editor-sheet"
+          testId="weekplanner-editor-planungsstatus"
+        />
 
         {matchRequiresEndTimeAction({
           startAt: item.canonicalStartAt,
@@ -687,6 +702,13 @@ function TournamentEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        <PlannerOperationalStatusSection
+          item={item}
+          locale="de-CH"
+          timezone={timezone}
+          variant="editor-sheet"
+          testId="weekplanner-editor-planungsstatus"
+        />
         {error ? <WeekplannerEditorError message={error} /> : null}
 
         {canEditSchedule ? (
@@ -862,6 +884,13 @@ function VeranstaltungEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        <PlannerOperationalStatusSection
+          item={item}
+          locale="de-CH"
+          timezone={timezone}
+          variant="editor-sheet"
+          testId="weekplanner-editor-planungsstatus"
+        />
         {error ? <WeekplannerEditorError message={error} /> : null}
 
         <WeekplannerDateTimeFields

@@ -13,7 +13,7 @@
 
 ## Accepted architecture (frozen)
 
-**Row 1:** FC Allschwil crest + name · Planung · Kommunikation · Club · Publizieren · Admin · notifications · avatar  
+**Row 1:** FC Allschwil crest + name · Club · Planung · Publizieren · Kommunikation · Admin · notifications · avatar  
 
 **Row 2:** SportClubEvo (platform) · intentional workspace whitespace · localized season (full label on desktop `lg+`)
 

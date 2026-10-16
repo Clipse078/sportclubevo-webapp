@@ -71,9 +71,9 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
   });
 
   it("renders four canonical cockpit modules via workspace slots", () => {
-    expect(clubDashboardSource).toContain("<PersonalDashboardWorkspace");
-    expect(clubDashboardSource).toContain("attentionSlot=");
-    expect(clubDashboardSource).toContain("tasksSlot=");
+    expect(clubDashboardDeferredSource).toContain("<PersonalDashboardWorkspace");
+    expect(clubDashboardDeferredSource).toContain("attentionSlot=");
+    expect(clubDashboardDeferredSource).toContain("tasksSlot=");
     expect(workspaceSource).toContain("PersonalProgrammeFeed");
     expect(workspaceSource).toContain("PersonalProgrammeMonthCalendar");
     expect(workspaceSource).toContain("attentionSlot");
@@ -98,20 +98,21 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(clubDashboardDeferredSource).toContain("programmeItems");
     expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
     expect(workspaceSource).toContain("onSelectedDayChange");
+    expect(workspaceSource).toContain("showSelectedDayPanel={false}");
   });
 
   it("preserves attention and tasks data sources", () => {
     expect(clubDashboardDeferredSource).toContain("<PersonalAttention");
-    expect(clubDashboardSource).toContain("personal.personalAttention.items");
-    expect(clubDashboardSource).toContain("personalTaskPreview");
+    expect(clubDashboardDeferredSource).toContain("personal.personalAttention.items");
+    expect(clubDashboardDeferredSource).toContain("personalTaskPreview");
   });
 
   it("keeps permission-aware quick access below cockpit", () => {
-    const workspaceIndex = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
-    const quickAccessIndex = clubDashboardSource.indexOf("<PersonalQuickAccess");
+    const workspaceIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardWorkspace");
+    const quickAccessIndex = clubDashboardDeferredSource.indexOf("<PersonalQuickAccess");
     expect(workspaceIndex).toBeGreaterThan(-1);
     expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
-    expect(clubDashboardSource).toContain("resolvePersonalQuickAccess");
+    expect(clubDashboardDeferredSource).toContain("resolvePersonalQuickAccess");
   });
 
   it("keeps dashboard customization entry as compact action", () => {

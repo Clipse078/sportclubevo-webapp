@@ -65,6 +65,7 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
     "1dda10e7e9569551953e36ee8062b2e1e26c1d0892028d59946d6781cfb3eb53" as const,
   conflict: "00a74ef6df00b29f71e487d10d3416a115170d09fcddfdf4a414cd0699423493" as const,
   infoboard: "7a5ee66eb81012ea34142ad9a5d16f535f4cd2c361d0b1226b78b21bb9d69a43" as const,
+  "mobile-app": "1225fa2c33e199799f807d554b794dae43785df608f0a9e848e1d08efff3b2fb" as const,
   news: "091c0ed2a7262a1a3a82b88e0eedffb4e0fc85b595efd9480516d20dce6e349c" as const,
   notifications:
     "e9dc7266848f0d13645c89581ad5ebda7476f4f4a4b47953193f1a6aa52f0753" as const,

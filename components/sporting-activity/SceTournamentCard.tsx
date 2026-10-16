@@ -40,6 +40,8 @@ import { SceTournamentCardStatus } from "./SceTournamentCardStatus";
 import {
   SceActivityListRowLocationMeta,
   SceActivityListRowOperationalMetaRow,
+  SceActivityListRowOrganizationalContext,
+  SceActivityListRowPrimaryIdentityRow,
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
 
@@ -448,67 +450,116 @@ function SceTournamentListRowIdentityContent({
     Boolean(organiser) &&
     organiser.localeCompare(model.tournamentTitle.trim(), "de-CH", { sensitivity: "accent" }) === 0;
 
+  const operational = listRowPresentation === "operational";
+
   return (
     <div
-      className={cn("min-w-0 w-full max-w-full", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
+      className={cn(
+        "min-w-0 w-full max-w-full",
+        operational ? "space-y-1" : SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass,
+      )}
       data-sce-tournament-density={density}
       data-sce-tournament-list-row-identity
+      data-sce-programme-card-contract={operational ? "three-row" : undefined}
     >
       <SceTournamentTypeHeader model={model} showStatus={false} listRow />
-      <div className="min-w-0 space-y-0.5" data-sce-tournament-region="identity">
-        <p
-          className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
-          data-testid="sce-tournament-title"
-          title={model.tournamentTitle}
-        >
-          {model.tournamentTitle}
-        </p>
-        {organiser ? (
-          <div
-            className="flex min-w-0 items-center gap-1.5"
-            data-sce-tournament-region="organiser-row"
-            data-sce-tournament-organiser-composition
-          >
-            {showOrganiserCrest ? (
-              <span data-testid="sce-tournament-organiser-crest" className="shrink-0 self-center">
-                <ClubCrest
-                  identity={model.organiser}
-                  density="compact"
-                  decorative
-                  emphasized
-                  className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
-                />
-              </span>
-            ) : null}
-            {!hideOrganiserText ? (
+      {operational ? (
+        <>
+          <SceActivityListRowPrimaryIdentityRow
+            title={model.tournamentTitle}
+            titleTestId="sce-tournament-title"
+            testId="sce-tournament-list-row-primary-identity"
+            crest={
+              showOrganiserCrest ? (
+                <span data-testid="sce-tournament-organiser-crest" className="shrink-0 self-center">
+                  <ClubCrest
+                    identity={model.organiser}
+                    density="compact"
+                    decorative
+                    emphasized
+                    className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
+                  />
+                </span>
+              ) : null
+            }
+          />
+          {organiser ? (
+            hideOrganiserText || showOrganiserCrest ? (
+              <span className="sr-only">{organiser}</span>
+            ) : (
               <p
-                className={cn(
-                  SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass,
-                  showOrganiserCrest && "min-w-0 flex-1",
-                )}
+                className={SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass}
                 data-testid="sce-tournament-organiser"
                 data-sce-tournament-region="organiser"
                 title={organiser}
               >
                 {organiser}
               </p>
-            ) : (
-              <span className="sr-only">{organiser}</span>
-            )}
-          </div>
-        ) : null}
-        {ownTeamsLabel ? (
+            )
+          ) : null}
+          {ownTeamsLabel ? (
+            <SceActivityListRowOrganizationalContext
+              label={ownTeamsLabel}
+              testId="sce-tournament-hauptteam"
+            />
+          ) : null}
+        </>
+      ) : (
+        <div className="min-w-0 space-y-0.5" data-sce-tournament-region="identity">
           <p
-            className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
-            data-testid="sce-tournament-hauptteam"
-            data-sce-tournament-region="hauptteam"
-            title={ownTeamsLabel}
+            className={SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass}
+            data-testid="sce-tournament-title"
+            title={model.tournamentTitle}
           >
-            {ownTeamsLabel}
+            {model.tournamentTitle}
           </p>
-        ) : null}
-      </div>
-      {listRowPresentation === "operational" && fmtCfg ? (
+          {organiser ? (
+            <div
+              className="flex min-w-0 items-center gap-1.5"
+              data-sce-tournament-region="organiser-row"
+              data-sce-tournament-organiser-composition
+            >
+              {showOrganiserCrest ? (
+                <span data-testid="sce-tournament-organiser-crest" className="shrink-0 self-center">
+                  <ClubCrest
+                    identity={model.organiser}
+                    density="compact"
+                    decorative
+                    emphasized
+                    className={SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass}
+                  />
+                </span>
+              ) : null}
+              {!hideOrganiserText ? (
+                <p
+                  className={cn(
+                    SCE_ACTIVITY_LIST_ROW_SCALE.secondaryContextClass,
+                    showOrganiserCrest && "min-w-0 flex-1",
+                  )}
+                  data-testid="sce-tournament-organiser"
+                  data-sce-tournament-region="organiser"
+                  title={organiser}
+                >
+                  {organiser}
+                </p>
+              ) : (
+                <span className="sr-only">{organiser}</span>
+              )}
+            </div>
+          ) : null}
+          {ownTeamsLabel ? (
+            <p
+              className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
+              data-testid="sce-tournament-hauptteam"
+              data-sce-tournament-region="hauptteam"
+              title={ownTeamsLabel}
+            >
+              {ownTeamsLabel}
+            </p>
+          ) : null}
+        </div>
+      )}
+      {operational && fmtCfg ? (
         (() => {
           const timeLabel = formatSessionTimeOnly(model, fmtCfg);
           const locationLine = resolveTournamentLocationLine(model, density);

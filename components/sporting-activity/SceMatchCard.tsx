@@ -42,15 +42,9 @@ import {
 import {
   SceActivityListRowLocationMeta,
   SceActivityListRowOperationalMetaRow,
+  SceActivityListRowOrganizationalContext,
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
-import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
-import {
-  formatProgrammeMatchMicroIdentityFallback,
-  formatTeamScopeMatchMicroIdentityLabel,
-  resolveTeamScopeMatchOpponent,
-} from "@/lib/calendar/sce-calendar-engine/calendar-micro-match-identity";
-
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
 export type SceMatchListRowPresentation = "default" | "programme-fixture" | "dashboard-opponent";
@@ -291,6 +285,16 @@ function SceMatchStackedFixturePanel({
   );
 }
 
+function buildProgrammeMatchOrganizationalContextLabel(
+  model: Pick<SceMatchPresentationModel, "teamContext" | "competition">,
+): string | undefined {
+  const parts = [
+    model.teamContext?.name?.trim(),
+    model.competition?.label?.trim(),
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : undefined;
+}
+
 function SceMatchInlineIdentitySide({
   side,
   identity,
@@ -323,31 +327,57 @@ function SceMatchInlineIdentitySide({
       ? SCE_ACTIVITY_LIST_ROW_SCALE.crestBoundsClass
       : undefined;
 
+  const crestNode = showCrests ? (
+    <div data-sce-match-region={`${side}-crest`} className="shrink-0">
+      <ClubCrest
+        identity={identity}
+        density={programmeFixture ? "management" : "compact"}
+        decorative
+        className={crestBoundsClass}
+      />
+    </div>
+  ) : null;
+
+  const nameNode = (
+    <span className={nameClass} title={identity.displayName} data-sce-match-region={`${side}-name`}>
+      {identity.displayName}
+    </span>
+  );
+
   return (
     <div
       data-sce-match-side={side}
       data-sce-match-region={`${side}-identity`}
       className={cn(
         "flex min-w-0 items-center gap-1.5",
-        listRow || programmeFixture ? "max-w-none" : "max-w-[min(100%,12rem)]",
-        programmeFixture && side === "home" && "justify-self-start",
-        programmeFixture && side === "away" && "flex-row-reverse justify-self-end text-right",
-        !programmeFixture && side === "away" && "flex-row-reverse justify-self-end text-right",
+        programmeFixture
+          ? side === "home"
+            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureSideHomeClass
+            : SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureSideAwayClass
+          : cn(
+              listRow ? "max-w-none" : "max-w-[min(100%,12rem)]",
+              side === "away" && "flex-row-reverse justify-self-end text-right",
+            ),
       )}
     >
-      {showCrests ? (
-        <div data-sce-match-region={`${side}-crest`} className="shrink-0">
-          <ClubCrest
-            identity={identity}
-            density={programmeFixture ? "management" : "compact"}
-            decorative
-            className={crestBoundsClass}
-          />
-        </div>
-      ) : null}
-      <span className={nameClass} title={identity.displayName} data-sce-match-region={`${side}-name`}>
-        {identity.displayName}
-      </span>
+      {programmeFixture ? (
+        side === "home" ? (
+          <>
+            {nameNode}
+            {crestNode}
+          </>
+        ) : (
+          <>
+            {crestNode}
+            {nameNode}
+          </>
+        )
+      ) : (
+        <>
+          {crestNode}
+          {nameNode}
+        </>
+      )}
     </div>
   );
 }
@@ -481,59 +511,13 @@ function SceMatchListRowIdentityContent({
   scopeTeamId?: string | null;
 }) {
   if (listRowPresentation === "dashboard-opponent") {
-    const scoped = scopeTeamId
-      ? resolveTeamScopeMatchOpponent(model.fixture, scopeTeamId)
-      : null;
-    const opponent = scoped?.opponent;
-    const identityLabel = opponent
-      ? formatTeamScopeMatchMicroIdentityLabel(opponent)
-      : formatProgrammeMatchMicroIdentityFallback(model.fixture);
-    const startAt = new Date(model.schedule.startAt);
-    const kickoffLabel = formatFixtureTime(startAt, fmtCfg);
-    const locationLine = model.location
-      ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
-      : undefined;
-    const lifecycle = model.matchLifecycle ?? model.status;
-    const showCancelledStatus = lifecycle?.semantic === "cancelled";
-
-    return (
-      <div
-        className={cn("min-w-0 w-full max-w-full space-y-1", SCE_ACTIVITY_LIST_ROW_SCALE.identityStackClass)}
-        data-sce-match-density={density}
-        data-sce-match-list-row-identity
-        data-sce-match-list-row-presentation="dashboard-opponent"
-      >
-        <SceMatchTypeHeader model={model} showStatus={showCancelledStatus} listRow />
-        <div
-          className="flex min-w-0 items-center gap-2"
-          data-sce-match-region="identity"
-          data-testid="sce-match-dashboard-agenda-identity"
-        >
-          {opponent ? (
-            <ClubCrest identity={opponent} density="compact" decorative className="shrink-0" />
-          ) : null}
-          <p className={cn(SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass, "line-clamp-2 flex-1")}>
-            {identityLabel}
-          </p>
-        </div>
-        {kickoffLabel || locationLine ? (
-          <SceActivityListRowOperationalMetaRow testId="sce-match-list-row-operational-meta">
-            {kickoffLabel ? (
-              <SceActivityListRowTimeMeta
-                label={kickoffLabel}
-                testId="sce-match-list-row-time"
-              />
-            ) : null}
-            {locationLine ? (
-              <SceActivityListRowLocationMeta
-                label={locationLine}
-                testId="sce-match-list-row-location"
-              />
-            ) : null}
-          </SceActivityListRowOperationalMetaRow>
-        ) : null}
-      </div>
-    );
+    return SceMatchListRowIdentityContent({
+      model,
+      density,
+      fmtCfg,
+      listRowPresentation: "programme-fixture",
+      scopeTeamId,
+    });
   }
 
   const showCrests = isSceActivityDimensionVisible(density, "crests");
@@ -548,19 +532,16 @@ function SceMatchListRowIdentityContent({
   const lifecycle = model.matchLifecycle ?? model.status;
   const showCancelledStatus = lifecycle?.semantic === "cancelled";
   const startAt = new Date(model.schedule.startAt);
-  const endAt = model.schedule.endAt ? new Date(model.schedule.endAt) : null;
   const kickoffLabel = formatFixtureTime(startAt, fmtCfg);
   const operationalTimeLabel =
-    programmeFixture && !model.schedule.allDay
-      ? formatSportingActivityTimeRange({
-          startLabel: kickoffLabel,
-          endLabel: endAt ? formatFixtureTime(endAt, fmtCfg) : undefined,
-        }) ?? kickoffLabel
-      : undefined;
+    programmeFixture && !model.schedule.allDay ? kickoffLabel : undefined;
   const locationLine =
     programmeFixture && model.location
       ? formatSceActivityLocationHierarchy(model.location, { includeHostClub: false })
       : undefined;
+  const teamContextLabel = programmeFixture
+    ? buildProgrammeMatchOrganizationalContextLabel(model)
+    : undefined;
 
   return (
     <div
@@ -571,32 +552,25 @@ function SceMatchListRowIdentityContent({
       data-sce-match-density={density}
       data-sce-match-list-row-identity
       data-sce-match-list-row-presentation={listRowPresentation}
+      data-sce-programme-card-contract={programmeFixture ? "three-row" : undefined}
     >
       <SceMatchTypeHeader
         model={model}
         showStatus={showCancelledStatus}
         listRow
       />
-      {programmeFixture && model.competition?.label ? (
-        <p
-          className={SCE_ACTIVITY_LIST_ROW_SCALE.programmeCompetitionClass}
-          data-testid="sce-match-competition"
-          data-sce-match-region="competition"
-        >
-          {model.competition.label}
-        </p>
-      ) : null}
       {tenantSideAccessibleLabel ? (
         <span className="sr-only">{tenantSideAccessibleLabel}</span>
       ) : null}
       <div
         className={
           programmeFixture
-            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureGridClass
+            ? SCE_ACTIVITY_LIST_ROW_SCALE.programmeFixtureBandClass
             : SCE_ACTIVITY_LIST_ROW_SCALE.fixtureGridClass
         }
         data-testid="sce-match-fixture"
         data-sce-match-region="fixture"
+        data-sce-match-programme-fixture={programmeFixture ? "inside-crests" : undefined}
         aria-label={buildFixtureAccessibleLabel(model)}
       >
         <SceMatchInlineIdentitySide
@@ -643,6 +617,12 @@ function SceMatchListRowIdentityContent({
           programmeFixture={programmeFixture}
         />
       </div>
+      {programmeFixture && teamContextLabel ? (
+        <SceActivityListRowOrganizationalContext
+          label={teamContextLabel}
+          testId="sce-match-list-row-team-context"
+        />
+      ) : null}
       {programmeFixture && (operationalTimeLabel || locationLine) ? (
         <SceActivityListRowOperationalMetaRow testId="sce-match-list-row-operational-meta">
           {operationalTimeLabel ? (

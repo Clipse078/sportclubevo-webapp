@@ -186,7 +186,11 @@ export const LUCIDE_DEFAULT_SEMANTIC: Record<string, DefaultRule> = {
   Settings2: { category: "UTILITY_ACTION", reason: "Settings affordance (generic)" },
   Image: { category: "CONTENT_IDENTITY", reason: "Image content / media picker" },
   Video: { category: "CONTENT_IDENTITY", reason: "Video content" },
-  Smartphone: { category: "UTILITY_ACTION", reason: "Mobile viewport preview" },
+  Smartphone: {
+    category: "SCE_DOMAIN_APPROVED",
+    sceMaster: "mobile-app",
+    reason: "Mobile app channel / smartphone device semantic",
+  },
   Tablet: { category: "UTILITY_ACTION", reason: "Tablet viewport preview" },
   Underline: { category: "UTILITY_ACTION", reason: "Rich-text formatting" },
   Users2: { category: "CONTENT_IDENTITY", reason: "People group content reference" },

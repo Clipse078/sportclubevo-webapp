@@ -102,8 +102,8 @@ describe("PlanningHubListeView", () => {
     expect(screen.getByTestId("planning-hub-liste-day-2026-10-05")).toBeInTheDocument();
     expect(screen.getByText("TRAINING")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-liste-sce-training-training:1")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-liste-row-resources").textContent).toContain("Hauptfeld A");
-    expect(screen.getByTestId("planning-hub-liste-row-status").textContent).toBe("Unvollständig");
+    expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Hauptfeld/i);
+    expect(screen.getByTestId("planning-hub-liste-operational-summary")).toHaveTextContent(/Unvollständig/);
 
     await user.click(screen.getByTestId("weekplanner-item-training"));
     expect(onOpen).toHaveBeenCalledTimes(1);

@@ -643,7 +643,7 @@
       "labelV2": "Website",
       "icon": "website",
       "targetL1": "publishing",
-      "targetL2": "Übersicht",
+      "targetL2": "Website",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -664,13 +664,37 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
+      "key": "website-news",
+      "route": "/dashboard/website/news",
+      "label": "News",
+      "labelV2": "News",
+      "icon": "news",
+      "targetL1": "publishing",
+      "targetL2": "Website",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "news.view",
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
       "key": "website-overview",
       "route": "/dashboard/website",
-      "label": "CMS Übersicht",
+      "label": "Übersicht",
       "labelV2": "Publishing-Übersicht",
       "icon": "website",
       "targetL1": "publishing",
-      "targetL2": "Übersicht",
+      "targetL2": "Website",
       "targetLocalGroup": "website",
       "visibility": {
         "header": false,
@@ -687,37 +711,13 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
-      "key": "website-news",
-      "route": "/dashboard/website/news",
-      "label": "News",
-      "labelV2": "News",
-      "icon": "news",
-      "targetL1": "publishing",
-      "targetL2": "Inhalte",
-      "targetLocalGroup": "website",
-      "visibility": {
-        "header": true,
-        "explorer": true,
-        "mobileEligible": true
-      },
-      "permissionKeys": [
-        "news.view",
-        "news.manage",
-        "website.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
       "key": "website-pages",
       "route": "/dashboard/website/pages",
       "label": "Seiten",
       "labelV2": "Seiten",
       "icon": "page",
       "targetL1": "publishing",
-      "targetL2": "Inhalte",
+      "targetL2": "Website",
       "targetLocalGroup": "website",
       "visibility": {
         "header": false,
@@ -799,21 +799,20 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
-      "key": "website-media",
-      "route": "/dashboard/website/media",
-      "label": "Medien",
-      "labelV2": "Medien",
-      "icon": "media-library",
+      "key": "website-components",
+      "route": "/dashboard/website/components",
+      "label": "Wiederverwendbare Inhalte",
+      "labelV2": "Wiederverwendbare Inhalte",
+      "icon": "form",
       "targetL1": "publishing",
-      "targetL2": "Medien",
+      "targetL2": "Website",
       "targetLocalGroup": "website",
       "visibility": {
-        "header": true,
+        "header": false,
         "explorer": true,
-        "mobileEligible": true
+        "mobileEligible": false
       },
       "permissionKeys": [
-        "news.manage",
         "website.manage"
       ],
       "classification": "LOCAL_DESTINATION",
@@ -828,7 +827,7 @@
       "labelV2": "Redaktion",
       "icon": "news",
       "targetL1": "publishing",
-      "targetL2": "Inhalte",
+      "targetL2": "Website",
       "targetLocalGroup": "website",
       "visibility": {
         "header": false,
@@ -850,7 +849,7 @@
       "labelV2": "Publizieren",
       "icon": "publish",
       "targetL1": "publishing",
-      "targetL2": "Kanäle",
+      "targetL2": "Website",
       "targetLocalGroup": "website",
       "visibility": {
         "header": false,
@@ -869,13 +868,13 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
-      "key": "website-components",
-      "route": "/dashboard/website/components",
-      "label": "Wiederverwendbare Inhalte",
-      "labelV2": "Wiederverwendbare Inhalte",
-      "icon": "form",
+      "key": "website-settings",
+      "route": "/dashboard/website/settings",
+      "label": "Einstellungen",
+      "labelV2": "Einstellungen",
+      "icon": "settings",
       "targetL1": "publishing",
-      "targetL2": "Inhalte",
+      "targetL2": "Website",
       "targetLocalGroup": "website",
       "visibility": {
         "header": false,
@@ -891,23 +890,46 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
-      "key": "website-settings",
-      "route": "/dashboard/website/settings",
-      "label": "Einstellungen",
-      "labelV2": "Einstellungen",
-      "icon": "settings",
+      "key": "website-media",
+      "route": "/dashboard/website/media",
+      "label": "Medien",
+      "labelV2": "Medien",
+      "icon": "media-library",
       "targetL1": "publishing",
-      "targetL2": "Einstellungen",
-      "targetLocalGroup": "website",
+      "targetL2": "Medien",
+      "targetLocalGroup": null,
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "mobile-app",
+      "route": "/dashboard/website/settings",
+      "label": "Mobile App",
+      "labelV2": "Mobile App",
+      "icon": "contact",
+      "targetL1": "publishing",
+      "targetL2": "Mobile App",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
       },
       "permissionKeys": [
         "website.manage"
       ],
-      "classification": "LOCAL_DESTINATION",
+      "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
@@ -919,7 +941,7 @@
       "labelV2": "Infoboard",
       "icon": "infoboard",
       "targetL1": "publishing",
-      "targetL2": "Kanäle",
+      "targetL2": "Infoboard",
       "targetLocalGroup": null,
       "visibility": {
         "header": true,
@@ -943,7 +965,7 @@
       "labelV2": "Übersicht",
       "icon": "infoboard",
       "targetL1": "publishing",
-      "targetL2": "Kanäle",
+      "targetL2": "Infoboard",
       "targetLocalGroup": "infoboard",
       "visibility": {
         "header": false,
@@ -966,7 +988,7 @@
       "labelV2": "Vorschau",
       "icon": "infoboard",
       "targetL1": "publishing",
-      "targetL2": "Kanäle",
+      "targetL2": "Infoboard",
       "targetLocalGroup": "infoboard",
       "visibility": {
         "header": false,
@@ -1484,33 +1506,27 @@
   ],
   "publishingL2": [
     {
-      "id": "uebersicht",
-      "label": "Übersicht",
-      "headerVisible": true,
-      "keys": [
-        "website",
-        "website-overview"
-      ]
-    },
-    {
-      "id": "inhalte",
-      "label": "Inhalte",
-      "headerVisible": true,
-      "keys": [
-        "website-news",
-        "website-pages",
-        "website-editorial",
-        "website-components"
-      ]
-    },
-    {
       "id": "website",
       "label": "Website",
-      "headerVisible": false,
+      "headerVisible": true,
       "keys": [
-        "website-homepage",
-        "website-navigation",
-        "website-blocks"
+        "website"
+      ]
+    },
+    {
+      "id": "infoboard",
+      "label": "Infoboard",
+      "headerVisible": true,
+      "keys": [
+        "infoboard"
+      ]
+    },
+    {
+      "id": "mobile-app",
+      "label": "Mobile App",
+      "headerVisible": true,
+      "keys": [
+        "mobile-app"
       ]
     },
     {
@@ -1519,25 +1535,6 @@
       "headerVisible": true,
       "keys": [
         "website-media"
-      ]
-    },
-    {
-      "id": "kanaele",
-      "label": "Kanäle",
-      "headerVisible": true,
-      "keys": [
-        "website-publishing",
-        "infoboard",
-        "infoboard-overview",
-        "infoboard-preview"
-      ]
-    },
-    {
-      "id": "einstellungen",
-      "label": "Einstellungen",
-      "headerVisible": false,
-      "keys": [
-        "website-settings"
       ]
     }
   ],

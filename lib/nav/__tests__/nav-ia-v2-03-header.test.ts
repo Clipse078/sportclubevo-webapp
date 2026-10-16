@@ -61,15 +61,16 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     expect(secondary.every((item) => item.headerGroupId)).toBe(true);
   });
 
-  it("limits Publishing header Row 2 while keeping Infoboard discoverable via Kanäle group", () => {
+  it("limits Publishing header Row 2 to publication channels including Infoboard", () => {
     const model = buildAppNavigationModelForUser(
       [PERMISSIONS.WEBSITE_MANAGE, PERMISSIONS.INFOBOARD_MANAGE],
       "club",
     );
     const publishing = model.domains.find((d) => d.id === "publishing")!;
     const secondary = resolveDomainSecondaryNavItems(publishing);
-    expect(secondary.some((item) => item.headerGroupId === "kanaele")).toBe(true);
-    expect(secondary.some((item) => item.label === "Einstellungen")).toBe(false);
+    expect(secondary.some((item) => item.headerGroupId === "infoboard")).toBe(true);
+    expect(secondary.some((item) => item.label === "Website")).toBe(true);
+    expect(secondary.some((item) => item.label === "Inhalte")).toBe(false);
 
     const index = buildExplorerSearchIndex(model, (d) => d.fallbackLabel);
     expect(index.some((hit) => hit.key === "infoboard")).toBe(true);

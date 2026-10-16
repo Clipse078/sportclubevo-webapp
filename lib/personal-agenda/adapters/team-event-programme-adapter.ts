@@ -1,3 +1,8 @@
+/**
+ * LEGACY_RETAINED — pre-01I personal event/training loaders bypassing Programme Engine.
+ * CONSUMERS: regression/diagnostic tests, sce-activity-ux-01r5-fca-trace script.
+ * FUTURE_REMOVAL_PACKAGE: SCE-ACTIVITY-CREATE-01N (after 01J personal surfaces fully on engine).
+ */
 import type { EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import {

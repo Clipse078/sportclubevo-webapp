@@ -109,6 +109,22 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       data-sce-modal-background
     >
       <div className="sce-authenticated-sticky-shell-chrome">
+        <div className="sce-authenticated-safety-chrome-stack">
+          <StageEnvironmentBanner />
+          <ImpersonationSafetyChrome
+            initialState={{
+              isImpersonating: Boolean(session.user.isImpersonating),
+              effectiveDisplayName:
+                `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
+                session.user.email,
+              actorDisplayName:
+                session.user.actorName?.trim() ||
+                session.user.actorEmail ||
+                "Administrator",
+            }}
+          />
+        </div>
+
         <Suspense fallback={null}>
           <AppShellNavigation
             permissionKeys={session.user.permissionKeys}
@@ -126,22 +142,6 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             imageUrl={shellImageUrl}
           />
         </Suspense>
-
-        <div className="sce-authenticated-safety-chrome-stack">
-          <StageEnvironmentBanner />
-          <ImpersonationSafetyChrome
-            initialState={{
-              isImpersonating: Boolean(session.user.isImpersonating),
-              effectiveDisplayName:
-                `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
-                session.user.email,
-              actorDisplayName:
-                session.user.actorName?.trim() ||
-                session.user.actorEmail ||
-                "Administrator",
-            }}
-          />
-        </div>
       </div>
 
       <div className={`${SCE_APP_MAIN_COLUMN} sce-app-main-with-mobile-nav`}>

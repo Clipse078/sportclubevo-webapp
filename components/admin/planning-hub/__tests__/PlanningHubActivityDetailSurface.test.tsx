@@ -3,8 +3,9 @@
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import PlanningHubActivityClippedDetailSurface from "../PlanningHubActivityClippedDetailSurface";
+import PlanningHubActivityDetailSurface from "../PlanningHubActivityDetailSurface";
 import type { WeekplannerTrainingItem } from "@/lib/weekplanner/types";
 
 const item: WeekplannerTrainingItem = {
@@ -46,10 +47,10 @@ const item: WeekplannerTrainingItem = {
   teamSeasonId: "ts1",
 };
 
-describe("PlanningHubActivityClippedDetailSurface", () => {
-  it("renders touch detail trigger when geometry is constrained", () => {
+describe("PlanningHubActivityDetailSurface", () => {
+  it("does not render a separate info-button affordance on constrained cards", () => {
     render(
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale="de-CH"
         timezone="Europe/Zurich"
@@ -60,16 +61,16 @@ describe("PlanningHubActivityClippedDetailSurface", () => {
             Card
           </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>,
+      </PlanningHubActivityDetailSurface>,
     );
 
-    expect(screen.getByTestId("planning-hub-activity-detail-touch-trigger")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Card" })).toBeInTheDocument();
   });
 
-  it("omits touch trigger when block is spacious", () => {
+  it("wires hover detail for spacious individual cards (universal detail)", async () => {
     render(
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale="de-CH"
         timezone="Europe/Zurich"
@@ -80,31 +81,33 @@ describe("PlanningHubActivityClippedDetailSurface", () => {
             Card
           </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>,
+      </PlanningHubActivityDetailSurface>,
     );
 
-    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.hover(screen.getByRole("button", { name: "Card" }));
+    expect(await screen.findByTestId("planning-hub-activity-detail")).toBeInTheDocument();
   });
 
-  it("keeps info affordance discoverable on coarse pointer without activity-colored styling", () => {
+  it("shows Planungsstatus with specific incomplete items on focus/hover (R5.5)", async () => {
+    const user = userEvent.setup();
     render(
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale="de-CH"
         timezone="Europe/Zurich"
-        geometry={{ compact: true, blockWidthPx: 80, blockHeightPx: 34 }}
+        geometry={{ compact: false, blockWidthPx: 200, blockHeightPx: 80 }}
       >
         {(props) => (
           <button type="button" {...props}>
             Card
           </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>,
+      </PlanningHubActivityDetailSurface>,
     );
 
-    const trigger = screen.getByTestId("planning-hub-activity-detail-touch-trigger");
-    expect(trigger.className).toContain("pointer-coarse:opacity-75");
-    expect(trigger.className).not.toContain("sce-info");
-    expect(trigger.className).not.toContain("sce-primary");
+    await user.tab();
+    expect(await screen.findByTestId("planning-hub-activity-detail-planungsstatus")).toBeInTheDocument();
+    expect(screen.getByText("Keine Garderobe zugewiesen")).toBeInTheDocument();
   });
 });

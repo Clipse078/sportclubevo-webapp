@@ -6,11 +6,7 @@ import type { PersonalCalendarItem } from "./types";
 import type { PersonalEventProjectionActor } from "./event-projection-access";
 import { sortPersonalProgrammeItems } from "./programme-sort";
 import type { PersonalProgrammeItem } from "./personal-programme-types";
-import { prisma } from "@/lib/db/prisma";
-import { queryProgramme } from "@/lib/programme-engine/query-programme";
-import { buildPersonProgrammeScope } from "@/lib/programme-engine/person-programme-scope";
-import { programmeItemsToPersonalProgrammeItems } from "@/lib/programme-engine/programme-item-personal-adapter";
-import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { loadPersonScopeSportingProgrammeItems } from "./load-person-scope-sporting-programme";
 
 export type LoadPersonalCalendarEntryProjectionsArgs = {
   tenantId: string;
@@ -58,27 +54,15 @@ export async function loadPersonalCalendarEntryProjections(
 
   const [sportingProgramme, meetings] = await Promise.all([
     canQueryProgramme
-      ? (async () => {
-          const [tenant, tenantLogoUrl] = await Promise.all([
-            prisma.tenant.findUnique({
-              where: { id: args.tenantId },
-              select: { name: true },
-            }),
-            getTenantClubCrestUrlCached(args.tenantId),
-          ]);
-          const result = await queryProgramme({
-            tenantId: args.tenantId,
-            userId: args.userId!,
-            timeZone: args.timeZone,
-            from: args.rangeStart,
-            to: args.rangeEnd,
-            permissionKeys: args.actor.permissionKeys,
-            tenantClubName: tenant?.name ?? null,
-            tenantLogoUrl,
-            scope: buildPersonProgrammeScope(args.personalContext),
-          });
-          return programmeItemsToPersonalProgrammeItems(result.items, args.personalContext);
-        })()
+      ? loadPersonScopeSportingProgrammeItems({
+          tenantId: args.tenantId,
+          userId: args.userId!,
+          personalContext: args.personalContext,
+          timeZone: args.timeZone,
+          rangeStart: args.rangeStart,
+          rangeEnd: args.rangeEnd,
+          permissionKeys: args.actor.permissionKeys,
+        })
       : Promise.resolve([]),
     hasMeetingScope ? loadMeetingProgrammeItems(adapterCtx) : Promise.resolve([]),
   ]);

@@ -41,7 +41,7 @@ describe("SCE-ICONS-11R1 legacy domain closure", () => {
   });
 
   it("keeps approved artwork frozen (90 masters including final semantic batch)", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
       90,
     );

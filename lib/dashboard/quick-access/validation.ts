@@ -55,6 +55,9 @@ export function filterStoredKeysToAuthorized(
 ): string[] {
   const result: string[] = [];
   for (const key of storedKeys) {
+    if (key.startsWith("action.create-")) {
+      continue;
+    }
     if (authorizedKeys.has(key) && !result.includes(key)) {
       result.push(key);
     }

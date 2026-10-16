@@ -28,6 +28,56 @@ export function SceActivityListRowOperationalMetaRow({
   );
 }
 
+/** Canonical Mein Programm row 2 — team(s) / org unit(s) involved. */
+export function SceActivityListRowOrganizationalContext({
+  label,
+  testId = "sce-activity-list-row-org-context",
+}: {
+  label: string;
+  testId?: string;
+}) {
+  return (
+    <p
+      className={SCE_ACTIVITY_LIST_ROW_SCALE.teamContextClass}
+      data-testid={testId}
+      data-sce-activity-region="organizational-context"
+      title={label}
+    >
+      {label}
+    </p>
+  );
+}
+
+/** Canonical Mein Programm row 1 — activity identity + club crest(s). */
+export function SceActivityListRowPrimaryIdentityRow({
+  title,
+  crest,
+  testId = "sce-activity-list-row-primary-identity",
+  titleTestId,
+}: {
+  title: string;
+  crest?: ReactNode;
+  testId?: string;
+  titleTestId?: string;
+}) {
+  return (
+    <div
+      className="flex min-w-0 items-center gap-2"
+      data-sce-activity-region="primary-identity"
+      data-testid={testId}
+    >
+      {crest}
+      <p
+        className={cn(SCE_ACTIVITY_LIST_ROW_SCALE.primaryTitleClass, "line-clamp-2 flex-1")}
+        data-testid={titleTestId}
+        title={title}
+      >
+        {title}
+      </p>
+    </div>
+  );
+}
+
 export function SceActivityListRowTimeMeta({
   label,
   testId = "sce-activity-list-row-time",

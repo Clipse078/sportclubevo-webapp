@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, type ReactNode } from "react";
-import AdminPageActions from "@/components/admin/layout/AdminPageActions";
+import type { ReactNode } from "react";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
 import NotificationBell from "@/components/admin/notifications/NotificationBell";
 
@@ -27,13 +26,8 @@ export function SceGlobalUtilities({
       className="flex min-w-0 shrink-0 items-center gap-0.5 sce-global-header-utilities md:gap-1"
       data-testid="sce-global-utilities"
       data-sce-utilities-tier="compact"
+      data-sce-navbar-contextual-actions="none"
     >
-      <div className="hidden md:flex items-center gap-1">
-        <Suspense fallback={null}>
-          <AdminPageActions />
-        </Suspense>
-      </div>
-
       {trailingSlot}
 
       <NotificationBell />

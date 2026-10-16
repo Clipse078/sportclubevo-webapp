@@ -8,6 +8,7 @@ import { SceMatchCard } from "@/components/sporting-activity/SceMatchCard";
 import { SceTournamentCard } from "@/components/sporting-activity/SceTournamentCard";
 import { SceClubEventCard } from "@/components/sporting-activity/SceClubEventCard";
 import { cn } from "@/lib/cn";
+import { SceProgrammeActivityCardShell } from "@/components/sporting-activity/SceProgrammeActivityCardShell";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import {
   isSceClubEventPresentationModel,
@@ -15,6 +16,7 @@ import {
   isSceTrainingPresentationModel,
   isSceTournamentPresentationModel,
 } from "@/lib/sporting-activity-presentation/canonical/types";
+import { SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-programme-shell";
 
 const LIST_ROW_CARD_CLASS = "border-0 bg-transparent p-0 shadow-none";
 
@@ -28,14 +30,17 @@ export type PersonalProgrammeCanonicalAgendaRowProps = {
   highlighted?: boolean;
   className?: string;
   fmtCfg?: TenantFormatConfig;
+  density?: "COMPACT" | "STANDARD";
 };
 
 function CanonicalAgendaBody({
   item,
   fmtCfg,
+  density = "COMPACT",
 }: {
   item: PersonalProgrammeItem;
   fmtCfg: TenantFormatConfig;
+  density?: "COMPACT" | "STANDARD";
 }) {
   const model = item.canonicalPresentation;
   if (!model) return null;
@@ -44,12 +49,12 @@ function CanonicalAgendaBody({
     return (
       <SceTrainingCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         showStatus
         surface="list-row"
-        listRowPresentation="dashboard-agenda"
+        listRowPresentation="operational"
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-training-${item.id}`}
       />
@@ -60,11 +65,11 @@ function CanonicalAgendaBody({
     return (
       <SceMatchCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         surface="list-row"
-        listRowPresentation="dashboard-opponent"
+        listRowPresentation="programme-fixture"
         scopeTeamId={item.programmeScopeTeamId}
         className={LIST_ROW_CARD_CLASS}
         testId={`personal-programme-match-${item.id}`}
@@ -76,7 +81,7 @@ function CanonicalAgendaBody({
     return (
       <SceTournamentCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         showStatus
@@ -92,7 +97,7 @@ function CanonicalAgendaBody({
     return (
       <SceClubEventCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         showStatus
@@ -115,31 +120,35 @@ export function PersonalProgrammeCanonicalAgendaRow({
   highlighted = false,
   className,
   fmtCfg = DEFAULT_FMT_CFG,
+  density = "COMPACT",
 }: PersonalProgrammeCanonicalAgendaRowProps) {
+  const shellDensity = density === "COMPACT" ? "COMPACT" : "STANDARD";
+
   const body = (
-    <div
-      className={cn(
-        "flex min-w-0 items-start gap-2 py-2",
-        highlighted &&
-          "rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_8%,transparent)] px-1",
-        className,
-      )}
-      data-testid="personal-programme-canonical-agenda-row"
+    <SceProgrammeActivityCardShell
+      density={shellDensity}
+      className={cn(highlighted && SCE_PROGRAMME_ACTIVITY_CARD_EMPHASIS_CLASS, className)}
+      testId="personal-programme-canonical-agenda-row-shell"
     >
-      <div className="min-w-0 flex-1">
-        <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} />
+      <div
+        className="flex min-w-0 items-start gap-2"
+        data-testid="personal-programme-canonical-agenda-row"
+      >
+        <div className="min-w-0 flex-1">
+          <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} density={density} />
+        </div>
+        {item.deepLink ? (
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+        ) : null}
       </div>
-      {item.deepLink ? (
-        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-      ) : null}
-    </div>
+    </SceProgrammeActivityCardShell>
   );
 
   if (item.deepLink) {
     return (
       <SportingActivityDetailLink
         href={item.deepLink}
-        className="block rounded-[var(--radius-md)] no-underline motion-safe:transition-colors motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_45%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+        className="block rounded-xl no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
         aria-label={item.ariaLabel}
       >
         {body}

@@ -23,15 +23,6 @@ const sampleCatalog: QuickAccessCatalogEntry[] = [
     permissionKeys: [],
     defaultPriority: 80,
   },
-  {
-    key: "action.create-training",
-    kind: "CREATE_ACTION",
-    href: "/dashboard/events/trainings/new",
-    iconLabel: "Training",
-    messageKey: "x",
-    permissionKeys: [],
-    defaultPriority: 40,
-  },
 ];
 
 describe("DASHBOARD-04 — quick access defaults", () => {

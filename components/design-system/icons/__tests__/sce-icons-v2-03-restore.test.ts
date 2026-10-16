@@ -38,7 +38,7 @@ function readV1MasterSvg(name: string): string {
 }
 
 describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
-  it("recovers 90 approved masters from the final V1 snapshot", () => {
+  it("recovers approved masters from the final V1 snapshot plus post-V1 additions", () => {
     const listed = execFileSync(
       "git",
       ["ls-tree", "--name-only", `${V1_FINAL_SNAPSHOT}:public/images/icons/`],
@@ -47,13 +47,15 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
       .split("\n")
       .filter((file) => file.endsWith(".svg"));
     expect(listed.length).toBe(90);
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES).toContain("mobile-app");
   });
 
   it("proves V1_GEOMETRY_EQUIVALENT = 87/90 with documented optical exceptions (SCE-ICONS-02 + settings)", () => {
     const mismatches: string[] = [];
     const approvedExceptions: string[] = [];
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
+      if (name === "mobile-app") continue;
       const v1 = readV1MasterSvg(name);
       const v2 = readFileSync(join(process.cwd(), SCE_APPROVED_MASTER_ASSETS[name]), "utf8");
       if (masterSvgGeometryEquivalent(v1, v2)) {
@@ -75,7 +77,7 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
   it("keeps 87/90 SVG masters byte-identical to the pre-03R1 artwork baseline", () => {
     const changed: string[] = [];
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
-      if (name === "settings" || name === "club" || name === "match") continue;
+      if (name === "settings" || name === "club" || name === "match" || name === "mobile-app") continue;
       const baseline = execFileSync(
         "git",
         ["show", `${V2_ARTWORK_BASELINE_SHA}:public/images/icons/${name}.svg`],
@@ -118,7 +120,7 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
 });
 
 describe("SCE-ICONS-V2-03 monochrome color contract", () => {
-  it("requires CURRENTCOLOR = 90/90 with zero baked brand / V1 runtime tokens", () => {
+  it("requires CURRENTCOLOR on all approved masters with zero baked brand / V1 runtime tokens", () => {
     let hardcodedBlue = 0;
     let hardcodedOrange = 0;
     let hardcodedWhite = 0;
