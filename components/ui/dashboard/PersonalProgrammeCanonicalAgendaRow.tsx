@@ -28,14 +28,17 @@ export type PersonalProgrammeCanonicalAgendaRowProps = {
   highlighted?: boolean;
   className?: string;
   fmtCfg?: TenantFormatConfig;
+  density?: "COMPACT" | "STANDARD";
 };
 
 function CanonicalAgendaBody({
   item,
   fmtCfg,
+  density = "COMPACT",
 }: {
   item: PersonalProgrammeItem;
   fmtCfg: TenantFormatConfig;
+  density?: "COMPACT" | "STANDARD";
 }) {
   const model = item.canonicalPresentation;
   if (!model) return null;
@@ -44,7 +47,7 @@ function CanonicalAgendaBody({
     return (
       <SceTrainingCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         showStatus
@@ -60,7 +63,7 @@ function CanonicalAgendaBody({
     return (
       <SceMatchCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         surface="list-row"
@@ -76,7 +79,7 @@ function CanonicalAgendaBody({
     return (
       <SceTournamentCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         showStatus
@@ -92,7 +95,7 @@ function CanonicalAgendaBody({
     return (
       <SceClubEventCard
         model={model}
-        density="COMPACT"
+        density={density}
         fmtCfg={fmtCfg}
         linkToDetail={false}
         showStatus
@@ -115,6 +118,7 @@ export function PersonalProgrammeCanonicalAgendaRow({
   highlighted = false,
   className,
   fmtCfg = DEFAULT_FMT_CFG,
+  density = "COMPACT",
 }: PersonalProgrammeCanonicalAgendaRowProps) {
   const body = (
     <div
@@ -127,7 +131,7 @@ export function PersonalProgrammeCanonicalAgendaRow({
       data-testid="personal-programme-canonical-agenda-row"
     >
       <div className="min-w-0 flex-1">
-        <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} />
+        <CanonicalAgendaBody item={item} fmtCfg={fmtCfg} density={density} />
       </div>
       {item.deepLink ? (
         <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />

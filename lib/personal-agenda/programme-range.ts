@@ -4,6 +4,9 @@ import { startOfLocalDay } from "@/lib/tasks/management-deadline";
 /** Default dashboard programme horizon (today inclusive through +N days). */
 export const DEFAULT_PERSONAL_PROGRAMME_FORWARD_DAYS = 14;
 
+/** Full Mein Programm list workspace horizon (today → +N tenant-local days). */
+export const MEIN_PROGRAMM_LISTE_FORWARD_DAYS = 90;
+
 /** Maximum explicit programme window length (guard against unbounded scans). */
 export const MAX_PERSONAL_PROGRAMME_RANGE_DAYS = 366;
 
@@ -48,4 +51,15 @@ export function resolvePersonalProgrammeRange(
   const rangeEnd = args.to ?? endDayWindow.end;
 
   return { rangeStart, rangeEnd };
+}
+
+/** Inclusive range for Mein Programm list view (broader than dashboard preview). */
+export function resolveMeinProgrammListeRange(
+  args: Pick<ResolvePersonalProgrammeRangeArgs, "timeZone" | "now">,
+): PersonalProgrammeRange {
+  const now = args.now ?? new Date();
+  const todayLocalStart = startOfLocalDay(now, args.timeZone);
+  const defaultEndDay = addUtcDays(todayLocalStart, MEIN_PROGRAMM_LISTE_FORWARD_DAYS);
+  const endDayWindow = getDayWindow(formatIsoDay(defaultEndDay));
+  return { rangeStart: todayLocalStart, rangeEnd: endDayWindow.end };
 }

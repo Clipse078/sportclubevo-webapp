@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R1 inventory + canonical foundation** |
+| **Status** | **IN PROGRESS — R2 Mein Programm workspace** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -21,7 +21,7 @@ Dashboard = personal home (preview + orientation). Mein Programm = full personal
 | Surface | Route | Page / shell |
 |---------|-------|----------------|
 | **Dashboard (home)** | `/dashboard` | `ClubDashboardView` → deferred `ClubDashboardCommandCenterAsync` → `PersonalDashboardWorkspace` |
-| **Mein Programm (full list today)** | `/dashboard/kalender?quelle=termine` (+ selected-day agenda) | No dedicated Liste route yet — **R2** adds list-first workspace aligned with `ProgrammeViewSwitcher` |
+| **Mein Programm (canonical)** | `/dashboard/mein-programm` | List-first workspace + `ProgrammeViewSwitcher` (Liste \| Kalender) — **R2** |
 | **Mein Kalender** | `/dashboard/kalender` | `PersonalKalenderWorkspace` → `PersonalKalenderMonthWorkspace` + `SceCalendarEngine` |
 | **Club Programme (not personal)** | `/dashboard/programm` | `queryProgramme` CLUB scope — out of 01J personal boundary |
 
@@ -96,3 +96,21 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 ### Navbar
 
 01J **consumes** accepted #847 navigation — no shell redesign unless proven integration defect.
+
+## 01J-R2 — Mein Programm canonical PERSON workspace
+
+| Decision | Value |
+|----------|--------|
+| **CANONICAL_MEIN_PROGRAMM_ROUTE** | `/dashboard/mein-programm` |
+| **DEFAULT_VIEW** | `liste` (`ansicht` omitted) |
+| **CALENDAR_VIEW** | `?ansicht=kalender` (+ optional `monat`, `quelle`) |
+| **VIEW_STATE** | Reuses `parseProgrammeUrlState` / `buildProgrammeHref` (`ansicht`, `monat`, `teams`, `typ`) |
+| **FILTER_STATE** | Activity type (`typ`) + team (`teams`) in URL; multi-select via `aria-pressed` controls (not toggles) |
+| **DATA_RANGE** | List: tenant-local today → +90 days (`resolveMeinProgrammListeRange`). Calendar: month grid via `loadPersonalCalendarMonthBundle` |
+| **LEGACY_CALENDAR_ROUTE** | `/dashboard/kalender?quelle=termine` |
+| **LEGACY_COMPATIBILITY** | Server redirect → `/dashboard/mein-programm?ansicht=kalender&monat=…` (Mein Kalender `alle` / `aufgaben` unchanged) |
+| **TASK_LAYER_DECISION** | Liste = Programme Engine sporting items (+ meetings via `loadPersonalProgramme`). Kalender reuses personal month bundle: tasks remain a separate calendar layer (`quelle=aufgaben` / `alle`), not ProgrammeItems |
+| **CANONICAL_CARD_USAGE** | `PersonalProgrammeCanonicalAgendaRow` → `SceTrainingCard` / `SceMatchCard` / `SceTournamentCard` / `SceClubEventCard` (`STANDARD` list density) |
+| **PERSON_SOURCE** | `loadPersonalProgramme` → `loadPersonScopeSportingProgrammeItems` (R1 boundary) |
+| **LEGACY_RETAINED** | `training-programme-adapter.ts`, `team-event-programme-adapter.ts` unchanged |
+| **DASHBOARD_FULL_PROGRAMME_LINK** | Dashboard preview “Alle anzeigen” → `/dashboard/mein-programm` |

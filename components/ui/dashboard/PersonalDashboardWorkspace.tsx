@@ -12,7 +12,7 @@ import {
   type ProgrammeFeedGroup,
 } from "@/lib/personal-agenda/programme-feed-groups";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
-import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
+import { MEIN_PROGRAMM_BASE_PATH } from "@/lib/personal-agenda/mein-programm-url";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
 import { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
 import { DashboardCockpitGrid } from "./DashboardCockpitGrid";
@@ -72,15 +72,7 @@ export function PersonalDashboardWorkspace({
     [groups],
   );
 
-  const programmeViewAllHref = useMemo(
-    () =>
-      buildPersonalKalenderHref(
-        "/dashboard/kalender",
-        { month: monthParam, quelle: "termine" },
-        { month: monthParam, quelle: "alle" },
-      ),
-    [monthParam],
-  );
+  const programmeViewAllHref = useMemo(() => MEIN_PROGRAMM_BASE_PATH, []);
 
   const calendarOpenHref = useMemo(
     () => `/dashboard/kalender?monat=${encodeURIComponent(monthParam)}`,
