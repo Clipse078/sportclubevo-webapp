@@ -1287,6 +1287,9 @@ model Tenant {
   tournamentFixtures               TournamentFixture[]
   tournamentScheduleVersions       TournamentScheduleVersion[]
   tournamentFixtureAssignments     TournamentFixtureAssignment[]
+  tournamentPitches                TournamentPitch[]
+  tournamentBreaks                 TournamentBreak[]
+  tournamentBreakPitches           TournamentBreakPitch[]
   // PLANNING-UX-07R6: canonical FacilityResource allocations for club events.
   eventFacilityAllocations         EventFacilityAllocation[]
   // WEEKPLANNER-01B: tenant-defined, week-scoped alternative planning
@@ -2747,6 +2750,8 @@ model Event {
   // SCE-TOURNAMENT-PLANNER-01B — WHO (fixtures) and WHEN/WHERE (versioned assignments).
   tournamentFixtures            TournamentFixture[]
   tournamentScheduleVersions    TournamentScheduleVersion[]
+  tournamentPitches             TournamentPitch[]
+  tournamentBreaks              TournamentBreak[]
   // PLANNING-UX-07R6 — Event.type=OTHER facility links (not MATCH/TOURNAMENT).
   eventFacilityAllocations      EventFacilityAllocation[]
   // TEAM-COCKPIT-02B: per-player attendance for match/tournament events
@@ -5380,7 +5385,6 @@ model FacilityResource {
   // no parallel resource model.
   tournamentResourceAllocations    TournamentResourceAllocation[]
   tournamentParticipantAllocations TournamentParticipantAllocation[]
-  tournamentFixtureAssignments     TournamentFixtureAssignment[]
   eventFacilityAllocations         EventFacilityAllocation[]
   // WEEKPLANNER-01B: alternative-plan Spielfeld/Halle + Garderobe
   // overrides — same canonical FacilityResource, no parallel resource model.
@@ -8887,15 +8891,15 @@ model TournamentParticipantAllocation {
 }
 
 // =============================================================================
-// SCE-TOURNAMENT-PLANNER-01B — Fixture vs schedule-version persistence
+// SCE-TOURNAMENT-PLANNER-01B / 01D-R1 — Fixture vs schedule-version persistence
 //
 // FIXTURE = WHO (stable TournamentParticipant sides, stage/round ordering).
 // SCHEDULE VERSION = editable/approvable schedule container + optimistic revision.
-// ASSIGNMENT = WHEN + WHERE for one fixture within one schedule version.
+// ASSIGNMENT = WHEN + logical TournamentPitch for one fixture within one version.
 //
-// Resource occupancy truth remains TournamentResourceAllocation + availability
-// engines; assignments reference canonical FacilityResource only (no duplicate
-// pitch identity). Dressing rooms stay on TournamentParticipantAllocation.
+// TournamentPitch = tournament-owned logical playing field (1:n per Event).
+// NOT a FacilityResource — physical location remains TournamentResourceAllocation.
+// Dressing rooms stay on TournamentParticipantAllocation.
 // =============================================================================
 
 enum TournamentScheduleVersionStatus {
@@ -8972,12 +8976,82 @@ model TournamentScheduleVersion {
   @@index([eventId, status])
 }
 
+enum TournamentBreakScope {
+  ALL_PITCHES
+  SELECTED_PITCHES
+}
+
+/// Logical playing field owned by one tournament (Event type=TOURNAMENT).
+model TournamentPitch {
+  id       String @id @default(cuid())
+  tenantId String
+  eventId  String
+
+  displayOrder Int
+  label        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant      Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event       Event                         @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  assignments TournamentFixtureAssignment[]
+  breakLinks  TournamentBreakPitch[]
+
+  @@unique([eventId, displayOrder])
+  @@unique([eventId, label])
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([tenantId, eventId])
+}
+
+/// Tournament-owned longer unavailable period (not match transition).
+model TournamentBreak {
+  id       String @id @default(cuid())
+  tenantId String
+  eventId  String
+
+  label String?
+  startAt DateTime
+  endAt   DateTime
+  scope   TournamentBreakScope @default(ALL_PITCHES)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event  Event                @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  pitches TournamentBreakPitch[]
+
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([tenantId, eventId])
+  @@index([eventId, startAt])
+}
+
+model TournamentBreakPitch {
+  id                String @id @default(cuid())
+  tenantId          String
+  tournamentBreakId String
+  tournamentPitchId String
+
+  createdAt DateTime @default(now())
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tournamentBreak TournamentBreak @relation(fields: [tournamentBreakId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tournamentPitch TournamentPitch @relation(fields: [tournamentPitchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tournamentBreakId, tournamentPitchId])
+  @@index([tenantId])
+  @@index([tournamentPitchId])
+}
+
 model TournamentFixtureAssignment {
   id                String @id @default(cuid())
   tenantId          String
   scheduleVersionId String
   fixtureId         String
-  facilityResourceId String
+  tournamentPitchId String
 
   startAt DateTime
   endAt   DateTime
@@ -8993,14 +9067,14 @@ model TournamentFixtureAssignment {
   tenant           Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   scheduleVersion  TournamentScheduleVersion @relation(fields: [scheduleVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   fixture          TournamentFixture         @relation(fields: [fixtureId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  facilityResource FacilityResource          @relation(fields: [facilityResourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tournamentPitch  TournamentPitch           @relation(fields: [tournamentPitchId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([scheduleVersionId, fixtureId])
   @@index([tenantId])
   @@index([scheduleVersionId])
   @@index([fixtureId])
   @@index([tenantId, scheduleVersionId])
-  @@index([facilityResourceId, startAt])
+  @@index([tournamentPitchId, startAt])
 }
 
 // PLANNING-UX-07R6 — canonical FacilityResource occupancy for club events

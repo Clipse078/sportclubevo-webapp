@@ -1,10 +1,11 @@
 /**
  * SCE-TOURNAMENT-PLANNER-01D — load/normalize tournament data and run pure feasibility engine.
+ *
+ * Physical FacilityResource availability is upstream (TournamentResourceAllocation).
+ * The feasibility engine uses tournament-owned logical pitches + breaks only.
  */
 
 import { prisma } from "@/lib/db/prisma";
-import { getResourceAvailability } from "@/lib/facilities/availability-service";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { SCE_PLATFORM_DEFAULT_TOURNAMENT_DURATION_MINUTES } from "@/lib/operational/defaults";
 import { listTournamentFixtures } from "./fixture-service";
@@ -13,15 +14,15 @@ import {
   analyseTournamentFeasibility,
   FEASIBILITY_DEFAULT_MIN_REST_MINUTES,
   FEASIBILITY_DEFAULT_TRANSITION_MINUTES,
-  type FeasibilityExternalOccupancyInterval,
   type FeasibilityInstantWindow,
-  type FeasibilityResourceRef,
+  type FeasibilityTournamentBreakRef,
+  type FeasibilityTournamentPitchRef,
   type TournamentFeasibilityInput,
   type TournamentFeasibilityResult,
 } from "./feasibility";
-import { subtractOccupancyFromWindow } from "./feasibility/normalize-intervals";
 import { requireTournamentEvent } from "./internal/require-tournament";
-import { listTournamentResourceAllocations } from "@/lib/tournaments/resource-allocation-service";
+import { listTournamentBreaks } from "./tournament-break-service";
+import { listTournamentPitches } from "./tournament-pitch-service";
 
 export type ResolveTournamentSchedulingConfigInput = {
   matchDurationMinutes?: number | null;
@@ -116,49 +117,28 @@ function tournamentWindowFromEvent(startAt: Date, endAt: Date | null): Feasibili
   return { startUtcMs, endUtcMs };
 }
 
-async function loadPlayingResourcesWithAvailability(params: {
-  tenantId: string;
-  tournamentId: string;
-  tournamentWindow: FeasibilityInstantWindow;
-}): Promise<{
-  resources: FeasibilityResourceRef[];
-  externalOccupancy: FeasibilityExternalOccupancyInterval[];
-}> {
-  const allocations = await listTournamentResourceAllocations(params.tenantId, params.tournamentId);
-  const playing = allocations.filter(
-    (row) => classifyFacilityResourceType(row.facilityResourceType) === "PITCH_HALL",
-  );
+function mapBreaksForEngine(
+  breaks: Awaited<ReturnType<typeof listTournamentBreaks>>,
+): FeasibilityTournamentBreakRef[] {
+  return breaks.map((br) => ({
+    breakId: br.id,
+    startUtcMs: new Date(br.startAt).getTime(),
+    endUtcMs: new Date(br.endAt).getTime(),
+    scope: br.scope === "ALL_PITCHES" ? "ALL_PITCHES" : "SELECTED_PITCHES",
+    tournamentPitchIds:
+      br.scope === "SELECTED_PITCHES" ? br.tournamentPitchIds : undefined,
+  }));
+}
 
-  const availability = await getResourceAvailability({
-    tenantId: params.tenantId,
-    startAt: new Date(params.tournamentWindow.startUtcMs),
-    endAt: new Date(params.tournamentWindow.endUtcMs),
-    group: "PITCH_HALL",
-    excludeEventId: params.tournamentId,
-  });
-
-  const externalOccupancy: FeasibilityExternalOccupancyInterval[] = [];
-  for (const row of availability) {
-    for (const conflict of row.conflicts) {
-      externalOccupancy.push({
-        resourceId: row.resourceId,
-        startUtcMs: new Date(conflict.startAt).getTime(),
-        endUtcMs: new Date(conflict.endAt).getTime(),
-      });
-    }
-  }
-
-  const resources: FeasibilityResourceRef[] = playing.map((allocation) => {
-    const baseWindow = params.tournamentWindow;
-    const blocks = externalOccupancy.filter((b) => b.resourceId === allocation.facilityResourceId);
-    const intervals = subtractOccupancyFromWindow(baseWindow, blocks);
-    return {
-      resourceId: allocation.facilityResourceId,
-      availabilityIntervals: intervals,
-    };
-  });
-
-  return { resources, externalOccupancy };
+function mapPitchesForEngine(
+  pitches: Awaited<ReturnType<typeof listTournamentPitches>>,
+): FeasibilityTournamentPitchRef[] {
+  return pitches.map((p) => ({
+    tournamentPitchId: p.id,
+    displayOrder: p.displayOrder,
+    label: p.label,
+    playableIntervals: [],
+  }));
 }
 
 export type AnalyseTournamentFeasibilityForTournamentInput = {
@@ -176,7 +156,7 @@ export type AnalyseTournamentFeasibilityForTournamentResult = {
 };
 
 /**
- * Application boundary: loads tournament fixtures/resources and invokes the pure engine.
+ * Application boundary: loads tournament fixtures/pitches/breaks and invokes the pure engine.
  * Does not persist schedule versions or assignments.
  */
 export async function analyseTournamentFeasibilityForTournament(
@@ -189,7 +169,7 @@ export async function analyseTournamentFeasibilityForTournament(
   });
   const tournamentWindow = tournamentWindowFromEvent(event.startAt, event.endAt);
 
-  const [fixtures, participants, schedulingConfig, resourcePayload] = await Promise.all([
+  const [fixtures, participants, schedulingConfig, pitches, breaks] = await Promise.all([
     listTournamentFixtures(input.tenantId, input.tournamentId),
     prisma.tournamentParticipant.findMany({
       where: { tenantId: input.tenantId, eventId: input.tournamentId },
@@ -201,11 +181,8 @@ export async function analyseTournamentFeasibilityForTournament(
       input.scheduleVersionId,
       input.configOverrides,
     ),
-    loadPlayingResourcesWithAvailability({
-      tenantId: input.tenantId,
-      tournamentId: input.tournamentId,
-      tournamentWindow,
-    }),
+    listTournamentPitches(input.tenantId, input.tournamentId),
+    listTournamentBreaks(input.tenantId, input.tournamentId),
   ]);
 
   const engineInput: TournamentFeasibilityInput = {
@@ -224,8 +201,8 @@ export async function analyseTournamentFeasibilityForTournament(
       sideBParticipantId: f.sideBParticipantId,
     })),
     participants: participants.map((p) => ({ participantId: p.id })),
-    resources: resourcePayload.resources,
-    externalOccupancy: resourcePayload.externalOccupancy,
+    tournamentPitches: mapPitchesForEngine(pitches),
+    breaks: mapBreaksForEngine(breaks),
     lockedAssignments: input.lockedAssignments,
   };
 

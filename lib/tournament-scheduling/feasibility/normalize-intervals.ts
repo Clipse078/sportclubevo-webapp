@@ -1,4 +1,6 @@
-import type { FeasibilityExternalOccupancyInterval, FeasibilityInstantWindow } from "./types";
+import type { FeasibilityInstantWindow } from "./types";
+
+type IntervalBlock = { startUtcMs: number; endUtcMs: number };
 
 function sortWindows(windows: FeasibilityInstantWindow[]): FeasibilityInstantWindow[] {
   return [...windows].sort((a, b) => a.startUtcMs - b.startUtcMs);
@@ -9,7 +11,7 @@ function sortWindows(windows: FeasibilityInstantWindow[]): FeasibilityInstantWin
  */
 export function subtractOccupancyFromWindow(
   base: FeasibilityInstantWindow,
-  blocks: readonly FeasibilityExternalOccupancyInterval[],
+  blocks: readonly IntervalBlock[],
 ): FeasibilityInstantWindow[] {
   const relevant = blocks
     .filter((b) => b.endUtcMs > base.startUtcMs && b.startUtcMs < base.endUtcMs)

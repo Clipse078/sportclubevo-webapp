@@ -46,10 +46,10 @@ export const HARD_CONSTRAINT_CATALOGUE = [
   },
   {
     id: "H6",
-    name: "Eligible pitches only",
-    inputs: ["resources[]"],
-    validationRule: "Assignments reference supplied playable resources",
-    diagnosticCode: "RESOURCE.UNAVAILABLE",
+    name: "Eligible tournament pitches only",
+    inputs: ["tournamentPitches[]"],
+    validationRule: "Assignments reference supplied logical tournament pitches",
+    diagnosticCode: "PITCH.UNAVAILABLE",
   },
   {
     id: "H7",
@@ -74,10 +74,10 @@ export const HARD_CONSTRAINT_CATALOGUE = [
   },
   {
     id: "H10",
-    name: "No SCE allocation conflicts",
-    inputs: ["externalOccupancy"],
-    validationRule: "Slots avoid injected occupancy intervals",
-    diagnosticCode: "RESOURCE.UNAVAILABLE",
+    name: "No tournament break overlap",
+    inputs: ["tournamentBreaks", "tournamentPitches"],
+    validationRule: "Pitch occupancy avoids applicable break intervals (half-open)",
+    diagnosticCode: "BREAK.INVALID",
   },
   {
     id: "H11",
@@ -164,7 +164,6 @@ export function canPlaceFixtureOnSlot(params: {
       // same start different fixture — still check overlap on resource
     }
     if (
-      params.slot.resourceId &&
       resourceIntervalsOverlap(
         params.slot.startUtcMs,
         params.slot.resourceEndUtcMs,
@@ -208,7 +207,7 @@ export function assignmentFromSlot(
 ): FeasibilityAssignmentRef {
   return {
     fixtureId,
-    resourceId: slot.resourceId,
+    tournamentPitchId: slot.tournamentPitchId,
     startUtcMs: slot.startUtcMs,
   };
 }

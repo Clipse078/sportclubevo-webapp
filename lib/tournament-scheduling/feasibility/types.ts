@@ -27,22 +27,28 @@ export interface FeasibilityFixtureRef {
   sideBParticipantId: string;
 }
 
-export interface FeasibilityResourceRef {
-  resourceId: string;
-  /** Normalized playable intervals (already intersected with tournament window). */
-  availabilityIntervals: FeasibilityInstantWindow[];
+/** Tournament-owned logical pitch (independent of FacilityResource). */
+export interface FeasibilityTournamentPitchRef {
+  tournamentPitchId: string;
+  displayOrder: number;
+  label: string;
+  /** Playable intervals after tournament window ∩ break subtraction. */
+  playableIntervals: FeasibilityInstantWindow[];
 }
 
-/** Read-only external occupancy (H10) — supplied by application layer. */
-export interface FeasibilityExternalOccupancyInterval {
-  resourceId: string;
+export type FeasibilityTournamentBreakScope = "ALL_PITCHES" | "SELECTED_PITCHES";
+
+export interface FeasibilityTournamentBreakRef {
+  breakId: string;
   startUtcMs: number;
   endUtcMs: number;
+  scope: FeasibilityTournamentBreakScope;
+  tournamentPitchIds?: readonly string[];
 }
 
 export interface FeasibilityAssignmentRef {
   fixtureId: string;
-  resourceId: string;
+  tournamentPitchId: string;
   startUtcMs: number;
 }
 
@@ -51,8 +57,8 @@ export interface TournamentFeasibilityInput {
   config: FeasibilitySchedulingConfig;
   fixtures: FeasibilityFixtureRef[];
   participants: FeasibilityParticipantRef[];
-  resources: FeasibilityResourceRef[];
-  externalOccupancy: FeasibilityExternalOccupancyInterval[];
+  tournamentPitches: FeasibilityTournamentPitchRef[];
+  breaks: FeasibilityTournamentBreakRef[];
   /** FULL_ASSIGNMENT_LOCK (H7) — fixed pitch + start for regeneration feasibility. */
   lockedAssignments?: FeasibilityAssignmentRef[];
 }
@@ -64,13 +70,16 @@ export type FeasibilityDiagnosticCode =
   | "CAPACITY.WINDOW_TOO_SHORT"
   | "CAPACITY.INSUFFICIENT_PARALLEL_PITCHES"
   | "REST.CANNOT_SATISFY_MIN_REST"
-  | "RESOURCE.UNAVAILABLE"
+  | "PITCH.UNAVAILABLE"
   | "SLOTS.TOO_MANY_CANDIDATES"
   | "LOCKS.CONFLICTING"
   | "ASSIGNMENT.SEARCH_EXHAUSTED"
   | "LIMIT.PARTICIPANTS_EXCEEDED"
   | "LIMIT.FIXTURES_EXCEEDED"
-  | "LIMIT.PITCHES_EXCEEDED";
+  | "LIMIT.PITCHES_EXCEEDED"
+  | "BREAK.INVALID"
+  | "BREAK.OUTSIDE_WINDOW"
+  | "BREAK.UNKNOWN_PITCH";
 
 export interface FeasibilityDiagnostic {
   code: FeasibilityDiagnosticCode;
@@ -81,7 +90,7 @@ export interface FeasibilityDiagnostic {
 
 export type FeasibilitySuggestionCode =
   | "EXTEND_TOURNAMENT_WINDOW"
-  | "ADD_PLAYING_RESOURCE"
+  | "ADD_TOURNAMENT_PITCH"
   | "REDUCE_MATCH_DURATION"
   | "REDUCE_TRANSITION_DURATION"
   | "REDUCE_MINIMUM_REST";
@@ -93,10 +102,11 @@ export interface FeasibilitySuggestion {
 
 export interface FeasibilityMetrics {
   fixtureCount: number;
-  pitchCount: number;
-  availablePitchMinutes: number;
+  tournamentPitchCount: number;
+  availableTournamentPitchMinutes: number;
+  blockedTournamentPitchMinutes: number;
   requiredMatchMinutes: number;
-  requiredResourceOccupancyMinutes: number;
+  requiredPitchOccupancyMinutes: number;
   minimumSlotsPerPitch: number;
   theoreticalSlotCapacity: number;
   candidateSlotCount: number;
@@ -116,9 +126,9 @@ export interface TournamentFeasibilityResult {
 /** Ephemeral candidate slot — never persisted (01D). */
 export interface FeasibilityCandidateSlot {
   slotIndex: number;
-  resourceId: string;
+  tournamentPitchId: string;
   startUtcMs: number;
-  /** Resource occupancy end (match + transition). */
+  /** Pitch occupancy end (match + transition). */
   resourceEndUtcMs: number;
   /** Participant active end (match only). */
   participantEndUtcMs: number;

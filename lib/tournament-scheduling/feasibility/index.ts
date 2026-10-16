@@ -11,18 +11,20 @@ export {
 } from "./constants";
 export { generateFeasibilityCandidateSlots, computeTheoreticalSlotCapacity } from "./candidate-slots";
 export { validateFeasibilityFixtureSet, sortFixturesForScheduling } from "./fixture-validation";
+export { validateTournamentBreaksInput, buildBlockedIntervalsByPitchId } from "./break-intervals";
 export type {
   FeasibilityAssignmentRef,
   FeasibilityCandidateSlot,
   FeasibilityDiagnostic,
-  FeasibilityExternalOccupancyInterval,
   FeasibilityFixtureRef,
   FeasibilityInstantWindow,
   FeasibilityMetrics,
   FeasibilityParticipantRef,
-  FeasibilityResourceRef,
   FeasibilitySchedulingConfig,
   FeasibilitySuggestion,
+  FeasibilityTournamentBreakRef,
+  FeasibilityTournamentBreakScope,
+  FeasibilityTournamentPitchRef,
   TournamentFeasibilityInput,
   TournamentFeasibilityResult,
   TournamentFeasibilityStatus,

@@ -18,15 +18,25 @@
 
 Future schedule generation must use deterministic constraint and optimisation logic — not LLM-invented fixtures.
 
+## Product cardinality (canonical)
+
+| Concept | Cardinality |
+| --- | --- |
+| **Tournament participants** | **2:n** |
+| **Tournament Pitches** (logical scheduler grid) | **1:n** per tournament |
+| **Tournament breaks / blocked periods** | **0:n** per tournament |
+
+**Tournament Pitch ≠ FacilityResource.** Physical SCE resources (e.g. Kunstrasen 2) are allocated via `TournamentResourceAllocation`; the scheduler uses tournament-owned logical pitches (e.g. Feld 1…8). MVP engine guards (e.g. 16 participants) are **implementation safety limits**, not product maximums.
+
 ## Hard constraints (future)
 
 - A participant cannot play two fixtures simultaneously
-- A pitch/hall cannot host simultaneous fixtures
-- Resource availability windows
-- Tournament time window (start/end)
+- A logical tournament pitch cannot host simultaneous fixtures
+- Tournament window + tournament-owned breaks
 - Match duration and changeover time
 - Configurable minimum rest between matches for a team
 - Competition-stage dependencies (groups → placement → knockout)
+- Physical facility availability remains upstream of the scheduler grid
 
 ## Optimisation targets (future)
 

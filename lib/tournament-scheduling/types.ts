@@ -31,12 +31,12 @@ export interface TournamentScheduleVersionDefinition {
   supersededAt: string | null;
 }
 
-/** WHEN + WHERE for one fixture within one schedule version. */
+/** WHEN + logical TournamentPitch for one fixture within one schedule version. */
 export interface TournamentFixtureAssignmentDefinition {
   id: string;
   scheduleVersionId: string;
   fixtureId: string;
-  facilityResourceId: string;
+  tournamentPitchId: string;
   startAt: string;
   endAt: string;
   isLocked: boolean;
@@ -68,14 +68,14 @@ export interface CreateTournamentScheduleVersionInput {
 
 export interface PersistTournamentFixtureAssignmentInput {
   fixtureId: string;
-  facilityResourceId: string;
+  tournamentPitchId: string;
   startAt: Date;
   /** When omitted, derived from schedule version matchDurationMinutes or tenant default. */
   endAt?: Date;
 }
 
 export interface UpdateTournamentFixtureAssignmentInput {
-  facilityResourceId?: string;
+  tournamentPitchId?: string;
   startAt?: Date;
   endAt?: Date;
 }

@@ -14,6 +14,16 @@ import {
 import { canPlaceFixtureOnSlot, slotWithinTournamentWindow } from "./constraints";
 import { sortFixturesForScheduling, validateFeasibilityFixtureSet } from "./fixture-validation";
 import { buildFeasibilityMetrics } from "./metrics";
+import {
+  buildBlockedIntervalsByPitchId,
+  validateTournamentBreaksInput,
+} from "./break-intervals";
+import { buildTournamentPitchAvailability } from "./pitch-availability";
+import {
+  applyFeasibilitySlot,
+  completeFeasibilitySearch,
+  createFeasibilitySearchState,
+} from "./complete-search";
 import type {
   FeasibilityCandidateSlot,
   FeasibilityDiagnostic,
@@ -40,8 +50,11 @@ function buildSuggestions(
     metrics.capacityUtilisation >= TIGHT_CAPACITY_UTILISATION_THRESHOLD
   ) {
     suggestions.push({
-      code: "ADD_PLAYING_RESOURCE",
-      context: { pitchCount: metrics.pitchCount, fixtureCount: metrics.fixtureCount },
+      code: "ADD_TOURNAMENT_PITCH",
+      context: {
+        tournamentPitchCount: metrics.tournamentPitchCount,
+        fixtureCount: metrics.fixtureCount,
+      },
     });
   }
   if (codes.has("CAPACITY.WINDOW_TOO_SHORT") || codes.has("REST.CANNOT_SATISFY_MIN_REST")) {
@@ -77,9 +90,7 @@ function buildSuggestions(
   });
 }
 
-function classifyTight(
-  metrics: TournamentFeasibilityResult["metrics"],
-): boolean {
+function classifyTight(metrics: TournamentFeasibilityResult["metrics"]): boolean {
   if (metrics.capacityUtilisation >= TIGHT_CAPACITY_UTILISATION_THRESHOLD) return true;
   if (metrics.participantMinRestSlackMinutes === 0) return true;
   if (
@@ -91,43 +102,8 @@ function classifyTight(
   return false;
 }
 
-type SearchState = {
-  assignments: Map<string, FeasibilityCandidateSlot>;
-  resourceBookings: Map<string, Array<{ fixtureId: string; startUtcMs: number; resourceEndUtcMs: number }>>;
-  participantBookings: Map<
-    string,
-    Array<{ fixtureId: string; startUtcMs: number; participantEndUtcMs: number }>
-  >;
-  participantLastEnd: Map<string, number>;
-};
-
-function applySlot(state: SearchState, fixtureId: string, participantIds: string[], slot: FeasibilityCandidateSlot): void {
-  state.assignments.set(fixtureId, slot);
-  const resourceList = state.resourceBookings.get(slot.resourceId) ?? [];
-  resourceList.push({
-    fixtureId,
-    startUtcMs: slot.startUtcMs,
-    resourceEndUtcMs: slot.resourceEndUtcMs,
-  });
-  state.resourceBookings.set(slot.resourceId, resourceList);
-
-  for (const participantId of participantIds) {
-    const list = state.participantBookings.get(participantId) ?? [];
-    list.push({
-      fixtureId,
-      startUtcMs: slot.startUtcMs,
-      participantEndUtcMs: slot.participantEndUtcMs,
-    });
-    state.participantBookings.set(participantId, list);
-    const prev = state.participantLastEnd.get(participantId);
-    if (prev === undefined || slot.participantEndUtcMs > prev) {
-      state.participantLastEnd.set(participantId, slot.participantEndUtcMs);
-    }
-  }
-}
-
 function computeParticipantMinRestSlack(
-  state: SearchState,
+  state: ReturnType<typeof createFeasibilitySearchState>,
   config: TournamentFeasibilityInput["config"],
 ): number | null {
   let minSlack: number | null = null;
@@ -144,70 +120,26 @@ function computeParticipantMinRestSlack(
   return minSlack;
 }
 
-/**
- * Deterministic earliest-feasible witness search (01A §20 — greedy lexicographic slots).
- * Same input always yields the same witness when one exists via this policy.
- */
-function greedyAssign(params: {
-  fixtures: readonly TournamentFeasibilityInput["fixtures"][number][];
-  slots: readonly FeasibilityCandidateSlot[];
-  config: TournamentFeasibilityInput["config"];
-  windowStart: number;
-  windowEnd: number;
-  state: SearchState;
-}): boolean {
-  for (const fixture of params.fixtures) {
-    const participantIds = [fixture.sideAParticipantId, fixture.sideBParticipantId];
-    if (params.state.assignments.has(fixture.fixtureId)) {
-      continue;
-    }
-
-    let placed = false;
-    for (const slot of params.slots) {
-      const resourceBookings = params.state.resourceBookings.get(slot.resourceId) ?? [];
-      if (
-        !canPlaceFixtureOnSlot({
-          fixtureId: fixture.fixtureId,
-          participantIds,
-          slot,
-          config: params.config,
-          windowStart: params.windowStart,
-          windowEnd: params.windowEnd,
-          resourceBookings,
-          participantBookings: params.state.participantBookings,
-          participantLastEnd: params.state.participantLastEnd,
-        })
-      ) {
-        continue;
-      }
-      applySlot(params.state, fixture.fixtureId, participantIds, slot);
-      placed = true;
-      break;
-    }
-    if (!placed) return false;
-  }
-  return true;
-}
-
 function validateLockedAssignments(
   input: TournamentFeasibilityInput,
+  pitches: readonly { tournamentPitchId: string }[],
   slots: readonly FeasibilityCandidateSlot[],
   config: TournamentFeasibilityInput["config"],
 ): FeasibilityDiagnostic[] {
   const diagnostics: FeasibilityDiagnostic[] = [];
   const slotByKey = new Map<string, FeasibilityCandidateSlot>();
   for (const slot of slots) {
-    slotByKey.set(`${slot.resourceId}\0${slot.startUtcMs}`, slot);
+    slotByKey.set(`${slot.tournamentPitchId}\0${slot.startUtcMs}`, slot);
   }
 
-  const resourceIds = new Set(input.resources.map((r) => r.resourceId));
+  const pitchIds = new Set(pitches.map((p) => p.tournamentPitchId));
 
   for (const locked of input.lockedAssignments ?? []) {
-    if (!resourceIds.has(locked.resourceId)) {
+    if (!pitchIds.has(locked.tournamentPitchId)) {
       diagnostics.push({
         code: "LOCKS.CONFLICTING",
         constraintId: "H6",
-        context: { fixtureId: locked.fixtureId, resourceId: locked.resourceId },
+        context: { fixtureId: locked.fixtureId, tournamentPitchId: locked.tournamentPitchId },
       });
       continue;
     }
@@ -227,12 +159,12 @@ function validateLockedAssignments(
       });
     }
 
-    const matchingSlot = slotByKey.get(`${locked.resourceId}\0${locked.startUtcMs}`);
+    const matchingSlot = slotByKey.get(`${locked.tournamentPitchId}\0${locked.startUtcMs}`);
     if (!matchingSlot) {
       diagnostics.push({
         code: "LOCKS.CONFLICTING",
         constraintId: "H10",
-        context: { fixtureId: locked.fixtureId, resourceId: locked.resourceId },
+        context: { fixtureId: locked.fixtureId, tournamentPitchId: locked.tournamentPitchId },
       });
     }
   }
@@ -251,6 +183,21 @@ function infeasibleResult(
     metrics,
     suggestions: buildSuggestions(diagnostics, metrics, config),
   };
+}
+
+function emptyMetrics(
+  input: TournamentFeasibilityInput,
+  config: TournamentFeasibilityInput["config"],
+): TournamentFeasibilityResult["metrics"] {
+  return buildFeasibilityMetrics({
+    fixtures: input.fixtures,
+    tournamentPitches: [],
+    tournamentWindow: input.tournamentWindow,
+    config,
+    candidateSlotCount: 0,
+    theoreticalSlotCapacity: 0,
+    participantMinRestSlackMinutes: null,
+  });
 }
 
 /**
@@ -280,29 +227,53 @@ export function analyseTournamentFeasibility(
       context: { count: input.fixtures.length, max: FEASIBILITY_MAX_FIXTURES },
     });
   }
-  if (input.resources.length > FEASIBILITY_MAX_PITCHES) {
+  if (input.tournamentPitches.length > FEASIBILITY_MAX_PITCHES) {
     diagnostics.push({
       code: "LIMIT.PITCHES_EXCEEDED",
-      context: { count: input.resources.length, max: FEASIBILITY_MAX_PITCHES },
+      context: { count: input.tournamentPitches.length, max: FEASIBILITY_MAX_PITCHES },
     });
   }
   if (diagnostics.length > 0) {
-    const metrics = buildFeasibilityMetrics({
-      fixtures: input.fixtures,
-      resources: input.resources,
-      config,
-      candidateSlotCount: 0,
-      theoreticalSlotCapacity: 0,
-      participantMinRestSlackMinutes: null,
-    });
-    return infeasibleResult(diagnostics, metrics, config);
+    return infeasibleResult(diagnostics, emptyMetrics(input, config), config);
   }
+
+  const breakDiagnostics = validateTournamentBreaksInput({
+    breaks: input.breaks,
+    pitches: input.tournamentPitches.map((p) => ({
+      tournamentPitchId: p.tournamentPitchId,
+      displayOrder: p.displayOrder,
+      label: p.label,
+      playableIntervals: [],
+    })),
+    tournamentWindow: input.tournamentWindow,
+  });
+  if (breakDiagnostics.some((d) => d.code === "BREAK.INVALID" || d.code === "BREAK.UNKNOWN_PITCH")) {
+    return infeasibleResult(breakDiagnostics, emptyMetrics(input, config), config);
+  }
+
+  const blockedIntervalsByPitchId = buildBlockedIntervalsByPitchId({
+    breaks: input.breaks,
+    pitches: input.tournamentPitches.map((p) => ({
+      tournamentPitchId: p.tournamentPitchId,
+      displayOrder: p.displayOrder,
+      label: p.label,
+      playableIntervals: [],
+    })),
+    tournamentWindow: input.tournamentWindow,
+  });
+
+  const tournamentPitches = buildTournamentPitchAvailability({
+    tournamentWindow: input.tournamentWindow,
+    pitches: input.tournamentPitches,
+    blockedIntervalsByPitchId,
+  });
 
   const fixtureValidation = validateFeasibilityFixtureSet(input.fixtures, input.participants);
   if (!fixtureValidation.ok) {
     const metrics = buildFeasibilityMetrics({
       fixtures: input.fixtures,
-      resources: input.resources,
+      tournamentPitches,
+      tournamentWindow: input.tournamentWindow,
       config,
       candidateSlotCount: 0,
       theoreticalSlotCapacity: 0,
@@ -318,16 +289,17 @@ export function analyseTournamentFeasibility(
     diagnostics.push({ code: "CAPACITY.WINDOW_TOO_SHORT", constraintId: "H5" });
   }
 
-  const theoreticalSlotCapacity = computeTheoreticalSlotCapacity(input.resources, config);
+  const theoreticalSlotCapacity = computeTheoreticalSlotCapacity(tournamentPitches, config);
   const candidateSlots = generateFeasibilityCandidateSlots(
-    input.resources,
+    tournamentPitches,
     config,
-    input.externalOccupancy,
+    blockedIntervalsByPitchId,
   );
 
   let metrics = buildFeasibilityMetrics({
     fixtures: input.fixtures,
-    resources: input.resources,
+    tournamentPitches,
+    tournamentWindow: input.tournamentWindow,
     config,
     candidateSlotCount: candidateSlots.length,
     theoreticalSlotCapacity,
@@ -346,13 +318,13 @@ export function analyseTournamentFeasibility(
     return infeasibleResult(diagnostics, metrics, config);
   }
 
-  if (metrics.requiredResourceOccupancyMinutes > metrics.availablePitchMinutes) {
+  if (metrics.requiredPitchOccupancyMinutes > metrics.availableTournamentPitchMinutes) {
     diagnostics.push({
       code: "CAPACITY.PITCH_MINUTES_SHORT",
       constraintId: "H2",
       context: {
-        requiredResourceOccupancyMinutes: metrics.requiredResourceOccupancyMinutes,
-        availablePitchMinutes: metrics.availablePitchMinutes,
+        requiredPitchOccupancyMinutes: metrics.requiredPitchOccupancyMinutes,
+        availableTournamentPitchMinutes: metrics.availableTournamentPitchMinutes,
       },
     });
   }
@@ -368,22 +340,22 @@ export function analyseTournamentFeasibility(
     });
   }
 
-  if (metrics.maxFixturesInSingleRound > metrics.pitchCount) {
+  if (metrics.maxFixturesInSingleRound > metrics.tournamentPitchCount) {
     diagnostics.push({
       code: "CAPACITY.INSUFFICIENT_PARALLEL_PITCHES",
       constraintId: "H2",
       context: {
         maxFixturesInSingleRound: metrics.maxFixturesInSingleRound,
-        pitchCount: metrics.pitchCount,
+        tournamentPitchCount: metrics.tournamentPitchCount,
       },
     });
   }
 
-  if (input.resources.length === 0 && input.fixtures.length > 0) {
-    diagnostics.push({ code: "RESOURCE.UNAVAILABLE", constraintId: "H6" });
+  if (input.tournamentPitches.length === 0 && input.fixtures.length > 0) {
+    diagnostics.push({ code: "PITCH.UNAVAILABLE", constraintId: "H6" });
   }
 
-  const lockDiagnostics = validateLockedAssignments(input, candidateSlots, config);
+  const lockDiagnostics = validateLockedAssignments(input, tournamentPitches, candidateSlots, config);
   diagnostics.push(...lockDiagnostics);
 
   if (diagnostics.length > 0) {
@@ -393,12 +365,7 @@ export function analyseTournamentFeasibility(
   const sortedFixtures = sortFixturesForScheduling(input.fixtures);
   const fixtureById = new Map(sortedFixtures.map((f) => [f.fixtureId, f]));
 
-  const state: SearchState = {
-    assignments: new Map(),
-    resourceBookings: new Map(),
-    participantBookings: new Map(),
-    participantLastEnd: new Map(),
-  };
+  const state = createFeasibilitySearchState();
 
   for (const locked of input.lockedAssignments ?? []) {
     const fixture = fixtureById.get(locked.fixtureId);
@@ -413,13 +380,13 @@ export function analyseTournamentFeasibility(
     const matchMs = config.matchDurationMinutes * 60_000;
     const slot: FeasibilityCandidateSlot = {
       slotIndex: -1,
-      resourceId: locked.resourceId,
+      tournamentPitchId: locked.tournamentPitchId,
       startUtcMs: locked.startUtcMs,
       resourceEndUtcMs: locked.startUtcMs + matchMs + ms(config.transitionMinutes),
       participantEndUtcMs: locked.startUtcMs + matchMs,
     };
     const participantIds = [fixture.sideAParticipantId, fixture.sideBParticipantId];
-    const resourceBookings = state.resourceBookings.get(slot.resourceId) ?? [];
+    const resourceBookings = state.resourceBookings.get(slot.tournamentPitchId) ?? [];
     if (
       !canPlaceFixtureOnSlot({
         fixtureId: fixture.fixtureId,
@@ -440,14 +407,14 @@ export function analyseTournamentFeasibility(
       });
       continue;
     }
-    applySlot(state, fixture.fixtureId, participantIds, slot);
+    applyFeasibilitySlot(state, fixture.fixtureId, participantIds, slot);
   }
 
   if (diagnostics.length > 0) {
     return infeasibleResult(diagnostics, metrics, config);
   }
 
-  const searchOk = greedyAssign({
+  const searchOk = completeFeasibilitySearch({
     fixtures: sortedFixtures,
     slots: candidateSlots,
     config,
@@ -462,7 +429,8 @@ export function analyseTournamentFeasibility(
 
   metrics = buildFeasibilityMetrics({
     fixtures: input.fixtures,
-    resources: input.resources,
+    tournamentPitches,
+    tournamentWindow: input.tournamentWindow,
     config,
     candidateSlotCount: candidateSlots.length,
     theoreticalSlotCapacity,
@@ -473,7 +441,7 @@ export function analyseTournamentFeasibility(
     diagnostics.push({
       code: "ASSIGNMENT.SEARCH_EXHAUSTED",
       constraintId: "H12",
-      context: { fixtureCount: metrics.fixtureCount },
+      context: { fixtureCount: metrics.fixtureCount, search: "COMPLETE" },
     });
     return infeasibleResult(diagnostics, metrics, config);
   }

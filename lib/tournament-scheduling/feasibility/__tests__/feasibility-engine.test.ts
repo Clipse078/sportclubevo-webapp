@@ -20,10 +20,13 @@ function windowFromMinutes(start: number, end: number) {
   };
 }
 
-function resource(id: string, start = 0, end = 600) {
+let pitchOrder = 0;
+function tournamentPitch(id: string, displayOrder?: number) {
   return {
-    resourceId: id,
-    availabilityIntervals: [windowFromMinutes(start, end)],
+    tournamentPitchId: id,
+    displayOrder: displayOrder ?? pitchOrder++,
+    label: id,
+    playableIntervals: [],
   };
 }
 
@@ -39,8 +42,8 @@ function defaultInput(
     tournamentWindow: windowFromMinutes(0, 600),
     config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 10 },
     participants: [...participantIds].map((participantId) => ({ participantId })),
-    resources: [resource("pitch-a"), resource("pitch-b")],
-    externalOccupancy: [],
+    tournamentPitches: [tournamentPitch("pitch-a"), tournamentPitch("pitch-b")],
+    breaks: [],
     ...partial,
   };
 }
@@ -78,7 +81,7 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
         fixtures,
         tournamentWindow: windowFromMinutes(0, 35),
         config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
-        resources: [resource("pitch-a", 0, 35)],
+        tournamentPitches: [tournamentPitch("pitch-a", 0)],
       }),
     );
     expect(["FEASIBLE", "TIGHT"]).toContain(result.status);
@@ -106,7 +109,8 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
     const result = analyseTournamentFeasibility(
       defaultInput({
         fixtures,
-        resources: [resource("pitch-a", 0, 30)],
+        tournamentWindow: windowFromMinutes(0, 30),
+        tournamentPitches: [tournamentPitch("pitch-a", 0)],
         config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
       }),
     );
@@ -147,7 +151,7 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
         participants: ["p1", "p2", "p3", "p4"].map((participantId) => ({ participantId })),
         tournamentWindow: windowFromMinutes(0, 200),
         config: { matchDurationMinutes: 30, transitionMinutes: 0, minRestMinutes: 60 },
-        resources: [resource("pitch-a", 0, 200), resource("pitch-b", 0, 200)],
+        tournamentPitches: [tournamentPitch("pitch-a", 0), tournamentPitch("pitch-b", 1)],
       }),
     );
     expect(result.status).toBe("INFEASIBLE");
@@ -192,11 +196,11 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
         participants: ["p1", "p2", "p3", "p4"].map((participantId) => ({ participantId })),
         tournamentWindow: windowFromMinutes(0, 500),
         config: { matchDurationMinutes: 30, transitionMinutes: 0, minRestMinutes: 240 },
-        resources: [resource("pitch-a", 0, 500), resource("pitch-b", 0, 500)],
+        tournamentPitches: [tournamentPitch("pitch-a", 0), tournamentPitch("pitch-b", 1)],
       }),
     );
     expect(result.status).toBe("INFEASIBLE");
-    expect(result.metrics.availablePitchMinutes).toBeGreaterThan(result.metrics.requiredMatchMinutes);
+    expect(result.metrics.availableTournamentPitchMinutes).toBeGreaterThan(result.metrics.requiredMatchMinutes);
     expect(result.diagnostics.some((d) => d.code === "REST.CANNOT_SATISFY_MIN_REST")).toBe(true);
   });
 
@@ -222,7 +226,8 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
     const infeasibleOnePitch = analyseTournamentFeasibility(
       defaultInput({
         fixtures,
-        resources: [resource("pitch-a", 0, 35)],
+        tournamentWindow: windowFromMinutes(0, 35),
+        tournamentPitches: [tournamentPitch("pitch-a", 0)],
         config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
       }),
     );
@@ -231,14 +236,15 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
     const feasibleTwoPitches = analyseTournamentFeasibility(
       defaultInput({
         fixtures,
-        resources: [resource("pitch-a", 0, 35), resource("pitch-b", 0, 35)],
+        tournamentWindow: windowFromMinutes(0, 35),
+        tournamentPitches: [tournamentPitch("pitch-a", 0), tournamentPitch("pitch-b", 1)],
         config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
       }),
     );
     expect(["FEASIBLE", "TIGHT"]).toContain(feasibleTwoPitches.status);
   });
 
-  it("G. unavailable resource interval reduces capacity", () => {
+  it("G. global break blocks entire window", () => {
     const fixtures = [
       {
         fixtureId: "f1",
@@ -249,15 +255,17 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
         sideBParticipantId: "p2",
       },
     ];
+    const window = windowFromMinutes(0, 600);
     const blocked = analyseTournamentFeasibility(
       defaultInput({
         fixtures,
-        resources: [resource("pitch-a", 0, 600)],
-        externalOccupancy: [
+        tournamentPitches: [tournamentPitch("pitch-a", 0)],
+        breaks: [
           {
-            resourceId: "pitch-a",
-            startUtcMs: windowFromMinutes(0, 600).startUtcMs,
-            endUtcMs: windowFromMinutes(600, 600).endUtcMs,
+            breakId: "br1",
+            startUtcMs: window.startUtcMs,
+            endUtcMs: window.endUtcMs,
+            scope: "ALL_PITCHES",
           },
         ],
         config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
@@ -288,7 +296,7 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
       defaultInput({
         fixtures,
         participants: ids.map((participantId) => ({ participantId })),
-        resources: [resource("pitch-a"), resource("pitch-b")],
+        tournamentPitches: [tournamentPitch("pitch-a"), tournamentPitch("pitch-b")],
         config: { matchDurationMinutes: 20, transitionMinutes: 5, minRestMinutes: 5 },
         tournamentWindow: windowFromMinutes(0, 600),
       }),
@@ -315,12 +323,12 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
       sideAParticipantId: f.sideAParticipantId,
       sideBParticipantId: f.sideBParticipantId,
     }));
-    const resources = Array.from({ length: 8 }, (_, i) => resource(`pitch-${i}`, 0, 12 * 60));
+    const tournamentPitches = Array.from({ length: 8 }, (_, i) => tournamentPitch(`pitch-${i}`, i));
     const result = analyseTournamentFeasibility(
       defaultInput({
         fixtures,
         participants: ids.map((participantId) => ({ participantId })),
-        resources,
+        tournamentPitches,
         config: { matchDurationMinutes: 15, transitionMinutes: 5, minRestMinutes: 10 },
         tournamentWindow: windowFromMinutes(0, 12 * 60),
       }),
@@ -387,7 +395,8 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
       defaultInput({
         fixtures,
         tournamentWindow: windowFromMinutes(0, 2000),
-        resources: [resource("pitch-a", 0, 2000), resource("pitch-b", 0, 2000)],
+        tournamentWindow: windowFromMinutes(0, 2000),
+        tournamentPitches: [tournamentPitch("pitch-a", 0), tournamentPitch("pitch-b", 1)],
         config: { matchDurationMinutes: 1, transitionMinutes: 0, minRestMinutes: 0 },
       }),
     );
@@ -454,7 +463,7 @@ describe("hard constraints H1–H12 catalogue", () => {
                 sideBParticipantId: "p4",
               },
             ],
-            resources: [resource("pitch-a", 0, 35)],
+            tournamentPitches: [tournamentPitch("pitch-a", 0)],
             config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
           }),
         ),
@@ -481,7 +490,7 @@ describe("boundary equalities", () => {
         ],
         tournamentWindow: windowFromMinutes(0, 35),
         config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
-        resources: [resource("pitch-a", 0, 35)],
+        tournamentPitches: [tournamentPitch("pitch-a", 0)],
       }),
     );
     expect(["FEASIBLE", "TIGHT"]).toContain(result.status);
@@ -543,11 +552,11 @@ describe("performance — 16-team round robin", () => {
       sideAParticipantId: f.sideAParticipantId,
       sideBParticipantId: f.sideBParticipantId,
     }));
-    const resources = Array.from({ length: 8 }, (_, i) => resource(`pitch-${i}`, 0, 12 * 60));
+    const tournamentPitches = Array.from({ length: 8 }, (_, i) => tournamentPitch(`pitch-${i}`, i));
     const input = defaultInput({
       fixtures,
       participants: ids.map((participantId) => ({ participantId })),
-      resources,
+      tournamentPitches,
       config: { matchDurationMinutes: 15, transitionMinutes: 5, minRestMinutes: 10 },
       tournamentWindow: windowFromMinutes(0, 12 * 60),
     });
@@ -555,5 +564,142 @@ describe("performance — 16-team round robin", () => {
     analyseTournamentFeasibility(input);
     const elapsed = performance.now() - start;
     expect(elapsed).toBeLessThan(500);
+  });
+});
+
+describe("tournament pitch count matrix", () => {
+  const parallelFixtures = Array.from({ length: 8 }, (_, i) => ({
+    fixtureId: `f${i}`,
+    stageKey: "MAIN",
+    roundIndex: 0,
+    slotIndexInRound: i,
+    sideAParticipantId: `p${i * 2}`,
+    sideBParticipantId: `p${i * 2 + 1}`,
+  }));
+
+  it("1 pitch INFEASIBLE vs 8 pitches FEASIBLE for same window", () => {
+    const window = windowFromMinutes(0, 35);
+    const config = { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 };
+    const one = analyseTournamentFeasibility(
+      defaultInput({
+        fixtures: parallelFixtures,
+        tournamentWindow: window,
+        tournamentPitches: [tournamentPitch("feld-1", 0)],
+        config,
+      }),
+    );
+    expect(one.status).toBe("INFEASIBLE");
+
+    const eight = analyseTournamentFeasibility(
+      defaultInput({
+        fixtures: parallelFixtures,
+        tournamentWindow: window,
+        tournamentPitches: Array.from({ length: 8 }, (_, i) => tournamentPitch(`feld-${i + 1}`, i)),
+        config,
+      }),
+    );
+    expect(["FEASIBLE", "TIGHT"]).toContain(eight.status);
+  });
+});
+
+describe("tournament break matrix", () => {
+  const singleFixture = [
+    {
+      fixtureId: "f1",
+      stageKey: "MAIN",
+      roundIndex: 0,
+      slotIndexInRound: 0,
+      sideAParticipantId: "p1",
+      sideBParticipantId: "p2",
+    },
+  ];
+
+  it("J. fixture may start exactly when break ends", () => {
+    const breakEnd = windowFromMinutes(30, 45);
+    const result = analyseTournamentFeasibility(
+      defaultInput({
+        fixtures: singleFixture,
+        tournamentWindow: windowFromMinutes(0, 600),
+        config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
+        tournamentPitches: [tournamentPitch("feld-1", 0)],
+        breaks: [
+          {
+            breakId: "br",
+            startUtcMs: windowFromMinutes(0, 30).startUtcMs,
+            endUtcMs: breakEnd.endUtcMs,
+            scope: "ALL_PITCHES",
+          },
+        ],
+      }),
+    );
+    expect(result.status).not.toBe("INFEASIBLE");
+  });
+
+  it("I. fixture overlapping break start is rejected", () => {
+    const result = analyseTournamentFeasibility(
+      defaultInput({
+        fixtures: singleFixture,
+        tournamentWindow: windowFromMinutes(0, 35),
+        config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
+        tournamentPitches: [tournamentPitch("feld-1", 0)],
+        breaks: [
+          {
+            breakId: "br",
+            startUtcMs: windowFromMinutes(0, 0).startUtcMs,
+            endUtcMs: windowFromMinutes(35, 35).endUtcMs,
+            scope: "ALL_PITCHES",
+          },
+        ],
+      }),
+    );
+    expect(result.status).toBe("INFEASIBLE");
+  });
+
+  it("selected-pitch break only blocks chosen pitches", () => {
+    const result = analyseTournamentFeasibility(
+      defaultInput({
+        fixtures: singleFixture,
+        tournamentWindow: windowFromMinutes(0, 35),
+        config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
+        tournamentPitches: [tournamentPitch("feld-1", 0), tournamentPitch("feld-2", 1)],
+        breaks: [
+          {
+            breakId: "br",
+            startUtcMs: windowFromMinutes(0, 0).startUtcMs,
+            endUtcMs: windowFromMinutes(35, 35).endUtcMs,
+            scope: "SELECTED_PITCHES",
+            tournamentPitchIds: ["feld-1"],
+          },
+        ],
+      }),
+    );
+    expect(["FEASIBLE", "TIGHT"]).toContain(result.status);
+  });
+
+  it("overlapping global + pitch-specific breaks merge on affected pitch", () => {
+    const result = analyseTournamentFeasibility(
+      defaultInput({
+        fixtures: singleFixture,
+        tournamentWindow: windowFromMinutes(0, 90),
+        config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
+        tournamentPitches: [tournamentPitch("feld-1", 0)],
+        breaks: [
+          {
+            breakId: "g",
+            startUtcMs: windowFromMinutes(30, 30).startUtcMs,
+            endUtcMs: windowFromMinutes(45, 45).endUtcMs,
+            scope: "ALL_PITCHES",
+          },
+          {
+            breakId: "p",
+            startUtcMs: windowFromMinutes(40, 40).startUtcMs,
+            endUtcMs: windowFromMinutes(55, 55).endUtcMs,
+            scope: "SELECTED_PITCHES",
+            tournamentPitchIds: ["feld-1"],
+          },
+        ],
+      }),
+    );
+    expect(result.status).not.toBe("INFEASIBLE");
   });
 });

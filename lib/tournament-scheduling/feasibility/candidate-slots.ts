@@ -1,35 +1,11 @@
 import { compareParticipantId } from "../fixtures/ordering";
+import { slotOverlapsPitchBreak } from "./break-intervals";
 import type {
   FeasibilityCandidateSlot,
-  FeasibilityExternalOccupancyInterval,
   FeasibilityInstantWindow,
-  FeasibilityResourceRef,
   FeasibilitySchedulingConfig,
+  FeasibilityTournamentPitchRef,
 } from "./types";
-
-function overlaps(
-  aStart: number,
-  aEnd: number,
-  bStart: number,
-  bEnd: number,
-): boolean {
-  return aStart < bEnd && bStart < aEnd;
-}
-
-function blockedByExternal(
-  resourceId: string,
-  startUtcMs: number,
-  resourceEndUtcMs: number,
-  externalOccupancy: readonly FeasibilityExternalOccupancyInterval[],
-): boolean {
-  for (const block of externalOccupancy) {
-    if (block.resourceId !== resourceId) continue;
-    if (overlaps(startUtcMs, resourceEndUtcMs, block.startUtcMs, block.endUtcMs)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 function theoreticalSlotsInInterval(
   interval: FeasibilityInstantWindow,
@@ -41,14 +17,14 @@ function theoreticalSlotsInInterval(
 }
 
 export function computeTheoreticalSlotCapacity(
-  resources: readonly FeasibilityResourceRef[],
+  tournamentPitches: readonly FeasibilityTournamentPitchRef[],
   config: FeasibilitySchedulingConfig,
 ): number {
   const slotOccupancyMs = (config.matchDurationMinutes + config.transitionMinutes) * 60_000;
   if (slotOccupancyMs <= 0) return 0;
   let total = 0;
-  for (const resource of resources) {
-    for (const interval of resource.availabilityIntervals) {
+  for (const pitch of tournamentPitches) {
+    for (const interval of pitch.playableIntervals) {
       total += theoreticalSlotsInInterval(interval, slotOccupancyMs);
     }
   }
@@ -56,45 +32,41 @@ export function computeTheoreticalSlotCapacity(
 }
 
 /**
- * Deterministic candidate slots at fixed stride = resource slot occupancy (H9).
+ * Deterministic candidate slots at fixed stride = pitch slot occupancy (H9).
+ * Half-open break semantics: slot may start exactly when a break ends.
  */
 export function generateFeasibilityCandidateSlots(
-  resources: readonly FeasibilityResourceRef[],
+  tournamentPitches: readonly FeasibilityTournamentPitchRef[],
   config: FeasibilitySchedulingConfig,
-  externalOccupancy: readonly FeasibilityExternalOccupancyInterval[],
+  blockedIntervalsByPitchId: ReadonlyMap<string, readonly FeasibilityInstantWindow[]>,
 ): FeasibilityCandidateSlot[] {
   const matchMs = config.matchDurationMinutes * 60_000;
   const slotOccupancyMs = (config.matchDurationMinutes + config.transitionMinutes) * 60_000;
   if (slotOccupancyMs <= 0 || matchMs <= 0) return [];
 
-  const sortedResources = [...resources].sort((a, b) =>
-    compareParticipantId(a.resourceId, b.resourceId),
-  );
+  const sortedPitches = [...tournamentPitches].sort((a, b) => {
+    if (a.displayOrder !== b.displayOrder) return a.displayOrder - b.displayOrder;
+    return compareParticipantId(a.tournamentPitchId, b.tournamentPitchId);
+  });
 
   const slots: FeasibilityCandidateSlot[] = [];
   let slotIndex = 0;
 
-  for (const resource of sortedResources) {
-    for (const interval of resource.availabilityIntervals) {
+  for (const pitch of sortedPitches) {
+    for (const interval of pitch.playableIntervals) {
       let startUtcMs = interval.startUtcMs;
       while (startUtcMs + slotOccupancyMs <= interval.endUtcMs) {
         const resourceEndUtcMs = startUtcMs + slotOccupancyMs;
         const participantEndUtcMs = startUtcMs + matchMs;
-        if (
-          !blockedByExternal(
-            resource.resourceId,
-            startUtcMs,
-            resourceEndUtcMs,
-            externalOccupancy,
-          )
-        ) {
-          slots.push({
-            slotIndex,
-            resourceId: resource.resourceId,
-            startUtcMs,
-            resourceEndUtcMs,
-            participantEndUtcMs,
-          });
+        const candidate: FeasibilityCandidateSlot = {
+          slotIndex,
+          tournamentPitchId: pitch.tournamentPitchId,
+          startUtcMs,
+          resourceEndUtcMs,
+          participantEndUtcMs,
+        };
+        if (!slotOverlapsPitchBreak(candidate, blockedIntervalsByPitchId)) {
+          slots.push(candidate);
           slotIndex += 1;
         }
         startUtcMs += slotOccupancyMs;
@@ -104,7 +76,12 @@ export function generateFeasibilityCandidateSlots(
 
   slots.sort((a, b) => {
     if (a.startUtcMs !== b.startUtcMs) return a.startUtcMs - b.startUtcMs;
-    return compareParticipantId(a.resourceId, b.resourceId);
+    const orderA =
+      sortedPitches.find((p) => p.tournamentPitchId === a.tournamentPitchId)?.displayOrder ?? 0;
+    const orderB =
+      sortedPitches.find((p) => p.tournamentPitchId === b.tournamentPitchId)?.displayOrder ?? 0;
+    if (orderA !== orderB) return orderA - orderB;
+    return compareParticipantId(a.tournamentPitchId, b.tournamentPitchId);
   });
 
   return slots.map((slot, index) => ({ ...slot, slotIndex: index }));

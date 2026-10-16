@@ -1,23 +1,14 @@
 import type {
   FeasibilityFixtureRef,
   FeasibilityInstantWindow,
-  FeasibilityResourceRef,
-  FeasibilitySchedulingConfig,
   FeasibilityMetrics,
+  FeasibilitySchedulingConfig,
+  FeasibilityTournamentPitchRef,
 } from "./types";
+import { sumPlayableMinutes } from "./pitch-availability";
 
 function intervalMinutes(window: FeasibilityInstantWindow): number {
   return Math.max(0, Math.floor((window.endUtcMs - window.startUtcMs) / 60_000));
-}
-
-export function sumResourceAvailabilityMinutes(resources: readonly FeasibilityResourceRef[]): number {
-  let total = 0;
-  for (const resource of resources) {
-    for (const interval of resource.availabilityIntervals) {
-      total += intervalMinutes(interval);
-    }
-  }
-  return total;
 }
 
 export function maxFixturesInAnyRound(fixtures: readonly FeasibilityFixtureRef[]): number {
@@ -59,36 +50,46 @@ export function minimumRequiredTournamentSpanMinutes(
 
 export function buildFeasibilityMetrics(params: {
   fixtures: readonly FeasibilityFixtureRef[];
-  resources: readonly FeasibilityResourceRef[];
+  tournamentPitches: readonly FeasibilityTournamentPitchRef[];
+  tournamentWindow: FeasibilityInstantWindow;
   config: FeasibilitySchedulingConfig;
   candidateSlotCount: number;
   theoreticalSlotCapacity: number;
   participantMinRestSlackMinutes: number | null;
 }): FeasibilityMetrics {
   const fixtureCount = params.fixtures.length;
-  const pitchCount = params.resources.length;
-  const availablePitchMinutes = sumResourceAvailabilityMinutes(params.resources);
+  const tournamentPitchCount = params.tournamentPitches.length;
+  const availableTournamentPitchMinutes = sumPlayableMinutes(params.tournamentPitches);
+  const windowMinutesPerPitch = intervalMinutes(params.tournamentWindow);
+  const rawPitchMinutes = windowMinutesPerPitch * tournamentPitchCount;
+  const blockedTournamentPitchMinutes = Math.max(
+    0,
+    rawPitchMinutes - availableTournamentPitchMinutes,
+  );
   const requiredMatchMinutes = fixtureCount * params.config.matchDurationMinutes;
   const slotOccupancyMinutes =
     params.config.matchDurationMinutes + params.config.transitionMinutes;
-  const requiredResourceOccupancyMinutes = fixtureCount * slotOccupancyMinutes;
+  const requiredPitchOccupancyMinutes = fixtureCount * slotOccupancyMinutes;
   const minimumSlotsPerPitch =
     slotOccupancyMinutes > 0
-      ? Math.ceil(requiredResourceOccupancyMinutes / slotOccupancyMinutes / Math.max(1, pitchCount))
+      ? Math.ceil(
+          requiredPitchOccupancyMinutes / slotOccupancyMinutes / Math.max(1, tournamentPitchCount),
+        )
       : 0;
   const capacityUtilisation =
-    availablePitchMinutes > 0
-      ? requiredResourceOccupancyMinutes / availablePitchMinutes
+    availableTournamentPitchMinutes > 0
+      ? requiredPitchOccupancyMinutes / availableTournamentPitchMinutes
       : fixtureCount > 0
         ? Number.POSITIVE_INFINITY
         : 0;
 
   return {
     fixtureCount,
-    pitchCount,
-    availablePitchMinutes,
+    tournamentPitchCount,
+    availableTournamentPitchMinutes,
+    blockedTournamentPitchMinutes,
     requiredMatchMinutes,
-    requiredResourceOccupancyMinutes,
+    requiredPitchOccupancyMinutes,
     minimumSlotsPerPitch,
     theoreticalSlotCapacity: params.theoreticalSlotCapacity,
     candidateSlotCount: params.candidateSlotCount,

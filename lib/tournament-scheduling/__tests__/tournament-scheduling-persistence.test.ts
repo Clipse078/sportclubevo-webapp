@@ -31,13 +31,9 @@ vi.mock("@/lib/db/prisma", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    tournamentPitch: { findFirst: vi.fn() },
     $transaction: vi.fn(),
   },
-}));
-
-vi.mock("@/lib/facilities/facility-resource-write-validation", () => ({
-  loadTenantFacilityResourceForWrite: vi.fn(),
-  validateAssignableFacilityResource: vi.fn(),
 }));
 
 vi.mock("@/lib/operational/tenant-operational-duration-policy-service", () => ({
@@ -45,10 +41,6 @@ vi.mock("@/lib/operational/tenant-operational-duration-policy-service", () => ({
 }));
 
 import { prisma } from "@/lib/db/prisma";
-import {
-  loadTenantFacilityResourceForWrite,
-  validateAssignableFacilityResource,
-} from "@/lib/facilities/facility-resource-write-validation";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import {
   createTournamentFixture,
@@ -89,7 +81,7 @@ const FIXTURE_ID = "fixture-01";
 const VERSION_ID = "version-01";
 const VERSION_ID_2 = "version-02";
 const ASSIGNMENT_ID = "assignment-01";
-const RESOURCE_ID = "resource-pitch-1";
+const PITCH_ID = "tournament-pitch-1";
 
 function mockTournamentExists(tenantId: string = TENANT_A) {
   vi.mocked(prisma.event.findFirst).mockResolvedValue({ id: TOURNAMENT_ID } as never);
@@ -114,12 +106,8 @@ function mockParticipants(
   });
 }
 
-function mockActiveResource() {
-  vi.mocked(loadTenantFacilityResourceForWrite).mockResolvedValue({
-    id: RESOURCE_ID,
-    facility: { id: "fac-1" },
-  } as never);
-  vi.mocked(validateAssignableFacilityResource).mockReturnValue(null);
+function mockActivePitch() {
+  vi.mocked(prisma.tournamentPitch.findFirst).mockResolvedValue({ id: PITCH_ID } as never);
 }
 
 beforeEach(() => {
@@ -315,11 +303,11 @@ describe("assignments", () => {
     return version;
   }
 
-  it("assigns fixture to resource + start", async () => {
+  it("assigns fixture to tournament pitch + start", async () => {
     mockWorkingVersion();
     vi.mocked(prisma.tournamentFixture.findFirst).mockResolvedValue({ id: FIXTURE_ID } as never);
     vi.mocked(prisma.tournamentFixtureAssignment.findUnique).mockResolvedValue(null);
-    mockActiveResource();
+    mockActivePitch();
     vi.mocked(prisma.tournamentScheduleVersion.findUniqueOrThrow).mockResolvedValue({
       revision: 3,
       status: "WORKING",
@@ -330,7 +318,7 @@ describe("assignments", () => {
       id: ASSIGNMENT_ID,
       scheduleVersionId: VERSION_ID,
       fixtureId: FIXTURE_ID,
-      facilityResourceId: RESOURCE_ID,
+      tournamentPitchId: PITCH_ID,
       startAt,
       endAt: new Date("2026-08-01T11:00:00.000Z"),
       isLocked: false,
@@ -340,7 +328,7 @@ describe("assignments", () => {
 
     const result = await persistTournamentFixtureAssignment(TENANT_A, VERSION_ID, {
       fixtureId: FIXTURE_ID,
-      facilityResourceId: RESOURCE_ID,
+      tournamentPitchId: PITCH_ID,
       startAt,
     });
 
@@ -352,28 +340,27 @@ describe("assignments", () => {
     mockWorkingVersion();
     vi.mocked(prisma.tournamentFixture.findFirst).mockResolvedValue({ id: FIXTURE_ID } as never);
     vi.mocked(prisma.tournamentFixtureAssignment.findUnique).mockResolvedValue({ id: "x" } as never);
-    mockActiveResource();
+    mockActivePitch();
 
     await expect(
       persistTournamentFixtureAssignment(TENANT_A, VERSION_ID, {
         fixtureId: FIXTURE_ID,
-        facilityResourceId: RESOURCE_ID,
+        tournamentPitchId: PITCH_ID,
         startAt: new Date(),
       }),
     ).rejects.toThrow(TournamentAssignmentDuplicateError);
   });
 
-  it("rejects archived resource", async () => {
+  it("rejects unknown tournament pitch", async () => {
     mockWorkingVersion();
     vi.mocked(prisma.tournamentFixture.findFirst).mockResolvedValue({ id: FIXTURE_ID } as never);
     vi.mocked(prisma.tournamentFixtureAssignment.findUnique).mockResolvedValue(null);
-    vi.mocked(loadTenantFacilityResourceForWrite).mockResolvedValue({ id: RESOURCE_ID } as never);
-    vi.mocked(validateAssignableFacilityResource).mockReturnValue("ARCHIVED_RESOURCE");
+    vi.mocked(prisma.tournamentPitch.findFirst).mockResolvedValue(null);
 
     await expect(
       persistTournamentFixtureAssignment(TENANT_A, VERSION_ID, {
         fixtureId: FIXTURE_ID,
-        facilityResourceId: RESOURCE_ID,
+        tournamentPitchId: PITCH_ID,
         startAt: new Date(),
       }),
     ).rejects.toThrow(TournamentScheduleResourceInvalidError);
@@ -390,7 +377,7 @@ describe("assignments", () => {
     await expect(
       persistTournamentFixtureAssignment(TENANT_A, VERSION_ID, {
         fixtureId: FIXTURE_ID,
-        facilityResourceId: RESOURCE_ID,
+        tournamentPitchId: PITCH_ID,
         startAt: new Date(),
       }),
     ).rejects.toThrow(TournamentScheduleApprovedImmutableError);
@@ -401,7 +388,7 @@ describe("assignments", () => {
       id: ASSIGNMENT_ID,
       scheduleVersionId: VERSION_ID,
       fixtureId: FIXTURE_ID,
-      facilityResourceId: RESOURCE_ID,
+      tournamentPitchId: PITCH_ID,
       startAt: new Date(),
       endAt: new Date(),
       isLocked: false,
@@ -418,7 +405,7 @@ describe("assignments", () => {
       id: ASSIGNMENT_ID,
       scheduleVersionId: VERSION_ID,
       fixtureId: FIXTURE_ID,
-      facilityResourceId: RESOURCE_ID,
+      tournamentPitchId: PITCH_ID,
       startAt: new Date(),
       endAt: new Date(),
       isLocked: true,
@@ -440,7 +427,7 @@ describe("assignments", () => {
     mockWorkingVersion({ revision: 5 });
     vi.mocked(prisma.tournamentFixture.findFirst).mockResolvedValue({ id: FIXTURE_ID } as never);
     vi.mocked(prisma.tournamentFixtureAssignment.findUnique).mockResolvedValue(null);
-    mockActiveResource();
+    mockActivePitch();
 
     await expect(
       persistTournamentFixtureAssignment(
@@ -448,7 +435,7 @@ describe("assignments", () => {
         VERSION_ID,
         {
           fixtureId: FIXTURE_ID,
-          facilityResourceId: RESOURCE_ID,
+          tournamentPitchId: PITCH_ID,
           startAt: new Date(),
         },
         { expectedRevision: 2 },
@@ -460,7 +447,7 @@ describe("assignments", () => {
         VERSION_ID,
         {
           fixtureId: FIXTURE_ID,
-          facilityResourceId: RESOURCE_ID,
+          tournamentPitchId: PITCH_ID,
           startAt: new Date(),
         },
         { expectedRevision: 2 },
@@ -472,9 +459,9 @@ describe("assignments", () => {
     vi.mocked(prisma.tournamentFixtureAssignment.findFirst).mockResolvedValue({
       id: ASSIGNMENT_ID,
       scheduleVersionId: VERSION_ID,
-      fixtureResourceId: RESOURCE_ID,
+      fixtureResourceId: PITCH_ID,
       fixtureId: FIXTURE_ID,
-      facilityResourceId: RESOURCE_ID,
+      tournamentPitchId: PITCH_ID,
       startAt: new Date("2026-08-01T10:00:00.000Z"),
       endAt: new Date("2026-08-01T11:00:00.000Z"),
       scheduleVersion: { id: VERSION_ID, status: "WORKING", revision: 1, eventId: TOURNAMENT_ID },
@@ -488,7 +475,7 @@ describe("assignments", () => {
       id: ASSIGNMENT_ID,
       scheduleVersionId: VERSION_ID,
       fixtureId: FIXTURE_ID,
-      facilityResourceId: RESOURCE_ID,
+      tournamentPitchId: PITCH_ID,
       startAt: new Date("2026-08-01T12:00:00.000Z"),
       endAt: new Date("2026-08-01T13:00:00.000Z"),
       isLocked: false,

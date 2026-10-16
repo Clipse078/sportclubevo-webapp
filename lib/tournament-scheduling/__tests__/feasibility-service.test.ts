@@ -2,18 +2,18 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    event: { findFirst: vi.fn() },
+    event: { findFirst: vi.fn(), findFirstOrThrow: vi.fn() },
     tournamentParticipant: { findMany: vi.fn() },
     tournamentScheduleVersion: { findFirst: vi.fn() },
   },
 }));
 
-vi.mock("@/lib/tournaments/resource-allocation-service", () => ({
-  listTournamentResourceAllocations: vi.fn(),
+vi.mock("../tournament-pitch-service", () => ({
+  listTournamentPitches: vi.fn(),
 }));
 
-vi.mock("@/lib/facilities/availability-service", () => ({
-  getResourceAvailability: vi.fn(),
+vi.mock("../tournament-break-service", () => ({
+  listTournamentBreaks: vi.fn(),
 }));
 
 vi.mock("@/lib/operational/tenant-operational-duration-policy-service", () => ({
@@ -33,12 +33,12 @@ vi.mock("../internal/require-tournament", () => ({
 }));
 
 import { prisma } from "@/lib/db/prisma";
-import { getResourceAvailability } from "@/lib/facilities/availability-service";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
-import { listTournamentResourceAllocations } from "@/lib/tournaments/resource-allocation-service";
 import { requireTournamentEvent } from "../internal/require-tournament";
 import { listTournamentFixtures } from "../fixture-service";
 import { getTournamentScheduleVersion } from "../schedule-version-service";
+import { listTournamentPitches } from "../tournament-pitch-service";
+import { listTournamentBreaks } from "../tournament-break-service";
 import {
   analyseTournamentFeasibilityForTournament,
   resolveTournamentSchedulingConfig,
@@ -90,6 +90,10 @@ describe("analyseTournamentFeasibilityForTournament", () => {
       startAt: start,
       endAt: end,
     } as never);
+    vi.mocked(prisma.event.findFirstOrThrow).mockResolvedValue({
+      startAt: start,
+      endAt: end,
+    } as never);
     vi.mocked(listTournamentFixtures).mockResolvedValue([
       {
         id: "fx1",
@@ -111,34 +115,11 @@ describe("analyseTournamentFeasibilityForTournament", () => {
       TRAINING: { durationMinutes: 90, isClubConfigured: false },
       TOURNAMENT: { durationMinutes: 60, isClubConfigured: false },
     });
-    vi.mocked(listTournamentResourceAllocations).mockResolvedValue([
-      {
-        id: "a1",
-        facilityResourceId: "res-1",
-        facilityResourceType: "FULL_PITCH",
-        facilityResourceCode: "P1",
-        facilityResourceName: "Pitch 1",
-        facilityId: "f1",
-        facilityName: "Main",
-        notes: null,
-        displayOrder: 0,
-      },
-    ] as never);
-    vi.mocked(getResourceAvailability).mockResolvedValue([
-      {
-        resourceId: "res-1",
-        resourceName: "Pitch 1",
-        resourceCode: "P1",
-        facilityId: "f1",
-        facilityName: "Main",
-        status: "FREE",
-        conflictLabel: null,
-        conflictStartAt: null,
-        conflictEndAt: null,
-        conflictSourceType: null,
-        conflicts: [],
-      },
-    ] as never);
+    vi.mocked(listTournamentPitches).mockResolvedValue([
+      { id: "tp1", eventId: TOURNAMENT, displayOrder: 0, label: "Feld 1" },
+      { id: "tp2", eventId: TOURNAMENT, displayOrder: 1, label: "Feld 2" },
+    ]);
+    vi.mocked(listTournamentBreaks).mockResolvedValue([]);
 
     const result = await analyseTournamentFeasibilityForTournament({
       tenantId: TENANT,
