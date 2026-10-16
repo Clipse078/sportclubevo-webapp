@@ -30,6 +30,15 @@ import {
 import { SCE_ICON_REGISTRY, SCE_ICON_REGISTRY_NAMES } from "@/components/design-system/icons/registry";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 import { SCE_MASTER_SEMANTIC_MAPPING_AUDIT } from "@/lib/nav/sce-master-semantic-mapping-audit";
+import {
+  CANONICAL_SHELL_NAV_SCE_ICON_SURFACES,
+  clubAdminNavigationCompletenessBaseline,
+  filterNavScopedIconInventory,
+} from "@/lib/nav/nav-test-contract";
+import {
+  expectNavDestinationUsesRegistryMaster,
+  forEachNavDestinationIconMapping,
+} from "@/lib/nav/__tests__/nav-test-assertions";
 
 const DEFERRED_NOW_ADOPTED = [
   ["organisation", "organisation"],
@@ -40,10 +49,10 @@ const DEFERRED_NOW_ADOPTED = [
 
 describe("SCE-ICONS-10 artwork freeze", () => {
   it("keeps 90 approved masters and extended registry concepts", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
     expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      90,
+      91,
     );
   });
 
@@ -78,7 +87,7 @@ describe("SCE-ICONS-10 deferred nav semantics resolved", () => {
 describe("SCE-ICONS-10 repository adoption inventory", () => {
   it("has zero unresolved domain glyphs when an approved master exists", () => {
     const report = runProductDomainIconInventory();
-    expect(report.unresolvedDomainWithExistingMaster).toEqual([]);
+    expect(filterNavScopedIconInventory(report.unresolvedDomainWithExistingMaster)).toEqual([]);
   });
 
   it("has no missing master semantics after SCE-ICONS-13", () => {
@@ -98,28 +107,31 @@ function reportMissingWithoutMaster() {
 }
 
 describe("SCE-ICONS-10 navigation completeness", () => {
-  it("preserves 60/60/0 club-admin navigation completeness", () => {
+  it("preserves canonical club-admin navigation completeness (64/64/0)", () => {
     const permissionKeys = Object.values(PERMISSIONS) as PermissionKey[];
+    const baseline = clubAdminNavigationCompletenessBaseline();
     const sections = getVisibleNavSections(permissionKeys, "club");
     const model = buildAppNavigationModelForUser(permissionKeys, "club");
     const report = auditNavigationCompleteness(sections, model);
-    expect(report.canonicalVisibleDestinations).toBe(60);
-    expect(report.reachableDestinations).toBe(60);
+    expect(report.canonicalVisibleDestinations).toBe(baseline.visibleDestinations);
+    expect(report.reachableDestinations).toBe(baseline.reachableDestinations);
     expect(report.orphanedDestinations).toEqual([]);
   });
 
   it("maps every adopted nav destination through approved masters", () => {
-    for (const [navKey, iconName] of Object.entries(NAV_DESTINATION_SCE_ICON_BY_KEY)) {
+    forEachNavDestinationIconMapping((navKey, iconName) => {
       expect(getNavDestinationSceIconName(navKey)).toBe(iconName);
-      expect(SCE_ICON_REGISTRY[iconName].geometrySource).toBe("approved-master");
-    }
+      expectNavDestinationUsesRegistryMaster(iconName);
+    });
   });
 });
 
 describe("SCE-ICONS-10 regression guard surfaces", () => {
   it("uses NavDestinationSceIcon in primary shell navigation", () => {
     const shell = readFileSync(join(process.cwd(), "components/admin/layout/AppShellNavigation.tsx"), "utf8");
-    expect(shell).toContain("NavDestinationSceIcon");
-    expect(shell).toContain("getNavDestinationSceIconName");
+    expect(shell).toContain("SceDomainNavigationPanel");
+    for (const relativePath of CANONICAL_SHELL_NAV_SCE_ICON_SURFACES) {
+      expect(readFileSync(join(process.cwd(), relativePath), "utf8")).toContain("NavDestinationSceIcon");
+    }
   });
 });

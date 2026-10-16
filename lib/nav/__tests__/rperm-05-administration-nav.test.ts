@@ -16,6 +16,7 @@ import {
   type NavContext,
 } from "@/lib/nav/nav-config";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
+import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 
 function visibleLabels(
   permissionKeys: PermissionKey[],
@@ -46,15 +47,22 @@ describe("RPERM-05 — tenant Roles & Permissions navigation", () => {
   });
 
   it("N-04: visible with roles.view", () => {
-    expect(visibleLabels([PERMISSIONS.ROLES_VIEW])).toContain("Rollen & Berechtigungen");
+    expect(
+      visibleLabels([...TENANT_ADMINISTRATION_PERMISSIONS, PERMISSIONS.ROLES_VIEW]),
+    ).toContain("Rollen & Berechtigungen");
   });
 
   it("N-04b: visible with roles.manage", () => {
-    expect(visibleLabels([PERMISSIONS.ROLES_MANAGE])).toContain("Rollen & Berechtigungen");
+    expect(
+      visibleLabels([...TENANT_ADMINISTRATION_PERMISSIONS, PERMISSIONS.ROLES_MANAGE]),
+    ).toContain("Rollen & Berechtigungen");
   });
 
   it("N-05: the platform-only 'Rollen' entry requires USERS_MANAGE independently of tenant roles.*", () => {
-    const tenantOnly = visibleLabels([PERMISSIONS.ROLES_VIEW]);
+    const tenantOnly = visibleLabels([
+      ...TENANT_ADMINISTRATION_PERMISSIONS,
+      PERMISSIONS.ROLES_VIEW,
+    ]);
     expect(tenantOnly).toContain("Rollen & Berechtigungen");
     expect(tenantOnly).not.toContain("Rollen");
 

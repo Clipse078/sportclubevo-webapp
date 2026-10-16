@@ -293,13 +293,19 @@ describe("getVisibleNavSections permission filtering", () => {
   const allPermissions = Object.values(PERMISSIONS);
 
   it("admin sees Saisons under Administration (SEASONS_VIEW)", () => {
-    const sections = getVisibleNavSections([PERMISSIONS.SEASONS_VIEW]);
+    const sections = getVisibleNavSections([
+      ...TENANT_ADMINISTRATION_PERMISSIONS,
+      PERMISSIONS.SEASONS_VIEW,
+    ]);
     const item = findItemByKey(sections, "admin-seasons");
     expect(item).not.toBeNull();
   });
 
   it("admin sees Saisons under Administration (SEASONS_MANAGE)", () => {
-    const sections = getVisibleNavSections([PERMISSIONS.SEASONS_MANAGE]);
+    const sections = getVisibleNavSections([
+      ...TENANT_ADMINISTRATION_PERMISSIONS,
+      PERMISSIONS.SEASONS_MANAGE,
+    ]);
     const item = findItemByKey(sections, "admin-seasons");
     expect(item).not.toBeNull();
   });
@@ -350,7 +356,10 @@ describe("getVisibleNavSections permission filtering", () => {
   });
 
   it("facilities-view user sees Anlagen & Ressourcen under Administration", () => {
-    const sections = getVisibleNavSections([PERMISSIONS.FACILITIES_VIEW]);
+    const sections = getVisibleNavSections([
+      ...TENANT_ADMINISTRATION_PERMISSIONS,
+      PERMISSIONS.FACILITIES_VIEW,
+    ]);
     const item = findItemByKey(sections, "admin-facilities");
     expect(item).not.toBeNull();
   });

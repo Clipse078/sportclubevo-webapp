@@ -24,6 +24,11 @@ import {
 } from "@/components/design-system/icons/masters/approved-hero-meta";
 import { SCE_ICON_REGISTRY, SCE_ICON_REGISTRY_NAMES } from "@/components/design-system/icons/registry";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
+import { clubAdminNavigationCompletenessBaseline } from "@/lib/nav/nav-test-contract";
+import {
+  expectNavDestinationUsesRegistryMaster,
+  forEachNavDestinationIconMapping,
+} from "@/lib/nav/__tests__/nav-test-assertions";
 
 const UTILITY_REGISTRY_NAMES = [
   "search",
@@ -56,10 +61,10 @@ function readRelative(relativePath: string): string {
 
 describe("SCE-ICONS-09 programme baseline", () => {
   it("keeps canonical approved master and registry totals", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
     expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      90,
+      91,
     );
   });
 
@@ -120,21 +125,22 @@ describe("SCE-ICONS-09 high-confidence adoption", () => {
   });
 
   it("routes adopted nav destinations only through central mapping keys", () => {
-    for (const [navKey, iconName] of Object.entries(NAV_DESTINATION_SCE_ICON_BY_KEY)) {
+    forEachNavDestinationIconMapping((navKey, iconName) => {
       expect(getNavDestinationSceIconName(navKey)).toBe(iconName);
-      expect(SCE_ICON_REGISTRY[iconName].geometrySource).toBe("approved-master");
-    }
+      expectNavDestinationUsesRegistryMaster(iconName);
+    });
   });
 });
 
 describe("SCE-ICONS-09 navigation completeness", () => {
-  it("keeps 60/60/0 for club-admin permissions", () => {
+  it("keeps canonical club-admin navigation completeness (64/64/0)", () => {
     const permissionKeys = Object.values(PERMISSIONS) as PermissionKey[];
+    const baseline = clubAdminNavigationCompletenessBaseline();
     const sections = getVisibleNavSections(permissionKeys, "club");
     const model = buildAppNavigationModelForUser(permissionKeys, "club");
     const report = auditNavigationCompleteness(sections, model);
-    expect(report.canonicalVisibleDestinations).toBe(60);
-    expect(report.reachableDestinations).toBe(60);
+    expect(report.canonicalVisibleDestinations).toBe(baseline.visibleDestinations);
+    expect(report.reachableDestinations).toBe(baseline.reachableDestinations);
     expect(report.orphanedDestinations).toEqual([]);
   });
 });

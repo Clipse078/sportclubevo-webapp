@@ -58,7 +58,7 @@ const manageInfoboardKeys = [
 async function openPublishingL3Panel(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByTestId("primary-domain-panel-trigger-publishing"));
   const panel = screen.getByTestId("sce-domain-nav-panel");
-  await user.click(within(panel).getByRole("button", { name: /Kanäle/i }));
+  await user.click(within(panel).getByRole("button", { name: /Infoboard/i }));
   return panel;
 }
 
