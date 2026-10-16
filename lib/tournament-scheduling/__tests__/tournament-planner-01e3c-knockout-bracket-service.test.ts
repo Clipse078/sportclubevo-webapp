@@ -2,6 +2,7 @@
  * SCE-TOURNAMENT-PLANNER-01E3C — knockout bracket service (mocked Prisma).
  */
 
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -212,5 +213,105 @@ describe("01E3C — knockout service guards", () => {
         ],
       }),
     ).rejects.toBeInstanceOf(TournamentFixtureSetConflictError);
+  });
+
+  it("resolves concurrent first-writer race via P2002 then idempotent read", async () => {
+    vi.mocked(prisma.tournamentCompetitionConfiguration.findFirst).mockResolvedValue({
+      id: "cfg",
+      eventId: TOURNAMENT,
+      competitionFormat: "KNOCKOUT_ONLY",
+    } as never);
+    vi.mocked(prisma.tournamentPhase.findFirst).mockResolvedValue({
+      id: PHASE_KO,
+      eventId: TOURNAMENT,
+      displayOrder: 1,
+      phaseType: "KNOCKOUT",
+      label: "K.-o.",
+      stageKey: "KO",
+      groupMixStrategy: null,
+      smartMixTargetMatchesPerParticipant: null,
+    } as never);
+    vi.mocked(prisma.tournamentParticipant.findFirst).mockImplementation(async (args) => {
+      const id = (args as { where: { id: string } }).where.id;
+      return { id } as never;
+    });
+
+    let listCalls = 0;
+    vi.mocked(prisma.tournamentFixture.findMany).mockImplementation(async () => {
+      listCalls += 1;
+      if (listCalls === 1) {
+        return [] as never;
+      }
+      return [
+        {
+          id: "fx-1",
+          eventId: TOURNAMENT,
+          tournamentPhaseId: PHASE_KO,
+          tournamentGroupId: null,
+          stageKey: "KO",
+          roundIndex: 0,
+          slotIndexInRound: 0,
+          generatorKey: "knockout:KO:r0:s0",
+          sideAParticipantId: "p1",
+          sideBParticipantId: "p2",
+        },
+      ] as never;
+    });
+
+    vi.mocked(prisma.$transaction).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      }),
+    );
+
+    const result = await generateKnockoutBracketForPhase(TENANT, {
+      tournamentId: TOURNAMENT,
+      phaseId: PHASE_KO,
+      entrants: [
+        { kind: "CONCRETE_PARTICIPANT", participantId: "p1" },
+        { kind: "CONCRETE_PARTICIPANT", participantId: "p2" },
+      ],
+    });
+
+    expect(result.fixtures).toHaveLength(1);
+    expect(vi.mocked(prisma.tournamentFixture.create)).not.toHaveBeenCalled();
+    expect(listCalls).toBeGreaterThanOrEqual(2);
+  });
+
+  it("does not leave partial bracket when transaction fails", async () => {
+    vi.mocked(prisma.tournamentCompetitionConfiguration.findFirst).mockResolvedValue({
+      id: "cfg",
+      eventId: TOURNAMENT,
+      competitionFormat: "KNOCKOUT_ONLY",
+    } as never);
+    vi.mocked(prisma.tournamentPhase.findFirst).mockResolvedValue({
+      id: PHASE_KO,
+      eventId: TOURNAMENT,
+      displayOrder: 1,
+      phaseType: "KNOCKOUT",
+      label: "K.-o.",
+      stageKey: "KO",
+      groupMixStrategy: null,
+      smartMixTargetMatchesPerParticipant: null,
+    } as never);
+    vi.mocked(prisma.tournamentParticipant.findFirst).mockImplementation(async (args) => {
+      const id = (args as { where: { id: string } }).where.id;
+      return { id } as never;
+    });
+    vi.mocked(prisma.tournamentFixture.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockRejectedValue(new Error("simulated persistence failure"));
+
+    await expect(
+      generateKnockoutBracketForPhase(TENANT, {
+        tournamentId: TOURNAMENT,
+        phaseId: PHASE_KO,
+        entrants: [
+          { kind: "CONCRETE_PARTICIPANT", participantId: "p1" },
+          { kind: "CONCRETE_PARTICIPANT", participantId: "p2" },
+        ],
+      }),
+    ).rejects.toThrow("simulated persistence failure");
+    expect(vi.mocked(prisma.$transaction)).toHaveBeenCalledTimes(1);
   });
 });

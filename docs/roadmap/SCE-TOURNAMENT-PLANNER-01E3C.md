@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E3C` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3B`](./SCE-TOURNAMENT-PLANNER-01E3B.md) — **CLOSED / ACCEPTED / MERGED** (PR **#862**) |
-| **Status** | **CURRENT — ready for review** |
+| **Status** | **CURRENT — READY FOR CLOSURE (R1 proof complete)** |
 | **Branch** | `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` |
 | **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**NOT STARTED**) |
 
@@ -138,3 +138,36 @@ Unchanged: **`TENANT_ORGANISED_TOURNAMENTS_ONLY`**, fail-closed on unknown owner
 ## Creator / Planung adoption
 
 Future Creator configures K.-o.-Turnier or Gruppenphase + K.-o.-Phase without hand-building every fixture. Future Planung renders rounds, BYEs, qualification placeholders, and `WINNER_OF_FIXTURE` paths from this structure.
+
+## R1 closure proof (SCE-TOURNAMENT-PLANNER-01E3C-R1)
+
+Automated gate on branch `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` (PR **#863**).
+
+| Proof area | Result |
+| --- | --- |
+| **Exhaustive topology N = 2..128** | **PASS** — `tournament-planner-01e3c-knockout-bracket-exhaustive.test.ts` + `knockout-bracket-invariants.ts` |
+| **Mixed-source BYE matrix** (3, 5, 6, 7, 9, 12) | **PASS** — concrete + `GROUP_RANK` qualification sources |
+| **BYE direct advancement** | **YES** — omitted fixture; entrant/source propagates to later structural side |
+| **Concrete BYE source preserved** | **YES** — `CONCRETE_PARTICIPANT` on final side (no fake `WINNER_OF_FIXTURE` for BYE) |
+| **GROUP_RANK BYE source preserved** | **YES** — qualification reference retained structurally (no resolution) |
+| **Source cardinality** | **Exactly one canonical source per knockout side** (discriminated union) |
+| **Reachability / orphans** | **0** orphaned initial entrant sources, winner sources, dangling side refs |
+| **Duplicate active paths** | **0** duplicated entrant/qualification identities on fixture sides |
+| **N − 1 real fixtures** | **PASS** for all tested N (BYEs do not inflate count) |
+| **Final fixture count** | **1** per bracket |
+| **DAG / cycles** | **PASS** — forward-only `WINNER_OF_FIXTURE` edges + DFS cycle check |
+| **Structural positions** | **0** duplicate `(roundIndex, slotIndexInRound)` |
+| **Generator keys** | **0** collisions; keys match `knockout:{stageKey}:r{roundIndex}:s{slotIndexInRound}` |
+| **GROUP + knockout handoff** | **PASS** — semifinals `GROUP_RANK`, final `WINNER_OF_FIXTURE` only |
+| **Phase-order integrity** | Enforced in 01E3A `validateQualificationSourceForFixtureSide` (`displayOrder` on `TournamentPhase`) |
+| **Idempotency / drift** | **PASS** — service tests (generator key match / conflict) |
+| **Concurrency** | **PASS** — P2002 unique race → idempotent re-read (no duplicate creates) |
+| **Failure atomicity** | **PASS** — single transaction; failure surfaces without partial return |
+| **01D handoff** | **PASS** — unresolved qualification sides for participant-rest |
+| **Package boundary** | **01E3D NOT STARTED** — no group-rank → participant resolution, no results engine |
+
+Explicit non-power-of-two proofs covered in exhaustive suite: **N = 3, 5, 6, 7, 9, 10, 12, 17**. Power-of-two regression: **2, 4, 8, 16, 32, 64, 128** with **BYE_COUNT = 0**.
+
+**Schema:** no migration in R1 (`SCHEMA_CHANGE = NO`).
+
+**01E3C** remains **CURRENT / READY FOR CLOSURE**. **01E3D** remains **NOT STARTED**.
