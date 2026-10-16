@@ -163,6 +163,7 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   "billing-invoice": "Billing / Invoice",
   conflict: "Conflict",
   infoboard: "Infoboard",
+  "mobile-app": "Mobile App",
   news: "News",
   notifications: "Notifications",
   planning: "Planning",

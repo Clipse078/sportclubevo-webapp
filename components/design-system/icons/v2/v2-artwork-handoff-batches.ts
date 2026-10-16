@@ -46,6 +46,7 @@ const BATCH_2: SceApprovedMasterIconName[] = [
   "news",
   "publish",
   "infoboard",
+  "mobile-app",
   "events",
   "competition",
   "club",

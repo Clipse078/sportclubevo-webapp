@@ -43,7 +43,7 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   infoboard: "infoboard",
   "infoboard-overview": "infoboard",
   "infoboard-preview": "infoboard",
-  "mobile-app": "contact",
+  "mobile-app": "mobile-app",
   finanzen: "finance",
   sponsoring: "sponsor",
   "formulare-freigaben": "form",

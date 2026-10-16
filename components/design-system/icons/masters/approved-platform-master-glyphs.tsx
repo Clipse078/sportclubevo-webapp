@@ -56,6 +56,15 @@ export function ConflictApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   );
 }
 
+/** Geometry copied exactly from `public/images/icons/mobile-app.svg` (V2 monochrome artwork). */
+export function MobileAppApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
+  return (
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="22" y="8" width="20" height="48" rx="4" stroke="currentColor" strokeWidth="4"/><path d="M28 48h8" stroke="currentColor" strokeWidth="3.5"/><circle cx="32" cy="14" r="1.5" fill="currentColor"/>
+    </SceIconSvg>
+  );
+}
+
 /** Geometry copied exactly from `public/images/icons/infoboard.svg` (V2 monochrome artwork). */
 export function InfoboardApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
@@ -133,6 +142,7 @@ export const SCE_APPROVED_PLATFORM_MASTER_GLYPHS = [
   AuditApprovedMasterGlyph,
   BillingInvoiceApprovedMasterGlyph,
   ConflictApprovedMasterGlyph,
+  MobileAppApprovedMasterGlyph,
   InfoboardApprovedMasterGlyph,
   NewsApprovedMasterGlyph,
   NotificationsApprovedMasterGlyph,
