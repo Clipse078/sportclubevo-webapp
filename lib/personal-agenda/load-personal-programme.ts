@@ -6,11 +6,7 @@ import type { PersonalContext } from "@/lib/dashboard/personal-context/types";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { loadMeetingProgrammeItems } from "./adapters/meeting-programme-adapter";
-import { prisma } from "@/lib/db/prisma";
-import { queryProgramme } from "@/lib/programme-engine/query-programme";
-import { buildPersonProgrammeScope } from "@/lib/programme-engine/person-programme-scope";
-import { programmeItemsToPersonalProgrammeItems } from "@/lib/programme-engine/programme-item-personal-adapter";
-import { getTenantClubCrestUrlCached } from "@/lib/server/request-cache";
+import { loadPersonScopeSportingProgrammeItems } from "./load-person-scope-sporting-programme";
 import {
   resolvePersonalProgrammeRange,
   type PersonalProgrammeRange,
@@ -148,30 +144,18 @@ export async function loadPersonalProgramme(
   };
 
   const [programmeQuery, meetings] = await Promise.all([
-    loadAdapter("programme-engine-person", async () => {
-      const [tenant, tenantLogoUrl] = await Promise.all([
-        prisma.tenant.findUnique({
-          where: { id: args.tenantId },
-          select: { name: true },
-        }),
-        getTenantClubCrestUrlCached(args.tenantId),
-      ]);
-
-      const result = await queryProgramme({
+    loadAdapter("programme-engine-person", () =>
+      loadPersonScopeSportingProgrammeItems({
         tenantId: args.tenantId,
         userId: args.userId!,
+        personalContext,
         timeZone: args.timeZone,
         now: args.now,
-        from: range.rangeStart,
-        to: range.rangeEnd,
+        rangeStart: range.rangeStart,
+        rangeEnd: range.rangeEnd,
         permissionKeys: permissionKeys ?? [],
-        tenantClubName: tenant?.name ?? null,
-        tenantLogoUrl,
-        scope: buildPersonProgrammeScope(personalContext),
-      });
-
-      return programmeItemsToPersonalProgrammeItems(result.items, personalContext);
-    }),
+      }),
+    ),
     loadAdapter("programme-meetings", () => loadMeetingProgrammeItems(adapterCtx)),
   ]);
 

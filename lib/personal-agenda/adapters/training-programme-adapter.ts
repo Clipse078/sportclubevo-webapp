@@ -1,3 +1,8 @@
+/**
+ * LEGACY_RETAINED — pre-01I training loader bypassing Programme Engine.
+ * CONSUMERS: regression/diagnostic tests, sce-activity-ux-01r5-fca-trace script.
+ * FUTURE_REMOVAL_PACKAGE: SCE-ACTIVITY-CREATE-01N.
+ */
 import { prisma } from "@/lib/db/prisma";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import {
