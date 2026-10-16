@@ -8783,10 +8783,10 @@ model TournamentParticipant {
   /// per [eventId, externalClubId].
   externalClubId String?
   /// Tournament-specific participant identity ("Anzeigename", e.g. "Gelb",
-  /// "E1") — only ever set together with externalClubId. Blank/null falls
-  /// back to the canonical ExternalClub.name for display (see
+  /// "FCA F2 Rot") — set with teamId and/or externalClubId. Blank/null falls
+  /// back to the canonical Team.name or ExternalClub.name for display (see
   /// lib/tournaments/participant-service.ts). Never written back into
-  /// ExternalClub.name or ExternalTeam.name.
+  /// Team.name, ExternalClub.name, or ExternalTeam.name.
   displayName    String?
   /// Smallest clean fallback for a genuinely unknown/free-text participant
   /// when no canonical Team or ExternalClub exists yet for that club/team.
@@ -8814,11 +8814,11 @@ model TournamentParticipant {
   fixtureSidesA           TournamentFixture[]               @relation("TournamentFixtureSideA")
   fixtureSidesB           TournamentFixture[]               @relation("TournamentFixtureSideB")
 
-  /// Prevent the same canonical Team from being added twice to the same tournament.
-  /// (Postgres unique indexes never compare NULLs as equal, so this is inert
-  /// for manual/external-only rows — duplicate ExternalTeam guard lives
-  /// below; externalClubId is deliberately NOT unique — see above.)
-  @@unique([eventId, teamId])
+  /// The same canonical Team MAY appear on multiple rows (01D-R2 — e.g. two
+  /// squads "Rot"/"Blau" referencing FC Allschwil F2). Tournament-local
+  /// displayName distinguishes them; Team.name is never mutated.
+  /// Duplicate guard for historical ExternalTeam rows remains below;
+  /// externalClubId is deliberately NOT unique — see above.
   /// Prevent the same canonical (historical) ExternalTeam from being added twice to the same tournament.
   @@unique([eventId, externalTeamId])
   @@index([tenantId])
