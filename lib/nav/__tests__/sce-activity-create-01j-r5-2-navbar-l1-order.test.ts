@@ -18,7 +18,10 @@ import {
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS);
-const COMM_SENDER_ONLY = [PERMISSIONS.COMMUNICATION_SEND] as const;
+const COMM_SENDER_ONLY = [
+  PERMISSIONS.COMMUNICATION_CLUB_SEND,
+  PERMISSIONS.COMMUNICATION_TEAM_SEND,
+] as const;
 
 function readRelative(relativePath: string): string {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
@@ -34,7 +37,7 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.2 canonical desktop L1 order", () => {
   it("defines desktop L1 order via NAVIGATION_DOMAIN_DEFINITIONS sortOrder (no CSS reorder)", () => {
     const css = readRelative("app/(admin)/global-app-navigation.css");
     expect(css).not.toMatch(/flex-order\s*:\s*[1-9]/);
-    expect(css).not.toMatch(/order\s*:\s*[1-9]/);
+    expect(css).not.toMatch(/(?:^|[\s;{])order\s*:\s*[1-9]/m);
 
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const desktop = resolveDesktopPrimaryNavigationDomains(model.domains, "club");
@@ -91,7 +94,7 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.2 canonical desktop L1 order", () => {
         expect(items.length).toBeGreaterThan(0);
       }
       if (domain.id === "admin") {
-        expect(items.some((item) => item.key === "administration")).toBe(true);
+        expect(items.some((item) => item.key.startsWith("admin-"))).toBe(true);
       }
     }
   });

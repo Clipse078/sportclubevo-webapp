@@ -23,6 +23,7 @@ import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-admi
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
   useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -129,9 +130,14 @@ describe("SCE-NAV-ADMIN-01 Club Admin navigation", () => {
     const labels = Array.from(nav.querySelectorAll(".sce-global-primary-nav-domain-label")).map(
       (el) => el.textContent,
     );
-    expect(labels.indexOf("Admin")).toBe(labels.indexOf("Publizieren") + 1);
+    expect(labels).toEqual(["Club", "Planung", "Publizieren", "Kommunikation", "Admin"]);
     expect(labels.at(-1)).toBe("Admin");
-    expect(screen.getByRole("link", { name: /^Admin$/ })).toHaveAttribute("href", "/dashboard/admin");
+    expect(labels[0]).toBe("Club");
+    expect(screen.getByRole("button", { name: /^Admin$/ })).toBeInTheDocument();
+    const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
+    expect(model.domains.find((d) => d.id === "admin")?.defaultDestination.href).toBe(
+      "/dashboard/admin",
+    );
   });
 
   it("hides Admin for non-Club-Admin and communication-only senders", () => {
