@@ -14,7 +14,7 @@ function diagnostic(
 }
 
 /**
- * Validates fixture set before feasibility analysis (01C-aligned structural checks).
+ * Validates fixture set before feasibility analysis (generator-agnostic structural checks).
  */
 export function validateFeasibilityFixtureSet(
   fixtures: readonly FeasibilityFixtureRef[],
