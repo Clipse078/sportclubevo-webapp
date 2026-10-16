@@ -3,11 +3,11 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01C round-robin generator delivered; next 01D** |
+| **Status** | **IN PROGRESS — 01C CLOSED / MERGED (PR #855); next 01D** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
-| **01C (round robin)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — deterministic fixture generation (WHO) |
+| **01C (round robin)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic fixture generation (WHO) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Architecture principle
@@ -37,7 +37,31 @@ Future schedule generation must use deterministic constraint and optimisation lo
 - Compact overall tournament duration
 - Soft penalties for manual preference violations
 
-## Future planner UX (not in 01F)
+## Product placement (accepted — engine/UI roadmap)
+
+**`SEPARATE_TOP_LEVEL_TOURNAMENT_SCHEDULING_MODULE = NO`**
+
+Scheduling UX lives inside the Tournament domain only:
+
+1. **Tournament Creator (`SceActivityComposer`)** — progressive adoption of scheduling rules at creation time (`TOURNAMENT_CREATOR_ADOPTION_REQUIRED` assessed per package).
+2. **Tournament context → Planung** — canonical workspace for fixture overview, feasibility, optimiser output, pitch × time planner, locks/regeneration, manual edits, conflicts, and publication (`TOURNAMENT_PLANUNG_ADOPTION_REQUIRED` assessed per package).
+
+Do not introduce parallel top-level “Smart Tournament Scheduling” navigation.
+
+## Sequenced packages (01D–01I)
+
+| Package | Focus | Layer |
+| --- | --- | --- |
+| **01D** | Feasibility + hard-constraint validator | ENGINE / DOMAIN |
+| **01E** | Automatic schedule optimiser | ENGINE / DOMAIN |
+| **01F** | Locks + regeneration + schedule diff | ENGINE / DOMAIN foundation |
+| **01G** | Visual pitch × time planner | First major **Planung** UI |
+| **01H** | Manual editing + DnD + conflict UX | **Planung** |
+| **01I** | Approval + publication + sharing | **Planung** / publication |
+
+Creator integration is **not** deferred until after 01I; each package records creator vs Planung adoption flags.
+
+## Future planner UX (01G+ — under Planung)
 
 - Feasibility assistant before generation
 - Generate smart schedule

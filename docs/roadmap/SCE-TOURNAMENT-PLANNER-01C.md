@@ -5,6 +5,8 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01C` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — **CLOSED / MERGED** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#855** → STAGE) |
+| **Merge commit** | `b62af792af698fd0092e6f9bfd6d632ca99198f8` |
 | **Branch** | `cursor/sce-tournament-planner-01c-round-robin-generation` |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
@@ -96,6 +98,38 @@ No silent delete/recreate.
 - Double round robin, groups, knockout, Swiss, placement rounds
 - Schedule versions, assignments, resource allocations, publication
 - UI / API routes, feasibility, optimiser, regeneration diff (01D–01F)
+
+## Product UX handoff (recorded — no UI in 01C)
+
+**Smart Tournament Scheduling is not a separate top-level product module.** It belongs to the Tournament domain in two contexts:
+
+### A. Tournament Creator Composer
+
+The Tournament Creator progressively adopts scheduling configuration (competition format, match duration, tournament time window, available pitches/resources, transition/buffer, minimum rest, feasibility feedback). Exact field timing follows engine packages — do not implement prematurely.
+
+**Principle:** create the tournament with its scheduling rules. The existing Tournament Creator remains the canonical `SceActivityComposer` adoption — no parallel tournament creation workflow.
+
+### B. Individual Tournament → Planung
+
+Every tournament exposes its scheduling workspace from canonical tournament context navigation (`Übersicht`, `Aufgebot`, `Teilnahme`, **`Planung`**, `Kommunikation`, `Mehr`). Scheduling belongs under **Planung**, progressively containing fixture overview, feasibility, automatic scheduling, pitch × time planner, locks, regeneration/diff, manual adjustments / DnD, conflicts, and approval/publication handoff.
+
+**Principle:** manage and evolve the resulting schedule from that tournament's **Planung** workspace — not from a separate top-level “Smart Tournament Scheduling” navigation domain.
+
+## Future package alignment (01D–01I)
+
+| Package | Scope | Domain |
+| --- | --- | --- |
+| **01D** | Feasibility + hard-constraint validator | ENGINE / DOMAIN |
+| **01E** | Automatic schedule optimiser | ENGINE / DOMAIN |
+| **01F** | Locks + regeneration + schedule diff | ENGINE / DOMAIN foundation |
+| **01G** | Visual pitch × time planner | First major **Planung** UI adoption |
+| **01H** | Manual editing + DnD + conflict UX | Tournament **Planung** |
+| **01I** | Approval + publication + sharing | Tournament **Planung** / publication |
+
+Tournament Creator scheduling-rule adoption occurs **progressively** at appropriate package boundaries — not deferred until after 01I. Each future package must explicitly assess:
+
+- `TOURNAMENT_CREATOR_ADOPTION_REQUIRED = YES | NO`
+- `TOURNAMENT_PLANUNG_ADOPTION_REQUIRED = YES | NO`
 
 ## 01D handoff
 
