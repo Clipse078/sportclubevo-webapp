@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R2 Mein Programm workspace** |
+| **Status** | **IN PROGRESS — R3 Dashboard Mein Programm preview** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -61,7 +61,7 @@ Same as above, with Mein Programm workspace consuming `PersonalProgrammeViewMode
 | Dashboard calendar (cockpit) | `PersonalProgrammeMonthCalendar` on same programme items | — |
 | Full personal calendar | `loadPersonalCalendarMonthBundle` → `SceCalendarEngine` | — |
 | Club/team programme | `ProgrammeSceActivityCard` | N/A for 01J |
-| Today widgets | `DashboardTodayEventCards`, `MeineAgendaWidget` | Separate compact formatters — **R3/R5** align or narrow scope |
+| Today widgets | Not wired on `/dashboard` (R3) | `DashboardTodayEventCards`, `MeineAgendaWidget` remain exported — **R5** cleanup if unused |
 
 ### Duplicate programme queries (R1 resolution)
 
@@ -114,3 +114,42 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **PERSON_SOURCE** | `loadPersonalProgramme` → `loadPersonScopeSportingProgrammeItems` (R1 boundary) |
 | **LEGACY_RETAINED** | `training-programme-adapter.ts`, `team-event-programme-adapter.ts` unchanged |
 | **DASHBOARD_FULL_PROGRAMME_LINK** | Dashboard preview “Alle anzeigen” → `/dashboard/mein-programm` |
+
+## 01J-R3 — Dashboard Mein Programm world-class preview
+
+| Decision | Value |
+|----------|--------|
+| **DASHBOARD_PROGRAMME_ROLE** | Orientation + near-term personal programme preview (not full workspace) |
+| **PROGRAMME_SOURCE** | `getPersonalCommandCenterData` → `loadPersonalProgramme` → `loadPersonScopeSportingProgrammeItems` (PERSON) |
+| **PERSON_SCOPE** | Shared R1 boundary — no duplicate `queryProgramme` in dashboard loaders |
+| **VIEW_MODEL** | `PersonalProgrammeItem` / feed groups from `buildProgrammeFeedGroups` |
+| **PREVIEW_LIMIT** | `DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT = 5` (presentation-only cap in `PersonalDashboardWorkspace`) |
+| **DATE_GROUPING** | Canonical Heute / Morgen / locale date headings via `ProgrammeFeedGroup.labelKind` |
+| **CARD_DENSITY** | `COMPACT` via `PersonalProgrammePreviewRow` → `PersonalProgrammeCanonicalAgendaRow` → Sce* list-row |
+| **FULL_PROGRAMME_ROUTE** | Cockpit header CTA → `/dashboard/mein-programm` (`MEIN_PROGRAMM_BASE_PATH`, “Alle anzeigen”) |
+| **NEXT_ACTIVITY_EMPHASIS** | First preview row receives modest `highlighted` styling; no separate hero card family |
+| **DUPLICATE_WIDGETS_REMOVED** | Cockpit calendar `showSelectedDayPanel={false}` — day sporting rows only in Mein Programm preview (avoids triple representation with feed + selected-day panel) |
+| **DISTINCT_WIDGETS_RETAINED** | `PersonalProgrammeMonthCalendar` grid + markers; `PersonalAttention`; `PersonalTasksPreview`; `PersonalQuickAccess`; `PersonalDashboardSecondary` (non-programme club signals) |
+| **MEETING_HANDLING** | `loadMeetingProgrammeItems` merged in `loadPersonalProgramme`; preview uses legacy compact `PersonalProgrammeAgendaRow` (not Sce* sporting cards) |
+| **TASK_HANDLING** | Tasks remain separate cockpit card / calendar layer — not ProgrammeItems |
+| **LEGACY_FALLBACK_STATUS** | Sporting PERSON rows always carry `canonicalPresentation`; dashboard preview uses Sce* path. Legacy `PersonalProgrammeAgendaRow` fallback retained for **meetings** and **degraded/missing presentation** (Kalender mobile day, tests) |
+| **MEIN_PROGRAMM_RANGE_REVIEW_REQUIRED** | **NO** (list remains tenant-local today → +90 days; out of R3 scope) |
+
+### R3 activity presentation (unchanged semantics)
+
+| Kind | Dashboard preview |
+|------|-------------------|
+| **TRAINING** | SceTrainingCard COMPACT — club/host · venue · resource hierarchy |
+| **MATCH** | SceMatchCard — home left / away right, crests when resolvable |
+| **TOURNAMENT** | SceTournamentCard — tournament identity (not match layout) |
+| **CLUB EVENT** | SceClubEventCard — VERANSTALTUNG + tenant/club identity |
+| **MULTI_TEAM** | Programme Engine dedupe; team/context on cards where needed |
+
+### R3 duplication audit
+
+| Tag | Component | Reason |
+|-----|-----------|--------|
+| **REMOVED_DUPLICATE** | Selected-day agenda under cockpit calendar | Same PERSON items already in Mein Programm preview feed |
+| **RETAINED_DISTINCT_WIDGET** | Calendar month grid | Date orientation + day selection sync to feed scroll |
+| **RETAINED_DISTINCT_WIDGET** | Tasks / Attention | Personal action layers, not programme sporting cards |
+| **RETAINED_DISTINCT_WIDGET** | Secondary news/activity | Tenant operational signals, not personal programme |

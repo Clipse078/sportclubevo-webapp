@@ -1,12 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
 import type { ProgrammeFeedGroup } from "@/lib/personal-agenda/programme-feed-groups";
 import { cn } from "@/lib/cn";
 import { DashboardEmptyState } from "./DashboardEmptyState";
-import { PersonalProgrammeAgendaRow } from "./PersonalProgrammeAgendaRow";
+import { PersonalProgrammePreviewRow } from "./PersonalProgrammePreviewRow";
 
 export type PersonalProgrammeFeedProps = {
   groups: ProgrammeFeedGroup[];
@@ -29,6 +30,14 @@ export function PersonalProgrammeFeed({
   className,
 }: PersonalProgrammeFeedProps) {
   const t = useTranslations("PersonalDashboard.programme");
+
+  const nextActivityId = useMemo(() => {
+    for (const group of groups) {
+      const first = group.items[0];
+      if (first) return first.id;
+    }
+    return null;
+  }, [groups]);
 
   const body = (
     <>
@@ -69,10 +78,12 @@ export function PersonalProgrammeFeed({
                       className="list-none"
                       data-programme-day-row={highlighted ? "highlighted" : undefined}
                     >
-                      <PersonalProgrammeAgendaRow
+                      <PersonalProgrammePreviewRow
                         item={item}
                         timeLabel={timeLabelById[item.id] ?? "—"}
-                        highlighted={highlighted}
+                        highlighted={
+                          highlighted || (nextActivityId != null && item.id === nextActivityId)
+                        }
                       />
                     </li>
                   ))}

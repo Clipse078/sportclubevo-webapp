@@ -149,7 +149,7 @@ export function PersonalDashboardWorkspace({
           navigation={navigation}
           todayDayKey={todayKey}
           headingLevel="h3"
-          showSelectedDayPanel
+          showSelectedDayPanel={false}
           timeLabelById={timeLabelById}
           density="cockpit"
         />
