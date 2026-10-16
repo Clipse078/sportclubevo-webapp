@@ -38,6 +38,15 @@ export function buildMeinProgrammHref(
 }
 
 /** Legacy personal-programme calendar URL → canonical Mein Programm Kalender. */
+/** Dashboard / deep links — canonical personal calendar on Mein Programm. */
+export function buildMeinProgrammKalenderOpenHref(month?: string | null): string {
+  const params = new URLSearchParams();
+  params.set("ansicht", "kalender");
+  const trimmed = month?.trim();
+  if (trimmed) params.set("monat", trimmed);
+  return `${MEIN_PROGRAMM_BASE_PATH}?${params.toString()}`;
+}
+
 export function buildLegacyTermineKalenderRedirectTarget(
   month: string,
   extraParams?: Record<string, string>,

@@ -137,6 +137,16 @@ Automated guardrails: `components/sporting-activity/__tests__/sce-ui-rollout-01e
 
 Future Training surfaces (**01H–01L**) must adopt `SceTrainingCard` — not local card variants.
 
+### Mein Programm / PERSON programme list-row contract (01J-R4)
+
+| Item | Contract |
+|------|----------|
+| **Scope** | `surface="list-row"` with `listRowPresentation="operational"` (match: `programme-fixture`) — Dashboard preview, `/dashboard/mein-programm` Liste, Programme Engine list rows |
+| **Information rows** | Exactly **three** rows under the type label: **ROW 1** activity identity + club crest(s) · **ROW 2** team(s)/OrgUnit(s) · **ROW 3** time → location |
+| **Match ROW 1** | HOME club + crest \| VS \| away crest + club — home always left |
+| **Match ROW 3** | Kickoff only when provider end is not authoritative — never fabricate `-` end times |
+| **MICRO calendar** | **Excluded** — calendar cells keep MICRO grammar (TYPE → identity → time → location) |
+
 ---
 
 ## Canonical Tournament card family (01F)

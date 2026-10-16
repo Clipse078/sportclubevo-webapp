@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MEIN_PROGRAMM_BASE_PATH,
   buildLegacyTermineKalenderRedirectTarget,
+  buildMeinProgrammKalenderOpenHref,
   buildMeinProgrammHref,
   parseMeinProgrammUrlState,
 } from "../mein-programm-url";
@@ -32,6 +33,12 @@ describe("mein-programm URL state", () => {
   it("buildMeinProgrammHref encodes calendar view", () => {
     const state = parseMeinProgrammUrlState({});
     expect(buildMeinProgrammHref(state, { view: "kalender", month: "2026-10" })).toBe(
+      `${MEIN_PROGRAMM_BASE_PATH}?ansicht=kalender&monat=2026-10`,
+    );
+  });
+
+  it("buildMeinProgrammKalenderOpenHref targets canonical calendar", () => {
+    expect(buildMeinProgrammKalenderOpenHref("2026-10")).toBe(
       `${MEIN_PROGRAMM_BASE_PATH}?ansicht=kalender&monat=2026-10`,
     );
   });

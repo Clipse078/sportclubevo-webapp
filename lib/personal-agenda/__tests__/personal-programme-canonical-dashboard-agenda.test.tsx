@@ -110,7 +110,8 @@ describe("Mein Programm — canonical programme engine presentation (R3)", () =>
     );
 
     expect(screen.getByTestId("personal-programme-canonical-agenda-row")).toBeInTheDocument();
-    expect(screen.getByText("FC Allschwil Junioren B1")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-training-title")).toHaveTextContent(/Training/i);
+    expect(screen.getByTestId("sce-training-team")).toHaveTextContent("FC Allschwil Junioren B1");
     expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Kunstrasen 2 B/i);
     expect(screen.getByTestId("sce-training-list-row-dressing-room")).toHaveTextContent("E2");
     expect(screen.getByTestId("sce-training-list-row-time")).toHaveTextContent("18:45–20:15");
@@ -139,9 +140,10 @@ describe("Mein Programm — canonical programme engine presentation (R3)", () =>
 
     render(wrap(<PersonalProgrammeAgendaRow item={item} timeLabel="20:45" />));
 
-    expect(screen.getByTestId("sce-match-dashboard-agenda-identity")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-match-fixture")).toBeInTheDocument();
     expect(screen.getByTestId("sce-match-list-row-time")).toHaveTextContent("20:45");
     expect(screen.getByText("FC Therwil")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-match-list-row-team-context")).toHaveTextContent("Junioren B1");
     expect(screen.getByTestId("sce-match-list-row-time").textContent).not.toMatch(/–/);
   });
 });

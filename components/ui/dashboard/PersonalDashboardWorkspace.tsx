@@ -12,7 +12,10 @@ import {
   type ProgrammeFeedGroup,
 } from "@/lib/personal-agenda/programme-feed-groups";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
-import { MEIN_PROGRAMM_BASE_PATH } from "@/lib/personal-agenda/mein-programm-url";
+import {
+  MEIN_PROGRAMM_BASE_PATH,
+  buildMeinProgrammKalenderOpenHref,
+} from "@/lib/personal-agenda/mein-programm-url";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
 import { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
 import { DashboardCockpitGrid } from "./DashboardCockpitGrid";
@@ -75,7 +78,7 @@ export function PersonalDashboardWorkspace({
   const programmeViewAllHref = useMemo(() => MEIN_PROGRAMM_BASE_PATH, []);
 
   const calendarOpenHref = useMemo(
-    () => `/dashboard/kalender?monat=${encodeURIComponent(monthParam)}`,
+    () => buildMeinProgrammKalenderOpenHref(monthParam),
     [monthParam],
   );
 
@@ -83,12 +86,18 @@ export function PersonalDashboardWorkspace({
     setSelectedDayKey(dayKey);
   }, []);
 
+  const previewDayKeys = useMemo(
+    () => new Set(previewGroups.map((group) => group.dayKey)),
+    [previewGroups],
+  );
+
   useEffect(() => {
+    if (!previewDayKeys.has(selectedDayKey)) return;
     const root = feedRef.current;
     if (!root) return;
     const target = root.querySelector<HTMLElement>(`[data-day-key="${selectedDayKey}"]`);
     target?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-  }, [selectedDayKey]);
+  }, [previewDayKeys, selectedDayKey]);
 
   return (
     <div className={cn("min-w-0", className)} data-testid="personal-dashboard-workspace">

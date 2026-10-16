@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R3 Dashboard Mein Programm preview** |
+| **Status** | **IN PROGRESS — R4 canonical cards + Dashboard Mein Kalender** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -153,3 +153,36 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **RETAINED_DISTINCT_WIDGET** | Calendar month grid | Date orientation + day selection sync to feed scroll |
 | **RETAINED_DISTINCT_WIDGET** | Tasks / Attention | Personal action layers, not programme sporting cards |
 | **RETAINED_DISTINCT_WIDGET** | Secondary news/activity | Tenant operational signals, not personal programme |
+
+## 01J-R4 — Canonical three-row programme cards + Dashboard Mein Kalender
+
+| Decision | Value |
+|----------|--------|
+| **MEIN_PROGRAMM_CARD_INFORMATION_CONTRACT** | TYPE label (not counted) + **ROW 1** activity identity + club crest(s) · **ROW 2** team(s)/OrgUnit(s) · **ROW 3** time → location |
+| **MATCH_ROW_1** | HOME club + crest \| VS \| away crest + club (home always left) |
+| **MATCH_ROW_2** | `teamContext.name` (own SCE team) |
+| **MATCH_ROW_3** | Kickoff only when end is not authoritative — no fabricated match end |
+| **MICRO_CONTRACT** | Unchanged — calendar cells keep TYPE → identity → time → location (not three-row programme cards) |
+| **CANONICAL_COMPONENT_LAYER** | `SceTrainingCard` / `SceMatchCard` / `SceTournamentCard` / `SceClubEventCard` `listRowPresentation="operational"` (match: `programme-fixture`) |
+| **DASHBOARD_ONLY_IMPLEMENTATION** | **NO** — Dashboard preview + `/dashboard/mein-programm` Liste share the same Sce* list-row contract |
+| **DASHBOARD_CALENDAR_ROLE** | Compact month orientation (where in month, which days have activities, day selection) — not a second programme feed |
+| **CANONICAL_CALENDAR_PIPELINE** | `loadPersonalProgramme` → `PersonalProgrammeMonthCalendar` / `loadPersonalCalendarMonthBundle` → `SceCalendarEngine` MICRO |
+| **DASHBOARD_CALENDAR_SOURCE_MODE** | Programme sporting items from PERSON scope; tasks remain separate calendar layer on full Kalender (`quelle`) |
+| **TASK_LAYER_VISIBLE** | Dashboard cockpit: tasks card; full calendar: `quelle=alle` / `aufgaben` unchanged |
+| **MEETING_BEHAVIOR** | Meetings stay legacy compact rows — not forced into Sce* sporting cards |
+| **SELECTED_DAY_BEHAVIOR** | Calendar-native selection styling; **no** selected-day sporting agenda under cockpit calendar (`showSelectedDayPanel={false}` frozen) |
+| **PROGRAMME_SYNC_BEHAVIOR** | Calendar day selection highlights feed group + scrolls preview **only when** that day appears in the 5-item preview cap |
+| **FULL_CALENDAR_ROUTE** | Dashboard “Kalender öffnen” → `/dashboard/mein-programm?ansicht=kalender&monat=…` (`buildMeinProgrammKalenderOpenHref`) |
+| **LEGACY_CALENDAR_DEPENDENCIES** | `/dashboard/kalender?quelle=termine` redirect retained; cockpit no longer links there for “open calendar” |
+| **LEGACY_REMOVAL_TARGET** | R5+ — unused today widgets; optional retirement of `dashboard-opponent` / `dashboard-agenda` list-row aliases |
+| **RESPONSIVE_BEHAVIOR** | Same three-row semantics desktop/tablet/mobile with wrapping; cockpit calendar uses `density="cockpit"` |
+
+### R4 calendar inventory
+
+| Class | Component / module |
+|-------|-------------------|
+| **CANONICAL** | `PersonalProgrammeMonthCalendar`, `MonthActivityGrid`, `loadPersonalCalendarMonthBundle`, `SceCalendarEngine`, `buildPersonalCalendarDayPresentation` |
+| **DASHBOARD-SPECIFIC** | `PersonalDashboardWorkspace` composition + preview scroll guard (`previewDayKeys`) |
+| **REUSABLE** | Month navigation hrefs from personal command center; same `PersonalProgrammeItem[]` as programme preview |
+| **LEGACY** | `/dashboard/kalender` workspace for tasks-heavy flows — redirect compatibility only for `quelle=termine` |
+| **DUPLICATED** | **None** — no `DashboardCalendarEngine` / duplicate PERSON resolver |
