@@ -299,6 +299,34 @@ Product-wide UI unification decisions for packages **01B–01N** are recorded in
 
 ---
 
+## ADR-014 — Tournament Fixture vs Schedule Separation and Deterministic Scheduling Engine
+
+**Status:** Accepted
+
+### Context
+
+Tournament Center already models a multi-team tournament as `Event(type=TOURNAMENT)` with participants and facility allocations ([`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md)). The product needs automatic pitch/time planning without duplicating facilities, collapsing fixtures into generic activities, or using non-deterministic / LLM-based scheduling.
+
+### Decision
+
+1. **Separate domains:** **Fixture** (who plays whom, stable fixture identity) vs **Schedule assignment** (when/where on a pitch). Fixtures may exist without assignments; assignments may change without changing fixture pairing.
+2. **Pure engine:** Implement fixture generation and schedule optimisation in a **pure TypeScript** module (`lib/tournament-scheduling/`) with no Prisma, React, permissions, or LLM inside the algorithm core. Persistence and authorization wrap the engine in application services.
+3. **Hard vs soft:** **Hard constraints are never violated** to improve fairness or compactness. Soft objectives use **measurable metrics** and a **deterministic** tie-break / lexicographic objective order.
+4. **Resource truth:** Pitch and facility identity flows through canonical `FacilityResource` and existing availability / conflict primitives — no tournament-only facility model.
+5. **Versioning:** Approved schedules are **versioned**; publication and external channels consume an approved version, not mutable working drafts.
+6. **No LLM scheduling:** Fixture and schedule generation are constraint-driven and testable.
+
+Full contracts and audit: [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md).
+
+### Consequences
+
+- Later packages add `TournamentFixture` / schedule version persistence (01B+) without replacing Event as tournament root.
+- Programme and Wochenplaner remain separate surfaces until planner UI packages integrate approved schedule views.
+- Diagnostics use structured codes; user-facing German copy lives outside the engine.
+- Performance and size limits (participants, fixtures, pitches) are enforced at UI + service boundaries.
+
+---
+
 ## ADR Template
 
 Copy this template to add a new ADR.
