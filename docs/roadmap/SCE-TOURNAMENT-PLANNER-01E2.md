@@ -5,8 +5,11 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E2` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — **CLOSED / MERGED** (PR **#859**) |
-| **Status** | **CURRENT** — implementation branch `cursor/sce-tournament-planner-01e2-smart-mix-generator` |
-| **Next** | [`01E3`](./SCE-TOURNAMENT-PLANNER-01.md) Groups + Knockout — **not started** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#860** → STAGE) |
+| **Merge commit** | `cb182a733ab428d320fe10ba915a7c87706478bd` |
+| **Feature HEAD** | `b535bb84f49730b9333da18a11474ba0221afaf9` |
+| **Branch** | `cursor/sce-tournament-planner-01e2-smart-mix-generator` |
+| **Next** | [`01E3`](./SCE-TOURNAMENT-PLANNER-01.md) Groups + Knockout — **NEXT** (not started) |
 
 ## Product purpose
 

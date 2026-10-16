@@ -17,8 +17,9 @@ describe("SCE-TOURNAMENT-PLANNER-01E2 documentation", () => {
     expect(doc).toContain("TENANT_ORGANISED");
   });
 
-  it("parent roadmap references 01E2 as current", () => {
+  it("parent roadmap references 01E2 as closed", () => {
     const parent = readFileSync(join(ROOT, "SCE-TOURNAMENT-PLANNER-01.md"), "utf8");
     expect(parent).toContain("01E2");
+    expect(parent).toContain("CLOSED / MERGED");
   });
 });
