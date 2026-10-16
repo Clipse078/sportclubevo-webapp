@@ -6,8 +6,8 @@
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E2`](./SCE-TOURNAMENT-PLANNER-01E2.md) — **CLOSED / MERGED** (PR **#860**) |
 | **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#861** → STAGE) |
-| **Merge commit** | *(recorded at merge — see parent roadmap)* |
-| **Feature HEAD** | `38b9aee30a5d60b51486deec995e313b61ca97ae` |
+| **Merge commit** | `f2b4e471f9cd8f19d416185dff3fb1ea070fbdcb` |
+| **Feature HEAD** | `f7fb778c78b75d7888c0b6b242a9534958f6fd39` (includes R1 verification `38b9aee30a5d60b51486deec995e313b61ca97ae`) |
 | **Branch** | `cursor/sce-tournament-planner-01e3a-phase-qualification-architecture` |
 | **Next** | **01E3B** — Automatic Group Formation + Group Fixture Generation (**NEXT**, not started) |
 
