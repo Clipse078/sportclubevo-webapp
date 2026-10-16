@@ -9,7 +9,7 @@
 | **Merge commit** | `d93e85d8684471eb6a0a00f6273fd9dc220bde71` |
 | **Feature HEAD** | `1cd034267056ff605778fa641b8785fd3b9d8fa5` (R1 accepted); closure docs `5383ad76e1cd911e24b465b017605e47719abc55` on feature branch |
 | **Branch** | `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` |
-| **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**CURRENT** — see [`SCE-TOURNAMENT-PLANNER-01E3D`](./SCE-TOURNAMENT-PLANNER-01E3D.md)) |
+| **Next** | **01F** — Automatic Schedule Optimiser + Smart Timing Advisor (**NEXT** — see parent [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md); predecessor **01E3D** closed PR **#864**) |
 
 ## Product purpose
 
@@ -172,7 +172,7 @@ Explicit non-power-of-two proofs covered in exhaustive suite: **N = 3, 5, 6, 7, 
 
 **Schema:** no migration in R1 (`SCHEMA_CHANGE = NO`).
 
-**01E3C** is **CLOSED / ACCEPTED / MERGED** (PR **#863**). **01E3D** remains **NOT STARTED**.
+**01E3C** is **CLOSED / ACCEPTED / MERGED** (PR **#863**). Successor **01E3D** is **CLOSED / ACCEPTED / MERGED** (PR **#864**). **01F** is **NEXT — NOT STARTED**.
 
 ## Smart Timing Advisor (01F roadmap — not implemented in 01E3C)
 

@@ -5,10 +5,11 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E3D` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01E.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3C`](./SCE-TOURNAMENT-PLANNER-01E3C.md) — **CLOSED / ACCEPTED / MERGED** (PR **#863**) |
-| **Status** | **CURRENT — READY FOR CLOSURE** (R1 hardening **PASS**) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#864** → STAGE) |
+| **Feature HEAD** | `35269343f3b4668780f6e61b328254ce22523fb9` (R1 accepted) |
 | **Branch** | `cursor/sce-tournament-planner-01e3d-qualification-mapping-progression` |
-| **PR** | **#864** (draft) |
-| **Next** | **01F** — Automatic Schedule Optimiser + Smart Timing Advisor (**NOT STARTED**) |
+| **PR** | **#864** |
+| **Next** | **01F** — Automatic Schedule Optimiser + Smart Timing Advisor (**NEXT — NOT STARTED**) |
 
 ## Product purpose
 
@@ -149,9 +150,9 @@ No fixture time or tournament pitch assignment. Smart Timing Advisor remains pla
 
 ## R1 automated gate (2026-10-16)
 
-- Vitest: tournament planner **01E1–01E3D** regression suite — **27** files, **175** tests, **0** failures.
+- Vitest: tournament planner **01E1–01E3D** regression suite — **30** files, **185** tests, **0** failures.
 - `prisma validate` — **PASS**
 - `NODE_OPTIONS=--max-old-space-size=8192 npm run build` — **PASS**
 - Manual UAT / screenshots — PO-owned (skipped by Cursor agent).
 
-**Closure:** `TOURNAMENT_PLANNER_01E3D_R1_CLOSURE_READY` — pending PO merge of PR **#864** (do not merge from agent).
+**Closure:** `TOURNAMENT_PLANNER_01E3D_CLOSED_GREEN_BASELINE` — merged via PR **#864**.
