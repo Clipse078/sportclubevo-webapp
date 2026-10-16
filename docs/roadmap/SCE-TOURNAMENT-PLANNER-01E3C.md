@@ -6,7 +6,8 @@
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3B`](./SCE-TOURNAMENT-PLANNER-01E3B.md) — **CLOSED / ACCEPTED / MERGED** (PR **#862**) |
 | **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#863** → STAGE) |
-| **Feature HEAD** | `1cd034267056ff605778fa641b8785fd3b9d8fa5` |
+| **Merge commit** | `d93e85d8684471eb6a0a00f6273fd9dc220bde71` |
+| **Feature HEAD** | `1cd034267056ff605778fa641b8785fd3b9d8fa5` (R1 accepted); closure docs `5383ad76e1cd911e24b465b017605e47719abc55` on feature branch |
 | **Branch** | `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` |
 | **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**NOT STARTED**) |
 
