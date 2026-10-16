@@ -14,6 +14,7 @@ function toDefinition(row: {
   id: string;
   eventId: string;
   tournamentPhaseId?: string | null;
+  tournamentGroupId?: string | null;
   stageKey: string;
   roundIndex: number;
   slotIndexInRound: number;
@@ -25,6 +26,7 @@ function toDefinition(row: {
     id: row.id,
     eventId: row.eventId,
     tournamentPhaseId: row.tournamentPhaseId ?? null,
+    tournamentGroupId: row.tournamentGroupId ?? null,
     stageKey: row.stageKey,
     roundIndex: row.roundIndex,
     slotIndexInRound: row.slotIndexInRound,

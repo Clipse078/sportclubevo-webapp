@@ -64,7 +64,7 @@ export function validateFeasibilityFixtureSet(
       }
     }
 
-    const slotKey = `${fixture.stageKey}\0${fixture.roundIndex}\0${fixture.slotIndexInRound}`;
+    const slotKey = `${fixture.stageKey}\0${fixture.tournamentGroupId ?? ""}\0${fixture.roundIndex}\0${fixture.slotIndexInRound}`;
     if (roundSlotKeys.has(slotKey)) {
       diagnostics.push(
         diagnostic("FIXTURE_SET.INVALID", {

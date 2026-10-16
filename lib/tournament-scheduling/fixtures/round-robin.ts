@@ -52,8 +52,10 @@ export function buildRoundRobinGeneratorKey(
   cycleIndex: number,
   roundIndexInCycle: number,
   slotIndexInRound: number,
+  groupScope?: string,
 ): string {
-  return `round-robin:${stageKey}:${cycleIndex}:${roundIndexInCycle}:${slotIndexInRound}`;
+  const groupSegment = groupScope ? `:group:${groupScope}` : "";
+  return `round-robin:${stageKey}${groupSegment}:${cycleIndex}:${roundIndexInCycle}:${slotIndexInRound}`;
 }
 
 function validateMeetingsPerOpponent(meetingsPerOpponent: number): void {
@@ -68,11 +70,19 @@ function validateMeetingsPerOpponent(meetingsPerOpponent: number): void {
 function generateSingleCycleFixtures(input: {
   participantIds: readonly string[];
   stageKey: string;
+  generatorKeyGroupScope?: string;
   cycleIndex: number;
   globalRoundOffset: number;
   homeAwayRelevance: HomeAwayRelevance;
 }): TournamentFixtureGenerationDefinition[] {
-  const { participantIds, stageKey, cycleIndex, globalRoundOffset, homeAwayRelevance } = input;
+  const {
+    participantIds,
+    stageKey,
+    generatorKeyGroupScope,
+    cycleIndex,
+    globalRoundOffset,
+    homeAwayRelevance,
+  } = input;
 
   const slots: string[] = [...participantIds];
   if (slots.length % 2 === 1) {
@@ -105,6 +115,7 @@ function generateSingleCycleFixtures(input: {
           cycleIndex,
           roundIndexInCycle,
           slotIndexInRound,
+          generatorKeyGroupScope,
         ),
       });
       slotIndexInRound += 1;
@@ -146,6 +157,7 @@ export function generateRoundRobinFixtures(
 
   const homeAwayRelevance =
     input.config?.homeAwayRelevance ?? HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT;
+  const generatorKeyGroupScope = input.config?.generatorKeyGroupScope;
 
   const participantIds = [...input.participantIds];
   assertDistinctParticipantIds(participantIds);
@@ -173,6 +185,7 @@ export function generateRoundRobinFixtures(
     const cycleFixtures = generateSingleCycleFixtures({
       participantIds,
       stageKey,
+      generatorKeyGroupScope,
       cycleIndex,
       globalRoundOffset: cycleIndex * roundCountPerCycle,
       homeAwayRelevance,

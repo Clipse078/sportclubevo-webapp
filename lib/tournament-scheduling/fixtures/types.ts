@@ -16,6 +16,8 @@ export interface TournamentFixtureGenerationDefinition {
 export interface RoundRobinGenerationConfig {
   format: TournamentFixtureFormatId;
   stageKey?: string;
+  /** Isolates generator keys when the same stage hosts multiple groups (01E3B). */
+  generatorKeyGroupScope?: string;
   /** Product 1:n — default 1 (01C parity). */
   meetingsPerOpponent?: number;
   /** Fixture-side Home/Away semantics — default OFF (neutral youth tournaments). */
@@ -32,6 +34,8 @@ export type TournamentFixtureGenerationStrategy = "ROUND_ROBIN" | "SMART_MIX";
 
 export interface SmartMixGenerationConfig {
   stageKey?: string;
+  /** Isolates generator keys when the same stage hosts multiple groups (01E3B). */
+  generatorKeyGroupScope?: string;
   /** Product input — matches each participant should play (exact or parity-adjusted). */
   targetMatchesPerParticipant: number;
   homeAwayRelevance?: HomeAwayRelevance;

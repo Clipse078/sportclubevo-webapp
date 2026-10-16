@@ -11,3 +11,4 @@ export * from "./feasibility-service";
 export * from "./smart-generator-architecture";
 export * from "./planner-eligibility";
 export * from "./competition-structure";
+export * from "./group-formation";

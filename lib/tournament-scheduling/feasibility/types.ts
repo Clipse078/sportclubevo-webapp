@@ -21,6 +21,8 @@ export interface FeasibilityParticipantRef {
 export interface FeasibilityFixtureRef {
   fixtureId: string;
   stageKey: string;
+  /** When set, structural round/slot coordinates are scoped per group (01E3B). */
+  tournamentGroupId?: string | null;
   roundIndex: number;
   slotIndexInRound: number;
   sideAParticipantId: string;
