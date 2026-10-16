@@ -1296,6 +1296,7 @@ model Tenant {
   tournamentGroupMemberships       TournamentGroupMembership[]
   tournamentRankingConfigurations  TournamentRankingConfiguration[]
   tournamentQualificationSources   TournamentQualificationSource[]
+  tournamentKnockoutQualificationMappings TournamentKnockoutQualificationMapping[]
   tournamentFixtureSides           TournamentFixtureSide[]
   // PLANNING-UX-07R6: canonical FacilityResource allocations for club events.
   eventFacilityAllocations         EventFacilityAllocation[]
@@ -2765,6 +2766,7 @@ model Event {
   tournamentGroupMemberships    TournamentGroupMembership[]
   tournamentRankingConfiguration TournamentRankingConfiguration?
   tournamentQualificationSources TournamentQualificationSource[]
+  tournamentKnockoutQualificationMappings TournamentKnockoutQualificationMapping[]
   // PLANNING-UX-07R6 — Event.type=OTHER facility links (not MATCH/TOURNAMENT).
   eventFacilityAllocations      EventFacilityAllocation[]
   // TEAM-COCKPIT-02B: per-player attendance for match/tournament events
@@ -9002,6 +9004,7 @@ model TournamentPhase {
   event    Event             @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   groups   TournamentGroup[]
   fixtures TournamentFixture[]
+  knockoutQualificationMappings TournamentKnockoutQualificationMapping[]
 
   @@unique([eventId, displayOrder])
   @@unique([eventId, stageKey])
@@ -9028,6 +9031,7 @@ model TournamentGroup {
   memberships          TournamentGroupMembership[]
   groupFixtures        TournamentFixture[]             @relation("TournamentGroupFixtures")
   groupRankQualSources TournamentQualificationSource[] @relation("QualificationSourceGroup")
+  knockoutQualificationMappings TournamentKnockoutQualificationMapping[]
 
   @@unique([tournamentPhaseId, displayOrder])
   @@unique([tournamentPhaseId, label])
@@ -9094,11 +9098,41 @@ model TournamentQualificationSource {
   sourceGroup   TournamentGroup?   @relation("QualificationSourceGroup", fields: [sourceGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   sourceFixture TournamentFixture? @relation("QualificationSourceFixture", fields: [sourceFixtureId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   fixtureSides  TournamentFixtureSide[]
+  knockoutQualificationMapping TournamentKnockoutQualificationMapping?
 
   @@index([tenantId])
   @@index([eventId])
   @@index([sourceGroupId])
   @@index([sourceFixtureId])
+}
+
+model TournamentKnockoutQualificationMapping {
+  id                    String                     @id @default(cuid())
+  tenantId              String
+  eventId               String
+  knockoutPhaseId       String
+  sourceGroupId         String
+  rank                  Int
+  roundIndex            Int
+  slotIndexInRound      Int
+  side                  TournamentFixtureSideLabel
+  qualificationSourceId String                     @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant              Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event               Event                         @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  knockoutPhase       TournamentPhase               @relation(fields: [knockoutPhaseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceGroup         TournamentGroup               @relation(fields: [sourceGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  qualificationSource TournamentQualificationSource @relation(fields: [qualificationSourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([knockoutPhaseId, roundIndex, slotIndexInRound, side])
+  @@unique([eventId, knockoutPhaseId, sourceGroupId, rank])
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([knockoutPhaseId])
+  @@index([sourceGroupId])
 }
 
 model TournamentFixtureSide {

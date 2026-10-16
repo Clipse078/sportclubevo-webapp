@@ -9,7 +9,7 @@
 | **Merge commit** | `d93e85d8684471eb6a0a00f6273fd9dc220bde71` |
 | **Feature HEAD** | `1cd034267056ff605778fa641b8785fd3b9d8fa5` (R1 accepted); closure docs `5383ad76e1cd911e24b465b017605e47719abc55` on feature branch |
 | **Branch** | `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` |
-| **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**NOT STARTED**) |
+| **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**CURRENT** — see [`SCE-TOURNAMENT-PLANNER-01E3D`](./SCE-TOURNAMENT-PLANNER-01E3D.md)) |
 
 ## Product purpose
 
@@ -166,7 +166,7 @@ Automated gate on branch `cursor/sce-tournament-planner-01e3c-knockout-bracket-b
 | **Concurrency** | **PASS** — P2002 unique race → idempotent re-read (no duplicate creates) |
 | **Failure atomicity** | **PASS** — single transaction; failure surfaces without partial return |
 | **01D handoff** | **PASS** — unresolved qualification sides for participant-rest |
-| **Package boundary** | **01E3D NOT STARTED** — no group-rank → participant resolution, no results engine |
+| **Package boundary** | **01E3D** owns group-rank → knockout entry mapping (structural only); no group-rank → participant resolution (01J) |
 
 Explicit non-power-of-two proofs covered in exhaustive suite: **N = 3, 5, 6, 7, 9, 10, 12, 17**. Power-of-two regression: **2, 4, 8, 16, 32, 64, 128** with **BYE_COUNT = 0**.
 
