@@ -9,7 +9,7 @@
 | **Merge commit** | `d93e85d8684471eb6a0a00f6273fd9dc220bde71` |
 | **Feature HEAD** | `1cd034267056ff605778fa641b8785fd3b9d8fa5` (R1 accepted); closure docs `5383ad76e1cd911e24b465b017605e47719abc55` on feature branch |
 | **Branch** | `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` |
-| **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**NOT STARTED**) |
+| **Next** | **01F** — Automatic Schedule Optimiser + Smart Timing Advisor (**NEXT** — see parent [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md); predecessor **01E3D** closed PR **#864**) |
 
 ## Product purpose
 
@@ -166,13 +166,13 @@ Automated gate on branch `cursor/sce-tournament-planner-01e3c-knockout-bracket-b
 | **Concurrency** | **PASS** — P2002 unique race → idempotent re-read (no duplicate creates) |
 | **Failure atomicity** | **PASS** — single transaction; failure surfaces without partial return |
 | **01D handoff** | **PASS** — unresolved qualification sides for participant-rest |
-| **Package boundary** | **01E3D NOT STARTED** — no group-rank → participant resolution, no results engine |
+| **Package boundary** | **01E3D** owns group-rank → knockout entry mapping (structural only); no group-rank → participant resolution (01J) |
 
 Explicit non-power-of-two proofs covered in exhaustive suite: **N = 3, 5, 6, 7, 9, 10, 12, 17**. Power-of-two regression: **2, 4, 8, 16, 32, 64, 128** with **BYE_COUNT = 0**.
 
 **Schema:** no migration in R1 (`SCHEMA_CHANGE = NO`).
 
-**01E3C** is **CLOSED / ACCEPTED / MERGED** (PR **#863**). **01E3D** remains **NOT STARTED**.
+**01E3C** is **CLOSED / ACCEPTED / MERGED** (PR **#863**). Successor **01E3D** is **CLOSED / ACCEPTED / MERGED** (PR **#864**). **01F** is **NEXT — NOT STARTED**.
 
 ## Smart Timing Advisor (01F roadmap — not implemented in 01E3C)
 

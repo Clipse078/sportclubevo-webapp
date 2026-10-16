@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E3D Group → knockout qualification mapping + progression (NEXT / not started); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01F Automatic Schedule Optimiser + Smart Timing Advisor (NEXT — not started); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -14,7 +14,7 @@
 | **01E3A (competition phase + qualification architecture)** | [`SCE-TOURNAMENT-PLANNER-01E3A`](./SCE-TOURNAMENT-PLANNER-01E3A.md) — **CLOSED / ACCEPTED / MERGED** (PR **#861**) |
 | **01E3B (automatic group formation + group fixtures)** | [`SCE-TOURNAMENT-PLANNER-01E3B`](./SCE-TOURNAMENT-PLANNER-01E3B.md) — **CLOSED / ACCEPTED / MERGED** (PR **#862**) |
 | **01E3C (knockout bracket + BYEs)** | [`SCE-TOURNAMENT-PLANNER-01E3C`](./SCE-TOURNAMENT-PLANNER-01E3C.md) — **CLOSED / ACCEPTED / MERGED** (PR **#863**) |
-| **01E3D (qualification mapping + progression)** | **NEXT** (not started) |
+| **01E3D (qualification mapping + progression)** | **CLOSED / ACCEPTED / MERGED** (PR **#864**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3D.md)) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -153,8 +153,8 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 5c | **01E3A** | Competition phase + qualification architecture — **CLOSED / ACCEPTED / MERGED** (PR **#861**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3A.md)) |
 | 5d | **01E3B** | Automatic group formation + group fixture generation — **CLOSED / ACCEPTED / MERGED** (PR **#862**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3B.md)) |
 | 5e | **01E3C** | Knockout bracket generation + BYEs — **CLOSED / ACCEPTED / MERGED** (PR **#863**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3C.md)) |
-| 5f | **01E3D** | Group → knockout qualification mapping + progression — **NEXT** (not started) |
-| 6 | **01F** | **Automatic Schedule Optimiser + Smart Timing Advisor** (WHEN + logical pitch; generator-agnostic; bidirectional timing engine — see below) |
+| 5f | **01E3D** | Group → knockout qualification mapping + progression — **CLOSED / ACCEPTED / MERGED** (PR **#864**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3D.md)) |
+| 6 | **01F** | **Automatic Schedule Optimiser + Smart Timing Advisor** — **NEXT** (WHEN + logical pitch; generator-agnostic; bidirectional timing engine — see below) |
 | 7 | **01G** | Locks + partial regeneration |
 | 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
 | 9 | **01I** | Manual adjustment / DnD / conflict validation |
