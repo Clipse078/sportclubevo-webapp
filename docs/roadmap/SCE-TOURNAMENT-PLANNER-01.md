@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E3B Group Formation + Group Fixture Generation (next); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E3B Group Formation + Group Fixture Generation (CURRENT); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -12,7 +12,8 @@
 | **01E1 (generator foundation + repeated RR)** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — **CLOSED / MERGED** — Smart Generator foundation, tenant-organised guard, repeated round robin |
 | **01E2 (Smart Mix)** | [`SCE-TOURNAMENT-PLANNER-01E2`](./SCE-TOURNAMENT-PLANNER-01E2.md) — **CLOSED / MERGED** — deterministic Smart Mix (`targetMatchesPerParticipant`) (PR **#860**) |
 | **01E3A (competition phase + qualification architecture)** | [`SCE-TOURNAMENT-PLANNER-01E3A`](./SCE-TOURNAMENT-PLANNER-01E3A.md) — **CLOSED / ACCEPTED / MERGED** (PR **#861**) |
-| **01E3B–D (Groups + Knockout generation slices)** | **01E3B NEXT** — 01E3C / 01E3D planned (see [01E3A roadmap](./SCE-TOURNAMENT-PLANNER-01E3A.md)) |
+| **01E3B (automatic group formation + group fixtures)** | [`SCE-TOURNAMENT-PLANNER-01E3B`](./SCE-TOURNAMENT-PLANNER-01E3B.md) — **CURRENT** |
+| **01E3C–D (Knockout + qualification generation)** | **01E3C NEXT** — 01E3D planned (see [01E3B roadmap](./SCE-TOURNAMENT-PLANNER-01E3B.md)) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
