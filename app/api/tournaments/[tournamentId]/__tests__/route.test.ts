@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   canEditPlanningRecord: vi.fn(),
   eventFindFirst: vi.fn(),
   tenantFindUnique: vi.fn(),
+  tenantFindFirst: vi.fn(),
   updateTournament: vi.fn(),
   cancelTournament: vi.fn(),
   restoreTournament: vi.fn(),
@@ -48,7 +49,10 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: { findFirst: mocks.eventFindFirst },
-    tenant: { findUnique: mocks.tenantFindUnique },
+    tenant: {
+      findUnique: mocks.tenantFindUnique,
+      findFirst: mocks.tenantFindFirst,
+    },
   },
 }));
 
@@ -97,6 +101,7 @@ describe("PATCH /api/tournaments/[tournamentId]", () => {
     mocks.canEditPlanningRecord.mockResolvedValue(true);
     mocks.eventFindFirst.mockResolvedValue(VALID_EVENT_ROW);
     mocks.tenantFindUnique.mockResolvedValue({ timezone: "Europe/Zurich" });
+    mocks.tenantFindFirst.mockResolvedValue({ key: "fca" });
     mocks.updateTournament.mockResolvedValue(VALID_TOURNAMENT);
     mocks.cancelTournament.mockResolvedValue({ ...VALID_TOURNAMENT, status: "CANCELLED" });
     mocks.restoreTournament.mockResolvedValue({ ...VALID_TOURNAMENT, status: "SCHEDULED" });

@@ -25,6 +25,10 @@ vi.mock("@/lib/participation/participation-request-config-service", () => ({
   assertEventStartCompatibleWithParticipationDue: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/dashboard/read-model/invalidate-audience", () => ({
+  notifyPersonalDashboardForSportingEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: {
