@@ -80,10 +80,12 @@ export interface UpdateTournamentFixtureAssignmentInput {
   endAt?: Date;
 }
 
-/** Future pure-engine contracts (01C+) — no implementations in 01B. */
+/** Pure-engine contract (01C round robin). */
+export type TournamentFormatSpec = { format: "ROUND_ROBIN"; stageKey?: string };
+
 export interface FixtureGenerationInput {
-  format: unknown;
-  participants: { participantId: string }[];
+  format: TournamentFormatSpec;
+  participants: { participantId: string; displayOrder: number }[];
 }
 
 export interface ScheduleTournamentInput {

@@ -3,10 +3,11 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01B persistence foundation delivered; next 01C** |
+| **Status** | **IN PROGRESS — 01C round-robin generator delivered; next 01D** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
+| **01C (round robin)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — deterministic fixture generation (WHO) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Architecture principle

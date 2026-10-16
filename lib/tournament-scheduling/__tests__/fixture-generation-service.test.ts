@@ -1,0 +1,256 @@
+/**
+ * SCE-TOURNAMENT-PLANNER-01C — round-robin generation service (mocked Prisma).
+ */
+
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    event: { findFirst: vi.fn() },
+    tournamentParticipant: { findMany: vi.fn() },
+    tournamentFixture: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+    },
+    tournamentScheduleVersion: { findMany: vi.fn() },
+    tournamentFixtureAssignment: { findMany: vi.fn() },
+    $transaction: vi.fn(),
+  },
+}));
+
+import { prisma } from "@/lib/db/prisma";
+import { generateTournamentRoundRobinFixtures } from "../fixture-generation-service";
+import { generateRoundRobinFixtures, canonicalizeParticipantIds } from "../fixtures";
+import {
+  TournamentFixturesAlreadyExistError,
+  TournamentFixtureSetConflictError,
+  TournamentParticipantsInsufficientError,
+  TournamentParticipantLimitExceededError,
+  TournamentFormatUnsupportedError,
+} from "../errors";
+import { TournamentNotFoundError } from "@/lib/tournaments/errors";
+
+const TENANT_A = "tenant-a";
+const TENANT_B = "tenant-b";
+const TOURNAMENT_ID = "tournament-01";
+
+function mockTournament(tenantId: string = TENANT_A) {
+  vi.mocked(prisma.event.findFirst).mockImplementation(async (args) => {
+    const where = (args as { where: { id: string; tenantId: string; type: string } }).where;
+    if (where.id === TOURNAMENT_ID && where.tenantId === tenantId && where.type === "TOURNAMENT") {
+      return { id: TOURNAMENT_ID } as never;
+    }
+    return null;
+  });
+}
+
+function mockParticipants(participantIds: string[], tenantId: string = TENANT_A) {
+  vi.mocked(prisma.tournamentParticipant.findMany).mockResolvedValue(
+    participantIds.map((id, displayOrder) => ({ id, displayOrder })) as never,
+  );
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(prisma.tournamentFixture.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.tournamentScheduleVersion.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.tournamentFixtureAssignment.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.$transaction).mockImplementation(async (fn) =>
+    typeof fn === "function" ? fn(prisma) : fn,
+  );
+});
+
+describe("generateTournamentRoundRobinFixtures", () => {
+  it("generates and persists fixtures for a valid tournament", async () => {
+    mockTournament();
+    const participantIds = ["p1", "p2", "p3", "p4"];
+    mockParticipants(participantIds);
+
+    const expected = generateRoundRobinFixtures({ participantIds: canonicalizeParticipantIds(
+      participantIds.map((id, displayOrder) => ({ id, displayOrder })),
+    ) });
+
+    let createCount = 0;
+    vi.mocked(prisma.tournamentFixture.create).mockImplementation(async (args) => {
+      const data = (args as { data: Record<string, unknown> }).data;
+      createCount += 1;
+      return {
+        id: `fixture-${createCount}`,
+        eventId: TOURNAMENT_ID,
+        ...data,
+      } as never;
+    });
+
+    const result = await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
+    expect(createCount).toBe(expected.length);
+    expect(result).toHaveLength(expected.length);
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("is idempotent when identical fixtures already exist", async () => {
+    mockTournament();
+    const participantIds = ["p1", "p2", "p3"];
+    mockParticipants(participantIds);
+
+    const generated = generateRoundRobinFixtures({
+      participantIds: canonicalizeParticipantIds(
+        participantIds.map((id, displayOrder) => ({ id, displayOrder })),
+      ),
+    });
+
+    vi.mocked(prisma.tournamentFixture.findMany).mockResolvedValue(
+      generated.map((g, index) => ({
+        id: `existing-${index}`,
+        eventId: TOURNAMENT_ID,
+        ...g,
+      })) as never,
+    );
+
+    const result = await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
+    expect(prisma.tournamentFixture.create).not.toHaveBeenCalled();
+    expect(result).toHaveLength(generated.length);
+  });
+
+  it("rejects conflicting existing fixtures", async () => {
+    mockTournament();
+    mockParticipants(["p1", "p2", "p3"]);
+
+    vi.mocked(prisma.tournamentFixture.findMany).mockResolvedValue([
+      {
+        id: "wrong-1",
+        eventId: TOURNAMENT_ID,
+        stageKey: "MAIN",
+        roundIndex: 0,
+        slotIndexInRound: 0,
+        generatorKey: null,
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p3",
+      },
+      {
+        id: "wrong-2",
+        eventId: TOURNAMENT_ID,
+        stageKey: "MAIN",
+        roundIndex: 1,
+        slotIndexInRound: 0,
+        generatorKey: null,
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p2",
+      },
+      {
+        id: "wrong-3",
+        eventId: TOURNAMENT_ID,
+        stageKey: "MAIN",
+        roundIndex: 2,
+        slotIndexInRound: 0,
+        generatorKey: null,
+        sideAParticipantId: "p2",
+        sideBParticipantId: "p3",
+      },
+    ] as never);
+
+    await expect(generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID)).rejects.toBeInstanceOf(
+      TournamentFixturesAlreadyExistError,
+    );
+  });
+
+  it("rejects when participants changed after generation", async () => {
+    mockTournament();
+    mockParticipants(["p1", "p2", "p3"]);
+
+    vi.mocked(prisma.tournamentFixture.findMany).mockResolvedValue([
+      {
+        id: "f1",
+        eventId: TOURNAMENT_ID,
+        stageKey: "MAIN",
+        roundIndex: 0,
+        slotIndexInRound: 0,
+        generatorKey: "k",
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p2",
+      },
+      {
+        id: "f2",
+        eventId: TOURNAMENT_ID,
+        stageKey: "MAIN",
+        roundIndex: 0,
+        slotIndexInRound: 1,
+        generatorKey: "k2",
+        sideAParticipantId: "p3",
+        sideBParticipantId: "p4-removed",
+      },
+    ] as never);
+
+    await expect(generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID)).rejects.toBeInstanceOf(
+      TournamentFixtureSetConflictError,
+    );
+  });
+
+  it("rejects insufficient participants", async () => {
+    mockTournament();
+    mockParticipants(["only-one"]);
+    await expect(generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID)).rejects.toBeInstanceOf(
+      TournamentParticipantsInsufficientError,
+    );
+  });
+
+  it("rejects more than 16 participants", async () => {
+    mockTournament();
+    mockParticipants(Array.from({ length: 17 }, (_, i) => `p${i}`));
+    await expect(generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID)).rejects.toBeInstanceOf(
+      TournamentParticipantLimitExceededError,
+    );
+  });
+
+  it("rejects unsupported format", async () => {
+    mockTournament();
+    mockParticipants(["p1", "p2"]);
+    await expect(
+      generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID, {
+        format: "KNOCKOUT" as never,
+      }),
+    ).rejects.toBeInstanceOf(TournamentFormatUnsupportedError);
+  });
+
+  it("rejects cross-tenant tournament access", async () => {
+    mockTournament(TENANT_A);
+    mockParticipants(["p1", "p2"]);
+    await expect(generateTournamentRoundRobinFixtures(TENANT_B, TOURNAMENT_ID)).rejects.toBeInstanceOf(
+      TournamentNotFoundError,
+    );
+  });
+
+  it("does not create schedule versions or assignments", async () => {
+    mockTournament();
+    mockParticipants(["p1", "p2", "p3"]);
+    vi.mocked(prisma.tournamentFixture.create).mockImplementation(async (args) => {
+      const data = (args as { data: Record<string, unknown> }).data;
+      return { id: "f-new", eventId: TOURNAMENT_ID, ...data } as never;
+    });
+
+    await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
+    expect(prisma.tournamentScheduleVersion.findMany).not.toHaveBeenCalled();
+    expect(prisma.tournamentFixtureAssignment.findMany).not.toHaveBeenCalled();
+  });
+
+  it("uses canonical ordering independent of findMany return order", async () => {
+    mockTournament();
+    vi.mocked(prisma.tournamentParticipant.findMany).mockResolvedValue([
+      { id: "p3", displayOrder: 2 },
+      { id: "p1", displayOrder: 0 },
+      { id: "p2", displayOrder: 1 },
+    ] as never);
+
+    const createdSides: string[] = [];
+    vi.mocked(prisma.tournamentFixture.create).mockImplementation(async (args) => {
+      const data = (args as { data: { sideAParticipantId: string; sideBParticipantId: string } }).data;
+      createdSides.push(`${data.sideAParticipantId}:${data.sideBParticipantId}`);
+      return { id: "x", eventId: TOURNAMENT_ID, ...(args as { data: object }).data } as never;
+    });
+
+    await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
+    const expected = generateRoundRobinFixtures({ participantIds: ["p1", "p2", "p3"] });
+    expect(createdSides.sort()).toEqual(
+      expected.map((f) => `${f.sideAParticipantId}:${f.sideBParticipantId}`).sort(),
+    );
+  });
+});

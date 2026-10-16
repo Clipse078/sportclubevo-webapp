@@ -4,6 +4,12 @@
 
 export type TournamentSchedulingErrorCode =
   | "TOURNAMENT_FIXTURE_NOT_FOUND"
+  | "TOURNAMENT_FIXTURES_ALREADY_EXIST"
+  | "TOURNAMENT_FIXTURE_SET_CONFLICT"
+  | "TOURNAMENT_PARTICIPANTS_INSUFFICIENT"
+  | "TOURNAMENT_PARTICIPANT_LIMIT_EXCEEDED"
+  | "TOURNAMENT_FORMAT_UNSUPPORTED"
+  | "TOURNAMENT_GENERATION_INVALID"
   | "TOURNAMENT_SCHEDULE_NOT_FOUND"
   | "TOURNAMENT_SCHEDULE_APPROVED_IMMUTABLE"
   | "TOURNAMENT_ASSIGNMENT_NOT_FOUND"
@@ -95,5 +101,51 @@ export class TournamentScheduleStaleVersionError extends TournamentSchedulingErr
       `Schedule revision mismatch: expected ${expectedRevision}, actual ${actualRevision}`,
     );
     this.name = "TournamentScheduleStaleVersionError";
+  }
+}
+
+export class TournamentFixturesAlreadyExistError extends TournamentSchedulingError {
+  constructor(tournamentId: string, message?: string) {
+    super(
+      "TOURNAMENT_FIXTURES_ALREADY_EXIST",
+      message ??
+        `Tournament "${tournamentId}" already has fixtures that cannot be replaced automatically`,
+    );
+    this.name = "TournamentFixturesAlreadyExistError";
+  }
+}
+
+export class TournamentFixtureSetConflictError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_FIXTURE_SET_CONFLICT", message);
+    this.name = "TournamentFixtureSetConflictError";
+  }
+}
+
+export class TournamentParticipantsInsufficientError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_PARTICIPANTS_INSUFFICIENT", message);
+    this.name = "TournamentParticipantsInsufficientError";
+  }
+}
+
+export class TournamentParticipantLimitExceededError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_PARTICIPANT_LIMIT_EXCEEDED", message);
+    this.name = "TournamentParticipantLimitExceededError";
+  }
+}
+
+export class TournamentFormatUnsupportedError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_FORMAT_UNSUPPORTED", message);
+    this.name = "TournamentFormatUnsupportedError";
+  }
+}
+
+export class TournamentGenerationInvalidError extends TournamentSchedulingError {
+  constructor(message: string) {
+    super("TOURNAMENT_GENERATION_INVALID", message);
+    this.name = "TournamentGenerationInvalidError";
   }
 }
