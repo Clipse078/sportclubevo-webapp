@@ -3,13 +3,13 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E1 in review; 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
 | **01C (round robin MVP)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic single round-robin (WHO, MVP) |
 | **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — **CLOSED / MERGED** — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
-| **01E1 (generator foundation + repeated RR)** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — Smart Generator foundation, tenant-organised guard, repeated round robin |
+| **01E1 (generator foundation + repeated RR)** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — **CLOSED / MERGED** — Smart Generator foundation, tenant-organised guard, repeated round robin |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -142,8 +142,8 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 1 | **01A** | Architecture — **CLOSED** |
 | 2 | **01B** | Persistence + fixture / schedule-version foundation — **CLOSED** |
 | 3 | **01C** | Deterministic single round-robin generator (WHO, MVP) — **CLOSED / MERGED** |
-| 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **IN PROGRESS (R3 closure review)** |
-| 5 | **01E1** | Smart generator foundation + repeated round robin (**this package**) |
+| 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **CLOSED / MERGED** |
+| 5 | **01E1** | Smart generator foundation + repeated round robin — **CLOSED / MERGED** (PR **#859**) |
 | 5b | **01E2** | Smart Mix generator |
 | 5c | **01E3** | Groups + knockout |
 | 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |

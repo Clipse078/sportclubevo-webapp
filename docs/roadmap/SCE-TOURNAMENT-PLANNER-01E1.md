@@ -5,7 +5,10 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E1` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator Foundation |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — **CLOSED / MERGED** |
-| **Status** | **DRAFT / IN REVIEW** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#859** → STAGE) |
+| **Merge commit** | `ecbacd607f73a5427f618750593cd7e269e76bea` |
+| **Feature HEAD** | `f356a3818de5554ef516e7a26779017ff72e7ce6` |
+| **Branch** | `cursor/sce-tournament-planner-01e1-generator-foundation-repeated-rr` |
 
 ## Scope
 
