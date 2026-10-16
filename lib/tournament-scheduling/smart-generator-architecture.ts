@@ -98,17 +98,17 @@ export const PARTICIPANT_LIMIT_REQUALIFICATION_RECORDED = true;
  * Canonical generation pipeline (binding for future packages).
  *
  * TournamentParticipants → CompetitionStructure → TournamentPhases →
- * FixtureGenerator → TournamentFixtures → 01D Feasibility → 01E ScheduleOptimiser →
+ * FixtureGenerator → TournamentFixtures → 01D Feasibility → 01F ScheduleOptimiser →
  * TournamentFixtureAssignments → ManualAdjustments/Locks → PartialRegeneration → Publication
  */
 export const GENERATION_PIPELINE_STAGES = [
   "TOURNAMENT_PARTICIPANTS",
   "COMPETITION_STRUCTURE",
   "TOURNAMENT_PHASES",
-  "FIXTURE_GENERATOR",
+  "SMART_GENERATOR_01E",
   "TOURNAMENT_FIXTURES",
   "FEASIBILITY_01D",
-  "SCHEDULE_OPTIMISER_01E",
+  "SCHEDULE_OPTIMISER_01F",
   "TOURNAMENT_FIXTURE_ASSIGNMENTS",
   "MANUAL_ADJUSTMENTS_AND_LOCKS",
   "PARTIAL_REGENERATION",

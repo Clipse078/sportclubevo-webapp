@@ -63,12 +63,60 @@ describe("SCE Smart Tournament Generator — 01D-R2 contracts", () => {
 
   it("binds the generation pipeline order", () => {
     expect(GENERATION_PIPELINE_STAGES).toContain("FEASIBILITY_01D");
-    expect(GENERATION_PIPELINE_STAGES.indexOf("FIXTURE_GENERATOR")).toBeLessThan(
+    expect(GENERATION_PIPELINE_STAGES.indexOf("SMART_GENERATOR_01E")).toBeLessThan(
+      GENERATION_PIPELINE_STAGES.indexOf("TOURNAMENT_FIXTURES"),
+    );
+    expect(GENERATION_PIPELINE_STAGES.indexOf("TOURNAMENT_FIXTURES")).toBeLessThan(
       GENERATION_PIPELINE_STAGES.indexOf("FEASIBILITY_01D"),
     );
     expect(GENERATION_PIPELINE_STAGES.indexOf("FEASIBILITY_01D")).toBeLessThan(
-      GENERATION_PIPELINE_STAGES.indexOf("SCHEDULE_OPTIMISER_01E"),
+      GENERATION_PIPELINE_STAGES.indexOf("SCHEDULE_OPTIMISER_01F"),
     );
+  });
+
+  it("treats two tournament participants as independent for rest (same source team conceptually)", () => {
+    const window = { startUtcMs: 0, endUtcMs: 4 * 60 * 60_000 };
+    const rot = "participant-rot";
+    const blau = "participant-blau";
+    const result = analyseTournamentFeasibility({
+      tournamentWindow: window,
+      config: { matchDurationMinutes: 30, transitionMinutes: 0, minRestMinutes: 30 },
+      participants: [{ participantId: rot }, { participantId: blau }, { participantId: "p-away" }],
+      fixtures: [
+        {
+          fixtureId: "rot-match",
+          stageKey: "MAIN",
+          roundIndex: 0,
+          slotIndexInRound: 0,
+          sideAParticipantId: rot,
+          sideBParticipantId: "p-away",
+        },
+        {
+          fixtureId: "blau-match",
+          stageKey: "MAIN",
+          roundIndex: 0,
+          slotIndexInRound: 1,
+          sideAParticipantId: blau,
+          sideBParticipantId: "p-away",
+        },
+      ],
+      tournamentPitches: [
+        {
+          tournamentPitchId: "pitch-a",
+          label: "Feld 1",
+          displayOrder: 0,
+          playableIntervals: [window],
+        },
+        {
+          tournamentPitchId: "pitch-b",
+          label: "Feld 2",
+          displayOrder: 1,
+          playableIntervals: [window],
+        },
+      ],
+      breaks: [],
+    });
+    expect(result.status).not.toBe("INFEASIBLE");
   });
 
   it("accepts a non-round-robin fixture set in feasibility (smart-mix shaped)", () => {

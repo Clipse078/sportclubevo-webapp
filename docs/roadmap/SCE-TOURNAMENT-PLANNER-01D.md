@@ -8,7 +8,8 @@
 | **Branch** | `cursor/sce-tournament-planner-01d-feasibility-hard-constraints` |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 | **01D-R1** | Tournament Pitch + break model correction (PO superseding product decision) |
-| **01D-R2** | Smart Tournament Generator architecture alignment (PO product decisions pre-01E) |
+| **01D-R2** | Smart Tournament Generator architecture alignment (PO product decisions pre-smart generator) |
+| **01D-R3** | Roadmap dependency correction + closure-readiness review |
 
 ## Scope delivered
 
@@ -43,7 +44,7 @@ Example: physical resource **Kunstrasen 2** may host tournament logical pitches 
 | --- | --- |
 | **01C** | WHO plays whom |
 | **01D** | CAN it fit? |
-| **01E** | WHEN + WHICH logical pitch (optimiser) |
+| **01F** | WHEN + WHICH logical pitch (optimiser) |
 
 `SCHEDULE_VERSION_CREATED = NO` and `FIXTURE_ASSIGNMENTS_CREATED = NO` for feasibility analysis.
 
@@ -152,16 +153,16 @@ Future UX targets documented in programme brief — not implemented in 01D-R1 UI
 
 MVP **safety** limits: ≤16 participants, ≤120 fixtures, ≤8 pitches, ≤500 candidate slots (not product maximums).
 
-## 01E handoff
+## 01F handoff (schedule optimiser)
 
-01E receives:
+01F receives:
 
 - Validated fixture set (01C)
 - **TournamentPitch** grid + break model
 - Normalized candidate slots (`tournamentPitchId`)
 - Hard-constraint rules + feasibility diagnostics/metrics
 
-01E selects **WHEN + WHICH TOURNAMENT PITCH** — not `FacilityResource`.
+01F selects **WHEN + WHICH TOURNAMENT PITCH** — not `FacilityResource`.
 
 ## Schema (01D-R1)
 
@@ -235,3 +236,61 @@ MVP **safety** limits: ≤16 participants, ≤120 fixtures, ≤8 pitches, ≤500
 | **USER_VISIBLE_UI_CHANGED** | **NO** |
 | **PRODUCT_NAVIGATION_CHANGED** | **NO** |
 | **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+---
+
+## 01D-R3 — Closure readiness
+
+| Flag | Value |
+| --- | --- |
+| **01D_CAN_CLOSE_BEFORE_FUTURE_GENERATORS** | **YES** |
+| **FEASIBILITY_REQUIRES_ROUND_ROBIN_SOURCE** | **NO** |
+| **REST_IDENTITY** | **TOURNAMENT_PARTICIPANT_ID** |
+| **GENERATOR_KEY_IS_ROUND_ROBIN_LOCKED** | **NO** (`round-robin:…` today; future namespaces e.g. `smart-mix:`, `group:`, `knockout:`) |
+| **DURABLE_PHASE_TABLE_REQUIRED_FOR_01D** | **NO** |
+| **FUTURE_PHASE_MIGRATION_PATH_DEFINED** | **YES** (`TournamentPhaseContract` / `stageKey` on fixtures) |
+| **SIDE_A_B_CURRENTLY_NEUTRAL** | **YES** |
+| **HOME_AWAY_NOT_INFERRED_FROM_SIDE_ORDER** | **YES** |
+| **TECHNICAL_LIMIT_REQUALIFICATION_PACKAGE** | **01M** |
+
+### 01D close criteria (generator-agnostic)
+
+01D may merge **before** Smart Mix, groups, or knockout generators when:
+
+- Feasibility validates and schedules **concrete** `TournamentFixture` rows by `sideAParticipantId` / `sideBParticipantId` only.
+- No inspection of `generatorKey` or round-robin provenance is required for correctness.
+- Rest and exclusivity constraints key on **tournament participant ids** (same source `teamId` → independent rows).
+- Scheduler grid uses **TournamentPitch** + **TournamentBreak** only (not `FacilityResource` as pitch).
+- Unresolved knockout sides have a documented extension path (below) without faking participant ids in 01D.
+
+### Unresolved knockout / qualification (future)
+
+| Feasibility layer | Meaning |
+| --- | --- |
+| **STRUCTURAL_CAPACITY_FEASIBILITY** | Fixture exists with duration and pitch demand; time/resource slots can be reserved even when participant ids are unknown (e.g. Winner QF1 vs Winner QF2). |
+| **PARTICIPANT_PATH_FEASIBILITY** | Participant-rest and dependency correctness uses **qualification paths** (`FixtureSideSourceContract`, `QualificationReference`) — not collapsed team or pretend participant ids. |
+
+01D does not implement bracket resolution; current contracts do not block this extension.
+
+### Migration chain (from STAGE `10dd0208…`)
+
+Execution order on feature branch (tournament planner slice):
+
+1. `20261016140000_sce_tournament_planner_01b_fixture_schedule_foundation` — fixtures, schedule versions, assignments (`facilityResourceId`)
+2. `20261016160000_sce_tournament_planner_01d_r1_tournament_pitch_break` — pitches, breaks, assignment → `tournamentPitchId`
+3. `20261016180000_sce_tournament_planner_01d_r2_participant_identity` — drop `@@unique([eventId, teamId])`
+
+R1 assignment migration is safe **iff** zero assignment rows exist pre-migration (no user-facing scheduling yet). R2 is non-destructive index drop only.
+
+### Participant uniqueness (tournament-local identity)
+
+| Rule | Allowed |
+| --- | --- |
+| Same event + same **Team** | **YES** — multiple rows; distinguish via `displayName` |
+| Same event + same **ExternalClub** | **YES** — multiple rows; distinguish via `displayName` |
+| Same event + same **ExternalTeam** (historical) | **NO** — `@@unique([eventId, externalTeamId])` preserved |
+| Duplicate **manualLabel** rows | **YES** — no DB uniqueness; free-text fallback only |
+
+### Roadmap
+
+Programme brief [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) **01D-R3** table is canonical; R2’s “01J/01K before 01D” presentation is **withdrawn**.

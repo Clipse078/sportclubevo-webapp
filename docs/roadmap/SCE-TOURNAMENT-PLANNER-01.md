@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01D (feasibility + R2 architecture); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01D (feasibility + R3 closure); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -32,7 +32,7 @@ Contracts: `lib/tournament-scheduling/smart-generator-architecture.ts`.
 
 > Fixture generation determines **WHO** plays whom.  
 > Feasibility (01D) determines **CAN IT FIT?**  
-> Schedule optimisation (01E) determines **WHEN** and **WHICH logical pitch**.
+> Schedule optimisation (01F) determines **WHEN** and **WHICH logical pitch**.
 
 ## Canonical tournament model
 
@@ -48,9 +48,9 @@ Contracts: `lib/tournament-scheduling/smart-generator-architecture.ts`.
 | **Scheduling rules** | Versioned on `TournamentScheduleVersion` |
 | **Breaks** | `TournamentBreak` 0:n |
 | **Feasibility** | Pure engine (01D) |
-| **Optimised schedule** | Assignments on logical pitches (01E+) |
-| **Manual adjustments / locks** | 01F+ |
-| **Publication** | 01I |
+| **Optimised schedule** | Assignments on logical pitches (01F+) |
+| **Manual adjustments / locks** | 01G+ |
+| **Publication** | 01K |
 
 ## Product cardinality (canonical)
 
@@ -80,7 +80,7 @@ One engine family — phases carry format semantics; not three unrelated tournam
 
 **CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1** (01C MVP). **PRODUCT = 1:n**. **ROUND_ROBIN_EXTENSION_REQUIRED = YES**.
 
-Smart Mix decides **WHO**; 01D decides **CAN IT FIT**; 01E decides **WHEN + PITCH**.
+Smart Mix decides **WHO** (01E+); 01D decides **CAN IT FIT**; 01F decides **WHEN + PITCH**.
 
 ## Participant identity (01D-R2)
 
@@ -96,7 +96,7 @@ Smart Mix decides **WHO**; 01D decides **CAN IT FIT**; 01E decides **WHEN + PITC
 
 ## Generation pipeline (binding)
 
-`TournamentParticipants → CompetitionStructure → TournamentPhases → FixtureGenerator → TournamentFixtures → 01D Feasibility → 01E ScheduleOptimiser → TournamentFixtureAssignments → ManualAdjustments/Locks → PartialRegeneration → Publication`
+`TournamentParticipants → CompetitionStructure → TournamentPhases → 01E SmartGenerator → TournamentFixtures → 01D Feasibility → 01F ScheduleOptimiser → TournamentFixtureAssignments → ManualAdjustments/Locks → PartialRegeneration → Publication`
 
 ## “Almost AI” UX (deterministic)
 
@@ -124,22 +124,31 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 1. **Tournament Creator** — progressive scheduling adoption.
 2. **Tournament → Planung** — feasibility, optimiser, planner, locks, edits, publication.
 
-## Recommended package sequence (01D-R2 resequencing)
+## Recommended package sequence (01D-R3 — dependency-correct)
 
-**`ROADMAP_RESEQUENCING_RECOMMENDED = YES`**
+**`ROADMAP_RESEQUENCING_RECOMMENDED = YES`** (supersedes the R2 table that listed future 01J/01K *before* delivered 01D)
 
-| Order | Package | Focus |
+**Foundation and delivered packages are not renumbered.** Package numbers communicate dependency order from the **current** codebase state (01A–01D implemented). The **logical pipeline** (participants → structure → fixtures → feasibility → optimiser → …) is binding; **delivery order** may close generic feasibility (01D) before every future generator exists, because 01D is generator-agnostic.
+
+| Order | Package | Status / focus |
 | --- | --- | --- |
-| 1 | **01C-EXT / 01J** (new) | Smart Mix, repeated RR, auto grouping, knockout bracket generation |
-| 2 | **01K** (new) | Standings + ranking rules + qualification resolution |
-| 3 | **01D** | Feasibility (in progress) |
-| 4 | **01E** | Schedule optimiser |
-| 5 | **01F** | Locks + partial regeneration |
-| 6 | **01G** | Visual pitch × time planner |
-| 7 | **01H** | Manual editing + DnD |
-| 8 | **01I** | Approval + publication + sharing |
+| 1 | **01A** | Architecture — **CLOSED** |
+| 2 | **01B** | Persistence + fixture / schedule-version foundation — **CLOSED** |
+| 3 | **01C** | Deterministic single round-robin generator (WHO, MVP) — **CLOSED / MERGED** |
+| 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **IN PROGRESS (R3 closure review)** |
+| 5 | **01E** | Smart generator foundation — repeated RR, Smart Mix, competition/phase generation contracts, automatic groups, knockout/bracket slices as needed |
+| 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |
+| 7 | **01G** | Locks + partial regeneration |
+| 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
+| 9 | **01I** | Manual adjustment / DnD / conflict validation |
+| 10 | **01J** | Results + rankings + qualification progression |
+| 11 | **01K** | Publication + sharing |
+| 12 | **01L** | Responsive / accessibility / polish |
+| 13 | **01M** | Integrity / performance / technical-limit requalification / closure |
 
-Labels 01E–01I remain for optimiser→publication; **insert 01J/01K (or equivalent) before 01E** for full smart generator scope. Do not treat 01C single-RR as the only product format.
+If **01E Smart Generator** is too large for one package, split without renumbering delivered work, e.g. **01E1** generation foundation + repeated RR, **01E2** Smart Mix, **01E3** groups + knockout — or equivalent repository-compliant sub-keys.
+
+**01D can close before 01E** when feasibility consumes any valid concrete `TournamentFixture` set (no round-robin provenance), uses `TournamentPitch` + breaks, and documents extension for unresolved qualification fixtures.
 
 ## Future planner UX (01G+)
 
