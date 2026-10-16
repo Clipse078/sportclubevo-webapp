@@ -167,10 +167,11 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
     expect(shell).toContain("domainSecondaryItems");
   });
 
-  it("maintains 60/60/0 completeness and V2-02 matrix parity", () => {
+  it("maintains completeness and V2-02 matrix parity", () => {
+    const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(63);
-    expect(baseline.reachableDestinations).toBe(63);
+    expect(baseline.visibleDestinations).toBe(inventory.length);
+    expect(baseline.reachableDestinations).toBe(inventory.length);
     expect(baseline.orphanedDestinations).toEqual([]);
 
     const sections = getVisibleNavSections(CLUB_ADMIN_KEYS, "club");

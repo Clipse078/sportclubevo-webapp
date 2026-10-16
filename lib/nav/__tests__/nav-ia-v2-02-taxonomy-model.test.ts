@@ -33,6 +33,10 @@ import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 
 const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS) as PermissionKey[];
 
+function clubAdminInventory() {
+  return buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
+}
+
 function loadApprovedTargetMatrix() {
   const raw = readFileSync(
     join(process.cwd(), "docs/navigation/SCE-NAV-IA-V2-01-target-ia-matrix.json"),
@@ -64,11 +68,16 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
   });
 
   it("maps all Publishing destinations under Publishing L1", () => {
-    const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
+    const inventory = clubAdminInventory();
     const publishingKeys = inventory
-      .filter((row) => row.key.startsWith("website") || row.key.startsWith("infoboard"))
+      .filter(
+        (row) =>
+          row.key.startsWith("website") ||
+          row.key.startsWith("infoboard") ||
+          row.key === "mobile-app",
+      )
       .map((row) => row.key);
-    expect(publishingKeys.length).toBe(15);
+    expect(publishingKeys.length).toBe(16);
     const matrix = buildTargetMatrixFromInventory(inventory);
     for (const key of publishingKeys) {
       const target = matrix.find((row) => row.key === key);
@@ -76,15 +85,17 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     }
     expect(CLUB_NAV_ITEM_TO_DOMAIN.website).toBe("publishing");
     expect(CLUB_NAV_ITEM_TO_DOMAIN.infoboard).toBe("publishing");
+    expect(CLUB_NAV_ITEM_TO_DOMAIN["mobile-app"]).toBe("publishing");
+    expect(CLUB_NAV_ITEM_TO_DOMAIN["website-media"]).toBe("publishing");
   });
 
   it("matches the approved target matrix with zero mismatches", () => {
-    const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
+    const inventory = clubAdminInventory();
     const matrix = buildTargetMatrixFromInventory(inventory);
-    expect(matrix).toHaveLength(63);
+    expect(matrix).toHaveLength(inventory.length);
 
     const approved = loadApprovedTargetMatrix().destinations;
-    expect(approved).toHaveLength(63);
+    expect(approved).toHaveLength(inventory.length);
 
     const sections = getVisibleNavSections(CLUB_ADMIN_KEYS, "club");
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
@@ -92,7 +103,7 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     expect(audit.unmapped).toEqual([]);
     expect(audit.mismatches).toEqual([]);
     expect(audit.duplicateCanonicalNodes).toEqual([]);
-    expect(audit.mapped).toBe(63);
+    expect(audit.mapped).toBe(inventory.length);
   });
 
   it("resolves deep routes against the V2 taxonomy without pathname hacks", () => {
@@ -175,10 +186,11 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     expect(audit.duplicateCanonicalNodes).toEqual([]);
   });
 
-  it("maintains club-admin navigation completeness at 63/63/0", () => {
+  it("maintains club-admin navigation completeness with zero orphans", () => {
+    const inventory = clubAdminInventory();
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(63);
-    expect(baseline.reachableDestinations).toBe(63);
+    expect(baseline.visibleDestinations).toBe(inventory.length);
+    expect(baseline.reachableDestinations).toBe(inventory.length);
     expect(baseline.orphanedDestinations).toEqual([]);
     expect(baseline.unregisteredAuthenticatedRoutes).toEqual([]);
 
@@ -199,6 +211,11 @@ describe("SCE-NAV-IA-V2-02 taxonomy model", () => {
     expect(CLUB_DOMAIN_MAP_SUMMARY.club).toEqual(
       expect.arrayContaining(["organisation", "mitglieder", "anmeldungen", "trainer-staff"]),
     );
-    expect(CLUB_DOMAIN_MAP_SUMMARY.publishing).toEqual(["website", "infoboard"]);
+    expect(CLUB_DOMAIN_MAP_SUMMARY.publishing).toEqual([
+      "website",
+      "infoboard",
+      "mobile-app",
+      "website-media",
+    ]);
   });
 });

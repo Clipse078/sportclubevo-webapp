@@ -12,6 +12,7 @@ import {
   auditNavigationCompleteness,
   buildAppNavigationModelForUser,
 } from "@/lib/nav/app-navigation-model";
+import { buildCurrentInventoryForPermissions } from "@/lib/nav/nav-ia-v2/build-current-inventory";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -215,7 +216,9 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
     const report = auditNavigationCompleteness(sections, model);
     expect(report.orphanedDestinations).toEqual([]);
     expect(report.reachableDestinations).toBe(report.canonicalVisibleDestinations);
-    expect(report.canonicalVisibleDestinations).toBe(63);
+    expect(report.canonicalVisibleDestinations).toBe(
+      buildCurrentInventoryForPermissions(adminKeys, "club").length,
+    );
   });
 });
 
