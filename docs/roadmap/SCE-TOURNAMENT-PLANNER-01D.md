@@ -5,6 +5,8 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01D` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#857** → STAGE; R4 STAGE migration verified) |
+| **Merge commit** | `f618e400ebc6845301e8a1a0d46bca8b133ffea4` |
 | **Branch** | `cursor/sce-tournament-planner-01d-feasibility-hard-constraints` |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 | **01D-R1** | Tournament Pitch + break model correction (PO superseding product decision) |

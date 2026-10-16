@@ -3,12 +3,12 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01D (feasibility + R3 closure); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E next; 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
 | **01C (round robin MVP)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic single round-robin (WHO, MVP) |
-| **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
+| **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — **CLOSED / MERGED** — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
