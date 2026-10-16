@@ -372,3 +372,14 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **R7 acceptance suite** | 598 tests PASS (01J + planner + programme-engine + calendar-micro + dashboard + 01J navbar guards) |
 | **Build / schema** | `prisma validate` OK; `npm run build` OK; no schema migration in merge |
 | **Test debt note** | Pre-R5.4.2 nav matrix expectations were stale test debt, not an 01J product defect |
+
+## 01J-R8.2 — Full navigation test reconciliation (STAGE)
+
+| Gate | Result |
+|------|--------|
+| **PR #849 merge** | **MERGED** to `STAGE` (R8.1 post-merge nav matrix baselines) |
+| **R8.2 branch** | `cursor/sce-nav-r8-2-full-test-reconciliation` |
+| **Nav suite (`lib/nav/__tests__`)** | **377 / 377 PASS** (19 legacy failures reconciled — icon/adoption baselines, 64-destination completeness, tenant-administration visibility, Publizieren channel IA) |
+| **Product navigation** | **Unchanged** — test/artifact reconciliation only |
+| **PO visual UAT** | **PASS** (16.10.2026 — unchanged; no Cursor visual UAT in R8.2) |
+| **Build / schema** | `prisma validate` OK; `npm run build` OK |

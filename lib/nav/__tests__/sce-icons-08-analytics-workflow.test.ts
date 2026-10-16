@@ -21,7 +21,7 @@ describe("SCE-ICONS-08 analytics, reporting & workflow", () => {
       expect(SCE_APPROVED_MASTER_ICON_NAMES).toContain(name);
       expect(SCE_ICON_REGISTRY[name].geometrySource).toBe("approved-master");
     }
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
   });
 
   it("extends the registry without removing prior concepts", () => {

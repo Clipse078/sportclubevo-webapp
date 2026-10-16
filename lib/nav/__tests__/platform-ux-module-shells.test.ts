@@ -21,6 +21,8 @@ const CANONICAL_FULL_ORDER = [
   "helfereinsaetze",
   "communication",
   "website",
+  "website-media",
+  "mobile-app",
   "infoboard",
   "trainer-staff",
   "meetings",

@@ -20,8 +20,12 @@ import {
   getQuickAccessSceIconName,
   NAV_DESTINATION_SCE_ICON_BY_KEY,
 } from "@/lib/nav/nav-destination-sce-icons";
-import { SCE_ICON_REGISTRY } from "@/components/design-system/icons/registry";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
+import { CANONICAL_SHELL_NAV_SCE_ICON_SURFACES } from "@/lib/nav/nav-test-contract";
+import {
+  expectNavDestinationUsesRegistryMaster,
+  forEachNavDestinationIconMapping,
+} from "@/lib/nav/__tests__/nav-test-assertions";
 
 function readRelative(relativePath: string): string {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
@@ -31,10 +35,10 @@ const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS);
 
 describe("SCE-ICONS-02 nav destination SCE mapping", () => {
   it("maps adopted nav destinations to registry entries with approved-master geometry", () => {
-    for (const [navKey, iconName] of Object.entries(NAV_DESTINATION_SCE_ICON_BY_KEY)) {
+    forEachNavDestinationIconMapping((navKey, iconName) => {
       expect(getNavDestinationSceIconName(navKey)).toBe(iconName);
-      expect(SCE_ICON_REGISTRY[iconName].geometrySource).toBe("approved-master");
-    }
+      expectNavDestinationUsesRegistryMaster(iconName);
+    });
   });
 
   it("maps Veranstaltungen to the approved events master (SCE-ICONS-10)", () => {
@@ -49,16 +53,16 @@ describe("SCE-ICONS-02 nav destination SCE mapping", () => {
 
 describe("SCE-ICONS-02 application wiring", () => {
   it("uses SceIcon via NavDestinationSceIcon without duplicating SVG geometry in nav layout", () => {
-    const drawer = readRelative("components/admin/layout/GlobalNavDrawer.tsx");
     const shell = readRelative("components/admin/layout/AppShellNavigation.tsx");
-    const quickAccess = readRelative("components/ui/dashboard/PersonalQuickAccess.tsx");
-
-    expect(drawer).toContain("NavDestinationSceIcon");
-    expect(drawer).not.toMatch(/public\/images\/icons\/[\w-]+\.svg/);
-    expect(shell).toContain("NavDestinationSceIcon");
-    expect(shell).toContain("getNavDestinationSceIconName");
-    expect(quickAccess).toContain("NavDestinationSceIcon");
-    expect(quickAccess).toContain("getQuickAccessSceIconName");
+    for (const relativePath of CANONICAL_SHELL_NAV_SCE_ICON_SURFACES) {
+      const source = readRelative(relativePath);
+      expect(source).toContain("NavDestinationSceIcon");
+      expect(source).not.toMatch(/public\/images\/icons\/[\w-]+\.svg/);
+    }
+    expect(shell).toContain("SceDomainNavigationPanel");
+    expect(readRelative("components/ui/dashboard/PersonalQuickAccess.tsx")).toContain(
+      "getQuickAccessSceIconName",
+    );
   });
 
   it("preserves permission-filtered explorer search and SCE icon nav keys", () => {
