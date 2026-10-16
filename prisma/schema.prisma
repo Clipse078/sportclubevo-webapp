@@ -9026,6 +9026,7 @@ model TournamentGroup {
   phase  TournamentPhase @relation(fields: [tournamentPhaseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   memberships          TournamentGroupMembership[]
+  groupFixtures        TournamentFixture[]             @relation("TournamentGroupFixtures")
   groupRankQualSources TournamentQualificationSource[] @relation("QualificationSourceGroup")
 
   @@unique([tournamentPhaseId, displayOrder])
@@ -9132,6 +9133,8 @@ model TournamentFixture {
 
   /// SCE-TOURNAMENT-PLANNER-01E3A — durable competition phase (nullable for pre-migration rows until backfill).
   tournamentPhaseId String?
+  /// SCE-TOURNAMENT-PLANNER-01E3B — group-scoped GROUP_MIX fixtures; null for knockout/legacy single-pool rows.
+  tournamentGroupId String?
 
   /// Stage identifier for future format evolution (e.g. group id, "MAIN").
   stageKey         String @default("MAIN")
@@ -9150,17 +9153,18 @@ model TournamentFixture {
   tenant           Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   event            Event                  @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   phase            TournamentPhase?       @relation(fields: [tournamentPhaseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  group            TournamentGroup?       @relation("TournamentGroupFixtures", fields: [tournamentGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   sideAParticipant TournamentParticipant? @relation("TournamentFixtureSideA", fields: [sideAParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   sideBParticipant TournamentParticipant? @relation("TournamentFixtureSideB", fields: [sideBParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   sides            TournamentFixtureSide[]
   qualificationSources TournamentQualificationSource[] @relation("QualificationSourceFixture")
   assignments      TournamentFixtureAssignment[]
 
-  @@unique([eventId, stageKey, roundIndex, slotIndexInRound])
   @@index([tenantId])
   @@index([eventId])
   @@index([tenantId, eventId])
   @@index([tournamentPhaseId])
+  @@index([tournamentGroupId])
   @@index([sideAParticipantId])
   @@index([sideBParticipantId])
 }
