@@ -5,6 +5,7 @@ import {
   expectedRoundRobinRoundCount,
   validateRoundRobinInvariants,
   canonicalizeParticipantIds,
+  compareParticipantId,
   ROUND_ROBIN_BYE_SENTINEL,
 } from "../index";
 
@@ -115,24 +116,35 @@ describe("canonical participant ordering", () => {
     ];
     expect(canonicalizeParticipantIds(rows)).toEqual(["a-id", "b-id"]);
   });
+
+  it("uses UTF-16 code-unit id order (not locale-sensitive collation)", () => {
+    const rows = [
+      { id: "z-participant", displayOrder: 0 },
+      { id: "ä-participant", displayOrder: 0 },
+    ];
+    expect(canonicalizeParticipantIds(rows)).toEqual(["z-participant", "ä-participant"]);
+    expect(compareParticipantId("z-participant", "ä-participant")).toBeLessThan(0);
+  });
 });
 
 describe("side A/B policy", () => {
-  it("assigns side A as lexicographically smaller participant id", () => {
+  it("assigns side A as code-unit-smaller participant id", () => {
     const fixtures = generateRoundRobinFixtures({ participantIds: ["team-z", "team-a", "team-m"] });
     for (const fixture of fixtures) {
-      expect(fixture.sideAParticipantId.localeCompare(fixture.sideBParticipantId)).toBeLessThanOrEqual(0);
+      expect(compareParticipantId(fixture.sideAParticipantId, fixture.sideBParticipantId)).toBeLessThanOrEqual(
+        0,
+      );
     }
   });
 
-  it("avoids pathological always-A for one participant across all fixtures", () => {
-    const fixtures = generateRoundRobinFixtures({ participantIds: ids(8) });
-    const sideACounts = new Map<string, number>();
-    for (const fixture of fixtures) {
-      sideACounts.set(fixture.sideAParticipantId, (sideACounts.get(fixture.sideAParticipantId) ?? 0) + 1);
-    }
-    const counts = [...sideACounts.values()];
-    expect(Math.max(...counts)).toBeLessThan(fixtures.length);
+  it("lexical side A is neutral — smallest seed id may be side A in every one of its fixtures", () => {
+    const participantIds = ids(8);
+    const fixtures = generateRoundRobinFixtures({ participantIds });
+    const smallest = participantIds[0];
+    const smallestFixtures = fixtures.filter(
+      (f) => f.sideAParticipantId === smallest || f.sideBParticipantId === smallest,
+    );
+    expect(smallestFixtures.every((f) => f.sideAParticipantId === smallest)).toBe(true);
   });
 });
 

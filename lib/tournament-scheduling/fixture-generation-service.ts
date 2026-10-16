@@ -2,6 +2,7 @@
  * SCE-TOURNAMENT-PLANNER-01C — round-robin fixture generation + persistence bridge.
  */
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { TournamentFixtureDefinition } from "./types";
 import { requireTournamentEvent } from "./internal/require-tournament";
@@ -16,6 +17,7 @@ import {
 } from "./errors";
 import {
   canonicalizeParticipantIds,
+  compareParticipantId,
   generateRoundRobinFixtures,
   RoundRobinGenerationValidationError,
   TOURNAMENT_FIXTURE_STAGE_MAIN,
@@ -24,6 +26,7 @@ import {
   persistedFixturesToLogicalKeys,
   logicalFixtureSetsEqual,
   participantIdsFromFixtures,
+  type TournamentFixtureGenerationDefinition,
 } from "./fixtures";
 import { listTournamentFixtures } from "./fixture-service";
 
@@ -47,6 +50,63 @@ function toDefinition(row: {
     sideAParticipantId: row.sideAParticipantId,
     sideBParticipantId: row.sideBParticipantId,
   };
+}
+
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
+function sortFixtureDefinitions(rows: TournamentFixtureDefinition[]): TournamentFixtureDefinition[] {
+  return [...rows].sort((a, b) => {
+    if (a.stageKey !== b.stageKey) return compareParticipantId(a.stageKey, b.stageKey);
+    if (a.roundIndex !== b.roundIndex) return a.roundIndex - b.roundIndex;
+    if (a.slotIndexInRound !== b.slotIndexInRound) {
+      return a.slotIndexInRound - b.slotIndexInRound;
+    }
+    return compareParticipantId(a.id, b.id);
+  });
+}
+
+function reconcileExistingFixtures(
+  tournamentId: string,
+  generated: readonly TournamentFixtureGenerationDefinition[],
+  existing: TournamentFixtureDefinition[],
+  canonicalIdSet: Set<string>,
+): TournamentFixtureDefinition[] | null {
+  if (existing.length === 0) {
+    return null;
+  }
+
+  const expectedKeys = fixtureDefinitionsToLogicalKeys(generated);
+  const existingKeys = persistedFixturesToLogicalKeys(existing);
+
+  if (logicalFixtureSetsEqual(expectedKeys, existingKeys)) {
+    return existing;
+  }
+
+  const fixtureParticipantIds = participantIdsFromFixtures(existing);
+  const currentMatchesFixtureParticipants =
+    fixtureParticipantIds.size === canonicalIdSet.size &&
+    [...fixtureParticipantIds].every((id) => canonicalIdSet.has(id));
+
+  if (!currentMatchesFixtureParticipants) {
+    throw new TournamentFixtureSetConflictError(
+      "Tournament participants changed after fixtures were generated; controlled regeneration is required",
+    );
+  }
+
+  throw new TournamentFixturesAlreadyExistError(
+    tournamentId,
+    "Existing tournament fixtures differ from the deterministic round-robin set",
+  );
 }
 
 function mapPureValidationError(error: RoundRobinGenerationValidationError): never {
@@ -111,59 +171,47 @@ export async function generateTournamentRoundRobinFixtures(
   }
 
   const existing = await listTournamentFixtures(tenantId, tournamentId);
-  if (existing.length > 0) {
-    const expectedKeys = fixtureDefinitionsToLogicalKeys(generated);
-    const existingKeys = persistedFixturesToLogicalKeys(existing);
+  const reconciled = reconcileExistingFixtures(tournamentId, generated, existing, canonicalIdSet);
+  if (reconciled) {
+    return sortFixtureDefinitions(reconciled);
+  }
 
-    if (logicalFixtureSetsEqual(expectedKeys, existingKeys)) {
-      return existing;
+  try {
+    const created = await prisma.$transaction(async (tx) => {
+      const rows = [];
+      for (const definition of generated) {
+        const row = await tx.tournamentFixture.create({
+          data: {
+            tenantId,
+            eventId: tournamentId,
+            stageKey: definition.stageKey,
+            roundIndex: definition.roundIndex,
+            slotIndexInRound: definition.slotIndexInRound,
+            generatorKey: definition.generatorKey,
+            sideAParticipantId: definition.sideAParticipantId,
+            sideBParticipantId: definition.sideBParticipantId,
+          },
+        });
+        rows.push(row);
+      }
+      return rows;
+    });
+
+    return sortFixtureDefinitions(created.map((row) => toDefinition(row)));
+  } catch (error) {
+    if (!isPrismaUniqueConstraintError(error)) {
+      throw error;
     }
 
-    const fixtureParticipantIds = participantIdsFromFixtures(existing);
-    const currentMatchesFixtureParticipants =
-      fixtureParticipantIds.size === canonicalIdSet.size &&
-      [...fixtureParticipantIds].every((id) => canonicalIdSet.has(id));
-
-    if (!currentMatchesFixtureParticipants) {
-      throw new TournamentFixtureSetConflictError(
-        "Tournament participants changed after fixtures were generated; controlled regeneration is required",
-      );
+    const afterRace = await listTournamentFixtures(tenantId, tournamentId);
+    const raced = reconcileExistingFixtures(tournamentId, generated, afterRace, canonicalIdSet);
+    if (raced) {
+      return sortFixtureDefinitions(raced);
     }
 
     throw new TournamentFixturesAlreadyExistError(
       tournamentId,
-      "Existing tournament fixtures differ from the deterministic round-robin set",
+      "Concurrent fixture generation left a non-matching fixture set",
     );
   }
-
-  const created = await prisma.$transaction(async (tx) => {
-    const rows = [];
-    for (const definition of generated) {
-      const row = await tx.tournamentFixture.create({
-        data: {
-          tenantId,
-          eventId: tournamentId,
-          stageKey: definition.stageKey,
-          roundIndex: definition.roundIndex,
-          slotIndexInRound: definition.slotIndexInRound,
-          generatorKey: definition.generatorKey,
-          sideAParticipantId: definition.sideAParticipantId,
-          sideBParticipantId: definition.sideBParticipantId,
-        },
-      });
-      rows.push(row);
-    }
-    return rows;
-  });
-
-  return created
-    .map((row) => toDefinition(row))
-    .sort((a, b) => {
-      if (a.stageKey !== b.stageKey) return a.stageKey.localeCompare(b.stageKey);
-      if (a.roundIndex !== b.roundIndex) return a.roundIndex - b.roundIndex;
-      if (a.slotIndexInRound !== b.slotIndexInRound) {
-        return a.slotIndexInRound - b.slotIndexInRound;
-      }
-      return a.id.localeCompare(b.id);
-    });
 }

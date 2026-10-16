@@ -1,5 +1,6 @@
 import type { TournamentFixtureDefinition } from "../types";
 import type { TournamentFixtureGenerationDefinition } from "./types";
+import { compareParticipantId } from "./ordering";
 
 function logicalFixtureKey(input: {
   stageKey: string;
@@ -9,7 +10,7 @@ function logicalFixtureKey(input: {
   sideBParticipantId: string;
 }): string {
   const minSide =
-    input.sideAParticipantId.localeCompare(input.sideBParticipantId) <= 0
+    compareParticipantId(input.sideAParticipantId, input.sideBParticipantId) <= 0
       ? input.sideAParticipantId
       : input.sideBParticipantId;
   const maxSide = minSide === input.sideAParticipantId ? input.sideBParticipantId : input.sideAParticipantId;
@@ -19,7 +20,7 @@ function logicalFixtureKey(input: {
 export function fixtureDefinitionsToLogicalKeys(
   fixtures: readonly TournamentFixtureGenerationDefinition[],
 ): string[] {
-  return fixtures.map((f) => logicalFixtureKey(f)).sort((a, b) => a.localeCompare(b));
+  return fixtures.map((f) => logicalFixtureKey(f)).sort(compareParticipantId);
 }
 
 export function persistedFixturesToLogicalKeys(
@@ -35,7 +36,7 @@ export function persistedFixturesToLogicalKeys(
         sideBParticipantId: f.sideBParticipantId,
       }),
     )
-    .sort((a, b) => a.localeCompare(b));
+    .sort(compareParticipantId);
 }
 
 export function logicalFixtureSetsEqual(a: readonly string[], b: readonly string[]): boolean {

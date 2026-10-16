@@ -4,8 +4,10 @@ import {
   expectedRoundRobinRoundCount,
 } from "./round-robin";
 
+import { compareParticipantId } from "./ordering";
+
 function unorderedPairKey(a: string, b: string): string {
-  return a.localeCompare(b) <= 0 ? `${a}|${b}` : `${b}|${a}`;
+  return compareParticipantId(a, b) <= 0 ? `${a}|${b}` : `${b}|${a}`;
 }
 
 /**

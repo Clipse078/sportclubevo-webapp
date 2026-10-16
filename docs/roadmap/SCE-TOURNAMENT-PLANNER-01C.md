@@ -38,7 +38,7 @@
 Canonical seed order before rotation:
 
 1. ascending `displayOrder`
-2. ascending participant `id` (lexicographic tie-break)
+2. ascending participant `id` (UTF-16 code-unit lexical tie-break — locale-independent)
 
 Matches tournament participant list conventions from CREATE-01F / participant service.
 
@@ -81,7 +81,7 @@ No silent delete/recreate.
 ## Atomicity + concurrency
 
 - `GENERATION_PERSISTENCE_ATOMIC = YES` via `prisma.$transaction`
-- DB uniqueness on `(eventId, stageKey, roundIndex, slotIndexInRound)` prevents duplicate slot rows; concurrent callers may race — one succeeds, others fail constraint or see existing fixtures on retry (no partial sets inside a single transaction)
+- DB uniqueness on `(eventId, stageKey, roundIndex, slotIndexInRound)` prevents duplicate slot rows; concurrent callers may race — one transaction commits the full set, the loser’s transaction rolls back (no partial sets), then the service re-reads and returns the winner’s fixture set idempotently when it matches the deterministic generation (raw `P2002` is not surfaced to callers)
 
 ## Limits
 

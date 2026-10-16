@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -230,6 +231,64 @@ describe("generateTournamentRoundRobinFixtures", () => {
     await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
     expect(prisma.tournamentScheduleVersion.findMany).not.toHaveBeenCalled();
     expect(prisma.tournamentFixtureAssignment.findMany).not.toHaveBeenCalled();
+  });
+
+  it("does not commit partial fixture sets when persistence fails mid-transaction", async () => {
+    mockTournament();
+    mockParticipants(["p1", "p2", "p3", "p4"]);
+
+    let createAttempts = 0;
+    vi.mocked(prisma.tournamentFixture.create).mockImplementation(async (args) => {
+      createAttempts += 1;
+      if (createAttempts === 3) {
+        throw new Error("simulated persistence failure");
+      }
+      const data = (args as { data: Record<string, unknown> }).data;
+      return { id: `fixture-${createAttempts}`, eventId: TOURNAMENT_ID, ...data } as never;
+    });
+
+    await expect(generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID)).rejects.toThrow(
+      "simulated persistence failure",
+    );
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(createAttempts).toBe(3);
+  });
+
+  it("resolves concurrent first-writer race via unique constraint then idempotent read", async () => {
+    mockTournament();
+    const participantIds = ["p1", "p2", "p3"];
+    mockParticipants(participantIds);
+
+    const generated = generateRoundRobinFixtures({
+      participantIds: canonicalizeParticipantIds(
+        participantIds.map((id, displayOrder) => ({ id, displayOrder })),
+      ),
+    });
+
+    let listCalls = 0;
+    vi.mocked(prisma.tournamentFixture.findMany).mockImplementation(async () => {
+      listCalls += 1;
+      if (listCalls === 1) {
+        return [] as never;
+      }
+      return generated.map((g, index) => ({
+        id: `winner-${index}`,
+        eventId: TOURNAMENT_ID,
+        ...g,
+      })) as never;
+    });
+
+    vi.mocked(prisma.$transaction).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      }),
+    );
+
+    const result = await generateTournamentRoundRobinFixtures(TENANT_A, TOURNAMENT_ID);
+    expect(prisma.tournamentFixture.create).not.toHaveBeenCalled();
+    expect(result).toHaveLength(generated.length);
+    expect(listCalls).toBe(2);
   });
 
   it("uses canonical ordering independent of findMany return order", async () => {

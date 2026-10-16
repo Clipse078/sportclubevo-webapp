@@ -10,7 +10,7 @@ import {
   TOURNAMENT_ROUND_ROBIN_MIN_PARTICIPANTS,
 } from "./constants";
 import type { RoundRobinGenerationInput, TournamentFixtureGenerationDefinition } from "./types";
-import { assertDistinctParticipantIds } from "./ordering";
+import { assertDistinctParticipantIds, compareParticipantId } from "./ordering";
 import { RoundRobinGenerationValidationError } from "./errors";
 
 export { RoundRobinGenerationValidationError } from "./errors";
@@ -19,7 +19,7 @@ function assignNeutralSides(
   participantA: string,
   participantB: string,
 ): { sideAParticipantId: string; sideBParticipantId: string } {
-  if (participantA.localeCompare(participantB) <= 0) {
+  if (compareParticipantId(participantA, participantB) <= 0) {
     return { sideAParticipantId: participantA, sideBParticipantId: participantB };
   }
   return { sideAParticipantId: participantB, sideBParticipantId: participantA };
