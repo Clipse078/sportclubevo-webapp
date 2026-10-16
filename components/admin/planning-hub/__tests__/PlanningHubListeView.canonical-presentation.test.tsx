@@ -265,7 +265,8 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     const rows = container.querySelectorAll("[data-sce-planning-hub-liste-row]");
     expect(rows.length).toBe(4);
     for (const row of rows) {
-      expect(row.querySelector("[data-sce-programme-activity-card-shell]")).toBeTruthy();
+      expect(row.getAttribute("data-sce-programme-activity-card-shell")).not.toBeNull();
+      expect(row).toHaveAttribute("data-sce-planning-hub-liste-full-width-contract", "canonical-shell");
       expect(row.querySelector('[data-testid="planning-hub-liste-row-time"]')).toBeNull();
       expect(row.querySelector('[data-testid="planning-hub-liste-row-status"]')).toBeNull();
     }

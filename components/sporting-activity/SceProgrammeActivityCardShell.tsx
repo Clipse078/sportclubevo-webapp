@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import {
   sceProgrammeActivityCardShellClass,
@@ -12,7 +12,7 @@ export type SceProgrammeActivityCardShellProps = {
   children: ReactNode;
   className?: string;
   testId?: string;
-};
+} & Omit<ComponentPropsWithoutRef<"div">, "className" | "children">;
 
 /**
  * Canonical programme-list card surface — SCE activity card family (Resultate-aligned).
@@ -23,9 +23,11 @@ export function SceProgrammeActivityCardShell({
   children,
   className,
   testId = "sce-programme-activity-card-shell",
+  ...rest
 }: SceProgrammeActivityCardShellProps) {
   return (
     <div
+      {...rest}
       className={cn(sceProgrammeActivityCardShellClass(density), className)}
       data-testid={testId}
       data-sce-programme-activity-card-shell

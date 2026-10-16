@@ -397,10 +397,14 @@ describe("SCE-ACTIVITY-CREATE-01H — core planning surfaces adoption", () => {
       expect(row).toContain("PlannerOperationalIssueSummary");
     });
 
-    it("R5.5 — no parallel planner card family or table row grid", () => {
+    it("R5.5 / R5.5.1 — no parallel planner card family, table grid, or nested visual row shell", () => {
       const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
       expect(row).not.toContain("PLANNING_HUB_LISTE_ROW_GRID_CLASS");
       expect(row).not.toContain("planning-hub-liste-row-status");
+      expect(row).toContain("data-sce-planning-hub-liste-full-width-contract");
+      expect(row).not.toMatch(
+        /rounded-lg border border-\[var\(--border\)\]\/80 bg-\[var\(--surface\)\] shadow-sm/,
+      );
       const forbidden = [
         "PlanningTrainingCard",
         "PlanningMatchCard",

@@ -87,6 +87,17 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.5 Wochenplaner", () => {
     }
   });
 
+  it("R5.5.1 — programme shell is the sole list-row visual shell (full width, no nested planner row)", () => {
+    const row = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
+    expect(row).toContain("data-sce-planning-hub-liste-full-width-contract");
+    expect(row).toContain("w-full");
+    expect(row).not.toMatch(
+      /rounded-lg border border-\[var\(--border\)\]\/80 bg-\[var\(--surface\)\] shadow-sm/,
+    );
+    expect(row.indexOf("SceProgrammeActivityCardShell")).toBeLessThan(row.indexOf("PlanningHubListeSceActivityCard"));
+    expect(row).toContain("data-sce-planning-hub-liste-menu-anchor");
+  });
+
   it("uses canonical Sce* cards via PlanningHubListeSceActivityCard — no parallel family", () => {
     const wrapper = read("components/admin/planning-hub/PlanningHubListeSceActivityCard.tsx");
     expect(wrapper).toContain("SceTrainingCard");

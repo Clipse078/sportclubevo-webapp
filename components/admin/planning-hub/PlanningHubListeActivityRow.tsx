@@ -62,37 +62,38 @@ export default function PlanningHubListeActivityRow({
 
   return (
     <li className="min-w-0 list-none">
-      <div
+      <SceProgrammeActivityCardShell
+        density="STANDARD"
+        testId={`planning-hub-liste-row-${item.id}`}
         className={cn(
-          "group relative flex min-w-0 items-stretch gap-1 rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] shadow-sm transition",
-          "hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]/30",
+          "group w-full min-w-0",
           semantic.listLeftEdgeClass,
           "border-l-[3px]",
           item.conflicts.length > 0 && "ring-1 ring-inset ring-amber-500/15",
         )}
-        data-testid={`planning-hub-liste-row-${item.id}`}
         data-sce-planning-hub-liste-row
         data-sce-planning-hub-liste-activity-kind={item.type}
+        data-sce-planning-hub-liste-full-width-contract="canonical-shell"
       >
-        <PlanningHubActivityDetailSurface
-          item={item}
-          locale={locale}
-          timezone={timezone}
-          geometry={LISTE_CARD_DETAIL_GEOMETRY}
-        >
-          {(referenceProps) => (
-            <button
-              type="button"
-              onClick={() => onItemOpen(item)}
-              data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
-              aria-label={weekplannerAccessibleName(item, locale, timezone)}
-              className={cn(
-                "min-w-0 flex-1 rounded-lg px-1 py-0.5 text-left",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-0",
-              )}
-              {...referenceProps}
-            >
-              <SceProgrammeActivityCardShell density="STANDARD" testId={`planning-hub-liste-shell-${item.id}`}>
+        <div className="flex min-w-0 items-stretch gap-1">
+          <PlanningHubActivityDetailSurface
+            item={item}
+            locale={locale}
+            timezone={timezone}
+            geometry={LISTE_CARD_DETAIL_GEOMETRY}
+          >
+            {(referenceProps) => (
+              <button
+                type="button"
+                onClick={() => onItemOpen(item)}
+                data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
+                aria-label={weekplannerAccessibleName(item, locale, timezone)}
+                className={cn(
+                  "min-w-0 flex-1 self-stretch rounded-[inherit] text-left",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-inset",
+                )}
+                {...referenceProps}
+              >
                 <PlanningHubListeSceActivityCard
                   item={item}
                   fmtCfg={fmtCfg}
@@ -109,22 +110,26 @@ export default function PlanningHubListeActivityRow({
                     timezone={timezone}
                   />
                 ) : null}
-              </SceProgrammeActivityCardShell>
-            </button>
-          )}
-        </PlanningHubActivityDetailSurface>
+              </button>
+            )}
+          </PlanningHubActivityDetailSurface>
 
-        <div className="flex shrink-0 items-center justify-end pr-1" data-sce-planning-hub-liste-column="ACTIONS">
-          <PlanningHubListeRowMenu
-            item={item}
-            permissionContext={permissionContext}
-            canEditItem={canEditItem}
-            onOpenItem={() => onItemOpen(item)}
-            onEditPlanning={() => onItemEditPlanning(item)}
-            onReviewConflict={() => onReviewConflictForItem(item)}
-          />
+          <div
+            className="flex shrink-0 items-start justify-end self-stretch pt-2 pr-0.5 sm:pt-2.5 sm:pr-1"
+            data-sce-planning-hub-liste-column="ACTIONS"
+            data-sce-planning-hub-liste-menu-anchor
+          >
+            <PlanningHubListeRowMenu
+              item={item}
+              permissionContext={permissionContext}
+              canEditItem={canEditItem}
+              onOpenItem={() => onItemOpen(item)}
+              onEditPlanning={() => onItemEditPlanning(item)}
+              onReviewConflict={() => onReviewConflictForItem(item)}
+            />
+          </div>
         </div>
-      </div>
+      </SceProgrammeActivityCardShell>
     </li>
   );
 }
