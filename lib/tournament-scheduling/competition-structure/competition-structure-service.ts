@@ -624,6 +624,86 @@ async function validateQualificationSourceForFixtureSide(
   return toQualificationSource(source);
 }
 
+export async function createWinnerOfFixtureQualificationSource(
+  tenantId: string,
+  tournamentId: string,
+  sourceFixtureId: string,
+  destinationPhaseId: string,
+  destinationRoundIndex: number,
+): Promise<TournamentQualificationSourceDefinition> {
+  await requireTenantOrganisedTournament(tenantId, tournamentId);
+
+  const sourceFixture = await prisma.tournamentFixture.findFirst({
+    where: { id: sourceFixtureId, tenantId, eventId: tournamentId },
+  });
+  if (!sourceFixture) {
+    throw new TournamentCompetitionValidationError(
+      `WINNER_OF_FIXTURE source fixture not found: ${sourceFixtureId}`,
+    );
+  }
+  if (sourceFixture.tournamentPhaseId !== destinationPhaseId) {
+    throw new TournamentCompetitionValidationError(
+      "WINNER_OF_FIXTURE source must belong to the same KNOCKOUT phase as the destination fixture",
+    );
+  }
+  if (sourceFixture.tournamentGroupId != null) {
+    throw new TournamentCompetitionValidationError(
+      "WINNER_OF_FIXTURE source must not be a group-scoped fixture",
+    );
+  }
+  if (sourceFixture.roundIndex >= destinationRoundIndex) {
+    throw new TournamentCompetitionValidationError(
+      "WINNER_OF_FIXTURE source must be from an earlier knockout round than the destination fixture",
+    );
+  }
+
+  const row = await prisma.tournamentQualificationSource.create({
+    data: {
+      tenantId,
+      eventId: tournamentId,
+      sourceType: "WINNER_OF_FIXTURE",
+      sourceFixtureId,
+    },
+  });
+  return toQualificationSource(row);
+}
+
+async function validateWinnerOfQualificationSourceForFixtureSide(
+  tenantId: string,
+  tournamentId: string,
+  qualificationSourceId: string,
+  destinationPhaseId: string,
+  destinationRoundIndex: number,
+): Promise<TournamentQualificationSourceDefinition> {
+  const source = await prisma.tournamentQualificationSource.findFirst({
+    where: { id: qualificationSourceId, tenantId, eventId: tournamentId },
+    include: { sourceFixture: true },
+  });
+  if (!source) {
+    throw new TournamentQualificationSourceNotFoundError(qualificationSourceId);
+  }
+  if (source.sourceType !== "WINNER_OF_FIXTURE" || !source.sourceFixtureId) {
+    throw new TournamentCompetitionValidationError(
+      "Expected WINNER_OF_FIXTURE qualification source",
+    );
+  }
+  const sourceFixture = source.sourceFixture;
+  if (!sourceFixture) {
+    throw new TournamentCompetitionValidationError("WINNER_OF_FIXTURE source fixture is missing");
+  }
+  if (sourceFixture.tournamentPhaseId !== destinationPhaseId) {
+    throw new TournamentCompetitionValidationError(
+      "WINNER_OF_FIXTURE source must belong to the same KNOCKOUT phase",
+    );
+  }
+  if (sourceFixture.roundIndex >= destinationRoundIndex) {
+    throw new TournamentCompetitionValidationError(
+      "WINNER_OF_FIXTURE source must be from an earlier knockout round",
+    );
+  }
+  return toQualificationSource(source);
+}
+
 function validateFixtureSideInput(side: FixtureSideInput): void {
   if (side.kind === "CONCRETE_PARTICIPANT" && !side.participantId) {
     throw new TournamentCompetitionValidationError("Concrete fixture side requires participantId");
@@ -653,27 +733,39 @@ export async function persistTournamentFixtureSides(
   if (!fixture) {
     throw new TournamentCompetitionValidationError(`Fixture not found: ${fixtureId}`);
   }
+  const destinationRoundIndex = fixture.roundIndex;
 
-  if (sideA.kind === "CONCRETE_PARTICIPANT") {
-    await requireParticipantInTournament(tenantId, tournamentId, sideA.participantId);
-  } else {
+  async function validateSide(side: FixtureSideInput): Promise<void> {
+    if (side.kind === "CONCRETE_PARTICIPANT") {
+      await requireParticipantInTournament(tenantId, tournamentId, side.participantId);
+      return;
+    }
+    const qual = await prisma.tournamentQualificationSource.findFirst({
+      where: { id: side.qualificationSourceId, tenantId, eventId: tournamentId },
+    });
+    if (!qual) {
+      throw new TournamentQualificationSourceNotFoundError(side.qualificationSourceId);
+    }
+    if (qual.sourceType === "WINNER_OF_FIXTURE") {
+      await validateWinnerOfQualificationSourceForFixtureSide(
+        tenantId,
+        tournamentId,
+        side.qualificationSourceId,
+        tournamentPhaseId,
+        destinationRoundIndex,
+      );
+      return;
+    }
     await validateQualificationSourceForFixtureSide(
       tenantId,
       tournamentId,
-      sideA.qualificationSourceId,
+      side.qualificationSourceId,
       tournamentPhaseId,
     );
   }
-  if (sideB.kind === "CONCRETE_PARTICIPANT") {
-    await requireParticipantInTournament(tenantId, tournamentId, sideB.participantId);
-  } else {
-    await validateQualificationSourceForFixtureSide(
-      tenantId,
-      tournamentId,
-      sideB.qualificationSourceId,
-      tournamentPhaseId,
-    );
-  }
+
+  await validateSide(sideA);
+  await validateSide(sideB);
 
   if (
     sideA.kind === "CONCRETE_PARTICIPANT" &&
