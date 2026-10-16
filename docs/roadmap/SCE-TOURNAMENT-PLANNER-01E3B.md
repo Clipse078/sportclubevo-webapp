@@ -5,9 +5,10 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E3B` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3A`](./SCE-TOURNAMENT-PLANNER-01E3A.md) — **CLOSED / MERGED** (PR **#861**) |
-| **Status** | **CURRENT — ready for closure (R1)** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#862** → STAGE) |
+| **Feature HEAD** | `3e5b3911cc07be73ceef928f7cb8b56babac4b73` |
 | **Branch** | `cursor/sce-tournament-planner-01e3b-group-formation-fixtures` |
-| **Next** | **01E3C** — Knockout bracket generation (**planned**, not started) |
+| **Next** | **01E3C** — Knockout bracket generation + BYEs (**NEXT**, not started) |
 
 ## Product purpose
 
@@ -103,8 +104,8 @@ Knockout brackets, qualification resolution, standings, scheduling, pitch/time a
 | Slice | Status |
 | --- | --- |
 | **01E3A** | CLOSED / MERGED |
-| **01E3B** | **CURRENT** |
-| **01E3C** | NEXT AFTER 01E3B (**NOT STARTED**) |
+| **01E3B** | **CLOSED / ACCEPTED / MERGED** (PR **#862**) |
+| **01E3C** | **NEXT** — Knockout bracket + BYEs (**NOT STARTED**) |
 | **01E3D** | PLANNED |
 
 ## STAGE migration verification (01E3B-R1)
