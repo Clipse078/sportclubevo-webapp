@@ -346,7 +346,15 @@ function SceTrainingListRowOperationalContent({
   showStatus: boolean;
 }) {
   const teamName = model.team?.name?.trim();
-  const title = model.trainingTitle.trim() || teamName || model.typeLabel;
+  const rawTitle = model.trainingTitle.trim();
+  const title = rawTitle || teamName || model.typeLabel;
+  const showTeamLine =
+    Boolean(teamName) &&
+    teamName!.localeCompare(rawTitle || title, "de-CH", { sensitivity: "accent" }) !== 0 &&
+    !(rawTitle || title)
+      .trim()
+      .toLocaleLowerCase("de-CH")
+      .includes(teamName!.toLocaleLowerCase("de-CH"));
   const crestIdentity = model.tenantClub;
   const timeLabel = resolveListRowOperationalTimeLabel(model, fmtCfg);
   const locationLine = resolveListRowOperationalLocationLine(model);
@@ -385,9 +393,9 @@ function SceTrainingListRowOperationalContent({
           ) : null
         }
       />
-      {teamName ? (
+      {showTeamLine ? (
         <SceActivityListRowOrganizationalContext
-          label={teamName}
+          label={teamName!}
           testId="sce-training-team"
         />
       ) : null}
