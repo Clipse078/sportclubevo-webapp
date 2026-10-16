@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5.3.1 hierarchical navigation selected state** |
+| **Status** | **IN PROGRESS — R5.3.2 hierarchical navigation active ancestry** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -223,6 +223,17 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **ONE_L1_MAX** | Unchanged — at most one L1 domain strongly active; hierarchical path does not suppress L2/L3 selected state |
 | **OPEN_VS_SELECTED** | Panel-open / L2 column browse (`--selected`) ≠ route selected (`--active`); hover and focus ≠ selected |
 | **IMPLEMENTATION** | `global-app-navigation.css` + `SceDomainNavigationPanel` / `SceNavigationItem` — no Organisation-specific or route-specific hacks |
+| **PO_UAT** | **FAILED** — L2 browse vs route split was correct, but **active L3 did not always propagate active ancestry** to the owning L2 panel row (Organisation stayed neutral while Teams was current); L2 chevron not tied to route-active state |
+
+## 01J-R5.3.2 — Active ancestry + complete L2 route-active visual
+
+| Decision | Value |
+|----------|--------|
+| **ACTIVE_DESCENDANT_IMPLIES_ANCESTOR** | **`isDomainPanelSecondaryItemRouteActive`**: L2 route-active when any permission-visible L3 child in that panel column is route-active, or direct L2 header match when no sibling owns the active L3 |
+| **BROWSED_BRANCH** | `selectedL2Key` / `--selected` remains neutral (icon, label, chevron) unless canonical route resolution marks the row active |
+| **L2_COMPLETE_VISUAL** | Route-active L2: icon + label + **`sce-domain-nav-panel-l2-chevron`** → **`var(--sce-primary)`** (same semantic state, no hardcoded orange) |
+| **L3_LEAF** | Route-active L3: label (+ icon when present) → **`var(--sce-primary)`**; `aria-current="page"` on leaf links only |
+| **IMPLEMENTATION** | `lib/nav/app-navigation-model.ts` + `AppShellNavigation` panel `isL2Active` + `global-app-navigation.css` + `SceDomainNavigationPanel` |
 
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 

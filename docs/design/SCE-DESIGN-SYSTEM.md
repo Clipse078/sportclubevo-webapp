@@ -529,17 +529,21 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 | **Row 2 — Platform + season** | SportClubEvo wordmark (left) · season context (right, under utilities) | `ScePlatformBrandRail` + `SceRow2SeasonContext` inside `SceTenantContextRow` | Always visible on desktop while panels overlay page content; **no** horizontal L2 strip; empty middle workspace is intentional. |
 | **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. **Selected route item:** icon + label use canonical `--sce-primary` (same token as L1); restrained selected surface may remain. **Panel browse (`--selected`) ≠ route selected (`--active`)** — opening another L2 column to preview L3 must not paint orange unless canonical route resolution marks that item active. |
 
-**Canonical navigation selected state (01J-R5.3.1)**
+**Canonical navigation active route path (01J-R5.3.2)**
 
-For the **currently selected navigation item** at each level (route-driven):
+When the current route resolves to an **L3 destination**, the **full ancestry** is route-active:
 
-| Level | Icon | Label |
-|-------|------|-------|
-| **L1 domain** | `--sce-primary` | `--sce-primary` |
-| **L2 category** (domain panel) | `--sce-primary` when present | `--sce-primary` |
-| **L3 destination** (domain panel) | `--sce-primary` when present | `--sce-primary` |
+| Level | Route rule | Visual (token `var(--sce-primary)`) |
+|-------|------------|-------------------------------------|
+| **L1 domain** | Current route belongs to this domain | Icon + label |
+| **L2 category** | Direct L2 match **or** owns the active L3 descendant (**active ancestor**) | Icon + label + disclosure chevron (when present) |
+| **L3 destination** | Current route resolves here | Label + icon when present |
 
-Inactive items stay neutral/muted; hover may brighten but must not mimic selected orange. Focus uses `:focus-visible` independently. The full path may show L1 + L2 + L3 selected simultaneously (e.g. Club → Organisation → Teams). Orange reinforces selection alongside `aria-current` and surface indicators — not as the sole accessibility signal.
+**Active descendant ⇒ active ancestor:** if Teams is the current L3 under Organisation, Organisation is route-active even when another L2 row was only **browsed** to preview a different L3 column. **Browse / open panel (`--selected`) ≠ route active (`--active`).** Hover and focus do not imply route-active.
+
+Leaf L3 links use `aria-current="page"`. Active L2 ancestors are visually active but do **not** claim `aria-current="page"` when they are not the leaf route.
+
+Inactive items stay neutral/muted; hover may brighten but must not mimic route-active orange. Focus uses `:focus-visible` independently. Orange reinforces the path alongside `aria-current` and surface indicators — not as the sole accessibility signal.
 
 **Navigation rules (canonical)**
 

@@ -612,6 +612,18 @@
   background: color-mix(in srgb, var(--sce-primary) 12%, transparent);
 }
 
+.sce-domain-nav-panel-l2-chevron {
+  flex-shrink: 0;
+  color: currentColor;
+  opacity: 0.88;
+}
+
+.sce-domain-nav-panel-l2-control--active .sce-domain-nav-panel-l2-chevron,
+.sce-domain-nav-panel-l2-link--active .sce-domain-nav-panel-l2-chevron {
+  color: var(--sce-primary);
+  opacity: 1;
+}
+
 .sce-domain-nav-panel-l2-control--selected:not(.sce-domain-nav-panel-l2-control--active) {
   color: color-mix(in srgb, var(--text-2) 96%, transparent);
   background: color-mix(in srgb, var(--surface-2) 28%, transparent);
