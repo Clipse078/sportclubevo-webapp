@@ -1,11 +1,9 @@
 /**
  * PATCH/DELETE /api/tournaments/[tournamentId]/participants/[participantId]
  *
- * PATCH — TOURNAMENTCENTER-UX-03: updates the tournament-specific
- * Anzeigename ("displayName") of an EXTERNAL_CLUB participant. Body:
- *   { displayName: string | null }
- * Only valid for EXTERNAL_CLUB participants; never touches
- * ExternalClub.name/ExternalTeam.name.
+ * PATCH — updates the tournament-specific Anzeigename ("displayName") of a
+ * TEAM or EXTERNAL_CLUB participant. Body: { displayName: string | null }
+ * Never touches Team.name / ExternalClub.name / ExternalTeam.name.
  *
  * DELETE — TOURNAMENTCENTER-01B — removes a participant from a tournament.
  * Cascades to its dressing-room allocations (TournamentParticipantAllocation)

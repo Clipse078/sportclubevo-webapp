@@ -6,3 +6,6 @@ export * from "./fixtures";
 export * from "./schedule-version-service";
 export * from "./assignment-service";
 export * from "./schedule-snapshot-service";
+export * from "./feasibility";
+export * from "./feasibility-service";
+export * from "./smart-generator-architecture";

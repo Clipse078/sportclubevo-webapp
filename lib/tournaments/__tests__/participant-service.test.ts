@@ -8,7 +8,7 @@
  *   4. Multiple ExternalTeams can participate.
  *   5. Internal + external participants coexist.
  *   6. Participants can be added/removed safely.
- *   7. Duplicate participant assignment is prevented.
+ *   7. Duplicate historical ExternalTeam assignment is prevented; same Team may appear twice (01D-R2).
  *   8. Tenant isolation holds for Team and ExternalTeam references.
  *
  * All external dependencies (Prisma) are mocked. No DB access.
@@ -200,21 +200,46 @@ describe("addTournamentParticipant", () => {
     expect(prisma.tournamentParticipant.create).not.toHaveBeenCalled();
   });
 
-  // ── Duplicate prevention (requirement 7) ───────────────────────────────────
-
-  it("maps a unique-constraint violation to TournamentParticipantDuplicateError for a Team", async () => {
-    vi.mocked(prisma.team.findFirst).mockResolvedValue({ id: "team-1" } as never);
+  it("allows the same Team twice with distinct tournament displayNames (01D-R2)", async () => {
+    vi.mocked(prisma.team.findFirst).mockResolvedValue({ id: "team-f2" } as never);
     vi.mocked(prisma.tournamentParticipant.aggregate).mockResolvedValue({
       _max: { displayOrder: 0 },
     } as never);
-    vi.mocked(prisma.tournamentParticipant.create).mockRejectedValue(
-      new Error("Unique constraint failed on the fields: (`eventId`,`teamId`)"),
-    );
+    vi.mocked(prisma.tournamentParticipant.create)
+      .mockResolvedValueOnce(
+        participantRow({
+          id: "participant-rot",
+          teamId: "team-f2",
+          displayName: "FCA F2 Rot",
+          team: teamRow("team-f2", "FC Allschwil F2"),
+        }) as never,
+      )
+      .mockResolvedValueOnce(
+        participantRow({
+          id: "participant-blau",
+          teamId: "team-f2",
+          displayName: "FCA F2 Blau",
+          team: teamRow("team-f2", "FC Allschwil F2"),
+        }) as never,
+      );
 
-    await expect(
-      addTournamentParticipant(TENANT_A, TOURNAMENT_ID, { teamId: "team-1" }),
-    ).rejects.toThrow(TournamentParticipantDuplicateError);
+    const rot = await addTournamentParticipant(TENANT_A, TOURNAMENT_ID, {
+      teamId: "team-f2",
+      displayName: "FCA F2 Rot",
+    });
+    const blau = await addTournamentParticipant(TENANT_A, TOURNAMENT_ID, {
+      teamId: "team-f2",
+      displayName: "FCA F2 Blau",
+    });
+
+    expect(rot.displayName).toBe("FCA F2 Rot");
+    expect(blau.displayName).toBe("FCA F2 Blau");
+    expect(rot.team?.name).toBe("FC Allschwil F2");
+    expect(blau.team?.name).toBe("FC Allschwil F2");
+    expect(prisma.tournamentParticipant.create).toHaveBeenCalledTimes(2);
   });
+
+  // ── Duplicate prevention (historical ExternalTeam) ───────────────────────────
 
   it("maps a unique-constraint violation to TournamentParticipantDuplicateError for an ExternalTeam", async () => {
     vi.mocked(prisma.externalTeam.findFirst).mockResolvedValue({ id: "ext-1" } as never);
@@ -382,9 +407,9 @@ describe("addTournamentParticipant — EXTERNAL_CLUB (TOURNAMENTCENTER-UX-03)", 
     expect(prisma.tournamentParticipant.create).not.toHaveBeenCalled();
   });
 
-  it("rejects displayName provided without externalClubId", async () => {
+  it("rejects displayName provided without teamId or externalClubId", async () => {
     await expect(
-      addTournamentParticipant(TENANT_A, TOURNAMENT_ID, { teamId: "team-1", displayName: "Gelb" }),
+      addTournamentParticipant(TENANT_A, TOURNAMENT_ID, { manualLabel: "Gäste 1", displayName: "Gelb" }),
     ).rejects.toThrow(TournamentParticipantValidationError);
   });
 });
@@ -414,9 +439,35 @@ describe("updateTournamentParticipantDisplayName — Anzeigename edit (PART 6)",
     );
   });
 
-  it("rejects editing displayName on a non-EXTERNAL_CLUB participant", async () => {
+  it("updates the Anzeigename of a TEAM participant without changing Team.name", async () => {
     vi.mocked(prisma.tournamentParticipant.findFirst).mockResolvedValue(
-      participantRow({ teamId: "team-1", team: teamRow("team-1", "FC Allschwil E1") }) as never,
+      participantRow({
+        teamId: "team-f2",
+        displayName: "FCA F2 Rot",
+        team: teamRow("team-f2", "FC Allschwil F2"),
+      }) as never,
+    );
+    vi.mocked(prisma.tournamentParticipant.update).mockResolvedValue(
+      participantRow({
+        teamId: "team-f2",
+        displayName: "FCA F2 Team Rot",
+        team: teamRow("team-f2", "FC Allschwil F2"),
+      }) as never,
+    );
+
+    const result = await updateTournamentParticipantDisplayName(
+      TENANT_A,
+      "participant-1",
+      "FCA F2 Team Rot",
+    );
+
+    expect(result.displayName).toBe("FCA F2 Team Rot");
+    expect(result.team?.name).toBe("FC Allschwil F2");
+  });
+
+  it("rejects editing displayName on a MANUAL participant", async () => {
+    vi.mocked(prisma.tournamentParticipant.findFirst).mockResolvedValue(
+      participantRow({ manualLabel: "Gäste 1" }) as never,
     );
 
     await expect(

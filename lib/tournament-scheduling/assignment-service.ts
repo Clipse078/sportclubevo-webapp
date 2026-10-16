@@ -1,15 +1,11 @@
 /**
- * SCE-TOURNAMENT-PLANNER-01B — schedule assignments (WHEN + WHERE).
+ * SCE-TOURNAMENT-PLANNER-01B — schedule assignments (WHEN + logical TournamentPitch).
  *
- * Boundary: assignments are schedule truth only. Authoritative facility occupancy
- * remains existing allocation / availability services (materialisation deferred).
+ * Boundary: assignments are schedule truth only. Physical facility occupancy
+ * remains TournamentResourceAllocation + availability services (separate concern).
  */
 
 import { prisma } from "@/lib/db/prisma";
-import {
-  loadTenantFacilityResourceForWrite,
-  validateAssignableFacilityResource,
-} from "@/lib/facilities/facility-resource-write-validation";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import type {
   PersistTournamentFixtureAssignmentInput,
@@ -30,7 +26,7 @@ function toDefinition(row: {
   id: string;
   scheduleVersionId: string;
   fixtureId: string;
-  facilityResourceId: string;
+  tournamentPitchId: string;
   startAt: Date;
   endAt: Date;
   isLocked: boolean;
@@ -41,7 +37,7 @@ function toDefinition(row: {
     id: row.id,
     scheduleVersionId: row.scheduleVersionId,
     fixtureId: row.fixtureId,
-    facilityResourceId: row.facilityResourceId,
+    tournamentPitchId: row.tournamentPitchId,
     startAt: row.startAt.toISOString(),
     endAt: row.endAt.toISOString(),
     isLocked: row.isLocked,
@@ -93,23 +89,19 @@ async function bumpScheduleRevision(
   });
 }
 
-async function validateFacilityResource(tenantId: string, facilityResourceId: string): Promise<void> {
-  const resource = await loadTenantFacilityResourceForWrite(tenantId, facilityResourceId);
-  switch (validateAssignableFacilityResource(resource)) {
-    case "NOT_FOUND":
-      throw new TournamentScheduleResourceInvalidError(
-        `FacilityResource not found: ${facilityResourceId}`,
-      );
-    case "ARCHIVED_RESOURCE":
-      throw new TournamentScheduleResourceInvalidError(
-        `FacilityResource "${facilityResourceId}" is archived and cannot receive new assignments`,
-      );
-    case "ARCHIVED_FACILITY":
-      throw new TournamentScheduleResourceInvalidError(
-        `Facility "${resource!.facility.id}" is archived; its resources cannot receive new assignments`,
-      );
-    case null:
-      break;
+async function validateTournamentPitch(
+  tenantId: string,
+  tournamentId: string,
+  tournamentPitchId: string,
+): Promise<void> {
+  const pitch = await prisma.tournamentPitch.findFirst({
+    where: { id: tournamentPitchId, tenantId, eventId: tournamentId },
+    select: { id: true },
+  });
+  if (!pitch) {
+    throw new TournamentScheduleResourceInvalidError(
+      `TournamentPitch not found for tournament: ${tournamentPitchId}`,
+    );
   }
 }
 
@@ -156,7 +148,7 @@ export async function persistTournamentFixtureAssignment(
   assertExpectedRevision(options?.expectedRevision, version.revision);
 
   await requireFixtureInTournament(tenantId, version.eventId, input.fixtureId);
-  await validateFacilityResource(tenantId, input.facilityResourceId);
+  await validateTournamentPitch(tenantId, version.eventId, input.tournamentPitchId);
 
   const existing = await prisma.tournamentFixtureAssignment.findUnique({
     where: {
@@ -201,7 +193,7 @@ export async function persistTournamentFixtureAssignment(
         tenantId,
         scheduleVersionId,
         fixtureId: input.fixtureId,
-        facilityResourceId: input.facilityResourceId,
+        tournamentPitchId: input.tournamentPitchId,
         startAt: input.startAt,
         endAt,
       },
@@ -229,8 +221,12 @@ export async function updateTournamentFixtureAssignment(
   }
   assertExpectedRevision(options?.expectedRevision, existing.scheduleVersion.revision);
 
-  if (input.facilityResourceId) {
-    await validateFacilityResource(tenantId, input.facilityResourceId);
+  if (input.tournamentPitchId) {
+    await validateTournamentPitch(
+      tenantId,
+      existing.scheduleVersion.eventId,
+      input.tournamentPitchId,
+    );
   }
 
   const startAt = input.startAt ?? existing.startAt;
@@ -252,7 +248,7 @@ export async function updateTournamentFixtureAssignment(
   const row = await prisma.tournamentFixtureAssignment.update({
     where: { id: assignmentId },
     data: {
-      facilityResourceId: input.facilityResourceId ?? existing.facilityResourceId,
+      tournamentPitchId: input.tournamentPitchId ?? existing.tournamentPitchId,
       startAt,
       endAt,
     },

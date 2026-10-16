@@ -1,76 +1,160 @@
-# SCE-TOURNAMENT-PLANNER-01 — Smart Tournament Scheduling
+# SCE-TOURNAMENT-PLANNER-01 — Smart Tournament Generator + Scheduler
 
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01C CLOSED / MERGED (PR #855); next 01D** |
+| **Status** | **IN PROGRESS — 01D (feasibility + R3 closure); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
-| **01C (round robin)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic fixture generation (WHO) |
+| **01C (round robin MVP)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic single round-robin (WHO, MVP) |
+| **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
+
+## Product vision (canonical)
+
+**`SMART_TOURNAMENT_GENERATOR = CANONICAL`**
+
+Primary user journey:
+
+**CONFIGURE → SCE GENERATES → REVIEW → MANUALLY ADJUST IF DESIRED → LOCK → REGENERATE UNLOCKED PARTS → PUBLISH**
+
+| Flag | Value |
+| --- | --- |
+| **AUTOMATIC_GENERATION_IS_PRIMARY** | **YES** |
+| **MANUAL_ADJUSTMENT_IS_SUPPORTED** | **YES** |
+
+Users must **not** normally construct groups, pairings, fixtures, brackets, pitch assignments, or kickoff times by hand. SCE performs deterministic, explainable, constraint-safe generation — **no LLM** for fixtures or scheduling.
+
+Contracts: `lib/tournament-scheduling/smart-generator-architecture.ts`.
 
 ## Architecture principle
 
 > Fixture generation determines **WHO** plays whom.  
-> Schedule optimisation determines **WHEN** and **WHERE**.
+> Feasibility (01D) determines **CAN IT FIT?**  
+> Schedule optimisation (01F) determines **WHEN** and **WHICH logical pitch**.
 
-Future schedule generation must use deterministic constraint and optimisation logic — not LLM-invented fixtures.
+## Canonical tournament model
+
+| Layer | Responsibility |
+| --- | --- |
+| **Tournament** (`Event`, type=TOURNAMENT) | Container + window + publication |
+| **Participants** | `TournamentParticipant` — tournament-local identity |
+| **Competition structure** | Modes + phases (see below) |
+| **Phases** | `stageKey` today; durable `TournamentPhase` deferred until Group+KO package |
+| **Generation strategy** | Round Robin / Smart Mix / future bracket engines |
+| **Fixtures** | `TournamentFixture` — WHO |
+| **Tournament Pitches** | Logical scheduler grid (1:n, tournament-owned) |
+| **Scheduling rules** | Versioned on `TournamentScheduleVersion` |
+| **Breaks** | `TournamentBreak` 0:n |
+| **Feasibility** | Pure engine (01D) |
+| **Optimised schedule** | Assignments on logical pitches (01F+) |
+| **Manual adjustments / locks** | 01G+ |
+| **Publication** | 01K |
+
+## Product cardinality (canonical)
+
+| Concept | Cardinality |
+| --- | --- |
+| **PARTICIPANT_PRODUCT_CARDINALITY** | **2:n** |
+| **TOURNAMENT_PITCH_CARDINALITY** | **1:n** per tournament |
+| **TOURNAMENT_BREAK_CARDINALITY** | **0:n** per tournament |
+| **TOURNAMENT_PHASE_CARDINALITY** | **1:n** per tournament |
+
+**Tournament Pitch ≠ FacilityResource.** MVP engine guards (e.g. 16 participants in 01C/01D) are **implementation safety limits**, not product maximums (`PARTICIPANT_LIMIT_IS_PRODUCT_RULE = NO`).
+
+## Competition modes (user-facing)
+
+**COMPETITION_MODES =** `GROUP_MIX_ONLY` \| `KNOCKOUT_ONLY` \| `GROUP_PLUS_KNOCKOUT`
+
+One engine family — phases carry format semantics; not three unrelated tournament engines.
+
+## Group / mix generation strategies
+
+**GROUP_MIX_GENERATORS =** `ROUND_ROBIN` \| `SMART_MIX`
+
+| Strategy | Meaning |
+| --- | --- |
+| **ROUND_ROBIN** | Every participant meets every other participant per configured encounter count |
+| **SMART_MIX** | Balanced subset from `targetMatchesPerParticipant` and constraints (future package) |
+
+**CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1** (01C MVP). **PRODUCT = 1:n**. **ROUND_ROBIN_EXTENSION_REQUIRED = YES**.
+
+Smart Mix decides **WHO** (01E+); 01D decides **CAN IT FIT**; 01F decides **WHEN + PITCH**.
+
+## Participant identity (01D-R2)
+
+`TournamentParticipant` ≠ SCE `Team`. Same canonical `teamId` may appear on **multiple** rows with distinct tournament `displayName` values (`SAME_SOURCE_TEAM_MULTIPLE_PARTICIPANTS = YES`). Manual participants (`manualLabel`) and external clubs remain supported.
+
+## Home / away
+
+**HOME_AWAY_RELEVANT = ON/OFF** (future generation setting). Default for neutral youth tournaments: **OFF**. Fixture `sideA`/`sideB` stay neutral unless explicitly enabled — do not infer from side labels alone.
+
+## Qualification / knockout (future)
+
+**FUTURE_KNOCKOUT_QUALIFICATION_MODEL_DEFINED = YES** — fixture sides may later reference `QUALIFICATION_REFERENCE` (group position, winner/loser of fixture) without nullable participant ids without integrity design. Group+KO requires canonical **ranking rules** output before qualification resolution.
+
+## Generation pipeline (binding)
+
+`TournamentParticipants → CompetitionStructure → TournamentPhases → 01E SmartGenerator → TournamentFixtures → 01D Feasibility → 01F ScheduleOptimiser → TournamentFixtureAssignments → ManualAdjustments/Locks → PartialRegeneration → Publication`
+
+## “Almost AI” UX (deterministic)
+
+Product copy examples: *Turnier automatisch erstellen*, *Neu generieren*, *Nur freie Spiele neu planen*. Intelligence = deterministic generation + optimisation — not LLM branding.
+
+## Creator adoption (future)
+
+Flow: **TEAMS / PARTICIPANTS → FORMAT → SCHEDULING → PUBLICATION → REVIEW** (tabs may refine). Must capture participants, tournament-local names, competition structure, generation strategy, Home/Away, Tournament Pitches, durations, transition, min rest, window, 0:n breaks — then SCE generates. **Not implemented in 01D-R2 UI.**
 
 ## Hard constraints (future)
 
-- A participant cannot play two fixtures simultaneously
-- A pitch/hall cannot host simultaneous fixtures
-- Resource availability windows
-- Tournament time window (start/end)
-- Match duration and changeover time
-- Configurable minimum rest between matches for a team
-- Competition-stage dependencies (groups → placement → knockout)
+- Participant / pitch exclusivity, window, breaks, duration, transition, min rest
+- **Knockout dependency:** dependent fixture cannot start before prerequisites complete (+ rest)
+- **Phase boundaries:** Group+KO default **sequential** (group completes → standings → knockout)
+- Physical facility availability upstream of logical pitch grid
 
 ## Optimisation targets (future)
 
-- Rest fairness across participants
-- Avoid consecutive matches for the same team where possible
-- Minimise excessive idle time
-- Pitch distribution and pitch switching fairness
-- First/last slot fairness
-- Compact overall tournament duration
-- Soft penalties for manual preference violations
+Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot fairness, compact duration, soft preference penalties.
 
-## Product placement (accepted — engine/UI roadmap)
+## Product placement (accepted)
 
 **`SEPARATE_TOP_LEVEL_TOURNAMENT_SCHEDULING_MODULE = NO`**
 
-Scheduling UX lives inside the Tournament domain only:
+1. **Tournament Creator** — progressive scheduling adoption.
+2. **Tournament → Planung** — feasibility, optimiser, planner, locks, edits, publication.
 
-1. **Tournament Creator (`SceActivityComposer`)** — progressive adoption of scheduling rules at creation time (`TOURNAMENT_CREATOR_ADOPTION_REQUIRED` assessed per package).
-2. **Tournament context → Planung** — canonical workspace for fixture overview, feasibility, optimiser output, pitch × time planner, locks/regeneration, manual edits, conflicts, and publication (`TOURNAMENT_PLANUNG_ADOPTION_REQUIRED` assessed per package).
+## Recommended package sequence (01D-R3 — dependency-correct)
 
-Do not introduce parallel top-level “Smart Tournament Scheduling” navigation.
+**`ROADMAP_RESEQUENCING_RECOMMENDED = YES`** (supersedes the R2 table that listed future 01J/01K *before* delivered 01D)
 
-## Sequenced packages (01D–01I)
+**Foundation and delivered packages are not renumbered.** Package numbers communicate dependency order from the **current** codebase state (01A–01D implemented). The **logical pipeline** (participants → structure → fixtures → feasibility → optimiser → …) is binding; **delivery order** may close generic feasibility (01D) before every future generator exists, because 01D is generator-agnostic.
 
-| Package | Focus | Layer |
+| Order | Package | Status / focus |
 | --- | --- | --- |
-| **01D** | Feasibility + hard-constraint validator | ENGINE / DOMAIN |
-| **01E** | Automatic schedule optimiser | ENGINE / DOMAIN |
-| **01F** | Locks + regeneration + schedule diff | ENGINE / DOMAIN foundation |
-| **01G** | Visual pitch × time planner | First major **Planung** UI |
-| **01H** | Manual editing + DnD + conflict UX | **Planung** |
-| **01I** | Approval + publication + sharing | **Planung** / publication |
+| 1 | **01A** | Architecture — **CLOSED** |
+| 2 | **01B** | Persistence + fixture / schedule-version foundation — **CLOSED** |
+| 3 | **01C** | Deterministic single round-robin generator (WHO, MVP) — **CLOSED / MERGED** |
+| 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **IN PROGRESS (R3 closure review)** |
+| 5 | **01E** | Smart generator foundation — repeated RR, Smart Mix, competition/phase generation contracts, automatic groups, knockout/bracket slices as needed |
+| 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |
+| 7 | **01G** | Locks + partial regeneration |
+| 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
+| 9 | **01I** | Manual adjustment / DnD / conflict validation |
+| 10 | **01J** | Results + rankings + qualification progression |
+| 11 | **01K** | Publication + sharing |
+| 12 | **01L** | Responsive / accessibility / polish |
+| 13 | **01M** | Integrity / performance / technical-limit requalification / closure |
 
-Creator integration is **not** deferred until after 01I; each package records creator vs Planung adoption flags.
+If **01E Smart Generator** is too large for one package, split without renumbering delivered work, e.g. **01E1** generation foundation + repeated RR, **01E2** Smart Mix, **01E3** groups + knockout — or equivalent repository-compliant sub-keys.
 
-## Future planner UX (01G+ — under Planung)
+**01D can close before 01E** when feasibility consumes any valid concrete `TournamentFixture` set (no round-robin provenance), uses `TournamentPitch` + breaks, and documents extension for unresolved qualification fixtures.
 
-- Feasibility assistant before generation
-- Generate smart schedule
-- Visual pitch/time planner
-- Drag/drop adjustments with validation
-- Fixture locks and regenerate-unlocked-remainder
-- Versioned schedule drafts and publication
+## Future planner UX (01G+)
 
-## Future sharing contract (TEILEN)
+Feasibility assistant, generate smart schedule, visual planner, DnD, locks, regenerate unlocked, versioned drafts.
+
+## Future sharing (TEILEN)
 
 First-class sharing for published schedules:
 
@@ -79,22 +163,12 @@ First-class sharing for published schedules:
 - **Link kopieren** — public/live schedule
 - **Drucken**
 
-Expected PDF / public content:
-
-- Tournament identity, date/time, venue, organiser
-- Participants
-- Schedule by pitch/time and optional by team
-- QR code to public/live schedule
+Expected PDF / public content: tournament identity, venue, participants, schedule by pitch/time, QR to live view.
 
 ## 01F foundation requirements (R3)
 
-Tournament creation must keep:
+Stable participant ids, multi-team participation, external clubs, organiser separation, dressing-room allocations, no Match HOME/AWAY on participants.
 
-- Stable participant identity (`localId` in composer; persisted participant ids after commit) for future fixture references
-- Multiple tenant teams as distinct participants (no single-own-team assumption)
-- External clubs stable and distinguishable
-- Organiser separate from participant and hosting semantics
-- Resource/dressing-room assignment per participant — not single-team-only
-- No Match HOME/AWAY semantics on tournament participants
+## Participant limit requalification
 
-Do **not** add fixture/schedule tables in 01F — only forward-compatible participant architecture.
+Before smart generator goes user-facing: requalify/remove arbitrary 16-participant MVP guard based on measured engine performance (**PARTICIPANT_LIMIT_REQUALIFICATION_RECORDED = YES**).

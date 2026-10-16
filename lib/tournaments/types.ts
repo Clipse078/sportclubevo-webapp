@@ -110,8 +110,8 @@ export type TournamentParticipantDto = {
   kind: TournamentParticipantKind;
   /**
    * Resolved display name regardless of kind — for UI/list convenience.
-   * For kind === "EXTERNAL_CLUB", this is externalClub.rawDisplayName
-   * (trimmed) when set, otherwise externalClub.club.name (clean fallback).
+   * For TEAM / EXTERNAL_CLUB, this is the stored tournament-local Anzeigename
+   * when set, otherwise the canonical Team.name or ExternalClub.name fallback.
    */
   displayName: string;
   /** Canonical crest URL resolved via lib/tournaments/club-identity.ts. */
@@ -234,7 +234,7 @@ export type UpdateTournamentInput = {
  *
  * `externalTeamId` is HISTORICAL ONLY — new participant creation should use
  * `externalClubId` (+ optional `displayName`) instead (TOURNAMENTCENTER-UX-03).
- * `displayName` is only meaningful together with `externalClubId`.
+ * `displayName` is meaningful together with `teamId` or `externalClubId` (01D-R2).
  */
 export type CreateTournamentParticipantInput = {
   teamId?: string;
@@ -245,9 +245,9 @@ export type CreateTournamentParticipantInput = {
   displayOrder?: number;
 };
 
-/** Updates the tournament-specific Anzeigename of an EXTERNAL_CLUB participant. */
+/** Updates the tournament-specific Anzeigename of a TEAM or EXTERNAL_CLUB participant. */
 export type UpdateTournamentParticipantDisplayNameInput = {
-  /** null/blank clears the override — display falls back to the canonical ExternalClub.name. */
+  /** null/blank clears the override — display falls back to canonical Team/ExternalClub name. */
   displayName: string | null;
 };
 

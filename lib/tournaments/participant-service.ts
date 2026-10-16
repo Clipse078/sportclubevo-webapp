@@ -15,8 +15,9 @@
  *     maximum (typical tournaments have 4+, and there is no upper bound).
  *   - Participants may be tenant-owned canonical Teams and Club-Directory
  *     ExternalTeams together, in any mix.
- *   - Duplicate participation (the same Team or ExternalTeam added twice to
- *     the same tournament) is rejected.
+ *   - The same canonical Team may appear on multiple participant rows with
+ *     distinct tournament-local displayNames (01D-R2). Historical
+ *     ExternalTeam duplicate participation is still rejected.
  *   - manualLabel is the smallest clean fallback for a genuinely unknown
  *     team with no canonical Team/ExternalTeam yet — never a second/parallel
  *     team identity model. Exactly one of teamId / externalTeamId /
@@ -204,11 +205,12 @@ function toDto(
   }));
 
   if (row.team) {
+    const rawDisplayName = row.displayName?.trim() || null;
     return {
       id: row.id,
       tournamentId: row.eventId,
       kind: "TEAM",
-      displayName: row.team.name,
+      displayName: rawDisplayName ?? row.team.name,
       logoUrl,
       team: row.team,
       externalTeam: null,
@@ -355,14 +357,13 @@ export async function listTournamentParticipants(
  *   - Exactly one of teamId / externalTeamId / externalClubId / manualLabel
  *     must be set. `externalTeamId` is HISTORICAL ONLY — new participants
  *     should use `externalClubId` (+ optional `displayName`) instead.
- *   - `displayName` is only valid together with `externalClubId`.
+ *   - `displayName` is only valid together with `teamId` or `externalClubId`.
  *   - Team/ExternalTeam/ExternalClub must belong to the same tenant as the
  *     tournament, and an ExternalClub must not be archived.
- *   - No duplicate participation of the same Team/ExternalTeam.
- *     `externalClubId` is deliberately NOT unique per tournament — the same
- *     canonical club may participate multiple times with distinct
- *     displayName values (e.g. "AC Rossoneri" + "Gelb" and "AC Rossoneri" +
- *     "E1" as two separate participants).
+ *   - The same canonical Team may participate multiple times with distinct
+ *     displayName values (01D-R2). `externalClubId` is deliberately NOT
+ *     unique per tournament. Duplicate historical ExternalTeam rows are
+ *     still rejected via DB unique constraint.
  *
  * @throws {TournamentNotFoundError}
  * @throws {TournamentParticipantValidationError}
@@ -389,9 +390,9 @@ export async function addTournamentParticipant(
     );
   }
 
-  if (displayName !== undefined && !externalClubId) {
+  if (displayName !== undefined && !externalClubId && !teamId) {
     throw new TournamentParticipantValidationError(
-      "displayName is only valid together with externalClubId.",
+      "displayName is only valid together with teamId or externalClubId.",
     );
   }
 
@@ -465,9 +466,7 @@ export async function addTournamentParticipant(
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes("Unique constraint")) {
       throw new TournamentParticipantDuplicateError(
-        teamId
-          ? `Team "${teamId}" already participates in this tournament.`
-          : `ExternalTeam "${externalTeamId}" already participates in this tournament.`,
+        `ExternalTeam "${externalTeamId}" already participates in this tournament.`,
       );
     }
     throw err;
@@ -475,12 +474,12 @@ export async function addTournamentParticipant(
 }
 
 /**
- * Updates the tournament-specific Anzeigename ("displayName") of an
- * EXTERNAL_CLUB participant. Never touches ExternalClub.name/ExternalTeam.name
- * — this is purely the participant-level override.
+ * Updates the tournament-specific Anzeigename ("displayName") of a TEAM or
+ * EXTERNAL_CLUB participant. Never touches Team.name / ExternalClub.name /
+ * ExternalTeam.name — purely the participant-level override.
  *
  * @throws {TournamentParticipantNotFoundError}
- * @throws {TournamentParticipantValidationError} Participant is not an EXTERNAL_CLUB kind.
+ * @throws {TournamentParticipantValidationError} Participant is not TEAM or EXTERNAL_CLUB.
  */
 export async function updateTournamentParticipantDisplayName(
   tenantId: string,
@@ -489,9 +488,9 @@ export async function updateTournamentParticipantDisplayName(
 ): Promise<TournamentParticipantDto> {
   const existing = await requireParticipant(tenantId, participantId);
 
-  if (!existing.externalClubId) {
+  if (!existing.teamId && !existing.externalClubId) {
     throw new TournamentParticipantValidationError(
-      "displayName can only be edited for an ExternalClub participant.",
+      "displayName can only be edited for a Team or ExternalClub participant.",
     );
   }
 

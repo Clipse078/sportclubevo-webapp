@@ -45,7 +45,7 @@ Fixtures may exist without assignments. Deleting a schedule version cascades ass
 
 ## Assignment model (`TournamentFixtureAssignment`)
 
-Connects **fixture + schedule version + `startAt` + `endAt` + canonical `FacilityResource`**.
+Connects **fixture + schedule version + `startAt` + `endAt` + logical `TournamentPitch`** (01D-R1 — superseded initial `FacilityResource` assignment FK).
 
 - `@@unique([scheduleVersionId, fixtureId])` — at most one assignment per fixture per version
 - Same fixture may differ across versions
@@ -66,7 +66,8 @@ Dressing rooms remain on **`TournamentParticipantAllocation`** — not on fixtur
 | `TournamentScheduleVersion` | Assignments cascade |
 | `TournamentFixture` | Assignments cascade |
 | `TournamentParticipant` | **Restrict** while referenced as a fixture side |
-| `FacilityResource` | **Restrict** on assignments (historical rows survive deactivation) |
+| `TournamentPitch` | **Restrict** on assignments while referenced |
+| `FacilityResource` | Unrelated to fixture assignments (physical allocations only) |
 
 ## Deferred to 01C+
 
