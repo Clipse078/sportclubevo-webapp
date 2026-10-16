@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5.3.2 hierarchical navigation active ancestry** |
+| **Status** | **IN PROGRESS — R5.5 Wochenplaner Liste canonicalization** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -269,6 +269,17 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **INFO_BUTTON** | **NONE** — card hover/focus/touch-focus only |
 | **IMPERSONATION_SHELL** | **FROZEN** (R5.4.1 accepted) |
 | **PO_UAT** | **DELIVERED / AWAITING PO VISUAL UAT** (Cursor manual UAT skipped) |
+
+## 01J-R5.5 — Wochenplaner default Liste + canonical list cards + operational Planungsstatus
+
+| Decision | Value |
+|----------|--------|
+| **DEFAULT_VIEW** | **Liste** — `/dashboard/planner/week` omits `ansicht` when Liste; explicit `ansicht=kalender\|spielfeld\|garderobe\|liste` deep links preserved |
+| **VIEW_ORDER** | Liste · Spielfeld · Garderobe · Kalender |
+| **LIST_CARDS** | `PlanningHubListeSceActivityCard` + `SceProgrammeActivityCardShell` — same Sce* list-row family as Programme; table/grid row chrome removed |
+| **OPERATIONAL_STATUS** | `derivePlannerOperationalStatus` → card summary, `PlanningHubActivityDetailSurface`, `WeekplannerPlanningSheet` |
+| **ISSUE_DISCLOSURE** | Summary on card; detailed lines hover/focus/open — no info button |
+| **PO_UAT** | **READY_FOR_PO_VISUAL_REVIEW** (Cursor manual UAT skipped) |
 
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 

@@ -24,7 +24,7 @@ describe("WeekPlannerChrome — planning family shell", () => {
         }}
         urlState={{
           week: "2026-08-10",
-          perspective: "kalender",
+          perspective: "liste",
           activity: "alle",
           team: null,
           facility: null,
@@ -44,10 +44,13 @@ describe("WeekPlannerChrome — planning family shell", () => {
     expect(screen.getByTestId("weekplanner-header-subtitle")).toBeInTheDocument();
     expect(screen.getByTestId("planning-week-navigation")).toBeInTheDocument();
     expect(screen.getByTestId("weekplanner-range-label")).toHaveTextContent("10.–16. Aug 2026");
-    expect(screen.getByTestId("planning-hub-perspective-kalender")).toHaveAttribute("aria-current", "true");
+    expect(screen.getByTestId("planning-hub-perspective-liste")).toHaveAttribute("aria-current", "true");
+    const perspective = screen.getByTestId("planning-hub-perspective");
+    const labels = [...perspective.querySelectorAll("a")].map((a) => a.textContent?.trim());
+    expect(labels).toEqual(["Liste", "Spielfeld", "Garderobe", "Kalender"]);
     expect(screen.getByTestId("planning-hub-perspective-spielfeld")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-perspective-garderobe")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-perspective-liste")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-perspective-kalender")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-filter-panel")).toBeInTheDocument();
     expect(screen.getByTestId("planning-hub-view-options-trigger")).toBeInTheDocument();
     expect(screen.queryByTestId("planning-hub-visible-time-range")).not.toBeInTheDocument();

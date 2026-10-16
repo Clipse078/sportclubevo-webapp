@@ -221,7 +221,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
       "list-row",
     );
     expect(screen.getByText("TRAINING")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-liste-row-resources").textContent).toContain("Kunstrasen 2");
+    expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent(/Kunstrasen 2/i);
   });
 
   it("renders match fixture with HOME left, AWAY right, VS, and list-row crests", () => {
@@ -255,7 +255,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     expect(screen.queryByTestId("sce-match-context-heim")).not.toBeInTheDocument();
   });
 
-  it("exposes shared desktop grid contract on every activity row", () => {
+  it("uses canonical programme shell on every activity row (no table grid)", () => {
     const { container } = renderListe([
       training("training:1", "Junioren F2"),
       match("match:1"),
@@ -265,10 +265,9 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
     const rows = container.querySelectorAll("[data-sce-planning-hub-liste-row]");
     expect(rows.length).toBe(4);
     for (const row of rows) {
-      expect(row).toHaveAttribute("data-sce-planning-hub-liste-grid");
-      expect(row.querySelector('[data-testid="planning-hub-liste-row-time"]')).toBeTruthy();
-      expect(row.querySelector('[data-testid="planning-hub-liste-row-resources"]')).toBeTruthy();
-      expect(row.querySelector('[data-testid="planning-hub-liste-row-status"]')).toBeTruthy();
+      expect(row.querySelector("[data-sce-programme-activity-card-shell]")).toBeTruthy();
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-time"]')).toBeNull();
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-status"]')).toBeNull();
     }
   });
 
@@ -299,7 +298,7 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4 canonical cards", 
         permissionContext={permissionContext}
       />,
     );
-    expect(screen.getByTestId("planning-hub-liste-row-status").textContent).toBe("Unvollständig");
+    expect(screen.getByTestId("planning-hub-liste-operational-summary")).toHaveTextContent(/Unvollständig/);
     await user.click(screen.getByTestId("weekplanner-item-training"));
     expect(onOpen).toHaveBeenCalledTimes(1);
     await user.click(screen.getByTestId("planning-hub-liste-row-menu-training:1"));

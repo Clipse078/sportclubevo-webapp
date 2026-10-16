@@ -230,12 +230,12 @@ beforeEach(() => {
   );
 });
 
-describe("WeekPlannerPage — default Kalender workspace", () => {
-  it("renders the week×time Kalender as the default view without legacy Standardplan banner", () => {
+describe("WeekPlannerPage — default Liste workspace", () => {
+  it("renders the canonical Liste as the default view without legacy Standardplan banner", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
     renderWeekPlannerPage(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[PLAN]} activePlanId={null} canManagePlans />);
 
-    expect(screen.getByTestId("planning-hub-calendar")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-liste")).toBeInTheDocument();
     expect(screen.queryByTestId("weekplanner-standardplan-safety-note")).not.toBeInTheDocument();
     expect(screen.queryByText("Spielfeld/Halle anpassen")).not.toBeInTheDocument();
   });

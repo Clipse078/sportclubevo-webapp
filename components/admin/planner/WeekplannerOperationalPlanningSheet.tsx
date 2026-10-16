@@ -25,6 +25,7 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import type { WeekplannerActivityType } from "@/lib/weekplanner/plan-types";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
+import PlannerOperationalStatusSection from "@/components/admin/planning-hub/PlannerOperationalStatusSection";
 
 type Props = {
   item: WeekplannerItem | null;
@@ -470,6 +471,14 @@ function TrainingOperationalEditor({
           </div>
         )}
 
+        <PlannerOperationalStatusSection
+          item={item}
+          locale="de-CH"
+          timezone={timezone}
+          variant="editor-sheet"
+          testId="weekplanner-operational-editor-planungsstatus"
+        />
+
         <div className="space-y-2">
           <SectionLabel>Datum &amp; Uhrzeit</SectionLabel>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -718,7 +727,16 @@ function MatchOperationalEditor({
     >
       <div data-testid="weekplanner-operational-editor" className="space-y-6">
         {"homeSide" in item && item.homeSide ? (
-          <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+          <>
+            <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+            <PlannerOperationalStatusSection
+              item={item}
+              locale="de-CH"
+              timezone={timezone}
+              variant="editor-sheet"
+              testId="weekplanner-operational-editor-planungsstatus"
+            />
+          </>
         ) : null}
         {error && (
           <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
@@ -918,6 +936,14 @@ function TournamentOperationalEditor({
             {error}
           </div>
         )}
+
+        <PlannerOperationalStatusSection
+          item={item}
+          locale="de-CH"
+          timezone={timezone}
+          variant="editor-sheet"
+          testId="weekplanner-operational-editor-planungsstatus"
+        />
 
         <div className="space-y-2">
           <SectionLabel>Datum &amp; Uhrzeit</SectionLabel>

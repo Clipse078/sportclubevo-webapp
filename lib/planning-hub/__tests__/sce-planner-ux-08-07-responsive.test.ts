@@ -21,9 +21,9 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
     expect(liste).not.toContain("checkbox");
 
     const listeRow = read("components/admin/planning-hub/PlanningHubListeActivityRow.tsx");
-    expect(listeRow).toContain("planning-hub-liste-row-time");
-    expect(listeRow).toContain("SceMatchCard");
-    expect(listeRow).toContain('surface="list-row"');
+    expect(listeRow).toContain("PlanningHubListeSceActivityCard");
+    expect(listeRow).toContain("PlanningHubActivityDetailSurface");
+    expect(listeRow).toContain("SceProgrammeActivityCardShell");
 
     const menu = read("components/admin/planning-hub/PlanningHubListeRowMenu.tsx");
     expect(menu).toContain("constrainHeight={false}");
@@ -41,6 +41,7 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
     expect(surface).toContain("useHover");
     expect(surface).not.toContain("planning-hub-activity-detail-touch-trigger");
     expect(surface).toContain("buildActivityClippedDetailModel");
+    expect(surface).toContain("PlannerOperationalStatusSection");
     expect(surface).not.toContain("ring-[var(--sce-primary)]");
     expect(surface).toContain("suppressActivityTypeHeader");
   });

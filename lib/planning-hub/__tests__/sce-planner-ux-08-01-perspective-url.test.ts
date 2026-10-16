@@ -7,9 +7,9 @@ import {
 } from "../planner-url";
 
 describe("SCE-PLANNER-UX-08-01 perspective URL", () => {
-  it("defaults to Kalender with empty resource filter", () => {
+  it("defaults to Liste with empty resource filter", () => {
     const state = parsePlanningHubUrlState({});
-    expect(state.perspective).toBe("kalender");
+    expect(state.perspective).toBe("liste");
     expect(state.resourceFilterIds).toBeNull();
   });
 

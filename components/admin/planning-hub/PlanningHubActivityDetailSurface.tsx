@@ -24,6 +24,7 @@ import { useActivityClippedDetailOffer } from "@/lib/planning-hub/use-activity-c
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import PlannerOperationalStatusSection from "./PlannerOperationalStatusSection";
 
 type PlanningHubActivityDetailSurfaceProps = {
   item?: WeekplannerItem;
@@ -179,6 +180,15 @@ export default function PlanningHubActivityDetailSurface({
                   </div>
                 ))}
               </dl>
+              {item ? (
+                <PlannerOperationalStatusSection
+                  item={item}
+                  locale={locale}
+                  timezone={timezone}
+                  variant="detail-popover"
+                  testId="planning-hub-activity-detail-planungsstatus"
+                />
+              ) : null}
             </div>
           </FloatingFocusManager>
         </FloatingPortal>

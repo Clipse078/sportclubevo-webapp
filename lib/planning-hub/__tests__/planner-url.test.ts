@@ -6,9 +6,9 @@ import {
 } from "../planner-url";
 
 describe("planning-hub planner-url", () => {
-  it("defaults to Kalender perspective and alle activity filter", () => {
+  it("defaults to Liste perspective and alle activity filter", () => {
     const state = parsePlanningHubUrlState({});
-    expect(state.perspective).toBe("kalender");
+    expect(state.perspective).toBe("liste");
     expect(state.activity).toBe("alle");
     expect(state.conflictsOnly).toBe(false);
     expect(state.search).toBe("");
@@ -46,10 +46,15 @@ describe("planning-hub planner-url", () => {
     expect(href).toContain("resFilter=res-1");
   });
 
-  it("omits ansicht param for default Kalender", () => {
+  it("omits ansicht param for default Liste", () => {
     const href = buildPlanningHubHref(parsePlanningHubUrlState({ week: "2026-09-14" }));
     expect(href).not.toContain("ansicht=");
     expect(href).toContain("week=2026-09-14");
+  });
+
+  it("includes ansicht=kalender when Kalender is selected", () => {
+    const href = buildPlanningHubHref(parsePlanningHubUrlState({ week: "2026-09-14", ansicht: "kalender" }));
+    expect(href).toContain("ansicht=kalender");
   });
 
   it("round-trips liste search query param", () => {

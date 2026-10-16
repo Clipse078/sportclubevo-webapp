@@ -13,6 +13,16 @@ import {
 
 export type PlanningHubPerspective = "kalender" | "spielfeld" | "garderobe" | "liste";
 
+/** Canonical Wochenplaner view selector order (R5.5). */
+export const PLANNING_HUB_PERSPECTIVE_ORDER = [
+  "liste",
+  "spielfeld",
+  "garderobe",
+  "kalender",
+] as const satisfies readonly PlanningHubPerspective[];
+
+export const PLANNING_HUB_DEFAULT_PERSPECTIVE: PlanningHubPerspective = "liste";
+
 export type PlanningHubActivityFilter =
   | "alle"
   | "trainings"
@@ -85,7 +95,7 @@ function parsePerspective(
   if (value === "ressourcen") {
     return legacyResourceParam?.trim().toLowerCase() === "garderobe" ? "garderobe" : "spielfeld";
   }
-  return "kalender";
+  return PLANNING_HUB_DEFAULT_PERSPECTIVE;
 }
 
 export function normalizePlanningHubUrlState(state: PlanningHubUrlState): PlanningHubUrlState {
@@ -155,7 +165,7 @@ export function buildPlanningHubHref(
   if (merged.plan) query.set("plan", merged.plan);
   if (merged.perspective === "spielfeld") query.set("ansicht", "spielfeld");
   else if (merged.perspective === "garderobe") query.set("ansicht", "garderobe");
-  else if (merged.perspective === "liste") query.set("ansicht", "liste");
+  else if (merged.perspective === "kalender") query.set("ansicht", "kalender");
   if (isPlanningHubResourceTimelinePerspective(merged.perspective) && merged.day) {
     query.set("day", merged.day);
   }

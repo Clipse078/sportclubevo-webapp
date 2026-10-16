@@ -88,4 +88,26 @@ describe("PlanningHubActivityDetailSurface", () => {
     await user.hover(screen.getByRole("button", { name: "Card" }));
     expect(await screen.findByTestId("planning-hub-activity-detail")).toBeInTheDocument();
   });
+
+  it("shows Planungsstatus with specific incomplete items on focus/hover (R5.5)", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlanningHubActivityDetailSurface
+        item={item}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        geometry={{ compact: false, blockWidthPx: 200, blockHeightPx: 80 }}
+      >
+        {(props) => (
+          <button type="button" {...props}>
+            Card
+          </button>
+        )}
+      </PlanningHubActivityDetailSurface>,
+    );
+
+    await user.tab();
+    expect(await screen.findByTestId("planning-hub-activity-detail-planungsstatus")).toBeInTheDocument();
+    expect(screen.getByText("Keine Garderobe zugewiesen")).toBeInTheDocument();
+  });
 });
