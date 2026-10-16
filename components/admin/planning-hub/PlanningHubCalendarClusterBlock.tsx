@@ -19,7 +19,7 @@ import {
 import { summarizeAggregateCluster } from "@/lib/planning-hub/scheduler/aggregate-cluster";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import PlanningHubClusterInspector from "./PlanningHubClusterInspector";
-import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
+import PlanningHubActivityDetailSurface from "./PlanningHubActivityDetailSurface";
 
 type Props = {
   items: WeekplannerItem[];
@@ -91,7 +91,7 @@ export default function PlanningHubCalendarClusterBlock({
           summary.conflictCount > 0 && PLANNING_HUB_CONFLICT_BLOCK_CLASS,
         )}
       >
-        <PlanningHubActivityClippedDetailSurface
+        <PlanningHubActivityDetailSurface
           aggregateItems={items}
           aggregateTimeLabel={timeLabel}
           locale={locale}
@@ -142,7 +142,7 @@ export default function PlanningHubCalendarClusterBlock({
               </div>
             </button>
           )}
-        </PlanningHubActivityClippedDetailSurface>
+        </PlanningHubActivityDetailSurface>
       </div>
 
       <PlanningHubClusterInspector

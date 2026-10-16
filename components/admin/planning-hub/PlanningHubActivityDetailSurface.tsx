@@ -25,7 +25,7 @@ import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePil
 import type { SportingActivityKind } from "@/lib/sporting-activity-presentation/types";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
-type PlanningHubActivityClippedDetailSurfaceProps = {
+type PlanningHubActivityDetailSurfaceProps = {
   item?: WeekplannerItem;
   aggregateItems?: WeekplannerItem[];
   aggregateTimeLabel?: string;
@@ -44,7 +44,7 @@ function sportingKind(type: WeekplannerItem["type"]): SportingActivityKind | und
   return undefined;
 }
 
-export default function PlanningHubActivityClippedDetailSurface({
+export default function PlanningHubActivityDetailSurface({
   item,
   aggregateItems,
   aggregateTimeLabel,
@@ -53,9 +53,12 @@ export default function PlanningHubActivityClippedDetailSurface({
   geometry,
   children,
   touchDetailTrigger: _touchDetailTrigger = false,
-}: PlanningHubActivityClippedDetailSurfaceProps) {
+}: PlanningHubActivityDetailSurfaceProps) {
   const measureRootRef = useRef<HTMLDivElement>(null);
-  const offerDisclosure = useActivityClippedDetailOffer(measureRootRef, geometry);
+  const isAggregateDetail =
+    aggregateItems != null && aggregateItems.length > 0 && aggregateTimeLabel != null;
+  const aggregateOffer = useActivityClippedDetailOffer(measureRootRef, geometry);
+  const offerDisclosure = isAggregateDetail ? aggregateOffer : Boolean(item);
   const detailId = useId();
   const [open, setOpen] = useState(false);
 
@@ -87,8 +90,8 @@ export default function PlanningHubActivityClippedDetailSurface({
   }, []);
 
   const model =
-    aggregateItems && aggregateItems.length > 0 && aggregateTimeLabel
-      ? buildAggregateClippedDetailModel(aggregateItems, locale, timezone, aggregateTimeLabel)
+    isAggregateDetail
+      ? buildAggregateClippedDetailModel(aggregateItems!, locale, timezone, aggregateTimeLabel!)
       : item
         ? buildActivityClippedDetailModel(item, locale, timezone)
         : null;
@@ -101,7 +104,7 @@ export default function PlanningHubActivityClippedDetailSurface({
       <div
         ref={setMeasureRoot}
         className="relative h-full w-full"
-        data-planning-hub-clipped-detail-root="true"
+        data-planning-hub-activity-detail-root="true"
       >
         <div className="h-full w-full">
           {children(
@@ -124,7 +127,7 @@ export default function PlanningHubActivityClippedDetailSurface({
               ref={refs.setFloating}
               style={floatingStyles}
               id={detailId}
-              data-testid="planning-hub-activity-clipped-detail"
+              data-testid="planning-hub-activity-detail"
               className="z-[80] max-w-[min(100vw-1.5rem,18rem)] rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] p-2.5 text-left shadow-[var(--shadow-lg)]"
               {...getFloatingProps({
                 "aria-label": `${model.title}, ${model.typeLabel}`,

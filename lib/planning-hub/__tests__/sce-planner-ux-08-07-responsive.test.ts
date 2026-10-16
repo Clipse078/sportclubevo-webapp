@@ -33,10 +33,10 @@ describe("SCE-PLANNER-UX-08-07 responsive contracts", () => {
 
   it("activity clipped-detail surface supports keyboard focus and touch trigger", () => {
     const block = read("components/admin/planning-hub/PlanningHubActivityBlock.tsx");
-    expect(block).toContain("PlanningHubActivityClippedDetailSurface");
+    expect(block).toContain("PlanningHubActivityDetailSurface");
     expect(block).toContain("focus-visible:ring");
 
-    const surface = read("components/admin/planning-hub/PlanningHubActivityClippedDetailSurface.tsx");
+    const surface = read("components/admin/planning-hub/PlanningHubActivityDetailSurface.tsx");
     expect(surface).toContain("useFocus");
     expect(surface).toContain("useHover");
     expect(surface).not.toContain("planning-hub-activity-detail-touch-trigger");

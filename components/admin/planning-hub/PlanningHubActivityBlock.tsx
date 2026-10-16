@@ -31,17 +31,21 @@ import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-i
 import { ActivityTypePill } from "@/components/sporting-activity/ActivityTypePill";
 import { resolvePlannerSportingActivityTypePresentation } from "@/lib/planning-hub/planner-sporting-activity-type-label";
 import { formatSportingActivityTimeRange } from "@/lib/sporting-activity-presentation/time-range";
-import PlanningHubActivityClippedDetailSurface from "./PlanningHubActivityClippedDetailSurface";
+import PlanningHubActivityDetailSurface from "./PlanningHubActivityDetailSurface";
 import { parseBlockDimensionPx } from "@/lib/planning-hub/activity-clipped-detail";
 import {
+  plannerActivityBlockMicroShowsTypeOnly,
   plannerActivityBlockShowsActivityIcon,
   plannerActivityBlockShowsCompactTypeLabel,
   plannerActivityBlockShowsEndTimeActionInline,
   plannerActivityBlockShowsInlineManipulationEdit,
   plannerActivityBlockShowsInlineTypeSuffix,
+  plannerActivityBlockShowsOperationalIndicators,
+  plannerActivityBlockShowsPrimaryIdentityLine,
   plannerActivityBlockShowsResourceLine,
   plannerActivityBlockShowsStandaloneTimeLine,
   plannerActivityBlockShowsTeamContext,
+  plannerActivityBlockShowsTimeWithTypePresentation,
   plannerActivityBlockShowsTypePill,
   resolvePlannerActivityBlockDensity,
 } from "@/lib/planning-hub/planner-activity-block-density";
@@ -137,18 +141,16 @@ export default function PlanningHubActivityBlock({
   const primary = schedulerDisplayIdentity(item);
   const typeLabel = schedulerBlockSubtitle(item);
   const teamContextRaw = schedulerAssignedTeamContext(item, { primaryLine: primary });
-  const blockWidthPx = parseBlockDimensionPx(
-    style?.width,
-    blockLayoutPx?.width ?? 240,
-  );
+  const layoutWidthPx =
+    blockLayoutPx?.width ?? parseBlockDimensionPx(style?.width, 240);
+  const blockWidthPx = layoutWidthPx;
   const blockHeightPx = parseBlockDimensionPx(style?.height, compact ? 40 : 64);
-  const layoutWidthPx = blockLayoutPx?.width ?? blockWidthPx;
   const density = resolvePlannerActivityBlockDensity(layoutWidthPx);
-  const clippedDetailGeometry = {
+  const detailGeometry = {
     blockWidthPx,
     blockHeightPx,
     compact,
-    layoutWidthPx: blockLayoutPx?.width,
+    layoutWidthPx: blockLayoutPx?.width ?? layoutWidthPx,
     layoutHeightPx: blockLayoutPx?.height,
   };
   const teamContext = teamContextRaw
@@ -168,6 +170,14 @@ export default function PlanningHubActivityBlock({
   const showTypePill = plannerTypePresentation && plannerActivityBlockShowsTypePill(density);
   const showCompactTypeLabel =
     plannerTypePresentation && plannerActivityBlockShowsCompactTypeLabel(density);
+  const showTimeWithTypePresentation =
+    plannerActivityBlockShowsTimeWithTypePresentation(density) && Boolean(plannerTypePresentation);
+  const showPrimaryIdentityLine = plannerActivityBlockShowsPrimaryIdentityLine(density);
+  const microShowsTypeOnly = plannerActivityBlockMicroShowsTypeOnly(
+    density,
+    Boolean(plannerTypePresentation),
+  );
+  const showOperationalIndicators = plannerActivityBlockShowsOperationalIndicators(density);
   const showResourceLine = !compact && plannerActivityBlockShowsResourceLine(density) && resources;
   const showStandaloneTimeLine = plannerActivityBlockShowsStandaloneTimeLine(
     density,
@@ -229,11 +239,11 @@ export default function PlanningHubActivityBlock({
           aria-hidden
         />
       )}
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale={locale}
         timezone={timezone}
-        geometry={clippedDetailGeometry}
+        geometry={detailGeometry}
       >
         {(detailReferenceProps) => (
       <button
@@ -307,26 +317,29 @@ export default function PlanningHubActivityBlock({
                   label={plannerTypePresentation.label}
                   className={density === "MEDIUM" ? "px-1 py-0 text-[8px] leading-tight" : undefined}
                 />
-                <span className="min-w-0 truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--text-2)]">
-                  {time}
-                </span>
+                {showTimeWithTypePresentation ? (
+                  <span className="min-w-0 truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--text-2)]">
+                    {time}
+                  </span>
+                ) : null}
               </div>
             ) : null}
-            {showCompactTypeLabel && plannerTypePresentation ? (
-              <p className="mb-0.5 flex min-w-0 items-center gap-1 text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
+            {showCompactTypeLabel && plannerTypePresentation && density === "NARROW" ? (
+              <p className="mb-0.5 min-w-0 truncate text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
                 <span data-planning-hub-compact-type="true">{plannerTypePresentation.label}</span>
-                <span className="truncate font-mono text-[9px] font-semibold tabular-nums text-[var(--muted)]">
-                  {time}
+              </p>
+            ) : null}
+            {microShowsTypeOnly && plannerTypePresentation ? (
+              <p className="flex min-w-0 items-center font-semibold leading-none text-[var(--foreground)]">
+                <span
+                  className="min-w-0 truncate text-[9px] font-bold uppercase tracking-[0.06em]"
+                  data-planning-hub-compact-type="true"
+                >
+                  {plannerTypePresentation.label}
                 </span>
               </p>
             ) : null}
-            {density === "MICRO" ? (
-              <p className="flex min-w-0 items-center gap-0.5 font-semibold leading-none text-[var(--foreground)]">
-                <span className="min-w-0 truncate text-[9px]" data-planning-hub-clipped-text="true">
-                  {primary}
-                </span>
-              </p>
-            ) : (
+            {showPrimaryIdentityLine ? (
               <p className="flex min-w-0 items-center gap-1 font-semibold text-[var(--foreground)]">
                 {activitySceIcon && showActivityIcon ? (
                   <ActivitySceIcon
@@ -345,7 +358,14 @@ export default function PlanningHubActivityBlock({
                   )}
                 </span>
               </p>
-            )}
+            ) : null}
+            {density === "MICRO" && !microShowsTypeOnly ? (
+              <p className="flex min-w-0 items-center gap-0.5 font-semibold leading-none text-[var(--foreground)]">
+                <span className="min-w-0 truncate text-[9px]" data-planning-hub-clipped-text="true">
+                  {primary}
+                </span>
+              </p>
+            ) : null}
             {showTeamContextLine && teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">
                 <ProductDomainSceIcon name="people" size={20} className="h-2.5 w-2.5 shrink-0 opacity-70" />
@@ -378,7 +398,7 @@ export default function PlanningHubActivityBlock({
               {manipulationEditLabel}
             </button>
           ) : null}
-          {(hasConflict || requiresEndTimeAction) && !isGhost && (
+          {showOperationalIndicators && (hasConflict || requiresEndTimeAction) && !isGhost && (
             <span
               title={hasConflict ? "Planungskonflikt" : MATCH_END_TIME_ACTION_LABEL}
               className="shrink-0 opacity-70 group-hover:opacity-100"
@@ -389,7 +409,7 @@ export default function PlanningHubActivityBlock({
         </div>
       </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>
+      </PlanningHubActivityDetailSurface>
 
       {canResize && onPointerDownResize && !isGhost && resizeOrientation === "vertical" && (
         <>

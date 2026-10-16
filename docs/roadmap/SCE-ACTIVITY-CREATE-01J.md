@@ -259,6 +259,17 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **SCOPE** | Presentation/shell only — no auth/credential/impersonation permission changes |
 | **PO_UAT** | **READY_FOR_PO_VISUAL_REVIEW** (Cursor manual UAT skipped) |
 
+## 01J-R5.4.2 — PO UAT corrections (smartphone icon, 100% planner cards, universal detail)
+
+| Decision | Value |
+|----------|--------|
+| **MOBILE_APP_ICON** | `mobile-app` → canonical SCE **`mobile-app`** approved master (smartphone outline, `currentColor`) via `nav-destination-sce-icons.ts` + `SCE_ICON_REGISTRY` |
+| **PLANNER_ADAPTIVE_CARD** | Structural density fix — NARROW/MICRO drop time-on-type-row, activity icons, operational chrome, and inline **Termin ändern**; WIDE inline edit only ≥140px; layout width from `blockLayoutPx` |
+| **UNIVERSAL_ACTIVITY_DETAIL** | `PlanningHubActivityDetailSurface` — every individual activity card exposes hover/focus detail; clipping gates aggregates only |
+| **INFO_BUTTON** | **NONE** — card hover/focus/touch-focus only |
+| **IMPERSONATION_SHELL** | **FROZEN** (R5.4.1 accepted) |
+| **PO_UAT** | **DELIVERED / AWAITING PO VISUAL UAT** (Cursor manual UAT skipped) |
+
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 
 | Decision | Value |

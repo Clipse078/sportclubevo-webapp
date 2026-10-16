@@ -15,6 +15,9 @@ export const PLANNER_ACTIVITY_BLOCK_DENSITY_MEDIUM_MIN_PX = CALENDAR_MIN_ACTIVIT
 /** Below this width, type pills and secondary chrome are removed. */
 export const PLANNER_ACTIVITY_BLOCK_DENSITY_NARROW_MIN_PX = 56;
 
+/** Inline reschedule affordance needs clear horizontal headroom on WIDE cards only. */
+export const PLANNER_ACTIVITY_BLOCK_INLINE_MANIPULATION_MIN_PX = 140;
+
 export function resolvePlannerActivityBlockDensity(blockWidthPx: number): PlannerActivityBlockDensity {
   if (blockWidthPx < PLANNER_ACTIVITY_BLOCK_DENSITY_NARROW_MIN_PX) return "MICRO";
   if (blockWidthPx < PLANNER_ACTIVITY_BLOCK_DENSITY_MEDIUM_MIN_PX) return "NARROW";
@@ -27,7 +30,7 @@ export function plannerActivityBlockShowsTypePill(density: PlannerActivityBlockD
 }
 
 export function plannerActivityBlockShowsCompactTypeLabel(density: PlannerActivityBlockDensity): boolean {
-  return density === "NARROW";
+  return density === "NARROW" || density === "MICRO";
 }
 
 export function plannerActivityBlockShowsInlineTypeSuffix(density: PlannerActivityBlockDensity): boolean {
@@ -35,7 +38,24 @@ export function plannerActivityBlockShowsInlineTypeSuffix(density: PlannerActivi
 }
 
 export function plannerActivityBlockShowsActivityIcon(density: PlannerActivityBlockDensity): boolean {
-  return density === "WIDE" || density === "MEDIUM" || density === "NARROW";
+  return density === "WIDE" || density === "MEDIUM";
+}
+
+export function plannerActivityBlockShowsTimeWithTypePresentation(
+  density: PlannerActivityBlockDensity,
+): boolean {
+  return density === "WIDE" || density === "MEDIUM";
+}
+
+export function plannerActivityBlockShowsPrimaryIdentityLine(density: PlannerActivityBlockDensity): boolean {
+  return density !== "MICRO";
+}
+
+export function plannerActivityBlockMicroShowsTypeOnly(
+  density: PlannerActivityBlockDensity,
+  hasTypePresentation: boolean,
+): boolean {
+  return density === "MICRO" && hasTypePresentation;
 }
 
 export function plannerActivityBlockShowsTeamContext(density: PlannerActivityBlockDensity): boolean {
@@ -57,13 +77,18 @@ export function plannerActivityBlockShowsEndTimeActionInline(density: PlannerAct
   return density === "WIDE";
 }
 
+export function plannerActivityBlockShowsOperationalIndicators(
+  density: PlannerActivityBlockDensity,
+): boolean {
+  return density === "WIDE" || density === "MEDIUM";
+}
+
 export function plannerActivityBlockShowsInlineManipulationEdit(
   density: PlannerActivityBlockDensity,
   layoutWidthPx: number,
 ): boolean {
-  if (density === "NARROW" || density === "MICRO") return false;
-  if (density === "MEDIUM") return layoutWidthPx >= 120;
-  return layoutWidthPx >= 100;
+  if (density !== "WIDE") return false;
+  return layoutWidthPx >= PLANNER_ACTIVITY_BLOCK_INLINE_MANIPULATION_MIN_PX;
 }
 
 export function plannerAggregateBlockShowsIdentityPreview(density: PlannerActivityBlockDensity): boolean {

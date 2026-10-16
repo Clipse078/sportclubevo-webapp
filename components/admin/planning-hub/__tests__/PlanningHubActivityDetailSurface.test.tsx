@@ -3,8 +3,9 @@
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import PlanningHubActivityClippedDetailSurface from "../PlanningHubActivityClippedDetailSurface";
+import PlanningHubActivityDetailSurface from "../PlanningHubActivityDetailSurface";
 import type { WeekplannerTrainingItem } from "@/lib/weekplanner/types";
 
 const item: WeekplannerTrainingItem = {
@@ -46,10 +47,10 @@ const item: WeekplannerTrainingItem = {
   teamSeasonId: "ts1",
 };
 
-describe("PlanningHubActivityClippedDetailSurface", () => {
+describe("PlanningHubActivityDetailSurface", () => {
   it("does not render a separate info-button affordance on constrained cards", () => {
     render(
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale="de-CH"
         timezone="Europe/Zurich"
@@ -60,16 +61,16 @@ describe("PlanningHubActivityClippedDetailSurface", () => {
             Card
           </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>,
+      </PlanningHubActivityDetailSurface>,
     );
 
     expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Card" })).toBeInTheDocument();
   });
 
-  it("omits detail wiring when block is spacious", () => {
+  it("wires hover detail for spacious individual cards (universal detail)", async () => {
     render(
-      <PlanningHubActivityClippedDetailSurface
+      <PlanningHubActivityDetailSurface
         item={item}
         locale="de-CH"
         timezone="Europe/Zurich"
@@ -80,9 +81,11 @@ describe("PlanningHubActivityClippedDetailSurface", () => {
             Card
           </button>
         )}
-      </PlanningHubActivityClippedDetailSurface>,
+      </PlanningHubActivityDetailSurface>,
     );
 
-    expect(screen.queryByTestId("planning-hub-activity-detail-touch-trigger")).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.hover(screen.getByRole("button", { name: "Card" }));
+    expect(await screen.findByTestId("planning-hub-activity-detail")).toBeInTheDocument();
   });
 });
