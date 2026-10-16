@@ -28,11 +28,11 @@ describe("SCE-TOURNAMENT-PLANNER-01D-R3 documentation", () => {
   it("lists dependency-correct future sequence after 01D", () => {
     const programme = readDoc("docs/roadmap/SCE-TOURNAMENT-PLANNER-01.md");
     const dIndex = programme.indexOf("| 4 | **01D**");
-    const eIndex = programme.indexOf("| 5 | **01E**");
+    const e1Index = programme.indexOf("| 5 | **01E1**");
     const fIndex = programme.indexOf("| 6 | **01F**");
     expect(dIndex).toBeGreaterThan(-1);
-    expect(eIndex).toBeGreaterThan(dIndex);
-    expect(fIndex).toBeGreaterThan(eIndex);
+    expect(e1Index).toBeGreaterThan(dIndex);
+    expect(fIndex).toBeGreaterThan(e1Index);
   });
 
   it("registers 01D-R3 closure flags on package doc", () => {

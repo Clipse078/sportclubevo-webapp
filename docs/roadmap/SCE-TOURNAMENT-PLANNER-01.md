@@ -3,12 +3,13 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E next; 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E1 in review; 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
 | **01C (round robin MVP)** | [`SCE-TOURNAMENT-PLANNER-01C`](./SCE-TOURNAMENT-PLANNER-01C.md) — **CLOSED / MERGED** — deterministic single round-robin (WHO, MVP) |
 | **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — **CLOSED / MERGED** — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
+| **01E1 (generator foundation + repeated RR)** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — Smart Generator foundation, tenant-organised guard, repeated round robin |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -78,7 +79,13 @@ One engine family — phases carry format semantics; not three unrelated tournam
 | **ROUND_ROBIN** | Every participant meets every other participant per configured encounter count |
 | **SMART_MIX** | Balanced subset from `targetMatchesPerParticipant` and constraints (future package) |
 
-**CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1** (01C MVP). **PRODUCT = 1:n**. **ROUND_ROBIN_EXTENSION_REQUIRED = YES**.
+**CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1** (default when omitted). **PRODUCT = 1:n** — **implemented in 01E1**. **ROUND_ROBIN_EXTENSION_REQUIRED = NO** (01E1 delivered).
+
+## Tournament Planner ownership (01E1)
+
+**TOURNAMENT_PLANNER_SCOPE = TENANT_ORGANISED_TOURNAMENTS_ONLY**
+
+Eligibility resolver: **`canTenantPlanTournament`** — authoritative field **`Event.homeAway`** (`HOME` = tenant organises, `AWAY` = external). Not physical venue. Away tournaments remain valid for tenant participation workflows; fixture generation is hard-rejected with **`TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT`**.
 
 Smart Mix decides **WHO** (01E+); 01D decides **CAN IT FIT**; 01F decides **WHEN + PITCH**.
 
@@ -136,7 +143,9 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 2 | **01B** | Persistence + fixture / schedule-version foundation — **CLOSED** |
 | 3 | **01C** | Deterministic single round-robin generator (WHO, MVP) — **CLOSED / MERGED** |
 | 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **IN PROGRESS (R3 closure review)** |
-| 5 | **01E** | Smart generator foundation — repeated RR, Smart Mix, competition/phase generation contracts, automatic groups, knockout/bracket slices as needed |
+| 5 | **01E1** | Smart generator foundation + repeated round robin (**this package**) |
+| 5b | **01E2** | Smart Mix generator |
+| 5c | **01E3** | Groups + knockout |
 | 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |
 | 7 | **01G** | Locks + partial regeneration |
 | 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
