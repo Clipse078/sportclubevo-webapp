@@ -118,3 +118,23 @@ Round-robin internal BYEs stay non-persisted generation artifacts. Knockout BYEs
 ## Service entry points
 
 `lib/tournament-scheduling/competition-structure/competition-structure-service.ts` — configuration, phases, groups, membership, ranking config, qualification sources, fixture sides.
+
+## STAGE migration verification (01E3A-R1)
+
+Verified on the designated FC Allschwil STAGE Neon database (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb`) with `APP_ENV=stage` and `SCE_DATA_ENVIRONMENT=STAGE`. Script: `scripts/sce-tournament-planner-01e3a-r1-stage-migration-verify.ts`. Applied via guarded `APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` (not `db push`).
+
+| Check | Result |
+| --- | --- |
+| **Migration applied** | `20261016190000_sce_tournament_planner_01e3a_competition_phase_qualification` — **YES** (`prisma migrate status` → up to date) |
+| **PRE — tournaments (`Event.type=TOURNAMENT`)** | **47** |
+| **PRE/POST — `TournamentParticipant`** | **83** / **83** (preserved) |
+| **PRE/POST — `TournamentFixture`** | **0** / **0** (preserved) |
+| **PRE/POST — `TournamentScheduleVersion`** | **0** / **0** (preserved) |
+| **PRE/POST — `TournamentFixtureAssignment`** | **0** / **0** (preserved) |
+| **Pre-migration referential audit** | `ORPHAN_SIDE_*` = 0, `CROSS_TOURNAMENT_SIDE` = 0, `CROSS_TENANT_SIDE` = 0 |
+| **Existing fixtures all concrete** | **N/A** (zero fixtures on STAGE — fixture-side backfill SQL not exercised on live rows) |
+| **Post-migration phase integrity** | `CROSS_TENANT_PHASE` = 0, `CROSS_TOURNAMENT_FIXTURE_PHASE` = 0, `INVALID_PHASE_ORDER` = 0 |
+| **Legacy autoinference** | Migration does **not** insert competition configuration or phases; runtime legacy bootstrap remains **`GROUP_MIX_ONLY` + `GROUP_MIX` / `MAIN`** only (`ensureLegacyGroupMixPhaseForGeneration`) — never **`GROUP_PLUS_KNOCKOUT`** unless explicitly configured later |
+| **PROD touched** | **NO** |
+
+Pre-migration snapshot artifact: `/opt/cursor/artifacts/01e3a-r1-pre-migration.json` (R1 closure run).
