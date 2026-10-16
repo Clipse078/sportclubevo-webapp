@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01A` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
-| **Status** | **ARCHITECTURE_READY_FOR_PO_REVIEW** |
+| **Status** | **CLOSED — PO APPROVED / MERGED TO STAGE** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption (**CLOSED**) |
 | **Branch** | `cursor/sce-tournament-planner-01a-architecture` |
 | **STAGE baseline (known ancestor)** | `795560e86d8f7c26711560d3bb2368a6de03889d` |
