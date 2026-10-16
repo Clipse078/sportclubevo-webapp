@@ -175,7 +175,7 @@ export function SceDomainNavigationPanel({
                       type="button"
                       className={cn(
                         "sce-domain-nav-panel-l2-control",
-                        (active || selected) && "sce-domain-nav-panel-l2-control--active",
+                        active && "sce-domain-nav-panel-l2-control--active",
                         selected && "sce-domain-nav-panel-l2-control--selected",
                       )}
                       aria-current={active ? "true" : undefined}
@@ -184,7 +184,7 @@ export function SceDomainNavigationPanel({
                     >
                       <span className="sce-domain-nav-panel-l2-label">
                         {sceIcon ? (
-                          <NavDestinationSceIcon navItemKey={item.key} size={16} active={active || selected} />
+                          <NavDestinationSceIcon navItemKey={item.key} size={16} active={active} />
                         ) : null}
                         {item.label}
                       </span>

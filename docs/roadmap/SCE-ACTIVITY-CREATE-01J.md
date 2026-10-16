@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5.3 Club Event tenant identity + Navbar corrections** |
+| **Status** | **IN PROGRESS — R5.3.1 hierarchical navigation selected state** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -213,6 +213,16 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **ACTIVE_L1_DOMAIN** | Selected desktop L1: **icon + label** → `--sce-primary`; inactive remain neutral; one strong active domain max |
 | **NAVBAR_CONTENT** | Identity · L1 navigation · global utilities · season (Row 2) — **not** contextual workflow CTAs |
 | **NAVBAR_QUICK_ACTIONS** | Removed/blocked — `SceGlobalUtilities` no longer mounts `AdminPageActions`; legacy component returns null |
+
+## 01J-R5.3.1 — Canonical navigation selected state (L1 + L2 + L3)
+
+| Decision | Value |
+|----------|--------|
+| **CANONICAL_NAV_SELECTED_STATE** | Route-selected navigation item at **L1, L2, and L3**: icon (when present) + label → **`var(--sce-primary)`** — same token as R5.3 L1; restrained selected background/border may remain |
+| **HIERARCHICAL_ACTIVE_PATH** | L1 + L2 + L3 may all show selected semantics together (e.g. Club → Organisation → Teams on `/dashboard/teams`) |
+| **ONE_L1_MAX** | Unchanged — at most one L1 domain strongly active; hierarchical path does not suppress L2/L3 selected state |
+| **OPEN_VS_SELECTED** | Panel-open / L2 column browse (`--selected`) ≠ route selected (`--active`); hover and focus ≠ selected |
+| **IMPLEMENTATION** | `global-app-navigation.css` + `SceDomainNavigationPanel` / `SceNavigationItem` — no Organisation-specific or route-specific hacks |
 
 ## 01J-R5.2 — Canonical desktop L1 order (order-only)
 

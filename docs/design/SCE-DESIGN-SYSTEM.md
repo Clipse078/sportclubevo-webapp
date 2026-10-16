@@ -527,7 +527,19 @@ Desktop shell (R9): **one primary domain bar**, **one persistent tenant bar**, *
 |---------|------|----------------|-------|
 | **Row 1 — Tenant + L1 + utilities** | Tenant crest + name · Club · Planung · Publizieren · Kommunikation · Admin · global utilities | `SceTenantContextRail` + `ScePrimaryNavigation` + `SceGlobalUtilities` | **One strong L1 selection maximum** (`--active` or open panel). **Active L1 domain:** icon **and** label use canonical `--sce-primary` (orange) while retaining underline/background and `aria-current` — color alone is not the only active signal. Route-active and panel-open are separate states: when a foreign panel is open, the route domain may use `--route-context` only — never two full active treatments. Domains with children open `SceDomainNavigationPanel` (`aria-expanded`); panel-open is not `aria-current`. |
 | **Row 2 — Platform + season** | SportClubEvo wordmark (left) · season context (right, under utilities) | `ScePlatformBrandRail` + `SceRow2SeasonContext` inside `SceTenantContextRow` | Always visible on desktop while panels overlay page content; **no** horizontal L2 strip; empty middle workspace is intentional. |
-| **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. |
+| **On-demand L2/L3** | Module discovery within a domain | `SceDomainNavigationPanel` fed by `resolveDomainSecondaryNavItems` + `resolveSecondaryNavItemModuleLocalChildren` | One overlay panel; simple domains = single column; hierarchical domains = L2 left + L3 right; **never** add a permanent Row 3. **Selected route item:** icon + label use canonical `--sce-primary` (same token as L1); restrained selected surface may remain. **Panel browse (`--selected`) ≠ route selected (`--active`)** — opening another L2 column to preview L3 must not paint orange unless canonical route resolution marks that item active. |
+
+**Canonical navigation selected state (01J-R5.3.1)**
+
+For the **currently selected navigation item** at each level (route-driven):
+
+| Level | Icon | Label |
+|-------|------|-------|
+| **L1 domain** | `--sce-primary` | `--sce-primary` |
+| **L2 category** (domain panel) | `--sce-primary` when present | `--sce-primary` |
+| **L3 destination** (domain panel) | `--sce-primary` when present | `--sce-primary` |
+
+Inactive items stay neutral/muted; hover may brighten but must not mimic selected orange. Focus uses `:focus-visible` independently. The full path may show L1 + L2 + L3 selected simultaneously (e.g. Club → Organisation → Teams). Orange reinforces selection alongside `aria-current` and surface indicators — not as the sole accessibility signal.
 
 **Navigation rules (canonical)**
 
