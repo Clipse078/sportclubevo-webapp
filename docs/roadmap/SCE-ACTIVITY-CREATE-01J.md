@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-ACTIVITY-CREATE-01J` |
 | **Programme** | [`SCE-ACTIVITY-CREATE-01`](./SCE-ACTIVITY-CREATE-01.md) |
 | **Depends on** | **01I CLOSED** (Programme Engine + PERSON foundation), **Navbar Upgrade #847 CLOSED** |
-| **Status** | **IN PROGRESS — R5.5 Wochenplaner Liste canonicalization** |
+| **Status** | **IN PROGRESS — R6 responsive / a11y / integrity (closure prep)** |
 | **Branch** | `cursor/sce-activity-create-01j-dashboard-mein-programm-70bb` |
 
 ## Product principle
@@ -90,7 +90,7 @@ Trainings, matches (incl. SFV null `teamSeasonId`), tournaments, club events (ex
 | **R3** | Dashboard Mein Programm preview polish |
 | **R4** | Dashboard Mein Kalender adoption |
 | **R5** | Contextual Erstellen + quick-action cleanup (**complete**) |
-| **R6** | Responsive / a11y / empty / loading / error |
+| **R6** | Responsive / a11y / integrity / legacy R4 test migration (**complete — automated**) |
 | **R7** | Legacy audit + closure |
 
 ### Navbar
@@ -308,3 +308,30 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 | **LEGACY_CREATE_LINKS_REMOVED** | Schnellzugriff links to `/dashboard/events/*/new` and legacy quick-action create pills |
 | **RESPONSIVE_BEHAVIOR** | `flex-wrap` nav strip + compact create pill; no horizontal page scroll dependency |
 | **NEW_CREATE_SYSTEM_INTRODUCED** | **NO** — no `DashboardActivityCreateMenu` / parallel modals |
+
+## 01J-R5.5.1 — Wochenplaner Liste full-width composition (PO accepted)
+
+| Decision | Value |
+|----------|--------|
+| **LIST_COMPOSITION** | One `SceProgrammeActivityCardShell` per row — no nested shadow card inside a second giant row |
+| **CARD_FAMILY** | Training / Match / Tournament / Club Event via `PlanningHubListeSceActivityCard` + operational Planungsstatus extension |
+| **PO_UAT** | **ACCEPTED** — frozen for R6+ (no visual redesign) |
+
+## 01J-R6 — Responsive / accessibility / visual consistency / final integrity
+
+| Area | Contract |
+|------|----------|
+| **Responsive** | Dashboard `DashboardCockpitGrid`: `grid-cols-1` → `md:grid-cols-2` with `minmax(0,1fr)`; Mein Programm filters `flex-wrap` + `min-w-0` list rows; Wochenplaner Liste `w-full` canonical shell — no zoom breakpoints |
+| **Accessibility** | Keyboard-reachable filters (`aria-pressed`, focus rings); planner operational summary text + `aria-label`; hover **and** focus detail via `PlanningHubActivityDetailSurface` — no standalone info control |
+| **Activity cards** | ONE Sce* family across Dashboard preview, Mein Programm, Club Programme, Wochenplaner Liste, calendar MICRO (MICRO unchanged) |
+| **Calendar** | Dashboard cockpit keeps `showSelectedDayPanel={false}`; MICRO time grammar via `calendar-micro-time-label.ts` + `personal-calendar-micro-presentation.ts` |
+| **Loading / empty / error** | Existing SCE patterns — `DashboardEmptyState` on Mein Programm (filtered vs unfiltered copy); programme unsupported string on preview |
+| **Programme engine** | Dashboard → `getPersonalCommandCenterData` → `loadPersonalProgramme` → `loadPersonScopeSportingProgrammeItems`; Mein Programm same PERSON boundary; Club `/dashboard/programm` → `queryProgramme` `CLUB` |
+| **Legacy R4 planner tests** | 10 obsolete grid/table expectations migrated to R5.5.1 semantic tests (`PlanningHubListeView.r4-*.test.tsx`); behavioural coverage retained (location dedupe, HEIM/AUSWÄRTS list-row, crest bounds, override indicator) |
+| **Implementation fix** | `SceTrainingCard` operational list-row suppresses duplicate team line when equivalent to title (parity with identity list-row) |
+| **Legacy 01N debt (explicit)** | `PersonalProgrammeAgendaRow` (meetings + Kalender mobile fallback); `training-programme-adapter.ts` / `team-event-programme-adapter.ts` (diagnostics); exported but unwired `DashboardTodayEventCards` / `MeineAgendaWidget`; `planning-hub-liste-grid.ts` tokens reference-only post-R5.5 |
+| **Navbar / impersonation / auth** | **FROZEN** — fix only proven 01J regressions (none in R6) |
+| **Toggle-first** | Mein Programm multi-select filters remain `aria-pressed` buttons — **0** new binary checkboxes on 01J surfaces |
+| **Automated validation** | `sce-activity-create-01j-r6-integrity.test.ts` + full 01J / planner / programme-engine / calendar-micro suites |
+| **PO_UAT** | **READY_FOR_PO_VISUAL_REVIEW** — Cursor manual UAT skipped (PO-owned) |
+| **Closure readiness** | **READY pending PO final visual sign-off** — no schema change; PR #848 remains open |
