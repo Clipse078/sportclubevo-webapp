@@ -12,7 +12,11 @@ vi.mock("@/lib/db/prisma", () => ({
     tournamentFixture: {
       findMany: vi.fn(),
       create: vi.fn(),
+      updateMany: vi.fn(),
     },
+    tournamentPhase: { findFirst: vi.fn(), create: vi.fn() },
+    tournamentCompetitionConfiguration: { findFirst: vi.fn(), create: vi.fn() },
+    tournamentFixtureSide: { createMany: vi.fn() },
     tournamentScheduleVersion: { findMany: vi.fn() },
     tournamentFixtureAssignment: { findMany: vi.fn() },
     tournamentPitch: { create: vi.fn() },
@@ -22,6 +26,7 @@ vi.mock("@/lib/db/prisma", () => ({
 
 import { prisma } from "@/lib/db/prisma";
 import { generateTournamentFixturesForEvent } from "../fixture-generation-service";
+import { mockLegacyGroupMixPhaseBootstrap } from "./helpers/mock-legacy-phase-persistence";
 import {
   generateSmartMixFixtures,
   canonicalizeParticipantIds,
@@ -53,6 +58,7 @@ function mockParticipants(ids: string[]) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockLegacyGroupMixPhaseBootstrap(TOURNAMENT);
   vi.mocked(prisma.tournamentFixture.findMany).mockResolvedValue([]);
   vi.mocked(prisma.tournamentScheduleVersion.findMany).mockResolvedValue([]);
   vi.mocked(prisma.tournamentFixtureAssignment.findMany).mockResolvedValue([]);

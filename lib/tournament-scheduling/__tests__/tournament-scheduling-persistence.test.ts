@@ -14,6 +14,10 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
     },
+    tournamentFixtureSide: {
+      deleteMany: vi.fn(),
+      createMany: vi.fn(),
+    },
     tournamentScheduleVersion: {
       findFirst: vi.fn(),
       findMany: vi.fn(),

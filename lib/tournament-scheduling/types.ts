@@ -7,12 +7,13 @@
 export interface TournamentFixtureDefinition {
   id: string;
   eventId: string;
+  tournamentPhaseId?: string | null;
   stageKey: string;
   roundIndex: number;
   slotIndexInRound: number;
   generatorKey: string | null;
-  sideAParticipantId: string;
-  sideBParticipantId: string;
+  sideAParticipantId: string | null;
+  sideBParticipantId: string | null;
 }
 
 export type TournamentScheduleVersionStatus = "WORKING" | "APPROVED" | "SUPERSEDED";

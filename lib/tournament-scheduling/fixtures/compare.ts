@@ -27,15 +27,18 @@ export function persistedFixturesToLogicalKeys(
   fixtures: readonly TournamentFixtureDefinition[],
 ): string[] {
   return fixtures
-    .map((f) =>
-      logicalFixtureKey({
+    .map((f) => {
+      if (!f.sideAParticipantId || !f.sideBParticipantId) {
+        return `${f.stageKey}|${f.roundIndex}|${f.slotIndexInRound}|UNRESOLVED`;
+      }
+      return logicalFixtureKey({
         stageKey: f.stageKey,
         roundIndex: f.roundIndex,
         slotIndexInRound: f.slotIndexInRound,
         sideAParticipantId: f.sideAParticipantId,
         sideBParticipantId: f.sideBParticipantId,
-      }),
-    )
+      });
+    })
     .sort(compareParticipantId);
 }
 
@@ -52,8 +55,8 @@ export function participantIdsFromFixtures(
 ): Set<string> {
   const ids = new Set<string>();
   for (const fixture of fixtures) {
-    ids.add(fixture.sideAParticipantId);
-    ids.add(fixture.sideBParticipantId);
+    if (fixture.sideAParticipantId) ids.add(fixture.sideAParticipantId);
+    if (fixture.sideBParticipantId) ids.add(fixture.sideBParticipantId);
   }
   return ids;
 }

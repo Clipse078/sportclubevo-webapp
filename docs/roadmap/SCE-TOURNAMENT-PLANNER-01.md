@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E3 Groups + Knockout (next); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E3B Group Formation + Group Fixture Generation (next); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -11,7 +11,8 @@
 | **01D (feasibility)** | [`SCE-TOURNAMENT-PLANNER-01D`](./SCE-TOURNAMENT-PLANNER-01D.md) — **CLOSED / MERGED** — feasibility + hard-constraint validator (CAN IT FIT?) + **01D-R2 smart generator alignment** |
 | **01E1 (generator foundation + repeated RR)** | [`SCE-TOURNAMENT-PLANNER-01E1`](./SCE-TOURNAMENT-PLANNER-01E1.md) — **CLOSED / MERGED** — Smart Generator foundation, tenant-organised guard, repeated round robin |
 | **01E2 (Smart Mix)** | [`SCE-TOURNAMENT-PLANNER-01E2`](./SCE-TOURNAMENT-PLANNER-01E2.md) — **CLOSED / MERGED** — deterministic Smart Mix (`targetMatchesPerParticipant`) (PR **#860**) |
-| **01E3 (Groups + Knockout)** | **NEXT** — not started |
+| **01E3A (competition phase + qualification architecture)** | [`SCE-TOURNAMENT-PLANNER-01E3A`](./SCE-TOURNAMENT-PLANNER-01E3A.md) — **CLOSED / ACCEPTED / MERGED** (PR **#861**) |
+| **01E3B–D (Groups + Knockout generation slices)** | **01E3B NEXT** — 01E3C / 01E3D planned (see [01E3A roadmap](./SCE-TOURNAMENT-PLANNER-01E3A.md)) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -147,7 +148,9 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 4 | **01D** | Feasibility + hard constraints (CAN IT FIT?) + TournamentPitch/break model — **CLOSED / MERGED** |
 | 5 | **01E1** | Smart generator foundation + repeated round robin — **CLOSED / MERGED** (PR **#859**) |
 | 5b | **01E2** | Smart Mix generator — **CLOSED / MERGED** (PR **#860**) |
-| 5c | **01E3** | Groups + knockout — **NEXT** (not started) |
+| 5c | **01E3A** | Competition phase + qualification architecture — **CLOSED / ACCEPTED / MERGED** (PR **#861**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3A.md)) |
+| 5d | **01E3B** | Automatic group formation + group fixture generation — **NEXT** (not started) |
+| 5e | **01E3C–D** | Knockout bracket + qualification progression slices — **PLANNED** (see 01E3A roadmap) |
 | 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |
 | 7 | **01G** | Locks + partial regeneration |
 | 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
