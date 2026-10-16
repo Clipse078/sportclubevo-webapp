@@ -225,6 +225,30 @@ describe("Smart Mix — Home/Away relevance", () => {
   });
 });
 
+describe("Smart Mix — performance smoke (observational)", () => {
+  const cases: Array<[number, number]> = [
+    [16, 5],
+    [20, 5],
+    [32, 5],
+    [32, 10],
+    [32, 31],
+  ];
+
+  it.each(cases)("n=%i target=%i completes within budget", (n, target) => {
+    const ids = participantIds(n);
+    const started = performance.now();
+    const fixtures = generateSmartMixFixtures({
+      participantIds: ids,
+      config: { targetMatchesPerParticipant: target },
+    });
+    const elapsedMs = performance.now() - started;
+    validateSmartMixInvariants(ids, fixtures, { targetMatchesPerParticipant: target });
+    expect(elapsedMs).toBeLessThan(5000);
+    // eslint-disable-next-line no-console -- observational timing for 01E2 closure report
+    console.info(`[smart-mix perf] n=${n} target=${target} ms=${elapsedMs.toFixed(1)} fixtures=${fixtures.length}`);
+  });
+});
+
 describe("Smart Mix — canonical entry point", () => {
   it("routes SMART_MIX via generateTournamentFixtures", () => {
     const ids = participantIds(4);

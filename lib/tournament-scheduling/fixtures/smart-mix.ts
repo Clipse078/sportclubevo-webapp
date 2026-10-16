@@ -40,6 +40,15 @@ export interface SmartMixGenerationDiagnostics {
   uniquePairCount: number;
   repeatedPairCount: number;
   maxPairMultiplicity: number;
+  participantUniqueOpponentCounts: Readonly<Record<string, number>>;
+  minUniqueOpponentCount: number;
+  maxUniqueOpponentCount: number;
+  participantRepeatAppearanceCounts: Readonly<Record<string, number>>;
+  minRepeatAppearanceCount: number;
+  maxRepeatAppearanceCount: number;
+  homeCounts?: Readonly<Record<string, number>>;
+  awayCounts?: Readonly<Record<string, number>>;
+  maxHomeAwayImbalance?: number;
 }
 
 export function buildSmartMixGeneratorKey(stageKey: string, fixtureIndex: number): string {
@@ -116,6 +125,85 @@ function validateTargetMatchesPerParticipant(target: number): void {
  * Parity policy: when n×k is odd, the first participant in canonical order
  * receives (k−1); all others receive k. No participant exceeds k.
  */
+/**
+ * Havel–Hakimi graphicality test (simple undirected graph, no loops).
+ */
+export function isGraphicDegreeSequence(degrees: readonly number[]): boolean {
+  const havelHakimi = (seq: number[]): boolean => {
+    const sorted = seq.filter((d) => d > 0).sort((a, b) => b - a);
+    if (sorted.length === 0) {
+      return true;
+    }
+    if (sorted.some((d) => d < 0 || d >= sorted.length)) {
+      return false;
+    }
+    const v = sorted[0];
+    const rest = sorted.slice(1);
+    if (v > rest.length) {
+      return false;
+    }
+    for (let i = 0; i < v; i += 1) {
+      rest[i] -= 1;
+      if (rest[i] < 0) {
+        return false;
+      }
+    }
+    return havelHakimi(rest);
+  };
+  return havelHakimi([...degrees]);
+}
+
+/**
+ * Deterministic simple-graph edge list via Havel–Hakimi (canonical id tie-breaks).
+ * Throws when the degree sequence is not realizable as a simple graph.
+ */
+export function constructSimpleGraphEdgesDeterministic(
+  participantIds: readonly string[],
+  degrees: readonly number[],
+): Array<[string, string]> {
+  if (participantIds.length !== degrees.length) {
+    throw new RoundRobinGenerationValidationError(
+      "TOURNAMENT_GENERATION_INVALID",
+      "Participant count must match degree plan length",
+    );
+  }
+
+  type Vertex = { id: string; degree: number };
+  let vertices: Vertex[] = participantIds.map((id, index) => ({
+    id,
+    degree: degrees[index],
+  }));
+
+  const edges: Array<[string, string]> = [];
+
+  const sortVertices = (list: Vertex[]): Vertex[] =>
+    [...list].sort((a, b) => {
+      if (b.degree !== a.degree) {
+        return b.degree - a.degree;
+      }
+      return compareParticipantId(a.id, b.id);
+    });
+
+  while (vertices.some((v) => v.degree > 0)) {
+    vertices = sortVertices(vertices.filter((v) => v.degree > 0));
+    const hub = vertices[0];
+    if (hub.degree > vertices.length - 1) {
+      throw new RoundRobinGenerationValidationError(
+        "TOURNAMENT_GENERATION_INVALID",
+        "Degree sequence is not realizable as a simple graph",
+      );
+    }
+    const targets = sortVertices(vertices.slice(1, 1 + hub.degree));
+    for (const target of targets) {
+      edges.push([hub.id, target.id]);
+      target.degree -= 1;
+    }
+    hub.degree = 0;
+  }
+
+  return edges;
+}
+
 export function planSmartMixTargetDegrees(
   participantIds: readonly string[],
   targetMatchesPerParticipant: number,
@@ -196,43 +284,103 @@ interface PendingEdge {
   multiplicity: number;
 }
 
-function addEdge(
+interface OpponentEdgeRecord {
+  a: string;
+  b: string;
+  /** When set, prefer this structural round (greedy matching round). */
+  preferredRoundIndex?: number;
+}
+
+function recordOpponentEdge(
   a: string,
   b: string,
   remaining: Map<string, number>,
   pairMultiplicity: Map<string, number>,
-  pairEncounterIndex: Map<string, number>,
-  homeAwayRelevance: HomeAwayRelevance,
-  homeCounts: Map<string, number>,
-  awayCounts: Map<string, number>,
-  stageKey: string,
-  roundIndex: number,
-  slotIndexInRound: number,
-  fixtureIndex: number,
-  out: TournamentFixtureGenerationDefinition[],
+  out: OpponentEdgeRecord[],
+  preferredRoundIndex?: number,
 ): void {
   const key = unorderedPairKey(a, b);
-  const encounter = pairEncounterIndex.get(key) ?? 0;
-  pairEncounterIndex.set(key, encounter + 1);
   pairMultiplicity.set(key, (pairMultiplicity.get(key) ?? 0) + 1);
   remaining.set(a, (remaining.get(a) ?? 0) - 1);
   remaining.set(b, (remaining.get(b) ?? 0) - 1);
-  const sides = assignFixtureSides(
-    a,
-    b,
-    encounter,
-    homeAwayRelevance,
-    homeCounts,
-    awayCounts,
-  );
-  homeCounts.set(sides.sideAParticipantId, (homeCounts.get(sides.sideAParticipantId) ?? 0) + 1);
-  awayCounts.set(sides.sideBParticipantId, (awayCounts.get(sides.sideBParticipantId) ?? 0) + 1);
-  out.push({
-    stageKey,
-    roundIndex,
-    slotIndexInRound,
-    ...sides,
-    generatorKey: buildSmartMixGeneratorKey(stageKey, fixtureIndex),
+  out.push({ a, b, preferredRoundIndex });
+}
+
+function assignStructuralRoundSlots(
+  edges: readonly OpponentEdgeRecord[],
+): Array<{ roundIndex: number; slotIndexInRound: number; a: string; b: string }> {
+  const participantsByRound = new Map<number, Set<string>>();
+  const slotByRound = new Map<number, number>();
+  const placed: Array<{ roundIndex: number; slotIndexInRound: number; a: string; b: string }> = [];
+
+  const canPlace = (roundIndex: number, a: string, b: string): boolean => {
+    const used = participantsByRound.get(roundIndex);
+    if (!used) return true;
+    return !used.has(a) && !used.has(b);
+  };
+
+  const occupy = (roundIndex: number, a: string, b: string): void => {
+    const used = participantsByRound.get(roundIndex) ?? new Set<string>();
+    used.add(a);
+    used.add(b);
+    participantsByRound.set(roundIndex, used);
+    const slot = slotByRound.get(roundIndex) ?? 0;
+    slotByRound.set(roundIndex, slot + 1);
+    placed.push({ roundIndex, slotIndexInRound: slot, a, b });
+  };
+
+  for (const edge of edges) {
+    const preferred = edge.preferredRoundIndex;
+    if (preferred !== undefined && canPlace(preferred, edge.a, edge.b)) {
+      occupy(preferred, edge.a, edge.b);
+      continue;
+    }
+    let roundIndex = 0;
+    while (!canPlace(roundIndex, edge.a, edge.b)) {
+      roundIndex += 1;
+    }
+    occupy(roundIndex, edge.a, edge.b);
+  }
+
+  return placed;
+}
+
+function materializeFixturesFromOpponentEdges(
+  edges: readonly OpponentEdgeRecord[],
+  participantIds: readonly string[],
+  homeAwayRelevance: HomeAwayRelevance,
+  stageKey: string,
+): TournamentFixtureGenerationDefinition[] {
+  const structured = assignStructuralRoundSlots(edges);
+  const pairEncounterIndex = new Map<string, number>();
+  const homeCounts = new Map<string, number>();
+  const awayCounts = new Map<string, number>();
+  for (const id of participantIds) {
+    homeCounts.set(id, 0);
+    awayCounts.set(id, 0);
+  }
+
+  return structured.map((edge, fixtureIndex) => {
+    const key = unorderedPairKey(edge.a, edge.b);
+    const encounter = pairEncounterIndex.get(key) ?? 0;
+    pairEncounterIndex.set(key, encounter + 1);
+    const sides = assignFixtureSides(
+      edge.a,
+      edge.b,
+      encounter,
+      homeAwayRelevance,
+      homeCounts,
+      awayCounts,
+    );
+    homeCounts.set(sides.sideAParticipantId, (homeCounts.get(sides.sideAParticipantId) ?? 0) + 1);
+    awayCounts.set(sides.sideBParticipantId, (awayCounts.get(sides.sideBParticipantId) ?? 0) + 1);
+    return {
+      stageKey,
+      roundIndex: edge.roundIndex,
+      slotIndexInRound: edge.slotIndexInRound,
+      ...sides,
+      generatorKey: buildSmartMixGeneratorKey(stageKey, fixtureIndex),
+    };
   });
 }
 
@@ -243,41 +391,6 @@ function sortPendingEdges(edges: PendingEdge[]): PendingEdge[] {
     if (cmpA !== 0) return cmpA;
     return compareParticipantId(x.b, y.b);
   });
-}
-
-function pickNextEdge(
-  participantIds: readonly string[],
-  remaining: Map<string, number>,
-  pairMultiplicity: Map<string, number>,
-  uniqueOnly: boolean,
-): PendingEdge | null {
-  const candidates = buildCandidateEdges(participantIds, remaining, pairMultiplicity, uniqueOnly);
-  const sorted = sortPendingEdges(candidates);
-  return sorted[0] ?? null;
-}
-
-function buildCandidateEdges(
-  participantIds: readonly string[],
-  remaining: Map<string, number>,
-  pairMultiplicity: Map<string, number>,
-  uniqueOnly: boolean,
-): PendingEdge[] {
-  const candidates: PendingEdge[] = [];
-  for (let i = 0; i < participantIds.length; i += 1) {
-    for (let j = i + 1; j < participantIds.length; j += 1) {
-      const a = participantIds[i];
-      const b = participantIds[j];
-      if ((remaining.get(a) ?? 0) <= 0 || (remaining.get(b) ?? 0) <= 0) {
-        continue;
-      }
-      const mult = pairMultiplicity.get(unorderedPairKey(a, b)) ?? 0;
-      if (uniqueOnly && mult > 0) {
-        continue;
-      }
-      candidates.push({ a, b, multiplicity: mult });
-    }
-  }
-  return candidates;
 }
 
 function remainingTotal(remaining: Map<string, number>): number {
@@ -292,19 +405,37 @@ export function deriveSmartMixDiagnostics(
   participantIds: readonly string[],
   fixtures: readonly TournamentFixtureGenerationDefinition[],
   plan: SmartMixTargetDegreePlan,
+  options: { homeAwayRelevance?: HomeAwayRelevance } = {},
 ): SmartMixGenerationDiagnostics {
   const participantMatchCounts: Record<string, number> = {};
+  const opponentsByParticipant = new Map<string, Set<string>>();
   for (const id of participantIds) {
     participantMatchCounts[id] = 0;
+    opponentsByParticipant.set(id, new Set());
   }
   const pairMultiplicity = new Map<string, number>();
+  const homeCounts: Record<string, number> = {};
+  const awayCounts: Record<string, number> = {};
+  for (const id of participantIds) {
+    homeCounts[id] = 0;
+    awayCounts[id] = 0;
+  }
+
   for (const fixture of fixtures) {
     participantMatchCounts[fixture.sideAParticipantId] =
       (participantMatchCounts[fixture.sideAParticipantId] ?? 0) + 1;
     participantMatchCounts[fixture.sideBParticipantId] =
       (participantMatchCounts[fixture.sideBParticipantId] ?? 0) + 1;
+    opponentsByParticipant.get(fixture.sideAParticipantId)?.add(fixture.sideBParticipantId);
+    opponentsByParticipant.get(fixture.sideBParticipantId)?.add(fixture.sideAParticipantId);
     const key = unorderedPairKey(fixture.sideAParticipantId, fixture.sideBParticipantId);
     pairMultiplicity.set(key, (pairMultiplicity.get(key) ?? 0) + 1);
+    if (options.homeAwayRelevance === "ON") {
+      homeCounts[fixture.sideAParticipantId] =
+        (homeCounts[fixture.sideAParticipantId] ?? 0) + 1;
+      awayCounts[fixture.sideBParticipantId] =
+        (awayCounts[fixture.sideBParticipantId] ?? 0) + 1;
+    }
   }
 
   const matchCounts = Object.values(participantMatchCounts);
@@ -312,12 +443,23 @@ export function deriveSmartMixDiagnostics(
   let repeatedPairCount = 0;
   let maxPairMultiplicity = 0;
   for (const mult of pairMultiplicity.values()) {
-    if (mult === 1) uniquePairCount += 1;
+    if (mult >= 1) uniquePairCount += 1;
     if (mult > 1) repeatedPairCount += 1;
     if (mult > maxPairMultiplicity) maxPairMultiplicity = mult;
   }
 
-  return {
+  const participantUniqueOpponentCounts: Record<string, number> = {};
+  const participantRepeatAppearanceCounts: Record<string, number> = {};
+  for (const id of participantIds) {
+    const uniqueOpponents = opponentsByParticipant.get(id)?.size ?? 0;
+    participantUniqueOpponentCounts[id] = uniqueOpponents;
+    participantRepeatAppearanceCounts[id] =
+      (participantMatchCounts[id] ?? 0) - uniqueOpponents;
+  }
+  const uniqueOpponentCounts = Object.values(participantUniqueOpponentCounts);
+  const repeatAppearanceCounts = Object.values(participantRepeatAppearanceCounts);
+
+  const base: SmartMixGenerationDiagnostics = {
     targetMatchesPerParticipant: plan.targetMatchesPerParticipant,
     balanceClassification: plan.balanceClassification,
     reducedMatchParticipantIds: plan.reducedMatchParticipantIds,
@@ -328,7 +470,31 @@ export function deriveSmartMixDiagnostics(
     uniquePairCount,
     repeatedPairCount,
     maxPairMultiplicity,
+    participantUniqueOpponentCounts,
+    minUniqueOpponentCount: Math.min(...uniqueOpponentCounts),
+    maxUniqueOpponentCount: Math.max(...uniqueOpponentCounts),
+    participantRepeatAppearanceCounts,
+    minRepeatAppearanceCount: Math.min(...repeatAppearanceCounts),
+    maxRepeatAppearanceCount: Math.max(...repeatAppearanceCounts),
   };
+
+  if (options.homeAwayRelevance === "ON") {
+    let maxHomeAwayImbalance = 0;
+    for (const id of participantIds) {
+      const imbalance = Math.abs((homeCounts[id] ?? 0) - (awayCounts[id] ?? 0));
+      if (imbalance > maxHomeAwayImbalance) {
+        maxHomeAwayImbalance = imbalance;
+      }
+    }
+    return {
+      ...base,
+      homeCounts,
+      awayCounts,
+      maxHomeAwayImbalance,
+    };
+  }
+
+  return base;
 }
 
 /**
@@ -374,65 +540,89 @@ export function generateSmartMixFixtures(
   });
 
   const pairMultiplicity = new Map<string, number>();
-  const pairEncounterIndex = new Map<string, number>();
-  const homeCounts = new Map<string, number>();
-  const awayCounts = new Map<string, number>();
-  for (const id of participantIds) {
-    homeCounts.set(id, 0);
-    awayCounts.set(id, 0);
-  }
-  const fixtures: TournamentFixtureGenerationDefinition[] = [];
-  let fixtureIndex = 0;
+  const opponentEdges: OpponentEdgeRecord[] = [];
 
-  const rrRounds = buildRoundRobinRoundPairings(participantIds);
-  let rrCursor = 0;
-
-  const appendEdge = (edge: PendingEdge, roundIndex: number, slotIndexInRound: number): void => {
-    addEdge(
+  const appendEdge = (edge: PendingEdge, preferredRoundIndex?: number): void => {
+    recordOpponentEdge(
       edge.a,
       edge.b,
       remaining,
       pairMultiplicity,
-      pairEncounterIndex,
-      homeAwayRelevance,
-      homeCounts,
-      awayCounts,
-      stageKey,
-      roundIndex,
-      slotIndexInRound,
-      fixtureIndex,
-      fixtures,
+      opponentEdges,
+      preferredRoundIndex,
     );
-    fixtureIndex += 1;
   };
 
-  // Primary pass — circle-method rounds (unique opponents first, fair rematches on later cycles).
-  while (remainingTotal(remaining) > 0) {
-    let addedInCycle = 0;
-    const cycleStart = rrCursor;
-    do {
-      const roundPairs = rrRounds[rrCursor % rrRounds.length];
-      rrCursor += 1;
-      let slot = 0;
-      for (const [a, b] of roundPairs) {
+  const maxPlanDegree = Math.max(...plan.participantDegrees);
+  const simpleGraphRealizable =
+    maxPlanDegree <= n - 1 && isGraphicDegreeSequence(plan.participantDegrees);
+
+  if (simpleGraphRealizable) {
+    const simpleEdges = constructSimpleGraphEdgesDeterministic(
+      participantIds,
+      plan.participantDegrees,
+    );
+    for (const [a, b] of simpleEdges) {
+      appendEdge({ a, b, multiplicity: 0 });
+    }
+  } else {
+    // Maximize unique opponent pairs first: at most one edge per unordered pair while both
+    // endpoints still need matches (complete-graph layer before rematches).
+    for (let i = 0; i < participantIds.length; i += 1) {
+      for (let j = i + 1; j < participantIds.length; j += 1) {
+        const a = participantIds[i];
+        const b = participantIds[j];
+        const key = unorderedPairKey(a, b);
         if ((remaining.get(a) ?? 0) <= 0 || (remaining.get(b) ?? 0) <= 0) {
           continue;
         }
-        appendEdge({ a, b, multiplicity: pairMultiplicity.get(unorderedPairKey(a, b)) ?? 0 }, rrCursor - 1, slot);
-        slot += 1;
-        addedInCycle += 1;
+        if ((pairMultiplicity.get(key) ?? 0) > 0) {
+          continue;
+        }
+        appendEdge({ a, b, multiplicity: 0 });
       }
-    } while (rrCursor - cycleStart < rrRounds.length && remainingTotal(remaining) > 0);
-
-    if (addedInCycle === 0) {
-      break;
     }
   }
 
-  // Fallback — lowest pair multiplicity, lexicographic tie-break (preserves realizability).
+  // Rematch phase — repeated greedy matchings; lowest pair multiplicity, lex tie-break.
+  let rematchRoundIndex = 0;
   while (remainingTotal(remaining) > 0) {
-    const next = pickNextEdge(participantIds, remaining, pairMultiplicity, false);
-    if (!next) {
+    const active = participantIds
+      .filter((id) => (remaining.get(id) ?? 0) > 0)
+      .sort((a, b) => {
+        const remDiff = (remaining.get(b) ?? 0) - (remaining.get(a) ?? 0);
+        if (remDiff !== 0) return remDiff;
+        return compareParticipantId(a, b);
+      });
+    const matched = new Set<string>();
+    let addedInRound = 0;
+
+    for (const a of active) {
+      if (matched.has(a)) continue;
+      let best: PendingEdge | null = null;
+      for (const b of active) {
+        if (a === b || matched.has(b)) continue;
+        if ((remaining.get(b) ?? 0) <= 0) continue;
+        const candidate: PendingEdge = {
+          a,
+          b,
+          multiplicity: pairMultiplicity.get(unorderedPairKey(a, b)) ?? 0,
+        };
+        if (!best) {
+          best = candidate;
+          continue;
+        }
+        const sorted = sortPendingEdges([best, candidate]);
+        best = sorted[0];
+      }
+      if (!best) continue;
+      appendEdge(best, rematchRoundIndex);
+      matched.add(best.a);
+      matched.add(best.b);
+      addedInRound += 1;
+    }
+
+    if (addedInRound === 0) {
       const remainingSnapshot = participantIds
         .map((id) => `${id}:${remaining.get(id) ?? 0}`)
         .join(",");
@@ -441,15 +631,20 @@ export function generateSmartMixFixtures(
         `Smart Mix could not satisfy remaining participant degrees (${remainingSnapshot})`,
       );
     }
-    appendEdge(next, fixtureIndex, 0);
+    rematchRoundIndex += 1;
   }
 
-  if (fixtures.length !== plan.expectedFixtureCount) {
+  if (opponentEdges.length !== plan.expectedFixtureCount) {
     throw new RoundRobinGenerationValidationError(
       "TOURNAMENT_GENERATION_INVALID",
-      `Smart Mix expected ${plan.expectedFixtureCount} fixtures, generated ${fixtures.length}`,
+      `Smart Mix expected ${plan.expectedFixtureCount} fixtures, generated ${opponentEdges.length}`,
     );
   }
 
-  return fixtures;
+  return materializeFixturesFromOpponentEdges(
+    opponentEdges,
+    participantIds,
+    homeAwayRelevance,
+    stageKey,
+  );
 }

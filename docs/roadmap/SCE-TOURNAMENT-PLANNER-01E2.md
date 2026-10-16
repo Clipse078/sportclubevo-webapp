@@ -62,12 +62,31 @@ No BYE fixtures, fake participants, or half-fixtures.
 
 ## Opponent diversity and rematches
 
-1. **Phase 1 — unique opponents:** circle-method round pairings; add edges only while pair multiplicity is zero (no unnecessary rematches when capacity allows).
-2. **Phase 2 — fair rematches:** greedy round matchings over remaining degree, prioritising lowest pair multiplicity, deterministic participant-id tie-breaks.
+### Guaranteed invariants (production)
 
-Lexicographic soft objectives: maximise unique opponents → minimise max pair multiplicity → minimise repeat variance → fair participant-level repeats.
+1. **Degree plan** — `planSmartMixTargetDegrees`: EXACT when `n×k` is even; otherwise canonical parity (`NEAR_BALANCED_PARITY`) with first canonical participant at `k−1`, spread ≤ 1, nobody above `k`.
+2. **Simple-graph phase** — when the plan is **graphical** (Havel–Hakimi) and every degree ≤ `n−1`, Smart Mix builds a **simple graph** via deterministic Havel–Hakimi (canonical id tie-breaks). **`repeatedPairCount = 0`** in this domain.
+3. **Multigraph phase** — when some degree exceeds `n−1`:
+   - add at most **one** edge per unordered pair while both endpoints still need matches (maximises distinct pairs / **objective 1**);
+   - complete remaining degrees with **greedy matching rounds**, each round pairing active participants at lowest current pair multiplicity (lexicographic id tie-break).
+4. **Structural rounds** — opponent edges are fixed first; `roundIndex` / `slotIndexInRound` are assigned afterward via deterministic greedy edge colouring (or rematch round index when applicable). **Not a schedule** (`SMART_MIX_STRUCTURAL_ORDER_IS_SCHEDULE = NO`).
+5. **Home / Away** — orientation is chosen after the opponent multigraph; toggling ON/OFF does not change unordered pair multiset.
 
-When `k ≤ n − 1` and a simple no-repeat balanced graph exists, **unnecessary rematches = 0**.
+### Deterministic soft heuristics (rematch-required cases)
+
+For cases where repeated pairs are mathematically required (`k > n−1` or residual after the simple layer), the rematch rounds **guarantee maximum distinct unordered pairs (objective 1)** but do **not** claim global optimality on minimum max multiplicity, multiplicity variance, or participant repeat balance (objectives 2–4). Tie-breaks remain lexicographic on participant ids.
+
+### Rematch lower bound (documentation model)
+
+Per participant, at most `n−1` distinct opponents exist. With target degree `d`, at least `max(0, d − (n−1))` appearances must be repeats against some opponent(s) (before parity interactions). Smart Mix saturates distinct pairs first, then distributes forced repeats.
+
+### Parity graphicality
+
+For all supported `1 ≤ k ≤ n−1` with `n×k` odd, the canonical parity degree sequence `[k−1, k, …, k]` is **graphical** (verified in exhaustive tests via Havel–Hakimi). No alternate degree plan is silently chosen.
+
+### Parity fairness note
+
+`PARITY_REDUCTION_SELECTION = CANONICAL_ORDER_DETERMINISTIC` (first participant in canonical order). **`LONGITUDINAL_PARITY_ROTATION_IMPLEMENTED = NO`** — history-aware rotation is future work.
 
 ## Home / Away relevance
 
@@ -96,7 +115,7 @@ Structural `roundIndex` / `slotIndexInRound` group greedy matchings only — **`
 
 ## Diagnostics (pure, derivable)
 
-`deriveSmartMixDiagnostics` exposes target, balance class, per-participant counts, pair multiplicity stats, fixture count. Not persisted.
+`deriveSmartMixDiagnostics` exposes target, balance class, per-participant match counts, **distinct unordered pair count** (`uniquePairCount`), pairs with multiplicity > 1 (`repeatedPairCount`), `maxPairMultiplicity`, per-participant unique opponent and repeat-appearance counts, and optional Home/Away imbalance when relevance is ON. Not persisted.
 
 ## Service behaviour
 
