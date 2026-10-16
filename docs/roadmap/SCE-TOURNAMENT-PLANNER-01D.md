@@ -8,6 +8,7 @@
 | **Branch** | `cursor/sce-tournament-planner-01d-feasibility-hard-constraints` |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 | **01D-R1** | Tournament Pitch + break model correction (PO superseding product decision) |
+| **01D-R2** | Smart Tournament Generator architecture alignment (PO product decisions pre-01E) |
 
 ## Scope delivered
 
@@ -22,9 +23,10 @@
 
 | Concept | Cardinality |
 | --- | --- |
-| **Participants** | **2:n** (product) |
-| **Tournament Pitches** | **1:n** per tournament (logical, tournament-owned) |
-| **Tournament breaks / blocked periods** | **0:n** per tournament |
+| **PARTICIPANT_PRODUCT_CARDINALITY** | **2:n** (product) |
+| **TOURNAMENT_PITCH_CARDINALITY** | **1:n** per tournament (logical, tournament-owned) |
+| **TOURNAMENT_BREAK_CARDINALITY** | **0:n** per tournament |
+| **TOURNAMENT_PHASE_CARDINALITY** | **1:n** per tournament (contract; persistence deferred) |
 
 | Flag | Value |
 | --- | --- |
@@ -173,3 +175,63 @@ MVP **safety** limits: ≤16 participants, ≤120 fixtures, ≤8 pitches, ≤500
 
 - `lib/tournament-scheduling/feasibility/__tests__/feasibility-engine.test.ts` — matrix A–L, pitch/break matrices, boundaries, performance
 - `lib/tournament-scheduling/__tests__/feasibility-service.test.ts` — config resolution + service bridge (mocked)
+- `lib/tournament-scheduling/__tests__/smart-generator-architecture-01d-r2.test.ts` — R2 contracts + generator-agnostic feasibility
+- `lib/tournaments/__tests__/tournament-planner-01d-r2-roadmap.test.ts` — documentation integrity
+- `lib/tournaments/__tests__/participant-service.test.ts` — same-team multi-participant + displayName (01D-R2)
+
+---
+
+## 01D-R2 — Smart Tournament Generator architecture alignment
+
+| Flag | Value |
+| --- | --- |
+| **SMART_TOURNAMENT_GENERATOR** | **CANONICAL** |
+| **AUTOMATIC_GENERATION_IS_PRIMARY** | **YES** |
+| **MANUAL_ADJUSTMENT_IS_SUPPORTED** | **YES** |
+| **SAME_SOURCE_TEAM_MULTIPLE_PARTICIPANTS** | **YES** (schema + service; migration drops `@@unique([eventId, teamId])`) |
+| **TOURNAMENT_LOCAL_DISPLAY_NAME** | **YES** (`displayName` on TEAM + EXTERNAL_CLUB; never mutates Team/Club) |
+| **MANUAL_PARTICIPANT_SUPPORTED** | **YES** (`manualLabel`) |
+| **EXTERNAL_PARTICIPANT_SUPPORTED** | **YES** (`externalClubId` / historical `externalTeamId`) |
+| **FEASIBILITY_REQUIRES_ROUND_ROBIN_SOURCE** | **NO** |
+| **HEURISTIC_ONLY_INFEASIBLE_OUTCOMES** | **0** (preserved from R1) |
+| **FUTURE_KNOCKOUT_QUALIFICATION_MODEL_DEFINED** | **YES** (`FixtureSideSourceContract` in `smart-generator-architecture.ts`) |
+| **FACILITY_RESOURCE_EQUALS_TOURNAMENT_PITCH** | **NO** |
+| **MULTIPLE_GLOBAL_BREAKS_SUPPORTED** | **YES** |
+| **MULTIPLE_PITCH_SPECIFIC_BREAKS_SUPPORTED** | **YES** |
+| **PARTICIPANT_LIMIT_IS_PRODUCT_RULE** | **NO** |
+| **PARTICIPANT_LIMIT_REQUALIFICATION_RECORDED** | **YES** |
+| **HOME_AWAY_RELEVANCE_EXPLICIT** | **YES** (contract only; default OFF for neutral youth) |
+| **ROADMAP_RESEQUENCING_RECOMMENDED** | **YES** (see programme brief) |
+
+**COMPETITION_MODES =** `GROUP_MIX_ONLY` \| `KNOCKOUT_ONLY` \| `GROUP_PLUS_KNOCKOUT`
+
+**GROUP_MIX_GENERATORS =** `ROUND_ROBIN` \| `SMART_MIX`
+
+**CURRENT_ROUND_ROBIN_MEETINGS_PER_OPPONENT = 1** — **PRODUCT = 1:n** — **ROUND_ROBIN_EXTENSION_REQUIRED = YES**
+
+### Tournament phase architecture
+
+`TournamentFixture.stageKey` evolves to **`TournamentPhaseContract`** (`stageKey`, `kind`, generator strategy). Durable `TournamentPhase` table **deferred** until Group+KO implementation — no parallel stage concept.
+
+### Feasibility generalization
+
+`validateFeasibilityFixtureSet` checks structural validity only (participants known, no self-play, unique round slots) — **not** generator type. Unresolved knockout qualification fixtures: future feasibility may reserve time/resource slots; participant-rest feasibility may depend on qualification paths (documented, not faked in 01D).
+
+### Schema (01D-R2)
+
+| Property | Value |
+| --- | --- |
+| **SCHEMA_CHANGE** | **YES** |
+| **NEW_MIGRATION** | **YES** — `20261016180000_sce_tournament_planner_01d_r2_participant_identity` |
+| **Change** | Drop unique `(eventId, teamId)` — enable multiple tournament participants per canonical Team |
+
+### Creator / UX freeze (R2)
+
+| Flag | Value |
+| --- | --- |
+| **PROGRAMME_BEHAVIOUR_CHANGED** | **NO** |
+| **TOURNAMENT_CARD_CHANGED** | **NO** |
+| **MATCH_CARD_CHANGED** | **NO** |
+| **USER_VISIBLE_UI_CHANGED** | **NO** |
+| **PRODUCT_NAVIGATION_CHANGED** | **NO** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |

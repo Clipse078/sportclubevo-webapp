@@ -312,9 +312,10 @@ Tournament Center already models a multi-team tournament as `Event(type=TOURNAME
 1. **Separate domains:** **Fixture** (who plays whom, stable fixture identity) vs **Schedule assignment** (when/where on a pitch). Fixtures may exist without assignments; assignments may change without changing fixture pairing.
 2. **Pure engine:** Implement fixture generation and schedule optimisation in a **pure TypeScript** module (`lib/tournament-scheduling/`) with no Prisma, React, permissions, or LLM inside the algorithm core. Persistence and authorization wrap the engine in application services.
 3. **Hard vs soft:** **Hard constraints are never violated** to improve fairness or compactness. Soft objectives use **measurable metrics** and a **deterministic** tie-break / lexicographic objective order.
-4. **Resource truth:** Pitch and facility identity flows through canonical `FacilityResource` and existing availability / conflict primitives — no tournament-only facility model.
-5. **Versioning:** Approved schedules are **versioned**; publication and external channels consume an approved version, not mutable working drafts.
-6. **No LLM scheduling:** Fixture and schedule generation are constraint-driven and testable.
+4. **Resource truth:** Physical venue identity flows through canonical `FacilityResource` and existing availability / conflict primitives (`TournamentResourceAllocation`). The **scheduler grid** uses tournament-owned **`TournamentPitch`** (1:n logical labels per tournament — **01D-R1**). `FacilityResource` ≠ `TournamentPitch`.
+5. **Smart generator (01D-R2):** Product flow is configure → SCE generates → review → optional manual adjust → lock → partial regenerate → publish. **Automatic generation is primary**; deterministic engines only (**no LLM**). Fixture generators (Round Robin, Smart Mix, future group/knockout) are separate from feasibility (01D) and schedule optimisation (01E).
+6. **Versioning:** Approved schedules are **versioned**; publication and external channels consume an approved version, not mutable working drafts.
+7. **No LLM scheduling:** Fixture and schedule generation are constraint-driven and testable.
 
 Full contracts and audit: [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md).
 
