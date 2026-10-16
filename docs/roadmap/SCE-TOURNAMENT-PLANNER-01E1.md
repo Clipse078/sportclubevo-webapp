@@ -36,15 +36,28 @@
 
 ## Tournament Planner ownership
 
-Planner eligibility is **organiser ownership**, not physical venue.
+Planner eligibility is **organiser ownership**, not physical venue. Fixture **Home/Away relevance** (neutral side A/B vs alternating exposure) is unrelated to this rule.
 
 | Resolver | Source |
 | --- | --- |
-| **`canTenantPlanTournament`** | `Event.homeAway` for `type=TOURNAMENT` — `HOME` = tenant organises, `AWAY` = external organiser |
+| **`canTenantPlanTournament`** | Raw `Event.homeAway` + `Event.organizerName` + tenant club name |
 
-Implementation: `lib/tournament-scheduling/planner-eligibility.ts` (aliases `isTenantHostedTournament`).
+Rules (fail closed):
 
-Fixture generation **must** call `requireTenantOrganisedTournament` before any fixture writes. Away tournaments return **`TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT`**.
+| Ownership signal | Planner |
+| --- | --- |
+| `homeAway` explicitly **HOME** | Allowed |
+| `homeAway` explicitly **AWAY** | Rejected (`TOURNAMENT_PLANNER_NOT_OWNED_BY_TENANT`) |
+| `homeAway` null/unknown | Allowed **only** when `organizerName` matches the tenant club name (authoritative organiser proof) |
+| Otherwise unknown | Rejected |
+
+Implementation: `lib/tournament-scheduling/planner-eligibility.ts` (`resolveTournamentPlannerOwnership`).
+
+DTO/presentation layers may still normalise null `homeAway` → **HOME** for MatchCenter operational semantics (`normalizeTournamentOrganiserHomeAway`); that normalisation **must not** grant planner authority.
+
+New tournaments created via Tournament Creator / Composer persist explicit `homeAway` (`HOME` or `AWAY`) and tenant organiser name for HOME.
+
+Fixture generation **must** call `requireTenantOrganisedTournament` before any fixture writes.
 
 Future navigation:
 

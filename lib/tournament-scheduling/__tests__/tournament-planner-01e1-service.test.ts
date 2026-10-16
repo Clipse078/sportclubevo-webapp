@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: { findFirst: vi.fn() },
+    tenant: { findFirst: vi.fn() },
     tournamentParticipant: { findMany: vi.fn() },
     tournamentFixture: {
       findMany: vi.fn(),
@@ -34,7 +35,9 @@ function mockHomeTournament() {
   vi.mocked(prisma.event.findFirst).mockResolvedValue({
     id: TOURNAMENT,
     homeAway: "HOME",
+    organizerName: "FC Allschwil",
   } as never);
+  vi.mocked(prisma.tenant.findFirst).mockResolvedValue({ name: "FC Allschwil" } as never);
 }
 
 function mockParticipants(ids: string[]) {

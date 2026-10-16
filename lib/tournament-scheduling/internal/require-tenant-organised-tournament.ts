@@ -1,25 +1,33 @@
 import { prisma } from "@/lib/db/prisma";
 import { TournamentNotFoundError } from "@/lib/tournaments/errors";
-import {
-  canTenantPlanTournament,
-  normalizeTournamentOrganiserHomeAway,
-} from "../planner-eligibility";
+import { canTenantPlanTournament } from "../planner-eligibility";
 import { TournamentPlannerNotOwnedByTenantError } from "../errors";
 
 export async function requireTenantOrganisedTournament(
   tenantId: string,
   tournamentId: string,
-): Promise<{ id: string; homeAway: "HOME" | "AWAY" }> {
-  const event = await prisma.event.findFirst({
-    where: { id: tournamentId, tenantId, type: "TOURNAMENT" },
-    select: { id: true, homeAway: true },
-  });
+): Promise<{ id: string }> {
+  const [event, tenant] = await Promise.all([
+    prisma.event.findFirst({
+      where: { id: tournamentId, tenantId, type: "TOURNAMENT" },
+      select: { id: true, homeAway: true, organizerName: true },
+    }),
+    prisma.tenant.findFirst({
+      where: { id: tenantId },
+      select: { name: true },
+    }),
+  ]);
   if (!event) {
     throw new TournamentNotFoundError(tournamentId);
   }
-  const homeAway = normalizeTournamentOrganiserHomeAway(event.homeAway);
-  if (!canTenantPlanTournament({ homeAway })) {
+  if (
+    !canTenantPlanTournament({
+      homeAway: event.homeAway,
+      organizerName: event.organizerName,
+      tenantName: tenant?.name ?? null,
+    })
+  ) {
     throw new TournamentPlannerNotOwnedByTenantError(tournamentId);
   }
-  return { id: event.id, homeAway };
+  return { id: event.id };
 }
