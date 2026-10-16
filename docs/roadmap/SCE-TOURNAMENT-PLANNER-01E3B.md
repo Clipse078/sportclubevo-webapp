@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E3B` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3A`](./SCE-TOURNAMENT-PLANNER-01E3A.md) — **CLOSED / MERGED** (PR **#861**) |
-| **Status** | **CURRENT — ready for review** |
+| **Status** | **CURRENT — ready for closure (R1)** |
 | **Branch** | `cursor/sce-tournament-planner-01e3b-group-formation-fixtures` |
 | **Next** | **01E3C** — Knockout bracket generation (**planned**, not started) |
 
@@ -104,5 +104,39 @@ Knockout brackets, qualification resolution, standings, scheduling, pitch/time a
 | --- | --- |
 | **01E3A** | CLOSED / MERGED |
 | **01E3B** | **CURRENT** |
-| **01E3C** | NEXT AFTER 01E3B |
+| **01E3C** | NEXT AFTER 01E3B (**NOT STARTED**) |
 | **01E3D** | PLANNED |
+
+## STAGE migration verification (01E3B-R1)
+
+Verified on the designated FC Allschwil STAGE Neon database (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb`) with `APP_ENV=stage` and `SCE_DATA_ENVIRONMENT=STAGE`. Script: `scripts/sce-tournament-planner-01e3b-r1-stage-migration-verify.ts`. Applied via guarded `APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` (not `db push`).
+
+| Check | Result |
+| --- | --- |
+| **Migration applied** | `20261016200000_sce_tournament_planner_01e3b_group_fixture_relation` — **YES** (`prisma migrate status` → up to date) |
+| **PRE/POST — tournaments (`Event.type=TOURNAMENT`)** | **47** / **47** (preserved) |
+| **PRE/POST — `TournamentParticipant`** | **83** / **83** (preserved) |
+| **PRE/POST — `TournamentPhase`** | **0** / **0** (preserved) |
+| **PRE/POST — `TournamentGroup`** | **0** / **0** (preserved) |
+| **PRE/POST — `TournamentGroupMembership`** | **0** / **0** (preserved) |
+| **PRE/POST — `TournamentFixture`** | **0** / **0** (preserved; nullable `tournamentGroupId` column added) |
+| **PRE/POST — `TournamentFixtureSide`** | **0** / **0** (preserved) |
+| **PRE/POST — schedule versions / assignments** | **0** / **0** (preserved) |
+| **Post-migration group-fixture integrity (live rows)** | cross-tournament / cross-phase / cross-tenant / side-outside-group / cross-group = **0** |
+| **`TournamentFixture.tournamentGroupId` FK** | nullable → `TournamentGroup`, **`ON DELETE RESTRICT`** (no cascade fixture delete) |
+| **PROD touched** | **NO** |
+| **Persistent test data on STAGE** | **NO** |
+
+### Relational enforcement (canonical paths)
+
+| Invariant | Enforcement |
+| --- | --- |
+| Fixture → group tournament (`eventId`) | **SERVICE** — group fixture generation binds `eventId`, `tournamentPhaseId`, and `tournamentGroupId` from the same phase topology; no heuristic group inference |
+| Fixture phase ↔ group phase | **SERVICE** — generation uses groups listed for the requested `phaseId` only |
+| Tenant alignment | **SERVICE** — tenant-scoped queries + ownership gate (`requireTenantOrganisedTournament`) |
+| Both sides members of fixture group | **SERVICE** — `assertNoCrossGroupFixtures` before persist; membership loaded from `TournamentGroupMembership` |
+| Referenced group delete | **DB** — FK `ON DELETE RESTRICT` |
+| Participant move after group fixtures | **SERVICE** — `moveParticipantBetweenTournamentGroups` → structured conflict |
+| Phase/format topology change with fixtures | **SERVICE** — `assertNoGeneratedFixtures` (01E3A, still valid for group-scoped fixtures) |
+
+Pre-migration snapshot: `/opt/cursor/artifacts/01e3b-r1-pre-migration.json`. Post-migration report: `/opt/cursor/artifacts/01e3b-r1-post-migration.json`.
