@@ -5,7 +5,8 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01E3C` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01E`](./SCE-TOURNAMENT-PLANNER-01.md) — Smart Generator |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3B`](./SCE-TOURNAMENT-PLANNER-01E3B.md) — **CLOSED / ACCEPTED / MERGED** (PR **#862**) |
-| **Status** | **CURRENT — READY FOR CLOSURE (R1 proof complete)** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#863** → STAGE) |
+| **Feature HEAD** | `1cd034267056ff605778fa641b8785fd3b9d8fa5` |
 | **Branch** | `cursor/sce-tournament-planner-01e3c-knockout-bracket-byes` |
 | **Next** | **01E3D** — Group → knockout qualification mapping + progression foundation (**NOT STARTED**) |
 
@@ -132,7 +133,7 @@ Unchanged: **`TENANT_ORGANISED_TOURNAMENTS_ONLY`**, fail-closed on unknown owner
 | --- | --- |
 | **01E3A** | CLOSED / MERGED |
 | **01E3B** | CLOSED / MERGED |
-| **01E3C** | Knockout bracket + BYEs (**this package**) |
+| **01E3C** | Knockout bracket + BYEs — **CLOSED / MERGED** (**this package**) |
 | **01E3D** | Group → KO qualification mapping + progression (**NEXT**) |
 
 ## Creator / Planung adoption
@@ -170,4 +171,10 @@ Explicit non-power-of-two proofs covered in exhaustive suite: **N = 3, 5, 6, 7, 
 
 **Schema:** no migration in R1 (`SCHEMA_CHANGE = NO`).
 
-**01E3C** remains **CURRENT / READY FOR CLOSURE**. **01E3D** remains **NOT STARTED**.
+**01E3C** is **CLOSED / ACCEPTED / MERGED** (PR **#863**). **01E3D** remains **NOT STARTED**.
+
+## Smart Timing Advisor (01F roadmap — not implemented in 01E3C)
+
+**`SMART_TIMING_ADVISOR_IMPLEMENTED_IN_01E3C = NO`**
+
+Parent roadmap [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) records **01F** as **Automatic Schedule Optimiser + Smart Timing Advisor** — a bidirectional, continuously recalculating tournament timing engine (forward/backward calculation, feasibility evaluation, proactive nudges). User remains in control; SCE continuously recalculates and surfaces guidance when planning inputs change.

@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01E3C Knockout bracket generation + BYEs (CURRENT / ready for review); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01E3D Group → knockout qualification mapping + progression (NEXT / not started); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -13,8 +13,8 @@
 | **01E2 (Smart Mix)** | [`SCE-TOURNAMENT-PLANNER-01E2`](./SCE-TOURNAMENT-PLANNER-01E2.md) — **CLOSED / MERGED** — deterministic Smart Mix (`targetMatchesPerParticipant`) (PR **#860**) |
 | **01E3A (competition phase + qualification architecture)** | [`SCE-TOURNAMENT-PLANNER-01E3A`](./SCE-TOURNAMENT-PLANNER-01E3A.md) — **CLOSED / ACCEPTED / MERGED** (PR **#861**) |
 | **01E3B (automatic group formation + group fixtures)** | [`SCE-TOURNAMENT-PLANNER-01E3B`](./SCE-TOURNAMENT-PLANNER-01E3B.md) — **CLOSED / ACCEPTED / MERGED** (PR **#862**) |
-| **01E3C (knockout bracket + BYEs)** | [`SCE-TOURNAMENT-PLANNER-01E3C`](./SCE-TOURNAMENT-PLANNER-01E3C.md) — **CURRENT** (ready for review) |
-| **01E3D (qualification mapping + progression)** | **NEXT after 01E3C** (not started) |
+| **01E3C (knockout bracket + BYEs)** | [`SCE-TOURNAMENT-PLANNER-01E3C`](./SCE-TOURNAMENT-PLANNER-01E3C.md) — **CLOSED / ACCEPTED / MERGED** (PR **#863**) |
+| **01E3D (qualification mapping + progression)** | **NEXT** (not started) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -152,9 +152,9 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 5b | **01E2** | Smart Mix generator — **CLOSED / MERGED** (PR **#860**) |
 | 5c | **01E3A** | Competition phase + qualification architecture — **CLOSED / ACCEPTED / MERGED** (PR **#861**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3A.md)) |
 | 5d | **01E3B** | Automatic group formation + group fixture generation — **CLOSED / ACCEPTED / MERGED** (PR **#862**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3B.md)) |
-| 5e | **01E3C** | Knockout bracket generation + BYEs — **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01E3C.md)) |
+| 5e | **01E3C** | Knockout bracket generation + BYEs — **CLOSED / ACCEPTED / MERGED** (PR **#863**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3C.md)) |
 | 5f | **01E3D** | Group → knockout qualification mapping + progression — **NEXT** (not started) |
-| 6 | **01F** | Automatic schedule optimiser (WHEN + logical pitch; generator-agnostic) |
+| 6 | **01F** | **Automatic Schedule Optimiser + Smart Timing Advisor** (WHEN + logical pitch; generator-agnostic; bidirectional timing engine — see below) |
 | 7 | **01G** | Locks + partial regeneration |
 | 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
 | 9 | **01I** | Manual adjustment / DnD / conflict validation |
@@ -181,6 +181,23 @@ First-class sharing for published schedules:
 - **Drucken**
 
 Expected PDF / public content: tournament identity, venue, participants, schedule by pitch/time, QR to live view.
+
+## 01F — Automatic Schedule Optimiser + Smart Timing Advisor (planned)
+
+**`SMART_TIMING_ADVISOR_IMPLEMENTED_IN_01E3C = NO`** — scheduling remains out of scope until **01F**.
+
+**`SMART_TIMING_ADVISOR_PLANNED_FOR_01F = YES`**
+
+Bidirectional, continuously recalculating tournament timing engine. Canonical inputs: tournament window, generated fixtures, Tournament Pitches, Pausen & Sperrzeiten, match duration, transition duration, minimum team rest.
+
+| Capability | Planned |
+| --- | --- |
+| **Forward calculation** (`SMART_TIMING_FORWARD_CALCULATION_PLANNED`) | Known start + fixture set + durations + pitches/breaks → predict tournament end |
+| **Backward calculation** (`SMART_TIMING_BACKWARD_CALCULATION_PLANNED`) | Known start/end + fixtures + pitches/breaks → recommend realistic match + transition durations within hard constraints |
+| **Feasibility evaluation** | Explain whether configuration fits window, rest, and capacity |
+| **Continuous nudging** (`SMART_TIMING_CONTINUOUS_NUDGING_PLANNED`) | Recalculate when inputs change; surface reserve, pitch benefit, duration tweaks, predicted end, smallest useful adjustment |
+
+**Product principle:** SCE continuously recalculates the tournament plan and proactively nudges the user toward a feasible, comfortable setup, while the user remains in control.
 
 ## 01F foundation requirements (R3)
 

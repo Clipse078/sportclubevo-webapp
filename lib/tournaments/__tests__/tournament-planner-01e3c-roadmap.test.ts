@@ -17,9 +17,12 @@ describe("SCE-TOURNAMENT-PLANNER-01E3C documentation", () => {
     expect(doc).toMatch(/01E3D.*NOT STARTED/i);
   });
 
-  it("parent roadmap references 01E3C as current", () => {
+  it("parent roadmap marks 01E3C closed and 01E3D next", () => {
     const parent = readFileSync(join(ROOT, "SCE-TOURNAMENT-PLANNER-01.md"), "utf8");
     expect(parent).toContain("01E3C");
     expect(parent).toContain("01E3B");
+    expect(parent).toMatch(/01E3C.*CLOSED.*MERGED/i);
+    expect(parent).toMatch(/01E3D.*NEXT/i);
+    expect(parent).toContain("Smart Timing Advisor");
   });
 });
