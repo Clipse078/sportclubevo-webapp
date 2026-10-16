@@ -917,7 +917,7 @@
       "route": "/dashboard/website/settings",
       "label": "Mobile App",
       "labelV2": "Mobile App",
-      "icon": "contact",
+      "icon": "mobile-app",
       "targetL1": "publishing",
       "targetL2": "Mobile App",
       "targetLocalGroup": null,

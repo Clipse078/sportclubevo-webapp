@@ -34,6 +34,7 @@ import {
   buildTargetMatrixFromInventory,
   computeCompletenessBaseline,
 } from "@/lib/nav/nav-ia-v2";
+import { PUBLISHING_TARGET_L2_GROUPS } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 
@@ -80,18 +81,22 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(headerSecondary.some((item) => item.label === "Administration")).toBe(false);
   });
 
-  it("groups Publishing explorer destinations with Infoboard under Kanäle", () => {
+  it("groups Publishing explorer destinations by publication channels (R5.4.2)", () => {
     const publishing = model.domains.find((d) => d.id === "publishing")!;
     const groups = resolveExplorerGroupsForDomain(publishing)!;
-    expect(groups.map((group) => group.label)).toEqual(
-      expect.arrayContaining(["Übersicht", "Inhalte", "Kanäle", "Einstellungen"]),
-    );
-    const kanaele = groups.find((group) => group.id === "kanaele");
-    expect(kanaele?.modules.some((module) => module.key === "infoboard")).toBe(true);
+    const channelLabels = PUBLISHING_TARGET_L2_GROUPS.map((group) => group.label);
+    expect(groups.map((group) => group.label)).toEqual(channelLabels);
+
+    const infoboardGroup = groups.find((group) => group.id === "infoboard");
+    expect(infoboardGroup?.modules.some((module) => module.key === "infoboard")).toBe(true);
+    const mobileGroup = groups.find((group) => group.id === "mobile-app");
+    expect(mobileGroup?.modules.some((module) => module.key === "mobile-app")).toBe(true);
 
     const index = buildExplorerSearchIndex(model, domainLabel);
     const infoboardHit = index.find((hit) => hit.key === "infoboard");
-    expect(infoboardHit?.groupLabel).toBe("Kanäle");
+    expect(infoboardHit?.groupLabel).toBe("Infoboard");
+    const mobileHit = index.find((hit) => hit.key === "mobile-app");
+    expect(mobileHit?.groupLabel).toBe("Mobile App");
   });
 
   it("keeps all club-admin destinations discoverable in explorer modules/search", () => {
@@ -126,7 +131,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
       expect(explorerKeys.has(leaf.key), `explorer module tree missing ${leaf.key}`).toBe(true);
       expect(searchKeys.has(leaf.key), `search index missing ${leaf.key}`).toBe(true);
     }
-    expect(leaves.length).toBe(63);
+    expect(leaves.length).toBe(buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club").length);
   });
 
   it("does not hide Admin L1 destinations from explorer", () => {
@@ -200,9 +205,10 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
   });
 
   it("maintains V2 completeness and matrix regression gates", () => {
+    const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
     const baseline = computeCompletenessBaseline(CLUB_ADMIN_KEYS, "club");
-    expect(baseline.visibleDestinations).toBe(63);
-    expect(baseline.reachableDestinations).toBe(63);
+    expect(baseline.visibleDestinations).toBe(inventory.length);
+    expect(baseline.reachableDestinations).toBe(inventory.length);
     expect(baseline.orphanedDestinations).toEqual([]);
 
     const sections = getVisibleNavSections(CLUB_ADMIN_KEYS, "club");

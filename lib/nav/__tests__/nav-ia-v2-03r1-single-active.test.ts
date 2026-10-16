@@ -68,7 +68,7 @@ describe("SCE-NAV-IA-V2-03R1 single-active navigation", () => {
     expect(publishing?.id).toBe("publishing");
   });
 
-  it("CASE 1: /dashboard/website/news — Publizieren → Inhalte → News only", () => {
+  it("CASE 1: /dashboard/website/news — Publizieren → Website → News only", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const pathname = "/dashboard/website/news";
     const active = resolveActiveAppNavigation(pathname, model);
@@ -86,7 +86,7 @@ describe("SCE-NAV-IA-V2-03R1 single-active navigation", () => {
         active.domainSecondaryItems,
       ),
     );
-    expect(l2Active.map((item) => item.label)).toEqual(["Inhalte"]);
+    expect(l2Active.map((item) => item.label)).toEqual(["Website"]);
     expect(countPrimaryActiveL2(pathname, active)).toBe(1);
 
     const l3Active = active.moduleLocalChildren.filter((child) =>
@@ -102,7 +102,7 @@ describe("SCE-NAV-IA-V2-03R1 single-active navigation", () => {
     expect(active.activeChildKey).toBe("website-news");
   });
 
-  it("CASE 2: /dashboard/infoboard/preview — Publizieren → Kanäle → Vorschau only", () => {
+  it("CASE 2: /dashboard/infoboard/preview — Publizieren → Infoboard → Vorschau only", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const pathname = "/dashboard/infoboard/preview";
     const active = resolveActiveAppNavigation(pathname, model);
@@ -120,7 +120,7 @@ describe("SCE-NAV-IA-V2-03R1 single-active navigation", () => {
         active.domainSecondaryItems,
       ),
     );
-    expect(l2Active.map((item) => item.label)).toEqual(["Kanäle"]);
+    expect(l2Active.map((item) => item.label)).toEqual(["Infoboard"]);
     expect(countPrimaryActiveL2(pathname, active)).toBe(1);
 
     const l3Active = active.moduleLocalChildren.filter((child) =>

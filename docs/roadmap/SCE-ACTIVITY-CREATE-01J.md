@@ -365,7 +365,10 @@ Shared modules: `activity-card-programme-shell.ts`, `SceProgrammeActivityCardShe
 
 | Gate | Result |
 |------|--------|
+| **PACKAGE** | **CLOSED / ACCEPTED / MERGED** |
 | **Merge** | PR **#848** merge commit `ebb267ed6cccca3a9e9ef75cd75b8ac8028b3b5a` |
+| **PO visual UAT** | **PASS** (unchanged — no production UI changes in R8.1) |
+| **Post-merge navigation baseline reconciliation** | **PASS** — `nav-ia-v2-02` / `03` / `03r1` / `04` + explorer polish baselines aligned to canonical **64** destinations and R5.4.2 Publizieren channel IA (Website / Infoboard / Mobile App / Medien) |
 | **R7 acceptance suite** | 598 tests PASS (01J + planner + programme-engine + calendar-micro + dashboard + 01J navbar guards) |
 | **Build / schema** | `prisma validate` OK; `npm run build` OK; no schema migration in merge |
-| **Follow-up (non-01J)** | `nav-ia-v2-02` / `03` / `04` matrix completeness baselines still expect **63** destinations; STAGE registers **64** after Mobile App nav (01J-R5.4.2) — update V2 regression baselines outside 01J scope |
+| **Test debt note** | Pre-R5.4.2 nav matrix expectations were stale test debt, not an 01J product defect |
