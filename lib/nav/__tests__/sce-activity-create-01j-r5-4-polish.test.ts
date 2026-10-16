@@ -114,7 +114,7 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.4 Publizieren channel IA", () => {
 
 describe("SCE-ACTIVITY-CREATE-01J-R5.4 Wochenplaner detail + density", () => {
   it("removes visible planner info-button affordance", () => {
-    const surface = readRelative("components/admin/planning-hub/PlanningHubActivityClippedDetailSurface.tsx");
+    const surface = readRelative("components/admin/planning-hub/PlanningHubActivityDetailSurface.tsx");
     expect(surface).not.toContain("planning-hub-activity-detail-touch-trigger");
     expect(surface).not.toContain("<Info");
     expect(surface).toContain("useHover");

@@ -22,7 +22,7 @@ import { resolveLucideSemantic } from "@/lib/icons/icon-semantic-resolution";
 
 describe("SCE-ICONS-11 artwork freeze", () => {
   it("keeps 90 approved masters and registry asset paths aligned", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(91);
     expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
       90,

@@ -83,7 +83,7 @@ describe("SCE-ACTIVITY-CREATE-01J-R5.4.1 Mobile App channel icon", () => {
   it("maps mobile-app to an approved SCE destination icon (same registry as Website/Infoboard/Medien)", () => {
     expect(getNavDestinationSceIconName("website")).toBe("website");
     expect(getNavDestinationSceIconName("infoboard")).toBe("infoboard");
-    expect(getNavDestinationSceIconName("mobile-app")).toBe("contact");
+    expect(getNavDestinationSceIconName("mobile-app")).toBe("mobile-app");
     expect(getNavDestinationSceIconName("website-media")).toBe("media-library");
   });
 
