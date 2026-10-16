@@ -1,12 +1,14 @@
 /**
  * @vitest-environment jsdom
- * SCE-ACTIVITY-CREATE-01H-R4.1 — Wochenplaner Liste redundancy & grid alignment.
+ * SCE-ACTIVITY-CREATE-01H-R4.1 — Wochenplaner Liste redundancy (semantic contract).
+ * R6: grid/table column markers superseded by R5.5.1 canonical full-width shell — tests migrated.
  */
 
 import { render, screen, within } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import PlanningHubListeView from "../PlanningHubListeView";
-import { PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS } from "@/lib/planning-hub/planning-hub-liste-grid";
 import type {
   WeekplannerMatchItem,
   WeekplannerTrainingItem,
@@ -139,9 +141,16 @@ const permissionContext = {
   alternativePlanId: "plan-alt",
 };
 
-describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1", () => {
-  it("uses the shared desktop grid marker on all activity row kinds", () => {
-    render(
+describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1 (R6 migrated)", () => {
+  it("uses canonical programme shell on activity rows — no legacy desktop grid marker", () => {
+    const rowSource = readFileSync(
+      join(process.cwd(), "components/admin/planning-hub/PlanningHubListeActivityRow.tsx"),
+      "utf8",
+    );
+    expect(rowSource).not.toContain("PLANNING_HUB_LISTE_ROW_GRID_CLASS");
+    expect(rowSource).toContain('data-sce-planning-hub-liste-full-width-contract="canonical-shell"');
+
+    const { container } = render(
       <PlanningHubListeView
         week={week([training({ id: "training:1" }), match("match:1")])}
         urlState={baseUrlState}
@@ -156,16 +165,16 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1", () => {
       />,
     );
 
-    const liste = screen.getByTestId("planning-hub-liste");
-    const rows = within(liste).getAllByTestId(/^planning-hub-liste-row-/);
-    const activityRows = rows.filter((node) => node.hasAttribute("data-sce-planning-hub-liste-row"));
-    expect(activityRows.length).toBeGreaterThanOrEqual(2);
-    for (const row of activityRows) {
-      expect(row).toHaveAttribute("data-sce-planning-hub-liste-grid", PLANNING_HUB_LISTE_ROW_DESKTOP_GRID_COLS);
+    const rows = container.querySelectorAll("[data-sce-planning-hub-liste-row]");
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    for (const row of rows) {
+      expect(row).toHaveAttribute("data-sce-programme-activity-card-shell");
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-time"]')).toBeNull();
+      expect(row.querySelector('[data-testid="planning-hub-liste-row-identity"]')).toBeNull();
     }
   });
 
-  it("renders training location once in LOCATION column without identity context line", () => {
+  it("renders training location once in list-row location — no duplicate hierarchy in identity", () => {
     render(
       <PlanningHubListeView
         week={week([training({ id: "training:1" })])}
@@ -181,12 +190,12 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1", () => {
       />,
     );
 
-    const identity = screen.getByTestId("planning-hub-liste-row-identity");
-    expect(within(identity).queryByTestId("sce-training-context-line")).not.toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-liste-row-resources").textContent).toContain("Kunstrasen 3 B");
-    expect(screen.getByTestId("planning-hub-liste-row-resources").textContent).not.toContain("Kunstrasen 3 ·");
-    expect(within(identity).getByTestId("sce-training-title")).toHaveTextContent("Junioren B2 Training");
-    expect(within(identity).getByTestId("sce-training-team")).toHaveTextContent("FC Allschwil Junioren B2");
+    const card = screen.getByTestId("planning-hub-liste-sce-training-training:1");
+    expect(within(card).queryByTestId("sce-training-context-line")).not.toBeInTheDocument();
+    expect(screen.getByTestId("sce-training-list-row-location")).toHaveTextContent("Kunstrasen 3 B");
+    expect(screen.getByTestId("sce-training-list-row-location").textContent).not.toContain("Kunstrasen 3 ·");
+    expect(within(card).getByTestId("sce-training-title")).toHaveTextContent("Junioren B2 Training");
+    expect(within(card).getByTestId("sce-training-team")).toHaveTextContent("FC Allschwil Junioren B2");
   });
 
   it("suppresses duplicate training team line when equivalent to title", () => {
@@ -211,11 +220,11 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1", () => {
       />,
     );
 
-    const identity = screen.getByTestId("planning-hub-liste-row-identity");
-    expect(within(identity).queryByTestId("sce-training-team")).not.toBeInTheDocument();
+    const card = screen.getByTestId("planning-hub-liste-sce-training-training:dup");
+    expect(within(card).queryByTestId("sce-training-team")).not.toBeInTheDocument();
   });
 
-  it("keeps match fixture grammar without inline location; location appears once", () => {
+  it("keeps match fixture grammar without inline location on the card body", () => {
     render(
       <PlanningHubListeView
         week={week([match("match:1")])}
@@ -231,12 +240,12 @@ describe("PlanningHubListeView — SCE-ACTIVITY-CREATE-01H-R4.1", () => {
       />,
     );
 
-    const identity = screen.getByTestId("planning-hub-liste-sce-match-match:1");
-    expect(within(identity).queryByTestId("sce-match-location")).not.toBeInTheDocument();
+    const card = screen.getByTestId("planning-hub-liste-sce-match-match:1");
+    expect(within(card).queryByTestId("sce-match-location")).not.toBeInTheDocument();
     expect(screen.getByTestId("sce-match-vs")).toBeInTheDocument();
-    expect(identity.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
-    expect(identity.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
-    expect(screen.getAllByTestId("planning-hub-liste-row-resources")).toHaveLength(1);
+    expect(card.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
+    expect(card.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
+    expect(screen.getAllByTestId("sce-match-list-row-location")).toHaveLength(1);
   });
 
   it("shows override indicator inside the training row when on an alternative plan", () => {
