@@ -18,8 +18,10 @@ describe("SCE-TOURNAMENT-PLANNER-01E3A documentation", () => {
     expect(doc).toContain("GROUP_RANK");
   });
 
-  it("parent roadmap references 01E3A as next architecture slice", () => {
+  it("parent roadmap references 01E3A as closed and 01E3B as next", () => {
     const parent = readFileSync(join(ROOT, "SCE-TOURNAMENT-PLANNER-01.md"), "utf8");
     expect(parent).toContain("01E3A");
+    expect(parent).toContain("CLOSED / ACCEPTED / MERGED");
+    expect(parent).toContain("01E3B");
   });
 });
