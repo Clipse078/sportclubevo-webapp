@@ -92,6 +92,19 @@ describe("01E3D — default mapping matrix", () => {
     expect(bracketSize).toBe(8);
     expect(mappings).toHaveLength(6);
   });
+
+  it.each([5, 6])("%i groups × 2 qualifiers — zero avoidable same-group first round", (groupCount) => {
+    const { mappings } = generateDefaultGroupRankMappingsPure({
+      groups: groups(groupCount),
+      qualifiersPerGroup: 2,
+    });
+    expect(mappings).toHaveLength(groupCount * 2);
+    const pairs = firstRoundPairGroups(mappings);
+    const sameGroupPairs = pairs.filter(
+      (p) => p.sourceGroupIds.length === 2 && p.sourceGroupIds[0] === p.sourceGroupIds[1],
+    );
+    expect(sameGroupPairs).toHaveLength(0);
+  });
 });
 
 describe("01E3D — explicit mapping preserved", () => {

@@ -34,8 +34,10 @@ import { generateKnockoutBracketForPhase } from "../knockout-bracket/knockout-br
 import {
   applyGroupToKnockoutQualificationAndGenerateBracket,
 } from "../qualification-mapping/qualification-mapping-service";
+import { Prisma } from "@prisma/client";
 import {
   TournamentCompetitionConflictError,
+  TournamentCompetitionValidationError,
   TournamentFormatUnsupportedError,
 } from "../errors";
 
@@ -204,5 +206,146 @@ describe("01E3D — drift safety", () => {
         mapping: { mode: "DEFAULT", qualifiersPerGroup: 2 },
       }),
     ).rejects.toBeInstanceOf(TournamentCompetitionConflictError);
+  });
+});
+
+function canonicalPersistedRows() {
+  return [
+    {
+      sourceGroupId: "group-a",
+      rank: 1,
+      roundIndex: 0,
+      slotIndexInRound: 0,
+      side: "A",
+      qualificationSourceId: "qs-group-a-r1",
+    },
+    {
+      sourceGroupId: "group-b",
+      rank: 2,
+      roundIndex: 0,
+      slotIndexInRound: 0,
+      side: "B",
+      qualificationSourceId: "qs-group-b-r2",
+    },
+    {
+      sourceGroupId: "group-b",
+      rank: 1,
+      roundIndex: 0,
+      slotIndexInRound: 1,
+      side: "A",
+      qualificationSourceId: "qs-group-b-r1",
+    },
+    {
+      sourceGroupId: "group-a",
+      rank: 2,
+      roundIndex: 0,
+      slotIndexInRound: 1,
+      side: "B",
+      qualificationSourceId: "qs-group-a-r2",
+    },
+  ] as const;
+}
+
+describe("01E3D — idempotency", () => {
+  it("skips mapping inserts when persisted fingerprint matches", async () => {
+    mockGroupPlusKnockoutPhases();
+    vi.mocked(prisma.tournamentKnockoutQualificationMapping.findMany).mockResolvedValue(
+      [...canonicalPersistedRows()] as never,
+    );
+
+    await applyGroupToKnockoutQualificationAndGenerateBracket(TENANT, {
+      tournamentId: TOURNAMENT,
+      groupPhaseId: PHASE_GROUP,
+      knockoutPhaseId: PHASE_KO,
+      mapping: { mode: "DEFAULT", qualifiersPerGroup: 2 },
+    });
+
+    expect(vi.mocked(prisma.tournamentKnockoutQualificationMapping.create)).not.toHaveBeenCalled();
+    expect(generateKnockoutBracketForPhase).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("01E3D — atomicity", () => {
+  it("rolls back persisted mappings when bracket generation fails", async () => {
+    mockGroupPlusKnockoutPhases();
+    vi.mocked(generateKnockoutBracketForPhase).mockRejectedValueOnce(new Error("bracket failed"));
+
+    await expect(
+      applyGroupToKnockoutQualificationAndGenerateBracket(TENANT, {
+        tournamentId: TOURNAMENT,
+        groupPhaseId: PHASE_GROUP,
+        knockoutPhaseId: PHASE_KO,
+        mapping: { mode: "DEFAULT", qualifiersPerGroup: 2 },
+      }),
+    ).rejects.toThrow(/bracket failed/);
+
+    expect(vi.mocked(prisma.tournamentKnockoutQualificationMapping.deleteMany)).toHaveBeenCalledWith({
+      where: { tenantId: TENANT, eventId: TOURNAMENT, knockoutPhaseId: PHASE_KO },
+    });
+  });
+});
+
+describe("01E3D — concurrency", () => {
+  it("retries idempotently after unique constraint race on mapping insert", async () => {
+    mockGroupPlusKnockoutPhases();
+    const uniqueError = new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+      code: "P2002",
+      clientVersion: "test",
+    });
+    vi.mocked(prisma.tournamentKnockoutQualificationMapping.create).mockRejectedValueOnce(uniqueError);
+    vi.mocked(prisma.tournamentKnockoutQualificationMapping.findMany)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([...canonicalPersistedRows()] as never);
+
+    await applyGroupToKnockoutQualificationAndGenerateBracket(TENANT, {
+      tournamentId: TOURNAMENT,
+      groupPhaseId: PHASE_GROUP,
+      knockoutPhaseId: PHASE_KO,
+      mapping: { mode: "DEFAULT", qualifiersPerGroup: 2 },
+    });
+
+    expect(vi.mocked(prisma.tournamentKnockoutQualificationMapping.create)).toHaveBeenCalled();
+    expect(vi.mocked(prisma.tournamentKnockoutQualificationMapping.findMany).mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(generateKnockoutBracketForPhase).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("01E3D — phase ordering", () => {
+  it("rejects GROUP_MIX phase with displayOrder not before knockout", async () => {
+    mockGroupPlusKnockoutPhases();
+    vi.mocked(prisma.tournamentPhase.findFirst).mockImplementation(async (args) => {
+      const id = (args as { where: { id: string } }).where.id;
+      if (id === PHASE_GROUP) {
+        return {
+          id: PHASE_GROUP,
+          eventId: TOURNAMENT,
+          displayOrder: 3,
+          phaseType: "GROUP_MIX",
+          label: "Gruppen",
+          stageKey: "MAIN",
+          groupMixStrategy: "ROUND_ROBIN",
+          smartMixTargetMatchesPerParticipant: null,
+        } as never;
+      }
+      return {
+        id: PHASE_KO,
+        eventId: TOURNAMENT,
+        displayOrder: 2,
+        phaseType: "KNOCKOUT",
+        label: "KO",
+        stageKey: "KO",
+        groupMixStrategy: null,
+        smartMixTargetMatchesPerParticipant: null,
+      } as never;
+    });
+
+    await expect(
+      applyGroupToKnockoutQualificationAndGenerateBracket(TENANT, {
+        tournamentId: TOURNAMENT,
+        groupPhaseId: PHASE_GROUP,
+        knockoutPhaseId: PHASE_KO,
+        mapping: { mode: "DEFAULT", qualifiersPerGroup: 2 },
+      }),
+    ).rejects.toBeInstanceOf(TournamentCompetitionValidationError);
   });
 });
