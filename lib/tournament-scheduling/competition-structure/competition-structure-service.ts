@@ -484,6 +484,20 @@ export async function moveParticipantBetweenTournamentGroups(
   if (fromGroupId === toGroupId) {
     throw new TournamentCompetitionValidationError("Source and destination group must differ");
   }
+
+  const groupScopedFixtures = await prisma.tournamentFixture.count({
+    where: {
+      tenantId,
+      eventId: tournamentId,
+      tournamentGroupId: { in: [fromGroupId, toGroupId] },
+    },
+  });
+  if (groupScopedFixtures > 0) {
+    throw new TournamentCompetitionConflictError(
+      "Cannot move participants between groups while group fixtures exist; use future regeneration (01G)",
+    );
+  }
+
   await prisma.tournamentGroupMembership.deleteMany({
     where: {
       tenantId,

@@ -8,6 +8,8 @@ export interface TournamentFixtureDefinition {
   id: string;
   eventId: string;
   tournamentPhaseId?: string | null;
+  /** GROUP_MIX group-scoped fixtures (01E3B); null for legacy/knockout. */
+  tournamentGroupId?: string | null;
   stageKey: string;
   roundIndex: number;
   slotIndexInRound: number;

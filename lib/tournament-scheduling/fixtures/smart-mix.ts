@@ -51,8 +51,13 @@ export interface SmartMixGenerationDiagnostics {
   maxHomeAwayImbalance?: number;
 }
 
-export function buildSmartMixGeneratorKey(stageKey: string, fixtureIndex: number): string {
-  return `smart-mix:${stageKey}:${fixtureIndex}`;
+export function buildSmartMixGeneratorKey(
+  stageKey: string,
+  fixtureIndex: number,
+  groupScope?: string,
+): string {
+  const groupSegment = groupScope ? `:group:${groupScope}` : "";
+  return `smart-mix:${stageKey}${groupSegment}:${fixtureIndex}`;
 }
 
 function unorderedPairKey(a: string, b: string): string {
@@ -350,6 +355,7 @@ function materializeFixturesFromOpponentEdges(
   participantIds: readonly string[],
   homeAwayRelevance: HomeAwayRelevance,
   stageKey: string,
+  generatorKeyGroupScope?: string,
 ): TournamentFixtureGenerationDefinition[] {
   const structured = assignStructuralRoundSlots(edges);
   const pairEncounterIndex = new Map<string, number>();
@@ -379,7 +385,7 @@ function materializeFixturesFromOpponentEdges(
       roundIndex: edge.roundIndex,
       slotIndexInRound: edge.slotIndexInRound,
       ...sides,
-      generatorKey: buildSmartMixGeneratorKey(stageKey, fixtureIndex),
+      generatorKey: buildSmartMixGeneratorKey(stageKey, fixtureIndex, generatorKeyGroupScope),
     };
   });
 }
@@ -514,6 +520,7 @@ export function generateSmartMixFixtures(
 
   const homeAwayRelevance =
     input.config?.homeAwayRelevance ?? HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT;
+  const generatorKeyGroupScope = input.config?.generatorKeyGroupScope;
 
   const participantIds = [...input.participantIds];
   assertDistinctParticipantIds(participantIds);
@@ -646,5 +653,6 @@ export function generateSmartMixFixtures(
     participantIds,
     homeAwayRelevance,
     stageKey,
+    generatorKeyGroupScope,
   );
 }
