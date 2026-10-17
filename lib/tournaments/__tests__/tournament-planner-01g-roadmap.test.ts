@@ -18,6 +18,7 @@ describe("01G roadmap", () => {
       "utf8",
     );
     expect(parent).toMatch(/01G.*CLOSED|01G = CLOSED|CLOSED \/ ACCEPTED \/ MERGED.*01G/i);
-    expect(parent).toMatch(/01H.*CURRENT|01H = CURRENT|01I.*NEXT/i);
+    expect(parent).toMatch(/01H.*CLOSED|01H CLOSED/i);
+    expect(parent).toMatch(/01I.*CURRENT|01I = CURRENT/i);
   });
 });
