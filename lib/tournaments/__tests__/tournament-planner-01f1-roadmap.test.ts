@@ -16,7 +16,7 @@ describe("SCE-TOURNAMENT-PLANNER-01F1 roadmap", () => {
   it("documents smart timing foundation as current", () => {
     const doc = read("docs/roadmap/SCE-TOURNAMENT-PLANNER-01F1.md");
     expect(doc).toContain("01F1");
-    expect(doc).toMatch(/CURRENT|IN PROGRESS/i);
+    expect(doc).toMatch(/CURRENT|READY FOR CLOSURE|IN PROGRESS/i);
     expect(doc).toContain("Smart Timing");
     expect(doc).toContain("01F2");
   });

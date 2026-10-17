@@ -29,10 +29,10 @@ describe("SCE-TOURNAMENT-PLANNER-01D-R3 documentation", () => {
     const programme = readDoc("docs/roadmap/SCE-TOURNAMENT-PLANNER-01.md");
     const dIndex = programme.indexOf("| 4 | **01D**");
     const e1Index = programme.indexOf("| 5 | **01E1**");
-    const fIndex = programme.indexOf("| 6 | **01F**");
+    const f1Index = programme.indexOf("| 6a | **01F1**");
     expect(dIndex).toBeGreaterThan(-1);
     expect(e1Index).toBeGreaterThan(dIndex);
-    expect(fIndex).toBeGreaterThan(e1Index);
+    expect(f1Index).toBeGreaterThan(e1Index);
   });
 
   it("registers 01D-R3 closure flags on package doc", () => {

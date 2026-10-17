@@ -43,7 +43,9 @@ describe("Smart Timing — 8-match canonical proof", () => {
         config: { matchDurationMinutes: 1, transitionMinutes: 0, minRestMinutes: 0 },
       }),
     );
-    expect(backward.durationRecommendation?.matchDurationMinutes).toBe(15);
-    expect(backward.durationRecommendation?.transitionMinutes).toBe(0);
+    expect(backward.mathematicalMaximumTiming?.matchDurationMinutes).toBe(15);
+    expect(backward.mathematicalMaximumTiming?.transitionMinutes).toBe(0);
+    expect(backward.durationRecommendation?.matchDurationMinutes).toBe(14);
+    expect(backward.durationRecommendation?.transitionMinutes).toBe(1);
   });
 });

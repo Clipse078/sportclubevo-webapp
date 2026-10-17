@@ -3,7 +3,7 @@ import { assessTournamentTiming } from "../assess";
 import { BASE_MS, baseInput, sequentialFixtures, tournamentPitch, windowFromClock } from "./helpers";
 
 describe("Smart Timing — backward matrix", () => {
-  it("10:00–12:00, 1 pitch, 8 fixtures → longest practical slot recommendation", () => {
+  it("10:00–12:00, 1 pitch, 8 fixtures → operational vs mathematical maximum", () => {
     const fixtures = sequentialFixtures(8);
     const result = assessTournamentTiming(
       baseInput({
@@ -14,9 +14,13 @@ describe("Smart Timing — backward matrix", () => {
         tournamentPitches: [tournamentPitch("pitch-a", 0)],
       }),
     );
+    expect(result.mathematicalMaximumTiming).not.toBeNull();
+    expect(result.mathematicalMaximumTiming!.matchDurationMinutes).toBe(15);
+    expect(result.mathematicalMaximumTiming!.transitionMinutes).toBe(0);
     expect(result.durationRecommendation).not.toBeNull();
-    expect(result.durationRecommendation!.matchDurationMinutes).toBe(15);
-    expect(result.durationRecommendation!.transitionMinutes).toBe(0);
+    expect(result.durationRecommendation!.transitionMinutes).toBeGreaterThan(0);
+    expect(result.durationRecommendation!.matchDurationMinutes).toBe(14);
+    expect(result.durationRecommendation!.transitionMinutes).toBe(1);
     expect(result.feasibilityStatus).not.toBe("INFEASIBLE");
   });
 

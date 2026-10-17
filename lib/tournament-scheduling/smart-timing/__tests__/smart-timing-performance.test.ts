@@ -3,7 +3,7 @@ import { assessTournamentTiming } from "../assess";
 import { baseInput, sequentialFixtures, tournamentPitch, windowFromClock } from "./helpers";
 
 describe("Smart Timing — performance observations", () => {
-  const fixtureCounts = [8, 16] as const;
+  const fixtureCounts = [8, 16, 32, 64, 128] as const;
 
   for (const count of fixtureCounts) {
     it(`assesses ${count} fixtures within interactive budget (observation)`, () => {

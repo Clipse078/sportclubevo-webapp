@@ -5,7 +5,7 @@ import {
   computeEffectivePlayableCapacityFromFeasibilityInput,
   computeEffectivePlayableCapacityMinutes,
 } from "./capacity";
-import { recommendMatchAndTransitionDurations } from "./backward";
+import { recommendBackwardTimingDurations } from "./backward";
 import {
   buildTimingNudges,
   mapFeasibilitySuggestionsToAdjustments,
@@ -156,6 +156,7 @@ function assessForwardTiming(
     predictedFinishUtcMs: finishUtcMs,
     reserveMinutes,
     durationRecommendation: null,
+    mathematicalMaximumTiming: null,
     adjustments: mapFeasibilitySuggestionsToAdjustments(feasibility),
     nudges,
     pitchCountRecommendation: pitchRec,
@@ -170,7 +171,8 @@ function assessBackwardTiming(
   config: ReturnType<typeof normalizeTimingConfig>,
   participantRestProofStatus: TournamentTimingAssessment["participantRestProofStatus"],
 ): TournamentTimingAssessment {
-  const durationRecommendation = recommendMatchAndTransitionDurations(input);
+  const { mathematicalMaximum: mathematicalMaximumTiming, operationalRecommendation: durationRecommendation } =
+    recommendBackwardTimingDurations(input);
   const trialConfig = durationRecommendation
     ? {
         matchDurationMinutes: durationRecommendation.matchDurationMinutes,
@@ -229,6 +231,7 @@ function assessBackwardTiming(
     predictedFinishUtcMs: finishUtcMs,
     reserveMinutes,
     durationRecommendation,
+    mathematicalMaximumTiming,
     adjustments: mapFeasibilitySuggestionsToAdjustments(feasibility),
     nudges,
     pitchCountRecommendation: pitchRec,
@@ -260,8 +263,11 @@ function assessFixedWindowTiming(
       : null;
 
   let durationRecommendation = null;
+  let mathematicalMaximumTiming = null;
   if (feasibility.status === "INFEASIBLE") {
-    durationRecommendation = recommendMatchAndTransitionDurations(input);
+    const backward = recommendBackwardTimingDurations(input);
+    durationRecommendation = backward.operationalRecommendation;
+    mathematicalMaximumTiming = backward.mathematicalMaximum;
   }
 
   const heavyOpportunities = input.fixtures.length <= HEAVY_OPPORTUNITY_FIXTURE_LIMIT;
@@ -297,6 +303,7 @@ function assessFixedWindowTiming(
     predictedFinishUtcMs: finishUtcMs,
     reserveMinutes,
     durationRecommendation,
+    mathematicalMaximumTiming,
     adjustments: mapFeasibilitySuggestionsToAdjustments(feasibility),
     nudges,
     pitchCountRecommendation: pitchRec,

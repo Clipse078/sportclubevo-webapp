@@ -115,7 +115,13 @@ export type TournamentTimingAssessment = {
   requiredSpanKind: RequiredSpanKind;
   predictedFinishUtcMs: number | null;
   reserveMinutes: number | null;
+  /** Operational (practical-grid) backward recommendation — never auto-applied. */
   durationRecommendation: TimingDurationRecommendation | null;
+  /**
+   * Tightest integer-minute slot packing verified by 01D (BACKWARD mode).
+   * Distinct from operational recommendation when zero-transition utilisation wins mathematically.
+   */
+  mathematicalMaximumTiming: TimingDurationRecommendation | null;
   /** Suggestions only — never auto-applied to tournament configuration. */
   recommendationsAutoApplied: false;
   adjustments: TimingAdjustmentOption[];

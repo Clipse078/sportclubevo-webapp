@@ -1,5 +1,11 @@
 export { assessTournamentTiming, computeEffectivePlayableCapacityMinutes } from "./assess";
-export { recommendMatchAndTransitionDurations } from "./backward";
+export {
+  recommendBackwardTimingDurations,
+  recommendMathematicalMaximumTiming,
+  recommendMatchAndTransitionDurations,
+  recommendOperationalMatchAndTransitionDurations,
+  structuralSlotUpperBoundMinutes,
+} from "./backward";
 export {
   PRACTICAL_MATCH_DURATION_MINUTES,
   PRACTICAL_TRANSITION_MINUTES,

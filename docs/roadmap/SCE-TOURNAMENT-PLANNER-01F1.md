@@ -5,9 +5,10 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01F1` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3D`](./SCE-TOURNAMENT-PLANNER-01E3D.md) — **CLOSED / ACCEPTED / MERGED** (PR **#864**) |
-| **Status** | **CURRENT / IN PROGRESS** (pure engine + contracts — no Planung UI) |
+| **Status** | **CURRENT / READY FOR CLOSURE** (R1 correctness gate — pure engine + contracts, no Planung UI) |
 | **Branch** | `cursor/sce-tournament-planner-01f1-smart-timing-foundation` |
-| **Next** | **01F2** — Automatic Schedule Optimiser implementation |
+| **PR** | **#865** (OPEN / DRAFT → STAGE) |
+| **Next** | **01F2** — Automatic Schedule Optimiser implementation (**NOT STARTED**) |
 
 ## Product purpose
 
@@ -28,11 +29,13 @@
 | --- | --- |
 | `assessTournamentTiming` | `TournamentTimingInput` → `TournamentTimingAssessment` |
 | `TournamentTimingMode` | `FORWARD` \| `BACKWARD` \| `FIXED_ASSESSMENT` |
-| `recommendMatchAndTransitionDurations` | Backward duration policy (practical whole-minute increments) |
+| `recommendBackwardTimingDurations` | `{ mathematicalMaximum, operationalRecommendation }` |
+| `recommendMathematicalMaximumTiming` | Tight integer-minute slot packing (oracle-verified) |
+| `recommendOperationalMatchAndTransitionDurations` | Practical-grid operational policy |
 | `SCHEDULE_SOFT_OBJECTIVES_LEX_ORDER` | Lexicographic soft objectives contract (01F2) |
 | `HARD_CONSTRAINT_CATALOGUE` | Re-export of 01D H1–H12 |
 
-**`SCHEMA_CHANGE = NO`** — no persistence; recalculation is pure.
+**`SCHEMA_CHANGE = NO`** — no persistence; recalculation is pure. **`recommendationsAutoApplied: false`** always.
 
 ## Time concepts (separate)
 
@@ -44,49 +47,134 @@
 | **TOURNAMENT_BREAK** | `TournamentBreak` / `FeasibilityTournamentBreakRef` |
 | **TOURNAMENT_WINDOW** | `[start, end)` instants |
 
-Half-open interval semantics match **01D** (`[start, end)`).
+Half-open interval semantics match **01D** (`[start, end)`). Touching break/fixture boundaries are allowed (fixture end == break start; fixture start == break end).
 
 ## Modes
 
 ### FORWARD
 
 Known: start, durations, fixtures, pitches, breaks.  
-Output: predicted finish, required span, feasibility, reserve (when end boundary known).
+Output: predicted finish, required span (`EXACT_WITNESS` when schedule witness exists), feasibility, reserve (when end boundary known).
+
+**Final transition (forward arithmetic):** each fixture occupies one **resource slot** of `matchDuration + transitionDuration` minutes (**01D H9**). The predicted finish is the end of the last slot. There is **no additional unused transition** charged after the final fixture beyond the last slot’s transition component (`FINAL_UNUSED_TRANSITION_CHARGED = NO` in the sense of no extra post-schedule transition).
 
 ### BACKWARD
 
 Known: start, end, fixtures, pitches, breaks.  
-Output: recommended practical `matchDurationMinutes` + `transitionMinutes` (deterministic lexicographic policy: longest feasible practical match, then longest feasible practical transition).
+Output:
+
+| Field | Meaning |
+| --- | --- |
+| `mathematicalMaximumTiming` | Tightest integer-minute `(match, transition)` verified by 01D |
+| `durationRecommendation` | **Operational** practical-grid recommendation (see policy below) |
 
 ### FIXED_ASSESSMENT
 
 Known: start, end, durations, fixtures, pitches, breaks.  
-Output: fit/feasibility, structured adjustments, optional backward recommendation when infeasible.
+Output: fit/feasibility, structured adjustments, opportunities/nudges. When **INFEASIBLE**, emits backward mathematical + operational recommendations (not auto-applied).
+
+## Recommendation policy (R1)
+
+### A. Mathematical maximum
+
+Deterministic integer search within structural per-fixture slot upper bound (effective capacity ÷ fixtures, capped by window × pitches ÷ fixtures):
+
+1. Lexicographic maximise `matchDurationMinutes`, then `transitionMinutes`.
+2. Each candidate must pass **`runTimingFeasibilityOracle`** (`FEASIBLE` \| `TIGHT`).
+
+Example (1 pitch, 10:00–12:00, 8 fixtures, no breaks): **15 + 0** (120 ÷ 8 = 15-minute slots).
+
+### B. Operational recommendation
+
+Deterministic practical policy on `PRACTICAL_MATCH_DURATION_MINUTES` × `PRACTICAL_TRANSITION_MINUTES`:
+
+1. Keep only oracle-feasible pairs.
+2. **Zero-transition feasibility is allowed** mathematically but **not** the default operational choice when any feasible practical pair has `transitionMinutes > 0`.
+3. Among the operational pool, lexicographic maximise match duration, then transition duration.
+
+Same canonical example: operational **14 + 1** (longest practical match with a non-zero transition that still fits). **12 + 3** remains a valid fixed configuration (exact 120-minute fit) but is not selected over **14 + 1** by this lexicographic operational rule.
+
+| Flag | Value |
+| --- | --- |
+| `MATHEMATICAL_MAXIMUM_DISTINGUISHED_FROM_RECOMMENDATION` | **YES** |
+| `ZERO_TRANSITION_FEASIBILITY_ALLOWED` | **YES** |
+| `ZERO_TRANSITION_DEFAULT_RECOMMENDATION` | **NO** (when non-zero operational pair exists) |
+| `SMART_TIMING_RECOMMENDATIONS_AUTO_APPLIED` | **NO** |
+
+## Canonical 8-match example
+
+1 `TournamentPitch`, 10:00–12:00, 8 fixtures:
+
+| Configuration | Result |
+| --- | --- |
+| **12 + 3** (fixed / forward) | 8 slots × 15 min = **120 min** → finish **12:00**, reserve **0** |
+| **Backward mathematical** | **15 + 0** |
+| **Backward operational** | **14 + 1** |
+
+Cadence under 12 + 3 (slot stride 15 min from engine): 10:00, 10:15, 10:30, … last slot ending 12:00.
 
 ## Unresolved qualification / progression
 
 `GROUP_RANK`, `WINNER_OF_FIXTURE`, and other qualification sides:
 
-- **Structural** pitch/time assessment proceeds with per-fixture structural participant placeholders (no fabricated cross-fixture rest).
+- Structural pitch/time assessment proceeds with per-fixture structural participant placeholders (**no fabricated cross-fixture rest**).
 - **`participantRestProofStatus`**: `UNRESOLVED` \| `PARTIAL` \| `PROVEN`.
+- Nudge **`UNRESOLVED_PARTICIPANT_REST`** prevents implying participant-rest proof where none exists.
 
-## Nudges & recommendations
+## Required span semantics
 
-Stable semantic codes (`TIME_WINDOW_TIGHT`, `EXTEND_END_TIME`, `RESERVE_REMAINS`, …).  
-**Recommendations are never auto-applied** (`recommendationsAutoApplied: false`).
+| Kind | Meaning |
+| --- | --- |
+| **`EXACT_WITNESS`** | Finish derived from a feasible schedule witness |
+| **`STRUCTURAL_LOWER_BOUND`** | Conservative bound when no witness finish is available |
 
-## Canonical 8-match example
+Structural lower bounds are **not** presented as guaranteed schedule spans.
 
-1 `TournamentPitch`, 10:00–12:00, 8 fixtures, 12 min match + 3 min transition:
+## TIGHT policy
 
-- Slot occupancy = **15 min** per fixture (match + transition, including final slot — **01D H9**).
-- **8 × 15 = 120 min** → exact window fit.
-- Backward policy may recommend **15 + 0** (longer match with zero transition) as the longest practical pair; **12 + 3** is also feasible under fixed assessment.
+**TIGHT** follows **01D** metrics using **effective playable capacity** after breaks, pitch availability, and hard constraints (`TIGHT_USES_EFFECTIVE_CAPACITY = YES`).
 
-## Performance (observed)
+## Opportunities & adjustments
 
-Interactive recalculation on representative sizes (8 / 16 fixtures, multi-pitch) completes in **sub-second** ranges in CI.  
-Opportunistic pitch-count / match-length proofs are skipped above **16 fixtures** to keep UI recalculation bounded; full 01D limits still apply.
+| Feature | Proof requirement |
+| --- | --- |
+| **Pitch count minimum** | Descending search with full oracle — no average-capacity-only claim |
+| **Match duration increase** | Oracle verifies increased duration remains feasible |
+| **Break opportunity** | Oracle verifies break can coexist — not inferred from reserve alone |
+| **Structured adjustments** | Mapped from 01D suggestions only when justified |
+| **Positive nudges** | Evidence-backed (`RESERVE_REMAINS`, `LONGER_MATCHES_POSSIBLE`, …) |
+
+Heavy opportunistic proofs skip above **16 fixtures** for interactive bounds; core feasibility limits unchanged.
+
+## Feasibility proof (01D reuse)
+
+- Heuristic success may establish a witness.
+- Heuristic failure alone does **not** establish `INFEASIBLE`.
+- **`HEURISTIC_ONLY_INFEASIBLE_OUTCOMES = 0`** (regression contract).
+
+## Soft objectives contract (01F2 handoff)
+
+Lexicographic order preserved in `SCHEDULE_SOFT_OBJECTIVES_LEX_ORDER`:
+
+1. Hard constraints  
+2. Participant rest fairness  
+3. Idle-gap quality  
+4. Pitch distribution  
+5. Pitch-switch / movement reduction  
+6. First/last slot fairness  
+7. Tournament span  
+
+**01F2 must not duplicate** 01D hard-constraint machinery or 01F1 timing assessment/recommendation contracts.
+
+### 01F2 pure boundary (NOT STARTED)
+
+**Input:** fixture set + `TournamentTimingAssessment` + locked assignments + same 01D config refs.  
+**Output:** assignment schedule optimising soft objectives without mutating fixture topology.  
+**Recommended next package:** `SCE-TOURNAMENT-PLANNER-01F2 — AUTOMATIC SCHEDULE OPTIMISER IMPLEMENTATION`.
+
+## Performance (observed, R1)
+
+Representative advisor workloads (8 / 16 / 32 / 64 / 128 fixtures, multi-pitch, break scenarios) complete in **sub-second to low-second** ranges locally/CI; no SLA claimed.
 
 ## Adoption
 
@@ -96,6 +184,15 @@ Opportunistic pitch-count / match-length proofs are skipped above **16 fixtures*
 | **Tournament → Planung** | **Required** — same engine (future UI) |
 | **01F2 Schedule Optimiser** | Builds on this contract |
 
+## Programme position
+
+| Package | Status |
+| --- | --- |
+| **01A–01E3D** | **CLOSED** |
+| **01F1** | **CURRENT / READY FOR CLOSURE** |
+| **01F2** | **NEXT / NOT STARTED** |
+| **01G–01M** | Unchanged |
+
 ## Decomposition
 
 | Package | Scope |
@@ -103,11 +200,18 @@ Opportunistic pitch-count / match-length proofs are skipped above **16 fixtures*
 | **01F1** | Smart Timing Advisor + optimisation foundation (this delivery) |
 | **01F2** | Automatic Schedule Optimiser — assignments on `TournamentPitch` |
 
-## Flags
+## Flags (closure)
 
 | Flag | Value |
 | --- | --- |
 | `PARALLEL_FEASIBILITY_ENGINE_CREATED` | **NO** |
-| `01D_COMPONENTS_REUSED` | **YES** — candidate slots, breaks, complete search, metrics, status |
+| `01D_COMPONENTS_REUSED` | **YES** |
 | `USER_VISIBLE_UI_CHANGED` | **NO** |
 | `SCHEDULER_MUTATES_FIXTURE_TOPOLOGY` | **NO** |
+| `SCHEDULER_ASSIGNMENT_TARGET` | **TOURNAMENT_PITCH** |
+| `TOURNAMENT_PLANNER_SCOPE` | **TENANT_ORGANISED_TOURNAMENTS_ONLY** |
+
+## R1 delivery notes
+
+- PR **#865** remains **OPEN / DRAFT**; **do not merge** until PO accepts R1 report.
+- Manual UAT / screenshots: **PO-owned** (skipped in Cursor R1 gate).
