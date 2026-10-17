@@ -9,7 +9,9 @@ export {
   fixtureAllowsSlot,
   isFixtureFullyLockedInState,
   mergeScheduleLocks,
+  resolveEffectiveScheduleLockDimension,
   resolveFixtureScheduleLocksFromBaseline,
+  scheduleLockFromPersistedAssignment,
   toLockedAssignmentsForFeasibility,
   type ResolvedFixtureScheduleLock,
 } from "./normalize";

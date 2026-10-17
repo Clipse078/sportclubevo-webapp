@@ -2,6 +2,35 @@ import type { FeasibilityAssignmentRef } from "../feasibility/types";
 import type { TournamentFixtureScheduleAssignment } from "../schedule-optimiser/types";
 import type { TournamentFixtureScheduleLock, TournamentFixtureScheduleLockDimension } from "./types";
 
+/**
+ * Canonical persisted lock resolution (01G-R1):
+ * - `scheduleLockDimension` wins when set.
+ * - Legacy `isLocked=true` with null dimension → TIME_AND_PITCH (pre-migration rows).
+ * - `isLocked=true` with TIME or PITCH dimension → dimension wins; isLocked stays false for partial locks in DB writes.
+ */
+export function resolveEffectiveScheduleLockDimension(input: {
+  scheduleLockDimension: TournamentFixtureScheduleLockDimension | null;
+  isLocked: boolean;
+}): TournamentFixtureScheduleLockDimension | null {
+  if (input.scheduleLockDimension != null) {
+    return input.scheduleLockDimension;
+  }
+  if (input.isLocked) {
+    return "TIME_AND_PITCH";
+  }
+  return null;
+}
+
+export function scheduleLockFromPersistedAssignment(input: {
+  fixtureId: string;
+  scheduleLockDimension: TournamentFixtureScheduleLockDimension | null;
+  isLocked: boolean;
+}): TournamentFixtureScheduleLock | null {
+  const dimension = resolveEffectiveScheduleLockDimension(input);
+  if (!dimension) return null;
+  return { fixtureId: input.fixtureId, dimension };
+}
+
 export type ResolvedFixtureScheduleLock = {
   fixtureId: string;
   dimension: TournamentFixtureScheduleLockDimension;
@@ -24,7 +53,9 @@ export function mergeScheduleLocks(params: {
     byFixture.set(lock.fixtureId, lock.dimension);
   }
   for (const full of params.lockedAssignments ?? []) {
-    byFixture.set(full.fixtureId, "TIME_AND_PITCH");
+    if (!byFixture.has(full.fixtureId)) {
+      byFixture.set(full.fixtureId, "TIME_AND_PITCH");
+    }
   }
   return [...byFixture.entries()]
     .sort((a, b) => a[0].localeCompare(b[0]))

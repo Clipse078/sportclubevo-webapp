@@ -10,6 +10,7 @@ import { loadTournamentScheduleOptimisationContext } from "./feasibility-service
 import { listTournamentFixtureAssignmentsForVersion } from "./assignment-service";
 import { regenerateTournamentSchedule } from "./partial-regeneration/regenerate";
 import type { TournamentPartialRegenerationResult } from "./schedule-optimiser/types";
+import { scheduleLockFromPersistedAssignment } from "./schedule-lock/normalize";
 import type { TournamentFixtureScheduleLock } from "./schedule-lock/types";
 
 export class TournamentPlannerNotOwnedError extends TournamentSchedulingError {
@@ -58,11 +59,14 @@ export async function runTournamentPartialRegenerationForVersion(params: {
   ]);
 
   const persistedLocks: TournamentFixtureScheduleLock[] = assignments
-    .filter((a) => a.scheduleLockDimension !== null)
-    .map((a) => ({
-      fixtureId: a.fixtureId,
-      dimension: a.scheduleLockDimension!,
-    }));
+    .map((a) =>
+      scheduleLockFromPersistedAssignment({
+        fixtureId: a.fixtureId,
+        scheduleLockDimension: a.scheduleLockDimension,
+        isLocked: a.isLocked,
+      }),
+    )
+    .filter((lock): lock is TournamentFixtureScheduleLock => lock !== null);
 
   const mergedLocks = [...persistedLocks, ...(params.scheduleLocks ?? [])];
 
