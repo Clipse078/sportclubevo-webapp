@@ -18,5 +18,8 @@ describe("01F2 — architecture closure flags", () => {
     const doc = readFileSync(join(root, "docs/roadmap/SCE-TOURNAMENT-PLANNER-01F2.md"), "utf8");
     expect(doc).toContain("OPTIMISER_PURE");
     expect(doc).toContain("SCHEDULE_SOFT_OBJECTIVES_LEX_ORDER");
+    expect(doc).toContain("BOUNDED_IMPROVEMENT_MAX_PASSES");
+    expect(doc).toContain("baselineObjectiveMetrics");
+    expect(doc).toContain("LARGE_SCHEDULE_BOUNDED_OPTIMISATION_IMPLEMENTED");
   });
 });

@@ -31,6 +31,7 @@ import {
 } from "../smart-timing/prepare-context";
 import { completeFeasibilitySearch } from "../feasibility/complete-search";
 import { EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES } from "./constants";
+import { boundedImprovementSearch } from "./bounded-improvement-search";
 import { completeOptimisationSearch } from "./complete-optimisation-search";
 import { computeScheduleObjectiveMetrics } from "./objective-metrics";
 import {
@@ -129,6 +130,9 @@ export function optimiseTournamentSchedule(
     candidateSlotCount: 0,
     completeAssignmentsExplored: 0,
     nodesVisited: 0,
+    boundedImprovementPasses: 0,
+    boundedImprovementEvaluations: 0,
+    boundedImprovementAccepted: 0,
   };
 
   if (feasibility.status === "INFEASIBLE") {
@@ -142,6 +146,7 @@ export function optimiseTournamentSchedule(
       feasibilityMetrics: feasibility.metrics,
       diagnostics: feasibility.diagnostics,
       searchStats: emptyStats,
+      baselineObjectiveMetrics: null,
       optimalityNote:
         "INFEASIBLE established by 01D proof or complete bounded search — not heuristic-only.",
     };
@@ -167,6 +172,7 @@ export function optimiseTournamentSchedule(
         },
       ],
       searchStats: emptyStats,
+      baselineObjectiveMetrics: null,
       optimalityNote: "Input exceeds MVP optimiser safety bounds.",
     };
   }
@@ -187,6 +193,7 @@ export function optimiseTournamentSchedule(
       feasibilityMetrics: feasibility.metrics,
       diagnostics: breakDiagnostics,
       searchStats: emptyStats,
+      baselineObjectiveMetrics: null,
       optimalityNote: "Break topology invalid.",
     };
   }
@@ -219,6 +226,7 @@ export function optimiseTournamentSchedule(
       feasibilityMetrics: feasibility.metrics,
       diagnostics: fixtureValidation.diagnostics,
       searchStats: emptyStats,
+      baselineObjectiveMetrics: null,
       optimalityNote: "Fixture set structurally invalid.",
     };
   }
@@ -249,6 +257,7 @@ export function optimiseTournamentSchedule(
         },
       ],
       searchStats: { ...emptyStats, candidateSlotCount: candidateSlots.length },
+      baselineObjectiveMetrics: null,
       optimalityNote: "Candidate slot grid exceeds complete-search MVP cap.",
     };
   }
@@ -274,11 +283,17 @@ export function optimiseTournamentSchedule(
       feasibilityMetrics: feasibility.metrics,
       diagnostics: [{ code: "LOCKS.CONFLICTING", constraintId: "H7" }],
       searchStats: { ...emptyStats, candidateSlotCount: candidateSlots.length },
+      baselineObjectiveMetrics: null,
       optimalityNote: "Locked assignments conflict with hard constraints.",
     };
   }
 
   const useExhaustiveLex = sortedFixtures.length <= EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES;
+  let baselineObjectiveMetrics: TournamentScheduleOptimisationResult["baselineObjectiveMetrics"] =
+    null;
+  let boundedImprovementPasses = 0;
+  let boundedImprovementEvaluations = 0;
+  let boundedImprovementAccepted = 0;
 
   const search = useExhaustiveLex
     ? completeOptimisationSearch({
@@ -336,6 +351,27 @@ export function optimiseTournamentSchedule(
     }
   }
 
+  if (finalState && !useExhaustiveLex) {
+    const improved = boundedImprovementSearch({
+      fixtures: sortedFixtures,
+      slots: candidateSlots,
+      config,
+      windowStart: feasibilityInput.tournamentWindow.startUtcMs,
+      windowEnd: feasibilityInput.tournamentWindow.endUtcMs,
+      windowStartUtcMs: feasibilityInput.tournamentWindow.startUtcMs,
+      pitchIds,
+      dependencies,
+      baselineState: finalState,
+    });
+    baselineObjectiveMetrics = improved.baselineObjectiveMetrics;
+    finalState = improved.state;
+    finalMetrics = improved.objectiveMetrics;
+    boundedImprovementPasses = improved.improvementPasses;
+    boundedImprovementEvaluations = improved.candidateEvaluations;
+    boundedImprovementAccepted = improved.improvementsAccepted;
+    status = "FEASIBLE_NOT_PROVEN_OPTIMAL";
+  }
+
   if (!finalState) {
     return {
       status: "INFEASIBLE_PROVEN",
@@ -353,10 +389,12 @@ export function optimiseTournamentSchedule(
         },
       ],
       searchStats: {
+        ...emptyStats,
         candidateSlotCount: candidateSlots.length,
         completeAssignmentsExplored: search.completeAssignmentsExplored,
         nodesVisited: search.nodesVisited,
       },
+      baselineObjectiveMetrics: null,
       optimalityNote: "No feasible assignment found.",
     };
   }
@@ -388,15 +426,21 @@ export function optimiseTournamentSchedule(
     objectiveScore: finalMetrics,
     feasibilityMetrics: metrics,
     diagnostics: [],
+    baselineObjectiveMetrics,
     searchStats: {
       candidateSlotCount: candidateSlots.length,
       completeAssignmentsExplored: search.completeAssignmentsExplored,
       nodesVisited: search.nodesVisited,
+      boundedImprovementPasses,
+      boundedImprovementEvaluations,
+      boundedImprovementAccepted,
     },
     optimalityNote:
       status === "OPTIMAL"
         ? "OPTIMAL within 01D discrete candidate-slot grid — complete enumeration of feasible assignments."
-        : "Feasible schedule with lex-best objective among search budget; optimality not proven (node budget or partial enumeration).",
+        : useExhaustiveLex
+          ? "Feasible schedule with lex-best objective among complete-search node budget; optimality not proven."
+          : "Feasible schedule after 01D witness plus deterministic bounded relocation improvement; optimality not proven.",
   };
 }
 

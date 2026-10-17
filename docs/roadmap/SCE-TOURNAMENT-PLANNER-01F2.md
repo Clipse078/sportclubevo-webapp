@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01F2` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01F1`](./SCE-TOURNAMENT-PLANNER-01F1.md) — **CLOSED / ACCEPTED / MERGED** (PR **#865**) |
-| **Status** | **CURRENT — ready for review** |
+| **Status** | **CURRENT — ready for closure (01F2-R1)** |
 | **Branch** | `cursor/sce-tournament-planner-01f2-automatic-schedule-optimiser` |
 | **Next** | **01G** — Locks + partial regeneration |
 
@@ -50,10 +50,11 @@
 | --- | --- |
 | `status` | `OPTIMAL` \| `FEASIBLE_NOT_PROVEN_OPTIMAL` \| `INFEASIBLE_PROVEN` \| `UNRESOLVED` |
 | `assignments` | One row per real fixture: pitch id, start, participant end, resource end |
-| `objectiveMetrics` / `objectiveScore` | Lexicographic soft objective vector |
+| `objectiveMetrics` / `objectiveScore` | Lexicographic soft objective vector (final after bounded improvement when applicable) |
+| `baselineObjectiveMetrics` | 01D witness objective vector before bounded improvement (`null` when exhaustive search used) |
 | `hardConstraintValidationOk` | Post-validation against 01D executable constraints |
 | `participantRestProofStatus` | From 01F1 (`PROVEN` \| `PARTIAL` \| `UNRESOLVED`) |
-| `searchStats` | Candidate slots, nodes visited, complete assignments explored |
+| `searchStats` | Candidate slots, nodes visited, complete assignments explored, bounded-improvement passes/evaluations |
 | `optimalityNote` | Honest optimality semantics (see below) |
 
 ## Hard constraints
@@ -94,10 +95,24 @@ Canonical order from `SCHEDULE_SOFT_OBJECTIVES_LEX_ORDER` (01F1):
 
 1. Run **`analyseTournamentFeasibility`** (01D) — if `INFEASIBLE`, return **`INFEASIBLE_PROVEN`** (no heuristic-only infeasible).
 2. Generate the same **deterministic candidate-slot grid** as 01D.
-3. **Complete optimisation search** (fixtures ≤ `EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES` = 6) — enumerate feasible assignments on the 01D slot grid; keep lex-best objective vector.
-4. For larger fixture counts within 01D bounds: **01D witness** schedule via `completeFeasibilitySearch` → `FEASIBLE_NOT_PROVEN_OPTIMAL` (honest status).
+3. **Complete optimisation search** when `fixtures.length ≤ EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES` (**6**) — enumerate feasible assignments on the 01D slot grid within `OPTIMISER_MAX_SEARCH_NODES`; may prove **`OPTIMAL`**.
+4. **Large schedules** (`fixtures.length > 6`) within 01D bounds:
+   - **Baseline:** first feasible witness via **`completeFeasibilitySearch`** (same deterministic slot order as 01D).
+   - **Bounded improvement:** deterministic single-fixture relocation hill-climb on the candidate-slot grid (`bounded-improvement-search.ts`).
+   - Accept a candidate only when **`compareScheduleObjectiveMetrics` < 0** (strict lex improvement).
+   - Return **`FEASIBLE_NOT_PROVEN_OPTIMAL`** — never claim global optimality.
 5. Validate assignments + dependency order.
 
+| Constant | Value | Role |
+| --- | --- | --- |
+| `EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES` | **6** | Complete lex enumeration threshold |
+| `OPTIMISER_MAX_SEARCH_NODES` | 750_000 | Exhaustive search node cap |
+| `BOUNDED_IMPROVEMENT_MAX_PASSES` | 12 | Hill-climb passes (large schedules) |
+| `BOUNDED_IMPROVEMENT_MAX_CANDIDATE_EVALUATIONS` | 80_000 | Alternative-slot evaluation cap |
+
+**`LARGE_SCHEDULE_BOUNDED_OPTIMISATION_IMPLEMENTED = YES`**  
+**`OPTIMISATION_BUDGET_DETERMINISTIC = YES`** — wall-clock is observed only, not a termination gate.  
+**`FINAL_SCHEDULE_NOT_WORSE_THAN_BASELINE = YES`** — if no improving move is found, the witness is returned unchanged.  
 **`HEURISTIC_ONLY_INFEASIBLE_OUTCOMES = 0`**.
 
 ## Optimality semantics
@@ -105,6 +120,7 @@ Canonical order from `SCHEDULE_SOFT_OBJECTIVES_LEX_ORDER` (01F1):
 | Status | Meaning |
 | --- | --- |
 | **`OPTIMAL`** | Lexicographically optimal among **all** feasible assignments on the 01D discrete candidate-slot grid (complete enumeration within MVP limits) |
+| **`FEASIBLE_NOT_PROVEN_OPTIMAL`** | Feasible schedule; exhaustive search node cap and/or large-schedule bounded improvement without optimality proof |
 | **`INFEASIBLE_PROVEN`** | 01D lower-bound proof or complete search exhaustion with diagnostics |
 | **`UNRESOLVED`** | Safety limits (fixtures/participants/pitches/candidate slots) prevent complete search |
 
@@ -129,9 +145,17 @@ Optimiser consumes timing configuration as supplied. **`OPTIMISER_SILENTLY_MUTAT
 **`PARALLEL_FEASIBILITY_ENGINE_CREATED = NO`**  
 **`PARALLEL_TIMING_ENGINE_CREATED = NO`**
 
-## Performance (observed, R1)
+## Performance (observed, 01F2-R1)
 
-Representative workloads (8 / 16 / 32 fixtures, multi-pitch, breaks, rest) complete in sub-second to low-second ranges locally/CI under MVP bounds; 64/128 remain bounded by `FEASIBILITY_MAX_*` guards — no product SLA claimed.
+Automated observations (not product SLAs):
+
+| Fixtures | Typical outcome | Notes |
+| --- | --- | --- |
+| 8 | `FEASIBLE_NOT_PROVEN_OPTIMAL`, bounded evals ≪ cap | Witness + relocation passes |
+| 16 / 32 | Same, deterministic | Multi-pitch + all-pitch break + min rest |
+| 64 / 128 | Feasible when window/slots permit | Bounded by `BOUNDED_IMPROVEMENT_MAX_CANDIDATE_EVALUATIONS` and existing `FEASIBILITY_MAX_*` guards |
+
+Recorded in `searchStats.boundedImprovementEvaluations` / `boundedImprovementPasses` for qualification.
 
 ## Technical guards
 
@@ -166,6 +190,8 @@ No new product limits. Existing MVP caps (`FEASIBILITY_MAX_FIXTURES`, `FEASIBILI
 | `OPTIMISER_PURE` | **YES** |
 | `SCHEDULE_PERSISTENCE_IMPLEMENTED` | **NO** |
 | `SCHEDULE_OPTIMISER_DETERMINISTIC` | **YES** |
+| `LARGE_SCHEDULE_BOUNDED_OPTIMISATION_IMPLEMENTED` | **YES** |
+| `BOUNDED_OPTIMISATION_STRATEGY` | **Deterministic single-fixture relocation hill-climb** |
 | `FIXTURE_LOCKING_IMPLEMENTED` | **NO** |
 | `PARTIAL_REGENERATION_IMPLEMENTED` | **NO** |
 | `MANUAL_SCHEDULE_DND_IMPLEMENTED` | **NO** |

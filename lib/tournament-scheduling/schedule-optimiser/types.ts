@@ -54,10 +54,14 @@ export type TournamentScheduleOptimisationResult = {
   objectiveScore: ScheduleObjectiveMetrics | null;
   feasibilityMetrics: FeasibilityMetrics | null;
   diagnostics: FeasibilityDiagnostic[];
+  baselineObjectiveMetrics: ScheduleObjectiveMetrics | null;
   searchStats: {
     candidateSlotCount: number;
     completeAssignmentsExplored: number;
     nodesVisited: number;
+    boundedImprovementPasses?: number;
+    boundedImprovementEvaluations?: number;
+    boundedImprovementAccepted?: number;
   };
   optimalityNote: string;
 };

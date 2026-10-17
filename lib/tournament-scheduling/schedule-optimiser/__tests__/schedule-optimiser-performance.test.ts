@@ -32,9 +32,12 @@ describe("01F2 — performance observations", () => {
       result.status,
     );
     expect(elapsedMs).toBeLessThan(count <= 16 ? 30_000 : 120_000);
+    expect(result.searchStats.candidateSlotCount).toBeGreaterThan(0);
     if (result.status === "OPTIMAL") {
-      expect(result.searchStats.candidateSlotCount).toBeGreaterThan(0);
       expect(result.searchStats.nodesVisited).toBeGreaterThan(0);
+    }
+    if (result.status === "FEASIBLE_NOT_PROVEN_OPTIMAL" && count > 6) {
+      expect(result.searchStats.boundedImprovementEvaluations).toBeGreaterThan(0);
     }
   });
 });
