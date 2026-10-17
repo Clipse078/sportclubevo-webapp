@@ -6,7 +6,7 @@
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01G`](./SCE-TOURNAMENT-PLANNER-01G.md) — **CLOSED / MERGED** (PR **#867**) |
 | **Status** | **CLOSED / ACCEPTED / MERGED** — PO final UAT **PASS** (PR **#868**); 01H-R1/R2/R3/R4 |
-| **Next** | **01I** — Manual adjustment + DnD + conflict validation (**NOT STARTED**) |
+| **Next** | **01J** — Results + rankings + qualification progression (**NEXT / NOT STARTED**); predecessor **01I** **CLOSED / MERGED** (PR **#869**) |
 | **Branch** | `cursor/sce-tournament-planner-01h-planung-workspace` |
 
 ## Product purpose

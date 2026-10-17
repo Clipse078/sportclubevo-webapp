@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01I CURRENT (manual adjustment + DnD); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01J NEXT (results + rankings); 01I CLOSED / ACCEPTED / MERGED (PR #869, PO UAT PASS); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -19,8 +19,8 @@
 | **01F2 (Automatic Schedule Optimiser)** | **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | **01G (Locks + partial regeneration)** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
 | **01H (Tournament Planung workspace)** | **CLOSED / ACCEPTED / MERGED** (PR **#868**, PO UAT **PASS**) — Planung workspace + Creator planner integration ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
-| **01I (Manual adjustment + DnD)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) — includes **01I-R2** Creator Termin-first order + retrospective-edit stability (PR **#869**) |
-| **01J (Results + rankings)** | **NEXT / NOT STARTED** |
+| **01I (Manual adjustment + DnD)** | **CLOSED / ACCEPTED / MERGED** (PR **#869**, PO UAT **PASS**) — manual WHEN + TournamentPitch adjustment, DnD, conflict validation, **01I-R1/R2** ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) |
+| **01J (Results + rankings)** | **NEXT / NOT STARTED** — Results + Rankings + Qualification Progression |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 
@@ -29,7 +29,7 @@
 | **HOME** | Termin → Teams → Turnierformat → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht |
 | **AWAY** | Termin → Teams → Ressourcen → Publikation → Übersicht |
 
-Retrospective edits on any step must keep the Composer responsive; Smart Timing recalculates as **derived** output only (apply via **Empfehlung übernehmen**).
+**Creator invariant (permanent, 01I-R2):** Retrospective edits on Termin, Teams, Turnierformat, Spielfelder, or Pausen must keep the Composer responsive (no browser freeze). Upstream changes may refresh **derived** feasibility / Smart Timing / fixture **estimates** only — never silently mutate user timing, breaks, or persisted schedule. Smart Timing applies only via **Empfehlung übernehmen**. Inactive Spielplan must not run expensive live Smart Timing / fixture synthesis on unrelated tab edits.
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -173,7 +173,7 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 6b | **01F2** | **Automatic Schedule Optimiser implementation** — **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | 7 | **01G** | **CLOSED / ACCEPTED / MERGED** — Locks + partial regeneration (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
 | 8 | **01H** | **CLOSED / ACCEPTED / MERGED** (PR **#868**, PO UAT **PASS**) — Planung workspace + **01H-R1/R2/R3/R4** ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
-| 9 | **01I** | **CURRENT** — Manual adjustment / DnD / conflict validation ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) |
+| 9 | **01I** | **CLOSED / ACCEPTED / MERGED** (PR **#869**, PO UAT **PASS**) — Manual adjustment / DnD / conflict validation + Creator retrospective stability ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) |
 | 10 | **01J** | **NEXT / NOT STARTED** — Results + rankings + qualification progression |
 | 11 | **01K** | Publication + sharing |
 | 12 | **01L** | Responsive / accessibility / polish |

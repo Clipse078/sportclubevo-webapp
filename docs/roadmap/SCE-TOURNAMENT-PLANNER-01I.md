@@ -3,9 +3,9 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01I` |
-| **Status** | **CURRENT — ready for PO UAT** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** — PO final UAT **PASS** (PR **#869**); includes **01I-R1** build/type closure + **01I-R2** retrospective Creator stability + Termin-first order |
 | **Predecessor** | [`01H`](./SCE-TOURNAMENT-PLANNER-01H.md) — Planung workspace (**CLOSED / MERGED PR #868**) |
-| **Next** | **01J** — Results + rankings + qualification progression (**NOT STARTED**) |
+| **Next** | **01J** — Results + rankings + qualification progression (**NEXT / NOT STARTED**) |
 
 ## Product goal
 
@@ -82,7 +82,7 @@ Does **not** implement results engine, standings, live qualification resolution,
 | `STALE_MANUAL_MOVE_SILENTLY_OVERWRITES` | **NO** |
 | `MANUAL_UAT_BY_CURSOR` | **SKIPPED_PO_OWNED** |
 
-**Success marker:** `TOURNAMENT_PLANNER_01I_READY_FOR_PO_UAT`
+**Success marker:** `TOURNAMENT_PLANNER_01I_CLOSED_GREEN_BASELINE`
 
 ## 01I-R2 — Creator retrospective-edit stability + Termin-first step order (PO UAT #869)
 
@@ -106,4 +106,14 @@ Does **not** implement results engine, standings, live qualification resolution,
 
 **Regression tests:** `lib/tournaments/__tests__/tournament-composer-creator-01i-r2.test.ts`
 
-**Success marker (R2):** `TOURNAMENT_PLANNER_01I_R2_READY_FOR_PO_UAT`
+**Success marker (R2):** absorbed into PO UAT **PASS** + merge closure (PR **#869**)
+
+## PO final UAT (closure)
+
+| Field | Value |
+| --- | --- |
+| **PO_FINAL_UAT** | **PASS** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+Validated: manual adjustment (WHEN + TournamentPitch), desktop DnD, Spiel verschieben fallback, mobile explicit move, canonical conflict validation, schedule revision concurrency, 01G lock + partial regeneration compatibility (**MOVE ≠ LOCK**), Creator Termin-first order, retrospective upstream edits without browser freeze, Smart Timing derived-only (**Empfehlung übernehmen**).

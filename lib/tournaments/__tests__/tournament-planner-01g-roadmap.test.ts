@@ -19,6 +19,6 @@ describe("01G roadmap", () => {
     );
     expect(parent).toMatch(/01G.*CLOSED|01G = CLOSED|CLOSED \/ ACCEPTED \/ MERGED.*01G/i);
     expect(parent).toMatch(/01H.*CLOSED|01H CLOSED/i);
-    expect(parent).toMatch(/01I.*CURRENT|01I = CURRENT/i);
+    expect(parent).toMatch(/01I.*CLOSED|01J.*NEXT/i);
   });
 });
