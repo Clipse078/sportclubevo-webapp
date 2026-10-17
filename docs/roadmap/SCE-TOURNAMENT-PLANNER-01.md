@@ -18,7 +18,7 @@
 | **01F1 (Smart Timing Advisor foundation)** | **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
 | **01F2 (Automatic Schedule Optimiser)** | **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | **01G (Locks + partial regeneration)** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
-| **01H (Tournament Planung workspace)** | **CURRENT** — R3 operational min-rest + concrete schedule sections ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
+| **01H (Tournament Planung workspace)** | **CURRENT** — R4 simplified Creator timing (Spieldauer + Wechselzeit + pauses); R3 concrete Planung schedule ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -161,7 +161,7 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 6a | **01F1** | **Smart Timing Advisor + scheduling optimisation foundation** — **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
 | 6b | **01F2** | **Automatic Schedule Optimiser implementation** — **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | 7 | **01G** | **CLOSED / ACCEPTED / MERGED** — Locks + partial regeneration (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
-| 8 | **01H** | **CURRENT (PO UAT)** — Planung workspace + **01H-R1/R2** creator Smart Timing & break UX ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
+| 8 | **01H** | **CURRENT (PO UAT)** — Planung workspace + **01H-R1/R2/R4** creator Smart Timing & break UX ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | 9 | **01I** | **NEXT** — Manual adjustment / DnD / conflict validation |
 | 10 | **01J** | Results + rankings + qualification progression |
 | 11 | **01K** | Publication + sharing |

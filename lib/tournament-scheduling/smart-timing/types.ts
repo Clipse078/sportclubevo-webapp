@@ -54,17 +54,6 @@ export type TimingDurationRecommendation = {
   rationale: string;
 };
 
-export type MinRestRecommendationKind =
-  | "OPERATIONALLY_RECOMMENDED"
-  | "MATHEMATICAL_BOUND";
-
-export type TimingMinRestRecommendation = {
-  minRestMinutes: number;
-  kind: MinRestRecommendationKind;
-  mathematicalMinimumMinutes: number;
-  rationale: string;
-};
-
 export type TimingAdjustmentCode =
   | "ADD_TOURNAMENT_PITCH"
   | "EXTEND_TOURNAMENT_END"
@@ -133,8 +122,6 @@ export type TournamentTimingAssessment = {
    * Distinct from operational recommendation when zero-transition utilisation wins mathematically.
    */
   mathematicalMaximumTiming: TimingDurationRecommendation | null;
-  /** Operational vs mathematical minimum rest — never auto-applied. */
-  minRestRecommendation: TimingMinRestRecommendation | null;
   /** Suggestions only — never auto-applied to tournament configuration. */
   recommendationsAutoApplied: false;
   adjustments: TimingAdjustmentOption[];

@@ -31,19 +31,22 @@ function fourTeamHomeDraft() {
   return base;
 }
 
-describe("01H-R3 — composer smart timing operational rest", () => {
-  it("recommends positive min rest for canonical 4-team / 4-pitch / 2h window", () => {
+describe("01H-R4 — creator timing without user-facing minimum rest", () => {
+  it("B — smart timing recommends match duration and transition only", () => {
     const view = buildTournamentComposerSmartTimingView(fourTeamHomeDraft());
     expect(view.recommendedTiming).not.toBeNull();
-    expect(view.recommendedTiming!.minRestMinutes).toBeGreaterThan(0);
+    expect(view.recommendedTiming!.matchDurationMinutes).toBeGreaterThan(0);
+    expect(view.recommendedTiming!.transitionMinutes).toBeGreaterThanOrEqual(0);
+    expect(view.recommendedTiming).not.toHaveProperty("minRestMinutes");
   });
 
-  it("apply recommendation sets min rest only on explicit user action", () => {
+  it("C — apply recommendation updates match/transition but preserves internal min rest", () => {
     const draft = fourTeamHomeDraft();
     draft.planner!.timing.minRestMinutes = 0;
     const view = buildTournamentComposerSmartTimingView(draft);
-    expect(draft.planner!.timing.minRestMinutes).toBe(0);
     const updated = applyComposerRecommendedTiming(draft.planner!, view.recommendedTiming!);
-    expect(updated.timing.minRestMinutes).toBe(view.recommendedTiming!.minRestMinutes);
+    expect(updated.timing.matchDurationMinutes).toBe(view.recommendedTiming!.matchDurationMinutes);
+    expect(updated.timing.transitionMinutes).toBe(view.recommendedTiming!.transitionMinutes);
+    expect(updated.timing.minRestMinutes).toBe(0);
   });
 });

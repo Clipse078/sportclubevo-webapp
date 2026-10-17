@@ -65,14 +65,13 @@ function SmartTimingPanel({
         <p className="text-sm font-semibold text-[var(--foreground)]">✨ SCE Smart Timing</p>
         <p className="mt-1 text-xs text-[var(--text-2)]">
           SCE prüft Spielanzahl, Felder und Zeitfenster und schlägt passende Timing-Werte vor.
-          SCE berücksichtigt dabei auch Erholungszeiten zwischen den Spielen eines Teams.
         </p>
       </div>
 
       {recommended ? (
         <div className="space-y-3" data-testid="tournament-composer-smart-timing-recommendation">
           <p className="text-sm text-[var(--text-2)]">Für dieses Turnier empfehlen wir:</p>
-          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <dl className="grid gap-3 sm:grid-cols-2">
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">Spieldauer</dt>
               <dd className="text-lg font-semibold text-[var(--foreground)]">
@@ -83,14 +82,6 @@ function SmartTimingPanel({
               <dt className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">Wechselzeit</dt>
               <dd className="text-lg font-semibold text-[var(--foreground)]">
                 {recommended.transitionMinutes} Min.
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                Mindestpause pro Team
-              </dt>
-              <dd className="text-lg font-semibold text-[var(--foreground)]">
-                {recommended.minRestMinutes} Min.
               </dd>
             </div>
           </dl>
@@ -404,10 +395,7 @@ export function TournamentComposerSpielplanPanel({
   const timingFieldErrors = fieldErrors
     ? Object.fromEntries(
         Object.entries(fieldErrors).filter(
-          ([key]) =>
-            key === "matchDurationMinutes" ||
-            key === "transitionMinutes" ||
-            key === "minRestMinutes",
+          ([key]) => key === "matchDurationMinutes" || key === "transitionMinutes",
         ),
       )
     : undefined;
@@ -465,27 +453,6 @@ export function TournamentComposerSpielplanPanel({
           {timingFieldErrors?.transitionMinutes ? (
             <p role="alert" className="text-sm text-[var(--sce-danger)]">
               {timingFieldErrors.transitionMinutes}
-            </p>
-          ) : null}
-        </label>
-        <label className="block space-y-2">
-          <span className="fca-label">Mindestpause pro Team (Min.)</span>
-          <input
-            type="number"
-            min={0}
-            className="fca-input"
-            value={planner.timing.minRestMinutes}
-            onChange={(e) =>
-              onChange((p) => ({
-                ...p,
-                timing: { ...p.timing, minRestMinutes: Number(e.target.value) },
-              }))
-            }
-            data-testid="tournament-min-rest"
-          />
-          {timingFieldErrors?.minRestMinutes ? (
-            <p role="alert" className="text-sm text-[var(--sce-danger)]">
-              {timingFieldErrors.minRestMinutes}
             </p>
           ) : null}
         </label>

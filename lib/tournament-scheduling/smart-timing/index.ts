@@ -6,7 +6,6 @@ export {
   recommendOperationalMatchAndTransitionDurations,
   structuralSlotUpperBoundMinutes,
 } from "./backward";
-export { recommendOperationalMinRestMinutes } from "./operational-min-rest";
 export {
   PRACTICAL_MATCH_DURATION_MINUTES,
   PRACTICAL_TRANSITION_MINUTES,
@@ -26,8 +25,6 @@ export type {
   TimingAdjustmentCode,
   TimingAdjustmentOption,
   TimingDurationRecommendation,
-  TimingMinRestRecommendation,
-  MinRestRecommendationKind,
   TimingFixtureSideSource,
   TimingNudge,
   TimingNudgeCode,

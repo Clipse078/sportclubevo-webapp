@@ -168,7 +168,6 @@ function buildTimingInput(payload: TournamentComposerDraftPayload): TournamentTi
 export type TournamentComposerRecommendedTiming = {
   matchDurationMinutes: number;
   transitionMinutes: number;
-  minRestMinutes: number;
 };
 
 export type TournamentComposerSmartTimingView = {
@@ -197,16 +196,10 @@ export function buildTournamentComposerSmartTimingView(
   const liveAssessment = assessTournamentTiming(input);
   let recommendedTiming: TournamentComposerRecommendedTiming | null = null;
 
-  const resolveRecommendedMinRest = (
-    assessment: TournamentTimingAssessment,
-  ): number =>
-    assessment.minRestRecommendation?.minRestMinutes ?? input.config.minRestMinutes;
-
   if (liveAssessment.durationRecommendation) {
     recommendedTiming = {
       matchDurationMinutes: liveAssessment.durationRecommendation.matchDurationMinutes,
       transitionMinutes: liveAssessment.durationRecommendation.transitionMinutes,
-      minRestMinutes: resolveRecommendedMinRest(liveAssessment),
     };
   } else if (payload.endAt) {
     const backward = assessTournamentTiming({ ...input, mode: "BACKWARD" });
@@ -214,7 +207,6 @@ export function buildTournamentComposerSmartTimingView(
       recommendedTiming = {
         matchDurationMinutes: backward.durationRecommendation.matchDurationMinutes,
         transitionMinutes: backward.durationRecommendation.transitionMinutes,
-        minRestMinutes: resolveRecommendedMinRest(backward),
       };
     }
   }
@@ -320,7 +312,7 @@ export function applyComposerRecommendedTiming(
     timing: {
       matchDurationMinutes: recommended.matchDurationMinutes,
       transitionMinutes: recommended.transitionMinutes,
-      minRestMinutes: recommended.minRestMinutes,
+      minRestMinutes: planner.timing.minRestMinutes,
     },
   };
 }

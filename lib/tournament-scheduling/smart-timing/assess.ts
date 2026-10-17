@@ -6,7 +6,6 @@ import {
   computeEffectivePlayableCapacityMinutes,
 } from "./capacity";
 import { recommendBackwardTimingDurations } from "./backward";
-import { recommendOperationalMinRestMinutes } from "./operational-min-rest";
 import {
   buildTimingNudges,
   mapFeasibilitySuggestionsToAdjustments,
@@ -158,12 +157,6 @@ function assessForwardTiming(
     reserveMinutes,
     durationRecommendation: null,
     mathematicalMaximumTiming: null,
-    minRestRecommendation: recommendOperationalMinRestMinutes(
-      timingInputForOps,
-      config.matchDurationMinutes,
-      config.transitionMinutes,
-      participantRestProofStatus,
-    ),
     adjustments: mapFeasibilitySuggestionsToAdjustments(feasibility),
     nudges,
     pitchCountRecommendation: pitchRec,
@@ -180,20 +173,11 @@ function assessBackwardTiming(
 ): TournamentTimingAssessment {
   const { mathematicalMaximum: mathematicalMaximumTiming, operationalRecommendation: durationRecommendation } =
     recommendBackwardTimingDurations(input);
-  const minRestRecommendation =
-    durationRecommendation != null
-      ? recommendOperationalMinRestMinutes(
-          input,
-          durationRecommendation.matchDurationMinutes,
-          durationRecommendation.transitionMinutes,
-          participantRestProofStatus,
-        )
-      : null;
   const trialConfig = durationRecommendation
     ? {
         matchDurationMinutes: durationRecommendation.matchDurationMinutes,
         transitionMinutes: durationRecommendation.transitionMinutes,
-        minRestMinutes: minRestRecommendation?.minRestMinutes ?? config.minRestMinutes,
+        minRestMinutes: config.minRestMinutes,
       }
     : config;
 
@@ -248,7 +232,6 @@ function assessBackwardTiming(
     reserveMinutes,
     durationRecommendation,
     mathematicalMaximumTiming,
-    minRestRecommendation,
     adjustments: mapFeasibilitySuggestionsToAdjustments(feasibility),
     nudges,
     pitchCountRecommendation: pitchRec,
@@ -281,24 +264,10 @@ function assessFixedWindowTiming(
 
   let durationRecommendation = null;
   let mathematicalMaximumTiming = null;
-  let minRestRecommendation = recommendOperationalMinRestMinutes(
-    input,
-    config.matchDurationMinutes,
-    config.transitionMinutes,
-    participantRestProofStatus,
-  );
   if (feasibility.status === "INFEASIBLE") {
     const backward = recommendBackwardTimingDurations(input);
     durationRecommendation = backward.operationalRecommendation;
     mathematicalMaximumTiming = backward.mathematicalMaximum;
-    if (durationRecommendation) {
-      minRestRecommendation = recommendOperationalMinRestMinutes(
-        input,
-        durationRecommendation.matchDurationMinutes,
-        durationRecommendation.transitionMinutes,
-        participantRestProofStatus,
-      );
-    }
   }
 
   const heavyOpportunities = input.fixtures.length <= HEAVY_OPPORTUNITY_FIXTURE_LIMIT;
@@ -335,7 +304,6 @@ function assessFixedWindowTiming(
     reserveMinutes,
     durationRecommendation,
     mathematicalMaximumTiming,
-    minRestRecommendation,
     adjustments: mapFeasibilitySuggestionsToAdjustments(feasibility),
     nudges,
     pitchCountRecommendation: pitchRec,

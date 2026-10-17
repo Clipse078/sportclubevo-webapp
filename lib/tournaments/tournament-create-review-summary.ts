@@ -137,7 +137,7 @@ export function buildTournamentCreateReviewSummary(input: {
       : null,
     plannerPitchLabels: planner?.pitches.map((p) => p.label) ?? [],
     plannerTimingLabel: planner
-      ? `${planner.timing.matchDurationMinutes} Min. Spiel · ${planner.timing.transitionMinutes} Min. Wechsel · ${planner.timing.minRestMinutes} Min. Pause/Team`
+      ? `${planner.timing.matchDurationMinutes} Min. Spiel · ${planner.timing.transitionMinutes} Min. Wechsel`
       : null,
     plannerBreakCount: planner?.breaks.length ?? 0,
   };
