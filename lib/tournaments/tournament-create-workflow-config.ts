@@ -11,9 +11,9 @@ export type TournamentCreateTabId =
   | "uebersicht";
 
 const HOME_TAB_ORDER: TournamentCreateTabId[] = [
+  "termin",
   "teams",
   "turnierformat",
-  "termin",
   "spielfelder",
   "spielplan",
   "ressourcen",
@@ -22,8 +22,8 @@ const HOME_TAB_ORDER: TournamentCreateTabId[] = [
 ];
 
 const AWAY_TAB_ORDER: TournamentCreateTabId[] = [
-  "teams",
   "termin",
+  "teams",
   "ressourcen",
   "publikation",
   "uebersicht",
@@ -55,7 +55,7 @@ export function buildTournamentCreateTabNavigationConfig(input?: {
 
   return {
     contextKind: "TOURNAMENT_CREATE",
-    defaultTab: "teams",
+    defaultTab: "termin",
     tabs: order.map((key) => ({
       key,
       label: mark(key, TAB_LABELS[key]),

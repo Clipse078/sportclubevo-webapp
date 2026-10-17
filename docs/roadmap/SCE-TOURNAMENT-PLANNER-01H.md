@@ -76,7 +76,9 @@ Manual drag & drop and move validation belong to **01I** — not implemented in 
 
 PO UAT finding: Planung workspace existed but the canonical **Tournament Activity Composer** did not collect planner inputs.
 
-**Creator IA (HOME):** Teams → Turnierformat → Termin → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht. AWAY keeps the legacy five-step surface (no planner steps).
+**Creator IA (HOME, 01H-R1 — superseded by 01I-R2):** Teams → Turnierformat → Termin → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht.
+
+**Creator IA (canonical after 01I-R2 PO UAT #869):** **Termin → Teams → Turnierformat → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht.** AWAY: **Termin → Teams → Ressourcen → Publikation → Übersicht** (no planner steps). 01H package status remains **CLOSED / ACCEPTED / MERGED** — order change is a 01I regression correction, not a reopen of 01H.
 
 **Persistence boundary:** Composer commit persists participants/resources as before, then `persistTournamentPlannerFromComposer` writes competition configuration, generates fixtures (01E engines), TournamentPitch, breaks, and a WORKING schedule version with timing — **no automatic optimiser run** (Planung CTA **✨ Spielplan automatisch erstellen** remains the schedule assignment boundary).
 

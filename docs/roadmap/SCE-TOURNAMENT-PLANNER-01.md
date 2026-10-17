@@ -19,8 +19,17 @@
 | **01F2 (Automatic Schedule Optimiser)** | **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | **01G (Locks + partial regeneration)** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
 | **01H (Tournament Planung workspace)** | **CLOSED / ACCEPTED / MERGED** (PR **#868**, PO UAT **PASS**) — Planung workspace + Creator planner integration ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
-| **01I (Manual adjustment + DnD)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) |
+| **01I (Manual adjustment + DnD)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) — includes **01I-R2** Creator Termin-first order + retrospective-edit stability (PR **#869**) |
 | **01J (Results + rankings)** | **NEXT / NOT STARTED** |
+
+### Tournament Creator step order (canonical after 01I-R2)
+
+| Surface | Order |
+| --- | --- |
+| **HOME** | Termin → Teams → Turnierformat → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht |
+| **AWAY** | Termin → Teams → Ressourcen → Publikation → Übersicht |
+
+Retrospective edits on any step must keep the Composer responsive; Smart Timing recalculates as **derived** output only (apply via **Empfehlung übernehmen**).
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)

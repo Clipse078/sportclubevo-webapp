@@ -83,3 +83,27 @@ Does **not** implement results engine, standings, live qualification resolution,
 | `MANUAL_UAT_BY_CURSOR` | **SKIPPED_PO_OWNED** |
 
 **Success marker:** `TOURNAMENT_PLANNER_01I_READY_FOR_PO_UAT`
+
+## 01I-R2 — Creator retrospective-edit stability + Termin-first step order (PO UAT #869)
+
+**Finding A (blocker):** Retrospective edits (Teams, Pausen, cross-step navigation) could freeze the browser when Spielplan Smart Timing ran full fixture generation + dual `assessTournamentTiming` on **every** upstream draft change while the Spielplan panel stayed mounted but hidden.
+
+**Root fix (state ownership):**
+
+- Smart Timing remains **derived** — recommendations never write into planner timing except via **Empfehlung übernehmen**.
+- Live Smart Timing derivation runs only when the **Spielplan** tab is active (`activeTab === "spielplan"`), not on Teams/Termin/Format/Pitch edits.
+- Spielplan payload uses the memoized composer draft snapshot (no per-render `buildPayload()` churn).
+- HOME/AWAY `homeAway` effect no longer clears organiser on unrelated duration-policy dependency churn.
+
+**Finding B (PO order):** **Termin** is the first Creator step (foundational window for Smart Timing and pause date inheritance). Free direct tab navigation and whole-form validation are unchanged — not a locked wizard.
+
+| Surface | Canonical step order |
+| --- | --- |
+| **HOME** | Termin → Teams → Turnierformat → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht |
+| **AWAY** | Termin → Teams → Ressourcen → Publikation → Übersicht |
+
+**Creator invariant:** Retrospective upstream edits must safely refresh **derived** feasibility/Smart Timing/fixture **estimates** without silent mutation of user timing/break values or schedule persistence in the Creator.
+
+**Regression tests:** `lib/tournaments/__tests__/tournament-composer-creator-01i-r2.test.ts`
+
+**Success marker (R2):** `TOURNAMENT_PLANNER_01I_R2_READY_FOR_PO_UAT`

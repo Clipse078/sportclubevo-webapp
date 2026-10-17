@@ -79,9 +79,9 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
   });
   it("uses canonical tournament tabs", () => {
     expect(buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" }).tabs.map((t) => t.key)).toEqual([
+      "termin",
       "teams",
       "turnierformat",
-      "termin",
       "spielfelder",
       "spielplan",
       "ressourcen",
@@ -89,8 +89,8 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
       "uebersicht",
     ]);
     expect(buildTournamentCreateTabNavigationConfig({ homeAway: "AWAY" }).tabs.map((t) => t.key)).toEqual([
-      "teams",
       "termin",
+      "teams",
       "ressourcen",
       "publikation",
       "uebersicht",
@@ -109,7 +109,7 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
     expect(computeTournamentCreateTabErrors(d).termin).toBeUndefined();
   });
   it("routes validation to teams when empty", () => {
-    expect(firstInvalidTournamentCreateTab(computeTournamentCreateTabErrors(createEmptyTournamentComposerDraft()))).toBe("teams");
+    expect(firstInvalidTournamentCreateTab(computeTournamentCreateTabErrors(createEmptyTournamentComposerDraft()))).toBe("termin");
   });
   it("HOME optional resources step valid", () => {
     const d = validDraft();
