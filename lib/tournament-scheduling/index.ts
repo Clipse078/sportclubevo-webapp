@@ -16,3 +16,20 @@ export * from "./knockout-bracket";
 export * from "./qualification-mapping";
 export * from "./smart-timing";
 export * from "./schedule-optimiser";
+export {
+  validateResolvedScheduleLocks,
+  mergeScheduleLocks,
+  resolveFixtureScheduleLocksFromBaseline,
+  toLockedAssignmentsForFeasibility,
+  fixtureAllowsSlot,
+  isFixtureFullyLockedInState,
+} from "./schedule-lock";
+export type {
+  ScheduleLockConflictCategory,
+  ScheduleLockConflictDiagnostic,
+  ScheduleLockValidationResult,
+  TournamentFixtureScheduleLock,
+  ResolvedFixtureScheduleLock,
+} from "./schedule-lock";
+export * from "./partial-regeneration";
+export * from "./partial-regeneration-service";

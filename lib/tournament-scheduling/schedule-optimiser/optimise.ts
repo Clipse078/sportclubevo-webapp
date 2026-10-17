@@ -9,11 +9,7 @@ import {
   computeTheoreticalSlotCapacity,
   generateFeasibilityCandidateSlots,
 } from "../feasibility/candidate-slots";
-import {
-  applyFeasibilitySlot,
-  createFeasibilitySearchState,
-} from "../feasibility/complete-search";
-import { canPlaceFixtureOnSlot } from "../feasibility/constraints";
+import { createFeasibilitySearchState } from "../feasibility/complete-search";
 import {
   buildBlockedIntervalsByPitchId,
   validateTournamentBreaksInput,
@@ -44,6 +40,12 @@ import type {
   TournamentScheduleOptimisationResult,
 } from "./types";
 import { validateOptimisedScheduleHardConstraints } from "./validate-schedule";
+import {
+  buildInitialSearchStateFromRegeneration,
+  buildRegenerationSearchContext,
+  seedUnlockedBaselineIntoState,
+} from "./regeneration-context";
+import { computeRegenerationChangeMetrics } from "../partial-regeneration/disruption-metrics";
 
 function ms(minutes: number): number {
   return minutes * 60_000;
@@ -63,53 +65,6 @@ function mapAssignmentsFromState(
     }));
 }
 
-function buildInitialStateFromLocks(
-  input: TournamentFeasibilityInput,
-  sortedFixtures: TournamentFeasibilityInput["fixtures"],
-  candidateSlots: readonly FeasibilityCandidateSlot[],
-  config: ReturnType<typeof normalizeTimingConfig>,
-): { ok: true; state: ReturnType<typeof createFeasibilitySearchState> } | { ok: false } {
-  const slotByKey = new Map<string, FeasibilityCandidateSlot>();
-  for (const slot of candidateSlots) {
-    slotByKey.set(`${slot.tournamentPitchId}\0${slot.startUtcMs}`, slot);
-  }
-  const fixtureById = new Map(sortedFixtures.map((f) => [f.fixtureId, f]));
-  const state = createFeasibilitySearchState();
-
-  for (const locked of input.lockedAssignments ?? []) {
-    const fixture = fixtureById.get(locked.fixtureId);
-    if (!fixture) return { ok: false };
-    const matchMs = config.matchDurationMinutes * 60_000;
-    const slot: FeasibilityCandidateSlot =
-      slotByKey.get(`${locked.tournamentPitchId}\0${locked.startUtcMs}`) ?? {
-        slotIndex: -1,
-        tournamentPitchId: locked.tournamentPitchId,
-        startUtcMs: locked.startUtcMs,
-        resourceEndUtcMs: locked.startUtcMs + matchMs + ms(config.transitionMinutes),
-        participantEndUtcMs: locked.startUtcMs + matchMs,
-      };
-    const participantIds = [fixture.sideAParticipantId, fixture.sideBParticipantId];
-    const resourceBookings = state.resourceBookings.get(slot.tournamentPitchId) ?? [];
-    if (
-      !canPlaceFixtureOnSlot({
-        fixtureId: fixture.fixtureId,
-        participantIds,
-        slot,
-        config,
-        windowStart: input.tournamentWindow.startUtcMs,
-        windowEnd: input.tournamentWindow.endUtcMs,
-        resourceBookings,
-        participantBookings: state.participantBookings,
-        participantLastEnd: state.participantLastEnd,
-      })
-    ) {
-      return { ok: false };
-    }
-    applyFeasibilitySlot(state, fixture.fixtureId, participantIds, slot);
-  }
-  return { ok: true, state };
-}
-
 /**
  * Pure deterministic schedule optimiser (01F2) — WHEN + WHICH TournamentPitch.
  * Reuses 01D candidate slots, hard constraints, and complete search bounds.
@@ -118,9 +73,15 @@ export function optimiseTournamentSchedule(
   input: TournamentScheduleOptimisationInput,
 ): TournamentScheduleOptimisationResult {
   const config = normalizeTimingConfig(input.config);
+  const regeneration = buildRegenerationSearchContext(input);
   const participantRestProofStatus = resolveParticipantRestProofStatus(input.fixtures);
   const feasibilityInput = buildTournamentFeasibilityInput(
-    { ...input, mode: "FIXED_ASSESSMENT", fixtures: input.fixtures },
+    {
+      ...input,
+      mode: "FIXED_ASSESSMENT",
+      fixtures: input.fixtures,
+      lockedAssignments: regeneration.feasibilityLockedAssignments,
+    },
     config,
     input.tournamentWindow,
   );
@@ -266,12 +227,16 @@ export function optimiseTournamentSchedule(
   const sortedFixtures = sortFixturesForOptimisation(feasibilityFixtures, dependencies);
   const pitchIds = tournamentPitches.map((p) => p.tournamentPitchId);
 
-  const lockState = buildInitialStateFromLocks(
-    feasibilityInput,
+  const baselineAssignments = input.baselineAssignments ?? [];
+  const lockState = buildInitialSearchStateFromRegeneration({
     sortedFixtures,
     candidateSlots,
     config,
-  );
+    windowStart: feasibilityInput.tournamentWindow.startUtcMs,
+    windowEnd: feasibilityInput.tournamentWindow.endUtcMs,
+    regeneration,
+    baselineAssignments,
+  });
   if (!lockState.ok) {
     return {
       status: "INFEASIBLE_PROVEN",
@@ -306,6 +271,9 @@ export function optimiseTournamentSchedule(
         pitchIds,
         dependencies,
         initialState: lockState.state,
+        lockByFixtureId: regeneration.lockByFixtureId,
+        baselineAssignments,
+        resolvedLocks: regeneration.resolvedLocks,
       })
     : {
         found: false,
@@ -327,6 +295,43 @@ export function optimiseTournamentSchedule(
   if (search.found && search.bestState) {
     finalState = search.bestState;
     finalMetrics = search.bestObjectiveMetrics;
+  }
+
+  if (!useExhaustiveLex && baselineAssignments.length > 0) {
+    const witnessState = cloneSearchStateFromLocks(lockState.state);
+    const seeded = seedUnlockedBaselineIntoState({
+      state: witnessState,
+      sortedFixtures,
+      candidateSlots,
+      config,
+      windowStart: feasibilityInput.tournamentWindow.startUtcMs,
+      windowEnd: feasibilityInput.tournamentWindow.endUtcMs,
+      regeneration,
+      baselineAssignments,
+    });
+    if (!seeded.ok) {
+      return {
+        status: "INFEASIBLE_PROVEN",
+        participantRestProofStatus,
+        assignments: [],
+        hardConstraintValidationOk: false,
+        objectiveMetrics: null,
+        objectiveScore: null,
+        feasibilityMetrics: feasibility.metrics,
+        diagnostics: [{ code: "LOCKS.CONFLICTING", constraintId: "H7" }],
+        searchStats: { ...emptyStats, candidateSlotCount: candidateSlots.length },
+        baselineObjectiveMetrics: null,
+        optimalityNote: "Baseline schedule conflicts with locks or hard constraints.",
+      };
+    }
+    finalState = witnessState;
+    finalMetrics = computeScheduleObjectiveMetrics({
+      state: witnessState,
+      config,
+      windowStartUtcMs: feasibilityInput.tournamentWindow.startUtcMs,
+      pitchIds,
+    });
+    status = "FEASIBLE_NOT_PROVEN_OPTIMAL";
   }
 
   if (!finalState) {
@@ -362,6 +367,9 @@ export function optimiseTournamentSchedule(
       pitchIds,
       dependencies,
       baselineState: finalState,
+      lockByFixtureId: regeneration.lockByFixtureId,
+      baselineAssignments,
+      resolvedLocks: regeneration.resolvedLocks,
     });
     baselineObjectiveMetrics = improved.baselineObjectiveMetrics;
     finalState = improved.state;
@@ -417,6 +425,15 @@ export function optimiseTournamentSchedule(
     participantMinRestSlackMinutes: null,
   });
 
+  const changeMetrics =
+    baselineAssignments.length > 0 && assignments.length > 0
+      ? computeRegenerationChangeMetrics({
+          baselineAssignments,
+          resultAssignments: assignments,
+          resolvedLocks: regeneration.resolvedLocks,
+        })
+      : null;
+
   return {
     status,
     participantRestProofStatus,
@@ -427,6 +444,7 @@ export function optimiseTournamentSchedule(
     feasibilityMetrics: metrics,
     diagnostics: [],
     baselineObjectiveMetrics,
+    changeMetrics,
     searchStats: {
       candidateSlotCount: candidateSlots.length,
       completeAssignmentsExplored: search.completeAssignmentsExplored,

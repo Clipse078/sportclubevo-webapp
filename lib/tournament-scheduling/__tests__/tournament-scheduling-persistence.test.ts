@@ -61,6 +61,7 @@ import {
   updateTournamentFixtureAssignment,
   removeTournamentFixtureAssignment,
   setTournamentFixtureAssignmentLocked,
+  setTournamentFixtureAssignmentScheduleLock,
   listTournamentFixtureAssignmentsForVersion,
 } from "../assignment-service";
 import { loadTournamentScheduleSnapshot } from "../schedule-snapshot-service";
@@ -328,6 +329,7 @@ describe("assignments", () => {
       isLocked: false,
       lockedAt: null,
       lockedByUserId: null,
+      scheduleLockDimension: null,
     } as never);
 
     const result = await persistTournamentFixtureAssignment(TENANT_A, VERSION_ID, {
@@ -387,6 +389,122 @@ describe("assignments", () => {
     ).rejects.toThrow(TournamentScheduleApprovedImmutableError);
   });
 
+  it("sets TIME schedule lock dimension with revision bump", async () => {
+    vi.mocked(prisma.tournamentFixtureAssignment.findFirst).mockResolvedValue({
+      id: ASSIGNMENT_ID,
+      scheduleVersionId: VERSION_ID,
+      fixtureId: FIXTURE_ID,
+      tournamentPitchId: PITCH_ID,
+      startAt: new Date(),
+      endAt: new Date(),
+      isLocked: false,
+      lockedAt: null,
+      lockedByUserId: null,
+      scheduleLockDimension: null,
+      scheduleVersion: { id: VERSION_ID, status: "WORKING", revision: 4 },
+    } as never);
+    vi.mocked(prisma.tournamentScheduleVersion.findUniqueOrThrow).mockResolvedValue({
+      revision: 4,
+      status: "WORKING",
+    } as never);
+    vi.mocked(prisma.tournamentScheduleVersion.update).mockResolvedValue({ revision: 5 } as never);
+    vi.mocked(prisma.tournamentFixtureAssignment.update).mockResolvedValue({
+      id: ASSIGNMENT_ID,
+      scheduleVersionId: VERSION_ID,
+      fixtureId: FIXTURE_ID,
+      tournamentPitchId: PITCH_ID,
+      startAt: new Date(),
+      endAt: new Date(),
+      isLocked: false,
+      lockedAt: new Date(),
+      lockedByUserId: "user-1",
+      scheduleLockDimension: "TIME",
+    } as never);
+
+    const locked = await setTournamentFixtureAssignmentScheduleLock(
+      TENANT_A,
+      ASSIGNMENT_ID,
+      "TIME",
+      "user-1",
+      { expectedRevision: 4 },
+    );
+    expect(locked.revision).toBe(5);
+    expect(locked.assignment.scheduleLockDimension).toBe("TIME");
+    expect(locked.assignment.isLocked).toBe(false);
+  });
+
+  it("clears schedule lock dimension on unlock", async () => {
+    vi.mocked(prisma.tournamentFixtureAssignment.findFirst).mockResolvedValue({
+      id: ASSIGNMENT_ID,
+      scheduleVersionId: VERSION_ID,
+      fixtureId: FIXTURE_ID,
+      tournamentPitchId: PITCH_ID,
+      startAt: new Date(),
+      endAt: new Date(),
+      isLocked: true,
+      lockedAt: new Date(),
+      lockedByUserId: "user-1",
+      scheduleLockDimension: "PITCH",
+      scheduleVersion: { id: VERSION_ID, status: "WORKING", revision: 6 },
+    } as never);
+    vi.mocked(prisma.tournamentScheduleVersion.findUniqueOrThrow).mockResolvedValue({
+      revision: 6,
+      status: "WORKING",
+    } as never);
+    vi.mocked(prisma.tournamentScheduleVersion.update).mockResolvedValue({ revision: 7 } as never);
+    vi.mocked(prisma.tournamentFixtureAssignment.update).mockResolvedValue({
+      id: ASSIGNMENT_ID,
+      scheduleVersionId: VERSION_ID,
+      fixtureId: FIXTURE_ID,
+      tournamentPitchId: PITCH_ID,
+      startAt: new Date(),
+      endAt: new Date(),
+      isLocked: false,
+      lockedAt: null,
+      lockedByUserId: null,
+      scheduleLockDimension: null,
+    } as never);
+
+    const unlocked = await setTournamentFixtureAssignmentScheduleLock(
+      TENANT_A,
+      ASSIGNMENT_ID,
+      null,
+      null,
+      { expectedRevision: 6 },
+    );
+    expect(unlocked.revision).toBe(7);
+    expect(unlocked.assignment.scheduleLockDimension).toBeNull();
+  });
+
+  it("rejects stale revision on schedule lock mutation", async () => {
+    vi.mocked(prisma.tournamentFixtureAssignment.findFirst).mockResolvedValue({
+      id: ASSIGNMENT_ID,
+      scheduleVersionId: VERSION_ID,
+      fixtureId: FIXTURE_ID,
+      tournamentPitchId: PITCH_ID,
+      startAt: new Date(),
+      endAt: new Date(),
+      isLocked: false,
+      lockedAt: null,
+      lockedByUserId: null,
+      scheduleLockDimension: null,
+      scheduleVersion: { id: VERSION_ID, status: "WORKING", revision: 9 },
+    } as never);
+
+    await expect(
+      setTournamentFixtureAssignmentScheduleLock(TENANT_A, ASSIGNMENT_ID, "PITCH", "user-1", {
+        expectedRevision: 3,
+      }),
+    ).rejects.toMatchObject({ code: "SCHEDULE.STALE_VERSION" });
+  });
+
+  it("rejects cross-tenant assignment lock mutation", async () => {
+    vi.mocked(prisma.tournamentFixtureAssignment.findFirst).mockResolvedValue(null);
+    await expect(
+      setTournamentFixtureAssignmentScheduleLock(TENANT_B, ASSIGNMENT_ID, "TIME", "user-1"),
+    ).rejects.toThrow();
+  });
+
   it("locks and unlocks assignment", async () => {
     vi.mocked(prisma.tournamentFixtureAssignment.findFirst).mockResolvedValue({
       id: ASSIGNMENT_ID,
@@ -398,6 +516,7 @@ describe("assignments", () => {
       isLocked: false,
       lockedAt: null,
       lockedByUserId: null,
+      scheduleLockDimension: null,
       scheduleVersion: { id: VERSION_ID, status: "WORKING", revision: 2 },
     } as never);
     vi.mocked(prisma.tournamentScheduleVersion.findUniqueOrThrow).mockResolvedValue({
@@ -415,6 +534,7 @@ describe("assignments", () => {
       isLocked: true,
       lockedAt: new Date(),
       lockedByUserId: "user-1",
+      scheduleLockDimension: "TIME_AND_PITCH",
     } as never);
 
     const locked = await setTournamentFixtureAssignmentLocked(
@@ -485,6 +605,7 @@ describe("assignments", () => {
       isLocked: false,
       lockedAt: null,
       lockedByUserId: null,
+      scheduleLockDimension: null,
     } as never);
 
     const updated = await updateTournamentFixtureAssignment(

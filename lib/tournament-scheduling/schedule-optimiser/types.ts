@@ -1,4 +1,12 @@
-import type { FeasibilityDiagnostic, FeasibilityMetrics, FeasibilitySchedulingConfig } from "../feasibility/types";
+import type {
+  FeasibilityAssignmentRef,
+  FeasibilityDiagnostic,
+  FeasibilityMetrics,
+  FeasibilitySchedulingConfig,
+} from "../feasibility/types";
+import type { TournamentFixtureScheduleLock } from "../schedule-lock/types";
+import type { RegenerationChangeMetrics } from "../partial-regeneration/types";
+import type { ScheduleLockConflictDiagnostic } from "../schedule-lock/types";
 import type {
   ParticipantRestProofStatus,
   TimingFixtureSideSource,
@@ -31,6 +39,12 @@ export type TournamentScheduleOptimisationInput = Omit<TournamentTimingInput, "m
   fixtures: readonly TournamentScheduleOptimisationFixtureRef[];
   /** When omitted, config is taken from input.config unchanged (no silent mutation). */
   config: FeasibilitySchedulingConfig;
+  /** 01G — granular locks (TIME / PITCH / TIME_AND_PITCH). */
+  scheduleLocks?: readonly TournamentFixtureScheduleLock[];
+  /** 01G — current schedule used for partial-lock resolution and minimal-disruption objective. */
+  baselineAssignments?: readonly TournamentFixtureScheduleAssignment[];
+  /** @deprecated Prefer scheduleLocks TIME_AND_PITCH — full assignment locks for feasibility seed. */
+  lockedAssignments?: readonly FeasibilityAssignmentRef[];
 };
 
 export type TournamentFixtureScheduleAssignment = {
@@ -45,6 +59,17 @@ export type ScheduleObjectiveMetrics = Partial<Record<ScheduleSoftObjectiveId, n
   tournamentSpanMinutes: number;
 };
 
+export type TournamentPartialRegenerationInput = TournamentScheduleOptimisationInput & {
+  baselineAssignments: readonly TournamentFixtureScheduleAssignment[];
+  scheduleLocks?: readonly TournamentFixtureScheduleLock[];
+};
+
+export type TournamentPartialRegenerationResult = TournamentScheduleOptimisationResult & {
+  changeMetrics: RegenerationChangeMetrics | null;
+  lockConflictDiagnostics: ScheduleLockConflictDiagnostic[];
+  preservedLockCount: number;
+};
+
 export type TournamentScheduleOptimisationResult = {
   status: TournamentScheduleOptimisationStatus;
   participantRestProofStatus: ParticipantRestProofStatus;
@@ -55,6 +80,7 @@ export type TournamentScheduleOptimisationResult = {
   feasibilityMetrics: FeasibilityMetrics | null;
   diagnostics: FeasibilityDiagnostic[];
   baselineObjectiveMetrics: ScheduleObjectiveMetrics | null;
+  changeMetrics?: RegenerationChangeMetrics | null;
   searchStats: {
     candidateSlotCount: number;
     completeAssignmentsExplored: number;

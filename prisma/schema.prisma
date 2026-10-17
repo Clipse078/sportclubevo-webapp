@@ -8927,6 +8927,13 @@ enum TournamentScheduleVersionStatus {
   SUPERSEDED
 }
 
+/// SCE-TOURNAMENT-PLANNER-01G — fixture schedule decision lock granularity.
+enum TournamentFixtureScheduleLockDimension {
+  TIME
+  PITCH
+  TIME_AND_PITCH
+}
+
 /// SCE-TOURNAMENT-PLANNER-01E3A — user-facing competition structure (above generation strategy).
 enum TournamentCompetitionFormat {
   GROUP_MIX_ONLY
@@ -9317,10 +9324,12 @@ model TournamentFixtureAssignment {
   startAt DateTime
   endAt   DateTime
 
-  /// FULL_ASSIGNMENT_LOCK MVP — fixed pitch + start (and derived end) when true.
+  /// Legacy boolean — true when `scheduleLockDimension` is set (TIME_AND_PITCH historically).
   isLocked       Boolean   @default(false)
   lockedAt       DateTime?
   lockedByUserId String?
+  /// When set, regeneration preserves the locked dimension(s) exactly (01G).
+  scheduleLockDimension TournamentFixtureScheduleLockDimension?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
