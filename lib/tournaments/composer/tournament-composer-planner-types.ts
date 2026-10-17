@@ -11,10 +11,13 @@ export type TournamentComposerPitchDraft = {
 export type TournamentComposerBreakDraft = {
   localId: string;
   label: string;
-  startAt: string;
-  endAt: string;
+  /** Wall-clock begin (HH:MM) on the tournament start date. */
+  startLocalTime: string;
+  durationMinutes: number;
   scope: "ALL_PITCHES" | "SELECTED_PITCHES";
   tournamentPitchLocalIds: string[];
+  /** When false, breaks default to all tournament pitches (normal flow). */
+  fieldSelectionAdvanced: boolean;
 };
 
 export type TournamentComposerTimingDraft = {

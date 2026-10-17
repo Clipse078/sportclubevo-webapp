@@ -38,14 +38,17 @@ export function validateHomePlannerDraft(
     errors.meetingsPerOpponent = "Mindestens ein Spiel pro Gegner.";
   }
   for (const br of planner.breaks) {
-    if (!br.startAt || !br.endAt) {
-      errors[`break-${br.localId}`] = "Pause benötigt Start und Ende.";
+    const missingBegin = !br.startLocalTime?.trim();
+    const missingDuration = !br.durationMinutes || br.durationMinutes <= 0;
+    if (missingBegin || missingDuration) {
+      errors[`break-${br.localId}`] = "Bitte Beginn und Dauer der Pause angeben.";
       continue;
     }
-    if (new Date(br.endAt).getTime() <= new Date(br.startAt).getTime()) {
-      errors[`break-${br.localId}`] = "Pausenende muss nach dem Start liegen.";
-    }
-    if (br.scope === "SELECTED_PITCHES" && br.tournamentPitchLocalIds.length === 0) {
+    if (
+      br.fieldSelectionAdvanced &&
+      br.scope === "SELECTED_PITCHES" &&
+      br.tournamentPitchLocalIds.length === 0
+    ) {
       errors[`break-${br.localId}`] = "Bitte mindestens ein Feld für die Sperrzeit auswählen.";
     }
   }

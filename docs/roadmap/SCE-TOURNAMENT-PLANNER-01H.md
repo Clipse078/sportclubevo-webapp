@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01H` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01G`](./SCE-TOURNAMENT-PLANNER-01G.md) — **CLOSED / MERGED** (PR **#867**) |
-| **Status** | **CURRENT** — PO UAT (01H-R1 creator integration) |
+| **Status** | **CURRENT** — PO UAT (01H-R2 Smart Timing + break UX) |
 | **Next** | **01I** — Manual adjustment + DnD + conflict validation |
 
 ## Product purpose
@@ -84,6 +84,23 @@ PO UAT finding: Planung workspace existed but the canonical **Tournament Activit
 **Legacy HOME:** Planung shows actionable **Turnierplanung einrichten** when pitches or fixtures are missing.
 
 **AWAY:** No planner in composer; Planung tab shows organiser-managed informational copy (no broken planner chrome).
+
+## 01H-R2 — Smart Tournament Creator UX + simple break model
+
+PO UAT (01H-R1): planner fields existed but felt like a generic form; Smart Timing was not prominent; breaks were over-engineered; Spieldauer defaulted to **120** when `defaultTournamentDurationMinutes` was incorrectly mapped to `matchDurationMinutes` in `TournamentCreateForm`.
+
+**Smart Timing (Spielplan step):** Prominent **✨ SCE Smart Timing** panel (above timing inputs) reuses **01F1** only (`assessTournamentTiming` / backward recommendation when a fixed end exists). **Empfehlung übernehmen** writes canonical timing fields without silent overwrite until the user accepts. Live feasibility surface uses engine `feasibilityStatus` (text + glyph, not color-only). Specific missing-input hints replace the generic sentence.
+
+**Breaks:** Composer UX is **Beginn (time) + Dauer (Min.)** on the tournament start date; end is derived; default scope **ALL_PITCHES**. **Nur bestimmte Felder sperren** reveals advanced multi-select pitch chips (no new binary checkboxes). Persistence maps to existing `TournamentBreak` start/end/scope — **SCHEMA_CHANGE = NO** for R2.
+
+**Boundary unchanged:** Creator does not run the full optimiser; Planung **✨ Spielplan automatisch erstellen** remains the WHEN/WHICH-pitch boundary.
+
+| Marker | Value |
+| --- | --- |
+| **TOURNAMENT_PLANNER_01H_R2_READY_FOR_PO_UAT** | **YES** (await PO visual UAT) |
+| **SMART_TIMING_ENGINE_REUSED** | **YES** |
+| **PARALLEL_CREATOR_TIMING_CALCULATOR_CREATED** | **NO** |
+| **SCHEMA_CHANGE (R2)** | **NO** |
 
 ## Package boundary
 

@@ -171,10 +171,7 @@ export default function TournamentCreateForm({
   const [teamPageVisible, setTeamPageVisible] = useState(initialPub.teamPageVisible);
   const [planner, setPlanner] = useState<TournamentComposerPlannerDraft | null>(
     serverHydrated?.homeAway === "HOME"
-      ? (serverHydrated.planner ??
-          createDefaultTournamentComposerPlannerDraft({
-            defaultMatchDurationMinutes: defaultTournamentDurationMinutes,
-          }))
+      ? (serverHydrated.planner ?? createDefaultTournamentComposerPlannerDraft())
       : null,
   );
 
@@ -193,12 +190,7 @@ export default function TournamentCreateForm({
   useEffect(() => {
     if (homeAway === "HOME") {
       setOrganizerSelection(null);
-      setPlanner((prev) =>
-        prev ??
-        createDefaultTournamentComposerPlannerDraft({
-          defaultMatchDurationMinutes: defaultTournamentDurationMinutes,
-        }),
-      );
+      setPlanner((prev) => prev ?? createDefaultTournamentComposerPlannerDraft());
     } else {
       setPlanner(null);
     }
@@ -430,10 +422,7 @@ export default function TournamentCreateForm({
       );
       setPlanner(
         hydrated.homeAway === "HOME"
-          ? (hydrated.planner ??
-              createDefaultTournamentComposerPlannerDraft({
-                defaultMatchDurationMinutes: defaultTournamentDurationMinutes,
-              }))
+          ? (hydrated.planner ?? createDefaultTournamentComposerPlannerDraft())
           : null,
       );
     }

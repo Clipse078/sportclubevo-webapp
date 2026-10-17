@@ -7,6 +7,7 @@ import type { TournamentTimingAssessment, TournamentTimingInput } from "@/lib/to
 import { expectedRoundRobinFixtureCount } from "@/lib/tournament-scheduling/fixtures/round-robin";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
+import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
 
 function estimateFixtureCount(payload: TournamentComposerDraftPayload): number {
   const n = payload.participants.length;
@@ -43,22 +44,43 @@ function buildSyntheticFixtures(count: number): TournamentTimingInput["fixtures"
   }));
 }
 
-export function assessTournamentComposerSmartTiming(
+export function composerSmartTimingMissingInputHint(
   payload: TournamentComposerDraftPayload,
-): TournamentTimingAssessment | null {
+): string | null {
+  if (payload.homeAway !== "HOME" || !payload.planner) {
+    return null;
+  }
+  if (payload.participants.length < 2) {
+    return "Füge mindestens zwei Teams hinzu, damit SCE den Spielplan berechnen kann.";
+  }
+  if (!payload.startAt) {
+    return "Lege zuerst den Turnierbeginn im Schritt Termin fest.";
+  }
+  if (payload.planner.pitches.length < 1) {
+    return "Füge mindestens ein Turnierfeld hinzu.";
+  }
+  const fixtureCount = estimateFixtureCount(payload);
+  if (fixtureCount < 1) {
+    return "Passe das Turnierformat an, damit SCE Spiele berechnen kann.";
+  }
+  return null;
+}
+
+function buildTimingInput(payload: TournamentComposerDraftPayload): TournamentTimingInput | null {
   if (payload.homeAway !== "HOME" || !payload.planner || !payload.startAt) {
     return null;
   }
   const start = new Date(payload.startAt);
   if (Number.isNaN(start.getTime())) return null;
-  const end = payload.endAt ? new Date(payload.endAt) : null;
-  const endMs = end && !Number.isNaN(end.getTime()) ? end.getTime() : start.getTime() + 4 * 60 * 60 * 1000;
 
   const fixtureCount = estimateFixtureCount(payload);
   if (fixtureCount < 1) return null;
 
+  const end = payload.endAt ? new Date(payload.endAt) : null;
+  const endMs = end && !Number.isNaN(end.getTime()) ? end.getTime() : start.getTime() + 4 * 60 * 60 * 1000;
+
   const planner = payload.planner;
-  const input: TournamentTimingInput = {
+  return {
     mode: payload.endAt ? "FIXED_ASSESSMENT" : "FORWARD",
     endBoundaryKnown: Boolean(payload.endAt),
     tournamentWindow: { startUtcMs: start.getTime(), endUtcMs: endMs },
@@ -79,38 +101,181 @@ export function assessTournamentComposerSmartTiming(
     })),
     breaks: planner.breaks
       .map((br) => {
-        const breakStart = new Date(br.startAt);
-        const breakEnd = new Date(br.endAt);
+        const interval = resolveComposerBreakDateTimes(br, payload.startAt);
+        if (!interval) return null;
+        const breakStart = new Date(interval.startAt);
+        const breakEnd = new Date(interval.endAt);
         if (Number.isNaN(breakStart.getTime()) || Number.isNaN(breakEnd.getTime())) {
           return null;
         }
+        const scope: "ALL_PITCHES" | "SELECTED_PITCHES" =
+          br.scope === "SELECTED_PITCHES" && br.fieldSelectionAdvanced
+            ? "SELECTED_PITCHES"
+            : "ALL_PITCHES";
         return {
           breakId: br.localId,
           startUtcMs: breakStart.getTime(),
           endUtcMs: breakEnd.getTime(),
-          scope: br.scope,
+          scope,
           tournamentPitchIds:
-            br.scope === "SELECTED_PITCHES" ? br.tournamentPitchLocalIds : undefined,
+            scope === "SELECTED_PITCHES" ? br.tournamentPitchLocalIds : undefined,
         };
       })
       .filter((row): row is NonNullable<typeof row> => row !== null),
   };
-
-  return assessTournamentTiming(input);
 }
 
+export type TournamentComposerRecommendedTiming = {
+  matchDurationMinutes: number;
+  transitionMinutes: number;
+  minRestMinutes: number;
+};
+
+export type TournamentComposerSmartTimingView = {
+  missingInputHint: string | null;
+  liveAssessment: TournamentTimingAssessment | null;
+  recommendedTiming: TournamentComposerRecommendedTiming | null;
+  fixtureCount: number;
+  pitchCount: number;
+};
+
+export function buildTournamentComposerSmartTimingView(
+  payload: TournamentComposerDraftPayload,
+): TournamentComposerSmartTimingView {
+  const missingInputHint = composerSmartTimingMissingInputHint(payload);
+  const input = buildTimingInput(payload);
+  if (!input || missingInputHint) {
+    return {
+      missingInputHint,
+      liveAssessment: null,
+      recommendedTiming: null,
+      fixtureCount: estimateFixtureCount(payload),
+      pitchCount: payload.planner?.pitches.length ?? 0,
+    };
+  }
+
+  const liveAssessment = assessTournamentTiming(input);
+  let recommendedTiming: TournamentComposerRecommendedTiming | null = null;
+
+  if (liveAssessment.durationRecommendation) {
+    recommendedTiming = {
+      matchDurationMinutes: liveAssessment.durationRecommendation.matchDurationMinutes,
+      transitionMinutes: liveAssessment.durationRecommendation.transitionMinutes,
+      minRestMinutes: input.config.minRestMinutes,
+    };
+  } else if (payload.endAt) {
+    const backward = assessTournamentTiming({ ...input, mode: "BACKWARD" });
+    if (backward.durationRecommendation) {
+      recommendedTiming = {
+        matchDurationMinutes: backward.durationRecommendation.matchDurationMinutes,
+        transitionMinutes: backward.durationRecommendation.transitionMinutes,
+        minRestMinutes: input.config.minRestMinutes,
+      };
+    }
+  }
+
+  return {
+    missingInputHint: null,
+    liveAssessment,
+    recommendedTiming,
+    fixtureCount: input.fixtures.length,
+    pitchCount: input.tournamentPitches.length,
+  };
+}
+
+export function assessTournamentComposerSmartTiming(
+  payload: TournamentComposerDraftPayload,
+): TournamentTimingAssessment | null {
+  return buildTournamentComposerSmartTimingView(payload).liveAssessment;
+}
+
+export type ComposerSmartTimingFeasibilitySurface = {
+  level: "OK" | "TIGHT" | "ADJUST" | "INFEASIBLE";
+  title: string;
+  detail: string;
+};
+
+export function composerSmartTimingFeasibilitySurface(
+  assessment: TournamentTimingAssessment | null,
+): ComposerSmartTimingFeasibilitySurface | null {
+  if (!assessment) return null;
+  if (assessment.feasibilityStatus === "FEASIBLE") {
+    return {
+      level: "OK",
+      title: "Plan passt",
+      detail: "Alle Spiele passen in das gewählte Zeitfenster.",
+    };
+  }
+  if (assessment.feasibilityStatus === "TIGHT") {
+    return {
+      level: "TIGHT",
+      title: "Zeitfenster knapp",
+      detail: "Nur wenig Reserve vorhanden.",
+    };
+  }
+  if (assessment.durationRecommendation) {
+    return {
+      level: "ADJUST",
+      title: "Anpassung empfohlen",
+      detail: "Verkürze die Spielzeit oder füge ein weiteres Feld hinzu.",
+    };
+  }
+  return {
+    level: "INFEASIBLE",
+    title: "Plan passt noch nicht",
+    detail: "Der aktuelle Spielplan benötigt mehr Zeit.",
+  };
+}
+
+/** @deprecated use composerSmartTimingFeasibilitySurface */
 export function composerSmartTimingFeasibilityHeadline(
   assessment: TournamentTimingAssessment | null,
 ): string | null {
+  return composerSmartTimingFeasibilitySurface(assessment)?.title ?? null;
+}
+
+export function composerSmartTimingPlanExplanation(
+  view: TournamentComposerSmartTimingView,
+): string | null {
+  const assessment = view.liveAssessment;
   if (!assessment) return null;
-  if (assessment.feasibilityStatus === "FEASIBLE") {
-    return "Plan passt";
+
+  const hasAddPitchNudge = assessment.nudges.some((n) => n.code === "ADD_TOURNAMENT_PITCH");
+  if (hasAddPitchNudge) {
+    return "Mit einem zusätzlichen Feld könnten die Spiele länger dauern.";
   }
-  if (assessment.feasibilityStatus === "TIGHT") {
-    return "Zeitfenster knapp";
-  }
+
   if (assessment.feasibilityStatus === "INFEASIBLE") {
-    return "Mehr Zeit oder ein zusätzliches Feld empfohlen";
+    return "Das aktuelle Zeitfenster reicht nicht aus.";
   }
+
+  const rec = view.recommendedTiming;
+  if (assessment.feasibilityStatus === "TIGHT" && rec) {
+    return `Das Zeitfenster ist knapp. Mit ${rec.matchDurationMinutes} Minuten Spielzeit und ${rec.transitionMinutes} Minuten Wechselzeit passt der Spielplan.`;
+  }
+
+  if (assessment.feasibilityStatus === "FEASIBLE") {
+    const pitchWord = view.pitchCount === 1 ? "Feld" : "Feldern";
+    return `${view.fixtureCount} Spiele auf ${view.pitchCount} ${pitchWord} passen komfortabel in das Zeitfenster.`;
+  }
+
+  if (assessment.feasibilityStatus === "TIGHT") {
+    return "Das Zeitfenster ist knapp — prüfen Sie Spielzeit und Reserve.";
+  }
+
   return null;
+}
+
+export function applyComposerRecommendedTiming(
+  planner: NonNullable<TournamentComposerDraftPayload["planner"]>,
+  recommended: TournamentComposerRecommendedTiming,
+): NonNullable<TournamentComposerDraftPayload["planner"]> {
+  return {
+    ...planner,
+    timing: {
+      matchDurationMinutes: recommended.matchDurationMinutes,
+      transitionMinutes: recommended.transitionMinutes,
+      minRestMinutes: recommended.minRestMinutes,
+    },
+  };
 }

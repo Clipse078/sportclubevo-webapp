@@ -16,6 +16,7 @@ import { createWorkingTournamentScheduleVersion } from "@/lib/tournament-schedul
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
+import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
 
 export async function persistTournamentPlannerFromComposer(input: {
   tenantId: string;
@@ -162,18 +163,26 @@ export async function persistTournamentPlannerFromComposer(input: {
   }
 
   for (const br of planner.breaks) {
-    const startAt = parseTenantLocalDateTimeInput(br.startAt, tenantTimeZone);
-    const endAt = parseTenantLocalDateTimeInput(br.endAt, tenantTimeZone);
+    const interval = resolveComposerBreakDateTimes(br, payload.startAt);
+    if (!interval) {
+      throw new Error("Ungültige Pausenzeit.");
+    }
+    const startAt = parseTenantLocalDateTimeInput(interval.startAt, tenantTimeZone);
+    const endAt = parseTenantLocalDateTimeInput(interval.endAt, tenantTimeZone);
     if (!startAt || !endAt) {
       throw new Error("Ungültige Pausenzeit.");
     }
+    const scope =
+      br.fieldSelectionAdvanced && br.scope === "SELECTED_PITCHES"
+        ? "SELECTED_PITCHES"
+        : "ALL_PITCHES";
     await createTournamentBreak(tenantId, tournamentId, {
       label: br.label,
       startAt,
       endAt,
-      scope: br.scope,
+      scope,
       tournamentPitchIds:
-        br.scope === "SELECTED_PITCHES"
+        scope === "SELECTED_PITCHES"
           ? br.tournamentPitchLocalIds
               .map((localId) => pitchIdByLocal.get(localId))
               .filter((id): id is string => !!id)
