@@ -13,17 +13,17 @@ function read(rel: string): string {
 }
 
 describe("SCE-TOURNAMENT-PLANNER-01F1 roadmap", () => {
-  it("documents smart timing foundation as current", () => {
+  it("documents smart timing foundation as closed and merged", () => {
     const doc = read("docs/roadmap/SCE-TOURNAMENT-PLANNER-01F1.md");
     expect(doc).toContain("01F1");
-    expect(doc).toMatch(/CURRENT|READY FOR CLOSURE|IN PROGRESS/i);
+    expect(doc).toMatch(/CLOSED.*ACCEPTED.*MERGED/i);
     expect(doc).toContain("Smart Timing");
     expect(doc).toContain("01F2");
   });
 
-  it("parent roadmap marks 01F1 current and 01E3D closed", () => {
+  it("parent roadmap marks 01F1 closed and 01E3D closed", () => {
     const parent = read("docs/roadmap/SCE-TOURNAMENT-PLANNER-01.md");
     expect(parent).toMatch(/01E3D.*CLOSED.*MERGED/i);
-    expect(parent).toMatch(/01F1.*CURRENT|Smart Timing Advisor/i);
+    expect(parent).toMatch(/01F1.*CLOSED.*MERGED/i);
   });
 });

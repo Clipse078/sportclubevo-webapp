@@ -5,10 +5,11 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01F1` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01E3D`](./SCE-TOURNAMENT-PLANNER-01E3D.md) — **CLOSED / ACCEPTED / MERGED** (PR **#864**) |
-| **Status** | **CURRENT / READY FOR CLOSURE** (R1 correctness gate — pure engine + contracts, no Planung UI) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#865** → STAGE) |
+| **Feature HEAD** | `dcb32db2b39097a479d6ecc6804065489423ae13` (R1 accepted) |
 | **Branch** | `cursor/sce-tournament-planner-01f1-smart-timing-foundation` |
-| **PR** | **#865** (OPEN / DRAFT → STAGE) |
-| **Next** | **01F2** — Automatic Schedule Optimiser implementation (**NOT STARTED**) |
+| **PR** | **#865** |
+| **Next** | **01F2** — Automatic Schedule Optimiser implementation (**NEXT / NOT STARTED**) |
 
 ## Product purpose
 
@@ -189,7 +190,7 @@ Representative advisor workloads (8 / 16 / 32 / 64 / 128 fixtures, multi-pitch, 
 | Package | Status |
 | --- | --- |
 | **01A–01E3D** | **CLOSED** |
-| **01F1** | **CURRENT / READY FOR CLOSURE** |
+| **01F1** | **CLOSED / ACCEPTED / MERGED** (PR **#865**) |
 | **01F2** | **NEXT / NOT STARTED** |
 | **01G–01M** | Unchanged |
 
@@ -211,7 +212,8 @@ Representative advisor workloads (8 / 16 / 32 / 64 / 128 fixtures, multi-pitch, 
 | `SCHEDULER_ASSIGNMENT_TARGET` | **TOURNAMENT_PITCH** |
 | `TOURNAMENT_PLANNER_SCOPE` | **TENANT_ORGANISED_TOURNAMENTS_ONLY** |
 
-## R1 delivery notes
+## Closure notes (merged)
 
-- PR **#865** remains **OPEN / DRAFT**; **do not merge** until PO accepts R1 report.
-- Manual UAT / screenshots: **PO-owned** (skipped in Cursor R1 gate).
+- PR **#865** merged to **STAGE** after R1 acceptance; feature HEAD **`dcb32db2b39097a479d6ecc6804065489423ae13`**.
+- Manual UAT / screenshots: **PO-owned** (skipped in Cursor closure gate).
+- **01F2** schedule optimiser: **NOT STARTED** — builds on this contract without duplicating 01D or 01F1 timing assessment.
