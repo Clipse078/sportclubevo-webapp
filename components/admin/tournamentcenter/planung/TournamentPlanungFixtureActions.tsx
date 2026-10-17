@@ -10,6 +10,7 @@ type Props = {
   fixtureId: string;
   busy: boolean;
   onLockAction: (body: Record<string, unknown>) => Promise<void>;
+  onManualMove: () => void;
   onClose: () => void;
 };
 
@@ -18,6 +19,7 @@ export default function TournamentPlanungFixtureActions({
   fixtureId,
   busy,
   onLockAction,
+  onManualMove,
   onClose,
 }: Props) {
   const cell = model.cells.find(
@@ -33,6 +35,16 @@ export default function TournamentPlanungFixtureActions({
       <span className="text-sm text-[var(--foreground)]">
         {cell.sideA.label} – {cell.sideB.label}
       </span>
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        disabled={busy}
+        data-testid="tournament-planung-manual-move-open"
+        onClick={onManualMove}
+      >
+        Spiel verschieben
+      </Button>
       {(["TIME", "PITCH", "TIME_AND_PITCH"] as const).map((dimension) => (
         <Button
           key={dimension}

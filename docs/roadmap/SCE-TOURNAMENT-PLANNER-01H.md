@@ -6,7 +6,7 @@
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01G`](./SCE-TOURNAMENT-PLANNER-01G.md) — **CLOSED / MERGED** (PR **#867**) |
 | **Status** | **CLOSED / ACCEPTED / MERGED** — PO final UAT **PASS** (PR **#868**); 01H-R1/R2/R3/R4 |
-| **Next** | **01I** — Manual adjustment + DnD + conflict validation (**NOT STARTED**) |
+| **Next** | **01J** — Results + rankings + qualification progression (**NEXT / NOT STARTED**); predecessor **01I** **CLOSED / MERGED** (PR **#869**) |
 | **Branch** | `cursor/sce-tournament-planner-01h-planung-workspace` |
 
 ## Product purpose
@@ -76,7 +76,9 @@ Manual drag & drop and move validation belong to **01I** — not implemented in 
 
 PO UAT finding: Planung workspace existed but the canonical **Tournament Activity Composer** did not collect planner inputs.
 
-**Creator IA (HOME):** Teams → Turnierformat → Termin → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht. AWAY keeps the legacy five-step surface (no planner steps).
+**Creator IA (HOME, 01H-R1 — superseded by 01I-R2):** Teams → Turnierformat → Termin → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht.
+
+**Creator IA (canonical after 01I-R2 PO UAT #869):** **Termin → Teams → Turnierformat → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht.** AWAY: **Termin → Teams → Ressourcen → Publikation → Übersicht** (no planner steps). 01H package status remains **CLOSED / ACCEPTED / MERGED** — order change is a 01I regression correction, not a reopen of 01H.
 
 **Persistence boundary:** Composer commit persists participants/resources as before, then `persistTournamentPlannerFromComposer` writes competition configuration, generates fixtures (01E engines), TournamentPitch, breaks, and a WORKING schedule version with timing — **no automatic optimiser run** (Planung CTA **✨ Spielplan automatisch erstellen** remains the schedule assignment boundary).
 

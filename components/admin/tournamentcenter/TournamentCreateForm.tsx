@@ -189,12 +189,22 @@ export default function TournamentCreateForm({
 
   useEffect(() => {
     if (homeAway === "HOME") {
-      setOrganizerSelection(null);
-      setPlanner((prev) => prev ?? createDefaultTournamentComposerPlannerDraft());
+      setPlanner((prev) =>
+        prev ??
+        createDefaultTournamentComposerPlannerDraft({
+          defaultMatchDurationMinutes: defaultTournamentDurationMinutes,
+        }),
+      );
     } else {
       setPlanner(null);
     }
   }, [homeAway, defaultTournamentDurationMinutes]);
+
+  useEffect(() => {
+    if (homeAway === "HOME") {
+      setOrganizerSelection(null);
+    }
+  }, [homeAway]);
 
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
@@ -307,7 +317,7 @@ export default function TournamentCreateForm({
       activityKind: "TOURNAMENT",
       title: composerTitle,
       createActionLabel: "Turnier erstellen",
-      defaultTab: "teams",
+      defaultTab: "termin",
       buildTabNavigationConfig: ({ tabErrors }) =>
         buildTournamentCreateTabNavigationConfig({ homeAway, tabErrors }),
       guidedWorkflow: {
@@ -768,7 +778,7 @@ export default function TournamentCreateForm({
     <PlanningEditorSection testId="tournament-create-review-section" ariaLabelledBy="tournament-create-review-heading">
       <PlanningEditorSectionHeading id="tournament-create-review-heading" title="Übersicht" />
       <TournamentCreateReviewPanel
-        payload={buildPayload()}
+        payload={composerDraft}
         organizer={effectiveOrganiserSelection}
         tenantClubName={tenantClubName}
         tenantLogoUrl={tenantLogoUrl}
@@ -786,14 +796,14 @@ export default function TournamentCreateForm({
           { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
             <TournamentComposerSpielfelderPanel planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielplanPanel payload={buildPayload()} planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielplanPanel payload={composerDraft} planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
         ]
       : [];
 
   definition.tabs = [
+    { key: "termin", label: "Termin", render: (ctx) => renderTerminPanel(ctx?.fieldErrors) },
     { key: "teams", label: "Teams", render: (ctx) => renderTeamsPanel(ctx?.fieldErrors) },
     ...homeTabs,
-    { key: "termin", label: "Termin", render: (ctx) => renderTerminPanel(ctx?.fieldErrors) },
     { key: "ressourcen", label: "Ressourcen", render: () => renderRessourcenPanel() },
     { key: "publikation", label: "Publikation", render: () => publikationPanel },
     { key: "uebersicht", label: "Übersicht", render: () => uebersichtPanel },

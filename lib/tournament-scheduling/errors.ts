@@ -27,7 +27,8 @@ export type TournamentSchedulingErrorCode =
   | "TOURNAMENT_PARTICIPANT_INVALID"
   | "TOURNAMENT_RESOURCE_INVALID"
   | "TOURNAMENT_SCHEDULE_WORKING_EXISTS"
-  | "SCHEDULE.STALE_VERSION";
+  | "SCHEDULE.STALE_VERSION"
+  | "TOURNAMENT_MANUAL_ASSIGNMENT_INVALID";
 
 export class TournamentSchedulingError extends Error {
   readonly code: TournamentSchedulingErrorCode;
@@ -226,6 +227,19 @@ export class TournamentGroupNotFoundError extends TournamentSchedulingError {
   constructor(groupId: string) {
     super("TOURNAMENT_GROUP_NOT_FOUND", `Tournament group not found: ${groupId}`);
     this.name = "TournamentGroupNotFoundError";
+  }
+}
+
+export class TournamentManualAssignmentInvalidError extends TournamentSchedulingError {
+  readonly diagnostics: import("./schedule-lock/types").ScheduleLockConflictDiagnostic[];
+
+  constructor(
+    diagnostics: import("./schedule-lock/types").ScheduleLockConflictDiagnostic[],
+    message: string,
+  ) {
+    super("TOURNAMENT_MANUAL_ASSIGNMENT_INVALID", message);
+    this.name = "TournamentManualAssignmentInvalidError";
+    this.diagnostics = diagnostics;
   }
 }
 

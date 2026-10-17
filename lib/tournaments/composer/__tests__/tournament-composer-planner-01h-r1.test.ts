@@ -49,9 +49,9 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
   it("HOME tab navigation includes planner steps", () => {
     const config = buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" });
     expect(config.tabs.map((t) => t.key)).toEqual([
+      "termin",
       "teams",
       "turnierformat",
-      "termin",
       "spielfelder",
       "spielplan",
       "ressourcen",
@@ -63,8 +63,8 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
   it("AWAY tab navigation hides planner steps", () => {
     const config = buildTournamentCreateTabNavigationConfig({ homeAway: "AWAY" });
     expect(config.tabs.map((t) => t.key)).toEqual([
-      "teams",
       "termin",
+      "teams",
       "ressourcen",
       "publikation",
       "uebersicht",

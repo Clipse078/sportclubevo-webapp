@@ -11,6 +11,7 @@ import TournamentPlanungBoard from "./TournamentPlanungBoard";
 import TournamentPlanungMobileTimeline from "./TournamentPlanungMobileTimeline";
 import TournamentPlanungScheduleList from "./TournamentPlanungScheduleList";
 import TournamentPlanungFixtureActions from "./TournamentPlanungFixtureActions";
+import TournamentPlanungManualMoveDialog from "./TournamentPlanungManualMoveDialog";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -30,6 +31,7 @@ export default function TournamentPlanungWorkspace({
   const [model, setModel] = useState(initialModel);
   const [busy, setBusy] = useState(false);
   const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
+  const [manualMoveOpen, setManualMoveOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/tournaments/${tournamentId}/planung`);
@@ -55,7 +57,7 @@ export default function TournamentPlanungWorkspace({
         if (!res.ok) {
           if (json.code === "SCHEDULE.STALE_VERSION") {
             toast.danger(
-              "Spielplan geändert — bitte erneut versuchen. Der Plan wurde zwischenzeitlich aktualisiert.",
+              "Der Spielplan wurde inzwischen geändert. Bitte aktualisiere die Planung.",
             );
             await refresh();
             return;
@@ -70,6 +72,64 @@ export default function TournamentPlanungWorkspace({
       }
     },
     [refresh, router, toast],
+  );
+
+  const manualMove = useCallback(
+    async (payload: {
+      fixtureId: string;
+      targetTournamentPitchId: string;
+      targetStartAt: string;
+      validateOnly?: boolean;
+    }) => {
+      if (!model.scheduleVersionId || model.scheduleRevision == null) {
+        throw new Error("Kein Spielplan geladen.");
+      }
+      const res = await fetch(`/api/tournaments/${tournamentId}/planung/manual-move`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduleVersionId: model.scheduleVersionId,
+          expectedRevision: model.scheduleRevision,
+          fixtureId: payload.fixtureId,
+          targetTournamentPitchId: payload.targetTournamentPitchId,
+          targetStartAt: payload.targetStartAt,
+          validateOnly: payload.validateOnly ?? false,
+        }),
+      });
+      const json = (await res.json()) as {
+        viewModel?: TournamentPlanungViewModel;
+        error?: string;
+        code?: string;
+        ok?: boolean;
+      };
+      if (!res.ok) {
+        if (json.code === "SCHEDULE.STALE_VERSION") {
+          toast.danger(
+            "Der Spielplan wurde inzwischen geändert. Bitte aktualisiere die Planung.",
+          );
+          await refresh();
+          return { ok: false as const, stale: true };
+        }
+        if (payload.validateOnly) {
+          return { ok: false as const, stale: false };
+        }
+        toast.danger(json.error ?? "Verschieben fehlgeschlagen");
+        return { ok: false as const, stale: false };
+      }
+      if (payload.validateOnly) {
+        return { ok: res.ok && json.ok !== false, stale: false };
+      }
+      if (json.viewModel) setModel(json.viewModel);
+      else await refresh();
+      router.refresh();
+      const userMessage = (json as { userMessage?: string }).userMessage;
+      if (userMessage && userMessage !== "Keine Änderung") {
+        toast.success(userMessage);
+      }
+      setManualMoveOpen(false);
+      return { ok: true as const, stale: false };
+    },
+    [model.scheduleRevision, model.scheduleVersionId, refresh, router, toast, tournamentId],
   );
 
   if (model.availability !== "AVAILABLE") {
@@ -209,10 +269,32 @@ export default function TournamentPlanungWorkspace({
               timezone={timezone}
               selectedFixtureId={selectedFixtureId}
               onSelectFixture={setSelectedFixtureId}
+              canManage={canManage}
+              busy={busy}
+              onManualMove={async (payload) => {
+                setBusy(true);
+                try {
+                  await manualMove(payload);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              onPreviewMoveTarget={async (payload) => {
+                const result = await manualMove({ ...payload, validateOnly: true });
+                return result.ok ? "valid" : "invalid";
+              }}
             />
           </div>
           <div className="lg:hidden">
-            <TournamentPlanungMobileTimeline model={model} timezone={timezone} />
+            <TournamentPlanungMobileTimeline
+              model={model}
+              timezone={timezone}
+              canManage={canManage}
+              onSelectFixture={(id) => {
+                setSelectedFixtureId(id);
+                setManualMoveOpen(true);
+              }}
+            />
           </div>
           {canManage && selectedFixtureId ? (
             <TournamentPlanungFixtureActions
@@ -223,7 +305,26 @@ export default function TournamentPlanungWorkspace({
               onLockAction={async (body) => {
                 await runAction(`/api/tournaments/${tournamentId}/planung/lock`, body);
               }}
+              onManualMove={() => setManualMoveOpen(true)}
               onClose={() => setSelectedFixtureId(null)}
+            />
+          ) : null}
+          {canManage && selectedFixtureId ? (
+            <TournamentPlanungManualMoveDialog
+              open={manualMoveOpen}
+              onClose={() => setManualMoveOpen(false)}
+              model={model}
+              fixtureId={selectedFixtureId}
+              timezone={timezone}
+              busy={busy}
+              onSubmit={async (target) => {
+                setBusy(true);
+                try {
+                  await manualMove({ fixtureId: selectedFixtureId, ...target });
+                } finally {
+                  setBusy(false);
+                }
+              }}
             />
           ) : null}
         </>

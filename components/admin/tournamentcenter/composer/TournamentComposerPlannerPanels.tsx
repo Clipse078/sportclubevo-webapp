@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useContextDetailTab } from "@/lib/context-tabs/use-context-detail-tab";
 import { Plus, Trash2 } from "lucide-react";
 import TournamentComposerChoiceCard from "./TournamentComposerChoiceCard";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
@@ -38,11 +39,20 @@ function feasibilityStatusGlyph(level: "OK" | "TIGHT" | "ADJUST" | "INFEASIBLE")
 function SmartTimingPanel({
   payload,
   onApplyRecommendation,
+  computeLiveView,
 }: {
   payload: TournamentComposerDraftPayload;
   onApplyRecommendation: () => void;
+  /** When false, skip expensive fixture/timing derivation (panel hidden on another step). */
+  computeLiveView: boolean;
 }) {
-  const view = buildTournamentComposerSmartTimingView(payload);
+  const view = useMemo(
+    () => (computeLiveView ? buildTournamentComposerSmartTimingView(payload) : null),
+    [computeLiveView, payload],
+  );
+  if (!view) {
+    return null;
+  }
   const assessment = view.liveAssessment;
   const feasibility = composerSmartTimingFeasibilitySurface(assessment);
   const explanation = composerSmartTimingPlanExplanation(view);
@@ -387,6 +397,9 @@ export function TournamentComposerSpielplanPanel({
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
+  const { activeTab } = useContextDetailTab();
+  const smartTimingLive = activeTab === "spielplan";
+
   const pitchLabelMap = useMemo(
     () => new Map(planner.pitches.map((p) => [p.localId, p.label])),
     [planner.pitches],
@@ -406,6 +419,7 @@ export function TournamentComposerSpielplanPanel({
 
       <SmartTimingPanel
         payload={payload}
+        computeLiveView={smartTimingLive}
         onApplyRecommendation={() => {
           const view = buildTournamentComposerSmartTimingView(payload);
           if (!view.recommendedTiming) return;

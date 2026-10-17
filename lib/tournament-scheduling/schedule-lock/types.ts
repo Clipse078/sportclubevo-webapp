@@ -19,7 +19,8 @@ export type ScheduleLockConflictCategory =
   | "QUALIFICATION_DEPENDENCY"
   | "OUTSIDE_TOURNAMENT_WINDOW"
   | "UNKNOWN_FIXTURE"
-  | "CROSS_TOURNAMENT_REFERENCE";
+  | "CROSS_TOURNAMENT_REFERENCE"
+  | "SCHEDULE_LOCK_VIOLATION";
 
 export type ScheduleLockConflictDiagnostic = {
   category: ScheduleLockConflictCategory;
