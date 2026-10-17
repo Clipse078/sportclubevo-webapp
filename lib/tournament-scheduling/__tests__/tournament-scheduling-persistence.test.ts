@@ -328,6 +328,7 @@ describe("assignments", () => {
       isLocked: false,
       lockedAt: null,
       lockedByUserId: null,
+      scheduleLockDimension: null,
     } as never);
 
     const result = await persistTournamentFixtureAssignment(TENANT_A, VERSION_ID, {
@@ -398,6 +399,7 @@ describe("assignments", () => {
       isLocked: false,
       lockedAt: null,
       lockedByUserId: null,
+      scheduleLockDimension: null,
       scheduleVersion: { id: VERSION_ID, status: "WORKING", revision: 2 },
     } as never);
     vi.mocked(prisma.tournamentScheduleVersion.findUniqueOrThrow).mockResolvedValue({
@@ -415,6 +417,7 @@ describe("assignments", () => {
       isLocked: true,
       lockedAt: new Date(),
       lockedByUserId: "user-1",
+      scheduleLockDimension: "TIME_AND_PITCH",
     } as never);
 
     const locked = await setTournamentFixtureAssignmentLocked(
@@ -485,6 +488,7 @@ describe("assignments", () => {
       isLocked: false,
       lockedAt: null,
       lockedByUserId: null,
+      scheduleLockDimension: null,
     } as never);
 
     const updated = await updateTournamentFixtureAssignment(

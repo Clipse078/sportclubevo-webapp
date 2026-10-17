@@ -10,6 +10,7 @@ import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-ope
 import type {
   PersistTournamentFixtureAssignmentInput,
   TournamentFixtureAssignmentDefinition,
+  TournamentFixtureScheduleLockDimension,
   UpdateTournamentFixtureAssignmentInput,
 } from "./types";
 import {
@@ -32,6 +33,7 @@ function toDefinition(row: {
   isLocked: boolean;
   lockedAt: Date | null;
   lockedByUserId: string | null;
+  scheduleLockDimension: TournamentFixtureScheduleLockDimension | null;
 }): TournamentFixtureAssignmentDefinition {
   return {
     id: row.id,
@@ -43,6 +45,7 @@ function toDefinition(row: {
     isLocked: row.isLocked,
     lockedAt: row.lockedAt?.toISOString() ?? null,
     lockedByUserId: row.lockedByUserId,
+    scheduleLockDimension: row.scheduleLockDimension,
   };
 }
 
@@ -309,14 +312,59 @@ export async function setTournamentFixtureAssignmentLocked(
     data: locked
       ? {
           isLocked: true,
+          scheduleLockDimension: "TIME_AND_PITCH",
           lockedAt: new Date(),
           lockedByUserId,
         }
       : {
           isLocked: false,
+          scheduleLockDimension: null,
           lockedAt: null,
           lockedByUserId: null,
         },
+  });
+
+  return { assignment: toDefinition(row), revision };
+}
+
+export async function setTournamentFixtureAssignmentScheduleLock(
+  tenantId: string,
+  assignmentId: string,
+  dimension: TournamentFixtureScheduleLockDimension | null,
+  lockedByUserId: string | null,
+  options?: { expectedRevision?: number },
+): Promise<{ assignment: TournamentFixtureAssignmentDefinition; revision: number }> {
+  const existing = await prisma.tournamentFixtureAssignment.findFirst({
+    where: { id: assignmentId, tenantId },
+    include: { scheduleVersion: { select: { id: true, status: true, revision: true } } },
+  });
+  if (!existing) throw new TournamentAssignmentNotFoundError(assignmentId);
+  if (existing.scheduleVersion.status === "APPROVED") {
+    throw new TournamentScheduleApprovedImmutableError(existing.scheduleVersion.id);
+  }
+  assertExpectedRevision(options?.expectedRevision, existing.scheduleVersion.revision);
+
+  const revision = await bumpScheduleRevision(
+    existing.scheduleVersionId,
+    options?.expectedRevision,
+  );
+
+  const row = await prisma.tournamentFixtureAssignment.update({
+    where: { id: assignmentId },
+    data:
+      dimension === null
+        ? {
+            isLocked: false,
+            scheduleLockDimension: null,
+            lockedAt: null,
+            lockedByUserId: null,
+          }
+        : {
+            isLocked: dimension === "TIME_AND_PITCH",
+            scheduleLockDimension: dimension,
+            lockedAt: new Date(),
+            lockedByUserId,
+          },
   });
 
   return { assignment: toDefinition(row), revision };

@@ -21,7 +21,15 @@ import {
   compareScheduleObjectiveMetrics,
   computeScheduleObjectiveMetrics,
 } from "./objective-metrics";
-import type { ScheduleObjectiveMetrics } from "./types";
+import type { ScheduleObjectiveMetrics, TournamentFixtureScheduleAssignment } from "./types";
+import {
+  bundleFromState,
+  compareRegenerationObjectiveBundles,
+  type RegenerationObjectiveBundle,
+} from "../partial-regeneration/disruption-metrics";
+import type { ResolvedFixtureScheduleLock } from "../schedule-lock/normalize";
+import { isFixtureFullyLockedInState } from "../schedule-lock/normalize";
+import { filterSlotsForFixtureLock } from "./regeneration-context";
 
 export type BoundedImprovementSearchResult = {
   state: FeasibilitySearchState;
@@ -99,6 +107,10 @@ function tryRelocateFixture(params: {
   incumbentMetrics: ScheduleObjectiveMetrics;
   windowStartUtcMs: number;
   pitchIds: readonly string[];
+  useRegenerationCompare?: boolean;
+  baselineAssignments?: readonly TournamentFixtureScheduleAssignment[];
+  resolvedLocks?: readonly ResolvedFixtureScheduleLock[];
+  incumbentRegenerationBundle?: RegenerationObjectiveBundle | null;
 }): { nextState: FeasibilitySearchState | null; candidateEvaluations: number } {
   const currentSlot = params.state.assignments.get(params.fixture.fixtureId);
   if (!currentSlot) return { nextState: null, candidateEvaluations: 0 };
@@ -154,8 +166,45 @@ function tryRelocateFixture(params: {
         windowStartUtcMs: params.windowStartUtcMs,
         pitchIds: params.pitchIds,
       });
-      if (compareScheduleObjectiveMetrics(metrics, params.incumbentMetrics) < 0) {
-        if (
+      const improves = params.useRegenerationCompare &&
+        params.baselineAssignments &&
+        params.resolvedLocks &&
+        params.incumbentRegenerationBundle
+        ? (() => {
+            const bundle = bundleFromState({
+              state: params.state,
+              baselineAssignments: params.baselineAssignments,
+              resolvedLocks: params.resolvedLocks,
+              scheduleObjectiveMetrics: metrics,
+            });
+            return compareRegenerationObjectiveBundles(bundle, params.incumbentRegenerationBundle!) < 0;
+          })()
+        : compareScheduleObjectiveMetrics(metrics, params.incumbentMetrics) < 0;
+
+      if (improves) {
+        if (params.useRegenerationCompare && params.baselineAssignments && params.resolvedLocks) {
+          const bundle = bundleFromState({
+            state: params.state,
+            baselineAssignments: params.baselineAssignments,
+            resolvedLocks: params.resolvedLocks,
+            scheduleObjectiveMetrics: metrics,
+          });
+          if (
+            bestMetrics === null ||
+            compareRegenerationObjectiveBundles(
+              bundle,
+              bundleFromState({
+                state: bestState ?? params.state,
+                baselineAssignments: params.baselineAssignments,
+                resolvedLocks: params.resolvedLocks,
+                scheduleObjectiveMetrics: bestMetrics ?? metrics,
+              }),
+            ) < 0
+          ) {
+            bestMetrics = metrics;
+            bestState = cloneSearchState(params.state);
+          }
+        } else if (
           bestMetrics === null ||
           compareScheduleObjectiveMetrics(metrics, bestMetrics) < 0
         ) {
@@ -187,7 +236,12 @@ export function boundedImprovementSearch(params: {
   baselineState: FeasibilitySearchState;
   maxPasses?: number;
   maxCandidateEvaluations?: number;
+  lockByFixtureId?: Map<string, ResolvedFixtureScheduleLock>;
+  baselineAssignments?: readonly TournamentFixtureScheduleAssignment[];
+  resolvedLocks?: readonly ResolvedFixtureScheduleLock[];
 }): BoundedImprovementSearchResult {
+  const useRegenerationCompare =
+    (params.baselineAssignments?.length ?? 0) > 0 && params.resolvedLocks !== undefined;
   let state = cloneSearchState(params.baselineState);
   const baselineObjectiveMetrics = computeScheduleObjectiveMetrics({
     state,
@@ -197,6 +251,14 @@ export function boundedImprovementSearch(params: {
   });
 
   let incumbentMetrics = baselineObjectiveMetrics;
+  let incumbentRegenerationBundle: RegenerationObjectiveBundle | null = useRegenerationCompare
+    ? bundleFromState({
+        state,
+        baselineAssignments: params.baselineAssignments!,
+        resolvedLocks: params.resolvedLocks!,
+        scheduleObjectiveMetrics: baselineObjectiveMetrics,
+      })
+    : null;
   const maxPasses = params.maxPasses ?? BOUNDED_IMPROVEMENT_MAX_PASSES;
   const maxEvaluations =
     params.maxCandidateEvaluations ?? BOUNDED_IMPROVEMENT_MAX_CANDIDATE_EVALUATIONS;
@@ -214,10 +276,13 @@ export function boundedImprovementSearch(params: {
       if (candidateEvaluations >= maxEvaluations) break;
       if (!state.assignments.has(fixture.fixtureId)) continue;
 
+      const lock = params.lockByFixtureId?.get(fixture.fixtureId);
+      if (lock && isFixtureFullyLockedInState(lock)) continue;
+
       const { nextState, candidateEvaluations: slotEvaluations } = tryRelocateFixture({
         state,
         fixture,
-        slots: params.slots,
+        slots: filterSlotsForFixtureLock({ slots: params.slots, lock }),
         config: params.config,
         windowStart: params.windowStart,
         windowEnd: params.windowEnd,
@@ -225,6 +290,10 @@ export function boundedImprovementSearch(params: {
         incumbentMetrics,
         windowStartUtcMs: params.windowStartUtcMs,
         pitchIds: params.pitchIds,
+        useRegenerationCompare,
+        baselineAssignments: params.baselineAssignments,
+        resolvedLocks: params.resolvedLocks,
+        incumbentRegenerationBundle,
       });
       candidateEvaluations += slotEvaluations;
 
@@ -236,6 +305,14 @@ export function boundedImprovementSearch(params: {
           windowStartUtcMs: params.windowStartUtcMs,
           pitchIds: params.pitchIds,
         });
+        if (useRegenerationCompare && params.baselineAssignments && params.resolvedLocks) {
+          incumbentRegenerationBundle = bundleFromState({
+            state,
+            baselineAssignments: params.baselineAssignments,
+            resolvedLocks: params.resolvedLocks,
+            scheduleObjectiveMetrics: incumbentMetrics,
+          });
+        }
         passImproved = true;
         improvementsAccepted += 1;
       }

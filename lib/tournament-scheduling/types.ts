@@ -34,6 +34,8 @@ export interface TournamentScheduleVersionDefinition {
   supersededAt: string | null;
 }
 
+export type { TournamentFixtureScheduleLockDimension } from "./schedule-lock/types";
+
 /** WHEN + logical TournamentPitch for one fixture within one schedule version. */
 export interface TournamentFixtureAssignmentDefinition {
   id: string;
@@ -45,6 +47,7 @@ export interface TournamentFixtureAssignmentDefinition {
   isLocked: boolean;
   lockedAt: string | null;
   lockedByUserId: string | null;
+  scheduleLockDimension: import("./schedule-lock/types").TournamentFixtureScheduleLockDimension | null;
 }
 
 /** Loaded schedule snapshot for a version (fixtures + assignments). */

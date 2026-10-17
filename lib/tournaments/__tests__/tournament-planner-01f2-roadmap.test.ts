@@ -24,7 +24,7 @@ describe("SCE-TOURNAMENT-PLANNER-01F2 roadmap", () => {
   it("parent roadmap marks 01F2 closed and 01G next", () => {
     const parent = read("docs/roadmap/SCE-TOURNAMENT-PLANNER-01.md");
     expect(parent).toMatch(/01F2.*CLOSED.*MERGED/i);
-    expect(parent).toMatch(/01G.*NEXT/i);
+    expect(parent).toMatch(/01G.*CURRENT/i);
     expect(parent).toMatch(/01F1.*CLOSED.*MERGED/i);
   });
 });

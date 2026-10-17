@@ -16,6 +16,8 @@ export type {
   ScheduleObjectiveMetrics,
   ScheduleOptimisationSideSource,
   TournamentFixtureScheduleAssignment,
+  TournamentPartialRegenerationInput,
+  TournamentPartialRegenerationResult,
   TournamentScheduleOptimisationFixtureRef,
   TournamentScheduleOptimisationInput,
   TournamentScheduleOptimisationResult,

@@ -19,7 +19,15 @@ import {
   computeScheduleObjectiveMetrics,
 } from "./objective-metrics";
 import { OPTIMISER_MAX_SEARCH_NODES } from "./constants";
-import type { ScheduleObjectiveMetrics } from "./types";
+import type { ScheduleObjectiveMetrics, TournamentFixtureScheduleAssignment } from "./types";
+import {
+  bundleFromState,
+  compareRegenerationObjectiveBundles,
+  type RegenerationObjectiveBundle,
+} from "../partial-regeneration/disruption-metrics";
+import type { ResolvedFixtureScheduleLock } from "../schedule-lock/normalize";
+import { isFixtureFullyLockedInState } from "../schedule-lock/normalize";
+import { filterSlotsForFixtureLock } from "./regeneration-context";
 
 export type CompleteOptimisationSearchResult = {
   found: boolean;
@@ -41,9 +49,15 @@ export function completeOptimisationSearch(params: {
   dependencies: Map<string, ResolvedFixtureDependency[]>;
   initialState?: FeasibilitySearchState;
   maxNodes?: number;
+  lockByFixtureId?: Map<string, ResolvedFixtureScheduleLock>;
+  baselineAssignments?: readonly TournamentFixtureScheduleAssignment[];
+  resolvedLocks?: readonly ResolvedFixtureScheduleLock[];
 }): CompleteOptimisationSearchResult {
   let bestState: FeasibilitySearchState | null = null;
   let bestObjectiveMetrics: ScheduleObjectiveMetrics | null = null;
+  let bestRegenerationBundle: RegenerationObjectiveBundle | null = null;
+  const useRegenerationCompare =
+    (params.baselineAssignments?.length ?? 0) > 0 && (params.resolvedLocks?.length ?? 0) >= 0;
   let completeAssignmentsExplored = 0;
   let nodesVisited = 0;
   let searchComplete = true;
@@ -66,7 +80,22 @@ export function completeOptimisationSearch(params: {
         windowStartUtcMs: params.windowStartUtcMs,
         pitchIds: params.pitchIds,
       });
-      if (
+      if (useRegenerationCompare && params.baselineAssignments && params.resolvedLocks) {
+        const bundle = bundleFromState({
+          state,
+          baselineAssignments: params.baselineAssignments,
+          resolvedLocks: params.resolvedLocks,
+          scheduleObjectiveMetrics: metrics,
+        });
+        if (
+          bestRegenerationBundle === null ||
+          compareRegenerationObjectiveBundles(bundle, bestRegenerationBundle) < 0
+        ) {
+          bestRegenerationBundle = bundle;
+          bestObjectiveMetrics = metrics;
+          bestState = cloneSearchState(state);
+        }
+      } else if (
         bestObjectiveMetrics === null ||
         compareScheduleObjectiveMetrics(metrics, bestObjectiveMetrics) < 0
       ) {
@@ -84,7 +113,13 @@ export function completeOptimisationSearch(params: {
     }
 
     const participantIds = [fixture.sideAParticipantId, fixture.sideBParticipantId];
-    for (const slot of params.slots) {
+    const lock = params.lockByFixtureId?.get(fixture.fixtureId);
+    if (lock && isFixtureFullyLockedInState(lock)) {
+      dfs(fixtureIndex + 1);
+      return;
+    }
+    const slotCandidates = filterSlotsForFixtureLock({ slots: params.slots, lock });
+    for (const slot of slotCandidates) {
       const resourceBookings = state.resourceBookings.get(slot.tournamentPitchId) ?? [];
       if (
         !canPlaceFixtureOnSlot({

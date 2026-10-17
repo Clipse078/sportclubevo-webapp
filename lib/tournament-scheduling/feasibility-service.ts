@@ -141,6 +141,65 @@ function mapPitchesForEngine(
   }));
 }
 
+export type TournamentScheduleEngineLoadResult = {
+  tournamentWindow: FeasibilityInstantWindow;
+  schedulingConfig: ResolvedTournamentSchedulingConfig;
+  engineFixtures: TournamentFeasibilityInput["fixtures"];
+  participants: TournamentFeasibilityInput["participants"];
+  tournamentPitches: FeasibilityTournamentPitchRef[];
+  breaks: FeasibilityTournamentBreakRef[];
+};
+
+async function loadTournamentScheduleEngineContext(
+  tenantId: string,
+  tournamentId: string,
+  scheduleVersionId?: string | null,
+  configOverrides: ResolveTournamentSchedulingConfigInput = {},
+): Promise<TournamentScheduleEngineLoadResult> {
+  await requireTournamentEvent(tenantId, tournamentId);
+  const event = await prisma.event.findFirstOrThrow({
+    where: { id: tournamentId, tenantId, type: "TOURNAMENT" },
+    select: { startAt: true, endAt: true },
+  });
+  const tournamentWindow = tournamentWindowFromEvent(event.startAt, event.endAt);
+
+  const [fixtures, participants, schedulingConfig, pitches, breaks] = await Promise.all([
+    listTournamentFixtures(tenantId, tournamentId),
+    prisma.tournamentParticipant.findMany({
+      where: { tenantId, eventId: tournamentId },
+      select: { id: true },
+      orderBy: [{ displayOrder: "asc" }, { id: "asc" }],
+    }),
+    resolveTournamentSchedulingConfig(tenantId, scheduleVersionId, configOverrides),
+    listTournamentPitches(tenantId, tournamentId),
+    listTournamentBreaks(tenantId, tournamentId),
+  ]);
+
+  const engineFixtures = fixtures
+    .filter(
+      (f): f is typeof f & { sideAParticipantId: string; sideBParticipantId: string } =>
+        f.sideAParticipantId != null && f.sideBParticipantId != null,
+    )
+    .map((f) => ({
+      fixtureId: f.id,
+      stageKey: f.stageKey,
+      tournamentGroupId: f.tournamentGroupId,
+      roundIndex: f.roundIndex,
+      slotIndexInRound: f.slotIndexInRound,
+      sideAParticipantId: f.sideAParticipantId,
+      sideBParticipantId: f.sideBParticipantId,
+    }));
+
+  return {
+    tournamentWindow,
+    schedulingConfig,
+    engineFixtures,
+    participants: participants.map((p) => ({ participantId: p.id })),
+    tournamentPitches: mapPitchesForEngine(pitches),
+    breaks: mapBreaksForEngine(breaks),
+  };
+}
+
 export type AnalyseTournamentFeasibilityForTournamentInput = {
   tenantId: string;
   tournamentId: string;
@@ -159,58 +218,45 @@ export type AnalyseTournamentFeasibilityForTournamentResult = {
  * Application boundary: loads tournament fixtures/pitches/breaks and invokes the pure engine.
  * Does not persist schedule versions or assignments.
  */
+export async function loadTournamentScheduleOptimisationContext(
+  tenantId: string,
+  tournamentId: string,
+  scheduleVersionId?: string | null,
+  configOverrides: ResolveTournamentSchedulingConfigInput = {},
+): Promise<TournamentScheduleEngineLoadResult> {
+  return loadTournamentScheduleEngineContext(
+    tenantId,
+    tournamentId,
+    scheduleVersionId,
+    configOverrides,
+  );
+}
+
 export async function analyseTournamentFeasibilityForTournament(
   input: AnalyseTournamentFeasibilityForTournamentInput,
 ): Promise<AnalyseTournamentFeasibilityForTournamentResult> {
-  await requireTournamentEvent(input.tenantId, input.tournamentId);
-  const event = await prisma.event.findFirstOrThrow({
-    where: { id: input.tournamentId, tenantId: input.tenantId, type: "TOURNAMENT" },
-    select: { startAt: true, endAt: true },
-  });
-  const tournamentWindow = tournamentWindowFromEvent(event.startAt, event.endAt);
-
-  const [fixtures, participants, schedulingConfig, pitches, breaks] = await Promise.all([
-    listTournamentFixtures(input.tenantId, input.tournamentId),
-    prisma.tournamentParticipant.findMany({
-      where: { tenantId: input.tenantId, eventId: input.tournamentId },
-      select: { id: true },
-      orderBy: [{ displayOrder: "asc" }, { id: "asc" }],
-    }),
-    resolveTournamentSchedulingConfig(
-      input.tenantId,
-      input.scheduleVersionId,
-      input.configOverrides,
-    ),
-    listTournamentPitches(input.tenantId, input.tournamentId),
-    listTournamentBreaks(input.tenantId, input.tournamentId),
-  ]);
+  const loaded = await loadTournamentScheduleEngineContext(
+    input.tenantId,
+    input.tournamentId,
+    input.scheduleVersionId,
+    input.configOverrides,
+  );
 
   const engineInput: TournamentFeasibilityInput = {
-    tournamentWindow,
+    tournamentWindow: loaded.tournamentWindow,
     config: {
-      matchDurationMinutes: schedulingConfig.matchDurationMinutes,
-      transitionMinutes: schedulingConfig.transitionMinutes,
-      minRestMinutes: schedulingConfig.minRestMinutes,
+      matchDurationMinutes: loaded.schedulingConfig.matchDurationMinutes,
+      transitionMinutes: loaded.schedulingConfig.transitionMinutes,
+      minRestMinutes: loaded.schedulingConfig.minRestMinutes,
     },
-    // 01E3A: participant-specific feasibility (incl. min rest) requires concrete sides only.
-    fixtures: fixtures
-      .filter(
-        (f): f is typeof f & { sideAParticipantId: string; sideBParticipantId: string } =>
-          f.sideAParticipantId != null && f.sideBParticipantId != null,
-      )
-      .map((f) => ({
-        fixtureId: f.id,
-        stageKey: f.stageKey,
-        roundIndex: f.roundIndex,
-        slotIndexInRound: f.slotIndexInRound,
-        sideAParticipantId: f.sideAParticipantId,
-        sideBParticipantId: f.sideBParticipantId,
-      })),
-    participants: participants.map((p) => ({ participantId: p.id })),
-    tournamentPitches: mapPitchesForEngine(pitches),
-    breaks: mapBreaksForEngine(breaks),
+    fixtures: loaded.engineFixtures,
+    participants: loaded.participants,
+    tournamentPitches: loaded.tournamentPitches,
+    breaks: loaded.breaks,
     lockedAssignments: input.lockedAssignments,
   };
+  const schedulingConfig = loaded.schedulingConfig;
+  const tournamentWindow = loaded.tournamentWindow;
 
   const feasibility = analyseTournamentFeasibility(engineInput);
 
