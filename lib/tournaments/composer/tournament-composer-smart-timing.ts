@@ -4,7 +4,10 @@
 
 import { assessTournamentTiming } from "@/lib/tournament-scheduling/smart-timing";
 import type { TournamentTimingAssessment, TournamentTimingInput } from "@/lib/tournament-scheduling/smart-timing/types";
-import { expectedRoundRobinFixtureCount } from "@/lib/tournament-scheduling/fixtures/round-robin";
+import {
+  expectedRoundRobinFixtureCount,
+  generateRoundRobinFixtures,
+} from "@/lib/tournament-scheduling/fixtures/round-robin";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
 import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
@@ -33,14 +36,51 @@ function estimateFixtureCount(payload: TournamentComposerDraftPayload): number {
   return groupCount * expectedRoundRobinFixtureCount(perGroup, planner.meetingsPerOpponent);
 }
 
-function buildSyntheticFixtures(count: number): TournamentTimingInput["fixtures"] {
+function buildSyntheticFixtures(
+  payload: TournamentComposerDraftPayload,
+  count: number,
+): TournamentTimingInput["fixtures"] {
+  const planner = payload.planner;
+  const participantIds = payload.participants.map((p, i) => p.localId || `p-${i}`);
+  if (
+    planner &&
+    participantIds.length >= 2 &&
+    planner.competitionFormat !== "KNOCKOUT_ONLY" &&
+    resolveEffectiveGroupCount(planner) <= 1
+  ) {
+    try {
+      const generated = generateRoundRobinFixtures({
+        participantIds,
+        config: {
+          format: "ROUND_ROBIN",
+          stageKey: "MAIN",
+          meetingsPerOpponent: planner.meetingsPerOpponent,
+          homeAwayRelevance: "OFF",
+        },
+      });
+      if (generated.length === count) {
+        return generated.map((row) => ({
+          fixtureId: row.generatorKey,
+          stageKey: row.stageKey,
+          roundIndex: row.roundIndex,
+          slotIndexInRound: row.slotIndexInRound,
+          sideAParticipantId: row.sideAParticipantId,
+          sideBParticipantId: row.sideBParticipantId,
+        }));
+      }
+    } catch {
+      /* fall through to conservative single-slot topology */
+    }
+  }
+
   return Array.from({ length: count }, (_, i) => ({
     fixtureId: `synthetic-${i}`,
     stageKey: "MAIN",
     roundIndex: i,
     slotIndexInRound: 0,
-    sideAParticipantId: "a",
-    sideBParticipantId: "b",
+    sideAParticipantId: participantIds[i % participantIds.length] ?? "a",
+    sideBParticipantId:
+      participantIds[(i + 1) % participantIds.length] ?? "b",
   }));
 }
 
@@ -89,7 +129,7 @@ function buildTimingInput(payload: TournamentComposerDraftPayload): TournamentTi
       transitionMinutes: planner.timing.transitionMinutes,
       minRestMinutes: planner.timing.minRestMinutes,
     },
-    fixtures: buildSyntheticFixtures(fixtureCount),
+    fixtures: buildSyntheticFixtures(payload, fixtureCount),
     participants: payload.participants.map((p, i) => ({
       participantId: p.localId || `p-${i}`,
     })),
@@ -157,11 +197,16 @@ export function buildTournamentComposerSmartTimingView(
   const liveAssessment = assessTournamentTiming(input);
   let recommendedTiming: TournamentComposerRecommendedTiming | null = null;
 
+  const resolveRecommendedMinRest = (
+    assessment: TournamentTimingAssessment,
+  ): number =>
+    assessment.minRestRecommendation?.minRestMinutes ?? input.config.minRestMinutes;
+
   if (liveAssessment.durationRecommendation) {
     recommendedTiming = {
       matchDurationMinutes: liveAssessment.durationRecommendation.matchDurationMinutes,
       transitionMinutes: liveAssessment.durationRecommendation.transitionMinutes,
-      minRestMinutes: input.config.minRestMinutes,
+      minRestMinutes: resolveRecommendedMinRest(liveAssessment),
     };
   } else if (payload.endAt) {
     const backward = assessTournamentTiming({ ...input, mode: "BACKWARD" });
@@ -169,7 +214,7 @@ export function buildTournamentComposerSmartTimingView(
       recommendedTiming = {
         matchDurationMinutes: backward.durationRecommendation.matchDurationMinutes,
         transitionMinutes: backward.durationRecommendation.transitionMinutes,
-        minRestMinutes: input.config.minRestMinutes,
+        minRestMinutes: resolveRecommendedMinRest(backward),
       };
     }
   }

@@ -25,6 +25,7 @@ const model: TournamentPlanungViewModel = {
   pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1" }],
   timeScale: null,
   cells: [],
+  scheduleSections: [],
   mobileTimeline: [],
   smartTiming: null,
   diagnostics: [],

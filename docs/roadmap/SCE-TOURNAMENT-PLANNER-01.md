@@ -18,7 +18,7 @@
 | **01F1 (Smart Timing Advisor foundation)** | **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
 | **01F2 (Automatic Schedule Optimiser)** | **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | **01G (Locks + partial regeneration)** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
-| **01H (Tournament Planung workspace)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
+| **01H (Tournament Planung workspace)** | **CURRENT** — R3 operational min-rest + concrete schedule sections ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/use-toast";
 import TournamentPlanungBoard from "./TournamentPlanungBoard";
 import TournamentPlanungMobileTimeline from "./TournamentPlanungMobileTimeline";
+import TournamentPlanungScheduleList from "./TournamentPlanungScheduleList";
 import TournamentPlanungFixtureActions from "./TournamentPlanungFixtureActions";
 
 type Props = {
@@ -201,6 +202,7 @@ export default function TournamentPlanungWorkspace({
 
       {model.schedulePresence !== "NONE" && model.timeScale ? (
         <>
+          <TournamentPlanungScheduleList model={model} timezone={timezone} />
           <div className="hidden lg:block">
             <TournamentPlanungBoard
               model={model}

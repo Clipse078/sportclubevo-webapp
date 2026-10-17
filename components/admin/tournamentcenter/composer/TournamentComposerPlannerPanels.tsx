@@ -65,6 +65,7 @@ function SmartTimingPanel({
         <p className="text-sm font-semibold text-[var(--foreground)]">✨ SCE Smart Timing</p>
         <p className="mt-1 text-xs text-[var(--text-2)]">
           SCE prüft Spielanzahl, Felder und Zeitfenster und schlägt passende Timing-Werte vor.
+          SCE berücksichtigt dabei auch Erholungszeiten zwischen den Spielen eines Teams.
         </p>
       </div>
 

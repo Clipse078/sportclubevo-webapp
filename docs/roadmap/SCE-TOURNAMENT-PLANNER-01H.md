@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01H` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01G`](./SCE-TOURNAMENT-PLANNER-01G.md) — **CLOSED / MERGED** (PR **#867**) |
-| **Status** | **CURRENT** — PO UAT (01H-R2 Smart Timing + break UX) |
+| **Status** | **CURRENT** — PO UAT (01H-R3 operational rest + Planung schedule output) |
 | **Next** | **01I** — Manual adjustment + DnD + conflict validation |
 
 ## Product purpose
@@ -97,10 +97,27 @@ PO UAT (01H-R1): planner fields existed but felt like a generic form; Smart Timi
 
 | Marker | Value |
 | --- | --- |
-| **TOURNAMENT_PLANNER_01H_R2_READY_FOR_PO_UAT** | **YES** (await PO visual UAT) |
+| **TOURNAMENT_PLANNER_01H_R2_READY_FOR_PO_UAT** | **YES** |
+| **TOURNAMENT_PLANNER_01H_R3_READY_FOR_PO_UAT** | **YES** (await PO visual UAT) |
 | **SMART_TIMING_ENGINE_REUSED** | **YES** |
 | **PARALLEL_CREATOR_TIMING_CALCULATOR_CREATED** | **NO** |
 | **SCHEMA_CHANGE (R2)** | **NO** |
+
+## 01H-R3 — Operational minimum rest + concrete Planung schedule
+
+PO UAT (01H-R2): Smart Timing recommended **0 Min.** Mindestpause although capacity allowed recovery; Planung needed readable **WHO / WHEN / WHICH TOURNAMENT PITCH** after **✨ Spielplan automatisch erstellen**.
+
+**Operational vs mathematical minimum rest (01F1):** Hard feasibility still permits `minRestMinutes = 0`. The advisor now exposes `minRestRecommendation` (`OPERATIONALLY_RECOMMENDED` vs `MATHEMATICAL_BOUND`) via binary-search on the 01D oracle — highest proven positive rest for concrete participants; unresolved qualification stays at the mathematical floor. Composer **Empfehlung übernehmen** applies all three timing fields only on explicit user action.
+
+**Planung schedule presentation:** `TournamentPlanungViewModel.scheduleSections` groups assigned `TournamentFixtureAssignment` rows by structural round (`Runde n`, `Gruppe A · Runde n`, knockout labels). Breaks render as `TournamentBreak` entries (`Pause · time · Alle Felder` / selected pitch labels). Desktop list + mobile timeline share the same sections; pitch × time board unchanged for 01G locks.
+
+**Boundary unchanged:** Creator persists topology + timing; Planung **✨ Spielplan automatisch erstellen** runs 01F2. **01I** DnD not started.
+
+| Marker | Value |
+| --- | --- |
+| **OPERATIONAL_MINIMUM_REST_RECOMMENDATION** | **YES** |
+| **CONCRETE_PLANUNG_ASSIGNMENTS_VISIBLE** | **YES** |
+| **SCHEMA_CHANGE (R3)** | **NO** |
 
 ## Package boundary
 

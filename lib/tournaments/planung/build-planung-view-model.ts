@@ -15,6 +15,7 @@ import {
   resolveFeasibilityUxStatus,
   scheduleLockDimensionLabel,
 } from "./planung-presentation";
+import { buildPlanungScheduleSections, formatPlanungBreakScopeLabel } from "./planung-schedule-sections";
 import { buildPlanungTimeScale, resolveTimeRowIndex } from "./time-scale";
 import {
   formatGroupRankPlaceholder,
@@ -162,11 +163,15 @@ function buildFixtureBlock(
   const lockSuffix = lockDimension ? `, ${scheduleLockDimensionLabel(lockDimension)}` : "";
   const timeLine =
     assignment != null
-      ? new Date(assignment.startAt).toLocaleTimeString("de-CH", {
+      ? `${new Date(assignment.startAt).toLocaleTimeString("de-CH", {
           hour: "2-digit",
           minute: "2-digit",
           timeZone: snapshot.timezone,
-        })
+        })}–${new Date(assignment.endAt).toLocaleTimeString("de-CH", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: snapshot.timezone,
+        })}`
       : "ungeplant";
 
   return {
@@ -324,23 +329,51 @@ export function buildTournamentPlanungViewModel(
     );
   }
 
+  const pitchLabelById = new Map(snapshot.pitches.map((p) => [p.id, p.label]));
+
   for (const br of snapshot.breaks) {
     const label = br.label?.trim() || "Pause";
+    const pitchIds =
+      br.scope === "ALL_PITCHES" ? snapshot.pitches.map((p) => p.id) : [...br.tournamentPitchIds];
+    const scopeLabel = formatPlanungBreakScopeLabel(
+      br.scope,
+      pitchIds.map((id) => pitchLabelById.get(id) ?? "Feld"),
+    );
+    const startTime = new Date(br.startAt).toLocaleTimeString("de-CH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: snapshot.timezone,
+    });
+    const endTime = new Date(br.endAt).toLocaleTimeString("de-CH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: snapshot.timezone,
+    });
     cells.push({
       kind: "BREAK",
       breakId: br.id,
       label,
       startUtc: br.startAt,
       endUtc: br.endAt,
-      pitchIds: br.scope === "ALL_PITCHES" ? snapshot.pitches.map((p) => p.id) : [...br.tournamentPitchIds],
+      pitchIds,
       scope: br.scope,
-      accessibleLabel: `${label}, ${new Date(br.startAt).toLocaleTimeString("de-CH", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: snapshot.timezone,
-      })}`,
+      accessibleLabel: `${startTime}–${endTime} · ${label} · ${scopeLabel}`,
     });
   }
+
+  const scheduleSections = buildPlanungScheduleSections({
+    fixtures: snapshot.fixtures.map((f) => ({
+      id: f.id,
+      stageKey: f.stageKey,
+      roundIndex: f.roundIndex,
+      slotIndexInRound: f.slotIndexInRound,
+      phaseLabel: f.phaseLabel,
+      groupLabel: f.groupLabel,
+    })),
+    cells,
+    pitchLabelById,
+    timezone: snapshot.timezone,
+  });
 
   const mobileTimeline = [...cells].sort(
     (a, b) => Date.parse(a.startUtc) - Date.parse(b.startUtc),
@@ -389,6 +422,7 @@ export function buildTournamentPlanungViewModel(
     })),
     timeScale,
     cells,
+    scheduleSections,
     mobileTimeline,
     smartTiming: buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
     diagnostics,

@@ -78,6 +78,12 @@ export type TournamentPlanungBoardCell =
   | TournamentPlanungFixtureBlock
   | TournamentPlanungBreakBlock;
 
+export type TournamentPlanungScheduleSection = {
+  sectionId: string;
+  title: string;
+  entries: readonly TournamentPlanungBoardCell[];
+};
+
 export type TournamentPlanungDiagnostic = {
   id: string;
   message: string;
@@ -125,6 +131,8 @@ export type TournamentPlanungViewModel = {
   pitches: readonly TournamentPlanungPitchColumn[];
   timeScale: TournamentPlanungTimeScale | null;
   cells: readonly TournamentPlanungBoardCell[];
+  /** Round / phase grouped schedule (assigned fixtures + breaks). */
+  scheduleSections: readonly TournamentPlanungScheduleSection[];
   /** Chronological mobile list — same cells, grouped order. */
   mobileTimeline: readonly TournamentPlanungBoardCell[];
   smartTiming: TournamentPlanungSmartTimingSummary | null;
