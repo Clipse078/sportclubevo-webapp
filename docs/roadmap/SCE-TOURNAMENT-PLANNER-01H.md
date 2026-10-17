@@ -5,8 +5,9 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01H` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01G`](./SCE-TOURNAMENT-PLANNER-01G.md) — **CLOSED / MERGED** (PR **#867**) |
-| **Status** | **CURRENT** — PO UAT (01H-R4 creator timing simplification + R3 Planung schedule output) |
-| **Next** | **01I** — Manual adjustment + DnD + conflict validation |
+| **Status** | **CLOSED / ACCEPTED / MERGED** — PO final UAT **PASS** (PR **#868**); 01H-R1/R2/R3/R4 |
+| **Next** | **01I** — Manual adjustment + DnD + conflict validation (**NOT STARTED**) |
+| **Branch** | `cursor/sce-tournament-planner-01h-planung-workspace` |
 
 ## Product purpose
 
@@ -127,8 +128,37 @@ PO decision: **Mindestpause pro Team** is redundant in the Tournament Creator wo
 | **MINIMUM_TEAM_REST_VISIBLE_IN_CREATOR** | **NO** |
 | **MINIMUM_TEAM_REST_RECOMMENDED_IN_CREATOR** | **NO** |
 | **INTERNAL_MINIMUM_REST_ENGINE_CONTRACT_PRESERVED** | **YES** (`TournamentScheduleVersion.minRestMinutes` + 01D hard constraint unchanged) |
-| **TOURNAMENT_PLANNER_01H_R4_READY_FOR_PO_UAT** | **YES** (await PO visual UAT) |
+| **TOURNAMENT_PLANNER_01H_R4_READY_FOR_PO_UAT** | **YES** |
+| **PO_FINAL_UAT** | **PASS** (01H-R1/R2/R3/R4) |
 | **SCHEMA_CHANGE (R4)** | **NO** |
+
+## STAGE migration (01H-R1 closure)
+
+| Item | Value |
+| --- | --- |
+| **Migration** | `20261017140000_sce_tournament_planner_01h_r1_composer_generation_prefs` |
+| **Designated STAGE** | `APP_ENV=stage`, `SCE_DATA_ENVIRONMENT=STAGE`, fingerprint `acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb` |
+| **Script** | `scripts/sce-tournament-planner-01h-r1-stage-migration-verify.ts` |
+| **Apply workflow** | Guarded `APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` (not `db push`) |
+| **MIGRATION_APPLIED_EXACTLY_ONCE** | **YES** |
+| **POST_MIGRATION_SCHEMA_VERIFIED** | **YES** |
+| **MIGRATION_HISTORY_HEALTHY** | **YES** |
+| **SCHEMA_DRIFT** | **NO** |
+| **PROD_TOUCHED** | **NO** |
+
+Migration SQL is additive: enum + four columns with safe defaults on `TournamentCompetitionConfiguration` (no destructive DDL, no blind backfill).
+
+## Accepted closure decisions (PO UAT PASS)
+
+- **Creator → Planner:** HOME composer collects planner configuration; `persistTournamentPlannerFromComposer` seeds competition config, fixtures, TournamentPitch, breaks, and WORKING schedule version; optimiser run remains Planung **✨ Spielplan automatisch erstellen**.
+- **Smart Timing:** canonical **01F1** engine in Creator; prominent recommendation (Spieldauer, Wechselzeit, predicted end, reserve, feasibility/nudges); explicit **Empfehlung übernehmen** only.
+- **Minimum team rest:** not shown or recommended in Creator; internal `minRestMinutes` + 01D constraint unchanged.
+- **Breaks:** Beginn + Dauer; tournament date inherited; end derived; default **ALL_PITCHES**; per-pitch breaks advanced only.
+- **Planung:** pitch × time board + concrete WHO/WHEN/WHICH TOURNAMENT PITCH; round/phase grouping; breaks as first-class blocks; 01G locks/regeneration reused.
+- **TournamentPitch:** assignment on tournament pitches only (not FacilityResource-as-pitch).
+- **Ownership:** tenant-organised only; AWAY / unknown fail closed (no disabled fake planner).
+- **Responsive / accessibility:** shared view model; `accessibleLabel` on cells; mobile timeline.
+- **01I handoff:** manual DnD + conflict validation **not** implemented in 01H.
 
 ## Package boundary
 
