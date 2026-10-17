@@ -5,9 +5,11 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01F2` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01F1`](./SCE-TOURNAMENT-PLANNER-01F1.md) — **CLOSED / ACCEPTED / MERGED** (PR **#865**) |
-| **Status** | **CURRENT — ready for closure (01F2-R1)** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#866** → STAGE) |
+| **Feature HEAD** | `8ab4c9ade83247a02dc8e379b9a72559bb0f91be` (01F2-R1 accepted) |
 | **Branch** | `cursor/sce-tournament-planner-01f2-automatic-schedule-optimiser` |
-| **Next** | **01G** — Locks + partial regeneration |
+| **PR** | **#866** |
+| **Next** | **01G** — Locks + partial regeneration (**NEXT / NOT STARTED**) |
 
 ## Product purpose
 
@@ -178,9 +180,8 @@ No new product limits. Existing MVP caps (`FEASIBILITY_MAX_FIXTURES`, `FEASIBILI
 
 | Package | Status |
 | --- | --- |
-| **01A–01F1** | **CLOSED** |
-| **01F2** | **CURRENT** |
-| **01G** | **NEXT** |
+| **01A–01F2** | **CLOSED / ACCEPTED / MERGED** |
+| **01G** | **NEXT / NOT STARTED** |
 | **01H–01M** | Unchanged |
 
 ## Flags (closure target)
