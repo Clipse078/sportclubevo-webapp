@@ -303,6 +303,123 @@ describe("01G-R1 — lock dimension preservation", () => {
   }, 60_000);
 });
 
+describe("01G-R1 — qualification dependency + rest boundaries", () => {
+  it("regeneration honours knockout dependency order with a locked semi-final", () => {
+    const fixtures = [
+      {
+        fixtureId: "semi-1",
+        stageKey: "KO",
+        roundIndex: 0,
+        slotIndexInRound: 0,
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p2",
+      },
+      {
+        fixtureId: "final",
+        stageKey: "KO",
+        roundIndex: 1,
+        slotIndexInRound: 0,
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p3",
+        sideSources: [
+          {
+            side: "A" as const,
+            sourceType: "WINNER_OF_FIXTURE" as const,
+            participantId: null,
+            sourceFixtureId: "semi-1",
+          },
+          { side: "B" as const, sourceType: "CONCRETE_PARTICIPANT" as const, participantId: "p3" },
+        ],
+      },
+    ];
+    const input = optimiserInput({
+      fixtures,
+      tournamentPitches: [tournamentPitch("pitch-a", 0), tournamentPitch("pitch-b", 1)],
+      config: { matchDurationMinutes: 10, transitionMinutes: 5, minRestMinutes: 0 },
+      tournamentWindow: windowFromClock(0, 120),
+    });
+    const baseline = optimiseTournamentSchedule(input).assignments;
+    const result = regenerateTournamentSchedule({
+      ...input,
+      baselineAssignments: baseline,
+      scheduleLocks: [{ fixtureId: "semi-1", dimension: "TIME_AND_PITCH" }],
+    });
+    expect(result.hardConstraintValidationOk).toBe(true);
+    const semi = result.assignments.find((a) => a.fixtureId === "semi-1")!;
+    const fin = result.assignments.find((a) => a.fixtureId === "final")!;
+    expect(fin.startUtcMs).toBeGreaterThanOrEqual(semi.resourceEndUtcMs);
+  });
+
+  it("surfaces MINIMUM_REST lock conflict one minute below boundary (not silently fixed)", () => {
+    const fixtures = [
+      {
+        fixtureId: "f1",
+        stageKey: "MAIN",
+        roundIndex: 0,
+        slotIndexInRound: 0,
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p2",
+      },
+      {
+        fixtureId: "f2",
+        stageKey: "MAIN",
+        roundIndex: 1,
+        slotIndexInRound: 0,
+        sideAParticipantId: "p1",
+        sideBParticipantId: "p3",
+      },
+    ];
+    const input = optimiserInput({
+      fixtures,
+      tournamentPitches: [tournamentPitch("pitch-a", 0)],
+      config: { matchDurationMinutes: 10, transitionMinutes: 0, minRestMinutes: 15 },
+      tournamentWindow: windowFromClock(0, 120),
+    });
+    const baseline = optimiseTournamentSchedule(input).assignments;
+    expect(baseline).toHaveLength(2);
+
+    const valid = regenerateTournamentSchedule({
+      ...input,
+      baselineAssignments: baseline,
+      scheduleLocks: [
+        { fixtureId: "f1", dimension: "TIME_AND_PITCH" },
+        { fixtureId: "f2", dimension: "TIME_AND_PITCH" },
+      ],
+    });
+    expect(valid.hardConstraintValidationOk).toBe(true);
+
+    const f1 = baseline.find((a) => a.fixtureId === "f1")!;
+    const f2 = baseline.find((a) => a.fixtureId === "f2")!;
+    expect((f2.startUtcMs - f1.endUtcMs) / 60_000).toBeGreaterThanOrEqual(15);
+
+    const tenMinuteMs = 10 * 60_000;
+    const tooEarlyBaseline = [
+      f1,
+      {
+        ...f2,
+        startUtcMs: f2.startUtcMs - tenMinuteMs,
+        endUtcMs: f2.endUtcMs - tenMinuteMs,
+        resourceEndUtcMs: f2.resourceEndUtcMs - tenMinuteMs,
+      },
+    ];
+    const belowBoundary = regenerateTournamentSchedule({
+      ...input,
+      baselineAssignments: tooEarlyBaseline,
+      scheduleLocks: [
+        { fixtureId: "f1", dimension: "TIME_AND_PITCH" },
+        { fixtureId: "f2", dimension: "TIME_AND_PITCH" },
+      ],
+    });
+    expect(belowBoundary.status).toBe("INFEASIBLE_PROVEN");
+    expect((tooEarlyBaseline[1]!.startUtcMs - f1.endUtcMs) / 60_000).toBeLessThan(15);
+    expect(
+      belowBoundary.lockConflictDiagnostics.some(
+        (d) => d.category === "MINIMUM_REST" || d.category === "PARTICIPANT_OVERLAP",
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("01G-R1 — property-style regeneration invariants", () => {
   it("keeps exactly one assignment per fixture without topology mutation", () => {
     const fixtures = sequentialFixtures(4);
