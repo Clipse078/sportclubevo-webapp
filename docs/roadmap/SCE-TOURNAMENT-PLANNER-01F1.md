@@ -191,7 +191,7 @@ Representative advisor workloads (8 / 16 / 32 / 64 / 128 fixtures, multi-pitch, 
 | --- | --- |
 | **01A–01E3D** | **CLOSED** |
 | **01F1** | **CLOSED / ACCEPTED / MERGED** (PR **#865**) |
-| **01F2** | **NEXT / NOT STARTED** |
+| **01F2** | **CURRENT** (see [`SCE-TOURNAMENT-PLANNER-01F2.md`](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | **01G–01M** | Unchanged |
 
 ## Decomposition

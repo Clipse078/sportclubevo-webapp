@@ -16,7 +16,12 @@ import type {
   TournamentTimingInput,
 } from "./types";
 
-const STRUCTURAL_PREFIX = "__SCE_TIMING_STRUCT__";
+export const STRUCTURAL_PARTICIPANT_ID_PREFIX = "__SCE_TIMING_STRUCT__";
+const STRUCTURAL_PREFIX = STRUCTURAL_PARTICIPANT_ID_PREFIX;
+
+export function isStructuralSchedulingParticipantId(participantId: string): boolean {
+  return participantId.startsWith(STRUCTURAL_PARTICIPANT_ID_PREFIX);
+}
 
 export function normalizeTimingConfig(
   config: FeasibilitySchedulingConfig,
