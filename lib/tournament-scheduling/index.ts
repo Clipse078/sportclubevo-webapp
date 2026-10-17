@@ -33,3 +33,5 @@ export type {
 } from "./schedule-lock";
 export * from "./partial-regeneration";
 export * from "./partial-regeneration-service";
+export * from "./schedule-engine-load-service";
+export * from "./tournament-schedule-orchestration-service";

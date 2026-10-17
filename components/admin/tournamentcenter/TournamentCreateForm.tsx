@@ -55,6 +55,15 @@ import {
 } from "@/lib/tournaments/tournament-create-step-validation";
 import { SceActivityDateTimeInput } from "@/components/sce/activity-datetime/SceActivityDateTimeInput";
 import type { TournamentParticipantDraftKind } from "@/lib/tournaments/create-tournament-orchestration";
+import {
+  createDefaultTournamentComposerPlannerDraft,
+} from "@/lib/tournaments/composer/tournament-composer-planner-defaults";
+import type { TournamentComposerPlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-types";
+import {
+  TournamentComposerSpielplanPanel,
+  TournamentComposerSpielfelderPanel,
+  TournamentComposerTurnierformatPanel,
+} from "@/components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels";
 
 type Props = {
   activeSeasonId: string;
@@ -122,6 +131,7 @@ export default function TournamentCreateForm({
   reviewerComment = null,
   originContext,
   successBehavior = "navigate",
+  defaultTournamentDurationMinutes,
 }: Props) {
   const router = useRouter();
   const serverHydrated = initialResumeDraft?.payload
@@ -159,6 +169,11 @@ export default function TournamentCreateForm({
   const [homepageVisible, setHomepageVisible] = useState(initialPub.homepageVisible);
   const [wochenplanVisible, setWochenplanVisible] = useState(initialPub.wochenplanVisible);
   const [teamPageVisible, setTeamPageVisible] = useState(initialPub.teamPageVisible);
+  const [planner, setPlanner] = useState<TournamentComposerPlannerDraft | null>(
+    serverHydrated?.homeAway === "HOME"
+      ? (serverHydrated.planner ?? createDefaultTournamentComposerPlannerDraft())
+      : null,
+  );
 
   const [draftId, setDraftId] = useState<string | null>(initialResumeDraft?.draftId ?? initialDraftId);
   const [persistedBaseline, setPersistedBaseline] = useState<TournamentComposerDraftPayload | null>(
@@ -175,8 +190,11 @@ export default function TournamentCreateForm({
   useEffect(() => {
     if (homeAway === "HOME") {
       setOrganizerSelection(null);
+      setPlanner((prev) => prev ?? createDefaultTournamentComposerPlannerDraft());
+    } else {
+      setPlanner(null);
     }
-  }, [homeAway]);
+  }, [homeAway, defaultTournamentDurationMinutes]);
 
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
@@ -199,11 +217,7 @@ export default function TournamentCreateForm({
     endAt: scheduleInterval?.endAt,
   });
 
-  const assignedTeamIds = useMemo(
-    () => new Set(participants.map((p) => p.teamId).filter((id): id is string => !!id)),
-    [participants],
-  );
-  const availableTeams = teamOptions.filter((t) => !assignedTeamIds.has(t.id));
+  const availableTeams = teamOptions;
 
   const buildPayload = useCallback((): TournamentComposerDraftPayload => {
     const organiserFields = sanitizeOrganiserDraftFields(
@@ -234,6 +248,7 @@ export default function TournamentCreateForm({
         wochenplanVisible,
         teamPageVisible,
       },
+      planner: homeAway === "HOME" ? planner : null,
     };
   }, [
     seasonId,
@@ -255,6 +270,7 @@ export default function TournamentCreateForm({
     homepageVisible,
     wochenplanVisible,
     teamPageVisible,
+    planner,
   ]);
 
   const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
@@ -292,7 +308,8 @@ export default function TournamentCreateForm({
       title: composerTitle,
       createActionLabel: "Turnier erstellen",
       defaultTab: "teams",
-      buildTabNavigationConfig: buildTournamentCreateTabNavigationConfig,
+      buildTabNavigationConfig: ({ tabErrors }) =>
+        buildTournamentCreateTabNavigationConfig({ homeAway, tabErrors }),
       guidedWorkflow: {
         finalReviewTab: "uebersicht",
         validateStep: validateTournamentCreateWorkflowStep,
@@ -304,7 +321,7 @@ export default function TournamentCreateForm({
         return {
           valid: Object.keys(errors).length === 0,
           tabErrors: errors,
-          firstInvalidTab: firstInvalidTournamentCreateTab(errors) ?? undefined,
+          firstInvalidTab: firstInvalidTournamentCreateTab(errors, homeAway) ?? undefined,
         };
       },
       submitDraft: async (draft) => {
@@ -349,7 +366,7 @@ export default function TournamentCreateForm({
       },
       tabs: [],
     };
-  }, [buildPayload, composerTitle, draftId]);
+  }, [buildPayload, composerTitle, draftId, homeAway]);
 
   const handleComposerSuccess = useCallback(
     (result: SceActivityCreateSuccessResult<{ eventId: string; outcome: string }>) => {
@@ -403,12 +420,17 @@ export default function TournamentCreateForm({
           ? { id: hydrated.organizerExternalClubId, name: hydrated.organizerExternalClubName ?? "", shortName: null }
           : null,
       );
+      setPlanner(
+        hydrated.homeAway === "HOME"
+          ? (hydrated.planner ?? createDefaultTournamentComposerPlannerDraft())
+          : null,
+      );
     }
     void loadDraft();
     return () => {
       active = false;
     };
-  }, [initialDraftId, initialResumeDraft]);
+  }, [defaultTournamentDurationMinutes, initialDraftId, initialResumeDraft]);
 
   const participantIdentities = useMemo(
     () =>
@@ -636,7 +658,10 @@ export default function TournamentCreateForm({
     const allocatedIds = new Set(resourceAllocations.map((r) => r.facilityResourceId));
     return (
       <PlanningEditorSection testId="tournament-create-resources-section">
-        <p className="mb-3 text-xs text-[var(--text-2)]">Optional — Ressourcen können auch später zugewiesen werden.</p>
+        <p className="mb-3 text-xs text-[var(--text-2)]">
+          Physische Anlagen (Kunstrasen, Halle) — getrennt von den logischen Turnierfeldern im Schritt Spielfelder.
+          Optional; Zuordnung kann auch später erfolgen.
+        </p>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <PlanningResourceAssignmentKindIcon kind="pitch_hall" />
@@ -753,8 +778,21 @@ export default function TournamentCreateForm({
     </PlanningEditorSection>
   );
 
+  const homeTabs =
+    planner != null
+      ? [
+          { key: "turnierformat" as const, label: "Turnierformat", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
+            <TournamentComposerTurnierformatPanel planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+          { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
+            <TournamentComposerSpielfelderPanel planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+          { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
+            <TournamentComposerSpielplanPanel payload={buildPayload()} planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+        ]
+      : [];
+
   definition.tabs = [
     { key: "teams", label: "Teams", render: (ctx) => renderTeamsPanel(ctx?.fieldErrors) },
+    ...homeTabs,
     { key: "termin", label: "Termin", render: (ctx) => renderTerminPanel(ctx?.fieldErrors) },
     { key: "ressourcen", label: "Ressourcen", render: () => renderRessourcenPanel() },
     { key: "publikation", label: "Publikation", render: () => publikationPanel },

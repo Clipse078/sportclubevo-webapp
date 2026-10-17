@@ -1,5 +1,10 @@
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
+import { createDefaultTournamentComposerPlannerDraft } from "./tournament-composer-planner-defaults";
 import { sanitizeOrganiserDraftFields } from "./tournament-composer-organiser";
+import {
+  normalizeComposerBreakDraft,
+  type LegacyComposerBreakDraft,
+} from "./tournament-composer-planner-breaks";
 
 export function hydrateTournamentComposerFormFromDraft(
   payload: TournamentComposerDraftPayload,
@@ -25,5 +30,18 @@ export function hydrateTournamentComposerFormFromDraft(
       wochenplanVisible: true,
       teamPageVisible: true,
     },
+    planner:
+      payload.homeAway === "HOME"
+        ? (() => {
+            const base =
+              payload.planner ?? createDefaultTournamentComposerPlannerDraft();
+            return {
+              ...base,
+              breaks: base.breaks.map((br) =>
+                normalizeComposerBreakDraft(br as LegacyComposerBreakDraft),
+              ),
+            };
+          })()
+        : null,
   };
 }

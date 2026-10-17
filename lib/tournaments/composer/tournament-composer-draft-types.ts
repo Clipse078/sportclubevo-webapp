@@ -3,6 +3,7 @@ import type {
   TournamentParticipantDraft,
   TournamentResourceAllocationDraft,
 } from "@/lib/tournaments/create-tournament-orchestration";
+import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 
 export type TournamentComposerParticipantRow = TournamentParticipantDraft & {
   displayName: string;
@@ -46,6 +47,8 @@ export type TournamentComposerDraftPayload = {
   participants: TournamentComposerParticipantRow[];
   resourceAllocations: TournamentComposerResourceRow[];
   publication: TournamentComposerPublicationValues;
+  /** HOME tenant-organised planner configuration (01H-R1). */
+  planner?: TournamentComposerPlannerDraft | null;
 };
 
 export function createEmptyTournamentComposerDraft(): TournamentComposerDraftPayload {
@@ -72,5 +75,6 @@ export function createEmptyTournamentComposerDraft(): TournamentComposerDraftPay
       wochenplanVisible: true,
       teamPageVisible: true,
     },
+    planner: null,
   };
 }

@@ -22,6 +22,8 @@ import { resolveTeamSeasonIdForTeamAndSeason } from "@/lib/planning/resolve-team
 import { resolvePlayerReleaseAccess } from "@/lib/match-squad/player-release-auth";
 import { resolveIntegratedTournamentSquadWorkspace } from "@/lib/match-squad/integrated-workspace";
 import MatchSquadSection from "@/components/admin/matchcenter/MatchSquadSection";
+import { resolveTournamentPlannerOwnership } from "@/lib/tournament-scheduling/planner-eligibility";
+import { loadTournamentPlanungViewModel } from "@/lib/tournaments/planung/load-tournament-planung.server";
 
 type Props = { params: Promise<{ tournamentId: string }> };
 
@@ -144,6 +146,22 @@ export default async function TournamentEditPage({ params }: Props) {
       </PlanningEditorParticipantsSection>
     ) : null;
 
+  const plannerOwnership = resolveTournamentPlannerOwnership({
+    homeAway: tournament.homeAway,
+    organizerName: tournament.organizerName,
+    tenantName: tenantContext.name,
+  });
+  const planungViewModel =
+    plannerOwnership === "TENANT_ORGANISED"
+      ? await loadTournamentPlanungViewModel({
+          tenantId: tenantContext.id,
+          tournamentId: tournament.id,
+          timezone: timeZone,
+          tenantName: tenantContext.name,
+          tenantLogoUrl: tenantContext.logoUrl,
+        })
+      : null;
+
   const collaborationSection = (
     <PlanningEditorCollaborationSection
       headingId="turniere-edit-collaboration-heading"
@@ -201,6 +219,7 @@ export default async function TournamentEditPage({ params }: Props) {
           participantsSection={participantsSection}
           collaborationSection={collaborationSection}
           tournamentSquadSection={tournamentSquadSection}
+          planungViewModel={planungViewModel}
         />
       </ToastProvider>
     </PageShell>

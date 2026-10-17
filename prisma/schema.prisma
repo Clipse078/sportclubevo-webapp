@@ -8941,6 +8941,12 @@ enum TournamentCompetitionFormat {
   GROUP_PLUS_KNOCKOUT
 }
 
+/// Fixture-side Home/Away semantics (not tournament Heim/Auswärts ownership).
+enum TournamentFixtureHomeAwayRelevance {
+  OFF
+  ON
+}
+
 enum TournamentPhaseType {
   GROUP_MIX
   KNOCKOUT
@@ -8979,6 +8985,13 @@ model TournamentCompetitionConfiguration {
   tenantId          String
   eventId           String                      @unique
   competitionFormat TournamentCompetitionFormat
+  /// Persisted generation preferences (01H-R1 composer → planner).
+  fixtureHomeAwayRelevance TournamentFixtureHomeAwayRelevance @default(OFF)
+  roundRobinMeetingsPerOpponent Int @default(1)
+  /// Automatic group formation count for group/mix phases (1 = single group).
+  automaticGroupCount Int?
+  /// Default qualifiers per group for GROUP_PLUS_KNOCKOUT (e.g. 2).
+  knockoutQualifiersPerGroup Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

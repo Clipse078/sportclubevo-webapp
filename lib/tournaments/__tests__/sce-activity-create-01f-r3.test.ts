@@ -100,14 +100,14 @@ describe("SCE-ACTIVITY-CREATE-01F-R3 — tournament lobby + 1:n own teams", () =
     ).toBe(false);
   });
 
-  it("prevents duplicate team, club, and manual participants", () => {
+  it("prevents duplicate club and manual participants; allows duplicate source teams with local display names", () => {
     const draft = createEmptyTournamentComposerDraft();
     draft.participants = [
       { localId: "1", kind: "TEAM", teamId: "t1", displayName: "F1", subLabel: null, dressingRooms: [] },
       { localId: "2", kind: "EXTERNAL_CLUB", externalClubId: "c1", displayName: "FC Basel", subLabel: null, dressingRooms: [] },
       { localId: "3", kind: "MANUAL", manualLabel: "Gast", displayName: "Gast", subLabel: null, dressingRooms: [] },
     ];
-    expect(isDuplicateTournamentParticipant(draft.participants, { kind: "TEAM", teamId: "t1" })).toBe(true);
+    expect(isDuplicateTournamentParticipant(draft.participants, { kind: "TEAM", teamId: "t1" })).toBe(false);
     expect(isDuplicateTournamentParticipant(draft.participants, { kind: "EXTERNAL_CLUB", externalClubId: "c1" })).toBe(
       true,
     );

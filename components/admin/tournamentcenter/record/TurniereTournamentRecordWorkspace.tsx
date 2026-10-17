@@ -50,6 +50,8 @@ import TurniereTournamentRecordReadinessPill from "./TurniereTournamentRecordRea
 import TurniereTournamentRecordResourceSummary from "./TurniereTournamentRecordResourceSummary";
 import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "./turniere-record-layout";
 import TurniereTournamentActivityTabShell from "@/components/admin/tournamentcenter/TurniereTournamentActivityTabShell";
+import TournamentPlanungWorkspace from "@/components/admin/tournamentcenter/planung/TournamentPlanungWorkspace";
+import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import TournamentOrganizerClubField from "@/components/admin/tournamentcenter/TournamentOrganizerClubField";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
@@ -159,6 +161,7 @@ export type TurniereTournamentRecordWorkspaceProps = {
   collaborationSection?: ReactNode;
   participantsSection?: ReactNode;
   tournamentSquadSection?: ReactNode;
+  planungViewModel?: TournamentPlanungViewModel | null;
 };
 
 export default function TurniereTournamentRecordWorkspace({
@@ -180,6 +183,7 @@ export default function TurniereTournamentRecordWorkspace({
   collaborationSection,
   participantsSection,
   tournamentSquadSection,
+  planungViewModel = null,
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -807,6 +811,24 @@ export default function TurniereTournamentRecordWorkspace({
           }
           planung={
             <div className="space-y-4">
+              {planungViewModel ? (
+                <TournamentPlanungWorkspace
+                  initialModel={planungViewModel}
+                  tournamentId={tournament.id}
+                  timezone={timezone}
+                  canManage={isEditable}
+                />
+              ) : !isTenantHostedTournament({ homeAway }) ? (
+                <section
+                  className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+                  data-testid="tournament-planung-external-info"
+                >
+                  <p className="text-sm text-[var(--text-2)]">
+                    Der Spielplan wird vom Veranstalter verwaltet. SCE Turnierplanung steht bei extern
+                    organisierten Turnieren nicht zur Verfügung.
+                  </p>
+                </section>
+              ) : null}
               {isTenantHostedTournament({ homeAway }) ? (
                 <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">
                   <div className="space-y-6">

@@ -15,6 +15,8 @@ import { addTournamentResourceAllocation } from "@/lib/tournaments/resource-allo
 import { addParticipantDressingRoomAllocation } from "@/lib/tournaments/participant-allocation-service";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import { resolveTournamentComposerPersistedLocation } from "@/lib/tournaments/tournament-create-validation";
+import { persistTournamentPlannerFromComposer } from "./persist-tournament-planner-from-composer";
+import { createDefaultTournamentComposerPlannerDraft } from "./tournament-composer-planner-defaults";
 
 export type CreateTournamentFromComposerResult = {
   eventId: string;
@@ -155,6 +157,16 @@ export async function createTournamentFromComposerPayload(input: {
       },
     },
   );
+
+  if (payload.homeAway === "HOME") {
+    const planner = payload.planner ?? createDefaultTournamentComposerPlannerDraft();
+    await persistTournamentPlannerFromComposer({
+      tenantId: input.tenantId,
+      tournamentId: event.id,
+      payload,
+      planner,
+    });
+  }
 
   return { eventId: event.id, orchestration };
 }
