@@ -5,8 +5,8 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01G` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01F2`](./SCE-TOURNAMENT-PLANNER-01F2.md) — **CLOSED / MERGED** (PR **#866**) |
-| **Status** | **CURRENT — 01G-R1 closure** |
-| **Next** | **01H** — Tournament Planung workspace (**NOT STARTED**) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) |
+| **Next** | **01H** — Tournament Planung workspace (**NEXT / NOT STARTED**) |
 
 ## Product purpose
 
@@ -116,14 +116,39 @@ Invalid locks are **rejected** — never silently moved, auto-fixed, or removed.
 - `TOURNAMENT_PLANNER_SCOPE = TENANT_ORGANISED_TOURNAMENTS_ONLY` on service entry  
 - Pure engine does not write Prisma  
 
-## STAGE migration (01G)
+## STAGE migration (01G closure)
 
-| Gate | Cloud Agent R1 |
+| Item | Value |
 | --- | --- |
-| **DESIGNATED_STAGE_DB_VERIFIED** | **NO** — effective `DATABASE_URL` fingerprint on the agent VM did not match canonical `STAGE_CANONICAL_DATABASE_FINGERPRINT` (`acd3b37682911890`) with required `APP_ENV=stage` + `SCE_DATA_ENVIRONMENT=STAGE` guards. |
-| **STAGE_MIGRATION_APPLIED** | **NO** (blocked — operator applies via `stage-preview-migration-runbook.md`) |
+| **Migration** | `20261017120000_sce_tournament_planner_01g_schedule_lock_dimension` |
+| **Designated STAGE** | `APP_ENV=stage`, `SCE_DATA_ENVIRONMENT=STAGE`, fingerprint `acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb` |
+| **Script** | `scripts/sce-tournament-planner-01g-stage-migration-verify.ts` |
+| **Apply workflow** | Guarded `APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` (not `db push`) |
+| **DESIGNATED_STAGE_DB_VERIFIED** | **YES** |
+| **STAGE_MIGRATION_APPLIED** | **YES** |
+| **MIGRATION_APPLIED_EXACTLY_ONCE** | **YES** |
+| **MIGRATION_HISTORY_HEALTHY** | **YES** |
+| **PROD_TOUCHED** | **NO** |
 
-Migration SQL is additive: enum + nullable column + `UPDATE … WHERE isLocked = true` only (no `SET isLocked`, no destructive DDL).
+Migration SQL is additive: enum + nullable `scheduleLockDimension` + `UPDATE … WHERE isLocked = true` → `TIME_AND_PITCH` only (no `SET isLocked`, no destructive DDL, **BLIND_LOCK_BACKFILL = NO**).
+
+**Pre/post counts (aggregate; designated STAGE):**
+
+| Metric | Pre | Post |
+| --- | ---: | ---: |
+| `TournamentFixtureAssignment` rows | 0 | 0 |
+| Legacy `isLocked = true` rows | 0 | 0 |
+| `TournamentScheduleVersion` rows | 0 | 0 |
+
+**Legacy lock preservation:** every pre-existing `isLocked = true` row receives `scheduleLockDimension = TIME_AND_PITCH`; unlocked rows are not backfilled (`LEGACY_UNLOCKED_ROWS_REMAIN_UNLOCKED = YES`). Normalization for reads without dimension remains in `schedule-lock/normalize.ts`.
+
+## Technical fixture guard (deferred requalification)
+
+| Field | Value |
+| --- | --- |
+| **CURRENT_TECHNICAL_FIXTURE_GUARD** | **120** (`FEASIBILITY_MAX_FIXTURES`) |
+| **PRODUCT_FIXTURE_MAX** | **NONE** (not a business cap) |
+| **128-fixture workloads** | Blocked by existing technical guard until requalification in **SCE-TOURNAMENT-PLANNER-01M** |
 
 ## Performance observations (representative, deterministic budgets)
 
@@ -153,7 +178,7 @@ UI will call:
 
 | Package | Status |
 | --- | --- |
-| 01A–01F2 | **CLOSED** |
-| **01G** | **CURRENT / R1 CLOSURE** |
+| 01A–01F2 | **CLOSED / ACCEPTED / MERGED** |
+| **01G** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) |
 | **01H** | **NEXT / NOT STARTED** — Tournament Planung workspace |
-| 01I–01M | Unchanged |
+| 01I–01M | **PLANNED** |
