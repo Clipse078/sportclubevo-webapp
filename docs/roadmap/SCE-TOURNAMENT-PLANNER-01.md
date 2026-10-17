@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01H Tournament Planung workspace (NEXT); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01H Tournament Planung workspace (CURRENT); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -18,7 +18,7 @@
 | **01F1 (Smart Timing Advisor foundation)** | **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
 | **01F2 (Automatic Schedule Optimiser)** | **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | **01G (Locks + partial regeneration)** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
-| **01H (Tournament Planung workspace)** | **NEXT / NOT STARTED** |
+| **01H (Tournament Planung workspace)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | **ADR** | [`ADR-014`](./05-architecture-decisions.md#adr-014--tournament-fixture-vs-schedule-separation-and-deterministic-scheduling-engine) |
 
 ## Product vision (canonical)
@@ -161,8 +161,8 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 6a | **01F1** | **Smart Timing Advisor + scheduling optimisation foundation** — **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
 | 6b | **01F2** | **Automatic Schedule Optimiser implementation** — **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | 7 | **01G** | **CLOSED / ACCEPTED / MERGED** — Locks + partial regeneration (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
-| 8 | **01H** | **NEXT / NOT STARTED** — Tournament Planung workspace / visual pitch × time planner |
-| 9 | **01I** | Manual adjustment / DnD / conflict validation |
+| 8 | **01H** | **CURRENT** — Tournament Planung workspace / visual pitch × time planner ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
+| 9 | **01I** | **NEXT** — Manual adjustment / DnD / conflict validation |
 | 10 | **01J** | Results + rankings + qualification progression |
 | 11 | **01K** | Publication + sharing |
 | 12 | **01L** | Responsive / accessibility / polish |

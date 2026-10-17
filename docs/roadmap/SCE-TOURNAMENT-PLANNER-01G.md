@@ -6,7 +6,7 @@
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01F2`](./SCE-TOURNAMENT-PLANNER-01F2.md) — **CLOSED / MERGED** (PR **#866**) |
 | **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) |
-| **Next** | **01H** — Tournament Planung workspace (**NEXT / NOT STARTED**) |
+| **Next** | **01I** — Manual adjustment + DnD (**NEXT**) — 01H workspace **CURRENT** |
 
 ## Product purpose
 
