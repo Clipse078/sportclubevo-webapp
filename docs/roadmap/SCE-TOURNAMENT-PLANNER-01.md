@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01F2 Automatic Schedule Optimiser (NEXT / NOT STARTED); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01F2 Automatic Schedule Optimiser (CURRENT); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -156,8 +156,8 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 5e | **01E3C** | Knockout bracket generation + BYEs — **CLOSED / ACCEPTED / MERGED** (PR **#863**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3C.md)) |
 | 5f | **01E3D** | Group → knockout qualification mapping + progression — **CLOSED / ACCEPTED / MERGED** (PR **#864**) ([doc](./SCE-TOURNAMENT-PLANNER-01E3D.md)) |
 | 6a | **01F1** | **Smart Timing Advisor + scheduling optimisation foundation** — **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
-| 6b | **01F2** | **Automatic Schedule Optimiser implementation** — **NEXT / NOT STARTED** (WHEN + logical pitch assignments) |
-| 7 | **01G** | Locks + partial regeneration |
+| 6b | **01F2** | **Automatic Schedule Optimiser implementation** — **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
+| 7 | **01G** | **NEXT** — Locks + partial regeneration |
 | 8 | **01H** | Tournament Planung workspace / visual pitch × time planner |
 | 9 | **01I** | Manual adjustment / DnD / conflict validation |
 | 10 | **01J** | Results + rankings + qualification progression |
@@ -188,7 +188,7 @@ Expected PDF / public content: tournament identity, venue, participants, schedul
 
 **01F1 (CLOSED / MERGED):** pure Smart Timing Advisor in `lib/tournament-scheduling/smart-timing/` — reuses **01D** feasibility (no parallel engine) (PR **#865**).
 
-**01F2 (NEXT / NOT STARTED):** persist assignments on `TournamentPitch` (schedule optimiser).
+**01F2 (CURRENT):** pure automatic schedule optimiser — assignments on `TournamentPitch` ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)); persistence service deferred to 01G+.
 
 | Capability | 01F1 |
 | --- | --- |
