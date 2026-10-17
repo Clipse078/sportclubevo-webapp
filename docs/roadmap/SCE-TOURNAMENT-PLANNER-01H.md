@@ -5,7 +5,7 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01H` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01G`](./SCE-TOURNAMENT-PLANNER-01G.md) — **CLOSED / MERGED** (PR **#867**) |
-| **Status** | **CURRENT** |
+| **Status** | **CURRENT** — PO UAT (01H-R1 creator integration) |
 | **Next** | **01I** — Manual adjustment + DnD + conflict validation |
 
 ## Product purpose
@@ -71,11 +71,25 @@ Board rendering is linear in fixtures + breaks; no new virtualisation framework 
 
 Manual drag & drop and move validation belong to **01I** — not implemented in 01H.
 
+## 01H-R1 — Tournament Creator → Planner configuration
+
+PO UAT finding: Planung workspace existed but the canonical **Tournament Activity Composer** did not collect planner inputs.
+
+**Creator IA (HOME):** Teams → Turnierformat → Termin → Spielfelder → Spielplan → Ressourcen → Publikation → Übersicht. AWAY keeps the legacy five-step surface (no planner steps).
+
+**Persistence boundary:** Composer commit persists participants/resources as before, then `persistTournamentPlannerFromComposer` writes competition configuration, generates fixtures (01E engines), TournamentPitch, breaks, and a WORKING schedule version with timing — **no automatic optimiser run** (Planung CTA **✨ Spielplan automatisch erstellen** remains the schedule assignment boundary).
+
+**Schema (01H-R1):** `TournamentCompetitionConfiguration` stores `fixtureHomeAwayRelevance`, `roundRobinMeetingsPerOpponent`, `automaticGroupCount`, `knockoutQualifiersPerGroup`.
+
+**Legacy HOME:** Planung shows actionable **Turnierplanung einrichten** when pitches or fixtures are missing.
+
+**AWAY:** No planner in composer; Planung tab shows organiser-managed informational copy (no broken planner chrome).
+
 ## Package boundary
 
 | Flag | Value |
 | --- | --- |
-| **SCHEMA_CHANGE** | **NO** |
+| **SCHEMA_CHANGE** | **YES** (01H-R1 migration `20261017140000_sce_tournament_planner_01h_r1_composer_generation_prefs`) |
 | **MANUAL_SCHEDULE_DND_IMPLEMENTED** | **NO** |
 | **RESULTS_ENGINE_IMPLEMENTED** | **NO** |
 | **PUBLICATION_WORKFLOW_IMPLEMENTED** | **NO** |

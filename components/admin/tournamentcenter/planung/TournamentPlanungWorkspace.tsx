@@ -135,7 +135,9 @@ export default function TournamentPlanungWorkspace({
           data-testid="tournament-planung-incomplete"
         >
           <p className="text-sm font-medium text-[var(--foreground)]">
-            Für die automatische Planung fehlt noch:
+            {model.incompleteSetup.some((i) => i.code === "PLANNER_SETUP")
+              ? "Turnierplanung einrichten"
+              : "Für die automatische Planung fehlt noch:"}
           </p>
           <ul className="mt-2 list-disc pl-5 text-sm text-[var(--muted)]">
             {model.incompleteSetup.map((item) => (

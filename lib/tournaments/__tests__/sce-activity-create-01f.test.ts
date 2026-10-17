@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createEmptyTournamentComposerDraft } from "@/lib/tournaments/composer/tournament-composer-draft-types";
+import { createDefaultTournamentComposerPlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-defaults";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { buildTournamentCreateTabNavigationConfig } from "@/lib/tournaments/tournament-create-workflow-config";
 import { computeTournamentCreateTabErrors, firstInvalidTournamentCreateTab, resolveTournamentComposerPersistedLocation } from "@/lib/tournaments/tournament-create-validation";
@@ -16,7 +17,11 @@ function read(rel: string): string { return readFileSync(join(root, rel), "utf8"
 function validDraft() {
   const d = createEmptyTournamentComposerDraft();
   d.seasonId = "s1"; d.title = "Cup"; d.startAt = "2026-10-14T10:00";
-  d.participants = [{ localId: "p1", kind: "TEAM", teamId: "t1", displayName: "Team", subLabel: null, dressingRooms: [] }];
+  d.participants = [
+    { localId: "p1", kind: "TEAM", teamId: "t1", displayName: "Team A", subLabel: null, dressingRooms: [] },
+    { localId: "p2", kind: "TEAM", teamId: "t2", displayName: "Team B", subLabel: null, dressingRooms: [] },
+  ];
+  d.planner = createDefaultTournamentComposerPlannerDraft();
   return d;
 }
 
@@ -73,8 +78,22 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
     expect(read("docs/roadmap/SCE-ACTIVITY-CREATE-01F.md")).toContain("SCE-ACTIVITY-CREATE-01F");
   });
   it("uses canonical tournament tabs", () => {
-    expect(buildTournamentCreateTabNavigationConfig().tabs.map((t) => t.key)).toEqual([
-      "teams", "termin", "ressourcen", "publikation", "uebersicht",
+    expect(buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" }).tabs.map((t) => t.key)).toEqual([
+      "teams",
+      "turnierformat",
+      "termin",
+      "spielfelder",
+      "spielplan",
+      "ressourcen",
+      "publikation",
+      "uebersicht",
+    ]);
+    expect(buildTournamentCreateTabNavigationConfig({ homeAway: "AWAY" }).tabs.map((t) => t.key)).toEqual([
+      "teams",
+      "termin",
+      "ressourcen",
+      "publikation",
+      "uebersicht",
     ]);
   });
   it("permission constant value", () => {

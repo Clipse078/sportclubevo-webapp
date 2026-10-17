@@ -164,6 +164,24 @@ export default function TournamentCreateReviewPanel({
         )}
       </div>
 
+      {summary.plannerFormatLabel ? (
+        <div className="space-y-3 rounded-xl border border-[var(--border)] p-4" data-testid="tournament-create-review-planner">
+          <SummaryRow label="Turnierplanung">
+            <ul className="space-y-1">
+              <li>Format: {summary.plannerFormatLabel}</li>
+              {summary.plannerStrategyLabel ? <li>Generierung: {summary.plannerStrategyLabel}</li> : null}
+              {summary.plannerPitchLabels.length > 0 ? (
+                <li>Turnierfelder: {summary.plannerPitchLabels.join(", ")}</li>
+              ) : null}
+              {summary.plannerTimingLabel ? <li>Timing: {summary.plannerTimingLabel}</li> : null}
+              {summary.plannerBreakCount > 0 ? (
+                <li>Pausen: {summary.plannerBreakCount}</li>
+              ) : null}
+            </ul>
+          </SummaryRow>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <SummaryRow label="Termin">
           <p>{summary.scheduleLabel}</p>

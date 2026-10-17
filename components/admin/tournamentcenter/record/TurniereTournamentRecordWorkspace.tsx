@@ -818,6 +818,16 @@ export default function TurniereTournamentRecordWorkspace({
                   timezone={timezone}
                   canManage={isEditable}
                 />
+              ) : !isTenantHostedTournament({ homeAway }) ? (
+                <section
+                  className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+                  data-testid="tournament-planung-external-info"
+                >
+                  <p className="text-sm text-[var(--text-2)]">
+                    Der Spielplan wird vom Veranstalter verwaltet. SCE Turnierplanung steht bei extern
+                    organisierten Turnieren nicht zur Verfügung.
+                  </p>
+                </section>
               ) : null}
               {isTenantHostedTournament({ homeAway }) ? (
                 <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">

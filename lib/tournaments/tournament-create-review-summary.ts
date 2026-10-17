@@ -18,6 +18,11 @@ export type TournamentCreateReviewSummary = {
   dressingRoomByParticipant: Array<{ participantLabel: string; resourceLabel: string }>;
   publicationLabels: string[];
   organiserLabel: string | null;
+  plannerFormatLabel: string | null;
+  plannerStrategyLabel: string | null;
+  plannerPitchLabels: string[];
+  plannerTimingLabel: string | null;
+  plannerBreakCount: number;
 };
 
 function formatDateTimeDeCH(isoLocal: string): string | null {
@@ -62,6 +67,7 @@ export function buildTournamentCreateReviewSummary(input: {
     | "homeAway"
     | "resourceAllocations"
     | "publication"
+    | "planner"
   >;
   organizer: ExternalClubPickerResult | null;
   pitchHallFacilityGroups: FacilityGroup[];
@@ -86,6 +92,13 @@ export function buildTournamentCreateReviewSummary(input: {
     payload.publication.wochenplanVisible ? "Wochenplan" : null,
     payload.publication.teamPageVisible ? "Teamseite" : null,
   ].filter((v): v is string => !!v);
+
+  const planner = payload.homeAway === "HOME" ? payload.planner : null;
+  const formatLabels: Record<string, string> = {
+    GROUP_MIX_ONLY: "Gruppen-/Mixspiele",
+    KNOCKOUT_ONLY: "K.-o.-Turnier",
+    GROUP_PLUS_KNOCKOUT: "Gruppenphase + K.-o.",
+  };
 
   return {
     title: payload.title.trim() || "—",
@@ -116,5 +129,16 @@ export function buildTournamentCreateReviewSummary(input: {
       .filter((row) => row.resourceLabel),
     publicationLabels,
     organiserLabel: organizer?.name?.trim() || null,
+    plannerFormatLabel: planner ? formatLabels[planner.competitionFormat] ?? null : null,
+    plannerStrategyLabel: planner
+      ? planner.groupMixStrategy === "SMART_MIX"
+        ? `Intelligente Mischung (${planner.smartMixTargetMatchesPerParticipant ?? "—"} Spiele/Team)`
+        : `Jeder gegen jeden (${planner.meetingsPerOpponent}×)`
+      : null,
+    plannerPitchLabels: planner?.pitches.map((p) => p.label) ?? [],
+    plannerTimingLabel: planner
+      ? `${planner.timing.matchDurationMinutes} Min. Spiel · ${planner.timing.transitionMinutes} Min. Wechsel · ${planner.timing.minRestMinutes} Min. Pause/Team`
+      : null,
+    plannerBreakCount: planner?.breaks.length ?? 0,
   };
 }

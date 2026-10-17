@@ -204,7 +204,15 @@ function buildIncompleteSetup(snapshot: PlanungDomainSnapshot): TournamentPlanun
       href: "/dashboard/tournamentcenter",
     });
   }
-  if (snapshot.fixtureCount < 1) {
+  const legacyPlannerIncomplete =
+    snapshot.pitches.length < 1 || snapshot.fixtureCount < 1;
+  if (legacyPlannerIncomplete) {
+    items.push({
+      code: "PLANNER_SETUP",
+      label: "Turnierplanung einrichten — Format, Felder, Timing und Pausen vervollständigen",
+      href: `/dashboard/tournamentcenter/${snapshot.tournamentId}/edit?tab=uebersicht`,
+    });
+  } else if (snapshot.fixtureCount < 1) {
     items.push({
       code: "FIXTURES",
       label: "Spiele wurden noch nicht erzeugt",

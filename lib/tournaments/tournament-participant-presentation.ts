@@ -29,8 +29,8 @@ export function isDuplicateTournamentParticipant(
   participants: readonly TournamentComposerParticipantRow[],
   candidate: Pick<TournamentComposerParticipantRow, "kind" | "teamId" | "externalClubId" | "manualLabel">,
 ): boolean {
-  if (candidate.kind === "TEAM" && candidate.teamId) {
-    return participants.some((p) => p.kind === "TEAM" && p.teamId === candidate.teamId);
+  if (candidate.kind === "TEAM") {
+    return false;
   }
   if (candidate.kind === "EXTERNAL_CLUB" && candidate.externalClubId) {
     return participants.some(

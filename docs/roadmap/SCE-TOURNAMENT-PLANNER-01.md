@@ -161,7 +161,7 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 6a | **01F1** | **Smart Timing Advisor + scheduling optimisation foundation** — **CLOSED / ACCEPTED / MERGED** (PR **#865**) ([doc](./SCE-TOURNAMENT-PLANNER-01F1.md)) |
 | 6b | **01F2** | **Automatic Schedule Optimiser implementation** — **CLOSED / ACCEPTED / MERGED** (PR **#866**) ([doc](./SCE-TOURNAMENT-PLANNER-01F2.md)) |
 | 7 | **01G** | **CLOSED / ACCEPTED / MERGED** — Locks + partial regeneration (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
-| 8 | **01H** | **CURRENT** — Tournament Planung workspace / visual pitch × time planner ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
+| 8 | **01H** | **CURRENT (PO UAT)** — Planung workspace + **01H-R1** creator → planner configuration ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | 9 | **01I** | **NEXT** — Manual adjustment / DnD / conflict validation |
 | 10 | **01J** | Results + rankings + qualification progression |
 | 11 | **01K** | Publication + sharing |
