@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
+import type { TournamentFixtureScheduleLockDimension } from "@/lib/tournament-scheduling/types";
 import { resolveTimeRowIndex } from "@/lib/tournaments/planung/time-scale";
 import { manualMoveTargetAllowed, resolveManualMoveCapabilities } from "@/lib/tournaments/planung/manual-move-capabilities";
 import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-hub-pointer-gesture";
@@ -39,11 +40,7 @@ type DragState = {
   fixtureId: string;
   fromPitchId: string;
   fromStartUtc: string;
-  lockDimension: TournamentPlanungViewModel["cells"][number] extends infer C
-    ? C extends { kind: "FIXTURE" }
-      ? C["lockDimension"]
-      : null
-    : null;
+  lockDimension: TournamentFixtureScheduleLockDimension | null;
   pointerId: number;
   startX: number;
   startY: number;

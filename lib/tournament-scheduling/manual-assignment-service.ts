@@ -29,6 +29,24 @@ import {
 } from "./manual-assignment";
 import type { TournamentManualAssignmentApplyResult } from "./manual-assignment/types";
 
+type ManualAssignmentParticipantNameRow = {
+  id: string;
+  displayName: string | null;
+  manualLabel: string | null;
+  team: { name: string } | null;
+  externalClub: { name: string } | null;
+  externalTeam: { name: string } | null;
+};
+
+/** Mirrors lib/tournaments/participant-service.ts display-name resolution for diagnostics. */
+function resolvedParticipantDisplayName(row: ManualAssignmentParticipantNameRow): string {
+  const rawDisplayName = row.displayName?.trim() || null;
+  if (row.team) return rawDisplayName ?? row.team.name;
+  if (row.externalClub) return rawDisplayName ?? row.externalClub.name;
+  if (row.externalTeam) return row.externalTeam.name;
+  return row.manualLabel ?? "Unbenannt";
+}
+
 async function assertPlannerOwnership(tenantId: string, tournamentId: string): Promise<void> {
   const event = await prisma.event.findFirst({
     where: { id: tournamentId, tenantId, type: "TOURNAMENT" },
@@ -133,7 +151,14 @@ export async function buildManualAssignmentValidationContext(
     listTournamentFixtureAssignmentsForVersion(input.tenantId, input.scheduleVersionId),
     prisma.tournamentParticipant.findMany({
       where: { tenantId: input.tenantId, eventId: input.tournamentId },
-      select: { id: true, displayName: true },
+      select: {
+        id: true,
+        displayName: true,
+        manualLabel: true,
+        team: { select: { name: true } },
+        externalClub: { select: { name: true } },
+        externalTeam: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -143,8 +168,8 @@ export async function buildManualAssignmentValidationContext(
     minRestMinutes: loaded.schedulingConfig.minRestMinutes,
   };
 
-  const participantDisplayNames = new Map(
-    participants.map((p) => [p.id, p.displayName]),
+  const participantDisplayNames = new Map<string, string>(
+    participants.map((p) => [p.id, resolvedParticipantDisplayName(p)]),
   );
   const pitchLabels = new Map(loaded.tournamentPitches.map((p) => [p.tournamentPitchId, p.label]));
 
