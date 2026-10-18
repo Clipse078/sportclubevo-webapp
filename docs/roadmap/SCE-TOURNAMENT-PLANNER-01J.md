@@ -4,8 +4,8 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01J` |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01I`](./SCE-TOURNAMENT-PLANNER-01I.md) — **CLOSED / ACCEPTED / MERGED** (PR **#869**) |
-| **Status** | **CURRENT** |
-| **Next** | [`SCE-TOURNAMENT-PLANNER-01K`](./SCE-TOURNAMENT-PLANNER-01.md) — Publication + Sharing (**NOT STARTED**) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** — PO final UAT **PASS** (PR **#870**); includes **01J-R1** STAGE migration + integrity closure |
+| **Next** | [`SCE-TOURNAMENT-PLANNER-01K`](./SCE-TOURNAMENT-PLANNER-01.md) — Publication + Sharing (**NEXT / NOT STARTED**) |
 
 ## Product purpose
 
@@ -149,3 +149,36 @@ Migration SQL is additive only: enum `TournamentFixtureResultState` + table `Tou
 ## Ownership
 
 Reuses `canTenantPlanTournament` / `resolveTournamentPlannerOwnership`. AWAY tournaments: no result management workflow.
+
+## Accepted invariants (closure)
+
+| Invariant | Value |
+| --- | --- |
+| Result identity | **FIXTURE** — one `TournamentFixtureResult` per fixture |
+| Standings | **Derived** — not redundantly persisted |
+| Ranking config | Persisted `TournamentRankingConfiguration` is **authoritative** |
+| Ambiguous group rank | Does **not** fabricate a qualifier |
+| Qualification provenance | `TournamentQualificationSource` retained on resolution |
+| Progression vs schedule | Progression changes **WHO** only; assignments / pitches / times / locks unchanged |
+| Destructive downstream invalidation | **Never silent** — blocked when completed downstream results exist |
+| Result concurrency | `TournamentFixtureResult.revision` — separate from schedule revision |
+
+## PO final UAT (closure)
+
+| Field | Value |
+| --- | --- |
+| **PO_FINAL_UAT** | **PASS** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+Validated: PLAY → enter/edit/clear result → group standings → qualification resolution (GROUP_RANK, WINNER_OF_FIXTURE, BYEs) → downstream participant population without schedule mutation; stale result writes rejected; KO draw requires explicit winner; ownership fail-closed for AWAY/unknown.
+
+**Success marker:** `TOURNAMENT_PLANNER_01J_CLOSED_GREEN_BASELINE`
+
+## Closure gates (automated)
+
+| Gate | Value |
+| --- | --- |
+| **SCHEMA_CHANGE_SINCE_01J_R1** | **NO** |
+| **NEW_CLOSURE_MIGRATION** | **NO** |
+| **01K_IMPLEMENTED** | **NO** |
