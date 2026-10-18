@@ -21,7 +21,7 @@ import {
   toFeasibilityFixtures,
 } from "../smart-timing/prepare-context";
 import { completeFeasibilitySearch } from "../feasibility/complete-search";
-import { EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES } from "./constants";
+import { shouldUseLexicographicCompleteSearch } from "./search-mode";
 import { boundedImprovementSearch } from "./bounded-improvement-search";
 import { completeOptimisationSearch } from "./complete-optimisation-search";
 import { computeScheduleObjectiveMetrics } from "./objective-metrics";
@@ -223,7 +223,11 @@ export function optimiseTournamentSchedule(
     };
   }
 
-  const useExhaustiveLex = sortedFixtures.length <= EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES;
+  const useExhaustiveLex = shouldUseLexicographicCompleteSearch({
+    fixtureCount: sortedFixtures.length,
+    pitchCount: tournamentPitches.length,
+    candidateSlotCount: candidateSlots.length,
+  });
   let baselineObjectiveMetrics: TournamentScheduleOptimisationResult["baselineObjectiveMetrics"] =
     null;
   let boundedImprovementPasses = 0;
