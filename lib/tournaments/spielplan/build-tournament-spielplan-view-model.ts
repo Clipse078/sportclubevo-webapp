@@ -8,6 +8,10 @@ import type {
   TournamentPlanungScheduleSection,
 } from "@/lib/tournaments/planung/types";
 import { formatPlanungBreakScopeLabel } from "@/lib/tournaments/planung/planung-schedule-sections";
+import {
+  coercePlanungInstantInput,
+  planungInstantsEqual,
+} from "@/lib/tournaments/planung/time-scale";
 import type {
   TournamentSpielplanFixturePresentation,
   TournamentSpielplanIdentity,
@@ -153,8 +157,8 @@ export function buildTournamentSpielplanViewModel(input: {
   );
 
   const rowStartTimes = new Set<string>();
-  for (const f of assignedFixtures) rowStartTimes.add(f.startUtc);
-  for (const b of breakCells) rowStartTimes.add(b.startUtc);
+  for (const f of assignedFixtures) rowStartTimes.add(coercePlanungInstantInput(f.startUtc));
+  for (const b of breakCells) rowStartTimes.add(coercePlanungInstantInput(b.startUtc));
 
   const sortedStarts = [...rowStartTimes].sort((a, b) => Date.parse(a) - Date.parse(b));
 
@@ -163,7 +167,7 @@ export function buildTournamentSpielplanViewModel(input: {
 
   for (const startUtc of sortedStarts) {
     const allPitchBreak = breakCells.find(
-      (b) => b.scope === "ALL_PITCHES" && b.startUtc === startUtc,
+      (b) => b.scope === "ALL_PITCHES" && planungInstantsEqual(b.startUtc, startUtc),
     );
     if (allPitchBreak) {
       const timeLabel = formatTimeRange(allPitchBreak.startUtc, allPitchBreak.endUtc, timezone);
@@ -186,7 +190,9 @@ export function buildTournamentSpielplanViewModel(input: {
       });
     }
 
-    const fixturesAtSlot = assignedFixtures.filter((f) => f.startUtc === startUtc);
+    const fixturesAtSlot = assignedFixtures.filter((f) =>
+      planungInstantsEqual(f.startUtc, startUtc),
+    );
     const selectedBreaksAtSlot = breakCells.filter(
       (b) =>
         b.scope === "SELECTED_PITCHES" &&

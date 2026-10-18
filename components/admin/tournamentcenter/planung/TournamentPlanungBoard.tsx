@@ -150,8 +150,10 @@ export default function TournamentPlanungBoard({
         ))}
 
         {timeScale.rowAnchorsUtc.map((anchor) => {
+          const anchorInstant = anchor;
           const allPitchBreak = breakCells.find(
-            (b) => planungInstantsEqual(b.startUtc, anchor) && b.scope === "ALL_PITCHES",
+            (b) =>
+              planungInstantsEqual(b.startUtc, anchorInstant) && b.scope === "ALL_PITCHES",
           );
           if (allPitchBreak) {
             const timeRangeLabel = `${formatTime(allPitchBreak.startUtc, timezone)}–${formatTime(allPitchBreak.endUtc, timezone)}`;

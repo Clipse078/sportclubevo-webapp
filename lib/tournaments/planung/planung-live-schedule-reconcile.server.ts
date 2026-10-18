@@ -8,6 +8,10 @@ import { loadTournamentPlanungViewModel } from "./load-tournament-planung.server
 import type { TournamentPlanungViewModel } from "./types";
 import type { PlanungScheduleConsistencyStatus } from "./assess-planung-schedule-consistency";
 import { regeneratePlanungFixtureTopologyForHomeAway } from "./planung-fixture-topology-regeneration.server";
+import {
+  assessPlanungRoundRobinTopologyMismatch,
+  ensurePersistedRoundRobinMeetingsForHomeAwayRelevance,
+} from "./planung-fixture-topology-audit";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
 
 export type PlanungLiveScheduleReconcileResult = {
@@ -31,12 +35,28 @@ export async function applyPlanungLiveScheduleReconcile(params: {
 }): Promise<PlanungLiveScheduleReconcileResult> {
   let revision = params.expectedRevision ?? null;
 
+  const topologyAssessment = await assessPlanungRoundRobinTopologyMismatch({
+    tenantId: params.tenantId,
+    tournamentId: params.tournamentId,
+  });
+  const fixtureHomeAwayRelevance =
+    params.fixtureHomeAwayRelevance ?? topologyAssessment.fixtureHomeAwayRelevance;
+
   let topologyRegenerated = false;
-  if (params.homeAwayChanged && params.fixtureHomeAwayRelevance) {
+  const shouldReconcileTopology =
+    Boolean(params.homeAwayChanged) ||
+    (topologyAssessment.applicable && topologyAssessment.mismatch);
+
+  if (shouldReconcileTopology) {
+    await ensurePersistedRoundRobinMeetingsForHomeAwayRelevance({
+      tenantId: params.tenantId,
+      tournamentId: params.tournamentId,
+      fixtureHomeAwayRelevance,
+    });
     await regeneratePlanungFixtureTopologyForHomeAway({
       tenantId: params.tenantId,
       tournamentId: params.tournamentId,
-      fixtureHomeAwayRelevance: params.fixtureHomeAwayRelevance,
+      fixtureHomeAwayRelevance,
     });
     topologyRegenerated = true;
   }

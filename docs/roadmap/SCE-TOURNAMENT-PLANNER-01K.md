@@ -193,9 +193,22 @@ Correct canonical home/away round-robin (4 teams → 6 fixtures OFF, 12 fixtures
 | Live editing | Spieldauer / Wechselzeit / Home/Away / break CRUD → serial latest-intent mutations; subtle *Spielplan wird aktualisiert …* only |
 | Infeasible edit | One calm block + optional Smart Timing **Empfehlung übernehmen**; otherwise structural hint (more time or pitch) |
 | Team highlight | Filter/focus master Spielplan — related fixtures fade, highlighted fixture keeps crests around **VS** |
-| TournamentPitch UI | Column supports optional `formatHint` (e.g. `3v3 · Kleinfeld`) without schema change — **Planner 02 deferred** |
+| TournamentPitch UI | Neutral logical columns (`Feld 1`, `Feld 2`, …); optional display-only hints must stay **sport-neutral** and **country-neutral** — no intrinsic pitch formats in schema (**Planner 02 templates deferred**) |
 
-**Explicitly NOT in R7.6 / 01K:** Tournament Planner 02 templates, Rotation format, playing formats, participant playing units, format-aware pitches, template-driven Smart Generation.
+**Explicitly NOT in R7.6 / 01K:** Tournament Planner 02 templates, Rotation format, playing formats, participant playing units, template-driven Smart Generation.
+
+## 01K-R7.7 — PO UAT correctness (Home/Away + breaks)
+
+Fix real end-to-end failures on existing tournaments: stale round-robin topology when `fixtureHomeAwayRelevance` is ON but first-leg fixtures remain, and break visibility across Planung board, master Spielplan, team/mobile/print/PDF projections.
+
+| Invariant | Decision |
+| --- | --- |
+| Home/Away | 4 participants → OFF: 6 fixtures / 3 rounds; ON: 12 fixtures / 6 rounds; reconcile topology on explicit organiser mutations when persisted intent mismatches canonical count |
+| Breaks | Schedule structure (not fixtures); ALL_PITCHES full-width band; must not depend on fixture collision / time gap alone |
+| TournamentPitch | **Sport-neutral · country-neutral** — no roadmap requirement for format-aware generic pitches |
+| Tests | Integration regression reproduces legacy persisted state + view-model/presentation layers (not pure generator-only claims) |
+
+**01K-R7.7 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending.
 
 **Next packages (unchanged):** [`01L`](./SCE-TOURNAMENT-PLANNER-01.md) Responsive + Accessibility + Polish; **01M** integrity + performance closure — **do not start from R7.6**.
 
