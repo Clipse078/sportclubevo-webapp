@@ -538,12 +538,6 @@ export default function TournamentPlanungWorkspace({
               canManage={canManage}
               onModelChange={setModel}
               onError={(message) => toast.danger(message)}
-              onRegenerate={() =>
-                runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
-                  scheduleVersionId: model.scheduleVersionId,
-                  expectedRevision: model.scheduleRevision,
-                })
-              }
               onScheduleSyncChange={setScheduleSyncPending}
             />
           ) : null}

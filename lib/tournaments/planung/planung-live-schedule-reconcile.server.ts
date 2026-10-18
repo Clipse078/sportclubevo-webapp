@@ -7,7 +7,7 @@ import { runTournamentScheduleRegeneration } from "@/lib/tournament-scheduling/t
 import { loadTournamentPlanungViewModel } from "./load-tournament-planung.server";
 import type { TournamentPlanungViewModel } from "./types";
 import type { PlanungScheduleConsistencyStatus } from "./assess-planung-schedule-consistency";
-import { reorientPlanungFixtureSidesForHomeAway } from "./planung-home-away-reorientation.server";
+import { regeneratePlanungFixtureTopologyForHomeAway } from "./planung-fixture-topology-regeneration.server";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
 
 export type PlanungLiveScheduleReconcileResult = {
@@ -31,26 +31,25 @@ export async function applyPlanungLiveScheduleReconcile(params: {
 }): Promise<PlanungLiveScheduleReconcileResult> {
   let revision = params.expectedRevision ?? null;
 
+  let topologyRegenerated = false;
   if (params.homeAwayChanged && params.fixtureHomeAwayRelevance) {
-    await reorientPlanungFixtureSidesForHomeAway({
+    await regeneratePlanungFixtureTopologyForHomeAway({
       tenantId: params.tenantId,
       tournamentId: params.tournamentId,
       fixtureHomeAwayRelevance: params.fixtureHomeAwayRelevance,
     });
+    topologyRegenerated = true;
   }
 
-  const assignmentCount = await prisma.tournamentFixtureAssignment.count({
-    where: {
-      tenantId: params.tenantId,
-      scheduleVersionId: params.scheduleVersionId,
-    },
+  const fixtureCount = await prisma.tournamentFixture.count({
+    where: { tenantId: params.tenantId, eventId: params.tournamentId },
   });
 
   let regenerationAttempted = false;
   let regenerationSucceeded = false;
   let scheduleConsistencyOverride: PlanungScheduleConsistencyStatus | undefined;
 
-  if (assignmentCount > 0) {
+  if (fixtureCount > 0 || topologyRegenerated) {
     regenerationAttempted = true;
     try {
       const regen = await runTournamentScheduleRegeneration({

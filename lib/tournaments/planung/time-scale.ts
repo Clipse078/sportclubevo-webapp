@@ -4,6 +4,17 @@
 
 import type { TournamentPlanungTimeScale } from "./types";
 
+/** Canonical ISO instant for board anchors and break matching. */
+export function normalizePlanungInstantIso(iso: string): string {
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) return iso;
+  return new Date(ms).toISOString();
+}
+
+export function planungInstantsEqual(a: string, b: string): boolean {
+  return Date.parse(a) === Date.parse(b);
+}
+
 export function buildPlanungTimeScale(input: {
   windowStartUtc: string;
   windowEndUtc: string;
@@ -13,9 +24,9 @@ export function buildPlanungTimeScale(input: {
   breakStartUtc: readonly string[];
 }): TournamentPlanungTimeScale {
   const anchors = new Set<string>([
-    ...input.assignmentStartUtc,
-    ...input.breakStartUtc,
-    input.windowStartUtc,
+    ...input.assignmentStartUtc.map(normalizePlanungInstantIso),
+    ...input.breakStartUtc.map(normalizePlanungInstantIso),
+    normalizePlanungInstantIso(input.windowStartUtc),
   ]);
   const rowAnchorsUtc = [...anchors]
     .filter((iso) => {

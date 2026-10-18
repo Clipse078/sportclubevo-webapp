@@ -114,7 +114,7 @@ describe("TournamentPlanungBoard 01I", () => {
       />,
     );
     expect(screen.getByTestId("planung-board-all-pitches-break")).toBeInTheDocument();
-    expect(screen.getByText(/Pause · 15 Min\. · Alle Felder/)).toBeInTheDocument();
+    expect(screen.getByText(/Pause · .* · Alle Felder/)).toBeInTheDocument();
   });
 
   it("A — fixture is draggable when unlocked", () => {

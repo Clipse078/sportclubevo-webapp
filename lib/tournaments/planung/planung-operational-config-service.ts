@@ -13,6 +13,7 @@ import {
 } from "@/lib/tournament-scheduling/tournament-break-service";
 import { updateWorkingTournamentScheduleVersionTiming } from "@/lib/tournament-scheduling/schedule-version-service";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
+import { normalizeStoredRoundRobinMeetingsForHomeAwayToggle } from "./planung-round-robin-home-away";
 
 function assertPositiveInteger(value: number, field: string): void {
   if (!Number.isFinite(value) || value < 1 || !Number.isInteger(value)) {
@@ -27,11 +28,26 @@ export async function updatePlanungFixtureHomeAwayRelevance(params: {
   tenantId: string;
   tournamentId: string;
   fixtureHomeAwayRelevance: "ON" | "OFF";
+  previousFixtureHomeAwayRelevance: "ON" | "OFF";
 }): Promise<void> {
   await requireTenantOrganisedTournament(params.tenantId, params.tournamentId);
+  const existing = await prisma.tournamentCompetitionConfiguration.findFirst({
+    where: { tenantId: params.tenantId, eventId: params.tournamentId },
+    select: { roundRobinMeetingsPerOpponent: true },
+  });
+  const storedMeetings = existing?.roundRobinMeetingsPerOpponent ?? 1;
+  const roundRobinMeetingsPerOpponent = normalizeStoredRoundRobinMeetingsForHomeAwayToggle(
+    storedMeetings,
+    params.previousFixtureHomeAwayRelevance,
+    params.fixtureHomeAwayRelevance,
+  );
+
   const updated = await prisma.tournamentCompetitionConfiguration.updateMany({
     where: { tenantId: params.tenantId, eventId: params.tournamentId },
-    data: { fixtureHomeAwayRelevance: params.fixtureHomeAwayRelevance },
+    data: {
+      fixtureHomeAwayRelevance: params.fixtureHomeAwayRelevance,
+      roundRobinMeetingsPerOpponent,
+    },
   });
   if (updated.count === 0) {
     throw new TournamentSchedulingError(

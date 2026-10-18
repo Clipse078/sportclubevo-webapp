@@ -8,6 +8,7 @@ import {
 } from "@/lib/tournaments/planung/planung-operational-config-service";
 import { applyPlanungLiveScheduleReconcile } from "@/lib/tournaments/planung/planung-live-schedule-reconcile.server";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
+import { planungStaleScheduleVersionResponse } from "@/lib/tournaments/planung/planung-stale-schedule-response.server";
 
 type RouteContext = { params: Promise<{ tournamentId: string; breakId: string }> };
 
@@ -85,7 +86,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   } catch (err) {
     if (err instanceof TournamentSchedulingError) {
       if (err.code === "SCHEDULE.STALE_VERSION") {
-        return NextResponse.json({ error: err.message, code: err.code }, { status: 409 });
+        const tenant = await getActiveTenant();
+        return planungStaleScheduleVersionResponse({
+          tenantId,
+          tournamentId,
+          timezone: tenant?.timezone ?? "Europe/Zurich",
+          tenantName: tenant?.name ?? null,
+          tenantLogoUrl: tenant?.logoUrl ?? null,
+          code: err.code,
+        });
       }
       if (err.code === "TOURNAMENT_GENERATION_INVALID") {
         return NextResponse.json({ error: err.message, code: err.code }, { status: 422 });
@@ -132,7 +141,15 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ viewModel: result.viewModel });
   } catch (err) {
     if (err instanceof TournamentSchedulingError && err.code === "SCHEDULE.STALE_VERSION") {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: 409 });
+      const tenant = await getActiveTenant();
+      return planungStaleScheduleVersionResponse({
+        tenantId,
+        tournamentId,
+        timezone: tenant?.timezone ?? "Europe/Zurich",
+        tenantName: tenant?.name ?? null,
+        tenantLogoUrl: tenant?.logoUrl ?? null,
+        code: err.code,
+      });
     }
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 422 });

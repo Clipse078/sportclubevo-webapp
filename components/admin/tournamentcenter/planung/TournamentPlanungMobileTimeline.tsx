@@ -54,10 +54,12 @@ export default function TournamentPlanungMobileTimeline({
                 return (
                   <li
                     key={cell.breakId}
-                    className="rounded-lg border border-dashed border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-3 py-2 text-sm text-[var(--muted)]"
+                    className="rounded-lg border border-dashed border-[var(--sce-warning)]/35 bg-[var(--sce-warning-soft)] px-3 py-2 text-sm font-medium text-[var(--foreground)]"
                     aria-label={cell.accessibleLabel}
+                    data-testid={`planung-mobile-break-${cell.breakId}`}
                   >
-                    {cell.accessibleLabel}
+                    {cell.label} · {formatTimeRange(cell.startUtc, cell.endUtc, timezone)}
+                    {cell.scope === "ALL_PITCHES" ? " · Alle Felder" : ""}
                   </li>
                 );
               }

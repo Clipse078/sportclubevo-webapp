@@ -107,7 +107,7 @@ export function buildPlanungTimingConsequence(
     status: "NEEDS_REGENERATION",
     headline: "Der Spielplan passt mit diesen Einstellungen nicht in die verfügbare Zeit.",
     detail:
-      "Passe Spieldauer, Wechselzeit oder Pausen an, oder löse gesperrte Spiele, und versuche es erneut.",
+      "Passe Spieldauer, Wechselzeit oder Pausen an, oder löse gesperrte Spiele, damit der Spielplan wieder passt.",
   };
 }
 

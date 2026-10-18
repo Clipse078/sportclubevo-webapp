@@ -64,7 +64,7 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
     expect(settings).not.toMatch(/planung-apply-settings/);
     expect(settings).not.toMatch(/Änderungen übernehmen/);
     expect(settings).toMatch(/TIMING_DEBOUNCE_MS/);
-    expect(settings).toMatch(/syncGenerationRef/);
+    expect(settings).toMatch(/usePlanungScheduleMutationQueue/);
     expect(settings).toMatch(/onBlur/);
     expect(settings).toMatch(/fixtureHomeAwayRelevance/);
     expect(schedulingRoute).toMatch(/applyPlanungLiveScheduleReconcile/);
@@ -80,8 +80,9 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
     expect(settings).toMatch(/scheduleVersionId: scheduleVersionIdRef.current/);
   });
 
-  it("G — stale response protection via sync generation token", () => {
-    expect(settings).toMatch(/generation !== syncGenerationRef.current/);
+  it("G — stale response protection via serial mutation queue", () => {
+    expect(settings).toMatch(/enqueueScheduleMutation/);
+    expect(settings).toMatch(/for \(let pass = 0; pass < 12; pass/);
   });
 
   it("H — timing auto-update uses partial regen, not fixture generator", () => {

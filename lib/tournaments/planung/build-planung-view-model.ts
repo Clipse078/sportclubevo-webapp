@@ -17,7 +17,11 @@ import {
   scheduleLockDimensionLabel,
 } from "./planung-presentation";
 import { buildPlanungScheduleSections, formatPlanungBreakScopeLabel } from "./planung-schedule-sections";
-import { buildPlanungTimeScale, resolveTimeRowIndex } from "./time-scale";
+import {
+  buildPlanungTimeScale,
+  normalizePlanungInstantIso,
+  resolveTimeRowIndex,
+} from "./time-scale";
 import {
   formatGroupRankPlaceholder,
   formatWinnerOfFixtureLabel,
@@ -276,8 +280,12 @@ function buildFixtureBlock(
     assignmentId: assignment?.id ?? null,
     sideA,
     sideB,
-    startUtc: assignment?.startAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
-    endUtc: assignment?.endAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
+    startUtc: normalizePlanungInstantIso(
+      assignment?.startAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
+    ),
+    endUtc: normalizePlanungInstantIso(
+      assignment?.endAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
+    ),
     pitchId: assignment?.tournamentPitchId ?? snapshot.pitches[0]?.id ?? "",
     phaseLabel: fixture.phaseLabel,
     groupLabel: fixture.groupLabel,
@@ -449,8 +457,8 @@ export function buildTournamentPlanungViewModel(
       kind: "BREAK",
       breakId: br.id,
       label,
-      startUtc: br.startAt,
-      endUtc: br.endAt,
+      startUtc: normalizePlanungInstantIso(br.startAt),
+      endUtc: normalizePlanungInstantIso(br.endAt),
       pitchIds,
       scope: br.scope,
       accessibleLabel: `${startTime}–${endTime} · ${label} · ${scopeLabel}`,

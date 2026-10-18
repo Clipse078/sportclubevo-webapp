@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import type { TournamentFixtureScheduleLockDimension } from "@/lib/tournament-scheduling/types";
-import { resolveTimeRowIndex } from "@/lib/tournaments/planung/time-scale";
+import { planungInstantsEqual, resolveTimeRowIndex } from "@/lib/tournaments/planung/time-scale";
 import { manualMoveTargetAllowed, resolveManualMoveCapabilities } from "@/lib/tournaments/planung/manual-move-capabilities";
 import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-hub-pointer-gesture";
 import { cn } from "@/lib/cn";
@@ -146,29 +146,24 @@ export default function TournamentPlanungBoard({
 
         {timeScale.rowAnchorsUtc.map((anchor) => {
           const allPitchBreak = breakCells.find(
-            (b) => b.startUtc === anchor && b.scope === "ALL_PITCHES",
+            (b) => planungInstantsEqual(b.startUtc, anchor) && b.scope === "ALL_PITCHES",
           );
           if (allPitchBreak) {
-            const durationMinutes = Math.max(
-              1,
-              Math.round(
-                (Date.parse(allPitchBreak.endUtc) - Date.parse(allPitchBreak.startUtc)) / 60_000,
-              ),
-            );
+            const timeRangeLabel = `${formatTime(allPitchBreak.startUtc, timezone)}–${formatTime(allPitchBreak.endUtc, timezone)}`;
             return (
               <div key={`row-${anchor}`} className="contents">
                 <div className="sticky left-0 border-r border-b border-[var(--border)] bg-[var(--surface)] p-2 text-xs tabular-nums text-[var(--muted)]">
                   {formatTime(anchor, timezone)}
                 </div>
                 <div
-                  className="border-b border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]"
-                  style={{ gridColumn: `span ${model.pitches.length}` }}
+                  className="col-start-2 border-b border-[var(--sce-warning)]/35 bg-[var(--sce-warning-soft)] px-3 py-3 text-center text-xs font-semibold text-[var(--foreground)]"
+                  style={{ gridColumn: `2 / span ${model.pitches.length}` }}
                   role="gridcell"
                   aria-label={allPitchBreak.accessibleLabel}
                   data-testid="planung-board-all-pitches-break"
                   data-drop-state="blocked"
                 >
-                  {allPitchBreak.label} · {durationMinutes} Min. · Alle Felder
+                  {allPitchBreak.label} · {timeRangeLabel} · Alle Felder
                 </div>
               </div>
             );
@@ -189,7 +184,7 @@ export default function TournamentPlanungBoard({
               );
               const br = breakCells.find(
                 (b) =>
-                  b.startUtc === anchor &&
+                  planungInstantsEqual(b.startUtc, anchor) &&
                   b.scope === "SELECTED_PITCHES" &&
                   b.pitchIds.includes(pitch.pitchId),
               );
@@ -214,10 +209,11 @@ export default function TournamentPlanungBoard({
                     }}
                   >
                     <div
-                      className="rounded-md border border-dashed border-[var(--sce-warning)]/40 bg-[var(--sce-warning-soft)] px-2 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]"
+                      className="rounded-md border border-dashed border-[var(--sce-warning)]/40 bg-[var(--sce-warning-soft)] px-2 py-3 text-center text-xs font-semibold text-[var(--foreground)]"
                       data-testid={`planung-board-pitch-break-${pitch.pitchId}`}
                     >
-                      {br.label}
+                      {br.label} · {formatTime(br.startUtc, timezone)}–
+                      {formatTime(br.endUtc, timezone)}
                     </div>
                   </div>
                 );

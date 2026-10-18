@@ -14,6 +14,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { usePlanungScheduleMutationQueue } from "@/lib/tournaments/planung/use-planung-schedule-mutation-queue";
 
 const TIMING_DEBOUNCE_MS = 450;
 
@@ -26,7 +27,6 @@ type Props = {
   canManage: boolean;
   onModelChange: (viewModel: TournamentPlanungViewModel) => void;
   onError: (message: string) => void;
-  onRegenerate: () => void;
   onScheduleSyncChange?: (pending: boolean) => void;
 };
 
@@ -106,7 +106,6 @@ export default function TournamentPlanungSpielplanSettings({
   canManage,
   onModelChange,
   onError,
-  onRegenerate,
   onScheduleSyncChange,
 }: Props) {
   const [timingDraft, setTimingDraft] = useState<TimingDraft>(() => timingDraftFromSettings(settings));
@@ -116,13 +115,35 @@ export default function TournamentPlanungSpielplanSettings({
   const [breakSavePending, setBreakSavePending] = useState(false);
   const [scheduleSyncPending, setScheduleSyncPending] = useState(false);
 
-  const syncGenerationRef = useRef(0);
   const homeAwayCommitSkipRef = useRef(true);
   const scheduleRevisionRef = useRef(model.scheduleRevision);
   const scheduleVersionIdRef = useRef(model.scheduleVersionId);
+  const timingDraftRef = useRef(timingDraft);
+  const settingsRef = useRef(settings);
 
   scheduleRevisionRef.current = model.scheduleRevision;
   scheduleVersionIdRef.current = model.scheduleVersionId;
+  timingDraftRef.current = timingDraft;
+  settingsRef.current = settings;
+
+  const { enqueueScheduleMutation } = usePlanungScheduleMutationQueue({
+    tournamentId,
+    getScheduleVersionId: () => scheduleVersionIdRef.current,
+    getScheduleRevision: () => scheduleRevisionRef.current,
+    onScheduleRevisionChange: (revision, versionId) => {
+      scheduleRevisionRef.current = revision;
+      if (versionId) scheduleVersionIdRef.current = versionId;
+    },
+    onModelChange,
+    onError: (message) => {
+      setSyncError(message);
+      onError(message);
+    },
+    onPendingChange: (pending) => {
+      setScheduleSyncPending(pending);
+      onScheduleSyncChange?.(pending);
+    },
+  });
 
   useEffect(() => {
     setTimingDraft(timingDraftFromSettings(settings));
@@ -139,57 +160,59 @@ export default function TournamentPlanungSpielplanSettings({
     [settings, timingDraft],
   );
 
-  const setSyncPending = useCallback(
-    (pending: boolean) => {
-      setScheduleSyncPending(pending);
-      onScheduleSyncChange?.(pending);
-    },
-    [onScheduleSyncChange],
-  );
+  const commitTimingSettings = useCallback(() => {
+    if (!canManage || !scheduleVersionIdRef.current) return;
+    if (!timingDraftDirty(timingDraftRef.current, settingsRef.current)) return;
 
-  const commitTimingSettings = useCallback(async () => {
-    if (!canManage || !scheduleVersionIdRef.current || !timingDirty) return;
-
-    const generation = ++syncGenerationRef.current;
-    setSyncPending(true);
     setSyncError(null);
+    enqueueScheduleMutation(async (expectedRevision) => {
+      let revision = expectedRevision;
+      for (let pass = 0; pass < 12; pass += 1) {
+        const intent = timingDraftRef.current;
+        const persisted = settingsRef.current;
+        if (!scheduleVersionIdRef.current) {
+          return { ok: false, status: 400, error: "Einstellungen konnten nicht gespeichert werden." };
+        }
+        if (!timingDraftDirty(intent, persisted)) {
+          return { ok: true, status: 200 };
+        }
 
-    try {
-      const res = await fetch(`/api/tournaments/${tournamentId}/planung/scheduling-config`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheduleVersionId: scheduleVersionIdRef.current,
-          expectedRevision: scheduleRevisionRef.current ?? undefined,
-          matchDurationMinutes: timingDraft.matchDurationMinutes,
-          transitionMinutes: timingDraft.transitionMinutes,
-          fixtureHomeAwayRelevance: timingDraft.fixtureHomeAwayRelevance,
-        }),
-      });
-      const json = (await res.json()) as {
-        viewModel?: TournamentPlanungViewModel;
-        error?: string;
-        code?: string;
-      };
-      if (generation !== syncGenerationRef.current) return;
-      if (!res.ok) {
-        const message = json.error ?? "Einstellungen konnten nicht gespeichert werden.";
-        setSyncError(message);
-        onError(message);
-        return;
+        const res = await fetch(`/api/tournaments/${tournamentId}/planung/scheduling-config`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scheduleVersionId: scheduleVersionIdRef.current,
+            expectedRevision: revision,
+            matchDurationMinutes: intent.matchDurationMinutes,
+            transitionMinutes: intent.transitionMinutes,
+            fixtureHomeAwayRelevance: intent.fixtureHomeAwayRelevance,
+          }),
+        });
+        const json = (await res.json()) as {
+          viewModel?: TournamentPlanungViewModel;
+          error?: string;
+          code?: string;
+        };
+        if (!res.ok) {
+          return {
+            ok: false,
+            status: res.status,
+            error: json.error,
+            code: json.code,
+            viewModel: json.viewModel,
+          };
+        }
+        if (json.viewModel) {
+          settingsRef.current = json.viewModel.schedulingSettings ?? persisted;
+          revision = json.viewModel.scheduleRevision ?? revision;
+        }
+        if (!timingDraftDirty(timingDraftRef.current, settingsRef.current)) {
+          return { ok: true, status: 200, viewModel: json.viewModel };
+        }
       }
-      if (json.viewModel) onModelChange(json.viewModel);
-    } catch {
-      if (generation !== syncGenerationRef.current) return;
-      const message = "Einstellungen konnten nicht gespeichert werden.";
-      setSyncError(message);
-      onError(message);
-    } finally {
-      if (generation === syncGenerationRef.current) {
-        setSyncPending(false);
-      }
-    }
-  }, [canManage, onError, onModelChange, setSyncPending, timingDirty, timingDraft, tournamentId]);
+      return { ok: false, status: 500, error: "Einstellungen konnten nicht gespeichert werden." };
+    });
+  }, [canManage, enqueueScheduleMutation, tournamentId]);
 
   useEffect(() => {
     if (!canManage || !timingDirty) return;
@@ -199,12 +222,12 @@ export default function TournamentPlanungSpielplanSettings({
       timingDraft.fixtureHomeAwayRelevance !== settings.fixtureHomeAwayRelevance;
     if (onlyHomeAwayChanged) {
       if (homeAwayCommitSkipRef.current) return;
-      void commitTimingSettings();
+      commitTimingSettings();
       return;
     }
 
     const handle = window.setTimeout(() => {
-      void commitTimingSettings();
+      commitTimingSettings();
     }, TIMING_DEBOUNCE_MS);
     return () => window.clearTimeout(handle);
   }, [
@@ -221,95 +244,99 @@ export default function TournamentPlanungSpielplanSettings({
 
   const flushTimingOnBoundary = useCallback(() => {
     if (!timingDirty) return;
-    void commitTimingSettings();
+    commitTimingSettings();
   }, [commitTimingSettings, timingDirty]);
 
-  const saveBreak = useCallback(async () => {
+  const saveBreak = useCallback(() => {
     if (!canManage || !scheduleVersionIdRef.current) return;
     setBreakSavePending(true);
-    setSyncPending(true);
-    const generation = ++syncGenerationRef.current;
-    try {
-      const payload = {
-        ...draftPayload(breakDraft),
-        scheduleVersionId: scheduleVersionIdRef.current,
-        expectedRevision: scheduleRevisionRef.current ?? undefined,
-      };
-      const isEdit = editorMode !== "none" && editorMode !== "add";
-      const res = await fetch(
-        isEdit
-          ? `/api/tournaments/${tournamentId}/planung/breaks/${editorMode.editId}`
-          : `/api/tournaments/${tournamentId}/planung/breaks`,
-        {
-          method: isEdit ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      const json = (await res.json()) as {
-        viewModel?: TournamentPlanungViewModel;
-        error?: string;
-      };
-      if (generation !== syncGenerationRef.current) return;
-      if (!res.ok) {
-        onError(json.error ?? "Pause konnte nicht gespeichert werden.");
-        return;
-      }
-      if (json.viewModel) onModelChange(json.viewModel);
-      setEditorMode("none");
-      setBreakDraft(emptyBreakDraft());
-    } catch {
-      if (generation !== syncGenerationRef.current) return;
-      onError("Pause konnte nicht gespeichert werden.");
-    } finally {
-      if (generation === syncGenerationRef.current) {
+    const payload = {
+      ...draftPayload(breakDraft),
+      scheduleVersionId: scheduleVersionIdRef.current,
+    };
+    const isEdit = editorMode !== "none" && editorMode !== "add";
+    enqueueScheduleMutation(async (expectedRevision) => {
+      try {
+        const res = await fetch(
+          isEdit
+            ? `/api/tournaments/${tournamentId}/planung/breaks/${editorMode.editId}`
+            : `/api/tournaments/${tournamentId}/planung/breaks`,
+          {
+            method: isEdit ? "PATCH" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...payload,
+              expectedRevision,
+            }),
+          },
+        );
+        const json = (await res.json()) as {
+          viewModel?: TournamentPlanungViewModel;
+          error?: string;
+          code?: string;
+        };
+        if (!res.ok) {
+          return {
+            ok: false,
+            status: res.status,
+            error: json.error ?? "Pause konnte nicht gespeichert werden.",
+            code: json.code,
+            viewModel: json.viewModel,
+          };
+        }
+        setEditorMode("none");
+        setBreakDraft(emptyBreakDraft());
+        return { ok: true, status: 200, viewModel: json.viewModel };
+      } catch {
+        return { ok: false, status: 500, error: "Pause konnte nicht gespeichert werden." };
+      } finally {
         setBreakSavePending(false);
-        setSyncPending(false);
       }
-    }
-  }, [breakDraft, canManage, editorMode, onError, onModelChange, setSyncPending, tournamentId]);
+    });
+  }, [breakDraft, canManage, editorMode, enqueueScheduleMutation, tournamentId]);
 
   const deleteBreak = useCallback(
-    async (breakId: string, label: string) => {
+    (breakId: string, label: string) => {
       if (!canManage || !scheduleVersionIdRef.current) return;
       const confirmed = window.confirm(`Pause „${label}“ wirklich löschen?`);
       if (!confirmed) return;
       setBreakSavePending(true);
-      setSyncPending(true);
-      const generation = ++syncGenerationRef.current;
-      try {
-        const res = await fetch(`/api/tournaments/${tournamentId}/planung/breaks/${breakId}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            scheduleVersionId: scheduleVersionIdRef.current,
-            expectedRevision: scheduleRevisionRef.current ?? undefined,
-          }),
-        });
-        const json = (await res.json()) as {
-          viewModel?: TournamentPlanungViewModel;
-          error?: string;
-        };
-        if (generation !== syncGenerationRef.current) return;
-        if (!res.ok) {
-          onError(json.error ?? "Pause konnte nicht gelöscht werden.");
-          return;
-        }
-        if (json.viewModel) onModelChange(json.viewModel);
-        if (editorMode !== "none" && editorMode !== "add" && editorMode.editId === breakId) {
-          setEditorMode("none");
-        }
-      } catch {
-        if (generation !== syncGenerationRef.current) return;
-        onError("Pause konnte nicht gelöscht werden.");
-      } finally {
-        if (generation === syncGenerationRef.current) {
+      enqueueScheduleMutation(async (expectedRevision) => {
+        try {
+          const res = await fetch(`/api/tournaments/${tournamentId}/planung/breaks/${breakId}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              scheduleVersionId: scheduleVersionIdRef.current,
+              expectedRevision,
+            }),
+          });
+          const json = (await res.json()) as {
+            viewModel?: TournamentPlanungViewModel;
+            error?: string;
+            code?: string;
+          };
+          if (!res.ok) {
+            return {
+              ok: false,
+              status: res.status,
+              error: json.error ?? "Pause konnte nicht gelöscht werden.",
+              code: json.code,
+              viewModel: json.viewModel,
+            };
+          }
+          if (editorMode !== "none" && editorMode !== "add" && editorMode.editId === breakId) {
+            setEditorMode("none");
+          }
+          return { ok: true, status: 200, viewModel: json.viewModel };
+        } catch {
+          return { ok: false, status: 500, error: "Pause konnte nicht gelöscht werden." };
+        } finally {
           setBreakSavePending(false);
-          setSyncPending(false);
         }
-      }
+      });
     },
-    [canManage, editorMode, onError, onModelChange, setSyncPending, tournamentId],
+    [canManage, editorMode, enqueueScheduleMutation, tournamentId],
   );
 
   const showEditor = editorMode !== "none";
@@ -400,7 +427,9 @@ export default function TournamentPlanungSpielplanSettings({
           }}
         />
         <p className="text-xs text-[var(--text-2)]">
-          SCE verteilt Heim- und Auswärtsseiten möglichst ausgeglichen.
+          {timingDraft.fixtureHomeAwayRelevance === "ON"
+            ? "Jede Paarung wird als Hin- und Rückspiel ausgetragen."
+            : "Jede Paarung wird einmal neutral ausgelost — ohne Hin- und Rückrunde."}
         </p>
       </div>
 
@@ -607,17 +636,6 @@ export default function TournamentPlanungSpielplanSettings({
           <p className="font-medium text-[var(--foreground)]">{timingConsequence.headline}</p>
           {timingConsequence.detail ? (
             <p className="mt-1 text-[var(--muted)]">{timingConsequence.detail}</p>
-          ) : null}
-          {model.actions.canRegenerate ? (
-            <Button
-              type="button"
-              className="mt-3"
-              variant="secondary"
-              data-testid="planung-timing-regenerate"
-              onClick={onRegenerate}
-            >
-              {model.actions.regenerateLabel}
-            </Button>
           ) : null}
         </div>
       ) : null}
