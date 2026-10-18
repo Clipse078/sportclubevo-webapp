@@ -26,6 +26,7 @@ const model: TournamentPlanungViewModel = {
   timeScale: null,
   cells: [],
   scheduleSections: [],
+  participants: [],
   mobileTimeline: [],
   smartTiming: null,
   diagnostics: [],

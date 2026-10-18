@@ -170,6 +170,8 @@ export type TournamentPlanungViewModel = {
   scheduleSections: readonly TournamentPlanungScheduleSection[];
   /** Chronological mobile list — same cells, grouped order. */
   mobileTimeline: readonly TournamentPlanungBoardCell[];
+  /** Tournament-local participants (authoritative for team Spielpläne). */
+  participants: readonly TournamentPlanungParticipantIdentity[];
   smartTiming: TournamentPlanungSmartTimingSummary | null;
   diagnostics: readonly TournamentPlanungDiagnostic[];
   regenerationSummary: TournamentPlanungRegenerationSummary;

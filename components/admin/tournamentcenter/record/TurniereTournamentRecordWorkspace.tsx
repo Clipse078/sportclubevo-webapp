@@ -823,6 +823,8 @@ export default function TurniereTournamentRecordWorkspace({
                   canManage={isEditable}
                   tournament={tournament}
                   tenantKey={tenantKey}
+                  tenantName={tenantClubName}
+                  tenantLogoUrl={tenantLogoUrl}
                   ownershipAllowsPublication={plannerOwnershipAllowsPublication}
                 />
               ) : !isTenantHostedTournament({ homeAway }) ? (

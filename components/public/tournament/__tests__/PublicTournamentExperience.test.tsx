@@ -20,6 +20,63 @@ const model: PublicTournamentViewModel = {
     season: null,
   },
   participants: [{ id: "p1", displayName: "Team A", crestUrl: null }],
+  spielplan: {
+    identity: {
+      tournamentId: "t1",
+      title: "Jugendturnier",
+      dateLabel: "Samstag, 1. August 2026",
+      location: "Halle",
+      organizerName: "FC Allschwil",
+      tenantName: null,
+      tenantLogoUrl: null,
+      timezone: "Europe/Zurich",
+    },
+    pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1" }],
+    fixtures: [],
+    matrixRows: [
+      {
+        kind: "SCHEDULE_SLOT",
+        rowId: "slot1",
+        startUtc: "2026-08-01T09:00:00.000Z",
+        timeLabel: "11:00",
+        roundTitle: "Gruppe A",
+        cellsByPitchId: {
+          p1: {
+            kind: "FIXTURE",
+            fixtureId: "f1",
+            pairingLabel: "Team A – 1. Gruppe B",
+            sideAParticipantId: "p1",
+            sideBParticipantId: null,
+            result: null,
+          },
+        },
+      },
+    ],
+    mobileSlots: [
+      {
+        slotId: "slot1",
+        startUtc: "2026-08-01T09:00:00.000Z",
+        timeLabel: "11:00",
+        roundTitle: "Gruppe A",
+        kind: "FIXTURES",
+        pitches: [
+          {
+            pitchLabel: "Feld 1",
+            cell: {
+              kind: "FIXTURE",
+              fixtureId: "f1",
+              pairingLabel: "Team A – 1. Gruppe B",
+              sideAParticipantId: "p1",
+              sideBParticipantId: null,
+              result: null,
+            },
+          },
+        ],
+      },
+    ],
+    participants: [{ participantId: "p1", displayName: "Team A", crestUrl: null }],
+    teamPlans: [],
+  },
   scheduleSections: [
     {
       sectionId: "s1",
@@ -78,7 +135,7 @@ describe("PublicTournamentExperience", () => {
     );
     expect(screen.getByRole("heading", { name: "Jugendturnier" })).toBeInTheDocument();
     expect(screen.getByTestId("public-tournament-copy-link")).toBeInTheDocument();
-    expect(screen.getByText("1. Gruppe B")).toBeInTheDocument();
+    expect(screen.getByText("1. Gruppe B", { hidden: true })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Spielplan automatisch/i })).not.toBeInTheDocument();
   });
 });

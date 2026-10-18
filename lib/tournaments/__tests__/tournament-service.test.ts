@@ -89,7 +89,7 @@ const baseRow = {
   competitionLabel: null,
   resultLabel: null,
   remarks: null,
-  homeAway: null as string | null,
+  homeAway: "HOME" as string | null,
   websiteVisible: true,
   infoboardVisible: false,
   homepageVisible: false,

@@ -114,6 +114,8 @@ describe("buildPublicTournamentViewModel", () => {
       expect(fixture).not.toHaveProperty("lockDimension");
     }
     expect(vm.groupStandings[0]?.rows.length).toBeGreaterThan(0);
+    expect(vm.spielplan.fixtures.length).toBeGreaterThan(0);
+    expect(vm.spielplan.fixtures[0]?.result).toEqual({ scoreSideA: 2, scoreSideB: 1 });
     expect(JSON.stringify(vm)).not.toMatch(/revision|scheduleVersion|audit|email|phone/i);
   });
 

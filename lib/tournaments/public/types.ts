@@ -2,6 +2,8 @@
  * SCE-TOURNAMENT-PLANNER-01K — public tournament read model (website-safe).
  */
 
+import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
+
 export type PublicTournamentPublicationState = {
   websiteVisible: boolean;
   homepageVisible: boolean;
@@ -100,6 +102,8 @@ export type PublicTournamentGroupStandingsSection = {
 export type PublicTournamentViewModel = {
   tournament: PublicTournamentHeader;
   participants: readonly PublicTournamentParticipant[];
+  /** Canonical Spielplan projection (master + team plans). */
+  spielplan: TournamentSpielplanViewModel;
   scheduleSections: readonly PublicTournamentScheduleSection[];
   mobileTimeline: readonly PublicTournamentScheduleEntry[];
   groupStandings: readonly PublicTournamentGroupStandingsSection[];

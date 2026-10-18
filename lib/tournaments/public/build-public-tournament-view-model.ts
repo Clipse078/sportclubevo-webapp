@@ -17,6 +17,7 @@ import type {
   PublicTournamentViewModel,
 } from "./types";
 import { buildPublicTournamentPath } from "./build-public-tournament-url";
+import { buildTournamentSpielplanFromPlanung } from "@/lib/tournaments/spielplan/build-tournament-spielplan-view-model";
 
 function mapFixtureCell(
   cell: TournamentPlanungFixtureBlock,
@@ -148,9 +149,33 @@ export function buildPublicTournamentViewModel(input: {
     crestUrl: p.crestUrl,
   }));
 
+  const spielplan = buildTournamentSpielplanFromPlanung({
+    tournamentId: input.header.id,
+    title: input.header.title,
+    startAtIso: input.header.startAt,
+    location: input.header.location,
+    organizerName: input.header.organizerName,
+    tenantName: null,
+    tenantLogoUrl: null,
+    timezone: input.snapshot.timezone,
+    pitches: planung.pitches.map((p) => ({
+      pitchId: p.pitchId,
+      displayOrder: p.displayOrder,
+      label: p.label,
+    })),
+    cells: planung.cells,
+    scheduleSections: planung.scheduleSections,
+    participants: input.snapshot.participants.map((p) => ({
+      participantId: p.participantId,
+      displayName: p.displayName,
+      crestUrl: p.crestUrl,
+    })),
+  });
+
   return {
     tournament: input.header,
     participants,
+    spielplan,
     scheduleSections,
     mobileTimeline,
     groupStandings,

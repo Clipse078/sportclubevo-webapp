@@ -57,6 +57,7 @@ const model: TournamentPlanungViewModel = {
     },
   ],
   scheduleSections: [],
+  participants: [],
   mobileTimeline: [],
   smartTiming: null,
   diagnostics: [],

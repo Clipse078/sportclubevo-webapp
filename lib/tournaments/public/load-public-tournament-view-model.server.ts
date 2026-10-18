@@ -22,7 +22,7 @@ export class PublicTournamentNotFoundError extends Error {
   }
 }
 
-async function loadPublicPlanungSnapshot(params: {
+export async function loadPublicPlanungSnapshot(params: {
   tenantId: string;
   tournamentId: string;
   timezone: string;

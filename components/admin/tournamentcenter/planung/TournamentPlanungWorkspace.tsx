@@ -15,7 +15,9 @@ import TournamentPlanungManualMoveDialog from "./TournamentPlanungManualMoveDial
 import TournamentPlanungGroupStandings from "./TournamentPlanungGroupStandings";
 import TournamentPlanungResultDialog from "./TournamentPlanungResultDialog";
 import TournamentPlanungPublicationPanel from "./TournamentPlanungPublicationPanel";
+import TournamentPlanungSpielplanOutput from "./TournamentPlanungSpielplanOutput";
 import type { TournamentDto } from "@/lib/tournaments/types";
+import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -24,9 +26,18 @@ type Props = {
   canManage: boolean;
   tournament?: Pick<
     TournamentDto,
-    "id" | "visibility" | "updatedAt" | "homeAway" | "organizerName"
+    | "id"
+    | "title"
+    | "startAt"
+    | "location"
+    | "visibility"
+    | "updatedAt"
+    | "homeAway"
+    | "organizerName"
   >;
   tenantKey?: string;
+  tenantName?: string | null;
+  tenantLogoUrl?: string | null;
   ownershipAllowsPublication?: boolean;
 };
 
@@ -37,11 +48,14 @@ export default function TournamentPlanungWorkspace({
   canManage,
   tournament,
   tenantKey = "",
+  tenantName = null,
+  tenantLogoUrl = null,
   ownershipAllowsPublication = false,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [model, setModel] = useState(initialModel);
+  const [workspaceMode, setWorkspaceMode] = useState<"planung" | "spielplan">("planung");
   const [busy, setBusy] = useState(false);
   const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
   const [manualMoveOpen, setManualMoveOpen] = useState(false);
@@ -156,7 +170,37 @@ export default function TournamentPlanungWorkspace({
     <div className="space-y-4" data-testid="tournament-planung-workspace">
       <header className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h2 className="text-base font-semibold text-[var(--foreground)]">Spielplan</h2>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-medium",
+                workspaceMode === "planung"
+                  ? "bg-[var(--surface-2)] text-[var(--foreground)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]",
+              )}
+              onClick={() => setWorkspaceMode("planung")}
+              data-testid="tournament-planung-mode-planung"
+            >
+              Planung
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-medium",
+                workspaceMode === "spielplan"
+                  ? "bg-[var(--surface-2)] text-[var(--foreground)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]",
+              )}
+              onClick={() => setWorkspaceMode("spielplan")}
+              data-testid="tournament-planung-mode-spielplan"
+            >
+              Spielplan
+            </button>
+          </div>
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
+            {workspaceMode === "spielplan" ? "Spielplan-Ausgabe" : "Planung"}
+          </h2>
           {model.smartTiming ? (
             <p className="text-sm text-[var(--muted)]">{model.smartTiming.headline}</p>
           ) : null}
@@ -166,7 +210,7 @@ export default function TournamentPlanungWorkspace({
             </p>
           ))}
         </div>
-        {canManage ? (
+        {canManage && workspaceMode === "planung" ? (
           <div className="flex flex-wrap gap-2">
             {model.actions.canGenerate ? (
               <Button
@@ -274,7 +318,26 @@ export default function TournamentPlanungWorkspace({
         </section>
       ) : null}
 
-      {model.schedulePresence !== "NONE" && model.timeScale ? (
+      {workspaceMode === "spielplan" && model.schedulePresence !== "NONE" && tournament ? (
+        <TournamentPlanungSpielplanOutput
+          planungModel={model}
+          tournamentId={tournamentId}
+          title={tournament.title}
+          startAtIso={tournament.startAt}
+          location={tournament.location ?? null}
+          organizerName={tournament.organizerName ?? null}
+          tenantName={tenantName}
+          tenantLogoUrl={tenantLogoUrl ?? null}
+          timezone={timezone}
+          publicPath={
+            tenantKey && tournament.visibility.websiteVisible
+              ? buildPublicTournamentPath(tenantKey, tournament.id)
+              : null
+          }
+        />
+      ) : null}
+
+      {workspaceMode === "planung" && model.schedulePresence !== "NONE" && model.timeScale ? (
         <>
           <TournamentPlanungGroupStandings model={model} />
           <TournamentPlanungScheduleList model={model} timezone={timezone} />

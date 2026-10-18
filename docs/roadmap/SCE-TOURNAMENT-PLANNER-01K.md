@@ -1,38 +1,63 @@
-# SCE-TOURNAMENT-PLANNER-01K — Publication + Sharing
+# SCE-TOURNAMENT-PLANNER-01K — Spielplan output + sharing
 
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01K` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01J`](./SCE-TOURNAMENT-PLANNER-01J.md) — **CLOSED / ACCEPTED / MERGED** (PR **#870**) |
-| **Status** | **CURRENT** — publication layer + public projection + sharing |
+| **Status** | **CURRENT** — Spielplan output (master + team), print, PDF, publication/sharing |
 | **Next** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01.md) — Responsive + Accessibility + Polish (**NOT STARTED**) |
 
-## Product goal
+## Product goal (scope correction)
 
-**ONE TOURNAMENT · ONE CANONICAL STATE · MULTIPLE PRESENTATIONS**
+**Primary output:** a practical, high-quality **Spielplan** for tournament day — not a completed tournament with a winner.
 
-Internal planner state remains canonical on `Event` (type=`TOURNAMENT`) and Tournament Planner persistence. Public website consumers receive a **permission-aware projection** — not a second tournament dataset.
+**CONFIGURE → PARTICIPANTS → PITCHES → TIMING / BREAKS → GENERATE FIXTURES → OPTIMISE → REVIEW → SPIELPLAN → PRINT / PDF / SHARE**
 
-## Publication model (reuse)
+| Flag | Value |
+| --- | --- |
+| **LIVE_RESULTS_REQUIRED_FOR_01K_SUCCESS** | **NO** |
+| **RANKINGS_REQUIRED_FOR_01K_SUCCESS** | **NO** |
+| **WINNER_REQUIRED_FOR_01K_SUCCESS** | **NO** |
 
-Publication continues to use canonical `Event` channel flags:
+01J results, standings, and qualification progression remain **optional advanced sporting capabilities** and are surfaced when data exists — they do not define 01K completion.
 
-- `websiteVisible` — gates public website list **and** tournament detail API/page
-- `homepageVisible`, `wochenplanVisible`, `teamPageVisible`, `infoboardVisible` — existing SCE channel semantics (Composer / Turnier record **Publikation** step)
+## Canonical Spielplan projection
 
-**NOT_PUBLISHED** for website detail ≡ `websiteVisible=false` (or failing review/status policy). No parallel `TournamentPublication` table.
+| Function | Role |
+| --- | --- |
+| `buildTournamentSpielplanViewModel` | Pure map from Planung cells + pitches + breaks → master matrix + mobile slots + per-participant team plans |
+| `buildTournamentSpielplanFromPlanung` | Adapter from Planung workspace / snapshot |
+| `loadTournamentSpielplanViewModel` | Presentation-only loader (no feasibility / Smart Timing / optimiser) |
 
-## Public projection
+**Source of truth:** `TournamentFixture`, `TournamentFixtureAssignment`, `TournamentPitch`, `TournamentBreak`, `TournamentParticipant`. Optional `TournamentFixtureResult` enriches display only.
+
+**Not persisted:** master or team Spielplan copies in Postgres.
+
+## Deliverables
+
+| Deliverable | Status |
+| --- | --- |
+| Master Spielplan (time × TournamentPitch matrix) | Planung **Spielplan** mode + public page |
+| Team-specific Spielplan (derived, not persisted) | Planung + public team selector |
+| Team highlight on master matrix | Planung + public |
+| Print master / team | `/tournaments/[id]/spielplan/print/...` |
+| PDF master / team | `GET /api/tournaments/[id]/planung/spielplan/pdf` |
+| Share stable public link | Existing 01K publication panel + public route |
+
+Document family (print/PDF presentation):
+
+- `SceTournamentSpielplanDocument`
+- `SceTournamentTeamSpielplanDocument`
+
+## Publication model (retained from initial 01K)
+
+Publication continues to use canonical `Event` channel flags (`websiteVisible`, `homepageVisible`, `wochenplanVisible`, `teamPageVisible`, `infoboardVisible`). The initial public tournament API/page remains **supporting infrastructure** for sharing the Spielplan.
 
 | Function | Role |
 | --- | --- |
 | `loadPublicTournamentViewModel` | Server loader — canonical DB, no optimiser/feasibility |
-| `buildPublicTournamentViewModel` | Pure map from `PlanungDomainSnapshot` → `PublicTournamentViewModel` |
-
-Standings: `calculateTournamentGroupStandings()` via `buildPlanungGroupStandings`.  
-Results: canonical `TournamentFixtureResult` (01J).  
-Qualification placeholders: shared Planung qualification display rules.
+| `buildPublicTournamentViewModel` | Pure map → `PublicTournamentViewModel` + embedded `spielplan` |
 
 ## Public surfaces
 
@@ -40,45 +65,25 @@ Qualification placeholders: shared Planung qualification display rules.
 | --- | --- |
 | **Public API** | `GET /api/public/[tenant]/website/tournaments/[tournamentId]` |
 | **Public page** | `/public/[tenant]/turniere/[tournamentId]` |
-| **Stable link** | Event id in path — unchanged across schedule/result edits |
+| **Stable link** | Event id in path |
 
-## Sharing
-
-Planung **Publikation** panel (`TournamentPlanungPublicationPanel`) shows channel toggles (canonical switches) + copy-link (+ Web Share when available).
+Public hierarchy: **identity → Spielplan → team plan → (optional) standings**.
 
 ## Authorization
 
-| Action | Rule |
-| --- | --- |
-| Public read | Published (`websiteVisible` + policy + review stage) — no login |
-| Publish/unpublish | `EVENTS_MANAGE` + `resolveTournamentPublicationManagement` (HOME only; AWAY/unknown fail closed) |
-| Cross-tenant | Fail closed (404) |
-
-## Concurrency
-
-Publication PATCH accepts optional `expectedEventUpdatedAt` (Event `updatedAt` ms). Mismatch → `409 TOURNAMENT_PUBLICATION_STALE`.
-
-## Cache / freshness
-
-- Publication toggles → existing `resolveTournamentPublicationCacheDomains`
-- Live results / manual schedule moves → `notifyPublicTournamentLiveDataChanged` (`TOURNAMENTS` + `WEEKPLAN` tags)
-- Public detail response: `Cache-Control: public, s-maxage=30, stale-while-revalidate=60`
+Unchanged from initial 01K: published read without login; publish/unpublish HOME + `EVENTS_MANAGE`; cross-tenant fail closed.
 
 ## Schema
 
-**SCHEMA_CHANGE = NO** — reuse Event publication fields.
+**SCHEMA_CHANGE = NO** — Spielplan is projection-only.
 
 ## Package boundary
 
-**01L_IMPLEMENTED = NO** — responsive/a11y polish programme remains next.  
+**01L_IMPLEMENTED = NO**  
 **01M_IMPLEMENTED = NO**
 
 ## Verification (automated)
 
-Security, projection, live-update, and regression tests under:
-
+- `lib/tournaments/spielplan/__tests__/*`
 - `lib/tournaments/public/__tests__/*`
-- `app/api/public/[tenant]/website/tournaments/[tournamentId]/__tests__/*`
-- `lib/tournaments/__tests__/tournament-planner-01k-roadmap.test.ts`
-
-Manual visual UAT: **PO-owned** (skipped by Cursor cloud agent).
+- Print document structure tests under `components/sce/tournament/__tests__/`

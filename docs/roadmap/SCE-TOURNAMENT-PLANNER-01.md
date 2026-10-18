@@ -21,7 +21,7 @@
 | **01H (Tournament Planung workspace)** | **CLOSED / ACCEPTED / MERGED** (PR **#868**, PO UAT **PASS**) — Planung workspace + Creator planner integration ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | **01I (Manual adjustment + DnD)** | **CLOSED / ACCEPTED / MERGED** (PR **#869**, PO UAT **PASS**) — manual WHEN + TournamentPitch adjustment, DnD, conflict validation, **01I-R1/R2** ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) |
 | **01J (Results + rankings)** | **CLOSED / ACCEPTED / MERGED** (PR **#870**, PO UAT **PASS**) — Results + Rankings + Qualification Progression ([doc](./SCE-TOURNAMENT-PLANNER-01J.md)) |
-| **01K (Publication + sharing)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01K.md)) |
+| **01K (Spielplan output + print/PDF + sharing)** | **CURRENT** ([doc](./SCE-TOURNAMENT-PLANNER-01K.md)) |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 
@@ -37,7 +37,13 @@
 
 **`SMART_TOURNAMENT_GENERATOR = CANONICAL`**
 
+The Tournament Planner enables tenants to **prepare tournaments and produce a practical, high-quality Spielplan for tournament day**. Success does **not** depend on recording results or determining a winner.
+
 Primary user journey:
+
+**TURNIER ERSTELLEN → SPIELPLAN GENERIEREN → PLANUNG PRÜFEN / ANPASSEN → SPIELPLAN → DRUCKEN / PDF / TEILEN**
+
+Supporting journey (generation engine):
 
 **CONFIGURE → SCE GENERATES → REVIEW → MANUALLY ADJUST IF DESIRED → LOCK → REGENERATE UNLOCKED PARTS → PUBLISH**
 

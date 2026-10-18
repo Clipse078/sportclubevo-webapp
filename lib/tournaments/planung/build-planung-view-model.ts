@@ -544,6 +544,7 @@ export function buildTournamentPlanungViewModel(
     cells,
     scheduleSections,
     mobileTimeline,
+    participants: snapshot.participants,
     smartTiming: buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
     diagnostics,
     regenerationSummary: buildRegenerationSummaryMessage(snapshot.regenerationMetrics),
