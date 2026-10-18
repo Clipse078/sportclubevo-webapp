@@ -19,7 +19,9 @@ describe("01K roadmap", () => {
       "utf8",
     );
     expect(parent).toMatch(/01J.*CLOSED|01J CLOSED/i);
-    expect(parent).toMatch(/01K.*CURRENT|01K.*Publication/i);
+    expect(parent).toMatch(/01K.*CLOSED|01K CLOSED/i);
     expect(parent).toMatch(/01L.*NEXT|NOT STARTED/i);
+    expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
+    expect(doc).toMatch(/PO UAT.*PASS/i);
   });
 });

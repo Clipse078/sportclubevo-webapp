@@ -5,14 +5,18 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01K` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01J`](./SCE-TOURNAMENT-PLANNER-01J.md) — **CLOSED / ACCEPTED / MERGED** (PR **#870**) |
-| **Status** | **CURRENT** — Spielplan output (master + team), print, PDF, publication/sharing |
-| **Next** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01.md) — Responsive + Accessibility + Polish (**NOT STARTED**) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**, merge to **STAGE**) |
+| **Next** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01.md) — Responsive + Accessibility + Polish (**NEXT / NOT STARTED**) |
 
 ## Product goal (scope correction)
 
 **Primary output:** a practical, high-quality **Spielplan** for tournament day — not a completed tournament with a winner.
 
-**CONFIGURE → PARTICIPANTS → PITCHES → TIMING / BREAKS → GENERATE FIXTURES → OPTIMISE → REVIEW → SPIELPLAN → PRINT / PDF / SHARE**
+**THE TOURNAMENT PLANNER'S PRIMARY OUTPUT IS A USABLE SPIELPLAN.**
+
+**ONE CANONICAL TOURNAMENT SCHEDULE.** Multiple outputs from the same schedule: **Planung → Master Spielplan → Team Spielplan → Print / PDF / Share.**
+
+**CONFIGURE → PARTICIPANTS → TOURNAMENT PITCHES → TIMING / BREAKS → GENERATE FIXTURES → OPTIMISE WHEN + WHERE → REVIEW / MANUALLY ADJUST → SPIELPLAN → PRINT / PDF / SHARE**
 
 | Flag | Value |
 | --- | --- |
@@ -21,6 +25,23 @@
 | **WINNER_REQUIRED_FOR_01K_SUCCESS** | **NO** |
 
 01J results, standings, and qualification progression remain **optional advanced sporting capabilities** and are surfaced when data exists — they do not define 01K completion.
+
+## Permanent SCE UX ground rule
+
+**WORLD-CLASS DESIGN · PREMIUM EXPERIENCE · MINIMAL UX**
+
+- Complexity stays behind the interface; calm information hierarchy; minimal cognitive load
+- Essential decisions only; one obvious primary action where appropriate; progressive disclosure
+- No engineering terminology in normal UX; no unnecessary settings or duplication
+- **Premium** means clarity, restraint, and consistency — not decoration
+
+**THE ENGINE CAN BE COMPLEX. THE USER EXPERIENCE MUST BE SIMPLE.**
+
+## TournamentPitch neutrality (permanent)
+
+**TournamentPitch** is **sport-neutral** and **country-neutral** — a tournament-local logical field/station identity (e.g. Feld 1, Feld 2). It remains distinct from **FacilityResource**.
+
+**FORMAT_AWARE_TOURNAMENT_PITCH_GENERIC_REQUIREMENT = NO** — no intrinsic generic requirement for 3v3, 4v4, Kleinfeld/Grossfeld, goal types, or Swiss/sport-specific pitch formats. Optional templates may add sport/country behaviour only when explicitly required (Tournament Planner 02 deferred).
 
 ## Canonical Spielplan projection
 
@@ -104,7 +125,7 @@ Smart Timing / feasibility / apply-recommendation reuse the existing 01F1 / 01D 
 
 Creator Spielplan step uses the same assistant pattern via `buildComposerPlanningAssistantUx` (shared Smart Timing truth).
 
-**01K-R4 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not mark 01K closed** until accepted.
+**01K-R4 status:** **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**).
 
 ## 01K-R5 — World-Class Spielplan Visual Presentation
 
@@ -119,7 +140,7 @@ Creator Spielplan step uses the same assistant pattern via `buildComposerPlannin
 | PDF refinement | **Backlog** — not a 01K closure blocker |
 | Email sharing | **Backlog** — not a 01K closure blocker |
 
-**01K-R5 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO visual UAT against target design required before 01K closure.
+**01K-R5 status:** **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO visual UAT **PASS**).
 
 ## 01K-R6 — Final Planung + Spielplan Visual Alignment
 
@@ -135,7 +156,7 @@ Planung keeps round-grouped overview **and** desktop pitch/time board (DnD); bot
 
 **Backlog (unchanged):** PDF refinement; direct Spielplan email sharing — not 01K closure blockers.
 
-**01K-R6 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); final PO visual UAT before Tournament Planner closure. No additional 01K feature package unless R6 exposes a blocker; **do not start 01L** from this scope.
+**01K-R6 status:** **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO visual UAT **PASS**).
 
 ## 01K-R7 — Unified Spielplan + planning edit mode
 
@@ -154,7 +175,7 @@ Planung keeps round-grouped overview **and** desktop pitch/time board (DnD); bot
 
 Planning is an operation **on** the Spielplan, not a second schedule representation. Domain architecture (fixtures, assignments, optimiser, feasibility) is unchanged.
 
-**01K-R7 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not mark 01K closed** until accepted.
+**01K-R7 status:** **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**).
 
 ## 01K-R7.1 — Spielplan bearbeiten: operational schedule settings
 
@@ -171,7 +192,7 @@ Planning is an operation **on** the Spielplan, not a second schedule representat
 | Publication | **Outside edit mode** — canonical **Publizieren** / publication surfaces only |
 | Advanced break scope | Default **Alle Felder**; optional **Nur bestimmte Felder sperren** via SCE **toggle** + pitch multi-select |
 
-**01K-R7.1 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not start 01L**.
+**01K-R7.1 status:** **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**).
 
 ## 01K-R7.5 — Home/Away topology + break timezone
 
@@ -208,11 +229,28 @@ Fix real end-to-end failures on existing tournaments: stale round-robin topology
 | TournamentPitch | **Sport-neutral · country-neutral** — no roadmap requirement for format-aware generic pitches |
 | Tests | Integration regression reproduces legacy persisted state + view-model/presentation layers (not pure generator-only claims) |
 
-**01K-R7.7 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending.
+**01K-R7.7 status:** **CLOSED / ACCEPTED / MERGED** at `d6ee7a47370eecb834bbd8feb1ac60ef153dc154` (PR **#871**, functional PO UAT **PASS**).
 
-**Next packages (unchanged):** [`01L`](./SCE-TOURNAMENT-PLANNER-01.md) Responsive + Accessibility + Polish; **01M** integrity + performance closure — **do not start from R7.6**.
+## 01K-R7.7A — Canonical Pause visual semantic
 
-**01K-R7.6 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending.
+PO-accepted amber Pause treatment on normal Spielplan and full-width Pause on Feld- und Zeitplan; Pause remains schedule structure (**BREAK_IS_FIXTURE = NO**), affects scheduling, and resumes after the break.
+
+**01K-R7.7A status:** **CLOSED / ACCEPTED / MERGED** at `a4a36464604e99cb4100d4689e44a71260f0477e` (PR **#871**, Pause visual PO UAT **PASS**).
+
+**01K-R7.6 status:** **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**).
+
+## Final accepted scope (closure)
+
+| Capability | Status |
+| --- | --- |
+| Spielplan-first product outcome | **ACCEPTED** |
+| Master Spielplan + team context + canonical match presentation | **ACCEPTED** |
+| Team highlight, print master/team, PDF master/team, share/public Spielplan | **ACCEPTED** |
+| Pause / Sperrzeit as explicit schedule structure + canonical Pause semantic | **ACCEPTED** |
+| Home/Away double-leg correctness + live operational editing | **ACCEPTED** |
+| One canonical schedule; sport/country-neutral TournamentPitch | **ACCEPTED** |
+
+**Next package:** [`01L`](./SCE-TOURNAMENT-PLANNER-01.md) — Responsive + Accessibility + Polish (**NOT STARTED**; deliberately narrow — no new formats, Rotation, template engine, or sport-specific TournamentPitch semantics). **Tournament Planner 02** remains later research.
 
 ## Verification (automated)
 
