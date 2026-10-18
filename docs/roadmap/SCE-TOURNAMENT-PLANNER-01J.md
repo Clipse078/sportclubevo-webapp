@@ -118,6 +118,34 @@ Result upsert + qualification side updates commit in a **single Prisma transacti
 | `NEW_TOURNAMENT_SCHEDULE_PUBLICATION_WORKFLOW` | **NO** |
 | `PUBLIC_RESULTS_SHARING_IMPLEMENTED` | **NO** |
 
+## STAGE migration (01J-R1 UAT readiness)
+
+| Item | Value |
+| --- | --- |
+| **Migration** | `20261018120000_sce_tournament_planner_01j_fixture_results` |
+| **Designated STAGE** | `APP_ENV=stage`, `SCE_DATA_ENVIRONMENT=STAGE`, fingerprint `acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb` |
+| **Script** | `scripts/sce-tournament-planner-01j-r1-stage-migration-verify.ts` |
+| **Apply workflow** | Guarded `APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` (not `db push`) |
+| **STAGE_ENVIRONMENT_VERIFIED** | **YES** |
+| **MIGRATION_APPLIED_EXACTLY_ONCE** | **YES** |
+| **MIGRATION_HISTORY_HEALTHY** | **YES** |
+| **POST_MIGRATION_SCHEMA_VERIFIED** | **YES** |
+| **SCHEMA_DRIFT** | **NO** |
+| **PROD_TOUCHED** | **NO** |
+
+Migration SQL is additive only: enum `TournamentFixtureResultState` + table `TournamentFixtureResult` (fixture-owned, `revision` concurrency). No DDL on fixtures, assignments, schedule versions, qualification sources, or competition configuration. No backfill, no auth/password mutation.
+
+**Pre/post counts (aggregate; designated STAGE):**
+
+| Metric | Pre | Post |
+| --- | ---: | ---: |
+| `TournamentFixture` rows | 0 | 0 |
+| `TournamentFixtureAssignment` rows | 0 | 0 |
+| `TournamentScheduleVersion` rows | 0 | 0 |
+| `TournamentParticipant` rows | 83 | 83 |
+| `TournamentQualificationSource` rows | 0 | 0 |
+| `TournamentCompetitionConfiguration` rows | 0 | 0 |
+
 ## Ownership
 
 Reuses `canTenantPlanTournament` / `resolveTournamentPlannerOwnership`. AWAY tournaments: no result management workflow.
