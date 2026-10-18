@@ -132,6 +132,14 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
       feasibility: null,
       smartTiming: null,
       optimisation: null,
+      fixtureResults: [],
+      groups: [],
+      rankingConfiguration: {
+        winPoints: 3,
+        drawPoints: 1,
+        lossPoints: 0,
+        tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
+      },
     });
     expect(vm.incompleteSetup.some((i) => i.code === "PLANNER_SETUP")).toBe(true);
   });

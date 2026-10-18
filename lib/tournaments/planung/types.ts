@@ -46,6 +46,17 @@ export type TournamentPlanungFixtureSidePresentation = {
   label: string;
   crestUrl: string | null;
   isPlaceholder: boolean;
+  participantId: string | null;
+  /** Qualification provenance when side is resolved but sourced from progression. */
+  qualificationProvenanceLabel: string | null;
+};
+
+export type TournamentPlanungFixtureResultPresentation = {
+  state: "UNPLAYED" | "COMPLETED";
+  scoreSideA: number | null;
+  scoreSideB: number | null;
+  winnerParticipantId: string | null;
+  revision: number;
 };
 
 export type TournamentPlanungFixtureBlock = {
@@ -59,8 +70,32 @@ export type TournamentPlanungFixtureBlock = {
   pitchId: string;
   phaseLabel: string | null;
   groupLabel: string | null;
+  phaseType: "GROUP_MIX" | "KNOCKOUT" | null;
   lockDimension: TournamentFixtureScheduleLockDimension | null;
   accessibleLabel: string;
+  result: TournamentPlanungFixtureResultPresentation | null;
+  canEnterResult: boolean;
+};
+
+export type TournamentPlanungGroupStandingsRow = {
+  position: number;
+  participantId: string;
+  displayName: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  tiedAtPosition: boolean;
+};
+
+export type TournamentPlanungGroupStandingsSection = {
+  groupId: string;
+  groupLabel: string;
+  rows: readonly TournamentPlanungGroupStandingsRow[];
 };
 
 export type TournamentPlanungBreakBlock = {
@@ -140,4 +175,5 @@ export type TournamentPlanungViewModel = {
   regenerationSummary: TournamentPlanungRegenerationSummary;
   incompleteSetup: readonly TournamentPlanungIncompleteItem[];
   actions: TournamentPlanungActions;
+  groupStandings: readonly TournamentPlanungGroupStandingsSection[];
 };

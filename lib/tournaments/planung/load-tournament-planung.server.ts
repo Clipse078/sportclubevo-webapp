@@ -52,7 +52,8 @@ export async function loadTournamentPlanungViewModel(params: {
     select: { id: true, revision: true },
   });
 
-  const [pitches, breaks, fixturesRaw, participantRows, schedulingConfig] = await Promise.all([
+  const [pitches, breaks, fixturesRaw, participantRows, schedulingConfig, fixtureResults, groupsRaw, rankingConfig] =
+    await Promise.all([
     listTournamentPitches(params.tenantId, params.tournamentId),
     listTournamentBreaks(params.tenantId, params.tournamentId),
     prisma.tournamentFixture.findMany({
@@ -64,7 +65,7 @@ export async function loadTournamentPlanungViewModel(params: {
         { id: "asc" },
       ],
       include: {
-        phase: { select: { label: true } },
+        phase: { select: { label: true, phaseType: true } },
         group: { select: { label: true } },
         sides: {
           orderBy: { side: "asc" },
@@ -113,10 +114,28 @@ export async function loadTournamentPlanungViewModel(params: {
         },
       },
     }),
-    resolveTournamentSchedulingConfig(
-      params.tenantId,
-      workingVersion?.id ?? null,
-    ),
+    resolveTournamentSchedulingConfig(params.tenantId, workingVersion?.id ?? null),
+    prisma.tournamentFixtureResult.findMany({
+      where: { tenantId: params.tenantId, fixture: { eventId: params.tournamentId } },
+      select: {
+        fixtureId: true,
+        state: true,
+        scoreSideA: true,
+        scoreSideB: true,
+        winnerParticipantId: true,
+        revision: true,
+      },
+    }),
+    prisma.tournamentGroup.findMany({
+      where: { tenantId: params.tenantId, eventId: params.tournamentId },
+      orderBy: { displayOrder: "asc" },
+      include: {
+        memberships: { select: { tournamentParticipantId: true } },
+      },
+    }),
+    prisma.tournamentRankingConfiguration.findUnique({
+      where: { eventId: params.tournamentId },
+    }),
   ]);
 
   const assignments =
@@ -148,6 +167,7 @@ export async function loadTournamentPlanungViewModel(params: {
     roundIndex: f.roundIndex,
     slotIndexInRound: f.slotIndexInRound,
     tournamentGroupId: f.tournamentGroupId,
+    phaseType: f.phase?.phaseType ?? null,
     sideAParticipantId: f.sideAParticipantId,
     sideBParticipantId: f.sideBParticipantId,
     phaseLabel: f.phase?.label ?? null,
@@ -285,6 +305,32 @@ export async function loadTournamentPlanungViewModel(params: {
     smartTiming,
     optimisation,
     regenerationMetrics: params.regenerationMetrics,
+    fixtureResults: fixtureResults.map((r) => ({
+      fixtureId: r.fixtureId,
+      state: r.state,
+      scoreSideA: r.scoreSideA,
+      scoreSideB: r.scoreSideB,
+      winnerParticipantId: r.winnerParticipantId,
+      revision: r.revision,
+    })),
+    groups: groupsRaw.map((g) => ({
+      id: g.id,
+      label: g.label,
+      participantIds: g.memberships.map((m) => m.tournamentParticipantId),
+    })),
+    rankingConfiguration: rankingConfig
+      ? {
+          winPoints: rankingConfig.winPoints,
+          drawPoints: rankingConfig.drawPoints,
+          lossPoints: rankingConfig.lossPoints,
+          tiebreakOrder: rankingConfig.tiebreakOrder,
+        }
+      : {
+          winPoints: 3,
+          drawPoints: 1,
+          lossPoints: 0,
+          tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
+        },
   };
 
   return buildTournamentPlanungViewModel(snapshot);

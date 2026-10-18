@@ -38,6 +38,7 @@ const model: TournamentPlanungViewModel = {
     regenerateLabel: "Spielplan neu berechnen",
     regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
   },
+  groupStandings: [],
 };
 
 describe("TournamentPlanungWorkspace", () => {

@@ -21,6 +21,7 @@ import {
   formatGroupRankPlaceholder,
   formatWinnerOfFixtureLabel,
 } from "./qualification-display";
+import { buildPlanungGroupStandings } from "./build-planung-group-standings";
 import type {
   TournamentPlanungAvailability,
   TournamentPlanungBoardCell,
@@ -60,6 +61,7 @@ export type PlanungDomainSnapshot = {
     roundIndex: number;
     slotIndexInRound: number;
     tournamentGroupId: string | null;
+    phaseType: "GROUP_MIX" | "KNOCKOUT" | null;
     sideAParticipantId: string | null;
     sideBParticipantId: string | null;
     sides: readonly {
@@ -91,6 +93,25 @@ export type PlanungDomainSnapshot = {
   smartTiming: TournamentTimingAssessment | null;
   optimisation: TournamentScheduleOptimisationResult | TournamentPartialRegenerationResult | null;
   regenerationMetrics?: TournamentScheduleOptimisationResult["changeMetrics"];
+  fixtureResults: readonly {
+    fixtureId: string;
+    state: "UNPLAYED" | "COMPLETED";
+    scoreSideA: number | null;
+    scoreSideB: number | null;
+    winnerParticipantId: string | null;
+    revision: number;
+  }[];
+  groups: readonly {
+    id: string;
+    label: string;
+    participantIds: readonly string[];
+  }[];
+  rankingConfiguration: {
+    winPoints: number;
+    drawPoints: number;
+    lossPoints: number;
+    tiebreakOrder: readonly ("POINTS" | "GOAL_DIFFERENCE" | "GOALS_SCORED" | "HEAD_TO_HEAD")[];
+  };
 };
 
 function resolveAvailability(
@@ -109,26 +130,58 @@ function participantById(
   return participants.find((p) => p.participantId === id) ?? null;
 }
 
+function qualificationProvenanceLabel(
+  qual: NonNullable<PlanungDomainSnapshot["fixtures"][number]["sides"][number]["qualification"]>,
+): string | null {
+  if (qual.sourceType === "GROUP_RANK" && qual.rank != null && qual.sourceGroupLabel) {
+    return formatGroupRankPlaceholder(qual.rank, qual.sourceGroupLabel);
+  }
+  if (qual.sourceType === "WINNER_OF_FIXTURE" && qual.sourceFixture) {
+    return formatWinnerOfFixtureLabel(qual.sourceFixture);
+  }
+  return null;
+}
+
 function sidePresentation(
   snapshot: PlanungDomainSnapshot,
   fixture: PlanungDomainSnapshot["fixtures"][number],
   side: "A" | "B",
-): { label: string; crestUrl: string | null; isPlaceholder: boolean } {
-  const participantId = side === "A" ? fixture.sideAParticipantId : fixture.sideBParticipantId;
+): {
+  label: string;
+  crestUrl: string | null;
+  isPlaceholder: boolean;
+  participantId: string | null;
+  qualificationProvenanceLabel: string | null;
+} {
+  const sideRow = fixture.sides.find((s) => s.side === side);
+  const qualLabel = sideRow?.qualification
+    ? qualificationProvenanceLabel(sideRow.qualification)
+    : null;
+
+  const participantId =
+    sideRow?.participantId ??
+    (side === "A" ? fixture.sideAParticipantId : fixture.sideBParticipantId);
   const concrete = participantById(snapshot.participants, participantId);
   if (concrete) {
     return {
       label: concrete.displayName,
       crestUrl: concrete.crestUrl,
       isPlaceholder: false,
+      participantId,
+      qualificationProvenanceLabel: qualLabel,
     };
   }
 
-  const sideRow = fixture.sides.find((s) => s.side === side);
   if (sideRow?.sourceType === "CONCRETE_PARTICIPANT" && sideRow.participantId) {
     const p = participantById(snapshot.participants, sideRow.participantId);
     if (p) {
-      return { label: p.displayName, crestUrl: p.crestUrl, isPlaceholder: false };
+      return {
+        label: p.displayName,
+        crestUrl: p.crestUrl,
+        isPlaceholder: false,
+        participantId: sideRow.participantId,
+        qualificationProvenanceLabel: null,
+      };
     }
   }
 
@@ -138,6 +191,8 @@ function sidePresentation(
       label: formatGroupRankPlaceholder(qual.rank, qual.sourceGroupLabel),
       crestUrl: null,
       isPlaceholder: true,
+      participantId: null,
+      qualificationProvenanceLabel: qualLabel,
     };
   }
   if (qual?.sourceType === "WINNER_OF_FIXTURE" && qual.sourceFixture) {
@@ -145,10 +200,18 @@ function sidePresentation(
       label: formatWinnerOfFixtureLabel(qual.sourceFixture),
       crestUrl: null,
       isPlaceholder: true,
+      participantId: null,
+      qualificationProvenanceLabel: qualLabel,
     };
   }
 
-  return { label: "Offen", crestUrl: null, isPlaceholder: true };
+  return {
+    label: "Offen",
+    crestUrl: null,
+    isPlaceholder: true,
+    participantId: null,
+    qualificationProvenanceLabel: null,
+  };
 }
 
 function buildFixtureBlock(
@@ -174,6 +237,31 @@ function buildFixtureBlock(
         })}`
       : "ungeplant";
 
+  const resultRow =
+    snapshot.fixtureResults.find((r) => r.fixtureId === fixture.id) ?? null;
+  const result = resultRow
+    ? {
+        state: resultRow.state,
+        scoreSideA: resultRow.scoreSideA,
+        scoreSideB: resultRow.scoreSideB,
+        winnerParticipantId: resultRow.winnerParticipantId,
+        revision: resultRow.revision,
+      }
+    : null;
+
+  const sideRowA = fixture.sides.find((s) => s.side === "A");
+  const sideRowB = fixture.sides.find((s) => s.side === "B");
+  const idA = sideRowA?.participantId ?? fixture.sideAParticipantId;
+  const idB = sideRowB?.participantId ?? fixture.sideBParticipantId;
+  const canEnterResult = Boolean(idA && idB);
+
+  const resultLine =
+    result?.state === "COMPLETED" &&
+    result.scoreSideA != null &&
+    result.scoreSideB != null
+      ? ` · ${result.scoreSideA}:${result.scoreSideB}`
+      : "";
+
   return {
     kind: "FIXTURE",
     fixtureId: fixture.id,
@@ -185,8 +273,11 @@ function buildFixtureBlock(
     pitchId: assignment?.tournamentPitchId ?? snapshot.pitches[0]?.id ?? "",
     phaseLabel: fixture.phaseLabel,
     groupLabel: fixture.groupLabel,
+    phaseType: fixture.phaseType,
     lockDimension,
-    accessibleLabel: `${sideA.label} gegen ${sideB.label}, ${timeLine}, ${pitchLabel}${lockSuffix}`,
+    accessibleLabel: `${sideA.label} gegen ${sideB.label}, ${timeLine}, ${pitchLabel}${lockSuffix}${resultLine}`,
+    result,
+    canEnterResult,
   };
 }
 
@@ -405,6 +496,35 @@ export function buildTournamentPlanungViewModel(
     });
   }
 
+  const completedGroupResults = snapshot.fixtureResults
+    .filter((r) => r.state === "COMPLETED" && r.scoreSideA != null && r.scoreSideB != null)
+    .flatMap((r) => {
+      const fixture = snapshot.fixtures.find((f) => f.id === r.fixtureId);
+      if (!fixture?.tournamentGroupId) return [];
+      const sideA = fixture.sides.find((s) => s.side === "A");
+      const sideB = fixture.sides.find((s) => s.side === "B");
+      const idA = sideA?.participantId ?? fixture.sideAParticipantId;
+      const idB = sideB?.participantId ?? fixture.sideBParticipantId;
+      if (!idA || !idB) return [];
+      return [
+        {
+          tournamentGroupId: fixture.tournamentGroupId,
+          fixtureId: fixture.id,
+          sideAParticipantId: idA,
+          sideBParticipantId: idB,
+          scoreSideA: r.scoreSideA!,
+          scoreSideB: r.scoreSideB!,
+        },
+      ];
+    });
+
+  const groupStandings = buildPlanungGroupStandings({
+    groups: snapshot.groups,
+    completedGroupResults,
+    rankingConfiguration: snapshot.rankingConfiguration,
+    participants: snapshot.participants,
+  });
+
   return {
     tournamentId: snapshot.tournamentId,
     availability,
@@ -441,6 +561,7 @@ export function buildTournamentPlanungViewModel(
       regenerateLabel: "Spielplan neu berechnen",
       regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
     },
+    groupStandings,
   };
 }
 

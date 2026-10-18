@@ -11,6 +11,7 @@ type Props = {
   busy: boolean;
   onLockAction: (body: Record<string, unknown>) => Promise<void>;
   onManualMove: () => void;
+  onEnterResult: () => void;
   onClose: () => void;
 };
 
@@ -20,12 +21,13 @@ export default function TournamentPlanungFixtureActions({
   busy,
   onLockAction,
   onManualMove,
+  onEnterResult,
   onClose,
 }: Props) {
   const cell = model.cells.find(
     (c) => c.kind === "FIXTURE" && c.fixtureId === fixtureId,
   );
-  if (!cell || cell.kind !== "FIXTURE" || !cell.assignmentId) return null;
+  if (!cell || cell.kind !== "FIXTURE") return null;
 
   return (
     <div
@@ -34,18 +36,40 @@ export default function TournamentPlanungFixtureActions({
     >
       <span className="text-sm text-[var(--foreground)]">
         {cell.sideA.label} – {cell.sideB.label}
+        {cell.result?.state === "COMPLETED" &&
+        cell.result.scoreSideA != null &&
+        cell.result.scoreSideB != null ? (
+          <span className="ml-2 tabular-nums font-semibold">
+            {cell.result.scoreSideA}:{cell.result.scoreSideB}
+          </span>
+        ) : null}
       </span>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        disabled={busy}
-        data-testid="tournament-planung-manual-move-open"
-        onClick={onManualMove}
-      >
-        Spiel verschieben
-      </Button>
-      {(["TIME", "PITCH", "TIME_AND_PITCH"] as const).map((dimension) => (
+      {cell.canEnterResult ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          data-testid="tournament-planung-result-open"
+          onClick={onEnterResult}
+        >
+          Ergebnis
+        </Button>
+      ) : null}
+      {cell.assignmentId ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          data-testid="tournament-planung-manual-move-open"
+          onClick={onManualMove}
+        >
+          Spiel verschieben
+        </Button>
+      ) : null}
+      {cell.assignmentId
+        ? (["TIME", "PITCH", "TIME_AND_PITCH"] as const).map((dimension) => (
         <Button
           key={dimension}
           type="button"
@@ -63,23 +87,26 @@ export default function TournamentPlanungFixtureActions({
         >
           {scheduleLockActionLabel(dimension)}
         </Button>
-      ))}
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        disabled={busy}
-        onClick={() =>
-          onLockAction({
-            assignmentId: cell.assignmentId,
-            dimension: null,
-            scheduleVersionId: model.scheduleVersionId,
-            expectedRevision: model.scheduleRevision,
-          })
-        }
-      >
-        Sperre aufheben
-      </Button>
+          ))
+        : null}
+      {cell.assignmentId ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          disabled={busy}
+          onClick={() =>
+            onLockAction({
+              assignmentId: cell.assignmentId,
+              dimension: null,
+              scheduleVersionId: model.scheduleVersionId,
+              expectedRevision: model.scheduleRevision,
+            })
+          }
+        >
+          Sperre aufheben
+        </Button>
+      ) : null}
       <Button type="button" size="sm" variant="ghost" onClick={onClose}>
         Schliessen
       </Button>

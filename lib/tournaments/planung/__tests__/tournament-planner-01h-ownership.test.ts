@@ -28,6 +28,14 @@ function baseSnapshot(
     feasibility: null,
     smartTiming: null,
     optimisation: null,
+    fixtureResults: [],
+    groups: [],
+    rankingConfiguration: {
+      winPoints: 3,
+      drawPoints: 1,
+      lossPoints: 0,
+      tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
+    },
   };
 }
 

@@ -1298,6 +1298,7 @@ model Tenant {
   tournamentQualificationSources   TournamentQualificationSource[]
   tournamentKnockoutQualificationMappings TournamentKnockoutQualificationMapping[]
   tournamentFixtureSides           TournamentFixtureSide[]
+  tournamentFixtureResults         TournamentFixtureResult[]
   // PLANNING-UX-07R6: canonical FacilityResource allocations for club events.
   eventFacilityAllocations         EventFacilityAllocation[]
   // WEEKPLANNER-01B: tenant-defined, week-scoped alternative planning
@@ -8832,6 +8833,8 @@ model TournamentParticipant {
   groupMemberships        TournamentGroupMembership[]
   /// SCE-TOURNAMENT-PLANNER-01E3A — concrete fixture-side sources.
   fixtureSideSources      TournamentFixtureSide[]
+  /// SCE-TOURNAMENT-PLANNER-01J — explicit KO winner when score is tied.
+  fixtureResultsWon       TournamentFixtureResult[] @relation("TournamentFixtureResultWinner")
 
   /// The same canonical Team MAY appear on multiple rows (01D-R2 — e.g. two
   /// squads "Rot"/"Blau" referencing FC Allschwil F2). Tournament-local
@@ -9213,6 +9216,7 @@ model TournamentFixture {
   sides            TournamentFixtureSide[]
   qualificationSources TournamentQualificationSource[] @relation("QualificationSourceFixture")
   assignments      TournamentFixtureAssignment[]
+  result           TournamentFixtureResult?
 
   @@index([tenantId])
   @@index([eventId])
@@ -9221,6 +9225,39 @@ model TournamentFixture {
   @@index([tournamentGroupId])
   @@index([sideAParticipantId])
   @@index([sideBParticipantId])
+}
+
+/// SCE-TOURNAMENT-PLANNER-01J — sporting outcome for one fixture (WHO scored; separate from schedule).
+enum TournamentFixtureResultState {
+  UNPLAYED
+  COMPLETED
+}
+
+model TournamentFixtureResult {
+  id        String @id @default(cuid())
+  tenantId  String
+  fixtureId String @unique
+
+  state              TournamentFixtureResultState @default(UNPLAYED)
+  scoreSideA         Int?
+  scoreSideB         Int?
+  winnerParticipantId String?
+
+  /// Optimistic concurrency for result entry (independent of schedule revision).
+  revision Int @default(0)
+
+  lastModifiedByUserId       String?
+  previousResultSnapshotJson Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fixture           TournamentFixture      @relation(fields: [fixtureId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  winnerParticipant TournamentParticipant? @relation("TournamentFixtureResultWinner", fields: [winnerParticipantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, fixtureId])
 }
 
 model TournamentScheduleVersion {
