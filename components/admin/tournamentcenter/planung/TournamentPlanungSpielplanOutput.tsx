@@ -7,7 +7,7 @@ import {
   buildTournamentSpielplanFromPlanung,
   resolveTeamSpielplan,
 } from "@/lib/tournaments/spielplan/build-tournament-spielplan-view-model";
-import TournamentSpielplanMasterMatrix from "@/components/sce/tournament/TournamentSpielplanMasterMatrix";
+import TournamentSpielplanMasterSchedule from "@/components/sce/tournament/TournamentSpielplanMasterSchedule";
 import TournamentSpielplanMobileTimeline from "@/components/sce/tournament/TournamentSpielplanMobileTimeline";
 import TournamentSpielplanTeamPlanView from "@/components/sce/tournament/TournamentSpielplanTeamPlanView";
 import { Button } from "@/components/ui/Button";
@@ -199,7 +199,7 @@ export default function TournamentPlanungSpielplanOutput({
       </div>
 
       <div className="hidden lg:block">
-        <TournamentSpielplanMasterMatrix
+        <TournamentSpielplanMasterSchedule
           model={spielplan}
           highlightParticipantId={highlightParticipantId}
         />
@@ -214,6 +214,9 @@ export default function TournamentPlanungSpielplanOutput({
           teamPlan={teamPlan}
           tournamentTitle={title}
           dateLabel={spielplan.identity.dateLabel}
+          fixtures={spielplan.fixtures}
+          participants={spielplan.participants}
+          timezone={spielplan.identity.timezone}
         />
       ) : null}
     </section>

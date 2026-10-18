@@ -5,7 +5,7 @@ import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import { buildClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import type { PublicTournamentViewModel } from "@/lib/tournaments/public/types";
 import { resolveTeamSpielplan } from "@/lib/tournaments/spielplan/build-tournament-spielplan-view-model";
-import TournamentSpielplanMasterMatrix from "@/components/sce/tournament/TournamentSpielplanMasterMatrix";
+import TournamentSpielplanMasterSchedule from "@/components/sce/tournament/TournamentSpielplanMasterSchedule";
 import TournamentSpielplanMobileTimeline from "@/components/sce/tournament/TournamentSpielplanMobileTimeline";
 import TournamentSpielplanTeamPlanView from "@/components/sce/tournament/TournamentSpielplanTeamPlanView";
 import PublicTournamentCopyLinkButton from "./PublicTournamentCopyLinkButton";
@@ -39,7 +39,10 @@ export default function PublicTournamentExperience({
     ? resolveTeamSpielplan(spielplan, teamParticipantId)
     : null;
 
-  const hasSpielplan = spielplan.matrixRows.length > 0 || spielplan.mobileSlots.length > 0;
+  const hasSpielplan =
+    spielplan.presentationItems.length > 0 ||
+    spielplan.matrixRows.length > 0 ||
+    spielplan.mobileSlots.length > 0;
 
   return (
     <div
@@ -115,7 +118,7 @@ export default function PublicTournamentExperience({
               </div>
             ) : null}
             <div className="hidden sm:block">
-              <TournamentSpielplanMasterMatrix
+              <TournamentSpielplanMasterSchedule
                 model={spielplan}
                 highlightParticipantId={highlightParticipantId}
               />
@@ -129,6 +132,9 @@ export default function PublicTournamentExperience({
                 teamPlan={teamPlan}
                 tournamentTitle={tournament.title}
                 dateLabel={spielplan.identity.dateLabel}
+                fixtures={spielplan.fixtures}
+                participants={spielplan.participants}
+                timezone={spielplan.identity.timezone}
               />
             ) : null}
           </div>

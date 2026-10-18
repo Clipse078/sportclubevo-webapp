@@ -8,6 +8,7 @@ import { manualMoveTargetAllowed, resolveManualMoveCapabilities } from "@/lib/to
 import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-hub-pointer-gesture";
 import { cn } from "@/lib/cn";
 import { Lock } from "lucide-react";
+import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -300,8 +301,7 @@ export default function TournamentPlanungBoard({
                       previewCache.current.clear();
                     }}
                   >
-                    <p className="truncate font-medium text-[var(--foreground)]">{fixture.sideA.label}</p>
-                    <p className="truncate text-[var(--muted)]">{fixture.sideB.label}</p>
+                    <SceTournamentFixtureCompactMatchup sideA={fixture.sideA} sideB={fixture.sideB} />
                     {fixture.lockDimension ? (
                       <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-[var(--muted)]">
                         <Lock className="h-3 w-3" aria-hidden />

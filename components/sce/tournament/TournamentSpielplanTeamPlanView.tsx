@@ -1,18 +1,31 @@
 "use client";
 
-import type { TournamentSpielplanTeamPlan } from "@/lib/tournaments/spielplan/types";
+import type {
+  TournamentSpielplanFixturePresentation,
+  TournamentSpielplanTeamPlan,
+  TournamentSpielplanParticipantOption,
+} from "@/lib/tournaments/spielplan/types";
+import SceTournamentFixtureCard from "./SceTournamentFixtureCard";
 
 type Props = {
   teamPlan: TournamentSpielplanTeamPlan;
   tournamentTitle: string;
   dateLabel: string;
+  fixtures: readonly TournamentSpielplanFixturePresentation[];
+  participants: readonly TournamentSpielplanParticipantOption[];
+  timezone: string;
 };
 
 export default function TournamentSpielplanTeamPlanView({
   teamPlan,
   tournamentTitle,
   dateLabel,
+  fixtures,
+  participants,
+  timezone,
 }: Props) {
+  const fixtureById = new Map(fixtures.map((f) => [f.fixtureId, f]));
+
   return (
     <section
       className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
@@ -39,6 +52,23 @@ export default function TournamentSpielplanTeamPlanView({
                 >
                   <span className="font-medium">{entry.label}</span>
                   <span className="text-[var(--text-2)]"> · {entry.timeLabel}</span>
+                  <span className="block text-xs text-[var(--muted)]">{entry.scopeLabel}</span>
+                </li>
+              );
+            }
+            const fixture = fixtureById.get(entry.fixtureId);
+            if (fixture) {
+              return (
+                <li key={entry.fixtureId}>
+                  <SceTournamentFixtureCard
+                    fixture={fixture}
+                    participants={participants}
+                    highlightParticipantId={teamPlan.participantId}
+                    timezone={timezone}
+                  />
+                  {entry.roundTitle ? (
+                    <p className="mt-1 text-xs text-[var(--muted)]">{entry.roundTitle}</p>
+                  ) : null}
                 </li>
               );
             }
@@ -55,9 +85,6 @@ export default function TournamentSpielplanTeamPlanView({
                     <span className="ml-2 tabular-nums font-semibold">{entry.scoreLabel}</span>
                   ) : null}
                 </div>
-                {entry.roundTitle ? (
-                  <div className="text-xs text-[var(--muted)]">{entry.roundTitle}</div>
-                ) : null}
               </li>
             );
           })}

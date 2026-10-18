@@ -32,7 +32,54 @@ const model: PublicTournamentViewModel = {
       timezone: "Europe/Zurich",
     },
     pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1" }],
-    fixtures: [],
+    fixtures: [
+      {
+        fixtureId: "f1",
+        sideALabel: "Team A",
+        sideBLabel: "1. Gruppe B",
+        sideAParticipantId: "p1",
+        sideBParticipantId: null,
+        sideAIsPlaceholder: false,
+        sideBIsPlaceholder: true,
+        pairingLabel: "Team A – 1. Gruppe B",
+        startUtc: "2026-08-01T09:00:00.000Z",
+        endUtc: "2026-08-01T09:20:00.000Z",
+        pitchId: "p1",
+        pitchLabel: "Feld 1",
+        roundTitle: "Gruppe A",
+        result: null,
+      },
+    ],
+    presentationItems: [
+      {
+        kind: "ROUND_GROUP",
+        group: {
+          sectionId: "s1",
+          title: "Gruppe A",
+          timeRangeLabel: "11:00–11:20",
+          pitchSummaryLabel: "Feld 1",
+          fixtureCount: 1,
+          fixtures: [
+            {
+              fixtureId: "f1",
+              sideALabel: "Team A",
+              sideBLabel: "1. Gruppe B",
+              sideAParticipantId: "p1",
+              sideBParticipantId: null,
+              sideAIsPlaceholder: false,
+              sideBIsPlaceholder: true,
+              pairingLabel: "Team A – 1. Gruppe B",
+              startUtc: "2026-08-01T09:00:00.000Z",
+              endUtc: "2026-08-01T09:20:00.000Z",
+              pitchId: "p1",
+              pitchLabel: "Feld 1",
+              roundTitle: "Gruppe A",
+              result: null,
+            },
+          ],
+        },
+      },
+    ],
     matrixRows: [
       {
         kind: "SCHEDULE_SLOT",
@@ -135,7 +182,7 @@ describe("PublicTournamentExperience", () => {
     );
     expect(screen.getByRole("heading", { name: "Jugendturnier" })).toBeInTheDocument();
     expect(screen.getByTestId("public-tournament-copy-link")).toBeInTheDocument();
-    expect(screen.getByText("1. Gruppe B", { hidden: true })).toBeInTheDocument();
+    expect(screen.getAllByTestId("sce-tournament-fixture-card-f1").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /Spielplan automatisch/i })).not.toBeInTheDocument();
   });
 });

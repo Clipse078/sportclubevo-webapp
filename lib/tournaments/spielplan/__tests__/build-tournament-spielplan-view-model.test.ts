@@ -114,6 +114,7 @@ describe("buildTournamentSpielplanViewModel", () => {
       fixtureCount: 4,
     });
     expect(model.pitches).toHaveLength(4);
+    expect(model.presentationItems.some((i) => i.kind === "ROUND_GROUP")).toBe(true);
     const slot = model.matrixRows.find((r) => r.kind === "SCHEDULE_SLOT");
     expect(slot?.kind).toBe("SCHEDULE_SLOT");
     if (slot?.kind === "SCHEDULE_SLOT") {

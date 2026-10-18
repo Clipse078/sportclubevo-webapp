@@ -46,6 +46,19 @@ const model: TournamentSpielplanViewModel = {
     },
   ],
   mobileSlots: [],
+  presentationItems: [
+    {
+      kind: "ROUND_GROUP",
+      group: {
+        sectionId: "r1",
+        title: "Runde 1",
+        timeRangeLabel: "10:00–10:14",
+        pitchSummaryLabel: "Feld 1",
+        fixtureCount: 1,
+        fixtures: [],
+      },
+    },
+  ],
   participants: [
     { participantId: "a", displayName: "Alpha", crestUrl: null },
     { participantId: "b", displayName: "Beta", crestUrl: null },

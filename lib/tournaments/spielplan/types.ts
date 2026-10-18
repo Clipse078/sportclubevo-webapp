@@ -114,12 +114,36 @@ export type TournamentSpielplanParticipantOption = {
   crestUrl: string | null;
 };
 
+/** Competition-round grouping for interactive Spielplan (from Planung schedule sections). */
+export type TournamentSpielplanRoundGroup = {
+  sectionId: string;
+  title: string;
+  timeRangeLabel: string | null;
+  pitchSummaryLabel: string | null;
+  fixtureCount: number;
+  fixtures: readonly TournamentSpielplanFixturePresentation[];
+};
+
+export type TournamentSpielplanScheduleBreakPresentation = {
+  breakId: string;
+  scope: "ALL_PITCHES" | "SELECTED_PITCHES";
+  timeLabel: string;
+  label: string;
+  scopeLabel: string;
+};
+
+export type TournamentSpielplanPresentationItem =
+  | { kind: "ROUND_GROUP"; group: TournamentSpielplanRoundGroup }
+  | { kind: "SCHEDULE_BREAK"; break: TournamentSpielplanScheduleBreakPresentation };
+
 export type TournamentSpielplanViewModel = {
   identity: TournamentSpielplanIdentity;
   pitches: readonly TournamentSpielplanPitchColumn[];
   fixtures: readonly TournamentSpielplanFixturePresentation[];
   matrixRows: readonly TournamentSpielplanMatrixRow[];
   mobileSlots: readonly TournamentSpielplanMobileSlot[];
+  /** Ordered round groups and schedule breaks for card-based Spielplan. */
+  presentationItems: readonly TournamentSpielplanPresentationItem[];
   participants: readonly TournamentSpielplanParticipantOption[];
   teamPlans: readonly TournamentSpielplanTeamPlan[];
 };

@@ -106,6 +106,21 @@ Creator Spielplan step uses the same assistant pattern via `buildComposerPlannin
 
 **01K-R4 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not mark 01K closed** until accepted.
 
+## 01K-R5 — World-Class Spielplan Visual Presentation
+
+**Principle:** The Spielplan is the primary tournament output for organisers and the public. Interactive surfaces use one SCE fixture-card family (time, TournamentPitch, crests, explicit **VS**, participants) grouped by competition round — not a spreadsheet matrix on desktop.
+
+| Topic | Decision |
+| --- | --- |
+| Master / Team Spielplan | Shared `SceTournamentFixtureCard` visual language |
+| Club identity | Authoritative crest resolution + restrained fallback (no fake logos; real crests not in generic avatar bubbles) |
+| Round grouping | Derived from canonical Planung `scheduleSections` / Spielplan `presentationItems` |
+| Print / PDF | Purpose-built compact matrix documents may remain for paper efficiency |
+| PDF refinement | **Backlog** — not a 01K closure blocker |
+| Email sharing | **Backlog** — not a 01K closure blocker |
+
+**01K-R5 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO visual UAT against target design required before 01K closure.
+
 ## Verification (automated)
 
 - `lib/tournaments/spielplan/__tests__/*`

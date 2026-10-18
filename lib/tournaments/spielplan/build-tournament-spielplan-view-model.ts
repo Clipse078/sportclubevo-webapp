@@ -19,6 +19,7 @@ import type {
   TournamentSpielplanTeamPlan,
   TournamentSpielplanViewModel,
 } from "./types";
+import { buildSpielplanPresentationItems } from "./build-spielplan-presentation-items";
 
 function formatTime(iso: string, timezone: string): string {
   return new Date(iso).toLocaleTimeString("de-CH", {
@@ -305,6 +306,13 @@ export function buildTournamentSpielplanViewModel(input: {
     };
   });
 
+  const presentationItems = buildSpielplanPresentationItems({
+    scheduleSections: input.scheduleSections,
+    fixtures,
+    timezone,
+    pitchLabelById: new Map(sortedPitches.map((p) => [p.pitchId, p.label])),
+  });
+
   return {
     identity: {
       ...input.identity,
@@ -314,6 +322,7 @@ export function buildTournamentSpielplanViewModel(input: {
     fixtures,
     matrixRows,
     mobileSlots,
+    presentationItems,
     participants: input.participants.map((p) => ({
       participantId: p.participantId,
       displayName: p.displayName,
