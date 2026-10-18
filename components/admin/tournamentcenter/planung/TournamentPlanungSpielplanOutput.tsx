@@ -17,6 +17,10 @@ import {
   SCE_TOURNAMENT_WORKSPACE_SCHEDULE_DIVIDER_CLASS,
   SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
 } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import {
+  SCE_TOURNAMENT_ACTION_LINK_CLASS,
+  SCE_TOURNAMENT_SELECT_CLASS,
+} from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
 
 type Props = {
   planungModel: TournamentPlanungViewModel;
@@ -133,7 +137,7 @@ export default function TournamentPlanungSpielplanOutput({
             target="_blank"
             rel="noreferrer"
             data-testid="spielplan-print-master"
-            className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface)]"
+            className={SCE_TOURNAMENT_ACTION_LINK_CLASS}
           >
             <Printer className="mr-1.5 h-4 w-4" aria-hidden />
             Drucken
@@ -141,7 +145,7 @@ export default function TournamentPlanungSpielplanOutput({
           <a
             href={masterPdfUrl}
             data-testid="spielplan-pdf-master"
-            className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface)]"
+            className={SCE_TOURNAMENT_ACTION_LINK_CLASS}
           >
             <Download className="mr-1.5 h-4 w-4" aria-hidden />
             PDF
@@ -153,14 +157,14 @@ export default function TournamentPlanungSpielplanOutput({
                 target="_blank"
                 rel="noreferrer"
                 data-testid="spielplan-print-team"
-                className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface)]"
+                className={SCE_TOURNAMENT_ACTION_LINK_CLASS}
               >
                 Team drucken
               </a>
               <a
                 href={teamPdfUrl}
                 data-testid="spielplan-pdf-team"
-                className="inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface)]"
+                className={SCE_TOURNAMENT_ACTION_LINK_CLASS}
               >
                 Team-PDF
               </a>
@@ -181,9 +185,7 @@ export default function TournamentPlanungSpielplanOutput({
         </label>
         <select
           id="spielplan-team-highlight"
-          className={cn(
-            "min-h-11 min-w-[12rem] flex-1 rounded-lg border border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] px-3 py-2 text-sm sm:max-w-xs sm:flex-none",
-          )}
+          className={cn(SCE_TOURNAMENT_SELECT_CLASS, "min-w-[12rem] flex-1 sm:max-w-xs sm:flex-none")}
           value={highlightParticipantId ?? ""}
           onChange={(e) => setHighlightParticipantId(e.target.value || null)}
           data-testid="spielplan-team-highlight-select"
@@ -200,7 +202,7 @@ export default function TournamentPlanungSpielplanOutput({
         </label>
         <select
           id="spielplan-team-plan"
-          className="min-h-11 min-w-[12rem] flex-1 rounded-lg border border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] px-3 py-2 text-sm sm:max-w-xs sm:flex-none"
+          className={cn(SCE_TOURNAMENT_SELECT_CLASS, "min-w-[12rem] flex-1 sm:max-w-xs sm:flex-none")}
           value={teamParticipantId ?? ""}
           onChange={(e) => setTeamParticipantId(e.target.value || null)}
           data-testid="spielplan-team-plan-select"

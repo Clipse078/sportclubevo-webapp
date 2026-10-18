@@ -9,6 +9,8 @@ import TournamentSpielplanMasterSchedule from "@/components/sce/tournament/Tourn
 import TournamentSpielplanMobileTimeline from "@/components/sce/tournament/TournamentSpielplanMobileTimeline";
 import TournamentSpielplanTeamPlanView from "@/components/sce/tournament/TournamentSpielplanTeamPlanView";
 import PublicTournamentCopyLinkButton from "./PublicTournamentCopyLinkButton";
+import { SCE_TOURNAMENT_SELECT_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
+import { cn } from "@/lib/cn";
 
 type Props = {
   model: PublicTournamentViewModel;
@@ -89,7 +91,7 @@ export default function PublicTournamentExperience({
                 </label>
                 <select
                   id="public-spielplan-highlight"
-                  className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                  className={cn(SCE_TOURNAMENT_SELECT_CLASS, "bg-[var(--surface)]")}
                   value={highlightParticipantId ?? ""}
                   onChange={(e) => setHighlightParticipantId(e.target.value || null)}
                   data-testid="public-spielplan-team-highlight"
@@ -103,7 +105,7 @@ export default function PublicTournamentExperience({
                 </select>
                 <select
                   aria-label="Team-Spielplan"
-                  className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                  className={cn(SCE_TOURNAMENT_SELECT_CLASS, "bg-[var(--surface)]")}
                   value={teamParticipantId ?? ""}
                   onChange={(e) => setTeamParticipantId(e.target.value || null)}
                   data-testid="public-spielplan-team-plan"
@@ -117,7 +119,7 @@ export default function PublicTournamentExperience({
                 </select>
               </div>
             ) : null}
-            <div className="hidden sm:block">
+            <div className="hidden lg:block">
               <TournamentSpielplanMasterSchedule
                 model={spielplan}
                 highlightParticipantId={highlightParticipantId}

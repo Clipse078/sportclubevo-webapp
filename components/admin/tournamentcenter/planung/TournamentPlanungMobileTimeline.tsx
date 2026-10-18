@@ -9,6 +9,7 @@ import {
 } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { cn } from "@/lib/cn";
 import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
+import { SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -47,8 +48,17 @@ export default function TournamentPlanungMobileTimeline({
   return (
     <div className="space-y-4" data-testid="tournament-planung-mobile-timeline">
       {sections.map((section) => (
-        <section key={section.sectionId} className={SCE_TOURNAMENT_ROUND_SURFACE_CLASS}>
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">{section.title}</h3>
+        <section
+          key={section.sectionId}
+          className={SCE_TOURNAMENT_ROUND_SURFACE_CLASS}
+          aria-labelledby={`planung-mobile-section-${section.sectionId}`}
+        >
+          <h3
+            id={`planung-mobile-section-${section.sectionId}`}
+            className="text-sm font-semibold text-[var(--foreground)]"
+          >
+            {section.title}
+          </h3>
           <ol className="mt-3 space-y-2.5">
             {section.entries.map((cell) => {
               if (cell.kind === "BREAK") {
@@ -57,7 +67,9 @@ export default function TournamentPlanungMobileTimeline({
                   <li key={cell.breakId} data-testid={`planung-mobile-break-${cell.breakId}`}>
                     <SceTournamentScheduleBreakPresentation
                       layout={
-                        cell.scope === "ALL_PITCHES" ? "board-all-pitches" : "spielplan-selected-pitches"
+                        cell.scope === "ALL_PITCHES"
+                          ? "spielplan-all-pitches"
+                          : "spielplan-selected-pitches"
                       }
                       label={cell.label}
                       timeLabel={timeLabel}
@@ -73,7 +85,8 @@ export default function TournamentPlanungMobileTimeline({
                     type="button"
                     className={cn(
                       SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
-                      "w-full rounded-lg px-3 py-3 text-left",
+                      SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS,
+                      "w-full min-h-11 rounded-lg px-3 py-3 text-left",
                     )}
                     aria-label={cell.accessibleLabel}
                     data-testid={`planung-mobile-fixture-${cell.fixtureId}`}

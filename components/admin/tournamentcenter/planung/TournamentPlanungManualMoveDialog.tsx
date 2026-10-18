@@ -5,6 +5,8 @@ import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types
 import { resolveManualMoveCapabilities } from "@/lib/tournaments/planung/manual-move-capabilities";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
+import { SCE_TOURNAMENT_SELECT_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
 
 type Props = {
   open: boolean;
@@ -82,7 +84,7 @@ export default function TournamentPlanungManualMoveDialog({
         <label className="block text-sm text-[var(--foreground)]">
           Startzeit
           <select
-            className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+            className={cn(SCE_TOURNAMENT_SELECT_CLASS, "mt-1 w-full")}
             disabled={!caps.allowTimeChange || busy}
             value={startUtc}
             onChange={(e) => setStartUtc(e.target.value)}
@@ -99,7 +101,7 @@ export default function TournamentPlanungManualMoveDialog({
         <label className="block text-sm text-[var(--foreground)]">
           Turnierfeld
           <select
-            className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+            className={cn(SCE_TOURNAMENT_SELECT_CLASS, "mt-1 w-full")}
             disabled={!caps.allowPitchChange || busy}
             value={pitchId}
             onChange={(e) => setPitchId(e.target.value)}
