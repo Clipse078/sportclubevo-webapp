@@ -7,6 +7,11 @@ import type {
   TournamentSpielplanViewModel,
 } from "@/lib/tournaments/spielplan/types";
 import { cn } from "@/lib/cn";
+import {
+  SCE_TOURNAMENT_SCHEDULE_BREAK_LABEL_CLASS,
+  SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER,
+  SCE_TOURNAMENT_SCHEDULE_BREAK_SPIELPLAN_BLOCK_CLASS,
+} from "@/lib/sce/tournament/sce-tournament-schedule-break-semantics";
 
 type Props = {
   model: TournamentSpielplanViewModel;
@@ -14,6 +19,20 @@ type Props = {
   subduedClassName?: string;
   highlightClassName?: string;
 };
+
+function cellAccessibleLabel(
+  cell: TournamentSpielplanPitchCell,
+  pitchLabel: string,
+  rowTimeLabel: string,
+): string {
+  if (cell.kind === "EMPTY") return `${rowTimeLabel}, ${pitchLabel}, frei`;
+  if (cell.kind === "PITCH_BLOCKED") {
+    return `${cell.label} ${rowTimeLabel}, ${pitchLabel}`;
+  }
+  const score =
+    cell.result != null ? `, Ergebnis ${cell.result.scoreSideA}:${cell.result.scoreSideB}` : "";
+  return `${rowTimeLabel}, ${pitchLabel}, ${cell.pairingLabel}${score}`;
+}
 
 function cellPresentation(
   cell: TournamentSpielplanPitchCell,
@@ -54,6 +73,7 @@ function MatrixRowCells({
         return (
           <td
             key={pitch.pitchId}
+            aria-label={cellAccessibleLabel(cell, pitch.label, row.timeLabel)}
             className={cn(
               "border border-[var(--border)] px-2 py-2 align-top text-xs sm:text-sm",
               highlightParticipantId && !highlighted && cell.kind === "FIXTURE"
@@ -93,15 +113,25 @@ export default function TournamentSpielplanMasterMatrix({
 
   return (
     <div className="overflow-x-auto" data-testid="spielplan-master-matrix">
-      <table className="w-full min-w-[640px] border-collapse text-left">
+      <table
+        className="w-full min-w-[640px] border-collapse text-left"
+        aria-label="Master-Spielplan Feld und Zeit"
+      >
+        <caption className="sr-only">
+          Spielplan nach Zeit und Turnierfeldern
+        </caption>
         <thead>
           <tr>
-            <th className="border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            <th
+              scope="col"
+              className="border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+            >
               Zeit
             </th>
             {pitches.map((pitch) => (
               <th
                 key={pitch.pitchId}
+                scope="col"
                 className="border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
               >
                 {pitch.label}
@@ -114,25 +144,34 @@ export default function TournamentSpielplanMasterMatrix({
             if (row.kind === "ALL_PITCHES_BREAK") {
               return (
                 <tr key={row.rowId} data-testid="spielplan-all-pitches-break">
-                  <td
-                    colSpan={pitches.length + 1}
-                    className="border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-center text-sm font-semibold uppercase tracking-wide"
-                  >
-                    {row.timeLabel} · {row.label}
+                  <td colSpan={pitches.length + 1} className="border border-[var(--border)] p-1">
+                    <div
+                      className={SCE_TOURNAMENT_SCHEDULE_BREAK_SPIELPLAN_BLOCK_CLASS}
+                      data-sce-schedule-break={SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER}
+                      aria-label={`${row.label} ${row.timeLabel}, alle Felder`}
+                    >
+                      <p className={SCE_TOURNAMENT_SCHEDULE_BREAK_LABEL_CLASS}>{row.label}</p>
+                      <p className="mt-0.5 text-xs tabular-nums text-[var(--text-2)]">
+                        {row.timeLabel}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               );
             }
             return (
               <tr key={row.rowId}>
-                <td className="border border-[var(--border)] px-2 py-2 text-sm whitespace-nowrap">
+                <th
+                  scope="row"
+                  className="border border-[var(--border)] px-2 py-2 text-sm whitespace-nowrap font-normal"
+                >
                   <div className="font-medium tabular-nums">{row.timeLabel}</div>
                   {row.roundTitle ? (
                     <div className="text-[10px] uppercase tracking-wide text-[var(--muted)]">
                       {row.roundTitle}
                     </div>
                   ) : null}
-                </td>
+                </th>
                 <MatrixRowCells
                   row={row}
                   pitches={pitches}

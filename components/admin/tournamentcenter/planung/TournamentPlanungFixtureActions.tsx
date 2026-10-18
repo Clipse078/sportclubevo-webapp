@@ -33,6 +33,8 @@ export default function TournamentPlanungFixtureActions({
     <div
       className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-3"
       data-testid="tournament-planung-fixture-actions"
+      role="toolbar"
+      aria-label={`Aktionen für ${cell.sideA.label} – ${cell.sideB.label}`}
     >
       <span className="text-sm text-[var(--foreground)]">
         {cell.sideA.label} – {cell.sideB.label}

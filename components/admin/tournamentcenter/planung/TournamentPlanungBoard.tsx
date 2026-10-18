@@ -11,6 +11,7 @@ import { Lock } from "lucide-react";
 import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
 import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
 import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
 import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 
 type Props = {
@@ -289,8 +290,9 @@ export default function TournamentPlanungBoard({
                   <button
                     type="button"
                     className={cn(
-                      "w-full text-left text-xs transition-colors touch-none",
+                      "w-full text-left text-xs transition-colors touch-none min-h-11",
                       SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
+                      SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS,
                       "rounded-lg px-2 py-2.5 hover:border-[var(--sce-surface-border-elevated)]",
                       selected && "ring-2 ring-[var(--accent)]",
                       isDragging && "opacity-40",

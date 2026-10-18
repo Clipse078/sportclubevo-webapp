@@ -182,7 +182,7 @@ export function buildTournamentSpielplanViewModel(input: {
       mobileSlots.push({
         slotId: `break-all:${allPitchBreak.breakId}`,
         startUtc: allPitchBreak.startUtc,
-        timeLabel: formatTime(startUtc, timezone),
+        timeLabel,
         roundTitle: null,
         kind: "ALL_PITCHES_BREAK",
         breakLabel: allPitchBreak.label,

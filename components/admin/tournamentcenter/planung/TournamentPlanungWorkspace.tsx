@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, Pencil, X } from "lucide-react";
@@ -23,6 +23,7 @@ import TournamentPlanungSpielplanSettings from "./TournamentPlanungSpielplanSett
 import type { TournamentDto } from "@/lib/tournaments/types";
 import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { SCE_TOURNAMENT_SR_LIVE_REGION_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -91,6 +92,19 @@ export default function TournamentPlanungWorkspace({
   const [resultOpen, setResultOpen] = useState(false);
   const [selfAdjustTiming, setSelfAdjustTiming] = useState(false);
   const [scheduleSyncPending, setScheduleSyncPending] = useState(false);
+  const [scheduleLiveMessage, setScheduleLiveMessage] = useState("");
+  const scheduleSyncWasPendingRef = useRef(false);
+
+  useEffect(() => {
+    if (scheduleSyncPending) {
+      scheduleSyncWasPendingRef.current = true;
+      return;
+    }
+    if (scheduleSyncWasPendingRef.current) {
+      scheduleSyncWasPendingRef.current = false;
+      setScheduleLiveMessage("Spielplan aktualisiert.");
+    }
+  }, [scheduleSyncPending]);
 
   const hasSchedule = model.schedulePresence !== "NONE";
   const effectiveInteractionMode: InteractionMode =
@@ -323,6 +337,15 @@ export default function TournamentPlanungWorkspace({
       data-testid="tournament-planung-workspace"
       data-interaction-mode={effectiveInteractionMode}
     >
+      <p
+        className={SCE_TOURNAMENT_SR_LIVE_REGION_CLASS}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="tournament-planung-schedule-live-message"
+      >
+        {scheduleLiveMessage}
+      </p>
       <header
         className={cn(
           SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
@@ -461,9 +484,10 @@ export default function TournamentPlanungWorkspace({
                     href={editTournamentHref}
                     data-testid="tournament-planung-edit-tournament"
                     className={cn(
-                      "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-strong)]",
+                      "inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--border-strong)]",
                       "bg-[var(--surface)] px-3.5 text-sm font-semibold text-[var(--text-2)]",
                       "hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2",
                     )}
                   >
                     Turnier bearbeiten
