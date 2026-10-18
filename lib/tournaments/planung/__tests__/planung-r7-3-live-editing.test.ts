@@ -98,7 +98,7 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
     expect(workspace).toMatch(/Spielplan wird aktualisiert/);
   });
 
-  it("J — MATCHES headline reflects live current schedule", () => {
+  it("J — MATCHES does not surface noisy success copy in edit settings", () => {
     const presentation = readFileSync(
       join(
         process.cwd(),
@@ -106,9 +106,7 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
       ),
       "utf8",
     );
-    expect(presentation).toMatch(/Spielplan aktuell ✓/);
-    expect(presentation).not.toMatch(
-      /Der aktuelle Spielplan passt nicht mehr zu diesen Einstellungen/,
-    );
+    expect(presentation).toMatch(/status === "MATCHES"\) return null|!status \|\| status === "MATCHES"\) return null/);
+    expect(presentation).not.toMatch(/Spielplan aktuell ✓/);
   });
 });

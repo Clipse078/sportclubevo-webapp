@@ -49,10 +49,11 @@ export default function TournamentSpielplanMasterSchedule({
               }
               role="status"
             >
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                {br.timeLabel} · {br.label}
-              </p>
-              <p className="text-xs text-[var(--muted)]">{br.scopeLabel}</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{br.label}</p>
+              <p className="text-xs tabular-nums text-[var(--text-2)]">{br.timeLabel}</p>
+              {!isAllPitches ? (
+                <p className="text-xs text-[var(--muted)]">{br.scopeLabel}</p>
+              ) : null}
             </div>
           );
         }

@@ -173,8 +173,37 @@ Planning is an operation **on** the Spielplan, not a second schedule representat
 
 **01K-R7.1 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not start 01L**.
 
+## 01K-R7.5 — Home/Away topology + break timezone
+
+Correct canonical home/away round-robin (4 teams → 6 fixtures OFF, 12 fixtures ON), break local-time inheritance from tournament date, and live reconciliation after topology changes.
+
+**01K-R7.5 status:** merged at `5146c5ebc7e6668f6a76dddc578874ef919b38b7` on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**).
+
+## 01K-R7.6 — World-class Spielplan UX + final product polish
+
+**Permanent ground rule:** **WORLD-CLASS DESIGN · PREMIUM EXPERIENCE · MINIMAL UX.** Engine complexity stays behind the interface — no optimiser/feasibility/revision vocabulary in normal organiser flows.
+
+| Principle | Decision |
+| --- | --- |
+| Primary outcome | **Spielplan** — usable without results/rankings/winner |
+| Information architecture | **Round × field** master schedule; team plans derived from the same canonical schedule |
+| Breaks | **Schedule structure, not fixtures** — visible on board, master Spielplan, team context, print/PDF |
+| View vs edit | View = Spielplan + highlight + print/PDF/share; Edit = Einstellungen + Pausen + Feld-/Zeitplan |
+| Home/Away UX | Toggle + short copy: *Jede Paarung wird als Hin- und Rückspiel ausgetragen.* — auto reconcile, no manual apply |
+| Live editing | Spieldauer / Wechselzeit / Home/Away / break CRUD → serial latest-intent mutations; subtle *Spielplan wird aktualisiert …* only |
+| Infeasible edit | One calm block + optional Smart Timing **Empfehlung übernehmen**; otherwise structural hint (more time or pitch) |
+| Team highlight | Filter/focus master Spielplan — related fixtures fade, highlighted fixture keeps crests around **VS** |
+| TournamentPitch UI | Column supports optional `formatHint` (e.g. `3v3 · Kleinfeld`) without schema change — **Planner 02 deferred** |
+
+**Explicitly NOT in R7.6 / 01K:** Tournament Planner 02 templates, Rotation format, playing formats, participant playing units, format-aware pitches, template-driven Smart Generation.
+
+**Next packages (unchanged):** [`01L`](./SCE-TOURNAMENT-PLANNER-01.md) Responsive + Accessibility + Polish; **01M** integrity + performance closure — **do not start from R7.6**.
+
+**01K-R7.6 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending.
+
 ## Verification (automated)
 
 - `lib/tournaments/spielplan/__tests__/*`
 - `lib/tournaments/public/__tests__/*`
+- `lib/tournaments/planung/__tests__/planung-r7-6-world-class-spielplan-ux.test.ts`
 - Print document structure tests under `components/sce/tournament/__tests__/`

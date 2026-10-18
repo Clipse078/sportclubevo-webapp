@@ -63,8 +63,10 @@ export default function SceTournamentFixtureCard({
   const rootClassName = cn(
     SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS,
     density === "standard" ? "px-3.5 py-4 sm:px-4 sm:py-[1.125rem]" : "px-3 py-3",
-    highlightParticipantId && !highlighted ? "opacity-45" : "",
-    highlighted ? "ring-2 ring-[var(--sce-focus)] shadow-md" : "",
+    highlightParticipantId && !highlighted ? "opacity-[0.38]" : "",
+    highlighted
+      ? "border-[var(--sce-primary)] bg-[var(--sce-surface-elevated)]"
+      : "",
     className,
     asChildProps?.className,
   );

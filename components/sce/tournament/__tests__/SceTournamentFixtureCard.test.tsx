@@ -179,6 +179,7 @@ describe("SceTournamentFixtureCard", () => {
         timezone="Europe/Zurich"
       />,
     );
-    expect(screen.getByTestId("sce-tournament-fixture-card-f1").className).toMatch(/ring-2/);
+    const card = screen.getByTestId("sce-tournament-fixture-card-f1");
+    expect(card.className).toMatch(/border-\[var\(--sce-primary\)\]/);
   });
 });

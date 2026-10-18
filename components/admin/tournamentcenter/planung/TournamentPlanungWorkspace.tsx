@@ -539,6 +539,9 @@ export default function TournamentPlanungWorkspace({
               onModelChange={setModel}
               onError={(message) => toast.danger(message)}
               onScheduleSyncChange={setScheduleSyncPending}
+              onApplyRecommendedTiming={
+                canManage ? () => void applyRecommendedTiming() : undefined
+              }
             />
           ) : null}
           <TournamentPlanungGroupStandings model={model} />
@@ -558,11 +561,7 @@ export default function TournamentPlanungWorkspace({
                 role="status"
                 aria-live="polite"
               >
-                {scheduleSyncPending
-                  ? "Spielplan wird aktualisiert …"
-                  : model.timingConsequence?.status === "MATCHES"
-                    ? model.timingConsequence.headline
-                    : null}
+                {scheduleSyncPending ? "Spielplan wird aktualisiert …" : null}
               </p>
             </div>
             <TournamentPlanungBoard

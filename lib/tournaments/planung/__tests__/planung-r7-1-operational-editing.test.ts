@@ -44,9 +44,12 @@ describe("01K-R7.1 — Spielplan operational editing", () => {
 
   it("builds simple German timing consequence copy", () => {
     expect(buildPlanungTimingConsequence("NEEDS_REGENERATION")?.headline).toBe(
-      "Der Spielplan passt mit diesen Einstellungen nicht in die verfügbare Zeit.",
+      "Der Spielplan passt noch nicht in die verfügbare Zeit.",
     );
-    expect(buildPlanungTimingConsequence("MATCHES")?.headline).toBe("Spielplan aktuell ✓");
+    expect(buildPlanungTimingConsequence("NEEDS_REGENERATION")?.structuralHint).toMatch(
+      /zusätzliches Spielfeld/,
+    );
+    expect(buildPlanungTimingConsequence("MATCHES")).toBeNull();
   });
 
   it("includes scheduling settings on view model when schedule exists", () => {

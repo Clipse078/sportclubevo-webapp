@@ -140,7 +140,12 @@ export default function TournamentPlanungBoard({
             className="sticky top-0 z-10 border-b border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] p-2 text-center text-xs font-semibold text-[var(--foreground)]"
             data-tournament-pitch-id={pitch.pitchId}
           >
-            {pitch.label}
+            <span className="block">{pitch.label}</span>
+            {pitch.formatHint ? (
+              <span className="mt-0.5 block text-[10px] font-normal text-[var(--muted)]">
+                {pitch.formatHint}
+              </span>
+            ) : null}
           </div>
         ))}
 

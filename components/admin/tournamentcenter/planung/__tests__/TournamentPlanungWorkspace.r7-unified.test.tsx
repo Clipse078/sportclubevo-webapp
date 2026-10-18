@@ -27,7 +27,7 @@ const scheduledModel: TournamentPlanungViewModel = {
   optimisationStatus: "FEASIBLE_NOT_PROVEN_OPTIMAL",
   feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: null,
-  pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1" }],
+  pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1", formatHint: null }],
   timeScale: {
     rowAnchorsUtc: ["2026-08-01T08:00:00.000Z"],
     matchDurationMinutes: 20,
@@ -93,11 +93,7 @@ const scheduledModel: TournamentPlanungViewModel = {
     fixtureHomeAwayRelevance: "OFF",
     breaks: [],
   },
-  timingConsequence: {
-    status: "MATCHES",
-    headline: "Spielplan passt zu diesen Einstellungen.",
-    detail: null,
-  },
+  timingConsequence: null,
 };
 
 const tournament = {

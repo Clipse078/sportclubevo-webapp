@@ -5,6 +5,7 @@
 import { combineTournamentStartDateWithLocalTime } from "@/lib/tournaments/composer/tournament-composer-planner-breaks";
 import { formatPlanungBreakScopeLabel } from "./planung-schedule-sections";
 import type {
+  TournamentPlanungRecommendedTiming,
   TournamentPlanungSchedulingBreak,
   TournamentPlanungSchedulingSettings,
   TournamentPlanungTimingConsequence,
@@ -94,20 +95,19 @@ export function buildPlanungSchedulingSettings(params: {
 
 export function buildPlanungTimingConsequence(
   status: PlanungScheduleConsistencyStatus | null,
+  options?: {
+    recommendedTiming?: TournamentPlanungRecommendedTiming | null;
+  },
 ): TournamentPlanungTimingConsequence {
-  if (!status) return null;
-  if (status === "MATCHES") {
-    return {
-      status: "MATCHES",
-      headline: "Spielplan aktuell ✓",
-      detail: null,
-    };
-  }
+  if (!status || status === "MATCHES") return null;
+  const recommendedTiming = options?.recommendedTiming ?? null;
   return {
     status: "NEEDS_REGENERATION",
-    headline: "Der Spielplan passt mit diesen Einstellungen nicht in die verfügbare Zeit.",
-    detail:
-      "Passe Spieldauer, Wechselzeit oder Pausen an, oder löse gesperrte Spiele, damit der Spielplan wieder passt.",
+    headline: "Der Spielplan passt noch nicht in die verfügbare Zeit.",
+    structuralHint: recommendedTiming
+      ? null
+      : "Du brauchst mehr Turnierzeit oder ein zusätzliches Spielfeld.",
+    recommendedTiming,
   };
 }
 

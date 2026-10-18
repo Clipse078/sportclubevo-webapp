@@ -14,6 +14,7 @@ import {
   buildRegenerationSummaryMessage,
   feasibilityDiagnosticUserMessage,
   resolveFeasibilityUxStatus,
+  resolvePlanungRecommendedTimingFromAssessment,
   scheduleLockDimensionLabel,
 } from "./planung-presentation";
 import { buildPlanungScheduleSections, formatPlanungBreakScopeLabel } from "./planung-schedule-sections";
@@ -32,6 +33,7 @@ import {
   buildPlanungSchedulingSettings,
   buildPlanungTimingConsequence,
 } from "./planung-scheduling-settings-presentation";
+import { resolveTournamentPitchColumnPresentation } from "./tournament-pitch-presentation";
 import type {
   TournamentPlanungAvailability,
   TournamentPlanungBoardCell,
@@ -525,8 +527,16 @@ export function buildTournamentPlanungViewModel(
           pitchLabelById,
           timezone: snapshot.timezone,
         });
+  const recommendedTimingForConsequence =
+    hasAssignments && snapshot.scheduleConsistencyStatus === "NEEDS_REGENERATION"
+      ? resolvePlanungRecommendedTimingFromAssessment(snapshot.smartTiming, {
+          matchDurationMinutes: snapshot.schedulingConfig.matchDurationMinutes,
+          transitionMinutes: snapshot.schedulingConfig.transitionMinutes,
+        })
+      : null;
   const timingConsequence = buildPlanungTimingConsequence(
     hasAssignments ? snapshot.scheduleConsistencyStatus : null,
+    { recommendedTiming: recommendedTimingForConsequence },
   );
 
   const completedGroupResults = snapshot.fixtureResults
@@ -568,11 +578,15 @@ export function buildTournamentPlanungViewModel(
     optimisationStatus: snapshot.optimisation?.status ?? null,
     feasibilityStatus: snapshot.feasibility?.status ?? null,
     feasibilityUxStatus,
-    pitches: snapshot.pitches.map((p) => ({
-      pitchId: p.id,
-      displayOrder: p.displayOrder,
-      label: p.label,
-    })),
+    pitches: snapshot.pitches.map((p) => {
+      const presentation = resolveTournamentPitchColumnPresentation({ label: p.label });
+      return {
+        pitchId: p.id,
+        displayOrder: p.displayOrder,
+        label: presentation.label,
+        formatHint: presentation.formatHint,
+      };
+    }),
     timeScale,
     cells,
     scheduleSections,

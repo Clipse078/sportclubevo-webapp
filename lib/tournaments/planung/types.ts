@@ -24,6 +24,8 @@ export type TournamentPlanungPitchColumn = {
   pitchId: string;
   displayOrder: number;
   label: string;
+  /** Optional playing-format hint (Tournament Planner 02); e.g. "3v3 · Kleinfeld". */
+  formatHint: string | null;
 };
 
 export type TournamentPlanungTimeScale = {
@@ -218,7 +220,9 @@ export type TournamentPlanungSchedulingSettings = {
 export type TournamentPlanungTimingConsequence = {
   status: "MATCHES" | "NEEDS_REGENERATION";
   headline: string;
-  detail: string | null;
+  /** Human next step when timing alone cannot fix the schedule. */
+  structuralHint: string | null;
+  recommendedTiming: TournamentPlanungRecommendedTiming | null;
 } | null;
 
 export type TournamentPlanungViewModel = {

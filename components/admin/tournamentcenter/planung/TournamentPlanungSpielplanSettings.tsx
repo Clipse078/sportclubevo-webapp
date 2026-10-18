@@ -28,6 +28,7 @@ type Props = {
   onModelChange: (viewModel: TournamentPlanungViewModel) => void;
   onError: (message: string) => void;
   onScheduleSyncChange?: (pending: boolean) => void;
+  onApplyRecommendedTiming?: () => void;
 };
 
 type BreakDraft = {
@@ -107,6 +108,7 @@ export default function TournamentPlanungSpielplanSettings({
   onModelChange,
   onError,
   onScheduleSyncChange,
+  onApplyRecommendedTiming,
 }: Props) {
   const [timingDraft, setTimingDraft] = useState<TimingDraft>(() => timingDraftFromSettings(settings));
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -634,8 +636,30 @@ export default function TournamentPlanungSpielplanSettings({
           aria-live="polite"
         >
           <p className="font-medium text-[var(--foreground)]">{timingConsequence.headline}</p>
-          {timingConsequence.detail ? (
-            <p className="mt-1 text-[var(--muted)]">{timingConsequence.detail}</p>
+          {timingConsequence.recommendedTiming ? (
+            <div className="mt-2 space-y-2">
+              <p className="text-[var(--foreground)]">SCE empfiehlt:</p>
+              <p
+                className="font-medium tabular-nums text-[var(--foreground)]"
+                data-testid="planung-timing-recommended"
+              >
+                {timingConsequence.recommendedTiming.matchDurationMinutes} Min. Spielzeit ·{" "}
+                {timingConsequence.recommendedTiming.transitionMinutes} Min. Wechselzeit
+              </p>
+              {onApplyRecommendedTiming ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={scheduleSyncPending}
+                  data-testid="planung-timing-apply-recommended"
+                  onClick={() => onApplyRecommendedTiming()}
+                >
+                  Empfehlung übernehmen
+                </Button>
+              ) : null}
+            </div>
+          ) : timingConsequence.structuralHint ? (
+            <p className="mt-1 text-[var(--muted)]">{timingConsequence.structuralHint}</p>
           ) : null}
         </div>
       ) : null}
