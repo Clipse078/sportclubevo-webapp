@@ -43,7 +43,7 @@
 
 | Flag | Value |
 | --- | --- |
-| **PARTICIPANT_LIMIT_IS_PRODUCT_RULE** | **NO** |
+| PARTICIPANT_LIMIT_IS_PRODUCT_RULE = NO | (no arbitrary participant product cap) |
 | **ARBITRARY_PRODUCT_PARTICIPANT_MAX** | **NONE** |
 
 Documented in `lib/tournament-scheduling/feasibility/constants.ts` and `bounds.ts`.
