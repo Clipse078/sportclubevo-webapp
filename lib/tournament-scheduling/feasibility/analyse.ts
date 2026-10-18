@@ -1,10 +1,8 @@
+import { exceedsCompleteFeasibilitySearchBounds } from "./bounds";
 import {
+  FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS,
   FEASIBILITY_DEFAULT_MIN_REST_MINUTES,
   FEASIBILITY_DEFAULT_TRANSITION_MINUTES,
-  FEASIBILITY_MAX_CANDIDATE_SLOTS,
-  FEASIBILITY_MAX_FIXTURES,
-  FEASIBILITY_MAX_PARTICIPANTS,
-  FEASIBILITY_MAX_PITCHES,
   TIGHT_CAPACITY_UTILISATION_THRESHOLD,
 } from "./constants";
 import {
@@ -185,6 +183,19 @@ function infeasibleResult(
   };
 }
 
+function unresolvedResult(
+  diagnostics: FeasibilityDiagnostic[],
+  metrics: TournamentFeasibilityResult["metrics"],
+  config: TournamentFeasibilityInput["config"],
+): TournamentFeasibilityResult {
+  return {
+    status: "UNRESOLVED",
+    diagnostics,
+    metrics,
+    suggestions: buildSuggestions(diagnostics, metrics, config),
+  };
+}
+
 function emptyMetrics(
   input: TournamentFeasibilityInput,
   config: TournamentFeasibilityInput["config"],
@@ -214,28 +225,6 @@ export function analyseTournamentFeasibility(
   };
 
   const diagnostics: FeasibilityDiagnostic[] = [];
-
-  if (input.participants.length > FEASIBILITY_MAX_PARTICIPANTS) {
-    diagnostics.push({
-      code: "LIMIT.PARTICIPANTS_EXCEEDED",
-      context: { count: input.participants.length, max: FEASIBILITY_MAX_PARTICIPANTS },
-    });
-  }
-  if (input.fixtures.length > FEASIBILITY_MAX_FIXTURES) {
-    diagnostics.push({
-      code: "LIMIT.FIXTURES_EXCEEDED",
-      context: { count: input.fixtures.length, max: FEASIBILITY_MAX_FIXTURES },
-    });
-  }
-  if (input.tournamentPitches.length > FEASIBILITY_MAX_PITCHES) {
-    diagnostics.push({
-      code: "LIMIT.PITCHES_EXCEEDED",
-      context: { count: input.tournamentPitches.length, max: FEASIBILITY_MAX_PITCHES },
-    });
-  }
-  if (diagnostics.length > 0) {
-    return infeasibleResult(diagnostics, emptyMetrics(input, config), config);
-  }
 
   const breakDiagnostics = validateTournamentBreaksInput({
     breaks: input.breaks,
@@ -306,16 +295,16 @@ export function analyseTournamentFeasibility(
     participantMinRestSlackMinutes: null,
   });
 
-  if (candidateSlots.length > FEASIBILITY_MAX_CANDIDATE_SLOTS) {
+  if (candidateSlots.length > FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS) {
     diagnostics.push({
       code: "SLOTS.TOO_MANY_CANDIDATES",
       constraintId: "H9",
       context: {
         candidateSlotCount: candidateSlots.length,
-        max: FEASIBILITY_MAX_CANDIDATE_SLOTS,
+        max: FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS,
       },
     });
-    return infeasibleResult(diagnostics, metrics, config);
+    return unresolvedResult(diagnostics, metrics, config);
   }
 
   if (metrics.requiredPitchOccupancyMinutes > metrics.availableTournamentPitchMinutes) {
@@ -360,6 +349,22 @@ export function analyseTournamentFeasibility(
 
   if (diagnostics.length > 0) {
     return infeasibleResult(diagnostics, metrics, config);
+  }
+
+  if (exceedsCompleteFeasibilitySearchBounds(input)) {
+    return unresolvedResult(
+      [
+        {
+          code: "ANALYSIS.COMPLETE_SEARCH_BOUNDARY",
+          context: {
+            fixtureCount: input.fixtures.length,
+            tournamentPitchCount: input.tournamentPitches.length,
+          },
+        },
+      ],
+      metrics,
+      config,
+    );
   }
 
   const sortedFixtures = sortFixturesForScheduling(input.fixtures);

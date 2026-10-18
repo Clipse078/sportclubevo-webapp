@@ -360,6 +360,9 @@ function buildSmartTimingSummary(
   if (assessment.feasibilityStatus === "INFEASIBLE") {
     return null;
   }
+  if (assessment.feasibilityStatus === "UNRESOLVED") {
+    headline = "Turnierplan — vereinfachte Machbarkeitsanalyse.";
+  }
 
   return {
     headline,
@@ -396,7 +399,12 @@ function mapDiagnostics(
       out.push({
         id: diag.code,
         message: feasibilityDiagnosticUserMessage(diag.code),
-        severity: feasibility.status === "INFEASIBLE" ? "danger" : "warning",
+        severity:
+          feasibility.status === "INFEASIBLE"
+            ? "danger"
+            : feasibility.status === "UNRESOLVED"
+              ? "info"
+              : "warning",
       });
     }
   }

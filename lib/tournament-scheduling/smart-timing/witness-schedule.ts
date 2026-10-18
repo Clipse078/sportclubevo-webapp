@@ -1,9 +1,5 @@
-import {
-  FEASIBILITY_MAX_CANDIDATE_SLOTS,
-  FEASIBILITY_MAX_FIXTURES,
-  FEASIBILITY_MAX_PARTICIPANTS,
-  FEASIBILITY_MAX_PITCHES,
-} from "../feasibility/constants";
+import { exceedsCompleteFeasibilitySearchBounds } from "../feasibility/bounds";
+import { FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS } from "../feasibility/constants";
 import {
   buildBlockedIntervalsByPitchId,
   validateTournamentBreaksInput,
@@ -44,11 +40,7 @@ export function findFeasibilityWitnessSchedule(
   config: FeasibilitySchedulingConfig,
 ): WitnessScheduleOutcome {
   const emptyState = createFeasibilitySearchState();
-  if (
-    input.participants.length > FEASIBILITY_MAX_PARTICIPANTS ||
-    input.fixtures.length > FEASIBILITY_MAX_FIXTURES ||
-    input.tournamentPitches.length > FEASIBILITY_MAX_PITCHES
-  ) {
+  if (exceedsCompleteFeasibilitySearchBounds(input)) {
     const emptyMetrics = buildFeasibilityMetrics({
       fixtures: input.fixtures,
       tournamentPitches: [],

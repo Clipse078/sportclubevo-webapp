@@ -3,9 +3,11 @@ import { compareScheduleObjectiveMetrics } from "../objective-metrics";
 import { optimiseTournamentSchedule } from "../optimise";
 import {
   EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES,
+  LEXICOGRAPHIC_COMPLETE_SEARCH_MAX_FIXTURES,
   BOUNDED_IMPROVEMENT_MAX_CANDIDATE_EVALUATIONS,
   BOUNDED_IMPROVEMENT_MAX_PASSES,
 } from "../constants";
+import { shouldUseLexicographicCompleteSearch } from "../search-mode";
 import { optimiserInput, sequentialFixtures, tournamentPitch, windowFromClock } from "./helpers";
 
 function assertNotLexWorseThanBaseline(
@@ -19,8 +21,26 @@ function assertNotLexWorseThanBaseline(
 }
 
 describe("01F2-R1 — search policy audit", () => {
-  it("documents exhaustive threshold at six fixtures", () => {
+  it("documents optimiser fixture ceiling and lex complete-search fixture band", () => {
     expect(EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES).toBe(12);
+    expect(LEXICOGRAPHIC_COMPLETE_SEARCH_MAX_FIXTURES).toBe(6);
+  });
+
+  it("selects bounded improvement for eight fixtures on a wide candidate grid", () => {
+    expect(
+      shouldUseLexicographicCompleteSearch({
+        fixtureCount: 8,
+        pitchCount: 2,
+        candidateSlotCount: 32,
+      }),
+    ).toBe(false);
+    expect(
+      shouldUseLexicographicCompleteSearch({
+        fixtureCount: 4,
+        pitchCount: 8,
+        candidateSlotCount: 128,
+      }),
+    ).toBe(true);
   });
 });
 

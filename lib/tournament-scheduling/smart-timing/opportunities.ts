@@ -1,5 +1,5 @@
 import { runTimingFeasibilityOracle } from "./feasibility-oracle";
-import { FEASIBILITY_MAX_PITCHES } from "../feasibility/constants";
+import { SMART_TIMING_PITCH_PROOF_SEARCH_MAX } from "../feasibility/constants";
 import type { FeasibilitySchedulingConfig, TournamentFeasibilityInput } from "../feasibility/types";
 import {
   MIN_BREAK_OPPORTUNITY_MINUTES,
@@ -32,7 +32,7 @@ export function recommendMinimumPitchCount(
 
   let provenMinimum: number | null = null;
   let low = 1;
-  let high = Math.min(FEASIBILITY_MAX_PITCHES, current);
+  let high = Math.min(SMART_TIMING_PITCH_PROOF_SEARCH_MAX, current);
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
     const pitches = input.tournamentPitches.slice(0, mid);

@@ -400,7 +400,7 @@ describe("analyseTournamentFeasibility — matrix A–L", () => {
         config: { matchDurationMinutes: 1, transitionMinutes: 0, minRestMinutes: 0 },
       }),
     );
-    expect(result.status).toBe("INFEASIBLE");
+    expect(result.status).toBe("UNRESOLVED");
     expect(result.diagnostics.some((d) => d.code === "SLOTS.TOO_MANY_CANDIDATES")).toBe(true);
     expect(result.metrics.candidateSlotCount).toBeGreaterThan(FEASIBILITY_MAX_CANDIDATE_SLOTS);
   });
