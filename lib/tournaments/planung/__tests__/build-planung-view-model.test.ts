@@ -30,6 +30,7 @@ function snapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSnapsho
         roundIndex: 0,
         slotIndexInRound: 0,
         tournamentGroupId: "g1",
+        phaseType: "GROUP_MIX",
         sideAParticipantId: "a",
         sideBParticipantId: "b",
         sides: [],
@@ -66,6 +67,14 @@ function snapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSnapsho
     feasibility: { status: "FEASIBLE", diagnostics: [], metrics: {} as never, suggestions: [] },
     smartTiming: null,
     optimisation: { status: "FEASIBLE_NOT_PROVEN_OPTIMAL" } as never,
+    fixtureResults: [],
+    groups: [],
+    rankingConfiguration: {
+      winPoints: 3,
+      drawPoints: 1,
+      lossPoints: 0,
+      tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
+    },
     ...partial,
   };
 }
@@ -91,6 +100,7 @@ describe("buildTournamentPlanungViewModel", () => {
             roundIndex: 1,
             slotIndexInRound: 0,
             tournamentGroupId: null,
+            phaseType: "KNOCKOUT",
             sideAParticipantId: null,
             sideBParticipantId: null,
             phaseLabel: "K.o.",

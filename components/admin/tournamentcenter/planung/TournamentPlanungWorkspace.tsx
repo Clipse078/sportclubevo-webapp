@@ -12,6 +12,8 @@ import TournamentPlanungMobileTimeline from "./TournamentPlanungMobileTimeline";
 import TournamentPlanungScheduleList from "./TournamentPlanungScheduleList";
 import TournamentPlanungFixtureActions from "./TournamentPlanungFixtureActions";
 import TournamentPlanungManualMoveDialog from "./TournamentPlanungManualMoveDialog";
+import TournamentPlanungGroupStandings from "./TournamentPlanungGroupStandings";
+import TournamentPlanungResultDialog from "./TournamentPlanungResultDialog";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -32,6 +34,7 @@ export default function TournamentPlanungWorkspace({
   const [busy, setBusy] = useState(false);
   const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
   const [manualMoveOpen, setManualMoveOpen] = useState(false);
+  const [resultOpen, setResultOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/tournaments/${tournamentId}/planung`);
@@ -262,6 +265,7 @@ export default function TournamentPlanungWorkspace({
 
       {model.schedulePresence !== "NONE" && model.timeScale ? (
         <>
+          <TournamentPlanungGroupStandings model={model} />
           <TournamentPlanungScheduleList model={model} timezone={timezone} />
           <div className="hidden lg:block">
             <TournamentPlanungBoard
@@ -306,7 +310,59 @@ export default function TournamentPlanungWorkspace({
                 await runAction(`/api/tournaments/${tournamentId}/planung/lock`, body);
               }}
               onManualMove={() => setManualMoveOpen(true)}
-              onClose={() => setSelectedFixtureId(null)}
+              onEnterResult={() => setResultOpen(true)}
+              onClose={() => {
+                setSelectedFixtureId(null);
+                setResultOpen(false);
+              }}
+            />
+          ) : null}
+          {canManage && selectedFixtureId && resultOpen ? (
+            <TournamentPlanungResultDialog
+              model={model}
+              fixtureId={selectedFixtureId}
+              busy={busy}
+              onClose={() => setResultOpen(false)}
+              onSave={async (payload) => {
+                setBusy(true);
+                try {
+                  const res = await fetch(
+                    `/api/tournaments/${tournamentId}/planung/fixture-result`,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        action: payload.action,
+                        fixtureId: selectedFixtureId,
+                        expectedRevision: payload.expectedRevision,
+                        scoreSideA: payload.scoreSideA,
+                        scoreSideB: payload.scoreSideB,
+                        explicitWinnerParticipantId: payload.explicitWinnerParticipantId,
+                      }),
+                    },
+                  );
+                  const json = (await res.json()) as {
+                    viewModel?: TournamentPlanungViewModel;
+                    error?: string;
+                    code?: string;
+                  };
+                  if (!res.ok) {
+                    if (json.code === "TOURNAMENT_FIXTURE_RESULT_STALE") {
+                      toast.danger(json.error ?? "Ergebnis veraltet — bitte aktualisieren.");
+                      await refresh();
+                      return;
+                    }
+                    toast.danger(json.error ?? "Ergebnis konnte nicht gespeichert werden.");
+                    return;
+                  }
+                  if (json.viewModel) setModel(json.viewModel);
+                  else await refresh();
+                  setResultOpen(false);
+                  router.refresh();
+                } finally {
+                  setBusy(false);
+                }
+              }}
             />
           ) : null}
           {canManage && selectedFixtureId ? (

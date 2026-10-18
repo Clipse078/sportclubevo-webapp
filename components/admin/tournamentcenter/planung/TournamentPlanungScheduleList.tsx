@@ -56,9 +56,36 @@ export default function TournamentPlanungScheduleList({ model, timezone }: Props
                     {formatTimeRange(entry.startUtc, entry.endUtc, timezone)} ·{" "}
                     {pitchLabel.get(entry.pitchId) ?? "Feld"}
                   </p>
-                  <p className="text-sm font-medium text-[var(--foreground)]">
-                    {entry.sideA.label} – {entry.sideB.label}
-                  </p>
+                  <div className="text-sm font-medium text-[var(--foreground)]">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span>
+                        {entry.sideA.label}
+                        {entry.sideA.qualificationProvenanceLabel ? (
+                          <span className="ml-1 text-xs font-normal text-[var(--muted)]">
+                            ({entry.sideA.qualificationProvenanceLabel})
+                          </span>
+                        ) : null}
+                      </span>
+                      {entry.result?.state === "COMPLETED" &&
+                      entry.result.scoreSideA != null ? (
+                        <span className="tabular-nums">{entry.result.scoreSideA}</span>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span>
+                        {entry.sideB.label}
+                        {entry.sideB.qualificationProvenanceLabel ? (
+                          <span className="ml-1 text-xs font-normal text-[var(--muted)]">
+                            ({entry.sideB.qualificationProvenanceLabel})
+                          </span>
+                        ) : null}
+                      </span>
+                      {entry.result?.state === "COMPLETED" &&
+                      entry.result.scoreSideB != null ? (
+                        <span className="tabular-nums">{entry.result.scoreSideB}</span>
+                      ) : null}
+                    </div>
+                  </div>
                   {entry.lockDimension ? (
                     <p className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
                       <Lock className="h-3 w-3" aria-hidden />

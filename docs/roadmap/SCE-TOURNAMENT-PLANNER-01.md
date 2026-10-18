@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01J NEXT (results + rankings); 01I CLOSED / ACCEPTED / MERGED (PR #869, PO UAT PASS); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01J CURRENT (results + rankings + progression); 01I CLOSED / ACCEPTED / MERGED (PR #869, PO UAT PASS); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -20,7 +20,8 @@
 | **01G (Locks + partial regeneration)** | **CLOSED / ACCEPTED / MERGED** (PR **#867**) ([doc](./SCE-TOURNAMENT-PLANNER-01G.md)) |
 | **01H (Tournament Planung workspace)** | **CLOSED / ACCEPTED / MERGED** (PR **#868**, PO UAT **PASS**) — Planung workspace + Creator planner integration ([doc](./SCE-TOURNAMENT-PLANNER-01H.md)) |
 | **01I (Manual adjustment + DnD)** | **CLOSED / ACCEPTED / MERGED** (PR **#869**, PO UAT **PASS**) — manual WHEN + TournamentPitch adjustment, DnD, conflict validation, **01I-R1/R2** ([doc](./SCE-TOURNAMENT-PLANNER-01I.md)) |
-| **01J (Results + rankings)** | **NEXT / NOT STARTED** — Results + Rankings + Qualification Progression |
+| **01J (Results + rankings)** | **CURRENT** — Results + Rankings + Qualification Progression ([doc](./SCE-TOURNAMENT-PLANNER-01J.md)) |
+| **01K (Publication + sharing)** | **NEXT / NOT STARTED** |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 
