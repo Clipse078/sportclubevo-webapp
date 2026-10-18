@@ -12,6 +12,11 @@ import TournamentSpielplanMobileTimeline from "@/components/sce/tournament/Tourn
 import TournamentSpielplanTeamPlanView from "@/components/sce/tournament/TournamentSpielplanTeamPlanView";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import {
+  SCE_TOURNAMENT_WORKSPACE_HEADER_DIVIDER_CLASS,
+  SCE_TOURNAMENT_WORKSPACE_SCHEDULE_DIVIDER_CLASS,
+  SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
+} from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 type Props = {
   planungModel: TournamentPlanungViewModel;
@@ -101,17 +106,28 @@ export default function TournamentPlanungSpielplanOutput({
 
   return (
     <section
-      className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4"
+      className={cn(SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS, "space-y-0 p-4 md:p-5")}
       data-testid="tournament-planung-spielplan-output"
     >
-      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">Spielplan-Ausgabe</h3>
-          <p className="text-sm text-[var(--muted)]">
+      <header
+        className={cn(
+          SCE_TOURNAMENT_WORKSPACE_HEADER_DIVIDER_CLASS,
+          "flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between",
+        )}
+      >
+        <div className="min-w-0 space-y-1.5">
+          <h3 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">
+            Spielplan-Ausgabe
+          </h3>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-2)]">
             Master-Spielplan, Teampläne, Druck, PDF und Teilen — ohne den Planungsstand zu verändern.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div
+          className="flex flex-wrap gap-2 lg:justify-end"
+          role="group"
+          aria-label="Spielplan-Aktionen"
+        >
           <a
             href={masterPrintUrl}
             target="_blank"
@@ -159,14 +175,14 @@ export default function TournamentPlanungSpielplanOutput({
         </div>
       </header>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <label htmlFor="spielplan-team-highlight" className="text-sm font-medium">
+      <div className="flex flex-col gap-3 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
+        <label htmlFor="spielplan-team-highlight" className="text-sm font-medium text-[var(--foreground)]">
           Team hervorheben
         </label>
         <select
           id="spielplan-team-highlight"
           className={cn(
-            "min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm",
+            "min-h-11 min-w-[12rem] flex-1 rounded-lg border border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] px-3 py-2 text-sm sm:max-w-xs sm:flex-none",
           )}
           value={highlightParticipantId ?? ""}
           onChange={(e) => setHighlightParticipantId(e.target.value || null)}
@@ -179,12 +195,12 @@ export default function TournamentPlanungSpielplanOutput({
             </option>
           ))}
         </select>
-        <label htmlFor="spielplan-team-plan" className="text-sm font-medium sm:ml-2">
+        <label htmlFor="spielplan-team-plan" className="text-sm font-medium text-[var(--foreground)] sm:ml-auto lg:ml-2">
           Team-Spielplan
         </label>
         <select
           id="spielplan-team-plan"
-          className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+          className="min-h-11 min-w-[12rem] flex-1 rounded-lg border border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] px-3 py-2 text-sm sm:max-w-xs sm:flex-none"
           value={teamParticipantId ?? ""}
           onChange={(e) => setTeamParticipantId(e.target.value || null)}
           data-testid="spielplan-team-plan-select"
@@ -198,27 +214,29 @@ export default function TournamentPlanungSpielplanOutput({
         </select>
       </div>
 
-      <div className="hidden lg:block">
-        <TournamentSpielplanMasterSchedule
+      <div className={cn(SCE_TOURNAMENT_WORKSPACE_SCHEDULE_DIVIDER_CLASS, "space-y-5")}>
+        <div className="hidden lg:block">
+          <TournamentSpielplanMasterSchedule
+            model={spielplan}
+            highlightParticipantId={highlightParticipantId}
+          />
+        </div>
+        <TournamentSpielplanMobileTimeline
           model={spielplan}
           highlightParticipantId={highlightParticipantId}
         />
-      </div>
-      <TournamentSpielplanMobileTimeline
-        model={spielplan}
-        highlightParticipantId={highlightParticipantId}
-      />
 
-      {teamPlan ? (
-        <TournamentSpielplanTeamPlanView
-          teamPlan={teamPlan}
-          tournamentTitle={title}
-          dateLabel={spielplan.identity.dateLabel}
-          fixtures={spielplan.fixtures}
-          participants={spielplan.participants}
-          timezone={spielplan.identity.timezone}
-        />
-      ) : null}
+        {teamPlan ? (
+          <TournamentSpielplanTeamPlanView
+            teamPlan={teamPlan}
+            tournamentTitle={title}
+            dateLabel={spielplan.identity.dateLabel}
+            fixtures={spielplan.fixtures}
+            participants={spielplan.participants}
+            timezone={spielplan.identity.timezone}
+          />
+        ) : null}
+      </div>
     </section>
   );
 }

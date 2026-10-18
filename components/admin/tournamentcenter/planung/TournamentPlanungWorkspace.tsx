@@ -23,6 +23,7 @@ import TournamentPlanungPublicationPanel from "./TournamentPlanungPublicationPan
 import TournamentPlanungSpielplanOutput from "./TournamentPlanungSpielplanOutput";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
+import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -283,7 +284,12 @@ export default function TournamentPlanungWorkspace({
 
   return (
     <div className="space-y-4" data-testid="tournament-planung-workspace">
-      <header className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 md:flex-row md:items-center md:justify-between">
+      <header
+        className={cn(
+          SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
+          "flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between",
+        )}
+      >
         <div className="space-y-1">
           <div className="flex flex-wrap gap-2">
             <button
@@ -520,11 +526,20 @@ export default function TournamentPlanungWorkspace({
       {workspaceMode === "planung" && model.schedulePresence !== "NONE" && model.timeScale ? (
         <>
           <TournamentPlanungGroupStandings model={model} />
-          <section aria-label="Spielplanübersicht nach Runden" className="space-y-3">
+          <section
+            aria-label="Spielplanübersicht nach Runden"
+            className={cn(SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS, "space-y-4 p-4 md:p-5")}
+          >
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Übersicht nach Runden</h3>
             <TournamentPlanungScheduleList model={model} timezone={timezone} />
           </section>
-          <section aria-label="Interaktives Feld-Zeit-Board" className="hidden space-y-3 lg:block">
+          <section
+            aria-label="Interaktives Feld-Zeit-Board"
+            className={cn(
+              SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
+              "hidden space-y-4 p-4 md:p-5 lg:block",
+            )}
+          >
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Feld- und Zeitplan</h3>
             <TournamentPlanungBoard
               model={model}
@@ -547,7 +562,7 @@ export default function TournamentPlanungWorkspace({
               }}
             />
           </section>
-          <div className="lg:hidden">
+          <div className={cn(SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS, "p-4 md:p-5 lg:hidden")}>
             <TournamentPlanungMobileTimeline
               model={model}
               timezone={timezone}

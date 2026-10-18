@@ -10,6 +10,7 @@ import {
   SceTournamentFixtureVs,
   type SceTournamentFixtureVisualDensity,
 } from "./SceTournamentFixtureIdentity";
+import { SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 export type SceTournamentFixtureCardDensity = SceTournamentFixtureVisualDensity;
 
@@ -60,8 +61,8 @@ export default function SceTournamentFixtureCard({
       fixture.sideBParticipantId === highlightParticipantId);
 
   const rootClassName = cn(
-    "rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 shadow-sm transition-[opacity,box-shadow,transform]",
-    density === "standard" ? "px-3 py-3.5 sm:px-4 sm:py-4" : "p-2",
+    SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS,
+    density === "standard" ? "px-3.5 py-4 sm:px-4 sm:py-[1.125rem]" : "px-3 py-3",
     highlightParticipantId && !highlighted ? "opacity-45" : "",
     highlighted ? "ring-2 ring-[var(--sce-focus)] shadow-md" : "",
     className,
@@ -108,10 +109,10 @@ export default function SceTournamentFixtureCard({
 
   const content =
     density === "standard" ? (
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <div className="shrink-0 tabular-nums sm:w-[5.25rem]">
+      <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:gap-3">
+        <div className="shrink-0 tabular-nums sm:w-[4.25rem]">
           <p className="text-sm font-semibold text-[var(--foreground)]">{timeLabel}</p>
-          <p className="text-xs text-[var(--muted)]">{fixture.pitchLabel}</p>
+          <p className="text-[11px] leading-snug text-[var(--muted)]">{fixture.pitchLabel}</p>
         </div>
         {matchup}
         {fixture.result ? (

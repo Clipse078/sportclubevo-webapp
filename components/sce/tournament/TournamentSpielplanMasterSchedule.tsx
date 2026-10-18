@@ -2,6 +2,10 @@
 
 import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
 import SceTournamentFixtureCard from "./SceTournamentFixtureCard";
+import {
+  SCE_TOURNAMENT_ROUND_COUNT_BADGE_CLASS,
+  SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
+} from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 type Props = {
   model: TournamentSpielplanViewModel;
@@ -37,8 +41,8 @@ export default function TournamentSpielplanMasterSchedule({
               key={`break-${br.breakId}`}
               className={
                 isAllPitches
-                  ? "rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-center"
-                  : "rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
+                  ? "rounded-[var(--radius-lg)] border border-dashed border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-4 py-3 text-center"
+                  : "rounded-[var(--radius-lg)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-4 py-3"
               }
               data-testid={
                 isAllPitches ? "spielplan-all-pitches-break" : "spielplan-selected-pitches-break"
@@ -59,24 +63,25 @@ export default function TournamentSpielplanMasterSchedule({
             key={group.sectionId}
             aria-labelledby={`spielplan-round-${group.sectionId}`}
             data-testid={`spielplan-round-group-${group.sectionId}`}
+            className={SCE_TOURNAMENT_ROUND_SURFACE_CLASS}
           >
             <header
               id={`spielplan-round-${group.sectionId}`}
-              className="mb-4 flex flex-wrap items-end justify-between gap-2 border-b border-[var(--border)] pb-2.5"
+              className="mb-4 flex flex-wrap items-start justify-between gap-3"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 space-y-1">
                 <h4 className="text-base font-semibold tracking-tight text-[var(--foreground)]">
                   {group.title}
                 </h4>
-                <p className="mt-0.5 text-xs text-[var(--muted)]">
+                <p className="text-sm text-[var(--text-2)]">
                   {[group.timeRangeLabel, group.pitchSummaryLabel].filter(Boolean).join(" · ")}
                 </p>
               </div>
-              <p className="text-xs font-medium text-[var(--text-2)]">
+              <span className={SCE_TOURNAMENT_ROUND_COUNT_BADGE_CLASS}>
                 {fixtureCountLabel(group.fixtureCount)}
-              </p>
+              </span>
             </header>
-            <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
+            <ul className="grid grid-cols-1 gap-3.5 lg:grid-cols-2 lg:gap-4">
               {group.fixtures.map((fixture) => (
                 <li key={fixture.fixtureId}>
                   <SceTournamentFixtureCard

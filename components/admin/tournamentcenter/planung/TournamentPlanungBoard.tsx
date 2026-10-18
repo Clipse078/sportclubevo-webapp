@@ -9,6 +9,8 @@ import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-h
 import { cn } from "@/lib/cn";
 import { Lock } from "lucide-react";
 import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
+import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -117,7 +119,7 @@ export default function TournamentPlanungBoard({
 
   return (
     <div
-      className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+      className={cn(SCE_SURFACE_DENSE_PANEL, "overflow-x-auto rounded-[var(--radius-xl)]")}
       data-testid="tournament-planung-board"
       role="grid"
       aria-label="Spielplan Feld und Zeit"
@@ -129,13 +131,13 @@ export default function TournamentPlanungBoard({
           gridTemplateColumns: `4.5rem repeat(${model.pitches.length}, minmax(8rem, 1fr))`,
         }}
       >
-        <div className="sticky left-0 z-10 border-b border-r border-[var(--border)] bg-[var(--surface-elevated)] p-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+        <div className="sticky left-0 z-10 border-b border-r border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] p-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Zeit
         </div>
         {model.pitches.map((pitch) => (
           <div
             key={pitch.pitchId}
-            className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--surface-elevated)] p-2 text-center text-xs font-semibold text-[var(--foreground)]"
+            className="sticky top-0 z-10 border-b border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] p-2 text-center text-xs font-semibold text-[var(--foreground)]"
             data-tournament-pitch-id={pitch.pitchId}
           >
             {pitch.label}
@@ -244,8 +246,9 @@ export default function TournamentPlanungBoard({
                   <button
                     type="button"
                     className={cn(
-                      "w-full rounded-md border px-2 py-2 text-left text-xs transition-colors touch-none",
-                      "border-[var(--border)] bg-[var(--surface-elevated)] hover:border-[var(--accent)]",
+                      "w-full text-left text-xs transition-colors touch-none",
+                      SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
+                      "rounded-lg px-2 py-2.5 hover:border-[var(--sce-surface-border-elevated)]",
                       selected && "ring-2 ring-[var(--accent)]",
                       isDragging && "opacity-40",
                       !caps.canDrag && canManage && "cursor-default",

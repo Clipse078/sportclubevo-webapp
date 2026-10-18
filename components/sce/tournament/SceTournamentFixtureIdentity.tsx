@@ -3,6 +3,7 @@
 import { ClubCrest, type ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import { cn } from "@/lib/cn";
+import { SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
 
 export type SceTournamentFixtureVisualDensity = "standard" | "compact";
 
@@ -26,10 +27,12 @@ export function SceTournamentFixtureVs({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-md border font-semibold uppercase tracking-wide text-[var(--muted)]",
+        "inline-flex shrink-0 items-center justify-center rounded-[var(--radius-pill)] border font-semibold uppercase",
+        SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
+        "border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)]",
         size === "standard"
-          ? "min-w-[2.25rem] border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px]"
-          : "min-w-[1.75rem] border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px]",
+          ? "min-w-[2rem] px-2.5 py-1 text-[10px] tracking-[0.14em]"
+          : "min-w-[1.65rem] px-1.5 py-0.5 text-[9px] tracking-[0.12em]",
         highlighted && "border-[var(--sce-focus)] text-[var(--foreground)]",
         className,
       )}
@@ -76,13 +79,15 @@ export function SceTournamentFixtureParticipant({
         decorative
         className={cn(
           "shrink-0",
-          responsiveCrest && "sm:!h-10 sm:!w-10",
+          responsiveCrest && "sm:!h-11 sm:!w-11 md:!h-12 md:!w-12",
         )}
       />
       <span
         className={cn(
           "min-w-0 text-sm font-medium leading-snug [overflow-wrap:anywhere]",
-          density === "compact" ? "line-clamp-2 text-xs" : "sm:line-clamp-2 xl:line-clamp-1",
+          density === "compact"
+            ? "line-clamp-2 text-xs"
+            : "sm:line-clamp-2 lg:line-clamp-none",
           muted ? "text-[var(--muted)]" : "text-[var(--foreground)]",
         )}
         title={label}

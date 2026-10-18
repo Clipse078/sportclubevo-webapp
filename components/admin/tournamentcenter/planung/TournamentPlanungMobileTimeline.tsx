@@ -3,6 +3,11 @@
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import { Lock } from "lucide-react";
 import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import {
+  SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
+  SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
+} from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { cn } from "@/lib/cn";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -41,15 +46,15 @@ export default function TournamentPlanungMobileTimeline({
   return (
     <div className="space-y-4" data-testid="tournament-planung-mobile-timeline">
       {sections.map((section) => (
-        <section key={section.sectionId}>
+        <section key={section.sectionId} className={SCE_TOURNAMENT_ROUND_SURFACE_CLASS}>
           <h3 className="text-sm font-semibold text-[var(--foreground)]">{section.title}</h3>
-          <ol className="mt-2 space-y-2">
+          <ol className="mt-3 space-y-2.5">
             {section.entries.map((cell) => {
               if (cell.kind === "BREAK") {
                 return (
                   <li
                     key={cell.breakId}
-                    className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-sm text-[var(--muted)]"
+                    className="rounded-lg border border-dashed border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-3 py-2 text-sm text-[var(--muted)]"
                     aria-label={cell.accessibleLabel}
                   >
                     {cell.accessibleLabel}
@@ -60,7 +65,10 @@ export default function TournamentPlanungMobileTimeline({
                 <li key={cell.fixtureId}>
                   <button
                     type="button"
-                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left"
+                    className={cn(
+                      SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
+                      "w-full rounded-lg px-3 py-3 text-left",
+                    )}
                     aria-label={cell.accessibleLabel}
                     data-testid={`planung-mobile-fixture-${cell.fixtureId}`}
                     onClick={() => onSelectFixture?.(cell.fixtureId)}

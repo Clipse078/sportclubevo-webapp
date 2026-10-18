@@ -43,16 +43,16 @@ export default function SceTournamentFixtureCompactMatchup({
           density="compact"
           align="start"
           qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
-          className="max-w-[min(100%,14rem)] flex-1"
+          className="min-w-0 flex-1 basis-0"
         />
-        <SceTournamentFixtureVs size="compact" className="mx-0.5" />
+        <SceTournamentFixtureVs size="compact" className="mx-0.5 shrink-0" />
         <SceTournamentFixtureParticipant
           identity={participantIdentityFromPlanung(sideB)}
           label={sideB.label}
           density="compact"
           align="start"
           qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
-          className="max-w-[min(100%,14rem)] flex-1"
+          className="min-w-0 flex-1 basis-0"
         />
       </div>
     );

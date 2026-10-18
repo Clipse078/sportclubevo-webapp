@@ -2,6 +2,7 @@
 
 import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
 import SceTournamentFixtureCard from "./SceTournamentFixtureCard";
+import { SCE_TOURNAMENT_ROUND_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 type Props = {
   model: TournamentSpielplanViewModel;
@@ -23,7 +24,7 @@ export default function TournamentSpielplanMobileTimeline({
       {model.mobileSlots.map((slot) => (
         <section
           key={slot.slotId}
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3"
+          className={SCE_TOURNAMENT_ROUND_SURFACE_CLASS}
         >
           <header className="mb-2 flex flex-wrap items-baseline gap-2">
             <span className="text-sm font-semibold tabular-nums">{slot.timeLabel}</span>
