@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01M READY_FOR_PO_UAT (implementation delivered, PO UAT pending); 01L CLOSED / ACCEPTED / MERGED (PR #872, PO UAT PASS); 01K CLOSED / ACCEPTED / MERGED (PR #871, PO UAT PASS); 01J CLOSED / ACCEPTED / MERGED (PR #870, PO UAT PASS); 01I CLOSED / ACCEPTED / MERGED (PR #869, PO UAT PASS); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** — programme complete (**01M** PR **#873**, PO UAT **PASS**); **01L** (PR **#872**); **01K** (PR **#871**); **01J** (PR **#870**); **01I** (PR **#869**); **01H** (PR **#868**); **01G** (PR **#867**); **01F2** (PR **#866**); **01F1** (PR **#865**); **01E3D** (PR **#864**); **01E3C** (PR **#863**); **01E3B** (PR **#862**); **01E3A** (PR **#861**); **01E2** (PR **#860**); **01E1** (PR **#859**); **01D** (PR **#857**); **01C** (PR **#855**); **01A** PO approved |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -23,7 +23,7 @@
 | **01J (Results + rankings)** | **CLOSED / ACCEPTED / MERGED** (PR **#870**, PO UAT **PASS**) — Results + Rankings + Qualification Progression ([doc](./SCE-TOURNAMENT-PLANNER-01J.md)) |
 | **01K (Spielplan output + print/PDF + sharing)** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01K.md)) |
 | **01L (Responsive + accessibility + polish)** | **CLOSED / ACCEPTED / MERGED** (PR **#872**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01L.md)) |
-| **01M (Integrity + performance + closure)** | **READY_FOR_PO_UAT** ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
+| **01M (Integrity + performance + closure)** | **CLOSED / ACCEPTED / MERGED** (PR **#873**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 
@@ -186,7 +186,7 @@ Rest fairness, consecutive-match avoidance, idle time, pitch distribution, slot 
 | 10 | **01J** | **CLOSED / ACCEPTED / MERGED** (PR **#870**, PO UAT **PASS**) — Results + rankings + qualification progression |
 | 11 | **01K** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**) — Spielplan output + print/PDF + sharing |
 | 12 | **01L** | **CLOSED / ACCEPTED / MERGED** (PR **#872**, PO UAT **PASS**) — Responsive / accessibility / polish ([doc](./SCE-TOURNAMENT-PLANNER-01L.md)) |
-| 13 | **01M** | **NEXT / NOT STARTED** — Integrity + performance + technical-limit requalification + final closure ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
+| 13 | **01M** | **CLOSED / ACCEPTED / MERGED** — Integrity + performance + technical-limit requalification + programme closure (PR **#873**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
 
 If **01E Smart Generator** is too large for one package, split without renumbering delivered work, e.g. **01E1** generation foundation + repeated RR, **01E2** Smart Mix, **01E3** groups + knockout — or equivalent repository-compliant sub-keys.
 
@@ -228,4 +228,41 @@ Stable participant ids, multi-team participation, external clubs, organiser sepa
 
 ## Participant limit requalification
 
-Before smart generator goes user-facing: requalify/remove arbitrary 16-participant MVP guard based on measured engine performance (**PARTICIPANT_LIMIT_REQUALIFICATION_RECORDED = YES**).
+Before smart generator goes user-facing: requalify/remove arbitrary 16-participant MVP guard based on measured engine performance (**PARTICIPANT_LIMIT_REQUALIFICATION_RECORDED = YES** — delivered in **01M**, PR **#873**).
+
+## Programme closure (01M — final)
+
+**THE TOURNAMENT PLANNER'S PRIMARY OUTPUT IS A USABLE SPIELPLAN**, not a completed tournament with a winner. Results, rankings, and qualification remain an **optional** advanced sporting layer.
+
+| Package | Status |
+| --- | --- |
+| **01A** | CLOSED / PO APPROVED / MERGED |
+| **01B** | CLOSED (persistence foundation) |
+| **01C** | CLOSED / MERGED |
+| **01D** | CLOSED / MERGED |
+| **01E1** | CLOSED / MERGED |
+| **01E2** | CLOSED / MERGED |
+| **01E3A** | CLOSED / ACCEPTED / MERGED |
+| **01E3B** | CLOSED / ACCEPTED / MERGED |
+| **01E3C** | CLOSED / ACCEPTED / MERGED |
+| **01E3D** | CLOSED / ACCEPTED / MERGED |
+| **01F1** | CLOSED / ACCEPTED / MERGED |
+| **01F2** | CLOSED / ACCEPTED / MERGED |
+| **01G** | CLOSED / ACCEPTED / MERGED |
+| **01H** | CLOSED / ACCEPTED / MERGED |
+| **01I** | CLOSED / ACCEPTED / MERGED |
+| **01J** | CLOSED / ACCEPTED / MERGED |
+| **01K** | CLOSED / ACCEPTED / MERGED |
+| **01L** | CLOSED / ACCEPTED / MERGED |
+| **01M** | CLOSED / ACCEPTED / MERGED |
+
+| Flag | Value |
+| --- | --- |
+| **TOURNAMENT_PLANNER_02_STARTED** | **NO** |
+| **ARBITRARY_PRODUCT_PARTICIPANT_MAX** | **NONE** |
+| **PARTICIPANT_PRODUCT_CARDINALITY** | **2:n** |
+| **ONE_CANONICAL_SCHEDULE** | **YES** |
+
+**01M integrity outcome:** feasibility no longer treats participant count as an INFEASIBLE dimension; **`UNRESOLVED`** is distinct from **`FEASIBLE`** and **`INFEASIBLE`**; optimiser complete search follows grid-width policy via **`shouldUseLexicographicCompleteSearch`**; automated scale coverage 4–64 participants (64-team KO = 63 fixtures) — see [01M doc](./SCE-TOURNAMENT-PLANNER-01M.md).
+
+**Deferred (documented only, not implemented):** rotation, `TournamentParticipantUnit`, `TournamentStation`, in-round phases, Swiss-specific behaviour, 3v3/6v6 rotation, alternative-activity scheduling.

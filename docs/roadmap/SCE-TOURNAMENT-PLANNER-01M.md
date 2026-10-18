@@ -5,8 +5,9 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01M` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01L.md) — **CLOSED / ACCEPTED / MERGED** (PR **#872**) |
-| **Status** | **READY_FOR_PO_UAT** (implementation delivered; PO visual UAT pending) |
-| **PR** | Open to **STAGE** (not merged) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PO UAT **PASS**, merge to **STAGE**) |
+| **PR** | **#873** — merged to **STAGE** |
+| **Accepted feature HEAD (R1)** | `d6c26fd56c0dbe43715c5bad15b544a87145e1a1` |
 
 ## Product baseline preserved
 
@@ -83,17 +84,49 @@ Documented in `lib/tournament-scheduling/feasibility/constants.ts` and `bounds.t
 
 **Future-safe today:** `TournamentParticipant` and logical `TournamentPitch` remain separable from `FacilityResource`. Fixture model is side-based (not hard-coded “one full team only forever”), but 01M does not add playing-unit persistence.
 
-## Automated verification (Cursor)
+## Optimiser R1 correction (preserved at closure)
 
-- Vitest: feasibility, 01M scale/integrity, tournament-scheduling regression (see CI / local `npm test` filters).
-- `prisma validate`, `prisma generate`, production build — run at delivery.
+Lexicographic complete search is gated by **`shouldUseLexicographicCompleteSearch`** (`lib/tournament-scheduling/schedule-optimiser/search-mode.ts`):
+
+- **≤6 fixtures:** complete lexicographic search (as implemented).
+- **7–12 fixtures:** complete lex search only when the candidate grid is narrow (≤2 pitches, ≤24 candidate slots); otherwise 01D witness + deterministic bounded improvement.
+- **>12 fixtures (within product optimiser ceiling):** bounded improvement — not fixture-count-only exhaustive enumeration.
+
+| Flag | Value |
+| --- | --- |
+| **HEURISTIC_ONLY_INFEASIBLE_OUTCOMES** | **0** |
+| **FALSE_INFEASIBILITY_FROM_PARTICIPANT_COUNT** | **NO** |
+| **DETERMINISTIC** | **YES** |
+| **BOUNDED_EXECUTION** | **YES** |
+
+## Automated verification (final closure)
+
+Command (Tournament Planner regression gate):
+
+`npm test -- tournament-planner feasibility smart-timing schedule-optimiser partial-regeneration spielplan planung tournament-scheduling components/sce/tournament`
+
+| Metric | Result |
+| --- | --- |
+| **Test files** | 113 passed \| 1 skipped |
+| **Tests** | 701 total |
+| **PASS** | 696 |
+| **FAIL** | 0 |
+| **SKIPPED** | 5 |
+
+Also: `prisma validate`, `prisma generate`, production build (`NODE_OPTIONS=--max-old-space-size=8192`) — **PASS** at closure.
 
 ## PO UAT
 
 | Flag | Value |
 | --- | --- |
-| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_ALREADY_PASSED** |
 | **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
-| **PO_UAT_STATUS** | **PENDING** |
+| **PO_UAT_STATUS** | **PASS** |
 
-**Tournament Planner 01 programme closure** awaits PO acceptance of **01M** after UAT.
+## Programme outcome
+
+| Flag | Value |
+| --- | --- |
+| **01M_STATUS** | **CLOSED / ACCEPTED / MERGED** |
+| **SCE-TOURNAMENT-PLANNER-01** | **CLOSED / ACCEPTED / MERGED** (with **01M**) |
+| **TOURNAMENT_PLANNER_02_STARTED** | **NO** |
