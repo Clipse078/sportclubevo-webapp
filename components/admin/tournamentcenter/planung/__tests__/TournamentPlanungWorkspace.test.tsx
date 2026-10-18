@@ -6,7 +6,9 @@ import TournamentPlanungWorkspace from "../TournamentPlanungWorkspace";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/dashboard/tournamentcenter/t1/edit",
+  useSearchParams: () => new URLSearchParams("tab=planung"),
 }));
 
 const toast = {

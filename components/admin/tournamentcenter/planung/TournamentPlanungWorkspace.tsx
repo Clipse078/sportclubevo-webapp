@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles, RefreshCw, Pencil, X } from "lucide-react";
 import type {
   TournamentPlanungGenerationOutcome,
   TournamentPlanungPlanningUx,
@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/use-toast";
 import TournamentPlanungBoard from "./TournamentPlanungBoard";
 import TournamentPlanungMobileTimeline from "./TournamentPlanungMobileTimeline";
-import TournamentPlanungScheduleList from "./TournamentPlanungScheduleList";
 import TournamentPlanungFixtureActions from "./TournamentPlanungFixtureActions";
 import TournamentPlanungManualMoveDialog from "./TournamentPlanungManualMoveDialog";
 import TournamentPlanungGroupStandings from "./TournamentPlanungGroupStandings";
@@ -47,6 +46,8 @@ type Props = {
   ownershipAllowsPublication?: boolean;
 };
 
+type InteractionMode = "view" | "edit";
+
 function mergePlanningUx(
   model: TournamentPlanungViewModel,
   generationFeedback: TournamentPlanungGenerationOutcome | null,
@@ -57,6 +58,10 @@ function mergePlanningUx(
   const fromGeneration = generationFeedback?.guidance ?? null;
   if (fromGeneration) return fromGeneration;
   return model.planningUx;
+}
+
+function resolveInitialInteractionMode(searchParams: URLSearchParams): InteractionMode {
+  return searchParams.get("mode") === "edit" ? "edit" : "view";
 }
 
 export default function TournamentPlanungWorkspace({
@@ -71,9 +76,13 @@ export default function TournamentPlanungWorkspace({
   ownershipAllowsPublication = false,
 }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [model, setModel] = useState(initialModel);
-  const [workspaceMode, setWorkspaceMode] = useState<"planung" | "spielplan">("planung");
+  const [interactionMode, setInteractionModeState] = useState<InteractionMode>(() =>
+    resolveInitialInteractionMode(searchParams),
+  );
   const [busy, setBusy] = useState(false);
   const [generatePending, setGeneratePending] = useState(false);
   const [generationFeedback, setGenerationFeedback] =
@@ -82,6 +91,25 @@ export default function TournamentPlanungWorkspace({
   const [manualMoveOpen, setManualMoveOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [selfAdjustTiming, setSelfAdjustTiming] = useState(false);
+
+  const hasSchedule = model.schedulePresence !== "NONE";
+  const effectiveInteractionMode: InteractionMode =
+    hasSchedule && interactionMode === "edit" ? "edit" : "view";
+
+  const setInteractionMode = useCallback(
+    (mode: InteractionMode) => {
+      setInteractionModeState(mode);
+      const params = new URLSearchParams(searchParams.toString());
+      if (mode === "edit") {
+        params.set("mode", "edit");
+      } else {
+        params.delete("mode");
+      }
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/tournaments/${tournamentId}/planung`);
@@ -125,6 +153,7 @@ export default function TournamentPlanungWorkspace({
         if (json.generation.succeeded) {
           toast.success("Spielplan wurde erstellt.");
           setGenerationFeedback(null);
+          setInteractionMode("view");
         } else {
           toast.danger("Spielplan konnte mit der aktuellen Konfiguration nicht erstellt werden.");
         }
@@ -136,7 +165,7 @@ export default function TournamentPlanungWorkspace({
       setBusy(false);
       setGeneratePending(false);
     }
-  }, [model.scheduleRevision, refresh, router, toast, tournamentId]);
+  }, [model.scheduleRevision, refresh, router, setInteractionMode, toast, tournamentId]);
 
   const runAction = useCallback(
     async (path: string, body?: Record<string, unknown>) => {
@@ -273,17 +302,27 @@ export default function TournamentPlanungWorkspace({
     }
   }, [model.scheduleRevision, refresh, router, toast, tournamentId]);
 
+  const planningUx = mergePlanningUx(model, generationFeedback);
+  const editTournamentHref = `/dashboard/tournamentcenter/${tournamentId}/edit?tab=spielplan`;
+  const showPreGenerationPanel =
+    effectiveInteractionMode === "view" && planningUx != null && model.incompleteSetup.length === 0;
+
+  const workspaceHeading = useMemo(() => {
+    if (effectiveInteractionMode === "edit") return "Spielplan bearbeiten";
+    if (hasSchedule) return "Spielplan";
+    return "Planung";
+  }, [effectiveInteractionMode, hasSchedule]);
+
   if (model.availability !== "AVAILABLE") {
     return null;
   }
 
-  const planningUx = mergePlanningUx(model, generationFeedback);
-  const editTournamentHref = `/dashboard/tournamentcenter/${tournamentId}/edit?tab=spielplan`;
-  const showPreGenerationPanel =
-    workspaceMode === "planung" && planningUx != null && model.incompleteSetup.length === 0;
-
   return (
-    <div className="space-y-4" data-testid="tournament-planung-workspace">
+    <div
+      className="space-y-4"
+      data-testid="tournament-planung-workspace"
+      data-interaction-mode={effectiveInteractionMode}
+    >
       <header
         className={cn(
           SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
@@ -291,57 +330,59 @@ export default function TournamentPlanungWorkspace({
         )}
       >
         <div className="space-y-1">
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-medium",
-                workspaceMode === "planung"
-                  ? "bg-[var(--surface-2)] text-[var(--foreground)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)]",
-              )}
-              onClick={() => setWorkspaceMode("planung")}
-              data-testid="tournament-planung-mode-planung"
-            >
-              Planung
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-medium",
-                workspaceMode === "spielplan"
-                  ? "bg-[var(--surface-2)] text-[var(--foreground)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)]",
-              )}
-              onClick={() => setWorkspaceMode("spielplan")}
-              data-testid="tournament-planung-mode-spielplan"
-            >
-              Spielplan
-            </button>
-          </div>
-          <h2 className="text-base font-semibold text-[var(--foreground)]">
-            {workspaceMode === "spielplan" ? "Spielplan-Ausgabe" : "Planung"}
-          </h2>
+          <h2 className="text-base font-semibold text-[var(--foreground)]">{workspaceHeading}</h2>
+          {effectiveInteractionMode === "edit" ? (
+            <p className="text-sm text-[var(--muted)]">
+              Verschiebe Spiele per Drag-and-drop oder manuell — der Spielplan bleibt dieselbe
+              Quelle.
+            </p>
+          ) : null}
         </div>
-        {canManage && workspaceMode === "planung" && model.actions.canRegenerate ? (
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
+          {effectiveInteractionMode === "view" && canManage && hasSchedule ? (
             <Button
               type="button"
               variant="secondary"
               disabled={busy}
-              onClick={() =>
-                runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
-                  scheduleVersionId: model.scheduleVersionId,
-                  expectedRevision: model.scheduleRevision,
-                })
-              }
-              data-testid="tournament-planung-regenerate"
+              onClick={() => setInteractionMode("edit")}
+              data-testid="tournament-planung-edit-spielplan"
             >
-              <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden />
-              {model.actions.regenerateLabel}
+              <Pencil className="mr-1.5 h-4 w-4" aria-hidden />
+              Spielplan bearbeiten
             </Button>
-          </div>
-        ) : null}
+          ) : null}
+          {effectiveInteractionMode === "edit" ? (
+            <>
+              {canManage && model.actions.canRegenerate ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
+                      scheduleVersionId: model.scheduleVersionId,
+                      expectedRevision: model.scheduleRevision,
+                    })
+                  }
+                  data-testid="tournament-planung-regenerate"
+                >
+                  <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden />
+                  {model.actions.regenerateLabel}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => setInteractionMode("view")}
+                data-testid="tournament-planung-exit-edit"
+              >
+                <X className="mr-1.5 h-4 w-4" aria-hidden />
+                Bearbeitung beenden
+              </Button>
+            </>
+          ) : null}
+        </div>
       </header>
 
       {model.incompleteSetup.length > 0 ? (
@@ -478,13 +519,13 @@ export default function TournamentPlanungWorkspace({
         </section>
       ) : null}
 
-      {model.regenerationSummary ? (
+      {effectiveInteractionMode === "edit" && model.regenerationSummary ? (
         <p className="text-sm text-[var(--muted)]" data-testid="tournament-planung-regen-summary">
           {model.regenerationSummary.message}
         </p>
       ) : null}
 
-      {model.diagnostics.length > 0 ? (
+      {effectiveInteractionMode === "edit" && model.diagnostics.length > 0 ? (
         <section aria-label="Planungsdiagnose" className="space-y-1">
           {model.diagnostics.map((d) => (
             <p
@@ -504,7 +545,7 @@ export default function TournamentPlanungWorkspace({
         </section>
       ) : null}
 
-      {workspaceMode === "spielplan" && model.schedulePresence !== "NONE" && tournament ? (
+      {effectiveInteractionMode === "view" && hasSchedule && tournament ? (
         <TournamentPlanungSpielplanOutput
           planungModel={model}
           tournamentId={tournamentId}
@@ -523,22 +564,16 @@ export default function TournamentPlanungWorkspace({
         />
       ) : null}
 
-      {workspaceMode === "planung" && model.schedulePresence !== "NONE" && model.timeScale ? (
+      {effectiveInteractionMode === "edit" && hasSchedule && model.timeScale ? (
         <>
           <TournamentPlanungGroupStandings model={model} />
-          <section
-            aria-label="Spielplanübersicht nach Runden"
-            className={cn(SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS, "space-y-4 p-4 md:p-5")}
-          >
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">Übersicht nach Runden</h3>
-            <TournamentPlanungScheduleList model={model} timezone={timezone} />
-          </section>
           <section
             aria-label="Interaktives Feld-Zeit-Board"
             className={cn(
               SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS,
               "hidden space-y-4 p-4 md:p-5 lg:block",
             )}
+            data-testid="tournament-planung-edit-board"
           >
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Feld- und Zeitplan</h3>
             <TournamentPlanungBoard
@@ -659,7 +694,7 @@ export default function TournamentPlanungWorkspace({
         </>
       ) : null}
 
-      {model.actions.canRegenerate && canManage ? (
+      {effectiveInteractionMode === "edit" && model.actions.canRegenerate && canManage ? (
         <p className="text-xs text-[var(--muted)]">{model.actions.regenerateHint}</p>
       ) : null}
 

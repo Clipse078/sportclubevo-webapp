@@ -10,6 +10,7 @@ describe("01K roadmap", () => {
     );
     expect(doc).toMatch(/01K/);
     expect(doc).toMatch(/Spielplan|buildTournamentSpielplanViewModel/i);
+    expect(doc).toMatch(/01K-R7/i);
     expect(doc).toMatch(/buildPublicTournamentViewModel/);
     expect(doc).toMatch(/LIVE_RESULTS_REQUIRED_FOR_01K_SUCCESS.*NO/i);
     const parent = readFileSync(

@@ -137,6 +137,25 @@ Planung keeps round-grouped overview **and** desktop pitch/time board (DnD); bot
 
 **01K-R6 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); final PO visual UAT before Tournament Planner closure. No additional 01K feature package unless R6 exposes a blocker; **do not start 01L** from this scope.
 
+## 01K-R7 — Unified Spielplan + planning edit mode
+
+**Principle:** **ONE TOURNAMENT SCHEDULE. ONE PRIMARY SPIELPLAN EXPERIENCE. TWO INTERACTION MODES: VIEW + EDIT.**
+
+| Topic | Decision |
+| --- | --- |
+| Default Planung route (`?tab=planung`) | Canonical **Spielplan** presentation (R6 visual language) |
+| Inner navigation | **Removed** — no Planung \| Spielplan toggle |
+| Redundant planning list | **Removed** — no separate “Übersicht nach Runden” operational fixture list |
+| Edit entry | **Spielplan bearbeiten** → same workspace, same schedule |
+| Edit content | Pitch × time board (DnD), locks, manual move, conflicts, partial regeneration |
+| Output actions | Master/team Spielplan, highlight, print, PDF, share — **view mode only** |
+| URL (optional) | `?tab=planung&mode=edit` for deep link; refresh without `mode` defaults to view |
+| Persistence | **No** DB field for edit mode; **SCHEMA_CHANGE = NO** |
+
+Planning is an operation **on** the Spielplan, not a second schedule representation. Domain architecture (fixtures, assignments, optimiser, feasibility) is unchanged.
+
+**01K-R7 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not mark 01K closed** until accepted.
+
 ## Verification (automated)
 
 - `lib/tournaments/spielplan/__tests__/*`

@@ -117,10 +117,10 @@ export default function TournamentPlanungSpielplanOutput({
       >
         <div className="min-w-0 space-y-1.5">
           <h3 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">
-            Spielplan-Ausgabe
+            Spielplan
           </h3>
           <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-2)]">
-            Master-Spielplan, Teampläne, Druck, PDF und Teilen — ohne den Planungsstand zu verändern.
+            Master-Spielplan, Teampläne, Druck, PDF und Teilen.
           </p>
         </div>
         <div
