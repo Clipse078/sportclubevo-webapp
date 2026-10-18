@@ -22,7 +22,7 @@ describe("01K roadmap", () => {
     expect(parent).toMatch(/01K.*CLOSED|01K CLOSED/i);
     expect(parent).toMatch(/01L.*CLOSED|01L CLOSED/i);
     expect(parent).toMatch(/01M.*CLOSED/i);
-    expect(parent).toMatch(/TOURNAMENT_PLANNER_02_STARTED.*NO/i);
+    expect(parent).toMatch(/TOURNAMENT_PLANNER_02_STARTED.*YES|SCE-TOURNAMENT-PLANNER-02/);
     expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
     expect(doc).toMatch(/PO UAT.*PASS/i);
   });

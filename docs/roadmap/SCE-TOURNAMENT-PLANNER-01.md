@@ -24,6 +24,7 @@
 | **01K (Spielplan output + print/PDF + sharing)** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01K.md)) |
 | **01L (Responsive + accessibility + polish)** | **CLOSED / ACCEPTED / MERGED** (PR **#872**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01L.md)) |
 | **01M (Integrity + performance + closure)** | **CLOSED / ACCEPTED / MERGED** (PR **#873**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
+| **Successor programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) — advanced tournament programme generation (**02A** opened) |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 
@@ -258,7 +259,7 @@ Before smart generator goes user-facing: requalify/remove arbitrary 16-participa
 
 | Flag | Value |
 | --- | --- |
-| **TOURNAMENT_PLANNER_02_STARTED** | **NO** |
+| **TOURNAMENT_PLANNER_02_STARTED** | **YES** ([02 programme doc](./SCE-TOURNAMENT-PLANNER-02.md), package **02A**) |
 | **ARBITRARY_PRODUCT_PARTICIPANT_MAX** | **NONE** |
 | **PARTICIPANT_PRODUCT_CARDINALITY** | **2:n** |
 | **ONE_CANONICAL_SCHEDULE** | **YES** |

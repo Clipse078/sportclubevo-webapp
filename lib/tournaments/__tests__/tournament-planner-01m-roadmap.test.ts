@@ -23,6 +23,6 @@ describe("01M roadmap", () => {
     expect(parent).toMatch(/01M.*CLOSED/i);
     expect(parent).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
     expect(parent).toMatch(/01L.*CLOSED/i);
-    expect(parent).toMatch(/TOURNAMENT_PLANNER_02_STARTED.*NO/i);
+    expect(parent).toMatch(/TOURNAMENT_PLANNER_02_STARTED.*YES|SCE-TOURNAMENT-PLANNER-02/);
   });
 });
