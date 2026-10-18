@@ -58,6 +58,7 @@ function baseSnapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSna
       lossPoints: 0,
       tiebreakOrder: ["POINTS"],
     },
+    scheduleConsistencyStatus: null,
     ...partial,
   };
 }

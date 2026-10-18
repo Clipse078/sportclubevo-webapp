@@ -156,6 +156,23 @@ Planning is an operation **on** the Spielplan, not a second schedule representat
 
 **01K-R7 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not mark 01K closed** until accepted.
 
+## 01K-R7.1 — Spielplan bearbeiten: operational schedule settings
+
+**Principle:** **ONE PRIMARY SPIELPLAN EXPERIENCE** — **VIEW** = consume/output/share; **EDIT** = operational schedule configuration + manual schedule editing.
+
+| Topic | Decision |
+| --- | --- |
+| **Spielplan-Einstellungen** (edit mode, above Feld- und Zeitplan) | **Spieldauer**, **Wechselzeit**, **Pausen & Sperrzeiten** (add/edit/delete) |
+| Configuration source | Canonical **WORKING** schedule version timing + **TournamentBreak** — no parallel draft model |
+| Timing change behaviour | Persist config → reassess feasibility/consistency → **no silent regeneration** |
+| Invalid assignments | Simple DE copy + explicit **[Spielplan neu berechnen]** (canonical partial regeneration) |
+| Valid assignments | Calm confirmation when useful — no internal feasibility dashboard |
+| Manual editing | Feld- und Zeitplan unchanged (DnD, manual move, locks, conflicts) |
+| Publication | **Outside edit mode** — canonical **Publizieren** / publication surfaces only |
+| Advanced break scope | Default **Alle Felder**; optional **Nur bestimmte Felder sperren** via SCE **toggle** + pitch multi-select |
+
+**01K-R7.1 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not start 01L**.
+
 ## Verification (automated)
 
 - `lib/tournaments/spielplan/__tests__/*`

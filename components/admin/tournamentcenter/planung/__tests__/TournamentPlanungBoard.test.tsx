@@ -74,6 +74,8 @@ const model: TournamentPlanungViewModel = {
     regenerateHint: "",
   },
   groupStandings: [],
+  schedulingSettings: null,
+  timingConsequence: null,
 };
 
 describe("TournamentPlanungBoard 01I", () => {

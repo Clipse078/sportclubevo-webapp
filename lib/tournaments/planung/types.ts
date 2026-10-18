@@ -193,6 +193,30 @@ export type TournamentPlanungActions = {
   regenerateHint: string;
 };
 
+/** Operational timing exposed in Spielplan bearbeiten (canonical schedule version config). */
+export type TournamentPlanungSchedulingBreak = {
+  breakId: string;
+  label: string;
+  startLocalTime: string;
+  durationMinutes: number;
+  scope: "ALL_PITCHES" | "SELECTED_PITCHES";
+  tournamentPitchIds: readonly string[];
+  timeRangeLabel: string;
+  scopeLabel: string;
+};
+
+export type TournamentPlanungSchedulingSettings = {
+  matchDurationMinutes: number;
+  transitionMinutes: number;
+  breaks: readonly TournamentPlanungSchedulingBreak[];
+};
+
+export type TournamentPlanungTimingConsequence = {
+  status: "MATCHES" | "NEEDS_REGENERATION";
+  headline: string;
+  detail: string | null;
+} | null;
+
 export type TournamentPlanungViewModel = {
   tournamentId: string;
   availability: TournamentPlanungAvailability;
@@ -222,4 +246,8 @@ export type TournamentPlanungViewModel = {
   incompleteSetup: readonly TournamentPlanungIncompleteItem[];
   actions: TournamentPlanungActions;
   groupStandings: readonly TournamentPlanungGroupStandingsSection[];
+  /** Present when a schedule exists — edit-mode Spielplan-Einstellungen. */
+  schedulingSettings: TournamentPlanungSchedulingSettings | null;
+  /** Whether persisted assignments still match operational timing (no silent regen). */
+  timingConsequence: TournamentPlanungTimingConsequence;
 };

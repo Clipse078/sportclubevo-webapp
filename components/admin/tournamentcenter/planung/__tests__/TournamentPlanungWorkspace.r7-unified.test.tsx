@@ -87,6 +87,16 @@ const scheduledModel: TournamentPlanungViewModel = {
     regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
   },
   groupStandings: [],
+  schedulingSettings: {
+    matchDurationMinutes: 20,
+    transitionMinutes: 5,
+    breaks: [],
+  },
+  timingConsequence: {
+    status: "MATCHES",
+    headline: "Spielplan passt zu diesen Einstellungen.",
+    detail: null,
+  },
 };
 
 const tournament = {
@@ -146,6 +156,7 @@ describe("01K-R7 — unified Spielplan view + edit", () => {
       "data-interaction-mode",
       "edit",
     );
+    expect(screen.getByTestId("tournament-planung-spielplan-settings")).toBeInTheDocument();
     expect(screen.getByTestId("tournament-planung-edit-board")).toBeInTheDocument();
     expect(screen.queryByTestId("tournament-planung-spielplan-output")).not.toBeInTheDocument();
     expect(screen.queryByText("Übersicht nach Runden")).not.toBeInTheDocument();

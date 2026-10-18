@@ -20,6 +20,7 @@ import TournamentPlanungGroupStandings from "./TournamentPlanungGroupStandings";
 import TournamentPlanungResultDialog from "./TournamentPlanungResultDialog";
 import TournamentPlanungPublicationPanel from "./TournamentPlanungPublicationPanel";
 import TournamentPlanungSpielplanOutput from "./TournamentPlanungSpielplanOutput";
+import TournamentPlanungSpielplanSettings from "./TournamentPlanungSpielplanSettings";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
@@ -333,8 +334,7 @@ export default function TournamentPlanungWorkspace({
           <h2 className="text-base font-semibold text-[var(--foreground)]">{workspaceHeading}</h2>
           {effectiveInteractionMode === "edit" ? (
             <p className="text-sm text-[var(--muted)]">
-              Verschiebe Spiele per Drag-and-drop oder manuell — der Spielplan bleibt dieselbe
-              Quelle.
+              Verschiebe Spiele per Drag-and-drop oder passe die Einstellungen an.
             </p>
           ) : null}
         </div>
@@ -525,26 +525,6 @@ export default function TournamentPlanungWorkspace({
         </p>
       ) : null}
 
-      {effectiveInteractionMode === "edit" && model.diagnostics.length > 0 ? (
-        <section aria-label="Planungsdiagnose" className="space-y-1">
-          {model.diagnostics.map((d) => (
-            <p
-              key={d.id}
-              className={cn(
-                "text-sm",
-                d.severity === "danger"
-                  ? "text-[var(--sce-danger)]"
-                  : d.severity === "warning"
-                    ? "text-[var(--sce-warning)]"
-                    : "text-[var(--muted)]",
-              )}
-            >
-              {d.message}
-            </p>
-          ))}
-        </section>
-      ) : null}
-
       {effectiveInteractionMode === "view" && hasSchedule && tournament ? (
         <TournamentPlanungSpielplanOutput
           planungModel={model}
@@ -566,6 +546,26 @@ export default function TournamentPlanungWorkspace({
 
       {effectiveInteractionMode === "edit" && hasSchedule && model.timeScale ? (
         <>
+          {model.schedulingSettings ? (
+            <TournamentPlanungSpielplanSettings
+              tournamentId={tournamentId}
+              model={model}
+              pitches={model.pitches}
+              settings={model.schedulingSettings}
+              timingConsequence={model.timingConsequence}
+              busy={busy}
+              canManage={canManage}
+              onModelChange={setModel}
+              onBusyChange={setBusy}
+              onError={(message) => toast.danger(message)}
+              onRegenerate={() =>
+                runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
+                  scheduleVersionId: model.scheduleVersionId,
+                  expectedRevision: model.scheduleRevision,
+                })
+              }
+            />
+          ) : null}
           <TournamentPlanungGroupStandings model={model} />
           <section
             aria-label="Interaktives Feld-Zeit-Board"
@@ -698,7 +698,7 @@ export default function TournamentPlanungWorkspace({
         <p className="text-xs text-[var(--muted)]">{model.actions.regenerateHint}</p>
       ) : null}
 
-      {tournament && tenantKey ? (
+      {effectiveInteractionMode === "view" && tournament && tenantKey ? (
         <TournamentPlanungPublicationPanel
           tournament={tournament}
           tenantKey={tenantKey}

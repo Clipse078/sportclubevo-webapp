@@ -72,6 +72,8 @@ const baseModel: TournamentPlanungViewModel = {
     regenerateHint: "",
   },
   groupStandings: [],
+  schedulingSettings: null,
+  timingConsequence: null,
 };
 
 describe("TournamentPlanungScheduleList", () => {

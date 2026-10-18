@@ -257,6 +257,7 @@ export async function loadPublicPlanungSnapshot(params: {
           lossPoints: 0,
           tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
         },
+    scheduleConsistencyStatus: null,
   };
 }
 

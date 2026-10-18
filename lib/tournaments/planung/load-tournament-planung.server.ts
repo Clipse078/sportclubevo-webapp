@@ -9,7 +9,10 @@ import { listTournamentBreaks } from "@/lib/tournament-scheduling/tournament-bre
 import { listTournamentPitches } from "@/lib/tournament-scheduling/tournament-pitch-service";
 import { assessTournamentTiming } from "@/lib/tournament-scheduling/smart-timing";
 import { optimiseTournamentSchedule } from "@/lib/tournament-scheduling/schedule-optimiser/optimise";
+import { resolveFixtureDependencies } from "@/lib/tournament-scheduling/schedule-optimiser/dependencies";
 import { listTournamentScheduleEngineFixtures } from "@/lib/tournament-scheduling/schedule-engine-load-service";
+import { toFeasibilityFixtures } from "@/lib/tournament-scheduling/smart-timing/prepare-context";
+import { assessPlanungScheduleConsistency } from "./assess-planung-schedule-consistency";
 import { resolveTournamentSchedulingConfig } from "@/lib/tournament-scheduling/feasibility-service";
 import {
   resolveTournamentPlannerOwnership,
@@ -195,6 +198,7 @@ export async function loadTournamentPlanungViewModel(params: {
   let feasibility = null;
   let smartTiming = null;
   let optimisation = null;
+  let scheduleConsistencyStatus: ReturnType<typeof assessPlanungScheduleConsistency> | null = null;
 
   if (ownership === "TENANT_ORGANISED" && event.startAt && event.endAt && fixtures.length > 0) {
     const feasibilityLoad = await analyseTournamentFeasibilityForTournament({
@@ -234,6 +238,44 @@ export async function loadTournamentPlanungViewModel(params: {
     });
 
     if (assignments.length > 0) {
+      const feasibilityBreaks = breaks.map((b) => ({
+        breakId: b.id,
+        startUtcMs: new Date(b.startAt).getTime(),
+        endUtcMs: new Date(b.endAt).getTime(),
+        scope: b.scope,
+        tournamentPitchIds: [...b.tournamentPitchIds],
+      }));
+      const playableWindow = {
+        startUtcMs: feasibilityLoad.tournamentWindow.startUtcMs,
+        endUtcMs: feasibilityLoad.tournamentWindow.endUtcMs,
+      };
+      const feasibilityPitches = pitches.map((p) => ({
+        tournamentPitchId: p.id,
+        displayOrder: p.displayOrder,
+        label: p.label,
+        playableIntervals: [playableWindow],
+      }));
+
+      scheduleConsistencyStatus = assessPlanungScheduleConsistency({
+        tournamentWindow: feasibilityLoad.tournamentWindow,
+        config: {
+          matchDurationMinutes: schedulingConfig.matchDurationMinutes,
+          transitionMinutes: schedulingConfig.transitionMinutes,
+          minRestMinutes: schedulingConfig.minRestMinutes,
+        },
+        fixtures: toFeasibilityFixtures(engineFixtures),
+        assignments: assignments.map((a) => ({
+          fixtureId: a.fixtureId,
+          tournamentPitchId: a.tournamentPitchId,
+          startAt: a.startAt,
+          endAt: a.endAt,
+          scheduleLockDimension: a.scheduleLockDimension,
+        })),
+        pitches: feasibilityPitches,
+        breaks: feasibilityBreaks,
+        dependencies: resolveFixtureDependencies(engineFixtures),
+      });
+
       optimisation = optimiseTournamentSchedule({
         tournamentWindow: feasibilityLoad.tournamentWindow,
         config: {
@@ -243,11 +285,7 @@ export async function loadTournamentPlanungViewModel(params: {
         },
         fixtures: engineFixtures,
         participants: participantRows.map((p) => ({ participantId: p.id })),
-        tournamentPitches: pitches.map((p) => ({
-          tournamentPitchId: p.id,
-          displayOrder: p.displayOrder,
-          label: p.label,
-        })),
+        tournamentPitches: feasibilityPitches,
         breaks: breaks.map((b) => ({
           breakId: b.id,
           label: b.label,
@@ -331,6 +369,7 @@ export async function loadTournamentPlanungViewModel(params: {
           lossPoints: 0,
           tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
         },
+    scheduleConsistencyStatus,
   };
 
   return buildTournamentPlanungViewModel(snapshot);

@@ -57,6 +57,8 @@ const model: TournamentPlanungViewModel = {
     regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
   },
   groupStandings: [],
+  schedulingSettings: null,
+  timingConsequence: null,
 };
 
 describe("TournamentPlanungWorkspace", () => {

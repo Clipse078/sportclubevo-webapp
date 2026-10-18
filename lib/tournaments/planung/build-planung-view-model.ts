@@ -23,6 +23,11 @@ import {
   formatWinnerOfFixtureLabel,
 } from "./qualification-display";
 import { buildPlanungGroupStandings } from "./build-planung-group-standings";
+import type { PlanungScheduleConsistencyStatus } from "./assess-planung-schedule-consistency";
+import {
+  buildPlanungSchedulingSettings,
+  buildPlanungTimingConsequence,
+} from "./planung-scheduling-settings-presentation";
 import type {
   TournamentPlanungAvailability,
   TournamentPlanungBoardCell,
@@ -113,6 +118,7 @@ export type PlanungDomainSnapshot = {
     lossPoints: number;
     tiebreakOrder: readonly ("POINTS" | "GOAL_DIFFERENCE" | "GOALS_SCORED" | "HEAD_TO_HEAD")[];
   };
+  scheduleConsistencyStatus: PlanungScheduleConsistencyStatus | null;
 };
 
 function resolveAvailability(
@@ -495,10 +501,23 @@ export function buildTournamentPlanungViewModel(
     planningUx?.state === "AUTO_FIX" || planningUx?.state === "STRUCTURAL_CHANGE"
       ? planningUx
       : null;
-  const suppressFeasibilityDiagnostics = planningUx !== null;
+  const suppressFeasibilityDiagnostics = planningUx !== null || hasAssignments;
   const diagnostics = mapDiagnostics(snapshot.feasibility, snapshot.optimisation, {
     includeFeasibilityDiagnostics: !suppressFeasibilityDiagnostics,
   });
+
+  const schedulingSettings =
+    schedulePresence === "NONE"
+      ? null
+      : buildPlanungSchedulingSettings({
+          schedulingConfig: snapshot.schedulingConfig,
+          breaks: snapshot.breaks,
+          pitchLabelById,
+          timezone: snapshot.timezone,
+        });
+  const timingConsequence = buildPlanungTimingConsequence(
+    hasAssignments ? snapshot.scheduleConsistencyStatus : null,
+  );
 
   const completedGroupResults = snapshot.fixtureResults
     .filter((r) => r.state === "COMPLETED" && r.scoreSideA != null && r.scoreSideB != null)
@@ -574,6 +593,8 @@ export function buildTournamentPlanungViewModel(
       regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
     },
     groupStandings,
+    schedulingSettings,
+    timingConsequence,
   };
 }
 

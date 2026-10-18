@@ -73,6 +73,7 @@ function snapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSnapsho
       lossPoints: 0,
       tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
     },
+    scheduleConsistencyStatus: null,
     ...partial,
   };
 }

@@ -107,3 +107,94 @@ export async function createTournamentBreak(
 
   return toDefinition(row);
 }
+
+export type UpdateTournamentBreakInput = CreateTournamentBreakInput;
+
+async function assertBreakPitchSelection(
+  tenantId: string,
+  tournamentId: string,
+  input: Pick<CreateTournamentBreakInput, "scope" | "tournamentPitchIds">,
+): Promise<string[]> {
+  const pitchIds = input.tournamentPitchIds ?? [];
+  if (input.scope === "SELECTED_PITCHES") {
+    const known = new Set(
+      (await listTournamentPitches(tenantId, tournamentId)).map((p) => p.id),
+    );
+    const unique = [...new Set(pitchIds)];
+    if (unique.length === 0) {
+      throw new Error("Selected-pitch break requires at least one tournament pitch");
+    }
+    for (const id of unique) {
+      if (!known.has(id)) {
+        throw new Error(`Unknown tournament pitch for break: ${id}`);
+      }
+    }
+    return unique;
+  }
+  return [];
+}
+
+export async function updateTournamentBreak(
+  tenantId: string,
+  tournamentId: string,
+  breakId: string,
+  input: UpdateTournamentBreakInput,
+): Promise<TournamentBreakDefinition> {
+  await requireTournamentEvent(tenantId, tournamentId);
+  if (input.endAt.getTime() <= input.startAt.getTime()) {
+    throw new Error("Break endAt must be after startAt");
+  }
+
+  const existing = await prisma.tournamentBreak.findFirst({
+    where: { id: breakId, tenantId, eventId: tournamentId },
+    select: { id: true },
+  });
+  if (!existing) {
+    throw new Error(`Tournament break not found: ${breakId}`);
+  }
+
+  const selectedPitchIds = await assertBreakPitchSelection(tenantId, tournamentId, input);
+
+  const row = await prisma.$transaction(async (tx) => {
+    await tx.tournamentBreakPitch.deleteMany({
+      where: { tenantId, tournamentBreakId: breakId },
+    });
+    return tx.tournamentBreak.update({
+      where: { id: breakId },
+      data: {
+        label: input.label?.trim() || null,
+        startAt: input.startAt,
+        endAt: input.endAt,
+        scope: input.scope,
+        pitches:
+          input.scope === "SELECTED_PITCHES"
+            ? {
+                create: selectedPitchIds.map((tournamentPitchId) => ({
+                  tenantId,
+                  tournamentPitchId,
+                })),
+              }
+            : undefined,
+      },
+      include: { pitches: { select: { tournamentPitchId: true } } },
+    });
+  });
+
+  return toDefinition(row);
+}
+
+export async function deleteTournamentBreak(
+  tenantId: string,
+  tournamentId: string,
+  breakId: string,
+): Promise<void> {
+  await requireTournamentEvent(tenantId, tournamentId);
+  const existing = await prisma.tournamentBreak.findFirst({
+    where: { id: breakId, tenantId, eventId: tournamentId },
+    select: { id: true },
+  });
+  if (!existing) {
+    throw new Error(`Tournament break not found: ${breakId}`);
+  }
+  await prisma.tournamentBreak.delete({ where: { id: breakId } });
+}

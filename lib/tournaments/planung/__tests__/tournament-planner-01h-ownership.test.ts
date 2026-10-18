@@ -36,6 +36,7 @@ function baseSnapshot(
       lossPoints: 0,
       tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
     },
+    scheduleConsistencyStatus: null,
   };
 }
 
