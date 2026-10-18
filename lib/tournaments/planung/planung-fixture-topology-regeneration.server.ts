@@ -76,16 +76,17 @@ export async function regeneratePlanungFixtureTopologyForHomeAway(params: {
         },
       });
       const strategy = phase.groupMixStrategy ?? "ROUND_ROBIN";
+      const targetMatchesPerParticipant =
+        strategy === "SMART_MIX"
+          ? (phase.smartMixTargetMatchesPerParticipant ?? undefined)
+          : undefined;
       if (groupCount > 0) {
         await generateTournamentGroupFixturesForPhase(params.tenantId, {
           tournamentId: params.tournamentId,
           phaseId: phase.id,
           strategy,
           meetingsPerOpponent,
-          targetMatchesPerParticipant:
-            strategy === "SMART_MIX"
-              ? (phase.smartMixTargetMatchesPerParticipant ?? undefined)
-              : undefined,
+          targetMatchesPerParticipant,
           homeAwayRelevance,
         });
       } else {
@@ -94,10 +95,7 @@ export async function regeneratePlanungFixtureTopologyForHomeAway(params: {
           meetingsPerOpponent,
           homeAwayRelevance,
           strategy,
-          targetMatchesPerParticipant:
-            strategy === "SMART_MIX"
-              ? (phase.smartMixTargetMatchesPerParticipant ?? undefined)
-              : undefined,
+          targetMatchesPerParticipant,
         });
       }
     }

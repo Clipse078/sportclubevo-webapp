@@ -163,7 +163,7 @@ export async function persistTournamentPlannerFromComposer(input: {
   }
 
   for (const br of planner.breaks) {
-    const interval = resolveComposerBreakDateTimes(br, payload.startAt);
+    const interval = resolveComposerBreakDateTimes(br, payload.startAt, tenantTimeZone);
     if (!interval) {
       throw new Error("Ungültige Pausenzeit.");
     }

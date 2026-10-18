@@ -3,7 +3,11 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
-import { parseTenantLocalDateTimeInput, resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import {
+  parseTenantLocalDateTimeInput,
+  resolveTenantEventTimezone,
+  utcInstantToDateTimeLocalValue,
+} from "@/lib/events/tenant-local-datetime";
 import { resolveComposerBreakDateTimes } from "@/lib/tournaments/composer/tournament-composer-planner-breaks";
 import { requireTenantOrganisedTournament } from "@/lib/tournament-scheduling/internal/require-tenant-organised-tournament";
 import {
@@ -13,7 +17,10 @@ import {
 } from "@/lib/tournament-scheduling/tournament-break-service";
 import { updateWorkingTournamentScheduleVersionTiming } from "@/lib/tournament-scheduling/schedule-version-service";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
-import { normalizeStoredRoundRobinMeetingsForHomeAwayToggle } from "./planung-round-robin-home-away";
+import {
+  normalizeStoredRoundRobinMeetingsForHomeAwayToggle,
+  normalizeStoredSmartMixTargetForHomeAwayToggle,
+} from "./planung-round-robin-home-away";
 
 function assertPositiveInteger(value: number, field: string): void {
   if (!Number.isFinite(value) || value < 1 || !Number.isInteger(value)) {
@@ -54,6 +61,30 @@ export async function updatePlanungFixtureHomeAwayRelevance(params: {
       "TOURNAMENT_GENERATION_INVALID",
       "Turnierkonfiguration fehlt — Heim-/Auswärtseinstellung konnte nicht gespeichert werden.",
     );
+  }
+
+  const groupPhases = await prisma.tournamentPhase.findMany({
+    where: {
+      tenantId: params.tenantId,
+      eventId: params.tournamentId,
+      phaseType: "GROUP_MIX",
+      groupMixStrategy: "SMART_MIX",
+    },
+    select: { id: true, smartMixTargetMatchesPerParticipant: true },
+  });
+  for (const phase of groupPhases) {
+    const storedTarget = phase.smartMixTargetMatchesPerParticipant ?? 1;
+    const smartMixTargetMatchesPerParticipant = normalizeStoredSmartMixTargetForHomeAwayToggle(
+      storedTarget,
+      params.previousFixtureHomeAwayRelevance,
+      params.fixtureHomeAwayRelevance,
+    );
+    if (smartMixTargetMatchesPerParticipant !== storedTarget) {
+      await prisma.tournamentPhase.update({
+        where: { id: phase.id },
+        data: { smartMixTargetMatchesPerParticipant },
+      });
+    }
   }
 }
 
@@ -112,6 +143,7 @@ async function resolveBreakInstants(
   }
 
   const tenantTimeZone = resolveTenantEventTimezone(event.tenant?.timezone);
+  const tournamentStartLocal = utcInstantToDateTimeLocalValue(event.startAt, tenantTimeZone);
   const interval = resolveComposerBreakDateTimes(
     {
       localId: "planung-break",
@@ -122,7 +154,8 @@ async function resolveBreakInstants(
       tournamentPitchLocalIds: [],
       fieldSelectionAdvanced: draft.scope === "SELECTED_PITCHES",
     },
-    event.startAt.toISOString(),
+    tournamentStartLocal,
+    tenantTimeZone,
   );
   if (!interval) {
     throw new TournamentSchedulingError(

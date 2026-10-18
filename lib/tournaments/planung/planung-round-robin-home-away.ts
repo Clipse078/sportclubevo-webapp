@@ -31,3 +31,18 @@ export function normalizeStoredRoundRobinMeetingsForHomeAwayToggle(
   }
   return stored;
 }
+
+export function normalizeStoredSmartMixTargetForHomeAwayToggle(
+  storedTargetMatchesPerParticipant: number,
+  previousRelevance: PlanungFixtureHomeAwayRelevance,
+  nextRelevance: PlanungFixtureHomeAwayRelevance,
+): number {
+  const stored = Math.max(1, Math.floor(storedTargetMatchesPerParticipant));
+  if (previousRelevance === "OFF" && nextRelevance === "ON") {
+    return stored * 2;
+  }
+  if (previousRelevance === "ON" && nextRelevance === "OFF" && stored >= 2 && stored % 2 === 0) {
+    return stored / 2;
+  }
+  return stored;
+}

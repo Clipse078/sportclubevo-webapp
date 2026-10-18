@@ -6,7 +6,8 @@
 export const OPTIMISER_MAX_SEARCH_NODES = 750_000;
 
 /** Full lexicographic enumeration is used at or below this fixture count (within 01D bounds). */
-export const EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES = 6;
+/** Covers canonical 4-team double round-robin (12 fixtures) within 01D bounds. */
+export const EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES = 12;
 
 /** Deterministic hill-climb passes for large schedules (fixture count above exhaustive threshold). */
 export const BOUNDED_IMPROVEMENT_MAX_PASSES = 12;

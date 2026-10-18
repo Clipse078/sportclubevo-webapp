@@ -57,15 +57,21 @@ export async function applyPlanungLiveScheduleReconcile(params: {
         tournamentId: params.tournamentId,
         scheduleVersionId: params.scheduleVersionId,
         expectedRevision: revision ?? undefined,
+        topologyReconciled: topologyRegenerated,
       });
 
       revision = regen.revision;
+
+      const regenAssignmentCount = regen.regeneration.assignments.length;
+      const completeForTopology =
+        !topologyRegenerated || regenAssignmentCount === fixtureCount;
 
       if (regen.regeneration.lockConflictDiagnostics.length > 0) {
         scheduleConsistencyOverride = "NEEDS_REGENERATION";
       } else if (
         regen.regeneration.status === "INFEASIBLE_PROVEN" ||
-        regen.regeneration.assignments.length === 0
+        regenAssignmentCount === 0 ||
+        !completeForTopology
       ) {
         scheduleConsistencyOverride = "NEEDS_REGENERATION";
       } else {

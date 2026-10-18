@@ -7,6 +7,7 @@ import { requireTenantOrganisedTournament } from "./internal/require-tenant-orga
 import {
   listTournamentFixtureAssignmentsForVersion,
   persistTournamentFixtureAssignment,
+  removeTournamentFixtureAssignment,
   updateTournamentFixtureAssignment,
 } from "./assignment-service";
 import { loadTournamentScheduleOptimisationContext } from "./feasibility-service";
@@ -92,6 +93,8 @@ export async function syncOptimisedAssignmentsToVersion(params: {
   scheduleVersionId: string;
   optimisation: TournamentScheduleOptimisationResult;
   expectedRevision?: number;
+  /** Remove persisted rows for fixtures absent from the optimisation result (topology/full regen). */
+  removeAssignmentsNotInResult?: boolean;
 }): Promise<{ revision: number }> {
   const version = await getTournamentScheduleVersion(params.tenantId, params.scheduleVersionId);
   let expectedRevision = params.expectedRevision ?? version.revision;
@@ -132,6 +135,15 @@ export async function syncOptimisedAssignmentsToVersion(params: {
         { expectedRevision },
       );
       expectedRevision = created.revision;
+    }
+  }
+
+  if (params.removeAssignmentsNotInResult) {
+    for (const row of existingByFixture.values()) {
+      const removed = await removeTournamentFixtureAssignment(params.tenantId, row.id, {
+        expectedRevision,
+      });
+      expectedRevision = removed.revision;
     }
   }
 
@@ -299,6 +311,8 @@ export async function runTournamentScheduleRegeneration(params: {
   tournamentId: string;
   scheduleVersionId: string;
   expectedRevision?: number;
+  /** When true, sync removes stale assignments and requires a complete fixture assignment set. */
+  topologyReconciled?: boolean;
 }): Promise<{
   regeneration: Awaited<ReturnType<typeof runTournamentPartialRegenerationForVersion>>;
   revision: number;
@@ -329,9 +343,17 @@ export async function runTournamentScheduleRegeneration(params: {
     return { regeneration, revision: version.revision };
   }
 
+  const engineFixtureCount = await prisma.tournamentFixture.count({
+    where: { tenantId: params.tenantId, eventId: params.tournamentId },
+  });
+
+  const assignmentComplete =
+    engineFixtureCount > 0 && regeneration.assignments.length === engineFixtureCount;
+
   if (
     regeneration.status === "INFEASIBLE_PROVEN" ||
-    regeneration.assignments.length === 0
+    regeneration.assignments.length === 0 ||
+    (params.topologyReconciled && !assignmentComplete)
   ) {
     return { regeneration, revision: version.revision };
   }
@@ -341,6 +363,7 @@ export async function runTournamentScheduleRegeneration(params: {
     scheduleVersionId: params.scheduleVersionId,
     optimisation: regeneration,
     expectedRevision: version.revision,
+    removeAssignmentsNotInResult: params.topologyReconciled === true,
   });
 
   return { regeneration, revision: synced.revision };
