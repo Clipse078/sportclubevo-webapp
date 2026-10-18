@@ -11,6 +11,7 @@ import { Lock } from "lucide-react";
 import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
 import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
 import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -163,14 +164,19 @@ export default function TournamentPlanungBoard({
                   {formatTime(anchor, timezone)}
                 </div>
                 <div
-                  className="col-start-2 border-b border-[var(--sce-warning)]/35 bg-[var(--sce-warning-soft)] px-3 py-3 text-center text-xs font-semibold text-[var(--foreground)]"
+                  className="col-start-2 border-b border-[var(--border)] p-1"
                   style={{ gridColumn: `2 / span ${model.pitches.length}` }}
                   role="gridcell"
-                  aria-label={allPitchBreak.accessibleLabel}
                   data-testid="planung-board-all-pitches-break"
                   data-drop-state="blocked"
                 >
-                  {allPitchBreak.label} · {timeRangeLabel} · Alle Felder
+                  <SceTournamentScheduleBreakPresentation
+                    layout="board-all-pitches"
+                    label={allPitchBreak.label}
+                    timeLabel={timeRangeLabel}
+                    scopeLabel="Alle Felder"
+                    accessibleLabel={allPitchBreak.accessibleLabel}
+                  />
                 </div>
               </div>
             );
@@ -215,13 +221,13 @@ export default function TournamentPlanungBoard({
                       if (drag?.committed) void handlePreview(drag, pitch.pitchId, anchor, true);
                     }}
                   >
-                    <div
-                      className="rounded-md border border-dashed border-[var(--sce-warning)]/40 bg-[var(--sce-warning-soft)] px-2 py-3 text-center text-xs font-semibold text-[var(--foreground)]"
-                      data-testid={`planung-board-pitch-break-${pitch.pitchId}`}
-                    >
-                      {br.label} · {formatTime(br.startUtc, timezone)}–
-                      {formatTime(br.endUtc, timezone)}
-                    </div>
+                    <SceTournamentScheduleBreakPresentation
+                      layout="board-pitch"
+                      label={br.label}
+                      timeLabel={`${formatTime(br.startUtc, timezone)}–${formatTime(br.endUtc, timezone)}`}
+                      accessibleLabel={br.accessibleLabel}
+                      testId={`planung-board-pitch-break-${pitch.pitchId}`}
+                    />
                   </div>
                 );
               }

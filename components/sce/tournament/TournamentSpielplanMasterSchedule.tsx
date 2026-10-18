@@ -2,6 +2,7 @@
 
 import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
 import SceTournamentFixtureCard from "./SceTournamentFixtureCard";
+import SceTournamentScheduleBreakPresentation from "./SceTournamentScheduleBreakPresentation";
 import {
   SCE_TOURNAMENT_ROUND_COUNT_BADGE_CLASS,
   SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
@@ -37,24 +38,16 @@ export default function TournamentSpielplanMasterSchedule({
           const { break: br } = item;
           const isAllPitches = br.scope === "ALL_PITCHES";
           return (
-            <div
+            <SceTournamentScheduleBreakPresentation
               key={`break-${br.breakId}`}
-              className={
-                isAllPitches
-                  ? "rounded-[var(--radius-lg)] border border-dashed border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-4 py-3 text-center"
-                  : "rounded-[var(--radius-lg)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-4 py-3"
-              }
-              data-testid={
+              layout={isAllPitches ? "spielplan-all-pitches" : "spielplan-selected-pitches"}
+              label={br.label}
+              timeLabel={br.timeLabel}
+              scopeLabel={isAllPitches ? null : br.scopeLabel}
+              testId={
                 isAllPitches ? "spielplan-all-pitches-break" : "spielplan-selected-pitches-break"
               }
-              role="status"
-            >
-              <p className="text-sm font-semibold text-[var(--foreground)]">{br.label}</p>
-              <p className="text-xs tabular-nums text-[var(--text-2)]">{br.timeLabel}</p>
-              {!isAllPitches ? (
-                <p className="text-xs text-[var(--muted)]">{br.scopeLabel}</p>
-              ) : null}
-            </div>
+            />
           );
         }
 

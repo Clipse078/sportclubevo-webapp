@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import TournamentSpielplanMasterSchedule from "../TournamentSpielplanMasterSchedule";
 import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
 import { expectCanonicalFixtureIdentityOrder } from "./fixture-identity-order-assertions";
+import { SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER } from "@/lib/sce/tournament/sce-tournament-schedule-break-semantics";
 
 const baseFixture = {
   fixtureId: "f1",
@@ -94,8 +95,10 @@ describe("TournamentSpielplanMasterSchedule", () => {
         })}
       />,
     );
-    expect(screen.getByTestId("spielplan-all-pitches-break")).toBeInTheDocument();
-    expect(screen.getByText(/Pause/)).toBeInTheDocument();
+    const breakBlock = screen.getByTestId("spielplan-all-pitches-break");
+    expect(breakBlock).toHaveAttribute("data-sce-schedule-break", SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER);
+    expect(screen.getByText("Pause")).toBeInTheDocument();
+    expect(screen.getByText("11:00–11:15")).toBeInTheDocument();
   });
 
   it("preserves team highlight visibility for all fixtures", () => {

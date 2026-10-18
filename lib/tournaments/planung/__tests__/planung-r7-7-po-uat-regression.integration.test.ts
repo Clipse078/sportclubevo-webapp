@@ -139,7 +139,7 @@ describe("01K-R7.7 — PO UAT regression (real failure path)", () => {
     vi.mocked(prisma.tournamentCompetitionConfiguration.findFirst).mockResolvedValue({
       fixtureHomeAwayRelevance: "ON",
       roundRobinMeetingsPerOpponent: 1,
-      competitionFormat: "ROUND_ROBIN",
+      competitionFormat: "GROUP_MIX_ONLY",
     } as never);
 
     const assessment = await assessPlanungRoundRobinTopologyMismatch({

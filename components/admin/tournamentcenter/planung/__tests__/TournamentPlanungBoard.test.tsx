@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TournamentPlanungBoard from "../TournamentPlanungBoard";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
+import { SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER } from "@/lib/sce/tournament/sce-tournament-schedule-break-semantics";
 
 const model: TournamentPlanungViewModel = {
   tournamentId: "t1",
@@ -113,8 +114,13 @@ describe("TournamentPlanungBoard 01I", () => {
         onSelectFixture={vi.fn()}
       />,
     );
-    expect(screen.getByTestId("planung-board-all-pitches-break")).toBeInTheDocument();
-    expect(screen.getByText(/Pause · .* · Alle Felder/)).toBeInTheDocument();
+    const bandCell = screen.getByTestId("planung-board-all-pitches-break");
+    expect(bandCell).toBeInTheDocument();
+    expect(
+      bandCell.querySelector(`[data-sce-schedule-break="${SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER}"]`),
+    ).toBeTruthy();
+    expect(screen.getByText("Pause")).toBeInTheDocument();
+    expect(screen.getByText(/10:15–10:30 · Alle Felder/)).toBeInTheDocument();
   });
 
   it("A — fixture is draggable when unlocked", () => {

@@ -8,6 +8,7 @@ import {
   SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
 } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { cn } from "@/lib/cn";
+import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -51,15 +52,18 @@ export default function TournamentPlanungMobileTimeline({
           <ol className="mt-3 space-y-2.5">
             {section.entries.map((cell) => {
               if (cell.kind === "BREAK") {
+                const timeLabel = formatTimeRange(cell.startUtc, cell.endUtc, timezone);
                 return (
-                  <li
-                    key={cell.breakId}
-                    className="rounded-lg border border-dashed border-[var(--sce-warning)]/35 bg-[var(--sce-warning-soft)] px-3 py-2 text-sm font-medium text-[var(--foreground)]"
-                    aria-label={cell.accessibleLabel}
-                    data-testid={`planung-mobile-break-${cell.breakId}`}
-                  >
-                    {cell.label} · {formatTimeRange(cell.startUtc, cell.endUtc, timezone)}
-                    {cell.scope === "ALL_PITCHES" ? " · Alle Felder" : ""}
+                  <li key={cell.breakId} data-testid={`planung-mobile-break-${cell.breakId}`}>
+                    <SceTournamentScheduleBreakPresentation
+                      layout={
+                        cell.scope === "ALL_PITCHES" ? "board-all-pitches" : "spielplan-selected-pitches"
+                      }
+                      label={cell.label}
+                      timeLabel={timeLabel}
+                      scopeLabel={cell.scope === "ALL_PITCHES" ? "Alle Felder" : "Ausgewählte Felder"}
+                      accessibleLabel={cell.accessibleLabel}
+                    />
                   </li>
                 );
               }
