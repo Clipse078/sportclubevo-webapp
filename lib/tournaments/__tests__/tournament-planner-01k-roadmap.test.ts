@@ -21,7 +21,7 @@ describe("01K roadmap", () => {
     expect(parent).toMatch(/01J.*CLOSED|01J CLOSED/i);
     expect(parent).toMatch(/01K.*CLOSED|01K CLOSED/i);
     expect(parent).toMatch(/01L.*CLOSED|01L CLOSED/i);
-    expect(parent).toMatch(/01M.*NEXT|NOT STARTED/i);
+    expect(parent).toMatch(/01M.*READY_FOR_PO_UAT|IN PROGRESS/i);
     expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
     expect(doc).toMatch(/PO UAT.*PASS/i);
   });

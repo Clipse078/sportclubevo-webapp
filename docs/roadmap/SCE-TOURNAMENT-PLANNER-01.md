@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01` |
-| **Status** | **IN PROGRESS — 01M NOT STARTED; 01L CLOSED / ACCEPTED / MERGED (PR #872, PO UAT PASS); 01K CLOSED / ACCEPTED / MERGED (PR #871, PO UAT PASS); 01J CLOSED / ACCEPTED / MERGED (PR #870, PO UAT PASS); 01I CLOSED / ACCEPTED / MERGED (PR #869, PO UAT PASS); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
+| **Status** | **IN PROGRESS — 01M READY_FOR_PO_UAT (implementation delivered, PO UAT pending); 01L CLOSED / ACCEPTED / MERGED (PR #872, PO UAT PASS); 01K CLOSED / ACCEPTED / MERGED (PR #871, PO UAT PASS); 01J CLOSED / ACCEPTED / MERGED (PR #870, PO UAT PASS); 01I CLOSED / ACCEPTED / MERGED (PR #869, PO UAT PASS); 01H CLOSED / ACCEPTED / MERGED (PR #868, PO UAT PASS); 01G CLOSED / ACCEPTED / MERGED (PR #867); 01F2 CLOSED / ACCEPTED / MERGED (PR #866); 01F1 CLOSED / ACCEPTED / MERGED (PR #865); 01E3D CLOSED / ACCEPTED / MERGED (PR #864); 01E3C CLOSED / ACCEPTED / MERGED (PR #863); 01E3B CLOSED / ACCEPTED / MERGED (PR #862); 01E3A CLOSED / MERGED (PR #861); 01E2 CLOSED / MERGED (PR #860); 01E1 CLOSED / MERGED (PR #859); 01D CLOSED / MERGED (PR #857); 01C CLOSED / MERGED (PR #855)** |
 | **Predecessor** | [`SCE-ACTIVITY-CREATE-01F`](./SCE-ACTIVITY-CREATE-01F.md) — Tournament Adoption |
 | **01A (architecture)** | [`SCE-TOURNAMENT-PLANNER-01A`](./SCE-TOURNAMENT-PLANNER-01A.md) — **CLOSED / PO APPROVED / MERGED** |
 | **01B (persistence)** | [`SCE-TOURNAMENT-PLANNER-01B`](./SCE-TOURNAMENT-PLANNER-01B.md) — fixture + schedule version foundation |
@@ -23,7 +23,7 @@
 | **01J (Results + rankings)** | **CLOSED / ACCEPTED / MERGED** (PR **#870**, PO UAT **PASS**) — Results + Rankings + Qualification Progression ([doc](./SCE-TOURNAMENT-PLANNER-01J.md)) |
 | **01K (Spielplan output + print/PDF + sharing)** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01K.md)) |
 | **01L (Responsive + accessibility + polish)** | **CLOSED / ACCEPTED / MERGED** (PR **#872**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01L.md)) |
-| **01M (Integrity + performance + closure)** | **NOT STARTED** ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
+| **01M (Integrity + performance + closure)** | **READY_FOR_PO_UAT** ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 
@@ -91,7 +91,7 @@ Contracts: `lib/tournament-scheduling/smart-generator-architecture.ts`.
 | **TOURNAMENT_BREAK_CARDINALITY** | **0:n** per tournament |
 | **TOURNAMENT_PHASE_CARDINALITY** | **1:n** per tournament |
 
-**Tournament Pitch ≠ FacilityResource.** MVP engine guards (e.g. 16 participants in 01C/01D) are **implementation safety limits**, not product maximums (`PARTICIPANT_LIMIT_IS_PRODUCT_RULE = NO`).
+**Tournament Pitch ≠ FacilityResource.** Engine guards (complete-search thresholds, generation safety caps) are **implementation limits**, not product maximums (`PARTICIPANT_LIMIT_IS_PRODUCT_RULE = NO`; requalified in **01M**).
 
 ## Competition modes (user-facing)
 

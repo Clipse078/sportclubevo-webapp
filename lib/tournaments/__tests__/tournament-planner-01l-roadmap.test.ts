@@ -21,9 +21,9 @@ describe("01L roadmap", () => {
     );
     expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
     expect(doc).toMatch(/PO UAT.*PASS/i);
-    expect(doc).toMatch(/01M.*NOT STARTED|Integrity \+ Performance/i);
+    expect(doc).toMatch(/01M.*READY_FOR_PO_UAT|Integrity \+ Performance/i);
     expect(parent).toMatch(/01L.*CLOSED|01L CLOSED/i);
     expect(parent).toMatch(/01K.*CLOSED/i);
-    expect(parent).toMatch(/01M.*NEXT|NOT STARTED/i);
+    expect(parent).toMatch(/01M.*READY_FOR_PO_UAT|IN PROGRESS/i);
   });
 });

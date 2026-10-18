@@ -1,10 +1,5 @@
 import { analyseTournamentFeasibility } from "../feasibility/analyse";
-import {
-  FEASIBILITY_MAX_CANDIDATE_SLOTS,
-  FEASIBILITY_MAX_FIXTURES,
-  FEASIBILITY_MAX_PARTICIPANTS,
-  FEASIBILITY_MAX_PITCHES,
-} from "../feasibility/constants";
+import { FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS } from "../feasibility/constants";
 import {
   computeTheoreticalSlotCapacity,
   generateFeasibilityCandidateSlots,
@@ -113,31 +108,6 @@ export function optimiseTournamentSchedule(
     };
   }
 
-  if (
-    input.participants.length > FEASIBILITY_MAX_PARTICIPANTS ||
-    input.fixtures.length > FEASIBILITY_MAX_FIXTURES ||
-    input.tournamentPitches.length > FEASIBILITY_MAX_PITCHES
-  ) {
-    return {
-      status: "UNRESOLVED",
-      participantRestProofStatus,
-      assignments: [],
-      hardConstraintValidationOk: false,
-      objectiveMetrics: null,
-      objectiveScore: null,
-      feasibilityMetrics: feasibility.metrics,
-      diagnostics: [
-        {
-          code: "LIMIT.FIXTURES_EXCEEDED",
-          context: { reason: "OPTIMISER_BOUNDS" },
-        },
-      ],
-      searchStats: emptyStats,
-      baselineObjectiveMetrics: null,
-      optimalityNote: "Input exceeds MVP optimiser safety bounds.",
-    };
-  }
-
   const breakDiagnostics = validateTournamentBreaksInput({
     breaks: feasibilityInput.breaks,
     pitches: feasibilityInput.tournamentPitches,
@@ -198,7 +168,7 @@ export function optimiseTournamentSchedule(
     blockedIntervalsByPitchId,
   );
 
-  if (candidateSlots.length > FEASIBILITY_MAX_CANDIDATE_SLOTS) {
+  if (candidateSlots.length > FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS) {
     return {
       status: "UNRESOLVED",
       participantRestProofStatus,
@@ -213,7 +183,7 @@ export function optimiseTournamentSchedule(
           constraintId: "H9",
           context: {
             candidateSlotCount: candidateSlots.length,
-            max: FEASIBILITY_MAX_CANDIDATE_SLOTS,
+            max: FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS,
           },
         },
       ],

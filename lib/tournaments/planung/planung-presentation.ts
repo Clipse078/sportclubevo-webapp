@@ -108,12 +108,11 @@ export function feasibilityDiagnosticUserMessage(code: FeasibilityDiagnosticCode
       return "Gesperrte Zeiten oder Felder widersprechen der aktuellen Konfiguration.";
     case "ASSIGNMENT.SEARCH_EXHAUSTED":
       return "Es konnte keine gültige Spielplan-Zuordnung gefunden werden.";
-    case "LIMIT.PARTICIPANTS_EXCEEDED":
-      return "Die Teilnehmeranzahl überschreitet die unterstützte Planungsgrenze.";
+    case "ANALYSIS.COMPLETE_SEARCH_BOUNDARY":
+      return "Die automatische Machbarkeitsprüfung nutzt für diese Größe eine vereinfachte Analyse — das Turnier bleibt planbar.";
     case "LIMIT.FIXTURES_EXCEEDED":
-      return "Die Spielanzahl überschreitet die unterstützte Planungsgrenze.";
     case "LIMIT.PITCHES_EXCEEDED":
-      return "Die Spielfeldanzahl überschreitet die unterstützte Planungsgrenze.";
+      return "Für diese Größe wird eine vereinfachte Planungsstrategie verwendet (kein Turnierlimit).";
     case "BREAK.INVALID":
     case "BREAK.OUTSIDE_WINDOW":
     case "BREAK.UNKNOWN_PITCH":

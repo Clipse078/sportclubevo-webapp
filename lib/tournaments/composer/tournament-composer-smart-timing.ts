@@ -250,6 +250,13 @@ export function composerSmartTimingFeasibilitySurface(
       detail: "Nur wenig Reserve vorhanden.",
     };
   }
+  if (assessment.feasibilityStatus === "UNRESOLVED") {
+    return {
+      level: "OK",
+      title: "Planung möglich",
+      detail: "Größenabhängige Machbarkeitsanalyse — Spielplan kann trotzdem erzeugt werden.",
+    };
+  }
   if (assessment.durationRecommendation) {
     return {
       level: "ADJUST",
@@ -284,6 +291,10 @@ export function composerSmartTimingPlanExplanation(
 
   if (assessment.feasibilityStatus === "INFEASIBLE") {
     return "Das aktuelle Zeitfenster reicht nicht aus.";
+  }
+
+  if (assessment.feasibilityStatus === "UNRESOLVED") {
+    return "Großes Turnier — vereinfachte Zeitplan-Analyse; Spielplan-Generierung bleibt möglich.";
   }
 
   const rec = view.recommendedTiming;

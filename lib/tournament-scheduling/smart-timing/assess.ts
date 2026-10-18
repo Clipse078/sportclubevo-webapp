@@ -1,4 +1,5 @@
 import { analyseTournamentFeasibility } from "../feasibility/analyse";
+import { SMART_TIMING_HEAVY_OPPORTUNITY_MAX_FIXTURES } from "../feasibility/constants";
 import { runTimingFeasibilityWithWitness } from "./feasibility-oracle";
 import { minimumRequiredTournamentSpanMinutes } from "../feasibility/metrics";
 import {
@@ -44,8 +45,6 @@ function structuralLowerBoundSpanMinutes(
   const restBound = minimumRequiredTournamentSpanMinutes(fixtures, config);
   return Math.max(pitchMinuteBound, restBound);
 }
-
-const HEAVY_OPPORTUNITY_FIXTURE_LIMIT = 16;
 
 function buildAssessmentShell(
   input: TournamentTimingInput,
@@ -119,7 +118,8 @@ function assessForwardTiming(
     ...input,
     tournamentWindow: hasKnownEnd ? input.tournamentWindow : tournamentWindow,
   };
-  const heavyOpportunities = input.fixtures.length <= HEAVY_OPPORTUNITY_FIXTURE_LIMIT;
+  const heavyOpportunities =
+    input.fixtures.length <= SMART_TIMING_HEAVY_OPPORTUNITY_MAX_FIXTURES;
   const matchOpportunity = heavyOpportunities
     ? computeMatchDurationIncreaseOpportunity(timingInputForOps, config)
     : null;
@@ -196,7 +196,8 @@ function assessBackwardTiming(
       ? Math.max(0, windowSpanMinutes(input.tournamentWindow) - requiredSpanMinutes)
       : null;
 
-  const heavyOpportunities = input.fixtures.length <= HEAVY_OPPORTUNITY_FIXTURE_LIMIT;
+  const heavyOpportunities =
+    input.fixtures.length <= SMART_TIMING_HEAVY_OPPORTUNITY_MAX_FIXTURES;
   const matchOpportunity =
     heavyOpportunities && !durationRecommendation
       ? computeMatchDurationIncreaseOpportunity(input, config)
@@ -270,7 +271,8 @@ function assessFixedWindowTiming(
     mathematicalMaximumTiming = backward.mathematicalMaximum;
   }
 
-  const heavyOpportunities = input.fixtures.length <= HEAVY_OPPORTUNITY_FIXTURE_LIMIT;
+  const heavyOpportunities =
+    input.fixtures.length <= SMART_TIMING_HEAVY_OPPORTUNITY_MAX_FIXTURES;
   const matchOpportunity = heavyOpportunities
     ? computeMatchDurationIncreaseOpportunity(input, config)
     : null;

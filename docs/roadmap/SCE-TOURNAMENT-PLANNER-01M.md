@@ -5,12 +5,95 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01M` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01L.md) — **CLOSED / ACCEPTED / MERGED** (PR **#872**) |
-| **Status** | **NOT STARTED** |
+| **Status** | **READY_FOR_PO_UAT** (implementation delivered; PO visual UAT pending) |
+| **PR** | Open to **STAGE** (not merged) |
 
-## Intended scope (programme — not implemented in this package)
+## Product baseline preserved
 
-- Integrity checks and regression closure for the full Tournament Planner programme
-- Performance requalification (including workloads previously blocked by technical guards, e.g. large fixture sets noted in **01G**)
-- Technical-limit requalification and final programme closure for **SCE-TOURNAMENT-PLANNER-01**
+- Primary output remains a **usable Spielplan**, not competition completion.
+- **ONE canonical tournament schedule** → Planung / Master / Team / Print / PDF / Public.
+- **01A–01L behaviour retained** (Home/Away, Pause/Sperrzeit, manual planning, outputs, HOME planner ownership).
+- **No Tournament Planner 02** scope; no rotation / participant units / tournament stations.
 
-**Do not implement 01M until explicitly opened as a delivery package.**
+## Integrity audit (summary)
+
+| Area | Result |
+| --- | --- |
+| Identity / tenant / HOME ownership | Existing service-boundary checks retained; no new cross-tenant or cross-tournament defects found in 01M code paths |
+| Schedule revision / locks / results separation | Unchanged 01G/01J contracts preserved |
+| Duplicate canonical state | No parallel Team-Spielplan or output-local schedule truth introduced |
+
+## Technical-limit requalification (01M changes)
+
+| Limit | Class | Rationale |
+| --- | --- | --- |
+| `FEASIBILITY_COMPLETE_SEARCH_MAX_FIXTURES` (120) | ALGORITHM_THRESHOLD | Complete 01D backtracking proof budget |
+| `FEASIBILITY_COMPLETE_SEARCH_MAX_PITCHES` (32) | PERFORMANCE_GUARD | Candidate-slot grid growth |
+| `FEASIBILITY_COMPLETE_SEARCH_MAX_CANDIDATE_SLOTS` (500) | PERFORMANCE_GUARD | H9 complete-search cap |
+| `EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES` (12) | ALGORITHM_THRESHOLD | Lexicographic exhaustive optimiser; larger → bounded improvement |
+| `SMART_TIMING_HEAVY_OPPORTUNITY_MAX_FIXTURES` (16) | PERFORMANCE_GUARD | Skip heavy interactive scans; structural bounds still apply |
+| `SMART_TIMING_PITCH_PROOF_SEARCH_MAX` (32) | ALGORITHM_THRESHOLD | Pitch-count binary search cap |
+| `TOURNAMENT_*_TECHNICAL_MAX_FIXTURES` (2000) | SAFETY_GUARD | Generation memory/CPU ceiling |
+| `MAX_VISIBLE_TOURNAMENT_LOGOS` (16) | LEGACY_ASSUMPTION | Dashboard avatar overflow UI only — not participant cap |
+
+**Removed / corrected**
+
+- **`FEASIBILITY_MAX_PARTICIPANTS = 16` as INFEASIBLE gate** — removed. Participant count is **not** a feasibility dimension.
+- **Heuristic-only INFEASIBLE** for `SLOTS.TOO_MANY_CANDIDATES` and complete-search boundary → new feasibility status **`UNRESOLVED`** (tournament remains planable; generation/optimiser use deterministic fallbacks).
+
+| Flag | Value |
+| --- | --- |
+| **PARTICIPANT_LIMIT_IS_PRODUCT_RULE** | **NO** |
+| **ARBITRARY_PRODUCT_PARTICIPANT_MAX** | **NONE** |
+
+Documented in `lib/tournament-scheduling/feasibility/constants.ts` and `bounds.ts`.
+
+## Scale scenarios (automated)
+
+| Participants | Format | Coverage |
+| --- | --- | --- |
+| 4, 8, 12, 16 | Smart Mix / Round Robin | `tournament-planner-01m-scale-integrity.test.ts` |
+| 24, 32 | Smart Mix | Generation + identity invariants |
+| 64 | Knockout | Larger bounded fixture set (63 matches) |
+| 32 fixtures | Optimiser | Bounded improvement path within time budget |
+
+## Performance audit (summary)
+
+- No new optimiser calls from presentation layers.
+- Removed redundant optimiser early-exit on participant count; optimiser still bounded by candidate-slot guard.
+- Existing N+1 patterns not expanded in 01M diff.
+
+## Schema / database
+
+| Flag | Value |
+| --- | --- |
+| **SCHEMA_CHANGE** | **NO** |
+| **NEW_MIGRATION** | **NO** |
+| **INDEX_CHANGES** | **NO** |
+| **PROD_TOUCHED** | **NO** |
+
+## Future extensibility (deferred — documented only)
+
+| Concept | Implemented |
+| --- | --- |
+| E/FF12 Rotation | **NO** |
+| Participant playing units (A1/A2) | **NO** |
+| TournamentStation | **NO** |
+| In-round rotation phases | **NO** |
+
+**Future-safe today:** `TournamentParticipant` and logical `TournamentPitch` remain separable from `FacilityResource`. Fixture model is side-based (not hard-coded “one full team only forever”), but 01M does not add playing-unit persistence.
+
+## Automated verification (Cursor)
+
+- Vitest: feasibility, 01M scale/integrity, tournament-scheduling regression (see CI / local `npm test` filters).
+- `prisma validate`, `prisma generate`, production build — run at delivery.
+
+## PO UAT
+
+| Flag | Value |
+| --- | --- |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **PO_UAT_STATUS** | **PENDING** |
+
+**Tournament Planner 01 programme closure** awaits PO acceptance of **01M** after UAT.
