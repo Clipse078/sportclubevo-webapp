@@ -6,7 +6,7 @@
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01J`](./SCE-TOURNAMENT-PLANNER-01J.md) — **CLOSED / ACCEPTED / MERGED** (PR **#870**) |
 | **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**, merge to **STAGE**) |
-| **Next** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01L.md) — Responsive + Accessibility + Polish (**IMPLEMENTED — PO UAT PENDING**) |
+| **Next** | [`SCE-TOURNAMENT-PLANNER-01L`](./SCE-TOURNAMENT-PLANNER-01L.md) — **CLOSED / ACCEPTED / MERGED** (PR **#872**); [`SCE-TOURNAMENT-PLANNER-01M`](./SCE-TOURNAMENT-PLANNER-01M.md) — **NOT STARTED** |
 
 ## Product goal (scope correction)
 

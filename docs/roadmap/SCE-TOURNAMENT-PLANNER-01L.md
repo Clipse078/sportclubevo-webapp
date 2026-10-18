@@ -5,7 +5,8 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-01L` |
 | **Parent** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01K`](./SCE-TOURNAMENT-PLANNER-01K.md) — **CLOSED / ACCEPTED / MERGED** (PR **#871**) |
-| **Status** | **IMPLEMENTED — PO UAT PENDING** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#872**, PO UAT **PASS**, merge to **STAGE**) |
+| **Next** | [`SCE-TOURNAMENT-PLANNER-01M`](./SCE-TOURNAMENT-PLANNER-01M.md) — Integrity + Performance + Technical-Limit Requalification + Final Closure (**NOT STARTED**) |
 
 ## Product goal
 
@@ -23,6 +24,19 @@
 | **NEW_OPTIMIZER_CALLS_FROM_PRESENTATION** | **0** |
 | **DUPLICATE_SCHEDULE_ENGINE** | **NO** |
 | **SPORT_SPECIFIC_FORMAT_REQUIREMENT_ADDED** | **NO** |
+| **TOURNAMENT_PLANNER_DOMAIN_CHANGE** | **NO** |
+
+## Accepted scope (PO UAT PASS)
+
+Presentation and interaction only — no Tournament Planner domain changes:
+
+- Responsive desktop / tablet / mobile Spielplan compositions (`lg` master vs chronological mobile timeline; single canonical schedule, two compositions)
+- Responsive Feld- und Zeitplan strategy (desktop matrix + tablet horizontal scroll; mobile timeline fallback)
+- Mobile manual-move fallback (Spiel verschieben without drag-and-drop)
+- Accessibility semantics: keyboard paths, visible focus, screen-reader fixture labels, Pause aria semantics, restrained live announcements
+- Pause semantic consistency (explicit schedule structure, canonical amber treatment, **COLOR_ONLY_SEMANTICS = NO**)
+- Responsive / public-output polish aligned with SCE Design System
+- Edit Mode usable responsively; touch-target contracts where applicable
 
 ## Scope (presentation / interaction only)
 
@@ -51,4 +65,4 @@ No new formats, generators, ranking logic, publication models, TournamentPitch s
 
 ## Next
 
-**01M** — not started (per programme table in parent doc).
+**01M** — [`SCE-TOURNAMENT-PLANNER-01M`](./SCE-TOURNAMENT-PLANNER-01M.md) — **NOT STARTED** (Integrity + Performance + Technical-Limit Requalification + Final Closure).

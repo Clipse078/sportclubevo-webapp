@@ -19,7 +19,11 @@ describe("01L roadmap", () => {
       join(process.cwd(), "docs/roadmap/SCE-TOURNAMENT-PLANNER-01.md"),
       "utf8",
     );
-    expect(parent).toMatch(/01L.*IMPLEMENTED|PO UAT PENDING/i);
+    expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
+    expect(doc).toMatch(/PO UAT.*PASS/i);
+    expect(doc).toMatch(/01M.*NOT STARTED|Integrity \+ Performance/i);
+    expect(parent).toMatch(/01L.*CLOSED|01L CLOSED/i);
     expect(parent).toMatch(/01K.*CLOSED/i);
+    expect(parent).toMatch(/01M.*NEXT|NOT STARTED/i);
   });
 });
