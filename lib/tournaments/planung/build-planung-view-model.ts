@@ -10,7 +10,9 @@ import type {
 } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 import type { TournamentPlannerOwnershipResolution } from "@/lib/tournament-scheduling/planner-eligibility";
 import {
+  buildPlanungFeasibilityGuidance,
   buildRegenerationSummaryMessage,
+  feasibilityDiagnosticUserMessage,
   feasibilityUxHeadline,
   resolveFeasibilityUxStatus,
   scheduleLockDimensionLabel,
@@ -380,7 +382,7 @@ function mapDiagnostics(
     for (const diag of feasibility.diagnostics.slice(0, 6)) {
       out.push({
         id: diag.code,
-        message: diag.code.replace(/\./g, " ").replace(/_/g, " "),
+        message: feasibilityDiagnosticUserMessage(diag.code),
         severity: feasibility.status === "INFEASIBLE" ? "danger" : "warning",
       });
     }
@@ -547,6 +549,7 @@ export function buildTournamentPlanungViewModel(
     participants: snapshot.participants,
     smartTiming: buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
     diagnostics,
+    feasibilityGuidance: buildPlanungFeasibilityGuidance(snapshot.feasibility),
     regenerationSummary: buildRegenerationSummaryMessage(snapshot.regenerationMetrics),
     incompleteSetup,
     actions: {
@@ -559,6 +562,7 @@ export function buildTournamentPlanungViewModel(
         schedulePresence !== "NONE" &&
         incompleteSetup.length === 0,
       generateLabel: "✨ Spielplan automatisch erstellen",
+      generatePendingLabel: "Spielplan wird erstellt …",
       regenerateLabel: "Spielplan neu berechnen",
       regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
     },

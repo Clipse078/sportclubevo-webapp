@@ -1,0 +1,80 @@
+import { describe, expect, it } from "vitest";
+import { analyseTournamentFeasibility } from "@/lib/tournament-scheduling/feasibility";
+import {
+  buildPlanungFeasibilityGuidance,
+  feasibilityDiagnosticUserMessage,
+  resolveInitialScheduleGenerationOutcome,
+} from "../planung-presentation";
+
+describe("planung feasibility presentation", () => {
+  it("maps capacity and rest diagnostics to German product copy", () => {
+    expect(feasibilityDiagnosticUserMessage("CAPACITY.PITCH_MINUTES_SHORT")).toContain(
+      "Zeitfenster",
+    );
+    expect(feasibilityDiagnosticUserMessage("REST.CANNOT_SATISFY_MIN_REST")).toContain(
+      "Erholungszeiten",
+    );
+    expect(feasibilityDiagnosticUserMessage("CAPACITY.PITCH_MINUTES_SHORT")).not.toContain("_");
+  });
+
+  it("builds actionable guidance from canonical feasibility suggestions", () => {
+    const feasibility = analyseTournamentFeasibility({
+      tournamentWindow: { startUtcMs: 0, endUtcMs: 30 * 60_000 },
+      config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
+      fixtures: [
+        {
+          fixtureId: "f1",
+          stageKey: "MAIN",
+          roundIndex: 0,
+          slotIndexInRound: 0,
+          sideAParticipantId: "p1",
+          sideBParticipantId: "p2",
+        },
+        {
+          fixtureId: "f2",
+          stageKey: "MAIN",
+          roundIndex: 0,
+          slotIndexInRound: 1,
+          sideAParticipantId: "p3",
+          sideBParticipantId: "p4",
+        },
+      ],
+      participants: [{ participantId: "p1" }, { participantId: "p2" }, { participantId: "p3" }, { participantId: "p4" }],
+      tournamentPitches: [
+        {
+          tournamentPitchId: "pitch-a",
+          displayOrder: 0,
+          label: "Feld 1",
+          playableIntervals: [{ startUtcMs: 0, endUtcMs: 30 * 60_000 }],
+        },
+      ],
+      breaks: [],
+    });
+
+    expect(feasibility.status).toBe("INFEASIBLE");
+    const guidance = buildPlanungFeasibilityGuidance(feasibility);
+    expect(guidance?.headline).toBe("Spielplan kann noch nicht erstellt werden");
+    expect(guidance?.adjustments.some((a) => a.includes("Spieldauer"))).toBe(true);
+    expect(guidance?.adjustments.some((a) => a.includes("Spielfeld"))).toBe(true);
+  });
+
+  it("reports structured infeasible generation without persisting assignments", () => {
+    const outcome = resolveInitialScheduleGenerationOutcome({
+      optimisation: {
+        status: "INFEASIBLE_PROVEN",
+        assignments: [],
+        diagnostics: [],
+        metrics: {} as never,
+      },
+      feasibility: {
+        status: "INFEASIBLE",
+        diagnostics: [{ code: "CAPACITY.PITCH_MINUTES_SHORT" }],
+        metrics: {} as never,
+        suggestions: [{ code: "REDUCE_MATCH_DURATION" }],
+      },
+    });
+
+    expect(outcome.succeeded).toBe(false);
+    expect(outcome.guidance?.adjustments).toContain("Spieldauer verkürzen");
+  });
+});

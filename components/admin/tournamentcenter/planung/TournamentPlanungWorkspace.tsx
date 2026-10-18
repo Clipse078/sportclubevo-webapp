@@ -3,7 +3,10 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Sparkles, RefreshCw } from "lucide-react";
-import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
+import type {
+  TournamentPlanungGenerationOutcome,
+  TournamentPlanungViewModel,
+} from "@/lib/tournaments/planung/types";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +60,9 @@ export default function TournamentPlanungWorkspace({
   const [model, setModel] = useState(initialModel);
   const [workspaceMode, setWorkspaceMode] = useState<"planung" | "spielplan">("planung");
   const [busy, setBusy] = useState(false);
+  const [generatePending, setGeneratePending] = useState(false);
+  const [generationFeedback, setGenerationFeedback] =
+    useState<TournamentPlanungGenerationOutcome | null>(null);
   const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
   const [manualMoveOpen, setManualMoveOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
@@ -67,6 +73,56 @@ export default function TournamentPlanungWorkspace({
     const json = (await res.json()) as { viewModel: TournamentPlanungViewModel };
     setModel(json.viewModel);
   }, [tournamentId]);
+
+  const runGenerate = useCallback(async () => {
+    setBusy(true);
+    setGeneratePending(true);
+    setGenerationFeedback(null);
+    try {
+      const res = await fetch(`/api/tournaments/${tournamentId}/planung/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expectedRevision: model.scheduleRevision }),
+      });
+      const json = (await res.json()) as {
+        viewModel?: TournamentPlanungViewModel;
+        generation?: TournamentPlanungGenerationOutcome;
+        error?: string;
+        code?: string;
+      };
+      if (!res.ok) {
+        if (json.code === "SCHEDULE.STALE_VERSION") {
+          toast.danger(
+            "Der Spielplan wurde inzwischen geändert. Bitte aktualisiere die Planung.",
+          );
+          await refresh();
+          return;
+        }
+        toast.danger(json.error ?? "Spielplan konnte nicht erstellt werden.");
+        return;
+      }
+      if (json.viewModel) setModel(json.viewModel);
+      else await refresh();
+
+      if (json.generation) {
+        setGenerationFeedback(json.generation);
+        if (json.generation.succeeded) {
+          toast.success("Spielplan wurde erstellt.");
+          setGenerationFeedback(null);
+        } else if (json.generation.guidance) {
+          toast.danger(json.generation.guidance.headline);
+        } else {
+          toast.danger("Spielplan konnte mit der aktuellen Konfiguration nicht erstellt werden.");
+        }
+      }
+      router.refresh();
+    } catch {
+      toast.danger("Spielplan konnte nicht erstellt werden. Bitte erneut versuchen.");
+    } finally {
+      setBusy(false);
+      setGeneratePending(false);
+    }
+  }, [model.scheduleRevision, refresh, router, toast, tournamentId]);
 
   const runAction = useCallback(
     async (path: string, body?: Record<string, unknown>) => {
@@ -90,11 +146,14 @@ export default function TournamentPlanungWorkspace({
             await refresh();
             return;
           }
-          throw new Error(json.error ?? "Aktion fehlgeschlagen");
+          toast.danger(json.error ?? "Aktion fehlgeschlagen");
+          return;
         }
         if (json.viewModel) setModel(json.viewModel);
         else await refresh();
         router.refresh();
+      } catch {
+        toast.danger("Aktion fehlgeschlagen. Bitte erneut versuchen.");
       } finally {
         setBusy(false);
       }
@@ -165,6 +224,8 @@ export default function TournamentPlanungWorkspace({
   }
 
   const showEmpty = model.schedulePresence === "NONE" && model.incompleteSetup.length === 0;
+  const feasibilityGuidance =
+    generationFeedback?.guidance ?? model.feasibilityGuidance ?? null;
 
   return (
     <div className="space-y-4" data-testid="tournament-planung-workspace">
@@ -216,15 +277,14 @@ export default function TournamentPlanungWorkspace({
               <Button
                 type="button"
                 disabled={busy}
-                onClick={() =>
-                  runAction(`/api/tournaments/${tournamentId}/planung/generate`, {
-                    expectedRevision: model.scheduleRevision,
-                  })
-                }
+                onClick={() => void runGenerate()}
                 data-testid="tournament-planung-generate"
+                aria-busy={generatePending}
               >
                 <Sparkles className="mr-1.5 h-4 w-4" aria-hidden />
-                {model.actions.generateLabel}
+                {generatePending
+                  ? model.actions.generatePendingLabel
+                  : model.actions.generateLabel}
               </Button>
             ) : null}
             {model.actions.canRegenerate ? (
@@ -279,14 +339,13 @@ export default function TournamentPlanungWorkspace({
               className="mt-4"
               type="button"
               disabled={busy}
-              onClick={() =>
-                runAction(`/api/tournaments/${tournamentId}/planung/generate`, {
-                  expectedRevision: model.scheduleRevision,
-                })
-              }
+              onClick={() => void runGenerate()}
+              aria-busy={generatePending}
             >
               <Sparkles className="mr-1.5 h-4 w-4" aria-hidden />
-              {model.actions.generateLabel}
+              {generatePending
+                ? model.actions.generatePendingLabel
+                : model.actions.generateLabel}
             </Button>
           ) : null}
         </section>
@@ -296,6 +355,31 @@ export default function TournamentPlanungWorkspace({
         <p className="text-sm text-[var(--muted)]" data-testid="tournament-planung-regen-summary">
           {model.regenerationSummary.message}
         </p>
+      ) : null}
+
+      {feasibilityGuidance ? (
+        <section
+          className="rounded-xl border border-[var(--sce-danger)]/40 bg-[var(--surface)] p-4"
+          data-testid="tournament-planung-generation-blocked"
+          role="alert"
+        >
+          <p className="text-sm font-semibold text-[var(--foreground)]">
+            {feasibilityGuidance.headline}
+          </p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{feasibilityGuidance.summary}</p>
+          {feasibilityGuidance.adjustments.length > 0 ? (
+            <>
+              <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
+                Mögliche Anpassungen:
+              </p>
+              <ul className="mt-1 list-disc pl-5 text-sm text-[var(--muted)]">
+                {feasibilityGuidance.adjustments.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </section>
       ) : null}
 
       {model.diagnostics.length > 0 ? (

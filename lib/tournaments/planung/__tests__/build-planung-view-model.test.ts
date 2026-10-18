@@ -154,4 +154,25 @@ describe("buildTournamentPlanungViewModel", () => {
     expect(vm.mobileTimeline.length).toBeGreaterThan(0);
     expect(vm.mobileTimeline[0]?.kind).toBe("FIXTURE");
   });
+
+  it("does not surface raw feasibility codes as primary diagnostics", () => {
+    const vm = buildTournamentPlanungViewModel(
+      snapshot({
+        assignments: [],
+        optimisation: null,
+        feasibility: {
+          status: "INFEASIBLE",
+          diagnostics: [{ code: "CAPACITY.PITCH_MINUTES_SHORT" }],
+          metrics: {} as never,
+          suggestions: [
+            { code: "REDUCE_MATCH_DURATION" },
+            { code: "ADD_TOURNAMENT_PITCH" },
+          ],
+        },
+      }),
+    );
+    expect(vm.diagnostics.every((d) => !d.message.includes("CAPACITY"))).toBe(true);
+    expect(vm.feasibilityGuidance?.headline).toBe("Spielplan kann noch nicht erstellt werden");
+    expect(vm.feasibilityGuidance?.adjustments).toContain("Spieldauer verkürzen");
+  });
 });

@@ -125,6 +125,20 @@ export type TournamentPlanungDiagnostic = {
   severity: "info" | "warning" | "danger";
 };
 
+/** Actionable German guidance when automatic generation cannot succeed. */
+export type TournamentPlanungFeasibilityGuidance = {
+  headline: string;
+  summary: string;
+  adjustments: readonly string[];
+};
+
+export type TournamentPlanungGenerationOutcome = {
+  attempted: boolean;
+  succeeded: boolean;
+  optimisationStatus: TournamentScheduleOptimisationStatus | null;
+  guidance: TournamentPlanungFeasibilityGuidance | null;
+};
+
 export type TournamentPlanungSmartTimingSummary = {
   headline: string;
   detailLines: readonly string[];
@@ -149,6 +163,7 @@ export type TournamentPlanungActions = {
   canGenerate: boolean;
   canRegenerate: boolean;
   generateLabel: string;
+  generatePendingLabel: string;
   regenerateLabel: string;
   regenerateHint: string;
 };
@@ -174,6 +189,8 @@ export type TournamentPlanungViewModel = {
   participants: readonly TournamentPlanungParticipantIdentity[];
   smartTiming: TournamentPlanungSmartTimingSummary | null;
   diagnostics: readonly TournamentPlanungDiagnostic[];
+  /** Present when canonical feasibility is INFEASIBLE (before or after generation attempt). */
+  feasibilityGuidance: TournamentPlanungFeasibilityGuidance | null;
   regenerationSummary: TournamentPlanungRegenerationSummary;
   incompleteSetup: readonly TournamentPlanungIncompleteItem[];
   actions: TournamentPlanungActions;
