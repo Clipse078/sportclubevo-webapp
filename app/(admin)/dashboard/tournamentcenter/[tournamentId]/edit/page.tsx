@@ -220,6 +220,8 @@ export default async function TournamentEditPage({ params }: Props) {
           collaborationSection={collaborationSection}
           tournamentSquadSection={tournamentSquadSection}
           planungViewModel={planungViewModel}
+          tenantKey={tenantContext.key}
+          plannerOwnershipAllowsPublication={plannerOwnership === "TENANT_ORGANISED"}
         />
       </ToastProvider>
     </PageShell>

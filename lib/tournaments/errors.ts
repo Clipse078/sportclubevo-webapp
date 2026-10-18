@@ -28,6 +28,22 @@ export class TournamentInvalidTransitionError extends Error {
   }
 }
 
+/** Publication settings changed since the client loaded the form (01K). */
+export class TournamentPublicationStaleError extends Error {
+  constructor() {
+    super("Publication settings were updated elsewhere. Refresh and try again.");
+    this.name = "TournamentPublicationStaleError";
+  }
+}
+
+/** AWAY / unknown ownership cannot use Tournament Planner publication workflow (01K). */
+export class TournamentPublicationNotAllowedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TournamentPublicationNotAllowedError";
+  }
+}
+
 // =============================================================================
 // TOURNAMENTCENTER-01B errors — multi-team participation
 // (lib/tournaments/participant-service.ts)

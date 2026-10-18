@@ -14,12 +14,20 @@ import TournamentPlanungFixtureActions from "./TournamentPlanungFixtureActions";
 import TournamentPlanungManualMoveDialog from "./TournamentPlanungManualMoveDialog";
 import TournamentPlanungGroupStandings from "./TournamentPlanungGroupStandings";
 import TournamentPlanungResultDialog from "./TournamentPlanungResultDialog";
+import TournamentPlanungPublicationPanel from "./TournamentPlanungPublicationPanel";
+import type { TournamentDto } from "@/lib/tournaments/types";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
   tournamentId: string;
   timezone: string;
   canManage: boolean;
+  tournament?: Pick<
+    TournamentDto,
+    "id" | "visibility" | "updatedAt" | "homeAway" | "organizerName"
+  >;
+  tenantKey?: string;
+  ownershipAllowsPublication?: boolean;
 };
 
 export default function TournamentPlanungWorkspace({
@@ -27,6 +35,9 @@ export default function TournamentPlanungWorkspace({
   tournamentId,
   timezone,
   canManage,
+  tournament,
+  tenantKey = "",
+  ownershipAllowsPublication = false,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
@@ -388,6 +399,15 @@ export default function TournamentPlanungWorkspace({
 
       {model.actions.canRegenerate && canManage ? (
         <p className="text-xs text-[var(--muted)]">{model.actions.regenerateHint}</p>
+      ) : null}
+
+      {tournament && tenantKey ? (
+        <TournamentPlanungPublicationPanel
+          tournament={tournament}
+          tenantKey={tenantKey}
+          canManage={canManage}
+          ownershipAllowsPublication={ownershipAllowsPublication}
+        />
       ) : null}
     </div>
   );

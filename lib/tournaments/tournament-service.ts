@@ -36,6 +36,10 @@ import {
   updateTouchesPublicationVisibility,
 } from "@/lib/tournaments/tournament-public-cache-notification";
 import {
+  publicationPatchTouchesManagement,
+  resolveTournamentPublicationManagement,
+} from "@/lib/tournaments/public/tournament-publication-management";
+import {
   findTournamentEventById,
   findAllTournamentEvents,
   tournamentEventSelect,
@@ -51,6 +55,8 @@ import {
   TournamentNotFoundError,
   TournamentValidationError,
   TournamentInvalidTransitionError,
+  TournamentPublicationNotAllowedError,
+  TournamentPublicationStaleError,
 } from "./errors";
 import { resolveTournamentTeamSeasonId } from "./team-season-resolution";
 import {
@@ -477,6 +483,26 @@ export async function updateTournament(
   const existing = await findTournamentEventById(tenantId, tournamentId);
   if (!existing) {
     throw new TournamentNotFoundError(tournamentId);
+  }
+
+  const touchesPublication = updateTouchesPublicationVisibility(input);
+  if (touchesPublication) {
+    const tenantContext = await loadTournamentTenantContext(tenantId);
+    const management = resolveTournamentPublicationManagement({
+      homeAway: existing.homeAway,
+      organizerName: existing.organizerName,
+      tenantName: tenantContext.name,
+    });
+    if (!management.allowed) {
+      throw new TournamentPublicationNotAllowedError(management.code);
+    }
+    if (input.expectedEventUpdatedAt) {
+      const expectedMs = Date.parse(input.expectedEventUpdatedAt);
+      const actualMs = existing.updatedAt.getTime();
+      if (!Number.isFinite(expectedMs) || expectedMs !== actualMs) {
+        throw new TournamentPublicationStaleError();
+      }
+    }
   }
 
   const data: Record<string, unknown> = {};

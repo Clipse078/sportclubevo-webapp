@@ -13,6 +13,7 @@ import {
   TournamentSchedulingError,
 } from "@/lib/tournament-scheduling/errors";
 import type { TournamentManualAssignmentInput } from "@/lib/tournament-scheduling/manual-assignment";
+import { notifyPublicTournamentLiveDataChanged } from "@/lib/tournaments/public/tournament-live-public-cache";
 
 type RouteContext = { params: Promise<{ tournamentId: string }> };
 
@@ -83,6 +84,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const result = await applyTournamentManualAssignment(input, {
       timezone: tenant?.timezone ?? "Europe/Zurich",
     });
+
+    notifyPublicTournamentLiveDataChanged(tenantId);
 
     const viewModel = await loadTournamentPlanungViewModel({
       tenantId,

@@ -223,6 +223,8 @@ export type UpdateTournamentInput = {
   homepageVisible?: boolean;
   wochenplanVisible?: boolean;
   teamPageVisible?: boolean;
+  /** ISO timestamp — required when mutating publication flags to prevent silent overwrites (01K). */
+  expectedEventUpdatedAt?: string;
 };
 
 // ── TOURNAMENTCENTER-01B — participant + allocation service inputs ───────────

@@ -162,6 +162,8 @@ export type TurniereTournamentRecordWorkspaceProps = {
   participantsSection?: ReactNode;
   tournamentSquadSection?: ReactNode;
   planungViewModel?: TournamentPlanungViewModel | null;
+  tenantKey?: string;
+  plannerOwnershipAllowsPublication?: boolean;
 };
 
 export default function TurniereTournamentRecordWorkspace({
@@ -184,6 +186,8 @@ export default function TurniereTournamentRecordWorkspace({
   participantsSection,
   tournamentSquadSection,
   planungViewModel = null,
+  tenantKey = "",
+  plannerOwnershipAllowsPublication = false,
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -817,6 +821,9 @@ export default function TurniereTournamentRecordWorkspace({
                   tournamentId={tournament.id}
                   timezone={timezone}
                   canManage={isEditable}
+                  tournament={tournament}
+                  tenantKey={tenantKey}
+                  ownershipAllowsPublication={plannerOwnershipAllowsPublication}
                 />
               ) : !isTenantHostedTournament({ homeAway }) ? (
                 <section
