@@ -1,38 +1,87 @@
 "use client";
 
-import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
-import { buildClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
+import { cn } from "@/lib/cn";
+import { participantIdentityFromPlanung } from "./planung-participant-identity";
+import {
+  SceTournamentFixtureParticipant,
+  SceTournamentFixtureVs,
+} from "./SceTournamentFixtureIdentity";
+
+export type SceTournamentFixtureCompactLayout = "inline" | "stack";
 
 type Props = {
   sideA: TournamentPlanungFixtureSidePresentation;
   sideB: TournamentPlanungFixtureSidePresentation;
+  layout?: SceTournamentFixtureCompactLayout;
+  className?: string;
 };
 
-function sideIdentity(side: TournamentPlanungFixtureSidePresentation) {
-  return buildClubIdentity({
-    id: side.participantId ?? undefined,
-    displayName: side.label,
-    logoUrl: side.crestUrl,
-    preferNeutralIcon: side.isPlaceholder,
-  });
-}
+/**
+ * COMPACT Planung fixture identity — crest, names, VS.
+ * Inline for round lists; stack for narrow board cells (DnD-safe).
+ */
+export default function SceTournamentFixtureCompactMatchup({
+  sideA,
+  sideB,
+  layout = "stack",
+  className,
+}: Props) {
+  if (layout === "inline") {
+    return (
+      <div
+        className={cn(
+          "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1",
+          className,
+        )}
+        data-testid="sce-tournament-fixture-compact-matchup"
+        data-layout="inline"
+      >
+        <SceTournamentFixtureParticipant
+          identity={participantIdentityFromPlanung(sideA)}
+          label={sideA.label}
+          density="compact"
+          align="start"
+          qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
+          className="max-w-[min(100%,14rem)] flex-1"
+        />
+        <SceTournamentFixtureVs size="compact" className="mx-0.5" />
+        <SceTournamentFixtureParticipant
+          identity={participantIdentityFromPlanung(sideB)}
+          label={sideB.label}
+          density="compact"
+          align="start"
+          qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
+          className="max-w-[min(100%,14rem)] flex-1"
+        />
+      </div>
+    );
+  }
 
-/** Dense crest + VS + crest row for Planung board cells (DnD-safe). */
-export default function SceTournamentFixtureCompactMatchup({ sideA, sideB }: Props) {
   return (
-    <div className="space-y-0.5" data-testid="sce-tournament-fixture-compact-matchup">
-      <div className="flex min-w-0 items-center gap-1">
-        <ClubCrest identity={sideIdentity(sideA)} density="micro" decorative className="shrink-0" />
-        <span className="truncate font-medium text-[var(--foreground)]">{sideA.label}</span>
+    <div
+      className={cn("min-w-0 space-y-1", className)}
+      data-testid="sce-tournament-fixture-compact-matchup"
+      data-layout="stack"
+    >
+      <SceTournamentFixtureParticipant
+        identity={participantIdentityFromPlanung(sideA)}
+        label={sideA.label}
+        density="compact"
+        align="start"
+        qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
+      />
+      <div className="flex justify-center py-0.5">
+        <SceTournamentFixtureVs size="compact" />
       </div>
-      <p className="text-[9px] font-semibold uppercase tracking-wide text-[var(--muted)]" aria-hidden>
-        VS
-      </p>
-      <div className="flex min-w-0 items-center gap-1">
-        <ClubCrest identity={sideIdentity(sideB)} density="micro" decorative className="shrink-0" />
-        <span className="truncate text-[var(--muted)]">{sideB.label}</span>
-      </div>
+      <SceTournamentFixtureParticipant
+        identity={participantIdentityFromPlanung(sideB)}
+        label={sideB.label}
+        density="compact"
+        align="start"
+        qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
+        muted
+      />
     </div>
   );
 }

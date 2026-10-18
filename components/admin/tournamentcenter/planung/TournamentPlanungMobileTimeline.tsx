@@ -2,6 +2,7 @@
 
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import { Lock } from "lucide-react";
+import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -68,9 +69,13 @@ export default function TournamentPlanungMobileTimeline({
                       {formatTimeRange(cell.startUtc, cell.endUtc, timezone)} ·{" "}
                       {pitchLabel.get(cell.pitchId) ?? "Feld"}
                     </p>
-                    <p className="text-sm font-medium text-[var(--foreground)]">
-                      {cell.sideA.label} – {cell.sideB.label}
-                    </p>
+                    <div className="mt-1.5 min-w-0">
+                      <SceTournamentFixtureCompactMatchup
+                        sideA={cell.sideA}
+                        sideB={cell.sideB}
+                        layout="inline"
+                      />
+                    </div>
                     {cell.lockDimension ? (
                       <p className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
                         <Lock className="h-3 w-3" aria-hidden />

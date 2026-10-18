@@ -93,6 +93,27 @@ describe("SceTournamentFixtureCard", () => {
     expect(screen.getByText("2:1")).toBeInTheDocument();
   });
 
+  it("does not force single-line truncate on long participant names", () => {
+    render(
+      <SceTournamentFixtureCard
+        fixture={{
+          ...fixture,
+          sideALabel: "FC Allschwil Junioren F1",
+          sideBLabel: "FC Allschwil Junioren F2",
+        }}
+        participants={participants}
+        timezone="Europe/Zurich"
+      />,
+    );
+    const card = screen.getByTestId("sce-tournament-fixture-card-f1");
+    expect(card.textContent).toContain("FC Allschwil Junioren F1");
+    expect(card.textContent).toContain("FC Allschwil Junioren F2");
+    const nameSpans = card.querySelectorAll("span[title]");
+    for (const span of nameSpans) {
+      expect(span.className).not.toContain("truncate");
+    }
+  });
+
   it("de-emphasises non-highlighted fixtures when highlight is active", () => {
     render(
       <SceTournamentFixtureCard

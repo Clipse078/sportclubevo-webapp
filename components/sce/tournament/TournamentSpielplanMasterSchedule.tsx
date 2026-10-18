@@ -62,11 +62,13 @@ export default function TournamentSpielplanMasterSchedule({
           >
             <header
               id={`spielplan-round-${group.sectionId}`}
-              className="mb-3 flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+              className="mb-4 flex flex-wrap items-end justify-between gap-2 border-b border-[var(--border)] pb-2.5"
             >
               <div className="min-w-0">
-                <h4 className="text-sm font-semibold text-[var(--foreground)]">{group.title}</h4>
-                <p className="text-xs text-[var(--muted)]">
+                <h4 className="text-base font-semibold tracking-tight text-[var(--foreground)]">
+                  {group.title}
+                </h4>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
                   {[group.timeRangeLabel, group.pitchSummaryLabel].filter(Boolean).join(" · ")}
                 </p>
               </div>
@@ -74,7 +76,7 @@ export default function TournamentSpielplanMasterSchedule({
                 {fixtureCountLabel(group.fixtureCount)}
               </p>
             </header>
-            <ul className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
               {group.fixtures.map((fixture) => (
                 <li key={fixture.fixtureId}>
                   <SceTournamentFixtureCard

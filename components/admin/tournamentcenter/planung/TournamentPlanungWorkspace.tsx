@@ -520,8 +520,12 @@ export default function TournamentPlanungWorkspace({
       {workspaceMode === "planung" && model.schedulePresence !== "NONE" && model.timeScale ? (
         <>
           <TournamentPlanungGroupStandings model={model} />
-          <TournamentPlanungScheduleList model={model} timezone={timezone} />
-          <div className="hidden lg:block">
+          <section aria-label="Spielplanübersicht nach Runden" className="space-y-3">
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Übersicht nach Runden</h3>
+            <TournamentPlanungScheduleList model={model} timezone={timezone} />
+          </section>
+          <section aria-label="Interaktives Feld-Zeit-Board" className="hidden space-y-3 lg:block">
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Feld- und Zeitplan</h3>
             <TournamentPlanungBoard
               model={model}
               timezone={timezone}
@@ -542,7 +546,7 @@ export default function TournamentPlanungWorkspace({
                 return result.ok ? "valid" : "invalid";
               }}
             />
-          </div>
+          </section>
           <div className="lg:hidden">
             <TournamentPlanungMobileTimeline
               model={model}

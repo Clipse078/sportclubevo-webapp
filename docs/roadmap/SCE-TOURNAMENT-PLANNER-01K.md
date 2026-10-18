@@ -121,6 +121,22 @@ Creator Spielplan step uses the same assistant pattern via `buildComposerPlannin
 
 **01K-R5 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO visual UAT against target design required before 01K closure.
 
+## 01K-R6 — Final Planung + Spielplan Visual Alignment
+
+**Principle:** One tournament fixture visual family with multiple densities — **STANDARD** for Spielplan output, **COMPACT** for operational Planung — sharing crest, participant identity, and explicit **VS** composition. Planung DnD, locks, manual move, and conflict semantics are unchanged.
+
+| Surface | Component | Role |
+| --- | --- | --- |
+| Spielplan (Master / Team / public) | `SceTournamentFixtureCard` | Organiser-facing schedule output |
+| Planung list + mobile timeline + board cells | `SceTournamentFixtureCompactMatchup` | Interactive scheduling (list overview + pitch/time board) |
+| Shared primitives | `SceTournamentFixtureIdentity` (`SceTournamentFixtureParticipant`, `SceTournamentFixtureVs`) | Crest + name + VS without parallel card families |
+
+Planung keeps round-grouped overview **and** desktop pitch/time board (DnD); both use the compact fixture language with clear section hierarchy.
+
+**Backlog (unchanged):** PDF refinement; direct Spielplan email sharing — not 01K closure blockers.
+
+**01K-R6 status:** on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); final PO visual UAT before Tournament Planner closure. No additional 01K feature package unless R6 exposes a blocker; **do not start 01L** from this scope.
+
 ## Verification (automated)
 
 - `lib/tournaments/spielplan/__tests__/*`

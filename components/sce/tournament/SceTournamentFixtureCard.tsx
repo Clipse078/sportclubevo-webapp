@@ -1,13 +1,17 @@
 "use client";
 
 import type { ComponentPropsWithoutRef } from "react";
-import { ClubCrest } from "@/components/sporting-activity/ClubCrest";
 import type { TournamentSpielplanFixturePresentation } from "@/lib/tournaments/spielplan/types";
 import type { TournamentSpielplanParticipantOption } from "@/lib/tournaments/spielplan/types";
 import { cn } from "@/lib/cn";
 import { participantIdentityFromSpielplan } from "./spielplan-participant-identity";
+import {
+  SceTournamentFixtureParticipant,
+  SceTournamentFixtureVs,
+  type SceTournamentFixtureVisualDensity,
+} from "./SceTournamentFixtureIdentity";
 
-export type SceTournamentFixtureCardDensity = "standard" | "compact";
+export type SceTournamentFixtureCardDensity = SceTournamentFixtureVisualDensity;
 
 type Props = {
   fixture: TournamentSpielplanFixturePresentation;
@@ -40,42 +44,6 @@ function fixtureAccessibleLabel(
   return `${time}, ${fixture.pitchLabel}, ${fixture.sideALabel} gegen ${fixture.sideBLabel}${score}`;
 }
 
-function ParticipantSide({
-  participantId,
-  label,
-  isPlaceholder,
-  participants,
-  density,
-  align,
-}: {
-  participantId: string | null;
-  label: string;
-  isPlaceholder: boolean;
-  participants: readonly TournamentSpielplanParticipantOption[];
-  density: SceTournamentFixtureCardDensity;
-  align: "start" | "end";
-}) {
-  const identity = participantIdentityFromSpielplan(
-    participants,
-    participantId,
-    label,
-    isPlaceholder,
-  );
-  const crestDensity = density === "compact" ? "micro" : "compact";
-
-  return (
-    <div
-      className={cn(
-        "flex min-w-0 flex-1 items-center gap-2",
-        align === "end" ? "flex-row-reverse text-right" : "flex-row text-left",
-      )}
-    >
-      <ClubCrest identity={identity} density={crestDensity} decorative className="shrink-0" />
-      <span className="truncate text-sm font-medium text-[var(--foreground)]">{label}</span>
-    </div>
-  );
-}
-
 export default function SceTournamentFixtureCard({
   fixture,
   participants,
@@ -92,81 +60,88 @@ export default function SceTournamentFixtureCard({
       fixture.sideBParticipantId === highlightParticipantId);
 
   const rootClassName = cn(
-    "rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]/80 shadow-sm transition-[opacity,box-shadow,transform]",
-    density === "standard" ? "p-3 sm:p-4" : "p-2",
+    "rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 shadow-sm transition-[opacity,box-shadow,transform]",
+    density === "standard" ? "px-3 py-3.5 sm:px-4 sm:py-4" : "p-2",
     highlightParticipantId && !highlighted ? "opacity-45" : "",
     highlighted ? "ring-2 ring-[var(--sce-focus)] shadow-md" : "",
     className,
     asChildProps?.className,
   );
 
-  const content = (
-    <>
-      <div
-        className={cn(
-          "flex gap-3",
-          density === "standard"
-            ? "flex-col sm:flex-row sm:items-center"
-            : "flex-row items-center gap-2",
-        )}
-      >
-        <div
-          className={cn(
-            "shrink-0 tabular-nums",
-            density === "standard" ? "sm:w-16" : "w-12",
-          )}
-        >
+  const sideAIdentity = participantIdentityFromSpielplan(
+    participants,
+    fixture.sideAParticipantId,
+    fixture.sideALabel,
+    fixture.sideAIsPlaceholder,
+  );
+  const sideBIdentity = participantIdentityFromSpielplan(
+    participants,
+    fixture.sideBParticipantId,
+    fixture.sideBLabel,
+    fixture.sideBIsPlaceholder,
+  );
+
+  const matchup = (
+    <div
+      className={cn(
+        "grid min-w-0 flex-1 items-center gap-2",
+        density === "standard"
+          ? "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2 sm:gap-3"
+          : "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1.5",
+      )}
+    >
+      <SceTournamentFixtureParticipant
+        identity={sideAIdentity}
+        label={fixture.sideALabel}
+        density={density}
+        align="start"
+      />
+      <SceTournamentFixtureVs highlighted={highlighted} size={density} />
+      <SceTournamentFixtureParticipant
+        identity={sideBIdentity}
+        label={fixture.sideBLabel}
+        density={density}
+        align="end"
+      />
+    </div>
+  );
+
+  const content =
+    density === "standard" ? (
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="shrink-0 tabular-nums sm:w-[5.25rem]">
           <p className="text-sm font-semibold text-[var(--foreground)]">{timeLabel}</p>
           <p className="text-xs text-[var(--muted)]">{fixture.pitchLabel}</p>
         </div>
-
-        <div
-          className={cn(
-            "flex min-w-0 flex-1 items-center gap-2",
-            density === "compact" ? "gap-1.5" : "gap-3 sm:gap-4",
-          )}
-        >
-          <ParticipantSide
-            participantId={fixture.sideAParticipantId}
-            label={fixture.sideALabel}
-            isPlaceholder={fixture.sideAIsPlaceholder}
-            participants={participants}
-            density={density}
-            align="start"
-          />
-          <span
-            className={cn(
-              "shrink-0 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]",
-              highlighted && "border-[var(--sce-focus)] text-[var(--foreground)]",
-            )}
-            aria-hidden
-          >
-            VS
-          </span>
-          <ParticipantSide
-            participantId={fixture.sideBParticipantId}
-            label={fixture.sideBLabel}
-            isPlaceholder={fixture.sideBIsPlaceholder}
-            participants={participants}
-            density={density}
-            align="end"
-          />
-        </div>
-
+        {matchup}
         {fixture.result ? (
           <p
-            className={cn(
-              "shrink-0 tabular-nums font-semibold text-[var(--foreground)]",
-              density === "compact" ? "text-xs" : "text-sm",
-            )}
+            className="shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)] sm:pl-1"
             aria-label={`Ergebnis ${fixture.result.scoreSideA} zu ${fixture.result.scoreSideB}`}
           >
             {fixture.result.scoreSideA}:{fixture.result.scoreSideB}
           </p>
         ) : null}
       </div>
-    </>
-  );
+    ) : (
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+        <div className="shrink-0 tabular-nums w-12">
+          <p className="text-sm font-semibold text-[var(--foreground)]">{timeLabel}</p>
+          <p className="text-xs text-[var(--muted)]">{fixture.pitchLabel}</p>
+        </div>
+        <div className="min-w-0">
+          {matchup}
+          {fixture.result ? (
+            <p
+              className="mt-1 text-xs font-semibold tabular-nums text-[var(--foreground)]"
+              aria-label={`Ergebnis ${fixture.result.scoreSideA} zu ${fixture.result.scoreSideB}`}
+            >
+              {fixture.result.scoreSideA}:{fixture.result.scoreSideB}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    );
 
   if (asChildProps) {
     const { className: _ignored, ...rest } = asChildProps;
