@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import SceTournamentFixtureCard from "../SceTournamentFixtureCard";
 import type { TournamentSpielplanFixturePresentation } from "@/lib/tournaments/spielplan/types";
+import { expectCanonicalFixtureIdentityOrder } from "./fixture-identity-order-assertions";
 
 const participants = [
   { participantId: "a", displayName: "Alpha FC", crestUrl: "https://example.com/a.png" },
@@ -112,6 +113,32 @@ describe("SceTournamentFixtureCard", () => {
     for (const span of nameSpans) {
       expect(span.className).not.toContain("truncate");
     }
+  });
+
+  it("uses canonical DOM identity order (name → crest → VS → crest → name)", () => {
+    render(
+      <SceTournamentFixtureCard
+        fixture={fixture}
+        participants={participants}
+        timezone="Europe/Zurich"
+      />,
+    );
+    const matchup = screen.getByTestId("sce-tournament-fixture-matchup");
+    expectCanonicalFixtureIdentityOrder(matchup);
+  });
+
+  it("keeps time and pitch before matchup identity", () => {
+    render(
+      <SceTournamentFixtureCard
+        fixture={fixture}
+        participants={participants}
+        timezone="Europe/Zurich"
+      />,
+    );
+    const card = screen.getByTestId("sce-tournament-fixture-card-f1");
+    const pitch = screen.getByText("Feld 1");
+    const firstName = card.querySelector('[data-fixture-identity-segment="name"]');
+    expect(pitch.compareDocumentPosition(firstName!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("de-emphasises non-highlighted fixtures when highlight is active", () => {

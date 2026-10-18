@@ -90,6 +90,7 @@ export default function SceTournamentFixtureCard({
           ? "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2 sm:gap-3"
           : "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1.5",
       )}
+      data-testid="sce-tournament-fixture-matchup"
     >
       <SceTournamentFixtureParticipant
         identity={sideAIdentity}

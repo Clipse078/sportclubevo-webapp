@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import TournamentPlanungScheduleList from "../TournamentPlanungScheduleList";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
+import { expectCanonicalFixtureIdentityOrder } from "@/components/sce/tournament/__tests__/fixture-identity-order-assertions";
 
 const baseModel: TournamentPlanungViewModel = {
   tournamentId: "t1",
@@ -81,5 +82,8 @@ describe("TournamentPlanungScheduleList", () => {
     expect(screen.getByText("Team Alpha")).toBeInTheDocument();
     expect(screen.getByText("Team Beta")).toBeInTheDocument();
     expect(screen.getByText("VS")).toBeInTheDocument();
+    expectCanonicalFixtureIdentityOrder(
+      row.querySelector('[data-testid="sce-tournament-fixture-compact-matchup"]')!,
+    );
   });
 });

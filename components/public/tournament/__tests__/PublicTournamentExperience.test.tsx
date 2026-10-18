@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import PublicTournamentExperience from "../PublicTournamentExperience";
 import type { PublicTournamentViewModel } from "@/lib/tournaments/public/types";
+import { expectCanonicalFixtureIdentityOrder } from "@/components/sce/tournament/__tests__/fixture-identity-order-assertions";
 
 const model: PublicTournamentViewModel = {
   tournament: {
@@ -184,5 +185,18 @@ describe("PublicTournamentExperience", () => {
     expect(screen.getByTestId("public-tournament-copy-link")).toBeInTheDocument();
     expect(screen.getAllByTestId("sce-tournament-fixture-card-f1").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /Spielplan automatisch/i })).not.toBeInTheDocument();
+  });
+
+  it("public Spielplan uses canonical fixture identity order", () => {
+    render(
+      <PublicTournamentExperience
+        model={model}
+        tenantName="FC Allschwil"
+        absolutePublicUrl="https://example.test/public/fc-allschwil/turniere/t1"
+      />,
+    );
+    const matchups = screen.getAllByTestId("sce-tournament-fixture-matchup");
+    expect(matchups.length).toBeGreaterThan(0);
+    expectCanonicalFixtureIdentityOrder(matchups[0]!);
   });
 });

@@ -36,6 +36,7 @@ export function SceTournamentFixtureVs({
         highlighted && "border-[var(--sce-focus)] text-[var(--foreground)]",
         className,
       )}
+      data-fixture-identity-segment="vs"
       aria-hidden
     >
       VS
@@ -64,41 +65,61 @@ export function SceTournamentFixtureParticipant({
 }: ParticipantProps) {
   const crestSize = crestDensityForFixture(density);
   const responsiveCrest = density === "standard";
+  const nameTowardCenter = align === "start";
 
-  return (
-    <div
+  const nameNode = (
+    <span
       className={cn(
-        "flex min-w-0 items-center gap-2",
-        align === "end" ? "flex-row-reverse text-right" : "flex-row text-left",
-        className,
+        "min-w-0 text-sm font-medium leading-snug [overflow-wrap:anywhere]",
+        density === "compact"
+          ? "line-clamp-2 text-xs"
+          : "sm:line-clamp-2 lg:line-clamp-none",
+        muted ? "text-[var(--muted)]" : "text-[var(--foreground)]",
       )}
+      title={label}
+      data-fixture-identity-segment="name"
     >
+      {label}
+      {qualificationProvenanceLabel ? (
+        <span className="ml-1 text-xs font-normal text-[var(--muted)]">
+          ({qualificationProvenanceLabel})
+        </span>
+      ) : null}
+    </span>
+  );
+
+  const crestNode = (
+    <span className="inline-flex shrink-0" data-fixture-identity-segment="crest">
       <ClubCrest
         identity={identity}
         density={crestSize}
         decorative
         className={cn(
-          "shrink-0",
           responsiveCrest && "sm:!h-11 sm:!w-11 md:!h-12 md:!w-12",
         )}
       />
-      <span
-        className={cn(
-          "min-w-0 text-sm font-medium leading-snug [overflow-wrap:anywhere]",
-          density === "compact"
-            ? "line-clamp-2 text-xs"
-            : "sm:line-clamp-2 lg:line-clamp-none",
-          muted ? "text-[var(--muted)]" : "text-[var(--foreground)]",
-        )}
-        title={label}
-      >
-        {label}
-        {qualificationProvenanceLabel ? (
-          <span className="ml-1 text-xs font-normal text-[var(--muted)]">
-            ({qualificationProvenanceLabel})
-          </span>
-        ) : null}
-      </span>
+    </span>
+  );
+
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-2",
+        align === "end" ? "flex-row justify-end text-right" : "flex-row text-left",
+        className,
+      )}
+    >
+      {nameTowardCenter ? (
+        <>
+          {nameNode}
+          {crestNode}
+        </>
+      ) : (
+        <>
+          {crestNode}
+          {nameNode}
+        </>
+      )}
     </div>
   );
 }

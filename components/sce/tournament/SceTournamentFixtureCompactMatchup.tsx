@@ -50,7 +50,7 @@ export default function SceTournamentFixtureCompactMatchup({
           identity={participantIdentityFromPlanung(sideB)}
           label={sideB.label}
           density="compact"
-          align="start"
+          align="end"
           qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
           className="min-w-0 flex-1 basis-0"
         />
@@ -78,7 +78,7 @@ export default function SceTournamentFixtureCompactMatchup({
         identity={participantIdentityFromPlanung(sideB)}
         label={sideB.label}
         density="compact"
-        align="start"
+        align="end"
         qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
         muted
       />
