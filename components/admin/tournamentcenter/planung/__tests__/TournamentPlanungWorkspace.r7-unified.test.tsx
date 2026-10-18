@@ -66,13 +66,7 @@ const scheduledModel: TournamentPlanungViewModel = {
       canEnterResult: true,
     },
   ],
-  scheduleSections: [
-    {
-      sectionKey: "r1",
-      title: "Runde 1",
-      fixtureIds: ["f1"],
-    },
-  ],
+  scheduleSections: [],
   participants: [
     { participantId: "p1", displayName: "Team A", crestUrl: null },
     { participantId: "p2", displayName: "Team B", crestUrl: null },
@@ -119,7 +113,6 @@ describe("01K-R7 — unified Spielplan view + edit", () => {
         timezone="Europe/Zurich"
         canManage
         tournament={tournament}
-        tenantKey="fc-test"
       />,
     );
 
@@ -144,7 +137,6 @@ describe("01K-R7 — unified Spielplan view + edit", () => {
         timezone="Europe/Zurich"
         canManage
         tournament={tournament}
-        tenantKey="fc-test"
       />,
     );
 
