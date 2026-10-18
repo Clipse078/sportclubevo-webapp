@@ -226,6 +226,47 @@ export default function TournamentPlanungWorkspace({
   const showEmpty = model.schedulePresence === "NONE" && model.incompleteSetup.length === 0;
   const feasibilityGuidance =
     generationFeedback?.guidance ?? model.feasibilityGuidance ?? null;
+  const showSmartTimingHeader =
+    model.smartTiming != null && feasibilityGuidance == null;
+
+  const applyRecommendedTiming = useCallback(async () => {
+    setBusy(true);
+    setGenerationFeedback(null);
+    try {
+      const res = await fetch(
+        `/api/tournaments/${tournamentId}/planung/apply-recommended-timing`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ expectedRevision: model.scheduleRevision }),
+        },
+      );
+      const json = (await res.json()) as {
+        viewModel?: TournamentPlanungViewModel;
+        error?: string;
+        code?: string;
+      };
+      if (!res.ok) {
+        if (json.code === "SCHEDULE.STALE_VERSION") {
+          toast.danger(
+            "Der Spielplan wurde inzwischen geändert. Bitte aktualisiere die Planung.",
+          );
+          await refresh();
+          return;
+        }
+        toast.danger(json.error ?? "Empfohlene Einstellungen konnten nicht übernommen werden.");
+        return;
+      }
+      if (json.viewModel) setModel(json.viewModel);
+      else await refresh();
+      toast.success("Empfohlene Einstellungen wurden übernommen.");
+      router.refresh();
+    } catch {
+      toast.danger("Empfohlene Einstellungen konnten nicht übernommen werden.");
+    } finally {
+      setBusy(false);
+    }
+  }, [model.scheduleRevision, refresh, router, toast, tournamentId]);
 
   return (
     <div className="space-y-4" data-testid="tournament-planung-workspace">
@@ -262,14 +303,16 @@ export default function TournamentPlanungWorkspace({
           <h2 className="text-base font-semibold text-[var(--foreground)]">
             {workspaceMode === "spielplan" ? "Spielplan-Ausgabe" : "Planung"}
           </h2>
-          {model.smartTiming ? (
-            <p className="text-sm text-[var(--muted)]">{model.smartTiming.headline}</p>
+          {showSmartTimingHeader ? (
+            <>
+              <p className="text-sm text-[var(--muted)]">{model.smartTiming!.headline}</p>
+              {model.smartTiming!.detailLines.map((line) => (
+                <p key={line} className="text-xs text-[var(--muted)]">
+                  {line}
+                </p>
+              ))}
+            </>
           ) : null}
-          {model.smartTiming?.detailLines.map((line) => (
-            <p key={line} className="text-xs text-[var(--muted)]">
-              {line}
-            </p>
-          ))}
         </div>
         {canManage && workspaceMode === "planung" ? (
           <div className="flex flex-wrap gap-2">
@@ -367,10 +410,40 @@ export default function TournamentPlanungWorkspace({
             {feasibilityGuidance.headline}
           </p>
           <p className="mt-1 text-sm text-[var(--muted)]">{feasibilityGuidance.summary}</p>
+          {feasibilityGuidance.recommendedTiming ? (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                Empfohlene Einstellungen
+              </p>
+              <dl className="grid max-w-md grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <dt className="text-[var(--muted)]">Spieldauer</dt>
+                <dd className="font-medium text-[var(--foreground)]">
+                  {feasibilityGuidance.recommendedTiming.matchDurationMinutes} Min.
+                </dd>
+                <dt className="text-[var(--muted)]">Wechselzeit</dt>
+                <dd className="font-medium text-[var(--foreground)]">
+                  {feasibilityGuidance.recommendedTiming.transitionMinutes} Min.
+                </dd>
+              </dl>
+              {canManage ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => void applyRecommendedTiming()}
+                  data-testid="tournament-planung-apply-recommended-timing"
+                >
+                  Empfohlene Einstellungen übernehmen
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
           {feasibilityGuidance.adjustments.length > 0 ? (
             <>
               <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
-                Mögliche Anpassungen:
+                {feasibilityGuidance.recommendedTiming
+                  ? "Alternative Anpassungen"
+                  : "Mögliche Anpassungen"}
               </p>
               <ul className="mt-1 list-disc pl-5 text-sm text-[var(--muted)]">
                 {feasibilityGuidance.adjustments.map((item) => (

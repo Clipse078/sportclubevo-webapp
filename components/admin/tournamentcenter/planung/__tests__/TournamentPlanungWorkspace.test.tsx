@@ -89,7 +89,8 @@ describe("TournamentPlanungWorkspace", () => {
   it("shows actionable guidance when automatic generation is infeasible", async () => {
     const guidance = {
       headline: "Spielplan kann noch nicht erstellt werden",
-      summary: "Das verfügbare Zeitfenster reicht für die geplanten Spiele und Spielfelder nicht aus.",
+      summary: "Das verfügbare Zeitfenster reicht für die aktuelle Konfiguration nicht aus.",
+      recommendedTiming: null,
       adjustments: ["Spieldauer verkürzen", "Weiteres Spielfeld hinzufügen"],
     };
     const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
@@ -98,13 +99,7 @@ describe("TournamentPlanungWorkspace", () => {
         viewModel: {
           ...model,
           feasibilityGuidance: guidance,
-          diagnostics: [
-            {
-              id: "CAPACITY.PITCH_MINUTES_SHORT",
-              message: guidance.summary,
-              severity: "danger" as const,
-            },
-          ],
+          diagnostics: [],
         },
         generation: {
           attempted: true,
@@ -137,7 +132,31 @@ describe("TournamentPlanungWorkspace", () => {
     expect(screen.getByText(guidance.headline)).toBeInTheDocument();
     expect(screen.getByText("Spieldauer verkürzen")).toBeInTheDocument();
     expect(screen.queryByText(/CAPACITY_PITCH_MINUTES_SHORT/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/witness schedule/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/MVP limit/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Planungsdiagnose")).not.toBeInTheDocument();
     expect(toast.danger).toHaveBeenCalledWith(guidance.headline);
+  });
+
+  it("shows smart timing recommendation and apply action when provided", async () => {
+    const guidance = {
+      headline: "Spielplan kann noch nicht erstellt werden",
+      summary: "Das verfügbare Zeitfenster reicht für die aktuelle Konfiguration nicht aus.",
+      recommendedTiming: { matchDurationMinutes: 12, transitionMinutes: 3 },
+      adjustments: ["Weiteres Spielfeld hinzufügen"],
+    };
+    render(
+      <TournamentPlanungWorkspace
+        initialModel={{ ...model, feasibilityGuidance: guidance }}
+        tournamentId="t1"
+        timezone="Europe/Zurich"
+        canManage
+      />,
+    );
+    expect(screen.getByText("Empfohlene Einstellungen")).toBeInTheDocument();
+    expect(screen.getByText("12 Min.")).toBeInTheDocument();
+    expect(screen.getByTestId("tournament-planung-apply-recommended-timing")).toBeInTheDocument();
+    expect(screen.queryByText("Spieldauer verkürzen")).not.toBeInTheDocument();
   });
 
   it("reconciles generated schedule without manual refresh", async () => {

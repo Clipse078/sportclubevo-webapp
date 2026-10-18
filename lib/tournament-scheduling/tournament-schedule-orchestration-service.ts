@@ -17,7 +17,10 @@ import { runTournamentPartialRegenerationForVersion } from "./partial-regenerati
 import {
   createWorkingTournamentScheduleVersion,
   getTournamentScheduleVersion,
+  updateWorkingTournamentScheduleVersionTiming,
 } from "./schedule-version-service";
+import { assessTournamentTiming } from "./smart-timing";
+import { resolvePlanungRecommendedTimingFromAssessment } from "@/lib/tournaments/planung/planung-presentation";
 import {
   TournamentScheduleResourceInvalidError,
   TournamentSchedulingError,
@@ -132,6 +135,80 @@ export async function syncOptimisedAssignmentsToVersion(params: {
   }
 
   return { revision: expectedRevision };
+}
+
+export async function applyCanonicalPlanungRecommendedTiming(params: {
+  tenantId: string;
+  tournamentId: string;
+  expectedRevision?: number;
+}): Promise<{ scheduleVersionId: string; revision: number }> {
+  await requireTenantOrganisedTournament(params.tenantId, params.tournamentId);
+  await assertPlanungGenerationReadiness(params.tenantId, params.tournamentId);
+
+  const working = await getOrCreateWorkingTournamentScheduleVersion(
+    params.tenantId,
+    params.tournamentId,
+  );
+  if (
+    params.expectedRevision !== undefined &&
+    params.expectedRevision !== working.revision
+  ) {
+    throw new TournamentSchedulingError(
+      "SCHEDULE.STALE_VERSION",
+      `Schedule revision mismatch: expected ${params.expectedRevision}, actual ${working.revision}`,
+    );
+  }
+
+  const loaded = await loadTournamentScheduleOptimisationContext(
+    params.tenantId,
+    params.tournamentId,
+    working.id,
+  );
+  const fixtures = await listTournamentScheduleEngineFixtures(
+    params.tenantId,
+    params.tournamentId,
+  );
+
+  const assessment = assessTournamentTiming({
+    mode: "FIXED_ASSESSMENT",
+    tournamentWindow: loaded.tournamentWindow,
+    config: {
+      matchDurationMinutes: loaded.schedulingConfig.matchDurationMinutes,
+      transitionMinutes: loaded.schedulingConfig.transitionMinutes,
+      minRestMinutes: loaded.schedulingConfig.minRestMinutes,
+    },
+    fixtures,
+    participants: loaded.participants,
+    tournamentPitches: loaded.tournamentPitches.map((p) => ({
+      tournamentPitchId: p.tournamentPitchId,
+      displayOrder: p.displayOrder,
+      label: p.label,
+    })),
+    breaks: loaded.breaks,
+  });
+
+  const recommended = resolvePlanungRecommendedTimingFromAssessment(assessment, {
+    matchDurationMinutes: loaded.schedulingConfig.matchDurationMinutes,
+    transitionMinutes: loaded.schedulingConfig.transitionMinutes,
+  });
+  if (!recommended) {
+    throw new TournamentSchedulingError(
+      "TOURNAMENT_GENERATION_INVALID",
+      "Es liegt keine übernehmbare Smart-Timing-Empfehlung vor.",
+    );
+  }
+
+  const updated = await updateWorkingTournamentScheduleVersionTiming(
+    params.tenantId,
+    working.id,
+    {
+      matchDurationMinutes: recommended.matchDurationMinutes,
+      transitionMinutes: recommended.transitionMinutes,
+    },
+    { expectedRevision: working.revision },
+  );
+
+  return { scheduleVersionId: updated.id, revision: updated.revision };
 }
 
 export async function runInitialTournamentScheduleGeneration(params: {

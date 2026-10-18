@@ -171,8 +171,69 @@ describe("buildTournamentPlanungViewModel", () => {
         },
       }),
     );
+    expect(vm.diagnostics).toHaveLength(0);
     expect(vm.diagnostics.every((d) => !d.message.includes("CAPACITY"))).toBe(true);
     expect(vm.feasibilityGuidance?.headline).toBe("Spielplan kann noch nicht erstellt werden");
     expect(vm.feasibilityGuidance?.adjustments).toContain("Spieldauer verkürzen");
+    expect(vm.smartTiming).toBeNull();
+  });
+
+  it("embeds canonical smart timing recommendation in guidance when infeasible", () => {
+    const vm = buildTournamentPlanungViewModel(
+      snapshot({
+        assignments: [],
+        optimisation: null,
+        schedulingConfig: {
+          matchDurationMinutes: 30,
+          transitionMinutes: 5,
+          minRestMinutes: 0,
+        },
+        feasibility: {
+          status: "INFEASIBLE",
+          diagnostics: [{ code: "CAPACITY.WINDOW_TOO_SHORT" }],
+          metrics: {} as never,
+          suggestions: [
+            { code: "REDUCE_MATCH_DURATION" },
+            { code: "REDUCE_TRANSITION_DURATION" },
+            { code: "ADD_TOURNAMENT_PITCH" },
+          ],
+        },
+        smartTiming: {
+          mode: "FIXED_ASSESSMENT",
+          feasibilityStatus: "INFEASIBLE",
+          participantRestProofStatus: "PROVEN",
+          metrics: {} as never,
+          effectivePlayableCapacityMinutes: 30,
+          requiredSpanMinutes: 60,
+          requiredSpanKind: "STRUCTURAL_LOWER_BOUND",
+          predictedFinishUtcMs: null,
+          reserveMinutes: null,
+          durationRecommendation: {
+            matchDurationMinutes: 12,
+            transitionMinutes: 3,
+            rationale: "internal only",
+          },
+          mathematicalMaximumTiming: null,
+          recommendationsAutoApplied: false,
+          adjustments: [],
+          nudges: [],
+          pitchCountRecommendation: {
+            minimumProvenPitchCount: null,
+            currentPitchCount: 2,
+            rationale: "No pitch count up to MVP limit produced a feasible witness schedule.",
+          },
+          matchDurationOpportunity: null,
+          breakOpportunity: null,
+          diagnostics: [],
+        },
+      }),
+    );
+    expect(vm.feasibilityGuidance?.recommendedTiming).toEqual({
+      matchDurationMinutes: 12,
+      transitionMinutes: 3,
+    });
+    expect(vm.feasibilityGuidance?.adjustments).not.toContain("Spieldauer verkürzen");
+    expect(vm.diagnostics).toHaveLength(0);
+    expect(vm.smartTiming).toBeNull();
   });
 });

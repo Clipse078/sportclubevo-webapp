@@ -10,10 +10,12 @@ import type {
 } from "@/lib/tournament-scheduling/feasibility/types";
 import type { TournamentScheduleOptimisationStatus } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 import type { TournamentFixtureScheduleLockDimension } from "@/lib/tournament-scheduling/types";
+import type { TournamentTimingAssessment } from "@/lib/tournament-scheduling/smart-timing";
 import type {
   TournamentPlanungFeasibilityGuidance,
   TournamentPlanungFeasibilityUxStatus,
   TournamentPlanungGenerationOutcome,
+  TournamentPlanungRecommendedTiming,
   TournamentPlanungRegenerationSummary,
 } from "./types";
 import type { RegenerationChangeMetrics } from "@/lib/tournament-scheduling/partial-regeneration/types";
@@ -137,29 +139,66 @@ export function feasibilitySuggestionUserLabel(code: FeasibilitySuggestionCode):
   }
 }
 
+const TIMING_ADJUSTMENT_LABELS = new Set([
+  "Spieldauer verkürzen",
+  "Wechselzeit verkürzen",
+  "Spieldauer oder Wechselzeit verkürzen",
+]);
+
+export function resolvePlanungRecommendedTimingFromAssessment(
+  assessment: TournamentTimingAssessment | null | undefined,
+  currentConfig?: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
+): TournamentPlanungRecommendedTiming | null {
+  const rec = assessment?.durationRecommendation;
+  if (!rec) return null;
+  if (currentConfig) {
+    const unchanged =
+      rec.matchDurationMinutes === currentConfig.matchDurationMinutes &&
+      rec.transitionMinutes === currentConfig.transitionMinutes;
+    if (unchanged) return null;
+  }
+  return {
+    matchDurationMinutes: rec.matchDurationMinutes,
+    transitionMinutes: rec.transitionMinutes,
+  };
+}
+
 export function buildPlanungFeasibilityGuidance(
   feasibility: TournamentFeasibilityResult | null,
+  smartTiming: TournamentTimingAssessment | null = null,
+  currentConfig?: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
 ): TournamentPlanungFeasibilityGuidance | null {
   if (!feasibility || feasibility.status !== "INFEASIBLE") {
     return null;
   }
 
-  const diagnosticMessages = feasibility.diagnostics.map((d) =>
-    feasibilityDiagnosticUserMessage(d.code),
-  );
-  const uniqueDiagnostic = [...new Set(diagnosticMessages)];
   const summary =
-    uniqueDiagnostic[0] ??
-    "Das verfügbare Zeitfenster reicht für die aktuelle Turnierkonfiguration nicht aus.";
+    "Das verfügbare Zeitfenster reicht für die aktuelle Konfiguration nicht aus.";
 
   const adjustmentLabels = feasibility.suggestions.map((s) =>
     feasibilitySuggestionUserLabel(s.code),
   );
-  const adjustments = [...new Set(adjustmentLabels)];
+  let adjustments = [...new Set(adjustmentLabels)];
+
+  const recommendedTiming = resolvePlanungRecommendedTimingFromAssessment(
+    smartTiming,
+    currentConfig,
+  );
+
+  if (recommendedTiming) {
+    adjustments = adjustments.filter((label) => !TIMING_ADJUSTMENT_LABELS.has(label));
+  }
 
   return {
     headline: "Spielplan kann noch nicht erstellt werden",
     summary,
+    recommendedTiming,
     adjustments,
   };
 }

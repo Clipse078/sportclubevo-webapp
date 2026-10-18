@@ -125,10 +125,19 @@ export type TournamentPlanungDiagnostic = {
   severity: "info" | "warning" | "danger";
 };
 
+/** Oracle-verified timing from canonical Smart Timing (operational backward recommendation). */
+export type TournamentPlanungRecommendedTiming = {
+  matchDurationMinutes: number;
+  transitionMinutes: number;
+};
+
 /** Actionable German guidance when automatic generation cannot succeed. */
 export type TournamentPlanungFeasibilityGuidance = {
   headline: string;
   summary: string;
+  /** Present when Smart Timing proves a feasible match/transition pair for the current window. */
+  recommendedTiming: TournamentPlanungRecommendedTiming | null;
+  /** Fallback suggestions (deduplicated); excludes timing knobs covered by recommendedTiming. */
   adjustments: readonly string[];
 };
 

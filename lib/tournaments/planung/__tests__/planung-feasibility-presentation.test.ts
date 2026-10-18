@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { analyseTournamentFeasibility } from "@/lib/tournament-scheduling/feasibility";
+import { assessTournamentTiming } from "@/lib/tournament-scheduling/smart-timing";
 import {
   buildPlanungFeasibilityGuidance,
   feasibilityDiagnosticUserMessage,
   resolveInitialScheduleGenerationOutcome,
+  resolvePlanungRecommendedTimingFromAssessment,
 } from "../planung-presentation";
 
 describe("planung feasibility presentation", () => {
@@ -54,8 +56,64 @@ describe("planung feasibility presentation", () => {
     expect(feasibility.status).toBe("INFEASIBLE");
     const guidance = buildPlanungFeasibilityGuidance(feasibility);
     expect(guidance?.headline).toBe("Spielplan kann noch nicht erstellt werden");
+    expect(guidance?.recommendedTiming).toBeNull();
     expect(guidance?.adjustments.some((a) => a.includes("Spieldauer"))).toBe(true);
     expect(guidance?.adjustments.some((a) => a.includes("Spielfeld"))).toBe(true);
+  });
+
+  it("uses smart timing durationRecommendation for guidance when oracle finds feasible pair", () => {
+    const fixtures = Array.from({ length: 8 }, (_, i) => ({
+      fixtureId: `f${i}`,
+      stageKey: "MAIN",
+      roundIndex: 0,
+      slotIndexInRound: i,
+      sideAParticipantId: `team-${i * 2}`,
+      sideBParticipantId: `team-${i * 2 + 1}`,
+    }));
+    const assessment = assessTournamentTiming({
+      mode: "FIXED_ASSESSMENT",
+      tournamentWindow: { startUtcMs: 0, endUtcMs: 120 * 60_000 },
+      config: { matchDurationMinutes: 30, transitionMinutes: 5, minRestMinutes: 0 },
+      fixtures,
+      participants: Array.from({ length: 16 }, (_, i) => ({ participantId: `team-${i}` })),
+      tournamentPitches: [
+        {
+          tournamentPitchId: "pitch-a",
+          displayOrder: 0,
+          label: "Feld 1",
+        },
+      ],
+      breaks: [],
+    });
+    expect(assessment.feasibilityStatus).toBe("INFEASIBLE");
+    expect(assessment.durationRecommendation).not.toBeNull();
+
+    const recommended = resolvePlanungRecommendedTimingFromAssessment(assessment, {
+      matchDurationMinutes: 30,
+      transitionMinutes: 5,
+    });
+    expect(recommended).toEqual({
+      matchDurationMinutes: assessment.durationRecommendation!.matchDurationMinutes,
+      transitionMinutes: assessment.durationRecommendation!.transitionMinutes,
+    });
+
+    const guidance = buildPlanungFeasibilityGuidance(
+      {
+        status: "INFEASIBLE",
+        diagnostics: [{ code: "CAPACITY.WINDOW_TOO_SHORT" }],
+        metrics: assessment.metrics,
+        suggestions: [
+          { code: "REDUCE_MATCH_DURATION" },
+          { code: "REDUCE_TRANSITION_DURATION" },
+          { code: "ADD_TOURNAMENT_PITCH" },
+        ],
+      },
+      assessment,
+      { matchDurationMinutes: 30, transitionMinutes: 5 },
+    );
+    expect(guidance?.recommendedTiming).toEqual(recommended);
+    expect(guidance?.adjustments).not.toContain("Spieldauer verkürzen");
+    expect(guidance?.adjustments).not.toContain("Wechselzeit verkürzen");
   });
 
   it("reports structured infeasible generation without persisting assignments", () => {
@@ -75,6 +133,7 @@ describe("planung feasibility presentation", () => {
     });
 
     expect(outcome.succeeded).toBe(false);
+    expect(outcome.guidance?.recommendedTiming).toBeNull();
     expect(outcome.guidance?.adjustments).toContain("Spieldauer verkürzen");
   });
 });

@@ -337,16 +337,12 @@ function buildSmartTimingSummary(
   if (assessment.reserveMinutes != null) {
     detailLines.push(`Reserve: ${assessment.reserveMinutes} Min.`);
   }
-  if (assessment.pitchCountRecommendation?.rationale) {
-    detailLines.push(assessment.pitchCountRecommendation.rationale);
-  }
-
   let headline = "Turnierplan passt in das Zeitfenster.";
   if (assessment.feasibilityStatus === "TIGHT") {
     headline = "Zeitfenster knapp.";
   }
   if (assessment.feasibilityStatus === "INFEASIBLE") {
-    headline = "Zeitfenster reicht nicht aus.";
+    return null;
   }
 
   return {
@@ -363,6 +359,7 @@ function buildSmartTimingSummary(
 function mapDiagnostics(
   feasibility: TournamentFeasibilityResult | null,
   optimisation: TournamentScheduleOptimisationResult | null,
+  options: { includeFeasibilityDiagnostics: boolean },
 ): TournamentPlanungDiagnostic[] {
   const out: TournamentPlanungDiagnostic[] = [];
   const lockDiagnostics: TournamentPartialRegenerationResult["lockConflictDiagnostics"] =
@@ -378,7 +375,7 @@ function mapDiagnostics(
       });
     }
   }
-  if (feasibility?.diagnostics?.length) {
+  if (options.includeFeasibilityDiagnostics && feasibility?.diagnostics?.length) {
     for (const diag of feasibility.diagnostics.slice(0, 6)) {
       out.push({
         id: diag.code,
@@ -484,8 +481,19 @@ export function buildTournamentPlanungViewModel(
         })
       : null;
 
-  const diagnostics = mapDiagnostics(snapshot.feasibility, snapshot.optimisation);
-  if (feasibilityUxStatus) {
+  const feasibilityGuidance = buildPlanungFeasibilityGuidance(
+    snapshot.feasibility,
+    snapshot.smartTiming,
+    {
+      matchDurationMinutes: snapshot.schedulingConfig.matchDurationMinutes,
+      transitionMinutes: snapshot.schedulingConfig.transitionMinutes,
+    },
+  );
+  const suppressFeasibilityDiagnostics = feasibilityGuidance !== null;
+  const diagnostics = mapDiagnostics(snapshot.feasibility, snapshot.optimisation, {
+    includeFeasibilityDiagnostics: !suppressFeasibilityDiagnostics,
+  });
+  if (feasibilityUxStatus && !suppressFeasibilityDiagnostics) {
     diagnostics.unshift({
       id: "feasibility-ux",
       message: feasibilityUxHeadline(feasibilityUxStatus),
@@ -549,7 +557,7 @@ export function buildTournamentPlanungViewModel(
     participants: snapshot.participants,
     smartTiming: buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
     diagnostics,
-    feasibilityGuidance: buildPlanungFeasibilityGuidance(snapshot.feasibility),
+    feasibilityGuidance,
     regenerationSummary: buildRegenerationSummaryMessage(snapshot.regenerationMetrics),
     incompleteSetup,
     actions: {
