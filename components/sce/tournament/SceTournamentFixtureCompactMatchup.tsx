@@ -36,20 +36,23 @@ export default function SceTournamentFixtureCompactMatchup({
         )}
         data-testid="sce-tournament-fixture-compact-matchup"
         data-layout="inline"
+        data-crest-variant="planung"
       >
         <SceTournamentFixtureParticipant
           identity={participantIdentityFromPlanung(sideA)}
           label={sideA.label}
           density="compact"
+          crestVariant="planung"
           align="start"
           qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
           className="min-w-0 flex-1 basis-0"
         />
-        <SceTournamentFixtureVs size="compact" className="mx-0.5 shrink-0" />
+        <SceTournamentFixtureVs size="compact" className="mx-1 shrink-0" />
         <SceTournamentFixtureParticipant
           identity={participantIdentityFromPlanung(sideB)}
           label={sideB.label}
           density="compact"
+          crestVariant="planung"
           align="end"
           qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
           className="min-w-0 flex-1 basis-0"
@@ -63,11 +66,13 @@ export default function SceTournamentFixtureCompactMatchup({
       className={cn("min-w-0 space-y-1", className)}
       data-testid="sce-tournament-fixture-compact-matchup"
       data-layout="stack"
+      data-crest-variant="planungBoard"
     >
       <SceTournamentFixtureParticipant
         identity={participantIdentityFromPlanung(sideA)}
         label={sideA.label}
         density="compact"
+        crestVariant="planungBoard"
         align="start"
         qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
       />
@@ -78,6 +83,7 @@ export default function SceTournamentFixtureCompactMatchup({
         identity={participantIdentityFromPlanung(sideB)}
         label={sideB.label}
         density="compact"
+        crestVariant="planungBoard"
         align="end"
         qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
         muted

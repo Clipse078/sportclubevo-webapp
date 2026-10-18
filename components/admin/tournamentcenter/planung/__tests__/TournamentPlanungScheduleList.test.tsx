@@ -86,4 +86,11 @@ describe("TournamentPlanungScheduleList", () => {
       row.querySelector('[data-testid="sce-tournament-fixture-compact-matchup"]')!,
     );
   });
+
+  it("round overview uses enlarged planung crest variant", () => {
+    render(<TournamentPlanungScheduleList model={baseModel} timezone="Europe/Zurich" />);
+    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
+    expect(matchup).toHaveAttribute("data-crest-variant", "planung");
+    expect(matchup.querySelectorAll('[data-fixture-crest-size="management"]').length).toBe(2);
+  });
 });

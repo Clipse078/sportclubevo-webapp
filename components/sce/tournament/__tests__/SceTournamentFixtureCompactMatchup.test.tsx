@@ -60,4 +60,21 @@ describe("SceTournamentFixtureCompactMatchup", () => {
       "stack",
     );
   });
+
+  it("inline planung uses larger management crest density", () => {
+    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="inline" />);
+    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
+    expect(matchup).toHaveAttribute("data-crest-variant", "planung");
+    const crests = matchup.querySelectorAll('[data-fixture-crest-size="management"]');
+    expect(crests.length).toBe(2);
+  });
+
+  it("stack board cells use planungBoard compact crest without micro icons", () => {
+    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="stack" />);
+    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
+    expect(matchup).toHaveAttribute("data-crest-variant", "planungBoard");
+    const crests = matchup.querySelectorAll('[data-fixture-crest-size="compact"]');
+    expect(crests.length).toBe(2);
+    expect(matchup.querySelector('[data-fixture-crest-size="micro"]')).toBeNull();
+  });
 });

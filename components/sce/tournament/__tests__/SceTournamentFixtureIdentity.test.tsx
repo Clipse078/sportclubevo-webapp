@@ -1,7 +1,11 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-import { SceTournamentFixtureParticipant, SceTournamentFixtureVs } from "../SceTournamentFixtureIdentity";
+import {
+  crestDensityForFixtureVariant,
+  SceTournamentFixtureParticipant,
+  SceTournamentFixtureVs,
+} from "../SceTournamentFixtureIdentity";
 import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
 import { expectCanonicalFixtureIdentityOrder } from "./fixture-identity-order-assertions";
 
@@ -42,6 +46,27 @@ describe("SceTournamentFixtureIdentity", () => {
       "crest",
       "name",
     ]);
+  });
+
+  it("maps planung crest variants without shrinking Spielplan standard", () => {
+    expect(crestDensityForFixtureVariant("spielplanStandard")).toBe("compact");
+    expect(crestDensityForFixtureVariant("spielplanCompact")).toBe("micro");
+    expect(crestDensityForFixtureVariant("planung")).toBe("management");
+    expect(crestDensityForFixtureVariant("planungBoard")).toBe("compact");
+  });
+
+  it("renders planung crest size on participant segment", () => {
+    const { container } = render(
+      <SceTournamentFixtureParticipant
+        identity={identity}
+        label="Team Alpha"
+        density="compact"
+        crestVariant="planung"
+        align="start"
+      />,
+    );
+    const crest = container.querySelector('[data-fixture-identity-segment="crest"]');
+    expect(crest).toHaveAttribute("data-fixture-crest-size", "management");
   });
 
   it("composes canonical matchup segment order", () => {

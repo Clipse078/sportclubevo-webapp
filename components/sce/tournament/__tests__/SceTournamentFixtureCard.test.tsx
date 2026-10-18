@@ -115,6 +115,24 @@ describe("SceTournamentFixtureCard", () => {
     }
   });
 
+  it("standard density keeps Spielplan compact crest scale (not planung management)", () => {
+    render(
+      <SceTournamentFixtureCard
+        fixture={fixture}
+        participants={participants}
+        timezone="Europe/Zurich"
+        density="standard"
+      />,
+    );
+    const crests = screen
+      .getByTestId("sce-tournament-fixture-matchup")
+      .querySelectorAll('[data-fixture-crest-size="compact"]');
+    expect(crests.length).toBe(2);
+    expect(
+      screen.getByTestId("sce-tournament-fixture-matchup").querySelector('[data-fixture-crest-size="management"]'),
+    ).toBeNull();
+  });
+
   it("uses canonical DOM identity order (name → crest → VS → crest → name)", () => {
     render(
       <SceTournamentFixtureCard
