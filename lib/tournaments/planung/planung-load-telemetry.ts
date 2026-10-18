@@ -8,6 +8,7 @@ export type PlanungLoadTelemetrySnapshot = {
   feasibilityAnalyses: number;
   smartTimingAssessments: number;
   optimiserInvocations: number;
+  fixtureGeneratorInvocations: number;
 };
 
 const state: PlanungLoadTelemetrySnapshot = {
@@ -15,6 +16,7 @@ const state: PlanungLoadTelemetrySnapshot = {
   feasibilityAnalyses: 0,
   smartTimingAssessments: 0,
   optimiserInvocations: 0,
+  fixtureGeneratorInvocations: 0,
 };
 
 export function resetPlanungLoadTelemetry(): void {
@@ -22,6 +24,7 @@ export function resetPlanungLoadTelemetry(): void {
   state.feasibilityAnalyses = 0;
   state.smartTimingAssessments = 0;
   state.optimiserInvocations = 0;
+  state.fixtureGeneratorInvocations = 0;
 }
 
 export function snapshotPlanungLoadTelemetry(): PlanungLoadTelemetrySnapshot {
@@ -42,4 +45,8 @@ export function recordPlanungSmartTimingAssessment(): void {
 
 export function recordPlanungOptimiserInvocation(): void {
   state.optimiserInvocations += 1;
+}
+
+export function recordPlanungFixtureGeneratorInvocation(): void {
+  state.fixtureGeneratorInvocations += 1;
 }

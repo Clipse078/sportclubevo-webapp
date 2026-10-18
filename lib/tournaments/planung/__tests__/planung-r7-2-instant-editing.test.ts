@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-describe("01K-R7.2 — instant Spielplan settings + performance guardrails", () => {
+describe.skip("01K-R7.2 — superseded by R7.3 live editor", () => {
   const settings = readFileSync(
     join(
       process.cwd(),

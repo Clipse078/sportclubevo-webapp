@@ -84,27 +84,32 @@ export default function SceTournamentFixtureCard({
 
   const matchup = (
     <div
-      className={cn(
-        "grid min-w-0 flex-1 items-center gap-2",
-        density === "standard"
-          ? "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2 sm:gap-3"
-          : "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1.5",
-      )}
+      className="flex min-w-0 flex-1 justify-center"
       data-testid="sce-tournament-fixture-matchup"
     >
-      <SceTournamentFixtureParticipant
-        identity={sideAIdentity}
-        label={fixture.sideALabel}
-        density={density}
-        align="start"
-      />
-      <SceTournamentFixtureVs highlighted={highlighted} size={density} />
-      <SceTournamentFixtureParticipant
-        identity={sideBIdentity}
-        label={fixture.sideBLabel}
-        density={density}
-        align="end"
-      />
+      <div
+        className={cn(
+          "inline-flex min-w-0 max-w-full items-center",
+          density === "standard" ? "gap-1.5 sm:gap-2" : "gap-1",
+        )}
+        data-testid="sce-tournament-fixture-matchup-cluster"
+      >
+        <SceTournamentFixtureParticipant
+          identity={sideAIdentity}
+          label={fixture.sideALabel}
+          density={density}
+          align="start"
+          className="min-w-0 max-w-[42%] sm:max-w-none"
+        />
+        <SceTournamentFixtureVs highlighted={highlighted} size={density} className="shrink-0" />
+        <SceTournamentFixtureParticipant
+          identity={sideBIdentity}
+          label={fixture.sideBLabel}
+          density={density}
+          align="end"
+          className="min-w-0 max-w-[42%] sm:max-w-none"
+        />
+      </div>
     </div>
   );
 

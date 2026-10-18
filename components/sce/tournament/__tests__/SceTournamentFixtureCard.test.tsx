@@ -133,6 +133,17 @@ describe("SceTournamentFixtureCard", () => {
     ).toBeNull();
   });
 
+  it("centers matchup cluster so crests frame VS", () => {
+    render(
+      <SceTournamentFixtureCard
+        fixture={fixture}
+        participants={participants}
+        timezone="Europe/Zurich"
+      />,
+    );
+    expect(screen.getByTestId("sce-tournament-fixture-matchup-cluster")).toBeInTheDocument();
+  });
+
   it("uses canonical DOM identity order (name → crest → VS → crest → name)", () => {
     render(
       <SceTournamentFixtureCard

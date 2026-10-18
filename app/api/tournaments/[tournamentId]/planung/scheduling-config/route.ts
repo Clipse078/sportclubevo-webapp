@@ -6,7 +6,7 @@ import {
   updatePlanungFixtureHomeAwayRelevance,
   updatePlanungOperationalTiming,
 } from "@/lib/tournaments/planung/planung-operational-config-service";
-import { loadTournamentPlanungViewModel } from "@/lib/tournaments/planung/load-tournament-planung.server";
+import { applyPlanungLiveScheduleReconcile } from "@/lib/tournaments/planung/planung-live-schedule-reconcile.server";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
 import { prisma } from "@/lib/db/prisma";
 
@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     const previousRelevance =
       previousHomeAway?.fixtureHomeAwayRelevance === "ON" ? "ON" : "OFF";
 
-    await updatePlanungOperationalTiming({
+    const timingResult = await updatePlanungOperationalTiming({
       tenantId,
       tournamentId,
       scheduleVersionId: body.scheduleVersionId,
@@ -61,6 +61,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     });
 
     let homeAwayChanged = false;
+    let nextHomeAway: "ON" | "OFF" = previousRelevance;
     if (body.fixtureHomeAwayRelevance != null) {
       if (body.fixtureHomeAwayRelevance !== "ON" && body.fixtureHomeAwayRelevance !== "OFF") {
         return NextResponse.json(
@@ -68,6 +69,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
           { status: 400 },
         );
       }
+      nextHomeAway = body.fixtureHomeAwayRelevance;
       homeAwayChanged = body.fixtureHomeAwayRelevance !== previousRelevance;
       if (homeAwayChanged) {
         await updatePlanungFixtureHomeAwayRelevance({
@@ -78,16 +80,25 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       }
     }
 
-    const viewModel = await loadTournamentPlanungViewModel({
+    const result = await applyPlanungLiveScheduleReconcile({
       tenantId,
       tournamentId,
+      scheduleVersionId: body.scheduleVersionId,
+      expectedRevision: timingResult.revision,
+      homeAwayChanged,
+      fixtureHomeAwayRelevance: nextHomeAway,
       timezone: tenant?.timezone ?? "Europe/Zurich",
       tenantName: tenant?.name ?? null,
       tenantLogoUrl: tenant?.logoUrl ?? null,
-      scheduleConsistencyOverride: homeAwayChanged ? "NEEDS_REGENERATION" : undefined,
     });
 
-    return NextResponse.json({ viewModel });
+    return NextResponse.json({
+      viewModel: result.viewModel,
+      scheduleReconcile: {
+        attempted: result.regenerationAttempted,
+        succeeded: result.regenerationSucceeded,
+      },
+    });
   } catch (err) {
     if (err instanceof TournamentSchedulingError) {
       if (err.code === "SCHEDULE.STALE_VERSION") {

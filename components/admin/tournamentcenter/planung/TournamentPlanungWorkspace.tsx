@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, RefreshCw, Pencil, X } from "lucide-react";
+import { Sparkles, Pencil, X } from "lucide-react";
 import type {
   TournamentPlanungGenerationOutcome,
   TournamentPlanungPlanningUx,
@@ -90,6 +90,7 @@ export default function TournamentPlanungWorkspace({
   const [manualMoveOpen, setManualMoveOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [selfAdjustTiming, setSelfAdjustTiming] = useState(false);
+  const [scheduleSyncPending, setScheduleSyncPending] = useState(false);
 
   const hasSchedule = model.schedulePresence !== "NONE";
   const effectiveInteractionMode: InteractionMode =
@@ -332,7 +333,7 @@ export default function TournamentPlanungWorkspace({
           <h2 className="text-base font-semibold text-[var(--foreground)]">{workspaceHeading}</h2>
           {effectiveInteractionMode === "edit" ? (
             <p className="text-sm text-[var(--muted)]">
-              Verschiebe Spiele per Drag-and-drop oder passe die Einstellungen an.
+              Passe Zeiten, Pausen oder Spiele direkt an.
             </p>
           ) : null}
         </div>
@@ -351,23 +352,6 @@ export default function TournamentPlanungWorkspace({
           ) : null}
           {effectiveInteractionMode === "edit" ? (
             <>
-              {canManage && model.actions.canRegenerate ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() =>
-                    runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
-                      scheduleVersionId: model.scheduleVersionId,
-                      expectedRevision: model.scheduleRevision,
-                    })
-                  }
-                  data-testid="tournament-planung-regenerate"
-                >
-                  <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden />
-                  {model.actions.regenerateLabel}
-                </Button>
-              ) : null}
               <Button
                 type="button"
                 variant="secondary"
@@ -560,6 +544,7 @@ export default function TournamentPlanungWorkspace({
                   expectedRevision: model.scheduleRevision,
                 })
               }
+              onScheduleSyncChange={setScheduleSyncPending}
             />
           ) : null}
           <TournamentPlanungGroupStandings model={model} />
@@ -571,7 +556,21 @@ export default function TournamentPlanungWorkspace({
             )}
             data-testid="tournament-planung-edit-board"
           >
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">Feld- und Zeitplan</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">Feld- und Zeitplan</h3>
+              <p
+                className="text-xs text-[var(--muted)]"
+                data-testid="planung-schedule-sync-status"
+                role="status"
+                aria-live="polite"
+              >
+                {scheduleSyncPending
+                  ? "Spielplan wird aktualisiert …"
+                  : model.timingConsequence?.status === "MATCHES"
+                    ? model.timingConsequence.headline
+                    : null}
+              </p>
+            </div>
             <TournamentPlanungBoard
               model={model}
               timezone={timezone}
@@ -688,10 +687,6 @@ export default function TournamentPlanungWorkspace({
             />
           ) : null}
         </>
-      ) : null}
-
-      {effectiveInteractionMode === "edit" && model.actions.canRegenerate && canManage ? (
-        <p className="text-xs text-[var(--muted)]">{model.actions.regenerateHint}</p>
       ) : null}
 
     </div>

@@ -99,15 +99,15 @@ export function buildPlanungTimingConsequence(
   if (status === "MATCHES") {
     return {
       status: "MATCHES",
-      headline: "Spielplan passt zu diesen Einstellungen.",
+      headline: "Spielplan aktuell ✓",
       detail: null,
     };
   }
   return {
     status: "NEEDS_REGENERATION",
-    headline: "Der aktuelle Spielplan passt nicht mehr zu diesen Einstellungen.",
+    headline: "Der Spielplan passt mit diesen Einstellungen nicht in die verfügbare Zeit.",
     detail:
-      "Zeiten und Pausen wurden gespeichert. Berechne den Spielplan neu, damit alle Spiele wieder passen.",
+      "Passe Spieldauer, Wechselzeit oder Pausen an, oder löse gesperrte Spiele, und versuche es erneut.",
   };
 }
 

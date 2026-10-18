@@ -78,7 +78,45 @@ const model: TournamentPlanungViewModel = {
   timingConsequence: null,
 };
 
+const breakModel: TournamentPlanungViewModel = {
+  ...model,
+  timeScale: {
+    ...model.timeScale!,
+    rowAnchorsUtc: [
+      "2026-06-01T08:00:00.000Z",
+      "2026-06-01T08:15:00.000Z",
+      "2026-06-01T08:30:00.000Z",
+    ],
+  },
+  cells: [
+    ...model.cells,
+    {
+      kind: "BREAK" as const,
+      breakId: "br1",
+      label: "Pause",
+      startUtc: "2026-06-01T08:15:00.000Z",
+      endUtc: "2026-06-01T08:30:00.000Z",
+      pitchIds: ["pitch-a", "pitch-b"],
+      scope: "ALL_PITCHES" as const,
+      accessibleLabel: "Pause alle Felder",
+    },
+  ],
+};
+
 describe("TournamentPlanungBoard 01I", () => {
+  it("R7.3 — ALL_PITCHES break renders full-width band", () => {
+    render(
+      <TournamentPlanungBoard
+        model={breakModel}
+        timezone="Europe/Zurich"
+        selectedFixtureId={null}
+        onSelectFixture={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("planung-board-all-pitches-break")).toBeInTheDocument();
+    expect(screen.getByText(/Pause · 15 Min\. · Alle Felder/)).toBeInTheDocument();
+  });
+
   it("A — fixture is draggable when unlocked", () => {
     render(
       <TournamentPlanungBoard

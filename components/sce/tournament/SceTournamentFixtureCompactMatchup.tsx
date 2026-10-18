@@ -27,17 +27,13 @@ export default function SceTournamentFixtureCompactMatchup({
   layout = "stack",
   className,
 }: Props) {
-  if (layout === "inline" || layout === "board") {
-    const crestVariant = layout === "board" ? "planungBoard" : "planung";
+  if (layout === "inline") {
+    const crestVariant = "planung";
     return (
       <div
-        className={cn(
-          "flex min-w-0 items-center gap-x-1 gap-y-0.5",
-          layout === "board" ? "flex-nowrap" : "flex-wrap",
-          className,
-        )}
+        className={cn("flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5", className)}
         data-testid="sce-tournament-fixture-compact-matchup"
-        data-layout={layout}
+        data-layout="inline"
         data-crest-variant={crestVariant}
       >
         <SceTournamentFixtureParticipant
@@ -58,6 +54,37 @@ export default function SceTournamentFixtureCompactMatchup({
           align="end"
           qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
           className="min-w-0 flex-1 basis-0"
+        />
+      </div>
+    );
+  }
+
+  if (layout === "board") {
+    return (
+      <div
+        className={cn("min-w-0 space-y-0.5", className)}
+        data-testid="sce-tournament-fixture-compact-matchup"
+        data-layout="board"
+        data-crest-variant="planungBoard"
+      >
+        <SceTournamentFixtureParticipant
+          identity={participantIdentityFromPlanung(sideA)}
+          label={sideA.label}
+          density="compact"
+          crestVariant="planungBoard"
+          align="start"
+          qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
+        />
+        <div className="flex justify-center py-0.5">
+          <SceTournamentFixtureVs size="compact" />
+        </div>
+        <SceTournamentFixtureParticipant
+          identity={participantIdentityFromPlanung(sideB)}
+          label={sideB.label}
+          density="compact"
+          crestVariant="planungBoard"
+          align="end"
+          qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
         />
       </div>
     );

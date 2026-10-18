@@ -6,16 +6,23 @@ import {
   deletePlanungOperationalBreak,
   updatePlanungOperationalBreak,
 } from "@/lib/tournaments/planung/planung-operational-config-service";
-import { loadTournamentPlanungViewModel } from "@/lib/tournaments/planung/load-tournament-planung.server";
+import { applyPlanungLiveScheduleReconcile } from "@/lib/tournaments/planung/planung-live-schedule-reconcile.server";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
 
 type RouteContext = { params: Promise<{ tournamentId: string; breakId: string }> };
 
-async function reloadViewModel(tenantId: string, tournamentId: string) {
+async function reconcileAfterBreakChange(
+  tenantId: string,
+  tournamentId: string,
+  scheduleVersionId: string,
+  expectedRevision?: number,
+) {
   const tenant = await getActiveTenant();
-  return loadTournamentPlanungViewModel({
+  return applyPlanungLiveScheduleReconcile({
     tenantId,
     tournamentId,
+    scheduleVersionId,
+    expectedRevision,
     timezone: tenant?.timezone ?? "Europe/Zurich",
     tenantName: tenant?.name ?? null,
     tenantLogoUrl: tenant?.logoUrl ?? null,
@@ -35,6 +42,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   const { tournamentId, breakId } = await params;
   const body = (await request.json()) as {
+    scheduleVersionId?: string;
+    expectedRevision?: number;
     label?: string | null;
     startLocalTime?: string;
     durationMinutes?: number;
@@ -47,6 +56,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       { error: "startLocalTime and durationMinutes are required." },
       { status: 400 },
     );
+  }
+  if (!body.scheduleVersionId) {
+    return NextResponse.json({ error: "scheduleVersionId is required." }, { status: 400 });
   }
 
   try {
@@ -63,11 +75,21 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       },
     });
 
-    const viewModel = await reloadViewModel(tenantId, tournamentId);
-    return NextResponse.json({ viewModel });
+    const result = await reconcileAfterBreakChange(
+      tenantId,
+      tournamentId,
+      body.scheduleVersionId,
+      body.expectedRevision,
+    );
+    return NextResponse.json({ viewModel: result.viewModel });
   } catch (err) {
-    if (err instanceof TournamentSchedulingError && err.code === "TOURNAMENT_GENERATION_INVALID") {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: 422 });
+    if (err instanceof TournamentSchedulingError) {
+      if (err.code === "SCHEDULE.STALE_VERSION") {
+        return NextResponse.json({ error: err.message, code: err.code }, { status: 409 });
+      }
+      if (err.code === "TOURNAMENT_GENERATION_INVALID") {
+        return NextResponse.json({ error: err.message, code: err.code }, { status: 422 });
+      }
     }
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 422 });
@@ -76,7 +98,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: RouteContext) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const access = await requireApiAnyPermission([PERMISSIONS.EVENTS_MANAGE]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
@@ -88,12 +110,30 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   }
 
   const { tournamentId, breakId } = await params;
+  let body: { scheduleVersionId?: string; expectedRevision?: number } = {};
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    body = {};
+  }
+
+  if (!body.scheduleVersionId) {
+    return NextResponse.json({ error: "scheduleVersionId is required." }, { status: 400 });
+  }
 
   try {
     await deletePlanungOperationalBreak({ tenantId, tournamentId, breakId });
-    const viewModel = await reloadViewModel(tenantId, tournamentId);
-    return NextResponse.json({ viewModel });
+    const result = await reconcileAfterBreakChange(
+      tenantId,
+      tournamentId,
+      body.scheduleVersionId,
+      body.expectedRevision,
+    );
+    return NextResponse.json({ viewModel: result.viewModel });
   } catch (err) {
+    if (err instanceof TournamentSchedulingError && err.code === "SCHEDULE.STALE_VERSION") {
+      return NextResponse.json({ error: err.message, code: err.code }, { status: 409 });
+    }
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 422 });
     }

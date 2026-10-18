@@ -61,12 +61,13 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     );
   });
 
-  it("board layout uses canonical inline identity with planungBoard crests", () => {
+  it("board layout uses compact stack match block with planungBoard crests", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="board" />);
     const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
     expect(matchup).toHaveAttribute("data-layout", "board");
     expect(matchup).toHaveAttribute("data-crest-variant", "planungBoard");
     expectCanonicalFixtureIdentityOrder(matchup);
+    expect(matchup.className).toMatch(/space-y/);
   });
 
   it("inline planung uses larger management crest density", () => {

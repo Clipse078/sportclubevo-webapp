@@ -144,7 +144,37 @@ export default function TournamentPlanungBoard({
           </div>
         ))}
 
-        {timeScale.rowAnchorsUtc.map((anchor) => (
+        {timeScale.rowAnchorsUtc.map((anchor) => {
+          const allPitchBreak = breakCells.find(
+            (b) => b.startUtc === anchor && b.scope === "ALL_PITCHES",
+          );
+          if (allPitchBreak) {
+            const durationMinutes = Math.max(
+              1,
+              Math.round(
+                (Date.parse(allPitchBreak.endUtc) - Date.parse(allPitchBreak.startUtc)) / 60_000,
+              ),
+            );
+            return (
+              <div key={`row-${anchor}`} className="contents">
+                <div className="sticky left-0 border-r border-b border-[var(--border)] bg-[var(--surface)] p-2 text-xs tabular-nums text-[var(--muted)]">
+                  {formatTime(anchor, timezone)}
+                </div>
+                <div
+                  className="border-b border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]"
+                  style={{ gridColumn: `span ${model.pitches.length}` }}
+                  role="gridcell"
+                  aria-label={allPitchBreak.accessibleLabel}
+                  data-testid="planung-board-all-pitches-break"
+                  data-drop-state="blocked"
+                >
+                  {allPitchBreak.label} · {durationMinutes} Min. · Alle Felder
+                </div>
+              </div>
+            );
+          }
+
+          return (
           <div key={`row-${anchor}`} className="contents">
             <div className="sticky left-0 border-r border-b border-[var(--border)] bg-[var(--surface)] p-2 text-xs tabular-nums text-[var(--muted)]">
               {formatTime(anchor, timezone)}
@@ -160,7 +190,8 @@ export default function TournamentPlanungBoard({
               const br = breakCells.find(
                 (b) =>
                   b.startUtc === anchor &&
-                  (b.scope === "ALL_PITCHES" || b.pitchIds.includes(pitch.pitchId)),
+                  b.scope === "SELECTED_PITCHES" &&
+                  b.pitchIds.includes(pitch.pitchId),
               );
 
               const cellKey = `${anchor}-${pitch.pitchId}`;
@@ -182,7 +213,10 @@ export default function TournamentPlanungBoard({
                       if (drag?.committed) void handlePreview(drag, pitch.pitchId, anchor, true);
                     }}
                   >
-                    <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-2 py-3 text-center text-xs text-[var(--muted)]">
+                    <div
+                      className="rounded-md border border-dashed border-[var(--sce-warning)]/40 bg-[var(--sce-warning-soft)] px-2 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]"
+                      data-testid={`planung-board-pitch-break-${pitch.pitchId}`}
+                    >
                       {br.label}
                     </div>
                   </div>
@@ -325,7 +359,8 @@ export default function TournamentPlanungBoard({
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

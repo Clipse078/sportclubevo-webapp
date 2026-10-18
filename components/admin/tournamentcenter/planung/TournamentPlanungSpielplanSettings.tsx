@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type {
   TournamentPlanungFixtureHomeAwayRelevance,
@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/Button";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
+const TIMING_DEBOUNCE_MS = 450;
+
 type Props = {
   tournamentId: string;
   model: TournamentPlanungViewModel;
@@ -25,6 +27,7 @@ type Props = {
   onModelChange: (viewModel: TournamentPlanungViewModel) => void;
   onError: (message: string) => void;
   onRegenerate: () => void;
+  onScheduleSyncChange?: (pending: boolean) => void;
 };
 
 type BreakDraft = {
@@ -104,17 +107,27 @@ export default function TournamentPlanungSpielplanSettings({
   onModelChange,
   onError,
   onRegenerate,
+  onScheduleSyncChange,
 }: Props) {
   const [timingDraft, setTimingDraft] = useState<TimingDraft>(() => timingDraftFromSettings(settings));
-  const [applyPending, setApplyPending] = useState(false);
-  const [applyError, setApplyError] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<"none" | "add" | { editId: string }>("none");
   const [breakDraft, setBreakDraft] = useState<BreakDraft>(emptyBreakDraft());
   const [breakSavePending, setBreakSavePending] = useState(false);
+  const [scheduleSyncPending, setScheduleSyncPending] = useState(false);
+
+  const syncGenerationRef = useRef(0);
+  const homeAwayCommitSkipRef = useRef(true);
+  const scheduleRevisionRef = useRef(model.scheduleRevision);
+  const scheduleVersionIdRef = useRef(model.scheduleVersionId);
+
+  scheduleRevisionRef.current = model.scheduleRevision;
+  scheduleVersionIdRef.current = model.scheduleVersionId;
 
   useEffect(() => {
     setTimingDraft(timingDraftFromSettings(settings));
-    setApplyError(null);
+    setSyncError(null);
+    homeAwayCommitSkipRef.current = true;
   }, [
     settings.matchDurationMinutes,
     settings.transitionMinutes,
@@ -126,17 +139,28 @@ export default function TournamentPlanungSpielplanSettings({
     [settings, timingDraft],
   );
 
-  const applySettings = useCallback(async () => {
-    if (!canManage || !model.scheduleVersionId || !timingDirty) return;
-    setApplyPending(true);
-    setApplyError(null);
+  const setSyncPending = useCallback(
+    (pending: boolean) => {
+      setScheduleSyncPending(pending);
+      onScheduleSyncChange?.(pending);
+    },
+    [onScheduleSyncChange],
+  );
+
+  const commitTimingSettings = useCallback(async () => {
+    if (!canManage || !scheduleVersionIdRef.current || !timingDirty) return;
+
+    const generation = ++syncGenerationRef.current;
+    setSyncPending(true);
+    setSyncError(null);
+
     try {
       const res = await fetch(`/api/tournaments/${tournamentId}/planung/scheduling-config`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          scheduleVersionId: model.scheduleVersionId,
-          expectedRevision: model.scheduleRevision ?? undefined,
+          scheduleVersionId: scheduleVersionIdRef.current,
+          expectedRevision: scheduleRevisionRef.current ?? undefined,
           matchDurationMinutes: timingDraft.matchDurationMinutes,
           transitionMinutes: timingDraft.transitionMinutes,
           fixtureHomeAwayRelevance: timingDraft.fixtureHomeAwayRelevance,
@@ -147,38 +171,70 @@ export default function TournamentPlanungSpielplanSettings({
         error?: string;
         code?: string;
       };
+      if (generation !== syncGenerationRef.current) return;
       if (!res.ok) {
         const message = json.error ?? "Einstellungen konnten nicht gespeichert werden.";
-        setApplyError(message);
+        setSyncError(message);
         onError(message);
         return;
       }
       if (json.viewModel) onModelChange(json.viewModel);
     } catch {
+      if (generation !== syncGenerationRef.current) return;
       const message = "Einstellungen konnten nicht gespeichert werden.";
-      setApplyError(message);
+      setSyncError(message);
       onError(message);
     } finally {
-      setApplyPending(false);
+      if (generation === syncGenerationRef.current) {
+        setSyncPending(false);
+      }
     }
+  }, [canManage, onError, onModelChange, setSyncPending, timingDirty, timingDraft, tournamentId]);
+
+  useEffect(() => {
+    if (!canManage || !timingDirty) return;
+    const onlyHomeAwayChanged =
+      timingDraft.matchDurationMinutes === settings.matchDurationMinutes &&
+      timingDraft.transitionMinutes === settings.transitionMinutes &&
+      timingDraft.fixtureHomeAwayRelevance !== settings.fixtureHomeAwayRelevance;
+    if (onlyHomeAwayChanged) {
+      if (homeAwayCommitSkipRef.current) return;
+      void commitTimingSettings();
+      return;
+    }
+
+    const handle = window.setTimeout(() => {
+      void commitTimingSettings();
+    }, TIMING_DEBOUNCE_MS);
+    return () => window.clearTimeout(handle);
   }, [
     canManage,
-    model.scheduleRevision,
-    model.scheduleVersionId,
-    onError,
-    onModelChange,
+    commitTimingSettings,
+    settings.fixtureHomeAwayRelevance,
+    settings.matchDurationMinutes,
+    settings.transitionMinutes,
     timingDirty,
     timingDraft.fixtureHomeAwayRelevance,
     timingDraft.matchDurationMinutes,
     timingDraft.transitionMinutes,
-    tournamentId,
   ]);
 
+  const flushTimingOnBoundary = useCallback(() => {
+    if (!timingDirty) return;
+    void commitTimingSettings();
+  }, [commitTimingSettings, timingDirty]);
+
   const saveBreak = useCallback(async () => {
-    if (!canManage) return;
+    if (!canManage || !scheduleVersionIdRef.current) return;
     setBreakSavePending(true);
+    setSyncPending(true);
+    const generation = ++syncGenerationRef.current;
     try {
-      const payload = draftPayload(breakDraft);
+      const payload = {
+        ...draftPayload(breakDraft),
+        scheduleVersionId: scheduleVersionIdRef.current,
+        expectedRevision: scheduleRevisionRef.current ?? undefined,
+      };
       const isEdit = editorMode !== "none" && editorMode !== "add";
       const res = await fetch(
         isEdit
@@ -194,6 +250,7 @@ export default function TournamentPlanungSpielplanSettings({
         viewModel?: TournamentPlanungViewModel;
         error?: string;
       };
+      if (generation !== syncGenerationRef.current) return;
       if (!res.ok) {
         onError(json.error ?? "Pause konnte nicht gespeichert werden.");
         return;
@@ -202,26 +259,38 @@ export default function TournamentPlanungSpielplanSettings({
       setEditorMode("none");
       setBreakDraft(emptyBreakDraft());
     } catch {
+      if (generation !== syncGenerationRef.current) return;
       onError("Pause konnte nicht gespeichert werden.");
     } finally {
-      setBreakSavePending(false);
+      if (generation === syncGenerationRef.current) {
+        setBreakSavePending(false);
+        setSyncPending(false);
+      }
     }
-  }, [breakDraft, canManage, editorMode, onError, onModelChange, tournamentId]);
+  }, [breakDraft, canManage, editorMode, onError, onModelChange, setSyncPending, tournamentId]);
 
   const deleteBreak = useCallback(
     async (breakId: string, label: string) => {
-      if (!canManage) return;
+      if (!canManage || !scheduleVersionIdRef.current) return;
       const confirmed = window.confirm(`Pause „${label}“ wirklich löschen?`);
       if (!confirmed) return;
       setBreakSavePending(true);
+      setSyncPending(true);
+      const generation = ++syncGenerationRef.current;
       try {
         const res = await fetch(`/api/tournaments/${tournamentId}/planung/breaks/${breakId}`, {
           method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scheduleVersionId: scheduleVersionIdRef.current,
+            expectedRevision: scheduleRevisionRef.current ?? undefined,
+          }),
         });
         const json = (await res.json()) as {
           viewModel?: TournamentPlanungViewModel;
           error?: string;
         };
+        if (generation !== syncGenerationRef.current) return;
         if (!res.ok) {
           onError(json.error ?? "Pause konnte nicht gelöscht werden.");
           return;
@@ -231,12 +300,16 @@ export default function TournamentPlanungSpielplanSettings({
           setEditorMode("none");
         }
       } catch {
+        if (generation !== syncGenerationRef.current) return;
         onError("Pause konnte nicht gelöscht werden.");
       } finally {
-        setBreakSavePending(false);
+        if (generation === syncGenerationRef.current) {
+          setBreakSavePending(false);
+          setSyncPending(false);
+        }
       }
     },
-    [canManage, editorMode, onError, onModelChange, tournamentId],
+    [canManage, editorMode, onError, onModelChange, setSyncPending, tournamentId],
   );
 
   const showEditor = editorMode !== "none";
@@ -274,6 +347,10 @@ export default function TournamentPlanungSpielplanSettings({
               onChange={(e) =>
                 setTimingDraft((d) => ({ ...d, matchDurationMinutes: Number(e.target.value) }))
               }
+              onBlur={() => flushTimingOnBoundary()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") flushTimingOnBoundary();
+              }}
             />
             <span className="text-sm text-[var(--muted)]">Min.</span>
           </span>
@@ -292,6 +369,10 @@ export default function TournamentPlanungSpielplanSettings({
               onChange={(e) =>
                 setTimingDraft((d) => ({ ...d, transitionMinutes: Number(e.target.value) }))
               }
+              onBlur={() => flushTimingOnBoundary()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") flushTimingOnBoundary();
+              }}
             />
             <span className="text-sm text-[var(--muted)]">Min.</span>
           </span>
@@ -310,35 +391,23 @@ export default function TournamentPlanungSpielplanSettings({
           label="Heim- und Auswärtsseiten berücksichtigen"
           checked={timingDraft.fixtureHomeAwayRelevance === "ON"}
           disabled={!canManage}
-          onChange={(checked) =>
+          onChange={(checked) => {
+            homeAwayCommitSkipRef.current = false;
             setTimingDraft((d) => ({
               ...d,
               fixtureHomeAwayRelevance: checked ? "ON" : "OFF",
-            }))
-          }
+            }));
+          }}
         />
         <p className="text-xs text-[var(--text-2)]">
           SCE verteilt Heim- und Auswärtsseiten möglichst ausgeglichen.
         </p>
       </div>
 
-      {canManage ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            disabled={!timingDirty || applyPending}
-            data-testid="planung-apply-settings"
-            aria-busy={applyPending}
-            onClick={() => void applySettings()}
-          >
-            {applyPending ? "Änderungen werden gespeichert …" : "Änderungen übernehmen"}
-          </Button>
-          {applyError ? (
-            <p className="text-sm text-[var(--sce-danger)]" role="alert">
-              {applyError}
-            </p>
-          ) : null}
-        </div>
+      {syncError ? (
+        <p className="text-sm text-[var(--sce-danger)]" role="alert">
+          {syncError}
+        </p>
       ) : null}
 
       <div className="space-y-3">
@@ -363,7 +432,7 @@ export default function TournamentPlanungSpielplanSettings({
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={breakSavePending}
+                    disabled={breakSavePending || scheduleSyncPending}
                     data-testid={`planung-break-edit-${br.breakId}`}
                     onClick={() => {
                       setEditorMode({ editId: br.breakId });
@@ -375,7 +444,7 @@ export default function TournamentPlanungSpielplanSettings({
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={breakSavePending}
+                    disabled={breakSavePending || scheduleSyncPending}
                     aria-label={`Pause ${br.label} löschen`}
                     data-testid={`planung-break-delete-${br.breakId}`}
                     onClick={() => void deleteBreak(br.breakId, br.label)}
@@ -393,7 +462,7 @@ export default function TournamentPlanungSpielplanSettings({
             type="button"
             className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
             data-testid="planung-break-add"
-            disabled={breakSavePending}
+            disabled={breakSavePending || scheduleSyncPending}
             onClick={() => {
               setEditorMode("add");
               setBreakDraft(emptyBreakDraft());
@@ -528,26 +597,22 @@ export default function TournamentPlanungSpielplanSettings({
         ) : null}
       </div>
 
-      {timingConsequence ? (
+      {timingConsequence?.status === "NEEDS_REGENERATION" ? (
         <div
-          className={cn(
-            "rounded-lg border px-3 py-3 text-sm",
-            timingConsequence.status === "NEEDS_REGENERATION"
-              ? "border-[var(--sce-warning)]/50 bg-[var(--sce-warning-soft)]"
-              : "border-[var(--border)] bg-[var(--surface-2)]",
-          )}
+          className="rounded-lg border border-[var(--sce-warning)]/50 bg-[var(--sce-warning-soft)] px-3 py-3 text-sm"
           data-testid="planung-timing-consequence"
-          role={timingConsequence.status === "NEEDS_REGENERATION" ? "alert" : "status"}
+          role="alert"
           aria-live="polite"
         >
           <p className="font-medium text-[var(--foreground)]">{timingConsequence.headline}</p>
           {timingConsequence.detail ? (
             <p className="mt-1 text-[var(--muted)]">{timingConsequence.detail}</p>
           ) : null}
-          {timingConsequence.status === "NEEDS_REGENERATION" && model.actions.canRegenerate ? (
+          {model.actions.canRegenerate ? (
             <Button
               type="button"
               className="mt-3"
+              variant="secondary"
               data-testid="planung-timing-regenerate"
               onClick={onRegenerate}
             >

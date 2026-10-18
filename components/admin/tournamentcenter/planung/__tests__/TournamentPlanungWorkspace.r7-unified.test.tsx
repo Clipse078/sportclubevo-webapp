@@ -161,7 +161,8 @@ describe("01K-R7 — unified Spielplan view + edit", () => {
     expect(screen.getByTestId("tournament-planung-edit-board")).toBeInTheDocument();
     expect(screen.queryByTestId("tournament-planung-spielplan-output")).not.toBeInTheDocument();
     expect(screen.queryByText("Übersicht nach Runden")).not.toBeInTheDocument();
-    expect(screen.getByTestId("tournament-planung-regenerate")).toBeInTheDocument();
+    expect(screen.getByTestId("planung-schedule-sync-status")).toBeInTheDocument();
+    expect(screen.queryByTestId("tournament-planung-regenerate")).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByTestId("tournament-planung-exit-edit"));
 
