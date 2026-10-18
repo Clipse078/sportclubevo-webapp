@@ -205,9 +205,13 @@ export type TournamentPlanungSchedulingBreak = {
   scopeLabel: string;
 };
 
+export type TournamentPlanungFixtureHomeAwayRelevance = "ON" | "OFF";
+
 export type TournamentPlanungSchedulingSettings = {
   matchDurationMinutes: number;
   transitionMinutes: number;
+  /** Canonical TournamentCompetitionConfiguration.fixtureHomeAwayRelevance */
+  fixtureHomeAwayRelevance: TournamentPlanungFixtureHomeAwayRelevance;
   breaks: readonly TournamentPlanungSchedulingBreak[];
 };
 

@@ -59,6 +59,7 @@ function baseSnapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSna
       tiebreakOrder: ["POINTS"],
     },
     scheduleConsistencyStatus: null,
+    fixtureHomeAwayRelevance: "OFF",
     ...partial,
   };
 }

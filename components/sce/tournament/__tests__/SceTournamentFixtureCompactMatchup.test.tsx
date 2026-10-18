@@ -53,12 +53,20 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     );
   });
 
-  it("stack layout is used for board cells", () => {
+  it("stack layout remains the default for narrow stacked contexts", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} />);
     expect(screen.getByTestId("sce-tournament-fixture-compact-matchup")).toHaveAttribute(
       "data-layout",
       "stack",
     );
+  });
+
+  it("board layout uses canonical inline identity with planungBoard crests", () => {
+    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="board" />);
+    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
+    expect(matchup).toHaveAttribute("data-layout", "board");
+    expect(matchup).toHaveAttribute("data-crest-variant", "planungBoard");
+    expectCanonicalFixtureIdentityOrder(matchup);
   });
 
   it("inline planung uses larger management crest density", () => {

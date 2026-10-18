@@ -66,6 +66,7 @@ export function buildPlanungSchedulingSettings(params: {
     matchDurationMinutes: number;
     transitionMinutes: number;
   };
+  fixtureHomeAwayRelevance: "ON" | "OFF";
   breaks: readonly {
     id: string;
     label: string | null;
@@ -80,6 +81,7 @@ export function buildPlanungSchedulingSettings(params: {
   return {
     matchDurationMinutes: params.schedulingConfig.matchDurationMinutes,
     transitionMinutes: params.schedulingConfig.transitionMinutes,
+    fixtureHomeAwayRelevance: params.fixtureHomeAwayRelevance,
     breaks: params.breaks.map((b) =>
       buildPlanungSchedulingBreakPresentation({
         break: b,

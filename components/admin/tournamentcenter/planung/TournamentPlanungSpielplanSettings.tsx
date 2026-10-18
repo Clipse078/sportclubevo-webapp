@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type {
+  TournamentPlanungFixtureHomeAwayRelevance,
   TournamentPlanungPitchColumn,
   TournamentPlanungSchedulingBreak,
   TournamentPlanungSchedulingSettings,
@@ -20,10 +21,8 @@ type Props = {
   pitches: readonly TournamentPlanungPitchColumn[];
   settings: TournamentPlanungSchedulingSettings;
   timingConsequence: TournamentPlanungTimingConsequence;
-  busy: boolean;
   canManage: boolean;
   onModelChange: (viewModel: TournamentPlanungViewModel) => void;
-  onBusyChange: (busy: boolean) => void;
   onError: (message: string) => void;
   onRegenerate: () => void;
 };
@@ -35,6 +34,12 @@ type BreakDraft = {
   scope: "ALL_PITCHES" | "SELECTED_PITCHES";
   selectedPitchIds: string[];
   fieldSelectionAdvanced: boolean;
+};
+
+type TimingDraft = {
+  matchDurationMinutes: number;
+  transitionMinutes: number;
+  fixtureHomeAwayRelevance: TournamentPlanungFixtureHomeAwayRelevance;
 };
 
 function breakToDraft(br: TournamentPlanungSchedulingBreak): BreakDraft {
@@ -73,97 +78,105 @@ function draftPayload(draft: BreakDraft) {
   };
 }
 
+function timingDraftFromSettings(settings: TournamentPlanungSchedulingSettings): TimingDraft {
+  return {
+    matchDurationMinutes: settings.matchDurationMinutes,
+    transitionMinutes: settings.transitionMinutes,
+    fixtureHomeAwayRelevance: settings.fixtureHomeAwayRelevance,
+  };
+}
+
+function timingDraftDirty(draft: TimingDraft, persisted: TournamentPlanungSchedulingSettings): boolean {
+  return (
+    draft.matchDurationMinutes !== persisted.matchDurationMinutes ||
+    draft.transitionMinutes !== persisted.transitionMinutes ||
+    draft.fixtureHomeAwayRelevance !== persisted.fixtureHomeAwayRelevance
+  );
+}
+
 export default function TournamentPlanungSpielplanSettings({
   tournamentId,
   model,
   pitches,
   settings,
   timingConsequence,
-  busy,
   canManage,
   onModelChange,
-  onBusyChange,
   onError,
   onRegenerate,
 }: Props) {
-  const [matchDuration, setMatchDuration] = useState(settings.matchDurationMinutes);
-  const [transitionMinutes, setTransitionMinutes] = useState(settings.transitionMinutes);
+  const [timingDraft, setTimingDraft] = useState<TimingDraft>(() => timingDraftFromSettings(settings));
+  const [applyPending, setApplyPending] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<"none" | "add" | { editId: string }>("none");
   const [breakDraft, setBreakDraft] = useState<BreakDraft>(emptyBreakDraft());
+  const [breakSavePending, setBreakSavePending] = useState(false);
 
   useEffect(() => {
-    setMatchDuration(settings.matchDurationMinutes);
-    setTransitionMinutes(settings.transitionMinutes);
-  }, [settings.matchDurationMinutes, settings.transitionMinutes]);
-
-  const persistTiming = useCallback(
-    async (nextMatch: number, nextTransition: number) => {
-      if (!model.scheduleVersionId) return;
-      onBusyChange(true);
-      try {
-        const res = await fetch(`/api/tournaments/${tournamentId}/planung/scheduling-config`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            scheduleVersionId: model.scheduleVersionId,
-            expectedRevision: model.scheduleRevision ?? undefined,
-            matchDurationMinutes: nextMatch,
-            transitionMinutes: nextTransition,
-          }),
-        });
-        const json = (await res.json()) as {
-          viewModel?: TournamentPlanungViewModel;
-          error?: string;
-          code?: string;
-        };
-        if (!res.ok) {
-          onError(json.error ?? "Einstellungen konnten nicht gespeichert werden.");
-          setMatchDuration(settings.matchDurationMinutes);
-          setTransitionMinutes(settings.transitionMinutes);
-          return;
-        }
-        if (json.viewModel) onModelChange(json.viewModel);
-      } catch {
-        onError("Einstellungen konnten nicht gespeichert werden.");
-        setMatchDuration(settings.matchDurationMinutes);
-        setTransitionMinutes(settings.transitionMinutes);
-      } finally {
-        onBusyChange(false);
-      }
-    },
-    [
-      model.scheduleRevision,
-      model.scheduleVersionId,
-      onBusyChange,
-      onError,
-      onModelChange,
-      settings.matchDurationMinutes,
-      settings.transitionMinutes,
-      tournamentId,
-    ],
-  );
-
-  const onTimingBlur = useCallback(() => {
-    if (!canManage) return;
-    if (
-      matchDuration === settings.matchDurationMinutes &&
-      transitionMinutes === settings.transitionMinutes
-    ) {
-      return;
-    }
-    void persistTiming(matchDuration, transitionMinutes);
+    setTimingDraft(timingDraftFromSettings(settings));
+    setApplyError(null);
   }, [
-    canManage,
-    matchDuration,
     settings.matchDurationMinutes,
     settings.transitionMinutes,
-    transitionMinutes,
-    persistTiming,
+    settings.fixtureHomeAwayRelevance,
+  ]);
+
+  const timingDirty = useMemo(
+    () => timingDraftDirty(timingDraft, settings),
+    [settings, timingDraft],
+  );
+
+  const applySettings = useCallback(async () => {
+    if (!canManage || !model.scheduleVersionId || !timingDirty) return;
+    setApplyPending(true);
+    setApplyError(null);
+    try {
+      const res = await fetch(`/api/tournaments/${tournamentId}/planung/scheduling-config`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduleVersionId: model.scheduleVersionId,
+          expectedRevision: model.scheduleRevision ?? undefined,
+          matchDurationMinutes: timingDraft.matchDurationMinutes,
+          transitionMinutes: timingDraft.transitionMinutes,
+          fixtureHomeAwayRelevance: timingDraft.fixtureHomeAwayRelevance,
+        }),
+      });
+      const json = (await res.json()) as {
+        viewModel?: TournamentPlanungViewModel;
+        error?: string;
+        code?: string;
+      };
+      if (!res.ok) {
+        const message = json.error ?? "Einstellungen konnten nicht gespeichert werden.";
+        setApplyError(message);
+        onError(message);
+        return;
+      }
+      if (json.viewModel) onModelChange(json.viewModel);
+    } catch {
+      const message = "Einstellungen konnten nicht gespeichert werden.";
+      setApplyError(message);
+      onError(message);
+    } finally {
+      setApplyPending(false);
+    }
+  }, [
+    canManage,
+    model.scheduleRevision,
+    model.scheduleVersionId,
+    onError,
+    onModelChange,
+    timingDirty,
+    timingDraft.fixtureHomeAwayRelevance,
+    timingDraft.matchDurationMinutes,
+    timingDraft.transitionMinutes,
+    tournamentId,
   ]);
 
   const saveBreak = useCallback(async () => {
     if (!canManage) return;
-    onBusyChange(true);
+    setBreakSavePending(true);
     try {
       const payload = draftPayload(breakDraft);
       const isEdit = editorMode !== "none" && editorMode !== "add";
@@ -191,16 +204,16 @@ export default function TournamentPlanungSpielplanSettings({
     } catch {
       onError("Pause konnte nicht gespeichert werden.");
     } finally {
-      onBusyChange(false);
+      setBreakSavePending(false);
     }
-  }, [breakDraft, canManage, editorMode, onBusyChange, onError, onModelChange, tournamentId]);
+  }, [breakDraft, canManage, editorMode, onError, onModelChange, tournamentId]);
 
   const deleteBreak = useCallback(
     async (breakId: string, label: string) => {
       if (!canManage) return;
       const confirmed = window.confirm(`Pause „${label}“ wirklich löschen?`);
       if (!confirmed) return;
-      onBusyChange(true);
+      setBreakSavePending(true);
       try {
         const res = await fetch(`/api/tournaments/${tournamentId}/planung/breaks/${breakId}`, {
           method: "DELETE",
@@ -220,10 +233,10 @@ export default function TournamentPlanungSpielplanSettings({
       } catch {
         onError("Pause konnte nicht gelöscht werden.");
       } finally {
-        onBusyChange(false);
+        setBreakSavePending(false);
       }
     },
-    [canManage, editorMode, onBusyChange, onError, onModelChange, tournamentId],
+    [canManage, editorMode, onError, onModelChange, tournamentId],
   );
 
   const showEditor = editorMode !== "none";
@@ -254,12 +267,13 @@ export default function TournamentPlanungSpielplanSettings({
               type="number"
               min={1}
               className="fca-input w-24"
-              value={matchDuration}
-              disabled={!canManage || busy}
+              value={timingDraft.matchDurationMinutes}
+              disabled={!canManage}
               aria-label="Spieldauer in Minuten"
               data-testid="planung-match-duration"
-              onChange={(e) => setMatchDuration(Number(e.target.value))}
-              onBlur={() => onTimingBlur()}
+              onChange={(e) =>
+                setTimingDraft((d) => ({ ...d, matchDurationMinutes: Number(e.target.value) }))
+              }
             />
             <span className="text-sm text-[var(--muted)]">Min.</span>
           </span>
@@ -271,17 +285,61 @@ export default function TournamentPlanungSpielplanSettings({
               type="number"
               min={0}
               className="fca-input w-24"
-              value={transitionMinutes}
-              disabled={!canManage || busy}
+              value={timingDraft.transitionMinutes}
+              disabled={!canManage}
               aria-label="Wechselzeit in Minuten"
               data-testid="planung-transition-duration"
-              onChange={(e) => setTransitionMinutes(Number(e.target.value))}
-              onBlur={() => onTimingBlur()}
+              onChange={(e) =>
+                setTimingDraft((d) => ({ ...d, transitionMinutes: Number(e.target.value) }))
+              }
             />
             <span className="text-sm text-[var(--muted)]">Min.</span>
           </span>
         </label>
       </div>
+
+      <div
+        className="space-y-2 rounded-lg border border-[var(--border)] p-3"
+        data-testid="planung-home-away-relevance"
+      >
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+          Heim-/Auswärtsspiele
+        </p>
+        <SwitchToggle
+          id="planung-fixture-home-away-relevance"
+          label="Heim- und Auswärtsseiten berücksichtigen"
+          checked={timingDraft.fixtureHomeAwayRelevance === "ON"}
+          disabled={!canManage}
+          onChange={(checked) =>
+            setTimingDraft((d) => ({
+              ...d,
+              fixtureHomeAwayRelevance: checked ? "ON" : "OFF",
+            }))
+          }
+        />
+        <p className="text-xs text-[var(--text-2)]">
+          SCE verteilt Heim- und Auswärtsseiten möglichst ausgeglichen.
+        </p>
+      </div>
+
+      {canManage ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            disabled={!timingDirty || applyPending}
+            data-testid="planung-apply-settings"
+            aria-busy={applyPending}
+            onClick={() => void applySettings()}
+          >
+            {applyPending ? "Änderungen werden gespeichert …" : "Änderungen übernehmen"}
+          </Button>
+          {applyError ? (
+            <p className="text-sm text-[var(--sce-danger)]" role="alert">
+              {applyError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
@@ -305,7 +363,7 @@ export default function TournamentPlanungSpielplanSettings({
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={busy}
+                    disabled={breakSavePending}
                     data-testid={`planung-break-edit-${br.breakId}`}
                     onClick={() => {
                       setEditorMode({ editId: br.breakId });
@@ -317,7 +375,7 @@ export default function TournamentPlanungSpielplanSettings({
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={busy}
+                    disabled={breakSavePending}
                     aria-label={`Pause ${br.label} löschen`}
                     data-testid={`planung-break-delete-${br.breakId}`}
                     onClick={() => void deleteBreak(br.breakId, br.label)}
@@ -335,7 +393,7 @@ export default function TournamentPlanungSpielplanSettings({
             type="button"
             className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
             data-testid="planung-break-add"
-            disabled={busy}
+            disabled={breakSavePending}
             onClick={() => {
               setEditorMode("add");
               setBreakDraft(emptyBreakDraft());
@@ -400,7 +458,7 @@ export default function TournamentPlanungSpielplanSettings({
               id="planung-break-field-scope-toggle"
               label="Nur bestimmte Felder sperren"
               checked={breakDraft.fieldSelectionAdvanced}
-              disabled={busy}
+              disabled={breakSavePending}
               onChange={(checked) =>
                 setBreakDraft((d) => ({
                   ...d,
@@ -451,13 +509,13 @@ export default function TournamentPlanungSpielplanSettings({
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              <Button type="button" disabled={busy} onClick={() => void saveBreak()}>
+              <Button type="button" disabled={breakSavePending} onClick={() => void saveBreak()}>
                 Speichern
               </Button>
               <Button
                 type="button"
                 variant="secondary"
-                disabled={busy}
+                disabled={breakSavePending}
                 onClick={() => {
                   setEditorMode("none");
                   setBreakDraft(emptyBreakDraft());
@@ -490,7 +548,6 @@ export default function TournamentPlanungSpielplanSettings({
             <Button
               type="button"
               className="mt-3"
-              disabled={busy}
               data-testid="planung-timing-regenerate"
               onClick={onRegenerate}
             >

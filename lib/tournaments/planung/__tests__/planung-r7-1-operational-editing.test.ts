@@ -28,11 +28,11 @@ describe("01K-R7.1 — Spielplan operational editing", () => {
     expect(roadmap).toMatch(/Outside edit mode|Publizieren/i);
   });
 
-  it("exposes Spielplan-Einstellungen only in edit mode and hides publication there", () => {
+  it("exposes Spielplan-Einstellungen only in edit mode without publication panel", () => {
     expect(workspace).toMatch(/TournamentPlanungSpielplanSettings/);
     expect(workspace).toMatch(/model\.schedulingSettings/);
-    expect(workspace).toMatch(/effectiveInteractionMode === "view"/);
-    expect(workspace).toMatch(/TournamentPlanungPublicationPanel/);
+    expect(workspace).toMatch(/effectiveInteractionMode === "edit"/);
+    expect(workspace).not.toMatch(/TournamentPlanungPublicationPanel/);
     expect(workspace).not.toMatch(/Planungsdiagnose/);
   });
 
@@ -80,6 +80,7 @@ describe("01K-R7.1 — Spielplan operational editing", () => {
         tiebreakOrder: ["POINTS"],
       },
       scheduleConsistencyStatus: "MATCHES",
+      fixtureHomeAwayRelevance: "OFF",
     } satisfies PlanungDomainSnapshot);
     expect(vm.schedulingSettings?.matchDurationMinutes).toBe(12);
     expect(vm.schedulingSettings?.transitionMinutes).toBe(3);

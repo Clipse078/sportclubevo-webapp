@@ -8,12 +8,19 @@ import { listTournamentFixtureAssignmentsForVersion } from "@/lib/tournament-sch
 import { listTournamentBreaks } from "@/lib/tournament-scheduling/tournament-break-service";
 import { listTournamentPitches } from "@/lib/tournament-scheduling/tournament-pitch-service";
 import { assessTournamentTiming } from "@/lib/tournament-scheduling/smart-timing";
-import { optimiseTournamentSchedule } from "@/lib/tournament-scheduling/schedule-optimiser/optimise";
 import { resolveFixtureDependencies } from "@/lib/tournament-scheduling/schedule-optimiser/dependencies";
 import { listTournamentScheduleEngineFixtures } from "@/lib/tournament-scheduling/schedule-engine-load-service";
 import { toFeasibilityFixtures } from "@/lib/tournament-scheduling/smart-timing/prepare-context";
 import { assessPlanungScheduleConsistency } from "./assess-planung-schedule-consistency";
-import { resolveTournamentSchedulingConfig } from "@/lib/tournament-scheduling/feasibility-service";
+import {
+  loadTournamentScheduleOptimisationContext,
+  resolveTournamentSchedulingConfig,
+} from "@/lib/tournament-scheduling/feasibility-service";
+import {
+  recordPlanungFeasibilityAnalysis,
+  recordPlanungSmartTimingAssessment,
+  recordPlanungViewModelLoad,
+} from "./planung-load-telemetry";
 import {
   resolveTournamentPlannerOwnership,
 } from "@/lib/tournament-scheduling/planner-eligibility";
@@ -29,7 +36,10 @@ export async function loadTournamentPlanungViewModel(params: {
   tenantName: string | null;
   tenantLogoUrl: string | null;
   regenerationMetrics?: PlanungDomainSnapshot["regenerationMetrics"];
+  /** When set, overrides consistency assessment (e.g. after home/away preference change). */
+  scheduleConsistencyOverride?: import("./assess-planung-schedule-consistency").PlanungScheduleConsistencyStatus;
 }): Promise<TournamentPlanungViewModel> {
+  recordPlanungViewModelLoad();
   const event = await prisma.event.findFirst({
     where: { id: params.tournamentId, tenantId: params.tenantId, type: "TOURNAMENT" },
     select: {
@@ -55,8 +65,17 @@ export async function loadTournamentPlanungViewModel(params: {
     select: { id: true, revision: true },
   });
 
-  const [pitches, breaks, fixturesRaw, participantRows, schedulingConfig, fixtureResults, groupsRaw, rankingConfig] =
-    await Promise.all([
+  const [
+    pitches,
+    breaks,
+    fixturesRaw,
+    participantRows,
+    schedulingConfig,
+    fixtureResults,
+    groupsRaw,
+    rankingConfig,
+    competitionConfig,
+  ] = await Promise.all([
     listTournamentPitches(params.tenantId, params.tournamentId),
     listTournamentBreaks(params.tenantId, params.tournamentId),
     prisma.tournamentFixture.findMany({
@@ -139,7 +158,14 @@ export async function loadTournamentPlanungViewModel(params: {
     prisma.tournamentRankingConfiguration.findUnique({
       where: { eventId: params.tournamentId },
     }),
+    prisma.tournamentCompetitionConfiguration.findFirst({
+      where: { tenantId: params.tenantId, eventId: params.tournamentId },
+      select: { fixtureHomeAwayRelevance: true },
+    }),
   ]);
+
+  const fixtureHomeAwayRelevance =
+    competitionConfig?.fixtureHomeAwayRelevance === "ON" ? "ON" : "OFF";
 
   const assignments =
     workingVersion != null
@@ -200,44 +226,15 @@ export async function loadTournamentPlanungViewModel(params: {
   let optimisation = null;
   let scheduleConsistencyStatus: ReturnType<typeof assessPlanungScheduleConsistency> | null = null;
 
+  const hasPersistedSchedule = assignments.length > 0;
+
   if (ownership === "TENANT_ORGANISED" && event.startAt && event.endAt && fixtures.length > 0) {
-    const feasibilityLoad = await analyseTournamentFeasibilityForTournament({
-      tenantId: params.tenantId,
-      tournamentId: params.tournamentId,
-      scheduleVersionId: workingVersion?.id ?? null,
-    });
-    feasibility = feasibilityLoad.feasibility;
-
-    const engineFixtures = await listTournamentScheduleEngineFixtures(
-      params.tenantId,
-      params.tournamentId,
-    );
-
-    smartTiming = assessTournamentTiming({
-      mode: "FIXED_ASSESSMENT",
-      tournamentWindow: feasibilityLoad.tournamentWindow,
-      config: {
-        matchDurationMinutes: schedulingConfig.matchDurationMinutes,
-        transitionMinutes: schedulingConfig.transitionMinutes,
-        minRestMinutes: schedulingConfig.minRestMinutes,
-      },
-      fixtures: engineFixtures,
-      participants: participantRows.map((p) => ({ participantId: p.id })),
-      tournamentPitches: pitches.map((p) => ({
-        tournamentPitchId: p.id,
-        displayOrder: p.displayOrder,
-        label: p.label,
-      })),
-      breaks: breaks.map((b) => ({
-        breakId: b.id,
-        startUtcMs: new Date(b.startAt).getTime(),
-        endUtcMs: new Date(b.endAt).getTime(),
-        scope: b.scope,
-        tournamentPitchIds: [...b.tournamentPitchIds],
-      })),
-    });
-
-    if (assignments.length > 0) {
+    if (hasPersistedSchedule) {
+      const loaded = await loadTournamentScheduleOptimisationContext(
+        params.tenantId,
+        params.tournamentId,
+        workingVersion?.id ?? null,
+      );
       const feasibilityBreaks = breaks.map((b) => ({
         breakId: b.id,
         startUtcMs: new Date(b.startAt).getTime(),
@@ -246,8 +243,8 @@ export async function loadTournamentPlanungViewModel(params: {
         tournamentPitchIds: [...b.tournamentPitchIds],
       }));
       const playableWindow = {
-        startUtcMs: feasibilityLoad.tournamentWindow.startUtcMs,
-        endUtcMs: feasibilityLoad.tournamentWindow.endUtcMs,
+        startUtcMs: loaded.tournamentWindow.startUtcMs,
+        endUtcMs: loaded.tournamentWindow.endUtcMs,
       };
       const feasibilityPitches = pitches.map((p) => ({
         tournamentPitchId: p.id,
@@ -256,27 +253,44 @@ export async function loadTournamentPlanungViewModel(params: {
         playableIntervals: [playableWindow],
       }));
 
-      scheduleConsistencyStatus = assessPlanungScheduleConsistency({
-        tournamentWindow: feasibilityLoad.tournamentWindow,
-        config: {
-          matchDurationMinutes: schedulingConfig.matchDurationMinutes,
-          transitionMinutes: schedulingConfig.transitionMinutes,
-          minRestMinutes: schedulingConfig.minRestMinutes,
-        },
-        fixtures: toFeasibilityFixtures(engineFixtures),
-        assignments: assignments.map((a) => ({
-          fixtureId: a.fixtureId,
-          tournamentPitchId: a.tournamentPitchId,
-          startAt: a.startAt,
-          endAt: a.endAt,
-          scheduleLockDimension: a.scheduleLockDimension,
-        })),
-        pitches: feasibilityPitches,
-        breaks: feasibilityBreaks,
-        dependencies: resolveFixtureDependencies(engineFixtures),
+      scheduleConsistencyStatus =
+        params.scheduleConsistencyOverride ??
+        assessPlanungScheduleConsistency({
+          tournamentWindow: loaded.tournamentWindow,
+          config: {
+            matchDurationMinutes: schedulingConfig.matchDurationMinutes,
+            transitionMinutes: schedulingConfig.transitionMinutes,
+            minRestMinutes: schedulingConfig.minRestMinutes,
+          },
+          fixtures: toFeasibilityFixtures(loaded.engineFixtures),
+          assignments: assignments.map((a) => ({
+            fixtureId: a.fixtureId,
+            tournamentPitchId: a.tournamentPitchId,
+            startAt: a.startAt,
+            endAt: a.endAt,
+            scheduleLockDimension: a.scheduleLockDimension,
+          })),
+          pitches: feasibilityPitches,
+          breaks: feasibilityBreaks,
+          dependencies: resolveFixtureDependencies(loaded.engineFixtures),
+        });
+    } else {
+      recordPlanungFeasibilityAnalysis();
+      const feasibilityLoad = await analyseTournamentFeasibilityForTournament({
+        tenantId: params.tenantId,
+        tournamentId: params.tournamentId,
+        scheduleVersionId: workingVersion?.id ?? null,
       });
+      feasibility = feasibilityLoad.feasibility;
 
-      optimisation = optimiseTournamentSchedule({
+      const engineFixtures = await listTournamentScheduleEngineFixtures(
+        params.tenantId,
+        params.tournamentId,
+      );
+
+      recordPlanungSmartTimingAssessment();
+      smartTiming = assessTournamentTiming({
+        mode: "FIXED_ASSESSMENT",
         tournamentWindow: feasibilityLoad.tournamentWindow,
         config: {
           matchDurationMinutes: schedulingConfig.matchDurationMinutes,
@@ -285,21 +299,17 @@ export async function loadTournamentPlanungViewModel(params: {
         },
         fixtures: engineFixtures,
         participants: participantRows.map((p) => ({ participantId: p.id })),
-        tournamentPitches: feasibilityPitches,
+        tournamentPitches: pitches.map((p) => ({
+          tournamentPitchId: p.id,
+          displayOrder: p.displayOrder,
+          label: p.label,
+        })),
         breaks: breaks.map((b) => ({
           breakId: b.id,
-          label: b.label,
           startUtcMs: new Date(b.startAt).getTime(),
           endUtcMs: new Date(b.endAt).getTime(),
           scope: b.scope,
           tournamentPitchIds: [...b.tournamentPitchIds],
-        })),
-        baselineAssignments: assignments.map((a) => ({
-          fixtureId: a.fixtureId,
-          tournamentPitchId: a.tournamentPitchId,
-          startUtcMs: new Date(a.startAt).getTime(),
-          endUtcMs: new Date(a.endAt).getTime(),
-          resourceEndUtcMs: new Date(a.endAt).getTime(),
         })),
       });
     }
@@ -370,6 +380,7 @@ export async function loadTournamentPlanungViewModel(params: {
           tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
         },
     scheduleConsistencyStatus,
+    fixtureHomeAwayRelevance,
   };
 
   return buildTournamentPlanungViewModel(snapshot);

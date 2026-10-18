@@ -141,6 +141,7 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
         tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
       },
       scheduleConsistencyStatus: null,
+      fixtureHomeAwayRelevance: "OFF",
     });
     expect(vm.incompleteSetup.some((i) => i.code === "PLANNER_SETUP")).toBe(true);
   });

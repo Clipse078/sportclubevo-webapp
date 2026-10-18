@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { updatePlanungOperationalTiming } from "@/lib/tournaments/planung/planung-operational-config-service";
+import {
+  updatePlanungFixtureHomeAwayRelevance,
+  updatePlanungOperationalTiming,
+} from "@/lib/tournaments/planung/planung-operational-config-service";
 import { loadTournamentPlanungViewModel } from "@/lib/tournaments/planung/load-tournament-planung.server";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
+import { prisma } from "@/lib/db/prisma";
 
 type RouteContext = { params: Promise<{ tournamentId: string }> };
 
@@ -26,6 +30,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     expectedRevision?: number;
     matchDurationMinutes?: number;
     transitionMinutes?: number;
+    fixtureHomeAwayRelevance?: "ON" | "OFF";
   };
 
   if (!body.scheduleVersionId) {
@@ -39,6 +44,13 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 
   try {
+    const previousHomeAway = await prisma.tournamentCompetitionConfiguration.findFirst({
+      where: { tenantId, eventId: tournamentId },
+      select: { fixtureHomeAwayRelevance: true },
+    });
+    const previousRelevance =
+      previousHomeAway?.fixtureHomeAwayRelevance === "ON" ? "ON" : "OFF";
+
     await updatePlanungOperationalTiming({
       tenantId,
       tournamentId,
@@ -48,12 +60,31 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       transitionMinutes: body.transitionMinutes,
     });
 
+    let homeAwayChanged = false;
+    if (body.fixtureHomeAwayRelevance != null) {
+      if (body.fixtureHomeAwayRelevance !== "ON" && body.fixtureHomeAwayRelevance !== "OFF") {
+        return NextResponse.json(
+          { error: "fixtureHomeAwayRelevance must be ON or OFF." },
+          { status: 400 },
+        );
+      }
+      homeAwayChanged = body.fixtureHomeAwayRelevance !== previousRelevance;
+      if (homeAwayChanged) {
+        await updatePlanungFixtureHomeAwayRelevance({
+          tenantId,
+          tournamentId,
+          fixtureHomeAwayRelevance: body.fixtureHomeAwayRelevance,
+        });
+      }
+    }
+
     const viewModel = await loadTournamentPlanungViewModel({
       tenantId,
       tournamentId,
       timezone: tenant?.timezone ?? "Europe/Zurich",
       tenantName: tenant?.name ?? null,
       tenantLogoUrl: tenant?.logoUrl ?? null,
+      scheduleConsistencyOverride: homeAwayChanged ? "NEEDS_REGENERATION" : undefined,
     });
 
     return NextResponse.json({ viewModel });

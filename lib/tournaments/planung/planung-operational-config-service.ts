@@ -23,6 +23,24 @@ function assertPositiveInteger(value: number, field: string): void {
   }
 }
 
+export async function updatePlanungFixtureHomeAwayRelevance(params: {
+  tenantId: string;
+  tournamentId: string;
+  fixtureHomeAwayRelevance: "ON" | "OFF";
+}): Promise<void> {
+  await requireTenantOrganisedTournament(params.tenantId, params.tournamentId);
+  const updated = await prisma.tournamentCompetitionConfiguration.updateMany({
+    where: { tenantId: params.tenantId, eventId: params.tournamentId },
+    data: { fixtureHomeAwayRelevance: params.fixtureHomeAwayRelevance },
+  });
+  if (updated.count === 0) {
+    throw new TournamentSchedulingError(
+      "TOURNAMENT_GENERATION_INVALID",
+      "Turnierkonfiguration fehlt — Heim-/Auswärtseinstellung konnte nicht gespeichert werden.",
+    );
+  }
+}
+
 export async function updatePlanungOperationalTiming(params: {
   tenantId: string;
   tournamentId: string;

@@ -12,6 +12,7 @@ import {
 import { loadTournamentScheduleOptimisationContext } from "./feasibility-service";
 import { listTournamentScheduleEngineFixtures } from "./schedule-engine-load-service";
 import { optimiseTournamentSchedule } from "./schedule-optimiser/optimise";
+import { recordPlanungOptimiserInvocation } from "@/lib/tournaments/planung/planung-load-telemetry";
 import type { TournamentScheduleOptimisationResult } from "./schedule-optimiser/types";
 import { runTournamentPartialRegenerationForVersion } from "./partial-regeneration-service";
 import {
@@ -250,6 +251,7 @@ export async function runInitialTournamentScheduleGeneration(params: {
     throw new TournamentPlanungIncompleteError(["Spiele"]);
   }
 
+  recordPlanungOptimiserInvocation();
   const optimisation = optimiseTournamentSchedule({
     tournamentWindow: loaded.tournamentWindow,
     config: {

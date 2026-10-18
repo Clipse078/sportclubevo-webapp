@@ -18,7 +18,6 @@ import TournamentPlanungFixtureActions from "./TournamentPlanungFixtureActions";
 import TournamentPlanungManualMoveDialog from "./TournamentPlanungManualMoveDialog";
 import TournamentPlanungGroupStandings from "./TournamentPlanungGroupStandings";
 import TournamentPlanungResultDialog from "./TournamentPlanungResultDialog";
-import TournamentPlanungPublicationPanel from "./TournamentPlanungPublicationPanel";
 import TournamentPlanungSpielplanOutput from "./TournamentPlanungSpielplanOutput";
 import TournamentPlanungSpielplanSettings from "./TournamentPlanungSpielplanSettings";
 import type { TournamentDto } from "@/lib/tournaments/types";
@@ -74,7 +73,6 @@ export default function TournamentPlanungWorkspace({
   tenantKey = "",
   tenantName = null,
   tenantLogoUrl = null,
-  ownershipAllowsPublication = false,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -553,10 +551,8 @@ export default function TournamentPlanungWorkspace({
               pitches={model.pitches}
               settings={model.schedulingSettings}
               timingConsequence={model.timingConsequence}
-              busy={busy}
               canManage={canManage}
               onModelChange={setModel}
-              onBusyChange={setBusy}
               onError={(message) => toast.danger(message)}
               onRegenerate={() =>
                 runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
@@ -698,14 +694,6 @@ export default function TournamentPlanungWorkspace({
         <p className="text-xs text-[var(--muted)]">{model.actions.regenerateHint}</p>
       ) : null}
 
-      {effectiveInteractionMode === "view" && tournament && tenantKey ? (
-        <TournamentPlanungPublicationPanel
-          tournament={tournament}
-          tenantKey={tenantKey}
-          canManage={canManage}
-          ownershipAllowsPublication={ownershipAllowsPublication}
-        />
-      ) : null}
     </div>
   );
 }

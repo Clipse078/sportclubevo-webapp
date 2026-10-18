@@ -54,8 +54,17 @@ export async function loadPublicPlanungSnapshot(params: {
     select: { id: true, revision: true },
   });
 
-  const [pitches, breaks, fixturesRaw, participantRows, schedulingConfig, fixtureResults, groupsRaw, rankingConfig] =
-    await Promise.all([
+  const [
+    pitches,
+    breaks,
+    fixturesRaw,
+    participantRows,
+    schedulingConfig,
+    fixtureResults,
+    groupsRaw,
+    rankingConfig,
+    competitionConfig,
+  ] = await Promise.all([
       listTournamentPitches(params.tenantId, params.tournamentId),
       listTournamentBreaks(params.tenantId, params.tournamentId),
       prisma.tournamentFixture.findMany({
@@ -138,7 +147,14 @@ export async function loadPublicPlanungSnapshot(params: {
       prisma.tournamentRankingConfiguration.findUnique({
         where: { eventId: params.tournamentId },
       }),
+      prisma.tournamentCompetitionConfiguration.findFirst({
+        where: { tenantId: params.tenantId, eventId: params.tournamentId },
+        select: { fixtureHomeAwayRelevance: true },
+      }),
     ]);
+
+  const fixtureHomeAwayRelevance =
+    competitionConfig?.fixtureHomeAwayRelevance === "ON" ? "ON" : "OFF";
 
   const assignments =
     workingVersion != null
@@ -258,6 +274,7 @@ export async function loadPublicPlanungSnapshot(params: {
           tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
         },
     scheduleConsistencyStatus: null,
+    fixtureHomeAwayRelevance,
   };
 }
 

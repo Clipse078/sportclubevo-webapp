@@ -119,6 +119,7 @@ export type PlanungDomainSnapshot = {
     tiebreakOrder: readonly ("POINTS" | "GOAL_DIFFERENCE" | "GOALS_SCORED" | "HEAD_TO_HEAD")[];
   };
   scheduleConsistencyStatus: PlanungScheduleConsistencyStatus | null;
+  fixtureHomeAwayRelevance: "ON" | "OFF";
 };
 
 function resolveAvailability(
@@ -511,6 +512,7 @@ export function buildTournamentPlanungViewModel(
       ? null
       : buildPlanungSchedulingSettings({
           schedulingConfig: snapshot.schedulingConfig,
+          fixtureHomeAwayRelevance: snapshot.fixtureHomeAwayRelevance,
           breaks: snapshot.breaks,
           pitchLabelById,
           timezone: snapshot.timezone,

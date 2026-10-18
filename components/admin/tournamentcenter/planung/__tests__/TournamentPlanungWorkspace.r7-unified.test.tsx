@@ -90,6 +90,7 @@ const scheduledModel: TournamentPlanungViewModel = {
   schedulingSettings: {
     matchDurationMinutes: 20,
     transitionMinutes: 5,
+    fixtureHomeAwayRelevance: "OFF",
     breaks: [],
   },
   timingConsequence: {

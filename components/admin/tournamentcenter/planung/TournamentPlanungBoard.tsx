@@ -304,7 +304,11 @@ export default function TournamentPlanungBoard({
                       previewCache.current.clear();
                     }}
                   >
-                    <SceTournamentFixtureCompactMatchup sideA={fixture.sideA} sideB={fixture.sideB} />
+                    <SceTournamentFixtureCompactMatchup
+                      layout="board"
+                      sideA={fixture.sideA}
+                      sideB={fixture.sideB}
+                    />
                     {fixture.lockDimension ? (
                       <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-[var(--muted)]">
                         <Lock className="h-3 w-3" aria-hidden />

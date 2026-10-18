@@ -37,6 +37,7 @@ function baseSnapshot(
       tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
     },
     scheduleConsistencyStatus: null,
+    fixtureHomeAwayRelevance: "OFF",
   };
 }
 

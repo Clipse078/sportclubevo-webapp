@@ -76,6 +76,7 @@ function snapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSnapsho
       tiebreakOrder: ["POINTS", "GOAL_DIFFERENCE", "GOALS_SCORED", "HEAD_TO_HEAD"],
     },
     scheduleConsistencyStatus: "MATCHES",
+    fixtureHomeAwayRelevance: "OFF",
     ...partial,
   };
 }
