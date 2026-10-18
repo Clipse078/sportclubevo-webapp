@@ -10,10 +10,9 @@ import type {
 } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 import type { TournamentPlannerOwnershipResolution } from "@/lib/tournament-scheduling/planner-eligibility";
 import {
-  buildPlanungFeasibilityGuidance,
+  buildPlanungPlanningUx,
   buildRegenerationSummaryMessage,
   feasibilityDiagnosticUserMessage,
-  feasibilityUxHeadline,
   resolveFeasibilityUxStatus,
   scheduleLockDimensionLabel,
 } from "./planung-presentation";
@@ -481,30 +480,25 @@ export function buildTournamentPlanungViewModel(
         })
       : null;
 
-  const feasibilityGuidance = buildPlanungFeasibilityGuidance(
-    snapshot.feasibility,
-    snapshot.smartTiming,
-    {
+  const planningUx = buildPlanungPlanningUx({
+    schedulePresence,
+    incompleteSetupCount: incompleteSetup.length,
+    feasibility: snapshot.feasibility,
+    smartTiming: snapshot.smartTiming,
+    schedulingConfig: {
       matchDurationMinutes: snapshot.schedulingConfig.matchDurationMinutes,
       transitionMinutes: snapshot.schedulingConfig.transitionMinutes,
     },
-  );
-  const suppressFeasibilityDiagnostics = feasibilityGuidance !== null;
+    tournamentId: snapshot.tournamentId,
+  });
+  const feasibilityGuidance =
+    planningUx?.state === "AUTO_FIX" || planningUx?.state === "STRUCTURAL_CHANGE"
+      ? planningUx
+      : null;
+  const suppressFeasibilityDiagnostics = planningUx !== null;
   const diagnostics = mapDiagnostics(snapshot.feasibility, snapshot.optimisation, {
     includeFeasibilityDiagnostics: !suppressFeasibilityDiagnostics,
   });
-  if (feasibilityUxStatus && !suppressFeasibilityDiagnostics) {
-    diagnostics.unshift({
-      id: "feasibility-ux",
-      message: feasibilityUxHeadline(feasibilityUxStatus),
-      severity:
-        feasibilityUxStatus === "CONFLICT"
-          ? "danger"
-          : feasibilityUxStatus === "WINDOW_TIGHT"
-            ? "warning"
-            : "info",
-    });
-  }
 
   const completedGroupResults = snapshot.fixtureResults
     .filter((r) => r.state === "COMPLETED" && r.scoreSideA != null && r.scoreSideB != null)
@@ -555,8 +549,12 @@ export function buildTournamentPlanungViewModel(
     scheduleSections,
     mobileTimeline,
     participants: snapshot.participants,
-    smartTiming: buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
+    smartTiming:
+      schedulePresence === "NONE"
+        ? null
+        : buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
     diagnostics,
+    planningUx,
     feasibilityGuidance,
     regenerationSummary: buildRegenerationSummaryMessage(snapshot.regenerationMetrics),
     incompleteSetup,
@@ -564,12 +562,13 @@ export function buildTournamentPlanungViewModel(
       canGenerate:
         availability === "AVAILABLE" &&
         incompleteSetup.length === 0 &&
-        schedulePresence === "NONE",
+        schedulePresence === "NONE" &&
+        snapshot.feasibility?.status !== "INFEASIBLE",
       canRegenerate:
         availability === "AVAILABLE" &&
         schedulePresence !== "NONE" &&
         incompleteSetup.length === 0,
-      generateLabel: "✨ Spielplan automatisch erstellen",
+      generateLabel: "✨ Spielplan erstellen",
       generatePendingLabel: "Spielplan wird erstellt …",
       regenerateLabel: "Spielplan neu berechnen",
       regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",

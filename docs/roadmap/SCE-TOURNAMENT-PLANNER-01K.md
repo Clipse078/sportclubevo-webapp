@@ -82,6 +82,30 @@ Unchanged from initial 01K: published read without login; publish/unpublish HOME
 **01L_IMPLEMENTED = NO**  
 **01M_IMPLEMENTED = NO**
 
+## 01K-R4 — Simplified organiser UX (CURRENT)
+
+**Principle:** The scheduling engine can be complex; the normal organiser experience must stay simple.
+
+**Workflow:** Tell SCE about the tournament → SCE creates the Spielplan → organiser reviews / adjusts.
+
+Technical diagnostics (feasibility codes, witness schedules, optimiser vocabulary, minimum-rest math) stay in logs, structured diagnostics, and tests — **not** in the default Creator / Planung UI.
+
+### Planung — three states (pre-generation)
+
+| State | When | Primary action |
+| --- | --- | --- |
+| **READY** | Canonical feasibility allows generation | ✨ Spielplan erstellen |
+| **AUTO_FIX** | Infeasible but Smart Timing has a concrete timing pair | Empfehlung übernehmen |
+| **STRUCTURAL_CHANGE** | No safe timing-only fix | Turnier bearbeiten (+ optional contextual links) |
+
+One canonical feasibility presentation per viewport — no duplicate red blocks, header diagnostics, or toasts repeating the full explanation.
+
+Smart Timing / feasibility / apply-recommendation reuse the existing 01F1 / 01D engines (no parallel logic, **SCHEMA_CHANGE = NO**).
+
+Creator Spielplan step uses the same assistant pattern via `buildComposerPlanningAssistantUx` (shared Smart Timing truth).
+
+**01K-R4 status:** implementation on branch `cursor/sce-tournament-planner-01k-publication-sharing` (PR **#871**); PO manual UAT pending — **do not mark 01K closed** until accepted.
+
 ## Verification (automated)
 
 - `lib/tournaments/spielplan/__tests__/*`

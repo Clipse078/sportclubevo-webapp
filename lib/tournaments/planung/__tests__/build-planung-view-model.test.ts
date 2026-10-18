@@ -173,8 +173,8 @@ describe("buildTournamentPlanungViewModel", () => {
     );
     expect(vm.diagnostics).toHaveLength(0);
     expect(vm.diagnostics.every((d) => !d.message.includes("CAPACITY"))).toBe(true);
-    expect(vm.feasibilityGuidance?.headline).toBe("Spielplan kann noch nicht erstellt werden");
-    expect(vm.feasibilityGuidance?.adjustments).toContain("Spieldauer verkürzen");
+    expect(vm.planningUx?.state).toBe("STRUCTURAL_CHANGE");
+    expect(vm.feasibilityGuidance?.state).toBe("STRUCTURAL_CHANGE");
     expect(vm.smartTiming).toBeNull();
   });
 
@@ -232,7 +232,7 @@ describe("buildTournamentPlanungViewModel", () => {
       matchDurationMinutes: 12,
       transitionMinutes: 3,
     });
-    expect(vm.feasibilityGuidance?.adjustments).not.toContain("Spieldauer verkürzen");
+    expect(vm.planningUx?.state).toBe("AUTO_FIX");
     expect(vm.diagnostics).toHaveLength(0);
     expect(vm.smartTiming).toBeNull();
   });

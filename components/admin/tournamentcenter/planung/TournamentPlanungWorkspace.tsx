@@ -2,9 +2,11 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Sparkles, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, RefreshCw } from "lucide-react";
 import type {
   TournamentPlanungGenerationOutcome,
+  TournamentPlanungPlanningUx,
   TournamentPlanungViewModel,
 } from "@/lib/tournaments/planung/types";
 import { cn } from "@/lib/cn";
@@ -44,6 +46,18 @@ type Props = {
   ownershipAllowsPublication?: boolean;
 };
 
+function mergePlanningUx(
+  model: TournamentPlanungViewModel,
+  generationFeedback: TournamentPlanungGenerationOutcome | null,
+): TournamentPlanungPlanningUx | null {
+  if (model.schedulePresence !== "NONE" || model.incompleteSetup.length > 0) {
+    return null;
+  }
+  const fromGeneration = generationFeedback?.guidance ?? null;
+  if (fromGeneration) return fromGeneration;
+  return model.planningUx;
+}
+
 export default function TournamentPlanungWorkspace({
   initialModel,
   tournamentId,
@@ -66,6 +80,7 @@ export default function TournamentPlanungWorkspace({
   const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
   const [manualMoveOpen, setManualMoveOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
+  const [selfAdjustTiming, setSelfAdjustTiming] = useState(false);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/tournaments/${tournamentId}/planung`);
@@ -109,8 +124,6 @@ export default function TournamentPlanungWorkspace({
         if (json.generation.succeeded) {
           toast.success("Spielplan wurde erstellt.");
           setGenerationFeedback(null);
-        } else if (json.generation.guidance) {
-          toast.danger(json.generation.guidance.headline);
         } else {
           toast.danger("Spielplan konnte mit der aktuellen Konfiguration nicht erstellt werden.");
         }
@@ -219,16 +232,6 @@ export default function TournamentPlanungWorkspace({
     [model.scheduleRevision, model.scheduleVersionId, refresh, router, toast, tournamentId],
   );
 
-  if (model.availability !== "AVAILABLE") {
-    return null;
-  }
-
-  const showEmpty = model.schedulePresence === "NONE" && model.incompleteSetup.length === 0;
-  const feasibilityGuidance =
-    generationFeedback?.guidance ?? model.feasibilityGuidance ?? null;
-  const showSmartTimingHeader =
-    model.smartTiming != null && feasibilityGuidance == null;
-
   const applyRecommendedTiming = useCallback(async () => {
     setBusy(true);
     setGenerationFeedback(null);
@@ -254,19 +257,29 @@ export default function TournamentPlanungWorkspace({
           await refresh();
           return;
         }
-        toast.danger(json.error ?? "Empfohlene Einstellungen konnten nicht übernommen werden.");
+        toast.danger(json.error ?? "Empfehlung konnte nicht übernommen werden.");
         return;
       }
       if (json.viewModel) setModel(json.viewModel);
       else await refresh();
-      toast.success("Empfohlene Einstellungen wurden übernommen.");
+      setSelfAdjustTiming(false);
+      toast.success("Empfehlung wurde übernommen.");
       router.refresh();
     } catch {
-      toast.danger("Empfohlene Einstellungen konnten nicht übernommen werden.");
+      toast.danger("Empfehlung konnte nicht übernommen werden.");
     } finally {
       setBusy(false);
     }
   }, [model.scheduleRevision, refresh, router, toast, tournamentId]);
+
+  if (model.availability !== "AVAILABLE") {
+    return null;
+  }
+
+  const planningUx = mergePlanningUx(model, generationFeedback);
+  const editTournamentHref = `/dashboard/tournamentcenter/${tournamentId}/edit?tab=spielplan`;
+  const showPreGenerationPanel =
+    workspaceMode === "planung" && planningUx != null && model.incompleteSetup.length === 0;
 
   return (
     <div className="space-y-4" data-testid="tournament-planung-workspace">
@@ -303,50 +316,24 @@ export default function TournamentPlanungWorkspace({
           <h2 className="text-base font-semibold text-[var(--foreground)]">
             {workspaceMode === "spielplan" ? "Spielplan-Ausgabe" : "Planung"}
           </h2>
-          {showSmartTimingHeader ? (
-            <>
-              <p className="text-sm text-[var(--muted)]">{model.smartTiming!.headline}</p>
-              {model.smartTiming!.detailLines.map((line) => (
-                <p key={line} className="text-xs text-[var(--muted)]">
-                  {line}
-                </p>
-              ))}
-            </>
-          ) : null}
         </div>
-        {canManage && workspaceMode === "planung" ? (
+        {canManage && workspaceMode === "planung" && model.actions.canRegenerate ? (
           <div className="flex flex-wrap gap-2">
-            {model.actions.canGenerate ? (
-              <Button
-                type="button"
-                disabled={busy}
-                onClick={() => void runGenerate()}
-                data-testid="tournament-planung-generate"
-                aria-busy={generatePending}
-              >
-                <Sparkles className="mr-1.5 h-4 w-4" aria-hidden />
-                {generatePending
-                  ? model.actions.generatePendingLabel
-                  : model.actions.generateLabel}
-              </Button>
-            ) : null}
-            {model.actions.canRegenerate ? (
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={busy}
-                onClick={() =>
-                  runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
-                    scheduleVersionId: model.scheduleVersionId,
-                    expectedRevision: model.scheduleRevision,
-                  })
-                }
-                data-testid="tournament-planung-regenerate"
-              >
-                <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden />
-                {model.actions.regenerateLabel}
-              </Button>
-            ) : null}
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={busy}
+              onClick={() =>
+                runAction(`/api/tournaments/${tournamentId}/planung/regenerate`, {
+                  scheduleVersionId: model.scheduleVersionId,
+                  expectedRevision: model.scheduleRevision,
+                })
+              }
+              data-testid="tournament-planung-regenerate"
+            >
+              <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden />
+              {model.actions.regenerateLabel}
+            </Button>
           </div>
         ) : null}
       </header>
@@ -369,27 +356,118 @@ export default function TournamentPlanungWorkspace({
         </section>
       ) : null}
 
-      {showEmpty ? (
+      {showPreGenerationPanel ? (
         <section
-          className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center"
-          data-testid="tournament-planung-empty"
+          className={cn(
+            "rounded-xl border bg-[var(--surface)] p-6",
+            planningUx.state === "READY"
+              ? "border-[var(--border)]"
+              : "border-[var(--sce-danger)]/40",
+          )}
+          data-testid={
+            planningUx.state === "READY"
+              ? "tournament-planung-ready"
+              : "tournament-planung-planning-state"
+          }
+          role={planningUx.state === "READY" ? "status" : "alert"}
+          aria-live="polite"
         >
-          <p className="text-sm text-[var(--muted)]">
-            SCE kann den Spielplan aus der Turnierkonfiguration automatisch erstellen.
-          </p>
-          {canManage && model.actions.canGenerate ? (
-            <Button
-              className="mt-4"
-              type="button"
-              disabled={busy}
-              onClick={() => void runGenerate()}
-              aria-busy={generatePending}
+          <p className="text-sm font-semibold text-[var(--foreground)]">{planningUx.headline}</p>
+          {planningUx.summary ? (
+            <p className="mt-1 text-sm text-[var(--muted)]">{planningUx.summary}</p>
+          ) : null}
+
+          {planningUx.state === "AUTO_FIX" && planningUx.recommendedTiming ? (
+            <p
+              className="mt-3 text-sm font-medium text-[var(--foreground)]"
+              data-testid="tournament-planung-recommended-timing-line"
             >
-              <Sparkles className="mr-1.5 h-4 w-4" aria-hidden />
-              {generatePending
-                ? model.actions.generatePendingLabel
-                : model.actions.generateLabel}
-            </Button>
+              {planningUx.recommendedTiming.matchDurationMinutes} Min. Spielzeit ·{" "}
+              {planningUx.recommendedTiming.transitionMinutes} Min. Wechselzeit
+            </p>
+          ) : null}
+
+          {canManage ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {planningUx.state === "READY" && model.actions.canGenerate ? (
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void runGenerate()}
+                  data-testid="tournament-planung-generate"
+                  aria-busy={generatePending}
+                >
+                  <Sparkles className="mr-1.5 h-4 w-4" aria-hidden />
+                  {generatePending
+                    ? model.actions.generatePendingLabel
+                    : model.actions.generateLabel}
+                </Button>
+              ) : null}
+
+              {planningUx.state === "AUTO_FIX" && planningUx.recommendedTiming ? (
+                <>
+                  <Button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void applyRecommendedTiming()}
+                    data-testid="tournament-planung-apply-recommended-timing"
+                  >
+                    Empfehlung übernehmen
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => setSelfAdjustTiming((v) => !v)}
+                    data-testid="tournament-planung-self-adjust"
+                  >
+                    Selbst anpassen
+                  </Button>
+                </>
+              ) : null}
+
+              {planningUx.state === "STRUCTURAL_CHANGE" ? (
+                <>
+                  <Link
+                    href={editTournamentHref}
+                    data-testid="tournament-planung-edit-tournament"
+                    className={cn(
+                      "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-strong)]",
+                      "bg-[var(--surface)] px-3.5 text-sm font-semibold text-[var(--text-2)]",
+                      "hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
+                    )}
+                  >
+                    Turnier bearbeiten
+                  </Link>
+                  {planningUx.contextLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        "inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-strong)]",
+                        "bg-[var(--surface)] px-3.5 text-sm font-semibold text-[var(--text-2)]",
+                        "hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </>
+              ) : null}
+            </div>
+          ) : null}
+
+          {planningUx.state === "AUTO_FIX" && selfAdjustTiming ? (
+            <p className="mt-4 text-sm text-[var(--muted)]">
+              Passe Spieldauer und Wechselzeit im{" "}
+              <Link
+                href={editTournamentHref}
+                className="font-medium text-[var(--sce-primary)] underline"
+              >
+                Turnier bearbeiten
+              </Link>
+              .
+            </p>
           ) : null}
         </section>
       ) : null}
@@ -398,61 +476,6 @@ export default function TournamentPlanungWorkspace({
         <p className="text-sm text-[var(--muted)]" data-testid="tournament-planung-regen-summary">
           {model.regenerationSummary.message}
         </p>
-      ) : null}
-
-      {feasibilityGuidance ? (
-        <section
-          className="rounded-xl border border-[var(--sce-danger)]/40 bg-[var(--surface)] p-4"
-          data-testid="tournament-planung-generation-blocked"
-          role="alert"
-        >
-          <p className="text-sm font-semibold text-[var(--foreground)]">
-            {feasibilityGuidance.headline}
-          </p>
-          <p className="mt-1 text-sm text-[var(--muted)]">{feasibilityGuidance.summary}</p>
-          {feasibilityGuidance.recommendedTiming ? (
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium text-[var(--foreground)]">
-                Empfohlene Einstellungen
-              </p>
-              <dl className="grid max-w-md grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                <dt className="text-[var(--muted)]">Spieldauer</dt>
-                <dd className="font-medium text-[var(--foreground)]">
-                  {feasibilityGuidance.recommendedTiming.matchDurationMinutes} Min.
-                </dd>
-                <dt className="text-[var(--muted)]">Wechselzeit</dt>
-                <dd className="font-medium text-[var(--foreground)]">
-                  {feasibilityGuidance.recommendedTiming.transitionMinutes} Min.
-                </dd>
-              </dl>
-              {canManage ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void applyRecommendedTiming()}
-                  data-testid="tournament-planung-apply-recommended-timing"
-                >
-                  Empfohlene Einstellungen übernehmen
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
-          {feasibilityGuidance.adjustments.length > 0 ? (
-            <>
-              <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
-                {feasibilityGuidance.recommendedTiming
-                  ? "Alternative Anpassungen"
-                  : "Mögliche Anpassungen"}
-              </p>
-              <ul className="mt-1 list-disc pl-5 text-sm text-[var(--muted)]">
-                {feasibilityGuidance.adjustments.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </>
-          ) : null}
-        </section>
       ) : null}
 
       {model.diagnostics.length > 0 ? (

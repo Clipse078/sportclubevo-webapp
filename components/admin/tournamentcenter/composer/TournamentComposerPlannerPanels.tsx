@@ -13,8 +13,7 @@ import type { TournamentComposerPlannerDraft } from "@/lib/tournaments/composer/
 import {
   applyComposerRecommendedTiming,
   buildTournamentComposerSmartTimingView,
-  composerSmartTimingFeasibilitySurface,
-  composerSmartTimingPlanExplanation,
+  buildComposerPlanningAssistantUx,
 } from "@/lib/tournaments/composer/tournament-composer-smart-timing";
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import { defaultTournamentComposerPitchLabels } from "@/lib/tournaments/composer/tournament-composer-planner-defaults";
@@ -24,17 +23,6 @@ import {
 } from "@/lib/tournaments/composer/tournament-composer-planner-breaks";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
-
-function feasibilityStatusGlyph(level: "OK" | "TIGHT" | "ADJUST" | "INFEASIBLE"): string {
-  switch (level) {
-    case "OK":
-      return "✓";
-    case "TIGHT":
-      return "⚠";
-    default:
-      return "!";
-  }
-}
 
 function SmartTimingPanel({
   payload,
@@ -53,10 +41,6 @@ function SmartTimingPanel({
   if (!view) {
     return null;
   }
-  const assessment = view.liveAssessment;
-  const feasibility = composerSmartTimingFeasibilitySurface(assessment);
-  const explanation = composerSmartTimingPlanExplanation(view);
-  const recommended = view.recommendedTiming;
 
   if (view.missingInputHint) {
     return (
@@ -66,51 +50,32 @@ function SmartTimingPanel({
     );
   }
 
+  const assistant = buildComposerPlanningAssistantUx(view, payload.planner?.timing);
+
+  if (!assistant) {
+    return null;
+  }
+
   return (
     <div
-      className="mb-6 space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
+      className="mb-6 space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
       data-testid="tournament-composer-smart-timing"
+      role={assistant.state === "READY" ? "status" : "alert"}
     >
-      <div>
-        <p className="text-sm font-semibold text-[var(--foreground)]">✨ SCE Smart Timing</p>
-        <p className="mt-1 text-xs text-[var(--text-2)]">
-          SCE prüft Spielanzahl, Felder und Zeitfenster und schlägt passende Timing-Werte vor.
-        </p>
-      </div>
+      <p className="text-sm font-semibold text-[var(--foreground)]">{assistant.headline}</p>
+      {assistant.summary ? (
+        <p className="text-sm text-[var(--text-2)]">{assistant.summary}</p>
+      ) : null}
 
-      {recommended ? (
-        <div className="space-y-3" data-testid="tournament-composer-smart-timing-recommendation">
-          <p className="text-sm text-[var(--text-2)]">Für dieses Turnier empfehlen wir:</p>
-          <dl className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">Spieldauer</dt>
-              <dd className="text-lg font-semibold text-[var(--foreground)]">
-                {recommended.matchDurationMinutes} Min.
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">Wechselzeit</dt>
-              <dd className="text-lg font-semibold text-[var(--foreground)]">
-                {recommended.transitionMinutes} Min.
-              </dd>
-            </div>
-          </dl>
-          {assessment?.predictedFinishUtcMs ? (
-            <p className="text-sm text-[var(--text-2)]">
-              Voraussichtliches Ende:{" "}
-              <span data-testid="tournament-composer-smart-timing-predicted-end">
-                {new Date(assessment.predictedFinishUtcMs).toLocaleTimeString("de-CH", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </p>
-          ) : null}
-          {assessment?.reserveMinutes != null ? (
-            <p className="text-sm text-[var(--text-2)]">
-              Reserve: {assessment.reserveMinutes} Min.
-            </p>
-          ) : null}
+      {assistant.state === "AUTO_FIX" && assistant.recommendedTiming ? (
+        <>
+          <p
+            className="text-sm font-medium text-[var(--foreground)]"
+            data-testid="tournament-composer-smart-timing-recommendation"
+          >
+            {assistant.recommendedTiming.matchDurationMinutes} Min. Spielzeit ·{" "}
+            {assistant.recommendedTiming.transitionMinutes} Min. Wechselzeit
+          </p>
           <button
             type="button"
             className="fca-btn fca-btn-primary"
@@ -119,25 +84,7 @@ function SmartTimingPanel({
           >
             Empfehlung übernehmen
           </button>
-        </div>
-      ) : null}
-
-      {explanation ? (
-        <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-smart-timing-explanation">
-          {explanation}
-        </p>
-      ) : null}
-
-      {feasibility ? (
-        <div
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3"
-          data-testid="tournament-composer-smart-timing-feasibility"
-        >
-          <p className="text-sm font-medium text-[var(--foreground)]">
-            <span aria-hidden>{feasibilityStatusGlyph(feasibility.level)}</span> {feasibility.title}
-          </p>
-          <p className="mt-1 text-sm text-[var(--text-2)]">{feasibility.detail}</p>
-        </div>
+        </>
       ) : null}
     </div>
   );

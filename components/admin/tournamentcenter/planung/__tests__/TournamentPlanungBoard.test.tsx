@@ -61,6 +61,7 @@ const model: TournamentPlanungViewModel = {
   mobileTimeline: [],
   smartTiming: null,
   diagnostics: [],
+  planningUx: null,
   feasibilityGuidance: null,
   regenerationSummary: null,
   incompleteSetup: [],

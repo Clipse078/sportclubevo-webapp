@@ -15,6 +15,8 @@ import type {
   TournamentPlanungFeasibilityGuidance,
   TournamentPlanungFeasibilityUxStatus,
   TournamentPlanungGenerationOutcome,
+  TournamentPlanungPlanningContextLink,
+  TournamentPlanungPlanningUx,
   TournamentPlanungRecommendedTiming,
   TournamentPlanungRegenerationSummary,
 } from "./types";
@@ -139,12 +141,6 @@ export function feasibilitySuggestionUserLabel(code: FeasibilitySuggestionCode):
   }
 }
 
-const TIMING_ADJUSTMENT_LABELS = new Set([
-  "Spieldauer verkürzen",
-  "Wechselzeit verkürzen",
-  "Spieldauer oder Wechselzeit verkürzen",
-]);
-
 export function resolvePlanungRecommendedTimingFromAssessment(
   assessment: TournamentTimingAssessment | null | undefined,
   currentConfig?: {
@@ -166,6 +162,91 @@ export function resolvePlanungRecommendedTimingFromAssessment(
   };
 }
 
+function buildPlanungStructuralContextLinks(
+  feasibility: TournamentFeasibilityResult,
+  tournamentId: string,
+): TournamentPlanungPlanningUx["contextLinks"] {
+  const labels = new Set(
+    feasibility.suggestions.map((s) => feasibilitySuggestionUserLabel(s.code)),
+  );
+  const links: TournamentPlanungPlanningContextLink[] = [];
+  const editBase = `/dashboard/tournamentcenter/${tournamentId}/edit`;
+  if (labels.has("Turnierzeit verlängern")) {
+    links.push({ label: "Turnierzeit ändern", href: `${editBase}?tab=termin` });
+  }
+  if (labels.has("Weiteres Spielfeld hinzufügen")) {
+    links.push({ label: "Spielfeld hinzufügen", href: `${editBase}?tab=spielfelder` });
+  }
+  return links.slice(0, 2);
+}
+
+export function buildPlanungInfeasiblePlanningUx(
+  feasibility: TournamentFeasibilityResult,
+  smartTiming: TournamentTimingAssessment | null = null,
+  currentConfig?: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
+  tournamentId?: string,
+): TournamentPlanungPlanningUx {
+  const recommendedTiming = resolvePlanungRecommendedTimingFromAssessment(
+    smartTiming,
+    currentConfig,
+  );
+
+  if (recommendedTiming) {
+    return {
+      state: "AUTO_FIX",
+      headline: "Der Spielplan passt noch nicht.",
+      summary: "SCE empfiehlt:",
+      recommendedTiming,
+      contextLinks: [],
+    };
+  }
+
+  return {
+    state: "STRUCTURAL_CHANGE",
+    headline: "Der Spielplan passt noch nicht in die verfügbare Zeit.",
+    summary: "Du brauchst mehr Zeit oder ein zusätzliches Spielfeld.",
+    recommendedTiming: null,
+    contextLinks: tournamentId
+      ? buildPlanungStructuralContextLinks(feasibility, tournamentId)
+      : [],
+  };
+}
+
+export function buildPlanungPlanningUx(input: {
+  schedulePresence: "NONE" | "PARTIAL" | "COMPLETE";
+  incompleteSetupCount: number;
+  feasibility: TournamentFeasibilityResult | null;
+  smartTiming: TournamentTimingAssessment | null;
+  schedulingConfig: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  };
+  tournamentId: string;
+}): TournamentPlanungPlanningUx | null {
+  if (input.schedulePresence !== "NONE" || input.incompleteSetupCount > 0) {
+    return null;
+  }
+  if (input.feasibility?.status === "INFEASIBLE") {
+    return buildPlanungInfeasiblePlanningUx(
+      input.feasibility,
+      input.smartTiming,
+      input.schedulingConfig,
+      input.tournamentId,
+    );
+  }
+  return {
+    state: "READY",
+    headline: "Alles bereit.",
+    summary: null,
+    recommendedTiming: null,
+    contextLinks: [],
+  };
+}
+
+/** @deprecated use buildPlanungInfeasiblePlanningUx / buildPlanungPlanningUx */
 export function buildPlanungFeasibilityGuidance(
   feasibility: TournamentFeasibilityResult | null,
   smartTiming: TournamentTimingAssessment | null = null,
@@ -177,30 +258,7 @@ export function buildPlanungFeasibilityGuidance(
   if (!feasibility || feasibility.status !== "INFEASIBLE") {
     return null;
   }
-
-  const summary =
-    "Das verfügbare Zeitfenster reicht für die aktuelle Konfiguration nicht aus.";
-
-  const adjustmentLabels = feasibility.suggestions.map((s) =>
-    feasibilitySuggestionUserLabel(s.code),
-  );
-  let adjustments = [...new Set(adjustmentLabels)];
-
-  const recommendedTiming = resolvePlanungRecommendedTimingFromAssessment(
-    smartTiming,
-    currentConfig,
-  );
-
-  if (recommendedTiming) {
-    adjustments = adjustments.filter((label) => !TIMING_ADJUSTMENT_LABELS.has(label));
-  }
-
-  return {
-    headline: "Spielplan kann noch nicht erstellt werden",
-    summary,
-    recommendedTiming,
-    adjustments,
-  };
+  return buildPlanungInfeasiblePlanningUx(feasibility, smartTiming, currentConfig);
 }
 
 export function resolveInitialScheduleGenerationOutcome(params: {
@@ -215,7 +273,11 @@ export function resolveInitialScheduleGenerationOutcome(params: {
     attempted: true,
     succeeded,
     optimisationStatus: params.optimisation.status,
-    guidance: succeeded ? null : buildPlanungFeasibilityGuidance(params.feasibility),
+    guidance: succeeded
+      ? null
+      : params.feasibility?.status === "INFEASIBLE"
+        ? buildPlanungInfeasiblePlanningUx(params.feasibility)
+        : null,
   };
 }
 

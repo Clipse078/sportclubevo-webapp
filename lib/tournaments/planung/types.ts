@@ -131,15 +131,31 @@ export type TournamentPlanungRecommendedTiming = {
   transitionMinutes: number;
 };
 
-/** Actionable German guidance when automatic generation cannot succeed. */
-export type TournamentPlanungFeasibilityGuidance = {
+/** Normal organiser planning experience (01K-R4): READY | AUTO_FIX | STRUCTURAL_CHANGE. */
+export type TournamentPlanungPlanningState =
+  | "READY"
+  | "AUTO_FIX"
+  | "STRUCTURAL_CHANGE";
+
+export type TournamentPlanungPlanningContextLink = {
+  label: string;
+  href: string;
+};
+
+/** Single canonical pre-generation planning surface for Planung + generation feedback. */
+export type TournamentPlanungPlanningUx = {
+  state: TournamentPlanungPlanningState;
   headline: string;
-  summary: string;
+  /** Secondary line; null for READY (no feasibility lecture). */
+  summary: string | null;
   /** Present when Smart Timing proves a feasible match/transition pair for the current window. */
   recommendedTiming: TournamentPlanungRecommendedTiming | null;
-  /** Fallback suggestions (deduplicated); excludes timing knobs covered by recommendedTiming. */
-  adjustments: readonly string[];
+  /** Optional deep links (max two) for structural fixes — never a generic bullet list. */
+  contextLinks: readonly TournamentPlanungPlanningContextLink[];
 };
+
+/** @deprecated alias — use planningUx; retained for generation outcome payloads. */
+export type TournamentPlanungFeasibilityGuidance = TournamentPlanungPlanningUx;
 
 export type TournamentPlanungGenerationOutcome = {
   attempted: boolean;
@@ -198,7 +214,9 @@ export type TournamentPlanungViewModel = {
   participants: readonly TournamentPlanungParticipantIdentity[];
   smartTiming: TournamentPlanungSmartTimingSummary | null;
   diagnostics: readonly TournamentPlanungDiagnostic[];
-  /** Present when canonical feasibility is INFEASIBLE (before or after generation attempt). */
+  /** Pre-generation organiser state (hidden once a schedule exists or setup is incomplete). */
+  planningUx: TournamentPlanungPlanningUx | null;
+  /** Mirror of planningUx for failed generation responses (same canonical presentation). */
   feasibilityGuidance: TournamentPlanungFeasibilityGuidance | null;
   regenerationSummary: TournamentPlanungRegenerationSummary;
   incompleteSetup: readonly TournamentPlanungIncompleteItem[];

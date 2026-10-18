@@ -26,7 +26,7 @@ const model: TournamentPlanungViewModel = {
   scheduleRevision: null,
   schedulePresence: "NONE",
   optimisationStatus: null,
-  feasibilityStatus: null,
+  feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: null,
   pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1" }],
   timeScale: null,
@@ -36,13 +36,20 @@ const model: TournamentPlanungViewModel = {
   mobileTimeline: [],
   smartTiming: null,
   diagnostics: [],
+  planningUx: {
+    state: "READY",
+    headline: "Alles bereit.",
+    summary: null,
+    recommendedTiming: null,
+    contextLinks: [],
+  },
   feasibilityGuidance: null,
   regenerationSummary: null,
   incompleteSetup: [],
   actions: {
     canGenerate: true,
     canRegenerate: false,
-    generateLabel: "✨ Spielplan automatisch erstellen",
+    generateLabel: "✨ Spielplan erstellen",
     generatePendingLabel: "Spielplan wird erstellt …",
     regenerateLabel: "Spielplan neu berechnen",
     regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
@@ -57,7 +64,7 @@ describe("TournamentPlanungWorkspace", () => {
     toast.danger.mockReset();
   });
 
-  it("shows guided empty state with generate CTA", () => {
+  it("shows READY state with single generate CTA", () => {
     render(
       <TournamentPlanungWorkspace
         initialModel={model}
@@ -66,8 +73,9 @@ describe("TournamentPlanungWorkspace", () => {
         canManage
       />,
     );
-    expect(screen.getByTestId("tournament-planung-empty")).toBeInTheDocument();
-    expect(screen.getByTestId("tournament-planung-generate")).toBeInTheDocument();
+    expect(screen.getByTestId("tournament-planung-ready")).toBeInTheDocument();
+    expect(screen.getByText("Alles bereit.")).toBeInTheDocument();
+    expect(screen.getAllByTestId("tournament-planung-generate")).toHaveLength(1);
   });
 
   it("does not render for externally organised tournaments", () => {
@@ -77,6 +85,7 @@ describe("TournamentPlanungWorkspace", () => {
           ...model,
           availability: "UNAVAILABLE_EXTERNALLY_ORGANISED",
           actions: { ...model.actions, canGenerate: false },
+          planningUx: null,
         }}
         tournamentId="t1"
         timezone="Europe/Zurich"
@@ -86,19 +95,23 @@ describe("TournamentPlanungWorkspace", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("shows actionable guidance when automatic generation is infeasible", async () => {
+  it("shows structural guidance without duplicate diagnostics when generation fails", async () => {
     const guidance = {
-      headline: "Spielplan kann noch nicht erstellt werden",
-      summary: "Das verfügbare Zeitfenster reicht für die aktuelle Konfiguration nicht aus.",
+      state: "STRUCTURAL_CHANGE" as const,
+      headline: "Der Spielplan passt noch nicht in die verfügbare Zeit.",
+      summary: "Du brauchst mehr Zeit oder ein zusätzliches Spielfeld.",
       recommendedTiming: null,
-      adjustments: ["Spieldauer verkürzen", "Weiteres Spielfeld hinzufügen"],
+      contextLinks: [{ label: "Spielfeld hinzufügen", href: "/dashboard/tournamentcenter/t1/edit?tab=spielfelder" }],
     };
     const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue({
       ok: true,
       json: async () => ({
         viewModel: {
           ...model,
+          feasibilityStatus: "INFEASIBLE",
+          planningUx: guidance,
           feasibilityGuidance: guidance,
+          actions: { ...model.actions, canGenerate: false },
           diagnostics: [],
         },
         generation: {
@@ -128,34 +141,42 @@ describe("TournamentPlanungWorkspace", () => {
       );
     });
 
-    expect(await screen.findByTestId("tournament-planung-generation-blocked")).toBeInTheDocument();
-    expect(screen.getByText(guidance.headline)).toBeInTheDocument();
-    expect(screen.getByText("Spieldauer verkürzen")).toBeInTheDocument();
+    expect(await screen.findByTestId("tournament-planung-planning-state")).toBeInTheDocument();
+    expect(screen.queryByText(/Spieldauer verkürzen/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/CAPACITY_PITCH_MINUTES_SHORT/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/witness schedule/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/MVP limit/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Planungsdiagnose")).not.toBeInTheDocument();
-    expect(toast.danger).toHaveBeenCalledWith(guidance.headline);
+    expect(toast.danger).toHaveBeenCalledWith(
+      "Spielplan konnte mit der aktuellen Konfiguration nicht erstellt werden.",
+    );
   });
 
   it("shows smart timing recommendation and apply action when provided", async () => {
     const guidance = {
-      headline: "Spielplan kann noch nicht erstellt werden",
-      summary: "Das verfügbare Zeitfenster reicht für die aktuelle Konfiguration nicht aus.",
+      state: "AUTO_FIX" as const,
+      headline: "Der Spielplan passt noch nicht.",
+      summary: "SCE empfiehlt:",
       recommendedTiming: { matchDurationMinutes: 12, transitionMinutes: 3 },
-      adjustments: ["Weiteres Spielfeld hinzufügen"],
+      contextLinks: [],
     };
     render(
       <TournamentPlanungWorkspace
-        initialModel={{ ...model, feasibilityGuidance: guidance }}
+        initialModel={{
+          ...model,
+          feasibilityStatus: "INFEASIBLE",
+          planningUx: guidance,
+          feasibilityGuidance: guidance,
+          actions: { ...model.actions, canGenerate: false },
+        }}
         tournamentId="t1"
         timezone="Europe/Zurich"
         canManage
       />,
     );
-    expect(screen.getByText("Empfohlene Einstellungen")).toBeInTheDocument();
-    expect(screen.getByText("12 Min.")).toBeInTheDocument();
+    expect(screen.getByTestId("tournament-planung-recommended-timing-line")).toHaveTextContent(
+      "12 Min. Spielzeit · 3 Min. Wechselzeit",
+    );
     expect(screen.getByTestId("tournament-planung-apply-recommended-timing")).toBeInTheDocument();
+    expect(screen.getByTestId("tournament-planung-self-adjust")).toBeInTheDocument();
     expect(screen.queryByText("Spieldauer verkürzen")).not.toBeInTheDocument();
   });
 
@@ -165,6 +186,7 @@ describe("TournamentPlanungWorkspace", () => {
       schedulePresence: "COMPLETE",
       scheduleVersionId: "sv1",
       scheduleRevision: 2,
+      planningUx: null,
       timeScale: {
         rowAnchorsUtc: ["2026-08-01T08:00:00.000Z"],
         matchDurationMinutes: 20,
@@ -222,7 +244,7 @@ describe("TournamentPlanungWorkspace", () => {
     await userEvent.click(screen.getByTestId("tournament-planung-generate"));
 
     await waitFor(() => {
-      expect(screen.queryByTestId("tournament-planung-empty")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("tournament-planung-ready")).not.toBeInTheDocument();
     });
     expect(toast.success).toHaveBeenCalledWith("Spielplan wurde erstellt.");
   });

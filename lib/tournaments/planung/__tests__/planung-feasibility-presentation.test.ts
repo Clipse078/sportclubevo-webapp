@@ -55,10 +55,9 @@ describe("planung feasibility presentation", () => {
 
     expect(feasibility.status).toBe("INFEASIBLE");
     const guidance = buildPlanungFeasibilityGuidance(feasibility);
-    expect(guidance?.headline).toBe("Spielplan kann noch nicht erstellt werden");
+    expect(guidance?.state).toBe("STRUCTURAL_CHANGE");
     expect(guidance?.recommendedTiming).toBeNull();
-    expect(guidance?.adjustments.some((a) => a.includes("Spieldauer"))).toBe(true);
-    expect(guidance?.adjustments.some((a) => a.includes("Spielfeld"))).toBe(true);
+    expect(guidance?.summary).toMatch(/mehr Zeit oder ein zusätzliches Spielfeld/i);
   });
 
   it("uses smart timing durationRecommendation for guidance when oracle finds feasible pair", () => {
@@ -111,9 +110,9 @@ describe("planung feasibility presentation", () => {
       assessment,
       { matchDurationMinutes: 30, transitionMinutes: 5 },
     );
+    expect(guidance?.state).toBe("AUTO_FIX");
     expect(guidance?.recommendedTiming).toEqual(recommended);
-    expect(guidance?.adjustments).not.toContain("Spieldauer verkürzen");
-    expect(guidance?.adjustments).not.toContain("Wechselzeit verkürzen");
+    expect(guidance?.contextLinks).toHaveLength(0);
   });
 
   it("reports structured infeasible generation without persisting assignments", () => {
@@ -133,7 +132,7 @@ describe("planung feasibility presentation", () => {
     });
 
     expect(outcome.succeeded).toBe(false);
+    expect(outcome.guidance?.state).toBe("STRUCTURAL_CHANGE");
     expect(outcome.guidance?.recommendedTiming).toBeNull();
-    expect(outcome.guidance?.adjustments).toContain("Spieldauer verkürzen");
   });
 });
