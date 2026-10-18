@@ -1,4 +1,8 @@
 import {
+  utcInstantToDateTimeLocalValue,
+  parseTenantLocalDateTimeInput,
+} from "@/lib/events/tenant-local-datetime";
+import {
   normalizeTimeInput,
   splitDateTimeLocalValue,
 } from "@/lib/sce/activity-datetime/sce-activity-datetime";
@@ -72,23 +76,61 @@ export function createDefaultComposerBreakDraft(localId: string): TournamentComp
 export function combineTournamentStartDateWithLocalTime(
   tournamentStartAt: string,
   startLocalTime: string,
+  timeZone?: string,
 ): string | null {
-  const startParts = splitDateTimeLocalValue(tournamentStartAt);
   const timeParsed = normalizeTimeInput(startLocalTime);
-  if (!startParts || !timeParsed.ok) {
+  if (!timeParsed.ok) {
     return null;
   }
-  return `${startParts.isoDateKey}T${timeParsed.normalized}`;
+
+  const localStartParts = splitDateTimeLocalValue(tournamentStartAt);
+  if (localStartParts) {
+    return `${localStartParts.isoDateKey}T${timeParsed.normalized}`;
+  }
+
+  if (timeZone) {
+    const instant = parseTenantLocalDateTimeInput(tournamentStartAt, timeZone);
+    if (!instant) {
+      return null;
+    }
+    const localStart = utcInstantToDateTimeLocalValue(instant, timeZone);
+    const dateParts = splitDateTimeLocalValue(localStart);
+    if (!dateParts) {
+      return null;
+    }
+    return `${dateParts.isoDateKey}T${timeParsed.normalized}`;
+  }
+
+  return null;
 }
 
 export function resolveComposerBreakDateTimes(
   br: TournamentComposerBreakDraft,
   tournamentStartAt: string,
+  timeZone?: string,
 ): { startAt: string; endAt: string } | null {
-  const startCombined = combineTournamentStartDateWithLocalTime(tournamentStartAt, br.startLocalTime);
+  const startCombined = combineTournamentStartDateWithLocalTime(
+    tournamentStartAt,
+    br.startLocalTime,
+    timeZone,
+  );
   if (!startCombined || br.durationMinutes <= 0) {
     return null;
   }
+
+  if (timeZone) {
+    const startInstant = parseTenantLocalDateTimeInput(startCombined, timeZone);
+    if (!startInstant) {
+      return null;
+    }
+    const endInstant = new Date(startInstant.getTime() + br.durationMinutes * 60_000);
+    const endAt = utcInstantToDateTimeLocalValue(endInstant, timeZone);
+    if (!endAt) {
+      return null;
+    }
+    return { startAt: startCombined, endAt };
+  }
+
   const startMs = new Date(startCombined).getTime();
   if (Number.isNaN(startMs)) {
     return null;

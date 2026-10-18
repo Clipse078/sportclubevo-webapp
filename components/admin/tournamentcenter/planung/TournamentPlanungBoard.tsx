@@ -3,11 +3,15 @@
 import { useCallback, useRef, useState } from "react";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import type { TournamentFixtureScheduleLockDimension } from "@/lib/tournament-scheduling/types";
-import { resolveTimeRowIndex } from "@/lib/tournaments/planung/time-scale";
+import { planungInstantsEqual, resolveTimeRowIndex } from "@/lib/tournaments/planung/time-scale";
 import { manualMoveTargetAllowed, resolveManualMoveCapabilities } from "@/lib/tournaments/planung/manual-move-capabilities";
 import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-hub-pointer-gesture";
 import { cn } from "@/lib/cn";
 import { Lock } from "lucide-react";
+import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
+import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 
 type Props = {
   model: TournamentPlanungViewModel;
@@ -116,7 +120,7 @@ export default function TournamentPlanungBoard({
 
   return (
     <div
-      className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+      className={cn(SCE_SURFACE_DENSE_PANEL, "overflow-x-auto rounded-[var(--radius-xl)]")}
       data-testid="tournament-planung-board"
       role="grid"
       aria-label="Spielplan Feld und Zeit"
@@ -128,20 +132,57 @@ export default function TournamentPlanungBoard({
           gridTemplateColumns: `4.5rem repeat(${model.pitches.length}, minmax(8rem, 1fr))`,
         }}
       >
-        <div className="sticky left-0 z-10 border-b border-r border-[var(--border)] bg-[var(--surface-elevated)] p-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+        <div className="sticky left-0 z-10 border-b border-r border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] p-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
           Zeit
         </div>
         {model.pitches.map((pitch) => (
           <div
             key={pitch.pitchId}
-            className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--surface-elevated)] p-2 text-center text-xs font-semibold text-[var(--foreground)]"
+            className="sticky top-0 z-10 border-b border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] p-2 text-center text-xs font-semibold text-[var(--foreground)]"
             data-tournament-pitch-id={pitch.pitchId}
           >
-            {pitch.label}
+            <span className="block">{pitch.label}</span>
+            {pitch.formatHint ? (
+              <span className="mt-0.5 block text-[10px] font-normal text-[var(--muted)]">
+                {pitch.formatHint}
+              </span>
+            ) : null}
           </div>
         ))}
 
-        {timeScale.rowAnchorsUtc.map((anchor) => (
+        {timeScale.rowAnchorsUtc.map((anchor) => {
+          const anchorInstant = anchor;
+          const allPitchBreak = breakCells.find(
+            (b) =>
+              planungInstantsEqual(b.startUtc, anchorInstant) && b.scope === "ALL_PITCHES",
+          );
+          if (allPitchBreak) {
+            const timeRangeLabel = `${formatTime(allPitchBreak.startUtc, timezone)}–${formatTime(allPitchBreak.endUtc, timezone)}`;
+            return (
+              <div key={`row-${anchor}`} className="contents">
+                <div className="sticky left-0 border-r border-b border-[var(--border)] bg-[var(--surface)] p-2 text-xs tabular-nums text-[var(--muted)]">
+                  {formatTime(anchor, timezone)}
+                </div>
+                <div
+                  className="col-start-2 border-b border-[var(--border)] p-1"
+                  style={{ gridColumn: `2 / span ${model.pitches.length}` }}
+                  role="gridcell"
+                  data-testid="planung-board-all-pitches-break"
+                  data-drop-state="blocked"
+                >
+                  <SceTournamentScheduleBreakPresentation
+                    layout="board-all-pitches"
+                    label={allPitchBreak.label}
+                    timeLabel={timeRangeLabel}
+                    scopeLabel="Alle Felder"
+                    accessibleLabel={allPitchBreak.accessibleLabel}
+                  />
+                </div>
+              </div>
+            );
+          }
+
+          return (
           <div key={`row-${anchor}`} className="contents">
             <div className="sticky left-0 border-r border-b border-[var(--border)] bg-[var(--surface)] p-2 text-xs tabular-nums text-[var(--muted)]">
               {formatTime(anchor, timezone)}
@@ -156,8 +197,9 @@ export default function TournamentPlanungBoard({
               );
               const br = breakCells.find(
                 (b) =>
-                  b.startUtc === anchor &&
-                  (b.scope === "ALL_PITCHES" || b.pitchIds.includes(pitch.pitchId)),
+                  planungInstantsEqual(b.startUtc, anchor) &&
+                  b.scope === "SELECTED_PITCHES" &&
+                  b.pitchIds.includes(pitch.pitchId),
               );
 
               const cellKey = `${anchor}-${pitch.pitchId}`;
@@ -179,9 +221,13 @@ export default function TournamentPlanungBoard({
                       if (drag?.committed) void handlePreview(drag, pitch.pitchId, anchor, true);
                     }}
                   >
-                    <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-2 py-3 text-center text-xs text-[var(--muted)]">
-                      {br.label}
-                    </div>
+                    <SceTournamentScheduleBreakPresentation
+                      layout="board-pitch"
+                      label={br.label}
+                      timeLabel={`${formatTime(br.startUtc, timezone)}–${formatTime(br.endUtc, timezone)}`}
+                      accessibleLabel={br.accessibleLabel}
+                      testId={`planung-board-pitch-break-${pitch.pitchId}`}
+                    />
                   </div>
                 );
               }
@@ -243,8 +289,9 @@ export default function TournamentPlanungBoard({
                   <button
                     type="button"
                     className={cn(
-                      "w-full rounded-md border px-2 py-2 text-left text-xs transition-colors touch-none",
-                      "border-[var(--border)] bg-[var(--surface-elevated)] hover:border-[var(--accent)]",
+                      "w-full text-left text-xs transition-colors touch-none",
+                      SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
+                      "rounded-lg px-2 py-2.5 hover:border-[var(--sce-surface-border-elevated)]",
                       selected && "ring-2 ring-[var(--accent)]",
                       isDragging && "opacity-40",
                       !caps.canDrag && canManage && "cursor-default",
@@ -300,8 +347,11 @@ export default function TournamentPlanungBoard({
                       previewCache.current.clear();
                     }}
                   >
-                    <p className="truncate font-medium text-[var(--foreground)]">{fixture.sideA.label}</p>
-                    <p className="truncate text-[var(--muted)]">{fixture.sideB.label}</p>
+                    <SceTournamentFixtureCompactMatchup
+                      layout="board"
+                      sideA={fixture.sideA}
+                      sideB={fixture.sideB}
+                    />
                     {fixture.lockDimension ? (
                       <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-[var(--muted)]">
                         <Lock className="h-3 w-3" aria-hidden />
@@ -318,7 +368,8 @@ export default function TournamentPlanungBoard({
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

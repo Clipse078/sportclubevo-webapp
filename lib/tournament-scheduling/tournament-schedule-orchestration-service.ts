@@ -7,17 +7,22 @@ import { requireTenantOrganisedTournament } from "./internal/require-tenant-orga
 import {
   listTournamentFixtureAssignmentsForVersion,
   persistTournamentFixtureAssignment,
+  removeTournamentFixtureAssignment,
   updateTournamentFixtureAssignment,
 } from "./assignment-service";
 import { loadTournamentScheduleOptimisationContext } from "./feasibility-service";
 import { listTournamentScheduleEngineFixtures } from "./schedule-engine-load-service";
 import { optimiseTournamentSchedule } from "./schedule-optimiser/optimise";
+import { recordPlanungOptimiserInvocation } from "@/lib/tournaments/planung/planung-load-telemetry";
 import type { TournamentScheduleOptimisationResult } from "./schedule-optimiser/types";
 import { runTournamentPartialRegenerationForVersion } from "./partial-regeneration-service";
 import {
   createWorkingTournamentScheduleVersion,
   getTournamentScheduleVersion,
+  updateWorkingTournamentScheduleVersionTiming,
 } from "./schedule-version-service";
+import { assessTournamentTiming } from "./smart-timing";
+import { resolvePlanungRecommendedTimingFromAssessment } from "@/lib/tournaments/planung/planung-presentation";
 import {
   TournamentScheduleResourceInvalidError,
   TournamentSchedulingError,
@@ -88,6 +93,8 @@ export async function syncOptimisedAssignmentsToVersion(params: {
   scheduleVersionId: string;
   optimisation: TournamentScheduleOptimisationResult;
   expectedRevision?: number;
+  /** Remove persisted rows for fixtures absent from the optimisation result (topology/full regen). */
+  removeAssignmentsNotInResult?: boolean;
 }): Promise<{ revision: number }> {
   const version = await getTournamentScheduleVersion(params.tenantId, params.scheduleVersionId);
   let expectedRevision = params.expectedRevision ?? version.revision;
@@ -131,7 +138,90 @@ export async function syncOptimisedAssignmentsToVersion(params: {
     }
   }
 
+  if (params.removeAssignmentsNotInResult) {
+    for (const row of existingByFixture.values()) {
+      const removed = await removeTournamentFixtureAssignment(params.tenantId, row.id, {
+        expectedRevision,
+      });
+      expectedRevision = removed.revision;
+    }
+  }
+
   return { revision: expectedRevision };
+}
+
+export async function applyCanonicalPlanungRecommendedTiming(params: {
+  tenantId: string;
+  tournamentId: string;
+  expectedRevision?: number;
+}): Promise<{ scheduleVersionId: string; revision: number }> {
+  await requireTenantOrganisedTournament(params.tenantId, params.tournamentId);
+  await assertPlanungGenerationReadiness(params.tenantId, params.tournamentId);
+
+  const working = await getOrCreateWorkingTournamentScheduleVersion(
+    params.tenantId,
+    params.tournamentId,
+  );
+  if (
+    params.expectedRevision !== undefined &&
+    params.expectedRevision !== working.revision
+  ) {
+    throw new TournamentSchedulingError(
+      "SCHEDULE.STALE_VERSION",
+      `Schedule revision mismatch: expected ${params.expectedRevision}, actual ${working.revision}`,
+    );
+  }
+
+  const loaded = await loadTournamentScheduleOptimisationContext(
+    params.tenantId,
+    params.tournamentId,
+    working.id,
+  );
+  const fixtures = await listTournamentScheduleEngineFixtures(
+    params.tenantId,
+    params.tournamentId,
+  );
+
+  const assessment = assessTournamentTiming({
+    mode: "FIXED_ASSESSMENT",
+    tournamentWindow: loaded.tournamentWindow,
+    config: {
+      matchDurationMinutes: loaded.schedulingConfig.matchDurationMinutes,
+      transitionMinutes: loaded.schedulingConfig.transitionMinutes,
+      minRestMinutes: loaded.schedulingConfig.minRestMinutes,
+    },
+    fixtures,
+    participants: loaded.participants,
+    tournamentPitches: loaded.tournamentPitches.map((p) => ({
+      tournamentPitchId: p.tournamentPitchId,
+      displayOrder: p.displayOrder,
+      label: p.label,
+    })),
+    breaks: loaded.breaks,
+  });
+
+  const recommended = resolvePlanungRecommendedTimingFromAssessment(assessment, {
+    matchDurationMinutes: loaded.schedulingConfig.matchDurationMinutes,
+    transitionMinutes: loaded.schedulingConfig.transitionMinutes,
+  });
+  if (!recommended) {
+    throw new TournamentSchedulingError(
+      "TOURNAMENT_GENERATION_INVALID",
+      "Es liegt keine übernehmbare Smart-Timing-Empfehlung vor.",
+    );
+  }
+
+  const updated = await updateWorkingTournamentScheduleVersionTiming(
+    params.tenantId,
+    working.id,
+    {
+      matchDurationMinutes: recommended.matchDurationMinutes,
+      transitionMinutes: recommended.transitionMinutes,
+    },
+    { expectedRevision: working.revision },
+  );
+
+  return { scheduleVersionId: updated.id, revision: updated.revision };
 }
 
 export async function runInitialTournamentScheduleGeneration(params: {
@@ -173,6 +263,7 @@ export async function runInitialTournamentScheduleGeneration(params: {
     throw new TournamentPlanungIncompleteError(["Spiele"]);
   }
 
+  recordPlanungOptimiserInvocation();
   const optimisation = optimiseTournamentSchedule({
     tournamentWindow: loaded.tournamentWindow,
     config: {
@@ -220,6 +311,8 @@ export async function runTournamentScheduleRegeneration(params: {
   tournamentId: string;
   scheduleVersionId: string;
   expectedRevision?: number;
+  /** When true, sync removes stale assignments and requires a complete fixture assignment set. */
+  topologyReconciled?: boolean;
 }): Promise<{
   regeneration: Awaited<ReturnType<typeof runTournamentPartialRegenerationForVersion>>;
   revision: number;
@@ -250,9 +343,17 @@ export async function runTournamentScheduleRegeneration(params: {
     return { regeneration, revision: version.revision };
   }
 
+  const engineFixtureCount = await prisma.tournamentFixture.count({
+    where: { tenantId: params.tenantId, eventId: params.tournamentId },
+  });
+
+  const assignmentComplete =
+    engineFixtureCount > 0 && regeneration.assignments.length === engineFixtureCount;
+
   if (
     regeneration.status === "INFEASIBLE_PROVEN" ||
-    regeneration.assignments.length === 0
+    regeneration.assignments.length === 0 ||
+    (params.topologyReconciled && !assignmentComplete)
   ) {
     return { regeneration, revision: version.revision };
   }
@@ -262,6 +363,7 @@ export async function runTournamentScheduleRegeneration(params: {
     scheduleVersionId: params.scheduleVersionId,
     optimisation: regeneration,
     expectedRevision: version.revision,
+    removeAssignmentsNotInResult: params.topologyReconciled === true,
   });
 
   return { regeneration, revision: synced.revision };

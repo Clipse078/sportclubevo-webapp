@@ -3,13 +3,25 @@
  */
 
 import type { TournamentFeasibilityStatus } from "@/lib/tournament-scheduling/feasibility";
+import type {
+  FeasibilityDiagnosticCode,
+  FeasibilitySuggestionCode,
+  TournamentFeasibilityResult,
+} from "@/lib/tournament-scheduling/feasibility/types";
 import type { TournamentScheduleOptimisationStatus } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 import type { TournamentFixtureScheduleLockDimension } from "@/lib/tournament-scheduling/types";
+import type { TournamentTimingAssessment } from "@/lib/tournament-scheduling/smart-timing";
 import type {
+  TournamentPlanungFeasibilityGuidance,
   TournamentPlanungFeasibilityUxStatus,
+  TournamentPlanungGenerationOutcome,
+  TournamentPlanungPlanningContextLink,
+  TournamentPlanungPlanningUx,
+  TournamentPlanungRecommendedTiming,
   TournamentPlanungRegenerationSummary,
 } from "./types";
 import type { RegenerationChangeMetrics } from "@/lib/tournament-scheduling/partial-regeneration/types";
+import type { TournamentScheduleOptimisationResult } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 
 export function scheduleLockDimensionLabel(
   dimension: TournamentFixtureScheduleLockDimension,
@@ -68,12 +80,205 @@ export function feasibilityUxHeadline(status: TournamentPlanungFeasibilityUxStat
     case "WINDOW_TIGHT":
       return "Zeitfenster knapp";
     case "CONFLICT":
-      return "Konflikt";
+      return "Spielplan kann noch nicht erstellt werden";
     case "NOT_FULLY_PLANNABLE":
       return "Noch nicht vollständig planbar";
     default:
       return "Planungsstatus";
   }
+}
+
+export function feasibilityDiagnosticUserMessage(code: FeasibilityDiagnosticCode): string {
+  switch (code) {
+    case "CAPACITY.PITCH_MINUTES_SHORT":
+    case "CAPACITY.WINDOW_TOO_SHORT":
+      return "Das verfügbare Zeitfenster reicht für die geplanten Spiele und Spielfelder nicht aus.";
+    case "CAPACITY.INSUFFICIENT_PARALLEL_PITCHES":
+      return "Es fehlt parallele Spielfeld-Kapazität für die geplante Spielanzahl.";
+    case "REST.CANNOT_SATISFY_MIN_REST":
+      return "Der Spielplan kann die erforderlichen Erholungszeiten zwischen den Spielen aktuell nicht einhalten.";
+    case "FIXTURE_SET.INVALID":
+    case "FIXTURE_SET.EMPTY":
+      return "Die Spielkonfiguration ist unvollständig oder ungültig.";
+    case "PITCH.UNAVAILABLE":
+      return "Mindestens ein Spielfeld ist im Zeitfenster nicht verfügbar.";
+    case "SLOTS.TOO_MANY_CANDIDATES":
+      return "Die Planung ist zu komplex für die verfügbare Zeit — bitte Turnierparameter anpassen.";
+    case "LOCKS.CONFLICTING":
+      return "Gesperrte Zeiten oder Felder widersprechen der aktuellen Konfiguration.";
+    case "ASSIGNMENT.SEARCH_EXHAUSTED":
+      return "Es konnte keine gültige Spielplan-Zuordnung gefunden werden.";
+    case "LIMIT.PARTICIPANTS_EXCEEDED":
+      return "Die Teilnehmeranzahl überschreitet die unterstützte Planungsgrenze.";
+    case "LIMIT.FIXTURES_EXCEEDED":
+      return "Die Spielanzahl überschreitet die unterstützte Planungsgrenze.";
+    case "LIMIT.PITCHES_EXCEEDED":
+      return "Die Spielfeldanzahl überschreitet die unterstützte Planungsgrenze.";
+    case "BREAK.INVALID":
+    case "BREAK.OUTSIDE_WINDOW":
+    case "BREAK.UNKNOWN_PITCH":
+      return "Pausen oder Sperrzeiten passen nicht zum Turnierzeitfenster.";
+    default:
+      return "Die aktuelle Turnierkonfiguration lässt sich nicht planen.";
+  }
+}
+
+/** User-facing adjustment labels (no internal minimum-rest control). */
+export function feasibilitySuggestionUserLabel(code: FeasibilitySuggestionCode): string {
+  switch (code) {
+    case "EXTEND_TOURNAMENT_WINDOW":
+      return "Turnierzeit verlängern";
+    case "ADD_TOURNAMENT_PITCH":
+      return "Weiteres Spielfeld hinzufügen";
+    case "REDUCE_MATCH_DURATION":
+      return "Spieldauer verkürzen";
+    case "REDUCE_TRANSITION_DURATION":
+      return "Wechselzeit verkürzen";
+    case "REDUCE_MINIMUM_REST":
+      return "Spieldauer oder Wechselzeit verkürzen";
+    default:
+      return "Turnierkonfiguration anpassen";
+  }
+}
+
+export function resolvePlanungRecommendedTimingFromAssessment(
+  assessment: TournamentTimingAssessment | null | undefined,
+  currentConfig?: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
+): TournamentPlanungRecommendedTiming | null {
+  const rec = assessment?.durationRecommendation;
+  if (!rec) return null;
+  if (currentConfig) {
+    const unchanged =
+      rec.matchDurationMinutes === currentConfig.matchDurationMinutes &&
+      rec.transitionMinutes === currentConfig.transitionMinutes;
+    if (unchanged) return null;
+  }
+  return {
+    matchDurationMinutes: rec.matchDurationMinutes,
+    transitionMinutes: rec.transitionMinutes,
+  };
+}
+
+function buildPlanungStructuralContextLinks(
+  feasibility: TournamentFeasibilityResult,
+  tournamentId: string,
+): TournamentPlanungPlanningUx["contextLinks"] {
+  const labels = new Set(
+    feasibility.suggestions.map((s) => feasibilitySuggestionUserLabel(s.code)),
+  );
+  const links: TournamentPlanungPlanningContextLink[] = [];
+  const editBase = `/dashboard/tournamentcenter/${tournamentId}/edit`;
+  if (labels.has("Turnierzeit verlängern")) {
+    links.push({ label: "Turnierzeit ändern", href: `${editBase}?tab=termin` });
+  }
+  if (labels.has("Weiteres Spielfeld hinzufügen")) {
+    links.push({ label: "Spielfeld hinzufügen", href: `${editBase}?tab=spielfelder` });
+  }
+  return links.slice(0, 2);
+}
+
+export function buildPlanungInfeasiblePlanningUx(
+  feasibility: TournamentFeasibilityResult,
+  smartTiming: TournamentTimingAssessment | null = null,
+  currentConfig?: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
+  tournamentId?: string,
+): TournamentPlanungPlanningUx {
+  const recommendedTiming = resolvePlanungRecommendedTimingFromAssessment(
+    smartTiming,
+    currentConfig,
+  );
+
+  if (recommendedTiming) {
+    return {
+      state: "AUTO_FIX",
+      headline: "Der Spielplan passt noch nicht.",
+      summary: "SCE empfiehlt:",
+      recommendedTiming,
+      contextLinks: [],
+    };
+  }
+
+  return {
+    state: "STRUCTURAL_CHANGE",
+    headline: "Der Spielplan passt noch nicht in die verfügbare Zeit.",
+    summary: "Du brauchst mehr Zeit oder ein zusätzliches Spielfeld.",
+    recommendedTiming: null,
+    contextLinks: tournamentId
+      ? buildPlanungStructuralContextLinks(feasibility, tournamentId)
+      : [],
+  };
+}
+
+export function buildPlanungPlanningUx(input: {
+  schedulePresence: "NONE" | "PARTIAL" | "COMPLETE";
+  incompleteSetupCount: number;
+  feasibility: TournamentFeasibilityResult | null;
+  smartTiming: TournamentTimingAssessment | null;
+  schedulingConfig: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  };
+  tournamentId: string;
+}): TournamentPlanungPlanningUx | null {
+  if (input.schedulePresence !== "NONE" || input.incompleteSetupCount > 0) {
+    return null;
+  }
+  if (input.feasibility?.status === "INFEASIBLE") {
+    return buildPlanungInfeasiblePlanningUx(
+      input.feasibility,
+      input.smartTiming,
+      input.schedulingConfig,
+      input.tournamentId,
+    );
+  }
+  return {
+    state: "READY",
+    headline: "Alles bereit.",
+    summary: null,
+    recommendedTiming: null,
+    contextLinks: [],
+  };
+}
+
+/** @deprecated use buildPlanungInfeasiblePlanningUx / buildPlanungPlanningUx */
+export function buildPlanungFeasibilityGuidance(
+  feasibility: TournamentFeasibilityResult | null,
+  smartTiming: TournamentTimingAssessment | null = null,
+  currentConfig?: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
+): TournamentPlanungFeasibilityGuidance | null {
+  if (!feasibility || feasibility.status !== "INFEASIBLE") {
+    return null;
+  }
+  return buildPlanungInfeasiblePlanningUx(feasibility, smartTiming, currentConfig);
+}
+
+export function resolveInitialScheduleGenerationOutcome(params: {
+  optimisation: TournamentScheduleOptimisationResult;
+  feasibility: TournamentFeasibilityResult | null;
+}): TournamentPlanungGenerationOutcome {
+  const succeeded =
+    params.optimisation.status !== "INFEASIBLE_PROVEN" &&
+    params.optimisation.assignments.length > 0;
+
+  return {
+    attempted: true,
+    succeeded,
+    optimisationStatus: params.optimisation.status,
+    guidance: succeeded
+      ? null
+      : params.feasibility?.status === "INFEASIBLE"
+        ? buildPlanungInfeasiblePlanningUx(params.feasibility)
+        : null,
+  };
 }
 
 export function buildRegenerationSummaryMessage(

@@ -10,18 +10,30 @@ import type {
 } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 import type { TournamentPlannerOwnershipResolution } from "@/lib/tournament-scheduling/planner-eligibility";
 import {
+  buildPlanungPlanningUx,
   buildRegenerationSummaryMessage,
-  feasibilityUxHeadline,
+  feasibilityDiagnosticUserMessage,
   resolveFeasibilityUxStatus,
+  resolvePlanungRecommendedTimingFromAssessment,
   scheduleLockDimensionLabel,
 } from "./planung-presentation";
 import { buildPlanungScheduleSections, formatPlanungBreakScopeLabel } from "./planung-schedule-sections";
-import { buildPlanungTimeScale, resolveTimeRowIndex } from "./time-scale";
+import {
+  buildPlanungTimeScale,
+  normalizePlanungInstantIso,
+  resolveTimeRowIndex,
+} from "./time-scale";
 import {
   formatGroupRankPlaceholder,
   formatWinnerOfFixtureLabel,
 } from "./qualification-display";
 import { buildPlanungGroupStandings } from "./build-planung-group-standings";
+import type { PlanungScheduleConsistencyStatus } from "./assess-planung-schedule-consistency";
+import {
+  buildPlanungSchedulingSettings,
+  buildPlanungTimingConsequence,
+} from "./planung-scheduling-settings-presentation";
+import { resolveTournamentPitchColumnPresentation } from "./tournament-pitch-presentation";
 import type {
   TournamentPlanungAvailability,
   TournamentPlanungBoardCell,
@@ -112,6 +124,8 @@ export type PlanungDomainSnapshot = {
     lossPoints: number;
     tiebreakOrder: readonly ("POINTS" | "GOAL_DIFFERENCE" | "GOALS_SCORED" | "HEAD_TO_HEAD")[];
   };
+  scheduleConsistencyStatus: PlanungScheduleConsistencyStatus | null;
+  fixtureHomeAwayRelevance: "ON" | "OFF";
 };
 
 function resolveAvailability(
@@ -268,8 +282,12 @@ function buildFixtureBlock(
     assignmentId: assignment?.id ?? null,
     sideA,
     sideB,
-    startUtc: assignment?.startAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
-    endUtc: assignment?.endAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
+    startUtc: normalizePlanungInstantIso(
+      assignment?.startAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
+    ),
+    endUtc: normalizePlanungInstantIso(
+      assignment?.endAt ?? snapshot.windowStartUtc ?? new Date(0).toISOString(),
+    ),
     pitchId: assignment?.tournamentPitchId ?? snapshot.pitches[0]?.id ?? "",
     phaseLabel: fixture.phaseLabel,
     groupLabel: fixture.groupLabel,
@@ -335,16 +353,12 @@ function buildSmartTimingSummary(
   if (assessment.reserveMinutes != null) {
     detailLines.push(`Reserve: ${assessment.reserveMinutes} Min.`);
   }
-  if (assessment.pitchCountRecommendation?.rationale) {
-    detailLines.push(assessment.pitchCountRecommendation.rationale);
-  }
-
   let headline = "Turnierplan passt in das Zeitfenster.";
   if (assessment.feasibilityStatus === "TIGHT") {
     headline = "Zeitfenster knapp.";
   }
   if (assessment.feasibilityStatus === "INFEASIBLE") {
-    headline = "Zeitfenster reicht nicht aus.";
+    return null;
   }
 
   return {
@@ -361,6 +375,7 @@ function buildSmartTimingSummary(
 function mapDiagnostics(
   feasibility: TournamentFeasibilityResult | null,
   optimisation: TournamentScheduleOptimisationResult | null,
+  options: { includeFeasibilityDiagnostics: boolean },
 ): TournamentPlanungDiagnostic[] {
   const out: TournamentPlanungDiagnostic[] = [];
   const lockDiagnostics: TournamentPartialRegenerationResult["lockConflictDiagnostics"] =
@@ -376,11 +391,11 @@ function mapDiagnostics(
       });
     }
   }
-  if (feasibility?.diagnostics?.length) {
+  if (options.includeFeasibilityDiagnostics && feasibility?.diagnostics?.length) {
     for (const diag of feasibility.diagnostics.slice(0, 6)) {
       out.push({
         id: diag.code,
-        message: diag.code.replace(/\./g, " ").replace(/_/g, " "),
+        message: feasibilityDiagnosticUserMessage(diag.code),
         severity: feasibility.status === "INFEASIBLE" ? "danger" : "warning",
       });
     }
@@ -444,8 +459,8 @@ export function buildTournamentPlanungViewModel(
       kind: "BREAK",
       breakId: br.id,
       label,
-      startUtc: br.startAt,
-      endUtc: br.endAt,
+      startUtc: normalizePlanungInstantIso(br.startAt),
+      endUtc: normalizePlanungInstantIso(br.endAt),
       pitchIds,
       scope: br.scope,
       accessibleLabel: `${startTime}–${endTime} · ${label} · ${scopeLabel}`,
@@ -482,19 +497,47 @@ export function buildTournamentPlanungViewModel(
         })
       : null;
 
-  const diagnostics = mapDiagnostics(snapshot.feasibility, snapshot.optimisation);
-  if (feasibilityUxStatus) {
-    diagnostics.unshift({
-      id: "feasibility-ux",
-      message: feasibilityUxHeadline(feasibilityUxStatus),
-      severity:
-        feasibilityUxStatus === "CONFLICT"
-          ? "danger"
-          : feasibilityUxStatus === "WINDOW_TIGHT"
-            ? "warning"
-            : "info",
-    });
-  }
+  const planningUx = buildPlanungPlanningUx({
+    schedulePresence,
+    incompleteSetupCount: incompleteSetup.length,
+    feasibility: snapshot.feasibility,
+    smartTiming: snapshot.smartTiming,
+    schedulingConfig: {
+      matchDurationMinutes: snapshot.schedulingConfig.matchDurationMinutes,
+      transitionMinutes: snapshot.schedulingConfig.transitionMinutes,
+    },
+    tournamentId: snapshot.tournamentId,
+  });
+  const feasibilityGuidance =
+    planningUx?.state === "AUTO_FIX" || planningUx?.state === "STRUCTURAL_CHANGE"
+      ? planningUx
+      : null;
+  const suppressFeasibilityDiagnostics = planningUx !== null || hasAssignments;
+  const diagnostics = mapDiagnostics(snapshot.feasibility, snapshot.optimisation, {
+    includeFeasibilityDiagnostics: !suppressFeasibilityDiagnostics,
+  });
+
+  const schedulingSettings =
+    schedulePresence === "NONE"
+      ? null
+      : buildPlanungSchedulingSettings({
+          schedulingConfig: snapshot.schedulingConfig,
+          fixtureHomeAwayRelevance: snapshot.fixtureHomeAwayRelevance,
+          breaks: snapshot.breaks,
+          pitchLabelById,
+          timezone: snapshot.timezone,
+        });
+  const recommendedTimingForConsequence =
+    hasAssignments && snapshot.scheduleConsistencyStatus === "NEEDS_REGENERATION"
+      ? resolvePlanungRecommendedTimingFromAssessment(snapshot.smartTiming, {
+          matchDurationMinutes: snapshot.schedulingConfig.matchDurationMinutes,
+          transitionMinutes: snapshot.schedulingConfig.transitionMinutes,
+        })
+      : null;
+  const timingConsequence = buildPlanungTimingConsequence(
+    hasAssignments ? snapshot.scheduleConsistencyStatus : null,
+    { recommendedTiming: recommendedTimingForConsequence },
+  );
 
   const completedGroupResults = snapshot.fixtureResults
     .filter((r) => r.state === "COMPLETED" && r.scoreSideA != null && r.scoreSideB != null)
@@ -535,33 +578,47 @@ export function buildTournamentPlanungViewModel(
     optimisationStatus: snapshot.optimisation?.status ?? null,
     feasibilityStatus: snapshot.feasibility?.status ?? null,
     feasibilityUxStatus,
-    pitches: snapshot.pitches.map((p) => ({
-      pitchId: p.id,
-      displayOrder: p.displayOrder,
-      label: p.label,
-    })),
+    pitches: snapshot.pitches.map((p) => {
+      const presentation = resolveTournamentPitchColumnPresentation({ label: p.label });
+      return {
+        pitchId: p.id,
+        displayOrder: p.displayOrder,
+        label: presentation.label,
+        formatHint: presentation.formatHint,
+      };
+    }),
     timeScale,
     cells,
     scheduleSections,
     mobileTimeline,
-    smartTiming: buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
+    participants: snapshot.participants,
+    smartTiming:
+      schedulePresence === "NONE"
+        ? null
+        : buildSmartTimingSummary(snapshot.smartTiming, snapshot.timezone),
     diagnostics,
+    planningUx,
+    feasibilityGuidance,
     regenerationSummary: buildRegenerationSummaryMessage(snapshot.regenerationMetrics),
     incompleteSetup,
     actions: {
       canGenerate:
         availability === "AVAILABLE" &&
         incompleteSetup.length === 0 &&
-        schedulePresence === "NONE",
+        schedulePresence === "NONE" &&
+        snapshot.feasibility?.status !== "INFEASIBLE",
       canRegenerate:
         availability === "AVAILABLE" &&
         schedulePresence !== "NONE" &&
         incompleteSetup.length === 0,
-      generateLabel: "✨ Spielplan automatisch erstellen",
+      generateLabel: "✨ Spielplan erstellen",
+      generatePendingLabel: "Spielplan wird erstellt …",
       regenerateLabel: "Spielplan neu berechnen",
       regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
     },
     groupStandings,
+    schedulingSettings,
+    timingConsequence,
   };
 }
 

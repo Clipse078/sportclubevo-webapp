@@ -316,3 +316,60 @@ export function applyComposerRecommendedTiming(
     },
   };
 }
+
+export type ComposerPlanningAssistantState = "READY" | "AUTO_FIX" | "STRUCTURAL_CHANGE";
+
+export type ComposerPlanningAssistantUx = {
+  state: ComposerPlanningAssistantState;
+  headline: string;
+  summary: string | null;
+  recommendedTiming: TournamentComposerRecommendedTiming | null;
+};
+
+function composerRecommendedTimingDiffersFromCurrent(
+  recommended: TournamentComposerRecommendedTiming,
+  current: { matchDurationMinutes: number; transitionMinutes: number },
+): boolean {
+  return (
+    recommended.matchDurationMinutes !== current.matchDurationMinutes ||
+    recommended.transitionMinutes !== current.transitionMinutes
+  );
+}
+
+/** Simplified creator assistant — mirrors Planung planning UX (01K-R4). */
+export function buildComposerPlanningAssistantUx(
+  view: TournamentComposerSmartTimingView,
+  currentTiming?: { matchDurationMinutes: number; transitionMinutes: number },
+): ComposerPlanningAssistantUx | null {
+  const assessment = view.liveAssessment;
+  if (!assessment) return null;
+
+  if (assessment.feasibilityStatus === "FEASIBLE" || assessment.feasibilityStatus === "TIGHT") {
+    return {
+      state: "READY",
+      headline: "Alles bereit.",
+      summary: null,
+      recommendedTiming: null,
+    };
+  }
+
+  const recommended = view.recommendedTiming;
+  if (
+    recommended &&
+    (!currentTiming || composerRecommendedTimingDiffersFromCurrent(recommended, currentTiming))
+  ) {
+    return {
+      state: "AUTO_FIX",
+      headline: "Der Spielplan passt noch nicht.",
+      summary: "SCE empfiehlt:",
+      recommendedTiming: recommended,
+    };
+  }
+
+  return {
+    state: "STRUCTURAL_CHANGE",
+    headline: "Der Spielplan passt noch nicht in die verfügbare Zeit.",
+    summary: "Du brauchst mehr Zeit oder ein zusätzliches Spielfeld.",
+    recommendedTiming: null,
+  };
+}

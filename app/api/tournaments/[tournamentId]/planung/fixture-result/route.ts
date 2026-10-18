@@ -12,6 +12,7 @@ import {
 import { loadTournamentPlanungViewModel } from "@/lib/tournaments/planung/load-tournament-planung.server";
 import { TournamentFixtureNotFoundError, TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
 import { TournamentPlannerNotOwnedError } from "@/lib/tournament-scheduling/partial-regeneration-service";
+import { notifyPublicTournamentLiveDataChanged } from "@/lib/tournaments/public/tournament-live-public-cache";
 
 type RouteContext = { params: Promise<{ tournamentId: string }> };
 
@@ -77,6 +78,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       });
       revision = result.revision;
     }
+
+    notifyPublicTournamentLiveDataChanged(tenantId);
 
     const viewModel = await loadTournamentPlanungViewModel({
       tenantId,

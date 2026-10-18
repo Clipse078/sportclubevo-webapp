@@ -9,6 +9,7 @@ import { TournamentSchedulingError } from "./errors";
 import { loadTournamentScheduleOptimisationContext } from "./feasibility-service";
 import { listTournamentFixtureAssignmentsForVersion } from "./assignment-service";
 import { regenerateTournamentSchedule } from "./partial-regeneration/regenerate";
+import { recordPlanungOptimiserInvocation } from "@/lib/tournaments/planung/planung-load-telemetry";
 import type { TournamentPartialRegenerationResult } from "./schedule-optimiser/types";
 import { scheduleLockFromPersistedAssignment } from "./schedule-lock/normalize";
 import type { TournamentFixtureScheduleLock } from "./schedule-lock/types";
@@ -70,6 +71,7 @@ export async function runTournamentPartialRegenerationForVersion(params: {
 
   const mergedLocks = [...persistedLocks, ...(params.scheduleLocks ?? [])];
 
+  recordPlanungOptimiserInvocation();
   return regenerateTournamentSchedule({
     tournamentWindow: loaded.tournamentWindow,
     config: {

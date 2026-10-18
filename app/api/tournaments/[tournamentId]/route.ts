@@ -88,6 +88,8 @@ import {
   TournamentNotFoundError,
   TournamentValidationError,
   TournamentInvalidTransitionError,
+  TournamentPublicationNotAllowedError,
+  TournamentPublicationStaleError,
 } from "@/lib/tournaments/errors";
 import type { UpdateTournamentInput } from "@/lib/tournaments/types";
 import {
@@ -379,6 +381,17 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       }
     }
 
+    if ("expectedEventUpdatedAt" in body) {
+      const value = body.expectedEventUpdatedAt;
+      if (typeof value !== "string" || !value.trim()) {
+        return NextResponse.json(
+          { error: "expectedEventUpdatedAt muss ein ISO-Zeitstempel sein." },
+          { status: 400 },
+        );
+      }
+      data.expectedEventUpdatedAt = value;
+    }
+
     if (Object.keys(data).length === 0 && !hasOccupancyPatch) {
       return NextResponse.json({ error: "Keine gültigen Felder zum Aktualisieren." }, { status: 400 });
     }
@@ -421,6 +434,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     }
     if (err instanceof TournamentInvalidTransitionError) {
       return NextResponse.json({ error: err.message }, { status: 422 });
+    }
+    if (err instanceof TournamentPublicationNotAllowedError) {
+      return NextResponse.json({ error: err.message, code: err.name }, { status: 403 });
+    }
+    if (err instanceof TournamentPublicationStaleError) {
+      return NextResponse.json({ error: err.message, code: "TOURNAMENT_PUBLICATION_STALE" }, { status: 409 });
     }
     throw err;
   }

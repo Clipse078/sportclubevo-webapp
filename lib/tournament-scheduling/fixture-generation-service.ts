@@ -39,6 +39,7 @@ import {
 } from "./competition-structure";
 import type { HomeAwayRelevance } from "./smart-generator-architecture";
 import { HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT } from "./smart-generator-architecture";
+import { recordPlanungFixtureGeneratorInvocation } from "@/lib/tournaments/planung/planung-load-telemetry";
 
 function toDefinition(row: {
   id: string;
@@ -169,6 +170,7 @@ export async function generateTournamentFixturesForEvent(
   input: GenerateTournamentFixturesInput = {},
 ): Promise<TournamentFixtureDefinition[]> {
   await requireTenantOrganisedTournament(tenantId, tournamentId);
+  recordPlanungFixtureGeneratorInvocation();
 
   const strategy = input.strategy ?? "ROUND_ROBIN";
   const stageKey = input.stageKey ?? TOURNAMENT_FIXTURE_STAGE_MAIN;

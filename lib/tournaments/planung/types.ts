@@ -24,6 +24,8 @@ export type TournamentPlanungPitchColumn = {
   pitchId: string;
   displayOrder: number;
   label: string;
+  /** Optional playing-format hint (Tournament Planner 02); e.g. "3v3 · Kleinfeld". */
+  formatHint: string | null;
 };
 
 export type TournamentPlanungTimeScale = {
@@ -125,6 +127,45 @@ export type TournamentPlanungDiagnostic = {
   severity: "info" | "warning" | "danger";
 };
 
+/** Oracle-verified timing from canonical Smart Timing (operational backward recommendation). */
+export type TournamentPlanungRecommendedTiming = {
+  matchDurationMinutes: number;
+  transitionMinutes: number;
+};
+
+/** Normal organiser planning experience (01K-R4): READY | AUTO_FIX | STRUCTURAL_CHANGE. */
+export type TournamentPlanungPlanningState =
+  | "READY"
+  | "AUTO_FIX"
+  | "STRUCTURAL_CHANGE";
+
+export type TournamentPlanungPlanningContextLink = {
+  label: string;
+  href: string;
+};
+
+/** Single canonical pre-generation planning surface for Planung + generation feedback. */
+export type TournamentPlanungPlanningUx = {
+  state: TournamentPlanungPlanningState;
+  headline: string;
+  /** Secondary line; null for READY (no feasibility lecture). */
+  summary: string | null;
+  /** Present when Smart Timing proves a feasible match/transition pair for the current window. */
+  recommendedTiming: TournamentPlanungRecommendedTiming | null;
+  /** Optional deep links (max two) for structural fixes — never a generic bullet list. */
+  contextLinks: readonly TournamentPlanungPlanningContextLink[];
+};
+
+/** @deprecated alias — use planningUx; retained for generation outcome payloads. */
+export type TournamentPlanungFeasibilityGuidance = TournamentPlanungPlanningUx;
+
+export type TournamentPlanungGenerationOutcome = {
+  attempted: boolean;
+  succeeded: boolean;
+  optimisationStatus: TournamentScheduleOptimisationStatus | null;
+  guidance: TournamentPlanungFeasibilityGuidance | null;
+};
+
 export type TournamentPlanungSmartTimingSummary = {
   headline: string;
   detailLines: readonly string[];
@@ -149,9 +190,40 @@ export type TournamentPlanungActions = {
   canGenerate: boolean;
   canRegenerate: boolean;
   generateLabel: string;
+  generatePendingLabel: string;
   regenerateLabel: string;
   regenerateHint: string;
 };
+
+/** Operational timing exposed in Spielplan bearbeiten (canonical schedule version config). */
+export type TournamentPlanungSchedulingBreak = {
+  breakId: string;
+  label: string;
+  startLocalTime: string;
+  durationMinutes: number;
+  scope: "ALL_PITCHES" | "SELECTED_PITCHES";
+  tournamentPitchIds: readonly string[];
+  timeRangeLabel: string;
+  scopeLabel: string;
+};
+
+export type TournamentPlanungFixtureHomeAwayRelevance = "ON" | "OFF";
+
+export type TournamentPlanungSchedulingSettings = {
+  matchDurationMinutes: number;
+  transitionMinutes: number;
+  /** Canonical TournamentCompetitionConfiguration.fixtureHomeAwayRelevance */
+  fixtureHomeAwayRelevance: TournamentPlanungFixtureHomeAwayRelevance;
+  breaks: readonly TournamentPlanungSchedulingBreak[];
+};
+
+export type TournamentPlanungTimingConsequence = {
+  status: "MATCHES" | "NEEDS_REGENERATION";
+  headline: string;
+  /** Human next step when timing alone cannot fix the schedule. */
+  structuralHint: string | null;
+  recommendedTiming: TournamentPlanungRecommendedTiming | null;
+} | null;
 
 export type TournamentPlanungViewModel = {
   tournamentId: string;
@@ -170,10 +242,20 @@ export type TournamentPlanungViewModel = {
   scheduleSections: readonly TournamentPlanungScheduleSection[];
   /** Chronological mobile list — same cells, grouped order. */
   mobileTimeline: readonly TournamentPlanungBoardCell[];
+  /** Tournament-local participants (authoritative for team Spielpläne). */
+  participants: readonly TournamentPlanungParticipantIdentity[];
   smartTiming: TournamentPlanungSmartTimingSummary | null;
   diagnostics: readonly TournamentPlanungDiagnostic[];
+  /** Pre-generation organiser state (hidden once a schedule exists or setup is incomplete). */
+  planningUx: TournamentPlanungPlanningUx | null;
+  /** Mirror of planningUx for failed generation responses (same canonical presentation). */
+  feasibilityGuidance: TournamentPlanungFeasibilityGuidance | null;
   regenerationSummary: TournamentPlanungRegenerationSummary;
   incompleteSetup: readonly TournamentPlanungIncompleteItem[];
   actions: TournamentPlanungActions;
   groupStandings: readonly TournamentPlanungGroupStandingsSection[];
+  /** Present when a schedule exists — edit-mode Spielplan-Einstellungen. */
+  schedulingSettings: TournamentPlanungSchedulingSettings | null;
+  /** Whether persisted assignments still match operational timing (no silent regen). */
+  timingConsequence: TournamentPlanungTimingConsequence;
 };

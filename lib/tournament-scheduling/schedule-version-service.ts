@@ -12,6 +12,7 @@ import { TournamentInvalidTransitionError } from "@/lib/tournaments/errors";
 import {
   TournamentScheduleNotFoundError,
   TournamentScheduleWorkingExistsError,
+  TournamentSchedulingError,
 } from "./errors";
 
 function toDefinition(row: {
@@ -106,6 +107,46 @@ export async function getTournamentScheduleVersion(
  * Marks a WORKING version APPROVED (foundation for immutability enforcement).
  * Does not publish or materialize resource allocations (deferred).
  */
+export async function updateWorkingTournamentScheduleVersionTiming(
+  tenantId: string,
+  scheduleVersionId: string,
+  input: {
+    matchDurationMinutes: number;
+    transitionMinutes: number;
+  },
+  options: { expectedRevision?: number } = {},
+): Promise<TournamentScheduleVersionDefinition> {
+  const version = await prisma.tournamentScheduleVersion.findFirst({
+    where: { id: scheduleVersionId, tenantId },
+  });
+  if (!version) throw new TournamentScheduleNotFoundError(scheduleVersionId);
+  if (version.status !== "WORKING") {
+    throw new TournamentInvalidTransitionError(
+      `Schedule version "${scheduleVersionId}" timing can only be updated on WORKING versions.`,
+    );
+  }
+  if (
+    options.expectedRevision !== undefined &&
+    options.expectedRevision !== version.revision
+  ) {
+    throw new TournamentSchedulingError(
+      "SCHEDULE.STALE_VERSION",
+      `Schedule revision mismatch: expected ${options.expectedRevision}, actual ${version.revision}`,
+    );
+  }
+
+  const row = await prisma.tournamentScheduleVersion.update({
+    where: { id: scheduleVersionId },
+    data: {
+      matchDurationMinutes: input.matchDurationMinutes,
+      transitionMinutes: input.transitionMinutes,
+      revision: { increment: 1 },
+    },
+  });
+
+  return toDefinition(row);
+}
+
 export async function approveTournamentScheduleVersion(
   tenantId: string,
   scheduleVersionId: string,

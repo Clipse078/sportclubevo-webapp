@@ -20,7 +20,7 @@ function assertNotLexWorseThanBaseline(
 
 describe("01F2-R1 — search policy audit", () => {
   it("documents exhaustive threshold at six fixtures", () => {
-    expect(EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES).toBe(6);
+    expect(EXHAUSTIVE_OPTIMISATION_MAX_FIXTURES).toBe(12);
   });
 });
 

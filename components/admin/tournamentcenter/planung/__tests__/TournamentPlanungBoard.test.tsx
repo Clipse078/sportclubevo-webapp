@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TournamentPlanungBoard from "../TournamentPlanungBoard";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
+import { SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER } from "@/lib/sce/tournament/sce-tournament-schedule-break-semantics";
 
 const model: TournamentPlanungViewModel = {
   tournamentId: "t1",
@@ -15,8 +16,8 @@ const model: TournamentPlanungViewModel = {
   feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: "PLAN_FITS",
   pitches: [
-    { pitchId: "pitch-a", displayOrder: 0, label: "Feld 1" },
-    { pitchId: "pitch-b", displayOrder: 1, label: "Feld 2" },
+    { pitchId: "pitch-a", displayOrder: 0, label: "Feld 1", formatHint: null },
+    { pitchId: "pitch-b", displayOrder: 1, label: "Feld 2", formatHint: null },
   ],
   timeScale: {
     rowAnchorsUtc: ["2026-06-01T08:00:00.000Z", "2026-06-01T08:15:00.000Z"],
@@ -57,22 +58,71 @@ const model: TournamentPlanungViewModel = {
     },
   ],
   scheduleSections: [],
+  participants: [],
   mobileTimeline: [],
   smartTiming: null,
   diagnostics: [],
+  planningUx: null,
+  feasibilityGuidance: null,
   regenerationSummary: null,
   incompleteSetup: [],
   actions: {
     canGenerate: false,
     canRegenerate: true,
     generateLabel: "",
+    generatePendingLabel: "",
     regenerateLabel: "",
     regenerateHint: "",
   },
   groupStandings: [],
+  schedulingSettings: null,
+  timingConsequence: null,
+};
+
+const breakModel: TournamentPlanungViewModel = {
+  ...model,
+  timeScale: {
+    ...model.timeScale!,
+    rowAnchorsUtc: [
+      "2026-06-01T08:00:00.000Z",
+      "2026-06-01T08:15:00.000Z",
+      "2026-06-01T08:30:00.000Z",
+    ],
+  },
+  cells: [
+    ...model.cells,
+    {
+      kind: "BREAK" as const,
+      breakId: "br1",
+      label: "Pause",
+      startUtc: "2026-06-01T08:15:00.000Z",
+      endUtc: "2026-06-01T08:30:00.000Z",
+      pitchIds: ["pitch-a", "pitch-b"],
+      scope: "ALL_PITCHES" as const,
+      accessibleLabel: "Pause alle Felder",
+    },
+  ],
 };
 
 describe("TournamentPlanungBoard 01I", () => {
+  it("R7.3 — ALL_PITCHES break renders full-width band", () => {
+    render(
+      <TournamentPlanungBoard
+        model={breakModel}
+        timezone="Europe/Zurich"
+        selectedFixtureId={null}
+        onSelectFixture={vi.fn()}
+      />,
+    );
+    const bandCell = screen.getByTestId("planung-board-all-pitches-break");
+    expect(bandCell).toBeInTheDocument();
+    expect(
+      bandCell.querySelector(`[data-sce-schedule-break="${SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER}"]`),
+    ).toBeTruthy();
+    expect(screen.getByText("Pause")).toBeInTheDocument();
+    expect(screen.getByText(/10:15–10:30 · Alle Felder/)).toBeInTheDocument();
+  });
+
   it("A — fixture is draggable when unlocked", () => {
     render(
       <TournamentPlanungBoard

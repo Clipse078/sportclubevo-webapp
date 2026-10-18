@@ -7,6 +7,7 @@ import {
   TournamentPlanungIncompleteError,
 } from "@/lib/tournament-scheduling/tournament-schedule-orchestration-service";
 import { loadTournamentPlanungViewModel } from "@/lib/tournaments/planung/load-tournament-planung.server";
+import type { TournamentPlanungGenerationOutcome } from "@/lib/tournaments/planung/types";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
 
 type RouteContext = { params: Promise<{ tournamentId: string }> };
@@ -47,7 +48,17 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       regenerationMetrics: result.optimisation.changeMetrics ?? undefined,
     });
 
-    return NextResponse.json({ viewModel, optimisationStatus: result.optimisation.status });
+    const succeeded =
+      result.optimisation.status !== "INFEASIBLE_PROVEN" &&
+      result.optimisation.assignments.length > 0;
+    const generation: TournamentPlanungGenerationOutcome = {
+      attempted: true,
+      succeeded,
+      optimisationStatus: result.optimisation.status,
+      guidance: succeeded ? null : viewModel.feasibilityGuidance,
+    };
+
+    return NextResponse.json({ viewModel, generation });
   } catch (err) {
     if (err instanceof TournamentPlanungIncompleteError) {
       return NextResponse.json(

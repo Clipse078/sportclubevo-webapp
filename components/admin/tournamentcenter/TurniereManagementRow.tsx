@@ -192,15 +192,25 @@ export default function TurniereManagementRow({
       data-testid={rowTestId}
       data-sce-tournament-list-row
       className={cn(
-        "relative grid gap-3 border-b border-[var(--border)]/60 px-4 py-3 transition last:border-b-0 hover:bg-[var(--surface-2)]/40",
+        "group relative grid cursor-pointer gap-3 border-b border-[var(--border)]/60 px-4 py-3 transition last:border-b-0",
+        "hover:bg-[var(--surface-2)]/40 has-[a:focus-visible]:bg-[var(--surface-2)]/40",
         TURNIERE_ROW_INTERMEDIATE_GRID,
         TURNIERE_ROW_DESKTOP_GRID,
         compact && "py-2",
       )}
     >
+      <Link
+        href={editHref}
+        aria-label={`Turnier ${tournament.title} öffnen`}
+        data-testid={`turniere-row-nav-${tournament.id}`}
+        className="absolute inset-0 z-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+      >
+        <span className="sr-only">Turnier {tournament.title} öffnen</span>
+      </Link>
+
       <div
         className={cn(
-          "flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center",
+          "pointer-events-none flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center",
           TURNIERE_ROW_DATE_CELL,
         )}
         aria-hidden
@@ -221,7 +231,7 @@ export default function TurniereManagementRow({
       </div>
 
       <div
-        className={cn("relative z-[1] min-w-0", TURNIERE_ROW_IDENTITY_CELL)}
+        className={cn("pointer-events-none relative z-[1] min-w-0", TURNIERE_ROW_IDENTITY_CELL)}
         data-testid={`turniere-row-identity-${tournament.id}`}
       >
         <SceTournamentCard
@@ -235,7 +245,7 @@ export default function TurniereManagementRow({
         />
       </div>
 
-      <div className={cn(TURNIERE_ROW_CONTEXT_CELL)}>
+      <div className={cn("pointer-events-none", TURNIERE_ROW_CONTEXT_CELL)}>
         <TurniereRowContextZone
           model={presentationWithStatus}
           locale={locale}
@@ -246,7 +256,7 @@ export default function TurniereManagementRow({
         />
       </div>
 
-      <div className={cn(TURNIERE_ROW_ACTION_CELL)}>
+      <div className={cn("relative z-[1] pointer-events-auto", TURNIERE_ROW_ACTION_CELL)}>
         <TurniereRowContextMenu
           tournamentId={tournament.id}
           editHref={editHref}
@@ -254,14 +264,6 @@ export default function TurniereManagementRow({
           canManage={canManage}
         />
       </div>
-
-      <Link
-        href={editHref}
-        aria-label={`Turnier ${tournament.title} öffnen`}
-        className="absolute inset-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
-      >
-        <span className="sr-only">Turnier {tournament.title} öffnen</span>
-      </Link>
     </article>
   );
 }
