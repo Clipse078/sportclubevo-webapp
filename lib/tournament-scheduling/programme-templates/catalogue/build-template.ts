@@ -1,5 +1,6 @@
 import { parseTemplateSideToken, participantSlotsForCount } from "../template-side-ref";
 import type {
+  ProgrammeTemplateCategoryContext,
   TemplateFieldDefinition,
   TemplateRoundAssignment,
   TemplateRoundDefinition,
@@ -45,6 +46,7 @@ export function buildRotationTemplate(input: {
   rounds: readonly RawRound[];
   breakAfterRoundNumber: number;
   referenceDocumentId: string;
+  categoryContext?: ProgrammeTemplateCategoryContext;
 }): TournamentProgrammeTemplate {
   const fields: TemplateFieldDefinition[] = [];
   for (let i = 1; i <= input.smallFieldCount; i += 1) {
@@ -70,6 +72,7 @@ export function buildRotationTemplate(input: {
     status: "ACTIVE",
     displayName: `Rotation (${input.participantCount} Teams)`,
     programmeFamily: "YOUTH_ROTATION_MULTI_PITCH",
+    categoryContext: input.categoryContext ?? "E_FF12",
     participantCount: input.participantCount,
     participantSlots: participantSlotsForCount(input.participantCount),
     fields,
@@ -92,6 +95,7 @@ export function buildThreeFieldRotationTemplate(input: {
   rounds: readonly RawRound[];
   breakAfterRoundNumber: number;
   referenceDocumentId: string;
+  categoryContext?: ProgrammeTemplateCategoryContext;
 }): TournamentProgrammeTemplate {
   return {
     id: input.id,
@@ -99,6 +103,7 @@ export function buildThreeFieldRotationTemplate(input: {
     status: "ACTIVE",
     displayName: `Rotation (${input.participantCount} Teams)`,
     programmeFamily: "YOUTH_ROTATION_MULTI_PITCH",
+    categoryContext: input.categoryContext ?? "E_FF12",
     participantCount: input.participantCount,
     participantSlots: participantSlotsForCount(input.participantCount),
     fields: fieldDefs([
@@ -125,6 +130,7 @@ export function buildFiveFieldRotationTemplate(input: {
   rounds: readonly RawRound[];
   breakAfterRoundNumber: number;
   referenceDocumentId: string;
+  categoryContext?: ProgrammeTemplateCategoryContext;
 }): TournamentProgrammeTemplate {
   return {
     id: input.id,
@@ -132,6 +138,7 @@ export function buildFiveFieldRotationTemplate(input: {
     status: "ACTIVE",
     displayName: `Rotation (${input.participantCount} Teams)`,
     programmeFamily: "YOUTH_ROTATION_MULTI_PITCH",
+    categoryContext: input.categoryContext ?? "E_FF12",
     participantCount: input.participantCount,
     participantSlots: participantSlotsForCount(input.participantCount),
     fields: fieldDefs([
@@ -160,6 +167,7 @@ export function buildSixFieldRotationTemplate(input: {
   rounds: readonly RawRound[];
   breakAfterRoundNumber: number;
   referenceDocumentId: string;
+  categoryContext?: ProgrammeTemplateCategoryContext;
 }): TournamentProgrammeTemplate {
   return buildRotationTemplate({
     ...input,

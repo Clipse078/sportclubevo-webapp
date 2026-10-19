@@ -4,6 +4,16 @@
 
 export type ProgrammeTemplateFamily = "YOUTH_ROTATION_MULTI_PITCH";
 
+/** Approved youth programme family for curated lookup — not shown in SCE UI. */
+export type ProgrammeTemplateCategoryContext = "G" | "F" | "E_FF12";
+
+export type ProgrammeTemplateLookupKey = {
+  categoryContext: ProgrammeTemplateCategoryContext | null;
+  participantCount: number;
+  programmeFamily?: ProgrammeTemplateFamily;
+  version?: number;
+};
+
 export type TemplateParticipantSlotId =
   | "A"
   | "B"
@@ -70,6 +80,7 @@ export type TournamentProgrammeTemplate = {
   status: "ACTIVE" | "INACTIVE";
   displayName: string;
   programmeFamily: ProgrammeTemplateFamily;
+  categoryContext: ProgrammeTemplateCategoryContext;
   participantCount: number;
   participantSlots: readonly TemplateParticipantSlotId[];
   fields: readonly TemplateFieldDefinition[];

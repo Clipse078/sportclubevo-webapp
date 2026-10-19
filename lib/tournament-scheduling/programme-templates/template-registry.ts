@@ -1,5 +1,9 @@
 import { E_FF12_ROTATION_TEMPLATES } from "./catalogue/e-ff12-rotation";
-import type { ProgrammeTemplateFamily, TournamentProgrammeTemplate } from "./types";
+import type {
+  ProgrammeTemplateCategoryContext,
+  ProgrammeTemplateFamily,
+  TournamentProgrammeTemplate,
+} from "./types";
 
 const ALL_ACTIVE_TEMPLATES: readonly TournamentProgrammeTemplate[] = [
   ...E_FF12_ROTATION_TEMPLATES,
@@ -8,6 +12,7 @@ const ALL_ACTIVE_TEMPLATES: readonly TournamentProgrammeTemplate[] = [
 export function listProgrammeTemplates(input?: {
   participantCount?: number;
   programmeFamily?: ProgrammeTemplateFamily;
+  categoryContext?: ProgrammeTemplateCategoryContext;
 }): TournamentProgrammeTemplate[] {
   let rows = [...ALL_ACTIVE_TEMPLATES];
   if (input?.participantCount !== undefined) {
@@ -15,6 +20,9 @@ export function listProgrammeTemplates(input?: {
   }
   if (input?.programmeFamily !== undefined) {
     rows = rows.filter((t) => t.programmeFamily === input.programmeFamily);
+  }
+  if (input?.categoryContext !== undefined) {
+    rows = rows.filter((t) => t.categoryContext === input.categoryContext);
   }
   return rows.sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -34,8 +42,16 @@ export function getProgrammeTemplateById(
 export function getRecommendedProgrammeTemplate(input: {
   participantCount: number;
   programmeFamily?: ProgrammeTemplateFamily;
+  categoryContext?: ProgrammeTemplateCategoryContext | null;
 }): TournamentProgrammeTemplate | null {
-  const candidates = listProgrammeTemplates(input);
+  if (input.categoryContext == null) {
+    return null;
+  }
+  const candidates = listProgrammeTemplates({
+    participantCount: input.participantCount,
+    programmeFamily: input.programmeFamily,
+    categoryContext: input.categoryContext,
+  });
   if (candidates.length === 0) return null;
   if (candidates.length === 1) return candidates[0]!;
   // Deterministic: same participant count + family → lexicographically first stable id.
