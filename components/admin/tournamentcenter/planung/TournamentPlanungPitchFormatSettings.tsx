@@ -55,7 +55,7 @@ export default function TournamentPlanungPitchFormatSettings({
       <div>
         <h3 className="text-sm font-semibold text-[var(--foreground)]">Turnierfelder</h3>
         <p className="mt-1 text-sm text-[var(--text-2)]">
-          Optionale Spielform pro logischem Feld — ändert den Spielplan nicht.
+          Optional kannst du für jedes Turnierfeld eine Spielform festlegen. Dies ändert den Spielplan nicht.
         </p>
       </div>
       <ul className="space-y-3">
