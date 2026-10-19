@@ -50,7 +50,7 @@ Long-term canonical pipeline:
 | Package | Scope |
 | --- | --- |
 | **02A** | Programme architecture & format model — **this slice** ([doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
-| **02B** | Playing formats & tournament pitches (persistence + Creator pitch format) |
+| **02B** | Playing formats & tournament pitches — optional pitch format, persistence, no mandatory format for normal tournaments (**NOT STARTED**) |
 | **02C** | Participant playing units (full team / subteams, capacity rules) |
 | **02D** | Rotation generator (first-class format) |
 | **02E** | Stations & alternative activities |
@@ -84,4 +84,5 @@ Team-Spielplan is a **derived view** — never a separately persisted schedule.
 | Flag | Value |
 | --- | --- |
 | **TOURNAMENT_PLANNER_02_STARTED** | **YES** (02A) |
-| **02A_STATUS** | **OPEN — IN REVIEW** ([02A doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
+| **02A_STATUS** | **CLOSED / ACCEPTED / MERGED** (PR **#874**, [02A doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
+| **NEXT_PACKAGE** | **02B** — Playing Formats & Tournament Pitches (**NOT STARTED**) |

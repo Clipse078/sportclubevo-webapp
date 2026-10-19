@@ -5,12 +5,12 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02A` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01M`](./SCE-TOURNAMENT-PLANNER-01M.md) — **CLOSED / ACCEPTED / MERGED** (PR **#873**) |
-| **Status** | **OPEN — IN REVIEW** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#874**) |
 | **Branch** | `cursor/sce-tournament-planner-02a-programme-architecture` |
 | **STAGE baseline** | `7c4af4a3e42499132ec797b2358b6ac9505a513c` |
 | **ADR** | [`ADR-015`](./05-architecture-decisions.md#adr-015--tournament-programme-architecture-and-generic-playing-format) |
 | **Contracts** | `lib/tournament-scheduling/tournament-programme-architecture.ts` |
-| **Next package** | **02B** — Playing Formats & Tournament Pitches (**NOT_STARTED**) |
+| **Next package** | **02B** — Playing Formats & Tournament Pitches (**NOT STARTED**) |
 
 ## Preflight
 
@@ -69,14 +69,36 @@ Binding stage order (`TOURNAMENT_PROGRAMME_PIPELINE_STAGES`):
 
 Display is **metadata**: default label `${n}v${n}` via `formatPlayersPerSideDisplayLabel`.
 
-### Validation band (02A contract)
+### Playing format optionality (permanent product rule)
+
+| Flag | Value |
+| --- | --- |
+| **PLAYING_FORMAT_OPTIONAL_BY_DEFAULT** | **YES** |
+| **PLAYING_FORMAT_REQUIRED_GLOBALLY** | **NO** |
+| **UNSPECIFIED_PLAYING_FORMAT_VALID** | **YES** |
+| **DEFAULT_PLAYING_FORMAT_ASSIGNED** | **NO** |
+| **SILENT_FORMAT_INFERENCE** | **NO** |
+| **NORMAL_TOURNAMENT_FORMAT_REQUIRED** | **NO** |
+| **LEGACY_TOURNAMENT_FORMAT_REQUIRED** | **NO** |
+| **ADVANCED_FORMAT_MAY_REQUIRE_PLAYING_FORMAT** | **YES** |
+
+`PlayingFormat` is an **optional** capability on logical `TournamentPitch`. Organisers may run a complete tournament with every pitch **unspecified** (Feld 1/2/3 with no `playersPerSide`). Mixed specified/unspecified pitches per tournament is valid.
+
+**Tournament pitch capability (optional)** is distinct from **selected advanced programme format requirements**: Round Robin, Smart Mix, Groups, Knockout, and Group+Knockout must **not** require `PlayingFormat` merely because 02 exists. Future **ROTATION** (or similar) may require format on relevant pitches when its configuration semantically depends on it — that validation belongs to the programme format, not global pitch rules.
+
+No mandatory Creator selector, no arbitrary default (e.g. 5v5), no silent inference from age category, team name, or pitch label.
+
+### Validation band (02A contract — technical, not product max)
 
 | Constant | Value | Rationale |
 | --- | --- | --- |
-| `PLAYERS_PER_SIDE_MIN` | **1** | Sport-extensible floor (small-sided / future formats) |
-| `PLAYERS_PER_SIDE_MAX` | **22** | Covers 11v11 with headroom; not Swiss-only |
+| `PLAYERS_PER_SIDE_MIN` | **1** | Defensive technical floor |
+| `PLAYERS_PER_SIDE_MAX` / `PLAYERS_PER_SIDE_TECHNICAL_BOUND_MAX` | **22** | Defensive architecture bound (11v11 headroom); **not** a permanent sporting/business maximum |
+| `PLAYERS_PER_SIDE_PRODUCT_MAX` | **(none in 02A)** | Product caps deferred — **02B** may revise bounds or strategy |
+| `TECHNICAL_BOUND_IS_PRODUCT_RULE` | **NO** |
+| `BOUND_REVIEW_DEFERRED_TO_02B` | **YES** |
 
-Presets may recommend common values (3, 4, 5, 6, 7, 9, 11) without encoding them as the only legal set.
+Presets may **suggest** common values (3, 4, 5, 6, 7, 9, 11) without encoding them as the only legal set.
 
 ### Display vs scheduling semantics
 
@@ -97,7 +119,7 @@ Permanent 01 invariant preserved:
 | **FACILITY_RESOURCE_SEPARATE** | **YES** |
 | **MULTIPLE_LOGICAL_PITCHES_PER_PHYSICAL_RESOURCE_FUTURE_READY** | **YES** |
 
-Example: one `FacilityResource` “Kunstrasen 2” may host logical pitches “Feld 1” (3v3), “Feld 2” (3v3), “Feld 3” (6v6).
+Example: one `FacilityResource` “Kunstrasen 2” may host logical pitches “Feld 1” (3v3), “Feld 2” (3v3), “Feld 3” (6v6), or equally “Feld 1/2/3” all **unspecified**.
 
 Future relationship:
 
@@ -242,11 +264,12 @@ Creator shows friendly labels (Turnierformat, Teams, Spielfelder with “Feld 1 
 | --- | --- |
 | **EXISTING_TOURNAMENTS_VALID** | **YES** |
 | **PLAYING_FORMAT_REQUIRED_FOR_LEGACY_TOURNAMENTS** | **NO** |
+| **NORMAL_TOURNAMENT_FORMAT_REQUIRED** | **NO** |
 | **UNSPECIFIED_FORMAT_BACKWARD_COMPATIBLE** | **YES** |
 
-`PlayingFormatSpecificationState.UNSPECIFIED` is valid until an advanced format explicitly requires format metadata (02B default strategy).
+`PlayingFormatSpecificationState.UNSPECIFIED` is valid for normal and legacy tournaments until an **explicitly selected** advanced programme format requires format metadata.
 
-Round Robin / Smart Mix tournaments must not suddenly require 3v3/5v5 configuration.
+Round Robin / Smart Mix / Groups / Knockout paths must not suddenly require 3v3/5v5 configuration.
 
 ## 14. Data model review
 
@@ -275,7 +298,16 @@ See `lib/tournament-scheduling/__tests__/tournament-programme-architecture-02a.t
 | `TOURNAMENT_PITCH_IS_LOGICAL` | YES |
 | `TOURNAMENT_PITCH_NEQ_FACILITY_RESOURCE` | YES |
 | `PLAYING_FORMAT_GENERIC` | YES |
+| `PLAYING_FORMAT_OPTIONAL_BY_DEFAULT` | YES |
+| `PLAYING_FORMAT_REQUIRED_GLOBALLY` | NO |
+| `UNSPECIFIED_PLAYING_FORMAT_VALID` | YES |
+| `DEFAULT_PLAYING_FORMAT_ASSIGNED` | NO |
+| `SILENT_FORMAT_INFERENCE` | NO |
+| `NORMAL_TOURNAMENT_FORMAT_REQUIRED` | NO |
+| `LEGACY_TOURNAMENT_FORMAT_REQUIRED` | NO |
+| `ADVANCED_FORMAT_MAY_REQUIRE_PLAYING_FORMAT` | YES |
 | `PLAYING_FORMAT_HARD_CODED_SWISS_ENUM` | NO |
+| `PLAYING_FORMAT_HARD_CODED_3V3_6V6_ENUM` | NO |
 | `ROTATION_FIRST_CLASS_FUTURE_FORMAT` | YES |
 | `ROTATION_FORCED_INTO_SMART_MIX` | NO |
 | `PARTICIPANT_NEQ_PLAYING_UNIT` | YES |
@@ -310,6 +342,10 @@ No substantial new UI in 02A.
 | **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
 | **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
 
-## 20. Verification (02A delivery)
+## 20. Package 02B scope (not started)
 
-Run Tournament Planner regression gate plus 02A tests — recorded in PR body after CI/local run.
+02B owns: `PlayingFormat` persistence, optional `TournamentPitch` playing format, `playersPerSide` configuration UI, **no** mandatory format for normal tournaments, **no** arbitrary default, **no** silent inference, format-specific validation only where semantically necessary, and Creator/Planung adoption where appropriate. Do **not** use a binary checkbox “Spielform verwenden” when progressive disclosure or optional fields suffice; canonical SCE toggles only for true ON/OFF settings.
+
+## 21. Verification (02A delivery)
+
+Run Tournament Planner regression gate plus 02A tests — recorded in PR **#874** closure.

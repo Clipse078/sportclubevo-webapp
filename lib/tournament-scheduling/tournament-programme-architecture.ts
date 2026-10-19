@@ -43,11 +43,32 @@ export const MULTIPLE_LOGICAL_PITCHES_PER_PHYSICAL_RESOURCE_FUTURE_READY = true;
  */
 export const PLAYING_FORMAT_GENERIC = true;
 export const PLAYING_FORMAT_HARD_CODED_SWISS_ENUM = false;
+export const PLAYING_FORMAT_HARD_CODED_3V3_6V6_ENUM = false;
 export const ARBITRARY_PLAYERS_PER_SIDE_PRESET_ONLY = false;
 
-/** Inclusive validation band for user-defined formats (02B persistence + UI). */
+/** Permanent product rule: PlayingFormat is optional on TournamentPitch unless a selected programme format requires it. */
+export const PLAYING_FORMAT_OPTIONAL_BY_DEFAULT = true;
+export const PLAYING_FORMAT_REQUIRED_GLOBALLY = false;
+export const UNSPECIFIED_PLAYING_FORMAT_VALID = true;
+export const DEFAULT_PLAYING_FORMAT_ASSIGNED = false;
+export const SILENT_FORMAT_INFERENCE = false;
+export const NORMAL_TOURNAMENT_FORMAT_REQUIRED = false;
+export const LEGACY_TOURNAMENT_FORMAT_REQUIRED = false;
+/** Future ROTATION (etc.) may require format on relevant pitches — not RR/Smart Mix/Groups/KO by default. */
+export const ADVANCED_FORMAT_MAY_REQUIRE_PLAYING_FORMAT = true;
+
+/**
+ * Defensive technical validation band for user-defined formats (02B persistence + UI).
+ * Not a sporting/business product maximum — 02B may revise bounds or strategy.
+ */
 export const PLAYERS_PER_SIDE_MIN = 1;
 export const PLAYERS_PER_SIDE_MAX = 22;
+export const PLAYERS_PER_SIDE_TECHNICAL_BOUND_MIN = PLAYERS_PER_SIDE_MIN;
+export const PLAYERS_PER_SIDE_TECHNICAL_BOUND_MAX = PLAYERS_PER_SIDE_MAX;
+/** No fixed product cap in 02A — federation/sport limits belong in presets or format-specific rules. */
+export const PLAYERS_PER_SIDE_PRODUCT_MAX: null = null;
+export const TECHNICAL_BOUND_IS_PRODUCT_RULE = false;
+export const PLAYERS_PER_SIDE_BOUND_REVIEW_DEFERRED_TO_02B = true;
 
 export type PlayingFormatSpecificationState = "UNSPECIFIED" | "SPECIFIED";
 
@@ -70,6 +91,7 @@ export interface PlayingFormatContract {
 /** Legacy / Round Robin / Smart Mix tournaments may omit explicit playing format (02B default). */
 export const UNSPECIFIED_PLAYING_FORMAT_BACKWARD_COMPATIBLE = true;
 export const PLAYING_FORMAT_REQUIRED_FOR_LEGACY_TOURNAMENTS = false;
+export const EXISTING_TOURNAMENTS_VALID = true;
 
 /** Future: each TournamentPitch may reference a PlayingFormat (02B). */
 export const TOURNAMENT_PITCH_PLAYING_FORMAT_RELATIONSHIP_DEFINED = true;
@@ -229,7 +251,8 @@ export const SFV_SPECIFIC_TYPES_IN_CORE_DOMAIN = false;
 /** Package boundaries 02A–02H (documentation map — implementation per slice). */
 export const TOURNAMENT_PLANNER_02_PACKAGES = {
   "02A": "Programme architecture & format model",
-  "02B": "Playing formats & tournament pitches",
+  "02B":
+    "Playing formats & tournament pitches — optional pitch PlayingFormat, playersPerSide persistence, no mandatory format for normal tournaments, no default/silent inference, format-specific validation only when semantically required, Creator/Planung adoption",
   "02C": "Participant playing units",
   "02D": "Rotation generator",
   "02E": "Stations & alternative activities",
