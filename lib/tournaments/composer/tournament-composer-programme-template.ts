@@ -9,11 +9,7 @@ import {
 } from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
 import type { TournamentProgrammeTemplate } from "@/lib/tournament-scheduling/programme-templates/types";
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
-import {
-  normalizeComposerMainPauseDraft,
-  resolveComposerMainPauseUtcWindow,
-  validateComposerMainPauseWindow,
-} from "./tournament-composer-main-pause";
+import { normalizeComposerMainPauseDraft } from "./tournament-composer-main-pause";
 import type {
   TournamentComposerPitchDraft,
   TournamentComposerPlannerDraft,
