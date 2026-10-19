@@ -91,7 +91,26 @@ PlayingFormat is metadata for normal TP01 formats until an advanced programme fo
 | ROTATION generator | **02D** |
 | `TournamentStation` / in-round phases | **02E / 02F** |
 
+## STAGE deployment (required before 02B app code)
+
+02B Prisma client **selects** `TournamentPitch.playersPerSide`. If the app is deployed without migration `20261019120000_sce_tournament_planner_02b_playing_format`, tournament **edit** fails server-side (`P2022` column not found) when `loadTournamentPlanungViewModel` runs.
+
+Apply on designated STAGE only:
+
+```bash
+APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+  ./node_modules/.bin/tsx scripts/sce-tournament-planner-02b-stage-migration-verify.ts --apply
+```
+
+Verify:
+
+```bash
+APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+  ./node_modules/.bin/tsx scripts/sce-tournament-planner-02b-stage-migration-verify.ts
+```
+
 ## Tests
 
 - `lib/tournament-scheduling/__tests__/tournament-pitch-playing-format-02b.test.ts`
 - `lib/tournaments/__tests__/tournament-planner-02b-roadmap.test.ts`
+- `lib/tournaments/__tests__/tournament-edit-page-02b-migration-regression.test.ts`
