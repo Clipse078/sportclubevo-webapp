@@ -21,6 +21,7 @@ import type { TournamentComposerPlannerDraft } from "./tournament-composer-plann
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
 import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
 import { resolveComposerMainPauseUtcWindow } from "./tournament-composer-main-pause";
+import { syncComposerValidatedScheduleFromDraft } from "./sync-composer-schedule-preview-persistence";
 
 export async function persistTournamentPlannerFromComposer(input: {
   tenantId: string;
@@ -253,4 +254,12 @@ export async function persistTournamentPlannerFromComposer(input: {
     });
   }
 
+  await syncComposerValidatedScheduleFromDraft({
+    tenantId,
+    tournamentId,
+    payload,
+    planner,
+    pitchIdByLocalId: pitchIdByLocal,
+    tenantTimeZone,
+  });
 }

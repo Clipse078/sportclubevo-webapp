@@ -7,11 +7,11 @@ import { createDefaultTournamentComposerPlannerDraft } from "../tournament-compo
 import { createEmptyTournamentComposerDraft } from "../tournament-composer-draft-types";
 import { hydrateTournamentComposerFormFromDraft } from "../hydrate-tournament-composer-form-from-draft";
 import {
-  buildComposerScheduleFitView,
   reconcileComposerPlannerForParticipants,
   resolveComposerProgrammeTemplate,
   restoreComposerProgrammeProposal,
 } from "../tournament-composer-programme-template";
+import { buildComposerScheduleFitView } from "../tournament-composer-schedule-fit";
 import {
   composerPitchDraftNeedsProposalMaterialisation,
   isGenericDefaultComposerPitchDraft,
@@ -183,14 +183,29 @@ describe("SCE-TOURNAMENT-PLANNER-02D R4 PO UAT", () => {
       participantCount: 6,
       categoryContext: "F",
     });
+    const draft = createEmptyTournamentComposerDraft();
+    draft.homeAway = "HOME";
+    draft.startAt = "2026-06-01T10:00";
+    draft.endAt = "2026-06-01T12:00";
+    draft.participants = Array.from({ length: 6 }, (_, i) => ({
+      localId: `p${i}`,
+      kind: "TEAM" as const,
+      teamId: "team-f1",
+      displayName: `T${i + 1}`,
+      subLabel: null,
+      dressingRooms: [],
+    }));
+    draft.planner = planner;
     const view = buildComposerScheduleFitView({
       participantCount: 6,
       categoryContext: "F",
-      startAt: "2026-06-01T10:00",
-      endAt: "2026-06-01T12:00",
+      startAt: draft.startAt,
+      endAt: draft.endAt,
       planner,
+      payload: draft,
     });
-    expect(view.headline).toMatch(/Feldaufteilung/);
+    expect(view.status).toBe("PASS");
+    expect(view.headline).toMatch(/passt/);
     expect(view.headline).not.toMatch(/TP01/i);
 
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");

@@ -3,11 +3,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { E_FF12_ROTATION_4_TEMPLATE } from "@/lib/tournament-scheduling/programme-templates/catalogue/e-ff12-rotation";
 import {
-  buildComposerScheduleFitView,
   materializeComposerPitchesFromTemplate,
   reconcileComposerPlannerForParticipants,
   resolveComposerProgrammeTemplate,
 } from "../tournament-composer-programme-template";
+import { buildComposerScheduleFitView } from "../tournament-composer-schedule-fit";
 import {
   addComposerPlayingUnitSubunit,
   splitComposerParticipantIntoDefaultSubunits,

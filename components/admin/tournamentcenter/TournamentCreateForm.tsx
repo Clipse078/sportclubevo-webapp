@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import SceActivityComposer from "@/components/sce/activity-composer/SceActivityComposer";
 import type { SceActivityCreateDefinition } from "@/lib/sce/activity-composer/types";
@@ -65,10 +65,8 @@ import {
   TournamentComposerTurnierformatPanel,
 } from "@/components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels";
 import TournamentComposerPlayingUnitsPanel from "@/components/admin/tournamentcenter/composer/TournamentComposerPlayingUnitsPanel";
-import {
-  countComposerCuratedTemplateParticipants,
-  reconcileComposerPlannerForParticipants,
-} from "@/lib/tournaments/composer/tournament-composer-programme-template";
+import { countComposerCuratedTemplateParticipants } from "@/lib/tournaments/composer/tournament-composer-programme-template";
+import { resolveEffectiveComposerPlanner } from "@/lib/tournaments/composer/resolve-effective-composer-planner";
 import {
   buildTeamAgeGroupLookup,
   resolveComposerProgrammeCategoryContext,
@@ -222,17 +220,15 @@ export default function TournamentCreateForm({
     return resolveComposerProgrammeCategoryContext({ participants, teamAgeGroupById }).categoryContext;
   }, [participants, teamAgeGroupById]);
 
-  useLayoutEffect(() => {
-    if (homeAway !== "HOME") return;
-    setPlanner((prev) => {
-      if (!prev) return prev;
-      return reconcileComposerPlannerForParticipants({
-        planner: prev,
-        participantCount: countComposerCuratedTemplateParticipants(participants),
-        categoryContext: programmeCategoryContext,
-      });
+  const effectivePlanner = useMemo(() => {
+    if (homeAway !== "HOME" || !planner) return null;
+    return resolveEffectiveComposerPlanner({
+      planner,
+      participantCount: countComposerCuratedTemplateParticipants(participants),
+      categoryContext: programmeCategoryContext,
+      preserveUserPitchEdits: planner.pitchesUserCustomized === true,
     });
-  }, [homeAway, participants, programmeCategoryContext]);
+  }, [homeAway, planner, participants, programmeCategoryContext]);
 
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
@@ -286,7 +282,7 @@ export default function TournamentCreateForm({
         wochenplanVisible,
         teamPageVisible,
       },
-      planner: homeAway === "HOME" ? planner : null,
+      planner: homeAway === "HOME" ? effectivePlanner : null,
     };
   }, [
     seasonId,
@@ -308,7 +304,7 @@ export default function TournamentCreateForm({
     homepageVisible,
     wochenplanVisible,
     teamPageVisible,
-    planner,
+    effectivePlanner,
   ]);
 
   const composerDraft = useMemo(() => buildPayload(), [buildPayload]);
@@ -460,7 +456,7 @@ export default function TournamentCreateForm({
       );
       setPlanner(
         hydrated.homeAway === "HOME"
-          ? reconcileComposerPlannerForParticipants({
+          ? resolveEffectiveComposerPlanner({
               planner: hydrated.planner ?? createDefaultTournamentComposerPlannerDraft(),
               participantCount: countComposerCuratedTemplateParticipants(hydrated.participants),
               categoryContext: resolveComposerProgrammeCategoryContext({
@@ -904,14 +900,14 @@ export default function TournamentCreateForm({
   );
 
   const homeTabs =
-    planner != null
+    effectivePlanner != null
       ? [
           { key: "turnierformat" as const, label: "Turnierformat", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerTurnierformatPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerTurnierformatPanel planner={effectivePlanner} participantCount={countComposerCuratedTemplateParticipants(participants)} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielfelderPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielfelderPanel planner={effectivePlanner} participantCount={countComposerCuratedTemplateParticipants(participants)} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielplanPanel payload={composerDraft} planner={planner} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielplanPanel payload={composerDraft} planner={effectivePlanner} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
         ]
       : [];
 

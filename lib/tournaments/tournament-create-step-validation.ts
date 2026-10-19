@@ -13,6 +13,7 @@ import {
   isAwayTournamentOrganiserMissing,
 } from "@/lib/tournaments/composer/tournament-composer-organiser";
 import { validateHomePlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-validation";
+import { buildTournamentSchedulePreview } from "@/lib/tournaments/composer/tournament-composer-schedule-preview";
 
 function teamsStepInvalid(draft: TournamentComposerDraftPayload): boolean {
   const minParticipants = draft.homeAway === "HOME" ? 2 : 1;
@@ -103,6 +104,33 @@ function homePlannerStepInvalid(draft: TournamentComposerDraftPayload): boolean 
   return Object.keys(validateHomePlannerDraft(draft)).length > 0;
 }
 
+function buildSpielplanFieldErrors(draft: TournamentComposerDraftPayload): Record<string, string> {
+  const fieldErrors = validateHomePlannerDraft(draft);
+  if (draft.homeAway !== "HOME" || !draft.planner) {
+    return fieldErrors;
+  }
+  const preview = buildTournamentSchedulePreview({
+    payload: draft,
+    categoryContext: draft.planner.programmeProposalCategoryContext ?? null,
+  });
+  if (preview.status === "ERROR") {
+    fieldErrors.schedulePreview =
+      preview.errorMessage ?? "Der Spielplan konnte nicht erstellt werden.";
+  } else if (preview.status === "INCOMPLETE") {
+    fieldErrors.schedulePreview =
+      preview.errorMessage ?? "Spielplanvorschau ist noch unvollständig.";
+  } else if (preview.fitStatus === "FAIL") {
+    fieldErrors.scheduleFit =
+      preview.fitHeadline ?? "Der Spielplan passt nicht in die geplante Turnierzeit.";
+  }
+  return fieldErrors;
+}
+
+function spielplanStepInvalid(draft: TournamentComposerDraftPayload): boolean {
+  if (draft.homeAway !== "HOME") return false;
+  return Object.keys(buildSpielplanFieldErrors(draft)).length > 0;
+}
+
 export function validateTournamentCreateWorkflowStep(
   draft: TournamentComposerDraftPayload,
   stepKey: TournamentCreateTabId,
@@ -119,10 +147,15 @@ export function validateTournamentCreateWorkflowStep(
       break;
     case "turnierformat":
     case "spielfelder":
-    case "spielplan":
       if (homePlannerStepInvalid(draft)) {
         tabErrors[stepKey] = true;
         fieldErrors = validateHomePlannerDraft(draft);
+      }
+      break;
+    case "spielplan":
+      if (spielplanStepInvalid(draft)) {
+        tabErrors.spielplan = true;
+        fieldErrors = buildSpielplanFieldErrors(draft);
       }
       break;
     case "termin":
@@ -157,8 +190,9 @@ export function resolveTournamentCreateStepValid(
       return !teamsStepInvalid(draft);
     case "turnierformat":
     case "spielfelder":
-    case "spielplan":
       return draft.homeAway !== "HOME" || !homePlannerStepInvalid(draft);
+    case "spielplan":
+      return draft.homeAway !== "HOME" || !spielplanStepInvalid(draft);
     case "termin":
       return !terminStepInvalid(draft) && Object.keys(buildTerminFieldErrors(draft)).length === 0;
     case "ressourcen":

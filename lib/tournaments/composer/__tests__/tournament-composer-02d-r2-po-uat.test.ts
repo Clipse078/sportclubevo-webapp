@@ -13,12 +13,12 @@ import { createDefaultTournamentComposerPlannerDraft } from "../tournament-compo
 import { createEmptyTournamentComposerDraft } from "../tournament-composer-draft-types";
 import { validateComposerMainPauseWindow } from "../tournament-composer-main-pause";
 import {
-  buildComposerScheduleFitView,
   countComposerCuratedTemplateParticipants,
   materializeComposerPitchesFromTemplate,
   reconcileComposerPlannerForParticipants,
   resolveComposerProgrammeTemplate,
 } from "../tournament-composer-programme-template";
+import { buildComposerScheduleFitView } from "../tournament-composer-schedule-fit";
 
 const root = process.cwd();
 function read(rel: string): string {

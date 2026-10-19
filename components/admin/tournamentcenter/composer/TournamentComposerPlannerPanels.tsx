@@ -12,12 +12,13 @@ import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import TournamentComposerPitchPlayingFormatField from "./TournamentComposerPitchPlayingFormatField";
 import {
-  buildComposerScheduleFitView,
   countComposerCuratedTemplateParticipants,
   resolveComposerProgrammeTemplate,
   restoreComposerProgrammeProposal,
 } from "@/lib/tournaments/composer/tournament-composer-programme-template";
+import { buildComposerScheduleFitView } from "@/lib/tournaments/composer/tournament-composer-schedule-fit";
 import { normalizeComposerMainPauseDraft } from "@/lib/tournaments/composer/tournament-composer-main-pause";
+import { buildTournamentSchedulePreview } from "@/lib/tournaments/composer/tournament-composer-schedule-preview";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
 
@@ -37,11 +38,15 @@ function ScheduleFitPanel({
             startAt: payload.startAt,
             endAt: payload.endAt,
             planner: payload.planner,
+            payload,
           })
         : null,
     [payload, categoryContext],
   );
   if (!view) return null;
+
+  const statusIcon =
+    view.status === "PASS" ? "✓" : view.status === "FAIL" ? "!" : "…";
 
   return (
     <div
@@ -49,10 +54,104 @@ function ScheduleFitPanel({
       data-testid="tournament-composer-schedule-fit"
       role={view.status === "FAIL" ? "alert" : "status"}
     >
-      <p className="text-sm font-semibold text-[var(--foreground)]">{view.headline}</p>
+      <p className="text-sm font-semibold text-[var(--foreground)]">
+        <span aria-hidden>{statusIcon}</span> {view.headline}
+      </p>
       {view.detail ? (
         <p className="whitespace-pre-line text-sm text-[var(--text-2)]">{view.detail}</p>
       ) : null}
+    </div>
+  );
+}
+
+function ComposerSchedulePreviewPanel({
+  payload,
+  categoryContext,
+}: {
+  payload: TournamentComposerDraftPayload;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
+}) {
+  const preview = useMemo(
+    () => buildTournamentSchedulePreview({ payload, categoryContext }),
+    [payload, categoryContext],
+  );
+
+  if (preview.status === "INCOMPLETE") {
+    return (
+      <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-schedule-preview-empty">
+        {preview.errorMessage ?? preview.fitHeadline}
+      </p>
+    );
+  }
+
+  if (preview.status === "ERROR") {
+    return (
+      <p
+        role="alert"
+        className="text-sm text-[var(--sce-danger)]"
+        data-testid="tournament-composer-schedule-preview-error"
+      >
+        {preview.errorMessage ?? preview.fitHeadline}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4" data-testid="tournament-composer-schedule-preview">
+      {preview.tournamentStartLabel ? (
+        <p className="text-sm text-[var(--text-2)]">
+          <span className="font-medium text-[var(--foreground)]">{preview.tournamentStartLabel}</span> Start
+          {preview.pauseLabel ? (
+            <>
+              {" · "}
+              <span className="font-medium text-[var(--foreground)]">{preview.pauseLabel}</span> Pause
+            </>
+          ) : null}
+          {preview.programmeEndLabel ? (
+            <>
+              {" · "}
+              <span className="font-medium text-[var(--foreground)]">{preview.programmeEndLabel}</span> Ende
+            </>
+          ) : null}
+        </p>
+      ) : null}
+
+      <div className="space-y-5" role="list" aria-label="Spielplanvorschau">
+        {preview.rounds.map((round) => (
+          <section key={round.roundNumber} role="listitem" className="space-y-2">
+            <div className="flex items-baseline justify-between gap-2 border-b border-[var(--border)] pb-1">
+              <h4 className="text-sm font-semibold text-[var(--foreground)]">Runde {round.roundNumber}</h4>
+              <time className="text-xs font-medium text-[var(--muted)]" dateTime="">
+                {round.roundStartLabel}
+              </time>
+            </div>
+            <ul className="space-y-1.5">
+              {round.fixtures.map((fixture) => (
+                <li
+                  key={fixture.fixtureKey}
+                  className="grid gap-1 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
+                  data-testid={`tournament-composer-schedule-fixture-${fixture.fixtureKey}`}
+                >
+                  <span className="font-medium text-[var(--foreground)]">{fixture.pitchLabel}</span>
+                  <span className="text-[var(--text-2)]">
+                    {fixture.homeDisplayName} – {fixture.awayDisplayName}
+                  </span>
+                  <span className="text-xs text-[var(--muted)]">
+                    {fixture.playersPerSide != null
+                      ? `${fixture.playersPerSide}v${fixture.playersPerSide}`
+                      : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+        {preview.pauseLabel ? (
+          <p className="text-sm font-medium text-[var(--foreground)]">
+            Pause <span className="text-[var(--text-2)]">{preview.pauseLabel}</span>
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -95,11 +194,6 @@ export function TournamentComposerTurnierformatPanel({
                 ))}
               </ul>
             ) : null}
-            {resolved.proposal.kind === "FIELD_PROPOSAL_ONLY" ? (
-              <p className="text-sm text-[var(--text-2)]">
-                Der Spielplan wird aus der vorgeschlagenen bzw. angepassten Feldaufteilung erstellt.
-              </p>
-            ) : null}
           </div>
           {advancedFormatOpen ? (
             <TournamentComposerLegacyTurnierformatPanel
@@ -123,8 +217,8 @@ export function TournamentComposerTurnierformatPanel({
       ) : (
         <>
           <p className="mb-4 text-sm text-[var(--text-2)]">
-            Für diese Konstellation liegt kein kuratierter Spielplan vor. Wähle ein Turnierformat — SCE erstellt den
-            Spielplan danach automatisch.
+            Für diese Konstellation legst du Format und Felder fest — SCE erstellt deinen Spielplan direkt in der
+            Vorschau.
           </p>
           <TournamentComposerLegacyTurnierformatPanel
             planner={planner}
@@ -156,9 +250,15 @@ export function TournamentComposerSpielfelderPanel({
   return (
     <PlanningEditorSection testId="tournament-create-pitches-section">
       <PlanningEditorSectionHeading title="Spielfelder" />
-      <p className="mb-3 text-sm text-[var(--text-2)]">
-        SCE hat eine empfohlene Aufteilung für dieses Turnier vorbereitet — du kannst Felder jederzeit anpassen.
-      </p>
+      {hasProposal ? (
+        <p className="mb-3 text-sm text-[var(--text-2)]">
+          SCE hat eine empfohlene Aufteilung für dieses Turnier vorbereitet — du kannst Felder jederzeit anpassen.
+        </p>
+      ) : (
+        <p className="mb-3 text-sm text-[var(--text-2)]">
+          Lege Spielfelder und Spielarten fest — SCE übernimmt sie in den Spielplan.
+        </p>
+      )}
       {hasProposal ? (
         <div
           className="mb-4 space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4"
@@ -520,7 +620,15 @@ export function TournamentComposerSpielplanPanel({
       </div>
 
       <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Zeitprüfung</h3>
-      <ScheduleFitPanel payload={payload} categoryContext={categoryContext} />
+      <ScheduleFitPanel payload={{ ...payload, planner }} categoryContext={categoryContext} />
+
+      <h3 className="mb-3 mt-8 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+        Spielplanvorschau
+      </h3>
+      <ComposerSchedulePreviewPanel
+        payload={{ ...payload, planner }}
+        categoryContext={categoryContext}
+      />
     </PlanningEditorSection>
   );
 }
