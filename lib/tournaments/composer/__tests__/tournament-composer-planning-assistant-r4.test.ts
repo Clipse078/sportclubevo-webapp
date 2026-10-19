@@ -51,7 +51,9 @@ describe("01K-R4 — creator planning assistant", () => {
     );
     expect(source).not.toMatch(/smart-timing-feasibility/);
     expect(source).not.toMatch(/SCE Smart Timing/);
-    expect(source).not.toMatch(/Empfehlung übernehmen/);
+    const spielplanSection = source.slice(source.indexOf("export function TournamentComposerSpielplanPanel"));
+    expect(spielplanSection).not.toMatch(/Empfehlung übernehmen/);
     expect(source).toMatch(/tournament-composer-schedule-fit/);
+    expect(source).toMatch(/tournament-composer-proposal-refresh-accept/);
   });
 });

@@ -79,7 +79,9 @@ describe("01K-R4 — simplified Planung UX", () => {
   });
 
   it("offers predefined template fast path when participant count matches catalogue", () => {
-    const vm = buildTournamentPlanungViewModel(baseSnapshot({ participantCount: 4 }));
+    const vm = buildTournamentPlanungViewModel(
+      baseSnapshot({ participantCount: 4, programmeCategoryContext: "E_FF12" }),
+    );
     expect(vm.programmeTemplate?.available).toBe(true);
     expect(vm.actions.canInstantiatePredefinedTemplate).toBe(true);
     expect(vm.actions.canGenerate).toBe(false);

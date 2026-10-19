@@ -13,10 +13,16 @@ export function TournamentComposerLegacyTurnierformatPanel({
   planner,
   onChange,
   fieldErrors,
+  hideRoundRobinMeetings = false,
+  hideHomeAwayRelevance = false,
 }: {
   planner: TournamentComposerPlannerDraft;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
+  /** Curated youth proposal path — TP01 round-robin meeting count is predetermined. */
+  hideRoundRobinMeetings?: boolean;
+  /** Curated youth proposal path — neutral sides are implied. */
+  hideHomeAwayRelevance?: boolean;
 }) {
   return (
     <>
@@ -71,7 +77,7 @@ export function TournamentComposerLegacyTurnierformatPanel({
               testId="tournament-strategy-smart-mix"
             />
           </div>
-          {planner.groupMixStrategy === "ROUND_ROBIN" ? (
+          {planner.groupMixStrategy === "ROUND_ROBIN" && !hideRoundRobinMeetings ? (
             <label className="block max-w-xs space-y-2">
               <span className="fca-label">Spiele pro Gegner</span>
               <select
@@ -89,7 +95,7 @@ export function TournamentComposerLegacyTurnierformatPanel({
                 ))}
               </select>
             </label>
-          ) : (
+          ) : planner.groupMixStrategy === "SMART_MIX" ? (
             <label className="block max-w-xs space-y-2">
               <span className="fca-label">Spiele pro Team</span>
               <input
@@ -106,7 +112,7 @@ export function TournamentComposerLegacyTurnierformatPanel({
                 data-testid="tournament-smart-mix-target"
               />
             </label>
-          )}
+          ) : null}
           {planner.competitionFormat === "GROUP_PLUS_KNOCKOUT" ? (
             <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
               <label className="block space-y-2">
@@ -150,25 +156,27 @@ export function TournamentComposerLegacyTurnierformatPanel({
         </div>
       ) : null}
 
-      <div
-        className="mt-6 flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] p-4"
-        data-testid="tournament-home-away-relevance"
-      >
-        <div>
-          <p className="text-sm font-medium text-[var(--foreground)]">Heim-/Auswärtsseiten berücksichtigen</p>
-          <p className="mt-1 text-xs text-[var(--text-2)]">
-            Aus: neutrale Seiten. An: SCE balanciert Heim- und Auswärtsseiten in Paarungen.
-          </p>
+      {hideHomeAwayRelevance ? null : (
+        <div
+          className="mt-6 flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] p-4"
+          data-testid="tournament-home-away-relevance"
+        >
+          <div>
+            <p className="text-sm font-medium text-[var(--foreground)]">Heim-/Auswärtsseiten berücksichtigen</p>
+            <p className="mt-1 text-xs text-[var(--text-2)]">
+              Aus: neutrale Seiten. An: SCE balanciert Heim- und Auswärtsseiten in Paarungen.
+            </p>
+          </div>
+          <SwitchThumb
+            id="tournament-home-away-relevance"
+            checked={planner.homeAwayRelevance === "ON"}
+            onChange={(checked) =>
+              onChange((p) => ({ ...p, homeAwayRelevance: checked ? "ON" : "OFF" }))
+            }
+            aria-label="Heim-/Auswärtsseiten berücksichtigen"
+          />
         </div>
-        <SwitchThumb
-          id="tournament-home-away-relevance"
-          checked={planner.homeAwayRelevance === "ON"}
-          onChange={(checked) =>
-            onChange((p) => ({ ...p, homeAwayRelevance: checked ? "ON" : "OFF" }))
-          }
-          aria-label="Heim-/Auswärtsseiten berücksichtigen"
-        />
-      </div>
+      )}
       {fieldErrors?.planner ? (
         <p role="alert" className="mt-3 text-sm text-[var(--sce-danger)]">
           {fieldErrors.planner}

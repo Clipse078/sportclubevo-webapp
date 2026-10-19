@@ -35,6 +35,7 @@ import {
 } from "./planung-scheduling-settings-presentation";
 import { resolveTournamentPitchColumnPresentation } from "./tournament-pitch-presentation";
 import { buildPlanungProgrammeTemplatePresentation } from "@/lib/tournament-scheduling/programme-templates/planung-template-presentation";
+import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import type {
   TournamentPlanungAvailability,
   TournamentPlanungBoardCell,
@@ -132,6 +133,7 @@ export type PlanungDomainSnapshot = {
   };
   scheduleConsistencyStatus: PlanungScheduleConsistencyStatus | null;
   fixtureHomeAwayRelevance: "ON" | "OFF";
+  programmeCategoryContext?: ProgrammeTemplateCategoryContext | null;
 };
 
 function resolveAvailability(
@@ -434,6 +436,7 @@ export function buildTournamentPlanungViewModel(
     schedulePresence === "NONE" && snapshot.participantCount >= 2
       ? buildPlanungProgrammeTemplatePresentation({
           participantCount: snapshot.participantCount,
+          categoryContext: snapshot.programmeCategoryContext ?? null,
         })
       : null;
 

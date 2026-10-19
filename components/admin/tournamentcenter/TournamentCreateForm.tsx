@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import SceActivityComposer from "@/components/sce/activity-composer/SceActivityComposer";
 import type { SceActivityCreateDefinition } from "@/lib/sce/activity-composer/types";
@@ -222,7 +222,7 @@ export default function TournamentCreateForm({
     return resolveComposerProgrammeCategoryContext({ participants, teamAgeGroupById }).categoryContext;
   }, [participants, teamAgeGroupById]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (homeAway !== "HOME") return;
     setPlanner((prev) => {
       if (!prev) return prev;

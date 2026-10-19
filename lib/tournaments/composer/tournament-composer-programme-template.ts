@@ -20,6 +20,9 @@ import type {
 } from "./tournament-composer-planner-types";
 import {
   buildComposerProposalFingerprint,
+  composerPitchDraftNeedsProposalMaterialisation,
+  fieldProposalSignatureForProposal,
+  isGenericDefaultComposerPitchDraft,
   materializeComposerPitchesFromFieldProposal,
   resolveComposerProgrammeProposal,
   summarizeComposerPitchAllocation,
@@ -28,6 +31,7 @@ import {
 
 export type ComposerResolvedProgrammeTemplate = {
   proposal: ComposerProgrammeProposal;
+  proposedFieldCount: number;
   fieldCountLabel: string;
   playingFormatSummary: string;
   statusHeadline: string;
@@ -96,7 +100,8 @@ export function resolveComposerProgrammeTemplate(input: {
     statusDetail:
       proposal.kind === "FULL_TEMPLATE"
         ? "SCE hat für die ausgewählten Teams einen passenden Spielplan vorbereitet."
-        : "SCE schlägt eine bewährte Feldaufteilung vor. Der Spielplan wird nach Erstellung angepasst.",
+        : "SCE schlägt eine bewährte Feldaufteilung vor — der Spielplan entsteht daraus automatisch.",
+    proposedFieldCount: allocation.fieldCount,
     allocationSummaryLines: allocation.formatLines,
   };
 }
@@ -152,14 +157,35 @@ function materializePitchesFromProposal(
 function proposalTemplateIdentity(proposal: ComposerProgrammeProposal): {
   programmeTemplateId: string | null;
   programmeTemplateVersion: number | null;
+  fieldProposalSignature: string | null;
 } {
   if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
     return {
       programmeTemplateId: proposal.template.id,
       programmeTemplateVersion: proposal.template.version,
+      fieldProposalSignature: null,
     };
   }
-  return { programmeTemplateId: null, programmeTemplateVersion: null };
+  return {
+    programmeTemplateId: null,
+    programmeTemplateVersion: null,
+    fieldProposalSignature: fieldProposalSignatureForProposal(proposal),
+  };
+}
+
+function buildFingerprintForProposal(
+  proposal: ComposerProgrammeProposal,
+  participantCount: number,
+  categoryContext: ProgrammeTemplateCategoryContext | null,
+): string {
+  const identity = proposalTemplateIdentity(proposal);
+  return buildComposerProposalFingerprint({
+    categoryContext,
+    participantCount,
+    templateId: identity.programmeTemplateId,
+    templateVersion: identity.programmeTemplateVersion,
+    fieldProposalSignature: identity.fieldProposalSignature,
+  });
 }
 
 export function restoreComposerProgrammeProposal(input: {
@@ -183,12 +209,11 @@ export function restoreComposerProgrammeProposal(input: {
     };
   }
   const identity = proposalTemplateIdentity(proposal);
-  const fingerprint = buildComposerProposalFingerprint({
-    categoryContext: input.categoryContext,
-    participantCount: input.participantCount,
-    templateId: identity.programmeTemplateId,
-    templateVersion: identity.programmeTemplateVersion,
-  });
+  const fingerprint = buildFingerprintForProposal(
+    proposal,
+    input.participantCount,
+    input.categoryContext,
+  );
   const mainPause =
     proposal.kind === "FULL_TEMPLATE" && proposal.template
       ? defaultComposerMainPauseForTemplate(proposal.template)
@@ -220,12 +245,21 @@ export function reconcileComposerPlannerForParticipants(input: {
     categoryContext: input.categoryContext,
   });
   const identity = proposalTemplateIdentity(proposal);
-  const nextFingerprint = buildComposerProposalFingerprint({
-    categoryContext: input.categoryContext,
-    participantCount: input.participantCount,
-    templateId: identity.programmeTemplateId,
-    templateVersion: identity.programmeTemplateVersion,
+  const nextFingerprint = buildFingerprintForProposal(
+    proposal,
+    input.participantCount,
+    input.categoryContext,
+  );
+
+  const needsProposalMaterialisation = composerPitchDraftNeedsProposalMaterialisation({
+    proposal,
+    pitches: input.planner.pitches,
   });
+  const staleGenericMarkedCustomised =
+    input.planner.pitchesUserCustomized === true &&
+    isGenericDefaultComposerPitchDraft(input.planner.pitches);
+  const userCustomisedPitches =
+    input.planner.pitchesUserCustomized === true && !staleGenericMarkedCustomised;
 
   if (proposal.kind === "NONE") {
     return {
@@ -242,14 +276,14 @@ export function reconcileComposerPlannerForParticipants(input: {
     input.planner.programmeProposalFingerprint != null &&
     input.planner.programmeProposalFingerprint !== nextFingerprint;
 
-  if (input.planner.pitchesUserCustomized) {
+  if (userCustomisedPitches) {
     if (fingerprintChanged) {
       return {
         ...input.planner,
         programmeProposalCategoryContext: input.categoryContext,
         pendingProposalRefresh: {
           message:
-            "Die Teams oder der Kontext haben sich geändert. Möchtest du die empfohlene Feldaufteilung neu übernehmen?",
+            "Die Teams haben sich geändert. SCE hat eine neue Feldaufteilung vorbereitet.",
           nextFingerprint,
           nextTemplateId: identity.programmeTemplateId,
           nextTemplateVersion: identity.programmeTemplateVersion,
@@ -278,10 +312,15 @@ export function reconcileComposerPlannerForParticipants(input: {
         ? defaultComposerMainPauseForTemplate(proposal.template)
         : input.planner.mainPause;
 
-  const preservePitches = input.preserveUserPitchEdits === true && input.planner.pitchesUserCustomized;
+  const preservePitches = input.preserveUserPitchEdits === true && userCustomisedPitches;
   const pitches = preservePitches
     ? input.planner.pitches
-    : materializePitchesFromProposal(proposal, templateChanged ? undefined : input.planner.pitches);
+    : needsProposalMaterialisation || staleGenericMarkedCustomised
+      ? materializePitchesFromProposal(
+          proposal,
+          templateChanged || needsProposalMaterialisation ? undefined : input.planner.pitches,
+        )
+      : input.planner.pitches;
 
   return {
     ...input.planner,
@@ -398,13 +437,17 @@ export function buildComposerScheduleFitView(input: {
   });
   const roundCount = resolved?.proposal.template?.rounds.length ?? 0;
   if (roundCount < 1) {
+    const fieldProposalHeadline =
+      resolved?.proposal.kind === "FIELD_PROPOSAL_ONLY"
+        ? "SCE erstellt den Spielplan anhand deiner Feldaufteilung."
+        : "Für diese Konstellation legst du Format und Felder fest — SCE erstellt den Spielplan danach.";
     return {
       status: "INCOMPLETE",
       requiredMinutes: null,
       availableMinutes,
       reserveMinutes: null,
       deficitMinutes: null,
-      headline: "Kein vordefinierter Spielplan für diese Konstellation — TP01-Fallback nach Erstellung.",
+      headline: fieldProposalHeadline,
       detail: null,
       requiredEndLabel: null,
       tournamentEndLabel: formatClockFromUtcMs(end.getTime()),

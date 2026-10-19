@@ -14,18 +14,93 @@ export type ComposerProgrammeProposal = {
   fieldProposalPlayersPerSide: readonly number[] | null;
 };
 
+export function buildFieldProposalSignature(playersPerSide: readonly number[]): string {
+  return playersPerSide.join("-");
+}
+
 export function buildComposerProposalFingerprint(input: {
   categoryContext: ProgrammeTemplateCategoryContext | null;
   participantCount: number;
   templateId: string | null;
   templateVersion: number | null;
+  fieldProposalSignature?: string | null;
 }): string {
   return [
     input.categoryContext ?? "unknown",
     String(input.participantCount),
     input.templateId ?? "none",
     input.templateVersion != null ? String(input.templateVersion) : "none",
+    input.fieldProposalSignature ?? "none",
   ].join(":");
+}
+
+export function expectedPitchCountForProposal(proposal: ComposerProgrammeProposal): number {
+  if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
+    return proposal.template.fields.length;
+  }
+  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
+    return proposal.fieldProposalPlayersPerSide.length;
+  }
+  return 0;
+}
+
+export function expectedPlayersPerSideForProposal(
+  proposal: ComposerProgrammeProposal,
+): readonly number[] {
+  if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
+    return [...proposal.template.fields]
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((f) => f.playingFormat.playersPerSide);
+  }
+  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
+    return proposal.fieldProposalPlayersPerSide;
+  }
+  return [];
+}
+
+/** Default planner bootstrap before SCE proposal materialisation. */
+export function isGenericDefaultComposerPitchDraft(
+  pitches: readonly TournamentComposerPitchDraft[],
+): boolean {
+  if (pitches.length !== 1) return false;
+  const only = pitches[0];
+  if (!only) return false;
+  return (
+    only.playersPerSide == null &&
+    !only.templateFieldKey &&
+    only.userLabelCustomized !== true &&
+    /^Feld 1$/i.test(only.label.trim())
+  );
+}
+
+export function composerPitchDraftNeedsProposalMaterialisation(input: {
+  proposal: ComposerProgrammeProposal;
+  pitches: readonly TournamentComposerPitchDraft[];
+}): boolean {
+  const expectedCount = expectedPitchCountForProposal(input.proposal);
+  if (expectedCount < 1) return false;
+  if (isGenericDefaultComposerPitchDraft(input.pitches)) return true;
+  if (input.pitches.length !== expectedCount) return true;
+  if (input.pitches.some((pitch) => pitch.playersPerSide == null)) return true;
+
+  if (input.proposal.kind === "FULL_TEMPLATE" && input.proposal.template) {
+    const sortedFields = [...input.proposal.template.fields].sort(
+      (a, b) => a.displayOrder - b.displayOrder,
+    );
+    for (let i = 0; i < sortedFields.length; i += 1) {
+      if (input.pitches[i]?.templateFieldKey !== sortedFields[i]!.fieldKey) return true;
+    }
+  }
+  return false;
+}
+
+export function fieldProposalSignatureForProposal(
+  proposal: ComposerProgrammeProposal,
+): string | null {
+  if (proposal.kind !== "FIELD_PROPOSAL_ONLY" || !proposal.fieldProposalPlayersPerSide) {
+    return null;
+  }
+  return buildFieldProposalSignature(proposal.fieldProposalPlayersPerSide);
 }
 
 export function resolveComposerProgrammeProposal(input: {

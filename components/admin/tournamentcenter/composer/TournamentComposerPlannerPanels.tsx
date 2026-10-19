@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { TournamentComposerLegacyTurnierformatPanel } from "./TournamentComposerLegacyTurnierformatPanel";
@@ -71,38 +71,60 @@ export function TournamentComposerTurnierformatPanel({
   fieldErrors?: Record<string, string>;
 }) {
   const resolved = resolveComposerProgrammeTemplate({ participantCount, categoryContext });
+  const hasCuratedProposal =
+    resolved?.proposal.kind === "FULL_TEMPLATE" || resolved?.proposal.kind === "FIELD_PROPOSAL_ONLY";
+  const [advancedFormatOpen, setAdvancedFormatOpen] = useState(false);
 
   return (
     <PlanningEditorSection testId="tournament-create-format-section">
       <PlanningEditorSectionHeading title="Turnierformat" />
-      {resolved?.proposal.kind === "FULL_TEMPLATE" && resolved.proposal.template ? (
-        <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
-          <p className="text-sm font-medium text-[var(--foreground)]">Empfohlener Spielplan</p>
-          <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
-          <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
-            {resolved.fieldCountLabel}
-          </p>
-          {resolved.allocationSummaryLines.length > 0 ? (
-            <ul className="text-xs text-[var(--muted)]">
-              {resolved.allocationSummaryLines.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : resolved?.proposal.kind === "FIELD_PROPOSAL_ONLY" ? (
-        <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
-          <p className="text-sm font-medium text-[var(--foreground)]">Empfohlene Feldaufteilung</p>
-          <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
-          <p className="text-sm text-[var(--text-2)]">
-            Für diese Feldaufteilung erstellt SCE den Spielplan nach dem Turnierstart neu (TP01).
-          </p>
+      {hasCuratedProposal && resolved ? (
+        <div className="space-y-4">
+          <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
+            <p className="text-sm font-medium text-[var(--foreground)]">
+              {resolved.proposal.kind === "FULL_TEMPLATE" ? "Empfohlener Spielplan" : "Empfohlene Feldaufteilung"}
+            </p>
+            <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
+            <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
+              {resolved.fieldCountLabel}
+            </p>
+            {resolved.allocationSummaryLines.length > 0 ? (
+              <ul className="text-xs text-[var(--muted)]">
+                {resolved.allocationSummaryLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+            {resolved.proposal.kind === "FIELD_PROPOSAL_ONLY" ? (
+              <p className="text-sm text-[var(--text-2)]">
+                Der Spielplan wird aus der vorgeschlagenen bzw. angepassten Feldaufteilung erstellt.
+              </p>
+            ) : null}
+          </div>
+          {advancedFormatOpen ? (
+            <TournamentComposerLegacyTurnierformatPanel
+              planner={planner}
+              onChange={onChange}
+              fieldErrors={fieldErrors}
+              hideRoundRobinMeetings
+              hideHomeAwayRelevance
+            />
+          ) : (
+            <button
+              type="button"
+              className="text-sm font-medium text-[var(--sce-primary)]"
+              data-testid="tournament-composer-advanced-format-toggle"
+              onClick={() => setAdvancedFormatOpen(true)}
+            >
+              Anderes Turnierformat wählen
+            </button>
+          )}
         </div>
       ) : (
         <>
           <p className="mb-4 text-sm text-[var(--text-2)]">
-            Für diese Konstellation liegt kein kuratierter Spielplan vor. SCE verwendet nach der Erstellung den
-            bekannten TP01-Generator.
+            Für diese Konstellation liegt kein kuratierter Spielplan vor. Wähle ein Turnierformat — SCE erstellt den
+            Spielplan danach automatisch.
           </p>
           <TournamentComposerLegacyTurnierformatPanel
             planner={planner}
@@ -145,8 +167,8 @@ export function TournamentComposerSpielfelderPanel({
           <p className="text-sm font-medium text-[var(--foreground)]">{resolved.statusHeadline}</p>
           <p className="text-sm text-[var(--text-2)]">
             {resolved.allocationSummaryLines.length > 0
-              ? `${planner.pitches.length} Spielfelder · ${resolved.allocationSummaryLines.join(" · ")}`
-              : `${planner.pitches.length} Spielfelder`}
+              ? `${resolved.proposedFieldCount} Spielfelder · ${resolved.allocationSummaryLines.join(" · ")}`
+              : `${resolved.proposedFieldCount} Spielfelder`}
           </p>
           {planner.pitchesUserCustomized ? (
             <button
