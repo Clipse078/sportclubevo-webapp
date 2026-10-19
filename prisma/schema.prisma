@@ -8878,6 +8878,7 @@ model TournamentParticipantUnit {
 
   tenant                Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   tournamentParticipant TournamentParticipant @relation(fields: [tournamentParticipantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fixtureSides          TournamentFixtureSide[]
 
   @@index([tenantId])
   @@index([tournamentParticipantId])
@@ -9028,6 +9029,10 @@ model TournamentCompetitionConfiguration {
   automaticGroupCount Int?
   /// Default qualifiers per group for GROUP_PLUS_KNOCKOUT (e.g. 2).
   knockoutQualifiersPerGroup Int?
+  /// SCE-TOURNAMENT-PLANNER-02D — last applied predefined programme template (if any).
+  programmeTemplateId                String?
+  programmeTemplateVersion           Int?
+  programmeTemplateSlotMappingJson   Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -9198,6 +9203,8 @@ model TournamentFixtureSide {
   side                  TournamentFixtureSideLabel
   sourceType            TournamentFixtureSideSourceType
   participantId         String?
+  /// SCE-TOURNAMENT-PLANNER-02D — tournament-local playing unit for template rows (A1, A2, …).
+  participantUnitId     String?
   qualificationSourceId String?
 
   createdAt DateTime @default(now())
@@ -9206,12 +9213,14 @@ model TournamentFixtureSide {
   tenant                Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   fixture               TournamentFixture              @relation(fields: [fixtureId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   participant           TournamentParticipant?         @relation(fields: [participantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  participantUnit       TournamentParticipantUnit?     @relation(fields: [participantUnitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   qualificationSource   TournamentQualificationSource? @relation(fields: [qualificationSourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([fixtureId, side])
   @@index([tenantId])
   @@index([fixtureId])
   @@index([participantId])
+  @@index([participantUnitId])
   @@index([qualificationSourceId])
 }
 
