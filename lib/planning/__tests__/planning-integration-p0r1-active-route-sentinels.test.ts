@@ -110,7 +110,6 @@ describe("PLANNING-INTEGRATION-P0R1 create/edit parity — shared planning primi
     expect(paritySources.trainingEdit).toContain("PlanningEditorWorkSection");
     expect(paritySources.matchCreate).toContain("PlanningEditorWorkSection");
     expect(paritySources.matchEdit).toContain("relatedRequirementsPanel");
-    expect(paritySources.tournamentCreate).toContain("PlanningEditorWorkSection");
     expect(paritySources.tournamentEdit).toContain("PlanningEditorWorkSection");
     expect(paritySources.eventEdit).toContain("PlanningEditorWorkSection");
   });

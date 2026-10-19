@@ -31,12 +31,12 @@ const ACTIVE_PLANNING_SURFACES: { domain: string; file: string; mustUse: string[
   {
     domain: "MATCH_CREATE",
     file: "components/admin/matchcenter/MatchCreateForm.tsx",
-    mustUse: ["/api/facilities/availability"],
+    mustUse: ["useFacilityAvailability", "PlanningSingleResourceAssignment"],
   },
   {
     domain: "TOURNAMENT",
     file: "components/admin/tournamentcenter/TournamentCreateForm.tsx",
-    mustUse: ["/api/facilities/availability"],
+    mustUse: ["PlanningSingleResourceAssignment", "useFacilityAvailability"],
   },
   {
     domain: "VERANSTALTUNG_CREATE",
