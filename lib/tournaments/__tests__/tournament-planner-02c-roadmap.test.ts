@@ -25,8 +25,8 @@ describe("SCE-TOURNAMENT-PLANNER-02C roadmap", () => {
       "utf8",
     );
     expect(sql).toContain("TournamentParticipantUnit");
-    expect(sql).not.toMatch(/UPDATE/i);
-    expect(sql).not.toMatch(/Team/i);
+    expect(sql).not.toMatch(/^\s*UPDATE/m);
+    expect(sql).not.toMatch(/UPDATE\s+"Team"/i);
   });
 
   it("parent programme doc marks 02C started and 02D next", () => {

@@ -120,7 +120,13 @@ export function resolveEffectivePlayingUnits(
   if (persistedUnits.length > 0) {
     return [...persistedUnits].sort((a, b) => a.displayOrder - b.displayOrder || a.id.localeCompare(b.id));
   }
-  return [createImplicitFullPlayingUnit(participant)];
+  return [
+    createImplicitFullPlayingUnit({
+      participantId: participant.id,
+      tournamentId: participant.tournamentId,
+      displayName: participant.displayName,
+    }),
+  ];
 }
 
 export function resolveEffectiveFullPlayingUnit(
