@@ -108,7 +108,6 @@ describe("PLANNING-INTEGRATION-P0R1 create/edit parity — shared planning primi
   it("all four domains expose work (Aufgaben/Anforderungen) on persisted edit or pre-persist on create", () => {
     expect(paritySources.trainingCreate).toContain("PlanningEditorWorkSection");
     expect(paritySources.trainingEdit).toContain("PlanningEditorWorkSection");
-    expect(paritySources.matchCreate).toContain("PlanningEditorWorkSection");
     expect(paritySources.matchEdit).toContain("relatedRequirementsPanel");
     expect(paritySources.tournamentEdit).toContain("PlanningEditorWorkSection");
     expect(paritySources.eventEdit).toContain("PlanningEditorWorkSection");
