@@ -55,6 +55,10 @@ async function syncTemplatePitches(
   tenantId: string,
   tournamentId: string,
   template: TournamentProgrammeTemplate,
+  pitchOverrides?: ReadonlyMap<
+    string,
+    { label: string; playersPerSide: number | null; displayOrder: number }
+  >,
 ): Promise<Map<string, string>> {
   const existing = await listTournamentPitches(tenantId, tournamentId);
   const sortedTemplateFields = [...template.fields].sort(
@@ -65,19 +69,20 @@ async function syncTemplatePitches(
 
   for (let i = 0; i < sortedTemplateFields.length; i += 1) {
     const field = sortedTemplateFields[i]!;
+    const override = pitchOverrides?.get(field.fieldKey);
     const existingPitch = existing[i] ?? null;
     if (existingPitch) {
       await updateTournamentPitch(tenantId, tournamentId, existingPitch.id, {
-        label: field.label,
-        displayOrder: field.displayOrder,
-        playersPerSide: field.playingFormat.playersPerSide,
+        label: override?.label ?? field.label,
+        displayOrder: override?.displayOrder ?? field.displayOrder,
+        playersPerSide: override?.playersPerSide ?? field.playingFormat.playersPerSide,
       });
       fieldKeyToPitchId.set(field.fieldKey, existingPitch.id);
     } else {
       const created = await createTournamentPitch(tenantId, tournamentId, {
-        label: field.label,
-        displayOrder: field.displayOrder,
-        playersPerSide: field.playingFormat.playersPerSide,
+        label: override?.label ?? field.label,
+        displayOrder: override?.displayOrder ?? field.displayOrder,
+        playersPerSide: override?.playersPerSide ?? field.playingFormat.playersPerSide,
       });
       fieldKeyToPitchId.set(field.fieldKey, created.id);
     }
@@ -263,6 +268,11 @@ export async function applyProgrammeTemplateToTournament(input: {
   mainBreakAfterRoundNumbers?: readonly number[];
   /** Fixed wall-clock main break start — takes precedence over round-based hints. */
   mainBreakStartAt?: Date | null;
+  /** User-adjusted pitch labels/formats keyed by template fieldKey. */
+  pitchOverrides?: ReadonlyMap<
+    string,
+    { label: string; playersPerSide: number | null; displayOrder: number }
+  >;
 }): Promise<{
   template: TournamentProgrammeTemplate;
   scheduleVersionId: string;
@@ -332,6 +342,7 @@ export async function applyProgrammeTemplateToTournament(input: {
     input.tenantId,
     input.tournamentId,
     plan.template,
+    input.pitchOverrides,
   );
 
   const participantsById = new Map(

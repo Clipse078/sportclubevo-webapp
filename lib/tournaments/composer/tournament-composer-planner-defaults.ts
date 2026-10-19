@@ -47,6 +47,10 @@ export function createDefaultTournamentComposerPlannerDraft(input?: {
     breaks: [],
     programmeTemplateId: null,
     programmeTemplateVersion: null,
+    programmeProposalCategoryContext: null,
+    programmeProposalFingerprint: null,
+    pitchesUserCustomized: false,
+    pendingProposalRefresh: null,
     mainPause: {
       enabled: false,
       durationMinutes: 10,

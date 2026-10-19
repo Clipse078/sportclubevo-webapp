@@ -5,10 +5,13 @@ import {
   normalizeComposerBreakDraft,
   type LegacyComposerBreakDraft,
 } from "./tournament-composer-planner-breaks";
+import { buildTeamAgeGroupLookup, resolveComposerProgrammeCategoryContext } from "./resolve-composer-programme-category-context";
 import { reconcileComposerPlannerForParticipants } from "./tournament-composer-programme-template";
+import type { TournamentTeamOption } from "./load-tournament-composer-create-surface-props.server";
 
 export function hydrateTournamentComposerFormFromDraft(
   payload: TournamentComposerDraftPayload,
+  options?: { teamOptions?: readonly TournamentTeamOption[] },
 ): TournamentComposerDraftPayload {
   const organiserFields = sanitizeOrganiserDraftFields(
     payload.homeAway ?? "HOME",
@@ -43,9 +46,16 @@ export function hydrateTournamentComposerFormFromDraft(
                 normalizeComposerBreakDraft(br as LegacyComposerBreakDraft),
               ),
             };
+            const teamAgeGroupById = buildTeamAgeGroupLookup(options?.teamOptions ?? []);
+            const { categoryContext } = resolveComposerProgrammeCategoryContext({
+              participants,
+              teamAgeGroupById,
+            });
             return reconcileComposerPlannerForParticipants({
               planner: normalized,
               participantCount: participants.length,
+              categoryContext,
+              preserveUserPitchEdits: normalized.pitchesUserCustomized === true,
             });
           })()
         : null,

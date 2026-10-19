@@ -14,6 +14,8 @@ import { createTournamentBreak } from "@/lib/tournament-scheduling/tournament-br
 import { createTournamentPitch } from "@/lib/tournament-scheduling/tournament-pitch-service";
 import { createWorkingTournamentScheduleVersion } from "@/lib/tournament-scheduling/schedule-version-service";
 import { applyProgrammeTemplateToTournament } from "@/lib/tournament-scheduling/programme-templates/programme-template-service";
+import { getProgrammeTemplateById } from "@/lib/tournament-scheduling/programme-templates/template-registry";
+import { evaluateComposerTemplateApplicability } from "./tournament-composer-programme-proposal";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
@@ -44,29 +46,55 @@ export async function persistTournamentPlannerFromComposer(input: {
   });
 
   if (planner.programmeTemplateId) {
-    const mainPause = planner.mainPause;
-    const pauseWindow =
-      mainPause?.enabled === true
-        ? resolveComposerMainPauseUtcWindow({
-            mainPause,
-            tournamentStartAt: payload.startAt,
-            tournamentEndAt: payload.endAt,
-            timeZone: tenantTimeZone,
-          })
-        : null;
-    await applyProgrammeTemplateToTournament({
-      tenantId,
-      tournamentId,
-      templateId: planner.programmeTemplateId,
-      templateVersion: planner.programmeTemplateVersion ?? undefined,
-      replaceExisting: true,
-      mainBreakDurationMinutes:
-        mainPause?.enabled === true ? mainPause.durationMinutes : 0,
-      mainBreakAfterRoundNumbers: pauseWindow ? [] : mainPause?.enabled === true ? [mainPause.afterRoundNumber ?? 1] : [],
-      mainBreakStartAt:
-        pauseWindow != null ? new Date(pauseWindow.startUtcMs) : null,
-    });
-    return;
+    const template = getProgrammeTemplateById(
+      planner.programmeTemplateId,
+      planner.programmeTemplateVersion ?? undefined,
+    );
+    const applicability =
+      template != null
+        ? evaluateComposerTemplateApplicability({ template, pitches: planner.pitches })
+        : "INCOMPATIBLE";
+    if (template && applicability !== "INCOMPATIBLE") {
+      const pitchOverrides =
+        planner.pitchesUserCustomized || applicability === "CUSTOM_COMPATIBLE"
+          ? new Map(
+              planner.pitches
+                .filter((p) => p.templateFieldKey)
+                .map((p, index) => [
+                  p.templateFieldKey!,
+                  {
+                    label: p.label,
+                    playersPerSide: p.playersPerSide ?? null,
+                    displayOrder: index,
+                  },
+                ]),
+            )
+          : undefined;
+      const mainPause = planner.mainPause;
+      const pauseWindow =
+        mainPause?.enabled === true
+          ? resolveComposerMainPauseUtcWindow({
+              mainPause,
+              tournamentStartAt: payload.startAt,
+              tournamentEndAt: payload.endAt,
+              timeZone: tenantTimeZone,
+            })
+          : null;
+      await applyProgrammeTemplateToTournament({
+        tenantId,
+        tournamentId,
+        templateId: planner.programmeTemplateId,
+        templateVersion: planner.programmeTemplateVersion ?? undefined,
+        replaceExisting: true,
+        pitchOverrides,
+        mainBreakDurationMinutes:
+          mainPause?.enabled === true ? mainPause.durationMinutes : 0,
+        mainBreakAfterRoundNumbers: pauseWindow ? [] : mainPause?.enabled === true ? [mainPause.afterRoundNumber ?? 1] : [],
+        mainBreakStartAt:
+          pauseWindow != null ? new Date(pauseWindow.startUtcMs) : null,
+      });
+      return;
+    }
   }
 
   const groupCount = resolveEffectiveGroupCount(planner);

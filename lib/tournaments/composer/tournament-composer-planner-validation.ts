@@ -39,7 +39,10 @@ export function validateHomePlannerDraft(
   if (planner.meetingsPerOpponent < 1) {
     errors.meetingsPerOpponent = "Mindestens ein Spiel pro Gegner.";
   }
-  const curatedTemplate = resolveComposerProgrammeTemplate(draft.participants.length);
+  const curatedTemplate = resolveComposerProgrammeTemplate({
+    participantCount: draft.participants.length,
+    categoryContext: planner.programmeProposalCategoryContext ?? null,
+  });
   if (curatedTemplate && planner.mainPause?.enabled) {
     const pauseError = validateComposerMainPauseWindow({
       mainPause: planner.mainPause,

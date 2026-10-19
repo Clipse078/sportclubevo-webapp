@@ -2,6 +2,7 @@ import type { TournamentCompetitionFormat } from "@/lib/tournament-scheduling/co
 import type { TournamentGroupMixGenerationStrategy } from "@/lib/tournament-scheduling/competition-structure/types";
 import type { HomeAwayRelevance } from "@/lib/tournament-scheduling/smart-generator-architecture";
 import type { TournamentRankingTiebreakCriterion } from "@/lib/tournament-scheduling/competition-structure/types";
+import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 
 export type TournamentComposerPitchDraft = {
   localId: string;
@@ -63,6 +64,19 @@ export type TournamentComposerPlannerDraft = {
   /** Resolved predefined programme template (02D) — null when TP01 fallback applies. */
   programmeTemplateId?: string | null;
   programmeTemplateVersion?: number | null;
+  /** Last resolved category used for proposals — internal, not shown in UI. */
+  programmeProposalCategoryContext?: ProgrammeTemplateCategoryContext | null;
+  /** Fingerprint of category + participant count + template identity at last proposal apply. */
+  programmeProposalFingerprint?: string | null;
+  /** User edited pitch rows after proposal materialisation. */
+  pitchesUserCustomized?: boolean;
+  /** Material upstream change while pitches are customised — requires explicit user decision. */
+  pendingProposalRefresh?: {
+    message: string;
+    nextFingerprint: string;
+    nextTemplateId: string | null;
+    nextTemplateVersion: number | null;
+  } | null;
   /** Primary tournament pause configured on Spielplan step (pause-first UX). */
   mainPause?: TournamentComposerMainPauseDraft;
 };

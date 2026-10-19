@@ -1,13 +1,14 @@
 /**
- * SCE-TOURNAMENT-PLANNER-02D — predefined programme template resolution for HOME creator.
+ * SCE-TOURNAMENT-PLANNER-02D — category-aware programme proposals for HOME creator.
+ * SCE proposes; user-adjusted pitch configuration is preserved across hydrate/navigation.
  */
 
 import {
   computeProgrammeRequiredMinutesFromTimeline,
   computeRoundParallelScheduleTimeline,
 } from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
-import { getRecommendedProgrammeTemplate } from "@/lib/tournament-scheduling/programme-templates/template-registry";
 import type { TournamentProgrammeTemplate } from "@/lib/tournament-scheduling/programme-templates/types";
+import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import {
   normalizeComposerMainPauseDraft,
   resolveComposerMainPauseUtcWindow,
@@ -17,13 +18,21 @@ import type {
   TournamentComposerPitchDraft,
   TournamentComposerPlannerDraft,
 } from "./tournament-composer-planner-types";
+import {
+  buildComposerProposalFingerprint,
+  materializeComposerPitchesFromFieldProposal,
+  resolveComposerProgrammeProposal,
+  summarizeComposerPitchAllocation,
+  type ComposerProgrammeProposal,
+} from "./tournament-composer-programme-proposal";
 
 export type ComposerResolvedProgrammeTemplate = {
-  template: TournamentProgrammeTemplate;
+  proposal: ComposerProgrammeProposal;
   fieldCountLabel: string;
   playingFormatSummary: string;
   statusHeadline: string;
   statusDetail: string;
+  allocationSummaryLines: string[];
 };
 
 export type ComposerMainPauseDraft = {
@@ -46,16 +55,49 @@ export function summarizeTemplatePlayingFormats(template: TournamentProgrammeTem
     .join(", ");
 }
 
-export function resolveComposerProgrammeTemplate(participantCount: number): ComposerResolvedProgrammeTemplate | null {
-  if (participantCount < 2) return null;
-  const template = getRecommendedProgrammeTemplate({ participantCount });
-  if (!template) return null;
+export function resolveComposerProgrammeTemplate(input: {
+  participantCount: number;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
+}): ComposerResolvedProgrammeTemplate | null {
+  const proposal = resolveComposerProgrammeProposal({
+    participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
+  });
+  if (proposal.kind === "NONE") return null;
+
+  const allocation = proposal.template
+    ? {
+        fieldCount: proposal.template.fields.length,
+        formatLines: summarizeComposerPitchAllocation(
+          materializeComposerPitchesFromTemplate(proposal.template),
+        ).formatLines,
+      }
+    : proposal.fieldProposalPlayersPerSide
+      ? summarizeComposerPitchAllocation(
+          materializeComposerPitchesFromFieldProposal({
+            playersPerSide: proposal.fieldProposalPlayersPerSide,
+          }),
+        )
+      : { fieldCount: 0, formatLines: [] };
+
+  const roundHint =
+    proposal.kind === "FULL_TEMPLATE" && proposal.template
+      ? ` · ${proposal.template.rounds.length} Runden`
+      : "";
+
   return {
-    template,
-    fieldCountLabel: `Dieser Spielplan benötigt ${template.fields.length} Spielfelder.`,
-    playingFormatSummary: summarizeTemplatePlayingFormats(template),
-    statusHeadline: "Vordefinierter Spielplan",
-    statusDetail: `${template.participantCount} Teams · Rotation`,
+    proposal,
+    fieldCountLabel:
+      proposal.kind === "FULL_TEMPLATE"
+        ? `Vorschlag: ${allocation.fieldCount} Spielfelder${roundHint}`
+        : `Vorschlag: ${allocation.fieldCount} Spielfelder`,
+    playingFormatSummary: allocation.formatLines.join(" · "),
+    statusHeadline: "Empfohlene Aufteilung",
+    statusDetail:
+      proposal.kind === "FULL_TEMPLATE"
+        ? "SCE hat für die ausgewählten Teams einen passenden Spielplan vorbereitet."
+        : "SCE schlägt eine bewährte Feldaufteilung vor. Der Spielplan wird nach Erstellung angepasst.",
+    allocationSummaryLines: allocation.formatLines,
   };
 }
 
@@ -84,49 +126,175 @@ export function materializeComposerPitchesFromTemplate(
     return {
       localId: prev?.localId ?? `pitch-template-${field.fieldKey}`,
       templateFieldKey: field.fieldKey,
-      label: prev?.label?.trim() ? prev.label : field.label,
+      label: prev?.userLabelCustomized && prev.label.trim() ? prev.label : field.label,
       playersPerSide: field.playingFormat.playersPerSide,
       userLabelCustomized: prev?.userLabelCustomized ?? false,
     };
   });
 }
 
+function materializePitchesFromProposal(
+  proposal: ComposerProgrammeProposal,
+  previous?: readonly TournamentComposerPitchDraft[],
+): TournamentComposerPitchDraft[] {
+  if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
+    return materializeComposerPitchesFromTemplate(proposal.template, previous);
+  }
+  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
+    return materializeComposerPitchesFromFieldProposal({
+      playersPerSide: proposal.fieldProposalPlayersPerSide,
+      previous,
+    });
+  }
+  return previous ? [...previous] : [];
+}
+
+function proposalTemplateIdentity(proposal: ComposerProgrammeProposal): {
+  programmeTemplateId: string | null;
+  programmeTemplateVersion: number | null;
+} {
+  if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
+    return {
+      programmeTemplateId: proposal.template.id,
+      programmeTemplateVersion: proposal.template.version,
+    };
+  }
+  return { programmeTemplateId: null, programmeTemplateVersion: null };
+}
+
+export function restoreComposerProgrammeProposal(input: {
+  planner: TournamentComposerPlannerDraft;
+  participantCount: number;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
+}): TournamentComposerPlannerDraft {
+  const proposal = resolveComposerProgrammeProposal({
+    participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
+  });
+  if (proposal.kind === "NONE") {
+    return {
+      ...input.planner,
+      pitchesUserCustomized: false,
+      pendingProposalRefresh: null,
+      programmeProposalCategoryContext: input.categoryContext,
+      programmeProposalFingerprint: null,
+      programmeTemplateId: null,
+      programmeTemplateVersion: null,
+    };
+  }
+  const identity = proposalTemplateIdentity(proposal);
+  const fingerprint = buildComposerProposalFingerprint({
+    categoryContext: input.categoryContext,
+    participantCount: input.participantCount,
+    templateId: identity.programmeTemplateId,
+    templateVersion: identity.programmeTemplateVersion,
+  });
+  const mainPause =
+    proposal.kind === "FULL_TEMPLATE" && proposal.template
+      ? defaultComposerMainPauseForTemplate(proposal.template)
+      : input.planner.mainPause;
+  return {
+    ...input.planner,
+    ...identity,
+    programmeProposalCategoryContext: input.categoryContext,
+    programmeProposalFingerprint: fingerprint,
+    pitchesUserCustomized: false,
+    pendingProposalRefresh: null,
+    mainPause: mainPause ? normalizeComposerMainPauseDraft(mainPause) : input.planner.mainPause,
+    pitches: materializePitchesFromProposal(proposal),
+    competitionFormat: "GROUP_MIX_ONLY",
+    groupMixStrategy: "ROUND_ROBIN",
+    groupCount: 1,
+  };
+}
+
 export function reconcileComposerPlannerForParticipants(input: {
   planner: TournamentComposerPlannerDraft;
   participantCount: number;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
+  /** When true, never overwrite user-customised pitches (draft hydrate/resume). */
+  preserveUserPitchEdits?: boolean;
 }): TournamentComposerPlannerDraft {
-  const resolved = resolveComposerProgrammeTemplate(input.participantCount);
-  if (!resolved) {
+  const proposal = resolveComposerProgrammeProposal({
+    participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
+  });
+  const identity = proposalTemplateIdentity(proposal);
+  const nextFingerprint = buildComposerProposalFingerprint({
+    categoryContext: input.categoryContext,
+    participantCount: input.participantCount,
+    templateId: identity.programmeTemplateId,
+    templateVersion: identity.programmeTemplateVersion,
+  });
+
+  if (proposal.kind === "NONE") {
     return {
       ...input.planner,
+      programmeProposalCategoryContext: input.categoryContext,
+      programmeProposalFingerprint: null,
+      pendingProposalRefresh: null,
       programmeTemplateId: null,
       programmeTemplateVersion: null,
     };
   }
 
+  const fingerprintChanged =
+    input.planner.programmeProposalFingerprint != null &&
+    input.planner.programmeProposalFingerprint !== nextFingerprint;
+
+  if (input.planner.pitchesUserCustomized) {
+    if (fingerprintChanged) {
+      return {
+        ...input.planner,
+        programmeProposalCategoryContext: input.categoryContext,
+        pendingProposalRefresh: {
+          message:
+            "Die Teams oder der Kontext haben sich geändert. Möchtest du die empfohlene Feldaufteilung neu übernehmen?",
+          nextFingerprint,
+          nextTemplateId: identity.programmeTemplateId,
+          nextTemplateVersion: identity.programmeTemplateVersion,
+        },
+      };
+    }
+    return {
+      ...input.planner,
+      programmeProposalCategoryContext: input.categoryContext,
+      programmeProposalFingerprint: nextFingerprint,
+      pendingProposalRefresh: null,
+      ...identity,
+    };
+  }
+
   const templateChanged =
-    input.planner.programmeTemplateId !== resolved.template.id ||
-    input.planner.programmeTemplateVersion !== resolved.template.version;
+    input.planner.programmeTemplateId !== identity.programmeTemplateId ||
+    input.planner.programmeTemplateVersion !== identity.programmeTemplateVersion;
 
   const mainPause =
-    input.planner.mainPause && !templateChanged
-      ? normalizeComposerMainPauseDraft(input.planner.mainPause)
-      : defaultComposerMainPauseForTemplate(resolved.template);
+    proposal.kind === "FULL_TEMPLATE" && proposal.template && !templateChanged
+      ? input.planner.mainPause
+        ? normalizeComposerMainPauseDraft(input.planner.mainPause)
+        : defaultComposerMainPauseForTemplate(proposal.template)
+      : proposal.kind === "FULL_TEMPLATE" && proposal.template
+        ? defaultComposerMainPauseForTemplate(proposal.template)
+        : input.planner.mainPause;
 
-  const pitches = materializeComposerPitchesFromTemplate(
-    resolved.template,
-    templateChanged ? undefined : input.planner.pitches,
-  );
+  const preservePitches = input.preserveUserPitchEdits === true && input.planner.pitchesUserCustomized;
+  const pitches = preservePitches
+    ? input.planner.pitches
+    : materializePitchesFromProposal(proposal, templateChanged ? undefined : input.planner.pitches);
 
   return {
     ...input.planner,
-    programmeTemplateId: resolved.template.id,
-    programmeTemplateVersion: resolved.template.version,
+    ...identity,
+    programmeProposalCategoryContext: input.categoryContext,
+    programmeProposalFingerprint: nextFingerprint,
+    pendingProposalRefresh: null,
     competitionFormat: "GROUP_MIX_ONLY",
     groupMixStrategy: "ROUND_ROBIN",
     groupCount: 1,
     mainPause,
     pitches,
+    pitchesUserCustomized: preservePitches ? true : false,
   };
 }
 
@@ -170,6 +338,7 @@ function formatClockFromUtcMs(utcMs: number): string {
 
 export function buildComposerScheduleFitView(input: {
   participantCount: number;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
   startAt: string;
   endAt: string;
   planner: TournamentComposerPlannerDraft;
@@ -223,8 +392,11 @@ export function buildComposerScheduleFitView(input: {
   }
 
   const availableMinutes = Math.round((end.getTime() - start.getTime()) / 60_000);
-  const resolved = resolveComposerProgrammeTemplate(input.participantCount);
-  const roundCount = resolved?.template.rounds.length ?? 0;
+  const resolved = resolveComposerProgrammeTemplate({
+    participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
+  });
+  const roundCount = resolved?.proposal.template?.rounds.length ?? 0;
   if (roundCount < 1) {
     return {
       status: "INCOMPLETE",
@@ -232,7 +404,7 @@ export function buildComposerScheduleFitView(input: {
       availableMinutes,
       reserveMinutes: null,
       deficitMinutes: null,
-      headline: "Kein vordefinierter Spielplan für diese Teilnehmerzahl — TP01-Fallback nach Erstellung.",
+      headline: "Kein vordefinierter Spielplan für diese Konstellation — TP01-Fallback nach Erstellung.",
       detail: null,
       requiredEndLabel: null,
       tournamentEndLabel: formatClockFromUtcMs(end.getTime()),

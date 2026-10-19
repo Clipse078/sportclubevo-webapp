@@ -70,6 +70,10 @@ import {
   reconcileComposerPlannerForParticipants,
 } from "@/lib/tournaments/composer/tournament-composer-programme-template";
 import {
+  buildTeamAgeGroupLookup,
+  resolveComposerProgrammeCategoryContext,
+} from "@/lib/tournaments/composer/resolve-composer-programme-category-context";
+import {
   addComposerPlayingUnitSubunit,
   removeComposerPlayingUnit,
   splitComposerParticipantIntoDefaultSubunits,
@@ -146,7 +150,7 @@ export default function TournamentCreateForm({
 }: Props) {
   const router = useRouter();
   const serverHydrated = initialResumeDraft?.payload
-    ? hydrateTournamentComposerFormFromDraft(initialResumeDraft.payload)
+    ? hydrateTournamentComposerFormFromDraft(initialResumeDraft.payload, { teamOptions })
     : null;
 
   const [seasonId, setSeasonId] = useState(serverHydrated?.seasonId || activeSeasonId);
@@ -212,6 +216,12 @@ export default function TournamentCreateForm({
     }
   }, [homeAway]);
 
+  const teamAgeGroupById = useMemo(() => buildTeamAgeGroupLookup(teamOptions), [teamOptions]);
+
+  const programmeCategoryContext = useMemo(() => {
+    return resolveComposerProgrammeCategoryContext({ participants, teamAgeGroupById }).categoryContext;
+  }, [participants, teamAgeGroupById]);
+
   useEffect(() => {
     if (homeAway !== "HOME") return;
     setPlanner((prev) => {
@@ -219,9 +229,10 @@ export default function TournamentCreateForm({
       return reconcileComposerPlannerForParticipants({
         planner: prev,
         participantCount: countComposerCuratedTemplateParticipants(participants),
+        categoryContext: programmeCategoryContext,
       });
     });
-  }, [homeAway, participants]);
+  }, [homeAway, participants, programmeCategoryContext]);
 
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
@@ -429,7 +440,7 @@ export default function TournamentCreateForm({
         setLoadError(data?.error ?? "Entwurf konnte nicht geladen werden.");
         return;
       }
-      const hydrated = hydrateTournamentComposerFormFromDraft(data.payload);
+      const hydrated = hydrateTournamentComposerFormFromDraft(data.payload, { teamOptions });
       setDraftId(data.draftId);
       setPersistedBaseline(data.payload);
       setSeasonId(hydrated.seasonId);
@@ -452,6 +463,11 @@ export default function TournamentCreateForm({
           ? reconcileComposerPlannerForParticipants({
               planner: hydrated.planner ?? createDefaultTournamentComposerPlannerDraft(),
               participantCount: countComposerCuratedTemplateParticipants(hydrated.participants),
+              categoryContext: resolveComposerProgrammeCategoryContext({
+                participants: hydrated.participants,
+                teamAgeGroupById,
+              }).categoryContext,
+              preserveUserPitchEdits: hydrated.planner?.pitchesUserCustomized === true,
             })
           : null,
       );
@@ -891,11 +907,11 @@ export default function TournamentCreateForm({
     planner != null
       ? [
           { key: "turnierformat" as const, label: "Turnierformat", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerTurnierformatPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerTurnierformatPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielfelderPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielfelderPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielplanPanel payload={composerDraft} planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielplanPanel payload={composerDraft} planner={planner} categoryContext={programmeCategoryContext} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
         ]
       : [];
 

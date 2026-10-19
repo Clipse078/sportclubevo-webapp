@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { TournamentComposerLegacyTurnierformatPanel } from "./TournamentComposerLegacyTurnierformatPanel";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
@@ -9,28 +9,37 @@ import PlanningEditorSectionHeading from "@/components/admin/shared/planning-edi
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import type { TournamentComposerPlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-types";
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
+import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import TournamentComposerPitchPlayingFormatField from "./TournamentComposerPitchPlayingFormatField";
 import {
   buildComposerScheduleFitView,
   countComposerCuratedTemplateParticipants,
   resolveComposerProgrammeTemplate,
+  restoreComposerProgrammeProposal,
 } from "@/lib/tournaments/composer/tournament-composer-programme-template";
 import { normalizeComposerMainPauseDraft } from "@/lib/tournaments/composer/tournament-composer-main-pause";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
 
-function ScheduleFitPanel({ payload }: { payload: TournamentComposerDraftPayload }) {
+function ScheduleFitPanel({
+  payload,
+  categoryContext,
+}: {
+  payload: TournamentComposerDraftPayload;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
+}) {
   const view = useMemo(
     () =>
       payload.planner
         ? buildComposerScheduleFitView({
             participantCount: countComposerCuratedTemplateParticipants(payload.participants),
+            categoryContext,
             startAt: payload.startAt,
             endAt: payload.endAt,
             planner: payload.planner,
           })
         : null,
-    [payload],
+    [payload, categoryContext],
   );
   if (!view) return null;
 
@@ -51,37 +60,48 @@ function ScheduleFitPanel({ payload }: { payload: TournamentComposerDraftPayload
 export function TournamentComposerTurnierformatPanel({
   planner,
   participantCount,
+  categoryContext,
   onChange,
   fieldErrors,
 }: {
   planner: TournamentComposerPlannerDraft;
   participantCount: number;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
-  const resolved = resolveComposerProgrammeTemplate(participantCount);
+  const resolved = resolveComposerProgrammeTemplate({ participantCount, categoryContext });
 
   return (
     <PlanningEditorSection testId="tournament-create-format-section">
       <PlanningEditorSectionHeading title="Turnierformat" />
-      {resolved ? (
+      {resolved?.proposal.kind === "FULL_TEMPLATE" && resolved.proposal.template ? (
         <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
-          <p className="text-sm font-medium text-[var(--foreground)]">{resolved.template.displayName}</p>
-          <p className="text-sm text-[var(--text-2)]">
-            SCE erkennt {participantCount} Teilnehmer und wählt den passenden vordefinierten Spielplan.
-          </p>
+          <p className="text-sm font-medium text-[var(--foreground)]">Empfohlener Spielplan</p>
+          <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
           <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
             {resolved.fieldCountLabel}
           </p>
-          <p className="text-xs text-[var(--muted)]">{resolved.playingFormatSummary}</p>
-          <p className="text-xs text-[var(--text-2)]">
-            {resolved.template.rounds.length} Runden · Struktur gemäss genehmigter Programmvorlage
+          {resolved.allocationSummaryLines.length > 0 ? (
+            <ul className="text-xs text-[var(--muted)]">
+              {resolved.allocationSummaryLines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : resolved?.proposal.kind === "FIELD_PROPOSAL_ONLY" ? (
+        <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
+          <p className="text-sm font-medium text-[var(--foreground)]">Empfohlene Feldaufteilung</p>
+          <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
+          <p className="text-sm text-[var(--text-2)]">
+            Für diese Feldaufteilung erstellt SCE den Spielplan nach dem Turnierstart neu (TP01).
           </p>
         </div>
       ) : (
         <>
           <p className="mb-4 text-sm text-[var(--text-2)]">
-            Für diese Teilnehmerzahl liegt kein kuratierter Spielplan vor. SCE verwendet nach der Erstellung den
+            Für diese Konstellation liegt kein kuratierter Spielplan vor. SCE verwendet nach der Erstellung den
             bekannten TP01-Generator.
           </p>
           <TournamentComposerLegacyTurnierformatPanel
@@ -98,116 +118,233 @@ export function TournamentComposerTurnierformatPanel({
 export function TournamentComposerSpielfelderPanel({
   planner,
   participantCount,
+  categoryContext,
   onChange,
   fieldErrors,
 }: {
   planner: TournamentComposerPlannerDraft;
   participantCount: number;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
-  const resolved = resolveComposerProgrammeTemplate(participantCount);
-  const templateDriven = resolved != null;
+  const resolved = resolveComposerProgrammeTemplate({ participantCount, categoryContext });
+  const hasProposal = resolved != null;
 
   return (
     <PlanningEditorSection testId="tournament-create-pitches-section">
-      <PlanningEditorSectionHeading title="Turnierfelder" />
+      <PlanningEditorSectionHeading title="Spielfelder" />
       <p className="mb-3 text-sm text-[var(--text-2)]">
-        Logische Spielfelder für den Spielplan — unabhängig von physischen Anlagenressourcen im Schritt Ressourcen.
+        SCE hat eine empfohlene Aufteilung für dieses Turnier vorbereitet — du kannst Felder jederzeit anpassen.
       </p>
-      {templateDriven ? (
+      {hasProposal ? (
         <div
-          className="mb-4 space-y-1 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4"
+          className="mb-4 space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4"
           data-testid="tournament-composer-pitches-template-status"
         >
           <p className="text-sm font-medium text-[var(--foreground)]">{resolved.statusHeadline}</p>
-          <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
-          <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-pitches-template-hint">
-            {resolved.fieldCountLabel}
+          <p className="text-sm text-[var(--text-2)]">
+            {resolved.allocationSummaryLines.length > 0
+              ? `${planner.pitches.length} Spielfelder · ${resolved.allocationSummaryLines.join(" · ")}`
+              : `${planner.pitches.length} Spielfelder`}
           </p>
+          {planner.pitchesUserCustomized ? (
+            <button
+              type="button"
+              className="text-sm font-medium text-[var(--sce-primary)]"
+              data-testid="tournament-composer-restore-proposal"
+              onClick={() =>
+                onChange((p) =>
+                  restoreComposerProgrammeProposal({
+                    planner: p,
+                    participantCount,
+                    categoryContext,
+                  }),
+                )
+              }
+            >
+              Empfehlung wiederherstellen
+            </button>
+          ) : null}
         </div>
       ) : null}
+
+      {planner.pendingProposalRefresh ? (
+        <div
+          className="mb-4 space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+          data-testid="tournament-composer-proposal-refresh-prompt"
+          role="status"
+        >
+          <p className="text-sm text-[var(--foreground)]">{planner.pendingProposalRefresh.message}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="fca-btn fca-btn-primary text-sm"
+              data-testid="tournament-composer-proposal-refresh-accept"
+              onClick={() =>
+                onChange((p) =>
+                  restoreComposerProgrammeProposal({
+                    planner: p,
+                    participantCount,
+                    categoryContext,
+                  }),
+                )
+              }
+            >
+              Empfehlung übernehmen
+            </button>
+            <button
+              type="button"
+              className="fca-btn fca-btn-secondary text-sm"
+              data-testid="tournament-composer-proposal-refresh-keep"
+              onClick={() =>
+                onChange((p) => ({
+                  ...p,
+                  pendingProposalRefresh: null,
+                  programmeProposalFingerprint: p.pendingProposalRefresh?.nextFingerprint ?? p.programmeProposalFingerprint,
+                }))
+              }
+            >
+              Eigene Aufteilung behalten
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <ul className="space-y-3">
-        {planner.pitches.map((pitch) => (
+        {planner.pitches.map((pitch, index) => (
           <li
             key={pitch.localId}
-            className="flex flex-col gap-3 rounded-lg border border-[var(--border)]/70 bg-[var(--surface)]/40 p-3 sm:flex-row sm:items-end sm:gap-2"
+            className="rounded-xl border border-[var(--border)]/70 bg-[var(--surface)]/40 p-4"
             data-testid={`tournament-composer-pitch-row-${pitch.localId}`}
           >
-            <label className="block min-w-0 flex-1 space-y-1">
-              <span className="fca-label">Name</span>
-              <input
-                type="text"
-                className="fca-input w-full"
-                value={pitch.label}
-                onChange={(e) =>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
+                <span aria-hidden>⚽</span>
+                <span>Feld {index + 1}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                  aria-label="Feld nach oben"
+                  disabled={index === 0}
+                  onClick={() =>
+                    onChange((p) => {
+                      const next = [...p.pitches];
+                      const tmp = next[index - 1]!;
+                      next[index - 1] = next[index]!;
+                      next[index] = tmp;
+                      return {
+                        ...p,
+                        pitchesUserCustomized: true,
+                        pendingProposalRefresh: null,
+                        pitches: next,
+                      };
+                    })
+                  }
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                  aria-label="Feld nach unten"
+                  disabled={index >= planner.pitches.length - 1}
+                  onClick={() =>
+                    onChange((p) => {
+                      const next = [...p.pitches];
+                      const tmp = next[index + 1]!;
+                      next[index + 1] = next[index]!;
+                      next[index] = tmp;
+                      return { ...p, pitchesUserCustomized: true, pendingProposalRefresh: null, pitches: next };
+                    })
+                  }
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
+                  aria-label="Feld entfernen"
+                  disabled={planner.pitches.length <= 1}
+                  onClick={() =>
+                    onChange((p) => ({
+                      ...p,
+                      pitchesUserCustomized: true,
+                      pendingProposalRefresh: null,
+                      pitches: p.pitches.filter((row) => row.localId !== pitch.localId),
+                    }))
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <MoreVertical className="h-4 w-4 text-[var(--muted)] opacity-40" aria-hidden />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-2">
+              <label className="block min-w-0 flex-1 space-y-1">
+                <span className="fca-label">Name</span>
+                <input
+                  type="text"
+                  className="fca-input w-full"
+                  value={pitch.label}
+                  onChange={(e) =>
+                    onChange((p) => ({
+                      ...p,
+                      pitchesUserCustomized: true,
+                      pendingProposalRefresh: null,
+                      pitches: p.pitches.map((row) =>
+                        row.localId === pitch.localId
+                          ? { ...row, label: e.target.value, userLabelCustomized: true }
+                          : row,
+                      ),
+                    }))
+                  }
+                  data-testid={`tournament-pitch-label-${pitch.localId}`}
+                />
+              </label>
+              <TournamentComposerPitchPlayingFormatField
+                id={`tournament-pitch-format-${pitch.localId}`}
+                testId={`tournament-pitch-format-${pitch.localId}`}
+                playersPerSide={pitch.playersPerSide ?? null}
+                onChange={(playersPerSide) =>
                   onChange((p) => ({
                     ...p,
+                    pitchesUserCustomized: true,
+                    pendingProposalRefresh: null,
                     pitches: p.pitches.map((row) =>
-                      row.localId === pitch.localId
-                        ? { ...row, label: e.target.value, userLabelCustomized: true }
-                        : row,
+                      row.localId === pitch.localId ? { ...row, playersPerSide } : row,
                     ),
                   }))
                 }
-                data-testid={`tournament-pitch-label-${pitch.localId}`}
               />
-            </label>
-            <TournamentComposerPitchPlayingFormatField
-              id={`tournament-pitch-format-${pitch.localId}`}
-              testId={`tournament-pitch-format-${pitch.localId}`}
-              playersPerSide={pitch.playersPerSide ?? null}
-              disabled={templateDriven}
-              onChange={(playersPerSide) =>
-                onChange((p) => ({
-                  ...p,
-                  pitches: p.pitches.map((row) =>
-                    row.localId === pitch.localId ? { ...row, playersPerSide } : row,
-                  ),
-                }))
-              }
-            />
-            {!templateDriven ? (
-              <button
-                type="button"
-                className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] self-end"
-                aria-label="Feld entfernen"
-                disabled={planner.pitches.length <= 1}
-                onClick={() =>
-                  onChange((p) => ({
-                    ...p,
-                    pitches: p.pitches.filter((row) => row.localId !== pitch.localId),
-                  }))
-                }
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            ) : null}
+            </div>
           </li>
         ))}
       </ul>
-      {!templateDriven ? (
-        <button
-          type="button"
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
-          onClick={() =>
-            onChange((p) => {
-              const nextIndex = p.pitches.length + 1;
-              return {
-                ...p,
-                pitches: [
-                  ...p.pitches,
-                  { localId: `pitch-${Date.now()}`, label: `Feld ${nextIndex}`, playersPerSide: null },
-                ],
-              };
-            })
-          }
-          data-testid="tournament-pitch-add"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Feld hinzufügen
-        </button>
-      ) : null}
+      <button
+        type="button"
+        className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
+        onClick={() =>
+          onChange((p) => {
+            const nextIndex = p.pitches.length + 1;
+            return {
+              ...p,
+              pitchesUserCustomized: true,
+              pendingProposalRefresh: null,
+              pitches: [
+                ...p.pitches,
+                { localId: `pitch-${Date.now()}`, label: `Feld ${nextIndex}`, playersPerSide: null },
+              ],
+            };
+          })
+        }
+        data-testid="tournament-pitch-add"
+      >
+        <Plus className="h-4 w-4" aria-hidden />
+        Spielfeld hinzufügen
+      </button>
       {fieldErrors?.pitches ? (
         <p role="alert" className="mt-2 text-sm text-[var(--sce-danger)]">
           {fieldErrors.pitches}
@@ -220,11 +357,13 @@ export function TournamentComposerSpielfelderPanel({
 export function TournamentComposerSpielplanPanel({
   payload,
   planner,
+  categoryContext,
   onChange,
   fieldErrors,
 }: {
   payload: TournamentComposerDraftPayload;
   planner: TournamentComposerPlannerDraft;
+  categoryContext: ProgrammeTemplateCategoryContext | null;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
@@ -359,7 +498,7 @@ export function TournamentComposerSpielplanPanel({
       </div>
 
       <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Zeitprüfung</h3>
-      <ScheduleFitPanel payload={payload} />
+      <ScheduleFitPanel payload={payload} categoryContext={categoryContext} />
     </PlanningEditorSection>
   );
 }

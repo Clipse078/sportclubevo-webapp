@@ -1,5 +1,5 @@
 import { getRecommendedProgrammeTemplate, listProgrammeTemplates } from "./template-registry";
-import type { TournamentProgrammeTemplate } from "./types";
+import type { ProgrammeTemplateCategoryContext, TournamentProgrammeTemplate } from "./types";
 
 export type PlanungProgrammeTemplatePresentation = {
   available: boolean;
@@ -31,8 +31,20 @@ function summarizeFormats(template: TournamentProgrammeTemplate): string {
 
 export function buildPlanungProgrammeTemplatePresentation(input: {
   participantCount: number;
+  categoryContext?: ProgrammeTemplateCategoryContext | null;
 }): PlanungProgrammeTemplatePresentation {
-  const candidates = listProgrammeTemplates({ participantCount: input.participantCount });
+  if (input.categoryContext == null) {
+    return {
+      available: false,
+      recommended: null,
+      alternatives: [],
+      fallbackRequired: true,
+    };
+  }
+  const candidates = listProgrammeTemplates({
+    participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
+  });
   if (candidates.length === 0) {
     return {
       available: false,
@@ -43,6 +55,7 @@ export function buildPlanungProgrammeTemplatePresentation(input: {
   }
   const recommended = getRecommendedProgrammeTemplate({
     participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
   });
   if (!recommended) {
     return {
@@ -62,7 +75,7 @@ export function buildPlanungProgrammeTemplatePresentation(input: {
       participantCount: recommended.participantCount,
       fieldCount: recommended.fields.length,
       roundCount: recommended.rounds.length,
-      fieldCountLabel: `Dieser Spielplan verwendet ${recommended.fields.length} Felder.`,
+      fieldCountLabel: `Vorschlag: ${recommended.fields.length} Spielfelder · ${recommended.rounds.length} Runden`,
       playingFormatSummary: summarizeFormats(recommended),
     },
     alternatives: candidates
