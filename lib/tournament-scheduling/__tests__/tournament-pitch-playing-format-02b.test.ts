@@ -134,4 +134,66 @@ describe("SCE-TOURNAMENT-PLANNER-02B playing format", () => {
       expect(rows[0]?.playersPerSide).toBeNull();
     });
   });
+
+  describe("CREATE → edit contract (02B R1)", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+      vi.mocked(prisma.tournamentPitch.findFirst).mockResolvedValue({ id: "pitch-1" } as never);
+    });
+
+    it("A — create/read pitch without PlayingFormat keeps playersPerSide NULL", async () => {
+      vi.mocked(prisma.tournamentPitch.aggregate).mockResolvedValue({ _max: { displayOrder: null } } as never);
+      vi.mocked(prisma.tournamentPitch.create).mockResolvedValue(pitchRow() as never);
+      const created = await createTournamentPitch(TENANT, EVENT, { label: "Feld 1" });
+      expect(created.playersPerSide).toBeNull();
+
+      vi.mocked(prisma.tournamentPitch.findMany).mockResolvedValue([pitchRow()] as never);
+      const listed = await listTournamentPitches(TENANT, EVENT);
+      expect(listed[0]?.playersPerSide).toBeNull();
+    });
+
+    it("B — create/read pitch with playersPerSide = 3", async () => {
+      vi.mocked(prisma.tournamentPitch.aggregate).mockResolvedValue({ _max: { displayOrder: null } } as never);
+      vi.mocked(prisma.tournamentPitch.create).mockResolvedValue(
+        pitchRow({ playersPerSide: 3 }) as never,
+      );
+      const created = await createTournamentPitch(TENANT, EVENT, {
+        label: "Feld 1",
+        playersPerSide: 3,
+      });
+      expect(created.playersPerSide).toBe(3);
+
+      vi.mocked(prisma.tournamentPitch.findMany).mockResolvedValue(
+        [pitchRow({ playersPerSide: 3 })] as never,
+      );
+      const listed = await listTournamentPitches(TENANT, EVENT);
+      expect(listed[0]?.playersPerSide).toBe(3);
+    });
+
+    it("C — change 3 → 6 on edit/read", async () => {
+      vi.mocked(prisma.tournamentPitch.update).mockResolvedValue(
+        pitchRow({ playersPerSide: 6 }) as never,
+      );
+      const updated = await updateTournamentPitch(TENANT, EVENT, "pitch-1", { playersPerSide: 6 });
+      expect(updated.playersPerSide).toBe(6);
+
+      vi.mocked(prisma.tournamentPitch.findMany).mockResolvedValue(
+        [pitchRow({ playersPerSide: 6 })] as never,
+      );
+      const listed = await listTournamentPitches(TENANT, EVENT);
+      expect(listed[0]?.playersPerSide).toBe(6);
+    });
+
+    it("D — change 6 → unspecified clears playersPerSide to NULL", async () => {
+      vi.mocked(prisma.tournamentPitch.update).mockResolvedValue(pitchRow() as never);
+      const updated = await updateTournamentPitch(TENANT, EVENT, "pitch-1", {
+        playersPerSide: null,
+      });
+      expect(updated.playersPerSide).toBeNull();
+
+      vi.mocked(prisma.tournamentPitch.findMany).mockResolvedValue([pitchRow()] as never);
+      const listed = await listTournamentPitches(TENANT, EVENT);
+      expect(listed[0]?.playersPerSide).toBeNull();
+    });
+  });
 });

@@ -1,6 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    tournamentPitch: {
+      findMany: vi.fn(),
+    },
+  },
+}));
+
+vi.mock("@/lib/tournament-scheduling/internal/require-tournament", () => ({
+  requireTournamentEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+import { prisma } from "@/lib/db/prisma";
+import { listTournamentPitches } from "@/lib/tournament-scheduling/tournament-pitch-service";
+import { buildTournamentPlanungViewModel } from "@/lib/tournaments/planung/build-planung-view-model";
+import type { PlanungDomainSnapshot } from "@/lib/tournaments/planung/build-planung-view-model";
 
 /**
  * Regression for STAGE UAT blocker: 02B app code + Prisma client selecting
@@ -48,6 +65,96 @@ describe("Tournament edit page — 02B schema coupling", () => {
       "utf8",
     );
     expect(script).toContain(MIGRATION_NAME);
+  });
+
+  describe("planung preload pitch query (edit-page failure path)", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("reads legacy pitches with playersPerSide NULL via Prisma select", async () => {
+      vi.mocked(prisma.tournamentPitch.findMany).mockResolvedValue([
+        {
+          id: "pitch-legacy",
+          eventId: "event-1",
+          displayOrder: 0,
+          label: "Feld 1",
+          playersPerSide: null,
+        },
+      ] as never);
+
+      const rows = await listTournamentPitches("tenant-1", "event-1");
+      expect(rows[0]?.playersPerSide).toBeNull();
+      expect(prisma.tournamentPitch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: expect.objectContaining({ playersPerSide: true }),
+        }),
+      );
+    });
+
+    it("reads configured playersPerSide via the same list path used by planung preload", async () => {
+      vi.mocked(prisma.tournamentPitch.findMany).mockResolvedValue([
+        {
+          id: "pitch-configured",
+          eventId: "event-1",
+          displayOrder: 0,
+          label: "Feld 1",
+          playersPerSide: 6,
+        },
+      ] as never);
+
+      const rows = await listTournamentPitches("tenant-1", "event-1");
+      expect(rows[0]?.playersPerSide).toBe(6);
+    });
+
+    it("maps listTournamentPitches rows into planung view-model pitch columns", () => {
+      const minimalSnapshot: PlanungDomainSnapshot = {
+        tournamentId: "event-1",
+        ownership: "TENANT_ORGANISED",
+        timezone: "Europe/Zurich",
+        windowStartUtc: null,
+        windowEndUtc: null,
+        scheduleVersionId: null,
+        scheduleRevision: null,
+        schedulingConfig: {
+          matchDurationMinutes: 20,
+          transitionMinutes: 5,
+          minRestMinutes: 10,
+        },
+        pitches: [
+          { id: "p-null", displayOrder: 0, label: "Feld A", playersPerSide: null },
+          { id: "p-six", displayOrder: 1, label: "Feld B", playersPerSide: 6 },
+        ],
+        breaks: [],
+        fixtures: [],
+        assignments: [],
+        participants: [],
+        participantCount: 0,
+        fixtureCount: 0,
+        feasibility: { status: "FEASIBLE", diagnostics: [], metrics: {} as never, suggestions: [] },
+        smartTiming: null,
+        optimisation: { status: "FEASIBLE_NOT_PROVEN_OPTIMAL" } as never,
+        fixtureResults: [],
+        groups: [],
+        rankingConfiguration: null,
+        scheduleConsistencyStatus: "MATCHES",
+        fixtureHomeAwayRelevance: "OFF",
+      };
+
+      const vm = buildTournamentPlanungViewModel(minimalSnapshot);
+      expect(vm.pitches).toEqual([
+        expect.objectContaining({
+          pitchId: "p-null",
+          playersPerSide: null,
+          formatHint: null,
+        }),
+        expect.objectContaining({
+          pitchId: "p-six",
+          playersPerSide: 6,
+          formatHint: "6v6",
+        }),
+      ]);
+    });
   });
 });
 
