@@ -58,7 +58,12 @@ export type PlanungDomainSnapshot = {
     transitionMinutes: number;
     minRestMinutes: number;
   };
-  pitches: readonly { id: string; displayOrder: number; label: string }[];
+  pitches: readonly {
+    id: string;
+    displayOrder: number;
+    label: string;
+    playersPerSide: number | null;
+  }[];
   breaks: readonly {
     id: string;
     label: string | null;
@@ -587,12 +592,16 @@ export function buildTournamentPlanungViewModel(
     feasibilityStatus: snapshot.feasibility?.status ?? null,
     feasibilityUxStatus,
     pitches: snapshot.pitches.map((p) => {
-      const presentation = resolveTournamentPitchColumnPresentation({ label: p.label });
+      const presentation = resolveTournamentPitchColumnPresentation({
+        label: p.label,
+        playersPerSide: p.playersPerSide,
+      });
       return {
         pitchId: p.id,
         displayOrder: p.displayOrder,
         label: presentation.label,
         formatHint: presentation.formatHint,
+        playersPerSide: p.playersPerSide,
       };
     }),
     timeScale,

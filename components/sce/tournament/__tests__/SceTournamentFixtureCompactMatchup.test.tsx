@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import SceTournamentFixtureCompactMatchup from "../SceTournamentFixtureCompactMatchup";
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
-import { expectCanonicalFixtureIdentityOrder } from "./fixture-identity-order-assertions";
+import {
+  expectCanonicalFixtureIdentityOrder,
+  expectCanonicalStackedFixtureIdentity,
+} from "./fixture-identity-order-assertions";
 
 const sideA: TournamentPlanungFixtureSidePresentation = {
   label: "FC Allschwil Junioren F1",
@@ -61,13 +64,16 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     );
   });
 
-  it("board layout uses compact stack match block with planungBoard crests", () => {
+  it("board layout uses canonical stacked match identity for Feld- und Zeitplan cells", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="board" />);
     const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
     expect(matchup).toHaveAttribute("data-layout", "board");
-    expect(matchup).toHaveAttribute("data-crest-variant", "planungBoard");
-    expectCanonicalFixtureIdentityOrder(matchup);
-    expect(matchup.className).toMatch(/space-y/);
+    expect(matchup).toHaveAttribute("data-crest-variant", "canonicalStacked");
+    expectCanonicalStackedFixtureIdentity(matchup);
+    expect(screen.getByText("FC Allschwil Junioren F1")).toBeInTheDocument();
+    expect(screen.getByText("FC Allschwil Junioren F2")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
+    expect(screen.getByTestId("club-crest-image")).toBeInTheDocument();
   });
 
   it("inline planung uses larger management crest density", () => {

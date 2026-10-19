@@ -1,23 +1,20 @@
 /**
  * @vitest-environment jsdom
  *
- * components/admin/tournamentcenter/__tests__/TournamentCreateForm.test.tsx
- *
- * TOURNAMENTCENTER-01D-V — regression test for the creation-form retry
- * guard: once Event creation has partially failed (Event + some
- * participants/resources already persisted, at least one step errored),
- * the primary "Turnier erstellen" action must be disabled so a retry
- * cannot call POST /api/events a second time and create a duplicate
- * tournament with duplicated participants — see
- * lib/tournaments/create-tournament-orchestration.ts and the task notes on
- * TournamentCreateForm.tsx.
+ * TournamentCreateForm — composer commit integration (server-props + commit API).
  */
 
+import "./tournament-create-form-composer-mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import { pickSearchableOption, TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
+import {
+  addOwnTeamParticipantViaSelector,
+  pickSearchableOption,
+  setTournamentCreateScheduleStart,
+  TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS,
+} from "./tournament-form-test-helpers";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -26,6 +23,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
+  usePathname: () => "/dashboard/tournamentcenter/create",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
 }));
 
 const PITCH_HALL_GROUPS: FacilityGroup[] = [
@@ -33,78 +36,41 @@ const PITCH_HALL_GROUPS: FacilityGroup[] = [
     facilityId: "facility-1",
     facilityName: "Sportanlage Brüel",
     resources: [
-      { id: "res-pitch-a", name: "Hauptplatz", code: "PITCH_A", type: "FULL_PITCH", facilityId: "facility-1", facilityName: "Sportanlage Brüel" },
+      {
+        id: "res-pitch-a",
+        name: "Hauptplatz",
+        code: "PITCH_A",
+        type: "FULL_PITCH",
+        facilityId: "facility-1",
+        facilityName: "Sportanlage Brüel",
+      },
     ],
   },
 ];
 
-const DRESSING_ROOM_GROUPS: FacilityGroup[] = [
-  {
-    facilityId: "facility-1",
-    facilityName: "Sportanlage Brüel",
-    resources: [
-      { id: "res-dressing-1", name: "E1", code: "DR_1", type: "DRESSING_ROOM", facilityId: "facility-1", facilityName: "Sportanlage Brüel" },
-    ],
-  },
-];
+const DRESSING_ROOM_GROUPS: FacilityGroup[] = [];
 
 function jsonResponse(data: unknown, status = 200): Response {
   return { ok: status >= 200 && status < 300, status, json: async () => data } as Response;
 }
 
-/**
- * Routes fetch() calls made by TournamentCreateForm by URL/method, so each
- * test only needs to override the handlers it actually cares about.
- */
-function installFetchMock(overrides: {
-  createEventResponse?: () => Response;
-  addParticipantResponse?: (callIndex: number) => Response;
-  addResourceAllocationResponse?: () => Response;
-}) {
-  let participantCallIndex = 0;
-
+function installFetchMock(overrides: { commitResponse?: () => Response } = {}) {
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
 
-    if (url === "/api/seasons") {
-      return jsonResponse({ seasons: [{ id: "season-1", key: "2025-2026", name: "Saison 2025/2026", isActive: true }] });
-    }
-    if (url === "/api/teams") {
-      return jsonResponse([
-        { id: "team-1", name: "1. Mannschaft", ageGroup: null, genderGroup: null, isActive: true },
-        { id: "team-2", name: "2. Mannschaft", ageGroup: null, genderGroup: null, isActive: true },
-      ]);
-    }
-    if (url === "/api/planning/writable-teams?domain=tournament") {
-      return jsonResponse({
-        teams: [
-          { id: "team-1", name: "1. Mannschaft", displayName: "1. Mannschaft", ageGroup: null, genderGroup: null, isActive: true },
-          { id: "team-2", name: "2. Mannschaft", displayName: "2. Mannschaft", ageGroup: null, genderGroup: null, isActive: true },
-        ],
-      });
-    }
-    if (url === "/api/club-directory/clubs") {
-      return jsonResponse({ clubs: [] });
-    }
-    if (url === "/api/events" && method === "POST") {
-      return overrides.createEventResponse
-        ? overrides.createEventResponse()
-        : jsonResponse({ eventIds: ["event-1"] }, 201);
-    }
-    if (url.match(/^\/api\/tournaments\/.+\/participants$/) && method === "POST") {
-      const response = overrides.addParticipantResponse
-        ? overrides.addParticipantResponse(participantCallIndex)
-        : jsonResponse({ participant: { id: `participant-${participantCallIndex}` } }, 201);
-      participantCallIndex += 1;
-      return response;
-    }
-    if (url.match(/^\/api\/tournaments\/.+\/resource-allocations$/) && method === "POST") {
-      return overrides.addResourceAllocationResponse
-        ? overrides.addResourceAllocationResponse()
-        : jsonResponse({ allocation: {} }, 201);
+    if (url.startsWith("/api/club-directory/clubs")) {
+      return jsonResponse({ clubs: [], meta: { total: 0, limit: 200, skip: 0, hasMore: false } });
     }
     if (url.startsWith("/api/facilities/availability")) {
       return jsonResponse({ availability: [] });
+    }
+    if (url === "/api/tournament/composer/drafts" && method === "POST") {
+      return jsonResponse({ draftId: "draft-test-1" });
+    }
+    if (url === "/api/tournament/composer/commit" && method === "POST") {
+      return overrides.commitResponse
+        ? overrides.commitResponse()
+        : jsonResponse({ eventId: "event-1", outcome: "PUBLISHED" });
     }
 
     throw new Error(`Unexpected fetch call: ${method} ${url}`);
@@ -116,77 +82,55 @@ function installFetchMock(overrides: {
 
 async function fillMinimalRequiredFields() {
   fireEvent.change(screen.getByTestId("tournament-create-title"), { target: { value: "Testturnier" } });
-  await waitFor(() => expect(screen.getByTestId("tournament-create-season-select")).not.toBeDisabled());
   pickSearchableOption("tournament-create-season", "season-1");
-  fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });
-
-  await waitFor(() => expect(screen.getByTestId("tournament-create-add-team-select")).not.toBeDisabled());
-  pickSearchableOption("tournament-create-add-team", "team-1");
-  fireEvent.click(screen.getByTestId("tournament-create-add-team-button"));
+  setTournamentCreateScheduleStart("2026-09-20", "10:00");
+  await addOwnTeamParticipantViaSelector("team-1");
+  await addOwnTeamParticipantViaSelector("team-2");
 }
 
-describe("TournamentCreateForm — retry guard after partial failure", () => {
+describe("TournamentCreateForm — composer commit", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     mocks.push.mockReset();
     mocks.refresh.mockReset();
   });
 
-  it("redirects to the TournamentCenter overview on a fully successful creation", async () => {
+  it("redirects to the TournamentCenter overview on a fully successful commit", async () => {
     installFetchMock({});
 
     render(
-      <TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />,
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
     );
     await fillMinimalRequiredFields();
 
-    fireEvent.click(screen.getByTestId("tournament-create-submit"));
+    fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
 
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/dashboard/tournamentcenter?submitted=1"));
-    expect(screen.queryByTestId("tournament-create-partial-warning")).not.toBeInTheDocument();
   });
 
-  it("disables the submit button after a partial failure instead of allowing a duplicate-creating retry", async () => {
+  it("does not redirect when composer commit returns an error", async () => {
     const fetchMock = installFetchMock({
-      addResourceAllocationResponse: () =>
-        jsonResponse({ error: 'FacilityResource "res-pitch-a" is archived and cannot receive new allocations' }, 422),
+      commitResponse: () => jsonResponse({ error: "Turnier konnte nicht erstellt werden." }, 422),
     });
 
     render(
-      <TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />,
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
     );
     await fillMinimalRequiredFields();
 
-    // PLANNING-RESOURCE-UX-01: visual picker card replaces dropdown.
-    // Click the pitch card to select it.
-    await waitFor(() => expect(screen.getByTestId("tournament-create-resource-card-res-pitch-a")).toBeInTheDocument());
-    fireEvent.click(screen.getByTestId("tournament-create-resource-card-res-pitch-a"));
-    await screen.findByText("Hauptplatz");
-
-    fireEvent.click(screen.getByTestId("tournament-create-submit"));
-
-    const warning = await screen.findByTestId("tournament-create-partial-warning");
-    expect(warning).toHaveTextContent("Turnier wurde erstellt");
-    expect(mocks.push).not.toHaveBeenCalledWith("/dashboard/tournamentcenter?submitted=1");
-
-    // The one and only Event-creation call so far — this is what we must
-    // NOT see a second one of.
-    const eventCallsBeforeRetry = fetchMock.mock.calls.filter(([url, init]) => url === "/api/events" && init?.method === "POST");
-    expect(eventCallsBeforeRetry).toHaveLength(1);
-
-    const submitButton = screen.getByTestId("tournament-create-submit");
-    expect(submitButton).toBeDisabled();
-
-    // Defense in depth: even a native form submit (e.g. Enter key) must not
-    // re-run the orchestration while a partial failure is unresolved.
-    fireEvent.submit(screen.getByTestId("tournament-create-form"));
+    fireEvent.click(screen.getByTestId("sce-activity-composer-submit"));
 
     await waitFor(() => {
-      const eventCallsAfterRetry = fetchMock.mock.calls.filter(([url, init]) => url === "/api/events" && init?.method === "POST");
-      expect(eventCallsAfterRetry).toHaveLength(1);
+      expect(fetchMock.mock.calls.some(([url]) => url === "/api/tournament/composer/commit")).toBe(true);
     });
-
-    // The safe path out of a partial failure remains available.
-    expect(screen.getByTestId("tournament-create-goto-edit")).toBeEnabled();
+    expect(mocks.push).not.toHaveBeenCalledWith("/dashboard/tournamentcenter?submitted=1");
   });
 });

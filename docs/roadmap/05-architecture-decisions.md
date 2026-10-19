@@ -353,7 +353,8 @@ Contracts: [`SCE-TOURNAMENT-PLANNER-02A`](./SCE-TOURNAMENT-PLANNER-02A.md), `lib
 
 ### Consequences
 
-- **02B+** may add persistence for playing format on pitches and Creator UX without ADR-014 rollback.
+- **02B** adds nullable `playersPerSide` on `TournamentPitch`, Creator/Planung/output adoption, and defensive validation — without ADR-014 rollback or schedule semantics for normal TP01 formats.
+- **02C+** continues playing units, rotation, stations.
 - Programme assignment persistence waits until **02E**; 02A is documentation + pure contracts only.
 - Architecture tests guard against Swiss-only enums and parallel schedule truth.
 - Team-Spielplan and public views remain **projections** of the canonical programme.

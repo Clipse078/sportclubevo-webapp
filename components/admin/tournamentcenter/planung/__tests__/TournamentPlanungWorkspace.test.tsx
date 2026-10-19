@@ -30,7 +30,7 @@ const model: TournamentPlanungViewModel = {
   optimisationStatus: null,
   feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: null,
-  pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1", formatHint: null }],
+  pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1", formatHint: null, playersPerSide: null }],
   timeScale: null,
   cells: [],
   scheduleSections: [],

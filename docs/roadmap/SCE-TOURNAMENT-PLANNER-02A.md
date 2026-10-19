@@ -10,7 +10,7 @@
 | **STAGE baseline** | `7c4af4a3e42499132ec797b2358b6ac9505a513c` |
 | **ADR** | [`ADR-015`](./05-architecture-decisions.md#adr-015--tournament-programme-architecture-and-generic-playing-format) |
 | **Contracts** | `lib/tournament-scheduling/tournament-programme-architecture.ts` |
-| **Next package** | **02B** — Playing Formats & Tournament Pitches (**NOT STARTED**) |
+| **Next package** | **02C** — Participant Playing Units (**NOT STARTED**); **02B** merged (PR **#875**) |
 
 ## Preflight
 

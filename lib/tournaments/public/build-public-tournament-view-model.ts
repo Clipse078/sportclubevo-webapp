@@ -162,6 +162,7 @@ export function buildPublicTournamentViewModel(input: {
       pitchId: p.pitchId,
       displayOrder: p.displayOrder,
       label: p.label,
+      formatHint: p.formatHint,
     })),
     cells: planung.cells,
     scheduleSections: planung.scheduleSections,

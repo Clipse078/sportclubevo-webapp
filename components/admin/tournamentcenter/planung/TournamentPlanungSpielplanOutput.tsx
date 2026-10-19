@@ -65,6 +65,7 @@ export default function TournamentPlanungSpielplanOutput({
           pitchId: p.pitchId,
           displayOrder: p.displayOrder,
           label: p.label,
+          formatHint: p.formatHint,
         })),
         cells: planungModel.cells,
         scheduleSections: planungModel.scheduleSections,

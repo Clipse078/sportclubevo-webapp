@@ -108,7 +108,7 @@ describe("SCE Tournament Programme — 02A contracts", () => {
     expect(PLAYERS_PER_SIDE_PRODUCT_MAX).toBeNull();
     expect(PLAYERS_PER_SIDE_TECHNICAL_BOUND_MAX).toBe(22);
     expect(TECHNICAL_BOUND_IS_PRODUCT_RULE).toBe(false);
-    expect(PLAYERS_PER_SIDE_BOUND_REVIEW_DEFERRED_TO_02B).toBe(true);
+    expect(PLAYERS_PER_SIDE_BOUND_REVIEW_DEFERRED_TO_02B).toBe(false);
   });
 
   it("locks PlayingFormat optionality — optional by default, no defaults or silent inference", () => {

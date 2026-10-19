@@ -47,10 +47,11 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
     expect(fixtureCard).not.toMatch(/grid-cols-\[minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/);
   });
 
-  it("B — edit board uses compact stack match block", () => {
+  it("B — edit board uses canonical stacked match identity block", () => {
     expect(board).toMatch(/layout="board"/);
     expect(compact).toMatch(/data-layout="board"/);
-    expect(compact).toMatch(/space-y-0\.5/);
+    expect(compact).toMatch(/SceMatchStackedFixtureIdentity/);
+    expect(compact).toMatch(/data-crest-variant="canonicalStacked"/);
     expect(compact).not.toMatch(/layout === "board" \? "flex-nowrap"/);
   });
 

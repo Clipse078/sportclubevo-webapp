@@ -44,7 +44,9 @@ describe("PLANNING-UX-07R4B cross-event facility engine", () => {
     });
 
     it("match create and edit use canonical facilities availability API", () => {
-      expect(read("components/admin/matchcenter/MatchCreateForm.tsx")).toContain("/api/facilities/availability");
+      expect(read("components/admin/matchcenter/MatchCreateForm.tsx")).toMatch(
+        /useFacilityAvailability|\/api\/facilities\/availability/,
+      );
       expect(read("components/admin/matchcenter/MatchcenterDetailOperational.tsx")).toContain("useFacilityAvailability");
     });
 

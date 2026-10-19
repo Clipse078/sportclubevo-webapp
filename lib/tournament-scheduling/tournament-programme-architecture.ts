@@ -68,7 +68,10 @@ export const PLAYERS_PER_SIDE_TECHNICAL_BOUND_MAX = PLAYERS_PER_SIDE_MAX;
 /** No fixed product cap in 02A — federation/sport limits belong in presets or format-specific rules. */
 export const PLAYERS_PER_SIDE_PRODUCT_MAX: null = null;
 export const TECHNICAL_BOUND_IS_PRODUCT_RULE = false;
-export const PLAYERS_PER_SIDE_BOUND_REVIEW_DEFERRED_TO_02B = true;
+export const PLAYERS_PER_SIDE_BOUND_REVIEW_DEFERRED_TO_02B = false;
+/** See validate-tournament-pitch-playing-format.ts — defensive only, not product max. */
+export const PLAYERS_PER_SIDE_TECHNICAL_BOUND_JUSTIFICATION =
+  "Defensive integer band (1–22) for user-entered playersPerSide; not a sporting/business maximum.";
 
 export type PlayingFormatSpecificationState = "UNSPECIFIED" | "SPECIFIED";
 
@@ -266,7 +269,7 @@ export const TP01_GENERATORS_PRESERVED = true;
 export const TP01_SCHEDULER_PRESERVED = true;
 export const TP01_OUTPUTS_PRESERVED = true;
 
-/** Creator adoption flags for 02A (architecture only). */
-export const TOURNAMENT_CREATOR_ADOPTION_REQUIRED_02A = false;
-export const TOURNAMENT_PLANUNG_ADOPTION_REQUIRED_02A = false;
-export const SPIELPLAN_OUTPUT_ADOPTION_REQUIRED_02A = false;
+/** Creator adoption flags — 02B implements pitch PlayingFormat UI + persistence. */
+export const TOURNAMENT_CREATOR_ADOPTION_REQUIRED_02B = true;
+export const TOURNAMENT_PLANUNG_ADOPTION_REQUIRED_02B = true;
+export const SPIELPLAN_OUTPUT_ADOPTION_REQUIRED_02B = true;

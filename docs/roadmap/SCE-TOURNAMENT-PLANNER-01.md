@@ -24,7 +24,7 @@
 | **01K (Spielplan output + print/PDF + sharing)** | **CLOSED / ACCEPTED / MERGED** (PR **#871**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01K.md)) |
 | **01L (Responsive + accessibility + polish)** | **CLOSED / ACCEPTED / MERGED** (PR **#872**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01L.md)) |
 | **01M (Integrity + performance + closure)** | **CLOSED / ACCEPTED / MERGED** (PR **#873**, PO UAT **PASS**) ([doc](./SCE-TOURNAMENT-PLANNER-01M.md)) |
-| **Successor programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) — advanced tournament programme generation (**02A** opened) |
+| **Successor programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) — advanced tournament programme generation (**IN PROGRESS**; **02A** PR **#874**, **02B** PR **#875** merged) |
 
 ### Tournament Creator step order (canonical after 01I-R2)
 

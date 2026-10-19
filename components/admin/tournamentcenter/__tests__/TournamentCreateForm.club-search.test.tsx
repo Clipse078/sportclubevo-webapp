@@ -1,63 +1,81 @@
 /**
  * @vitest-environment jsdom
  *
- * components/admin/tournamentcenter/__tests__/TournamentCreateForm.club-search.test.tsx
- *
- * MASTERDATA-SELECTOR-CONSISTENCY-03 (BUG 2) — focused tests for the
- * TournamentCenter external-club participant flow after replacing the
- * eagerly-fetched, silently-capped native <select> with the search-driven
- * ExternalClubPicker.
+ * External club participant flow via SceClubTeamSelectorDialog (CLUB_ONLY).
  */
 
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import "./tournament-create-form-composer-mock";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import { TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
+import {
+  openTournamentExternalClubSelector,
+  searchTournamentExternalClubSelector,
+  TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS,
+} from "./tournament-form-test-helpers";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/tournamentcenter/create",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
 }));
 
 const PITCH_HALL_GROUPS: FacilityGroup[] = [];
 const DRESSING_ROOM_GROUPS: FacilityGroup[] = [];
 
+const CLUB_BEYOND_OLD_CAP = {
+  id: "club-99",
+  name: "SC Zunzgen 99",
+  shortName: null,
+  logoUrl: null,
+  status: "active",
+  teamCount: 0,
+};
+const CLUB_ROSSONERI = {
+  id: "club-rossoneri",
+  name: "AC Rossoneri",
+  shortName: null,
+  logoUrl: null,
+  status: "active",
+  teamCount: 0,
+};
+
 function jsonResponse(data: unknown, status = 200): Response {
   return { ok: status >= 200 && status < 300, status, json: async () => data } as Response;
 }
 
-/**
- * A club deliberately positioned well beyond the OLD un-searched default
- * cap (CLUB_DIRECTORY_DEFAULT_LIMIT = 50) — proves the fix is retrievable
- * regardless of alphabetical position, since it is never fetched as part
- * of a bulk/paged list at all.
- */
-const CLUB_BEYOND_OLD_CAP = { id: "club-99", name: "SC Zunzgen 99", shortName: null };
-const CLUB_ROSSONERI = { id: "club-rossoneri", name: "AC Rossoneri", shortName: null };
+function clubDirectoryResponse(allClubs: unknown[], skip = 0, limit = 200) {
+  const page = allClubs.slice(skip, skip + limit);
+  return jsonResponse({
+    clubs: page,
+    meta: {
+      total: allClubs.length,
+      limit,
+      skip,
+      hasMore: skip + page.length < allClubs.length,
+    },
+  });
+}
 
-function installFetchMock() {
+function installFetchMock(clubs: unknown[] = [CLUB_BEYOND_OLD_CAP, CLUB_ROSSONERI]) {
   const clubSearchCalls: string[] = [];
 
   const fetchMock = vi.fn(async (url: string) => {
-    if (url === "/api/seasons") {
-      return jsonResponse({ seasons: [{ id: "season-1", key: "2025-2026", name: "Saison 2025/2026", isActive: true }] });
-    }
-    if (url === "/api/teams") {
-      return jsonResponse([]);
-    }
     if (url.startsWith("/api/club-directory/clubs")) {
       clubSearchCalls.push(url);
       const parsed = new URL(url, "http://localhost");
-      const search = (parsed.searchParams.get("search") ?? "").toLowerCase();
-
-      const all = [CLUB_BEYOND_OLD_CAP, CLUB_ROSSONERI];
-      const matches = all.filter((c) => c.name.toLowerCase().includes(search));
-      return jsonResponse({ clubs: matches });
+      const skip = Number(parsed.searchParams.get("skip") ?? "0");
+      const limit = Number(parsed.searchParams.get("limit") ?? "200");
+      return clubDirectoryResponse(clubs, skip, limit);
     }
     if (url.startsWith("/api/facilities/availability")) {
       return jsonResponse({ availability: [] });
     }
-
     throw new Error(`Unexpected fetch call: ${url}`);
   });
 
@@ -69,135 +87,142 @@ beforeEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("TournamentCreateForm — external club participant search (BUG 2 fix)", () => {
-  it("never eagerly fetches the full Club Directory on mount (no un-searched GET /api/club-directory/clubs call)", async () => {
-    const { fetchMock, clubSearchCalls } = installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
+describe("TournamentCreateForm — external club participant search", () => {
+  it("never eagerly fetches the Club Directory on mount (only when selector opens)", async () => {
+    const { clubSearchCalls } = installFetchMock();
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    // Give any stray mount-time effect a tick to fire before asserting.
     await new Promise((resolve) => setTimeout(resolve, 50));
-
     expect(clubSearchCalls).toHaveLength(0);
+
+    await openTournamentExternalClubSelector();
+    await waitFor(() => expect(clubSearchCalls.length).toBeGreaterThan(0));
   });
 
-  // 9. eligible club beyond previous result cap is retrievable
   it("9. a club positioned well beyond the previous 50-item cap is retrievable via search", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
 
-    fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
-      target: { value: "zu" },
-    });
-
+    await openTournamentExternalClubSelector();
+    searchTournamentExternalClubSelector("zu");
     expect(await screen.findByText("SC Zunzgen 99")).toBeInTheDocument();
   });
 
-  // 12. 2-character search returns matching canonical clubs
   it("12. a 2-character search returns matching canonical clubs", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
 
-    fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
-      target: { value: "ro" },
-    });
-
+    await openTournamentExternalClubSelector();
+    searchTournamentExternalClubSelector("ro");
     expect(await screen.findByText("AC Rossoneri")).toBeInTheDocument();
   });
 
-  // 13. non-matching clubs excluded from search result
   it("13. non-matching clubs are excluded from the search result", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
 
-    fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
-      target: { value: "ro" },
-    });
-
+    await openTournamentExternalClubSelector();
+    searchTournamentExternalClubSelector("ro");
     await screen.findByText("AC Rossoneri");
     expect(screen.queryByText("SC Zunzgen 99")).not.toBeInTheDocument();
   });
 
-  it("selecting a searched club and clicking + adds it as a participant, then the Anzeigename field is editable (PR #348 behavior preserved)", async () => {
+  it("selecting a searched club adds it to the participant lobby", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
 
-    fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
-      target: { value: "ro" },
+    await openTournamentExternalClubSelector();
+    searchTournamentExternalClubSelector("ro");
+    fireEvent.click(await screen.findByTestId("sce-club-card-club-rossoneri"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("tournament-create-participant-total")).toHaveTextContent("1 gesamt");
     });
-    fireEvent.mouseDown(await screen.findByTestId("tournament-create-add-external-club-search-option-club-rossoneri"));
-
-    fireEvent.click(screen.getByTestId("tournament-create-add-external-club-search-button"));
-
-    const row = await screen.findByTestId(/tournament-create-participant-row-/);
-    expect(row).toHaveTextContent("AC Rossoneri");
-
-    fireEvent.click(within(row).getByRole("button", { name: "Details bearbeiten" }));
-
-    const displayNameInput = row.querySelector("input[placeholder='AC Rossoneri']") as HTMLInputElement;
-    expect(displayNameInput).toBeInTheDocument();
-    fireEvent.change(displayNameInput, { target: { value: "Gelb" } });
-    expect(displayNameInput.value).toBe("Gelb");
+    expect(screen.getAllByText("AC Rossoneri").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("the same club can be added twice with distinct Anzeigename values (PR #348 behavior preserved)", async () => {
+  it("prevents adding the same external club twice", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
 
     async function addRossoneri() {
-      fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
-        target: { value: "ro" },
-      });
-      fireEvent.mouseDown(await screen.findByTestId("tournament-create-add-external-club-search-option-club-rossoneri"));
-      fireEvent.click(screen.getByTestId("tournament-create-add-external-club-search-button"));
+      await openTournamentExternalClubSelector();
+      searchTournamentExternalClubSelector("ro");
+      fireEvent.click(await screen.findByTestId("sce-club-card-club-rossoneri"));
+      await waitFor(() =>
+        expect(screen.queryByTestId("tournament-participant-club-selector")).not.toBeInTheDocument(),
+      );
     }
 
     await addRossoneri();
-    await waitFor(() => expect(screen.getAllByText("AC Rossoneri")).toHaveLength(1));
-    await addRossoneri();
+    await waitFor(() => expect(screen.getByTestId("tournament-create-participant-total")).toHaveTextContent("1 gesamt"));
 
-    await waitFor(() => expect(screen.getAllByText("AC Rossoneri")).toHaveLength(2));
+    await addRossoneri();
+    expect(await screen.findByTestId("tournament-participant-duplicate-notice")).toBeInTheDocument();
+    expect(screen.getByTestId("tournament-create-participant-total")).toHaveTextContent("1 gesamt");
   });
 
-  // 1/7. MASTERDATA-SELECTOR-CONSISTENCY-03-C1 — end-to-end through the
-  // real form (not just the isolated picker component): a search matching
-  // more than one page's worth of clubs still exposes a club ranked past
-  // the previous 200-item cap, and TournamentCreateForm's add flow around
-  // the picker is otherwise unchanged.
-  it("1/7. exposes a club beyond the previous 200-item search cap through the real TournamentCreateForm add-participant flow", async () => {
+  it("1/7. exposes a club beyond the previous 200-item search cap through the add-participant flow", async () => {
     const manyClubs = Array.from({ length: 210 }, (_, i) => ({
       id: `club-many-${i}`,
       name: `Testverein ${String(i).padStart(4, "0")}`,
-      shortName: null as string | null,
+      shortName: null,
+      logoUrl: null,
+      status: "active",
+      teamCount: 0,
     }));
 
-    const fetchMock = vi.fn(async (url: string) => {
-      if (url === "/api/seasons") {
-        return jsonResponse({ seasons: [{ id: "season-1", key: "2025-2026", name: "Saison 2025/2026", isActive: true }] });
-      }
-      if (url === "/api/teams") return jsonResponse([]);
-      if (url.startsWith("/api/club-directory/clubs")) {
-        const parsed = new URL(url, "http://localhost");
-        const limit = Number(parsed.searchParams.get("limit"));
-        const skip = Number(parsed.searchParams.get("skip") ?? "0");
-        return jsonResponse({ clubs: manyClubs.slice(skip, skip + limit) });
-      }
-      if (url.startsWith("/api/facilities/availability")) return jsonResponse({ availability: [] });
-      throw new Error(`Unexpected fetch call: ${url}`);
+    installFetchMock(manyClubs);
+    render(
+      <TournamentCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        {...TOURNAMENT_CREATE_FORM_TEST_COMPOSER_SURFACE_PROPS}
+      />,
+    );
+
+    await openTournamentExternalClubSelector();
+    searchTournamentExternalClubSelector("testverein");
+    fireEvent.click(await screen.findByTestId("sce-club-card-club-many-209"));
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Testverein 0209").length).toBeGreaterThanOrEqual(1);
     });
-    vi.stubGlobal("fetch", fetchMock);
-
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
-
-    fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
-      target: { value: "testverein" },
-    });
-
-    await screen.findByText("Testverein 0209");
-    fireEvent.mouseDown(screen.getByTestId("tournament-create-add-external-club-search-option-club-many-209"));
-    fireEvent.click(screen.getByTestId("tournament-create-add-external-club-search-button"));
-
-    const row = await screen.findByTestId(/tournament-create-participant-row-/);
-    expect(row).toHaveTextContent("Testverein 0209");
   });
 });

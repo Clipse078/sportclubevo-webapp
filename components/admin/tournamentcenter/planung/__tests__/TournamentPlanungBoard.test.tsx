@@ -16,8 +16,8 @@ const model: TournamentPlanungViewModel = {
   feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: "PLAN_FITS",
   pitches: [
-    { pitchId: "pitch-a", displayOrder: 0, label: "Feld 1", formatHint: null },
-    { pitchId: "pitch-b", displayOrder: 1, label: "Feld 2", formatHint: null },
+    { pitchId: "pitch-a", displayOrder: 0, label: "Feld 1", formatHint: null, playersPerSide: null },
+    { pitchId: "pitch-b", displayOrder: 1, label: "Feld 2", formatHint: null, playersPerSide: null },
   ],
   timeScale: {
     rowAnchorsUtc: ["2026-06-01T08:00:00.000Z", "2026-06-01T08:15:00.000Z"],
@@ -135,6 +135,23 @@ describe("TournamentPlanungBoard 01I", () => {
       />,
     );
     expect(screen.getByTestId("planung-fixture-f1")).toHaveAttribute("data-draggable", "true");
+  });
+
+  it("R4 — board fixture cells use canonical stacked match identity without pitch/time in card", () => {
+    render(
+      <TournamentPlanungBoard
+        model={model}
+        timezone="Europe/Zurich"
+        selectedFixtureId={null}
+        onSelectFixture={vi.fn()}
+      />,
+    );
+    const fixtureButton = screen.getByTestId("planung-fixture-f1");
+    expect(fixtureButton.querySelector('[data-sce-match-region="fixture"]')).toBeTruthy();
+    expect(fixtureButton.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
+    expect(fixtureButton.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
+    expect(fixtureButton.querySelector('[data-testid="sce-match-vs"]')).toBeTruthy();
+    expect(fixtureButton.textContent).not.toMatch(/Feld 1/);
   });
 
   it("M — uses TournamentPitch column labels", () => {

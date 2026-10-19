@@ -45,7 +45,12 @@ export default function SceTournamentSpielplanDocument({
                 key={pitch.pitchId}
                 className="border border-neutral-400 bg-neutral-100 px-2 py-1.5 text-xs uppercase"
               >
-                {pitch.label}
+                <span>{pitch.label}</span>
+                {pitch.formatHint ? (
+                  <span className="mt-0.5 block text-[10px] font-normal normal-case">
+                    {pitch.formatHint}
+                  </span>
+                ) : null}
               </th>
             ))}
           </tr>

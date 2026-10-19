@@ -45,6 +45,7 @@ import {
   SceActivityListRowOrganizationalContext,
   SceActivityListRowTimeMeta,
 } from "./SceActivityListRowOperationalMeta";
+import { SceMatchStackedFixtureIdentity } from "./SceMatchStackedFixtureIdentity";
 export type SceMatchCardSurface = "standalone" | "detail-embed" | "list-row";
 
 export type SceMatchListRowPresentation = "default" | "programme-fixture" | "dashboard-opponent";
@@ -201,44 +202,6 @@ function SceMatchContextBadges({
   );
 }
 
-function SceMatchStackedIdentityColumn({
-  side,
-  identity,
-  density,
-  showCrests,
-}: {
-  side: "home" | "away";
-  identity: SceMatchPresentationModel["fixture"]["home"];
-  density: SceActivityPresentationDensity;
-  showCrests: boolean;
-}) {
-  const crestSize = crestSizeForDensity(density);
-
-  return (
-    <div
-      data-sce-match-side={side}
-      data-sce-match-region={`${side}-identity`}
-      className={cn(
-        "flex min-w-0 flex-col items-center text-center",
-        richScale(density).identityStackGapClass,
-      )}
-    >
-      {showCrests ? (
-        <div data-sce-match-region={`${side}-crest`}>
-          <ClubCrest identity={identity} density={crestSize} decorative />
-        </div>
-      ) : null}
-      <span
-        className={cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity(density))}
-        title={identity.displayName}
-        data-sce-match-region={`${side}-name`}
-      >
-        {identity.displayName}
-      </span>
-    </div>
-  );
-}
-
 function SceMatchStackedFixturePanel({
   model,
   density,
@@ -246,42 +209,14 @@ function SceMatchStackedFixturePanel({
   model: SceMatchPresentationModel;
   density: SceActivityPresentationDensity;
 }) {
-  const showCrests = isSceActivityDimensionVisible(density, "crests");
-  const fixtureLabel = buildFixtureAccessibleLabel(model);
-
-  const scale = richScale(density);
-
   return (
-    <div
-      className={cn(
-        "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center py-1",
-        scale.fixtureGridGapXClass,
-        scale.fixtureGapYClass,
-      )}
-      data-testid="sce-match-fixture"
-      data-sce-match-region="fixture"
-      aria-label={fixtureLabel}
-    >
-      <SceMatchStackedIdentityColumn
-        side="home"
-        identity={model.fixture.home}
-        density={density}
-        showCrests={showCrests}
-      />
-      <div
-        className="flex items-center justify-center px-1"
-        data-sce-match-region="center"
-        data-sce-match-center
-      >
-        <SceMatchFixtureSeparator model={model} density={density} />
-      </div>
-      <SceMatchStackedIdentityColumn
-        side="away"
-        identity={model.fixture.away}
-        density={density}
-        showCrests={showCrests}
-      />
-    </div>
+    <SceMatchStackedFixtureIdentity
+      home={{ identity: model.fixture.home }}
+      away={{ identity: model.fixture.away }}
+      density={density}
+      ariaLabel={buildFixtureAccessibleLabel(model)}
+      center={<SceMatchFixtureSeparator model={model} density={density} />}
+    />
   );
 }
 
