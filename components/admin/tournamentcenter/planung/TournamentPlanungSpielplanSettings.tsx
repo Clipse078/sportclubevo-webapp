@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { usePlanungScheduleMutationQueue } from "@/lib/tournaments/planung/use-planung-schedule-mutation-queue";
+import TournamentPlanungPitchFormatSettings from "./TournamentPlanungPitchFormatSettings";
 
 const TIMING_DEBOUNCE_MS = 450;
 
@@ -440,6 +441,14 @@ export default function TournamentPlanungSpielplanSettings({
           {syncError}
         </p>
       ) : null}
+
+      <TournamentPlanungPitchFormatSettings
+        tournamentId={tournamentId}
+        pitches={pitches}
+        canManage={canManage}
+        onSaved={onModelChange}
+        onError={onError}
+      />
 
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">

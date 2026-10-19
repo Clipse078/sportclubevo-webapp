@@ -121,7 +121,12 @@ function breakOverlapsInstant(
 
 export function buildTournamentSpielplanViewModel(input: {
   identity: Omit<TournamentSpielplanIdentity, "dateLabel"> & { startAtIso: string };
-  pitches: readonly { pitchId: string; displayOrder: number; label: string }[];
+  pitches: readonly {
+    pitchId: string;
+    displayOrder: number;
+    label: string;
+    formatHint?: string | null;
+  }[];
   cells: readonly TournamentPlanungBoardCell[];
   scheduleSections: readonly TournamentPlanungScheduleSection[];
   participants: readonly {
@@ -136,6 +141,7 @@ export function buildTournamentSpielplanViewModel(input: {
       pitchId: p.pitchId,
       displayOrder: p.displayOrder,
       label: p.label,
+      formatHint: p.formatHint ?? null,
     }))
     .sort((a, b) => a.displayOrder - b.displayOrder || a.pitchId.localeCompare(b.pitchId));
 
@@ -347,7 +353,12 @@ export function buildTournamentSpielplanFromPlanung(input: {
   tenantName: string | null;
   tenantLogoUrl: string | null;
   timezone: string;
-  pitches: readonly { pitchId: string; displayOrder: number; label: string }[];
+  pitches: readonly {
+    pitchId: string;
+    displayOrder: number;
+    label: string;
+    formatHint?: string | null;
+  }[];
   cells: readonly TournamentPlanungBoardCell[];
   scheduleSections: readonly TournamentPlanungScheduleSection[];
   participants: readonly {

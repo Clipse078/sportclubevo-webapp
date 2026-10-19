@@ -21,6 +21,7 @@ import {
   createDefaultComposerBreakDraft,
   formatComposerBreakSummary,
 } from "@/lib/tournaments/composer/tournament-composer-planner-breaks";
+import TournamentComposerPitchPlayingFormatField from "./TournamentComposerPitchPlayingFormatField";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
 
@@ -270,26 +271,45 @@ export function TournamentComposerSpielfelderPanel({
         Logische Spielfelder für den Spielplan — unabhängig von physischen Anlagenressourcen im Schritt
         Ressourcen.
       </p>
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {planner.pitches.map((pitch) => (
-          <li key={pitch.localId} className="flex items-center gap-2">
-            <input
-              type="text"
-              className="fca-input flex-1"
-              value={pitch.label}
-              onChange={(e) =>
+          <li
+            key={pitch.localId}
+            className="flex flex-col gap-3 rounded-lg border border-[var(--border)]/70 bg-[var(--surface)]/40 p-3 sm:flex-row sm:items-end sm:gap-2"
+          >
+            <label className="block min-w-0 flex-1 space-y-1">
+              <span className="fca-label">Name</span>
+              <input
+                type="text"
+                className="fca-input w-full"
+                value={pitch.label}
+                onChange={(e) =>
+                  onChange((p) => ({
+                    ...p,
+                    pitches: p.pitches.map((row) =>
+                      row.localId === pitch.localId ? { ...row, label: e.target.value } : row,
+                    ),
+                  }))
+                }
+                data-testid={`tournament-pitch-label-${pitch.localId}`}
+              />
+            </label>
+            <TournamentComposerPitchPlayingFormatField
+              id={`tournament-pitch-format-${pitch.localId}`}
+              testId={`tournament-pitch-format-${pitch.localId}`}
+              playersPerSide={pitch.playersPerSide ?? null}
+              onChange={(playersPerSide) =>
                 onChange((p) => ({
                   ...p,
                   pitches: p.pitches.map((row) =>
-                    row.localId === pitch.localId ? { ...row, label: e.target.value } : row,
+                    row.localId === pitch.localId ? { ...row, playersPerSide } : row,
                   ),
                 }))
               }
-              data-testid={`tournament-pitch-label-${pitch.localId}`}
             />
             <button
               type="button"
-              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface)]"
+              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] self-end"
               aria-label="Feld entfernen"
               disabled={planner.pitches.length <= 1}
               onClick={() =>
@@ -314,7 +334,7 @@ export function TournamentComposerSpielfelderPanel({
               ...p,
               pitches: [
                 ...p.pitches,
-                { localId: `pitch-${Date.now()}`, label: `Feld ${nextIndex}` },
+                { localId: `pitch-${Date.now()}`, label: `Feld ${nextIndex}`, playersPerSide: null },
               ],
             };
           })
@@ -616,6 +636,7 @@ export function syncPitchCountPreset(planner: TournamentComposerPlannerDraft, co
     pitches: labels.map((label, index) => ({
       localId: planner.pitches[index]?.localId ?? `pitch-${index + 1}`,
       label,
+      playersPerSide: planner.pitches[index]?.playersPerSide ?? null,
     })),
   };
 }

@@ -158,6 +158,7 @@ export async function persistTournamentPlannerFromComposer(input: {
     const created = await createTournamentPitch(tenantId, tournamentId, {
       label: pitch.label,
       displayOrder: i,
+      playersPerSide: pitch.playersPerSide ?? null,
     });
     pitchIdByLocal.set(pitch.localId, created.id);
   }

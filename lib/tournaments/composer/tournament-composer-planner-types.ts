@@ -6,6 +6,8 @@ import type { TournamentRankingTiebreakCriterion } from "@/lib/tournament-schedu
 export type TournamentComposerPitchDraft = {
   localId: string;
   label: string;
+  /** Optional players per side — omitted/null = unspecified (02B). */
+  playersPerSide?: number | null;
 };
 
 export type TournamentComposerBreakDraft = {

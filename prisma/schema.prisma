@@ -9307,6 +9307,8 @@ model TournamentPitch {
 
   displayOrder Int
   label        String
+  /// Optional playing format (players per side). Null = unspecified (02B).
+  playersPerSide Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

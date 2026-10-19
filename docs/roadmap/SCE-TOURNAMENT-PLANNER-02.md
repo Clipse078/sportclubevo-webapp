@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02` |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) — **CLOSED / ACCEPTED / MERGED** (01M PR **#873**) |
-| **Status** | **IN PROGRESS** — package **02A** opened |
+| **Status** | **IN PROGRESS** — package **02B** opened |
 | **ADR** | [`ADR-015`](./05-architecture-decisions.md#adr-015--tournament-programme-architecture-and-generic-playing-format) |
 | **Contracts** | `lib/tournament-scheduling/tournament-programme-architecture.ts` |
 
@@ -50,7 +50,7 @@ Long-term canonical pipeline:
 | Package | Scope |
 | --- | --- |
 | **02A** | Programme architecture & format model — **this slice** ([doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
-| **02B** | Playing formats & tournament pitches — optional pitch format, persistence, no mandatory format for normal tournaments (**NOT STARTED**) |
+| **02B** | Playing formats & tournament pitches — optional pitch format, persistence, Creator/Planung/output adoption ([doc](./SCE-TOURNAMENT-PLANNER-02B.md)) (**OPEN — PO UAT**) |
 | **02C** | Participant playing units (full team / subteams, capacity rules) |
 | **02D** | Rotation generator (first-class format) |
 | **02E** | Stations & alternative activities |
@@ -85,4 +85,5 @@ Team-Spielplan is a **derived view** — never a separately persisted schedule.
 | --- | --- |
 | **TOURNAMENT_PLANNER_02_STARTED** | **YES** (02A) |
 | **02A_STATUS** | **CLOSED / ACCEPTED / MERGED** (PR **#874**, [02A doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
-| **NEXT_PACKAGE** | **02B** — Playing Formats & Tournament Pitches (**NOT STARTED**) |
+| **02B_STATUS** | **OPEN** ([02B doc](./SCE-TOURNAMENT-PLANNER-02B.md)) |
+| **NEXT_PACKAGE** | **02C** — Participant Playing Units (**NOT STARTED**) |

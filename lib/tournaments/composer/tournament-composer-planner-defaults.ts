@@ -37,6 +37,7 @@ export function createDefaultTournamentComposerPlannerDraft(input?: {
     pitches: labels.map((label, index) => ({
       localId: `pitch-${index + 1}`,
       label,
+      playersPerSide: null,
     })),
     timing: {
       matchDurationMinutes: input?.defaultMatchDurationMinutes ?? 12,

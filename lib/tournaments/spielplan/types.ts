@@ -17,6 +17,8 @@ export type TournamentSpielplanPitchColumn = {
   pitchId: string;
   displayOrder: number;
   label: string;
+  /** Compact format hint when configured (e.g. 3v3). */
+  formatHint: string | null;
 };
 
 export type TournamentSpielplanFixturePresentation = {

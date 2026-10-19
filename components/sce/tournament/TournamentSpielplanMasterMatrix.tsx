@@ -134,7 +134,12 @@ export default function TournamentSpielplanMasterMatrix({
                 scope="col"
                 className="border border-[var(--border)] bg-[var(--surface-2)] px-2 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
               >
-                {pitch.label}
+                <span className="block">{pitch.label}</span>
+                {pitch.formatHint ? (
+                  <span className="mt-0.5 block text-[0.65rem] font-normal normal-case tracking-normal text-[var(--text-2)]">
+                    {pitch.formatHint}
+                  </span>
+                ) : null}
               </th>
             ))}
           </tr>

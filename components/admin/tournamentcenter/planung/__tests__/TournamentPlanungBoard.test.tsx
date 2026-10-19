@@ -16,8 +16,8 @@ const model: TournamentPlanungViewModel = {
   feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: "PLAN_FITS",
   pitches: [
-    { pitchId: "pitch-a", displayOrder: 0, label: "Feld 1", formatHint: null },
-    { pitchId: "pitch-b", displayOrder: 1, label: "Feld 2", formatHint: null },
+    { pitchId: "pitch-a", displayOrder: 0, label: "Feld 1", formatHint: null, playersPerSide: null },
+    { pitchId: "pitch-b", displayOrder: 1, label: "Feld 2", formatHint: null, playersPerSide: null },
   ],
   timeScale: {
     rowAnchorsUtc: ["2026-06-01T08:00:00.000Z", "2026-06-01T08:15:00.000Z"],

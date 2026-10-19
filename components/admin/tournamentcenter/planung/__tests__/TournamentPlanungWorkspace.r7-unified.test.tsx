@@ -27,7 +27,7 @@ const scheduledModel: TournamentPlanungViewModel = {
   optimisationStatus: "FEASIBLE_NOT_PROVEN_OPTIMAL",
   feasibilityStatus: "FEASIBLE",
   feasibilityUxStatus: null,
-  pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1", formatHint: null }],
+  pitches: [{ pitchId: "p1", displayOrder: 0, label: "Feld 1", formatHint: null, playersPerSide: null }],
   timeScale: {
     rowAnchorsUtc: ["2026-08-01T08:00:00.000Z"],
     matchDurationMinutes: 20,

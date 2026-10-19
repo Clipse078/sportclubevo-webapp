@@ -24,8 +24,9 @@ export type TournamentPlanungPitchColumn = {
   pitchId: string;
   displayOrder: number;
   label: string;
-  /** Optional playing-format hint (Tournament Planner 02); e.g. "3v3 · Kleinfeld". */
+  /** Optional playing-format hint (Tournament Planner 02); e.g. "3v3". */
   formatHint: string | null;
+  playersPerSide: number | null;
 };
 
 export type TournamentPlanungTimeScale = {

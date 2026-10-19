@@ -31,6 +31,7 @@ function fixtureCountLabel(count: number): string {
 
 export default function TournamentPlanungScheduleList({ model, timezone }: Props) {
   const pitchLabel = new Map(model.pitches.map((p) => [p.pitchId, p.label]));
+  const pitchFormatHint = new Map(model.pitches.map((p) => [p.pitchId, p.formatHint]));
 
   if (model.scheduleSections.length === 0) return null;
 
@@ -85,6 +86,9 @@ export default function TournamentPlanungScheduleList({ model, timezone }: Props
                       <p className="text-xs tabular-nums text-[var(--muted)]">
                         {formatTimeRange(entry.startUtc, entry.endUtc, timezone)} ·{" "}
                         {pitchLabel.get(entry.pitchId) ?? "Feld"}
+                        {pitchFormatHint.get(entry.pitchId)
+                          ? ` · ${pitchFormatHint.get(entry.pitchId)}`
+                          : ""}
                       </p>
                       {completed ? (
                         <p
