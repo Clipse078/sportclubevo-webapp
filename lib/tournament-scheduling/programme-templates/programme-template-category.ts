@@ -44,12 +44,17 @@ export function resolveProgrammeCategoryFromTeamAgeGroups(
 }
 
 export function resolveProgrammeCategoryFromComposerParticipants(input: {
-  participants: readonly { kind: string; teamId?: string }[];
+  participants: readonly { kind: string; teamId?: string; teamAgeGroup?: string | null }[];
   teamAgeGroupById: ReadonlyMap<string, string | null | undefined>;
 }): ResolvedProgrammeCategoryContext {
   const teamAgeGroups: (string | null | undefined)[] = [];
   for (const participant of input.participants) {
-    if (participant.kind !== "TEAM" || !participant.teamId) continue;
+    if (participant.kind !== "TEAM") continue;
+    if (participant.teamAgeGroup !== undefined && participant.teamAgeGroup !== null) {
+      teamAgeGroups.push(participant.teamAgeGroup);
+      continue;
+    }
+    if (!participant.teamId) continue;
     teamAgeGroups.push(input.teamAgeGroupById.get(participant.teamId) ?? null);
   }
   if (teamAgeGroups.length === 0) {

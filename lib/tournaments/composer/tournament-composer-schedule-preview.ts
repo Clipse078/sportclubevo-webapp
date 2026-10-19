@@ -165,7 +165,8 @@ function buildRoundRobinPathFixtures(input: {
   }
   if (pitches.some((p) => p.playersPerSide == null)) {
     return {
-      error: "Mit dieser Feldaufteilung kann der Spielplan nicht vollständig erstellt werden.",
+      error:
+        "Bitte für jedes Spielfeld eine Spielart wählen — dann erstellt SCE den Spielplan in der Vorschau.",
     };
   }
 
@@ -409,8 +410,8 @@ export function buildTournamentSchedulePreview(input: {
     fitStatus = "FAIL";
     deficitMinutes = requiredMinutes - availableMinutes;
     reserveMinutes = null;
-    fitHeadline = `Der Spielplan benötigt ${deficitMinutes} Minuten mehr.`;
-    fitDetail = `Spielplan endet: ${programmeEndLabel}\nTurnierende: ${tournamentEndLabel}\nFehlend: ${deficitMinutes} Min.`;
+    fitHeadline = "Spielplan passt noch nicht in das Turnierfenster.";
+    fitDetail = `Benötigt: ${requiredMinutes} Min.\nVerfügbar: ${availableMinutes} Min.\nFehlend: ${deficitMinutes} Min.\n\nAnpassbar: Spieldauer, Wechselzeit, Pause oder Spielfelder.`;
   } else if (reserveMinutes != null && reserveMinutes >= 0) {
     fitDetail += `\nReserve: ${reserveMinutes} Min.`;
   }

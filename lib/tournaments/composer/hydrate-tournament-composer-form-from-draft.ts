@@ -5,8 +5,8 @@ import {
   normalizeComposerBreakDraft,
   type LegacyComposerBreakDraft,
 } from "./tournament-composer-planner-breaks";
-import { buildTeamAgeGroupLookup, resolveComposerProgrammeCategoryContext } from "./resolve-composer-programme-category-context";
-import { reconcileComposerPlannerForParticipants } from "./tournament-composer-programme-template";
+import { buildTeamAgeGroupLookup } from "./resolve-composer-programme-category-context";
+import { prepareTournamentComposerProposal } from "./prepare-tournament-composer-proposal";
 import type { TournamentTeamOption } from "./load-tournament-composer-create-surface-props.server";
 
 export function hydrateTournamentComposerFormFromDraft(
@@ -25,7 +25,15 @@ export function hydrateTournamentComposerFormFromDraft(
     title: payload.title ?? "Turnier",
     description: payload.description ?? "",
     location: payload.location ?? "",
-    participants: Array.isArray(payload.participants) ? payload.participants : [],
+    participants: (() => {
+      const rows = Array.isArray(payload.participants) ? payload.participants : [];
+      const teamAgeGroupById = buildTeamAgeGroupLookup(options?.teamOptions ?? []);
+      return rows.map((row) => {
+        if (row.kind !== "TEAM" || !row.teamId) return row;
+        if (row.teamAgeGroup !== undefined) return row;
+        return { ...row, teamAgeGroup: teamAgeGroupById.get(row.teamId) ?? null };
+      });
+    })(),
     resourceAllocations: Array.isArray(payload.resourceAllocations) ? payload.resourceAllocations : [],
     publication: payload.publication ?? {
       websiteVisible: true,
@@ -47,16 +55,12 @@ export function hydrateTournamentComposerFormFromDraft(
               ),
             };
             const teamAgeGroupById = buildTeamAgeGroupLookup(options?.teamOptions ?? []);
-            const { categoryContext } = resolveComposerProgrammeCategoryContext({
+            return prepareTournamentComposerProposal({
               participants,
-              teamAgeGroupById,
-            });
-            return reconcileComposerPlannerForParticipants({
               planner: normalized,
-              participantCount: participants.length,
-              categoryContext,
+              teamAgeGroupById,
               preserveUserPitchEdits: normalized.pitchesUserCustomized === true,
-            });
+            }).planner;
           })()
         : null,
   };

@@ -43,6 +43,7 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
       },
     ];
     base.planner = createDefaultTournamentComposerPlannerDraft({ defaultMatchDurationMinutes: 12 });
+    base.planner.pitches[0]!.playersPerSide = 6;
     return base;
   }
 

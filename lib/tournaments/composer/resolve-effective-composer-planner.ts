@@ -1,5 +1,7 @@
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
+import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
+import { prepareTournamentComposerProposal } from "./prepare-tournament-composer-proposal";
 import {
   composerPitchDraftNeedsProposalMaterialisation,
   resolveComposerProgrammeProposal,
@@ -15,8 +17,23 @@ export function resolveEffectiveComposerPlanner(input: {
   participantCount: number;
   categoryContext: ProgrammeTemplateCategoryContext | null;
   preserveUserPitchEdits?: boolean;
+  participants?: TournamentComposerDraftPayload["participants"];
+  teamAgeGroupById?: ReadonlyMap<string, string | null | undefined>;
 }): TournamentComposerPlannerDraft {
-  return reconcileComposerPlannerForParticipants(input);
+  if (input.participants) {
+    return prepareTournamentComposerProposal({
+      participants: input.participants,
+      planner: input.planner,
+      teamAgeGroupById: input.teamAgeGroupById,
+      preserveUserPitchEdits: input.preserveUserPitchEdits,
+    }).planner;
+  }
+  return reconcileComposerPlannerForParticipants({
+    planner: input.planner,
+    participantCount: input.participantCount,
+    categoryContext: input.categoryContext,
+    preserveUserPitchEdits: input.preserveUserPitchEdits,
+  });
 }
 
 /** Integration invariant — proposal fields must be visible in planner.pitches before Spielfelder. */

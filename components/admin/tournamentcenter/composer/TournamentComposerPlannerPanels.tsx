@@ -180,10 +180,12 @@ export function TournamentComposerTurnierformatPanel({
       {hasCuratedProposal && resolved ? (
         <div className="space-y-4">
           <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
+            <p className="text-sm text-[var(--text-2)]">
+              SCE hat auf Basis der Teilnehmer einen passenden Spielplan vorbereitet.
+            </p>
             <p className="text-sm font-medium text-[var(--foreground)]">
               {resolved.proposal.kind === "FULL_TEMPLATE" ? "Empfohlener Spielplan" : "Empfohlene Feldaufteilung"}
             </p>
-            <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
             <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
               {resolved.fieldCountLabel}
             </p>
