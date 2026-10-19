@@ -5,10 +5,24 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02C` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-02B`](./SCE-TOURNAMENT-PLANNER-02B.md) — **CLOSED / ACCEPTED / MERGED** |
-| **Status** | **READY FOR PO UAT** — implementation on branch `cursor/sce-tournament-planner-02c-participant-playing-units` |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PO UAT **PASS**, PR **#876**) |
+| **PR** | **#876** — merged to **STAGE** |
+| **Accepted feature HEAD (R2)** | `e57c20119a5394853b9529e2381af21d72d607fb` |
+| **Branch** | `cursor/sce-tournament-planner-02c-participant-playing-units` |
 | **STAGE baseline** | `541626211eff20d2b3274897f2919fe0af5849cf` |
 | **Next package** | **02D** — Predefined Spielplan Templates & Instant Generation (**NOT STARTED**) |
 | **Final TP02 package** | **02E** — Spielplan UX, Outputs & Final Hardening |
+
+## Preflight
+
+| Check | Result |
+| --- | --- |
+| `START_BRANCH` | `cursor/sce-tournament-planner-02c-participant-playing-units` |
+| `STARTING_HEAD_FULL` | `541626211eff20d2b3274897f2919fe0af5849cf` |
+| `FINAL_FEATURE_HEAD_FULL` | `e57c20119a5394853b9529e2381af21d72d607fb` |
+| `02B_BASELINE_CONTAINED` | **YES** |
+| `R1_ROADMAP_ALIGNMENT_CONTAINED` | **YES** (`810a5057754d3eb93f0afc3c30dbf9b81c94a4a3`) |
+| `R2_UAT_FIX_CONTAINED` | **YES** (`e57c20119a5394853b9529e2381af21d72d607fb`) |
 
 ## Product goal
 
@@ -156,6 +170,56 @@ Planung / participant editor (`TournamentParticipantsEditor` expanded panel):
 
 | Flag | Value |
 | --- | --- |
+| **PO_UAT** | **PASS** (canonical STAGE — Test Turnier II → Teilnahme → FC Allschwil Junioren E1 → Spielteams) |
+| **SPIELTEAMS_LOAD** | **PASS** |
+| **TEAM_AUFTEILEN** | **PASS** |
+| **SPLIT_UNITS_VISIBLE** | **PASS** (E1-Rot / E1-Blau Teilteams) |
+| **ADDITIONAL_SPIELTEAM_SUPPORTED** | **PASS** |
+| **SOURCE_TEAM_UNCHANGED** | **PASS** |
+| **PLAYING_UNITS_PERSISTED** | **YES** (PO session; STAGE `TournamentParticipantUnit` table operational) |
 | **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
 | **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
-| **PO_UAT_REQUIRED** | **YES** |
+
+## 02D handover (canonical principle)
+
+**PARTICIPATING TEAMS → PARTICIPANT COUNT → PREDEFINED SPIELPLAN TEMPLATE → PREDEFINED NUMBER OF FELDER → PREDEFINED ROUNDS / PAIRINGS / FIELD ASSIGNMENTS → MAP REAL TOURNAMENT PARTICIPANTS TO TEMPLATE POSITIONS → APPLY EXISTING TIMING CAPABILITIES → SPIELPLAN READY**
+
+Example: 6 participating teams → predefined 6-team Spielplan → corresponding predefined field count → map teams to A–F → instantiate predefined programme.
+
+The predefined template determines the number of tournament fields. Do **not** independently optimise or recalculate a different field count when using an approved predefined template.
+
+| Flag | Value |
+| --- | --- |
+| **INITIAL_CURATED_TARGET** | **4–16** participants (where approved templates exist) |
+| **ARBITRARY_PRODUCT_PARTICIPANT_MAX** | **NONE** |
+| **02C_PLAYING_UNITS_FOR_TEMPLATE_SPLITS** | **YES** (e.g. A1 / A2) |
+| **ROTATION_VIA_TEMPLATE** | **YES** — rotation is a template capability where required by an approved reference Spielplan, not a separate generic Rotation Generator |
+
+## Design system
+
+| Flag | Value |
+| --- | --- |
+| **SCE_DESIGN_SYSTEM_COMPLIANCE** | **PASS** |
+| **WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE** | **PASS** |
+| **NEW_PARALLEL_ACTIVITY_CARD** | **NO** |
+| **NEW_PARALLEL_UI_PRIMITIVES** | **0** |
+| **BINARY_CONTROL_COMPLIANCE** | **PASS** |
+| **NEW_BINARY_CHECKBOXES** | **0** |
+
+## Security
+
+| Flag | Value |
+| --- | --- |
+| **PASSWORD_MUTATION** | **NO** |
+| **PASSWORD_HASH_WRITE** | **NO** |
+| **PASSWORD_CHANGED_AT_WRITE** | **NO** |
+| **CREDENTIAL_RESTORE** | **NO** |
+| **CREDENTIAL_SCRIPT_EXECUTED** | **NO** |
+
+## Verification (02C closure)
+
+Regression gate: participant playing-unit domain/service tests, capacity overlap, API routes, `TournamentParticipantPlayingUnitsPanel`, R2 UAT regression, TP02 roadmap/architecture guardrails, relevant TP01 compatibility — recorded in PR **#876** closure.
+
+STAGE migration inventory (read-only):
+
+`APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 ./node_modules/.bin/tsx scripts/sce-tournament-planner-02c-stage-migration-verify.ts`

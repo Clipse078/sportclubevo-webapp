@@ -17,7 +17,9 @@ describe("SCE-TOURNAMENT-PLANNER-02C roadmap", () => {
     expect(doc).toMatch(/GENERIC_ROTATION_GENERATOR_REQUIRED.*NO/i);
     expect(doc).toMatch(/MANUAL_UAT_BY_CURSOR.*SKIPPED_PO_OWNED/i);
     expect(doc).toMatch(/IMPLICIT_FULL_TEAM_COMPATIBILITY/i);
-    expect(doc).toMatch(/READY FOR PO UAT/i);
+    expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
+    expect(doc).toMatch(/PO_UAT.*PASS/i);
+    expect(doc).toMatch(/02D handover/i);
 
     const sql = readFileSync(
       join(
@@ -31,13 +33,13 @@ describe("SCE-TOURNAMENT-PLANNER-02C roadmap", () => {
     expect(sql).not.toMatch(/UPDATE\s+"Team"/i);
   });
 
-  it("parent programme doc marks 02C ready for UAT and predefined-template 02D next", () => {
+  it("parent programme doc marks 02C merged and predefined-template 02D next", () => {
     const parent = readFileSync(
       join(process.cwd(), "docs/roadmap/SCE-TOURNAMENT-PLANNER-02.md"),
       "utf8",
     );
     expect(parent).toMatch(/02C.*Participant playing units/i);
-    expect(parent).toMatch(/02C_STATUS.*READY FOR PO UAT/i);
+    expect(parent).toMatch(/02C_STATUS.*CLOSED.*MERGED/i);
     expect(parent).toMatch(
       /NEXT_PACKAGE.*02D.*Predefined Spielplan Templates & Instant Generation/i,
     );
