@@ -1,3 +1,4 @@
+import type { JuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
@@ -19,12 +20,14 @@ export function resolveEffectiveComposerPlanner(input: {
   preserveUserPitchEdits?: boolean;
   participants?: TournamentComposerDraftPayload["participants"];
   teamAgeGroupById?: ReadonlyMap<string, string | null | undefined>;
+  teamJuniorCategoryById?: ReadonlyMap<string, JuniorCategoryCode | null | undefined>;
 }): TournamentComposerPlannerDraft {
   if (input.participants) {
     return prepareTournamentComposerProposal({
       participants: input.participants,
       planner: input.planner,
       teamAgeGroupById: input.teamAgeGroupById,
+      teamJuniorCategoryById: input.teamJuniorCategoryById,
       preserveUserPitchEdits: input.preserveUserPitchEdits,
     }).planner;
   }

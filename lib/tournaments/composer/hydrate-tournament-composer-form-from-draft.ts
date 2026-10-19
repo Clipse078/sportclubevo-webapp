@@ -5,7 +5,10 @@ import {
   normalizeComposerBreakDraft,
   type LegacyComposerBreakDraft,
 } from "./tournament-composer-planner-breaks";
-import { buildTeamAgeGroupLookup } from "./resolve-composer-programme-category-context";
+import {
+  buildTeamAgeGroupLookup,
+  buildTeamJuniorCategoryLookup,
+} from "./resolve-composer-programme-category-context";
 import { prepareTournamentComposerProposal } from "./prepare-tournament-composer-proposal";
 import type { TournamentTeamOption } from "./load-tournament-composer-create-surface-props.server";
 
@@ -28,10 +31,22 @@ export function hydrateTournamentComposerFormFromDraft(
     participants: (() => {
       const rows = Array.isArray(payload.participants) ? payload.participants : [];
       const teamAgeGroupById = buildTeamAgeGroupLookup(options?.teamOptions ?? []);
+      const teamJuniorCategoryById = buildTeamJuniorCategoryLookup(options?.teamOptions ?? []);
       return rows.map((row) => {
         if (row.kind !== "TEAM" || !row.teamId) return row;
-        if (row.teamAgeGroup !== undefined) return row;
-        return { ...row, teamAgeGroup: teamAgeGroupById.get(row.teamId) ?? null };
+        const teamAgeGroup =
+          row.teamAgeGroup !== undefined ? row.teamAgeGroup : (teamAgeGroupById.get(row.teamId) ?? null);
+        const teamJuniorCategoryCode =
+          row.teamJuniorCategoryCode !== undefined
+            ? row.teamJuniorCategoryCode
+            : (teamJuniorCategoryById.get(row.teamId) ?? null);
+        if (
+          row.teamAgeGroup === teamAgeGroup &&
+          row.teamJuniorCategoryCode === teamJuniorCategoryCode
+        ) {
+          return row;
+        }
+        return { ...row, teamAgeGroup, teamJuniorCategoryCode };
       });
     })(),
     resourceAllocations: Array.isArray(payload.resourceAllocations) ? payload.resourceAllocations : [],
@@ -55,10 +70,12 @@ export function hydrateTournamentComposerFormFromDraft(
               ),
             };
             const teamAgeGroupById = buildTeamAgeGroupLookup(options?.teamOptions ?? []);
+            const teamJuniorCategoryById = buildTeamJuniorCategoryLookup(options?.teamOptions ?? []);
             return prepareTournamentComposerProposal({
               participants,
               planner: normalized,
               teamAgeGroupById,
+              teamJuniorCategoryById,
               preserveUserPitchEdits: normalized.pitchesUserCustomized === true,
             }).planner;
           })()

@@ -1,3 +1,5 @@
+import type { JuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
+
 /**
  * lib/tournaments/create-tournament-orchestration.ts
  *
@@ -42,6 +44,8 @@ export type TournamentParticipantDraft = {
   teamId?: string;
   /** Structured age group snapshot for TEAM rows (composer programme category). */
   teamAgeGroup?: string | null;
+  /** Authoritative junior code snapshot (server-resolved from ageGroup / shortName). */
+  teamJuniorCategoryCode?: JuniorCategoryCode | null;
   externalTeamId?: string;
   externalClubId?: string;
   /** Tournament-specific "Anzeigename" — only meaningful together with externalClubId. */

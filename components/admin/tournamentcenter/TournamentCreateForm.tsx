@@ -68,7 +68,10 @@ import TournamentComposerPlayingUnitsPanel from "@/components/admin/tournamentce
 import { countComposerCuratedTemplateParticipants } from "@/lib/tournaments/composer/tournament-composer-programme-template";
 import { prepareTournamentComposerProposal } from "@/lib/tournaments/composer/prepare-tournament-composer-proposal";
 import { resolveEffectiveComposerPlanner } from "@/lib/tournaments/composer/resolve-effective-composer-planner";
-import { buildTeamAgeGroupLookup } from "@/lib/tournaments/composer/resolve-composer-programme-category-context";
+import {
+  buildTeamAgeGroupLookup,
+  buildTeamJuniorCategoryLookup,
+} from "@/lib/tournaments/composer/resolve-composer-programme-category-context";
 import {
   addComposerPlayingUnitSubunit,
   removeComposerPlayingUnit,
@@ -213,14 +216,29 @@ export default function TournamentCreateForm({
   }, [homeAway]);
 
   const teamAgeGroupById = useMemo(() => buildTeamAgeGroupLookup(teamOptions), [teamOptions]);
+  const teamJuniorCategoryById = useMemo(
+    () => buildTeamJuniorCategoryLookup(teamOptions),
+    [teamOptions],
+  );
 
   const participantsWithTeamAgeGroups = useMemo(() => {
     return participants.map((row) => {
       if (row.kind !== "TEAM" || !row.teamId) return row;
-      if (row.teamAgeGroup !== undefined) return row;
-      return { ...row, teamAgeGroup: teamAgeGroupById.get(row.teamId) ?? null };
+      const teamAgeGroup =
+        row.teamAgeGroup !== undefined ? row.teamAgeGroup : (teamAgeGroupById.get(row.teamId) ?? null);
+      const teamJuniorCategoryCode =
+        row.teamJuniorCategoryCode !== undefined
+          ? row.teamJuniorCategoryCode
+          : (teamJuniorCategoryById.get(row.teamId) ?? null);
+      if (
+        row.teamAgeGroup === teamAgeGroup &&
+        row.teamJuniorCategoryCode === teamJuniorCategoryCode
+      ) {
+        return row;
+      }
+      return { ...row, teamAgeGroup, teamJuniorCategoryCode };
     });
-  }, [participants, teamAgeGroupById]);
+  }, [participants, teamAgeGroupById, teamJuniorCategoryById]);
 
   const preparedComposerProposal = useMemo(() => {
     if (homeAway !== "HOME" || !planner) return null;
@@ -228,9 +246,10 @@ export default function TournamentCreateForm({
       participants: participantsWithTeamAgeGroups,
       planner,
       teamAgeGroupById,
+      teamJuniorCategoryById,
       preserveUserPitchEdits: planner.pitchesUserCustomized === true,
     });
-  }, [homeAway, planner, participantsWithTeamAgeGroups, teamAgeGroupById]);
+  }, [homeAway, planner, participantsWithTeamAgeGroups, teamAgeGroupById, teamJuniorCategoryById]);
 
   const programmeCategoryContext = preparedComposerProposal?.categoryContext ?? null;
   const effectivePlanner = preparedComposerProposal?.planner ?? null;
@@ -265,12 +284,13 @@ export default function TournamentCreateForm({
             participants: participantsWithTeamAgeGroups,
             planner: prev,
             teamAgeGroupById,
+            teamJuniorCategoryById,
             preserveUserPitchEdits: prev.pitchesUserCustomized === true,
           }).planner ?? prev;
         return updater(base);
       });
     },
-    [participantsWithTeamAgeGroups, teamAgeGroupById],
+    [participantsWithTeamAgeGroups, teamAgeGroupById, teamJuniorCategoryById],
   );
 
   const scheduleInterval = useMemo(() => {
@@ -503,6 +523,7 @@ export default function TournamentCreateForm({
               participants: hydrated.participants,
               planner: hydrated.planner ?? createDefaultTournamentComposerPlannerDraft(),
               teamAgeGroupById,
+              teamJuniorCategoryById,
               preserveUserPitchEdits: hydrated.planner?.pitchesUserCustomized === true,
             }).planner
           : null,
@@ -512,7 +533,7 @@ export default function TournamentCreateForm({
     return () => {
       active = false;
     };
-  }, [defaultTournamentDurationMinutes, initialDraftId, initialResumeDraft]);
+  }, [defaultTournamentDurationMinutes, initialDraftId, initialResumeDraft, teamAgeGroupById, teamJuniorCategoryById, teamOptions]);
 
   const participantIdentities = useMemo(
     () =>
@@ -664,6 +685,7 @@ export default function TournamentCreateForm({
         kind: "TEAM" as TournamentParticipantDraftKind,
         teamId,
         teamAgeGroup: team.ageGroup ?? null,
+        teamJuniorCategoryCode: team.juniorCategoryCode ?? null,
         displayName: formatTeamLabel(team),
         subLabel: tenantClubName,
         dressingRooms: [],

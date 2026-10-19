@@ -194,6 +194,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R3", () => {
   it("silent category from structured team age group only", () => {
     expect(resolveProgrammeCategoryFromTeamAgeGroups(["F"]).categoryContext).toBe("F");
     expect(resolveProgrammeCategoryFromTeamAgeGroups(["E"]).categoryContext).toBe("E_FF12");
+    expect(resolveProgrammeCategoryFromTeamAgeGroups(["E1"]).categoryContext).toBe("E_FF12");
+    expect(resolveProgrammeCategoryFromTeamAgeGroups(["F2"]).categoryContext).toBe("F");
     expect(resolveProgrammeCategoryFromTeamAgeGroups(["F", "E"]).source).toBe("MIXED_OR_UNKNOWN");
   });
 });

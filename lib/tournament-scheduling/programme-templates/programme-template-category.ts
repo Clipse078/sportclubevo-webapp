@@ -1,4 +1,7 @@
-import { normalizeJuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
+import {
+  resolveStructuredJuniorCategoryFromAgeGroup,
+  type JuniorCategoryCode,
+} from "@/lib/teams/jahrgang-rules";
 import type { ProgrammeTemplateCategoryContext } from "./types";
 
 export type ProgrammeCategoryResolutionSource =
@@ -11,13 +14,17 @@ export type ResolvedProgrammeCategoryContext = {
   source: ProgrammeCategoryResolutionSource;
 };
 
-function juniorCodeToCategoryContext(
-  code: ReturnType<typeof normalizeJuniorCategoryCode>,
-): ProgrammeTemplateCategoryContext | null {
+function juniorCodeToCategoryContext(code: JuniorCategoryCode | null): ProgrammeTemplateCategoryContext | null {
   if (code === "G") return "G";
   if (code === "F") return "F";
   if (code === "E") return "E_FF12";
   return null;
+}
+
+function resolveJuniorCodeFromStructuredAgeGroup(
+  value: string | null | undefined,
+): JuniorCategoryCode | null {
+  return resolveStructuredJuniorCategoryFromAgeGroup(value);
 }
 
 /**
@@ -28,7 +35,7 @@ export function resolveProgrammeCategoryFromTeamAgeGroups(
 ): ResolvedProgrammeCategoryContext {
   const contexts = new Set<ProgrammeTemplateCategoryContext>();
   for (const ageGroup of ageGroups) {
-    const mapped = juniorCodeToCategoryContext(normalizeJuniorCategoryCode(ageGroup));
+    const mapped = juniorCodeToCategoryContext(resolveJuniorCodeFromStructuredAgeGroup(ageGroup));
     if (mapped) contexts.add(mapped);
   }
   if (contexts.size === 1) {
@@ -44,21 +51,48 @@ export function resolveProgrammeCategoryFromTeamAgeGroups(
 }
 
 export function resolveProgrammeCategoryFromComposerParticipants(input: {
-  participants: readonly { kind: string; teamId?: string; teamAgeGroup?: string | null }[];
+  participants: readonly {
+    kind: string;
+    teamId?: string;
+    teamAgeGroup?: string | null;
+    teamJuniorCategoryCode?: JuniorCategoryCode | null;
+  }[];
   teamAgeGroupById: ReadonlyMap<string, string | null | undefined>;
+  teamJuniorCategoryById?: ReadonlyMap<string, JuniorCategoryCode | null | undefined>;
 }): ResolvedProgrammeCategoryContext {
-  const teamAgeGroups: (string | null | undefined)[] = [];
+  const juniorCodes: (JuniorCategoryCode | null | undefined)[] = [];
   for (const participant of input.participants) {
     if (participant.kind !== "TEAM") continue;
+    if (participant.teamJuniorCategoryCode) {
+      juniorCodes.push(participant.teamJuniorCategoryCode);
+      continue;
+    }
     if (participant.teamAgeGroup !== undefined && participant.teamAgeGroup !== null) {
-      teamAgeGroups.push(participant.teamAgeGroup);
+      juniorCodes.push(resolveJuniorCodeFromStructuredAgeGroup(participant.teamAgeGroup));
       continue;
     }
     if (!participant.teamId) continue;
-    teamAgeGroups.push(input.teamAgeGroupById.get(participant.teamId) ?? null);
+    const fromLookup = input.teamJuniorCategoryById?.get(participant.teamId);
+    if (fromLookup) {
+      juniorCodes.push(fromLookup);
+      continue;
+    }
+    juniorCodes.push(resolveJuniorCodeFromStructuredAgeGroup(input.teamAgeGroupById.get(participant.teamId)));
   }
-  if (teamAgeGroups.length === 0) {
+  if (juniorCodes.length === 0) {
     return { categoryContext: null, source: "NO_TEAM_PARTICIPANTS" };
   }
-  return resolveProgrammeCategoryFromTeamAgeGroups(teamAgeGroups);
+
+  const contexts = new Set<ProgrammeTemplateCategoryContext>();
+  for (const code of juniorCodes) {
+    const mapped = juniorCodeToCategoryContext(code ?? null);
+    if (mapped) contexts.add(mapped);
+  }
+  if (contexts.size === 1) {
+    return { categoryContext: [...contexts][0]!, source: "TEAM_AGE_GROUP" };
+  }
+  if (contexts.size === 0) {
+    return { categoryContext: null, source: "MIXED_OR_UNKNOWN" };
+  }
+  return { categoryContext: null, source: "MIXED_OR_UNKNOWN" };
 }

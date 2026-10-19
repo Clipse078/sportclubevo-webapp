@@ -2,6 +2,29 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { SCE_PLATFORM_DEFAULT_TOURNAMENT_DURATION_MINUTES } from "@/lib/operational/defaults";
 import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
 import type { TournamentSeasonOption, TournamentTeamOption } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
+import { resolveAuthoritativeTeamJuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
+
+/** Mirrors server `loadTournamentComposerCreateSurfaceProps` team row shape. */
+export function makeTournamentComposerTeamOption(input: {
+  id: string;
+  name: string;
+  shortName?: string | null;
+  ageGroup: string | null;
+  genderGroup?: string | null;
+}): TournamentTeamOption {
+  const shortName = input.shortName ?? null;
+  return {
+    id: input.id,
+    name: input.name,
+    shortName,
+    ageGroup: input.ageGroup,
+    genderGroup: input.genderGroup ?? null,
+    juniorCategoryCode: resolveAuthoritativeTeamJuniorCategoryCode({
+      ageGroup: input.ageGroup,
+      shortName,
+    }),
+  };
+}
 
 /** Props for tournament create/edit tests — duration is configurable, not UI-hardcoded to a club. */
 export const TOURNAMENT_FORM_TEST_SCHEDULE_PROPS = {
@@ -15,8 +38,8 @@ export const TOURNAMENT_CREATE_FORM_TEST_SEASON_OPTIONS: TournamentSeasonOption[
 ];
 
 export const TOURNAMENT_CREATE_FORM_TEST_TEAM_OPTIONS: TournamentTeamOption[] = [
-  { id: "team-1", name: "1. Mannschaft", ageGroup: null, genderGroup: null },
-  { id: "team-2", name: "2. Mannschaft", ageGroup: null, genderGroup: null },
+  makeTournamentComposerTeamOption({ id: "team-1", name: "1. Mannschaft", ageGroup: null }),
+  makeTournamentComposerTeamOption({ id: "team-2", name: "2. Mannschaft", ageGroup: null }),
 ];
 
 export const TOURNAMENT_CREATE_FORM_TEST_GOVERNANCE: SceActivityEffectiveGovernance = {

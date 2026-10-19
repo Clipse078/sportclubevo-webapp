@@ -26,14 +26,18 @@ const BASE_JAHRGANG_BY_CODE: Record<JuniorCategoryCode, number[]> = {
 
 const BASE_SEASON_START_YEAR = 2025;
 
-export function normalizeJuniorCategoryCode(
-  value: string | null | undefined
-): JuniorCategoryCode | null {
-  const normalized = String(value ?? "")
+function normalizeAgeGroupToken(value: string | null | undefined): string {
+  return String(value ?? "")
     .trim()
     .toUpperCase()
     .replace(/\s+/g, "")
     .replace("-", "");
+}
+
+export function normalizeJuniorCategoryCode(
+  value: string | null | undefined
+): JuniorCategoryCode | null {
+  const normalized = normalizeAgeGroupToken(value);
 
   if (normalized === "G") return "G";
   if (normalized === "F") return "F";
@@ -45,6 +49,38 @@ export function normalizeJuniorCategoryCode(
   if (normalized === "A") return "A";
 
   return null;
+}
+
+/**
+ * Resolves junior category from structured team fields (`Team.ageGroup`, `Team.shortName`).
+ * Handles squad stufe tokens such as E1 / F2 stored in ageGroup — not display-name parsing.
+ */
+export function resolveStructuredJuniorCategoryFromAgeGroup(
+  value: string | null | undefined,
+): JuniorCategoryCode | null {
+  const direct = normalizeJuniorCategoryCode(value);
+  if (direct) return direct;
+
+  const normalized = normalizeAgeGroupToken(value);
+  if (!normalized) return null;
+
+  const squadMatch = /^([GFEACB])(\d+)$/.exec(normalized);
+  if (squadMatch) {
+    return squadMatch[1] as JuniorCategoryCode;
+  }
+
+  return null;
+}
+
+/** Authoritative junior code for tournament composer category resolution. */
+export function resolveAuthoritativeTeamJuniorCategoryCode(team: {
+  ageGroup: string | null | undefined;
+  shortName?: string | null | undefined;
+}): JuniorCategoryCode | null {
+  return (
+    resolveStructuredJuniorCategoryFromAgeGroup(team.ageGroup) ??
+    resolveStructuredJuniorCategoryFromAgeGroup(team.shortName ?? null)
+  );
 }
 
 export function getSeasonStartYearFromDate(

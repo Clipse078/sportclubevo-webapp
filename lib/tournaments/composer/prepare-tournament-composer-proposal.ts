@@ -5,6 +5,7 @@
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
+import type { JuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
 import {
   buildTeamAgeGroupLookup,
   resolveComposerProgrammeCategoryContext,
@@ -50,6 +51,7 @@ export function prepareTournamentComposerProposal(input: {
   participants: TournamentComposerDraftPayload["participants"];
   planner: TournamentComposerPlannerDraft;
   teamAgeGroupById?: ReadonlyMap<string, string | null | undefined>;
+  teamJuniorCategoryById?: ReadonlyMap<string, JuniorCategoryCode | null | undefined>;
   preserveUserPitchEdits?: boolean;
 }): PreparedTournamentComposerProposal {
   const teamAgeGroupById = buildComposerTeamAgeGroupLookup({
@@ -59,6 +61,7 @@ export function prepareTournamentComposerProposal(input: {
   const { categoryContext, source: categorySource } = resolveComposerProgrammeCategoryContext({
     participants: input.participants,
     teamAgeGroupById,
+    teamJuniorCategoryById: input.teamJuniorCategoryById,
   });
   const participantCount = countComposerCuratedTemplateParticipants(input.participants);
   const proposal = resolveComposerProgrammeProposal({

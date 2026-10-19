@@ -13,11 +13,11 @@ import TournamentCreateForm from "@/components/admin/tournamentcenter/Tournament
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import {
   addOwnTeamParticipantViaSelector,
+  makeTournamentComposerTeamOption,
   setTournamentCreateScheduleStart,
   TOURNAMENT_CREATE_FORM_TEST_GOVERNANCE,
   TOURNAMENT_CREATE_FORM_TEST_SEASON_OPTIONS,
 } from "./tournament-form-test-helpers";
-import type { TournamentTeamOption } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -61,12 +61,12 @@ vi.mock("@/components/sce/activity-composer/SceActivityComposer", () => ({
 const PITCH_HALL_GROUPS: FacilityGroup[] = [];
 const DRESSING_ROOM_GROUPS: FacilityGroup[] = [];
 
-const E_TEAM_OPTIONS: TournamentTeamOption[] = [
-  { id: "team-e1", name: "Junioren E1", ageGroup: "E", genderGroup: null },
+const E_TEAM_OPTIONS = [
+  makeTournamentComposerTeamOption({ id: "team-e1", name: "Junioren E1", ageGroup: "E" }),
 ];
 
-const F_TEAM_OPTIONS: TournamentTeamOption[] = [
-  { id: "team-f1", name: "Junioren F1", ageGroup: "F", genderGroup: null },
+const F_TEAM_OPTIONS = [
+  makeTournamentComposerTeamOption({ id: "team-f1", name: "Junioren F1", ageGroup: "F" }),
 ];
 
 function installFetchMock() {
@@ -207,7 +207,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R6 — real creator flow", () => {
         activeSeasonId="season-1"
         seasonOptions={TOURNAMENT_CREATE_FORM_TEST_SEASON_OPTIONS}
         teamOptions={[
-          { id: "team-a", name: "Aktive", ageGroup: "Aktive", genderGroup: null },
+          makeTournamentComposerTeamOption({ id: "team-a", name: "Aktive", ageGroup: "Aktive" }),
         ]}
         pitchHallFacilityGroups={PITCH_HALL_GROUPS}
         dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
