@@ -8,6 +8,16 @@ export type TournamentComposerPitchDraft = {
   label: string;
   /** Optional players per side — omitted/null = unspecified (02B). */
   playersPerSide?: number | null;
+  /** When set, pitch row originates from a predefined programme template field. */
+  templateFieldKey?: string;
+  userLabelCustomized?: boolean;
+};
+
+export type TournamentComposerMainPauseDraft = {
+  enabled: boolean;
+  durationMinutes: number;
+  /** 1-based round number after which the main tournament pause is inserted. */
+  afterRoundNumber: number;
 };
 
 export type TournamentComposerBreakDraft = {
@@ -48,6 +58,11 @@ export type TournamentComposerPlannerDraft = {
   pitches: TournamentComposerPitchDraft[];
   timing: TournamentComposerTimingDraft;
   breaks: TournamentComposerBreakDraft[];
+  /** Resolved predefined programme template (02D) — null when TP01 fallback applies. */
+  programmeTemplateId?: string | null;
+  programmeTemplateVersion?: number | null;
+  /** Primary tournament pause configured on Spielplan step (pause-first UX). */
+  mainPause?: TournamentComposerMainPauseDraft;
 };
 
 export function isHomePlannerConfiguration(

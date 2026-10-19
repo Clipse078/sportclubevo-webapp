@@ -4,6 +4,7 @@ import type {
   TournamentResourceAllocationDraft,
 } from "@/lib/tournaments/create-tournament-orchestration";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
+import type { TournamentComposerPlayingUnitDraft } from "./tournament-composer-playing-units";
 
 export type TournamentComposerParticipantRow = TournamentParticipantDraft & {
   displayName: string;
@@ -14,6 +15,8 @@ export type TournamentComposerParticipantRow = TournamentParticipantDraft & {
     facilityResourceName: string;
     facilityName: string;
   }>;
+  /** Tournament-local Spielteams (02C) — draft-only until tournament is created. */
+  playingUnits?: TournamentComposerPlayingUnitDraft[];
 };
 
 export type TournamentComposerResourceRow = TournamentResourceAllocationDraft & {

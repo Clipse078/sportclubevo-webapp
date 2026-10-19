@@ -1,281 +1,130 @@
 "use client";
 
 import { useMemo } from "react";
-import { useContextDetailTab } from "@/lib/context-tabs/use-context-detail-tab";
 import { Plus, Trash2 } from "lucide-react";
-import TournamentComposerChoiceCard from "./TournamentComposerChoiceCard";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
-import { cn } from "@/lib/cn";
+import { TournamentComposerLegacyTurnierformatPanel } from "./TournamentComposerLegacyTurnierformatPanel";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import type { TournamentComposerPlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-types";
-import {
-  applyComposerRecommendedTiming,
-  buildTournamentComposerSmartTimingView,
-  buildComposerPlanningAssistantUx,
-} from "@/lib/tournaments/composer/tournament-composer-smart-timing";
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
-import { defaultTournamentComposerPitchLabels } from "@/lib/tournaments/composer/tournament-composer-planner-defaults";
-import {
-  createDefaultComposerBreakDraft,
-  formatComposerBreakSummary,
-} from "@/lib/tournaments/composer/tournament-composer-planner-breaks";
 import TournamentComposerPitchPlayingFormatField from "./TournamentComposerPitchPlayingFormatField";
+import {
+  buildComposerScheduleFitView,
+  resolveComposerProgrammeTemplate,
+} from "@/lib/tournaments/composer/tournament-composer-programme-template";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
 
-function SmartTimingPanel({
-  payload,
-  onApplyRecommendation,
-  computeLiveView,
-}: {
-  payload: TournamentComposerDraftPayload;
-  onApplyRecommendation: () => void;
-  /** When false, skip expensive fixture/timing derivation (panel hidden on another step). */
-  computeLiveView: boolean;
-}) {
+function ScheduleFitPanel({ payload }: { payload: TournamentComposerDraftPayload }) {
   const view = useMemo(
-    () => (computeLiveView ? buildTournamentComposerSmartTimingView(payload) : null),
-    [computeLiveView, payload],
+    () =>
+      payload.planner
+        ? buildComposerScheduleFitView({
+            participantCount: payload.participants.length,
+            startAt: payload.startAt,
+            endAt: payload.endAt,
+            planner: payload.planner,
+          })
+        : null,
+    [payload],
   );
-  if (!view) {
-    return null;
-  }
-
-  if (view.missingInputHint) {
-    return (
-      <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-smart-timing-hint">
-        {view.missingInputHint}
-      </p>
-    );
-  }
-
-  const assistant = buildComposerPlanningAssistantUx(view, payload.planner?.timing);
-
-  if (!assistant) {
-    return null;
-  }
+  if (!view) return null;
 
   return (
     <div
-      className="mb-6 space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
-      data-testid="tournament-composer-smart-timing"
-      role={assistant.state === "READY" ? "status" : "alert"}
+      className="mb-6 space-y-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
+      data-testid="tournament-composer-schedule-fit"
+      role={view.status === "FAIL" ? "alert" : "status"}
     >
-      <p className="text-sm font-semibold text-[var(--foreground)]">{assistant.headline}</p>
-      {assistant.summary ? (
-        <p className="text-sm text-[var(--text-2)]">{assistant.summary}</p>
-      ) : null}
-
-      {assistant.state === "AUTO_FIX" && assistant.recommendedTiming ? (
-        <>
-          <p
-            className="text-sm font-medium text-[var(--foreground)]"
-            data-testid="tournament-composer-smart-timing-recommendation"
-          >
-            {assistant.recommendedTiming.matchDurationMinutes} Min. Spielzeit ·{" "}
-            {assistant.recommendedTiming.transitionMinutes} Min. Wechselzeit
-          </p>
-          <button
-            type="button"
-            className="fca-btn fca-btn-primary"
-            data-testid="tournament-composer-smart-timing-apply"
-            onClick={onApplyRecommendation}
-          >
-            Empfehlung übernehmen
-          </button>
-        </>
-      ) : null}
+      <p className="text-sm font-semibold text-[var(--foreground)]">{view.headline}</p>
+      {view.detail ? <p className="text-sm text-[var(--text-2)]">{view.detail}</p> : null}
     </div>
   );
 }
 
 export function TournamentComposerTurnierformatPanel({
   planner,
+  participantCount,
   onChange,
   fieldErrors,
 }: {
   planner: TournamentComposerPlannerDraft;
+  participantCount: number;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
+  const resolved = resolveComposerProgrammeTemplate(participantCount);
+
   return (
     <PlanningEditorSection testId="tournament-create-format-section">
       <PlanningEditorSectionHeading title="Turnierformat" />
-      <p className="mb-4 text-sm text-[var(--text-2)]">
-        Wählen Sie, wie SCE Gruppen-, Mix- und K.-o.-Spiele aufbaut.
-      </p>
-      <div className="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Turnierformat">
-        <TournamentComposerChoiceCard
-          title="Gruppen-/Mixspiele"
-          description="Round Robin oder intelligente Mischung — ideal für Jugendturniere."
-          selected={planner.competitionFormat === "GROUP_MIX_ONLY"}
-          onSelect={() => onChange((p) => ({ ...p, competitionFormat: "GROUP_MIX_ONLY" }))}
-          testId="tournament-format-group-mix-only"
-        />
-        <TournamentComposerChoiceCard
-          title="K.-o.-Turnier"
-          description="Direkter K.-o.-Baum mit automatischen Freilosen."
-          selected={planner.competitionFormat === "KNOCKOUT_ONLY"}
-          onSelect={() => onChange((p) => ({ ...p, competitionFormat: "KNOCKOUT_ONLY" }))}
-          testId="tournament-format-knockout-only"
-        />
-        <TournamentComposerChoiceCard
-          title="Gruppenphase + K.-o."
-          description="Gruppen qualifizieren Teams für die K.-o.-Phase."
-          selected={planner.competitionFormat === "GROUP_PLUS_KNOCKOUT"}
-          onSelect={() => onChange((p) => ({ ...p, competitionFormat: "GROUP_PLUS_KNOCKOUT", groupCount: Math.max(2, p.groupCount) }))}
-          testId="tournament-format-group-plus-knockout"
-        />
-      </div>
-
-      {planner.competitionFormat !== "KNOCKOUT_ONLY" ? (
-        <div className="mt-6 space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Generierungsstrategie">
-            <TournamentComposerChoiceCard
-              title="Jeder gegen jeden"
-              description="Klassische Round-Robin-Paarungen in der Gruppe."
-              selected={planner.groupMixStrategy === "ROUND_ROBIN"}
-              onSelect={() => onChange((p) => ({ ...p, groupMixStrategy: "ROUND_ROBIN" }))}
-              testId="tournament-strategy-round-robin"
-            />
-            <TournamentComposerChoiceCard
-              title="Intelligente Mischung"
-              description="SCE verteilt Gegner ausgewogen — ohne manuelle Paarungen."
-              selected={planner.groupMixStrategy === "SMART_MIX"}
-              onSelect={() => onChange((p) => ({ ...p, groupMixStrategy: "SMART_MIX" }))}
-              testId="tournament-strategy-smart-mix"
-            />
-          </div>
-          {planner.groupMixStrategy === "ROUND_ROBIN" ? (
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Spiele pro Gegner</span>
-              <select
-                className="fca-input"
-                value={planner.meetingsPerOpponent}
-                onChange={(e) =>
-                  onChange((p) => ({ ...p, meetingsPerOpponent: Number(e.target.value) }))
-                }
-                data-testid="tournament-meetings-per-opponent"
-              >
-                {[1, 2].map((n) => (
-                  <option key={n} value={n}>
-                    {n}× gegeneinander
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Spiele pro Team</span>
-              <input
-                type="number"
-                min={1}
-                className="fca-input"
-                value={planner.smartMixTargetMatchesPerParticipant ?? 4}
-                onChange={(e) =>
-                  onChange((p) => ({
-                    ...p,
-                    smartMixTargetMatchesPerParticipant: Number(e.target.value),
-                  }))
-                }
-                data-testid="tournament-smart-mix-target"
-              />
-            </label>
-          )}
-          {planner.competitionFormat === "GROUP_PLUS_KNOCKOUT" ? (
-            <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-              <label className="block space-y-2">
-                <span className="fca-label">Anzahl Gruppen</span>
-                <input
-                  type="number"
-                  min={2}
-                  className="fca-input"
-                  value={planner.groupCount}
-                  onChange={(e) => onChange((p) => ({ ...p, groupCount: Number(e.target.value) }))}
-                  data-testid="tournament-group-count"
-                />
-              </label>
-              <label className="block space-y-2">
-                <span className="fca-label">Qualifikation pro Gruppe</span>
-                <input
-                  type="number"
-                  min={1}
-                  className="fca-input"
-                  value={planner.knockoutQualifiersPerGroup}
-                  onChange={(e) =>
-                    onChange((p) => ({ ...p, knockoutQualifiersPerGroup: Number(e.target.value) }))
-                  }
-                  data-testid="tournament-knockout-qualifiers-per-group"
-                />
-              </label>
-            </div>
-          ) : planner.competitionFormat === "GROUP_MIX_ONLY" ? (
-            <label className="block max-w-xs space-y-2">
-              <span className="fca-label">Anzahl Gruppen</span>
-              <input
-                type="number"
-                min={1}
-                className="fca-input"
-                value={planner.groupCount}
-                onChange={(e) => onChange((p) => ({ ...p, groupCount: Number(e.target.value) }))}
-                data-testid="tournament-group-count"
-              />
-            </label>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div
-        className="mt-6 flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] p-4"
-        data-testid="tournament-home-away-relevance"
-      >
-        <div>
-          <p className="text-sm font-medium text-[var(--foreground)]">Heim-/Auswärtsseiten berücksichtigen</p>
-          <p className="mt-1 text-xs text-[var(--text-2)]">
-            Aus: neutrale Seiten. An: SCE balanciert Heim- und Auswärtsseiten in Paarungen.
+      {resolved ? (
+        <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4">
+          <p className="text-sm font-medium text-[var(--foreground)]">{resolved.template.displayName}</p>
+          <p className="text-sm text-[var(--text-2)]">
+            SCE erkennt {participantCount} Teilnehmer und wählt den passenden vordefinierten Spielplan.
+          </p>
+          <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
+            {resolved.fieldCountLabel}
+          </p>
+          <p className="text-xs text-[var(--muted)]">{resolved.playingFormatSummary}</p>
+          <p className="text-xs text-[var(--text-2)]">
+            {resolved.template.rounds.length} Runden · Struktur gemäss genehmigter Programmvorlage
           </p>
         </div>
-        <SwitchThumb
-          id="tournament-home-away-relevance"
-          checked={planner.homeAwayRelevance === "ON"}
-          onChange={(checked) =>
-            onChange((p) => ({ ...p, homeAwayRelevance: checked ? "ON" : "OFF" }))
-          }
-          aria-label="Heim-/Auswärtsseiten berücksichtigen"
-        />
-      </div>
-      {fieldErrors?.planner ? (
-        <p role="alert" className="mt-3 text-sm text-[var(--sce-danger)]">
-          {fieldErrors.planner}
-        </p>
-      ) : null}
+      ) : (
+        <>
+          <p className="mb-4 text-sm text-[var(--text-2)]">
+            Für diese Teilnehmerzahl liegt kein kuratierter Spielplan vor. SCE verwendet nach der Erstellung den
+            bekannten TP01-Generator.
+          </p>
+          <TournamentComposerLegacyTurnierformatPanel
+            planner={planner}
+            onChange={onChange}
+            fieldErrors={fieldErrors}
+          />
+        </>
+      )}
     </PlanningEditorSection>
   );
 }
 
 export function TournamentComposerSpielfelderPanel({
   planner,
+  participantCount,
   onChange,
   fieldErrors,
 }: {
   planner: TournamentComposerPlannerDraft;
+  participantCount: number;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
+  const resolved = resolveComposerProgrammeTemplate(participantCount);
+  const templateDriven = resolved != null;
+
   return (
     <PlanningEditorSection testId="tournament-create-pitches-section">
       <PlanningEditorSectionHeading title="Turnierfelder" />
       <p className="mb-3 text-sm text-[var(--text-2)]">
-        Logische Spielfelder für den Spielplan — unabhängig von physischen Anlagenressourcen im Schritt
-        Ressourcen.
+        Logische Spielfelder für den Spielplan — unabhängig von physischen Anlagenressourcen im Schritt Ressourcen.
       </p>
+      {templateDriven ? (
+        <>
+          <p className="mb-3 text-sm font-medium text-[var(--foreground)]" data-testid="tournament-composer-pitches-template-hint">
+            {resolved.fieldCountLabel}
+          </p>
+          <p className="mb-3 text-xs text-[var(--text-2)]">{resolved.playingFormatSummary}</p>
+        </>
+      ) : null}
       <ul className="space-y-3">
         {planner.pitches.map((pitch) => (
           <li
             key={pitch.localId}
             className="flex flex-col gap-3 rounded-lg border border-[var(--border)]/70 bg-[var(--surface)]/40 p-3 sm:flex-row sm:items-end sm:gap-2"
+            data-testid={`tournament-composer-pitch-row-${pitch.localId}`}
           >
             <label className="block min-w-0 flex-1 space-y-1">
               <span className="fca-label">Name</span>
@@ -287,7 +136,9 @@ export function TournamentComposerSpielfelderPanel({
                   onChange((p) => ({
                     ...p,
                     pitches: p.pitches.map((row) =>
-                      row.localId === pitch.localId ? { ...row, label: e.target.value } : row,
+                      row.localId === pitch.localId
+                        ? { ...row, label: e.target.value, userLabelCustomized: true }
+                        : row,
                     ),
                   }))
                 }
@@ -298,6 +149,7 @@ export function TournamentComposerSpielfelderPanel({
               id={`tournament-pitch-format-${pitch.localId}`}
               testId={`tournament-pitch-format-${pitch.localId}`}
               playersPerSide={pitch.playersPerSide ?? null}
+              disabled={templateDriven}
               onChange={(playersPerSide) =>
                 onChange((p) => ({
                   ...p,
@@ -307,43 +159,47 @@ export function TournamentComposerSpielfelderPanel({
                 }))
               }
             />
-            <button
-              type="button"
-              className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] self-end"
-              aria-label="Feld entfernen"
-              disabled={planner.pitches.length <= 1}
-              onClick={() =>
-                onChange((p) => ({
-                  ...p,
-                  pitches: p.pitches.filter((row) => row.localId !== pitch.localId),
-                }))
-              }
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {!templateDriven ? (
+              <button
+                type="button"
+                className="rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-2)] self-end"
+                aria-label="Feld entfernen"
+                disabled={planner.pitches.length <= 1}
+                onClick={() =>
+                  onChange((p) => ({
+                    ...p,
+                    pitches: p.pitches.filter((row) => row.localId !== pitch.localId),
+                  }))
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>
-      <button
-        type="button"
-        className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
-        onClick={() =>
-          onChange((p) => {
-            const nextIndex = p.pitches.length + 1;
-            return {
-              ...p,
-              pitches: [
-                ...p.pitches,
-                { localId: `pitch-${Date.now()}`, label: `Feld ${nextIndex}`, playersPerSide: null },
-              ],
-            };
-          })
-        }
-        data-testid="tournament-pitch-add"
-      >
-        <Plus className="h-4 w-4" aria-hidden />
-        Feld hinzufügen
-      </button>
+      {!templateDriven ? (
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
+          onClick={() =>
+            onChange((p) => {
+              const nextIndex = p.pitches.length + 1;
+              return {
+                ...p,
+                pitches: [
+                  ...p.pitches,
+                  { localId: `pitch-${Date.now()}`, label: `Feld ${nextIndex}`, playersPerSide: null },
+                ],
+              };
+            })
+          }
+          data-testid="tournament-pitch-add"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Feld hinzufügen
+        </button>
+      ) : null}
       {fieldErrors?.pitches ? (
         <p role="alert" className="mt-2 text-sm text-[var(--sce-danger)]">
           {fieldErrors.pitches}
@@ -364,13 +220,12 @@ export function TournamentComposerSpielplanPanel({
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
-  const { activeTab } = useContextDetailTab();
-  const smartTimingLive = activeTab === "spielplan";
-
-  const pitchLabelMap = useMemo(
-    () => new Map(planner.pitches.map((p) => [p.localId, p.label])),
-    [planner.pitches],
-  );
+  const resolved = resolveComposerProgrammeTemplate(payload.participants.length);
+  const mainPause = planner.mainPause ?? {
+    enabled: false,
+    durationMinutes: 10,
+    afterRoundNumber: resolved?.template.breakHints[0]?.afterRoundNumber ?? 1,
+  };
 
   const timingFieldErrors = fieldErrors
     ? Object.fromEntries(
@@ -384,15 +239,80 @@ export function TournamentComposerSpielplanPanel({
     <PlanningEditorSection testId="tournament-create-scheduling-section">
       <PlanningEditorSectionHeading title="Spielplan & Timing" />
 
-      <SmartTimingPanel
-        payload={payload}
-        computeLiveView={smartTimingLive}
-        onApplyRecommendation={() => {
-          const view = buildTournamentComposerSmartTimingView(payload);
-          if (!view.recommendedTiming) return;
-          onChange((p) => applyComposerRecommendedTiming(p, view.recommendedTiming!));
-        }}
-      />
+      <div className="mb-6 space-y-4 rounded-xl border border-[var(--border)] p-4">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Pause</h3>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-[var(--foreground)]">Grössere Turnierpause</p>
+            <p className="mt-1 text-xs text-[var(--text-2)]">
+              {resolved
+                ? `Position gemäss Programmvorlage nach Runde ${mainPause.afterRoundNumber}.`
+                : "Optional — nur für kuratierte Spielpläne relevant."}
+            </p>
+          </div>
+          <div data-testid="tournament-composer-main-pause-toggle">
+            <SwitchThumb
+              id="tournament-composer-main-pause-enabled"
+              checked={mainPause.enabled}
+              onChange={(checked) =>
+                onChange((p) => ({
+                  ...p,
+                  mainPause: {
+                    ...(p.mainPause ?? mainPause),
+                    enabled: checked,
+                  },
+                }))
+              }
+              aria-label="Grössere Turnierpause"
+            />
+          </div>
+        </div>
+        {mainPause.enabled ? (
+          <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+            <label className="block space-y-2">
+              <span className="fca-label">Pausendauer (Min.)</span>
+              <input
+                type="number"
+                min={1}
+                className="fca-input"
+                value={mainPause.durationMinutes}
+                onChange={(e) =>
+                  onChange((p) => ({
+                    ...p,
+                    mainPause: {
+                      ...(p.mainPause ?? mainPause),
+                      durationMinutes: Number(e.target.value),
+                    },
+                  }))
+                }
+                data-testid="tournament-composer-main-pause-duration"
+              />
+            </label>
+            {resolved ? (
+              <label className="block space-y-2">
+                <span className="fca-label">Nach Runde</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={resolved.template.rounds.length}
+                  className="fca-input"
+                  value={mainPause.afterRoundNumber}
+                  onChange={(e) =>
+                    onChange((p) => ({
+                      ...p,
+                      mainPause: {
+                        ...(p.mainPause ?? mainPause),
+                        afterRoundNumber: Number(e.target.value),
+                      },
+                    }))
+                  }
+                  data-testid="tournament-composer-main-pause-after-round"
+                />
+              </label>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       <div className={`${PLANNING_EDITOR_FORM_GRID_CLASS} mb-4`}>
         <label className="block space-y-2">
@@ -439,204 +359,7 @@ export function TournamentComposerSpielplanPanel({
         </label>
       </div>
 
-      <div className="mt-6 space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Pausen & Sperrzeiten</h3>
-        {planner.breaks.map((br) => {
-          const breakError = fieldErrors?.[`break-${br.localId}`];
-          return (
-            <div key={br.localId} className="rounded-xl border border-[var(--border)] p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <input
-                  type="text"
-                  className="fca-input flex-1"
-                  placeholder="Bezeichnung"
-                  value={br.label}
-                  onChange={(e) =>
-                    onChange((p) => ({
-                      ...p,
-                      breaks: p.breaks.map((row) =>
-                        row.localId === br.localId ? { ...row, label: e.target.value } : row,
-                      ),
-                    }))
-                  }
-                />
-                <button
-                  type="button"
-                  aria-label="Pause entfernen"
-                  onClick={() =>
-                    onChange((p) => ({
-                      ...p,
-                      breaks: p.breaks.filter((row) => row.localId !== br.localId),
-                    }))
-                  }
-                >
-                  <Trash2 className="h-4 w-4 text-[var(--muted)]" />
-                </button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block space-y-1">
-                  <span className="fca-label">Beginn</span>
-                  <input
-                    type="time"
-                    className="fca-input"
-                    value={br.startLocalTime}
-                    onChange={(e) =>
-                      onChange((p) => ({
-                        ...p,
-                        breaks: p.breaks.map((row) =>
-                          row.localId === br.localId ? { ...row, startLocalTime: e.target.value } : row,
-                        ),
-                      }))
-                    }
-                    data-testid={`tournament-break-start-${br.localId}`}
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="fca-label">Dauer</span>
-                  <input
-                    type="number"
-                    min={1}
-                    className="fca-input"
-                    value={br.durationMinutes}
-                    onChange={(e) =>
-                      onChange((p) => ({
-                        ...p,
-                        breaks: p.breaks.map((row) =>
-                          row.localId === br.localId
-                            ? { ...row, durationMinutes: Number(e.target.value) }
-                            : row,
-                        ),
-                      }))
-                    }
-                    data-testid={`tournament-break-duration-${br.localId}`}
-                  />
-                </label>
-              </div>
-              <p className="text-xs text-[var(--text-2)]" data-testid={`tournament-break-summary-${br.localId}`}>
-                {formatComposerBreakSummary(br, pitchLabelMap)}
-              </p>
-              {breakError ? (
-                <p role="alert" className="text-sm text-[var(--sce-danger)]">
-                  {breakError}
-                </p>
-              ) : null}
-              {!br.fieldSelectionAdvanced ? (
-                <button
-                  type="button"
-                  className="text-sm font-medium text-[var(--sce-primary)]"
-                  data-testid={`tournament-break-advanced-${br.localId}`}
-                  onClick={() =>
-                    onChange((p) => ({
-                      ...p,
-                      breaks: p.breaks.map((row) =>
-                        row.localId === br.localId
-                          ? {
-                              ...row,
-                              fieldSelectionAdvanced: true,
-                              scope: "SELECTED_PITCHES",
-                              tournamentPitchLocalIds: row.tournamentPitchLocalIds.length
-                                ? row.tournamentPitchLocalIds
-                                : p.pitches.slice(0, 1).map((pitch) => pitch.localId),
-                            }
-                          : row,
-                      ),
-                    }))
-                  }
-                >
-                  Nur bestimmte Felder sperren
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    className="text-xs text-[var(--text-2)] underline"
-                    onClick={() =>
-                      onChange((p) => ({
-                        ...p,
-                        breaks: p.breaks.map((row) =>
-                          row.localId === br.localId
-                            ? {
-                                ...row,
-                                fieldSelectionAdvanced: false,
-                                scope: "ALL_PITCHES",
-                                tournamentPitchLocalIds: [],
-                              }
-                            : row,
-                        ),
-                      }))
-                    }
-                  >
-                    Wieder alle Felder
-                  </button>
-                  <div
-                    className="flex flex-wrap gap-2"
-                    role="group"
-                    aria-label="Felder für Sperrzeit"
-                    data-testid={`tournament-break-pitches-${br.localId}`}
-                  >
-                    {planner.pitches.map((pitch) => {
-                      const selected = br.tournamentPitchLocalIds.includes(pitch.localId);
-                      return (
-                        <button
-                          key={pitch.localId}
-                          type="button"
-                          aria-pressed={selected}
-                          className={cn(
-                            "rounded-full border px-3 py-1 text-xs font-medium",
-                            selected
-                              ? "border-[var(--sce-primary)] bg-[var(--sce-primary-soft)] text-[var(--foreground)]"
-                              : "border-[var(--border)] text-[var(--text-2)]",
-                          )}
-                          onClick={() =>
-                            onChange((p) => ({
-                              ...p,
-                              breaks: p.breaks.map((row) => {
-                                if (row.localId !== br.localId) return row;
-                                const ids = new Set(row.tournamentPitchLocalIds);
-                                if (ids.has(pitch.localId)) ids.delete(pitch.localId);
-                                else ids.add(pitch.localId);
-                                return { ...row, tournamentPitchLocalIds: [...ids] };
-                              }),
-                            }))
-                          }
-                        >
-                          {pitch.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          className="inline-flex items-center gap-1 text-sm font-medium text-[var(--sce-primary)]"
-          onClick={() =>
-            onChange((p) => ({
-              ...p,
-              breaks: [...p.breaks, createDefaultComposerBreakDraft(`break-${Date.now()}`)],
-            }))
-          }
-          data-testid="tournament-break-add"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          Pause hinzufügen
-        </button>
-      </div>
+      <ScheduleFitPanel payload={payload} />
     </PlanningEditorSection>
   );
-}
-
-export function syncPitchCountPreset(planner: TournamentComposerPlannerDraft, count: 1 | 2 | 4 | 8) {
-  const labels = defaultTournamentComposerPitchLabels(count);
-  return {
-    ...planner,
-    pitches: labels.map((label, index) => ({
-      localId: planner.pitches[index]?.localId ?? `pitch-${index + 1}`,
-      label,
-      playersPerSide: planner.pitches[index]?.playersPerSide ?? null,
-    })),
-  };
 }

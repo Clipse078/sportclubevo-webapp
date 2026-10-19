@@ -13,6 +13,7 @@ import { generateTournamentFixturesForEvent } from "@/lib/tournament-scheduling/
 import { createTournamentBreak } from "@/lib/tournament-scheduling/tournament-break-service";
 import { createTournamentPitch } from "@/lib/tournament-scheduling/tournament-pitch-service";
 import { createWorkingTournamentScheduleVersion } from "@/lib/tournament-scheduling/schedule-version-service";
+import { applyProgrammeTemplateToTournament } from "@/lib/tournament-scheduling/programme-templates/programme-template-service";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
@@ -26,6 +27,28 @@ export async function persistTournamentPlannerFromComposer(input: {
 }): Promise<void> {
   const { tenantId, tournamentId, payload, planner } = input;
   if (payload.homeAway !== "HOME") {
+    return;
+  }
+
+  await createWorkingTournamentScheduleVersion(tenantId, tournamentId, {
+    matchDurationMinutes: planner.timing.matchDurationMinutes,
+    transitionMinutes: planner.timing.transitionMinutes,
+    minRestMinutes: planner.timing.minRestMinutes,
+  });
+
+  if (planner.programmeTemplateId) {
+    const mainPause = planner.mainPause;
+    await applyProgrammeTemplateToTournament({
+      tenantId,
+      tournamentId,
+      templateId: planner.programmeTemplateId,
+      templateVersion: planner.programmeTemplateVersion ?? undefined,
+      replaceExisting: true,
+      mainBreakDurationMinutes:
+        mainPause?.enabled === true ? mainPause.durationMinutes : 0,
+      mainBreakAfterRoundNumbers:
+        mainPause?.enabled === true ? [mainPause.afterRoundNumber] : [],
+    });
     return;
   }
 
@@ -191,9 +214,4 @@ export async function persistTournamentPlannerFromComposer(input: {
     });
   }
 
-  await createWorkingTournamentScheduleVersion(tenantId, tournamentId, {
-    matchDurationMinutes: planner.timing.matchDurationMinutes,
-    transitionMinutes: planner.timing.transitionMinutes,
-    minRestMinutes: planner.timing.minRestMinutes,
-  });
 }

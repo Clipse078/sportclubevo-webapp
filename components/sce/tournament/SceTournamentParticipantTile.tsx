@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type RefObject } from "react";
+import { useState, type ReactNode, type RefObject } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ClubCrest, type ClubCrestVisualSize } from "@/components/sporting-activity/ClubCrest";
@@ -20,6 +20,7 @@ export type SceTournamentParticipantTileProps =
       density: TournamentLobbyGridDensity;
       onRemove?: (localId: string) => void;
       readOnly?: boolean;
+      footer?: ReactNode;
       testId?: string;
     }
   | {
@@ -65,7 +66,7 @@ export function SceTournamentParticipantTile(props: SceTournamentParticipantTile
     );
   }
 
-  const { model, onRemove, readOnly = false } = props;
+  const { model, onRemove, readOnly = false, footer } = props;
   const [confirmRemove, setConfirmRemove] = useState(false);
   const crestSize = crestDensityForLobby(density);
   const titleClass =
@@ -96,6 +97,7 @@ export function SceTournamentParticipantTile(props: SceTournamentParticipantTile
           ) : null}
         </div>
       </div>
+      {footer ? <div className="mt-2 w-full text-left">{footer}</div> : null}
       {!readOnly && onRemove ? (
       <div className="mt-auto flex w-full justify-end pt-1">
         <button

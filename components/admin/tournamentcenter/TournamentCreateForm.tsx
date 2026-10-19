@@ -64,6 +64,14 @@ import {
   TournamentComposerSpielfelderPanel,
   TournamentComposerTurnierformatPanel,
 } from "@/components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels";
+import TournamentComposerPlayingUnitsPanel from "@/components/admin/tournamentcenter/composer/TournamentComposerPlayingUnitsPanel";
+import { reconcileComposerPlannerForParticipants } from "@/lib/tournaments/composer/tournament-composer-programme-template";
+import {
+  addComposerPlayingUnitSubunit,
+  removeComposerPlayingUnit,
+  splitComposerParticipantIntoDefaultSubunits,
+  updateComposerPlayingUnitName,
+} from "@/lib/tournaments/composer/tournament-composer-playing-units";
 
 type Props = {
   activeSeasonId: string;
@@ -205,6 +213,17 @@ export default function TournamentCreateForm({
       setOrganizerSelection(null);
     }
   }, [homeAway]);
+
+  useEffect(() => {
+    if (homeAway !== "HOME") return;
+    setPlanner((prev) => {
+      if (!prev) return prev;
+      return reconcileComposerPlannerForParticipants({
+        planner: prev,
+        participantCount: participants.length,
+      });
+    });
+  }, [homeAway, participants.length]);
 
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
@@ -496,6 +515,82 @@ export default function TournamentCreateForm({
     setParticipantNotice(null);
   }
 
+  const renderParticipantPlayingUnitsFooter = useCallback(
+    (participantLocalId: string) => {
+      const participant = participants.find((p) => p.localId === participantLocalId);
+      if (!participant) return null;
+      return (
+        <TournamentComposerPlayingUnitsPanel
+          participantLocalId={participant.localId}
+          participantDisplayName={participant.displayName}
+          units={participant.playingUnits}
+          onSplit={() => {
+            setParticipants((prev) =>
+              prev.map((row) =>
+                row.localId === participantLocalId
+                  ? {
+                      ...row,
+                      playingUnits: splitComposerParticipantIntoDefaultSubunits({
+                        participantLocalId: row.localId,
+                        baseDisplayName: row.displayName,
+                        existingUnits: row.playingUnits,
+                        nextLocalId: () => nextLocalId("unit"),
+                      }),
+                    }
+                  : row,
+              ),
+            );
+          }}
+          onAddSubunit={() => {
+            setParticipants((prev) =>
+              prev.map((row) =>
+                row.localId === participantLocalId
+                  ? {
+                      ...row,
+                      playingUnits: addComposerPlayingUnitSubunit({
+                        units: row.playingUnits ?? [],
+                        baseDisplayName: row.displayName,
+                        nextLocalId: () => nextLocalId("unit"),
+                      }),
+                    }
+                  : row,
+              ),
+            );
+          }}
+          onRename={(unitLocalId, displayName) => {
+            setParticipants((prev) =>
+              prev.map((row) =>
+                row.localId === participantLocalId && row.playingUnits
+                  ? {
+                      ...row,
+                      playingUnits: updateComposerPlayingUnitName(
+                        row.playingUnits,
+                        unitLocalId,
+                        displayName,
+                      ),
+                    }
+                  : row,
+              ),
+            );
+          }}
+          onRemove={(unitLocalId) => {
+            setParticipants((prev) =>
+              prev.map((row) =>
+                row.localId === participantLocalId && row.playingUnits
+                  ? {
+                      ...row,
+                      playingUnits: removeComposerPlayingUnit(row.playingUnits, unitLocalId),
+                    }
+                  : row,
+              ),
+            );
+          }}
+        />
+      );
+    },
+    [participants],
+  );
+
   function rejectDuplicateParticipant(): boolean {
     setParticipantNotice("Dieser Teilnehmer ist bereits im Turnier.");
     return true;
@@ -620,16 +715,19 @@ export default function TournamentCreateForm({
             tenantClubName={tenantClubName}
             onAddTeam={addTeamParticipant}
             onRemoveParticipant={removeParticipant}
+            renderParticipantFooter={renderParticipantPlayingUnitsFooter}
           />
           <TournamentExternalClubsSection
             identities={externalClubIdentities}
             onAddExternalClub={addExternalClubParticipant}
             onRemoveParticipant={removeParticipant}
+            renderParticipantFooter={renderParticipantPlayingUnitsFooter}
           />
           <TournamentManualParticipantSection
             identities={manualIdentities}
             onAddManual={addManualParticipant}
             onRemoveParticipant={removeParticipant}
+            renderParticipantFooter={renderParticipantPlayingUnitsFooter}
           />
         </div>
       </PlanningEditorSection>
@@ -792,9 +890,9 @@ export default function TournamentCreateForm({
     planner != null
       ? [
           { key: "turnierformat" as const, label: "Turnierformat", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerTurnierformatPanel planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerTurnierformatPanel planner={planner} participantCount={participants.length} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielfelderPanel planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielfelderPanel planner={planner} participantCount={participants.length} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
             <TournamentComposerSpielplanPanel payload={composerDraft} planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
         ]

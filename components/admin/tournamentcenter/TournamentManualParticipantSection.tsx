@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Plus } from "lucide-react";
 import { SceTournamentParticipantTile } from "@/components/sce/tournament/SceTournamentParticipantTile";
 import type { TournamentLobbyParticipantIdentity } from "@/lib/tournaments/tournament-participant-presentation";
@@ -11,6 +11,7 @@ type Props = {
   identities: TournamentLobbyParticipantIdentity[];
   onAddManual: (label: string) => void;
   onRemoveParticipant: (localId: string) => void;
+  renderParticipantFooter?: (localId: string) => ReactNode;
   pending?: boolean;
   testId?: string;
 };
@@ -29,6 +30,7 @@ export default function TournamentManualParticipantSection({
   identities,
   onAddManual,
   onRemoveParticipant,
+  renderParticipantFooter,
   pending = false,
   testId = "tournament-manual-participants-section",
 }: Props) {
@@ -54,6 +56,7 @@ export default function TournamentManualParticipantSection({
               model={model}
               density={density}
               onRemove={onRemoveParticipant}
+              footer={renderParticipantFooter?.(model.localId)}
               testId={`tournament-manual-participant-tile-${model.localId}`}
             />
           ))}

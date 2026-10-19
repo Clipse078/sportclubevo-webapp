@@ -51,6 +51,7 @@ describe("01K-R4 — creator planning assistant", () => {
     );
     expect(source).not.toMatch(/smart-timing-feasibility/);
     expect(source).not.toMatch(/SCE Smart Timing/);
-    expect(source).toMatch(/Empfehlung übernehmen/);
+    expect(source).not.toMatch(/Empfehlung übernehmen/);
+    expect(source).toMatch(/tournament-composer-schedule-fit/);
   });
 });

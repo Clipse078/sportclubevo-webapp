@@ -210,13 +210,19 @@ async function ensureTemplateBreaks(
   matchDurationMinutes: number,
   transitionMinutes: number,
   breakDurationMinutes: number,
+  breakAfterRoundNumbers: readonly number[],
 ): Promise<void> {
   const existing = await listTournamentBreaks(tenantId, tournamentId);
   if (existing.length > 0) {
     return;
   }
+  if (breakDurationMinutes <= 0 || breakAfterRoundNumbers.length === 0) {
+    return;
+  }
   const slotMs = (matchDurationMinutes + transitionMinutes) * 60_000;
+  const roundSet = new Set(breakAfterRoundNumbers);
   for (const hint of template.breakHints) {
+    if (!roundSet.has(hint.afterRoundNumber)) continue;
     const startAt = new Date(
       tournamentStart.getTime() + hint.afterRoundNumber * slotMs,
     );
@@ -237,6 +243,10 @@ export async function applyProgrammeTemplateToTournament(input: {
   templateVersion?: number;
   replaceExisting?: boolean;
   expectedRevision?: number;
+  /** Main tournament pause duration — defaults to 10 when omitted. */
+  mainBreakDurationMinutes?: number;
+  /** When set, only these 1-based round numbers receive the main break. */
+  mainBreakAfterRoundNumbers?: readonly number[];
 }): Promise<{
   template: TournamentProgrammeTemplate;
   scheduleVersionId: string;
@@ -343,6 +353,11 @@ export async function applyProgrammeTemplateToTournament(input: {
   const matchDurationMinutes = scheduleVersion.matchDurationMinutes ?? 12;
   const transitionMinutes = scheduleVersion.transitionMinutes ?? 3;
 
+  const breakDurationMinutes = input.mainBreakDurationMinutes ?? 10;
+  const breakAfterRoundNumbers =
+    input.mainBreakAfterRoundNumbers ??
+    plan.template.breakHints.map((hint) => hint.afterRoundNumber);
+
   await ensureTemplateBreaks(
     input.tenantId,
     input.tournamentId,
@@ -350,7 +365,8 @@ export async function applyProgrammeTemplateToTournament(input: {
     event.startAt,
     matchDurationMinutes,
     transitionMinutes,
-    10,
+    breakDurationMinutes,
+    breakAfterRoundNumbers,
   );
 
   const fixturesForSchedule = createdFixtures.map((created, index) => {
@@ -366,8 +382,8 @@ export async function applyProgrammeTemplateToTournament(input: {
     tournamentStartUtcMs: event.startAt.getTime(),
     matchDurationMinutes,
     transitionMinutes,
-    breakAfterRoundNumbers: plan.template.breakHints.map((b) => b.afterRoundNumber),
-    breakDurationMinutes: 10,
+    breakAfterRoundNumbers,
+    breakDurationMinutes,
     fixtures: fixturesForSchedule,
   });
 

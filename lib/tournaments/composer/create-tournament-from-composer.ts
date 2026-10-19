@@ -17,6 +17,7 @@ import type { TournamentComposerDraftPayload } from "./tournament-composer-draft
 import { resolveTournamentComposerPersistedLocation } from "@/lib/tournaments/tournament-create-validation";
 import { persistTournamentPlannerFromComposer } from "./persist-tournament-planner-from-composer";
 import { createDefaultTournamentComposerPlannerDraft } from "./tournament-composer-planner-defaults";
+import { createTournamentParticipantUnit } from "@/lib/tournament-scheduling/tournament-participant-unit-service";
 
 export type CreateTournamentFromComposerResult = {
   eventId: string;
@@ -157,6 +158,18 @@ export async function createTournamentFromComposerPayload(input: {
       },
     },
   );
+
+  for (const participant of payload.participants) {
+    const participantId = orchestration.createdParticipantIds.get(participant.localId);
+    if (!participantId || !participant.playingUnits?.length) continue;
+    for (const unit of participant.playingUnits) {
+      await createTournamentParticipantUnit(input.tenantId, event.id, participantId, {
+        displayName: unit.displayName,
+        mode: unit.mode,
+        displayOrder: unit.displayOrder,
+      });
+    }
+  }
 
   if (payload.homeAway === "HOME") {
     const planner = payload.planner ?? createDefaultTournamentComposerPlannerDraft();

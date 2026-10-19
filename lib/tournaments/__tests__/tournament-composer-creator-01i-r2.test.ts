@@ -16,10 +16,7 @@ import {
 } from "@/lib/sce/activity-composer/guided-workflow";
 import { createEmptyTournamentComposerDraft } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import { createDefaultTournamentComposerPlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-defaults";
-import {
-  applyComposerRecommendedTiming,
-  buildTournamentComposerSmartTimingView,
-} from "@/lib/tournaments/composer/tournament-composer-smart-timing";
+import { buildTournamentComposerSmartTimingView } from "@/lib/tournaments/composer/tournament-composer-smart-timing";
 import {
   createDefaultComposerBreakDraft,
   resolveComposerBreakDateTimes,
@@ -161,16 +158,10 @@ describe("SCE-TOURNAMENT-PLANNER-01I-R2 — Creator step order + retrospective s
     expect(draft.planner!.timing).toEqual(timingBefore);
   });
 
-  it("N/O — Smart Timing recommendation does not silently apply; Empfehlung übernehmen is explicit", () => {
-    const draft = homeDraft();
-    const view = buildTournamentComposerSmartTimingView(draft);
-    expect(view.recommendedTiming).not.toBeNull();
-    expect(draft.planner!.timing.matchDurationMinutes).not.toBe(view.recommendedTiming!.matchDurationMinutes);
-    const applied = applyComposerRecommendedTiming(draft.planner!, view.recommendedTiming!);
-    expect(applied.timing.matchDurationMinutes).toBe(view.recommendedTiming!.matchDurationMinutes);
+  it("N/O — creator no longer exposes Smart Timing recommendation UX (02D R1 PO UAT)", () => {
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
-    expect(panels).toContain("Empfehlung übernehmen");
-    expect(panels).toContain("computeLiveView");
+    expect(panels).not.toMatch(/Empfehlung übernehmen/);
+    expect(panels).toContain("tournament-composer-schedule-fit");
   });
 
   it("P — 01I manual-assignment module remains present", () => {
@@ -180,9 +171,9 @@ describe("SCE-TOURNAMENT-PLANNER-01I-R2 — Creator step order + retrospective s
     );
   });
 
-  it("Spielplan Smart Timing skips live derivation when panel is inactive (code guard)", () => {
+  it("Spielplan uses deterministic fit calculation panel (02D R1)", () => {
     expect(read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx")).toMatch(
-      /activeTab === "spielplan"/,
+      /ScheduleFitPanel/,
     );
   });
 });
