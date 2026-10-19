@@ -304,30 +304,9 @@ export function buildTournamentSchedulePreview(input: {
   });
 
   const scheduleFixtures = fixtures.map((f) => ({
-    ...f,
     fixtureId: f.fixtureKey,
     tournamentPitchId: f.pitchLocalId,
     roundIndex: f.roundIndex,
-    slotIndexInRound: f.slotIndexInRound,
-    fieldKey: "draft",
-    fieldDisplayOrder: 0,
-    templateId: planner.programmeTemplateId ?? "draft",
-    templateVersion: planner.programmeTemplateVersion ?? 1,
-    slotMapping: {},
-    home: {
-      participantId: f.homeParticipantId,
-      slot: "A" as const,
-      subunitIndex: null,
-      participantUnitId: f.homeParticipantId,
-    },
-    away: {
-      participantId: f.awayParticipantId,
-      slot: "B" as const,
-      subunitIndex: null,
-      participantUnitId: f.awayParticipantId,
-    },
-    playersPerSide: f.playersPerSide ?? 3,
-    generatorKey: f.fixtureKey,
   }));
 
   const assignments = buildTemplateScheduleAssignments({

@@ -246,17 +246,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     const tournamentStartUtcMs = new Date("2026-06-01T10:00:00").getTime();
     const fixtures = E_FF12_ROTATION_4_TEMPLATE.rounds.flatMap((round) =>
       round.assignments.map((assignment, slotIndexInRound) => ({
-        templateId: E_FF12_ROTATION_4_TEMPLATE.id,
-        templateVersion: 1,
-        slotMapping: {} as never,
         roundIndex: round.roundNumber - 1,
-        slotIndexInRound,
-        fieldKey: assignment.fieldKey,
-        fieldDisplayOrder: 1,
-        playersPerSide: 3,
-        home: { participantId: "a", slot: "A" as const, subunitIndex: null },
-        away: { participantId: "b", slot: "B" as const, subunitIndex: null },
-        generatorKey: "k",
         fixtureId: `f-${round.roundNumber}-${slotIndexInRound}`,
         tournamentPitchId: `pitch-${assignment.fieldKey}`,
       })),

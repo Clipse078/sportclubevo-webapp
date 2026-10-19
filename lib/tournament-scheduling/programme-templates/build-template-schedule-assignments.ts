@@ -2,7 +2,12 @@ import {
   computeRoundParallelScheduleTimeline,
   type FixedPauseWindow,
 } from "./fixed-pause-round-scheduling";
-import type { InstantiatedTemplateFixturePlan } from "./types";
+/** Minimal fixture shape for round-parallel time assignment (no template slot mapping). */
+export type TemplateScheduleAssignmentFixtureInput = {
+  fixtureId: string;
+  tournamentPitchId: string;
+  roundIndex: number;
+};
 
 export type TemplateScheduleAssignment = {
   fixtureId: string;
@@ -22,7 +27,7 @@ export function buildTemplateScheduleAssignments(input: {
   breakAfterRoundNumbers?: readonly number[];
   breakDurationMinutes?: number;
   fixedPause?: FixedPauseWindow | null;
-  fixtures: readonly (InstantiatedTemplateFixturePlan & { fixtureId: string; tournamentPitchId: string })[];
+  fixtures: readonly TemplateScheduleAssignmentFixtureInput[];
 }): TemplateScheduleAssignment[] {
   const maxRoundIndex = Math.max(...input.fixtures.map((f) => f.roundIndex), 0);
   const roundCount = maxRoundIndex + 1;
