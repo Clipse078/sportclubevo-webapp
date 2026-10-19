@@ -13,6 +13,7 @@ import {
   updateTournamentParticipantUnit,
 } from "@/lib/tournament-scheduling/tournament-participant-unit-service";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
+import { mapPlayingUnitsPersistenceError } from "@/lib/tournament-scheduling/playing-units-route-errors";
 
 type RouteContext = {
   params: Promise<{ tournamentId: string; participantId: string; unitId: string }>;
@@ -72,7 +73,17 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     }
     if (err instanceof TournamentSchedulingError) {
       const status = err.code === "TOURNAMENT_PARTICIPANT_UNIT_NOT_FOUND" ? 404 : 400;
-      return NextResponse.json({ error: err.message }, { status });
+      return NextResponse.json(
+        { error: err.message, errorKind: "mutation" },
+        { status },
+      );
+    }
+    const mapped = mapPlayingUnitsPersistenceError(err, "mutation");
+    if (mapped) {
+      return NextResponse.json(
+        { error: mapped.error, errorKind: mapped.errorKind },
+        { status: mapped.status },
+      );
     }
     throw err;
   }
@@ -106,7 +117,17 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
     }
     if (err instanceof TournamentSchedulingError) {
       const status = err.code === "TOURNAMENT_PARTICIPANT_UNIT_NOT_FOUND" ? 404 : 400;
-      return NextResponse.json({ error: err.message }, { status });
+      return NextResponse.json(
+        { error: err.message, errorKind: "mutation" },
+        { status },
+      );
+    }
+    const mapped = mapPlayingUnitsPersistenceError(err, "mutation");
+    if (mapped) {
+      return NextResponse.json(
+        { error: mapped.error, errorKind: mapped.errorKind },
+        { status: mapped.status },
+      );
     }
     throw err;
   }

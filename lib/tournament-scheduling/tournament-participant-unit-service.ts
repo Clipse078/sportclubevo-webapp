@@ -341,6 +341,11 @@ export async function splitParticipantIntoDefaultSubunits(
   participantId: string,
   baseDisplayName: string,
 ): Promise<TournamentParticipantUnitDefinition[]> {
+  const existing = await listTournamentParticipantUnits(tenantId, tournamentId, participantId);
+  if (existing.length > 0) {
+    return existing;
+  }
+
   const trimmed = baseDisplayName.trim() || "Team";
   const first = await createTournamentParticipantUnit(tenantId, tournamentId, participantId, {
     displayName: `${trimmed}-1`,

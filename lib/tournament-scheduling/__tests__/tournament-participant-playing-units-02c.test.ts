@@ -40,6 +40,7 @@ import {
   removeTournamentParticipantUnit,
   resolveEffectiveFullPlayingUnit,
   resolveEffectivePlayingUnits,
+  splitParticipantIntoDefaultSubunits,
   updateTournamentParticipantUnit,
 } from "../tournament-participant-unit-service";
 import {
@@ -272,6 +273,31 @@ describe("SCE-TOURNAMENT-PLANNER-02C playing units", () => {
       vi.mocked(prisma.tournamentParticipantUnit.findFirst).mockResolvedValue({ id: "u-new" } as never);
       await removeTournamentParticipantUnit(TENANT, EVENT, PARTICIPANT_A, "u-new");
       expect(prisma.tournamentParticipantUnit.delete).toHaveBeenCalledWith({ where: { id: "u-new" } });
+    });
+  });
+
+  describe("G. default split workflow", () => {
+    it("is idempotent when units already exist", async () => {
+      vi.mocked(prisma.tournamentParticipantUnit.findMany).mockResolvedValue([
+        {
+          id: "u1",
+          tournamentParticipantId: PARTICIPANT_A,
+          displayName: "E1-1",
+          mode: "SUBUNIT",
+          capacityPartitionKey: null,
+          displayOrder: 0,
+          tournamentParticipant: { eventId: EVENT },
+        },
+      ] as never);
+
+      const units = await splitParticipantIntoDefaultSubunits(
+        TENANT,
+        EVENT,
+        PARTICIPANT_A,
+        "E1",
+      );
+      expect(units).toHaveLength(1);
+      expect(prisma.tournamentParticipantUnit.create).not.toHaveBeenCalled();
     });
   });
 

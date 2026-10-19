@@ -18,6 +18,7 @@ import {
   splitParticipantIntoDefaultSubunits,
 } from "@/lib/tournament-scheduling/tournament-participant-unit-service";
 import { TournamentSchedulingError } from "@/lib/tournament-scheduling/errors";
+import { mapPlayingUnitsPersistenceError } from "@/lib/tournament-scheduling/playing-units-route-errors";
 
 type RouteContext = { params: Promise<{ tournamentId: string; participantId: string }> };
 
@@ -71,7 +72,17 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     });
   } catch (err) {
     if (err instanceof TournamentParticipantNotFoundError) {
-      return NextResponse.json({ error: "Teilnehmer nicht gefunden." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Teilnehmer nicht gefunden.", errorKind: "not_found" },
+        { status: 404 },
+      );
+    }
+    const mapped = mapPlayingUnitsPersistenceError(err, "load");
+    if (mapped) {
+      return NextResponse.json(
+        { error: mapped.error, errorKind: mapped.errorKind },
+        { status: mapped.status },
+      );
     }
     throw err;
   }
@@ -131,10 +142,23 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ unit: mapUnitDto(unit) });
   } catch (err) {
     if (err instanceof TournamentParticipantNotFoundError) {
-      return NextResponse.json({ error: "Teilnehmer nicht gefunden." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Teilnehmer nicht gefunden.", errorKind: "not_found" },
+        { status: 404 },
+      );
     }
     if (err instanceof TournamentSchedulingError) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
+      return NextResponse.json(
+        { error: err.message, errorKind: "mutation" },
+        { status: 400 },
+      );
+    }
+    const mapped = mapPlayingUnitsPersistenceError(err, "mutation");
+    if (mapped) {
+      return NextResponse.json(
+        { error: mapped.error, errorKind: mapped.errorKind },
+        { status: mapped.status },
+      );
     }
     throw err;
   }

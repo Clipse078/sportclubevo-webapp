@@ -141,6 +141,17 @@ Planung / participant editor (`TournamentParticipantsEditor` expanded panel):
 2. **SCHEMA VERIFICATION** — `prisma validate`, `prisma generate`, STAGE script `scripts/sce-tournament-planner-02c-stage-migration-verify.ts`
 3. **APPLICATION CODE**
 
+### R2 UAT (Spielteams load / Team aufteilen)
+
+| Symptom | Typical cause | Fix |
+| --- | --- | --- |
+| «Spielteams konnten nicht geladen werden» on Teilnahme | 02C migration not applied on STAGE (`TournamentParticipantUnit` missing) | Run guarded STAGE apply via `scripts/sce-tournament-planner-02c-stage-migration-verify.ts --apply` (not `db push`) |
+| «Team aufteilen» appears inert after failed load | Mutation succeeded but UI refetch hid panel / no optimistic reconcile | R2 panel applies split response immediately + separate load/mutation errors |
+
+**STAGE apply (canonical):**
+
+`APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 ./node_modules/.bin/tsx scripts/sce-tournament-planner-02c-stage-migration-verify.ts --apply`
+
 ## UAT
 
 | Flag | Value |
