@@ -12,9 +12,17 @@ import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduli
 import { getProgrammeTemplateById } from "@/lib/tournament-scheduling/programme-templates/template-registry";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
-import { resolveComposerMainPauseUtcWindow } from "./tournament-composer-main-pause";
+import {
+  normalizeComposerMainPauseDraft,
+  resolveComposerMainPauseUtcWindow,
+} from "./tournament-composer-main-pause";
 import { resolveComposerProgrammeProposal } from "./tournament-composer-programme-proposal";
 import { resolveEffectiveComposerPlanner } from "./resolve-effective-composer-planner";
+import {
+  buildComposerSchedulePreviewTimeline,
+  type ComposerSchedulePreviewTimelineItem,
+} from "./build-composer-schedule-preview-timeline";
+import { HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT } from "@/lib/tournament-scheduling/smart-generator-architecture";
 
 export type ComposerSchedulePreviewFixtureRow = {
   fixtureKey: string;
@@ -44,6 +52,8 @@ export type ComposerSchedulePreviewResult = {
   path: "FULL_TEMPLATE" | "FIELD_ONLY" | "GENERIC" | "NONE";
   errorMessage: string | null;
   rounds: ComposerSchedulePreviewRound[];
+  /** Chronological ROUND | BREAK items for Spielplan presentation. */
+  timelineItems: ComposerSchedulePreviewTimelineItem[];
   fixtureCount: number;
   roundCount: number;
   programmeEndUtcMs: number | null;
@@ -183,7 +193,7 @@ function buildRoundRobinPathFixtures(input: {
         format: "ROUND_ROBIN",
         stageKey: "MAIN",
         meetingsPerOpponent: input.planner.meetingsPerOpponent,
-        homeAwayRelevance: input.planner.homeAwayRelevance === "ON" ? "ON" : "OFF",
+        homeAwayRelevance: HOME_AWAY_DEFAULT_FOR_NEUTRAL_YOUTH_TOURNAMENT,
       },
     });
   } catch {
@@ -229,6 +239,7 @@ export function buildTournamentSchedulePreview(input: {
     reserveMinutes: null,
     deficitMinutes: null,
     assignmentPlan: [],
+    timelineItems: [],
   });
 
   if (input.payload.homeAway !== "HOME" || !input.payload.planner) {
@@ -295,6 +306,7 @@ export function buildTournamentSchedulePreview(input: {
       reserveMinutes: null,
       deficitMinutes: null,
       assignmentPlan: [],
+      timelineItems: [],
     };
   }
 
@@ -366,6 +378,7 @@ export function buildTournamentSchedulePreview(input: {
           reserveMinutes: null,
           deficitMinutes: null,
           assignmentPlan: [],
+          timelineItems: [],
         };
       }
     }
@@ -416,11 +429,30 @@ export function buildTournamentSchedulePreview(input: {
     fitDetail += `\nReserve: ${reserveMinutes} Min.`;
   }
 
+  const pauseDurationMinutes =
+    fixedPause && planner.mainPause?.enabled
+      ? normalizeComposerMainPauseDraft(planner.mainPause).durationMinutes
+      : null;
+
+  const timelineItems = buildComposerSchedulePreviewTimeline({
+    rounds,
+    fixedPause: fixedPause
+      ? {
+          startUtcMs: fixedPause.startUtcMs,
+          endUtcMs: fixedPause.endUtcMs,
+          durationMinutes: pauseDurationMinutes ?? Math.round(
+            (fixedPause.endUtcMs - fixedPause.startUtcMs) / 60_000,
+          ),
+        }
+      : null,
+  });
+
   return {
     status: "OK",
     path,
     errorMessage: null,
     rounds,
+    timelineItems,
     fixtureCount: rows.length,
     roundCount: rounds.length,
     programmeEndUtcMs,

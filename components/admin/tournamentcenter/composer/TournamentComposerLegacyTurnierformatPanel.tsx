@@ -1,7 +1,6 @@
 "use client";
 
 import TournamentComposerChoiceCard from "./TournamentComposerChoiceCard";
-import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
@@ -14,15 +13,12 @@ export function TournamentComposerLegacyTurnierformatPanel({
   onChange,
   fieldErrors,
   hideRoundRobinMeetings = false,
-  hideHomeAwayRelevance = false,
 }: {
   planner: TournamentComposerPlannerDraft;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
   /** Curated youth proposal path — TP01 round-robin meeting count is predetermined. */
   hideRoundRobinMeetings?: boolean;
-  /** Curated youth proposal path — neutral sides are implied. */
-  hideHomeAwayRelevance?: boolean;
 }) {
   return (
     <>
@@ -156,27 +152,6 @@ export function TournamentComposerLegacyTurnierformatPanel({
         </div>
       ) : null}
 
-      {hideHomeAwayRelevance ? null : (
-        <div
-          className="mt-6 flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] p-4"
-          data-testid="tournament-home-away-relevance"
-        >
-          <div>
-            <p className="text-sm font-medium text-[var(--foreground)]">Heim-/Auswärtsseiten berücksichtigen</p>
-            <p className="mt-1 text-xs text-[var(--text-2)]">
-              Aus: neutrale Seiten. An: SCE balanciert Heim- und Auswärtsseiten in Paarungen.
-            </p>
-          </div>
-          <SwitchThumb
-            id="tournament-home-away-relevance"
-            checked={planner.homeAwayRelevance === "ON"}
-            onChange={(checked) =>
-              onChange((p) => ({ ...p, homeAwayRelevance: checked ? "ON" : "OFF" }))
-            }
-            aria-label="Heim-/Auswärtsseiten berücksichtigen"
-          />
-        </div>
-      )}
       {fieldErrors?.planner ? (
         <p role="alert" className="mt-3 text-sm text-[var(--sce-danger)]">
           {fieldErrors.planner}

@@ -19,6 +19,7 @@ import {
 import { buildComposerScheduleFitView } from "@/lib/tournaments/composer/tournament-composer-schedule-fit";
 import { normalizeComposerMainPauseDraft } from "@/lib/tournaments/composer/tournament-composer-main-pause";
 import { buildTournamentSchedulePreview } from "@/lib/tournaments/composer/tournament-composer-schedule-preview";
+import ComposerSchedulePreviewPresentation from "./ComposerSchedulePreviewPresentation";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
 
@@ -96,63 +97,23 @@ function ComposerSchedulePreviewPanel({
     );
   }
 
-  return (
-    <div className="space-y-4" data-testid="tournament-composer-schedule-preview">
-      {preview.tournamentStartLabel ? (
-        <p className="text-sm text-[var(--text-2)]">
-          <span className="font-medium text-[var(--foreground)]">{preview.tournamentStartLabel}</span> Start
-          {preview.pauseLabel ? (
-            <>
-              {" · "}
-              <span className="font-medium text-[var(--foreground)]">{preview.pauseLabel}</span> Pause
-            </>
-          ) : null}
-          {preview.programmeEndLabel ? (
-            <>
-              {" · "}
-              <span className="font-medium text-[var(--foreground)]">{preview.programmeEndLabel}</span> Ende
-            </>
-          ) : null}
-        </p>
-      ) : null}
+  const summaryParts: string[] = [];
+  if (preview.tournamentStartLabel) {
+    summaryParts.push(`${preview.tournamentStartLabel} Start`);
+  }
+  if (preview.pauseLabel) {
+    summaryParts.push(`${preview.pauseLabel} Pause`);
+  }
+  if (preview.programmeEndLabel) {
+    summaryParts.push(`${preview.programmeEndLabel} Ende`);
+  }
 
-      <div className="space-y-5" role="list" aria-label="Spielplanvorschau">
-        {preview.rounds.map((round) => (
-          <section key={round.roundNumber} role="listitem" className="space-y-2">
-            <div className="flex items-baseline justify-between gap-2 border-b border-[var(--border)] pb-1">
-              <h4 className="text-sm font-semibold text-[var(--foreground)]">Runde {round.roundNumber}</h4>
-              <time className="text-xs font-medium text-[var(--muted)]" dateTime="">
-                {round.roundStartLabel}
-              </time>
-            </div>
-            <ul className="space-y-1.5">
-              {round.fixtures.map((fixture) => (
-                <li
-                  key={fixture.fixtureKey}
-                  className="grid gap-1 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
-                  data-testid={`tournament-composer-schedule-fixture-${fixture.fixtureKey}`}
-                >
-                  <span className="font-medium text-[var(--foreground)]">{fixture.pitchLabel}</span>
-                  <span className="text-[var(--text-2)]">
-                    {fixture.homeDisplayName} – {fixture.awayDisplayName}
-                  </span>
-                  <span className="text-xs text-[var(--muted)]">
-                    {fixture.playersPerSide != null
-                      ? `${fixture.playersPerSide}v${fixture.playersPerSide}`
-                      : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-        {preview.pauseLabel ? (
-          <p className="text-sm font-medium text-[var(--foreground)]">
-            Pause <span className="text-[var(--text-2)]">{preview.pauseLabel}</span>
-          </p>
-        ) : null}
-      </div>
-    </div>
+  return (
+    <ComposerSchedulePreviewPresentation
+      payload={payload}
+      timelineItems={preview.timelineItems}
+      summaryLine={summaryParts.length > 0 ? summaryParts.join(" · ") : null}
+    />
   );
 }
 
@@ -203,7 +164,6 @@ export function TournamentComposerTurnierformatPanel({
               onChange={onChange}
               fieldErrors={fieldErrors}
               hideRoundRobinMeetings
-              hideHomeAwayRelevance
             />
           ) : (
             <button

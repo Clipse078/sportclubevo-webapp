@@ -67,7 +67,7 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
     expect(settings).toMatch(/TIMING_DEBOUNCE_MS/);
     expect(settings).toMatch(/usePlanungScheduleMutationQueue/);
     expect(settings).toMatch(/onBlur/);
-    expect(settings).toMatch(/fixtureHomeAwayRelevance/);
+    expect(settings).not.toMatch(/planung-home-away-relevance/);
     expect(schedulingRoute).toMatch(/applyPlanungLiveScheduleReconcile/);
     expect(schedulingRoute).not.toMatch(/scheduleConsistencyOverride/);
   });

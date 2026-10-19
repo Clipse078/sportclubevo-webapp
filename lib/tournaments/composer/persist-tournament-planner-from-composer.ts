@@ -109,7 +109,7 @@ export async function persistTournamentPlannerFromComposer(input: {
   await prisma.tournamentCompetitionConfiguration.update({
     where: { eventId: tournamentId },
     data: {
-      fixtureHomeAwayRelevance: planner.homeAwayRelevance === "ON" ? "ON" : "OFF",
+      fixtureHomeAwayRelevance: "OFF",
       roundRobinMeetingsPerOpponent: planner.meetingsPerOpponent,
       automaticGroupCount: groupCount,
       knockoutQualifiersPerGroup:

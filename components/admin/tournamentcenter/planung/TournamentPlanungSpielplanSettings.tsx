@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type {
-  TournamentPlanungFixtureHomeAwayRelevance,
   TournamentPlanungPitchColumn,
   TournamentPlanungSchedulingBreak,
   TournamentPlanungSchedulingSettings,
@@ -44,7 +43,6 @@ type BreakDraft = {
 type TimingDraft = {
   matchDurationMinutes: number;
   transitionMinutes: number;
-  fixtureHomeAwayRelevance: TournamentPlanungFixtureHomeAwayRelevance;
 };
 
 function breakToDraft(br: TournamentPlanungSchedulingBreak): BreakDraft {
@@ -87,15 +85,13 @@ function timingDraftFromSettings(settings: TournamentPlanungSchedulingSettings):
   return {
     matchDurationMinutes: settings.matchDurationMinutes,
     transitionMinutes: settings.transitionMinutes,
-    fixtureHomeAwayRelevance: settings.fixtureHomeAwayRelevance,
   };
 }
 
 function timingDraftDirty(draft: TimingDraft, persisted: TournamentPlanungSchedulingSettings): boolean {
   return (
     draft.matchDurationMinutes !== persisted.matchDurationMinutes ||
-    draft.transitionMinutes !== persisted.transitionMinutes ||
-    draft.fixtureHomeAwayRelevance !== persisted.fixtureHomeAwayRelevance
+    draft.transitionMinutes !== persisted.transitionMinutes
   );
 }
 
@@ -118,7 +114,6 @@ export default function TournamentPlanungSpielplanSettings({
   const [breakSavePending, setBreakSavePending] = useState(false);
   const [scheduleSyncPending, setScheduleSyncPending] = useState(false);
 
-  const homeAwayCommitSkipRef = useRef(true);
   const scheduleRevisionRef = useRef(model.scheduleRevision);
   const scheduleVersionIdRef = useRef(model.scheduleVersionId);
   const timingDraftRef = useRef(timingDraft);
@@ -151,12 +146,7 @@ export default function TournamentPlanungSpielplanSettings({
   useEffect(() => {
     setTimingDraft(timingDraftFromSettings(settings));
     setSyncError(null);
-    homeAwayCommitSkipRef.current = true;
-  }, [
-    settings.matchDurationMinutes,
-    settings.transitionMinutes,
-    settings.fixtureHomeAwayRelevance,
-  ]);
+  }, [settings.matchDurationMinutes, settings.transitionMinutes]);
 
   const timingDirty = useMemo(
     () => timingDraftDirty(timingDraft, settings),
@@ -188,7 +178,6 @@ export default function TournamentPlanungSpielplanSettings({
             expectedRevision: revision,
             matchDurationMinutes: intent.matchDurationMinutes,
             transitionMinutes: intent.transitionMinutes,
-            fixtureHomeAwayRelevance: intent.fixtureHomeAwayRelevance,
           }),
         });
         const json = (await res.json()) as {
@@ -219,15 +208,6 @@ export default function TournamentPlanungSpielplanSettings({
 
   useEffect(() => {
     if (!canManage || !timingDirty) return;
-    const onlyHomeAwayChanged =
-      timingDraft.matchDurationMinutes === settings.matchDurationMinutes &&
-      timingDraft.transitionMinutes === settings.transitionMinutes &&
-      timingDraft.fixtureHomeAwayRelevance !== settings.fixtureHomeAwayRelevance;
-    if (onlyHomeAwayChanged) {
-      if (homeAwayCommitSkipRef.current) return;
-      commitTimingSettings();
-      return;
-    }
 
     const handle = window.setTimeout(() => {
       commitTimingSettings();
@@ -236,11 +216,9 @@ export default function TournamentPlanungSpielplanSettings({
   }, [
     canManage,
     commitTimingSettings,
-    settings.fixtureHomeAwayRelevance,
     settings.matchDurationMinutes,
     settings.transitionMinutes,
     timingDirty,
-    timingDraft.fixtureHomeAwayRelevance,
     timingDraft.matchDurationMinutes,
     timingDraft.transitionMinutes,
   ]);
@@ -407,33 +385,6 @@ export default function TournamentPlanungSpielplanSettings({
             <span className="text-sm text-[var(--muted)]">Min.</span>
           </span>
         </label>
-      </div>
-
-      <div
-        className="space-y-2 rounded-lg border border-[var(--border)] p-3"
-        data-testid="planung-home-away-relevance"
-      >
-        <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-          Heim-/Auswärtsspiele
-        </p>
-        <SwitchToggle
-          id="planung-fixture-home-away-relevance"
-          label="Heim- und Auswärtsseiten berücksichtigen"
-          checked={timingDraft.fixtureHomeAwayRelevance === "ON"}
-          disabled={!canManage}
-          onChange={(checked) => {
-            homeAwayCommitSkipRef.current = false;
-            setTimingDraft((d) => ({
-              ...d,
-              fixtureHomeAwayRelevance: checked ? "ON" : "OFF",
-            }));
-          }}
-        />
-        <p className="text-xs text-[var(--text-2)]">
-          {timingDraft.fixtureHomeAwayRelevance === "ON"
-            ? "Jede Paarung wird als Hin- und Rückspiel ausgetragen."
-            : "Jede Paarung wird einmal neutral ausgelost — ohne Hin- und Rückrunde."}
-        </p>
       </div>
 
       {syncError ? (

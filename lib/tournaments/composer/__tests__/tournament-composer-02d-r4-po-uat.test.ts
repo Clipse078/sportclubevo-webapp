@@ -172,9 +172,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R4 PO UAT", () => {
     const legacy = read("components/admin/tournamentcenter/composer/TournamentComposerLegacyTurnierformatPanel.tsx");
     expect(panels).toMatch(/tournament-composer-advanced-format-toggle/);
     expect(panels).toMatch(/hideRoundRobinMeetings/);
-    expect(panels).toMatch(/hideHomeAwayRelevance/);
     expect(legacy).toMatch(/hideRoundRobinMeetings/);
-    expect(legacy).toMatch(/hideHomeAwayRelevance/);
+    expect(legacy).not.toMatch(/tournament-home-away-relevance/);
   });
 
   it("Spielplan fit messaging avoids TP01 fallback copy for field proposals", () => {

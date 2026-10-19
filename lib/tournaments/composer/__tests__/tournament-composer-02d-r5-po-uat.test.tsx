@@ -252,7 +252,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R5 PO UAT", () => {
   it("TEST J — curated Turnierformat hides redundant controls in source", () => {
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
     expect(panels).toMatch(/hideRoundRobinMeetings/);
-    expect(panels).toMatch(/hideHomeAwayRelevance/);
+    expect(panels).not.toMatch(/hideHomeAwayRelevance/);
     expect(panels).not.toMatch(/SCE erstellt den Spielplan danach/);
   });
 
@@ -261,7 +261,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R5 PO UAT", () => {
       "components/admin/tournamentcenter/composer/TournamentComposerLegacyTurnierformatPanel.tsx",
     );
     expect(legacy).toMatch(/tournament-meetings-per-opponent/);
-    expect(legacy).toMatch(/tournament-home-away-relevance/);
+    expect(legacy).not.toMatch(/tournament-home-away-relevance/);
   });
 
   it("integration — Spielfelder panel renders materialised pitch rows (E/4)", () => {

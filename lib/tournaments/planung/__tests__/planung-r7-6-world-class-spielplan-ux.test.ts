@@ -83,8 +83,9 @@ describe("01K-R7.6 — world-class Spielplan UX", () => {
     expect(meetings).toBe(1);
   });
 
-  it("D — human home/away helper and canonical toggles", () => {
-    expect(settings).toMatch(/Jede Paarung wird als Hin- und Rückspiel ausgetragen/);
+  it("D — home/away side option removed from Spielplan settings (02D R9)", () => {
+    expect(settings).not.toMatch(/planung-home-away-relevance/);
+    expect(settings).not.toMatch(/Heim- und Auswärtsseiten berücksichtigen/);
     expect(settings).toMatch(/SwitchToggle/);
     expect(settings).not.toMatch(/type="checkbox"/);
   });
