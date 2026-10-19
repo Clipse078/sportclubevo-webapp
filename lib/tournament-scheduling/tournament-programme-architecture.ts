@@ -10,7 +10,8 @@ export const ADVANCED_TOURNAMENT_PROGRAMME_GENERATION = "CANONICAL_TARGET" as co
 
 /**
  * Canonical conceptual pipeline (02+).
- * Extends 01 fixture/schedule flow; later packages fill in playing units, rotation, stations.
+ * Extends 01 fixture/schedule flow; 02D+ fills predefined templates on this spine.
+ * Stations / in-round phases are not required TP02 delivery packages.
  */
 export const TOURNAMENT_PROGRAMME_PIPELINE_STAGES = [
   "PARTICIPANTS",
@@ -18,7 +19,7 @@ export const TOURNAMENT_PROGRAMME_PIPELINE_STAGES = [
   "PLAYING_UNITS",
   "ROUNDS",
   "ASSIGNMENTS",
-  "PITCHES_AND_STATIONS",
+  "PITCHES",
   "TIMING",
   "SPIELPLAN",
 ] as const;
@@ -139,6 +140,16 @@ export const PARENT_CAPACITY_CONTRACT_DEFINED = true;
 export const FULL_TEAM_FUTURE_READY = true;
 export const SUBTEAM_FUTURE_READY = true;
 
+/** 02C — persisted tournament-local playing units + capacity overlap primitive. */
+export const PLAYING_UNITS_PERSISTENCE_IMPLEMENTED = true;
+export const PLAYING_UNIT_TOURNAMENT_LOCAL = true;
+export const PARTICIPANT_UNIT_CAPACITY_OVERLAP_IMPLEMENTED = true;
+export const IMPLICIT_FULL_TEAM_PLAYING_UNIT_COMPATIBILITY = true;
+export const EXISTING_TOURNAMENTS_REQUIRE_UNIT_SETUP = false;
+export const PLAYING_UNIT_FIXTURE_REFERENCE_IMPLEMENTED = false;
+export const PLAYING_UNIT_ASSIGNMENT_REFERENCE_IMPLEMENTED = false;
+export const PLAYING_UNIT_FIXTURE_REFERENCE_DEFERRED_TO_02D = true;
+
 /** ROTATION is a first-class programme format — not a Smart Mix variant. */
 export const ROTATION_FIRST_CLASS_FUTURE_FORMAT = true;
 export const ROTATION_FORCED_INTO_SMART_MIX = false;
@@ -146,13 +157,13 @@ export const ROTATION_GENERATOR_IMPLEMENTED = false;
 
 export type AdvancedProgrammeCompetitionFormat = "ROTATION";
 
-/** Coexists with 01 group/mix/knockout modes — separate generator family (02D). */
+/** Coexists with 01 group/mix/knockout modes; curated rotation programmes use 02D templates. */
 export const ROTATION_COEXISTS_WITH_ROUND_ROBIN = true;
 export const ROTATION_COEXISTS_WITH_SMART_MIX = true;
 export const ROTATION_COEXISTS_WITH_GROUPS = true;
 export const ROTATION_COEXISTS_WITH_KNOCKOUT = true;
 
-/** Programme assignment kinds beyond ordinary fixtures (02E+). */
+/** Programme assignment kinds beyond ordinary fixtures (optional future — not required for TP02). */
 export type TournamentProgrammeAssignmentKind =
   | "MATCH"
   | "ALTERNATIVE_ACTIVITY"
@@ -171,7 +182,7 @@ export interface TournamentProgrammeAssignmentContract {
   fixtureId?: string;
   /** Future: playing unit ids for rotation rows. */
   playingUnitIds?: readonly string[];
-  /** Match rows: tournamentPitchId; alt/rest: tournamentStationId (future). */
+  /** Match rows: tournamentPitchId; alt/rest: tournamentStationId (optional future). */
   tournamentPitchId?: string;
   tournamentStationId?: string;
   startAtUtcMs?: number;
@@ -181,7 +192,7 @@ export interface TournamentProgrammeAssignmentContract {
 export const FIXTURE_PROGRAMME_ASSIGNMENT_RELATIONSHIP_DEFINED = true;
 export const NON_FIXTURE_ASSIGNMENTS_FUTURE_READY = true;
 
-/** Future station types (02E) — TournamentPitch stays canonical for match pitches. */
+/** Optional future station types — TournamentPitch stays canonical for match pitches. */
 export type TournamentStationKind =
   | "MATCH_PITCH"
   | "ALTERNATIVE_ACTIVITY"
@@ -191,7 +202,7 @@ export interface TournamentStationContract {
   stationId: string;
   kind: TournamentStationKind;
   label: string;
-  /** When kind === MATCH_PITCH, links to logical TournamentPitch (optional until 02E). */
+  /** When kind === MATCH_PITCH, links to logical TournamentPitch. */
   tournamentPitchId?: string;
 }
 
@@ -207,7 +218,7 @@ export interface TournamentProgrammeRoundContract {
 
 export const ROUND_MODEL_DEFINED = true;
 
-/** Distinct timing concepts — must not be merged (02F implements in-round phases). */
+/** Distinct timing concepts — must not be merged; TP02 reuses 01 timing (no in-round phase package). */
 export const TIMING_CONCEPTS = [
   "TOURNAMENT_WINDOW",
   "ROUND_DURATION",
@@ -224,7 +235,7 @@ export const IN_ROUND_PHASE_CONTRACT_DEFINED = true;
 export const IN_ROUND_PHASE_IMPLEMENTED = false;
 export const TIMING_CONCEPTS_REMAIN_DISTINCT = true;
 
-/** Soft fairness dimensions for future optimiser (02G) — hard constraints always win. */
+/** Soft fairness dimensions (optional future) — hard constraints always win; not required for TP02. */
 export const FAIRNESS_OPTIMISATION_DIMENSIONS = [
   "TOTAL_MATCH_COUNT",
   "PLAYING_TIME",
@@ -251,18 +262,48 @@ export const GENERIC_ENGINE_LAYER = "TOURNAMENT_PROGRAMME_ENGINE" as const;
 export const FEDERATION_PRESETS_LAYER = "OPTIONAL_TEMPLATES_ABOVE_ENGINE" as const;
 export const SFV_SPECIFIC_TYPES_IN_CORE_DOMAIN = false;
 
-/** Package boundaries 02A–02H (documentation map — implementation per slice). */
+/** Active TP02 package map (02A–02E). Former 02D rotation generator / 02E–02G scope removed from delivery. */
 export const TOURNAMENT_PLANNER_02_PACKAGES = {
   "02A": "Programme architecture & format model",
   "02B":
     "Playing formats & tournament pitches — optional pitch PlayingFormat, playersPerSide persistence, no mandatory format for normal tournaments, no default/silent inference, format-specific validation only when semantically required, Creator/Planung adoption",
   "02C": "Participant playing units",
-  "02D": "Rotation generator",
-  "02E": "Stations & alternative activities",
-  "02F": "Advanced timing & in-round phases",
-  "02G": "Fair programme optimiser",
-  "02H": "Spielplan UX, outputs & final hardening",
+  "02D": "Predefined Spielplan templates & instant generation",
+  "02E": "Spielplan UX, outputs & final hardening",
 } as const;
+
+export type TournamentPlanner02PackageId = keyof typeof TOURNAMENT_PLANNER_02_PACKAGES;
+
+export const TOURNAMENT_PLANNER_02C_STATUS = "READY_FOR_PO_UAT" as const;
+
+export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID = "02D" as const;
+export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_LABEL =
+  "Predefined Spielplan templates & instant generation" as const;
+
+export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_ID = "02E" as const;
+export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_LABEL =
+  "Spielplan UX, outputs & final hardening" as const;
+
+export const TOURNAMENT_PLANNER_02_CLOSES_AFTER_PACKAGE_ID = "02E" as const;
+
+/** Remaining required work to close Tournament Planner 02. */
+export const TOURNAMENT_PLANNER_02_REMAINING_REQUIRED_PACKAGES = [
+  "02D",
+  "02E",
+] as const satisfies readonly TournamentPlanner02PackageId[];
+
+export const GENERIC_ROTATION_GENERATOR_REQUIRED_FOR_TP02 = false;
+export const STATIONS_ALTERNATIVE_ACTIVITIES_REQUIRED_FOR_TP02 = false;
+export const ADVANCED_TIMING_IN_ROUND_PHASES_REQUIRED_FOR_TP02 = false;
+export const FAIR_PROGRAMME_OPTIMISER_REQUIRED_FOR_TP02 = false;
+
+export const TEMPLATE_DRIVEN_SPIELPLAN_GENERATION = true;
+export const PARTICIPANT_COUNT_SELECTS_PREDEFINED_TEMPLATE = true;
+export const PREDEFINED_TEMPLATE_DEFINES_FIELD_COUNT = true;
+/** Initial curated template target band — not a hard product maximum participant count. */
+export const PREDEFINED_TEMPLATE_INITIAL_CURATED_PARTICIPANT_MIN = 4;
+export const PREDEFINED_TEMPLATE_INITIAL_CURATED_PARTICIPANT_MAX = 16;
+export const TOURNAMENT_PARTICIPANT_PRODUCT_MAX: null = null;
 
 export const TOURNAMENT_PLANNER_01_BACKWARD_COMPATIBLE = true;
 export const TP01_GENERATORS_PRESERVED = true;

@@ -12,6 +12,7 @@ import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/compo
 import { PlanningSubjectDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningSubjectDressingRoomAssignments";
 import { cn } from "@/lib/cn";
 import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
+import TournamentParticipantPlayingUnitsPanel from "./TournamentParticipantPlayingUnitsPanel";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
 
 type TeamOption = {
@@ -299,6 +300,7 @@ export default function TournamentParticipantsEditor({
             const expanded = expandedIds.has(participant.id);
             const needsExpand =
               participant.kind === "EXTERNAL_CLUB" ||
+              canManage ||
               (!hideDressingRoomAllocation &&
                 homeAway === "HOME" &&
                 (canManage || participant.dressingRoomAllocations.length > 0));
@@ -391,6 +393,13 @@ export default function TournamentParticipantsEditor({
                         />
                       </label>
                     )}
+
+                    <TournamentParticipantPlayingUnitsPanel
+                      tournamentId={tournamentId}
+                      participantId={participant.id}
+                      participantDisplayName={participant.displayName}
+                      canManage={canManage}
+                    />
 
                     {!hideDressingRoomAllocation && homeAway === "HOME" && (
                       <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>

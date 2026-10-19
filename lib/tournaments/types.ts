@@ -97,6 +97,19 @@ export type TournamentFacilityResourceFields = {
  */
 export type TournamentParticipantKind = "TEAM" | "EXTERNAL_CLUB" | "EXTERNAL_TEAM" | "MANUAL";
 
+/** SCE-TOURNAMENT-PLANNER-02C — tournament-local Spielteam (not SCE Team identity). */
+export type TournamentParticipantPlayingUnitMode = "FULL" | "SUBUNIT";
+
+export type TournamentParticipantPlayingUnitDto = {
+  id: string;
+  tournamentParticipantId: string;
+  displayName: string;
+  mode: TournamentParticipantPlayingUnitMode;
+  capacityPartitionKey: string | null;
+  displayOrder: number;
+  isPersisted: boolean;
+};
+
 export type TournamentParticipantDressingRoomAllocationDto = TournamentFacilityResourceFields & {
   /** The allocation row's own id (for removal) — distinct from facilityResourceId. */
   id: string;
