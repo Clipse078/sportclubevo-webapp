@@ -132,6 +132,53 @@ export default function TournamentPlanungWorkspace({
     setModel(json.viewModel);
   }, [tournamentId]);
 
+  const runInstantiateTemplate = useCallback(
+    async (templateId: string, templateVersion: number) => {
+      setBusy(true);
+      setGeneratePending(true);
+      setGenerationFeedback(null);
+      try {
+        const res = await fetch(
+          `/api/tournaments/${tournamentId}/planung/instantiate-template`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              templateId,
+              templateVersion,
+              expectedRevision: model.scheduleRevision,
+            }),
+          },
+        );
+        const json = (await res.json()) as {
+          viewModel?: TournamentPlanungViewModel;
+          error?: string;
+          code?: string;
+        };
+        if (!res.ok) {
+          if (json.code === "SCHEDULE.STALE_VERSION") {
+            toast.danger(
+              "Der Spielplan wurde inzwischen geändert. Bitte aktualisiere die Planung.",
+            );
+            await refresh();
+            return;
+          }
+          toast.danger(json.error ?? "Spielplan konnte nicht erstellt werden.");
+          return;
+        }
+        if (json.viewModel) setModel(json.viewModel);
+        else await refresh();
+        toast.success("Spielplan wurde erstellt.");
+      } catch {
+        toast.danger("Spielplan konnte nicht erstellt werden. Bitte erneut versuchen.");
+      } finally {
+        setBusy(false);
+        setGeneratePending(false);
+      }
+    },
+    [model.scheduleRevision, refresh, toast, tournamentId],
+  );
+
   const runGenerate = useCallback(async () => {
     setBusy(true);
     setGeneratePending(true);
@@ -439,8 +486,64 @@ export default function TournamentPlanungWorkspace({
             </p>
           ) : null}
 
+          {model.programmeTemplate?.available && model.programmeTemplate.recommended ? (
+            <div
+              className="mt-4 space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4"
+              data-testid="tournament-planung-predefined-template"
+            >
+              <p className="text-sm font-semibold text-[var(--foreground)]">
+                Empfohlener Spielplan
+              </p>
+              <p className="text-sm text-[var(--text-2)]">
+                {model.programmeTemplate.recommended.displayName} ·{" "}
+                {model.programmeTemplate.recommended.roundCount} Runden ·{" "}
+                {model.programmeTemplate.recommended.fieldCount} Felder
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                {model.programmeTemplate.recommended.fieldCountLabel}
+              </p>
+              <p className="text-xs text-[var(--muted)]">
+                {model.programmeTemplate.recommended.playingFormatSummary}
+              </p>
+            </div>
+          ) : null}
+
+          {model.programmeTemplate?.fallbackRequired &&
+          !model.programmeTemplate.available &&
+          planningUx.state === "READY" ? (
+            <p
+              className="mt-3 text-sm text-[var(--muted)]"
+              data-testid="tournament-planung-no-predefined-template"
+            >
+              Kein vordefinierter Spielplan für diese Teilnehmerzahl verfügbar. SCE erstellt
+              den Spielplan über die bestehende Generator-Planung.
+            </p>
+          ) : null}
+
           {canManage ? (
             <div className="mt-4 flex flex-wrap gap-2">
+              {planningUx.state === "READY" &&
+              model.actions.canInstantiatePredefinedTemplate &&
+              model.programmeTemplate?.recommended ? (
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void runInstantiateTemplate(
+                      model.programmeTemplate!.recommended!.templateId,
+                      model.programmeTemplate!.recommended!.version,
+                    )
+                  }
+                  data-testid="tournament-planung-instantiate-template"
+                  aria-busy={generatePending}
+                >
+                  <Sparkles className="mr-1.5 h-4 w-4" aria-hidden />
+                  {generatePending
+                    ? model.actions.instantiatePredefinedTemplatePendingLabel
+                    : model.actions.instantiatePredefinedTemplateLabel}
+                </Button>
+              ) : null}
+
               {planningUx.state === "READY" && model.actions.canGenerate ? (
                 <Button
                   type="button"

@@ -194,6 +194,28 @@ export type TournamentPlanungActions = {
   generatePendingLabel: string;
   regenerateLabel: string;
   regenerateHint: string;
+  canInstantiatePredefinedTemplate: boolean;
+  instantiatePredefinedTemplateLabel: string;
+  instantiatePredefinedTemplatePendingLabel: string;
+};
+
+export type TournamentPlanungProgrammeTemplateOffer = {
+  available: boolean;
+  recommended: {
+    templateId: string;
+    version: number;
+    displayName: string;
+    fieldCount: number;
+    roundCount: number;
+    fieldCountLabel: string;
+    playingFormatSummary: string;
+  } | null;
+  alternatives: readonly {
+    templateId: string;
+    version: number;
+    displayName: string;
+  }[];
+  fallbackRequired: boolean;
 };
 
 /** Operational timing exposed in Spielplan bearbeiten (canonical schedule version config). */
@@ -253,6 +275,7 @@ export type TournamentPlanungViewModel = {
   feasibilityGuidance: TournamentPlanungFeasibilityGuidance | null;
   regenerationSummary: TournamentPlanungRegenerationSummary;
   incompleteSetup: readonly TournamentPlanungIncompleteItem[];
+  programmeTemplate: TournamentPlanungProgrammeTemplateOffer | null;
   actions: TournamentPlanungActions;
   groupStandings: readonly TournamentPlanungGroupStandingsSection[];
   /** Present when a schedule exists — edit-mode Spielplan-Einstellungen. */

@@ -34,6 +34,7 @@ import {
   buildPlanungTimingConsequence,
 } from "./planung-scheduling-settings-presentation";
 import { resolveTournamentPitchColumnPresentation } from "./tournament-pitch-presentation";
+import { buildPlanungProgrammeTemplatePresentation } from "@/lib/tournament-scheduling/programme-templates/planung-template-presentation";
 import type {
   TournamentPlanungAvailability,
   TournamentPlanungBoardCell,
@@ -429,6 +430,13 @@ export function buildTournamentPlanungViewModel(
         ? "COMPLETE"
         : "PARTIAL";
 
+  const programmeTemplate =
+    schedulePresence === "NONE" && snapshot.participantCount >= 2
+      ? buildPlanungProgrammeTemplatePresentation({
+          participantCount: snapshot.participantCount,
+        })
+      : null;
+
   const feasibilityUxStatus = resolveFeasibilityUxStatus({
     feasibility: snapshot.feasibility?.status ?? null,
     optimisation: snapshot.optimisation?.status ?? null,
@@ -618,12 +626,14 @@ export function buildTournamentPlanungViewModel(
     feasibilityGuidance,
     regenerationSummary: buildRegenerationSummaryMessage(snapshot.regenerationMetrics),
     incompleteSetup,
+    programmeTemplate,
     actions: {
       canGenerate:
         availability === "AVAILABLE" &&
         incompleteSetup.length === 0 &&
         schedulePresence === "NONE" &&
-        snapshot.feasibility?.status !== "INFEASIBLE",
+        snapshot.feasibility?.status !== "INFEASIBLE" &&
+        (programmeTemplate?.available !== true),
       canRegenerate:
         availability === "AVAILABLE" &&
         schedulePresence !== "NONE" &&
@@ -632,6 +642,14 @@ export function buildTournamentPlanungViewModel(
       generatePendingLabel: "Spielplan wird erstellt …",
       regenerateLabel: "Spielplan neu berechnen",
       regenerateHint: "Gesperrte Zeiten und Felder bleiben erhalten.",
+      canInstantiatePredefinedTemplate:
+        availability === "AVAILABLE" &&
+        incompleteSetup.length === 0 &&
+        schedulePresence === "NONE" &&
+        programmeTemplate?.available === true &&
+        programmeTemplate.recommended !== null,
+      instantiatePredefinedTemplateLabel: "Spielplan erstellen",
+      instantiatePredefinedTemplatePendingLabel: "Spielplan wird erstellt …",
     },
     groupStandings,
     schedulingSettings,
