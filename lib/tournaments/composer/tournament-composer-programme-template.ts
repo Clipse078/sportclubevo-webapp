@@ -2,8 +2,17 @@
  * SCE-TOURNAMENT-PLANNER-02D — predefined programme template resolution for HOME creator.
  */
 
+import {
+  computeProgrammeRequiredMinutesFromTimeline,
+  computeRoundParallelScheduleTimeline,
+} from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
 import { getRecommendedProgrammeTemplate } from "@/lib/tournament-scheduling/programme-templates/template-registry";
 import type { TournamentProgrammeTemplate } from "@/lib/tournament-scheduling/programme-templates/types";
+import {
+  normalizeComposerMainPauseDraft,
+  resolveComposerMainPauseUtcWindow,
+  validateComposerMainPauseWindow,
+} from "./tournament-composer-main-pause";
 import type {
   TournamentComposerPitchDraft,
   TournamentComposerPlannerDraft,
@@ -13,13 +22,23 @@ export type ComposerResolvedProgrammeTemplate = {
   template: TournamentProgrammeTemplate;
   fieldCountLabel: string;
   playingFormatSummary: string;
+  statusHeadline: string;
+  statusDetail: string;
 };
 
 export type ComposerMainPauseDraft = {
   enabled: boolean;
   durationMinutes: number;
-  afterRoundNumber: number;
+  startLocalTime: string;
+  afterRoundNumber?: number;
 };
+
+/** Curated templates key off tournament participants — never playing-unit splits. */
+export function countComposerCuratedTemplateParticipants(
+  participants: readonly unknown[],
+): number {
+  return participants.length;
+}
 
 export function summarizeTemplatePlayingFormats(template: TournamentProgrammeTemplate): string {
   return template.fields
@@ -35,17 +54,18 @@ export function resolveComposerProgrammeTemplate(participantCount: number): Comp
     template,
     fieldCountLabel: `Dieser Spielplan benötigt ${template.fields.length} Spielfelder.`,
     playingFormatSummary: summarizeTemplatePlayingFormats(template),
+    statusHeadline: "Vordefinierter Spielplan",
+    statusDetail: `${template.participantCount} Teams · Rotation`,
   };
 }
 
 export function defaultComposerMainPauseForTemplate(
-  template: TournamentProgrammeTemplate,
+  _template: TournamentProgrammeTemplate,
 ): ComposerMainPauseDraft {
-  const hint = template.breakHints[0];
   return {
     enabled: true,
     durationMinutes: 10,
-    afterRoundNumber: hint?.afterRoundNumber ?? 1,
+    startLocalTime: "",
   };
 }
 
@@ -90,7 +110,7 @@ export function reconcileComposerPlannerForParticipants(input: {
 
   const mainPause =
     input.planner.mainPause && !templateChanged
-      ? input.planner.mainPause
+      ? normalizeComposerMainPauseDraft(input.planner.mainPause)
       : defaultComposerMainPauseForTemplate(resolved.template);
 
   const pitches = materializeComposerPitchesFromTemplate(
@@ -114,21 +134,20 @@ export function computeTemplateScheduleRequiredMinutes(input: {
   roundCount: number;
   matchDurationMinutes: number;
   transitionMinutes: number;
-  breakAfterRoundNumbers: readonly number[];
-  breakDurationMinutes: number;
+  tournamentStartUtcMs: number;
+  fixedPause: { startUtcMs: number; endUtcMs: number } | null;
 }): number {
-  if (input.roundCount < 1) return 0;
-  const slotMinutes = input.matchDurationMinutes + input.transitionMinutes;
-  const breakSet = new Set(input.breakAfterRoundNumbers);
-  let cursor = 0;
-  for (let roundIndex = 0; roundIndex < input.roundCount; roundIndex += 1) {
-    cursor += slotMinutes;
-    const roundNumber = roundIndex + 1;
-    if (breakSet.has(roundNumber)) {
-      cursor += input.breakDurationMinutes;
-    }
-  }
-  return Math.max(0, cursor - input.transitionMinutes);
+  const timeline = computeRoundParallelScheduleTimeline({
+    tournamentStartUtcMs: input.tournamentStartUtcMs,
+    roundCount: input.roundCount,
+    matchDurationMinutes: input.matchDurationMinutes,
+    transitionMinutes: input.transitionMinutes,
+    fixedPause: input.fixedPause,
+  });
+  return computeProgrammeRequiredMinutesFromTimeline({
+    tournamentStartUtcMs: input.tournamentStartUtcMs,
+    programmeEndUtcMs: timeline.programmeEndUtcMs,
+  });
 }
 
 export type ComposerScheduleFitView = {
@@ -139,7 +158,15 @@ export type ComposerScheduleFitView = {
   deficitMinutes: number | null;
   headline: string;
   detail: string | null;
+  requiredEndLabel: string | null;
+  tournamentEndLabel: string | null;
 };
+
+function formatClockFromUtcMs(utcMs: number): string {
+  const d = new Date(utcMs);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 export function buildComposerScheduleFitView(input: {
   participantCount: number;
@@ -156,6 +183,8 @@ export function buildComposerScheduleFitView(input: {
       deficitMinutes: null,
       headline: "Lege Start- und Endzeit im Schritt Termin fest.",
       detail: null,
+      requiredEndLabel: null,
+      tournamentEndLabel: null,
     };
   }
   const start = new Date(input.startAt);
@@ -169,6 +198,27 @@ export function buildComposerScheduleFitView(input: {
       deficitMinutes: null,
       headline: "Turnierzeitfenster ist unvollständig.",
       detail: null,
+      requiredEndLabel: null,
+      tournamentEndLabel: null,
+    };
+  }
+
+  const pauseError = validateComposerMainPauseWindow({
+    mainPause: input.planner.mainPause,
+    tournamentStartAt: input.startAt,
+    tournamentEndAt: input.endAt,
+  });
+  if (pauseError) {
+    return {
+      status: "INCOMPLETE",
+      requiredMinutes: null,
+      availableMinutes: Math.round((end.getTime() - start.getTime()) / 60_000),
+      reserveMinutes: null,
+      deficitMinutes: null,
+      headline: pauseError,
+      detail: null,
+      requiredEndLabel: null,
+      tournamentEndLabel: formatClockFromUtcMs(end.getTime()),
     };
   }
 
@@ -184,23 +234,31 @@ export function buildComposerScheduleFitView(input: {
       deficitMinutes: null,
       headline: "Kein vordefinierter Spielplan für diese Teilnehmerzahl — TP01-Fallback nach Erstellung.",
       detail: null,
+      requiredEndLabel: null,
+      tournamentEndLabel: formatClockFromUtcMs(end.getTime()),
     };
   }
 
-  const breakAfterRoundNumbers =
-    input.planner.mainPause?.enabled === true
-      ? [input.planner.mainPause.afterRoundNumber]
-      : [];
-  const breakDurationMinutes =
-    input.planner.mainPause?.enabled === true ? input.planner.mainPause.durationMinutes : 0;
+  const fixedPause = resolveComposerMainPauseUtcWindow({
+    mainPause: input.planner.mainPause,
+    tournamentStartAt: input.startAt,
+    tournamentEndAt: input.endAt,
+  });
 
-  const requiredMinutes = computeTemplateScheduleRequiredMinutes({
+  const timeline = computeRoundParallelScheduleTimeline({
+    tournamentStartUtcMs: start.getTime(),
     roundCount,
     matchDurationMinutes: input.planner.timing.matchDurationMinutes,
     transitionMinutes: input.planner.timing.transitionMinutes,
-    breakAfterRoundNumbers,
-    breakDurationMinutes,
+    fixedPause,
   });
+
+  const requiredMinutes = computeProgrammeRequiredMinutesFromTimeline({
+    tournamentStartUtcMs: start.getTime(),
+    programmeEndUtcMs: timeline.programmeEndUtcMs,
+  });
+  const requiredEndLabel = formatClockFromUtcMs(timeline.programmeEndUtcMs);
+  const tournamentEndLabel = formatClockFromUtcMs(end.getTime());
 
   if (requiredMinutes <= availableMinutes) {
     const reserveMinutes = availableMinutes - requiredMinutes;
@@ -211,7 +269,9 @@ export function buildComposerScheduleFitView(input: {
       reserveMinutes,
       deficitMinutes: null,
       headline: "Der Spielplan passt in die geplante Turnierzeit.",
-      detail: `Benötigt: ${requiredMinutes} Min. · Verfügbar: ${availableMinutes} Min. · Reserve: ${reserveMinutes} Min.`,
+      detail: `Benötigt bis: ${requiredEndLabel}\nTurnierende: ${tournamentEndLabel}\nReserve: ${reserveMinutes} Min.`,
+      requiredEndLabel,
+      tournamentEndLabel,
     };
   }
 
@@ -222,7 +282,9 @@ export function buildComposerScheduleFitView(input: {
     availableMinutes,
     reserveMinutes: null,
     deficitMinutes,
-    headline: `Der Spielplan benötigt ${requiredMinutes} Min., verfügbar sind ${availableMinutes} Min.`,
-    detail: `${deficitMinutes} Min. zu wenig Zeit.`,
+    headline: "Der Spielplan passt nicht in die geplante Turnierzeit.",
+    detail: `Benötigt bis: ${requiredEndLabel}\nTurnierende: ${tournamentEndLabel}\nFehlend: ${deficitMinutes} Min.`,
+    requiredEndLabel,
+    tournamentEndLabel,
   };
 }

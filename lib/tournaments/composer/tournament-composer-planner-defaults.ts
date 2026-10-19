@@ -50,7 +50,7 @@ export function createDefaultTournamentComposerPlannerDraft(input?: {
     mainPause: {
       enabled: false,
       durationMinutes: 10,
-      afterRoundNumber: 1,
+      startLocalTime: "",
     },
   };
 }

@@ -70,7 +70,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
     });
     planner.timing.matchDurationMinutes = 12;
     planner.timing.transitionMinutes = 3;
-    planner.mainPause = { enabled: true, durationMinutes: 10, afterRoundNumber: 3 };
+    planner.mainPause = { enabled: true, durationMinutes: 10, startLocalTime: "11:00" };
 
     const pass = buildComposerScheduleFitView({
       participantCount: 4,
@@ -106,7 +106,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
       endAt: "2026-06-01T12:00",
       planner: {
         ...planner,
-        mainPause: { enabled: false, durationMinutes: 10, afterRoundNumber: 3 },
+        mainPause: { enabled: false, durationMinutes: 10, startLocalTime: "11:00" },
       },
     });
     expect(pauseOff.requiredMinutes).toBeLessThan(pass.requiredMinutes!);

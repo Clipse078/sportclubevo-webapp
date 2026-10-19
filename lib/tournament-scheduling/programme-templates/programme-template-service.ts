@@ -211,12 +211,26 @@ async function ensureTemplateBreaks(
   transitionMinutes: number,
   breakDurationMinutes: number,
   breakAfterRoundNumbers: readonly number[],
+  mainBreakStartAt?: Date | null,
 ): Promise<void> {
   const existing = await listTournamentBreaks(tenantId, tournamentId);
   if (existing.length > 0) {
     return;
   }
-  if (breakDurationMinutes <= 0 || breakAfterRoundNumbers.length === 0) {
+  if (breakDurationMinutes <= 0) {
+    return;
+  }
+  if (mainBreakStartAt) {
+    const endAt = new Date(mainBreakStartAt.getTime() + breakDurationMinutes * 60_000);
+    await createTournamentBreak(tenantId, tournamentId, {
+      label: template.breakHints[0]?.label ?? "Pause",
+      startAt: mainBreakStartAt,
+      endAt,
+      scope: "ALL_PITCHES",
+    });
+    return;
+  }
+  if (breakAfterRoundNumbers.length === 0) {
     return;
   }
   const slotMs = (matchDurationMinutes + transitionMinutes) * 60_000;
@@ -247,6 +261,8 @@ export async function applyProgrammeTemplateToTournament(input: {
   mainBreakDurationMinutes?: number;
   /** When set, only these 1-based round numbers receive the main break. */
   mainBreakAfterRoundNumbers?: readonly number[];
+  /** Fixed wall-clock main break start — takes precedence over round-based hints. */
+  mainBreakStartAt?: Date | null;
 }): Promise<{
   template: TournamentProgrammeTemplate;
   scheduleVersionId: string;
@@ -367,6 +383,7 @@ export async function applyProgrammeTemplateToTournament(input: {
     transitionMinutes,
     breakDurationMinutes,
     breakAfterRoundNumbers,
+    input.mainBreakStartAt,
   );
 
   const fixturesForSchedule = createdFixtures.map((created, index) => {
@@ -378,12 +395,21 @@ export async function applyProgrammeTemplateToTournament(input: {
     };
   });
 
+  const fixedPause =
+    input.mainBreakStartAt && breakDurationMinutes > 0
+      ? {
+          startUtcMs: input.mainBreakStartAt.getTime(),
+          endUtcMs: input.mainBreakStartAt.getTime() + breakDurationMinutes * 60_000,
+        }
+      : null;
+
   const assignments = buildTemplateScheduleAssignments({
     tournamentStartUtcMs: event.startAt.getTime(),
     matchDurationMinutes,
     transitionMinutes,
-    breakAfterRoundNumbers,
-    breakDurationMinutes,
+    breakAfterRoundNumbers: fixedPause ? [] : breakAfterRoundNumbers,
+    breakDurationMinutes: fixedPause ? 0 : breakDurationMinutes,
+    fixedPause,
     fixtures: fixturesForSchedule,
   });
 

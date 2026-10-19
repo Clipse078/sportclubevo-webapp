@@ -1,4 +1,6 @@
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
+import { validateComposerMainPauseWindow } from "./tournament-composer-main-pause";
+import { resolveComposerProgrammeTemplate } from "./tournament-composer-programme-template";
 
 export function validateHomePlannerDraft(
   draft: TournamentComposerDraftPayload,
@@ -36,6 +38,17 @@ export function validateHomePlannerDraft(
   }
   if (planner.meetingsPerOpponent < 1) {
     errors.meetingsPerOpponent = "Mindestens ein Spiel pro Gegner.";
+  }
+  const curatedTemplate = resolveComposerProgrammeTemplate(draft.participants.length);
+  if (curatedTemplate && planner.mainPause?.enabled) {
+    const pauseError = validateComposerMainPauseWindow({
+      mainPause: planner.mainPause,
+      tournamentStartAt: draft.startAt,
+      tournamentEndAt: draft.endAt,
+    });
+    if (pauseError) {
+      errors.mainPauseStartLocalTime = pauseError;
+    }
   }
   for (const br of planner.breaks) {
     const missingBegin = !br.startLocalTime?.trim();

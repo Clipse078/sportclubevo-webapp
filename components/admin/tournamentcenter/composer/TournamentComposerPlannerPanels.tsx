@@ -12,8 +12,10 @@ import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/
 import TournamentComposerPitchPlayingFormatField from "./TournamentComposerPitchPlayingFormatField";
 import {
   buildComposerScheduleFitView,
+  countComposerCuratedTemplateParticipants,
   resolveComposerProgrammeTemplate,
 } from "@/lib/tournaments/composer/tournament-composer-programme-template";
+import { normalizeComposerMainPauseDraft } from "@/lib/tournaments/composer/tournament-composer-main-pause";
 
 type PlannerUpdater = (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => void;
 
@@ -22,7 +24,7 @@ function ScheduleFitPanel({ payload }: { payload: TournamentComposerDraftPayload
     () =>
       payload.planner
         ? buildComposerScheduleFitView({
-            participantCount: payload.participants.length,
+            participantCount: countComposerCuratedTemplateParticipants(payload.participants),
             startAt: payload.startAt,
             endAt: payload.endAt,
             planner: payload.planner,
@@ -39,7 +41,9 @@ function ScheduleFitPanel({ payload }: { payload: TournamentComposerDraftPayload
       role={view.status === "FAIL" ? "alert" : "status"}
     >
       <p className="text-sm font-semibold text-[var(--foreground)]">{view.headline}</p>
-      {view.detail ? <p className="text-sm text-[var(--text-2)]">{view.detail}</p> : null}
+      {view.detail ? (
+        <p className="whitespace-pre-line text-sm text-[var(--text-2)]">{view.detail}</p>
+      ) : null}
     </div>
   );
 }
@@ -112,12 +116,16 @@ export function TournamentComposerSpielfelderPanel({
         Logische Spielfelder für den Spielplan — unabhängig von physischen Anlagenressourcen im Schritt Ressourcen.
       </p>
       {templateDriven ? (
-        <>
-          <p className="mb-3 text-sm font-medium text-[var(--foreground)]" data-testid="tournament-composer-pitches-template-hint">
+        <div
+          className="mb-4 space-y-1 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4"
+          data-testid="tournament-composer-pitches-template-status"
+        >
+          <p className="text-sm font-medium text-[var(--foreground)]">{resolved.statusHeadline}</p>
+          <p className="text-sm text-[var(--text-2)]">{resolved.statusDetail}</p>
+          <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-pitches-template-hint">
             {resolved.fieldCountLabel}
           </p>
-          <p className="mb-3 text-xs text-[var(--text-2)]">{resolved.playingFormatSummary}</p>
-        </>
+        </div>
       ) : null}
       <ul className="space-y-3">
         {planner.pitches.map((pitch) => (
@@ -220,12 +228,7 @@ export function TournamentComposerSpielplanPanel({
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
-  const resolved = resolveComposerProgrammeTemplate(payload.participants.length);
-  const mainPause = planner.mainPause ?? {
-    enabled: false,
-    durationMinutes: 10,
-    afterRoundNumber: resolved?.template.breakHints[0]?.afterRoundNumber ?? 1,
-  };
+  const mainPause = normalizeComposerMainPauseDraft(planner.mainPause);
 
   const timingFieldErrors = fieldErrors
     ? Object.fromEntries(
@@ -244,11 +247,6 @@ export function TournamentComposerSpielplanPanel({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-[var(--foreground)]">Grössere Turnierpause</p>
-            <p className="mt-1 text-xs text-[var(--text-2)]">
-              {resolved
-                ? `Position gemäss Programmvorlage nach Runde ${mainPause.afterRoundNumber}.`
-                : "Optional — nur für kuratierte Spielpläne relevant."}
-            </p>
           </div>
           <div data-testid="tournament-composer-main-pause-toggle">
             <SwitchThumb
@@ -270,6 +268,24 @@ export function TournamentComposerSpielplanPanel({
         {mainPause.enabled ? (
           <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
             <label className="block space-y-2">
+              <span className="fca-label">Pausenbeginn</span>
+              <input
+                type="time"
+                className="fca-input"
+                value={mainPause.startLocalTime}
+                onChange={(e) =>
+                  onChange((p) => ({
+                    ...p,
+                    mainPause: {
+                      ...normalizeComposerMainPauseDraft(p.mainPause ?? mainPause),
+                      startLocalTime: e.target.value,
+                    },
+                  }))
+                }
+                data-testid="tournament-composer-main-pause-start"
+              />
+            </label>
+            <label className="block space-y-2">
               <span className="fca-label">Pausendauer (Min.)</span>
               <input
                 type="number"
@@ -280,7 +296,7 @@ export function TournamentComposerSpielplanPanel({
                   onChange((p) => ({
                     ...p,
                     mainPause: {
-                      ...(p.mainPause ?? mainPause),
+                      ...normalizeComposerMainPauseDraft(p.mainPause ?? mainPause),
                       durationMinutes: Number(e.target.value),
                     },
                   }))
@@ -288,32 +304,11 @@ export function TournamentComposerSpielplanPanel({
                 data-testid="tournament-composer-main-pause-duration"
               />
             </label>
-            {resolved ? (
-              <label className="block space-y-2">
-                <span className="fca-label">Nach Runde</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={resolved.template.rounds.length}
-                  className="fca-input"
-                  value={mainPause.afterRoundNumber}
-                  onChange={(e) =>
-                    onChange((p) => ({
-                      ...p,
-                      mainPause: {
-                        ...(p.mainPause ?? mainPause),
-                        afterRoundNumber: Number(e.target.value),
-                      },
-                    }))
-                  }
-                  data-testid="tournament-composer-main-pause-after-round"
-                />
-              </label>
-            ) : null}
           </div>
         ) : null}
       </div>
 
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Spieldauer</h3>
       <div className={`${PLANNING_EDITOR_FORM_GRID_CLASS} mb-4`}>
         <label className="block space-y-2">
           <span className="fca-label">Spieldauer (Min.)</span>
@@ -336,6 +331,10 @@ export function TournamentComposerSpielplanPanel({
             </p>
           ) : null}
         </label>
+      </div>
+
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Wechselzeit</h3>
+      <div className={`${PLANNING_EDITOR_FORM_GRID_CLASS} mb-4`}>
         <label className="block space-y-2">
           <span className="fca-label">Wechselzeit (Min.)</span>
           <input
@@ -359,6 +358,7 @@ export function TournamentComposerSpielplanPanel({
         </label>
       </div>
 
+      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Zeitprüfung</h3>
       <ScheduleFitPanel payload={payload} />
     </PlanningEditorSection>
   );

@@ -18,6 +18,7 @@ import type { TournamentComposerDraftPayload } from "./tournament-composer-draft
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
 import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
+import { resolveComposerMainPauseUtcWindow } from "./tournament-composer-main-pause";
 
 export async function persistTournamentPlannerFromComposer(input: {
   tenantId: string;
@@ -30,6 +31,12 @@ export async function persistTournamentPlannerFromComposer(input: {
     return;
   }
 
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { timezone: true },
+  });
+  const tenantTimeZone = resolveTenantEventTimezone(tenant?.timezone);
+
   await createWorkingTournamentScheduleVersion(tenantId, tournamentId, {
     matchDurationMinutes: planner.timing.matchDurationMinutes,
     transitionMinutes: planner.timing.transitionMinutes,
@@ -38,6 +45,15 @@ export async function persistTournamentPlannerFromComposer(input: {
 
   if (planner.programmeTemplateId) {
     const mainPause = planner.mainPause;
+    const pauseWindow =
+      mainPause?.enabled === true
+        ? resolveComposerMainPauseUtcWindow({
+            mainPause,
+            tournamentStartAt: payload.startAt,
+            tournamentEndAt: payload.endAt,
+            timeZone: tenantTimeZone,
+          })
+        : null;
     await applyProgrammeTemplateToTournament({
       tenantId,
       tournamentId,
@@ -46,17 +62,12 @@ export async function persistTournamentPlannerFromComposer(input: {
       replaceExisting: true,
       mainBreakDurationMinutes:
         mainPause?.enabled === true ? mainPause.durationMinutes : 0,
-      mainBreakAfterRoundNumbers:
-        mainPause?.enabled === true ? [mainPause.afterRoundNumber] : [],
+      mainBreakAfterRoundNumbers: pauseWindow ? [] : mainPause?.enabled === true ? [mainPause.afterRoundNumber ?? 1] : [],
+      mainBreakStartAt:
+        pauseWindow != null ? new Date(pauseWindow.startUtcMs) : null,
     });
     return;
   }
-
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId },
-    select: { timezone: true },
-  });
-  const tenantTimeZone = resolveTenantEventTimezone(tenant?.timezone);
 
   const groupCount = resolveEffectiveGroupCount(planner);
 

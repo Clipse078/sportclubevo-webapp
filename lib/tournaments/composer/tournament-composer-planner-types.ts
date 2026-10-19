@@ -16,8 +16,10 @@ export type TournamentComposerPitchDraft = {
 export type TournamentComposerMainPauseDraft = {
   enabled: boolean;
   durationMinutes: number;
-  /** 1-based round number after which the main tournament pause is inserted. */
-  afterRoundNumber: number;
+  /** Wall-clock begin (HH:MM) on the tournament start date. */
+  startLocalTime: string;
+  /** Legacy round-based pause hint — ignored when startLocalTime is set. */
+  afterRoundNumber?: number;
 };
 
 export type TournamentComposerBreakDraft = {

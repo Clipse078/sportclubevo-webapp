@@ -65,7 +65,10 @@ import {
   TournamentComposerTurnierformatPanel,
 } from "@/components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels";
 import TournamentComposerPlayingUnitsPanel from "@/components/admin/tournamentcenter/composer/TournamentComposerPlayingUnitsPanel";
-import { reconcileComposerPlannerForParticipants } from "@/lib/tournaments/composer/tournament-composer-programme-template";
+import {
+  countComposerCuratedTemplateParticipants,
+  reconcileComposerPlannerForParticipants,
+} from "@/lib/tournaments/composer/tournament-composer-programme-template";
 import {
   addComposerPlayingUnitSubunit,
   removeComposerPlayingUnit,
@@ -197,16 +200,11 @@ export default function TournamentCreateForm({
 
   useEffect(() => {
     if (homeAway === "HOME") {
-      setPlanner((prev) =>
-        prev ??
-        createDefaultTournamentComposerPlannerDraft({
-          defaultMatchDurationMinutes: defaultTournamentDurationMinutes,
-        }),
-      );
+      setPlanner((prev) => prev ?? createDefaultTournamentComposerPlannerDraft());
     } else {
       setPlanner(null);
     }
-  }, [homeAway, defaultTournamentDurationMinutes]);
+  }, [homeAway]);
 
   useEffect(() => {
     if (homeAway === "HOME") {
@@ -220,10 +218,10 @@ export default function TournamentCreateForm({
       if (!prev) return prev;
       return reconcileComposerPlannerForParticipants({
         planner: prev,
-        participantCount: participants.length,
+        participantCount: countComposerCuratedTemplateParticipants(participants),
       });
     });
-  }, [homeAway, participants.length]);
+  }, [homeAway, participants]);
 
   const scheduleInterval = useMemo(() => {
     if (!startAt) return null;
@@ -451,7 +449,10 @@ export default function TournamentCreateForm({
       );
       setPlanner(
         hydrated.homeAway === "HOME"
-          ? (hydrated.planner ?? createDefaultTournamentComposerPlannerDraft())
+          ? reconcileComposerPlannerForParticipants({
+              planner: hydrated.planner ?? createDefaultTournamentComposerPlannerDraft(),
+              participantCount: countComposerCuratedTemplateParticipants(hydrated.participants),
+            })
           : null,
       );
     }
@@ -890,9 +891,9 @@ export default function TournamentCreateForm({
     planner != null
       ? [
           { key: "turnierformat" as const, label: "Turnierformat", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerTurnierformatPanel planner={planner} participantCount={participants.length} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerTurnierformatPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielfelderPanel planner={planner} participantCount={participants.length} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielfelderPanel planner={planner} participantCount={countComposerCuratedTemplateParticipants(participants)} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
             <TournamentComposerSpielplanPanel payload={composerDraft} planner={planner} onChange={(fn) => setPlanner((p) => (p ? fn(p) : p))} fieldErrors={ctx?.fieldErrors} /> },
         ]

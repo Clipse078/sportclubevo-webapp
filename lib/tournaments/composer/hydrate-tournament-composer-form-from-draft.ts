@@ -5,6 +5,7 @@ import {
   normalizeComposerBreakDraft,
   type LegacyComposerBreakDraft,
 } from "./tournament-composer-planner-breaks";
+import { reconcileComposerPlannerForParticipants } from "./tournament-composer-programme-template";
 
 export function hydrateTournamentComposerFormFromDraft(
   payload: TournamentComposerDraftPayload,
@@ -33,14 +34,19 @@ export function hydrateTournamentComposerFormFromDraft(
     planner:
       payload.homeAway === "HOME"
         ? (() => {
+            const participants = Array.isArray(payload.participants) ? payload.participants : [];
             const base =
               payload.planner ?? createDefaultTournamentComposerPlannerDraft();
-            return {
+            const normalized = {
               ...base,
               breaks: base.breaks.map((br) =>
                 normalizeComposerBreakDraft(br as LegacyComposerBreakDraft),
               ),
             };
+            return reconcileComposerPlannerForParticipants({
+              planner: normalized,
+              participantCount: participants.length,
+            });
           })()
         : null,
   };
