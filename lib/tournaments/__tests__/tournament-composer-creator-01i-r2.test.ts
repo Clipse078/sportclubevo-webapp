@@ -54,12 +54,13 @@ function homeDraft() {
     },
   ];
   base.planner = createDefaultTournamentComposerPlannerDraft();
+  base.spielplanCreationEnabled = true;
   return base;
 }
 
 describe("SCE-TOURNAMENT-PLANNER-01I-R2 — Creator step order + retrospective stability", () => {
   it("A — HOME tab order is Termin-first canonical", () => {
-    expect(resolveTournamentCreateTabOrder("HOME")).toEqual([
+    expect(resolveTournamentCreateTabOrder("HOME", { spielplanCreationEnabled: true })).toEqual([
       "termin",
       "teams",
       "turnierformat",
@@ -69,7 +70,9 @@ describe("SCE-TOURNAMENT-PLANNER-01I-R2 — Creator step order + retrospective s
       "publikation",
       "uebersicht",
     ]);
-    expect(buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" }).defaultTab).toBe("termin");
+    expect(
+      buildTournamentCreateTabNavigationConfig({ homeAway: "HOME", spielplanCreationEnabled: true }).defaultTab,
+    ).toBe("termin");
   });
 
   it("B — AWAY tab order is Termin-first canonical", () => {
@@ -83,7 +86,7 @@ describe("SCE-TOURNAMENT-PLANNER-01I-R2 — Creator step order + retrospective s
   });
 
   it("C/D — guided Schritt index and Weiter/Zurück follow tab order", () => {
-    const order = resolveTournamentCreateTabOrder("HOME");
+    const order = resolveTournamentCreateTabOrder("HOME", { spielplanCreationEnabled: true });
     expect(resolveGuidedStepIndex(order, "termin")).toBe(0);
     expect(resolveGuidedNextStep(order, "termin")).toBe("teams");
     expect(resolveGuidedPreviousStep(order, "teams")).toBe("termin");
@@ -160,8 +163,10 @@ describe("SCE-TOURNAMENT-PLANNER-01I-R2 — Creator step order + retrospective s
 
   it("N/O — creator no longer exposes Smart Timing recommendation UX (02D R1 PO UAT)", () => {
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
-    expect(panels).not.toMatch(/Empfehlung übernehmen/);
+    expect(panels).not.toMatch(/Smart Timing/i);
+    expect(panels).not.toMatch(/Empfehlung übernehmen.*Smart/i);
     expect(panels).toContain("tournament-composer-schedule-fit");
+    expect(panels).toContain("tournament-composer-proposal-refresh-accept");
   });
 
   it("P — 01I manual-assignment module remains present", () => {

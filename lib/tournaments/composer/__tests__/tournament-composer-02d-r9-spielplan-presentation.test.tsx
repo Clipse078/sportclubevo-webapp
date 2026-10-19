@@ -38,6 +38,7 @@ function buildE4PreviewWithPause(input?: {
 
   const draft = createEmptyTournamentComposerDraft();
   draft.homeAway = "HOME";
+  draft.spielplanCreationEnabled = true;
   draft.startAt = "2026-06-01T10:00";
   draft.endAt = "2026-06-01T13:00";
   draft.participants = Array.from({ length: 4 }, (_, i) => ({

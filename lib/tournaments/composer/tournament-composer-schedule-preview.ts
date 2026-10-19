@@ -173,13 +173,6 @@ function buildRoundRobinPathFixtures(input: {
   if (pitches.length < 1) {
     return { error: "Mindestens ein Spielfeld ist erforderlich." };
   }
-  if (pitches.some((p) => p.playersPerSide == null)) {
-    return {
-      error:
-        "Bitte für jedes Spielfeld eine Spielart wählen — dann erstellt SCE den Spielplan in der Vorschau.",
-    };
-  }
-
   const participantIds = input.payload.participants.map((p) => p.localId);
   if (participantIds.length < 2) {
     return { error: "Mindestens zwei Teams sind erforderlich." };

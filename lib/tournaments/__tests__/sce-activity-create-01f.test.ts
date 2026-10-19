@@ -78,7 +78,11 @@ describe("SCE-ACTIVITY-CREATE-01F — Tournament adoption", () => {
     expect(read("docs/roadmap/SCE-ACTIVITY-CREATE-01F.md")).toContain("SCE-ACTIVITY-CREATE-01F");
   });
   it("uses canonical tournament tabs", () => {
-    expect(buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" }).tabs.map((t) => t.key)).toEqual([
+    expect(
+      buildTournamentCreateTabNavigationConfig({ homeAway: "HOME", spielplanCreationEnabled: true }).tabs.map(
+        (t) => t.key,
+      ),
+    ).toEqual([
       "termin",
       "teams",
       "turnierformat",

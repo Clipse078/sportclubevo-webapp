@@ -122,3 +122,11 @@ export async function addOwnTeamParticipantViaSelector(teamId = "team-1") {
   });
   fireEvent.click(screen.getByTestId(`sce-team-row-${teamId}`));
 }
+
+/** Enable optional Spielplan workflow (02D R10) on tournament create Termin step. */
+export function enableTournamentCreateSpielplanCreation() {
+  const toggle = screen.getByRole("switch", { name: "Spielplan erstellen" });
+  if (toggle.getAttribute("aria-checked") !== "true") {
+    fireEvent.click(toggle);
+  }
+}

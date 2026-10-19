@@ -17,6 +17,7 @@ import type { TournamentComposerDraftPayload } from "./tournament-composer-draft
 import { resolveTournamentComposerPersistedLocation } from "@/lib/tournaments/tournament-create-validation";
 import { persistTournamentPlannerFromComposer } from "./persist-tournament-planner-from-composer";
 import { createDefaultTournamentComposerPlannerDraft } from "./tournament-composer-planner-defaults";
+import { shouldPersistComposerPlanner } from "./resolve-composer-spielplan-creation-enabled";
 import { createTournamentParticipantUnit } from "@/lib/tournament-scheduling/tournament-participant-unit-service";
 
 export type CreateTournamentFromComposerResult = {
@@ -171,7 +172,7 @@ export async function createTournamentFromComposerPayload(input: {
     }
   }
 
-  if (payload.homeAway === "HOME") {
+  if (payload.homeAway === "HOME" && shouldPersistComposerPlanner(payload)) {
     const planner = payload.planner ?? createDefaultTournamentComposerPlannerDraft();
     await persistTournamentPlannerFromComposer({
       tenantId: input.tenantId,

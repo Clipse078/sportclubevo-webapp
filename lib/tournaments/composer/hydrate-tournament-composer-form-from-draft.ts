@@ -1,5 +1,4 @@
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
-import { createDefaultTournamentComposerPlannerDraft } from "./tournament-composer-planner-defaults";
 import { sanitizeOrganiserDraftFields } from "./tournament-composer-organiser";
 import {
   normalizeComposerBreakDraft,
@@ -10,6 +9,7 @@ import {
   buildTeamJuniorCategoryLookup,
 } from "./resolve-composer-programme-category-context";
 import { prepareTournamentComposerProposal } from "./prepare-tournament-composer-proposal";
+import { resolveComposerSpielplanCreationEnabled } from "./resolve-composer-spielplan-creation-enabled";
 import type { TournamentTeamOption } from "./load-tournament-composer-create-surface-props.server";
 
 export function hydrateTournamentComposerFormFromDraft(
@@ -57,18 +57,21 @@ export function hydrateTournamentComposerFormFromDraft(
       wochenplanVisible: true,
       teamPageVisible: true,
     },
+    spielplanCreationEnabled: resolveComposerSpielplanCreationEnabled(payload),
     planner:
       payload.homeAway === "HOME"
         ? (() => {
+            if (!payload.planner) return null;
             const participants = Array.isArray(payload.participants) ? payload.participants : [];
-            const base =
-              payload.planner ?? createDefaultTournamentComposerPlannerDraft();
             const normalized = {
-              ...base,
-              breaks: base.breaks.map((br) =>
+              ...payload.planner,
+              breaks: payload.planner.breaks.map((br) =>
                 normalizeComposerBreakDraft(br as LegacyComposerBreakDraft),
               ),
             };
+            if (!resolveComposerSpielplanCreationEnabled({ ...payload, planner: normalized })) {
+              return normalized;
+            }
             const teamAgeGroupById = buildTeamAgeGroupLookup(options?.teamOptions ?? []);
             const teamJuniorCategoryById = buildTeamJuniorCategoryLookup(options?.teamOptions ?? []);
             return prepareTournamentComposerProposal({

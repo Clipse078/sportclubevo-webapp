@@ -235,6 +235,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
       dressingRooms: [],
     }));
     draft.planner = createDefaultTournamentComposerPlannerDraft();
+    draft.spielplanCreationEnabled = true;
     const hydrated = hydrateTournamentComposerFormFromDraft(draft, {
       teamOptions: [{ id: "team-e1", name: "E1", ageGroup: "E", genderGroup: null }],
     });

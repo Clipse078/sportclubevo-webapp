@@ -1,12 +1,13 @@
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import { validateComposerMainPauseWindow } from "./tournament-composer-main-pause";
 import { resolveComposerProgrammeTemplate } from "./tournament-composer-programme-template";
+import { resolveComposerSpielplanCreationEnabled } from "./resolve-composer-spielplan-creation-enabled";
 
 export function validateHomePlannerDraft(
   draft: TournamentComposerDraftPayload,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (draft.homeAway !== "HOME") {
+  if (draft.homeAway !== "HOME" || !resolveComposerSpielplanCreationEnabled(draft)) {
     return errors;
   }
   const planner = draft.planner;

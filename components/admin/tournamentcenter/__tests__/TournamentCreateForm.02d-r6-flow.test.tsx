@@ -15,6 +15,7 @@ import {
   addOwnTeamParticipantViaSelector,
   makeTournamentComposerTeamOption,
   setTournamentCreateScheduleStart,
+  enableTournamentCreateSpielplanCreation,
   TOURNAMENT_CREATE_FORM_TEST_GOVERNANCE,
   TOURNAMENT_CREATE_FORM_TEST_SEASON_OPTIONS,
 } from "./tournament-form-test-helpers";
@@ -97,6 +98,7 @@ async function addOwnTeamRepeated(teamId: string, count: number) {
 async function seedE4Tournament() {
   fireEvent.change(screen.getByTestId("tournament-create-title"), { target: { value: "E Turnier" } });
   setTournamentCreateScheduleStart("2026-06-01", "10:00");
+  enableTournamentCreateSpielplanCreation();
   fireEvent.change(screen.getByTestId("tournament-create-schedule-end-time-input"), {
     target: { value: "12:00" },
   });
@@ -163,6 +165,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R6 — real creator flow", () => {
 
     fireEvent.change(screen.getByTestId("tournament-create-title"), { target: { value: "F Turnier" } });
     setTournamentCreateScheduleStart("2026-06-01", "10:00");
+    enableTournamentCreateSpielplanCreation();
     fireEvent.change(screen.getByTestId("tournament-create-schedule-end-time-input"), {
       target: { value: "12:00" },
     });
@@ -220,6 +223,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R6 — real creator flow", () => {
 
     fireEvent.change(screen.getByTestId("tournament-create-title"), { target: { value: "Generic" } });
     setTournamentCreateScheduleStart("2026-06-01", "10:00");
+    enableTournamentCreateSpielplanCreation();
     fireEvent.change(screen.getByTestId("tournament-create-schedule-end-time-input"), {
       target: { value: "12:00" },
     });

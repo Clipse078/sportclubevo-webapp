@@ -50,6 +50,11 @@ export type TournamentComposerDraftPayload = {
   participants: TournamentComposerParticipantRow[];
   resourceAllocations: TournamentComposerResourceRow[];
   publication: TournamentComposerPublicationValues;
+  /**
+   * When true, organiser wants SCE to prepare/manage a Spielplan (02D R10).
+   * Defaults to false for new tournaments; omitted on legacy drafts is resolved via planner state.
+   */
+  spielplanCreationEnabled?: boolean;
   /** HOME tenant-organised planner configuration (01H-R1). */
   planner?: TournamentComposerPlannerDraft | null;
 };
@@ -78,6 +83,7 @@ export function createEmptyTournamentComposerDraft(): TournamentComposerDraftPay
       wochenplanVisible: true,
       teamPageVisible: true,
     },
+    spielplanCreationEnabled: false,
     planner: null,
   };
 }

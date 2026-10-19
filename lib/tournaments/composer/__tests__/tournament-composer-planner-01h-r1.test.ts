@@ -44,11 +44,15 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
     ];
     base.planner = createDefaultTournamentComposerPlannerDraft({ defaultMatchDurationMinutes: 12 });
     base.planner.pitches[0]!.playersPerSide = 6;
+    base.spielplanCreationEnabled = true;
     return base;
   }
 
   it("HOME tab navigation includes planner steps", () => {
-    const config = buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" });
+    const config = buildTournamentCreateTabNavigationConfig({
+      homeAway: "HOME",
+      spielplanCreationEnabled: true,
+    });
     expect(config.tabs.map((t) => t.key)).toEqual([
       "termin",
       "teams",
@@ -101,7 +105,7 @@ describe("01H-R1 — Tournament Creator planner configuration", () => {
     draft.planner!.timing.matchDurationMinutes = 0;
     const errors = computeTournamentCreateTabErrors(draft);
     expect(errors.spielplan || errors.spielfelder || errors.turnierformat).toBe(true);
-    expect(firstInvalidTournamentCreateTab(errors, "HOME")).toBeTruthy();
+    expect(firstInvalidTournamentCreateTab(errors, "HOME", { spielplanCreationEnabled: true })).toBeTruthy();
   });
 
   it("AWAY draft has no planner configuration surface in tab order", () => {

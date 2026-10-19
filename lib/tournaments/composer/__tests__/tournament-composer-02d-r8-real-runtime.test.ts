@@ -188,6 +188,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R8 — real runtime pipeline", () => {
     draft.endAt = "2026-06-01T12:00:00.000Z";
     draft.participants = teamParticipants("fca-e1", 4, team);
     draft.planner = createDefaultTournamentComposerPlannerDraft();
+    draft.spielplanCreationEnabled = true;
     const hydrated = hydrateTournamentComposerFormFromDraft(draft, { teamOptions: [team] });
     expect(hydrated.planner?.pitches).toHaveLength(3);
   });

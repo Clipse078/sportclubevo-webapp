@@ -13,6 +13,7 @@ import {
   isAwayTournamentOrganiserMissing,
 } from "@/lib/tournaments/composer/tournament-composer-organiser";
 import { prepareTournamentComposerProposalFromDraft } from "@/lib/tournaments/composer/prepare-tournament-composer-proposal";
+import { resolveComposerSpielplanCreationEnabled } from "@/lib/tournaments/composer/resolve-composer-spielplan-creation-enabled";
 import { validateHomePlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-validation";
 import { buildTournamentSchedulePreview } from "@/lib/tournaments/composer/tournament-composer-schedule-preview";
 
@@ -101,11 +102,14 @@ function buildTerminFieldErrors(draft: TournamentComposerDraftPayload): Record<s
 }
 
 function homePlannerStepInvalid(draft: TournamentComposerDraftPayload): boolean {
-  if (draft.homeAway !== "HOME") return false;
+  if (draft.homeAway !== "HOME" || !resolveComposerSpielplanCreationEnabled(draft)) return false;
   return Object.keys(validateHomePlannerDraft(draft)).length > 0;
 }
 
 function buildSpielplanFieldErrors(draft: TournamentComposerDraftPayload): Record<string, string> {
+  if (!resolveComposerSpielplanCreationEnabled(draft)) {
+    return {};
+  }
   const prepared = prepareTournamentComposerProposalFromDraft(draft);
   const draftForValidation =
     prepared != null ? { ...draft, planner: prepared.planner } : draft;

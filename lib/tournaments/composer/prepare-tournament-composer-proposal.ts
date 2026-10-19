@@ -19,6 +19,7 @@ import {
   type ComposerProgrammeProposal,
 } from "./tournament-composer-programme-proposal";
 import type { ProgrammeCategoryResolutionSource } from "@/lib/tournament-scheduling/programme-templates/programme-template-category";
+import { resolveComposerSpielplanCreationEnabled } from "./resolve-composer-spielplan-creation-enabled";
 
 export type PreparedTournamentComposerProposal = {
   categoryContext: ProgrammeTemplateCategoryContext | null;
@@ -90,7 +91,9 @@ export function prepareTournamentComposerProposalFromDraft(
     preserveUserPitchEdits?: boolean;
   },
 ): PreparedTournamentComposerProposal | null {
-  if (draft.homeAway !== "HOME" || !draft.planner) return null;
+  if (draft.homeAway !== "HOME" || !draft.planner || !resolveComposerSpielplanCreationEnabled(draft)) {
+    return null;
+  }
   return prepareTournamentComposerProposal({
     participants: draft.participants,
     planner: draft.planner,

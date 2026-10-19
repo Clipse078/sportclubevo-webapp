@@ -15,6 +15,7 @@ import {
   addOwnTeamParticipantViaSelector,
   makeTournamentComposerTeamOption,
   setTournamentCreateScheduleStart,
+  enableTournamentCreateSpielplanCreation,
   TOURNAMENT_CREATE_FORM_TEST_GOVERNANCE,
   TOURNAMENT_CREATE_FORM_TEST_SEASON_OPTIONS,
 } from "./tournament-form-test-helpers";
@@ -108,6 +109,7 @@ async function addOwnTeamRepeated(teamId: string, count: number) {
 async function seedSchedule() {
   fireEvent.change(screen.getByTestId("tournament-create-title"), { target: { value: "Turnier" } });
   setTournamentCreateScheduleStart("2026-06-01", "10:00");
+  enableTournamentCreateSpielplanCreation();
   fireEvent.change(screen.getByTestId("tournament-create-schedule-end-time-input"), {
     target: { value: "12:00" },
   });
