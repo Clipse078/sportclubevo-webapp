@@ -354,9 +354,11 @@ Contracts: [`SCE-TOURNAMENT-PLANNER-02A`](./SCE-TOURNAMENT-PLANNER-02A.md), `lib
 ### Consequences
 
 - **02B** adds nullable `playersPerSide` on `TournamentPitch`, Creator/Planung/output adoption, and defensive validation — without ADR-014 rollback or schedule semantics for normal TP01 formats.
-- **02C** adds `TournamentParticipantUnit` persistence, capacity primitive, Planung Spielteam configuration; fixture unit references deferred to **02D**.
-- **02D+** continues rotation, stations.
-- Programme assignment persistence waits until **02E**; 02A is documentation + pure contracts only.
+- **02C** adds `TournamentParticipantUnit` persistence, capacity primitive, Planung Spielteam configuration; predefined template mapping and fixture unit references deferred to **02D**.
+- **02D (revised delivery)** — predefined Spielplan templates & instant generation: participant count selects an approved template; template defines Felder, rounds, pairings, and field assignments; real teams map to template positions. No generic rotation generator is required for TP02 closure.
+- **02E (revised delivery)** — Spielplan UX, outputs & final hardening; **TP02 closes after 02E**.
+- **Removed from required TP02 delivery:** generic rotation generator (former 02D), stations & alternative activities (former 02E), advanced timing & in-round phases (former 02F), fair programme optimiser (former 02G). Optional contract types (e.g. `TournamentStation`) may remain for documentation without implying those packages ship in TP02.
+- 02A remains documentation + pure contracts only for its slice.
 - Architecture tests guard against Swiss-only enums and parallel schedule truth.
 - Team-Spielplan and public views remain **projections** of the canonical programme.
 

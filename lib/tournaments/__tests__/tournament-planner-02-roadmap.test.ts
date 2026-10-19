@@ -10,7 +10,9 @@ describe("02 roadmap programme", () => {
     );
     expect(doc).toMatch(/SCE-TOURNAMENT-PLANNER-02/);
     expect(doc).toMatch(/01M.*#873|CLOSED.*MERGED/i);
-    expect(doc).toMatch(/02A.*02H|02A–02H/i);
+    expect(doc).toMatch(/02A.*02E|02A–02E/i);
+    expect(doc).toMatch(/Predefined Spielplan templates/i);
+    expect(doc).toMatch(/TP02_CLOSES_AFTER_02E.*YES/i);
     expect(doc).toMatch(/ONE_CANONICAL_PROGRAMME.*YES/i);
     expect(doc).toMatch(/TP01_EVOLUTION_NOT_REPLACEMENT.*YES/i);
     expect(doc).toMatch(/TOURNAMENT_PLANNER_02_STARTED.*YES/i);

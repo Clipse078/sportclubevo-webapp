@@ -14,8 +14,10 @@ describe("SCE-TOURNAMENT-PLANNER-02C roadmap", () => {
     expect(doc).toMatch(/PLAYING_UNIT_TOURNAMENT_LOCAL.*YES/i);
     expect(doc).toMatch(/EXISTING_TOURNAMENTS_REQUIRE_UNIT_SETUP.*NO/i);
     expect(doc).toMatch(/ROTATION_GENERATOR_IMPLEMENTED.*NO/i);
+    expect(doc).toMatch(/GENERIC_ROTATION_GENERATOR_REQUIRED.*NO/i);
     expect(doc).toMatch(/MANUAL_UAT_BY_CURSOR.*SKIPPED_PO_OWNED/i);
     expect(doc).toMatch(/IMPLICIT_FULL_TEAM_COMPATIBILITY/i);
+    expect(doc).toMatch(/READY FOR PO UAT/i);
 
     const sql = readFileSync(
       join(
@@ -29,13 +31,20 @@ describe("SCE-TOURNAMENT-PLANNER-02C roadmap", () => {
     expect(sql).not.toMatch(/UPDATE\s+"Team"/i);
   });
 
-  it("parent programme doc marks 02C started and 02D next", () => {
+  it("parent programme doc marks 02C ready for UAT and predefined-template 02D next", () => {
     const parent = readFileSync(
       join(process.cwd(), "docs/roadmap/SCE-TOURNAMENT-PLANNER-02.md"),
       "utf8",
     );
     expect(parent).toMatch(/02C.*Participant playing units/i);
-    expect(parent).toMatch(/02C_STARTED.*YES/i);
-    expect(parent).toMatch(/NEXT_PACKAGE.*02D/i);
+    expect(parent).toMatch(/02C_STATUS.*READY FOR PO UAT/i);
+    expect(parent).toMatch(
+      /NEXT_PACKAGE.*02D.*Predefined Spielplan Templates & Instant Generation/i,
+    );
+    expect(parent).toMatch(/FINAL_PACKAGE.*02E.*Spielplan UX/i);
+    expect(parent).toMatch(/TP02_CLOSES_AFTER_02E.*YES/i);
+    expect(parent).not.toMatch(/02H/i);
+    expect(parent).not.toMatch(/NEXT_PACKAGE.*Rotation Generator/i);
+    expect(parent).toMatch(/Fair programme optimiser.*Removed/i);
   });
 });
