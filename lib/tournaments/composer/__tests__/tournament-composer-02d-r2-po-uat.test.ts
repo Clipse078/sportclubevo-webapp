@@ -30,6 +30,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     const planner = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 4,
+      categoryContext: "E_FF12",
     });
     expect(planner.programmeTemplateId).toBe(E_FF12_ROTATION_4_TEMPLATE.id);
     expect(planner.pitches).toHaveLength(3);
@@ -41,10 +42,10 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
   });
 
   it("A — another curated participant count (6 teams)", () => {
-    const resolved = resolveComposerProgrammeTemplate(6);
-    expect(resolved?.template.fields.length).toBeGreaterThan(0);
-    const pitches = materializeComposerPitchesFromTemplate(resolved!.template);
-    expect(pitches.length).toBe(resolved!.template.fields.length);
+    const resolved = resolveComposerProgrammeTemplate({ participantCount: 6, categoryContext: "E_FF12" });
+    expect(resolved?.proposal.template?.fields.length).toBeGreaterThan(0);
+    const pitches = materializeComposerPitchesFromTemplate(resolved!.proposal.template!);
+    expect(pitches.length).toBe(resolved!.proposal.template!.fields.length);
     expect(pitches.every((p) => p.playersPerSide != null)).toBe(true);
   });
 
@@ -52,6 +53,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     const reconciled = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 17,
+      categoryContext: "E_FF12",
     });
     expect(reconciled.programmeTemplateId).toBeNull();
     expect(reconciled.pitches).toHaveLength(1);
@@ -94,7 +96,9 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
       ...participants.slice(1),
     ];
     expect(countComposerCuratedTemplateParticipants(withExtraUnit)).toBe(4);
-    expect(resolveComposerProgrammeTemplate(4)?.template.id).toBe(E_FF12_ROTATION_4_TEMPLATE.id);
+    expect(
+      resolveComposerProgrammeTemplate({ participantCount: 4, categoryContext: "E_FF12" })?.proposal.template?.id,
+    ).toBe(E_FF12_ROTATION_4_TEMPLATE.id);
   });
 
   it("D — pause window validation against termin", () => {
@@ -165,6 +169,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     const planner = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 4,
+      categoryContext: "E_FF12",
     });
     planner.timing.matchDurationMinutes = 12;
     planner.timing.transitionMinutes = 3;
@@ -172,6 +177,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
 
     const pass = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T12:00",
       planner,
@@ -182,6 +188,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
 
     const exact = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T11:37",
       planner,
@@ -191,6 +198,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
 
     const fail = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T11:30",
       planner,
@@ -207,9 +215,9 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     expect(planner.timing.matchDurationMinutes).not.toBe(120);
   });
 
-  it("H — no smart timing recommendation UI in Spielplan panel", () => {
+  it("H — Spielplan panel uses pause-first UX and proposal refresh affordance", () => {
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
-    expect(panels).not.toMatch(/Empfehlung übernehmen/);
+    expect(panels).toMatch(/tournament-composer-proposal-refresh-accept/);
     expect(panels).toMatch(/tournament-composer-main-pause-start/);
     expect(panels).not.toMatch(/main-pause-after-round/);
   });
@@ -219,14 +227,17 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     draft.homeAway = "HOME";
     draft.participants = Array.from({ length: 4 }, (_, i) => ({
       localId: `p${i}`,
-      kind: "MANUAL",
+      kind: "TEAM",
+      teamId: "team-e1",
       manualLabel: `T${i + 1}`,
       displayName: `T${i + 1}`,
       subLabel: null,
       dressingRooms: [],
     }));
     draft.planner = createDefaultTournamentComposerPlannerDraft();
-    const hydrated = hydrateTournamentComposerFormFromDraft(draft);
+    const hydrated = hydrateTournamentComposerFormFromDraft(draft, {
+      teamOptions: [{ id: "team-e1", name: "E1", ageGroup: "E", genderGroup: null }],
+    });
     expect(hydrated.planner!.pitches).toHaveLength(3);
     expect(hydrated.planner!.programmeTemplateId).toBe(E_FF12_ROTATION_4_TEMPLATE.id);
   });

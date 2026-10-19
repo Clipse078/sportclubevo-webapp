@@ -10,9 +10,10 @@ describe("SCE-TOURNAMENT-PLANNER-02D roadmap", () => {
     );
     expect(doc).toMatch(/Predefined Spielplan Templates/i);
     expect(doc).toMatch(/TEMPLATE_STORAGE.*code-backed/i);
-    expect(doc).toMatch(/CURATED_TEMPLATE_COUNTS/i);
-    expect(doc).toMatch(/MISSING_CURATED_TEMPLATE_COUNTS/i);
-    expect(doc).toMatch(/TEMPLATE_FIELD_COUNT_IS_AUTHORITATIVE.*YES/i);
+    expect(doc).toMatch(/E_FF12_CURATED_COUNTS/i);
+    expect(doc).toMatch(/F_CURATED_FIELD_PROPOSAL_COUNTS/i);
+    expect(doc).toMatch(/PROPOSAL_NOT_LOCK.*YES/i);
+    expect(doc).toMatch(/CATEGORY_AWARE_PROPOSAL.*YES/i);
     expect(doc).toMatch(/MANUAL_UAT_BY_CURSOR.*SKIPPED_PO_OWNED/i);
   });
 

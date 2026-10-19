@@ -12,7 +12,10 @@ describe("programme template catalogue fallback (02D R1)", () => {
 
   it("counts 9–16 require TP01 fallback (no fabricated curated template)", () => {
     for (let count = 9; count <= 16; count += 1) {
-      const presentation = buildPlanungProgrammeTemplatePresentation({ participantCount: count });
+      const presentation = buildPlanungProgrammeTemplatePresentation({
+        participantCount: count,
+        categoryContext: "E_FF12",
+      });
       expect(presentation.available).toBe(false);
       expect(presentation.fallbackRequired).toBe(true);
       expect(listProgrammeTemplates({ participantCount: count })).toHaveLength(0);
@@ -21,7 +24,10 @@ describe("programme template catalogue fallback (02D R1)", () => {
 
   it("counts above 16 remain valid for fallback path (no product maximum)", () => {
     for (const count of [17, 24, 32]) {
-      const presentation = buildPlanungProgrammeTemplatePresentation({ participantCount: count });
+      const presentation = buildPlanungProgrammeTemplatePresentation({
+        participantCount: count,
+        categoryContext: "E_FF12",
+      });
       expect(presentation.available).toBe(false);
       expect(presentation.fallbackRequired).toBe(true);
     }

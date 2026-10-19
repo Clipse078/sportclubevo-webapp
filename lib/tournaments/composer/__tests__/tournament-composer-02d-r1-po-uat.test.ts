@@ -40,11 +40,11 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
   });
 
   it("B — template field authority is not participantCount/2 formula", () => {
-    const resolved = resolveComposerProgrammeTemplate(4);
-    expect(resolved?.template.fields).toHaveLength(3);
-    const sixTeam = resolveComposerProgrammeTemplate(6);
-    expect(sixTeam?.template.fields.length).not.toBe(4 / 2);
-    expect(sixTeam?.template.fields.length).toBeGreaterThan(0);
+    const resolved = resolveComposerProgrammeTemplate({ participantCount: 4, categoryContext: "E_FF12" });
+    expect(resolved?.proposal.template?.fields).toHaveLength(3);
+    const sixTeam = resolveComposerProgrammeTemplate({ participantCount: 6, categoryContext: "E_FF12" });
+    expect(sixTeam?.proposal.template?.fields.length).not.toBe(4 / 2);
+    expect(sixTeam?.proposal.template?.fields.length).toBeGreaterThan(0);
   });
 
   it("C — 4-team reference preserves exact field formats", () => {
@@ -67,6 +67,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
     const planner = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 4,
+      categoryContext: "E_FF12",
     });
     planner.timing.matchDurationMinutes = 12;
     planner.timing.transitionMinutes = 3;
@@ -74,6 +75,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
     const pass = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T12:00",
       planner,
@@ -84,6 +86,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
     const exact = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T11:37",
       planner,
@@ -93,6 +96,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
     const fail = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T11:30",
       planner,
@@ -102,6 +106,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
     const pauseOff = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T12:00",
       planner: {
@@ -113,6 +118,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
     const shorterMatches = buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: "E_FF12",
       startAt: "2026-06-01T10:00",
       endAt: "2026-06-01T12:00",
       planner: {
@@ -139,11 +145,13 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
     draft.planner = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 4,
+      categoryContext: null,
     });
     const timingBefore = { ...draft.planner!.timing };
     const pauseBefore = { ...draft.planner!.mainPause! };
     buildComposerScheduleFitView({
       participantCount: 4,
+      categoryContext: null,
       startAt: draft.startAt,
       endAt: draft.endAt,
       planner: draft.planner!,
@@ -152,34 +160,37 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
     expect(draft.planner!.mainPause).toEqual(pauseBefore);
   });
 
-  it("G — SCE recommendation UX removed from creator", () => {
+  it("G — smart timing recommendation UX removed from creator", () => {
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
-    expect(panels).not.toMatch(/Empfehlung übernehmen/);
     expect(panels).not.toMatch(/SmartTimingPanel|smart-timing/);
   });
 
   it("H — unsupported curated count keeps TP01 fallback without artificial max", () => {
-    const resolved = resolveComposerProgrammeTemplate(17);
+    const resolved = resolveComposerProgrammeTemplate({ participantCount: 17, categoryContext: "E_FF12" });
     expect(resolved).toBeNull();
     const reconciled = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 17,
+      categoryContext: "E_FF12",
     });
     expect(reconciled.programmeTemplateId).toBeNull();
   });
 
-  it("participant change reconciles template pitches safely", () => {
+  it("participant change preserves customised labels when fingerprint unchanged", () => {
     const planner = reconcileComposerPlannerForParticipants({
       planner: createDefaultTournamentComposerPlannerDraft(),
       participantCount: 4,
+      categoryContext: "E_FF12",
     });
     const customized = {
       ...planner,
+      pitchesUserCustomized: true,
       pitches: planner.pitches.map((p) => ({ ...p, label: "Custom", userLabelCustomized: true })),
     };
     const again = reconcileComposerPlannerForParticipants({
       planner: customized,
       participantCount: 4,
+      categoryContext: "E_FF12",
     });
     expect(again.pitches.every((p) => p.label === "Custom")).toBe(true);
     expect(again.pitches).toHaveLength(3);
