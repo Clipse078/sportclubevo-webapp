@@ -137,6 +137,23 @@ describe("TournamentPlanungBoard 01I", () => {
     expect(screen.getByTestId("planung-fixture-f1")).toHaveAttribute("data-draggable", "true");
   });
 
+  it("R4 — board fixture cells use canonical stacked match identity without pitch/time in card", () => {
+    render(
+      <TournamentPlanungBoard
+        model={model}
+        timezone="Europe/Zurich"
+        selectedFixtureId={null}
+        onSelectFixture={vi.fn()}
+      />,
+    );
+    const fixtureButton = screen.getByTestId("planung-fixture-f1");
+    expect(fixtureButton.querySelector('[data-sce-match-region="fixture"]')).toBeTruthy();
+    expect(fixtureButton.querySelector('[data-sce-match-side="home"]')).toBeTruthy();
+    expect(fixtureButton.querySelector('[data-sce-match-side="away"]')).toBeTruthy();
+    expect(fixtureButton.querySelector('[data-testid="sce-match-vs"]')).toBeTruthy();
+    expect(fixtureButton.textContent).not.toMatch(/Feld 1/);
+  });
+
   it("M — uses TournamentPitch column labels", () => {
     render(
       <TournamentPlanungBoard
