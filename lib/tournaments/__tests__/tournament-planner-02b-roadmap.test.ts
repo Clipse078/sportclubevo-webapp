@@ -11,6 +11,9 @@ describe("SCE-TOURNAMENT-PLANNER-02B roadmap", () => {
     expect(doc).toMatch(/02B/i);
     expect(doc).toMatch(/playersPerSide/i);
     expect(doc).toMatch(/PLAYING_FORMAT_OPTIONAL_BY_DEFAULT.*YES/i);
+    expect(doc).toMatch(/CLOSED.*ACCEPTED.*MERGED/i);
+    expect(doc).toMatch(/PO_UAT_STATUS.*PASS/i);
+    expect(doc).toMatch(/MANUAL_UAT_BY_CURSOR.*SKIPPED_PO_OWNED/i);
     expect(doc).toMatch(/02C/i);
     expect(doc).toMatch(/02D/i);
     expect(doc).not.toMatch(/PARTICIPANT_UNITS_IMPLEMENTED.*YES/i);
@@ -21,6 +24,8 @@ describe("SCE-TOURNAMENT-PLANNER-02B roadmap", () => {
     );
     expect(parent).toMatch(/02B.*Playing formats/i);
     expect(parent).toMatch(/02A.*CLOSED/i);
+    expect(parent).toMatch(/02B_STATUS.*CLOSED.*MERGED/i);
+    expect(parent).toMatch(/02C_STARTED.*NO/i);
   });
 
   it("wires migration for nullable playersPerSide", () => {

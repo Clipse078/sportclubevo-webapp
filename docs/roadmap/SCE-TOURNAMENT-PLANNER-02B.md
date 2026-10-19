@@ -5,7 +5,9 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02B` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-02A`](./SCE-TOURNAMENT-PLANNER-02A.md) — **CLOSED / ACCEPTED / MERGED** |
-| **Status** | **OPEN** — PO UAT pending |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PO UAT **PASS**, R4 visual PO UAT **PASS**, PR **#875**) |
+| **PR** | **#875** — merged to **STAGE** |
+| **Accepted feature HEAD (R4)** | `bdb466f10e5bdfc0efb3e3a84808c2e5a0a8336b` |
 | **Branch** | `cursor/sce-tournament-planner-02b-playing-formats-pitches` |
 | **STAGE baseline** | `eab2797262074358ccd9b5b1317666d4d197a054` |
 | **Next package** | **02C** — Participant Playing Units (**NOT STARTED**) |
@@ -114,3 +116,45 @@ APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b3768
 - `lib/tournament-scheduling/__tests__/tournament-pitch-playing-format-02b.test.ts`
 - `lib/tournaments/__tests__/tournament-planner-02b-roadmap.test.ts`
 - `lib/tournaments/__tests__/tournament-edit-page-02b-migration-regression.test.ts`
+
+## STAGE schema-drift incident (resolved)
+
+| Item | Detail |
+| --- | --- |
+| **Symptom** | Tournament **Edit → Planung** preload failed with Prisma **P2022** (`ColumnNotFound`) |
+| **Root cause** | Application code selected `TournamentPitch.playersPerSide` before additive migration `20261019120000_sce_tournament_planner_02b_playing_format` was applied on designated **STAGE** |
+| **Fix** | Apply/verify migration on STAGE (`scripts/sce-tournament-planner-02b-stage-migration-verify.ts`); **not** a legacy tournament data defect |
+| **Lesson** | **Migration / schema verification → application code expecting new column** |
+| **P2022 suppression** | **NO** |
+
+## UAT
+
+| Flag | Value |
+| --- | --- |
+| **02B_FUNCTIONAL_PO_UAT** | **PASS** |
+| **R4_VISUAL_PO_UAT** | **PASS** |
+| **PO_UAT_STATUS** | **PASS** |
+| **MANUAL_UAT_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+| **SCREENSHOTS_BY_CURSOR** | **SKIPPED_PO_OWNED** |
+
+## Match card (R4)
+
+Tournament **Feld- und Zeitplan** fixture cells use the shared canonical primitive **`SceMatchStackedFixtureIdentity`** inside **`SceMatchCard`** — home left, away right, centred VS, canonical crests, compact tournament density. No redundant type/status/date/time/venue/pitch/format badges inside each fixture card.
+
+| Flag | Value |
+| --- | --- |
+| **CANONICAL_MATCH_PRIMITIVE_REUSED** | **YES** |
+| **PARALLEL_MATCH_CARD_CREATED** | **NO** |
+| **WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE** | **PASS** |
+
+## Security
+
+| Flag | Value |
+| --- | --- |
+| **PASSWORD_MUTATION** | **NO** |
+| **PASSWORD_HASH_WRITE** | **NO** |
+| **CREDENTIAL_SCRIPT_EXECUTED** | **NO** |
+
+## Verification (02B delivery)
+
+Run Tournament Planner regression gate plus 02B tests — recorded in PR **#875** closure.

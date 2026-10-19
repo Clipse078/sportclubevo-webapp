@@ -155,7 +155,8 @@ describe("SCE-ACTIVITY-CREATE-01F-R3 — tournament lobby + 1:n own teams", () =
     expect(doc).toContain("SCE-TOURNAMENT-PLANNER-01A");
     expect(doc).toContain("ADR-014");
     expect(doc).toContain("SCE-TOURNAMENT-PLANNER-01B");
-    expect(doc).toMatch(/IN PROGRESS/);
+    expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/);
+    expect(doc).toMatch(/SCE-TOURNAMENT-PLANNER-02.*IN PROGRESS/i);
     expect(doc).toContain("**WHO** plays whom");
     expect(doc).toContain("Per E-Mail senden");
     expect(doc).toContain("PDF herunterladen");
