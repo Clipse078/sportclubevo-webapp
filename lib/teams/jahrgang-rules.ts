@@ -31,7 +31,7 @@ function normalizeAgeGroupToken(value: string | null | undefined): string {
     .trim()
     .toUpperCase()
     .replace(/\s+/g, "")
-    .replace("-", "");
+    .replace(/-/g, "");
 }
 
 export function normalizeJuniorCategoryCode(
@@ -52,8 +52,8 @@ export function normalizeJuniorCategoryCode(
 }
 
 /**
- * Resolves junior category from structured team fields (`Team.ageGroup`, `Team.shortName`).
- * Handles squad stufe tokens such as E1 / F2 stored in ageGroup — not display-name parsing.
+ * Resolves junior category from one structured team label (`ageGroup`, `shortName`, `alternativeName`).
+ * Handles squad stufe tokens (E1 / F2), tenant short names (`Junioren E1`), and D-7 / D-9 labels.
  */
 export function resolveStructuredJuniorCategoryFromAgeGroup(
   value: string | null | undefined,
@@ -69,6 +69,19 @@ export function resolveStructuredJuniorCategoryFromAgeGroup(
     return squadMatch[1] as JuniorCategoryCode;
   }
 
+  if (normalized.includes("D7")) return "D7";
+  if (normalized.includes("D9")) return "D9";
+
+  const juniorPrefixMatch = /(?:JUNIOREN|JUNIORINNEN)([GFEACB])\d*/.exec(normalized);
+  if (juniorPrefixMatch) {
+    return juniorPrefixMatch[1] as JuniorCategoryCode;
+  }
+
+  const femaleFormatMatch = /([GFE])FF\d+/.exec(normalized);
+  if (femaleFormatMatch) {
+    return femaleFormatMatch[1] as JuniorCategoryCode;
+  }
+
   return null;
 }
 
@@ -76,11 +89,13 @@ export function resolveStructuredJuniorCategoryFromAgeGroup(
 export function resolveAuthoritativeTeamJuniorCategoryCode(team: {
   ageGroup: string | null | undefined;
   shortName?: string | null | undefined;
+  alternativeName?: string | null | undefined;
 }): JuniorCategoryCode | null {
-  return (
-    resolveStructuredJuniorCategoryFromAgeGroup(team.ageGroup) ??
-    resolveStructuredJuniorCategoryFromAgeGroup(team.shortName ?? null)
-  );
+  for (const field of [team.ageGroup, team.alternativeName, team.shortName]) {
+    const resolved = resolveStructuredJuniorCategoryFromAgeGroup(field);
+    if (resolved) return resolved;
+  }
+  return null;
 }
 
 export function getSeasonStartYearFromDate(

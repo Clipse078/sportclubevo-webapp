@@ -15,9 +15,11 @@ export type TournamentTeamOption = {
   id: string;
   name: string;
   shortName: string | null;
+  /** Tenant-owned structured label (often compact stufe, e.g. E1). */
+  alternativeName?: string | null;
   ageGroup: string | null;
   genderGroup: string | null;
-  /** Server-resolved junior code from structured ageGroup / shortName only. */
+  /** Server-resolved junior code from structured ageGroup / shortName / alternativeName. */
   juniorCategoryCode: JuniorCategoryCode | null;
 };
 
@@ -90,12 +92,26 @@ export async function loadTournamentComposerCreateSurfaceProps(input: {
     writableTeamIds.length > 0
       ? await prisma.team.findMany({
           where: { tenantId: input.tenantId, id: { in: [...writableTeamIds] }, isActive: true },
-          select: { id: true, name: true, shortName: true, ageGroup: true, genderGroup: true },
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            alternativeName: true,
+            ageGroup: true,
+            genderGroup: true,
+          },
           orderBy: { name: "asc" },
         })
       : await prisma.team.findMany({
           where: { tenantId: input.tenantId, isActive: true },
-          select: { id: true, name: true, shortName: true, ageGroup: true, genderGroup: true },
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            alternativeName: true,
+            ageGroup: true,
+            genderGroup: true,
+          },
           orderBy: { name: "asc" },
         });
 
@@ -111,11 +127,13 @@ export async function loadTournamentComposerCreateSurfaceProps(input: {
       id: t.id,
       name: t.name,
       shortName: t.shortName,
+      alternativeName: t.alternativeName,
       ageGroup: t.ageGroup,
       genderGroup: t.genderGroup,
       juniorCategoryCode: resolveAuthoritativeTeamJuniorCategoryCode({
         ageGroup: t.ageGroup,
         shortName: t.shortName,
+        alternativeName: t.alternativeName,
       }),
     })),
     pitchHallFacilityGroups: facilityGroupsForTypes(facilities, ["FULL_PITCH", "HALF_PITCH"]),

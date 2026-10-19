@@ -9,19 +9,23 @@ export function makeTournamentComposerTeamOption(input: {
   id: string;
   name: string;
   shortName?: string | null;
+  alternativeName?: string | null;
   ageGroup: string | null;
   genderGroup?: string | null;
 }): TournamentTeamOption {
   const shortName = input.shortName ?? null;
+  const alternativeName = input.alternativeName ?? null;
   return {
     id: input.id,
     name: input.name,
     shortName,
+    alternativeName,
     ageGroup: input.ageGroup,
     genderGroup: input.genderGroup ?? null,
     juniorCategoryCode: resolveAuthoritativeTeamJuniorCategoryCode({
       ageGroup: input.ageGroup,
       shortName,
+      alternativeName,
     }),
   };
 }

@@ -23,7 +23,10 @@ export function buildTeamAgeGroupLookup(
 }
 
 export function buildTeamJuniorCategoryLookup(
-  teamOptions: readonly Pick<TournamentTeamOption, "id" | "ageGroup" | "shortName" | "juniorCategoryCode">[],
+  teamOptions: readonly Pick<
+    TournamentTeamOption,
+    "id" | "ageGroup" | "shortName" | "alternativeName" | "juniorCategoryCode"
+  >[],
 ): Map<string, JuniorCategoryCode | null> {
   return new Map(
     teamOptions.map((team) => [
@@ -32,6 +35,7 @@ export function buildTeamJuniorCategoryLookup(
         resolveAuthoritativeTeamJuniorCategoryCode({
           ageGroup: team.ageGroup,
           shortName: team.shortName,
+          alternativeName: team.alternativeName,
         }),
     ]),
   );

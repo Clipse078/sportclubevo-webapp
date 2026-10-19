@@ -18,9 +18,19 @@ describe("jahrgang-rules — structured ageGroup / shortName resolution", () => 
   });
 
   it("does not treat display labels or adult categories as junior codes", () => {
-    expect(resolveStructuredJuniorCategoryFromAgeGroup("Junioren E")).toBeNull();
     expect(resolveStructuredJuniorCategoryFromAgeGroup("Aktive")).toBeNull();
     expect(resolveStructuredJuniorCategoryFromAgeGroup(null)).toBeNull();
+  });
+
+  it("resolves FCA STAGE structured shortName / alternativeName (Junioren E1, E1)", () => {
+    expect(resolveStructuredJuniorCategoryFromAgeGroup("Junioren E1")).toBe("E");
+    expect(resolveStructuredJuniorCategoryFromAgeGroup("Junioren F2")).toBe("F");
+    expect(resolveStructuredJuniorCategoryFromAgeGroup("Junioren D-7 D1")).toBe("D7");
+    expect(resolveAuthoritativeTeamJuniorCategoryCode({
+      ageGroup: null,
+      shortName: "Junioren E1",
+      alternativeName: "E1",
+    })).toBe("E");
   });
 
   it("prefers ageGroup over shortName for authoritative team resolution", () => {
