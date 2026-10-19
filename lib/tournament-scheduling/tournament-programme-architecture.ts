@@ -139,6 +139,16 @@ export const PARENT_CAPACITY_CONTRACT_DEFINED = true;
 export const FULL_TEAM_FUTURE_READY = true;
 export const SUBTEAM_FUTURE_READY = true;
 
+/** 02C — persisted tournament-local playing units + capacity overlap primitive. */
+export const PLAYING_UNITS_PERSISTENCE_IMPLEMENTED = true;
+export const PLAYING_UNIT_TOURNAMENT_LOCAL = true;
+export const PARTICIPANT_UNIT_CAPACITY_OVERLAP_IMPLEMENTED = true;
+export const IMPLICIT_FULL_TEAM_PLAYING_UNIT_COMPATIBILITY = true;
+export const EXISTING_TOURNAMENTS_REQUIRE_UNIT_SETUP = false;
+export const PLAYING_UNIT_FIXTURE_REFERENCE_IMPLEMENTED = false;
+export const PLAYING_UNIT_ASSIGNMENT_REFERENCE_IMPLEMENTED = false;
+export const PLAYING_UNIT_FIXTURE_REFERENCE_DEFERRED_TO_02D = true;
+
 /** ROTATION is a first-class programme format — not a Smart Mix variant. */
 export const ROTATION_FIRST_CLASS_FUTURE_FORMAT = true;
 export const ROTATION_FORCED_INTO_SMART_MIX = false;

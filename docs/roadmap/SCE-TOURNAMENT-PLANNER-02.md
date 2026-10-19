@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02` |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) — **CLOSED / ACCEPTED / MERGED** (01M PR **#873**) |
-| **Status** | **IN PROGRESS** — packages **02A** and **02B** merged; **02C** next |
+| **Status** | **IN PROGRESS** — **02A** / **02B** merged; **02C** open |
 | **ADR** | [`ADR-015`](./05-architecture-decisions.md#adr-015--tournament-programme-architecture-and-generic-playing-format) |
 | **Contracts** | `lib/tournament-scheduling/tournament-programme-architecture.ts` |
 
@@ -51,14 +51,14 @@ Long-term canonical pipeline:
 | --- | --- |
 | **02A** | Programme architecture & format model — **this slice** ([doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
 | **02B** | Playing formats & tournament pitches — optional pitch format, persistence, Creator/Planung/output adoption ([doc](./SCE-TOURNAMENT-PLANNER-02B.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#875**) |
-| **02C** | Participant playing units (full team / subteams, capacity rules) |
+| **02C** | Participant playing units — Spielteams, capacity rules ([doc](./SCE-TOURNAMENT-PLANNER-02C.md)) (**OPEN**) |
 | **02D** | Rotation generator (first-class format) |
 | **02E** | Stations & alternative activities |
 | **02F** | Advanced timing & in-round phases |
 | **02G** | Fair programme optimiser |
 | **02H** | Spielplan UX, outputs & final hardening |
 
-Do **not** implement 02B–02H until their package is opened.
+Do **not** implement packages beyond the opened slice (currently **02C**; **02D+** remain closed).
 
 ## Generic engine vs federation presets
 
@@ -86,5 +86,6 @@ Team-Spielplan is a **derived view** — never a separately persisted schedule.
 | **TOURNAMENT_PLANNER_02_STARTED** | **YES** (02A) |
 | **02A_STATUS** | **CLOSED / ACCEPTED / MERGED** (PR **#874**, [02A doc](./SCE-TOURNAMENT-PLANNER-02A.md)) |
 | **02B_STATUS** | **CLOSED / ACCEPTED / MERGED** (PR **#875**, [02B doc](./SCE-TOURNAMENT-PLANNER-02B.md)) |
-| **NEXT_PACKAGE** | **02C** — Participant Playing Units (**NOT STARTED**) |
-| **02C_STARTED** | **NO** |
+| **02C_STATUS** | **OPEN** ([02C doc](./SCE-TOURNAMENT-PLANNER-02C.md)) |
+| **02C_STARTED** | **YES** |
+| **NEXT_PACKAGE** | **02D** — Rotation Generator (**NOT STARTED**) |

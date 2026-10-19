@@ -342,7 +342,7 @@ Tournament Planner **01** (ADR-014) separates fixtures from schedule assignments
 2. **Generic playing format:** The core semantic is **`playersPerSide`** (integer, defensive technical validation band 1–22 in 02A — not a product maximum). Display labels such as `3v3` are derived. No hard-coded `THREE_V_THREE` / `3V3_6V6` enums. Optional federation presets sit **above** the generic engine, not inside core types.
 3. **Playing format optionality:** `PlayingFormat` on logical `TournamentPitch` is **optional by default**. Unspecified format is valid for normal and legacy tournaments. No global requirement, no default assignment, no silent inference from category or pitch name. Advanced programme formats (e.g. future ROTATION) **may** require format on relevant pitches when their semantics depend on it; Round Robin / Smart Mix / Groups / Knockout do **not** require format merely because 02 exists.
 4. **Logical pitch invariant:** `TournamentPitch` stays tournament-owned and schedule-facing. Playing format attaches to logical pitches (future persistence); physical venue truth remains `FacilityResource` / allocations. One physical resource may map to several logical pitches with different formats.
-5. **Participant vs unit:** `TournamentParticipant` remains registration identity; future **`TournamentParticipantUnit`** represents schedulable units (full team / subteams) with **parent capacity rules** (subteams may overlap; full team + subteam normally must not).
+5. **Participant vs unit:** `TournamentParticipant` remains registration identity; **`TournamentParticipantUnit`** (02C) represents tournament-local schedulable units (FULL / SUBUNIT) with explicit **parent capacity overlap** via `doParticipantUnitsOverlapCapacity` — subunits may play simultaneously; full team + subunit must not. Implicit full-team compatibility when no units are persisted.
 6. **Rotation:** **ROTATION** is a **first-class** programme format with its own generator family — **not** a variant of Smart Mix (opponent balancing).
 7. **Single schedule truth:** Canonical programme remains on **`TournamentScheduleVersion`**. Match rows continue via **`TournamentFixtureAssignment`**. Future non-fixture slots (alternative activity, rest/idle) attach to the **same** version as programme assignments — no parallel Team-Spielplan persistence.
 8. **Stations:** Future **`TournamentStation`** covers match pitch references, alternative activities, and rest/idle without replacing `TournamentPitch` as the match location primitive.
@@ -354,7 +354,8 @@ Contracts: [`SCE-TOURNAMENT-PLANNER-02A`](./SCE-TOURNAMENT-PLANNER-02A.md), `lib
 ### Consequences
 
 - **02B** adds nullable `playersPerSide` on `TournamentPitch`, Creator/Planung/output adoption, and defensive validation — without ADR-014 rollback or schedule semantics for normal TP01 formats.
-- **02C+** continues playing units, rotation, stations.
+- **02C** adds `TournamentParticipantUnit` persistence, capacity primitive, Planung Spielteam configuration; fixture unit references deferred to **02D**.
+- **02D+** continues rotation, stations.
 - Programme assignment persistence waits until **02E**; 02A is documentation + pure contracts only.
 - Architecture tests guard against Swiss-only enums and parallel schedule truth.
 - Team-Spielplan and public views remain **projections** of the canonical programme.

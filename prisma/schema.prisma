@@ -1283,6 +1283,7 @@ model Tenant {
   tournamentParticipants           TournamentParticipant[]
   tournamentResourceAllocations    TournamentResourceAllocation[]
   tournamentParticipantAllocations TournamentParticipantAllocation[]
+  tournamentParticipantUnits       TournamentParticipantUnit[]
   // SCE-TOURNAMENT-PLANNER-01B: durable fixtures + versioned schedule assignments
   tournamentFixtures               TournamentFixture[]
   tournamentScheduleVersions       TournamentScheduleVersion[]
@@ -8835,6 +8836,8 @@ model TournamentParticipant {
   fixtureSideSources      TournamentFixtureSide[]
   /// SCE-TOURNAMENT-PLANNER-01J — explicit KO winner when score is tied.
   fixtureResultsWon       TournamentFixtureResult[] @relation("TournamentFixtureResultWinner")
+  /// SCE-TOURNAMENT-PLANNER-02C — tournament-local playing units (Spielteams).
+  playingUnits            TournamentParticipantUnit[]
 
   /// The same canonical Team MAY appear on multiple rows (01D-R2 — e.g. two
   /// squads "Rot"/"Blau" referencing FC Allschwil F2). Tournament-local
@@ -8849,6 +8852,36 @@ model TournamentParticipant {
   @@index([externalTeamId])
   @@index([externalClubId])
   @@index([tenantId, eventId])
+}
+
+/// SCE-TOURNAMENT-PLANNER-02C — schedulable tournament-local unit (full team / Teilteam).
+/// Not a global Team/ExternalClub identity; never mutates source Team membership.
+enum TournamentParticipantUnitMode {
+  FULL
+  SUBUNIT
+}
+
+model TournamentParticipantUnit {
+  id                      String @id @default(cuid())
+  tenantId                String
+  tournamentParticipantId String
+
+  /// Tournament-local display label (e.g. E1, E1-1, Allschwil Blau).
+  displayName String
+  mode        TournamentParticipantUnitMode @default(FULL)
+  /// Optional capacity partition for SUBUNIT rows. Null = unit id is its own partition.
+  capacityPartitionKey String?
+  displayOrder         Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant                Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tournamentParticipant TournamentParticipant @relation(fields: [tournamentParticipantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tournamentParticipantId])
+  @@index([tenantId, tournamentParticipantId])
 }
 
 model TournamentResourceAllocation {
