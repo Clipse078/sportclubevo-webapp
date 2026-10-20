@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02E` |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-02D`](./SCE-TOURNAMENT-PLANNER-02D.md) — **CLOSED / ACCEPTED / MERGED** (PR **#877**) |
-| **Status** | **CLOSED / ACCEPTED / pending merge** (PO UAT **PASS**, PR **#878**) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PO UAT **PASS**, PR **#878**) |
 | **Branch** | `cursor/sce-tournament-planner-02e-unified-spielplan-ux-ebf3` |
 
 ## Objective
@@ -168,7 +168,7 @@ Participant zones remain **crest above name** (stacked), symmetrical around a ce
 | Flag | Value |
 | --- | --- |
 | **PO_UAT** | **PASS** |
-| **02E_STATUS** | **CLOSED / ACCEPTED / pending merge** (until PR **#878** merges to **STAGE**) |
+| **02E_STATUS** | **CLOSED / ACCEPTED / MERGED** |
 | **02E_PACKAGE_CLOSED** | **YES** |
 | **COMPOSER_SPIELPLAN** | **PASS** (~9/10) |
 | **MASTER_SPIELPLAN** | **PASS** (~8.5/10) |
