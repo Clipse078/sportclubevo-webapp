@@ -58,6 +58,8 @@ export function SceActivityComposerFooter({
           onClick={onCancel}
           disabled={isSubmitting}
           data-testid="sce-activity-composer-cancel"
+          data-sce-composer-action="cancel"
+          data-sce-action-hierarchy="TERTIARY_TEXT"
         >
           Abbrechen
         </Button>
@@ -97,6 +99,8 @@ export function SceActivityComposerFooter({
               disabled={busy || isSubmitting}
               aria-busy={isSavingDraft}
               data-testid="sce-activity-composer-save-draft"
+              data-sce-composer-action="save-draft"
+              data-sce-action-hierarchy="SECONDARY"
             >
               {saveDraftLabel}
             </Button>
@@ -108,6 +112,8 @@ export function SceActivityComposerFooter({
               onClick={onGuidedPrevious}
               disabled={busy}
               data-testid="sce-activity-composer-previous"
+              data-sce-composer-action="guided-previous"
+              data-sce-action-hierarchy="SECONDARY"
             >
               ← Zurück
             </Button>
@@ -119,6 +125,8 @@ export function SceActivityComposerFooter({
               onClick={onGuidedNext}
               disabled={busy}
               data-testid="sce-activity-composer-next"
+              data-sce-composer-action="guided-next"
+              data-sce-action-hierarchy="SECONDARY"
             >
               Weiter →
             </Button>
@@ -132,6 +140,8 @@ export function SceActivityComposerFooter({
               disabled={submitDisabled || busy}
               aria-busy={isSubmitting}
               data-testid="sce-activity-composer-submit"
+              data-sce-composer-action="primary-submit"
+              data-sce-action-hierarchy="PRIMARY"
             >
               {createActionLabel}
             </Button>

@@ -28,9 +28,15 @@ import {
   UserMinus,
   X,
 } from "lucide-react";
-import { Dialog } from "@/components/ui/Dialog";
-import { Button } from "@/components/ui/Button";
-import { PopoverContent } from "@/components/ui/Popover";
+import {
+  SceConfirmDialog,
+  SceOverflowMenu,
+  SceOverflowMenuDivider,
+} from "@/components/sce/actions";
+import {
+  SCE_OVERFLOW_MENU_ITEM_CLASS,
+  SCE_OVERFLOW_MENU_ITEM_DESTRUCTIVE_CLASS,
+} from "@/lib/design-system/sce-action-dialog-micro-ux";
 import ImpersonateButton from "@/components/admin/users/ImpersonateButton";
 import { cn } from "@/lib/cn";
 
@@ -55,10 +61,6 @@ type Props = {
   tenantRoleNames?: string[];
 };
 
-function MenuDivider() {
-  return <div className="my-1 h-px bg-[var(--border)]/80" role="separator" />;
-}
-
 function RowMenuItem({
   icon,
   iconClassName,
@@ -74,13 +76,9 @@ function RowMenuItem({
   onSelect?: () => void;
   destructive?: boolean;
 }) {
-  const className = cn(
-    "flex w-full min-h-[38px] cursor-pointer items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-[0.8125rem] font-medium transition-colors",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-0",
-    destructive
-      ? "text-[var(--sce-danger)] hover:bg-red-500/10 hover:text-[var(--sce-danger)]"
-      : "text-[var(--foreground)] hover:bg-[var(--surface-2)]/90",
-  );
+  const className = destructive
+    ? SCE_OVERFLOW_MENU_ITEM_DESTRUCTIVE_CLASS
+    : SCE_OVERFLOW_MENU_ITEM_CLASS;
 
   const content = (
     <>
@@ -210,38 +208,14 @@ export default function UserRowActionsMenu({
 
   return (
     <>
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
-        aria-label="Mehr Aktionen"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          setMenuOpen((value) => !value);
-        }}
-        className={cn(
-          "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--text-2)] transition-colors",
-          "hover:border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
-        )}
-      >
-        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-      </button>
-
-      <PopoverContent
+      <SceOverflowMenu
         open={menuOpen}
         onOpenChange={setMenuOpen}
         anchorRef={triggerRef}
-        placement="bottom-end"
-        matchAnchorWidth={false}
-        constrainHeight={false}
-        clipOverflow={false}
-        role="dialog"
-        className="w-[min(100vw-2rem,14.5rem)] p-1.5"
+        triggerLabel="Mehr Aktionen"
+        menuLabel="Benutzeraktionen"
+        triggerIcon={<MoreHorizontal className="h-4 w-4" aria-hidden="true" />}
       >
-        <div role="menu" aria-label="Benutzeraktionen">
           {showImpersonate ? (
             <div onClick={(event) => event.stopPropagation()}>
               <ImpersonateButton
@@ -275,7 +249,7 @@ export default function UserRowActionsMenu({
             </>
           ) : null}
 
-          {hasNormalActions && hasDestructiveSection ? <MenuDivider /> : null}
+          {hasNormalActions && hasDestructiveSection ? <SceOverflowMenuDivider /> : null}
 
           {canRemove ? (
             <RowMenuItem
@@ -295,7 +269,7 @@ export default function UserRowActionsMenu({
 
           {canGlobalDelete ? (
             <>
-              {canRemove ? <MenuDivider /> : null}
+              {canRemove ? <SceOverflowMenuDivider /> : null}
               <RowMenuItem
                 icon={<Trash2 className="h-4 w-4" />}
                 iconClassName="text-[var(--sce-danger)]"
@@ -306,34 +280,18 @@ export default function UserRowActionsMenu({
               />
             </>
           ) : null}
-        </div>
-      </PopoverContent>
+      </SceOverflowMenu>
 
-      {/* Tenant membership removal confirmation dialog */}
-      <Dialog
+      <SceConfirmDialog
         open={showRemoveDialog}
         onClose={() => !removing && setShowRemoveDialog(false)}
         title="Aus Verein entfernen"
         description={`„${userName}" (${userEmail}) dauerhaft aus diesem Club entfernen.`}
-        footer={
-          <div className="flex flex-col gap-2">
-            {removeError ? (
-              <p className="text-sm text-red-600">{removeError}</p>
-            ) : null}
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setShowRemoveDialog(false)}
-                disabled={removing}
-              >
-                Abbrechen
-              </Button>
-              <Button variant="danger" onClick={doRemoveMembership} loading={removing}>
-                Aus Verein entfernen
-              </Button>
-            </div>
-          </div>
-        }
+        dialogType="DESTRUCTIVE_CONFIRMATION"
+        confirmLabel="Aus Verein entfernen"
+        onConfirm={doRemoveMembership}
+        confirmLoading={removing}
+        errorMessage={removeError}
       >
         <RemovalImpactContent
           userName={userName}
@@ -341,33 +299,18 @@ export default function UserRowActionsMenu({
           linkedPersonName={linkedPersonName}
           tenantRoleNames={tenantRoleNames}
         />
-      </Dialog>
+      </SceConfirmDialog>
 
-      {/* Invitation revoke confirmation dialog */}
-      <Dialog
+      <SceConfirmDialog
         open={showRevokeDialog}
         onClose={() => !revoking && setShowRevokeDialog(false)}
         title="Einladung widerrufen"
         description={`Ausstehende Einladung für „${userName}" (${userEmail}) widerrufen.`}
-        footer={
-          <div className="flex flex-col gap-2">
-            {revokeError ? (
-              <p className="text-sm text-red-600">{revokeError}</p>
-            ) : null}
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setShowRevokeDialog(false)}
-                disabled={revoking}
-              >
-                Abbrechen
-              </Button>
-              <Button variant="danger" onClick={doRevokeInvitation} loading={revoking}>
-                Einladung widerrufen
-              </Button>
-            </div>
-          </div>
-        }
+        dialogType="DESTRUCTIVE_CONFIRMATION"
+        confirmLabel="Einladung widerrufen"
+        onConfirm={doRevokeInvitation}
+        confirmLoading={revoking}
+        errorMessage={revokeError}
       >
         <div className="space-y-4 text-sm text-[var(--text-2)]">
           <p>
@@ -379,7 +322,7 @@ export default function UserRowActionsMenu({
             in anderen Clubs bleiben unberührt.
           </p>
         </div>
-      </Dialog>
+      </SceConfirmDialog>
     </>
   );
 }

@@ -5,6 +5,7 @@
  * PEOPLE-ACCESS-IMPERSONATION-01R7 — row action menu UX + impersonation visibility.
  */
 
+import { useState, type ReactNode } from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
@@ -20,19 +21,61 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/Dialog", () => ({
-  Dialog: ({ open, children, footer, title }: {
+vi.mock("@/components/sce/actions", () => ({
+  SceConfirmDialog: ({ open, children, title, onConfirm, confirmLabel }: {
     open: boolean;
     children: React.ReactNode;
-    footer?: React.ReactNode;
     title?: string;
+    onConfirm?: () => void;
+    confirmLabel?: string;
   }) =>
     open ? (
       <div role="dialog" aria-label={title ?? "dialog"}>
         {children}
-        {footer}
+        <button type="button" onClick={onConfirm}>
+          {confirmLabel}
+        </button>
       </div>
     ) : null,
+  SceOverflowMenu: ({
+    children,
+    triggerLabel,
+    menuLabel,
+    open,
+    onOpenChange,
+  }: {
+    children: ReactNode;
+    triggerLabel: string;
+    menuLabel?: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }) => {
+    const [localOpen, setLocalOpen] = useState(false);
+    const isOpen = open ?? localOpen;
+    const setOpen = onOpenChange ?? setLocalOpen;
+    return (
+      <div
+        onClick={(e) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('[role="menuitem"]')) setOpen(false);
+        }}
+      >
+        <button
+          type="button"
+          aria-label={triggerLabel}
+          onClick={() => setOpen(!isOpen)}
+        >
+          menu
+        </button>
+        {isOpen ? (
+          <div role="menu" aria-label={menuLabel ?? "menu"}>
+            {children}
+          </div>
+        ) : null}
+      </div>
+    );
+  },
+  SceOverflowMenuDivider: () => <hr />,
 }));
 
 vi.mock("@/components/ui/Button", () => ({

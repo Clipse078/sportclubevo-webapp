@@ -1,8 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Dialog } from "@/components/ui/Dialog";
+import { SceConfirmDialog } from "@/components/sce/actions/SceConfirmDialog";
 
 export type TournamentDeletionImpactRow = { key: string; label: string; count: number };
 
@@ -28,31 +27,20 @@ export default function TurniereTournamentRecordDeleteDialog({
   onConfirm,
 }: Props) {
   return (
-    <Dialog
+    <SceConfirmDialog
       open={open}
       onClose={onClose}
       title={title}
       description="Diese Aktion ist endgültig und kann nicht rückgängig gemacht werden."
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            Abbrechen
-          </Button>
-          <Button
-            variant="danger"
-            loading={deleteBusy}
-            disabled={deleteImpactLoading}
-            onClick={onConfirm}
-            data-testid="tournament-delete-confirm"
-          >
-            Endgültig löschen
-          </Button>
-        </>
-      }
+      dialogType="DESTRUCTIVE_CONFIRMATION"
+      confirmLabel="Endgültig löschen"
+      onConfirm={onConfirm}
+      confirmLoading={deleteBusy}
+      confirmDisabled={deleteImpactLoading}
+      errorMessage={deleteError}
+      confirmTestId="tournament-delete-confirm"
     >
       <div className="space-y-3">
-        {deleteError ? <p className="text-sm font-medium text-[var(--sce-danger)]">{deleteError}</p> : null}
-
         {deleteImpactLoading ? (
           <p className="text-sm text-[var(--text-2)]">Auswirkungen werden geprüft…</p>
         ) : deleteImpact && deleteImpact.length > 0 ? (
@@ -78,6 +66,6 @@ export default function TurniereTournamentRecordDeleteDialog({
           </p>
         ) : null}
       </div>
-    </Dialog>
+    </SceConfirmDialog>
   );
 }
