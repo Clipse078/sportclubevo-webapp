@@ -23,7 +23,7 @@ export const SCE_DESIGN_SYSTEM_06_R3_PO_REVIEW = {
   PR: "884",
   R3_STARTING_HEAD_FULL: "af40c05e62ad4002e8a3662a5ee78edca3a979c4",
   /** Set after R3 commits land — PO review gate. */
-  R3_FEATURE_HEAD_FULL: "",
+  R3_FEATURE_HEAD_FULL: "d657e74772208e401f4419057f954c8ca28ed07c",
 } as const;
 
 export const SCE_DESIGN_SYSTEM_06_R3_GOVERNANCE = {
