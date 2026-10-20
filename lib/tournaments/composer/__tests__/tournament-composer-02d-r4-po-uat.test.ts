@@ -48,7 +48,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R4 PO UAT", () => {
       categoryContext: "E_FF12",
     });
     expect(planner.pitches.length).toBeGreaterThan(1);
-    expect(planner.pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(planner.pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
     expect(planner.pitchesUserCustomized).toBe(false);
   });
 
@@ -62,7 +62,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R4 PO UAT", () => {
       categoryContext: "F",
     });
     expect(planner.pitches).toHaveLength(4);
-    expect(planner.pitches.every((p) => p.playersPerSide != null)).toBe(true);
+    expect(planner.pitches.every((p) => p.playersPerSide == null)).toBe(true);
     expect(planner.pitchesUserCustomized).toBe(false);
   });
 
@@ -164,7 +164,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R4 PO UAT", () => {
       categoryContext: "E_FF12",
     });
     expect(restored.pitchesUserCustomized).toBe(false);
-    expect(restored.pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(restored.pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
   });
 
   it("Turnierformat curated path hides redundant controls until advanced open", () => {

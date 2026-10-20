@@ -81,7 +81,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R5 PO UAT", () => {
       teamId: "team-e1",
     });
     expect(planner.pitches.length).toBe(3);
-    expect(planner.pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(planner.pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
   });
 
   it("TEST B — field-only proposal materialises F/6", () => {
@@ -91,7 +91,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R5 PO UAT", () => {
       teamId: "team-f1",
     });
     expect(planner.pitches.length).toBe(4);
-    expect(planner.pitches.every((p) => p.playersPerSide != null)).toBe(true);
+    expect(planner.pitches.every((p) => p.playersPerSide == null)).toBe(true);
   });
 
   it("TEST C — full template materialises E/4", () => {

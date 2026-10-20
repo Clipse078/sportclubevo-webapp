@@ -10,12 +10,24 @@ export type ComposerProgrammeProposal = {
   kind: ComposerProgrammeProposalKind;
   categoryContext: ProgrammeTemplateCategoryContext | null;
   template: TournamentProgrammeTemplate | null;
-  /** When kind === FIELD_PROPOSAL_ONLY — players per side per proposed field (no encoded Spielplan). */
-  fieldProposalPlayersPerSide: readonly number[] | null;
+  /** When kind === FIELD_PROPOSAL_ONLY — logical pitch count only (no encoded Spielplan). */
+  fieldProposalPitchCount: number | null;
 };
 
-export function buildFieldProposalSignature(playersPerSide: readonly number[]): string {
-  return playersPerSide.join("-");
+export function buildFieldProposalSignature(pitchCount: number): string {
+  return String(pitchCount);
+}
+
+/** Sport-neutral schedule structure label for recommendation surfaces. */
+export function buildScheduleRecommendationSummary(input: {
+  fieldCount: number;
+  roundCount: number | null;
+}): string {
+  const fields = `${input.fieldCount} Spielfelder`;
+  if (input.roundCount != null && input.roundCount > 0) {
+    return `${fields} · ${input.roundCount} Runden`;
+  }
+  return fields;
 }
 
 export function buildComposerProposalFingerprint(input: {
@@ -38,24 +50,17 @@ export function expectedPitchCountForProposal(proposal: ComposerProgrammeProposa
   if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
     return proposal.template.fields.length;
   }
-  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
-    return proposal.fieldProposalPlayersPerSide.length;
+  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPitchCount != null) {
+    return proposal.fieldProposalPitchCount;
   }
   return 0;
 }
 
-export function expectedPlayersPerSideForProposal(
-  proposal: ComposerProgrammeProposal,
-): readonly number[] {
+export function expectedRoundCountForProposal(proposal: ComposerProgrammeProposal): number | null {
   if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
-    return [...proposal.template.fields]
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .map((f) => f.playingFormat.playersPerSide);
+    return proposal.template.rounds.length;
   }
-  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
-    return proposal.fieldProposalPlayersPerSide;
-  }
-  return [];
+  return null;
 }
 
 /** Default planner bootstrap before SCE proposal materialisation. */
@@ -81,7 +86,6 @@ export function composerPitchDraftNeedsProposalMaterialisation(input: {
   if (expectedCount < 1) return false;
   if (isGenericDefaultComposerPitchDraft(input.pitches)) return true;
   if (input.pitches.length !== expectedCount) return true;
-  if (input.pitches.some((pitch) => pitch.playersPerSide == null)) return true;
 
   if (input.proposal.kind === "FULL_TEMPLATE" && input.proposal.template) {
     const sortedFields = [...input.proposal.template.fields].sort(
@@ -97,10 +101,10 @@ export function composerPitchDraftNeedsProposalMaterialisation(input: {
 export function fieldProposalSignatureForProposal(
   proposal: ComposerProgrammeProposal,
 ): string | null {
-  if (proposal.kind !== "FIELD_PROPOSAL_ONLY" || !proposal.fieldProposalPlayersPerSide) {
+  if (proposal.kind !== "FIELD_PROPOSAL_ONLY" || proposal.fieldProposalPitchCount == null) {
     return null;
   }
-  return buildFieldProposalSignature(proposal.fieldProposalPlayersPerSide);
+  return buildFieldProposalSignature(proposal.fieldProposalPitchCount);
 }
 
 export function resolveComposerProgrammeProposal(input: {
@@ -112,7 +116,7 @@ export function resolveComposerProgrammeProposal(input: {
       kind: "NONE",
       categoryContext: input.categoryContext,
       template: null,
-      fieldProposalPlayersPerSide: null,
+      fieldProposalPitchCount: null,
     };
   }
 
@@ -125,7 +129,7 @@ export function resolveComposerProgrammeProposal(input: {
       kind: "FULL_TEMPLATE",
       categoryContext: input.categoryContext,
       template,
-      fieldProposalPlayersPerSide: null,
+      fieldProposalPitchCount: null,
     };
   }
 
@@ -136,7 +140,7 @@ export function resolveComposerProgrammeProposal(input: {
         kind: "FIELD_PROPOSAL_ONLY",
         categoryContext: "F",
         template: null,
-        fieldProposalPlayersPerSide: fProposal.playingFormats.map((f) => f.playersPerSide),
+        fieldProposalPitchCount: fProposal.fieldCount,
       };
     }
   }
@@ -145,23 +149,34 @@ export function resolveComposerProgrammeProposal(input: {
     kind: "NONE",
     categoryContext: input.categoryContext,
     template: null,
-    fieldProposalPlayersPerSide: null,
+    fieldProposalPitchCount: null,
   };
 }
 
-export function materializeComposerPitchesFromFieldProposal(input: {
-  playersPerSide: readonly number[];
+export function materializeComposerPitchesFromPitchCount(input: {
+  pitchCount: number;
   previous?: readonly TournamentComposerPitchDraft[];
 }): TournamentComposerPitchDraft[] {
-  return input.playersPerSide.map((playersPerSide, index) => {
+  return Array.from({ length: input.pitchCount }, (_, index) => {
     const displayOrder = index + 1;
     const prev = input.previous?.[index];
     return {
       localId: prev?.localId ?? `pitch-proposal-${displayOrder}-${Date.now()}`,
       label: prev?.userLabelCustomized && prev.label.trim() ? prev.label : `Feld ${displayOrder}`,
-      playersPerSide,
+      playersPerSide: prev?.playersPerSide ?? null,
       userLabelCustomized: prev?.userLabelCustomized ?? false,
     };
+  });
+}
+
+/** @deprecated Use materializeComposerPitchesFromPitchCount — pitch count only; no format inference. */
+export function materializeComposerPitchesFromFieldProposal(input: {
+  playersPerSide: readonly number[];
+  previous?: readonly TournamentComposerPitchDraft[];
+}): TournamentComposerPitchDraft[] {
+  return materializeComposerPitchesFromPitchCount({
+    pitchCount: input.playersPerSide.length,
+    previous: input.previous,
   });
 }
 
@@ -188,15 +203,6 @@ export function evaluateComposerTemplateApplicability(input: {
 
 export function summarizeComposerPitchAllocation(pitches: readonly TournamentComposerPitchDraft[]): {
   fieldCount: number;
-  formatLines: string[];
 } {
-  const counts = new Map<number, number>();
-  for (const pitch of pitches) {
-    if (pitch.playersPerSide == null) continue;
-    counts.set(pitch.playersPerSide, (counts.get(pitch.playersPerSide) ?? 0) + 1);
-  }
-  const formatLines = [...counts.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([side, count]) => `${count} × ${side} gegen ${side}`);
-  return { fieldCount: pitches.length, formatLines };
+  return { fieldCount: pitches.length };
 }

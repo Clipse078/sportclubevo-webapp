@@ -158,13 +158,9 @@ export function TournamentComposerTurnierformatPanel({
             <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
               {resolved.fieldCountLabel}
             </p>
-            {resolved.allocationSummaryLines.length > 0 ? (
-              <ul className="text-xs text-[var(--muted)]">
-                {resolved.allocationSummaryLines.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            ) : null}
+            <p className="text-xs text-[var(--muted)]" data-testid="tournament-composer-schedule-recommendation">
+              {resolved.scheduleRecommendationSummary}
+            </p>
           </div>
           {advancedFormatOpen ? (
             <TournamentComposerLegacyTurnierformatPanel
@@ -245,10 +241,11 @@ export function TournamentComposerSpielfelderPanel({
           data-testid="tournament-composer-pitches-template-status"
         >
           <p className="text-sm font-medium text-[var(--foreground)]">{resolved.statusHeadline}</p>
-          <p className="text-sm text-[var(--text-2)]">
-            {resolved.allocationSummaryLines.length > 0
-              ? `${resolved.proposedFieldCount} Spielfelder · ${resolved.allocationSummaryLines.join(" · ")}`
-              : `${resolved.proposedFieldCount} Spielfelder`}
+          <p
+            className="text-sm text-[var(--text-2)]"
+            data-testid="tournament-composer-pitches-schedule-recommendation"
+          >
+            {resolved.scheduleRecommendationSummary}
           </p>
           {planner.pitchesUserCustomized ? (
             <button

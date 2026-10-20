@@ -551,10 +551,7 @@ export default function TournamentPlanungWorkspace({
                 {model.programmeTemplate.recommended.fieldCount} Felder
               </p>
               <p className="text-sm text-[var(--muted)]">
-                {model.programmeTemplate.recommended.fieldCountLabel}
-              </p>
-              <p className="text-xs text-[var(--muted)]">
-                {model.programmeTemplate.recommended.playingFormatSummary}
+                {model.programmeTemplate.recommended.scheduleRecommendationSummary}
               </p>
             </div>
           ) : null}

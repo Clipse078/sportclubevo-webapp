@@ -61,10 +61,15 @@
 | **USER_OVERRIDE_PRESERVATION** | **YES** |
 | **RESET_TO_RECOMMENDATION** | **YES** (user-initiated) |
 | **PLAYING_FORMAT_OPTIONALITY** | **YES** (global 02B rules preserved) |
+| **PLAYING_FORMAT_RECOMMENDED_FROM_PARTICIPANT_COUNT** | **NO** (DS-06-R3) |
+| **PLAYING_FORMAT_RECOMMENDED_FROM_CATEGORY** | **NO** (DS-06-R3) |
+| **PLAYING_FORMAT_RECOMMENDED_FROM_TEMPLATE** | **NO** (DS-06-R3 — template may carry optional historical format metadata; SCE must not auto-assign playersPerSide on recommendation) |
+| **PLAYING_FORMAT_AUTO_ASSIGNED_TO_RECOMMENDED_PITCH** | **NO** (DS-06-R3) |
+| **PITCH_COUNT_RECOMMENDATION_INDEPENDENT_OF_PLAYING_FORMAT** | **YES** (DS-06-R3) |
 | **CANONICAL_SCHEDULE_AFTER_CUSTOMISATION** | **YES** (one schedule; TP01 when template incompatible) |
 | **SOURCE_TEMPLATE_IMMUTABLE** | **YES** (versioned catalogue never mutated by user edits) |
 
-Curated templates and field proposals seed the **draft** configuration. After materialisation, `TournamentPitch` rows and planner draft pitches are user-editable without mutating catalogue sources.
+Curated templates and field proposals seed the **draft** configuration (logical pitch count, rounds, fixture structure). **Spielform / playersPerSide** remains organiser-controlled unless explicitly set by the user. After materialisation, `TournamentPitch` rows and planner draft pitches are user-editable without mutating catalogue sources.
 
 ## Category-aware lookup
 

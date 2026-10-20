@@ -135,3 +135,26 @@ PO visual UAT follow-up on draft PR **#884** (same branch — no DS-07 start).
 **Existing HOME tournament planner entry:** Planung incomplete state exposes **Turnierplanung einrichten** → embedded setup dialog → `persistTournamentPlannerFromComposer` (no tournament recreation, no parallel schedule truth).
 
 **R1 finish marker:** `SCE_DESIGN_SYSTEM_06_R1_READY_FOR_PO_REVIEW`
+
+---
+
+## DS-06-R3 — schedule recommendation ≠ playing format
+
+**Canonical principle:** SCE RECOMMENDS THE TOURNAMENT PROGRAMME. THE ORGANISER CHOOSES THE PLAYING FORMAT.
+
+Automatic-first applies to **fixture / schedule / pitch structure** (field count, rounds, pairings, timing feasibility). It does **not** authorize SCE to infer players-per-side from participant count, category, or predefined Spielplan templates.
+
+| Flag | R3 value |
+| --- | --- |
+| **PITCH_COUNT_RECOMMENDATION** | **YES** |
+| **ROUND_SCHEDULE_RECOMMENDATION** | **YES** |
+| **PLAYING_FORMAT_RECOMMENDED_FROM_PARTICIPANT_COUNT** | **NO** |
+| **PLAYING_FORMAT_RECOMMENDED_FROM_CATEGORY** | **NO** |
+| **PLAYING_FORMAT_RECOMMENDED_FROM_TEMPLATE** | **NO** |
+| **PLAYING_FORMAT_AUTO_ASSIGNED_TO_RECOMMENDED_PITCH** | **NO** |
+| **PITCH_COUNT_RECOMMENDATION_INDEPENDENT_OF_PLAYING_FORMAT** | **YES** |
+| **EXISTING_USER_PLAYING_FORMAT_PRESERVED** | **YES** |
+
+Typed governance: `lib/design-system/sce-design-system-06-r3-meta.ts`
+
+**R3 finish marker:** `SCE_DESIGN_SYSTEM_06_R3_READY_FOR_PO_REVIEW`

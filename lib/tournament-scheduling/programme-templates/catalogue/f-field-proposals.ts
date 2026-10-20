@@ -1,6 +1,7 @@
 /**
  * F category field layout proposals (approved reference structures — Spielplan rounds not encoded in-repo).
- * Used for composer Spielfelder recommendations only; full templates require encoded round matrices.
+ * Used for composer logical pitch-count recommendations only; `playingFormats` are legacy reference
+ * metadata and must not drive automatic playersPerSide assignment (DS-06-R3).
  */
 
 import type { TemplateFieldPlayingFormat } from "../types";

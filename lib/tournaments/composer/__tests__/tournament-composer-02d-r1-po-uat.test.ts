@@ -50,7 +50,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
   it("C — 4-team reference preserves exact field formats", () => {
     const pitches = materializeComposerPitchesFromTemplate(E_FF12_ROTATION_4_TEMPLATE);
-    expect(pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
     expect(E_FF12_ROTATION_4_TEMPLATE.rounds).toHaveLength(6);
   });
 

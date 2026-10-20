@@ -105,6 +105,34 @@ describe("applyRecommendedPlannerPitchDraftPreparation (DS-06-R2)", () => {
       persistedPitchCount: 0,
     });
     expect(planner.pitches.length).toBe(4);
-    expect(planner.pitches.every((p) => p.playersPerSide != null)).toBe(true);
+    expect(planner.pitches.every((p) => p.playersPerSide == null)).toBe(true);
+  });
+
+  it("DS-06-R3 — newly prepared pitches never inherit playersPerSide from recommendation", () => {
+    const planner = applyRecommendedPlannerPitchDraftPreparation({
+      planner: createDefaultTournamentComposerPlannerDraft(),
+      participantCount: 4,
+      categoryContext: "E_FF12",
+      persistedPitchCount: 0,
+    });
+    expect(planner.pitches.every((p) => p.playersPerSide == null)).toBe(true);
+  });
+
+  it("DS-06-R3 — user-configured 11v11 on existing pitch is preserved", () => {
+    const pitches: TournamentComposerPitchDraft[] = [
+      {
+        localId: "db-1",
+        label: "Feld 1",
+        playersPerSide: 11,
+        userLabelCustomized: false,
+      },
+    ];
+    const planner = applyRecommendedPlannerPitchDraftPreparation({
+      planner: { ...createDefaultTournamentComposerPlannerDraft(), pitches, pitchesUserCustomized: true },
+      participantCount: 4,
+      categoryContext: "E_FF12",
+      persistedPitchCount: 1,
+    });
+    expect(planner.pitches[0]?.playersPerSide).toBe(11);
   });
 });

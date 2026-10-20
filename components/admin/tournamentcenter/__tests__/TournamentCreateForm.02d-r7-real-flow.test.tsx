@@ -297,7 +297,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R7 — real FCA team contract", () => {
       teamOptions: [FCA_E_SHORTNAME_ONLY],
     });
     expect(hydrated.planner!.pitches).toHaveLength(3);
-    expect(hydrated.planner!.pitches.every((p) => p.playersPerSide != null)).toBe(true);
+    expect(hydrated.planner!.pitches.every((p) => p.playersPerSide == null)).toBe(true);
     expect(hydrated.participants[0]?.teamJuniorCategoryCode).toBe("E");
   });
 });

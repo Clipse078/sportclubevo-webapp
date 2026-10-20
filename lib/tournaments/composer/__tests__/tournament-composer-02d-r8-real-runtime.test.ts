@@ -114,7 +114,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R8 — real runtime pipeline", () => {
     });
     expect(prepared.proposal.kind).toBe("FULL_TEMPLATE");
     expect(prepared.planner.pitches).toHaveLength(3);
-    expect(prepared.planner.pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(prepared.planner.pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
   });
 
   it("REAL_E4_LIVE_SPIELPLAN", () => {
@@ -152,7 +152,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R8 — real runtime pipeline", () => {
     expect(prepared.categoryContext).toBe("F");
     expect(prepared.proposal.kind).toBe("FIELD_PROPOSAL_ONLY");
     expect(prepared.planner.pitches.length).toBeGreaterThan(1);
-    expect(prepared.planner.pitches.every((p) => p.playersPerSide != null)).toBe(true);
+    expect(prepared.planner.pitches.every((p) => p.playersPerSide == null)).toBe(true);
   });
 
   it("USER_OVERRIDE_PRESERVATION", () => {

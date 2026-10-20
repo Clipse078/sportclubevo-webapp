@@ -11,7 +11,7 @@ import { defaultTournamentComposerPitchLabels } from "@/lib/tournaments/composer
 import {
   expectedPitchCountForProposal,
   isGenericDefaultComposerPitchDraft,
-  materializeComposerPitchesFromFieldProposal,
+  materializeComposerPitchesFromPitchCount,
   resolveComposerProgrammeProposal,
 } from "@/lib/tournaments/composer/tournament-composer-programme-proposal";
 import {
@@ -26,9 +26,9 @@ function materializeProposalPitchDrafts(
   if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
     return materializeComposerPitchesFromTemplate(proposal.template, previous);
   }
-  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
-    return materializeComposerPitchesFromFieldProposal({
-      playersPerSide: proposal.fieldProposalPlayersPerSide,
+  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPitchCount != null) {
+    return materializeComposerPitchesFromPitchCount({
+      pitchCount: proposal.fieldProposalPitchCount,
       previous,
     });
   }
