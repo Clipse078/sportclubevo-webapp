@@ -13,3 +13,6 @@ export * from "./sce-design-system-04-meta";
 export * from "./sce-form-control-foundation";
 export * from "./sce-binary-checkbox-audit";
 export * from "./sce-design-system-05-meta";
+export * from "./sce-action-dialog-foundation";
+export * from "./sce-action-dialog-micro-ux";
+export * from "./sce-design-system-06-meta";
