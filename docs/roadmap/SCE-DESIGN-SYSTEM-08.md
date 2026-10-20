@@ -12,7 +12,7 @@
 | **Accepted base implementation HEAD** | `280e287ff5e80cd1e987dbb5af6a9c42567b38f9` |
 | **Accepted R1 HEAD** | `d164cafd8b2fc9cb8184d7d499d8201ef2b4c783` |
 | **Feature HEAD before closure docs** | `d164cafd8b2fc9cb8184d7d499d8201ef2b4c783` |
-| **Closure commit** | *(recorded in `SCE_DESIGN_SYSTEM_08_PO_CLOSURE.CLOSURE_COMMIT` after closure commit)* |
+| **Closure commit** | `bf3cae19f236fe940a0344c8c3f8738c31e33082` |
 | **STAGE merge commit** | *(recorded after PR #886 merge)* |
 | **Predecessor DS-07 PR** | **#885** |
 | **PR** | **#886** — **MERGED** |
