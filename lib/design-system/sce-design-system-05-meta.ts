@@ -69,7 +69,7 @@ export const SCE_DESIGN_SYSTEM_05_R1_MICRO_UX = {
   PACKAGE_KEY: "SCE-DESIGN-SYSTEM-05-R1-MICRO-UX",
   DS05_R1_MICRO_UX_STATUS: "READY_FOR_PO_REVIEW",
   /** Updated by guardrails after each R1 commit — PO review gate. */
-  FEATURE_HEAD_FULL: "6b50bb21fe5618be499cd53862bee6a411d97d2a",
+  FEATURE_HEAD_FULL: "4b6a3bcb63d0ba1adcf3394aca82adf264c423a8",
 } as const;
 
 /**
