@@ -380,6 +380,8 @@ Full package doc: [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md).
 
 **Representative hardening:** global nav + mobile bottom nav · workspace header · Personen & Zugänge toolbar · Roles dense responsive strategy · Dialog mobile shell · feedback empty-state reflow. DS-10 completes route migration per [`SCE-DESIGN-SYSTEM-09-RESPONSIVE-A11Y-INVENTORY.md`](./SCE-DESIGN-SYSTEM-09-RESPONSIVE-A11Y-INVENTORY.md) and [`SCE-DESIGN-SYSTEM-09-DS10-HANDOFF.md`](./SCE-DESIGN-SYSTEM-09-DS10-HANDOFF.md).
 
+**Closure marker:** `SCE_DESIGN_SYSTEM_09_CLOSED_ACCEPTED_MERGED`
+
 ---
 
 ## Design principle
