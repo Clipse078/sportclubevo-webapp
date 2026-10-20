@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { PageActions, PageHeader } from "@/components/ui/page";
 import { cn } from "@/lib/cn";
+import { SCE_WORKSPACE_HEADER_ACTIONS_CLASS } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 
 export type SceWorkspaceHeaderProps = {
   eyebrow?: ReactNode;
@@ -45,7 +46,7 @@ export function SceWorkspaceHeader({
           className="mb-0 flex-1"
         />
         {hasActions ? (
-          <PageActions className="shrink-0 lg:pt-1">
+          <PageActions className={cn(SCE_WORKSPACE_HEADER_ACTIONS_CLASS, "lg:pt-1")}>
             {secondaryActions}
             {primaryAction}
           </PageActions>

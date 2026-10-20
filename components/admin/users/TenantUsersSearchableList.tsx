@@ -29,6 +29,7 @@ import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAl
 import { userHasPrivilegedRole } from "@/lib/admin/people-access/privileged-utils";
 import { SCE_PEOPLE_ACCESS_DENSE_GRID } from "@/lib/design-system/sce-dense-ui-foundation";
 import { SCE_DENSE_META_TEXT_CLASS } from "@/lib/design-system/sce-dense-ui-micro-ux";
+import { SCE_DENSE_TOOLBAR_RESPONSIVE_GRID_CLASS } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/queries";
 import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
@@ -239,7 +240,12 @@ export default function TenantUsersSearchableList({
             isFiltered ? <SceDenseResultCount shown={totalShown} total={grandTotal} label="Einträge" /> : undefined
           }
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(12rem,1fr)_minmax(7.5rem,auto)_minmax(7.5rem,auto)_minmax(8rem,auto)_auto] lg:items-center">
+          <div
+            className={cn(
+              SCE_DENSE_TOOLBAR_RESPONSIVE_GRID_CLASS,
+              "lg:grid-cols-[minmax(12rem,1fr)_minmax(7.5rem,auto)_minmax(7.5rem,auto)_minmax(8rem,auto)_auto]",
+            )}
+          >
             <SceSearchField
               value={query}
               onChange={setQuery}

@@ -118,9 +118,10 @@ export const SCE_DIALOG_FOCUS_CONTRACT = {
 /** Responsive dialog behaviour — full-screen mobile for Composer; Dialog uses shell tokens + DS-09 final pass. */
 export const SCE_RESPONSIVE_DIALOG_CONTRACT = {
   DESKTOP: "centered modal / overlay panel",
-  MOBILE: "full-screen or adapted shell — not shrunk desktop-only card",
+  MOBILE: "full-viewport-height shell — not shrunk desktop-only card",
   COMPOSER_MOBILE: "full-screen preserved",
   FINAL_HARDENING_OWNER: "SCE-DESIGN-SYSTEM-09",
+  STANDARD_DIALOG_MOBILE_ADAPTIVE: "YES",
 } as const;
 
 /** Nested modal policy — avoid modal → modal; prefer popover / secondary panel / state transition. */

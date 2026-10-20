@@ -3,6 +3,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Button, type ButtonSize } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { SCE_ICON_BUTTON_TOUCH_TARGET_CLASS } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 
 export type SceIconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
   /** Required accessible name — icon-only actions must not rely on recognition alone. */
@@ -23,7 +24,7 @@ export const SceIconButton = forwardRef<HTMLButtonElement, SceIconButtonProps>(
         type="button"
         variant={variant}
         size={size === "default" ? "icon" : size}
-        className={cn(className)}
+        className={cn(SCE_ICON_BUTTON_TOUCH_TARGET_CLASS, className)}
         data-sce-icon-action
         {...props}
       >
