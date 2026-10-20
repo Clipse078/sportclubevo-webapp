@@ -37,6 +37,23 @@ Product Owner decision: **`/dashboard/communication`** and related Communication
 | `CANONICAL_NAVIGATION_PRESERVED` | **YES** |
 | `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
 
+Architecture closure markers (DS-01-R1):
+
+```text
+COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES
+PRODUCT_WIDE_ROLLOUT_TARGET = YES
+DARK_NAVY_SCE_LANGUAGE = CANONICAL_DIRECTION
+RESTRAINED_ACCENT_USAGE = REQUIRED
+LAYERED_SURFACE_HIERARCHY = REQUIRED
+CALM_INFORMATION_HIERARCHY = REQUIRED
+DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES
+TOURNAMENT_OPERATIONAL_PATTERNS_PRESERVED = YES
+ACTIVITY_CARD_FAMILY_PRESERVED = YES
+ACTIVITY_COMPOSER_PRESERVED = YES
+CANONICAL_NAVIGATION_PRESERVED = YES
+PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
+```
+
 **Canonical visual language**
 
 - **Dark / navy SCE product language** — preserve atmospheric `--sce-app-background` and layered dark surfaces (`--sce-surface-*`). Avoid drift toward generic white SaaS unless accessibility or domain requirements justify an exception.

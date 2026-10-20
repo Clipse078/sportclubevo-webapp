@@ -31,6 +31,23 @@ The Product Owner selected the **Communication** module as a **primary positive 
 | `CANONICAL_NAVIGATION_PRESERVED` | **YES** |
 | `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
 
+Architecture closure markers (DS-01-R1):
+
+```text
+COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES
+PRODUCT_WIDE_ROLLOUT_TARGET = YES
+DARK_NAVY_SCE_LANGUAGE = CANONICAL_DIRECTION
+RESTRAINED_ACCENT_USAGE = REQUIRED
+LAYERED_SURFACE_HIERARCHY = REQUIRED
+CALM_INFORMATION_HIERARCHY = REQUIRED
+DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES
+TOURNAMENT_OPERATIONAL_PATTERNS_PRESERVED = YES
+ACTIVITY_CARD_FAMILY_PRESERVED = YES
+ACTIVITY_COMPOSER_PRESERVED = YES
+CANONICAL_NAVIGATION_PRESERVED = YES
+PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
+```
+
 **Primary reference routes:** `/dashboard/communication` · `/dashboard/communication/email-sender`
 
 **Objective:** Extract Communication’s successful **visual principles** (dark layered workspace, calm hierarchy, restrained accent, readiness/status patterns) into canonical DS rules and apply **systematically** across SportClubEvo — **without** copying the hub grid layout onto unrelated domains.
