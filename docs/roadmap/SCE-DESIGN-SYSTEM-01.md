@@ -4,13 +4,14 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-01` |
 | **Predecessor** | SCE-UI-ROLLOUT-01+ (foundations), SCE-TOURNAMENT-PLANNER-02 (**CLOSED**, STAGE `9430a8e7…`) |
-| **Status** | **CLOSED / ACCEPTED** (PO architecture + visual direction **PASS**; PR **#879** → **STAGE**) |
-| **`DS01_STATUS`** | **CLOSED / ACCEPTED** (pending merge on PR **#879**) |
-| **Branch** | `cursor/sce-design-system-01-product-wide-audit-architecture` |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#879** → **STAGE**; merge `108fdf6e…`) |
+| **`DS01_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
+| **Branch** | `cursor/sce-design-system-01-product-wide-audit-architecture` (merged) |
 | **Baseline STAGE** | `9430a8e7b3bfefc40872e756d7dfe6e6b9cb6f2c` |
 | **Accepted audit HEAD** | `6f3554f415bd4b3aa6012dad6e79a0d31eb8f875` |
-| **Accepted feature HEAD (R1 + closure)** | `08929f33aa72ea44339fb53586f5de3725461811` (pre-closure); closure commit updates this row |
-| **PR** | **#879** → **STAGE** |
+| **Closure commit** | `e2ad61756538d55cd8dd4c17c8448c576bf64c9f` |
+| **STAGE merge commit** | `108fdf6e9840dcc6d53ea3f68fc11acb151b5a41` |
+| **PR** | **#879** — **MERGED** |
 
 ---
 
@@ -44,7 +45,7 @@ LAYERED_SURFACE_HIERARCHY = REQUIRED
 CALM_INFORMATION_HIERARCHY = REQUIRED
 DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES
 PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
-DS01_STATUS = CLOSED / ACCEPTED
+DS01_STATUS = CLOSED / ACCEPTED / MERGED
 ```
 
 **Programme carry-forward:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-02`** (Foundations & Tokens — **not started** in DS-01 closure).
@@ -451,7 +452,7 @@ Sequence may merge/split based on PO review. **DS-01 (+ R1) is PO-accepted** —
 - [x] PR **#879** against STAGE — PO closure (merge when gates green)
 - [x] No database / password / PO UAT by Cursor
 - [x] **DS-01-R1:** PO Communication visual direction locked; product-wide rollout classifications; guardrails updated
-- [x] **PO final:** architecture review **PASS**; visual direction **PASS**; `DS01_STATUS = CLOSED / ACCEPTED`
+- [x] **PO final:** architecture review **PASS**; visual direction **PASS**; `DS01_STATUS = CLOSED / ACCEPTED / MERGED` (PR **#879**)
 
 ---
 

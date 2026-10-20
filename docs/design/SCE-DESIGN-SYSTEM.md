@@ -1,6 +1,6 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED** (PR **#879** → STAGE)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
 > **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-02** (Foundations & Tokens — not started)
 
@@ -8,7 +8,7 @@
 
 ## SCE-DESIGN-SYSTEM-01 — current state vs target v1.0
 
-**PO closure:** `PO_ARCHITECTURE_REVIEW = PASS` · `PO_VISUAL_DIRECTION_REVIEW = PASS` · `DS01_STATUS = CLOSED / ACCEPTED` (architecture baseline for DS-02+). See [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md).
+**PO closure:** `PO_ARCHITECTURE_REVIEW = PASS` · `PO_VISUAL_DIRECTION_REVIEW = PASS` · `DS01_STATUS = CLOSED / ACCEPTED / MERGED` (architecture baseline for DS-02+). See [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md).
 
 | | **Current state (STAGE baseline)** | **Target v1.0 (DS-02+ implementation)** |
 | --- | --- | --- |
