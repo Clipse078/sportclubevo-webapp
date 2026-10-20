@@ -13,7 +13,7 @@
 | **Accepted R1 HEAD** | `d164cafd8b2fc9cb8184d7d499d8201ef2b4c783` |
 | **Feature HEAD before closure docs** | `d164cafd8b2fc9cb8184d7d499d8201ef2b4c783` |
 | **Closure commit** | `bf3cae19f236fe940a0344c8c3f8738c31e33082` |
-| **STAGE merge commit** | *(recorded after PR #886 merge)* |
+| **STAGE merge commit** | `337e09c9a9dd5a395e72b7b01c5286f8ea1de43d` |
 | **Predecessor DS-07 PR** | **#885** |
 | **PR** | **#886** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-09`** — Responsive & Accessibility Hardening |
