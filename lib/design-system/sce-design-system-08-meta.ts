@@ -44,7 +44,7 @@ export const SCE_DESIGN_SYSTEM_08_PO_REVIEW = {
   BASELINE_STAGE_HEAD: "867d6c4a443d33ee219a65d71c755fd78e352bbc",
   BRANCH: "cursor/sce-design-system-08-tables-lists-dense-ui",
   PREDECESSOR_DS07_PR: "885",
-  PR: "TBD",
+  PR: "886",
   NEXT_PACKAGE: "SCE-DESIGN-SYSTEM-09 — Responsive & Accessibility Hardening",
 } as const;
 
