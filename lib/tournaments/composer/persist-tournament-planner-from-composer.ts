@@ -28,6 +28,8 @@ export async function persistTournamentPlannerFromComposer(input: {
   tournamentId: string;
   payload: TournamentComposerDraftPayload;
   planner: TournamentComposerPlannerDraft;
+  /** When set, skips pitch creation and uses pre-synced tournament pitch ids (existing-tournament setup). */
+  existingPitchIdByLocalId?: ReadonlyMap<string, string>;
 }): Promise<void> {
   const { tenantId, tournamentId, payload, planner } = input;
   if (payload.homeAway !== "HOME") {
@@ -205,15 +207,17 @@ export async function persistTournamentPlannerFromComposer(input: {
     });
   }
 
-  const pitchIdByLocal = new Map<string, string>();
-  for (let i = 0; i < planner.pitches.length; i += 1) {
-    const pitch = planner.pitches[i]!;
-    const created = await createTournamentPitch(tenantId, tournamentId, {
-      label: pitch.label,
-      displayOrder: i,
-      playersPerSide: pitch.playersPerSide ?? null,
-    });
-    pitchIdByLocal.set(pitch.localId, created.id);
+  const pitchIdByLocal = new Map<string, string>(input.existingPitchIdByLocalId ?? []);
+  if (!input.existingPitchIdByLocalId) {
+    for (let i = 0; i < planner.pitches.length; i += 1) {
+      const pitch = planner.pitches[i]!;
+      const created = await createTournamentPitch(tenantId, tournamentId, {
+        label: pitch.label,
+        displayOrder: i,
+        playersPerSide: pitch.playersPerSide ?? null,
+      });
+      pitchIdByLocal.set(pitch.localId, created.id);
+    }
   }
 
   for (const br of planner.breaks) {
