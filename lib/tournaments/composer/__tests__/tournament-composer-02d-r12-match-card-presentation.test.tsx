@@ -84,7 +84,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R12 — Spielplan match card presentation",
   it("A — reuses SceMatchStackedFixtureIdentity via spielplan layout", () => {
     const compact = read("components/sce/tournament/SceTournamentFixtureCompactMatchup.tsx");
     expect(compact).toMatch(/SceMatchStackedFixtureIdentity/);
-    expect(compact).toMatch(/layout === "spielplan"/);
+    expect(compact).toMatch(/layout === "inline" \|\| layout === "stack" \? "spielplan"/);
+    expect(compact).toMatch(/SceTournamentFixtureVs/);
   });
 
   it("B/C/D/E — participant order, crests, field, fallback", () => {
