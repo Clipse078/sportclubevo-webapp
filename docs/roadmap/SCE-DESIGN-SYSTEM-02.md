@@ -4,9 +4,55 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-02` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-01` (**CLOSED / ACCEPTED / MERGED**, PR **#879**) |
-| **Status** | **READY FOR PO REVIEW** (draft PR — not merged) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#880** → **STAGE**; PO final acceptance) |
+| **`DS02_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
 | **Branch** | `cursor/sce-design-system-02-foundations-tokens` |
-| **Baseline STAGE** | `fb202812e7e710dea7be4bd597bd7e623fa8fb18` |
+| **Accepted foundation head (`FEATURE_HEAD`)** | `00b5eeca31dd9ac9621fa0ee6491707a97f9ac5e` |
+| **Baseline STAGE (pre-merge)** | `fb202812e7e710dea7be4bd597bd7e623fa8fb18` |
+| **Successor** | **`SCE-DESIGN-SYSTEM-03`** — Workspace / Surface / Navigation System ([doc](./SCE-DESIGN-SYSTEM-03.md)) — **NOT STARTED** |
+
+**PO closure:** `PO_FOUNDATION_REVIEW = PASS` · `PO_ARCHITECTURE_REVIEW = PASS` · `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
+
+**Programme:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-03`**
+
+---
+
+## Product-wide workspace system (PO lock — DS-02 closure)
+
+**Target:** **ONE CANONICAL SCE WORKSPACE SYSTEM** across the entire SportClubEvo webapp (current and future workspaces). **Not** identical layouts — shared consumption of workspace hierarchy, surface language, header language, breadcrumb language, contextual navigation language, spacing, typography, action hierarchy, responsive principles, and accessibility principles. Domain-specific compositions remain allowed and required.
+
+| Flag | Value |
+| --- | --- |
+| `WORKSPACE_SYSTEM_PRODUCT_WIDE` | **YES** |
+| `BREADCRUMB_SYSTEM_PRODUCT_WIDE` | **YES** |
+| `CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC` | **YES** |
+| `LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED` | **NO** |
+| `PRODUCT_WIDE_WORKSPACE_MIGRATION_REQUIRED` | **YES** |
+| `UNEXPLAINED_LEGACY_WORKSPACES_ALLOWED_AT_DS10_CLOSURE` | **NO** |
+
+**Canonical workspace hierarchy** (layers complement — do not duplicate):
+
+```text
+GLOBAL NAVIGATION
+  → BREADCRUMBS
+  → WORKSPACE / PAGE HEADER
+  → CONTEXT TABS (when semantically appropriate)
+  → WORKSPACE CONTENT
+```
+
+| Layer | Responsibility |
+| --- | --- |
+| **Global navigation** | Which major SCE domain am I in? |
+| **Breadcrumbs** | Where am I in the product hierarchy? |
+| **Workspace / page header** | What context/object/workspace am I viewing? |
+| **Context tabs** | What can I view/do within this context? |
+| **Workspace content** | Operational content |
+
+**Breadcrumbs:** `BREADCRUMBS_CANONICAL_NAVIGATION_LANGUAGE = YES` · rollout **`BREADCRUMB_ROLLOUT_OWNER = SCE-DESIGN-SYSTEM-03`** (component, semantics, truncation, mobile back, a11y — **not** DS-02).
+
+**Context tabs:** `CONTEXT_TABS_CANONICAL = SceContextTabs` · **`CONTEXT_TAB_ROLLOUT_OWNER = SCE-DESIGN-SYSTEM-03`**. **All workspaces ≠ all workspaces require tabs** — do not add artificial tabs to flat single-purpose workspaces.
+
+**DS-10 completion gate:** DS-10 cannot close while unexplained legacy workspace systems remain. Every applicable workspace must be **(A)** migrated, **(B)** already compliant, or **(C)** an explicit documented domain-specific composition that still consumes canonical foundations/navigation semantics — **not (D)** forgotten legacy UI.
 
 ---
 
@@ -332,7 +378,7 @@ Updated to consume semantic foundation (aliases — no intentional visual drift)
 - [x] Representative primitive adoption
 - [x] Guardrail tests (`sce-design-system-02-foundations.test.ts`)
 - [x] Master doc updated
-- [ ] PO visual UAT (PO-owned)
+- [x] PO visual UAT (PO-owned — **PASS**; Cursor skipped per closure policy)
 
 ---
 
@@ -347,6 +393,26 @@ Updated to consume semantic foundation (aliases — no intentional visual drift)
 | `CANONICAL_TOGGLES_USED` | **YES** (SwitchToggle unchanged as canonical) |
 | `MULTI_SELECTION_PATTERN` | **not_applicable** |
 | `WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE` | **PASS** (SCE activity card family — `SceMatchCard`, `SceTrainingCard`, … — semantics preserved) |
+| `PO_FOUNDATION_REVIEW` | **PASS** |
+| `PO_ARCHITECTURE_REVIEW` | **PASS** |
+| `DATABASE_MIGRATION_REQUIRED` | **NO** |
+| `SCHEMA_DRIFT` | **NO** |
+| `PERSISTENT_TEST_DATA` | **0** |
+| `PROD` | **UNTOUCHED** |
+
+```text
+DS02_STATUS = CLOSED / ACCEPTED / MERGED
+SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS
+NEXT_PACKAGE = SCE-DESIGN-SYSTEM-03 — Workspace / Surface / Navigation System
+WORKSPACE_SYSTEM_PRODUCT_WIDE = YES
+BREADCRUMB_SYSTEM_PRODUCT_WIDE = YES
+CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC = YES
+LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED = NO
+PRODUCT_WIDE_WORKSPACE_MIGRATION_REQUIRED = YES
+UNEXPLAINED_LEGACY_WORKSPACES_ALLOWED_AT_DS10_CLOSURE = NO
+MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED
+SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED
+```
 
 ---
 
@@ -354,4 +420,5 @@ Updated to consume semantic foundation (aliases — no intentional visual drift)
 
 - [`SCE-DESIGN-SYSTEM.md`](../design/SCE-DESIGN-SYSTEM.md)
 - [`SCE-DESIGN-SYSTEM-01.md`](./SCE-DESIGN-SYSTEM-01.md)
+- [`SCE-DESIGN-SYSTEM-03.md`](./SCE-DESIGN-SYSTEM-03.md)
 - [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](../design/SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md)

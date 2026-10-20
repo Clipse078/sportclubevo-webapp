@@ -1,14 +1,16 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **Foundations & Tokens** (PO review)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **NOT STARTED**  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-03** (Workspace / Surface / Navigation — after DS-02 PO acceptance)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-03** — Workspace / Surface / Navigation System
 
 ---
 
 ## SCE-DESIGN-SYSTEM-01 — current state vs target v1.0
 
-**PO closure:** `PO_ARCHITECTURE_REVIEW = PASS` · `PO_VISUAL_DIRECTION_REVIEW = PASS` · `DS01_STATUS = CLOSED / ACCEPTED / MERGED` (architecture baseline for DS-02+). See [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md).
+**PO closure (DS-01):** `PO_ARCHITECTURE_REVIEW = PASS` · `PO_VISUAL_DIRECTION_REVIEW = PASS` · `DS01_STATUS = CLOSED / ACCEPTED / MERGED` (architecture baseline). See [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md).
+
+**PO closure (DS-02):** `PO_FOUNDATION_REVIEW = PASS` · `PO_ARCHITECTURE_REVIEW = PASS` · `DS02_STATUS = CLOSED / ACCEPTED / MERGED` (foundations & tokens — **no** product-wide migration). See [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md).
 
 | | **Current state (STAGE baseline)** | **Target v1.0 (DS-02+ implementation)** |
 | --- | --- | --- |
@@ -107,6 +109,31 @@ Full pattern mapping: [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIG
 Full package doc: [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md).
 
 Automated guardrails: `lib/design-system/__tests__/sce-design-system-02-foundations.test.ts`.
+
+**DS-02 PO lock — product-wide workspace system** (implementation rollout → **DS-03**; completion gate → **DS-10**):
+
+| Flag | Value |
+| --- | --- |
+| `WORKSPACE_SYSTEM_PRODUCT_WIDE` | **YES** |
+| `BREADCRUMB_SYSTEM_PRODUCT_WIDE` | **YES** |
+| `CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC` | **YES** |
+| `LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED` | **NO** |
+| `BREADCRUMBS_CANONICAL_NAVIGATION_LANGUAGE` | **YES** |
+| `BREADCRUMB_ROLLOUT_OWNER` | **SCE-DESIGN-SYSTEM-03** |
+| `CONTEXT_TABS_CANONICAL` | **SceContextTabs** |
+| `CONTEXT_TAB_ROLLOUT_OWNER` | **SCE-DESIGN-SYSTEM-03** |
+| `PRODUCT_WIDE_WORKSPACE_MIGRATION_REQUIRED` | **YES** |
+| `UNEXPLAINED_LEGACY_WORKSPACES_ALLOWED_AT_DS10_CLOSURE` | **NO** |
+
+**Canonical navigation stack** (complement — do not duplicate):
+
+```text
+GLOBAL NAVIGATION → BREADCRUMBS → WORKSPACE / PAGE HEADER → CONTEXT TABS (when semantic) → WORKSPACE CONTENT
+```
+
+Communication (`/dashboard/communication`) remains the **primary positive visual reference**, **not** a universal page template. Preserve tournament planner density, Activity Composer, Programme Engine, activity cards, and domain-specific layouts per DS-01-R1.
+
+Full DS-03 scope: [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
 
 ---
 
