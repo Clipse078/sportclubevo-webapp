@@ -29,7 +29,7 @@ function shellPaddingForDensity(density: SceTournamentFixturePresentationDensity
     case "compact":
       return "flex flex-col gap-2.5 px-3 py-3 sm:px-3.5";
     case "grid":
-      return "px-2 py-2 sm:px-2.5 sm:py-2.5";
+      return "px-2.5 py-2.5 sm:px-3 sm:py-3";
     default:
       return "p-3";
   }

@@ -8,8 +8,10 @@ import {
 } from "@/components/sporting-activity/SceMatchStackedFixtureIdentity";
 import { sceMatchRichDensityScale } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import {
+  clubNameClassForFixturePresentation,
   crestVisualSizeOverrideForFixturePresentation,
   matchIdentityDensityForFixturePresentation,
+  stackedLayoutScaleForFixturePresentation,
 } from "@/lib/sce/tournament/sce-tournament-fixture-presentation-density";
 import { cn } from "@/lib/cn";
 import SceTournamentFixtureVs from "./SceTournamentFixtureVs";
@@ -49,6 +51,8 @@ export default function SceTournamentFixtureCompactMatchup({
   const matchDensity = matchIdentityDensityForFixturePresentation(presentationDensity);
   const scale = sceMatchRichDensityScale(matchDensity);
   const crestOverride = crestVisualSizeOverrideForFixturePresentation(presentationDensity);
+  const gridLayoutScale = stackedLayoutScaleForFixturePresentation(presentationDensity);
+  const gridClubNameClass = clubNameClassForFixturePresentation(presentationDensity);
 
   return (
     <div
@@ -69,11 +73,13 @@ export default function SceTournamentFixtureCompactMatchup({
         }}
         density={matchDensity}
         crestVisualSizeOverride={crestOverride}
+        clubNameClassOverride={gridClubNameClass ?? undefined}
+        layoutScaleOverride={gridLayoutScale ?? undefined}
         ariaLabel={buildStackedFixtureAccessibleLabel(homeLabel, awayLabel)}
         className={cn(
-          resolvedLayout === "board" ? "py-0" : "py-0.5",
-          scale.fixtureGridGapXClass,
-          scale.fixtureGapYClass,
+          gridLayoutScale?.fixtureOuterPyClass ?? (resolvedLayout === "board" ? "py-0" : "py-0.5"),
+          !gridLayoutScale && scale.fixtureGridGapXClass,
+          !gridLayoutScale && scale.fixtureGapYClass,
         )}
         center={<SceTournamentFixtureVs density={presentationDensity} />}
       />

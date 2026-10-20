@@ -118,3 +118,32 @@ Do **not** adopt horizontal crest–name rows from the reference image.
 - **`PARALLEL_MATCH_CARD_PATTERN_INTRODUCED = NO`**
 - **`CREST_ABOVE_NAME_PRESERVED = YES`**
 - Cursor **did not** run manual browser UAT or screenshots for R1; PO performs visual UAT
+
+## 02E-R2 — Final visual density & grid polish
+
+| Field | Value |
+| --- | --- |
+| **Trigger** | PO visual UAT of R1 — Composer/Master accepted; Feld- und Zeitplan grid density needs final polish |
+| **Status** | **FINAL VISUAL DENSITY & GRID POLISH — READY FOR PO UAT** |
+
+### Scope (restrained)
+
+| Surface | R2 action |
+| --- | --- |
+| **Composer (`standard`)** | **No visual regression** — shared-token fixes only if neutral |
+| **Master-Spielplan (`compact`)** | **No visual regression** |
+| **Feld- und Zeitplan (`grid`)** | Crest-forward grid cells: `board` crest tier (~36px), grid name typography, VS capsule readability, minimal vertical breathing room, column `minmax` tuned for 2–3 pitches |
+
+### Grid density tokens
+
+- **`crestVisualSizeOverrideForFixturePresentation('grid')` → `board`** (between legacy `compact` 32px and Master `management` 40px)
+- **`stackedLayoutScaleForFixturePresentation('grid')`** — spacing rhythm for matrix cells
+- **`clubNameClassForFixturePresentation('grid')`** — clamped semibold names under crests
+- **`SceTournamentFixtureVs`** — grid capsule padding/contrast refined; still one primitive
+
+### Compliance (R2)
+
+- **`PARALLEL_MATCH_CARD_PATTERN_INTRODUCED = NO`**
+- **`COMPOSER_VISUAL_REGRESSION = NONE`**
+- **`MASTER_VISUAL_REGRESSION = NONE`**
+- Cursor **did not** run manual visual UAT or screenshots for R2; PO performs visual UAT

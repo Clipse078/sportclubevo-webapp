@@ -66,7 +66,14 @@ describe("SceTournamentFixtureCompactMatchup", () => {
   });
 
   it("board layout uses canonical stacked match identity for Feld- und Zeitplan cells", () => {
-    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="board" />);
+    render(
+      <SceTournamentFixtureCompactMatchup
+        sideA={sideA}
+        sideB={sideB}
+        layout="board"
+        presentationDensity="grid"
+      />,
+    );
     const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
     expect(matchup).toHaveAttribute("data-layout", "board");
     expect(matchup).toHaveAttribute("data-crest-variant", "canonicalStacked");

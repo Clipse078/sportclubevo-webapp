@@ -12,7 +12,7 @@ type Props = {
 const CAPSULE_PADDING: Record<SceTournamentFixturePresentationDensity, string> = {
   standard: "min-w-[2.375rem] px-2.5 py-[0.3125rem]",
   compact: "min-w-[2rem] px-2 py-0.5",
-  grid: "min-w-[1.625rem] px-1.5 py-px",
+  grid: "min-w-[1.75rem] px-1.5 py-0.5",
 };
 
 /**
@@ -27,7 +27,9 @@ export default function SceTournamentFixtureVs({ density }: Props) {
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-full border",
         "border-[var(--sce-surface-border-subtle)]",
-        "bg-[var(--sce-surface-elevated)]/75",
+        density === "grid"
+          ? "bg-[var(--sce-surface-elevated)]/85"
+          : "bg-[var(--sce-surface-elevated)]/75",
         "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]",
         "ring-1 ring-inset ring-[var(--sce-primary)]/[0.07]",
         CAPSULE_PADDING[density],
