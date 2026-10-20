@@ -12,7 +12,7 @@
 | **Accepted base implementation HEAD** | `65799accf7350a6e97859d08c78be8ea42b552e2` |
 | **Accepted R1 HEAD** | `a19bff63838e1ad8a7384f29b2eb1665bb0d890d` |
 | **Feature HEAD before closure docs** | `a19bff63838e1ad8a7384f29b2eb1665bb0d890d` |
-| **Closure commit** | `PENDING_CLOSURE_COMMIT` |
+| **Closure commit** | `cbbcee90a504279b0fa196bcc1cc760d7704cb07` |
 | **STAGE merge commit** | `PENDING_STAGE_MERGE` |
 | **PR** | **#885** — **MERGED** (after merge) |
 | **Successor** | **`SCE-DESIGN-SYSTEM-08`** — Tables, Lists & Dense UI |
