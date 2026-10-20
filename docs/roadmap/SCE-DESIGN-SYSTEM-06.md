@@ -13,7 +13,7 @@
 | **Accepted R2 HEAD** | `a8dbd4b64f6e72e6efb71ac12de53232d9682eea` |
 | **Accepted R3 HEAD** | `d657e74772208e401f4419057f954c8ca28ed07c` |
 | **Feature HEAD before closure docs** | `19275e80b8409494b6e2111359ac814f8972c877` |
-| **Closure commit** | see `SCE_DESIGN_SYSTEM_06_PO_CLOSURE.CLOSURE_COMMIT` in `sce-design-system-06-meta.ts` |
+| **Closure commit** | `d208772701e6a0bad4582aa50391c9346db54059` |
 | **STAGE merge commit** | see `SCE_DESIGN_SYSTEM_06_PO_CLOSURE.STAGE_MERGE_COMMIT` on **STAGE** after merge |
 | **PR** | **#884** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-07`** — Status, Feedback, Loading, Empty & Error |
