@@ -108,7 +108,8 @@ describe("SCE-DESIGN-SYSTEM-09 responsive & accessibility guardrails", () => {
     expect(SCE_APP_MAIN_COLUMN).toContain("overflow-x-clip");
 
     const dialog = readSrc("components/ui/Dialog.tsx");
-    expect(dialog).toContain(SCE_DIALOG_MOBILE_SHELL_CLASS.split(" ")[0]);
+    expect(dialog).toContain("SCE_DIALOG_MOBILE_SHELL_CLASS");
+    expect(SCE_DIALOG_MOBILE_SHELL_CLASS).toContain("max-md:");
     expect(dialog).toContain("data-sce-dialog-mobile-adaptive");
     expect(SCE_RESPONSIVE_DIALOG_CONTRACT.STANDARD_DIALOG_MOBILE_ADAPTIVE).toBe("YES");
 
