@@ -10,6 +10,7 @@ import {
 } from "./resolve-composer-programme-category-context";
 import { prepareTournamentComposerProposal } from "./prepare-tournament-composer-proposal";
 import { resolveComposerSpielplanCreationEnabled } from "./resolve-composer-spielplan-creation-enabled";
+import { mergePlannerScheduleRoundBreaks } from "./tournament-composer-schedule-round-breaks";
 import type { TournamentTeamOption } from "./load-tournament-composer-create-surface-props.server";
 
 export function hydrateTournamentComposerFormFromDraft(
@@ -63,12 +64,12 @@ export function hydrateTournamentComposerFormFromDraft(
         ? (() => {
             if (!payload.planner) return null;
             const participants = Array.isArray(payload.participants) ? payload.participants : [];
-            const normalized = {
+            const normalized = mergePlannerScheduleRoundBreaks({
               ...payload.planner,
               breaks: payload.planner.breaks.map((br) =>
                 normalizeComposerBreakDraft(br as LegacyComposerBreakDraft),
               ),
-            };
+            });
             if (!resolveComposerSpielplanCreationEnabled({ ...payload, planner: normalized })) {
               return normalized;
             }

@@ -20,7 +20,7 @@ import type { TournamentComposerDraftPayload } from "./tournament-composer-draft
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
 import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
-import { resolveComposerMainPauseUtcWindow } from "./tournament-composer-main-pause";
+import { resolveCanonicalScheduleRoundBreaks } from "./tournament-composer-schedule-round-breaks";
 import { syncComposerValidatedScheduleFromDraft } from "./sync-composer-schedule-preview-persistence";
 
 export async function persistTournamentPlannerFromComposer(input: {
@@ -71,16 +71,7 @@ export async function persistTournamentPlannerFromComposer(input: {
                 ]),
             )
           : undefined;
-      const mainPause = planner.mainPause;
-      const pauseWindow =
-        mainPause?.enabled === true
-          ? resolveComposerMainPauseUtcWindow({
-              mainPause,
-              tournamentStartAt: payload.startAt,
-              tournamentEndAt: payload.endAt,
-              timeZone: tenantTimeZone,
-            })
-          : null;
+      const roundScheduledBreaks = resolveCanonicalScheduleRoundBreaks(planner);
       await applyProgrammeTemplateToTournament({
         tenantId,
         tournamentId,
@@ -88,11 +79,10 @@ export async function persistTournamentPlannerFromComposer(input: {
         templateVersion: planner.programmeTemplateVersion ?? undefined,
         replaceExisting: true,
         pitchOverrides,
-        mainBreakDurationMinutes:
-          mainPause?.enabled === true ? mainPause.durationMinutes : 0,
-        mainBreakAfterRoundNumbers: pauseWindow ? [] : mainPause?.enabled === true ? [mainPause.afterRoundNumber ?? 1] : [],
-        mainBreakStartAt:
-          pauseWindow != null ? new Date(pauseWindow.startUtcMs) : null,
+        roundScheduledBreaks,
+        mainBreakDurationMinutes: 0,
+        mainBreakAfterRoundNumbers: [],
+        mainBreakStartAt: null,
       });
       return;
     }

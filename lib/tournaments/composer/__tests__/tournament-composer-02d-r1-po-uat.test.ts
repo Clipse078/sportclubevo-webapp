@@ -13,6 +13,7 @@ import {
   splitComposerParticipantIntoDefaultSubunits,
 } from "../tournament-composer-playing-units";
 import { createDefaultTournamentComposerPlannerDraft } from "../tournament-composer-planner-defaults";
+import { createComposerScheduleRoundBreakDraft } from "../tournament-composer-schedule-round-breaks";
 import { createEmptyTournamentComposerDraft } from "../tournament-composer-draft-types";
 
 const root = process.cwd();
@@ -55,7 +56,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
 
   it("D — Spielplan panel orders pause before Spieldauer and Wechselzeit", () => {
     const panel = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
-    const pauseIdx = panel.indexOf("Grössere Turnierpause");
+    const pauseIdx = panel.indexOf("Pausen");
     const durationIdx = panel.indexOf("Spieldauer (Min.)");
     const transitionIdx = panel.indexOf("Wechselzeit (Min.)");
     expect(pauseIdx).toBeGreaterThan(-1);
@@ -71,7 +72,9 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
     });
     planner.timing.matchDurationMinutes = 12;
     planner.timing.transitionMinutes = 3;
-    planner.mainPause = { enabled: true, durationMinutes: 10, startLocalTime: "11:00" };
+    planner.scheduleRoundBreaks = [
+      createComposerScheduleRoundBreakDraft({ afterRoundNumber: 4, durationMinutes: 10 }),
+    ];
 
     const pass = buildComposerScheduleFitView({
       participantCount: 4,
@@ -111,7 +114,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
       endAt: "2026-06-01T12:00",
       planner: {
         ...planner,
-        mainPause: { enabled: false, durationMinutes: 10, startLocalTime: "11:00" },
+        scheduleRoundBreaks: [],
       },
     });
     expect(pauseOff.requiredMinutes).toBeLessThan(pass.requiredMinutes!);
@@ -148,7 +151,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
       categoryContext: null,
     });
     const timingBefore = { ...draft.planner!.timing };
-    const pauseBefore = { ...draft.planner!.mainPause! };
+    const pauseBefore = draft.planner!.scheduleRoundBreaks;
     buildComposerScheduleFitView({
       participantCount: 4,
       categoryContext: null,
@@ -157,7 +160,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R1 PO UAT — creator corrections", () => {
       planner: draft.planner!,
     });
     expect(draft.planner!.timing).toEqual(timingBefore);
-    expect(draft.planner!.mainPause).toEqual(pauseBefore);
+    expect(draft.planner!.scheduleRoundBreaks).toEqual(pauseBefore);
   });
 
   it("G — smart timing recommendation UX removed from creator", () => {

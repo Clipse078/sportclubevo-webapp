@@ -6,6 +6,7 @@ function hasEstablishedPlannerDraft(planner: TournamentComposerPlannerDraft): bo
   if (planner.programmeTemplateId) return true;
   if (planner.pitchesUserCustomized === true) return true;
   if (planner.breaks.length > 0) return true;
+  if ((planner.scheduleRoundBreaks?.length ?? 0) > 0) return true;
   if (planner.mainPause?.enabled === true) return true;
   if (!isGenericDefaultComposerPitchDraft(planner.pitches)) return true;
   return false;

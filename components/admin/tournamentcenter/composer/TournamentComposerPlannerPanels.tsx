@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, MoreVertical, Plus, Trash2 } from "lucide-react";
-import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { TournamentComposerLegacyTurnierformatPanel } from "./TournamentComposerLegacyTurnierformatPanel";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
@@ -17,7 +16,10 @@ import {
   restoreComposerProgrammeProposal,
 } from "@/lib/tournaments/composer/tournament-composer-programme-template";
 import { buildComposerScheduleFitView } from "@/lib/tournaments/composer/tournament-composer-schedule-fit";
-import { normalizeComposerMainPauseDraft } from "@/lib/tournaments/composer/tournament-composer-main-pause";
+import {
+  createComposerScheduleRoundBreakDraft,
+  normalizeComposerScheduleRoundBreaks,
+} from "@/lib/tournaments/composer/tournament-composer-schedule-round-breaks";
 import { buildTournamentSchedulePreview } from "@/lib/tournaments/composer/tournament-composer-schedule-preview";
 import ComposerSchedulePreviewPresentation from "./ComposerSchedulePreviewPresentation";
 
@@ -451,7 +453,20 @@ export function TournamentComposerSpielplanPanel({
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
 }) {
-  const mainPause = normalizeComposerMainPauseDraft(planner.mainPause);
+  const scheduleRoundBreaks = normalizeComposerScheduleRoundBreaks(planner);
+
+  const previewRoundCount = useMemo(() => {
+    const preview = buildTournamentSchedulePreview({
+      payload: { ...payload, planner },
+      categoryContext,
+    });
+    return preview.roundCount;
+  }, [payload, planner, categoryContext]);
+
+  const pauseRoundOptions = useMemo(() => {
+    const maxAfterRound = Math.max(0, previewRoundCount - 1);
+    return Array.from({ length: maxAfterRound }, (_, index) => index + 1);
+  }, [previewRoundCount]);
 
   const timingFieldErrors = fieldErrors
     ? Object.fromEntries(
@@ -466,69 +481,131 @@ export function TournamentComposerSpielplanPanel({
       <PlanningEditorSectionHeading title="Spielplan & Timing" />
 
       <div className="mb-6 space-y-4 rounded-xl border border-[var(--border)] p-4">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Pause</h3>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-[var(--foreground)]">Grössere Turnierpause</p>
-          </div>
-          <div data-testid="tournament-composer-main-pause-toggle">
-            <SwitchThumb
-              id="tournament-composer-main-pause-enabled"
-              checked={mainPause.enabled}
-              onChange={(checked) =>
-                onChange((p) => ({
-                  ...p,
-                  mainPause: {
-                    ...(p.mainPause ?? mainPause),
-                    enabled: checked,
-                  },
-                }))
-              }
-              aria-label="Grössere Turnierpause"
-            />
-          </div>
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Pausen</h3>
+          <p className="mt-1 text-sm text-[var(--text-2)]">
+            Optional. Füge bei Bedarf Pausen zwischen den Spielrunden ein.
+          </p>
         </div>
-        {mainPause.enabled ? (
-          <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
-            <label className="block space-y-2">
-              <span className="fca-label">Pausenbeginn</span>
-              <input
-                type="time"
-                className="fca-input"
-                value={mainPause.startLocalTime}
-                onChange={(e) =>
-                  onChange((p) => ({
-                    ...p,
-                    mainPause: {
-                      ...normalizeComposerMainPauseDraft(p.mainPause ?? mainPause),
-                      startLocalTime: e.target.value,
-                    },
-                  }))
-                }
-                data-testid="tournament-composer-main-pause-start"
-              />
-            </label>
-            <label className="block space-y-2">
-              <span className="fca-label">Pausendauer (Min.)</span>
-              <input
-                type="number"
-                min={1}
-                className="fca-input"
-                value={mainPause.durationMinutes}
-                onChange={(e) =>
-                  onChange((p) => ({
-                    ...p,
-                    mainPause: {
-                      ...normalizeComposerMainPauseDraft(p.mainPause ?? mainPause),
-                      durationMinutes: Number(e.target.value),
-                    },
-                  }))
-                }
-                data-testid="tournament-composer-main-pause-duration"
-              />
-            </label>
-          </div>
-        ) : null}
+
+        <ul className="space-y-3" data-testid="tournament-composer-schedule-round-breaks">
+          {scheduleRoundBreaks.map((br, index) => {
+            const errorKey = `scheduleRoundBreak-${br.localId}`;
+            const rowError = fieldErrors?.[errorKey];
+            return (
+              <li
+                key={br.localId}
+                className="rounded-lg border border-[var(--border)] p-3"
+                data-testid={`tournament-composer-schedule-round-break-${index + 1}`}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-[var(--foreground)]">Pause {index + 1}</p>
+                  <button
+                    type="button"
+                    className="fca-btn fca-btn-ghost p-2"
+                    aria-label={`Pause ${index + 1} entfernen`}
+                    data-testid={`tournament-composer-schedule-round-break-delete-${br.localId}`}
+                    onClick={() =>
+                      onChange((p) => ({
+                        ...p,
+                        scheduleRoundBreaks: normalizeComposerScheduleRoundBreaks(p).filter(
+                          (row) => row.localId !== br.localId,
+                        ),
+                        mainPause: undefined,
+                      }))
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+                <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+                  <label className="block space-y-2">
+                    <span className="fca-label">Nach Runde</span>
+                    <select
+                      className="fca-input"
+                      value={br.afterRoundNumber}
+                      onChange={(e) =>
+                        onChange((p) => ({
+                          ...p,
+                          scheduleRoundBreaks: normalizeComposerScheduleRoundBreaks(p).map((row) =>
+                            row.localId === br.localId
+                              ? { ...row, afterRoundNumber: Number(e.target.value) }
+                              : row,
+                          ),
+                          mainPause: undefined,
+                        }))
+                      }
+                      data-testid={`tournament-composer-schedule-round-break-after-${br.localId}`}
+                    >
+                      {pauseRoundOptions.map((roundNumber) => (
+                        <option key={roundNumber} value={roundNumber}>
+                          Nach Runde {roundNumber}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block space-y-2">
+                    <span className="fca-label">Dauer (Min.)</span>
+                    <input
+                      type="number"
+                      min={1}
+                      className="fca-input"
+                      value={br.durationMinutes}
+                      onChange={(e) =>
+                        onChange((p) => ({
+                          ...p,
+                          scheduleRoundBreaks: normalizeComposerScheduleRoundBreaks(p).map((row) =>
+                            row.localId === br.localId
+                              ? { ...row, durationMinutes: Number(e.target.value) }
+                              : row,
+                          ),
+                          mainPause: undefined,
+                        }))
+                      }
+                      data-testid={`tournament-composer-schedule-round-break-duration-${br.localId}`}
+                    />
+                  </label>
+                </div>
+                {rowError ? (
+                  <p role="alert" className="mt-2 text-sm text-[var(--sce-danger)]">
+                    {rowError}
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+
+        <button
+          type="button"
+          className="fca-btn fca-btn-secondary inline-flex items-center gap-2 text-sm"
+          data-testid="tournament-composer-schedule-round-break-add"
+          disabled={pauseRoundOptions.length === 0}
+          onClick={() =>
+            onChange((p) => {
+              const existing = normalizeComposerScheduleRoundBreaks(p);
+              const usedRounds = new Set(existing.map((row) => row.afterRoundNumber));
+              const nextRound =
+                pauseRoundOptions.find((roundNumber) => !usedRounds.has(roundNumber)) ??
+                pauseRoundOptions[pauseRoundOptions.length - 1] ??
+                1;
+              return {
+                ...p,
+                scheduleRoundBreaks: [
+                  ...existing,
+                  createComposerScheduleRoundBreakDraft({
+                    afterRoundNumber: nextRound,
+                    durationMinutes: 10,
+                  }),
+                ],
+                mainPause: undefined,
+              };
+            })
+          }
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Pause hinzufügen
+        </button>
       </div>
 
       <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Spieldauer</h3>

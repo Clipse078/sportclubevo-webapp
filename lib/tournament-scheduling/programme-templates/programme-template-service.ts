@@ -19,6 +19,8 @@ import {
 } from "../tournament-schedule-orchestration-service";
 import { listTournamentFixtureAssignmentsForVersion } from "../assignment-service";
 import { buildTemplateScheduleAssignments } from "./build-template-schedule-assignments";
+import { computeRoundParallelScheduleWithBreaks } from "./round-scheduled-breaks";
+import type { RoundScheduledBreak } from "./round-scheduled-breaks";
 import {
   instantiateProgrammeTemplate,
   ProgrammeTemplateInstantiationError,
@@ -214,19 +216,18 @@ async function ensureTemplateBreaks(
   tournamentStart: Date,
   matchDurationMinutes: number,
   transitionMinutes: number,
-  breakDurationMinutes: number,
-  breakAfterRoundNumbers: readonly number[],
+  roundBreaks: readonly { afterRoundNumber: number; durationMinutes: number }[],
   mainBreakStartAt?: Date | null,
+  legacyBreakDurationMinutes?: number,
 ): Promise<void> {
   const existing = await listTournamentBreaks(tenantId, tournamentId);
   if (existing.length > 0) {
     return;
   }
-  if (breakDurationMinutes <= 0) {
-    return;
-  }
-  if (mainBreakStartAt) {
-    const endAt = new Date(mainBreakStartAt.getTime() + breakDurationMinutes * 60_000);
+  if (mainBreakStartAt && (legacyBreakDurationMinutes ?? 0) > 0) {
+    const endAt = new Date(
+      mainBreakStartAt.getTime() + (legacyBreakDurationMinutes ?? 0) * 60_000,
+    );
     await createTournamentBreak(tenantId, tournamentId, {
       label: template.breakHints[0]?.label ?? "Pause",
       startAt: mainBreakStartAt,
@@ -235,21 +236,24 @@ async function ensureTemplateBreaks(
     });
     return;
   }
-  if (breakAfterRoundNumbers.length === 0) {
+  if (roundBreaks.length === 0) {
     return;
   }
-  const slotMs = (matchDurationMinutes + transitionMinutes) * 60_000;
-  const roundSet = new Set(breakAfterRoundNumbers);
-  for (const hint of template.breakHints) {
-    if (!roundSet.has(hint.afterRoundNumber)) continue;
-    const startAt = new Date(
-      tournamentStart.getTime() + hint.afterRoundNumber * slotMs,
-    );
-    const endAt = new Date(startAt.getTime() + breakDurationMinutes * 60_000);
+
+  const { breakWindows } = computeRoundParallelScheduleWithBreaks({
+    tournamentStartUtcMs: tournamentStart.getTime(),
+    roundCount: template.rounds.length,
+    matchDurationMinutes,
+    transitionMinutes,
+    roundBreaks,
+  });
+
+  for (const window of breakWindows) {
+    const hint = template.breakHints.find((h) => h.afterRoundNumber === window.afterRoundNumber);
     await createTournamentBreak(tenantId, tournamentId, {
-      label: hint.label ?? "Pause",
-      startAt,
-      endAt,
+      label: hint?.label ?? "Pause",
+      startAt: new Date(window.startUtcMs),
+      endAt: new Date(window.endUtcMs),
       scope: "ALL_PITCHES",
     });
   }
@@ -262,11 +266,13 @@ export async function applyProgrammeTemplateToTournament(input: {
   templateVersion?: number;
   replaceExisting?: boolean;
   expectedRevision?: number;
-  /** Main tournament pause duration — defaults to 10 when omitted. */
+  /** Canonical round-bound breaks (0:n) — preferred over legacy mainBreak* fields. */
+  roundScheduledBreaks?: readonly RoundScheduledBreak[];
+  /** Main tournament pause duration — defaults to 10 when omitted (legacy). */
   mainBreakDurationMinutes?: number;
-  /** When set, only these 1-based round numbers receive the main break. */
+  /** When set, only these 1-based round numbers receive the main break (legacy). */
   mainBreakAfterRoundNumbers?: readonly number[];
-  /** Fixed wall-clock main break start — takes precedence over round-based hints. */
+  /** Fixed wall-clock main break start — takes precedence over round-based hints (legacy). */
   mainBreakStartAt?: Date | null;
   /** User-adjusted pitch labels/formats keyed by template fieldKey. */
   pitchOverrides?: ReadonlyMap<
@@ -385,6 +391,15 @@ export async function applyProgrammeTemplateToTournament(input: {
     input.mainBreakAfterRoundNumbers ??
     plan.template.breakHints.map((hint) => hint.afterRoundNumber);
 
+  const roundScheduledBreaks: readonly RoundScheduledBreak[] =
+    input.roundScheduledBreaks ??
+    (input.mainBreakStartAt
+      ? []
+      : breakAfterRoundNumbers.map((afterRoundNumber) => ({
+          afterRoundNumber,
+          durationMinutes: breakDurationMinutes,
+        })));
+
   await ensureTemplateBreaks(
     input.tenantId,
     input.tournamentId,
@@ -392,9 +407,9 @@ export async function applyProgrammeTemplateToTournament(input: {
     event.startAt,
     matchDurationMinutes,
     transitionMinutes,
-    breakDurationMinutes,
-    breakAfterRoundNumbers,
+    roundScheduledBreaks,
     input.mainBreakStartAt,
+    breakDurationMinutes,
   );
 
   const fixturesForSchedule = createdFixtures.map((created, index) => {
@@ -418,8 +433,7 @@ export async function applyProgrammeTemplateToTournament(input: {
     tournamentStartUtcMs: event.startAt.getTime(),
     matchDurationMinutes,
     transitionMinutes,
-    breakAfterRoundNumbers: fixedPause ? [] : breakAfterRoundNumbers,
-    breakDurationMinutes: fixedPause ? 0 : breakDurationMinutes,
+    roundBreaks: fixedPause ? [] : roundScheduledBreaks,
     fixedPause,
     fixtures: fixturesForSchedule,
   });

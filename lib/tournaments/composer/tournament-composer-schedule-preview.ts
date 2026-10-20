@@ -5,17 +5,14 @@
 
 import { generateRoundRobinFixtures } from "@/lib/tournament-scheduling/fixtures/round-robin";
 import { buildTemplateScheduleAssignments } from "@/lib/tournament-scheduling/programme-templates/build-template-schedule-assignments";
-import { roundPlayingOverlapsPause } from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
+import { computeRoundParallelScheduleWithBreaks } from "@/lib/tournament-scheduling/programme-templates/round-scheduled-breaks";
 import { buildInstantiatedProgrammePlan } from "@/lib/tournament-scheduling/programme-templates/instantiate-programme-template";
 import { mapParticipantsToTemplateSlots } from "@/lib/tournament-scheduling/programme-templates/participant-slot-mapping";
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import { getProgrammeTemplateById } from "@/lib/tournament-scheduling/programme-templates/template-registry";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
-import {
-  normalizeComposerMainPauseDraft,
-  resolveComposerMainPauseUtcWindow,
-} from "./tournament-composer-main-pause";
+import { resolveCanonicalScheduleRoundBreaks } from "./tournament-composer-schedule-round-breaks";
 import { resolveComposerProgrammeProposal } from "./tournament-composer-programme-proposal";
 import { resolveEffectiveComposerPlanner } from "./resolve-effective-composer-planner";
 import {
@@ -303,11 +300,7 @@ export function buildTournamentSchedulePreview(input: {
     };
   }
 
-  const fixedPause = resolveComposerMainPauseUtcWindow({
-    mainPause: planner.mainPause,
-    tournamentStartAt: input.payload.startAt,
-    tournamentEndAt: input.payload.endAt,
-  });
+  const roundBreaks = resolveCanonicalScheduleRoundBreaks(planner);
 
   const scheduleFixtures = fixtures.map((f) => ({
     fixtureId: f.fixtureKey,
@@ -319,7 +312,7 @@ export function buildTournamentSchedulePreview(input: {
     tournamentStartUtcMs: startMs,
     matchDurationMinutes: planner.timing.matchDurationMinutes,
     transitionMinutes: planner.timing.transitionMinutes,
-    fixedPause,
+    roundBreaks,
     fixtures: scheduleFixtures,
   });
 
@@ -344,38 +337,6 @@ export function buildTournamentSchedulePreview(input: {
       endUtcMs: assignment.resourceEndUtcMs,
     };
   });
-
-  if (fixedPause) {
-    for (const row of rows) {
-      if (
-        roundPlayingOverlapsPause({
-          roundStartUtcMs: row.startUtcMs,
-          matchDurationMinutes: planner.timing.matchDurationMinutes,
-          pause: fixedPause,
-        })
-      ) {
-        return {
-          status: "ERROR",
-          path,
-          errorMessage: "Der Spielplan überschneidet sich mit der Turnierpause.",
-          rounds: [],
-          fixtureCount: rows.length,
-          roundCount: 0,
-          programmeEndUtcMs: null,
-          programmeEndLabel: null,
-          tournamentStartLabel: formatClockFromUtcMs(startMs),
-          pauseLabel: formatClockRangeFromUtcMs(fixedPause.startUtcMs, fixedPause.endUtcMs),
-          fitStatus: "INCOMPLETE",
-          fitHeadline: "Der Spielplan überschneidet sich mit der Turnierpause.",
-          fitDetail: null,
-          reserveMinutes: null,
-          deficitMinutes: null,
-          assignmentPlan: [],
-          timelineItems: [],
-        };
-      }
-    }
-  }
 
   const roundMap = new Map<number, ComposerSchedulePreviewFixtureRow[]>();
   for (const row of rows) {
@@ -422,23 +383,26 @@ export function buildTournamentSchedulePreview(input: {
     fitDetail += `\nReserve: ${reserveMinutes} Min.`;
   }
 
-  const pauseDurationMinutes =
-    fixedPause && planner.mainPause?.enabled
-      ? normalizeComposerMainPauseDraft(planner.mainPause).durationMinutes
-      : null;
+  const breakTimeline = computeRoundParallelScheduleWithBreaks({
+    tournamentStartUtcMs: startMs,
+    roundCount: rounds.length,
+    matchDurationMinutes: planner.timing.matchDurationMinutes,
+    transitionMinutes: planner.timing.transitionMinutes,
+    roundBreaks,
+  });
 
   const timelineItems = buildComposerSchedulePreviewTimeline({
     rounds,
-    fixedPause: fixedPause
-      ? {
-          startUtcMs: fixedPause.startUtcMs,
-          endUtcMs: fixedPause.endUtcMs,
-          durationMinutes: pauseDurationMinutes ?? Math.round(
-            (fixedPause.endUtcMs - fixedPause.startUtcMs) / 60_000,
-          ),
-        }
-      : null,
+    breaks: breakTimeline.breakWindows.map((window) => ({
+      breakKey: `after-round-${window.afterRoundNumber}`,
+      startUtcMs: window.startUtcMs,
+      endUtcMs: window.endUtcMs,
+      durationMinutes: window.durationMinutes,
+      label: "Pause",
+    })),
   });
+
+  const firstBreak = breakTimeline.breakWindows[0];
 
   return {
     status: "OK",
@@ -451,8 +415,8 @@ export function buildTournamentSchedulePreview(input: {
     programmeEndUtcMs,
     programmeEndLabel,
     tournamentStartLabel: formatClockFromUtcMs(startMs),
-    pauseLabel: fixedPause
-      ? formatClockRangeFromUtcMs(fixedPause.startUtcMs, fixedPause.endUtcMs)
+    pauseLabel: firstBreak
+      ? formatClockRangeFromUtcMs(firstBreak.startUtcMs, firstBreak.endUtcMs)
       : null,
     fitStatus,
     fitHeadline,

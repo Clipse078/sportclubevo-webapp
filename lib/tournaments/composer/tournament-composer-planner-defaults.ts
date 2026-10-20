@@ -51,11 +51,7 @@ export function createDefaultTournamentComposerPlannerDraft(input?: {
     programmeProposalFingerprint: null,
     pitchesUserCustomized: false,
     pendingProposalRefresh: null,
-    mainPause: {
-      enabled: false,
-      durationMinutes: 10,
-      startLocalTime: "",
-    },
+    scheduleRoundBreaks: undefined,
   };
 }
 

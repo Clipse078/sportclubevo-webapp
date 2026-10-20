@@ -60,11 +60,13 @@ function simulateComposerLifecycle(input: {
     input.categoryContext === "E_FF12"
       ? {
           ...planner,
-          mainPause: {
-            enabled: true,
-            durationMinutes: 10,
-            startLocalTime: "11:00",
-          },
+          scheduleRoundBreaks: [
+            {
+              localId: "pause-r4",
+              afterRoundNumber: 4,
+              durationMinutes: 10,
+            },
+          ],
         }
       : planner;
 
@@ -195,17 +197,15 @@ describe("SCE-TOURNAMENT-PLANNER-02D R5 PO UAT", () => {
     expect(fit.deficitMinutes).toBeGreaterThan(0);
   });
 
-  it("TEST H — pause overlap is zero for fixed pause scheduling", () => {
+  it("TEST H — round-bound pause does not overlap playing time", () => {
     const { planner, participants } = simulateComposerLifecycle({
       participantCount: 4,
       categoryContext: "E_FF12",
       teamId: "team-e1",
     });
-    planner.mainPause = {
-      enabled: true,
-      durationMinutes: 10,
-      startLocalTime: "11:00",
-    };
+    planner.scheduleRoundBreaks = [
+      { localId: "pause-r4", afterRoundNumber: 4, durationMinutes: 10 },
+    ];
     const draft = createEmptyTournamentComposerDraft();
     draft.homeAway = "HOME";
     draft.startAt = "2026-06-01T10:00";
@@ -214,8 +214,10 @@ describe("SCE-TOURNAMENT-PLANNER-02D R5 PO UAT", () => {
     draft.planner = planner;
     const preview = buildTournamentSchedulePreview({ payload: draft, categoryContext: "E_FF12" });
     expect(preview.status).toBe("OK");
-    const pauseStart = new Date("2026-06-01T11:00:00").getTime();
-    const pauseEnd = pauseStart + 10 * 60_000;
+    const breakItem = preview.timelineItems.find((i) => i.kind === "BREAK");
+    expect(breakItem?.kind).toBe("BREAK");
+    const pauseStart = breakItem?.kind === "BREAK" ? breakItem.startUtcMs : 0;
+    const pauseEnd = breakItem?.kind === "BREAK" ? breakItem.endUtcMs : 0;
     for (const round of preview.rounds) {
       for (const fixture of round.fixtures) {
         expect(

@@ -8,6 +8,7 @@ import { buildTournamentSchedulePreview } from "../tournament-composer-schedule-
 import { createEmptyTournamentComposerDraft } from "../tournament-composer-draft-types";
 import { createDefaultTournamentComposerPlannerDraft } from "../tournament-composer-planner-defaults";
 import { reconcileComposerPlannerForParticipants } from "../tournament-composer-programme-template";
+import { createComposerScheduleRoundBreakDraft } from "../tournament-composer-schedule-round-breaks";
 import ComposerSchedulePreviewPresentation from "@/components/admin/tournamentcenter/composer/ComposerSchedulePreviewPresentation";
 import { prepareTournamentComposerProposal } from "../prepare-tournament-composer-proposal";
 import { resolveAuthoritativeTeamJuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
@@ -30,11 +31,9 @@ function buildE4PreviewWithPause(input?: {
   });
   planner.timing.matchDurationMinutes = input?.matchDurationMinutes ?? 10;
   planner.timing.transitionMinutes = input?.transitionMinutes ?? 5;
-  planner.mainPause = {
-    enabled: true,
-    durationMinutes: 10,
-    startLocalTime: "11:00",
-  };
+  planner.scheduleRoundBreaks = [
+    createComposerScheduleRoundBreakDraft({ afterRoundNumber: 4, durationMinutes: 10 }),
+  ];
 
   const draft = createEmptyTournamentComposerDraft();
   draft.homeAway = "HOME";
@@ -119,7 +118,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R9 — Spielplan presentation", () => {
   });
 
   describe("C — chronological pause", () => {
-    it("orders R1–R4, BREAK, R5 for fixed pause at 11:00", () => {
+    it("orders R1–R4, BREAK, R5 for pause after round 4", () => {
       const preview = buildE4PreviewWithPause({ transitionMinutes: 5, matchDurationMinutes: 10 });
       expect(preview.status).toBe("OK");
       const kinds = preview.timelineItems.map((item) =>
@@ -165,7 +164,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R9 — Spielplan presentation", () => {
   });
 
   describe("D — live recalculation", () => {
-    it("changing Wechselzeit shifts later rounds and pause placement", () => {
+    it("changing Wechselzeit shifts later rounds and derived pause placement", () => {
       const short = buildE4PreviewWithPause({ transitionMinutes: 5 });
       const long = buildE4PreviewWithPause({ transitionMinutes: 10 });
       expect(short.status).toBe("OK");

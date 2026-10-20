@@ -11,7 +11,10 @@ import {
 } from "../tournament-composer-playing-units";
 import { createDefaultTournamentComposerPlannerDraft } from "../tournament-composer-planner-defaults";
 import { createEmptyTournamentComposerDraft } from "../tournament-composer-draft-types";
-import { validateComposerMainPauseWindow } from "../tournament-composer-main-pause";
+import {
+  createComposerScheduleRoundBreakDraft,
+  validateComposerScheduleRoundBreaks,
+} from "../tournament-composer-schedule-round-breaks";
 import {
   countComposerCuratedTemplateParticipants,
   materializeComposerPitchesFromTemplate,
@@ -101,40 +104,34 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     ).toBe(E_FF12_ROTATION_4_TEMPLATE.id);
   });
 
-  it("D — pause window validation against termin", () => {
-    const base = {
-      enabled: true,
-      durationMinutes: 10,
-      startLocalTime: "11:00",
-    };
+  it("D — round-bound pause validation", () => {
     expect(
-      validateComposerMainPauseWindow({
-        mainPause: base,
-        tournamentStartAt: "2026-06-01T10:00",
-        tournamentEndAt: "2026-06-01T12:00",
+      validateComposerScheduleRoundBreaks({
+        roundCount: 6,
+        breaks: [
+          createComposerScheduleRoundBreakDraft({ afterRoundNumber: 3, durationMinutes: 10 }),
+        ],
       }),
-    ).toBeNull();
+    ).toEqual({});
+    const finalRoundError = Object.values(
+      validateComposerScheduleRoundBreaks({
+        roundCount: 6,
+        breaks: [
+          createComposerScheduleRoundBreakDraft({ localId: "x", afterRoundNumber: 6, durationMinutes: 10 }),
+        ],
+      }),
+    )[0];
+    expect(finalRoundError).toMatch(/zwischen 1 und 5/i);
     expect(
-      validateComposerMainPauseWindow({
-        mainPause: { ...base, startLocalTime: "09:55" },
-        tournamentStartAt: "2026-06-01T10:00",
-        tournamentEndAt: "2026-06-01T12:00",
-      }),
-    ).toMatch(/vor Turnierbeginn/i);
-    expect(
-      validateComposerMainPauseWindow({
-        mainPause: { ...base, startLocalTime: "12:00" },
-        tournamentStartAt: "2026-06-01T10:00",
-        tournamentEndAt: "2026-06-01T12:00",
-      }),
-    ).toMatch(/nach Turnierende/i);
-    expect(
-      validateComposerMainPauseWindow({
-        mainPause: { ...base, startLocalTime: "11:55" },
-        tournamentStartAt: "2026-06-01T10:00",
-        tournamentEndAt: "2026-06-01T12:00",
-      }),
-    ).toMatch(/endet nach Turnierende/i);
+      Object.values(
+        validateComposerScheduleRoundBreaks({
+          roundCount: 6,
+          breaks: [
+            createComposerScheduleRoundBreakDraft({ localId: "a", afterRoundNumber: 2, durationMinutes: 0 }),
+          ],
+        }),
+      )[0],
+    ).toMatch(/positiv/i);
   });
 
   it("E — fixed pause scheduling avoids fixture overlap and round splits", () => {
@@ -173,7 +170,9 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     });
     planner.timing.matchDurationMinutes = 12;
     planner.timing.transitionMinutes = 3;
-    planner.mainPause = { enabled: true, durationMinutes: 10, startLocalTime: "11:00" };
+    planner.scheduleRoundBreaks = [
+      createComposerScheduleRoundBreakDraft({ afterRoundNumber: 4, durationMinutes: 10 }),
+    ];
 
     const pass = buildComposerScheduleFitView({
       participantCount: 4,
@@ -215,11 +214,11 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     expect(planner.timing.matchDurationMinutes).not.toBe(120);
   });
 
-  it("H — Spielplan panel uses pause-first UX and proposal refresh affordance", () => {
+  it("H — Spielplan panel uses round-bound pauses and proposal refresh affordance", () => {
     const panels = read("components/admin/tournamentcenter/composer/TournamentComposerPlannerPanels.tsx");
     expect(panels).toMatch(/tournament-composer-proposal-refresh-accept/);
-    expect(panels).toMatch(/tournament-composer-main-pause-start/);
-    expect(panels).not.toMatch(/main-pause-after-round/);
+    expect(panels).toMatch(/tournament-composer-schedule-round-break-add/);
+    expect(panels).not.toMatch(/Pausenbeginn/);
   });
 
   it("hydrate reconciles stale single-pitch drafts for curated counts", () => {

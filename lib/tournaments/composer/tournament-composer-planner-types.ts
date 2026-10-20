@@ -14,13 +14,21 @@ export type TournamentComposerPitchDraft = {
   userLabelCustomized?: boolean;
 };
 
+/** @deprecated R11 — migrated to scheduleRoundBreaks on hydrate; do not use in UX. */
 export type TournamentComposerMainPauseDraft = {
   enabled: boolean;
   durationMinutes: number;
   /** Wall-clock begin (HH:MM) on the tournament start date. */
   startLocalTime: string;
-  /** Legacy round-based pause hint — ignored when startLocalTime is set. */
+  /** Legacy round-based pause hint — migrated to scheduleRoundBreaks when present. */
   afterRoundNumber?: number;
+};
+
+/** Canonical Spielplan pauses — after round N, duration in minutes (0:n). */
+export type TournamentComposerScheduleRoundBreakDraft = {
+  localId: string;
+  afterRoundNumber: number;
+  durationMinutes: number;
 };
 
 export type TournamentComposerBreakDraft = {
@@ -77,7 +85,9 @@ export type TournamentComposerPlannerDraft = {
     nextTemplateId: string | null;
     nextTemplateVersion: number | null;
   } | null;
-  /** Primary tournament pause configured on Spielplan step (pause-first UX). */
+  /** Canonical round-bound pauses on Spielplan step (0:n). */
+  scheduleRoundBreaks?: TournamentComposerScheduleRoundBreakDraft[];
+  /** @deprecated R11 — use scheduleRoundBreaks. */
   mainPause?: TournamentComposerMainPauseDraft;
 };
 

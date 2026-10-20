@@ -7,9 +7,13 @@ import {
   computeProgrammeRequiredMinutesFromTimeline,
   computeRoundParallelScheduleTimeline,
 } from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
+import { computeRoundParallelScheduleWithBreaks } from "@/lib/tournament-scheduling/programme-templates/round-scheduled-breaks";
 import type { TournamentProgrammeTemplate } from "@/lib/tournament-scheduling/programme-templates/types";
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
-import { normalizeComposerMainPauseDraft } from "./tournament-composer-main-pause";
+import {
+  defaultComposerScheduleRoundBreaksForTemplate,
+  normalizeComposerScheduleRoundBreaks,
+} from "./tournament-composer-schedule-round-breaks";
 import type {
   TournamentComposerPitchDraft,
   TournamentComposerPlannerDraft,
@@ -33,13 +37,6 @@ export type ComposerResolvedProgrammeTemplate = {
   statusHeadline: string;
   statusDetail: string;
   allocationSummaryLines: string[];
-};
-
-export type ComposerMainPauseDraft = {
-  enabled: boolean;
-  durationMinutes: number;
-  startLocalTime: string;
-  afterRoundNumber?: number;
 };
 
 /** Curated templates key off tournament participants — never playing-unit splits. */
@@ -102,15 +99,6 @@ export function resolveComposerProgrammeTemplate(input: {
   };
 }
 
-export function defaultComposerMainPauseForTemplate(
-  _template: TournamentProgrammeTemplate,
-): ComposerMainPauseDraft {
-  return {
-    enabled: true,
-    durationMinutes: 10,
-    startLocalTime: "",
-  };
-}
 
 export function materializeComposerPitchesFromTemplate(
   template: TournamentProgrammeTemplate,
@@ -210,10 +198,10 @@ export function restoreComposerProgrammeProposal(input: {
     input.participantCount,
     input.categoryContext,
   );
-  const mainPause =
+  const scheduleRoundBreaks =
     proposal.kind === "FULL_TEMPLATE" && proposal.template
-      ? defaultComposerMainPauseForTemplate(proposal.template)
-      : input.planner.mainPause;
+      ? defaultComposerScheduleRoundBreaksForTemplate(proposal.template)
+      : normalizeComposerScheduleRoundBreaks(input.planner);
   return {
     ...input.planner,
     ...identity,
@@ -221,7 +209,8 @@ export function restoreComposerProgrammeProposal(input: {
     programmeProposalFingerprint: fingerprint,
     pitchesUserCustomized: false,
     pendingProposalRefresh: null,
-    mainPause: mainPause ? normalizeComposerMainPauseDraft(mainPause) : input.planner.mainPause,
+    scheduleRoundBreaks,
+    mainPause: undefined,
     pitches: materializePitchesFromProposal(proposal),
     competitionFormat: "GROUP_MIX_ONLY",
     groupMixStrategy: "ROUND_ROBIN",
@@ -299,14 +288,14 @@ export function reconcileComposerPlannerForParticipants(input: {
     input.planner.programmeTemplateId !== identity.programmeTemplateId ||
     input.planner.programmeTemplateVersion !== identity.programmeTemplateVersion;
 
-  const mainPause =
+  const scheduleRoundBreaks =
     proposal.kind === "FULL_TEMPLATE" && proposal.template && !templateChanged
-      ? input.planner.mainPause
-        ? normalizeComposerMainPauseDraft(input.planner.mainPause)
-        : defaultComposerMainPauseForTemplate(proposal.template)
+      ? input.planner.scheduleRoundBreaks !== undefined
+        ? normalizeComposerScheduleRoundBreaks(input.planner)
+        : defaultComposerScheduleRoundBreaksForTemplate(proposal.template)
       : proposal.kind === "FULL_TEMPLATE" && proposal.template
-        ? defaultComposerMainPauseForTemplate(proposal.template)
-        : input.planner.mainPause;
+        ? defaultComposerScheduleRoundBreaksForTemplate(proposal.template)
+        : normalizeComposerScheduleRoundBreaks(input.planner);
 
   const preservePitches = input.preserveUserPitchEdits === true && userCustomisedPitches;
   const pitches = preservePitches
@@ -327,7 +316,8 @@ export function reconcileComposerPlannerForParticipants(input: {
     competitionFormat: "GROUP_MIX_ONLY",
     groupMixStrategy: "ROUND_ROBIN",
     groupCount: 1,
-    mainPause,
+    scheduleRoundBreaks,
+    mainPause: undefined,
     pitches,
     pitchesUserCustomized: preservePitches ? true : false,
   };
@@ -338,15 +328,24 @@ export function computeTemplateScheduleRequiredMinutes(input: {
   matchDurationMinutes: number;
   transitionMinutes: number;
   tournamentStartUtcMs: number;
-  fixedPause: { startUtcMs: number; endUtcMs: number } | null;
+  roundBreaks?: readonly { afterRoundNumber: number; durationMinutes: number }[];
+  fixedPause?: { startUtcMs: number; endUtcMs: number } | null;
 }): number {
-  const timeline = computeRoundParallelScheduleTimeline({
-    tournamentStartUtcMs: input.tournamentStartUtcMs,
-    roundCount: input.roundCount,
-    matchDurationMinutes: input.matchDurationMinutes,
-    transitionMinutes: input.transitionMinutes,
-    fixedPause: input.fixedPause,
-  });
+  const timeline = input.fixedPause
+    ? computeRoundParallelScheduleTimeline({
+        tournamentStartUtcMs: input.tournamentStartUtcMs,
+        roundCount: input.roundCount,
+        matchDurationMinutes: input.matchDurationMinutes,
+        transitionMinutes: input.transitionMinutes,
+        fixedPause: input.fixedPause,
+      })
+    : computeRoundParallelScheduleWithBreaks({
+        tournamentStartUtcMs: input.tournamentStartUtcMs,
+        roundCount: input.roundCount,
+        matchDurationMinutes: input.matchDurationMinutes,
+        transitionMinutes: input.transitionMinutes,
+        roundBreaks: input.roundBreaks ?? [],
+      });
   return computeProgrammeRequiredMinutesFromTimeline({
     tournamentStartUtcMs: input.tournamentStartUtcMs,
     programmeEndUtcMs: timeline.programmeEndUtcMs,

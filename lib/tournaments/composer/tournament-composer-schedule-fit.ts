@@ -1,11 +1,12 @@
-import {
-  computeProgrammeRequiredMinutesFromTimeline,
-  computeRoundParallelScheduleTimeline,
-} from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
+import { computeProgrammeRequiredMinutesFromTimeline } from "@/lib/tournament-scheduling/programme-templates/fixed-pause-round-scheduling";
+import { computeRoundParallelScheduleWithBreaks } from "@/lib/tournament-scheduling/programme-templates/round-scheduled-breaks";
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
-import { validateComposerMainPauseWindow, resolveComposerMainPauseUtcWindow } from "./tournament-composer-main-pause";
+import {
+  normalizeComposerScheduleRoundBreaks,
+  validateComposerScheduleRoundBreaks,
+} from "./tournament-composer-schedule-round-breaks";
 import { buildTournamentSchedulePreview } from "./tournament-composer-schedule-preview";
 import { resolveComposerProgrammeTemplate } from "./tournament-composer-programme-template";
 
@@ -61,25 +62,6 @@ export function buildComposerScheduleFitView(input: {
       detail: null,
       requiredEndLabel: null,
       tournamentEndLabel: null,
-    };
-  }
-
-  const pauseError = validateComposerMainPauseWindow({
-    mainPause: input.planner.mainPause,
-    tournamentStartAt: input.startAt,
-    tournamentEndAt: input.endAt,
-  });
-  if (pauseError) {
-    return {
-      status: "INCOMPLETE",
-      requiredMinutes: null,
-      availableMinutes: Math.round((end.getTime() - start.getTime()) / 60_000),
-      reserveMinutes: null,
-      deficitMinutes: null,
-      headline: pauseError,
-      detail: null,
-      requiredEndLabel: null,
-      tournamentEndLabel: formatClockFromUtcMs(end.getTime()),
     };
   }
 
@@ -140,18 +122,34 @@ export function buildComposerScheduleFitView(input: {
     };
   }
 
-  const fixedPause = resolveComposerMainPauseUtcWindow({
-    mainPause: input.planner.mainPause,
-    tournamentStartAt: input.startAt,
-    tournamentEndAt: input.endAt,
+  const scheduleBreakErrors = validateComposerScheduleRoundBreaks({
+    breaks: normalizeComposerScheduleRoundBreaks(input.planner),
+    roundCount,
   });
+  const firstBreakError = Object.values(scheduleBreakErrors)[0];
+  if (firstBreakError) {
+    return {
+      status: "INCOMPLETE",
+      requiredMinutes: null,
+      availableMinutes,
+      reserveMinutes: null,
+      deficitMinutes: null,
+      headline: firstBreakError,
+      detail: null,
+      requiredEndLabel: null,
+      tournamentEndLabel: formatClockFromUtcMs(end.getTime()),
+    };
+  }
 
-  const timeline = computeRoundParallelScheduleTimeline({
+  const timeline = computeRoundParallelScheduleWithBreaks({
     tournamentStartUtcMs: start.getTime(),
     roundCount,
     matchDurationMinutes: input.planner.timing.matchDurationMinutes,
     transitionMinutes: input.planner.timing.transitionMinutes,
-    fixedPause,
+    roundBreaks: normalizeComposerScheduleRoundBreaks(input.planner).map((row) => ({
+      afterRoundNumber: row.afterRoundNumber,
+      durationMinutes: row.durationMinutes,
+    })),
   });
 
   const requiredMinutes = computeProgrammeRequiredMinutesFromTimeline({

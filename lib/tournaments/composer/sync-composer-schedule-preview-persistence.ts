@@ -2,6 +2,7 @@ import { parseTenantLocalDateTimeInput } from "@/lib/events/tenant-local-datetim
 import { prisma } from "@/lib/db/prisma";
 import { listTournamentFixtures } from "@/lib/tournament-scheduling/fixture-service";
 import { createTournamentBreak } from "@/lib/tournament-scheduling/tournament-break-service";
+import { computeRoundParallelScheduleWithBreaks } from "@/lib/tournament-scheduling/programme-templates/round-scheduled-breaks";
 import {
   getOrCreateWorkingTournamentScheduleVersion,
   syncOptimisedAssignmentsToVersion,
@@ -9,8 +10,8 @@ import {
 import type { TournamentScheduleOptimisationResult } from "@/lib/tournament-scheduling/schedule-optimiser/types";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
-import { resolveComposerMainPauseUtcWindow } from "./tournament-composer-main-pause";
 import { buildTournamentSchedulePreview } from "./tournament-composer-schedule-preview";
+import { resolveCanonicalScheduleRoundBreaks } from "./tournament-composer-schedule-round-breaks";
 
 /**
  * Persists composer-validated schedule assignments (TP01 / field-only paths).
@@ -55,23 +56,29 @@ export async function syncComposerValidatedScheduleFromDraft(input: {
       .map((row) => [row.generatorKey!, row.id] as const),
   );
 
-  const mainPause = input.planner.mainPause;
-  const pauseWindow =
-    mainPause?.enabled === true
-      ? resolveComposerMainPauseUtcWindow({
-          mainPause,
-          tournamentStartAt: input.payload.startAt,
-          tournamentEndAt: input.payload.endAt,
-          timeZone: input.tenantTimeZone,
-        })
-      : null;
-  if (pauseWindow) {
-    await createTournamentBreak(input.tenantId, input.tournamentId, {
-      label: "Pause",
-      startAt: new Date(pauseWindow.startUtcMs),
-      endAt: new Date(pauseWindow.endUtcMs),
-      scope: "ALL_PITCHES",
-    });
+  const roundBreaks = resolveCanonicalScheduleRoundBreaks(input.planner);
+  if (roundBreaks.length > 0 && preview.roundCount > 0) {
+    const tournamentStart = parseTenantLocalDateTimeInput(
+      input.payload.startAt,
+      input.tenantTimeZone,
+    );
+    if (tournamentStart) {
+      const { breakWindows } = computeRoundParallelScheduleWithBreaks({
+        tournamentStartUtcMs: tournamentStart.getTime(),
+        roundCount: preview.roundCount,
+        matchDurationMinutes: input.planner.timing.matchDurationMinutes,
+        transitionMinutes: input.planner.timing.transitionMinutes,
+        roundBreaks,
+      });
+      for (const window of breakWindows) {
+        await createTournamentBreak(input.tenantId, input.tournamentId, {
+          label: "Pause",
+          startAt: new Date(window.startUtcMs),
+          endAt: new Date(window.endUtcMs),
+          scope: "ALL_PITCHES",
+        });
+      }
+    }
   }
 
   const working = await getOrCreateWorkingTournamentScheduleVersion(

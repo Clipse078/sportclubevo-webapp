@@ -1,7 +1,11 @@
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
-import { validateComposerMainPauseWindow } from "./tournament-composer-main-pause";
+import { buildTournamentSchedulePreview } from "./tournament-composer-schedule-preview";
 import { resolveComposerProgrammeTemplate } from "./tournament-composer-programme-template";
 import { resolveComposerSpielplanCreationEnabled } from "./resolve-composer-spielplan-creation-enabled";
+import {
+  normalizeComposerScheduleRoundBreaks,
+  validateComposerScheduleRoundBreaks,
+} from "./tournament-composer-schedule-round-breaks";
 
 export function validateHomePlannerDraft(
   draft: TournamentComposerDraftPayload,
@@ -40,20 +44,29 @@ export function validateHomePlannerDraft(
   if (planner.meetingsPerOpponent < 1) {
     errors.meetingsPerOpponent = "Mindestens ein Spiel pro Gegner.";
   }
-  const curatedTemplate = resolveComposerProgrammeTemplate({
-    participantCount: draft.participants.length,
+
+  const preview = buildTournamentSchedulePreview({
+    payload: draft,
     categoryContext: planner.programmeProposalCategoryContext ?? null,
+    planner,
   });
-  if (curatedTemplate && planner.mainPause?.enabled) {
-    const pauseError = validateComposerMainPauseWindow({
-      mainPause: planner.mainPause,
-      tournamentStartAt: draft.startAt,
-      tournamentEndAt: draft.endAt,
-    });
-    if (pauseError) {
-      errors.mainPauseStartLocalTime = pauseError;
-    }
-  }
+  const effectiveRoundCount =
+    preview.roundCount > 0
+      ? preview.roundCount
+      : (resolveComposerProgrammeTemplate({
+          participantCount: draft.participants.length,
+          categoryContext: planner.programmeProposalCategoryContext ?? null,
+        })?.proposal.template?.rounds.length ?? 0);
+
+  const scheduleBreaks = normalizeComposerScheduleRoundBreaks(planner);
+  Object.assign(
+    errors,
+    validateComposerScheduleRoundBreaks({
+      breaks: scheduleBreaks,
+      roundCount: effectiveRoundCount,
+    }),
+  );
+
   for (const br of planner.breaks) {
     const missingBegin = !br.startLocalTime?.trim();
     const missingDuration = !br.durationMinutes || br.durationMinutes <= 0;
