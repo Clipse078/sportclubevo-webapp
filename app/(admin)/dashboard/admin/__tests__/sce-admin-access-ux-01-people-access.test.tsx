@@ -143,8 +143,8 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         canInvite={false}
       />,
     );
-    expect(screen.getByText("Person")).toBeTruthy();
-    expect(screen.getByText("Zugriff")).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "Person", hidden: true })).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "Zugriff", hidden: true })).toBeTruthy();
     expect(screen.getAllByText(/F2/).length).toBeGreaterThan(0);
   });
 
@@ -251,9 +251,9 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         }}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: /Max Muster — Zugriff anzeigen/i }));
+    fireEvent.click(screen.getByTestId("people-access-row-u1"));
     expect(screen.getByText("Übersicht")).toBeTruthy();
-    expect(screen.getByText("Funktionen")).toBeTruthy();
+    expect(screen.getByText("Rollen")).toBeTruthy();
   });
 
   it("protected platform user shows Systemzugang badge", () => {

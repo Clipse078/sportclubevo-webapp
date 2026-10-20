@@ -42,7 +42,10 @@ describe("SCE-DESIGN-SYSTEM-07-R1 visual convergence guardrails", () => {
 
   it("wires filtered no-results, reset action, and list-surface containment", () => {
     const people = readSrc("components/admin/users/TenantUsersSearchableList.tsx");
-    expect(people).toContain('data-sce-feedback-surface="people-access-list"');
+    expect(
+      people.includes('data-sce-feedback-surface="people-access-list"') ||
+        people.includes('feedbackSurfaceId="people-access-list"'),
+    ).toBe(true);
     expect(people).toContain('variant="FILTERED_NO_RESULTS"');
     expect(people).toContain("people-access-reset-filters");
     expect(people).toContain("contained");

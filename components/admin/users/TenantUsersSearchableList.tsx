@@ -3,23 +3,32 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Search, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { SCE_KPI_CARD_SURFACE, SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
+import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
 import { cn } from "@/lib/cn";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
+import { PeopleAccessDenseUserRow } from "@/components/admin/users/PeopleAccessDenseUserRow";
 import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
+import {
+  SceDenseGridHeader,
+  SceDenseGridHeaderCell,
+  SceDenseResultCount,
+  SceDenseSurface,
+  SceDenseToolbar,
+  SceEntityIdentity,
+} from "@/components/sce/dense";
+import { SceSearchField } from "@/components/sce/forms/SceSearchField";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
-import UserRowActionsMenu from "@/components/admin/users/UserRowActionsMenu";
 import PeopleAccessWizardDialog from "@/components/admin/users/people-access/PeopleAccessWizardDialog";
 import PersonAccessDrawer from "@/components/admin/users/people-access/PersonAccessDrawer";
 import { buildPersonDetailZugriffHref } from "@/lib/admin/users/person-quick-view-config";
 import type { WizardRoleOption } from "@/components/admin/users/people-access/PeopleAccessWizard";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
-import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
-import { buildAccessColumnSummary } from "@/lib/admin/people-access/access-column-summary";
 import { userHasPrivilegedRole } from "@/lib/admin/people-access/privileged-utils";
+import { SCE_PEOPLE_ACCESS_DENSE_GRID } from "@/lib/design-system/sce-dense-ui-foundation";
+import { SCE_DENSE_META_TEXT_CLASS } from "@/lib/design-system/sce-dense-ui-micro-ux";
 import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/queries";
 import { canShowImpersonateTenantUserAction } from "@/lib/admin/users/tenant-impersonation-eligibility";
 
@@ -44,16 +53,18 @@ type Props = {
   wizardConfig?: PeopleAccessWizardConfig;
 };
 
-function getRoleBadgeClass(roleKey: string): string {
-  const k = roleKey.toLowerCase();
-  if (k.includes("superadmin") || k.includes("super_admin")) return "sce-role-badge sce-role-badge-admin";
-  if (k.includes("admin")) return "sce-role-badge sce-role-badge-admin";
-  if (k.includes("trainer")) return "sce-role-badge sce-role-badge-trainer";
-  if (k.includes("staff")) return "sce-role-badge sce-role-badge-staff";
-  return "sce-role-badge sce-role-badge-member";
-}
-
 type StatusFilter = "all" | "active" | "deactivated" | "pending" | "not_invited" | "privileged";
+
+function formatScopeSummary(user: TenantUserItem): string {
+  const parts: string[] = [];
+  if (user.roles.length > 0) parts.push("Gesamter Verein");
+  const scoped = user.scopedRoles?.map((s) => s.orgUnitName).filter(Boolean) ?? [];
+  for (const s of scoped) {
+    if (!parts.includes(s)) parts.push(s);
+  }
+  if (parts.length === 0) return "Kein Bereich zugewiesen";
+  return parts.join(" · ");
+}
 
 function getAccessStatusLabel(
   user: TenantUserItem,
@@ -66,24 +77,6 @@ function getAccessStatusLabel(
     return { label: "Aktiv", tone: "success" };
   }
   return { label: "Deaktiviert", tone: "muted" };
-}
-
-function formatLastActivity(date: Date | string | null): string {
-  if (!date) return "—";
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("de-CH", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-function formatScopeSummary(user: TenantUserItem): string {
-  const parts: string[] = [];
-  if (user.roles.length > 0) parts.push("Gesamter Verein");
-  const scoped = user.scopedRoles?.map((s) => s.orgUnitName).filter(Boolean) ?? [];
-  for (const s of scoped) {
-    if (!parts.includes(s)) parts.push(s);
-  }
-  if (parts.length === 0) return "Kein Bereich zugewiesen";
-  return parts.join(" · ");
 }
 
 export default function TenantUsersSearchableList({
@@ -201,9 +194,6 @@ export default function TenantUsersSearchableList({
   const totalShown = filteredUsers.length + filteredPersons.length;
   const grandTotal = initialUsers.length + personsWithoutUser.length;
 
-  const gridCols =
-    "md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_80px_100px_100px_40px]";
-
   function openWizardForPerson(personId?: string, email?: string) {
     setWizardPersonId(personId ?? "");
     setWizardEmail(email ?? "");
@@ -243,32 +233,21 @@ export default function TenantUsersSearchableList({
         ))}
       </div>
 
-      <section
-        data-sce-feedback-surface="people-access-list"
-        className={cn(SCE_SURFACE_STANDARD_PANEL, "overflow-hidden p-0")}
-        aria-label="Personenliste"
-      >
-        <div className="space-y-3 border-b border-[var(--border)] p-4 md:p-5">
+      <SceDenseSurface feedbackSurfaceId="people-access-list" aria-label="Personenliste">
+        <SceDenseToolbar
+          footer={
+            isFiltered ? <SceDenseResultCount shown={totalShown} total={grandTotal} label="Einträge" /> : undefined
+          }
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(12rem,1fr)_minmax(7.5rem,auto)_minmax(7.5rem,auto)_minmax(8rem,auto)_auto] lg:items-center">
-            <div className="sce-page-search min-w-0 sm:col-span-2 md:col-span-1 lg:col-span-1">
-              <Search className="h-4 w-4 flex-shrink-0 text-[var(--muted)]" />
-              <input
-                type="text"
-                placeholder="Name oder E-Mail suchen…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                autoComplete="off"
-              />
-              {query ? (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="flex-shrink-0 text-xs font-medium text-[var(--muted)]"
-                >
-                  Löschen
-                </button>
-              ) : null}
-            </div>
+            <SceSearchField
+              value={query}
+              onChange={setQuery}
+              placeholder="Name oder E-Mail suchen…"
+              ariaLabel="Personen suchen"
+              testId="people-access-search"
+              shellClassName="sm:col-span-2 md:col-span-1 lg:col-span-1"
+            />
 
             <SceToolbarSelect
               value={statusFilter}
@@ -324,13 +303,7 @@ export default function TenantUsersSearchableList({
               </Button>
             ) : null}
           </div>
-
-          {isFiltered ? (
-            <p className="text-sm text-[var(--muted)]" role="status">
-              {totalShown} von {grandTotal} Einträgen
-            </p>
-          ) : null}
-        </div>
+        </SceDenseToolbar>
 
         {grandTotal === 0 ? (
           <SceEmptyState
@@ -377,156 +350,70 @@ export default function TenantUsersSearchableList({
             data-testid="people-access-empty-filtered"
           />
         ) : (
-          <div className="overflow-hidden bg-[var(--surface)]">
-          <div
-            className={`hidden gap-3 border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)] md:grid ${gridCols}`}
-          >
-            <span>Person</span>
-            <span>Funktion</span>
-            <span>Bereich</span>
-            <span>Zugriff</span>
-            <span>Status</span>
-            <span>Letzte Aktivität</span>
-            <span />
-          </div>
+          <div role="table" aria-label="Personen und Zugänge" className="bg-[var(--surface)]">
+            <SceDenseGridHeader gridClassName={SCE_PEOPLE_ACCESS_DENSE_GRID}>
+              <SceDenseGridHeaderCell>Person</SceDenseGridHeaderCell>
+              <SceDenseGridHeaderCell>Funktion</SceDenseGridHeaderCell>
+              <SceDenseGridHeaderCell>Bereich</SceDenseGridHeaderCell>
+              <SceDenseGridHeaderCell>Zugriff</SceDenseGridHeaderCell>
+              <SceDenseGridHeaderCell>Status</SceDenseGridHeaderCell>
+              <SceDenseGridHeaderCell align="end">Letzte Aktivität</SceDenseGridHeaderCell>
+              <SceDenseGridHeaderCell align="end">
+                <span className="sr-only">Aktionen</span>
+              </SceDenseGridHeaderCell>
+            </SceDenseGridHeader>
 
-          {filteredUsers.map((user, idx) => {
-            const isLast = idx === filteredUsers.length - 1 && filteredPersons.length === 0;
-            const isCurrentUser = user.userId === currentUserId;
-            const canImpersonateTarget = canShowImpersonateTenantUserAction({
-              actorCanImpersonate: canImpersonateTenant,
-              actorUserId,
-              targetUserId: user.userId,
-              pendingInvitation: user.pendingInvitation,
-              membershipIsActive: user.membershipIsActive,
-              userIsActive: user.userIsActive,
-              isPlatformSystemIdentity: user.isPlatformSystemIdentity,
-            });
-            const status = getAccessStatusLabel(user);
-            const roleChips = groupRoleChipsForDisplay(user.roles);
+            {filteredUsers.map((user) => {
+              const isCurrentUser = user.userId === currentUserId;
+              const canImpersonateTarget = canShowImpersonateTenantUserAction({
+                actorCanImpersonate: canImpersonateTenant,
+                actorUserId,
+                targetUserId: user.userId,
+                pendingInvitation: user.pendingInvitation,
+                membershipIsActive: user.membershipIsActive,
+                userIsActive: user.userIsActive,
+                isPlatformSystemIdentity: user.isPlatformSystemIdentity,
+              });
+              const status = getAccessStatusLabel(user);
 
-            return (
-              <div
-                key={user.userId}
-                className={`group relative flex flex-col gap-3 px-5 py-4 md:grid md:items-center md:gap-3 hover:bg-[var(--surface-2)] ${gridCols} ${
-                  !isLast ? "border-b border-[var(--border)]" : ""
-                }`}
-              >
-                <button
-                  type="button"
-                  className="absolute inset-0 z-0 cursor-pointer"
-                  aria-label={`${user.name} — Zugriff anzeigen`}
-                  onClick={() => setDrawerUser(user)}
+              return (
+                <PeopleAccessDenseUserRow
+                  key={user.userId}
+                  user={user}
+                  isCurrentUser={isCurrentUser}
+                  status={status}
+                  onOpenDrawer={setDrawerUser}
+                  actorUserId={actorUserId}
+                  canImpersonateTarget={canImpersonateTarget}
+                  canManage={canManage}
+                  canGlobalDelete={canGlobalDelete}
+                  onEditAccess={(userId) => router.push(buildPersonDetailZugriffHref(userId))}
                 />
+              );
+            })}
 
-                <div className="relative z-[1] flex min-w-0 items-center gap-3 pointer-events-none">
-                  <AdminAvatar name={user.name} size="sm" />
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-sm font-semibold">{user.name}</span>
-                      {isCurrentUser ? (
-                        <span className="inline-flex h-5 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[0.65rem] font-semibold text-amber-700">
-                          Ich
-                        </span>
-                      ) : null}
-                      {user.isPlatformSystemIdentity ? (
-                        <span className="inline-flex h-5 items-center rounded-full border border-slate-200 bg-slate-50 px-2 text-[0.65rem] font-semibold text-slate-700">
-                          Systemzugang
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-0.5 truncate text-xs text-[var(--muted)]">{user.email}</p>
-                  </div>
-                </div>
-
-                <div className="relative z-[1] pointer-events-none">
-                  <div className="flex flex-wrap gap-1.5">
-                    {roleChips.length > 0 ? (
-                      roleChips.map((role) => (
-                        <span key={role.id} className={getRoleBadgeClass(role.key)} title={role.assignmentCount > 1 ? `${role.assignmentCount} Zuweisungen` : undefined}>
-                          {role.name}
-                        </span>
-                      ))
-                    ) : user.scopedRoles && user.scopedRoles.length > 0 ? (
-                      user.scopedRoles.map((s, i) => (
-                        <span key={`${s.id}-${i}`} className={getRoleBadgeClass(s.key ?? s.name)}>
-                          {s.name}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-[var(--muted)]">Keine Funktion zugewiesen</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="relative z-[1] text-xs text-[var(--muted)] pointer-events-none">
-                  {formatScopeSummary(user)}
-                </div>
-
-                <div className="relative z-[1] text-xs pointer-events-none">
-                  {(() => {
-                    const access = buildAccessColumnSummary(user);
-                    return (
-                      <span>
-                        <span className="block font-medium text-[var(--foreground)]">{access.primary}</span>
-                        {access.secondary ? (
-                          <span className="block text-[var(--muted)]">{access.secondary}</span>
-                        ) : null}
-                      </span>
-                    );
-                  })()}
-                </div>
-
-                <div className="relative z-[1] pointer-events-none">
-                  <AdminStatusPill label={status.label} tone={status.tone} />
-                </div>
-
-                <div className="relative z-[1] text-xs text-[var(--muted)] pointer-events-none">
-                  {formatLastActivity(user.lastLoginAt)}
-                </div>
-
-                <div className="relative z-[1] flex justify-end">
-                  <UserRowActionsMenu
-                    userId={user.userId}
-                    userName={user.name}
-                    userEmail={user.email}
-                    pendingInvitation={user.pendingInvitation}
-                    canManageMembership={canManage && !user.isPlatformSystemIdentity}
-                    canGlobalDelete={canGlobalDelete}
-                    isSelf={user.userId === actorUserId}
-                    canImpersonateTarget={canImpersonateTarget}
-                    canShowAdminShortcuts={canManage && !user.isPlatformSystemIdentity}
-                    onEditAccess={(userId) => router.push(buildPersonDetailZugriffHref(userId))}
-                    linkedPersonName={user.linkedPersonName ?? null}
-                    tenantRoleNames={user.roles.map((r) => r.name)}
-                  />
-                </div>
-              </div>
-            );
-          })}
-
-          {filteredPersons.map((person, idx) => {
-            const isLast = idx === filteredPersons.length - 1;
-            return (
+            {filteredPersons.map((person) => (
               <div
                 key={person.personId}
-                className={`flex flex-col gap-3 bg-[var(--surface-2)]/40 px-5 py-4 md:grid md:items-center md:gap-3 ${gridCols} ${
-                  !isLast ? "border-b border-[var(--border)]" : ""
-                }`}
+                className={cn(
+                  "flex flex-col gap-3 border-b border-[var(--border)] bg-[var(--surface-2)]/30 px-4 py-3 md:grid md:items-center md:gap-3 md:px-5 md:py-3.5",
+                  SCE_PEOPLE_ACCESS_DENSE_GRID,
+                )}
+                data-testid={`people-access-person-row-${person.personId}`}
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <AdminAvatar name={person.name} size="sm" />
-                  <div className="min-w-0">
-                    <span className="truncate text-sm font-semibold">{person.name}</span>
-                    <p className="mt-0.5 truncate text-xs text-[var(--muted)]">{person.email ?? "Keine E-Mail"}</p>
-                  </div>
+                <SceEntityIdentity
+                  primary={person.name}
+                  secondary={person.email ?? "Keine E-Mail"}
+                  leading={<AdminAvatar name={person.name} size="sm" />}
+                />
+                <div className={`hidden md:block ${SCE_DENSE_META_TEXT_CLASS}`}>—</div>
+                <div className={`hidden md:block ${SCE_DENSE_META_TEXT_CLASS}`}>—</div>
+                <div className={`hidden md:block ${SCE_DENSE_META_TEXT_CLASS}`}>Kein Zugriff</div>
+                <div className="hidden md:block">
+                  <AdminStatusPill label="Nicht eingeladen" tone="muted" />
                 </div>
-                <div className="text-xs text-[var(--muted)]">—</div>
-                <div className="text-xs text-[var(--muted)]">—</div>
-                <div className="text-xs text-[var(--muted)]">Kein Zugriff</div>
-                <AdminStatusPill label="Nicht eingeladen" tone="muted" />
-                <div className="text-xs text-[var(--muted)]">—</div>
-                <div className="flex justify-end">
+                <div className={`hidden md:block ${SCE_DENSE_META_TEXT_CLASS}`}>—</div>
+                <div className="flex justify-end md:justify-end">
                   {canInvite && wizardConfig ? (
                     <button
                       type="button"
@@ -538,11 +425,10 @@ export default function TenantUsersSearchableList({
                   ) : null}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
         )}
-      </section>
+      </SceDenseSurface>
 
       {wizardConfig ? (
         <PeopleAccessWizardDialog
