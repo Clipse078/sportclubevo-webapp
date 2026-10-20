@@ -29,7 +29,7 @@ export const SCE_DESIGN_SYSTEM_06_R2_PO_REVIEW = {
   PR: "884",
   /** Set after R2 commits land — PO review gate. */
   R2_STARTING_HEAD_FULL: "10e21d1d9d212ae8db2f04290711e21603bdc906",
-  FEATURE_HEAD_FULL: "PENDING_COMMIT",
+  FEATURE_HEAD_FULL: "a8dbd4b64f6e72e6efb71ac12de53232d9682eea",
   /** R1 docs gate commit — R2 work starts here. */
 } as const;
 
