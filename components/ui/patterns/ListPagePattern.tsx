@@ -1,10 +1,7 @@
 import type { ReactNode } from "react";
-import {
-  PageBreadcrumbs,
-  PageHeader,
-  PageActions,
-  EmptyState,
-} from "@/components/ui/page";
+import { PageActions, EmptyState } from "@/components/ui/page";
+import { SceBreadcrumbs } from "@/components/sce/navigation/SceBreadcrumbs";
+import { SceWorkspaceHeader } from "@/components/sce/workspace/SceWorkspaceHeader";
 import type { BreadcrumbItem } from "@/components/ui/page";
 import { LoadingSkeleton } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -126,20 +123,17 @@ export function ListPagePattern({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <PageBreadcrumbs items={breadcrumbs} />
-      )}
+      {breadcrumbs && breadcrumbs.length > 0 ? (
+        <SceBreadcrumbs items={breadcrumbs} />
+      ) : null}
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <PageHeader
-          eyebrow={eyebrow}
-          title={title}
-          description={description}
-          badge={headerBadge}
-          className="mb-0"
-        />
-        {headerActions && <PageActions>{headerActions}</PageActions>}
-      </div>
+      <SceWorkspaceHeader
+        eyebrow={eyebrow}
+        title={title}
+        description={description}
+        badge={headerBadge}
+        secondaryActions={headerActions ? <PageActions>{headerActions}</PageActions> : undefined}
+      />
 
       {stats && <div className="mb-6">{stats}</div>}
 

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { PeoplePicker, type PersonPickerResult } from "@/components/shared/PeoplePicker";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 
 type RoleSummary = { id: string; key: string; name: string };
 type SeasonSummary = { id: string; name: string; key: string; isActive: boolean };
@@ -290,17 +291,19 @@ export default function OrgMembershipPicker({
             ))}
           </select>
         </div>
-        <div className="flex items-center gap-3 pt-5">
-          <input
-            type="checkbox"
-            id="isPrimary"
-            checked={isPrimary}
-            onChange={(e) => setIsPrimary(e.target.checked)}
-            className="fca-toggle-checkbox"
-          />
-          <label htmlFor="isPrimary" className="text-sm font-medium text-[var(--text-2)]">
+        <div
+          className="flex items-center justify-between gap-3 pt-5"
+          data-sce-binary-setting-row="true"
+        >
+          <label htmlFor="org-membership-is-primary" className="text-sm font-medium text-[var(--text-2)]">
             Primäres Mitglied
           </label>
+          <SwitchThumb
+            id="org-membership-is-primary"
+            checked={isPrimary}
+            onChange={setIsPrimary}
+            aria-label="Primäres Mitglied"
+          />
         </div>
       </div>
 

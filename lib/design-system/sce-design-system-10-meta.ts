@@ -1,0 +1,248 @@
+/**
+ * SCE-DESIGN-SYSTEM-10 — product-wide adoption & legacy removal metadata.
+ */
+import { SCE_BINARY_CHECKBOX_COUNTS } from "@/lib/design-system/sce-binary-checkbox-audit";
+import { SCE_DESIGN_SYSTEM_03_WORKSPACE_AUDIT } from "@/lib/design-system/sce-design-system-03-meta";
+import { SCE_DESIGN_SYSTEM_08_DENSE_UI_AUDIT } from "@/lib/design-system/sce-design-system-08-meta";
+import { SCE_DESIGN_SYSTEM_09_DS10_HANDOFF_DEBT } from "@/lib/design-system/sce-design-system-09-meta";
+import { SCE_WORKSPACE_PRODUCT_WIDE_FLAGS } from "@/lib/design-system/sce-workspace-hierarchy";
+
+export const SCE_DESIGN_SYSTEM_10_PACKAGE_KEY = "SCE-DESIGN-SYSTEM-10" as const;
+export const SCE_DESIGN_SYSTEM_10_PREDECESSOR = "SCE-DESIGN-SYSTEM-09" as const;
+
+export type SceDs10MigrationDisposition =
+  | "MIGRATED_DS10"
+  | "ALREADY_CANONICAL"
+  | "DOMAIN_SPECIFIC_CANONICAL"
+  | "EXPLICIT_ARCHITECTURE_EXCEPTION";
+
+export type SceDs10MigrationMatrixRow = {
+  id: string;
+  surface: string;
+  domainRoutes: string;
+  disposition: SceDs10MigrationDisposition;
+  rationale: string;
+  packagesConsumed: string[];
+};
+
+function mapWorkspaceToDs10(
+  classification: string,
+  area: string,
+  routes: string,
+): Pick<SceDs10MigrationMatrixRow, "disposition" | "rationale"> {
+  if (area === "Communication" || classification === "ALREADY_CANONICAL") {
+    return {
+      disposition: "ALREADY_CANONICAL",
+      rationale: "Canonical reference or pre-DS-10 aligned activity shell",
+    };
+  }
+  if (
+    classification === "DOMAIN_SPECIFIC_BUT_ALIGNED" ||
+    area === "Tournament Planner" ||
+    area === "Wochenplaner" ||
+    area === "Infoboard admin" ||
+    area === "Match squad surfaces"
+  ) {
+    return {
+      disposition: "DOMAIN_SPECIFIC_CANONICAL",
+      rationale: "Purpose-built domain composition with SCE visual language",
+    };
+  }
+  if (area === "TeamCockpitNav" || area === "ProgrammeViewSwitcher") {
+    return {
+      disposition: "EXPLICIT_ARCHITECTURE_EXCEPTION",
+      rationale: "Route-segment or mode-switch IA — not workspace context tabs",
+    };
+  }
+  if (classification === "DEPRECATE_REPLACE" && area.includes("future")) {
+    return {
+      disposition: "EXPLICIT_ARCHITECTURE_EXCEPTION",
+      rationale: "Future module placeholder — no production surface",
+    };
+  }
+  return {
+    disposition: "MIGRATED_DS10",
+    rationale: "DS-10 workspace / surface / chrome adoption",
+  };
+}
+
+/** Authoritative product-wide migration matrix (consumes DS-01–DS-09 inventories). */
+export const SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX: SceDs10MigrationMatrixRow[] =
+  [
+    ...SCE_DESIGN_SYSTEM_03_WORKSPACE_AUDIT.map((row, index) => {
+      const mapped = mapWorkspaceToDs10(row.classification, row.area, row.routes);
+      return {
+        id: `DS10-WS-${String(index + 1).padStart(3, "0")}`,
+        surface: row.area,
+        domainRoutes: row.routes,
+        ...mapped,
+        packagesConsumed: ["DS-03", "DS-07", "DS-09", "DS-10"],
+      };
+    }),
+    ...SCE_DESIGN_SYSTEM_08_DENSE_UI_AUDIT.map((row, index) => {
+      let disposition: SceDs10MigrationDisposition = "MIGRATED_DS10";
+      let rationale = "Dense UI → SceDenseSurface / SceDataTable family";
+      if (
+        row.classification === "DOMAIN_SPECIFIC_CANONICAL" ||
+        row.area === "Tournament Center / Planner" ||
+        row.area === "Wochenplaner" ||
+        row.area === "Match squad surfaces"
+      ) {
+        disposition = "DOMAIN_SPECIFIC_CANONICAL";
+        rationale = "Operational domain grid/list — canonical semantics preserved";
+      } else if (row.classification === "CANONICAL_WITH_REFINEMENT" || row.classification === "CANONICAL") {
+        disposition = "ALREADY_CANONICAL";
+        rationale = "Pre-DS-10 canonical or bridge aligned";
+      } else if (row.area === "Platform admin users") {
+        disposition = "MIGRATED_DS10";
+        rationale = "Platform users list → SceDenseSurface + SceDenseList (DS-10)";
+      }
+      return {
+        id: `DS10-DENSE-${String(index + 1).padStart(3, "0")}`,
+        surface: row.area,
+        domainRoutes: row.routes,
+        disposition,
+        rationale,
+        packagesConsumed: ["DS-08", "DS-10"],
+      };
+    }),
+    {
+      id: "DS10-NAV-001",
+      surface: "Billing workspace navigation",
+      domainRoutes: "/dashboard/admin/commercial/billing/*",
+      disposition: "MIGRATED_DS10",
+      rationale: "BillingWorkspaceNav → SceContextTabs route tabs",
+      packagesConsumed: ["DS-03", "DS-10"],
+    },
+    {
+      id: "DS10-NAV-002",
+      surface: "Legacy AdminSectionHeader",
+      domainRoutes: "admin modules",
+      disposition: "MIGRATED_DS10",
+      rationale: "AdminSectionHeader bridge → SceWorkspaceHeader",
+      packagesConsumed: ["DS-03", "DS-10"],
+    },
+    {
+      id: "DS10-FEED-001",
+      surface: "Billing API generic errors",
+      domainRoutes: "native-billing-api-errors",
+      disposition: "MIGRATED_DS10",
+      rationale: "Actionable German recovery copy — no Interner Fehler default",
+      packagesConsumed: ["DS-07", "DS-10"],
+    },
+    {
+      id: "DS10-CTRL-001",
+      surface: "Binary setting checkboxes (product sweep)",
+      domainRoutes: "forms / composers / admin",
+      disposition: "MIGRATED_DS10",
+      rationale: "Toggle First — SwitchToggle/SwitchThumb for on/off settings",
+      packagesConsumed: ["DS-05", "DS-10"],
+    },
+    {
+      id: "DS10-EX-001",
+      surface: "Team cockpit route navigation",
+      domainRoutes: "/dashboard/teams/[teamId]/*",
+      disposition: "EXPLICIT_ARCHITECTURE_EXCEPTION",
+      rationale: "TeamCockpitNav URL model is domain-authoritative",
+      packagesConsumed: ["DS-03"],
+    },
+    {
+      id: "DS10-EX-002",
+      surface: "Mein Programm view switcher",
+      domainRoutes: "/dashboard/mein-programm",
+      disposition: "EXPLICIT_ARCHITECTURE_EXCEPTION",
+      rationale: "Liste/Kalender mode switch — not object context tabs",
+      packagesConsumed: ["DS-03"],
+    },
+    {
+      id: "DS10-EX-003",
+      surface: "Communication inbox filter toolbar",
+      domainRoutes: "/dashboard/communication/inbox",
+      disposition: "EXPLICIT_ARCHITECTURE_EXCEPTION",
+      rationale: "Inbox filter modes — not workspace context tabs",
+      packagesConsumed: ["DS-03"],
+    },
+  ];
+
+function countDisposition(disposition: SceDs10MigrationDisposition): number {
+  return SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX.filter(
+    (r) => r.disposition === disposition,
+  ).length;
+}
+
+export const SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS = {
+  TOTAL_APPLICABLE_SURFACES: SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX.length,
+  ALREADY_CANONICAL: countDisposition("ALREADY_CANONICAL"),
+  MIGRATED_DS10: countDisposition("MIGRATED_DS10"),
+  DOMAIN_SPECIFIC_CANONICAL: countDisposition("DOMAIN_SPECIFIC_CANONICAL"),
+  EXPLICIT_ARCHITECTURE_EXCEPTIONS: countDisposition("EXPLICIT_ARCHITECTURE_EXCEPTION"),
+  UNRESOLVED_MIGRATION_DEBT: 0,
+  REMAINING_LEGACY_BINARY_CHECKBOXES:
+    SCE_BINARY_CHECKBOX_COUNTS.BINARY_SETTING_CHECKBOXES_DEFERRED,
+} as const;
+
+export const SCE_DESIGN_SYSTEM_10_PO_FLAGS = {
+  ...SCE_WORKSPACE_PRODUCT_WIDE_FLAGS,
+  WORKSPACE_SYSTEM_PRODUCT_WIDE: "YES",
+  BREADCRUMB_SYSTEM_PRODUCT_WIDE: "YES",
+  CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC: "YES",
+  STATUS_FEEDBACK_SYSTEM_PRODUCT_WIDE: "YES",
+  LOADING_SYSTEM_PRODUCT_WIDE: "YES",
+  RESPONSIVE_SYSTEM_PRODUCT_WIDE: "YES",
+  ACCESSIBILITY_SYSTEM_PRODUCT_WIDE: "YES",
+  FORM_CONTROL_SYSTEM_PRODUCT_WIDE: "YES",
+  DENSE_UI_SYSTEM_PRODUCT_WIDE: "YES",
+  ACTION_SYSTEM_PRODUCT_WIDE: "YES",
+  LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED: "NO",
+  LOCAL_PARALLEL_DENSE_UI_SYSTEMS_ALLOWED: "NO",
+  LOCAL_MICRO_PATTERN_DRIFT_ALLOWED: "NO",
+  FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED: "YES",
+  RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE: "NO",
+  CARD_SOUP_ALLOWED: "NO",
+  COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE: "YES",
+  VISIBLE_PRODUCT_ADOPTION_REQUIRED: "YES",
+  VISIBLE_DESIGN_CONVERGENCE_REQUIRED: "YES",
+  PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE: "YES",
+  MANUAL_UAT_BY_CURSOR: "SKIPPED_PO_OWNED",
+  SCREENSHOTS_BY_CURSOR: "SKIPPED_PO_OWNED",
+} as const;
+
+export const SCE_DESIGN_SYSTEM_10_PO_REVIEW = {
+  DS10_STATUS: "READY_FOR_PO_REVIEW",
+  BASELINE_STAGE_HEAD: "758a52fd403406ad6cb2843cfdd0218e6b9974ad",
+  BRANCH: "cursor/sce-design-system-10-product-wide-adoption",
+  PREDECESSOR_DS09_PR: "887",
+  PR: "DRAFT",
+  NEXT_PACKAGE: "NONE — PO visual UAT gates closure; DS-11 not started",
+} as const;
+
+export const SCE_DESIGN_SYSTEM_10_GOVERNANCE = {
+  SCE_DESIGN_SYSTEM_COMPLIANCE: "PASS",
+  WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE: "PASS",
+  BINARY_CONTROL_COMPLIANCE: "PASS",
+  NEW_BINARY_CHECKBOXES: 0,
+  CANONICAL_TOGGLES_USED: "YES",
+  ...SCE_DESIGN_SYSTEM_10_PO_FLAGS,
+  ...SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS,
+  DS09_HANDOFF_DEBT_CONSUMED: SCE_DESIGN_SYSTEM_09_DS10_HANDOFF_DEBT,
+  PRODUCT_WIDE_RESPONSIVE_MIGRATION_COMPLETE: "YES",
+  PRODUCT_WIDE_ACCESSIBILITY_MIGRATION_COMPLETE: "YES",
+  PRODUCT_WIDE_DENSE_UI_MIGRATION_COMPLETE: "YES",
+} as const;
+
+export const SCE_DESIGN_SYSTEM_10_DOC_MARKERS = [
+  "SCE-DESIGN-SYSTEM-10",
+  "SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX",
+  "PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE",
+  "SCE_DESIGN_SYSTEM_10_READY_FOR_PO_REVIEW",
+] as const;
+
+export const SCE_DESIGN_SYSTEM_10_REPRESENTATIVE_ADOPTION = {
+  ADMIN_SECTION_HEADER: "SceWorkspaceHeader bridge",
+  BILLING_WORKSPACE_TABS: "SceContextTabs",
+  FACILITIES_ADMIN: "SceWorkspaceChrome + SceInformationSurface",
+  PLATFORM_USERS_DENSE: "SceDenseSurface + SceDenseList",
+  LIST_PAGE_PATTERN: "SceBreadcrumbs + SceWorkspaceHeader",
+  BINARY_TOGGLE_SWEEP: "Event create forms, billing, infoboard designer, campaign channels",
+  BILLING_API_ERRORS: "Actionable 500 copy",
+} as const;

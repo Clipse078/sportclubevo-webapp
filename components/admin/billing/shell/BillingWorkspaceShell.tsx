@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { isPlatformSuperAdmin } from "@/lib/security/platform-superadmin";
-import BillingWorkspaceNav from "./BillingWorkspaceNav";
+import BillingWorkspaceContextTabs from "./BillingWorkspaceContextTabs";
 
 type Props = {
   children: ReactNode;
@@ -20,7 +20,7 @@ export default async function BillingWorkspaceShell({ children }: Props) {
 
   return (
     <div className="w-full space-y-8">
-      <BillingWorkspaceNav showOperations={showOperations} />
+      <BillingWorkspaceContextTabs showOperations={showOperations} />
       {children}
     </div>
   );

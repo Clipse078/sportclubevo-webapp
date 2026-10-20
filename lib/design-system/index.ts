@@ -26,3 +26,4 @@ export * from "./sce-design-system-08-meta";
 export * from "./sce-responsive-accessibility-foundation";
 export * from "./sce-responsive-accessibility-micro-ux";
 export * from "./sce-design-system-09-meta";
+export * from "./sce-design-system-10-meta";

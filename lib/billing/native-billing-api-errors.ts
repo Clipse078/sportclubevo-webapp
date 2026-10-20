@@ -47,5 +47,12 @@ export function nativeBillingErrorResponse(error: unknown): NextResponse {
       { status: 503 },
     );
   }
-  return NextResponse.json({ error: "Interner Fehler." }, { status: 500 });
+  return NextResponse.json(
+    {
+      error:
+        "Der Vorgang konnte nicht abgeschlossen werden. Bitte versuchen Sie es später erneut.",
+      code: "BILLING_UNEXPECTED_ERROR",
+    },
+    { status: 500 },
+  );
 }

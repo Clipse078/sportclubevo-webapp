@@ -37,7 +37,9 @@ describe("nativeBillingErrorResponse", () => {
   it("keeps unexpected errors as safe internal 500", async () => {
     const response = nativeBillingErrorResponse(new Error("db blew up"));
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: "Interner Fehler." });
+    const body = await response.json();
+    expect(body.error).not.toBe("Interner Fehler.");
+    expect(body.code).toBe("BILLING_UNEXPECTED_ERROR");
   });
 
   it("maps billing crypto misconfiguration without leaking secrets", async () => {

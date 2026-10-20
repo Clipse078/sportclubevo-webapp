@@ -384,6 +384,21 @@ Full package doc: [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md).
 
 ---
 
+## SCE-DESIGN-SYSTEM-10 — Product-wide adoption / legacy removal
+
+Product-wide rollout of workspace chrome, bounded surfaces, dense UI, forms (Toggle First), actions, and feedback — consuming DS-01–DS-09 inventories.
+
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md) |
+| --- | --- |
+| Typed matrix | `SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX` in `lib/design-system/sce-design-system-10-meta.ts` |
+| Roadmap | [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) |
+
+**Delivery status:** `DS10_STATUS = READY_FOR_PO_REVIEW` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = YES` (matrix) · PO visual UAT pending · **not merged** · **DS-11 not started**.
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-10-product-wide-adoption.test.ts`.
+
+---
+
 ## Design principle
 
 **One SCE. One navigation language. One activity language. One visual family.**

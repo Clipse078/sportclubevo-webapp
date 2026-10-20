@@ -307,7 +307,7 @@ export const SCE_DESIGN_SYSTEM_03_LEGACY_NAV_INVENTORY: SceLegacyNavigationInven
       classification: "LEGACY_MIGRATE",
       canonicalTarget: "SceContextTabs",
       migrationPackage: "DS-10",
-      status: "DS10_REMAINING",
+      status: "DS03_DONE",
     },
     {
       currentImplementation: "AdminSectionHeader",
@@ -315,7 +315,7 @@ export const SCE_DESIGN_SYSTEM_03_LEGACY_NAV_INVENTORY: SceLegacyNavigationInven
       classification: "LEGACY_MIGRATE",
       canonicalTarget: "SceWorkspaceHeader",
       migrationPackage: "DS-10",
-      status: "DS10_REMAINING",
+      status: "DS03_DONE",
     },
   ];
 

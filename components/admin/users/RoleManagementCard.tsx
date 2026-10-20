@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 
 type RoleItem = {
   id: string;
@@ -236,41 +238,43 @@ export default function RoleManagementCard({
                         </p>
 
                         <div className="mt-4 space-y-4">
-                          <label className="fca-toggle-row">
+                          <div
+                            className="fca-toggle-row"
+                            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+                          >
                             <span className="text-sm text-slate-700">
                               Zugriff auf Vereinsleitung
                             </span>
-                            <input
-                              type="checkbox"
+                            <SwitchThumb
+                              id={`role-${role.id}-vereinsleitung-access`}
                               checked={role.canAccessVereinsleitung}
-                              onChange={(event) =>
-                                updateRoleField(
-                                  role.id,
-                                  "canAccessVereinsleitung",
-                                  event.target.checked,
-                                )
+                              onChange={(checked) =>
+                                updateRoleField(role.id, "canAccessVereinsleitung", checked)
                               }
-                              className="fca-toggle-checkbox"
+                              aria-label="Zugriff auf Vereinsleitung"
                             />
-                          </label>
+                          </div>
 
-                          <label className="fca-toggle-row">
+                          <div
+                            className="fca-toggle-row"
+                            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+                          >
                             <span className="text-sm text-slate-700">
                               Darf an Vereinsleitungs-Meetings teilnehmen
                             </span>
-                            <input
-                              type="checkbox"
+                            <SwitchThumb
+                              id={`role-${role.id}-vereinsleitung-meetings`}
                               checked={role.canAttendVereinsleitungMeetings}
-                              onChange={(event) =>
+                              onChange={(checked) =>
                                 updateRoleField(
                                   role.id,
                                   "canAttendVereinsleitungMeetings",
-                                  event.target.checked,
+                                  checked,
                                 )
                               }
-                              className="fca-toggle-checkbox"
+                              aria-label="Darf an Vereinsleitungs-Meetings teilnehmen"
                             />
-                          </label>
+                          </div>
                         </div>
                       </div>
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 import { cn } from "@/lib/cn";
@@ -336,31 +337,30 @@ export default function DirectMessageComposer({ tenantId }: Props) {
           </fieldset>
           <fieldset>
             <legend className="text-sm font-medium">Kanäle</legend>
-            <div className="mt-2 flex flex-wrap gap-4 text-sm">
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={channels.inApp}
-                  onChange={(e) => setChannels((c) => ({ ...c, inApp: e.target.checked }))}
-                />
-                In-App
-              </label>
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={channels.push}
-                  onChange={(e) => setChannels((c) => ({ ...c, push: e.target.checked }))}
-                />
-                Push
-              </label>
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={channels.email}
-                  onChange={(e) => setChannels((c) => ({ ...c, email: e.target.checked }))}
-                />
-                E-Mail
-              </label>
+            <div className="mt-2 space-y-2 text-sm">
+              {(
+                [
+                  ["inApp", "In-App"],
+                  ["push", "Push"],
+                  ["email", "E-Mail"],
+                ] as const
+              ).map(([key, label]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+                  data-sce-binary-setting-row="true"
+                >
+                  <span>{label}</span>
+                  <SwitchThumb
+                    id={`direct-message-channel-${key}`}
+                    checked={channels[key]}
+                    onChange={(checked) =>
+                      setChannels((c) => ({ ...c, [key]: checked }))
+                    }
+                    aria-label={`Kanal ${label}`}
+                  />
+                </div>
+              ))}
             </div>
           </fieldset>
           <CommunicationSenderSelector

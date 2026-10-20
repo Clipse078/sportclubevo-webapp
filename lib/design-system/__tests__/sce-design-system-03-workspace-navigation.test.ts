@@ -134,12 +134,15 @@ describe("SCE-DESIGN-SYSTEM-03 workspace / navigation guardrails", () => {
     );
   });
 
-  it("legacy inventory rows include DS-10 gate", () => {
-    expect(
-      SCE_DESIGN_SYSTEM_03_LEGACY_NAV_INVENTORY.some(
-        (row) => row.status === "DS10_REMAINING",
-      ),
-    ).toBe(true);
+  it("legacy inventory rows resolve billing and admin headers after DS-10", () => {
+    const billing = SCE_DESIGN_SYSTEM_03_LEGACY_NAV_INVENTORY.find(
+      (row) => row.currentImplementation === "BillingWorkspaceNav",
+    );
+    const adminHeader = SCE_DESIGN_SYSTEM_03_LEGACY_NAV_INVENTORY.find(
+      (row) => row.currentImplementation === "AdminSectionHeader",
+    );
+    expect(billing?.status).not.toBe("DS10_REMAINING");
+    expect(adminHeader?.status).not.toBe("DS10_REMAINING");
     expect(SCE_DESIGN_SYSTEM_03_CANONICAL_PRIMITIVES.BREADCRUMBS).toBe(
       "SceBreadcrumbs",
     );
