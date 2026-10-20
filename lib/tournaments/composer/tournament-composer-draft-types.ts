@@ -4,6 +4,7 @@ import type {
   TournamentResourceAllocationDraft,
 } from "@/lib/tournaments/create-tournament-orchestration";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
+import type { TournamentComposerPlayingUnitDraft } from "./tournament-composer-playing-units";
 
 export type TournamentComposerParticipantRow = TournamentParticipantDraft & {
   displayName: string;
@@ -14,6 +15,8 @@ export type TournamentComposerParticipantRow = TournamentParticipantDraft & {
     facilityResourceName: string;
     facilityName: string;
   }>;
+  /** Tournament-local Spielteams (02C) — draft-only until tournament is created. */
+  playingUnits?: TournamentComposerPlayingUnitDraft[];
 };
 
 export type TournamentComposerResourceRow = TournamentResourceAllocationDraft & {
@@ -47,6 +50,11 @@ export type TournamentComposerDraftPayload = {
   participants: TournamentComposerParticipantRow[];
   resourceAllocations: TournamentComposerResourceRow[];
   publication: TournamentComposerPublicationValues;
+  /**
+   * When true, organiser wants SCE to prepare/manage a Spielplan (02D R10).
+   * Defaults to false for new tournaments; omitted on legacy drafts is resolved via planner state.
+   */
+  spielplanCreationEnabled?: boolean;
   /** HOME tenant-organised planner configuration (01H-R1). */
   planner?: TournamentComposerPlannerDraft | null;
 };
@@ -75,6 +83,7 @@ export function createEmptyTournamentComposerDraft(): TournamentComposerDraftPay
       wochenplanVisible: true,
       teamPageVisible: true,
     },
+    spielplanCreationEnabled: false,
     planner: null,
   };
 }

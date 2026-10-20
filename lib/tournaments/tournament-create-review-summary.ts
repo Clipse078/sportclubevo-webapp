@@ -1,6 +1,7 @@
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
+import { resolveComposerSpielplanCreationEnabled } from "@/lib/tournaments/composer/resolve-composer-spielplan-creation-enabled";
 
 export type TournamentCreateReviewSummary = {
   title: string;
@@ -68,6 +69,7 @@ export function buildTournamentCreateReviewSummary(input: {
     | "resourceAllocations"
     | "publication"
     | "planner"
+    | "spielplanCreationEnabled"
   >;
   organizer: ExternalClubPickerResult | null;
   pitchHallFacilityGroups: FacilityGroup[];
@@ -93,7 +95,10 @@ export function buildTournamentCreateReviewSummary(input: {
     payload.publication.teamPageVisible ? "Teamseite" : null,
   ].filter((v): v is string => !!v);
 
-  const planner = payload.homeAway === "HOME" ? payload.planner : null;
+  const planner =
+    payload.homeAway === "HOME" && resolveComposerSpielplanCreationEnabled(payload)
+      ? payload.planner
+      : null;
   const formatLabels: Record<string, string> = {
     GROUP_MIX_ONLY: "Gruppen-/Mixspiele",
     KNOCKOUT_ONLY: "K.-o.-Turnier",

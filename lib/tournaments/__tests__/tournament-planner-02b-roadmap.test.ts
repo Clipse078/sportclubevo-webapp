@@ -25,7 +25,8 @@ describe("SCE-TOURNAMENT-PLANNER-02B roadmap", () => {
     expect(parent).toMatch(/02B.*Playing formats/i);
     expect(parent).toMatch(/02A.*CLOSED/i);
     expect(parent).toMatch(/02B_STATUS.*CLOSED.*MERGED/i);
-    expect(parent).toMatch(/02C_STARTED.*YES/i);
+    expect(parent).toMatch(/02C_STATUS.*CLOSED.*MERGED/i);
+    expect(parent).toMatch(/02D.*Predefined Spielplan Templates/i);
   });
 
   it("wires migration for nullable playersPerSide", () => {

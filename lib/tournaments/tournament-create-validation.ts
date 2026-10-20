@@ -1,5 +1,6 @@
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import { isAwayTournamentOrganiserMissing } from "@/lib/tournaments/composer/tournament-composer-organiser";
+import { resolveComposerSpielplanCreationEnabled } from "@/lib/tournaments/composer/resolve-composer-spielplan-creation-enabled";
 import { validateHomePlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-validation";
 import type { TournamentCreateTabId } from "@/lib/tournaments/tournament-create-workflow-config";
 import { resolveTournamentCreateTabOrder } from "@/lib/tournaments/tournament-create-workflow-config";
@@ -23,7 +24,7 @@ export function computeTournamentCreateTabErrors(
     errors.termin = true;
   }
 
-  if (draft.homeAway === "HOME") {
+  if (draft.homeAway === "HOME" && resolveComposerSpielplanCreationEnabled(draft)) {
     const plannerErrors = validateHomePlannerDraft(draft);
     if (Object.keys(plannerErrors).length > 0) {
       if (plannerErrors.competitionFormat || plannerErrors.groupMixStrategy) {
@@ -45,8 +46,9 @@ export function computeTournamentCreateTabErrors(
 export function firstInvalidTournamentCreateTab(
   errors: Partial<Record<TournamentCreateTabId, boolean>>,
   homeAway: "HOME" | "AWAY" = "HOME",
+  options?: { spielplanCreationEnabled?: boolean },
 ): TournamentCreateTabId | null {
-  const order = resolveTournamentCreateTabOrder(homeAway);
+  const order = resolveTournamentCreateTabOrder(homeAway, options);
   for (const tab of order) {
     if (errors[tab]) return tab;
   }

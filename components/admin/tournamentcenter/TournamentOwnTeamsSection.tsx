@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Loader2, Plus } from "lucide-react";
 import type { TeamPickerOption } from "@/components/admin/shared/TeamSearchablePicker";
 import { SceClubTeamSelectorDialog } from "@/components/sce/club-team-selector/SceClubTeamSelectorDialog";
@@ -18,6 +18,7 @@ type Props = {
   tenantClubName: string;
   onAddTeam: (teamId: string) => void;
   onRemoveParticipant: (localId: string) => void;
+  renderParticipantFooter?: (localId: string) => ReactNode;
   pending?: boolean;
   testId?: string;
 };
@@ -40,6 +41,7 @@ export default function TournamentOwnTeamsSection({
   tenantClubName,
   onAddTeam,
   onRemoveParticipant,
+  renderParticipantFooter,
   pending = false,
   testId = "tournament-own-teams-section",
 }: Props) {
@@ -78,6 +80,7 @@ export default function TournamentOwnTeamsSection({
             model={model}
             density={density}
             onRemove={onRemoveParticipant}
+            footer={renderParticipantFooter?.(model.localId)}
             testId={`tournament-own-team-tile-${model.localId}`}
           />
         ))}

@@ -66,13 +66,25 @@ function baseSnapshot(partial: Partial<PlanungDomainSnapshot>): PlanungDomainSna
 
 describe("01K-R4 — simplified Planung UX", () => {
   it("READY state when feasible and no schedule yet", () => {
-    const vm = buildTournamentPlanungViewModel(baseSnapshot({}));
+    const vm = buildTournamentPlanungViewModel(
+      baseSnapshot({ participantCount: 9 }),
+    );
     expect(vm.planningUx?.state).toBe("READY");
     expect(vm.planningUx?.headline).toBe("Alles bereit.");
     expect(vm.actions.generateLabel).toBe("✨ Spielplan erstellen");
     expect(vm.actions.canGenerate).toBe(true);
+    expect(vm.programmeTemplate?.available).toBe(false);
     expect(vm.diagnostics).toHaveLength(0);
     expect(vm.feasibilityGuidance).toBeNull();
+  });
+
+  it("offers predefined template fast path when participant count matches catalogue", () => {
+    const vm = buildTournamentPlanungViewModel(
+      baseSnapshot({ participantCount: 4, programmeCategoryContext: "E_FF12" }),
+    );
+    expect(vm.programmeTemplate?.available).toBe(true);
+    expect(vm.actions.canInstantiatePredefinedTemplate).toBe(true);
+    expect(vm.actions.canGenerate).toBe(false);
   });
 
   it("does not expose raw diagnostic codes or minimum-rest copy in planning UX", () => {

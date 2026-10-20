@@ -13,10 +13,15 @@ import { generateTournamentFixturesForEvent } from "@/lib/tournament-scheduling/
 import { createTournamentBreak } from "@/lib/tournament-scheduling/tournament-break-service";
 import { createTournamentPitch } from "@/lib/tournament-scheduling/tournament-pitch-service";
 import { createWorkingTournamentScheduleVersion } from "@/lib/tournament-scheduling/schedule-version-service";
+import { applyProgrammeTemplateToTournament } from "@/lib/tournament-scheduling/programme-templates/programme-template-service";
+import { getProgrammeTemplateById } from "@/lib/tournament-scheduling/programme-templates/template-registry";
+import { evaluateComposerTemplateApplicability } from "./tournament-composer-programme-proposal";
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
 import type { TournamentComposerPlannerDraft } from "./tournament-composer-planner-types";
 import { resolveEffectiveGroupCount } from "./tournament-composer-planner-defaults";
 import { resolveComposerBreakDateTimes } from "./tournament-composer-planner-breaks";
+import { resolveCanonicalScheduleRoundBreaks } from "./tournament-composer-schedule-round-breaks";
+import { syncComposerValidatedScheduleFromDraft } from "./sync-composer-schedule-preview-persistence";
 
 export async function persistTournamentPlannerFromComposer(input: {
   tenantId: string;
@@ -35,6 +40,54 @@ export async function persistTournamentPlannerFromComposer(input: {
   });
   const tenantTimeZone = resolveTenantEventTimezone(tenant?.timezone);
 
+  await createWorkingTournamentScheduleVersion(tenantId, tournamentId, {
+    matchDurationMinutes: planner.timing.matchDurationMinutes,
+    transitionMinutes: planner.timing.transitionMinutes,
+    minRestMinutes: planner.timing.minRestMinutes,
+  });
+
+  if (planner.programmeTemplateId) {
+    const template = getProgrammeTemplateById(
+      planner.programmeTemplateId,
+      planner.programmeTemplateVersion ?? undefined,
+    );
+    const applicability =
+      template != null
+        ? evaluateComposerTemplateApplicability({ template, pitches: planner.pitches })
+        : "INCOMPATIBLE";
+    if (template && applicability !== "INCOMPATIBLE") {
+      const pitchOverrides =
+        planner.pitchesUserCustomized || applicability === "CUSTOM_COMPATIBLE"
+          ? new Map(
+              planner.pitches
+                .filter((p) => p.templateFieldKey)
+                .map((p, index) => [
+                  p.templateFieldKey!,
+                  {
+                    label: p.label,
+                    playersPerSide: p.playersPerSide ?? null,
+                    displayOrder: index,
+                  },
+                ]),
+            )
+          : undefined;
+      const roundScheduledBreaks = resolveCanonicalScheduleRoundBreaks(planner);
+      await applyProgrammeTemplateToTournament({
+        tenantId,
+        tournamentId,
+        templateId: planner.programmeTemplateId,
+        templateVersion: planner.programmeTemplateVersion ?? undefined,
+        replaceExisting: true,
+        pitchOverrides,
+        roundScheduledBreaks,
+        mainBreakDurationMinutes: 0,
+        mainBreakAfterRoundNumbers: [],
+        mainBreakStartAt: null,
+      });
+      return;
+    }
+  }
+
   const groupCount = resolveEffectiveGroupCount(planner);
 
   await upsertTournamentCompetitionConfiguration(
@@ -46,7 +99,7 @@ export async function persistTournamentPlannerFromComposer(input: {
   await prisma.tournamentCompetitionConfiguration.update({
     where: { eventId: tournamentId },
     data: {
-      fixtureHomeAwayRelevance: planner.homeAwayRelevance === "ON" ? "ON" : "OFF",
+      fixtureHomeAwayRelevance: "OFF",
       roundRobinMeetingsPerOpponent: planner.meetingsPerOpponent,
       automaticGroupCount: groupCount,
       knockoutQualifiersPerGroup:
@@ -191,9 +244,12 @@ export async function persistTournamentPlannerFromComposer(input: {
     });
   }
 
-  await createWorkingTournamentScheduleVersion(tenantId, tournamentId, {
-    matchDurationMinutes: planner.timing.matchDurationMinutes,
-    transitionMinutes: planner.timing.transitionMinutes,
-    minRestMinutes: planner.timing.minRestMinutes,
+  await syncComposerValidatedScheduleFromDraft({
+    tenantId,
+    tournamentId,
+    payload,
+    planner,
+    pitchIdByLocalId: pitchIdByLocal,
+    tenantTimeZone,
   });
 }

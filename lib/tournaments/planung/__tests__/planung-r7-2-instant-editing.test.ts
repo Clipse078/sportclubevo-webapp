@@ -30,7 +30,7 @@ describe.skip("01K-R7.2 — superseded by R7.3 live editor", () => {
     expect(settings).not.toMatch(/onBusyChange/);
     expect(settings).toMatch(/fixtureHomeAwayRelevance/);
     expect(settings).toMatch(/SwitchToggle/);
-    expect(settings).toMatch(/planung-home-away-relevance/);
+    expect(settings).not.toMatch(/planung-home-away-relevance/);
   });
 
   it("does not expose publication panel in Spielplan workspace", () => {

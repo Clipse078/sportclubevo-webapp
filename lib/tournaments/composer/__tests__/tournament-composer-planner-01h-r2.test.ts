@@ -42,14 +42,21 @@ vi.mock("@/lib/tournament-scheduling/schedule-version-service", () => ({
   createWorkingTournamentScheduleVersion: vi.fn().mockResolvedValue({ id: "sv-1" }),
 }));
 
+vi.mock("../sync-composer-schedule-preview-persistence", () => ({
+  syncComposerValidatedScheduleFromDraft: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     tenant: { findUnique: vi.fn().mockResolvedValue({ timezone: "Europe/Zurich" }) },
+    event: { findFirst: vi.fn().mockResolvedValue({ id: "event-1" }) },
     tournamentCompetitionConfiguration: { update: vi.fn() },
     tournamentRankingConfiguration: { upsert: vi.fn() },
     tournamentParticipant: {
       findMany: vi.fn().mockResolvedValue([{ id: "p1" }, { id: "p2" }]),
     },
+    tournamentFixture: { findMany: vi.fn().mockResolvedValue([]) },
+    tournamentScheduleVersion: { findFirst: vi.fn().mockResolvedValue({ id: "sv-1" }) },
   },
 }));
 
@@ -79,6 +86,7 @@ function homeDraft() {
     },
   ];
   base.planner = createDefaultTournamentComposerPlannerDraft();
+  base.spielplanCreationEnabled = true;
   return base;
 }
 
@@ -169,10 +177,17 @@ describe("01H-R2 — Smart Timing + break UX", () => {
     expect(planner.timing.matchDurationMinutes).not.toBe(120);
   });
 
-  it("N/O — HOME has planner tabs; AWAY does not", () => {
+  it("N/O — HOME with Spielplan enabled has planner tabs; AWAY does not", () => {
     expect(
-      buildTournamentCreateTabNavigationConfig({ homeAway: "HOME" }).tabs.some((t) => t.key === "spielplan"),
+      buildTournamentCreateTabNavigationConfig({ homeAway: "HOME", spielplanCreationEnabled: true }).tabs.some(
+        (t) => t.key === "spielplan",
+      ),
     ).toBe(true);
+    expect(
+      buildTournamentCreateTabNavigationConfig({ homeAway: "HOME", spielplanCreationEnabled: false }).tabs.some(
+        (t) => t.key === "spielplan",
+      ),
+    ).toBe(false);
     expect(
       buildTournamentCreateTabNavigationConfig({ homeAway: "AWAY" }).tabs.some((t) => t.key === "spielplan"),
     ).toBe(false);

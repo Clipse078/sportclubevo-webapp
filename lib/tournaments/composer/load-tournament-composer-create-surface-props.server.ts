@@ -6,12 +6,21 @@ import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-autho
 import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
 import { SCE_ACTIVITY_DEFAULT_PUBLICATION_AUTHORITY } from "@/lib/sce/activity-governance/types";
 import { loadTournamentEffectiveGovernanceForSession } from "./load-effective-governance-server";
+import {
+  resolveAuthoritativeTeamJuniorCategoryCode,
+  type JuniorCategoryCode,
+} from "@/lib/teams/jahrgang-rules";
 
 export type TournamentTeamOption = {
   id: string;
   name: string;
+  shortName: string | null;
+  /** Tenant-owned structured label (often compact stufe, e.g. E1). */
+  alternativeName?: string | null;
   ageGroup: string | null;
   genderGroup: string | null;
+  /** Server-resolved junior code from structured ageGroup / shortName / alternativeName. */
+  juniorCategoryCode: JuniorCategoryCode | null;
 };
 
 export type TournamentSeasonOption = {
@@ -83,12 +92,26 @@ export async function loadTournamentComposerCreateSurfaceProps(input: {
     writableTeamIds.length > 0
       ? await prisma.team.findMany({
           where: { tenantId: input.tenantId, id: { in: [...writableTeamIds] }, isActive: true },
-          select: { id: true, name: true, ageGroup: true, genderGroup: true },
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            alternativeName: true,
+            ageGroup: true,
+            genderGroup: true,
+          },
           orderBy: { name: "asc" },
         })
       : await prisma.team.findMany({
           where: { tenantId: input.tenantId, isActive: true },
-          select: { id: true, name: true, ageGroup: true, genderGroup: true },
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            alternativeName: true,
+            ageGroup: true,
+            genderGroup: true,
+          },
           orderBy: { name: "asc" },
         });
 
@@ -103,8 +126,15 @@ export async function loadTournamentComposerCreateSurfaceProps(input: {
     teamOptions: teamRows.map((t) => ({
       id: t.id,
       name: t.name,
+      shortName: t.shortName,
+      alternativeName: t.alternativeName,
       ageGroup: t.ageGroup,
       genderGroup: t.genderGroup,
+      juniorCategoryCode: resolveAuthoritativeTeamJuniorCategoryCode({
+        ageGroup: t.ageGroup,
+        shortName: t.shortName,
+        alternativeName: t.alternativeName,
+      }),
     })),
     pitchHallFacilityGroups: facilityGroupsForTypes(facilities, ["FULL_PITCH", "HALF_PITCH"]),
     dressingRoomFacilityGroups: facilityGroupsForTypes(facilities, ["DRESSING_ROOM"]),

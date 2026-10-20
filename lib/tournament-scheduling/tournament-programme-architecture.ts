@@ -146,9 +146,9 @@ export const PLAYING_UNIT_TOURNAMENT_LOCAL = true;
 export const PARTICIPANT_UNIT_CAPACITY_OVERLAP_IMPLEMENTED = true;
 export const IMPLICIT_FULL_TEAM_PLAYING_UNIT_COMPATIBILITY = true;
 export const EXISTING_TOURNAMENTS_REQUIRE_UNIT_SETUP = false;
-export const PLAYING_UNIT_FIXTURE_REFERENCE_IMPLEMENTED = false;
-export const PLAYING_UNIT_ASSIGNMENT_REFERENCE_IMPLEMENTED = false;
-export const PLAYING_UNIT_FIXTURE_REFERENCE_DEFERRED_TO_02D = true;
+export const PLAYING_UNIT_FIXTURE_REFERENCE_IMPLEMENTED = true;
+export const PLAYING_UNIT_ASSIGNMENT_REFERENCE_IMPLEMENTED = true;
+export const PLAYING_UNIT_FIXTURE_REFERENCE_DEFERRED_TO_02D = false;
 
 /** ROTATION is a first-class programme format — not a Smart Mix variant. */
 export const ROTATION_FIRST_CLASS_FUTURE_FORMAT = true;
@@ -274,11 +274,13 @@ export const TOURNAMENT_PLANNER_02_PACKAGES = {
 
 export type TournamentPlanner02PackageId = keyof typeof TOURNAMENT_PLANNER_02_PACKAGES;
 
-export const TOURNAMENT_PLANNER_02C_STATUS = "READY_FOR_PO_UAT" as const;
+export const TOURNAMENT_PLANNER_02C_STATUS = "CLOSED / ACCEPTED / MERGED" as const;
 
-export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID = "02D" as const;
+export const TOURNAMENT_PLANNER_02D_STATUS = "READY_FOR_PO_UAT" as const;
+
+export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID = "02E" as const;
 export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_LABEL =
-  "Predefined Spielplan templates & instant generation" as const;
+  "Spielplan UX, outputs & final hardening" as const;
 
 export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_ID = "02E" as const;
 export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_LABEL =
@@ -288,7 +290,6 @@ export const TOURNAMENT_PLANNER_02_CLOSES_AFTER_PACKAGE_ID = "02E" as const;
 
 /** Remaining required work to close Tournament Planner 02. */
 export const TOURNAMENT_PLANNER_02_REMAINING_REQUIRED_PACKAGES = [
-  "02D",
   "02E",
 ] as const satisfies readonly TournamentPlanner02PackageId[];
 

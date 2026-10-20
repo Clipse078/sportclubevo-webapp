@@ -28,6 +28,7 @@ import { buildTournamentPlanungViewModel } from "./build-planung-view-model";
 import type { PlanungDomainSnapshot } from "./build-planung-view-model";
 import type { TournamentPlanungViewModel } from "./types";
 import { resolveTournamentParticipantLogoUrl } from "../club-identity";
+import { resolveProgrammeCategoryFromTeamAgeGroups } from "@/lib/tournament-scheduling/programme-templates/programme-template-category";
 
 export async function loadTournamentPlanungViewModel(params: {
   tenantId: string;
@@ -108,7 +109,7 @@ export async function loadTournamentPlanungViewModel(params: {
       where: { tenantId: params.tenantId, eventId: params.tournamentId },
       orderBy: [{ displayOrder: "asc" }, { id: "asc" }],
       include: {
-        team: { select: { id: true } },
+        team: { select: { id: true, ageGroup: true } },
         externalClub: {
           select: {
             id: true,
@@ -315,6 +316,10 @@ export async function loadTournamentPlanungViewModel(params: {
     }
   }
 
+  const programmeCategoryContext = resolveProgrammeCategoryFromTeamAgeGroups(
+    participantRows.map((row) => row.team?.ageGroup ?? null),
+  ).categoryContext;
+
   const snapshot: PlanungDomainSnapshot = {
     tournamentId: params.tournamentId,
     ownership,
@@ -381,6 +386,7 @@ export async function loadTournamentPlanungViewModel(params: {
         },
     scheduleConsistencyStatus,
     fixtureHomeAwayRelevance,
+    programmeCategoryContext,
   };
 
   return buildTournamentPlanungViewModel(snapshot);

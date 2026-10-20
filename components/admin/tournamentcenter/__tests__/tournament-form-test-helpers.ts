@@ -2,6 +2,33 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { SCE_PLATFORM_DEFAULT_TOURNAMENT_DURATION_MINUTES } from "@/lib/operational/defaults";
 import type { SceActivityEffectiveGovernance } from "@/lib/sce/activity-governance/types";
 import type { TournamentSeasonOption, TournamentTeamOption } from "@/lib/tournaments/composer/load-tournament-composer-create-surface-props.server";
+import { resolveAuthoritativeTeamJuniorCategoryCode } from "@/lib/teams/jahrgang-rules";
+
+/** Mirrors server `loadTournamentComposerCreateSurfaceProps` team row shape. */
+export function makeTournamentComposerTeamOption(input: {
+  id: string;
+  name: string;
+  shortName?: string | null;
+  alternativeName?: string | null;
+  ageGroup: string | null;
+  genderGroup?: string | null;
+}): TournamentTeamOption {
+  const shortName = input.shortName ?? null;
+  const alternativeName = input.alternativeName ?? null;
+  return {
+    id: input.id,
+    name: input.name,
+    shortName,
+    alternativeName,
+    ageGroup: input.ageGroup,
+    genderGroup: input.genderGroup ?? null,
+    juniorCategoryCode: resolveAuthoritativeTeamJuniorCategoryCode({
+      ageGroup: input.ageGroup,
+      shortName,
+      alternativeName,
+    }),
+  };
+}
 
 /** Props for tournament create/edit tests — duration is configurable, not UI-hardcoded to a club. */
 export const TOURNAMENT_FORM_TEST_SCHEDULE_PROPS = {
@@ -15,8 +42,8 @@ export const TOURNAMENT_CREATE_FORM_TEST_SEASON_OPTIONS: TournamentSeasonOption[
 ];
 
 export const TOURNAMENT_CREATE_FORM_TEST_TEAM_OPTIONS: TournamentTeamOption[] = [
-  { id: "team-1", name: "1. Mannschaft", ageGroup: null, genderGroup: null },
-  { id: "team-2", name: "2. Mannschaft", ageGroup: null, genderGroup: null },
+  makeTournamentComposerTeamOption({ id: "team-1", name: "1. Mannschaft", ageGroup: null }),
+  makeTournamentComposerTeamOption({ id: "team-2", name: "2. Mannschaft", ageGroup: null }),
 ];
 
 export const TOURNAMENT_CREATE_FORM_TEST_GOVERNANCE: SceActivityEffectiveGovernance = {
@@ -94,4 +121,12 @@ export async function addOwnTeamParticipantViaSelector(teamId = "team-1") {
     expect(screen.getByTestId("tournament-participant-team-selector")).toBeInTheDocument();
   });
   fireEvent.click(screen.getByTestId(`sce-team-row-${teamId}`));
+}
+
+/** Enable optional Spielplan workflow (02D R10) on tournament create Termin step. */
+export function enableTournamentCreateSpielplanCreation() {
+  const toggle = screen.getByRole("switch", { name: "Spielplan erstellen" });
+  if (toggle.getAttribute("aria-checked") !== "true") {
+    fireEvent.click(toggle);
+  }
 }

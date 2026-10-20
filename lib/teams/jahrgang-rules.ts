@@ -26,14 +26,18 @@ const BASE_JAHRGANG_BY_CODE: Record<JuniorCategoryCode, number[]> = {
 
 const BASE_SEASON_START_YEAR = 2025;
 
-export function normalizeJuniorCategoryCode(
-  value: string | null | undefined
-): JuniorCategoryCode | null {
-  const normalized = String(value ?? "")
+function normalizeAgeGroupToken(value: string | null | undefined): string {
+  return String(value ?? "")
     .trim()
     .toUpperCase()
     .replace(/\s+/g, "")
-    .replace("-", "");
+    .replace(/-/g, "");
+}
+
+export function normalizeJuniorCategoryCode(
+  value: string | null | undefined
+): JuniorCategoryCode | null {
+  const normalized = normalizeAgeGroupToken(value);
 
   if (normalized === "G") return "G";
   if (normalized === "F") return "F";
@@ -44,6 +48,53 @@ export function normalizeJuniorCategoryCode(
   if (normalized === "B") return "B";
   if (normalized === "A") return "A";
 
+  return null;
+}
+
+/**
+ * Resolves junior category from one structured team label (`ageGroup`, `shortName`, `alternativeName`).
+ * Handles squad stufe tokens (E1 / F2), tenant short names (`Junioren E1`), and D-7 / D-9 labels.
+ */
+export function resolveStructuredJuniorCategoryFromAgeGroup(
+  value: string | null | undefined,
+): JuniorCategoryCode | null {
+  const direct = normalizeJuniorCategoryCode(value);
+  if (direct) return direct;
+
+  const normalized = normalizeAgeGroupToken(value);
+  if (!normalized) return null;
+
+  const squadMatch = /^([GFEACB])(\d+)$/.exec(normalized);
+  if (squadMatch) {
+    return squadMatch[1] as JuniorCategoryCode;
+  }
+
+  if (normalized.includes("D7")) return "D7";
+  if (normalized.includes("D9")) return "D9";
+
+  const juniorPrefixMatch = /(?:JUNIOREN|JUNIORINNEN)([GFEACB])\d*/.exec(normalized);
+  if (juniorPrefixMatch) {
+    return juniorPrefixMatch[1] as JuniorCategoryCode;
+  }
+
+  const femaleFormatMatch = /([GFE])FF\d+/.exec(normalized);
+  if (femaleFormatMatch) {
+    return femaleFormatMatch[1] as JuniorCategoryCode;
+  }
+
+  return null;
+}
+
+/** Authoritative junior code for tournament composer category resolution. */
+export function resolveAuthoritativeTeamJuniorCategoryCode(team: {
+  ageGroup: string | null | undefined;
+  shortName?: string | null | undefined;
+  alternativeName?: string | null | undefined;
+}): JuniorCategoryCode | null {
+  for (const field of [team.ageGroup, team.alternativeName, team.shortName]) {
+    const resolved = resolveStructuredJuniorCategoryFromAgeGroup(field);
+    if (resolved) return resolved;
+  }
   return null;
 }
 

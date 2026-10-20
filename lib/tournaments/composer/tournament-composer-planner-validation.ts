@@ -1,10 +1,17 @@
 import type { TournamentComposerDraftPayload } from "./tournament-composer-draft-types";
+import { buildTournamentSchedulePreview } from "./tournament-composer-schedule-preview";
+import { resolveComposerProgrammeTemplate } from "./tournament-composer-programme-template";
+import { resolveComposerSpielplanCreationEnabled } from "./resolve-composer-spielplan-creation-enabled";
+import {
+  normalizeComposerScheduleRoundBreaks,
+  validateComposerScheduleRoundBreaks,
+} from "./tournament-composer-schedule-round-breaks";
 
 export function validateHomePlannerDraft(
   draft: TournamentComposerDraftPayload,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (draft.homeAway !== "HOME") {
+  if (draft.homeAway !== "HOME" || !resolveComposerSpielplanCreationEnabled(draft)) {
     return errors;
   }
   const planner = draft.planner;
@@ -37,6 +44,29 @@ export function validateHomePlannerDraft(
   if (planner.meetingsPerOpponent < 1) {
     errors.meetingsPerOpponent = "Mindestens ein Spiel pro Gegner.";
   }
+
+  const preview = buildTournamentSchedulePreview({
+    payload: draft,
+    categoryContext: planner.programmeProposalCategoryContext ?? null,
+    planner,
+  });
+  const effectiveRoundCount =
+    preview.roundCount > 0
+      ? preview.roundCount
+      : (resolveComposerProgrammeTemplate({
+          participantCount: draft.participants.length,
+          categoryContext: planner.programmeProposalCategoryContext ?? null,
+        })?.proposal.template?.rounds.length ?? 0);
+
+  const scheduleBreaks = normalizeComposerScheduleRoundBreaks(planner);
+  Object.assign(
+    errors,
+    validateComposerScheduleRoundBreaks({
+      breaks: scheduleBreaks,
+      roundCount: effectiveRoundCount,
+    }),
+  );
+
   for (const br of planner.breaks) {
     const missingBegin = !br.startLocalTime?.trim();
     const missingDuration = !br.durationMinutes || br.durationMinutes <= 0;

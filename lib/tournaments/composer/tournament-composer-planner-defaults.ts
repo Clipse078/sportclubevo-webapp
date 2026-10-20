@@ -45,6 +45,13 @@ export function createDefaultTournamentComposerPlannerDraft(input?: {
       minRestMinutes: FEASIBILITY_DEFAULT_MIN_REST_MINUTES,
     },
     breaks: [],
+    programmeTemplateId: null,
+    programmeTemplateVersion: null,
+    programmeProposalCategoryContext: null,
+    programmeProposalFingerprint: null,
+    pitchesUserCustomized: false,
+    pendingProposalRefresh: null,
+    scheduleRoundBreaks: undefined,
   };
 }
 

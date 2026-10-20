@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Loader2, Plus } from "lucide-react";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
 import { SceClubTeamSelectorDialog } from "@/components/sce/club-team-selector/SceClubTeamSelectorDialog";
@@ -13,6 +13,7 @@ type Props = {
   identities: TournamentLobbyParticipantIdentity[];
   onAddExternalClub: (club: ExternalClubPickerResult) => void;
   onRemoveParticipant: (localId: string) => void;
+  renderParticipantFooter?: (localId: string) => ReactNode;
   pending?: boolean;
   testId?: string;
 };
@@ -31,6 +32,7 @@ export default function TournamentExternalClubsSection({
   identities,
   onAddExternalClub,
   onRemoveParticipant,
+  renderParticipantFooter,
   pending = false,
   testId = "tournament-external-clubs-section",
 }: Props) {
@@ -56,6 +58,7 @@ export default function TournamentExternalClubsSection({
             model={model}
             density={density}
             onRemove={onRemoveParticipant}
+            footer={renderParticipantFooter?.(model.localId)}
             testId={`tournament-external-club-tile-${model.localId}`}
           />
         ))}

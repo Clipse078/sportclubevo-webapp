@@ -49,11 +49,11 @@ describe("ClubCrest accessibility", () => {
     expect(screen.queryByTestId("club-crest-fallback-initials")).toBeNull();
   });
 
-  it("keeps circular treatment for missing-logo fallback only", () => {
+  it("uses restrained square bounds for missing-logo fallback (same footprint as real crests)", () => {
     const identity = buildNameOnlyClubIdentity("FC Binningen");
     render(<ClubCrest identity={identity} />);
-    expect(screen.getByTestId("club-crest-fallback-initials").className).toContain(
-      "rounded-full",
-    );
+    const fallback = screen.getByTestId("club-crest-fallback-initials");
+    expect(fallback.className).not.toContain("rounded-full");
+    expect(fallback.className).toContain("border-dashed");
   });
 });
