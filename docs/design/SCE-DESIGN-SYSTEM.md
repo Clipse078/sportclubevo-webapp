@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**; STAGE `c94e36e5…`) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **NOT STARTED**  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **READY FOR PO REVIEW**  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-03** — Workspace / Surface / Navigation System
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-04** (after DS-03 PO acceptance)
 
 ---
 
@@ -134,6 +134,33 @@ GLOBAL NAVIGATION → BREADCRUMBS → WORKSPACE / PAGE HEADER → CONTEXT TABS (
 Communication (`/dashboard/communication`) remains the **primary positive visual reference**, **not** a universal page template. Preserve tournament planner density, Activity Composer, Programme Engine, activity cards, and domain-specific layouts per DS-01-R1.
 
 Full DS-03 scope: [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
+
+---
+
+## Workspace / navigation (SCE-DESIGN-SYSTEM-03)
+
+**Canonical composition** (`SceWorkspaceChrome`):
+
+```text
+SceBreadcrumbs → SceWorkspaceHeader → SceContextTabs (when semantic) → content / SceWorkspaceSurface
+```
+
+| Primitive | Role |
+| --- | --- |
+| `AppShellNavigation` | Global SCE domain (unchanged NAVBAR-UPGRADE-01) |
+| `SceBreadcrumbs` | Hierarchy wayfinding — **WHERE am I?** |
+| `SceWorkspaceHeader` | Object/workspace identity + actions — calm, not oversized |
+| `SceContextTabs` | Context subviews — **WHAT can I view/do here?** |
+| `PageShell` | Page frame + width modes |
+| `SceWorkspaceSurface` | Bounded tab/workspace panel |
+
+**Responsive breadcrumbs:** mobile parent back-link + current label; full trail from `sm` with truncation/collapse for deep paths.
+
+**Context tabs:** URL-first (`?tab=` or `tabRoutes` for route-segment modules). **No parallel tab frameworks** — local shells migrate or documented exceptions ([`SCE-DESIGN-SYSTEM-03-MIGRATION-INVENTORY.md`](./SCE-DESIGN-SYSTEM-03-MIGRATION-INVENTORY.md)).
+
+**Keyboard:** `SceContextTabs` supports arrow keys, Home/End, roving tabindex, and Mehr overflow links.
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-03-workspace-navigation.test.ts`.
 
 ---
 

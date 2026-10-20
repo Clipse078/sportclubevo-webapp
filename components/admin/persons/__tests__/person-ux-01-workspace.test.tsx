@@ -25,9 +25,19 @@ import PersonSportTab from "../PersonSportTab";
 import PersonDetailTabs from "../PersonDetailTabs";
 import PersonZugangTab from "../PersonZugangTab";
 
+const mockPush = vi.fn();
+const mockUseSearchParams = vi.fn(() => new URLSearchParams("tab=uebersicht"));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), push: mockPush }),
+  usePathname: () => "/dashboard/persons/person-1",
+  useSearchParams: () => mockUseSearchParams(),
 }));
+
+afterEach(() => {
+  mockPush.mockClear();
+  mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=uebersicht"));
+});
 
 // ── Shared fixture factories ──────────────────────────────────────────────────
 
@@ -702,7 +712,7 @@ describe("10. Responsive tab structure", () => {
     expect(screen.getByText("Organisation")).toBeTruthy();
     expect(screen.getByText("Spieler")).toBeTruthy();
     expect(screen.getByText("Trainer")).toBeTruthy();
-    expect(screen.getByText("Sport & Entwicklung")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /Sport & Entwicklung/ })).toBeTruthy();
     expect(screen.getByText("Mitgliedschaft")).toBeTruthy();
     expect(screen.getByText("Finanzen")).toBeTruthy();
     expect(screen.getByText("Gesundheit")).toBeTruthy();
@@ -740,7 +750,7 @@ describe("10. Responsive tab structure", () => {
     expect(screen.getByText("Stammdaten")).toBeTruthy();
     expect(screen.getByText("Organisation")).toBeTruthy();
     // Sport & Entwicklung is visible: person has squad membership (non-sensitive)
-    expect(screen.getByText("Sport & Entwicklung")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /Sport & Entwicklung/ })).toBeTruthy();
     expect(screen.getByText("Mitgliedschaft")).toBeTruthy();
     expect(screen.getByText("Zugang")).toBeTruthy();
 
@@ -750,7 +760,7 @@ describe("10. Responsive tab structure", () => {
     expect(screen.queryByText("Dokumente")).toBeNull();
   });
 
-  it("tab nav uses flex-wrap (not overflow-x-scroll) for responsive wrapping", () => {
+  it("tab nav uses canonical SceContextTabs horizontal tablist", () => {
     const person = makePerson();
     const { container } = render(
       <PersonDetailTabs
@@ -764,10 +774,9 @@ describe("10. Responsive tab structure", () => {
       />,
     );
 
-    const nav = container.querySelector("nav");
-    expect(nav).toBeTruthy();
-    expect(nav!.className).toContain("flex-wrap");
-    expect(nav!.className).not.toContain("overflow-x");
+    const tablist = container.querySelector('[role="tablist"]');
+    expect(tablist).toBeTruthy();
+    expect(tablist!.className).toContain("flex-nowrap");
   });
 
   it("switches tab content when a tab button is clicked", () => {
@@ -787,13 +796,15 @@ describe("10. Responsive tab structure", () => {
     // Initially on Übersicht
     expect(screen.getByText("Identität & Status")).toBeTruthy();
 
-    // Click Zugang
-    fireEvent.click(screen.getByRole("tab", { name: /Zugang/ }));
-    expect(screen.getByText(/Sicherheitsprinzip/)).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /Zugang/ })).toHaveAttribute(
+      "href",
+      expect.stringContaining("tab=zugang"),
+    );
   });
 
   it("Sport & Entwicklung tab shows season content", () => {
     const person = makePerson();
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=sport"));
     render(
       <PersonDetailTabs
         person={{
@@ -811,8 +822,6 @@ describe("10. Responsive tab structure", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: /Sport & Entwicklung/ }));
-
     expect(screen.getByText("Saison-Biografie")).toBeTruthy();
     expect(screen.getByText(SEASON_ACTIVE.name)).toBeTruthy();
   });
@@ -822,40 +831,40 @@ describe("10. Responsive tab structure", () => {
     // holds the corresponding domain permission. Pass the flags to verify the
     // placeholder content renders correctly (no fake data shown).
     const person = makePerson();
-    render(
-      <PersonDetailTabs
-        person={{ ...person, assignments: [], squadMemberships: [], trainerMemberships: [] }}
-        canManage={false}
-        canDelete={false}
-        orgUnits={[]}
-        teams={[]}
-        activeSeason={null}
-        accessRolesCard={null}
-        domainPermissions={{
-          canViewFinance: false,
-          canManageFinance: false,
-          canViewHealth: true,
-          canManageHealth: false,
-          canViewPrivateDocuments: true,
-          canManagePrivateDocuments: false,
-          canViewDevelopment: false,
-          canManageDevelopment: false,
-          canViewAssessments: false,
-          canManageAssessments: false,
-          canViewAudit: false,
+    const domainPermissions = {
+      canViewFinance: false,
+      canManageFinance: false,
+      canViewHealth: true,
+      canManageHealth: false,
+      canViewPrivateDocuments: true,
+      canManagePrivateDocuments: false,
+      canViewDevelopment: false,
+      canManageDevelopment: false,
+      canViewAssessments: false,
+      canManageAssessments: false,
+      canViewAudit: false,
       canViewContact: false,
       canManageContact: false,
-        }}
-      />,
+    };
+    const tabProps = {
+      person: { ...person, assignments: [], squadMemberships: [], trainerMemberships: [] },
+      canManage: false,
+      canDelete: false,
+      orgUnits: [] as Array<{ id: string; name: string }>,
+      teams: [] as Array<{ id: string; name: string; shortName?: string | null }>,
+      activeSeason: null,
+      accessRolesCard: null,
+      domainPermissions,
+    };
+
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=gesundheit"));
+    const { rerender } = render(
+      <PersonDetailTabs {...tabProps} />,
     );
+    expect(screen.getAllByText("Gesundheit").length).toBeGreaterThanOrEqual(2);
 
-    fireEvent.click(screen.getByRole("tab", { name: /Gesundheit/ }));
-    // Must show the health placeholder title (no restricted note in new placeholder)
-    expect(screen.getAllByText("Gesundheit").length).toBeGreaterThanOrEqual(2); // tab + placeholder title
-
-    fireEvent.click(screen.getByRole("tab", { name: /Dokumente/ }));
-    // PERSON-UX-07: Dokumente tab now renders real PersonDocumentTab (not a placeholder).
-    // Verify the real tab renders (empty state or security notice).
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=dokumente"));
+    rerender(<PersonDetailTabs {...tabProps} />);
     const content = document.body.textContent ?? "";
     expect(content).toContain("Datenschutz");
   });

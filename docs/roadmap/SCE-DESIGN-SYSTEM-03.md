@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-03` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-02` (**CLOSED / ACCEPTED / MERGED**, PR **#880**) |
-| **Status** | **NOT STARTED** |
+| **Status** | **READY FOR PO REVIEW** (implementation branch) |
 | **Foundation consumed** | DS-02 `app/globals.css` + `lib/design-system/sce-foundation-contract.ts` |
 
 ---
@@ -64,6 +64,21 @@ Layers **complement** each other — no duplicated titles, competing tab rows, o
 8. **Workspace surface composition** — `SceWorkspaceSurface`, panel/card elevation on semantic surfaces.
 9. **Removal/migration plan** for parallel workspace navigation patterns (see [`SCE-UI-LEGACY-REGISTER.md`](../design/SCE-UI-LEGACY-REGISTER.md), migration matrix).
 10. **Representative adoption** across **multiple substantially different domains** (not Communication-only).
+
+### DS-03 implementation notes (engineering)
+
+| Primitive | Module |
+| --- | --- |
+| `SceBreadcrumbs` | `components/sce/navigation/SceBreadcrumbs.tsx` |
+| `SceWorkspaceHeader` | `components/sce/workspace/SceWorkspaceHeader.tsx` |
+| `SceWorkspaceChrome` | `components/sce/workspace/SceWorkspaceChrome.tsx` |
+| Context tab route mode | `ContextTabNavigationConfig.tabRoutes` |
+| Legacy inventory | [`SCE-DESIGN-SYSTEM-03-MIGRATION-INVENTORY.md`](../design/SCE-DESIGN-SYSTEM-03-MIGRATION-INVENTORY.md) |
+| Guardrails | `lib/design-system/__tests__/sce-design-system-03-workspace-navigation.test.ts` |
+
+**Representative migrations (DS-03):** Mein Programm workspace chrome; Person detail `SceContextTabs`; Roles admin route tabs; Communication header alignment; Documents `WorkspaceBreadcrumbs`.
+
+**Activity tabs:** `SceContextTabs` arrow-key navigation (`ArrowLeft` / `ArrowRight` / `Home` / `End`) — DS-01 P0 a11y closure.
 
 ---
 

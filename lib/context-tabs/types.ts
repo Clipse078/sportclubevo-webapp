@@ -25,4 +25,17 @@ export type ContextTabNavigationConfig<TTabId extends ContextTabId = ContextTabI
   tabs: ContextTabDefinition<TTabId>[];
   /** Optional legacy `?tab=` normalization before resolving visible tabs. */
   resolveTabParam?: (raw: string | null | undefined) => string | null | undefined;
+  /**
+   * Route-segment tabs: absolute path per tab (URL-first deep links).
+   * When present, `hrefForTab` uses these paths instead of `?tab=` on the current pathname.
+   */
+  tabRoutes?: Partial<Record<TTabId, string>>;
+  /**
+   * Resolve active tab from pathname when using `tabRoutes` (e.g. admin module layouts).
+   * Return null to fall back to `?tab=` resolution.
+   */
+  resolveActiveTabFromPathname?: (
+    pathname: string,
+    visibleTabKeys: TTabId[],
+  ) => TTabId | null;
 };

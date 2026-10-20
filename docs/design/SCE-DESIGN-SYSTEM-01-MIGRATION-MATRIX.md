@@ -39,8 +39,8 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 
 | AREA | ROUTE_OR_COMPONENT | CURRENT_PATTERN | CLASSIFICATION | TARGET_CANONICAL_PATTERN | SEVERITY | MIGRATION_PRIORITY | DEPENDENCIES | NOTES |
 |------|-------------------|-----------------|----------------|---------------------------|----------|----------|--------------|-------|
-| NAV | `PersonDetailTabs.tsx` | Local tab shell, weak URL sync | LEGACY_MIGRATE | `SceContextTabs` + deep links | MED | P1 | DS-03 | LEGACY-TABS-001 |
-| NAV | `RolesAdminTabs.tsx` | Local underline tabs | LEGACY_MIGRATE | Context tabs or route tabs | LOW | P2 | DS-03 | LEGACY-TABS-004 |
+| NAV | `PersonDetailTabs.tsx` | ~~Local tab shell~~ → `SceContextTabs` | CANONICAL | `SceContextTabs` + `?tab=` | MED | P1 | DS-03 | LEGACY-TABS-001 **DS03_DONE** |
+| NAV | `RolesAdminTabs.tsx` | ~~Local underline tabs~~ → `SceContextTabs` | CANONICAL | `SceContextTabs` + `tabRoutes` | LOW | P2 | DS-03 | LEGACY-TABS-004 **DS03_DONE** |
 | NAV | Activity detail tabs | `SceContextTabs` + activity nav | CANONICAL | — | — | — | — | Keep; extend a11y |
 | NAV | `AppShellNavigation` | NAVBAR-UPGRADE-01 two-row + panel | CANONICAL | — | — | — | — | Do not parallel |
 | DASHBOARD | `DashboardTodayEventCards` | Local event cards | LEGACY_MIGRATE | `Sce*Card` COMPACT | MED | P1 | DS-04 | LEGACY-MATCH-CARD-007 |
