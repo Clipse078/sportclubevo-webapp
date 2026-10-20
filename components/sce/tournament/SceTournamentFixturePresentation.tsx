@@ -6,7 +6,9 @@ import { cn } from "@/lib/cn";
 import {
   SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS,
   SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
+  SCE_TOURNAMENT_FIXTURE_STANDARD_SHELL_CLASS,
 } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { SCE_TOURNAMENT_FOCUS_RING_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
 import SceTournamentFixtureCompactMatchup, {
   type SceTournamentFixtureCompactLayout,
 } from "./SceTournamentFixtureCompactMatchup";
@@ -23,13 +25,30 @@ function matchupLayoutForDensity(
 function shellPaddingForDensity(density: SceTournamentFixturePresentationDensity): string {
   switch (density) {
     case "standard":
-      return "flex flex-col gap-2.5 p-3.5 sm:p-4";
+      return "flex flex-col gap-3 p-3.5 sm:p-4";
     case "compact":
-      return "flex flex-col gap-2 px-3 py-3";
+      return "flex flex-col gap-2.5 px-3 py-3 sm:px-3.5";
     case "grid":
-      return "px-1.5 py-1.5";
+      return "px-2 py-2 sm:px-2.5 sm:py-2.5";
     default:
       return "p-3";
+  }
+}
+
+function shellClassForDensity(
+  density: SceTournamentFixturePresentationDensity,
+  embedded: boolean,
+): string | null {
+  if (embedded) return null;
+  switch (density) {
+    case "standard":
+      return SCE_TOURNAMENT_FIXTURE_STANDARD_SHELL_CLASS;
+    case "compact":
+      return SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS;
+    case "grid":
+      return SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS;
+    default:
+      return SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS;
   }
 }
 
@@ -52,6 +71,8 @@ type Props = {
   footer?: ReactNode;
   /** When true, render identity/metadata only (interactive shell lives in parent, e.g. DnD grid). */
   embedded?: boolean;
+  /** When true, apply subtle hover affordance on the fixture shell. */
+  interactive?: boolean;
 };
 
 /**
@@ -75,66 +96,75 @@ export default function SceTournamentFixturePresentation({
   asChildProps,
   footer,
   embedded = false,
+  interactive = false,
 }: Props) {
   const formatLabel = formatTournamentSpielplanPlayingFormatLabel(playersPerSide);
-  const showMetadata = density !== "grid" && (pitchLabel || timeLabel || formatLabel);
-  const shellBase =
-    density === "standard"
-      ? SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS
-      : density === "compact"
-        ? SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS
-        : SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS;
+  const showMetadata = density !== "grid" && (pitchLabel || timeLabel || formatLabel || result);
+  const shellBase = shellClassForDensity(density, embedded);
 
   const rootClassName = cn(
-    !embedded && shellBase,
+    shellBase,
     !embedded && shellPaddingForDensity(density),
     embedded && density === "grid" && "min-w-0",
+    interactive &&
+      !embedded &&
+      cn(
+        SCE_TOURNAMENT_FOCUS_RING_CLASS,
+        "cursor-default hover:border-[var(--sce-surface-border-elevated)]",
+      ),
     deEmphasized && "opacity-[0.38]",
-    highlighted && !embedded && "border-[var(--sce-primary)] bg-[var(--sce-surface-elevated)]",
+    highlighted &&
+      !embedded &&
+      "border-[var(--sce-primary)]/80 bg-[var(--sce-surface-elevated)]/35 shadow-[0_0_0_1px_var(--sce-primary)/0.12]",
     className,
     shellClassName,
     asChildProps?.className,
   );
 
   const metadataNode =
-    showMetadata && (pitchLabel || timeLabel || formatLabel) ? (
-      <header className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 space-y-0.5">
-          {timeLabel ? (
-            <p className="text-xs tabular-nums text-[var(--muted)]" data-testid="sce-tournament-fixture-time">
-              {timeLabel}
-            </p>
-          ) : null}
+    showMetadata && (pitchLabel || timeLabel || formatLabel || result) ? (
+      <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1 space-y-0.5">
           {pitchLabel ? (
             <p
               id={metadataHeadingId}
-              className={cn(
-                "min-w-0 font-semibold leading-snug text-[var(--foreground)]",
-                density === "standard" ? "text-xs" : "text-xs",
-              )}
+              className="min-w-0 text-xs font-medium leading-snug text-[var(--text-2)]"
               data-testid="sce-tournament-spielplan-fixture-field"
             >
               {pitchLabel}
             </p>
           ) : null}
+          {timeLabel ? (
+            <p
+              className="text-xs tabular-nums text-[var(--muted)]"
+              data-testid="sce-tournament-fixture-time"
+            >
+              {timeLabel}
+            </p>
+          ) : null}
         </div>
-        {formatLabel ? (
-          <p
-            className="shrink-0 text-xs font-medium tabular-nums text-[var(--text-2)]"
-            data-testid="sce-tournament-spielplan-fixture-format"
-          >
-            {formatLabel}
-          </p>
-        ) : null}
-        {result ? (
-          <p
-            className="shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]"
-            aria-label={`Ergebnis ${result.scoreSideA} zu ${result.scoreSideB}`}
-            data-testid="sce-tournament-fixture-result"
-          >
-            {result.scoreSideA}:{result.scoreSideB}
-          </p>
-        ) : null}
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          {formatLabel ? (
+            <p
+              className={cn(
+                "rounded-[var(--radius-pill)] border border-[var(--sce-surface-border-subtle)]",
+                "bg-[var(--sce-surface-elevated)]/50 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-[var(--text-2)]",
+              )}
+              data-testid="sce-tournament-spielplan-fixture-format"
+            >
+              {formatLabel}
+            </p>
+          ) : null}
+          {result ? (
+            <p
+              className="text-sm font-semibold tabular-nums text-[var(--foreground)]"
+              aria-label={`Ergebnis ${result.scoreSideA} zu ${result.scoreSideB}`}
+              data-testid="sce-tournament-fixture-result"
+            >
+              {result.scoreSideA}:{result.scoreSideB}
+            </p>
+          ) : null}
+        </div>
       </header>
     ) : null;
 
@@ -143,9 +173,10 @@ export default function SceTournamentFixturePresentation({
       className="flex min-w-0 flex-1 justify-center"
       data-testid="sce-tournament-fixture-matchup"
     >
-      <div className="min-w-0 max-w-full" data-testid="sce-tournament-fixture-matchup-cluster">
+      <div className="min-w-0 w-full max-w-full" data-testid="sce-tournament-fixture-matchup-cluster">
         <SceTournamentFixtureCompactMatchup
           layout={matchupLayoutForDensity(density)}
+          presentationDensity={density}
           sideA={sideA}
           sideB={sideB}
         />

@@ -25,6 +25,7 @@ describe("sce-tournament-surface-layout", () => {
       "components/sce/tournament/SceTournamentFixturePresentation.tsx",
     );
     expect(presentation).not.toContain("surface-elevated]/90");
+    expect(presentation).toContain("SCE_TOURNAMENT_FIXTURE_STANDARD_SHELL_CLASS");
     expect(presentation).toContain("SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS");
 
     const planungList = readSource(

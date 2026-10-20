@@ -2,11 +2,9 @@
 
 import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
 import SceTournamentFixtureCard from "./SceTournamentFixtureCard";
+import SceTournamentRoundHeader from "./SceTournamentRoundHeader";
 import SceTournamentScheduleBreakPresentation from "./SceTournamentScheduleBreakPresentation";
-import {
-  SCE_TOURNAMENT_ROUND_COUNT_BADGE_CLASS,
-  SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
-} from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { SCE_TOURNAMENT_ROUND_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 
 type Props = {
   model: TournamentSpielplanViewModel;
@@ -59,28 +57,19 @@ export default function TournamentSpielplanMasterSchedule({
             data-testid={`spielplan-round-group-${group.sectionId}`}
             className={SCE_TOURNAMENT_ROUND_SURFACE_CLASS}
           >
-            <header
-              id={`spielplan-round-${group.sectionId}`}
-              className="mb-4 flex flex-wrap items-start justify-between gap-3"
-            >
-              <div className="min-w-0 space-y-1">
-                <h4 className="text-base font-semibold tracking-tight text-[var(--foreground)]">
-                  {group.title}
-                </h4>
-                <p className="text-sm text-[var(--text-2)]">
-                  {[group.timeRangeLabel, group.pitchSummaryLabel].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-              <span className={SCE_TOURNAMENT_ROUND_COUNT_BADGE_CLASS}>
-                {fixtureCountLabel(group.fixtureCount)}
-              </span>
-            </header>
+            <SceTournamentRoundHeader
+              headingId={`spielplan-round-${group.sectionId}`}
+              title={group.title}
+              metaLine={[group.timeRangeLabel, group.pitchSummaryLabel].filter(Boolean).join(" · ")}
+              countLabel={fixtureCountLabel(group.fixtureCount)}
+            />
             <ul className="grid grid-cols-1 gap-3.5 lg:grid-cols-2 lg:gap-4">
               {group.fixtures.map((fixture) => (
                 <li key={fixture.fixtureId}>
                   <SceTournamentFixtureCard
                     fixture={fixture}
                     participants={participants}
+                    density="compact"
                     highlightParticipantId={highlightParticipantId}
                     timezone={model.identity.timezone}
                     showFixtureTime={false}

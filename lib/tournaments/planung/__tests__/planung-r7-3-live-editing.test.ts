@@ -50,9 +50,10 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
   it("B — edit board uses canonical stacked match identity block", () => {
     expect(board).toMatch(/SceTournamentFixturePresentation/);
     expect(board).toMatch(/density="grid"/);
-    expect(compact).toMatch(/data-layout="board"/);
+    expect(compact).toMatch(/resolvedLayout === "board"/);
     expect(compact).toMatch(/SceMatchStackedFixtureIdentity/);
-    expect(compact).toMatch(/data-crest-variant="canonicalStacked"/);
+    expect(compact).toMatch(/canonicalStacked/);
+    expect(compact).toMatch(/SceTournamentFixtureVs/);
     expect(compact).not.toMatch(/layout === "board" \? "flex-nowrap"/);
   });
 

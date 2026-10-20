@@ -80,3 +80,41 @@ Cursor did **not** perform manual visual UAT or screenshots. PO validates the 18
 
 - SCE surface + match-card shell tokens (`sce-tournament-surface-layout`)
 - Canonical toggles unchanged; **no new binary checkboxes**
+
+## 02E-R1 — World-class unified Spielplan card family (PO refinement)
+
+| Field | Value |
+| --- | --- |
+| **Trigger** | PO visual review before 02E sign-off |
+| **Reference** | Target Spielplan-Ausgabe mock (visual inspiration only) |
+| **Status** | **READY FOR PO UAT** (02E remains open until PO accepts R1) |
+
+### Non-negotiable fixture anatomy
+
+Participant zones remain **crest above name** (stacked), symmetrical around a centred VS:
+
+```
+[ PARTICIPANT A ]  [ VS ]  [ PARTICIPANT B ]
+     CREST                    CREST
+      NAME                     NAME
+```
+
+Do **not** adopt horizontal crest–name rows from the reference image.
+
+### R1 presentation upgrades
+
+| Area | Change |
+| --- | --- |
+| **VS** | `SceTournamentFixtureVs` — one subtle capsule treatment; density-scaled (standard / compact / grid) |
+| **Densities** | Standard → `STANDARD` match identity + ~48px planner crest; compact → ~40px management; grid → ~32px compact |
+| **Surfaces** | Distinct standard vs compact fixture shells; restrained borders and hover on non-embedded cards |
+| **Rounds** | `SceTournamentRoundHeader` shared by Composer preview and Master-Spielplan |
+| **Metadata** | Field + optional playing format on fixture; time owned by round (Master/Composer); grid omits field/time |
+| **Master** | Explicit `compact` density on fixture cards |
+
+### Compliance (R1)
+
+- **`WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE`** — one SCE tournament fixture family, purpose-built densities
+- **`PARALLEL_MATCH_CARD_PATTERN_INTRODUCED = NO`**
+- **`CREST_ABOVE_NAME_PRESERVED = YES`**
+- Cursor **did not** run manual browser UAT or screenshots for R1; PO performs visual UAT
