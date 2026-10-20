@@ -3,9 +3,9 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Search, UserPlus, UserX } from "lucide-react";
+import { Search, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
+import { SCE_KPI_CARD_SURFACE, SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import { cn } from "@/lib/cn";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
@@ -243,114 +243,141 @@ export default function TenantUsersSearchableList({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(12rem,1fr)_minmax(7.5rem,auto)_minmax(7.5rem,auto)_minmax(8rem,auto)_auto] lg:items-center">
-        <div className="sce-page-search min-w-0 sm:col-span-2 md:col-span-1 lg:col-span-1">
-          <Search className="h-4 w-4 flex-shrink-0 text-[var(--muted)]" />
-          <input
-            type="text"
-            placeholder="Name oder E-Mail suchen…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoComplete="off"
-          />
-          {query ? (
-            <button type="button" onClick={() => setQuery("")} className="flex-shrink-0 text-xs font-medium text-[var(--muted)]">
-              Löschen
-            </button>
+      <section
+        data-sce-feedback-surface="people-access-list"
+        className={cn(SCE_SURFACE_STANDARD_PANEL, "overflow-hidden p-0")}
+        aria-label="Personenliste"
+      >
+        <div className="space-y-3 border-b border-[var(--border)] p-4 md:p-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(12rem,1fr)_minmax(7.5rem,auto)_minmax(7.5rem,auto)_minmax(8rem,auto)_auto] lg:items-center">
+            <div className="sce-page-search min-w-0 sm:col-span-2 md:col-span-1 lg:col-span-1">
+              <Search className="h-4 w-4 flex-shrink-0 text-[var(--muted)]" />
+              <input
+                type="text"
+                placeholder="Name oder E-Mail suchen…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoComplete="off"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="flex-shrink-0 text-xs font-medium text-[var(--muted)]"
+                >
+                  Löschen
+                </button>
+              ) : null}
+            </div>
+
+            <SceToolbarSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="lg:w-auto"
+              aria-label="Status filtern"
+            >
+              <option value="all">Alle Status</option>
+              <option value="active">Aktiv ({activeCount})</option>
+              <option value="pending">Einladung ausstehend ({pendingCount})</option>
+              <option value="deactivated">Deaktiviert ({inactiveCount})</option>
+              <option value="not_invited">Nicht eingeladen ({noAccountCount})</option>
+              {privilegedRoleIds.length > 0 ? (
+                <option value="privileged">Privilegiert ({privilegedCount})</option>
+              ) : null}
+            </SceToolbarSelect>
+
+            {uniqueRoles.length > 0 ? (
+              <SceToolbarSelect
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="lg:w-auto"
+                aria-label="Funktion filtern"
+              >
+                <option value="all">Alle Funktionen</option>
+                {uniqueRoles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </SceToolbarSelect>
+            ) : null}
+
+            <input
+              type="search"
+              placeholder="Alle Bereiche"
+              value={scopeQuery}
+              onChange={(e) => setScopeQuery(e.target.value)}
+              className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
+              aria-label="Bereich filtern"
+            />
+
+            {canInvite && wizardConfig ? (
+              <Button
+                type="button"
+                onClick={() => openWizardForPerson()}
+                className="h-9 w-full sm:col-span-2 md:col-span-3 lg:col-span-1 lg:w-auto"
+                data-sce-action-hierarchy="PRIMARY"
+                data-testid="people-access-add-person"
+              >
+                <UserPlus className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                Person hinzufügen
+              </Button>
+            ) : null}
+          </div>
+
+          {isFiltered ? (
+            <p className="text-sm text-[var(--muted)]" role="status">
+              {totalShown} von {grandTotal} Einträgen
+            </p>
           ) : null}
         </div>
 
-        <SceToolbarSelect
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="lg:w-auto"
-          aria-label="Status filtern"
-        >
-          <option value="all">Alle Status</option>
-          <option value="active">Aktiv ({activeCount})</option>
-          <option value="pending">Einladung ausstehend ({pendingCount})</option>
-          <option value="deactivated">Deaktiviert ({inactiveCount})</option>
-          <option value="not_invited">Nicht eingeladen ({noAccountCount})</option>
-          {privilegedRoleIds.length > 0 ? (
-            <option value="privileged">Privilegiert ({privilegedCount})</option>
-          ) : null}
-        </SceToolbarSelect>
-
-        {uniqueRoles.length > 0 ? (
-          <SceToolbarSelect
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="lg:w-auto"
-            aria-label="Funktion filtern"
-          >
-            <option value="all">Alle Funktionen</option>
-            {uniqueRoles.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </SceToolbarSelect>
-        ) : null}
-
-        <input
-          type="search"
-          placeholder="Alle Bereiche"
-          value={scopeQuery}
-          onChange={(e) => setScopeQuery(e.target.value)}
-          className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
-          aria-label="Bereich filtern"
-        />
-
-        {canInvite && wizardConfig ? (
-          <Button
-            type="button"
-            onClick={() => openWizardForPerson()}
-            className="h-9 w-full sm:col-span-2 md:col-span-3 lg:col-span-1 lg:w-auto"
-            data-sce-action-hierarchy="PRIMARY"
-            data-testid="people-access-add-person"
-          >
-            <UserPlus className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-            Person hinzufügen
-          </Button>
-        ) : null}
-      </div>
-
-      {isFiltered ? (
-        <p className="text-sm text-[var(--muted)]">{totalShown} von {grandTotal} Einträgen</p>
-      ) : null}
-
-      {grandTotal === 0 ? (
-        <SceEmptyState
-          variant="FIRST_USE"
-          icon={<ProductDomainSceIcon name="people" size={48} />}
-          title="Noch keine Personen mit Zugang"
-          description="Füge die erste Person hinzu, um Zugang zu SportClubEvo zu vergeben."
-          data-testid="people-access-empty-first-use"
-        />
-      ) : totalShown === 0 ? (
-        <SceEmptyState
-          variant="FILTERED_NO_RESULTS"
-          icon={<UserX className="h-10 w-10" />}
-          title="Keine Personen gefunden."
-          description="Für die gewählten Filter wurden keine Einträge gefunden."
-          primaryAction={
-            isFiltered ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setStatusFilter("all");
-                  setRoleFilter("all");
-                  setScopeQuery("");
-                }}
-                className="fca-button-secondary text-sm"
-              >
-                Filter zurücksetzen
-              </button>
-            ) : undefined
-          }
-          data-testid="people-access-empty-filtered"
-        />
-      ) : (
-        <div className="overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">
+        {grandTotal === 0 ? (
+          <SceEmptyState
+            variant="FIRST_USE"
+            layout="compact-stacked"
+            contained
+            icon={<ProductDomainSceIcon name="people" size={28} />}
+            title="Noch keine Personen mit Zugang"
+            description="Füge die erste Person hinzu, um Zugang zu SportClubEvo zu vergeben."
+            primaryAction={
+              canInvite && wizardConfig ? (
+                <Button type="button" onClick={() => openWizardForPerson()} data-sce-action-hierarchy="PRIMARY">
+                  <UserPlus className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                  Person hinzufügen
+                </Button>
+              ) : undefined
+            }
+            data-testid="people-access-empty-first-use"
+          />
+        ) : totalShown === 0 ? (
+          <SceEmptyState
+            variant="FILTERED_NO_RESULTS"
+            layout="compact-stacked"
+            contained
+            title="Keine Personen gefunden"
+            description="Für die aktuellen Such- oder Filterkriterien wurden keine Personen gefunden."
+            primaryAction={
+              isFiltered ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setStatusFilter("all");
+                    setRoleFilter("all");
+                    setScopeQuery("");
+                  }}
+                  className="fca-button-secondary text-sm"
+                  data-testid="people-access-reset-filters"
+                >
+                  Filter zurücksetzen
+                </button>
+              ) : undefined
+            }
+            data-testid="people-access-empty-filtered"
+          />
+        ) : (
+          <div className="overflow-hidden bg-[var(--surface)]">
           <div
             className={`hidden gap-3 border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)] md:grid ${gridCols}`}
           >
@@ -514,7 +541,8 @@ export default function TenantUsersSearchableList({
             );
           })}
         </div>
-      )}
+        )}
+      </section>
 
       {wizardConfig ? (
         <PeopleAccessWizardDialog

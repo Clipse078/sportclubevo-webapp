@@ -24,7 +24,6 @@ import type { TournamentDto } from "@/lib/tournaments/types";
 import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { SCE_TOURNAMENT_SR_LIVE_REGION_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
-import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import { shouldExposePlannerSetupPrimaryAction } from "@/lib/tournaments/planung/planner-setup-eligibility";
 import TournamentPlanungSetupDialog from "./TournamentPlanungSetupDialog";
 import { SceReadinessStatusPanel } from "@/components/sce/feedback/SceReadinessStatusPanel";
@@ -409,8 +408,9 @@ export default function TournamentPlanungWorkspace({
 
   return (
     <div
-      className="space-y-4"
+      className="space-y-5"
       data-testid="tournament-planung-workspace"
+      data-sce-planung-vertical-rhythm
       data-interaction-mode={effectiveInteractionMode}
     >
       <p
@@ -468,7 +468,6 @@ export default function TournamentPlanungWorkspace({
 
       {model.incompleteSetup.length > 0 ? (
         <SceReadinessStatusPanel
-          className={cn(SCE_SURFACE_STANDARD_PANEL, "border-[var(--border)]")}
           title={
             showPlannerSetupAction ? "Turnierplanung einrichten" : "Für die Planung fehlt noch:"
           }
@@ -525,7 +524,7 @@ export default function TournamentPlanungWorkspace({
             description={planningUx.summary ?? undefined}
           />
 
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 md:p-5">
           {planningUx.state === "AUTO_FIX" && planningUx.recommendedTiming ? (
             <p
               className="mt-3 text-sm font-medium text-[var(--foreground)]"

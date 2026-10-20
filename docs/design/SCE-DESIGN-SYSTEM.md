@@ -319,6 +319,8 @@ Full package doc: [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md).
 
 **Representative adoption:** Email Sender readiness → `SceReadinessStatusPanel` · Tournament Planung readiness/planning feedback · Personen & Zugänge + Planning Hub + Mein Programm empty language · Planung setup dialog load error UX. DS-10 completes product-wide empty/loading/error sweep.
 
+**DS-07-R1 (draft PR #885):** contained empty states in list surfaces · `FEEDBACK_NEAREST_MEANINGFUL_CONTEXT` · readiness visual DNA without local restyling · `people-access-list` skeleton geometry · explicit DS-08 handoff for dense Personen & Zugänge table debt ([`SCE-DESIGN-SYSTEM-07-DS08-HANDOFF.md`](./SCE-DESIGN-SYSTEM-07-DS08-HANDOFF.md)). Metadata: `sce-design-system-07-r1-meta.ts`.
+
 ---
 
 ## Design principle

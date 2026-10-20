@@ -45,10 +45,12 @@ export const SCE_DESIGN_SYSTEM_07_PO_FLAGS = {
 
 export const SCE_DESIGN_SYSTEM_07_PO_REVIEW = {
   DS07_STATUS: "READY_FOR_PO_REVIEW",
+  DS07_R1_STATUS: "READY_FOR_PO_REVIEW",
   BASELINE_STAGE_HEAD: "5439f64d914a53f1dc3d029957e8a021cf0a0269",
   BRANCH: "cursor/sce-design-system-07-status-feedback-loading-empty-error",
   PREDECESSOR_DS06_PR: "884",
-  PR: "PENDING",
+  PR: "885",
+  PR_STATE: "DRAFT",
   NEXT_PACKAGE: "SCE-DESIGN-SYSTEM-08",
 } as const;
 

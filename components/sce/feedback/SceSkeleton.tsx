@@ -78,6 +78,34 @@ function TableRowSkeleton({ rows }: { rows: number }) {
   );
 }
 
+/** Approximates Personen & Zugänge list row geometry (DS-07 R1 — not a table redesign). */
+function PeopleAccessListSkeleton({ rows }: { rows: number }) {
+  return (
+    <div className="divide-y divide-[var(--border)]" data-sce-skeleton-recipe="people-access-list">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div
+          key={i}
+          className="flex flex-col gap-3 px-5 py-4 md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_80px_100px_100px_40px] md:items-center md:gap-3"
+        >
+          <div className="flex items-center gap-3">
+            <Bone className="h-8 w-8 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Bone className="h-3 w-28" />
+              <Bone className="h-2.5 w-36" />
+            </div>
+          </div>
+          <Bone className="hidden h-2.5 w-20 md:block" />
+          <Bone className="hidden h-2.5 w-24 md:block" />
+          <Bone className="hidden h-2.5 w-14 md:block" />
+          <Bone className="hidden h-5 w-16 rounded-full md:block" />
+          <Bone className="hidden h-2.5 w-20 md:block" />
+          <Bone className="hidden h-6 w-6 rounded-md md:ml-auto md:block" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const LEGACY_VARIANT_MAP: Partial<Record<SceSkeletonRecipe, LoadingSkeletonVariant>> = {
   card: "card",
   page: "page",
@@ -117,6 +145,7 @@ export function SceSkeleton({
       {recipe === "list-row" && <ListRowSkeleton rows={rows} />}
       {recipe === "readiness-panel" && <ReadinessPanelSkeleton />}
       {recipe === "table-row" && <TableRowSkeleton rows={rows} />}
+      {recipe === "people-access-list" && <PeopleAccessListSkeleton rows={rows} />}
       <span className="sr-only">Wird geladen…</span>
     </div>
   );

@@ -49,6 +49,23 @@ describe("Sce feedback primitives", () => {
       "data-sce-empty-state",
       "FILTERED_NO_RESULTS",
     );
+    expect(screen.getByTestId("empty")).toHaveAttribute("data-sce-empty-contained", "no");
+    expect(document.querySelector("[data-sce-empty-state-icon]")).toBeTruthy();
+  });
+
+  it("supports contained filtered no-results with reset action slot", () => {
+    render(
+      <SceEmptyState
+        variant="FILTERED_NO_RESULTS"
+        layout="compact-stacked"
+        contained
+        title="Keine Personen gefunden"
+        primaryAction={<button type="button">Filter zurücksetzen</button>}
+        data-testid="empty-contained"
+      />,
+    );
+    expect(screen.getByTestId("empty-contained")).toHaveAttribute("data-sce-empty-contained", "yes");
+    expect(screen.getByRole("button", { name: "Filter zurücksetzen" })).toBeInTheDocument();
   });
 
   it("supports retry on actionable errors", async () => {

@@ -28,6 +28,7 @@ export default function PlanningHubFilteredEmptyState({
       title="Keine passenden Einträge"
       description="Für die aktuellen Filter wurden keine Aktivitäten gefunden."
       layout="compact-stacked"
+      contained
       className="px-1 py-6"
       data-testid={testId}
       primaryAction={

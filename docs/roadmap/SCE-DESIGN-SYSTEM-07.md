@@ -4,9 +4,11 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-07` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-06` (**CLOSED / ACCEPTED / MERGED**, PR **#884**) |
-| **Status** | **READY FOR PO VISUAL REVIEW** (draft PR — do not merge until PO accepts) |
+| **Status** | **R1 READY FOR PO VISUAL REVIEW** (draft PR **#885** — do not merge until PO accepts) |
 | **`DS07_STATUS`** | **READY_FOR_PO_REVIEW** |
+| **`DS07_R1_STATUS`** | **READY_FOR_PO_REVIEW** |
 | **Branch** | `cursor/sce-design-system-07-status-feedback-loading-empty-error` |
+| **PR** | **#885** (DRAFT) |
 | **Baseline STAGE** | `5439f64d914a53f1dc3d029957e8a021cf0a0269` |
 | **Successor** | **`SCE-DESIGN-SYSTEM-08`** (after PO acceptance) |
 
@@ -80,6 +82,23 @@ Legacy bridge: `components/ui/page/EmptyState` → `SceEmptyState` · `Dashboard
 | `NEW_BINARY_CHECKBOXES` | **0** |
 | `SCE_DESIGN_SYSTEM_COMPLIANCE` | **PASS** |
 
-Automated guardrails: `lib/design-system/__tests__/sce-design-system-07-status-feedback.test.ts` · `components/sce/feedback/__tests__/SceFeedbackPrimitives.test.tsx`.
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-07-status-feedback.test.ts` · `lib/design-system/__tests__/sce-design-system-07-r1-status-feedback.test.ts` · `components/sce/feedback/__tests__/SceFeedbackPrimitives.test.tsx`.
+
+---
+
+## R1 — visual convergence (PO partial pass)
+
+| Lock | Value |
+| --- | --- |
+| `DS07_INITIAL_VISUAL_REVIEW` | **PARTIAL_PASS** |
+| `EMPTY_STATE_CONTAINMENT_REQUIRED` | **YES** |
+| `FEEDBACK_NEAREST_MEANINGFUL_CONTEXT` | **YES** |
+| `READINESS_VISUAL_DNA_SHARED` | **YES** |
+| `LOCAL_READINESS_RESTYLING_ALLOWED` | **NO** |
+| `DS08_OWNS_DENSE_ADMIN_TABLE` | **YES** |
+
+R1 metadata: `lib/design-system/sce-design-system-07-r1-meta.ts` · DS-08 handoff: [`SCE-DESIGN-SYSTEM-07-DS08-HANDOFF.md`](../design/SCE-DESIGN-SYSTEM-07-DS08-HANDOFF.md).
+
+**Finish marker (after PO accepts R1):** `SCE_DESIGN_SYSTEM_07_R1_READY_FOR_PO_REVIEW`
 
 **Finish marker (after PO acceptance):** `SCE_DESIGN_SYSTEM_07_CLOSED_ACCEPTED_MERGED`

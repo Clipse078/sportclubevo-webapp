@@ -69,6 +69,8 @@ export function SceReadinessStatusPanel({
     <section
       aria-labelledby={resolvedHeadingId}
       data-sce-readiness-panel
+      data-sce-readiness-visual-dna="shared"
+      data-sce-readiness-density={density}
       data-testid={testId}
       className={cn(
         "rounded-xl border border-[var(--border)] bg-[var(--surface-1)]",
