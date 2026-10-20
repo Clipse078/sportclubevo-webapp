@@ -297,7 +297,7 @@ Textual semantics enforced in presentation model and pills — **never colour al
 | Risk | Priority | Package |
 | --- | --- | --- |
 | Activity tabs missing arrow-key navigation | **P0** | DS-09 |
-| Infoboard match fallback semantic layout | **P0** | DS-04/10 |
+| Infoboard match fallback semantic layout | **CLOSED (DS-04)** | DS-10 polish |
 | Focus visible on all legacy form controls | P1 | DS-09 |
 | Dialog focus trap / restoration (composer + selector) | P1 | DS-06 (tests exist for overlay) |
 | Colour-only status | Mitigated by text-first badges — audit residual icons | P2 |

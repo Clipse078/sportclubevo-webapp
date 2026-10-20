@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   enrichMatchIdentityWithTenant,
   resolveInfoboardClubDisplayName,
+  buildInfoboardMatchIdentityFromFixtureFields,
   resolveInfoboardMatchPresentation,
   resolveInfoboardMatchTeamDisplayName,
   resolveInfoboardTeamSubDisplayName,
@@ -219,6 +220,34 @@ describe("resolveInfoboardMatchPresentation", () => {
 
     expect(result?.home.clubLogoUrl).toBeNull();
     expect(result?.away?.clubLogoUrl).toBeNull();
+  });
+});
+
+describe("buildInfoboardMatchIdentityFromFixtureFields", () => {
+  it("places tenant team on away side when homeAway is AWAY", () => {
+    const identity = buildInfoboardMatchIdentityFromFixtureFields({
+      homeAway: "AWAY",
+      team: { name: "FC Allschwil E1" },
+      teamDisplayName: "FC Allschwil E1",
+      opponentDisplayName: "FC Rival",
+      opponentLogoUrl: "https://cdn.example.com/rival.png",
+    });
+    const presentation = resolveInfoboardMatchPresentation(identity, null, null);
+    expect(presentation?.home.clubDisplayName).toBe("FC Rival");
+    expect(presentation?.away?.clubDisplayName).toBe("FC Allschwil E1");
+  });
+
+  it("places tenant team on home side when homeAway is HOME", () => {
+    const identity = buildInfoboardMatchIdentityFromFixtureFields({
+      homeAway: "HOME",
+      team: null,
+      teamDisplayName: "FC Home",
+      opponentDisplayName: "FC Away",
+      opponentLogoUrl: null,
+    });
+    const presentation = resolveInfoboardMatchPresentation(identity, null, null);
+    expect(presentation?.home.clubDisplayName).toBe("FC Home");
+    expect(presentation?.away?.clubDisplayName).toBe("FC Away");
   });
 });
 

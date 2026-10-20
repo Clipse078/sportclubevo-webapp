@@ -199,6 +199,8 @@ export type PitchEventSummary = {
   displayTitle: string;
   teamDisplayName: string | null;
   opponentDisplayName: string | null;
+  /** Canonical MATCH identity (home left, away right). Null for non-MATCH. */
+  matchPresentation: InfoboardMatchPresentation | null;
   /**
    * Optional tournament participant display names.
    *

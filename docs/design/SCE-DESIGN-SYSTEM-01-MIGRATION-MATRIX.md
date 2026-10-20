@@ -74,7 +74,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | PUBLISHING | Website page list | Admin table | CANONICAL_REFINE | DS-08 | LOW | P3 | DS-08 | |
 | SPONSOR | `SponsorBannerConfigForm` | Residual checkbox in CMS | LEGACY_MIGRATE | Toggle if binary setting | LOW | P3 | DS-05 | Audit only — no Sponsor module |
 | AUTH | Login page | Auth layout outside admin shell | DOMAIN | Shared input/button tokens | LOW | P3 | DS-05 | |
-| INFOBOARD | Screen1/2 fallback branches | Non-canonical match layout | LEGACY_MIGRATE | Required presentation model | **HIGH** | **P0** | DS-04, DS-10 | LEGACY-MATCH-CARD-003/004 |
+| INFOBOARD | Screen1/2 fallback branches | Non-canonical match layout | **CLOSED DS-04** | `matchPresentation` + `InfoboardCompactMatchIdentity` | **HIGH** | ~~P0~~ **CLOSED** | DS-10 polish | LEGACY-MATCH-CARD-003/004 |
 | INFOBOARD | Kiosk CSS modules | Channel-specific styling | DOMAIN | Adopt presentation model | MED | P1 | DS-04 | CAN_RETAIN channel chrome |
 | STATUS | `AdminStatusPill` | Parallel status styling | DUPLICATE | `Badge` variants | LOW | P2 | DS-07 | |
 | STATUS | Parallel status maps | matchcenter/tournament/training | LEGACY_MIGRATE | 01C status translation | MED | P1 | DS-07 | LEGACY-FORMAT-STATUS-001 |

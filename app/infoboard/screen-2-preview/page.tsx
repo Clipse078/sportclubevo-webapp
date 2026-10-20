@@ -118,11 +118,32 @@ function createPreviewDatabase(): AnlageplanSourceDatabase {
   };
 }
 
+function previewMatchPresentation(
+  home: string,
+  away: string | null,
+): PitchEventSummary["matchPresentation"] {
+  if (away === null) return null;
+  return {
+    home: { clubDisplayName: home, teamSubDisplayName: null, clubLogoUrl: null },
+    away: { clubDisplayName: away, teamSubDisplayName: null, clubLogoUrl: null },
+  };
+}
+
 function event(
-  values: Omit<PitchEventSummary, "dressingRooms">,
+  values: Omit<PitchEventSummary, "dressingRooms" | "matchPresentation"> &
+    Partial<Pick<PitchEventSummary, "matchPresentation">>,
 ): PitchEventSummary {
+  const matchPresentation =
+    values.matchPresentation ??
+    (values.type === "MATCH"
+      ? previewMatchPresentation(
+          values.teamDisplayName ?? values.displayTitle,
+          values.opponentDisplayName,
+        )
+      : null);
   return {
     ...values,
+    matchPresentation,
     dressingRooms: [],
   };
 }

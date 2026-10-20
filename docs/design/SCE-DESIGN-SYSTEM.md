@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**, STAGE `5522cfee…`) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **NOT STARTED**  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **READY FOR PO REVIEW**  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-04** — Cards & Information Presentation
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-05** (after PO closes DS-04)
 
 ---
 
@@ -167,6 +167,29 @@ Automated guardrails: `lib/design-system/__tests__/sce-design-system-03-workspac
 **DS-03 locks:** `WORKSPACE_SYSTEM_PRODUCT_WIDE = YES` · `BREADCRUMB_SYSTEM_PRODUCT_WIDE = YES` · `CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC = YES` · `LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED = NO` · `BREADCRUMBS_CANONICAL_NAVIGATION_LANGUAGE = YES` · `CONTEXT_TABS_CANONICAL = SceContextTabs` · `ACTIVITY_TAB_ARROW_KEY_ACCESSIBILITY = IMPLEMENTED` · `DOMAIN_SPECIFIC_REVIEW_REQUIRED_AT_DS10 = YES` (interim exceptions: `TeamCockpitNav`, `ProgrammeViewSwitcher`, `CommunicationInboxToolbar`, composer `localNavigation`).
 
 Full package doc: [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
+
+---
+
+## Cards & information presentation (SCE-DESIGN-SYSTEM-04)
+
+**`CARD_SYSTEM_PRODUCT_WIDE`:** **YES** · **`COMMUNICATION_IS_UNIVERSAL_CARD_TEMPLATE`:** **NO**
+
+One SCE information language — multiple purpose-built compositions (shared hierarchy, surfaces, typography, spacing, metadata, status shells, action placement).
+
+| Concern | Contract |
+| --- | --- |
+| Information hierarchy | `SCE_INFORMATION_HIERARCHY_LAYERS` — `lib/design-system/sce-card-information-hierarchy.ts` |
+| Information panel shell | `SceInformationSurface` |
+| Capability cards | `CommunicationHubCapabilityLink` (navigation) · `SceFeatureCard` (functional) |
+| Summary / metric | `DashboardKpiCard` — **`PREMIUM_DOES_NOT_MEAN_OVERSIZED`** |
+| Activity family | `SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard` + `SceActivityPresentationModel` |
+| Tournament fixtures | `SceTournamentFixtureCard` — domain-specific canonical |
+| Infoboard match P0 | **`INFOBOARD_MATCH_PRESENTATION_P0 = CLOSED`** — Screen 1 UI fallback removed; mapper synthesis; Screen 2 `InfoboardCompactMatchIdentity` |
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-04-CARD-INVENTORY.md`](./SCE-DESIGN-SYSTEM-04-CARD-INVENTORY.md) |
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-04-cards.test.ts`.
+
+Full package doc: [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md).
 
 ---
 

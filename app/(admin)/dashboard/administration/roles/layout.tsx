@@ -5,6 +5,7 @@ import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { TENANT_ROLES_VIEW } from "@/lib/roles/access";
 import { PageShell } from "@/components/ui/page";
+import { SceInformationSurface } from "@/components/sce/information";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import RoleScopeBadge from "@/components/admin/roles/RoleScopeBadge";
 import RolesAdminTabs from "@/components/admin/roles/RolesAdminTabs";
@@ -56,7 +57,9 @@ export default async function TenantRolesLayout({ children }: LayoutProps) {
         }}
         contextTabs={<RolesAdminTabs />}
       >
-        {children}
+        <SceInformationSurface variant="flat" testId="roles-admin-information-surface">
+          {children}
+        </SceInformationSurface>
       </SceWorkspaceChrome>
     </PageShell>
   );

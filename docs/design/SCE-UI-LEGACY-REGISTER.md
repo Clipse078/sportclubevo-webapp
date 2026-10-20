@@ -42,8 +42,8 @@
 | LEGACY-MATCH-CARD-001 | MATCH-CARD | `MatchCard.tsx` | Matchcenter views | MED | 01H | **`SceMatchCard`** | Zero imports |
 | CANONICAL-MATCH-CARD-001 | MATCH-CARD | `SceMatchCard.tsx` | Activity Detail + preview | — | **01D** | 01C model | Representative integration |
 | LEGACY-MATCH-CARD-002 | MATCH-CARD | ~~Inline crest rows in `SpieleManagement*Row.tsx`~~ | Spiele management | MED | **01D R4** | **`SceMatchCard` COMPACT `list-row`** | **Retired** — row uses `resolveSceMatchPresentation` |
-| LEGACY-MATCH-CARD-003 | MATCH-CARD | `InfoboardScreen1.tsx` fallback branch | Kiosk | **HIGH** | 01D+01K | `matchPresentation` required | Loader always sets pair; fallback deleted |
-| LEGACY-MATCH-CARD-004 | MATCH-CARD | `InfoboardScreen2.tsx` | Kiosk | **HIGH** | 01D+01K | `MatchClubPair` layout | Same as 003 |
+| LEGACY-MATCH-CARD-003 | MATCH-CARD | ~~`InfoboardScreen1.tsx` fallback branch~~ | Kiosk | **HIGH** | 01D+01K | **CLOSED DS-04** | Fallback deleted; `matchPresentation` only |
+| LEGACY-MATCH-CARD-004 | MATCH-CARD | `InfoboardScreen2.tsx` | Kiosk | **HIGH** | 01D+01K | **CLOSED DS-04** | `InfoboardCompactMatchIdentity` + mapper |
 | LEGACY-MATCH-CARD-005 | MATCH-CARD | `WeekplannerMatchIdentityCard.tsx` | Wochenplaner | MED | 01H | 01D planner density | Component wraps canonical |
 | LEGACY-ACTIVITY-LOCATION-001 | ACTIVITY | `WochenplanEventCard.tsx` category shell | Wochenplan board | MED | 01H / 01N | **ActivityTypePill** type identity (01H); full card migration optional | Board DnD preserved |
 | CANONICAL-TRAINING-CARD-001 | ACTIVITY | `SceTrainingCard.tsx` | Activity Detail, Trainings management identity, Wochenplaner editor | — | **01E** | 01C model | Representative integration |
@@ -89,7 +89,7 @@
 
 ## HIGH_RISK summary
 
-1. **LEGACY-MATCH-CARD-003/004** — home/away invariant FAIL on Infoboard fallback.
+1. ~~**LEGACY-MATCH-CARD-003/004**~~ — **CLOSED DS-04** (canonical `matchPresentation`).
 2. **LEGACY-FORMAT-STATUS-001** — inconsistent cancellation/postponed labelling across modules.
 3. **LEGACY-ROUTE-001** — wrong deep link target from notifications if mixed.
 4. **LEGACY-TABS-001** — person detail without URL breaks share/back.

@@ -34,6 +34,7 @@ function makeEvent(overrides: Partial<PitchEventSummary> = {}): PitchEventSummar
     displayTitle: "Test Event",
     teamDisplayName: "Test Team",
     opponentDisplayName: null,
+    matchPresentation: null,
     startAt: "2026-08-14T18:00:00.000Z",
     endAt: "2026-08-14T20:00:00.000Z",
     status: "SCHEDULED",

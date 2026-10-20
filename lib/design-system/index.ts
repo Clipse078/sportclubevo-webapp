@@ -8,3 +8,5 @@ export * from "./sce-design-system-03-meta";
 export * from "./sce-context-tabs-foundation";
 export * from "./sce-breadcrumbs-foundation";
 export * from "./sce-workspace-hierarchy";
+export * from "./sce-card-information-hierarchy";
+export * from "./sce-design-system-04-meta";
