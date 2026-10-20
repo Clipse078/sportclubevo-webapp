@@ -17,7 +17,7 @@ Human-readable product-wide audit for responsive behaviour and accessibility con
 | DUPLICATE | Parallel local pattern — consolidate in DS-10 |
 | LEGACY_REPLACE | Replace with canonical system in DS-10 |
 
-## DS-09 representative hardening (PO review)
+## DS-09 representative hardening (PO accepted)
 
 | Surface | Status |
 | --- | --- |
