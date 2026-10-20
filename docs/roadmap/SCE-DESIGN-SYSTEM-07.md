@@ -13,8 +13,8 @@
 | **Accepted R1 HEAD** | `a19bff63838e1ad8a7384f29b2eb1665bb0d890d` |
 | **Feature HEAD before closure docs** | `a19bff63838e1ad8a7384f29b2eb1665bb0d890d` |
 | **Closure commit** | `cbbcee90a504279b0fa196bcc1cc760d7704cb07` |
-| **STAGE merge commit** | `PENDING_STAGE_MERGE` |
-| **PR** | **#885** — **MERGED** (after merge) |
+| **STAGE merge commit** | `805cf4a0f10d906dffd170e2dd0e2aeeb63a8ff6` |
+| **PR** | **#885** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-08`** — Tables, Lists & Dense UI |
 
 **PO closure:** `PO_DS07_VISUAL_UAT = PASS` · `PO_DS07_R1_VISUAL_UAT = PASS` · `PO_EMPTY_STATE_REVIEW = PASS` · `PO_PEOPLE_ACCESS_FEEDBACK_REVIEW = PASS` · `PO_TOURNAMENT_PLANUNG_FEEDBACK_REVIEW = PASS` · `PO_READINESS_SYSTEM_REVIEW = PASS` · `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
