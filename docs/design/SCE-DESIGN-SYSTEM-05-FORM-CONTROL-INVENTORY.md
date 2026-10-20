@@ -1,6 +1,6 @@
 # SCE Design System v1.0 — Form & Control Migration Inventory (DS-05)
 
-> **Status:** DS-05 representative adoption + DS-10 gate  
+> **Status:** **CLOSED / ACCEPTED / MERGED** (DS-05) — representative adoption complete; **DS-10 gate** for remaining rows + micro drift  
 > **Package:** [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md)  
 > **Master doc:** [`SCE-DESIGN-SYSTEM.md`](./SCE-DESIGN-SYSTEM.md)  
 > **Typed audit:** `lib/design-system/sce-design-system-05-meta.ts`

@@ -7,6 +7,7 @@ import {
   SCE_DESIGN_SYSTEM_05_FORM_CONTROL_AUDIT,
   SCE_DESIGN_SYSTEM_05_GOVERNANCE,
   SCE_DESIGN_SYSTEM_05_PACKAGE_KEY,
+  SCE_DESIGN_SYSTEM_05_PO_CLOSURE,
   SCE_DESIGN_SYSTEM_05_PO_FLAGS,
   SCE_DESIGN_SYSTEM_05_REPRESENTATIVE_ADOPTION,
 } from "@/lib/design-system/sce-design-system-05-meta";
@@ -37,6 +38,16 @@ describe("SCE-DESIGN-SYSTEM-05 forms & controls guardrails", () => {
     for (const marker of SCE_DESIGN_SYSTEM_05_DOC_MARKERS.slice(0, 6)) {
       expect(master).toContain(marker);
     }
+  });
+
+  it("records PO closure and accepted R1 implementation HEAD", () => {
+    expect(SCE_DESIGN_SYSTEM_05_PO_CLOSURE.PO_FORM_CONTROL_SYSTEM_REVIEW).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_05_PO_CLOSURE.PO_TOGGLE_FIRST_REVIEW).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_05_PO_CLOSURE.PO_FORM_CONTROL_MICRO_UX_REVIEW).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_05_PO_CLOSURE.DS05_STATUS).toBe("CLOSED / ACCEPTED / MERGED");
+    expect(SCE_DESIGN_SYSTEM_05_PO_CLOSURE.ACCEPTED_R1_MICRO_UX_HEAD).toBe(
+      "4b6a3bcb63d0ba1adcf3394aca82adf264c423a8",
+    );
   });
 
   it("locks form system and Toggle First governance", () => {
