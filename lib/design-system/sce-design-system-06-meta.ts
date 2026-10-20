@@ -82,7 +82,7 @@ export const SCE_DESIGN_SYSTEM_06_PO_CLOSURE = {
   FEATURE_HEAD_BEFORE_CLOSURE: "19275e80b8409494b6e2111359ac814f8972c877",
   /** Set on closure commit — merge SHA recorded on STAGE after PR merge. */
   CLOSURE_COMMIT: "d208772701e6a0bad4582aa50391c9346db54059",
-  STAGE_MERGE_COMMIT: "PENDING_STAGE_MERGE",
+  STAGE_MERGE_COMMIT: "7690f15d2d2dc3e8f2ba0c1660bff66877cf83ab",
   NEXT_PACKAGE: "SCE-DESIGN-SYSTEM-07 — Status, Feedback, Loading, Empty & Error",
 } as const;
 

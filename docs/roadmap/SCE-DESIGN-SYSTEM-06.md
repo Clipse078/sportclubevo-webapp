@@ -14,7 +14,7 @@
 | **Accepted R3 HEAD** | `d657e74772208e401f4419057f954c8ca28ed07c` |
 | **Feature HEAD before closure docs** | `19275e80b8409494b6e2111359ac814f8972c877` |
 | **Closure commit** | `d208772701e6a0bad4582aa50391c9346db54059` |
-| **STAGE merge commit** | see `SCE_DESIGN_SYSTEM_06_PO_CLOSURE.STAGE_MERGE_COMMIT` on **STAGE** after merge |
+| **STAGE merge commit** | `7690f15d2d2dc3e8f2ba0c1660bff66877cf83ab` |
 | **PR** | **#884** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-07`** — Status, Feedback, Loading, Empty & Error |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace · DS-04 cards · DS-05 controls |
