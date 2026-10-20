@@ -64,6 +64,17 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     );
   });
 
+  it("spielplan layout uses canonical stacked identity with management crests", () => {
+    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="spielplan" />);
+    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
+    expect(matchup).toHaveAttribute("data-layout", "spielplan");
+    expect(matchup).toHaveAttribute("data-crest-variant", "canonicalSpielplan");
+    expectCanonicalStackedFixtureIdentity(matchup);
+    const crestHosts = matchup.querySelectorAll('[data-sce-match-region="home-crest"] img, [data-sce-match-region="away-crest"] img');
+    expect(crestHosts.length).toBeGreaterThan(0);
+    expect(matchup.querySelector('[data-fixture-crest-size="micro"]')).toBeNull();
+  });
+
   it("board layout uses canonical stacked match identity for Feld- und Zeitplan cells", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="board" />);
     const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");

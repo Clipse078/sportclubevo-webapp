@@ -86,9 +86,13 @@ describe("SCE-TOURNAMENT-PLANNER-02D R9 — Spielplan presentation", () => {
       const presentation = read(
         "components/admin/tournamentcenter/composer/ComposerSchedulePreviewPresentation.tsx",
       );
-      expect(presentation).toMatch(/SceTournamentFixtureCompactMatchup/);
-      expect(presentation).toMatch(/layout="board"/);
-      expect(presentation).toMatch(/SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS/);
+      const fixtureCard = read(
+        "components/sce/tournament/SceTournamentSpielplanPreviewFixtureCard.tsx",
+      );
+      expect(presentation).toMatch(/SceTournamentSpielplanPreviewFixtureCard/);
+      expect(fixtureCard).toMatch(/SceTournamentFixtureCompactMatchup/);
+      expect(fixtureCard).toMatch(/layout="spielplan"/);
+      expect(fixtureCard).toMatch(/SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS/);
     });
 
     it("renders field, format and canonical matchup in DOM", () => {

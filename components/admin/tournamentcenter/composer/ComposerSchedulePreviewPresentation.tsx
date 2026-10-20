@@ -1,11 +1,10 @@
 "use client";
 
-import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import SceTournamentSpielplanPreviewFixtureCard from "@/components/sce/tournament/SceTournamentSpielplanPreviewFixtureCard";
 import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import type { ComposerSchedulePreviewTimelineItem } from "@/lib/tournaments/composer/build-composer-schedule-preview-timeline";
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
-import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { SCE_TOURNAMENT_ROUND_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { cn } from "@/lib/cn";
 
@@ -21,11 +20,6 @@ function participantSide(
     participantId,
     qualificationProvenanceLabel: null,
   };
-}
-
-function playingFormatLabel(playersPerSide: number | null): string | null {
-  if (playersPerSide == null || playersPerSide <= 0) return null;
-  return `${playersPerSide}v${playersPerSide}`;
 }
 
 type Props = {
@@ -87,34 +81,18 @@ export default function ComposerSchedulePreviewPresentation({
                   {item.roundStartLabel}
                 </time>
               </header>
-              <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-3.5">
-                {item.fixtures.map((fixture) => {
-                  const formatLabel = playingFormatLabel(fixture.playersPerSide);
-                  return (
-                    <li
-                      key={fixture.fixtureKey}
-                      className={cn(SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS, "space-y-2 p-3")}
-                      data-testid={`tournament-composer-schedule-fixture-${fixture.fixtureKey}`}
-                    >
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--text-2)]">
-                        <span className="font-medium text-[var(--foreground)]">{fixture.pitchLabel}</span>
-                        {formatLabel ? (
-                          <>
-                            <span aria-hidden className="text-[var(--muted)]">
-                              ·
-                            </span>
-                            <span>{formatLabel}</span>
-                          </>
-                        ) : null}
-                      </div>
-                      <SceTournamentFixtureCompactMatchup
-                        layout="board"
-                        sideA={participantSide(payload, fixture.homeParticipantId)}
-                        sideB={participantSide(payload, fixture.awayParticipantId)}
-                      />
-                    </li>
-                  );
-                })}
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-3.5">
+                {item.fixtures.map((fixture) => (
+                  <li key={fixture.fixtureKey} className="min-w-0">
+                    <SceTournamentSpielplanPreviewFixtureCard
+                      fixtureKey={fixture.fixtureKey}
+                      pitchLabel={fixture.pitchLabel}
+                      playersPerSide={fixture.playersPerSide}
+                      sideA={participantSide(payload, fixture.homeParticipantId)}
+                      sideB={participantSide(payload, fixture.awayParticipantId)}
+                    />
+                  </li>
+                ))}
               </ul>
             </section>
           );

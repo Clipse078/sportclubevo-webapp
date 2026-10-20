@@ -1,7 +1,6 @@
 "use client";
 
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
-import { cn } from "@/lib/cn";
 import { participantIdentityFromPlanung } from "./planung-participant-identity";
 import {
   SceTournamentFixtureParticipant,
@@ -11,9 +10,10 @@ import {
   buildStackedFixtureAccessibleLabel,
   SceMatchStackedFixtureIdentity,
 } from "@/components/sporting-activity/SceMatchStackedFixtureIdentity";
-import { SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS } from "@/lib/sporting-activity-presentation/canonical/activity-card-semantic-tokens";
+import { sceMatchCenterTypographyScale } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
+import { cn } from "@/lib/cn";
 
-export type SceTournamentFixtureCompactLayout = "inline" | "stack" | "board";
+export type SceTournamentFixtureCompactLayout = "inline" | "stack" | "board" | "spielplan";
 
 function formatSideLabel(side: TournamentPlanungFixtureSidePresentation): string {
   if (!side.qualificationProvenanceLabel) {
@@ -71,15 +71,17 @@ export default function SceTournamentFixtureCompactMatchup({
     );
   }
 
-  if (layout === "board") {
+  if (layout === "board" || layout === "spielplan") {
     const homeLabel = formatSideLabel(sideA);
     const awayLabel = formatSideLabel(sideB);
+    const vsScale = sceMatchCenterTypographyScale("COMPACT");
+    const crestOverride = layout === "spielplan" ? undefined : ("compact" as const);
     return (
       <div
         className={cn("min-w-0", className)}
         data-testid="sce-tournament-fixture-compact-matchup"
-        data-layout="board"
-        data-crest-variant="canonicalStacked"
+        data-layout={layout}
+        data-crest-variant={layout === "spielplan" ? "canonicalSpielplan" : "canonicalStacked"}
       >
         <SceMatchStackedFixtureIdentity
           home={{
@@ -91,15 +93,12 @@ export default function SceTournamentFixtureCompactMatchup({
             displayName: awayLabel,
           }}
           density="COMPACT"
-          crestVisualSizeOverride="compact"
+          crestVisualSizeOverride={crestOverride}
           ariaLabel={buildStackedFixtureAccessibleLabel(homeLabel, awayLabel)}
-          className="py-0"
+          className={layout === "spielplan" ? "py-0.5" : "py-0"}
           center={
             <span
-              className={cn(
-                "shrink-0 text-[0.625rem] font-medium uppercase tracking-[0.08em]",
-                SCE_ACTIVITY_FIXTURE_SEPARATOR_FOREGROUND_CLASS,
-              )}
+              className={cn("shrink-0 uppercase text-[var(--muted)]", vsScale.vsTextClass)}
               aria-hidden
               data-testid="sce-match-vs"
               data-sce-match-region="separator"
