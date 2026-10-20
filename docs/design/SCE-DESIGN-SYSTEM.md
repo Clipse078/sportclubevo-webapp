@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **Foundations & Tokens** (PO review)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-02** (Foundations & Tokens — not started)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-03** (Workspace / Surface / Navigation — after DS-02 PO acceptance)
 
 ---
 
@@ -81,6 +81,32 @@ APP (atmospheric background)
 **Density:** Support **COMFORTABLE · COMPACT · DENSE** tiers under the same SCE language. Operational surfaces (tables, Personen & Zugänge, Wochenplaner, Tournament Planner) stay efficient — **`PREMIUM_DOES_NOT_MEAN_OVERSIZED`**.
 
 Full pattern mapping: [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md) · product-wide rollout classifications: [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md).
+
+---
+
+## Foundations & tokens (SCE-DESIGN-SYSTEM-02)
+
+**`FOUNDATION_SOURCE_OF_TRUTH`:** `app/globals.css` — semantic aliases on `:root` (DS-02). Typed names and guardrails: `lib/design-system/sce-foundation-contract.ts` (no duplicate colour literals).
+
+| Concern | Contract |
+| --- | --- |
+| Semantic colours (surfaces, text, borders, accent, status) | `--sce-color-*` in `app/globals.css` |
+| Activity semantics (SPIEL / TRAINING / TURNIER / VERANSTALTUNG) | `--sce-activity-*` + `activity-type-pill.ts` |
+| Typography roles | `--sce-fs-*` + optional `.sce-type-*` utilities |
+| Spacing roles | `--sce-space-*` + `--sce-sp-*` scale |
+| Radii / elevation | `--sce-radius-*`, `--sce-elevation-*` |
+| Focus | `--sce-focus-ring-color`, `--sce-focus-input-shadow`, global `:focus-visible` |
+| Layout density | `--sce-density-{comfortable,compact,dense}-*` |
+| Overlay layering | `lib/ui/sce-overlay-layering.ts` + `--sce-z-*` |
+| Context tab foundation | `lib/design-system/sce-context-tabs-foundation.ts` → **`SceContextTabs`** (canonical) |
+
+**Navigation rollout (not DS-02):** Breadcrumbs and product-wide context tab adoption → **`SCE-DESIGN-SYSTEM-03`** (`BREADCRUMB_ROLLOUT_OWNER` · `CONTEXT_TAB_ROLLOUT_OWNER`).
+
+**Representative adoption in DS-02:** `Button`, `SwitchToggle`, `Badge`, `SceWorkspaceSurface`, `SceContextTabs`, activity type pills — proof of token architecture only; not DS-10 migration.
+
+Full package doc: [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md).
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-02-foundations.test.ts`.
 
 ---
 

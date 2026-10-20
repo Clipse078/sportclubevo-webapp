@@ -41,26 +41,26 @@ export function sportingActivityTypePillClassName(
     case "training-blue":
       return cn(
         base,
-        "bg-[var(--sce-info-light)]",
-        "text-[color-mix(in_srgb,var(--sce-info)_90%,var(--foreground)_10%)]",
+        "bg-[var(--sce-activity-training-subtle)]",
+        "text-[color-mix(in_srgb,var(--sce-activity-training)_90%,var(--foreground)_10%)]",
       );
     case "match-red":
       return cn(
         base,
-        "bg-[var(--sce-secondary-light)]",
-        "text-[color-mix(in_srgb,var(--sce-secondary)_88%,var(--foreground)_12%)]",
+        "bg-[var(--sce-activity-match-subtle)]",
+        "text-[color-mix(in_srgb,var(--sce-activity-match)_88%,var(--foreground)_12%)]",
       );
     case "tournament-orange":
       return cn(
         base,
-        "bg-[var(--sce-primary-light)]",
-        "text-[color-mix(in_srgb,var(--sce-primary)_92%,var(--foreground)_8%)]",
+        "bg-[var(--sce-activity-tournament-subtle)]",
+        "text-[color-mix(in_srgb,var(--sce-activity-tournament)_92%,var(--foreground)_8%)]",
       );
     case "club-event-violet":
       return cn(
         base,
-        "bg-[var(--sce-club-event-light)]",
-        "text-[color-mix(in_srgb,var(--sce-club-event)_92%,var(--foreground)_8%)]",
+        "bg-[var(--sce-activity-club-event-subtle)]",
+        "text-[color-mix(in_srgb,var(--sce-activity-club-event)_92%,var(--foreground)_8%)]",
       );
   }
 }

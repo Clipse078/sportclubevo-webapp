@@ -48,10 +48,10 @@ export function SwitchThumb({
       className={[
         "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent",
         "transition-colors duration-150 ease-in-out",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-app-background)]",
         checked
-          ? "bg-[var(--sce-primary)]"
-          : "bg-[var(--border-strong)]",
+          ? "bg-[var(--sce-color-accent-primary)]"
+          : "bg-[var(--sce-color-border-strong)]",
         disabled ? "cursor-not-allowed opacity-50" : "",
       ]
         .filter(Boolean)

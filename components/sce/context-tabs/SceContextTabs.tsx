@@ -11,6 +11,11 @@ import {
 } from "@/lib/context-tabs/registry";
 import { useContextDetailTab } from "@/lib/context-tabs/use-context-detail-tab";
 import { useOptionalContextDirtyNavigation } from "@/lib/context-tabs/ContextDirtyNavigationContext";
+import {
+  SCE_CONTEXT_TABS_NAV_CLASS,
+  sceContextTabClassName,
+  sceContextTabOverflowSummaryClassName,
+} from "@/lib/design-system/sce-context-tabs-foundation";
 import { SCE_ACTIVITY_NAV_TABLIST_CLASS } from "@/lib/sce/workspace/sce-workspace-layout";
 
 type Props<TTabId extends ContextTabId = ContextTabId> = {
@@ -122,7 +127,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
   return (
     <nav
       aria-label={ariaLabel}
-      className="flex min-w-0 items-stretch gap-2 border-b border-[var(--border)] sm:gap-3"
+      className={SCE_CONTEXT_TABS_NAV_CLASS}
       data-testid={testId}
     >
       <div
@@ -142,13 +147,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
           const tabDomId = `${idPrefix}-${tab.key}`;
           const panelDomId = `${idPrefix}panel-${tab.key}`;
 
-          const tabClassName = cn(
-            "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors sm:px-4",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-            isActive
-              ? "border-[var(--sce-primary)] text-[var(--sce-primary)]"
-              : "border-transparent text-[var(--text-2)] hover:text-[var(--foreground)]",
-          );
+          const tabClassName = sceContextTabClassName(isActive);
 
           if (localNavigation) {
             return (
@@ -192,13 +191,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
         <div className="relative mb-px flex shrink-0 items-end self-stretch pb-0">
           <details className="group relative">
             <summary
-              className={cn(
-                "flex cursor-pointer list-none items-center gap-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors marker:content-none [&::-webkit-details-marker]:hidden",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2",
-                overflowActive
-                  ? "text-[var(--sce-primary)]"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
+              className={sceContextTabOverflowSummaryClassName(overflowActive)}
               data-testid={`${testId}-mehr`}
             >
               Mehr

@@ -6,11 +6,11 @@
 
 /** Bounded activity tab workspace — background remains visible in gutters. */
 export const SCE_WORKSPACE_SURFACE_CLASS =
-  "overflow-hidden rounded-[var(--radius-lg)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)]/90 shadow-sm backdrop-blur-[2px] supports-[backdrop-filter]:bg-[var(--sce-surface-standard)]/82";
+  "overflow-hidden rounded-[var(--sce-radius-panel)] border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)]/90 shadow-[var(--sce-elevation-panel)] backdrop-blur-[2px] supports-[backdrop-filter]:bg-[var(--sce-color-surface-standard)]/82";
 
 /** Card-style functional section inside a tab (Communication hub card pattern). */
 export const SCE_WORKSPACE_FEATURE_CARD_CLASS =
-  "rounded-[var(--radius-lg)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-4 md:p-5";
+  "rounded-[var(--sce-radius-panel)] border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-standard)] p-4 md:p-5";
 
 /** Responsive grid for Mehr / multi-card tabs. */
 export const SCE_WORKSPACE_CARD_GRID_CLASS =
