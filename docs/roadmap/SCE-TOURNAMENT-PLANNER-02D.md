@@ -5,8 +5,24 @@
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02D` |
 | **Programme** | [`SCE-TOURNAMENT-PLANNER-02`](./SCE-TOURNAMENT-PLANNER-02.md) |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-02C`](./SCE-TOURNAMENT-PLANNER-02C.md) — **CLOSED / ACCEPTED / MERGED** (PR **#876**) |
-| **Status** | **READY FOR PO UAT (R3)** |
+| **Status** | **READY FOR PO UAT (R13)** |
 | **Next package** | **02E** — Spielplan UX, Outputs & Final Hardening |
+
+## Product invariants (R13 — final creator / Spielplan UX)
+
+| Invariant | Value |
+| --- | --- |
+| **SPIELPLAN_OPT_IN** | **YES** — toggle **Spielplan erstellen** on Termin; **default OFF** |
+| **SIMPLE_TOURNAMENT_WITHOUT_SPIELPLAN** | **VALID** — five-step flow: Termin → Teams → Ressourcen → Publikation → Übersicht |
+| **SPIELPLAN_CREATOR_FLOW** | **ON** — eight steps including Turnierformat, Spielfelder, Spielplan |
+| **PLAYING_FORMAT_OPTIONAL_BY_DEFAULT** | **YES** — **Nicht festgelegt** valid; no global mandatory Spielart validation |
+| **PREDEFINED_TEMPLATES** | **Fast path** when curated catalogue matches; **not** a product participant ceiling |
+| **TEMPLATE_FIELD_COUNT** | **Authoritative** for matched full templates — optimiser must not silently change field count |
+| **SCHEDULE_ROUND_BREAKS** | **0:N**, **after-round** model; no clock-time user input; no `mainPause` UI |
+| **CANONICAL_SCHEDULE** | **Single** TP01/TP02 spine — no parallel schedule/break/fixture-card architecture |
+| **SPIELPLAN_FIXTURE_PRESENTATION** | R12/R12.1 — field, optional format, crest above name, VS centred; **no Heim/Auswärts** |
+| **ARBITRARY_PRODUCT_PARTICIPANT_MAX** | **NONE** |
+| **02D_PACKAGE_CLOSED** | **NO** — PO UAT still required before close |
 
 ## Product principle (R3)
 

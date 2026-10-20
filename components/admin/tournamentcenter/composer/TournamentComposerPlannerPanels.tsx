@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, MoreVertical, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, LayoutGrid, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { TournamentComposerLegacyTurnierformatPanel } from "./TournamentComposerLegacyTurnierformatPanel";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
@@ -226,7 +226,7 @@ export function TournamentComposerSpielfelderPanel({
         </p>
       ) : (
         <p className="mb-3 text-sm text-[var(--text-2)]">
-          Lege Spielfelder und Spielarten fest — SCE übernimmt sie in den Spielplan.
+          Lege Turnierspielfelder fest — optional mit Spielweise pro Feld. SCE übernimmt sie in den Spielplan.
         </p>
       )}
       {hasProposal ? (
@@ -312,7 +312,7 @@ export function TournamentComposerSpielfelderPanel({
           >
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
-                <span aria-hidden>⚽</span>
+                <LayoutGrid className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
                 <span>Feld {index + 1}</span>
               </div>
               <div className="flex items-center gap-1">

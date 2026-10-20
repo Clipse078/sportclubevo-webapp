@@ -15,6 +15,10 @@ describe("SCE-TOURNAMENT-PLANNER-02D roadmap", () => {
     expect(doc).toMatch(/PROPOSAL_NOT_LOCK.*YES/i);
     expect(doc).toMatch(/CATEGORY_AWARE_PROPOSAL.*YES/i);
     expect(doc).toMatch(/MANUAL_UAT_BY_CURSOR.*SKIPPED_PO_OWNED/i);
+    expect(doc).toMatch(/SPIELPLAN_OPT_IN.*default OFF/i);
+    expect(doc).toMatch(/PLAYING_FORMAT_OPTIONAL_BY_DEFAULT.*YES/i);
+    expect(doc).toMatch(/ARBITRARY_PRODUCT_PARTICIPANT_MAX.*NONE/i);
+    expect(doc).toMatch(/02D_PACKAGE_CLOSED.*NO/i);
   });
 
   it("parent programme doc marks 02D in progress and 02E final", () => {
