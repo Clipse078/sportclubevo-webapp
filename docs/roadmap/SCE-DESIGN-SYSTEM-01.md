@@ -4,11 +4,50 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-01` |
 | **Predecessor** | SCE-UI-ROLLOUT-01+ (foundations), SCE-TOURNAMENT-PLANNER-02 (**CLOSED**, STAGE `9430a8e7…`) |
-| **Status** | **DS-01 audit complete + DS-01-R1 PO visual direction locked** (architecture docs only — **no** product-wide migration) |
+| **Status** | **CLOSED / ACCEPTED** (PO architecture + visual direction **PASS**; PR **#879** → **STAGE**) |
+| **`DS01_STATUS`** | **CLOSED / ACCEPTED** (pending merge on PR **#879**) |
 | **Branch** | `cursor/sce-design-system-01-product-wide-audit-architecture` |
 | **Baseline STAGE** | `9430a8e7b3bfefc40872e756d7dfe6e6b9cb6f2c` |
 | **Accepted audit HEAD** | `6f3554f415bd4b3aa6012dad6e79a0d31eb8f875` |
-| **Draft PR** | **#879** → **STAGE** (not merged) |
+| **Accepted feature HEAD (R1 + closure)** | `08929f33aa72ea44339fb53586f5de3725461811` (pre-closure); closure commit updates this row |
+| **PR** | **#879** → **STAGE** |
+
+---
+
+## PO acceptance (final closure)
+
+Product Owner review **PASS** — DS-01 is the **architecture baseline** for the remaining Design System programme (DS-02+).
+
+| Field | Value |
+| --- | --- |
+| `PO_ARCHITECTURE_REVIEW` | **PASS** |
+| `PO_VISUAL_DIRECTION_REVIEW` | **PASS** |
+| `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
+| `PRODUCT_WIDE_ROLLOUT_TARGET` | **YES** |
+| `DARK_NAVY_SCE_LANGUAGE` | **CANONICAL_DIRECTION** |
+| `RESTRAINED_ACCENT_USAGE` | **REQUIRED** |
+| `LAYERED_SURFACE_HIERARCHY` | **REQUIRED** |
+| `CALM_INFORMATION_HIERARCHY` | **REQUIRED** |
+| `DOMAIN_SPECIFIC_LAYOUTS_PRESERVED` | **YES** |
+| `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
+
+Architecture closure markers (PO final):
+
+```text
+PO_ARCHITECTURE_REVIEW = PASS
+PO_VISUAL_DIRECTION_REVIEW = PASS
+COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES
+PRODUCT_WIDE_ROLLOUT_TARGET = YES
+DARK_NAVY_SCE_LANGUAGE = CANONICAL_DIRECTION
+RESTRAINED_ACCENT_USAGE = REQUIRED
+LAYERED_SURFACE_HIERARCHY = REQUIRED
+CALM_INFORMATION_HIERARCHY = REQUIRED
+DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES
+PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
+DS01_STATUS = CLOSED / ACCEPTED
+```
+
+**Programme carry-forward:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-02`** (Foundations & Tokens — **not started** in DS-01 closure).
 
 ---
 
@@ -385,7 +424,7 @@ Full matrix: [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-S
 
 **R1 acceptance criteria carry-forward:** Each DS-02+ package must demonstrate alignment with PO visual flags above (dark layered surfaces, restrained accent, calm hierarchy) **without** breaking domain-specific layouts listed in [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md) visual rollout table.
 
-Sequence may merge/split based on PO review — **do not start DS-02** until DS-01 (+ R1) accepted.
+Sequence may merge/split based on PO review. **DS-01 (+ R1) is PO-accepted** — **do not implement DS-02** in the DS-01 closure branch; start DS-02 only as a separate package.
 
 ---
 
@@ -409,9 +448,10 @@ Sequence may merge/split based on PO review — **do not start DS-02** until DS-
 - [x] Proposed DS-02–DS-11 sequence
 - [x] Automated guardrails for doc structure (no brittle prose tests)
 - [x] `npm run build`, prisma validate/generate, focused tests pass
-- [x] Draft PR against STAGE — **not merged**
+- [x] PR **#879** against STAGE — PO closure (merge when gates green)
 - [x] No database / password / PO UAT by Cursor
 - [x] **DS-01-R1:** PO Communication visual direction locked; product-wide rollout classifications; guardrails updated
+- [x] **PO final:** architecture review **PASS**; visual direction **PASS**; `DS01_STATUS = CLOSED / ACCEPTED`
 
 ---
 
