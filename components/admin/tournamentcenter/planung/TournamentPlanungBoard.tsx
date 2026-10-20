@@ -8,7 +8,7 @@ import { manualMoveTargetAllowed, resolveManualMoveCapabilities } from "@/lib/to
 import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-hub-pointer-gesture";
 import { cn } from "@/lib/cn";
 import { Lock } from "lucide-react";
-import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import SceTournamentFixturePresentation from "@/components/sce/tournament/SceTournamentFixturePresentation";
 import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
 import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
@@ -130,7 +130,7 @@ export default function TournamentPlanungBoard({
         className="min-w-max"
         style={{
           display: "grid",
-          gridTemplateColumns: `4.5rem repeat(${model.pitches.length}, minmax(8rem, 1fr))`,
+          gridTemplateColumns: `4.5rem repeat(${model.pitches.length}, minmax(9rem, 1fr))`,
         }}
       >
         <div className="sticky left-0 z-10 border-b border-r border-[var(--sce-surface-border)] bg-[var(--sce-surface-elevated)] p-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -242,7 +242,7 @@ export default function TournamentPlanungBoard({
                   <div
                     key={`${cellKey}-empty`}
                     className={cn(
-                      "border-b border-[var(--border)] p-1 min-h-[3.25rem]",
+                      "border-b border-[var(--border)] p-1 min-h-[3.75rem]",
                       dropStatus === "valid" && "ring-1 ring-inset ring-[var(--accent)]/40",
                       dropStatus === "invalid" && "ring-1 ring-inset ring-[var(--sce-danger)]/50",
                       dropStatus === "lock" && "opacity-60",
@@ -290,10 +290,10 @@ export default function TournamentPlanungBoard({
                   <button
                     type="button"
                     className={cn(
-                      "w-full text-left text-xs transition-colors touch-none min-h-11",
+                      "w-full text-left text-xs transition-colors touch-none min-h-[3.75rem]",
                       SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
                       SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS,
-                      "rounded-lg px-2 py-2.5 hover:border-[var(--sce-surface-border-elevated)]",
+                      "rounded-lg px-2 py-3 hover:border-[var(--sce-surface-border-elevated)]",
                       selected && "ring-2 ring-[var(--accent)]",
                       isDragging && "opacity-40",
                       !caps.canDrag && canManage && "cursor-default",
@@ -349,8 +349,9 @@ export default function TournamentPlanungBoard({
                       previewCache.current.clear();
                     }}
                   >
-                    <SceTournamentFixtureCompactMatchup
-                      layout="board"
+                    <SceTournamentFixturePresentation
+                      density="grid"
+                      embedded
                       sideA={fixture.sideA}
                       sideB={fixture.sideB}
                     />

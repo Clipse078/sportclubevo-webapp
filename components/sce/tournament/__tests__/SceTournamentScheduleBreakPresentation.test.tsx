@@ -62,6 +62,8 @@ describe("SceTournamentScheduleBreakPresentation — R7.7A pause semantic", () =
       />,
     );
     const block = screen.getByTestId("break-only");
-    expect(block.className).not.toContain(SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS.split(" ")[0]);
+    expect(block.className).not.toContain("--sce-match-card-surface");
+    expect(block.className).not.toContain("hover:bg-[var(--sce-surface-elevated)]/15");
+    expect(SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS).toContain("--sce-match-card-surface");
   });
 });

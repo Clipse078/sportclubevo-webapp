@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02` |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) — **CLOSED / ACCEPTED / MERGED** (01M PR **#873**) |
-| **Status** | **IN PROGRESS** — **02A** / **02B** / **02C** / **02D** **CLOSED / ACCEPTED / MERGED**; **02E** next |
+| **Status** | **CLOSING** — **02A** / **02B** / **02C** / **02D** **CLOSED / ACCEPTED / MERGED**; **02E** **CLOSED / ACCEPTED / pending merge** (PR **#878**) |
 | **ADR** | [`ADR-015`](./05-architecture-decisions.md#adr-015--tournament-programme-architecture-and-generic-playing-format) |
 | **Contracts** | `lib/tournament-scheduling/tournament-programme-architecture.ts` |
 
@@ -58,7 +58,7 @@ Conceptual pipeline (useful for architecture; not every abstraction must be full
 | **02B** | Playing formats & tournament pitches — optional pitch format, persistence, Creator/Planung/output adoption ([doc](./SCE-TOURNAMENT-PLANNER-02B.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#875**) |
 | **02C** | Participant playing units — Spielteams, capacity rules ([doc](./SCE-TOURNAMENT-PLANNER-02C.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#876**) |
 | **02D** | **Predefined Spielplan templates & instant generation** — ([doc](./SCE-TOURNAMENT-PLANNER-02D.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#877**) |
-| **02E** | **Spielplan UX, outputs & final hardening** — final TP02 package before closure (**NEXT**, **NOT STARTED**) |
+| **02E** | **Spielplan UX, outputs & final hardening** — ([doc](./SCE-TOURNAMENT-PLANNER-02E.md)) (**CLOSED / ACCEPTED / pending merge**, PR **#878**) |
 
 **TP02 closes after 02E** acceptance/merge.
 
@@ -121,7 +121,9 @@ Team-Spielplan is a **derived view** — never a separately persisted schedule.
 | **02B_STATUS** | **CLOSED / ACCEPTED / MERGED** (PR **#875**, [02B doc](./SCE-TOURNAMENT-PLANNER-02B.md)) |
 | **02C_STATUS** | **CLOSED / ACCEPTED / MERGED** (PR **#876**, [02C doc](./SCE-TOURNAMENT-PLANNER-02C.md)) |
 | **02D_STATUS** | **CLOSED / ACCEPTED / MERGED** (PO UAT **PASS**, PR **#877**, [02D doc](./SCE-TOURNAMENT-PLANNER-02D.md)) |
-| **NEXT_PACKAGE** | **02E** — Spielplan UX, Outputs & Final Hardening (**NOT STARTED**) |
-| **FINAL_PACKAGE** | **02E** — Spielplan UX, Outputs & Final Hardening (**NOT STARTED**) |
+| **02E_STATUS** | **CLOSED / ACCEPTED / pending merge** (PO UAT **PASS**, PR **#878**, [02E doc](./SCE-TOURNAMENT-PLANNER-02E.md)) |
+| **NEXT_PACKAGE** | **NONE** (programme closes when PR **#878** merges) |
+| **FINAL_PACKAGE** | **02E** — **CLOSED / ACCEPTED / pending merge** |
 | **TP02_CLOSES_AFTER_02E** | **YES** |
-| **REMAINING_REQUIRED_TP02_PACKAGES** | **02E** |
+| **REMAINING_REQUIRED_TP02_PACKAGES** | **NONE** (pending PR **#878** merge to **STAGE**) |
+| **TOURNAMENT_PLANNER_02_STATUS** | **CLOSING** — becomes **CLOSED / ACCEPTED / MERGED** after PR **#878** merge |

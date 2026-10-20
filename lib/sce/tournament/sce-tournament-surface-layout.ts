@@ -15,19 +15,26 @@ export const SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS = cn(
 export const SCE_TOURNAMENT_ROUND_SURFACE_CLASS = cn(
   "rounded-[var(--radius-lg)] border border-[var(--sce-surface-border-subtle)]",
   "bg-[var(--sce-surface-standard)] p-4 md:p-5",
+  "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]",
 );
 
 /** Standard Spielplan fixture card — pitch-opaque identity layer (aligned with SceMatchCard). */
 export const SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS = cn(
   SCE_MATCH_CARD_SHELL_CLASS,
-  "transition-[opacity,box-shadow,border-color]",
-  "hover:border-[var(--sce-surface-border-elevated)]",
+  "transition-[opacity,box-shadow,border-color,background-color]",
 );
 
-/** Denser Planung list / board fixture shell — same token stack, tighter padding applied in components. */
-export const SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS = cn(
+/** Composer STANDARD density — premium fixture card in round grids. */
+export const SCE_TOURNAMENT_FIXTURE_STANDARD_SHELL_CLASS = cn(
   SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS,
   "shadow-[var(--sce-surface-shadow)]",
+  "hover:border-[var(--sce-surface-border-elevated)] hover:bg-[var(--sce-surface-elevated)]/15",
+);
+
+/** Master / Planung list COMPACT density — same family, tighter rhythm. */
+export const SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS = cn(
+  SCE_TOURNAMENT_FIXTURE_STANDARD_SHELL_CLASS,
+  "rounded-[var(--radius-lg)]",
 );
 
 /** Round metadata pill (match count). */

@@ -3,15 +3,19 @@
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
 import { participantIdentityFromPlanung } from "./planung-participant-identity";
 import {
-  SceTournamentFixtureParticipant,
-  SceTournamentFixtureVs,
-} from "./SceTournamentFixtureIdentity";
-import {
   buildStackedFixtureAccessibleLabel,
   SceMatchStackedFixtureIdentity,
 } from "@/components/sporting-activity/SceMatchStackedFixtureIdentity";
-import { sceMatchCenterTypographyScale } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
+import { sceMatchRichDensityScale } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
+import {
+  clubNameClassForFixturePresentation,
+  crestVisualSizeOverrideForFixturePresentation,
+  matchIdentityDensityForFixturePresentation,
+  stackedLayoutScaleForFixturePresentation,
+} from "@/lib/sce/tournament/sce-tournament-fixture-presentation-density";
 import { cn } from "@/lib/cn";
+import SceTournamentFixtureVs from "./SceTournamentFixtureVs";
+import type { SceTournamentFixturePresentationDensity } from "./SceTournamentFixturePresentation";
 
 export type SceTournamentFixtureCompactLayout = "inline" | "stack" | "board" | "spielplan";
 
@@ -26,117 +30,58 @@ type Props = {
   sideA: TournamentPlanungFixtureSidePresentation;
   sideB: TournamentPlanungFixtureSidePresentation;
   layout?: SceTournamentFixtureCompactLayout;
+  presentationDensity?: SceTournamentFixturePresentationDensity;
   className?: string;
 };
 
 /**
- * COMPACT Planung fixture identity — crest, names, VS.
- * Inline for round lists; stack for narrow board cells (DnD-safe).
+ * Tournament fixture identity — crest above name, canonical VS, symmetric participant zones.
  */
 export default function SceTournamentFixtureCompactMatchup({
   sideA,
   sideB,
-  layout = "stack",
+  layout = "spielplan",
+  presentationDensity = "compact",
   className,
 }: Props) {
-  if (layout === "inline") {
-    const crestVariant = "planung";
-    return (
-      <div
-        className={cn("flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5", className)}
-        data-testid="sce-tournament-fixture-compact-matchup"
-        data-layout="inline"
-        data-crest-variant={crestVariant}
-      >
-        <SceTournamentFixtureParticipant
-          identity={participantIdentityFromPlanung(sideA)}
-          label={sideA.label}
-          density="compact"
-          crestVariant={crestVariant}
-          align="start"
-          qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
-          className="min-w-0 flex-1 basis-0"
-        />
-        <SceTournamentFixtureVs size="compact" className="mx-0.5 shrink-0" />
-        <SceTournamentFixtureParticipant
-          identity={participantIdentityFromPlanung(sideB)}
-          label={sideB.label}
-          density="compact"
-          crestVariant={crestVariant}
-          align="end"
-          qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
-          className="min-w-0 flex-1 basis-0"
-        />
-      </div>
-    );
-  }
-
-  if (layout === "board" || layout === "spielplan") {
-    const homeLabel = formatSideLabel(sideA);
-    const awayLabel = formatSideLabel(sideB);
-    const vsScale = sceMatchCenterTypographyScale("COMPACT");
-    const crestOverride = layout === "spielplan" ? undefined : ("compact" as const);
-    return (
-      <div
-        className={cn("min-w-0", className)}
-        data-testid="sce-tournament-fixture-compact-matchup"
-        data-layout={layout}
-        data-crest-variant={layout === "spielplan" ? "canonicalSpielplan" : "canonicalStacked"}
-      >
-        <SceMatchStackedFixtureIdentity
-          home={{
-            identity: participantIdentityFromPlanung(sideA),
-            displayName: homeLabel,
-          }}
-          away={{
-            identity: participantIdentityFromPlanung(sideB),
-            displayName: awayLabel,
-          }}
-          density="COMPACT"
-          crestVisualSizeOverride={crestOverride}
-          ariaLabel={buildStackedFixtureAccessibleLabel(homeLabel, awayLabel)}
-          className={layout === "spielplan" ? "py-0.5" : "py-0"}
-          center={
-            <span
-              className={cn("shrink-0 uppercase text-[var(--muted)]", vsScale.vsTextClass)}
-              aria-hidden
-              data-testid="sce-match-vs"
-              data-sce-match-region="separator"
-            >
-              VS
-            </span>
-          }
-        />
-      </div>
-    );
-  }
+  const resolvedLayout =
+    layout === "inline" || layout === "stack" ? "spielplan" : layout === "board" ? "board" : layout;
+  const homeLabel = formatSideLabel(sideA);
+  const awayLabel = formatSideLabel(sideB);
+  const matchDensity = matchIdentityDensityForFixturePresentation(presentationDensity);
+  const scale = sceMatchRichDensityScale(matchDensity);
+  const crestOverride = crestVisualSizeOverrideForFixturePresentation(presentationDensity);
+  const gridLayoutScale = stackedLayoutScaleForFixturePresentation(presentationDensity);
+  const gridClubNameClass = clubNameClassForFixturePresentation(presentationDensity);
 
   return (
     <div
-      className={cn("min-w-0 space-y-1", className)}
+      className={cn("min-w-0", className)}
       data-testid="sce-tournament-fixture-compact-matchup"
-      data-layout="stack"
-      data-crest-variant="planungBoard"
+      data-layout={layout === "inline" || layout === "stack" ? layout : resolvedLayout}
+      data-crest-variant={resolvedLayout === "board" ? "canonicalStacked" : "canonicalSpielplan"}
+      data-presentation-density={presentationDensity}
     >
-      <SceTournamentFixtureParticipant
-        identity={participantIdentityFromPlanung(sideA)}
-        label={sideA.label}
-        density="compact"
-        crestVariant="planungBoard"
-        align="start"
-        qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
-      />
-      <div className="flex justify-center py-0.5">
-        <SceTournamentFixtureVs size="compact" />
-      </div>
-      <SceTournamentFixtureParticipant
-        identity={participantIdentityFromPlanung(sideB)}
-        label={sideB.label}
-        density="compact"
-        crestVariant="planungBoard"
-        align="end"
-        qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
-        muted
+      <SceMatchStackedFixtureIdentity
+        home={{
+          identity: participantIdentityFromPlanung(sideA),
+          displayName: homeLabel,
+        }}
+        away={{
+          identity: participantIdentityFromPlanung(sideB),
+          displayName: awayLabel,
+        }}
+        density={matchDensity}
+        crestVisualSizeOverride={crestOverride}
+        clubNameClassOverride={gridClubNameClass ?? undefined}
+        layoutScaleOverride={gridLayoutScale ?? undefined}
+        ariaLabel={buildStackedFixtureAccessibleLabel(homeLabel, awayLabel)}
+        className={cn(
+          gridLayoutScale?.fixtureOuterPyClass ?? (resolvedLayout === "board" ? "py-0" : "py-0.5"),
+          !gridLayoutScale && scale.fixtureGridGapXClass,
+          !gridLayoutScale && scale.fixtureGapYClass,
+        )}
+        center={<SceTournamentFixtureVs density={presentationDensity} />}
       />
     </div>
   );

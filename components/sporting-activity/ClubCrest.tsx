@@ -7,12 +7,13 @@ import type { ClubIdentity } from "@/lib/sporting-activity-design/club-identity"
 import { resolveClubIdentityEffectiveLogoUrl } from "@/lib/sporting-activity-design/club-identity";
 import type { SportingActivityDensity } from "@/lib/sporting-activity-design/density";
 
-export type ClubCrestVisualSize = SportingActivityDensity | "detail" | "micro";
+export type ClubCrestVisualSize = SportingActivityDensity | "detail" | "micro" | "board";
 
 /** Square layout bounds — real logos use object-contain inside (not circular pills). */
 const BOUNDS_CLASSES: Record<ClubCrestVisualSize, string> = {
   micro: "h-[1.125rem] w-[1.125rem]",
   compact: "h-8 w-8",
+  board: "h-9 w-9",
   planner: "h-12 w-12",
   management: "h-10 w-10",
   detail: "h-[5rem] w-[5rem]",
@@ -21,6 +22,7 @@ const BOUNDS_CLASSES: Record<ClubCrestVisualSize, string> = {
 const FALLBACK_SIZE_CLASSES: Record<ClubCrestVisualSize, string> = {
   micro: "h-[1.125rem] w-[1.125rem] text-[0.4375rem]",
   compact: "h-8 w-8 text-[0.5625rem]",
+  board: "h-9 w-9 text-[0.5625rem]",
   planner: "h-12 w-12 text-[0.75rem]",
   management: "h-10 w-10 text-[0.625rem]",
   detail: "h-[5rem] w-[5rem] text-[0.875rem]",
@@ -29,6 +31,7 @@ const FALLBACK_SIZE_CLASSES: Record<ClubCrestVisualSize, string> = {
 const ICON_SIZE = {
   micro: 12,
   compact: 12,
+  board: 16,
   planner: 24,
   management: 16,
   detail: 32,

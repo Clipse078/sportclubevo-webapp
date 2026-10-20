@@ -2,10 +2,9 @@
 
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import { Lock } from "lucide-react";
-import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
-import { cn } from "@/lib/cn";
+import SceTournamentFixturePresentation from "@/components/sce/tournament/SceTournamentFixturePresentation";
+import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 import {
-  SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
   SCE_TOURNAMENT_ROUND_COUNT_BADGE_CLASS,
   SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
 } from "@/lib/sce/tournament/sce-tournament-surface-layout";
@@ -61,13 +60,14 @@ export default function TournamentPlanungScheduleList({ model, timezone }: Props
               {section.entries.map((entry) => {
                 if (entry.kind === "BREAK") {
                   return (
-                    <li
-                      key={entry.breakId}
-                      className="rounded-lg border border-dashed border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-3 py-2 text-sm text-[var(--muted)]"
-                      aria-label={entry.accessibleLabel}
-                      data-testid={`planung-break-${entry.breakId}`}
-                    >
-                      {entry.accessibleLabel}
+                    <li key={entry.breakId} role="listitem">
+                      <SceTournamentScheduleBreakPresentation
+                        layout="spielplan-all-pitches"
+                        label={entry.label}
+                        timeLabel={formatTimeRange(entry.startUtc, entry.endUtc, timezone)}
+                        accessibleLabel={entry.accessibleLabel}
+                        testId={`planung-break-${entry.breakId}`}
+                      />
                     </li>
                   );
                 }
@@ -75,43 +75,37 @@ export default function TournamentPlanungScheduleList({ model, timezone }: Props
                   entry.result?.state === "COMPLETED" &&
                   entry.result.scoreSideA != null &&
                   entry.result.scoreSideB != null;
+                const pitch = pitchLabel.get(entry.pitchId) ?? "Feld";
+                const formatHint = pitchFormatHint.get(entry.pitchId);
+                const pitchWithHint = formatHint ? `${pitch} · ${formatHint}` : pitch;
+
                 return (
-                  <li
-                    key={entry.fixtureId}
-                    className={cn(SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS, "px-3 py-3")}
-                    aria-label={entry.accessibleLabel}
-                    data-testid={`planung-schedule-fixture-${entry.fixtureId}`}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-xs tabular-nums text-[var(--muted)]">
-                        {formatTimeRange(entry.startUtc, entry.endUtc, timezone)} ·{" "}
-                        {pitchLabel.get(entry.pitchId) ?? "Feld"}
-                        {pitchFormatHint.get(entry.pitchId)
-                          ? ` · ${pitchFormatHint.get(entry.pitchId)}`
-                          : ""}
-                      </p>
-                      {completed ? (
-                        <p
-                          className="shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]"
-                          aria-label={`Ergebnis ${entry.result!.scoreSideA} zu ${entry.result!.scoreSideB}`}
-                        >
-                          {entry.result!.scoreSideA}:{entry.result!.scoreSideB}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className={cn("mt-2 min-w-0")}>
-                      <SceTournamentFixtureCompactMatchup
-                        sideA={entry.sideA}
-                        sideB={entry.sideB}
-                        layout="inline"
-                      />
-                    </div>
-                    {entry.lockDimension ? (
-                      <p className="mt-1.5 flex items-center gap-1 text-xs text-[var(--muted)]">
-                        <Lock className="h-3 w-3" aria-hidden />
-                        Gesperrt
-                      </p>
-                    ) : null}
+                  <li key={entry.fixtureId} role="listitem">
+                    <SceTournamentFixturePresentation
+                      density="compact"
+                      sideA={entry.sideA}
+                      sideB={entry.sideB}
+                      timeLabel={formatTimeRange(entry.startUtc, entry.endUtc, timezone)}
+                      pitchLabel={pitchWithHint}
+                      result={
+                        completed
+                          ? {
+                              scoreSideA: entry.result!.scoreSideA!,
+                              scoreSideB: entry.result!.scoreSideB!,
+                            }
+                          : null
+                      }
+                      accessibleLabel={entry.accessibleLabel}
+                      testId={`planung-schedule-fixture-${entry.fixtureId}`}
+                      footer={
+                        entry.lockDimension ? (
+                          <p className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
+                            <Lock className="h-3 w-3" aria-hidden />
+                            Gesperrt
+                          </p>
+                        ) : null
+                      }
+                    />
                   </li>
                 );
               })}

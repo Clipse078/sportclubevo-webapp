@@ -11,6 +11,7 @@ import {
   sceMatchRichDensityScale,
 } from "@/lib/sporting-activity-presentation/canonical/match-card-rich-density";
 import type { SceActivityPresentationDensity } from "@/lib/sporting-activity-presentation/canonical/types";
+import type { SceTournamentFixtureStackedLayoutScale } from "@/lib/sce/tournament/sce-tournament-fixture-presentation-density";
 
 export type SceMatchStackedFixtureSide = {
   identity: ClubIdentity;
@@ -30,6 +31,12 @@ export type SceMatchStackedFixtureIdentityProps = {
   showCrests?: boolean;
   /** Narrow schedule cells — keep canonical grammar with slightly smaller crests. */
   crestVisualSizeOverride?: ClubCrestVisualSize;
+  /** Tournament grid density — crest-forward name scale without changing rich-card tiers. */
+  clubNameClassOverride?: string;
+  layoutScaleOverride?: Pick<
+    SceTournamentFixtureStackedLayoutScale,
+    "identityStackGapClass" | "fixtureGridGapXClass" | "fixtureGapYClass"
+  >;
 };
 
 function richScale(density: SceActivityPresentationDensity) {
@@ -58,12 +65,16 @@ function SceMatchStackedIdentityColumn({
   density,
   showCrests,
   crestVisualSize,
+  clubNameClassOverride,
+  identityStackGapClass,
 }: {
   side: "home" | "away";
   sideModel: SceMatchStackedFixtureSide;
   density: SceActivityPresentationDensity;
   showCrests: boolean;
   crestVisualSize: ClubCrestVisualSize;
+  clubNameClassOverride?: string;
+  identityStackGapClass: string;
 }) {
   const label = sideModel.displayName?.trim() || sideModel.identity.displayName;
 
@@ -73,7 +84,7 @@ function SceMatchStackedIdentityColumn({
       data-sce-match-region={`${side}-identity`}
       className={cn(
         "flex min-w-0 flex-col items-center text-center",
-        richScale(density).identityStackGapClass,
+        identityStackGapClass,
       )}
     >
       {showCrests ? (
@@ -82,7 +93,10 @@ function SceMatchStackedIdentityColumn({
         </div>
       ) : null}
       <span
-        className={cn("min-w-0 text-[var(--foreground)]", clubNameClassForDensity(density))}
+        className={cn(
+          "min-w-0 text-[var(--foreground)]",
+          clubNameClassOverride ?? clubNameClassForDensity(density),
+        )}
         title={label}
         data-sce-match-region={`${side}-name`}
       >
@@ -106,16 +120,23 @@ export function SceMatchStackedFixtureIdentity({
   testId = "sce-match-fixture",
   showCrests = isSceActivityDimensionVisible(density, "crests"),
   crestVisualSizeOverride,
+  clubNameClassOverride,
+  layoutScaleOverride,
 }: SceMatchStackedFixtureIdentityProps) {
   const scale = richScale(density);
   const crestVisualSize = crestSizeForDensity(density, crestVisualSizeOverride);
+  const identityStackGapClass =
+    layoutScaleOverride?.identityStackGapClass ?? scale.identityStackGapClass;
+  const fixtureGridGapXClass =
+    layoutScaleOverride?.fixtureGridGapXClass ?? scale.fixtureGridGapXClass;
+  const fixtureGapYClass = layoutScaleOverride?.fixtureGapYClass ?? scale.fixtureGapYClass;
 
   return (
     <div
       className={cn(
         "grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center py-1",
-        scale.fixtureGridGapXClass,
-        scale.fixtureGapYClass,
+        fixtureGridGapXClass,
+        fixtureGapYClass,
         className,
       )}
       data-testid={testId}
@@ -128,6 +149,8 @@ export function SceMatchStackedFixtureIdentity({
         density={density}
         showCrests={showCrests}
         crestVisualSize={crestVisualSize}
+        clubNameClassOverride={clubNameClassOverride}
+        identityStackGapClass={identityStackGapClass}
       />
       <div
         className="flex items-center justify-center px-1"
@@ -142,6 +165,8 @@ export function SceMatchStackedFixtureIdentity({
         density={density}
         showCrests={showCrests}
         crestVisualSize={crestVisualSize}
+        clubNameClassOverride={clubNameClassOverride}
+        identityStackGapClass={identityStackGapClass}
       />
     </div>
   );

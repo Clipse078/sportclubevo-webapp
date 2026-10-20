@@ -1,6 +1,7 @@
 "use client";
 
 import SceTournamentSpielplanPreviewFixtureCard from "@/components/sce/tournament/SceTournamentSpielplanPreviewFixtureCard";
+import SceTournamentRoundHeader from "@/components/sce/tournament/SceTournamentRoundHeader";
 import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import type { ComposerSchedulePreviewTimelineItem } from "@/lib/tournaments/composer/build-composer-schedule-preview-timeline";
@@ -57,20 +58,16 @@ export default function ComposerSchedulePreviewPresentation({
               className={cn(SCE_TOURNAMENT_ROUND_SURFACE_CLASS, "space-y-3")}
               data-testid={`tournament-composer-schedule-round-${item.roundNumber}`}
             >
-              <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--border)] pb-2">
-                <h4
-                  id={roundHeadingId}
-                  className="text-sm font-semibold text-[var(--foreground)]"
-                >
-                  Runde {item.roundNumber}
-                </h4>
-                <time
-                  className="text-xs font-medium tabular-nums text-[var(--muted)]"
-                  dateTime={new Date(item.roundStartUtcMs).toISOString()}
-                >
-                  {item.roundStartLabel}
-                </time>
-              </header>
+              <SceTournamentRoundHeader
+                headingId={roundHeadingId}
+                title={`Runde ${item.roundNumber}`}
+                metaLine={item.roundStartLabel}
+                countLabel={
+                  item.fixtures.length === 1
+                    ? "1 Spiel"
+                    : `${item.fixtures.length} Spiele`
+                }
+              />
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-3.5">
                 {item.fixtures.map((fixture) => (
                   <li key={fixture.fixtureKey} className="min-w-0">

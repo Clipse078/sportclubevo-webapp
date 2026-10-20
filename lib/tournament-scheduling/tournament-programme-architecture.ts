@@ -276,11 +276,14 @@ export type TournamentPlanner02PackageId = keyof typeof TOURNAMENT_PLANNER_02_PA
 
 export const TOURNAMENT_PLANNER_02C_STATUS = "CLOSED / ACCEPTED / MERGED" as const;
 
-export const TOURNAMENT_PLANNER_02D_STATUS = "READY_FOR_PO_UAT" as const;
+export const TOURNAMENT_PLANNER_02D_STATUS = "CLOSED / ACCEPTED / MERGED" as const;
 
-export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID = "02E" as const;
-export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_LABEL =
-  "Spielplan UX, outputs & final hardening" as const;
+export const TOURNAMENT_PLANNER_02E_STATUS = "CLOSED / ACCEPTED / pending merge" as const;
+
+/** No further TP02 packages after 02E (programme complete pending PR #878 merge to STAGE). */
+export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID = null;
+
+export const TOURNAMENT_PLANNER_02_NEXT_PACKAGE_LABEL = null;
 
 export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_ID = "02E" as const;
 export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_LABEL =
@@ -288,10 +291,10 @@ export const TOURNAMENT_PLANNER_02_FINAL_PACKAGE_LABEL =
 
 export const TOURNAMENT_PLANNER_02_CLOSES_AFTER_PACKAGE_ID = "02E" as const;
 
+export const TOURNAMENT_PLANNER_02_STATUS = "CLOSING" as const;
+
 /** Remaining required work to close Tournament Planner 02. */
-export const TOURNAMENT_PLANNER_02_REMAINING_REQUIRED_PACKAGES = [
-  "02E",
-] as const satisfies readonly TournamentPlanner02PackageId[];
+export const TOURNAMENT_PLANNER_02_REMAINING_REQUIRED_PACKAGES = [] as const satisfies readonly TournamentPlanner02PackageId[];
 
 export const GENERIC_ROTATION_GENERATOR_REQUIRED_FOR_TP02 = false;
 export const STATIONS_ALTERNATIVE_ACTIVITIES_REQUIRED_FOR_TP02 = false;

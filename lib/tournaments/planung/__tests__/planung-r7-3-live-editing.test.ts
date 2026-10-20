@@ -18,8 +18,8 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
     join(process.cwd(), "components/admin/tournamentcenter/planung/TournamentPlanungBoard.tsx"),
     "utf8",
   );
-  const fixtureCard = readFileSync(
-    join(process.cwd(), "components/sce/tournament/SceTournamentFixtureCard.tsx"),
+  const fixturePresentation = readFileSync(
+    join(process.cwd(), "components/sce/tournament/SceTournamentFixturePresentation.tsx"),
     "utf8",
   );
   const compact = readFileSync(
@@ -43,15 +43,17 @@ describe("01K-R7.3 — live Spielplan editor + schedule reconcile", () => {
   );
 
   it("A — team highlight card clusters crests around VS (no 1fr grid strip)", () => {
-    expect(fixtureCard).toMatch(/sce-tournament-fixture-matchup-cluster/);
-    expect(fixtureCard).not.toMatch(/grid-cols-\[minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/);
+    expect(fixturePresentation).toMatch(/sce-tournament-fixture-matchup-cluster/);
+    expect(fixturePresentation).not.toMatch(/grid-cols-\[minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/);
   });
 
   it("B — edit board uses canonical stacked match identity block", () => {
-    expect(board).toMatch(/layout="board"/);
-    expect(compact).toMatch(/data-layout="board"/);
+    expect(board).toMatch(/SceTournamentFixturePresentation/);
+    expect(board).toMatch(/density="grid"/);
+    expect(compact).toMatch(/resolvedLayout === "board"/);
     expect(compact).toMatch(/SceMatchStackedFixtureIdentity/);
-    expect(compact).toMatch(/data-crest-variant="canonicalStacked"/);
+    expect(compact).toMatch(/canonicalStacked/);
+    expect(compact).toMatch(/SceTournamentFixtureVs/);
     expect(compact).not.toMatch(/layout === "board" \? "flex-nowrap"/);
   });
 
