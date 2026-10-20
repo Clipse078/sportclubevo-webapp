@@ -4,12 +4,14 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-03` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-02` (**CLOSED / ACCEPTED / MERGED**, PR **#880**) |
-| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#881** → **STAGE**; merge recorded at closure) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#881** → **STAGE**; merge `5522cfee822339d5ac0d45957df5c63b10c35f3c`) |
 | **`DS03_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
-| **Branch** | `cursor/sce-design-system-03-workspace-surface-navigation` |
+| **Branch** | `cursor/sce-design-system-03-workspace-surface-navigation` (merged) |
 | **Baseline STAGE (pre-merge)** | `e54213bce121b50db5aae8891d821faabecac75d` |
 | **Accepted implementation HEAD (`FEATURE_HEAD`)** | `46de14ffcbc089c773928234e60e6c3679f0022e` |
-| **PR** | **#881** — **MERGED** (PO acceptance closure) |
+| **Closure commit** | `e6aac4cad64ff802280fc11f3e1e028dc7de2b66` |
+| **STAGE merge commit** | `5522cfee822339d5ac0d45957df5c63b10c35f3c` |
+| **PR** | **#881** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-04`** — Cards & Information Presentation ([doc](./SCE-DESIGN-SYSTEM-04.md)) — **NOT STARTED** |
 | **Foundation consumed** | DS-02 `app/globals.css` + `lib/design-system/sce-foundation-contract.ts` |
 
