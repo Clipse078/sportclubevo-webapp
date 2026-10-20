@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-05` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-04` (**CLOSED / ACCEPTED / MERGED**, PR **#882**) |
-| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#883** → **STAGE**; merge pending record in `STAGE_MERGE_COMMIT`) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#883** → **STAGE**; merge `771260ad957178e92fa7735792f56f80f91f07ce`) |
 | **`DS05_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
 | **`DS05_R1_MICRO_UX_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
 | **Branch** | `cursor/sce-design-system-05-forms-controls` |
@@ -13,7 +13,8 @@
 | **Accepted R1 micro-UX HEAD** | `4b6a3bcb63d0ba1adcf3394aca82adf264c423a8` |
 | **Feature HEAD before closure docs** | `323582d940d7c0f3a6a28543ce93a46696cab191` |
 | **Closure commit** | `a59c830b928fbbdc0081f8cf9ad8c3c07ce30c44` |
-| **PR** | **#883** |
+| **STAGE merge commit** | `771260ad957178e92fa7735792f56f80f91f07ce` |
+| **PR** | **#883** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-06`** — Actions, Dialogs & Composer |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace · DS-04 cards |
 
