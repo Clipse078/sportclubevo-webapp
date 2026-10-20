@@ -18,11 +18,13 @@ export const SCE_DESIGN_SYSTEM_06_R3_SCHEDULE_VS_FORMAT = {
 } as const;
 
 export const SCE_DESIGN_SYSTEM_06_R3_PO_REVIEW = {
-  DS06_R3_STATUS: "READY_FOR_PO_REVIEW",
+  DS06_R3_STATUS: "CLOSED / ACCEPTED / MERGED",
+  PO_DS06_R3_VISUAL_UAT: "PASS",
+  PO_SPORTING_NEUTRALITY_REVIEW: "PASS",
   BRANCH: "cursor/sce-design-system-06-actions-dialogs-composer",
   PR: "884",
   R3_STARTING_HEAD_FULL: "af40c05e62ad4002e8a3662a5ee78edca3a979c4",
-  /** Set after R3 commits land — PO review gate. */
+  /** Accepted R3 implementation HEAD (PO closure). */
   R3_FEATURE_HEAD_FULL: "d657e74772208e401f4419057f954c8ca28ed07c",
 } as const;
 

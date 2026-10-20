@@ -4,16 +4,54 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-06` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-05` (**CLOSED / ACCEPTED / MERGED**, PR **#883**) |
-| **Status** | **READY FOR PO REVIEW** (draft PR → **STAGE**) |
-| **`DS06_STATUS`** | **READY_FOR_PO_REVIEW** |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#884** → **STAGE**; merge recorded on **STAGE** after merge) |
+| **`DS06_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
 | **Branch** | `cursor/sce-design-system-06-actions-dialogs-composer` |
-| **Baseline STAGE** | `896d51e70586e28a78511cdea3f621b826483366` |
-| **Successor** | **`SCE-DESIGN-SYSTEM-07`** — Status, Feedback & System States |
+| **Baseline STAGE (pre-merge)** | `896d51e70586e28a78511cdea3f621b826483366` |
+| **Accepted base implementation HEAD** | `4e36b3a7a71dad94e8e2aa60d7fe45556bd9bd98` |
+| **Accepted R1 HEAD** | `2ec5cafbe4c5ea28a243f719934d302b44563ca3` |
+| **Accepted R2 HEAD** | `a8dbd4b64f6e72e6efb71ac12de53232d9682eea` |
+| **Accepted R3 HEAD** | `d657e74772208e401f4419057f954c8ca28ed07c` |
+| **Feature HEAD before closure docs** | `19275e80b8409494b6e2111359ac814f8972c877` |
+| **Closure commit** | see `SCE_DESIGN_SYSTEM_06_PO_CLOSURE.CLOSURE_COMMIT` in `sce-design-system-06-meta.ts` |
+| **STAGE merge commit** | see `SCE_DESIGN_SYSTEM_06_PO_CLOSURE.STAGE_MERGE_COMMIT` on **STAGE** after merge |
+| **PR** | **#884** — **MERGED** |
+| **Successor** | **`SCE-DESIGN-SYSTEM-07`** — Status, Feedback, Loading, Empty & Error |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace · DS-04 cards · DS-05 controls |
 
-**PO review:** `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
+**PO closure:** `PO_DS06_R3_VISUAL_UAT = PASS` · `PO_TOURNAMENT_PLANNER_ENTRY_REVIEW = PASS` · `PO_SMART_PITCH_PREPARATION_REVIEW = PASS` · `PO_SPORTING_NEUTRALITY_REVIEW = PASS` · `PO_SURFACE_CONTAINMENT_REVIEW = PASS` · `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
 
-**Programme:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-07`**
+**Programme:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-07`** — Status, Feedback, Loading, Empty & Error
+
+---
+
+## PO acceptance (final closure)
+
+Product Owner accepts DS-06 including **R1 visible adoption**, **R2 functional surfaces + pitch preparation**, and **R3 sporting-neutral schedule recommendation** at the accepted R3 implementation HEAD above. Closure is documentation and programme truth only — no redesign.
+
+| Field | Value |
+| --- | --- |
+| `PO_DS06_R3_VISUAL_UAT` | **PASS** |
+| `PO_TOURNAMENT_PLANNER_ENTRY_REVIEW` | **PASS** |
+| `PO_SMART_PITCH_PREPARATION_REVIEW` | **PASS** |
+| `PO_SPORTING_NEUTRALITY_REVIEW` | **PASS** |
+| `PO_SURFACE_CONTAINMENT_REVIEW` | **PASS** |
+| `ACTION_SYSTEM_PRODUCT_WIDE` | **YES** |
+| `DIALOG_SYSTEM_PRODUCT_WIDE` | **YES** |
+| `ACTIVITY_COMPOSER_CANONICAL` | **YES** |
+| `VISIBLE_DESIGN_CONVERGENCE_REQUIRED` | **YES** |
+| `FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED` | **YES** |
+| `RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE` | **NO** |
+| `PITCH_COUNT_RECOMMENDATION` | **YES** |
+| `PLAYING_FORMAT_RECOMMENDED_FROM_TEMPLATE` | **NO** |
+| `PLAYING_FORMAT_AUTO_ASSIGNED_TO_RECOMMENDED_PITCH` | **NO** |
+| `WORLD_CLASS_MICRO_UX_REQUIRED` | **YES** |
+| `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED` | **NO** |
+| `SCE_DESIGN_SYSTEM_COMPLIANCE` | **PASS** |
+
+**Visible design direction (locked):** Communication workspace remains the **primary positive visual reference** — not a universal page layout. Domain-specific layouts stay valid. Remaining surface inconsistencies across the webapp are explicit **DS-07–DS-10 migration debt**; the full app is **not** visually migrated at DS-06 closure.
+
+**Toggle First (locked):** binary ON/OFF → canonical toggle/switch · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES`.
 
 ---
 
@@ -115,9 +153,9 @@ Do **not** opportunistically migrate all 17 remaining binary-setting checkboxes 
 
 ## Closure criteria (PO)
 
-Product Owner review required before merge to **STAGE**. Visual UAT remains PO-owned.
+Product Owner review **complete** — merged to **STAGE** via PR **#884**. Visual UAT remains PO-owned (`SKIPPED_PO_OWNED`).
 
-**Finish marker (base):** `SCE_DESIGN_SYSTEM_06_READY_FOR_PO_REVIEW`
+**Finish marker:** `SCE_DESIGN_SYSTEM_06_CLOSED_ACCEPTED_MERGED`
 
 ---
 
@@ -134,7 +172,7 @@ PO visual UAT follow-up on draft PR **#884** (same branch — no DS-07 start).
 
 **Existing HOME tournament planner entry:** Planung incomplete state exposes **Turnierplanung einrichten** → embedded setup dialog → `persistTournamentPlannerFromComposer` (no tournament recreation, no parallel schedule truth).
 
-**R1 finish marker:** `SCE_DESIGN_SYSTEM_06_R1_READY_FOR_PO_REVIEW`
+**R1 status:** **CLOSED / ACCEPTED / MERGED** at `2ec5cafbe4c5ea28a243f719934d302b44563ca3`
 
 ---
 
@@ -157,4 +195,32 @@ Automatic-first applies to **fixture / schedule / pitch structure** (field count
 
 Typed governance: `lib/design-system/sce-design-system-06-r3-meta.ts`
 
-**R3 finish marker:** `SCE_DESIGN_SYSTEM_06_R3_READY_FOR_PO_REVIEW`
+**R3 status:** **CLOSED / ACCEPTED / MERGED** at `d657e74772208e401f4419057f954c8ca28ed07c`
+
+---
+
+## Final closure markers
+
+```text
+DS06_STATUS = CLOSED / ACCEPTED / MERGED
+SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS
+NEXT_PACKAGE = SCE-DESIGN-SYSTEM-07 — Status, Feedback, Loading, Empty & Error
+ACTION_SYSTEM_PRODUCT_WIDE = YES
+DIALOG_SYSTEM_PRODUCT_WIDE = YES
+ACTIVITY_COMPOSER_CANONICAL = YES
+VISIBLE_DESIGN_CONVERGENCE_REQUIRED = YES
+FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED = YES
+RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE = NO
+PITCH_COUNT_RECOMMENDATION = YES
+PLAYING_FORMAT_RECOMMENDED_FROM_TEMPLATE = NO
+PLAYING_FORMAT_AUTO_ASSIGNED_TO_RECOMMENDED_PITCH = NO
+WORLD_CLASS_MICRO_UX_REQUIRED = YES
+LOCAL_MICRO_PATTERN_DRIFT_ALLOWED = NO
+BINARY_CONTROL_COMPLIANCE = PASS
+NEW_BINARY_CHECKBOXES = 0
+CANONICAL_TOGGLES_USED = YES
+SCE_DESIGN_SYSTEM_COMPLIANCE = PASS
+MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED
+SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED
+PO_DS06_R3_VISUAL_UAT = PASS
+```

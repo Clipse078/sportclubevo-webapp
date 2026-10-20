@@ -1,6 +1,6 @@
 # SCE Design System v1.0 — Action & Dialog Migration Inventory (DS-06)
 
-> **Status:** **READY FOR PO REVIEW** (DS-06) — representative adoption complete; **DS-10 gate** for remaining rows  
+> **Status:** **CLOSED / ACCEPTED / MERGED** (DS-06, PR **#884**) — representative adoption complete; **DS-10 gate** for remaining rows  
 > **Package:** [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md)  
 > **Master doc:** [`SCE-DESIGN-SYSTEM.md`](./SCE-DESIGN-SYSTEM.md)  
 > **Typed audit:** `lib/design-system/sce-design-system-06-meta.ts`

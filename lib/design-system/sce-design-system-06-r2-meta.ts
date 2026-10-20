@@ -24,11 +24,13 @@ export const SCE_DESIGN_SYSTEM_06_R2_SMART_FIELD_PREPARATION = {
 } as const;
 
 export const SCE_DESIGN_SYSTEM_06_R2_PO_REVIEW = {
-  DS06_R2_STATUS: "READY_FOR_PO_REVIEW",
+  DS06_R2_STATUS: "CLOSED / ACCEPTED / MERGED",
+  PO_SMART_PITCH_PREPARATION_REVIEW: "PASS",
+  PO_SURFACE_CONTAINMENT_REVIEW: "PASS",
   BRANCH: "cursor/sce-design-system-06-actions-dialogs-composer",
   PR: "884",
-  /** Set after R2 commits land — PO review gate. */
   R2_STARTING_HEAD_FULL: "10e21d1d9d212ae8db2f04290711e21603bdc906",
+  /** Accepted R2 implementation HEAD (PO closure). */
   FEATURE_HEAD_FULL: "a8dbd4b64f6e72e6efb71ac12de53232d9682eea",
 } as const;
 

@@ -28,10 +28,11 @@ export const SCE_DESIGN_SYSTEM_06_R1_PLANNER_ENTRY = {
 } as const;
 
 export const SCE_DESIGN_SYSTEM_06_R1_PO_REVIEW = {
-  DS06_R1_STATUS: "READY_FOR_PO_REVIEW",
+  DS06_R1_STATUS: "CLOSED / ACCEPTED / MERGED",
+  PO_TOURNAMENT_PLANNER_ENTRY_REVIEW: "PASS",
   BRANCH: "cursor/sce-design-system-06-actions-dialogs-composer",
   PR: "884",
-  /** Updated by guardrails after R1 commits — PO review gate. */
+  /** Accepted R1 implementation HEAD (PO closure). */
   FEATURE_HEAD_FULL: "2ec5cafbe4c5ea28a243f719934d302b44563ca3",
 } as const;
 
