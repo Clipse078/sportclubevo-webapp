@@ -82,7 +82,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | FORMAT | Ad-hoc date in admin rows | Local `toLocale*` | LEGACY_MIGRATE | `time-range.ts` / presentation formatters | LOW | P2 | DS-02 | |
 | FORMAT | Inline crest `<img onError>` | Outside ClubCrest | LEGACY_MIGRATE | `ClubCrest` | LOW | P2 | DS-04 | Grep-driven cleanup |
 | ROUTE | Dual match URLs | consume vs manage | LEGACY_MIGRATE | `buildSceActivityRoute` policy | MED | P1 | DS-03 docs | LEGACY-ROUTE-001 |
-| A11Y | Activity tabs | Missing arrow-key nav | CANONICAL_REFINE | WAI-ARIA tabs | MED | **P0** | DS-09 | LEGACY-A11Y-TABS-001 |
+| A11Y | Activity tabs | ~~Missing arrow-key nav~~ → implemented | CANONICAL | WAI-ARIA tabs + `SceContextTabs` | MED | **P0** | DS-03 | LEGACY-A11Y-TABS-001 **DS03_DONE** |
 | RESPONSIVE | Legacy admin forms | Desktop-only wide layouts | DESKTOP_ONLY_LEGACY | Page width modes + stack | MED | P2 | DS-09 | |
 | RESPONSIVE | Composer | Overlay vs full-page | CANONICAL | Breakpoint contract | — | — | — | Preserve 01E |
 

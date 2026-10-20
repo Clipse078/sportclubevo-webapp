@@ -70,7 +70,7 @@
 | LEGACY-MATCH-CARD-007 | MATCH-CARD | `DashboardTodayEventCards` | Dashboard | MED | 01I | 01D COMPACT | Shared component |
 | LEGACY-ACTIVITY-PLAN-001 | ACTIVITY | `PlanningHubActivityBlock` local identity | Planning hub | MED | 01H | 01C presentation embed | Hub uses resolver |
 | LEGACY-FORMAT-LOGO-001 | FORMATTER | Inline `<img onError>` outside `ClubCrest` | Various | LOW | 01D | `ClubCrest` | Grep-clean |
-| LEGACY-A11Y-TABS-001 | TABS | Missing arrow-key nav on activity tabs | All activity shells | MED | 01M | WAI-ARIA tabs | A11y test pass |
+| LEGACY-A11Y-TABS-001 | TABS | ~~Missing arrow-key nav~~ → `SceContextTabs` | All activity shells | MED | **DS-03** | WAI-ARIA tabs | **Resolved DS-03** (not open for DS-09 migration) |
 
 ---
 

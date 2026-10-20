@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **READY FOR PO REVIEW**  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **NOT STARTED**  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-04** (after DS-03 PO acceptance)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-04** — Cards & Information Presentation
 
 ---
 
@@ -11,6 +11,8 @@
 **PO closure (DS-01):** `PO_ARCHITECTURE_REVIEW = PASS` · `PO_VISUAL_DIRECTION_REVIEW = PASS` · `DS01_STATUS = CLOSED / ACCEPTED / MERGED` (architecture baseline). See [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md).
 
 **PO closure (DS-02):** `PO_FOUNDATION_REVIEW = PASS` · `PO_ARCHITECTURE_REVIEW = PASS` · `DS02_STATUS = CLOSED / ACCEPTED / MERGED` (foundations & tokens — **no** product-wide migration). See [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md).
+
+**PO closure (DS-03):** `PO_WORKSPACE_SYSTEM_REVIEW = PASS` · `PO_BREADCRUMB_SYSTEM_REVIEW = PASS` · `PO_CONTEXT_TAB_SYSTEM_REVIEW = PASS` · `PO_NAVIGATION_ARCHITECTURE_REVIEW = PASS` · `DS03_STATUS = CLOSED / ACCEPTED / MERGED` (workspace / surface / navigation — representative adoption; DS-10 completes product-wide migration). See [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
 
 | | **Current state (STAGE baseline)** | **Target v1.0 (DS-02+ implementation)** |
 | --- | --- | --- |
@@ -161,6 +163,10 @@ SceBreadcrumbs → SceWorkspaceHeader → SceContextTabs (when semantic) → con
 **Keyboard:** `SceContextTabs` supports arrow keys, Home/End, roving tabindex, and Mehr overflow links.
 
 Automated guardrails: `lib/design-system/__tests__/sce-design-system-03-workspace-navigation.test.ts`.
+
+**DS-03 locks:** `WORKSPACE_SYSTEM_PRODUCT_WIDE = YES` · `BREADCRUMB_SYSTEM_PRODUCT_WIDE = YES` · `CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC = YES` · `LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED = NO` · `BREADCRUMBS_CANONICAL_NAVIGATION_LANGUAGE = YES` · `CONTEXT_TABS_CANONICAL = SceContextTabs` · `ACTIVITY_TAB_ARROW_KEY_ACCESSIBILITY = IMPLEMENTED` · `DOMAIN_SPECIFIC_REVIEW_REQUIRED_AT_DS10 = YES` (interim exceptions: `TeamCockpitNav`, `ProgrammeViewSwitcher`, `CommunicationInboxToolbar`, composer `localNavigation`).
+
+Full package doc: [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
 
 ---
 

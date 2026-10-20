@@ -32,3 +32,18 @@
 ## DS-10 obligation
 
 `UNEXPLAINED_LEGACY_WORKSPACES_ALLOWED_AT_DS10_CLOSURE = NO` — every row must reach **DS03_DONE**, **CANONICAL**, or **JUSTIFIED_EXCEPTION** before DS-10 closure.
+
+`PRODUCT_WIDE_WORKSPACE_MIGRATION_REQUIRED = YES` — this inventory is **mandatory DS-10 input**.
+
+## Domain-specific interim exceptions (DS-10 review required)
+
+`DOMAIN_SPECIFIC_REVIEW_REQUIRED_AT_DS10 = YES` — none of the following are permanent exemptions:
+
+| Implementation | DS-10 decision options |
+| --- | --- |
+| `TeamCockpitNav` | **A** migrate to canonical tabs · **B** preserve domain URL model · **C** evolve primitive — **flagged** for future Team workspace IA |
+| `ProgrammeViewSwitcher` | Liste/Kalender mode — not object context tabs |
+| `CommunicationInboxToolbar` | Inbox filter modes — not workspace context tabs |
+| Composer `localNavigation` | Overlay workflow — `SceContextTabs` localNavigation contract |
+
+No exception may survive DS-10 merely because it pre-existed DS-03.

@@ -4,8 +4,44 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-03` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-02` (**CLOSED / ACCEPTED / MERGED**, PR **#880**) |
-| **Status** | **READY FOR PO REVIEW** (implementation branch) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#881** → **STAGE**; merge recorded at closure) |
+| **`DS03_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
+| **Branch** | `cursor/sce-design-system-03-workspace-surface-navigation` |
+| **Baseline STAGE (pre-merge)** | `e54213bce121b50db5aae8891d821faabecac75d` |
+| **Accepted implementation HEAD (`FEATURE_HEAD`)** | `46de14ffcbc089c773928234e60e6c3679f0022e` |
+| **PR** | **#881** — **MERGED** (PO acceptance closure) |
+| **Successor** | **`SCE-DESIGN-SYSTEM-04`** — Cards & Information Presentation ([doc](./SCE-DESIGN-SYSTEM-04.md)) — **NOT STARTED** |
 | **Foundation consumed** | DS-02 `app/globals.css` + `lib/design-system/sce-foundation-contract.ts` |
+
+**PO closure:** `PO_WORKSPACE_SYSTEM_REVIEW = PASS` · `PO_BREADCRUMB_SYSTEM_REVIEW = PASS` · `PO_CONTEXT_TAB_SYSTEM_REVIEW = PASS` · `PO_NAVIGATION_ARCHITECTURE_REVIEW = PASS` · `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
+
+**Programme:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-04`** — Cards & Information Presentation
+
+---
+
+## PO acceptance (final closure)
+
+Product Owner accepts the submitted DS-03 implementation at **`46de14ffcbc089c773928234e60e6c3679f0022e`**. No redesign during closure — documentation and programme truth only.
+
+| Field | Value |
+| --- | --- |
+| `PO_WORKSPACE_SYSTEM_REVIEW` | **PASS** |
+| `PO_BREADCRUMB_SYSTEM_REVIEW` | **PASS** |
+| `PO_CONTEXT_TAB_SYSTEM_REVIEW` | **PASS** |
+| `PO_NAVIGATION_ARCHITECTURE_REVIEW` | **PASS** |
+| `ACTIVITY_TAB_ARROW_KEY_ACCESSIBILITY` | **IMPLEMENTED** (DS-01 P0 `LEGACY-A11Y-TABS-001` resolved — not deferred to DS-09) |
+| `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
+| `COMMUNICATION_IS_UNIVERSAL_PAGE_TEMPLATE` | **NO** |
+
+**Canonical architecture (locked):**
+
+```text
+AppShellNavigation → SceBreadcrumbs → SceWorkspaceHeader → SceContextTabs (when semantic) → workspace content
+```
+
+Composition primitives: **`SceWorkspaceChrome`** · **`SceWorkspaceSurface`** · **`PageShell`** · **`SceBreadcrumbs`** · **`SceContextTabs`**
+
+**Domain-specific exceptions (interim — DS-10 mandatory review):** `TeamCockpitNav` · `ProgrammeViewSwitcher` · `CommunicationInboxToolbar` · composer `localNavigation`. **`DOMAIN_SPECIFIC_REVIEW_REQUIRED_AT_DS10 = YES`**. **`TeamCockpitNav`** flagged for review against future canonical Team workspace IA (Übersicht · Kader · Programm · Resultate · Rangliste · Trainerteam · Kommunikation · Dokumente · Administration · Mehr — no placeholder tabs in DS-03).
 
 ---
 
@@ -126,6 +162,57 @@ By DS-10 closure, every applicable workspace must be:
 
 - [`SCE-DESIGN-SYSTEM.md`](../design/SCE-DESIGN-SYSTEM.md)
 - [`SCE-DESIGN-SYSTEM-02.md`](./SCE-DESIGN-SYSTEM-02.md)
+- [`SCE-DESIGN-SYSTEM-04.md`](./SCE-DESIGN-SYSTEM-04.md)
 - [`SCE-WORKSPACE-SURFACE-STANDARD.md`](../design/SCE-WORKSPACE-SURFACE-STANDARD.md)
 - [`SCE-CONTEXT-TABS-STANDARD.md`](../design/SCE-CONTEXT-TABS-STANDARD.md)
 - [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md)
+
+---
+
+## Acceptance criteria
+
+- [x] Canonical workspace composition (`SceWorkspaceChrome`, `SceWorkspaceHeader`, `SceWorkspaceSurface`, `PageShell`)
+- [x] Canonical breadcrumbs (`SceBreadcrumbs`) — product-wide language; alias compatibility only
+- [x] `SceContextTabs` adoption architecture + representative migrations (Mein Programm, Person, Roles, Communication, Documents, activity tabs)
+- [x] Activity tab arrow-key accessibility (DS-01 P0 closure)
+- [x] Migration inventory for DS-10 gate
+- [x] Guardrail tests (`sce-design-system-03-workspace-navigation.test.ts`)
+- [x] PO acceptance (PO-owned UAT — **PASS**; Cursor skipped per closure policy)
+
+---
+
+## Verification (DS-03 closure)
+
+Regression gate: DS-01 architecture guardrails · DS-02 foundation guardrails · DS-03 workspace/navigation guardrails · `SceContextTabs` / `SceBreadcrumbs` · Roles admin tabs · Person workspace · activity/navigation presentation · binary-control standard. `prisma validate`, `prisma generate`, production build (`NODE_OPTIONS=--max-old-space-size=8192`) — **PASS** at closure.
+
+---
+
+## Governance (closure template)
+
+| Field | DS-03 value |
+| --- | --- |
+| `SCE_DESIGN_SYSTEM_COMPLIANCE` | **PASS** (workspace/navigation scope) |
+| `WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE` | **PASS** |
+| `BINARY_CONTROL_COMPLIANCE` | **PASS** |
+| `NEW_BINARY_CHECKBOXES` | **0** |
+| `CANONICAL_TOGGLES_USED` | **YES** |
+| `PARALLEL_PATTERN_INTRODUCED` | **NO** |
+| `DOMAIN_SPECIFIC_REVIEW_REQUIRED_AT_DS10` | **YES** |
+| `PRODUCT_WIDE_WORKSPACE_MIGRATION_REQUIRED` | **YES** |
+| `UNEXPLAINED_LEGACY_WORKSPACES_ALLOWED_AT_DS10_CLOSURE` | **NO** |
+| `DATABASE_MIGRATION_REQUIRED` | **NO** |
+| `SCHEMA_DRIFT` | **NO** |
+| `PERSISTENT_TEST_DATA` | **0** |
+| `PROD` | **UNTOUCHED** |
+
+```text
+DS03_STATUS = CLOSED / ACCEPTED / MERGED
+SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS
+NEXT_PACKAGE = SCE-DESIGN-SYSTEM-04 — Cards & Information Presentation
+WORKSPACE_SYSTEM_PRODUCT_WIDE = YES
+BREADCRUMB_SYSTEM_PRODUCT_WIDE = YES
+CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC = YES
+LOCAL_PARALLEL_WORKSPACE_SYSTEMS_ALLOWED = NO
+MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED
+SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED
+```
