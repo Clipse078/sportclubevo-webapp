@@ -8,8 +8,10 @@ import {
   SCE_DESIGN_SYSTEM_04_GOVERNANCE,
   SCE_DESIGN_SYSTEM_04_LEGACY_CARD_INVENTORY,
   SCE_DESIGN_SYSTEM_04_PACKAGE_KEY,
+  SCE_DESIGN_SYSTEM_04_PO_CLOSURE,
   SCE_DESIGN_SYSTEM_04_PO_FLAGS,
 } from "@/lib/design-system/sce-design-system-04-meta";
+import { SCE_DESIGN_SYSTEM_01_P0_FINDINGS } from "@/lib/design-system/sce-design-system-01-meta";
 import { SCE_INFORMATION_HIERARCHY_LAYERS } from "@/lib/design-system/sce-card-information-hierarchy";
 
 const ROOT = process.cwd();
@@ -35,6 +37,16 @@ describe("SCE-DESIGN-SYSTEM-04 cards & information presentation guardrails", () 
     for (const marker of SCE_DESIGN_SYSTEM_04_DOC_MARKERS.slice(0, 6)) {
       expect(master).toContain(marker);
     }
+  });
+
+  it("records PO closure and DS-01 P0 resolution", () => {
+    expect(SCE_DESIGN_SYSTEM_04_PO_CLOSURE.PO_CARD_SYSTEM_REVIEW).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_04_PO_CLOSURE.PO_INFOBOARD_P0_REVIEW).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_04_PO_CLOSURE.DS04_STATUS).toBe("CLOSED / ACCEPTED");
+    expect(SCE_DESIGN_SYSTEM_01_P0_FINDINGS.DS01_OPEN_P0_FINDINGS).toBe(0);
+    expect(SCE_DESIGN_SYSTEM_01_P0_FINDINGS.P0_INFOBOARD_MATCH_PRESENTATION).toBe(
+      "CLOSED_BY_DS04",
+    );
   });
 
   it("locks product-wide card and activity family flags", () => {

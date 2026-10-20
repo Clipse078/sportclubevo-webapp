@@ -48,4 +48,4 @@ Layers (not all required on every card):
 
 ## DS-10 obligation
 
-Every row must reach **CANONICAL**, **DS04_DONE**, or **JUSTIFIED_EXCEPTION** before DS-10 closure. Typed inventory source: `lib/design-system/sce-design-system-04-meta.ts`.
+Every row must reach **CANONICAL**, **DS04_DONE**, or **JUSTIFIED_EXCEPTION** before DS-10 closure. **`UNEXPLAINED_LEGACY_CARD_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO`**. Typed inventory source: `lib/design-system/sce-design-system-04-meta.ts`.

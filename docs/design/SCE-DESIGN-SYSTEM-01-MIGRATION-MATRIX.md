@@ -27,7 +27,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | Roles / Permissions | Roles admin, matrix | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-05, DS-08 | Tabs migrate; matrix stays dense |
 | Facilities | Pitches, resources | **ALIGNED_WITH_REFINEMENT** | DS-08 | Table tokens |
 | Documents | Person documents, DAM | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-07 | Local empty states |
-| Infoboard | Kiosk / public screens | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-10 | P0 presentation fallback |
+| Infoboard | Kiosk / public screens | **ALIGNED_WITH_REFINEMENT** | DS-10 polish | ~~P0~~ match presentation **CLOSED DS-04** |
 | Sponsor / Commercial (future) | CMS banner config | **LEGACY_REPLACE** | DS-05 | Minimal surface; toggle audit |
 | Team / Person workspaces (future) | Person detail, team workspace | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-04 | Context tabs + calm headers |
 
@@ -74,7 +74,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | PUBLISHING | Website page list | Admin table | CANONICAL_REFINE | DS-08 | LOW | P3 | DS-08 | |
 | SPONSOR | `SponsorBannerConfigForm` | Residual checkbox in CMS | LEGACY_MIGRATE | Toggle if binary setting | LOW | P3 | DS-05 | Audit only — no Sponsor module |
 | AUTH | Login page | Auth layout outside admin shell | DOMAIN | Shared input/button tokens | LOW | P3 | DS-05 | |
-| INFOBOARD | Screen1/2 fallback branches | Non-canonical match layout | **CLOSED DS-04** | `matchPresentation` + `InfoboardCompactMatchIdentity` | **HIGH** | ~~P0~~ **CLOSED** | DS-10 polish | LEGACY-MATCH-CARD-003/004 |
+| INFOBOARD | Screen1/2 fallback branches | Non-canonical match layout | **CLOSED DS-04** | `matchPresentation` + `InfoboardCompactMatchIdentity` | **HIGH** | ~~P0~~ **CLOSED** | DS-10 polish | LEGACY-MATCH-CARD-003/004 · `P0_INFOBOARD_MATCH_PRESENTATION = CLOSED_BY_DS04` |
 | INFOBOARD | Kiosk CSS modules | Channel-specific styling | DOMAIN | Adopt presentation model | MED | P1 | DS-04 | CAN_RETAIN channel chrome |
 | STATUS | `AdminStatusPill` | Parallel status styling | DUPLICATE | `Badge` variants | LOW | P2 | DS-07 | |
 | STATUS | Parallel status maps | matchcenter/tournament/training | LEGACY_MIGRATE | 01C status translation | MED | P1 | DS-07 | LEGACY-FORMAT-STATUS-001 |
@@ -82,7 +82,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | FORMAT | Ad-hoc date in admin rows | Local `toLocale*` | LEGACY_MIGRATE | `time-range.ts` / presentation formatters | LOW | P2 | DS-02 | |
 | FORMAT | Inline crest `<img onError>` | Outside ClubCrest | LEGACY_MIGRATE | `ClubCrest` | LOW | P2 | DS-04 | Grep-driven cleanup |
 | ROUTE | Dual match URLs | consume vs manage | LEGACY_MIGRATE | `buildSceActivityRoute` policy | MED | P1 | DS-03 docs | LEGACY-ROUTE-001 |
-| A11Y | Activity tabs | ~~Missing arrow-key nav~~ → implemented | CANONICAL | WAI-ARIA tabs + `SceContextTabs` | MED | **P0** | DS-03 | LEGACY-A11Y-TABS-001 **DS03_DONE** |
+| A11Y | Activity tabs | ~~Missing arrow-key nav~~ → implemented | CANONICAL | WAI-ARIA tabs + `SceContextTabs` | MED | ~~P0~~ **CLOSED DS-03** | DS-09 polish | LEGACY-A11Y-TABS-001 **DS03_DONE** · `P0_ACTIVITY_TAB_KEYBOARD_ACCESSIBILITY = CLOSED_BY_DS03` |
 | RESPONSIVE | Legacy admin forms | Desktop-only wide layouts | DESKTOP_ONLY_LEGACY | Page width modes + stack | MED | P2 | DS-09 | |
 | RESPONSIVE | Composer | Overlay vs full-page | CANONICAL | Breakpoint contract | — | — | — | Preserve 01E |
 
@@ -93,7 +93,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | Metric | Value |
 |--------|------:|
 | Matrix rows (this document) | **45** |
-| P0 | **2** |
+| P0 | **0** open (`DS01_OPEN_P0_FINDINGS = 0`; historical P0 rows closed by DS-03 / DS-04) |
 | P1 | **14** |
 | P2 | **22** |
 | P3 | **7** |

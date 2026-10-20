@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **READY FOR PO REVIEW**  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED** (PR **#882**)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-05** (after PO closes DS-04)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-05** — Forms & Controls
 
 ---
 
@@ -13,6 +13,10 @@
 **PO closure (DS-02):** `PO_FOUNDATION_REVIEW = PASS` · `PO_ARCHITECTURE_REVIEW = PASS` · `DS02_STATUS = CLOSED / ACCEPTED / MERGED` (foundations & tokens — **no** product-wide migration). See [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md).
 
 **PO closure (DS-03):** `PO_WORKSPACE_SYSTEM_REVIEW = PASS` · `PO_BREADCRUMB_SYSTEM_REVIEW = PASS` · `PO_CONTEXT_TAB_SYSTEM_REVIEW = PASS` · `PO_NAVIGATION_ARCHITECTURE_REVIEW = PASS` · `DS03_STATUS = CLOSED / ACCEPTED / MERGED` (workspace / surface / navigation — representative adoption; DS-10 completes product-wide migration). See [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
+
+**PO closure (DS-04):** `PO_CARD_SYSTEM_REVIEW = PASS` · `PO_INFORMATION_PRESENTATION_REVIEW = PASS` · `PO_ACTIVITY_PRESENTATION_REVIEW = PASS` · `PO_INFOBOARD_P0_REVIEW = PASS` · `DS04_STATUS = CLOSED / ACCEPTED` (cards & information presentation — representative adoption; DS-10 completes legacy card inventory). See [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md).
+
+**DS-01 P0 audit carry-forward:** `P0_ACTIVITY_TAB_KEYBOARD_ACCESSIBILITY = CLOSED_BY_DS03` · `P0_INFOBOARD_MATCH_PRESENTATION = CLOSED_BY_DS04` · **`DS01_OPEN_P0_FINDINGS = 0`** (historical audit rows preserved in migration matrix).
 
 | | **Current state (STAGE baseline)** | **Target v1.0 (DS-02+ implementation)** |
 | --- | --- | --- |
@@ -186,10 +190,13 @@ One SCE information language — multiple purpose-built compositions (shared hie
 | Tournament fixtures | `SceTournamentFixtureCard` — domain-specific canonical |
 | Infoboard match P0 | **`INFOBOARD_MATCH_PRESENTATION_P0 = CLOSED`** — Screen 1 UI fallback removed; mapper synthesis; Screen 2 `InfoboardCompactMatchIdentity` |
 | DS-10 inventory | [`SCE-DESIGN-SYSTEM-04-CARD-INVENTORY.md`](./SCE-DESIGN-SYSTEM-04-CARD-INVENTORY.md) |
+| DS-10 card gate | `UNEXPLAINED_LEGACY_CARD_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO` |
 
 Automated guardrails: `lib/design-system/__tests__/sce-design-system-04-cards.test.ts`.
 
 Full package doc: [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md).
+
+**DS-04 PO locks:** `CARD_SYSTEM_PRODUCT_WIDE = YES` · `ACTIVITY_CARD_FAMILY_CANONICAL = YES` · `WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE = PASS` · `INFOBOARD_MATCH_PRESENTATION_P0 = CLOSED` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `COMMUNICATION_IS_UNIVERSAL_CARD_TEMPLATE = NO` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES`.
 
 ---
 
