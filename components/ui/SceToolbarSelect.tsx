@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 
 type SceToolbarSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   wrapperClassName?: string;
@@ -19,6 +20,7 @@ export default function SceToolbarSelect({
     <div className={cn("relative min-w-0", wrapperClassName)}>
       <select
         {...props}
+        {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.TOOLBAR_SELECT]: "true" }}
         className={cn(
           "fca-select sce-toolbar-select h-9 w-full min-w-0 appearance-none pr-8 text-sm lg:w-auto",
           className,

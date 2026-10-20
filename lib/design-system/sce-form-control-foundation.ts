@@ -1,6 +1,7 @@
 /**
  * SCE Design System — form & control architecture (DS-05).
  * Visual tokens remain in app/globals.css (`.fca-input`, `.fca-label`, …).
+ * Micro-UX contract (R1): `lib/design-system/sce-form-control-micro-ux.ts`.
  */
 import type { SceFoundationDensityTier } from "@/lib/design-system/sce-foundation-contract";
 

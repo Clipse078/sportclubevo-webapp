@@ -7,6 +7,8 @@
 
 **Marker:** `FORM_CONTROL_MIGRATION_INVENTORY`
 
+**R1 micro-UX markers:** `SCE_FORM_CONTROL_MICRO_UX` · `WORLD_CLASS_FORM_CONTROL_MICRO_UX` · `FOCUS_NOT_COLOUR_ALONE` · `CALM_FIELD_HIERARCHY` · `BINARY_SETTING_ROW_LAYOUT_CANONICAL`
+
 ---
 
 ## Canonical primitive registry (DS-05)
@@ -74,3 +76,19 @@ Semantics: **A** binary setting → **SwitchToggle** · **B** multi-selection �
 ## DS-10 obligation
 
 `UNEXPLAINED_LEGACY_FORM_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO` — every remaining legacy control family must appear here with classification or justified exception before programme closure.
+
+---
+
+## R1 micro-UX audit (representative adoptions)
+
+| Surface | Micro-UX note | R1 action |
+| --- | --- | --- |
+| `EmailSenderWorkspace` | `SceFormField` + invalid `SceTextInput` borders | **PASS** (unchanged layout) |
+| `NotificationPreferencesSection` | Table `SwitchThumb` — Toggle First | **PASS** |
+| `CommunicationPreferencesSection` | Channel switches | **PASS** |
+| Personal signature compose | Binary row marker + calm bordered row | **REFINED** |
+| `LayoutConfigPanel` responsive flags | Binary row marker; SCE border hover (no orange drift) | **REFINED** |
+| `PlannerEntryCreatePublicationFields` | Binary row marker on publication switches | **REFINED** |
+| `CompetitionsSearchBar` | `SceSearchField` + `SwitchToggle` row marker via primitive | **PASS** |
+| Activity date/time inputs | Semantic required/error tokens + focus on calendar trigger | **REFINED** |
+| `SceSegmentedControl` | Foundation focus ring + DOM marker | **REFINED** |

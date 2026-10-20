@@ -6,8 +6,11 @@
 | **Predecessor** | `SCE-DESIGN-SYSTEM-04` (**CLOSED / ACCEPTED / MERGED**, PR **#882**) |
 | **Status** | **READY FOR PO REVIEW** (draft PR — do not merge until PO acceptance) |
 | **`DS05_STATUS`** | **READY_FOR_PO_REVIEW** |
+| **`DS05_R1_MICRO_UX_STATUS`** | **READY_FOR_PO_REVIEW** |
 | **Branch** | `cursor/sce-design-system-05-forms-controls` |
 | **Baseline STAGE** | `4bc4ad9f81eb243df5bcc68164085cace4b1f011` |
+| **Accepted DS-05 implementation HEAD** | `f311c899822daed639b328f3281bb0b0a3c92e39` |
+| **R1 micro-UX HEAD (`FEATURE_HEAD_FULL`)** | recorded in `lib/design-system/sce-design-system-05-meta.ts` |
 | **Successor** | **`SCE-DESIGN-SYSTEM-06`** — Actions / Dialogs / Composer |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace · DS-04 cards |
 
@@ -33,6 +36,7 @@ Establish **one canonical SCE form/control language** across SportClubEvo — te
 | [`SCE-DESIGN-SYSTEM-05-FORM-CONTROL-INVENTORY.md`](../design/SCE-DESIGN-SYSTEM-05-FORM-CONTROL-INVENTORY.md) | DS-10 migration gate + binary audit |
 | `lib/design-system/sce-design-system-05-meta.ts` | Typed audit + governance |
 | `lib/design-system/sce-form-control-foundation.ts` | Form architecture constants |
+| `lib/design-system/sce-form-control-micro-ux.ts` | R1 micro-UX contract + DOM markers |
 | `lib/design-system/sce-binary-checkbox-audit.ts` | Binary checkbox re-audit |
 | `components/sce/forms/*` | `SceFormField`, `SceTextInput`, `SceTextarea`, `SceSearchField`, `SceCheckbox` |
 
@@ -69,7 +73,24 @@ Establish **one canonical SCE form/control language** across SportClubEvo — te
 | `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
 | `DATABASE_MIGRATION_REQUIRED` | **NO** |
 
-Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.test.ts`.
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.test.ts` · `lib/design-system/__tests__/sce-design-system-05-r1-micro-ux.test.ts`.
+
+---
+
+## R1 — world-class micro-UX (same branch)
+
+**`SCE_FORM_CONTROL_MICRO_UX`** · **`WORLD_CLASS_FORM_CONTROL_MICRO_UX = PASS`**
+
+Calm field hierarchy, semantic validation colour tokens, unified `focus-visible` rings on segmented controls and icon triggers, stable `data-sce-*` markers for primitives and binary-setting rows, and invalid-state borders on canonical text controls — without restarting DS-05 architecture or introducing parallel primitives.
+
+| Flag | R1 value |
+| --- | --- |
+| `WORLD_CLASS_FORM_CONTROL_MICRO_UX` | **PASS** |
+| `FOCUS_NOT_COLOUR_ALONE` | **YES** |
+| `CALM_FIELD_HIERARCHY` | **YES** |
+| `BINARY_SETTING_ROW_LAYOUT_CANONICAL` | **YES** |
+| `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
+| `PO_FORM_CONTROL_MICRO_UX_REVIEW` | **PENDING** |
 
 ---
 

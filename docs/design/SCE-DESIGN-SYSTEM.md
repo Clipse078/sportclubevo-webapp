@@ -221,11 +221,13 @@ One SCE form/control language — semantic controls for semantic jobs. Evolve ex
 | Density | DS-02 `COMFORTABLE` · `COMPACT` · `DENSE` on form fields |
 | DS-10 inventory | [`SCE-DESIGN-SYSTEM-05-FORM-CONTROL-INVENTORY.md`](./SCE-DESIGN-SYSTEM-05-FORM-CONTROL-INVENTORY.md) |
 
-Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.test.ts` · `lib/design-system/__tests__/sce-binary-control-standard.test.ts`.
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.test.ts` · `lib/design-system/__tests__/sce-design-system-05-r1-micro-ux.test.ts` · `lib/design-system/__tests__/sce-binary-control-standard.test.ts`.
+
+**R1 micro-UX (`SCE_FORM_CONTROL_MICRO_UX`):** `WORLD_CLASS_FORM_CONTROL_MICRO_UX = PASS` · `FOCUS_NOT_COLOUR_ALONE = YES` · `CALM_FIELD_HIERARCHY = YES` · `BINARY_SETTING_ROW_LAYOUT_CANONICAL = YES` — shared field stack rhythm, semantic required/error tokens (no raw palette drift), foundation-aligned focus rings, invalid borders on `SceTextInput`/`SceTextarea`, and stable `data-sce-*` markers on primitives plus `data-sce-binary-setting-row` on representative Toggle First migrations. Contract: `lib/design-system/sce-form-control-micro-ux.ts`.
 
 Full package doc: [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md).
 
-**DS-05 locks (pending PO):** `FORM_CONTROL_SYSTEM_PRODUCT_WIDE = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES` · `VALIDATION_SYSTEM_CANONICAL = YES` · `ACTIVITY_COMPOSER_ARCHITECTURE = PRESERVED` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES`.
+**DS-05 locks (pending PO):** `FORM_CONTROL_SYSTEM_PRODUCT_WIDE = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES` · `VALIDATION_SYSTEM_CANONICAL = YES` · `ACTIVITY_COMPOSER_ARCHITECTURE = PRESERVED` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `WORLD_CLASS_FORM_CONTROL_MICRO_UX = PASS`.
 
 ---
 

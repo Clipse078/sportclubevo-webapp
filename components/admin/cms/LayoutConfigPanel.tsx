@@ -25,6 +25,7 @@
 
 import { useId, useState } from "react";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import { Image as ImageIcon, X } from "lucide-react";
 import SharedMediaPicker from "@/components/admin/media/SharedMediaPicker";
 import type { MediaAssetListItem } from "@/lib/media/types";
@@ -541,7 +542,10 @@ function ResponsiveRuleRow({
 }) {
   const id = useId();
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] p-3 transition hover:border-[var(--brand-primary,#f97316)]">
+    <div
+      className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] p-3 transition hover:border-[var(--border-strong)]"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+    >
       <div className="min-w-0">
         <label htmlFor={id} className="block cursor-pointer text-xs font-medium text-[var(--foreground)]">
           {label}

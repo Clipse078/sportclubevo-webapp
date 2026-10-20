@@ -2,6 +2,7 @@
 
 import { forwardRef, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
+import { SCE_FORM_CONTROL_MICRO_UX_INVALID_INPUT_CLASS } from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceTextInputProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean;
@@ -23,6 +24,7 @@ export const SceTextInput = forwardRef<HTMLInputElement, SceTextInputProps>(
         className={cn(
           "fca-input w-full",
           readOnly ? "cursor-default bg-[var(--surface-2)]/60 text-[var(--text-2)]" : "",
+          invalid ? SCE_FORM_CONTROL_MICRO_UX_INVALID_INPUT_CLASS : "",
           className,
         )}
         {...props}

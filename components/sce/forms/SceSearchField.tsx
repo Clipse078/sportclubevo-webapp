@@ -7,6 +7,7 @@ import {
   SCE_SEARCH_FIELD_INPUT_WITH_CLEAR_CLASS,
   SCE_SEARCH_FIELD_MARKERS,
 } from "@/lib/design-system/sce-form-control-foundation";
+import { SCE_FORM_CONTROL_MICRO_UX_SEARCH_ICON_SIZE_CLASS } from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceSearchFieldProps = {
   value: string;
@@ -50,7 +51,10 @@ export function SceSearchField({
       data-sce-search-field="true"
     >
       <Search
-        className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-2)]"
+        className={cn(
+          "pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-2)]",
+          SCE_FORM_CONTROL_MICRO_UX_SEARCH_ICON_SIZE_CLASS,
+        )}
         aria-hidden
         {...{ [SCE_SEARCH_FIELD_MARKERS.leadingIcon]: "true" }}
       />
@@ -81,7 +85,7 @@ export function SceSearchField({
           {...{ [SCE_SEARCH_FIELD_MARKERS.trailingClear]: "true" }}
           onClick={() => onChange("")}
         >
-          <X className="h-3.5 w-3.5" aria-hidden />
+          <X className={SCE_FORM_CONTROL_MICRO_UX_SEARCH_ICON_SIZE_CLASS} aria-hidden />
         </button>
       ) : null}
     </div>
