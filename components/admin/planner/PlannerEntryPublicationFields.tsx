@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { cn } from "@/lib/cn";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import type {
   PlannerPublicationRowConfig,
   PlannerPublicationValues,
@@ -43,6 +44,7 @@ function PublicationRow({
         switchDisabled ? "opacity-90" : "",
       )}
       data-testid={`planner-publication-row-${row.key}`}
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
     >
       <div className="min-w-0 flex-1">
         <label

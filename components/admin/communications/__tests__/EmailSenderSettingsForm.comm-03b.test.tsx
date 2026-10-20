@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 const toastSuccess = vi.fn();
 const toastDanger = vi.fn();
@@ -68,16 +68,40 @@ function modelFrom(settings = configured, ready = true): EmailSenderWorkspaceVie
   };
 }
 
+function stubEmailSenderFetch(
+  handler: (url: string, init?: RequestInit) => Response | Promise<Response>,
+) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/communication/email/senders")) {
+        return new Response(JSON.stringify({ senders: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return handler(url, init);
+    }),
+  );
+}
+
+function legacySenderForm() {
+  return within(screen.getByTestId("email-sender-form"));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.stubGlobal("fetch", vi.fn());
+  stubEmailSenderFetch(() => new Response("{}", { status: 404 }));
 });
 
 describe("COMM-03B email sender settings UI (UX-08 workspace)", () => {
   it("renders tenant-wide sender fields and Reply-To explanation", () => {
     render(<EmailSenderWorkspace initialModel={modelFrom()} />);
-    expect(screen.getByLabelText("Absendername")).toHaveValue("FC Allschwil");
-    expect(screen.getByLabelText("Absender-E-Mail-Adresse")).toHaveValue("info@fcallschwil.ch");
+    expect(legacySenderForm().getByLabelText("Absendername")).toHaveValue("FC Allschwil");
+    expect(legacySenderForm().getByLabelText("Absender-E-Mail-Adresse")).toHaveValue(
+      "info@fcallschwil.ch",
+    );
     expect(screen.getByText("Konfigurierter Absender")).toBeInTheDocument();
     expect(screen.getByText("Reply-To (Antworten)")).toBeInTheDocument();
   });
@@ -106,15 +130,15 @@ describe("COMM-03B email sender settings UI (UX-08 workspace)", () => {
       displayName: "Neuer Club",
       emailAddress: "mail@neuer-club.ch",
     };
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ settings: updated }), {
+    stubEmailSenderFetch((url, init) => {
+      if (url.includes("/api/admin/communications/email-sender") && init?.method === "PATCH") {
+        return new Response(JSON.stringify({ settings: updated }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
+        });
+      }
+      if (url.includes("/api/communication/email/readiness")) {
+        return new Response(
           JSON.stringify({
             readiness: {
               ready: true,
@@ -128,16 +152,18 @@ describe("COMM-03B email sender settings UI (UX-08 workspace)", () => {
             },
             sender: updated,
           }),
-          { status: 200 },
-        ),
-      );
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("{}", { status: 404 });
+    });
 
     render(<EmailSenderWorkspace initialModel={modelFrom()} />);
 
-    fireEvent.change(screen.getByLabelText("Absendername"), {
+    fireEvent.change(legacySenderForm().getByLabelText("Absendername"), {
       target: { value: "Neuer Club" },
     });
-    fireEvent.change(screen.getByLabelText("Absender-E-Mail-Adresse"), {
+    fireEvent.change(legacySenderForm().getByLabelText("Absender-E-Mail-Adresse"), {
       target: { value: "mail@neuer-club.ch" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Absender speichern" }));
@@ -145,7 +171,15 @@ describe("COMM-03B email sender settings UI (UX-08 workspace)", () => {
     await waitFor(() =>
       expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("Versandbereitschaft")),
     );
-    const [, options] = vi.mocked(fetch).mock.calls[0]!;
+    const patchCall = vi
+      .mocked(fetch)
+      .mock.calls.find(
+        ([url, init]) =>
+          String(url).includes("/api/admin/communications/email-sender") &&
+          init?.method === "PATCH",
+      );
+    expect(patchCall).toBeDefined();
+    const [, options] = patchCall!;
     expect(JSON.parse(String(options?.body))).toEqual({
       displayName: "Neuer Club",
       emailAddress: "mail@neuer-club.ch",

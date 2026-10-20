@@ -5,6 +5,7 @@ import {
   updatePlannerEntryAction,
 } from "@/app/(admin)/dashboard/planner/actions";
 import PlannerEntryDeleteButton from "@/components/admin/planner/PlannerEntryDeleteButton";
+import PlannerEntryCreatePublicationFields from "@/components/admin/planner/PlannerEntryCreatePublicationFields";
 
 type PlannerCreateFormData = {
   seasons: Array<{
@@ -322,60 +323,18 @@ export default function PlannerEntryCreateForm({
                 Publikation
               </h2>
 
-              <div className="mt-5 space-y-3">
-                <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="websiteVisible"
-                    defaultChecked={defaults?.websiteVisible ?? true}
-                  />
-                  Website
-                </label>
-
-                <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="wochenplanVisible"
-                    defaultChecked={defaults?.wochenplanVisible ?? true}
-                  />
-                  Wochenplanner
-                </label>
-
-                <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="infoboardVisible"
-                    defaultChecked={defaults?.infoboardVisible ?? false}
-                  />
-                  Infoboard
-                </label>
-
-                <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="homepageVisible"
-                    defaultChecked={defaults?.homepageVisible ?? false}
-                  />
-                  Homepage
-                </label>
-
-                <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="trainingsplanVisible"
-                    defaultChecked={defaults?.trainingsplanVisible ?? false}
-                  />
-                  Trainingsplan
-                </label>
-
-                <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="teamPageVisible"
-                    defaultChecked={defaults?.teamPageVisible ?? false}
-                  />
-                  Teamseite
-                </label>
+              <div className="mt-5">
+                <PlannerEntryCreatePublicationFields
+                  eventType={data.selectedType}
+                  defaults={{
+                    websiteVisible: defaults?.websiteVisible,
+                    wochenplanVisible: defaults?.wochenplanVisible,
+                    infoboardVisible: defaults?.infoboardVisible,
+                    homepageVisible: defaults?.homepageVisible,
+                    trainingsplanVisible: defaults?.trainingsplanVisible,
+                    teamPageVisible: defaults?.teamPageVisible,
+                  }}
+                />
               </div>
             </article>
 

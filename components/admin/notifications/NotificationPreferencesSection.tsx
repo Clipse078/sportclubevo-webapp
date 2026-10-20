@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import type { NotificationPreferenceDto } from "@/lib/notifications/preference-service";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -25,6 +26,29 @@ const TYPE_LABELS: Record<string, string> = {
 type Props = {
   initialPreferences: NotificationPreferenceDto[];
 };
+
+function ChannelSwitch({
+  checked,
+  disabled,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <SwitchThumb
+      id={id}
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+      aria-label={label}
+    />
+  );
+}
 
 export default function NotificationPreferencesSection({ initialPreferences }: Props) {
   const [preferences, setPreferences] = useState(initialPreferences);
@@ -88,34 +112,24 @@ export default function NotificationPreferencesSection({ initialPreferences }: P
                   {TYPE_LABELS[row.notificationType] ?? row.notificationType}
                 </td>
                 <td className="py-3 px-4">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={row.inAppEnabled}
-                      disabled={pending}
-                      onChange={(event) =>
-                        updatePreference(row.notificationType, {
-                          inAppEnabled: event.target.checked,
-                        })
-                      }
-                    />
-                    <span className="sr-only">In-App für {TYPE_LABELS[row.notificationType]}</span>
-                  </label>
+                  <ChannelSwitch
+                    checked={row.inAppEnabled}
+                    disabled={pending}
+                    label={`In-App für ${TYPE_LABELS[row.notificationType] ?? row.notificationType}`}
+                    onChange={(inAppEnabled) =>
+                      updatePreference(row.notificationType, { inAppEnabled })
+                    }
+                  />
                 </td>
                 <td className="py-3 pl-4">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={row.emailEnabled}
-                      disabled={pending}
-                      onChange={(event) =>
-                        updatePreference(row.notificationType, {
-                          emailEnabled: event.target.checked,
-                        })
-                      }
-                    />
-                    <span className="sr-only">E-Mail für {TYPE_LABELS[row.notificationType]}</span>
-                  </label>
+                  <ChannelSwitch
+                    checked={row.emailEnabled}
+                    disabled={pending}
+                    label={`E-Mail für ${TYPE_LABELS[row.notificationType] ?? row.notificationType}`}
+                    onChange={(emailEnabled) =>
+                      updatePreference(row.notificationType, { emailEnabled })
+                    }
+                  />
                 </td>
               </tr>
             ))}

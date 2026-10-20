@@ -10,3 +10,6 @@ export * from "./sce-breadcrumbs-foundation";
 export * from "./sce-workspace-hierarchy";
 export * from "./sce-card-information-hierarchy";
 export * from "./sce-design-system-04-meta";
+export * from "./sce-form-control-foundation";
+export * from "./sce-binary-checkbox-audit";
+export * from "./sce-design-system-05-meta";

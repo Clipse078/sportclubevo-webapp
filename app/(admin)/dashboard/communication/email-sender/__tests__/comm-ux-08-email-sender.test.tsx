@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -91,12 +91,34 @@ function buildModel(overrides: Partial<EmailSenderWorkspaceViewModel> = {}): Ema
   };
 }
 
+function stubEmailSenderFetch(
+  handler: (url: string, init?: RequestInit) => Response | Promise<Response>,
+) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/communication/email/senders")) {
+        return new Response(JSON.stringify({ senders: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return handler(url, init);
+    }),
+  );
+}
+
+function legacySenderForm() {
+  return within(screen.getByTestId("email-sender-form"));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.requirePermission.mockResolvedValue(undefined);
   mocks.getActiveTenant.mockResolvedValue({ id: "tenant-a" });
   mocks.loadModel.mockResolvedValue(buildModel());
-  vi.stubGlobal("fetch", vi.fn());
+  stubEmailSenderFetch(() => new Response("{}", { status: 404 }));
 });
 
 describe("SCE-COMM-UX-08 email sender page", () => {
@@ -197,7 +219,7 @@ describe("SCE-COMM-UX-08 readiness states", () => {
       />,
     );
     expect(screen.getByText("Fallback aktiv")).toBeInTheDocument();
-    expect(screen.getByText(/SportClubEvo-Fallback/)).toBeInTheDocument();
+    expect(screen.getAllByText(/SportClubEvo-Fallback/).length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows unverified tenant sender state", () => {
@@ -239,7 +261,7 @@ describe("SCE-COMM-UX-08 sender editing", () => {
       ),
     );
     render(<EmailSenderWorkspace initialModel={buildModel()} />);
-    fireEvent.change(screen.getByLabelText("Absender-E-Mail-Adresse"), {
+    fireEvent.change(legacySenderForm().getByLabelText("Absender-E-Mail-Adresse"), {
       target: { value: "not-an-email" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Absender speichern" }));
@@ -249,12 +271,15 @@ describe("SCE-COMM-UX-08 sender editing", () => {
   });
 
   it("refetches readiness after save instead of assuming ready", async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ settings: settingsVerified }), { status: 200 }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
+    stubEmailSenderFetch((url, init) => {
+      if (url.includes("/api/admin/communications/email-sender") && init?.method === "PATCH") {
+        return new Response(JSON.stringify({ settings: settingsVerified }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (url.includes("/api/communication/email/readiness")) {
+        return new Response(
           JSON.stringify({
             readiness: { ...readinessReady, ready: false, reasons: ["SENDER_DOMAIN_NOT_VERIFIED"] },
             sender: {
@@ -265,9 +290,11 @@ describe("SCE-COMM-UX-08 sender editing", () => {
               activeFrom: "SportClubEvo <noreply@mail.sportclubevo.com>",
             },
           }),
-          { status: 200 },
-        ),
-      );
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("{}", { status: 404 });
+    });
 
     render(<EmailSenderWorkspace initialModel={buildModel()} />);
     fireEvent.click(screen.getByRole("button", { name: "Absender speichern" }));

@@ -8,6 +8,13 @@ import {
   parseDisplayDateInput,
 } from "@/lib/sce/activity-datetime/sce-activity-datetime";
 import { SceActivityCalendarPopover } from "./SceActivityCalendarPopover";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_MARKERS,
+  SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceActivityDateInputProps = {
   label: string;
@@ -61,10 +68,22 @@ export function SceActivityDateInput({
   }
 
   return (
-    <div className="block min-w-0 space-y-1.5" data-testid={testId}>
+    <div
+      className={cn("block min-w-0", SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS)}
+      data-testid={testId}
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.ACTIVITY_DATE]: "true" }}
+    >
       <label htmlFor={inputId} className="fca-label block">
         {label}
-        {required ? <span className="text-rose-500"> *</span> : null}
+        {required ? (
+          <>
+            <span className={SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS} aria-hidden>
+              {" "}
+              *
+            </span>
+            <span className="sr-only"> (Pflichtfeld)</span>
+          </>
+        ) : null}
       </label>
       {helperText ? (
         <p id={helperId} className="text-[11px] text-[var(--text-2)]">
@@ -107,14 +126,17 @@ export function SceActivityDateInput({
           aria-label={`${label} — Kalender öffnen`}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] disabled:opacity-50"
+          className={cn(
+            "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] disabled:opacity-50",
+            SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
+          )}
           data-testid={testId ? `${testId}-calendar` : undefined}
         >
           <CalendarDays className="h-4 w-4" aria-hidden />
         </button>
       </div>
       {resolvedError ? (
-        <p id={errorId} role="alert" className="text-xs text-[var(--sce-danger)]">
+        <p id={errorId} role="alert" className={SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS}>
           {resolvedError}
         </p>
       ) : null}

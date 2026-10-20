@@ -64,15 +64,21 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | PLANNING | Tournament planung board | Grid + DnD + fixture presentation | CANONICAL | `SceTournamentFixturePresentation` grid | — | — | — | Operational density |
 | ADMIN | People directory | Workspace + searchable lists | CANONICAL_REFINE | Unified empty/loading | MED | P2 | DS-07 | Many tab-local empty states |
 | ADMIN | `NavAlignedPermissionEditor` | Dense permission matrix | DOMAIN | Keep density; refine toggles | LOW | P2 | DS-05 | Checkbox = multi-capability |
-| ADMIN | Roles forms | Mix toggle + checkbox | CANONICAL_REFINE | Toggle First for binary caps | MED | P2 | DS-05 | |
+| ADMIN | Roles forms | Mix toggle + checkbox | CANONICAL_REFINE | Toggle First for binary caps | MED | P2 | DS-05 | NavAlignedPermissionEditor switch-only; matrix multi-select DS-10 |
+| ADMIN | Notification preferences | Channel enable flags | **DS-05 DONE** | `SwitchThumb` | — | — | DS-05 | Binary setting migration |
 | ADMIN | Facilities / pitches | Admin tables + forms | CANONICAL_REFINE | DS-08 table tokens | LOW | P2 | DS-08 | |
 | COMM | Communication hub + email-sender | Hub workspace/cards; readiness checklist | CANONICAL / CANONICAL_REFINE | PO visual reference; DS-07 readiness; Badge not AdminStatusPill | MED | P2 | DS-03, DS-04, DS-07 | R1 primary ref: `/dashboard/communication`, `/dashboard/communication/email-sender` |
-| COMM | Campaign composers | Multi checkbox + toggles | CANONICAL_REFINE | Audit binary vs multi | MED | P2 | DS-05 | ~6 checkboxes in CampaignComposer |
+| COMM | Campaign composers | Multi checkbox + toggles | CANONICAL_REFINE | Audit binary vs multi | MED | P2 | DS-10 | Inventory in DS-05 form-control inventory |
+| COMM | Communication / notification preferences | Per-channel ON/OFF | **DS-05 DONE** | `SwitchThumb` | — | — | DS-05 | Toggle First |
+| COMM | Email sender workspace | Sender identity fields | **DS-05 DONE** | `SceFormField` + `SceTextInput` | — | — | DS-05 | Visual reference alignment |
+| COMM | Personal signature | useByDefault / compose include | **DS-05 DONE** | `SwitchToggle` / `SwitchThumb` | — | — | DS-05 | |
+| PLANNING | Planner entry create publication | Legacy checkboxes | **DS-05 DONE** | `PlannerEntryCreatePublicationFields` | — | — | DS-05 | Hidden field semantics preserved |
 | COMM | Inbox list | Row selection checkboxes | DOMAIN | Checkbox legitimate | — | — | — | MULTI_SELECTION |
 | DOCUMENTS | Person document tab | Local list + empty | CANONICAL_REFINE | SceEmptyState | LOW | P3 | DS-07 | |
 | PUBLISHING | Homepage builder empty | Multiple local empty components | DUPLICATE | Unified empty primitive | LOW | P2 | DS-07 | 4+ variants |
 | PUBLISHING | Website page list | Admin table | CANONICAL_REFINE | DS-08 | LOW | P3 | DS-08 | |
-| SPONSOR | `SponsorBannerConfigForm` | Residual checkbox in CMS | LEGACY_MIGRATE | Toggle if binary setting | LOW | P3 | DS-05 | Audit only — no Sponsor module |
+| SPONSOR | `SponsorBannerConfigForm` | Click tracking ON/OFF | **DS-05 DONE** | `SwitchToggle` | — | — | DS-05 | CMS reusable config |
+| SEARCH | Competitions list filter | Legacy gray search + checkbox archived | **DS-05 DONE** | `SceSearchField` + `SwitchToggle` | — | — | DS-05 | |
 | AUTH | Login page | Auth layout outside admin shell | DOMAIN | Shared input/button tokens | LOW | P3 | DS-05 | |
 | INFOBOARD | Screen1/2 fallback branches | Non-canonical match layout | **CLOSED DS-04** | `matchPresentation` + `InfoboardCompactMatchIdentity` | **HIGH** | ~~P0~~ **CLOSED** | DS-10 polish | LEGACY-MATCH-CARD-003/004 · `P0_INFOBOARD_MATCH_PRESENTATION = CLOSED_BY_DS04` |
 | INFOBOARD | Kiosk CSS modules | Channel-specific styling | DOMAIN | Adopt presentation model | MED | P1 | DS-04 | CAN_RETAIN channel chrome |

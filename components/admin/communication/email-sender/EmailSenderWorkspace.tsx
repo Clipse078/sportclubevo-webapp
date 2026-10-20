@@ -9,6 +9,8 @@ import type { EmailSenderWorkspaceViewModel } from "@/lib/communication/email-se
 import type { EmailSenderReadinessChecklistItem } from "@/lib/communication/email-sender-display";
 import { useToast } from "@/hooks/use-toast";
 import { EmailSenderManagementPanel } from "@/components/admin/communication/email-sender/EmailSenderManagementPanel";
+import { SceFormField } from "@/components/sce/forms/SceFormField";
+import { SceTextInput } from "@/components/sce/forms/SceTextInput";
 
 type Props = {
   initialModel: EmailSenderWorkspaceViewModel;
@@ -263,11 +265,13 @@ export default function EmailSenderWorkspace({ initialModel }: Props) {
           className="mt-4 space-y-5"
           data-testid="email-sender-form"
         >
-          <div>
-            <label htmlFor="email-sender-display-name" className={labelClass}>
-              Absendername
-            </label>
-            <input
+          <SceFormField
+            label="Absendername"
+            htmlFor="email-sender-display-name"
+            error={fieldErrors.displayName}
+            density="COMPACT"
+          >
+            <SceTextInput
               id="email-sender-display-name"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
@@ -275,28 +279,17 @@ export default function EmailSenderWorkspace({ initialModel }: Props) {
               autoComplete="organization"
               placeholder="FC Allschwil"
               disabled={saving}
-              aria-invalid={!!fieldErrors.displayName}
-              aria-describedby={
-                fieldErrors.displayName ? "email-sender-display-name-error" : undefined
-              }
-              className="fca-input w-full"
+              invalid={!!fieldErrors.displayName}
             />
-            {fieldErrors.displayName ? (
-              <p
-                id="email-sender-display-name-error"
-                role="alert"
-                className="mt-1 text-[11px] font-medium text-[var(--sce-danger)]"
-              >
-                {fieldErrors.displayName}
-              </p>
-            ) : null}
-          </div>
+          </SceFormField>
 
-          <div>
-            <label htmlFor="email-sender-address" className={labelClass}>
-              Absender-E-Mail-Adresse
-            </label>
-            <input
+          <SceFormField
+            label="Absender-E-Mail-Adresse"
+            htmlFor="email-sender-address"
+            error={fieldErrors.emailAddress}
+            density="COMPACT"
+          >
+            <SceTextInput
               id="email-sender-address"
               type="email"
               value={emailAddress}
@@ -305,20 +298,9 @@ export default function EmailSenderWorkspace({ initialModel }: Props) {
               autoComplete="email"
               placeholder="kommunikation@fcallschwil.ch"
               disabled={saving}
-              aria-invalid={!!fieldErrors.emailAddress}
-              aria-describedby={fieldErrors.emailAddress ? "email-sender-address-error" : undefined}
-              className="fca-input w-full"
+              invalid={!!fieldErrors.emailAddress}
             />
-            {fieldErrors.emailAddress ? (
-              <p
-                id="email-sender-address-error"
-                role="alert"
-                className="mt-1 text-[11px] font-medium text-[var(--sce-danger)]"
-              >
-                {fieldErrors.emailAddress}
-              </p>
-            ) : null}
-          </div>
+          </SceFormField>
 
           <div className="flex justify-end border-t border-[var(--border)] pt-4">
             <button type="submit" disabled={saving} className="fca-button-primary">

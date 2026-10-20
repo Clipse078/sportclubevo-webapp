@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ImageIcon, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { MediaAssetListItem } from "@/lib/media/types";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
 
 const SharedMediaPicker = dynamic(
   () => import("@/components/admin/media/SharedMediaPicker"),
@@ -154,18 +155,13 @@ export default function SponsorBannerConfigForm({ config, onChange }: Props) {
         </Field>
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="click-tracking"
-          checked={(config.clickTrackingEnabled as boolean) ?? false}
-          onChange={(e) => set("clickTrackingEnabled", e.target.checked)}
-          className="h-4 w-4 rounded border-[var(--border)]"
-        />
-        <label htmlFor="click-tracking" className="text-xs text-[var(--foreground)]">
-          Click-Tracking aktivieren
-        </label>
-      </div>
+      <SwitchToggle
+        id="sponsor-banner-click-tracking"
+        label="Click-Tracking aktivieren"
+        description="Erfasst Klicks auf Sponsor-Banner-Links."
+        checked={(config.clickTrackingEnabled as boolean) ?? false}
+        onChange={(checked) => set("clickTrackingEnabled", checked)}
+      />
 
       <SharedMediaPicker
         open={pickerOpen}

@@ -17,6 +17,11 @@
 
 "use client";
 
+import {
+  SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_MARKERS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
+
 type SwitchToggleProps = {
   id: string;
   checked: boolean;
@@ -48,7 +53,7 @@ export function SwitchThumb({
       className={[
         "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent",
         "transition-colors duration-150 ease-in-out",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-app-background)]",
+        SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
         checked
           ? "bg-[var(--sce-color-accent-primary)]"
           : "bg-[var(--sce-color-border-strong)]",
@@ -90,6 +95,7 @@ export function SwitchToggle({
     <label
       htmlFor={id}
       className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.SWITCH_TOGGLE_ROW]: "true" }}
     >
       <div className="min-w-0">
         <span className="block text-sm font-medium text-[var(--foreground)]">{label}</span>

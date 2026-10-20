@@ -9,6 +9,7 @@ import {
   signatureContentToPlainText,
 } from "@/lib/communication/personal-signature/signature-content";
 import { PersonalSignatureEditor } from "@/components/admin/communication/personal-signature/PersonalSignatureEditor";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
 
 type Preference = {
   bodyText: string | null;
@@ -111,15 +112,13 @@ export default function PersonalSignatureWorkspace({ initialPreference }: Props)
         </p>
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={useByDefault}
-          onChange={(event) => setUseByDefault(event.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-[var(--border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-        />
-        <span>Signatur standardmässig verwenden</span>
-      </label>
+      <SwitchToggle
+        id="personal-signature-use-by-default"
+        label="Signatur standardmässig verwenden"
+        checked={useByDefault}
+        onChange={setUseByDefault}
+        disabled={busy}
+      />
 
       <section
         aria-labelledby="personal-signature-preview-heading"

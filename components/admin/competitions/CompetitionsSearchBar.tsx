@@ -8,8 +8,9 @@
  */
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback } from "react";
-import { Search } from "lucide-react";
+import { useCallback, useState } from "react";
+import { SceSearchField } from "@/components/sce/forms/SceSearchField";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
 
 type Props = {
   initialSearch?: string;
@@ -25,6 +26,8 @@ export default function CompetitionsSearchBar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [search, setSearch] = useState(initialSearch);
+  const [includeArchived, setIncludeArchived] = useState(initialIncludeArchived);
 
   const updateParams = useCallback(
     (updates: Record<string, string | undefined>) => {
@@ -45,41 +48,37 @@ export default function CompetitionsSearchBar({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Textsuche */}
-      <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="search"
-          placeholder="Wettkampf suchen…"
-          defaultValue={initialSearch}
-          onChange={(e) => updateParams({ search: e.target.value || undefined })}
-          className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+      <SceSearchField
+        value={search}
+        onChange={(next) => {
+          setSearch(next);
+          updateParams({ search: next || undefined });
+        }}
+        placeholder="Wettkampf suchen…"
+        ariaLabel="Wettkampf suchen"
+        testId="competitions-search"
+        shellClassName="min-w-[200px]"
+      />
 
-      {/* Provider-Filter */}
       <select
         defaultValue={initialProvider}
         onChange={(e) => updateParams({ provider: e.target.value || undefined })}
-        className="rounded-md border border-gray-300 py-2 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="fca-select rounded-md py-2 text-sm"
       >
         <option value="">Alle Provider</option>
         <option value="SFV">SFV</option>
         <option value="MANUAL">Manuell</option>
       </select>
 
-      {/* Archiv-Toggle */}
-      <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          defaultChecked={initialIncludeArchived}
-          onChange={(e) =>
-            updateParams({ includeArchived: e.target.checked ? "true" : undefined })
-          }
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        Archivierte anzeigen
-      </label>
+      <SwitchToggle
+        id="competitions-include-archived"
+        label="Archivierte anzeigen"
+        checked={includeArchived}
+        onChange={(checked) => {
+          setIncludeArchived(checked);
+          updateParams({ includeArchived: checked ? "true" : undefined });
+        }}
+      />
     </div>
   );
 }

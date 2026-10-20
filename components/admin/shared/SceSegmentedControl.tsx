@@ -1,6 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_MARKERS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceSegmentOption<T extends string> = {
   value: T;
@@ -40,6 +44,7 @@ export function SceSegmentedControl<T extends string>({
       aria-label={ariaLabel}
       data-testid={testId}
       className="flex flex-wrap gap-1"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.SEGMENTED_CONTROL]: "true" }}
     >
       {options.map((option) => {
         const isSelected = value === option.value;
@@ -64,7 +69,7 @@ export function SceSegmentedControl<T extends string>({
             className={cn(
               "rounded-lg border px-3 font-medium transition-colors",
               size === "sm" ? "py-1.5 text-xs" : "py-2 text-sm",
-              "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+              SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
               "disabled:cursor-not-allowed disabled:opacity-50",
               isSelected
                 ? "border-[color-mix(in_srgb,var(--sce-accent)_45%,var(--border-strong))] bg-[color-mix(in_srgb,var(--sce-accent)_14%,var(--surface))] text-[var(--foreground)] shadow-sm"

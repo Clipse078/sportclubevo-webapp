@@ -3,6 +3,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { normalizeTimeInput } from "@/lib/sce/activity-datetime/sce-activity-datetime";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_MARKERS,
+  SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceActivityTimeInputProps = {
   label: string;
@@ -55,10 +61,22 @@ export function SceActivityTimeInput({
   }
 
   return (
-    <div className="block min-w-0 space-y-1.5" data-testid={testId}>
+    <div
+      className={cn("block min-w-0", SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS)}
+      data-testid={testId}
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.ACTIVITY_TIME]: "true" }}
+    >
       <label htmlFor={inputId} className={compact ? "sr-only" : "fca-label block"}>
         {label}
-        {required ? <span className="text-rose-500"> *</span> : null}
+        {required ? (
+          <>
+            <span className={SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS} aria-hidden>
+              {" "}
+              *
+            </span>
+            <span className="sr-only"> (Pflichtfeld)</span>
+          </>
+        ) : null}
       </label>
       {helperText && !compact ? (
         <p id={helperId} className="text-[11px] text-[var(--text-2)]">
@@ -93,7 +111,7 @@ export function SceActivityTimeInput({
         data-testid={testId ? `${testId}-input` : undefined}
       />
       {resolvedError ? (
-        <p id={errorId} role="alert" className="text-xs text-[var(--sce-danger)]">
+        <p id={errorId} role="alert" className={SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS}>
           {resolvedError}
         </p>
       ) : null}
