@@ -2,7 +2,10 @@
 
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_MARKERS,
+  SCE_FORM_CONTROL_MICRO_UX_SELECT_CHEVRON_SIZE_CLASS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 type SceToolbarSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   wrapperClassName?: string;
@@ -27,7 +30,10 @@ export default function SceToolbarSelect({
         )}
       />
       <ChevronDown
-        className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
+        className={cn(
+          "pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)]",
+          SCE_FORM_CONTROL_MICRO_UX_SELECT_CHEVRON_SIZE_CLASS,
+        )}
         aria-hidden
       />
     </div>

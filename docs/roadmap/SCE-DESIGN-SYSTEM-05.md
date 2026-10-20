@@ -79,18 +79,40 @@ Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.te
 
 ## R1 — world-class micro-UX (same branch)
 
-**`SCE_FORM_CONTROL_MICRO_UX`** · **`WORLD_CLASS_FORM_CONTROL_MICRO_UX = PASS`**
+**`SCE_FORM_CONTROL_MICRO_UX`** · **`WORLD_CLASS_FORM_CONTROL_MICRO_UX = PASS`** · **`WORLD_CLASS_SCE_QUALITY`** (macro + component + micro)
 
 Calm field hierarchy, semantic validation colour tokens, unified `focus-visible` rings on segmented controls and icon triggers, stable `data-sce-*` markers for primitives and binary-setting rows, and invalid-state borders on canonical text controls — without restarting DS-05 architecture or introducing parallel primitives.
 
+**MICRO HIERARCHY:** PRIMARY CONTENT → SECONDARY CONTENT → METADATA → SUPPORTING AFFORDANCE.
+
 | Flag | R1 value |
 | --- | --- |
+| `WORLD_CLASS_MICRO_UX_REQUIRED` | **YES** |
+| `MICRO_STATE_COVERAGE_REQUIRED` | **YES** |
+| `MICRO_ALIGNMENT_CONSISTENCY_REQUIRED` | **YES** |
+| `MICRO_RESPONSIVE_QUALITY_REQUIRED` | **YES** |
+| `MICRO_ACCESSIBILITY_REQUIRED` | **YES** |
+| `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED` | **NO** |
 | `WORLD_CLASS_FORM_CONTROL_MICRO_UX` | **PASS** |
 | `FOCUS_NOT_COLOUR_ALONE` | **YES** |
 | `CALM_FIELD_HIERARCHY` | **YES** |
 | `BINARY_SETTING_ROW_LAYOUT_CANONICAL` | **YES** |
 | `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
 | `PO_FORM_CONTROL_MICRO_UX_REVIEW` | **PENDING** |
+
+### === WORLD_CLASS_MICRO_UX === (DS-05 report)
+
+| Field | Value |
+| --- | --- |
+| `WORLD_CLASS_MICRO_UX_REQUIRED` | **YES** |
+| `MICRO_STATE_COVERAGE` | **PASS** |
+| `MICRO_ALIGNMENT_CONSISTENCY` | **PASS** |
+| `MICRO_RESPONSIVE_QUALITY` | **PARTIAL_DS09_FINAL** |
+| `MICRO_ACCESSIBILITY` | **PARTIAL_DS09_FINAL** |
+| `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED` | **NO** |
+| `CONTROL_MICRO_STATES_AUDITED` | `SCE_FORM_CONTROL_MICRO_STATE_MATRIX` in `sce-form-control-micro-ux.ts` |
+| `MICRO_PATTERNS_CANONICALISED` | Shared focus ring, field stack, error/invalid, search icon + clear touch target, binary row markers |
+| `MICRO_PATTERNS_DEFERRED` | CMS designer orange chrome, legacy selects, combobox sweep, campaign forms, infoboard — see inventory |
 
 ---
 

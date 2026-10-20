@@ -17,7 +17,10 @@
 
 "use client";
 
-import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_MARKERS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 type SwitchToggleProps = {
   id: string;
@@ -50,7 +53,7 @@ export function SwitchThumb({
       className={[
         "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent",
         "transition-colors duration-150 ease-in-out",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sce-color-app-background)]",
+        SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
         checked
           ? "bg-[var(--sce-color-accent-primary)]"
           : "bg-[var(--sce-color-border-strong)]",

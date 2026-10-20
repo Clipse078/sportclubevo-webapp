@@ -7,7 +7,7 @@
 
 **Marker:** `FORM_CONTROL_MIGRATION_INVENTORY`
 
-**R1 micro-UX markers:** `SCE_FORM_CONTROL_MICRO_UX` · `WORLD_CLASS_FORM_CONTROL_MICRO_UX` · `FOCUS_NOT_COLOUR_ALONE` · `CALM_FIELD_HIERARCHY` · `BINARY_SETTING_ROW_LAYOUT_CANONICAL`
+**R1 micro-UX markers:** `WORLD_CLASS_MICRO_UX_REQUIRED` · `MICRO_STATE_COVERAGE_REQUIRED` · `MICRO_ALIGNMENT_CONSISTENCY_REQUIRED` · `MICRO_RESPONSIVE_QUALITY_REQUIRED` · `MICRO_ACCESSIBILITY_REQUIRED` · `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED` · `WORLD_CLASS_SCE_QUALITY` · `MICRO HIERARCHY` · `SCE_FORM_CONTROL_MICRO_UX` · `WORLD_CLASS_FORM_CONTROL_MICRO_UX` · `FOCUS_NOT_COLOUR_ALONE` · `CALM_FIELD_HIERARCHY` · `BINARY_SETTING_ROW_LAYOUT_CANONICAL`
 
 ---
 
@@ -76,6 +76,19 @@ Semantics: **A** binary setting → **SwitchToggle** · **B** multi-selection �
 ## DS-10 obligation
 
 `UNEXPLAINED_LEGACY_FORM_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO` — every remaining legacy control family must appear here with classification or justified exception before programme closure.
+
+`UNEXPLAINED_MICRO_PATTERN_DRIFT_ALLOWED_AT_DS10_CLOSURE = NO` — unexplained local micro drift (icon size, focus ring, error spacing, chevron/clear placement, hover backgrounds) must be canonicalised or listed below before programme closure.
+
+### Micro-pattern drift inventory (DS-10 gate)
+
+| Area / pattern | Micro inconsistency | DS-05 R1 | DS-10 action |
+| --- | --- | --- | --- |
+| `LayoutConfigPanel` CMS designer tiles | Legacy orange selection chrome on non-responsive controls | **DEFERRED** | Tokenise to restrained SCE accent |
+| `CompetitionsSearchBar` provider `<select>` | Native select without `SceToolbarSelect` chevron recipe | **DEFERRED** | Align to `fca-select` + indicator |
+| `SceListSelectorPanel` | Full open/loading/empty micro matrix | **PARTIAL** | DS-10 combobox micro sweep |
+| Campaign / Vorlage forms | Mixed checkbox/toggle micro spacing | **INVENTORY** | Per-control audit |
+| Infoboard designer | Binary flags + local control heights | **DEFERRED** | SwitchToggle + density tokens |
+| Global search shortcut hints | Communication reference uses quiet hints | **DEFERRED** | Adopt where search is primary |
 
 ---
 

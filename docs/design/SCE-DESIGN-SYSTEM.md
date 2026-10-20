@@ -65,6 +65,35 @@ CANONICAL_NAVIGATION_PRESERVED = YES
 PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
 ```
 
+### World-class micro UX / visual detail (permanent — all Design System packages)
+
+A package is not complete when the correct component exists, the correct token is used, or the layout is structurally consistent. **Every touched surface must also pass micro review.**
+
+```text
+WORLD_CLASS_SCE_QUALITY =
+  MACRO ARCHITECTURE + COMPONENT QUALITY + MICRO DETAIL QUALITY
+```
+
+**Visual references (quality inspiration — do not copy layouts):** Communication / Mail Inbox · Dashboard · global navigation · SCE Match Cards · Wochenplaner · Tournament / Spielplan. Generalise the **micro** quality (alignment, icon sizing, borders, focus, density), not the screen structure.
+
+**MICRO HIERARCHY:** PRIMARY CONTENT → SECONDARY CONTENT → METADATA → SUPPORTING AFFORDANCE. Chevrons, metadata icons, badges, and status dots must support primary content — not compete with it.
+
+| Governance flag | Value |
+| --- | --- |
+| `WORLD_CLASS_MICRO_UX_REQUIRED` | **YES** |
+| `MICRO_STATE_COVERAGE_REQUIRED` | **YES** |
+| `MICRO_ALIGNMENT_CONSISTENCY_REQUIRED` | **YES** |
+| `MICRO_RESPONSIVE_QUALITY_REQUIRED` | **YES** |
+| `MICRO_ACCESSIBILITY_REQUIRED` | **YES** |
+| `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED` | **NO** |
+| `UNEXPLAINED_MICRO_PATTERN_DRIFT_ALLOWED_AT_DS10_CLOSURE` | **NO** |
+
+Equivalent control semantics must consume **canonical micro recipes** (`lib/design-system/sce-micro-ux-governance.ts`, `lib/design-system/sce-form-control-micro-ux.ts` for DS-05 forms). Unexplained local drift (icon sizes, focus rings, error spacing, chevrons, clear-button placement) is **Design System debt** gated at DS-10.
+
+**Density:** micro polish must hold in **COMFORTABLE**, **COMPACT**, and **DENSE** — dense operational surfaces (Wochenplaner, Tournament Planner) stay information-rich; quality comes from precision, not extra whitespace.
+
+Typed governance: `lib/design-system/sce-micro-ux-governance.ts` · automated DS-05 checks: `lib/design-system/__tests__/sce-design-system-05-r1-micro-ux.test.ts`.
+
 **Canonical visual language**
 
 - **Dark / navy SCE product language** — preserve atmospheric `--sce-app-background` and layered dark surfaces (`--sce-surface-*`). Avoid drift toward generic white SaaS unless accessibility or domain requirements justify an exception.

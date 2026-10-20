@@ -4,6 +4,11 @@ import { type ReactNode, useId } from "react";
 import { cn } from "@/lib/cn";
 import type { SceFoundationDensityTier } from "@/lib/design-system/sce-foundation-contract";
 import { SCE_FORM_DENSITY_DEFAULT } from "@/lib/design-system/sce-form-control-foundation";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceFormFieldProps = {
   label: ReactNode;
@@ -50,7 +55,7 @@ export function SceFormField({
 
   return (
     <div
-      className={cn("space-y-1.5", className)}
+      className={cn(SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS, className)}
       data-sce-form-field="true"
       data-sce-form-field-density={density}
       data-disabled={disabled ? "true" : undefined}
@@ -68,7 +73,7 @@ export function SceFormField({
       >
         {label}
         {required ? (
-          <span className="ms-1 text-[var(--sce-color-status-error)]" aria-hidden>
+          <span className={cn("ms-1", SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS)} aria-hidden>
             *
           </span>
         ) : null}
@@ -96,7 +101,7 @@ export function SceFormField({
         <p
           id={errorId}
           role="alert"
-          className="text-xs font-medium text-[var(--sce-color-status-error)]"
+          className={SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS}
           data-sce-form-field-error="true"
         >
           {error}

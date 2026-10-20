@@ -7,7 +7,10 @@ import {
   SCE_SEARCH_FIELD_INPUT_WITH_CLEAR_CLASS,
   SCE_SEARCH_FIELD_MARKERS,
 } from "@/lib/design-system/sce-form-control-foundation";
-import { SCE_FORM_CONTROL_MICRO_UX_SEARCH_ICON_SIZE_CLASS } from "@/lib/design-system/sce-form-control-micro-ux";
+import {
+  SCE_FORM_CONTROL_MICRO_UX_ICON_ACTION_TOUCH_CLASS,
+  SCE_FORM_CONTROL_MICRO_UX_SEARCH_ICON_SIZE_CLASS,
+} from "@/lib/design-system/sce-form-control-micro-ux";
 
 export type SceSearchFieldProps = {
   value: string;
@@ -79,7 +82,10 @@ export function SceSearchField({
       {showClear && !disabled ? (
         <button
           type="button"
-          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-color-focus)]"
+          className={cn(
+            "absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-md text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-color-focus)]",
+            SCE_FORM_CONTROL_MICRO_UX_ICON_ACTION_TOUCH_CLASS,
+          )}
           aria-label="Suche löschen"
           data-testid={`${testId}-clear`}
           {...{ [SCE_SEARCH_FIELD_MARKERS.trailingClear]: "true" }}

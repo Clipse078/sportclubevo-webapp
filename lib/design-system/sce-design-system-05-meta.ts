@@ -8,9 +8,13 @@ import {
 } from "@/lib/design-system/sce-binary-checkbox-audit";
 import { SCE_FORM_FIELD_LAYERS } from "@/lib/design-system/sce-form-control-foundation";
 import {
+  SCE_FORM_CONTROL_MICRO_PATTERNS_CANONICALISED,
+  SCE_FORM_CONTROL_MICRO_PATTERNS_DEFERRED,
+  SCE_FORM_CONTROL_MICRO_STATE_MATRIX,
   SCE_FORM_CONTROL_MICRO_UX_DOC_MARKERS,
   SCE_FORM_CONTROL_MICRO_UX_GOVERNANCE,
 } from "@/lib/design-system/sce-form-control-micro-ux";
+import { SCE_MICRO_UX_GOVERNANCE } from "@/lib/design-system/sce-micro-ux-governance";
 
 export const SCE_DESIGN_SYSTEM_05_PACKAGE_KEY = "SCE-DESIGN-SYSTEM-05" as const;
 
@@ -66,6 +70,21 @@ export const SCE_DESIGN_SYSTEM_05_R1_MICRO_UX = {
   DS05_R1_MICRO_UX_STATUS: "READY_FOR_PO_REVIEW",
   /** Updated by guardrails after each R1 commit — PO review gate. */
   FEATURE_HEAD_FULL: "6b50bb21fe5618be499cd53862bee6a411d97d2a",
+} as const;
+
+/**
+ * === WORLD_CLASS_MICRO_UX === (DS-05 final report — PO addendum)
+ * Manual visual UAT remains PO-owned (`MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED`).
+ */
+export const SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX = {
+  ...SCE_MICRO_UX_GOVERNANCE,
+  MICRO_STATE_COVERAGE: "PASS",
+  MICRO_ALIGNMENT_CONSISTENCY: "PASS",
+  MICRO_RESPONSIVE_QUALITY: "PARTIAL_DS09_FINAL",
+  MICRO_ACCESSIBILITY: "PARTIAL_DS09_FINAL",
+  CONTROL_MICRO_STATES_AUDITED: SCE_FORM_CONTROL_MICRO_STATE_MATRIX,
+  MICRO_PATTERNS_CANONICALISED: SCE_FORM_CONTROL_MICRO_PATTERNS_CANONICALISED,
+  MICRO_PATTERNS_DEFERRED: SCE_FORM_CONTROL_MICRO_PATTERNS_DEFERRED,
 } as const;
 
 export type SceFormControlAuditClassification =

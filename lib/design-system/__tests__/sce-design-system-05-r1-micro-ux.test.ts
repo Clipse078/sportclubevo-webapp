@@ -4,12 +4,15 @@ import { describe, expect, it } from "vitest";
 import {
   SCE_DESIGN_SYSTEM_05_R1_MICRO_UX,
   SCE_DESIGN_SYSTEM_05_REPRESENTATIVE_ADOPTION,
+  SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX,
 } from "@/lib/design-system/sce-design-system-05-meta";
 import {
+  SCE_FORM_CONTROL_MICRO_STATE_MATRIX,
   SCE_FORM_CONTROL_MICRO_UX_DOC_MARKERS,
   SCE_FORM_CONTROL_MICRO_UX_GOVERNANCE,
   SCE_FORM_CONTROL_MICRO_UX_MARKERS,
 } from "@/lib/design-system/sce-form-control-micro-ux";
+import { SCE_MICRO_UX_GOVERNANCE } from "@/lib/design-system/sce-micro-ux-governance";
 
 const ROOT = process.cwd();
 
@@ -34,9 +37,27 @@ describe("SCE-DESIGN-SYSTEM-05 R1 micro-UX guardrails", () => {
   });
 
   it("locks world-class micro-UX governance flags", () => {
+    expect(SCE_MICRO_UX_GOVERNANCE.WORLD_CLASS_MICRO_UX_REQUIRED).toBe("YES");
+    expect(SCE_MICRO_UX_GOVERNANCE.LOCAL_MICRO_PATTERN_DRIFT_ALLOWED).toBe("NO");
     expect(SCE_FORM_CONTROL_MICRO_UX_GOVERNANCE.WORLD_CLASS_FORM_CONTROL_MICRO_UX).toBe("PASS");
     expect(SCE_DESIGN_SYSTEM_05_R1_MICRO_UX.WORLD_CLASS_FORM_CONTROL_MICRO_UX).toBe("PASS");
     expect(SCE_DESIGN_SYSTEM_05_R1_MICRO_UX.DS05_R1_MICRO_UX_STATUS).toBe("READY_FOR_PO_REVIEW");
+  });
+
+  it("reports WORLD_CLASS_MICRO_UX DS-05 closure fields", () => {
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.WORLD_CLASS_MICRO_UX_REQUIRED).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.MICRO_STATE_COVERAGE).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.MICRO_ALIGNMENT_CONSISTENCY).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.LOCAL_MICRO_PATTERN_DRIFT_ALLOWED).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.CONTROL_MICRO_STATES_AUDITED).toBe(
+      SCE_FORM_CONTROL_MICRO_STATE_MATRIX,
+    );
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.MICRO_PATTERNS_CANONICALISED.length).toBeGreaterThan(
+      3,
+    );
+    expect(SCE_DESIGN_SYSTEM_05_WORLD_CLASS_MICRO_UX.MICRO_PATTERNS_DEFERRED.length).toBeGreaterThan(0);
+    const roadmap = readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-05.md");
+    expect(roadmap).toContain("=== WORLD_CLASS_MICRO_UX ===");
   });
 
   it("records FEATURE_HEAD_FULL as the R1 implementation SHA (not a placeholder)", () => {
@@ -78,6 +99,15 @@ describe("SCE-DESIGN-SYSTEM-05 R1 micro-UX guardrails", () => {
     expect(time).not.toContain("text-rose-500");
     expect(date).toContain("SCE_FORM_CONTROL_MICRO_UX_REQUIRED_MARKER_CLASS");
     expect(time).toContain("SCE_FORM_CONTROL_MICRO_UX_FIELD_ERROR_CLASS");
+  });
+
+  it("consumes shared micro recipes on SwitchToggle and SceFormField", () => {
+    expect(readSrc("components/ui/SwitchToggle.tsx")).toContain(
+      "SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS",
+    );
+    expect(readSrc("components/sce/forms/SceFormField.tsx")).toContain(
+      "SCE_FORM_CONTROL_MICRO_UX_FIELD_STACK_CLASS",
+    );
   });
 
   it("aligns segmented control focus ring with foundation focus tokens", () => {
