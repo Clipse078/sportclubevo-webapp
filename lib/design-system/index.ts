@@ -23,3 +23,6 @@ export * from "./sce-design-system-07-meta";
 export * from "./sce-dense-ui-foundation";
 export * from "./sce-dense-ui-micro-ux";
 export * from "./sce-design-system-08-meta";
+export * from "./sce-responsive-accessibility-foundation";
+export * from "./sce-responsive-accessibility-micro-ux";
+export * from "./sce-design-system-09-meta";

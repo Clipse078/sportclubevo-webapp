@@ -92,13 +92,15 @@ export const SCE_ACTION_DIALOG_MICRO_PATTERNS_CANONICALISED = [
   "SCE_OVERFLOW_MENU_ITEM_CLASS",
   "SCE_OVERFLOW_MENU_ITEM_DESTRUCTIVE_CLASS",
   "SCE_ICON_BUTTON_TOUCH_TARGET",
+  "SCE_ICON_BUTTON_TOUCH_TARGET_CLASS",
+  "SCE_DIALOG_MOBILE_SHELL_CLASS",
   "data-sce-dialog-shell",
+  "data-sce-dialog-mobile-adaptive",
   "data-sce-composer-action",
   "data-sce-action-hierarchy",
 ] as const;
 
 export const SCE_ACTION_DIALOG_MICRO_PATTERNS_DEFERRED = [
-  "Full-screen mobile Dialog shell hardening (DS-09)",
   "Global menu surface token unification for all row menus (DS-10)",
   "Typed-name high-friction delete (domain-specific only)",
 ] as const;
@@ -140,5 +142,5 @@ export const SCE_OVERFLOW_MENU_ITEM_DESTRUCTIVE_CLASS = [
   SCE_FOUNDATION_FOCUS,
 ].join(" ");
 
-/** Minimum touch target for icon-only actions (matches Button size=icon height). */
+/** Desktop compact icon target; narrow viewports use SCE_ICON_BUTTON_TOUCH_TARGET_CLASS (44px). */
 export const SCE_ICON_BUTTON_TOUCH_TARGET_PX = 36;

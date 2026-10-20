@@ -75,4 +75,4 @@ export const SCE_DENSE_DATA_TABLE_CELL_CLASS =
   "px-3 py-3 align-middle sm:px-4 sm:py-3.5";
 
 export const SCE_DENSE_SORT_BUTTON_CLASS =
-  "inline-flex items-center gap-1 rounded-md px-0.5 py-0.5 -mx-0.5 text-inherit transition hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/40";
+  "inline-flex min-h-9 items-center gap-1 rounded-md px-1.5 py-1 -mx-0.5 text-inherit transition hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/40 max-md:min-h-11 max-md:px-2.5";

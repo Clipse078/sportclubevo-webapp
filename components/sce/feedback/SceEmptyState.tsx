@@ -99,7 +99,7 @@ export function SceEmptyState({
       >
         <p
           className={cn(
-            "font-semibold text-[var(--foreground)]",
+            "min-w-0 break-words font-semibold text-[var(--foreground)] [overflow-wrap:anywhere]",
             isCompact ? "text-[0.8125rem] sm:text-sm" : "text-sm",
             contained && layout === "compact-stacked" && "text-sm",
           )}
@@ -109,7 +109,7 @@ export function SceEmptyState({
         {description ? (
           <p
             className={cn(
-              "text-[0.8125rem] leading-relaxed text-[var(--text-2)]",
+              "min-w-0 break-words text-[0.8125rem] leading-relaxed text-[var(--text-2)] [overflow-wrap:anywhere]",
               isCockpit || (contained && layout === "compact-stacked")
                 ? "max-w-md text-left"
                 : isInline

@@ -49,6 +49,10 @@ export const SCE_DIALOG_WORKSPACE_PANEL = [
 export const SCE_DIALOG_PANEL_BASE =
   "relative z-10 flex w-full min-w-0 max-w-full flex-col rounded-2xl border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)] outline-none max-h-[var(--sce-dialog-max-height)]";
 
+/** DS-09 — narrow viewports use full dynamic viewport height (see SCE_DIALOG_MOBILE_SHELL_CLASS). */
+export const SCE_DIALOG_MOBILE_VIEWPORT_SHELL =
+  "max-md:max-h-[100dvh] max-md:h-[100dvh] max-md:rounded-none max-md:border-x-0";
+
 /** @deprecated Prefer {@link SCE_DIALOG_VARIANT_COMPACT} — kept for Dialog size="sm" mapping. */
 export const SCE_DIALOG_SIZE_SM = SCE_DIALOG_VARIANT_COMPACT;
 export const SCE_DIALOG_SIZE_MD =
@@ -63,8 +67,9 @@ export const SCE_DIALOG_BODY = "min-h-0 flex-1 overflow-y-auto px-6 py-5 text-sm
 export const SCE_DIALOG_FOOTER =
   "flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-[var(--border)] px-6 py-4";
 
-/** Main authenticated column — flex child must shrink. */
-export const SCE_APP_MAIN_COLUMN = "flex min-h-screen min-w-0 flex-1 flex-col";
+/** Main authenticated column — flex child must shrink; clip accidental horizontal overflow (DS-09). */
+export const SCE_APP_MAIN_COLUMN =
+  "flex min-h-screen min-w-0 max-w-full flex-1 flex-col overflow-x-clip";
 
 /** Desired workspace dialog cap (px) — mirrored in CSS as --sce-dialog-workspace-desired-max. */
 export const SCE_DIALOG_WORKSPACE_DESIRED_MAX_PX = 1160;

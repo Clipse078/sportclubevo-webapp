@@ -56,15 +56,15 @@ export function PageHeader({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)] leading-tight">
+      <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+        <h1 className="min-w-0 break-words text-2xl font-semibold leading-tight tracking-tight text-[var(--foreground)] [overflow-wrap:anywhere]">
           {title}
         </h1>
         {badge}
       </div>
 
       {description && (
-        <p className="mt-1 max-w-2xl text-sm text-[var(--text-2)] leading-relaxed">
+        <p className="mt-1 max-w-2xl break-words text-sm leading-relaxed text-[var(--text-2)] [overflow-wrap:anywhere]">
           {description}
         </p>
       )}

@@ -28,7 +28,7 @@ export function SceDenseSurface({
       data-sce-feedback-surface={feedbackSurfaceId}
       data-testid={testId}
       aria-label={ariaLabel}
-      className={cn(SCE_SURFACE_STANDARD_PANEL, "overflow-hidden p-0", className)}
+      className={cn(SCE_SURFACE_STANDARD_PANEL, "min-w-0 overflow-hidden p-0", className)}
     >
       {children}
     </section>

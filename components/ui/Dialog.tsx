@@ -16,8 +16,10 @@ import {
   SCE_DIALOG_VARIANT_FORM,
   SCE_DIALOG_VARIANT_STANDARD,
   SCE_DIALOG_VARIANT_WORKSPACE,
+  SCE_DIALOG_MOBILE_VIEWPORT_SHELL,
 } from "@/lib/shell/responsive-layout";
 import { SCE_DIALOG_CLOSE_BUTTON_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
+import { SCE_DIALOG_MOBILE_SHELL_CLASS } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 
 export type DialogSize = "sm" | "md" | "standard" | "lg" | "xl" | "workspace";
 
@@ -117,8 +119,14 @@ export function Dialog({
         aria-labelledby="sce-dialog-title"
         aria-describedby={description ? "sce-dialog-desc" : undefined}
         onKeyDown={handlePanelKeyDown}
-        className={cn(SCE_DIALOG_PANEL_BASE, sizeClass[size])}
+        className={cn(
+          SCE_DIALOG_PANEL_BASE,
+          SCE_DIALOG_MOBILE_VIEWPORT_SHELL,
+          SCE_DIALOG_MOBILE_SHELL_CLASS,
+          sizeClass[size],
+        )}
         data-sce-dialog-shell
+        data-sce-dialog-mobile-adaptive="true"
       >
         {/* Header */}
         <div className={SCE_DIALOG_HEADER}>
