@@ -4,11 +4,14 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-04` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-03` (**CLOSED / ACCEPTED / MERGED**, PR **#881**) |
-| **Status** | **CLOSED / ACCEPTED** (PR **#882** → **STAGE**; merge pending closure gates) |
-| **`DS04_STATUS`** | **CLOSED / ACCEPTED** |
-| **Branch** | `cursor/sce-design-system-04-cards-information-presentation` |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#882** → **STAGE**; merge `7990f37a991ce48ff3bf1c9f2fcee4b2fe737877`) |
+| **`DS04_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
+| **Branch** | `cursor/sce-design-system-04-cards-information-presentation` (merged) |
+| **Baseline STAGE (pre-merge)** | `c99a1e74510dbf01b2c0a97f0678b918d9140e40` |
 | **Accepted implementation HEAD (`FEATURE_HEAD`)** | `4057e5d2cc3766a2040f2de29acd3f2f7292d748` |
-| **PR** | **#882** |
+| **Closure commit** | `21b4c6e7d6e3e49a17a88d74f5d478c1ff11a836` |
+| **STAGE merge commit** | `7990f37a991ce48ff3bf1c9f2fcee4b2fe737877` |
+| **PR** | **#882** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-05`** — Forms & Controls |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace/navigation |
 
@@ -96,7 +99,7 @@ Standardize and evolve **information presentation within** accepted workspace su
 | `PROD` | **UNTOUCHED** |
 
 ```text
-DS04_STATUS = CLOSED / ACCEPTED
+DS04_STATUS = CLOSED / ACCEPTED / MERGED
 SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS
 NEXT_PACKAGE = SCE-DESIGN-SYSTEM-05 — Forms & Controls
 CARD_SYSTEM_PRODUCT_WIDE = YES

@@ -1,6 +1,6 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED** (PR **#882**)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
 > **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-05** — Forms & Controls
 
@@ -14,7 +14,7 @@
 
 **PO closure (DS-03):** `PO_WORKSPACE_SYSTEM_REVIEW = PASS` · `PO_BREADCRUMB_SYSTEM_REVIEW = PASS` · `PO_CONTEXT_TAB_SYSTEM_REVIEW = PASS` · `PO_NAVIGATION_ARCHITECTURE_REVIEW = PASS` · `DS03_STATUS = CLOSED / ACCEPTED / MERGED` (workspace / surface / navigation — representative adoption; DS-10 completes product-wide migration). See [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md).
 
-**PO closure (DS-04):** `PO_CARD_SYSTEM_REVIEW = PASS` · `PO_INFORMATION_PRESENTATION_REVIEW = PASS` · `PO_ACTIVITY_PRESENTATION_REVIEW = PASS` · `PO_INFOBOARD_P0_REVIEW = PASS` · `DS04_STATUS = CLOSED / ACCEPTED` (cards & information presentation — representative adoption; DS-10 completes legacy card inventory). See [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md).
+**PO closure (DS-04):** `PO_CARD_SYSTEM_REVIEW = PASS` · `PO_INFORMATION_PRESENTATION_REVIEW = PASS` · `PO_ACTIVITY_PRESENTATION_REVIEW = PASS` · `PO_INFOBOARD_P0_REVIEW = PASS` · `DS04_STATUS = CLOSED / ACCEPTED / MERGED` (PR **#882**; cards & information presentation — representative adoption; DS-10 completes legacy card inventory). See [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md).
 
 **DS-01 P0 audit carry-forward:** `P0_ACTIVITY_TAB_KEYBOARD_ACCESSIBILITY = CLOSED_BY_DS03` · `P0_INFOBOARD_MATCH_PRESENTATION = CLOSED_BY_DS04` · **`DS01_OPEN_P0_FINDINGS = 0`** (historical audit rows preserved in migration matrix).
 
