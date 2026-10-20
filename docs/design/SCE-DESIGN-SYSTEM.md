@@ -1,7 +1,22 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) (audit & architecture)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)
+
+---
+
+## SCE-DESIGN-SYSTEM-01 — current state vs target v1.0
+
+| | **Current state (STAGE baseline)** | **Target v1.0 (DS-02+ implementation)** |
+| --- | --- | --- |
+| **Scope** | Strong canonical cores (nav, activity cards, composer, context tabs, crest rules, tournament fixture presentation) coexisting with legacy admin surfaces, local empty states, and ~32 estimated binary-setting checkboxes | One enforced consumption model across modules with tokenised foundations and unified feedback primitives |
+| **Documentation** | This master doc + UI rollout standards + **DS-01** registry/matrix | Same master doc as single entry; registry rows marked **CANONICAL** only after adoption package lands |
+| **Migration** | [`SCE-UI-LEGACY-REGISTER.md`](./SCE-UI-LEGACY-REGISTER.md) (28 rows) + [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md) | DS-10 closes MUST-MIGRATE register entries |
+| **Compliance** | Package closure fields defined below — manual | DS-11 adds automated guardrails where practical |
+
+**DS-01 does not claim unfinished primitives are already canonical.** Refer to [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md) for proposed v1.0 registry and classification counts.
+
+**Terminology:** Use **SCE activity card family** (`SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard`, tournament fixture presentation layer). Do **not** introduce **“World Activity Card”** as a product or architecture concept in new Design System documentation (historical roadmap phrasing only).
 
 ---
 
@@ -435,17 +450,20 @@ Every future SCE package must declare **`SCE_DESIGN_SYSTEM_COMPLIANCE`** in its 
 
 | Field | Description |
 |-------|-------------|
-| Canonical primitives consumed | e.g. `SceContextTabs`, `SceWorkspaceSurface` |
+| **`SCE_DESIGN_SYSTEM_COMPLIANCE`** | **PASS** / **FAIL** (aggregate gate) |
+| **`CANONICAL_PRIMITIVES_USED`** | List (e.g. `SceContextTabs`, `SceWorkspaceSurface`) |
 | Canonical navigation pattern | Context tabs / route tabs / filters (justify if not context tabs) |
 | Canonical workspace pattern | Dark workspace + sections |
-| New UX primitives introduced | List + justification |
-| Responsive compliance | PASS / deferred with package id |
-| Accessibility compliance | PASS / deferred with package id |
-| Legacy / parallel pattern introduced | **YES/NO** |
+| **`NEW_PRIMITIVES_INTRODUCED`** | List of new UX primitives |
+| **`NEW_PRIMITIVES_JUSTIFICATION`** | ADR link or closure exception when new primitives are introduced |
+| **`RESPONSIVE_COMPLIANCE`** | PASS / deferred with package id |
+| **`ACCESSIBILITY_COMPLIANCE`** | PASS / deferred with package id |
+| **`PARALLEL_PATTERN_INTRODUCED`** | **YES/NO** |
 | **`BINARY_CONTROL_COMPLIANCE`** | **PASS** / **FAIL** |
 | **`NEW_BINARY_CHECKBOXES`** | Count; must be **0** unless an approved design-system exception exists |
 | **`CANONICAL_TOGGLES_USED`** | **YES** / **NO** / **NOT_APPLICABLE** (when package introduces no binary settings) |
 | **`MULTI_SELECTION_PATTERN`** | **canonical** / **not_applicable** / **exception_documented** |
+| **`WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE`** | **PASS** when surfaces consume the SCE activity card **family** (`SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard`, tournament fixture presentation) — no parallel card framework |
 
 **Target gate:** `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS`
 
