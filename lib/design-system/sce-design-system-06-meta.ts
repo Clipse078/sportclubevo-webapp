@@ -346,8 +346,14 @@ export const SCE_DESIGN_SYSTEM_06_REPRESENTATIVE_ADOPTION = {
   COMMUNICATION: "Communication hub primary/secondary → SceActionLink (canonical Button variants)",
   ADMIN: "UserRowActionsMenu → SceOverflowMenu + SceConfirmDialog destructive confirmations",
   TOURNAMENT_OPERATIONAL: "TurniereTournamentRecordDeleteDialog → SceConfirmDialog",
+  TOURNAMENT_CENTER: "TurniereManagementHeaderMenu SceOverflowMenu + SCE surface list panels (DS-06-R1)",
+  TOURNAMENT_PLANUNG:
+    "Actionable readiness panel + TournamentPlanungSetupDialog — existing HOME planner activation (DS-06-R1)",
+  PEOPLE_ACCESS: "TenantUsersSearchableList canonical Button + SCE KPI surfaces (DS-06-R1)",
   OVERFLOW_MENU: "SceOverflowMenu shared trigger/item tokens (UserRowActionsMenu reference)",
   DESTRUCTIVE_CONFIRMATION: "SceConfirmDialog — meaningful copy, danger confirm, safe cancel",
+  VISIBLE_PRODUCT_ADOPTION_REQUIRED: "YES",
+  VISIBLE_DESIGN_CONVERGENCE_REQUIRED: "YES",
 } as const;
 
 export const SCE_DESIGN_SYSTEM_06_NESTED_DIALOG_COUNTS = {

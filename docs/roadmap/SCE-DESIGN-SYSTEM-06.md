@@ -71,8 +71,14 @@ Establish **one canonical SCE action and dialog language** across SportClubEvo w
 | `DATABASE_MIGRATION_REQUIRED` | **NO** |
 | `PERSISTENT_TEST_DATA` | **0** |
 | `PROD` | **UNTOUCHED** |
+| `VISIBLE_PRODUCT_ADOPTION_REQUIRED` | **YES** (R1) |
+| `VISIBLE_DESIGN_CONVERGENCE_REQUIRED` | **YES** (R1) |
+| `MICRO_STATE_COVERAGE` | **PASS** (R1) |
+| `MICRO_ALIGNMENT_CONSISTENCY` | **PASS** (R1) |
 
-Automated guardrails: `lib/design-system/__tests__/sce-design-system-06-actions-dialogs.test.ts` plus DS-01–DS-05 regression suites as applicable.
+From **DS-06 onward**, every remaining Design System package must ship **(1)** canonical primitives where required, **(2)** representative real-product adoption, **(3)** visible visual convergence, **(4)** world-class micro-UX review, and **(5)** migration inventory for remaining legacy surfaces. A package must not report PASS when the application remains visually unchanged.
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-06-actions-dialogs.test.ts` · `lib/design-system/__tests__/sce-design-system-06-r1-visual-adoption.test.ts` plus DS-01–DS-05 regression suites as applicable.
 
 ---
 
@@ -111,4 +117,21 @@ Do **not** opportunistically migrate all 17 remaining binary-setting checkboxes 
 
 Product Owner review required before merge to **STAGE**. Visual UAT remains PO-owned.
 
-**Finish marker:** `SCE_DESIGN_SYSTEM_06_READY_FOR_PO_REVIEW`
+**Finish marker (base):** `SCE_DESIGN_SYSTEM_06_READY_FOR_PO_REVIEW`
+
+---
+
+## DS-06-R1 — visible adoption + existing tournament planner entry
+
+PO visual UAT follow-up on draft PR **#884** (same branch — no DS-07 start).
+
+| Surface | R1 adoption |
+| --- | --- |
+| Communication | Visual reference preserved — no regression |
+| Tournament Center | `SceOverflowMenu` header actions · SCE surface list panels |
+| Tournament detail / Planung | Actionable readiness panel · `TournamentPlanungSetupDialog` (TP01/02 reuse) |
+| Personen & Zugänge | Canonical `Button` primary · SCE KPI card surfaces |
+
+**Existing HOME tournament planner entry:** Planung incomplete state exposes **Turnierplanung einrichten** → embedded setup dialog → `persistTournamentPlannerFromComposer` (no tournament recreation, no parallel schedule truth).
+
+**R1 finish marker:** `SCE_DESIGN_SYSTEM_06_R1_READY_FOR_PO_REVIEW`

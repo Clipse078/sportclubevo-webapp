@@ -4,6 +4,9 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Search, UserPlus, UserX } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
+import { cn } from "@/lib/cn";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { EmptyState } from "@/components/ui/page/EmptyState";
@@ -225,9 +228,11 @@ export default function TenantUsersSearchableList({
             key={kpi.key}
             type="button"
             onClick={() => setStatusFilter((prev) => (prev === kpi.key ? "all" : kpi.key))}
-            className={`sce-kpi-card text-left transition ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue)]/40 ${
-              statusFilter === kpi.key ? "ring-2 ring-[var(--blue)]/30" : ""
-            }`}
+            className={cn(
+              "sce-kpi-card text-left transition ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue)]/40",
+              SCE_KPI_CARD_SURFACE,
+              statusFilter === kpi.key ? "ring-2 ring-[var(--blue)]/30" : "",
+            )}
           >
             <p className="sce-data-label">{kpi.label}</p>
             <p className={`mt-1.5 text-2xl font-bold ${kpi.color}`} style={{ fontFamily: "var(--font-display)" }}>
@@ -295,14 +300,16 @@ export default function TenantUsersSearchableList({
         />
 
         {canInvite && wizardConfig ? (
-          <button
+          <Button
             type="button"
             onClick={() => openWizardForPerson()}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--blue,#2563EB)] px-3 text-sm font-medium text-white sm:col-span-2 md:col-span-3 lg:col-span-1 lg:w-auto lg:justify-start"
+            className="h-9 w-full sm:col-span-2 md:col-span-3 lg:col-span-1 lg:w-auto"
+            data-sce-action-hierarchy="PRIMARY"
+            data-testid="people-access-add-person"
           >
-            <UserPlus className="h-4 w-4 shrink-0" />
+            <UserPlus className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
             Person hinzufügen
-          </button>
+          </Button>
         ) : null}
       </div>
 

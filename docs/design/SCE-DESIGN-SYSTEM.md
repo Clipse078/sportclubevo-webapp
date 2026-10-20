@@ -290,6 +290,8 @@ Full package doc: [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md).
 
 **DS-06 PO review locks:** `ACTION_SYSTEM_PRODUCT_WIDE = YES` · `DIALOG_SYSTEM_PRODUCT_WIDE = YES` · `ACTIVITY_COMPOSER_CANONICAL = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `MICRO_RESPONSIVE_QUALITY = PARTIAL_DS09_FINAL` · `MICRO_ACCESSIBILITY = PARTIAL_DS09_FINAL` · `UNEXPLAINED_LEGACY_ACTION_DIALOG_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO`.
 
+**DS-06-R1 visible adoption (PO UAT on PR #884):** `VISIBLE_PRODUCT_ADOPTION_REQUIRED = YES` · `VISIBLE_DESIGN_CONVERGENCE_REQUIRED = YES` · `WORLD_CLASS_MICRO_UX_REQUIRED = YES` · `MICRO_STATE_COVERAGE = PASS` · `MICRO_ALIGNMENT_CONSISTENCY = PASS` · `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED = NO` — representative convergence on Tournament Center, Tournament Planung, and Personen & Zugänge while preserving Communication as the visual reference. **Existing HOME tournaments** may activate Tournament Planner via Planung **Turnierplanung einrichten** (TP01/02 domain reuse; AWAY protected). Metadata: `lib/design-system/sce-design-system-06-r1-meta.ts`.
+
 ---
 
 ## Design principle
