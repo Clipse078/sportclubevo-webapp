@@ -32,7 +32,7 @@ export const SCE_DESIGN_SYSTEM_06_R1_PO_REVIEW = {
   BRANCH: "cursor/sce-design-system-06-actions-dialogs-composer",
   PR: "884",
   /** Updated by guardrails after R1 commits — PO review gate. */
-  FEATURE_HEAD_FULL: "PENDING_COMMIT",
+  FEATURE_HEAD_FULL: "2ec5cafbe4c5ea28a243f719934d302b44563ca3",
 } as const;
 
 export const SCE_DESIGN_SYSTEM_06_R1_GOVERNANCE = {
