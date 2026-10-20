@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import type { CommunicationPreferenceSettingDto } from "@/lib/communication/preferences/communication-preference-service";
 
 type Props = {
@@ -40,6 +41,29 @@ const CHANNEL_LABELS: Record<string, string> = {
   PUSH: "Push",
   EMAIL: "E-Mail",
 };
+
+function PreferenceChannelSwitch({
+  checked,
+  disabled,
+  ariaLabel,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  ariaLabel: string;
+  onChange: (enabled: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <SwitchThumb
+      id={id}
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+      aria-label={ariaLabel}
+    />
+  );
+}
 
 export default function CommunicationPreferencesSection({ initialPreferences }: Props) {
   const [preferences, setPreferences] = useState(initialPreferences);
@@ -147,19 +171,14 @@ export default function CommunicationPreferencesSection({ initialPreferences }: 
                                 Immer aktiv
                               </span>
                             ) : pref.userConfigurable ? (
-                              <label className="inline-flex cursor-pointer items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  className="h-4 w-4 rounded border-[var(--border)]"
-                                  checked={checked}
-                                  disabled={pending}
-                                  onChange={(e) =>
-                                    updatePreference(category, channel, e.target.checked)
-                                  }
-                                  aria-label={`${CATEGORY_LABELS[category]} ${CHANNEL_LABELS[channel]}`}
-                                />
-                                <span className="sr-only">{CHANNEL_LABELS[channel]}</span>
-                              </label>
+                              <PreferenceChannelSwitch
+                                checked={checked}
+                                disabled={pending}
+                                ariaLabel={`${CATEGORY_LABELS[category]} ${CHANNEL_LABELS[channel]}`}
+                                onChange={(enabled) =>
+                                  updatePreference(category, channel, enabled)
+                                }
+                              />
                             ) : (
                               <span className="text-xs text-[var(--muted)]">Nicht verfügbar</span>
                             )}

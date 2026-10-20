@@ -23,7 +23,8 @@
  *   <LayoutConfigPanel layout={cfg._layout} onChange={(l) => update({ _layout: l })} />
  */
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { Image as ImageIcon, X } from "lucide-react";
 import SharedMediaPicker from "@/components/admin/media/SharedMediaPicker";
 import type { MediaAssetListItem } from "@/lib/media/types";
@@ -527,6 +528,31 @@ function BackgroundSection({
 // Responsive section
 // ---------------------------------------------------------------------------
 
+function ResponsiveRuleRow({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] p-3 transition hover:border-[var(--brand-primary,#f97316)]">
+      <div className="min-w-0">
+        <label htmlFor={id} className="block cursor-pointer text-xs font-medium text-[var(--foreground)]">
+          {label}
+        </label>
+        <p className="text-[11px] text-[var(--muted)]">{hint}</p>
+      </div>
+      <SwitchThumb id={id} checked={checked} onChange={onChange} aria-label={label} />
+    </div>
+  );
+}
+
 function ResponsiveSection({
   value,
   onChange,
@@ -566,21 +592,13 @@ function ResponsiveSection({
       <SectionHeading>Responsiv</SectionHeading>
       <div className="mt-2 space-y-2">
         {rules.map((rule) => (
-          <label
+          <ResponsiveRuleRow
             key={rule.key}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] p-3 hover:border-[var(--brand-primary,#f97316)] transition"
-          >
-            <input
-              type="checkbox"
-              checked={value[rule.key] ?? false}
-              onChange={(e) => onChange({ ...value, [rule.key]: e.target.checked })}
-              className="mt-0.5 h-4 w-4 rounded border-[var(--border)] accent-orange-500"
-            />
-            <div>
-              <p className="text-xs font-medium text-[var(--foreground)]">{rule.label}</p>
-              <p className="text-[11px] text-[var(--muted)]">{rule.hint}</p>
-            </div>
-          </label>
+            label={rule.label}
+            hint={rule.hint}
+            checked={value[rule.key] ?? false}
+            onChange={(checked) => onChange({ ...value, [rule.key]: checked })}
+          />
         ))}
       </div>
     </div>

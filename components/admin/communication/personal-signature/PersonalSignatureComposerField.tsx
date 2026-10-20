@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 import { MAX_PERSONAL_SIGNATURE_LENGTH } from "@/lib/communication/personal-signature/personal-signature-constants";
 
@@ -15,7 +17,7 @@ type Props = {
 };
 
 export function PersonalSignatureComposerField({
-  checkboxId,
+  checkboxId: _checkboxId,
   enabled,
   onEnabledChange,
   signatureBody,
@@ -44,19 +46,22 @@ export function PersonalSignatureComposerField({
     );
   }
 
+  const switchId = useId();
+
   return (
     <div className="space-y-3">
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          id={checkboxId}
-          type="checkbox"
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5">
+        <label htmlFor={switchId} className="text-sm font-medium text-[var(--foreground)]">
+          Meine Signatur verwenden
+        </label>
+        <SwitchThumb
+          id={switchId}
           checked={enabled}
           disabled={disabled}
-          onChange={(event) => onEnabledChange(event.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-[var(--border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          onChange={onEnabledChange}
+          aria-label="Meine Signatur verwenden"
         />
-        <span>Meine Signatur verwenden</span>
-      </label>
+      </div>
       {showPreview && enabled ? (
         <section aria-labelledby={previewHeadingId} className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/60 p-3 text-sm">
           <h3 id={previewHeadingId} className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">

@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **READY FOR PO REVIEW** (draft PR)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-05** — Forms & Controls
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-06** — Actions / Dialogs / Composer (after DS-05 PO acceptance)
 
 ---
 
@@ -197,6 +197,35 @@ Automated guardrails: `lib/design-system/__tests__/sce-design-system-04-cards.te
 Full package doc: [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md).
 
 **DS-04 PO locks:** `CARD_SYSTEM_PRODUCT_WIDE = YES` · `ACTIVITY_CARD_FAMILY_CANONICAL = YES` · `WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE = PASS` · `INFOBOARD_MATCH_PRESENTATION_P0 = CLOSED` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `COMMUNICATION_IS_UNIVERSAL_CARD_TEMPLATE = NO` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES`.
+
+---
+
+## Forms & controls (SCE-DESIGN-SYSTEM-05)
+
+**`FORM_CONTROL_SYSTEM_PRODUCT_WIDE`:** **YES** · **`PARALLEL_PATTERN_INTRODUCED`:** **NO**
+
+One SCE form/control language — semantic controls for semantic jobs. Evolve existing `.fca-input` / `SwitchToggle` / Activity date-time primitives; do **not** introduce parallel form frameworks.
+
+| Concern | Contract |
+| --- | --- |
+| Form-field composition | `SceFormField` — LABEL · CONTROL · DESCRIPTION · VALIDATION · STATUS (`SCE_FORM_FIELD_LAYERS`) |
+| Text inputs / textarea | `SceTextInput` · `SceTextarea` → `.fca-input` / `.fca-textarea` in `app/globals.css` |
+| Search | `SceSearchField` (icon, placeholder, clear) — club/team selector wraps same primitive |
+| Select vs combobox | Bounded set → `SceToolbarSelect` / native select with tokens; discovery → `SceListSelectorPanel` / combobox popover |
+| Date / time | `SceActivityDateInput` · `SceActivityTimeInput` · `SceActivityDateTimeInput` — preserve smart activity semantics |
+| Binary ON/OFF settings | **`SwitchToggle` / `SwitchThumb` — Toggle First** (no new binary checkboxes) |
+| Multi-select / row select / consent | `SceCheckbox` — legitimate checkbox semantics only |
+| Single visible choice (small set) | `SceSegmentedControl` — modes/views, not fake tabs |
+| Validation | Field errors via `SceFormField`; form-level `ValidationSummary` — **UNVISITED ≠ ERROR** |
+| Disabled vs read-only | Disabled = non-interactive; read-only = visible but not editable (distinct styling) |
+| Density | DS-02 `COMFORTABLE` · `COMPACT` · `DENSE` on form fields |
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-05-FORM-CONTROL-INVENTORY.md`](./SCE-DESIGN-SYSTEM-05-FORM-CONTROL-INVENTORY.md) |
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.test.ts` · `lib/design-system/__tests__/sce-binary-control-standard.test.ts`.
+
+Full package doc: [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md).
+
+**DS-05 locks (pending PO):** `FORM_CONTROL_SYSTEM_PRODUCT_WIDE = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES` · `VALIDATION_SYSTEM_CANONICAL = YES` · `ACTIVITY_COMPOSER_ARCHITECTURE = PRESERVED` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES`.
 
 ---
 
