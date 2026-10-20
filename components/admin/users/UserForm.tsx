@@ -1,7 +1,9 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 
 type UserFormProps = {
   mode: "create" | "edit";
@@ -20,6 +22,7 @@ export default function UserForm({
   initialValues,
 }: UserFormProps) {
   const router = useRouter();
+  const activeSwitchId = useId();
 
   const [firstName, setFirstName] = useState(initialValues?.firstName ?? "");
   const [lastName, setLastName] = useState(initialValues?.lastName ?? "");
@@ -114,13 +117,17 @@ export default function UserForm({
           />
         </label>
       ) : (
-        <label className="fca-toggle-row">
+        <label
+          htmlFor={activeSwitchId}
+          className="fca-toggle-row"
+          {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+        >
           <span className="text-sm text-slate-700">Benutzer ist aktiv</span>
-          <input
-            type="checkbox"
+          <SwitchThumb
+            id={activeSwitchId}
             checked={isActive}
-            onChange={(event) => setIsActive(event.target.checked)}
-            className="fca-toggle-checkbox"
+            onChange={setIsActive}
+            aria-label="Benutzer ist aktiv"
           />
         </label>
       )}

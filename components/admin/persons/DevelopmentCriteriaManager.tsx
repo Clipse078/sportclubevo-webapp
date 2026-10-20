@@ -16,7 +16,9 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
  *   - Reorder with up/down controls
  */
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -93,6 +95,9 @@ function CriterionForm({
   onSave: (values: CriterionFormValues) => Promise<void>;
   onCancel: () => void;
 }) {
+  const customLabelsSwitchId = useId();
+  const teamBenchmarkSwitchId = useId();
+  const jahrgangBenchmarkSwitchId = useId();
   const [values, setValues] = useState<CriterionFormValues>(defaultFormValues(initial));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,15 +181,23 @@ function CriterionForm({
 
       {values.ratingMode === RATING_MODES.QUALITATIVE_5 ? (
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-[11px] font-medium text-[var(--foreground)]">
-            <input
-              type="checkbox"
+          <div
+            className="flex items-center justify-between gap-3"
+            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+          >
+            <label
+              htmlFor={customLabelsSwitchId}
+              className="text-[11px] font-medium text-[var(--foreground)]"
+            >
+              Eigene Stufen-Bezeichnungen
+            </label>
+            <SwitchThumb
+              id={customLabelsSwitchId}
               checked={values.customLabels}
-              onChange={(e) => set("customLabels", e.target.checked)}
-              className="rounded"
+              onChange={(checked) => set("customLabels", checked)}
+              aria-label="Eigene Stufen-Bezeichnungen"
             />
-            Eigene Stufen-Bezeichnungen
-          </label>
+          </div>
           {values.customLabels ? (
             <div className="grid grid-cols-5 gap-1">
               {([1, 2, 3, 4, 5] as const).map((n) => {
@@ -210,25 +223,38 @@ function CriterionForm({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-4">
-        <label className="flex items-center gap-2 text-[11px] text-[var(--foreground)]">
-          <input
-            type="checkbox"
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
+        <div
+          className="flex min-w-[12rem] flex-1 items-center justify-between gap-3"
+          {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+        >
+          <label htmlFor={teamBenchmarkSwitchId} className="text-[11px] text-[var(--foreground)]">
+            Team-Benchmark anzeigen
+          </label>
+          <SwitchThumb
+            id={teamBenchmarkSwitchId}
             checked={values.showTeamBenchmark}
-            onChange={(e) => set("showTeamBenchmark", e.target.checked)}
-            className="rounded"
+            onChange={(checked) => set("showTeamBenchmark", checked)}
+            aria-label="Team-Benchmark anzeigen"
           />
-          Team-Benchmark anzeigen
-        </label>
-        <label className="flex items-center gap-2 text-[11px] text-[var(--foreground)]">
-          <input
-            type="checkbox"
+        </div>
+        <div
+          className="flex min-w-[12rem] flex-1 items-center justify-between gap-3"
+          {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+        >
+          <label
+            htmlFor={jahrgangBenchmarkSwitchId}
+            className="text-[11px] text-[var(--foreground)]"
+          >
+            Jahrgang-Benchmark anzeigen
+          </label>
+          <SwitchThumb
+            id={jahrgangBenchmarkSwitchId}
             checked={values.showJahrgangBenchmark}
-            onChange={(e) => set("showJahrgangBenchmark", e.target.checked)}
-            className="rounded"
+            onChange={(checked) => set("showJahrgangBenchmark", checked)}
+            aria-label="Jahrgang-Benchmark anzeigen"
           />
-          Jahrgang-Benchmark anzeigen
-        </label>
+        </div>
       </div>
 
       {error ? (

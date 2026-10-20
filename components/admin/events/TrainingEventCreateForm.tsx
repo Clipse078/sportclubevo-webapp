@@ -1,6 +1,8 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import { useRouter } from "next/navigation";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
 
@@ -60,6 +62,7 @@ function formatWeekdayLabel(startAt: string) {
 
 export default function TrainingEventCreateForm() {
   const router = useRouter();
+  const recurrenceSwitchId = useId();
 
   const [seasonId, setSeasonId] = useState("");
   const [teamId, setTeamId] = useState("");
@@ -390,13 +393,17 @@ export default function TrainingEventCreateForm() {
                 </p>
               </div>
 
-              <label className="fca-toggle-row">
+              <label
+                htmlFor={recurrenceSwitchId}
+                className="fca-toggle-row"
+                {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+              >
                 <span className="fca-label">Serientermin</span>
-                <input
-                  type="checkbox"
+                <SwitchThumb
+                  id={recurrenceSwitchId}
                   checked={isRecurring}
-                  onChange={(event) => setIsRecurring(event.target.checked)}
-                  className="fca-toggle-checkbox"
+                  onChange={setIsRecurring}
+                  aria-label="Serientermin"
                 />
               </label>
             </div>
@@ -492,14 +499,20 @@ function Toggle({
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
+  const switchId = useId();
   return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
+    <div
+      className="fca-toggle-row"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+    >
+      <label htmlFor={switchId} className="fca-label cursor-pointer">
+        {label}
+      </label>
+      <SwitchThumb
+        id={switchId}
         checked={value}
-        onChange={(event) => onChange(event.target.checked)}
-        className="fca-toggle-checkbox"
+        onChange={onChange}
+        aria-label={label}
       />
     </div>
   );

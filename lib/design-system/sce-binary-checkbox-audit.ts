@@ -115,8 +115,8 @@ export const SCE_BINARY_CHECKBOX_AUDIT_SAMPLE: SceBinaryCheckboxAuditRow[] = [
   {
     file: "components/admin/events/TrainingEventCreateForm.tsx",
     semantics: "A_BINARY_SETTING_ON_OFF",
-    ds05Action: "DEFER_DS10",
-    notes: "Legacy create forms — migrate with DS-10 form sweep",
+    ds05Action: "MIGRATED_DS05",
+    notes: "Serientermin + publication flags → SwitchThumb (DS-10 sweep)",
   },
   {
     file: "components/admin/communication/campaign/CampaignComposer.tsx",

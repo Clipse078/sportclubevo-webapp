@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
 
 export type LegalEntityOption = { key: string; label: string };
 
@@ -29,6 +30,7 @@ export default function NativeBillingCreateBankAccountForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDefault, setIsDefault] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +58,7 @@ export default function NativeBillingCreateBankAccountForm({
           creditorPostalCode: String(form.get("creditorPostalCode") ?? ""),
           creditorCity: String(form.get("creditorCity") ?? ""),
           creditorCountryCode: String(form.get("creditorCountryCode") ?? "CH"),
-          isDefault: form.get("isDefault") === "on",
+          isDefault,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -65,6 +67,7 @@ export default function NativeBillingCreateBankAccountForm({
       }
       router.refresh();
       formElement.reset();
+      setIsDefault(false);
       onSuccess?.();
     } catch (e) {
       setError(clientSafeBankAccountFormError(e));
@@ -118,10 +121,13 @@ export default function NativeBillingCreateBankAccountForm({
         <span className="font-medium">QRR-Präfix (optional, numerisch)</span>
         <input name="qrrReferencePrefix" className="fca-input w-full" inputMode="numeric" />
       </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="isDefault" />
-        <span>Standardkonto</span>
-      </label>
+      <SwitchToggle
+        id="bank-account-is-default"
+        label="Standardkonto"
+        checked={isDefault}
+        onChange={setIsDefault}
+        disabled={loading}
+      />
       <fieldset className="space-y-2 text-sm">
         <legend className="font-medium">Gläubiger (strukturiert)</legend>
         <input name="creditorName" required placeholder="Name" className="fca-input w-full" />

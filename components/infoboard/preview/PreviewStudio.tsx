@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import {
@@ -36,6 +38,7 @@ export function PreviewStudio({
   initialStudio,
 }: PreviewStudioProps) {
   const router = useRouter();
+  const autoRotateSwitchId = useId();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [isPending, startTransition] = useTransition();
   const [screen, setScreen] = useState(initialScreen);
@@ -323,16 +326,24 @@ export function PreviewStudio({
           <span className="text-xs font-medium text-[var(--muted)]">
             {pageCount} {pageCount === 1 ? "Seite" : "Seiten"}
           </span>
-          <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--foreground)]">
-            <input
-              type="checkbox"
+          <div
+            className="inline-flex items-center gap-3"
+            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+          >
+            <label
+              htmlFor={autoRotateSwitchId}
+              className="cursor-pointer text-sm font-medium text-[var(--foreground)]"
+            >
+              Auto-Rotation
+            </label>
+            <SwitchThumb
+              id={autoRotateSwitchId}
               checked={autoRotate}
               disabled={screen !== "1" || pageCount <= 1}
-              onChange={(event) => setAutoRotate(event.target.checked)}
-              className="h-4 w-4 accent-[var(--sce-primary)]"
+              onChange={setAutoRotate}
+              aria-label="Auto-Rotation"
             />
-            Auto-Rotation
-          </label>
+          </div>
         </div>
       </div>
     </section>

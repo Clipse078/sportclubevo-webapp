@@ -13,6 +13,8 @@
  */
 
 import { AnnouncementTicker } from "@/components/infoboard/screen1/AnnouncementTicker";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import type { AnnouncementWidgetSettings } from "@/lib/infoboard/widget-types";
 
 type AnnouncementWidgetPanelProps = {
@@ -176,32 +178,18 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label htmlFor={id} className="flex items-center gap-3 cursor-pointer group">
-      <div className="relative shrink-0">
-        <input
-          type="checkbox"
-          id={id}
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          className="sr-only"
-        />
-        <div
-          aria-hidden="true"
-          className={`h-5 w-9 rounded-full transition-colors ${
-            checked ? "bg-[var(--sce-primary)]" : "bg-[var(--border)]"
-          }`}
-        >
-          <div
-            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-              checked ? "translate-x-4" : "translate-x-0.5"
-            }`}
-          />
-        </div>
-      </div>
-      <span className="text-[0.82rem] text-[var(--foreground)] select-none group-hover:text-[var(--sce-primary)] transition-colors">
+    <div
+      className="flex items-center justify-between gap-3"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+    >
+      <label
+        htmlFor={id}
+        className="cursor-pointer text-[0.82rem] text-[var(--foreground)] transition-colors select-none group-hover:text-[var(--sce-primary)]"
+      >
         {label}
-      </span>
-    </label>
+      </label>
+      <SwitchThumb id={id} checked={checked} onChange={onChange} aria-label={label} />
+    </div>
   );
 }
 

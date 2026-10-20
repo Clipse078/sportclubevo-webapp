@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useId } from "react";
 import { useRouter } from "next/navigation";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import type { TurniereFilterOption } from "@/lib/tournaments/management-view";
 import { TOURNAMENT_STATUS_LABELS } from "@/lib/tournaments/presentation";
 import type { TournamentStatus } from "@/lib/tournaments/types";
@@ -77,6 +80,8 @@ function SelectFilter({
 
 export default function TurniereManagementFilterRail(props: Props) {
   const router = useRouter();
+  const ownOnlySwitchId = useId();
+  const publicOnlySwitchId = useId();
   const {
     resetHref,
     categoryFilter,
@@ -161,28 +166,36 @@ export default function TurniereManagementFilterRail(props: Props) {
         />
 
         <div className="space-y-2 border-t border-[var(--border)]/60 pt-2">
-          <label className="flex items-center gap-2 text-sm text-[var(--text-2)]">
-            <input
-              type="checkbox"
+          <div
+            className="flex items-center justify-between gap-3"
+            data-testid="turniere-filter-own-only"
+            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+          >
+            <label htmlFor={ownOnlySwitchId} className="text-sm text-[var(--text-2)]">
+              Nur eigene Turniere
+            </label>
+            <SwitchThumb
+              id={ownOnlySwitchId}
               checked={ownOnly}
-              onChange={() => {
-                router.push(buildOwnOnlyHref(!ownOnly));
-              }}
-              data-testid="turniere-filter-own-only"
+              onChange={(checked) => router.push(buildOwnOnlyHref(checked))}
+              aria-label="Nur eigene Turniere"
             />
-            Nur eigene Turniere
-          </label>
-          <label className="flex items-center gap-2 text-sm text-[var(--text-2)]">
-            <input
-              type="checkbox"
+          </div>
+          <div
+            className="flex items-center justify-between gap-3"
+            data-testid="turniere-filter-public-only"
+            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+          >
+            <label htmlFor={publicOnlySwitchId} className="text-sm text-[var(--text-2)]">
+              Nur öffentliche Turniere
+            </label>
+            <SwitchThumb
+              id={publicOnlySwitchId}
               checked={publicOnly}
-              onChange={() => {
-                router.push(buildPublicOnlyHref(!publicOnly));
-              }}
-              data-testid="turniere-filter-public-only"
+              onChange={(checked) => router.push(buildPublicOnlyHref(checked))}
+              aria-label="Nur öffentliche Turniere"
             />
-            Nur öffentliche Turniere
-          </label>
+          </div>
         </div>
       </div>
     </section>
