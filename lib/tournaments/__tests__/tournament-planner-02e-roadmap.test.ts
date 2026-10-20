@@ -14,6 +14,7 @@ describe("SCE-TOURNAMENT-PLANNER-02E roadmap", () => {
     expect(doc).toMatch(/READY FOR PO UAT/);
     expect(doc).toMatch(/PARALLEL_MATCH_CARD_PATTERN_INTRODUCED = NO/);
     expect(doc).toMatch(/02E-R1|R1.*world-class|canonical VS/i);
+    expect(doc).toMatch(/02E-R2|FINAL VISUAL DENSITY & GRID POLISH/i);
     expect(parent).toMatch(/02E.*READY FOR PO UAT/);
   });
 });
