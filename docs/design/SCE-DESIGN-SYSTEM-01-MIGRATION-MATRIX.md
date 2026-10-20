@@ -20,7 +20,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | Wochenplaner | Week planner | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-08 | `WochenplanEventCard`; keep **DENSE** tier |
 | Planning Hub | Planning hub calendar | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-08 | `PlanningHubActivityBlock`; operational density |
 | Tournament Planner | Planung board, matrices | **DOMAIN_SPECIFIC_BUT_ALIGNED** | DS-08 | Preserve grids, DnD, locks — SCE language only |
-| Communication | `/dashboard/communication`, email-sender | **ALREADY_ALIGNED** | DS-05, DS-07 | **Primary visual reference** — tokenise Button/readiness |
+| Communication | `/dashboard/communication`, email-sender | **ALREADY_ALIGNED** | DS-05, DS-06, DS-07 | **Primary visual reference** — hub CTAs → `SceActionLink` (DS-06) |
 | Publishing | Website, homepage builder | **ALIGNED_WITH_REFINEMENT** | DS-07, DS-08 | Empty-state duplication |
 | Admin | Settings, seasons, governance | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-07 | Mixed legacy forms |
 | Personen & Zugänge | People directory | **ALIGNED_WITH_REFINEMENT** | DS-07, DS-08 | **COMPACT/DENSE** — not hub whitespace |

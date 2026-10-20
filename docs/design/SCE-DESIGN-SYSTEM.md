@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **READY FOR PO REVIEW**  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-06** — Actions, Dialogs & Composer
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-07** — Status, Feedback & System States
 
 ---
 
@@ -259,6 +259,36 @@ Automated guardrails: `lib/design-system/__tests__/sce-design-system-05-forms.te
 Full package doc: [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md).
 
 **DS-05 PO locks:** `FORM_CONTROL_SYSTEM_PRODUCT_WIDE = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `CANONICAL_TOGGLES_USED = YES` · `VALIDATION_SYSTEM_CANONICAL = YES` · `DISABLED_READ_ONLY_SEMANTICS_CANONICAL = YES` · `ACTIVITY_COMPOSER_ARCHITECTURE = PRESERVED` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `WORLD_CLASS_FORM_CONTROL_MICRO_UX = PASS` · `MICRO_RESPONSIVE_QUALITY = PARTIAL_DS09_FINAL` · `MICRO_ACCESSIBILITY = PARTIAL_DS09_FINAL` · `UNEXPLAINED_MICRO_PATTERN_DRIFT_ALLOWED_AT_DS10_CLOSURE = NO`.
+
+---
+
+## Actions, dialogs & composer (SCE-DESIGN-SYSTEM-06)
+
+**`ACTION_SYSTEM_PRODUCT_WIDE`:** **YES** · **`DIALOG_SYSTEM_PRODUCT_WIDE`:** **YES** · **`ACTIVITY_COMPOSER_CANONICAL`:** **YES** · **`PARALLEL_MODAL_SYSTEM`:** **NO**
+
+One SCE action language and one dialog architecture — evolve `SceModalOverlay` / `Dialog` / `SceActivityComposer`; do **not** introduce a second modal stack.
+
+| Concern | Contract |
+| --- | --- |
+| Action hierarchy | `SCE_ACTION_HIERARCHY` — PRIMARY · SECONDARY · TERTIARY/TEXT · DESTRUCTIVE · ICON ACTION (`lib/design-system/sce-action-dialog-foundation.ts`) |
+| Primary / secondary CTAs | `Button` · `SceActionLink` — **one primary per local context**; restrained orange accent |
+| Icon actions | `SceIconButton` — required `aria-label`, canonical touch target |
+| Workspace actions | `SceWorkspaceHeader` · `PageActions` |
+| Overflow menus | `SceOverflowMenu` + shared item/trigger tokens |
+| Dialog shell | `Dialog` on `SceModalOverlay` · `useSceModalDialog` focus trap |
+| Confirmations | `SceConfirmDialog` — meaningful copy, safe cancel, destructive hierarchy |
+| Composer | `SceActivityComposer` — overlay/page/mobile, guided Zurück/Weiter, dirty guard, `secondaryPanel` |
+| Dirty guard | `SceContextDirtyGuardProvider` · `confirmNavigationIfDirty` |
+| Nested modals | **Avoid modal → modal** — inventory in DS-06; elevated `stackLayer` exceptions only |
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-06-ACTION-DIALOG-INVENTORY.md`](./SCE-DESIGN-SYSTEM-06-ACTION-DIALOG-INVENTORY.md) |
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-06-actions-dialogs.test.ts`.
+
+**SCE_ACTION_DIALOG_MICRO_UX:** `WORLD_CLASS_ACTION_DIALOG_MICRO_UX = PASS` · `ACTION_HIERARCHY_NOT_COLOUR_ALONE = YES` · `ONE_PRIMARY_PER_CONTEXT = YES` — shared dialog close/footer tokens, overflow menu recipes, composer footer `data-sce-composer-action` markers. Contract: `lib/design-system/sce-action-dialog-micro-ux.ts`.
+
+Full package doc: [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md).
+
+**DS-06 PO review locks:** `ACTION_SYSTEM_PRODUCT_WIDE = YES` · `DIALOG_SYSTEM_PRODUCT_WIDE = YES` · `ACTIVITY_COMPOSER_CANONICAL = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `MICRO_RESPONSIVE_QUALITY = PARTIAL_DS09_FINAL` · `MICRO_ACCESSIBILITY = PARTIAL_DS09_FINAL` · `UNEXPLAINED_LEGACY_ACTION_DIALOG_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO`.
 
 ---
 
