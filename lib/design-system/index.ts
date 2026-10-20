@@ -20,3 +20,6 @@ export * from "./sce-feedback-status-foundation";
 export * from "./sce-feedback-status-micro-ux";
 export * from "./sce-actionable-error-foundation";
 export * from "./sce-design-system-07-meta";
+export * from "./sce-dense-ui-foundation";
+export * from "./sce-dense-ui-micro-ux";
+export * from "./sce-design-system-08-meta";

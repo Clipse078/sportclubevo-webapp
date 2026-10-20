@@ -2,7 +2,7 @@
 
 > **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **CLOSED / ACCEPTED / MERGED** (PR **#884**) · [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md) — **CLOSED / ACCEPTED / MERGED** (PR **#885**)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-08** — Tables, Lists & Dense UI
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-09** — Responsive & Accessibility Hardening · **In review:** **SCE-DESIGN-SYSTEM-08** — Tables, Lists & Dense UI (draft)
 
 ---
 
@@ -322,6 +322,33 @@ Full package doc: [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md).
 **Representative adoption:** Email Sender readiness → `SceReadinessStatusPanel` · Tournament Planung readiness/planning feedback · Personen & Zugänge feedback layer + empty language (dense table → **DS-08**) · Planning Hub + Mein Programm empty language · Planung setup dialog load error UX. DS-10 completes product-wide empty/loading/error sweep per [`SCE-DESIGN-SYSTEM-07-FEEDBACK-INVENTORY.md`](./SCE-DESIGN-SYSTEM-07-FEEDBACK-INVENTORY.md).
 
 **DS-07-R1 (accepted on PR #885):** contained empty states in list surfaces · readiness visual DNA without local restyling · `people-access-list` skeleton geometry · explicit DS-08 handoff ([`SCE-DESIGN-SYSTEM-07-DS08-HANDOFF.md`](./SCE-DESIGN-SYSTEM-07-DS08-HANDOFF.md)). Metadata: `sce-design-system-07-meta.ts` · `sce-design-system-07-r1-meta.ts`.
+
+---
+
+## Tables, lists & dense UI (SCE-DESIGN-SYSTEM-08)
+
+**`DENSE_UI_SYSTEM_PRODUCT_WIDE`:** **YES** · **`TABLE_SYSTEM_CANONICAL`:** **YES** · **`LIST_SYSTEM_CANONICAL`:** **YES** · **`DENSE_SURFACE_CANONICAL`:** **YES**
+
+One dense-information language for administrative tables, entity lists, and operational scanning — **not** card soup, **not** forced identical tables everywhere.
+
+| Concern | Contract |
+| --- | --- |
+| Dense surface | `SceDenseSurface` — toolbar → header → rows → DS-07 states in same region |
+| Tabular data | `SceDataTable` when column relationships matter |
+| Entity lists | `SceDenseGridRow` + `SceEntityIdentity` when hierarchy/identity scanning matters |
+| Toolbar | `SceDenseToolbar` + DS-05 `SceSearchField` / filters |
+| Row actions | DS-06 `SceIconButton` · `SceOverflowMenu` · `SceActionLink` |
+| Status | Existing `AdminStatusPill` / Badge — no new pill family |
+| Selection | Checkboxes only for legitimate multi-select + bulk actions |
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-08-DENSE-UI-INVENTORY.md`](./SCE-DESIGN-SYSTEM-08-DENSE-UI-INVENTORY.md) |
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-08-dense-ui.test.ts` · `components/sce/dense/__tests__/SceDensePrimitives.test.tsx`.
+
+Full package doc: [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md).
+
+**DS-08 draft locks:** `DENSE_UI_SYSTEM_PRODUCT_WIDE = YES` · `TABLE_SYSTEM_CANONICAL = YES` · `LIST_SYSTEM_CANONICAL = YES` · `DENSE_SURFACE_CANONICAL = YES` · `ROW_ACTION_SYSTEM_CANONICAL = YES` · `DENSE_FILTER_TOOLBAR_CANONICAL = YES` · `TABLE_WHEN_COLUMN_RELATIONSHIPS_MATTER = YES` · `LIST_WHEN_ENTITY_HIERARCHY_MATTERS = YES` · `CARD_GRID_AS_DEFAULT_DENSE_UI = NO` · `CARD_SOUP_ALLOWED = NO` · `VISIBLE_PRODUCT_ADOPTION_REQUIRED = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS`.
+
+**Representative adoption:** Personen & Zugänge dense grid → `PeopleAccessDenseUserRow` · Roles overview → `TenantRolesOverviewDenseTable` · Billing table bridge → `BillingDataTable` / `SceDataTable`. DS-10 completes product-wide dense migration.
 
 ---
 

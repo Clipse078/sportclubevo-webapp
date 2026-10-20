@@ -1,5 +1,14 @@
+/**
+ * DS-08 bridge — billing tables delegate to canonical SceDataTable primitives.
+ */
 import type { ReactNode } from "react";
-import { cn } from "@/lib/cn";
+import {
+  SceDataTable,
+  SceDataTableCell,
+  SceDataTableHead,
+  SceDataTableHeaderCell,
+  SceDataTableRow,
+} from "@/components/sce/dense";
 
 type Props = {
   children: ReactNode;
@@ -8,24 +17,14 @@ type Props = {
 
 export default function BillingDataTableShell({ children, className }: Props) {
   return (
-    <div
-      className={cn(
-        "overflow-x-auto rounded-[var(--radius-lg)]",
-        "ring-1 ring-[color-mix(in_srgb,var(--border)_55%,transparent)]",
-        className,
-      )}
-    >
-      <table className="min-w-full text-sm">{children}</table>
-    </div>
+    <SceDataTable className={className} data-testid="billing-data-table">
+      {children}
+    </SceDataTable>
   );
 }
 
 export function BillingDataTableHead({ children }: { children: ReactNode }) {
-  return (
-    <thead className="bg-[color-mix(in_srgb,var(--muted)_14%,transparent)] text-left text-xs uppercase tracking-wide text-[var(--text-2)]">
-      {children}
-    </thead>
-  );
+  return <SceDataTableHead>{children}</SceDataTableHead>;
 }
 
 export function BillingDataTableRow({
@@ -38,29 +37,9 @@ export function BillingDataTableRow({
   onClick?: () => void;
 }) {
   return (
-    <tr
-      className={cn(
-        "border-t border-[color-mix(in_srgb,var(--border)_45%,transparent)]",
-        "transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
-        "focus-within:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
-        className,
-      )}
-      onClick={onClick}
-      onKeyDown={
-        onClick
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
-      tabIndex={onClick ? 0 : undefined}
-      role={onClick ? "link" : undefined}
-    >
+    <SceDataTableRow className={className} onClick={onClick}>
       {children}
-    </tr>
+    </SceDataTableRow>
   );
 }
 
@@ -74,15 +53,9 @@ export function BillingDataTableCell({
   align?: "left" | "right";
 }) {
   return (
-    <td
-      className={cn(
-        "px-3 py-3.5 align-middle sm:px-4 sm:py-4",
-        align === "right" && "text-right tabular-nums",
-        className,
-      )}
-    >
+    <SceDataTableCell className={className} align={align}>
       {children}
-    </td>
+    </SceDataTableCell>
   );
 }
 
@@ -96,14 +69,8 @@ export function BillingDataTableHeaderCell({
   align?: "left" | "right";
 }) {
   return (
-    <th
-      className={cn(
-        "px-3 py-2.5 font-medium sm:px-4 sm:py-3",
-        align === "right" && "text-right",
-        className,
-      )}
-    >
+    <SceDataTableHeaderCell className={className} align={align}>
       {children}
-    </th>
+    </SceDataTableHeaderCell>
   );
 }

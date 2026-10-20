@@ -24,3 +24,5 @@ DS-07-R1 refined **feedback-only** layers inside the existing list workspace:
 | Metadata density | Secondary lines, scope summaries |
 
 Automated classification: `SCE_DESIGN_SYSTEM_07_DS08_HANDOFF_DEBT` in `lib/design-system/sce-design-system-07-r1-meta.ts`.
+
+**DS-08 consumption:** representative dense list redesign on Personen & Zugänge + canonical primitives in `components/sce/dense/*`. Full product-wide migration remains **DS-10**.
