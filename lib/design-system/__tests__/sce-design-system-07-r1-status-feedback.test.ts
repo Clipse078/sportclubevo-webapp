@@ -21,14 +21,14 @@ function readSrc(relativePath: string): string {
 }
 
 describe("SCE-DESIGN-SYSTEM-07-R1 visual convergence guardrails", () => {
-  it("records PO R1 findings and draft PR state", () => {
+  it("records PO R1 acceptance and closure state", () => {
     expect(SCE_DESIGN_SYSTEM_07_R1_PO_FINDINGS.DS07_INITIAL_VISUAL_REVIEW).toBe("PARTIAL_PASS");
     expect(SCE_DESIGN_SYSTEM_07_R1_PO_FINDINGS.DS07_R1_REQUIRED).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_07_R1_PO_FINDINGS.DS07_R1_VISUAL_UAT).toBe("PASS");
     expect(SCE_DESIGN_SYSTEM_07_R1_PO_REVIEW.PR).toBe("885");
-    expect(SCE_DESIGN_SYSTEM_07_R1_PO_REVIEW.PR_STATE).toBe("DRAFT");
-    expect(SCE_DESIGN_SYSTEM_07_R1_PO_REVIEW.R1_FEATURE_HEAD_FULL).toMatch(
-      /^[0-9a-f]{40}$|PENDING_COMMIT/,
-    );
+    expect(SCE_DESIGN_SYSTEM_07_R1_PO_REVIEW.DS07_R1_STATUS).toBe("CLOSED / ACCEPTED / MERGED");
+    expect(SCE_DESIGN_SYSTEM_07_R1_PO_REVIEW.PO_DS07_R1_VISUAL_UAT).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_07_R1_PO_REVIEW.R1_FEATURE_HEAD_FULL).toMatch(/^[0-9a-f]{40}$/);
   });
 
   it("locks empty-state containment and feedback nearest-context rules", () => {
