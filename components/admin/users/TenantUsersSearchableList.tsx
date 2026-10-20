@@ -337,7 +337,7 @@ export default function TenantUsersSearchableList({
             variant="FIRST_USE"
             layout="compact-stacked"
             contained
-            icon={<ProductDomainSceIcon name="people" size={28} />}
+            icon={<ProductDomainSceIcon name="people" size={24} />}
             title="Noch keine Personen mit Zugang"
             description="Füge die erste Person hinzu, um Zugang zu SportClubEvo zu vergeben."
             primaryAction={
