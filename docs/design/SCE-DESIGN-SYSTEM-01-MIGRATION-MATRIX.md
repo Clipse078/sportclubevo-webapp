@@ -39,8 +39,8 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 
 | AREA | ROUTE_OR_COMPONENT | CURRENT_PATTERN | CLASSIFICATION | TARGET_CANONICAL_PATTERN | SEVERITY | MIGRATION_PRIORITY | DEPENDENCIES | NOTES |
 |------|-------------------|-----------------|----------------|---------------------------|----------|----------|--------------|-------|
-| NAV | `PersonDetailTabs.tsx` | Local tab shell, weak URL sync | LEGACY_MIGRATE | `SceContextTabs` + deep links | MED | P1 | DS-03 | LEGACY-TABS-001 |
-| NAV | `RolesAdminTabs.tsx` | Local underline tabs | LEGACY_MIGRATE | Context tabs or route tabs | LOW | P2 | DS-03 | LEGACY-TABS-004 |
+| NAV | `PersonDetailTabs.tsx` | ~~Local tab shell~~ → `SceContextTabs` | CANONICAL | `SceContextTabs` + `?tab=` | MED | P1 | DS-03 | LEGACY-TABS-001 **DS03_DONE** |
+| NAV | `RolesAdminTabs.tsx` | ~~Local underline tabs~~ → `SceContextTabs` | CANONICAL | `SceContextTabs` + `tabRoutes` | LOW | P2 | DS-03 | LEGACY-TABS-004 **DS03_DONE** |
 | NAV | Activity detail tabs | `SceContextTabs` + activity nav | CANONICAL | — | — | — | — | Keep; extend a11y |
 | NAV | `AppShellNavigation` | NAVBAR-UPGRADE-01 two-row + panel | CANONICAL | — | — | — | — | Do not parallel |
 | DASHBOARD | `DashboardTodayEventCards` | Local event cards | LEGACY_MIGRATE | `Sce*Card` COMPACT | MED | P1 | DS-04 | LEGACY-MATCH-CARD-007 |
@@ -82,7 +82,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | FORMAT | Ad-hoc date in admin rows | Local `toLocale*` | LEGACY_MIGRATE | `time-range.ts` / presentation formatters | LOW | P2 | DS-02 | |
 | FORMAT | Inline crest `<img onError>` | Outside ClubCrest | LEGACY_MIGRATE | `ClubCrest` | LOW | P2 | DS-04 | Grep-driven cleanup |
 | ROUTE | Dual match URLs | consume vs manage | LEGACY_MIGRATE | `buildSceActivityRoute` policy | MED | P1 | DS-03 docs | LEGACY-ROUTE-001 |
-| A11Y | Activity tabs | Missing arrow-key nav | CANONICAL_REFINE | WAI-ARIA tabs | MED | **P0** | DS-09 | LEGACY-A11Y-TABS-001 |
+| A11Y | Activity tabs | ~~Missing arrow-key nav~~ → implemented | CANONICAL | WAI-ARIA tabs + `SceContextTabs` | MED | **P0** | DS-03 | LEGACY-A11Y-TABS-001 **DS03_DONE** |
 | RESPONSIVE | Legacy admin forms | Desktop-only wide layouts | DESKTOP_ONLY_LEGACY | Page width modes + stack | MED | P2 | DS-09 | |
 | RESPONSIVE | Composer | Overlay vs full-page | CANONICAL | Breakpoint contract | — | — | — | Preserve 01E |
 

@@ -4,4 +4,7 @@
  */
 export * from "./sce-foundation-contract";
 export * from "./sce-design-system-02-meta";
+export * from "./sce-design-system-03-meta";
 export * from "./sce-context-tabs-foundation";
+export * from "./sce-breadcrumbs-foundation";
+export * from "./sce-workspace-hierarchy";

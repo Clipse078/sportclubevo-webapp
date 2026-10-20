@@ -87,9 +87,9 @@ Repository evidence mapped onto existing DS-01 primitives. Prefer **refinement a
 |-----------|------------------------|--------|-------------------|
 | Primary navbar (desktop) | `AppShellNavigation`, `ScePrimaryNavigation`, `SceDomainNavigationPanel` | **CANONICAL** | Do not replace NAVBAR-UPGRADE-01 |
 | Mobile primary nav | Bottom nav + `GlobalNavDrawer` | **CANONICAL_REFINE** | Align focus rings / overflow with desktop tokens |
-| Context tabs | `SceContextTabs`, `lib/context-tabs` | **CANONICAL** | Migrate `PersonDetailTabs`, `RolesAdminTabs` (P2) |
-| Activity navigation | `lib/activity-navigation/configs.ts` | **CANONICAL** | Extend a11y arrow-key pattern (P1) |
-| Breadcrumbs | Sparse / route-derived headers | **CANONICAL_REFINE** | Standardise in DS-03 |
+| Context tabs | `SceContextTabs`, `lib/context-tabs` | **CANONICAL** | `PersonDetailTabs`, `RolesAdminTabs` migrated DS-03 |
+| Activity navigation | `lib/activity-navigation/configs.ts` | **CANONICAL** | Arrow-key a11y on `SceContextTabs` — **DS03_DONE** |
+| Breadcrumbs | `SceBreadcrumbs` (+ `PageBreadcrumbs` alias) | **CANONICAL** | Product-wide rollout continues DS-04–DS-10 |
 | Filter rails | Matchcenter, Turniere, Planning hub toolbars | **DOMAIN** | Shared filter-bar primitive optional in DS-08 |
 
 ---

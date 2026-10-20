@@ -89,6 +89,17 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
   const visibleTabs = useMemo(() => listAllVisibleTabs(config), [config]);
 
   const activeTab = useMemo(() => {
+    const visibleKeys = visibleTabs
+      .filter((t) => t.visible !== false)
+      .map((t) => t.key as TTabId);
+
+    if (config.resolveActiveTabFromPathname) {
+      const fromPath = config.resolveActiveTabFromPathname(pathname, visibleKeys);
+      if (fromPath && visibleKeys.includes(fromPath)) {
+        return fromPath;
+      }
+    }
+
     const rawParam = readContextTabParam(searchParams);
     const tabParam = config.resolveTabParam?.(rawParam) ?? rawParam;
     return resolveContextTabFromSearchParams({
@@ -96,12 +107,17 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
       defaultTab: config.defaultTab,
       visibleTabs,
     });
-  }, [config, searchParams, visibleTabs]);
+  }, [config, pathname, searchParams, visibleTabs]);
 
   const basePath = pathname;
 
   const hrefForTab = useCallback(
     (tabKey: TTabId) => {
+      const routeHref = config.tabRoutes?.[tabKey];
+      if (routeHref) {
+        return routeHref;
+      }
+
       const preserved = new URLSearchParams();
       searchParams.forEach((value, key) => {
         if (key !== CONTEXT_TAB_QUERY_PARAM) {
@@ -118,7 +134,7 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
       });
       return `${url.pathname}${url.search}`;
     },
-    [basePath, searchParams],
+    [basePath, config.tabRoutes, searchParams],
   );
 
   const navigateToTab = useCallback(

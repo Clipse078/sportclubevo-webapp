@@ -1,10 +1,7 @@
 import type { ReactNode } from "react";
-import {
-  PageActions,
-  PageBreadcrumbs,
-  PageHeader,
-  type BreadcrumbItem,
-} from "@/components/ui/page";
+import { SceBreadcrumbs } from "@/components/sce/navigation/SceBreadcrumbs";
+import { SceWorkspaceHeader } from "@/components/sce/workspace/SceWorkspaceHeader";
+import type { BreadcrumbItem } from "@/components/ui/page";
 
 type CommunicationWorkspaceHeaderProps = {
   breadcrumbs: BreadcrumbItem[];
@@ -25,25 +22,16 @@ export function CommunicationWorkspaceHeader({
   primaryAction,
   secondaryActions,
 }: CommunicationWorkspaceHeaderProps) {
-  const hasActions = Boolean(primaryAction || secondaryActions);
-
   return (
     <>
-      <PageBreadcrumbs items={breadcrumbs} />
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <PageHeader
-          eyebrow="Kommunikation"
-          title={title}
-          description={description}
-          className="mb-0 flex-1"
-        />
-        {hasActions ? (
-          <PageActions className="shrink-0 lg:pt-1">
-            {secondaryActions}
-            {primaryAction}
-          </PageActions>
-        ) : null}
-      </div>
+      <SceBreadcrumbs items={breadcrumbs} />
+      <SceWorkspaceHeader
+        eyebrow="Kommunikation"
+        title={title}
+        description={description}
+        secondaryActions={secondaryActions}
+        primaryAction={primaryAction}
+      />
     </>
   );
 }

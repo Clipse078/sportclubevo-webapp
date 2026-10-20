@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { PageHeader, PageShell } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import ProgrammeViewSwitcher from "@/components/programme/ProgrammeViewSwitcher";
 import PersonalProgrammeFilterBar from "@/components/admin/mein-programm/PersonalProgrammeFilterBar";
 import PersonalProgrammeListeView from "@/components/admin/mein-programm/PersonalProgrammeListeView";
@@ -180,15 +181,19 @@ export default async function MeinProgrammPage({ searchParams }: PageProps) {
 
   return (
     <PageShell>
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <PageHeader
-          title="Mein Programm"
-          description="Deine relevanten Trainings, Spiele, Turniere und Veranstaltungen — chronologisch oder im Kalender."
-          className="mb-0"
-        />
-        {createMenu}
-      </div>
-
+      <SceWorkspaceChrome
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Mein Programm" },
+        ]}
+        header={{
+          title: "Mein Programm",
+          description:
+            "Deine relevanten Trainings, Spiele, Turniere und Veranstaltungen — chronologisch oder im Kalender.",
+          primaryAction: createMenu,
+        }}
+        contentClassName="space-y-4"
+      >
       <div className="space-y-4" data-testid="mein-programm-workspace">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <ProgrammeViewSwitcher
@@ -212,6 +217,7 @@ export default async function MeinProgrammPage({ searchParams }: PageProps) {
           />
         )}
       </div>
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

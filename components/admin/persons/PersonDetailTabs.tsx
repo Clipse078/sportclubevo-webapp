@@ -1,6 +1,4 @@
 "use client";
-import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { FinanceSceIcon, PaymentSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * PERSON-UX-01 — Person Workspace tab shell.
@@ -41,17 +39,15 @@ import { FinanceSceIcon, PaymentSceIcon } from "@/components/icons/domain-sce-ic
  * Trainer + Funktionär at once. No single "primary" capacity is selected.
  */
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { HeartPulse } from "lucide-react";
+import { FinanceSceIcon } from "@/components/icons/domain-sce-icon-components";
+import SceContextTabs from "@/components/sce/context-tabs/SceContextTabs";
+import { useContextDetailTab } from "@/lib/context-tabs/use-context-detail-tab";
 import {
-  LayoutDashboard,
-  User,
-  Building2,
-  Users2,
-  UserCheck,
-  Trophy,
-  HeartPulse,
-  FolderOpen,
-  KeyRound } from "lucide-react";
+  buildPersonWorkspaceTabNavigationConfig,
+  type PersonWorkspaceTabId,
+} from "@/lib/people/person-workspace-tab-config";
 import type { PersonAssignment, PersonDetail, PersonSquadMembership, PersonTrainerMembership, PersonMembershipRecord, PersonAssessmentRecord, PersonDocumentItem, TenantCriterion } from "@/lib/people/queries";
 import type { PersonAccessRole, PersonAccessLinkedUser } from "./PersonAccessRolesCard";
 import type { PersonDomainPermissions } from "@/lib/people/person-domain-auth";
@@ -66,19 +62,6 @@ import PersonZugangTab from "./PersonZugangTab";
 import PersonDomainPlaceholder from "./PersonDomainPlaceholder";
 import PersonMembershipTab from "./PersonMembershipTab";
 import PersonDocumentTab from "./PersonDocumentTab";
-
-type Tab =
-  | "uebersicht"
-  | "stammdaten"
-  | "organisation"
-  | "spieler"
-  | "trainer"
-  | "sport"
-  | "mitgliedschaft"
-  | "finanzen"
-  | "gesundheit"
-  | "dokumente"
-  | "zugang";
 
 type PersonDetailTabsProps = {
   person: PersonDetail & {
@@ -120,30 +103,6 @@ type PersonDetailTabsProps = {
   documents?: PersonDocumentItem[];
 };
 
-/**
- * Tab descriptor for the registry.
- *
- * hidden:
- *   When true, the tab is not rendered at all (no DOM node, no empty space).
- *   Computed from Person capacity (hasPlayerEvidence, etc.) and viewer permissions.
- *
- * requiredPermission (reserved for future use):
- *   A permission key string (e.g. "people.view.assessments") that a viewer
- *   must hold for this tab to be shown. Do NOT put role names here.
- */
-type TabDefinition = {
-  key: Tab;
-  label: string;
-  icon: React.ReactNode;
-  count?: number;
-  /** Deferred domain — placeholder content, not yet implemented. */
-  deferred?: boolean;
-  /** Tab is hidden: not rendered in DOM. Zero layout cost. */
-  hidden?: boolean;
-  /** Reserved: future permission key required to show this tab. */
-  requiredPermission?: string;
-};
-
 export default function PersonDetailTabs({
   person,
   canManage,
@@ -157,8 +116,6 @@ export default function PersonDetailTabs({
   assessments = [],
   criteria = [],
   documents = [] }: PersonDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("uebersicht");
-
   // ── Capacity resolution ────────────────────────────────────────────────────
   // PERSON-UX-07: Spieler / Trainer tab visibility is driven by explicit
   // capacity flags. Membership evidence is used as a secondary signal for the
@@ -199,124 +156,47 @@ export default function PersonDetailTabs({
     ).length +
     person.trainerMemberships.filter((m: PersonTrainerMembership) => m.status === "ACTIVE").length;
 
-  // ── Tab registry ───────────────────────────────────────────────────────────
-  // Tab visibility is determined by two orthogonal concerns:
-  //   1. Person capacity (hasPlayerEvidence, hasSportingEvidence, etc.)
-  //   2. Viewer domain permissions (canViewFinance, canViewHealth, etc.)
-  // Both are expressed via the `hidden` flag. Structural shape is ready for
-  // future permission-gating additions without a rewrite.
-  const ALL_TABS: TabDefinition[] = [
-    { key: "uebersicht", label: "Übersicht", icon: <LayoutDashboard className="h-3.5 w-3.5" /> },
-    { key: "stammdaten", label: "Stammdaten", icon: <User className="h-3.5 w-3.5" /> },
-    {
-      key: "organisation",
-      label: "Organisation",
-      icon: <ProductDomainSceIcon name="org-unit" size={12} />,
-      count: activeAssignmentCount },
-    {
-      key: "spieler",
-      label: "Spieler",
-      icon: <ProductDomainSceIcon name="people" size={12} />,
-      // PERSON-UX-07: tab driven by isPlayer capacity flag, not membership evidence.
-      // Removing the flag hides the tab; historical data is preserved.
-      hidden: !showSpielerTab },
-    {
-      key: "trainer",
-      label: "Trainer",
-      icon: <UserCheck className="h-3.5 w-3.5" />,
-      // PERSON-UX-07: tab driven by isTrainer capacity flag, not membership evidence.
-      hidden: !showTrainerTab },
-    {
-      key: "sport",
-      label: "Sport & Entwicklung",
-      icon: <Trophy className="h-3.5 w-3.5" />,
-      // Cross-role season biography visible when any sporting capacity or evidence exists.
-      hidden: !showSportTab,
-      count: activeSportingRoleCount > 0 ? activeSportingRoleCount : undefined },
-    {
-      key: "mitgliedschaft",
-      label: "Mitgliedschaft",
-      icon: <PaymentSceIcon className="h-3.5 w-3.5" />,
-      // PERSON-UX-04: No longer deferred — real implementation.
-    },
-    {
-      key: "finanzen",
-      label: "Finanzen",
-      icon: <FinanceSceIcon className="h-3.5 w-3.5" />,
-      deferred: true,
-      // Absent entirely when viewer lacks people.finance.view — no hint about existence.
-      hidden: !canViewFinance },
-    {
-      key: "gesundheit",
-      label: "Gesundheit",
-      icon: <HeartPulse className="h-3.5 w-3.5" />,
-      deferred: true,
-      // Absent entirely when viewer lacks people.health.view — no hint about existence.
-      hidden: !canViewHealth },
-    {
-      key: "dokumente",
-      label: "Dokumente",
-      icon: <ProductDomainSceIcon name="documents" size={12} />,
-      // Absent entirely when viewer lacks people.private_documents.view — no hint about existence.
-      hidden: !canViewPrivateDocuments },
-    { key: "zugang", label: "Zugang", icon: <KeyRound className="h-3.5 w-3.5" /> },
-  ];
+  const tabConfig = useMemo(
+    () =>
+      buildPersonWorkspaceTabNavigationConfig({
+        showSpielerTab,
+        showTrainerTab,
+        showSportTab,
+        canViewFinance,
+        canViewHealth,
+        canViewPrivateDocuments,
+        organisationCount:
+          activeAssignmentCount > 0 ? activeAssignmentCount : undefined,
+        sportRoleCount:
+          activeSportingRoleCount > 0 ? activeSportingRoleCount : undefined,
+      }),
+    [
+      activeAssignmentCount,
+      activeSportingRoleCount,
+      canViewFinance,
+      canViewHealth,
+      canViewPrivateDocuments,
+      showSpielerTab,
+      showSportTab,
+      showTrainerTab,
+    ],
+  );
 
-  // Only render visible tabs in the nav bar
-  const visibleTabs = ALL_TABS.filter((t) => !t.hidden);
+  const { activeTab, navigateToTab } = useContextDetailTab(tabConfig);
+  const safeActiveTab: PersonWorkspaceTabId = activeTab;
 
-  // If the active tab is no longer visible (e.g. after permission change between renders),
-  // fall back to Übersicht. This prevents rendering a hidden panel.
-  const visibleKeys = new Set(visibleTabs.map((t) => t.key));
-  const safeActiveTab: Tab = visibleKeys.has(activeTab) ? activeTab : "uebersicht";
+  const navigateToPersonTab = (tab: PersonWorkspaceTabId) => {
+    navigateToTab(tab);
+  };
 
   return (
     <div className="space-y-0">
-      {/* Tab navigation — wraps on small screens; hidden tabs consume no space */}
-      <div className="border-b border-[var(--border)]">
-        <nav
-          className="-mb-px flex flex-wrap gap-0"
-          aria-label="Person Workspace Tabs"
-          role="tablist"
-        >
-          {visibleTabs.map((tab) => {
-            const isActive = safeActiveTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`tabpanel-${tab.key}`}
-                id={`tab-${tab.key}`}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "border-[var(--sce-primary)] text-[var(--sce-primary)]"
-                    : "border-transparent text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--foreground)]"
-                }`}
-              >
-                {tab.icon}
-                <span className="whitespace-nowrap">{tab.label}</span>
-                {tab.count !== undefined && tab.count > 0 ? (
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                      isActive
-                        ? "bg-[var(--sce-accent)] text-[var(--sce-primary)]"
-                        : "bg-[var(--surface-3)] text-[var(--muted)]"
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                ) : null}
-                {tab.deferred ? (
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--border-strong)]" title="Geplant" />
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      <SceContextTabs
+        config={tabConfig}
+        ariaLabel="Person Workspace"
+        testId="person-detail-tabs"
+        idPrefix="person-tab"
+      />
 
       {/* Tab panels — only active tab content is mounted */}
       <div className="pt-6">
@@ -331,7 +211,7 @@ export default function PersonDetailTabs({
             <PersonWorkspaceOverviewTab
               person={person}
               activeSeason={activeSeason}
-              onNavigateToTab={setActiveTab}
+              onNavigateToTab={navigateToPersonTab}
               documentCount={canViewPrivateDocuments ? documents.length : null}
               canManage={canManage}
             />
@@ -394,7 +274,7 @@ export default function PersonDetailTabs({
                 canManageAssessments={canManageAssessments}
                 assessments={assessments}
                 criteria={criteria}
-                onNavigateToTab={setActiveTab}
+                onNavigateToTab={navigateToPersonTab}
               />
             ) : null}
           </div>
@@ -414,7 +294,7 @@ export default function PersonDetailTabs({
                 assignments={person.assignments}
                 activeSeason={activeSeason}
                 personFirstName={person.firstName}
-                onNavigateToTab={setActiveTab}
+                onNavigateToTab={navigateToPersonTab}
               />
             ) : null}
           </div>
@@ -439,7 +319,7 @@ export default function PersonDetailTabs({
                 canManageAssessments={canManageAssessments}
                 assessments={assessments}
                 criteria={criteria}
-                onNavigateToTab={setActiveTab}
+                onNavigateToTab={navigateToPersonTab}
               />
             ) : null}
           </div>

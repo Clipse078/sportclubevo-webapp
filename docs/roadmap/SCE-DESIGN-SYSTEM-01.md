@@ -48,7 +48,7 @@ PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
 DS01_STATUS = CLOSED / ACCEPTED / MERGED
 ```
 
-**Programme carry-forward:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-03`** (Workspace / Surface / Navigation — DS-02 **CLOSED / ACCEPTED / MERGED**, PR **#880**).
+**Programme carry-forward:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-04`** (Cards & Information Presentation — DS-03 **CLOSED / ACCEPTED / MERGED**, PR **#881**).
 
 ---
 
