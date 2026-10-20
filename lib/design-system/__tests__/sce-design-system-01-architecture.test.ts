@@ -2,7 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  SCE_DESIGN_SYSTEM_01_COMMUNICATION_REFERENCE_ROUTES,
   SCE_DESIGN_SYSTEM_01_PACKAGE_KEY,
+  SCE_DESIGN_SYSTEM_01_PO_VISUAL_DIRECTION,
+  SCE_DESIGN_SYSTEM_01_PO_VISUAL_DOC_MARKERS,
   SCE_DESIGN_SYSTEM_01_REGISTRY_COUNTS,
   SCE_DESIGN_SYSTEM_COMPLIANCE_FIELDS,
   SCE_DESIGN_SYSTEM_PROPOSED_SEQUENCE,
@@ -81,5 +84,42 @@ describe("SCE-DESIGN-SYSTEM-01 architecture guardrails", () => {
     expect(roadmap).toContain("BINARY_CONTROL_AUDIT");
     expect(roadmap).toContain("LEGACY_BINARY_CHECKBOX_COUNT");
     expect(roadmap).toContain("CANONICAL_TOGGLE_IMPLEMENTATIONS");
+  });
+
+  it("locks PO visual direction markers in master and roadmap (DS-01-R1)", () => {
+    const master = readDoc("docs/design/SCE-DESIGN-SYSTEM.md");
+    const roadmap = readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-01.md");
+    for (const marker of SCE_DESIGN_SYSTEM_01_PO_VISUAL_DOC_MARKERS) {
+      expect(master).toContain(marker);
+      expect(roadmap).toContain(marker);
+    }
+    expect(
+      SCE_DESIGN_SYSTEM_01_PO_VISUAL_DIRECTION
+        .COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE,
+    ).toBe("YES");
+    expect(
+      SCE_DESIGN_SYSTEM_01_PO_VISUAL_DIRECTION.PRODUCT_WIDE_ROLLOUT_TARGET,
+    ).toBe("YES");
+  });
+
+  it("records Communication as primary visual reference route evidence", () => {
+    const registry = readDoc(
+      "docs/design/SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md",
+    );
+    for (const route of SCE_DESIGN_SYSTEM_01_COMMUNICATION_REFERENCE_ROUTES) {
+      expect(registry).toContain(route);
+    }
+    const matrix = readDoc(
+      "docs/design/SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md",
+    );
+    expect(matrix).toContain("VISUAL_DIRECTION_CLASSIFICATION");
+  });
+
+  it("preserves domain-specific layout and activity-card architecture flags", () => {
+    const master = readDoc("docs/design/SCE-DESIGN-SYSTEM.md");
+    expect(master).toContain("DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES");
+    expect(master).toContain("ACTIVITY_CARD_FAMILY_PRESERVED = YES");
+    expect(master).toContain("Do **not** introduce");
+    expect(master).toContain("World Activity Card");
   });
 });

@@ -3,6 +3,40 @@
 > Priorities: **P0** structural/a11y/serious UX · **P1** major visual/architecture · **P2** polish/tokenisation · **P3** low-impact  
 > Supersedes nothing in [`SCE-UI-LEGACY-REGISTER.md`](./SCE-UI-LEGACY-REGISTER.md) — extends it with DS programme packaging.
 
+## PO visual direction — product-wide rollout (DS-01-R1)
+
+Evaluate every major area against Communication-derived visual principles (`COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES`, `PRODUCT_WIDE_ROLLOUT_TARGET = YES`). **Do not implement migrations in DS-01** — classifications guide DS-02 through DS-10.
+
+| PRODUCT_AREA | PRIMARY_ROUTES / MODULE | VISUAL_DIRECTION_CLASSIFICATION | TARGET (DS packages) | NOTES |
+| --- | --- | --- | --- | --- |
+| Dashboard | `/dashboard`, today modules | **ALIGNED_WITH_REFINEMENT** | DS-02, DS-04 | Module KPI cards; migrate `DashboardTodayEventCards` (see rows below) |
+| Mein Programm | `/dashboard/mein-programm` | **ALREADY_ALIGNED** | DS-02 tokens | Programme engine + three-row list-row |
+| Club | Club dashboard, directory | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-04 | Adopt workspace/header calm hierarchy |
+| Teams | Team cockpit, programme | **DOMAIN_SPECIFIC_BUT_ALIGNED** | DS-03 | Retain route-tab cockpit; align surfaces/accent |
+| Match | Matchcenter, Spiele | **ALREADY_ALIGNED** | DS-04, DS-07 | `SceMatchCard`; legacy `MatchCard.tsx` row below |
+| Training | Trainingscenter | **ALREADY_ALIGNED** | DS-04 | `SceTrainingCard`; management row refinement |
+| Tournament | Turniere, planung | **ALREADY_ALIGNED** | DS-04 | Cards + `SceTournamentFixturePresentation` densities |
+| Club Event | Veranstaltungen | **ALIGNED_WITH_REFINEMENT** | DS-04 | Canonical cards; `VeranstaltungCard` legacy |
+| Wochenplaner | Week planner | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-08 | `WochenplanEventCard`; keep **DENSE** tier |
+| Planning Hub | Planning hub calendar | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-08 | `PlanningHubActivityBlock`; operational density |
+| Tournament Planner | Planung board, matrices | **DOMAIN_SPECIFIC_BUT_ALIGNED** | DS-08 | Preserve grids, DnD, locks — SCE language only |
+| Communication | `/dashboard/communication`, email-sender | **ALREADY_ALIGNED** | DS-05, DS-07 | **Primary visual reference** — tokenise Button/readiness |
+| Publishing | Website, homepage builder | **ALIGNED_WITH_REFINEMENT** | DS-07, DS-08 | Empty-state duplication |
+| Admin | Settings, seasons, governance | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-07 | Mixed legacy forms |
+| Personen & Zugänge | People directory | **ALIGNED_WITH_REFINEMENT** | DS-07, DS-08 | **COMPACT/DENSE** — not hub whitespace |
+| Roles / Permissions | Roles admin, matrix | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-05, DS-08 | Tabs migrate; matrix stays dense |
+| Facilities | Pitches, resources | **ALIGNED_WITH_REFINEMENT** | DS-08 | Table tokens |
+| Documents | Person documents, DAM | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-07 | Local empty states |
+| Infoboard | Kiosk / public screens | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-10 | P0 presentation fallback |
+| Sponsor / Commercial (future) | CMS banner config | **LEGACY_REPLACE** | DS-05 | Minimal surface; toggle audit |
+| Team / Person workspaces (future) | Person detail, team workspace | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-04 | Context tabs + calm headers |
+
+**Preserved regardless of rollout:** `AppShellNavigation`, `SceContextTabs`, activity card family, `SceActivityComposer`, tournament operational patterns (`DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES`).
+
+---
+
+## Legacy / architecture migration rows (unchanged DS-01 audit)
+
 | AREA | ROUTE_OR_COMPONENT | CURRENT_PATTERN | CLASSIFICATION | TARGET_CANONICAL_PATTERN | SEVERITY | MIGRATION_PRIORITY | DEPENDENCIES | NOTES |
 |------|-------------------|-----------------|----------------|---------------------------|----------|----------|--------------|-------|
 | NAV | `PersonDetailTabs.tsx` | Local tab shell, weak URL sync | LEGACY_MIGRATE | `SceContextTabs` + deep links | MED | P1 | DS-03 | LEGACY-TABS-001 |
@@ -32,6 +66,7 @@
 | ADMIN | `NavAlignedPermissionEditor` | Dense permission matrix | DOMAIN | Keep density; refine toggles | LOW | P2 | DS-05 | Checkbox = multi-capability |
 | ADMIN | Roles forms | Mix toggle + checkbox | CANONICAL_REFINE | Toggle First for binary caps | MED | P2 | DS-05 | |
 | ADMIN | Facilities / pitches | Admin tables + forms | CANONICAL_REFINE | DS-08 table tokens | LOW | P2 | DS-08 | |
+| COMM | Communication hub + email-sender | Hub workspace/cards; readiness checklist | CANONICAL / CANONICAL_REFINE | PO visual reference; DS-07 readiness; Badge not AdminStatusPill | MED | P2 | DS-03, DS-04, DS-07 | R1 primary ref: `/dashboard/communication`, `/dashboard/communication/email-sender` |
 | COMM | Campaign composers | Multi checkbox + toggles | CANONICAL_REFINE | Audit binary vs multi | MED | P2 | DS-05 | ~6 checkboxes in CampaignComposer |
 | COMM | Inbox list | Row selection checkboxes | DOMAIN | Checkbox legitimate | — | — | — | MULTI_SELECTION |
 | DOCUMENTS | Person document tab | Local list + empty | CANONICAL_REFINE | SceEmptyState | LOW | P3 | DS-07 | |

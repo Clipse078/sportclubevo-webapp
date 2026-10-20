@@ -4,9 +4,40 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-01` |
 | **Predecessor** | SCE-UI-ROLLOUT-01+ (foundations), SCE-TOURNAMENT-PLANNER-02 (**CLOSED**, STAGE `9430a8e7…`) |
-| **Status** | **READY FOR PO ARCHITECTURE REVIEW** (research / audit — **no** broad visual rewrite) |
+| **Status** | **DS-01 audit complete + DS-01-R1 PO visual direction locked** (architecture docs only — **no** product-wide migration) |
 | **Branch** | `cursor/sce-design-system-01-product-wide-audit-architecture` |
 | **Baseline STAGE** | `9430a8e7b3bfefc40872e756d7dfe6e6b9cb6f2c` |
+| **Accepted audit HEAD** | `6f3554f415bd4b3aa6012dad6e79a0d31eb8f875` |
+| **Draft PR** | **#879** → **STAGE** (not merged) |
+
+---
+
+## PO visual direction (DS-01-R1)
+
+The Product Owner selected the **Communication** module as a **primary positive visual reference** for SCE Design System v1.0 rollout quality.
+
+| Flag | Value |
+| --- | --- |
+| `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
+| `PRODUCT_WIDE_ROLLOUT_TARGET` | **YES** |
+| `DARK_NAVY_SCE_LANGUAGE` | **CANONICAL_DIRECTION** |
+| `RESTRAINED_ACCENT_USAGE` | **REQUIRED** |
+| `LAYERED_SURFACE_HIERARCHY` | **REQUIRED** |
+| `CALM_INFORMATION_HIERARCHY` | **REQUIRED** |
+| `DOMAIN_SPECIFIC_LAYOUTS_PRESERVED` | **YES** |
+| `TOURNAMENT_OPERATIONAL_PATTERNS_PRESERVED` | **YES** |
+| `ACTIVITY_CARD_FAMILY_PRESERVED` | **YES** |
+| `ACTIVITY_COMPOSER_PRESERVED` | **YES** |
+| `CANONICAL_NAVIGATION_PRESERVED` | **YES** |
+| `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
+
+**Primary reference routes:** `/dashboard/communication` · `/dashboard/communication/email-sender`
+
+**Objective:** Extract Communication’s successful **visual principles** (dark layered workspace, calm hierarchy, restrained accent, readiness/status patterns) into canonical DS rules and apply **systematically** across SportClubEvo — **without** copying the hub grid layout onto unrelated domains.
+
+**Explicitly preserved (not replaced by Communication layout):** `AppShellNavigation` / NAVBAR-UPGRADE-01 · `SceContextTabs` · activity card family · `SceTournamentFixturePresentation` · Programme Engine · `SceActivityComposer` / `SceModalOverlay` · tournament planner operational density.
+
+R1 **supplements** the evidence-based DS-01 audit; it does **not** replace route inventory, registry counts, migration matrix priorities, or P0 findings.
 
 ---
 
@@ -50,7 +81,7 @@ Establish the **factual current state** of the SportClubEvo webapp UI and define
 | **Planning** | Wochenplaner, planning hub, day/season planner, Trainingsplaner | **Mixed** — hub blocks and Wochenplan shells partially legacy; tournament planung post-02E canonical |
 | **Tournament center** | Turniere list, planung, Spielplan, composer | **Canonical** fixture presentation (`SceTournamentFixturePresentation`); list-row composition standard |
 | **Admin** | Personen & Zugänge, roles, facilities, seasons, workspace governance | **Mixed** — dense operational UI; permission editor domain-specific; tabs partially legacy |
-| **Communication** | Hub, inbox, campaigns, vorlagen, zielgruppen | **Operational** — legitimate checkbox multi-select; binary settings audit pending |
+| **Communication** | Hub, inbox, campaigns, vorlagen, zielgruppen, email-sender | **Primary visual reference (R1)** — layered workspace + calm hub; readiness panel on email-sender; legitimate checkbox multi-select |
 | **Documents** | Person documents, media DAM | **Legacy empty patterns** — local empty states |
 | **Publishing** | Website, homepage builder, infoboard admin | **Mixed** — builder empty-state duplication; infoboard channel separate |
 | **Sponsor / commercial** | CMS sponsor banner config only | **Minimal surface** — audit-only, no new module |
@@ -82,19 +113,21 @@ Establish the **factual current state** of the SportClubEvo webapp UI and define
 
 ## Surface architecture (target hierarchy)
 
-Based on existing architecture (not a new wrapper framework):
+Based on existing architecture (not a new wrapper framework). **Communication** (`SCE_DASHBOARD_MODULE_PAGE_SURFACE` layout + `PageShell` + `CommunicationContentSurface` panels) is a **positive reference** for WORKSPACE → PAGE → SECTION → PANEL layering — reconciled with:
 
 ```text
 APP (atmospheric --sce-app-background)
   → CHROME (navbar two-row, tenant identity)
-  → WORKSPACE (SceWorkspaceSurface / tournament dense surfaces)
+  → WORKSPACE (SceWorkspaceSurface / SCE_DASHBOARD_MODULE_PAGE_SURFACE / tournament dense surfaces)
   → PAGE (PageShell + width mode: operational | readable | dashboard)
-  → SECTION (FormSection, context header)
-  → PANEL / CARD (activity cards, admin cards, elevated dialogs)
+  → SECTION (FormSection, context header, CommunicationWorkspaceHeader)
+  → PANEL / CARD (activity cards, admin cards, elevated dialogs, hub capability surfaces)
   → CONTROLS & ACTIONS
 ```
 
 Tournament operational surfaces additionally use `SCE_TOURNAMENT_*_SURFACE_CLASS` tokens — **domain extension**, not a parallel system.
+
+**R1 principle:** `LAYERED_SURFACE_HIERARCHY = REQUIRED` · `DARK_NAVY_SCE_LANGUAGE = CANONICAL_DIRECTION` · depth via surface tokens and restrained borders, not decorative noise.
 
 ---
 
@@ -218,15 +251,20 @@ Full WCAG remediation **not** in DS-01 — migration plan only.
 
 ## System states architecture (recommendation)
 
-Target **one SCE feedback family** (implement in DS-07):
+Target **one SCE feedback family** (implement in DS-07). **Email-sender Versandbereitschaft** (`EmailSenderWorkspace`, `buildEmailSenderReadinessPresentation`) is an additional **positive reference** for configuration/readiness surfaces:
 
 | State | Current | Target |
 | --- | --- | --- |
+| SUCCESS / READY | Email-sender checklist `pass`, readiness headline | Canonical readiness panel + `Badge` (replace `AdminStatusPill` duplicate) |
+| WARNING / INCOMPLETE | Checklist `warn` / `fail`, fallback sender | Icon + text rows; restrained semantic colour |
+| INFORMATION | Summary copy under heading | Short explanation + structured rows |
 | LOADING | Mixed spinners, `LoadingSkeleton`, planning ring | Unified skeleton + inline loader |
 | EMPTY | Many local components | `SceEmptyState` (+ optional illustration slot) |
 | NO RESULTS | Filtered empty in planning hub only | Shared filtered-empty primitive |
 | ERROR | Inline + toast | Actionable error panel component |
 | PERMISSION DENIED | Route-level + inline | Standard denied surface |
+
+Readiness checklist rows: **icon + label + optional detail + screen-reader state label** — **no colour-only meaning** (align DS-07 with Communication email-sender pattern).
 
 ---
 
@@ -316,19 +354,21 @@ Full matrix: [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-S
 
 | Package | Scope | Notes |
 | --- | --- | --- |
-| **DS-01** | Audit & architecture | **This package** |
-| **DS-02** | Foundations & tokens | Consolidate CSS + Tailwind recipes |
-| **DS-03** | Workspace / surface / navigation | Context tab migrations, breadcrumbs |
-| **DS-04** | Cards & information presentation | Legacy card removal, infoboard model |
-| **DS-05** | Forms & controls | Toggle migration waves, combobox |
-| **DS-06** | Actions, dialogs & composer | Nested modal reduction |
-| **DS-07** | Status / feedback / loading / empty / error | Unified empty + error UX |
-| **DS-08** | Tables, lists & dense operational UI | Density tiers |
+| **DS-01** | Audit & architecture + **R1 PO visual direction** | **This package** (docs/guardrails only) |
+| **DS-02** | Foundations & tokens | Consolidate CSS + Tailwind recipes; encode dark/navy + accent restraint |
+| **DS-03** | Workspace / surface / navigation | Roll Communication workspace tokens product-wide; context tab migrations |
+| **DS-04** | Cards & information presentation | Feature capability card pattern; legacy card removal; infoboard model |
+| **DS-05** | Forms & controls | Toggle migration waves; map Communication action hierarchy to `Button` |
+| **DS-06** | Actions, dialogs & composer | Nested modal reduction; preserve composer |
+| **DS-07** | Status / feedback / loading / empty / error | Readiness panel + status rows (email-sender reference); unified empty |
+| **DS-08** | Tables, lists & dense operational UI | **PREMIUM ≠ OVERSIZED** density tiers |
 | **DS-09** | Responsive & accessibility | Arrow-key tabs, focus audit |
-| **DS-10** | Product-wide adoption & legacy removal | Close 01A register |
+| **DS-10** | Product-wide adoption & legacy removal | Execute migration matrix visual classifications |
 | **DS-11** | Governance & automated compliance | AST/eslint rules |
 
-Sequence may merge/split based on PO review — **do not start DS-02** until DS-01 accepted.
+**R1 acceptance criteria carry-forward:** Each DS-02+ package must demonstrate alignment with PO visual flags above (dark layered surfaces, restrained accent, calm hierarchy) **without** breaking domain-specific layouts listed in [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md) visual rollout table.
+
+Sequence may merge/split based on PO review — **do not start DS-02** until DS-01 (+ R1) accepted.
 
 ---
 
@@ -354,6 +394,7 @@ Sequence may merge/split based on PO review — **do not start DS-02** until DS-
 - [x] `npm run build`, prisma validate/generate, focused tests pass
 - [x] Draft PR against STAGE — **not merged**
 - [x] No database / password / PO UAT by Cursor
+- [x] **DS-01-R1:** PO Communication visual direction locked; product-wide rollout classifications; guardrails updated
 
 ---
 

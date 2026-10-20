@@ -18,6 +18,50 @@
 
 **Terminology:** Use **SCE activity card family** (`SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard`, tournament fixture presentation layer). Do **not** introduce **“World Activity Card”** as a product or architecture concept in new Design System documentation (historical roadmap phrasing only).
 
+### PO visual direction (DS-01-R1 — locked)
+
+Product Owner decision: **`/dashboard/communication`** and related Communication settings surfaces (including **`/dashboard/communication/email-sender`**) are a **primary positive visual reference** for SCE Design System v1.0. Extract **visual principles** into canonical rules and roll them out product-wide — **not** copy the Communication hub layout onto every module.
+
+| Flag | Value |
+| --- | --- |
+| `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
+| `PRODUCT_WIDE_ROLLOUT_TARGET` | **YES** |
+| `DARK_NAVY_SCE_LANGUAGE` | **CANONICAL_DIRECTION** |
+| `RESTRAINED_ACCENT_USAGE` | **REQUIRED** |
+| `LAYERED_SURFACE_HIERARCHY` | **REQUIRED** |
+| `CALM_INFORMATION_HIERARCHY` | **REQUIRED** |
+| `DOMAIN_SPECIFIC_LAYOUTS_PRESERVED` | **YES** |
+| `TOURNAMENT_OPERATIONAL_PATTERNS_PRESERVED` | **YES** |
+| `ACTIVITY_CARD_FAMILY_PRESERVED` | **YES** |
+| `ACTIVITY_COMPOSER_PRESERVED` | **YES** |
+| `CANONICAL_NAVIGATION_PRESERVED` | **YES** |
+| `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
+
+**Canonical visual language**
+
+- **Dark / navy SCE product language** — preserve atmospheric `--sce-app-background` and layered dark surfaces (`--sce-surface-*`). Avoid drift toward generic white SaaS unless accessibility or domain requirements justify an exception.
+- **Layered surface hierarchy** (reconciled with DS-01 architecture, not a competing model):
+
+```text
+APP (atmospheric background)
+  → CHROME (AppShellNavigation — two-row, on-demand L2/L3)
+  → WORKSPACE (module canvas — e.g. SCE_DASHBOARD_MODULE_PAGE_SURFACE / SceWorkspaceSurface)
+  → PAGE (PageShell + width mode)
+  → SECTION (headers, grouped content)
+  → PANEL / CARD (elevated working surfaces)
+  → CONTROLS & ACTIONS
+```
+
+- **Restrained accent** — orange (`--sce-primary`) for primary actions, active navigation, meaningful icons, important links, and focused emphasis — **not** dominant surface colour.
+- **Calm information hierarchy** — clear title, concise description, controlled whitespace, muted secondary text, restrained borders, obvious primary action, limited competing actions (Communication hub exemplifies this).
+- **Depth without noise** — prefer surface contrast and restrained borders over excessive boxes, shadows, and decoration.
+
+**Preservation rule:** Communication provides a **primary visual reference**. The Design System provides **product-wide rules**. Domain workflows retain **purpose-built compositions** (activity cards, tournament planner grids, permission matrices, Wochenplaner density, `SceActivityComposer`, NAVBAR-UPGRADE-01 shell).
+
+**Density:** Support **COMFORTABLE · COMPACT · DENSE** tiers under the same SCE language. Operational surfaces (tables, Personen & Zugänge, Wochenplaner, Tournament Planner) stay efficient — **`PREMIUM_DOES_NOT_MEAN_OVERSIZED`**.
+
+Full pattern mapping: [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md) · product-wide rollout classifications: [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md).
+
 ---
 
 ## Design principle

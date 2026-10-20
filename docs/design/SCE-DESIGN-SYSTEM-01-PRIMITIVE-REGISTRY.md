@@ -16,6 +16,44 @@ Legend for **canonical status:**
 | **DOMAIN** | Justified one-off composition on canonical foundations |
 | **DEPRECATE** | Remove after migration |
 
+### PO visual reference (DS-01-R1)
+
+| Flag | Value |
+| --- | --- |
+| `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
+| `PRODUCT_WIDE_ROLLOUT_TARGET` | **YES** |
+| `DARK_NAVY_SCE_LANGUAGE` | **CANONICAL_DIRECTION** |
+| `RESTRAINED_ACCENT_USAGE` | **REQUIRED** |
+
+Evidence routes: `/dashboard/communication` · `/dashboard/communication/email-sender`
+
+---
+
+## Communication pattern mapping (formalise — no new components in DS-01)
+
+Repository evidence mapped onto existing DS-01 primitives. Prefer **refinement and tokenisation** in DS-02+ over parallel components.
+
+| Pattern | Evidence | Maps to | DS package | New primitive in DS-01? |
+| --- | --- | --- | --- | --- |
+| **Module workspace canvas** | `communication/layout.tsx` → `SCE_DASHBOARD_MODULE_PAGE_SURFACE` | WORKSPACE layer in surface hierarchy; aligns with `SceWorkspaceSurface` / `lib/shell/sce-surface-system.ts` tokens | DS-03 | **No** — extend shared module canvas utility |
+| **Page frame + calm header** | `PageShell` + `CommunicationWorkspaceHeader` → `PageHeader` / `PageActions` | PAGE + SECTION (title, description, primary/secondary actions) | DS-03 | **No** — generalise header recipe |
+| **Elevated working panel** | `CommunicationContentSurface` → `SCE_SURFACE_STANDARD_PANEL` | PANEL layer | DS-03 | **No** |
+| **Feature capability card** | `CommunicationHubCapabilityLink` (Mitteilungen, Kampagnen, …) | Composed link-card: icon tile + title + description + tertiary “Öffnen →” affordance on `Card`/surface tokens | DS-04 | **No** — document as **SceFeatureCapabilityCard** composition spec (optional thin wrapper later) |
+| **Feature hero / action panel** | `CommunicationHubInboxSection` | SECTION + PANEL with PRIMARY action (`Kommunikationscenter öffnen`) | DS-04 / DS-06 | **No** — pattern spec on `CommunicationContentSurface` |
+| **Readiness / configuration status panel** | `EmailSenderWorkspace` Versandbereitschaft + `buildEmailSenderReadinessPresentation` | Future **`SceReadinessStatusPanel`** family (DS-07); headline + summary + overall state + checklist | DS-07 | **No** — architecture only |
+| **Status checklist row** | Checklist items (`pass` / `fail` / `warn` / `neutral`) with lucide icon + label + detail + `sr-only` state | Same as readiness rows; overall pill today uses **`AdminStatusPill`** → migrate to **`Badge`** semantic variants (registry DUPLICATE row) | DS-07 | **No** — do not duplicate Badge |
+| **Action hierarchy** | Hub: primary filled (`Neue Mitteilung`), secondary bordered (`Neue Kampagne`), hero primary, capability tertiary text link | Map to `Button` variants: PRIMARY / SECONDARY / tertiary link / destructive / icon-button | DS-05 / DS-06 | **No** — audit raw `<Link className="bg-[var(--sce-primary)]…">` in Communication for Button adoption in DS-05 |
+
+**Action levels (semantic):**
+
+| Level | Communication example | Target primitive |
+| --- | --- | --- |
+| PRIMARY | Neue Mitteilung · Kommunikationscenter öffnen | `Button` primary |
+| SECONDARY | Neue Kampagne | `Button` secondary / outline |
+| TERTIARY / TEXT | Öffnen → on capability cards | Link styled as text action (tokenised) |
+| DESTRUCTIVE | (rare in hub) | `Button` destructive |
+| ICON ACTION | Toolbar icons in inbox (separate module) | Icon button sizes (DS-05) |
+
 ---
 
 ## Foundation
