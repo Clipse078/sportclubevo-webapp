@@ -18,15 +18,17 @@ describe("SCE-TOURNAMENT-PLANNER-02D roadmap", () => {
     expect(doc).toMatch(/SPIELPLAN_OPT_IN.*default OFF/i);
     expect(doc).toMatch(/PLAYING_FORMAT_OPTIONAL_BY_DEFAULT.*YES/i);
     expect(doc).toMatch(/ARBITRARY_PRODUCT_PARTICIPANT_MAX.*NONE/i);
-    expect(doc).toMatch(/02D_PACKAGE_CLOSED.*NO/i);
+    expect(doc).toMatch(/02D_PACKAGE_CLOSED.*YES/i);
+    expect(doc).toMatch(/PO_UAT.*PASS/i);
+    expect(doc).toMatch(/CLOSED \/ ACCEPTED \/ MERGED/i);
   });
 
-  it("parent programme doc marks 02D in progress and 02E final", () => {
+  it("parent programme doc marks 02D closed and 02E next", () => {
     const parent = readFileSync(
       join(process.cwd(), "docs/roadmap/SCE-TOURNAMENT-PLANNER-02.md"),
       "utf8",
     );
-    expect(parent).toMatch(/02D.*Predefined Spielplan Templates/i);
+    expect(parent).toMatch(/02D.*CLOSED \/ ACCEPTED \/ MERGED/i);
     expect(parent).toMatch(/02E.*Spielplan UX/i);
   });
 });
