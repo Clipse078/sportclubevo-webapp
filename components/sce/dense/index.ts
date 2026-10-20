@@ -8,10 +8,10 @@ export {
   SceDataTable,
   SceDataTableHead,
   SceDataTableBody,
-  SceDataTableRow,
   SceDataTableCell,
   SceDataTableHeaderCell,
 } from "./SceDataTable";
+export { SceDataTableRow, type SceDataTableRowProps } from "./SceDataTableRow";
 export { SceSortableColumnHeader, type SceSortDirection } from "./SceSortableColumnHeader";
 export { SceDenseList, SceDenseListRow } from "./SceDenseList";
 export { SceDensePagination } from "./SceDensePagination";

@@ -1,10 +1,9 @@
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import {
   SCE_DENSE_DATA_TABLE_CELL_CLASS,
   SCE_DENSE_DATA_TABLE_CLASS,
   SCE_DENSE_DATA_TABLE_HEAD_CLASS,
-  SCE_DENSE_DATA_TABLE_ROW_CLASS,
   SCE_DENSE_DATA_TABLE_SHELL_CLASS,
 } from "@/lib/design-system/sce-dense-ui-micro-ux";
 
@@ -45,44 +44,6 @@ export function SceDataTableHead({ children }: { children: ReactNode }) {
 
 export function SceDataTableBody({ children }: { children: ReactNode }) {
   return <tbody className="divide-y divide-[color-mix(in_srgb,var(--border)_45%,transparent)]">{children}</tbody>;
-}
-
-export function SceDataTableRow({
-  children,
-  className,
-  onClick,
-}: {
-  children: ReactNode;
-  className?: string;
-  onClick?: () => void;
-}) {
-  function onKeyDown(event: KeyboardEvent<HTMLTableRowElement>) {
-    if (!onClick) return;
-    if (event.key === "Enter" || event.key === " ") {
-      if ((event.target as HTMLElement).closest("[data-sce-row-action]")) return;
-      event.preventDefault();
-      onClick();
-    }
-  }
-
-  return (
-    <tr
-      data-sce-data-table-row="true"
-      className={cn(SCE_DENSE_DATA_TABLE_ROW_CLASS, onClick && "cursor-pointer", className)}
-      onClick={
-        onClick
-          ? (event) => {
-              if ((event.target as HTMLElement).closest("[data-sce-row-action]")) return;
-              onClick();
-            }
-          : undefined
-      }
-      onKeyDown={onKeyDown}
-      tabIndex={onClick ? 0 : undefined}
-    >
-      {children}
-    </tr>
-  );
 }
 
 export function SceDataTableCell({

@@ -97,16 +97,18 @@ export default function TenantRolesOverviewDenseTable({ roles }: Props) {
                 </SceDataTableCell>
                 <SceDataTableCell className={SCE_DENSE_META_TEXT_CLASS}>{formatDate(role.updatedAt)}</SceDataTableCell>
                 <SceDataTableCell align="right">
-                  <SceActionLink
-                    href={`/dashboard/administration/roles/${role.id}`}
-                    variant="link"
-                    size="sm"
-                    data-sce-action-hierarchy="TERTIARY_TEXT"
-                    className="inline-flex h-auto min-h-0 items-center gap-1 px-0 py-0 text-[0.78rem] opacity-70 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-                  >
-                    Details
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                  </SceActionLink>
+                  <div data-sce-row-action="true">
+                    <SceActionLink
+                      href={`/dashboard/administration/roles/${role.id}`}
+                      variant="link"
+                      size="sm"
+                      data-sce-action-hierarchy="TERTIARY_TEXT"
+                      className="inline-flex h-auto min-h-0 items-center gap-1 px-0 py-0 text-[0.78rem] opacity-70 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+                    >
+                      Details
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                    </SceActionLink>
+                  </div>
                 </SceDataTableCell>
               </SceDataTableRow>
             ))}

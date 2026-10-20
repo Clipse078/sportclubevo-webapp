@@ -48,6 +48,33 @@ describe("SceDensePrimitives", () => {
     );
     expect(screen.getByRole("table", { name: "Demo" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    const row = screen.getByText("Ada").closest("tr");
+    expect(row).not.toHaveAttribute("tabindex");
+  });
+
+  it("activates data table row on Enter but not when focus is on row action", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(
+      <SceDataTable aria-label="Interactive">
+        <SceDataTableBody>
+          <SceDataTableRow onClick={onClick}>
+            <SceDataTableCell>Row</SceDataTableCell>
+            <SceDataTableCell>
+              <div data-sce-row-action="true">
+                <button type="button">Act</button>
+              </div>
+            </SceDataTableCell>
+          </SceDataTableRow>
+        </SceDataTableBody>
+      </SceDataTable>,
+    );
+    const row = screen.getByText("Row").closest("tr")!;
+    row.focus();
+    await user.keyboard("{Enter}");
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "Act" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it("activates grid row on Enter but not when focus is on row action", async () => {
