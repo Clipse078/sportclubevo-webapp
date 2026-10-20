@@ -80,6 +80,7 @@ export function DashboardKpiCard({
 
   return (
     <div
+      data-sce-card-family="summary-metric"
       className={cn(
         "rounded-[var(--radius-lg)] border",
         isHero

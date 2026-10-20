@@ -27,6 +27,7 @@ export function CommunicationHubCapabilityLink({
     <Link
       href={href}
       aria-label={linkLabel}
+      data-sce-card-family="capability-navigation"
       className={cn(
         "group flex h-full flex-col rounded-[var(--radius-lg)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-4 no-underline md:p-5",
         "motion-safe:transition-[background-color,border-color,box-shadow,transform] motion-safe:duration-150",

@@ -48,7 +48,15 @@ PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
 DS01_STATUS = CLOSED / ACCEPTED / MERGED
 ```
 
-**Programme carry-forward:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-04`** (Cards & Information Presentation — DS-03 **CLOSED / ACCEPTED / MERGED**, PR **#881**).
+**Programme carry-forward:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-05`** — Forms & Controls (DS-04 **CLOSED / ACCEPTED**, PR **#882**).
+
+**Original DS-01 P0 findings (status updated — not erased):**
+
+| Finding | Status |
+| --- | --- |
+| `P0_ACTIVITY_TAB_KEYBOARD_ACCESSIBILITY` | **CLOSED_BY_DS03** |
+| `P0_INFOBOARD_MATCH_PRESENTATION` | **CLOSED_BY_DS04** |
+| **`DS01_OPEN_P0_FINDINGS`** | **0** |
 
 ---
 
@@ -233,7 +241,7 @@ Textual semantics enforced in presentation model and pills — **never colour al
 
 - **Canonical:** `lib/sporting-data/sce-club-visual-identity.ts`, `ClubCrest`, `ClubIdentity`, club-team selector `ClubLogo`.
 - **Person avatars:** separate primitive — photos/initials in person modules (**not** crest rules).
-- **High risk:** Infoboard fallback branches without presentation model (**P0**).
+- **High risk (historical):** Infoboard fallback branches without presentation model — **CLOSED_BY_DS04** (`matchPresentation` authoritative).
 - **No new** tournament-specific crest resolver (TP02E verified).
 
 ---
@@ -296,8 +304,8 @@ Textual semantics enforced in presentation model and pills — **never colour al
 
 | Risk | Priority | Package |
 | --- | --- | --- |
-| Activity tabs missing arrow-key navigation | **P0** | DS-09 |
-| Infoboard match fallback semantic layout | **P0** | DS-04/10 |
+| Activity tabs missing arrow-key navigation | **CLOSED_BY_DS03** | DS-09 polish |
+| Infoboard match fallback semantic layout | **CLOSED_BY_DS04** | DS-10 polish |
 | Focus visible on all legacy form controls | P1 | DS-09 |
 | Dialog focus trap / restoration (composer + selector) | P1 | DS-06 (tests exist for overlay) |
 | Colour-only status | Mitigated by text-first badges — audit residual icons | P2 |
@@ -419,7 +427,7 @@ Full matrix: [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-S
 | **DS-06** | Actions, dialogs & composer | Nested modal reduction; preserve composer |
 | **DS-07** | Status / feedback / loading / empty / error | Readiness panel + status rows (email-sender reference); unified empty |
 | **DS-08** | Tables, lists & dense operational UI | **PREMIUM ≠ OVERSIZED** density tiers |
-| **DS-09** | Responsive & accessibility | Arrow-key tabs, focus audit |
+| **DS-09** | Responsive & accessibility | Residual focus audit (arrow-key tabs **CLOSED_BY_DS03**) |
 | **DS-10** | Product-wide adoption & legacy removal | Execute migration matrix visual classifications |
 | **DS-11** | Governance & automated compliance | AST/eslint rules |
 
@@ -433,7 +441,7 @@ Sequence may merge/split based on PO review. **DS-01 (+ R1) is PO-accepted** —
 
 1. **Scope creep** — treating DS-01 as visual rewrite (mitigated by explicit out-of-scope).
 2. **Parallel primitives** — future modules bypassing registry (mitigated by compliance contract + ADRs).
-3. **Infoboard P0** — kiosk channel bypasses presentation model.
+3. ~~**Infoboard P0**~~ — **mitigated (DS-04)** — kiosk match identity uses canonical `matchPresentation`; channel CSS may retain domain-specific chrome.
 4. **Empty-state explosion** — without DS-07, modules keep inventing local patterns.
 5. **Checkbox debt** — ~32 setting checkboxes remain until DS-05/10.
 

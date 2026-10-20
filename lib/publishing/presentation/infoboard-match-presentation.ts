@@ -208,6 +208,67 @@ export function enrichMatchIdentityWithTenant(
  * Builds the full MATCH presentation block for Screen 1 from canonical side
  * identities and tenant branding context.
  */
+/**
+ * Builds fixture-authoritative home/away identity when the canonical loader did
+ * not supply `matchIdentity` (tests, legacy fixtures). Uses `homeAway` to place
+ * the tenant team on the correct side — never tenant-left semantics.
+ */
+export function buildInfoboardMatchIdentityFromFixtureFields(input: {
+  readonly homeAway: string | null | undefined;
+  readonly team: Screen1SourceEventTeamFields | null | undefined;
+  readonly teamDisplayName: string | null;
+  readonly opponentDisplayName: string | null;
+  readonly opponentLogoUrl: string | null | undefined;
+}): InfoboardMatchIdentity {
+  const homeAway = (input.homeAway ?? "HOME").trim().toUpperCase();
+  const ownTeamIsAway = homeAway === "AWAY";
+
+  const ownSide: InfoboardMatchSideIdentity = {
+    isOwnTeam: true,
+    clubName: null,
+    clubLogoUrl: null,
+    teamName: input.team?.name ?? null,
+    teamShortName: input.team?.shortName ?? null,
+    teamAlternativeName: input.team?.alternativeName ?? null,
+    teamInfoboardDisplayName: input.team?.infoboardDisplayName ?? null,
+    teamInfoboardMatchDisplayName: input.team?.infoboardMatchDisplayName ?? null,
+    fallbackDisplayName: input.teamDisplayName,
+  };
+
+  const opponentSide: InfoboardMatchSideIdentity = {
+    isOwnTeam: false,
+    clubName: null,
+    clubLogoUrl: input.opponentLogoUrl ?? null,
+    teamName: null,
+    teamShortName: null,
+    teamAlternativeName: null,
+    teamInfoboardDisplayName: null,
+    teamInfoboardMatchDisplayName: null,
+    fallbackDisplayName: input.opponentDisplayName,
+  };
+
+  if (ownTeamIsAway) {
+    return {
+      home: opponentSide,
+      away: ownSide,
+    };
+  }
+
+  return {
+    home: ownSide,
+    away: input.opponentDisplayName != null ? opponentSide : null,
+  };
+}
+
+/** Minimal team naming slice for fixture synthesis (avoids circular imports). */
+export type Screen1SourceEventTeamFields = {
+  readonly name?: string | null;
+  readonly shortName?: string | null;
+  readonly alternativeName?: string | null;
+  readonly infoboardDisplayName?: string | null;
+  readonly infoboardMatchDisplayName?: string | null;
+};
+
 export function resolveInfoboardMatchPresentation(
   identity: InfoboardMatchIdentity | null | undefined,
   tenantLogoUrl: string | null | undefined,

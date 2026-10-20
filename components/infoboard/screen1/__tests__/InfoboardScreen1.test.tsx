@@ -68,6 +68,10 @@ import type {
   InfoboardTeamAllocationPresentation,
 } from "@/components/infoboard/screen1/screen1-presentation-types";
 import { DEFAULT_SCREEN1_PRESENTATION } from "@/lib/infoboard/screen1-logo-settings";
+import {
+  buildInfoboardMatchIdentityFromFixtureFields,
+  resolveInfoboardMatchPresentation,
+} from "@/lib/publishing/presentation/infoboard-match-presentation";
 
 // â”€â”€ Fixture helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -97,7 +101,7 @@ function makeFeed(
 function makeEvent(
   overrides: Partial<InfoboardScreen1Event> = {},
 ): InfoboardScreen1Event {
-  return {
+  const base: InfoboardScreen1Event = {
     id: "evt-test-1",
     type: "TRAINING",
     displayTitle: "Test Training",
@@ -123,6 +127,29 @@ function makeEvent(
     },
     ...overrides,
   };
+
+  if (
+    base.type === "MATCH" &&
+    base.matchPresentation === null &&
+    (base.teamDisplayName !== null || base.opponentDisplayName !== null)
+  ) {
+    return {
+      ...base,
+      matchPresentation: resolveInfoboardMatchPresentation(
+        buildInfoboardMatchIdentityFromFixtureFields({
+          homeAway: "HOME",
+          team: null,
+          teamDisplayName: base.teamDisplayName,
+          opponentDisplayName: base.opponentDisplayName,
+          opponentLogoUrl: base.opponentLogoUrl,
+        }),
+        null,
+        null,
+      ),
+    };
+  }
+
+  return base;
 }
 
 function makeEventPresentation(
@@ -1058,7 +1085,7 @@ describe("Match row", () => {
     expect(screen.getByText("Gast")).toBeTruthy();
   });
 
-  it("shows legacy combined team names when matchPresentation is absent", () => {
+  it("uses canonical matchPresentation home row (fixture-authoritative, no legacy UI fallback)", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "MATCH", teamDisplayName: "FC Test", opponentDisplayName: "FC Other", allocation: { pitchLabel: null, homeDressingRoomLabel: "Kabine E1", awayDressingRoomLabel: "Kabine E2", refereeDressingRoomLabel: null } })],
       isEmpty: false,

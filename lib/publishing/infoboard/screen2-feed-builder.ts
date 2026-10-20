@@ -77,7 +77,7 @@ import {
   resolveTeamDisplayName,
   resolveOpponentDisplayName,
 } from "../presentation/display-name-resolver";
-import type { Screen1SourceEvent } from "./screen1-event-mapper";
+import { mapScreen1Event, type Screen1SourceEvent } from "./screen1-event-mapper";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -137,6 +137,8 @@ export type BuildScreen2FeedInput = {
   readonly dressingRooms?: readonly ConfiguredDressingRoom[];
   readonly loader: PublicationEventLoader<Screen1SourceEvent>;
   readonly operationalDurationPolicy?: TenantOperationalDurationPolicyResolved;
+  /** Tenant club crest for own-team match sides (Screen 1 parity). */
+  readonly tenantLogoUrl?: string | null;
 };
 
 // ── Allocation-code resolution (multi-resource aware) ─────────────────────────
@@ -195,15 +197,29 @@ function resolveAwayPartyDisplayName(event: Screen1SourceEvent): string | null {
 
 // ── PitchEventSummary mapping ─────────────────────────────────────────────────
 
+type Screen2PresentationContext = {
+  readonly tenantClubName?: string;
+  readonly tenantLogoUrl?: string | null;
+};
+
 function mapToPitchEventSummary(
   event: Screen1SourceEvent,
   relation: "current" | "next",
+  presentationContext?: Screen2PresentationContext,
 ): PitchEventSummary {
+  const mapped = mapScreen1Event({
+    event,
+    temporalBucket: relation === "current" ? "current" : "next",
+    tenantClubName: presentationContext?.tenantClubName,
+    tenantLogoUrl: presentationContext?.tenantLogoUrl,
+  });
+
   return {
     eventId: event.id,
     displayTitle: event.title,
-    teamDisplayName: resolveHomePartyDisplayName(event),
-    opponentDisplayName: resolveAwayPartyDisplayName(event),
+    teamDisplayName: mapped.teamDisplayName,
+    opponentDisplayName: mapped.opponentDisplayName,
+    matchPresentation: mapped.matchPresentation,
     startAt: event.startAt.toISOString(),
     endAt: event.endAt ? event.endAt.toISOString() : null,
     status: event.status as PublishingEventStatus,
@@ -272,6 +288,7 @@ function resolvePitchOccupancy(
   nowMs: number,
   horizonMs: number,
   resolveEffectiveEndAt: (event: Screen1SourceEvent) => Date,
+  presentationContext: Screen2PresentationContext,
 ): PitchOccupancy {
   const candidates = eligibleEvents.filter((e) =>
     eventPitchCodes(e).includes(pitch.code),
@@ -284,9 +301,14 @@ function resolvePitchOccupancy(
   );
   const hasConflict = current.length > 1;
 
-  const currentEvents = current.map((e) => mapToPitchEventSummary(e, "current"));
+  const currentEvents = current.map((e) =>
+    mapToPitchEventSummary(e, "current", presentationContext),
+  );
   const currentEvent = currentEvents.length > 0 ? currentEvents[0] : null;
-  const nextEvent = next.length > 0 ? mapToPitchEventSummary(next[0], "next") : null;
+  const nextEvent =
+    next.length > 0
+      ? mapToPitchEventSummary(next[0], "next", presentationContext)
+      : null;
 
   let state: PitchOccupancyState;
   if (currentEvent !== null) {
@@ -445,6 +467,7 @@ function resolveUnallocatedActivities(
   nowMs: number,
   horizonMs: number,
   resolveEffectiveEndAt: (event: Screen1SourceEvent) => Date,
+  presentationContext: Screen2PresentationContext,
 ): PitchEventSummary[] {
   const unmapped = eligibleEvents.filter((event) => {
     const codes = eventPitchCodes(event);
@@ -459,8 +482,12 @@ function resolveUnallocatedActivities(
   );
 
   return [
-    ...current.map((event) => mapToPitchEventSummary(event, "current")),
-    ...next.map((event) => mapToPitchEventSummary(event, "next")),
+    ...current.map((event) =>
+      mapToPitchEventSummary(event, "current", presentationContext),
+    ),
+    ...next.map((event) =>
+      mapToPitchEventSummary(event, "next", presentationContext),
+    ),
   ];
 }
 
@@ -507,6 +534,11 @@ export async function buildInfoboardScreen2Feed(
     dateTo,
   });
 
+  const presentationContext: Screen2PresentationContext = {
+    tenantClubName: tenant.name,
+    tenantLogoUrl: input.tenantLogoUrl ?? null,
+  };
+
   // ── Resolve per-pitch occupancy (current + next, independently) ──────────
   const pitchOccupancies: PitchOccupancy[] = pitches.map((pitch) =>
     resolvePitchOccupancy(
@@ -515,6 +547,7 @@ export async function buildInfoboardScreen2Feed(
       nowMs,
       SCREEN1_HORIZON_MS,
       resolveEffectiveEndAt,
+      presentationContext,
     ),
   );
 
@@ -537,6 +570,7 @@ export async function buildInfoboardScreen2Feed(
     nowMs,
     SCREEN1_HORIZON_MS,
     resolveEffectiveEndAt,
+    presentationContext,
   );
 
   return {

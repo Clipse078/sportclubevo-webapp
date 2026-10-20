@@ -245,6 +245,7 @@ export async function buildScreen2LivePayload(params: {
     dressingRooms,
     loader,
     operationalDurationPolicy,
+    tenantLogoUrl: resolveClubLogoSrc(tenant),
   });
 
   // ── Resolve final facility name for the feed header ──────────────────────

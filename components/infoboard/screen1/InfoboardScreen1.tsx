@@ -1355,52 +1355,26 @@ function EventCard({
           {typeDisplayLabel}
         </span>
 
-        {isMatch ? (
+        {isMatch && event.matchPresentation ? (
           <div className={styles.matchIdentity}>
-            {event.matchPresentation ? (
-              <>
-                <MatchSideIdentity
-                  side={event.matchPresentation.home}
-                  rowTestId="match-home-team-row"
-                  logoTestId="home-team-logo"
-                  primaryClassName={styles.eventTeamMain}
-                  showLogos={matchShowLogos}
-                />
-                <span className={styles.vsLabel} aria-hidden="true">vs.</span>
-                {event.matchPresentation.away !== null && (
-                  <MatchSideIdentity
-                    side={event.matchPresentation.away}
-                    rowTestId="match-away-team-row"
-                    logoTestId="away-team-logo"
-                    primaryClassName={styles.eventTeamOpponent}
-                    showLogos={matchShowLogos}
-                  />
-                )}
-              </>
-            ) : (
-              <>
-                <div className={styles.matchTeamRow} data-testid="match-home-team-row">
-                  <span
-                    className={styles.eventTeamMain}
-                    data-match-team-label
-                    data-match-name-size={matchTeamNameSize(event.teamDisplayName ?? "")}
-                  >
-                    {event.teamDisplayName}
-                  </span>
-                </div>
-                <span className={styles.vsLabel} aria-hidden="true">vs.</span>
-                {event.opponentDisplayName !== null && (
-                  <div className={styles.matchTeamRow} data-testid="match-away-team-row">
-                    <span
-                      className={styles.eventTeamOpponent}
-                      data-match-team-label
-                      data-match-name-size={matchTeamNameSize(event.opponentDisplayName)}
-                    >
-                      {event.opponentDisplayName}
-                    </span>
-                  </div>
-                )}
-              </>
+            <MatchSideIdentity
+              side={event.matchPresentation.home}
+              rowTestId="match-home-team-row"
+              logoTestId="home-team-logo"
+              primaryClassName={styles.eventTeamMain}
+              showLogos={matchShowLogos}
+            />
+            <span className={styles.vsLabel} aria-hidden="true">
+              vs.
+            </span>
+            {event.matchPresentation.away !== null && (
+              <MatchSideIdentity
+                side={event.matchPresentation.away}
+                rowTestId="match-away-team-row"
+                logoTestId="away-team-logo"
+                primaryClassName={styles.eventTeamOpponent}
+                showLogos={matchShowLogos}
+              />
             )}
           </div>
         ) : isTournament ? (

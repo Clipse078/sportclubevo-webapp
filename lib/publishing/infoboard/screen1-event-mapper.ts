@@ -45,6 +45,7 @@ import {
   type AllocationResourceInput,
 } from "../presentation/allocation-display-resolver";
 import {
+  buildInfoboardMatchIdentityFromFixtureFields,
   resolveInfoboardMatchPresentation,
   type InfoboardMatchIdentity,
 } from "../presentation/infoboard-match-presentation";
@@ -371,10 +372,22 @@ export function mapScreen1Event(
   const meetingTime =
     event.meetingTime != null ? event.meetingTime.toISOString() : null;
 
+  const matchIdentityForPresentation: InfoboardMatchIdentity | null =
+    event.type === "MATCH"
+      ? (event.matchIdentity ??
+        buildInfoboardMatchIdentityFromFixtureFields({
+          homeAway: event.homeAway,
+          team: event.team,
+          teamDisplayName,
+          opponentDisplayName,
+          opponentLogoUrl: event.opponentLogoUrl,
+        }))
+      : null;
+
   const matchPresentation =
     event.type === "MATCH"
       ? resolveInfoboardMatchPresentation(
-          event.matchIdentity,
+          matchIdentityForPresentation,
           tenantLogoUrl,
           tenantClubName,
         )

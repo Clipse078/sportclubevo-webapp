@@ -31,6 +31,27 @@ import type {
   InfoboardScreen2Feed,
   PitchEventSummary,
 } from "@/lib/publishing/event-types";
+
+const MATCH_PRESENTATION_NULL: PitchEventSummary["matchPresentation"] = null;
+
+function matchPresentationForPreview(
+  type: PitchEventSummary["type"],
+  teamDisplayName: string | null,
+  opponentDisplayName: string | null,
+): PitchEventSummary["matchPresentation"] {
+  if (type !== "MATCH" || opponentDisplayName === null) {
+    return MATCH_PRESENTATION_NULL;
+  }
+  const home = teamDisplayName ?? "";
+  return {
+    home: { clubDisplayName: home, teamSubDisplayName: null, clubLogoUrl: null },
+    away: {
+      clubDisplayName: opponentDisplayName,
+      teamSubDisplayName: null,
+      clubLogoUrl: null,
+    },
+  };
+}
 import type { WeatherDto } from "@/lib/weather/weather-types";
 
 // ── Shared tenant reference ───────────────────────────────────────────────────
@@ -47,6 +68,7 @@ const UNALLOCATED_ACTIVITY: PitchEventSummary = {
   displayTitle: "Aktive Herren",
   teamDisplayName: "Aktive Herren",
   opponentDisplayName: null,
+  matchPresentation: MATCH_PRESENTATION_NULL,
   startAt: "2026-09-12T18:00:00.000Z",
   endAt: "2026-09-12T19:30:00.000Z",
   status: "SCHEDULED",
@@ -78,6 +100,11 @@ export const PREVIEW_FIXTURE_SCREEN2: InfoboardScreen2Feed = {
         displayTitle: "FC Allschwil E1 – FC Binningen E1",
         teamDisplayName: "FC Allschwil E1",
         opponentDisplayName: "FC Binningen E1",
+        matchPresentation: matchPresentationForPreview(
+          "MATCH",
+          "FC Allschwil E1",
+          "FC Binningen E1",
+        ),
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: "2026-09-12T16:45:00.000Z",
         status: "LIVE",
@@ -100,6 +127,7 @@ export const PREVIEW_FIXTURE_SCREEN2: InfoboardScreen2Feed = {
         displayTitle: "Juniorinnen FF-14",
         teamDisplayName: "Juniorinnen FF-14",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: "2026-09-12T16:00:00.000Z",
         status: "LIVE",
@@ -112,6 +140,7 @@ export const PREVIEW_FIXTURE_SCREEN2: InfoboardScreen2Feed = {
         displayTitle: "FC Allschwil D1",
         teamDisplayName: "FC Allschwil D1",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T16:30:00.000Z",
         endAt: "2026-09-12T18:00:00.000Z",
         status: "SCHEDULED",
@@ -145,6 +174,7 @@ export const PREVIEW_FIXTURE_SCREEN2: InfoboardScreen2Feed = {
         displayTitle: "Sommer-Cup Junioren E",
         teamDisplayName: "FC Allschwil Junioren",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T17:00:00.000Z",
         endAt: null,
         status: "SCHEDULED",
@@ -250,6 +280,11 @@ export const PREVIEW_FIXTURE_SCREEN2_ALL_OCCUPIED: InfoboardScreen2Feed = {
         displayTitle: "FC Allschwil E1 – FC Binningen E1",
         teamDisplayName: "FC Allschwil E1",
         opponentDisplayName: "FC Binningen E1",
+        matchPresentation: matchPresentationForPreview(
+          "MATCH",
+          "FC Allschwil E1",
+          "FC Binningen E1",
+        ),
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: "2026-09-12T16:45:00.000Z",
         status: "LIVE",
@@ -272,6 +307,7 @@ export const PREVIEW_FIXTURE_SCREEN2_ALL_OCCUPIED: InfoboardScreen2Feed = {
         displayTitle: "Juniorinnen FF-14",
         teamDisplayName: "Juniorinnen FF-14",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T14:00:00.000Z",
         endAt: null,
         status: "LIVE",
@@ -294,6 +330,7 @@ export const PREVIEW_FIXTURE_SCREEN2_ALL_OCCUPIED: InfoboardScreen2Feed = {
         displayTitle: "Sommer-Cup Junioren E",
         teamDisplayName: "FC Allschwil Junioren",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T14:30:00.000Z",
         endAt: null,
         status: "LIVE",
@@ -316,6 +353,7 @@ export const PREVIEW_FIXTURE_SCREEN2_ALL_OCCUPIED: InfoboardScreen2Feed = {
         displayTitle: "Aktive Herren",
         teamDisplayName: "Aktive Herren",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: null,
         status: "LIVE",
@@ -418,6 +456,11 @@ export const PREVIEW_FIXTURE_SCREEN2_PHYSICAL_TV: InfoboardScreen2Feed = {
         displayTitle: "FC Allschwil E1 – FC Binningen E1",
         teamDisplayName: "FC Allschwil E1",
         opponentDisplayName: "FC Binningen E1",
+        matchPresentation: matchPresentationForPreview(
+          "MATCH",
+          "FC Allschwil E1",
+          "FC Binningen E1",
+        ),
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: "2026-09-12T16:45:00.000Z",
         status: "LIVE",
@@ -457,6 +500,7 @@ export const PREVIEW_FIXTURE_SCREEN2_PHYSICAL_TV: InfoboardScreen2Feed = {
         displayTitle: "FC Allschwil F2",
         teamDisplayName: "FC Allschwil F2",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: "2026-09-12T16:30:00.000Z",
         status: "LIVE",
@@ -518,6 +562,7 @@ export const PREVIEW_FIXTURE_SCREEN2_PHYSICAL_TV: InfoboardScreen2Feed = {
         displayTitle: "Junioren F Play More Football",
         teamDisplayName: "FC Allschwil Junioren F",
         opponentDisplayName: null,
+        matchPresentation: MATCH_PRESENTATION_NULL,
         startAt: "2026-09-12T15:00:00.000Z",
         endAt: "2026-09-12T17:00:00.000Z",
         status: "LIVE",

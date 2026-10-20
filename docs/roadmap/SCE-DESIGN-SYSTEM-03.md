@@ -12,12 +12,12 @@
 | **Closure commit** | `e6aac4cad64ff802280fc11f3e1e028dc7de2b66` |
 | **STAGE merge commit** | `5522cfee822339d5ac0d45957df5c63b10c35f3c` |
 | **PR** | **#881** — **MERGED** |
-| **Successor** | **`SCE-DESIGN-SYSTEM-04`** — Cards & Information Presentation ([doc](./SCE-DESIGN-SYSTEM-04.md)) — **NOT STARTED** |
+| **Successor** | **`SCE-DESIGN-SYSTEM-04`** — Cards & Information Presentation ([doc](./SCE-DESIGN-SYSTEM-04.md)) — **CLOSED / ACCEPTED** (PR **#882**) |
 | **Foundation consumed** | DS-02 `app/globals.css` + `lib/design-system/sce-foundation-contract.ts` |
 
 **PO closure:** `PO_WORKSPACE_SYSTEM_REVIEW = PASS` · `PO_BREADCRUMB_SYSTEM_REVIEW = PASS` · `PO_CONTEXT_TAB_SYSTEM_REVIEW = PASS` · `PO_NAVIGATION_ARCHITECTURE_REVIEW = PASS` · `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
 
-**Programme:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-04`** — Cards & Information Presentation
+**Programme:** `SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS` · **`NEXT_PACKAGE = SCE-DESIGN-SYSTEM-05`** — Forms & Controls
 
 ---
 
@@ -210,7 +210,7 @@ Regression gate: DS-01 architecture guardrails · DS-02 foundation guardrails ·
 ```text
 DS03_STATUS = CLOSED / ACCEPTED / MERGED
 SCE_DESIGN_SYSTEM_PROGRAMME_STATUS = IN PROGRESS
-NEXT_PACKAGE = SCE-DESIGN-SYSTEM-04 — Cards & Information Presentation
+NEXT_PACKAGE = SCE-DESIGN-SYSTEM-05 — Forms & Controls
 WORKSPACE_SYSTEM_PRODUCT_WIDE = YES
 BREADCRUMB_SYSTEM_PRODUCT_WIDE = YES
 CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC = YES

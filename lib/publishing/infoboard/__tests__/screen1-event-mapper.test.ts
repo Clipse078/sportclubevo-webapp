@@ -740,7 +740,7 @@ describe("mapScreen1Event — opponentLogoUrl", () => {
   it("passes through null opponentLogoUrl when not set", () => {
     const result = mapScreen1Event(makeInput({ type: "MATCH", homeAway: "HOME" }));
     expect(result.opponentLogoUrl).toBeNull();
-    expect(result.matchPresentation).toBeNull();
+    expect(result.matchPresentation).not.toBeNull();
   });
 
   it("builds matchPresentation from canonical match identity", () => {

@@ -29,6 +29,7 @@ export function SceFeatureCard({
   return (
     <section
       className={cn(SCE_WORKSPACE_FEATURE_CARD_CLASS, className)}
+      data-sce-card-family="capability-functional"
       data-testid={testId}
       aria-labelledby={headingId ?? (testId ? `${testId}-heading` : undefined)}
     >

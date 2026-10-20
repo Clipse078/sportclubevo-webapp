@@ -62,6 +62,7 @@ import {
 } from "@/lib/publishing/infoboard/display-theme";
 import { KioskShellHeader } from "@/components/infoboard/shared/KioskShellHeader";
 import { KioskShellFooter } from "@/components/infoboard/shared/KioskShellFooter";
+import { InfoboardCompactMatchIdentity } from "@/components/infoboard/shared/InfoboardCompactMatchIdentity";
 import styles from "./InfoboardScreen2.module.css";
 
 // ── Public component props ────────────────────────────────────────────────────
@@ -226,13 +227,23 @@ function PitchEventBlock({ event, temporal, timeZone }: PitchEventBlockProps): R
       >
         {eventTypeLabel(event.type)}
       </span>
-      <span className={styles.pitchCardEventTitle}>
-        {event.teamDisplayName ?? event.displayTitle}
-      </span>
-      {event.opponentDisplayName !== null && (
-        <span className={styles.pitchCardEventOpponent}>
-          vs. {event.opponentDisplayName}
-        </span>
+      {event.type === "MATCH" && event.matchPresentation ? (
+        <InfoboardCompactMatchIdentity
+          matchPresentation={event.matchPresentation}
+          primaryClassName={styles.pitchCardEventTitle}
+          opponentClassName={styles.pitchCardEventOpponent}
+        />
+      ) : (
+        <>
+          <span className={styles.pitchCardEventTitle}>
+            {event.teamDisplayName ?? event.displayTitle}
+          </span>
+          {event.opponentDisplayName !== null && (
+            <span className={styles.pitchCardEventOpponent}>
+              vs. {event.opponentDisplayName}
+            </span>
+          )}
+        </>
       )}
     </div>
   );
@@ -381,8 +392,20 @@ function UnallocatedSection({ activities, timeZone }: UnallocatedSectionProps): 
             <span className={styles.unallocatedTime}>{formatTime(activity.startAt, timeZone)}</span>
             <span className={styles.unallocatedType}>{eventTypeLabel(activity.type)}</span>
             <span className={styles.unallocatedName}>
-              {activity.teamDisplayName ?? activity.displayTitle}
-              {activity.opponentDisplayName !== null && ` – ${activity.opponentDisplayName}`}
+              {activity.type === "MATCH" && activity.matchPresentation ? (
+                <>
+                  {activity.matchPresentation.home.clubDisplayName}
+                  {activity.matchPresentation.away !== null
+                    ? ` vs. ${activity.matchPresentation.away.clubDisplayName}`
+                    : null}
+                </>
+              ) : (
+                <>
+                  {activity.teamDisplayName ?? activity.displayTitle}
+                  {activity.opponentDisplayName !== null &&
+                    ` – ${activity.opponentDisplayName}`}
+                </>
+              )}
             </span>
           </li>
         ))}
