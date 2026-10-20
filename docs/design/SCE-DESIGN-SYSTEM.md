@@ -1,7 +1,86 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md)  
-> **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED** (PR **#879** → STAGE)  
+> **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-02** (Foundations & Tokens — not started)
+
+---
+
+## SCE-DESIGN-SYSTEM-01 — current state vs target v1.0
+
+**PO closure:** `PO_ARCHITECTURE_REVIEW = PASS` · `PO_VISUAL_DIRECTION_REVIEW = PASS` · `DS01_STATUS = CLOSED / ACCEPTED` (architecture baseline for DS-02+). See [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md).
+
+| | **Current state (STAGE baseline)** | **Target v1.0 (DS-02+ implementation)** |
+| --- | --- | --- |
+| **Scope** | Strong canonical cores (nav, activity cards, composer, context tabs, crest rules, tournament fixture presentation) coexisting with legacy admin surfaces, local empty states, and ~32 estimated binary-setting checkboxes | One enforced consumption model across modules with tokenised foundations and unified feedback primitives |
+| **Documentation** | This master doc + UI rollout standards + **DS-01** registry/matrix | Same master doc as single entry; registry rows marked **CANONICAL** only after adoption package lands |
+| **Migration** | [`SCE-UI-LEGACY-REGISTER.md`](./SCE-UI-LEGACY-REGISTER.md) (28 rows) + [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md) | DS-10 closes MUST-MIGRATE register entries |
+| **Compliance** | Package closure fields defined below — manual | DS-11 adds automated guardrails where practical |
+
+**DS-01 does not claim unfinished primitives are already canonical.** Refer to [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md) for proposed v1.0 registry and classification counts.
+
+**Terminology:** Use **SCE activity card family** (`SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard`, tournament fixture presentation layer). Do **not** introduce **“World Activity Card”** as a product or architecture concept in new Design System documentation (historical roadmap phrasing only).
+
+### PO visual direction (DS-01-R1 — locked)
+
+Product Owner decision: **`/dashboard/communication`** and related Communication settings surfaces (including **`/dashboard/communication/email-sender`**) are a **primary positive visual reference** for SCE Design System v1.0. Extract **visual principles** into canonical rules and roll them out product-wide — **not** copy the Communication hub layout onto every module.
+
+| Flag | Value |
+| --- | --- |
+| `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE` | **YES** |
+| `PRODUCT_WIDE_ROLLOUT_TARGET` | **YES** |
+| `DARK_NAVY_SCE_LANGUAGE` | **CANONICAL_DIRECTION** |
+| `RESTRAINED_ACCENT_USAGE` | **REQUIRED** |
+| `LAYERED_SURFACE_HIERARCHY` | **REQUIRED** |
+| `CALM_INFORMATION_HIERARCHY` | **REQUIRED** |
+| `DOMAIN_SPECIFIC_LAYOUTS_PRESERVED` | **YES** |
+| `TOURNAMENT_OPERATIONAL_PATTERNS_PRESERVED` | **YES** |
+| `ACTIVITY_CARD_FAMILY_PRESERVED` | **YES** |
+| `ACTIVITY_COMPOSER_PRESERVED` | **YES** |
+| `CANONICAL_NAVIGATION_PRESERVED` | **YES** |
+| `PREMIUM_DOES_NOT_MEAN_OVERSIZED` | **YES** |
+
+Architecture closure markers (DS-01-R1):
+
+```text
+COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES
+PRODUCT_WIDE_ROLLOUT_TARGET = YES
+DARK_NAVY_SCE_LANGUAGE = CANONICAL_DIRECTION
+RESTRAINED_ACCENT_USAGE = REQUIRED
+LAYERED_SURFACE_HIERARCHY = REQUIRED
+CALM_INFORMATION_HIERARCHY = REQUIRED
+DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES
+TOURNAMENT_OPERATIONAL_PATTERNS_PRESERVED = YES
+ACTIVITY_CARD_FAMILY_PRESERVED = YES
+ACTIVITY_COMPOSER_PRESERVED = YES
+CANONICAL_NAVIGATION_PRESERVED = YES
+PREMIUM_DOES_NOT_MEAN_OVERSIZED = YES
+```
+
+**Canonical visual language**
+
+- **Dark / navy SCE product language** — preserve atmospheric `--sce-app-background` and layered dark surfaces (`--sce-surface-*`). Avoid drift toward generic white SaaS unless accessibility or domain requirements justify an exception.
+- **Layered surface hierarchy** (reconciled with DS-01 architecture, not a competing model):
+
+```text
+APP (atmospheric background)
+  → CHROME (AppShellNavigation — two-row, on-demand L2/L3)
+  → WORKSPACE (module canvas — e.g. SCE_DASHBOARD_MODULE_PAGE_SURFACE / SceWorkspaceSurface)
+  → PAGE (PageShell + width mode)
+  → SECTION (headers, grouped content)
+  → PANEL / CARD (elevated working surfaces)
+  → CONTROLS & ACTIONS
+```
+
+- **Restrained accent** — orange (`--sce-primary`) for primary actions, active navigation, meaningful icons, important links, and focused emphasis — **not** dominant surface colour.
+- **Calm information hierarchy** — clear title, concise description, controlled whitespace, muted secondary text, restrained borders, obvious primary action, limited competing actions (Communication hub exemplifies this).
+- **Depth without noise** — prefer surface contrast and restrained borders over excessive boxes, shadows, and decoration.
+
+**Preservation rule:** Communication provides a **primary visual reference**. The Design System provides **product-wide rules**. Domain workflows retain **purpose-built compositions** (activity cards, tournament planner grids, permission matrices, Wochenplaner density, `SceActivityComposer`, NAVBAR-UPGRADE-01 shell).
+
+**Density:** Support **COMFORTABLE · COMPACT · DENSE** tiers under the same SCE language. Operational surfaces (tables, Personen & Zugänge, Wochenplaner, Tournament Planner) stay efficient — **`PREMIUM_DOES_NOT_MEAN_OVERSIZED`**.
+
+Full pattern mapping: [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md) · product-wide rollout classifications: [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md).
 
 ---
 
@@ -435,17 +514,20 @@ Every future SCE package must declare **`SCE_DESIGN_SYSTEM_COMPLIANCE`** in its 
 
 | Field | Description |
 |-------|-------------|
-| Canonical primitives consumed | e.g. `SceContextTabs`, `SceWorkspaceSurface` |
+| **`SCE_DESIGN_SYSTEM_COMPLIANCE`** | **PASS** / **FAIL** (aggregate gate) |
+| **`CANONICAL_PRIMITIVES_USED`** | List (e.g. `SceContextTabs`, `SceWorkspaceSurface`) |
 | Canonical navigation pattern | Context tabs / route tabs / filters (justify if not context tabs) |
 | Canonical workspace pattern | Dark workspace + sections |
-| New UX primitives introduced | List + justification |
-| Responsive compliance | PASS / deferred with package id |
-| Accessibility compliance | PASS / deferred with package id |
-| Legacy / parallel pattern introduced | **YES/NO** |
+| **`NEW_PRIMITIVES_INTRODUCED`** | List of new UX primitives |
+| **`NEW_PRIMITIVES_JUSTIFICATION`** | ADR link or closure exception when new primitives are introduced |
+| **`RESPONSIVE_COMPLIANCE`** | PASS / deferred with package id |
+| **`ACCESSIBILITY_COMPLIANCE`** | PASS / deferred with package id |
+| **`PARALLEL_PATTERN_INTRODUCED`** | **YES/NO** |
 | **`BINARY_CONTROL_COMPLIANCE`** | **PASS** / **FAIL** |
 | **`NEW_BINARY_CHECKBOXES`** | Count; must be **0** unless an approved design-system exception exists |
 | **`CANONICAL_TOGGLES_USED`** | **YES** / **NO** / **NOT_APPLICABLE** (when package introduces no binary settings) |
 | **`MULTI_SELECTION_PATTERN`** | **canonical** / **not_applicable** / **exception_documented** |
+| **`WORLD_CLASS_ACTIVITY_CARD_COMPLIANCE`** | **PASS** when surfaces consume the SCE activity card **family** (`SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard`, tournament fixture presentation) — no parallel card framework |
 
 **Target gate:** `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS`
 
