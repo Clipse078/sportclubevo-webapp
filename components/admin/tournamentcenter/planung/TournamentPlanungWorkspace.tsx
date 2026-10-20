@@ -24,9 +24,11 @@ import type { TournamentDto } from "@/lib/tournaments/types";
 import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { SCE_TOURNAMENT_SR_LIVE_REGION_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
-import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import { shouldExposePlannerSetupPrimaryAction } from "@/lib/tournaments/planung/planner-setup-eligibility";
 import TournamentPlanungSetupDialog from "./TournamentPlanungSetupDialog";
+import { SceReadinessStatusPanel } from "@/components/sce/feedback/SceReadinessStatusPanel";
+import { SceSemanticFeedback } from "@/components/sce/feedback/SceSemanticFeedback";
+import type { SceSemanticFeedbackTone } from "@/lib/design-system/sce-feedback-status-foundation";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -66,6 +68,12 @@ function mergePlanningUx(
 
 function resolveInitialInteractionMode(searchParams: URLSearchParams): InteractionMode {
   return searchParams.get("mode") === "edit" ? "edit" : "view";
+}
+
+function planningUxTone(state: TournamentPlanungPlanningUx["state"]): SceSemanticFeedbackTone {
+  if (state === "READY") return "SUCCESS";
+  if (state === "AUTO_FIX") return "WARNING";
+  return "ERROR";
 }
 
 export default function TournamentPlanungWorkspace({
@@ -400,8 +408,9 @@ export default function TournamentPlanungWorkspace({
 
   return (
     <div
-      className="space-y-4"
+      className="space-y-5"
       data-testid="tournament-planung-workspace"
+      data-sce-planung-vertical-rhythm
       data-interaction-mode={effectiveInteractionMode}
     >
       <p
@@ -458,31 +467,24 @@ export default function TournamentPlanungWorkspace({
       </header>
 
       {model.incompleteSetup.length > 0 ? (
-        <section
-          className={cn(SCE_SURFACE_STANDARD_PANEL, "space-y-3 p-4 md:p-5")}
-          data-testid="tournament-planung-incomplete"
-          role="status"
-        >
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              {showPlannerSetupAction ? "Turnierplanung einrichten" : "Für die Planung fehlt noch:"}
-            </p>
-            {showPlannerSetupAction ? (
-              <p className="text-sm text-[var(--text-2)]">
-                Für dieses Turnier ist noch kein Spielplan eingerichtet. Format, Felder, Timing und
-                Pausen vervollständigen, um den Spielplan zu erstellen.
-              </p>
-            ) : null}
-          </div>
-          {incompleteListItems.length > 0 ? (
-            <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
-              {incompleteListItems.map((item) => (
-                <li key={item.code}>{item.label}</li>
-              ))}
-            </ul>
-          ) : null}
-          {showPlannerSetupAction ? (
-            <div className="pt-1">
+        <SceReadinessStatusPanel
+          title={
+            showPlannerSetupAction ? "Turnierplanung einrichten" : "Für die Planung fehlt noch:"
+          }
+          description={
+            showPlannerSetupAction
+              ? "Für dieses Turnier ist noch kein Spielplan eingerichtet. Format, Felder, Timing und Pausen vervollständigen, um den Spielplan zu erstellen."
+              : undefined
+          }
+          headlineTone={showPlannerSetupAction ? "WARNING" : "NEUTRAL"}
+          rows={incompleteListItems.map((item) => ({
+            id: item.code,
+            label: item.label,
+            tone: "WARNING" as const,
+            stateLabel: "Offen",
+          }))}
+          primaryAction={
+            showPlannerSetupAction ? (
               <Button
                 type="button"
                 onClick={() => setSetupDialogOpen(true)}
@@ -491,9 +493,10 @@ export default function TournamentPlanungWorkspace({
               >
                 Turnierplanung einrichten
               </Button>
-            </div>
-          ) : null}
-        </section>
+            ) : undefined
+          }
+          data-testid="tournament-planung-incomplete"
+        />
       ) : null}
 
       <TournamentPlanungSetupDialog
@@ -507,26 +510,21 @@ export default function TournamentPlanungWorkspace({
       />
 
       {showPreGenerationPanel ? (
-        <section
-          className={cn(
-            "rounded-xl border bg-[var(--surface)] p-6",
-            planningUx.state === "READY"
-              ? "border-[var(--border)]"
-              : "border-[var(--sce-danger)]/40",
-          )}
+        <div
+          className="space-y-4"
           data-testid={
             planningUx.state === "READY"
               ? "tournament-planung-ready"
               : "tournament-planung-planning-state"
           }
-          role={planningUx.state === "READY" ? "status" : "alert"}
-          aria-live="polite"
         >
-          <p className="text-sm font-semibold text-[var(--foreground)]">{planningUx.headline}</p>
-          {planningUx.summary ? (
-            <p className="mt-1 text-sm text-[var(--muted)]">{planningUx.summary}</p>
-          ) : null}
+          <SceSemanticFeedback
+            tone={planningUxTone(planningUx.state)}
+            title={planningUx.headline}
+            description={planningUx.summary ?? undefined}
+          />
 
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 md:p-5">
           {planningUx.state === "AUTO_FIX" && planningUx.recommendedTiming ? (
             <p
               className="mt-3 text-sm font-medium text-[var(--foreground)]"
@@ -673,7 +671,8 @@ export default function TournamentPlanungWorkspace({
               .
             </p>
           ) : null}
-        </section>
+          </div>
+        </div>
       ) : null}
 
       {effectiveInteractionMode === "edit" && model.regenerationSummary ? (

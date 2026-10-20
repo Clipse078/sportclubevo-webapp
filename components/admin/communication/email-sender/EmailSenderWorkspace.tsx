@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CheckCircle2, Circle, Loader2, Mail, AlertTriangle } from "lucide-react";
-import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
+import { Loader2, Mail } from "lucide-react";
+import { SceReadinessStatusPanel } from "@/components/sce/feedback/SceReadinessStatusPanel";
+import {
+  mapEmailSenderReadinessHeadlineTone,
+  mapEmailSenderReadinessToPanelRows,
+} from "@/lib/communication/email-sender-readiness-panel";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import type { EmailSenderWorkspaceViewModel } from "@/lib/communication/email-sender-workspace";
-import type { EmailSenderReadinessChecklistItem } from "@/lib/communication/email-sender-display";
 import { useToast } from "@/hooks/use-toast";
 import { EmailSenderManagementPanel } from "@/components/admin/communication/email-sender/EmailSenderManagementPanel";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
@@ -18,45 +21,6 @@ type Props = {
 
 const labelClass =
   "block text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)] mb-1.5";
-
-function checklistIcon(state: EmailSenderReadinessChecklistItem["state"]) {
-  if (state === "pass") {
-    return <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--sce-success)]" aria-hidden />;
-  }
-  if (state === "fail") {
-    return <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--sce-danger)]" aria-hidden />;
-  }
-  if (state === "warn") {
-    return <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--sce-warning)]" aria-hidden />;
-  }
-  return <Circle className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />;
-}
-
-function checklistStateLabel(state: EmailSenderReadinessChecklistItem["state"]): string {
-  switch (state) {
-    case "pass":
-      return "Erfüllt";
-    case "fail":
-      return "Offen";
-    case "warn":
-      return "Hinweis";
-    default:
-      return "Neutral";
-  }
-}
-
-function toneToPill(tone: EmailSenderWorkspaceViewModel["readinessPresentation"]["tone"]) {
-  switch (tone) {
-    case "success":
-      return "success" as const;
-    case "warning":
-      return "warning" as const;
-    case "danger":
-      return "warning" as const;
-    default:
-      return "muted" as const;
-  }
-}
 
 export default function EmailSenderWorkspace({ initialModel }: Props) {
   const { toast } = useToast();
@@ -156,45 +120,19 @@ export default function EmailSenderWorkspace({ initialModel }: Props) {
     model;
 
   return (
-    <CommunicationContentSurface className="mx-auto w-full max-w-3xl space-y-6" padded={false}>
-      <section
-        aria-labelledby="email-sender-readiness-heading"
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 md:p-6"
+    <CommunicationContentSurface
+      className="mx-auto flex w-full max-w-3xl flex-col space-y-6"
+      padded={false}
+    >
+      <SceReadinessStatusPanel
+        title="Versandbereitschaft"
+        description={readinessPresentation.summary}
+        headline={readinessPresentation.headline}
+        headlineTone={mapEmailSenderReadinessHeadlineTone(readinessPresentation)}
+        rows={mapEmailSenderReadinessToPanelRows(readinessPresentation)}
+        headingId="email-sender-readiness-heading"
         data-testid="email-sender-readiness"
-      >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2
-              id="email-sender-readiness-heading"
-              className="text-base font-semibold text-[var(--foreground)]"
-            >
-              Versandbereitschaft
-            </h2>
-            <p className="mt-1 text-sm text-[var(--text-2)]">{readinessPresentation.summary}</p>
-          </div>
-          <AdminStatusPill
-            label={readinessPresentation.headline}
-            tone={toneToPill(readinessPresentation.tone)}
-          />
-        </div>
-
-        <ul
-          className="mt-4 space-y-2"
-          aria-label="Versandbereitschaft Prüfpunkte"
-          data-testid="email-sender-readiness-checklist"
-        >
-          {readinessPresentation.checklist.map((item) => (
-            <li key={item.id} className="flex gap-2 text-sm text-[var(--text-2)]">
-              <span className="sr-only">{checklistStateLabel(item.state)}:</span>
-              {checklistIcon(item.state)}
-              <span>
-                <span className="font-medium text-[var(--foreground)]">{item.label}</span>
-                {item.detail ? <span className="block text-[var(--text-2)]">{item.detail}</span> : null}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      />
 
       <section
         aria-labelledby="email-sender-active-heading"

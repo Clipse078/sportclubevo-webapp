@@ -14,7 +14,7 @@ function Bone({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-[var(--surface-2)]",
+        "motion-safe:animate-pulse motion-reduce:animate-none rounded-md bg-[var(--surface-2)]",
         className,
       )}
       aria-hidden="true"

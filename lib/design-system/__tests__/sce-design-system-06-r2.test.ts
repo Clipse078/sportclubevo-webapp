@@ -38,7 +38,8 @@ describe("SCE-DESIGN-SYSTEM-06 R2 guardrails", () => {
     expect(record).toContain("turniere-record-section-resources");
     expect(record).not.toContain('TurniereRecordSection title="Ressourcen"');
     const readiness = readSrc("components/admin/tournamentcenter/planung/TournamentPlanungWorkspace.tsx");
-    expect(readiness).toContain("SCE_SURFACE_STANDARD_PANEL");
+    expect(readiness).toContain("SceReadinessStatusPanel");
+    expect(readiness).not.toContain("SCE_SURFACE_STANDARD_PANEL");
   });
 
   it("records DS-10 uncontained surface audit category for representative areas", () => {
