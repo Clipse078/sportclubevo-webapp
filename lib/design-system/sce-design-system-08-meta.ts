@@ -3,6 +3,7 @@
  */
 import {
   SCE_DENSE_CANONICAL_PRIMITIVES,
+  SCE_DENSE_RSC_BOUNDARY_CONTRACT,
   SCE_DENSE_UI_DS07_INTEGRATION,
   SCE_DENSE_UI_SEMANTICS,
   SCE_DENSE_FILTER_TOOLBAR_CONTRACT,
@@ -40,12 +41,66 @@ export const SCE_DESIGN_SYSTEM_08_PO_FLAGS = {
 } as const;
 
 export const SCE_DESIGN_SYSTEM_08_PO_REVIEW = {
-  DS08_STATUS: "DRAFT — PO VISUAL REVIEW",
+  DS08_STATUS: "CLOSED / ACCEPTED / MERGED",
+  DS08_R1_STATUS: "CLOSED / ACCEPTED / MERGED",
   BASELINE_STAGE_HEAD: "867d6c4a443d33ee219a65d71c755fd78e352bbc",
   BRANCH: "cursor/sce-design-system-08-tables-lists-dense-ui",
   PREDECESSOR_DS07_PR: "885",
   PR: "886",
   NEXT_PACKAGE: "SCE-DESIGN-SYSTEM-09 — Responsive & Accessibility Hardening",
+} as const;
+
+export const SCE_DESIGN_SYSTEM_08_PO_CLOSURE = {
+  PO_DS08_VISUAL_UAT: "PASS",
+  PO_DS08_R1_RUNTIME_REVIEW: "PASS",
+  PO_PEOPLE_ACCESS_DESKTOP_REVIEW: "PASS",
+  PO_PEOPLE_ACCESS_RESPONSIVE_REVIEW: "PASS",
+  PO_ROLES_DENSE_TABLE_REVIEW: "PASS",
+  DS08_STATUS: "CLOSED / ACCEPTED / MERGED",
+  DS08_R1_STATUS: "CLOSED / ACCEPTED / MERGED",
+  PR: "886",
+  ACCEPTED_BASE_IMPLEMENTATION_HEAD: "280e287ff5e80cd1e987dbb5af6a9c42567b38f9",
+  ACCEPTED_R1_HEAD: "d164cafd8b2fc9cb8184d7d499d8201ef2b4c783",
+  FEATURE_HEAD_BEFORE_CLOSURE: "d164cafd8b2fc9cb8184d7d499d8201ef2b4c783",
+  /** Set on closure commit — merge SHA recorded on STAGE after PR merge. */
+  CLOSURE_COMMIT: "PENDING_CLOSURE_COMMIT",
+  STAGE_MERGE_COMMIT: "PENDING_STAGE_MERGE",
+  NEXT_PACKAGE: "SCE-DESIGN-SYSTEM-09 — Responsive & Accessibility Hardening",
+} as const;
+
+/** Explicit DS-09 handoff — DS-08 does not claim responsive/a11y finality product-wide. */
+export const SCE_DESIGN_SYSTEM_08_DS09_HANDOFF_DEBT = [
+  "horizontal overflow review",
+  "responsive table strategy",
+  "mobile metadata stacking",
+  "breakpoint quality",
+  "narrow desktop/tablet behaviour",
+  "touch targets",
+  "keyboard navigation",
+  "focus visibility",
+  "semantic structure",
+  "screen-reader semantics",
+  "reduced motion",
+  "zoom/reflow",
+  "text truncation/wrapping",
+  "long labels/content",
+  "dense controls on touch devices",
+  "bottom navigation/content collision",
+  "sticky/fixed UI collision",
+  "modal/dialog responsive behaviour",
+  "workspace/header/context-tab responsiveness",
+  "activity cards",
+  "forms",
+  "feedback states",
+  "dense UI",
+] as const;
+
+export const SCE_DESIGN_SYSTEM_08_DS09_HANDOFF = {
+  RESPONSIVE_FINAL_HARDENING: "DS09",
+  ACCESSIBILITY_FINAL_HARDENING: "DS09",
+  PRODUCT_WIDE_RESPONSIVE_AUDIT_REQUIRED: "YES",
+  PRODUCT_WIDE_ACCESSIBILITY_AUDIT_REQUIRED: "YES",
+  DEBT: SCE_DESIGN_SYSTEM_08_DS09_HANDOFF_DEBT,
 } as const;
 
 export type SceDenseUiAuditClassification =
@@ -240,6 +295,8 @@ export const SCE_DESIGN_SYSTEM_08_DOC_MARKERS = [
   "SceDenseGridRow",
   "SceEntityIdentity",
   "SCE-DESIGN-SYSTEM-08-DENSE-UI-INVENTORY",
+  "SCE-DESIGN-SYSTEM-08-DS09-HANDOFF",
+  "SCE_DESIGN_SYSTEM_08_CLOSED_ACCEPTED_MERGED",
   ...SCE_DENSE_UI_MICRO_UX_DOC_MARKERS,
 ] as const;
 
@@ -256,7 +313,12 @@ export const SCE_DESIGN_SYSTEM_08_GOVERNANCE = {
   VISIBLE_DESIGN_CONVERGENCE_REQUIRED: "YES",
   FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED: "YES",
   DS10_FINAL_DENSE_MIGRATION_REQUIRED: "YES",
-  DS07_HANDOFF_DEBT_ADDRESSED: "PARTIAL — representative adoption",
+  DS10_FINAL_ADOPTION_REQUIRED: "YES",
+  PRODUCT_WIDE_DENSE_UI_MIGRATION_COMPLETE: "NO",
+  LOCAL_PARALLEL_DENSE_UI_SYSTEMS_ALLOWED: "NO",
+  ...SCE_DENSE_RSC_BOUNDARY_CONTRACT,
+  ...SCE_DESIGN_SYSTEM_08_DS09_HANDOFF,
+  DS07_HANDOFF_DEBT_ADDRESSED: "REPRESENTATIVE — People & Access + Roles + Billing bridge",
   DS07_HANDOFF_DEBT: SCE_DESIGN_SYSTEM_07_DS08_HANDOFF_DEBT,
   NEW_BINARY_CHECKBOXES: 0,
   BINARY_CONTROL_COMPLIANCE: "PASS",
@@ -273,11 +335,14 @@ export const SCE_DESIGN_SYSTEM_08_GOVERNANCE = {
 } as const;
 
 export const SCE_DESIGN_SYSTEM_08_REPRESENTATIVE_ADOPTION = {
+  PEOPLE_ACCESS_DENSE_UI: "ACCEPTED",
+  ROLES_OVERVIEW_DENSE_UI: "ACCEPTED",
+  BILLING_TABLE_BRIDGE: "ACCEPTED",
   PEOPLE_ACCESS:
     "TenantUsersSearchableList → SceDenseSurface, SceDenseGridRow, SceEntityIdentity, SceSearchField toolbar",
   ROLES_OVERVIEW:
     "TenantRolesOverviewDenseTable → SceDenseSurface + SceDataTable + SceDenseList mobile",
-  BILLING_TABLE_BRIDGE: "BillingDataTable → delegates to SceDataTable primitives",
+  BILLING_TABLE_BRIDGE_DETAIL: "BillingDataTable → delegates to SceDataTable primitives",
   SECOND_ADOPTION_RATIONALE:
     "Roles overview is structurally tabular (column relationships) vs People & Access entity grid — proves TABLE vs DENSE_LIST flexibility",
   VISIBLE_PRODUCT_ADOPTION_REQUIRED: "YES",

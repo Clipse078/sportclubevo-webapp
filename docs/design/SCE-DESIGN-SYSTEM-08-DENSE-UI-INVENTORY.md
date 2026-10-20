@@ -18,13 +18,15 @@ Human-readable product-wide audit of tables, lists, and dense operational surfac
 | DUPLICATE | Parallel local system — consolidate in DS-10 |
 | LEGACY_REPLACE | Replace with canonical dense primitives |
 
-## DS-08 representative adoption
+## DS-08 representative adoption (PO accepted)
 
 | Surface | Pattern | Status |
 | --- | --- | --- |
-| Personen & Zugänge | Dense entity grid | **ADOPTED** |
-| Roles overview | Semantic table + dense mobile list | **ADOPTED** |
-| Billing operations tables | Table bridge | **BRIDGE** |
+| Personen & Zugänge | Dense entity grid | **ACCEPTED** (`PEOPLE_ACCESS_DENSE_UI`) |
+| Roles overview | Semantic table + dense mobile list | **ACCEPTED** (`ROLES_OVERVIEW_DENSE_UI`) |
+| Billing operations tables | Table bridge | **ACCEPTED** (`BILLING_TABLE_BRIDGE`) |
+
+**DS-08 closure does not** imply `PRODUCT_WIDE_DENSE_UI_MIGRATION_COMPLETE`. Remaining surfaces stay **REMAINING** until **DS-10**.
 
 ## DS-10 carry-forward
 

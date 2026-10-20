@@ -118,11 +118,25 @@ export const SCE_DENSE_CANONICAL_PRIMITIVES = {
   DENSE_TOOLBAR: "SceDenseToolbar",
   DENSE_RESULT_COUNT: "SceDenseResultCount",
   DATA_TABLE: "SceDataTable",
+  DATA_TABLE_ROW: "SceDataTableRow",
+  DATA_TABLE_HEADER_CELL: "SceDataTableHeaderCell",
   DENSE_GRID_HEADER: "SceDenseGridHeader",
   DENSE_GRID_ROW: "SceDenseGridRow",
   DENSE_LIST: "SceDenseList",
   DENSE_LIST_ROW: "SceDenseListRow",
+  DENSE_ROW_ACTIONS: "SceDenseRowActions",
+  DENSE_META_CHIP: "SceDenseMetaChip",
   ENTITY_IDENTITY: "SceEntityIdentity",
   SORTABLE_HEADER: "SceSortableColumnHeader",
   PAGINATION: "SceDensePagination",
+} as const;
+
+/** Server Component safe dense UI — interactive handlers live in client leaf modules only. */
+export const SCE_DENSE_RSC_BOUNDARY_CONTRACT = {
+  SERVER_COMPONENT_SAFE_DENSE_UI_API: "YES",
+  EVENT_HANDLERS_CROSS_RSC_BOUNDARY: "NO",
+  FAKE_INTERACTIVE_ROWS_ALLOWED: "NO",
+  SEMANTIC_TABLE_STRUCTURE_PRESERVED: "YES",
+  CLIENT_ROW_PRIMITIVE: "SceDataTableRow",
+  SERVER_TABLE_SHELL: "SceDataTable",
 } as const;
