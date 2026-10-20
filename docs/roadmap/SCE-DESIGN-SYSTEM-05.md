@@ -10,7 +10,7 @@
 | **Branch** | `cursor/sce-design-system-05-forms-controls` |
 | **Baseline STAGE** | `4bc4ad9f81eb243df5bcc68164085cace4b1f011` |
 | **Accepted DS-05 implementation HEAD** | `f311c899822daed639b328f3281bb0b0a3c92e39` |
-| **R1 micro-UX HEAD (`FEATURE_HEAD_FULL`)** | recorded in `lib/design-system/sce-design-system-05-meta.ts` |
+| **R1 micro-UX HEAD (`FEATURE_HEAD_FULL`)** | `6b50bb21fe5618be499cd53862bee6a411d97d2a` |
 | **Successor** | **`SCE-DESIGN-SYSTEM-06`** — Actions / Dialogs / Composer |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace · DS-04 cards |
 
