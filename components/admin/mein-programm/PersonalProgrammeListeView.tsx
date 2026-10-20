@@ -52,7 +52,9 @@ export default function PersonalProgrammeListeView({
           icon={<CalendarDays className="h-5 w-5" />}
           title={filtersActive ? "Keine Aktivitäten für diese Auswahl" : t("emptyTitle")}
           description={filtersActive ? undefined : t("emptyDescription")}
-          variant="default"
+          variant="compact"
+          variantSemantic={filtersActive ? "FILTERED_NO_RESULTS" : "NO_DATA"}
+          compactLayout="inline"
         />
       </div>
     );

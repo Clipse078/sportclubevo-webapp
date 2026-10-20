@@ -1,8 +1,8 @@
 # SCE Design System v1.0 — Master Entry Point
 
-> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **CLOSED / ACCEPTED / MERGED** (PR **#884**)  
+> **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **CLOSED / ACCEPTED / MERGED** (PR **#884**) · [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md) — **READY FOR PO REVIEW** (draft)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-07** — Status, Feedback, Loading, Empty & Error
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-08** (after DS-07 PO acceptance)
 
 ---
 
@@ -291,6 +291,33 @@ Full package doc: [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md).
 **DS-06 PO closure locks:** `DS06_STATUS = CLOSED / ACCEPTED / MERGED` · `ACTION_SYSTEM_PRODUCT_WIDE = YES` · `DIALOG_SYSTEM_PRODUCT_WIDE = YES` · `ACTIVITY_COMPOSER_CANONICAL = YES` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `VISIBLE_DESIGN_CONVERGENCE_REQUIRED = YES` · `FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED = YES` · `RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE = NO` · `PITCH_COUNT_RECOMMENDATION = YES` · `PLAYING_FORMAT_RECOMMENDED_FROM_TEMPLATE = NO` · `PLAYING_FORMAT_AUTO_ASSIGNED_TO_RECOMMENDED_PITCH = NO` · `WORLD_CLASS_MICRO_UX_REQUIRED = YES` · `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED = NO` · `MICRO_RESPONSIVE_QUALITY = PARTIAL_DS09_FINAL` · `MICRO_ACCESSIBILITY = PARTIAL_DS09_FINAL` · `UNEXPLAINED_LEGACY_ACTION_DIALOG_FAMILIES_ALLOWED_AT_DS10_CLOSURE = NO` · `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS`.
 
 **DS-06-R1–R3 (accepted on PR #884):** visible adoption on Tournament Center, Planung, and Personen & Zugänge; **Turnierplanung einrichten** for legacy HOME tournaments (no recreation; AWAY protected); R2 functional Planung resource surfaces + idempotent recommended pitch count preparation; R3 **schedule recommendation ≠ playing format** (Spielform optional until organiser chooses). Metadata: `sce-design-system-06-meta.ts` · `sce-design-system-06-r1-meta.ts` · `sce-design-system-06-r2-meta.ts` · `sce-design-system-06-r3-meta.ts`. Remaining visual debt: **DS-07–DS-10** — not a claim of full-app visual migration.
+
+---
+
+## Status, feedback, loading, empty & error (SCE-DESIGN-SYSTEM-07)
+
+**`STATUS_FEEDBACK_SYSTEM_PRODUCT_WIDE`:** **YES** · **`READINESS_SYSTEM_CANONICAL`:** **YES** · **`EMPTY_STATE_SYSTEM_CANONICAL`:** **YES** · **`LOADING_SYSTEM_CANONICAL`:** **YES**
+
+One semantic feedback model (SUCCESS · WARNING · ERROR · INFO · NEUTRAL) — **icon + text**, never colour alone. Restrained surfaces aligned with Communication workspace quality.
+
+| Concern | Contract |
+| --- | --- |
+| Semantic feedback | `SceSemanticFeedback` — role/status/alert semantics (`lib/design-system/sce-feedback-status-foundation.ts`) |
+| Readiness / status panel | `SceReadinessStatusPanel` — Email Sender **Versandbereitschaft** reference |
+| Empty states | `SceEmptyState` — EMPTY ≠ ERROR; NO_RESULTS ≠ FIRST_USE |
+| Actionable errors | `SceActionableError` + `buildSceActionableErrorPresentation` — **`GENERIC_INTERNAL_ERROR_AS_DEFAULT = NO`** |
+| Loading hierarchy | Control → local → skeleton → workspace skeleton (`SCE_LOADING_HIERARCHY`) |
+| Skeletons | `SceSkeleton` recipes · bridge to `LoadingSkeleton` · `prefers-reduced-motion` |
+| Legacy empty bridge | `EmptyState` / `DashboardEmptyState` → `SceEmptyState` |
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-07-FEEDBACK-INVENTORY.md`](./SCE-DESIGN-SYSTEM-07-FEEDBACK-INVENTORY.md) |
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-07-status-feedback.test.ts` · `components/sce/feedback/__tests__/SceFeedbackPrimitives.test.tsx`.
+
+Full package doc: [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md).
+
+**DS-07 PO review locks (draft):** `ACTIONABLE_ERROR_UX_REQUIRED = YES` · `VISIBLE_PRODUCT_ADOPTION_REQUIRED = YES` · `VISIBLE_DESIGN_CONVERGENCE_REQUIRED = YES` · `FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED = YES` · `RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE = NO` · `CARD_SOUP_ALLOWED = NO` · `BINARY_CONTROL_COMPLIANCE = PASS` · `NEW_BINARY_CHECKBOXES = 0` · `COMMUNICATION_WORKSPACE_PRIMARY_VISUAL_REFERENCE = YES` · `WORLD_CLASS_MICRO_UX_REQUIRED = YES` · `LOCAL_MICRO_PATTERN_DRIFT_ALLOWED = NO` · `MICRO_RESPONSIVE_QUALITY = PARTIAL_DS09_FINAL` · `MICRO_ACCESSIBILITY = PARTIAL_DS09_FINAL` · `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS`.
+
+**Representative adoption:** Email Sender readiness → `SceReadinessStatusPanel` · Tournament Planung readiness/planning feedback · Personen & Zugänge + Planning Hub + Mein Programm empty language · Planung setup dialog load error UX. DS-10 completes product-wide empty/loading/error sweep.
 
 ---
 

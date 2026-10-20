@@ -9,7 +9,7 @@ import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
 import { cn } from "@/lib/cn";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
-import { EmptyState } from "@/components/ui/page/EmptyState";
+import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import UserRowActionsMenu from "@/components/admin/users/UserRowActionsMenu";
 import PeopleAccessWizardDialog from "@/components/admin/users/people-access/PeopleAccessWizardDialog";
@@ -318,17 +318,20 @@ export default function TenantUsersSearchableList({
       ) : null}
 
       {grandTotal === 0 ? (
-        <EmptyState
+        <SceEmptyState
+          variant="FIRST_USE"
           icon={<ProductDomainSceIcon name="people" size={48} />}
-          heading="Noch keine Personen mit Zugang"
+          title="Noch keine Personen mit Zugang"
           description="Füge die erste Person hinzu, um Zugang zu SportClubEvo zu vergeben."
+          data-testid="people-access-empty-first-use"
         />
       ) : totalShown === 0 ? (
-        <EmptyState
+        <SceEmptyState
+          variant="FILTERED_NO_RESULTS"
           icon={<UserX className="h-10 w-10" />}
-          heading="Keine Personen gefunden."
+          title="Keine Personen gefunden."
           description="Für die gewählten Filter wurden keine Einträge gefunden."
-          action={
+          primaryAction={
             isFiltered ? (
               <button
                 type="button"
@@ -344,6 +347,7 @@ export default function TenantUsersSearchableList({
               </button>
             ) : undefined
           }
+          data-testid="people-access-empty-filtered"
         />
       ) : (
         <div className="overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { SceActionableError } from "@/components/sce/feedback/SceActionableError";
+import { SceSkeleton } from "@/components/sce/feedback/SceSkeleton";
+import { buildSceActionableErrorPresentation } from "@/lib/design-system/sce-actionable-error-foundation";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
@@ -50,43 +53,58 @@ export default function TournamentPlanungSetupDialog({
   const [tenantLogoUrl, setTenantLogoUrl] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [persistedPitchCount, setPersistedPitchCount] = useState(0);
+  const [loadError, setLoadError] = useState<{
+    title: string;
+    description: string;
+    retryLabel: string;
+  } | null>(null);
+
+  const loadSetup = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await fetch(`/api/tournaments/${tournamentId}/planung/setup`);
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Turnierplanung konnte nicht geladen werden.");
+      }
+      const data = (await res.json()) as {
+        payload: TournamentComposerDraftPayload;
+        planner: TournamentComposerPlannerDraft;
+        participantCount: number;
+        categoryContext: ProgrammeTemplateCategoryContext | null;
+        tenantClubName: string;
+        tenantLogoUrl: string | null;
+        persistedPitchCount: number;
+      };
+      setPayload(data.payload);
+      setPlanner(data.planner);
+      setParticipantCount(data.participantCount);
+      setCategoryContext(data.categoryContext);
+      setTenantClubName(data.tenantClubName);
+      setTenantLogoUrl(data.tenantLogoUrl);
+      setPersistedPitchCount(data.persistedPitchCount ?? 0);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : undefined;
+      const presentation = buildSceActionableErrorPresentation({
+        context: "TOURNAMENT_PLANUNG_LOAD",
+        serverMessage: message,
+        allowServerMessage: true,
+      });
+      setLoadError(presentation);
+      setPayload(null);
+      setPlanner(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [tournamentId]);
 
   useEffect(() => {
     if (!open) return;
     setStep("turnierformat");
     setFieldErrors({});
-    setLoading(true);
-    void fetch(`/api/tournaments/${tournamentId}/planung/setup`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(data.error ?? "Turnierplanung konnte nicht geladen werden.");
-        }
-        return res.json() as Promise<{
-          payload: TournamentComposerDraftPayload;
-          planner: TournamentComposerPlannerDraft;
-          participantCount: number;
-          categoryContext: ProgrammeTemplateCategoryContext | null;
-          tenantClubName: string;
-          tenantLogoUrl: string | null;
-          persistedPitchCount: number;
-        }>;
-      })
-      .then((data) => {
-        setPayload(data.payload);
-        setPlanner(data.planner);
-        setParticipantCount(data.participantCount);
-        setCategoryContext(data.categoryContext);
-        setTenantClubName(data.tenantClubName);
-        setTenantLogoUrl(data.tenantLogoUrl);
-        setPersistedPitchCount(data.persistedPitchCount ?? 0);
-      })
-      .catch((err: unknown) => {
-        toast.danger(err instanceof Error ? err.message : "Laden fehlgeschlagen.");
-        onClose();
-      })
-      .finally(() => setLoading(false));
-  }, [open, tournamentId, toast, onClose]);
+    void loadSetup();
+  }, [open, loadSetup]);
 
   const applyPlannerUpdate = useCallback(
     (updater: (prev: TournamentComposerPlannerDraft) => TournamentComposerPlannerDraft) => {
@@ -224,11 +242,17 @@ export default function TournamentPlanungSetupDialog({
         data-testid="tournament-planung-setup-dialog"
         data-sce-dialog-shell
       >
-        {loading || !planner || !payload ? (
-          <p className="flex items-center gap-2 text-sm text-[var(--muted)]">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            Turnierplanung wird geladen …
-          </p>
+        {loadError ? (
+          <SceActionableError
+            title={loadError.title}
+            description={loadError.description}
+            retryLabel={loadError.retryLabel}
+            onRetry={() => void loadSetup()}
+            onDismiss={onClose}
+            data-testid="tournament-planung-setup-load-error"
+          />
+        ) : loading || !planner || !payload ? (
+          <SceSkeleton recipe="readiness-panel" data-testid="tournament-planung-setup-loading" />
         ) : (
           <>
             <p className="mb-4 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
