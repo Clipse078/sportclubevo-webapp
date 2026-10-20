@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-02` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-01` (**CLOSED / ACCEPTED / MERGED**, PR **#879**) |
-| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#880** → **STAGE**; PO final acceptance) |
+| **Status** | **CLOSED / ACCEPTED / MERGED** (PR **#880** → **STAGE**; merge `c94e36e53586f14940ca9a0f212ca3e87f5d7499`) |
 | **`DS02_STATUS`** | **CLOSED / ACCEPTED / MERGED** |
 | **Branch** | `cursor/sce-design-system-02-foundations-tokens` |
 | **Accepted foundation head (`FEATURE_HEAD`)** | `00b5eeca31dd9ac9621fa0ee6491707a97f9ac5e` |
