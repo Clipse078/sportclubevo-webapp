@@ -113,6 +113,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R9 — Spielplan presentation", () => {
           payload={draft}
           timelineItems={preview.timelineItems}
           summaryLine="10:00 Start"
+          tenantClubName="Test Club"
+          tenantLogoUrl="https://example.com/tenant.png"
         />,
       );
 

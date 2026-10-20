@@ -52,10 +52,10 @@ function ClubCrestFallback({
   const sizeClass = FALLBACK_SIZE_CLASSES[density ?? "management"];
   const containerClassName = cn(
     sizeClass,
-    "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border font-semibold uppercase tracking-wide",
+    "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-sm border border-dashed font-medium normal-case",
     emphasized
-      ? "border-[var(--border-strong)] bg-[var(--surface-2)] text-[var(--text-2)]"
-      : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
+      ? "border-[var(--border-strong)] text-[var(--text-2)]"
+      : "border-[var(--border)] bg-[var(--surface)]/40 text-[var(--muted)]",
     className,
   );
 

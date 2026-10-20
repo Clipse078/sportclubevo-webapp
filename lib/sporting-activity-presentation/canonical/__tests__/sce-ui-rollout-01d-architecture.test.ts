@@ -256,7 +256,8 @@ describe("SCE-UI-ROLLOUT-01D — architecture guardrails", () => {
     expect(crest).toContain("object-contain");
     expect(crest).toMatch(/data-testid="club-crest-image"/);
     expect(crest).not.toMatch(/data-testid="club-crest-image"[\s\S]*rounded-full/);
-    expect(crest).toMatch(/rounded-full[\s\S]*club-crest-fallback-initials/);
+    expect(crest).toMatch(/border-dashed[\s\S]*club-crest-fallback-initials/);
+    expect(crest).not.toMatch(/club-crest-fallback-initials[\s\S]*rounded-full/);
   });
 
   it("match density scale defines result typography for all densities including MICRO", () => {

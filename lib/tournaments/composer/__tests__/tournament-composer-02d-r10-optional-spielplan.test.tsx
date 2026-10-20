@@ -98,6 +98,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R10 — optional Spielplan", () => {
         payload={draft}
         timelineItems={preview.timelineItems}
         summaryLine={preview.tournamentStartLabel}
+        tenantClubName="Test Club"
+        tenantLogoUrl={null}
       />,
     );
     expect(presentation.container.textContent).not.toMatch(/Nicht festgelegt/);

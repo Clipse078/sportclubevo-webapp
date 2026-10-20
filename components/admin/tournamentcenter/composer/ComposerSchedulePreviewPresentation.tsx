@@ -4,34 +4,24 @@ import SceTournamentSpielplanPreviewFixtureCard from "@/components/sce/tournamen
 import SceTournamentScheduleBreakPresentation from "@/components/sce/tournament/SceTournamentScheduleBreakPresentation";
 import type { TournamentComposerDraftPayload } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import type { ComposerSchedulePreviewTimelineItem } from "@/lib/tournaments/composer/build-composer-schedule-preview-timeline";
-import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
 import { SCE_TOURNAMENT_ROUND_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
+import { buildComposerParticipantFixtureSidePresentation } from "@/lib/tournaments/tournament-participant-presentation";
 import { cn } from "@/lib/cn";
-
-function participantSide(
-  payload: TournamentComposerDraftPayload,
-  participantId: string,
-): TournamentPlanungFixtureSidePresentation {
-  const row = payload.participants.find((p) => p.localId === participantId);
-  return {
-    label: row?.displayName?.trim() || participantId,
-    crestUrl: row?.externalClubLogoUrl ?? null,
-    isPlaceholder: false,
-    participantId,
-    qualificationProvenanceLabel: null,
-  };
-}
 
 type Props = {
   payload: TournamentComposerDraftPayload;
   timelineItems: readonly ComposerSchedulePreviewTimelineItem[];
   summaryLine: string | null;
+  tenantClubName: string;
+  tenantLogoUrl: string | null;
 };
 
 export default function ComposerSchedulePreviewPresentation({
   payload,
   timelineItems,
   summaryLine,
+  tenantClubName,
+  tenantLogoUrl,
 }: Props) {
   return (
     <div className="space-y-4" data-testid="tournament-composer-schedule-preview">
@@ -88,8 +78,18 @@ export default function ComposerSchedulePreviewPresentation({
                       fixtureKey={fixture.fixtureKey}
                       pitchLabel={fixture.pitchLabel}
                       playersPerSide={fixture.playersPerSide}
-                      sideA={participantSide(payload, fixture.homeParticipantId)}
-                      sideB={participantSide(payload, fixture.awayParticipantId)}
+                      sideA={buildComposerParticipantFixtureSidePresentation({
+                        participants: payload.participants,
+                        participantLocalId: fixture.homeParticipantId,
+                        tenantClubName,
+                        tenantLogoUrl,
+                      })}
+                      sideB={buildComposerParticipantFixtureSidePresentation({
+                        participants: payload.participants,
+                        participantLocalId: fixture.awayParticipantId,
+                        tenantClubName,
+                        tenantLogoUrl,
+                      })}
                     />
                   </li>
                 ))}

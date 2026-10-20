@@ -997,7 +997,7 @@ export default function TournamentCreateForm({
           { key: "spielfelder" as const, label: "Spielfelder", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
             <TournamentComposerSpielfelderPanel planner={plannerForPanels} participantCount={countComposerCuratedTemplateParticipants(participantsWithTeamAgeGroups)} categoryContext={programmeCategoryContext} onChange={applyPlannerUpdate} fieldErrors={ctx?.fieldErrors} /> },
           { key: "spielplan" as const, label: "Spielplan", render: (ctx?: { fieldErrors?: Record<string, string> }) =>
-            <TournamentComposerSpielplanPanel payload={composerDraft} planner={plannerForPanels} categoryContext={programmeCategoryContext} onChange={applyPlannerUpdate} fieldErrors={ctx?.fieldErrors} /> },
+            <TournamentComposerSpielplanPanel payload={composerDraft} planner={plannerForPanels} categoryContext={programmeCategoryContext} onChange={applyPlannerUpdate} fieldErrors={ctx?.fieldErrors} tenantClubName={tenantClubName} tenantLogoUrl={tenantLogoUrl} /> },
         ]
       : [];
 

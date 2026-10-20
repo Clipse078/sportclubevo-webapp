@@ -1,7 +1,12 @@
 import type { TournamentComposerParticipantRow } from "@/lib/tournaments/composer/tournament-composer-draft-types";
 import type { TournamentParticipantDraftKind } from "@/lib/tournaments/create-tournament-orchestration";
-import { buildClubIdentity, type ClubIdentity } from "@/lib/sporting-activity-design/club-identity";
+import {
+  buildClubIdentity,
+  resolveClubIdentityEffectiveLogoUrl,
+  type ClubIdentity,
+} from "@/lib/sporting-activity-design/club-identity";
 import { resolveSceTournamentHauptteamDisplayName } from "@/lib/sporting-activity-presentation/canonical/tournament-hauptteam-display";
+import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
 
 export type TournamentLobbyGridDensity = "spacious" | "balanced" | "dense";
 
@@ -127,6 +132,40 @@ export function buildTournamentLobbyParticipantIdentities(input: {
       tenantLogoUrl: input.tenantLogoUrl,
     }),
   );
+}
+
+/** Composer Spielplan preview fixture side — same crest resolution as lobby / resource rows. */
+export function buildComposerParticipantFixtureSidePresentation(input: {
+  participants: readonly TournamentComposerParticipantRow[];
+  participantLocalId: string;
+  tenantClubName: string;
+  tenantLogoUrl: string | null;
+}): TournamentPlanungFixtureSidePresentation {
+  const row = input.participants.find((p) => p.localId === input.participantLocalId);
+  const label = row?.displayName?.trim() || input.participantLocalId;
+  if (!row) {
+    return {
+      label,
+      crestUrl: null,
+      isPlaceholder: true,
+      participantId: input.participantLocalId,
+      qualificationProvenanceLabel: null,
+    };
+  }
+
+  const lobbyIdentity = buildTournamentLobbyParticipantIdentity({
+    participant: row,
+    tenantClubName: input.tenantClubName,
+    tenantLogoUrl: input.tenantLogoUrl,
+  });
+
+  return {
+    label,
+    crestUrl: resolveClubIdentityEffectiveLogoUrl(lobbyIdentity.identity),
+    isPlaceholder: row.kind === "MANUAL",
+    participantId: row.localId,
+    qualificationProvenanceLabel: null,
+  };
 }
 
 /** Compact resource-assignment row labels derived from the same lobby identity model. */

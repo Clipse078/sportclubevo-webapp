@@ -139,6 +139,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R12 — Spielplan match card presentation",
     const presentation = read(
       "components/admin/tournamentcenter/composer/ComposerSchedulePreviewPresentation.tsx",
     );
+    expect(presentation).toMatch(/buildComposerParticipantFixtureSidePresentation/);
+    expect(presentation).not.toMatch(/externalClubLogoUrl/);
     expect(presentation).not.toMatch(/Heim|Auswärts|Geplant/i);
     const card = read("components/sce/tournament/SceTournamentSpielplanPreviewFixtureCard.tsx");
     expect(card).not.toMatch(/Heim|Auswärts|Geplant/i);
@@ -152,6 +154,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R12 — Spielplan match card presentation",
         payload={draft}
         timelineItems={preview.timelineItems}
         summaryLine="10:00 Start"
+        tenantClubName="Test Club"
+        tenantLogoUrl="https://example.com/tenant.png"
       />,
     );
     const round1 = screen.getByTestId("tournament-composer-schedule-round-1");
@@ -169,6 +173,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R12 — Spielplan match card presentation",
         payload={draft}
         timelineItems={preview.timelineItems}
         summaryLine={null}
+        tenantClubName="Test Club"
+        tenantLogoUrl="https://example.com/tenant.png"
       />,
     );
     const round1 = screen.getByTestId("tournament-composer-schedule-round-1");
@@ -220,6 +226,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R12 — Spielplan match card presentation",
         payload={draft}
         timelineItems={preview.timelineItems}
         summaryLine={null}
+        tenantClubName="Test Club"
+        tenantLogoUrl="https://example.com/tenant.png"
       />,
     );
     expect(screen.getAllByTestId("tournament-composer-schedule-break")).toHaveLength(1);

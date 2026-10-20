@@ -239,6 +239,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R11 — multi round breaks", () => {
         payload={draft}
         timelineItems={preview.timelineItems}
         summaryLine="10:00 Start"
+        tenantClubName="Test Club"
+        tenantLogoUrl={null}
       />,
     );
     expect(screen.getAllByTestId("tournament-composer-schedule-break").length).toBe(1);

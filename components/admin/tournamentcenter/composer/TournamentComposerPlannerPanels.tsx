@@ -70,9 +70,13 @@ function ScheduleFitPanel({
 function ComposerSchedulePreviewPanel({
   payload,
   categoryContext,
+  tenantClubName,
+  tenantLogoUrl,
 }: {
   payload: TournamentComposerDraftPayload;
   categoryContext: ProgrammeTemplateCategoryContext | null;
+  tenantClubName: string;
+  tenantLogoUrl: string | null;
 }) {
   const preview = useMemo(
     () => buildTournamentSchedulePreview({ payload, categoryContext }),
@@ -115,6 +119,8 @@ function ComposerSchedulePreviewPanel({
       payload={payload}
       timelineItems={preview.timelineItems}
       summaryLine={summaryParts.length > 0 ? summaryParts.join(" · ") : null}
+      tenantClubName={tenantClubName}
+      tenantLogoUrl={tenantLogoUrl}
     />
   );
 }
@@ -446,12 +452,16 @@ export function TournamentComposerSpielplanPanel({
   categoryContext,
   onChange,
   fieldErrors,
+  tenantClubName,
+  tenantLogoUrl,
 }: {
   payload: TournamentComposerDraftPayload;
   planner: TournamentComposerPlannerDraft;
   categoryContext: ProgrammeTemplateCategoryContext | null;
   onChange: PlannerUpdater;
   fieldErrors?: Record<string, string>;
+  tenantClubName: string;
+  tenantLogoUrl: string | null;
 }) {
   const scheduleRoundBreaks = normalizeComposerScheduleRoundBreaks(planner);
 
@@ -667,6 +677,8 @@ export function TournamentComposerSpielplanPanel({
       <ComposerSchedulePreviewPanel
         payload={{ ...payload, planner }}
         categoryContext={categoryContext}
+        tenantClubName={tenantClubName}
+        tenantLogoUrl={tenantLogoUrl}
       />
     </PlanningEditorSection>
   );
