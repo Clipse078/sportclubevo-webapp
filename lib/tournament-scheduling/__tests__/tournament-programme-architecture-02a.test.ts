@@ -180,10 +180,10 @@ describe("SCE Tournament Programme — 02A contracts", () => {
     expect(TOURNAMENT_PLANNER_02_PACKAGES["02A"]).toMatch(/architecture/i);
     expect(TOURNAMENT_PLANNER_02_PACKAGES["02D"]).toMatch(/Predefined Spielplan/i);
     expect(TOURNAMENT_PLANNER_02_PACKAGES["02E"]).toMatch(/Spielplan/i);
-    expect(TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID).toBe("02E");
+    expect(TOURNAMENT_PLANNER_02_NEXT_PACKAGE_ID).toBeNull();
     expect(TOURNAMENT_PLANNER_02_FINAL_PACKAGE_ID).toBe("02E");
     expect(TOURNAMENT_PLANNER_02_CLOSES_AFTER_PACKAGE_ID).toBe("02E");
-    expect([...TOURNAMENT_PLANNER_02_REMAINING_REQUIRED_PACKAGES]).toEqual(["02E"]);
+    expect([...TOURNAMENT_PLANNER_02_REMAINING_REQUIRED_PACKAGES]).toEqual([]);
     expect(GENERIC_ROTATION_GENERATOR_REQUIRED_FOR_TP02).toBe(false);
     expect(STATIONS_ALTERNATIVE_ACTIVITIES_REQUIRED_FOR_TP02).toBe(false);
     expect(ADVANCED_TIMING_IN_ROUND_PHASES_REQUIRED_FOR_TP02).toBe(false);

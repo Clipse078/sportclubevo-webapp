@@ -41,8 +41,8 @@ describe("SCE-TOURNAMENT-PLANNER-02C roadmap", () => {
     expect(parent).toMatch(/02C.*Participant playing units/i);
     expect(parent).toMatch(/02C_STATUS.*CLOSED.*MERGED/i);
     expect(parent).toMatch(/02D.*Predefined Spielplan Templates/i);
-    expect(parent).toMatch(/NEXT_PACKAGE.*02E.*Spielplan UX/i);
-    expect(parent).toMatch(/FINAL_PACKAGE.*02E.*Spielplan UX/i);
+    expect(parent).toMatch(/FINAL_PACKAGE.*02E/i);
+    expect(parent).toMatch(/NEXT_PACKAGE.*NONE|REMAINING_REQUIRED_TP02_PACKAGES.*NONE/i);
     expect(parent).toMatch(/TP02_CLOSES_AFTER_02E.*YES/i);
     expect(parent).not.toMatch(/02H/i);
     expect(parent).not.toMatch(/NEXT_PACKAGE.*Rotation Generator/i);
