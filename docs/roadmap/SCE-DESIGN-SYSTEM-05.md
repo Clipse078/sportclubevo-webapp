@@ -12,6 +12,7 @@
 | **Accepted DS-05 implementation HEAD** | `f311c899822daed639b328f3281bb0b0a3c92e39` |
 | **Accepted R1 micro-UX HEAD** | `4b6a3bcb63d0ba1adcf3394aca82adf264c423a8` |
 | **Feature HEAD before closure docs** | `323582d940d7c0f3a6a28543ce93a46696cab191` |
+| **Closure commit** | `a59c830b928fbbdc0081f8cf9ad8c3c07ce30c44` |
 | **PR** | **#883** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-06`** — Actions, Dialogs & Composer |
 | **Foundation consumed** | DS-02 tokens · DS-03 workspace · DS-04 cards |
