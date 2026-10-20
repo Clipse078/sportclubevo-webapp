@@ -20,7 +20,7 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | Wochenplaner | Week planner | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-08 | `WochenplanEventCard`; keep **DENSE** tier |
 | Planning Hub | Planning hub calendar | **NEEDS_DESIGN_SYSTEM_MIGRATION** | DS-04, DS-08 | `PlanningHubActivityBlock`; operational density |
 | Tournament Planner | Planung board, matrices | **DOMAIN_SPECIFIC_BUT_ALIGNED** | DS-08 | Preserve grids, DnD, locks — SCE language only |
-| Communication | `/dashboard/communication`, email-sender | **ALREADY_ALIGNED** | DS-05, DS-07 | **Primary visual reference** — tokenise Button/readiness |
+| Communication | `/dashboard/communication`, email-sender | **ALREADY_ALIGNED** | DS-05, DS-06, DS-07 | **Primary visual reference** — hub CTAs → `SceActionLink` (DS-06) |
 | Publishing | Website, homepage builder | **ALIGNED_WITH_REFINEMENT** | DS-07, DS-08 | Empty-state duplication |
 | Admin | Settings, seasons, governance | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-07 | Mixed legacy forms |
 | Personen & Zugänge | People directory | **ALIGNED_WITH_REFINEMENT** | DS-07, DS-08 | **COMPACT/DENSE** — not hub whitespace |
@@ -32,6 +32,18 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 | Team / Person workspaces (future) | Person detail, team workspace | **ALIGNED_WITH_REFINEMENT** | DS-03, DS-04 | Context tabs + calm headers |
 
 **Preserved regardless of rollout:** `AppShellNavigation`, `SceContextTabs`, activity card family, `SceActivityComposer`, tournament operational patterns (`DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES`).
+
+### DS-06-R2 — functional surface hierarchy (DS-10 gate)
+
+Permanent governance (classify in DS-06+; migrate in DS-10 — **no blind product-wide migration in R2**):
+
+| Flag | Value |
+| --- | --- |
+| `FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED` | **YES** |
+| `RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE` | **NO** |
+| `CARD_SOUP_ALLOWED` | **NO** |
+
+Audit category for remaining drift: **`UNCONTAINED_FUNCTIONAL_CONTENT_ON_DECORATIVE_BACKGROUND`**. Representative area snapshot: `lib/design-system/sce-design-system-06-r2-meta.ts` (`SCE_DESIGN_SYSTEM_06_R2_SURFACE_DEBT_SNAPSHOT`). DS-10 must not close with unexplained surface hierarchy drift.
 
 ---
 

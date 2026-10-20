@@ -158,13 +158,9 @@ export function TournamentComposerTurnierformatPanel({
             <p className="text-sm text-[var(--text-2)]" data-testid="tournament-composer-template-field-count">
               {resolved.fieldCountLabel}
             </p>
-            {resolved.allocationSummaryLines.length > 0 ? (
-              <ul className="text-xs text-[var(--muted)]">
-                {resolved.allocationSummaryLines.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            ) : null}
+            <p className="text-xs text-[var(--muted)]" data-testid="tournament-composer-schedule-recommendation">
+              {resolved.scheduleRecommendationSummary}
+            </p>
           </div>
           {advancedFormatOpen ? (
             <TournamentComposerLegacyTurnierformatPanel
@@ -229,16 +225,27 @@ export function TournamentComposerSpielfelderPanel({
           Lege Turnierspielfelder fest — optional mit Spielweise pro Feld. SCE übernimmt sie in den Spielplan.
         </p>
       )}
+      {hasProposal &&
+      planner.pitches.length >= resolved.proposedFieldCount &&
+      !planner.pendingProposalRefresh ? (
+        <p
+          className="mb-3 text-sm font-medium text-[var(--foreground)]"
+          data-testid="tournament-composer-pitches-prepared-count"
+        >
+          {planner.pitches.length} Spielfelder vorbereitet
+        </p>
+      ) : null}
       {hasProposal ? (
         <div
           className="mb-4 space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4"
           data-testid="tournament-composer-pitches-template-status"
         >
           <p className="text-sm font-medium text-[var(--foreground)]">{resolved.statusHeadline}</p>
-          <p className="text-sm text-[var(--text-2)]">
-            {resolved.allocationSummaryLines.length > 0
-              ? `${resolved.proposedFieldCount} Spielfelder · ${resolved.allocationSummaryLines.join(" · ")}`
-              : `${resolved.proposedFieldCount} Spielfelder`}
+          <p
+            className="text-sm text-[var(--text-2)]"
+            data-testid="tournament-composer-pitches-schedule-recommendation"
+          >
+            {resolved.scheduleRecommendationSummary}
           </p>
           {planner.pitchesUserCustomized ? (
             <button

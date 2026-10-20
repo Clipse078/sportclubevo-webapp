@@ -17,6 +17,7 @@ import {
   SCE_DIALOG_VARIANT_STANDARD,
   SCE_DIALOG_VARIANT_WORKSPACE,
 } from "@/lib/shell/responsive-layout";
+import { SCE_DIALOG_CLOSE_BUTTON_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 
 export type DialogSize = "sm" | "md" | "standard" | "lg" | "xl" | "workspace";
 
@@ -117,6 +118,7 @@ export function Dialog({
         aria-describedby={description ? "sce-dialog-desc" : undefined}
         onKeyDown={handlePanelKeyDown}
         className={cn(SCE_DIALOG_PANEL_BASE, sizeClass[size])}
+        data-sce-dialog-shell
       >
         {/* Header */}
         <div className={SCE_DIALOG_HEADER}>
@@ -143,12 +145,8 @@ export function Dialog({
             type="button"
             aria-label="Dialog schließen"
             onClick={onClose}
-            className={cn(
-              "shrink-0 rounded-lg p-1.5",
-              "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
-              "transition-colors duration-[120ms]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
-            )}
+            className={SCE_DIALOG_CLOSE_BUTTON_CLASS}
+            data-sce-dialog-close
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>

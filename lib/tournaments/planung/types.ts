@@ -208,7 +208,7 @@ export type TournamentPlanungProgrammeTemplateOffer = {
     fieldCount: number;
     roundCount: number;
     fieldCountLabel: string;
-    playingFormatSummary: string;
+    scheduleRecommendationSummary: string;
   } | null;
   alternatives: readonly {
     templateId: string;

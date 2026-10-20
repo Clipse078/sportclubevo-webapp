@@ -144,7 +144,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R3", () => {
       categoryContext: "E_FF12",
     });
     expect(restored.pitchesUserCustomized).toBe(false);
-    expect(restored.pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(restored.pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
   });
 
   it("F — schedule applicability rejects deleted template fields", () => {

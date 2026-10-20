@@ -57,7 +57,7 @@ export default function TournamentComposerPitchPlayingFormatField({
   return (
     <div className="flex min-w-0 flex-col gap-2 sm:max-w-xs sm:flex-1">
       <label htmlFor={id} className="fca-label">
-        Spielform
+        Spielform (optional)
       </label>
       <select
         id={id}

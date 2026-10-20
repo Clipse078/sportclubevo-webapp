@@ -43,6 +43,7 @@ import {
   TURNIERE_WORKSPACE_RAIL_ASIDE,
   TURNIERE_WORKSPACE_RAIL_STACK,
 } from "./turniere-management-layout";
+import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 
 export type TournamentCenterWorkspaceProps = {
   tournaments: TournamentDto[];
@@ -437,7 +438,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
                       {groupBlock.heading}
                     </h2>
                   ) : null}
-                  <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                  <div className={cn("overflow-hidden", SCE_SURFACE_STANDARD_PANEL)}>
                     {groupBlock.rows.map((row) => (
                       <TurniereManagementRow
                         key={`${groupBlock.key}-${row.tournament.id}`}

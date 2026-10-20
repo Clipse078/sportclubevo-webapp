@@ -19,6 +19,9 @@ import TournamentPublicationToggles, {
 } from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
+import { PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TeamSearchablePicker from "@/components/admin/shared/TeamSearchablePicker";
@@ -839,12 +842,18 @@ export default function TurniereTournamentRecordWorkspace({
                 </section>
               ) : null}
               {isTenantHostedTournament({ homeAway }) ? (
-                <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">
+                <PlanningEditorSection
+                  testId="turniere-record-section-resources"
+                  ariaLabelledBy="turniere-record-resources-heading"
+                >
+                  <PlanningEditorSectionHeading
+                    id="turniere-record-resources-heading"
+                    title="Ressourcen"
+                    description="Spielfeld, Halle und Garderoben für dieses Turnier."
+                  />
                   <div className="space-y-6">
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        Spielfeld / Halle
-                      </p>
+                      <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
                       <TurniereTournamentRecordResourceSummary presentation={resourcePresentation} />
                       <TournamentResourceAllocationEditor
                         tournamentId={tournament.id}
@@ -856,7 +865,12 @@ export default function TurniereTournamentRecordWorkspace({
                     </div>
 
                     <div className="space-y-3">
-                      <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                      <p
+                        className={cn(
+                          PLANNING_RESOURCE_SECTION_LABEL_CLASS,
+                          "flex items-center gap-1",
+                        )}
+                      >
                         <TournamentDressingRoomLabelIcon />
                         Garderoben
                       </p>
@@ -877,7 +891,7 @@ export default function TurniereTournamentRecordWorkspace({
                       </p>
                     ) : null}
                   </div>
-                </TurniereRecordSection>
+                </PlanningEditorSection>
               ) : null}
 
               <PlanningEditorWorkSection

@@ -12,7 +12,8 @@ export type PlanungProgrammeTemplatePresentation = {
     fieldCount: number;
     roundCount: number;
     fieldCountLabel: string;
-    playingFormatSummary: string;
+    /** Sport-neutral schedule structure — not players-per-side. */
+    scheduleRecommendationSummary: string;
   } | null;
   alternatives: readonly {
     templateId: string;
@@ -21,13 +22,6 @@ export type PlanungProgrammeTemplatePresentation = {
   }[];
   fallbackRequired: boolean;
 };
-
-function summarizeFormats(template: TournamentProgrammeTemplate): string {
-  const parts = template.fields.map(
-    (f) => `${f.label} · ${f.playingFormat.playersPerSide}v${f.playingFormat.playersPerSide}`,
-  );
-  return parts.join(", ");
-}
 
 export function buildPlanungProgrammeTemplatePresentation(input: {
   participantCount: number;
@@ -76,7 +70,7 @@ export function buildPlanungProgrammeTemplatePresentation(input: {
       fieldCount: recommended.fields.length,
       roundCount: recommended.rounds.length,
       fieldCountLabel: `Vorschlag: ${recommended.fields.length} Spielfelder · ${recommended.rounds.length} Runden`,
-      playingFormatSummary: summarizeFormats(recommended),
+      scheduleRecommendationSummary: `${recommended.fields.length} Spielfelder · ${recommended.rounds.length} Runden`,
     },
     alternatives: candidates
       .filter((c) => c.id !== recommended.id)

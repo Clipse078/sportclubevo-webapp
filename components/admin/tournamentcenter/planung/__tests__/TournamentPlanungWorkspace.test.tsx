@@ -82,6 +82,30 @@ describe("TournamentPlanungWorkspace", () => {
     expect(screen.getAllByTestId("tournament-planung-generate")).toHaveLength(1);
   });
 
+  it("shows actionable Turnierplanung einrichten for incomplete HOME planner setup", () => {
+    render(
+      <TournamentPlanungWorkspace
+        initialModel={{
+          ...model,
+          planningUx: null,
+          actions: { ...model.actions, canGenerate: false },
+          incompleteSetup: [
+            {
+              code: "PLANNER_SETUP",
+              label: "Turnierplanung einrichten — Format, Felder, Timing und Pausen vervollständigen",
+              href: null,
+            },
+            { code: "PITCHES", label: "Turnierfelder fehlen", href: null },
+          ],
+        }}
+        tournamentId="t1"
+        timezone="Europe/Zurich"
+        canManage
+      />,
+    );
+    expect(screen.getByTestId("tournament-planung-setup-open")).toBeInTheDocument();
+  });
+
   it("does not render for externally organised tournaments", () => {
     const { container } = render(
       <TournamentPlanungWorkspace

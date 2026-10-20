@@ -37,7 +37,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     });
     expect(planner.programmeTemplateId).toBe(E_FF12_ROTATION_4_TEMPLATE.id);
     expect(planner.pitches).toHaveLength(3);
-    expect(planner.pitches.map((p) => p.playersPerSide)).toEqual([3, 3, 6]);
+    expect(planner.pitches.map((p) => p.playersPerSide)).toEqual([null, null, null]);
     expect(planner.pitches.some((p) => p.label === "Feld 1" && p.templateFieldKey)).toBe(true);
     expect(planner.pitches).not.toEqual([
       expect.objectContaining({ label: "Feld 1", playersPerSide: null, templateFieldKey: undefined }),
@@ -49,7 +49,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R2 PO UAT", () => {
     expect(resolved?.proposal.template?.fields.length).toBeGreaterThan(0);
     const pitches = materializeComposerPitchesFromTemplate(resolved!.proposal.template!);
     expect(pitches.length).toBe(resolved!.proposal.template!.fields.length);
-    expect(pitches.every((p) => p.playersPerSide != null)).toBe(true);
+    expect(pitches.every((p) => p.playersPerSide == null)).toBe(true);
   });
 
   it("B — unsupported count keeps manual fallback", () => {

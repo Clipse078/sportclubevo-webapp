@@ -20,23 +20,25 @@ import type {
 } from "./tournament-composer-planner-types";
 import {
   buildComposerProposalFingerprint,
+  buildScheduleRecommendationSummary,
   composerPitchDraftNeedsProposalMaterialisation,
+  expectedRoundCountForProposal,
   fieldProposalSignatureForProposal,
   isGenericDefaultComposerPitchDraft,
-  materializeComposerPitchesFromFieldProposal,
+  materializeComposerPitchesFromPitchCount,
   resolveComposerProgrammeProposal,
-  summarizeComposerPitchAllocation,
   type ComposerProgrammeProposal,
 } from "./tournament-composer-programme-proposal";
 
 export type ComposerResolvedProgrammeTemplate = {
   proposal: ComposerProgrammeProposal;
   proposedFieldCount: number;
+  proposedRoundCount: number | null;
   fieldCountLabel: string;
-  playingFormatSummary: string;
+  /** Sport-neutral schedule structure (fields + rounds when known). */
+  scheduleRecommendationSummary: string;
   statusHeadline: string;
   statusDetail: string;
-  allocationSummaryLines: string[];
 };
 
 /** Curated templates key off tournament participants — never playing-unit splits. */
@@ -44,12 +46,6 @@ export function countComposerCuratedTemplateParticipants(
   participants: readonly unknown[],
 ): number {
   return participants.length;
-}
-
-export function summarizeTemplatePlayingFormats(template: TournamentProgrammeTemplate): string {
-  return template.fields
-    .map((f) => `${f.label} · ${f.playingFormat.playersPerSide}v${f.playingFormat.playersPerSide}`)
-    .join(", ");
 }
 
 export function resolveComposerProgrammeTemplate(input: {
@@ -62,40 +58,27 @@ export function resolveComposerProgrammeTemplate(input: {
   });
   if (proposal.kind === "NONE") return null;
 
-  const allocation = proposal.template
-    ? {
-        fieldCount: proposal.template.fields.length,
-        formatLines: summarizeComposerPitchAllocation(
-          materializeComposerPitchesFromTemplate(proposal.template),
-        ).formatLines,
-      }
-    : proposal.fieldProposalPlayersPerSide
-      ? summarizeComposerPitchAllocation(
-          materializeComposerPitchesFromFieldProposal({
-            playersPerSide: proposal.fieldProposalPlayersPerSide,
-          }),
-        )
-      : { fieldCount: 0, formatLines: [] };
-
-  const roundHint =
+  const fieldCount =
     proposal.kind === "FULL_TEMPLATE" && proposal.template
-      ? ` · ${proposal.template.rounds.length} Runden`
-      : "";
+      ? proposal.template.fields.length
+      : proposal.fieldProposalPitchCount ?? 0;
+  const roundCount = expectedRoundCountForProposal(proposal);
+  const scheduleRecommendationSummary = buildScheduleRecommendationSummary({
+    fieldCount,
+    roundCount,
+  });
 
   return {
     proposal,
-    fieldCountLabel:
-      proposal.kind === "FULL_TEMPLATE"
-        ? `Vorschlag: ${allocation.fieldCount} Spielfelder${roundHint}`
-        : `Vorschlag: ${allocation.fieldCount} Spielfelder`,
-    playingFormatSummary: allocation.formatLines.join(" · "),
+    fieldCountLabel: `Vorschlag: ${scheduleRecommendationSummary}`,
+    scheduleRecommendationSummary,
     statusHeadline: "Empfohlene Aufteilung",
     statusDetail:
       proposal.kind === "FULL_TEMPLATE"
-        ? "SCE hat für die ausgewählten Teams einen passenden Spielplan vorbereitet."
-        : "SCE schlägt eine bewährte Feldaufteilung vor — du siehst den Spielplan direkt im Schritt Spielplan.",
-    proposedFieldCount: allocation.fieldCount,
-    allocationSummaryLines: allocation.formatLines,
+        ? "SCE empfiehlt Spielplan-Struktur (Felder und Runden) — Spielform legst du pro Feld optional selbst fest."
+        : "SCE empfiehlt eine Feldaufteilung — Spielform legst du pro Feld optional selbst fest.",
+    proposedFieldCount: fieldCount,
+    proposedRoundCount: roundCount,
   };
 }
 
@@ -116,7 +99,7 @@ export function materializeComposerPitchesFromTemplate(
       localId: prev?.localId ?? `pitch-template-${field.fieldKey}`,
       templateFieldKey: field.fieldKey,
       label: prev?.userLabelCustomized && prev.label.trim() ? prev.label : field.label,
-      playersPerSide: field.playingFormat.playersPerSide,
+      playersPerSide: prev?.playersPerSide ?? null,
       userLabelCustomized: prev?.userLabelCustomized ?? false,
     };
   });
@@ -129,9 +112,9 @@ function materializePitchesFromProposal(
   if (proposal.kind === "FULL_TEMPLATE" && proposal.template) {
     return materializeComposerPitchesFromTemplate(proposal.template, previous);
   }
-  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPlayersPerSide) {
-    return materializeComposerPitchesFromFieldProposal({
-      playersPerSide: proposal.fieldProposalPlayersPerSide,
+  if (proposal.kind === "FIELD_PROPOSAL_ONLY" && proposal.fieldProposalPitchCount != null) {
+    return materializeComposerPitchesFromPitchCount({
+      pitchCount: proposal.fieldProposalPitchCount,
       previous,
     });
   }

@@ -24,6 +24,9 @@ import type { TournamentDto } from "@/lib/tournaments/types";
 import { buildPublicTournamentPath } from "@/lib/tournaments/public/build-public-tournament-url";
 import { SCE_TOURNAMENT_WORKSPACE_SURFACE_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { SCE_TOURNAMENT_SR_LIVE_REGION_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
+import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
+import { shouldExposePlannerSetupPrimaryAction } from "@/lib/tournaments/planung/planner-setup-eligibility";
+import TournamentPlanungSetupDialog from "./TournamentPlanungSetupDialog";
 
 type Props = {
   initialModel: TournamentPlanungViewModel;
@@ -93,6 +96,7 @@ export default function TournamentPlanungWorkspace({
   const [selfAdjustTiming, setSelfAdjustTiming] = useState(false);
   const [scheduleSyncPending, setScheduleSyncPending] = useState(false);
   const [scheduleLiveMessage, setScheduleLiveMessage] = useState("");
+  const [setupDialogOpen, setSetupDialogOpen] = useState(false);
   const scheduleSyncWasPendingRef = useRef(false);
 
   useEffect(() => {
@@ -107,6 +111,22 @@ export default function TournamentPlanungWorkspace({
   }, [scheduleSyncPending]);
 
   const hasSchedule = model.schedulePresence !== "NONE";
+  const incompleteCodes = useMemo(
+    () => model.incompleteSetup.map((item) => item.code),
+    [model.incompleteSetup],
+  );
+  const showPlannerSetupAction = shouldExposePlannerSetupPrimaryAction({
+    ownership: model.ownership,
+    incompleteSetupCodes: incompleteCodes,
+    canManage,
+  });
+  const incompleteListItems = useMemo(
+    () =>
+      model.incompleteSetup.filter(
+        (item) => item.code !== "PLANNER_SETUP" || !showPlannerSetupAction,
+      ),
+    [model.incompleteSetup, showPlannerSetupAction],
+  );
   const effectiveInteractionMode: InteractionMode =
     hasSchedule && interactionMode === "edit" ? "edit" : "view";
 
@@ -439,21 +459,52 @@ export default function TournamentPlanungWorkspace({
 
       {model.incompleteSetup.length > 0 ? (
         <section
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+          className={cn(SCE_SURFACE_STANDARD_PANEL, "space-y-3 p-4 md:p-5")}
           data-testid="tournament-planung-incomplete"
+          role="status"
         >
-          <p className="text-sm font-medium text-[var(--foreground)]">
-            {model.incompleteSetup.some((i) => i.code === "PLANNER_SETUP")
-              ? "Turnierplanung einrichten"
-              : "Für die automatische Planung fehlt noch:"}
-          </p>
-          <ul className="mt-2 list-disc pl-5 text-sm text-[var(--muted)]">
-            {model.incompleteSetup.map((item) => (
-              <li key={item.code}>{item.label}</li>
-            ))}
-          </ul>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-[var(--foreground)]">
+              {showPlannerSetupAction ? "Turnierplanung einrichten" : "Für die Planung fehlt noch:"}
+            </p>
+            {showPlannerSetupAction ? (
+              <p className="text-sm text-[var(--text-2)]">
+                Für dieses Turnier ist noch kein Spielplan eingerichtet. Format, Felder, Timing und
+                Pausen vervollständigen, um den Spielplan zu erstellen.
+              </p>
+            ) : null}
+          </div>
+          {incompleteListItems.length > 0 ? (
+            <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
+              {incompleteListItems.map((item) => (
+                <li key={item.code}>{item.label}</li>
+              ))}
+            </ul>
+          ) : null}
+          {showPlannerSetupAction ? (
+            <div className="pt-1">
+              <Button
+                type="button"
+                onClick={() => setSetupDialogOpen(true)}
+                data-testid="tournament-planung-setup-open"
+                data-sce-action-hierarchy="PRIMARY"
+              >
+                Turnierplanung einrichten
+              </Button>
+            </div>
+          ) : null}
         </section>
       ) : null}
+
+      <TournamentPlanungSetupDialog
+        open={setupDialogOpen}
+        onClose={() => setSetupDialogOpen(false)}
+        tournamentId={tournamentId}
+        onConfigured={(nextModel) => {
+          setModel(nextModel);
+          setGenerationFeedback(null);
+        }}
+      />
 
       {showPreGenerationPanel ? (
         <section
@@ -500,10 +551,7 @@ export default function TournamentPlanungWorkspace({
                 {model.programmeTemplate.recommended.fieldCount} Felder
               </p>
               <p className="text-sm text-[var(--muted)]">
-                {model.programmeTemplate.recommended.fieldCountLabel}
-              </p>
-              <p className="text-xs text-[var(--muted)]">
-                {model.programmeTemplate.recommended.playingFormatSummary}
+                {model.programmeTemplate.recommended.scheduleRecommendationSummary}
               </p>
             </div>
           ) : null}

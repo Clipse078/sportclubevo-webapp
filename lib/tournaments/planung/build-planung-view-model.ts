@@ -332,7 +332,7 @@ function buildIncompleteSetup(snapshot: PlanungDomainSnapshot): TournamentPlanun
     items.push({
       code: "PLANNER_SETUP",
       label: "Turnierplanung einrichten — Format, Felder, Timing und Pausen vervollständigen",
-      href: `/dashboard/tournamentcenter/${snapshot.tournamentId}/edit?tab=uebersicht`,
+      href: null,
     });
   } else if (snapshot.fixtureCount < 1) {
     items.push({
