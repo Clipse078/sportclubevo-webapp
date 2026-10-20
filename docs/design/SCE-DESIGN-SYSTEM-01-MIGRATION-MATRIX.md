@@ -33,6 +33,18 @@ Evaluate every major area against Communication-derived visual principles (`COMM
 
 **Preserved regardless of rollout:** `AppShellNavigation`, `SceContextTabs`, activity card family, `SceActivityComposer`, tournament operational patterns (`DOMAIN_SPECIFIC_LAYOUTS_PRESERVED = YES`).
 
+### DS-06-R2 — functional surface hierarchy (DS-10 gate)
+
+Permanent governance (classify in DS-06+; migrate in DS-10 — **no blind product-wide migration in R2**):
+
+| Flag | Value |
+| --- | --- |
+| `FUNCTIONAL_SURFACE_HIERARCHY_REQUIRED` | **YES** |
+| `RAW_DECORATIVE_BACKGROUND_AS_DEFAULT_CONTENT_SURFACE` | **NO** |
+| `CARD_SOUP_ALLOWED` | **NO** |
+
+Audit category for remaining drift: **`UNCONTAINED_FUNCTIONAL_CONTENT_ON_DECORATIVE_BACKGROUND`**. Representative area snapshot: `lib/design-system/sce-design-system-06-r2-meta.ts` (`SCE_DESIGN_SYSTEM_06_R2_SURFACE_DEBT_SNAPSHOT`). DS-10 must not close with unexplained surface hierarchy drift.
+
 ---
 
 ## Legacy / architecture migration rows (unchanged DS-01 audit)

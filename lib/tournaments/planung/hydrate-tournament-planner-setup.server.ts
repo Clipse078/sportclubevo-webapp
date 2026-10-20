@@ -14,6 +14,7 @@ import { resolveProgrammeCategoryFromTeamAgeGroups } from "@/lib/tournament-sche
 import type { ProgrammeTemplateCategoryContext } from "@/lib/tournament-scheduling/programme-templates/types";
 import type { TournamentCompetitionFormat } from "@/lib/tournament-scheduling/competition-structure/types";
 import type { TournamentRankingTiebreakCriterion } from "@/lib/tournament-scheduling/competition-structure/types";
+import { applyRecommendedPlannerPitchDraftPreparation } from "./prepare-recommended-planner-pitch-drafts";
 
 function breakStartLocalTime(iso: string, timezone: string): string {
   return new Date(iso).toLocaleTimeString("de-CH", {
@@ -41,6 +42,7 @@ export async function hydrateTournamentPlannerSetupDraft(input: {
   participantCount: number;
   categoryContext: ProgrammeTemplateCategoryContext | null;
   defaultMatchDurationMinutes: number;
+  persistedPitchCount: number;
 }> {
   await requireTenantOrganisedTournament(input.tenantId, input.tournamentId);
 
@@ -94,7 +96,7 @@ export async function hydrateTournamentPlannerSetupDraft(input: {
     initialPitchCount: Math.max(1, pitches.length),
   });
 
-  const planner: TournamentComposerPlannerDraft = {
+  let planner: TournamentComposerPlannerDraft = {
     ...plannerBase,
     ...(competitionConfig
       ? {
@@ -142,6 +144,17 @@ export async function hydrateTournamentPlannerSetupDraft(input: {
     })),
   };
 
+  const { categoryContext } = resolveProgrammeCategoryFromTeamAgeGroups(
+    participants.map((p) => p.team?.ageGroup ?? null),
+  );
+
+  planner = applyRecommendedPlannerPitchDraftPreparation({
+    planner,
+    participantCount: participants.length,
+    categoryContext,
+    persistedPitchCount: pitches.length,
+  });
+
   const payload: TournamentComposerDraftPayload = {
     seasonId: event.seasonId ?? "",
     title: event.title,
@@ -179,15 +192,12 @@ export async function hydrateTournamentPlannerSetupDraft(input: {
     planner,
   };
 
-  const { categoryContext } = resolveProgrammeCategoryFromTeamAgeGroups(
-    participants.map((p) => p.team?.ageGroup ?? null),
-  );
-
   return {
     payload,
     planner,
     participantCount: participants.length,
     categoryContext,
     defaultMatchDurationMinutes,
+    persistedPitchCount: pitches.length,
   };
 }

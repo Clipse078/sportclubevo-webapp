@@ -229,6 +229,16 @@ export function TournamentComposerSpielfelderPanel({
           Lege Turnierspielfelder fest — optional mit Spielweise pro Feld. SCE übernimmt sie in den Spielplan.
         </p>
       )}
+      {hasProposal &&
+      planner.pitches.length >= resolved.proposedFieldCount &&
+      !planner.pendingProposalRefresh ? (
+        <p
+          className="mb-3 text-sm font-medium text-[var(--foreground)]"
+          data-testid="tournament-composer-pitches-prepared-count"
+        >
+          {planner.pitches.length} Spielfelder vorbereitet
+        </p>
+      ) : null}
       {hasProposal ? (
         <div
           className="mb-4 space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface)]/50 p-4"

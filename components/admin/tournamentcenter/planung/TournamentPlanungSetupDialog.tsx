@@ -17,6 +17,7 @@ import { prepareTournamentComposerProposal } from "@/lib/tournaments/composer/pr
 import { validateHomePlannerDraft } from "@/lib/tournaments/composer/tournament-composer-planner-validation";
 import { useToast } from "@/hooks/use-toast";
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
+import { applyRecommendedPlannerPitchDraftPreparation } from "@/lib/tournaments/planung/prepare-recommended-planner-pitch-drafts";
 
 type SetupStep = "turnierformat" | "spielfelder" | "spielplan";
 
@@ -48,6 +49,7 @@ export default function TournamentPlanungSetupDialog({
   const [tenantClubName, setTenantClubName] = useState("");
   const [tenantLogoUrl, setTenantLogoUrl] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [persistedPitchCount, setPersistedPitchCount] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +69,7 @@ export default function TournamentPlanungSetupDialog({
           categoryContext: ProgrammeTemplateCategoryContext | null;
           tenantClubName: string;
           tenantLogoUrl: string | null;
+          persistedPitchCount: number;
         }>;
       })
       .then((data) => {
@@ -76,6 +79,7 @@ export default function TournamentPlanungSetupDialog({
         setCategoryContext(data.categoryContext);
         setTenantClubName(data.tenantClubName);
         setTenantLogoUrl(data.tenantLogoUrl);
+        setPersistedPitchCount(data.persistedPitchCount ?? 0);
       })
       .catch((err: unknown) => {
         toast.danger(err instanceof Error ? err.message : "Laden fehlgeschlagen.");
@@ -108,6 +112,24 @@ export default function TournamentPlanungSetupDialog({
   }, [payload, planner]);
 
   const stepIndex = STEPS.indexOf(step);
+
+  function advanceSetupStep() {
+    const nextStep = STEPS[stepIndex + 1];
+    if (!nextStep || !planner) return;
+    if (step === "turnierformat") {
+      setPlanner((prev) =>
+        prev
+          ? applyRecommendedPlannerPitchDraftPreparation({
+              planner: prev,
+              participantCount,
+              categoryContext,
+              persistedPitchCount,
+            })
+          : prev,
+      );
+    }
+    setStep(nextStep);
+  }
 
   async function saveSetup() {
     if (!planner || !draftForValidation) return;
@@ -170,7 +192,7 @@ export default function TournamentPlanungSetupDialog({
               <Button
                 type="button"
                 disabled={saving || loading || !planner}
-                onClick={() => setStep(STEPS[stepIndex + 1]!)}
+                onClick={advanceSetupStep}
                 data-testid="tournament-planung-setup-next"
               >
                 Weiter

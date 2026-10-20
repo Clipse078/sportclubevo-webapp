@@ -39,6 +39,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
       participantCount: setup.participantCount,
       categoryContext: setup.categoryContext,
       defaultMatchDurationMinutes: setup.defaultMatchDurationMinutes,
+      persistedPitchCount: setup.persistedPitchCount,
       tenantClubName: tenant?.name ?? "",
       tenantLogoUrl: tenant?.logoUrl ?? null,
     });
