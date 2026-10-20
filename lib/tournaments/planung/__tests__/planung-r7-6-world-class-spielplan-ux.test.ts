@@ -32,8 +32,8 @@ describe("01K-R7.6 — world-class Spielplan UX", () => {
     join(process.cwd(), "components/sce/tournament/TournamentSpielplanMasterSchedule.tsx"),
     "utf8",
   );
-  const fixtureCard = readFileSync(
-    join(process.cwd(), "components/sce/tournament/SceTournamentFixtureCard.tsx"),
+  const fixturePresentation = readFileSync(
+    join(process.cwd(), "components/sce/tournament/SceTournamentFixturePresentation.tsx"),
     "utf8",
   );
   const reconcile = readFileSync(
@@ -102,9 +102,9 @@ describe("01K-R7.6 — world-class Spielplan UX", () => {
   });
 
   it("G — team highlight de-emphasis without heavy glow", () => {
-    expect(fixtureCard).toMatch(/opacity-\[0\.38\]/);
-    expect(fixtureCard).not.toMatch(/shadow-md/);
-    expect(fixtureCard).toMatch(/data-testid="sce-tournament-fixture-matchup-cluster"/);
+    expect(fixturePresentation).toMatch(/opacity-\[0\.38\]/);
+    expect(fixturePresentation).not.toMatch(/shadow-md/);
+    expect(fixturePresentation).toMatch(/data-testid="sce-tournament-fixture-matchup-cluster"/);
   });
 
   it("H — master Spielplan break hierarchy (label before time)", () => {

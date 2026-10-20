@@ -83,6 +83,7 @@ export default function TournamentSpielplanMasterSchedule({
                     participants={participants}
                     highlightParticipantId={highlightParticipantId}
                     timezone={model.identity.timezone}
+                    showFixtureTime={false}
                   />
                 </li>
               ))}

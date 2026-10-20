@@ -21,15 +21,17 @@ describe("sce-tournament-surface-layout", () => {
   });
 
   it("does not rely on transparent legacy surface-elevated overlays in tournament fixture shells", () => {
-    const card = readSource("components/sce/tournament/SceTournamentFixtureCard.tsx");
-    expect(card).not.toContain("surface-elevated]/90");
-    expect(card).toContain("SCE_TOURNAMENT_FIXTURE_CARD_SHELL_CLASS");
+    const presentation = readSource(
+      "components/sce/tournament/SceTournamentFixturePresentation.tsx",
+    );
+    expect(presentation).not.toContain("surface-elevated]/90");
+    expect(presentation).toContain("SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS");
 
     const planungList = readSource(
       "components/admin/tournamentcenter/planung/TournamentPlanungScheduleList.tsx",
     );
     expect(planungList).not.toContain("surface-elevated]/90");
-    expect(planungList).toContain("SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS");
+    expect(planungList).toContain("SceTournamentFixturePresentation");
 
     const spielplanOutput = readSource(
       "components/admin/tournamentcenter/planung/TournamentPlanungSpielplanOutput.tsx",

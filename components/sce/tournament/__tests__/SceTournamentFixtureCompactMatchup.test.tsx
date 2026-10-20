@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import SceTournamentFixtureCompactMatchup from "../SceTournamentFixtureCompactMatchup";
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
-import {
-  expectCanonicalFixtureIdentityOrder,
-  expectCanonicalStackedFixtureIdentity,
-} from "./fixture-identity-order-assertions";
+import { expectCanonicalStackedFixtureIdentity } from "./fixture-identity-order-assertions";
 
 const sideA: TournamentPlanungFixtureSidePresentation = {
   label: "FC Allschwil Junioren F1",
@@ -25,7 +22,7 @@ const sideB: TournamentPlanungFixtureSidePresentation = {
 };
 
 describe("SceTournamentFixtureCompactMatchup", () => {
-  it("renders both participants and VS (inline)", () => {
+  it("renders both participants and VS (inline alias → stacked spielplan)", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="inline" />);
     expect(screen.getByTestId("sce-tournament-fixture-compact-matchup")).toHaveAttribute(
       "data-layout",
@@ -33,7 +30,10 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     );
     expect(screen.getByText("FC Allschwil Junioren F1")).toBeInTheDocument();
     expect(screen.getByText("FC Allschwil Junioren F2")).toBeInTheDocument();
-    expect(screen.getByText("VS")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
+    expectCanonicalStackedFixtureIdentity(
+      screen.getByTestId("sce-tournament-fixture-compact-matchup"),
+    );
   });
 
   it("renders crest image when available", () => {
@@ -42,37 +42,27 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     expect(screen.getByTestId("club-crest-fallback-initials")).toBeInTheDocument();
   });
 
-  it("inline layout uses canonical identity order", () => {
-    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="inline" />);
-    expectCanonicalFixtureIdentityOrder(
-      screen.getByTestId("sce-tournament-fixture-compact-matchup"),
-    );
-  });
-
-  it("stack layout uses canonical identity order", () => {
+  it("stack layout aliases to canonical stacked spielplan identity", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="stack" />);
-    expectCanonicalFixtureIdentityOrder(
+    expectCanonicalStackedFixtureIdentity(
       screen.getByTestId("sce-tournament-fixture-compact-matchup"),
     );
   });
 
-  it("stack layout remains the default for narrow stacked contexts", () => {
+  it("spielplan is the default layout", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} />);
     expect(screen.getByTestId("sce-tournament-fixture-compact-matchup")).toHaveAttribute(
       "data-layout",
-      "stack",
+      "spielplan",
     );
   });
 
-  it("spielplan layout uses canonical stacked identity with management crests", () => {
+  it("spielplan layout uses canonical stacked identity", () => {
     render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="spielplan" />);
     const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
     expect(matchup).toHaveAttribute("data-layout", "spielplan");
     expect(matchup).toHaveAttribute("data-crest-variant", "canonicalSpielplan");
     expectCanonicalStackedFixtureIdentity(matchup);
-    const crestHosts = matchup.querySelectorAll('[data-sce-match-region="home-crest"] img, [data-sce-match-region="away-crest"] img');
-    expect(crestHosts.length).toBeGreaterThan(0);
-    expect(matchup.querySelector('[data-fixture-crest-size="micro"]')).toBeNull();
   });
 
   it("board layout uses canonical stacked match identity for Feld- und Zeitplan cells", () => {
@@ -81,26 +71,6 @@ describe("SceTournamentFixtureCompactMatchup", () => {
     expect(matchup).toHaveAttribute("data-layout", "board");
     expect(matchup).toHaveAttribute("data-crest-variant", "canonicalStacked");
     expectCanonicalStackedFixtureIdentity(matchup);
-    expect(screen.getByText("FC Allschwil Junioren F1")).toBeInTheDocument();
-    expect(screen.getByText("FC Allschwil Junioren F2")).toBeInTheDocument();
-    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
     expect(screen.getByTestId("club-crest-image")).toBeInTheDocument();
-  });
-
-  it("inline planung uses larger management crest density", () => {
-    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="inline" />);
-    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
-    expect(matchup).toHaveAttribute("data-crest-variant", "planung");
-    const crests = matchup.querySelectorAll('[data-fixture-crest-size="management"]');
-    expect(crests.length).toBe(2);
-  });
-
-  it("stack board cells use planungBoard compact crest without micro icons", () => {
-    render(<SceTournamentFixtureCompactMatchup sideA={sideA} sideB={sideB} layout="stack" />);
-    const matchup = screen.getByTestId("sce-tournament-fixture-compact-matchup");
-    expect(matchup).toHaveAttribute("data-crest-variant", "planungBoard");
-    const crests = matchup.querySelectorAll('[data-fixture-crest-size="compact"]');
-    expect(crests.length).toBe(2);
-    expect(matchup.querySelector('[data-fixture-crest-size="micro"]')).toBeNull();
   });
 });

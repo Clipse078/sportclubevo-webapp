@@ -62,6 +62,7 @@ export default function TournamentSpielplanMobileTimeline({
                         density="compact"
                         highlightParticipantId={highlightParticipantId}
                         timezone={model.identity.timezone}
+                        showFixtureTime={false}
                       />
                     </li>
                   );

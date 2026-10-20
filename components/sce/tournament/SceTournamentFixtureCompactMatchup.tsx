@@ -3,10 +3,6 @@
 import type { TournamentPlanungFixtureSidePresentation } from "@/lib/tournaments/planung/types";
 import { participantIdentityFromPlanung } from "./planung-participant-identity";
 import {
-  SceTournamentFixtureParticipant,
-  SceTournamentFixtureVs,
-} from "./SceTournamentFixtureIdentity";
-import {
   buildStackedFixtureAccessibleLabel,
   SceMatchStackedFixtureIdentity,
 } from "@/components/sporting-activity/SceMatchStackedFixtureIdentity";
@@ -36,52 +32,20 @@ type Props = {
 export default function SceTournamentFixtureCompactMatchup({
   sideA,
   sideB,
-  layout = "stack",
+  layout = "spielplan",
   className,
 }: Props) {
-  if (layout === "inline") {
-    const crestVariant = "planung";
-    return (
-      <div
-        className={cn("flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5", className)}
-        data-testid="sce-tournament-fixture-compact-matchup"
-        data-layout="inline"
-        data-crest-variant={crestVariant}
-      >
-        <SceTournamentFixtureParticipant
-          identity={participantIdentityFromPlanung(sideA)}
-          label={sideA.label}
-          density="compact"
-          crestVariant={crestVariant}
-          align="start"
-          qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
-          className="min-w-0 flex-1 basis-0"
-        />
-        <SceTournamentFixtureVs size="compact" className="mx-0.5 shrink-0" />
-        <SceTournamentFixtureParticipant
-          identity={participantIdentityFromPlanung(sideB)}
-          label={sideB.label}
-          density="compact"
-          crestVariant={crestVariant}
-          align="end"
-          qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
-          className="min-w-0 flex-1 basis-0"
-        />
-      </div>
-    );
-  }
-
-  if (layout === "board" || layout === "spielplan") {
+  if (layout === "inline" || layout === "stack" || layout === "spielplan") {
+    const resolvedLayout = layout === "inline" || layout === "stack" ? "spielplan" : layout;
     const homeLabel = formatSideLabel(sideA);
     const awayLabel = formatSideLabel(sideB);
     const vsScale = sceMatchCenterTypographyScale("COMPACT");
-    const crestOverride = layout === "spielplan" ? undefined : ("compact" as const);
     return (
       <div
         className={cn("min-w-0", className)}
         data-testid="sce-tournament-fixture-compact-matchup"
-        data-layout={layout}
-        data-crest-variant={layout === "spielplan" ? "canonicalSpielplan" : "canonicalStacked"}
+        data-layout={layout === "inline" || layout === "stack" ? layout : "spielplan"}
+        data-crest-variant="canonicalSpielplan"
       >
         <SceMatchStackedFixtureIdentity
           home={{
@@ -93,9 +57,8 @@ export default function SceTournamentFixtureCompactMatchup({
             displayName: awayLabel,
           }}
           density="COMPACT"
-          crestVisualSizeOverride={crestOverride}
           ariaLabel={buildStackedFixtureAccessibleLabel(homeLabel, awayLabel)}
-          className={layout === "spielplan" ? "py-0.5" : "py-0"}
+          className={resolvedLayout === "spielplan" ? "py-0.5" : "py-0.5"}
           center={
             <span
               className={cn("shrink-0 uppercase text-[var(--muted)]", vsScale.vsTextClass)}
@@ -111,33 +74,44 @@ export default function SceTournamentFixtureCompactMatchup({
     );
   }
 
-  return (
-    <div
-      className={cn("min-w-0 space-y-1", className)}
-      data-testid="sce-tournament-fixture-compact-matchup"
-      data-layout="stack"
-      data-crest-variant="planungBoard"
-    >
-      <SceTournamentFixtureParticipant
-        identity={participantIdentityFromPlanung(sideA)}
-        label={sideA.label}
-        density="compact"
-        crestVariant="planungBoard"
-        align="start"
-        qualificationProvenanceLabel={sideA.qualificationProvenanceLabel}
-      />
-      <div className="flex justify-center py-0.5">
-        <SceTournamentFixtureVs size="compact" />
+  if (layout === "board") {
+    const homeLabel = formatSideLabel(sideA);
+    const awayLabel = formatSideLabel(sideB);
+    const vsScale = sceMatchCenterTypographyScale("COMPACT");
+    return (
+      <div
+        className={cn("min-w-0", className)}
+        data-testid="sce-tournament-fixture-compact-matchup"
+        data-layout="board"
+        data-crest-variant="canonicalStacked"
+      >
+        <SceMatchStackedFixtureIdentity
+          home={{
+            identity: participantIdentityFromPlanung(sideA),
+            displayName: homeLabel,
+          }}
+          away={{
+            identity: participantIdentityFromPlanung(sideB),
+            displayName: awayLabel,
+          }}
+          density="COMPACT"
+          crestVisualSizeOverride="compact"
+          ariaLabel={buildStackedFixtureAccessibleLabel(homeLabel, awayLabel)}
+          className="py-0"
+          center={
+            <span
+              className={cn("shrink-0 uppercase text-[var(--muted)]", vsScale.vsTextClass)}
+              aria-hidden
+              data-testid="sce-match-vs"
+              data-sce-match-region="separator"
+            >
+              VS
+            </span>
+          }
+        />
       </div>
-      <SceTournamentFixtureParticipant
-        identity={participantIdentityFromPlanung(sideB)}
-        label={sideB.label}
-        density="compact"
-        crestVariant="planungBoard"
-        align="end"
-        qualificationProvenanceLabel={sideB.qualificationProvenanceLabel}
-        muted
-      />
-    </div>
-  );
+    );
+  }
+
+  return null;
 }

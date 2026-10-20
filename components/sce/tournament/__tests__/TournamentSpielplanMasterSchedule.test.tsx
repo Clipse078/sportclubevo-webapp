@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import TournamentSpielplanMasterSchedule from "../TournamentSpielplanMasterSchedule";
 import type { TournamentSpielplanViewModel } from "@/lib/tournaments/spielplan/types";
-import { expectCanonicalFixtureIdentityOrder } from "./fixture-identity-order-assertions";
+import { expectCanonicalStackedFixtureIdentity } from "./fixture-identity-order-assertions";
 import { SCE_TOURNAMENT_SCHEDULE_BREAK_MARKER } from "@/lib/sce/tournament/sce-tournament-schedule-break-semantics";
 
 const baseFixture = {
@@ -73,7 +73,7 @@ describe("TournamentSpielplanMasterSchedule", () => {
     expect(screen.getByTestId("spielplan-master-schedule")).toBeInTheDocument();
     expect(screen.getByTestId("spielplan-round-group-r1")).toBeInTheDocument();
     expect(screen.getByTestId("sce-tournament-fixture-card-f1")).toBeInTheDocument();
-    expectCanonicalFixtureIdentityOrder(screen.getByTestId("sce-tournament-fixture-matchup"));
+    expectCanonicalStackedFixtureIdentity(screen.getByTestId("sce-tournament-fixture-card-f1"));
   });
 
   it("renders ALL_PITCHES break as full-width interruption", () => {

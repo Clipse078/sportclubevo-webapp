@@ -90,9 +90,8 @@ describe("SCE-TOURNAMENT-PLANNER-02D R9 — Spielplan presentation", () => {
         "components/sce/tournament/SceTournamentSpielplanPreviewFixtureCard.tsx",
       );
       expect(presentation).toMatch(/SceTournamentSpielplanPreviewFixtureCard/);
-      expect(fixtureCard).toMatch(/SceTournamentFixtureCompactMatchup/);
-      expect(fixtureCard).toMatch(/layout="spielplan"/);
-      expect(fixtureCard).toMatch(/SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS/);
+      expect(fixtureCard).toMatch(/SceTournamentFixturePresentation/);
+      expect(fixtureCard).toMatch(/density="standard"/);
     });
 
     it("renders field, format and canonical matchup in DOM", () => {

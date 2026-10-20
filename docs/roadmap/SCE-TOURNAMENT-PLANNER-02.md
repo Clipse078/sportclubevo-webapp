@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-TOURNAMENT-PLANNER-02` |
 | **Predecessor** | [`SCE-TOURNAMENT-PLANNER-01`](./SCE-TOURNAMENT-PLANNER-01.md) — **CLOSED / ACCEPTED / MERGED** (01M PR **#873**) |
-| **Status** | **IN PROGRESS** — **02A** / **02B** / **02C** / **02D** **CLOSED / ACCEPTED / MERGED**; **02E** next |
+| **Status** | **IN PROGRESS** — **02A** / **02B** / **02C** / **02D** **CLOSED / ACCEPTED / MERGED**; **02E** **READY FOR PO UAT** |
 | **ADR** | [`ADR-015`](./05-architecture-decisions.md#adr-015--tournament-programme-architecture-and-generic-playing-format) |
 | **Contracts** | `lib/tournament-scheduling/tournament-programme-architecture.ts` |
 
@@ -58,7 +58,7 @@ Conceptual pipeline (useful for architecture; not every abstraction must be full
 | **02B** | Playing formats & tournament pitches — optional pitch format, persistence, Creator/Planung/output adoption ([doc](./SCE-TOURNAMENT-PLANNER-02B.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#875**) |
 | **02C** | Participant playing units — Spielteams, capacity rules ([doc](./SCE-TOURNAMENT-PLANNER-02C.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#876**) |
 | **02D** | **Predefined Spielplan templates & instant generation** — ([doc](./SCE-TOURNAMENT-PLANNER-02D.md)) (**CLOSED / ACCEPTED / MERGED**, PR **#877**) |
-| **02E** | **Spielplan UX, outputs & final hardening** — final TP02 package before closure (**NEXT**, **NOT STARTED**) |
+| **02E** | **Spielplan UX, outputs & final hardening** — ([doc](./SCE-TOURNAMENT-PLANNER-02E.md)) (**READY FOR PO UAT**) |
 
 **TP02 closes after 02E** acceptance/merge.
 

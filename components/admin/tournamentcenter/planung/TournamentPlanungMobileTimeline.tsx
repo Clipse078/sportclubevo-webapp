@@ -2,7 +2,7 @@
 
 import type { TournamentPlanungViewModel } from "@/lib/tournaments/planung/types";
 import { Lock } from "lucide-react";
-import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import SceTournamentFixturePresentation from "@/components/sce/tournament/SceTournamentFixturePresentation";
 import {
   SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS,
   SCE_TOURNAMENT_ROUND_SURFACE_CLASS,
@@ -92,23 +92,22 @@ export default function TournamentPlanungMobileTimeline({
                     data-testid={`planung-mobile-fixture-${cell.fixtureId}`}
                     onClick={() => onSelectFixture?.(cell.fixtureId)}
                   >
-                    <p className="text-xs text-[var(--muted)]">
-                      {formatTimeRange(cell.startUtc, cell.endUtc, timezone)} ·{" "}
-                      {pitchLabel.get(cell.pitchId) ?? "Feld"}
-                    </p>
-                    <div className="mt-1.5 min-w-0">
-                      <SceTournamentFixtureCompactMatchup
-                        sideA={cell.sideA}
-                        sideB={cell.sideB}
-                        layout="inline"
-                      />
-                    </div>
-                    {cell.lockDimension ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
-                        <Lock className="h-3 w-3" aria-hidden />
-                        Gesperrt
-                      </p>
-                    ) : null}
+                    <SceTournamentFixturePresentation
+                      density="compact"
+                      embedded
+                      sideA={cell.sideA}
+                      sideB={cell.sideB}
+                      timeLabel={formatTimeRange(cell.startUtc, cell.endUtc, timezone)}
+                      pitchLabel={pitchLabel.get(cell.pitchId) ?? "Feld"}
+                      footer={
+                        cell.lockDimension ? (
+                          <p className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
+                            <Lock className="h-3 w-3" aria-hidden />
+                            Gesperrt
+                          </p>
+                        ) : null
+                      }
+                    />
                     {canManage ? (
                       <p className="mt-2 text-xs text-[var(--accent)]">Spiel verschieben</p>
                     ) : null}

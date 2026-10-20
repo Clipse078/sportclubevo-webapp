@@ -8,7 +8,7 @@ import { manualMoveTargetAllowed, resolveManualMoveCapabilities } from "@/lib/to
 import { exceedsDragThreshold } from "@/components/admin/planning-hub/planning-hub-pointer-gesture";
 import { cn } from "@/lib/cn";
 import { Lock } from "lucide-react";
-import SceTournamentFixtureCompactMatchup from "@/components/sce/tournament/SceTournamentFixtureCompactMatchup";
+import SceTournamentFixturePresentation from "@/components/sce/tournament/SceTournamentFixturePresentation";
 import { SCE_SURFACE_DENSE_PANEL } from "@/lib/shell/sce-surface-system";
 import { SCE_TOURNAMENT_FIXTURE_COMPACT_SHELL_CLASS } from "@/lib/sce/tournament/sce-tournament-surface-layout";
 import { SCE_TOURNAMENT_FIXTURE_CONTROL_CLASS } from "@/lib/sce/tournament/sce-tournament-interactive-a11y";
@@ -349,8 +349,9 @@ export default function TournamentPlanungBoard({
                       previewCache.current.clear();
                     }}
                   >
-                    <SceTournamentFixtureCompactMatchup
-                      layout="board"
+                    <SceTournamentFixturePresentation
+                      density="grid"
+                      embedded
                       sideA={fixture.sideA}
                       sideB={fixture.sideB}
                     />

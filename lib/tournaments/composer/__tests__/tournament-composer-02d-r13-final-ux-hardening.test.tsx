@@ -308,7 +308,7 @@ describe("SCE-TOURNAMENT-PLANNER-02D R13 — final creator / Spielplan UX harden
     expect(screen.getByTestId("sce-tournament-spielplan-fixture-field")).toHaveTextContent("Feld 1");
     expect(screen.queryByTestId("sce-tournament-spielplan-fixture-format")).toBeNull();
     const card = read("components/sce/tournament/SceTournamentSpielplanPreviewFixtureCard.tsx");
-    expect(card).toMatch(/SceTournamentFixtureCompactMatchup/);
+    expect(card).toMatch(/SceTournamentFixturePresentation/);
     expect(card).not.toMatch(/Heim|Auswärt/i);
   });
 

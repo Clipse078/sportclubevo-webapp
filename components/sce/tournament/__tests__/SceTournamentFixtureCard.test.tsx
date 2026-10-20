@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import SceTournamentFixtureCard from "../SceTournamentFixtureCard";
 import type { TournamentSpielplanFixturePresentation } from "@/lib/tournaments/spielplan/types";
-import { expectCanonicalFixtureIdentityOrder } from "./fixture-identity-order-assertions";
+import { expectCanonicalStackedFixtureIdentity } from "./fixture-identity-order-assertions";
 
 const participants = [
   { participantId: "a", displayName: "Alpha FC", crestUrl: "https://example.com/a.png" },
@@ -28,7 +28,7 @@ const fixture: TournamentSpielplanFixturePresentation = {
 };
 
 describe("SceTournamentFixtureCard", () => {
-  it("renders time, pitch, participants, and VS", () => {
+  it("renders pitch, participants, and VS via canonical stacked identity", () => {
     render(
       <SceTournamentFixtureCard
         fixture={fixture}
@@ -36,11 +36,13 @@ describe("SceTournamentFixtureCard", () => {
         timezone="Europe/Zurich"
       />,
     );
-    expect(screen.getByTestId("sce-tournament-fixture-card-f1")).toBeInTheDocument();
+    const card = screen.getByTestId("sce-tournament-fixture-card-f1");
+    expect(card).toBeInTheDocument();
     expect(screen.getByText("Feld 1")).toBeInTheDocument();
     expect(screen.getByText("Alpha FC")).toBeInTheDocument();
     expect(screen.getByText("Beta United")).toBeInTheDocument();
-    expect(screen.getByText("VS")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-match-vs")).toHaveTextContent("VS");
+    expectCanonicalStackedFixtureIdentity(card);
   });
 
   it("renders authoritative crest without circular avatar wrapper on real logo", () => {
@@ -109,28 +111,6 @@ describe("SceTournamentFixtureCard", () => {
     const card = screen.getByTestId("sce-tournament-fixture-card-f1");
     expect(card.textContent).toContain("FC Allschwil Junioren F1");
     expect(card.textContent).toContain("FC Allschwil Junioren F2");
-    const nameSpans = card.querySelectorAll("span[title]");
-    for (const span of nameSpans) {
-      expect(span.className).not.toContain("truncate");
-    }
-  });
-
-  it("standard density keeps Spielplan compact crest scale (not planung management)", () => {
-    render(
-      <SceTournamentFixtureCard
-        fixture={fixture}
-        participants={participants}
-        timezone="Europe/Zurich"
-        density="standard"
-      />,
-    );
-    const crests = screen
-      .getByTestId("sce-tournament-fixture-matchup")
-      .querySelectorAll('[data-fixture-crest-size="compact"]');
-    expect(crests.length).toBe(2);
-    expect(
-      screen.getByTestId("sce-tournament-fixture-matchup").querySelector('[data-fixture-crest-size="management"]'),
-    ).toBeNull();
   });
 
   it("centers matchup cluster so crests frame VS", () => {
@@ -144,30 +124,30 @@ describe("SceTournamentFixtureCard", () => {
     expect(screen.getByTestId("sce-tournament-fixture-matchup-cluster")).toBeInTheDocument();
   });
 
-  it("uses canonical DOM identity order (name → crest → VS → crest → name)", () => {
+  it("omits per-fixture time when showFixtureTime is false", () => {
     render(
       <SceTournamentFixtureCard
         fixture={fixture}
         participants={participants}
         timezone="Europe/Zurich"
+        showFixtureTime={false}
       />,
     );
-    const matchup = screen.getByTestId("sce-tournament-fixture-matchup");
-    expectCanonicalFixtureIdentityOrder(matchup);
+    expect(screen.queryByTestId("sce-tournament-fixture-time")).not.toBeInTheDocument();
+    expect(screen.getByText("Feld 1")).toBeInTheDocument();
   });
 
-  it("keeps time and pitch before matchup identity", () => {
+  it("keeps time before pitch metadata when showFixtureTime is true", () => {
     render(
       <SceTournamentFixtureCard
         fixture={fixture}
         participants={participants}
         timezone="Europe/Zurich"
+        showFixtureTime
       />,
     );
-    const card = screen.getByTestId("sce-tournament-fixture-card-f1");
-    const pitch = screen.getByText("Feld 1");
-    const firstName = card.querySelector('[data-fixture-identity-segment="name"]');
-    expect(pitch.compareDocumentPosition(firstName!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId("sce-tournament-fixture-time")).toBeInTheDocument();
+    expect(screen.getByText("Feld 1")).toBeInTheDocument();
   });
 
   it("de-emphasises non-highlighted fixtures when highlight is active", () => {
