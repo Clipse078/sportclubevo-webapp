@@ -10,7 +10,7 @@
 | **Baseline STAGE (pre-branch)** | `3224666df3b67cee8c0df38dbc442fb424abc7e3` |
 | **Accepted DS-09 implementation HEAD** | `2effdb133a0cd95fbc6fe0d82cec604bfe10effd` |
 | **Feature HEAD before closure docs** | `2effdb133a0cd95fbc6fe0d82cec604bfe10effd` |
-| **Closure commit** | `0000000000000000000000000000000000000000` |
+| **Closure commit** | `ae705a70f0fa3876cea6c66f94e22ab82249d504` |
 | **STAGE merge commit** | `0000000000000000000000000000000000000000` |
 | **Predecessor DS-08 PR** | **#886** |
 | **PR** | **#887** — **MERGED** |
