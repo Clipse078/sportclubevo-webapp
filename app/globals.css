@@ -220,6 +220,82 @@
   --sce-accent-hover:    var(--orange-hover);
   --sce-accent-subtle:   rgba(212, 132, 58, 0.10);
   --sce-focus-ring:      var(--orange);
+  --sce-focus-ring-color: var(--sce-focus-ring);
+  --sce-focus-ring-width: 2px;
+  --sce-focus-ring-offset: 2px;
+  --sce-focus-input-shadow: 0 0 0 3px color-mix(in srgb, var(--sce-focus-ring) 18%, transparent);
+
+  /* ── SCE Design System v1.0 — DS-02 semantic colour foundation ─────────
+   * Single source of truth: values alias existing palette — no parallel literals.
+   * Application components should prefer these names over raw navy/gray/orange steps.
+   * ─────────────────────────────────────────────────────────────────────── */
+  --sce-color-app-background: var(--sce-app-background);
+  --sce-color-chrome: var(--sce-app-chrome);
+  --sce-color-workspace: var(--sce-app-surface);
+  --sce-color-page-surface: var(--sce-app-surface-elevated);
+  --sce-color-surface-standard: var(--sce-surface-standard);
+  --sce-color-surface-elevated: var(--sce-surface-elevated);
+  --sce-color-surface-interactive: var(--sce-surface-subtle);
+  --sce-color-surface-selected: color-mix(in srgb, var(--sce-primary) 12%, var(--surface-2));
+  --sce-color-surface-hover: var(--sce-surface-elevated);
+
+  --sce-color-border-subtle: var(--sce-surface-border-subtle);
+  --sce-color-border-standard: var(--sce-surface-border);
+  --sce-color-border-strong: var(--sce-surface-border-elevated);
+
+  --sce-color-text-primary: var(--sce-foreground);
+  --sce-color-text-secondary: var(--sce-text-2);
+  --sce-color-text-muted: var(--sce-muted);
+  --sce-color-text-disabled: color-mix(in srgb, var(--sce-muted) 72%, transparent);
+
+  --sce-color-icon-primary: var(--sce-icon-primary);
+  --sce-color-icon-muted: var(--sce-icon-muted);
+
+  --sce-color-accent-primary: var(--sce-primary);
+  --sce-color-accent-hover: var(--sce-primary-hover);
+  --sce-color-accent-active: var(--orange-hover);
+  --sce-color-focus: var(--sce-focus-ring-color);
+  --sce-color-disabled: color-mix(in srgb, var(--sce-muted) 55%, var(--surface));
+
+  --sce-color-status-success: var(--sce-success);
+  --sce-color-status-warning: var(--sce-warning);
+  --sce-color-status-error: var(--sce-danger);
+  --sce-color-status-info: var(--sce-info);
+  --sce-color-status-neutral: var(--sce-text-2);
+
+  /* Activity semantics — pills / restrained accents (SPIEL · TRAINING · TURNIER · VERANSTALTUNG) */
+  --sce-activity-match: var(--sce-secondary);
+  --sce-activity-match-subtle: var(--sce-secondary-light);
+  --sce-activity-training: var(--sce-info);
+  --sce-activity-training-subtle: var(--sce-info-light);
+  --sce-activity-tournament: var(--sce-primary);
+  --sce-activity-tournament-subtle: var(--sce-primary-light);
+  --sce-activity-club-event: var(--sce-club-event);
+  --sce-activity-club-event-subtle: var(--sce-club-event-light);
+
+  /* Semantic radii — controls stay tighter than panels/dialogs */
+  --sce-radius-control: var(--radius-lg);
+  --sce-radius-panel: var(--radius-xl);
+  --sce-radius-menu: var(--radius-lg);
+  --sce-radius-dialog: var(--radius-xl);
+  --sce-radius-pill: var(--radius-pill);
+
+  /* Elevation — surface contrast first; shadow when depth matters */
+  --sce-elevation-panel: var(--sce-surface-shadow);
+  --sce-elevation-elevated: var(--sce-surface-shadow-elevated);
+  --sce-elevation-menu: var(--shadow-md);
+  --sce-elevation-dialog: var(--shadow-lg);
+
+  /* Layout density foundation (COMFORTABLE · COMPACT · DENSE) */
+  --sce-density-comfortable-control-height: 2.25rem;
+  --sce-density-comfortable-gap: var(--sce-sp-4);
+  --sce-density-comfortable-panel-padding: var(--sce-sp-5);
+  --sce-density-compact-control-height: 1.75rem;
+  --sce-density-compact-gap: var(--sce-sp-3);
+  --sce-density-compact-panel-padding: var(--sce-sp-4);
+  --sce-density-dense-control-height: 1.5rem;
+  --sce-density-dense-gap: var(--sce-sp-2);
+  --sce-density-dense-panel-padding: var(--sce-sp-3);
 
   /* ── SCE Neutral Aliases ──────────────────────────────────────────────── */
   --sce-bg:            var(--background);
@@ -319,6 +395,36 @@
   --sce-fw-micro:       500;
   --sce-lh-micro:       1.3;
   --sce-ls-micro:       0.05em;
+
+  /* Label — form field / control labels */
+  --sce-fs-label:       0.8125rem;
+  --sce-fw-label:       500;
+  --sce-lh-label:       1.35;
+
+  /* Metadata — timestamps, secondary row hints */
+  --sce-fs-metadata:    0.75rem;
+  --sce-fw-metadata:    400;
+  --sce-lh-metadata:    1.4;
+
+  /* Control text — buttons, compact tabs */
+  --sce-fs-control:     0.875rem;
+  --sce-fw-control:     600;
+  --sce-lh-control:     1.25;
+
+  /* Dense operational — tables, planner cells */
+  --sce-fs-dense:       0.8125rem;
+  --sce-fw-dense:       500;
+  --sce-lh-dense:       1.35;
+
+  /* Spacing roles (foundation — not a full product migration) */
+  --sce-space-page-gutter: var(--sce-page-gutter);
+  --sce-space-workspace-padding: var(--sce-sp-4);
+  --sce-space-section-gap: var(--sce-sp-6);
+  --sce-space-panel-padding: var(--sce-sp-5);
+  --sce-space-form-gap: var(--sce-sp-4);
+  --sce-space-control-gap: var(--sce-sp-2);
+  --sce-space-inline-gap: var(--sce-sp-2);
+  --sce-space-dense-inline: var(--sce-sp-1);
 
   /* ── SCE Spacing Aliases ─────────────────────────────────────────────── */
   --sce-sp-1:  var(--space-1);
@@ -442,6 +548,72 @@ button {
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.2;
+}
+
+/* DS-02 — semantic typography utilities (dark-surface hierarchy) */
+.sce-type-page-title {
+  color: var(--sce-color-text-primary);
+  font-size: var(--sce-fs-page-title);
+  font-weight: var(--sce-fw-page-title);
+  letter-spacing: var(--sce-ls-page-title);
+  line-height: var(--sce-lh-page-title);
+}
+
+.sce-type-section-title {
+  color: var(--sce-color-text-primary);
+  font-size: var(--sce-fs-section-title);
+  font-weight: var(--sce-fw-section-title);
+  letter-spacing: var(--sce-ls-section-title);
+  line-height: var(--sce-lh-section-title);
+}
+
+.sce-type-card-title {
+  color: var(--sce-color-text-primary);
+  font-size: var(--sce-fs-card-title);
+  font-weight: var(--sce-fw-card-title);
+  line-height: var(--sce-lh-card-title);
+}
+
+.sce-type-body {
+  color: var(--sce-color-text-primary);
+  font-size: var(--sce-fs-body);
+  font-weight: var(--sce-fw-body);
+  line-height: var(--sce-lh-body);
+}
+
+.sce-type-body-secondary {
+  color: var(--sce-color-text-secondary);
+  font-size: var(--sce-fs-body);
+  font-weight: var(--sce-fw-body);
+  line-height: var(--sce-lh-body);
+}
+
+.sce-type-label {
+  color: var(--sce-color-text-secondary);
+  font-size: var(--sce-fs-label);
+  font-weight: var(--sce-fw-label);
+  line-height: var(--sce-lh-label);
+}
+
+.sce-type-metadata {
+  color: var(--sce-color-text-muted);
+  font-size: var(--sce-fs-metadata);
+  font-weight: var(--sce-fw-metadata);
+  line-height: var(--sce-lh-metadata);
+}
+
+.sce-type-caption {
+  color: var(--sce-color-text-muted);
+  font-size: var(--sce-fs-caption);
+  font-weight: var(--sce-fw-caption);
+  line-height: var(--sce-lh-caption);
+}
+
+.sce-type-dense {
+  color: var(--sce-color-text-primary);
+  font-size: var(--sce-fs-dense);
+  font-weight: var(--sce-fw-dense);
+  line-height: var(--sce-lh-dense);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

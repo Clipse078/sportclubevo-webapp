@@ -11,14 +11,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:   "border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]",
-        primary:   "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]",
-        secondary: "bg-[var(--sce-secondary-light)] text-[var(--sce-secondary)]",
-        success:   "bg-[var(--sce-success-light)] text-[var(--sce-success)]",
-        warning:   "bg-[var(--sce-warning-light)] text-[var(--sce-warning)]",
-        danger:    "bg-[var(--sce-danger-light)] text-[var(--sce-danger)]",
-        info:      "bg-[var(--sce-info-light)] text-[var(--sce-info)]",
-        outline:   "border border-[var(--border-strong)] bg-transparent text-[var(--text-2)]",
+        default:   "border border-[var(--sce-color-border-standard)] bg-[var(--sce-color-surface-elevated)] text-[var(--sce-color-text-secondary)]",
+        primary:   "bg-[var(--sce-primary-light)] text-[var(--sce-color-accent-primary)]",
+        secondary: "bg-[var(--sce-activity-match-subtle)] text-[var(--sce-activity-match)]",
+        success:   "bg-[var(--sce-success-light)] text-[var(--sce-color-status-success)]",
+        warning:   "bg-[var(--sce-warning-light)] text-[var(--sce-color-status-warning)]",
+        danger:    "bg-[var(--sce-danger-light)] text-[var(--sce-color-status-error)]",
+        info:      "bg-[var(--sce-info-light)] text-[var(--sce-color-status-info)]",
+        outline:   "border border-[var(--sce-color-border-strong)] bg-transparent text-[var(--sce-color-text-secondary)]",
       },
       size: {
         sm:      "h-5 px-2 text-[0.68rem]",

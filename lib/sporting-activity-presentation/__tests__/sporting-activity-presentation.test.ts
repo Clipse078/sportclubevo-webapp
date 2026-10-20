@@ -789,10 +789,14 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
     });
 
     it("uses SCE token-backed classes per variant", () => {
-      expect(sportingActivityTypePillClassName("training-blue")).toContain("--sce-info-light");
-      expect(sportingActivityTypePillClassName("match-red")).toContain("--sce-secondary-light");
+      expect(sportingActivityTypePillClassName("training-blue")).toContain(
+        "--sce-activity-training-subtle",
+      );
+      expect(sportingActivityTypePillClassName("match-red")).toContain(
+        "--sce-activity-match-subtle",
+      );
       expect(sportingActivityTypePillClassName("tournament-orange")).toContain(
-        "--sce-primary-light",
+        "--sce-activity-tournament-subtle",
       );
     });
   });
