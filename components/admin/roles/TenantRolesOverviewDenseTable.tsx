@@ -18,6 +18,7 @@ import {
 } from "@/components/sce/dense";
 import { SceActionLink } from "@/components/sce/actions/SceActionLink";
 import { SCE_DENSE_META_TEXT_CLASS } from "@/lib/design-system/sce-dense-ui-micro-ux";
+import { SCE_DENSE_TABLE_PAGE_CONTAINMENT_CLASS } from "@/lib/design-system/sce-density-border-micro-ux";
 
 export type TenantRoleOverviewRow = {
   id: string;
@@ -44,7 +45,12 @@ type Props = {
 
 export default function TenantRolesOverviewDenseTable({ roles }: Props) {
   return (
-    <SceDenseSurface feedbackSurfaceId="roles-overview-list" aria-label="Rollenliste" data-testid="roles-dense-surface">
+    <SceDenseSurface
+      feedbackSurfaceId="roles-overview-list"
+      aria-label="Rollenliste"
+      data-testid="roles-dense-surface"
+      className={SCE_DENSE_TABLE_PAGE_CONTAINMENT_CLASS}
+    >
       <div className="hidden md:block">
         <SceDataTable aria-label="Rollen">
           <SceDataTableHead>

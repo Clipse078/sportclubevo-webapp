@@ -125,3 +125,63 @@ export const SCE_BINARY_CHECKBOX_AUDIT_SAMPLE: SceBinaryCheckboxAuditRow[] = [
     notes: "Mix: audience multi-select + channel toggles — audit per field",
   },
 ];
+
+export type SceBinaryControlClassification =
+  | "BINARY_SETTING"
+  | "MULTI_SELECTION"
+  | "ROW_SELECTION"
+  | "ACKNOWLEDGEMENT"
+  | "LEGACY_DS10_DEBT";
+
+export type SceDs09BinaryControlAuditRow = {
+  file: string;
+  control: string;
+  classification: SceBinaryControlClassification;
+  ds09Action: "MIGRATED_TOGGLE" | "LEGITIMATE_UNCHANGED" | "DEFER_DS10";
+  notes: string;
+};
+
+/** DS-09 representative surfaces — toggle-first re-audit. */
+export const SCE_DS09_BINARY_CONTROL_AUDIT: SceDs09BinaryControlAuditRow[] = [
+  {
+    file: "components/admin/communication/zielgruppen/ZielgruppeDefinitionEditor.tsx",
+    control: "Ganze Organisation",
+    classification: "BINARY_SETTING",
+    ds09Action: "MIGRATED_TOGGLE",
+    notes: "wholeOrganisation ON/OFF → SwitchToggle",
+  },
+  {
+    file: "components/admin/roles/RolePermissionEditor.tsx",
+    control: "Permission matrix checkboxes",
+    classification: "MULTI_SELECTION",
+    ds09Action: "LEGITIMATE_UNCHANGED",
+    notes: "Multi-capability selection",
+  },
+  {
+    file: "components/admin/communication/inbox/CommunicationInboxConversationList.tsx",
+    control: "Bulk conversation selection",
+    classification: "ROW_SELECTION",
+    ds09Action: "LEGITIMATE_UNCHANGED",
+    notes: "Multi-select rows for bulk actions",
+  },
+  {
+    file: "components/admin/workspace/WorkspaceListViewOptions.tsx",
+    control: "Column visibility",
+    classification: "MULTI_SELECTION",
+    ds09Action: "LEGITIMATE_UNCHANGED",
+    notes: "Independent column toggles — multi-select semantics",
+  },
+  {
+    file: "components/admin/events/TrainingEventCreateForm.tsx",
+    control: "Legacy publication flags",
+    classification: "BINARY_SETTING",
+    ds09Action: "DEFER_DS10",
+    notes: "LEGACY_DS10_DEBT — migrate with form sweep",
+  },
+];
+
+export const SCE_BINARY_CONTROL_DS10_DEBT = [
+  "Remaining BINARY_SETTING checkboxes from DS-01 estimate (~17 deferred)",
+  "TrainingEventCreateForm and legacy admin create forms",
+  "Per-field audit in CampaignComposer mixed controls",
+] as const;

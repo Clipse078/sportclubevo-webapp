@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import ZielgruppeCreateTrigger from "@/components/admin/communication/zielgruppen/ZielgruppeCreateTrigger";
 
 type Props = {
   canManage: boolean;
@@ -61,13 +62,7 @@ export default function ZielgruppenListToolbar({
         </select>
       </div>
       {canManage && showCreateAction ? (
-        <Link
-          href="/dashboard/communication/zielgruppen/new"
-          className="fca-button-primary inline-flex shrink-0 items-center justify-center gap-2"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Neue Zielgruppe
-        </Link>
+        <ZielgruppeCreateTrigger className="fca-button-primary inline-flex shrink-0 items-center justify-center gap-2" />
       ) : null}
     </div>
   );

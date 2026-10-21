@@ -28,6 +28,10 @@ Human-readable product-wide audit for responsive behaviour and accessibility con
 | Activity card text resilience | **HARDENED** (contract + existing min-w-0 grammar) |
 | Dialog mobile adaptive shell | **HARDENED** |
 | Feedback empty state reflow | **HARDENED** |
+| Roles page overflow containment | **HARDENED** (PO addendum) |
+| Zielgruppe modal-first create | **ADOPTED** (PO addendum) |
+| Neue Saison modal-first create | **ADOPTED** (PO addendum) |
+| Density/border representative surfaces | **NORMALIZED** (PO addendum) |
 
 **DS-09 does not** imply `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE`. Remaining surfaces stay **REMAINING** until **DS-10**.
 

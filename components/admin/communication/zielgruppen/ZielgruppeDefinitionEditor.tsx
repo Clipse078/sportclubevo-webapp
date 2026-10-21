@@ -28,6 +28,8 @@ import {
 } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 import type { CommunicationAudienceDiscoverPick } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 import ZielgruppeBulkEmailDialog from "@/components/admin/communication/zielgruppen/ZielgruppeBulkEmailDialog";
+import { SwitchToggle } from "@/components/ui/SwitchToggle";
+import { SCE_DENSITY_SECTION_STACK_CLASS } from "@/lib/design-system/sce-density-border-micro-ux";
 
 type KnownLabels = {
   orgUnits: Record<string, string>;
@@ -390,7 +392,9 @@ export default function ZielgruppeDefinitionEditor({
 
   return (
     <div className="space-y-6" data-testid="zielgruppe-audience-builder">
-      <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5">
+      <section
+        className={`${SCE_DENSITY_SECTION_STACK_CLASS} rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5`}
+      >
         <div>
           <h3 className="text-base font-semibold text-[var(--foreground)]">Einschliessen</h3>
           <p className="mt-1 text-sm text-[var(--text-2)]">
@@ -398,22 +402,14 @@ export default function ZielgruppeDefinitionEditor({
           </p>
         </div>
 
-        <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/50 p-4 transition-colors hover:bg-[var(--surface-2)]">
-          <input
-            type="checkbox"
-            className="h-5 w-5 rounded border-[var(--border-strong)]"
-            checked={value.wholeOrganisation}
-            disabled={disabled}
-            onChange={(e) => patch({ wholeOrganisation: e.target.checked })}
-            aria-describedby="zg-whole-org-hint"
-          />
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold text-[var(--foreground)]">Ganze Organisation</span>
-            <span id="zg-whole-org-hint" className="mt-0.5 block text-xs text-[var(--muted)]">
-              Alle aktuellen Vereinsmitglieder werden dynamisch berücksichtigt.
-            </span>
-          </span>
-        </label>
+        <SwitchToggle
+          id="zg-whole-organisation"
+          label="Ganze Organisation"
+          description="Alle aktuellen Vereinsmitglieder werden dynamisch berücksichtigt."
+          checked={value.wholeOrganisation}
+          disabled={disabled}
+          onChange={(checked) => patch({ wholeOrganisation: checked })}
+        />
 
         {!value.wholeOrganisation && dynamicIncludeRules.length > 0 ? (
           <div className="space-y-3" data-testid="zielgruppe-include-criteria">
