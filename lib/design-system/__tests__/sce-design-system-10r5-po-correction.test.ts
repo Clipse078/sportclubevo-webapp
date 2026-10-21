@@ -16,8 +16,8 @@ function readSrc(relativePath: string): string {
 describe("SCE-DESIGN-SYSTEM-10R5 Organisation Builder polish", () => {
   it("marks R5 ready for PO review without DS-10 closure", () => {
     expect(SCE_DESIGN_SYSTEM_10R5_PO.SCE_DESIGN_SYSTEM_10R5_READY_FOR_PO_REVIEW).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10R5_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10R5_PO.PO_DS10_ORG_BUILDER_R5_VISUAL_UAT).toBe("PENDING");
+    expect(SCE_DESIGN_SYSTEM_10R5_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10R5_PO.PO_DS10_ORG_BUILDER_R5_VISUAL_UAT).toBe("PASS");
   });
 
   it("exposes R5 interaction locks", () => {

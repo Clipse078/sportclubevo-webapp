@@ -31,10 +31,10 @@ describe("SCE-DESIGN-SYSTEM-10-R4 product-wide closure", () => {
     );
   });
 
-  it("records engineering migration complete with PO visual UAT still pending", () => {
+  it("records engineering migration complete with PO visual UAT accepted", () => {
     expect(SCE_DESIGN_SYSTEM_10_R4_ENGINEERING.ENGINEERING_MIGRATION_COMPLETE).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10_R4_ENGINEERING.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe("PENDING");
-    expect(SCE_DESIGN_SYSTEM_10_R4_ENGINEERING.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_R4_ENGINEERING.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe("PASS");
+    expect(SCE_DESIGN_SYSTEM_10_R4_ENGINEERING.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("YES");
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
   });
 

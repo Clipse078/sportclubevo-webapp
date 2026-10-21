@@ -18,7 +18,7 @@ function readSrc(relativePath: string): string {
 describe("SCE-DESIGN-SYSTEM-10-R1 Batch 01 — Club / Organisation core", () => {
   it("records engineering migration complete — ready for PO visual UAT", () => {
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_STATUS).toBe("R3_ORG_BUILDER_AND_MIGRATION_TRUTH");
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_STATUS).toBe("CLOSED / ACCEPTED / MERGED");
     expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT.DS10_PO_VISUAL_UAT).toBe(
       "READY_FOR_PO_REVIEW",
     );

@@ -24,11 +24,9 @@ describe("SCE-DESIGN-SYSTEM-10R2 product-wide convergence", () => {
     expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBe(0);
   });
 
-  it("clears light functional surfaces and keeps PO visual UAT pending", () => {
+  it("clears light functional surfaces with final PO visual UAT pass", () => {
     expect(SCE_DESIGN_SYSTEM_10R2_GOVERNANCE.REMAINING_LIGHT_FUNCTIONAL_SURFACES).toBe(0);
-    expect(SCE_DESIGN_SYSTEM_10R2_PO.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe(
-      "PENDING_R2_PO_REVIEW",
-    );
+    expect(SCE_DESIGN_SYSTEM_10R2_PO.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe("PASS");
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
   });
 

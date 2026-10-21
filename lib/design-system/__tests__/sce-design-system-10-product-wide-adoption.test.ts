@@ -26,7 +26,7 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
       "docs/design/SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md",
     );
     expect(matrix).toContain("SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX");
-    expect(readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-10.md")).toContain("READY_FOR_PO_REVIEW");
+    expect(readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-10.md")).toContain("CLOSED / ACCEPTED / MERGED");
   });
 
   it("records zero engineering migration debt after DS-10R2", () => {
@@ -76,10 +76,11 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
     );
   });
 
-  it("delivers DS-10R2 on draft PR — not merged", () => {
+  it("records DS-10 PO closure on PR #888", () => {
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_R1_REQUIRED).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_PO_VISUAL_UAT).toBe("PENDING_R4_PO_PRODUCT_WIDE_UAT");
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_PO_VISUAL_UAT).toBe("PASS");
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.NEXT_PACKAGE).toContain("DS-11 not started");
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.PR_NUMBER).toBe("888");
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_CREATE_FLOW_MIGRATION_COMPLETE).toBe("YES");
     expect(readSrc("components/admin/facilities/FacilitiesAdminPanel.tsx")).toContain(
       "CreateFacilityComposerDialog",

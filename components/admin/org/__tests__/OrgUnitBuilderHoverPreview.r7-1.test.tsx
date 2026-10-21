@@ -302,6 +302,6 @@ describe("OrgUnitBuilder R7.1 composed hover preview", () => {
 
   it("records R7.1 PO readiness metadata", () => {
     expect(SCE_DESIGN_SYSTEM_10R7_1_PO.SCE_DESIGN_SYSTEM_10R7_1_READY_FOR_PO_REVIEW).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10R7_1_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10R7_1_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("YES");
   });
 });

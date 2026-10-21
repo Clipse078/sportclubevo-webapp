@@ -13,6 +13,7 @@ import { SCE_DENSITY_BORDER_SYSTEM_LOCKS } from "@/lib/design-system/sce-density
 import { countDs10R2UnresolvedMigrationDebt } from "@/lib/design-system/sce-design-system-10r2-migration-debt";
 import { SCE_DESIGN_SYSTEM_10R2_PO } from "@/lib/design-system/sce-design-system-10r2-meta";
 import { SCE_DESIGN_SYSTEM_10R3_PO } from "@/lib/design-system/sce-design-system-10r3-po-correction-meta";
+import { SCE_DESIGN_SYSTEM_10_PO_CLOSURE } from "@/lib/design-system/sce-design-system-10-closure-meta";
 import { SCE_DESIGN_SYSTEM_10_R4_CLOSURE_COUNTERS } from "@/lib/design-system/sce-design-system-10-r4-product-wide-meta";
 import { SCE_WORKSPACE_PRODUCT_WIDE_FLAGS } from "@/lib/design-system/sce-workspace-hierarchy";
 
@@ -316,8 +317,8 @@ export const SCE_DESIGN_SYSTEM_10_PO_FLAGS = {
 } as const;
 
 export const SCE_DESIGN_SYSTEM_10_PO_REVIEW = {
-  DS10_STATUS: "R3_ORG_BUILDER_AND_MIGRATION_TRUTH",
-  DS10_PO_VISUAL_UAT: "PENDING_R4_PO_PRODUCT_WIDE_UAT",
+  DS10_STATUS: SCE_DESIGN_SYSTEM_10_PO_CLOSURE.DS10_STATUS,
+  DS10_PO_VISUAL_UAT: SCE_DESIGN_SYSTEM_10_PO_CLOSURE.PO_DS10_PRODUCT_WIDE_VISUAL_UAT,
   DS10_R1_REQUIRED: "NO",
   DS10_R2_REQUIRED: "NO",
   DS10_R3_REQUIRED: "NO",
@@ -325,10 +326,15 @@ export const SCE_DESIGN_SYSTEM_10_PO_REVIEW = {
   ORIGIN_STAGE_HEAD: "f8cdf34eb0b23878396b31e73d0d1684cf3bea83",
   BRANCH: "cursor/sce-design-system-10-product-wide-adoption",
   PREDECESSOR_DS09_PR: "889",
-  PR: "DRAFT",
+  PR: "OPEN",
   PR_NUMBER: "888",
-  NEXT_PACKAGE: "NONE — DS-11 not started",
-  CLOSURE_MARKER: SCE_DESIGN_SYSTEM_10_READY_FOR_PO_REVIEW,
+  NEXT_PACKAGE: SCE_DESIGN_SYSTEM_10_PO_CLOSURE.NEXT_PACKAGE,
+  CLOSURE_MARKER: "SCE_DESIGN_SYSTEM_10_CLOSED",
+  SCE_DESIGN_SYSTEM_10_CLOSED: SCE_DESIGN_SYSTEM_10_PO_CLOSURE.SCE_DESIGN_SYSTEM_10_CLOSED,
+  PO_DS10_ORG_BUILDER_R7_2_VISUAL_UAT:
+    SCE_DESIGN_SYSTEM_10_PO_CLOSURE.PO_DS10_ORG_BUILDER_R7_2_VISUAL_UAT,
+  PO_DS10_ORG_BUILDER_R7_2_HOVER_RUNTIME_UAT:
+    SCE_DESIGN_SYSTEM_10_PO_CLOSURE.PO_DS10_ORG_BUILDER_R7_2_HOVER_RUNTIME_UAT,
 } as const;
 
 export const SCE_DESIGN_SYSTEM_10_GOVERNANCE = {

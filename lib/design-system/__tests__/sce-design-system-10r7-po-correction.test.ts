@@ -18,8 +18,8 @@ function readSrc(relativePath: string): string {
 describe("SCE-DESIGN-SYSTEM-10R7 Organisation Builder people experience", () => {
   it("marks R7 ready for PO review without DS-10 closure", () => {
     expect(SCE_DESIGN_SYSTEM_10R7_PO.SCE_DESIGN_SYSTEM_10R7_READY_FOR_PO_REVIEW).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10R7_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10R7_PO.PO_DS10_ORG_BUILDER_R7_VISUAL_UAT).toBe("PENDING");
+    expect(SCE_DESIGN_SYSTEM_10R7_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10R7_PO.PO_DS10_ORG_BUILDER_R7_VISUAL_UAT).toBe("PASS");
   });
 
   it("locks people-first node and inspector hierarchy", () => {

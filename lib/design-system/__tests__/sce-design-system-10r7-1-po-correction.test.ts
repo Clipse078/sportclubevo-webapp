@@ -8,8 +8,8 @@ import { SCE_DESIGN_SYSTEM_10R7_ORGANISATION_BUILDER } from "@/lib/design-system
 describe("SCE-DESIGN-SYSTEM-10R7.1 Organisation Builder hover preview regression", () => {
   it("marks R7.1 ready for PO review without DS-10 closure", () => {
     expect(SCE_DESIGN_SYSTEM_10R7_1_PO.SCE_DESIGN_SYSTEM_10R7_1_READY_FOR_PO_REVIEW).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10R7_1_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10R7_1_PO.PO_DS10_ORG_BUILDER_R7_1_VISUAL_UAT).toBe("PENDING");
+    expect(SCE_DESIGN_SYSTEM_10R7_1_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10R7_1_PO.PO_DS10_ORG_BUILDER_R7_1_VISUAL_UAT).toBe("PASS");
   });
 
   it("preserves R7 people model locks", () => {

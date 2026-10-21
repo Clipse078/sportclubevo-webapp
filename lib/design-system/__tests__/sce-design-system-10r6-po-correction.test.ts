@@ -17,8 +17,8 @@ function readSrc(relativePath: string): string {
 describe("SCE-DESIGN-SYSTEM-10R6 Organisation Builder contextual intelligence", () => {
   it("marks R6 ready for PO review without DS-10 closure", () => {
     expect(SCE_DESIGN_SYSTEM_10R6_PO.SCE_DESIGN_SYSTEM_10R6_READY_FOR_PO_REVIEW).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10R6_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10R6_PO.PO_DS10_ORG_BUILDER_R6_VISUAL_UAT).toBe("PENDING");
+    expect(SCE_DESIGN_SYSTEM_10R6_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10R6_PO.PO_DS10_ORG_BUILDER_R6_VISUAL_UAT).toBe("PASS");
   });
 
   it("locks progressive disclosure and zoom-independent preview", () => {

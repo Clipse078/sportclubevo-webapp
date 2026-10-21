@@ -16,14 +16,12 @@ function readSrc(relativePath: string): string {
 }
 
 describe("SCE-DESIGN-SYSTEM-10R1 PO visual correction", () => {
-  it("records R1 correction delivered — R2 engineering complete; PO visual UAT still pending", () => {
+  it("records R1 correction delivered — superseded by final DS-10 PO closure", () => {
     expect(SCE_DESIGN_SYSTEM_10R1_PO_CORRECTION.SCE_DESIGN_SYSTEM_10R1_READY_FOR_PO_REVIEW).toBe(
       "YES",
     );
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10R2_PO.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe(
-      "PENDING_R2_PO_REVIEW",
-    );
+    expect(SCE_DESIGN_SYSTEM_10R2_PO.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe("PASS");
   });
 
   it("wires organisation canvas on authoritative OrgUnit model", () => {

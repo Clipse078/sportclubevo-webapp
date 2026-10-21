@@ -2,7 +2,7 @@
 
 > **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **CLOSED / ACCEPTED / MERGED** (PR **#884**) · [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md) — **CLOSED / ACCEPTED / MERGED** (PR **#885**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#887** baseline · PR **#889** PO addendum)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-10** — Product-wide Adoption / Legacy Removal · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#889**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **DS-11 not started** · [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) — **CLOSED / ACCEPTED / MERGED** (PR **#888**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#889**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**)
 
 ---
 
@@ -393,9 +393,11 @@ Product-wide rollout of workspace chrome, bounded surfaces, dense UI, forms (Tog
 | Typed matrix | `SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX` in `lib/design-system/sce-design-system-10-meta.ts` |
 | Roadmap | [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) |
 
-**Delivery status:** `DS10_STATUS = READY_FOR_PO_REVIEW` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = YES` · `SCE_DESIGN_SYSTEM_10_READY_FOR_PO_REVIEW` · **DRAFT PR #888** · **not merged** · **DS-11 not started**.
+**Delivery status:** `DS10_STATUS = CLOSED / ACCEPTED / MERGED` · `PO_DS10_PRODUCT_WIDE_VISUAL_UAT = PASS` · `SCE_DESIGN_SYSTEM_10_CLOSED = YES` · **PR #888** · **DS-11 not started**.
 
-Automated guardrails: `lib/design-system/__tests__/sce-design-system-10-product-wide-adoption.test.ts`.
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-10-product-wide-adoption.test.ts` · `lib/design-system/__tests__/sce-design-system-10-final-closure.test.ts`.
+
+**Closure marker:** `SCE_DESIGN_SYSTEM_10_CLOSED`
 
 ---
 
