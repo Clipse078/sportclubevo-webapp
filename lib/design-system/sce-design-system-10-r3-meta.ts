@@ -71,5 +71,5 @@ export const SCE_DESIGN_SYSTEM_10_R3_GOVERNANCE = {
   ...SCE_DESIGN_SYSTEM_10_R3_PO_PUBLISHING_VISUAL_UAT,
   ...SCE_DESIGN_SYSTEM_10_R3_BATCH_03,
   MULTI_SELECTION_PATTERN: "SceDenseFilterChip + legitimate row/checkbox selection where semantic",
-  FEATURE_HEAD_FULL: "" as string,
+  FEATURE_HEAD_FULL: "cc39356b9adb96fd195ff0be6e9996579ddf1e0d",
 } as const;
