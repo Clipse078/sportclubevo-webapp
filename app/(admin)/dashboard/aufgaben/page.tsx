@@ -6,7 +6,9 @@ import { resolvePersonUserIdentityByUserId } from "@/lib/people/person-user-iden
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveQuickCreateCapabilities } from "@/lib/tasks/quick-create";
 import { loadTaskOrgUnitFilterOptions } from "@/lib/tasks/task-org-options";
-import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { buildRequirementServiceContextForActor } from "@/lib/requirements/server-context";
+import { resolveVerwaltungUnifiedOverviewTaskQuery } from "@/lib/aufgaben/verwaltung-unified-presentation";
 import {
   getTaskManagementSummary,
   listTaskManagementItems,
@@ -23,7 +25,6 @@ import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInb
 import AufgabenWorkspaceShell from "@/components/admin/aufgaben/AufgabenWorkspaceShell";
 import AufgabenVerwaltungWorkspace from "@/components/admin/aufgaben/AufgabenVerwaltungWorkspace";
 import AufgabenWorkspaceCreateChooser from "@/components/admin/aufgaben/AufgabenWorkspaceCreateChooser";
-import { getRequirementServiceContext } from "@/lib/requirements/server-context";
 import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";
 import {
   getRequirementManagementSummary,
@@ -100,10 +101,10 @@ export default async function AufgabenPage({ searchParams }: Props) {
           ? "verwaltung"
           : "meine";
 
-  const reqCtx = await getRequirementServiceContext();
+  const reqCtx = await buildRequirementServiceContextForActor(session.user.id, tenantId);
   const canCreateReq = reqCtx ? canCreateRequirement(reqCtx) : false;
 
-  const taskCtx = await getTaskServiceContext();
+  const taskCtx = await buildTaskServiceContextForActor(session.user.id, tenantId);
   const canCreateTask =
     taskCtx != null && hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE);
 
@@ -194,9 +195,13 @@ export default async function AufgabenPage({ searchParams }: Props) {
   }
 
   const tenantWideVisibility = taskCtx ? canViewAllTasks(taskCtx) : false;
-  const query = taskCtx
-    ? resolveTaskManagementQuery(params, tenantWideVisibility)
-    : resolveTaskManagementQuery({}, tenantWideVisibility);
+  const taskQueryForFilter =
+    verwaltungTypeFilter === "all"
+      ? resolveVerwaltungUnifiedOverviewTaskQuery(params, tenantWideVisibility)
+      : taskCtx
+        ? resolveTaskManagementQuery(params, tenantWideVisibility)
+        : resolveTaskManagementQuery({}, tenantWideVisibility);
+  const query = taskQueryForFilter;
   const sort = parseTaskManagementSort(params.sort);
   const reqQuery = resolveRequirementManagementQuery(params);
 
@@ -207,43 +212,64 @@ export default async function AufgabenPage({ searchParams }: Props) {
     showRequirementVerwaltung &&
     (verwaltungTypeFilter === "all" || verwaltungTypeFilter === "requirements");
 
-  const [summary, assigneeOptions, orgUnitFilterOptions, reqSummary] = await Promise.all([
-    needsTasks && taskCtx
-      ? getTaskManagementSummary(taskCtx, timeZone)
-      : Promise.resolve({ open: 0, overdue: 0, dueThisWeek: 0, myOpen: 0 }),
-    needsTasks && taskCtx && tenantWideVisibility
-      ? listEligibleTaskAssignees(taskCtx.tenantId)
-      : Promise.resolve([]),
-    needsTasks && taskCtx ? loadTaskOrgUnitFilterOptions(taskCtx) : Promise.resolve([]),
-    needsRequirements && reqCtx
-      ? getRequirementManagementSummary(reqCtx)
-      : Promise.resolve({ active: 0, openRecipients: 0, overdue: 0, completed: 0 }),
-  ]);
+  let summary: Awaited<ReturnType<typeof getTaskManagementSummary>> = {
+    open: 0,
+    overdue: 0,
+    dueThisWeek: 0,
+    myOpen: 0,
+  };
+  let assigneeOptions: Awaited<ReturnType<typeof listEligibleTaskAssignees>> = [];
+  let orgUnitFilterOptions: Awaited<ReturnType<typeof loadTaskOrgUnitFilterOptions>> = [];
+  let reqSummary: Awaited<ReturnType<typeof getRequirementManagementSummary>> = {
+    active: 0,
+    openRecipients: 0,
+    overdue: 0,
+    completed: 0,
+  };
+  let taskLoadError = false;
+  let reqLoadError = false;
+
+  if (needsTasks && taskCtx) {
+    try {
+      [summary, assigneeOptions, orgUnitFilterOptions] = await Promise.all([
+        getTaskManagementSummary(taskCtx, timeZone),
+        tenantWideVisibility ? listEligibleTaskAssignees(taskCtx.tenantId) : Promise.resolve(assigneeOptions),
+        loadTaskOrgUnitFilterOptions(taskCtx),
+      ]);
+    } catch {
+      taskLoadError = true;
+    }
+  }
+
+  if (needsRequirements && reqCtx) {
+    try {
+      reqSummary = await getRequirementManagementSummary(reqCtx);
+    } catch {
+      reqLoadError = true;
+    }
+  }
 
   let items: Awaited<ReturnType<typeof listTaskManagementItems>>["items"] = [];
   let totalCount = 0;
   let page = 1;
   let pageCount = 1;
   let seriesRows: Awaited<ReturnType<typeof listTaskSeriesManagementRows>>["rows"] = [];
-  let taskLoadError = false;
-
   let reqItems: Awaited<ReturnType<typeof listRequirementManagementItems>>["items"] = [];
   let reqTotalCount = 0;
   let reqPage = 1;
   let reqPageCount = 1;
-  let reqLoadError = false;
 
   try {
-    if (needsTasks && taskCtx) {
-      if (query.view === "WIEDERKEHREND") {
-        const seriesResult = await listTaskSeriesManagementRows(taskCtx, query);
-        seriesRows = seriesResult.rows;
-      } else {
+    if (needsTasks && taskCtx && !taskLoadError) {
+      if (verwaltungTypeFilter === "all" || query.view !== "WIEDERKEHREND") {
         const listResult = await listTaskManagementItems(taskCtx, query, timeZone, locale);
         items = listResult.items;
         totalCount = listResult.totalCount;
         page = listResult.page;
         pageCount = listResult.pageCount;
+      } else {
+        const seriesResult = await listTaskSeriesManagementRows(taskCtx, query);
+        seriesRows = seriesResult.rows;
       }
     }
   } catch {
@@ -251,7 +277,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
   }
 
   try {
-    if (needsRequirements && reqCtx) {
+    if (needsRequirements && reqCtx && !reqLoadError) {
       const listResult = await listRequirementManagementItems(reqCtx, reqQuery, new Date());
       reqItems = listResult.items;
       reqTotalCount = listResult.totalCount;

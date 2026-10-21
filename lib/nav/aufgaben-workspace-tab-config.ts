@@ -7,7 +7,7 @@ export type AufgabenWorkspaceTabId = Extract<AufgabenBereich, "meine" | "verwalt
 const BASE = "/dashboard/aufgaben";
 
 export const AUFGABEN_WORKSPACE_CANONICAL_SUBTITLE =
-  "Alles, was erledigt, bestätigt oder beantwortet werden muss." as const;
+  "Alles, was du erledigen, beantworten oder bestätigen musst." as const;
 
 export function buildAufgabenWorkspaceTabNavigationConfig(options: {
   showMeine: boolean;
@@ -45,6 +45,6 @@ export function buildAufgabenWorkspaceTabNavigationConfig(options: {
 }
 
 export const AUFGABEN_WORKSPACE_SUBTITLES: Record<AufgabenWorkspaceTabId, string> = {
-  meine: "Was du persönlich erledigen oder bestätigen musst.",
-  verwaltung: "Aufgaben und Anforderungen koordinieren und nachverfolgen.",
+  meine: "Alles, was du erledigen, beantworten oder bestätigen musst.",
+  verwaltung: "Aufgaben und Anforderungen erstellen, koordinieren und nachverfolgen.",
 };

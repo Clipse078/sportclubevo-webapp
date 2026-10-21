@@ -43,7 +43,7 @@ vi.mock("@/lib/personal-actions", () => ({
 }));
 
 vi.mock("@/lib/tasks/server-context", () => ({
-  getTaskServiceContext: vi.fn().mockResolvedValue({
+  buildTaskServiceContextForActor: vi.fn().mockResolvedValue({
     tenantId: "tenant-1",
     userId: "user-1",
     permissionKeys: ["tasks.view", "tasks.create", "tasks.assign", "tasks.manage"],
@@ -138,7 +138,7 @@ vi.mock("@/lib/tasks/management-service", () => ({
 }));
 
 vi.mock("@/lib/requirements/server-context", () => ({
-  getRequirementServiceContext: vi.fn().mockResolvedValue({
+  buildRequirementServiceContextForActor: vi.fn().mockResolvedValue({
     tenantId: "tenant-1",
     userId: "user-1",
     permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
@@ -219,6 +219,40 @@ describe("AUFGABEN-02 — Aufgaben management page", () => {
       "aria-selected",
       "true",
     );
+  });
+
+  it("renders unified Verwaltung Alle when bereich=verwaltung without type filter", async () => {
+    vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
+      tenantId: "tenant-1",
+      capabilities: {
+        taskManagement: true,
+        requirementManagement: true,
+        personalInbox: true,
+        moduleAccess: true,
+        permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
+      },
+    });
+    vi.mocked(getRequirementManagementSummary).mockResolvedValueOnce({
+      active: 1,
+      openRecipients: 2,
+      overdue: 0,
+      completed: 0,
+    });
+    vi.mocked(listRequirementManagementItems).mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageCount: 1,
+    });
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung" });
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "verwaltung" }),
+    });
+    render(jsx);
+    expect(screen.getByTestId("aufgaben-verwaltung-workspace")).toBeInTheDocument();
+    expect(screen.getByTestId("verwaltung-unified-list")).toBeInTheDocument();
+    expect(screen.getByText("Material bestellen")).toBeInTheDocument();
   });
 
   it("renders management workspace when bereich=verwaltung&type=tasks", async () => {

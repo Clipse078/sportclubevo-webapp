@@ -95,8 +95,8 @@ export default function AufgabenVerwaltungWorkspace({
   const unifiedRows =
     effectiveFilter === "all"
       ? buildVerwaltungUnifiedRows({
-          tasks: showTasks ? taskItems : [],
-          requirements: showRequirements ? reqItems : [],
+          tasks: showTasks && !taskLoadError ? taskItems : [],
+          requirements: showRequirements && !reqLoadError ? reqItems : [],
           locale,
           timeZone,
           taskHref: taskWorkspaceHref,
@@ -104,7 +104,34 @@ export default function AufgabenVerwaltungWorkspace({
         })
       : [];
 
-  const unifiedLoadError = taskLoadError || reqLoadError;
+  const unifiedAllDomainsFailed =
+    effectiveFilter === "all" &&
+    (showTasks || showRequirements) &&
+    (!showTasks || taskLoadError) &&
+    (!showRequirements || reqLoadError) &&
+    ((showTasks && taskLoadError) || (showRequirements && reqLoadError));
+
+  const unifiedPartialTaskError =
+    effectiveFilter === "all" &&
+    showTasks &&
+    showRequirements &&
+    taskLoadError &&
+    !reqLoadError;
+  const unifiedPartialReqError =
+    effectiveFilter === "all" &&
+    showTasks &&
+    showRequirements &&
+    reqLoadError &&
+    !taskLoadError;
+
+  const unifiedFatalContext =
+    unifiedAllDomainsFailed && showTasks && showRequirements
+      ? ("AUFGABEN_VERWALTUNG_UNIFIED_LOAD" as const)
+      : unifiedAllDomainsFailed && showTasks
+        ? ("AUFGABEN_MANAGEMENT_LOAD" as const)
+        : unifiedAllDomainsFailed && showRequirements
+          ? ("AUFGABEN_REQUIREMENTS_LOAD" as const)
+          : null;
 
   return (
     <div className="space-y-4" data-testid="aufgaben-verwaltung-workspace">
@@ -116,13 +143,25 @@ export default function AufgabenVerwaltungWorkspace({
 
       {effectiveFilter === "all" ? (
         <>
-          {unifiedLoadError ? (
+          {unifiedFatalContext ? (
             <AufgabenDomainLoadError
-              context="AUFGABEN_MANAGEMENT_LOAD"
+              context={unifiedFatalContext}
               testId="verwaltung-unified-load-error"
             />
           ) : null}
-          <VerwaltungUnifiedActionList rows={unifiedRows} loadError={unifiedLoadError} />
+          {unifiedPartialTaskError ? (
+            <AufgabenDomainLoadError
+              context="AUFGABEN_MANAGEMENT_LOAD"
+              testId="verwaltung-unified-task-load-error"
+            />
+          ) : null}
+          {unifiedPartialReqError ? (
+            <AufgabenDomainLoadError
+              context="AUFGABEN_REQUIREMENTS_LOAD"
+              testId="verwaltung-unified-requirements-load-error"
+            />
+          ) : null}
+          <VerwaltungUnifiedActionList rows={unifiedRows} loadError={unifiedAllDomainsFailed} />
         </>
       ) : null}
 

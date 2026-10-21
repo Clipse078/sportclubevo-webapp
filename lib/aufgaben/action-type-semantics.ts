@@ -13,6 +13,35 @@ export const SCE_AUFGABEN_ACTION_TYPE_MENTAL_MODEL = {
   ANFORDERUNG: "ETWAS INDIVIDUELL BESTÄTIGEN",
 } as const;
 
+/** User-facing copy for workspace legend and filter hints (DS-10 R4.3). */
+export const AUFGABEN_PERSONAL_ACTION_TYPE_DISPLAY = {
+  AUFGABE: {
+    label: "Aufgabe",
+    tagline: "Etwas erledigen",
+  },
+  TEILNAHME: {
+    label: "Teilnahme",
+    tagline: "Dabei / nicht dabei",
+  },
+  ANFORDERUNG: {
+    label: "Anforderung",
+    tagline: "Individuell bestätigen",
+  },
+} as const;
+
+export const AUFGABEN_PERSONAL_INBOX_LOCKS = {
+  PERSONAL_ACTION_INBOX_UNIFIED: "YES",
+  PERSONAL_ACTION_TYPES: "TASK | ATTENDANCE_RESPONSE | REQUIREMENT",
+  PERSONAL_ACTION_ALL_CONTAINS_ALL_TYPES: "YES",
+  PERSONAL_ACTION_TYPE_FILTERS_SECONDARY: "YES",
+  PARALLEL_PRIMARY_TYPE_WORKSPACES_ALLOWED: "NO",
+} as const;
+
+export const AUFGABEN_VERWALTUNG_SEMANTICS = {
+  TEILNAHME_IN_MANAGEMENT_CREATE_FLOW: "NO",
+  TEILNAHME_SYSTEM_GENERATED_FROM_ACTIVITY: "YES",
+} as const;
+
 export const SCE_AUFGABEN_R4_2_WORKSPACE_LOCKS = {
   AUFGABEN_SINGLE_WORKSPACE: "YES",
   AUFGABEN_PRIMARY_CONTEXTS: "MEINE_AUFGABEN | VERWALTUNG",

@@ -7,6 +7,7 @@ export type SceActionableErrorContext =
   | "COMMUNICATION"
   | "AUFGABEN_MANAGEMENT_LOAD"
   | "AUFGABEN_REQUIREMENTS_LOAD"
+  | "AUFGABEN_VERWALTUNG_UNIFIED_LOAD"
   | "GENERIC";
 
 const DOMAIN_COPY: Record<
@@ -40,6 +41,11 @@ const DOMAIN_COPY: Record<
   },
   AUFGABEN_REQUIREMENTS_LOAD: {
     title: "Anforderungen konnten nicht geladen werden.",
+    description: "Bitte erneut versuchen. Wenn das Problem bleibt, später nochmals öffnen.",
+    retryLabel: "Erneut laden",
+  },
+  AUFGABEN_VERWALTUNG_UNIFIED_LOAD: {
+    title: "Aufgaben und Anforderungen konnten nicht geladen werden.",
     description: "Bitte erneut versuchen. Wenn das Problem bleibt, später nochmals öffnen.",
     retryLabel: "Erneut laden",
   },

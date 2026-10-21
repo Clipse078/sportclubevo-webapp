@@ -33,6 +33,9 @@ export default function PersonalInboxFilterNav({ filter, basePath = "/dashboard/
       <span className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--muted)]">
         Inbox filtern
       </span>
+      <p className="max-w-md text-right text-[0.6875rem] text-[var(--text-2)] sm:text-right">
+        «Alle» zeigt Aufgaben, Teilnahmen und Anforderungen in einem Posteingang.
+      </p>
       <div
         className="flex flex-wrap gap-1"
         role="radiogroup"

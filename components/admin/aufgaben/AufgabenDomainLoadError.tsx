@@ -10,7 +10,9 @@ import {
 type Props = {
   context: Extract<
     SceActionableErrorContext,
-    "AUFGABEN_MANAGEMENT_LOAD" | "AUFGABEN_REQUIREMENTS_LOAD"
+    | "AUFGABEN_MANAGEMENT_LOAD"
+    | "AUFGABEN_REQUIREMENTS_LOAD"
+    | "AUFGABEN_VERWALTUNG_UNIFIED_LOAD"
   >;
   testId?: string;
 };

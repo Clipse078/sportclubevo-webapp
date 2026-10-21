@@ -1,6 +1,11 @@
 import type { TaskManagementListItem } from "@/lib/tasks/management-service";
 import type { RequirementManagementListItem } from "@/lib/requirements/management-service";
 import {
+  resolveTaskManagementQuery,
+  type TaskManagementQueryState,
+  type TaskManagementView,
+} from "@/lib/tasks/management-navigation";
+import {
   formatRequirementConfirmationAggregateLabel,
   formatRequirementRecipientCountLabel,
   REQUIREMENT_STATUS_LABELS,
@@ -37,6 +42,23 @@ function taskDueSortKey(iso: string | null): number {
   return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
 }
 
+const UNIFIED_OVERVIEW_EXCLUDED_VIEWS = new Set<TaskManagementView>(["WIEDERKEHREND", "ERLEDIGT"]);
+
+/**
+ * Verwaltung «Alle» composes a flat task overview — not series or completed-only views.
+ */
+export function resolveVerwaltungUnifiedOverviewTaskQuery(
+  params: Record<string, string | undefined>,
+  tenantWideVisibility: boolean,
+): TaskManagementQueryState {
+  const query = resolveTaskManagementQuery(params, tenantWideVisibility);
+  if (!UNIFIED_OVERVIEW_EXCLUDED_VIEWS.has(query.view)) {
+    return query;
+  }
+  const overviewView: TaskManagementView = tenantWideVisibility ? "ALLE" : "MEINE";
+  return { ...query, view: overviewView, page: 1 };
+}
+
 export function buildVerwaltungUnifiedRows(input: {
   tasks: TaskManagementListItem[];
   requirements: RequirementManagementListItem[];
@@ -47,7 +69,8 @@ export function buildVerwaltungUnifiedRows(input: {
 }): VerwaltungUnifiedRow[] {
   const taskRows: VerwaltungUnifiedRow[] = input.tasks.map((item) => {
     const task = item.task;
-    const assignee = task.assignees[0];
+    const assignees = task.assignees ?? [];
+    const assignee = assignees[0];
     const assigneeLabel = assignee
       ? formatAssigneeName(assignee.firstName, assignee.lastName, assignee.displayName)
       : "—";
@@ -71,18 +94,20 @@ export function buildVerwaltungUnifiedRows(input: {
 
   const requirementRows: VerwaltungUnifiedRow[] = input.requirements.map((item) => {
     const req = item.requirement;
+    const draftAudienceCount = req.draftAudiencePersonIds?.length ?? 0;
     const aggregateLabel = formatRequirementConfirmationAggregateLabel(item.aggregate, req.status);
     const recipientLabel = formatRequirementRecipientCountLabel(
       item.aggregate,
-      req.draftAudiencePersonIds.length,
+      draftAudienceCount,
       req.status,
     );
+    const statusLabel = REQUIREMENT_STATUS_LABELS[req.status] ?? req.status;
     return {
       kind: "ANFORDERUNG",
       id: req.id,
       title: req.title,
       href: input.requirementHref(req.id),
-      statusLabel: REQUIREMENT_STATUS_LABELS[req.status],
+      statusLabel,
       metaPrimary: aggregateLabel ?? recipientLabel,
       metaSecondary: aggregateLabel ? recipientLabel : null,
       sortKey: taskDueSortKey(req.dueAt),

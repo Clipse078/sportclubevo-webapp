@@ -44,6 +44,9 @@ export default function VerwaltungTypeFilterNav({
       <span className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--muted)]">
         Verwaltung filtern
       </span>
+      <p className="max-w-lg text-[0.6875rem] text-[var(--text-2)]">
+        «Alle» fasst Aufgaben und Anforderungen zusammen — Teilnahmen entstehen aus Aktivitäten.
+      </p>
       <div
         className="flex flex-wrap gap-1"
         role="radiogroup"

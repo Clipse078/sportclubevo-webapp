@@ -5,12 +5,14 @@ import {
 import type { PersonalInboxFilterParam } from "@/lib/personal-actions/aufgaben-scope";
 import PersonalActionRow from "./PersonalActionRow";
 import PersonalInboxFilterNav from "./PersonalInboxFilterNav";
+import AufgabenPersonalActionTypeLegend from "./AufgabenPersonalActionTypeLegend";
 
 type Props = {
   items: PersonalActionListItem[];
   locale: string;
   timeZone: string;
   filter: PersonalInboxFilterParam;
+  /** When true, show secondary type filters (Alle / Aufgaben / …). Legend is always visible. */
   showSourceFilters: boolean;
   /** Full actionable count (independent of inbox list limit). */
   totalActionableCount?: number | null;
@@ -32,6 +34,7 @@ export default function PersonalActionsInbox({
 
   return (
     <div className="space-y-4" data-testid="personal-actions-inbox">
+      <AufgabenPersonalActionTypeLegend />
       {showSourceFilters ? (
         <div className="flex justify-end">
           <PersonalInboxFilterNav filter={filter} basePath={basePath} />
