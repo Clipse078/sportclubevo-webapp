@@ -54,4 +54,13 @@ describe("VeranstaltungListRow composition (01G-R1)", () => {
     const pill = screen.getByText("VERANSTALTUNG");
     expect(pill.getAttribute("data-activity-type-pill")).toBe("club-event-violet");
   });
+
+  it("keeps start time out of the left date block (DS-10 R2)", () => {
+    render(<VeranstaltungListRow event={createEvent()} canManage />);
+    const dateBlock = screen.getByTestId("veranstaltung-row-date-block");
+    expect(dateBlock).toHaveAttribute("data-sce-activity-date-block", "date-only");
+    expect(screen.queryByTestId("veranstaltung-row-date-time")).toBeNull();
+    expect((dateBlock.textContent ?? "").match(/\d{1,2}:\d{2}/)).toBeNull();
+    expect(screen.getByTestId("veranstaltung-row-context-time").textContent).toMatch(/19:00/);
+  });
 });
