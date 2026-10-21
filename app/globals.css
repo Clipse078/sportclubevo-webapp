@@ -1365,6 +1365,7 @@ html[data-sidebar-collapsed="1"] {
 /* SCE floating surfaces portalled to body (popover / calendar inside composer) */
 :root {
   --sce-z-floating-app: 70;
+  --sce-z-contextual-preview: 80;
   --sce-z-modal-overlay: 100;
   --sce-z-composer-popover: 105;
   --sce-z-modal-overlay-elevated: 110;
@@ -1376,6 +1377,10 @@ html[data-sidebar-collapsed="1"] {
 
 .sce-floating-layer-composer {
   z-index: var(--sce-z-composer-popover);
+}
+
+.sce-contextual-preview-layer {
+  z-index: var(--sce-z-contextual-preview);
 }
 
 .sce-modal-overlay-interaction-layer,

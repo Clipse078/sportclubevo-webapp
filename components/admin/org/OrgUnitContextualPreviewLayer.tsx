@@ -15,6 +15,7 @@ import {
 } from "@/lib/org/org-unit-preview-placement";
 import type { OrgUnitPreviewAnchorRect } from "@/lib/org/org-unit-hover-eligibility";
 import type { OrgUnitCanvasItem } from "@/components/admin/org/OrgUnitCanvasView";
+import { SCE_CONTEXTUAL_PREVIEW_LAYER_CLASS } from "@/lib/ui/sce-overlay-layering";
 
 type Props = {
   openUnitId: string | null;
@@ -94,7 +95,7 @@ export default function OrgUnitContextualPreviewLayer({
 
   return createPortal(
     <div
-      className="fixed z-[80] motion-reduce:transition-none"
+      className={`fixed ${SCE_CONTEXTUAL_PREVIEW_LAYER_CLASS} motion-reduce:transition-none`}
       style={{
         top: placement.top,
         left: placement.left,

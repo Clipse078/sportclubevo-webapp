@@ -1,0 +1,32 @@
+name: SCE Design System governance
+
+on:
+  pull_request:
+    paths:
+      - "components/**"
+      - "app/(admin)/**"
+      - "lib/design-system/**"
+      - "lib/ui/sce-overlay-layering.ts"
+      - "app/globals.css"
+      - "scripts/run-design-system-governance.ts"
+      - "package.json"
+  push:
+    branches:
+      - STAGE
+    paths:
+      - "components/**"
+      - "app/(admin)/**"
+      - "lib/design-system/**"
+
+jobs:
+  design-system-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:design-system

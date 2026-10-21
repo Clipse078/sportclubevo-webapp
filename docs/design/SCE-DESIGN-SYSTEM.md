@@ -851,13 +851,37 @@ Every future SCE package must declare **`SCE_DESIGN_SYSTEM_COMPLIANCE`** in its 
 
 Any introduction of a **new binary checkbox** for settings must fail **`BINARY_CONTROL_COMPLIANCE`** unless an explicit architecture / design-system exception is approved and recorded (ADR or package closure exception).
 
-Automated guardrails (01B / 01C):
+Automated guardrails (01B / 01C + DS-11):
 
 - Context tabs: `lib/context-tabs/__tests__/context-tabs-architecture.test.ts`
 - Binary control standard (doc + canonical primitive): `lib/design-system/__tests__/sce-binary-control-standard.test.ts`
 - Activity presentation model: `lib/sporting-activity-presentation/canonical/__tests__/sce-ui-rollout-01c-architecture.test.ts`
+- **DS-11 programme governance (manifest + scanner + CI):** `npm run test:design-system` · manifest `lib/design-system/sce-design-system-governance.ts` · exceptions `lib/design-system/sce-design-system-exception-registry.ts`
 
-Product-wide static enforcement of “no new setting checkboxes” is deferred to a future UI rollout / design-system hardening package if AST-based rules are required; the compliance contract and Toggle First rule are authoritative from 01B closure onward.
+Product-wide static enforcement runs in DS-11 — violations emit stable rule ids (for example `SCE-DS-GOV-CONTROL-001`) with file, reason, and suggested canonical alternative.
+
+---
+
+## How to build new SCE UI (DS-11)
+
+Practical checklist for feature packages — keep domain composition, consume canonical primitives first.
+
+| Question | Canonical answer |
+|----------|------------------|
+| **Workspace shell?** | `SceWorkspaceChrome` + `SceWorkspaceSurface` / `SceWorkspaceSection` (`components/sce/workspace/*`) — breadcrumbs via `PageBreadcrumbs` where the domain is wayfinding-heavy. |
+| **In-workspace navigation?** | `SceContextTabs` when sections are **semantic** (person, billing, Aufgaben, activity detail). Do not invent parallel tab systems for flat lists. |
+| **Surface hierarchy?** | Dark functional layers via `SCE_FUNCTIONAL_PANEL_CLASS` / `var(--surface*)` — no nested border soup or decorative light admin panels. Semantic light previews (PDF, e-mail, documents) need a typed exception. |
+| **Forms?** | `SceFormField`, `SceTextInput`, `SceTextarea`, `SceToolbarSelect`, activity date/time inputs — see DS-05 foundations. |
+| **Binary ON/OFF settings?** | **`SwitchToggle` / `SwitchThumb` only** — mark rows with `data-sce-binary-setting-row`. Multi-select / row-select may use `SceCheckbox`. |
+| **Create entity?** | **Modal-first** — `Create*Trigger` with `data-sce-create-flow="modal"` + `*ComposerDialog`. `/new` routes remain deep-link / fallback only (activity composers excepted). |
+| **Activity cards?** | `SceMatchCard`, `SceTrainingCard`, `SceTournamentCard`, `SceClubEventCard` — purpose-built interiors, shared SCE language (not a parallel card framework). |
+| **Dialogs / confirms?** | `Dialog` / `SceConfirmDialog` patterns from DS-06 — mobile shell classes from responsive micro-UX. |
+| **Responsive?** | No page-level horizontal overflow; dense tables scroll inside semantic containers; provide touch/coarse-pointer alternatives where hover is supplemental. |
+| **Z-index / layers?** | `lib/ui/sce-overlay-layering.ts` + `app/globals.css` layer classes (`sce-floating-layer-*`, `sce-contextual-preview-layer`, modal overlay root). No unexplained `z-[…]` in canonical SCE components. |
+| **Legitimate exception?** | Add a typed row to `lib/design-system/sce-design-system-exception-registry.ts` (**reason required**) — silent drift is not allowed. |
+| **Before PR?** | Run **`npm run test:design-system`** and declare `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS` in the package closure footer. |
+
+**Communication** remains a primary **visual reference** (dark/navy surfaces, restrained orange, calm hierarchy) — it is **not** a universal layout template for every domain workspace.
 
 ---
 
