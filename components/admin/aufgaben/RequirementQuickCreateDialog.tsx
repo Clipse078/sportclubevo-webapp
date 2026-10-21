@@ -118,7 +118,6 @@ export default function RequirementQuickCreateDialog({
           audience={audience}
           onAudienceChange={setAudience}
           onSubmit={onSubmit}
-          showCancelLink={false}
           error={
             error ? (
               <SceSemanticFeedback tone="ERROR" title="Speichern fehlgeschlagen" description={error} />
