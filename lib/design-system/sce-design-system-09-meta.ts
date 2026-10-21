@@ -82,8 +82,10 @@ export const SCE_DESIGN_SYSTEM_09_PO_CLOSURE = {
   PR: "887",
   ACCEPTED_DS09_HEAD: "2effdb133a0cd95fbc6fe0d82cec604bfe10effd",
   FEATURE_HEAD_BEFORE_CLOSURE: "2effdb133a0cd95fbc6fe0d82cec604bfe10effd",
+  /** Prior DS-09 closure on STAGE (PR #887); PO addendum continues on PR #889. */
   PRIOR_CLOSURE_COMMIT: "ae705a70f0fa3876cea6c66f94e22ab82249d504",
-  STAGE_MERGE_COMMIT: "0000000000000000000000000000000000000000",
+  /** Merge SHA recorded on STAGE after PR #887 merge. */
+  STAGE_MERGE_COMMIT: "0dbfb886714ff7bf2164a6f41611b7657e17b590",
   NEXT_PACKAGE: "SCE-DESIGN-SYSTEM-10 — Product-wide Adoption / Legacy Removal",
 } as const;
 

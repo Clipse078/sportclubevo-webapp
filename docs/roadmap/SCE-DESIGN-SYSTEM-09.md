@@ -11,7 +11,7 @@
 | **Accepted DS-09 implementation HEAD** | `2effdb133a0cd95fbc6fe0d82cec604bfe10effd` |
 | **Feature HEAD before closure docs** | `2effdb133a0cd95fbc6fe0d82cec604bfe10effd` |
 | **Closure commit** | `ae705a70f0fa3876cea6c66f94e22ab82249d504` |
-| **STAGE merge commit** | `0000000000000000000000000000000000000000` |
+| **STAGE merge commit** | `0dbfb886714ff7bf2164a6f41611b7657e17b590` |
 | **Predecessor DS-08 PR** | **#886** |
 | **PR** | **#887** — **MERGED** |
 | **Successor** | **`SCE-DESIGN-SYSTEM-10`** — Product-wide Adoption / Legacy Removal |
