@@ -22,13 +22,14 @@ import {
   ORG_CANVAS_MIN_SCALE,
 } from "@/lib/org/org-canvas-viewport";
 import {
-  computeLayoutBounds,
   expandCollapsedAncestors,
   loadOrgLayoutPositions,
   mergeLayoutWithManualPositions,
   saveOrgLayoutPositions,
   type OrgLayoutPositionMap,
 } from "@/lib/org/org-layout-persistence";
+import { computeOrgLayoutBoundingBox } from "@/lib/org/org-layout-bounds";
+import OrgUnitReparentDialog from "@/components/admin/org/OrgUnitReparentDialog";
 import OrgUnitNodeCard, { type OrgUnitCanvasNodeData } from "@/components/admin/org/OrgUnitNodeCard";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
@@ -54,7 +55,11 @@ type Props = {
   onSelectId: (id: string | null) => void;
   onAddChild: (parentId: string) => void;
   onReparentSuccess?: () => void;
+  parentOptions?: { id: string; key: string; name: string; level: number; type: string }[];
 };
+
+const ORG_CANVAS_TOOLBAR_INSET_PX = 52;
+const ORG_INSPECTOR_INSET_PX = 352;
 
 type NodeDragState = {
   nodeId: string;
@@ -73,6 +78,7 @@ export default function OrgUnitCanvasView({
   onSelectId,
   onAddChild,
   onReparentSuccess,
+  parentOptions = [],
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const didInitialFit = useRef(false);
@@ -98,6 +104,7 @@ export default function OrgUnitCanvasView({
   const [autoLayoutConfirmOpen, setAutoLayoutConfirmOpen] = useState(false);
   const [reparentError, setReparentError] = useState<string | null>(null);
   const [reparentLoading, setReparentLoading] = useState(false);
+  const [reparentFormUnitId, setReparentFormUnitId] = useState<string | null>(null);
 
   const hierarchyUnits: OrgHierarchyUnit[] = useMemo(
     () =>
@@ -121,12 +128,13 @@ export default function OrgUnitCanvasView({
   );
 
   const layout = useMemo(() => {
-    const bounds = computeLayoutBounds(layoutNodes);
+    const box = computeOrgLayoutBoundingBox(layoutNodes);
     return {
       nodes: layoutNodes,
       edges: autoLayout.edges,
-      width: Math.max(autoLayout.width, bounds.width),
-      height: Math.max(autoLayout.height, bounds.height),
+      width: Math.max(autoLayout.width, box.width),
+      height: Math.max(autoLayout.height, box.height),
+      boundingBox: box,
     };
   }, [layoutNodes, autoLayout.edges, autoLayout.width, autoLayout.height]);
 
@@ -161,15 +169,24 @@ export default function OrgUnitCanvasView({
   const applyFitToView = useCallback(() => {
     const viewport = viewportRef.current;
     if (!viewport || layout.nodes.length === 0) return;
+    const box = layout.boundingBox;
     const result = computeOrgCanvasFitToView({
       viewportWidth: viewport.clientWidth,
       viewportHeight: viewport.clientHeight,
       layoutWidth: layout.width,
       layoutHeight: layout.height,
+      boundsMinX: box.minX,
+      boundsMinY: box.minY,
+      contentWidth: box.width,
+      contentHeight: box.height,
+      chromeInsets: {
+        top: ORG_CANVAS_TOOLBAR_INSET_PX,
+        right: selectedId ? ORG_INSPECTOR_INSET_PX : 0,
+      },
     });
     setScale(result.scale);
     setPan({ x: result.panX, y: result.panY });
-  }, [layout]);
+  }, [layout, selectedId]);
 
   const focusNodeLegible = useCallback(
     (id: string) => {
@@ -293,6 +310,35 @@ export default function OrgUnitCanvasView({
     }
   }
 
+  const highlightedEdgeKeys = useMemo(() => {
+    if (!selectedId) return new Set<string>();
+    const parentById = new Map(hierarchyUnits.map((u) => [u.id, u.parentId]));
+    const onPath = new Set<string>();
+    onPath.add(selectedId);
+    let current: string | null = parentById.get(selectedId) ?? null;
+    while (current) {
+      onPath.add(current);
+      current = parentById.get(current) ?? null;
+    }
+    for (const u of hierarchyUnits) {
+      let p: string | null = u.parentId;
+      while (p) {
+        if (p === selectedId) {
+          onPath.add(u.id);
+          break;
+        }
+        p = parentById.get(p) ?? null;
+      }
+    }
+    const keys = new Set<string>();
+    for (const edge of layout.edges) {
+      if (onPath.has(edge.fromId) && onPath.has(edge.toId)) {
+        keys.add(`${edge.fromId}-${edge.toId}`);
+      }
+    }
+    return keys;
+  }, [hierarchyUnits, layout.edges, selectedId]);
+
   const gridStyle = orgCanvasGridBackgroundStyle(pan.x, pan.y, scale);
 
   return (
@@ -316,7 +362,7 @@ export default function OrgUnitCanvasView({
             data-testid="org-canvas-search"
           />
         </div>
-        <div className="flex items-center gap-1" role="toolbar" aria-label="Canvas-Steuerung">
+        <div className="flex items-center gap-1" role="toolbar" aria-label="Organigramm-Steuerung">
           <button
             type="button"
             className="fca-button-secondary p-2"
@@ -426,7 +472,7 @@ export default function OrgUnitCanvasView({
         }}
         data-testid="org-unit-canvas-viewport"
         role="application"
-        aria-label="Organisationshierarchie Canvas"
+        aria-label="Organisationshierarchie Organigramm"
       >
         <div
           className="absolute origin-top-left motion-reduce:transition-none transition-transform duration-150"
@@ -443,16 +489,24 @@ export default function OrgUnitCanvasView({
             height={layout.height}
             aria-hidden
           >
-            {layout.edges.map((edge) => (
-              <path
-                key={`${edge.fromId}-${edge.toId}`}
-                d={connectorPath(edge.fromId, edge.toId)}
-                fill="none"
-                stroke="color-mix(in srgb, var(--sce-primary) 35%, var(--border-strong))"
-                strokeWidth={1.5}
-                opacity={0.9}
-              />
-            ))}
+            {layout.edges.map((edge) => {
+              const key = `${edge.fromId}-${edge.toId}`;
+              const emphasized = highlightedEdgeKeys.has(key);
+              return (
+                <path
+                  key={key}
+                  d={connectorPath(edge.fromId, edge.toId)}
+                  fill="none"
+                  stroke={
+                    emphasized
+                      ? "color-mix(in srgb, var(--sce-accent) 55%, var(--border-strong))"
+                      : "color-mix(in srgb, var(--sce-primary) 28%, var(--border-strong))"
+                  }
+                  strokeWidth={emphasized ? 2 : 1.5}
+                  opacity={emphasized ? 1 : 0.65}
+                />
+              );
+            })}
           </svg>
 
           {layout.nodes.map((node) => {
@@ -531,6 +585,8 @@ export default function OrgUnitCanvasView({
                     });
                   }}
                   onAddChild={canManage ? () => onAddChild(node.id) : undefined}
+                  onMove={canManage ? () => setReparentFormUnitId(node.id) : undefined}
+                  onMore={() => onSelectId(node.id)}
                   onReparentDragStart={
                     canManage
                       ? (ev) => {
@@ -563,16 +619,20 @@ export default function OrgUnitCanvasView({
           setReparentPending(null);
           setReparentError(null);
         }}
-        title="Einheit verschieben"
-        description="Die Hierarchie wird serverseitig mit Zyklus- und Tiefenprüfung gespeichert."
+        title={
+          reparentPending
+            ? `„${reparentPending.unitName}" verschieben?`
+            : "Einheit verschieben"
+        }
+        description="Neue übergeordnete Einheit bestätigen — serverseitige Zyklus- und Tiefenprüfung."
         size="md"
         footer={null}
       >
         {reparentPending ? (
           <div className="space-y-4">
             <p className="text-sm text-[var(--text-2)]">
-              <strong className="text-[var(--text-1)]">{reparentPending.unitName}</strong> unter{" "}
-              <strong className="text-[var(--text-1)]">{reparentPending.parentName}</strong> einordnen?
+              Neue übergeordnete Einheit:{" "}
+              <strong className="text-[var(--text-1)]">{reparentPending.parentName}</strong>
             </p>
             {reparentError ? (
               <p className="text-sm text-rose-400" role="alert">
@@ -594,7 +654,7 @@ export default function OrgUnitCanvasView({
                 onClick={() => void confirmReparent()}
                 disabled={reparentLoading}
               >
-                {reparentLoading ? "Speichern…" : "Verschieben bestätigen"}
+                {reparentLoading ? "Speichern…" : "Verschieben"}
               </button>
             </div>
           </div>
@@ -618,6 +678,22 @@ export default function OrgUnitCanvasView({
           </button>
         </div>
       </Dialog>
+
+      {reparentFormUnitId && unitById.get(reparentFormUnitId) ? (
+        <OrgUnitReparentDialog
+          open={Boolean(reparentFormUnitId)}
+          onClose={() => setReparentFormUnitId(null)}
+          unitId={reparentFormUnitId}
+          unitName={unitById.get(reparentFormUnitId)!.name}
+          currentParentId={unitById.get(reparentFormUnitId)!.parentId}
+          hierarchyUnits={hierarchyUnits}
+          parentOptions={parentOptions}
+          onSuccess={() => {
+            setReparentFormUnitId(null);
+            onReparentSuccess?.();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

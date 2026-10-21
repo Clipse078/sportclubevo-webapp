@@ -26,7 +26,7 @@ export default function OrgUnitCreateComposerDialog({
       open={open}
       onClose={onClose}
       title="Neue Organisationseinheit"
-      description="Einheit im Organigramm anlegen — übergeordnete Einheit ist vorausgefüllt, wenn aus dem Canvas gewählt."
+      description="Einheit im Organigramm anlegen — übergeordnete Einheit ist vorausgefüllt, wenn aus dem Organigramm gewählt."
       size="workspace"
       bodyLayout="flex"
       footer={null}

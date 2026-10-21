@@ -30,10 +30,12 @@ export type OrgHierarchyLayoutResult = {
   height: number;
 };
 
-const DEFAULT_NODE_WIDTH = 200;
-const DEFAULT_NODE_HEIGHT = 68;
-const DEFAULT_GAP_X = 28;
-const DEFAULT_GAP_Y = 56;
+export const ORG_HIERARCHY_NODE_WIDTH = 240;
+export const ORG_HIERARCHY_NODE_HEIGHT = 116;
+const DEFAULT_NODE_WIDTH = ORG_HIERARCHY_NODE_WIDTH;
+const DEFAULT_NODE_HEIGHT = ORG_HIERARCHY_NODE_HEIGHT;
+const DEFAULT_GAP_X = 32;
+const DEFAULT_GAP_Y = 64;
 
 function compareUnits(a: OrgHierarchyUnit, b: OrgHierarchyUnit): number {
   if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
@@ -151,4 +153,14 @@ export function wouldReparentCreateCycle(
     current = parentById.get(current) ?? null;
   }
   return false;
+}
+
+/** Org units that may receive `unitId` as a child without creating a cycle. */
+export function filterValidReparentTargets(
+  units: Pick<OrgHierarchyUnit, "id" | "parentId">[],
+  unitId: string,
+): string[] {
+  return units
+    .filter((u) => u.id !== unitId && !wouldReparentCreateCycle(units, unitId, u.id))
+    .map((u) => u.id);
 }

@@ -3,13 +3,24 @@
  */
 
 import type { CSSProperties } from "react";
+import {
+  ORG_HIERARCHY_NODE_HEIGHT,
+  ORG_HIERARCHY_NODE_WIDTH,
+} from "@/lib/org/org-hierarchy-layout";
 
-export const ORG_CANVAS_DEFAULT_NODE_WIDTH = 200;
-export const ORG_CANVAS_DEFAULT_NODE_HEIGHT = 68;
+export const ORG_CANVAS_DEFAULT_NODE_WIDTH = ORG_HIERARCHY_NODE_WIDTH;
+export const ORG_CANVAS_DEFAULT_NODE_HEIGHT = ORG_HIERARCHY_NODE_HEIGHT;
 export const ORG_CANVAS_MIN_SCALE = 0.45;
 export const ORG_CANVAS_MAX_SCALE = 1.75;
 /** Minimum on-screen node width when using fit-to-view (px). */
-export const ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH = 128;
+export const ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH = 152;
+
+export type OrgCanvasChromeInsets = {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+};
 
 export type OrgContextualZoomLevel = "NORMAL" | "COMPACT" | "MICRO";
 
@@ -24,6 +35,12 @@ export type FitToViewInput = {
   viewportHeight: number;
   layoutWidth: number;
   layoutHeight: number;
+  /** When set, fit uses content box instead of layoutWidth/Height (0,0 origin). */
+  boundsMinX?: number;
+  boundsMinY?: number;
+  contentWidth?: number;
+  contentHeight?: number;
+  chromeInsets?: OrgCanvasChromeInsets;
   nodeWidth?: number;
   padding?: number;
   minScale?: number;
@@ -47,26 +64,41 @@ export function computeOrgCanvasFitToView(input: FitToViewInput): FitToViewResul
     viewportHeight: vh,
     layoutWidth,
     layoutHeight,
+    boundsMinX = 0,
+    boundsMinY = 0,
+    contentWidth,
+    contentHeight,
+    chromeInsets = {},
     nodeWidth = ORG_CANVAS_DEFAULT_NODE_WIDTH,
-    padding = 32,
+    padding = 40,
     minScale = ORG_CANVAS_MIN_SCALE,
     maxScale = ORG_CANVAS_MAX_SCALE,
     legibleMinScreenNodeWidth = ORG_CANVAS_LEGIBLE_MIN_SCREEN_NODE_WIDTH,
   } = input;
 
-  if (layoutWidth <= 0 || layoutHeight <= 0 || vw <= 0 || vh <= 0) {
+  const cw = contentWidth ?? layoutWidth;
+  const ch = contentHeight ?? layoutHeight;
+  const insetTop = chromeInsets.top ?? 0;
+  const insetRight = chromeInsets.right ?? 0;
+  const insetBottom = chromeInsets.bottom ?? 0;
+  const insetLeft = chromeInsets.left ?? 0;
+
+  const innerVw = vw - insetLeft - insetRight;
+  const innerVh = vh - insetTop - insetBottom;
+
+  if (cw <= 0 || ch <= 0 || innerVw <= 0 || innerVh <= 0) {
     return {
       scale: 1,
-      panX: padding,
-      panY: padding,
+      panX: padding + insetLeft,
+      panY: padding + insetTop,
       legibilityClamped: false,
       hierarchyOverflowsViewport: false,
     };
   }
 
   const fitScaleRaw = Math.min(
-    (vw - padding * 2) / layoutWidth,
-    (vh - padding * 2) / layoutHeight,
+    (innerVw - padding * 2) / cw,
+    (innerVh - padding * 2) / ch,
     1,
   );
 
@@ -76,10 +108,10 @@ export function computeOrgCanvasFitToView(input: FitToViewInput): FitToViewResul
   scale = Math.max(minScale, Math.min(maxScale, scale));
 
   const hierarchyOverflowsViewport =
-    layoutWidth * scale > vw - padding * 2 || layoutHeight * scale > vh - padding * 2;
+    cw * scale > innerVw - padding * 2 || ch * scale > innerVh - padding * 2;
 
-  const panX = (vw - layoutWidth * scale) / 2;
-  const panY = (vh - layoutHeight * scale) / 2;
+  const panX = insetLeft + padding + (innerVw - padding * 2 - cw * scale) / 2 - boundsMinX * scale;
+  const panY = insetTop + padding + (innerVh - padding * 2 - ch * scale) / 2 - boundsMinY * scale;
 
   return { scale, panX, panY, legibilityClamped, hierarchyOverflowsViewport };
 }
@@ -100,7 +132,7 @@ export function orgCanvasGridBackgroundStyle(
   const offsetY = ((panY % step) + step) % step;
   return {
     backgroundImage:
-      "radial-gradient(circle, color-mix(in srgb, var(--text-1) 14%, transparent) 1px, transparent 1px)",
+      "radial-gradient(circle, color-mix(in srgb, var(--text-1) 7%, transparent) 1px, transparent 1px)",
     backgroundSize: `${step}px ${step}px`,
     backgroundPosition: `${offsetX}px ${offsetY}px`,
   };

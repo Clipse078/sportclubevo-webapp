@@ -92,7 +92,7 @@ export default function OrgUnitBuilderWorkspace({
             onClick={() => setView("canvas")}
             data-testid="org-builder-view-canvas"
           >
-            Canvas
+            Organigramm
           </button>
           <button
             type="button"
@@ -127,12 +127,15 @@ export default function OrgUnitBuilderWorkspace({
               onSelectId={setSelectedId}
               onAddChild={(parentId) => openCreate(parentId)}
               onReparentSuccess={() => router.refresh()}
+              parentOptions={parentOptions}
             />
           </div>
           {inspectorUnit ? (
             <OrgUnitInspectorPanel
               unit={inspectorUnit}
               canManage={canManage}
+              hierarchyUnits={orgUnits.map((u) => ({ id: u.id, parentId: u.parentId }))}
+              parentOptions={parentOptions}
               onClose={() => setSelectedId(null)}
               onAddChild={(parentId) => openCreate(parentId)}
             />
