@@ -51,7 +51,8 @@
     "billing:qr-04b:generate": "tsx scripts/generate-billing-qr-04b-cross-bank-pack.ts",
     "sce-icons:legacy-inventory": "tsx scripts/sce-icons-legacy-inventory.ts",
     "diag:sce-perf-02-bench": "tsx scripts/diagnostics/sce-perf-02-readonly-bench.ts",
-    "diag:sce-perf-02a-stage-probe": "tsx scripts/diagnostics/sce-perf-02a-stage-http-probe.ts"
+    "diag:sce-perf-02a-stage-probe": "tsx scripts/diagnostics/sce-perf-02a-stage-http-probe.ts",
+    "finance:01a:analyze-fca-workbook": "tsx scripts/finance/sce-finance-01a-analyze-fca-workbook.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",
@@ -128,7 +129,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "xlsx": "^0.18.5"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
