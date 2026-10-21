@@ -317,6 +317,8 @@ export const SCE_DESIGN_SYSTEM_10_DOC_MARKERS = [
   "SCE_DESIGN_SYSTEM_10_R2_ACTIVITY_CARD_TEMPORAL",
   "SCE-DESIGN-SYSTEM-10-R3",
   "SCE_DESIGN_SYSTEM_10_R3_BATCH_03",
+  "SCE-DESIGN-SYSTEM-10-R4",
+  "SCE_DESIGN_SYSTEM_10_R4_AUFGABEN",
   "DS10_STATUS",
   "PO_VISUAL_UAT_IN_PROGRESS",
 ] as const;
@@ -331,6 +333,7 @@ export const SCE_DESIGN_SYSTEM_10_REPRESENTATIVE_ADOPTION = {
   PLATFORM_AUDIT_LOGS: "SceDenseSurface + SceDataTable",
   PLANNING_ADMIN_CREATE: "PlanningEditorOperationalWorkspace + SceFeatureCard",
   DAY_PLANNER: "SceWorkspaceChrome + canonical day header surface",
+  AUFGABEN_WORKSPACE: "AufgabenWorkspaceShell + SceContextTabs (?bereich= deep links)",
   BINARY_TOGGLE_SWEEP: "Event create forms, billing, infoboard designer, campaign channels",
   BILLING_API_ERRORS: "Actionable 500 copy",
 } as const;

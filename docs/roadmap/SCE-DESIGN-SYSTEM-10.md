@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-10` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-09` (**CLOSED / ACCEPTED / MERGED**, PR **#887**) |
-| **`DS10_STATUS`** | **PO_VISUAL_UAT_IN_PROGRESS** (R3 Batch 03 delivered — not closed) |
+| **`DS10_STATUS`** | **PO_VISUAL_UAT_IN_PROGRESS** (R4 Aufgaben workspace delivered — not closed) |
 | **Branch** | `cursor/sce-design-system-10-product-wide-adoption` |
 | **Baseline STAGE (pre-branch)** | `758a52fd403406ad6cb2843cfdd0218e6b9974ad` |
 | **PR** | **DRAFT** against **STAGE** |
@@ -28,6 +28,7 @@ Make SportClubEvo **visibly and structurally** converge on SCE Design System v1.
 | `lib/design-system/sce-design-system-10-meta.ts` | Typed matrix + governance |
 | Product migrations | Workspace chrome, dense UI, toggles, billing tabs, facilities shell, **R3:** Documents DAM, audit logs, day/create planner, facilities controls |
 | `SCE_DESIGN_SYSTEM_10_R3_BATCH_03` | Administration, Documents & Planning Administration |
+| **`SCE-DESIGN-SYSTEM-10-R4`** | **Aufgaben / Anforderungen** — single `AufgabenWorkspaceShell`, canonical context tabs, DS-07 load errors, creation form convergence (PO Aufgaben visual baseline) |
 
 ---
 

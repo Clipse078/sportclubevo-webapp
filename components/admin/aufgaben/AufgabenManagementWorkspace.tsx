@@ -3,8 +3,8 @@ import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, Websi
 import { Suspense } from "react";
 import { AlertCircle, CalendarClock, ListChecks, UserRound } from "lucide-react";
 import { cn } from "@/lib/cn";
-import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
 import PlanningManagementKpiCards from "@/components/admin/planning/PlanningManagementKpiCards";
+import AufgabenDomainLoadError from "./AufgabenDomainLoadError";
 import {
   PLANNING_WORKSPACE_MAIN_RAIL_GRID,
   PLANNING_WORKSPACE_RAIL_ASIDE,
@@ -39,7 +39,6 @@ import AufgabenManagementSortControl from "./AufgabenManagementSortControl";
 import AufgabenManagementQuickAccess from "./AufgabenManagementQuickAccess";
 import AufgabenManagementFilterRail from "./AufgabenManagementFilterRail";
 import AufgabenManagementPagination from "./AufgabenManagementPagination";
-import AufgabenQuickCreateDialog from "./AufgabenQuickCreateDialog";
 import AufgabenTaskList from "./AufgabenTaskList";
 import AufgabenSeriesList from "./AufgabenSeriesList";
 
@@ -171,27 +170,6 @@ export default function AufgabenManagementWorkspace({
 
   return (
     <div className="w-full space-y-4" data-testid="aufgaben-management-workspace">
-      <PlanningManagementPageHeader
-        breadcrumbLeaf="Aufgaben"
-        title="Aufgaben"
-        subtitle="Operatives Task Center — Arbeit im Verein koordinieren und nachverfolgen."
-        subtitleTestId="aufgaben-header-subtitle"
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {canManage ? (
-              <Link
-                href="/dashboard/aufgaben/serien/neu"
-                className="fca-button-secondary inline-flex items-center text-sm"
-                data-testid="aufgaben-recurring-create-header"
-              >
-                Wiederkehrend
-              </Link>
-            ) : null}
-            <AufgabenQuickCreateDialog canCreate={canCreate} assigneeOptions={assigneeOptions} canManage={canManage} />
-          </div>
-        }
-      />
-
       <PlanningManagementKpiCards
         testId="aufgaben-kpi-cards"
         metrics={[
@@ -253,12 +231,10 @@ export default function AufgabenManagementWorkspace({
       <div className={PLANNING_WORKSPACE_MAIN_RAIL_GRID}>
         <div className="min-w-0 space-y-4">
           {loadError ? (
-            <div
-              className="rounded-xl border border-red-500/30 bg-red-950/20 px-4 py-3 text-sm text-red-100"
-              data-testid="aufgaben-load-error"
-            >
-              Aufgaben konnten nicht geladen werden. Bitte Seite neu laden oder später erneut versuchen.
-            </div>
+            <AufgabenDomainLoadError
+              context="AUFGABEN_MANAGEMENT_LOAD"
+              testId="aufgaben-load-error"
+            />
           ) : null}
 
           {!isSeriesView ? (

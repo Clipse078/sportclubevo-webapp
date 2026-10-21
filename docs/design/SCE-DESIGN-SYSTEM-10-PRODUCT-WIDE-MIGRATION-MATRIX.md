@@ -30,8 +30,9 @@ See `SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS` — reconciled on branch `cur
 | List pages | `ListPagePattern` → `SceBreadcrumbs` + `SceWorkspaceHeader` |
 | Binary settings | Toggle First sweep (forms, composers, infoboard designer) |
 | Billing API | Actionable 500 copy — no `Interner Fehler.` default |
+| Aufgaben / Anforderungen | `AufgabenWorkspaceShell` + `SceContextTabs` (`?bereich=`), DS-07 load errors |
 
-**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · **R3 Batch 03** (Administration, Documents DAM, Planning Administration) in `SCE_DESIGN_SYSTEM_10_R3_BATCH_03` · PO Publishing/CMS/Infoboard baseline **PASS** (`SCE_DESIGN_SYSTEM_10_R3_PO_PUBLISHING_VISUAL_UAT`) · R1 Batch 01/02 — awaiting PO re-review.
+**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · **R4** Aufgaben / Anforderungen workspace convergence (`SCE-DESIGN-SYSTEM-10-R4`, PO Aufgaben visual baseline) · **R3 Batch 03** (Administration, Documents DAM, Planning Administration) · PO Publishing/CMS/Infoboard baseline **PASS** · R1 Batch 01/02 — awaiting PO re-review.
 
 | Route | R3 disposition |
 | --- | --- |

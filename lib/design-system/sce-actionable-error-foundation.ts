@@ -5,6 +5,8 @@ export type SceActionableErrorContext =
   | "TOURNAMENT_PLANUNG_SAVE"
   | "PEOPLE_ACCESS"
   | "COMMUNICATION"
+  | "AUFGABEN_MANAGEMENT_LOAD"
+  | "AUFGABEN_REQUIREMENTS_LOAD"
   | "GENERIC";
 
 const DOMAIN_COPY: Record<
@@ -30,6 +32,16 @@ const DOMAIN_COPY: Record<
     title: "Kommunikation konnte nicht geladen werden.",
     description: "Bitte erneut versuchen.",
     retryLabel: "Erneut versuchen",
+  },
+  AUFGABEN_MANAGEMENT_LOAD: {
+    title: "Aufgaben konnten nicht geladen werden.",
+    description: "Bitte erneut versuchen. Wenn das Problem bleibt, später nochmals öffnen.",
+    retryLabel: "Erneut laden",
+  },
+  AUFGABEN_REQUIREMENTS_LOAD: {
+    title: "Anforderungen konnten nicht geladen werden.",
+    description: "Bitte erneut versuchen. Wenn das Problem bleibt, später nochmals öffnen.",
+    retryLabel: "Erneut laden",
   },
   GENERIC: {
     title: "Ein Fehler ist aufgetreten.",

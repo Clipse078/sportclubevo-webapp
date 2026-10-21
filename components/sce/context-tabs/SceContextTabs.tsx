@@ -176,6 +176,7 @@ export default function SceContextTabs<TTabId extends ContextTabId = ContextTabI
               id={tabDomId}
               tabIndex={isActive ? 0 : -1}
               aria-selected={isActive}
+              aria-current={isActive ? "page" : undefined}
               aria-controls={panelDomId}
               data-testid={`${testId}-${tab.key}`}
               onClick={(event) => handleTabClick(event, tab.key)}

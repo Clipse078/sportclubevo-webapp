@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ArrowLeft } from "lucide-react";
-import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+import { SceSemanticFeedback } from "@/components/sce/feedback/SceSemanticFeedback";
+import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
 import {
   emptyRequirementAudienceSelection,
@@ -55,49 +57,52 @@ export default function RequirementCreateClient({ timeZone }: Props) {
   }
 
   return (
-    <div className={`mx-auto w-full max-w-4xl space-y-4 px-1 py-2 ${SCE_DIALOG_WORKSPACE_PANEL}`}>
-      <Link
-        href={buildAufgabenBereichHref("anforderungen")}
-        className="inline-flex items-center gap-1 text-sm text-[var(--text-2)] hover:text-[var(--foreground)]"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Anforderungen
-      </Link>
-      <header>
-        <h1 className="text-xl font-semibold">Neue Anforderung</h1>
-        <p className="mt-1 text-sm text-[var(--text-2)]">
-          Mehrere Personen müssen individuell bestätigen. Empfänger werden beim Aktivieren
-          festgelegt.
-        </p>
-      </header>
+    <SceWorkspaceChrome
+      className="mx-auto max-w-4xl"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Aufgaben", href: buildAufgabenBereichHref("anforderungen") },
+        { label: "Neue Anforderung" },
+      ]}
+      header={{
+        title: "Neue Anforderung",
+        description:
+          "Mehrere Personen müssen individuell bestätigen. Empfänger werden beim Aktivieren festgelegt.",
+        secondaryActions: (
+          <Link
+            href={buildAufgabenBereichHref("anforderungen")}
+            className="fca-button-secondary inline-flex items-center gap-1 text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Anforderungen
+          </Link>
+        ),
+      }}
+      density="dense"
+    >
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
+        <SceSemanticFeedback tone="ERROR" title="Speichern fehlgeschlagen" description={error} />
       ) : null}
-      <form action={onSubmit} className="space-y-5 rounded-xl border border-[var(--border)] p-4 sm:p-5">
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-[var(--text-2)]">Titel</span>
+      <form
+        action={onSubmit}
+        className="space-y-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5"
+        data-testid="requirement-create-form"
+      >
+        <SceFormField label="Titel" required density="DENSE">
           <input
             name="title"
             required
             disabled={pending}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+            className="fca-input w-full text-sm"
             placeholder="Trainershandbuch 2026/27 bestätigen"
             data-testid="requirement-create-title"
           />
-        </label>
+        </SceFormField>
         <TaskDescriptionFormField name="description" disabled={pending} compact />
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-1">
-            <span className="text-xs font-medium text-[var(--text-2)]">Fällig am</span>
-            <input
-              type="date"
-              name="dueAt"
-              disabled={pending}
-              className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
-            />
-          </label>
+          <SceFormField label="Fällig am" density="DENSE">
+            <input type="date" name="dueAt" disabled={pending} className="fca-input w-full text-sm" />
+          </SceFormField>
           <TaskReminderFields
             timeZone={timeZone}
             disabled={pending}
@@ -119,6 +124,6 @@ export default function RequirementCreateClient({ timeZone }: Props) {
           </button>
         </div>
       </form>
-    </div>
+    </SceWorkspaceChrome>
   );
 }

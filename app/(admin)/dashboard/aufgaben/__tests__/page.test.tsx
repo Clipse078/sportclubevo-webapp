@@ -7,10 +7,12 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+let mockSearchParams = new URLSearchParams();
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => "/dashboard/aufgaben",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 vi.mock("@/lib/personal-actions/require-module-access", () => ({
@@ -47,6 +49,21 @@ vi.mock("@/lib/tasks/server-context", () => ({
 
 vi.mock("@/lib/tenants/active-tenant", () => ({
   getActiveTenant: vi.fn().mockResolvedValue({ timezone: "Europe/Zurich", locale: "de-CH" }),
+}));
+
+vi.mock("@/lib/people/queries", () => ({
+  getPersonNameByUserId: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/people/person-user-identity", () => ({
+  resolvePersonUserIdentityByUserId: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/people/identity", () => ({
+  resolveAccountIdentityName: vi.fn().mockReturnValue({
+    firstName: "Test",
+    lastName: "User",
+  }),
 }));
 
 vi.mock("@/lib/tasks/task-org-options", () => ({
@@ -138,6 +155,7 @@ import { getRequirementManagementSummary, listRequirementManagementItems } from 
 
 describe("AUFGABEN-02 — Aufgaben management page", () => {
   it("renders personal inbox by default for authorized users", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "meine" });
     const jsx = await AufgabenPage({ searchParams: Promise.resolve({}) });
     render(jsx);
     expect(screen.getByTestId("personal-actions-inbox")).toBeInTheDocument();
@@ -168,15 +186,20 @@ describe("AUFGABEN-02 — Aufgaben management page", () => {
       page: 1,
       pageCount: 1,
     });
+    mockSearchParams = new URLSearchParams({ bereich: "anforderungen" });
     const jsx = await AufgabenPage({
       searchParams: Promise.resolve({ bereich: "anforderungen" }),
     });
     render(jsx);
     expect(screen.getByTestId("requirements-management-workspace")).toBeInTheDocument();
-    expect(screen.getByTestId("aufgaben-bereich-anforderungen")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId("aufgaben-bereich-anforderungen")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("renders management workspace when bereich=verwaltung", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung", view: "MEINE" });
     const jsx = await AufgabenPage({
       searchParams: Promise.resolve({ bereich: "verwaltung", view: "MEINE" }),
     });

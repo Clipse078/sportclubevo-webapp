@@ -17,10 +17,15 @@ import {
   resolveTaskManagementQuery,
 } from "@/lib/tasks/management-navigation";
 import { canViewAllTasks, hasTaskPermission } from "@/lib/tasks/visibility";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
 import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInbox";
-import AufgabenScopeToggle from "@/components/admin/aufgaben/AufgabenScopeToggle";
+import AufgabenWorkspaceShell from "@/components/admin/aufgaben/AufgabenWorkspaceShell";
 import RequirementsManagementWorkspace from "@/components/admin/aufgaben/RequirementsManagementWorkspace";
+import MeineAufgabenQuickCreateDialog from "@/components/admin/aufgaben/MeineAufgabenQuickCreateDialog";
+import AufgabenQuickCreateDialog from "@/components/admin/aufgaben/AufgabenQuickCreateDialog";
+import { requirementCreateHref } from "@/lib/requirements/management-navigation";
 import { getRequirementServiceContext } from "@/lib/requirements/server-context";
 import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";
 import {
@@ -118,7 +123,23 @@ export default async function AufgabenPage({ searchParams }: Props) {
     const canCreate = canCreateRequirement(reqCtx);
 
     return (
-      <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+      <AufgabenWorkspaceShell
+        bereich="anforderungen"
+        showManagement={showManagement}
+        showRequirements={showRequirementManagement}
+        primaryAction={
+          canCreate ? (
+            <Link
+              href={requirementCreateHref()}
+              className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+              data-testid="requirements-create-open"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Anforderung
+            </Link>
+          ) : null
+        }
+      >
         <RequirementsManagementWorkspace
           locale={locale}
           timeZone={timeZone}
@@ -129,10 +150,9 @@ export default async function AufgabenPage({ searchParams }: Props) {
           page={page}
           pageCount={pageCount}
           canCreate={canCreate}
-          showTaskManagementScope={showManagement}
           loadError={loadError}
         />
-      </div>
+      </AufgabenWorkspaceShell>
     );
   }
 
@@ -176,31 +196,36 @@ export default async function AufgabenPage({ searchParams }: Props) {
     });
 
     return (
-      <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+      <AufgabenWorkspaceShell
+        bereich="meine"
+        showManagement={showManagement}
+        showRequirements={showRequirementManagement}
+        primaryAction={
+          quickCreateCaps.canCreateSelf ? (
+            <MeineAufgabenQuickCreateDialog
+              canCreateSelf={quickCreateCaps.canCreateSelf}
+              canAssignOthers={quickCreateCaps.canAssignOthers}
+              canOpenFullCreate={hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE)}
+              currentUser={{
+                userId: session.user.id,
+                personId: linkedPersonIdentity?.personId,
+                firstName: identity.firstName,
+                lastName: identity.lastName,
+              }}
+              timeZone={timeZone}
+            />
+          ) : null
+        }
+      >
         <PersonalActionsInbox
           items={items}
           locale={locale}
           timeZone={timeZone}
-          showManagementScope={showManagement}
-          showRequirementScope={showRequirementManagement}
-          bereich="meine"
           filter={inboxFilter}
           showSourceFilters={hasMixedSources}
           totalActionableCount={actionCounts.totalActionable}
-          quickCreate={{
-            canCreateSelf: quickCreateCaps.canCreateSelf,
-            canAssignOthers: quickCreateCaps.canAssignOthers,
-            canOpenFullCreate: hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE),
-            currentUser: {
-              userId: session.user.id,
-              personId: linkedPersonIdentity?.personId,
-              firstName: identity.firstName,
-              lastName: identity.lastName,
-            },
-            timeZone,
-          }}
         />
-      </div>
+      </AufgabenWorkspaceShell>
     );
   }
 
@@ -250,16 +275,29 @@ export default async function AufgabenPage({ searchParams }: Props) {
   const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
 
   return (
-    <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      {showManagement || showRequirementManagement ? (
-        <div className="mb-4">
-          <AufgabenScopeToggle
-            active="verwaltung"
-            showManagement={showManagement}
-            showRequirements={showRequirementManagement}
-          />
-        </div>
-      ) : null}
+    <AufgabenWorkspaceShell
+      bereich="verwaltung"
+      showManagement={showManagement}
+      showRequirements={showRequirementManagement}
+      secondaryActions={
+        canManage ? (
+          <Link
+            href="/dashboard/aufgaben/serien/neu"
+            className="fca-button-secondary inline-flex items-center text-sm"
+            data-testid="aufgaben-recurring-create-header"
+          >
+            Wiederkehrend
+          </Link>
+        ) : null
+      }
+      primaryAction={
+        <AufgabenQuickCreateDialog
+          canCreate={canCreate}
+          assigneeOptions={assigneeOptions}
+          canManage={canManage}
+        />
+      }
+    >
       <AufgabenManagementWorkspace
         tenantWideVisibility={tenantWideVisibility}
         locale={locale}
@@ -279,6 +317,6 @@ export default async function AufgabenPage({ searchParams }: Props) {
         canManage={canManage}
         loadError={loadError}
       />
-    </div>
+    </AufgabenWorkspaceShell>
   );
 }
