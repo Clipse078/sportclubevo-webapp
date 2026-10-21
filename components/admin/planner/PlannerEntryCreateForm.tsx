@@ -6,6 +6,12 @@ import {
 } from "@/app/(admin)/dashboard/planner/actions";
 import PlannerEntryDeleteButton from "@/components/admin/planner/PlannerEntryDeleteButton";
 import PlannerEntryCreatePublicationFields from "@/components/admin/planner/PlannerEntryCreatePublicationFields";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import { Button } from "@/components/ui/Button";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { SceInformationSurface } from "@/components/sce/information/SceInformationSurface";
+import { cn } from "@/lib/cn";
 
 type PlannerCreateFormData = {
   seasons: Array<{
@@ -94,42 +100,222 @@ export default function PlannerEntryCreateForm({
   const formAction =
     mode === "edit" ? updatePlannerEntryAction : createPlannerEntryAction;
 
-  return (
-    <div className="space-y-8">
-      <section className="rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="fca-eyebrow">Planner</p>
-            <h1 className="fca-heading mt-2">
-              {mode === "edit"
-                ? "Planner-Eintrag bearbeiten"
-                : "Neuen Planner-Eintrag erstellen"}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-500">
-              {mode === "edit"
-                ? "Passe einen saisongebundenen Planner-Eintrag an."
-                : "Erstelle einen saisongebundenen Eintrag für Saisonagenda, Wochenplanner und Tagesplanner."}
-            </p>
-          </div>
-
-          <Link
-            href={data.backHref}
-            className="inline-flex h-11 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            Zurück zum Planner
-          </Link>
+  const primary = (
+    <SceFeatureCard title="Stammdaten" testId="planner-create-stammdaten">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <label className="fca-label" htmlFor="planner-title">
+            Titel
+          </label>
+          <input
+            id="planner-title"
+            name="title"
+            required
+            defaultValue={defaults?.title ?? ""}
+            className="fca-input mt-2 w-full"
+            placeholder="Zum Beispiel Training E4"
+          />
         </div>
-      </section>
 
-      <section className="rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div>
+          <label className="fca-label">Saison</label>
+          <input
+            value={
+              data.seasons.find((season) => season.key === data.selectedSeasonKey)?.name ?? ""
+            }
+            readOnly
+            className="fca-input mt-2 w-full cursor-default bg-[var(--surface-2)]/60 text-[var(--text-2)]"
+          />
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-source">
+            Quelle
+          </label>
+          <select
+            id="planner-source"
+            name="source"
+            defaultValue={defaults?.source ?? "MANUAL"}
+            className="fca-input mt-2 w-full"
+          >
+            {SOURCE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-team">
+            Team
+          </label>
+          <select
+            id="planner-team"
+            name="teamId"
+            defaultValue={defaults?.teamId ?? ""}
+            className="fca-input mt-2 w-full"
+          >
+            <option value="">Kein Team</option>
+            {data.teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-location">
+            Ort
+          </label>
+          <input
+            id="planner-location"
+            name="location"
+            defaultValue={defaults?.location ?? ""}
+            className="fca-input mt-2 w-full"
+            placeholder="Zum Beispiel Hauptplatz"
+          />
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-start">
+            Start
+          </label>
+          <input
+            id="planner-start"
+            type="datetime-local"
+            name="startAt"
+            required
+            defaultValue={defaults?.startAt ?? ""}
+            className="fca-input mt-2 w-full"
+          />
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-end">
+            Ende
+          </label>
+          <input
+            id="planner-end"
+            type="datetime-local"
+            name="endAt"
+            defaultValue={defaults?.endAt ?? ""}
+            className="fca-input mt-2 w-full"
+          />
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-opponent">
+            Gegner
+          </label>
+          <input
+            id="planner-opponent"
+            name="opponentName"
+            defaultValue={defaults?.opponentName ?? ""}
+            className="fca-input mt-2 w-full"
+            placeholder="Optional"
+          />
+        </div>
+
+        <div>
+          <label className="fca-label" htmlFor="planner-organizer">
+            Organisator
+          </label>
+          <input
+            id="planner-organizer"
+            name="organizerName"
+            defaultValue={defaults?.organizerName ?? ""}
+            className="fca-input mt-2 w-full"
+            placeholder="Optional"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="fca-label" htmlFor="planner-competition">
+            Wettbewerb / Label
+          </label>
+          <input
+            id="planner-competition"
+            name="competitionLabel"
+            defaultValue={defaults?.competitionLabel ?? ""}
+            className="fca-input mt-2 w-full"
+            placeholder="Zum Beispiel BRACK.CH PlayMore"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="fca-label" htmlFor="planner-description">
+            Beschreibung
+          </label>
+          <textarea
+            id="planner-description"
+            name="description"
+            rows={4}
+            defaultValue={defaults?.description ?? ""}
+            className="fca-input mt-2 w-full min-h-[6rem] py-3"
+            placeholder="Optionale Beschreibung"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="fca-label" htmlFor="planner-remarks">
+            Bemerkungen
+          </label>
+          <textarea
+            id="planner-remarks"
+            name="remarks"
+            rows={3}
+            defaultValue={defaults?.remarks ?? ""}
+            className="fca-input mt-2 w-full min-h-[5rem] py-3"
+            placeholder="Interne Bemerkungen"
+          />
+        </div>
+      </div>
+    </SceFeatureCard>
+  );
+
+  const secondaryRail = (
+    <>
+      <PlanningPublicationPanel>
+        <PlannerEntryCreatePublicationFields
+          eventType={data.selectedType}
+          defaults={{
+            websiteVisible: defaults?.websiteVisible,
+            wochenplanVisible: defaults?.wochenplanVisible,
+            infoboardVisible: defaults?.infoboardVisible,
+            homepageVisible: defaults?.homepageVisible,
+            trainingsplanVisible: defaults?.trainingsplanVisible,
+            teamPageVisible: defaults?.teamPageVisible,
+          }}
+        />
+      </PlanningPublicationPanel>
+
+      <SceFeatureCard title="Aktion" testId="planner-create-actions">
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" variant="primary">
+            {mode === "edit" ? "Änderungen speichern" : "Planner-Eintrag erstellen"}
+          </Button>
+          <Link href={data.backHref} className="fca-button-secondary inline-flex h-10 items-center px-4">
+            Abbrechen
+          </Link>
+          {mode === "edit" && data.eventId ? (
+            <PlannerEntryDeleteButton eventId={data.eventId} seasonKey={data.selectedSeasonKey} />
+          ) : null}
+        </div>
+      </SceFeatureCard>
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+      <SceInformationSurface variant="flat" testId="planner-entry-type-surface">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
           Eintragstyp
         </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {TYPE_OPTIONS.map((option) => {
             const isSelected = option.value === data.selectedType;
-
             return (
               <Link
                 key={option.value}
@@ -139,20 +325,22 @@ export default function PlannerEntryCreateForm({
                   mode,
                   data.eventId,
                 )}
-                className={
+                className={cn(
+                  "rounded-full border px-4 py-2 text-sm font-medium transition",
                   isSelected
-                    ? "rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-[#0b4aa2]"
-                    : "rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                }
+                    ? "border-[var(--sce-primary)]/40 bg-[var(--sce-primary)]/10 font-semibold text-[var(--sce-primary)]"
+                    : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
+                )}
+                aria-current={isSelected ? "page" : undefined}
               >
                 {option.label}
               </Link>
             );
           })}
         </div>
-      </section>
+      </SceInformationSurface>
 
-      <form action={formAction} className="space-y-8">
+      <form action={formAction} className="space-y-6">
         {mode === "edit" && data.eventId ? (
           <input type="hidden" name="eventId" value={data.eventId} />
         ) : null}
@@ -160,216 +348,7 @@ export default function PlannerEntryCreateForm({
         <input type="hidden" name="seasonKey" value={data.selectedSeasonKey} />
         <input type="hidden" name="type" value={data.selectedType} />
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_420px]">
-          <div className="space-y-5">
-            <article className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-              <h2 className="text-[1.05rem] font-semibold text-slate-900">
-                Stammdaten
-              </h2>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">Titel</label>
-                  <input
-                    name="title"
-                    required
-                    defaultValue={defaults?.title ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Zum Beispiel Training E4"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Saison</label>
-                  <input
-                    value={
-                      data.seasons.find(
-                        (season) => season.key === data.selectedSeasonKey,
-                      )?.name ?? ""
-                    }
-                    readOnly
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Quelle</label>
-                  <select
-                    name="source"
-                    defaultValue={defaults?.source ?? "MANUAL"}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                  >
-                    {SOURCE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Team</label>
-                  <select
-                    name="teamId"
-                    defaultValue={defaults?.teamId ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                  >
-                    <option value="">Kein Team</option>
-                    {data.teams.map((team) => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Ort</label>
-                  <input
-                    name="location"
-                    defaultValue={defaults?.location ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Zum Beispiel Hauptplatz"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Start</label>
-                  <input
-                    type="datetime-local"
-                    name="startAt"
-                    required
-                    defaultValue={defaults?.startAt ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Ende</label>
-                  <input
-                    type="datetime-local"
-                    name="endAt"
-                    defaultValue={defaults?.endAt ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Gegner</label>
-                  <input
-                    name="opponentName"
-                    defaultValue={defaults?.opponentName ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Optional"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Organisator
-                  </label>
-                  <input
-                    name="organizerName"
-                    defaultValue={defaults?.organizerName ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Optional"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Wettbewerb / Label
-                  </label>
-                  <input
-                    name="competitionLabel"
-                    defaultValue={defaults?.competitionLabel ?? ""}
-                    className="mt-2 h-11 w-full rounded-[16px] border border-slate-200 px-4 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Zum Beispiel BRACK.CH PlayMore"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Beschreibung
-                  </label>
-                  <textarea
-                    name="description"
-                    rows={4}
-                    defaultValue={defaults?.description ?? ""}
-                    className="mt-2 w-full rounded-[16px] border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Optionale Beschreibung"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Bemerkungen
-                  </label>
-                  <textarea
-                    name="remarks"
-                    rows={3}
-                    defaultValue={defaults?.remarks ?? ""}
-                    className="mt-2 w-full rounded-[16px] border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300"
-                    placeholder="Interne Bemerkungen"
-                  />
-                </div>
-              </div>
-            </article>
-          </div>
-
-          <div className="space-y-5">
-            <article className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-              <h2 className="text-[1.05rem] font-semibold text-slate-900">
-                Publikation
-              </h2>
-
-              <div className="mt-5">
-                <PlannerEntryCreatePublicationFields
-                  eventType={data.selectedType}
-                  defaults={{
-                    websiteVisible: defaults?.websiteVisible,
-                    wochenplanVisible: defaults?.wochenplanVisible,
-                    infoboardVisible: defaults?.infoboardVisible,
-                    homepageVisible: defaults?.homepageVisible,
-                    trainingsplanVisible: defaults?.trainingsplanVisible,
-                    teamPageVisible: defaults?.teamPageVisible,
-                  }}
-                />
-              </div>
-            </article>
-
-            <article className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-              <h2 className="text-[1.05rem] font-semibold text-slate-900">
-                Aktion
-              </h2>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  className="inline-flex h-11 items-center rounded-full bg-[#0b4aa2] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#08357a]"
-                >
-                  {mode === "edit"
-                    ? "Änderungen speichern"
-                    : "Planner-Eintrag erstellen"}
-                </button>
-
-                <Link
-                  href={data.backHref}
-                  className="inline-flex h-11 items-center rounded-full border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-                >
-                  Abbrechen
-                </Link>
-
-                {mode === "edit" && data.eventId ? (
-                  <PlannerEntryDeleteButton
-                    eventId={data.eventId}
-                    seasonKey={data.selectedSeasonKey}
-                  />
-                ) : null}
-              </div>
-            </article>
-          </div>
-        </section>
+        <PlanningEditorOperationalWorkspace primary={primary} secondaryRail={secondaryRail} />
       </form>
     </div>
   );

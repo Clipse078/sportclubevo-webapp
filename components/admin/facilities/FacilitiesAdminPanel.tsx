@@ -101,7 +101,7 @@ function InlineEditForm({
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         placeholder={placeholder}
-        className="rounded-lg border border-[var(--blue)]/40 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+        className="fca-input py-1.5 text-sm"
       />
       <button
         type="submit"
@@ -113,7 +113,7 @@ function InlineEditForm({
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+        className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--text-2)]"
       >
         Abbrechen
       </button>
@@ -173,7 +173,7 @@ function CreateFacilityForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="z.B. Hauptplatz"
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+            className="fca-input mt-1 w-full text-sm"
           />
         </div>
         <div>
@@ -181,7 +181,7 @@ function CreateFacilityForm({
           <select
             value={type}
             onChange={(e) => setType(e.target.value as FacilityType)}
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none"
+            className="fca-input mt-1 w-full text-sm"
           >
             {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((t) => (
               <option key={t} value={t}>
@@ -267,7 +267,7 @@ function CreateResourceForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="z.B. Hauptplatz A"
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+            className="fca-input mt-1 w-full py-1.5 text-xs"
           />
         </div>
         <div>
@@ -276,7 +276,7 @@ function CreateResourceForm({
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="z.B. STADION_A"
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-mono outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+            className="fca-input mt-1 w-full py-1.5 font-mono text-xs"
           />
         </div>
         <div>
@@ -284,7 +284,7 @@ function CreateResourceForm({
           <select
             value={type}
             onChange={(e) => setType(e.target.value as FacilityResourceType)}
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none"
+            className="fca-input mt-1 w-full py-1.5 text-xs"
           >
             {(Object.keys(RESOURCE_TYPE_LABELS) as FacilityResourceType[]).map((t) => (
               <option key={t} value={t}>
@@ -548,7 +548,7 @@ function ResourceItem({
       {/* Delete confirmation dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-slate-900">
               Ressource endgültig löschen
             </h3>
@@ -810,7 +810,7 @@ function FacilityCard({
       {/* Facility delete dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-slate-900">
               Anlage endgültig löschen
             </h3>

@@ -31,7 +31,18 @@ See `SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS` — reconciled on branch `cur
 | Binary settings | Toggle First sweep (forms, composers, infoboard designer) |
 | Billing API | Actionable 500 copy — no `Interner Fehler.` default |
 
-**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · R1 Batch 01 (Club / Organisation core) in `SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT` · R1 Batch 02 (Planning & activity operations) in `SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT` — awaiting PO re-review.
+**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · **R3 Batch 03** (Administration, Documents DAM, Planning Administration) in `SCE_DESIGN_SYSTEM_10_R3_BATCH_03` · PO Publishing/CMS/Infoboard baseline **PASS** (`SCE_DESIGN_SYSTEM_10_R3_PO_PUBLISHING_VISUAL_UAT`) · R1 Batch 01/02 — awaiting PO re-review.
+
+| Route | R3 disposition |
+| --- | --- |
+| `/dashboard/workspace` | MIGRATED_DS10_R3 — `SceWorkspaceChrome` |
+| `/dashboard/workspace/audit` | MIGRATED_DS10_R3 |
+| `/dashboard/workspace/governance/break-glass` | MIGRATED_DS10_R3 |
+| `/dashboard/logs` | MIGRATED_DS10_R3 — dense audit table |
+| `/dashboard/planner/day` | MIGRATED_DS10_R3 |
+| `/dashboard/planner/new` | MIGRATED_DS10_R3 — create form SCE surfaces |
+| `/dashboard/admin/facilities` | MIGRATED_DS10_R3 — panel control tokens |
+| `/dashboard/seasons/planner` | MIGRATED_DS10_R3 |
 
 | Route | PO visual status (Batch 01) |
 | --- | --- |

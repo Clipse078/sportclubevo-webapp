@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { WorkspaceAuditPanel } from "@/components/admin/workspace/WorkspaceAuditPanel";
-import { PageHeader, PageShell } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -24,12 +25,22 @@ export default async function WorkspaceAuditPage() {
   });
 
   return (
-    <PageShell>
-      <PageHeader
-        title="Workspace-Sicherheitsaudit"
-        description="Governance- und Sicherheitsereignisse für diesen Mandanten (ohne Dokumentinhalte)."
-      />
-      <WorkspaceAuditPanel initialData={initialData} />
+    <PageShell widthMode="operational">
+      <SceWorkspaceChrome
+        density="dense"
+        breadcrumbs={[
+          { label: "Dokumente", href: "/dashboard/workspace" },
+          { label: "Sicherheitsaudit" },
+        ]}
+        header={{
+          eyebrow: "Dokumente",
+          title: "Workspace-Sicherheitsaudit",
+          description:
+            "Governance- und Sicherheitsereignisse für diesen Mandanten (ohne Dokumentinhalte).",
+        }}
+      >
+        <WorkspaceAuditPanel initialData={initialData} />
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

@@ -153,7 +153,7 @@ export default function NextSeasonPlannerCard() {
         <div className="sce-detail-section">
           <div className="sce-detail-section-header">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-white">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)]">
                 <CalendarDays className="h-4 w-4 text-[var(--blue)]" />
               </div>
               <span className="text-sm font-semibold text-[var(--foreground)]">

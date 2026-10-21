@@ -1,6 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  SceDataTable,
+  SceDataTableBody,
+  SceDataTableCell,
+  SceDataTableHead,
+  SceDataTableHeaderCell,
+  SceDataTableRow,
+  SceDenseSurface,
+} from "@/components/sce/dense";
+import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
+import { SceSemanticFeedback } from "@/components/sce/feedback/SceSemanticFeedback";
 
 type AuditLogItem = {
   id: string;
@@ -57,7 +68,7 @@ export default function AuditLogsTable() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Ein Fehler ist aufgetreten."
+          err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.",
         );
       } finally {
         if (active) {
@@ -73,74 +84,69 @@ export default function AuditLogsTable() {
     };
   }, []);
 
-  if (loading) {
-    return <p className="text-sm text-slate-500">Lade Audit Logs...</p>;
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-[28px] border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-        {error}
-      </div>
-    );
-  }
-
-  if (logs.length === 0) {
-    return (
-      <div className="rounded-[28px] border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-        Noch keine Audit Logs vorhanden.
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-      <table className="w-full text-left">
-        <thead className="bg-slate-50">
-          <tr className="border-b border-slate-200 text-xs uppercase tracking-[0.18em] text-slate-500">
-            <th className="px-6 py-4">Zeit</th>
-            <th className="px-6 py-4">Benutzer</th>
-            <th className="px-6 py-4">Modul</th>
-            <th className="px-6 py-4">Aktion</th>
-            <th className="px-6 py-4">Entity</th>
-          </tr>
-        </thead>
+    <SceDenseSurface feedbackSurfaceId="platform-audit-logs" aria-label="Audit Logs">
+      {loading ? (
+        <p className="px-4 py-6 text-sm text-[var(--muted)]" data-testid="audit-logs-loading">
+          Lade Audit Logs…
+        </p>
+      ) : null}
 
-        <tbody>
-          {logs.map((log) => (
-            <tr
-              key={log.id}
-              className="border-b border-slate-100 last:border-b-0"
-            >
-              <td className="px-6 py-4 text-sm text-slate-600">
-                {formatDateTime(log.createdAt)}
-              </td>
+      {!loading && error ? (
+        <div className="p-4">
+          <SceSemanticFeedback
+            tone="ERROR"
+            title="Audit Logs nicht verfügbar"
+            description={error}
+          />
+        </div>
+      ) : null}
 
-              <td className="px-6 py-4">
-                <div className="text-sm font-medium text-slate-900">
-                  {log.actorName ?? "System"}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {log.actorEmail ?? "-"}
-                </div>
-              </td>
+      {!loading && !error && logs.length === 0 ? (
+        <SceEmptyState
+          variant="NO_DATA"
+          title="Noch keine Audit Logs vorhanden"
+          description="Systemänderungen erscheinen hier, sobald protokollierte Aktionen vorliegen."
+          contained
+        />
+      ) : null}
 
-              <td className="px-6 py-4 text-sm text-slate-600">
-                {log.moduleKey}
-              </td>
-
-              <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                {log.action}
-              </td>
-
-              <td className="px-6 py-4">
-                <div className="text-sm text-slate-900">{log.entityType}</div>
-                <div className="text-xs text-slate-500">{log.entityId}</div>
-              </td>
+      {!loading && !error && logs.length > 0 ? (
+        <SceDataTable aria-label="Audit Log Einträge" data-testid="platform-audit-logs-table">
+          <SceDataTableHead>
+            <tr>
+              <SceDataTableHeaderCell scope="col">Zeit</SceDataTableHeaderCell>
+              <SceDataTableHeaderCell scope="col">Benutzer</SceDataTableHeaderCell>
+              <SceDataTableHeaderCell scope="col">Modul</SceDataTableHeaderCell>
+              <SceDataTableHeaderCell scope="col">Aktion</SceDataTableHeaderCell>
+              <SceDataTableHeaderCell scope="col">Entity</SceDataTableHeaderCell>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </SceDataTableHead>
+          <SceDataTableBody>
+            {logs.map((log) => (
+              <SceDataTableRow key={log.id}>
+                <SceDataTableCell className="text-[var(--text-2)]">
+                  {formatDateTime(log.createdAt)}
+                </SceDataTableCell>
+                <SceDataTableCell>
+                  <div className="font-medium text-[var(--foreground)]">
+                    {log.actorName ?? "System"}
+                  </div>
+                  <div className="text-xs text-[var(--muted)]">{log.actorEmail ?? "—"}</div>
+                </SceDataTableCell>
+                <SceDataTableCell className="text-[var(--text-2)]">{log.moduleKey}</SceDataTableCell>
+                <SceDataTableCell className="font-semibold text-[var(--foreground)]">
+                  {log.action}
+                </SceDataTableCell>
+                <SceDataTableCell>
+                  <div className="text-[var(--foreground)]">{log.entityType}</div>
+                  <div className="text-xs text-[var(--muted)]">{log.entityId}</div>
+                </SceDataTableCell>
+              </SceDataTableRow>
+            ))}
+          </SceDataTableBody>
+        </SceDataTable>
+      ) : null}
+    </SceDenseSurface>
   );
 }

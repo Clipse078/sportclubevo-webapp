@@ -11,6 +11,8 @@ import { listWeekplannerPlans, listWeekplannerPlanAllocations } from "@/lib/week
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import DayPlannerPage from "@/components/admin/planner/DayPlannerPage";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
@@ -90,20 +92,36 @@ export default async function PlannerDayPageRoute({ searchParams }: PlannerDayPa
       : undefined;
 
   return (
-    <DayPlannerPage
-      day={day}
-      dayParam={dayWindow.param}
-      previousParam={dayWindow.previousParam}
-      nextParam={dayWindow.nextParam}
-      todayParam={todayParam}
-      weekParam={weekWindow.param}
-      locale={tenantContext.locale ?? "de-CH"}
-      timezone={timezone}
-      plans={plans}
-      activePlanId={activePlan?.id ?? null}
-      canManagePlans={canManagePlans}
-      overrideEditing={overrideEditing}
-    />
+    <PageShell widthMode="operational">
+      <SceWorkspaceChrome
+        density="dense"
+        breadcrumbs={[
+          { label: "Planung", href: "/dashboard/planner/week" },
+          { label: "Tagesplanung" },
+        ]}
+        header={{
+          eyebrow: "Planung",
+          title: "Tagesplanung",
+          description:
+            "Was passiert heute an der Sportanlage, wann und wo — Trainings, Heimspiele und Heimturniere in einer chronologischen Tagesansicht.",
+        }}
+      >
+        <DayPlannerPage
+          day={day}
+          dayParam={dayWindow.param}
+          previousParam={dayWindow.previousParam}
+          nextParam={dayWindow.nextParam}
+          todayParam={todayParam}
+          weekParam={weekWindow.param}
+          locale={tenantContext.locale ?? "de-CH"}
+          timezone={timezone}
+          plans={plans}
+          activePlanId={activePlan?.id ?? null}
+          canManagePlans={canManagePlans}
+          overrideEditing={overrideEditing}
+        />
+      </SceWorkspaceChrome>
+    </PageShell>
   );
 }
 

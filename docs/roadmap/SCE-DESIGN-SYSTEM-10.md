@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-10` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-09` (**CLOSED / ACCEPTED / MERGED**, PR **#887**) |
-| **`DS10_STATUS`** | **PO_VISUAL_UAT_IN_PROGRESS** (R1 Batch 01 — not closed) |
+| **`DS10_STATUS`** | **PO_VISUAL_UAT_IN_PROGRESS** (R3 Batch 03 delivered — not closed) |
 | **Branch** | `cursor/sce-design-system-10-product-wide-adoption` |
 | **Baseline STAGE (pre-branch)** | `758a52fd403406ad6cb2843cfdd0218e6b9974ad` |
 | **PR** | **DRAFT** against **STAGE** |
@@ -26,7 +26,8 @@ Make SportClubEvo **visibly and structurally** converge on SCE Design System v1.
 | [`SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md`](../design/SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md) | Authoritative disposition matrix |
 | [`SCE-DESIGN-SYSTEM-09-DS10-HANDOFF.md`](../design/SCE-DESIGN-SYSTEM-09-DS10-HANDOFF.md) | Consumed handoff debt |
 | `lib/design-system/sce-design-system-10-meta.ts` | Typed matrix + governance |
-| Product migrations | Workspace chrome, dense UI, toggles, billing tabs, facilities shell |
+| Product migrations | Workspace chrome, dense UI, toggles, billing tabs, facilities shell, **R3:** Documents DAM, audit logs, day/create planner, facilities controls |
+| `SCE_DESIGN_SYSTEM_10_R3_BATCH_03` | Administration, Documents & Planning Administration |
 
 ---
 

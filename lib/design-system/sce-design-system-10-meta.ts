@@ -176,8 +176,8 @@ export const SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS = {
   MIGRATED_DS10: countDisposition("MIGRATED_DS10"),
   DOMAIN_SPECIFIC_CANONICAL: countDisposition("DOMAIN_SPECIFIC_CANONICAL"),
   EXPLICIT_ARCHITECTURE_EXCEPTIONS: countDisposition("EXPLICIT_ARCHITECTURE_EXCEPTION"),
-  /** PO visual UAT R1 — provider mapping + competitions visual debt */
-  UNRESOLVED_MIGRATION_DEBT: 2,
+  /** PO visual UAT — Batch 01/02 replanning + post-R3 remaining surfaces */
+  UNRESOLVED_MIGRATION_DEBT: 4,
   REMAINING_LEGACY_BINARY_CHECKBOXES:
     SCE_BINARY_CHECKBOX_COUNTS.BINARY_SETTING_CHECKBOXES_DEFERRED,
 } as const;
@@ -209,6 +209,10 @@ export const SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT = {
 };
 
 /** SCE-DESIGN-SYSTEM-10-R2 — activity card temporal consistency (PO visual review). */
+/** PO visual UAT — Publishing / CMS / Infoboard (accepted before R3). */
+export const SCE_DESIGN_SYSTEM_10_R3_PO_PUBLISHING_BASELINE =
+  "SCE_DESIGN_SYSTEM_10_R3_PO_PUBLISHING_VISUAL_UAT" as const;
+
 export const SCE_DESIGN_SYSTEM_10_R2_ACTIVITY_CARD_TEMPORAL = {
   PACKAGE: "SCE-DESIGN-SYSTEM-10-R2",
   PO_FINDING: "VERANSTALTUNGEN_DATE_BLOCK_TIME_REDUNDANCY",
@@ -311,6 +315,8 @@ export const SCE_DESIGN_SYSTEM_10_DOC_MARKERS = [
   "SCE_DESIGN_SYSTEM_10_R1_BATCH_01",
   "SCE_DESIGN_SYSTEM_10_R1_BATCH_02",
   "SCE_DESIGN_SYSTEM_10_R2_ACTIVITY_CARD_TEMPORAL",
+  "SCE-DESIGN-SYSTEM-10-R3",
+  "SCE_DESIGN_SYSTEM_10_R3_BATCH_03",
   "DS10_STATUS",
   "PO_VISUAL_UAT_IN_PROGRESS",
 ] as const;
@@ -318,9 +324,13 @@ export const SCE_DESIGN_SYSTEM_10_DOC_MARKERS = [
 export const SCE_DESIGN_SYSTEM_10_REPRESENTATIVE_ADOPTION = {
   ADMIN_SECTION_HEADER: "SceWorkspaceHeader bridge",
   BILLING_WORKSPACE_TABS: "SceContextTabs",
-  FACILITIES_ADMIN: "SceWorkspaceChrome + SceInformationSurface",
+  FACILITIES_ADMIN: "SceWorkspaceChrome + SceInformationSurface + fca-input dense panel",
   PLATFORM_USERS_DENSE: "SceDenseSurface + SceDenseList",
   LIST_PAGE_PATTERN: "SceBreadcrumbs + SceWorkspaceHeader",
+  DOCUMENTS_DAM_HUB: "SceWorkspaceChrome on /dashboard/workspace",
+  PLATFORM_AUDIT_LOGS: "SceDenseSurface + SceDataTable",
+  PLANNING_ADMIN_CREATE: "PlanningEditorOperationalWorkspace + SceFeatureCard",
+  DAY_PLANNER: "SceWorkspaceChrome + canonical day header surface",
   BINARY_TOGGLE_SWEEP: "Event create forms, billing, infoboard designer, campaign channels",
   BILLING_API_ERRORS: "Actionable 500 copy",
 } as const;
