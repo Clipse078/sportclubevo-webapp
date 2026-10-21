@@ -188,6 +188,26 @@ export type SceDs10PoVisualMigrationStatus =
   | "R1_REQUIRED";
 
 /** SCE-DESIGN-SYSTEM-10-R1 Batch 01 — Club / Organisation core (PO visual UAT). */
+/** SCE-DESIGN-SYSTEM-10-R1 Batch 02 — Planning & activity operations (PO visual UAT). */
+export const SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT = {
+  BATCH: "SCE-DESIGN-SYSTEM-10-R1-BATCH-02",
+  DS10_PO_VISUAL_UAT: "IN_PROGRESS",
+  DS10_R1_REQUIRED: "YES",
+  ROUTES: {
+    "/dashboard/planner/week": "R1_REQUIRED",
+    "/dashboard/programm": "R1_REQUIRED",
+    "/dashboard/training": "R1_REQUIRED",
+    "/dashboard/matchcenter": "R1_REQUIRED",
+    "/dashboard/tournamentcenter": "R1_REQUIRED",
+    "/dashboard/veranstaltungen": "R1_REQUIRED",
+  },
+} as const satisfies {
+  BATCH: string;
+  DS10_PO_VISUAL_UAT: string;
+  DS10_R1_REQUIRED: string;
+  ROUTES: Record<string, SceDs10PoVisualMigrationStatus>;
+};
+
 export const SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT = {
   BATCH: "SCE-DESIGN-SYSTEM-10-R1-BATCH-01",
   DS10_PO_VISUAL_UAT: "IN_PROGRESS",
@@ -269,6 +289,7 @@ export const SCE_DESIGN_SYSTEM_10_DOC_MARKERS = [
   "SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX",
   "PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE",
   "SCE_DESIGN_SYSTEM_10_R1_BATCH_01",
+  "SCE_DESIGN_SYSTEM_10_R1_BATCH_02",
   "DS10_STATUS",
   "PO_VISUAL_UAT_IN_PROGRESS",
 ] as const;

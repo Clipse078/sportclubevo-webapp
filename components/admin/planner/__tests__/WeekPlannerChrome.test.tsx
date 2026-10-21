@@ -41,6 +41,7 @@ describe("WeekPlannerChrome — planning family shell", () => {
     );
 
     expect(screen.getByTestId("weekplanner-management-chrome")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-command-surface")).toBeInTheDocument();
     expect(screen.getByTestId("weekplanner-header-subtitle")).toBeInTheDocument();
     expect(screen.getByTestId("planning-week-navigation")).toBeInTheDocument();
     expect(screen.getByTestId("weekplanner-range-label")).toHaveTextContent("10.–16. Aug 2026");

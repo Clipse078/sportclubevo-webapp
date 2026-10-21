@@ -114,7 +114,8 @@ describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
       />,
     );
 
-    expect(screen.getByTestId("training-kpi-cards")).toBeInTheDocument();
+    expect(screen.getByTestId("training-operational-summary")).toBeInTheDocument();
+    expect(screen.getByTestId("training-operational-toolbar")).toBeInTheDocument();
     expect(screen.getByTestId("training-management-rail")).toBeInTheDocument();
     expect(screen.getByTestId("training-filter-rail")).toBeInTheDocument();
     expect(screen.getByTestId("training-search")).toBeInTheDocument();

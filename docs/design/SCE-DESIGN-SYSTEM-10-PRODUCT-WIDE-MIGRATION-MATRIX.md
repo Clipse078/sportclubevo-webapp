@@ -31,7 +31,7 @@ See `SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS` — reconciled on branch `cur
 | Binary settings | Toggle First sweep (forms, composers, infoboard designer) |
 | Billing API | Actionable 500 copy — no `Interner Fehler.` default |
 
-**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · R1 Batch 01 (Club / Organisation core) recorded in `SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT`.
+**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · R1 Batch 01 (Club / Organisation core) in `SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT` · R1 Batch 02 (Planning & activity operations) in `SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT` — awaiting PO re-review.
 
 | Route | PO visual status (Batch 01) |
 | --- | --- |
@@ -42,3 +42,12 @@ See `SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS` — reconciled on branch `cur
 | `/dashboard/vereine` | PO_ACCEPTED_WITH_MINOR_REVIEW |
 | `/dashboard/persons` | PO_ACCEPTED_WITH_MINOR_REVIEW |
 | `/dashboard/competitions` | R1_REQUIRED → R1 delivered in branch (awaiting PO re-review) |
+
+| Route | PO visual status (Batch 02 baseline) |
+| --- | --- |
+| `/dashboard/planner/week` | R1_REQUIRED (PO 7.5/10) |
+| `/dashboard/programm` | R1_REQUIRED (PO 8.5/10 minor) |
+| `/dashboard/training` | R1_REQUIRED (PO 8/10) |
+| `/dashboard/matchcenter` | R1_REQUIRED (PO 7/10) |
+| `/dashboard/tournamentcenter` | R1_REQUIRED (PO 8/10 minor) |
+| `/dashboard/veranstaltungen` | R1_REQUIRED (PO 8/10 minor) |

@@ -29,11 +29,10 @@ import type { TournamentActionFilter } from "@/lib/tournaments/view-model";
 import { formatMonthLabel, resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
-import TurniereManagementKpiCards from "./TurniereManagementKpiCards";
+import { SceDenseToolbar } from "@/components/sce/dense/SceDenseToolbar";
 import TurniereManagementToolbar from "./TurniereManagementToolbar";
 import TurniereManagementRow from "./TurniereManagementRow";
 import TurniereManagementMonthCalendar from "./TurniereManagementMonthCalendar";
-import TurniereManagementQuickAccess from "./TurniereManagementQuickAccess";
 import TurniereManagementFilterRail from "./TurniereManagementFilterRail";
 import TurniereManagementHeaderMenu, {
   TurniereManagementPageTitle,
@@ -132,8 +131,9 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     locale = "de-CH",
     canCreate = true,
     activityCreateTrigger = null,
-    activityCreateQuickAccessTrigger = null,
+    activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger = null,
   } = props;
+  void _activityCreateQuickAccessTrigger;
 
   const router = useRouter();
   const [searchDraft, setSearchDraft] = useState(initialSearch);
@@ -365,23 +365,21 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
         </span>
       </nav>
 
-      <TurniereManagementKpiCards
-        kpis={kpis}
-        scope={scope}
-        anstehendHref={buildHref({ scope: "UPCOMING" })}
-        vergangenHref={buildHref({ scope: "PAST" })}
-      />
-
       <div className={cn(TURNIERE_WORKSPACE_MAIN_RAIL_GRID)}>
         <div className="min-w-0 space-y-4">
-          <TurniereManagementToolbar
-            searchDraft={searchDraft}
-            onSearchChange={pushSearch}
-            listView={listView}
-            listeHref={buildHref({ listView: "LISTE" })}
-            kompaktHref={buildHref({ listView: "KOMPAKT" })}
-            kalenderHref={wochenplanerHref}
-          />
+          <SceDenseToolbar
+            className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/40 py-3"
+            data-testid="turniere-operational-toolbar"
+          >
+            <TurniereManagementToolbar
+              searchDraft={searchDraft}
+              onSearchChange={pushSearch}
+              listView={listView}
+              listeHref={buildHref({ listView: "LISTE" })}
+              kompaktHref={buildHref({ listView: "KOMPAKT" })}
+              kalenderHref={wochenplanerHref}
+            />
+          </SceDenseToolbar>
 
           {viewModel.emptyKind === "no_data" ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
@@ -469,10 +467,6 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
             tournamentDayKeys={calendarDayKeys}
             previousMonthHref={buildHref({ month: calendarMonthWindow.previousParam })}
             nextMonthHref={buildHref({ month: calendarMonthWindow.nextParam })}
-          />
-          <TurniereManagementQuickAccess
-            canCreate={canCreate}
-            activityCreateTrigger={activityCreateQuickAccessTrigger ?? activityCreateTrigger}
           />
           <TurniereManagementFilterRail
             resetHref={resetHref}

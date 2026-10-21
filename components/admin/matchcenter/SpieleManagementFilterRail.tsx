@@ -62,8 +62,23 @@ function navigate(href: string) {
   }
 }
 
+function filtersActive(props: Props): boolean {
+  return (
+    props.homeAwayFilter !== "ALLE" ||
+    props.actionFilter !== "ALLE" ||
+    props.teamFilter != null ||
+    props.competitionFilter != null ||
+    props.venueFilter != null ||
+    props.statusMask.length !== 3 ||
+    !props.statusMask.includes("anstehend") ||
+    !props.statusMask.includes("offen") ||
+    !props.statusMask.includes("bereit")
+  );
+}
+
 export default function SpieleManagementFilterRail(props: Props) {
   const maskSet = new Set(props.statusMask);
+  const expandedByDefault = filtersActive(props);
 
   const haItems: { key: SpieleHomeAwayFilter; label: string; href: string }[] = [
     { key: "ALLE", label: "Alle", href: props.alleHref },
@@ -74,23 +89,24 @@ export default function SpieleManagementFilterRail(props: Props) {
   const teamSelectValue = props.teamFilter ?? "";
 
   return (
-    <section
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-3 sm:col-span-2 min-[105rem]:col-span-1"
-      aria-label="Filter"
+    <details
+      className="group rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 sm:col-span-2 min-[105rem]:col-span-1"
       data-testid="spiele-filter-rail"
+      open={expandedByDefault}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-[var(--foreground)]">Filter</h3>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 marker:content-none [&::-webkit-details-marker]:hidden">
+        <span className="text-sm font-semibold text-[var(--foreground)]">Filter &amp; Status</span>
         <Link
           href={props.resetHref}
           className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
           data-testid="spiele-filter-reset"
+          onClick={(event) => event.stopPropagation()}
         >
           Zurücksetzen
         </Link>
-      </div>
+      </summary>
 
-      <div className="space-y-3">
+      <section className="space-y-3 border-t border-[var(--border)]/70 px-3 pb-3 pt-2" aria-label="Filter">
         <div>
           <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
             Heim / Auswärts
@@ -262,8 +278,6 @@ export default function SpieleManagementFilterRail(props: Props) {
             ))}
           </select>
         </label>
-      </div>
-
       <div
         className="mt-3 rounded-lg border border-[var(--border)]/80 bg-[var(--surface-2)]/30 p-3"
         data-testid="spiele-matchvorbereitung-info"
@@ -279,8 +293,9 @@ export default function SpieleManagementFilterRail(props: Props) {
         </div>
       </div>
 
-      {/* Legacy test hook — filter rail replaced Schnellfilter */}
+      {/* Legacy test hook — compact filter rail replaced Schnellfilter panel */}
       <span className="sr-only" data-testid="spiele-schnellfilter" />
-    </section>
+      </section>
+    </details>
   );
 }

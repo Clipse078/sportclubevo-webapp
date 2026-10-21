@@ -166,7 +166,8 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     expect(screen.getByTestId("spiele-header-subtitle")).toHaveTextContent(
       "Zentrale Spielplanung und operative Matchvorbereitung.",
     );
-    expect(screen.getByTestId("spiele-kpi-cards")).toBeTruthy();
+    expect(screen.getByTestId("spiele-status-strip")).toBeTruthy();
+    expect(screen.getByTestId("spiele-operational-toolbar")).toBeTruthy();
     expect(screen.getByTestId("spiele-view-switcher")).toBeTruthy();
     expect(screen.getByTestId("spiele-schnellfilter")).toBeTruthy();
     expect(screen.getByTestId("spiele-month-calendar")).toBeTruthy();
@@ -221,9 +222,7 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     expect(screen.getByTestId("matchcenter-kpi-bereit")).toHaveTextContent(
       "1",
     );
-    expect(screen.getByTestId("matchcenter-kpi-resultate")).toHaveTextContent(
-      "1",
-    );
+    expect(screen.queryByTestId("matchcenter-kpi-resultate")).toBeNull();
   });
 });
 

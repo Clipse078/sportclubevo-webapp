@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CalendarClock, CheckCircle2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Suspense } from "react";
 import { cn } from "@/lib/cn";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
-import PlanningManagementKpiCards from "@/components/admin/planning/PlanningManagementKpiCards";
+import PlanningManagementOperationalSummary from "@/components/admin/planning/PlanningManagementOperationalSummary";
+import { buildTrainingOperationalSummaryItems } from "@/lib/training/training-operational-summary";
+import { SceDenseToolbar } from "@/components/sce/dense/SceDenseToolbar";
 import {
   PLANNING_WORKSPACE_MAIN_RAIL_GRID,
   PLANNING_WORKSPACE_RAIL_ASIDE,
@@ -15,7 +17,6 @@ import TrainingManagementSortControl from "./TrainingManagementSortControl";
 import TrainingManagementPagination from "./TrainingManagementPagination";
 import TrainingSeriesManagementRow from "./TrainingSeriesManagementRow";
 import TrainingManagementFilterRail from "./TrainingManagementFilterRail";
-import TrainingManagementQuickAccess from "./TrainingManagementQuickAccess";
 import TrainingComposerDraftList, {
   type TrainingComposerDraftListItem,
 } from "./TrainingComposerDraftList";
@@ -95,8 +96,9 @@ export default function TrainingManagementWorkspace({
   statusHrefByValue,
   resetFiltersHref,
   createTrigger,
-  activityCreateQuickAccessTrigger,
+  activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger,
   composerDrafts = [] }: Props) {
+  void _activityCreateQuickAccessTrigger;
   void _isCoordinator;
   void _locale;
 
@@ -108,6 +110,11 @@ export default function TrainingManagementWorkspace({
     pagination.page,
     pagination.pageCount,
   );
+
+  const operationalSummary = buildTrainingOperationalSummaryItems(kpis, {
+    archiveToggleHref,
+    archivedView: Boolean(filters.archived),
+  });
 
   return (
     <div className="w-full space-y-4" data-testid="training-management-workspace">
@@ -146,68 +153,44 @@ export default function TrainingManagementWorkspace({
 
       <TrainingComposerDraftList drafts={composerDrafts} />
 
-      <PlanningManagementKpiCards
-        testId="training-kpi-cards"
-        metrics={[
-          {
-            key: "active",
-            label: "Aktiv",
-            value: kpis.active,
-            hint: "laufende Serien",
-            icon: CalendarClock,
-            surface: "border-sky-500/25 bg-sky-950/40",
-            iconTile: "bg-sky-500/15 text-sky-400",
-            "data-testid": "training-kpi-active" },
-          {
-            key: "inactive",
-            label: "Inaktiv",
-            value: kpis.inactive,
-            hint: "pausiert",
-            icon: CheckCircle2,
-            surface: "border-amber-500/25 bg-amber-950/30",
-            iconTile: "bg-amber-500/15 text-amber-400",
-            "data-testid": "training-kpi-inactive" },
-          {
-            key: "archived",
-            label: "Archiv",
-            value: kpis.archived,
-            hint: "archivierte Serien",
-            href: archiveToggleHref,
-            active: Boolean(filters.archived),
-            icon: ArchiveSceIcon,
-            surface: "border-[var(--border)] bg-[var(--surface)]/80",
-            iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-            "data-testid": "training-kpi-archived" },
-          {
-            key: "total",
-            label: "Total",
-            value: kpis.total,
-            hint: "Trainings im Tenant",
-            icon: CheckCircle2,
-            surface: "border-emerald-500/25 bg-emerald-950/35",
-            iconTile: "bg-emerald-500/15 text-emerald-400",
-            "data-testid": "training-kpi-total" },
-        ]}
-      />
+      {operationalSummary.length > 0 ? (
+        <PlanningManagementOperationalSummary
+          items={operationalSummary}
+          testId="training-operational-summary"
+        />
+      ) : null}
 
       <div className={PLANNING_WORKSPACE_MAIN_RAIL_GRID}>
         <div className="min-w-0 space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <Suspense fallback={null}>
-              <TrainingManagementToolbar
-                searchValue={filters.seriesSearch}
-                archived={filters.archived}
-              />
-            </Suspense>
-            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-              <p className="text-sm text-[var(--text-2)]" data-testid="training-result-count">
-                {pagination.totalCount} {pagination.totalCount === 1 ? "Training" : "Trainings"}
-              </p>
+          <SceDenseToolbar
+            className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/40 py-3"
+            data-testid="training-operational-toolbar"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <Suspense fallback={null}>
-                <TrainingManagementSortControl value={sort} archived={filters.archived} />
+                <TrainingManagementToolbar
+                  searchValue={filters.seriesSearch}
+                  archived={filters.archived}
+                />
               </Suspense>
+              <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                <p className="text-sm text-[var(--text-2)]" data-testid="training-result-count">
+                  {pagination.totalCount}{" "}
+                  {pagination.totalCount === 1 ? "Training" : "Trainings"}
+                </p>
+                <Suspense fallback={null}>
+                  <TrainingManagementSortControl value={sort} archived={filters.archived} />
+                </Suspense>
+                <Link
+                  href={wochenplanerHref}
+                  className="text-sm font-medium text-[var(--sce-primary)] hover:underline"
+                  data-testid="training-toolbar-wochenplaner"
+                >
+                  Wochenplaner
+                </Link>
+              </div>
             </div>
-          </div>
+          </SceDenseToolbar>
 
           <div
             className="overflow-hidden rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]"
@@ -271,11 +254,6 @@ export default function TrainingManagementWorkspace({
           className={cn(PLANNING_WORKSPACE_RAIL_ASIDE, PLANNING_WORKSPACE_RAIL_STACK)}
           data-testid="training-management-rail"
         >
-          <TrainingManagementQuickAccess
-            canCreate={canCreate}
-            wochenplanerHref={wochenplanerHref}
-            activityCreateTrigger={activityCreateQuickAccessTrigger ?? createTrigger}
-          />
           <TrainingManagementFilterRail
             resetHref={resetFiltersHref}
             teamValue={filters.seriesTeam}

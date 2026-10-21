@@ -1,11 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import {
-  CompetitionSceIcon,
-  FacilitySceIcon,
-  HistorySceIcon,
-} from "@/components/icons/domain-sce-icon-components";
-import { CalendarClock, MapPin } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
 import ClubEventComposerDraftList, {
   type ClubEventComposerDraftListItem,
@@ -16,7 +11,9 @@ import {
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
-import PlanningManagementKpiCards from "@/components/admin/planning/PlanningManagementKpiCards";
+import PlanningManagementOperationalSummary from "@/components/admin/planning/PlanningManagementOperationalSummary";
+import { buildVeranstaltungenOperationalSummaryItems } from "@/lib/veranstaltungen/veranstaltungen-operational-summary";
+import { SceDenseToolbar } from "@/components/sce/dense/SceDenseToolbar";
 import {
   PLANNING_WORKSPACE_MAIN_RAIL_GRID,
   PLANNING_WORKSPACE_RAIL_ASIDE,
@@ -24,7 +21,6 @@ import {
 import SpieleManagementMonthCalendar from "@/components/admin/matchcenter/SpieleManagementMonthCalendar";
 import VeranstaltungenManagementToolbar from "./VeranstaltungenManagementToolbar";
 import VeranstaltungenManagementFilterRail from "./VeranstaltungenManagementFilterRail";
-import VeranstaltungenManagementQuickAccess from "./VeranstaltungenManagementQuickAccess";
 import VeranstaltungListRow from "./VeranstaltungListRow";
 import {
   buildVeranstaltungenHref,
@@ -83,8 +79,9 @@ export default function VeranstaltungenManagementWorkspace({
   publicationFilter = "ALLE",
   composerDrafts = [],
   activityCreateTrigger = null,
-  activityCreateQuickAccessTrigger = null,
+  activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger = null,
 }: Props) {
+  void _activityCreateQuickAccessTrigger;
   const tz = timeZone ?? "Europe/Zurich";
   const now = new Date();
 
@@ -216,55 +213,21 @@ export default function VeranstaltungenManagementWorkspace({
         <ClubEventComposerDraftList drafts={composerDrafts} />
       ) : null}
 
-      <PlanningManagementKpiCards
-        testId="veranstaltungen-kpi-cards"
-        metrics={[
-          {
-            key: "upcoming",
-            label: "Bevorstehend",
-            value: kpis.upcoming,
-            hint: "aktive Anlässe",
-            href: buildHref({ tab: "BEVORSTEHEND" }),
-            active: tab === "BEVORSTEHEND",
-            icon: CalendarClock,
-            surface: "border-sky-500/25 bg-sky-950/40",
-            iconTile: "bg-sky-500/15 text-sky-400",
-            "data-testid": "veranstaltungen-kpi-upcoming" },
-          {
-            key: "past",
-            label: "Vergangen",
-            value: kpis.past,
-            hint: "abgeschlossen",
-            href: buildHref({ tab: "VERGANGEN" }),
-            active: tab === "VERGANGEN",
-            icon: HistorySceIcon,
-            surface: "border-[var(--border)] bg-[var(--surface)]/80",
-            iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-            "data-testid": "veranstaltungen-kpi-past" },
-          {
-            key: "total",
-            label: "Total",
-            value: kpis.total,
-            hint: "ohne Archiv",
-            icon: CompetitionSceIcon,
-            surface: "border-emerald-500/25 bg-emerald-950/35",
-            iconTile: "bg-emerald-500/15 text-emerald-400",
-            "data-testid": "veranstaltungen-kpi-total" },
-          {
-            key: "venues",
-            label: "Veranstaltungsorte",
-            value: kpis.uniqueVenues,
-            hint: "mit Standortangabe",
-            icon: FacilitySceIcon,
-            surface: "border-[var(--border)] bg-[var(--surface)]/80",
-            iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-            "data-testid": "veranstaltungen-kpi-venues" },
-        ]}
+      <PlanningManagementOperationalSummary
+        items={buildVeranstaltungenOperationalSummaryItems(kpis, tab, (nextTab) =>
+          buildHref({ tab: nextTab }),
+        )}
+        testId="veranstaltungen-operational-summary"
       />
 
       <div className={PLANNING_WORKSPACE_MAIN_RAIL_GRID}>
         <div className="min-w-0 space-y-4">
-          <VeranstaltungenManagementToolbar searchValue={searchQuery} />
+          <SceDenseToolbar
+            className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/40 py-3"
+            data-testid="veranstaltungen-operational-toolbar"
+          >
+            <VeranstaltungenManagementToolbar searchValue={searchQuery} />
+          </SceDenseToolbar>
 
           {filtered.length === 0 ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
@@ -329,10 +292,6 @@ export default function VeranstaltungenManagementWorkspace({
             todayHref={todayHref}
             previousMonthHref={calendarPreviousHref}
             nextMonthHref={calendarNextHref}
-          />
-          <VeranstaltungenManagementQuickAccess
-            canManage={canManage}
-            activityCreateTrigger={activityCreateQuickAccessTrigger ?? activityCreateTrigger}
           />
           <VeranstaltungenManagementFilterRail
             resetHref={resetHref}
