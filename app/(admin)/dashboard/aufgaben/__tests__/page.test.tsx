@@ -221,6 +221,28 @@ describe("AUFGABEN-02 — Aufgaben management page", () => {
     );
   });
 
+  it("R4.4 — unified Verwaltung Alle keeps tasks visible when requirements load fails", async () => {
+    vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
+      tenantId: "tenant-1",
+      capabilities: {
+        taskManagement: true,
+        requirementManagement: true,
+        personalInbox: true,
+        moduleAccess: true,
+        permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
+      },
+    });
+    vi.mocked(getRequirementManagementSummary).mockRejectedValueOnce(new Error("req load fail"));
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung" });
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "verwaltung" }),
+    });
+    render(jsx);
+    expect(screen.getByTestId("verwaltung-unified-requirements-load-error")).toBeInTheDocument();
+    expect(screen.getByText("Material bestellen")).toBeInTheDocument();
+  });
+
   it("renders unified Verwaltung Alle when bereich=verwaltung without type filter", async () => {
     vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
       session: { user: { id: "user-1", firstName: "T", lastName: "U" } },

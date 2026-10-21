@@ -63,7 +63,6 @@ import {
 } from "./types";
 
 const REQUIREMENT_INCLUDE = {
-  draftAudienceCompositionJson: true,
   draftAudience: { select: { personId: true } },
   draftAudienceTeams: { select: { teamId: true } },
   draftAudienceOrgUnits: { select: { orgUnitId: true } },
