@@ -115,6 +115,14 @@ export const SCE_CREATE_FLOW_REPRESENTATIVE_AUDIT: SceCreateFlowAuditRow[] = [
     canonicalEntry: "CreateFacilityComposerDialog on facilities workspace",
     notes: "Inline expand retired — canonical Dialog composer (DS-10)",
   },
+  {
+    entity: "Neuer Verein",
+    route: "/dashboard/vereine/new",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "ClubCreateComposerDialog on Vereine list workspace",
+    notes: "/new retained for deep links — shared ClubForm layout=composer (DS-10R3)",
+  },
 ];
 
 /** Documented full-page exceptions — not modal-first debt (empty after DS-10R1 re-audit). */

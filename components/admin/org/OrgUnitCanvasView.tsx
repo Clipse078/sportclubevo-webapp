@@ -13,10 +13,26 @@ import {
   wouldReparentCreateCycle,
   type OrgHierarchyUnit,
 } from "@/lib/org/org-hierarchy-layout";
+import {
+  clampOrgCanvasScale,
+  computeOrgCanvasFitToView,
+  getOrgContextualZoomLevel,
+  orgCanvasGridBackgroundStyle,
+  ORG_CANVAS_MAX_SCALE,
+  ORG_CANVAS_MIN_SCALE,
+} from "@/lib/org/org-canvas-viewport";
+import {
+  computeLayoutBounds,
+  expandCollapsedAncestors,
+  loadOrgLayoutPositions,
+  mergeLayoutWithManualPositions,
+  saveOrgLayoutPositions,
+  type OrgLayoutPositionMap,
+} from "@/lib/org/org-layout-persistence";
 import OrgUnitNodeCard, { type OrgUnitCanvasNodeData } from "@/components/admin/org/OrgUnitNodeCard";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
-import { Crosshair, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
+import { LayoutGrid, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
 
 export type OrgUnitCanvasItem = OrgHierarchyUnit & {
   sortOrder: number;
@@ -31,6 +47,7 @@ export type OrgUnitCanvasItem = OrgHierarchyUnit & {
 };
 
 type Props = {
+  tenantId: string;
   orgUnits: OrgUnitCanvasItem[];
   canManage: boolean;
   selectedId: string | null;
@@ -39,10 +56,17 @@ type Props = {
   onReparentSuccess?: () => void;
 };
 
-const MIN_SCALE = 0.35;
-const MAX_SCALE = 1.75;
+type NodeDragState = {
+  nodeId: string;
+  pointerId: number;
+  startClientX: number;
+  startClientY: number;
+  startX: number;
+  startY: number;
+};
 
 export default function OrgUnitCanvasView({
+  tenantId,
   orgUnits,
   canManage,
   selectedId,
@@ -51,20 +75,27 @@ export default function OrgUnitCanvasView({
   onReparentSuccess,
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const didInitialFit = useRef(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const [manualPositions, setManualPositions] = useState<OrgLayoutPositionMap>(() =>
+    loadOrgLayoutPositions(tenantId),
+  );
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 24, y: 24 });
   const [isPanning, setIsPanning] = useState(false);
+  const [spacePan, setSpacePan] = useState(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const [searchQuery, setSearchQuery] = useState("");
-  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [reparentDraggingId, setReparentDraggingId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [nodeDrag, setNodeDrag] = useState<NodeDragState | null>(null);
   const [reparentPending, setReparentPending] = useState<{
     unitId: string;
     newParentId: string;
     unitName: string;
     parentName: string;
   } | null>(null);
+  const [autoLayoutConfirmOpen, setAutoLayoutConfirmOpen] = useState(false);
   const [reparentError, setReparentError] = useState<string | null>(null);
   const [reparentLoading, setReparentLoading] = useState(false);
 
@@ -79,12 +110,28 @@ export default function OrgUnitCanvasView({
     [orgUnits],
   );
 
-  const layout = useMemo(
+  const autoLayout = useMemo(
     () => buildOrgHierarchyLayout(hierarchyUnits, collapsed),
     [hierarchyUnits, collapsed],
   );
 
+  const layoutNodes = useMemo(
+    () => mergeLayoutWithManualPositions(autoLayout.nodes, manualPositions),
+    [autoLayout.nodes, manualPositions],
+  );
+
+  const layout = useMemo(() => {
+    const bounds = computeLayoutBounds(layoutNodes);
+    return {
+      nodes: layoutNodes,
+      edges: autoLayout.edges,
+      width: Math.max(autoLayout.width, bounds.width),
+      height: Math.max(autoLayout.height, bounds.height),
+    };
+  }, [layoutNodes, autoLayout.edges, autoLayout.width, autoLayout.height]);
+
   const unitById = useMemo(() => new Map(orgUnits.map((u) => [u.id, u])), [orgUnits]);
+  const contextualZoom = getOrgContextualZoomLevel(scale);
 
   const nodeDataById = useMemo(() => {
     const map = new Map<string, OrgUnitCanvasNodeData>();
@@ -103,46 +150,71 @@ export default function OrgUnitCanvasView({
     return map;
   }, [orgUnits, collapsed]);
 
-  const focusNode = useCallback(
+  const persistManual = useCallback(
+    (next: OrgLayoutPositionMap) => {
+      setManualPositions(next);
+      saveOrgLayoutPositions(tenantId, next);
+    },
+    [tenantId],
+  );
+
+  const applyFitToView = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || layout.nodes.length === 0) return;
+    const result = computeOrgCanvasFitToView({
+      viewportWidth: viewport.clientWidth,
+      viewportHeight: viewport.clientHeight,
+      layoutWidth: layout.width,
+      layoutHeight: layout.height,
+    });
+    setScale(result.scale);
+    setPan({ x: result.panX, y: result.panY });
+  }, [layout]);
+
+  const focusNodeLegible = useCallback(
     (id: string) => {
       const node = layout.nodes.find((n) => n.id === id);
       const viewport = viewportRef.current;
       if (!node || !viewport) return;
       const vw = viewport.clientWidth;
       const vh = viewport.clientHeight;
+      const targetScale = clampOrgCanvasScale(Math.max(scale, 0.85));
       const cx = node.x + node.width / 2;
       const cy = node.y + node.height / 2;
+      setScale(targetScale);
       setPan({
-        x: vw / 2 - cx * scale,
-        y: vh / 2 - cy * scale,
+        x: vw / 2 - cx * targetScale,
+        y: vh / 2 - cy * targetScale,
       });
       onSelectId(id);
     },
     [layout.nodes, onSelectId, scale],
   );
 
-  const fitToView = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (!viewport || layout.nodes.length === 0) return;
-    const vw = viewport.clientWidth;
-    const vh = viewport.clientHeight;
-    const pad = 32;
-    const fitScale = Math.min(
-      (vw - pad * 2) / layout.width,
-      (vh - pad * 2) / layout.height,
-      1,
-    );
-    const clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, fitScale));
-    setScale(clamped);
-    setPan({
-      x: (vw - layout.width * clamped) / 2,
-      y: (vh - layout.height * clamped) / 2,
-    });
-  }, [layout]);
+  useEffect(() => {
+    if (didInitialFit.current) return;
+    if (layout.nodes.length === 0) return;
+    didInitialFit.current = true;
+    applyFitToView();
+  }, [applyFitToView, layout.nodes.length]);
 
   useEffect(() => {
-    fitToView();
-  }, [fitToView, orgUnits.length]);
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === "Space" && !(e.target as HTMLElement)?.closest?.("input, textarea, select")) {
+        e.preventDefault();
+        setSpacePan(true);
+      }
+    }
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.code === "Space") setSpacePan(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) return;
@@ -150,14 +222,23 @@ export default function OrgUnitCanvasView({
     const match = orgUnits.find(
       (u) => u.name.toLowerCase().includes(q) || u.key.toLowerCase().includes(q),
     );
-    if (match) focusNode(match.id);
-  }, [searchQuery, orgUnits, focusNode]);
+    if (!match) return;
+    setCollapsed((prev) => expandCollapsedAncestors(match.id, hierarchyUnits, prev));
+    focusNodeLegible(match.id);
+  }, [searchQuery, orgUnits, hierarchyUnits, focusNodeLegible]);
 
   const handleWheel = (e: ReactWheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.08 : 0.08;
-      setScale((s) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, s + delta)));
+      setScale((s) => clampOrgCanvasScale(s + delta));
+      return;
+    }
+    if (Math.abs(e.deltaX) > 0 || Math.abs(e.deltaY) > 0) {
+      setPan((p) => ({
+        x: p.x - e.deltaX,
+        y: p.y - e.deltaY,
+      }));
     }
   };
 
@@ -172,6 +253,21 @@ export default function OrgUnitCanvasView({
     const midY = (y1 + y2) / 2;
     return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
   };
+
+  function runAutoLayout() {
+    persistManual({});
+    setAutoLayoutConfirmOpen(false);
+    requestAnimationFrame(() => applyFitToView());
+  }
+
+  function requestAutoLayout() {
+    const hasManual = Object.keys(manualPositions).length > 0;
+    if (hasManual) {
+      setAutoLayoutConfirmOpen(true);
+      return;
+    }
+    runAutoLayout();
+  }
 
   async function confirmReparent() {
     if (!reparentPending) return;
@@ -197,9 +293,17 @@ export default function OrgUnitCanvasView({
     }
   }
 
+  const gridStyle = orgCanvasGridBackgroundStyle(pan.x, pan.y, scale);
+
   return (
-    <div className="flex min-h-[min(70vh,640px)] flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-0)]">
-      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+    <div
+      className="flex min-h-[min(70vh,640px)] flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-1)]"
+      data-testid="org-unit-canvas-shell"
+    >
+      <div
+        className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)]/80 px-3 py-2"
+        data-testid="org-canvas-toolbar"
+      >
         <div className="relative min-w-[12rem] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
           <input
@@ -212,43 +316,83 @@ export default function OrgUnitCanvasView({
             data-testid="org-canvas-search"
           />
         </div>
-        <div className="flex items-center gap-1">
-          <button type="button" className="fca-button-secondary p-2" aria-label="Verkleinern" onClick={() => setScale((s) => Math.max(MIN_SCALE, s - 0.1))}>
+        <div className="flex items-center gap-1" role="toolbar" aria-label="Canvas-Steuerung">
+          <button
+            type="button"
+            className="fca-button-secondary p-2"
+            aria-label="Verkleinern"
+            data-testid="org-canvas-zoom-out"
+            onClick={() => setScale((s) => clampOrgCanvasScale(s - 0.1))}
+          >
             <ZoomOut className="h-4 w-4" />
           </button>
-          <button type="button" className="fca-button-secondary p-2" aria-label="Vergrössern" onClick={() => setScale((s) => Math.min(MAX_SCALE, s + 0.1))}>
+          <span
+            className="min-w-[3.25rem] px-1 text-center text-xs font-medium tabular-nums text-[var(--muted)]"
+            aria-live="polite"
+            data-testid="org-canvas-zoom-level"
+          >
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            type="button"
+            className="fca-button-secondary p-2"
+            aria-label="Vergrössern"
+            data-testid="org-canvas-zoom-in"
+            onClick={() => setScale((s) => clampOrgCanvasScale(s + 0.1))}
+          >
             <ZoomIn className="h-4 w-4" />
           </button>
-          <button type="button" className="fca-button-secondary p-2" aria-label="Alles einpassen" onClick={fitToView}>
+          <button
+            type="button"
+            className="fca-button-secondary inline-flex items-center gap-1 px-2.5 py-2 text-xs"
+            aria-label="Hierarchie einpassen"
+            data-testid="org-canvas-fit"
+            onClick={applyFitToView}
+          >
             <Maximize2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Einpassen</span>
           </button>
-          {selectedId ? (
-            <button
-              type="button"
-              className="fca-button-secondary inline-flex items-center gap-1 px-3 py-2 text-xs"
-              onClick={() => focusNode(selectedId)}
-            >
-              <Crosshair className="h-3.5 w-3.5" />
-              Fokus
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="fca-button-secondary inline-flex items-center gap-1 px-2.5 py-2 text-xs"
+            aria-label="Automatisches Layout"
+            data-testid="org-canvas-auto-layout"
+            onClick={requestAutoLayout}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            <span className="hidden sm:inline">Auto-Layout</span>
+          </button>
         </div>
       </div>
 
       <div
         ref={viewportRef}
         className={cn(
-          "relative min-h-0 flex-1 touch-none overflow-hidden",
-          isPanning ? "cursor-grabbing" : "cursor-grab",
+          "relative min-h-0 flex-1 touch-none overflow-hidden bg-[#0c1220]",
+          isPanning || spacePan ? "cursor-grabbing" : "cursor-grab",
         )}
+        style={gridStyle}
         onWheel={handleWheel}
         onPointerDown={(e) => {
-          if ((e.target as HTMLElement).closest("[data-org-unit-node]")) return;
+          const target = e.target as HTMLElement;
+          if (target.closest("[data-org-unit-node]") && !spacePan) return;
+          if (target.closest("[data-org-reparent-handle]")) return;
           setIsPanning(true);
           panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
+          if (nodeDrag && nodeDrag.pointerId === e.pointerId) {
+            const dx = (e.clientX - nodeDrag.startClientX) / scale;
+            const dy = (e.clientY - nodeDrag.startClientY) / scale;
+            const nextX = nodeDrag.startX + dx;
+            const nextY = nodeDrag.startY + dy;
+            setManualPositions((prev) => ({
+              ...prev,
+              [nodeDrag.nodeId]: { x: nextX, y: nextY },
+            }));
+            return;
+          }
           if (!isPanning) return;
           setPan({
             x: panStart.current.panX + (e.clientX - panStart.current.x),
@@ -256,6 +400,19 @@ export default function OrgUnitCanvasView({
           });
         }}
         onPointerUp={(e) => {
+          if (nodeDrag && nodeDrag.pointerId === e.pointerId) {
+            const dx = (e.clientX - nodeDrag.startClientX) / scale;
+            const dy = (e.clientY - nodeDrag.startClientY) / scale;
+            setManualPositions((prev) => {
+              const next = {
+                ...prev,
+                [nodeDrag.nodeId]: { x: nodeDrag.startX + dx, y: nodeDrag.startY + dy },
+              };
+              saveOrgLayoutPositions(tenantId, next);
+              return next;
+            });
+            setNodeDrag(null);
+          }
           setIsPanning(false);
           try {
             (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
@@ -263,7 +420,10 @@ export default function OrgUnitCanvasView({
             /* ignore */
           }
         }}
-        onPointerLeave={() => setIsPanning(false)}
+        onPointerLeave={() => {
+          setIsPanning(false);
+          setNodeDrag(null);
+        }}
         data-testid="org-unit-canvas-viewport"
         role="application"
         aria-label="Organisationshierarchie Canvas"
@@ -275,6 +435,7 @@ export default function OrgUnitCanvasView({
             width: layout.width,
             height: layout.height,
           }}
+          data-testid="org-canvas-transform-layer"
         >
           <svg
             className="pointer-events-none absolute inset-0 overflow-visible"
@@ -287,9 +448,9 @@ export default function OrgUnitCanvasView({
                 key={`${edge.fromId}-${edge.toId}`}
                 d={connectorPath(edge.fromId, edge.toId)}
                 fill="none"
-                stroke="var(--border-strong)"
+                stroke="color-mix(in srgb, var(--sce-primary) 35%, var(--border-strong))"
                 strokeWidth={1.5}
-                opacity={0.85}
+                opacity={0.9}
               />
             ))}
           </svg>
@@ -297,11 +458,12 @@ export default function OrgUnitCanvasView({
           {layout.nodes.map((node) => {
             const data = nodeDataById.get(node.id);
             if (!data) return null;
-            const isDropTarget = dropTargetId === node.id && draggingId && draggingId !== node.id;
+            const isDropTarget =
+              dropTargetId === node.id && reparentDraggingId && reparentDraggingId !== node.id;
             const isInvalidDrop =
               isDropTarget &&
-              draggingId &&
-              wouldReparentCreateCycle(hierarchyUnits, draggingId, node.id);
+              reparentDraggingId &&
+              wouldReparentCreateCycle(hierarchyUnits, reparentDraggingId, node.id);
 
             return (
               <div
@@ -314,65 +476,75 @@ export default function OrgUnitCanvasView({
                   height: node.height,
                 }}
                 onDragOver={(e) => {
-                  if (!canManage || !draggingId) return;
+                  if (!canManage || !reparentDraggingId) return;
                   e.preventDefault();
                   setDropTargetId(node.id);
                 }}
                 onDragLeave={() => setDropTargetId((id) => (id === node.id ? null : id))}
                 onDrop={(e) => {
                   e.preventDefault();
-                  if (!canManage || !draggingId || draggingId === node.id) return;
+                  if (!canManage || !reparentDraggingId || reparentDraggingId === node.id) return;
                   setDropTargetId(null);
-                  if (wouldReparentCreateCycle(hierarchyUnits, draggingId, node.id)) return;
-                  const unit = unitById.get(draggingId);
+                  if (wouldReparentCreateCycle(hierarchyUnits, reparentDraggingId, node.id)) return;
+                  const unit = unitById.get(reparentDraggingId);
                   const parent = unitById.get(node.id);
                   if (!unit || !parent) return;
                   setReparentPending({
-                    unitId: draggingId,
+                    unitId: reparentDraggingId,
                     newParentId: node.id,
                     unitName: unit.name,
                     parentName: parent.name,
                   });
                 }}
+                onPointerDown={(e) => {
+                  if (!canManage || spacePan) return;
+                  if ((e.target as HTMLElement).closest("[data-org-reparent-handle]")) return;
+                  if ((e.target as HTMLElement).closest("button")) return;
+                  e.stopPropagation();
+                  setNodeDrag({
+                    nodeId: node.id,
+                    pointerId: e.pointerId,
+                    startClientX: e.clientX,
+                    startClientY: e.clientY,
+                    startX: node.x,
+                    startY: node.y,
+                  });
+                  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+                }}
               >
-                <div
-                  className={cn(
-                    "h-full rounded-xl transition",
-                    isDropTarget &&
-                      (isInvalidDrop
-                        ? "ring-2 ring-rose-500/60"
-                        : "ring-2 ring-[var(--sce-accent)]/70"),
-                  )}
-                >
-                  <OrgUnitNodeCard
-                    unit={data}
-                    selected={selectedId === node.id}
-                    canManage={canManage}
-                    onSelect={() => onSelectId(node.id)}
-                    onToggleCollapse={() => {
-                      setCollapsed((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(node.id)) next.delete(node.id);
-                        else next.add(node.id);
-                        return next;
-                      });
-                    }}
-                    onAddChild={canManage ? () => onAddChild(node.id) : undefined}
-                    onDragStart={
-                      canManage
-                        ? (e) => {
-                            setDraggingId(node.id);
-                            e.dataTransfer.setData("text/org-unit-id", node.id);
-                            e.dataTransfer.effectAllowed = "move";
-                          }
-                        : undefined
-                    }
-                    onDragEnd={() => {
-                      setDraggingId(null);
-                      setDropTargetId(null);
-                    }}
-                  />
-                </div>
+                <OrgUnitNodeCard
+                  unit={data}
+                  selected={selectedId === node.id}
+                  canManage={canManage}
+                  density={contextualZoom}
+                  isDragging={nodeDrag?.nodeId === node.id}
+                  isReparentSource={reparentDraggingId === node.id}
+                  isReparentTarget={Boolean(isDropTarget)}
+                  isInvalidReparentTarget={Boolean(isInvalidDrop)}
+                  onSelect={() => onSelectId(node.id)}
+                  onToggleCollapse={() => {
+                    setCollapsed((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(node.id)) next.delete(node.id);
+                      else next.add(node.id);
+                      return next;
+                    });
+                  }}
+                  onAddChild={canManage ? () => onAddChild(node.id) : undefined}
+                  onReparentDragStart={
+                    canManage
+                      ? (ev) => {
+                          setReparentDraggingId(node.id);
+                          ev.dataTransfer.setData("text/org-unit-id", node.id);
+                          ev.dataTransfer.effectAllowed = "move";
+                        }
+                      : undefined
+                  }
+                  onReparentDragEnd={() => {
+                    setReparentDraggingId(null);
+                    setDropTargetId(null);
+                  }}
+                />
               </div>
             );
           })}
@@ -428,6 +600,26 @@ export default function OrgUnitCanvasView({
           </div>
         ) : null}
       </Dialog>
+
+      <Dialog
+        open={autoLayoutConfirmOpen}
+        onClose={() => setAutoLayoutConfirmOpen(false)}
+        title="Auto-Layout anwenden?"
+        description="Manuelle Knotenpositionen werden durch das hierarchische Layout ersetzt. Die Organisationsstruktur (Eltern-Kind) bleibt unverändert."
+        size="md"
+        footer={null}
+      >
+        <div className="flex justify-end gap-2">
+          <button type="button" className="fca-button-secondary" onClick={() => setAutoLayoutConfirmOpen(false)}>
+            Abbrechen
+          </button>
+          <button type="button" className="fca-button-primary" onClick={runAutoLayout}>
+            Auto-Layout anwenden
+          </button>
+        </div>
+      </Dialog>
     </div>
   );
 }
+
+export { ORG_CANVAS_MIN_SCALE, ORG_CANVAS_MAX_SCALE };

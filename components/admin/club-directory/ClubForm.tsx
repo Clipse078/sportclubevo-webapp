@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { SectionCard } from "@/components/ui/page/SectionCard";
+import { cn } from "@/lib/cn";
 
 type ClubFormProps = {
   mode: "create" | "edit";
   clubId?: string;
+  layout?: "page" | "composer";
   defaultValues?: {
     name?: string;
     shortName?: string;
@@ -15,13 +18,18 @@ type ClubFormProps = {
     location?: string;
     notes?: string;
   };
+  onCancel?: () => void;
+  onSuccess?: (clubId: string) => void;
 };
 
-const fieldClass =
-  "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
-
-export default function ClubForm({ mode, clubId, defaultValues }: ClubFormProps) {
+export default function ClubForm({
+  mode,
+  clubId,
+  layout = "page",
+  defaultValues,
+  onCancel,
+  onSuccess,
+}: ClubFormProps) {
   const router = useRouter();
   const [name, setName] = useState(defaultValues?.name ?? "");
   const [shortName, setShortName] = useState(defaultValues?.shortName ?? "");
@@ -31,6 +39,8 @@ export default function ClubForm({ mode, clubId, defaultValues }: ClubFormProps)
   const [notes, setNotes] = useState(defaultValues?.notes ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isComposer = layout === "composer";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -64,6 +74,10 @@ export default function ClubForm({ mode, clubId, defaultValues }: ClubFormProps)
       }
 
       const targetId = mode === "edit" ? clubId : data?.club?.id;
+      if (targetId && onSuccess) {
+        onSuccess(targetId);
+        return;
+      }
       router.push(targetId ? `/dashboard/vereine/${targetId}` : "/dashboard/vereine");
       router.refresh();
     } catch {
@@ -73,95 +87,106 @@ export default function ClubForm({ mode, clubId, defaultValues }: ClubFormProps)
     }
   }
 
+  function handleCancel() {
+    if (onCancel) {
+      onCancel();
+      return;
+    }
+    router.back();
+  }
+
+  const fieldBody = (
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="md:col-span-2">
+        <label className="fca-label">Name *</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="z.B. SV Muttenz"
+          className="fca-input w-full"
+          required
+        />
+      </div>
+      <div>
+        <label className="fca-label">Kurzname</label>
+        <input
+          type="text"
+          value={shortName}
+          onChange={(e) => setShortName(e.target.value)}
+          placeholder="z.B. Muttenz"
+          className="fca-input w-full"
+        />
+      </div>
+      <div>
+        <label className="fca-label">Alternativname</label>
+        <input
+          type="text"
+          value={alternativeName}
+          onChange={(e) => setAlternativeName(e.target.value)}
+          placeholder="Optional"
+          className="fca-input w-full"
+        />
+      </div>
+      <div>
+        <label className="fca-label">Website</label>
+        <input
+          type="url"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          placeholder="https://…"
+          className="fca-input w-full"
+        />
+      </div>
+      <div>
+        <label className="fca-label">Ort / Adresse</label>
+        <input
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Optional"
+          className="fca-input w-full"
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="fca-label">Notizen</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="Optionale interne Notiz…"
+          className="fca-input w-full min-h-[4.5rem]"
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className={cn("space-y-6", isComposer && "pb-2")} data-testid="club-form">
       {error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+        <div
+          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+          role="alert"
+        >
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">Vereinsdaten</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <label className={labelClass}>Name *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="z.B. SV Muttenz"
-              className={fieldClass}
-              required
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Kurzname</label>
-            <input
-              type="text"
-              value={shortName}
-              onChange={(e) => setShortName(e.target.value)}
-              placeholder="z.B. Muttenz"
-              className={fieldClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Alternativname</label>
-            <input
-              type="text"
-              value={alternativeName}
-              onChange={(e) => setAlternativeName(e.target.value)}
-              placeholder="Optional"
-              className={fieldClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Website</label>
-            <input
-              type="url"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              placeholder="https://…"
-              className={fieldClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Ort / Adresse</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Optional"
-              className={fieldClass}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className={labelClass}>Notizen</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              placeholder="Optionale interne Notiz…"
-              className={fieldClass}
-            />
-          </div>
+      {isComposer ? (
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-[var(--text-1)]">Vereinsdaten</h3>
+          {fieldBody}
         </div>
-      </section>
+      ) : (
+        <SectionCard title="Vereinsdaten">{fieldBody}</SectionCard>
+      )}
 
       <div className="flex items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-        >
+        <button type="button" onClick={handleCancel} className="fca-button-secondary">
           Abbrechen
         </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]"
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        <button type="submit" disabled={loading} className="fca-button-primary inline-flex items-center gap-2">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
           {mode === "create" ? "Verein erstellen" : "Änderungen speichern"}
         </button>
       </div>

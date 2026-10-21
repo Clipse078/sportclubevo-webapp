@@ -14,6 +14,7 @@ import { cn } from "@/lib/cn";
 type OrgUnitListItem = OrgUnitCanvasItem;
 
 type Props = {
+  tenantId: string;
   orgUnits: OrgUnitListItem[];
   archivedOrgUnits: OrgUnitListItem[];
   showArchived: boolean;
@@ -24,6 +25,7 @@ type Props = {
 type ViewMode = "canvas" | "list";
 
 export default function OrgUnitBuilderWorkspace({
+  tenantId,
   orgUnits,
   archivedOrgUnits,
   showArchived,
@@ -118,6 +120,7 @@ export default function OrgUnitBuilderWorkspace({
         <div className="flex min-h-[min(70vh,640px)] flex-col gap-0 overflow-hidden rounded-xl border border-[var(--border)] lg:flex-row">
           <div className="min-h-0 min-w-0 flex-1">
             <OrgUnitCanvasView
+              tenantId={tenantId}
               orgUnits={orgUnits}
               canManage={canManage}
               selectedId={selectedId}

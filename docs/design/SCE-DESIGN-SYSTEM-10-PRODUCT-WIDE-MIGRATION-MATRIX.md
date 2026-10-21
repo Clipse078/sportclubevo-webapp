@@ -34,7 +34,7 @@ See `SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS` — reconciled on branch `cur
 | Aufgaben / Anforderungen | `AufgabenWorkspaceShell` + `SceContextTabs` (`?bereich=`), DS-07 load errors |
 | Aufgaben R4.2 | One workspace: **Meine Aufgaben** \| **Verwaltung**; local filters for action types; `AufgabenWorkspaceCreateChooser` (`+ Erstellen`); per-recipient Anforderung aggregates in Verwaltung |
 
-**Status:** `DS10_STATUS = READY_FOR_PO_REVIEW` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = YES` · **R4.4** Anforderungen runtime load · **R4.2** unified Aufgaben workspace · **R3 Batch 03** · **R1 Batch 01/02** engineering delivered · **Facilities** modal-first create · PO visual UAT pending (not merged).
+**Status:** `DS10_STATUS = R3_ORG_BUILDER_AND_MIGRATION_TRUTH` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · **R3** Organisation Builder editor plane + Neuer Verein modal-first correction · **R4.4** Anforderungen runtime load · **R4.2** unified Aufgaben workspace · PO visual UAT pending (not merged · PR #888 draft).
 
 | Route | R3 disposition |
 | --- | --- |

@@ -40,6 +40,7 @@ export default async function OrgUnitsPage({ searchParams }: PageProps) {
         description="Visuelles Organigramm — Hierarchie, Mitglieder und Berechtigungen auf autoritativen OrgUnit-Daten."
       >
         <OrgUnitBuilderWorkspace
+          tenantId={tenant.id}
           orgUnits={orgUnits}
           archivedOrgUnits={archivedOrgUnits}
           showArchived={showArchived}
