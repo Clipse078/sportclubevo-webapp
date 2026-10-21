@@ -75,9 +75,9 @@ function getTypePillClass(type: string) {
     case "TRAINING":
       return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "OTHER":
-      return "border-slate-200 bg-slate-50 text-slate-700";
+      return "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-700";
+      return "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]";
   }
 }
 
@@ -214,22 +214,22 @@ export default function EventImportUploader() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="fca-eyebrow">Events Import</p>
             <h3 className="fca-heading mt-2">CSV Vorschau und Import</h3>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-2)]">
               Smart Mapping erkennt jetzt automatisch verschiedene CSV Header aus
               externen Exporten und ordnet sie den passenden Systemfeldern zu.
             </p>
           </div>
 
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-4">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Unterstützte Varianten
             </p>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--text-2)]">
               z. B. team / mannschaft, opponentName / gegner / gastteam,
               startAt / datum / beginn / anpfiff, location / ort / sportplatz
             </p>
@@ -280,35 +280,35 @@ export default function EventImportUploader() {
       {preview ? (
         <>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                 Aktive Saison
               </p>
-              <p className="mt-3 font-[var(--font-display)] text-[1.3rem] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-slate-900">
+              <p className="mt-3 font-[var(--font-display)] text-[1.3rem] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-[var(--foreground)]">
                 {preview.activeSeason.name}
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                 Erkannte Zeilen
               </p>
-              <p className="mt-3 font-[var(--font-display)] text-[1.3rem] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-slate-900">
+              <p className="mt-3 font-[var(--font-display)] text-[1.3rem] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-[var(--foreground)]">
                 {preview.rowsDetected}
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                 Zeilen ohne Endzeit
               </p>
-              <p className="mt-3 font-[var(--font-display)] text-[1.3rem] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-slate-900">
+              <p className="mt-3 font-[var(--font-display)] text-[1.3rem] font-bold uppercase leading-[0.95] tracking-[-0.02em] text-[var(--foreground)]">
                 {rowsWithoutEndAt}
               </p>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="fca-eyebrow">Smart Mapping</p>
@@ -320,21 +320,21 @@ export default function EventImportUploader() {
               </span>
             </div>
 
-            <div className="mt-5 overflow-hidden rounded-[24px] border border-slate-200">
+            <div className="mt-5 overflow-hidden rounded-[24px] border border-[var(--border)]">
               <table className="w-full text-left">
-                <thead className="bg-slate-50">
-                  <tr className="border-b border-slate-200 text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">
+                <thead className="bg-[var(--surface-2)]">
+                  <tr className="border-b border-[var(--border)] text-[0.72rem] uppercase tracking-[0.18em] text-[var(--muted)]">
                     <th className="px-4 py-3">Systemfeld</th>
                     <th className="px-4 py-3">Erkannte CSV Spalte</th>
                   </tr>
                 </thead>
                 <tbody>
                   {getMappingRows(preview.csvMeta.mapping).map(([fieldKey, mappedHeader]) => (
-                    <tr key={fieldKey} className="border-b border-slate-100 bg-white last:border-b-0">
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">
+                    <tr key={fieldKey} className="border-b border-[var(--border)] bg-white last:border-b-0">
+                      <td className="px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
                         {fieldKey}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                         {mappedHeader ?? "Nicht gefunden"}
                       </td>
                     </tr>
@@ -359,20 +359,20 @@ export default function EventImportUploader() {
             </div>
           )}
 
-          <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
-              <p className="text-sm font-semibold text-slate-900">
+          <div className="overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+            <div className="border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-4">
+              <p className="text-sm font-semibold text-[var(--foreground)]">
                 Import Vorschau
               </p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-[var(--text-2)]">
                 Die Vorschau zeigt die bereits normalisierten Eventdaten nach Smart Mapping.
               </p>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-slate-50">
-                  <tr className="border-b border-slate-200 text-[0.72rem] uppercase tracking-[0.18em] text-slate-500">
+                <thead className="bg-[var(--surface-2)]">
+                  <tr className="border-b border-[var(--border)] text-[0.72rem] uppercase tracking-[0.18em] text-[var(--muted)]">
                     <th className="px-4 py-3">Zeile</th>
                     <th className="px-4 py-3">Titel</th>
                     <th className="px-4 py-3">Typ</th>
@@ -392,15 +392,15 @@ export default function EventImportUploader() {
                           ? "border-b border-amber-100 bg-amber-50/60 last:border-b-0"
                           : !row.endAt
                             ? "border-b border-blue-100 bg-blue-50/40 last:border-b-0"
-                            : "border-b border-slate-100 bg-white last:border-b-0"
+                            : "border-b border-[var(--border)] bg-white last:border-b-0"
                       }
                     >
-                      <td className="px-4 py-3 text-sm text-slate-600">{row.rowNumber}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">{row.rowNumber}</td>
 
                       <td className="px-4 py-3">
-                        <div className="text-sm font-semibold text-slate-900">{row.title}</div>
+                        <div className="text-sm font-semibold text-[var(--foreground)]">{row.title}</div>
                         {row.competitionLabel ? (
-                          <div className="mt-1 text-xs text-slate-500">{row.competitionLabel}</div>
+                          <div className="mt-1 text-xs text-[var(--muted)]">{row.competitionLabel}</div>
                         ) : null}
                       </td>
 
@@ -410,24 +410,24 @@ export default function EventImportUploader() {
                         </span>
                       </td>
 
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                         <div>{row.teamName ?? "-"}</div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--muted)]">
                           {row.hasTeamWarning
                             ? "Nicht in aktiver Saison gefunden"
                             : row.matchedTeamName ?? "Ohne Team"}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                         {row.opponentName ?? row.organizerName ?? "-"}
                       </td>
 
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                         {formatDateTime(row.startAt)}
                       </td>
 
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                         {row.endAt ? (
                           formatDateTime(row.endAt)
                         ) : (
@@ -435,7 +435,7 @@ export default function EventImportUploader() {
                         )}
                       </td>
 
-                      <td className="px-4 py-3 text-sm text-slate-700">{row.location ?? "-"}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--text-2)]">{row.location ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>

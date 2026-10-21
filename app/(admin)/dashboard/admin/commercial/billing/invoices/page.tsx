@@ -1,5 +1,6 @@
-import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import NativeBillingCreateInvoiceTrigger from "@/components/admin/billing/NativeBillingCreateInvoiceTrigger";
+import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
 import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingInvoicesOperationsTable from "@/components/admin/billing/NativeBillingInvoicesOperationsTable";
 import { getBillingInvoiceOperationalRows } from "@/lib/billing/operations/billing-operations-service";
@@ -14,14 +15,17 @@ export default async function NativeBillingInvoicesPage() {
 
   let rows: Awaited<ReturnType<typeof getBillingInvoiceOperationalRows>> = [];
   let customers: Awaited<ReturnType<typeof listBillingCustomers>> = [];
+  let contracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
   try {
-    [rows, customers] = await Promise.all([
+    [rows, customers, contracts] = await Promise.all([
       getBillingInvoiceOperationalRows(),
       listBillingCustomers(),
+      getBillingContractsOverview(),
     ]);
   } catch {
     rows = [];
     customers = [];
+    contracts = [];
   }
 
   return (
@@ -32,9 +36,13 @@ export default async function NativeBillingInvoicesPage() {
         description="Operative Rechnungsliste mit Zahlungs-, Versand- und Fälligkeitsstatus."
         actions={
           canManage ? (
-            <Link href="/dashboard/admin/commercial/billing/invoices/new" className="fca-button-primary">
-              Rechnungsentwurf
-            </Link>
+            <NativeBillingCreateInvoiceTrigger
+              contracts={contracts.map((c) => ({
+                id: c.id,
+                label: `${c.contractNumber} · ${c.productName}`,
+                status: c.status,
+              }))}
+            />
           ) : undefined
         }
       />

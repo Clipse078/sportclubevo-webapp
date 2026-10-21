@@ -10,7 +10,7 @@
  * German UI. Server Component with client-side interactions.
  */
 
-import { Link2, Plus } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { listProviderMappings } from "@/lib/provider-mapping/provider-mapping-queries";
@@ -18,6 +18,7 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 import ProviderMappingWorkspace from "@/components/admin/teams/provider-mapping/ProviderMappingWorkspace";
+import ProviderMappingCreateTrigger from "@/components/admin/teams/provider-mapping/ProviderMappingCreateTrigger";
 import { SceActionLink } from "@/components/sce/actions/SceActionLink";
 import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
 import type { MappingFilterParams } from "@/lib/provider-mapping/provider-mapping-queries";
@@ -76,14 +77,7 @@ export default async function ProviderMappingPage({ searchParams }: PageProps) {
         ]}
         headerActions={
           canManage ? (
-            <SceActionLink
-              href="/dashboard/teams/provider-mapping/new"
-              data-sce-action-hierarchy="PRIMARY"
-              className="inline-flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" aria-hidden />
-              Neue Zuordnung
-            </SceActionLink>
+            <ProviderMappingCreateTrigger className="inline-flex items-center gap-2" />
           ) : undefined
         }
         isEmpty={mappings.length === 0}
@@ -95,7 +89,7 @@ export default async function ProviderMappingPage({ searchParams }: PageProps) {
             description='Erstellen Sie die erste Zuordnung über „Neue Zuordnung".'
             primaryAction={
               canManage ? (
-                <SceActionLink href="/dashboard/teams/provider-mapping/new">Neue Zuordnung</SceActionLink>
+                <ProviderMappingCreateTrigger />
               ) : undefined
             }
             contained

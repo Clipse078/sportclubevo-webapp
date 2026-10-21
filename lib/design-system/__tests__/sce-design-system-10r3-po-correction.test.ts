@@ -19,7 +19,7 @@ describe("SCE-DESIGN-SYSTEM-10R3 PO correction package", () => {
   it("marks R3 ready for PO review without DS-10 closure", () => {
     expect(SCE_DESIGN_SYSTEM_10R3_PO.SCE_DESIGN_SYSTEM_10R3_READY_FOR_PO_REVIEW).toBe("YES");
     expect(SCE_DESIGN_SYSTEM_10R3_PO.SCE_DESIGN_SYSTEM_10_READY_FOR_CLOSURE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
   });
 
   it("implements editor-style organisation canvas contracts", () => {

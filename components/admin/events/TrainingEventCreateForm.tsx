@@ -372,10 +372,10 @@ export default function TrainingEventCreateForm() {
           </label>
 
           <div className="fca-section-card p-4">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Team Kontext
             </p>
-            <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="mt-3 space-y-2 text-sm text-[var(--text-2)]">
               <p>{selectedTeam ? selectedTeam.name : "-"}</p>
               <p>{selectedTeam?.ageGroup ?? "-"}</p>
               <p>{selectedTeam?.genderGroup ?? "-"}</p>
@@ -385,10 +385,10 @@ export default function TrainingEventCreateForm() {
           <div className="fca-section-card p-4 md:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                   Wiederholung
                 </p>
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-sm text-[var(--text-2)]">
                   Optional: Training wöchentlich wiederholen, ähnlich wie in Outlook.
                 </p>
               </div>
@@ -410,7 +410,7 @@ export default function TrainingEventCreateForm() {
 
             {isRecurring ? (
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
                   Wiederholt sich wöchentlich an <span className="font-semibold">{recurrenceWeekdayLabel}</span>.
                 </div>
 

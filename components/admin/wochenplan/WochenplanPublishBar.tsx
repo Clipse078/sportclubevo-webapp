@@ -93,7 +93,7 @@ export default function WochenplanPublishBar({
           </div>
 
           {!isSaving && hasUnsavedChanges && weekNumber !== null ? (
-            <p className="text-[0.7rem] text-slate-400">
+            <p className="text-[0.7rem] text-[var(--muted)]">
               Öffentlich: &ldquo;KW {weekNumber} | {effectiveLabel} aktiv&rdquo;
             </p>
           ) : null}

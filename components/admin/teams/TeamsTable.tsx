@@ -65,7 +65,7 @@ export default function TeamsTable({ initialTeams }: TeamsTableProps) {
           <div>
             <p className="fca-eyebrow">Filter</p>
             <h3 className="fca-subheading mt-2">Teams nach Kategorie</h3>
-            <p className="mt-3 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-[var(--text-2)]">
               Premium Übersicht für alle FCA Teams mit Sichtbarkeiten, aktiver Saison und Schnellzugriff.
             </p>
           </div>
@@ -99,7 +99,7 @@ export default function TeamsTable({ initialTeams }: TeamsTableProps) {
 
       {filteredTeams.length === 0 ? (
         <AdminSurfaceCard className="p-6">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-[var(--text-2)]">
             Keine Teams für den aktuellen Filter gefunden.
           </p>
         </AdminSurfaceCard>
@@ -109,7 +109,7 @@ export default function TeamsTable({ initialTeams }: TeamsTableProps) {
             <AdminListItem
               key={team.id}
               avatar={
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-br from-white to-slate-100 font-[var(--font-display)] text-sm font-bold uppercase tracking-[0.08em] text-[#0b4aa2] shadow-sm">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-gradient-to-br from-white to-slate-100 font-[var(--font-display)] text-sm font-bold uppercase tracking-[0.08em] text-[#0b4aa2] shadow-sm">
                   {team.ageGroup ?? "FCA"}
                 </div>
               }

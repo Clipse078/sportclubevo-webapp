@@ -47,7 +47,7 @@ const MODULE_META = [
     description:
       "Weitere Vereinsanlässe wie Lager, Apéros, Versammlungen oder Reisen.",
     icon: Flag,
-    accent: "border-slate-200 bg-slate-100 text-slate-700",
+    accent: "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]",
   },
   {
     key: "vacationPeriods",
@@ -193,33 +193,33 @@ export default async function SeasonPlannerPage({
       />
 
       <section className="grid gap-5 xl:grid-cols-3">
-        <article className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <article className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
           <p className="fca-eyebrow">Flow</p>
-          <h3 className="mt-2 text-[1.05rem] font-semibold text-slate-900">
+          <h3 className="mt-2 text-[1.05rem] font-semibold text-[var(--foreground)]">
             Planner-Hierarchie
           </h3>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
+          <div className="mt-4 space-y-3 text-sm text-[var(--text-2)]">
             <p>Saisonplanner = führende Jahresagenda</p>
             <p>Wochenplanner = operative Wochenansicht</p>
             <p>Tagesplanner = operative Tagesansicht für Infoboard</p>
           </div>
         </article>
 
-        <article className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <article className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
           <p className="fca-eyebrow">Publikation</p>
-          <h3 className="mt-2 text-[1.05rem] font-semibold text-slate-900">
+          <h3 className="mt-2 text-[1.05rem] font-semibold text-[var(--foreground)]">
             Ausspielung
           </h3>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
+          <div className="mt-4 space-y-3 text-sm text-[var(--text-2)]">
             <p>Wochenplanner → Website live</p>
             <p>Wochenplanner → später Mobile App</p>
             <p>Tagesplanner → Infoboard live</p>
           </div>
         </article>
 
-        <article className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <article className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
           <p className="fca-eyebrow">Aktion</p>
-          <h3 className="mt-2 text-[1.05rem] font-semibold text-slate-900">
+          <h3 className="mt-2 text-[1.05rem] font-semibold text-[var(--foreground)]">
             Neuer Eintrag
           </h3>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -233,7 +233,7 @@ export default async function SeasonPlannerPage({
 
             <Link
               href={weekHref}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
             >
               <CalendarDays className="h-4 w-4" />
               Wochenplanner öffnen
@@ -241,7 +241,7 @@ export default async function SeasonPlannerPage({
 
             <Link
               href={dayHref}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
             >
               <ProductDomainSceIcon name="requirements" size={16} />
               Tagesplanner öffnen
@@ -258,19 +258,19 @@ export default async function SeasonPlannerPage({
           return (
             <article
               key={item.key}
-              className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+              className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[#0b4aa2]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[#0b4aa2]">
                     <Icon className="h-5 w-5" />
                   </div>
 
                   <div>
-                    <h3 className="text-[1.05rem] font-semibold text-slate-900">
+                    <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">
                       {item.title}
                     </h3>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-[var(--muted)]">
                       {item.description}
                     </p>
                   </div>
@@ -287,35 +287,35 @@ export default async function SeasonPlannerPage({
         })}
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+      <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="fca-eyebrow">Live Daten</p>
-            <h3 className="mt-2 text-[1.05rem] font-semibold text-slate-900">
+            <h3 className="mt-2 text-[1.05rem] font-semibold text-[var(--foreground)]">
               Letzte Saison-Einträge
             </h3>
           </div>
 
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-2)]">
             {data.latestEntries.length} sichtbar
           </span>
         </div>
 
         <div className="mt-4 space-y-3">
           {data.latestEntries.length === 0 ? (
-            <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
               Für diese Saison existieren aktuell noch keine Planner-Einträge.
             </div>
           ) : (
             data.latestEntries.map((entry) => (
               <div
                 key={entry.id}
-                className="rounded-[20px] border border-slate-200 bg-slate-50 p-4"
+                className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-2)] p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm font-semibold text-[var(--foreground)]">
                         {entry.title}
                       </p>
                       <PlannerEntryTypeBadge
@@ -324,14 +324,14 @@ export default async function SeasonPlannerPage({
                       />
                     </div>
 
-                    <p className="mt-2 text-sm text-slate-600">
+                    <p className="mt-2 text-sm text-[var(--text-2)]">
                       {formatSwissDateTime(entry.startAt)}
                       {entry.location ? ` · ${entry.location}` : ""}
                       {entry.teamName ? ` · ${entry.teamName}` : ""}
                     </p>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600">
+                      <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold text-[var(--text-2)]">
                         {entry.sourceLabel}
                       </span>
                       <PlannerEntryPublicationBadges
@@ -348,7 +348,7 @@ export default async function SeasonPlannerPage({
                         ? `/dashboard/planner/edit/${entry.id}?season=${encodeURIComponent(selectedSeasonKey)}`
                         : `/dashboard/planner/edit/${entry.id}`
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Bearbeiten

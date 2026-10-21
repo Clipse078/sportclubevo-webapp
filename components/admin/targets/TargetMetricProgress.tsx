@@ -71,13 +71,13 @@ export default function TargetMetricProgress({
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium text-slate-900 leading-5">
+          <p className="text-[13px] font-medium text-[var(--foreground)] leading-5">
             {directionLabel} {label}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500">
-            Aktuell: <span className="font-semibold text-slate-700">{currentFormatted}</span>
+          <p className="mt-0.5 text-[11px] text-[var(--muted)]">
+            Aktuell: <span className="font-semibold text-[var(--text-2)]">{currentFormatted}</span>
             {" · "}
-            Ziel: <span className="font-semibold text-slate-700">{targetFormatted}</span>
+            Ziel: <span className="font-semibold text-[var(--text-2)]">{targetFormatted}</span>
           </p>
         </div>
         <span
@@ -95,7 +95,7 @@ export default function TargetMetricProgress({
         </span>
       </div>
 
-      <div className="h-2 rounded-full bg-slate-100">
+      <div className="h-2 rounded-full bg-[var(--surface-2)]">
         <div
           className={`h-2 rounded-full transition-all ${progressColor}`}
           style={{ width: `${percent}%` }}

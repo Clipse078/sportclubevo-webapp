@@ -399,10 +399,10 @@ export default function MatchEventCreateForm() {
           </label>
 
           <div className="fca-section-card p-4">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Team Kontext
             </p>
-            <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="mt-3 space-y-2 text-sm text-[var(--text-2)]">
               <p>{selectedTeam ? selectedTeam.name : "-"}</p>
               <p>{selectedTeam?.ageGroup ?? "-"}</p>
               <p>{selectedTeam?.genderGroup ?? "-"}</p>

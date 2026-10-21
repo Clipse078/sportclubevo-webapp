@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import NewsArticleCreateTrigger from "@/components/admin/news/NewsArticleCreateTrigger";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { NEWS_READ_PERMISSIONS } from "@/lib/permissions/content-view-permissions";
@@ -14,6 +13,10 @@ import { ListPagePattern } from "@/components/ui/patterns";
 export default async function NewsAdminPage() {
   const session = await requireAnyPermission([...NEWS_READ_PERMISSIONS]);
   const tenantId = await requireActiveTenantId();
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { approvedDataOnly: true },
+  });
   const readOnly = !sessionCanWriteNews(session);
 
   const resolver = createEffectivePermissionResolver(prisma);
@@ -42,10 +45,7 @@ export default async function NewsAdminPage() {
         ]}
         headerActions={
           readOnly ? undefined : (
-            <Link href="/dashboard/website/news/new" className="fca-button-primary">
-              <Plus className="h-4 w-4" />
-              Neue News erstellen
-            </Link>
+            <NewsArticleCreateTrigger requiresReview={tenant?.approvedDataOnly ?? false} />
           )
         }
       >

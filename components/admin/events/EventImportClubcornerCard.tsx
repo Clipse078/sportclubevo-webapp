@@ -44,7 +44,7 @@ export default function EventImportClubcornerCard() {
         <div>
           <p className="fca-eyebrow">ClubCorner / fvnws</p>
           <h3 className="fca-heading mt-2">Sync Foundation</h3>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-sm leading-6 text-[var(--text-2)]">
             Grundlage für spätere externe Synchronisation offizieller Match- und
             Turnierdaten mit Import Runs, Fehlerstatus und nachvollziehbarer Historie.
           </p>

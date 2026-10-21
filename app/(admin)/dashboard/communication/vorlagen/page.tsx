@@ -3,6 +3,10 @@ import { Suspense } from "react";
 import { FileStack } from "lucide-react";
 import { notFound } from "next/navigation";
 import VorlagenListToolbar from "@/components/admin/communication/vorlagen/VorlagenListToolbar";
+import VorlageCreateTrigger from "@/components/admin/communication/vorlagen/VorlageCreateTrigger";
+import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
+import { resolveSponsorAudienceAuthorization } from "@/lib/sponsoring/sponsor-authorization";
+import { prisma } from "@/lib/db/prisma";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
@@ -59,15 +63,46 @@ export default async function CommunicationTemplatesPage(props: PageProps = {}) 
     kindFilter,
   });
 
+  const targetGroups = authz.canManage
+    ? await listZielgruppenForManagement({ tenantId: tenant.id, statusFilter: "ACTIVE" })
+    : [];
+  const sponsorAuth = authz.canManage
+    ? await resolveSponsorAudienceAuthorization({
+        tenantId: tenant.id,
+        tenantKey: tenant.key,
+        userId: session.user.id,
+      })
+    : null;
+  const sponsorOrganisations =
+    authz.canManage && sponsorAuth?.canViewSponsorData
+      ? await prisma.sponsorOrganisation.findMany({
+          where: { tenantId: tenant.id, status: "ACTIVE" },
+          select: {
+            id: true,
+            name: true,
+            contacts: {
+              where: { isActive: true },
+              select: { id: true, firstName: true, lastName: true, isPrimary: true },
+              orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }],
+            },
+          },
+          orderBy: { name: "asc" },
+          take: 200,
+        })
+      : [];
+
   const hasActiveFilters = Boolean(params.q?.trim() || kindParam !== "all");
 
   const primaryAction = authz.canManage ? (
-    <Link
-      href="/dashboard/communication/vorlagen/new"
-      className="inline-flex rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
-    >
-      Neue Vorlage
-    </Link>
+    <VorlageCreateTrigger
+      tenantId={tenant.id}
+      targetGroups={targetGroups.map((tg) => ({
+        id: tg.id,
+        name: tg.name,
+        status: tg.status,
+      }))}
+      sponsorOrganisations={sponsorOrganisations}
+    />
   ) : undefined;
 
   return (

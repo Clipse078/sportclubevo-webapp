@@ -21,16 +21,16 @@ export default function TargetLinksPanel({
   const totalLinks = initiativeRefs.length + meetingRefs.length;
 
   return (
-    <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-slate-400" />
-          <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <Link2 className="h-4 w-4 text-[var(--muted)]" />
+          <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
             Verknüpfungen
           </h3>
         </div>
         {totalLinks > 0 ? (
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-2)]">
             {totalLinks}
           </span>
         ) : null}
@@ -38,11 +38,11 @@ export default function TargetLinksPanel({
 
       <div className="space-y-4">
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             Initiativen
           </p>
           {initiativeRefs.length === 0 ? (
-            <p className="text-[12px] text-slate-400 italic">
+            <p className="text-[12px] text-[var(--muted)] italic">
               Keine Initiativen verknüpft.
             </p>
           ) : (
@@ -51,10 +51,10 @@ export default function TargetLinksPanel({
                 <li key={ref.slug}>
                   <Link
                     href={ref.url ?? `/vereinsleitung/initiativen/${ref.slug}`}
-                    className="flex items-center gap-2 rounded-[12px] border border-slate-100 bg-slate-50 px-3 py-2 text-[12px] font-medium text-slate-800 transition hover:border-slate-200 hover:bg-white hover:text-[#0b4aa2]"
+                    className="flex items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-[12px] font-medium text-[var(--foreground)] transition hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[#0b4aa2]"
                   >
                     <span className="min-w-0 flex-1 truncate">{ref.title}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0 text-slate-400" />
+                    <ExternalLink className="h-3 w-3 shrink-0 text-[var(--muted)]" />
                   </Link>
                 </li>
               ))}
@@ -63,11 +63,11 @@ export default function TargetLinksPanel({
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             Meetings
           </p>
           {meetingRefs.length === 0 ? (
-            <p className="text-[12px] text-slate-400 italic">
+            <p className="text-[12px] text-[var(--muted)] italic">
               Keine Meetings verknüpft.
             </p>
           ) : (
@@ -76,10 +76,10 @@ export default function TargetLinksPanel({
                 <li key={ref.slug}>
                   <Link
                     href={ref.url ?? `/vereinsleitung/meetings/${ref.slug}`}
-                    className="flex items-center gap-2 rounded-[12px] border border-slate-100 bg-slate-50 px-3 py-2 text-[12px] font-medium text-slate-800 transition hover:border-slate-200 hover:bg-white hover:text-[#0b4aa2]"
+                    className="flex items-center gap-2 rounded-[12px] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-[12px] font-medium text-[var(--foreground)] transition hover:border-[var(--border)] hover:bg-[var(--surface)] hover:text-[#0b4aa2]"
                   >
                     <span className="min-w-0 flex-1 truncate">{ref.title}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0 text-slate-400" />
+                    <ExternalLink className="h-3 w-3 shrink-0 text-[var(--muted)]" />
                   </Link>
                 </li>
               ))}
@@ -88,7 +88,7 @@ export default function TargetLinksPanel({
         </div>
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-3">
+      <div className="mt-4 border-t border-[var(--border)] pt-3">
         <Link
           href={`/vereinsleitung/targets/${targetId}/edit#links`}
           className="text-[11px] font-medium text-[#0b4aa2] hover:underline"

@@ -1,5 +1,8 @@
-import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import NativeBillingCreateContractTrigger from "@/components/admin/billing/NativeBillingCreateContractTrigger";
+import { getBillingProductsCatalogue } from "@/lib/billing/native-billing-commercial-service";
+import { listActiveBillingCustomers, listActiveLegalEntities } from "@/lib/billing/native-billing-repository";
+import { presentLegalEntityContractSelectorLabel } from "@/lib/billing/native-billing-presentation";
 import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingContractsTable from "@/components/admin/billing/NativeBillingContractsTable";
 import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
@@ -15,14 +18,20 @@ export default async function NativeBillingContractsPage() {
 
   let contracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
   let customers: Awaited<ReturnType<typeof listBillingCustomers>> = [];
+  let products: Awaited<ReturnType<typeof getBillingProductsCatalogue>> = [];
+  let legalEntities: Awaited<ReturnType<typeof listActiveLegalEntities>> = [];
   try {
-    [contracts, customers] = await Promise.all([
+    [contracts, customers, products, legalEntities] = await Promise.all([
       getBillingContractsOverview(),
       listBillingCustomers(),
+      getBillingProductsCatalogue(),
+      listActiveLegalEntities(),
     ]);
   } catch {
     contracts = [];
     customers = [];
+    products = [];
+    legalEntities = [];
   }
 
   const customerById = new Map(customers.map((c) => [c.id, c.displayName]));
@@ -35,9 +44,21 @@ export default async function NativeBillingContractsPage() {
         description="Aktive und historische SCE-Verträge mit Preisen, MWST und Abrechnungsintervall."
         actions={
           canManage ? (
-            <Link href="/dashboard/admin/commercial/billing/contracts/new" className="fca-button-primary">
-              Neuer Vertrag
-            </Link>
+            <NativeBillingCreateContractTrigger
+              products={products.map((p) => ({
+                id: p.id,
+                name: p.name,
+                catalogueMonthlyNetMinor: p.catalogueMonthlyNetMinor,
+              }))}
+              customers={customers.map((c) => ({ id: c.id, label: c.displayName }))}
+              legalEntities={legalEntities.map((e) => ({
+                id: e.id,
+                label: presentLegalEntityContractSelectorLabel({
+                  displayName: e.displayName,
+                  legalName: e.legalName,
+                }),
+              }))}
+            />
           ) : undefined
         }
       />

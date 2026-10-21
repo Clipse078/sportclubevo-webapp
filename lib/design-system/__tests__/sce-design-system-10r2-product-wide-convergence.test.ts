@@ -29,7 +29,7 @@ describe("SCE-DESIGN-SYSTEM-10R2 product-wide convergence", () => {
     expect(SCE_DESIGN_SYSTEM_10R2_PO.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe(
       "PENDING_R2_PO_REVIEW",
     );
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
   });
 
   it("wires planner edit form to SceFormField", () => {

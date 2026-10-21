@@ -14,12 +14,16 @@ type UserFormProps = {
     email: string;
     isActive: boolean;
   };
+  onSuccess?: (userId?: string) => void;
+  onCancel?: () => void;
 };
 
 export default function UserForm({
   mode,
   userId,
   initialValues,
+  onSuccess,
+  onCancel,
 }: UserFormProps) {
   const router = useRouter();
   const activeSwitchId = useId();
@@ -60,8 +64,12 @@ export default function UserForm({
         throw new Error(data.error ?? "Speichern fehlgeschlagen.");
       }
 
-      router.push("/dashboard/users");
-      router.refresh();
+      if (onSuccess) {
+        onSuccess(data.user?.id);
+      } else {
+        router.push("/dashboard/users");
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
     } finally {
@@ -122,7 +130,7 @@ export default function UserForm({
           className="fca-toggle-row"
           {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
         >
-          <span className="text-sm text-slate-700">Benutzer ist aktiv</span>
+          <span className="text-sm text-[var(--text-2)]">Benutzer ist aktiv</span>
           <SwitchThumb
             id={activeSwitchId}
             checked={isActive}
@@ -151,7 +159,7 @@ export default function UserForm({
 
         <button
           type="button"
-          onClick={() => router.push("/dashboard/users")}
+          onClick={() => (onCancel ? onCancel() : router.push("/dashboard/users"))}
           className="fca-button-secondary"
         >
           Abbrechen

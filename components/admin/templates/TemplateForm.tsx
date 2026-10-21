@@ -95,15 +95,15 @@ export default function TemplateForm({ mode, templateId, defaultValues }: Templa
     }
   }
 
-  const fieldClass = "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-  const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  const fieldClass = "w-full rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
+  const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)] mb-1.5";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error ? <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">{error}</div> : null}
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">Vorlage</h3>
+      <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <h3 className="mb-5 text-[1.05rem] font-semibold text-[var(--foreground)]">Vorlage</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Titel *</label>
@@ -128,21 +128,21 @@ export default function TemplateForm({ mode, templateId, defaultValues }: Templa
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+      <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h3 className="text-[1.05rem] font-semibold text-slate-900">Inhalt (Markdown)</h3>
-          <button type="button" onClick={handlePreview} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50">
+          <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Inhalt (Markdown)</h3>
+          <button type="button" onClick={handlePreview} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]">
             <Sparkles className="h-3.5 w-3.5" />Vorschau
           </button>
         </div>
         <textarea value={bodyMarkdown} onChange={(e) => setBodyMarkdown(e.target.value)} rows={12} placeholder="Schreibe den Inhalt in Markdown. Verwende {{variable.key}} für dynamische Inhalte." className={`${fieldClass} font-mono text-[13px]`} required />
 
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">Verfügbare Variablen</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">Verfügbare Variablen</p>
           <div className="flex flex-wrap gap-1.5">
             {availableVars.slice(0, 16).map((v) => (
               <button key={v.key} type="button" onClick={() => insertVariable(v.key)}
-                className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-mono text-slate-600 hover:border-[#0b4aa2]/30 hover:bg-[#0b4aa2]/5 hover:text-[#0b4aa2]"
+                className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-mono text-[var(--text-2)] hover:border-[#0b4aa2]/30 hover:bg-[#0b4aa2]/5 hover:text-[#0b4aa2]"
                 title={v.label}>
                 {`{{${v.key}}}`}
               </button>
@@ -154,15 +154,15 @@ export default function TemplateForm({ mode, templateId, defaultValues }: Templa
       {preview ? (
         <section className="rounded-[28px] border border-emerald-200 bg-emerald-50/50 p-6">
           <h3 className="mb-4 text-[1.05rem] font-semibold text-emerald-800">Vorschau (Beispieldaten)</h3>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Betreff</p>
-          <p className="mb-5 rounded-[14px] border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900">{preview.subject}</p>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">Inhalt</p>
-          <pre className="whitespace-pre-wrap rounded-[14px] border border-slate-200 bg-white p-4 font-sans text-sm leading-7 text-slate-800">{preview.body}</pre>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">Betreff</p>
+          <p className="mb-5 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--foreground)]">{preview.subject}</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">Inhalt</p>
+          <pre className="whitespace-pre-wrap rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-4 font-sans text-sm leading-7 text-[var(--foreground)]">{preview.body}</pre>
         </section>
       ) : null}
 
       <div className="flex items-center justify-between gap-4">
-        <button type="button" onClick={() => router.back()} className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Abbrechen</button>
+        <button type="button" onClick={() => router.back()} className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]">Abbrechen</button>
         <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {mode === "create" ? "Vorlage erstellen" : "Änderungen speichern"}

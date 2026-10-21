@@ -1,5 +1,6 @@
-import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import NativeBillingCreateCustomerTrigger from "@/components/admin/billing/NativeBillingCreateCustomerTrigger";
+import { getTenants } from "@/lib/tenants/queries";
 import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingCustomersTable from "@/components/admin/billing/NativeBillingCustomersTable";
 import { pickLatestCustomerLastInvoice } from "@/lib/billing/billing-customer-last-invoice";
@@ -35,21 +36,24 @@ export default async function NativeBillingCustomersPage() {
   const canManage = hasPermission(session, PERMISSIONS.BILLING_MANAGE);
 
   let rows: Awaited<ReturnType<typeof getBillingCustomersOverview>> = [];
+  let tenants: Awaited<ReturnType<typeof getTenants>> = [];
   let balances: Awaited<ReturnType<typeof getBillingCustomerBalanceSummaries>> = [];
   let contracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
   let invoices: Awaited<ReturnType<typeof getInvoicesOverview>> = [];
   try {
-    [rows, balances, contracts, invoices] = await Promise.all([
+    [rows, balances, contracts, invoices, tenants] = await Promise.all([
       getBillingCustomersOverview(),
       getBillingCustomerBalanceSummaries(),
       getBillingContractsOverview(),
       getInvoicesOverview(),
+      getTenants(),
     ]);
   } catch {
     rows = [];
     balances = [];
     contracts = [];
     invoices = [];
+    tenants = [];
   }
 
   const balanceByCustomerKey = new Map(balances.map((b) => [b.customerKey, b]));
@@ -80,9 +84,12 @@ export default async function NativeBillingCustomersPage() {
         description="Finanzielle Kundenübersicht mit Salden, Verträgen und Abrechnungsstatus."
         actions={
           canManage ? (
-            <Link href="/dashboard/admin/commercial/billing/customers/new" className="fca-button-primary">
-              Neuer Kunde
-            </Link>
+            <NativeBillingCreateCustomerTrigger
+              tenants={tenants.map((t) => ({
+                key: t.key,
+                label: `${t.name} (${t.key})`,
+              }))}
+            />
           ) : undefined
         }
       />

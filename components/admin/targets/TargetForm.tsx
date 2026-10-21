@@ -374,11 +374,11 @@ export default function TargetForm({
 
       <section className={sectionClass}>
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h3 className="text-[1.05rem] font-semibold text-slate-900">Metriken</h3>
+          <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Metriken</h3>
           <button
             type="button"
             onClick={addMetric}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
           >
             <Plus className="h-3.5 w-3.5" />
             Metrik hinzufügen
@@ -389,10 +389,10 @@ export default function TargetForm({
           {metrics.map((metric, idx) => (
             <div
               key={idx}
-              className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-5"
+              className="rounded-[20px] border border-[var(--border)]/80 bg-[var(--surface-2)] p-5"
             >
               <div className="mb-4 flex items-center justify-between gap-3">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Metrik {idx + 1}
                 </p>
                 {metrics.length > 1 ? (
@@ -501,8 +501,8 @@ export default function TargetForm({
       </section>
 
       <section className={sectionClass}>
-        <h3 className="mb-2 text-[1.05rem] font-semibold text-slate-900">Sichtbarkeit</h3>
-        <p className="mb-5 text-[12px] text-slate-500">
+        <h3 className="mb-2 text-[1.05rem] font-semibold text-[var(--foreground)]">Sichtbarkeit</h3>
+        <p className="mb-5 text-[12px] text-[var(--muted)]">
           Wer kann dieses Ziel sehen? Privat und Eingeschränkt verbergen den Eintrag
           für nicht berechtigte Benutzer.
         </p>

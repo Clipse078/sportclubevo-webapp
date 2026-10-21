@@ -38,7 +38,7 @@ function StatusBadge({ status }: { status: "READY" | "OPEN" | "NOT_APPLICABLE" }
   }
   if (status === "NOT_APPLICABLE") {
     return (
-      <span className="inline-flex h-5 items-center rounded-full border border-slate-200 bg-slate-100 px-2 text-[0.65rem] font-semibold text-slate-500">
+      <span className="inline-flex h-5 items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 text-[0.65rem] font-semibold text-[var(--muted)]">
         Abgesagt
       </span>
     );

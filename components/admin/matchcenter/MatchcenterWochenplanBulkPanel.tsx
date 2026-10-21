@@ -434,7 +434,7 @@ export default function MatchcenterWochenplanBulkPanel({
               onClick={() => applyBulkVisibility(false)}
               disabled={isPending}
               data-testid="matchcenter-bulk-disable"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] disabled:opacity-50"
             >
               {isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

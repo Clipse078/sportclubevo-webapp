@@ -153,7 +153,7 @@ export default function RoleManagementCard({
         <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div>
             <h3 className="fca-subheading">Rollen & Vereinsleitungs-Zugriff</h3>
-            <p className="mt-3 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-[var(--text-2)]">
               Admin kann hier Rollennamen, Beschreibungen sowie den Zugriff auf
               das Vereinsleitungs-Modul und die Teilnahme an Vereinsleitungs-Meetings
               steuern. Die Workflow-Matrix für Review-, Approve- und Publish-Logik
@@ -209,7 +209,7 @@ export default function RoleManagementCard({
                           <span className="fca-label">Rollen-Key</span>
                           <input
                             value={role.key}
-                            className="fca-input bg-slate-50 text-slate-500"
+                            className="fca-input bg-[var(--surface-2)] text-[var(--muted)]"
                             disabled
                           />
                         </label>
@@ -233,7 +233,7 @@ export default function RoleManagementCard({
 
                     <div className="space-y-4">
                       <div className="fca-section-card p-4">
-                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                           Zusatzrechte
                         </p>
 
@@ -242,7 +242,7 @@ export default function RoleManagementCard({
                             className="fca-toggle-row"
                             {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
                           >
-                            <span className="text-sm text-slate-700">
+                            <span className="text-sm text-[var(--text-2)]">
                               Zugriff auf Vereinsleitung
                             </span>
                             <SwitchThumb
@@ -259,7 +259,7 @@ export default function RoleManagementCard({
                             className="fca-toggle-row"
                             {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
                           >
-                            <span className="text-sm text-slate-700">
+                            <span className="text-sm text-[var(--text-2)]">
                               Darf an Vereinsleitungs-Meetings teilnehmen
                             </span>
                             <SwitchThumb
@@ -278,7 +278,7 @@ export default function RoleManagementCard({
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
                         Letzte Änderung: {formatDateTime(role.updatedAt)}
                       </div>
 

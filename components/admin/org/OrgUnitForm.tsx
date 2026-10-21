@@ -111,10 +111,10 @@ export default function OrgUnitForm({
   const isComposer = layout === "composer";
   const fieldClass = isComposer
     ? "fca-input w-full"
-    : "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
+    : "w-full rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
   const labelClass = isComposer
     ? "mb-1 block text-xs font-medium text-[var(--muted)]"
-    : "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+    : "block text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)] mb-1.5";
 
   // Filter eligible parents (exclude self, max depth 2 for parents)
   const eligibleParents = parentOptions.filter((p) => p.id !== orgUnitId && p.level <= 1);
@@ -138,10 +138,10 @@ export default function OrgUnitForm({
         className={
           isComposer
             ? "space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/60 p-4"
-            : "rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+            : "rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
         }
       >
-        {!isComposer ? <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">Einheit</h3> : null}
+        {!isComposer ? <h3 className="mb-5 text-[1.05rem] font-semibold text-[var(--foreground)]">Einheit</h3> : null}
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Name *</label>
@@ -156,7 +156,7 @@ export default function OrgUnitForm({
               placeholder="z.B. vorstand"
               readOnly={mode === "edit"}
               aria-readonly={mode === "edit"}
-              className={`${fieldClass} font-mono text-[13px] ${mode === "edit" ? "cursor-not-allowed bg-slate-50 text-slate-500" : ""}`}
+              className={`${fieldClass} font-mono text-[13px] ${mode === "edit" ? "cursor-not-allowed bg-[var(--surface-2)] text-[var(--muted)]" : ""}`}
             />
           </div>
           <div>
@@ -193,7 +193,7 @@ export default function OrgUnitForm({
         <button
           type="button"
           onClick={() => (onCancel ? onCancel() : router.back())}
-          className={isComposer ? "fca-button-secondary" : "rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"}
+          className={isComposer ? "fca-button-secondary" : "rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"}
         >
           Abbrechen
         </button>

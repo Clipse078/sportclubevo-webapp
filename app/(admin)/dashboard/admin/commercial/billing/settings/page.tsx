@@ -1,5 +1,5 @@
-import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import NativeBillingCreateLegalEntityTrigger from "@/components/admin/billing/NativeBillingCreateLegalEntityTrigger";
 import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import NativeBillingCreateBankAccountDialog from "@/components/admin/billing/NativeBillingCreateBankAccountDialog";
@@ -56,14 +56,7 @@ export default async function NativeBillingSettingsPage() {
         title="Einstellungen"
         description="Rechtsträger, Bankkonten und Abrechnungsgrundlagen für native SCE-Rechnungen."
         actions={
-          canManage ? (
-            <Link
-              href="/dashboard/admin/commercial/billing/settings/legal-entities/new"
-              className="fca-button-secondary"
-            >
-              Rechtsträger hinzufügen
-            </Link>
-          ) : undefined
+          canManage ? <NativeBillingCreateLegalEntityTrigger /> : undefined
         }
       />
 

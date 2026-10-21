@@ -10,7 +10,7 @@ const CATEGORY_COLORS: Record<TargetTemplate["category"], string> = {
   FINANZEN: "bg-amber-50 border-amber-200 text-amber-700",
   AUSBILDUNG: "bg-violet-50 border-violet-200 text-violet-700",
   MEDIEN_SOZIALES: "bg-pink-50 border-pink-200 text-pink-700",
-  GOVERNANCE: "bg-slate-100 border-slate-300 text-slate-700",
+  GOVERNANCE: "bg-[var(--surface-2)] border-slate-300 text-[var(--text-2)]",
 };
 
 type TargetTemplateSuggestionsProps = {
@@ -29,7 +29,7 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
       : TARGET_TEMPLATES.filter((t) => t.category === selectedCategory);
 
   return (
-    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -38,21 +38,21 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
         <div className="flex items-center gap-3">
           <Sparkles className="h-5 w-5 text-[#0b4aa2]" />
           <div>
-            <p className="text-[1.02rem] font-semibold text-slate-900">
+            <p className="text-[1.02rem] font-semibold text-[var(--foreground)]">
               Vorlagen-Katalog
             </p>
-            <p className="mt-0.5 text-sm text-slate-500">
+            <p className="mt-0.5 text-sm text-[var(--muted)]">
               {TARGET_TEMPLATES.length} kuratierte Vorlagen für Sport-Vereinsziele
             </p>
           </div>
         </div>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`h-5 w-5 shrink-0 text-[var(--muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
         />
       </button>
 
       {expanded ? (
-        <div className="border-t border-slate-100 p-6 pt-4">
+        <div className="border-t border-[var(--border)] p-6 pt-4">
           <div className="mb-5 flex flex-wrap gap-2">
             <button
               type="button"
@@ -60,7 +60,7 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
               className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
                 selectedCategory === "ALL"
                   ? "border-[#0b4aa2] bg-[#0b4aa2] text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
               }`}
             >
               Alle ({TARGET_TEMPLATES.length})
@@ -75,7 +75,7 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
                   className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
                     selectedCategory === cat
                       ? "border-[#0b4aa2] bg-[#0b4aa2] text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
                   }`}
                 >
                   {CATEGORY_LABELS[cat]} ({count})
@@ -88,7 +88,7 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
             {filtered.map((template) => (
               <div
                 key={template.id}
-                className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4 transition hover:border-slate-300 hover:shadow-sm"
+                className="rounded-[20px] border border-[var(--border)]/80 bg-[var(--surface-2)] p-4 transition hover:border-slate-300 hover:shadow-sm"
               >
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <span
@@ -97,16 +97,16 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
                     {CATEGORY_LABELS[template.category]}
                   </span>
                   {template.ageGroupHint ? (
-                    <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-500">
+                    <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] text-[var(--muted)]">
                       {template.ageGroupHint}
                     </span>
                   ) : null}
                 </div>
 
-                <p className="text-[13px] font-semibold text-slate-900 leading-5">
+                <p className="text-[13px] font-semibold text-[var(--foreground)] leading-5">
                   {template.title}
                 </p>
-                <p className="mt-1 text-[11px] text-slate-500 leading-4">
+                <p className="mt-1 text-[11px] text-[var(--muted)] leading-4">
                   {template.description}
                 </p>
 
@@ -114,7 +114,7 @@ export default function TargetTemplateSuggestions({ onSelect }: TargetTemplateSu
                   {template.metrics.map((m) => (
                     <span
                       key={m.label}
-                      className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-600"
+                      className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] text-[var(--text-2)]"
                     >
                       {m.label}
                     </span>

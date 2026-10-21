@@ -54,13 +54,13 @@ export default function WochenplanRoomDrawer({
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 z-40 w-full max-w-[420px] border-l border-slate-200 bg-white/95 p-4 backdrop-blur-xl">
+    <div className="fixed inset-y-0 right-0 z-40 w-full max-w-[420px] border-l border-[var(--border)] bg-[var(--surface)]/95 p-4 backdrop-blur-xl">
       <AdminSurfaceCard className="flex h-full flex-col p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="fca-eyebrow">Garderoben</p>
             <h3 className="fca-subheading mt-2">{event.title}</h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[var(--text-2)]">
               {event.boardDayKey} • {event.slotKey} • {event.pitchRowKey}
             </p>
           </div>
@@ -68,7 +68,7 @@ export default function WochenplanRoomDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -109,7 +109,7 @@ export default function WochenplanRoomDrawer({
         </div>
 
         <div className="mt-6">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
             Verfügbarkeit in diesem Slot
           </p>
 
@@ -124,7 +124,7 @@ export default function WochenplanRoomDrawer({
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+        <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-4 text-sm leading-6 text-[var(--text-2)]">
           Sandra soll hier später die Garderoben sehr schnell zuteilen können.
           Diese Drawer-Version ist die UX-Grundlage dafür.
         </div>

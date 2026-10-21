@@ -55,7 +55,7 @@ export default function InitiativeStageActions({
       case ReviewWorkflowStage.PUBLISHED:
         return "border-blue-200 bg-blue-50 text-[#0b4aa2] hover:bg-blue-100";
       default:
-        return "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100";
+        return "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-2)]";
     }
   }
 

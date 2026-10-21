@@ -44,7 +44,7 @@ export default function EventImportCsvCard() {
         <div>
           <p className="fca-eyebrow">CSV / Excel</p>
           <h3 className="fca-heading mt-2">Upload Foundation</h3>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-sm leading-6 text-[var(--text-2)]">
             Grundlage für spätere Datei-Uploads mit Mapping auf Matches, Turniere,
             Trainings und weitere Events.
           </p>

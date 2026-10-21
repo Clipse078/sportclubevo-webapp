@@ -17,8 +17,8 @@ type TeamFormProps = {
 };
 
 const fieldClass =
-  "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  "w-full rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
+const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)] mb-1.5";
 
 export default function TeamForm({ mode, clubId, teamId, defaultValues }: TeamFormProps) {
   const router = useRouter();
@@ -78,8 +78,8 @@ export default function TeamForm({ mode, clubId, teamId, defaultValues }: TeamFo
         </div>
       ) : null}
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">Teamdaten</h3>
+      <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <h3 className="mb-5 text-[1.05rem] font-semibold text-[var(--foreground)]">Teamdaten</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Name *</label>
@@ -129,7 +129,7 @@ export default function TeamForm({ mode, clubId, teamId, defaultValues }: TeamFo
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"
         >
           Abbrechen
         </button>

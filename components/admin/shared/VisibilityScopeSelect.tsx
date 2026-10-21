@@ -20,7 +20,7 @@ const OPTIONS: Array<{
     label: "Organisation",
     description: "Sichtbar für alle angemeldeten Vereinsmitglieder.",
     icon: Eye,
-    colors: "border-slate-200 text-slate-700 bg-slate-50",
+    colors: "border-[var(--border)] text-[var(--text-2)] bg-[var(--surface-2)]",
   },
   {
     value: "RESTRICTED",
@@ -56,15 +56,15 @@ export default function VisibilityScopeSelect({
             className={`flex w-full items-start gap-3 rounded-[16px] border px-4 py-3 text-left transition ${
               active
                 ? `${opt.colors} shadow-sm`
-                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:border-slate-300 hover:bg-[var(--surface-2)]"
             }`}
           >
-            <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${active ? "" : "text-slate-400"}`} />
+            <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${active ? "" : "text-[var(--muted)]"}`} />
             <div className="min-w-0">
-              <p className={`text-[13px] font-semibold ${active ? "" : "text-slate-800"}`}>
+              <p className={`text-[13px] font-semibold ${active ? "" : "text-[var(--foreground)]"}`}>
                 {opt.label}
               </p>
-              <p className={`mt-0.5 text-[11px] ${active ? "opacity-80" : "text-slate-500"}`}>
+              <p className={`mt-0.5 text-[11px] ${active ? "opacity-80" : "text-[var(--muted)]"}`}>
                 {opt.description}
               </p>
             </div>

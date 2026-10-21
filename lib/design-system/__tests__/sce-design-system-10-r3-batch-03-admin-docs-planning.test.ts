@@ -24,7 +24,7 @@ describe("SCE-DESIGN-SYSTEM-10-R3 Batch 03 — Admin, Documents & Planning Admin
     expect(SCE_DESIGN_SYSTEM_10_R3_PO_PUBLISHING_VISUAL_UAT.CARD_SOUP).toBe("NO");
     expect(SCE_DESIGN_SYSTEM_10_R3_BATCH_03.ROUTES["/dashboard/workspace"]).toBe("MIGRATED_DS10_R3");
     expect(SCE_DESIGN_SYSTEM_10_R3_BATCH_03.ROUTES["/dashboard/logs"]).toBe("MIGRATED_DS10_R3");
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
   });
 
   it("adopts SceWorkspaceChrome on Documents hub and governance sub-workspaces", () => {

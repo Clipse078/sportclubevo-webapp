@@ -71,16 +71,16 @@ export default function TargetLinkEditor({
     "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition cursor-pointer select-none";
   const chipActive = "border-[#0b4aa2] bg-[#0b4aa2]/8 text-[#0b4aa2]";
   const chipInactive =
-    "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50";
+    "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:border-slate-300 hover:bg-[var(--surface-2)]";
 
   return (
     <section
       id="links"
-      className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+      className="rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
     >
       <div className="mb-5 flex items-center gap-2">
         <Link2 className="h-5 w-5 text-[#0b4aa2]" />
-        <h3 className="text-[1.05rem] font-semibold text-slate-900">
+        <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">
           Verknüpfungen
         </h3>
       </div>
@@ -99,16 +99,16 @@ export default function TargetLinkEditor({
 
       <div className="space-y-5">
         <div>
-          <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+          <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             Initiativen
           </p>
           {availableInitiatives.length === 0 ? (
-            <p className="text-[11px] text-slate-400 italic">
+            <p className="text-[11px] text-[var(--muted)] italic">
               Keine Initiativen in der Datenbank.
             </p>
           ) : (
             <>
-              <p className="mb-3 text-[11px] text-slate-400">
+              <p className="mb-3 text-[11px] text-[var(--muted)]">
                 Wähle Initiativen aus, die dieses Ziel operationalisieren.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -132,16 +132,16 @@ export default function TargetLinkEditor({
         </div>
 
         <div>
-          <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+          <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             Meetings
           </p>
           {availableMeetings.length === 0 ? (
-            <p className="text-[11px] text-slate-400 italic">
+            <p className="text-[11px] text-[var(--muted)] italic">
               Keine Meetings in der Datenbank.
             </p>
           ) : (
             <>
-              <p className="mb-3 text-[11px] text-slate-400">
+              <p className="mb-3 text-[11px] text-[var(--muted)]">
                 Verknüpfe relevante Meetings, in denen dieses Ziel besprochen wurde.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -165,8 +165,8 @@ export default function TargetLinkEditor({
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-        <p className="text-[11px] text-slate-400">
+      <div className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4">
+        <p className="text-[11px] text-[var(--muted)]">
           {initiativeRefs.length + meetingRefs.length} Verknüpfung
           {initiativeRefs.length + meetingRefs.length !== 1 ? "en" : ""} gewählt
         </p>

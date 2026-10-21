@@ -13,7 +13,7 @@ type MoveTeamCardProps = {
 };
 
 const fieldClass =
-  "w-full rounded-[12px] border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
+  "w-full rounded-[12px] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
 
 /**
  * CLUB-DIRECTORY-03 — lets a tenant admin re-parent an ExternalTeam onto a

@@ -10,7 +10,11 @@ const ENTITY_TYPE_OPTIONS: { value: LegalEntityType; label: string }[] = [
   { value: "OTHER", label: "Andere Rechtsform (z. B. Einzelunternehmen)" },
 ];
 
-export default function NativeBillingCreateLegalEntityForm() {
+type Props = {
+  onCreated?: (entityKey: string) => void;
+};
+
+export default function NativeBillingCreateLegalEntityForm({ onCreated }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +62,14 @@ export default function NativeBillingCreateLegalEntityForm() {
       if (!res.ok || !data.legalEntity) {
         throw new Error(data.error ?? "Rechtsträger konnte nicht erstellt werden.");
       }
-      router.push(
-        `/dashboard/admin/commercial/billing/settings/legal-entities/${data.legalEntity.key}`,
-      );
-      router.refresh();
+      if (onCreated) {
+        onCreated(data.legalEntity.key);
+      } else {
+        router.push(
+          `/dashboard/admin/commercial/billing/settings/legal-entities/${data.legalEntity.key}`,
+        );
+        router.refresh();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fehler beim Speichern.");
     } finally {

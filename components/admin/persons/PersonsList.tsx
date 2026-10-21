@@ -26,7 +26,7 @@ export default function PersonsList({ persons }: PersonsListProps) {
       <AdminSurfaceCard className="p-6">
         <div className="space-y-3">
           <p className="fca-subheading">Noch keine Personen</p>
-          <p className="text-sm leading-6 text-slate-600">
+          <p className="text-sm leading-6 text-[var(--text-2)]">
             Noch keine Personen erfasst. Über die Schaltfläche oben rechts den ersten Datensatz anlegen.
           </p>
         </div>
@@ -63,7 +63,7 @@ export default function PersonsList({ persons }: PersonsListProps) {
           actions={
             <Link
               href={`/dashboard/persons/${person.id}`}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[11px] font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
             >
               Öffnen
             </Link>
