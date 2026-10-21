@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type WheelEvent as ReactWheelEvent,
 } from "react";
 import {
@@ -35,14 +34,12 @@ import OrgUnitContextualPreviewLayer from "@/components/admin/org/OrgUnitContext
 import OrgUnitNodeCard, { type OrgUnitCanvasNodeData } from "@/components/admin/org/OrgUnitNodeCard";
 import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enrichment";
 import { membershipSearchNames } from "@/lib/org/org-unit-people";
-import {
-  orgUnitHoverPreviewEnabled,
-  subscribeOrgUnitHoverPreviewEnabled,
-  useOrgUnitContextualPreview,
-} from "@/lib/org/use-org-unit-contextual-preview";
+import { useOrgUnitContextualPreview } from "@/lib/org/use-org-unit-contextual-preview";
+import { anchorRectFromElement } from "@/lib/org/org-unit-hover-eligibility";
+import { useOrgBuilderHistory } from "@/components/admin/org/OrgUnitBuilderHistoryContext";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
-import { LayoutGrid, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
+import { LayoutGrid, Maximize2, Redo2, Search, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 
 export type OrgUnitCanvasItem = OrgHierarchyUnit & {
   sortOrder: number;
@@ -167,17 +164,32 @@ export default function OrgUnitCanvasView({
           : ("panning" as const)
       : ("none" as const);
 
-  const hoverPreviewEnabled = useSyncExternalStore(
-    subscribeOrgUnitHoverPreviewEnabled,
-    orgUnitHoverPreviewEnabled,
-    () => true,
-  );
+  const orgHistory = useOrgBuilderHistory();
 
   const contextualPreview = useOrgUnitContextualPreview({
     suppressReason: previewSuppressReason,
-    hoverPreviewEnabled,
     selectedUnitId: selectedId,
   });
+
+  const previewChromeInsets = useMemo(
+    () => ({
+      top: ORG_CANVAS_TOOLBAR_INSET_PX,
+      right: selectedId ? ORG_INSPECTOR_INSET_PX : 0,
+    }),
+    [selectedId],
+  );
+
+  const dragHistoryBefore = useRef<OrgLayoutPositionMap | null>(null);
+  const dragHistoryMeta = useRef<{ nodeId: string; unitName: string } | null>(null);
+
+  useEffect(() => {
+    orgHistory.registerDismissPreview(contextualPreview.dismiss);
+  }, [contextualPreview.dismiss, orgHistory]);
+
+  useEffect(() => {
+    if (!contextualPreview.openUnitId) return;
+    contextualPreview.refreshOpenAnchor();
+  }, [pan, scale, contextualPreview.openUnitId, contextualPreview.refreshOpenAnchor]);
 
   const nodeDataById = useMemo(() => {
     const map = new Map<string, OrgUnitCanvasNodeData>();
@@ -319,7 +331,9 @@ export default function OrgUnitCanvasView({
   };
 
   function runAutoLayout() {
+    const before = { ...manualPositions };
     persistManual({});
+    orgHistory.pushAutoLayout({ before, apply: (map) => persistManual(map) });
     setAutoLayoutConfirmOpen(false);
     requestAnimationFrame(() => applyFitToView());
   }
@@ -348,6 +362,13 @@ export default function OrgUnitCanvasView({
         setReparentError(data?.error ?? "Verschieben fehlgeschlagen.");
         return;
       }
+      orgHistory.pushReparent({
+        unitId: reparentPending.unitId,
+        unitName: reparentPending.unitName,
+        beforeParentId: unitById.get(reparentPending.unitId)?.parentId ?? null,
+        afterParentId: reparentPending.newParentId,
+        onRefresh: () => onReparentSuccess?.(),
+      });
       setReparentPending(null);
       onReparentSuccess?.();
     } catch {
@@ -410,6 +431,44 @@ export default function OrgUnitCanvasView({
           />
         </div>
         <div className="flex items-center gap-1" role="toolbar" aria-label="Organigramm-Steuerung">
+          <button
+            type="button"
+            className="fca-button-secondary p-2 disabled:opacity-40"
+            aria-label={
+              orgHistory.snapshot.undoLabel
+                ? `Rückgängig: ${orgHistory.snapshot.undoLabel}`
+                : "Rückgängig"
+            }
+            title={
+              orgHistory.snapshot.undoLabel
+                ? `Rückgängig: ${orgHistory.snapshot.undoLabel}`
+                : "Rückgängig"
+            }
+            data-testid="org-canvas-undo"
+            disabled={!orgHistory.snapshot.canUndo}
+            onClick={() => void orgHistory.undo()}
+          >
+            <Undo2 className="h-4 w-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="fca-button-secondary p-2 disabled:opacity-40"
+            aria-label={
+              orgHistory.snapshot.redoLabel
+                ? `Wiederholen: ${orgHistory.snapshot.redoLabel}`
+                : "Wiederholen"
+            }
+            title={
+              orgHistory.snapshot.redoLabel
+                ? `Wiederholen: ${orgHistory.snapshot.redoLabel}`
+                : "Wiederholen"
+            }
+            data-testid="org-canvas-redo"
+            disabled={!orgHistory.snapshot.canRedo}
+            onClick={() => void orgHistory.redo()}
+          >
+            <Redo2 className="h-4 w-4" aria-hidden />
+          </button>
           <button
             type="button"
             className="fca-button-secondary p-2"
@@ -496,12 +555,24 @@ export default function OrgUnitCanvasView({
           if (nodeDrag && nodeDrag.pointerId === e.pointerId) {
             const dx = (e.clientX - nodeDrag.startClientX) / scale;
             const dy = (e.clientY - nodeDrag.startClientY) / scale;
+            const moved =
+              Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5;
             setManualPositions((prev) => {
               const next = {
                 ...prev,
                 [nodeDrag.nodeId]: { x: nodeDrag.startX + dx, y: nodeDrag.startY + dy },
               };
               saveOrgLayoutPositions(tenantId, next);
+              if (moved && dragHistoryBefore.current && dragHistoryMeta.current) {
+                orgHistory.pushNodeMove({
+                  unitName: dragHistoryMeta.current.unitName,
+                  before: dragHistoryBefore.current,
+                  after: next,
+                  apply: (map) => persistManual(map),
+                });
+              }
+              dragHistoryBefore.current = null;
+              dragHistoryMeta.current = null;
               return next;
             });
             setNodeDrag(null);
@@ -576,8 +647,6 @@ export default function OrgUnitCanvasView({
                   width: node.width,
                   height: node.height,
                 }}
-                onPointerEnter={() => contextualPreview.onNodePointerEnter(node.id)}
-                onPointerLeave={() => contextualPreview.onNodePointerLeave(node.id)}
                 onDragOver={(e) => {
                   if (!canManage || !reparentDraggingId) return;
                   e.preventDefault();
@@ -604,6 +673,12 @@ export default function OrgUnitCanvasView({
                   if ((e.target as HTMLElement).closest("[data-org-reparent-handle]")) return;
                   if ((e.target as HTMLElement).closest("button")) return;
                   e.stopPropagation();
+                  contextualPreview.dismiss();
+                  dragHistoryBefore.current = { ...manualPositions };
+                  dragHistoryMeta.current = {
+                    nodeId: node.id,
+                    unitName: data.name,
+                  };
                   setNodeDrag({
                     nodeId: node.id,
                     pointerId: e.pointerId,
@@ -624,13 +699,19 @@ export default function OrgUnitCanvasView({
                   isReparentSource={reparentDraggingId === node.id}
                   isReparentTarget={Boolean(isDropTarget)}
                   isInvalidReparentTarget={Boolean(isInvalidDrop)}
-                  onContextualPreviewPointerEnter={() =>
-                    contextualPreview.onNodePointerEnter(node.id)
+                  onContextualPreviewPointerEnter={(ev) =>
+                    contextualPreview.onNodePointerEnter(node.id, {
+                      pointerType: ev.pointerType,
+                      anchor: anchorRectFromElement(ev.currentTarget),
+                      element: ev.currentTarget,
+                    })
                   }
                   onContextualPreviewPointerLeave={() =>
                     contextualPreview.onNodePointerLeave(node.id)
                   }
-                  onContextualPreviewFocus={() => contextualPreview.onNodeFocus(node.id)}
+                  onContextualPreviewFocus={(ev) =>
+                    contextualPreview.onNodeFocus(node.id, { element: ev.currentTarget })
+                  }
                   onContextualPreviewBlur={(target) =>
                     contextualPreview.onNodeBlur(node.id, target)
                   }
@@ -675,18 +756,25 @@ export default function OrgUnitCanvasView({
         ) : null}
       </div>
 
+      {orgHistory.feedback ? (
+        <div
+          className="border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm text-rose-400"
+          role="alert"
+          data-testid="org-builder-history-feedback"
+        >
+          {orgHistory.feedback.message}
+        </div>
+      ) : null}
+
       <OrgUnitContextualPreviewLayer
         openUnitId={contextualPreview.openUnitId}
+        openAnchor={contextualPreview.openAnchor}
         orgUnits={orgUnits}
         enrichment={builderEnrichment}
         resolveRoleName={
           roleKeyToName ? (roleKey) => roleKeyToName[roleKey] ?? null : undefined
         }
-        viewportRef={viewportRef}
-        chromeInsets={{
-          top: ORG_CANVAS_TOOLBAR_INSET_PX,
-          right: selectedId ? ORG_INSPECTOR_INSET_PX : 0,
-        }}
+        chromeInsets={previewChromeInsets}
         onPreviewPointerEnter={contextualPreview.onPreviewPointerEnter}
         onPreviewPointerLeave={contextualPreview.onPreviewPointerLeave}
         onPreviewFocus={contextualPreview.onPreviewFocus}

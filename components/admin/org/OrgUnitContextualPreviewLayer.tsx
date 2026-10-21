@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useState, type RefObject } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import SceOrgUnitPreviewCard from "@/components/sce/org/SceOrgUnitPreviewCard";
 import {
@@ -13,14 +13,15 @@ import {
   SCE_ORG_UNIT_PREVIEW_WIDTH_PX,
   type OrgUnitPreviewChromeInsets,
 } from "@/lib/org/org-unit-preview-placement";
+import type { OrgUnitPreviewAnchorRect } from "@/lib/org/org-unit-hover-eligibility";
 import type { OrgUnitCanvasItem } from "@/components/admin/org/OrgUnitCanvasView";
 
 type Props = {
   openUnitId: string | null;
+  openAnchor: OrgUnitPreviewAnchorRect | null;
   orgUnits: OrgUnitCanvasItem[];
   enrichment: OrgUnitBuilderEnrichmentMap;
   resolveRoleName?: OrgUnitPreviewRoleResolver;
-  viewportRef: RefObject<HTMLElement | null>;
   chromeInsets?: OrgUnitPreviewChromeInsets;
   onPreviewPointerEnter: () => void;
   onPreviewPointerLeave: () => void;
@@ -32,10 +33,10 @@ type Props = {
 
 export default function OrgUnitContextualPreviewLayer({
   openUnitId,
+  openAnchor,
   orgUnits,
   enrichment,
   resolveRoleName,
-  viewportRef,
   chromeInsets,
   onPreviewPointerEnter,
   onPreviewPointerLeave,
@@ -72,52 +73,22 @@ export default function OrgUnitContextualPreviewLayer({
   }, [unit, enrichment, resolveRoleName]);
 
   useLayoutEffect(() => {
-    if (!openUnitId || typeof window === "undefined") {
+    if (!openUnitId || !openAnchor || typeof window === "undefined") {
       setPlacement(null);
       return;
     }
 
-    let cancelled = false;
-    let retryFrame = 0;
+    const next = computeOrgUnitPreviewPlacement({
+      anchor: openAnchor,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      previewWidth: SCE_ORG_UNIT_PREVIEW_WIDTH_PX,
+      chromeInsets,
+    });
+    setPlacement({ top: next.top, left: next.left });
+  }, [openUnitId, openAnchor, chromeInsets]);
 
-    const resolveAnchor = (): HTMLElement | null => {
-      const scoped = viewportRef.current?.querySelector<HTMLElement>(
-        `[data-org-unit-node="${openUnitId}"]`,
-      );
-      if (scoped) return scoped;
-      return document.querySelector<HTMLElement>(`[data-org-unit-node="${openUnitId}"]`);
-    };
-
-    const updatePlacement = () => {
-      if (cancelled) return;
-      const nodeEl = resolveAnchor();
-      if (!nodeEl) {
-        if (retryFrame < 4) {
-          retryFrame += 1;
-          requestAnimationFrame(updatePlacement);
-          return;
-        }
-        setPlacement(null);
-        return;
-      }
-      const anchor = nodeEl.getBoundingClientRect();
-      const next = computeOrgUnitPreviewPlacement({
-        anchor,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        previewWidth: SCE_ORG_UNIT_PREVIEW_WIDTH_PX,
-        chromeInsets,
-      });
-      setPlacement({ top: next.top, left: next.left });
-    };
-
-    updatePlacement();
-    return () => {
-      cancelled = true;
-    };
-  }, [openUnitId, viewportRef, chromeInsets, orgUnits]);
-
-  if (!openUnitId || !unit || !model || !placement || typeof document === "undefined") {
+  if (!openUnitId || !unit || !model || !openAnchor || !placement || typeof document === "undefined") {
     return null;
   }
 
@@ -128,6 +99,9 @@ export default function OrgUnitContextualPreviewLayer({
         top: placement.top,
         left: placement.left,
         transform: "none",
+        visibility: "visible",
+        opacity: 1,
+        pointerEvents: "auto",
       }}
       data-org-contextual-preview
       data-org-contextual-preview-root

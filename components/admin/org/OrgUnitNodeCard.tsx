@@ -1,5 +1,6 @@
 "use client";
 
+import type { FocusEvent, PointerEvent } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -53,9 +54,9 @@ type Props = {
   onMore?: () => void;
   onReparentDragStart?: (e: React.DragEvent) => void;
   onReparentDragEnd?: () => void;
-  onContextualPreviewPointerEnter?: () => void;
+  onContextualPreviewPointerEnter?: (event: PointerEvent<HTMLElement>) => void;
   onContextualPreviewPointerLeave?: () => void;
-  onContextualPreviewFocus?: () => void;
+  onContextualPreviewFocus?: (event: FocusEvent<HTMLElement>) => void;
   onContextualPreviewBlur?: (relatedTarget: EventTarget | null) => void;
   tabIndex?: number;
 };
@@ -98,9 +99,9 @@ export default function OrgUnitNodeCard({
       role="button"
       tabIndex={tabIndex}
       onClick={onSelect}
-      onPointerEnter={onContextualPreviewPointerEnter}
-      onPointerLeave={onContextualPreviewPointerLeave}
-      onFocus={onContextualPreviewFocus}
+      onPointerEnter={(e) => onContextualPreviewPointerEnter?.(e)}
+      onPointerLeave={() => onContextualPreviewPointerLeave?.()}
+      onFocus={(e) => onContextualPreviewFocus?.(e)}
       onBlur={(e) => onContextualPreviewBlur?.(e.relatedTarget)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

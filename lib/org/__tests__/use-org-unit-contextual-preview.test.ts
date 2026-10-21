@@ -3,6 +3,14 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useOrgUnitContextualPreview } from "@/lib/org/use-org-unit-contextual-preview";
 
+function mouseEnter(unitId: string) {
+  return {
+    pointerType: "mouse",
+    anchor: { top: 0, left: 0, right: 100, bottom: 40, width: 100, height: 40 },
+    element: document.createElement("div"),
+  } as const;
+}
+
 describe("useOrgUnitContextualPreview", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -18,7 +26,11 @@ describe("useOrgUnitContextualPreview", () => {
     );
 
     act(() => {
-      result.current.onNodePointerEnter("unit-a");
+      result.current.onNodePointerEnter("unit-a", {
+        pointerType: "mouse",
+        anchor: { top: 0, left: 0, right: 100, bottom: 40, width: 100, height: 40 },
+        element: document.createElement("div"),
+      });
     });
     expect(result.current.openUnitId).toBeNull();
 
@@ -41,7 +53,7 @@ describe("useOrgUnitContextualPreview", () => {
     );
 
     act(() => {
-      result.current.onNodePointerEnter("unit-a");
+      result.current.onNodePointerEnter("unit-a", mouseEnter("unit-a"));
       vi.advanceTimersByTime(0);
     });
     expect(result.current.openUnitId).toBe("unit-a");
@@ -59,13 +71,13 @@ describe("useOrgUnitContextualPreview", () => {
     );
 
     act(() => {
-      result.current.onNodePointerEnter("unit-a");
+      result.current.onNodePointerEnter("unit-a", mouseEnter("unit-a"));
       vi.advanceTimersByTime(0);
     });
     expect(result.current.openUnitId).toBeNull();
 
     act(() => {
-      result.current.onNodePointerEnter("unit-b");
+      result.current.onNodePointerEnter("unit-b", mouseEnter("unit-b"));
       vi.advanceTimersByTime(0);
     });
     expect(result.current.openUnitId).toBe("unit-b");
@@ -77,12 +89,28 @@ describe("useOrgUnitContextualPreview", () => {
     );
 
     act(() => {
-      result.current.onNodePointerEnter("unit-a");
+      result.current.onNodePointerEnter("unit-a", mouseEnter("unit-a"));
       vi.advanceTimersByTime(0);
       result.current.onNodePointerLeave("unit-a");
       result.current.onPreviewPointerEnter();
       vi.advanceTimersByTime(200);
     });
     expect(result.current.openUnitId).toBe("unit-a");
+  });
+
+  it("ignores touch pointer for hover open", () => {
+    const { result } = renderHook(() =>
+      useOrgUnitContextualPreview({ openDelayMs: 0 }),
+    );
+
+    act(() => {
+      result.current.onNodePointerEnter("unit-a", {
+        pointerType: "touch",
+        anchor: mouseEnter("unit-a").anchor,
+        element: document.createElement("div"),
+      });
+      vi.advanceTimersByTime(0);
+    });
+    expect(result.current.openUnitId).toBeNull();
   });
 });

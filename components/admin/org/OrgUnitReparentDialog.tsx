@@ -7,6 +7,7 @@ import {
   wouldReparentCreateCycle,
   type OrgHierarchyUnit,
 } from "@/lib/org/org-hierarchy-layout";
+import { useOptionalOrgBuilderHistory } from "@/components/admin/org/OrgUnitBuilderHistoryContext";
 
 type ParentOption = { id: string; name: string; level: number };
 
@@ -31,6 +32,7 @@ export default function OrgUnitReparentDialog({
   parentOptions,
   onSuccess,
 }: Props) {
+  const orgHistory = useOptionalOrgBuilderHistory();
   const validTargetIds = useMemo(
     () => new Set(filterValidReparentTargets(hierarchyUnits, unitId)),
     [hierarchyUnits, unitId],
@@ -73,6 +75,13 @@ export default function OrgUnitReparentDialog({
         setError(data?.error ?? "Verschieben fehlgeschlagen.");
         return;
       }
+      orgHistory?.pushReparent({
+        unitId,
+        unitName,
+        beforeParentId: currentParentId,
+        afterParentId: newParentId,
+        onRefresh: () => onSuccess?.(),
+      });
       onSuccess?.();
       onClose();
     } catch {

@@ -12,6 +12,7 @@ import OrgUnitInspectorPanel, {
 } from "@/components/admin/org/OrgUnitInspectorPanel";
 import OrgUnitCreateComposerDialog from "@/components/admin/org/OrgUnitCreateComposerDialog";
 import OrgUnitCreateTrigger from "@/components/admin/org/OrgUnitCreateTrigger";
+import { OrgBuilderHistoryProvider } from "@/components/admin/org/OrgUnitBuilderHistoryContext";
 import { cn } from "@/lib/cn";
 
 type OrgUnitListItem = OrgUnitCanvasItem;
@@ -116,6 +117,7 @@ export default function OrgUnitBuilderWorkspace({
   }
 
   return (
+    <OrgBuilderHistoryProvider>
     <div className="space-y-4" data-testid="org-unit-builder-workspace">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
@@ -212,8 +214,10 @@ export default function OrgUnitBuilderWorkspace({
           onClose={() => setCreateOpen(false)}
           parentOptions={parentOptions}
           defaultParentId={createParentId}
+          onCreatedInBuilder={() => router.refresh()}
         />
       ) : null}
     </div>
+    </OrgBuilderHistoryProvider>
   );
 }

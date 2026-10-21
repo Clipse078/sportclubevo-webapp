@@ -5,6 +5,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import OrgUnitBuilderWorkspace from "@/components/admin/org/OrgUnitBuilderWorkspace";
 import OrgUnitCanvasView, { type OrgUnitCanvasItem } from "@/components/admin/org/OrgUnitCanvasView";
+import { OrgBuilderHistoryProvider } from "@/components/admin/org/OrgUnitBuilderHistoryContext";
 import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enrichment";
 import {
   SCE_DESIGN_SYSTEM_10R7_1_PO,
@@ -22,11 +23,11 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-function mockMatchMedia(finePointer = true) {
+function mockMatchMediaCoarse() {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
-      matches: finePointer && query.includes("hover: hover"),
+      matches: false,
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -172,7 +173,6 @@ const populatedEnrichment: OrgUnitBuilderEnrichmentMap = {
 describe("OrgUnitBuilder R7.1 composed hover preview", () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockMatchMedia(true);
     mockNodeRects();
   });
 
@@ -202,7 +202,9 @@ describe("OrgUnitBuilder R7.1 composed hover preview", () => {
   }
 
   async function openPreviewOn(nodeId: "unit-a" | "unit-b") {
-    fireEvent.pointerEnter(screen.getByTestId(`org-unit-node-${nodeId}`));
+    fireEvent.pointerEnter(screen.getByTestId(`org-unit-node-${nodeId}`), {
+      pointerType: "mouse",
+    });
     await act(async () => {
       vi.advanceTimersByTime(450);
     });
@@ -265,15 +267,17 @@ describe("OrgUnitBuilder R7.1 composed hover preview", () => {
 
   it("suppresses preview during canvas pan", async () => {
     render(
-      <OrgUnitCanvasView
-        tenantId="tenant-1"
-        orgUnits={[unitA, unitB]}
-        builderEnrichment={emptyEnrichment}
-        canManage={true}
-        selectedId={null}
-        onSelectId={() => {}}
-        onAddChild={() => {}}
-      />,
+      <OrgBuilderHistoryProvider>
+        <OrgUnitCanvasView
+          tenantId="tenant-1"
+          orgUnits={[unitA, unitB]}
+          builderEnrichment={emptyEnrichment}
+          canManage={true}
+          selectedId={null}
+          onSelectId={() => {}}
+          onAddChild={() => {}}
+        />
+      </OrgBuilderHistoryProvider>,
     );
     await openPreviewOn("unit-a");
     expect(screen.getByTestId("sce-org-unit-preview-card")).toBeInTheDocument();

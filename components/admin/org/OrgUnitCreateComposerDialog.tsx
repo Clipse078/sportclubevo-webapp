@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/ui/Dialog";
 import OrgUnitForm from "@/components/admin/org/OrgUnitForm";
+import { useOrgBuilderHistory } from "@/components/admin/org/OrgUnitBuilderHistoryContext";
 
 type ParentOption = { id: string; key: string; name: string; level: number; type: string };
 
@@ -11,6 +12,7 @@ type Props = {
   onClose: () => void;
   parentOptions: ParentOption[];
   defaultParentId?: string;
+  onCreatedInBuilder?: () => void;
 };
 
 export default function OrgUnitCreateComposerDialog({
@@ -18,8 +20,10 @@ export default function OrgUnitCreateComposerDialog({
   onClose,
   parentOptions,
   defaultParentId,
+  onCreatedInBuilder,
 }: Props) {
   const router = useRouter();
+  const orgHistory = useOrgBuilderHistory();
 
   return (
     <Dialog
@@ -38,8 +42,19 @@ export default function OrgUnitCreateComposerDialog({
           parentOptions={parentOptions}
           defaultValues={{ parentId: defaultParentId ?? "" }}
           onCancel={onClose}
-          onSuccess={(orgUnitId) => {
+          onSuccess={(orgUnitId, meta) => {
             onClose();
+            const payload = meta?.createPayload;
+            if (onCreatedInBuilder && orgUnitId && payload) {
+              orgHistory.pushCreate({
+                unitName: payload.name,
+                payload,
+                createdId: orgUnitId,
+                onRefresh: () => onCreatedInBuilder(),
+              });
+              onCreatedInBuilder();
+              return;
+            }
             router.push(orgUnitId ? `/dashboard/org-units/${orgUnitId}` : "/dashboard/org-units");
             router.refresh();
           }}

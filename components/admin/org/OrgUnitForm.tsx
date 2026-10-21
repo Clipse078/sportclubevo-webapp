@@ -11,7 +11,10 @@ type OrgUnitFormProps = {
   layout?: "page" | "composer";
   orgUnitId?: string;
   parentOptions?: OrgUnitOption[];
-  onSuccess?: (orgUnitId: string) => void;
+  onSuccess?: (
+    orgUnitId: string,
+    meta?: { createPayload?: { name: string; key?: string; type: string; parentId: string | null; description?: string | null; status?: string } },
+  ) => void;
   onCancel?: () => void;
   defaultValues?: {
     name?: string;
@@ -100,7 +103,21 @@ export default function OrgUnitForm({
             ? data.orgUnit.id
             : "";
       if (onSuccess) {
-        onSuccess(savedId);
+        onSuccess(
+          savedId,
+          mode === "create"
+            ? {
+                createPayload: {
+                  name: name.trim(),
+                  key: key || undefined,
+                  type,
+                  parentId: parentId || null,
+                  description: description || null,
+                  status,
+                },
+              }
+            : undefined,
+        );
         return;
       }
       router.push(mode === "edit" && orgUnitId ? `/dashboard/org-units/${orgUnitId}` : "/dashboard/org-units");
