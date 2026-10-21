@@ -8,7 +8,9 @@
 | **Branch** | `cursor/sce-design-system-10-product-wide-adoption` |
 | **Baseline STAGE (canonical DS-10 base)** | `f8cdf34eb0b23878396b31e73d0d1684cf3bea83` |
 | **Accepted implementation HEAD (R7.2)** | `d29ac1161828fe2b0aa47620173236d8475096b2` |
-| **PR** | **#888** → **STAGE** |
+| **Final closure commit** | `4cda4d7667e0a136247f5ea368e0583a4b3be0d3` |
+| **STAGE merge commit (PR #888)** | `62fc6c9f081ac08b7f51549c26e85466771236e8` |
+| **PR** | **#888** — **MERGED** → **STAGE** |
 | **Successor** | **DS-11 not started** |
 
 **PO closure:** `PO_DS10_PRODUCT_WIDE_VISUAL_UAT = PASS` · `PO_DS10_ORG_BUILDER_R7_2_VISUAL_UAT = PASS` · `PO_DS10_ORG_BUILDER_R7_2_HOVER_RUNTIME_UAT = PASS` · `PO_DS10_R4_AUFGABEN_VISUAL_UAT = PASS` · `PO_DS10_R4_RUNTIME_UAT = PASS` · `SCE_DS10_AUFGABEN_WORKSPACE_ACCEPTED = YES` · `MANUAL_UAT_BY_CURSOR = SKIPPED_PO_OWNED` · `SCREENSHOTS_BY_CURSOR = SKIPPED_PO_OWNED`
