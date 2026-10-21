@@ -37,3 +37,14 @@ export const SCE_DESIGN_SYSTEM_10_R4_ROUTE_FAMILY = [
   "/dashboard/aufgaben/neu",
   "/dashboard/aufgaben/anforderungen/neu",
 ] as const;
+
+/** R4.1 PO UAT corrections — modal scroll, task detail containment, shared creation language. */
+export const SCE_DESIGN_SYSTEM_10_R4_1_UAT_LOCKS = {
+  AUFGABE_CREATION_MODAL: "YES",
+  ANFORDERUNG_CREATION_MODAL: "YES",
+  AUFGABEN_CREATION_LANGUAGE_CONSISTENT: "YES",
+  PARALLEL_REQUIREMENT_CREATION_UI: "NO",
+  TASK_DETAIL_HEADER_CONTENT_OVERLAP: "NO",
+  MODAL_BODY_SCROLLABLE: "YES",
+  TASK_TYPE_SEMANTIC_COLOUR_REQUIRED: "YES",
+} as const;

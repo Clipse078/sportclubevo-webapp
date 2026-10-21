@@ -6,9 +6,9 @@ import type {
 import type { RequirementManagementQueryState } from "@/lib/requirements/management-navigation";
 import {
   buildRequirementManagementHref,
-  requirementCreateHref,
   requirementDetailHref,
 } from "@/lib/requirements/management-navigation";
+import RequirementQuickCreateDialog from "./RequirementQuickCreateDialog";
 import {
   formatRequirementOpenLabel,
   formatRequirementOverviewProgressLabel,
@@ -28,6 +28,7 @@ type Props = {
   page: number;
   pageCount: number;
   canCreate: boolean;
+  canCreateInModal?: boolean;
   loadError?: boolean;
 };
 
@@ -51,6 +52,7 @@ export default function RequirementsManagementWorkspace({
   page,
   pageCount,
   canCreate,
+  canCreateInModal = false,
   loadError = false,
 }: Props) {
   const basePath = "/dashboard/aufgaben";
@@ -93,10 +95,13 @@ export default function RequirementsManagementWorkspace({
             Erstelle eine Anforderung, wenn mehrere Personen etwas individuell bestätigen oder erledigen
             sollen.
           </p>
-          {canCreate ? (
-            <Link href={requirementCreateHref()} className="fca-button-primary mt-4 inline-flex text-sm">
-              + Anforderung
-            </Link>
+          {canCreate && canCreateInModal ? (
+            <RequirementQuickCreateDialog
+              canCreate
+              timeZone={timeZone}
+              triggerLabel="+ Anforderung"
+              triggerClassName="fca-button-primary mt-4 inline-flex items-center gap-1.5 text-sm"
+            />
           ) : null}
         </div>
       ) : null}

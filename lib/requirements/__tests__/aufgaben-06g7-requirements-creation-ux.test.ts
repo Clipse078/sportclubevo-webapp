@@ -48,11 +48,13 @@ describe("AUFGABEN-06G7 UX contracts", () => {
 
   it("U05/U06 — Aufgaben create/edit dialogs use wide form sizing contract", () => {
     expect(SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL).toContain("sce-dialog-variant-form");
+    const shell = read("components/admin/aufgaben/AufgabenFormDialogShell.tsx");
     const create = read("components/admin/aufgaben/AufgabenQuickCreateDialog.tsx");
     const meine = read("components/admin/aufgaben/MeineAufgabenQuickCreateDialog.tsx");
-    expect(create).toContain("SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL");
-    expect(meine).toContain("SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL");
-    expect(create).toContain('data-dialog-size="aufgaben-form"');
+    expect(shell).toContain('size="xl"');
+    expect(shell).toContain('data-dialog-size="aufgaben-form"');
+    expect(create).toContain("AufgabenFormDialogShell");
+    expect(meine).toContain("AufgabenFormDialogShell");
   });
 
   it("U07/U08/U09 — checklist rows inline; bullets/numbered lists unchanged", () => {
@@ -117,8 +119,9 @@ describe("AUFGABEN-06G7 UX contracts", () => {
   });
 
   it("U18/U19 — requirement reminder UI maps to canonical schedule without obligation coupling", () => {
-    const create = read("components/admin/aufgaben/RequirementCreateClient.tsx");
+    const create = read("components/admin/aufgaben/RequirementCreateForm.tsx");
     expect(create).toContain("TaskReminderFields");
+    expect(read("components/admin/aufgaben/RequirementCreateClient.tsx")).toContain("RequirementCreateForm");
     expect(create).not.toContain("RequirementRecipient");
     expect(
       requirementHasExplicitReminderSchedule({

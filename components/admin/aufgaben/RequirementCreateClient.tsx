@@ -7,17 +7,16 @@ import { ArrowLeft } from "lucide-react";
 import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { SceSemanticFeedback } from "@/components/sce/feedback/SceSemanticFeedback";
-import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
-import {
-  emptyRequirementAudienceSelection,
-  normalizeRequirementAudienceSelection,
-} from "@/lib/requirements/requirement-audience-selection";
+import { emptyRequirementAudienceSelection } from "@/lib/requirements/requirement-audience-selection";
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
-import TaskDescriptionFormField from "./TaskDescriptionFormField";
-import RequirementAudienceBuilder from "./RequirementAudienceBuilder";
-import { TaskReminderFields } from "./TaskReminderFields";
 import { createRequirementDraftAction } from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
+import {
+  RequirementCreateForm,
+  appendRequirementAudienceToFormData,
+} from "./RequirementCreateForm";
+
+const FORM_ID = "requirement-fallback-create-form";
 
 type Props = {
   timeZone: string;
@@ -33,17 +32,7 @@ export default function RequirementCreateClient({ timeZone }: Props) {
 
   function onSubmit(formData: FormData) {
     setError(null);
-    const normalized = normalizeRequirementAudienceSelection(audience);
-    formData.set("audiencePersonIds", normalized.personIds.join(","));
-    formData.set("audienceTeamIds", normalized.teamIds.join(","));
-    formData.set("audienceOrgUnitIds", normalized.orgUnitIds.join(","));
-    formData.set("audienceRoleIds", normalized.roleIds.join(","));
-    formData.set("audienceTargetGroupIds", normalized.targetGroupIds.join(","));
-    formData.set("audienceExcludePersonIds", normalized.excludePersonIds.join(","));
-    formData.set(
-      "audienceCompositionJson",
-      normalized.composition ? JSON.stringify(normalized.composition) : "",
-    );
+    appendRequirementAudienceToFormData(formData, audience);
     startTransition(async () => {
       const result = await createRequirementDraftAction(formData);
       if (!result.ok) {
@@ -80,50 +69,38 @@ export default function RequirementCreateClient({ timeZone }: Props) {
       }}
       density="dense"
     >
-      {error ? (
-        <SceSemanticFeedback tone="ERROR" title="Speichern fehlgeschlagen" description={error} />
-      ) : null}
-      <form
-        action={onSubmit}
-        className="space-y-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5"
-        data-testid="requirement-create-form"
+      <div
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5"
+        data-requirement-create-fallback="true"
       >
-        <SceFormField label="Titel" required density="DENSE">
-          <input
-            name="title"
-            required
-            disabled={pending}
-            className="fca-input w-full text-sm"
-            placeholder="Trainershandbuch 2026/27 bestätigen"
-            data-testid="requirement-create-title"
-          />
-        </SceFormField>
-        <TaskDescriptionFormField name="description" disabled={pending} compact />
-        <div className="grid gap-4 md:grid-cols-2">
-          <SceFormField label="Fällig am" density="DENSE">
-            <input type="date" name="dueAt" disabled={pending} className="fca-input w-full text-sm" />
-          </SceFormField>
-          <TaskReminderFields
-            timeZone={timeZone}
-            disabled={pending}
-            values={{
-              reminder1PresetKey: null,
-              reminder2PresetKey: null,
-              reminder1At: null,
-              reminder2At: null,
-            }}
-          />
-        </div>
-        <RequirementAudienceBuilder value={audience} onChange={setAudience} disabled={pending} />
-        <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">
+        <RequirementCreateForm
+          timeZone={timeZone}
+          pending={pending}
+          formId={FORM_ID}
+          audience={audience}
+          onAudienceChange={setAudience}
+          onSubmit={onSubmit}
+          error={
+            error ? (
+              <SceSemanticFeedback tone="ERROR" title="Speichern fehlgeschlagen" description={error} />
+            ) : null
+          }
+        />
+        <div className="mt-4 flex justify-end gap-2 border-t border-[var(--border)] pt-4">
           <Link href={buildAufgabenBereichHref("anforderungen")} className="fca-button-secondary text-sm">
             Abbrechen
           </Link>
-          <button type="submit" className="fca-button-primary text-sm" disabled={pending}>
+          <button
+            type="submit"
+            form={FORM_ID}
+            className="fca-button-primary text-sm"
+            disabled={pending}
+            data-testid="requirement-create-submit"
+          >
             Entwurf speichern
           </button>
         </div>
-      </form>
+      </div>
     </SceWorkspaceChrome>
   );
 }

@@ -18,14 +18,13 @@ import {
 } from "@/lib/tasks/management-navigation";
 import { canViewAllTasks, hasTaskPermission } from "@/lib/tasks/visibility";
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
 import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInbox";
 import AufgabenWorkspaceShell from "@/components/admin/aufgaben/AufgabenWorkspaceShell";
 import RequirementsManagementWorkspace from "@/components/admin/aufgaben/RequirementsManagementWorkspace";
 import MeineAufgabenQuickCreateDialog from "@/components/admin/aufgaben/MeineAufgabenQuickCreateDialog";
 import AufgabenQuickCreateDialog from "@/components/admin/aufgaben/AufgabenQuickCreateDialog";
-import { requirementCreateHref } from "@/lib/requirements/management-navigation";
+import RequirementQuickCreateDialog from "@/components/admin/aufgaben/RequirementQuickCreateDialog";
 import { getRequirementServiceContext } from "@/lib/requirements/server-context";
 import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";
 import {
@@ -129,20 +128,14 @@ export default async function AufgabenPage({ searchParams }: Props) {
         showRequirements={showRequirementManagement}
         primaryAction={
           canCreate ? (
-            <Link
-              href={requirementCreateHref()}
-              className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-              data-testid="requirements-create-open"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Anforderung
-            </Link>
+            <RequirementQuickCreateDialog canCreate timeZone={timeZone} />
           ) : null
         }
       >
         <RequirementsManagementWorkspace
           locale={locale}
           timeZone={timeZone}
+          canCreateInModal={canCreate}
           query={reqQuery}
           summary={summary}
           items={items}

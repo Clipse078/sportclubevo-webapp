@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { createAufgabeAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import {
@@ -14,13 +14,15 @@ import {
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
 import TaskPriorityField from "./TaskPriorityField";
-import { SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL } from "@/lib/shell/responsive-layout";
+import { AufgabenFormDialogShell } from "./AufgabenFormDialogShell";
 
 type Props = {
   canCreate: boolean;
   canManage?: boolean;
   assigneeOptions: TaskAssigneeOption[];
 };
+
+const FORM_ID = "aufgaben-quick-create-form";
 
 export default function AufgabenQuickCreateDialog({
   canCreate,
@@ -61,127 +63,99 @@ export default function AufgabenQuickCreateDialog({
         Aufgabe
       </button>
 
-      {open ? (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh]"
-          role="presentation"
-          onClick={() => !pending && setOpen(false)}
-          data-testid="aufgaben-create-dialog-backdrop"
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="aufgaben-create-title"
-            className={`${SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL} p-4 sm:p-5`}
-            onClick={(e) => e.stopPropagation()}
-            data-testid="aufgaben-create-dialog"
-            data-dialog-size="aufgaben-form"
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h2 id="aufgaben-create-title" className="text-base font-semibold text-[var(--foreground)]">
-                  Neue Aufgabe
-                </h2>
-                <p className="mt-0.5 text-xs text-[var(--muted)]">
-                  Titel, Verantwortliche und optional Termin & Priorität.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface-2)]"
+      <AufgabenFormDialogShell
+        open={open}
+        onClose={() => !pending && setOpen(false)}
+        title="Neue Aufgabe"
+        description="Titel, Verantwortliche und optional Termin & Priorität."
+        testId="aufgaben-create-dialog"
+        footer={
+          <>
+            <div className="mr-auto flex flex-col gap-1">
+              <Link
+                href={taskCreateHref()}
+                className="text-xs font-medium text-[var(--primary)] hover:underline"
                 onClick={() => setOpen(false)}
-                aria-label="Dialog schliessen"
+                data-testid="aufgaben-create-more-details"
               >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {error ? (
-              <p className="mb-3 rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200">
-                {error}
-              </p>
-            ) : null}
-
-            <form action={onSubmit} className="space-y-3">
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Titel</span>
-                <input
-                  name="title"
-                  required
-                  className="fca-input w-full text-sm"
-                  data-testid="aufgaben-create-title"
-                />
-              </label>
-
-              <TaskPeopleMultiPicker
-                label="Verantwortlich"
-                fieldName="assigneeUserIds"
-                selectedIds={assigneeIds}
-                onSelectedIdsChange={setAssigneeIds}
-                disabled={pending}
-                testIdPrefix="aufgaben-quick-create-assignees"
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block space-y-1">
-                  <span className="text-xs font-medium text-[var(--text-2)]">Termin</span>
-                  <input
-                    type="date"
-                    name="dueAt"
-                    className="fca-input w-full text-sm"
-                    data-testid="aufgaben-create-due"
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>
-                  <TaskPriorityField disabled={pending} testId="aufgaben-quick-create-priority" />
-                </label>
-              </div>
-
-              <TaskDescriptionFormField optional compact inputId="aufgaben-quick-create-description" />
-
-              <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-                <div className="mr-auto flex flex-col gap-1">
-                  <Link
-                    href={taskCreateHref()}
-                    className="text-xs font-medium text-[var(--primary)] hover:underline"
-                    onClick={() => setOpen(false)}
-                    data-testid="aufgaben-create-more-details"
-                  >
-                    Weitere Details
-                  </Link>
-                  {canManage ? (
-                    <Link
-                      href={taskSeriesCreateHref()}
-                      className="text-xs font-medium text-[var(--primary)] hover:underline"
-                      onClick={() => setOpen(false)}
-                      data-testid="aufgaben-create-recurring"
-                    >
-                      Wiederkehrende Aufgabe erstellen
-                    </Link>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  className="fca-button-secondary text-sm"
+                Weitere Details
+              </Link>
+              {canManage ? (
+                <Link
+                  href={taskSeriesCreateHref()}
+                  className="text-xs font-medium text-[var(--primary)] hover:underline"
                   onClick={() => setOpen(false)}
-                  disabled={pending}
+                  data-testid="aufgaben-create-recurring"
                 >
-                  Abbrechen
-                </button>
-                <button
-                  type="submit"
-                  className="fca-button-primary text-sm"
-                  disabled={pending}
-                  data-testid="aufgaben-create-submit"
-                >
-                  {pending ? "Speichern …" : "Erstellen"}
-                </button>
-              </div>
-            </form>
+                  Wiederkehrende Aufgabe erstellen
+                </Link>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="fca-button-secondary text-sm"
+              onClick={() => setOpen(false)}
+              disabled={pending}
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              form={FORM_ID}
+              className="fca-button-primary text-sm"
+              disabled={pending}
+              data-testid="aufgaben-create-submit"
+            >
+              {pending ? "Speichern …" : "Erstellen"}
+            </button>
+          </>
+        }
+      >
+        {error ? (
+          <p className="mb-3 rounded-md border border-red-500/30 bg-red-950/20 px-3 py-2 text-sm text-red-200">
+            {error}
+          </p>
+        ) : null}
+
+        <form id={FORM_ID} action={onSubmit} className="space-y-3">
+          <label className="block space-y-1">
+            <span className="text-xs font-medium text-[var(--text-2)]">Titel</span>
+            <input
+              name="title"
+              required
+              className="fca-input w-full text-sm"
+              data-testid="aufgaben-create-title"
+            />
+          </label>
+
+          <TaskPeopleMultiPicker
+            label="Verantwortlich"
+            fieldName="assigneeUserIds"
+            selectedIds={assigneeIds}
+            onSelectedIdsChange={setAssigneeIds}
+            disabled={pending}
+            testIdPrefix="aufgaben-quick-create-assignees"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-[var(--text-2)]">Termin</span>
+              <input
+                type="date"
+                name="dueAt"
+                className="fca-input w-full text-sm"
+                data-testid="aufgaben-create-due"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>
+              <TaskPriorityField disabled={pending} testId="aufgaben-quick-create-priority" />
+            </label>
           </div>
-        </div>
-      ) : null}
+
+          <TaskDescriptionFormField optional compact inputId="aufgaben-quick-create-description" />
+        </form>
+      </AufgabenFormDialogShell>
     </>
   );
 }

@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import type { PersonalActionListItem } from "@/lib/personal-actions/presentation";
 import PersonalActionParticipationInline from "./PersonalActionParticipationInline";
 import PersonalActionRequirementInline from "./PersonalActionRequirementInline";
+import PersonalActionTypeChip from "./PersonalActionTypeChip";
 
 type Props = {
   item: PersonalActionListItem;
@@ -40,9 +41,7 @@ export default function PersonalActionRow({ item, compact = false }: Props) {
             <p className="text-[0.875rem] font-medium leading-snug text-[var(--foreground)]">
               {item.title}
             </p>
-            <span className="text-[0.6875rem] font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
-              {item.sourceLabel}
-            </span>
+            <PersonalActionTypeChip sourceType={item.sourceType} />
           </div>
           {item.subtitle ? (
             <p className="mt-0.5 text-[0.8125rem] text-[var(--text-2)]">{item.subtitle}</p>
