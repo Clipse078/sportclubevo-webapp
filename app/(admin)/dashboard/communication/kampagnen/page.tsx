@@ -12,6 +12,8 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { resolveCampaignAuthorization } from "@/lib/communication/campaign/campaign-authorization";
 import { listCampaigns } from "@/lib/communication/campaign/campaign-service";
+import { bootstrapCampaignComposer } from "@/lib/communication/campaign/campaign-composer-bootstrap";
+import KampagneCreateTrigger from "@/components/admin/communication/kampagnen/KampagneCreateTrigger";
 import {
   formatKampagnenCreator,
   formatKampagnenListTimestamp,
@@ -55,13 +57,17 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
     params.q?.trim() || statusParam || params.mine === "1",
   );
 
-  const primaryAction = authz.canSend ? (
-    <Link
-      href="/dashboard/communication/kampagnen/new"
-      className="inline-flex rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
-    >
-      Neue Kampagne
-    </Link>
+  const composerBootstrap = authz.canSend
+    ? await bootstrapCampaignComposer({
+        tenantId: tenant.id,
+        tenantKey: tenant.key,
+        userId: session.user.id,
+        tenantTimezone: tenant.timezone,
+      })
+    : null;
+
+  const primaryAction = composerBootstrap ? (
+    <KampagneCreateTrigger {...composerBootstrap} />
   ) : undefined;
 
   const timeColumnLabel =
@@ -110,7 +116,10 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
         ) : (
           <>
             <Suspense fallback={null}>
-              <KampagnenListToolbar canSend={authz.canSend} />
+              <KampagnenListToolbar
+                canSend={authz.canSend}
+                composerBootstrap={composerBootstrap}
+              />
             </Suspense>
             <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full divide-y divide-[var(--border)] text-sm">

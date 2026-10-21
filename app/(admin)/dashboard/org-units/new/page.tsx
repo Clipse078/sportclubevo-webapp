@@ -22,7 +22,7 @@ export default async function NewOrgUnitPage() {
         title="Neue Organisationseinheit"
         description="Erstelle eine Einheit im Organigramm des Vereins."
       />
-      <OrgUnitForm mode="create" parentOptions={parentOptions} />
+      <OrgUnitForm mode="create" layout="composer" parentOptions={parentOptions} />
     </div>
   );
 }

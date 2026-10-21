@@ -1,5 +1,5 @@
-﻿import Link from "next/link";
-import { CalendarDays, Plus } from "lucide-react";
+﻿import { CalendarDays } from "lucide-react";
+import CreateMeetingTrigger from "@/components/admin/meetings/CreateMeetingTrigger";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getMeetings } from "@/lib/meetings/queries";
@@ -25,12 +25,7 @@ export default async function VereinsleitungMeetingsPage() {
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Meetings" },
         ]}
-        headerActions={
-          <Link href="/vereinsleitung/meetings/new" className="fca-button-primary">
-            <Plus className="h-4 w-4" />
-            Neues Meeting
-          </Link>
-        }
+        headerActions={<CreateMeetingTrigger />}
         isEmpty={meetings.length === 0}
         emptyIcon={<CalendarDays className="h-10 w-10" />}
         emptyHeading="Keine zugänglichen Meetings"

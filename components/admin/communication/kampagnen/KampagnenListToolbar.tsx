@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import KampagneCreateTrigger from "@/components/admin/communication/kampagnen/KampagneCreateTrigger";
+import type { KampagneComposerBootstrap } from "@/components/admin/communication/kampagnen/KampagneCreateComposerDialog";
 import { Search } from "lucide-react";
 
 const STATUS_OPTIONS = [
@@ -15,9 +16,10 @@ const STATUS_OPTIONS = [
 
 type Props = {
   canSend: boolean;
+  composerBootstrap?: KampagneComposerBootstrap | null;
 };
 
-export function KampagnenListToolbar({ canSend }: Props) {
+export function KampagnenListToolbar({ canSend, composerBootstrap }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
@@ -78,13 +80,11 @@ export function KampagnenListToolbar({ canSend }: Props) {
           </label>
         ) : null}
       </div>
-      {canSend ? (
-        <Link
-          href="/dashboard/communication/kampagnen/new"
+      {canSend && composerBootstrap ? (
+        <KampagneCreateTrigger
+          {...composerBootstrap}
           className="fca-button-primary inline-flex shrink-0 items-center justify-center"
-        >
-          Neue Kampagne
-        </Link>
+        />
       ) : null}
     </div>
   );

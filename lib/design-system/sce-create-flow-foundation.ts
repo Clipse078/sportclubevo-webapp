@@ -54,26 +54,58 @@ export const SCE_CREATE_FLOW_REPRESENTATIVE_AUDIT: SceCreateFlowAuditRow[] = [
   {
     entity: "Neue Rolle",
     route: "/dashboard/administration/roles/new",
-    classification: "VALID_FULL_PAGE_EXCEPTION",
-    ds09Action: "EXCEPTION_DOCUMENTED",
-    canonicalEntry: "CreateTenantRoleForm (3-step permission matrix)",
-    notes: "Complex multi-step workspace — full page remains default entry via /new until DS-10 composer review",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "CreateTenantRoleComposerDialog (workspace modal)",
+    notes: "/new retained for deep links — same CreateTenantRoleForm",
   },
   {
     entity: "Neue Mitteilung",
     route: "/dashboard/communication/mitteilungen/new",
-    classification: "VALID_FULL_PAGE_EXCEPTION",
-    ds09Action: "DEFER_DS10",
-    canonicalEntry: "Mitteilung composer workspace",
-    notes: "Long-form composition — modal-first where sub-flows allow",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "MitteilungCreateComposerDialog",
+    notes: "ClubCommunicationComposer in workspace dialog",
   },
   {
     entity: "Neue Kampagne",
     route: "/dashboard/communication/kampagnen/new",
-    classification: "VALID_FULL_PAGE_EXCEPTION",
-    ds09Action: "DEFER_DS10",
-    canonicalEntry: "Campaign composer workspace",
-    notes: "Multi-step campaign builder",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "KampagneCreateComposerDialog",
+    notes: "CampaignComposer in workspace dialog",
+  },
+  {
+    entity: "Neue Organisationseinheit",
+    route: "/dashboard/org-units/new",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "OrgUnitCreateComposerDialog on Organisation Builder",
+    notes: "Canvas + list share OrgUnitForm",
+  },
+  {
+    entity: "Neues Ziel",
+    route: "/vereinsleitung/targets/new",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "CreateTargetComposerDialog",
+    notes: "Dark composer surfaces on fallback /new",
+  },
+  {
+    entity: "Neue Initiative",
+    route: "/vereinsleitung/initiativen/new",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "CreateInitiativeComposerDialog",
+    notes: "Fallback route uses layout=composer",
+  },
+  {
+    entity: "Neues Meeting",
+    route: "/vereinsleitung/meetings/new",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "CreateMeetingComposerDialog",
+    notes: "Fallback route uses layout=composer",
   },
   {
     entity: "Anlage erstellen",
@@ -85,11 +117,7 @@ export const SCE_CREATE_FLOW_REPRESENTATIVE_AUDIT: SceCreateFlowAuditRow[] = [
   },
 ];
 
-/** Documented full-page exceptions — not modal-first debt. */
-export const SCE_CREATE_FLOW_DS10_VALID_EXCEPTIONS = [
-  "Neue Rolle — multi-step permission matrix (CreateTenantRoleForm)",
-  "Neue Mitteilung — long-form composer workspace",
-  "Neue Kampagne — multi-step campaign builder",
-] as const;
+/** Documented full-page exceptions — not modal-first debt (empty after DS-10R1 re-audit). */
+export const SCE_CREATE_FLOW_DS10_VALID_EXCEPTIONS = [] as const;
 
 export const SCE_CREATE_FLOW_DS10_DEBT = [] as const;

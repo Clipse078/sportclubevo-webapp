@@ -28,7 +28,17 @@ type DefaultValues = {
   }>;
 };
 
-export default function TargetNewPageClient() {
+type Props = {
+  layout?: "page" | "composer";
+  onSuccess?: (targetId: string) => void;
+  onCancel?: () => void;
+};
+
+export default function TargetNewPageClient({
+  layout = "page",
+  onSuccess,
+  onCancel,
+}: Props) {
   const [formKey, setFormKey] = useState(0);
   const [defaults, setDefaults] = useState<DefaultValues>({});
   const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
@@ -66,7 +76,14 @@ export default function TargetNewPageClient() {
         </div>
       ) : null}
 
-      <TargetForm key={formKey} mode="create" defaultValues={defaults} />
+      <TargetForm
+        key={formKey}
+        mode="create"
+        layout={layout}
+        defaultValues={defaults}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+      />
 
       <TargetTemplateSuggestions onSelect={handleTemplateSelect} />
     </div>

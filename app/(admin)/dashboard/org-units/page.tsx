@@ -1,17 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getOrgUnits, getArchivedOrgUnits } from "@/lib/org/queries";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import OrgUnitSearchableList from "@/components/admin/org/OrgUnitSearchableList";
+import OrgUnitBuilderWorkspace from "@/components/admin/org/OrgUnitBuilderWorkspace";
 import { ListPagePattern } from "@/components/ui/patterns";
-
-// Org Builder Foundation v1: view=archived param switches to the archived units view.
-// RPERM-04: tenant resolved via the single tenant-context helper (session.activeTenantId,
-// derived from TenantMembership — never the legacy User.tenantId column).
+import { PageShell } from "@/components/ui/page";
 
 type PageProps = { searchParams: Promise<{ view?: string }> };
 
@@ -29,30 +24,29 @@ export default async function OrgUnitsPage({ searchParams }: PageProps) {
     canManage ? getArchivedOrgUnits(tenant.id) : Promise.resolve([]),
   ]);
 
+  const parentOptions = orgUnits.map((u) => ({
+    id: u.id,
+    key: u.key,
+    name: u.name,
+    level: u.level,
+    type: u.type,
+  }));
+
   return (
-    <ListPagePattern
-      eyebrow="Organisation"
-      title="Organisation Builder"
-      description="Hierarchische Organisationsstruktur – Grundlage für Sichtbarkeit, Berechtigungen und Kommunikation."
-      headerActions={
-        canManage ? (
-          <Link href="/dashboard/org-units/new" className="fca-button-primary">
-            <Plus className="h-4 w-4" />
-            Neue Einheit
-          </Link>
-        ) : null
-      }
-    >
-      {/* Phase 2 (org-based permissions) implemented: the detail page now grants
-          access to active members of each org unit via canAccessOrgUnit().
-          This list page retains ORG_VIEW / ORG_MANAGE as the module-level gate
-          (browsing the full list is an admin operation, not a member operation). */}
-      <OrgUnitSearchableList
-        orgUnits={orgUnits}
-        archivedOrgUnits={archivedOrgUnits}
-        showArchived={showArchived}
-        canManage={canManage}
-      />
-    </ListPagePattern>
+    <PageShell fullWidth>
+      <ListPagePattern
+        eyebrow="Organisation"
+        title="Organisation Builder"
+        description="Visuelles Organigramm — Hierarchie, Mitglieder und Berechtigungen auf autoritativen OrgUnit-Daten."
+      >
+        <OrgUnitBuilderWorkspace
+          orgUnits={orgUnits}
+          archivedOrgUnits={archivedOrgUnits}
+          showArchived={showArchived}
+          canManage={canManage}
+          parentOptions={parentOptions}
+        />
+      </ListPagePattern>
+    </PageShell>
   );
 }

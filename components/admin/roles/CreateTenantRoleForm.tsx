@@ -24,6 +24,9 @@ import { isDangerousPermission } from "@/lib/roles/permission-metadata";
 type CreateTenantRoleFormProps = {
   moduleGroups: PermissionMatrixModuleGroup[];
   actorDelegatablePermissionKeys: readonly string[];
+  layout?: "page" | "composer";
+  onCancel?: () => void;
+  onSuccess?: (roleId: string) => void;
 };
 
 const STEPS = [
@@ -39,6 +42,9 @@ const STEPS = [
 export default function CreateTenantRoleForm({
   moduleGroups,
   actorDelegatablePermissionKeys,
+  layout = "page",
+  onCancel,
+  onSuccess,
 }: CreateTenantRoleFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -97,7 +103,12 @@ export default function CreateTenantRoleForm({
         setSubmitting(false);
         return;
       }
-      router.push(`/dashboard/administration/roles/${data.role.id}`);
+      const roleId = typeof data?.role?.id === "string" ? data.role.id : "";
+      if (onSuccess) {
+        onSuccess(roleId);
+        return;
+      }
+      router.push(`/dashboard/administration/roles/${roleId}`);
       router.refresh();
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");

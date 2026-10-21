@@ -7,11 +7,7 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
-import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
-import { resolvePlatformTemplateAuthorization } from "@/lib/communication/templates/platform-template-authorization";
-import { listPlatformCommunicationTemplates } from "@/lib/communication/templates/platform-template-service";
-import { templateKindAllowedForMitteilungComposer } from "@/lib/communication/templates/template-management-service";
-import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import { bootstrapMitteilungComposer } from "@/lib/communication/club/mitteilung-composer-bootstrap";
 
 export const dynamic = "force-dynamic";
 
@@ -26,26 +22,12 @@ export default async function NewClubMitteilungPage() {
     userId: session.user.id,
   });
 
-  const targetGroups = await listZielgruppenForManagement({
-    tenantId: tenant.id,
-    statusFilter: "ACTIVE",
-  });
-
-  const templateAuthz = await resolvePlatformTemplateAuthorization({
+  const composer = await bootstrapMitteilungComposer({
     tenantId: tenant.id,
     tenantKey: tenant.key,
     userId: session.user.id,
+    tenantTimezone: tenant.timezone,
   });
-
-  const templateOptions = templateAuthz.canView
-    ? (await listPlatformCommunicationTemplates({ tenantId: tenant.id }))
-        .filter(
-          (t) =>
-            templateKindAllowedForMitteilungComposer(t.kind) &&
-            (t.status === "ACTIVE" || t.status === "DRAFT"),
-        )
-        .map((t) => ({ id: t.id, name: t.name, kind: t.kind }))
-    : [];
 
   return (
     <PageShell>
@@ -61,14 +43,10 @@ export default async function NewClubMitteilungPage() {
       />
       <CommunicationContentSurface>
         <ClubCommunicationComposer
-          targetGroups={targetGroups.map((tg) => ({
-            id: tg.id,
-            name: tg.name,
-            status: tg.status,
-          }))}
-          tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
-          templateOptions={templateOptions}
-          tenantId={tenant.id}
+          targetGroups={composer.targetGroups}
+          tenantTimezone={composer.tenantTimezone}
+          templateOptions={composer.templateOptions}
+          tenantId={composer.tenantId}
         />
       </CommunicationContentSurface>
     </PageShell>

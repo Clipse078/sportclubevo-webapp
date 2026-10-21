@@ -14,7 +14,7 @@ export default async function NewTargetPage() {
         title="Neues Ziel erstellen"
         description="Strategisches Ziel mit messbaren Metriken erfassen. Optional eine Vorlage als Ausgangspunkt verwenden."
       />
-      <TargetNewPageClient />
+      <TargetNewPageClient layout="composer" />
     </div>
   );
 }

@@ -1,27 +1,35 @@
-import Link from "next/link";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { Plus } from "lucide-react";
+import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
-import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
+import { TENANT_ROLES_MANAGE } from "@/lib/roles/access";
+import {
+  getActorDelegatableTenantPermissionKeys,
+  getTenantPermissionCatalog,
+  getTenantRolesOverview,
+} from "@/lib/roles/tenant-queries";
 import TenantRolesOverviewDenseTable from "@/components/admin/roles/TenantRolesOverviewDenseTable";
+import CreateTenantRoleTrigger from "@/components/admin/roles/CreateTenantRoleTrigger";
 import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
 import { SCE_DENSE_OPERATIONAL_PAGE_ROOT_CLASS } from "@/lib/design-system/sce-density-border-micro-ux";
 import { SCE_WORKSPACE_HEADER_ACTIONS_CLASS } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 
 export default async function TenantRolesOverviewPage() {
-  // Permission + tenant-context guard is already enforced by the parent
-  // layout.tsx — re-resolving the tenant id here only to scope the query,
-  // never to re-derive authorization.
   const tenantId = await requireActiveTenantId();
-  const roles = await getTenantRolesOverview(tenantId);
+  const session = await requireAnyPermission(TENANT_ROLES_MANAGE, tenantId);
+
+  const [roles, moduleGroups, actorDelegatablePermissionKeys] = await Promise.all([
+    getTenantRolesOverview(tenantId),
+    getTenantPermissionCatalog(),
+    getActorDelegatableTenantPermissionKeys(tenantId, session.user.id),
+  ]);
 
   return (
     <div className={SCE_DENSE_OPERATIONAL_PAGE_ROOT_CLASS} data-testid="roles-overview-page-root">
       <div className={SCE_WORKSPACE_HEADER_ACTIONS_CLASS}>
-        <Link href="/dashboard/administration/roles/new" className="fca-button-primary flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Neue Rolle
-        </Link>
+        <CreateTenantRoleTrigger
+          moduleGroups={moduleGroups}
+          actorDelegatablePermissionKeys={actorDelegatablePermissionKeys}
+        />
       </div>
 
       {roles.length === 0 ? (
@@ -32,10 +40,10 @@ export default async function TenantRolesOverviewPage() {
           title="Keine Rollen vorhanden"
           description="Erstelle die erste mandanten-eigene Rolle für diesen Verein."
           primaryAction={
-            <Link href="/dashboard/administration/roles/new" className="fca-button-primary flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Neue Rolle
-            </Link>
+            <CreateTenantRoleTrigger
+              moduleGroups={moduleGroups}
+              actorDelegatablePermissionKeys={actorDelegatablePermissionKeys}
+            />
           }
           data-testid="roles-empty-first-use"
         />

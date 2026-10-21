@@ -1,0 +1,157 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import OrgUnitSearchableList from "@/components/admin/org/OrgUnitSearchableList";
+import OrgUnitCanvasView, { type OrgUnitCanvasItem } from "@/components/admin/org/OrgUnitCanvasView";
+import OrgUnitInspectorPanel, {
+  type OrgUnitInspectorUnit,
+} from "@/components/admin/org/OrgUnitInspectorPanel";
+import OrgUnitCreateComposerDialog from "@/components/admin/org/OrgUnitCreateComposerDialog";
+import OrgUnitCreateTrigger from "@/components/admin/org/OrgUnitCreateTrigger";
+import { cn } from "@/lib/cn";
+
+type OrgUnitListItem = OrgUnitCanvasItem;
+
+type Props = {
+  orgUnits: OrgUnitListItem[];
+  archivedOrgUnits: OrgUnitListItem[];
+  showArchived: boolean;
+  canManage: boolean;
+  parentOptions: { id: string; key: string; name: string; level: number; type: string }[];
+};
+
+type ViewMode = "canvas" | "list";
+
+export default function OrgUnitBuilderWorkspace({
+  orgUnits,
+  archivedOrgUnits,
+  showArchived,
+  canManage,
+  parentOptions,
+}: Props) {
+  const router = useRouter();
+  const [view, setView] = useState<ViewMode>("canvas");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createParentId, setCreateParentId] = useState<string | undefined>();
+
+  const unitById = useMemo(() => new Map(orgUnits.map((u) => [u.id, u])), [orgUnits]);
+
+  const inspectorUnit: OrgUnitInspectorUnit | null = useMemo(() => {
+    if (!selectedId) return null;
+    const unit = unitById.get(selectedId);
+    if (!unit) return null;
+    const parent = unit.parentId ? unitById.get(unit.parentId) : null;
+    const childUnits = orgUnits
+      .filter((u) => u.parentId === unit.id)
+      .map((u) => ({ id: u.id, name: u.name, type: u.type }));
+
+    return {
+      id: unit.id,
+      key: unit.key,
+      name: unit.name,
+      type: unit.type,
+      status: unit.status,
+      memberCount: unit._count.memberships,
+      childCount: unit._count.children,
+      hasChildren: unit._count.children > 0,
+      collapsed: false,
+      parentId: unit.parentId,
+      parentName: parent?.name ?? null,
+      description: unit.description,
+      childUnits,
+    };
+  }, [selectedId, unitById, orgUnits]);
+
+  function openCreate(parentId?: string) {
+    setCreateParentId(parentId);
+    setCreateOpen(true);
+  }
+
+  return (
+    <div className="space-y-4" data-testid="org-unit-builder-workspace">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
+          role="tablist"
+          aria-label="Organisation Builder Ansicht"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "canvas"}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)]",
+              view === "canvas"
+                ? "bg-[var(--surface-1)] text-[var(--text-1)] shadow-sm"
+                : "text-[var(--muted)] hover:text-[var(--text-1)]",
+            )}
+            onClick={() => setView("canvas")}
+            data-testid="org-builder-view-canvas"
+          >
+            Canvas
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "list"}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-accent)]",
+              view === "list"
+                ? "bg-[var(--surface-1)] text-[var(--text-1)] shadow-sm"
+                : "text-[var(--muted)] hover:text-[var(--text-1)]",
+            )}
+            onClick={() => setView("list")}
+            data-testid="org-builder-view-list"
+          >
+            Liste
+          </button>
+        </div>
+
+        {canManage ? (
+          <OrgUnitCreateTrigger parentOptions={parentOptions} className="fca-button-primary inline-flex items-center gap-2" />
+        ) : null}
+      </div>
+
+      {view === "canvas" ? (
+        <div className="flex min-h-[min(70vh,640px)] flex-col gap-0 overflow-hidden rounded-xl border border-[var(--border)] lg:flex-row">
+          <div className="min-h-0 min-w-0 flex-1">
+            <OrgUnitCanvasView
+              orgUnits={orgUnits}
+              canManage={canManage}
+              selectedId={selectedId}
+              onSelectId={setSelectedId}
+              onAddChild={(parentId) => openCreate(parentId)}
+              onReparentSuccess={() => router.refresh()}
+            />
+          </div>
+          {inspectorUnit ? (
+            <OrgUnitInspectorPanel
+              unit={inspectorUnit}
+              canManage={canManage}
+              onClose={() => setSelectedId(null)}
+              onAddChild={(parentId) => openCreate(parentId)}
+            />
+          ) : null}
+        </div>
+      ) : (
+        <OrgUnitSearchableList
+          orgUnits={orgUnits}
+          archivedOrgUnits={archivedOrgUnits}
+          showArchived={showArchived}
+          canManage={canManage}
+        />
+      )}
+
+      {canManage ? (
+        <OrgUnitCreateComposerDialog
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          parentOptions={parentOptions}
+          defaultParentId={createParentId}
+        />
+      ) : null}
+    </div>
+  );
+}

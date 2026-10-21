@@ -14,7 +14,7 @@ export default async function NewInitiativePage() {
         title="Neue Initiative erstellen"
         description="Initiative erfassen mit Status, Fortschritt und Sichtbarkeitseinstellungen."
       />
-      <InitiativeForm mode="create" />
+      <InitiativeForm mode="create" layout="composer" />
     </div>
   );
 }
