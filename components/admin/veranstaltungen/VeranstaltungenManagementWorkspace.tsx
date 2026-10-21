@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Plus } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
 import ClubEventComposerDraftList, {
   type ClubEventComposerDraftListItem,
@@ -178,7 +178,16 @@ export default function VeranstaltungenManagementWorkspace({
               >
                 Freigaben
               </Link>
-              {activityCreateTrigger}
+              {activityCreateTrigger ?? (
+                <Link
+                  href="/dashboard/veranstaltungen/new"
+                  className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                  data-testid="veranstaltungen-create-link"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Veranstaltung erstellen
+                </Link>
+              )}
             </div>
           ) : null
         }

@@ -226,6 +226,7 @@ export default function WeekPlannerChrome({
               />
             </div>
           ) : null}
+          </div>
         </div>
 
         <div

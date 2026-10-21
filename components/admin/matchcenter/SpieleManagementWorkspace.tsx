@@ -471,6 +471,15 @@ export default function SpieleManagementWorkspace({
                     ? "Passe Suche oder Filter an."
                     : "Für den ausgewählten Monat gibt es keine anstehenden Spiele."}
                 </p>
+                {canManage && !hasSearch ? (
+                  <Link
+                    href={`${basePath}/new`}
+                    className="fca-button-primary mt-4 inline-flex text-sm"
+                    data-testid="spiele-create-link"
+                  >
+                    Spiel erstellen
+                  </Link>
+                ) : null}
               </div>
             ) : (
               <SpieleManagementUpcomingList

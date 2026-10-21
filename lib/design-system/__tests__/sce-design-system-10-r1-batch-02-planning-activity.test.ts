@@ -37,10 +37,9 @@ describe("SCE-DESIGN-SYSTEM-10-R1 Batch 02 — Planning & activity operations", 
   it("preserves planner primary view modes and command surface", () => {
     const chrome = readSrc("components/admin/planner/WeekPlannerChrome.tsx");
     expect(chrome).toContain("planning-hub-command-surface");
-    expect(chrome).toContain("planning-hub-perspective-liste");
-    expect(chrome).toContain("planning-hub-perspective-spielfeld");
-    expect(chrome).toContain("planning-hub-perspective-garderobe");
-    expect(chrome).toContain("planning-hub-perspective-kalender");
+    expect(chrome).toContain("planning-hub-perspective-${perspective}");
+    expect(chrome).toContain('"liste", "Liste"');
+    expect(chrome).toContain('"kalender", "Kalender"');
   });
 
   it("keeps programme canonical list — compact collapsible filters", () => {

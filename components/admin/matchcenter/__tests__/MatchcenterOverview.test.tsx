@@ -285,9 +285,10 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getByText("2 Punkte offen")).toBeTruthy();
-    expect(screen.getByText("Spielfeld")).toBeTruthy();
-    expect(screen.getByText("Heimkabine")).toBeTruthy();
+    const row = screen.getByTestId("matchcenter-spielplanung-row-match-1");
+    expect(within(row).getAllByText("2 Punkte offen").length).toBeGreaterThan(0);
+    expect(within(row).getByText("Spielfeld")).toBeTruthy();
+    expect(within(row).getByText("Heimkabine")).toBeTruthy();
   });
 
   it("G. shows a calm Auswärtsspiel state instead of manufactured facility warnings", () => {
