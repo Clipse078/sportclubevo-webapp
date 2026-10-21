@@ -1,4 +1,10 @@
 ﻿import { CalendarDays, Clock3, MapPin, Users } from "lucide-react";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { MeetingLiveData } from "@/lib/meetings/queries";
@@ -40,8 +46,8 @@ function InfoRow({
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-[0.12em] text-slate-400">{label}</p>
-        <p className="mt-1 text-sm font-medium text-slate-900">{value}</p>
+        <p className="text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{label}</p>
+        <p className="mt-1 text-sm font-medium text-[var(--foreground)]">{value}</p>
       </div>
     </div>
   );
@@ -52,13 +58,13 @@ export default function VereinsleitungMeetingInfoCard({
 }: VereinsleitungMeetingInfoCardProps) {
   if (dbMeeting) {
     return (
-      <section className="rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="text-[1.08rem] font-semibold text-slate-900">
+      <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
           Sitzungsinformationen
         </h3>
 
         {dbMeeting.description ? (
-          <p className="mt-3 text-sm text-slate-500">{dbMeeting.description}</p>
+          <p className="mt-3 text-sm text-[var(--text-2)]">{dbMeeting.description}</p>
         ) : null}
 
         <div className="mt-5 space-y-4">
@@ -94,8 +100,8 @@ export default function VereinsleitungMeetingInfoCard({
 
   // Legacy mock fallback — rendered when slug is not yet in DB
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-      <h3 className="text-[1.08rem] font-semibold text-slate-900">
+    <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+      <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
         Sitzungsinformationen
       </h3>
 
@@ -108,7 +114,7 @@ export default function VereinsleitungMeetingInfoCard({
             <ProductDomainSceIcon name="people" size={16} />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.12em] text-slate-400">
+            <p className="text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
               Online Teilnahme
             </p>
             <button

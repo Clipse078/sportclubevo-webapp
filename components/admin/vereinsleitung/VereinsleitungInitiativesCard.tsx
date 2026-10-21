@@ -1,3 +1,9 @@
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 ﻿/**
  * TODO: Initiative contribution scoring
  * Each initiative may carry a contributionWeight toward a parent Target.
@@ -18,7 +24,7 @@ type VereinsleitungInitiativesCardProps = {
 const DB_STATUS_CLASSES: Record<string, string> = {
   IN_PROGRESS: "border-blue-200 bg-blue-50 text-blue-700",
   ON_TRACK: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  PLANNED: "border-slate-200 bg-slate-50 text-slate-600",
+  PLANNED: "border-slate-200 bg-slate-50 text-[var(--text-2)]",
   ON_HOLD: "border-amber-200 bg-amber-50 text-amber-700",
   COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
   CANCELLED: "border-rose-200 bg-rose-50 text-rose-700",
@@ -36,22 +42,22 @@ const MOCK_INITIATIVES = [
 ];
 
 function getStatusClass(status: string): string {
-  return DB_STATUS_CLASSES[status] ?? "border-slate-200 bg-slate-50 text-slate-600";
+  return DB_STATUS_CLASSES[status] ?? "border-slate-200 bg-slate-50 text-[var(--text-2)]";
 }
 
 export default function VereinsleitungInitiativesCard({ initiatives }: VereinsleitungInitiativesCardProps) {
   const hasRealData = initiatives && initiatives.length > 0;
 
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">Initiativen</h3>
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">Initiativen</h3>
           {!hasRealData ? <p className="mt-0.5 text-[11px] text-slate-400">Demo-Daten</p> : null}
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/vereinsleitung/initiativen" className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700">Alle</Link>
-          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 hover:bg-slate-50">
+          <Link href="/vereinsleitung/initiativen" className="rounded-full border border-slate-200 bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)] hover:bg-slate-50 hover:text-slate-700">Alle</Link>
+          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-[var(--surface-2)] text-slate-400 hover:bg-slate-50">
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
@@ -67,8 +73,8 @@ export default function VereinsleitungInitiativesCard({ initiatives }: Vereinsle
                       <TrendingUp className="h-4 w-4 text-[#0b4aa2]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[14px] font-semibold text-slate-900">{ini.title}</p>
-                      {ini.owner ? <p className="mt-0.5 text-xs text-slate-500">{ini.owner}</p> : null}
+                      <p className="truncate text-[14px] font-semibold text-[var(--foreground)]">{ini.title}</p>
+                      {ini.owner ? <p className="mt-0.5 text-xs text-[var(--text-2)]">{ini.owner}</p> : null}
                     </div>
                   </div>
                   <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${getStatusClass(ini.status)}`}>
@@ -81,7 +87,7 @@ export default function VereinsleitungInitiativesCard({ initiatives }: Vereinsle
                       <div className="h-1.5 flex-1 rounded-full bg-slate-100">
                         <div className="h-1.5 rounded-full bg-[#0b4aa2]" style={{ width: `${Math.min(100, ini.progress)}%` }} />
                       </div>
-                      <span className="shrink-0 text-[11px] font-semibold text-slate-500">{ini.progress}%</span>
+                      <span className="shrink-0 text-[11px] font-semibold text-[var(--text-2)]">{ini.progress}%</span>
                     </div>
                   </div>
                 ) : null}
@@ -95,14 +101,14 @@ export default function VereinsleitungInitiativesCard({ initiatives }: Vereinsle
                       <Flag className="h-4 w-4 text-[#0b4aa2]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[14px] font-semibold text-slate-900">{ini.title}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{ini.owner}</p>
+                      <p className="truncate text-[14px] font-semibold text-[var(--foreground)]">{ini.title}</p>
+                      <p className="mt-0.5 text-xs text-[var(--text-2)]">{ini.owner}</p>
                     </div>
                   </div>
                   <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${
                     ini.status === "In Arbeit" ? "border-blue-200 bg-blue-50 text-blue-700" :
                     ini.status === "On Track" ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
-                    "border-slate-200 bg-slate-50 text-slate-600"
+                    "border-slate-200 bg-slate-50 text-[var(--text-2)]"
                   }`}>{ini.status}</span>
                 </div>
                 <div className="pl-11">
@@ -110,7 +116,7 @@ export default function VereinsleitungInitiativesCard({ initiatives }: Vereinsle
                     <div className="h-1.5 flex-1 rounded-full bg-slate-100">
                       <div className="h-1.5 rounded-full bg-[#0b4aa2]" style={{ width: `${ini.progress}%` }} />
                     </div>
-                    <span className="shrink-0 text-[11px] font-semibold text-slate-500">{ini.progress}%</span>
+                    <span className="shrink-0 text-[11px] font-semibold text-[var(--text-2)]">{ini.progress}%</span>
                   </div>
                 </div>
               </div>

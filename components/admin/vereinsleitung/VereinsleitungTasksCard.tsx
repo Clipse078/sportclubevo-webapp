@@ -1,4 +1,10 @@
 ﻿import { CalendarDays, Circle, MoreHorizontal } from "lucide-react";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 
 const TASKS = [
   {
@@ -26,10 +32,10 @@ const TASKS = [
 
 export default function VereinsleitungTasksCard() {
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             Offene Aufgaben
           </h3>
         </div>
@@ -42,7 +48,7 @@ export default function VereinsleitungTasksCard() {
         </button>
       </div>
 
-      <div className="mt-6 divide-y divide-slate-100 overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_6px_18px_rgba(15,23,42,0.03)]">
+      <div className="mt-6 divide-y divide-slate-100 overflow-hidden rounded-[22px] border border-slate-200/80 bg-[var(--surface-2)] shadow-[0_6px_18px_rgba(15,23,42,0.03)]">
         {TASKS.map((task) => (
           <div
             key={task.title}
@@ -52,18 +58,18 @@ export default function VereinsleitungTasksCard() {
               <button
                 type="button"
                 aria-label={`${task.title} auswählen`}
-                className="flex h-5 w-5 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-400 transition hover:border-slate-400 hover:text-slate-600"
+                className="flex h-5 w-5 items-center justify-center rounded-md border border-slate-300 bg-[var(--surface-2)] text-[var(--muted)] transition hover:border-slate-400 hover:text-[var(--text-2)]"
               >
                 <Circle className="h-3.5 w-3.5" />
               </button>
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold leading-5 text-slate-900">
+              <p className="text-sm font-semibold leading-5 text-[var(--foreground)]">
                 {task.title}
               </p>
 
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-[var(--text-2)]">
                 <span className="inline-flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0b4aa2]/10 text-[10px] font-semibold text-[#0b4aa2]">
                     {task.ownerInitials}
@@ -87,7 +93,7 @@ export default function VereinsleitungTasksCard() {
             <button
               type="button"
               aria-label="Mehr Optionen"
-              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)] transition hover:bg-slate-50 hover:text-[var(--text-2)]"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>

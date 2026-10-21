@@ -29,9 +29,10 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
     expect(readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-10.md")).toContain("READY_FOR_PO_REVIEW");
   });
 
-  it("records honest migration debt until PO accepts DS-10R1 visual UAT", () => {
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBeGreaterThan(
+  it("records zero engineering migration debt after DS-10R2", () => {
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBe(0);
+    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.REMAINING_LIGHT_FUNCTIONAL_SURFACES).toBe(
       0,
     );
     expect(SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX.length).toBeGreaterThan(30);
@@ -75,8 +76,9 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
     );
   });
 
-  it("delivers DS-10R1 correction on draft PR — not merged", () => {
-    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_R1_REQUIRED).toBe("YES");
+  it("delivers DS-10R2 on draft PR — not merged", () => {
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_R1_REQUIRED).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_PO_VISUAL_UAT).toBe("PENDING_R2_PO_REVIEW");
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.NEXT_PACKAGE).toContain("DS-11 not started");
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_CREATE_FLOW_MIGRATION_COMPLETE).toBe("YES");
     expect(readSrc("components/admin/facilities/FacilitiesAdminPanel.tsx")).toContain(

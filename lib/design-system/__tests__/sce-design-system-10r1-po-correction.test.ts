@@ -7,6 +7,7 @@ import {
   SCE_DESIGN_SYSTEM_10R1_CREATE_FLOW,
 } from "@/lib/design-system/sce-design-system-10r1-meta";
 import { SCE_DESIGN_SYSTEM_10_GOVERNANCE } from "@/lib/design-system/sce-design-system-10-meta";
+import { SCE_DESIGN_SYSTEM_10R2_PO } from "@/lib/design-system/sce-design-system-10r2-meta";
 
 const ROOT = process.cwd();
 
@@ -15,11 +16,13 @@ function readSrc(relativePath: string): string {
 }
 
 describe("SCE-DESIGN-SYSTEM-10R1 PO visual correction", () => {
-  it("does not claim product-wide visual completion before PO accepts R1", () => {
-    expect(SCE_DESIGN_SYSTEM_10R1_PO_CORRECTION.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
+  it("records R1 correction delivered — R2 engineering complete; PO visual UAT still pending", () => {
     expect(SCE_DESIGN_SYSTEM_10R1_PO_CORRECTION.SCE_DESIGN_SYSTEM_10R1_READY_FOR_PO_REVIEW).toBe(
       "YES",
+    );
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10R2_PO.PO_DS10_PRODUCT_WIDE_VISUAL_UAT).toBe(
+      "PENDING_R2_PO_REVIEW",
     );
   });
 

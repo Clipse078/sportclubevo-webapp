@@ -30,6 +30,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import { SceFormField } from "@/components/sce/forms/SceFormField";
 
 type PlannerEditFormData = {
   seasons: Array<{
@@ -99,10 +100,22 @@ function isExternallySynchronizedSource(source: EventSource): boolean {
   return source === EventSource.CLUBCORNER_FVNWS || source === EventSource.SFV;
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function PlannerFormField({
+  label,
+  children,
+}: {
+  label: React.ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <label className="fca-label block text-[var(--text-2)]">{children}</label>
+    <SceFormField label={label} density="COMPACT">
+      {children}
+    </SceFormField>
   );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <span className="fca-label block text-[var(--text-2)]">{children}</span>;
 }
 
 function ReadOnlyValue({ children }: { children: React.ReactNode }) {
@@ -333,17 +346,18 @@ export default function PlannerEntryEditForm({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <FieldLabel>Titel</FieldLabel>
-                {isCoreReadonly ? (
-                  <ReadOnlyValue>{defaults.title}</ReadOnlyValue>
-                ) : (
-                  <input
-                    name="title"
-                    required
-                    defaultValue={defaults.title}
-                    className="fca-input mt-1.5 w-full"
-                  />
-                )}
+                <PlannerFormField label="Titel">
+                  {isCoreReadonly ? (
+                    <ReadOnlyValue>{defaults.title}</ReadOnlyValue>
+                  ) : (
+                    <input
+                      name="title"
+                      required
+                      defaultValue={defaults.title}
+                      className="fca-input mt-1.5 w-full"
+                    />
+                  )}
+                </PlannerFormField>
               </div>
 
               <div>

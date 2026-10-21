@@ -1,4 +1,10 @@
 import type { ReactNode } from "react";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import Link from "next/link";
 import { Target, FileText } from "lucide-react";
 import type { StaleTargetItem, TemplateDraftItem } from "@/lib/dashboard/governance-overview";
@@ -34,7 +40,7 @@ function staleDays(iso: string): number {
 
 function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-[18px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-slate-400">
+    <div className="flex items-center gap-3 rounded-[18px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-[var(--muted)]">
       <span className="shrink-0 text-slate-300">{icon}</span>
       {text}
     </div>
@@ -52,17 +58,17 @@ type Props = {
 
 export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Props) {
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className={VEREINSLEITUNG_PANEL_CLASS}>
 
       {/* ── Stale Targets ── */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             Stagnierende Ziele
           </h3>
-          <p className="mt-0.5 text-[11px] text-slate-400">Aktiv, seit &gt;30 Tagen nicht aktualisiert</p>
+          <p className="mt-0.5 text-[11px] text-[var(--muted)]">Aktiv, seit &gt;30 Tagen nicht aktualisiert</p>
         </div>
-        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${staleTargets.length > 0 ? "border-amber-200 bg-amber-50 text-amber-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${staleTargets.length > 0 ? "border-amber-200 bg-amber-50 text-amber-700" : "border-slate-200 bg-slate-50 text-[var(--text-2)]"}`}>
           {staleTargets.length}
         </span>
       </div>
@@ -80,7 +86,7 @@ export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Pr
               <Link
                 key={t.id}
                 href={`/vereinsleitung/targets/${t.id}`}
-                className="block rounded-[18px] border border-slate-200/80 bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
+                className="block rounded-[18px] border border-slate-200/80 bg-[var(--surface-2)] px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="min-w-0 truncate text-sm font-medium text-slate-800">
@@ -91,7 +97,7 @@ export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Pr
                   </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-medium text-slate-400">
+                  <span className="text-[10px] font-medium text-[var(--muted)]">
                     {CATEGORY_LABELS[t.category] ?? t.category}
                   </span>
                   {t.progress !== null ? (
@@ -102,7 +108,7 @@ export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Pr
                           style={{ width: `${t.progress}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-semibold text-slate-500">
+                      <span className="text-[10px] font-semibold text-[var(--text-2)]">
                         {t.progress}%
                       </span>
                     </div>
@@ -128,12 +134,12 @@ export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Pr
       {/* ── Template Drafts ── */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             Vorlagen zur Prüfung
           </h3>
-          <p className="mt-0.5 text-[11px] text-slate-400">CommunicationTemplates in Prüfungsstufe</p>
+          <p className="mt-0.5 text-[11px] text-[var(--muted)]">CommunicationTemplates in Prüfungsstufe</p>
         </div>
-        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${templateDrafts.length > 0 ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${templateDrafts.length > 0 ? "border-violet-200 bg-violet-50 text-violet-700" : "border-slate-200 bg-slate-50 text-[var(--text-2)]"}`}>
           {templateDrafts.length}
         </span>
       </div>
@@ -149,7 +155,7 @@ export default function GovernanceStaleCard({ staleTargets, templateDrafts }: Pr
             <Link
               key={t.id}
               href={`/vereinsleitung/templates/${t.id}`}
-              className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
+              className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-[var(--surface-2)] px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
             >
               <p className="min-w-0 truncate text-sm font-medium text-slate-800">{t.title}</p>
               <span className="shrink-0 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">

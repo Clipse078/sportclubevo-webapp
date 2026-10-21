@@ -1,4 +1,9 @@
-﻿const KPI_GROUPS = [
+﻿import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
+
+const KPI_GROUPS = [
   {
     title: "Mitglieder & Teams",
     items: [
@@ -26,23 +31,17 @@ export default function VereinsleitungKpisPage() {
   return (
     <div className="grid gap-5 xl:grid-cols-3">
       {KPI_GROUPS.map((group) => (
-        <section
-          key={group.title}
-          className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
-        >
-          <h3 className="text-[1.05rem] font-semibold text-slate-900">{group.title}</h3>
+        <section key={group.title} className={VEREINSLEITUNG_PANEL_CLASS}>
+          <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">{group.title}</h3>
 
           <div className="mt-4 space-y-3">
             {group.items.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-4"
-              >
-                <p className="text-sm text-slate-500">{item.label}</p>
-                <p className="mt-2 text-[1.8rem] font-bold leading-none text-slate-900">
+              <div key={item.label} className={VEREINSLEITUNG_INNER_ROW_CLASS}>
+                <p className="text-sm text-[var(--text-2)]">{item.label}</p>
+                <p className="mt-2 text-[1.8rem] font-bold leading-none text-[var(--foreground)]">
                   {item.value}
                 </p>
-                <p className="mt-3 text-xs text-slate-400">{item.delta}</p>
+                <p className="mt-3 text-xs text-[var(--muted)]">{item.delta}</p>
               </div>
             ))}
           </div>

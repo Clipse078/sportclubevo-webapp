@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { Plus, FileText, Sparkles } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -16,7 +21,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const STATUS_CLASSES: Record<string, string> = {
   DRAFT: "border-amber-200 bg-amber-50 text-amber-700",
   ACTIVE: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  ARCHIVED: "border-slate-200 bg-slate-50 text-slate-500",
+  ARCHIVED: "border-slate-200 bg-slate-50 text-[var(--text-2)]",
 };
 
 const STATUS_LABELS: Record<string, string> = { DRAFT: "Entwurf", ACTIVE: "Aktiv", ARCHIVED: "Archiviert" };
@@ -64,16 +69,16 @@ export default async function TemplatesPage({ searchParams }: PageProps) {
         <div className="grid gap-4 xl:grid-cols-2">
           {templates.map((t) => (
             <Link key={t.id} href={`/vereinsleitung/templates/${t.id}`}
-              className="block rounded-[26px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.06)]">
+              className="block VEREINSLEITUNG_PANEL_CLASS transition hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(15,23,42,0.06)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 shrink-0 text-[#0b4aa2]" />
-                    <p className="truncate text-[1.02rem] font-semibold text-slate-900">{t.title}</p>
+                    <p className="truncate text-[1.02rem] font-semibold text-[var(--foreground)]">{t.title}</p>
                   </div>
-                  <p className="mt-1.5 truncate text-sm text-slate-500">{t.subject}</p>
+                  <p className="mt-1.5 truncate text-sm text-[var(--text-2)]">{t.subject}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600">{CATEGORY_LABELS[t.category] ?? t.category}</span>
+                    <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-2)]">{CATEGORY_LABELS[t.category] ?? t.category}</span>
                     {t.moduleKey ? <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">{t.moduleKey}</span> : null}
                   </div>
                 </div>

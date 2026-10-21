@@ -1,4 +1,10 @@
 import type { ReactNode } from "react";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { ClipboardList, Clock } from "lucide-react";
@@ -41,7 +47,7 @@ function formatDate(iso: string): string {
 
 function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-[18px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-slate-400">
+    <div className="flex items-center gap-3 rounded-[18px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-[var(--muted)]">
       <span className="shrink-0 text-slate-300">{icon}</span>
       {text}
     </div>
@@ -59,19 +65,19 @@ type Props = {
 
 export default function GovernancePendingCard({ pendingApprovals, overdueActions }: Props) {
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
 
       {/* ── Pending Approvals ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             Ausstehende Genehmigungen
           </h3>
-          <p className="mt-0.5 text-[11px] text-slate-400">
+          <p className="mt-0.5 text-[11px] text-[var(--muted)]">
             Elemente in Stufe &ldquo;Zur Prüfung&rdquo;
           </p>
         </div>
-        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${pendingApprovals.length > 0 ? "border-amber-200 bg-amber-50 text-amber-700" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${pendingApprovals.length > 0 ? "border-amber-200 bg-amber-50 text-amber-700" : "border-slate-200 bg-slate-50 text-[var(--text-2)]"}`}>
           {pendingApprovals.length}
         </span>
       </div>
@@ -89,7 +95,7 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
               <Link
                 key={`${item.module}-${item.id}`}
                 href={item.href}
-                className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
+                className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-[var(--surface-2)] px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badge.cls}`}>
@@ -99,7 +105,7 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
                     {item.title}
                   </span>
                 </div>
-                <span className="shrink-0 text-[11px] text-slate-400">
+                <span className="shrink-0 text-[11px] text-[var(--muted)]">
                   {relativeAge(item.updatedAt)}
                 </span>
               </Link>
@@ -107,7 +113,7 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
           })
         )}
         {pendingApprovals.length > 6 && (
-          <p className="pt-1 text-center text-[11px] text-slate-400">
+          <p className="pt-1 text-center text-[11px] text-[var(--muted)]">
             + {pendingApprovals.length - 6} weitere
           </p>
         )}
@@ -119,14 +125,14 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
       {/* ── Overdue Actions ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             Überfällige Massnahmen
           </h3>
-          <p className="mt-0.5 text-[11px] text-slate-400">
+          <p className="mt-0.5 text-[11px] text-[var(--muted)]">
             Offene Meeting-Aktionen mit abgelaufenem Datum
           </p>
         </div>
-        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${overdueActions.length > 0 ? "border-rose-200 bg-rose-50 text-rose-600" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${overdueActions.length > 0 ? "border-rose-200 bg-rose-50 text-rose-600" : "border-slate-200 bg-slate-50 text-[var(--text-2)]"}`}>
           {overdueActions.length}
         </span>
       </div>
@@ -142,11 +148,11 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
             <Link
               key={action.id}
               href={`/vereinsleitung/meetings/${action.meetingSlug}`}
-              className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-white px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
+              className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-[var(--surface-2)] px-4 py-3 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-800">{action.title}</p>
-                <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                <p className="mt-0.5 truncate text-[11px] text-[var(--muted)]">
                   {action.meetingTitle}
                   {action.owner ? ` · ${action.owner}` : ""}
                 </p>
@@ -158,7 +164,7 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
           ))
         )}
         {overdueActions.length > 5 && (
-          <p className="pt-1 text-center text-[11px] text-slate-400">
+          <p className="pt-1 text-center text-[11px] text-[var(--muted)]">
             + {overdueActions.length - 5} weitere
           </p>
         )}

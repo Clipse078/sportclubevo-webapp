@@ -1,4 +1,10 @@
 ﻿import Link from "next/link";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CalendarDays, ChevronRight, Users } from "lucide-react";
 import type { MeetingListItem } from "@/lib/meetings/queries";
@@ -23,12 +29,12 @@ export default function VereinsleitungMeetingsCard({ meetings = [] }: Vereinslei
   const hasRealData = meetings.length > 0;
 
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className={VEREINSLEITUNG_PANEL_CLASS}>
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-[1.08rem] font-semibold text-slate-900">
+        <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
           {hasRealData ? "Meetings" : "Meetings · Demo"}
         </h3>
-        <Link href="/vereinsleitung/meetings" className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+        <Link href="/vereinsleitung/meetings" className={`${VEREINSLEITUNG_MUTED_BADGE_CLASS} hover:text-[var(--foreground)]`}>
           Alle anzeigen
         </Link>
       </div>
@@ -37,33 +43,33 @@ export default function VereinsleitungMeetingsCard({ meetings = [] }: Vereinslei
         {hasRealData
           ? meetings.map((m) => (
               <Link key={m.id} href={`/vereinsleitung/meetings/${m.slug}`}
-                className="flex items-start justify-between gap-3 rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md">
+                className="flex items-start justify-between gap-3 VEREINSLEITUNG_INNER_ROW_CLASS transition hover:-translate-y-[1px] hover:shadow-md">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">{m.title}</p>
-                  <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
+                  <p className="truncate text-sm font-semibold text-[var(--foreground)]">{m.title}</p>
+                  <div className="mt-1.5 flex items-center gap-2 text-xs text-[var(--text-2)]">
                     <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                     {formatSwissDate(m.meetingDate)}
                     {m.attendeeCount ? <><ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 shrink-0 ml-1" />{m.attendeeCount}</> : null}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{STATUS_LABELS[m.status] ?? m.status}</span>
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-2)]">{STATUS_LABELS[m.status] ?? m.status}</span>
+                  <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
                 </div>
               </Link>
             ))
           : MOCK_MEETINGS.map((m) => (
               <Link key={m.id} href={m.href}
-                className="flex items-start justify-between gap-3 rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:shadow-md">
+                className="flex items-start justify-between gap-3 VEREINSLEITUNG_INNER_ROW_CLASS transition hover:-translate-y-[1px] hover:shadow-md">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">{m.title}</p>
-                  <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
+                  <p className="truncate text-sm font-semibold text-[var(--foreground)]">{m.title}</p>
+                  <div className="mt-1.5 flex items-center gap-2 text-xs text-[var(--text-2)]">
                     <CalendarDays className="h-3.5 w-3.5 shrink-0" />{m.dateLabel}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{m.status}</span>
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-2)]">{m.status}</span>
+                  <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
                 </div>
               </Link>
             ))}

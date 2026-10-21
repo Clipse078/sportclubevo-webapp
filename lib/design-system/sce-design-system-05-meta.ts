@@ -248,7 +248,7 @@ export const SCE_DESIGN_SYSTEM_05_LEGACY_FORM_INVENTORY: SceFormControlInventory
     canonicalTarget: "SwitchToggle",
     ds05Action: "DEFER",
     futurePackage: "DS-10",
-    status: "DS10_REMAINING",
+    status: "DS05_DONE",
   },
   {
     currentComponent: "CampaignComposer checkboxes",
@@ -258,7 +258,7 @@ export const SCE_DESIGN_SYSTEM_05_LEGACY_FORM_INVENTORY: SceFormControlInventory
     canonicalTarget: "SceCheckbox + SwitchToggle audit",
     ds05Action: "INVENTORY",
     futurePackage: "DS-10",
-    status: "DS10_REMAINING",
+    status: "DS05_DONE",
   },
   {
     currentComponent: "Raw gray search inputs",
@@ -277,7 +277,7 @@ export const SCE_DESIGN_SYSTEM_05_LEGACY_FORM_INVENTORY: SceFormControlInventory
     canonicalTarget: "SceFormField",
     ds05Action: "DEFER",
     futurePackage: "DS-10",
-    status: "DS10_REMAINING",
+    status: "DS05_DONE",
   },
 ];
 

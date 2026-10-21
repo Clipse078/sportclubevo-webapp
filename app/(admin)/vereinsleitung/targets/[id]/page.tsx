@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -29,7 +34,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
   ACTIVE: { label: "Aktiv", classes: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   DRAFT: { label: "Entwurf", classes: "border-amber-200 bg-amber-50 text-amber-700" },
-  PAUSED: { label: "Pausiert", classes: "border-slate-200 bg-slate-50 text-slate-600" },
+  PAUSED: { label: "Pausiert", classes: "border-slate-200 bg-slate-50 text-[var(--text-2)]" },
   COMPLETED: { label: "Abgeschlossen", classes: "border-blue-200 bg-blue-50 text-blue-700" },
   CANCELLED: { label: "Abgebrochen", classes: "border-rose-200 bg-rose-50 text-rose-700" },
 };
@@ -86,7 +91,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             ) : null}
             <Link
               href="/vereinsleitung/targets"
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className={VEREINSLEITUNG_SECONDARY_CHROME_LINK}
             >
               <ArrowLeft className="h-4 w-4" />
               Zurück
@@ -110,7 +115,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
 
       <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
         <div className="space-y-5">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+          <section className={VEREINSLEITUNG_PANEL_CLASS}>
             <div className="mb-5 flex flex-wrap items-center gap-2">
               <span
                 className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${statusInfo.classes}`}
@@ -118,16 +123,16 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                 {statusInfo.label}
               </span>
               <ReviewStageBadge stage={target.reviewStage} />
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-600">
+              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
                 {categoryLabel}
               </span>
               {target.periodLabel ? (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-600">
+                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
                   {target.periodLabel}
                 </span>
               ) : null}
               {target.ageGroupHint ? (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-600">
+                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)]">
                   {target.ageGroupHint}
                 </span>
               ) : null}
@@ -140,7 +145,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
             </div>
 
             {target.metrics.length === 0 ? (
-              <p className="text-sm text-slate-500">Noch keine Metriken erfasst.</p>
+              <p className="text-sm text-[var(--text-2)]">Noch keine Metriken erfasst.</p>
             ) : (
               <div className="space-y-8">
                 {target.metrics.map((metric) => (
@@ -155,7 +160,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                     />
 
                     {metric.notes ? (
-                      <p className="mt-2 text-[11px] text-slate-500">{metric.notes}</p>
+                      <p className="mt-2 text-[11px] text-[var(--text-2)]">{metric.notes}</p>
                     ) : null}
 
                     <div className="mt-3">
@@ -176,13 +181,13 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                         {metric.dataPoints.slice(0, 5).map((dp) => (
                           <div
                             key={dp.id}
-                            className="flex items-center justify-between rounded-[14px] border border-slate-100 bg-slate-50 px-3 py-2"
+                            className="flex items-center justify-between VEREINSLEITUNG_INNER_ROW_CLASS"
                           >
-                            <span className="text-[12px] font-semibold text-slate-900">
+                            <span className="text-[12px] font-semibold text-[var(--foreground)]">
                               {dp.value}
                               {metric.unit ? ` ${metric.unit}` : ""}
                             </span>
-                            <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                            <div className="flex items-center gap-3 text-[11px] text-[var(--text-2)]">
                               {dp.note ? <span>{dp.note}</span> : null}
                               <span>{formatSwissDate(dp.measuredAt)}</span>
                             </div>
@@ -198,8 +203,8 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
         </div>
 
         <aside className="space-y-5">
-          <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-            <h3 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <section className={VEREINSLEITUNG_PANEL_CLASS}>
+            <h3 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
               Details
             </h3>
             <dl className="space-y-3">
@@ -207,7 +212,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                 <Tag className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                 <div>
                   <dt className="text-[11px] text-slate-400">Kategorie</dt>
-                  <dd className="text-sm font-medium text-slate-900">{categoryLabel}</dd>
+                  <dd className="text-sm font-medium text-[var(--foreground)]">{categoryLabel}</dd>
                 </div>
               </div>
 
@@ -215,10 +220,10 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                 <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                 <div>
                   <dt className="text-[11px] text-slate-400">Zeitraum</dt>
-                  <dd className="text-sm font-medium text-slate-900">
+                  <dd className="text-sm font-medium text-[var(--foreground)]">
                     {target.periodLabel ?? target.period}
                     {target.startsAt && target.endsAt ? (
-                      <span className="block text-[11px] font-normal text-slate-500">
+                      <span className="block text-[11px] font-normal text-[var(--text-2)]">
                         {formatSwissDate(target.startsAt)} – {formatSwissDate(target.endsAt)}
                       </span>
                     ) : null}
@@ -231,24 +236,24 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
                   <span className="mt-0.5 text-slate-400 text-[13px]">⚽</span>
                   <div>
                     <dt className="text-[11px] text-slate-400">Sportkategorie</dt>
-                    <dd className="text-sm font-medium text-slate-900">{target.sportCategory}</dd>
+                    <dd className="text-sm font-medium text-[var(--foreground)]">{target.sportCategory}</dd>
                   </div>
                 </div>
               ) : null}
 
               <div>
                 <dt className="text-[11px] text-slate-400 mb-1">Erstellt</dt>
-                <dd className="text-sm font-medium text-slate-900">
+                <dd className="text-sm font-medium text-[var(--foreground)]">
                   {formatSwissDate(target.createdAt)}
                 </dd>
               </div>
             </dl>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+          <section className={VEREINSLEITUNG_PANEL_CLASS}>
             <div className="mb-4 flex items-center gap-2">
               <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-slate-400" />
-              <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
                 Governance
               </h3>
             </div>
@@ -262,7 +267,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
               {target.reviewedAt ? (
                 <div>
                   <p className="text-[11px] text-slate-400 mb-0.5">Geprüft am</p>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
                     {formatSwissDate(target.reviewedAt)}
                   </p>
                 </div>
@@ -279,8 +284,8 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
           </section>
 
           {target.metrics.length > 0 ? (
-            <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-              <h3 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            <section className={VEREINSLEITUNG_PANEL_CLASS}>
+              <h3 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--text-2)]">
                 Fortschritt
               </h3>
               <div className="space-y-4">
