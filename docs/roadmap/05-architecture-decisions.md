@@ -364,9 +364,9 @@ Contracts: [`SCE-TOURNAMENT-PLANNER-02A`](./SCE-TOURNAMENT-PLANNER-02A.md), `lib
 
 ---
 
-## SCE Finance programme ADRs (ADR-016 … ADR-025)
+## SCE Finance programme ADRs (ADR-016 … ADR-033)
 
-Established by **SCE-FINANCE-01A** ([`SCE-FINANCE-01A.md`](./SCE-FINANCE-01A.md)). Contracts: `lib/finance/finance-architecture.ts`.
+Established by **SCE-FINANCE-01A** and corrected in **FIN-01A-R1** ([`SCE-FINANCE-01A.md`](./SCE-FINANCE-01A.md)). Contracts: `lib/finance/finance-architecture.ts`, `lib/finance/finance-archetypes.ts`.
 
 ---
 
@@ -376,17 +376,17 @@ Established by **SCE-FINANCE-01A** ([`SCE-FINANCE-01A.md`](./SCE-FINANCE-01A.md)
 
 ### Context
 
-Sports clubs need management finance (budget, Erfolgsrechnung, team economics) but often retain Bexio/Abacus/etc. for statutory ledger, VAT, and formal closing. Building a full GL in v1 would delay club-aware planning and duplicate professional tools.
+Sports organisations need management finance (budget, income statement, unit economics) but often retain country-specific accounting products for statutory ledger, VAT, and formal closing. Building a full GL in v1 would delay sport-aware planning and duplicate professional tools.
 
 ### Decision
 
-SCE Finance is a **club-aware financial operating system** for **management finance** (plan, understand, control, forecast). It **does not** replace statutory accounting in FIN-01. v1 explicitly excludes: full general ledger, balance sheet, VAT accounting, payroll ledger, and bank reconciliation. Architecture must allow future **accounting integration** (export, mapping, API) without assuming SCE is the statutory SoT.
+SCE Finance is an **organisation-aware financial operating system** for **management finance** (plan, understand, control, forecast). It is **sport-agnostic**, **country-agnostic at core**, and **tenant-configurable**. It **does not** replace statutory accounting in FIN-01. v1 explicitly excludes: full general ledger, full balance sheet, VAT accounting, payroll ledger, and bank reconciliation. Architecture must remain **balance-sheet aware** for future asset/liability/reserve representation without implementing a statutory ledger. Future **accounting integration** (export, mapping, API) must not assume SCE is the statutory SoT.
 
 ### Consequences
 
-- FIN-01 delivers budgets and management Erfolgsrechnung, not double-entry bookkeeping.
-- Platform **Billing** (`Invoice`, Swiss QR) remains the commercial invoicing rail — integrated later, not merged into club budget tables.
-- PO must not interpret “Finanzen” as “replace Abacus” in v1.
+- FIN-01 delivers budgets and **management income statement** reporting (localized labels such as Erfolgsrechnung / P&L), not double-entry bookkeeping.
+- Platform **Billing** (`Invoice`, payment rails) remains the commercial invoicing boundary — integrated later, not merged into management finance tables.
+- PO must not interpret Finance as “replace statutory accounting” in v1.
 
 ---
 
@@ -396,24 +396,25 @@ SCE Finance is a **club-aware financial operating system** for **management fina
 
 ### Context
 
-Amounts must attribute to Season, OrgUnit, Team, Person, Event, Tournament, Sponsor, Project, Facility, Funding Source, and Cost Center. Dozens of nullable FKs on every row are hard to validate in Prisma; pure EAV loses referential integrity.
+Amounts may attribute to Season, OrgUnit, Team/Group, Person, Activity, Event, Tournament, Sponsor, Project, Facility, Fund, Funding Source, Cost Center, or **tenant-defined custom dimensions**. No sporting or org dimension is **required** for finance. Dozens of nullable FKs on every row are hard to validate; pure EAV loses referential integrity.
 
 ### Decision
 
 Use **`FinancialPosting`** (amount + account + measure + finance year/version) plus **`FinanceDimensionAssignment`** rows:
 
-- `kind`: enum (`SEASON`, `ORG_UNIT`, `TEAM`, `PERSON`, `CLUB_EVENT`, `TOURNAMENT`, `MATCH`, `SPONSOR_ORGANISATION`, `FINANCE_PROJECT`, `FACILITY_RESOURCE`, `FUNDING_SOURCE`, `FINANCE_COST_CENTER`)
-- Exactly **one** canonical entity id per assignment row (service-layer validation; optional DB check constraints per kind in FIN-01B).
-- Multiple assignments per posting allowed (e.g. Team + Season + Cost Center).
-- **No duplicate** Team/OrgUnit/Person tables — FKs reference existing SCE models.
+- **Typed domain kinds** (optional per posting): `SEASON`, `ORG_UNIT`, `TEAM_OR_GROUP`, `PERSON`, `ACTIVITY`, `CLUB_EVENT`, `TOURNAMENT`, `MATCH`, `SPONSOR_ORGANISATION`, `FINANCE_PROJECT`, `FACILITY_RESOURCE`, `FUND`, `FUNDING_SOURCE`, `FINANCE_COST_CENTER`
+- **Custom dimensions**: `FinanceCustomDimensionDefinition` + `FinanceCustomDimensionValue` referenced from assignments with `kind=CUSTOM`
+- Exactly **one** entity id per assignment row (service-layer validation; optional DB check constraints per kind in FIN-01B).
+- Multiple assignments per posting allowed (e.g. Project + Cost Center + custom Program).
+- **No duplicate** Team/OrgUnit/Person tables — FKs reference existing SCE models when used.
 
-Alternatives rejected: (A) wide nullable FK row — poor ergonomics; (B) untyped JSON dimensions — weak audit/reporting.
+Alternatives rejected: (A) wide nullable FK row — poor ergonomics; (B) untyped-only JSON dimensions — weak audit/reporting.
 
 ### Consequences
 
-- Reporting aggregates by dimension via assignment joins.
-- Import assistant maps Excel columns → assignments + cost centers.
-- Extensibility: new kinds require enum + validator, not schema explosion.
+- Reporting aggregates by dimension via assignment joins; irrelevant dimensions stay unused per tenant.
+- Import assistants map spreadsheet columns → assignments + cost centers (FCA is one reference case).
+- New **typed** kinds require enum + validator; **custom** dimensions are tenant-managed within guardrails.
 
 ---
 
@@ -427,7 +428,7 @@ ADR-001 anchors **sporting** planning to `Season`. Accounting years may follow c
 
 ### Decision
 
-Introduce **`FinanceYear`** (tenant-scoped date range, base currency) as the budget/Erfolgsrechnung container. **`Season` remains authoritative for sport**. Optional **`FinanceYear.primarySeasonId`** (or M:N link table if needed) associates a finance year with one or more seasons — **not** 1:1 required. Postings may carry `seasonId` as a dimension when sport context matters.
+Introduce **`FinanceYear`** (tenant-scoped configurable date range, tenant base currency) as the budget/management-income-statement container. **`Season` remains authoritative for sport when the tenant uses seasons**. Optional links associate finance years with seasons — **not** 1:1 required. Calendar year, fiscal year, July–June, or custom boundaries are **tenant configuration**. Postings may carry `seasonId` as an optional dimension when sport context matters.
 
 ### Consequences
 
@@ -443,16 +444,16 @@ Introduce **`FinanceYear`** (tenant-scoped date range, base currency) as the bud
 
 ### Context
 
-Approved annual budgets must not be silently edited. Clubs need baselines, sanierung/investment scenarios, and audit trails.
+Approved annual budgets must not be silently edited. Tenants need named scenarios (Conservative, Growth, Facility Expansion, …) and audit trails.
 
 ### Decision
 
 - **`Budget`**: container per `FinanceYear` (and tenant).
-- **`BudgetScenario`**: BASELINE | SANIERUNG | INVESTITION_JUGEND | CUSTOM — scenarios relate to the same budget structure, not unrelated copies.
+- **`BudgetScenario`**: **tenant-named** rows; optional canonical semantic flag (`BASELINE`, `COMPARISON`) — **not** hardcoded scenario types such as SANIERUNG or INVESTITION_JUGEND in core enums.
 - **`BudgetVersion`**: lifecycle `DRAFT → SUBMITTED → APPROVED → LOCKED`. **Approved/Locked lines are immutable**; changes create **`BudgetRevision`** (new version or amendment package) with who/when/before/after.
 - **`BudgetLine`**: amount per account + measure BUDGET + dimension assignments.
 
-Scenarios support clone/compare/promote in FIN-03; FIN-01A only fixes the model.
+Scenarios support clone/compare/promote in FIN-04; FIN-01A only fixes the model. FCA scenario labels map via import/localization — not product schema.
 
 ### Consequences
 
@@ -467,18 +468,18 @@ Scenarios support clone/compare/promote in FIN-03; FIN-01A only fixes the model.
 
 ### Context
 
-OrgUnit hierarchy (Organisation Builder) describes governance and sport structure, not always accounting structure (e.g. “Material”, “Administration”, tournament P&L).
+OrgUnit hierarchy (Organisation Builder) describes governance and sport structure, not always finance structure.
 
 ### Decision
 
-Introduce **`FinanceCostCenter`** (tenant-scoped tree, optional `parentId`). Optional links: `orgUnitId`, `teamId`, `eventId` — **none required**. Cost center reporting rolls up independently of organigram layout coordinates.
+Introduce **`FinanceCostCenter`** (tenant-scoped **user-managed** tree: create, rename, reparent, reorder, archive, reactivate, delete-when-safe). Optional links to OrgUnit, Team, Event, Tournament, Facility, Project — **none required**. Cost center **names are tenant data**; no business logic on literal labels. Cost center reporting rolls up independently of organigram layout.
 
-OrgUnit/Team/Event may **mirror** a cost center via link, but are not automatically cost centers.
+OrgUnit/Team/Event may **link** to a cost center, but are not cost centers by default.
 
 ### Consequences
 
-- Team economics and event mini-P&L use cost centers + dimensions.
-- Kinderfussball / Mannschaft / Event X can each have explicit centers without reshaping OrgUnit tree.
+- Unit/event economics use cost centers + optional dimensions — not mandatory team navigation.
+- Historical postings keep references when centers are archived; silent delete and cascade delete of financial history are **forbidden** (see ADR-026).
 
 ---
 
@@ -498,7 +499,7 @@ Forecast may be manual or derived later — not AI in FIN-01.
 
 ### Consequences
 
-- Erfolgsrechnung compares measures uniformly.
+- Management income statement compares measures uniformly.
 - Liquidity timing (payment dates) is a separate future layer (ADR-016 boundary).
 
 ---
@@ -513,7 +514,7 @@ Floating-point money causes rounding bugs. SCE billing already uses integer mino
 
 ### Decision
 
-All finance amounts: **`amountMinor` safe integer** + **`currency`** ISO code. Tenant **`Tenant.currency`** is default base currency (FCA: CHF). Display via shared formatters in `lib/` (align with `formatBillingMoney`). No FX trading in FIN-01; multi-currency reserved for future integration exports.
+All finance amounts: **`amountMinor` safe integer** + **`currency`** ISO 4217 code. Tenant base currency is **configurable** (`Tenant.currency` or dedicated finance settings) — **no hardcoded CHF** in core. Display via shared formatters in `lib/` (align with `formatBillingMoney`). No FX trading in FIN-01; multi-currency reserved for future integration exports.
 
 ### Consequences
 
@@ -534,7 +535,7 @@ All finance amounts: **`amountMinor` safe integer** + **`currency`** ISO code. T
 
 Three visibility layers:
 
-1. **Club aggregate** — `finance.view` / Erfolgsrechnung totals.
+1. **Organisation aggregate** — `finance.view` / income statement totals.
 2. **Team / cost-center aggregate** — `finance.view` + scope (OrgUnit/Team/cost center assignment).
 3. **Individual compensation** — requires **`people.finance.view`** (and manage via **`people.finance.manage`**). **`finance.personnel.view`** may gate aggregate personnel planning rows without line-item names where product requires.
 
@@ -559,7 +560,7 @@ Clubs will keep statutory SoT in external accounting. SCE must remain authoritat
 
 FIN-01 defines integration **seams**, not a provider:
 
-- CSV/Excel export of management Erfolgsrechnung and budget lines
+- CSV/Excel export of management income statement and budget lines
 - Future: account mapping table (SCE account → external ledger account)
 - Future: journal export / API / payment reconciliation
 
@@ -578,15 +579,15 @@ SCE does **not** become statutory ledger in v1. Statutory balance sheet, VAT, an
 
 ### Context
 
-FC Allschwil manages planning in `FC_Allschwil_Budget_26-27_Draft_v2.xlsx`. Adoption requires import, not manual re-entry. Workbook is **reference input**, not schema.
+FC Allschwil manages planning in `FC_Allschwil_Budget_26-27_Draft_v2.xlsx`. Adoption requires import, not manual re-entry. Workbook is **reference input**, not product schema. **FCA_WORKBOOK_PROGRAMMATIC_ANALYSIS** remains **PENDING** until the file is available to the analyzer in a validated run.
 
 ### Decision
 
-**Finance Import Assistant** (future FIN-01F+):
+**Finance Import Assistant** (future FIN-01 import subpackage):
 
 1. Upload workbook → programmatic inspect (existing analyzer script).
-2. Sheet/row classifier → map to `FinancialAccount` tree (tenant-specific, with SCE defaults).
-3. Map columns to **dimensions** (Team, OrgUnit, Event) and **measures** (Budget / Ist / Vorjahr).
+2. Sheet/row classifier → map to tenant **`FinancialAccount`** tree (from template or scratch).
+3. Map columns to **optional dimensions** and **measures** (Budget / Actual / prior year).
 4. Preview + validation + idempotent import run record.
 
 Do **not** ship generic AI spreadsheet parsing in FIN-01A. FIN-01A delivers analyzer + mapping model + ambiguity catalog.
@@ -595,9 +596,162 @@ Do **not** ship generic AI spreadsheet parsing in FIN-01A. FIN-01A delivers anal
 
 ### Consequences
 
-- Category labels from FCA are **not** universal SCE defaults.
-- Import must resolve Team column headers → canonical `Team`/`TeamSeason` via mapping UI.
-- Re-run analyzer when PO supplies workbook to refresh sheet inventory.
+- Category labels from FCA are **examples / import mapping**, not universal SCE core semantics.
+- Import must resolve column headers → canonical entities via mapping UI — never assume football team columns globally.
+- Re-run analyzer when PO supplies workbook to refresh sheet inventory. Missing workbook does **not** block generic architecture.
+
+---
+
+## ADR-026 — Tenant-Owned Finance Structure
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Organisations must own cost center trees, account hierarchies, and reporting structures without code deploys or SCE support.
+
+### Decision
+
+Finance structure entities (`FinanceCostCenter`, `FinancialAccount`, `FinancialReportingGroup`, scenario names) are **tenant-managed configuration** with RBAC (`finance.structure.manage`). Lifecycle: create, rename, move/reparent, reorder, archive, reactivate, delete-when-safe. **Product deployment is not required** for structure changes.
+
+### Consequences
+
+- FIN-01B+ implements Structure Builder UX (see ADR-028).
+- Services enforce dependency-aware delete and archive rules (ADR-020).
+
+---
+
+## ADR-027 — Canonical vs Configurable Financial Semantics
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Flexibility must not collapse into untyped strings. Reporting and future accounting integration need stable typed semantics.
+
+### Decision
+
+- **Canonical (typed)**: account semantics (`INCOME`, `EXPENSE`, `ASSET`, `LIABILITY`, `EQUITY`, `TRANSFER`, `OTHER`), measure kinds, budget version status, optional scenario semantic flags.
+- **Configurable (tenant data)**: display names, hierarchy shape, localization labels (Ertrag/Aufwand, P&L sections), template-derived trees.
+- **Management income statement** is the canonical report; Swiss Erfolgsrechnung is a **supported localization**, not a global requirement.
+
+### Consequences
+
+- No hardcoded Ertrag/Aufwand/Sanierung enums in core contracts.
+- Templates seed tenant data; tenants may rename/reparent freely.
+
+---
+
+## ADR-028 — Capability-Driven Finance UX
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Hardcoded German navigation (Übersicht, Erfolgsrechnung, Teams & Bereiche) embeds FC Allschwil / football assumptions.
+
+### Decision
+
+Finance modules and navigation derive from **enabled capabilities**, **permissions**, and **tenant settings**. Contextual team/org/event/personnel analysis appears when relevant — not as globally mandatory nav. Progressive complexity: small orgs see Overview + Budget + Income & Expenses; advanced orgs enable Projects, Funds, Liquidity, etc.
+
+**FIN-01B Structure Builder** (architecture recommendation): tree/table hybrid with inline rename, drag reparent, inspector for semantics/links, command search, archive/delete guards, keyboard accessible.
+
+### Consequences
+
+- `/dashboard/finance` shell reads capability manifest — no fixed five-tab German IA in contracts.
+- Design System v1.0 components only; binary settings use canonical toggles.
+
+---
+
+## ADR-029 — Localization and Optional Templates
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Country and sport templates help onboarding but must not become core schema assumptions.
+
+### Decision
+
+Separate **core financial model** from **localization layer** (language, terminology, currency defaults, country templates, tax/accounting mapping hints). Optional starter templates (small org, team sport, federation, start from scratch) copy into **tenant configuration**; tenants may modify all resulting structure.
+
+### Consequences
+
+- CHF, J+S, Gemeinde, Swiss VAT examples live in localization/reference — not core enums.
+- `SCE-FINANCE-TERMINOLOGY.md` documents localization examples, not immutable core names.
+
+---
+
+## ADR-030 — Funds, Funding Sources, and Restrictions
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Grants, subsidies, donations, and purpose-bound reserves need first-class architecture without hardcoding Swiss providers.
+
+### Decision
+
+Model **`FinanceFund`**, **`FundingSource`**, and optional **`FinanceFundRestriction`** (purpose-bound vs unrestricted). Provider names (J+S, municipality, federation) are **tenant/localization data**. Postings may assign fund/funding source dimensions.
+
+### Consequences
+
+- FIN-08 expands governance workflows; FIN-01A only fixes seams.
+- Restricted vs unrestricted reporting is architecture-supported, not FIN-01 implemented.
+
+---
+
+## ADR-031 — Finance Projects
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Capital projects, camps, and programmes span years, cost centers, and org slices without requiring teams or seasons.
+
+### Decision
+
+**`FinanceProject`** is sport-independent, optional everywhere, may link multiple org units/teams/events/funding sources, and spans multiple finance years.
+
+### Consequences
+
+- Project P&L is filtered postings — no separate non-configurable project types in core.
+
+---
+
+## ADR-032 — Account Hierarchy and Reporting Structure Lifecycle
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+“What kind of activity?” (account) is separate from “where does it belong?” (cost center).
+
+### Decision
+
+**`FinancialAccount`** hierarchical tree with `nodeKind` GROUP|POSTING and **canonical semantic** per node; **`FinancialReportingGroup`** for rolled-up management income statement lines. Same user-managed lifecycle as cost centers (ADR-026). Delete-when-safe with historical integrity.
+
+### Consequences
+
+- No universal Ertrag/Aufwand/Material tree in core — templates only.
+
+---
+
+## ADR-033 — Custom Reporting Dimensions
+
+**Status:** Accepted (FIN-01A-R1)
+
+### Context
+
+Tenants need Region, Program, Campaign, etc., without abandoning typed domain FKs.
+
+### Decision
+
+**`FinanceCustomDimensionDefinition`** (tenant-scoped, typed metadata) and **`FinanceCustomDimensionValue`** (hierarchical optional) referenced from **`FinanceDimensionAssignment`** with `kind=CUSTOM`. Not a free-form JSON bag on postings.
+
+### Consequences
+
+- Balances referential integrity, query performance, and tenant isolation vs pure EAV.
 
 ---
 
