@@ -107,5 +107,5 @@ export const SCE_DESIGN_SYSTEM_10_PO_CLOSURE = {
   DS10_STATUS: "CLOSED / ACCEPTED / MERGED",
   MANUAL_UAT_BY_CURSOR: "SKIPPED_PO_OWNED",
   SCREENSHOTS_BY_CURSOR: "SKIPPED_PO_OWNED",
-  NEXT_PACKAGE: "NONE — DS-11 not started",
+  NEXT_PACKAGE: "NONE — SCE Design System v1.0 programme complete (DS-11 closed)",
 } as const;

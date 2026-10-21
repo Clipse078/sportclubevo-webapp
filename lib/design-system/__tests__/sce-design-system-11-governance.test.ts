@@ -26,7 +26,10 @@ describe("SCE-DESIGN-SYSTEM-11 governance architecture", () => {
       "YES",
     );
     expect(SCE_DESIGN_SYSTEM_11_READINESS.SCE_DESIGN_SYSTEM_11_READY_FOR_PO_REVIEW).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_11_READINESS.SCE_DESIGN_SYSTEM_V1_READY_FOR_FINAL_CLOSURE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_11_READINESS.SCE_DESIGN_SYSTEM_V1_READY_FOR_FINAL_CLOSURE).toBe(
+      "YES",
+    );
+    expect(SCE_DESIGN_SYSTEM_11_READINESS.SCE_DESIGN_SYSTEM_11_CLOSED).toBe("YES");
   });
 
   it("points canonical master documentation at SCE-DESIGN-SYSTEM.md", () => {

@@ -79,7 +79,7 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
   it("records DS-10 PO closure on PR #888", () => {
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_R1_REQUIRED).toBe("NO");
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_PO_VISUAL_UAT).toBe("PASS");
-    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.NEXT_PACKAGE).toContain("DS-11 not started");
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.NEXT_PACKAGE).toContain("v1.0 programme complete");
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.PR_NUMBER).toBe("888");
     expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_CREATE_FLOW_MIGRATION_COMPLETE).toBe("YES");
     expect(readSrc("components/admin/facilities/FacilitiesAdminPanel.tsx")).toContain(

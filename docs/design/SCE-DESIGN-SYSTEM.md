@@ -2,7 +2,7 @@
 
 > **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **CLOSED / ACCEPTED / MERGED** (PR **#884**) · [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md) — **CLOSED / ACCEPTED / MERGED** (PR **#885**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#887** baseline · PR **#889** PO addendum)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **DS-11 not started** · [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) — **CLOSED / ACCEPTED / MERGED** (PR **#888**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#889**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **COMPLETE (v1.0)** · **`NEXT_PACKAGE`:** **NONE** · [`SCE-DESIGN-SYSTEM-11`](./SCE-DESIGN-SYSTEM.md#sce-design-system-11--governance--automation-closure) — **CLOSED / ACCEPTED / MERGED** (PR **#890**) · [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) — **CLOSED / ACCEPTED / MERGED** (PR **#888**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#889**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**)
 
 ---
 
@@ -25,7 +25,7 @@
 | **Scope** | Strong canonical cores (nav, activity cards, composer, context tabs, crest rules, tournament fixture presentation) coexisting with legacy admin surfaces, local empty states, and ~32 estimated binary-setting checkboxes | One enforced consumption model across modules with tokenised foundations and unified feedback primitives |
 | **Documentation** | This master doc + UI rollout standards + **DS-01** registry/matrix | Same master doc as single entry; registry rows marked **CANONICAL** only after adoption package lands |
 | **Migration** | [`SCE-UI-LEGACY-REGISTER.md`](./SCE-UI-LEGACY-REGISTER.md) (28 rows) + [`SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-01-MIGRATION-MATRIX.md) | DS-10 closes MUST-MIGRATE register entries |
-| **Compliance** | Package closure fields defined below — manual | DS-11 adds automated guardrails where practical |
+| **Compliance** | **`npm run test:design-system`** + package closure footer fields | Automated DS-11 guardrails enforced in CI |
 
 **DS-01 does not claim unfinished primitives are already canonical.** Refer to [`SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md`](./SCE-DESIGN-SYSTEM-01-PRIMITIVE-REGISTRY.md) for proposed v1.0 registry and classification counts.
 
@@ -393,11 +393,50 @@ Product-wide rollout of workspace chrome, bounded surfaces, dense UI, forms (Tog
 | Typed matrix | `SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX` in `lib/design-system/sce-design-system-10-meta.ts` |
 | Roadmap | [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) |
 
-**Delivery status:** `DS10_STATUS = CLOSED / ACCEPTED / MERGED` · `PO_DS10_PRODUCT_WIDE_VISUAL_UAT = PASS` · `SCE_DESIGN_SYSTEM_10_CLOSED = YES` · **PR #888** · **DS-11 not started**.
+**Delivery status:** `DS10_STATUS = CLOSED / ACCEPTED / MERGED` · `PO_DS10_PRODUCT_WIDE_VISUAL_UAT = PASS` · `SCE_DESIGN_SYSTEM_10_CLOSED = YES` · **PR #888**.
 
 Automated guardrails: `lib/design-system/__tests__/sce-design-system-10-product-wide-adoption.test.ts` · `lib/design-system/__tests__/sce-design-system-10-final-closure.test.ts`.
 
 **Closure marker:** `SCE_DESIGN_SYSTEM_10_CLOSED`
+
+---
+
+## SCE-DESIGN-SYSTEM-11 — Governance & automation closure
+
+Machine-readable governance manifest, typed exception registry, static scanner, developer guide, CI guard, and canonical Organisation Builder contextual preview layer token.
+
+| Item | Location |
+| --- | --- |
+| Manifest + rule ids | `lib/design-system/sce-design-system-governance.ts` |
+| Exception registry | `lib/design-system/sce-design-system-exception-registry.ts` |
+| Scanner / CLI | `lib/design-system/sce-design-system-governance-runner.ts` · `scripts/run-design-system-governance.ts` |
+| Closure metadata | `lib/design-system/sce-design-system-11-closure-meta.ts` |
+| CI workflow | `.github/workflows/design-system-governance.yml` |
+
+**Delivery status:** `DS11_STATUS = CLOSED / ACCEPTED / MERGED` · `SCE_DESIGN_SYSTEM_11_CLOSED = YES` · `SCE_DESIGN_SYSTEM_V1_COMPLETE = YES` · `SCE_DESIGN_SYSTEM_COMPLIANCE = PASS` · **PR #890**.
+
+**Governance command:** `npm run test:design-system` (scanner + DS regression vitest suites).
+
+**Layer debt semantics (honest inventory — do not conflate):**
+
+| Field | Meaning |
+| --- | --- |
+| `CANONICAL_SCE_LAYER_DEBT` | Unexplained magic z-index inside canonical SCE families guarded by `SCE-DS-GOV-LAYER-001` — **0** at closure |
+| `REPOSITORY_WIDE_NON_CANONICAL_LAYER_DEBT` | Production magic overlay utilities (e.g. legacy `z-[80]`) not yet on canonical tokens — tracked, not hidden |
+| `ACCEPTED_LAYER_ARCHITECTURE_EXCEPTIONS` | Registry `EXPLICIT_ARCHITECTURE_EXCEPTION` rows documenting intentional non-token overlay stacking |
+
+Organisation Builder contextual preview consumes **`SCE_Z_INDEX_CONTEXTUAL_PREVIEW` / `sce-contextual-preview-layer`** (effective z-index **80** — above app floaters, below modal stack).
+
+**Closure markers:**
+
+```text
+SCE_DESIGN_SYSTEM_11_CLOSED = YES
+SCE_DESIGN_SYSTEM_GOVERNANCE_ENABLED = YES
+SCE_DESIGN_SYSTEM_COMPLIANCE = PASS
+SCE_DESIGN_SYSTEM_V1_COMPLETE = YES
+UNCLASSIFIED_GOVERNANCE_EXCEPTIONS = 0
+UNRESOLVED_DS11_GOVERNANCE_DEBT = 0
+```
 
 ---
 
@@ -924,6 +963,7 @@ Portalled floating surfaces use explicit stack tokens (`lib/ui/sce-overlay-layer
 | Layer | z-index | Usage |
 |-------|---------|--------|
 | App popover | 70 | Combobox / filter dropdowns in main workspace |
+| Contextual preview | 80 | Organisation Builder hover/focus preview (`sce-contextual-preview-layer`) |
 | Modal overlay root | 100 | Activity Composer, standard dialogs |
 | Composer popover | 105 | `SceActivityCalendarPopover`, other composer-owned popovers (`PopoverContent` `floatingLayer="composer"`) |
 | Elevated modal | 110 | Club/team selector over composer |

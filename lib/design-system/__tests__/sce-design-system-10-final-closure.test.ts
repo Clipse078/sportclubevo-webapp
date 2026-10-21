@@ -81,7 +81,7 @@ describe("SCE-DESIGN-SYSTEM-10 final closure", () => {
     ).toBe(true);
   });
 
-  it("does not start DS-11", () => {
-    expect(SCE_DESIGN_SYSTEM_10_PO_CLOSURE.NEXT_PACKAGE).toContain("DS-11 not started");
+  it("records DS-11 completion without starting a new programme package", () => {
+    expect(SCE_DESIGN_SYSTEM_10_PO_CLOSURE.NEXT_PACKAGE).toContain("v1.0 programme complete");
   });
 });
