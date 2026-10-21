@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ArrowLeft } from "lucide-react";
-import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
+import { buildVerwaltungManagementHref } from "@/lib/personal-actions/aufgaben-scope";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { SceSemanticFeedback } from "@/components/sce/feedback/SceSemanticFeedback";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
@@ -50,7 +50,7 @@ export default function RequirementCreateClient({ timeZone }: Props) {
       className="mx-auto max-w-4xl"
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },
-        { label: "Aufgaben", href: buildAufgabenBereichHref("anforderungen") },
+        { label: "Aufgaben", href: buildVerwaltungManagementHref("requirements") },
         { label: "Neue Anforderung" },
       ]}
       header={{
@@ -59,11 +59,11 @@ export default function RequirementCreateClient({ timeZone }: Props) {
           "Mehrere Personen müssen individuell bestätigen. Empfänger werden beim Aktivieren festgelegt.",
         secondaryActions: (
           <Link
-            href={buildAufgabenBereichHref("anforderungen")}
+            href={buildVerwaltungManagementHref("requirements")}
             className="fca-button-secondary inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Anforderungen
+            Verwaltung
           </Link>
         ),
       }}
@@ -87,7 +87,7 @@ export default function RequirementCreateClient({ timeZone }: Props) {
           }
         />
         <div className="mt-4 flex justify-end gap-2 border-t border-[var(--border)] pt-4">
-          <Link href={buildAufgabenBereichHref("anforderungen")} className="fca-button-secondary text-sm">
+          <Link href={buildVerwaltungManagementHref("requirements")} className="fca-button-secondary text-sm">
             Abbrechen
           </Link>
           <button

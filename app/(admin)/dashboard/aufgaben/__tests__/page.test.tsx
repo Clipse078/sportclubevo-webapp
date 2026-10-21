@@ -13,11 +13,14 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => "/dashboard/aufgaben",
   useSearchParams: () => mockSearchParams,
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  }),
 }));
 
 vi.mock("@/lib/personal-actions/require-module-access", () => ({
   requirePersonalActionsModuleAccess: vi.fn().mockResolvedValue({
-    session: { user: { id: "user-1" } },
+    session: { user: { id: "user-1", firstName: "Test", lastName: "User" } },
     tenantId: "tenant-1",
     capabilities: {
       taskManagement: true,
@@ -70,8 +73,8 @@ vi.mock("@/lib/tasks/task-org-options", () => ({
   loadTaskOrgUnitFilterOptions: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/components/admin/aufgaben/MeineAufgabenQuickCreateDialog", () => ({
-  default: () => null,
+vi.mock("@/components/admin/aufgaben/AufgabenWorkspaceCreateChooser", () => ({
+  default: () => <div data-testid="aufgaben-create-chooser-stub" />,
 }));
 
 vi.mock("@/lib/tasks/queries", () => ({
@@ -162,9 +165,28 @@ describe("AUFGABEN-02 — Aufgaben management page", () => {
     expect(screen.getByTestId("personal-inbox-empty")).toBeInTheDocument();
   });
 
-  it("M1 renders requirements workspace when bereich=anforderungen", async () => {
+  it("redirects legacy bereich=anforderungen into Verwaltung type filter", async () => {
     vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
-      session: { user: { id: "user-1" } },
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
+      tenantId: "tenant-1",
+      capabilities: {
+        taskManagement: true,
+        requirementManagement: true,
+        personalInbox: true,
+        moduleAccess: true,
+        permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
+      },
+    });
+    await expect(
+      AufgabenPage({
+        searchParams: Promise.resolve({ bereich: "anforderungen" }),
+      }),
+    ).rejects.toThrow(/REDIRECT:.*bereich=verwaltung.*type=requirements/);
+  });
+
+  it("renders unified Verwaltung when bereich=verwaltung&type=requirements", async () => {
+    vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
       tenantId: "tenant-1",
       capabilities: {
         taskManagement: true,
@@ -186,24 +208,26 @@ describe("AUFGABEN-02 — Aufgaben management page", () => {
       page: 1,
       pageCount: 1,
     });
-    mockSearchParams = new URLSearchParams({ bereich: "anforderungen" });
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung", type: "requirements" });
     const jsx = await AufgabenPage({
-      searchParams: Promise.resolve({ bereich: "anforderungen" }),
+      searchParams: Promise.resolve({ bereich: "verwaltung", type: "requirements" }),
     });
     render(jsx);
+    expect(screen.getByTestId("aufgaben-verwaltung-workspace")).toBeInTheDocument();
     expect(screen.getByTestId("requirements-management-workspace")).toBeInTheDocument();
-    expect(screen.getByTestId("aufgaben-bereich-anforderungen")).toHaveAttribute(
+    expect(screen.getByTestId("aufgaben-bereich-verwaltung")).toHaveAttribute(
       "aria-selected",
       "true",
     );
   });
 
-  it("renders management workspace when bereich=verwaltung", async () => {
-    mockSearchParams = new URLSearchParams({ bereich: "verwaltung", view: "MEINE" });
+  it("renders management workspace when bereich=verwaltung&type=tasks", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung", type: "tasks", view: "MEINE" });
     const jsx = await AufgabenPage({
-      searchParams: Promise.resolve({ bereich: "verwaltung", view: "MEINE" }),
+      searchParams: Promise.resolve({ bereich: "verwaltung", type: "tasks", view: "MEINE" }),
     });
     render(jsx);
+    expect(screen.getByTestId("aufgaben-verwaltung-workspace")).toBeInTheDocument();
     expect(screen.getByTestId("aufgaben-management-workspace")).toBeInTheDocument();
     expect(screen.getByText("Material bestellen")).toBeInTheDocument();
     expect(screen.getByTestId("aufgaben-view-meine")).toHaveAttribute("aria-current", "true");

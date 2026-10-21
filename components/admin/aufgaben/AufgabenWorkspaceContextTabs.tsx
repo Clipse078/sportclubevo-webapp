@@ -5,27 +5,27 @@ import { SceContextTabProvider } from "@/lib/context-tabs/use-context-detail-tab
 import { buildAufgabenWorkspaceTabNavigationConfig } from "@/lib/nav/aufgaben-workspace-tab-config";
 
 type Props = {
-  showManagement: boolean;
-  showRequirements: boolean;
+  showMeine: boolean;
+  showVerwaltung: boolean;
   basePath?: string;
 };
 
 /**
- * Aufgaben module — canonical `SceContextTabs` (DS-10 R4).
+ * Aufgaben module — canonical `SceContextTabs` (DS-10 R4.2: Meine Aufgaben + Verwaltung).
  * Preserves legacy `?bereich=` deep links via `tabQueryParam`.
  */
 export default function AufgabenWorkspaceContextTabs({
-  showManagement,
-  showRequirements,
+  showMeine,
+  showVerwaltung,
   basePath,
 }: Props) {
-  if (!showManagement && !showRequirements) {
+  if (!showMeine && !showVerwaltung) {
     return null;
   }
 
   const config = buildAufgabenWorkspaceTabNavigationConfig({
-    showManagement,
-    showRequirements,
+    showMeine,
+    showVerwaltung,
     basePath,
   });
 

@@ -50,8 +50,20 @@ export function RequirementCreateForm({
         </SceFormField>
         <TaskDescriptionFormField name="description" disabled={pending} compact />
         <div className="grid gap-4 md:grid-cols-2">
-          <SceFormField label="Fällig am" density="DENSE">
-            <input type="date" name="dueAt" disabled={pending} className="fca-input w-full text-sm" />
+          <SceFormField
+            label="Fällig am"
+            required
+            description="Für Anforderungen wird ein Termin benötigt, um offene und überfällige Bestätigungen nachzuverfolgen."
+            density="DENSE"
+          >
+            <input
+              type="date"
+              name="dueAt"
+              required
+              disabled={pending}
+              className="fca-input w-full text-sm"
+              data-testid="requirement-create-due"
+            />
           </SceFormField>
           <TaskReminderFields
             timeZone={timeZone}

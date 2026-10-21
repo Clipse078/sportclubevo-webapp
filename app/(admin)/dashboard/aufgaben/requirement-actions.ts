@@ -204,6 +204,12 @@ export async function createRequirementDraftAction(
     const description = formData.get("description");
     const schedule = await parseRequirementScheduleFields(ctx.tenantId, formData);
     if (!schedule.ok) return schedule;
+    if (!schedule.dueAt) {
+      return {
+        ok: false,
+        message: "Fälligkeitsdatum ist für neue Anforderungen erforderlich.",
+      };
+    }
 
     const draft = await createRequirementDraft(ctx, {
       title,

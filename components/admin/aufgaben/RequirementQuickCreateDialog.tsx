@@ -19,6 +19,10 @@ type Props = {
   timeZone: string;
   triggerLabel?: string;
   triggerClassName?: string;
+  triggerTestId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 };
 
 const FORM_ID = "requirement-quick-create-form";
@@ -28,9 +32,15 @@ export default function RequirementQuickCreateDialog({
   timeZone,
   triggerLabel = "Anforderung",
   triggerClassName,
+  triggerTestId = "requirements-create-open",
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [audience, setAudience] = useState<RequirementAudienceSelection>(
@@ -73,21 +83,23 @@ export default function RequirementQuickCreateDialog({
 
   return (
     <>
-      <button
-        type="button"
-        className={triggerClassName ?? "fca-button-primary inline-flex items-center gap-1.5 text-sm"}
-        onClick={openDialog}
-        data-testid="requirements-create-open"
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        {triggerLabel}
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          className={triggerClassName ?? "fca-button-primary inline-flex items-center gap-1.5 text-sm"}
+          onClick={openDialog}
+          data-testid={triggerTestId}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {triggerLabel}
+        </button>
+      ) : null}
 
       <AufgabenFormDialogShell
         open={open}
         onClose={closeDialog}
         title="Neue Anforderung"
-        description="Mehrere Personen müssen individuell bestätigen. Empfänger werden beim Aktivieren festgelegt."
+        description="Eine Bestätigung, die jede ausgewählte Person einzeln abgeben muss."
         testId="requirement-create-dialog"
         footer={
           <>

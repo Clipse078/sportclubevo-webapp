@@ -29,6 +29,7 @@ Make SportClubEvo **visibly and structurally** converge on SCE Design System v1.
 | Product migrations | Workspace chrome, dense UI, toggles, billing tabs, facilities shell, **R3:** Documents DAM, audit logs, day/create planner, facilities controls |
 | `SCE_DESIGN_SYSTEM_10_R3_BATCH_03` | Administration, Documents & Planning Administration |
 | **`SCE-DESIGN-SYSTEM-10-R4`** | **Aufgaben / Anforderungen** — single `AufgabenWorkspaceShell`, canonical context tabs, DS-07 load errors, creation form convergence (PO Aufgaben visual baseline) |
+| **`SCE-DESIGN-SYSTEM-10-R4.2`** | **Unified Aufgaben workspace** — Meine Aufgaben + Verwaltung only; action types (Aufgabe / Teilnahme / Anforderung); `+ Erstellen` chooser; legacy `?bereich=anforderungen` → Verwaltung |
 
 ---
 

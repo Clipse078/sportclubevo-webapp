@@ -1,46 +1,40 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import type { AufgabenBereich } from "@/lib/personal-actions/aufgaben-scope";
-import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
+import type { AufgabenWorkspaceTabId } from "@/lib/nav/aufgaben-workspace-tab-config";
+import {
+  buildAufgabenBereichHref,
+  buildVerwaltungManagementHref,
+} from "@/lib/personal-actions/aufgaben-scope";
 
 type Props = {
-  active: AufgabenBereich;
-  showManagement: boolean;
-  showRequirements?: boolean;
+  active: AufgabenWorkspaceTabId | "anforderungen";
+  showMeine: boolean;
+  showVerwaltung: boolean;
   basePath?: string;
 };
 
+/** Legacy scope toggle — prefer `AufgabenWorkspaceContextTabs` (DS-10 R4.2). */
 export default function AufgabenScopeToggle({
   active,
-  showManagement,
-  showRequirements = false,
+  showMeine,
+  showVerwaltung,
   basePath = "/dashboard/aufgaben",
 }: Props) {
-  if (!showManagement && !showRequirements) {
+  if (!showMeine && !showVerwaltung) {
     return null;
   }
 
-  const tabs: { id: AufgabenBereich; label: string; testId: string }[] = [
-    ...(showManagement
-      ? ([
-          { id: "meine" as const, label: "Meine Aufgaben", testId: "aufgaben-bereich-meine" },
-          {
-            id: "verwaltung" as const,
-            label: "Aufgabenverwaltung",
-            testId: "aufgaben-bereich-verwaltung",
-          },
-        ] as const)
+  const tabs: { id: AufgabenWorkspaceTabId; label: string; testId: string }[] = [
+    ...(showMeine
+      ? ([{ id: "meine" as const, label: "Meine Aufgaben", testId: "aufgaben-bereich-meine" }] as const)
       : []),
-    ...(showRequirements
-      ? ([
-          {
-            id: "anforderungen" as const,
-            label: "Anforderungen",
-            testId: "aufgaben-bereich-anforderungen",
-          },
-        ] as const)
+    ...(showVerwaltung
+      ? ([{ id: "verwaltung" as const, label: "Verwaltung", testId: "aufgaben-bereich-verwaltung" }] as const)
       : []),
   ];
+
+  const normalizedActive: AufgabenWorkspaceTabId =
+    active === "anforderungen" ? "verwaltung" : active;
 
   return (
     <nav
@@ -49,11 +43,15 @@ export default function AufgabenScopeToggle({
       data-testid="aufgaben-scope-toggle"
     >
       {tabs.map((tab) => {
-        const isActive = active === tab.id;
+        const isActive = normalizedActive === tab.id;
+        const href =
+          tab.id === "verwaltung" && active === "anforderungen"
+            ? buildVerwaltungManagementHref("requirements", basePath)
+            : buildAufgabenBereichHref(tab.id, basePath);
         return (
           <Link
             key={tab.id}
-            href={buildAufgabenBereichHref(tab.id, basePath)}
+            href={href}
             data-testid={tab.testId}
             aria-current={isActive ? "page" : undefined}
             className={cn(

@@ -26,6 +26,11 @@ type Props = {
   currentUser: QuickCreateCurrentUser;
   timeZone: string;
   canOpenFullCreate?: boolean;
+  triggerLabel?: string;
+  triggerTestId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 };
 
 const FORM_ID = "meine-aufgaben-create-form";
@@ -36,10 +41,17 @@ export default function MeineAufgabenQuickCreateDialog({
   currentUser,
   timeZone,
   canOpenFullCreate = false,
+  triggerLabel = "Aufgabe",
+  triggerTestId = "meine-aufgaben-create-open",
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: Props) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([currentUser.userId]);
@@ -107,21 +119,23 @@ export default function MeineAufgabenQuickCreateDialog({
 
   return (
     <>
-      <button
-        type="button"
-        className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-        onClick={openDialog}
-        data-testid="meine-aufgaben-create-open"
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        Aufgabe
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+          onClick={openDialog}
+          data-testid={triggerTestId}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {triggerLabel}
+        </button>
+      ) : null}
 
       <AufgabenFormDialogShell
         open={open}
         onClose={closeDialog}
         title="Neue Aufgabe"
-        description="Schnell etwas für dich oder dein Team erfassen."
+        description="Eine Arbeit, die erledigt werden muss."
         testId="meine-aufgaben-create-dialog"
         footer={
           <>

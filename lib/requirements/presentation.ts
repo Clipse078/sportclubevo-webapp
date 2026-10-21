@@ -36,6 +36,39 @@ export function formatRequirementOverviewProgressLabel(
   return `${aggregate.resolvedCount} / ${aggregate.totalRecipients} erledigt · ${aggregate.resolvedPercent} %`;
 }
 
+/** Per-recipient confirmation aggregate for management surfaces (R4.2). */
+export function formatRequirementConfirmationAggregateLabel(
+  aggregate: RequirementAggregateDto | null,
+  status: RequirementStatus,
+): string | null {
+  if (status === "DRAFT") return null;
+  if (!aggregate || aggregate.totalRecipients === 0) return null;
+  const confirmed = aggregate.acknowledgedCount;
+  const total = aggregate.totalRecipients;
+  const parts = [`${confirmed} / ${total} bestätigt`];
+  if (aggregate.openCount > 0) {
+    parts.push(`${aggregate.openCount} offen`);
+  }
+  if (aggregate.overdueCount > 0) {
+    parts.push(`${aggregate.overdueCount} überfällig`);
+  }
+  return parts.length === 1 ? parts[0]! : `${parts[0]} · ${parts.slice(1).join(" · ")}`;
+}
+
+export function formatRequirementRecipientCountLabel(
+  aggregate: RequirementAggregateDto | null,
+  draftAudienceCount: number,
+  status: RequirementStatus,
+): string {
+  if (status === "DRAFT") {
+    return draftAudienceCount === 1 ? "1 Empfänger" : `${draftAudienceCount} Empfänger`;
+  }
+  if (!aggregate || aggregate.totalRecipients === 0) return "—";
+  return aggregate.totalRecipients === 1
+    ? "1 Empfänger"
+    : `${aggregate.totalRecipients} Empfänger`;
+}
+
 export function formatRequirementReminderSummary(input: {
   remindersConfigured: boolean;
   reminder1At: string | null;

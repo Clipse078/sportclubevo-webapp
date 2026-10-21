@@ -34,7 +34,7 @@ import {
 } from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
 import type { RequirementDocumentReferenceDto } from "@/lib/requirements/requirement-document-reference-service";
 import { RequirementDocumentReferencesSection } from "./RequirementDocumentReferencesSection";
-import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
+import { buildVerwaltungManagementHref } from "@/lib/personal-actions/aufgaben-scope";
 
 type Props = {
   requirement: RequirementDto;
@@ -125,7 +125,7 @@ export default function RequirementDetailWorkspace({
   const isActive = requirement.status === "ACTIVE";
   const readOnly = requirement.status === "CLOSED" || requirement.status === "CANCELLED";
 
-  const backHref = buildAufgabenBereichHref("anforderungen");
+  const backHref = buildVerwaltungManagementHref("requirements");
 
   const reminderSummary = formatRequirementReminderSummary({
     remindersConfigured: requirement.remindersConfigured,

@@ -7,7 +7,10 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { resolvePersonalActionsModuleCapabilities } from "@/lib/personal-actions/access";
-import { parseAufgabenBereich, buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
+import {
+  parseAufgabenBereich,
+  buildVerwaltungManagementHref,
+} from "@/lib/personal-actions/aufgaben-scope";
 import {
   canAccessRequirementManagement,
   canAccessRequirementManagementFromKeys,
@@ -91,7 +94,8 @@ describe("AUFGABEN-06G2 scope & authorization (M1–M3, M14–M16, M31–M32)", 
   it("M1 shows Anforderungen scope for authorized manager", () => {
     expect(canAccessRequirementManagementFromKeys(MANAGER_PERMS)).toBe(true);
     expect(parseAufgabenBereich("anforderungen")).toBe("anforderungen");
-    expect(buildAufgabenBereichHref("anforderungen")).toContain("bereich=anforderungen");
+    expect(buildVerwaltungManagementHref("requirements")).toContain("bereich=verwaltung");
+    expect(buildVerwaltungManagementHref("requirements")).toContain("type=requirements");
   });
 
   it("M2 hides management scope from recipient-only user", () => {

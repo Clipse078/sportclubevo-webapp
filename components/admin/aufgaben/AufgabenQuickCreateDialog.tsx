@@ -20,6 +20,11 @@ type Props = {
   canCreate: boolean;
   canManage?: boolean;
   assigneeOptions: TaskAssigneeOption[];
+  triggerLabel?: string;
+  triggerTestId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 };
 
 const FORM_ID = "aufgaben-quick-create-form";
@@ -27,9 +32,16 @@ const FORM_ID = "aufgaben-quick-create-form";
 export default function AufgabenQuickCreateDialog({
   canCreate,
   canManage = false,
+  triggerLabel = "Aufgabe",
+  triggerTestId = "aufgaben-create-open",
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
@@ -53,21 +65,23 @@ export default function AufgabenQuickCreateDialog({
 
   return (
     <>
-      <button
-        type="button"
-        className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-        onClick={() => setOpen(true)}
-        data-testid="aufgaben-create-open"
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        Aufgabe
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+          onClick={() => setOpen(true)}
+          data-testid={triggerTestId}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {triggerLabel}
+        </button>
+      ) : null}
 
       <AufgabenFormDialogShell
         open={open}
         onClose={() => !pending && setOpen(false)}
         title="Neue Aufgabe"
-        description="Titel, Verantwortliche und optional Termin & Priorität."
+        description="Eine Arbeit, die erledigt werden muss."
         testId="aufgaben-create-dialog"
         footer={
           <>

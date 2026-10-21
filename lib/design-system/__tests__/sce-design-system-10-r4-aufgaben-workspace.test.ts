@@ -34,13 +34,13 @@ describe("SCE-DESIGN-SYSTEM-10 R4 — Aufgaben workspace convergence", () => {
 
   it("preserves bereich deep links via SceContextTabs tabQueryParam", () => {
     const config = buildAufgabenWorkspaceTabNavigationConfig({
-      showManagement: true,
-      showRequirements: true,
+      showMeine: true,
+      showVerwaltung: true,
     });
     expect(config.tabQueryParam).toBe("bereich");
     expect(config.tabRoutes?.meine).toContain("bereich=meine");
     expect(config.tabRoutes?.verwaltung).toContain("bereich=verwaltung");
-    expect(config.tabRoutes?.anforderungen).toContain("bereich=anforderungen");
+    expect(config.tabs.map((t) => t.key)).toEqual(["meine", "verwaltung"]);
 
     expect(readSrc("components/admin/aufgaben/AufgabenWorkspaceContextTabs.tsx")).toContain(
       "SceContextTabs",
@@ -148,7 +148,9 @@ describe("SCE-DESIGN-SYSTEM-10 R4 — Aufgaben workspace convergence", () => {
     const modal = readSrc("components/admin/aufgaben/RequirementQuickCreateDialog.tsx");
     expect(modal).toContain("AufgabenFormDialogShell");
     expect(modal).toContain("RequirementCreateForm");
-    expect(readSrc("app/(admin)/dashboard/aufgaben/page.tsx")).toContain("RequirementQuickCreateDialog");
+    expect(readSrc("app/(admin)/dashboard/aufgaben/page.tsx")).toContain(
+      "AufgabenWorkspaceCreateChooser",
+    );
     const fallback = readSrc("components/admin/aufgaben/RequirementCreateClient.tsx");
     expect(fallback).toContain("RequirementCreateForm");
     expect(fallback).toContain("data-requirement-create-fallback");
