@@ -15,7 +15,7 @@ function getClasses(type: string) {
       return "border-rose-200 bg-rose-50 text-rose-700";
     case "OTHER":
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]";
   }
 }
 

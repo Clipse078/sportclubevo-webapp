@@ -573,9 +573,24 @@ export function TaskWorkspacePanel({
     </span>
   );
 
+  const isModal = presentation === "modal";
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col" data-testid="task-workspace">
-      <header className={cn(SCE_DIALOG_HEADER, "items-center py-3")}>
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col overflow-hidden",
+        isModal && "max-h-full",
+      )}
+      data-testid="task-workspace"
+      data-task-workspace-presentation={presentation}
+    >
+      <header
+        className={cn(
+          SCE_DIALOG_HEADER,
+          "relative z-10 shrink-0 items-center bg-[var(--sce-surface-elevated)] py-3",
+        )}
+        data-task-workspace-header="true"
+      >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link
             href={backHref}
@@ -675,7 +690,14 @@ export function TaskWorkspacePanel({
         </p>
       ) : null}
 
-      <div className={cn(SCE_DIALOG_BODY, "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]")}>
+      <div
+        className={cn(
+          SCE_DIALOG_BODY,
+          "min-h-0 overscroll-contain",
+          "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]",
+        )}
+        data-task-workspace-scroll-body="true"
+      >
         <div className="min-w-0 space-y-5">
           <InlineDescription task={task} canEdit={capabilities.canEditDescription} />
 
@@ -942,7 +964,13 @@ export function TaskWorkspaceModal({
 
   return (
     <SceModalOverlay open onBackdropClick={onClose} testId="task-workspace-modal">
-      <div ref={panelRef} className={cn(SCE_DIALOG_WORKSPACE_PANEL, "w-full")} role="dialog" aria-modal="true">
+      <div
+        ref={panelRef}
+        className={cn(SCE_DIALOG_WORKSPACE_PANEL, "flex min-h-0 w-full max-h-[var(--sce-dialog-max-height)]")}
+        role="dialog"
+        aria-modal="true"
+        data-task-workspace-modal-shell="true"
+      >
         <TaskWorkspacePanel
           bundle={bundle}
           assigneeOptions={assigneeOptions}

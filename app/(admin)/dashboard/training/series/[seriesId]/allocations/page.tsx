@@ -8,6 +8,7 @@ import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocat
 import { TrainingSeriesNotFoundError } from "@/lib/training/errors";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 type Props = { params: Promise<{ seriesId: string }> };
@@ -71,7 +72,7 @@ export default async function TrainingAllocationsPage({ params }: Props) {
         description="Weisen Sie dieser Trainingsserie eine oder mehrere Anlagen-Ressourcen zu. Die Zuweisung gilt für alle Trainings dieser Serie und dient als einzige Quelle für Wochenplanung, Infoboard und Ressourcennutzung."
       />
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <SceFeatureCard title="Ressourcenzuweisung">
         <TrainingAllocationEditor
           trainingSeriesId={seriesId}
           trainingSeriesTitle={series.title}
@@ -79,7 +80,7 @@ export default async function TrainingAllocationsPage({ params }: Props) {
           facilityGroups={facilityGroups}
           canManage={canManage}
         />
-      </div>
+      </SceFeatureCard>
     </div>
   );
 }

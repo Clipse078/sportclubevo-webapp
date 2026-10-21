@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { AddFacilityResourceButton } from "@/components/admin/facilities/AddFacilityResourceButton";
+import CreateFacilityComposerDialog, {
+  type CreateFacilityResult,
+} from "@/components/admin/facilities/CreateFacilityComposerDialog";
 import { PopoverContent } from "@/components/ui/Popover";
 import type { FacilityType, FacilityResourceType, FacilityStatus } from "@prisma/client";
 
@@ -101,7 +104,7 @@ function InlineEditForm({
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         placeholder={placeholder}
-        className="rounded-lg border border-[var(--blue)]/40 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+        className="fca-input py-1.5 text-sm"
       />
       <button
         type="submit"
@@ -113,101 +116,10 @@ function InlineEditForm({
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+        className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs font-medium text-[var(--text-2)]"
       >
         Abbrechen
       </button>
-    </form>
-  );
-}
-
-// ── Create Facility dialog ────────────────────────────────────────────────────
-
-function CreateFacilityForm({
-  onCreated,
-  onCancel,
-  onRefresh,
-}: {
-  onCreated: (facility: FacilityRow) => void;
-  onCancel: () => void;
-  onRefresh: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [type, setType] = useState<FacilityType>("PITCH");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setError(null);
-    startTransition(async () => {
-      const res = await fetch("/api/facilities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), type }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data?.error ?? "Fehler beim Erstellen.");
-        return;
-      }
-      const data = await res.json();
-      onCreated({ ...data.facility, resources: [] });
-      onRefresh();
-    });
-  }
-
-  return (
-    <form
-      onSubmit={submit}
-      className="rounded-2xl border border-[var(--blue)]/20 bg-[var(--blue-light)] p-5 space-y-4"
-    >
-      <p className="text-sm font-semibold text-[var(--blue)]">Neue Anlage erstellen</p>
-      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="text-xs font-medium text-slate-600">Name</label>
-          <input
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="z.B. Hauptplatz"
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-slate-600">Typ</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as FacilityType)}
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none"
-          >
-            {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((t) => (
-              <option key={t} value={t}>
-                {FACILITY_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending || !name.trim()}
-          className="fca-button-primary disabled:opacity-50"
-        >
-          {pending ? "Wird erstellt…" : "Anlage erstellen"}
-        </button>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onCancel}
-          className="fca-button-secondary disabled:opacity-50"
-        >
-          Abbrechen
-        </button>
-      </div>
     </form>
   );
 }
@@ -267,7 +179,7 @@ function CreateResourceForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="z.B. Hauptplatz A"
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+            className="fca-input mt-1 w-full py-1.5 text-xs"
           />
         </div>
         <div>
@@ -276,7 +188,7 @@ function CreateResourceForm({
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="z.B. STADION_A"
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-mono outline-none focus:ring-2 focus:ring-[var(--blue)]/20"
+            className="fca-input mt-1 w-full py-1.5 font-mono text-xs"
           />
         </div>
         <div>
@@ -284,7 +196,7 @@ function CreateResourceForm({
           <select
             value={type}
             onChange={(e) => setType(e.target.value as FacilityResourceType)}
-            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none"
+            className="fca-input mt-1 w-full py-1.5 text-xs"
           >
             {(Object.keys(RESOURCE_TYPE_LABELS) as FacilityResourceType[]).map((t) => (
               <option key={t} value={t}>
@@ -548,7 +460,7 @@ function ResourceItem({
       {/* Delete confirmation dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-slate-900">
               Ressource endgültig löschen
             </h3>
@@ -810,7 +722,7 @@ function FacilityCard({
       {/* Facility delete dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-slate-900">
               Anlage endgültig löschen
             </h3>
@@ -907,25 +819,24 @@ export default function FacilitiesAdminPanel({
     <div className="space-y-5">
       {/* Action bar */}
       {canManage ? (
-        showCreate ? (
-          <CreateFacilityForm
-            onCreated={(facility) => {
-              setFacilities((prev) => [...prev, facility]);
-              setShowCreate(false);
-            }}
-            onCancel={() => setShowCreate(false)}
-            onRefresh={handleRefresh}
-          />
-        ) : (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="fca-button-primary flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Anlage erstellen
-          </button>
-        )
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className="fca-button-primary flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Anlage erstellen
+        </button>
       ) : null}
+
+      <CreateFacilityComposerDialog
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={(facility: CreateFacilityResult) => {
+          setFacilities((prev) => [...prev, { ...facility, resources: [] }]);
+        }}
+        onRefresh={handleRefresh}
+      />
 
       {/* Facility list */}
       {facilities.length === 0 ? (

@@ -14,7 +14,7 @@ export default async function NewMeetingPage() {
         title="Neues Meeting erstellen"
         description="Meeting erfassen mit Datum, Ort und Sichtbarkeitseinstellungen."
       />
-      <MeetingForm mode="create" />
+      <MeetingForm mode="create" layout="composer" />
     </div>
   );
 }

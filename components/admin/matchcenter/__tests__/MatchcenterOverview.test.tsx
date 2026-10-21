@@ -166,7 +166,8 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     expect(screen.getByTestId("spiele-header-subtitle")).toHaveTextContent(
       "Zentrale Spielplanung und operative Matchvorbereitung.",
     );
-    expect(screen.getByTestId("spiele-kpi-cards")).toBeTruthy();
+    expect(screen.getByTestId("spiele-status-strip")).toBeTruthy();
+    expect(screen.getByTestId("spiele-operational-toolbar")).toBeTruthy();
     expect(screen.getByTestId("spiele-view-switcher")).toBeTruthy();
     expect(screen.getByTestId("spiele-schnellfilter")).toBeTruthy();
     expect(screen.getByTestId("spiele-month-calendar")).toBeTruthy();
@@ -221,9 +222,7 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     expect(screen.getByTestId("matchcenter-kpi-bereit")).toHaveTextContent(
       "1",
     );
-    expect(screen.getByTestId("matchcenter-kpi-resultate")).toHaveTextContent(
-      "1",
-    );
+    expect(screen.queryByTestId("matchcenter-kpi-resultate")).toBeNull();
   });
 });
 
@@ -286,9 +285,10 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getByText("2 Punkte offen")).toBeTruthy();
-    expect(screen.getByText("Spielfeld")).toBeTruthy();
-    expect(screen.getByText("Heimkabine")).toBeTruthy();
+    const row = screen.getByTestId("matchcenter-spielplanung-row-match-1");
+    expect(within(row).getAllByText("2 Punkte offen").length).toBeGreaterThan(0);
+    expect(within(row).getByText("Spielfeld")).toBeTruthy();
+    expect(within(row).getByText("Heimkabine")).toBeTruthy();
   });
 
   it("G. shows a calm Auswärtsspiel state instead of manufactured facility warnings", () => {

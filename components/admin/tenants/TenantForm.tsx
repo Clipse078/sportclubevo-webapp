@@ -11,6 +11,8 @@ type TenantFormProps = {
     name?: string;
     status?: string;
   };
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
 const STATUS_OPTIONS = [
@@ -18,7 +20,13 @@ const STATUS_OPTIONS = [
   { value: "INACTIVE", label: "Inaktiv" },
 ] as const;
 
-export default function TenantForm({ mode, tenantKey, defaultValues }: TenantFormProps) {
+export default function TenantForm({
+  mode,
+  tenantKey,
+  defaultValues,
+  onSuccess,
+  onCancel,
+}: TenantFormProps) {
   const router = useRouter();
   const [name, setName] = useState(defaultValues?.name ?? "");
   const [key, setKey] = useState("");
@@ -60,8 +68,12 @@ export default function TenantForm({ mode, tenantKey, defaultValues }: TenantFor
         return;
       }
 
-      router.push("/dashboard/admin/tenants");
-      router.refresh();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/dashboard/admin/tenants");
+        router.refresh();
+      }
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {
@@ -150,7 +162,7 @@ export default function TenantForm({ mode, tenantKey, defaultValues }: TenantFor
         </button>
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => (onCancel ? onCancel() : router.back())}
           className="fca-button-secondary"
         >
           Abbrechen

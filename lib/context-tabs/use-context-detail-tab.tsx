@@ -100,7 +100,15 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
       }
     }
 
-    const rawParam = readContextTabParam(searchParams);
+    const tabQueryParam = config.tabQueryParam ?? CONTEXT_TAB_QUERY_PARAM;
+    const rawParam =
+      searchParams instanceof URLSearchParams
+        ? searchParams.get(tabQueryParam)
+        : (() => {
+            const raw = searchParams[tabQueryParam];
+            if (Array.isArray(raw)) return raw[0] ?? null;
+            return raw ?? null;
+          })();
     const tabParam = config.resolveTabParam?.(rawParam) ?? rawParam;
     return resolveContextTabFromSearchParams({
       tabParam,
@@ -118,23 +126,21 @@ function useContextDetailTabState<TTabId extends ContextTabId>(
         return routeHref;
       }
 
+      const tabQueryParam = config.tabQueryParam ?? CONTEXT_TAB_QUERY_PARAM;
       const preserved = new URLSearchParams();
       searchParams.forEach((value, key) => {
-        if (key !== CONTEXT_TAB_QUERY_PARAM) {
+        if (key !== CONTEXT_TAB_QUERY_PARAM && key !== tabQueryParam) {
           preserved.set(key, value);
         }
       });
-      const baseHref = buildContextTabHref(basePath, tabKey);
-      if (preserved.toString().length === 0) {
-        return baseHref;
-      }
-      const url = new URL(baseHref, "http://local");
+      const url = new URL(basePath, "http://local");
       preserved.forEach((value, key) => {
         url.searchParams.set(key, value);
       });
+      url.searchParams.set(tabQueryParam, tabKey);
       return `${url.pathname}${url.search}`;
     },
-    [basePath, config.tabRoutes, searchParams],
+    [basePath, config.tabQueryParam, config.tabRoutes, searchParams],
   );
 
   const navigateToTab = useCallback(

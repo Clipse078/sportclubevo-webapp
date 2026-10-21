@@ -112,8 +112,8 @@ export default async function ClubProgrammePage({ searchParams }: Props) {
         title="Vereinsprogramm"
         description="Chronologisches Club-Programm — Training, Spiele, Turniere und Veranstaltungen."
       />
-      <div className="space-y-4" data-testid="club-programme-workspace">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="space-y-3" data-testid="club-programme-workspace">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <ProgrammeViewSwitcher basePath={BASE} urlState={urlState} />
         </div>
 

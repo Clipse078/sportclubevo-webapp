@@ -26,6 +26,8 @@ type WebsitePageFormProps = {
    * When false, direct publish is available.
    */
   requiresReview?: boolean;
+  onCreated?: (pageId: string) => void;
+  onCancel?: () => void;
 };
 
 const labelClass =
@@ -44,6 +46,8 @@ function toLocalDatetimeValue(date: Date | null | undefined): string {
 export default function WebsitePageForm({
   page,
   requiresReview = false,
+  onCreated,
+  onCancel,
 }: WebsitePageFormProps) {
   const router = useRouter();
   const isEdit = Boolean(page);
@@ -130,8 +134,12 @@ export default function WebsitePageForm({
 
       const savedId: string = data.page?.id ?? page?.id;
       setStatus(data.page?.status as PageStatus ?? status);
-      router.push(`/dashboard/website/pages/${savedId}/edit`);
-      router.refresh();
+      if (onCreated && savedId) {
+        onCreated(savedId);
+      } else {
+        router.push(`/dashboard/website/pages/${savedId}/edit`);
+        router.refresh();
+      }
     } catch {
       setSaveError("Netzwerkfehler. Bitte erneut versuchen.");
     } finally {

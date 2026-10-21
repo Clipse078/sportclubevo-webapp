@@ -12,6 +12,8 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { resolveClubCommunicationAuthorization } from "@/lib/communication/club/club-communication-authorization";
 import { listClubCommunications } from "@/lib/communication/club/club-communication-service";
+import { bootstrapMitteilungComposer } from "@/lib/communication/club/mitteilung-composer-bootstrap";
+import MitteilungCreateTrigger from "@/components/admin/communication/mitteilungen/MitteilungCreateTrigger";
 import {
   formatMitteilungCreator,
   formatMitteilungListTimestamp,
@@ -45,13 +47,17 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
     kind: params.kind,
   });
 
-  const primaryAction = authz.canSend ? (
-    <Link
-      href="/dashboard/communication/mitteilungen/new"
-      className="inline-flex rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
-    >
-      Neue Mitteilung
-    </Link>
+  const composerBootstrap = authz.canSend
+    ? await bootstrapMitteilungComposer({
+        tenantId: tenant.id,
+        tenantKey: tenant.key,
+        userId: session.user.id,
+        tenantTimezone: tenant.timezone,
+      })
+    : null;
+
+  const primaryAction = composerBootstrap ? (
+    <MitteilungCreateTrigger {...composerBootstrap} />
   ) : undefined;
 
   const timeColumnLabel =
@@ -87,7 +93,10 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
         ) : (
           <>
             <Suspense fallback={null}>
-              <MitteilungenListToolbar canSend={authz.canSend} />
+              <MitteilungenListToolbar
+                canSend={authz.canSend}
+                composerBootstrap={composerBootstrap}
+              />
             </Suspense>
             <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full divide-y divide-[var(--border)] text-sm">

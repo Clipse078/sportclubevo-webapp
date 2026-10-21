@@ -8,8 +8,9 @@
 import Link from "next/link";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import { SectionCard } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceFeatureCard } from "@/components/sce/workspace/SceFeatureCard";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { getSfvConfigStatus } from "@/lib/integrations/sfv/config";
 
 export const dynamic = "force-dynamic";
@@ -20,14 +21,16 @@ export default async function IntegrationsPage() {
   const sfvStatus = getSfvConfigStatus();
 
   return (
-    <div className="max-w-2xl space-y-8">
-      <AdminSectionHeader
-        eyebrow="Admin"
-        title="Integrationen"
-        description="Externe Datenquellen und Verbindungen verwalten."
-      />
-
-      <SectionCard
+    <PageShell widthMode="operational">
+      <SceWorkspaceChrome
+        breadcrumbs={[{ label: "Admin", href: "/dashboard/admin" }, { label: "Integrationen" }]}
+        header={{
+          eyebrow: "Admin",
+          title: "Integrationen",
+          description: "Externe Datenquellen und Verbindungen verwalten.",
+        }}
+      >
+      <SceFeatureCard
         title="SFV / ClubCorner"
         description="Schweizerischer Fussballverband — offizielle Spiel- und Turnierdaten"
       >
@@ -35,15 +38,15 @@ export default async function IntegrationsPage() {
           <div className="flex items-center justify-between">
             <span className="text-sm text-[var(--text-2)]">Status</span>
             {sfvStatus.allValid ? (
-              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+              <span className="inline-flex items-center rounded-full border border-[var(--sce-success-border)] bg-[var(--sce-success-light)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--sce-success)]">
                 Konfiguriert
               </span>
             ) : sfvStatus.allPresent ? (
-              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              <span className="inline-flex items-center rounded-full border border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--sce-warning)]">
                 Konfiguration ungültig
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <span className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
                 Nicht konfiguriert
               </span>
             )}
@@ -63,7 +66,8 @@ export default async function IntegrationsPage() {
             </Link>
           </div>
         </div>
-      </SectionCard>
-    </div>
+      </SceFeatureCard>
+      </SceWorkspaceChrome>
+    </PageShell>
   );
 }

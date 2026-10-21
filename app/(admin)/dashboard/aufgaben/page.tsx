@@ -6,7 +6,9 @@ import { resolvePersonUserIdentityByUserId } from "@/lib/people/person-user-iden
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveQuickCreateCapabilities } from "@/lib/tasks/quick-create";
 import { loadTaskOrgUnitFilterOptions } from "@/lib/tasks/task-org-options";
-import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { buildTaskServiceContextForActor } from "@/lib/tasks/server-context";
+import { buildRequirementServiceContextForActor } from "@/lib/requirements/server-context";
+import { resolveVerwaltungUnifiedOverviewTaskQuery } from "@/lib/aufgaben/verwaltung-unified-presentation";
 import {
   getTaskManagementSummary,
   listTaskManagementItems,
@@ -17,11 +19,12 @@ import {
   resolveTaskManagementQuery,
 } from "@/lib/tasks/management-navigation";
 import { canViewAllTasks, hasTaskPermission } from "@/lib/tasks/visibility";
-import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInbox";
-import AufgabenScopeToggle from "@/components/admin/aufgaben/AufgabenScopeToggle";
-import RequirementsManagementWorkspace from "@/components/admin/aufgaben/RequirementsManagementWorkspace";
-import { getRequirementServiceContext } from "@/lib/requirements/server-context";
+import AufgabenWorkspaceShell from "@/components/admin/aufgaben/AufgabenWorkspaceShell";
+import AufgabenVerwaltungWorkspace from "@/components/admin/aufgaben/AufgabenVerwaltungWorkspace";
+import AufgabenWorkspaceCreateChooser from "@/components/admin/aufgaben/AufgabenWorkspaceCreateChooser";
 import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";
 import {
   getRequirementManagementSummary,
@@ -36,14 +39,17 @@ import {
   PERSONAL_ACTION_INBOX_DEFAULT_LIMIT,
 } from "@/lib/personal-actions/presentation";
 import {
+  buildLegacyAnforderungenBereichRedirectHref,
   parseAufgabenBereich,
   parsePersonalInboxFilter,
+  parseVerwaltungTypeFilter,
 } from "@/lib/personal-actions/aufgaben-scope";
 
 export const dynamic = "force-dynamic";
 
 type PageSearchParams = {
   bereich?: string;
+  type?: string;
   filter?: string;
   view?: string;
   q?: string;
@@ -67,76 +73,57 @@ export default async function AufgabenPage({ searchParams }: Props) {
   const { session, tenantId, capabilities } = await requirePersonalActionsModuleAccess();
 
   const params: PageSearchParams = searchParams ? await searchParams : {};
-  const bereich = parseAufgabenBereich(params.bereich);
+
+  if (params.bereich === "anforderungen") {
+    redirect(buildLegacyAnforderungenBereichRedirectHref(params));
+  }
+
+  const bereichRaw = parseAufgabenBereich(params.bereich);
   const inboxFilter = parsePersonalInboxFilter(params.filter);
+  const verwaltungTypeFilter = parseVerwaltungTypeFilter(params.type);
 
   const tenant = await getActiveTenant();
   const timeZone = tenant?.timezone ?? "Europe/Zurich";
   const locale = tenant?.locale ?? "de-CH";
   const fmtCfg = { locale, timezone: timeZone };
 
-  const showManagement = capabilities.taskManagement;
-  const showRequirementManagement = capabilities.requirementManagement;
+  const showMeine = capabilities.personalInbox;
+  const showVerwaltung = capabilities.taskManagement || capabilities.requirementManagement;
+  const showTaskVerwaltung = capabilities.taskManagement;
+  const showRequirementVerwaltung = capabilities.requirementManagement;
+
   const effectiveBereich =
-    bereich === "anforderungen" && showRequirementManagement
-      ? "anforderungen"
-      : bereich === "verwaltung" && showManagement
-        ? "verwaltung"
-        : "meine";
+    bereichRaw === "verwaltung" && showVerwaltung
+      ? "verwaltung"
+      : showMeine
+        ? "meine"
+        : showVerwaltung
+          ? "verwaltung"
+          : "meine";
 
-  if (effectiveBereich === "anforderungen") {
-    const reqCtx = await getRequirementServiceContext();
-    if (!reqCtx) return null;
+  const reqCtx = await buildRequirementServiceContextForActor(session.user.id, tenantId);
+  const canCreateReq = reqCtx ? canCreateRequirement(reqCtx) : false;
 
-    const reqQuery = resolveRequirementManagementQuery(params);
-    let summary: Awaited<ReturnType<typeof getRequirementManagementSummary>> = {
-      active: 0,
-      openRecipients: 0,
-      overdue: 0,
-      completed: 0,
-    };
-    let items: Awaited<ReturnType<typeof listRequirementManagementItems>>["items"] = [];
-    let totalCount = 0;
-    let page = 1;
-    let pageCount = 1;
-    let loadError = false;
-
-    try {
-      const [summaryResult, listResult] = await Promise.all([
-        getRequirementManagementSummary(reqCtx),
-        listRequirementManagementItems(reqCtx, reqQuery, new Date()),
-      ]);
-      summary = summaryResult;
-      items = listResult.items;
-      totalCount = listResult.totalCount;
-      page = listResult.page;
-      pageCount = listResult.pageCount;
-    } catch {
-      loadError = true;
-    }
-
-    const canCreate = canCreateRequirement(reqCtx);
-
-    return (
-      <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-        <RequirementsManagementWorkspace
-          locale={locale}
-          timeZone={timeZone}
-          query={reqQuery}
-          summary={summary}
-          items={items}
-          totalCount={totalCount}
-          page={page}
-          pageCount={pageCount}
-          canCreate={canCreate}
-          showTaskManagementScope={showManagement}
-          loadError={loadError}
-        />
-      </div>
-    );
-  }
+  const taskCtx = await buildTaskServiceContextForActor(session.user.id, tenantId);
+  const canCreateTask =
+    taskCtx != null && hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE);
 
   if (effectiveBereich === "meine") {
+    const linkedPerson = await getPersonNameByUserId(session.user.id);
+    const linkedPersonIdentity = await resolvePersonUserIdentityByUserId(tenantId, session.user.id);
+    const identity = resolveAccountIdentityName({
+      linkedPerson,
+      sessionFirstName: session.user.firstName,
+      sessionLastName: session.user.lastName,
+      tenantName: tenant?.name,
+    });
+
+    const quickCreateCaps = resolveQuickCreateCapabilities({
+      tenantId,
+      userId: session.user.id,
+      permissionKeys: capabilities.permissionKeys,
+    });
+
     const [rawActions, actionCounts] = await Promise.all([
       loadPersonalActions({
         tenantId,
@@ -157,128 +144,215 @@ export default async function AufgabenPage({ searchParams }: Props) {
     const sourceTypes = new Set(rawActions.map((a) => a.sourceType));
     const hasMixedSources = sourceTypes.size > 1;
 
-    const taskCtx = {
-      tenantId,
-      userId: session.user.id,
-      permissionKeys: capabilities.permissionKeys,
-    };
-    const quickCreateCaps = resolveQuickCreateCapabilities(taskCtx);
-    const linkedPerson = await getPersonNameByUserId(session.user.id);
-    const linkedPersonIdentity =
-      taskCtx != null
-        ? await resolvePersonUserIdentityByUserId(taskCtx.tenantId, session.user.id)
-        : null;
-    const identity = resolveAccountIdentityName({
-      linkedPerson,
-      sessionFirstName: session.user.firstName,
-      sessionLastName: session.user.lastName,
-      tenantName: tenant?.name,
-    });
+    const meineCreateChooser = (
+      <AufgabenWorkspaceCreateChooser
+        variant="meine"
+        canCreateTask={canCreateTask && quickCreateCaps.canCreateSelf}
+        canCreateRequirement={canCreateReq}
+        timeZone={timeZone}
+        meineQuickCreate={
+          quickCreateCaps.canCreateSelf
+            ? {
+                canCreateSelf: quickCreateCaps.canCreateSelf,
+                canAssignOthers: quickCreateCaps.canAssignOthers,
+                canOpenFullCreate: hasTaskPermission(
+                  {
+                    tenantId,
+                    userId: session.user.id,
+                    permissionKeys: capabilities.permissionKeys,
+                  },
+                  PERMISSIONS.TASKS_CREATE,
+                ),
+                currentUser: {
+                  userId: session.user.id,
+                  personId: linkedPersonIdentity?.personId,
+                  firstName: identity.firstName,
+                  lastName: identity.lastName,
+                },
+              }
+            : undefined
+        }
+      />
+    );
 
     return (
-      <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+      <AufgabenWorkspaceShell
+        bereich="meine"
+        showMeine={showMeine}
+        showVerwaltung={showVerwaltung}
+        primaryAction={meineCreateChooser}
+      >
         <PersonalActionsInbox
           items={items}
           locale={locale}
           timeZone={timeZone}
-          showManagementScope={showManagement}
-          showRequirementScope={showRequirementManagement}
-          bereich="meine"
           filter={inboxFilter}
           showSourceFilters={hasMixedSources}
           totalActionableCount={actionCounts.totalActionable}
-          quickCreate={{
-            canCreateSelf: quickCreateCaps.canCreateSelf,
-            canAssignOthers: quickCreateCaps.canAssignOthers,
-            canOpenFullCreate: hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE),
-            currentUser: {
-              userId: session.user.id,
-              personId: linkedPersonIdentity?.personId,
-              firstName: identity.firstName,
-              lastName: identity.lastName,
-            },
-            timeZone,
-          }}
         />
-      </div>
+      </AufgabenWorkspaceShell>
     );
   }
 
-  const ctx = await getTaskServiceContext();
-  if (!ctx) {
-    return null;
+  const tenantWideVisibility = taskCtx ? canViewAllTasks(taskCtx) : false;
+  const taskQueryForFilter =
+    verwaltungTypeFilter === "all"
+      ? resolveVerwaltungUnifiedOverviewTaskQuery(params, tenantWideVisibility)
+      : taskCtx
+        ? resolveTaskManagementQuery(params, tenantWideVisibility)
+        : resolveTaskManagementQuery({}, tenantWideVisibility);
+  const query = taskQueryForFilter;
+  const sort = parseTaskManagementSort(params.sort);
+  const reqQuery = resolveRequirementManagementQuery(params);
+
+  const needsTasks =
+    showTaskVerwaltung &&
+    (verwaltungTypeFilter === "all" || verwaltungTypeFilter === "tasks");
+  const needsRequirements =
+    showRequirementVerwaltung &&
+    (verwaltungTypeFilter === "all" || verwaltungTypeFilter === "requirements");
+
+  let summary: Awaited<ReturnType<typeof getTaskManagementSummary>> = {
+    open: 0,
+    overdue: 0,
+    dueThisWeek: 0,
+    myOpen: 0,
+  };
+  let assigneeOptions: Awaited<ReturnType<typeof listEligibleTaskAssignees>> = [];
+  let orgUnitFilterOptions: Awaited<ReturnType<typeof loadTaskOrgUnitFilterOptions>> = [];
+  let reqSummary: Awaited<ReturnType<typeof getRequirementManagementSummary>> = {
+    active: 0,
+    openRecipients: 0,
+    overdue: 0,
+    completed: 0,
+  };
+  let taskLoadError = false;
+  let reqLoadError = false;
+
+  if (needsTasks && taskCtx) {
+    try {
+      [summary, assigneeOptions, orgUnitFilterOptions] = await Promise.all([
+        getTaskManagementSummary(taskCtx, timeZone),
+        tenantWideVisibility ? listEligibleTaskAssignees(taskCtx.tenantId) : Promise.resolve(assigneeOptions),
+        loadTaskOrgUnitFilterOptions(taskCtx),
+      ]);
+    } catch {
+      taskLoadError = true;
+    }
   }
 
-  const tenantWideVisibility = canViewAllTasks(ctx);
-  const query = resolveTaskManagementQuery(params, tenantWideVisibility);
-  const sort = parseTaskManagementSort(params.sort);
-
-  const [summary, assigneeOptions, orgUnitFilterOptions] = await Promise.all([
-    getTaskManagementSummary(ctx, timeZone),
-    tenantWideVisibility
-      ? listEligibleTaskAssignees(ctx.tenantId)
-      : Promise.resolve([]),
-    loadTaskOrgUnitFilterOptions(ctx),
-  ]);
+  if (needsRequirements && reqCtx) {
+    try {
+      reqSummary = await getRequirementManagementSummary(reqCtx);
+    } catch {
+      reqLoadError = true;
+    }
+  }
 
   let items: Awaited<ReturnType<typeof listTaskManagementItems>>["items"] = [];
   let totalCount = 0;
   let page = 1;
   let pageCount = 1;
   let seriesRows: Awaited<ReturnType<typeof listTaskSeriesManagementRows>>["rows"] = [];
-  let loadError = false;
+  let reqItems: Awaited<ReturnType<typeof listRequirementManagementItems>>["items"] = [];
+  let reqTotalCount = 0;
+  let reqPage = 1;
+  let reqPageCount = 1;
 
   try {
-    if (query.view === "WIEDERKEHREND") {
-      const seriesResult = await listTaskSeriesManagementRows(ctx, query);
-      seriesRows = seriesResult.rows;
-    } else {
-      const listResult = await listTaskManagementItems(ctx, query, timeZone, locale);
-      items = listResult.items;
-      totalCount = listResult.totalCount;
-      page = listResult.page;
-      pageCount = listResult.pageCount;
+    if (needsTasks && taskCtx && !taskLoadError) {
+      if (verwaltungTypeFilter === "all" || query.view !== "WIEDERKEHREND") {
+        const listResult = await listTaskManagementItems(taskCtx, query, timeZone, locale);
+        items = listResult.items;
+        totalCount = listResult.totalCount;
+        page = listResult.page;
+        pageCount = listResult.pageCount;
+      } else {
+        const seriesResult = await listTaskSeriesManagementRows(taskCtx, query);
+        seriesRows = seriesResult.rows;
+      }
     }
   } catch {
-    loadError = true;
+    taskLoadError = true;
   }
 
-  const canCreate = hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE);
+  try {
+    if (needsRequirements && reqCtx && !reqLoadError) {
+      const listResult = await listRequirementManagementItems(reqCtx, reqQuery, new Date());
+      reqItems = listResult.items;
+      reqTotalCount = listResult.totalCount;
+      reqPage = listResult.page;
+      reqPageCount = listResult.pageCount;
+    }
+  } catch {
+    reqLoadError = true;
+  }
+
   const canAssign =
-    hasTaskPermission(ctx, PERMISSIONS.TASKS_ASSIGN) ||
-    hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
-  const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
+    taskCtx != null &&
+    (hasTaskPermission(taskCtx, PERMISSIONS.TASKS_ASSIGN) ||
+      hasTaskPermission(taskCtx, PERMISSIONS.TASKS_MANAGE));
+  const canManage = taskCtx != null && hasTaskPermission(taskCtx, PERMISSIONS.TASKS_MANAGE);
+
+  const verwaltungCreateChooser = (
+    <AufgabenWorkspaceCreateChooser
+      variant="verwaltung"
+      canCreateTask={canCreateTask}
+      canCreateRequirement={canCreateReq}
+      timeZone={timeZone}
+      assigneeOptions={assigneeOptions}
+      canManageTasks={canManage}
+    />
+  );
 
   return (
-    <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      {showManagement || showRequirementManagement ? (
-        <div className="mb-4">
-          <AufgabenScopeToggle
-            active="verwaltung"
-            showManagement={showManagement}
-            showRequirements={showRequirementManagement}
-          />
-        </div>
-      ) : null}
-      <AufgabenManagementWorkspace
-        tenantWideVisibility={tenantWideVisibility}
+    <AufgabenWorkspaceShell
+      bereich="verwaltung"
+      showMeine={showMeine}
+      showVerwaltung={showVerwaltung}
+      secondaryActions={
+        canManage ? (
+          <Link
+            href="/dashboard/aufgaben/serien/neu"
+            className="fca-button-secondary inline-flex items-center text-sm"
+            data-testid="aufgaben-recurring-create-header"
+          >
+            Wiederkehrend
+          </Link>
+        ) : null
+      }
+      primaryAction={verwaltungCreateChooser}
+    >
+      <AufgabenVerwaltungWorkspace
+        typeFilter={verwaltungTypeFilter}
+        showTasks={showTaskVerwaltung}
+        showRequirements={showRequirementVerwaltung}
         locale={locale}
         timeZone={timeZone}
-        query={query}
-        sort={sort}
-        summary={summary}
-        items={items}
-        seriesRows={seriesRows}
-        totalCount={totalCount}
-        page={page}
-        pageCount={pageCount}
+        taskQuery={query}
+        taskSort={sort}
+        taskSummary={summary}
+        taskItems={items}
+        taskSeriesRows={seriesRows}
+        taskTotalCount={totalCount}
+        taskPage={page}
+        taskPageCount={pageCount}
         assigneeOptions={assigneeOptions}
         orgUnitFilterOptions={orgUnitFilterOptions}
-        canCreate={canCreate}
+        canCreateTask={canCreateTask}
         canAssign={canAssign}
-        canManage={canManage}
-        loadError={loadError}
+        canManageTasks={canManage}
+        tenantWideVisibility={tenantWideVisibility}
+        taskLoadError={taskLoadError}
+        reqQuery={reqQuery}
+        reqSummary={reqSummary}
+        reqItems={reqItems}
+        reqTotalCount={reqTotalCount}
+        reqPage={reqPage}
+        reqPageCount={reqPageCount}
+        canCreateRequirement={canCreateReq}
+        reqLoadError={reqLoadError}
       />
-    </div>
+    </AufgabenWorkspaceShell>
   );
 }

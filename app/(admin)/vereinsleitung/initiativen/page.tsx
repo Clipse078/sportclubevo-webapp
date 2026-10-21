@@ -1,5 +1,5 @@
-﻿import Link from "next/link";
-import { Flag, Plus } from "lucide-react";
+﻿import { Flag } from "lucide-react";
+import CreateInitiativeTrigger from "@/components/admin/initiatives/CreateInitiativeTrigger";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getInitiatives } from "@/lib/initiatives/queries";
@@ -25,12 +25,7 @@ export default async function VereinsleitungInitiativenPage() {
           { label: "Vereinsleitung", href: "/vereinsleitung" },
           { label: "Initiativen" },
         ]}
-        headerActions={
-          <Link href="/vereinsleitung/initiativen/new" className="fca-button-primary">
-            <Plus className="h-4 w-4" />
-            Neue Initiative
-          </Link>
-        }
+        headerActions={<CreateInitiativeTrigger />}
         isEmpty={initiatives.length === 0}
         emptyIcon={<Flag className="h-10 w-10" />}
         emptyHeading="Keine zugänglichen Initiativen"

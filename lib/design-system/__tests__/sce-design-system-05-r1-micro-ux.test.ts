@@ -133,6 +133,8 @@ describe("SCE-DESIGN-SYSTEM-05 R1 micro-UX guardrails", () => {
     expect(readSrc("components/admin/communication/email-sender/EmailSenderWorkspace.tsx")).toContain(
       "SceFormField",
     );
-    expect(readSrc("components/admin/competitions/CompetitionsSearchBar.tsx")).toContain("SceSearchField");
+    expect(readSrc("components/admin/competitions/CompetitionsOperationalToolbar.tsx")).toContain(
+      "SceSearchField",
+    );
   });
 });

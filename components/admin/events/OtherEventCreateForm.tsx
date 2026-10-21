@@ -1,7 +1,9 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
 
 type SeasonItem = {
@@ -310,14 +312,20 @@ function Toggle({
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
+  const switchId = useId();
   return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
+    <div
+      className="fca-toggle-row"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+    >
+      <label htmlFor={switchId} className="fca-label cursor-pointer">
+        {label}
+      </label>
+      <SwitchThumb
+        id={switchId}
         checked={value}
-        onChange={(event) => onChange(event.target.checked)}
-        className="fca-toggle-checkbox"
+        onChange={onChange}
+        aria-label={label}
       />
     </div>
   );

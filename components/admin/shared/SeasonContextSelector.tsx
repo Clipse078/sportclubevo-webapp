@@ -59,21 +59,15 @@ export default function SeasonContextSelector({
           >
             {title}
           </p>
-          <h3
-            className={
-              isCompact
-                ? "mt-0.5 truncate text-sm font-semibold text-[var(--foreground)]"
-                : "mt-2 text-[1.15rem] font-semibold text-[var(--foreground)]"
-            }
-          >
-            {selectedSeason?.name ?? "Keine Saison verfügbar"}
-          </h3>
           {!isCompact ? (
-            <p className="mt-2 text-sm text-[var(--text-2)]">{description}</p>
+            <>
+              <h3 className="mt-2 text-[1.15rem] font-semibold text-[var(--foreground)]">
+                {selectedSeason?.name ?? "Keine Saison verfügbar"}
+              </h3>
+              <p className="mt-2 text-sm text-[var(--text-2)]">{description}</p>
+            </>
           ) : (
-            <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
-              {description}
-            </p>
+            <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">{description}</p>
           )}
         </div>
 

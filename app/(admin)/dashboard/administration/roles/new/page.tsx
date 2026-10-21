@@ -52,6 +52,7 @@ export default async function NewTenantRolePage() {
       <CreateTenantRoleForm
         moduleGroups={moduleGroups}
         actorDelegatablePermissionKeys={actorDelegatablePermissionKeys}
+        layout="composer"
       />
     </div>
   );

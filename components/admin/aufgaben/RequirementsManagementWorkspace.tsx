@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
 import type {
   RequirementManagementListItem,
   RequirementManagementSummary,
@@ -8,17 +6,18 @@ import type {
 import type { RequirementManagementQueryState } from "@/lib/requirements/management-navigation";
 import {
   buildRequirementManagementHref,
-  requirementCreateHref,
   requirementDetailHref,
 } from "@/lib/requirements/management-navigation";
 import {
+  formatRequirementConfirmationAggregateLabel,
   formatRequirementOpenLabel,
   formatRequirementOverviewProgressLabel,
   formatRequirementProgressLabel,
+  formatRequirementRecipientCountLabel,
   REQUIREMENT_STATUS_LABELS,
 } from "@/lib/requirements/presentation";
-import AufgabenScopeToggle from "./AufgabenScopeToggle";
 import RequirementsManagementFilters from "./RequirementsManagementFilters";
+import AufgabenDomainLoadError from "./AufgabenDomainLoadError";
 
 type Props = {
   locale: string;
@@ -30,7 +29,7 @@ type Props = {
   page: number;
   pageCount: number;
   canCreate: boolean;
-  showTaskManagementScope: boolean;
+  canCreateInModal?: boolean;
   loadError?: boolean;
 };
 
@@ -54,39 +53,13 @@ export default function RequirementsManagementWorkspace({
   page,
   pageCount,
   canCreate,
-  showTaskManagementScope,
+  canCreateInModal = false,
   loadError = false,
 }: Props) {
   const basePath = "/dashboard/aufgaben";
 
   return (
     <div className="space-y-4" data-testid="requirements-management-workspace">
-      <PlanningManagementPageHeader
-        breadcrumbLeaf="Aufgaben"
-        title="Anforderungen"
-        subtitle="Bestätigungen oder Handlungen, die mehrere Personen individuell erledigen müssen."
-        subtitleTestId="requirements-management-subtitle"
-        actions={
-          canCreate ? (
-            <Link
-              href={requirementCreateHref()}
-              className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-              data-testid="requirements-create-open"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Anforderung
-            </Link>
-          ) : null
-        }
-      />
-
-      <AufgabenScopeToggle
-        active="anforderungen"
-        showManagement={showTaskManagementScope}
-        showRequirements
-        basePath={basePath}
-      />
-
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4" data-testid="requirements-kpi-row">
         {[
           { label: "Aktiv", value: summary.active },
@@ -94,7 +67,10 @@ export default function RequirementsManagementWorkspace({
           { label: "Überfällig", value: summary.overdue },
           { label: "Erledigt", value: summary.completed },
         ].map((kpi) => (
-          <div key={kpi.label} className="rounded-lg border border-[var(--border)]/80 px-3 py-2">
+          <div
+            key={kpi.label}
+            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
+          >
             <dt className="text-xs text-[var(--muted)]">{kpi.label}</dt>
             <dd className="text-lg font-semibold tabular-nums text-[var(--foreground)]">{kpi.value}</dd>
           </div>
@@ -104,31 +80,26 @@ export default function RequirementsManagementWorkspace({
       <RequirementsManagementFilters query={query} basePath={basePath} />
 
       {loadError ? (
-        <p className="text-sm text-red-600" role="alert">
-          Anforderungen konnten nicht geladen werden.
-        </p>
+        <AufgabenDomainLoadError
+          context="AUFGABEN_REQUIREMENTS_LOAD"
+          testId="requirements-load-error"
+        />
       ) : null}
 
       {!loadError && items.length === 0 ? (
         <div
-          className="rounded-lg border border-dashed border-[var(--border)] px-4 py-10 text-center"
+          className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-10 text-center"
           data-testid="requirements-empty"
         >
-          <p className="text-sm font-medium text-[var(--foreground)]">Noch keine Anforderungen</p>
+          <p className="text-sm font-medium text-[var(--foreground)]">Noch keine Anforderungen.</p>
           <p className="mt-1 text-sm text-[var(--text-2)]">
-            Erstelle eine Anforderung, wenn mehrere Personen etwas individuell bestätigen oder erledigen
-            sollen.
+            Nutze «Erstellen» oben, wenn mehrere Personen etwas individuell bestätigen sollen.
           </p>
-          {canCreate ? (
-            <Link href={requirementCreateHref()} className="fca-button-primary mt-4 inline-flex text-sm">
-              + Anforderung
-            </Link>
-          ) : null}
         </div>
       ) : null}
 
       {!loadError && items.length > 0 ? (
-        <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+        <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
           <table className="w-full text-left text-sm" data-testid="requirements-list">
             <thead className="border-b border-[var(--border)] bg-[var(--surface-2)]/40 text-xs uppercase tracking-wide text-[var(--muted)]">
               <tr>
@@ -146,8 +117,17 @@ export default function RequirementsManagementWorkspace({
                   req.draftAudiencePersonIds.length,
                   req.status,
                 );
+                const confirmationAggregate = formatRequirementConfirmationAggregateLabel(
+                  item.aggregate,
+                  req.status,
+                );
                 const compactProgress = formatRequirementOverviewProgressLabel(item.aggregate);
                 const openLabel = formatRequirementOpenLabel(item.aggregate);
+                const recipientCount = formatRequirementRecipientCountLabel(
+                  item.aggregate,
+                  req.draftAudiencePersonIds.length,
+                  req.status,
+                );
                 return (
                   <tr
                     key={req.id}
@@ -167,17 +147,23 @@ export default function RequirementsManagementWorkspace({
                     </td>
                     <td className="hidden px-3 py-2.5 md:table-cell">
                       <span className="inline-flex rounded-full border border-[var(--border)] px-2 py-0.5 text-xs text-[var(--text-2)]">
-                        {REQUIREMENT_STATUS_LABELS[req.status]}
+                        {confirmationAggregate ?? REQUIREMENT_STATUS_LABELS[req.status]}
                       </span>
-                      {item.isOverdue ? (
+                      {req.status !== "DRAFT" && item.isOverdue ? (
                         <span className="ml-2 text-xs text-amber-700">Überfällig</span>
+                      ) : null}
+                      {req.status === "DRAFT" ? (
+                        <span className="ml-2 text-xs text-[var(--muted)]">
+                          {REQUIREMENT_STATUS_LABELS[req.status]}
+                        </span>
                       ) : null}
                     </td>
                     <td className="hidden px-3 py-2.5 lg:table-cell">
                       <div className="space-y-1">
                         <p className="text-xs text-[var(--text-2)]">
-                          {compactProgress ?? progress}
+                          {confirmationAggregate ?? compactProgress ?? progress}
                         </p>
+                        <p className="text-xs text-[var(--muted)]">{recipientCount}</p>
                         {openLabel ? <p className="text-xs text-[var(--muted)]">{openLabel}</p> : null}
                         {item.aggregate && req.status !== "DRAFT" ? (
                           <div

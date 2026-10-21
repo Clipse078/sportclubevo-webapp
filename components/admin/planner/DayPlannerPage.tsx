@@ -13,7 +13,6 @@ import {
 import { cn } from "@/lib/cn";
 import { SectionCard } from "@/components/ui/page/SectionCard";
 import { EmptyState } from "@/components/ui/page/EmptyState";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { WeekplannerDay, WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import {
   weekplannerConflictBadgeTitle,
@@ -405,12 +404,6 @@ export default function DayPlannerPage({
 
   return (
     <div className="space-y-6">
-      <AdminSectionHeader
-        eyebrow="Planung"
-        title="Tagesplanung"
-        description="Was passiert heute an der Sportanlage, wann und wo — Trainings, Heimspiele und Heimturniere in einer chronologischen Tagesansicht."
-      />
-
       <SectionCard noPadding>
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <div>

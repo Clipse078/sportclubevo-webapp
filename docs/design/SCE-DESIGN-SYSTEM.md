@@ -2,7 +2,7 @@
 
 > **Programme:** [`SCE-UI-ROLLOUT-01+`](../roadmap/SCE-UI-ROLLOUT-01.md) · **Design System programme:** [`SCE-DESIGN-SYSTEM-01`](../roadmap/SCE-DESIGN-SYSTEM-01.md) — **CLOSED / ACCEPTED / MERGED** (PR **#879**) · [`SCE-DESIGN-SYSTEM-02`](../roadmap/SCE-DESIGN-SYSTEM-02.md) — **CLOSED / ACCEPTED / MERGED** (PR **#880**) · [`SCE-DESIGN-SYSTEM-03`](../roadmap/SCE-DESIGN-SYSTEM-03.md) — **CLOSED / ACCEPTED / MERGED** (PR **#881**) · [`SCE-DESIGN-SYSTEM-04`](../roadmap/SCE-DESIGN-SYSTEM-04.md) — **CLOSED / ACCEPTED / MERGED** (PR **#882**) · [`SCE-DESIGN-SYSTEM-05`](../roadmap/SCE-DESIGN-SYSTEM-05.md) — **CLOSED / ACCEPTED / MERGED** (PR **#883**) · [`SCE-DESIGN-SYSTEM-06`](../roadmap/SCE-DESIGN-SYSTEM-06.md) — **CLOSED / ACCEPTED / MERGED** (PR **#884**) · [`SCE-DESIGN-SYSTEM-07`](../roadmap/SCE-DESIGN-SYSTEM-07.md) — **CLOSED / ACCEPTED / MERGED** (PR **#885**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#887** baseline · PR **#889** PO addendum)  
 > **Established by:** SCE-UI-ROLLOUT-01B (Context Tabs foundation)  
-> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **SCE-DESIGN-SYSTEM-10** — Product-wide Adoption / Legacy Removal · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#889**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**)
+> **`SCE_DESIGN_SYSTEM_PROGRAMME_STATUS`:** **IN PROGRESS** · **`NEXT_PACKAGE`:** **DS-11 not started** · [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) — **CLOSED / ACCEPTED / MERGED** (PR **#888**) · [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md) — **CLOSED / ACCEPTED / MERGED** (PR **#889**) · [`SCE-DESIGN-SYSTEM-08`](../roadmap/SCE-DESIGN-SYSTEM-08.md) — **CLOSED / ACCEPTED / MERGED** (PR **#886**)
 
 ---
 
@@ -384,6 +384,23 @@ Full package doc: [`SCE-DESIGN-SYSTEM-09`](../roadmap/SCE-DESIGN-SYSTEM-09.md).
 
 ---
 
+## SCE-DESIGN-SYSTEM-10 — Product-wide adoption / legacy removal
+
+Product-wide rollout of workspace chrome, bounded surfaces, dense UI, forms (Toggle First), actions, and feedback — consuming DS-01–DS-09 inventories.
+
+| DS-10 inventory | [`SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md`](./SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md) |
+| --- | --- |
+| Typed matrix | `SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX` in `lib/design-system/sce-design-system-10-meta.ts` |
+| Roadmap | [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) |
+
+**Delivery status:** `DS10_STATUS = CLOSED / ACCEPTED / MERGED` · `PO_DS10_PRODUCT_WIDE_VISUAL_UAT = PASS` · `SCE_DESIGN_SYSTEM_10_CLOSED = YES` · **PR #888** · **DS-11 not started**.
+
+Automated guardrails: `lib/design-system/__tests__/sce-design-system-10-product-wide-adoption.test.ts` · `lib/design-system/__tests__/sce-design-system-10-final-closure.test.ts`.
+
+**Closure marker:** `SCE_DESIGN_SYSTEM_10_CLOSED`
+
+---
+
 ## Design principle
 
 **One SCE. One navigation language. One activity language. One visual family.**
@@ -576,7 +593,8 @@ Future Tournament surfaces (**01H–01L**) must adopt `SceTournamentCard` — no
 | **Routes** | `model.route.consumeHref` / `manageHref` from `buildSceActivityRoute("CLUB_EVENT", …)` |
 | **Event audience («Gültig für»)** | Optional `model.audience` (`CLUB_WIDE` \| `SELECTED_ORG_UNITS`) — authoritative organisational scope (Teams + OrgUnits via `ClubEventOrganisationalAudience*` relations). **Separate** from organiser, publication, participation, and authorization. Render via `SceClubEventAudienceLine` (contextual identity — **not** a second activity accent). Reduced density: compact labels e.g. «3 Organisationseinheiten» / «2 Teams». Parent OrgUnit selection = **exact unit** (no silent descendant expansion). |
 | **Management boundary** | `SceClubEventCard` owns **identity** (`list-row`); `VeranstaltungListRow` owns date block, **context zone** (schedule/location), lifecycle + publication — no duplicated schedule/location on the card in list rows |
-| **VERANSTALTUNGEN_LIST_ROW_COMPOSITION** | **Date** (weekday/day/month + compact time) · **Identity** (`SceClubEventCard` `list-row` — VERANSTALTUNG pill, title, organiser/audience) · **Context** (date line, time/Ganztägig, location, status + publication). Responsive grid reuses Turniere row contract (without action column) |
+| **Date block (DS-10 R2)** | Left **date block = date identity only** (weekday · day · month) — **no start time** in the block; time/Ganztägig lives in the **context zone** (and card schedule rows where the card owns schedule). Same contract as Turniere management rows (`turniere-row-date-block`). See `SCE_ACTIVITY_DATE_BLOCK_CONTRACT` in `activity-card-temporal-grammar.ts`. |
+| **VERANSTALTUNGEN_LIST_ROW_COMPOSITION** | **Date** (weekday/day/month — date-only block) · **Identity** (`SceClubEventCard` `list-row` — VERANSTALTUNG pill, title, organiser/audience) · **Context** (date line, time/Ganztägig, location, status + publication). Responsive grid reuses Turniere row contract (without action column) |
 | **Detail context** | Edit workspace header uses `SceClubEventCard` `surface="context-header"` (`VeranstaltungEditPlanningHeader`) — canonical hierarchy, not ad-hoc subtitle strings |
 | **Preview / UAT** | `/sce-preview/club-event-card` |
 

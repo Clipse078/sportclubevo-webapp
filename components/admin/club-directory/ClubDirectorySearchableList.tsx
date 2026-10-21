@@ -8,6 +8,7 @@ import { Loader2, Search, Shield, Building2 } from "lucide-react";
 import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { EmptyState } from "@/components/ui/page";
 import { ClubDirectoryRow, type ClubDirectoryListItem } from "./ClubDirectoryRow";
+import ClubCreateTrigger from "@/components/admin/club-directory/ClubCreateTrigger";
 import { ClubDirectoryFilterBar, buildVereineHref } from "./ClubDirectoryFilterBar";
 import {
   applyClubDirectoryViewFilters,
@@ -406,9 +407,7 @@ export default function ClubDirectorySearchableList({
           }
           action={
             !showArchived ? (
-              <Link href="/dashboard/vereine/new" className="fca-button-primary">
-                Ersten Verein erstellen
-              </Link>
+              <ClubCreateTrigger className="fca-button-primary inline-flex items-center gap-2" />
             ) : undefined
           }
         />

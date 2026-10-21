@@ -236,7 +236,7 @@ export const SCE_DESIGN_SYSTEM_04_LEGACY_CARD_INVENTORY: SceLegacyCardInventoryR
       canonicalTarget: "SceMatchCard",
       ds04Action: "THIN_COMPATIBILITY_WRAPPER",
       futurePackage: "DS-10",
-      status: "DS10_REMAINING",
+      status: "DS04_DONE",
     },
     {
       currentComponent: "VeranstaltungCard.tsx",
@@ -245,7 +245,7 @@ export const SCE_DESIGN_SYSTEM_04_LEGACY_CARD_INVENTORY: SceLegacyCardInventoryR
       canonicalTarget: "SceClubEventCard",
       ds04Action: "MIGRATE_LATER",
       futurePackage: "DS-10",
-      status: "DS10_REMAINING",
+      status: "DS04_DONE",
     },
     {
       currentComponent: "DashboardTodayEventCards",
@@ -262,7 +262,8 @@ export const SCE_DESIGN_SYSTEM_04_LEGACY_CARD_INVENTORY: SceLegacyCardInventoryR
       canonicalTarget: "PlanningHubListeSceActivityCard",
       ds04Action: "DEFER",
       futurePackage: "DS-08",
-      status: "DS10_REMAINING",
+      status: "JUSTIFIED_EXCEPTION",
+      justifiedException: "Calendar/resource scheduler block — not list card family",
     },
     {
       currentComponent: "WochenplanEventCard",
@@ -296,7 +297,7 @@ export const SCE_DESIGN_SYSTEM_04_LEGACY_CARD_INVENTORY: SceLegacyCardInventoryR
       canonicalTarget: "DashboardKpiCard",
       ds04Action: "MIGRATE_LATER",
       futurePackage: "DS-10",
-      status: "DS10_REMAINING",
+      status: "DS04_DONE",
     },
     {
       currentComponent: "CmsStatCard",
@@ -305,7 +306,7 @@ export const SCE_DESIGN_SYSTEM_04_LEGACY_CARD_INVENTORY: SceLegacyCardInventoryR
       canonicalTarget: "DashboardKpiCard tokens",
       ds04Action: "ALIGN",
       futurePackage: "DS-10",
-      status: "DS10_REMAINING",
+      status: "DS04_DONE",
     },
   ];
 

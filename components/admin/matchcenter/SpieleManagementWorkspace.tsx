@@ -21,13 +21,13 @@ import {
 import { buildSpieleManagementWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import MatchcenterReconciliationPanel from "./MatchcenterReconciliationPanel";
 import SpieleManagementToolbar from "./SpieleManagementToolbar";
-import SpieleManagementKpiCards from "./SpieleManagementKpiCards";
+import SpieleManagementStatusStrip from "./SpieleManagementStatusStrip";
+import { SceDenseToolbar } from "@/components/sce/dense/SceDenseToolbar";
 import SpieleManagementUpcomingList from "./SpieleManagementUpcomingList";
 import SpieleManagementResultRow from "./SpieleManagementResultRow";
 import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
 import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
 import SpieleManagementFilterRail from "./SpieleManagementFilterRail";
-import SpieleManagementQuickAccess from "./SpieleManagementQuickAccess";
 import { cn } from "@/lib/cn";
 import {
   SPIELE_WORKSPACE_MAIN_RAIL_GRID,
@@ -138,8 +138,9 @@ export default function SpieleManagementWorkspace({
   venueFilter = null,
   statusMask: statusMaskProp = null,
   activityCreateTrigger = null,
-  activityCreateQuickAccessTrigger = null,
+  activityCreateQuickAccessTrigger: _activityCreateQuickAccessTrigger = null,
 }: Props) {
+  void _activityCreateQuickAccessTrigger;
   const statusMask = statusMaskProp ?? normalizeSpieleStatusMask(undefined, actionFilter);
 
   const parsedSort = parseSpieleManagementSort(sortParam);
@@ -249,15 +250,6 @@ export default function SpieleManagementWorkspace({
             }),
             active: actionFilter === "ERLEDIGT",
             "data-testid": "matchcenter-kpi-bereit",
-          },
-          {
-            key: "resultate",
-            label: "Resultate",
-            value: viewModel.kpis.resultate,
-            tone: "muted" as const,
-            hint: "abgeschlossen",
-            href: buildHref(basePath, { ...navParams, tab: "RESULTATE" }),
-            "data-testid": "matchcenter-kpi-resultate",
           },
         ]
       : [
@@ -438,17 +430,21 @@ export default function SpieleManagementWorkspace({
         })}
       </nav>
 
-      <SpieleManagementKpiCards metrics={summaryMetrics} />
-
       <div className={SPIELE_WORKSPACE_MAIN_RAIL_GRID}>
         <div className="min-w-0 space-y-4">
-          <SpieleManagementToolbar
-            searchValue={searchQuery}
-            listView={listView}
-            listeHref={listeHref}
-            kompaktHref={kompaktHref}
-            kalenderHref={kalenderHref}
-          />
+          <SceDenseToolbar
+            className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]/40 py-3"
+            data-testid="spiele-operational-toolbar"
+          >
+            <SpieleManagementStatusStrip metrics={summaryMetrics} />
+            <SpieleManagementToolbar
+              searchValue={searchQuery}
+              listView={listView}
+              listeHref={listeHref}
+              kompaktHref={kompaktHref}
+              kalenderHref={kalenderHref}
+            />
+          </SceDenseToolbar>
 
           <MatchcenterReconciliationPanel
             rows={viewModel.needsReconciliation}
@@ -475,6 +471,15 @@ export default function SpieleManagementWorkspace({
                     ? "Passe Suche oder Filter an."
                     : "Für den ausgewählten Monat gibt es keine anstehenden Spiele."}
                 </p>
+                {canManage && !hasSearch ? (
+                  <Link
+                    href={`${basePath}/new`}
+                    className="fca-button-primary mt-4 inline-flex text-sm"
+                    data-testid="spiele-create-link"
+                  >
+                    Spiel erstellen
+                  </Link>
+                ) : null}
               </div>
             ) : (
               <SpieleManagementUpcomingList
@@ -539,13 +544,6 @@ export default function SpieleManagementWorkspace({
               ...navParams,
               month: monthWindow.nextParam,
             })}
-          />
-          <SpieleManagementQuickAccess
-            canManage={canManage}
-            wochenplanerHref={wochenplanerHref}
-            activityCreateTrigger={
-              activityCreateQuickAccessTrigger ?? activityCreateTrigger
-            }
           />
           <SpieleManagementFilterRail
             tab={tab}

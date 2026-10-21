@@ -27,7 +27,7 @@ export default function UsersTable({
   if (initialUsers.length === 0) {
     return (
       <AdminSurfaceCard className="p-6">
-        <p className="text-sm text-slate-600">Noch keine Benutzer gefunden.</p>
+        <p className="text-sm text-[var(--text-2)]">Noch keine Benutzer gefunden.</p>
       </AdminSurfaceCard>
     );
   }
@@ -67,7 +67,7 @@ export default function UsersTable({
               </Link>
 
               {user.id === currentUserId ? (
-                <span className="text-xs font-medium text-slate-400">
+                <span className="text-xs font-medium text-[var(--muted)]">
                   Aktueller Benutzer
                 </span>
               ) : (

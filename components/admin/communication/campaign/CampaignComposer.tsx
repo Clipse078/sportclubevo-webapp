@@ -18,6 +18,7 @@ import type { CommunicationAudienceSpec } from "@/lib/communication/platform/aud
 import CommunicationAudienceSelector, {
   type CommunicationAudiencePreviewState,
 } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import {
   buildCommunicationAudienceSpec,
   communicationAudienceSelectionIsEmpty,
@@ -741,44 +742,50 @@ export default function CampaignComposer({
         {sectionHeading("kampagne-kanaele-heading", "Kanäle")}
         <p className="text-sm text-[var(--text-2)]">Über welche Kanäle soll zugestellt werden?</p>
         <ul className="space-y-2 text-sm">
-          <li>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={inAppEnabled}
-                onChange={(e) => {
-                  setInAppEnabled(e.target.checked);
-                  invalidateReview();
-                }}
-              />
-              In-App
-            </label>
+          <li
+            className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+            data-sce-binary-setting-row="true"
+          >
+            <span>In-App</span>
+            <SwitchThumb
+              id="kampagne-channel-in-app"
+              checked={inAppEnabled}
+              onChange={(checked) => {
+                setInAppEnabled(checked);
+                invalidateReview();
+              }}
+              aria-label="Kanal In-App"
+            />
           </li>
-          <li>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={pushEnabled}
-                onChange={(e) => {
-                  setPushEnabled(e.target.checked);
-                  invalidateReview();
-                }}
-              />
-              Push
-            </label>
+          <li
+            className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+            data-sce-binary-setting-row="true"
+          >
+            <span>Push</span>
+            <SwitchThumb
+              id="kampagne-channel-push"
+              checked={pushEnabled}
+              onChange={(checked) => {
+                setPushEnabled(checked);
+                invalidateReview();
+              }}
+              aria-label="Kanal Push"
+            />
           </li>
-          <li>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={emailChannelEnabled}
-                onChange={(e) => {
-                  setEmailChannelEnabled(e.target.checked);
-                  invalidateReview();
-                }}
-              />
-              E-Mail
-            </label>
+          <li
+            className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+            data-sce-binary-setting-row="true"
+          >
+            <span>E-Mail</span>
+            <SwitchThumb
+              id="kampagne-channel-email"
+              checked={emailChannelEnabled}
+              onChange={(checked) => {
+                setEmailChannelEnabled(checked);
+                invalidateReview();
+              }}
+              aria-label="Kanal E-Mail"
+            />
           </li>
         </ul>
         <CommunicationSenderSelector

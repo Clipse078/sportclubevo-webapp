@@ -11,7 +11,7 @@ export default async function RequirementCreatePage() {
   await requirePersonalActionsModuleAccess();
   const ctx = await getRequirementServiceContext();
   if (!ctx || !canCreateRequirement(ctx)) {
-    redirect("/dashboard/aufgaben?bereich=anforderungen");
+    redirect("/dashboard/aufgaben?bereich=verwaltung&type=requirements");
   }
 
   const tenant = await getActiveTenant();

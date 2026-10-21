@@ -89,12 +89,12 @@ describe("VeranstaltungenOverview", () => {
     );
 
     expect(screen.getByTestId("veranstaltungen-management-workspace")).toBeInTheDocument();
-    expect(screen.getByTestId("veranstaltungen-kpi-cards")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-operational-summary")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-search")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-management-rail")).toBeInTheDocument();
     expect(screen.getByTestId("spiele-month-calendar")).toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-filter-rail")).toBeInTheDocument();
-    expect(screen.getByTestId("veranstaltungen-quick-access")).toBeInTheDocument();
+    expect(screen.queryByTestId("veranstaltungen-quick-access")).not.toBeInTheDocument();
     expect(screen.getByTestId("veranstaltungen-create-link")).toBeInTheDocument();
   });
 });

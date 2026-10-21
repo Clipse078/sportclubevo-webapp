@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import TenantCreateTrigger from "@/components/admin/tenants/TenantCreateTrigger";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -30,12 +29,7 @@ export default async function TenantsPage() {
         title="Tenants"
         description="Alle Tenants dieser Instanz. Jeder Tenant repräsentiert eine eigenständige Vereinsinstanz."
         actions={
-          canManage ? (
-            <Link href="/dashboard/admin/tenants/new" className="fca-button-primary">
-              <Plus className="h-4 w-4" />
-              Neuer Tenant
-            </Link>
-          ) : undefined
+          canManage ? <TenantCreateTrigger /> : undefined
         }
       />
 

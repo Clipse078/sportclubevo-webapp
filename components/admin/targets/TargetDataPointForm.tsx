@@ -91,7 +91,7 @@ export default function TargetDataPointForm({
         <button
           type="button"
           onClick={() => { setSuccess(false); setOpen(true); }}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[11px] font-medium text-[var(--text-2)] transition hover:border-slate-300 hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
         >
           <PlusCircle className="h-3.5 w-3.5" />
           Wert erfassen
@@ -103,17 +103,17 @@ export default function TargetDataPointForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-3 rounded-[18px] border border-slate-200 bg-slate-50 p-4"
+      className="mt-3 rounded-[18px] border border-[var(--border)] bg-[var(--surface-2)] p-4"
     >
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-slate-700">
+        <p className="text-[12px] font-semibold text-[var(--text-2)]">
           Neuer Messwert: {metricLabel}
         </p>
         <button
           type="button"
           onClick={() => setOpen(false)}
           aria-label="Schliessen"
-          className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+          className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--muted)] hover:bg-slate-200 hover:text-[var(--text-2)]"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -127,14 +127,14 @@ export default function TargetDataPointForm({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 mb-1">
+          <label className="block text-[11px] font-medium text-[var(--muted)] mb-1">
             Wert {unitLabel ? `(${unitLabel})` : ""}
           </label>
           {metricType === "BOOLEAN" ? (
             <select
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
               required
             >
               <option value="">Wählen…</option>
@@ -148,26 +148,26 @@ export default function TargetDataPointForm({
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder="0"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
               required
             />
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 mb-1">
+          <label className="block text-[11px] font-medium text-[var(--muted)] mb-1">
             Datum
           </label>
           <input
             type="date"
             value={measuredAt}
             onChange={(e) => setMeasuredAt(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 mb-1">
+          <label className="block text-[11px] font-medium text-[var(--muted)] mb-1">
             Notiz (optional)
           </label>
           <input
@@ -175,7 +175,7 @@ export default function TargetDataPointForm({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Kurze Notiz…"
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30"
           />
         </div>
       </div>
@@ -184,7 +184,7 @@ export default function TargetDataPointForm({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50"
+          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"
         >
           Abbrechen
         </button>

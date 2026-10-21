@@ -1,3 +1,9 @@
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 ﻿const DECISIONS = [
   {
     date: "10. Apr 2025",
@@ -25,15 +31,15 @@ function getTagClass(tag: string) {
     case "Sport":
       return "border-rose-200 bg-rose-50 text-rose-700";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-600";
+      return "border-slate-200 bg-slate-50 text-[var(--text-2)]";
   }
 }
 
 export default function VereinsleitungDecisionsCard() {
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className={VEREINSLEITUNG_PANEL_CLASS}>
       <div>
-        <h3 className="text-[1.08rem] font-semibold text-slate-900">
+        <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
           Letzte Entscheidungen
         </h3>
       </div>
@@ -45,14 +51,14 @@ export default function VereinsleitungDecisionsCard() {
               <div className="absolute left-[7px] top-5 h-[calc(100%+8px)] w-px bg-slate-200" />
             ) : null}
 
-            <div className="absolute left-0 top-1.5 h-[14px] w-[14px] rounded-full border border-slate-300 bg-white" />
+            <div className="absolute left-0 top-1.5 h-[14px] w-[14px] rounded-full border border-slate-300 bg-[var(--surface-2)]" />
 
             <div className={index === 0 ? "pb-4" : "py-4"}>
               <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
                 {decision.date}
               </p>
 
-              <p className="mt-2 text-sm font-semibold leading-5 text-slate-900">
+              <p className="mt-2 text-sm font-semibold leading-5 text-[var(--foreground)]">
                 {decision.title}
               </p>
 

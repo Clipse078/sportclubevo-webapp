@@ -7,9 +7,10 @@ export type TenantOption = { key: string; label: string };
 
 type Props = {
   tenants: TenantOption[];
+  onCreated?: (customerKey: string) => void;
 };
 
-export default function NativeBillingCreateCustomerForm({ tenants }: Props) {
+export default function NativeBillingCreateCustomerForm({ tenants, onCreated }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,8 +62,12 @@ export default function NativeBillingCreateCustomerForm({ tenants }: Props) {
       if (!res.ok || !data.customer) {
         throw new Error(data.error ?? "Kunde konnte nicht erstellt werden.");
       }
-      router.push(`/dashboard/admin/commercial/billing/customers/${data.customer.key}`);
-      router.refresh();
+      if (onCreated) {
+        onCreated(data.customer.key);
+      } else {
+        router.push(`/dashboard/admin/commercial/billing/customers/${data.customer.key}`);
+        router.refresh();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fehler beim Speichern.");
     } finally {

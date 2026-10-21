@@ -203,7 +203,7 @@ function FolderTreeNode({
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className={`flex-shrink-0 rounded p-1 ${isActive ? "hover:bg-white/20" : "hover:bg-[var(--surface-3,var(--surface-2))]"}`}
+          className={`flex-shrink-0 rounded p-1 ${isActive ? "hover:bg-[var(--surface)]/20" : "hover:bg-[var(--surface-3,var(--surface-2))]"}`}
         >
           {hasChildren ? (
             open ? (
@@ -248,7 +248,7 @@ function FolderTreeNode({
             type="button"
             onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
             className={`rounded p-1 opacity-0 group-hover:opacity-100 ${
-              isActive ? "hover:bg-white/20" : "hover:bg-[var(--surface-2)]"
+              isActive ? "hover:bg-[var(--surface)]/20" : "hover:bg-[var(--surface-2)]"
             }`}
           >
             <MoreHorizontal className="h-3 w-3" />

@@ -7,7 +7,7 @@ export default function WochenplanLegend() {
     { label: "Junioren (D / C / B / A)", className: "border-blue-300 bg-blue-50 text-blue-800" },
     { label: "Aktive (1. / 2. Mannschaft)", className: "border-red-300 bg-red-50 text-red-800" },
     { label: "Frauen / Juniorinnen", className: "border-pink-300 bg-pink-50 text-pink-800" },
-    { label: "Senioren (30+, 40+, 50+)", className: "border-slate-300 bg-slate-50 text-slate-800" },
+    { label: "Senioren (30+, 40+, 50+)", className: "border-slate-300 bg-[var(--surface-2)] text-[var(--foreground)]" },
     { label: "Torwarttraining", className: "border-neutral-300 bg-neutral-50 text-neutral-800" },
   ];
 
@@ -61,21 +61,21 @@ export default function WochenplanLegend() {
         ))}
       </div>
 
-      <div className="mt-5 grid gap-4 text-sm text-slate-600 md:grid-cols-4">
+      <div className="mt-5 grid gap-4 text-sm text-[var(--text-2)] md:grid-cols-4">
         <div>
-          <p className="font-semibold text-slate-900">Stadion</p>
+          <p className="font-semibold text-[var(--foreground)]">Stadion</p>
           <p>Hauptspielfeld</p>
         </div>
         <div>
-          <p className="font-semibold text-slate-900">KR 2</p>
+          <p className="font-semibold text-[var(--foreground)]">KR 2</p>
           <p>Kleinfeld / Kunstrasen 2</p>
         </div>
         <div>
-          <p className="font-semibold text-slate-900">KR 3</p>
+          <p className="font-semibold text-[var(--foreground)]">KR 3</p>
           <p>Kleinfeld / Kunstrasen 3</p>
         </div>
         <div>
-          <p className="font-semibold text-slate-900">Hinweis</p>
+          <p className="font-semibold text-[var(--foreground)]">Hinweis</p>
           <p>Kurzfristige Änderungen bitte zeitnah abstimmen.</p>
         </div>
       </div>

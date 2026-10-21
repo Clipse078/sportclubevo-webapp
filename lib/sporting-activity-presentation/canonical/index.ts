@@ -104,6 +104,11 @@ export {
   formatSceClubEventTimeLabel,
 } from "./club-event-schedule-presentation";
 export {
+  SCE_ACTIVITY_CARD_FAMILY_TEMPORAL,
+  SCE_ACTIVITY_DATE_BLOCK_CONTRACT,
+  SCE_ACTIVITY_TEMPORAL_INFORMATION_GRAMMAR,
+} from "./activity-card-temporal-grammar";
+export {
   mapClubEventLifecycleStatusToSemantic,
   resolveClubEventLifecycleStatusLabel,
   resolveClubEventPublicationPresentationLabel,

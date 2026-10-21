@@ -23,7 +23,7 @@ describe("MeineAufgabenQuickCreateDialog", () => {
     lastName: "Duijster",
   };
 
-  it("opens dialog with current user pre-selected", () => {
+  it("opens dialog with current user pre-selected", async () => {
     render(
       <MeineAufgabenQuickCreateDialog
         canCreateSelf
@@ -34,7 +34,9 @@ describe("MeineAufgabenQuickCreateDialog", () => {
     );
 
     fireEvent.click(screen.getByTestId("meine-aufgaben-create-open"));
-    expect(screen.getByTestId("meine-aufgaben-create-dialog")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("meine-aufgaben-create-dialog", undefined, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("meine-aufgaben-create-assignees")).toHaveTextContent(
       "Michael Duijster",
     );

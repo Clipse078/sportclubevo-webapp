@@ -315,7 +315,7 @@ export default function ProviderMappingDetail({
                   setSuggestions(null);
                   setPendingMapping(null);
                 }}
-                className="w-full py-2 px-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full py-2 px-3 text-sm border border-[var(--border)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
               >
                 <option value="SFV">SFV (Schweizerischer Fussballverband)</option>
               </select>
@@ -333,7 +333,7 @@ export default function ProviderMappingDetail({
                   setSuggestions(null);
                   setPendingMapping(null);
                 }}
-                className="w-full py-2 px-3 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                className="w-full py-2 px-3 text-sm border border-[var(--border)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
               >
                 <option value="">Kein Wettbewerb gewählt</option>
                 {activeCompetitions.map((c) => (
@@ -484,7 +484,7 @@ export default function ProviderMappingDetail({
                     setPendingMapping(null);
                     setSaveError(null);
                   }}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-[var(--border)] rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Abbrechen
                 </button>

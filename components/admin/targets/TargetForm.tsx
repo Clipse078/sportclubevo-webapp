@@ -7,6 +7,7 @@ import VisibilityScopeSelect, {
   type VisibilityScopeValue,
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
+import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
 
 type MetricDraft = {
   id?: string;
@@ -21,6 +22,9 @@ type MetricDraft = {
 
 type TargetFormProps = {
   mode: "create" | "edit";
+  layout?: "page" | "composer";
+  onSuccess?: (targetId: string) => void;
+  onCancel?: () => void;
   targetId?: string;
   defaultValues?: {
     title?: string;
@@ -92,7 +96,14 @@ function emptyMetric(): MetricDraft {
   };
 }
 
-export default function TargetForm({ mode, targetId, defaultValues }: TargetFormProps) {
+export default function TargetForm({
+  mode,
+  layout = "page",
+  onSuccess,
+  onCancel,
+  targetId,
+  defaultValues,
+}: TargetFormProps) {
   const router = useRouter();
 
   const [title, setTitle] = useState(defaultValues?.title ?? "");
@@ -201,7 +212,11 @@ export default function TargetForm({ mode, targetId, defaultValues }: TargetForm
       }
 
       const data = await res.json();
-      const id = data?.target?.id ?? targetId;
+      const id = data?.target?.id ?? targetId ?? "";
+      if (onSuccess) {
+        onSuccess(id);
+        return;
+      }
       router.push(`/vereinsleitung/targets/${id}?status=saved`);
       router.refresh();
     } catch {
@@ -211,20 +226,26 @@ export default function TargetForm({ mode, targetId, defaultValues }: TargetForm
     }
   }
 
-  const fieldClass =
-    "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-  const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  const {
+    fieldClass,
+    labelClass,
+    sectionClass,
+    sectionTitleClass,
+    errorClass,
+    cancelButtonClass,
+    submitButtonClass,
+  } = sceFormSurfaceClasses(layout);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+        <div className={errorClass} role="alert">
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">
+      <section className={sectionClass}>
+        <h3 className={sectionTitleClass}>
           Grunddaten
         </h3>
         <div className="grid gap-4 md:grid-cols-2">
@@ -351,13 +372,13 @@ export default function TargetForm({ mode, targetId, defaultValues }: TargetForm
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+      <section className={sectionClass}>
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h3 className="text-[1.05rem] font-semibold text-slate-900">Metriken</h3>
+          <h3 className="text-[1.05rem] font-semibold text-[var(--foreground)]">Metriken</h3>
           <button
             type="button"
             onClick={addMetric}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
           >
             <Plus className="h-3.5 w-3.5" />
             Metrik hinzufügen
@@ -368,10 +389,10 @@ export default function TargetForm({ mode, targetId, defaultValues }: TargetForm
           {metrics.map((metric, idx) => (
             <div
               key={idx}
-              className="rounded-[20px] border border-slate-200/80 bg-slate-50 p-5"
+              className="rounded-[20px] border border-[var(--border)]/80 bg-[var(--surface-2)] p-5"
             >
               <div className="mb-4 flex items-center justify-between gap-3">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Metrik {idx + 1}
                 </p>
                 {metrics.length > 1 ? (
@@ -479,9 +500,9 @@ export default function TargetForm({ mode, targetId, defaultValues }: TargetForm
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-2 text-[1.05rem] font-semibold text-slate-900">Sichtbarkeit</h3>
-        <p className="mb-5 text-[12px] text-slate-500">
+      <section className={sectionClass}>
+        <h3 className="mb-2 text-[1.05rem] font-semibold text-[var(--foreground)]">Sichtbarkeit</h3>
+        <p className="mb-5 text-[12px] text-[var(--muted)]">
           Wer kann dieses Ziel sehen? Privat und Eingeschränkt verbergen den Eintrag
           für nicht berechtigte Benutzer.
         </p>
@@ -502,17 +523,13 @@ export default function TargetForm({ mode, targetId, defaultValues }: TargetForm
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => router.back()}
-          className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          onClick={() => (onCancel ? onCancel() : router.back())}
+          className={cancelButtonClass}
         >
           Abbrechen
         </button>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]"
-        >
+        <button type="submit" disabled={loading} className={submitButtonClass}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {mode === "create" ? "Ziel erstellen" : "Änderungen speichern"}
         </button>

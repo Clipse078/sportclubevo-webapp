@@ -2,10 +2,21 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Search, UserX } from "lucide-react";
+import { UserX } from "lucide-react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
-import { EmptyState } from "@/components/ui/page";
+import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
+import {
+  SceDenseList,
+  SceDenseListRow,
+  SceDenseResultCount,
+  SceDenseSurface,
+  SceDenseToolbar,
+  SceEntityIdentity,
+} from "@/components/sce/dense";
+import { SceSearchField } from "@/components/sce/forms/SceSearchField";
+import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
+import { cn } from "@/lib/cn";
 
 type UserItem = {
   id: string;
@@ -29,7 +40,6 @@ function getRoleBadgeClass(roleName: string): string {
   return "sce-role-badge sce-role-badge-member";
 }
 
-
 export default function UsersSearchableList({
   currentUserId,
   initialUsers,
@@ -52,9 +62,8 @@ export default function UsersSearchableList({
 
   return (
     <div className="space-y-4">
-      {/* KPI row */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="sce-kpi-card">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className={cn(SCE_KPI_CARD_SURFACE, "p-4")}>
           <p className="sce-data-label">Benutzer</p>
           <p
             className="mt-1.5 text-2xl font-bold text-[var(--foreground)]"
@@ -64,7 +73,7 @@ export default function UsersSearchableList({
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">Total</p>
         </div>
-        <div className="sce-kpi-card">
+        <div className={cn(SCE_KPI_CARD_SURFACE, "p-4")}>
           <p className="sce-data-label">Aktiv</p>
           <p
             className="mt-1.5 text-2xl font-bold text-emerald-600"
@@ -74,7 +83,7 @@ export default function UsersSearchableList({
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">aktive Konten</p>
         </div>
-        <div className="sce-kpi-card">
+        <div className={cn(SCE_KPI_CARD_SURFACE, "p-4")}>
           <p className="sce-data-label">Mit Rollen</p>
           <p
             className="mt-1.5 text-2xl font-bold text-[var(--blue)]"
@@ -86,106 +95,84 @@ export default function UsersSearchableList({
         </div>
       </div>
 
-      {/* Search */}
-      <div className="sce-page-search">
-        <Search className="h-4 w-4 flex-shrink-0 text-[var(--muted)]" />
-        <input
-          type="text"
-          placeholder="Benutzer suchen nach Name, E-Mail oder Rolle…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          autoComplete="off"
-        />
-        {query ? (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="flex-shrink-0 text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
-          >
-            Löschen
-          </button>
+      <SceDenseSurface>
+        <SceDenseToolbar>
+          <SceSearchField
+            value={query}
+            onChange={setQuery}
+            placeholder="Benutzer suchen nach Name, E-Mail oder Rolle…"
+            aria-label="Benutzer suchen"
+            className="min-w-0 flex-1"
+          />
+        </SceDenseToolbar>
+
+        {query.trim() ? (
+          <SceDenseResultCount
+            shown={filtered.length}
+            total={initialUsers.length}
+            label="Benutzer"
+          />
         ) : null}
-      </div>
 
-      {/* Result count */}
-      {query.trim() ? (
-        <p className="text-sm text-[var(--muted)]">
-          {filtered.length} von {initialUsers.length} Benutzern
-        </p>
-      ) : null}
+        {initialUsers.length === 0 ? (
+          <SceEmptyState
+            variant="NO_DATA"
+            icon={<UserX className="h-10 w-10" />}
+            title="Noch keine Benutzer"
+            description="Noch keine Benutzerkonten erfasst. Über die Schaltfläche oben rechts den ersten anlegen."
+          />
+        ) : filtered.length === 0 ? (
+          <SceEmptyState
+            variant="FILTERED_NO_RESULTS"
+            title="Keine Treffer"
+            description={`Für „${query}" wurden keine Benutzer gefunden.`}
+          />
+        ) : (
+          <SceDenseList aria-label="Plattform-Benutzer">
+            {filtered.map((user) => {
+              const isCurrentUser = user.id === currentUserId;
 
-      {/* List */}
-      {initialUsers.length === 0 ? (
-        <EmptyState
-          icon={<UserX className="h-10 w-10" />}
-          heading="Noch keine Benutzer"
-          description="Noch keine Benutzerkonten erfasst. Über die Schaltfläche oben rechts den ersten anlegen."
-        />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={<Search className="h-10 w-10" />}
-          heading="Keine Treffer"
-          description={`Für „${query}" wurden keine Benutzer gefunden.`}
-        />
-      ) : (
-        <div className="overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-sm)]">
-          {filtered.map((user, idx) => {
-            const isLast = idx === filtered.length - 1;
-            const isCurrentUser = user.id === currentUserId;
-
-            return (
-              <Link
-                key={user.id}
-                href={`/dashboard/users/${user.id}`}
-                className={`group flex items-center gap-4 px-5 py-4 transition hover:bg-[var(--surface-2)] ${
-                  !isLast ? "border-b border-[var(--border)]" : ""
-                }`}
-              >
-                {/* Avatar */}
-                <AdminAvatar name={user.name} size="sm" />
-
-                {/* Name + meta */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-sm font-semibold text-[var(--foreground)]">
-                      {user.name}
-                    </span>
-                    {isCurrentUser ? (
-                      <span className="inline-flex h-5 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[0.65rem] font-semibold text-amber-700">
-                        Ich
-                      </span>
-                    ) : null}
-                    {user.roles.length > 0
-                      ? user.roles.map((role) => (
-                          <span key={role} className={getRoleBadgeClass(role)}>
-                            {role}
-                          </span>
-                        ))
-                      : null}
-                    {user.roles.length === 0 ? (
-                      <span className="sce-role-badge sce-role-badge-member opacity-50">
-                        Keine Rolle
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                    {user.email}
-                  </p>
-                </div>
-
-                {/* Status + chevron */}
-                <div className="flex flex-shrink-0 items-center gap-2">
-                  <AdminStatusPill
-                    label={user.isActive ? "Aktiv" : "Inaktiv"}
-                    tone={user.isActive ? "success" : "muted"}
-                  />
-                  <ChevronRight className="h-4 w-4 text-[var(--muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--blue)]" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+              return (
+                <SceDenseListRow key={user.id} interactive>
+                  <Link
+                    href={`/dashboard/users/${user.id}`}
+                    className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <SceEntityIdentity
+                      leading={<AdminAvatar name={user.name} size="sm" />}
+                      primary={user.name}
+                      secondary={user.email}
+                      badges={
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          {isCurrentUser ? (
+                            <span className="inline-flex h-5 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[0.65rem] font-semibold text-amber-700">
+                              Ich
+                            </span>
+                          ) : null}
+                          {user.roles.map((role) => (
+                            <span key={role} className={getRoleBadgeClass(role)}>
+                              {role}
+                            </span>
+                          ))}
+                          {user.roles.length === 0 ? (
+                            <span className="sce-role-badge sce-role-badge-member opacity-50">
+                              Keine Rolle
+                            </span>
+                          ) : null}
+                        </span>
+                      }
+                    />
+                    <AdminStatusPill
+                      label={user.isActive ? "Aktiv" : "Inaktiv"}
+                      tone={user.isActive ? "success" : "muted"}
+                    />
+                  </Link>
+                </SceDenseListRow>
+              );
+            })}
+          </SceDenseList>
+        )}
+      </SceDenseSurface>
     </div>
   );
 }

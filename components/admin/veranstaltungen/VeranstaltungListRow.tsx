@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
-import { formatClubEventTimingLabel } from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 import { cn } from "@/lib/cn";
@@ -120,11 +119,6 @@ export default function VeranstaltungListRow({
   const tz = resolveTenantEventTimezone(timeZone);
   const locale = "de-CH";
   const start = new Date(event.startAt);
-  const timing = formatClubEventTimingLabel(
-    { allDay: event.allDay, startAt: event.startAt, endAt: event.endAt },
-    locale,
-    tz,
-  );
 
   const weekdayShort = new Intl.DateTimeFormat(locale, {
     weekday: "short",
@@ -161,6 +155,7 @@ export default function VeranstaltungListRow({
         )}
         aria-hidden
         data-testid="veranstaltung-row-date-block"
+        data-sce-activity-date-block="date-only"
       >
         <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
           {weekdayShort}
@@ -173,15 +168,6 @@ export default function VeranstaltungListRow({
         </span>
         <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
           {monthShort}
-        </span>
-        <span
-          className={cn(
-            "mt-1 text-[0.65rem] tabular-nums text-[var(--foreground)]",
-            event.allDay ? "font-medium" : "font-mono font-medium",
-          )}
-          data-testid="veranstaltung-row-date-time"
-        >
-          {timing}
         </span>
       </div>
 

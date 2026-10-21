@@ -7,15 +7,20 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+let mockSearchParams = new URLSearchParams();
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => "/dashboard/aufgaben",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  }),
 }));
 
 vi.mock("@/lib/personal-actions/require-module-access", () => ({
   requirePersonalActionsModuleAccess: vi.fn().mockResolvedValue({
-    session: { user: { id: "user-1" } },
+    session: { user: { id: "user-1", firstName: "Test", lastName: "User" } },
     tenantId: "tenant-1",
     capabilities: {
       taskManagement: true,
@@ -38,7 +43,7 @@ vi.mock("@/lib/personal-actions", () => ({
 }));
 
 vi.mock("@/lib/tasks/server-context", () => ({
-  getTaskServiceContext: vi.fn().mockResolvedValue({
+  buildTaskServiceContextForActor: vi.fn().mockResolvedValue({
     tenantId: "tenant-1",
     userId: "user-1",
     permissionKeys: ["tasks.view", "tasks.create", "tasks.assign", "tasks.manage"],
@@ -49,12 +54,27 @@ vi.mock("@/lib/tenants/active-tenant", () => ({
   getActiveTenant: vi.fn().mockResolvedValue({ timezone: "Europe/Zurich", locale: "de-CH" }),
 }));
 
+vi.mock("@/lib/people/queries", () => ({
+  getPersonNameByUserId: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/people/person-user-identity", () => ({
+  resolvePersonUserIdentityByUserId: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/people/identity", () => ({
+  resolveAccountIdentityName: vi.fn().mockReturnValue({
+    firstName: "Test",
+    lastName: "User",
+  }),
+}));
+
 vi.mock("@/lib/tasks/task-org-options", () => ({
   loadTaskOrgUnitFilterOptions: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/components/admin/aufgaben/MeineAufgabenQuickCreateDialog", () => ({
-  default: () => null,
+vi.mock("@/components/admin/aufgaben/AufgabenWorkspaceCreateChooser", () => ({
+  default: () => <div data-testid="aufgaben-create-chooser-stub" />,
 }));
 
 vi.mock("@/lib/tasks/queries", () => ({
@@ -118,7 +138,7 @@ vi.mock("@/lib/tasks/management-service", () => ({
 }));
 
 vi.mock("@/lib/requirements/server-context", () => ({
-  getRequirementServiceContext: vi.fn().mockResolvedValue({
+  buildRequirementServiceContextForActor: vi.fn().mockResolvedValue({
     tenantId: "tenant-1",
     userId: "user-1",
     permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
@@ -138,15 +158,35 @@ import { getRequirementManagementSummary, listRequirementManagementItems } from 
 
 describe("AUFGABEN-02 — Aufgaben management page", () => {
   it("renders personal inbox by default for authorized users", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "meine" });
     const jsx = await AufgabenPage({ searchParams: Promise.resolve({}) });
     render(jsx);
     expect(screen.getByTestId("personal-actions-inbox")).toBeInTheDocument();
     expect(screen.getByTestId("personal-inbox-empty")).toBeInTheDocument();
   });
 
-  it("M1 renders requirements workspace when bereich=anforderungen", async () => {
+  it("redirects legacy bereich=anforderungen into Verwaltung type filter", async () => {
     vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
-      session: { user: { id: "user-1" } },
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
+      tenantId: "tenant-1",
+      capabilities: {
+        taskManagement: true,
+        requirementManagement: true,
+        personalInbox: true,
+        moduleAccess: true,
+        permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
+      },
+    });
+    await expect(
+      AufgabenPage({
+        searchParams: Promise.resolve({ bereich: "anforderungen" }),
+      }),
+    ).rejects.toThrow(/REDIRECT:.*bereich=verwaltung.*type=requirements/);
+  });
+
+  it("renders unified Verwaltung when bereich=verwaltung&type=requirements", async () => {
+    vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
       tenantId: "tenant-1",
       capabilities: {
         taskManagement: true,
@@ -168,19 +208,82 @@ describe("AUFGABEN-02 — Aufgaben management page", () => {
       page: 1,
       pageCount: 1,
     });
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung", type: "requirements" });
     const jsx = await AufgabenPage({
-      searchParams: Promise.resolve({ bereich: "anforderungen" }),
+      searchParams: Promise.resolve({ bereich: "verwaltung", type: "requirements" }),
     });
     render(jsx);
+    expect(screen.getByTestId("aufgaben-verwaltung-workspace")).toBeInTheDocument();
     expect(screen.getByTestId("requirements-management-workspace")).toBeInTheDocument();
-    expect(screen.getByTestId("aufgaben-bereich-anforderungen")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId("aufgaben-bereich-verwaltung")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
-  it("renders management workspace when bereich=verwaltung", async () => {
+  it("R4.4 — unified Verwaltung Alle keeps tasks visible when requirements load fails", async () => {
+    vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
+      tenantId: "tenant-1",
+      capabilities: {
+        taskManagement: true,
+        requirementManagement: true,
+        personalInbox: true,
+        moduleAccess: true,
+        permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
+      },
+    });
+    vi.mocked(getRequirementManagementSummary).mockRejectedValueOnce(new Error("req load fail"));
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung" });
     const jsx = await AufgabenPage({
-      searchParams: Promise.resolve({ bereich: "verwaltung", view: "MEINE" }),
+      searchParams: Promise.resolve({ bereich: "verwaltung" }),
     });
     render(jsx);
+    expect(screen.getByTestId("verwaltung-unified-requirements-load-error")).toBeInTheDocument();
+    expect(screen.getByText("Material bestellen")).toBeInTheDocument();
+  });
+
+  it("renders unified Verwaltung Alle when bereich=verwaltung without type filter", async () => {
+    vi.mocked(requirePersonalActionsModuleAccess).mockResolvedValueOnce({
+      session: { user: { id: "user-1", firstName: "T", lastName: "U" } },
+      tenantId: "tenant-1",
+      capabilities: {
+        taskManagement: true,
+        requirementManagement: true,
+        personalInbox: true,
+        moduleAccess: true,
+        permissionKeys: ["requirements.view", "requirements.manage", "requirements.view_aggregate"],
+      },
+    });
+    vi.mocked(getRequirementManagementSummary).mockResolvedValueOnce({
+      active: 1,
+      openRecipients: 2,
+      overdue: 0,
+      completed: 0,
+    });
+    vi.mocked(listRequirementManagementItems).mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageCount: 1,
+    });
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung" });
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "verwaltung" }),
+    });
+    render(jsx);
+    expect(screen.getByTestId("aufgaben-verwaltung-workspace")).toBeInTheDocument();
+    expect(screen.getByTestId("verwaltung-unified-list")).toBeInTheDocument();
+    expect(screen.getByText("Material bestellen")).toBeInTheDocument();
+  });
+
+  it("renders management workspace when bereich=verwaltung&type=tasks", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "verwaltung", type: "tasks", view: "MEINE" });
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "verwaltung", type: "tasks", view: "MEINE" }),
+    });
+    render(jsx);
+    expect(screen.getByTestId("aufgaben-verwaltung-workspace")).toBeInTheDocument();
     expect(screen.getByTestId("aufgaben-management-workspace")).toBeInTheDocument();
     expect(screen.getByText("Material bestellen")).toBeInTheDocument();
     expect(screen.getByTestId("aufgaben-view-meine")).toHaveAttribute("aria-current", "true");

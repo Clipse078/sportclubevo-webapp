@@ -74,61 +74,61 @@ export default function WochenplanConflictPanel({
 
   return (
     <AdminSurfaceCard className="overflow-hidden p-0">
-      <div className="border-b border-slate-200 px-5 py-5">
+      <div className="border-b border-[var(--border)] px-5 py-5">
         <p className="fca-eyebrow">Konfliktprüfung</p>
         <h3 className="fca-subheading mt-2">Konflikte & Hinweise</h3>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Fehler
             </p>
             <p
               className={
                 "mt-2 text-[2rem] font-bold leading-none tracking-tight " +
-                (errors.length > 0 ? "text-red-600" : "text-slate-900")
+                (errors.length > 0 ? "text-red-600" : "text-[var(--foreground)]")
               }
             >
               {errors.length}
             </p>
           </div>
 
-          <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Hinweise
             </p>
             <p
               className={
                 "mt-2 text-[2rem] font-bold leading-none tracking-tight " +
-                (warnings.length > 0 ? "text-amber-600" : "text-slate-900")
+                (warnings.length > 0 ? "text-amber-600" : "text-[var(--foreground)]")
               }
             >
               {warnings.length}
             </p>
           </div>
 
-          <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Platzkonflikte
             </p>
             <p
               className={
                 "mt-2 text-[2rem] font-bold leading-none tracking-tight " +
-                (totalPitch > 0 ? "text-red-600" : "text-slate-900")
+                (totalPitch > 0 ? "text-red-600" : "text-[var(--foreground)]")
               }
             >
               {totalPitch}
             </p>
           </div>
 
-          <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Garderobenkonflikte
             </p>
             <p
               className={
                 "mt-2 text-[2rem] font-bold leading-none tracking-tight " +
-                (totalRooms > 0 ? "text-red-600" : "text-slate-900")
+                (totalRooms > 0 ? "text-red-600" : "text-[var(--foreground)]")
               }
             >
               {totalRooms}
@@ -199,7 +199,7 @@ export default function WochenplanConflictPanel({
                         </span>
                       </div>
 
-                      <p className="mt-2.5 text-sm leading-6 text-slate-700">
+                      <p className="mt-2.5 text-sm leading-6 text-[var(--text-2)]">
                         {conflict.message}
                       </p>
                     </div>

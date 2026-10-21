@@ -48,11 +48,8 @@ import WorkspaceDocumentInspectorServer from "@/components/admin/workspace/inspe
 import { WorkspaceDocumentInspectorSkeleton } from "@/components/admin/workspace/inspector/WorkspaceDocumentInspectorView";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { buildWorkspaceBreadcrumbs } from "@/lib/workspace/breadcrumbs";
-import {
-  PageBreadcrumbs,
-  PageHeader,
-  PageShell,
-} from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 
 type WorkspacePageProps = {
   searchParams?: Promise<{
@@ -280,19 +277,17 @@ export default async function WorkspacePage({
 
   return (
     <PageShell fullWidth>
-      <PageBreadcrumbs
-        items={[
+      <SceWorkspaceChrome
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: t("page.title") },
         ]}
-      />
-
-      <PageHeader
-        eyebrow={t("page.eyebrow")}
-        title={t("page.title")}
-        description={t("page.description")}
-      />
-
+        header={{
+          eyebrow: t("page.eyebrow"),
+          title: t("page.title"),
+          description: t("page.description"),
+        }}
+      >
       <WorkspaceCollaborationProvider>
 
       {directLinkLifecycle && directLinkLifecycle !== "ACTIVE" ? (
@@ -444,6 +439,7 @@ export default async function WorkspacePage({
           </div>
         </section>
       ) : null}
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

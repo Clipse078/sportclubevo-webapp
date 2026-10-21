@@ -68,7 +68,7 @@ export async function createRequirementLinkedToWorkspaceDocumentAction(
 export async function navigateToNewRequirementForDocumentAction(documentId: string): Promise<void> {
   const ctx = await getRequirementServiceContext();
   if (!ctx || !canCreateRequirement(ctx)) {
-    redirect("/dashboard/aufgaben?bereich=anforderungen");
+    redirect("/dashboard/aufgaben?bereich=verwaltung&type=requirements");
   }
   const readable = await canReadWorkspaceDocument(ctx, documentId.trim());
   if (!readable) {

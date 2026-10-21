@@ -10,7 +10,7 @@ export default function EventImportHub() {
           <div>
             <p className="fca-eyebrow">Import foundation</p>
             <h2 className="fca-heading mt-2">Mehrquellige Event-Ingestion</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--text-2)]">
               Hier bündeln wir künftig externe und manuelle Datenzuflüsse in die zentrale
               Events Domain. Jeder Lauf wird als Import Run protokolliert, damit ClubCorner,
               CSV / Excel und spätere Updates sauber nachvollziehbar bleiben.
@@ -18,10 +18,10 @@ export default function EventImportHub() {
           </div>
 
           <div className="fca-section-card p-5">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Foundation Status
             </p>
-            <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="mt-3 space-y-2 text-sm text-[var(--text-2)]">
               <p>CSV / Excel Endpoint vorbereitet</p>
               <p>ClubCorner / fvnws Endpoint vorbereitet</p>
               <p>Import Run Datenmodell vorbereitet</p>

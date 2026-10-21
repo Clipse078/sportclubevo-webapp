@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
+import ClubCreateTrigger from "@/components/admin/club-directory/ClubCreateTrigger";
 
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -37,12 +36,7 @@ export default async function VereinePage({ searchParams }: PageProps) {
         title="Vereine"
         description="Kanonisches Verzeichnis externer Vereine und ihrer Teams — dieselbe Datenquelle wie TournamentCenter, MatchCenter und Infoboard."
         breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Vereine" }]}
-        headerActions={
-          <Link href="/dashboard/vereine/new" className="fca-button-primary">
-            <Plus className="h-4 w-4" />
-            Neuer Verein
-          </Link>
-        }
+        headerActions={<ClubCreateTrigger />}
       >
         <ClubDirectorySearchableList
           showArchived={showArchived}

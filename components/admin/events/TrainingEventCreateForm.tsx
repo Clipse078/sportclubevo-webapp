@@ -1,6 +1,8 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import { useRouter } from "next/navigation";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
 
@@ -60,6 +62,7 @@ function formatWeekdayLabel(startAt: string) {
 
 export default function TrainingEventCreateForm() {
   const router = useRouter();
+  const recurrenceSwitchId = useId();
 
   const [seasonId, setSeasonId] = useState("");
   const [teamId, setTeamId] = useState("");
@@ -369,10 +372,10 @@ export default function TrainingEventCreateForm() {
           </label>
 
           <div className="fca-section-card p-4">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Team Kontext
             </p>
-            <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="mt-3 space-y-2 text-sm text-[var(--text-2)]">
               <p>{selectedTeam ? selectedTeam.name : "-"}</p>
               <p>{selectedTeam?.ageGroup ?? "-"}</p>
               <p>{selectedTeam?.genderGroup ?? "-"}</p>
@@ -382,28 +385,32 @@ export default function TrainingEventCreateForm() {
           <div className="fca-section-card p-4 md:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                   Wiederholung
                 </p>
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-sm text-[var(--text-2)]">
                   Optional: Training wöchentlich wiederholen, ähnlich wie in Outlook.
                 </p>
               </div>
 
-              <label className="fca-toggle-row">
+              <label
+                htmlFor={recurrenceSwitchId}
+                className="fca-toggle-row"
+                {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+              >
                 <span className="fca-label">Serientermin</span>
-                <input
-                  type="checkbox"
+                <SwitchThumb
+                  id={recurrenceSwitchId}
                   checked={isRecurring}
-                  onChange={(event) => setIsRecurring(event.target.checked)}
-                  className="fca-toggle-checkbox"
+                  onChange={setIsRecurring}
+                  aria-label="Serientermin"
                 />
               </label>
             </div>
 
             {isRecurring ? (
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
                   Wiederholt sich wöchentlich an <span className="font-semibold">{recurrenceWeekdayLabel}</span>.
                 </div>
 
@@ -492,14 +499,20 @@ function Toggle({
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
+  const switchId = useId();
   return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
+    <div
+      className="fca-toggle-row"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+    >
+      <label htmlFor={switchId} className="fca-label cursor-pointer">
+        {label}
+      </label>
+      <SwitchThumb
+        id={switchId}
         checked={value}
-        onChange={(event) => onChange(event.target.checked)}
-        className="fca-toggle-checkbox"
+        onChange={onChange}
+        aria-label={label}
       />
     </div>
   );

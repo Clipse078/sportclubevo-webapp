@@ -101,14 +101,14 @@ export default function UserRolesForm({
               />
 
               <div>
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-sm font-semibold text-[var(--foreground)]">
                   {role.name}
                 </div>
-                <div className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                <div className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
                   {role.key}
                 </div>
                 {role.description ? (
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-[var(--text-2)]">
                     {role.description}
                   </p>
                 ) : null}

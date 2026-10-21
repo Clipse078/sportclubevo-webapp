@@ -92,9 +92,9 @@ function getPublicationTargets(event: EventListCardProps["event"]) {
 }
 
 export default function EventListCard({ event }: EventListCardProps) {
-  const typeBadge = TYPE_BADGE[event.type] ?? "border-slate-200 bg-slate-50 text-slate-600";
+  const typeBadge = TYPE_BADGE[event.type] ?? "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]";
   const typeLabel = TYPE_LABEL[event.type] ?? event.type;
-  const statusBadge = STATUS_BADGE[event.status] ?? "border-slate-200 bg-slate-50 text-slate-500";
+  const statusBadge = STATUS_BADGE[event.status] ?? "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]";
   const sourceLabel = SOURCE_LABEL[event.source] ?? event.source;
   const publicationTargets = getPublicationTargets(event);
 

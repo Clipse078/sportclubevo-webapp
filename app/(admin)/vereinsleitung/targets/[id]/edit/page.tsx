@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -74,7 +79,7 @@ export default async function EditTargetPage({ params }: PageProps) {
         actions={
           <Link
             href={`/vereinsleitung/targets/${id}`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            className={VEREINSLEITUNG_SECONDARY_CHROME_LINK}
           >
             <ArrowLeft className="h-4 w-4" />
             Zurück

@@ -54,7 +54,7 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
     detail = await loadRequirementManagementDetail(ctx, requirementId);
   } catch (error) {
     if (error instanceof RequirementForbiddenError) {
-      redirect("/dashboard/aufgaben?bereich=anforderungen");
+      redirect("/dashboard/aufgaben?bereich=verwaltung&type=requirements");
     }
     throw error;
   }

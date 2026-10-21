@@ -778,15 +778,15 @@ export default function MatchcenterDetailOperational({
       >
         {readinessState === "not-relevant" ? (
           <div
-            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+            className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
             data-testid="infoboard-readiness-not-relevant"
           >
-            <X className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
+            <X className="mt-0.5 h-5 w-5 shrink-0 text-[var(--muted)]" />
             <div>
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-[var(--foreground)]">
                 Nicht relevant
               </p>
-              <p className="mt-1 text-sm text-slate-700">
+              <p className="mt-1 text-sm text-[var(--text-2)]">
                 Auswärtsspiele werden nicht auf dem FC-Allschwil-Infoboard
                 angezeigt.
               </p>

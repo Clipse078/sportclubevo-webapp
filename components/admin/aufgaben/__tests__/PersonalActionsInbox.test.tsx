@@ -32,13 +32,13 @@ describe("AUFGABEN-05-UI-A1 — PersonalActionsInbox", () => {
         items={items}
         locale="de-CH"
         timeZone="Europe/Zurich"
-        showManagementScope={false}
-        bereich="meine"
         filter="all"
         showSourceFilters={false}
         totalActionableCount={65}
       />,
     );
+
+    expect(screen.getByTestId("aufgaben-personal-action-type-legend")).toBeInTheDocument();
 
     expect(screen.getByTestId("personal-inbox-range-summary")).toHaveTextContent(
       "1–50 von 65",

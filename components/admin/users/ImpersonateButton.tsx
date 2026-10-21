@@ -56,7 +56,7 @@ export default function ImpersonateButton({
         type="button"
         onClick={handleImpersonate}
         disabled={submitting}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-[var(--surface)]/25 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Eye className="h-3.5 w-3.5" />
         {submitting ? "Starte…" : "Als Benutzer ansehen"}

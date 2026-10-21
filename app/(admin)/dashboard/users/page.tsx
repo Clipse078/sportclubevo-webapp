@@ -1,7 +1,6 @@
-﻿import Link from "next/link";
-import { redirect } from "next/navigation";
-import { UserPlus } from "lucide-react";
+﻿import { redirect } from "next/navigation";
 import UsersSearchableList from "@/components/admin/users/UsersSearchableList";
+import PlatformUserCreateTrigger from "@/components/admin/users/PlatformUserCreateTrigger";
 import RoleManagementCard from "@/components/admin/users/RoleManagementCard";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { requirePermission } from "@/lib/permissions/require-permission";
@@ -28,12 +27,7 @@ export default async function UsersPage() {
         eyebrow="Benutzer & Rollen"
         title="Benutzer"
         description="Alle Benutzerkonten im System — Rollen, Status und Zugriffe auf einen Blick."
-        actions={
-          <Link href="/dashboard/users/new" className="fca-button-primary">
-            <UserPlus className="h-4 w-4" />
-            Neuer Benutzer
-          </Link>
-        }
+        actions={<PlatformUserCreateTrigger />}
       />
 
       <UsersSearchableList currentUserId={currentUserId} initialUsers={users} />

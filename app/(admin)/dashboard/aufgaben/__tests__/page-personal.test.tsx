@@ -5,10 +5,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+let mockSearchParams = new URLSearchParams();
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => "/dashboard/aufgaben",
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => mockSearchParams,
 }));
 
 vi.mock("@/lib/personal-actions/require-module-access", () => ({
@@ -56,6 +58,21 @@ vi.mock("@/lib/tenants/active-tenant", () => ({
   getActiveTenant: vi.fn().mockResolvedValue({ timezone: "Europe/Zurich", locale: "de-CH" }),
 }));
 
+vi.mock("@/lib/people/queries", () => ({
+  getPersonNameByUserId: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/people/person-user-identity", () => ({
+  resolvePersonUserIdentityByUserId: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/people/identity", () => ({
+  resolveAccountIdentityName: vi.fn().mockReturnValue({
+    firstName: "Parent",
+    lastName: "User",
+  }),
+}));
+
 vi.mock("@/lib/tasks/server-context", () => ({
   getTaskServiceContext: vi.fn(),
 }));
@@ -68,6 +85,7 @@ import AufgabenPage from "../page";
 
 describe("AUFGABEN-05-UI — parent-only Aufgaben page", () => {
   it("K — parent-only ?bereich=verwaltung stays on personal inbox", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "meine" });
     const jsx = await AufgabenPage({
       searchParams: Promise.resolve({ bereich: "verwaltung" }),
     });
@@ -79,6 +97,7 @@ describe("AUFGABEN-05-UI — parent-only Aufgaben page", () => {
   });
 
   it("L — unknown bereich falls back to personal inbox", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "meine" });
     const jsx = await AufgabenPage({
       searchParams: Promise.resolve({ bereich: "foo" }),
     });
@@ -87,6 +106,7 @@ describe("AUFGABEN-05-UI — parent-only Aufgaben page", () => {
   });
 
   it("P — renders personal inbox without management workspace", async () => {
+    mockSearchParams = new URLSearchParams({ bereich: "meine" });
     const jsx = await AufgabenPage({ searchParams: Promise.resolve({}) });
     render(jsx);
 

@@ -165,7 +165,7 @@ export default function PersonHeaderPhotoAdmin({
         aria-label={canManage ? "Profilbild verwalten" : personName}
         className={[
           "relative h-14 w-14 overflow-hidden rounded-full",
-          "border border-slate-200 bg-white shadow-sm",
+          "border border-[var(--border)] bg-[var(--surface)] shadow-sm",
           canManage
             ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
             : "cursor-default",

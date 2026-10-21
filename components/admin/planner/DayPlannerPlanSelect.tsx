@@ -52,7 +52,7 @@ export function DayPlannerPlanSelect({ dayParam, weekParam, plans, activePlanId 
         data-testid="dayplanner-plan-select"
         value={activePlanId ?? STANDARDPLAN_VALUE}
         onChange={(e) => handleSelect(e.target.value)}
-        className="h-9 rounded-lg border border-[var(--border)] bg-white px-3 text-sm font-medium text-[var(--foreground)] focus:border-[var(--sce-primary)] focus:outline-none"
+        className="fca-input h-9 w-auto min-w-[10rem] px-3 text-sm font-medium"
       >
         <option value={STANDARDPLAN_VALUE}>Standardplan</option>
         {plans.map((plan) => (

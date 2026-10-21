@@ -17,7 +17,7 @@ export default function PlannerEntryPublicationBadges({
 
   if (items.length === 0) {
     return (
-      <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500">
+      <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold text-[var(--muted)]">
         Nicht publiziert
       </span>
     );
@@ -28,7 +28,7 @@ export default function PlannerEntryPublicationBadges({
       {items.map((item) => (
         <span
           key={item}
-          className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600"
+          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[10px] font-semibold text-[var(--text-2)]"
         >
           {item}
         </span>

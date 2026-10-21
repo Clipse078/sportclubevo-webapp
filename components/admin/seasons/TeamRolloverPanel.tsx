@@ -205,7 +205,7 @@ export default function TeamRolloverPanel({ seasonId, seasonName }: TeamRollover
           <ul className="mt-3 max-h-64 space-y-1 overflow-y-auto">
             {candidates.map((team) => (
               <li key={team.id}>
-                <label className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-white">
+                <label className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[var(--surface)]">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(team.id)}

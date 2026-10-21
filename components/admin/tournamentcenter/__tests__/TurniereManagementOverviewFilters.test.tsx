@@ -168,10 +168,10 @@ describe("TURNIERE-UX-01D — overview filter surfaces", () => {
       "/dashboard/tournamentcenter?location=Im%20Br%C3%BCel%2C%20Allschwil",
     );
 
-    fireEvent.click(screen.getByTestId("turniere-filter-own-only"));
+    fireEvent.click(screen.getByRole("switch", { name: "Nur eigene Turniere" }));
     expect(push).toHaveBeenCalledWith("/dashboard/tournamentcenter?ownership=own");
 
-    fireEvent.click(screen.getByTestId("turniere-filter-public-only"));
+    fireEvent.click(screen.getByRole("switch", { name: "Nur öffentliche Turniere" }));
     expect(push).toHaveBeenCalledWith("/dashboard/tournamentcenter?visibility=public");
 
     expect(screen.getByRole("link", { name: "Zurücksetzen" })).toHaveAttribute(

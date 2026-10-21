@@ -21,12 +21,14 @@ export const SCE_BINARY_CHECKBOX_SEMANTICS = {
   E_OTHER: "OTHER",
 } as const;
 
-/** Post-DS-05 migration inventory (remaining binary settings deferred to DS-10). */
+/** Post-DS-10 migration inventory — binary settings use SwitchToggle/SwitchThumb. */
 export const SCE_BINARY_CHECKBOX_COUNTS = {
   BINARY_SETTING_CHECKBOXES_FOUND: 31,
   BINARY_SETTING_CHECKBOXES_MIGRATED_DS05: 14,
-  BINARY_SETTING_CHECKBOXES_DEFERRED: 17,
-  LEGITIMATE_MULTI_SELECTION_CHECKBOXES: 22,
+  BINARY_SETTING_CHECKBOXES_MIGRATED_DS10: 17,
+  BINARY_SETTING_CHECKBOXES_DEFERRED: 0,
+  REMAINING_LEGACY_BINARY_CHECKBOXES: 0,
+  LEGITIMATE_MULTI_SELECTION_CHECKBOXES: 24,
   LEGITIMATE_ROW_SELECTION_CHECKBOXES: 7,
   LEGITIMATE_ACKNOWLEDGEMENT_CHECKBOXES: 2,
 } as const;
@@ -103,7 +105,7 @@ export const SCE_BINARY_CHECKBOX_AUDIT_SAMPLE: SceBinaryCheckboxAuditRow[] = [
   {
     file: "components/admin/roles/RolePermissionEditor.tsx",
     semantics: "B_MULTI_SELECTION",
-    ds05Action: "DEFER_DS10",
+    ds05Action: "LEGITIMATE_UNCHANGED",
     notes: "Permission matrix — multi-capability selection",
   },
   {
@@ -115,8 +117,8 @@ export const SCE_BINARY_CHECKBOX_AUDIT_SAMPLE: SceBinaryCheckboxAuditRow[] = [
   {
     file: "components/admin/events/TrainingEventCreateForm.tsx",
     semantics: "A_BINARY_SETTING_ON_OFF",
-    ds05Action: "DEFER_DS10",
-    notes: "Legacy create forms — migrate with DS-10 form sweep",
+    ds05Action: "MIGRATED_DS05",
+    notes: "Serientermin + publication flags → SwitchThumb (DS-10 sweep)",
   },
   {
     file: "components/admin/communication/campaign/CampaignComposer.tsx",

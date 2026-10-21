@@ -7,7 +7,10 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { resolvePersonalActionsModuleCapabilities } from "@/lib/personal-actions/access";
-import { parseAufgabenBereich, buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
+import {
+  parseAufgabenBereich,
+  buildVerwaltungManagementHref,
+} from "@/lib/personal-actions/aufgaben-scope";
 import {
   canAccessRequirementManagement,
   canAccessRequirementManagementFromKeys,
@@ -91,7 +94,8 @@ describe("AUFGABEN-06G2 scope & authorization (M1–M3, M14–M16, M31–M32)", 
   it("M1 shows Anforderungen scope for authorized manager", () => {
     expect(canAccessRequirementManagementFromKeys(MANAGER_PERMS)).toBe(true);
     expect(parseAufgabenBereich("anforderungen")).toBe("anforderungen");
-    expect(buildAufgabenBereichHref("anforderungen")).toContain("bereich=anforderungen");
+    expect(buildVerwaltungManagementHref("requirements")).toContain("bereich=verwaltung");
+    expect(buildVerwaltungManagementHref("requirements")).toContain("type=requirements");
   });
 
   it("M2 hides management scope from recipient-only user", () => {
@@ -339,6 +343,76 @@ describe("AUFGABEN-06G2 deferred & safety (M27–M30)", () => {
 });
 
 describe("AUFGABEN-06G2 management list (M4–M8, M12)", () => {
+  it("R4.4 — management list uses valid Prisma include (no scalar Json in include)", async () => {
+    mocks.requirementFindMany.mockResolvedValue([]);
+    await listRequirementManagementItems(managerCtx(), {
+      search: "",
+      sort: "DEADLINE_ASC",
+      status: "ALL",
+      deadline: "ALL",
+      page: 1,
+    });
+    const includeArg = mocks.requirementFindMany.mock.calls[0]?.[0]?.include as
+      | Record<string, unknown>
+      | undefined;
+    expect(includeArg?.draftAudienceCompositionJson).toBeUndefined();
+    expect(includeArg?.draftAudience).toBeDefined();
+  });
+
+  it("R4.4 — zero rows is empty list, not error", async () => {
+    mocks.requirementFindMany.mockResolvedValue([]);
+    const result = await listRequirementManagementItems(managerCtx(), {
+      search: "",
+      sort: "DEADLINE_ASC",
+      status: "ALL",
+      deadline: "ALL",
+      page: 1,
+    });
+    expect(result).toEqual({ items: [], totalCount: 0, page: 1, pageCount: 1 });
+  });
+
+  it("R4.4 — legacy nullable dueAt and invalid composition JSON remain readable", async () => {
+    mocks.requirementFindMany.mockResolvedValue([
+      {
+        id: "req-legacy",
+        tenantId: TENANT,
+        title: "Historisch",
+        description: null,
+        status: "ACTIVE",
+        responseMode: "ACKNOWLEDGE",
+        dueAt: null,
+        reminder1At: null,
+        reminder2At: null,
+        reminder1PresetKey: null,
+        reminder2PresetKey: null,
+        remindersConfigured: false,
+        activatedAt: new Date(),
+        closedAt: null,
+        cancelledAt: null,
+        createdByUserId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        draftAudienceCompositionJson: { version: 2, conditions: [] },
+        draftAudience: [],
+        draftAudienceTeams: [],
+        draftAudienceOrgUnits: [],
+        draftAudienceRoles: [],
+        draftAudienceTargetGroups: [],
+        createdBy: null,
+      },
+    ]);
+    mocks.recipientCount.mockResolvedValue(0);
+    const result = await listRequirementManagementItems(managerCtx(), {
+      search: "",
+      sort: "DEADLINE_ASC",
+      status: "ALL",
+      deadline: "ALL",
+      page: 1,
+    });
+    expect(result.items[0]?.requirement.dueAt).toBeNull();
+    expect(result.items[0]?.requirement.draftAudienceComposition).toBeNull();
+  });
+
   it("M12 ACTIVE list item includes aggregate enrichment", async () => {
     mocks.requirementFindMany.mockResolvedValue([
       {

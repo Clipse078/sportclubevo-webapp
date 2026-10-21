@@ -2,6 +2,7 @@
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
+ * @deprecated DS-10R2 — use `SceMatchCard` / `SpieleManagementMatchRow`. Retained for historical reference only; no production imports.
  * MatchCard — MATCHCENTER-UX-03-C2
  *
  * Premium MatchCard with deliberate two-region composition.

@@ -11,9 +11,10 @@ type ContractOption = {
 
 type Props = {
   contracts: ContractOption[];
+  onCreated?: (invoiceKey: string) => void;
 };
 
-export default function NativeBillingCreateInvoiceForm({ contracts }: Props) {
+export default function NativeBillingCreateInvoiceForm({ contracts, onCreated }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +41,12 @@ export default function NativeBillingCreateInvoiceForm({ contracts }: Props) {
       if (!res.ok || !data.invoice) {
         throw new Error(data.error ?? "Rechnung konnte nicht erstellt werden.");
       }
-      router.push(`/dashboard/admin/commercial/billing/invoices/${data.invoice.key}`);
-      router.refresh();
+      if (onCreated) {
+        onCreated(data.invoice.key);
+      } else {
+        router.push(`/dashboard/admin/commercial/billing/invoices/${data.invoice.key}`);
+        router.refresh();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fehler beim Speichern.");
     } finally {

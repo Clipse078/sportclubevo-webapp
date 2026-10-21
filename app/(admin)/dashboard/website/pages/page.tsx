@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import WebsitePageCreateTrigger from "@/components/admin/pages/WebsitePageCreateTrigger";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
@@ -16,6 +15,10 @@ import {
 export default async function WebsitePagesAdminPage() {
   const session = await requireAnyPermission([PERMISSIONS.WEBSITE_MANAGE]);
   const tenantId = await requireActiveTenantId();
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { approvedDataOnly: true },
+  });
 
   const resolver = createEffectivePermissionResolver(prisma);
   const canDelete = await resolver.hasTenantDeletionAuthority({
@@ -41,10 +44,7 @@ export default async function WebsitePagesAdminPage() {
           className="mb-0"
         />
         <PageActions>
-          <Link href="/dashboard/website/pages/new" className="fca-button-primary">
-            <Plus className="h-4 w-4" />
-            Neue Seite
-          </Link>
+          <WebsitePageCreateTrigger requiresReview={tenant?.approvedDataOnly ?? false} />
         </PageActions>
       </div>
       <WebsitePageList canDelete={canDelete} />

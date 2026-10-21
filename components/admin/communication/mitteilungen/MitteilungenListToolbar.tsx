@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
+import MitteilungCreateTrigger from "@/components/admin/communication/mitteilungen/MitteilungCreateTrigger";
+import type { MitteilungComposerBootstrap } from "@/components/admin/communication/mitteilungen/MitteilungCreateComposerDialog";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Alle Status" },
@@ -13,9 +14,10 @@ const STATUS_OPTIONS = [
 
 type Props = {
   canSend: boolean;
+  composerBootstrap?: MitteilungComposerBootstrap | null;
 };
 
-export function MitteilungenListToolbar({ canSend }: Props) {
+export function MitteilungenListToolbar({ canSend, composerBootstrap }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
@@ -65,13 +67,11 @@ export function MitteilungenListToolbar({ canSend }: Props) {
           ))}
         </select>
       </div>
-      {canSend ? (
-        <Link
-          href="/dashboard/communication/mitteilungen/new"
+      {canSend && composerBootstrap ? (
+        <MitteilungCreateTrigger
+          {...composerBootstrap}
           className="fca-button-primary inline-flex shrink-0 items-center justify-center"
-        >
-          Neue Mitteilung
-        </Link>
+        />
       ) : null}
     </div>
   );

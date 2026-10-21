@@ -1,4 +1,10 @@
 ﻿import Link from "next/link";
+import {
+  VEREINSLEITUNG_INNER_ROW_CLASS,
+  VEREINSLEITUNG_MUTED_BADGE_CLASS,
+  VEREINSLEITUNG_PANEL_CLASS,
+  VEREINSLEITUNG_SECONDARY_CHROME_LINK,
+} from "@/components/admin/vereinsleitung/vereinsleitungSurfaceStyles";
 import { TrendingUp } from "lucide-react";
 import type { TargetListItem } from "@/lib/targets/queries";
 
@@ -47,14 +53,14 @@ export default function VereinsleitungGoalsCard({ targets = [] }: Vereinsleitung
     : MOCK_GOALS.map((g, i) => ({ id: String(i), title: g.title, category: g.category, progress: g.progress, href: "/vereinsleitung/targets" }));
 
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[30px] border border-slate-200/80 bg-[var(--surface-2)] p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[1.08rem] font-semibold text-slate-900">
+          <h3 className="text-[1.08rem] font-semibold text-[var(--foreground)]">
             {hasRealData ? "Aktuelle Ziele" : "Saisonziele 2025/26"}
           </h3>
           {!hasRealData ? (
-            <p className="mt-0.5 text-[11px] text-slate-400">
+            <p className="mt-0.5 text-[11px] text-[var(--muted)]">
               Demo-Daten ·{" "}
               <Link href="/vereinsleitung/targets" className="text-[#0b4aa2] hover:underline">
                 echte Ziele erfassen
@@ -65,7 +71,7 @@ export default function VereinsleitungGoalsCard({ targets = [] }: Vereinsleitung
 
         <Link
           href="/vereinsleitung/targets"
-          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+          className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-2)] transition hover:bg-slate-50 hover:text-[var(--text-2)]"
         >
           <span className="inline-flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5" />
@@ -79,8 +85,8 @@ export default function VereinsleitungGoalsCard({ targets = [] }: Vereinsleitung
           <Link key={item.id} href={item.href} className="block space-y-2.5 transition hover:opacity-80">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-[15px] font-semibold leading-6 text-slate-900">{item.title}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{item.category}</p>
+                <p className="text-[15px] font-semibold leading-6 text-[var(--foreground)]">{item.title}</p>
+                <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.category}</p>
               </div>
               <span className="shrink-0 text-sm font-semibold text-[#0b4aa2]">{item.progress}%</span>
             </div>

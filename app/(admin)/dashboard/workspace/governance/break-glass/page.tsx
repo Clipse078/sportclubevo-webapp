@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { BreakGlassGovernancePanel } from "@/components/admin/workspace/BreakGlassGovernancePanel";
-import { PageHeader, PageShell } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
+import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -20,19 +21,28 @@ export default async function WorkspaceBreakGlassPage() {
   const canActivate = permissionKeys.includes(PERMISSIONS.WORKSPACE_BREAK_GLASS);
 
   return (
-    <PageShell>
-      <PageHeader
-        title="Workspace Break-Glass"
-        description="Explizite, zeitlich begrenzte Ausnahme für dokumentierte Governance-Fälle (nur Lesezugriff im definierten Umfang)."
-      />
-      {canActivate ? (
-        <BreakGlassGovernancePanel />
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Sie verfügen über Governance-Verwaltungsrechte, jedoch nicht über
-          Break-Glass-Aktivierung. Widerruf erfolgt über die Governance-API.
-        </p>
-      )}
+    <PageShell widthMode="operational">
+      <SceWorkspaceChrome
+        breadcrumbs={[
+          { label: "Dokumente", href: "/dashboard/workspace" },
+          { label: "Break-Glass" },
+        ]}
+        header={{
+          eyebrow: "Governance",
+          title: "Workspace Break-Glass",
+          description:
+            "Explizite, zeitlich begrenzte Ausnahme für dokumentierte Governance-Fälle (nur Lesezugriff im definierten Umfang).",
+        }}
+      >
+        {canActivate ? (
+          <BreakGlassGovernancePanel />
+        ) : (
+          <p className="text-sm text-[var(--text-2)]">
+            Sie verfügen über Governance-Verwaltungsrechte, jedoch nicht über
+            Break-Glass-Aktivierung. Widerruf erfolgt über die Governance-API.
+          </p>
+        )}
+      </SceWorkspaceChrome>
     </PageShell>
   );
 }

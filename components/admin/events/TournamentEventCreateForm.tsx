@@ -1,7 +1,9 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
 
 type SeasonItem = {
@@ -409,10 +411,10 @@ export default function TournamentEventCreateForm({
           </label>
 
           <div className="fca-section-card p-4">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Team Kontext
             </p>
-            <div className="mt-3 space-y-2 text-sm text-slate-600">
+            <div className="mt-3 space-y-2 text-sm text-[var(--text-2)]">
               <p>{selectedTeam ? selectedTeam.name : "-"}</p>
               <p>{selectedTeam?.ageGroup ?? "-"}</p>
               <p>{selectedTeam?.genderGroup ?? "-"}</p>
@@ -486,14 +488,20 @@ function Toggle({
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
+  const switchId = useId();
   return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
+    <div
+      className="fca-toggle-row"
+      {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+    >
+      <label htmlFor={switchId} className="fca-label cursor-pointer">
+        {label}
+      </label>
+      <SwitchThumb
+        id={switchId}
         checked={value}
-        onChange={(event) => onChange(event.target.checked)}
-        className="fca-toggle-checkbox"
+        onChange={onChange}
+        aria-label={label}
       />
     </div>
   );

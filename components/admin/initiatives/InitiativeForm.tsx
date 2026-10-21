@@ -7,9 +7,13 @@ import VisibilityScopeSelect, {
   type VisibilityScopeValue,
 } from "@/components/admin/shared/VisibilityScopeSelect";
 import AllowlistPanel from "@/components/admin/shared/visibility/AllowlistPanel";
+import { sceFormSurfaceClasses } from "@/lib/design-system/sce-composer-form-surface";
 
 type InitiativeFormProps = {
   mode: "create" | "edit";
+  layout?: "page" | "composer";
+  onSuccess?: (initiativeId: string) => void;
+  onCancel?: () => void;
   initiativeId?: string;
   defaultValues?: {
     title?: string;
@@ -36,7 +40,14 @@ const STATUS_OPTIONS = [
   { value: "CANCELLED", label: "Abgesagt" },
 ] as const;
 
-export default function InitiativeForm({ mode, initiativeId, defaultValues }: InitiativeFormProps) {
+export default function InitiativeForm({
+  mode,
+  layout = "page",
+  onSuccess,
+  onCancel,
+  initiativeId,
+  defaultValues,
+}: InitiativeFormProps) {
   const router = useRouter();
 
   const [title, setTitle] = useState(defaultValues?.title ?? "");
@@ -107,6 +118,12 @@ export default function InitiativeForm({ mode, initiativeId, defaultValues }: In
         return;
       }
 
+      const data = await res.json().catch(() => ({}));
+      const slug = typeof data?.initiative?.slug === "string" ? data.initiative.slug : "";
+      if (onSuccess) {
+        onSuccess(slug);
+        return;
+      }
       router.push("/vereinsleitung/initiativen?status=saved");
       router.refresh();
     } catch {
@@ -116,21 +133,26 @@ export default function InitiativeForm({ mode, initiativeId, defaultValues }: In
     }
   }
 
-  const fieldClass =
-    "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-  const labelClass =
-    "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  const {
+    fieldClass,
+    labelClass,
+    sectionClass,
+    sectionTitleClass,
+    errorClass,
+    cancelButtonClass,
+    submitButtonClass,
+  } = sceFormSurfaceClasses(layout);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+        <div className={errorClass} role="alert">
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">Grunddaten</h3>
+      <section className={sectionClass}>
+        <h3 className={sectionTitleClass}>Grunddaten</h3>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
@@ -218,9 +240,9 @@ export default function InitiativeForm({ mode, initiativeId, defaultValues }: In
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-2 text-[1.05rem] font-semibold text-slate-900">Sichtbarkeit</h3>
-        <p className="mb-5 text-[12px] text-slate-500">
+      <section className={sectionClass}>
+        <h3 className={sectionTitleClass}>Sichtbarkeit</h3>
+        <p className="mb-5 text-[12px] text-[var(--muted)]">
           Wer kann diese Initiative sehen? Privat und Eingeschränkt
           verbergen diesen Eintrag für nicht berechtigte Benutzer.
         </p>
@@ -241,16 +263,12 @@ export default function InitiativeForm({ mode, initiativeId, defaultValues }: In
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
-          onClick={() => router.back()}
-          className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          onClick={() => (onCancel ? onCancel() : router.back())}
+          className={cancelButtonClass}
         >
           Abbrechen
         </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]"
-        >
+        <button type="submit" disabled={loading} className={submitButtonClass}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {mode === "create" ? "Initiative erstellen" : "Änderungen speichern"}
         </button>

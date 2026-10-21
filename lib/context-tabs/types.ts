@@ -26,6 +26,11 @@ export type ContextTabNavigationConfig<TTabId extends ContextTabId = ContextTabI
   /** Optional legacy `?tab=` normalization before resolving visible tabs. */
   resolveTabParam?: (raw: string | null | undefined) => string | null | undefined;
   /**
+   * Query param used to resolve the active tab on the current pathname (default `tab`).
+   * Domain legacy URLs (e.g. Aufgaben `?bereich=`) set this instead of migrating deep links.
+   */
+  tabQueryParam?: string;
+  /**
    * Route-segment tabs: absolute path per tab (URL-first deep links).
    * When present, `hrefForTab` uses these paths instead of `?tab=` on the current pathname.
    */

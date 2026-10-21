@@ -8,8 +8,14 @@ type OrgUnitOption = { id: string; key: string; name: string; level: number; typ
 
 type OrgUnitFormProps = {
   mode: "create" | "edit";
+  layout?: "page" | "composer";
   orgUnitId?: string;
   parentOptions?: OrgUnitOption[];
+  onSuccess?: (
+    orgUnitId: string,
+    meta?: { createPayload?: { name: string; key?: string; type: string; parentId: string | null; description?: string | null; status?: string } },
+  ) => void;
+  onCancel?: () => void;
   defaultValues?: {
     name?: string;
     key?: string;
@@ -38,7 +44,15 @@ const STATUS_OPTIONS = [
   { value: "ARCHIVED", label: "Archiviert" },
 ] as const;
 
-export default function OrgUnitForm({ mode, orgUnitId, parentOptions = [], defaultValues }: OrgUnitFormProps) {
+export default function OrgUnitForm({
+  mode,
+  layout = "page",
+  orgUnitId,
+  parentOptions = [],
+  onSuccess,
+  onCancel,
+  defaultValues,
+}: OrgUnitFormProps) {
   const router = useRouter();
   const [name, setName] = useState(defaultValues?.name ?? "");
   const [key, setKey] = useState(defaultValues?.key ?? "");
@@ -81,23 +95,70 @@ export default function OrgUnitForm({ mode, orgUnitId, parentOptions = [], defau
         setError(data?.error ?? "Fehler beim Speichern.");
         return;
       }
+      const data = await res.json().catch(() => ({}));
+      const savedId =
+        mode === "edit" && orgUnitId
+          ? orgUnitId
+          : typeof data?.orgUnit?.id === "string"
+            ? data.orgUnit.id
+            : "";
+      if (onSuccess) {
+        onSuccess(
+          savedId,
+          mode === "create"
+            ? {
+                createPayload: {
+                  name: name.trim(),
+                  key: key || undefined,
+                  type,
+                  parentId: parentId || null,
+                  description: description || null,
+                  status,
+                },
+              }
+            : undefined,
+        );
+        return;
+      }
       router.push(mode === "edit" && orgUnitId ? `/dashboard/org-units/${orgUnitId}` : "/dashboard/org-units");
       router.refresh();
     } catch { setError("Netzwerkfehler."); } finally { setLoading(false); }
   }
 
-  const fieldClass = "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-  const labelClass = "block text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  const isComposer = layout === "composer";
+  const fieldClass = isComposer
+    ? "fca-input w-full"
+    : "w-full rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
+  const labelClass = isComposer
+    ? "mb-1 block text-xs font-medium text-[var(--muted)]"
+    : "block text-[12px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)] mb-1.5";
 
   // Filter eligible parents (exclude self, max depth 2 for parents)
   const eligibleParents = parentOptions.filter((p) => p.id !== orgUnitId && p.level <= 1);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error ? <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">{error}</div> : null}
+      {error ? (
+        <div
+          className={
+            isComposer
+              ? "rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+              : "rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700"
+          }
+          role="alert"
+        >
+          {error}
+        </div>
+      ) : null}
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-slate-900">Einheit</h3>
+      <section
+        className={
+          isComposer
+            ? "space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/60 p-4"
+            : "rounded-[28px] border border-[var(--border)] bg-[var(--surface-2)]/60 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+        }
+      >
+        {!isComposer ? <h3 className="mb-5 text-[1.05rem] font-semibold text-[var(--foreground)]">Einheit</h3> : null}
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Name *</label>
@@ -112,7 +173,7 @@ export default function OrgUnitForm({ mode, orgUnitId, parentOptions = [], defau
               placeholder="z.B. vorstand"
               readOnly={mode === "edit"}
               aria-readonly={mode === "edit"}
-              className={`${fieldClass} font-mono text-[13px] ${mode === "edit" ? "cursor-not-allowed bg-slate-50 text-slate-500" : ""}`}
+              className={`${fieldClass} font-mono text-[13px] ${mode === "edit" ? "cursor-not-allowed bg-[var(--surface-2)] text-[var(--muted)]" : ""}`}
             />
           </div>
           <div>
@@ -146,8 +207,22 @@ export default function OrgUnitForm({ mode, orgUnitId, parentOptions = [], defau
       </section>
 
       <div className="flex items-center justify-between gap-4">
-        <button type="button" onClick={() => router.back()} className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">Abbrechen</button>
-        <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]">
+        <button
+          type="button"
+          onClick={() => (onCancel ? onCancel() : router.back())}
+          className={isComposer ? "fca-button-secondary" : "rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"}
+        >
+          Abbrechen
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className={
+            isComposer
+              ? "fca-button-primary inline-flex items-center gap-2"
+              : "inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]"
+          }
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {mode === "create" ? "Einheit erstellen" : "Änderungen speichern"}
         </button>

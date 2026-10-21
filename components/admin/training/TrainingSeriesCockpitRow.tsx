@@ -46,7 +46,7 @@ function statusBadgeClasses(status: CockpitRow["status"]): string {
     case "INACTIVE":
       return "border-amber-200 bg-amber-50 text-amber-700";
     case "ARCHIVED":
-      return "border-slate-200 bg-slate-100 text-slate-500";
+      return "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]";
   }
 }
 

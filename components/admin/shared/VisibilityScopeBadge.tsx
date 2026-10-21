@@ -16,7 +16,7 @@ export default function VisibilityScopeBadge({
   const config = {
     ORGANISATION: {
       label: "Organisation",
-      classes: "border-slate-200 bg-slate-50 text-slate-500",
+      classes: "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
       Icon: Eye,
     },
     RESTRICTED: {

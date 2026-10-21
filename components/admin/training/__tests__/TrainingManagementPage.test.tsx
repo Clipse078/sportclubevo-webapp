@@ -79,7 +79,7 @@ describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
     expect(screen.queryByTestId("training-sessions-section")).not.toBeInTheDocument();
     expect(screen.queryByTestId("training-create-menu-trigger")).not.toBeInTheDocument();
     expect(screen.getByTestId("training-create-link")).toHaveAttribute("href", "/dashboard/training/new");
-    expect(screen.getByTestId("training-quick-wochenplaner")).toHaveTextContent("Wochenplaner öffnen");
+    expect(screen.getByTestId("training-toolbar-wochenplaner")).toHaveTextContent("Wochenplaner");
     expect(screen.queryByText("Serien")).not.toBeInTheDocument();
     expect(screen.queryByText("Einzeltrainings")).not.toBeInTheDocument();
     expect(screen.queryByText("Filtern")).not.toBeInTheDocument();
@@ -114,7 +114,8 @@ describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
       />,
     );
 
-    expect(screen.getByTestId("training-kpi-cards")).toBeInTheDocument();
+    expect(screen.getByTestId("training-operational-summary")).toBeInTheDocument();
+    expect(screen.getByTestId("training-operational-toolbar")).toBeInTheDocument();
     expect(screen.getByTestId("training-management-rail")).toBeInTheDocument();
     expect(screen.getByTestId("training-filter-rail")).toBeInTheDocument();
     expect(screen.getByTestId("training-search")).toBeInTheDocument();

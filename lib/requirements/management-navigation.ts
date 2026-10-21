@@ -82,7 +82,7 @@ export function buildRequirementManagementHref(
   patch: Partial<RequirementManagementQueryState> = {},
 ): string {
   const merged = { ...query, ...patch };
-  const params = new URLSearchParams({ bereich: "anforderungen" });
+  const params = new URLSearchParams({ bereich: "verwaltung", type: "requirements" });
   if (merged.search) params.set("q", merged.search);
   if (merged.sort !== "DEADLINE_ASC") params.set("sort", merged.sort);
   if (merged.status !== "ALL") params.set("status", merged.status);

@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { SCE_FORM_CONTROL_MICRO_UX_MARKERS } from "@/lib/design-system/sce-form-control-micro-ux";
 
 type RoleItem = {
   id: string;
@@ -151,7 +153,7 @@ export default function RoleManagementCard({
         <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div>
             <h3 className="fca-subheading">Rollen & Vereinsleitungs-Zugriff</h3>
-            <p className="mt-3 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-[var(--text-2)]">
               Admin kann hier Rollennamen, Beschreibungen sowie den Zugriff auf
               das Vereinsleitungs-Modul und die Teilnahme an Vereinsleitungs-Meetings
               steuern. Die Workflow-Matrix für Review-, Approve- und Publish-Logik
@@ -207,7 +209,7 @@ export default function RoleManagementCard({
                           <span className="fca-label">Rollen-Key</span>
                           <input
                             value={role.key}
-                            className="fca-input bg-slate-50 text-slate-500"
+                            className="fca-input bg-[var(--surface-2)] text-[var(--muted)]"
                             disabled
                           />
                         </label>
@@ -231,50 +233,52 @@ export default function RoleManagementCard({
 
                     <div className="space-y-4">
                       <div className="fca-section-card p-4">
-                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                           Zusatzrechte
                         </p>
 
                         <div className="mt-4 space-y-4">
-                          <label className="fca-toggle-row">
-                            <span className="text-sm text-slate-700">
+                          <div
+                            className="fca-toggle-row"
+                            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+                          >
+                            <span className="text-sm text-[var(--text-2)]">
                               Zugriff auf Vereinsleitung
                             </span>
-                            <input
-                              type="checkbox"
+                            <SwitchThumb
+                              id={`role-${role.id}-vereinsleitung-access`}
                               checked={role.canAccessVereinsleitung}
-                              onChange={(event) =>
-                                updateRoleField(
-                                  role.id,
-                                  "canAccessVereinsleitung",
-                                  event.target.checked,
-                                )
+                              onChange={(checked) =>
+                                updateRoleField(role.id, "canAccessVereinsleitung", checked)
                               }
-                              className="fca-toggle-checkbox"
+                              aria-label="Zugriff auf Vereinsleitung"
                             />
-                          </label>
+                          </div>
 
-                          <label className="fca-toggle-row">
-                            <span className="text-sm text-slate-700">
+                          <div
+                            className="fca-toggle-row"
+                            {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.BINARY_SETTING_ROW]: "true" }}
+                          >
+                            <span className="text-sm text-[var(--text-2)]">
                               Darf an Vereinsleitungs-Meetings teilnehmen
                             </span>
-                            <input
-                              type="checkbox"
+                            <SwitchThumb
+                              id={`role-${role.id}-vereinsleitung-meetings`}
                               checked={role.canAttendVereinsleitungMeetings}
-                              onChange={(event) =>
+                              onChange={(checked) =>
                                 updateRoleField(
                                   role.id,
                                   "canAttendVereinsleitungMeetings",
-                                  event.target.checked,
+                                  checked,
                                 )
                               }
-                              className="fca-toggle-checkbox"
+                              aria-label="Darf an Vereinsleitungs-Meetings teilnehmen"
                             />
-                          </label>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
                         Letzte Änderung: {formatDateTime(role.updatedAt)}
                       </div>
 

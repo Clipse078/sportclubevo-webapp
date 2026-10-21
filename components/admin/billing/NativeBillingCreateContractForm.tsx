@@ -12,12 +12,14 @@ type Props = {
   products: ProductOption[];
   customers: CustomerOption[];
   legalEntities: EntityOption[];
+  onCreated?: (contractKey: string) => void;
 };
 
 export default function NativeBillingCreateContractForm({
   products,
   customers,
   legalEntities,
+  onCreated,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -55,8 +57,12 @@ export default function NativeBillingCreateContractForm({
       if (!res.ok || !data.contract) {
         throw new Error(data.error ?? "Vertrag konnte nicht erstellt werden.");
       }
-      router.push(`/dashboard/admin/commercial/billing/contracts/${data.contract.key}`);
-      router.refresh();
+      if (onCreated) {
+        onCreated(data.contract.key);
+      } else {
+        router.push(`/dashboard/admin/commercial/billing/contracts/${data.contract.key}`);
+        router.refresh();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fehler beim Speichern.");
     } finally {

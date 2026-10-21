@@ -10,17 +10,18 @@
  * German UI. Server Component with client-side interactions.
  */
 
-import { Link2, Plus } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { listProviderMappings } from "@/lib/provider-mapping/provider-mapping-queries";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
-import ProviderMappingTable from "@/components/admin/teams/provider-mapping/ProviderMappingTable";
-import ProviderMappingFilters from "@/components/admin/teams/provider-mapping/ProviderMappingFilters";
+import ProviderMappingWorkspace from "@/components/admin/teams/provider-mapping/ProviderMappingWorkspace";
+import ProviderMappingCreateTrigger from "@/components/admin/teams/provider-mapping/ProviderMappingCreateTrigger";
+import { SceActionLink } from "@/components/sce/actions/SceActionLink";
+import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
 import type { MappingFilterParams } from "@/lib/provider-mapping/provider-mapping-queries";
-import Link from "next/link";
 
 type PageProps = {
   searchParams?: Promise<{
@@ -74,53 +75,38 @@ export default async function ProviderMappingPage({ searchParams }: PageProps) {
           { label: "Teams", href: "/dashboard/teams" },
           { label: "Anbieter-Zuordnungen", href: "/dashboard/teams/provider-mapping" },
         ]}
-        stats={
-          <div className="flex gap-6 text-sm">
-            <span>
-              <span className="font-semibold text-green-700">{mappedCount}</span>
-              <span className="ml-1 text-gray-500">zugeordnet</span>
-            </span>
-            <span>
-              <span className="font-semibold text-gray-600">{unmappedCount}</span>
-              <span className="ml-1 text-gray-500">nicht zugeordnet</span>
-            </span>
-            <span>
-              <span className="font-semibold text-blue-700">{mappings.length}</span>
-              <span className="ml-1 text-gray-500">gesamt</span>
-            </span>
-          </div>
-        }
         headerActions={
           canManage ? (
-            <Link
-              href="/dashboard/teams/provider-mapping/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Neue Zuordnung
-            </Link>
+            <ProviderMappingCreateTrigger className="inline-flex items-center gap-2" />
           ) : undefined
         }
-        toolbar={
-          <ProviderMappingFilters
+        isEmpty={mappings.length === 0}
+        emptyState={
+          <SceEmptyState
+            variant="NO_DATA"
+            icon={<Link2 className="h-10 w-10" />}
+            title="Noch keine Anbieter-Zuordnungen"
+            description='Erstellen Sie die erste Zuordnung über „Neue Zuordnung".'
+            primaryAction={
+              canManage ? (
+                <ProviderMappingCreateTrigger />
+              ) : undefined
+            }
+            contained
+          />
+        }
+      >
+        {mappings.length > 0 ? (
+          <ProviderMappingWorkspace
+            mappings={mappings}
+            canManage={canManage ?? false}
+            mappedCount={mappedCount}
+            unmappedCount={unmappedCount}
             currentProvider={params.provider}
             currentSearch={params.search}
             currentMappingSource={params.mappingSource}
           />
-        }
-        isEmpty={mappings.length === 0}
-        emptyState={
-          <div className="text-center py-16 text-gray-500">
-            <Link2 className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p className="font-medium text-gray-600">Noch keine Anbieter-Zuordnungen</p>
-            <p className="text-sm mt-1">Erstellen Sie die erste Zuordnung über &quot;Neue Zuordnung&quot;.</p>
-          </div>
-        }
-      >
-        <ProviderMappingTable
-          mappings={mappings}
-          canManage={canManage ?? false}
-        />
+        ) : null}
       </ListPagePattern>
     </PageShell>
   );
