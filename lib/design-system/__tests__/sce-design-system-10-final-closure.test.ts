@@ -63,8 +63,11 @@ describe("SCE-DESIGN-SYSTEM-10 final closure", () => {
       "PARTIAL",
     );
     expect(SCE_DESIGN_SYSTEM_10_ORG_BUILDER_FINAL.EDIT_HISTORY_INFRASTRUCTURE).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10_ORG_BUILDER_FINAL.DS11_LAYER_GOVERNANCE_FOLLOWUP).toBe("YES");
-    expect(readSrc("components/admin/org/OrgUnitContextualPreviewLayer.tsx")).toContain("z-[80]");
+    expect(SCE_DESIGN_SYSTEM_10_ORG_BUILDER_FINAL.DS11_LAYER_GOVERNANCE_FOLLOWUP).toBe("COMPLETE");
+    expect(SCE_DESIGN_SYSTEM_10_ORG_BUILDER_FINAL.CANONICAL_LAYER_TOKEN_USED).toBe("YES");
+    expect(readSrc("components/admin/org/OrgUnitContextualPreviewLayer.tsx")).toContain(
+      "SCE_CONTEXTUAL_PREVIEW_LAYER_CLASS",
+    );
   });
 
   it("passes Toggle First and create-flow representative audit", () => {
@@ -78,7 +81,7 @@ describe("SCE-DESIGN-SYSTEM-10 final closure", () => {
     ).toBe(true);
   });
 
-  it("does not start DS-11", () => {
-    expect(SCE_DESIGN_SYSTEM_10_PO_CLOSURE.NEXT_PACKAGE).toContain("DS-11 not started");
+  it("records DS-11 completion without starting a new programme package", () => {
+    expect(SCE_DESIGN_SYSTEM_10_PO_CLOSURE.NEXT_PACKAGE).toContain("v1.0 programme complete");
   });
 });

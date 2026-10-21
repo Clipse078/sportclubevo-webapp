@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "vitest run",
+    "test:design-system": "tsx scripts/run-design-system-governance.ts && vitest run lib/design-system components/admin/org/__tests__",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dev": "next dev --turbopack",
@@ -45,7 +46,7 @@
     "team-sfv-mapping-04:dry-run": "tsx scripts/team-sfv-mapping-04-stale-match-reconciliation.ts --dry-run",
     "club-directory-02c:inventory": "tsx scripts/club-directory-02c-sfv-consolidation.ts --inventory",
     "club-directory-02c:dry-run": "tsx scripts/club-directory-02c-sfv-consolidation.ts --dry-run",
-    "deploy:check": "npm run db:generate && npm run lint && npm run build",
+    "deploy:check": "npm run db:generate && npm run lint && npm run test:design-system && npm run build",
     "billing:qr-04a:generate": "tsx scripts/generate-billing-qr-04a-six-validation-pack.ts",
     "billing:qr-04b:generate": "tsx scripts/generate-billing-qr-04b-cross-bank-pack.ts",
     "sce-icons:legacy-inventory": "tsx scripts/sce-icons-legacy-inventory.ts",

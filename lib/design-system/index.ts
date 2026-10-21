@@ -30,3 +30,7 @@ export * from "./sce-density-border-foundation";
 export * from "./sce-density-border-micro-ux";
 export * from "./sce-create-flow-foundation";
 export * from "./sce-design-system-10-meta";
+export * from "./sce-design-system-governance";
+export * from "./sce-design-system-exception-registry";
+export * from "./sce-design-system-governance-runner";
+export * from "./sce-design-system-11-meta";
