@@ -27,6 +27,7 @@ type Props = {
   onPreviewFocus: () => void;
   onPreviewBlur: (relatedTarget: EventTarget | null) => void;
   onOpenDetails: (unitId: string) => void;
+  onViewAllStaff?: (unitId: string) => void;
 };
 
 export default function OrgUnitContextualPreviewLayer({
@@ -41,6 +42,7 @@ export default function OrgUnitContextualPreviewLayer({
   onPreviewFocus,
   onPreviewBlur,
   onOpenDetails,
+  onViewAllStaff,
 }: Props) {
   const [placement, setPlacement] = useState<{ top: number; left: number } | null>(null);
 
@@ -61,9 +63,10 @@ export default function OrgUnitContextualPreviewLayer({
         description: unit.description,
         childCount: unit._count.children,
         teamCount: extra?.teamCount ?? 0,
-        personCount: extra?.personCount ?? 0,
+        staffCount: extra?.staffCount ?? 0,
       },
       memberships: extra?.primaryMemberships ?? [],
+      staffAssignments: extra?.staffAssignments ?? [],
       resolveRoleName,
     });
   }, [unit, enrichment, resolveRoleName]);
@@ -114,6 +117,7 @@ export default function OrgUnitContextualPreviewLayer({
         model={model}
         unitType={unit.type}
         onOpenDetails={() => onOpenDetails(unit.id)}
+        onViewAllStaff={onViewAllStaff ? () => onViewAllStaff(unit.id) : undefined}
       />
     </div>,
     document.body,

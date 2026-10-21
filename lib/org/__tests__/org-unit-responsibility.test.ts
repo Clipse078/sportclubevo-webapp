@@ -64,6 +64,6 @@ describe("deriveOrgUnitResponsibility", () => {
   it("empty state has no fabricated responsible person", () => {
     const result = deriveOrgUnitResponsibility([]);
     expect(result.hasExplicitResponsible).toBe(false);
-    expect(ORG_UNIT_NO_RESPONSIBLE_LABEL).toContain("Keine verantwortliche");
+    expect(ORG_UNIT_NO_RESPONSIBLE_LABEL).toBe("Keine Zuweisung");
   });
 });

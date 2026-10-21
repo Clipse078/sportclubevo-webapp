@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { deriveOrgUnitPeopleFromAssignments } from "@/lib/org/org-unit-people";
 import OrgUnitSearchableList from "@/components/admin/org/OrgUnitSearchableList";
 import OrgUnitCanvasView, { type OrgUnitCanvasItem } from "@/components/admin/org/OrgUnitCanvasView";
 import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enrichment";
@@ -41,8 +42,15 @@ export default function OrgUnitBuilderWorkspace({
   const router = useRouter();
   const [view, setView] = useState<ViewMode>("canvas");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [inspectorPeopleOpen, setInspectorPeopleOpen] = useState(false);
+  const focusOrgUnitRef = useRef<(id: string) => void>(() => {});
   const [createOpen, setCreateOpen] = useState(false);
   const [createParentId, setCreateParentId] = useState<string | undefined>();
+
+  function selectOrgUnit(id: string | null, options?: { openPeople?: boolean }) {
+    setSelectedId(id);
+    setInspectorPeopleOpen(Boolean(options?.openPeople));
+  }
 
   const unitById = useMemo(() => new Map(orgUnits.map((u) => [u.id, u])), [orgUnits]);
 
@@ -56,6 +64,10 @@ export default function OrgUnitBuilderWorkspace({
       .map((u) => ({ id: u.id, name: u.name, type: u.type }));
 
     const extra = builderEnrichment[unit.id];
+    const resolveRoleName = roleKeyToName
+      ? (roleKey: string) => roleKeyToName[roleKey] ?? null
+      : undefined;
+
     const previewModel = buildSceOrgUnitPreviewModel({
       unit: {
         id: unit.id,
@@ -65,13 +77,17 @@ export default function OrgUnitBuilderWorkspace({
         description: unit.description,
         childCount: unit._count.children,
         teamCount: extra?.teamCount ?? 0,
-        personCount: extra?.personCount ?? 0,
+        staffCount: extra?.staffCount ?? 0,
       },
       memberships: extra?.primaryMemberships ?? [],
-      resolveRoleName: roleKeyToName
-        ? (roleKey) => roleKeyToName[roleKey] ?? null
-        : undefined,
+      staffAssignments: extra?.staffAssignments ?? [],
+      resolveRoleName,
     });
+
+    const allStaff = deriveOrgUnitPeopleFromAssignments(
+      extra?.staffAssignments ?? [],
+      resolveRoleName,
+    ).allPeople;
 
     return {
       id: unit.id,
@@ -79,15 +95,18 @@ export default function OrgUnitBuilderWorkspace({
       name: unit.name,
       type: unit.type,
       status: unit.status,
-      memberCount: unit._count.memberships,
+      teamCount: extra?.teamCount ?? 0,
+      staffCount: extra?.staffCount ?? 0,
       childCount: unit._count.children,
       hasChildren: unit._count.children > 0,
       collapsed: false,
       parentId: unit.parentId,
       parentName: parent?.name ?? null,
       description: unit.description,
+      membershipCount: extra?.membershipCount ?? unit._count.memberships,
       childUnits,
       previewModel,
+      allStaff,
     };
   }, [selectedId, unitById, orgUnits, builderEnrichment, roleKeyToName]);
 
@@ -151,7 +170,11 @@ export default function OrgUnitBuilderWorkspace({
               roleKeyToName={roleKeyToName}
               canManage={canManage}
               selectedId={selectedId}
-              onSelectId={setSelectedId}
+              onSelectId={(id) => selectOrgUnit(id)}
+              onViewAllStaff={(id) => selectOrgUnit(id, { openPeople: true })}
+              onRegisterFocusHandler={(fn) => {
+                focusOrgUnitRef.current = fn;
+              }}
               onAddChild={(parentId) => openCreate(parentId)}
               onReparentSuccess={() => router.refresh()}
               parentOptions={parentOptions}
@@ -163,8 +186,14 @@ export default function OrgUnitBuilderWorkspace({
               canManage={canManage}
               hierarchyUnits={orgUnits.map((u) => ({ id: u.id, parentId: u.parentId }))}
               parentOptions={parentOptions}
-              onClose={() => setSelectedId(null)}
+              peopleViewOpen={inspectorPeopleOpen}
+              onPeopleViewOpenChange={setInspectorPeopleOpen}
+              onClose={() => selectOrgUnit(null)}
               onAddChild={(parentId) => openCreate(parentId)}
+              onFocusChild={(childId) => {
+                selectOrgUnit(childId);
+                focusOrgUnitRef.current(childId);
+              }}
             />
           ) : null}
         </div>

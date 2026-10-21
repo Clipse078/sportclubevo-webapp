@@ -5,7 +5,7 @@
 
 export const SCE_ORG_UNIT_PREVIEW_WIDTH_PX = 320;
 export const SCE_ORG_UNIT_PREVIEW_GAP_PX = 10;
-export const SCE_ORG_UNIT_PREVIEW_ESTIMATED_HEIGHT_PX = 280;
+export const SCE_ORG_UNIT_PREVIEW_ESTIMATED_HEIGHT_PX = 220;
 
 export type OrgUnitPreviewChromeInsets = {
   top?: number;

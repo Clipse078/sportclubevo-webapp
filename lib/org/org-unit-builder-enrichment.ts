@@ -3,6 +3,7 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import type { OrgUnitStaffAssignmentInput } from "@/lib/org/org-unit-people";
 import type { OrgUnitMembershipResponsibleInput } from "@/lib/org/org-unit-responsibility";
 
 export type OrgUnitBuilderEnrichmentMap = Record<
@@ -10,7 +11,11 @@ export type OrgUnitBuilderEnrichmentMap = Record<
   {
     primaryMemberships: OrgUnitMembershipResponsibleInput[];
     teamCount: number;
-    personCount: number;
+    /** Unique persons with ACTIVE PersonAssignment in this OrgUnit. */
+    staffCount: number;
+    /** Active OrgUnitMembership rows (governance — not staff semantics). */
+    membershipCount: number;
+    staffAssignments: OrgUnitStaffAssignmentInput[];
   }
 >;
 
@@ -23,7 +28,7 @@ export async function loadOrgUnitBuilderEnrichment(
   const now = new Date();
   const expiryFilter = { OR: [{ endsAt: null }, { endsAt: { gt: now } }] };
 
-  const [primaryMemberships, teamGroups, assignmentRows] = await Promise.all([
+  const [primaryMemberships, membershipGroups, teamGroups, assignmentRows] = await Promise.all([
     prisma.orgUnitMembership.findMany({
       where: {
         orgUnitId: { in: orgUnitIds },
@@ -51,6 +56,15 @@ export async function loadOrgUnitBuilderEnrichment(
         },
       },
     }),
+    prisma.orgUnitMembership.groupBy({
+      by: ["orgUnitId"],
+      where: {
+        orgUnitId: { in: orgUnitIds },
+        status: "ACTIVE",
+        ...expiryFilter,
+      },
+      _count: { _all: true },
+    }),
     prisma.team.groupBy({
       by: ["orgUnitId"],
       where: {
@@ -66,7 +80,23 @@ export async function loadOrgUnitBuilderEnrichment(
         orgUnitId: { in: orgUnitIds },
         status: "ACTIVE",
       },
-      select: { orgUnitId: true, personId: true },
+      select: {
+        id: true,
+        orgUnitId: true,
+        personId: true,
+        functionKey: true,
+        person: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            displayName: true,
+          },
+        },
+        team: {
+          select: { id: true, name: true, shortName: true },
+        },
+      },
     }),
   ]);
 
@@ -75,14 +105,30 @@ export async function loadOrgUnitBuilderEnrichment(
     if (row.orgUnitId) teamCountByOrg.set(row.orgUnitId, row._count._all);
   }
 
-  const personsByOrg = new Map<string, Set<string>>();
+  const staffPersonIdsByOrg = new Map<string, Set<string>>();
+  const assignmentsByOrg = new Map<string, OrgUnitStaffAssignmentInput[]>();
   for (const row of assignmentRows) {
-    let set = personsByOrg.get(row.orgUnitId);
+    let set = staffPersonIdsByOrg.get(row.orgUnitId);
     if (!set) {
       set = new Set();
-      personsByOrg.set(row.orgUnitId, set);
+      staffPersonIdsByOrg.set(row.orgUnitId, set);
     }
     set.add(row.personId);
+
+    const list = assignmentsByOrg.get(row.orgUnitId) ?? [];
+    list.push({
+      id: row.id,
+      personId: row.personId,
+      functionKey: row.functionKey,
+      person: row.person,
+      team: row.team,
+    });
+    assignmentsByOrg.set(row.orgUnitId, list);
+  }
+
+  const membershipCountByOrg = new Map<string, number>();
+  for (const row of membershipGroups) {
+    membershipCountByOrg.set(row.orgUnitId, row._count._all);
   }
 
   const membershipsByOrg = new Map<string, OrgUnitMembershipResponsibleInput[]>();
@@ -103,7 +149,9 @@ export async function loadOrgUnitBuilderEnrichment(
     result[id] = {
       primaryMemberships: membershipsByOrg.get(id) ?? [],
       teamCount: teamCountByOrg.get(id) ?? 0,
-      personCount: personsByOrg.get(id)?.size ?? 0,
+      staffCount: staffPersonIdsByOrg.get(id)?.size ?? 0,
+      membershipCount: membershipCountByOrg.get(id) ?? 0,
+      staffAssignments: assignmentsByOrg.get(id) ?? [],
     };
   }
   return result;

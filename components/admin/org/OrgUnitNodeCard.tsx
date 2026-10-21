@@ -19,7 +19,8 @@ export type OrgUnitCanvasNodeData = {
   name: string;
   type: string;
   status: string;
-  memberCount: number;
+  teamCount: number;
+  staffCount: number;
   childCount: number;
   hasChildren: boolean;
   collapsed: boolean;
@@ -87,8 +88,10 @@ export default function OrgUnitNodeCard({
   const showCompactMeta = density === "COMPACT";
   const showType = density !== "MICRO";
 
-  const childLabel = `${unit.childCount} Untereinheit${unit.childCount === 1 ? "" : "en"}`;
-  const memberLabel = `${unit.memberCount} Mitglieder`;
+  const metaParts: string[] = [];
+  if (unit.teamCount > 0) metaParts.push(`${unit.teamCount} Team${unit.teamCount === 1 ? "" : "s"}`);
+  if (unit.staffCount > 0) metaParts.push(`${unit.staffCount} Mitarbeitende`);
+  const metaLine = metaParts.join(" · ");
 
   return (
     <div
@@ -210,18 +213,15 @@ export default function OrgUnitNodeCard({
         ) : null}
       </div>
 
-      {showMeta ? (
-        <p className="mt-2 pl-6 text-[10px] text-[var(--muted)]" title={`${childLabel} · ${memberLabel}`}>
-          {childLabel} · {memberLabel}
+      {showMeta && metaLine ? (
+        <p className="mt-2 pl-6 text-[10px] text-[var(--muted)]" title={metaLine}>
+          {metaLine}
           {unit.collapsed && unit.hasChildren ? " · zugeklappt" : ""}
         </p>
       ) : null}
 
-      {showCompactMeta ? (
-        <p className="mt-1 pl-6 text-[10px] text-[var(--muted)]">
-          {unit.childCount > 0 ? `${unit.childCount} · ` : ""}
-          {unit.memberCount} Mitgl.
-        </p>
+      {showCompactMeta && metaLine ? (
+        <p className="mt-1 pl-6 text-[10px] text-[var(--muted)]">{metaLine}</p>
       ) : null}
 
       {canManage && density === "NORMAL" ? (

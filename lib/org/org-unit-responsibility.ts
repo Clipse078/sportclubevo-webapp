@@ -90,4 +90,4 @@ export function deriveOrgUnitResponsibility(
   };
 }
 
-export const ORG_UNIT_NO_RESPONSIBLE_LABEL = "Keine verantwortliche Person zugewiesen" as const;
+export const ORG_UNIT_NO_RESPONSIBLE_LABEL = "Keine Zuweisung" as const;

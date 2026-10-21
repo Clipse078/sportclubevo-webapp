@@ -33,6 +33,7 @@ import OrgUnitReparentDialog from "@/components/admin/org/OrgUnitReparentDialog"
 import OrgUnitContextualPreviewLayer from "@/components/admin/org/OrgUnitContextualPreviewLayer";
 import OrgUnitNodeCard, { type OrgUnitCanvasNodeData } from "@/components/admin/org/OrgUnitNodeCard";
 import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enrichment";
+import { membershipSearchNames } from "@/lib/org/org-unit-people";
 import {
   orgUnitHoverPreviewEnabled,
   useOrgUnitContextualPreview,
@@ -61,6 +62,8 @@ type Props = {
   canManage: boolean;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
+  onViewAllStaff?: (unitId: string) => void;
+  onRegisterFocusHandler?: (focus: (unitId: string) => void) => void;
   onAddChild: (parentId: string) => void;
   onReparentSuccess?: () => void;
   parentOptions?: { id: string; key: string; name: string; level: number; type: string }[];
@@ -86,6 +89,8 @@ export default function OrgUnitCanvasView({
   canManage,
   selectedId,
   onSelectId,
+  onViewAllStaff,
+  onRegisterFocusHandler,
   onAddChild,
   onReparentSuccess,
   parentOptions = [],
@@ -168,19 +173,21 @@ export default function OrgUnitCanvasView({
   const nodeDataById = useMemo(() => {
     const map = new Map<string, OrgUnitCanvasNodeData>();
     for (const unit of orgUnits) {
+      const extra = builderEnrichment[unit.id];
       map.set(unit.id, {
         id: unit.id,
         name: unit.name,
         type: unit.type,
         status: unit.status,
-        memberCount: unit._count.memberships,
+        teamCount: extra?.teamCount ?? 0,
+        staffCount: extra?.staffCount ?? 0,
         childCount: unit._count.children,
         hasChildren: unit._count.children > 0,
         collapsed: collapsed.has(unit.id),
       });
     }
     return map;
-  }, [orgUnits, collapsed]);
+  }, [orgUnits, collapsed, builderEnrichment]);
 
   const persistManual = useCallback(
     (next: OrgLayoutPositionMap) => {
@@ -258,15 +265,27 @@ export default function OrgUnitCanvasView({
   }, []);
 
   useEffect(() => {
+    onRegisterFocusHandler?.((id) => focusNodeLegible(id));
+  }, [focusNodeLegible, onRegisterFocusHandler]);
+
+  useEffect(() => {
     if (!searchQuery.trim()) return;
     const q = searchQuery.trim().toLowerCase();
-    const match = orgUnits.find(
-      (u) => u.name.toLowerCase().includes(q) || u.key.toLowerCase().includes(q),
-    );
+    const match = orgUnits.find((u) => {
+      if (u.name.toLowerCase().includes(q) || u.key.toLowerCase().includes(q)) return true;
+      const extra = builderEnrichment[u.id];
+      const names = membershipSearchNames(extra?.primaryMemberships ?? []);
+      return names.some((n) => n.toLowerCase().includes(q));
+    });
     if (!match) return;
     setCollapsed((prev) => expandCollapsedAncestors(match.id, hierarchyUnits, prev));
     focusNodeLegible(match.id);
-  }, [searchQuery, orgUnits, hierarchyUnits, focusNodeLegible]);
+  }, [searchQuery, orgUnits, hierarchyUnits, focusNodeLegible, builderEnrichment]);
+
+  const previewOpenUnitId =
+    contextualPreview.openUnitId && contextualPreview.openUnitId !== selectedId
+      ? contextualPreview.openUnitId
+      : null;
 
   const handleWheel = (e: ReactWheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -605,7 +624,10 @@ export default function OrgUnitCanvasView({
                   onContextualPreviewBlur={(target) =>
                     contextualPreview.onNodeBlur(node.id, target)
                   }
-                  onSelect={() => onSelectId(node.id)}
+                  onSelect={() => {
+                    contextualPreview.dismiss();
+                    onSelectId(node.id);
+                  }}
                   onToggleCollapse={() => {
                     setCollapsed((prev) => {
                       const next = new Set(prev);
@@ -644,7 +666,7 @@ export default function OrgUnitCanvasView({
       </div>
 
       <OrgUnitContextualPreviewLayer
-        openUnitId={contextualPreview.openUnitId}
+        openUnitId={previewOpenUnitId}
         orgUnits={orgUnits}
         enrichment={builderEnrichment}
         resolveRoleName={
@@ -659,7 +681,14 @@ export default function OrgUnitCanvasView({
         onPreviewPointerLeave={contextualPreview.onPreviewPointerLeave}
         onPreviewFocus={contextualPreview.onPreviewFocus}
         onPreviewBlur={contextualPreview.onPreviewBlur}
-        onOpenDetails={(id) => onSelectId(id)}
+        onOpenDetails={(id) => {
+          contextualPreview.dismiss();
+          onSelectId(id);
+        }}
+        onViewAllStaff={(id) => {
+          contextualPreview.dismiss();
+          onViewAllStaff?.(id);
+        }}
       />
 
       <Dialog
