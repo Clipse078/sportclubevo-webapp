@@ -13,7 +13,7 @@
 | **Prior closure commit (PR #887)** | `ae705a70f0fa3876cea6c66f94e22ab82249d504` |
 | **Prior STAGE merge (PR #887)** | `0dbfb886714ff7bf2164a6f41611b7657e17b590` |
 | **Final closure commit** | `60d4c81b083451a55953333287274c732b985410` |
-| **Final STAGE merge commit (PR #889)** | *(pinned in `SCE_DESIGN_SYSTEM_09_PO_CLOSURE.STAGE_MERGE_COMMIT`)* |
+| **Final STAGE merge commit (PR #889)** | `1c1b91852215db819239e70090d2a64759a977ca` |
 | **Predecessor DS-08 PR** | **#886** |
 | **PR (responsive/a11y baseline)** | **#887** — **MERGED** |
 | **PR (PO addendum + final closure)** | **#889** — **MERGED** |
