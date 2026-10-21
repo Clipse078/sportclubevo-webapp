@@ -19,10 +19,27 @@ DS-09 established **canonical viewport & accessibility contracts**, **shared mic
 
 ```text
 DS10_FINAL_ADOPTION_REQUIRED = YES
+DS10_PRODUCT_WIDE_DENSITY_ADOPTION_REQUIRED = YES
+DS10_PRODUCT_WIDE_BORDER_ADOPTION_REQUIRED = YES
+DS10_MODAL_FIRST_CREATE_ADOPTION_REQUIRED = YES
+DS10_BINARY_CONTROL_FINAL_MIGRATION_REQUIRED = YES
 PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO
 PRODUCT_WIDE_RESPONSIVE_MIGRATION_COMPLETE = NO
 PRODUCT_WIDE_ACCESSIBILITY_MIGRATION_COMPLETE = NO
+PRODUCT_WIDE_DENSITY_MIGRATION_COMPLETE = NO
+PRODUCT_WIDE_CREATE_FLOW_MIGRATION_COMPLETE = NO
+PRODUCT_WIDE_BINARY_CONTROL_MIGRATION_COMPLETE = NO
 ```
+
+## PO addendum audit debts (DS-09 → DS-10)
+
+| Debt key | Source |
+| --- | --- |
+| `DENSITY_BORDER_DEBT` | `SCE_DENSITY_BORDER_DS10_DEBT` in `sce-density-border-foundation.ts` |
+| `CREATE_FLOW_MODAL_MIGRATION_DEBT` | `SCE_CREATE_FLOW_DS10_DEBT` in `sce-create-flow-foundation.ts` |
+| `BINARY_CONTROL_MIGRATION_DEBT` | `SCE_BINARY_CONTROL_DS10_DEBT` in `sce-binary-checkbox-audit.ts` |
+
+DS-10 closure requires product-wide adoption/removal or an explicit valid domain-specific exception — documentation alone is insufficient.
 
 Automated classification: `SCE_DESIGN_SYSTEM_09_DS10_HANDOFF_DEBT` in `lib/design-system/sce-design-system-09-meta.ts`.
 

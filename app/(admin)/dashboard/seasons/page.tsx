@@ -5,7 +5,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getSeasonsOverviewData } from "@/lib/seasons/queries";
 import { suggestNextSeasonStartYear } from "@/lib/seasons/mutations";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import CreateSeasonForm from "@/components/admin/seasons/CreateSeasonForm";
+import CreateSeasonTrigger from "@/components/admin/seasons/CreateSeasonTrigger";
 import SeasonRowCard from "@/components/admin/seasons/SeasonRowCard";
 
 type SeasonsPageProps = {
@@ -118,7 +118,9 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
       </div>
 
       {/* Create form */}
-      {canManage ? <CreateSeasonForm suggestedStartYear={suggestNextSeasonStartYear()} /> : null}
+      {canManage ? (
+        <CreateSeasonTrigger suggestedStartYear={suggestNextSeasonStartYear()} />
+      ) : null}
 
       {/* Empty state */}
       {seasons.length === 0 ? (
@@ -126,7 +128,7 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
           <div className="sce-detail-section-body flex flex-col items-center justify-center gap-3 py-16 text-center">
             <CalendarDays className="h-10 w-10 text-[var(--muted)]" />
             <p className="font-semibold text-[var(--foreground)]">Noch keine Saisons</p>
-            <p className="text-sm text-[var(--muted)]">Erstelle die erste Saison über das Formular oben.</p>
+            <p className="text-sm text-[var(--muted)]">Erstelle die erste Saison über «Neue Saison».</p>
           </div>
         </div>
       ) : null}

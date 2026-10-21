@@ -5,6 +5,8 @@ import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import TenantRolesOverviewDenseTable from "@/components/admin/roles/TenantRolesOverviewDenseTable";
 import { SceEmptyState } from "@/components/sce/feedback/SceEmptyState";
+import { SCE_DENSE_OPERATIONAL_PAGE_ROOT_CLASS } from "@/lib/design-system/sce-density-border-micro-ux";
+import { SCE_WORKSPACE_HEADER_ACTIONS_CLASS } from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 
 export default async function TenantRolesOverviewPage() {
   // Permission + tenant-context guard is already enforced by the parent
@@ -14,8 +16,8 @@ export default async function TenantRolesOverviewPage() {
   const roles = await getTenantRolesOverview(tenantId);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-end">
+    <div className={SCE_DENSE_OPERATIONAL_PAGE_ROOT_CLASS} data-testid="roles-overview-page-root">
+      <div className={SCE_WORKSPACE_HEADER_ACTIONS_CLASS}>
         <Link href="/dashboard/administration/roles/new" className="fca-button-primary flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Neue Rolle

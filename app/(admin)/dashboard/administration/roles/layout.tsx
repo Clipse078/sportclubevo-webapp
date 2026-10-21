@@ -9,6 +9,10 @@ import { SceInformationSurface } from "@/components/sce/information";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import RoleScopeBadge from "@/components/admin/roles/RoleScopeBadge";
 import RolesAdminTabs from "@/components/admin/roles/RolesAdminTabs";
+import {
+  SCE_TEXT_EXPANSION_SAFE_CLASS,
+  SCE_WORKSPACE_HEADER_ACTIONS_CLASS,
+} from "@/lib/design-system/sce-responsive-accessibility-micro-ux";
 
 type LayoutProps = { children: ReactNode };
 
@@ -42,16 +46,18 @@ export default async function TenantRolesLayout({ children }: LayoutProps) {
           description:
             "Mandanten-Rollen, Berechtigungsmatrix, Benutzerzuweisungen und effektiver Zugriff für diesen Mandanten.",
           secondaryActions: (
-            <div className="flex items-center gap-2">
-              <ProductDomainSceIcon
-                name="roles-access"
-                size={16}
-                className="h-4 w-4 text-[var(--muted)]"
-              />
-              <span className="text-sm font-semibold text-[var(--foreground)]">
-                {tenant?.name ?? "Aktiver Mandant"}
-              </span>
-              <RoleScopeBadge scope="TENANT" />
+            <div className={SCE_WORKSPACE_HEADER_ACTIONS_CLASS}>
+              <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+                <ProductDomainSceIcon
+                  name="roles-access"
+                  size={16}
+                  className="h-4 w-4 shrink-0 text-[var(--muted)]"
+                />
+                <span className={`text-sm font-semibold text-[var(--foreground)] ${SCE_TEXT_EXPANSION_SAFE_CLASS}`}>
+                  {tenant?.name ?? "Aktiver Mandant"}
+                </span>
+                <RoleScopeBadge scope="TENANT" />
+              </div>
             </div>
           ),
         }}
