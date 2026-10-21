@@ -72,9 +72,10 @@ describe("SCE-DESIGN-SYSTEM-09 PO addendum — density, borders, create flow, bi
     expect(SCE_DESIGN_SYSTEM_09_BINARY_CONTROL_AUDIT).toEqual(SCE_DS09_BINARY_CONTROL_AUDIT);
   });
 
-  it("records PO addendum ready-for-review status", () => {
-    expect(SCE_DESIGN_SYSTEM_09_PO_REVIEW.DS09_STATUS).toBe("READY_FOR_PO_REVIEW");
+  it("records PO addendum accepted and closed status", () => {
+    expect(SCE_DESIGN_SYSTEM_09_PO_REVIEW.DS09_STATUS).toBe("CLOSED / ACCEPTED / MERGED");
     expect(SCE_DESIGN_SYSTEM_09_PO_REVIEW.PO_ADDENDUM).toContain("DENSITY");
+    expect(SCE_DESIGN_SYSTEM_09_PO_REVIEW.PR).toBe("889");
   });
 
   it("hardens roles page overflow containment", () => {
