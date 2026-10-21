@@ -393,7 +393,7 @@ Product-wide rollout of workspace chrome, bounded surfaces, dense UI, forms (Tog
 | Typed matrix | `SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX` in `lib/design-system/sce-design-system-10-meta.ts` |
 | Roadmap | [`SCE-DESIGN-SYSTEM-10`](../roadmap/SCE-DESIGN-SYSTEM-10.md) |
 
-**Delivery status:** `DS10_STATUS = READY_FOR_PO_REVIEW` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = YES` (matrix) · PO visual UAT pending · **not merged** · **DS-11 not started**.
+**Delivery status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · R1 Batch 01 Club/Org core · **not merged** · **DS-11 not started**.
 
 Automated guardrails: `lib/design-system/__tests__/sce-design-system-10-product-wide-adoption.test.ts`.
 

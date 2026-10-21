@@ -9,19 +9,15 @@
  * German UI. Responsive. Server Component with client-side interactions.
  */
 
-import { CompetitionSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { listCompetitions } from "@/lib/competitions/queries";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { PageShell, SectionCard } from "@/components/ui/page";
+import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
-import CompetitionsTable from "@/components/admin/competitions/CompetitionsTable";
-import CompetitionsSyncButton from "@/components/admin/competitions/CompetitionsSyncButton";
-import CompetitionsSearchBar from "@/components/admin/competitions/CompetitionsSearchBar";
-import CompetitionsCreateButton from "@/components/admin/competitions/CompetitionsCreateButton";
+import CompetitionsListWorkspace from "@/components/admin/competitions/CompetitionsListWorkspace";
 import type { CompetitionFilterParams } from "@/lib/competitions/dto";
 
 type CompetitionsPageProps = {
@@ -67,9 +63,6 @@ export default async function CompetitionsPage({ searchParams }: CompetitionsPag
 
   const competitions = await listCompetitions(tenantId, filters);
 
-  const activeCount = competitions.filter((c) => !c.isArchived).length;
-  const archivedCount = competitions.filter((c) => c.isArchived).length;
-
   const canManage = session.user.permissionKeys?.includes(PERMISSIONS.COMPETITIONS_MANAGE);
 
   const resolver = createEffectivePermissionResolver(prisma);
@@ -84,53 +77,21 @@ export default async function CompetitionsPage({ searchParams }: CompetitionsPag
       <ListPagePattern
         eyebrow="Wettkämpfe"
         title="Wettkämpfe"
-        description="Ligen, Cups und Turnierserie — Wettkampfmetadaten für alle Saisons. Wird aus dem SFV-Provider synchronisiert oder manuell erfasst."
+        description="Ligen, Cups und Turnierserien — Wettkampfmetadaten für alle Saisons. Wird aus dem SFV-Provider synchronisiert oder manuell erfasst."
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Wettkämpfe" },
         ]}
-        stats={
-          <div className="flex flex-wrap gap-4">
-            <SectionCard className="flex-1 min-w-[120px]">
-              <div className="text-2xl font-bold text-gray-900">{activeCount}</div>
-              <div className="text-sm text-gray-500">Aktive Wettkämpfe</div>
-            </SectionCard>
-            {archivedCount > 0 && (
-              <SectionCard className="flex-1 min-w-[120px]">
-                <div className="text-2xl font-bold text-gray-400">{archivedCount}</div>
-                <div className="text-sm text-gray-500">Archiviert</div>
-              </SectionCard>
-            )}
-            {canManage && (
-              <SectionCard className="flex-1 min-w-[280px]">
-                <div className="text-sm font-medium text-gray-700 mb-2">
-                  SFV Synchronisation
-                </div>
-                <CompetitionsSyncButton />
-              </SectionCard>
-            )}
-          </div>
-        }
-        toolbar={
-          <div className="flex flex-wrap items-center gap-3">
-            <CompetitionsSearchBar
-              initialSearch={params.search ?? ""}
-              initialProvider={params.provider ?? ""}
-              initialIncludeArchived={params.includeArchived === "true"}
-            />
-            {canManage && <CompetitionsCreateButton />}
-          </div>
-        }
-        isEmpty={competitions.length === 0}
-        emptyIcon={<CompetitionSceIcon className="h-10 w-10" />}
-        emptyHeading="Keine Wettkämpfe vorhanden"
-        emptyDescription={
-          filters.search
-            ? `Keine Wettkämpfe für „${filters.search}" gefunden.`
-            : "Noch keine Wettkämpfe vorhanden. Erstellen Sie manuell einen Wettkampf oder starten Sie eine SFV-Synchronisation."
-        }
       >
-        <CompetitionsTable competitions={competitions} canManage={canManage} canDelete={canDelete} />
+        <CompetitionsListWorkspace
+          competitions={competitions}
+          canManage={canManage}
+          canDelete={canDelete}
+          initialSearch={params.search ?? ""}
+          initialProvider={params.provider ?? ""}
+          initialIncludeArchived={params.includeArchived === "true"}
+          hasSearchFilter={Boolean(filters.search)}
+        />
       </ListPagePattern>
     </PageShell>
   );

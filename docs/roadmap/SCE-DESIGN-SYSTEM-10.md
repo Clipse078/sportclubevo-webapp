@@ -4,7 +4,7 @@
 | --- | --- |
 | **Canonical key** | `SCE-DESIGN-SYSTEM-10` |
 | **Predecessor** | `SCE-DESIGN-SYSTEM-09` (**CLOSED / ACCEPTED / MERGED**, PR **#887**) |
-| **`DS10_STATUS`** | **READY_FOR_PO_REVIEW** (not closed) |
+| **`DS10_STATUS`** | **PO_VISUAL_UAT_IN_PROGRESS** (R1 Batch 01 — not closed) |
 | **Branch** | `cursor/sce-design-system-10-product-wide-adoption` |
 | **Baseline STAGE (pre-branch)** | `758a52fd403406ad6cb2843cfdd0218e6b9974ad` |
 | **PR** | **DRAFT** against **STAGE** |
@@ -33,7 +33,9 @@ Make SportClubEvo **visibly and structurally** converge on SCE Design System v1.
 ## Closure gates (PO acceptance — not claimed in this PR)
 
 ```text
-PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = YES   (matrix — pending PO visual sign-off)
+PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO   (PO visual UAT R1 in progress)
+DS10_PO_VISUAL_UAT = IN_PROGRESS
+DS10_R1_REQUIRED = YES
 WORKSPACE_SYSTEM_PRODUCT_WIDE = YES
 BREADCRUMB_SYSTEM_PRODUCT_WIDE = YES
 CONTEXT_TABS_PRODUCT_WIDE_WHERE_SEMANTIC = YES

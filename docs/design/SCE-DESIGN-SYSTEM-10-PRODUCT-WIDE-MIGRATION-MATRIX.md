@@ -31,4 +31,14 @@ See `SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS` — reconciled on branch `cur
 | Binary settings | Toggle First sweep (forms, composers, infoboard designer) |
 | Billing API | Actionable 500 copy — no `Interner Fehler.` default |
 
-**Status:** `DS10_STATUS = READY_FOR_PO_REVIEW` — PO visual UAT required before closure.
+**Status:** `DS10_STATUS = PO_VISUAL_UAT_IN_PROGRESS` · `PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE = NO` · R1 Batch 01 (Club / Organisation core) recorded in `SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT`.
+
+| Route | PO visual status (Batch 01) |
+| --- | --- |
+| `/dashboard` | PO_ACCEPTED |
+| `/dashboard/org-units` | PO_ACCEPTED |
+| `/dashboard/teams` | PO_ACCEPTED_WITH_MINOR_REVIEW |
+| `/dashboard/teams/provider-mapping` | R1_REQUIRED → R1 delivered in branch (awaiting PO re-review) |
+| `/dashboard/vereine` | PO_ACCEPTED_WITH_MINOR_REVIEW |
+| `/dashboard/persons` | PO_ACCEPTED_WITH_MINOR_REVIEW |
+| `/dashboard/competitions` | R1_REQUIRED → R1 delivered in branch (awaiting PO re-review) |

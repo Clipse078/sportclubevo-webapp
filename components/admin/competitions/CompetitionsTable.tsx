@@ -1,12 +1,7 @@
 "use client";
 
 /**
- * CompetitionsTable
- *
- * Client-side table listing canonical Competition records.
- * Supports inline archive / restore actions.
- *
- * German UI as required.
+ * CompetitionsTable — canonical SCE dense data table (DS-10 R1).
  */
 
 import { useState } from "react";
@@ -14,33 +9,44 @@ import { useRouter } from "next/navigation";
 import { RotateCcw, Edit2 } from "lucide-react";
 import { ArchiveSceIcon, CompetitionSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { CompetitionListItem } from "@/lib/competitions/dto";
-import { SectionCard } from "@/components/ui/page";
+import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { Badge } from "@/components/ui/Badge";
+import { SceIconButton } from "@/components/sce/actions/SceIconButton";
+import {
+  SceDataTable,
+  SceDataTableBody,
+  SceDataTableCell,
+  SceDataTableHead,
+  SceDataTableHeaderCell,
+  SceDataTableRow,
+  SceEntityIdentity,
+} from "@/components/sce/dense";
+import { SCE_DENSE_META_TEXT_CLASS } from "@/lib/design-system/sce-dense-ui-micro-ux";
+import { cn } from "@/lib/cn";
 import CompetitionEditDialog from "./CompetitionEditDialog";
 import CompetitionDeleteButton from "./CompetitionDeleteButton";
-
-// ── Label helpers ─────────────────────────────────────────────────────────────
 
 const COMPETITION_TYPE_LABELS: Record<string, string> = {
   LEAGUE: "Liga",
   CUP: "Cup",
   TOURNAMENT_SERIES: "Turnierserie",
-  OTHER: "Sonstige" };
+  OTHER: "Sonstige",
+};
 
 const GENDER_LABELS: Record<string, string> = {
   MALE: "Herren",
   FEMALE: "Frauen",
-  MIXED: "Mixed" };
+  MIXED: "Mixed",
+};
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("de-CH", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric" });
+    year: "numeric",
+  });
 }
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 type Props = {
   competitions: CompetitionListItem[];
@@ -69,7 +75,8 @@ export default function CompetitionsTable({ competitions, canManage = false, can
       await fetch(`/api/competitions/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isArchived: false }) });
+        body: JSON.stringify({ isArchived: false }),
+      });
       router.refresh();
     } finally {
       setActionLoading(null);
@@ -82,180 +89,132 @@ export default function CompetitionsTable({ competitions, canManage = false, can
 
   return (
     <>
-    {editTarget && (
-      <CompetitionEditDialog
-        competition={editTarget}
-        open={true}
-        onClose={() => setEditTarget(null)}
-      />
-    )}
-    <SectionCard noPadding>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Wettkampf
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Saison
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Provider
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Gruppe
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Zugeordnete Teams
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Letzte Synchronisation
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              {canManage && (
-                <th className="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider">
-                  Aktionen
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
-            {competitions.map((competition) => (
-              <tr
-                key={competition.id}
-                className={competition.isArchived ? "opacity-50 bg-gray-50" : "hover:bg-gray-50"}
-              >
-                {/* Wettkampf */}
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <CompetitionSceIcon className="h-4 w-4 text-gray-400 shrink-0" />
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {competition.shortName ?? competition.officialName}
-                      </div>
-                      {competition.shortName && (
-                        <div className="text-xs text-gray-500">{competition.officialName}</div>
-                      )}
-                      <div className="flex items-center gap-1 mt-0.5">
+      {editTarget ? (
+        <CompetitionEditDialog competition={editTarget} open onClose={() => setEditTarget(null)} />
+      ) : null}
+
+      <SceDataTable aria-label="Wettkämpfe" data-testid="competitions-table">
+        <SceDataTableHead>
+          <tr>
+            <SceDataTableHeaderCell>Wettkampf</SceDataTableHeaderCell>
+            <SceDataTableHeaderCell>Saison</SceDataTableHeaderCell>
+            <SceDataTableHeaderCell>Provider</SceDataTableHeaderCell>
+            <SceDataTableHeaderCell>Gruppe</SceDataTableHeaderCell>
+            <SceDataTableHeaderCell>Zugeordnete Teams</SceDataTableHeaderCell>
+            <SceDataTableHeaderCell>Letzte Synchronisation</SceDataTableHeaderCell>
+            <SceDataTableHeaderCell>Status</SceDataTableHeaderCell>
+            {canManage ? (
+              <SceDataTableHeaderCell align="right">
+                <span className="sr-only">Aktionen</span>
+              </SceDataTableHeaderCell>
+            ) : null}
+          </tr>
+        </SceDataTableHead>
+        <SceDataTableBody>
+          {competitions.map((competition) => (
+            <SceDataTableRow
+              key={competition.id}
+              className={cn("group", competition.isArchived && "opacity-60")}
+            >
+              <SceDataTableCell>
+                <div className="flex items-start gap-2">
+                  <CompetitionSceIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
+                  <div className="min-w-0">
+                    <SceEntityIdentity
+                      primary={competition.shortName ?? competition.officialName}
+                      secondary={
+                        competition.shortName ? competition.officialName : undefined
+                      }
+                      className="gap-0"
+                    />
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      <Badge size="sm">
+                        {COMPETITION_TYPE_LABELS[competition.competitionType] ??
+                          competition.competitionType}
+                      </Badge>
+                      {competition.gender ? (
                         <Badge size="sm">
-                          {COMPETITION_TYPE_LABELS[competition.competitionType] ?? competition.competitionType}
+                          {GENDER_LABELS[competition.gender] ?? competition.gender}
                         </Badge>
-                        {competition.gender && (
-                          <Badge size="sm">
-                            {GENDER_LABELS[competition.gender] ?? competition.gender}
-                          </Badge>
-                        )}
-                        {competition.ageCategory && (
-                          <Badge size="sm">
-                            {competition.ageCategory}
-                          </Badge>
-                        )}
-                      </div>
+                      ) : null}
+                      {competition.ageCategory ? (
+                        <Badge size="sm">{competition.ageCategory}</Badge>
+                      ) : null}
                     </div>
                   </div>
-                </td>
-
-                {/* Saison */}
-                <td className="px-4 py-3 text-gray-700">
-                  {competition.externalSeasonId ?? "—"}
-                </td>
-
-                {/* Provider */}
-                <td className="px-4 py-3">
-                  <Badge size="sm">
-                    {competition.provider}
-                  </Badge>
-                </td>
-
-                {/* Gruppe */}
-                <td className="px-4 py-3 text-gray-700">
-                  {competition.groupName ?? "—"}
-                </td>
-
-                {/* Zugeordnete Teams */}
-                <td className="px-4 py-3 text-gray-700">
-                  {competition.assignedTeamCount > 0 ? (
-                    <Badge size="sm">
-                      {competition.assignedTeamCount} Team{competition.assignedTeamCount !== 1 ? "s" : ""}
-                    </Badge>
-                  ) : (
-                    <span className="text-gray-400">Keine</span>
-                  )}
-                </td>
-
-                {/* Letzte Synchronisation */}
-                <td className="px-4 py-3 text-gray-600 text-xs">
-                  {formatDate(competition.lastSyncedAt)}
-                </td>
-
-                {/* Status */}
-                <td className="px-4 py-3">
-                  {competition.isArchived ? (
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <ArchiveSceIcon className="h-3.5 w-3.5" />
-                      <span className="text-xs">Archiviert</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-green-400 inline-block" />
-                      <span className="text-xs text-gray-600">Aktiv</span>
-                    </div>
-                  )}
-                </td>
-
-                {/* Aktionen */}
-                {canManage && (
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        title="Bearbeiten"
-                        onClick={() => setEditTarget(competition)}
-                        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </button>
-                      {competition.isArchived ? (
-                        <>
-                          <button
-                            type="button"
-                            title="Wiederherstellen"
-                            disabled={actionLoading === competition.id}
-                            onClick={() => handleRestore(competition.id)}
-                            className="rounded p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors disabled:opacity-40"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                          </button>
-                          {canDelete ? (
-                            <CompetitionDeleteButton
-                              competitionId={competition.id}
-                              competitionName={competition.officialName}
-                            />
-                          ) : null}
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          title="Archivieren"
-                          disabled={actionLoading === competition.id}
-                          onClick={() => handleArchive(competition.id)}
-                          className="rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600 transition-colors disabled:opacity-40"
-                        >
-                          <ArchiveSceIcon className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                </div>
+              </SceDataTableCell>
+              <SceDataTableCell className={SCE_DENSE_META_TEXT_CLASS}>
+                {competition.externalSeasonId ?? "—"}
+              </SceDataTableCell>
+              <SceDataTableCell>
+                <Badge size="sm">{competition.provider}</Badge>
+              </SceDataTableCell>
+              <SceDataTableCell className={SCE_DENSE_META_TEXT_CLASS}>
+                {competition.groupName ?? "—"}
+              </SceDataTableCell>
+              <SceDataTableCell className={SCE_DENSE_META_TEXT_CLASS}>
+                {competition.assignedTeamCount > 0
+                  ? `${competition.assignedTeamCount} Team${competition.assignedTeamCount !== 1 ? "s" : ""}`
+                  : "Keine"}
+              </SceDataTableCell>
+              <SceDataTableCell className={SCE_DENSE_META_TEXT_CLASS}>
+                {formatDate(competition.lastSyncedAt)}
+              </SceDataTableCell>
+              <SceDataTableCell>
+                {competition.isArchived ? (
+                  <AdminStatusPill label="Archiviert" tone="muted" />
+                ) : (
+                  <AdminStatusPill label="Aktiv" tone="success" />
                 )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </SectionCard>
+              </SceDataTableCell>
+              {canManage ? (
+                <SceDataTableCell align="right">
+                  <div className="flex items-center justify-end gap-0.5" data-sce-row-action="true">
+                    <SceIconButton
+                      title="Bearbeiten"
+                      aria-label="Bearbeiten"
+                      onClick={() => setEditTarget(competition)}
+                      variant="ghost"
+                      size="sm"
+                      icon={<Edit2 className="h-3.5 w-3.5" />}
+                    />
+                    {competition.isArchived ? (
+                      <>
+                        <SceIconButton
+                          title="Wiederherstellen"
+                          aria-label="Wiederherstellen"
+                          disabled={actionLoading === competition.id}
+                          onClick={() => handleRestore(competition.id)}
+                          variant="ghost"
+                          size="sm"
+                          icon={<RotateCcw className="h-3.5 w-3.5" />}
+                        />
+                        {canDelete ? (
+                          <CompetitionDeleteButton
+                            competitionId={competition.id}
+                            competitionName={competition.officialName}
+                          />
+                        ) : null}
+                      </>
+                    ) : (
+                      <SceIconButton
+                        title="Archivieren"
+                        aria-label="Archivieren"
+                        disabled={actionLoading === competition.id}
+                        onClick={() => handleArchive(competition.id)}
+                        variant="ghost"
+                        size="sm"
+                        icon={<ArchiveSceIcon className="h-3.5 w-3.5" />}
+                      />
+                    )}
+                  </div>
+                </SceDataTableCell>
+              ) : null}
+            </SceDataTableRow>
+          ))}
+        </SceDataTableBody>
+      </SceDataTable>
     </>
   );
 }

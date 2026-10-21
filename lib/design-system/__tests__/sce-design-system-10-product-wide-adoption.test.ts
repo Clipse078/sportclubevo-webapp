@@ -26,12 +26,12 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
       "docs/design/SCE-DESIGN-SYSTEM-10-PRODUCT-WIDE-MIGRATION-MATRIX.md",
     );
     expect(matrix).toContain("SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX");
-    expect(readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-10.md")).toContain("READY_FOR_PO_REVIEW");
+    expect(readDoc("docs/roadmap/SCE-DESIGN-SYSTEM-10.md")).toContain("PO_VISUAL_UAT_IN_PROGRESS");
   });
 
-  it("closes product-wide migration gate with zero unresolved debt", () => {
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBe(0);
+  it("records PO visual UAT — product-wide migration not closed", () => {
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBeGreaterThan(0);
     expect(SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX.length).toBeGreaterThan(30);
     expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.TOTAL_APPLICABLE_SURFACES).toBe(
       SCE_DESIGN_SYSTEM_10_PRODUCT_WIDE_MIGRATION_MATRIX.length,
@@ -73,8 +73,8 @@ describe("SCE-DESIGN-SYSTEM-10 product-wide adoption", () => {
     );
   });
 
-  it("remains ready for PO review — not closed", () => {
-    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_STATUS).toBe("READY_FOR_PO_REVIEW");
+  it("remains in PO visual UAT — not closed", () => {
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_STATUS).toBe("PO_VISUAL_UAT_IN_PROGRESS");
     expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.NEXT_PACKAGE).toContain("DS-11 not started");
   });
 });
