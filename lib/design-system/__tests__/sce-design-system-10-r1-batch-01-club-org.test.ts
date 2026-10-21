@@ -16,12 +16,14 @@ function readSrc(relativePath: string): string {
 }
 
 describe("SCE-DESIGN-SYSTEM-10-R1 Batch 01 — Club / Organisation core", () => {
-  it("records PO visual UAT in progress — migration not complete", () => {
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_STATUS).toBe("PO_VISUAL_UAT_IN_PROGRESS");
-    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT.DS10_PO_VISUAL_UAT).toBe("IN_PROGRESS");
-    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT.DS10_R1_REQUIRED).toBe("YES");
-    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBe(4);
+  it("records engineering migration complete — ready for PO visual UAT", () => {
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10_PO_REVIEW.DS10_STATUS).toBe("READY_FOR_PO_REVIEW");
+    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT.DS10_PO_VISUAL_UAT).toBe(
+      "READY_FOR_PO_REVIEW",
+    );
+    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_01_PO_VISUAL_UAT.DS10_R1_REQUIRED).toBe("NO");
+    expect(SCE_DESIGN_SYSTEM_10_MIGRATION_MATRIX_COUNTS.UNRESOLVED_MIGRATION_DEBT).toBe(0);
   });
 
   it("locks legacy white islands out of dark workspace", () => {

@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { AddFacilityResourceButton } from "@/components/admin/facilities/AddFacilityResourceButton";
+import CreateFacilityComposerDialog, {
+  type CreateFacilityResult,
+} from "@/components/admin/facilities/CreateFacilityComposerDialog";
 import { PopoverContent } from "@/components/ui/Popover";
 import type { FacilityType, FacilityResourceType, FacilityStatus } from "@prisma/client";
 
@@ -117,97 +120,6 @@ function InlineEditForm({
       >
         Abbrechen
       </button>
-    </form>
-  );
-}
-
-// ── Create Facility dialog ────────────────────────────────────────────────────
-
-function CreateFacilityForm({
-  onCreated,
-  onCancel,
-  onRefresh,
-}: {
-  onCreated: (facility: FacilityRow) => void;
-  onCancel: () => void;
-  onRefresh: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [type, setType] = useState<FacilityType>("PITCH");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setError(null);
-    startTransition(async () => {
-      const res = await fetch("/api/facilities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), type }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data?.error ?? "Fehler beim Erstellen.");
-        return;
-      }
-      const data = await res.json();
-      onCreated({ ...data.facility, resources: [] });
-      onRefresh();
-    });
-  }
-
-  return (
-    <form
-      onSubmit={submit}
-      className="rounded-2xl border border-[var(--blue)]/20 bg-[var(--blue-light)] p-5 space-y-4"
-    >
-      <p className="text-sm font-semibold text-[var(--blue)]">Neue Anlage erstellen</p>
-      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="text-xs font-medium text-slate-600">Name</label>
-          <input
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="z.B. Hauptplatz"
-            className="fca-input mt-1 w-full text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-slate-600">Typ</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as FacilityType)}
-            className="fca-input mt-1 w-full text-sm"
-          >
-            {(Object.keys(FACILITY_TYPE_LABELS) as FacilityType[]).map((t) => (
-              <option key={t} value={t}>
-                {FACILITY_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending || !name.trim()}
-          className="fca-button-primary disabled:opacity-50"
-        >
-          {pending ? "Wird erstellt…" : "Anlage erstellen"}
-        </button>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onCancel}
-          className="fca-button-secondary disabled:opacity-50"
-        >
-          Abbrechen
-        </button>
-      </div>
     </form>
   );
 }
@@ -907,25 +819,24 @@ export default function FacilitiesAdminPanel({
     <div className="space-y-5">
       {/* Action bar */}
       {canManage ? (
-        showCreate ? (
-          <CreateFacilityForm
-            onCreated={(facility) => {
-              setFacilities((prev) => [...prev, facility]);
-              setShowCreate(false);
-            }}
-            onCancel={() => setShowCreate(false)}
-            onRefresh={handleRefresh}
-          />
-        ) : (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="fca-button-primary flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Anlage erstellen
-          </button>
-        )
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className="fca-button-primary flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          Anlage erstellen
+        </button>
       ) : null}
+
+      <CreateFacilityComposerDialog
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={(facility: CreateFacilityResult) => {
+          setFacilities((prev) => [...prev, { ...facility, resources: [] }]);
+        }}
+        onRefresh={handleRefresh}
+      />
 
       {/* Facility list */}
       {facilities.length === 0 ? (

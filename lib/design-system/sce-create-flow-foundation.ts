@@ -77,17 +77,19 @@ export const SCE_CREATE_FLOW_REPRESENTATIVE_AUDIT: SceCreateFlowAuditRow[] = [
   },
   {
     entity: "Anlage erstellen",
-    route: "FacilitiesAdminPanel inline",
-    classification: "INLINE_LEGACY_DS10",
-    ds09Action: "DEFER_DS10",
-    canonicalEntry: "CreateFacilityForm inline expand",
-    notes: "Migrate to Dialog composer in DS-10",
+    route: "/dashboard/admin/facilities",
+    classification: "MODAL_FIRST_DS09",
+    ds09Action: "ADOPTED_MODAL",
+    canonicalEntry: "CreateFacilityComposerDialog on facilities workspace",
+    notes: "Inline expand retired — canonical Dialog composer (DS-10)",
   },
 ];
 
-export const SCE_CREATE_FLOW_DS10_DEBT = [
-  "Neue Rolle — evaluate workspace composer vs retained full-page exception",
-  "Neue Mitteilung / Neue Kampagne — unified communication composer modal entry",
-  "Anlage erstellen — replace inline expand with canonical Dialog",
-  "Audit remaining /new routes for modal-first primary entry",
+/** Documented full-page exceptions — not modal-first debt. */
+export const SCE_CREATE_FLOW_DS10_VALID_EXCEPTIONS = [
+  "Neue Rolle — multi-step permission matrix (CreateTenantRoleForm)",
+  "Neue Mitteilung — long-form composer workspace",
+  "Neue Kampagne — multi-step campaign builder",
 ] as const;
+
+export const SCE_CREATE_FLOW_DS10_DEBT = [] as const;

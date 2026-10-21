@@ -14,15 +14,14 @@ function readSrc(relativePath: string): string {
 }
 
 describe("SCE-DESIGN-SYSTEM-10-R1 Batch 02 — Planning & activity operations", () => {
-  it("records Batch 02 PO baseline — not accepted, migration incomplete", () => {
-    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("NO");
-    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT.DS10_PO_VISUAL_UAT).toBe("IN_PROGRESS");
-    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT.ROUTES["/dashboard/matchcenter"]).toBe(
-      "R1_REQUIRED",
+  it("records Batch 02 delivered — ready for PO visual re-review", () => {
+    expect(SCE_DESIGN_SYSTEM_10_GOVERNANCE.PRODUCT_WIDE_DESIGN_MIGRATION_COMPLETE).toBe("YES");
+    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT.DS10_PO_VISUAL_UAT).toBe(
+      "READY_FOR_PO_REVIEW",
     );
-    for (const status of Object.values(SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT.ROUTES)) {
-      expect(status).toBe("R1_REQUIRED");
-    }
+    expect(SCE_DESIGN_SYSTEM_10_R1_BATCH_02_PO_VISUAL_UAT.ROUTES["/dashboard/matchcenter"]).toBe(
+      "PO_ACCEPTED_WITH_MINOR_REVIEW",
+    );
   });
 
   it("governs training KPIs — no duplicate total/active hero strip", () => {
