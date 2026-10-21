@@ -43,7 +43,7 @@ describe("SCE-DESIGN-SYSTEM-10R7 Organisation Builder people experience", () => 
 
   it("suppresses hover preview for selected node when inspector is open", () => {
     const canvas = readSrc("components/admin/org/OrgUnitCanvasView.tsx");
-    expect(canvas).toContain("previewOpenUnitId");
+    expect(canvas).toContain("selectedUnitId: selectedId");
     expect(canvas).toContain("contextualPreview.dismiss()");
   });
 

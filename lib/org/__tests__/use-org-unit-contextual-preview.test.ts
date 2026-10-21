@@ -50,6 +50,27 @@ describe("useOrgUnitContextualPreview", () => {
     expect(result.current.openUnitId).toBeNull();
   });
 
+  it("does not open preview for the inspector-selected unit", () => {
+    const { result } = renderHook(() =>
+      useOrgUnitContextualPreview({
+        openDelayMs: 0,
+        selectedUnitId: "unit-a",
+      }),
+    );
+
+    act(() => {
+      result.current.onNodePointerEnter("unit-a");
+      vi.advanceTimersByTime(0);
+    });
+    expect(result.current.openUnitId).toBeNull();
+
+    act(() => {
+      result.current.onNodePointerEnter("unit-b");
+      vi.advanceTimersByTime(0);
+    });
+    expect(result.current.openUnitId).toBe("unit-b");
+  });
+
   it("stays open when pointer moves onto preview before close delay", () => {
     const { result } = renderHook(() =>
       useOrgUnitContextualPreview({ openDelayMs: 0, closeDelayMs: 200 }),

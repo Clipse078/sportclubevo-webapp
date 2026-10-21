@@ -15,6 +15,8 @@ export type UseOrgUnitContextualPreviewOptions = {
   suppressReason?: OrgUnitContextualPreviewSuppressReason;
   /** When false (touch / coarse pointer), preview is disabled — inspector is the surface. */
   hoverPreviewEnabled?: boolean;
+  /** Inspector-selected unit — hover/focus must not open a duplicate preview for this id only. */
+  selectedUnitId?: string | null;
 };
 
 export type OrgUnitContextualPreviewState = {
@@ -45,6 +47,7 @@ export function useOrgUnitContextualPreview(
   const closeDelayMs = options.closeDelayMs ?? 160;
   const suppressReason = options.suppressReason ?? "none";
   const hoverPreviewEnabled = options.hoverPreviewEnabled ?? true;
+  const selectedUnitId = options.selectedUnitId ?? null;
 
   const [openUnitId, setOpenUnitId] = useState<string | null>(null);
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,13 +82,24 @@ export function useOrgUnitContextualPreview(
   const scheduleOpen = useCallback(
     (unitId: string) => {
       if (!hoverPreviewEnabled || suppressReason !== "none") return;
+      if (selectedUnitId && unitId === selectedUnitId) {
+        clearOpenTimer();
+        return;
+      }
       clearOpenTimer();
       clearCloseTimer();
       openTimer.current = setTimeout(() => {
         setOpenUnitId(unitId);
       }, openDelayMs);
     },
-    [clearCloseTimer, clearOpenTimer, hoverPreviewEnabled, openDelayMs, suppressReason],
+    [
+      clearCloseTimer,
+      clearOpenTimer,
+      hoverPreviewEnabled,
+      openDelayMs,
+      selectedUnitId,
+      suppressReason,
+    ],
   );
 
   const scheduleClose = useCallback(() => {
@@ -102,6 +116,13 @@ export function useOrgUnitContextualPreview(
       dismiss();
     }
   }, [suppressReason, dismiss]);
+
+  useEffect(() => {
+    if (selectedUnitId && openUnitId === selectedUnitId) {
+      setOpenUnitId(null);
+      clearOpenTimer();
+    }
+  }, [clearOpenTimer, openUnitId, selectedUnitId]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -192,7 +213,16 @@ export function useOrgUnitContextualPreview(
   };
 }
 
+const HOVER_PREVIEW_MEDIA = "(hover: hover) and (pointer: fine)";
+
 export function orgUnitHoverPreviewEnabled(): boolean {
   if (typeof window === "undefined") return true;
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  return window.matchMedia(HOVER_PREVIEW_MEDIA).matches;
+}
+
+export function subscribeOrgUnitHoverPreviewEnabled(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia(HOVER_PREVIEW_MEDIA);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
 }

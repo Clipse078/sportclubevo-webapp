@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type WheelEvent as ReactWheelEvent,
 } from "react";
 import {
@@ -36,6 +37,7 @@ import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enr
 import { membershipSearchNames } from "@/lib/org/org-unit-people";
 import {
   orgUnitHoverPreviewEnabled,
+  subscribeOrgUnitHoverPreviewEnabled,
   useOrgUnitContextualPreview,
 } from "@/lib/org/use-org-unit-contextual-preview";
 import { Dialog } from "@/components/ui/Dialog";
@@ -165,9 +167,16 @@ export default function OrgUnitCanvasView({
           : ("panning" as const)
       : ("none" as const);
 
+  const hoverPreviewEnabled = useSyncExternalStore(
+    subscribeOrgUnitHoverPreviewEnabled,
+    orgUnitHoverPreviewEnabled,
+    () => true,
+  );
+
   const contextualPreview = useOrgUnitContextualPreview({
     suppressReason: previewSuppressReason,
-    hoverPreviewEnabled: orgUnitHoverPreviewEnabled(),
+    hoverPreviewEnabled,
+    selectedUnitId: selectedId,
   });
 
   const nodeDataById = useMemo(() => {
@@ -281,11 +290,6 @@ export default function OrgUnitCanvasView({
     setCollapsed((prev) => expandCollapsedAncestors(match.id, hierarchyUnits, prev));
     focusNodeLegible(match.id);
   }, [searchQuery, orgUnits, hierarchyUnits, focusNodeLegible, builderEnrichment]);
-
-  const previewOpenUnitId =
-    contextualPreview.openUnitId && contextualPreview.openUnitId !== selectedId
-      ? contextualPreview.openUnitId
-      : null;
 
   const handleWheel = (e: ReactWheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -572,6 +576,8 @@ export default function OrgUnitCanvasView({
                   width: node.width,
                   height: node.height,
                 }}
+                onPointerEnter={() => contextualPreview.onNodePointerEnter(node.id)}
+                onPointerLeave={() => contextualPreview.onNodePointerLeave(node.id)}
                 onDragOver={(e) => {
                   if (!canManage || !reparentDraggingId) return;
                   e.preventDefault();
@@ -618,8 +624,12 @@ export default function OrgUnitCanvasView({
                   isReparentSource={reparentDraggingId === node.id}
                   isReparentTarget={Boolean(isDropTarget)}
                   isInvalidReparentTarget={Boolean(isInvalidDrop)}
-                  onContextualPreviewEnter={() => contextualPreview.onNodePointerEnter(node.id)}
-                  onContextualPreviewLeave={() => contextualPreview.onNodePointerLeave(node.id)}
+                  onContextualPreviewPointerEnter={() =>
+                    contextualPreview.onNodePointerEnter(node.id)
+                  }
+                  onContextualPreviewPointerLeave={() =>
+                    contextualPreview.onNodePointerLeave(node.id)
+                  }
                   onContextualPreviewFocus={() => contextualPreview.onNodeFocus(node.id)}
                   onContextualPreviewBlur={(target) =>
                     contextualPreview.onNodeBlur(node.id, target)
@@ -666,7 +676,7 @@ export default function OrgUnitCanvasView({
       </div>
 
       <OrgUnitContextualPreviewLayer
-        openUnitId={previewOpenUnitId}
+        openUnitId={contextualPreview.openUnitId}
         orgUnits={orgUnits}
         enrichment={builderEnrichment}
         resolveRoleName={

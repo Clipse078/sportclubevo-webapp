@@ -72,26 +72,49 @@ export default function OrgUnitContextualPreviewLayer({
   }, [unit, enrichment, resolveRoleName]);
 
   useLayoutEffect(() => {
-    if (!openUnitId || !viewportRef.current) {
+    if (!openUnitId || typeof window === "undefined") {
       setPlacement(null);
       return;
     }
-    const nodeEl = viewportRef.current.querySelector<HTMLElement>(
-      `[data-org-unit-node="${openUnitId}"]`,
-    );
-    if (!nodeEl) {
-      setPlacement(null);
-      return;
-    }
-    const anchor = nodeEl.getBoundingClientRect();
-    const next = computeOrgUnitPreviewPlacement({
-      anchor,
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
-      previewWidth: SCE_ORG_UNIT_PREVIEW_WIDTH_PX,
-      chromeInsets,
-    });
-    setPlacement({ top: next.top, left: next.left });
+
+    let cancelled = false;
+    let retryFrame = 0;
+
+    const resolveAnchor = (): HTMLElement | null => {
+      const scoped = viewportRef.current?.querySelector<HTMLElement>(
+        `[data-org-unit-node="${openUnitId}"]`,
+      );
+      if (scoped) return scoped;
+      return document.querySelector<HTMLElement>(`[data-org-unit-node="${openUnitId}"]`);
+    };
+
+    const updatePlacement = () => {
+      if (cancelled) return;
+      const nodeEl = resolveAnchor();
+      if (!nodeEl) {
+        if (retryFrame < 4) {
+          retryFrame += 1;
+          requestAnimationFrame(updatePlacement);
+          return;
+        }
+        setPlacement(null);
+        return;
+      }
+      const anchor = nodeEl.getBoundingClientRect();
+      const next = computeOrgUnitPreviewPlacement({
+        anchor,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        previewWidth: SCE_ORG_UNIT_PREVIEW_WIDTH_PX,
+        chromeInsets,
+      });
+      setPlacement({ top: next.top, left: next.left });
+    };
+
+    updatePlacement();
+    return () => {
+      cancelled = true;
+    };
   }, [openUnitId, viewportRef, chromeInsets, orgUnits]);
 
   if (!openUnitId || !unit || !model || !placement || typeof document === "undefined") {
@@ -107,9 +130,10 @@ export default function OrgUnitContextualPreviewLayer({
         transform: "none",
       }}
       data-org-contextual-preview
+      data-org-contextual-preview-root
       data-org-preview-zoom-independent="true"
-      onMouseEnter={onPreviewPointerEnter}
-      onMouseLeave={onPreviewPointerLeave}
+      onPointerEnter={onPreviewPointerEnter}
+      onPointerLeave={onPreviewPointerLeave}
       onFocus={onPreviewFocus}
       onBlur={(e) => onPreviewBlur(e.relatedTarget)}
     >

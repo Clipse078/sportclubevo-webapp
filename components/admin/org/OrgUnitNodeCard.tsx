@@ -53,8 +53,8 @@ type Props = {
   onMore?: () => void;
   onReparentDragStart?: (e: React.DragEvent) => void;
   onReparentDragEnd?: () => void;
-  onContextualPreviewEnter?: () => void;
-  onContextualPreviewLeave?: () => void;
+  onContextualPreviewPointerEnter?: () => void;
+  onContextualPreviewPointerLeave?: () => void;
   onContextualPreviewFocus?: () => void;
   onContextualPreviewBlur?: (relatedTarget: EventTarget | null) => void;
   tabIndex?: number;
@@ -76,8 +76,8 @@ export default function OrgUnitNodeCard({
   onMore,
   onReparentDragStart,
   onReparentDragEnd,
-  onContextualPreviewEnter,
-  onContextualPreviewLeave,
+  onContextualPreviewPointerEnter,
+  onContextualPreviewPointerLeave,
   onContextualPreviewFocus,
   onContextualPreviewBlur,
   tabIndex = 0,
@@ -98,8 +98,8 @@ export default function OrgUnitNodeCard({
       role="button"
       tabIndex={tabIndex}
       onClick={onSelect}
-      onMouseEnter={onContextualPreviewEnter}
-      onMouseLeave={onContextualPreviewLeave}
+      onPointerEnter={onContextualPreviewPointerEnter}
+      onPointerLeave={onContextualPreviewPointerLeave}
       onFocus={onContextualPreviewFocus}
       onBlur={(e) => onContextualPreviewBlur?.(e.relatedTarget)}
       onKeyDown={(e) => {
