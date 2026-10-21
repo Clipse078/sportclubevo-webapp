@@ -52,6 +52,10 @@ type Props = {
   onMore?: () => void;
   onReparentDragStart?: (e: React.DragEvent) => void;
   onReparentDragEnd?: () => void;
+  onContextualPreviewEnter?: () => void;
+  onContextualPreviewLeave?: () => void;
+  onContextualPreviewFocus?: () => void;
+  onContextualPreviewBlur?: (relatedTarget: EventTarget | null) => void;
   tabIndex?: number;
 };
 
@@ -71,6 +75,10 @@ export default function OrgUnitNodeCard({
   onMore,
   onReparentDragStart,
   onReparentDragEnd,
+  onContextualPreviewEnter,
+  onContextualPreviewLeave,
+  onContextualPreviewFocus,
+  onContextualPreviewBlur,
   tabIndex = 0,
 }: Props) {
   const typeLabel = TYPE_LABELS[unit.type] ?? unit.type;
@@ -87,6 +95,10 @@ export default function OrgUnitNodeCard({
       role="button"
       tabIndex={tabIndex}
       onClick={onSelect}
+      onMouseEnter={onContextualPreviewEnter}
+      onMouseLeave={onContextualPreviewLeave}
+      onFocus={onContextualPreviewFocus}
+      onBlur={(e) => onContextualPreviewBlur?.(e.relatedTarget)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -163,8 +175,8 @@ export default function OrgUnitNodeCard({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "truncate font-semibold text-[var(--text-1)]",
-              density === "MICRO" ? "text-[11px]" : "text-sm",
+              "truncate font-semibold leading-tight text-[var(--text-1)]",
+              density === "MICRO" ? "text-[11px]" : density === "COMPACT" ? "text-[13px]" : "text-sm",
             )}
             title={unit.name}
           >

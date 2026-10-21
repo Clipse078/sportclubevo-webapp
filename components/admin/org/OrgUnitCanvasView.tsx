@@ -30,7 +30,13 @@ import {
 } from "@/lib/org/org-layout-persistence";
 import { computeOrgLayoutBoundingBox } from "@/lib/org/org-layout-bounds";
 import OrgUnitReparentDialog from "@/components/admin/org/OrgUnitReparentDialog";
+import OrgUnitContextualPreviewLayer from "@/components/admin/org/OrgUnitContextualPreviewLayer";
 import OrgUnitNodeCard, { type OrgUnitCanvasNodeData } from "@/components/admin/org/OrgUnitNodeCard";
+import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enrichment";
+import {
+  orgUnitHoverPreviewEnabled,
+  useOrgUnitContextualPreview,
+} from "@/lib/org/use-org-unit-contextual-preview";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
 import { LayoutGrid, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
@@ -50,6 +56,8 @@ export type OrgUnitCanvasItem = OrgHierarchyUnit & {
 type Props = {
   tenantId: string;
   orgUnits: OrgUnitCanvasItem[];
+  builderEnrichment: OrgUnitBuilderEnrichmentMap;
+  roleKeyToName?: Record<string, string>;
   canManage: boolean;
   selectedId: string | null;
   onSelectId: (id: string | null) => void;
@@ -73,6 +81,8 @@ type NodeDragState = {
 export default function OrgUnitCanvasView({
   tenantId,
   orgUnits,
+  builderEnrichment,
+  roleKeyToName,
   canManage,
   selectedId,
   onSelectId,
@@ -140,6 +150,20 @@ export default function OrgUnitCanvasView({
 
   const unitById = useMemo(() => new Map(orgUnits.map((u) => [u.id, u])), [orgUnits]);
   const contextualZoom = getOrgContextualZoomLevel(scale);
+
+  const previewSuppressReason =
+    nodeDrag || reparentDraggingId || isPanning
+      ? nodeDrag
+        ? ("node-drag" as const)
+        : reparentDraggingId
+          ? ("reparent-drag" as const)
+          : ("panning" as const)
+      : ("none" as const);
+
+  const contextualPreview = useOrgUnitContextualPreview({
+    suppressReason: previewSuppressReason,
+    hoverPreviewEnabled: orgUnitHoverPreviewEnabled(),
+  });
 
   const nodeDataById = useMemo(() => {
     const map = new Map<string, OrgUnitCanvasNodeData>();
@@ -575,6 +599,12 @@ export default function OrgUnitCanvasView({
                   isReparentSource={reparentDraggingId === node.id}
                   isReparentTarget={Boolean(isDropTarget)}
                   isInvalidReparentTarget={Boolean(isInvalidDrop)}
+                  onContextualPreviewEnter={() => contextualPreview.onNodePointerEnter(node.id)}
+                  onContextualPreviewLeave={() => contextualPreview.onNodePointerLeave(node.id)}
+                  onContextualPreviewFocus={() => contextualPreview.onNodeFocus(node.id)}
+                  onContextualPreviewBlur={(target) =>
+                    contextualPreview.onNodeBlur(node.id, target)
+                  }
                   onSelect={() => onSelectId(node.id)}
                   onToggleCollapse={() => {
                     setCollapsed((prev) => {
@@ -612,6 +642,25 @@ export default function OrgUnitCanvasView({
           </div>
         ) : null}
       </div>
+
+      <OrgUnitContextualPreviewLayer
+        openUnitId={contextualPreview.openUnitId}
+        orgUnits={orgUnits}
+        enrichment={builderEnrichment}
+        resolveRoleName={
+          roleKeyToName ? (roleKey) => roleKeyToName[roleKey] ?? null : undefined
+        }
+        viewportRef={viewportRef}
+        chromeInsets={{
+          top: ORG_CANVAS_TOOLBAR_INSET_PX,
+          right: selectedId ? ORG_INSPECTOR_INSET_PX : 0,
+        }}
+        onPreviewPointerEnter={contextualPreview.onPreviewPointerEnter}
+        onPreviewPointerLeave={contextualPreview.onPreviewPointerLeave}
+        onPreviewFocus={contextualPreview.onPreviewFocus}
+        onPreviewBlur={contextualPreview.onPreviewBlur}
+        onOpenDetails={(id) => onSelectId(id)}
+      />
 
       <Dialog
         open={Boolean(reparentPending)}

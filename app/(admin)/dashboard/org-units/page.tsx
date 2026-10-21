@@ -3,7 +3,9 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getOrgUnits, getArchivedOrgUnits } from "@/lib/org/queries";
+import { loadOrgUnitBuilderEnrichment } from "@/lib/org/org-unit-builder-enrichment";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { prisma } from "@/lib/db/prisma";
 import OrgUnitBuilderWorkspace from "@/components/admin/org/OrgUnitBuilderWorkspace";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
@@ -32,6 +34,16 @@ export default async function OrgUnitsPage({ searchParams }: PageProps) {
     type: u.type,
   }));
 
+  const orgUnitIds = orgUnits.map((u) => u.id);
+  const [builderEnrichment, tenantRoles] = await Promise.all([
+    loadOrgUnitBuilderEnrichment(tenant.id, orgUnitIds),
+    prisma.role.findMany({
+      where: { tenantId: tenant.id },
+      select: { key: true, name: true },
+    }),
+  ]);
+  const roleKeyToName = Object.fromEntries(tenantRoles.map((r) => [r.key, r.name]));
+
   return (
     <PageShell fullWidth>
       <ListPagePattern
@@ -42,6 +54,8 @@ export default async function OrgUnitsPage({ searchParams }: PageProps) {
         <OrgUnitBuilderWorkspace
           tenantId={tenant.id}
           orgUnits={orgUnits}
+          builderEnrichment={builderEnrichment}
+          roleKeyToName={roleKeyToName}
           archivedOrgUnits={archivedOrgUnits}
           showArchived={showArchived}
           canManage={canManage}

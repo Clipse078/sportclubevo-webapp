@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, X, Plus, ExternalLink, Move, Trash2 } from "lucide-react";
+import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import OrgUnitNodeCard, { type OrgUnitCanvasNodeData } from "@/components/admin/org/OrgUnitNodeCard";
+import type { SceOrgUnitPreviewModel } from "@/lib/org/org-unit-preview-model";
 import OrgUnitReparentDialog from "@/components/admin/org/OrgUnitReparentDialog";
 import OrgUnitBuilderDeleteDialog from "@/components/admin/org/OrgUnitBuilderDeleteDialog";
 import type { OrgHierarchyUnit } from "@/lib/org/org-hierarchy-layout";
@@ -15,6 +17,7 @@ export type OrgUnitInspectorUnit = OrgUnitCanvasNodeData & {
   parentName: string | null;
   description: string | null;
   childUnits: { id: string; name: string; type: string }[];
+  previewModel: SceOrgUnitPreviewModel;
 };
 
 type ParentOption = { id: string; key: string; name: string; level: number; type: string };
@@ -76,6 +79,41 @@ export default function OrgUnitInspectorPanel({
           {unit.description ? (
             <p className="text-sm text-[var(--text-2)]">{unit.description}</p>
           ) : null}
+
+          <section aria-labelledby="org-inspector-responsible">
+            <h3
+              id="org-inspector-responsible"
+              className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+            >
+              Verantwortlich
+            </h3>
+            {unit.previewModel.responsibility.primary ? (
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/80 p-3">
+                <AdminAvatar name={unit.previewModel.responsibility.primary.displayName} size="sm" />
+                <div className="min-w-0">
+                  <p className="font-medium text-[var(--text-1)]">
+                    {unit.previewModel.responsibility.primary.displayName}
+                  </p>
+                  {unit.previewModel.responsibility.primaryRoleLabel ? (
+                    <p className="text-sm text-[var(--muted)]">
+                      {unit.previewModel.responsibility.primaryRoleLabel}
+                    </p>
+                  ) : null}
+                  {unit.previewModel.responsibility.additionalPrimaryCount > 0 ? (
+                    <p className="text-xs text-[var(--sce-primary)]">
+                      + {unit.previewModel.responsibility.additionalPrimaryCount} weitere primäre
+                      Verantwortliche
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--muted)]">{unit.previewModel.responsibility.emptyLabel}</p>
+            )}
+            {unit.previewModel.structureLine ? (
+              <p className="mt-2 text-sm text-[var(--text-2)]">{unit.previewModel.structureLine}</p>
+            ) : null}
+          </section>
 
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div className="col-span-2">

@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import OrgUnitSearchableList from "@/components/admin/org/OrgUnitSearchableList";
 import OrgUnitCanvasView, { type OrgUnitCanvasItem } from "@/components/admin/org/OrgUnitCanvasView";
+import type { OrgUnitBuilderEnrichmentMap } from "@/lib/org/org-unit-builder-enrichment";
+import { buildSceOrgUnitPreviewModel } from "@/lib/org/org-unit-preview-model";
 import OrgUnitInspectorPanel, {
   type OrgUnitInspectorUnit,
 } from "@/components/admin/org/OrgUnitInspectorPanel";
@@ -16,6 +18,8 @@ type OrgUnitListItem = OrgUnitCanvasItem;
 type Props = {
   tenantId: string;
   orgUnits: OrgUnitListItem[];
+  builderEnrichment: OrgUnitBuilderEnrichmentMap;
+  roleKeyToName?: Record<string, string>;
   archivedOrgUnits: OrgUnitListItem[];
   showArchived: boolean;
   canManage: boolean;
@@ -27,6 +31,8 @@ type ViewMode = "canvas" | "list";
 export default function OrgUnitBuilderWorkspace({
   tenantId,
   orgUnits,
+  builderEnrichment,
+  roleKeyToName,
   archivedOrgUnits,
   showArchived,
   canManage,
@@ -49,6 +55,24 @@ export default function OrgUnitBuilderWorkspace({
       .filter((u) => u.parentId === unit.id)
       .map((u) => ({ id: u.id, name: u.name, type: u.type }));
 
+    const extra = builderEnrichment[unit.id];
+    const previewModel = buildSceOrgUnitPreviewModel({
+      unit: {
+        id: unit.id,
+        name: unit.name,
+        type: unit.type,
+        status: unit.status,
+        description: unit.description,
+        childCount: unit._count.children,
+        teamCount: extra?.teamCount ?? 0,
+        personCount: extra?.personCount ?? 0,
+      },
+      memberships: extra?.primaryMemberships ?? [],
+      resolveRoleName: roleKeyToName
+        ? (roleKey) => roleKeyToName[roleKey] ?? null
+        : undefined,
+    });
+
     return {
       id: unit.id,
       key: unit.key,
@@ -63,8 +87,9 @@ export default function OrgUnitBuilderWorkspace({
       parentName: parent?.name ?? null,
       description: unit.description,
       childUnits,
+      previewModel,
     };
-  }, [selectedId, unitById, orgUnits]);
+  }, [selectedId, unitById, orgUnits, builderEnrichment, roleKeyToName]);
 
   function openCreate(parentId?: string) {
     setCreateParentId(parentId);
@@ -122,6 +147,8 @@ export default function OrgUnitBuilderWorkspace({
             <OrgUnitCanvasView
               tenantId={tenantId}
               orgUnits={orgUnits}
+              builderEnrichment={builderEnrichment}
+              roleKeyToName={roleKeyToName}
               canManage={canManage}
               selectedId={selectedId}
               onSelectId={setSelectedId}
