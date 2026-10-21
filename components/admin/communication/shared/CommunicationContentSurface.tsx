@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { SCE_DENSITY_WORKSPACE_CONTENT_PADDING_CLASS } from "@/lib/design-system/sce-density-border-micro-ux";
 import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 
 type CommunicationContentSurfaceProps = {
@@ -22,7 +23,7 @@ export function CommunicationContentSurface({
     <div
       className={cn(
         SCE_SURFACE_STANDARD_PANEL,
-        padded && "p-4 md:p-6",
+        padded && SCE_DENSITY_WORKSPACE_CONTENT_PADDING_CLASS,
         className,
       )}
     >

@@ -13,6 +13,9 @@ import { zielgruppeDefinitionIsEmpty } from "@/lib/communication/zielgruppen/edi
 
 type Props = {
   mode: "create" | "edit";
+  layout?: "page" | "composer";
+  onCreated?: (targetGroupId: string) => void;
+  onCancel?: () => void;
   targetGroupId?: string;
   defaultValues?: {
     name?: string;
@@ -39,6 +42,9 @@ const STATUS_OPTIONS = [
 
 export default function ZielgruppeManagementForm({
   mode,
+  layout = "page",
+  onCreated,
+  onCancel,
   targetGroupId,
   defaultValues,
   knownLabels,
@@ -162,7 +168,11 @@ export default function ZielgruppeManagementForm({
       }
       const data = await res.json().catch(() => ({}));
       if (mode === "create" && data?.targetGroup?.id) {
-        router.push(`/dashboard/communication/zielgruppen/${data.targetGroup.id}`);
+        if (onCreated) {
+          onCreated(data.targetGroup.id);
+        } else {
+          router.push(`/dashboard/communication/zielgruppen/${data.targetGroup.id}`);
+        }
       } else {
         setEditing(false);
         router.refresh();
@@ -188,9 +198,11 @@ export default function ZielgruppeManagementForm({
     );
   }
 
+  const formSpacing = layout === "composer" ? "space-y-4" : "space-y-6";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {canManage ? (
+    <form onSubmit={handleSubmit} className={formSpacing} data-sce-zielgruppe-form-layout={layout}>
+      {canManage && layout === "page" ? (
         <div className="hidden justify-end lg:flex">
           <button
             type="submit"
@@ -286,7 +298,13 @@ export default function ZielgruppeManagementForm({
         ) : null}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.42fr)] lg:items-start">
+      <div
+        className={
+          layout === "composer"
+            ? "grid min-w-0 gap-4"
+            : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.42fr)] lg:items-start"
+        }
+      >
         <ZielgruppeDefinitionEditor
           value={definition}
           onChange={setDefinition}
@@ -323,14 +341,19 @@ export default function ZielgruppeManagementForm({
       ) : null}
 
       <div className="flex flex-wrap justify-between gap-3 border-t border-[var(--border)] pt-4">
-        <button type="button" onClick={() => router.back()} className="fca-button-secondary min-h-11">
+        <button
+          type="button"
+          onClick={() => (onCancel ? onCancel() : router.back())}
+          className="fca-button-secondary min-h-11"
+        >
           Abbrechen
         </button>
         {canManage ? (
           <button
             type="submit"
             disabled={loading || readOnly}
-            className="fca-button-primary min-h-11 lg:hidden"
+            className={layout === "composer" ? "fca-button-primary min-h-11" : "fca-button-primary min-h-11 lg:hidden"}
+            data-testid={layout === "composer" ? "zielgruppe-save" : undefined}
           >
             {loading ? "Speichern…" : "Zielgruppe speichern"}
           </button>

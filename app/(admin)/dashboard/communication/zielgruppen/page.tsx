@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Target } from "lucide-react";
+import ZielgruppeCreateTrigger from "@/components/admin/communication/zielgruppen/ZielgruppeCreateTrigger";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import ZielgruppenListToolbar from "@/components/admin/communication/zielgruppen/ZielgruppenListToolbar";
@@ -63,14 +64,7 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
 
   const hasActiveFilters = Boolean(params.q?.trim() || statusParam !== "active");
 
-  const primaryAction = canManage ? (
-    <Link
-      href="/dashboard/communication/zielgruppen/new"
-      className="inline-flex rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2"
-    >
-      Neue Zielgruppe
-    </Link>
-  ) : undefined;
+  const primaryAction = canManage ? <ZielgruppeCreateTrigger /> : undefined;
 
   return (
     <PageShell>

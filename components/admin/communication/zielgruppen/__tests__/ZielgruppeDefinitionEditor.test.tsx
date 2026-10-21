@@ -31,7 +31,7 @@ describe("ZielgruppeDefinitionEditor", () => {
     expect(screen.queryByText(/Automatisch einschliessen/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Ausschliessen/i)).toBeInTheDocument();
     expect(screen.getByText(/immer ausgeschlossen/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Ganze Organisation/i)).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /Ganze Organisation/i })).toBeInTheDocument();
     expect(screen.getByTestId("zielgruppe-composition-union")).toBeInTheDocument();
     expect(screen.getByTestId("zielgruppe-add-include")).toBeInTheDocument();
     expect(screen.getByTestId("zielgruppe-add-external")).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("ZielgruppeDefinitionEditor", () => {
     expect(screen.getByText("Michael Duijster")).toBeInTheDocument();
   });
 
-  it("toggles whole organisation checkbox", async () => {
+  it("toggles whole organisation via canonical switch", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(
@@ -75,7 +75,7 @@ describe("ZielgruppeDefinitionEditor", () => {
       />,
     );
 
-    await user.click(screen.getByLabelText(/Ganze Organisation/i));
+    await user.click(screen.getByRole("switch", { name: /Ganze Organisation/i }));
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ wholeOrganisation: true }),
     );
