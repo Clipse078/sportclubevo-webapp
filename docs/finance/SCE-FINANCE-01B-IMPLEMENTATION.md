@@ -43,3 +43,7 @@ Club navigation (Führung): **Finanzen** → `/dashboard/finance` (`finance.view
 ## Deferred (explicit)
 
 Full Structure Builder UI, budgets, postings, FCA import, receivables/payables, sponsor/commercial.
+
+### UX backlog (post FIN-01B closure)
+
+- **Basiswährung setup control:** replace free-text ISO input with a searchable currency combobox (supported ISO 4217 codes stored canonically; search by code and intuitive country/currency terms; keyboard-accessible autocomplete; no country-specific hardcoding in Finance core; do not force currency from tenant country alone).

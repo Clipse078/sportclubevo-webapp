@@ -5,10 +5,11 @@ import deMessages from "@/messages/de.json";
 import {
   FINANCE_CAPABILITY_PRESENTATION,
   FINANCE_CAPABILITY_PRESENTATION_ORDER,
-  FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS,
+  filterFinanceStarterRecommendedCapabilityKeys,
 } from "@/lib/finance/capability-presentation";
 import {
   FINANCE_DEFAULT_ENABLED_CAPABILITIES,
+  FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS,
   FINANCE_SYSTEM_CAPABILITY_KEYS,
   isFinanceCapabilityImplemented,
 } from "@/lib/finance/capability-registry";
@@ -50,21 +51,56 @@ describe("FIN-01B-R3 finance capability presentation", () => {
     expect(panel).not.toMatch(/capabilityDescriptions\.[A-Z_]+/);
   });
 
-  it("keeps starter guidance non-mutating", () => {
-    expect(FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS).toEqual([
-      "OVERVIEW",
-      "BUDGETING",
-      "ACTUALS",
-    ]);
+  it("keeps starter guidance non-mutating and availability-aware", () => {
+    expect(FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS).toEqual(["OVERVIEW"]);
+    expect(
+      filterFinanceStarterRecommendedCapabilityKeys(isFinanceCapabilityImplemented),
+    ).toEqual(["OVERVIEW"]);
     expect(FINANCE_DEFAULT_ENABLED_CAPABILITIES).toEqual(["OVERVIEW"]);
     expect(ensureDefaultFinanceCapabilities.toString()).not.toContain("BUDGETING");
     expect(ensureDefaultFinanceCapabilities.toString()).not.toContain("ACTUALS");
     expect(read("components/admin/finance/FinanceSettingsPanel.tsx")).toContain(
       "starterNudgeTitle",
     );
-    expect(FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS).not.toEqual([
-      ...FINANCE_DEFAULT_ENABLED_CAPABILITIES,
-    ]);
+    for (const key of FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS) {
+      expect(isFinanceCapabilityImplemented(key)).toBe(true);
+    }
+    expect(
+      filterFinanceStarterRecommendedCapabilityKeys(() => true),
+    ).toEqual(["OVERVIEW", "BUDGETING", "ACTUALS"]);
+  });
+
+  it("does not recommend unavailable capabilities in starter nudge copy", () => {
+    const body = deMessages.Finance.settings.starterNudgeBody as string;
+    expect(deMessages.Finance.settings.starterNudgeTitle).toBe("Empfohlen für den Start");
+    expect(body).toBe(
+      "Startet mit der Übersicht. Weitere Finanzfunktionen werden schrittweise verfügbar und können später jederzeit ergänzt werden.",
+    );
+    expect(body).not.toMatch(/Budgetierung|Ist-Werte/i);
+    for (const key of FINANCE_CAPABILITY_KEYS) {
+      if (!isFinanceCapabilityImplemented(key)) {
+        const label = deMessages.Finance.capabilities[key] as string;
+        expect(body).not.toContain(label);
+      }
+    }
+  });
+
+  it("separates capability availability from tenant enabled state in settings rows", () => {
+    const settingsPage = read("app/(admin)/dashboard/finance/settings/page.tsx");
+    expect(settingsPage).toContain("configurable: isFinanceCapabilityImplemented");
+    expect(settingsPage).toContain("enabled: workspace.enabledCapabilities");
+    const panel = read("components/admin/finance/FinanceSettingsPanel.tsx");
+    expect(panel).toContain("capabilityNotAvailable");
+    expect(panel).toContain("disabled={!available || pending}");
+    expect(panel).toContain("row.configurable");
+    expect(panel).toContain("row.enabled");
+  });
+
+  it("keeps unavailable capability toggles disabled and subordinate to status text", () => {
+    const panel = read("components/admin/finance/FinanceSettingsPanel.tsx");
+    expect(panel).toContain("finance-cap-status-");
+    expect(panel).toContain("aria-describedby={!available ? statusId : titleId}");
+    expect(panel).toMatch(/if \(!available\)/);
   });
 
   it("preserves production-readiness gating for unavailable capabilities", () => {

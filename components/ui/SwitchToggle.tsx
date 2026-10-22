@@ -28,6 +28,7 @@ type SwitchToggleProps = {
   onChange: (checked: boolean) => void;
   disabled?: boolean;
   "aria-label"?: string;
+  "aria-describedby"?: string;
 };
 
 /**
@@ -40,6 +41,7 @@ export function SwitchThumb({
   onChange,
   disabled = false,
   "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
 }: SwitchToggleProps) {
   return (
     <button
@@ -48,6 +50,7 @@ export function SwitchThumb({
       id={id}
       aria-checked={checked}
       aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={[

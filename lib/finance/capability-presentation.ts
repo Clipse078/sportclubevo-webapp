@@ -24,9 +24,17 @@ function presentationFor(key: FinanceCapabilityKey): FinanceCapabilityPresentati
   };
 }
 
-/** UX guidance only — does not auto-enable capabilities or change tenant defaults. */
-export const FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS: readonly FinanceCapabilityKey[] =
-  FINANCE_CAPABILITY_KEYS.filter((key) => STARTER_RECOMMENDED.has(key));
+/**
+ * Starter guidance keys filtered by product availability (e.g. FIN-01B implementation).
+ * UX only — does not auto-enable capabilities or change tenant defaults.
+ */
+export function filterFinanceStarterRecommendedCapabilityKeys(
+  isAvailableForConfiguration: (key: FinanceCapabilityKey) => boolean,
+): FinanceCapabilityKey[] {
+  return FINANCE_CAPABILITY_KEYS.filter(
+    (key) => STARTER_RECOMMENDED.has(key) && isAvailableForConfiguration(key),
+  );
+}
 
 export const FINANCE_CAPABILITY_PRESENTATION: Record<
   FinanceCapabilityKey,

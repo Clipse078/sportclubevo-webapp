@@ -5,6 +5,7 @@ import {
   type FinanceCapabilityKey,
 } from "@/lib/finance/finance-architecture";
 import type { PermissionKey } from "@/lib/permissions/permissions";
+import { filterFinanceStarterRecommendedCapabilityKeys } from "@/lib/finance/capability-presentation";
 
 /** Capabilities with product surfaces implemented in FIN-01B. */
 export const FINANCE_CAPABILITIES_IMPLEMENTED_01B: ReadonlySet<FinanceCapabilityKey> =
@@ -43,10 +44,14 @@ export function isFinanceCapabilityImplemented(
 
 export const FINANCE_DEFAULT_ENABLED_CAPABILITIES: FinanceCapabilityKey[] = ["OVERVIEW"];
 
+/** UX guidance only — excludes capabilities not yet available for tenant configuration. */
+export const FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS: readonly FinanceCapabilityKey[] =
+  filterFinanceStarterRecommendedCapabilityKeys(isFinanceCapabilityImplemented);
+
 export {
   FINANCE_CAPABILITY_PRESENTATION,
   FINANCE_CAPABILITY_PRESENTATION_ORDER,
-  FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS,
+  filterFinanceStarterRecommendedCapabilityKeys,
   getFinanceCapabilityPresentation,
   type FinanceCapabilityPresentation,
 } from "@/lib/finance/capability-presentation";

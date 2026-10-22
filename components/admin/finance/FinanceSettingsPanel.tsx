@@ -141,12 +141,13 @@ export function FinanceSettingsPanel({
             const label = t(presentation.labelKey);
             const description = t(presentation.descriptionKey);
             const titleId = `finance-cap-title-${presentation.key}`;
+            const statusId = `finance-cap-status-${presentation.key}`;
             const available = row.configurable;
 
             return (
               <li
                 key={presentation.key}
-                className="flex flex-col gap-3 rounded-lg border border-[var(--sce-color-border-subtle)] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                className="flex flex-col gap-3 rounded-lg border border-[var(--sce-color-border-subtle)] px-3 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
               >
                 <div className="min-w-0 flex-1">
                   <p id={titleId} className="text-sm font-medium text-[var(--foreground)]">
@@ -154,18 +155,33 @@ export function FinanceSettingsPanel({
                   </p>
                   <p className="mt-0.5 text-xs text-[var(--muted)]">{description}</p>
                   {!available ? (
-                    <p className="mt-1 text-xs text-[var(--muted)]">
+                    <p
+                      id={statusId}
+                      className="mt-1.5 text-xs font-medium text-[var(--foreground)]"
+                    >
                       {t("settings.capabilityNotAvailable")}
                     </p>
                   ) : null}
                 </div>
-                <div className="flex shrink-0 items-center self-start sm:self-center">
+                <div
+                  className={[
+                    "flex shrink-0 items-center self-start sm:pt-0.5",
+                    !available ? "opacity-35" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-hidden={!available ? true : undefined}
+                >
                   <SwitchThumb
                     id={`finance-cap-${presentation.key}`}
                     checked={row.enabled}
                     disabled={!available || pending}
-                    aria-label={label}
+                    aria-label={available ? label : `${label} — ${t("settings.capabilityNotAvailable")}`}
+                    aria-describedby={!available ? statusId : titleId}
                     onChange={(checked) => {
+                      if (!available) {
+                        return;
+                      }
                       startTransition(async () => {
                         await setFinanceCapabilityAction(presentation.key, checked);
                       });
