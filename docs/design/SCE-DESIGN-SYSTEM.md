@@ -115,6 +115,18 @@ APP (atmospheric background)
 - **Calm information hierarchy** — clear title, concise description, controlled whitespace, muted secondary text, restrained borders, obvious primary action, limited competing actions (Communication hub exemplifies this).
 - **Depth without noise** — prefer surface contrast and restrained borders over excessive boxes, shadows, and decoration.
 
+### User guidance (nudging)
+
+SCE should guide users toward the **next meaningful action** when context makes that action unclear, while keeping the interface **calm and non-intrusive**.
+
+Nudges should be **contextual**, **actionable**, **permission-aware**, **capability-aware**, **prerequisite-aware**, **lifecycle-aware**, **concise**, and **dismissible or temporary** where persistence is unnecessary.
+
+Avoid repetitive instructional banners, modal spam, patronising copy, fake urgency, permanent tutorial text, tooltips as the only way to understand essential functionality, and unnecessary success screens. Prefer contextual next-step copy, recommended actions, progressive disclosure, lightweight hints, clear empty states, and safety guidance at destructive or blocked actions.
+
+Nudging must **not** substitute for understandable information architecture — primary functionality should be discoverable without a tutorial layer.
+
+Implementation packages may consider: empty-state, prerequisite, next-action, safety, permission-aware, capability-aware, and success-state nudges. Not every category requires UI; omit nudges deliberately when they would add noise.
+
 **Preservation rule:** Communication provides a **primary visual reference**. The Design System provides **product-wide rules**. Domain workflows retain **purpose-built compositions** (activity cards, tournament planner grids, permission matrices, Wochenplaner density, `SceActivityComposer`, NAVBAR-UPGRADE-01 shell).
 
 **Density:** Support **COMFORTABLE · COMPACT · DENSE** tiers under the same SCE language. Operational surfaces (tables, Personen & Zugänge, Wochenplaner, Tournament Planner) stay efficient — **`PREMIUM_DOES_NOT_MEAN_OVERSIZED`**.
