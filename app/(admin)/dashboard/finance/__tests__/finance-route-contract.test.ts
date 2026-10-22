@@ -23,6 +23,12 @@ describe("FIN-01B finance routes", () => {
     expect(read("app/(admin)/dashboard/finance/budget/page.tsx")).toContain(
       "FinanceBudgetWorkspacePanel",
     );
+    expect(read("app/(admin)/dashboard/finance/budget/page.tsx")).toContain(
+      "showBudget={workspace.showBudgetNav}",
+    );
+    expect(read("app/(admin)/dashboard/finance/budget/page.tsx")).not.toContain(
+      "FinanceCapabilityNav",
+    );
     const panel = read("components/admin/finance/FinanceBudgetWorkspacePanel.tsx");
     expect(panel).not.toContain('type="checkbox"');
   });

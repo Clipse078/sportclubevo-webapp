@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { PageShell } from "@/components/ui/page";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
 import { FinanceBudgetWorkspacePanel } from "@/components/admin/finance/FinanceBudgetWorkspacePanel";
-import { FinanceCapabilityNav } from "@/components/admin/finance/FinanceCapabilityNav";
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { loadBudgetWorkspaceSnapshot } from "@/lib/finance/services/finance-budget-query-service";
@@ -22,7 +21,7 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   const budgetingEnabled = workspace.enabledCapabilities.has("BUDGETING");
-  if (!budgetingEnabled || !workspace.setupConfigured) {
+  if (!budgetingEnabled) {
     redirect("/dashboard/finance");
   }
 
@@ -38,8 +37,6 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
     workspace.ctx,
     params.yearId ?? null,
   );
-
-  const capabilityNav = workspace.navigation.filter((item) => item.key !== "structure");
 
   return (
     <PageShell>
@@ -57,17 +54,18 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
         contextTabs={
           <FinanceWorkspaceTabs
             showStructure={workspace.canStructure}
+            showBudget={workspace.showBudgetNav}
             showSettings={workspace.canAdmin || workspace.canStructure}
             labels={{
               overview: t("nav.overview"),
               structure: t("nav.structure"),
+              budget: t("nav.budget"),
               settings: t("nav.structure_settings"),
             }}
             ariaLabel={t("contextTabsAria")}
           />
         }
       >
-        <FinanceCapabilityNav items={capabilityNav} />
         <FinanceBudgetWorkspacePanel
           years={years.map((y) => ({ id: y.id, name: y.name }))}
           snapshot={snapshot}
