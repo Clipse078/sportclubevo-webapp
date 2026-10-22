@@ -142,12 +142,18 @@ describe("reconcileTenantClubAdminPermissions", () => {
     const assigned = options.assigned ?? new Set<string>();
     const customAssigned = options.customRoleAssigned ?? new Set<string>();
 
-    const roleFindMany = vi.fn(async (args: { where?: { key?: { startsWith?: string } } }) => {
-      if (args.where?.key?.startsWith === TENANT_CLUB_ADMIN_ROLE_KEY_PREFIX) {
+    const roleFindMany = vi.fn(async (args: { where?: Record<string, unknown> }) => {
+      const where = args.where ?? {};
+      if (
+        (where as { key?: { startsWith?: string } }).key?.startsWith ===
+        TENANT_CLUB_ADMIN_ROLE_KEY_PREFIX
+      ) {
         return options.clubAdminRoles ?? [{ key: FCA_CLUB_ADMIN.key }];
       }
       return [];
     });
+
+    const tenantFindMany = vi.fn(async () => []);
 
     const roleFindUnique = vi.fn(async ({ where }: { where: { key: string } }) => {
       if (where.key === FCA_CLUB_ADMIN.key) return FCA_CLUB_ADMIN;
@@ -189,6 +195,7 @@ describe("reconcileTenantClubAdminPermissions", () => {
       prisma: {
         permission: { findMany: permissionFindMany, findUnique: permissionFindUnique },
         role: { findMany: roleFindMany, findUnique: roleFindUnique },
+        tenant: { findMany: tenantFindMany },
         rolePermission: {
           findUnique: rolePermissionFindUnique,
           upsert: rolePermissionUpsert,

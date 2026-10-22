@@ -1,16 +1,18 @@
 /**
- * Idempotent reconciliation: align every canonical tenant Club Admin role with
+ * Idempotent reconciliation: align every tenant Club Admin role identity with
  * the live permission catalog (TENANT + grantableByAdmin=true, minus explicit
- * governance exclusions). Does not modify custom/delegated tenant roles.
+ * governance exclusions). Includes canonical materialized `club_admin__*`
+ * rows and tenant-scoped Club Admin aliases still in use on existing tenants.
+ * Does not modify custom/delegated non–Club Admin tenant roles.
  */
 
 import type { PrismaClient } from "@prisma/client";
 
 import {
-  CANONICAL_TENANT_CLUB_ADMIN_ROLE_WHERE,
   isTenantClubAdminDelegatablePermission,
   mergeTenantClubAdminAssignedPermissionKeys,
 } from "@/lib/permissions/tenant-club-admin-permission-contract";
+import { listTenantClubAdminRoleKeysForReconciliation } from "@/lib/permissions/tenant-club-admin-role-discovery";
 
 export type RolePermissionSyncOutcome =
   | { action: "assigned"; roleKey: string; permissionKey: string }
@@ -47,18 +49,14 @@ export async function reconcileTenantClubAdminPermissions(
     expectedDelegatablePermissionKeys,
   );
 
-  const materializedClubAdminRoles = await prisma.role.findMany({
-    where: CANONICAL_TENANT_CLUB_ADMIN_ROLE_WHERE,
-    select: { key: true },
-    orderBy: { key: "asc" },
-  });
+  const clubAdminRoleKeys = await listTenantClubAdminRoleKeysForReconciliation(prisma);
 
   const tenantClubAdminRoles: RolePermissionSyncOutcome[] = [];
 
-  for (const role of materializedClubAdminRoles) {
+  for (const roleKey of clubAdminRoleKeys) {
     for (const permissionKey of expectedAssignedPermissionKeys) {
       tenantClubAdminRoles.push(
-        await assignPermissionToRole(prisma, role.key, permissionKey, dryRun),
+        await assignPermissionToRole(prisma, roleKey, permissionKey, dryRun),
       );
     }
   }
