@@ -1,5 +1,5 @@
 import type { CanonicalAccountSemantic } from "@prisma/client";
-import { computeBudgetPlanningTotals } from "@/lib/finance/services/finance-budget-service";
+import { computeBudgetPlanningTotals } from "@/lib/finance/budget/budget-planning-totals";
 
 export type BudgetAccountPlanningRow = {
   accountId: string;

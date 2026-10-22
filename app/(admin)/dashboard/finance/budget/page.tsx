@@ -32,7 +32,7 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
     redirect("/dashboard/finance");
   }
 
-  const { years, snapshot, hasAccounts } = await loadBudgetWorkspaceSnapshot(
+  const { years, snapshot, hasAccounts, selectedYearId } = await loadBudgetWorkspaceSnapshot(
     prisma,
     workspace.ctx,
     params.yearId ?? null,
@@ -72,7 +72,7 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
           hasAccounts={hasAccounts}
           canMutate={workspace.canBudgetManage}
           canApprove={workspace.canBudgetApprove}
-          selectedYearId={params.yearId ?? snapshot?.financeYearId ?? years[0]?.id ?? null}
+          selectedYearId={selectedYearId}
         />
       </SceWorkspaceChrome>
     </PageShell>

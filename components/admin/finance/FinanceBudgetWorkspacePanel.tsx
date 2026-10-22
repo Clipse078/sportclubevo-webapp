@@ -1,15 +1,28 @@
 "use client";
 
-import { useMemo, useState, useTransition, useId } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition, useId } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import type { BudgetWorkspaceSnapshot } from "@/lib/finance/budget/budget-presentation";
+import {
+  budgetDraftInputFromMinor,
+  formatBudgetPlanningMinor,
+  normalizeBudgetAmountInput,
+  parseBudgetInputToMinor,
+} from "@/lib/finance/budget/budget-amount-presentation";
+import {
+  buildBudgetDraftAmounts,
+  budgetTotalsFromDraft,
+  isStaleBudgetSaveResult,
+  mergeBudgetDraftAmount,
+  type BudgetDraftAmounts,
+} from "@/lib/finance/budget/budget-draft-editing";
 import {
   approveBudgetAction,
   ensureDraftBudgetAction,
@@ -27,24 +40,6 @@ type FinanceBudgetWorkspacePanelProps = {
   selectedYearId: string | null;
 };
 
-function majorUnitsFromMinor(amountMinor: number | null): string {
-  if (amountMinor === null) return "";
-  return (amountMinor / 100).toFixed(2);
-}
-
-function minorUnitsFromMajorInput(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const parsed = Number(trimmed.replace(",", "."));
-  if (!Number.isFinite(parsed)) return null;
-  return Math.round(parsed * 100);
-}
-
-function formatMinor(amountMinor: number, currency: string | null): string {
-  const major = amountMinor / 100;
-  return `${major.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${currency ? ` ${currency}` : ""}`;
-}
-
 export function FinanceBudgetWorkspacePanel({
   years,
   snapshot,
@@ -54,10 +49,10 @@ export function FinanceBudgetWorkspacePanel({
   selectedYearId,
 }: FinanceBudgetWorkspacePanelProps) {
   const t = useTranslations("Finance.budget");
+  const locale = useLocale();
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [approveOpen, setApproveOpen] = useState(false);
   const yearSelectId = useId();
 
   const isApproved = snapshot?.status === "APPROVED";
@@ -74,11 +69,12 @@ export function FinanceBudgetWorkspacePanel({
   );
 
   function onYearChange(yearId: string) {
+    if (!yearId) return;
     router.push(`/dashboard/finance/budget?yearId=${encodeURIComponent(yearId)}`);
   }
 
-  function runAction(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
-    startTransition(async () => {
+  function runWorkspaceAction(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
+    startWorkspaceTransition(async () => {
       const result = await fn();
       if (result.ok) {
         setFeedback(null);
@@ -123,6 +119,8 @@ export function FinanceBudgetWorkspacePanel({
     );
   }
 
+  const yearSelected = Boolean(selectedYearId);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -130,9 +128,12 @@ export function FinanceBudgetWorkspacePanel({
           <select
             id={yearSelectId}
             className="min-w-[12rem] rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
-            value={selectedYearId ?? snapshot?.financeYearId ?? ""}
+            value={selectedYearId ?? ""}
             onChange={(e) => onYearChange(e.target.value)}
           >
+            <option value="" disabled>
+              {t("yearPlaceholder")}
+            </option>
             {years.map((year) => (
               <option key={year.id} value={year.id}>
                 {year.name}
@@ -153,7 +154,11 @@ export function FinanceBudgetWorkspacePanel({
         ) : null}
       </div>
 
-      {!canMutate && !isApproved ? (
+      {!yearSelected ? (
+        <p className="text-sm text-[var(--muted)]">{t("selectYearHint")}</p>
+      ) : null}
+
+      {!canMutate && !isApproved && yearSelected ? (
         <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
       ) : null}
 
@@ -163,82 +168,220 @@ export function FinanceBudgetWorkspacePanel({
         </p>
       ) : null}
 
-      {!snapshot?.versionId && canMutate && selectedYearId ? (
+      {yearSelected && !snapshot?.versionId && canMutate && selectedYearId ? (
         <div className="rounded-xl border border-dashed border-[var(--sce-color-border-standard)] px-5 py-6">
           <h2 className="text-base font-semibold">{t("emptyTitle")}</h2>
           <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("emptyBody")}</p>
           <Button
             className="mt-4"
-            disabled={pending}
-            onClick={() => runAction(() => ensureDraftBudgetAction(selectedYearId))}
+            disabled={workspacePending}
+            onClick={() => runWorkspaceAction(() => ensureDraftBudgetAction(selectedYearId))}
           >
             {t("startDraft")}
           </Button>
         </div>
       ) : null}
 
-      {snapshot?.versionId ? (
-        <>
-          <BudgetSection
-            title={t("incomeSection")}
-            rows={incomeRows}
-            currency={snapshot.currency}
-            readOnly={readOnly}
-            pending={pending}
-            versionId={snapshot.versionId}
-            onSave={(accountId, amountMinor) =>
-              runAction(() =>
-                saveBudgetLineAction({
-                  budgetVersionId: snapshot.versionId!,
-                  financialAccountId: accountId,
-                  amountMinor,
-                }),
-              )
-            }
-          />
-          <BudgetSection
-            title={t("expenseSection")}
-            rows={expenseRows}
-            currency={snapshot.currency}
-            readOnly={readOnly}
-            pending={pending}
-            versionId={snapshot.versionId}
-            onSave={(accountId, amountMinor) =>
-              runAction(() =>
-                saveBudgetLineAction({
-                  budgetVersionId: snapshot.versionId!,
-                  financialAccountId: accountId,
-                  amountMinor,
-                }),
-              )
-            }
-          />
+      {yearSelected && snapshot?.versionId ? (
+        <BudgetWorkspaceEditor
+          key={`${selectedYearId}:${snapshot.versionId}`}
+          snapshot={snapshot}
+          incomeRows={incomeRows}
+          expenseRows={expenseRows}
+          locale={locale}
+          readOnly={readOnly}
+          isDraft={isDraft}
+          canApprove={canApprove}
+          workspacePending={workspacePending}
+          onApproveBlocked={() => setFeedback(t("approveBlockedPendingSave"))}
+          onApprove={() => {
+            if (!snapshot?.versionId) return;
+            runWorkspaceAction(() => approveBudgetAction(snapshot.versionId!));
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
 
-          <section className="rounded-xl border border-[var(--sce-color-border-standard)] bg-[var(--surface-2)] px-4 py-3 text-sm">
-            <dl className="grid gap-2 sm:grid-cols-3">
-              <div>
-                <dt className="text-[var(--muted)]">{t("totalIncome")}</dt>
-                <dd className="font-medium">{formatMinor(snapshot.totals.totalIncomeMinor, snapshot.currency)}</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted)]">{t("totalExpense")}</dt>
-                <dd className="font-medium">{formatMinor(snapshot.totals.totalExpenseMinor, snapshot.currency)}</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted)]">{t("plannedResult")}</dt>
-                <dd className="font-medium">{formatMinor(snapshot.totals.resultMinor, snapshot.currency)}</dd>
-              </div>
-            </dl>
-          </section>
+function BudgetWorkspaceEditor(props: {
+  snapshot: BudgetWorkspaceSnapshot;
+  incomeRows: BudgetWorkspaceSnapshot["rows"];
+  expenseRows: BudgetWorkspaceSnapshot["rows"];
+  locale: string;
+  readOnly: boolean;
+  isDraft: boolean;
+  canApprove: boolean;
+  workspacePending: boolean;
+  onApproveBlocked: () => void;
+  onApprove: () => void;
+}) {
+  const t = useTranslations("Finance.budget");
+  const [draftAmounts, setDraftAmounts] = useState<BudgetDraftAmounts>(() =>
+    buildBudgetDraftAmounts(props.snapshot.rows),
+  );
+  const [lineErrors, setLineErrors] = useState<Record<string, string>>({});
+  const [approveOpen, setApproveOpen] = useState(false);
+  const dirtyAccountIdsRef = useRef(new Set<string>());
+  const saveGenerationRef = useRef(new Map<string, number>());
+  const pendingSavePromisesRef = useRef(new Set<Promise<void>>());
+  const localTotals = useMemo(
+    () => budgetTotalsFromDraft(props.snapshot.rows, draftAmounts),
+    [props.snapshot.rows, draftAmounts],
+  );
 
-          {isDraft && canApprove ? (
-            <div className="flex justify-end">
-              <Button disabled={pending} onClick={() => setApproveOpen(true)}>
-                {t("approveAction")}
-              </Button>
-            </div>
-          ) : null}
-        </>
+  const persistLine = useCallback(
+    async (accountId: string, amountMinor: number) => {
+      const versionId = props.snapshot.versionId;
+      if (!versionId || props.readOnly) return;
+      const nextGen = (saveGenerationRef.current.get(accountId) ?? 0) + 1;
+      saveGenerationRef.current.set(accountId, nextGen);
+
+      const savePromise = (async () => {
+        const result = await saveBudgetLineAction({
+          budgetVersionId: versionId,
+          financialAccountId: accountId,
+          amountMinor,
+        });
+        if (isStaleBudgetSaveResult(accountId, nextGen, saveGenerationRef.current)) {
+          return;
+        }
+        if (result.ok) {
+          dirtyAccountIdsRef.current.delete(accountId);
+          setLineErrors((prev) => {
+            if (!prev[accountId]) return prev;
+            const next = { ...prev };
+            delete next[accountId];
+            return next;
+          });
+        } else {
+          setLineErrors((prev) => ({ ...prev, [accountId]: result.error }));
+        }
+      })();
+
+      pendingSavePromisesRef.current.add(savePromise);
+      await savePromise.finally(() => {
+        pendingSavePromisesRef.current.delete(savePromise);
+      });
+    },
+    [props.readOnly, props.snapshot.versionId],
+  );
+
+  const flushPendingLineSaves = useCallback(async () => {
+    await Promise.all([...pendingSavePromisesRef.current]);
+  }, []);
+
+  const flushDirtyDraftsToServer = useCallback(
+    async (amounts: BudgetDraftAmounts) => {
+      const dirtyIds = [...dirtyAccountIdsRef.current];
+      for (const accountId of dirtyIds) {
+        const amountMinor = amounts[accountId];
+        if (amountMinor !== null) {
+          await persistLine(accountId, amountMinor);
+        }
+      }
+    },
+    [persistLine],
+  );
+
+  const ensurePersistedForApproval = useCallback(async () => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    await flushDirtyDraftsToServer(draftAmounts);
+    await flushPendingLineSaves();
+    return dirtyAccountIdsRef.current.size === 0;
+  }, [draftAmounts, flushDirtyDraftsToServer, flushPendingLineSaves]);
+
+  const updateLocalDraftAmount = useCallback((accountId: string, amountMinor: number | null) => {
+    setDraftAmounts((prev) => mergeBudgetDraftAmount(prev, accountId, amountMinor));
+    dirtyAccountIdsRef.current.add(accountId);
+  }, []);
+
+  const persistDraftAmount = useCallback(
+    (accountId: string, amountMinor: number | null) => {
+      updateLocalDraftAmount(accountId, amountMinor);
+      if (amountMinor !== null) {
+        void persistLine(accountId, amountMinor);
+      }
+    },
+    [persistLine, updateLocalDraftAmount],
+  );
+
+  return (
+    <>
+      <BudgetSection
+        title={t("incomeSection")}
+        rows={props.incomeRows}
+        currency={props.snapshot.currency}
+        locale={props.locale}
+        readOnly={props.readOnly}
+        draftAmounts={draftAmounts}
+        lineErrors={lineErrors}
+        onLocalDraftChange={updateLocalDraftAmount}
+        onPersist={persistDraftAmount}
+      />
+      <BudgetSection
+        title={t("expenseSection")}
+        rows={props.expenseRows}
+        currency={props.snapshot.currency}
+        locale={props.locale}
+        readOnly={props.readOnly}
+        draftAmounts={draftAmounts}
+        lineErrors={lineErrors}
+        onLocalDraftChange={updateLocalDraftAmount}
+        onPersist={persistDraftAmount}
+      />
+
+      <section className="rounded-xl border border-[var(--sce-color-border-standard)] bg-[var(--surface-2)] px-4 py-3 text-sm">
+        <dl className="grid gap-2 sm:grid-cols-3">
+          <div>
+            <dt className="text-[var(--muted)]">{t("totalIncome")}</dt>
+            <dd className="font-medium">
+              {formatBudgetPlanningMinor(
+                localTotals.totalIncomeMinor,
+                props.snapshot.currency,
+                props.locale,
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[var(--muted)]">{t("totalExpense")}</dt>
+            <dd className="font-medium">
+              {formatBudgetPlanningMinor(
+                localTotals.totalExpenseMinor,
+                props.snapshot.currency,
+                props.locale,
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[var(--muted)]">{t("plannedResult")}</dt>
+            <dd className="font-medium">
+              {formatBudgetPlanningMinor(
+                localTotals.resultMinor,
+                props.snapshot.currency,
+                props.locale,
+              )}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {props.isDraft && props.canApprove ? (
+        <div className="flex justify-end">
+          <Button
+            disabled={props.workspacePending}
+            onClick={async () => {
+              const ready = await ensurePersistedForApproval();
+              if (!ready) {
+                props.onApproveBlocked();
+                return;
+              }
+              setApproveOpen(true);
+            }}
+          >
+            {t("approveAction")}
+          </Button>
+        </div>
       ) : null}
 
       <Dialog
@@ -252,11 +395,17 @@ export function FinanceBudgetWorkspacePanel({
               {t("cancel")}
             </Button>
             <Button
-              disabled={pending}
+              disabled={props.workspacePending}
               onClick={() => {
-                setApproveOpen(false);
-                if (!snapshot?.versionId) return;
-                runAction(() => approveBudgetAction(snapshot.versionId!));
+                void (async () => {
+                  setApproveOpen(false);
+                  const ready = await ensurePersistedForApproval();
+                  if (!ready) {
+                    props.onApproveBlocked();
+                    return;
+                  }
+                  props.onApprove();
+                })();
               }}
             >
               {t("approveConfirm")}
@@ -264,7 +413,7 @@ export function FinanceBudgetWorkspacePanel({
           </div>
         }
       />
-    </div>
+    </>
   );
 }
 
@@ -272,10 +421,12 @@ function BudgetSection(props: {
   title: string;
   rows: BudgetWorkspaceSnapshot["rows"];
   currency: string | null;
+  locale: string;
   readOnly: boolean;
-  pending: boolean;
-  versionId: string;
-  onSave: (accountId: string, amountMinor: number) => void;
+  draftAmounts: BudgetDraftAmounts;
+  lineErrors: Record<string, string>;
+  onLocalDraftChange: (accountId: string, amountMinor: number | null) => void;
+  onPersist: (accountId: string, amountMinor: number | null) => void;
 }) {
   const t = useTranslations("Finance.budget");
 
@@ -298,9 +449,16 @@ function BudgetSection(props: {
               key={row.accountId}
               row={row}
               currency={props.currency}
+              locale={props.locale}
               readOnly={props.readOnly}
-              pending={props.pending}
-              onSave={props.onSave}
+              amountMinor={
+                Object.prototype.hasOwnProperty.call(props.draftAmounts, row.accountId)
+                  ? props.draftAmounts[row.accountId]!
+                  : row.amountMinor
+              }
+              lineError={props.lineErrors[row.accountId]}
+              onLocalDraftChange={props.onLocalDraftChange}
+              onPersist={props.onPersist}
             />
           ))}
         </tbody>
@@ -312,42 +470,95 @@ function BudgetSection(props: {
 function BudgetAmountRow(props: {
   row: BudgetWorkspaceSnapshot["rows"][number];
   currency: string | null;
+  locale: string;
   readOnly: boolean;
-  pending: boolean;
-  onSave: (accountId: string, amountMinor: number) => void;
+  amountMinor: number | null;
+  lineError: string | undefined;
+  onLocalDraftChange: (accountId: string, amountMinor: number | null) => void;
+  onPersist: (accountId: string, amountMinor: number | null) => void;
 }) {
   const t = useTranslations("Finance.budget");
   const inputId = useId();
-  const [localValue, setLocalValue] = useState(majorUnitsFromMinor(props.row.amountMinor));
+  const [focused, setFocused] = useState(false);
+  const [editValue, setEditValue] = useState(() => budgetDraftInputFromMinor(props.amountMinor));
+
+  const displayValue = focused
+    ? editValue
+    : props.amountMinor !== null
+      ? formatBudgetPlanningMinor(props.amountMinor, props.currency, props.locale)
+      : "";
 
   return (
-    <tr className={cn("border-b border-[var(--border)]/60 last:border-0", props.row.lifecycle === "ARCHIVED" && "opacity-75")}>
+    <tr
+      className={cn(
+        "border-b border-[var(--border)]/60 last:border-0",
+        props.row.lifecycle === "ARCHIVED" && "opacity-75",
+      )}
+    >
       <td className="px-4 py-2">
         <span className="font-medium">{props.row.accountName}</span>
         {props.row.lifecycle === "ARCHIVED" ? (
           <span className="ms-2 text-xs text-[var(--muted)]">({t("archivedAccount")})</span>
         ) : null}
       </td>
-      <td className="hidden px-4 py-2 text-[var(--muted)] sm:table-cell">{props.row.reportingGroupName}</td>
+      <td className="hidden px-4 py-2 text-[var(--muted)] sm:table-cell">
+        {props.row.reportingGroupName}
+      </td>
       <td className="px-4 py-2">
         {props.readOnly ? (
-          <span>{props.row.amountMinor !== null ? formatMinor(props.row.amountMinor, props.currency) : "—"}</span>
+          <span>
+            {props.amountMinor !== null
+              ? formatBudgetPlanningMinor(props.amountMinor, props.currency, props.locale)
+              : "—"}
+          </span>
         ) : (
-          <input
-            id={inputId}
-            type="text"
-            inputMode="decimal"
-            aria-label={t("plannedAmountLabel", { account: props.row.accountName })}
-            className="w-full max-w-[10rem] rounded-md border border-[var(--sce-color-border-standard)] px-2 py-1.5 text-sm"
-            value={localValue}
-            disabled={props.pending}
-            onChange={(e) => setLocalValue(e.target.value)}
-            onBlur={() => {
-              const minor = minorUnitsFromMajorInput(localValue);
-              if (minor === null) return;
-              props.onSave(props.row.accountId, minor);
-            }}
-          />
+          <div className="space-y-1">
+            <input
+              id={inputId}
+              type="text"
+              inputMode="numeric"
+              aria-label={t("plannedAmountLabel", { account: props.row.accountName })}
+              aria-invalid={props.lineError ? true : undefined}
+              className="w-full max-w-[10rem] rounded-md border border-[var(--sce-color-border-standard)] px-2 py-1.5 text-sm"
+              value={displayValue}
+              onFocus={() => {
+                setFocused(true);
+                setEditValue(budgetDraftInputFromMinor(props.amountMinor));
+              }}
+              onChange={(e) => {
+                const next = normalizeBudgetAmountInput(e.target.value);
+                setEditValue(next);
+                if (next === "") {
+                  props.onLocalDraftChange(props.row.accountId, null);
+                  return;
+                }
+                const minor = parseBudgetInputToMinor(next);
+                if (minor !== null) {
+                  props.onLocalDraftChange(props.row.accountId, minor);
+                }
+              }}
+              onBlur={() => {
+                setFocused(false);
+                if (editValue.trim() === "") {
+                  props.onLocalDraftChange(props.row.accountId, null);
+                  return;
+                }
+                const minor = parseBudgetInputToMinor(editValue);
+                if (minor === null) return;
+                props.onPersist(props.row.accountId, minor);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+              }}
+            />
+            {props.lineError ? (
+              <p className="text-xs text-[var(--destructive)]" role="alert">
+                {props.lineError}
+              </p>
+            ) : null}
+          </div>
         )}
       </td>
     </tr>

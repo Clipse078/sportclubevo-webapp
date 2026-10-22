@@ -17,10 +17,22 @@ describe("FIN-01D budget workspace UX", () => {
   it("uses approval confirmation dialog rather than toggle", () => {
     expect(panel).toContain("approveDialogTitle");
     expect(panel).toContain("approveBudgetAction");
+    expect(panel).toContain("approveBlockedPendingSave");
   });
 
   it("labels planned amount inputs for accessibility", () => {
     expect(panel).toContain("aria-label");
     expect(panel).toContain("plannedAmountLabel");
+  });
+
+  it("separates local draft updates from blur persistence", () => {
+    expect(panel).toContain("onLocalDraftChange");
+    expect(panel).toContain("onPersist");
+    expect(panel).toContain("normalizeBudgetAmountInput");
+  });
+
+  it("requires a selected financial year before showing budget workspace", () => {
+    expect(panel).toContain("selectYearHint");
+    expect(panel).toContain("yearSelected");
   });
 });

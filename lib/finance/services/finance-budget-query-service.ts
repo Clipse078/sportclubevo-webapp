@@ -5,13 +5,15 @@ import {
   budgetTotalsFromRows,
   type BudgetWorkspaceSnapshot,
 } from "@/lib/finance/budget/budget-presentation";
+import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import {
   listFinanceYearsForBudget,
   loadBudgetForYear,
   resolveTenantBudgetCurrency,
 } from "@/lib/finance/services/finance-budget-service";
 
-type Db = Pick<PrismaClient, "financialAccount" | "financeYear"> & Parameters<typeof loadBudgetForYear>[0];
+type Db = Pick<PrismaClient, "financialAccount" | "financeYear" | "financeConfiguration"> &
+  Parameters<typeof loadBudgetForYear>[0];
 
 export async function loadBudgetWorkspaceSnapshot(
   db: Db,
@@ -21,9 +23,14 @@ export async function loadBudgetWorkspaceSnapshot(
   years: Awaited<ReturnType<typeof listFinanceYearsForBudget>>;
   snapshot: BudgetWorkspaceSnapshot | null;
   hasAccounts: boolean;
+  selectedYearId: string | null;
 }> {
   const years = await listFinanceYearsForBudget(db, ctx);
   const currency = await resolveTenantBudgetCurrency(db, ctx);
+  const financeConfig = await db.financeConfiguration.findUnique({
+    where: { tenantId: ctx.tenantId },
+    select: { currentFinanceYearId: true },
+  });
 
   const accounts = await db.financialAccount.findMany({
     where: { tenantId: ctx.tenantId },
@@ -35,14 +42,18 @@ export async function loadBudgetWorkspaceSnapshot(
     (a) => a.canonicalSemantic === "INCOME" || a.canonicalSemantic === "EXPENSE",
   );
 
-  const selectedYearId = financeYearId ?? years[0]?.id ?? null;
+  const selectedYearId = resolveBudgetSelectedYearId({
+    requestedYearId: financeYearId,
+    years,
+    currentFinanceYearId: financeConfig?.currentFinanceYearId ?? null,
+  });
   if (!selectedYearId) {
-    return { years, snapshot: null, hasAccounts };
+    return { years, snapshot: null, hasAccounts, selectedYearId: null };
   }
 
   const year = years.find((y) => y.id === selectedYearId) ?? null;
   if (!year) {
-    return { years, snapshot: null, hasAccounts };
+    return { years, snapshot: null, hasAccounts, selectedYearId: null };
   }
 
   const budget = await loadBudgetForYear(db, ctx, selectedYearId);
@@ -73,5 +84,5 @@ export async function loadBudgetWorkspaceSnapshot(
     totals: budgetTotalsFromRows(rows),
   };
 
-  return { years, snapshot, hasAccounts };
+  return { years, snapshot, hasAccounts, selectedYearId };
 }
