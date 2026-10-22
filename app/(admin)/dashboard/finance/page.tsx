@@ -1,4 +1,4 @@
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { formatBudgetPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import { PageShell } from "@/components/ui/page";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
 
 export default async function FinanceOverviewPage() {
   const t = await getTranslations("Finance");
-  const locale = await getLocale();
   const workspace = await loadFinanceWorkspaceContext();
+  const formattingLocale = workspace.formattingLocale;
 
   const formattedReporting =
     workspace.overviewReporting.kind === "APPROVED_BASELINE"
@@ -20,17 +20,17 @@ export default async function FinanceOverviewPage() {
           income: formatBudgetPlanningMinor(
             workspace.overviewReporting.incomeMinor,
             workspace.overviewReporting.currency,
-            locale,
+            formattingLocale,
           ),
           expense: formatBudgetPlanningMinor(
             workspace.overviewReporting.expenseMinor,
             workspace.overviewReporting.currency,
-            locale,
+            formattingLocale,
           ),
           result: formatBudgetPlanningMinor(
             workspace.overviewReporting.resultMinor,
             workspace.overviewReporting.currency,
-            locale,
+            formattingLocale,
           ),
         }
       : undefined;

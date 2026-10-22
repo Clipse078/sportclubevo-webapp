@@ -5,7 +5,7 @@
 | **Feature branch** | `cursor/sce-finance-01e-reporting-foundation-b4b9` |
 | **Merge target** | `STAGE` |
 | **Scope** | Reusable reporting read model, aggregation, approved-budget measure adapter, minimal Finance Overview integration |
-| **Status** | **R4 STAGE schema parity closed / AWAITING PO RETEST** |
+| **Status** | **R5 locale-aware money presentation / AWAITING PO UAT** |
 
 ## Purpose
 
@@ -88,6 +88,33 @@ then verify with `npm run finance:01e:r4:stage-migration-verify` /
 `scripts/sce-finance-01e-r4-stage-migration-verify.ts`. Do **not** patch around the
 missing column in application code.
 
+### FIN-01E R5 — Locale-aware money presentation
+
+**Observed (R4 retest):** Functional reporting path works (approved baseline, CHF, totals correct), but German UI showed **150.000 CHF** (generic `de` grouping) instead of Swiss-German **150’000 CHF**.
+
+**Root cause:** Finance Overview and Budget summaries used **next-intl translation locale** (`de` from `i18n/request.ts`) for `Intl.NumberFormat`, while SCE canonical **formatting locale** is **tenant `locale`** (default **`de-CH`** via `lib/tenant-runtime/formatters.ts`). Translation locale and formatting locale are intentionally separate.
+
+**Architecture (R5):**
+
+| Concern | Source |
+| --- | --- |
+| Copy / translations | next-intl locale (`de`) |
+| Number grouping / decimals | Tenant formatting locale (`tenant.locale ?? de-CH`) |
+| Monetary unit | ISO 4217 currency code from Finance configuration / approved baseline — **never inferred from locale** |
+
+**Canonical formatter:** `lib/finance/presentation/finance-money-presentation.ts` — `formatFinanceMoneyMinor(amountMinor, currencyCode, locale)`:
+
+- Integer **minor units** in → locale-formatted display out (storage unchanged).
+- Numeric component via **Intl** only (no currency-specific separator hacks).
+- Explicit **ISO code suffix** (`{number}\u00a0{CODE}`) for management surfaces — avoids ambiguous symbols and normalises code placement across locales where raw `Intl` currency style prefixes codes (e.g. `de-CH` → `CHF 150’000`).
+- **Fraction digits:** whole major amounts (minor % 100 === 0) → no trailing decimals; fractional minor units → ISO currency fraction digits via `Intl` resolved options.
+
+**Wiring:** `loadFinanceWorkspaceContext()` exposes `formattingLocale`; Finance Overview (server) and Budget workspace (client prop) use it instead of `getLocale()` / `useLocale()` for money.
+
+**Tests:** `lib/finance/presentation/__tests__/finance-money-presentation.test.ts` — cross-locale contract (currency/locale independence, large numbers, fractions, zero/negative/invalid).
+
+**Database:** none (presentation only).
+
 ### Legacy approved baselines (e.g. FC Allschwil PO dataset)
 
 - Pre-R3 approved versions may have `baseCurrency = null`.
@@ -129,6 +156,8 @@ Actuals, forecast, variance, FIN-05 suite, FIN-06 publishing/sharing/export, com
 - `lib/finance/__tests__/finance-01e-r3-currency.test.ts` — ISO catalogue, search, persistence, reporting closure, currency change safety.
 - `lib/finance/__tests__/finance-configuration-base-currency.test.ts` — configuration lifecycle regressions.
 - `lib/finance/__tests__/finance-01d-budget.test.ts` — approval currency prerequisite.
+- `lib/finance/presentation/__tests__/finance-money-presentation.test.ts` — R5 locale/currency presentation contract.
+- `lib/finance/presentation/__tests__/resolve-finance-formatting-locale.test.ts` — tenant formatting locale resolution.
 
 ## Future compatibility
 

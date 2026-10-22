@@ -9,6 +9,7 @@ import { loadApprovedBudgetReportingReadModel } from "@/lib/finance/services/fin
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { resolveFinanceFormattingLocale } from "@/lib/finance/presentation/resolve-finance-formatting-locale";
 import { requireTenantContext } from "@/lib/tenants/active-tenant";
 
 export async function loadFinanceWorkspaceContext() {
@@ -44,9 +45,12 @@ export async function loadFinanceWorkspaceContext() {
     reporting: reportingReadModel,
   });
 
+  const formattingLocale = resolveFinanceFormattingLocale(tenant);
+
   return {
     session,
     tenant,
+    formattingLocale,
     ctx,
     snapshot,
     overviewState,

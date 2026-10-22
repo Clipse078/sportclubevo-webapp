@@ -68,14 +68,25 @@ export type TenantFormatConfig = {
 
 // ── Internal resolvers ────────────────────────────────────────────────────────
 
-const PLATFORM_LOCALE = "de-CH";
+/** Default BCP-47 locale for number/currency/date formatting when tenant locale is unset. */
+export const PLATFORM_FORMATTING_LOCALE = "de-CH";
+
 const PLATFORM_TIMEZONE = "Europe/Zurich";
 const PLATFORM_CURRENCY = "CHF";
 const PLATFORM_SEASON_TRANSITION_MONTH = 8;
 const PLATFORM_SEASON_TRANSITION_DAY = 1;
 
 function locale(cfg: TenantFormatConfig): string {
-  return cfg.locale ?? PLATFORM_LOCALE;
+  return resolveFormattingLocale(cfg);
+}
+
+/**
+ * Resolves the tenant's formatting locale (grouping, decimals, dates).
+ * Independent of next-intl translation locale and of stored currency.
+ */
+export function resolveFormattingLocale(cfg: Pick<TenantFormatConfig, "locale">): string {
+  const trimmed = cfg.locale?.trim();
+  return trimmed ? trimmed : PLATFORM_FORMATTING_LOCALE;
 }
 
 function timezone(cfg: TenantFormatConfig): string {

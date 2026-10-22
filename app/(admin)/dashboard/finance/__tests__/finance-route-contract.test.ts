@@ -52,4 +52,17 @@ describe("FIN-01B finance routes", () => {
     expect(panel).toContain("FinanceBaseCurrencySelector");
     expect(panel).not.toMatch(/name="baseCurrency"/);
   });
+
+  it("formats Finance overview amounts with tenant formatting locale (FIN-01E R5)", () => {
+    const overviewPage = read("app/(admin)/dashboard/finance/page.tsx");
+    expect(overviewPage).toContain("formattingLocale");
+    expect(overviewPage).not.toContain("getLocale");
+
+    const budgetPage = read("app/(admin)/dashboard/finance/budget/page.tsx");
+    expect(budgetPage).toContain("formattingLocale={workspace.formattingLocale}");
+
+    const panel = read("components/admin/finance/FinanceBudgetWorkspacePanel.tsx");
+    expect(panel).toContain("formattingLocale:");
+    expect(panel).not.toContain("useLocale");
+  });
 });

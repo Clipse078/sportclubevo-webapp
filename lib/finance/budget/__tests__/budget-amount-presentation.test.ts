@@ -18,12 +18,12 @@ describe("FIN-01D budget amount presentation", () => {
 
   it("formats whole-unit budget display with locale and ISO currency code", () => {
     const chf = formatBudgetPlanningMinor(12_500_000, "CHF", "de-CH");
-    expect(chf).toMatch(/CHF/);
     expect(chf).toMatch(/125.?000/);
+    expect(chf).toMatch(/CHF$/);
     expect(chf).not.toMatch(/125,?000\.00/);
 
     const eur = formatBudgetPlanningMinor(2_500_000, "EUR", "de-DE");
-    expect(eur).toMatch(/EUR/);
+    expect(eur).toMatch(/EUR$/);
     expect(eur).toMatch(/25.?000/);
   });
 
@@ -41,7 +41,7 @@ describe("FIN-01D budget amount presentation", () => {
     const first = getBudgetPlanningFormatters("EUR", "de-DE");
     const second = getBudgetPlanningFormatters("EUR", "de-DE");
     expect(first).toBe(second);
-    expect(first.currencyWholeMajor).toBe(second.currencyWholeMajor);
+    expect(first.wholeMajorNumber).toBe(second.wholeMajorNumber);
   });
 
   it("derives editing strings from minor storage without decimals", () => {
