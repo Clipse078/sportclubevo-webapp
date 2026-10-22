@@ -2,9 +2,11 @@ import type { PrismaClient } from "@prisma/client";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import {
   buildBudgetPlanningRows,
+  buildBudgetVersionHistory,
   budgetTotalsFromRows,
   type BudgetWorkspaceSnapshot,
 } from "@/lib/finance/budget/budget-presentation";
+import { evaluateBudgetApprovalReadiness } from "@/lib/finance/budget/budget-approval-readiness";
 import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import {
   listFinanceYearsForBudget,
@@ -58,31 +60,87 @@ export async function loadBudgetWorkspaceSnapshot(
   }
 
   const budget = await loadBudgetForYear(db, ctx, selectedYearId);
-  const workingVersion =
-    budget?.versions.find((v) => v.status === "DRAFT") ??
-    budget?.versions.find((v) => v.status === "APPROVED") ??
-    null;
+  const draftVersion = budget?.versions.find((v) => v.status === "DRAFT") ?? null;
+  const approvedVersion = budget?.versions.find((v) => v.status === "APPROVED") ?? null;
+  const workingVersion = draftVersion ?? approvedVersion ?? null;
 
   const rows = buildBudgetPlanningRows({
     accounts,
     lines: workingVersion?.lines ?? [],
   });
 
-  const approvedVersion = budget?.versions.find((v) => v.status === "APPROVED") ?? null;
+  const approvedRows = approvedVersion
+    ? buildBudgetPlanningRows({
+        accounts,
+        lines: approvedVersion.lines,
+      })
+    : null;
+
+  const workspaceStatus: BudgetWorkspaceSnapshot["status"] = !workingVersion
+    ? "NONE"
+    : draftVersion && approvedVersion
+      ? "WORKING_REVISION"
+      : workingVersion.status === "APPROVED"
+        ? "APPROVED"
+        : "DRAFT";
+
+  const approvalReadiness =
+    draftVersion && !approvedVersion
+      ? evaluateBudgetApprovalReadiness({
+          versionStatus: "DRAFT",
+          baseCurrency,
+          lines: draftVersion.lines.map((line) => ({
+            amountMinor: line.amountMinor,
+            financialAccountId: line.financialAccountId,
+            financialAccount: {
+              lifecycle: line.financialAccount.lifecycle,
+              canonicalSemantic: line.financialAccount.canonicalSemantic,
+            },
+          })),
+          siblingApprovedExists: false,
+        })
+      : null;
 
   const snapshot: BudgetWorkspaceSnapshot = {
     financeYearId: selectedYearId,
     financeYearName: year.name,
     budgetId: budget?.id ?? null,
     versionId: workingVersion?.id ?? null,
-    status: workingVersion?.status ?? "NONE",
+    versionNumber: workingVersion?.versionNumber ?? null,
+    status: workspaceStatus,
     approvedAt: approvedVersion?.approvedAt ?? null,
     approvedByLabel: approvedVersion?.approvedBy
       ? `${approvedVersion.approvedBy.firstName} ${approvedVersion.approvedBy.lastName}`.trim()
       : null,
-    currency: baseCurrency,
+    currency: approvedVersion?.baseCurrency ?? baseCurrency,
     rows,
     totals: budgetTotalsFromRows(rows),
+    approvedBaseline: approvedVersion
+      ? {
+          versionId: approvedVersion.id,
+          versionNumber: approvedVersion.versionNumber,
+          approvedAt: approvedVersion.approvedAt,
+          approvedByLabel: approvedVersion.approvedBy
+            ? `${approvedVersion.approvedBy.firstName} ${approvedVersion.approvedBy.lastName}`.trim()
+            : null,
+          currency: approvedVersion.baseCurrency ?? baseCurrency,
+          totals: budgetTotalsFromRows(approvedRows ?? []),
+        }
+      : null,
+    versionHistory: budget
+      ? buildBudgetVersionHistory({
+          versions: budget.versions.map((v) => ({
+            id: v.id,
+            versionNumber: v.versionNumber,
+            status: v.status,
+            approvedAt: v.approvedAt,
+            approvedBy: v.approvedBy,
+            createdAt: v.createdAt,
+          })),
+          governanceBaselineVersionId: approvedVersion?.id ?? null,
+        })
+      : [],
+    approvalReadiness,
   };
 
   return { years, snapshot, hasAccounts, selectedYearId, baseCurrency };

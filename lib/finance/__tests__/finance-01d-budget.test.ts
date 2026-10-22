@@ -131,12 +131,29 @@ const db = {
     }),
   },
   financeBudgetVersion: {
-    findUnique: vi.fn(async ({ where: { id } }: { where: { id: string } }) => {
-      const version = store.versions.find((v) => v.id === id);
-      if (!version) return null;
-      const budget = store.budgets.find((b) => b.id === version.budgetId)!;
-      return { ...version, budget };
-    }),
+    findUnique: vi.fn(
+      async ({
+        where: { id },
+        include,
+      }: {
+        where: { id: string };
+        include?: { lines?: { include?: { financialAccount?: unknown } }; budget?: unknown };
+      }) => {
+        const version = store.versions.find((v) => v.id === id);
+        if (!version) return null;
+        const budget = store.budgets.find((b) => b.id === version.budgetId)!;
+        const payload: Record<string, unknown> = { ...version, budget };
+        if (include?.lines) {
+          payload.lines = store.lines
+            .filter((line) => line.budgetVersionId === id)
+            .map((line) => ({
+              ...line,
+              financialAccount: store.accounts.find((a) => a.id === line.financialAccountId),
+            }));
+        }
+        return payload;
+      },
+    ),
     findFirst: vi.fn(
       async ({
         where,

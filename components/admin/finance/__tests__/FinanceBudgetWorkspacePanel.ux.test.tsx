@@ -51,4 +51,11 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).toContain("FINANCE_SUMMARY_SURFACE_CLASS");
     expect(panel).toContain("data-budget-summary=\"result\"");
   });
+
+  it("FIN-02A surfaces readiness, baseline, and revision without checkboxes", () => {
+    expect(panel).toContain("readinessTitle");
+    expect(panel).toContain("governanceBaselineTitle");
+    expect(panel).toContain("startWorkingRevisionAction");
+    expect(panel).not.toContain('type="checkbox"');
+  });
 });

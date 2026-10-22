@@ -7,6 +7,7 @@ import {
   requireFinanceBudgetView,
   type FinanceAuthContext,
 } from "@/lib/finance/finance-authorization";
+import { evaluateBudgetApprovalReadiness } from "@/lib/finance/budget/budget-approval-readiness";
 import { assertSafeAmountMinor } from "@/lib/finance/money-types";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
 import "@/lib/finance/budget/budget-account-delete-guard";
@@ -237,53 +238,83 @@ export async function approveBudgetVersion(
   budgetVersionId: string,
 ) {
   requireFinanceBudgetApprove(ctx);
-  const version = await getVersionOrThrow(db, ctx, budgetVersionId);
-  if (version.status !== "DRAFT") {
-    throw new FinanceDomainError(
-      "FINANCE_BUDGET_IMMUTABLE",
-      "Only draft budgets can be approved.",
-      409,
-    );
+  const version = await db.financeBudgetVersion.findUnique({
+    where: { id: budgetVersionId },
+    include: {
+      budget: true,
+      lines: {
+        include: {
+          financialAccount: {
+            select: { lifecycle: true, canonicalSemantic: true },
+          },
+        },
+      },
+    },
+  });
+  if (!version) {
+    throw new FinanceDomainError("FINANCE_NOT_FOUND", "Budget version not found.", 404);
   }
+  assertSameTenant(version.budget.tenantId, ctx.tenantId, "Budget");
 
   const siblingApproved = await db.financeBudgetVersion.findFirst({
     where: { budgetId: version.budgetId, status: "APPROVED", id: { not: version.id } },
   });
-  if (siblingApproved) {
-    throw new FinanceDomainError(
-      "FINANCE_BUDGET_BASELINE_EXISTS",
-      "An approved baseline already exists for this financial year.",
-      409,
-    );
-  }
-
-  const lineCount = await db.financeBudgetLine.count({
-    where: { budgetVersionId: version.id },
-  });
-  if (lineCount === 0) {
-    throw new FinanceDomainError(
-      "FINANCE_BUDGET_INVALID_AMOUNT",
-      "Add at least one planned amount before approval.",
-    );
-  }
 
   const configuration = await db.financeConfiguration.findUnique({
     where: { tenantId: ctx.tenantId },
     select: { baseCurrency: true },
   });
   const baseCurrency = configuration?.baseCurrency?.trim().toUpperCase() ?? null;
-  if (!baseCurrency) {
+
+  const readiness = evaluateBudgetApprovalReadiness({
+    versionStatus: version.status === "APPROVED" ? "APPROVED" : "DRAFT",
+    baseCurrency,
+    lines: version.lines,
+    siblingApprovedExists: Boolean(siblingApproved),
+  });
+
+  if (!readiness.canApprove) {
+    const primary = readiness.issues.find((issue) => issue.severity === "blocker");
+    const code = primary?.code ?? "NO_PLANNED_LINES";
+    if (code === "VERSION_NOT_DRAFT") {
+      throw new FinanceDomainError(
+        "FINANCE_BUDGET_IMMUTABLE",
+        "Only draft budgets can be approved.",
+        409,
+      );
+    }
+    if (code === "APPROVED_BASELINE_ALREADY_EXISTS") {
+      throw new FinanceDomainError(
+        "FINANCE_BUDGET_BASELINE_EXISTS",
+        "An approved baseline already exists for this financial year.",
+        409,
+      );
+    }
+    if (code === "BASE_CURRENCY_REQUIRED") {
+      throw new FinanceDomainError(
+        "FINANCE_INVALID_CURRENCY",
+        "Configure organisation base currency before approving a budget baseline.",
+      );
+    }
+    if (code === "NO_PLANNED_LINES") {
+      throw new FinanceDomainError(
+        "FINANCE_BUDGET_INVALID_AMOUNT",
+        "Add at least one planned amount before approval.",
+      );
+    }
     throw new FinanceDomainError(
-      "FINANCE_INVALID_CURRENCY",
-      "Configure organisation base currency before approving a budget baseline.",
+      "FINANCE_BUDGET_NOT_READY",
+      "This budget is not ready for approval yet.",
     );
   }
+
+  const frozenCurrency = baseCurrency!;
 
   return db.financeBudgetVersion.update({
     where: { id: version.id },
     data: {
       status: "APPROVED",
-      baseCurrency,
+      baseCurrency: frozenCurrency,
       approvedAt: new Date(),
       approvedByUserId: ctx.userId,
     },
@@ -292,6 +323,70 @@ export async function approveBudgetVersion(
       approvedBy: { select: { id: true, firstName: true, lastName: true } },
     },
   });
+}
+
+/**
+ * After a baseline is approved, organisations may open a new working revision (FIN-02A).
+ * The approved version remains the governance baseline for reporting until a future
+ * re-baseline workflow supersedes it (FIN-02B+).
+ */
+export async function createWorkingBudgetRevision(
+  db: Db,
+  ctx: FinanceAuthContext,
+  financeYearId: string,
+) {
+  requireFinanceBudgetManage(ctx);
+  await getFinanceYearOrThrow(db, ctx, financeYearId);
+
+  const budget = await db.financeBudget.findUnique({
+    where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId } },
+    include: {
+      versions: {
+        orderBy: { versionNumber: "desc" },
+        include: { lines: true },
+      },
+    },
+  });
+
+  if (!budget) {
+    throw new FinanceDomainError("FINANCE_NOT_FOUND", "Budget not found.", 404);
+  }
+
+  const approved = budget.versions.find((v) => v.status === "APPROVED") ?? null;
+  if (!approved) {
+    throw new FinanceDomainError(
+      "FINANCE_BUDGET_NO_BASELINE",
+      "Approve a baseline before starting a working revision.",
+      409,
+    );
+  }
+
+  const existingDraft = budget.versions.find((v) => v.status === "DRAFT") ?? null;
+  if (existingDraft) {
+    return { budget, workingVersion: existingDraft };
+  }
+
+  const nextVersionNumber = (budget.versions[0]?.versionNumber ?? 0) + 1;
+
+  const workingVersion = await db.financeBudgetVersion.create({
+    data: {
+      budgetId: budget.id,
+      status: "DRAFT",
+      versionNumber: nextVersionNumber,
+      createdByUserId: ctx.userId,
+      lines: {
+        create: approved.lines.map((line) => ({
+          financialAccountId: line.financialAccountId,
+          amountMinor: line.amountMinor,
+        })),
+      },
+    },
+    include: {
+      lines: true,
+    },
+  });
+
+  return { budget, workingVersion };
 }
 
 export async function deleteDraftBudgetWhenSafe(

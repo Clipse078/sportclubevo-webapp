@@ -6,6 +6,7 @@ import { FinanceDomainError } from "@/lib/finance/errors";
 import { financeErrorMessage } from "@/lib/finance/errors";
 import {
   approveBudgetVersion,
+  createWorkingBudgetRevision,
   getOrCreateDraftBudgetForYear,
   upsertBudgetLine,
 } from "@/lib/finance/services/finance-budget-service";
@@ -51,4 +52,11 @@ export async function approveBudgetAction(
 ): Promise<FinanceBudgetActionResult> {
   const ctx = await budgetCtx();
   return mapResult(() => approveBudgetVersion(prisma, ctx, budgetVersionId));
+}
+
+export async function startWorkingRevisionAction(
+  financeYearId: string,
+): Promise<FinanceBudgetActionResult> {
+  const ctx = await budgetCtx();
+  return mapResult(() => createWorkingBudgetRevision(prisma, ctx, financeYearId));
 }

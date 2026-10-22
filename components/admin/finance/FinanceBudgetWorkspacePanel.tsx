@@ -25,10 +25,12 @@ import {
   mergeBudgetDraftAmount,
   type BudgetDraftAmounts,
 } from "@/lib/finance/budget/budget-draft-editing";
+import type { BudgetReadinessIssueCode } from "@/lib/finance/budget/budget-approval-readiness";
 import {
   approveBudgetAction,
   ensureDraftBudgetAction,
   saveBudgetLineAction,
+  startWorkingRevisionAction,
 } from "@/app/(admin)/dashboard/finance/budget/actions";
 import {
   FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
@@ -79,9 +81,10 @@ export function FinanceBudgetWorkspacePanel({
   const currencyContextId = useId();
   const workspaceCurrency = snapshot?.currency ?? baseCurrency;
 
-  const isApproved = snapshot?.status === "APPROVED";
+  const isApprovedOnly = snapshot?.status === "APPROVED";
+  const isWorkingRevision = snapshot?.status === "WORKING_REVISION";
   const isDraft = snapshot?.status === "DRAFT";
-  const readOnly = !canMutate || isApproved;
+  const readOnly = !canMutate || isApprovedOnly;
 
   const incomeRows = useMemo(
     () => snapshot?.rows.filter((row) => row.semantic === "INCOME") ?? [],
@@ -192,17 +195,12 @@ export function FinanceBudgetWorkspacePanel({
           )
         ) : null}
 
-        {isApproved ? (
+        {snapshot?.status && snapshot.status !== "NONE" ? (
           <p
             className="ms-auto max-w-md text-end text-sm text-[var(--muted)]"
-            data-budget-status="approved"
+            data-budget-status={snapshot.status}
           >
-            {t("approvedBaselineHint", {
-              date: snapshot?.approvedAt
-                ? new Date(snapshot.approvedAt).toLocaleDateString()
-                : "—",
-              approver: snapshot?.approvedByLabel ?? "—",
-            })}
+            {t(`status.${snapshot.status}`)}
           </p>
         ) : null}
       </div>
@@ -211,8 +209,24 @@ export function FinanceBudgetWorkspacePanel({
         <p className="text-sm text-[var(--muted)]">{t("selectYearHint")}</p>
       ) : null}
 
-      {!canMutate && !isApproved && yearSelected ? (
+      {!canMutate && !isApprovedOnly && yearSelected ? (
         <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
+      ) : null}
+
+      {yearSelected && isApprovedOnly && canMutate && selectedYearId ? (
+        <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="revision-start">
+          <h2 className="text-base font-semibold">{t("revisionStartTitle")}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("revisionStartBody")}</p>
+          <Button
+            className="mt-4"
+            disabled={workspacePending}
+            onClick={() =>
+              runWorkspaceAction(() => startWorkingRevisionAction(selectedYearId))
+            }
+          >
+            {t("revisionStartAction")}
+          </Button>
+        </section>
       ) : null}
 
       {feedback ? (
@@ -244,7 +258,7 @@ export function FinanceBudgetWorkspacePanel({
           expenseRows={expenseRows}
           formattingLocale={formattingLocale}
           readOnly={readOnly}
-          isDraft={isDraft}
+          isDraft={isDraft || isWorkingRevision}
           canApprove={canApprove}
           workspacePending={workspacePending}
           onApproveBlocked={() => setFeedback(t("approveBlockedPendingSave"))}
@@ -361,8 +375,121 @@ function BudgetWorkspaceEditor(props: {
     [persistLine, updateLocalDraftAmount],
   );
 
+  const readinessIssues = props.snapshot.approvalReadiness?.issues ?? [];
+  const canApproveByReadiness = props.snapshot.approvalReadiness?.canApprove ?? true;
+
   return (
     <>
+      {props.snapshot.approvedBaseline && props.snapshot.status === "WORKING_REVISION" ? (
+        <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="baseline">
+          <h2 className="text-base font-semibold">{t("governanceBaselineTitle")}</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {t("governanceBaselineHint", {
+              version: props.snapshot.approvedBaseline.versionNumber,
+              date: props.snapshot.approvedBaseline.approvedAt
+                ? new Date(props.snapshot.approvedBaseline.approvedAt).toLocaleDateString()
+                : "—",
+              approver: props.snapshot.approvedBaseline.approvedByLabel ?? "—",
+            })}
+          </p>
+          <dl className={cn(FINANCE_SUMMARY_GRID_CLASS, "mt-4")}>
+            <div>
+              <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalIncome")}</dt>
+              <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
+                {formatBudgetPlanningMinor(
+                  props.snapshot.approvedBaseline.totals.totalIncomeMinor,
+                  props.snapshot.approvedBaseline.currency,
+                  props.formattingLocale,
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalExpense")}</dt>
+              <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
+                {formatBudgetPlanningMinor(
+                  props.snapshot.approvedBaseline.totals.totalExpenseMinor,
+                  props.snapshot.approvedBaseline.currency,
+                  props.formattingLocale,
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("plannedResult")}</dt>
+              <dd className={FINANCE_SUMMARY_RESULT_VALUE_CLASS}>
+                {formatBudgetPlanningMinor(
+                  props.snapshot.approvedBaseline.totals.resultMinor,
+                  props.snapshot.approvedBaseline.currency,
+                  props.formattingLocale,
+                )}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-sm text-[var(--muted)]">{t("workingRevisionHint")}</p>
+        </section>
+      ) : null}
+
+      {props.isDraft && props.canApprove && props.snapshot.approvalReadiness ? (
+        <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="readiness">
+          <h2 className="text-base font-semibold">{t("readinessTitle")}</h2>
+          {canApproveByReadiness ? (
+            <p className="mt-2 text-sm text-[var(--muted)]">{t("readinessReady")}</p>
+          ) : (
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-[var(--muted)]">
+              {readinessIssues
+                .filter((issue) => issue.severity === "blocker")
+                .map((issue) => (
+                  <li key={issue.code}>
+                    {t(`readinessIssue.${issue.code}` as `readinessIssue.${BudgetReadinessIssueCode}`)}
+                  </li>
+                ))}
+            </ul>
+          )}
+          {readinessIssues.some((issue) => issue.severity === "warning") ? (
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-[var(--muted)]">
+              {readinessIssues
+                .filter((issue) => issue.severity === "warning")
+                .map((issue) => (
+                  <li key={issue.code}>
+                    {t(`readinessIssue.${issue.code}` as `readinessIssue.${BudgetReadinessIssueCode}`)}
+                  </li>
+                ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
+
+      {props.snapshot.versionHistory.length > 0 ? (
+        <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="version-history">
+          <h2 className="text-base font-semibold">{t("versionHistoryTitle")}</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {props.snapshot.versionHistory.map((entry) => (
+              <li
+                key={entry.versionId}
+                className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] pb-2 last:border-0"
+              >
+                <span>
+                  {t("versionHistoryEntry", { number: entry.versionNumber })}{" "}
+                  <span className="text-[var(--muted)]">
+                    {entry.status === "APPROVED" ? t("versionApproved") : t("versionDraft")}
+                  </span>
+                  {entry.isGovernanceBaseline ? (
+                    <span className="ms-2 text-xs uppercase tracking-wide text-[var(--muted)]">
+                      {t("governanceBaselineBadge")}
+                    </span>
+                  ) : null}
+                </span>
+                {entry.approvedAt ? (
+                  <span className="text-[var(--muted)]">
+                    {new Date(entry.approvedAt).toLocaleDateString()}
+                    {entry.approvedByLabel ? ` · ${entry.approvedByLabel}` : ""}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <BudgetSection
         title={t("incomeSection")}
         rows={props.incomeRows}
@@ -424,10 +551,10 @@ function BudgetWorkspaceEditor(props: {
         </dl>
       </section>
 
-      {props.isDraft && props.canApprove ? (
+      {props.isDraft && props.canApprove && !props.snapshot.approvedBaseline ? (
         <div className="flex justify-end">
           <Button
-            disabled={props.workspacePending}
+            disabled={props.workspacePending || !canApproveByReadiness}
             onClick={async () => {
               const ready = await ensurePersistedForApproval();
               if (!ready) {

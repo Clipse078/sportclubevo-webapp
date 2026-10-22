@@ -582,7 +582,34 @@
       "approveDialogBody": "Approval establishes the financial baseline for this year. Approved amounts are protected from silent editing and support future actuals and forecasts.",
       "approveConfirm": "Approve baseline",
       "cancel": "Cancel",
-      "approvedBaselineHint": "Approved baseline · {date} · {approver}"
+      "approvedBaselineHint": "Approved baseline · {date} · {approver}",
+      "status": {
+        "DRAFT": "Working budget — in preparation",
+        "APPROVED": "Approved baseline locked",
+        "WORKING_REVISION": "Working revision — baseline protected",
+        "NONE": "No budget"
+      },
+      "readinessTitle": "Approval readiness",
+      "readinessReady": "This working budget meets the prerequisites to establish the governance baseline.",
+      "readinessIssue": {
+        "BASE_CURRENCY_REQUIRED": "Configure organisation base currency in finance setup before approval.",
+        "NO_PLANNED_LINES": "Enter at least one planned amount on an account before approval.",
+        "INVALID_LINE_AMOUNT": "One or more planned amounts are invalid.",
+        "LINE_ON_ARCHIVED_ACCOUNT": "Some planned amounts reference archived accounts — review before approval.",
+        "APPROVED_BASELINE_ALREADY_EXISTS": "An approved baseline already exists for this financial year.",
+        "VERSION_NOT_DRAFT": "Only a working budget can be approved."
+      },
+      "governanceBaselineTitle": "Governance baseline",
+      "governanceBaselineHint": "Version {version} · approved {date} · {approver}",
+      "governanceBaselineBadge": "Baseline",
+      "workingRevisionHint": "Changes below apply to the working revision only. Reporting and variance use the approved baseline until a future re-baseline.",
+      "revisionStartTitle": "Continue planning after approval",
+      "revisionStartBody": "The approved baseline stays locked for reporting. Start a working revision to explore updated plans without changing the governance baseline.",
+      "revisionStartAction": "Start working revision",
+      "versionHistoryTitle": "Version history",
+      "versionHistoryEntry": "Version {number}",
+      "versionApproved": "Approved",
+      "versionDraft": "Draft"
     },
     "settings": {
       "title": "Finance setup",

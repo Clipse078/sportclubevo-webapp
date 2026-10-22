@@ -1,4 +1,8 @@
-import type { CanonicalAccountSemantic } from "@prisma/client";
+import type { CanonicalAccountSemantic, FinanceBudgetVersionStatus } from "@prisma/client";
+import {
+  evaluateBudgetApprovalReadiness,
+  type BudgetApprovalReadiness,
+} from "@/lib/finance/budget/budget-approval-readiness";
 import { computeBudgetPlanningTotals } from "@/lib/finance/budget/budget-planning-totals";
 
 export type BudgetAccountPlanningRow = {
@@ -11,12 +15,36 @@ export type BudgetAccountPlanningRow = {
   amountMinor: number | null;
 };
 
+export type BudgetVersionHistoryEntry = {
+  versionId: string;
+  versionNumber: number;
+  status: FinanceBudgetVersionStatus;
+  approvedAt: Date | null;
+  approvedByLabel: string | null;
+  createdAt: Date;
+  isGovernanceBaseline: boolean;
+};
+
+export type BudgetApprovedBaselineSummary = {
+  versionId: string;
+  versionNumber: number;
+  approvedAt: Date | null;
+  approvedByLabel: string | null;
+  currency: string | null;
+  totals: {
+    totalIncomeMinor: number;
+    totalExpenseMinor: number;
+    resultMinor: number;
+  };
+};
+
 export type BudgetWorkspaceSnapshot = {
   financeYearId: string;
   financeYearName: string;
   budgetId: string | null;
   versionId: string | null;
-  status: "NONE" | "DRAFT" | "APPROVED";
+  versionNumber: number | null;
+  status: "NONE" | "DRAFT" | "APPROVED" | "WORKING_REVISION";
   approvedAt: Date | null;
   approvedByLabel: string | null;
   currency: string | null;
@@ -26,6 +54,9 @@ export type BudgetWorkspaceSnapshot = {
     totalExpenseMinor: number;
     resultMinor: number;
   };
+  approvedBaseline: BudgetApprovedBaselineSummary | null;
+  versionHistory: BudgetVersionHistoryEntry[];
+  approvalReadiness: BudgetApprovalReadiness | null;
 };
 
 export function buildBudgetPlanningRows(input: {
@@ -58,6 +89,32 @@ export function buildBudgetPlanningRows(input: {
         amountMinor: line?.amountMinor ?? null,
       };
     });
+}
+
+export function buildBudgetVersionHistory(input: {
+  versions: ReadonlyArray<{
+    id: string;
+    versionNumber: number;
+    status: FinanceBudgetVersionStatus;
+    approvedAt: Date | null;
+    approvedBy: { firstName: string; lastName: string } | null;
+    createdAt: Date;
+  }>;
+  governanceBaselineVersionId: string | null;
+}): BudgetVersionHistoryEntry[] {
+  return [...input.versions]
+    .sort((a, b) => b.versionNumber - a.versionNumber)
+    .map((version) => ({
+      versionId: version.id,
+      versionNumber: version.versionNumber,
+      status: version.status,
+      approvedAt: version.approvedAt,
+      approvedByLabel: version.approvedBy
+        ? `${version.approvedBy.firstName} ${version.approvedBy.lastName}`.trim()
+        : null,
+      createdAt: version.createdAt,
+      isGovernanceBaseline: version.id === input.governanceBaselineVersionId,
+    }));
 }
 
 export function budgetTotalsFromRows(

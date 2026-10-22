@@ -1045,7 +1045,34 @@
       "approveDialogBody": "Die Freigabe legt die finanzielle Baseline für dieses Jahr fest. Genehmigte Beträge sind vor stillschweigender Änderung geschützt.",
       "approveConfirm": "Baseline freigeben",
       "cancel": "Abbrechen",
-      "approvedBaselineHint": "Freigegebene Baseline · {date} · {approver}"
+      "approvedBaselineHint": "Freigegebene Baseline · {date} · {approver}",
+      "status": {
+        "DRAFT": "Arbeitsbudget — in Vorbereitung",
+        "APPROVED": "Freigegebene Baseline gesperrt",
+        "WORKING_REVISION": "Arbeitsrevision — Baseline geschützt",
+        "NONE": "Kein Budget"
+      },
+      "readinessTitle": "Freigabebereitschaft",
+      "readinessReady": "Dieses Arbeitsbudget erfüllt die Voraussetzungen für die Governance-Baseline.",
+      "readinessIssue": {
+        "BASE_CURRENCY_REQUIRED": "Legen Sie die Basiswährung in der Finanz-Einrichtung fest, bevor Sie freigeben.",
+        "NO_PLANNED_LINES": "Erfassen Sie mindestens einen Planbetrag auf einem Konto vor der Freigabe.",
+        "INVALID_LINE_AMOUNT": "Mindestens ein Planbetrag ist ungültig.",
+        "LINE_ON_ARCHIVED_ACCOUNT": "Einige Planbeträge verweisen auf archivierte Konten — vor Freigabe prüfen.",
+        "APPROVED_BASELINE_ALREADY_EXISTS": "Für dieses Finanzjahr existiert bereits eine freigegebene Baseline.",
+        "VERSION_NOT_DRAFT": "Nur ein Arbeitsbudget kann freigegeben werden."
+      },
+      "governanceBaselineTitle": "Governance-Baseline",
+      "governanceBaselineHint": "Version {version} · freigegeben {date} · {approver}",
+      "governanceBaselineBadge": "Baseline",
+      "workingRevisionHint": "Änderungen unten gelten nur für die Arbeitsrevision. Auswertungen und Abweichungen nutzen die freigegebene Baseline bis zu einer späteren Re-Baseline.",
+      "revisionStartTitle": "Planung nach Freigabe fortsetzen",
+      "revisionStartBody": "Die freigegebene Baseline bleibt für Auswertungen gesperrt. Starten Sie eine Arbeitsrevision, um aktualisierte Pläne zu erkunden, ohne die Governance-Baseline zu ändern.",
+      "revisionStartAction": "Arbeitsrevision starten",
+      "versionHistoryTitle": "Versionsverlauf",
+      "versionHistoryEntry": "Version {number}",
+      "versionApproved": "Freigegeben",
+      "versionDraft": "Entwurf"
     },
     "settings": {
       "title": "Finanz-Einrichtung",

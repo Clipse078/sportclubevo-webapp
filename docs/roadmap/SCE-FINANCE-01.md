@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — foundation package **FIN-01** (FIN-01A/R1 through **FIN-01E** complete + merged to **STAGE**; **FIN-01F** not started) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** operational budgeting **IN PROGRESS** (FIN-02A) |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -14,7 +14,7 @@
 | Package | Focus |
 | --- | --- |
 | **FIN-01** | Foundation & configurable structure |
-| **FIN-02** | Budgeting & approved baseline |
+| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — see [`SCE-FINANCE-02A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02A-IMPLEMENTATION.md)) |
 | **FIN-03** | Periodic measurement & budget control |
 | **FIN-04** | Rolling forecast & scenarios |
 | **FIN-05** | Financial reporting & intelligence |
@@ -36,7 +36,7 @@
 | **FIN-01C** | Account/reporting hierarchy + optional templates + Structure Builder UI | **COMPLETE + MERGED + PO UAT PASS** (PR **#893**) |
 | **FIN-01D** | Budget foundation / workflow (foundation slice — not entire FIN-02 product) | **COMPLETE + PO UAT PASS** (PR **#894** → **STAGE**) |
 | **FIN-01E** | Management reporting foundation (foundation slice — not entire FIN-05 product) | **COMPLETE + MERGED + PO UAT PASS** (PR **#895**) |
-| **FIN-01F** | Import foundation | **NOT STARTED** |
+| **FIN-01F** | Import foundation | **BACKLOG / LOW PRIORITY** |
 
 Do not collapse granular FIN-01 foundation slices into later operational FIN-02…FIN-11 products.
 
