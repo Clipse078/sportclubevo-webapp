@@ -10,8 +10,9 @@
 | **FIN_01E_IMPLEMENTATION** | **COMPLETE** |
 | **FIN_01E_STAGE_MIGRATION_APPLIED** | **YES** (2026-10-22 — shared STAGE Neon; `20261022200000_sce_finance_01e_r3_budget_version_base_currency`; verified via `npm run finance:01e:r4:stage-migration-verify`) |
 | **FIN_01E_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative; Cursor did not perform manual browser UAT) |
-| **FIN_01E_READY_FOR_MERGE** | **YES** (pending automated closure validation + PR **#895** merge) |
-| **Status** | **COMPLETE — ENGINEERING PASS + PO UAT PASS** |
+| **FIN_01E_READY_FOR_MERGE** | **YES** |
+| **FIN_01E_MERGED** | **YES** (PR **#895** → **STAGE**, merge commit `63d3be7a`, 2026-10-22) |
+| **Status** | **COMPLETE + MERGED + PO UAT PASS** |
 
 ## PO UAT confirmation (2026-10-22 — closure)
 
