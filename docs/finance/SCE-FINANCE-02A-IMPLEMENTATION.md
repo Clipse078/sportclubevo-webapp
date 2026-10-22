@@ -4,8 +4,28 @@
 | --- | --- |
 | **Feature branch** | `cursor/sce-finance-02a-operational-budgeting` |
 | **Merge target** | `STAGE` |
+| **PR** | **#896** |
+| **Closure head** | `f57f14498f604def2d9f33d7bd136834615e947d` (R1 `2953f666` … R2 save-state `f57f1449`) |
 | **Builds on** | FIN-01D budget foundation, FIN-01E reporting & currency |
-| **FIN-02 programme status** | **IN PROGRESS** (02A = architecture + first vertical slice) |
+| **FIN-02A implementation** | **COMPLETE** |
+| **FIN_02A_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative) |
+| **FIN-02 programme status** | **IN PROGRESS** (02A closed; re-baseline / copy / notes remain **FIN-02B+**) |
+
+## PO UAT confirmation (2026-10-22 — closure)
+
+Product Owner manual UAT **PASS** confirms acceptance of:
+
+1. **Working budget lifecycle** — year, currency, and status context in the Finance budget workspace.
+2. **Approved baseline immutability** — governance baseline cannot be edited in place.
+3. **Working revision** — new DRAFT after approval; clearly distinguished from the governance baseline.
+4. **Version history** — calm list of versions without Git-style complexity.
+5. **Readiness model** — actionable prerequisites before first approval (i18n-backed).
+6. **Local-first editing** — keystrokes stay local; blur / Enter persists lines.
+7. **Workspace persistence states (R2)** — `Ungespeicherte Änderungen`, `Wird gespeichert …`, `Gespeichert`, `Speichern fehlgeschlagen`; stale async saves cannot overwrite newer edits.
+8. **Baseline protection** — approved baseline totals remain visible and unchanged while a working revision is edited.
+9. **Finance dark workspace** — coherent surfaces with FIN-01D/E presentation primitives.
+
+Cursor did not invent additional manual UAT evidence beyond this Product Owner sign-off.
 
 ## Purpose
 

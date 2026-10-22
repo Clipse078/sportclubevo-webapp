@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** operational budgeting **IN PROGRESS** (FIN-02A) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02A** operational budgeting slice **COMPLETE + PO UAT PASS** (PR **#896** → **STAGE**); **FIN-02** programme **IN PROGRESS** (02B+ backlog) |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -14,16 +14,16 @@
 | Package | Focus |
 | --- | --- |
 | **FIN-01** | Foundation & configurable structure |
-| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — see [`SCE-FINANCE-02A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02A-IMPLEMENTATION.md)) |
-| **FIN-03** | Periodic measurement & budget control |
-| **FIN-04** | Rolling forecast & scenarios |
-| **FIN-05** | Financial reporting & intelligence |
-| **FIN-06** | Financial publishing & sharing |
+| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — **02A COMPLETE + PO UAT PASS**; see [`SCE-FINANCE-02A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02A-IMPLEMENTATION.md); **02B+** not started) |
+| **FIN-03** | Periodic measurement & budget control (**NOT STARTED**) |
+| **FIN-04** | Rolling forecast & scenarios (**NOT STARTED**) |
+| **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
+| **FIN-06** | Financial publishing & sharing (**NOT STARTED**) |
 | **FIN-07** | Commitments & approvals |
 | **FIN-08** | Revenue / receivables / collections |
 | **FIN-09** | Liquidity & treasury |
 | **FIN-10** | Funds / grants / advanced governance |
-| **FIN-11** | Accounting integration & advanced finance |
+| **FIN-11** | Accounting integration & advanced finance (**NOT STARTED** — Balance Sheet & financial statements; future **ASSET / LIABILITY / EQUITY** semantics) |
 
 **Sponsor / Commercial:** **NOT STARTED** (separate from Finance workspace).
 
