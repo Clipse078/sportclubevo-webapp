@@ -29,6 +29,23 @@ STAGE migration** before manual Preview acceptance.
 
 Do **not** use `prisma db push`, `migrate reset`, or manual DDL shortcuts.
 
+## Finance (FIN-01E) — required column before Preview UAT
+
+PR Preview code for FIN-01E R3+ selects `FinanceBudgetVersion.baseCurrency`. If the
+shared STAGE database has not applied:
+
+- `20261022200000_sce_finance_01e_r3_budget_version_base_currency`
+
+…Finance Settings save/reload will fail with Prisma **column does not exist** while
+the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Preview.
+
+Operator verify (read-only or `--apply` as above):
+
+- `scripts/sce-finance-01e-r4-stage-migration-verify.ts`
+- `npm run finance:01e:r4:stage-migration-verify`
+
+See also `docs/finance/SCE-FINANCE-01E-IMPLEMENTATION.md` (R4 closure).
+
 ## Historical note
 
 STAGE may list legacy `_prisma_migrations` rows whose names are absent from the

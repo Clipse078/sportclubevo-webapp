@@ -54,7 +54,8 @@
     "sce-icons:legacy-inventory": "tsx scripts/sce-icons-legacy-inventory.ts",
     "diag:sce-perf-02-bench": "tsx scripts/diagnostics/sce-perf-02-readonly-bench.ts",
     "diag:sce-perf-02a-stage-probe": "tsx scripts/diagnostics/sce-perf-02a-stage-http-probe.ts",
-    "finance:01a:analyze-fca-workbook": "tsx scripts/finance/sce-finance-01a-analyze-fca-workbook.ts"
+    "finance:01a:analyze-fca-workbook": "tsx scripts/finance/sce-finance-01a-analyze-fca-workbook.ts",
+    "finance:01e:r4:stage-migration-verify": "tsx scripts/sce-finance-01e-r4-stage-migration-verify.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",

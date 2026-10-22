@@ -5,7 +5,7 @@
 | **Feature branch** | `cursor/sce-finance-01e-reporting-foundation-b4b9` |
 | **Merge target** | `STAGE` |
 | **Scope** | Reusable reporting read model, aggregation, approved-budget measure adapter, minimal Finance Overview integration |
-| **Status** | **R3 ON FEATURE BRANCH / AWAITING PO RETEST** |
+| **Status** | **R4 STAGE schema parity closed / AWAITING PO RETEST** |
 
 ## Purpose
 
@@ -72,6 +72,21 @@ Establish canonical financial reporting language on top of FIN-01C structure and
 4. **Budget approval gate** — cannot approve draft baseline without configured organisation currency.
 5. **Approval snapshot** — `FinanceBudgetVersion.baseCurrency` set at approve time (migration `20261022200000_sce_finance_01e_r3_budget_version_base_currency`).
 6. **Currency change safety** — cannot change organisation base currency while any approved baseline exists (first-time set from null allowed for legacy reconciliation — does not silently assign CHF to historical lines).
+
+### FIN-01E R4 — Preview UAT failure (schema parity)
+
+**Observed (R3 Preview):** Finance Settings selector worked; saving/reloading CHF caused
+server error — Prisma `FinanceBudgetVersion.baseCurrency` column missing on shared STAGE.
+
+**Root cause:** PR Preview uses the shared STAGE Neon database but **does not** run
+`prisma migrate deploy` during Vercel build (`APPLY_DATABASE_MIGRATIONS` is never
+Preview-scoped). R3 application deployed before the additive migration was applied on STAGE.
+
+**Closure:** Apply pending migration on STAGE with the guarded runner documented in
+[`docs/deployment/stage-preview-migration-runbook.md`](../deployment/stage-preview-migration-runbook.md),
+then verify with `npm run finance:01e:r4:stage-migration-verify` /
+`scripts/sce-finance-01e-r4-stage-migration-verify.ts`. Do **not** patch around the
+missing column in application code.
 
 ### Legacy approved baselines (e.g. FC Allschwil PO dataset)
 
