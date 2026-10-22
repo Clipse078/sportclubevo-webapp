@@ -89,7 +89,7 @@ describe("FinanceStructureBuilderPanel nudging", () => {
     expect(screen.getByTestId("template-applied-nudge")).toBeTruthy();
   });
 
-  it("shows empty-group next actions for groups without children", () => {
+  it("shows empty-group hint for groups without children", () => {
     const tree: FinanceStructureTreeNode[] = [
       {
         type: "group",
@@ -107,7 +107,7 @@ describe("FinanceStructureBuilderPanel nudging", () => {
       groupOptions: [{ id: "g1", name: "Income", depth: 0 }],
     });
     expect(screen.getByTestId("empty-reporting-group-nudge")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Add account" })).toBeTruthy();
+    expect(screen.getByText("This group is empty.")).toBeTruthy();
   });
 
   it("explains template customization before apply in preview dialog", async () => {
