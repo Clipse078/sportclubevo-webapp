@@ -36,7 +36,9 @@ Person compensation remains `people.finance.view` / `people.finance.manage` (ADR
 - `/dashboard/finance` — overview (honest empty/setup states)
 - `/dashboard/finance/settings` — setup (requires `finance.admin` or structure manage for tabs)
 
-Legacy demo `/vereinsleitung/finanzen` unchanged.
+Legacy demo `/vereinsleitung/finanzen` (and `/vereinsleitung/finanzen/rechnungen`) **redirect** to `/dashboard/finance` (FIN-01B-R1). The historical demo UI is no longer a competing primary Finance destination; authorization follows `finance.view` on the canonical workspace.
+
+Club navigation (Führung): **Finanzen** → `/dashboard/finance` (`finance.view`). Sponsoring remains a separate destination under the future commercial capability boundary.
 
 ## Deferred (explicit)
 

@@ -59,7 +59,7 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
     expect(model.domains.find((d) => d.id === "publishing")?.fallbackLabel).toBe("Publizieren");
   });
 
-  it("groups Club explorer destinations into seven L2 groups without Administration (moved to Admin L1)", () => {
+  it("groups Club explorer destinations into eight L2 groups without Administration (moved to Admin L1)", () => {
     const club = model.domains.find((d) => d.id === "club")!;
     const groups = resolveExplorerDomainGroups(club)!;
     expect(groups.map((group) => group.label)).toEqual([
@@ -69,7 +69,8 @@ describe("SCE-NAV-IA-V2-04 App Explorer", () => {
       "Vereinsentwicklung",
       "Club-Betrieb",
       "Dokumente",
-      "Finanzen & Partnerschaften",
+      "Finanzen",
+      "Sponsoring",
     ]);
     expect(groups.some((group) => group.id === "administration")).toBe(false);
 

@@ -625,9 +625,9 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         key: "finanzen",
         label: "Finanzen",
-        href: "/vereinsleitung/finanzen",
+        href: "/dashboard/finance",
         navContexts: ["club"],
-        permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
+        permissionKeys: [PERMISSIONS.FINANCE_VIEW],
       },
       {
         key: "sponsoring",
@@ -650,12 +650,6 @@ export const NAV_SECTIONS: NavSection[] = [
           PERMISSIONS.WORKSPACE_VIEW,
           PERMISSIONS.WORKSPACE_MANAGE,
         ],
-      },
-      {
-        key: "finance",
-        label: "Finanzen",
-        href: "/dashboard/finance",
-        permissionKeys: [PERMISSIONS.FINANCE_VIEW],
       },
       {
         key: "formulare-freigaben",

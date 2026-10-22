@@ -77,7 +77,8 @@ const CLUB_OPERATIONS_KEYS = new Set([
 
 const CLUB_DOCUMENTS_KEYS = new Set(["workspace"]);
 
-const CLUB_COMMERCIAL_KEYS = new Set(["finanzen", "sponsoring"]);
+const CLUB_FINANCE_KEYS = new Set(["finanzen"]);
+const CLUB_SPONSORING_KEYS = new Set(["sponsoring"]);
 
 const CLUB_ADMIN_KEYS = new Set([
   "administration",
@@ -149,7 +150,8 @@ export function resolveNavKeyTargetL1(
     CLUB_DEVELOPMENT_KEYS.has(key) ||
     CLUB_DOCUMENTS_KEYS.has(key) ||
     CLUB_OPERATIONS_KEYS.has(key) ||
-    CLUB_COMMERCIAL_KEYS.has(key)
+    CLUB_FINANCE_KEYS.has(key) ||
+    CLUB_SPONSORING_KEYS.has(key)
   ) {
     return "club";
   }
@@ -180,7 +182,8 @@ function resolveTargetL2(key: string): string {
   if (CLUB_DEVELOPMENT_KEYS.has(key)) return "Vereinsentwicklung";
   if (CLUB_DOCUMENTS_KEYS.has(key)) return "Dokumente";
   if (CLUB_OPERATIONS_KEYS.has(key)) return "Club-Betrieb";
-  if (CLUB_COMMERCIAL_KEYS.has(key)) return "Finanzen & Partnerschaften";
+  if (CLUB_FINANCE_KEYS.has(key)) return "Finanzen";
+  if (CLUB_SPONSORING_KEYS.has(key)) return "Sponsoring";
   if (CLUB_ADMIN_KEYS.has(key)) return "Administration";
   return "Club";
 }
@@ -374,9 +377,15 @@ export const CLUB_TARGET_L2_GROUPS = [
   },
   {
     id: "finanzen",
-    label: "Finanzen & Partnerschaften",
+    label: "Finanzen",
     headerVisible: true,
-    keys: ["finanzen", "sponsoring"],
+    keys: ["finanzen"],
+  },
+  {
+    id: "sponsoring",
+    label: "Sponsoring",
+    headerVisible: true,
+    keys: ["sponsoring"],
   },
 ] as const;
 
