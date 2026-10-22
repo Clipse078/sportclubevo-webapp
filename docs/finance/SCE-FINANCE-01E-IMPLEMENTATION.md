@@ -4,8 +4,26 @@
 | --- | --- |
 | **Feature branch** | `cursor/sce-finance-01e-reporting-foundation-b4b9` |
 | **Merge target** | `STAGE` |
+| **PR** | **#895** |
+| **Closure head (R5)** | `5723370764929a959d77723febfb7c347b1d3ae0` (R1 `acfc4b26` … R5 `57233707`) |
 | **Scope** | Reusable reporting read model, aggregation, approved-budget measure adapter, minimal Finance Overview integration |
-| **Status** | **R5 locale-aware money presentation / AWAITING PO UAT** |
+| **FIN_01E_IMPLEMENTATION** | **COMPLETE** |
+| **FIN_01E_STAGE_MIGRATION_APPLIED** | **YES** (2026-10-22 — shared STAGE Neon; `20261022200000_sce_finance_01e_r3_budget_version_base_currency`; verified via `npm run finance:01e:r4:stage-migration-verify`) |
+| **FIN_01E_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative; Cursor did not perform manual browser UAT) |
+| **FIN_01E_READY_FOR_MERGE** | **YES** (pending automated closure validation + PR **#895** merge) |
+| **Status** | **COMPLETE — ENGINEERING PASS + PO UAT PASS** |
+
+## PO UAT confirmation (2026-10-22 — closure)
+
+Product Owner manual UAT **PASS** confirms acceptance of:
+
+1. **Reporting** — Finance Overview loads; approved budget reporting visible; **Basiswährung fehlt** no longer blocks when currency configured; baseline totals **Einnahmen 150000 / Ausgaben 75000 / Ergebnis 75000**.
+2. **Currency** — Searchable ISO 4217 selector; CHF explicitly configurable; `FinanceConfiguration.baseCurrency` persists; no country/tenant currency inference; approval freezes version currency; legacy approved baseline unchanged.
+3. **Schema** — `FinanceBudgetVersion.baseCurrency` migration on shared STAGE; Preview/STAGE parity; no Prisma missing-column error.
+4. **Money presentation (R5)** — FC Allschwil Swiss formatting **150'000 CHF** confirmed; currency and formatting locale remain separate; no CHF-specific separator hack.
+5. **UX** — Dark Finance presentation; reporting primary when valid data exists; setup subordinate; Finance separate from Sponsoring.
+
+Cursor did not invent additional manual UAT evidence beyond this Product Owner sign-off.
 
 ## Purpose
 
