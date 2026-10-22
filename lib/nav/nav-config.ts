@@ -625,9 +625,9 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         key: "finanzen",
         label: "Finanzen",
-        href: "/vereinsleitung/finanzen",
+        href: "/dashboard/finance",
         navContexts: ["club"],
-        permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
+        permissionKeys: [PERMISSIONS.FINANCE_VIEW],
       },
       {
         key: "sponsoring",

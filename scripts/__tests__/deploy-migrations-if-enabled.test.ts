@@ -148,6 +148,7 @@ describe("deploy-migrations-if-enabled", () => {
     expect(() => runDeployMigrationsIfEnabled(deps)).toThrow(
       "process.exit called",
     );
+    expect(deps.spawnSync).toHaveBeenCalledTimes(2);
     expect(deps.exit).toHaveBeenCalledWith(0);
   });
 

@@ -1,0 +1,18 @@
+import { describe, expect, it } from "vitest";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PROPOSED_FINANCE_PERMISSION_KEYS } from "@/lib/finance/finance-architecture";
+
+describe("FIN-01B finance permissions", () => {
+  it("maps architecture keys to PERMISSIONS constants", () => {
+    expect(PERMISSIONS.FINANCE_VIEW).toBe(PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_VIEW);
+    expect(PERMISSIONS.FINANCE_STRUCTURE_MANAGE).toBe(
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_STRUCTURE_MANAGE,
+    );
+    expect(PERMISSIONS.FINANCE_ADMIN).toBe(PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_ADMIN);
+  });
+
+  it("keeps person compensation permissions separate from finance.view", () => {
+    expect(PERMISSIONS.FINANCE_VIEW).not.toBe(PERMISSIONS.PEOPLE_FINANCE_VIEW);
+    expect(PERMISSIONS.FINANCE_VIEW).not.toBe(PERMISSIONS.BILLING_VIEW);
+  });
+});

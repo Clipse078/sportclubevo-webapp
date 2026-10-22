@@ -1,4 +1,5 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
+import { resolve } from "node:path";
 import { assertAcceptanceDatabaseTarget } from "@/lib/acceptance/bootstrap";
 import { getRuntimeEnvironment } from "@/lib/env";
 import { shouldApplyDatabaseMigrations } from "@/lib/server/database-migration-policy";
@@ -75,5 +76,29 @@ export function runDeployMigrationsIfEnabled(
     throw result.error;
   }
 
-  deps.exit(result.status ?? 1);
+  const migrateStatus = result.status ?? 1;
+  if (migrateStatus !== 0) {
+    deps.exit(migrateStatus);
+  }
+
+  const postDeployScript = resolve(
+    process.cwd(),
+    "scripts/post-deploy-tenant-club-admin-reconciliation.ts",
+  );
+  const tsxCli = resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
+  console.log("[migrate] Running post-deploy tenant Club Admin reconciliation.");
+  const reconcileResult = deps.spawnSync(
+    deps.execPath,
+    [tsxCli, postDeployScript],
+    {
+      stdio: "inherit",
+      env: deps.env,
+    },
+  );
+
+  if (reconcileResult.error) {
+    throw reconcileResult.error;
+  }
+
+  deps.exit(reconcileResult.status ?? 1);
 }

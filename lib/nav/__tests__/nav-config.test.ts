@@ -284,6 +284,16 @@ describe("NAV_SECTIONS static structure", () => {
       href: "/dashboard/sponsoring",
       permissionKeys: [PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
     }));
+
+    const finanzen = fuehrung!.items.find((i) => i.key === "finanzen");
+    expect(finanzen).toEqual(
+      expect.objectContaining({
+        label: "Finanzen",
+        href: "/dashboard/finance",
+        permissionKeys: [PERMISSIONS.FINANCE_VIEW],
+      }),
+    );
+    expect(finanzen?.label).not.toContain("Partnerschaften");
   });
 });
 

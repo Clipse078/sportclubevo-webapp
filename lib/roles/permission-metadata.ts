@@ -37,6 +37,7 @@ export const MODULE_DESCRIPTIONS_DE: Record<string, string> = {
   SEASONS: "Saisons und saisonale Planung.",
   FACILITIES: "Anlagen, Ressourcen und Material.",
   WORKSPACE: "Dokumente und Vereinsarbeitsbereich.",
+  FINANCE: "Organisationsfinanzen, Budgetplanung und Finanzstruktur.",
   USERS: "Benutzer, Einladungen und Zugänge.",
   ROLES: "Rollen, Berechtigungen und Zuweisungen.",
   TENANTS: "Mandantenverwaltung (Plattform).",
@@ -274,6 +275,10 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
     "Governance-Vorgänge wie Break-Glass-Widerruf (kein Ersatz für Dokument-ACL).",
   "workspace.break_glass":
     "Ausserordentlichen, zeitlich begrenzten Lesezugriff auf explizit definierte Workspace-Ressourcen aktivieren.",
+
+  "finance.view": "Organisationsfinanzen einsehen.",
+  "finance.structure.manage": "Finanzstruktur (Kostenstellen, Konten, Berichtsstruktur) verwalten.",
+  "finance.admin": "Finanzkonfiguration und Fähigkeiten verwalten.",
 
   "users.view": "Benutzer und Zugänge einsehen.",
   "users.invite": "Neue Benutzer zum Verein einladen.",

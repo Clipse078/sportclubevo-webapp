@@ -100,7 +100,7 @@ describe("SCE-VISUAL-03 global app navigation", () => {
       ["/dashboard/infoboard/preview", "publishing", "infoboard"],
       ["/dashboard/trainer-staff", "club", "trainer-staff"],
       ["/vereinsleitung/meetings", "club", "meetings"],
-      ["/vereinsleitung/finanzen", "club", "finanzen"],
+      ["/dashboard/finance", "club", "finanzen"],
       ["/dashboard/sponsoring", "club", "sponsoring"],
     ];
     for (const [pathname, domainId, destinationKey] of samples) {
@@ -187,8 +187,6 @@ describe("SCE-VISUAL-03 global app navigation", () => {
   it("carries season query on canonical season-aware dashboard hrefs", () => {
     expect(buildNavigationHref("/dashboard/teams", "2025")).toContain("season=2025");
     expect(buildNavigationHref("/dashboard", "2025")).toContain("season=2025");
-    expect(buildNavigationHref("/vereinsleitung/finanzen", "2025")).toBe(
-      "/vereinsleitung/finanzen",
-    );
+    expect(buildNavigationHref("/dashboard/finance", "2025")).toContain("season=2025");
   });
 });

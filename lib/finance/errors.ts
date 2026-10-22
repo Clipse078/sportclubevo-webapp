@@ -1,0 +1,29 @@
+export type FinanceDomainErrorCode =
+  | "FINANCE_FORBIDDEN"
+  | "FINANCE_CROSS_TENANT"
+  | "FINANCE_NOT_FOUND"
+  | "FINANCE_CYCLE"
+  | "FINANCE_SELF_PARENT"
+  | "FINANCE_ARCHIVED"
+  | "FINANCE_UNSAFE_DELETE"
+  | "FINANCE_INVALID_YEAR"
+  | "FINANCE_INVALID_CURRENCY"
+  | "FINANCE_INVALID_CAPABILITY"
+  | "FINANCE_INVALID_HIERARCHY";
+
+export class FinanceDomainError extends Error {
+  readonly code: FinanceDomainErrorCode;
+  readonly status: number;
+
+  constructor(code: FinanceDomainErrorCode, message: string, status = 400) {
+    super(message);
+    this.name = "FinanceDomainError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
+export function financeErrorMessage(error: unknown): string {
+  if (error instanceof FinanceDomainError) return error.message;
+  return "Interner Fehler";
+}

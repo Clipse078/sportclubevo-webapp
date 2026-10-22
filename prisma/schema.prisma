@@ -74,6 +74,7 @@ enum PermissionModule {
   REQUIREMENTS
   COMMUNICATION
   SPONSORING
+  FINANCE
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.
@@ -1384,6 +1385,13 @@ model Tenant {
   taskCommentMentions             TaskCommentMention[]
   taskFollowers                   TaskFollower[]
   taskDocumentReferences          TaskDocumentReference[]
+  // SCE-FINANCE-01B — tenant organisation finance foundation (not platform billing).
+  financeConfiguration            FinanceConfiguration?
+  financeYears                    FinanceYear[]
+  financeTenantCapabilities       FinanceTenantCapability[]
+  financeCostCenters              FinanceCostCenter[]
+  financialAccounts               FinancialAccount[]
+  financialReportingGroups        FinancialReportingGroup[]
 
   @@index([status])
   @@index([name])
@@ -1952,6 +1960,7 @@ model Season {
   personAssignments      PersonAssignment[]      @relation("SeasonPersonAssignments")
   // PERSON-UX-05: development assessments in this season
   developmentAssessments DevelopmentAssessment[] @relation("SeasonDevelopmentAssessments")
+  financeYears           FinanceYear[]           @relation("FinanceYearSeason")
 
   @@index([isActive])
 }
@@ -10612,4 +10621,184 @@ model SceActivityGovernanceDecision {
 
   @@unique([revisionId, approverPersonId, decision])
   @@index([tenantId, revisionId])
+}
+
+// ---------------------------------------------------------------------------
+// SCE Finance — FIN-01B foundation (organisation financial operating system).
+// Sport/country/structure agnostic. No FCA or statutory accounting in v1.
+// ---------------------------------------------------------------------------
+
+enum FinanceSetupStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  CONFIGURED
+}
+
+enum FinanceYearStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum FinanceStructureLifecycle {
+  ACTIVE
+  ARCHIVED
+}
+
+enum CanonicalAccountSemantic {
+  INCOME
+  EXPENSE
+  ASSET
+  LIABILITY
+  EQUITY
+  TRANSFER
+  OTHER
+}
+
+enum FinancialAccountNodeKind {
+  GROUP
+  POSTING
+}
+
+enum FinanceCapabilityKey {
+  OVERVIEW
+  MANAGEMENT_INCOME_STATEMENT
+  BUDGETING
+  ACTUALS
+  FORECASTING
+  COST_CENTERS
+  PROJECTS
+  FUNDS
+  RECEIVABLES
+  PAYABLES
+  COMMITMENTS
+  APPROVALS
+  PERSONNEL_FINANCE
+  EVENT_FINANCE
+  GRANTS
+  LIQUIDITY
+  ACCOUNTING_INTEGRATION
+  UNIT_ECONOMICS
+  REPORTING
+}
+
+/// Tenant-level finance configuration and setup lifecycle (1:1 per tenant).
+model FinanceConfiguration {
+  id                   String             @id @default(cuid())
+  tenantId             String             @unique
+  setupStatus          FinanceSetupStatus @default(NOT_STARTED)
+  /// ISO 4217 base currency for organisation finance (nullable until configured).
+  baseCurrency         String?
+  currentFinanceYearId String?
+  configuredAt         DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  tenant             Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  currentFinanceYear FinanceYear? @relation("FinanceConfigurationCurrentYear", fields: [currentFinanceYearId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, setupStatus])
+}
+
+/// Configurable financial year — independent from sporting Season (ADR-018).
+model FinanceYear {
+  id        String            @id @default(cuid())
+  tenantId  String
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    FinanceYearStatus @default(DRAFT)
+  /// Optional association when sport season context is relevant — not required.
+  seasonId  String?
+  archivedAt DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  tenant                    Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  season                    Season?                @relation("FinanceYearSeason", fields: [seasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  configurationsAsCurrent   FinanceConfiguration[] @relation("FinanceConfigurationCurrentYear")
+
+  @@index([tenantId, status])
+  @@index([tenantId, startDate, endDate])
+  @@index([seasonId])
+}
+
+/// Tenant enablement for system finance capabilities (ADR-028).
+model FinanceTenantCapability {
+  id        String               @id @default(cuid())
+  tenantId  String
+  capability FinanceCapabilityKey
+  enabled   Boolean              @default(false)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, capability])
+  @@index([tenantId, enabled])
+}
+
+/// User-managed cost center hierarchy (ADR-020, ADR-026).
+model FinanceCostCenter {
+  id          String                    @id @default(cuid())
+  tenantId    String
+  parentId    String?
+  name        String
+  description String?
+  sortOrder   Int                       @default(0)
+  lifecycle   FinanceStructureLifecycle @default(ACTIVE)
+  archivedAt  DateTime?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parent   FinanceCostCenter?  @relation("FinanceCostCenterHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  children FinanceCostCenter[] @relation("FinanceCostCenterHierarchy")
+
+  @@index([tenantId, lifecycle])
+  @@index([tenantId, parentId])
+  @@index([parentId])
+}
+
+/// Account / category hierarchy with canonical semantics (ADR-027, ADR-032).
+model FinancialAccount {
+  id                String                    @id @default(cuid())
+  tenantId          String
+  parentId          String?
+  name              String
+  nodeKind          FinancialAccountNodeKind  @default(GROUP)
+  canonicalSemantic CanonicalAccountSemantic
+  sortOrder         Int                       @default(0)
+  lifecycle         FinanceStructureLifecycle @default(ACTIVE)
+  archivedAt        DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parent   FinancialAccount?  @relation("FinancialAccountHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  children FinancialAccount[] @relation("FinancialAccountHierarchy")
+
+  @@index([tenantId, lifecycle])
+  @@index([tenantId, parentId])
+  @@index([tenantId, canonicalSemantic])
+}
+
+/// Reporting presentation hierarchy — separate from FinancialAccount (ADR-032).
+model FinancialReportingGroup {
+  id          String                    @id @default(cuid())
+  tenantId    String
+  parentId    String?
+  name        String
+  sortOrder   Int                       @default(0)
+  lifecycle   FinanceStructureLifecycle @default(ACTIVE)
+  archivedAt  DateTime?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  tenant   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parent   FinancialReportingGroup?  @relation("FinancialReportingGroupHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  children FinancialReportingGroup[] @relation("FinancialReportingGroupHierarchy")
+
+  @@index([tenantId, lifecycle])
+  @@index([tenantId, parentId])
 }
