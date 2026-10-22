@@ -51,4 +51,25 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).toContain("FINANCE_SUMMARY_SURFACE_CLASS");
     expect(panel).toContain("data-budget-summary=\"result\"");
   });
+
+  it("FIN-02A surfaces readiness, baseline, and revision without checkboxes", () => {
+    expect(panel).toContain("readinessTitle");
+    expect(panel).toContain("governanceBaselineTitle");
+    expect(panel).toContain("startWorkingRevisionAction");
+    expect(panel).not.toContain('type="checkbox"');
+  });
+
+  it("FIN-02A R2 surfaces calm workspace persistence feedback without per-line toasts", () => {
+    expect(panel).toContain("deriveBudgetWorkspacePersistencePhase");
+    expect(panel).toContain("Finance.budget.persistence");
+    expect(panel).toContain("data-budget-persistence");
+    expect(panel).toContain("onPersistencePhaseChange");
+    expect(panel).not.toMatch(/toast/i);
+  });
+
+  it("FIN-02A R2 labels working-revision totals separately from governance baseline", () => {
+    expect(panel).toContain("workingRevisionTotalsScope");
+    expect(panel).toContain("data-budget-editable-scope");
+    expect(panel).toContain('"working-revision"');
+  });
 });
