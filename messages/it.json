@@ -472,6 +472,8 @@
       "pageTitle": "Budget",
       "pageDescription": "Importi pianificati per conto e anno finanziario. L'approvazione stabilisce la baseline protetta.",
       "yearLabel": "Anno finanziario",
+      "currencyLabel": "Valuta",
+      "currencyUnsetHint": "Imposta una valuta base nella configurazione finanziaria così gli importi pianificati sono inequivocabili.",
       "yearPlaceholder": "Seleziona anno finanziario",
       "selectYearHint": "Seleziona un anno finanziario per visualizzare o modificare il budget.",
       "approveBlockedPendingSave": "Salva tutti gli importi pianificati prima di approvare la baseline.",

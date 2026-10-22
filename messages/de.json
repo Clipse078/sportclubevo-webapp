@@ -998,6 +998,8 @@
       "pageTitle": "Budget",
       "pageDescription": "Planbeträge pro Konto und Finanzjahr. Freigabe schützt die genehmigte Baseline.",
       "yearLabel": "Finanzjahr",
+      "currencyLabel": "Währung",
+      "currencyUnsetHint": "Legen Sie in der Finanz-Einrichtung eine Basiswährung fest, damit Planbeträge eindeutig sind.",
       "yearPlaceholder": "Finanzjahr wählen",
       "selectYearHint": "Wählen Sie ein Finanzjahr, um das Budget anzuzeigen oder zu bearbeiten.",
       "approveBlockedPendingSave": "Speichern Sie alle Planbeträge, bevor Sie die Baseline freigeben.",

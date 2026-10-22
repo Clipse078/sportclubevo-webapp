@@ -35,4 +35,12 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).toContain("selectYearHint");
     expect(panel).toContain("yearSelected");
   });
+
+  it("surfaces tenant base currency context beside the financial year", () => {
+    expect(panel).toContain("currencyLabel");
+    expect(panel).toContain("data-budget-currency");
+    expect(panel).toContain("baseCurrency");
+    expect(panel).toContain("formatBudgetPlanningWholeMajorNumber");
+    expect(panel).toContain("formatBudgetPlanningMinor");
+  });
 });

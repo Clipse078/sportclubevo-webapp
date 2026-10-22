@@ -24,9 +24,10 @@ export async function loadBudgetWorkspaceSnapshot(
   snapshot: BudgetWorkspaceSnapshot | null;
   hasAccounts: boolean;
   selectedYearId: string | null;
+  baseCurrency: string | null;
 }> {
   const years = await listFinanceYearsForBudget(db, ctx);
-  const currency = await resolveTenantBudgetCurrency(db, ctx);
+  const baseCurrency = await resolveTenantBudgetCurrency(db, ctx);
   const financeConfig = await db.financeConfiguration.findUnique({
     where: { tenantId: ctx.tenantId },
     select: { currentFinanceYearId: true },
@@ -48,12 +49,12 @@ export async function loadBudgetWorkspaceSnapshot(
     currentFinanceYearId: financeConfig?.currentFinanceYearId ?? null,
   });
   if (!selectedYearId) {
-    return { years, snapshot: null, hasAccounts, selectedYearId: null };
+    return { years, snapshot: null, hasAccounts, selectedYearId: null, baseCurrency };
   }
 
   const year = years.find((y) => y.id === selectedYearId) ?? null;
   if (!year) {
-    return { years, snapshot: null, hasAccounts, selectedYearId: null };
+    return { years, snapshot: null, hasAccounts, selectedYearId: null, baseCurrency };
   }
 
   const budget = await loadBudgetForYear(db, ctx, selectedYearId);
@@ -79,10 +80,10 @@ export async function loadBudgetWorkspaceSnapshot(
     approvedByLabel: approvedVersion?.approvedBy
       ? `${approvedVersion.approvedBy.firstName} ${approvedVersion.approvedBy.lastName}`.trim()
       : null,
-    currency,
+    currency: baseCurrency,
     rows,
     totals: budgetTotalsFromRows(rows),
   };
 
-  return { years, snapshot, hasAccounts, selectedYearId };
+  return { years, snapshot, hasAccounts, selectedYearId, baseCurrency };
 }

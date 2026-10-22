@@ -472,6 +472,8 @@
       "pageTitle": "Budget",
       "pageDescription": "Planifier les montants par compte et exercice. L'approbation établit la baseline protégée.",
       "yearLabel": "Exercice",
+      "currencyLabel": "Devise",
+      "currencyUnsetHint": "Définissez une devise de base dans la configuration financière pour des montants planifiés sans ambiguïté.",
       "yearPlaceholder": "Choisir un exercice",
       "selectYearHint": "Choisissez un exercice pour afficher ou modifier le budget.",
       "approveBlockedPendingSave": "Enregistrez tous les montants planifiés avant d'approuver la baseline.",

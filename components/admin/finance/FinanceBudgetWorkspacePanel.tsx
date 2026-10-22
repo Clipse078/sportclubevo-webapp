@@ -13,6 +13,7 @@ import type { BudgetWorkspaceSnapshot } from "@/lib/finance/budget/budget-presen
 import {
   budgetDraftInputFromMinor,
   formatBudgetPlanningMinor,
+  formatBudgetPlanningWholeMajorNumber,
   normalizeBudgetAmountInput,
   parseBudgetInputToMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
@@ -34,6 +35,7 @@ type FinanceYearOption = { id: string; name: string };
 type FinanceBudgetWorkspacePanelProps = {
   years: FinanceYearOption[];
   snapshot: BudgetWorkspaceSnapshot | null;
+  baseCurrency: string | null;
   hasAccounts: boolean;
   canMutate: boolean;
   canApprove: boolean;
@@ -43,6 +45,7 @@ type FinanceBudgetWorkspacePanelProps = {
 export function FinanceBudgetWorkspacePanel({
   years,
   snapshot,
+  baseCurrency,
   hasAccounts,
   canMutate,
   canApprove,
@@ -54,6 +57,8 @@ export function FinanceBudgetWorkspacePanel({
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const yearSelectId = useId();
+  const currencyContextId = useId();
+  const workspaceCurrency = snapshot?.currency ?? baseCurrency;
 
   const isApproved = snapshot?.status === "APPROVED";
   const isDraft = snapshot?.status === "DRAFT";
@@ -124,23 +129,46 @@ export function FinanceBudgetWorkspacePanel({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <SceFormField label={t("yearLabel")} htmlFor={yearSelectId}>
-          <select
-            id={yearSelectId}
-            className="min-w-[12rem] rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
-            value={selectedYearId ?? ""}
-            onChange={(e) => onYearChange(e.target.value)}
-          >
-            <option value="" disabled>
-              {t("yearPlaceholder")}
-            </option>
-            {years.map((year) => (
-              <option key={year.id} value={year.id}>
-                {year.name}
+        <div className="flex flex-wrap items-end gap-4">
+          <SceFormField label={t("yearLabel")} htmlFor={yearSelectId}>
+            <select
+              id={yearSelectId}
+              className="min-w-[12rem] rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
+              value={selectedYearId ?? ""}
+              onChange={(e) => onYearChange(e.target.value)}
+            >
+              <option value="" disabled>
+                {t("yearPlaceholder")}
               </option>
-            ))}
-          </select>
-        </SceFormField>
+              {years.map((year) => (
+                <option key={year.id} value={year.id}>
+                  {year.name}
+                </option>
+              ))}
+            </select>
+          </SceFormField>
+
+          {yearSelected ? (
+            workspaceCurrency ? (
+              <SceFormField label={t("currencyLabel")} htmlFor={currencyContextId}>
+                <p
+                  id={currencyContextId}
+                  className="min-h-[2.375rem] rounded-md border border-transparent px-0 py-2 text-sm font-medium"
+                  data-budget-currency={workspaceCurrency}
+                >
+                  {workspaceCurrency}
+                </p>
+              </SceFormField>
+            ) : (
+              <div className="max-w-md pb-2 text-sm text-[var(--muted)]">
+                <p>{t("currencyUnsetHint")}</p>
+                <Link href="/dashboard/finance/settings" className="font-medium underline">
+                  {t("openSetup")}
+                </Link>
+              </div>
+            )
+          ) : null}
+        </div>
 
         {isApproved ? (
           <p className="text-sm text-[var(--muted)]" data-budget-status="approved">
@@ -186,6 +214,7 @@ export function FinanceBudgetWorkspacePanel({
         <BudgetWorkspaceEditor
           key={`${selectedYearId}:${snapshot.versionId}`}
           snapshot={snapshot}
+          workspaceCurrency={workspaceCurrency}
           incomeRows={incomeRows}
           expenseRows={expenseRows}
           locale={locale}
@@ -206,6 +235,7 @@ export function FinanceBudgetWorkspacePanel({
 
 function BudgetWorkspaceEditor(props: {
   snapshot: BudgetWorkspaceSnapshot;
+  workspaceCurrency: string | null;
   incomeRows: BudgetWorkspaceSnapshot["rows"];
   expenseRows: BudgetWorkspaceSnapshot["rows"];
   locale: string;
@@ -311,7 +341,7 @@ function BudgetWorkspaceEditor(props: {
       <BudgetSection
         title={t("incomeSection")}
         rows={props.incomeRows}
-        currency={props.snapshot.currency}
+        currency={props.workspaceCurrency}
         locale={props.locale}
         readOnly={props.readOnly}
         draftAmounts={draftAmounts}
@@ -322,7 +352,7 @@ function BudgetWorkspaceEditor(props: {
       <BudgetSection
         title={t("expenseSection")}
         rows={props.expenseRows}
-        currency={props.snapshot.currency}
+        currency={props.workspaceCurrency}
         locale={props.locale}
         readOnly={props.readOnly}
         draftAmounts={draftAmounts}
@@ -338,7 +368,7 @@ function BudgetWorkspaceEditor(props: {
             <dd className="font-medium">
               {formatBudgetPlanningMinor(
                 localTotals.totalIncomeMinor,
-                props.snapshot.currency,
+                props.workspaceCurrency,
                 props.locale,
               )}
             </dd>
@@ -348,7 +378,7 @@ function BudgetWorkspaceEditor(props: {
             <dd className="font-medium">
               {formatBudgetPlanningMinor(
                 localTotals.totalExpenseMinor,
-                props.snapshot.currency,
+                props.workspaceCurrency,
                 props.locale,
               )}
             </dd>
@@ -358,7 +388,7 @@ function BudgetWorkspaceEditor(props: {
             <dd className="font-medium">
               {formatBudgetPlanningMinor(
                 localTotals.resultMinor,
-                props.snapshot.currency,
+                props.workspaceCurrency,
                 props.locale,
               )}
             </dd>
@@ -485,7 +515,7 @@ function BudgetAmountRow(props: {
   const displayValue = focused
     ? editValue
     : props.amountMinor !== null
-      ? formatBudgetPlanningMinor(props.amountMinor, props.currency, props.locale)
+      ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.locale)
       : "";
 
   return (

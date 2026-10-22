@@ -535,6 +535,8 @@
       "pageTitle": "Budget",
       "pageDescription": "Plan amounts against your financial accounts for a financial year. Approval establishes the protected baseline.",
       "yearLabel": "Financial year",
+      "currencyLabel": "Currency",
+      "currencyUnsetHint": "Set a base currency in finance setup so planned amounts are unambiguous.",
       "yearPlaceholder": "Select financial year",
       "selectYearHint": "Choose a financial year to view or edit the budget.",
       "approveBlockedPendingSave": "Save all planned amounts before approving the baseline.",

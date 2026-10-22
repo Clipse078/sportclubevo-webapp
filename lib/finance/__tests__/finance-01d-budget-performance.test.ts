@@ -37,6 +37,7 @@ describe("FIN-01D budget editing performance contract", () => {
       "utf8",
     );
     expect(budgetPage).toContain("selectedYearId={selectedYearId}");
+    expect(budgetPage).toContain("baseCurrency={baseCurrency}");
     expect(budgetPage).not.toContain("years[0]");
   });
 

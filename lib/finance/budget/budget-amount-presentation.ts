@@ -33,24 +33,66 @@ export function budgetDraftInputFromMinor(amountMinor: number | null): string {
   return String(minorUnitsToWholeMajor(amountMinor));
 }
 
+type BudgetPlanningFormatters = {
+  wholeMajorNumber: Intl.NumberFormat;
+  currencyWholeMajor: Intl.NumberFormat | null;
+};
+
+const formatterCache = new Map<string, BudgetPlanningFormatters>();
+
+function formatterCacheKey(currency: string | null, locale: string): string {
+  return `${locale}\u0000${currency?.toUpperCase() ?? ""}`;
+}
+
+export function getBudgetPlanningFormatters(
+  currency: string | null,
+  locale: string,
+): BudgetPlanningFormatters {
+  const key = formatterCacheKey(currency, locale);
+  const cached = formatterCache.get(key);
+  if (cached) return cached;
+
+  const wholeMajorNumber = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
+  let currencyWholeMajor: Intl.NumberFormat | null = null;
+  if (currency) {
+    const code = currency.toUpperCase();
+    try {
+      currencyWholeMajor = new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: code,
+        currencyDisplay: "code",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    } catch {
+      currencyWholeMajor = null;
+    }
+  }
+
+  const formatters = { wholeMajorNumber, currencyWholeMajor };
+  formatterCache.set(key, formatters);
+  return formatters;
+}
+
+/** Locale-aware whole-unit number without currency (row blur when workspace shows currency). */
+export function formatBudgetPlanningWholeMajorNumber(
+  amountMinor: number,
+  locale: string,
+): string {
+  const wholeMajor = minorUnitsToWholeMajor(amountMinor);
+  return getBudgetPlanningFormatters(null, locale).wholeMajorNumber.format(wholeMajor);
+}
+
+/** Whole-unit budget amount with ISO currency code via Intl (totals and read-only emphasis). */
 export function formatBudgetPlanningMinor(
   amountMinor: number,
   currency: string | null,
   locale: string,
 ): string {
   const wholeMajor = minorUnitsToWholeMajor(amountMinor);
-  if (!currency) {
-    return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(wholeMajor);
+  const { wholeMajorNumber, currencyWholeMajor } = getBudgetPlanningFormatters(currency, locale);
+  if (currencyWholeMajor) {
+    return currencyWholeMajor.format(wholeMajor);
   }
-  const code = currency.toUpperCase();
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: code,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(wholeMajor);
-  } catch {
-    return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(wholeMajor);
-  }
+  return wholeMajorNumber.format(wholeMajor);
 }

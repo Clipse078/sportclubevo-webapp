@@ -32,11 +32,8 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
     redirect("/dashboard/finance");
   }
 
-  const { years, snapshot, hasAccounts, selectedYearId } = await loadBudgetWorkspaceSnapshot(
-    prisma,
-    workspace.ctx,
-    params.yearId ?? null,
-  );
+  const { years, snapshot, hasAccounts, selectedYearId, baseCurrency } =
+    await loadBudgetWorkspaceSnapshot(prisma, workspace.ctx, params.yearId ?? null);
 
   return (
     <PageShell>
@@ -69,6 +66,7 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
         <FinanceBudgetWorkspacePanel
           years={years.map((y) => ({ id: y.id, name: y.name }))}
           snapshot={snapshot}
+          baseCurrency={baseCurrency}
           hasAccounts={hasAccounts}
           canMutate={workspace.canBudgetManage}
           canApprove={workspace.canBudgetApprove}
