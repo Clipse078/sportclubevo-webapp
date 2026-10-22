@@ -414,6 +414,81 @@
     "matchHomeSide": "Home",
     "matchAwaySide": "Away"
   },
+  "Finance": {
+    "breadcrumbs": {
+      "dashboard": "Dashboard",
+      "finance": "Finance",
+      "settings": "Setup"
+    },
+    "workspace": {
+      "eyebrow": "Finance",
+      "title": "Finance",
+      "description": "Planning and financial structure for your organisation."
+    },
+    "contextTabsAria": "Finance workspace sections",
+    "nav": {
+      "overview": "Overview",
+      "income_statement": "Income statement",
+      "budget": "Budget",
+      "forecast": "Forecast",
+      "cost_centers": "Cost centers",
+      "projects": "Projects",
+      "funds": "Funds",
+      "structure_settings": "Setup",
+      "reports": "Reports"
+    },
+    "overview": {
+      "notConfiguredTitle": "Finance is not configured yet",
+      "notConfiguredBody": "Set a base currency and financial year when you are ready. No sample data will be shown.",
+      "incompleteTitle": "Finance setup is in progress",
+      "incompleteBody": "Complete base currency, at least one financial year, and confirm setup to unlock finance capabilities.",
+      "configuredNoDataTitle": "Finance is configured",
+      "configuredNoDataBody": "Budgets, actuals, and reports will appear here as you enable capabilities and add data in future releases.",
+      "configuredCapabilitiesTitle": "Finance is ready",
+      "configuredCapabilitiesBody": "Enabled capabilities are available from the navigation. Postings and calculations are not part of this foundation release.",
+      "openSetup": "Open finance setup"
+    },
+    "settings": {
+      "title": "Finance setup",
+      "description": "Base currency, financial years, and enabled capabilities.",
+      "structureOnlyHint": "Configuration changes require finance admin permission.",
+      "baseCurrencyTitle": "Base currency",
+      "baseCurrencyHelp": "ISO 4217 code used for organisation finance (not platform billing).",
+      "baseCurrencyLabel": "Currency code",
+      "saveCurrency": "Save currency",
+      "financeYearTitle": "Financial years",
+      "financeYearHelp": "Independent from sporting seasons. Define boundaries that fit your organisation.",
+      "financeYearName": "Label",
+      "financeYearStart": "Start date",
+      "financeYearEnd": "End date",
+      "financeYearDefaultName": "Financial year",
+      "addFinanceYear": "Add financial year",
+      "capabilitiesTitle": "Capabilities",
+      "capabilitiesHelp": "Only product-ready capabilities can be enabled.",
+      "completeSetup": "Mark setup complete"
+    },
+    "capabilities": {
+      "OVERVIEW": "Overview",
+      "MANAGEMENT_INCOME_STATEMENT": "Management income statement",
+      "BUDGETING": "Budgeting",
+      "ACTUALS": "Actuals",
+      "FORECASTING": "Forecasting",
+      "COST_CENTERS": "Cost centers",
+      "PROJECTS": "Projects",
+      "FUNDS": "Funds",
+      "RECEIVABLES": "Receivables",
+      "PAYABLES": "Payables",
+      "COMMITMENTS": "Commitments",
+      "APPROVALS": "Approvals",
+      "PERSONNEL_FINANCE": "Personnel finance",
+      "EVENT_FINANCE": "Event finance",
+      "GRANTS": "Grants",
+      "LIQUIDITY": "Liquidity",
+      "ACCOUNTING_INTEGRATION": "Accounting integration",
+      "UNIT_ECONOMICS": "Unit economics",
+      "REPORTING": "Reporting"
+    }
+  },
   "AppShell": {
     "primaryNavAria": "Main navigation",
     "contextNavAria": "Context navigation",

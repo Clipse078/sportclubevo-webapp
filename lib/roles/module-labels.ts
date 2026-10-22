@@ -40,6 +40,11 @@ export const MODULE_LABELS: Record<string, string> = {
   WORKSPACE: "Dokumente",
   ROLES: "Rollen & Berechtigungen",
   TASKS: "Aufgaben",
+  FINANCE: "Finanzen",
+  BILLING: "Abrechnung",
+  COMMUNICATION: "Kommunikation",
+  SPONSORING: "Sponsoring",
+  REQUIREMENTS: "Anforderungen",
 };
 
 /**
@@ -69,6 +74,7 @@ export const MODULE_DISPLAY_ORDER: readonly string[] = [
   "SEASONS",
   "FACILITIES",
   "WORKSPACE",
+  "FINANCE",
   "USERS",
   "ROLES",
   "TENANTS",

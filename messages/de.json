@@ -877,6 +877,81 @@
     }
   },
 
+  "Finance": {
+    "breadcrumbs": {
+      "dashboard": "Dashboard",
+      "finance": "Finanzen",
+      "settings": "Einrichtung"
+    },
+    "workspace": {
+      "eyebrow": "Finanzen",
+      "title": "Finanzen",
+      "description": "Planung und Finanzstruktur für Ihre Organisation."
+    },
+    "contextTabsAria": "Finanz-Bereiche",
+    "nav": {
+      "overview": "Übersicht",
+      "income_statement": "Erfolgsrechnung",
+      "budget": "Budget",
+      "forecast": "Prognose",
+      "cost_centers": "Kostenstellen",
+      "projects": "Projekte",
+      "funds": "Fonds",
+      "structure_settings": "Einrichtung",
+      "reports": "Berichte"
+    },
+    "overview": {
+      "notConfiguredTitle": "Finanzen sind noch nicht eingerichtet",
+      "notConfiguredBody": "Legen Sie Basiswährung und Finanzjahr fest, wenn Sie bereit sind. Es werden keine Beispieldaten angezeigt.",
+      "incompleteTitle": "Finanz-Einrichtung läuft",
+      "incompleteBody": "Vervollständigen Sie Basiswährung, mindestens ein Finanzjahr und schliessen Sie die Einrichtung ab.",
+      "configuredNoDataTitle": "Finanzen sind eingerichtet",
+      "configuredNoDataBody": "Budgets, Ist-Werte und Berichte erscheinen hier, sobald Fähigkeiten und Daten verfügbar sind.",
+      "configuredCapabilitiesTitle": "Finanzen sind bereit",
+      "configuredCapabilitiesBody": "Aktivierte Fähigkeiten sind in der Navigation verfügbar. Buchungen und Berechnungen folgen in späteren Releases.",
+      "openSetup": "Finanz-Einrichtung öffnen"
+    },
+    "settings": {
+      "title": "Finanz-Einrichtung",
+      "description": "Basiswährung, Finanzjahre und aktivierte Fähigkeiten.",
+      "structureOnlyHint": "Konfigurationsänderungen erfordern Finanz-Admin-Berechtigung.",
+      "baseCurrencyTitle": "Basiswährung",
+      "baseCurrencyHelp": "ISO-4217-Code für Organisationsfinanzen (nicht Plattform-Abrechnung).",
+      "baseCurrencyLabel": "Währungscode",
+      "saveCurrency": "Währung speichern",
+      "financeYearTitle": "Finanzjahre",
+      "financeYearHelp": "Unabhängig von Sport-Saisons. Grenzen passend zur Organisation definieren.",
+      "financeYearName": "Bezeichnung",
+      "financeYearStart": "Startdatum",
+      "financeYearEnd": "Enddatum",
+      "financeYearDefaultName": "Finanzjahr",
+      "addFinanceYear": "Finanzjahr hinzufügen",
+      "capabilitiesTitle": "Fähigkeiten",
+      "capabilitiesHelp": "Nur produktionsreife Fähigkeiten können aktiviert werden.",
+      "completeSetup": "Einrichtung abschliessen"
+    },
+    "capabilities": {
+      "OVERVIEW": "Übersicht",
+      "MANAGEMENT_INCOME_STATEMENT": "Erfolgsrechnung",
+      "BUDGETING": "Budgetierung",
+      "ACTUALS": "Ist-Werte",
+      "FORECASTING": "Prognose",
+      "COST_CENTERS": "Kostenstellen",
+      "PROJECTS": "Projekte",
+      "FUNDS": "Fonds",
+      "RECEIVABLES": "Forderungen",
+      "PAYABLES": "Verbindlichkeiten",
+      "COMMITMENTS": "Verpflichtungen",
+      "APPROVALS": "Freigaben",
+      "PERSONNEL_FINANCE": "Personal-Finanzen",
+      "EVENT_FINANCE": "Event-Finanzen",
+      "GRANTS": "Zuschüsse",
+      "LIQUIDITY": "Liquidität",
+      "ACCOUNTING_INTEGRATION": "Buchhaltungs-Integration",
+      "UNIT_ECONOMICS": "Unit Economics",
+      "REPORTING": "Berichte"
+    }
+  },
   "AppShell": {
     "primaryNavAria": "Hauptnavigation",
     "contextNavAria": "Kontextnavigation",

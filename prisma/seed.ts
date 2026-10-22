@@ -387,6 +387,11 @@ async function main() {
     { key: "workspace.audit.view", name: "View workspace governance audit", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "workspace.governance.manage", name: "Manage workspace governance operations", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "workspace.break_glass", name: "Activate workspace break-glass exceptional access", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+
+    // SCE-FINANCE-01B — tenant organisation finance (distinct from people.finance.* and billing.*)
+    { key: "finance.view", name: "View organisation finance", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "finance.structure.manage", name: "Manage finance structure", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "finance.admin", name: "Administer finance configuration", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
   ] as const;
 
   for (const permission of permissions) {

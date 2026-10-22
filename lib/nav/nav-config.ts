@@ -652,6 +652,12 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
+        key: "finance",
+        label: "Finanzen",
+        href: "/dashboard/finance",
+        permissionKeys: [PERMISSIONS.FINANCE_VIEW],
+      },
+      {
         key: "formulare-freigaben",
         label: "Formulare & Freigaben",
         href: "/dashboard/formulare-freigaben",

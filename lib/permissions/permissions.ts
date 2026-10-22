@@ -198,6 +198,11 @@ export const PERMISSIONS = {
   BILLING_VIEW: "billing.view",
   BILLING_MANAGE: "billing.manage",
 
+  /** SCE-FINANCE-01B — organisation finance (not platform billing). */
+  FINANCE_VIEW: "finance.view",
+  FINANCE_STRUCTURE_MANAGE: "finance.structure.manage",
+  FINANCE_ADMIN: "finance.admin",
+
   ORG_VIEW: "org.view",
   ORG_MANAGE: "org.manage",
   // ADMIN-DELETE-ORG-01: canonical permanent-deletion permission for OrgUnit
