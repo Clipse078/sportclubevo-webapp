@@ -267,10 +267,23 @@ export async function approveBudgetVersion(
     );
   }
 
+  const configuration = await db.financeConfiguration.findUnique({
+    where: { tenantId: ctx.tenantId },
+    select: { baseCurrency: true },
+  });
+  const baseCurrency = configuration?.baseCurrency?.trim().toUpperCase() ?? null;
+  if (!baseCurrency) {
+    throw new FinanceDomainError(
+      "FINANCE_INVALID_CURRENCY",
+      "Configure organisation base currency before approving a budget baseline.",
+    );
+  }
+
   return db.financeBudgetVersion.update({
     where: { id: version.id },
     data: {
       status: "APPROVED",
+      baseCurrency,
       approvedAt: new Date(),
       approvedByUserId: ctx.userId,
     },

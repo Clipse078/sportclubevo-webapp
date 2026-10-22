@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { Button } from "@/components/ui/Button";
 import {
@@ -18,6 +19,9 @@ import {
   FINANCE_SETTINGS_SECTION_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
+import { FinanceBaseCurrencySelector } from "@/components/admin/finance/FinanceBaseCurrencySelector";
+import { formatIso4217CurrencyOptionLabel } from "@/lib/finance/currency/iso4217-currency";
+import { useLocale } from "next-intl";
 
 type FinanceSettingsPanelProps = {
   baseCurrency: string | null;
@@ -26,6 +30,81 @@ type FinanceSettingsPanelProps = {
   yearDraftDefaults: { name: string; startDate: string; endDate: string };
 };
 
+function FinanceBaseCurrencySettingsSection({ baseCurrency }: { baseCurrency: string | null }) {
+  const t = useTranslations("Finance");
+  const locale = useLocale();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [currencyDraft, setCurrencyDraft] = useState(baseCurrency ?? "");
+  const [currencyError, setCurrencyError] = useState<string | null>(null);
+
+  const configuredLabel =
+    baseCurrency != null && baseCurrency.length > 0
+      ? formatIso4217CurrencyOptionLabel(baseCurrency, locale)
+      : null;
+
+  return (
+    <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-currency">
+      <h2 className="text-sm font-semibold">{t("settings.baseCurrencyTitle")}</h2>
+      <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.baseCurrencyHelp")}</p>
+      {configuredLabel ? (
+        <p
+          className="mt-2 text-sm font-medium text-[var(--foreground)]"
+          data-finance-base-currency-state="configured"
+        >
+          {t("settings.baseCurrencyConfiguredStatus", { currency: configuredLabel })}
+        </p>
+      ) : (
+        <p
+          className="mt-2 text-sm font-medium text-[var(--destructive)]"
+          data-finance-base-currency-state="required"
+        >
+          {t("settings.baseCurrencyRequiredStatus")}
+        </p>
+      )}
+      <form
+        className="mt-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setCurrencyError(null);
+          const currency = currencyDraft.trim();
+          if (!currency) {
+            setCurrencyError(t("settings.baseCurrencyRequiredStatus"));
+            return;
+          }
+          startTransition(async () => {
+            const result = await saveFinanceBaseCurrencyAction(currency);
+            if (!result.ok) {
+              setCurrencyError(result.error);
+              return;
+            }
+            router.refresh();
+          });
+        }}
+      >
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium sm:max-w-md">
+          {t("settings.baseCurrencyLabel")}
+          <FinanceBaseCurrencySelector
+            value={currencyDraft}
+            onChange={setCurrencyDraft}
+            disabled={pending}
+            ariaLabel={t("settings.baseCurrencyLabel")}
+            placeholder={t("settings.baseCurrencyPlaceholder")}
+          />
+        </label>
+        <Button type="submit" size="sm" disabled={pending || !currencyDraft.trim()}>
+          {t("settings.saveCurrency")}
+        </Button>
+      </form>
+      {currencyError ? (
+        <p className="mt-2 text-sm text-[var(--destructive)]" role="alert">
+          {currencyError}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 export function FinanceSettingsPanel({
   baseCurrency,
   canCompleteSetup,
@@ -33,6 +112,7 @@ export function FinanceSettingsPanel({
   yearDraftDefaults,
 }: FinanceSettingsPanelProps) {
   const t = useTranslations("Finance");
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   const capabilityState = new Map(
@@ -41,36 +121,10 @@ export function FinanceSettingsPanel({
 
   return (
     <div className={cn(FINANCE_WORKSPACE_STACK_CLASS, "gap-8")}>
-      <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-currency">
-        <h2 className="text-sm font-semibold">{t("settings.baseCurrencyTitle")}</h2>
-        <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.baseCurrencyHelp")}</p>
-        <form
-          className="mt-4 flex flex-wrap items-end gap-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const data = new FormData(event.currentTarget);
-            const currency = String(data.get("baseCurrency") ?? "").trim();
-            startTransition(async () => {
-              await saveFinanceBaseCurrencyAction(currency);
-            });
-          }}
-        >
-          <label className="flex min-w-[8rem] flex-col gap-1 text-xs font-medium">
-            {t("settings.baseCurrencyLabel")}
-            <input
-              name="baseCurrency"
-              defaultValue={baseCurrency ?? ""}
-              maxLength={3}
-              className={`${FINANCE_FIELD_CONTROL_CLASS} uppercase`}
-              aria-label={t("settings.baseCurrencyLabel")}
-              placeholder="EUR"
-            />
-          </label>
-          <Button type="submit" size="sm" disabled={pending}>
-            {t("settings.saveCurrency")}
-          </Button>
-        </form>
-      </section>
+      <FinanceBaseCurrencySettingsSection
+        key={baseCurrency ?? "finance-base-currency-unset"}
+        baseCurrency={baseCurrency}
+      />
 
       <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-year">
         <h2 className="text-sm font-semibold">{t("settings.financeYearTitle")}</h2>
@@ -86,6 +140,7 @@ export function FinanceSettingsPanel({
                 startDate: String(data.get("startDate") ?? ""),
                 endDate: String(data.get("endDate") ?? ""),
               });
+              router.refresh();
             });
           }}
         >
@@ -190,6 +245,7 @@ export function FinanceSettingsPanel({
                       }
                       startTransition(async () => {
                         await setFinanceCapabilityAction(presentation.key, checked);
+                        router.refresh();
                       });
                     }}
                   />
@@ -208,6 +264,7 @@ export function FinanceSettingsPanel({
             onClick={() => {
               startTransition(async () => {
                 await completeFinanceSetupAction();
+                router.refresh();
               });
             }}
           >

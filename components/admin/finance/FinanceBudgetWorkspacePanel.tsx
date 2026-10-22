@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState, useTransition, useId } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
@@ -58,6 +58,7 @@ type FinanceBudgetWorkspacePanelProps = {
   canMutate: boolean;
   canApprove: boolean;
   selectedYearId: string | null;
+  formattingLocale: string;
 };
 
 export function FinanceBudgetWorkspacePanel({
@@ -68,9 +69,9 @@ export function FinanceBudgetWorkspacePanel({
   canMutate,
   canApprove,
   selectedYearId,
+  formattingLocale,
 }: FinanceBudgetWorkspacePanelProps) {
   const t = useTranslations("Finance.budget");
-  const locale = useLocale();
   const router = useRouter();
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -241,7 +242,7 @@ export function FinanceBudgetWorkspacePanel({
           workspaceCurrency={workspaceCurrency}
           incomeRows={incomeRows}
           expenseRows={expenseRows}
-          locale={locale}
+          formattingLocale={formattingLocale}
           readOnly={readOnly}
           isDraft={isDraft}
           canApprove={canApprove}
@@ -262,7 +263,7 @@ function BudgetWorkspaceEditor(props: {
   workspaceCurrency: string | null;
   incomeRows: BudgetWorkspaceSnapshot["rows"];
   expenseRows: BudgetWorkspaceSnapshot["rows"];
-  locale: string;
+  formattingLocale: string;
   readOnly: boolean;
   isDraft: boolean;
   canApprove: boolean;
@@ -366,7 +367,7 @@ function BudgetWorkspaceEditor(props: {
         title={t("incomeSection")}
         rows={props.incomeRows}
         currency={props.workspaceCurrency}
-        locale={props.locale}
+        formattingLocale={props.formattingLocale}
         readOnly={props.readOnly}
         draftAmounts={draftAmounts}
         lineErrors={lineErrors}
@@ -377,7 +378,7 @@ function BudgetWorkspaceEditor(props: {
         title={t("expenseSection")}
         rows={props.expenseRows}
         currency={props.workspaceCurrency}
-        locale={props.locale}
+        formattingLocale={props.formattingLocale}
         readOnly={props.readOnly}
         draftAmounts={draftAmounts}
         lineErrors={lineErrors}
@@ -396,7 +397,7 @@ function BudgetWorkspaceEditor(props: {
               {formatBudgetPlanningMinor(
                 localTotals.totalIncomeMinor,
                 props.workspaceCurrency,
-                props.locale,
+                props.formattingLocale,
               )}
             </dd>
           </div>
@@ -406,7 +407,7 @@ function BudgetWorkspaceEditor(props: {
               {formatBudgetPlanningMinor(
                 localTotals.totalExpenseMinor,
                 props.workspaceCurrency,
-                props.locale,
+                props.formattingLocale,
               )}
             </dd>
           </div>
@@ -416,7 +417,7 @@ function BudgetWorkspaceEditor(props: {
               {formatBudgetPlanningMinor(
                 localTotals.resultMinor,
                 props.workspaceCurrency,
-                props.locale,
+                props.formattingLocale,
               )}
             </dd>
           </div>
@@ -478,7 +479,7 @@ function BudgetSection(props: {
   title: string;
   rows: BudgetWorkspaceSnapshot["rows"];
   currency: string | null;
-  locale: string;
+  formattingLocale: string;
   readOnly: boolean;
   draftAmounts: BudgetDraftAmounts;
   lineErrors: Record<string, string>;
@@ -504,7 +505,7 @@ function BudgetSection(props: {
               key={row.accountId}
               row={row}
               currency={props.currency}
-              locale={props.locale}
+              formattingLocale={props.formattingLocale}
               readOnly={props.readOnly}
               amountMinor={
                 Object.prototype.hasOwnProperty.call(props.draftAmounts, row.accountId)
@@ -525,7 +526,7 @@ function BudgetSection(props: {
 function BudgetAmountRow(props: {
   row: BudgetWorkspaceSnapshot["rows"][number];
   currency: string | null;
-  locale: string;
+  formattingLocale: string;
   readOnly: boolean;
   amountMinor: number | null;
   lineError: string | undefined;
@@ -540,7 +541,7 @@ function BudgetAmountRow(props: {
   const displayValue = focused
     ? editValue
     : props.amountMinor !== null
-      ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.locale)
+      ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.formattingLocale)
       : "";
 
   return (
@@ -563,7 +564,11 @@ function BudgetAmountRow(props: {
         {props.readOnly ? (
           <span className="inline-block min-w-[11rem] text-end tabular-nums font-medium">
             {props.amountMinor !== null
-              ? formatBudgetPlanningMinor(props.amountMinor, props.currency, props.locale)
+              ? formatBudgetPlanningMinor(
+                  props.amountMinor,
+                  props.currency,
+                  props.formattingLocale,
+                )
               : "—"}
           </span>
         ) : (

@@ -71,6 +71,7 @@ export default async function FinanceBudgetPage({ searchParams }: PageProps) {
           canMutate={workspace.canBudgetManage}
           canApprove={workspace.canBudgetApprove}
           selectedYearId={selectedYearId}
+          formattingLocale={workspace.formattingLocale}
         />
       </SceWorkspaceChrome>
     </PageShell>

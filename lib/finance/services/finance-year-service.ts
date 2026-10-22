@@ -10,6 +10,7 @@ import {
   deriveSetupStatusAfterMutation,
   financeYearOverlaps,
 } from "@/lib/finance/setup/finance-setup-state";
+import { ensureFinanceConfigurationRow } from "@/lib/finance/services/finance-configuration-service";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
 import { logAction } from "@/lib/audit/log-action";
 
@@ -84,23 +85,19 @@ export async function createFinanceYear(
     },
   });
 
-  const config = await db.financeConfiguration.findUnique({
+  const config = await ensureFinanceConfigurationRow(db, ctx.tenantId);
+  const yearCount = await db.financeYear.count({ where: { tenantId: ctx.tenantId } });
+  await db.financeConfiguration.update({
     where: { tenantId: ctx.tenantId },
+    data: {
+      setupStatus: deriveSetupStatusAfterMutation({
+        baseCurrency: config.baseCurrency,
+        financeYearCount: yearCount,
+        previous: config.setupStatus,
+      }),
+      currentFinanceYearId: config.currentFinanceYearId ?? year.id,
+    },
   });
-  if (config) {
-    const yearCount = await db.financeYear.count({ where: { tenantId: ctx.tenantId } });
-    await db.financeConfiguration.update({
-      where: { tenantId: ctx.tenantId },
-      data: {
-        setupStatus: deriveSetupStatusAfterMutation({
-          baseCurrency: config.baseCurrency,
-          financeYearCount: yearCount,
-          previous: config.setupStatus,
-        }),
-        currentFinanceYearId: config.currentFinanceYearId ?? year.id,
-      },
-    });
-  }
 
   await logAction({
     moduleKey: "finance",

@@ -11,14 +11,20 @@ import { logAction } from "@/lib/audit/log-action";
 
 type Db = Pick<
   PrismaClient,
-  "financeConfiguration" | "financeYear" | "financeTenantCapability"
+  "financeConfiguration" | "financeYear" | "financeTenantCapability" | "financeBudgetVersion"
 >;
+
+type FinanceConfigurationDb = Pick<PrismaClient, "financeConfiguration">;
 
 export async function getFinanceConfiguration(db: Db, tenantId: string) {
   return db.financeConfiguration.findUnique({ where: { tenantId } });
 }
 
-export async function ensureFinanceConfigurationRow(db: Db, tenantId: string) {
+/** Ensures a configuration row exists without mutating unrelated fields (e.g. baseCurrency). */
+export async function ensureFinanceConfigurationRow(
+  db: FinanceConfigurationDb,
+  tenantId: string,
+) {
   return db.financeConfiguration.upsert({
     where: { tenantId },
     create: { tenantId },
@@ -42,6 +48,23 @@ export async function setFinanceBaseCurrency(
 
   const yearCount = await db.financeYear.count({ where: { tenantId: ctx.tenantId } });
   const existing = await ensureFinanceConfigurationRow(db, ctx.tenantId);
+
+  if (existing.baseCurrency && existing.baseCurrency !== normalized) {
+    const approvedBaselineCount = await db.financeBudgetVersion.count({
+      where: {
+        status: "APPROVED",
+        budget: { tenantId: ctx.tenantId },
+      },
+    });
+    if (approvedBaselineCount > 0) {
+      throw new FinanceDomainError(
+        "FINANCE_INVALID_CURRENCY",
+        "Base currency cannot change while approved financial baselines exist.",
+        409,
+      );
+    }
+  }
+
   const setupStatus = deriveSetupStatusAfterMutation({
     baseCurrency: normalized,
     financeYearCount: yearCount,

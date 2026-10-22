@@ -2,6 +2,12 @@
  * FIN-01D budget planning amounts — whole major units in UI, integer minor units in storage.
  */
 
+import {
+  formatFinanceMoneyMinor,
+  formatFinanceMoneyWholeMajorNumber,
+  getFinanceMoneyPresentationFormatters,
+} from "@/lib/finance/presentation/finance-money-presentation";
+
 export function normalizeBudgetAmountInput(raw: string): string {
   return raw.replace(/[^\d]/g, "");
 }
@@ -33,45 +39,9 @@ export function budgetDraftInputFromMinor(amountMinor: number | null): string {
   return String(minorUnitsToWholeMajor(amountMinor));
 }
 
-type BudgetPlanningFormatters = {
-  wholeMajorNumber: Intl.NumberFormat;
-  currencyWholeMajor: Intl.NumberFormat | null;
-};
-
-const formatterCache = new Map<string, BudgetPlanningFormatters>();
-
-function formatterCacheKey(currency: string | null, locale: string): string {
-  return `${locale}\u0000${currency?.toUpperCase() ?? ""}`;
-}
-
-export function getBudgetPlanningFormatters(
-  currency: string | null,
-  locale: string,
-): BudgetPlanningFormatters {
-  const key = formatterCacheKey(currency, locale);
-  const cached = formatterCache.get(key);
-  if (cached) return cached;
-
-  const wholeMajorNumber = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
-  let currencyWholeMajor: Intl.NumberFormat | null = null;
-  if (currency) {
-    const code = currency.toUpperCase();
-    try {
-      currencyWholeMajor = new Intl.NumberFormat(locale, {
-        style: "currency",
-        currency: code,
-        currencyDisplay: "code",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      });
-    } catch {
-      currencyWholeMajor = null;
-    }
-  }
-
-  const formatters = { wholeMajorNumber, currencyWholeMajor };
-  formatterCache.set(key, formatters);
-  return formatters;
+/** @deprecated Prefer getFinanceMoneyPresentationFormatters — budget alias for FIN-01D tests. */
+export function getBudgetPlanningFormatters(currency: string | null, locale: string) {
+  return getFinanceMoneyPresentationFormatters(currency, locale);
 }
 
 /** Locale-aware whole-unit number without currency (row blur when workspace shows currency). */
@@ -79,20 +49,14 @@ export function formatBudgetPlanningWholeMajorNumber(
   amountMinor: number,
   locale: string,
 ): string {
-  const wholeMajor = minorUnitsToWholeMajor(amountMinor);
-  return getBudgetPlanningFormatters(null, locale).wholeMajorNumber.format(wholeMajor);
+  return formatFinanceMoneyWholeMajorNumber(amountMinor, locale);
 }
 
-/** Whole-unit budget amount with ISO currency code via Intl (totals and read-only emphasis). */
+/** Whole-unit budget amount with ISO currency code (totals and read-only emphasis). */
 export function formatBudgetPlanningMinor(
   amountMinor: number,
   currency: string | null,
   locale: string,
 ): string {
-  const wholeMajor = minorUnitsToWholeMajor(amountMinor);
-  const { wholeMajorNumber, currencyWholeMajor } = getBudgetPlanningFormatters(currency, locale);
-  if (currencyWholeMajor) {
-    return currencyWholeMajor.format(wholeMajor);
-  }
-  return wholeMajorNumber.format(wholeMajor);
+  return formatFinanceMoneyMinor(amountMinor, currency, locale);
 }

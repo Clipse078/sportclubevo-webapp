@@ -1,3 +1,5 @@
+import { computeCanonicalFinancialResult } from "@/lib/finance/reporting/canonical-financial-result";
+
 export type BudgetPlanningTotals = {
   totalIncomeMinor: number;
   totalExpenseMinor: number;
@@ -7,18 +9,15 @@ export type BudgetPlanningTotals = {
 export function computeBudgetPlanningTotals(
   lines: ReadonlyArray<{ amountMinor: number; financialAccount: { canonicalSemantic: string } }>,
 ): BudgetPlanningTotals {
-  let totalIncomeMinor = 0;
-  let totalExpenseMinor = 0;
-  for (const line of lines) {
-    if (line.financialAccount.canonicalSemantic === "INCOME") {
-      totalIncomeMinor += line.amountMinor;
-    } else if (line.financialAccount.canonicalSemantic === "EXPENSE") {
-      totalExpenseMinor += line.amountMinor;
-    }
-  }
+  const result = computeCanonicalFinancialResult(
+    lines.map((line) => ({
+      amountMinor: line.amountMinor,
+      canonicalSemantic: line.financialAccount.canonicalSemantic,
+    })),
+  );
   return {
-    totalIncomeMinor,
-    totalExpenseMinor,
-    resultMinor: totalIncomeMinor - totalExpenseMinor,
+    totalIncomeMinor: result.incomeMinor,
+    totalExpenseMinor: result.expenseMinor,
+    resultMinor: result.resultMinor,
   };
 }
