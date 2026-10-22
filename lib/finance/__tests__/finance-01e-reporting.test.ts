@@ -228,7 +228,12 @@ describe("FIN-01E reporting query service", () => {
       createdAt: Date;
       updatedAt: Date;
     }>,
-    budgets: [] as Array<{ id: string; tenantId: string; financeYearId: string }>,
+    budgets: [] as Array<{
+      id: string;
+      tenantId: string;
+      financeYearId: string;
+      currentBaselineVersionId: string | null;
+    }>,
     versions: [] as Array<{
       id: string;
       budgetId: string;
@@ -322,7 +327,14 @@ describe("FIN-01E reporting query service", () => {
         updatedAt: new Date(),
       },
     ];
-    store.budgets = [{ id: "b1", tenantId: tenantA, financeYearId: "year-1" }];
+    store.budgets = [
+      {
+        id: "b1",
+        tenantId: tenantA,
+        financeYearId: "year-1",
+        currentBaselineVersionId: "v-approved",
+      },
+    ];
     store.versions = [
       {
         id: "v-draft",

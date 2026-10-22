@@ -513,7 +513,13 @@
       "approveDialogBody": "L'approbation établit la baseline financière pour l'exercice. Les montants approuvés ne peuvent pas être modifiés silencieusement.",
       "approveConfirm": "Approuver la baseline",
       "cancel": "Annuler",
-      "approvedBaselineHint": "Baseline approuvée · {date} · {approver}"
+      "approvedBaselineHint": "Baseline approuvée · {date} · {approver}",
+      "rebaselineAction": "Approuver la nouvelle baseline",
+      "rebaselineDialogTitle": "Approuver la nouvelle baseline de gouvernance",
+      "rebaselineDialogBody": "Cette révision de travail deviendra la baseline financière pour l'exercice. La baseline approuvée précédente reste dans l'historique. Le reporting utilisera ensuite la nouvelle baseline.",
+      "rebaselineConfirm": "Approuver la nouvelle baseline",
+      "currentBaselineBadge": "Baseline actuelle",
+      "historicalApprovedBadge": "Baseline antérieure"
     },
     "settings": {
       "title": "Configuration finances",

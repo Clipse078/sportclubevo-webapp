@@ -512,11 +512,22 @@ function BudgetWorkspaceEditor(props: {
         </section>
       ) : null}
 
-      {props.isDraft && props.canApprove && props.snapshot.approvalReadiness ? (
+      {props.isDraft &&
+      props.canApprove &&
+      props.snapshot.approvalReadiness &&
+      props.snapshot.approvalMode ? (
         <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="readiness">
-          <h2 className="text-base font-semibold">{t("readinessTitle")}</h2>
+          <h2 className="text-base font-semibold">
+            {props.snapshot.approvalMode === "REBASELINE"
+              ? t("rebaselineReadinessTitle")
+              : t("readinessTitle")}
+          </h2>
           {canApproveByReadiness ? (
-            <p className="mt-2 text-sm text-[var(--muted)]">{t("readinessReady")}</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              {props.snapshot.approvalMode === "REBASELINE"
+                ? t("rebaselineReadinessReady")
+                : t("readinessReady")}
+            </p>
           ) : (
             <ul className="mt-2 list-disc space-y-1 ps-5 text-sm text-[var(--muted)]">
               {readinessIssues
@@ -556,9 +567,13 @@ function BudgetWorkspaceEditor(props: {
                   <span className="text-[var(--muted)]">
                     {entry.status === "APPROVED" ? t("versionApproved") : t("versionDraft")}
                   </span>
-                  {entry.isGovernanceBaseline ? (
+                  {entry.isCurrentBaseline ? (
                     <span className="ms-2 text-xs uppercase tracking-wide text-[var(--muted)]">
-                      {t("governanceBaselineBadge")}
+                      {t("currentBaselineBadge")}
+                    </span>
+                  ) : entry.isHistoricalApproved ? (
+                    <span className="ms-2 text-xs uppercase tracking-wide text-[var(--muted)]">
+                      {t("historicalApprovedBadge")}
                     </span>
                   ) : null}
                 </span>
@@ -651,7 +666,12 @@ function BudgetWorkspaceEditor(props: {
         </dl>
       </section>
 
-      {props.isDraft && props.canApprove && !props.snapshot.approvedBaseline ? (
+      {props.isDraft &&
+      props.canApprove &&
+      props.snapshot.approvalMode &&
+      (props.snapshot.approvalMode === "FIRST_APPROVAL"
+        ? !props.snapshot.approvedBaseline
+        : props.snapshot.approvedBaseline) ? (
         <div className="flex justify-end">
           <Button
             disabled={props.workspacePending || !canApproveByReadiness}
@@ -664,7 +684,9 @@ function BudgetWorkspaceEditor(props: {
               setApproveOpen(true);
             }}
           >
-            {t("approveAction")}
+            {props.snapshot.approvalMode === "REBASELINE"
+              ? t("rebaselineAction")
+              : t("approveAction")}
           </Button>
         </div>
       ) : null}
@@ -672,8 +694,16 @@ function BudgetWorkspaceEditor(props: {
       <Dialog
         open={approveOpen}
         onClose={() => setApproveOpen(false)}
-        title={t("approveDialogTitle")}
-        description={t("approveDialogBody")}
+        title={
+          props.snapshot.approvalMode === "REBASELINE"
+            ? t("rebaselineDialogTitle")
+            : t("approveDialogTitle")
+        }
+        description={
+          props.snapshot.approvalMode === "REBASELINE"
+            ? t("rebaselineDialogBody")
+            : t("approveDialogBody")
+        }
         footer={
           <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
             <Button variant="secondary" onClick={() => setApproveOpen(false)}>
@@ -693,7 +723,9 @@ function BudgetWorkspaceEditor(props: {
                 })();
               }}
             >
-              {t("approveConfirm")}
+              {props.snapshot.approvalMode === "REBASELINE"
+                ? t("rebaselineConfirm")
+                : t("approveConfirm")}
             </Button>
           </div>
         }

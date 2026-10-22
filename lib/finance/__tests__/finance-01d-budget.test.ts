@@ -30,7 +30,12 @@ const store = {
     canonicalSemantic: "INCOME" | "EXPENSE";
     lifecycle: "ACTIVE" | "ARCHIVED";
   }>,
-  budgets: [] as Array<{ id: string; tenantId: string; financeYearId: string }>,
+  budgets: [] as Array<{
+    id: string;
+    tenantId: string;
+    financeYearId: string;
+    currentBaselineVersionId: string | null;
+  }>,
   versions: [] as Array<{
     id: string;
     budgetId: string;
@@ -112,6 +117,7 @@ const db = {
         id: `budget-${store.budgets.length + 1}`,
         tenantId: data.tenantId as string,
         financeYearId: data.financeYearId as string,
+        currentBaselineVersionId: null,
       };
       store.budgets.push(budget);
       const version = {
@@ -126,6 +132,21 @@ const db = {
       const payload = { ...budget, versions: [version] };
       return include ? payload : budget;
     }),
+    update: vi.fn(
+      async ({
+        where: { id },
+        data,
+      }: {
+        where: { id: string };
+        data: { currentBaselineVersionId?: string };
+      }) => {
+        const budget = store.budgets.find((b) => b.id === id)!;
+        if (data.currentBaselineVersionId !== undefined) {
+          budget.currentBaselineVersionId = data.currentBaselineVersionId;
+        }
+        return budget;
+      },
+    ),
     delete: vi.fn(async ({ where: { id } }: { where: { id: string } }) => {
       store.budgets = store.budgets.filter((b) => b.id !== id);
     }),
@@ -137,12 +158,22 @@ const db = {
         include,
       }: {
         where: { id: string };
-        include?: { lines?: { include?: { financialAccount?: unknown } }; budget?: unknown };
+        include?: {
+          lines?: boolean | { include?: { financialAccount?: unknown } };
+          budget?: unknown;
+          approvedBy?: unknown;
+        };
       }) => {
         const version = store.versions.find((v) => v.id === id);
         if (!version) return null;
         const budget = store.budgets.find((b) => b.id === version.budgetId)!;
-        const payload: Record<string, unknown> = { ...version, budget };
+        const budgetVersions = store.versions
+          .filter((v) => v.budgetId === budget.id)
+          .map((v) => ({ id: v.id, status: v.status }));
+        const payload: Record<string, unknown> = {
+          ...version,
+          budget: { ...budget, versions: budgetVersions },
+        };
         if (include?.lines) {
           payload.lines = store.lines
             .filter((line) => line.budgetVersionId === id)
@@ -150,6 +181,9 @@ const db = {
               ...line,
               financialAccount: store.accounts.find((a) => a.id === line.financialAccountId),
             }));
+        }
+        if (include && "approvedBy" in include) {
+          payload.approvedBy = null;
         }
         return payload;
       },
@@ -171,10 +205,19 @@ const db = {
       },
     ),
     update: vi.fn(
-      async ({ where: { id }, data }: { where: { id: string }; data: Record<string, unknown> }) => {
-        const idx = store.versions.findIndex((v) => v.id === id);
-        store.versions[idx] = { ...store.versions[idx]!, ...data } as (typeof store.versions)[number];
-        return store.versions[idx];
+      async ({
+        where,
+        data,
+      }: {
+        where: { id: string; status?: "DRAFT" };
+        data: Record<string, unknown>;
+      }) => {
+        const version = store.versions.find((v) => v.id === where.id)!;
+        if (where.status && version.status !== where.status) {
+          throw new Error("immutable");
+        }
+        Object.assign(version, data);
+        return version;
       },
     ),
   },
@@ -237,6 +280,7 @@ const db = {
       store.configs.find((c) => c.tenantId === tenantId) ?? null,
     ),
   },
+  $transaction: vi.fn(async (fn: (tx: typeof db) => Promise<unknown>) => fn(db)),
 };
 
 describe("FIN-01D budget foundation", () => {
