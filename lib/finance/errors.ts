@@ -15,7 +15,9 @@ export type FinanceDomainErrorCode =
   | "FINANCE_BUDGET_IMMUTABLE"
   | "FINANCE_BUDGET_BASELINE_EXISTS"
   | "FINANCE_BUDGET_INVALID_ACCOUNT"
-  | "FINANCE_BUDGET_INVALID_AMOUNT";
+  | "FINANCE_BUDGET_INVALID_AMOUNT"
+  | "FINANCE_BUDGET_NOT_READY"
+  | "FINANCE_BUDGET_NO_BASELINE";
 
 export class FinanceDomainError extends Error {
   readonly code: FinanceDomainErrorCode;
