@@ -47,3 +47,50 @@ export function requireFinanceAdmin(ctx: FinanceAuthContext): void {
 export function canMutateFinanceStructure(ctx: FinanceAuthContext): boolean {
   return hasFinancePermission(ctx, PERMISSIONS.FINANCE_STRUCTURE_MANAGE);
 }
+
+export function requireFinanceBudgetView(ctx: FinanceAuthContext): void {
+  if (
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) &&
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_BUDGET_VIEW)
+  ) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to view budgets.",
+      403,
+    );
+  }
+}
+
+export function requireFinanceBudgetManage(ctx: FinanceAuthContext): void {
+  if (!hasFinancePermission(ctx, PERMISSIONS.FINANCE_BUDGET_MANAGE)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to manage draft budgets.",
+      403,
+    );
+  }
+}
+
+export function requireFinanceBudgetApprove(ctx: FinanceAuthContext): void {
+  if (
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_APPROVE) &&
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
+  ) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to approve budgets.",
+      403,
+    );
+  }
+}
+
+export function canManageDraftBudget(ctx: FinanceAuthContext): boolean {
+  return hasFinancePermission(ctx, PERMISSIONS.FINANCE_BUDGET_MANAGE);
+}
+
+export function canApproveBudget(ctx: FinanceAuthContext): boolean {
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_APPROVE) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
+  );
+}

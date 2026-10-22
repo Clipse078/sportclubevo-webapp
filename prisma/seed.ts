@@ -391,6 +391,9 @@ async function main() {
     // SCE-FINANCE-01B — tenant organisation finance (distinct from people.finance.* and billing.*)
     { key: "finance.view", name: "View organisation finance", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "finance.structure.manage", name: "Manage finance structure", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "finance.budget.view", name: "View organisation budgets", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "finance.budget.manage", name: "Manage draft budgets", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "finance.approve", name: "Approve finance baselines", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "finance.admin", name: "Administer finance configuration", module: PermissionModule.FINANCE, scope: PermissionScope.TENANT, grantableByAdmin: true },
   ] as const;
 

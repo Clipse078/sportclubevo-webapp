@@ -27,22 +27,25 @@ function entryCapabilitiesSatisfied(
   return required.every((cap) => enabled.has(cap) && isFinanceCapabilityImplemented(cap));
 }
 
+function resolveFinanceNavigationEntry(
+  input: {
+    ctx: FinanceAuthContext;
+    enabledCapabilities: ReadonlySet<FinanceCapabilityKey>;
+  },
+  entry: FinanceNavEntry,
+): boolean {
+  if (!entryPermitted(input.ctx, entry.permissionKeys)) return false;
+  if (entry.key === "structure") return true;
+  return entryCapabilitiesSatisfied(input.enabledCapabilities, entry.requiredCapabilities);
+}
+
 export function resolveFinanceNavigation(input: {
   ctx: FinanceAuthContext;
   enabledCapabilities: ReadonlySet<FinanceCapabilityKey>;
+  /** Retained for callers; capability nav no longer hides implemented surfaces by setup status. */
   setupConfigured: boolean;
 }): ResolvedFinanceNavItem[] {
-  if (!input.setupConfigured) {
-    return FINANCE_WORKSPACE_NAV.filter(
-      (entry) =>
-        entry.key === "overview" ||
-        (entry.key === "structure" && entryPermitted(input.ctx, entry.permissionKeys)),
-    );
-  }
-
-  return FINANCE_WORKSPACE_NAV.filter((entry) => {
-    if (!entryPermitted(input.ctx, entry.permissionKeys)) return false;
-    if (entry.key === "structure") return true;
-    return entryCapabilitiesSatisfied(input.enabledCapabilities, entry.requiredCapabilities);
-  });
+  return FINANCE_WORKSPACE_NAV.filter((entry) =>
+    resolveFinanceNavigationEntry(input, entry),
+  );
 }

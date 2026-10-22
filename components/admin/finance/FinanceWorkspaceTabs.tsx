@@ -9,18 +9,25 @@ import {
 
 type FinanceWorkspaceTabsProps = {
   showStructure: boolean;
+  showBudget: boolean;
   showSettings: boolean;
-  labels: { overview: string; structure: string; settings: string };
+  labels: { overview: string; structure: string; budget: string; settings: string };
   ariaLabel: string;
 };
 
 export function FinanceWorkspaceTabs({
   showStructure,
+  showBudget,
   showSettings,
   labels,
   ariaLabel,
 }: FinanceWorkspaceTabsProps) {
-  const config = buildFinanceTabNavigationConfig({ showStructure, showSettings, labels });
+  const config = buildFinanceTabNavigationConfig({
+    showStructure,
+    showBudget,
+    showSettings,
+    labels,
+  });
 
   return (
     <SceContextTabProvider config={config}>

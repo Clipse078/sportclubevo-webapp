@@ -96,6 +96,9 @@ export const TENANT_CLUB_ADMIN_DELEGATION_REGRESSION_KEYS = [
   "finance.view",
   "finance.structure.manage",
   "finance.admin",
+  "finance.budget.view",
+  "finance.budget.manage",
+  "finance.approve",
 ] as const;
 
 /**

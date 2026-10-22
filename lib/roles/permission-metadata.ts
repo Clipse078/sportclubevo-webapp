@@ -277,6 +277,9 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
     "Ausserordentlichen, zeitlich begrenzten Lesezugriff auf explizit definierte Workspace-Ressourcen aktivieren.",
 
   "finance.view": "Organisationsfinanzen einsehen.",
+  "finance.budget.view": "Organisationsbudgets einsehen.",
+  "finance.budget.manage": "Budgetentwürfe planen und bearbeiten.",
+  "finance.approve": "Genehmigte Finanz-Baselines freigeben.",
   "finance.structure.manage": "Finanzstruktur (Kostenstellen, Konten, Berichtsstruktur) verwalten.",
   "finance.admin": "Finanzkonfiguration und Fähigkeiten verwalten.",
 

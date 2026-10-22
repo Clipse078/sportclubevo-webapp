@@ -35,6 +35,8 @@ export async function loadFinanceWorkspaceContext() {
     setupConfigured,
   });
 
+  const showBudgetNav = navigation.some((item) => item.key === "budget");
+
   return {
     session,
     tenant,
@@ -44,7 +46,12 @@ export async function loadFinanceWorkspaceContext() {
     setupConfigured,
     enabledCapabilities,
     navigation,
+    showBudgetNav,
     canAdmin: permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     canStructure: permissionKeys.has(PERMISSIONS.FINANCE_STRUCTURE_MANAGE),
+    canBudgetManage: permissionKeys.has(PERMISSIONS.FINANCE_BUDGET_MANAGE),
+    canBudgetApprove:
+      permissionKeys.has(PERMISSIONS.FINANCE_APPROVE) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
   };
 }

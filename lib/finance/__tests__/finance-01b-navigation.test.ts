@@ -9,22 +9,45 @@ describe("FIN-01B capability-driven navigation", () => {
     permissionKeys: new Set([PERMISSIONS.FINANCE_VIEW]),
   };
 
-  it("shows overview and setup entry before configuration", () => {
+  it("shows overview before configuration when OVERVIEW capability is enabled", () => {
     const items = resolveFinanceNavigation({
       ctx: viewerCtx,
-      enabledCapabilities: new Set(),
+      enabledCapabilities: new Set(["OVERVIEW"]),
       setupConfigured: false,
     });
     expect(items.map((i) => i.key)).toEqual(["overview"]);
   });
 
-  it("does not expose unimplemented capability routes when configured", () => {
+  it("exposes budget when BUDGETING is enabled even before setup is marked configured", () => {
+    const budgetViewerCtx = {
+      ...viewerCtx,
+      permissionKeys: new Set([
+        PERMISSIONS.FINANCE_VIEW,
+        PERMISSIONS.FINANCE_BUDGET_VIEW,
+      ]),
+    };
     const items = resolveFinanceNavigation({
-      ctx: viewerCtx,
+      ctx: budgetViewerCtx,
+      enabledCapabilities: new Set(["OVERVIEW", "BUDGETING"]),
+      setupConfigured: false,
+    });
+    expect(items.some((i) => i.key === "budget")).toBe(true);
+  });
+
+  it("exposes budget when BUDGETING capability is implemented and enabled", () => {
+    const budgetViewerCtx = {
+      ...viewerCtx,
+      permissionKeys: new Set([
+        PERMISSIONS.FINANCE_VIEW,
+        PERMISSIONS.FINANCE_BUDGET_VIEW,
+      ]),
+    };
+    const items = resolveFinanceNavigation({
+      ctx: budgetViewerCtx,
       enabledCapabilities: new Set(["OVERVIEW", "BUDGETING"]),
       setupConfigured: true,
     });
-    expect(items.some((i) => i.key === "budget")).toBe(false);
+    expect(items.some((i) => i.key === "budget")).toBe(true);
   });
 
   it("includes structure settings only with structure permission", () => {

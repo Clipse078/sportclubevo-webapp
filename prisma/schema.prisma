@@ -1392,6 +1392,7 @@ model Tenant {
   financeCostCenters              FinanceCostCenter[]
   financialAccounts               FinancialAccount[]
   financialReportingGroups        FinancialReportingGroup[]
+  financeBudgets                  FinanceBudget[]
 
   @@index([status])
   @@index([name])
@@ -1541,6 +1542,10 @@ model User {
   communicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
   communicationPersonalSignatures  UserCommunicationPersonalSignature[]
   pushDeviceRegistrations          PushDeviceRegistration[]
+
+  financeBudgetsCreated              FinanceBudget[]         @relation("FinanceBudgetCreatedBy")
+  financeBudgetVersionsCreated       FinanceBudgetVersion[]  @relation("FinanceBudgetVersionCreatedBy")
+  financeBudgetVersionsApproved      FinanceBudgetVersion[]  @relation("FinanceBudgetVersionApprovedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10719,6 +10724,7 @@ model FinanceYear {
   tenant                    Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   season                    Season?                @relation("FinanceYearSeason", fields: [seasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   configurationsAsCurrent   FinanceConfiguration[] @relation("FinanceConfigurationCurrentYear")
+  budgets                   FinanceBudget[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -10778,6 +10784,7 @@ model FinancialAccount {
 
   tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   reportingGroup  FinancialReportingGroup @relation(fields: [reportingGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  budgetLines     FinanceBudgetLine[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, reportingGroupId])
@@ -10803,4 +10810,64 @@ model FinancialReportingGroup {
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, parentId])
+}
+
+enum FinanceBudgetVersionStatus {
+  DRAFT
+  APPROVED
+}
+
+/// Budget container per tenant financial year (ADR-019, FIN-01D).
+model FinanceBudget {
+  id              String   @id @default(cuid())
+  tenantId        String
+  financeYearId   String
+  name            String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear FinanceYear         @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy   User?               @relation("FinanceBudgetCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  versions    FinanceBudgetVersion[]
+
+  @@unique([tenantId, financeYearId])
+  @@index([tenantId])
+  @@index([financeYearId])
+}
+
+model FinanceBudgetVersion {
+  id               String                     @id @default(cuid())
+  budgetId         String
+  status           FinanceBudgetVersionStatus @default(DRAFT)
+  versionNumber    Int                        @default(1)
+  approvedAt       DateTime?
+  approvedByUserId String?
+  createdByUserId  String?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  budget     FinanceBudget       @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  approvedBy User?               @relation("FinanceBudgetVersionApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdBy  User?               @relation("FinanceBudgetVersionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  lines      FinanceBudgetLine[]
+
+  @@index([budgetId, status])
+}
+
+/// Planned amount against a financial account leaf — not actuals or forecast (FIN-01D).
+model FinanceBudgetLine {
+  id                 String   @id @default(cuid())
+  budgetVersionId    String
+  financialAccountId String
+  amountMinor        Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  budgetVersion    FinanceBudgetVersion @relation(fields: [budgetVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financialAccount FinancialAccount     @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([budgetVersionId, financialAccountId])
+  @@index([financialAccountId])
 }

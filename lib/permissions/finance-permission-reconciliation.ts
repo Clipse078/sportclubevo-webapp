@@ -29,6 +29,27 @@ export const FINANCE_PERMISSION_DEFS = [
     grantableByAdmin: true,
   },
   {
+    key: "finance.budget.view",
+    name: "View organisation budgets",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.budget.manage",
+    name: "Manage draft budgets",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.approve",
+    name: "Approve finance baselines",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
     key: "finance.admin",
     name: "Administer finance configuration",
     module: FINANCE_MODULE,

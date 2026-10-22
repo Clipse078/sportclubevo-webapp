@@ -24,6 +24,12 @@ import {
   AccountRowActions,
   ReportingGroupRowActions,
 } from "@/components/admin/finance/FinanceStructureNodeActions";
+import {
+  FINANCE_FIELD_CONTROL_CLASS,
+  FINANCE_FUNCTIONAL_SURFACE_CLASS,
+  FINANCE_STRUCTURE_TREE_SURFACE_CLASS,
+  FINANCE_WORKSPACE_STACK_CLASS,
+} from "@/lib/finance/finance-workspace-surfaces";
 
 type GroupOption = { id: string; name: string; depth: number };
 
@@ -34,8 +40,7 @@ type StructureMutationHandlers = {
   onAddAccount: (reportingGroupId: string) => void;
 };
 
-const FIELD_CONTROL_CLASS =
-  "w-full rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm";
+const FIELD_CONTROL_CLASS = FINANCE_FIELD_CONTROL_CLASS;
 
 function runStructureMutation(
   startTransition: (fn: () => void) => void,
@@ -244,7 +249,7 @@ export function FinanceStructureBuilderPanel({
   };
 
   return (
-    <div className="space-y-6" data-finance-structure-panel>
+    <div className={cn(FINANCE_WORKSPACE_STACK_CLASS, "gap-6")} data-finance-structure-panel>
       {!canMutate ? (
         <p className="text-sm text-[var(--muted)]" data-testid="structure-view-only-hint">
           {ts("viewOnlyHint")}
@@ -270,8 +275,9 @@ export function FinanceStructureBuilderPanel({
 
       {isEmpty ? (
         <section
-          className="rounded-xl border border-[var(--sce-color-border-standard)] p-5"
+          className={FINANCE_FUNCTIONAL_SURFACE_CLASS}
           data-testid="structure-empty-state"
+          data-finance-surface="structure-empty"
         >
           <h2 className="text-sm font-semibold">{ts("emptyTitle")}</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">{ts("emptyBody")}</p>
@@ -323,8 +329,9 @@ export function FinanceStructureBuilderPanel({
             </div>
           ) : null}
           <section
-            className="max-h-[min(32rem,70vh)] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--sce-color-border-standard)] p-3 sm:p-4"
+            className={FINANCE_STRUCTURE_TREE_SURFACE_CLASS}
             aria-label={ts("treeAria")}
+            data-finance-surface="structure-tree"
           >
             <div role="tree">
               <StructureTreeRows

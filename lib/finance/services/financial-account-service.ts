@@ -7,6 +7,7 @@ import {
 } from "@/lib/finance/finance-authorization";
 import { nextSortOrder } from "@/lib/finance/hierarchy/tree-utils";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
+import "@/lib/finance/budget/budget-account-delete-guard";
 import { isFinanceStructureAccountSemantic } from "@/lib/finance/structure/structure-presentation";
 import { evaluateFinancialStructureDeleteGuards } from "@/lib/finance/structure/delete-guards";
 

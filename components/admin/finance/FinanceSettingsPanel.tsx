@@ -12,6 +12,12 @@ import {
 import type { FinanceCapabilityKey } from "@prisma/client";
 import { useTranslations } from "next-intl";
 import { FINANCE_CAPABILITY_PRESENTATION_ORDER } from "@/lib/finance/capability-presentation";
+import { cn } from "@/lib/cn";
+import {
+  FINANCE_FIELD_CONTROL_CLASS,
+  FINANCE_SETTINGS_SECTION_CLASS,
+  FINANCE_WORKSPACE_STACK_CLASS,
+} from "@/lib/finance/finance-workspace-surfaces";
 
 type FinanceSettingsPanelProps = {
   baseCurrency: string | null;
@@ -34,8 +40,8 @@ export function FinanceSettingsPanel({
   );
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-xl border border-[var(--sce-color-border-standard)] p-5">
+    <div className={cn(FINANCE_WORKSPACE_STACK_CLASS, "gap-8")}>
+      <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-currency">
         <h2 className="text-sm font-semibold">{t("settings.baseCurrencyTitle")}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.baseCurrencyHelp")}</p>
         <form
@@ -55,7 +61,7 @@ export function FinanceSettingsPanel({
               name="baseCurrency"
               defaultValue={baseCurrency ?? ""}
               maxLength={3}
-              className="rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm uppercase"
+              className={`${FINANCE_FIELD_CONTROL_CLASS} uppercase`}
               aria-label={t("settings.baseCurrencyLabel")}
               placeholder="EUR"
             />
@@ -66,7 +72,7 @@ export function FinanceSettingsPanel({
         </form>
       </section>
 
-      <section className="rounded-xl border border-[var(--sce-color-border-standard)] p-5">
+      <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-year">
         <h2 className="text-sm font-semibold">{t("settings.financeYearTitle")}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.financeYearHelp")}</p>
         <form
@@ -89,7 +95,7 @@ export function FinanceSettingsPanel({
               name="name"
               required
               defaultValue={yearDraftDefaults.name}
-              className="rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
+              className={FINANCE_FIELD_CONTROL_CLASS}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium">
@@ -99,7 +105,7 @@ export function FinanceSettingsPanel({
               name="startDate"
               required
               defaultValue={yearDraftDefaults.startDate}
-              className="rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
+              className={FINANCE_FIELD_CONTROL_CLASS}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium">
@@ -109,7 +115,7 @@ export function FinanceSettingsPanel({
               name="endDate"
               required
               defaultValue={yearDraftDefaults.endDate}
-              className="rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
+              className={FINANCE_FIELD_CONTROL_CLASS}
             />
           </label>
           <div className="sm:col-span-2">
@@ -120,7 +126,7 @@ export function FinanceSettingsPanel({
         </form>
       </section>
 
-      <section className="rounded-xl border border-[var(--sce-color-border-standard)] p-5">
+      <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-capabilities">
         <h2 className="text-sm font-semibold">{t("settings.capabilitiesTitle")}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.capabilitiesHelp")}</p>
         <div

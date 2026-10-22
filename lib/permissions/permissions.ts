@@ -200,6 +200,9 @@ export const PERMISSIONS = {
 
   /** SCE-FINANCE-01B — organisation finance (not platform billing). */
   FINANCE_VIEW: "finance.view",
+  FINANCE_BUDGET_VIEW: "finance.budget.view",
+  FINANCE_BUDGET_MANAGE: "finance.budget.manage",
+  FINANCE_APPROVE: "finance.approve",
   FINANCE_STRUCTURE_MANAGE: "finance.structure.manage",
   FINANCE_ADMIN: "finance.admin",
 
