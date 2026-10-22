@@ -5,7 +5,6 @@ import {
   FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_SECTION_SURFACE_CLASS,
-  FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 
 describe("FIN-01D R5 finance workspace surfaces", () => {
