@@ -10,6 +10,7 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireTenantContext } from "@/lib/tenants/active-tenant";
 import type { CanonicalAccountSemantic } from "@prisma/client";
+import { isFinanceStructureAccountSemantic } from "@/lib/finance/structure/structure-presentation";
 import {
   archiveFinancialAccount,
   createFinancialAccount,
@@ -169,6 +170,12 @@ export async function createFinancialAccountAction(input: {
   canonicalSemantic: CanonicalAccountSemantic;
 }): Promise<FinanceStructureActionResult> {
   try {
+    if (!isFinanceStructureAccountSemantic(input.canonicalSemantic)) {
+      throw new FinanceDomainError(
+        "FINANCE_INVALID_HIERARCHY",
+        "Only INCOME and EXPENSE account semantics are available in this release.",
+      );
+    }
     const ctx = await structureActionContext();
     await createFinancialAccount(prisma, ctx, input);
     revalidateFinanceStructure();

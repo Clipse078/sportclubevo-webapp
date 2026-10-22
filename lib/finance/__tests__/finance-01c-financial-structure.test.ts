@@ -238,7 +238,7 @@ describe("FIN-01C reporting groups", () => {
     expect(updated.name).toBe("New");
   });
 
-  it("blocks delete when accounts remain", async () => {
+  it("blocks delete when accounts remain with actionable guidance", async () => {
     const group = await createFinancialReportingGroup(db, structureCtx, { name: "G" });
     await createFinancialAccount(db, structureCtx, {
       name: "A",
@@ -247,7 +247,24 @@ describe("FIN-01C reporting groups", () => {
     });
     await expect(
       deleteFinancialReportingGroupWhenSafe(db, structureCtx, group.id),
-    ).rejects.toMatchObject({ code: "FINANCE_UNSAFE_DELETE" });
+    ).rejects.toMatchObject({
+      code: "FINANCE_UNSAFE_DELETE",
+      message: expect.stringContaining("financial accounts"),
+    });
+  });
+
+  it("blocks delete when child reporting groups remain with actionable guidance", async () => {
+    const parent = await createFinancialReportingGroup(db, structureCtx, { name: "Parent" });
+    await createFinancialReportingGroup(db, structureCtx, {
+      name: "Child",
+      parentId: parent.id,
+    });
+    await expect(
+      deleteFinancialReportingGroupWhenSafe(db, structureCtx, parent.id),
+    ).rejects.toMatchObject({
+      code: "FINANCE_UNSAFE_DELETE",
+      message: expect.stringContaining("child reporting groups"),
+    });
   });
 });
 
@@ -268,16 +285,19 @@ describe("FIN-01C financial accounts", () => {
     expect(expense.canonicalSemantic).toBe("EXPENSE");
   });
 
-  it("rejects unsupported account semantics in FIN-01C", async () => {
-    const group = await createFinancialReportingGroup(db, structureCtx, { name: "Root" });
-    await expect(
-      createFinancialAccount(db, structureCtx, {
-        name: "Asset",
-        reportingGroupId: group.id,
-        canonicalSemantic: "ASSET",
-      }),
-    ).rejects.toBeInstanceOf(FinanceDomainError);
-  });
+  it.each(["ASSET", "LIABILITY", "EQUITY"] as const)(
+    "rejects %s account semantics in FIN-01C",
+    async (canonicalSemantic) => {
+      const group = await createFinancialReportingGroup(db, structureCtx, { name: "Root" });
+      await expect(
+        createFinancialAccount(db, structureCtx, {
+          name: "Blocked",
+          reportingGroupId: group.id,
+          canonicalSemantic,
+        }),
+      ).rejects.toMatchObject({ code: "FINANCE_INVALID_HIERARCHY" });
+    },
+  );
 
   it("preserves identity on rename", async () => {
     const group = await createFinancialReportingGroup(db, structureCtx, { name: "Root" });
@@ -348,6 +368,17 @@ describe("FIN-01C templates", () => {
     const preview = await previewFinanceStructureTemplate("generic_income_expense_v1");
     expect(preview.groupCount).toBe(2);
     expect(preview.accountCount).toBe(4);
+  });
+
+  it("template application only creates INCOME and EXPENSE accounts", async () => {
+    store.configs.push({ tenantId: tenantA, appliedStructureTemplateKey: null });
+    await applyFinanceStructureTemplate(db, structureCtx, {
+      templateKey: "generic_income_expense_v1",
+      resolveLabel: (key) => key,
+    });
+    expect(store.accounts.every((a) => a.canonicalSemantic === "INCOME" || a.canonicalSemantic === "EXPENSE")).toBe(
+      true,
+    );
   });
 
   it("applies template only to empty structure and records template key", async () => {

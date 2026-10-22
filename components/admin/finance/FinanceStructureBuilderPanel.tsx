@@ -26,8 +26,31 @@ import {
   reparentReportingGroupAction,
 } from "@/app/(admin)/dashboard/finance/structure/actions";
 import type { CanonicalAccountSemantic } from "@prisma/client";
+import type { FinanceStructureActionResult } from "@/app/(admin)/dashboard/finance/structure/actions";
 
 type GroupOption = { id: string; name: string; depth: number };
+
+type StructureMutationHandlers = {
+  onMutated: () => void;
+  onActionFeedback: (message: string) => void;
+  onAddSubgroup: (parentGroupId: string) => void;
+  onAddAccount: (reportingGroupId: string) => void;
+};
+
+function runStructureMutation(
+  startTransition: (fn: () => void) => void,
+  handlers: StructureMutationHandlers,
+  fn: () => Promise<FinanceStructureActionResult>,
+) {
+  startTransition(async () => {
+    const result = await fn();
+    if (result.ok) {
+      handlers.onMutated();
+    } else {
+      handlers.onActionFeedback(result.error);
+    }
+  });
+}
 
 type FinanceStructureBuilderPanelProps = {
   tree: FinanceStructureTreeNode[];
@@ -55,10 +78,9 @@ function StructureTreeRows(props: {
   depth?: number;
   canMutate: boolean;
   groupOptions: GroupOption[];
-  onMutated: () => void;
+  mutationHandlers: StructureMutationHandlers;
 }) {
   const t = useTranslations("Finance.structure");
-  const [pending, startTransition] = useTransition();
   const depth = props.depth ?? 0;
 
   return (
@@ -73,25 +95,50 @@ function StructureTreeRows(props: {
               >
                 <span className="text-sm font-medium">{node.name}</span>
                 {node.lifecycle === "ARCHIVED" ? (
-                  <span className="text-xs text-[var(--muted)]">{t("archivedBadge")}</span>
+                  <span className="text-xs text-[var(--muted)]" title={t("archivedHint")}>
+                    {t("archivedBadge")}
+                  </span>
                 ) : null}
                 {props.canMutate ? (
                   <GroupActions
                     node={node}
                     groupOptions={props.groupOptions}
-                    pending={pending}
-                    onMutated={props.onMutated}
-                    startTransition={startTransition}
+                    mutationHandlers={props.mutationHandlers}
                   />
                 ) : null}
               </div>
+              {node.children.length === 0 && props.canMutate && node.lifecycle !== "ARCHIVED" ? (
+                <div
+                  className="flex flex-wrap items-center gap-2 py-1 text-xs text-[var(--muted)]"
+                  style={{ paddingInlineStart: `${(depth + 1) * 1.25}rem` }}
+                  data-testid="empty-reporting-group-nudge"
+                >
+                  <span>{t("emptyGroupHint")}</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => props.mutationHandlers.onAddSubgroup(node.id)}
+                  >
+                    {t("actions.addSubgroup")}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => props.mutationHandlers.onAddAccount(node.id)}
+                  >
+                    {t("actions.addAccount")}
+                  </Button>
+                </div>
+              ) : null}
               {node.children.length > 0 ? (
                 <StructureTreeRows
                   nodes={node.children}
                   depth={depth + 1}
                   canMutate={props.canMutate}
                   groupOptions={props.groupOptions}
-                  onMutated={props.onMutated}
+                  mutationHandlers={props.mutationHandlers}
                 />
               ) : null}
             </li>
@@ -109,15 +156,15 @@ function StructureTreeRows(props: {
                 {t(`semantics.${node.canonicalSemantic.toLowerCase()}.label` as "semantics.income.label")}
               </span>
               {node.lifecycle === "ARCHIVED" ? (
-                <span className="text-xs text-[var(--muted)]">{t("archivedBadge")}</span>
+                <span className="text-xs text-[var(--muted)]" title={t("archivedHint")}>
+                  {t("archivedBadge")}
+                </span>
               ) : null}
               {props.canMutate ? (
                 <AccountActions
                   node={node}
                   groupOptions={props.groupOptions}
-                  pending={pending}
-                  onMutated={props.onMutated}
-                  startTransition={startTransition}
+                  mutationHandlers={props.mutationHandlers}
                 />
               ) : null}
             </div>
@@ -131,34 +178,30 @@ function StructureTreeRows(props: {
 function GroupActions(props: {
   node: Extract<FinanceStructureTreeNode, { type: "group" }>;
   groupOptions: GroupOption[];
-  pending: boolean;
-  onMutated: () => void;
-  startTransition: (fn: () => void) => void;
+  mutationHandlers: StructureMutationHandlers;
 }) {
   const t = useTranslations("Finance.structure");
   const [renameOpen, setRenameOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  const run = (fn: () => Promise<{ ok: boolean }>) => {
-    props.startTransition(async () => {
-      await fn();
-      props.onMutated();
-    });
+  const run = (fn: () => Promise<FinanceStructureActionResult>) => {
+    runStructureMutation(startTransition, props.mutationHandlers, fn);
   };
 
   return (
     <div className="ms-auto flex flex-wrap gap-1">
-      <Button type="button" size="sm" variant="ghost" disabled={props.pending} onClick={() => setRenameOpen(true)}>
+      <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={() => setRenameOpen(true)}>
         {t("actions.rename")}
       </Button>
-      <Button type="button" size="sm" variant="ghost" disabled={props.pending} onClick={() => setMoveOpen(true)}>
+      <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={() => setMoveOpen(true)}>
         {t("actions.move")}
       </Button>
       <Button
         type="button"
         size="sm"
         variant="ghost"
-        disabled={props.pending}
+        disabled={pending}
         onClick={() =>
           run(async () =>
             props.node.lifecycle === "ARCHIVED"
@@ -173,7 +216,7 @@ function GroupActions(props: {
         type="button"
         size="sm"
         variant="ghost"
-        disabled={props.pending}
+        disabled={pending}
         onClick={() => {
           if (!window.confirm(t("confirmDeleteGroup"))) return;
           run(async () => deleteReportingGroupAction(props.node.id));
@@ -185,7 +228,7 @@ function GroupActions(props: {
         type="button"
         size="sm"
         variant="ghost"
-        disabled={props.pending}
+        disabled={pending}
         onClick={() =>
           run(async () => reorderReportingGroupAction(props.node.id, Math.max(0, props.node.sortOrder - 1)))
         }
@@ -212,7 +255,7 @@ function GroupActions(props: {
             className="w-full rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
             aria-label={t("nameLabel")}
           />
-          <Button type="submit" size="sm" disabled={props.pending}>
+          <Button type="submit" size="sm" disabled={pending}>
             {t("actions.save")}
           </Button>
         </form>
@@ -249,7 +292,7 @@ function GroupActions(props: {
                 </option>
               ))}
           </select>
-          <Button type="submit" size="sm" disabled={props.pending}>
+          <Button type="submit" size="sm" disabled={pending}>
             {t("actions.save")}
           </Button>
         </form>
@@ -261,34 +304,30 @@ function GroupActions(props: {
 function AccountActions(props: {
   node: Extract<FinanceStructureTreeNode, { type: "account" }>;
   groupOptions: GroupOption[];
-  pending: boolean;
-  onMutated: () => void;
-  startTransition: (fn: () => void) => void;
+  mutationHandlers: StructureMutationHandlers;
 }) {
   const t = useTranslations("Finance.structure");
   const [renameOpen, setRenameOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  const run = (fn: () => Promise<{ ok: boolean }>) => {
-    props.startTransition(async () => {
-      await fn();
-      props.onMutated();
-    });
+  const run = (fn: () => Promise<FinanceStructureActionResult>) => {
+    runStructureMutation(startTransition, props.mutationHandlers, fn);
   };
 
   return (
     <div className="ms-auto flex flex-wrap gap-1">
-      <Button type="button" size="sm" variant="ghost" disabled={props.pending} onClick={() => setRenameOpen(true)}>
+      <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={() => setRenameOpen(true)}>
         {t("actions.rename")}
       </Button>
-      <Button type="button" size="sm" variant="ghost" disabled={props.pending} onClick={() => setMoveOpen(true)}>
+      <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={() => setMoveOpen(true)}>
         {t("actions.move")}
       </Button>
       <Button
         type="button"
         size="sm"
         variant="ghost"
-        disabled={props.pending}
+        disabled={pending}
         onClick={() =>
           run(async () =>
             props.node.lifecycle === "ARCHIVED"
@@ -303,7 +342,7 @@ function AccountActions(props: {
         type="button"
         size="sm"
         variant="ghost"
-        disabled={props.pending}
+        disabled={pending}
         onClick={() => {
           if (!window.confirm(t("confirmDeleteAccount"))) return;
           run(async () => deleteFinancialAccountAction(props.node.id));
@@ -315,7 +354,7 @@ function AccountActions(props: {
         type="button"
         size="sm"
         variant="ghost"
-        disabled={props.pending}
+        disabled={pending}
         onClick={() =>
           run(async () => reorderFinancialAccountAction(props.node.id, Math.max(0, props.node.sortOrder - 1)))
         }
@@ -342,7 +381,7 @@ function AccountActions(props: {
             className="w-full rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
             aria-label={t("nameLabel")}
           />
-          <Button type="submit" size="sm" disabled={props.pending}>
+          <Button type="submit" size="sm" disabled={pending}>
             {t("actions.save")}
           </Button>
         </form>
@@ -373,7 +412,7 @@ function AccountActions(props: {
               </option>
             ))}
           </select>
-          <Button type="submit" size="sm" disabled={props.pending}>
+          <Button type="submit" size="sm" disabled={pending}>
             {t("actions.save")}
           </Button>
         </form>
@@ -396,7 +435,9 @@ export function FinanceStructureBuilderPanel({
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [templatePreviewOpen, setTemplatePreviewOpen] = useState(false);
-
+  const [createGroupParentPreset, setCreateGroupParentPreset] = useState<string>("");
+  const [createAccountGroupPreset, setCreateAccountGroupPreset] = useState<string>("");
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const groupOptions = useMemo(
     () => (initialGroupOptions.length > 0 ? initialGroupOptions : flattenGroupOptions(tree)),
     [initialGroupOptions, tree],
@@ -404,24 +445,81 @@ export function FinanceStructureBuilderPanel({
 
   const defaultTemplate = FINANCE_STRUCTURE_TEMPLATE_REGISTRY[0];
 
-  const onMutated = () => {
-    router.refresh();
+  const mutationHandlers: StructureMutationHandlers = {
+    onMutated: () => {
+      setActionFeedback(null);
+      router.refresh();
+    },
+    onActionFeedback: (message) => setActionFeedback(message),
+    onAddSubgroup: (parentGroupId) => {
+      setCreateGroupParentPreset(parentGroupId);
+      setCreateGroupOpen(true);
+    },
+    onAddAccount: (reportingGroupId) => {
+      setCreateAccountGroupPreset(reportingGroupId);
+      setCreateAccountOpen(true);
+    },
+  };
+
+  const openCreateRootGroup = () => {
+    setCreateGroupParentPreset("");
+    setCreateGroupOpen(true);
   };
 
   return (
     <div className="space-y-6" data-finance-structure-panel>
+      {!canMutate ? (
+        <p className="text-sm text-[var(--muted)]" data-testid="structure-view-only-hint">
+          {ts("viewOnlyHint")}
+        </p>
+      ) : null}
+
+      {actionFeedback ? (
+        <div
+          className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-[var(--foreground)]"
+          role="status"
+          data-testid="structure-action-feedback"
+        >
+          <p className="font-medium">{ts("actionBlockedTitle")}</p>
+          <p className="mt-1 text-[var(--muted)]">{actionFeedback}</p>
+        </div>
+      ) : null}
+
+      {appliedTemplateKey && !isEmpty && canMutate ? (
+        <p className="text-sm text-[var(--muted)]" data-testid="template-applied-nudge">
+          {ts("templateAppliedNextSteps")}
+        </p>
+      ) : null}
+
       {isEmpty ? (
-        <section className="rounded-xl border border-[var(--sce-color-border-standard)] p-5">
+        <section
+          className="rounded-xl border border-[var(--sce-color-border-standard)] p-5"
+          data-testid="structure-empty-state"
+        >
           <h2 className="text-sm font-semibold">{ts("emptyTitle")}</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">{ts("emptyBody")}</p>
           {canMutate && !appliedTemplateKey ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="secondary" onClick={() => setTemplatePreviewOpen(true)}>
-                {ts("previewTemplate")}
-              </Button>
-              <Button type="button" size="sm" onClick={() => setCreateGroupOpen(true)}>
-                {ts("createRootGroup")}
-              </Button>
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                  {ts("emptyRecommendedLabel")}
+                </p>
+                <div className="mt-2">
+                  <Button type="button" size="sm" onClick={() => setTemplatePreviewOpen(true)}>
+                    {ts("previewTemplate")}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                  {ts("emptyManualLabel")}
+                </p>
+                <div className="mt-2">
+                  <Button type="button" size="sm" variant="secondary" onClick={openCreateRootGroup}>
+                    {ts("createRootGroup")}
+                  </Button>
+                </div>
+              </div>
             </div>
           ) : null}
         </section>
@@ -429,7 +527,7 @@ export function FinanceStructureBuilderPanel({
         <>
           {canMutate ? (
             <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" onClick={() => setCreateGroupOpen(true)}>
+              <Button type="button" size="sm" onClick={openCreateRootGroup}>
                 {ts("createGroup")}
               </Button>
               <Button
@@ -437,7 +535,10 @@ export function FinanceStructureBuilderPanel({
                 size="sm"
                 variant="secondary"
                 disabled={groupOptions.length === 0}
-                onClick={() => setCreateAccountOpen(true)}
+                onClick={() => {
+                  setCreateAccountGroupPreset(groupOptions[0]?.id ?? "");
+                  setCreateAccountOpen(true);
+                }}
               >
                 {ts("createAccount")}
               </Button>
@@ -451,7 +552,7 @@ export function FinanceStructureBuilderPanel({
               nodes={tree}
               canMutate={canMutate}
               groupOptions={groupOptions}
-              onMutated={onMutated}
+              mutationHandlers={mutationHandlers}
             />
           </section>
         </>
@@ -459,21 +560,22 @@ export function FinanceStructureBuilderPanel({
 
       <Dialog open={createGroupOpen} onClose={() => setCreateGroupOpen(false)} title={ts("createGroupTitle")}>
         <form
+          key={`create-group-${createGroupParentPreset}`}
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
             const data = new FormData(event.currentTarget);
             const name = String(data.get("name") ?? "").trim();
             const parentId = String(data.get("parentId") ?? "");
-            startTransition(async () => {
+            runStructureMutation(startTransition, mutationHandlers, async () => {
               const result = await createReportingGroupAction({
                 name,
                 parentId: parentId === "" ? null : parentId,
               });
               if (result.ok) {
                 setCreateGroupOpen(false);
-                onMutated();
               }
+              return result;
             });
           }}
         >
@@ -486,6 +588,7 @@ export function FinanceStructureBuilderPanel({
           />
           <select
             name="parentId"
+            defaultValue={createGroupParentPreset}
             className="w-full rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
             aria-label={ts("parentGroupLabel")}
           >
@@ -504,11 +607,12 @@ export function FinanceStructureBuilderPanel({
 
       <Dialog open={createAccountOpen} onClose={() => setCreateAccountOpen(false)} title={ts("createAccountTitle")}>
         <form
+          key={`create-account-${createAccountGroupPreset}`}
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
             const data = new FormData(event.currentTarget);
-            startTransition(async () => {
+            runStructureMutation(startTransition, mutationHandlers, async () => {
               const result = await createFinancialAccountAction({
                 name: String(data.get("name") ?? "").trim(),
                 reportingGroupId: String(data.get("reportingGroupId") ?? ""),
@@ -516,8 +620,8 @@ export function FinanceStructureBuilderPanel({
               });
               if (result.ok) {
                 setCreateAccountOpen(false);
-                onMutated();
               }
+              return result;
             });
           }}
         >
@@ -530,6 +634,7 @@ export function FinanceStructureBuilderPanel({
           <select
             name="reportingGroupId"
             required
+            defaultValue={createAccountGroupPreset || undefined}
             className="w-full rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
             aria-label={ts("reportingGroupLabel")}
           >
@@ -566,22 +671,34 @@ export function FinanceStructureBuilderPanel({
             {t(defaultTemplate.descriptionKey as Parameters<typeof t>[0])}
           </p>
           <p className="mt-2 text-sm">{t(defaultTemplate.previewSummaryKey as Parameters<typeof t>[0])}</p>
-          <div className="mt-4 flex gap-2">
+          <p className="mt-3 text-sm text-[var(--muted)]" data-testid="template-apply-customize-note">
+            {ts("applyTemplateCustomizeNote")}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               type="button"
               size="sm"
               disabled={pending}
               onClick={() => {
-                startTransition(async () => {
+                runStructureMutation(startTransition, mutationHandlers, async () => {
                   const result = await applyStructureTemplateAction(defaultTemplate.key);
                   if (result.ok) {
                     setTemplatePreviewOpen(false);
-                    onMutated();
                   }
+                  return result;
                 });
               }}
             >
               {ts("applyTemplate")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={pending}
+              onClick={() => setTemplatePreviewOpen(false)}
+            >
+              {ts("actions.cancel")}
             </Button>
           </div>
         </Dialog>

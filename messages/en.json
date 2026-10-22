@@ -443,9 +443,17 @@
       "pageTitle": "Financial structure",
       "pageDescription": "Manage reporting groups and accounts for your organisation — no amounts or postings.",
       "emptyTitle": "No financial structure yet",
-      "emptyBody": "Create reporting groups and accounts, or start from an optional template. Labels are yours; account types use SCE income and expense semantics.",
+      "emptyBody": "Reporting groups organise income and expense accounts for planning and reports. Choose a quick start or build your own labels — nothing is locked to a template.",
+      "emptyRecommendedLabel": "Recommended",
+      "emptyManualLabel": "Or build manually",
       "previewTemplate": "Preview starter template",
       "applyTemplate": "Apply template",
+      "applyTemplateCustomizeNote": "You can rename, reorder, or extend everything after applying. The template is a one-time starter — not a permanent link.",
+      "templateAppliedNextSteps": "Starter structure applied. Review the groups, rename labels for your organisation, or add accounts where needed.",
+      "viewOnlyHint": "You can browse the financial structure. Changes require structure management permission.",
+      "emptyGroupHint": "This group is empty.",
+      "archivedHint": "Archived items are kept for history and can be reactivated.",
+      "actionBlockedTitle": "Action could not be completed",
       "createRootGroup": "Create first reporting group",
       "createGroup": "Reporting group",
       "createAccount": "Account",
@@ -472,7 +480,10 @@
         "delete": "Delete",
         "moveUp": "Move up",
         "save": "Save",
-        "create": "Create"
+        "create": "Create",
+        "addSubgroup": "Add subgroup",
+        "addAccount": "Add account",
+        "cancel": "Cancel"
       },
       "semantics": {
         "income": {

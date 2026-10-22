@@ -906,9 +906,17 @@
       "pageTitle": "Finanzstruktur",
       "pageDescription": "Berichtsgruppen und Konten für die Organisation verwalten — ohne Beträge oder Buchungen.",
       "emptyTitle": "Noch keine Finanzstruktur",
-      "emptyBody": "Legt Berichtsgruppen und Konten an oder startet mit einer optionalen Vorlage. Namen sind frei wählbar; Kontotypen folgen den SCE-Grundsemantiken Einnahme und Ausgabe.",
+      "emptyBody": "Berichtsgruppen ordnen Einnahme- und Ausgabekonten für Planung und Auswertungen. Schnellstart wählen oder selbst aufbauen — nichts ist dauerhaft an eine Vorlage gebunden.",
+      "emptyRecommendedLabel": "Empfohlen",
+      "emptyManualLabel": "Oder manuell aufbauen",
       "previewTemplate": "Starter-Vorlage ansehen",
       "applyTemplate": "Vorlage anwenden",
+      "applyTemplateCustomizeNote": "Nach dem Anwenden könnt ihr alles umbenennen, sortieren oder erweitern. Die Vorlage ist ein einmaliger Starter — keine dauerhafte Kopplung.",
+      "templateAppliedNextSteps": "Starterstruktur angewendet. Gruppen prüfen, Bezeichnungen anpassen oder bei Bedarf Konten ergänzen.",
+      "viewOnlyHint": "Ihr könnt die Finanzstruktur einsehen. Änderungen erfordern Berechtigung zur Strukturverwaltung.",
+      "emptyGroupHint": "Diese Gruppe ist leer.",
+      "archivedHint": "Archivierte Einträge bleiben erhalten und können reaktiviert werden.",
+      "actionBlockedTitle": "Aktion nicht möglich",
       "createRootGroup": "Erste Berichtsgruppe erstellen",
       "createGroup": "Berichtsgruppe",
       "createAccount": "Konto",
@@ -935,7 +943,10 @@
         "delete": "Löschen",
         "moveUp": "Nach oben",
         "save": "Speichern",
-        "create": "Erstellen"
+        "create": "Erstellen",
+        "addSubgroup": "Untergruppe hinzufügen",
+        "addAccount": "Konto hinzufügen",
+        "cancel": "Abbrechen"
       },
       "semantics": {
         "income": {
