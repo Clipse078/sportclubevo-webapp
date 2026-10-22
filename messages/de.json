@@ -992,7 +992,18 @@
       "configuredNoDataBody": "Budgets, Ist-Werte und Berichte erscheinen hier, sobald Funktionen und Daten verfügbar sind.",
       "configuredCapabilitiesTitle": "Finanzen sind bereit",
       "configuredCapabilitiesBody": "Aktivierte Funktionen sind in der Navigation verfügbar. Buchungen und Berechnungen folgen in späteren Releases.",
-      "openSetup": "Finanz-Einrichtung öffnen"
+      "openSetup": "Finanz-Einrichtung öffnen",
+      "reportingApprovedTitle": "Genehmigtes Budget",
+      "reportingYearLabel": "Finanzjahr",
+      "reportingIncome": "Einnahmen",
+      "reportingExpense": "Ausgaben",
+      "reportingResult": "Ergebnis",
+      "reportingNoStructureTitle": "Finanzstruktur erforderlich",
+      "reportingNoStructureBody": "Management-Auswertungen nutzen Ihre Berichtsgruppen und Konten. Legen Sie die Struktur fest, bevor Budgetsummen interpretiert werden.",
+      "openStructure": "Finanzstruktur öffnen",
+      "reportingNoBaselineTitle": "Noch keine genehmigte Budget-Baseline",
+      "reportingNoBaselineBody": "Management-Auswertungen stehen zur Verfügung, sobald eine Budget-Baseline für das gewählte Finanzjahr freigegeben ist. Entwürfe erscheinen hier nicht.",
+      "openBudget": "Budget öffnen"
     },
     "budget": {
       "pageTitle": "Budget",

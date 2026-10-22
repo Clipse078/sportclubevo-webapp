@@ -529,7 +529,18 @@
       "configuredNoDataBody": "Budgets, actuals, and reports will appear here as you enable capabilities and add data in future releases.",
       "configuredCapabilitiesTitle": "Finance is ready",
       "configuredCapabilitiesBody": "Enabled capabilities are available from the navigation. Postings and calculations are not part of this foundation release.",
-      "openSetup": "Open finance setup"
+      "openSetup": "Open finance setup",
+      "reportingApprovedTitle": "Approved budget",
+      "reportingYearLabel": "Financial year",
+      "reportingIncome": "Income",
+      "reportingExpense": "Expense",
+      "reportingResult": "Result",
+      "reportingNoStructureTitle": "Financial structure required",
+      "reportingNoStructureBody": "Management reporting uses your reporting groups and accounts. Define the structure before interpreting budget totals.",
+      "openStructure": "Open financial structure",
+      "reportingNoBaselineTitle": "No approved budget baseline yet",
+      "reportingNoBaselineBody": "Management reporting becomes available once a budget baseline is approved for the selected financial year. Draft planning does not appear here.",
+      "openBudget": "Open budget"
     },
     "budget": {
       "pageTitle": "Budget",

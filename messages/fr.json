@@ -466,7 +466,18 @@
       "configuredNoDataBody": "Budgets, réalisations et rapports apparaîtront ici lorsque les capacités seront activées.",
       "configuredCapabilitiesTitle": "Finances prêtes",
       "configuredCapabilitiesBody": "Les capacités activées sont disponibles dans la navigation.",
-      "openSetup": "Ouvrir la configuration"
+      "openSetup": "Ouvrir la configuration",
+      "reportingApprovedTitle": "Budget approuvé",
+      "reportingYearLabel": "Exercice",
+      "reportingIncome": "Revenus",
+      "reportingExpense": "Charges",
+      "reportingResult": "Résultat",
+      "reportingNoStructureTitle": "Structure financière requise",
+      "reportingNoStructureBody": "Les rapports de gestion s'appuient sur vos groupes et comptes. Définissez la structure avant d'interpréter les totaux budgétaires.",
+      "openStructure": "Ouvrir la structure",
+      "reportingNoBaselineTitle": "Aucune baseline budgétaire approuvée",
+      "reportingNoBaselineBody": "Les rapports de gestion seront disponibles une fois qu'une baseline sera approuvée pour l'exercice sélectionné. Les brouillons n'apparaissent pas ici.",
+      "openBudget": "Ouvrir le budget"
     },
     "budget": {
       "pageTitle": "Budget",

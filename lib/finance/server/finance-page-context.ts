@@ -4,6 +4,8 @@ import { getEnabledFinanceCapabilities } from "@/lib/finance/services/finance-ca
 import { loadFinanceSetupSnapshot } from "@/lib/finance/services/finance-configuration-service";
 import { resolveFinanceOverviewState } from "@/lib/finance/setup/finance-setup-state";
 import { resolveFinanceNavigation } from "@/lib/finance/navigation/finance-navigation";
+import { resolveFinanceOverviewReportingSlice } from "@/lib/finance/reporting/reporting-overview-state";
+import { loadApprovedBudgetReportingReadModel } from "@/lib/finance/services/finance-reporting-query-service";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -37,6 +39,12 @@ export async function loadFinanceWorkspaceContext() {
 
   const showBudgetNav = navigation.some((item) => item.key === "budget");
 
+  const reportingReadModel = await loadApprovedBudgetReportingReadModel(prisma, ctx, null);
+  const overviewReporting = resolveFinanceOverviewReportingSlice({
+    overviewState,
+    reporting: reportingReadModel,
+  });
+
   return {
     session,
     tenant,
@@ -53,5 +61,6 @@ export async function loadFinanceWorkspaceContext() {
     canBudgetApprove:
       permissionKeys.has(PERMISSIONS.FINANCE_APPROVE) ||
       permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
+    overviewReporting,
   };
 }

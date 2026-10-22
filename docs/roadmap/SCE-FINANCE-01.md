@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — foundation package **FIN-01** (FIN-01A/R1, FIN-01B, FIN-01C, FIN-01D complete — FIN-01D merge via PR **#894**) |
+| **Status** | **IN_PROGRESS** — foundation package **FIN-01** (FIN-01A/R1, FIN-01B, FIN-01C, FIN-01D complete; **FIN-01E** on feature branch awaiting PO UAT) |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -35,7 +35,7 @@
 | **FIN-01B** | Prisma foundation, permissions, capability-driven `/dashboard/finance` shell | **COMPLETE + MERGED + PO UAT PASS** |
 | **FIN-01C** | Account/reporting hierarchy + optional templates + Structure Builder UI | **COMPLETE + MERGED + PO UAT PASS** (PR **#893**) |
 | **FIN-01D** | Budget foundation / workflow (foundation slice — not entire FIN-02 product) | **COMPLETE + PO UAT PASS** (PR **#894** → **STAGE**) |
-| **FIN-01E** | Management reporting foundation (foundation slice — not entire FIN-05 product) | **NOT STARTED** |
+| **FIN-01E** | Management reporting foundation (foundation slice — not entire FIN-05 product) | **IMPLEMENTED ON FEATURE BRANCH / AWAITING PO UAT** |
 | **FIN-01F** | Import foundation | **NOT STARTED** |
 
 Do not collapse granular FIN-01 foundation slices into later operational FIN-02…FIN-11 products.

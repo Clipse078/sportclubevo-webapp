@@ -466,7 +466,18 @@
       "configuredNoDataBody": "Budget, consuntivi e report compariranno qui con le prossime funzionalità.",
       "configuredCapabilitiesTitle": "Finanze pronte",
       "configuredCapabilitiesBody": "Le capacità attive sono disponibili nella navigazione.",
-      "openSetup": "Apri configurazione"
+      "openSetup": "Apri configurazione",
+      "reportingApprovedTitle": "Budget approvato",
+      "reportingYearLabel": "Anno finanziario",
+      "reportingIncome": "Entrate",
+      "reportingExpense": "Uscite",
+      "reportingResult": "Risultato",
+      "reportingNoStructureTitle": "Struttura finanziaria richiesta",
+      "reportingNoStructureBody": "I report di gestione usano gruppi e conti. Definite la struttura prima di interpretare i totali di budget.",
+      "openStructure": "Apri struttura finanziaria",
+      "reportingNoBaselineTitle": "Nessuna baseline di budget approvata",
+      "reportingNoBaselineBody": "I report di gestione saranno disponibili dopo l'approvazione di una baseline per l'anno selezionato. Le bozze non compaiono qui.",
+      "openBudget": "Apri budget"
     },
     "budget": {
       "pageTitle": "Budget",
