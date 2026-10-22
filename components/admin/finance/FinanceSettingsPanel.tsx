@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { SwitchToggle } from "@/components/ui/SwitchToggle";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { Button } from "@/components/ui/Button";
 import {
   completeFinanceSetupAction,
@@ -11,6 +11,7 @@ import {
 } from "@/app/(admin)/dashboard/finance/actions";
 import type { FinanceCapabilityKey } from "@prisma/client";
 import { useTranslations } from "next-intl";
+import { FINANCE_CAPABILITY_PRESENTATION_ORDER } from "@/lib/finance/capability-presentation";
 
 type FinanceSettingsPanelProps = {
   baseCurrency: string | null;
@@ -27,6 +28,10 @@ export function FinanceSettingsPanel({
 }: FinanceSettingsPanelProps) {
   const t = useTranslations("Finance");
   const [pending, startTransition] = useTransition();
+
+  const capabilityState = new Map(
+    capabilityRows.map((row) => [row.capability, row] as const),
+  );
 
   return (
     <div className="space-y-8">
@@ -118,26 +123,58 @@ export function FinanceSettingsPanel({
       <section className="rounded-xl border border-[var(--sce-color-border-standard)] p-5">
         <h2 className="text-sm font-semibold">{t("settings.capabilitiesTitle")}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.capabilitiesHelp")}</p>
+        <div
+          className="mt-4 rounded-lg border border-[var(--sce-color-border-subtle)] bg-[var(--surface-2)] px-3 py-2.5"
+          role="note"
+        >
+          <p className="text-xs font-medium text-[var(--foreground)]">
+            {t("settings.starterNudgeTitle")}
+          </p>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">{t("settings.starterNudgeBody")}</p>
+        </div>
         <ul className="mt-4 space-y-3">
-          {capabilityRows.map((row) => (
-            <li
-              key={row.capability}
-              className="flex items-center justify-between gap-4 rounded-lg border border-[var(--sce-color-border-subtle)] px-3 py-2"
-            >
-              <span className="text-sm">{t(`capabilities.${row.capability}` as "capabilities.OVERVIEW")}</span>
-              <SwitchToggle
-                id={`finance-cap-${row.capability}`}
-                label={t(`capabilities.${row.capability}` as "capabilities.OVERVIEW")}
-                checked={row.enabled}
-                disabled={!row.configurable || pending}
-                onChange={(checked) => {
-                  startTransition(async () => {
-                    await setFinanceCapabilityAction(row.capability, checked);
-                  });
-                }}
-              />
-            </li>
-          ))}
+          {FINANCE_CAPABILITY_PRESENTATION_ORDER.map((presentation) => {
+            const row = capabilityState.get(presentation.key);
+            if (!row) {
+              return null;
+            }
+            const label = t(presentation.labelKey);
+            const description = t(presentation.descriptionKey);
+            const titleId = `finance-cap-title-${presentation.key}`;
+            const available = row.configurable;
+
+            return (
+              <li
+                key={presentation.key}
+                className="flex flex-col gap-3 rounded-lg border border-[var(--sce-color-border-subtle)] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <p id={titleId} className="text-sm font-medium text-[var(--foreground)]">
+                    {label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--muted)]">{description}</p>
+                  {!available ? (
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      {t("settings.capabilityNotAvailable")}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center self-start sm:self-center">
+                  <SwitchThumb
+                    id={`finance-cap-${presentation.key}`}
+                    checked={row.enabled}
+                    disabled={!available || pending}
+                    aria-label={label}
+                    onChange={(checked) => {
+                      startTransition(async () => {
+                        await setFinanceCapabilityAction(presentation.key, checked);
+                      });
+                    }}
+                  />
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </section>
 

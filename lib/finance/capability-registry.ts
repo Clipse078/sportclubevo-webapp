@@ -43,4 +43,12 @@ export function isFinanceCapabilityImplemented(
 
 export const FINANCE_DEFAULT_ENABLED_CAPABILITIES: FinanceCapabilityKey[] = ["OVERVIEW"];
 
+export {
+  FINANCE_CAPABILITY_PRESENTATION,
+  FINANCE_CAPABILITY_PRESENTATION_ORDER,
+  FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS,
+  getFinanceCapabilityPresentation,
+  type FinanceCapabilityPresentation,
+} from "@/lib/finance/capability-presentation";
+
 export { PROPOSED_FINANCE_PERMISSION_KEYS };
