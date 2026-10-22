@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
@@ -29,6 +30,23 @@ import {
   ensureDraftBudgetAction,
   saveBudgetLineAction,
 } from "@/app/(admin)/dashboard/finance/budget/actions";
+import {
+  FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
+  FINANCE_CONTEXT_STRIP_CLASS,
+  FINANCE_CURRENCY_CONTEXT_CLASS,
+  FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
+  FINANCE_FUNCTIONAL_SURFACE_CLASS,
+  FINANCE_SECTION_HEADER_CLASS,
+  FINANCE_SECTION_SURFACE_CLASS,
+  FINANCE_SUMMARY_GRID_CLASS,
+  FINANCE_SUMMARY_LABEL_CLASS,
+  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+  FINANCE_SUMMARY_SURFACE_CLASS,
+  FINANCE_SUMMARY_VALUE_CLASS,
+  FINANCE_TABLE_HEAD_ROW_CLASS,
+  FINANCE_TABLE_ROW_CLASS,
+  FINANCE_WORKSPACE_STACK_CLASS,
+} from "@/lib/finance/finance-workspace-surfaces";
 
 type FinanceYearOption = { id: string; name: string };
 
@@ -92,7 +110,8 @@ export function FinanceBudgetWorkspacePanel({
 
   if (years.length === 0) {
     return (
-      <section className="rounded-xl border border-[var(--sce-color-border-standard)] bg-[var(--surface)] px-5 py-6">
+      <div className={FINANCE_WORKSPACE_STACK_CLASS}>
+      <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="prerequisite">
         <h2 className="text-base font-semibold">{t("noYearTitle")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("noYearBody")}</p>
         <div className="mt-4">
@@ -104,12 +123,14 @@ export function FinanceBudgetWorkspacePanel({
           </Link>
         </div>
       </section>
+      </div>
     );
   }
 
   if (!hasAccounts) {
     return (
-      <section className="rounded-xl border border-[var(--sce-color-border-standard)] bg-[var(--surface)] px-5 py-6">
+      <div className={FINANCE_WORKSPACE_STACK_CLASS}>
+      <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-surface="prerequisite">
         <h2 className="text-base font-semibold">{t("noAccountsTitle")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("noAccountsBody")}</p>
         <div className="mt-4">
@@ -121,57 +142,60 @@ export function FinanceBudgetWorkspacePanel({
           </Link>
         </div>
       </section>
+      </div>
     );
   }
 
   const yearSelected = Boolean(selectedYearId);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-wrap items-end gap-4">
-          <SceFormField label={t("yearLabel")} htmlFor={yearSelectId}>
-            <select
-              id={yearSelectId}
-              className="min-w-[12rem] rounded-md border border-[var(--sce-color-border-standard)] px-3 py-2 text-sm"
-              value={selectedYearId ?? ""}
-              onChange={(e) => onYearChange(e.target.value)}
-            >
-              <option value="" disabled>
-                {t("yearPlaceholder")}
+    <div className={FINANCE_WORKSPACE_STACK_CLASS}>
+      <div className={FINANCE_CONTEXT_STRIP_CLASS} data-finance-surface="context">
+        <SceFormField label={t("yearLabel")} htmlFor={yearSelectId}>
+          <SceToolbarSelect
+            id={yearSelectId}
+            wrapperClassName="min-w-[12rem]"
+            value={selectedYearId ?? ""}
+            onChange={(e) => onYearChange(e.target.value)}
+          >
+            <option value="" disabled>
+              {t("yearPlaceholder")}
+            </option>
+            {years.map((year) => (
+              <option key={year.id} value={year.id}>
+                {year.name}
               </option>
-              {years.map((year) => (
-                <option key={year.id} value={year.id}>
-                  {year.name}
-                </option>
-              ))}
-            </select>
-          </SceFormField>
+            ))}
+          </SceToolbarSelect>
+        </SceFormField>
 
-          {yearSelected ? (
-            workspaceCurrency ? (
-              <SceFormField label={t("currencyLabel")} htmlFor={currencyContextId}>
-                <p
-                  id={currencyContextId}
-                  className="min-h-[2.375rem] rounded-md border border-transparent px-0 py-2 text-sm font-medium"
-                  data-budget-currency={workspaceCurrency}
-                >
-                  {workspaceCurrency}
-                </p>
-              </SceFormField>
-            ) : (
-              <div className="max-w-md pb-2 text-sm text-[var(--muted)]">
-                <p>{t("currencyUnsetHint")}</p>
-                <Link href="/dashboard/finance/settings" className="font-medium underline">
-                  {t("openSetup")}
-                </Link>
-              </div>
-            )
-          ) : null}
-        </div>
+        {yearSelected ? (
+          workspaceCurrency ? (
+            <SceFormField label={t("currencyLabel")} htmlFor={currencyContextId}>
+              <p
+                id={currencyContextId}
+                className={FINANCE_CURRENCY_CONTEXT_CLASS}
+                data-budget-currency={workspaceCurrency}
+                aria-readonly="true"
+              >
+                {workspaceCurrency}
+              </p>
+            </SceFormField>
+          ) : (
+            <div className="max-w-md pb-1 text-sm text-[var(--muted)]">
+              <p>{t("currencyUnsetHint")}</p>
+              <Link href="/dashboard/finance/settings" className="font-medium underline">
+                {t("openSetup")}
+              </Link>
+            </div>
+          )
+        ) : null}
 
         {isApproved ? (
-          <p className="text-sm text-[var(--muted)]" data-budget-status="approved">
+          <p
+            className="ms-auto max-w-md text-end text-sm text-[var(--muted)]"
+            data-budget-status="approved"
+          >
             {t("approvedBaselineHint", {
               date: snapshot?.approvedAt
                 ? new Date(snapshot.approvedAt).toLocaleDateString()
@@ -197,7 +221,7 @@ export function FinanceBudgetWorkspacePanel({
       ) : null}
 
       {yearSelected && !snapshot?.versionId && canMutate && selectedYearId ? (
-        <div className="rounded-xl border border-dashed border-[var(--sce-color-border-standard)] px-5 py-6">
+        <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS} data-finance-surface="empty-draft">
           <h2 className="text-base font-semibold">{t("emptyTitle")}</h2>
           <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("emptyBody")}</p>
           <Button
@@ -361,11 +385,14 @@ function BudgetWorkspaceEditor(props: {
         onPersist={persistDraftAmount}
       />
 
-      <section className="rounded-xl border border-[var(--sce-color-border-standard)] bg-[var(--surface-2)] px-4 py-3 text-sm">
-        <dl className="grid gap-2 sm:grid-cols-3">
+      <section
+        className={FINANCE_SUMMARY_SURFACE_CLASS}
+        data-finance-surface="summary"
+      >
+        <dl className={FINANCE_SUMMARY_GRID_CLASS}>
           <div>
-            <dt className="text-[var(--muted)]">{t("totalIncome")}</dt>
-            <dd className="font-medium">
+            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalIncome")}</dt>
+            <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
               {formatBudgetPlanningMinor(
                 localTotals.totalIncomeMinor,
                 props.workspaceCurrency,
@@ -374,8 +401,8 @@ function BudgetWorkspaceEditor(props: {
             </dd>
           </div>
           <div>
-            <dt className="text-[var(--muted)]">{t("totalExpense")}</dt>
-            <dd className="font-medium">
+            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalExpense")}</dt>
+            <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
               {formatBudgetPlanningMinor(
                 localTotals.totalExpenseMinor,
                 props.workspaceCurrency,
@@ -383,9 +410,9 @@ function BudgetWorkspaceEditor(props: {
               )}
             </dd>
           </div>
-          <div>
-            <dt className="text-[var(--muted)]">{t("plannedResult")}</dt>
-            <dd className="font-medium">
+          <div className="sm:border-s sm:border-[var(--sce-surface-border-subtle)] sm:ps-4">
+            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("plannedResult")}</dt>
+            <dd className={FINANCE_SUMMARY_RESULT_VALUE_CLASS} data-budget-summary="result">
               {formatBudgetPlanningMinor(
                 localTotals.resultMinor,
                 props.workspaceCurrency,
@@ -461,16 +488,14 @@ function BudgetSection(props: {
   const t = useTranslations("Finance.budget");
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[var(--sce-color-border-standard)]">
-      <h2 className="border-b border-[var(--sce-color-border-standard)] bg-[var(--surface-2)] px-4 py-2 text-sm font-semibold">
-        {props.title}
-      </h2>
-      <table className="w-full text-sm">
+    <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="budget-section">
+      <h2 className={FINANCE_SECTION_HEADER_CLASS}>{props.title}</h2>
+      <table className="w-full min-w-0 text-sm">
         <thead>
-          <tr className="border-b border-[var(--sce-color-border-standard)] text-left text-[var(--muted)]">
-            <th className="px-4 py-2 font-medium">{t("accountColumn")}</th>
-            <th className="hidden px-4 py-2 font-medium sm:table-cell">{t("groupColumn")}</th>
-            <th className="px-4 py-2 font-medium">{t("plannedColumn")}</th>
+          <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
+            <th className="px-4 py-2">{t("accountColumn")}</th>
+            <th className="hidden px-4 py-2 sm:table-cell">{t("groupColumn")}</th>
+            <th className="px-4 py-2 text-end">{t("plannedColumn")}</th>
           </tr>
         </thead>
         <tbody>
@@ -521,7 +546,7 @@ function BudgetAmountRow(props: {
   return (
     <tr
       className={cn(
-        "border-b border-[var(--border)]/60 last:border-0",
+        FINANCE_TABLE_ROW_CLASS,
         props.row.lifecycle === "ARCHIVED" && "opacity-75",
       )}
     >
@@ -534,22 +559,22 @@ function BudgetAmountRow(props: {
       <td className="hidden px-4 py-2 text-[var(--muted)] sm:table-cell">
         {props.row.reportingGroupName}
       </td>
-      <td className="px-4 py-2">
+      <td className="px-4 py-2 text-end align-middle">
         {props.readOnly ? (
-          <span>
+          <span className="inline-block min-w-[11rem] text-end tabular-nums font-medium">
             {props.amountMinor !== null
               ? formatBudgetPlanningMinor(props.amountMinor, props.currency, props.locale)
               : "—"}
           </span>
         ) : (
-          <div className="space-y-1">
+          <div className="ms-auto max-w-[11rem] space-y-1">
             <input
               id={inputId}
               type="text"
               inputMode="numeric"
               aria-label={t("plannedAmountLabel", { account: props.row.accountName })}
               aria-invalid={props.lineError ? true : undefined}
-              className="w-full max-w-[10rem] rounded-md border border-[var(--sce-color-border-standard)] px-2 py-1.5 text-sm"
+              className={FINANCE_BUDGET_AMOUNT_INPUT_CLASS}
               value={displayValue}
               onFocus={() => {
                 setFocused(true);

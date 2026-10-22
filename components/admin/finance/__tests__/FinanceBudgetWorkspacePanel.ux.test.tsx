@@ -42,5 +42,13 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).toContain("baseCurrency");
     expect(panel).toContain("formatBudgetPlanningWholeMajorNumber");
     expect(panel).toContain("formatBudgetPlanningMinor");
+    expect(panel).toContain("FINANCE_CURRENCY_CONTEXT_CLASS");
+    expect(panel).toContain("SceToolbarSelect");
+  });
+
+  it("uses shared dark finance surface primitives", () => {
+    expect(panel).toContain("FINANCE_SECTION_SURFACE_CLASS");
+    expect(panel).toContain("FINANCE_SUMMARY_SURFACE_CLASS");
+    expect(panel).toContain("data-budget-summary=\"result\"");
   });
 });

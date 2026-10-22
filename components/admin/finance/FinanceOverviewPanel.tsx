@@ -1,5 +1,9 @@
 import Link from "next/link";
 import type { FinanceOverviewState } from "@/lib/finance/setup/finance-setup-state";
+import {
+  FINANCE_FUNCTIONAL_SURFACE_CLASS,
+  FINANCE_WORKSPACE_STACK_CLASS,
+} from "@/lib/finance/finance-workspace-surfaces";
 
 type FinanceOverviewPanelProps = {
   state: FinanceOverviewState;
@@ -43,9 +47,11 @@ export function FinanceOverviewPanel({
   })();
 
   return (
-    <section
-      className="rounded-xl border border-[var(--sce-color-border-standard)] bg-[var(--surface)] px-5 py-6"
+    <div className={FINANCE_WORKSPACE_STACK_CLASS} data-finance-overview-panel>
+    <div
+      className={FINANCE_FUNCTIONAL_SURFACE_CLASS}
       data-finance-overview-state={state}
+      data-finance-surface="overview"
     >
       <h2 className="text-base font-semibold text-[var(--foreground)]">{copy.title}</h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">{copy.body}</p>
@@ -59,6 +65,7 @@ export function FinanceOverviewPanel({
           </Link>
         </div>
       ) : null}
-    </section>
+    </div>
+    </div>
   );
 }
