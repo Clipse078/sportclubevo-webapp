@@ -5,7 +5,7 @@
 | **Feature branch** | `cursor/sce-finance-01e-reporting-foundation-b4b9` |
 | **Merge target** | `STAGE` |
 | **Scope** | Reusable reporting read model, aggregation, approved-budget measure adapter, minimal Finance Overview integration |
-| **Status** | **IMPLEMENTED ON FEATURE BRANCH / AWAITING PO UAT** |
+| **Status** | **R2 ON FEATURE BRANCH / AWAITING PO RETEST** |
 
 ## Purpose
 

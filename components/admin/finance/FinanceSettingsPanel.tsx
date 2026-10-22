@@ -44,6 +44,21 @@ export function FinanceSettingsPanel({
       <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-currency">
         <h2 className="text-sm font-semibold">{t("settings.baseCurrencyTitle")}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.baseCurrencyHelp")}</p>
+        {baseCurrency ? (
+          <p
+            className="mt-2 text-sm font-medium text-[var(--foreground)]"
+            data-finance-base-currency-state="configured"
+          >
+            {t("settings.baseCurrencyConfiguredStatus", { currency: baseCurrency })}
+          </p>
+        ) : (
+          <p
+            className="mt-2 text-sm font-medium text-[var(--destructive)]"
+            data-finance-base-currency-state="required"
+          >
+            {t("settings.baseCurrencyRequiredStatus")}
+          </p>
+        )}
         <form
           className="mt-4 flex flex-wrap items-end gap-3"
           onSubmit={(event) => {

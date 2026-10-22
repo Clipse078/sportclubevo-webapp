@@ -14,11 +14,17 @@ type Db = Pick<
   "financeConfiguration" | "financeYear" | "financeTenantCapability"
 >;
 
+type FinanceConfigurationDb = Pick<PrismaClient, "financeConfiguration">;
+
 export async function getFinanceConfiguration(db: Db, tenantId: string) {
   return db.financeConfiguration.findUnique({ where: { tenantId } });
 }
 
-export async function ensureFinanceConfigurationRow(db: Db, tenantId: string) {
+/** Ensures a configuration row exists without mutating unrelated fields (e.g. baseCurrency). */
+export async function ensureFinanceConfigurationRow(
+  db: FinanceConfigurationDb,
+  tenantId: string,
+) {
   return db.financeConfiguration.upsert({
     where: { tenantId },
     create: { tenantId },

@@ -167,11 +167,27 @@ const db = {
       }) => {
         const idx = store.configs.findIndex((c) => c.tenantId === tenantId);
         if (idx === -1) {
-          const row = { tenantId, appliedStructureTemplateKey: null, ...create };
+          const row = { tenantId, appliedStructureTemplateKey: null, baseCurrency: null, ...create };
           store.configs.push(row);
           return row;
         }
         store.configs[idx] = { ...store.configs[idx]!, ...update };
+        return store.configs[idx];
+      },
+    ),
+    update: vi.fn(
+      async ({
+        where: { tenantId },
+        data,
+      }: {
+        where: { tenantId: string };
+        data: Record<string, unknown>;
+      }) => {
+        const idx = store.configs.findIndex((c) => c.tenantId === tenantId);
+        if (idx === -1) {
+          throw new Error("FinanceConfiguration not found");
+        }
+        store.configs[idx] = { ...store.configs[idx]!, ...data };
         return store.configs[idx];
       },
     ),
@@ -412,6 +428,21 @@ describe("FIN-01C templates", () => {
         resolveLabel: (k) => k,
       }),
     ).rejects.toMatchObject({ code: "FINANCE_STRUCTURE_NOT_EMPTY" });
+  });
+
+  it("preserves baseCurrency when applying a structure template", async () => {
+    store.configs.push({
+      tenantId: tenantA,
+      appliedStructureTemplateKey: null,
+      baseCurrency: "CHF",
+      setupStatus: "IN_PROGRESS",
+    });
+    await applyFinanceStructureTemplate(db, structureCtx, {
+      templateKey: "generic_income_expense_v1",
+      resolveLabel: (key) => key,
+    });
+    expect(store.configs[0]?.baseCurrency).toBe("CHF");
+    expect(store.configs[0]?.appliedStructureTemplateKey).toBe("generic_income_expense_v1");
   });
 });
 

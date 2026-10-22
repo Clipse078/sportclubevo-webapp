@@ -12,6 +12,7 @@ import {
 } from "@/lib/finance/structure/template-registry";
 import { financeStructureIsEmpty } from "@/lib/finance/structure/build-structure-tree";
 import { createFinancialReportingGroup } from "@/lib/finance/services/financial-reporting-group-service";
+import { ensureFinanceConfigurationRow } from "@/lib/finance/services/finance-configuration-service";
 import { createFinancialAccount } from "@/lib/finance/services/financial-account-service";
 
 type Db = Pick<
@@ -133,15 +134,10 @@ export async function applyFinanceStructureTemplate(
     await instantiateTemplateNode(db, ctx, rootNode, null, input.resolveLabel);
   }
 
-  await db.financeConfiguration.upsert({
+  await ensureFinanceConfigurationRow(db, ctx.tenantId);
+  await db.financeConfiguration.update({
     where: { tenantId: ctx.tenantId },
-    create: {
-      tenantId: ctx.tenantId,
-      appliedStructureTemplateKey: template.key,
-    },
-    update: {
-      appliedStructureTemplateKey: template.key,
-    },
+    data: { appliedStructureTemplateKey: template.key },
   });
 
   return { applied: true as const, templateKey: template.key };

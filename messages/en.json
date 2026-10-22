@@ -591,6 +591,8 @@
       "baseCurrencyTitle": "Base currency",
       "baseCurrencyHelp": "ISO 4217 code used for organisation finance (not platform billing).",
       "baseCurrencyLabel": "Currency code",
+      "baseCurrencyConfiguredStatus": "Configured base currency: {currency}",
+      "baseCurrencyRequiredStatus": "Required — base currency is not configured yet",
       "saveCurrency": "Save currency",
       "financeYearTitle": "Financial years",
       "financeYearHelp": "Independent from sporting seasons. Define boundaries that fit your organisation.",

@@ -1054,6 +1054,8 @@
       "baseCurrencyTitle": "Basiswährung",
       "baseCurrencyHelp": "ISO-4217-Code für Organisationsfinanzen (nicht Plattform-Abrechnung).",
       "baseCurrencyLabel": "Währungscode",
+      "baseCurrencyConfiguredStatus": "Konfigurierte Basiswährung: {currency}",
+      "baseCurrencyRequiredStatus": "Erforderlich — Basiswährung ist noch nicht konfiguriert",
       "saveCurrency": "Währung speichern",
       "financeYearTitle": "Finanzjahre",
       "financeYearHelp": "Unabhängig von Sport-Saisons. Grenzen passend zur Organisation definieren.",

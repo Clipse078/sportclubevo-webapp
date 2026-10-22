@@ -522,6 +522,8 @@
       "baseCurrencyTitle": "Valuta base",
       "baseCurrencyHelp": "Codice ISO 4217 per le finanze dell'organizzazione.",
       "baseCurrencyLabel": "Codice valuta",
+      "baseCurrencyConfiguredStatus": "Valuta base configurata: {currency}",
+      "baseCurrencyRequiredStatus": "Obbligatorio — la valuta base non è ancora configurata",
       "saveCurrency": "Salva valuta",
       "financeYearTitle": "Anni finanziari",
       "financeYearHelp": "Indipendenti dalle stagioni sportive.",
