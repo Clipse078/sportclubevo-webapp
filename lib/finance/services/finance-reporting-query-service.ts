@@ -68,6 +68,15 @@ export async function loadApprovedBudgetReportingReadModel(
   ]);
 
   const baseCurrency = config?.baseCurrency ?? null;
+  if (!baseCurrency) {
+    return emptyReadModel(ctx, {
+      financeYearId: null,
+      financeYearName: null,
+      availability: "NO_BASE_CURRENCY",
+      baseCurrency: null,
+    });
+  }
+
   const selectedYearId = resolveBudgetSelectedYearId({
     requestedYearId: financeYearId,
     years,

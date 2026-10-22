@@ -1,8 +1,9 @@
 import type { FinancialReportingReadModel } from "@/lib/finance/reporting/reporting-read-model";
-import type { FinanceOverviewState } from "@/lib/finance/setup/finance-setup-state";
 
 export type FinanceOverviewReportingSlice =
   | { kind: "NONE" }
+  | { kind: "NO_BASE_CURRENCY" }
+  | { kind: "NO_FINANCE_YEAR" }
   | { kind: "NO_STRUCTURE"; financeYearName: string | null }
   | {
       kind: "NO_APPROVED_BASELINE";
@@ -24,21 +25,17 @@ export type FinanceOverviewReportingSlice =
       }>;
     };
 
+/** FIN-01E overview reporting resolves from the read model alone — not the formal setup workflow flag. */
 export function resolveFinanceOverviewReportingSlice(input: {
-  overviewState: FinanceOverviewState;
   reporting: FinancialReportingReadModel;
 }): FinanceOverviewReportingSlice {
-  const { overviewState, reporting } = input;
-  if (
-    overviewState === "NOT_CONFIGURED" ||
-    overviewState === "SETUP_INCOMPLETE"
-  ) {
-    return { kind: "NONE" };
-  }
+  const { reporting } = input;
 
   switch (reporting.availability) {
+    case "NO_BASE_CURRENCY":
+      return { kind: "NO_BASE_CURRENCY" };
     case "NO_FINANCE_YEAR":
-      return { kind: "NONE" };
+      return { kind: "NO_FINANCE_YEAR" };
     case "NO_STRUCTURE":
       return { kind: "NO_STRUCTURE", financeYearName: reporting.financeYearName };
     case "NO_APPROVED_BASELINE":
@@ -67,4 +64,20 @@ export function resolveFinanceOverviewReportingSlice(input: {
     default:
       return { kind: "NONE" };
   }
+}
+
+export function financeOverviewReportingIsPrimaryContent(
+  slice: FinanceOverviewReportingSlice,
+): boolean {
+  return slice.kind !== "NONE";
+}
+
+export function shouldShowSubordinateSetupWorkflowNudge(input: {
+  overviewState: "NOT_CONFIGURED" | "SETUP_INCOMPLETE" | "CONFIGURED_NO_DATA" | "CONFIGURED_WITH_CAPABILITIES";
+  reporting: FinanceOverviewReportingSlice;
+}): boolean {
+  return (
+    input.reporting.kind === "APPROVED_BASELINE" &&
+    (input.overviewState === "SETUP_INCOMPLETE" || input.overviewState === "NOT_CONFIGURED")
+  );
 }

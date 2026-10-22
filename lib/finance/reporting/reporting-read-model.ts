@@ -4,6 +4,7 @@ import type { FinancialMeasureKey, FinancialReportingMode } from "@/lib/finance/
 
 export type FinancialReportingAvailability =
   | "AVAILABLE"
+  | "NO_BASE_CURRENCY"
   | "NO_FINANCE_YEAR"
   | "NO_STRUCTURE"
   | "NO_APPROVED_BASELINE";

@@ -41,7 +41,6 @@ export async function loadFinanceWorkspaceContext() {
 
   const reportingReadModel = await loadApprovedBudgetReportingReadModel(prisma, ctx, null);
   const overviewReporting = resolveFinanceOverviewReportingSlice({
-    overviewState,
     reporting: reportingReadModel,
   });
 

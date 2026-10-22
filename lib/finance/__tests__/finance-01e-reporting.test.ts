@@ -7,7 +7,11 @@ import {
   summarizeReportingTree,
 } from "@/lib/finance/reporting/build-reporting-tree";
 import { computeCanonicalFinancialResult } from "@/lib/finance/reporting/canonical-financial-result";
-import { resolveFinanceOverviewReportingSlice } from "@/lib/finance/reporting/reporting-overview-state";
+import {
+  resolveFinanceOverviewReportingSlice,
+  shouldShowSubordinateSetupWorkflowNudge,
+} from "@/lib/finance/reporting/reporting-overview-state";
+import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import { loadApprovedBudgetReportingReadModel } from "@/lib/finance/services/finance-reporting-query-service";
 
 const tenantA = "tenant-a";
@@ -281,6 +285,16 @@ describe("FIN-01E reporting query service", () => {
   };
 
   beforeEach(() => {
+    store.config = { tenantId: tenantA, baseCurrency: "EUR", currentFinanceYearId: "year-1" };
+    store.years = [
+      {
+        id: "year-1",
+        tenantId: tenantA,
+        name: "FY2027",
+        startDate: new Date("2027-01-01"),
+        endDate: new Date("2027-12-31"),
+      },
+    ];
     store.groups = [
       {
         id: "g1",
@@ -374,27 +388,166 @@ describe("FIN-01E reporting query service", () => {
     expect(model.availability).toBe("NO_APPROVED_BASELINE");
     expect(model.summary.incomeMinor).toBe(0);
   });
+
+  it("reports NO_BASE_CURRENCY before finance year resolution", async () => {
+    store.config = { ...store.config, baseCurrency: null as unknown as string };
+    const model = await loadApprovedBudgetReportingReadModel(
+      db as never,
+      ctx(tenantA, [PERMISSIONS.FINANCE_VIEW]),
+      "year-1",
+    );
+    expect(model.availability).toBe("NO_BASE_CURRENCY");
+  });
+
+  it("does not leak approved baseline from another finance year", async () => {
+    store.years.push({
+      id: "year-2",
+      tenantId: tenantA,
+      name: "FY2028",
+      startDate: new Date("2028-01-01"),
+      endDate: new Date("2028-12-31"),
+    });
+    store.budgets.push({ id: "b2", tenantId: tenantA, financeYearId: "year-2" });
+    store.versions.push({
+      id: "v-year2",
+      budgetId: "b2",
+      status: "APPROVED",
+      approvedAt: new Date(),
+      lines: [{ financialAccountId: "acc-1", amountMinor: 500_00 }],
+    });
+    const model = await loadApprovedBudgetReportingReadModel(
+      db as never,
+      ctx(tenantA, [PERMISSIONS.FINANCE_VIEW]),
+      "year-1",
+    );
+    expect(model.financeYearId).toBe("year-1");
+    expect(model.summary.incomeMinor).toBe(80_00);
+  });
 });
+
+function approvedReportingFixture(
+  overrides: Partial<{
+    availability: "AVAILABLE" | "NO_APPROVED_BASELINE";
+    incomeMinor: number;
+    expenseMinor: number;
+    resultMinor: number;
+  }> = {},
+) {
+  return {
+    tenantId: tenantA,
+    financeYearId: "year-1",
+    financeYearName: "FY2027",
+    measure: "APPROVED_BUDGET" as const,
+    mode: "LIVE" as const,
+    baseCurrency: "EUR",
+    availability: overrides.availability ?? ("AVAILABLE" as const),
+    reportingContextKey: "ctx-1",
+    approvedBudgetVersionId: "v-approved",
+    approvedAt: new Date(),
+    tree: [],
+    summary: {
+      incomeMinor: overrides.incomeMinor ?? 100_00,
+      expenseMinor: overrides.expenseMinor ?? 40_00,
+      resultMinor: overrides.resultMinor ?? 60_00,
+    },
+  };
+}
 
 describe("FIN-01E overview reporting slice", () => {
   it("never shows approved summary when baseline is absent", () => {
     const slice = resolveFinanceOverviewReportingSlice({
-      overviewState: "CONFIGURED_WITH_CAPABILITIES",
       reporting: {
-        tenantId: tenantA,
-        financeYearId: "year-1",
-        financeYearName: "FY2027",
-        measure: "APPROVED_BUDGET",
-        mode: "LIVE",
-        baseCurrency: "EUR",
+        ...approvedReportingFixture(),
         availability: "NO_APPROVED_BASELINE",
         reportingContextKey: null,
         approvedBudgetVersionId: null,
         approvedAt: null,
-        tree: [],
         summary: { incomeMinor: 0, expenseMinor: 0, resultMinor: 0 },
       },
     });
     expect(slice.kind).toBe("NO_APPROVED_BASELINE");
+  });
+
+  it("shows approved reporting when setup workflow flag would still be incomplete", () => {
+    const slice = resolveFinanceOverviewReportingSlice({
+      reporting: approvedReportingFixture(),
+    });
+    expect(slice.kind).toBe("APPROVED_BASELINE");
+    if (slice.kind === "APPROVED_BASELINE") {
+      expect(slice.incomeMinor).toBe(100_00);
+      expect(slice.expenseMinor).toBe(40_00);
+      expect(slice.resultMinor).toBe(60_00);
+    }
+  });
+
+  it("maps prerequisite availability to focused nudges", () => {
+    expect(
+      resolveFinanceOverviewReportingSlice({
+        reporting: {
+          ...approvedReportingFixture(),
+          availability: "NO_BASE_CURRENCY",
+          baseCurrency: null,
+        },
+      }).kind,
+    ).toBe("NO_BASE_CURRENCY");
+    expect(
+      resolveFinanceOverviewReportingSlice({
+        reporting: {
+          ...approvedReportingFixture(),
+          availability: "NO_FINANCE_YEAR",
+          financeYearId: null,
+          financeYearName: null,
+        },
+      }).kind,
+    ).toBe("NO_FINANCE_YEAR");
+    expect(
+      resolveFinanceOverviewReportingSlice({
+        reporting: {
+          ...approvedReportingFixture(),
+          availability: "NO_STRUCTURE",
+        },
+      }).kind,
+    ).toBe("NO_STRUCTURE");
+  });
+
+  it("surfaces subordinate setup nudge only when reporting is available but workflow open", () => {
+    expect(
+      shouldShowSubordinateSetupWorkflowNudge({
+        overviewState: "SETUP_INCOMPLETE",
+        reporting: resolveFinanceOverviewReportingSlice({
+          reporting: approvedReportingFixture(),
+        }),
+      }),
+    ).toBe(true);
+    expect(
+      shouldShowSubordinateSetupWorkflowNudge({
+        overviewState: "CONFIGURED_WITH_CAPABILITIES",
+        reporting: resolveFinanceOverviewReportingSlice({
+          reporting: approvedReportingFixture(),
+        }),
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("FIN-01E overview year resolution consistency", () => {
+  it("matches budget default year when overview passes no explicit year", () => {
+    const years = [
+      { id: "year-1", status: "ACTIVE" as const },
+      { id: "year-2", status: "ACTIVE" as const },
+    ];
+    const currentFinanceYearId = "year-1";
+    const overviewYear = resolveBudgetSelectedYearId({
+      requestedYearId: null,
+      years,
+      currentFinanceYearId,
+    });
+    const budgetDefaultYear = resolveBudgetSelectedYearId({
+      requestedYearId: null,
+      years,
+      currentFinanceYearId,
+    });
+    expect(overviewYear).toBe(budgetDefaultYear);
+    expect(overviewYear).toBe("year-1");
   });
 });
