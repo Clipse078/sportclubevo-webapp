@@ -609,7 +609,15 @@
       "versionHistoryTitle": "Version history",
       "versionHistoryEntry": "Version {number}",
       "versionApproved": "Approved",
-      "versionDraft": "Draft"
+      "versionDraft": "Draft",
+      "workingRevisionTotalsScope": "Working revision totals — not the approved baseline",
+      "draftTotalsScope": "Working budget totals (draft)",
+      "persistence": {
+        "unsaved": "Unsaved changes",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "error": "Save failed"
+      }
     },
     "settings": {
       "title": "Finance setup",

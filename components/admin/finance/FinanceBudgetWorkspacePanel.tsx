@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useTransition, useId } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  useId,
+} from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -25,6 +33,11 @@ import {
   mergeBudgetDraftAmount,
   type BudgetDraftAmounts,
 } from "@/lib/finance/budget/budget-draft-editing";
+import {
+  countFailedBudgetLineSaves,
+  deriveBudgetWorkspacePersistencePhase,
+  type BudgetWorkspacePersistencePhase,
+} from "@/lib/finance/budget/budget-workspace-persistence";
 import type { BudgetReadinessIssueCode } from "@/lib/finance/budget/budget-approval-readiness";
 import {
   approveBudgetAction,
@@ -34,6 +47,7 @@ import {
 } from "@/app/(admin)/dashboard/finance/budget/actions";
 import {
   FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
+  FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS,
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_CURRENCY_CONTEXT_CLASS,
   FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
@@ -77,6 +91,8 @@ export function FinanceBudgetWorkspacePanel({
   const router = useRouter();
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [persistencePhase, setPersistencePhase] =
+    useState<BudgetWorkspacePersistencePhase>("hidden");
   const yearSelectId = useId();
   const currencyContextId = useId();
   const workspaceCurrency = snapshot?.currency ?? baseCurrency;
@@ -196,12 +212,18 @@ export function FinanceBudgetWorkspacePanel({
         ) : null}
 
         {snapshot?.status && snapshot.status !== "NONE" ? (
-          <p
-            className="ms-auto max-w-md text-end text-sm text-[var(--muted)]"
-            data-budget-status={snapshot.status}
-          >
-            {t(`status.${snapshot.status}`)}
-          </p>
+          <div className="ms-auto flex max-w-md flex-col items-end gap-0.5 text-end">
+            <p className="text-sm text-[var(--muted)]" data-budget-status={snapshot.status}>
+              {t(`status.${snapshot.status}`)}
+            </p>
+            {persistencePhase !== "hidden" ? (
+              <FinanceBudgetPersistenceIndicator phase={persistencePhase} />
+            ) : null}
+          </div>
+        ) : persistencePhase !== "hidden" ? (
+          <div className="ms-auto text-end">
+            <FinanceBudgetPersistenceIndicator phase={persistencePhase} />
+          </div>
         ) : null}
       </div>
 
@@ -261,6 +283,7 @@ export function FinanceBudgetWorkspacePanel({
           isDraft={isDraft || isWorkingRevision}
           canApprove={canApprove}
           workspacePending={workspacePending}
+          onPersistencePhaseChange={setPersistencePhase}
           onApproveBlocked={() => setFeedback(t("approveBlockedPendingSave"))}
           onApprove={() => {
             if (!snapshot?.versionId) return;
@@ -269,6 +292,28 @@ export function FinanceBudgetWorkspacePanel({
         />
       ) : null}
     </div>
+  );
+}
+
+function FinanceBudgetPersistenceIndicator({
+  phase,
+}: {
+  phase: Exclude<BudgetWorkspacePersistencePhase, "hidden">;
+}) {
+  const t = useTranslations("Finance.budget.persistence");
+  const isError = phase === "error";
+  return (
+    <p
+      className={cn(
+        FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS,
+        isError && "text-[var(--destructive)]",
+      )}
+      data-budget-persistence={phase}
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
+    >
+      {t(phase)}
+    </p>
   );
 }
 
@@ -282,6 +327,7 @@ function BudgetWorkspaceEditor(props: {
   isDraft: boolean;
   canApprove: boolean;
   workspacePending: boolean;
+  onPersistencePhaseChange: (phase: BudgetWorkspacePersistencePhase) => void;
   onApproveBlocked: () => void;
   onApprove: () => void;
 }) {
@@ -290,10 +336,38 @@ function BudgetWorkspaceEditor(props: {
     buildBudgetDraftAmounts(props.snapshot.rows),
   );
   const [lineErrors, setLineErrors] = useState<Record<string, string>>({});
+  const [dirtyAccountCount, setDirtyAccountCount] = useState(0);
+  const [inFlightSaveCount, setInFlightSaveCount] = useState(0);
   const [approveOpen, setApproveOpen] = useState(false);
   const dirtyAccountIdsRef = useRef(new Set<string>());
   const saveGenerationRef = useRef(new Map<string, number>());
   const pendingSavePromisesRef = useRef(new Set<Promise<void>>());
+
+  const syncDirtyAccountCount = useCallback(() => {
+    setDirtyAccountCount(dirtyAccountIdsRef.current.size);
+  }, []);
+
+  const persistencePhase = useMemo(
+    () =>
+      deriveBudgetWorkspacePersistencePhase({
+        editable: !props.readOnly,
+        dirtyAccountCount,
+        inFlightSaveCount,
+        failedLineSaveCount: countFailedBudgetLineSaves(lineErrors),
+      }),
+    [props.readOnly, dirtyAccountCount, inFlightSaveCount, lineErrors],
+  );
+
+  useEffect(() => {
+    props.onPersistencePhaseChange(persistencePhase);
+  }, [persistencePhase, props.onPersistencePhaseChange]);
+
+  useEffect(
+    () => () => {
+      props.onPersistencePhaseChange("hidden");
+    },
+    [props.onPersistencePhaseChange],
+  );
   const localTotals = useMemo(
     () => budgetTotalsFromDraft(props.snapshot.rows, draftAmounts),
     [props.snapshot.rows, draftAmounts],
@@ -306,25 +380,31 @@ function BudgetWorkspaceEditor(props: {
       const nextGen = (saveGenerationRef.current.get(accountId) ?? 0) + 1;
       saveGenerationRef.current.set(accountId, nextGen);
 
+      setInFlightSaveCount((count) => count + 1);
       const savePromise = (async () => {
-        const result = await saveBudgetLineAction({
-          budgetVersionId: versionId,
-          financialAccountId: accountId,
-          amountMinor,
-        });
-        if (isStaleBudgetSaveResult(accountId, nextGen, saveGenerationRef.current)) {
-          return;
-        }
-        if (result.ok) {
-          dirtyAccountIdsRef.current.delete(accountId);
-          setLineErrors((prev) => {
-            if (!prev[accountId]) return prev;
-            const next = { ...prev };
-            delete next[accountId];
-            return next;
+        try {
+          const result = await saveBudgetLineAction({
+            budgetVersionId: versionId,
+            financialAccountId: accountId,
+            amountMinor,
           });
-        } else {
-          setLineErrors((prev) => ({ ...prev, [accountId]: result.error }));
+          if (isStaleBudgetSaveResult(accountId, nextGen, saveGenerationRef.current)) {
+            return;
+          }
+          if (result.ok) {
+            dirtyAccountIdsRef.current.delete(accountId);
+            syncDirtyAccountCount();
+            setLineErrors((prev) => {
+              if (!prev[accountId]) return prev;
+              const next = { ...prev };
+              delete next[accountId];
+              return next;
+            });
+          } else {
+            setLineErrors((prev) => ({ ...prev, [accountId]: result.error }));
+          }
+        } finally {
+          setInFlightSaveCount((count) => Math.max(0, count - 1));
         }
       })();
 
@@ -333,7 +413,7 @@ function BudgetWorkspaceEditor(props: {
         pendingSavePromisesRef.current.delete(savePromise);
       });
     },
-    [props.readOnly, props.snapshot.versionId],
+    [props.readOnly, props.snapshot.versionId, syncDirtyAccountCount],
   );
 
   const flushPendingLineSaves = useCallback(async () => {
@@ -360,10 +440,14 @@ function BudgetWorkspaceEditor(props: {
     return dirtyAccountIdsRef.current.size === 0;
   }, [draftAmounts, flushDirtyDraftsToServer, flushPendingLineSaves]);
 
-  const updateLocalDraftAmount = useCallback((accountId: string, amountMinor: number | null) => {
-    setDraftAmounts((prev) => mergeBudgetDraftAmount(prev, accountId, amountMinor));
-    dirtyAccountIdsRef.current.add(accountId);
-  }, []);
+  const updateLocalDraftAmount = useCallback(
+    (accountId: string, amountMinor: number | null) => {
+      setDraftAmounts((prev) => mergeBudgetDraftAmount(prev, accountId, amountMinor));
+      dirtyAccountIdsRef.current.add(accountId);
+      syncDirtyAccountCount();
+    },
+    [syncDirtyAccountCount],
+  );
 
   const persistDraftAmount = useCallback(
     (accountId: string, amountMinor: number | null) => {
@@ -516,7 +600,23 @@ function BudgetWorkspaceEditor(props: {
       <section
         className={FINANCE_SUMMARY_SURFACE_CLASS}
         data-finance-surface="summary"
+        data-budget-editable-scope={
+          props.snapshot.status === "WORKING_REVISION"
+            ? "working-revision"
+            : props.snapshot.status === "DRAFT"
+              ? "draft"
+              : undefined
+        }
       >
+        {props.snapshot.status === "WORKING_REVISION" ? (
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+            {t("workingRevisionTotalsScope")}
+          </p>
+        ) : props.snapshot.status === "DRAFT" ? (
+          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+            {t("draftTotalsScope")}
+          </p>
+        ) : null}
         <dl className={FINANCE_SUMMARY_GRID_CLASS}>
           <div>
             <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("totalIncome")}</dt>

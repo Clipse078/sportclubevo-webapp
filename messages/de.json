@@ -1072,7 +1072,15 @@
       "versionHistoryTitle": "Versionsverlauf",
       "versionHistoryEntry": "Version {number}",
       "versionApproved": "Freigegeben",
-      "versionDraft": "Entwurf"
+      "versionDraft": "Entwurf",
+      "workingRevisionTotalsScope": "Summen der Arbeitsrevision — nicht die freigegebene Baseline",
+      "draftTotalsScope": "Summen des Arbeitsbudgets (Entwurf)",
+      "persistence": {
+        "unsaved": "Ungespeicherte Änderungen",
+        "saving": "Wird gespeichert …",
+        "saved": "Gespeichert",
+        "error": "Speichern fehlgeschlagen"
+      }
     },
     "settings": {
       "title": "Finanz-Einrichtung",

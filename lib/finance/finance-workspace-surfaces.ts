@@ -41,6 +41,10 @@ export const FINANCE_CONTEXT_STRIP_CLASS = cn(
 export const FINANCE_CURRENCY_CONTEXT_CLASS =
   "flex min-h-9 items-center text-sm font-semibold tracking-wide text-[var(--foreground)] tabular-nums";
 
+/** Subordinate workspace persistence hint (FIN-02A R2) — below governance status in context strip. */
+export const FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS =
+  "text-xs text-[var(--muted)] tabular-nums";
+
 export const FINANCE_SUMMARY_SURFACE_CLASS = cn(SCE_SURFACE_STANDARD_PANEL, "px-4 py-4");
 
 export const FINANCE_SUMMARY_GRID_CLASS = "grid min-w-0 gap-4 sm:grid-cols-3";
