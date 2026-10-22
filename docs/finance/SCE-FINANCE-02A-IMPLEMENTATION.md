@@ -5,7 +5,8 @@
 | **Feature branch** | `cursor/sce-finance-02a-operational-budgeting` |
 | **Merge target** | `STAGE` |
 | **PR** | **#896** |
-| **Closure head** | `f57f14498f604def2d9f33d7bd136834615e947d` (R1 `2953f666` … R2 save-state `f57f1449`) |
+| **Feature head at merge** | `08b5965fc5c97767a44710016a0b30a4ee16d6dd` (R1 `2953f666` … R2 `f57f1449` … closure docs) |
+| **Merge commit (STAGE)** | `e4408e1bc402533ca9fb070c57066195885a5581` (2026-10-22) |
 | **Builds on** | FIN-01D budget foundation, FIN-01E reporting & currency |
 | **FIN-02A implementation** | **COMPLETE** |
 | **FIN_02A_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative) |
