@@ -18,13 +18,20 @@ describe("FIN-01B capability-driven navigation", () => {
     expect(items.map((i) => i.key)).toEqual(["overview"]);
   });
 
-  it("does not expose unimplemented capability routes when configured", () => {
+  it("exposes budget when BUDGETING capability is implemented and enabled", () => {
+    const budgetViewerCtx = {
+      ...viewerCtx,
+      permissionKeys: new Set([
+        PERMISSIONS.FINANCE_VIEW,
+        PERMISSIONS.FINANCE_BUDGET_VIEW,
+      ]),
+    };
     const items = resolveFinanceNavigation({
-      ctx: viewerCtx,
+      ctx: budgetViewerCtx,
       enabledCapabilities: new Set(["OVERVIEW", "BUDGETING"]),
       setupConfigured: true,
     });
-    expect(items.some((i) => i.key === "budget")).toBe(false);
+    expect(items.some((i) => i.key === "budget")).toBe(true);
   });
 
   it("includes structure settings only with structure permission", () => {

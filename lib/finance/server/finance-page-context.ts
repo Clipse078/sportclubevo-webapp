@@ -46,5 +46,9 @@ export async function loadFinanceWorkspaceContext() {
     navigation,
     canAdmin: permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     canStructure: permissionKeys.has(PERMISSIONS.FINANCE_STRUCTURE_MANAGE),
+    canBudgetManage: permissionKeys.has(PERMISSIONS.FINANCE_BUDGET_MANAGE),
+    canBudgetApprove:
+      permissionKeys.has(PERMISSIONS.FINANCE_APPROVE) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
   };
 }

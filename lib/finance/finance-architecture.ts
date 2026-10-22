@@ -392,7 +392,10 @@ export const FINANCE_NAVIGATION_ENTRIES = [
   {
     key: "budget",
     requiredCapabilities: ["BUDGETING"] as const,
-    permissionKeys: [PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_BUDGET_VIEW],
+    permissionKeys: [
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_VIEW,
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_BUDGET_VIEW,
+    ],
     labelKey: "finance.nav.budget",
   },
   {
