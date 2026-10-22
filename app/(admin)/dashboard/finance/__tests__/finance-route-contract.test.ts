@@ -19,6 +19,13 @@ describe("FIN-01B finance routes", () => {
     expect(read("lib/nav/nav-config.ts")).toContain("PERMISSIONS.FINANCE_VIEW");
   });
 
+  it("declares FIN-01C financial structure builder route", () => {
+    expect(read("app/(admin)/dashboard/finance/structure/page.tsx")).toContain(
+      "FinanceStructureBuilderPanel",
+    );
+    expect(read("lib/finance/capability-registry.ts")).toContain("/dashboard/finance/structure");
+  });
+
   it("uses canonical switch toggles for capability settings (binary control compliance)", () => {
     const panel = read("components/admin/finance/FinanceSettingsPanel.tsx");
     expect(panel).toContain("@/components/ui/SwitchToggle");

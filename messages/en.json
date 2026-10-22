@@ -418,7 +418,8 @@
     "breadcrumbs": {
       "dashboard": "Dashboard",
       "finance": "Finance",
-      "settings": "Setup"
+      "settings": "Setup",
+      "structure": "Financial structure"
     },
     "workspace": {
       "eyebrow": "Finance",
@@ -435,7 +436,87 @@
       "projects": "Projects",
       "funds": "Funds",
       "structure_settings": "Setup",
+      "structure": "Structure",
       "reports": "Reports"
+    },
+    "structure": {
+      "pageTitle": "Financial structure",
+      "pageDescription": "Manage reporting groups and accounts for your organisation — no amounts or postings.",
+      "emptyTitle": "No financial structure yet",
+      "emptyBody": "Reporting groups organise income and expense accounts for planning and reports. Choose a quick start or build your own labels — nothing is locked to a template.",
+      "emptyRecommendedLabel": "Recommended",
+      "emptyManualLabel": "Or build manually",
+      "previewTemplate": "Preview starter template",
+      "applyTemplate": "Apply template",
+      "applyTemplateCustomizeNote": "You can rename, reorder, or extend everything after applying. The template is a one-time starter — not a permanent link.",
+      "templateAppliedNextSteps": "Starter structure applied. Review the groups, rename labels for your organisation, or add accounts where needed.",
+      "viewOnlyHint": "You can browse the financial structure. Changes require structure management permission.",
+      "emptyGroupHint": "This group is empty.",
+      "archivedHint": "Archived items are kept for history and can be reactivated.",
+      "actionBlockedTitle": "Action could not be completed",
+      "createRootGroup": "Create first reporting group",
+      "createGroup": "Reporting group",
+      "createAccount": "Account",
+      "rowMenuTrigger": "More actions",
+      "rowMenuGroup": "Reporting group actions",
+      "rowMenuAccount": "Account actions",
+      "deleteGroupTitle": "Delete reporting group",
+      "deleteAccountTitle": "Delete account",
+      "createGroupTitle": "Create reporting group",
+      "createAccountTitle": "Create account",
+      "renameGroupTitle": "Rename reporting group",
+      "renameAccountTitle": "Rename account",
+      "moveGroupTitle": "Move reporting group",
+      "moveAccountTitle": "Move account",
+      "nameLabel": "Name",
+      "parentGroupLabel": "Parent group",
+      "reportingGroupLabel": "Reporting group",
+      "semanticLabel": "Account type",
+      "rootGroupOption": "Top level",
+      "treeAria": "Financial structure hierarchy",
+      "archivedBadge": "Archived",
+      "confirmDeleteGroup": "Permanently delete this reporting group? Remove child groups and accounts first.",
+      "confirmDeleteAccount": "Permanently delete this account?",
+      "actions": {
+        "rename": "Rename",
+        "move": "Move",
+        "archive": "Archive",
+        "reactivate": "Reactivate",
+        "delete": "Delete",
+        "moveUp": "Move up",
+        "save": "Save",
+        "create": "Create",
+        "addSubgroup": "Add subgroup",
+        "addAccount": "Add account",
+        "cancel": "Cancel"
+      },
+      "semantics": {
+        "income": {
+          "label": "Income",
+          "description": "Money flowing into the organisation."
+        },
+        "expense": {
+          "label": "Expense",
+          "description": "Money spent by the organisation."
+        }
+      },
+      "templates": {
+        "generic_income_expense_v1": {
+          "name": "Generic income & expense",
+          "description": "Simple starter structure with separate income and expense sections.",
+          "previewSummary": "Creates two reporting groups with two sample accounts each. You can rename everything afterwards.",
+          "groups": {
+            "income": "Income",
+            "expense": "Expenses"
+          },
+          "accounts": {
+            "membership_income": "Membership income",
+            "other_income": "Other income",
+            "personnel_expense": "Personnel",
+            "operations_expense": "Operations"
+          }
+        }
+      }
     },
     "overview": {
       "notConfiguredTitle": "Finance is not configured yet",

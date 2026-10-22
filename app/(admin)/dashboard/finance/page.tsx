@@ -26,9 +26,11 @@ export default async function FinanceOverviewPage() {
         }}
         contextTabs={
           <FinanceWorkspaceTabs
+            showStructure={workspace.canStructure}
             showSettings={workspace.canAdmin || workspace.canStructure}
             labels={{
               overview: t("nav.overview"),
+              structure: t("nav.structure"),
               settings: t("nav.structure_settings"),
             }}
             ariaLabel={t("contextTabsAria")}

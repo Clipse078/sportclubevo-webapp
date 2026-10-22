@@ -41,7 +41,7 @@ function basePass(description: string): OrganisationArchetypeExpectations {
     ownCostCenterHierarchySupported:
       COST_CENTER_HIERARCHY_CAPABILITIES.tenantCanCreateCostCenters,
     ownAccountHierarchySupported:
-      ACCOUNT_HIERARCHY_MODEL.tenantCanConfigureAccountHierarchy,
+      ACCOUNT_HIERARCHY_MODEL.tenantCanConfigureReportingStructure,
     ownFinancialYearSupported: FINANCIAL_YEAR_CONFIGURABLE,
     ownCurrencySupported: FINANCE_MONEY_MODEL.tenantBaseCurrencyConfigurable,
     customDimensionsSupported: FINANCIAL_DIMENSION_MODEL.customDimensionsSupported,

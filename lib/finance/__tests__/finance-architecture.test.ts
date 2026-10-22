@@ -67,7 +67,8 @@ describe("SCE Finance FIN-01A-R1 configurable structure", () => {
     expect(SCE_FINANCE_PRODUCT_LOCKS.tenantFinanceStructureUserManaged).toBe(true);
     expect(COST_CENTER_HIERARCHY_CAPABILITIES.tenantCanCreateCostCenters).toBe(true);
     expect(COST_CENTER_HIERARCHY_CAPABILITIES.tenantCanReparentCostCenters).toBe(true);
-    expect(ACCOUNT_HIERARCHY_MODEL.tenantCanConfigureAccountHierarchy).toBe(true);
+    expect(ACCOUNT_HIERARCHY_MODEL.tenantCanConfigureReportingStructure).toBe(true);
+    expect(ACCOUNT_HIERARCHY_MODEL.accountsAreLeavesUnderReportingGroups).toBe(true);
     expect(ACCOUNT_HIERARCHY_MODEL.hardcodedAccountStructure).toBe(false);
     expect(COST_CENTER_DELETE_INTEGRITY.silentDelete).toBe(false);
     expect(COST_CENTER_DELETE_INTEGRITY.cascadeFinancialHistoryDelete).toBe(false);
