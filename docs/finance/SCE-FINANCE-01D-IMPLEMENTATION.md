@@ -4,8 +4,13 @@
 | --- | --- |
 | **Feature branch** | `cursor/sce-finance-01d-budget-foundation-0fdb` |
 | **Merge target** | `STAGE` |
+| **PR** | **#894** (owner merge — not auto-merged by agents) |
+| **Closure head (R1)** | `7449dd2072a37f325709bda173684287fea09376` |
 | **FIN_01D_IMPLEMENTATION** | **COMPLETE** (feature branch — not merged) |
+| **FIN_01D_STAGE_MIGRATION_APPLIED** | **YES** (2026-10-22 — shared STAGE Neon via guarded `db:migrate:deploy-if-enabled`; schema up to date) |
+| **FIN_01D_READY_FOR_PO_UAT** | **YES** |
 | **FIN_01D_PO_UAT** | **NOT_YET_PERFORMED** |
+| **FIN_01D_MERGED** | **NO** |
 | **Scope** | Budget domain model, draft workflow, approval baseline, Budget workspace (foundation slice — not FIN-02 product) |
 
 ## Domain model
@@ -47,8 +52,15 @@ Reconciliation: `lib/permissions/finance-permission-reconciliation.ts` + migrati
 | Field | Value |
 | --- | --- |
 | **STAGE_MIGRATION_REQUIRED** | **YES** (before PO UAT on shared preview DB) |
-| **STAGE_MIGRATION_APPLIED** | **NOT_YET** (agent run — apply via canonical STAGE migration runbook) |
+| **STAGE_MIGRATION_APPLIED** | **YES** (`20261022190000_sce_finance_01d_budget_foundation`; last common pre-apply: `20261022180000_sce_finance_01c_financial_structure`) |
 | **PRODUCTION_TOUCHED** | **NO** |
+| **DUPLICATE_MIGRATION_CREATED** | **NO** |
+
+### STAGE permission reconciliation (R1)
+
+- Migration backfill assigns `finance.budget.view`, `finance.budget.manage`, and `finance.approve` to `super_admin` and all `club_admin__*` roles (`ON CONFLICT DO NOTHING`).
+- Post-deploy tenant Club Admin catalog reconciliation runs automatically from the guarded migration runner (canonical FIN-01B/01C pattern).
+- Verified on STAGE: **0** missing `RolePermission` rows for the three FIN-01D keys across `club_admin__*` roles (sample: `club_admin__fc-allschwil` has all three).
 
 ## Routes
 
