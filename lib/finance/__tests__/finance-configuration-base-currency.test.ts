@@ -204,6 +204,9 @@ const db = {
   financeBudget: {
     findUnique: vi.fn(async () => null),
   },
+  financeBudgetVersion: {
+    count: vi.fn(async () => 0),
+  },
 };
 
 beforeEach(() => {
@@ -228,6 +231,12 @@ describe("FinanceConfiguration baseCurrency lifecycle (FIN-01E R2)", () => {
     });
     return ctx;
   }
+
+  it("rejects unsupported ISO currency codes", async () => {
+    await expect(setFinanceBaseCurrency(db, adminCtx(tenantA), "NOTVALID")).rejects.toMatchObject({
+      code: "FINANCE_INVALID_CURRENCY",
+    });
+  });
 
   it("persists baseCurrency after FinanceYear creation", async () => {
     const ctx = adminCtx(tenantA);

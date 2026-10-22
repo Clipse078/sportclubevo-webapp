@@ -128,6 +128,8 @@ export async function loadApprovedBudgetReportingReadModel(
     });
   }
 
+  const reportingCurrency = measure.baseCurrency ?? baseCurrency;
+
   const tree = buildFinancialReportingTree({
     groups,
     accounts,
@@ -141,7 +143,7 @@ export async function loadApprovedBudgetReportingReadModel(
     financeYearName: year.name,
     measure: FINANCIAL_MEASURE_APPROVED_BUDGET,
     mode: "LIVE",
-    baseCurrency,
+    baseCurrency: reportingCurrency,
     availability: "AVAILABLE",
     reportingContextKey: buildApprovedBudgetReportingContextKey({
       tenantId: ctx.tenantId,

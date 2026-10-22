@@ -10842,6 +10842,8 @@ model FinanceBudgetVersion {
   budgetId         String
   status           FinanceBudgetVersionStatus @default(DRAFT)
   versionNumber    Int                        @default(1)
+  /// ISO 4217 currency frozen at approval — organisation base currency at approve time (FIN-01E R3).
+  baseCurrency     String?
   approvedAt       DateTime?
   approvedByUserId String?
   createdByUserId  String?

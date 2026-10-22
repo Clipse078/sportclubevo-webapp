@@ -46,4 +46,10 @@ describe("FIN-01B finance routes", () => {
     expect(panel).toMatch(/SwitchToggle|SwitchThumb/);
     expect(panel).not.toContain('type="checkbox"');
   });
+
+  it("uses searchable ISO 4217 base currency selector (FIN-01E R3)", () => {
+    const panel = read("components/admin/finance/FinanceSettingsPanel.tsx");
+    expect(panel).toContain("FinanceBaseCurrencySelector");
+    expect(panel).not.toMatch(/name="baseCurrency"/);
+  });
 });

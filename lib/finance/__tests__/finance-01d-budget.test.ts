@@ -35,6 +35,7 @@ const store = {
     id: string;
     budgetId: string;
     status: "DRAFT" | "APPROVED";
+    baseCurrency: string | null;
     approvedAt: Date | null;
     approvedByUserId: string | null;
   }>,
@@ -117,6 +118,7 @@ const db = {
         id: `ver-${store.versions.length + 1}`,
         budgetId: budget.id,
         status: "DRAFT" as const,
+        baseCurrency: null,
         approvedAt: null,
         approvedByUserId: null,
       };
@@ -313,6 +315,7 @@ describe("FIN-01D budget foundation", () => {
     const approved = await approveBudgetVersion(db, manage, workingVersion.id);
     expect(approved.status).toBe("APPROVED");
     expect(approved.approvedByUserId).toBe(userId);
+    expect(approved.baseCurrency).toBe("EUR");
 
     await expect(
       upsertBudgetLine(db, manage, {
@@ -321,6 +324,20 @@ describe("FIN-01D budget foundation", () => {
         amountMinor: 500,
       }),
     ).rejects.toMatchObject({ code: "FINANCE_BUDGET_IMMUTABLE" });
+  });
+
+  it("blocks approval when organisation base currency is missing", async () => {
+    store.configs = [{ tenantId: tenantA, baseCurrency: null }];
+    const manage = ctx(tenantA, [PERMISSIONS.FINANCE_BUDGET_MANAGE, PERMISSIONS.FINANCE_APPROVE]);
+    const { workingVersion } = await getOrCreateDraftBudgetForYear(db, manage, "year-a");
+    await upsertBudgetLine(db, manage, {
+      budgetVersionId: workingVersion.id,
+      financialAccountId: "acc-income",
+      amountMinor: 100,
+    });
+    await expect(approveBudgetVersion(db, manage, workingVersion.id)).rejects.toMatchObject({
+      code: "FINANCE_INVALID_CURRENCY",
+    });
   });
 
   it("blocks unauthorized approval", async () => {

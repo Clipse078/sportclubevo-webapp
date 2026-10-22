@@ -1,3 +1,4 @@
+import { isSupportedIso4217CurrencyCode } from "@/lib/finance/currency/iso4217-currency";
 import { FinanceDomainError } from "@/lib/finance/errors";
 
 export function assertSameTenant(
@@ -15,5 +16,5 @@ export function assertSameTenant(
 }
 
 export function isIso4217Currency(code: string): boolean {
-  return /^[A-Z]{3}$/.test(code.trim());
+  return isSupportedIso4217CurrencyCode(code);
 }

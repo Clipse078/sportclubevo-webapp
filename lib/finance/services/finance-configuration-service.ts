@@ -11,7 +11,7 @@ import { logAction } from "@/lib/audit/log-action";
 
 type Db = Pick<
   PrismaClient,
-  "financeConfiguration" | "financeYear" | "financeTenantCapability"
+  "financeConfiguration" | "financeYear" | "financeTenantCapability" | "financeBudgetVersion"
 >;
 
 type FinanceConfigurationDb = Pick<PrismaClient, "financeConfiguration">;
@@ -48,6 +48,23 @@ export async function setFinanceBaseCurrency(
 
   const yearCount = await db.financeYear.count({ where: { tenantId: ctx.tenantId } });
   const existing = await ensureFinanceConfigurationRow(db, ctx.tenantId);
+
+  if (existing.baseCurrency && existing.baseCurrency !== normalized) {
+    const approvedBaselineCount = await db.financeBudgetVersion.count({
+      where: {
+        status: "APPROVED",
+        budget: { tenantId: ctx.tenantId },
+      },
+    });
+    if (approvedBaselineCount > 0) {
+      throw new FinanceDomainError(
+        "FINANCE_INVALID_CURRENCY",
+        "Base currency cannot change while approved financial baselines exist.",
+        409,
+      );
+    }
+  }
+
   const setupStatus = deriveSetupStatusAfterMutation({
     baseCurrency: normalized,
     financeYearCount: yearCount,

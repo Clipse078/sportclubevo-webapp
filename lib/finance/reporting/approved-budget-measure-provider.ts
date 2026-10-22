@@ -5,6 +5,7 @@ import { assertSafeAmountMinor } from "@/lib/finance/money-types";
 export type ApprovedBudgetVersionWithLines = {
   id: string;
   status: FinanceBudgetVersionStatus;
+  baseCurrency?: string | null;
   approvedAt: Date | null;
   lines: ReadonlyArray<{
     financialAccountId: string;
@@ -16,6 +17,7 @@ export type ApprovedBudgetMeasurePayload = {
   measure: typeof FINANCIAL_MEASURE_APPROVED_BUDGET;
   budgetVersionId: string;
   approvedAt: Date | null;
+  baseCurrency: string | null;
   valuesByAccountId: ReadonlyMap<string, number>;
 };
 
@@ -41,6 +43,7 @@ export function resolveApprovedBudgetMeasure(
     measure: FINANCIAL_MEASURE_APPROVED_BUDGET,
     budgetVersionId: approved.id,
     approvedAt: approved.approvedAt,
+    baseCurrency: approved.baseCurrency?.trim().toUpperCase() ?? null,
     valuesByAccountId,
   };
 }
