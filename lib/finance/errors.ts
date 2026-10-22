@@ -9,7 +9,9 @@ export type FinanceDomainErrorCode =
   | "FINANCE_INVALID_YEAR"
   | "FINANCE_INVALID_CURRENCY"
   | "FINANCE_INVALID_CAPABILITY"
-  | "FINANCE_INVALID_HIERARCHY";
+  | "FINANCE_INVALID_HIERARCHY"
+  | "FINANCE_TEMPLATE_ALREADY_APPLIED"
+  | "FINANCE_STRUCTURE_NOT_EMPTY";
 
 export class FinanceDomainError extends Error {
   readonly code: FinanceDomainErrorCode;

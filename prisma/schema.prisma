@@ -10690,6 +10690,8 @@ model FinanceConfiguration {
   /// ISO 4217 base currency for organisation finance (nullable until configured).
   baseCurrency         String?
   currentFinanceYearId String?
+  /// Set when a starter structure template was applied (prevents duplicate template application).
+  appliedStructureTemplateKey String?
   configuredAt         DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
@@ -10760,13 +10762,13 @@ model FinanceCostCenter {
   @@index([parentId])
 }
 
-/// Account / category hierarchy with canonical semantics (ADR-027, ADR-032).
+/// Financial classification leaf — belongs under FinancialReportingGroup (ADR-027, ADR-032, FIN-01C).
 model FinancialAccount {
   id                String                    @id @default(cuid())
   tenantId          String
-  parentId          String?
+  reportingGroupId  String
   name              String
-  nodeKind          FinancialAccountNodeKind  @default(GROUP)
+  nodeKind          FinancialAccountNodeKind  @default(POSTING)
   canonicalSemantic CanonicalAccountSemantic
   sortOrder         Int                       @default(0)
   lifecycle         FinanceStructureLifecycle @default(ACTIVE)
@@ -10774,12 +10776,11 @@ model FinancialAccount {
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt
 
-  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  parent   FinancialAccount?  @relation("FinancialAccountHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  children FinancialAccount[] @relation("FinancialAccountHierarchy")
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reportingGroup  FinancialReportingGroup @relation(fields: [reportingGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([tenantId, lifecycle])
-  @@index([tenantId, parentId])
+  @@index([tenantId, reportingGroupId])
   @@index([tenantId, canonicalSemantic])
 }
 
@@ -10798,6 +10799,7 @@ model FinancialReportingGroup {
   tenant   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   parent   FinancialReportingGroup?  @relation("FinancialReportingGroupHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   children FinancialReportingGroup[] @relation("FinancialReportingGroupHierarchy")
+  accounts FinancialAccount[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, parentId])

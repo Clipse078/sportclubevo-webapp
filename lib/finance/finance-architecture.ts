@@ -266,11 +266,12 @@ export const COST_CENTER_DELETE_INTEGRITY = {
 /** Account / category / reporting hierarchy — separate from cost center (ADR-032). */
 export const ACCOUNT_HIERARCHY_MODEL = {
   entity: "FinancialAccount",
-  nodeKinds: ["GROUP", "POSTING"] as const,
+  nodeKinds: ["POSTING"] as const,
+  accountsAreLeavesUnderReportingGroups: true,
+  accountWithinAccountHierarchy: false,
   canonicalSemanticOnNode: true,
   displayLabelIsTenantData: true,
   reportingGroupEntity: "FinancialReportingGroup",
-  tenantCanConfigureAccountHierarchy: true,
   tenantCanConfigureReportingStructure: true,
   hardcodedAccountStructure: false,
 } as const;
@@ -422,7 +423,7 @@ export const FINANCE_NAVIGATION_ENTRIES = [
     key: "structure",
     requiredCapabilities: [] as const,
     permissionKeys: [PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_STRUCTURE_MANAGE],
-    labelKey: "finance.nav.structure_settings",
+    labelKey: "finance.nav.structure",
   },
   {
     key: "reports",

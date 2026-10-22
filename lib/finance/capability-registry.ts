@@ -28,7 +28,7 @@ export const FINANCE_WORKSPACE_NAV: FinanceNavEntry[] = FINANCE_NAVIGATION_ENTRI
       entry.key === "overview"
         ? "/dashboard/finance"
         : entry.key === "structure"
-          ? "/dashboard/finance/settings"
+          ? "/dashboard/finance/structure"
           : `/dashboard/finance/${entry.key}`,
     labelKey: entry.labelKey,
     requiredCapabilities: [...entry.requiredCapabilities] as FinanceCapabilityKey[],

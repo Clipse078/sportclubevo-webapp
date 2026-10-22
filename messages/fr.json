@@ -402,10 +402,47 @@
     "matchAwaySide": "Visiteurs"
   },
   "Finance": {
-    "breadcrumbs": { "dashboard": "Tableau de bord", "finance": "Finances", "settings": "Configuration" },
+    "breadcrumbs": { "dashboard": "Tableau de bord", "finance": "Finances", "settings": "Configuration", "structure": "Structure financière" },
     "workspace": { "eyebrow": "Finances", "title": "Finances", "description": "Planification et structure financière de votre organisation." },
     "contextTabsAria": "Sections finances",
-    "nav": { "overview": "Aperçu", "income_statement": "Compte de résultat", "budget": "Budget", "forecast": "Prévision", "cost_centers": "Centres de coûts", "projects": "Projets", "funds": "Fonds", "structure_settings": "Configuration", "reports": "Rapports" },
+    "nav": { "overview": "Aperçu", "income_statement": "Compte de résultat", "budget": "Budget", "forecast": "Prévision", "cost_centers": "Centres de coûts", "projects": "Projets", "funds": "Fonds", "structure_settings": "Configuration", "structure": "Structure", "reports": "Rapports" },
+    "structure": {
+      "pageTitle": "Structure financière",
+      "pageDescription": "Gérer les groupes de reporting et les comptes — sans montants ni écritures.",
+      "emptyTitle": "Pas encore de structure",
+      "emptyBody": "Créez des groupes et comptes ou utilisez un modèle optionnel.",
+      "previewTemplate": "Aperçu du modèle",
+      "applyTemplate": "Appliquer le modèle",
+      "createRootGroup": "Créer un premier groupe",
+      "createGroup": "Groupe",
+      "createAccount": "Compte",
+      "createGroupTitle": "Créer un groupe",
+      "createAccountTitle": "Créer un compte",
+      "renameGroupTitle": "Renommer le groupe",
+      "renameAccountTitle": "Renommer le compte",
+      "moveGroupTitle": "Déplacer le groupe",
+      "moveAccountTitle": "Déplacer le compte",
+      "nameLabel": "Nom",
+      "parentGroupLabel": "Groupe parent",
+      "reportingGroupLabel": "Groupe de reporting",
+      "semanticLabel": "Type de compte",
+      "rootGroupOption": "Niveau racine",
+      "treeAria": "Hiérarchie financière",
+      "archivedBadge": "Archivé",
+      "confirmDeleteGroup": "Supprimer ce groupe ? Retirez d'abord les sous-groupes et comptes.",
+      "confirmDeleteAccount": "Supprimer ce compte ?",
+      "actions": { "rename": "Renommer", "move": "Déplacer", "archive": "Archiver", "reactivate": "Réactiver", "delete": "Supprimer", "moveUp": "Monter", "save": "Enregistrer", "create": "Créer" },
+      "semantics": { "income": { "label": "Recette", "description": "Entrées d'argent." }, "expense": { "label": "Charge", "description": "Sorties d'argent." } },
+      "templates": {
+        "generic_income_expense_v1": {
+          "name": "Recettes et charges génériques",
+          "description": "Structure de démarrage simple.",
+          "previewSummary": "Deux groupes avec deux comptes exemples chacun.",
+          "groups": { "income": "Recettes", "expense": "Charges" },
+          "accounts": { "membership_income": "Cotisations", "other_income": "Autres recettes", "personnel_expense": "Personnel", "operations_expense": "Exploitation" }
+        }
+      }
+    },
     "overview": {
       "notConfiguredTitle": "Les finances ne sont pas encore configurées",
       "notConfiguredBody": "Définissez la devise de base et l'exercice lorsque vous êtes prêt. Aucune donnée fictive n'est affichée.",

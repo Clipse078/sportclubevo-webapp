@@ -28,8 +28,8 @@
 | Sub | Deliverable |
 | --- | --- |
 | **FIN-01A / R1** | Global architecture, ADRs 016–033, contracts, archetype tests, FCA analyzer (**workbook analysis pending**) |
-| **FIN-01B** | Prisma foundation, permissions, capability-driven `/dashboard/finance` shell, Structure Builder UX |
-| **FIN-01C** | Account/reporting hierarchy + optional templates |
+| **FIN-01B** | Prisma foundation, permissions, capability-driven `/dashboard/finance` shell (**COMPLETE + PO UAT PASS**) |
+| **FIN-01C** | Account/reporting hierarchy + optional templates (**IMPLEMENTED ON FEATURE BRANCH / AWAITING PO UAT**) |
 | **FIN-01D** | Budget version workflow + immutability |
 | **FIN-01E** | Management income statement + variance |
 | **FIN-01F** | Import assistant foundation (FCA as reference mapper) |

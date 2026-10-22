@@ -402,10 +402,47 @@
     "matchAwaySide": "Ospiti"
   },
   "Finance": {
-    "breadcrumbs": { "dashboard": "Dashboard", "finance": "Finanze", "settings": "Configurazione" },
+    "breadcrumbs": { "dashboard": "Dashboard", "finance": "Finanze", "settings": "Configurazione", "structure": "Struttura finanziaria" },
     "workspace": { "eyebrow": "Finanze", "title": "Finanze", "description": "Pianificazione e struttura finanziaria della organizzazione." },
     "contextTabsAria": "Sezioni finanze",
-    "nav": { "overview": "Panoramica", "income_statement": "Conto economico", "budget": "Budget", "forecast": "Previsione", "cost_centers": "Centri di costo", "projects": "Progetti", "funds": "Fondi", "structure_settings": "Configurazione", "reports": "Report" },
+    "nav": { "overview": "Panoramica", "income_statement": "Conto economico", "budget": "Budget", "forecast": "Previsione", "cost_centers": "Centri di costo", "projects": "Progetti", "funds": "Fondi", "structure_settings": "Configurazione", "structure": "Struttura", "reports": "Report" },
+    "structure": {
+      "pageTitle": "Struttura finanziaria",
+      "pageDescription": "Gestire gruppi di reporting e conti — senza importi o registrazioni.",
+      "emptyTitle": "Nessuna struttura ancora",
+      "emptyBody": "Create gruppi e conti o partite da un modello opzionale.",
+      "previewTemplate": "Anteprima modello",
+      "applyTemplate": "Applica modello",
+      "createRootGroup": "Crea primo gruppo",
+      "createGroup": "Gruppo",
+      "createAccount": "Conto",
+      "createGroupTitle": "Crea gruppo",
+      "createAccountTitle": "Crea conto",
+      "renameGroupTitle": "Rinomina gruppo",
+      "renameAccountTitle": "Rinomina conto",
+      "moveGroupTitle": "Sposta gruppo",
+      "moveAccountTitle": "Sposta conto",
+      "nameLabel": "Nome",
+      "parentGroupLabel": "Gruppo superiore",
+      "reportingGroupLabel": "Gruppo di reporting",
+      "semanticLabel": "Tipo conto",
+      "rootGroupOption": "Livello principale",
+      "treeAria": "Gerarchia finanziaria",
+      "archivedBadge": "Archiviato",
+      "confirmDeleteGroup": "Eliminare questo gruppo? Rimuovere prima sottogruppi e conti.",
+      "confirmDeleteAccount": "Eliminare questo conto?",
+      "actions": { "rename": "Rinomina", "move": "Sposta", "archive": "Archivia", "reactivate": "Riattiva", "delete": "Elimina", "moveUp": "Su", "save": "Salva", "create": "Crea" },
+      "semantics": { "income": { "label": "Entrata", "description": "Denaro in entrata." }, "expense": { "label": "Uscita", "description": "Denaro in uscita." } },
+      "templates": {
+        "generic_income_expense_v1": {
+          "name": "Entrate e uscite generiche",
+          "description": "Struttura iniziale semplice.",
+          "previewSummary": "Due gruppi con due conti di esempio ciascuno.",
+          "groups": { "income": "Entrate", "expense": "Uscite" },
+          "accounts": { "membership_income": "Quote", "other_income": "Altre entrate", "personnel_expense": "Personale", "operations_expense": "Operativo" }
+        }
+      }
+    },
     "overview": {
       "notConfiguredTitle": "Le finanze non sono ancora configurate",
       "notConfiguredBody": "Impostate valuta base e anno finanziario quando siete pronti. Nessun dato di esempio.",

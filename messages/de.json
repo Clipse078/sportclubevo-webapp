@@ -881,7 +881,8 @@
     "breadcrumbs": {
       "dashboard": "Dashboard",
       "finance": "Finanzen",
-      "settings": "Einrichtung"
+      "settings": "Einrichtung",
+      "structure": "Finanzstruktur"
     },
     "workspace": {
       "eyebrow": "Finanzen",
@@ -898,7 +899,71 @@
       "projects": "Projekte",
       "funds": "Fonds",
       "structure_settings": "Einrichtung",
+      "structure": "Finanzstruktur",
       "reports": "Berichte"
+    },
+    "structure": {
+      "pageTitle": "Finanzstruktur",
+      "pageDescription": "Berichtsgruppen und Konten für die Organisation verwalten — ohne Beträge oder Buchungen.",
+      "emptyTitle": "Noch keine Finanzstruktur",
+      "emptyBody": "Legt Berichtsgruppen und Konten an oder startet mit einer optionalen Vorlage. Namen sind frei wählbar; Kontotypen folgen den SCE-Grundsemantiken Einnahme und Ausgabe.",
+      "previewTemplate": "Starter-Vorlage ansehen",
+      "applyTemplate": "Vorlage anwenden",
+      "createRootGroup": "Erste Berichtsgruppe erstellen",
+      "createGroup": "Berichtsgruppe",
+      "createAccount": "Konto",
+      "createGroupTitle": "Berichtsgruppe erstellen",
+      "createAccountTitle": "Konto erstellen",
+      "renameGroupTitle": "Berichtsgruppe umbenennen",
+      "renameAccountTitle": "Konto umbenennen",
+      "moveGroupTitle": "Berichtsgruppe verschieben",
+      "moveAccountTitle": "Konto verschieben",
+      "nameLabel": "Bezeichnung",
+      "parentGroupLabel": "Übergeordnete Gruppe",
+      "reportingGroupLabel": "Berichtsgruppe",
+      "semanticLabel": "Kontotyp",
+      "rootGroupOption": "Oberste Ebene",
+      "treeAria": "Finanzstruktur-Hierarchie",
+      "archivedBadge": "Archiviert",
+      "confirmDeleteGroup": "Diese Berichtsgruppe endgültig löschen? Untergruppen oder Konten müssen zuerst entfernt werden.",
+      "confirmDeleteAccount": "Dieses Konto endgültig löschen?",
+      "actions": {
+        "rename": "Umbenennen",
+        "move": "Verschieben",
+        "archive": "Archivieren",
+        "reactivate": "Reaktivieren",
+        "delete": "Löschen",
+        "moveUp": "Nach oben",
+        "save": "Speichern",
+        "create": "Erstellen"
+      },
+      "semantics": {
+        "income": {
+          "label": "Einnahme",
+          "description": "Geld, das in die Organisation fließt."
+        },
+        "expense": {
+          "label": "Ausgabe",
+          "description": "Geld, das die Organisation ausgibt."
+        }
+      },
+      "templates": {
+        "generic_income_expense_v1": {
+          "name": "Allgemeine Einnahmen & Ausgaben",
+          "description": "Einfache Starterstruktur mit getrennten Einnahme- und Ausgabebereichen.",
+          "previewSummary": "Erstellt zwei Berichtsgruppen mit je zwei Beispielkonten. Alle Bezeichnungen können danach frei angepasst werden.",
+          "groups": {
+            "income": "Einnahmen",
+            "expense": "Ausgaben"
+          },
+          "accounts": {
+            "membership_income": "Mitgliedsbeiträge",
+            "other_income": "Weitere Einnahmen",
+            "personnel_expense": "Personal",
+            "operations_expense": "Betrieb"
+          }
+        }
+      }
     },
     "overview": {
       "notConfiguredTitle": "Finanzen sind noch nicht eingerichtet",
