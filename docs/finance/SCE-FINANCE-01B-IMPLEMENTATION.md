@@ -2,6 +2,33 @@
 
 Foundation persistence and capability-driven `/dashboard/finance` workspace shell on accepted FIN-01A/R1 architecture.
 
+## Closure status
+
+| Field | Value |
+| --- | --- |
+| **Feature branch** | `cursor/sce-finance-01b-foundation-52a1` |
+| **Merge target** | `STAGE` |
+| **PR** | **#892** (owner merge — not auto-merged by agents) |
+| **Closure baseline** | `a25fadca137375e479ba1f9aeeb79037e7f26f1d` |
+| **FIN_01B_PO_UAT** | **PASS** (Product Owner visual UAT — authoritative; Cursor did not perform manual UAT) |
+| **FIN_01B_COMPLETE** | **YES** (closure package; no FIN-01C scope in this branch) |
+
+### PO UAT confirmation (2026-10-22)
+
+Product Owner visual UAT **PASS** confirms:
+
+1. `/dashboard/finance` reachable for authorized FC Allschwil Club Admin.
+2. Navigation: **Finanzen** and **Sponsoring** as separate entries (not a combined Finance concept).
+3. Legacy combined label **Finanzen & Partnerschaften** is no longer the Finance navigation concept.
+4. Finance setup reachable; base currency configuration visible.
+5. Finance years configurable independently from sporting seasons.
+6. Finance capability configuration visible under **Funktionen**; descriptions visible without hover.
+7. Implemented capability **Übersicht** distinguishable from unavailable capabilities.
+8. Unavailable capabilities show **Noch nicht verfügbar**; switches cannot be activated.
+9. Starter guidance: **Empfohlen für den Start** / *Startet mit der Übersicht. Weitere Finanzfunktionen werden schrittweise verfügbar und können später jederzeit ergänzt werden.* — does not pretend unavailable functionality is usable.
+10. **Übersicht** toggle uses canonical SCE switch/toggle pattern.
+11. No fake/demo financial KPIs in canonical Finance workspace; setup state is honest and configuration-driven.
+
 ## Production models
 
 | Model | Role |
@@ -46,4 +73,19 @@ Full Structure Builder UI, budgets, postings, FCA import, receivables/payables, 
 
 ### UX backlog (post FIN-01B closure)
 
-- **Basiswährung setup control:** replace free-text ISO input with a searchable currency combobox (supported ISO 4217 codes stored canonically; search by code and intuitive country/currency terms; keyboard-accessible autocomplete; no country-specific hardcoding in Finance core; do not force currency from tenant country alone).
+- **SEARCHABLE CURRENCY COMBOBOX (Basiswährung):** the current free-text ISO currency input is **temporary**. Future Finance Setup UX must replace it with a searchable currency selector backed by a **complete currency dataset** (not a manually maintained shortlist). Expected behaviour:
+  - search by ISO 4217 currency code and currency name; useful country/region aliases where appropriate
+  - typing `CH` surfaces **CHF** prominently; `CHF` surfaces CHF; `Swiss` surfaces CHF where localized search supports it
+  - typing `US` surfaces **USD** prominently; `USD` surfaces USD
+  - keyboard navigation; accessible combobox semantics; localized display names where supported
+  - **no Swiss-specific assumptions** in Finance core; tenant base currency remains ISO 4217 based
+  - do **not** implement in FIN-01B closure
+
+### Architecture / product backlog (preserved — not FIN-01B scope)
+
+Explicit future packages remain documented in programme roadmap [`SCE-FINANCE-01`](../roadmap/SCE-FINANCE-01.md) and FIN-01A architecture — **do not implement during FIN-01B closure**:
+
+- periodic budget measurement; Budget vs Actual; Forecast; rolling forecast / rolling budget where appropriate
+- reporting; publishing/sharing financial results internally and externally
+- cost-center **Structure Builder** UX; account/reporting hierarchy UX
+- projects; funds; receivables; payables; commitments; approvals; liquidity; accounting integration
