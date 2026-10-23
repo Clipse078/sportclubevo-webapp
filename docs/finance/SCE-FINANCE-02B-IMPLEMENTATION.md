@@ -5,9 +5,10 @@
 | **Feature branch** | `cursor/sce-finance-02b-controlled-rebaselining` |
 | **Merge target** | `STAGE` |
 | **PR** | **#897** |
-| **Feature head at closure** | `797819b69f42efdb6b838b1d3782d5c927e7c209` (R1 `c0793029` … R2 `09e07585` … R3 `797819b6` … closure docs) |
+| **Feature head at merge** | `ef176002ade511b911d83a47fca2e4dc87a4c649` (R1 `c0793029` … R2 `09e07585` … R3 `797819b6` … closure docs) |
+| **Merge commit (STAGE)** | `989a6c1de619ee131a21d2a3d1a6d5c85b1c2503` (2026-10-23, PR **#897**) |
 | **Builds on** | FIN-02A operational budgeting, FIN-01E reporting |
-| **FIN-02B implementation** | **COMPLETE** |
+| **FIN-02B implementation** | **COMPLETE + MERGED (STAGE)** |
 | **FIN_02B_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative, 2026-10-23) |
 | **FIN-02 programme status** | **IN PROGRESS** (02B closed; **02C/02D** candidates not started) |
 
@@ -276,7 +277,7 @@ Published snapshots must bind to a **specific budget version id** at publication
 | Item | State |
 | --- | --- |
 | FIN-02A | COMPLETE + MERGED + PO UAT PASS |
-| FIN-02B | **COMPLETE + PO UAT PASS** (pending STAGE merge **#897**) |
+| FIN-02B | **COMPLETE + MERGED + PO UAT PASS** (PR **#897** → **STAGE**) |
 | FIN-02C | Candidate / **NOT STARTED** |
 | FIN-02D | Candidate / **NOT STARTED** |
 | FIN-01F | BACKLOG / LOW PRIORITY |
