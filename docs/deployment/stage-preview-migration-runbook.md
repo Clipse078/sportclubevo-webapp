@@ -58,6 +58,21 @@ the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Previ
 
 Closure record: `docs/finance/SCE-FINANCE-02B-IMPLEMENTATION.md` (STAGE migration applied 2026-10-23).
 
+## Finance (FIN-03A) — actuals foundation before Preview UAT
+
+PR Preview code for FIN-03A queries `FinanceActualEntry` and enum `FinanceActualEntrySource`. If the shared STAGE database has not applied:
+
+- `20261023120000_sce_finance_03a_actuals_foundation`
+
+…Finance actuals / variance reads will fail with Prisma **relation does not exist** while the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Preview.
+
+Operator verify (read-only or `--apply` as above):
+
+- `scripts/sce-finance-03a-r1-stage-migration-verify.ts`
+- `npm run finance:03a:r1:stage-migration-verify`
+
+See also `docs/finance/SCE-FINANCE-03A-IMPLEMENTATION.md` (R1 STAGE closure).
+
 ## Historical note
 
 STAGE may list legacy `_prisma_migrations` rows whose names are absent from the

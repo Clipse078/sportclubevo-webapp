@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-03A |
-| **Status** | **IMPLEMENTED / PO UAT PENDING** |
+| **Status** | **IMPLEMENTED / STAGE DB READY / PO UAT PENDING** |
 | **Branch** | `cursor/sce-finance-03a-actuals-variance-foundation` |
 | **Target** | STAGE |
 
@@ -46,6 +46,13 @@ Management finance actuals (measured outcomes) compared to the **current governa
 ## Schema
 
 See migration `20261023120000_sce_finance_03a_actuals_foundation`.
+
+## STAGE migration (R1)
+
+Shared STAGE must apply `20261023120000_sce_finance_03a_actuals_foundation` before PR Preview PO UAT (Preview builds do not run migrations). Operator procedure: `docs/deployment/stage-preview-migration-runbook.md`.
+
+- Verify / apply: `npm run finance:03a:r1:stage-migration-verify` (read-only default; pass `--apply` with guarded env as documented in `scripts/sce-finance-03a-r1-stage-migration-verify.ts`).
+- **2026-10-23:** migration applied on designated shared STAGE (`ep-wispy-hall-aso93dy6`, fingerprint `acd3b37682911890`).
 
 ## PO UAT hints
 
