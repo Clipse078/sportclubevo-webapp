@@ -127,20 +127,20 @@ export function FinanceBudgetWorkspacePanel({
   }
 
   const copySources = annualCreation?.eligibleCopySources ?? [];
-  const defaultCopySourceId = annualCreation?.defaultCopySourceFinanceYearId ?? null;
   const canChoosePriorCopy = copySources.length > 0;
   const selectedYearName =
     years.find((y) => y.id === selectedYearId)?.name ?? snapshot?.financeYearName ?? "";
 
-  useEffect(() => {
-    if (!createDialogOpen) return;
+  function openCreateBudgetDialog() {
+    setCreateSuccess(null);
     setCreationMode("EMPTY");
     setCopySourceYearId(
       annualCreation?.defaultCopySourceFinanceYearId ??
         annualCreation?.eligibleCopySources[0]?.financeYearId ??
         "",
     );
-  }, [createDialogOpen, annualCreation]);
+    setCreateDialogOpen(true);
+  }
 
   function runWorkspaceAction(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
     startWorkspaceTransition(async () => {
@@ -354,10 +354,7 @@ export function FinanceBudgetWorkspacePanel({
           <Button
             className="mt-4"
             disabled={workspacePending}
-            onClick={() => {
-              setCreateSuccess(null);
-              setCreateDialogOpen(true);
-            }}
+            onClick={openCreateBudgetDialog}
           >
             {t("createBudgetAction")}
           </Button>
