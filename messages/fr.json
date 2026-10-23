@@ -559,6 +559,8 @@
       "createModeLabel": "Point de départ",
       "createModeEmpty": "Démarrer vide",
       "createModeFromBaseline": "Partir du budget",
+      "createModeEmptyDescription": "Créer une prévision sans montants de départ.",
+      "createModeFromBaselineDescription": "Reprendre les montants du budget approuvé comme point de départ.",
       "baselineUnavailableHint": "Le démarrage depuis le budget nécessite une baseline de gouvernance approuvée.",
       "createConfirm": "Créer la prévision",
       "cancel": "Annuler",

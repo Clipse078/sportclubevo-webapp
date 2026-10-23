@@ -22,9 +22,12 @@ import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dia
 import {
   budgetDraftInputFromMinor,
   formatBudgetPlanningMinor,
+  formatBudgetPlanningSignedWholeMajorNumber,
+  formatBudgetPlanningWholeMajorNumber,
   normalizeBudgetAmountInput,
   parseBudgetInputToMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
+import { computeForecastBudgetComparisonMetrics } from "@/lib/finance/forecast/forecast-budget-comparison";
 import {
   buildForecastDraftAmounts,
   forecastTotalsFromDraft,
@@ -44,23 +47,34 @@ import {
   type BudgetWorkspacePersistencePhase,
 } from "@/lib/finance/budget/budget-workspace-persistence";
 import {
-  FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
   FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS,
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_CURRENCY_CONTEXT_CLASS,
   FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
+  FINANCE_FORECAST_MONEY_CELL_INPUT_CLASS,
+  FINANCE_FORECAST_MONEY_CELL_READ_ONLY_CLASS,
+  FINANCE_FORECAST_TABLES_STACK_CLASS,
+  FINANCE_FORECAST_WORKSPACE_STACK_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
   FINANCE_SECTION_HEADER_CLASS,
   FINANCE_SECTION_SURFACE_CLASS,
-  FINANCE_SUMMARY_GRID_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
-  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
-  FINANCE_SUMMARY_SURFACE_CLASS,
-  FINANCE_SUMMARY_VALUE_CLASS,
+  FINANCE_SUMMARY_STRIP_GRID_CLASS,
+  FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS,
+  FINANCE_SUMMARY_STRIP_SURFACE_CLASS,
+  FINANCE_SUMMARY_STRIP_VALUE_CLASS,
   FINANCE_TABLE_HEAD_ROW_CLASS,
   FINANCE_TABLE_ROW_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
+import {
+  FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS,
+  FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS,
+  FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS,
+  FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+  FINANCE_VARIANCE_COMPARISON_TABLE_CLASS,
+  FinanceVarianceComparisonColGroup,
+} from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 
 type FinanceYearOption = { id: string; name: string };
 
@@ -91,7 +105,9 @@ export function FinanceForecastWorkspacePanel({
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [creationMode, setCreationMode] = useState<"EMPTY" | "FROM_BASELINE">("EMPTY");
+  const [creationMode, setCreationMode] = useState<"EMPTY" | "FROM_BASELINE">(() =>
+    creation.canInitializeFromBaseline ? "FROM_BASELINE" : "EMPTY",
+  );
   const [persistencePhase, setPersistencePhase] =
     useState<BudgetWorkspacePersistencePhase>("hidden");
   const yearSelectId = useId();
@@ -177,8 +193,13 @@ export function FinanceForecastWorkspacePanel({
     ? forecastTotalsFromDraft(snapshot.rows, buildForecastDraftAmounts(snapshot.rows))
     : null;
 
+  function openCreateDialog() {
+    setCreationMode(creation.canInitializeFromBaseline ? "FROM_BASELINE" : "EMPTY");
+    setCreateDialogOpen(true);
+  }
+
   return (
-    <div className={FINANCE_WORKSPACE_STACK_CLASS}>
+    <div className={FINANCE_FORECAST_WORKSPACE_STACK_CLASS}>
       <div className={FINANCE_CONTEXT_STRIP_CLASS}>
         <SceFormField label={t("yearLabel")} htmlFor={yearSelectId}>
           <SceToolbarSelect
@@ -207,9 +228,18 @@ export function FinanceForecastWorkspacePanel({
         ) : null}
 
         {hasForecast && snapshot?.versionNumber ? (
-          <p className="ms-auto text-sm text-[var(--muted)]">
-            {t("currentVersionLabel", { version: snapshot.versionNumber })}
-          </p>
+          <div className="ms-auto flex max-w-md flex-col items-end gap-0.5 text-end">
+            <p className="text-xs text-[var(--muted)]">
+              {t("currentVersionLabel", { version: snapshot.versionNumber })}
+            </p>
+            {persistencePhase !== "hidden" ? (
+              <ForecastPersistenceIndicator phase={persistencePhase} t={t} />
+            ) : null}
+          </div>
+        ) : persistencePhase !== "hidden" ? (
+          <div className="ms-auto text-end">
+            <ForecastPersistenceIndicator phase={persistencePhase} t={t} />
+          </div>
         ) : null}
       </div>
 
@@ -224,12 +254,12 @@ export function FinanceForecastWorkspacePanel({
       ) : null}
 
       {yearSelected && !hasForecast && canMutate ? (
-        <section className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>
-          <h2 className="text-base font-semibold">
+        <section className={cn(FINANCE_EMPTY_DRAFT_SURFACE_CLASS, "py-4")}>
+          <h2 className="text-sm font-semibold">
             {t("emptyTitle", { year: selectedYearName })}
           </h2>
-          <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("emptyBody")}</p>
-          <Button className="mt-4" onClick={() => setCreateDialogOpen(true)}>
+          <p className="mt-1.5 max-w-2xl text-sm text-[var(--muted)]">{t("emptyBody")}</p>
+          <Button className="mt-3 h-8 px-3 text-sm" onClick={openCreateDialog}>
             {t("createAction")}
           </Button>
         </section>
@@ -238,7 +268,6 @@ export function FinanceForecastWorkspacePanel({
       {yearSelected && hasForecast && snapshot && displayTotals ? (
         <>
           <ForecastSummarySection
-            snapshot={snapshot}
             totals={displayTotals}
             currency={workspaceCurrency}
             formattingLocale={formattingLocale}
@@ -254,11 +283,9 @@ export function FinanceForecastWorkspacePanel({
             incomeRows={incomeRows}
             expenseRows={expenseRows}
             readOnly={readOnly}
-            currency={workspaceCurrency}
             formattingLocale={formattingLocale}
             yearName={selectedYearName}
             onPersistencePhaseChange={setPersistencePhase}
-            persistencePhase={persistencePhase}
             t={t}
             tVariance={tVariance}
           />
@@ -281,7 +308,7 @@ export function FinanceForecastWorkspacePanel({
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-3">
           <SceFormField label={t("createModeLabel")}>
             <SceSegmentedControl
               aria-label={t("createModeLabel")}
@@ -291,6 +318,11 @@ export function FinanceForecastWorkspacePanel({
               disabled={workspacePending}
             />
           </SceFormField>
+          <p className="text-sm text-[var(--muted)]">
+            {creationMode === "EMPTY"
+              ? t("createModeEmptyDescription")
+              : t("createModeFromBaselineDescription")}
+          </p>
           {!creation.canInitializeFromBaseline ? (
             <p className="text-xs text-[var(--muted)]">{t("baselineUnavailableHint")}</p>
           ) : null}
@@ -300,8 +332,33 @@ export function FinanceForecastWorkspacePanel({
   );
 }
 
+function ForecastPersistenceIndicator(props: {
+  phase: Exclude<BudgetWorkspacePersistencePhase, "hidden">;
+  t: ReturnType<typeof useTranslations<"Finance.forecast">>;
+}) {
+  const isError = props.phase === "error";
+  return (
+    <p
+      className={cn(
+        FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS,
+        isError && "text-[var(--destructive)]",
+      )}
+      data-finance-forecast-persistence={props.phase}
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
+    >
+      {props.phase === "saving"
+        ? props.t("persistenceSaving")
+        : props.phase === "unsaved"
+          ? props.t("persistenceUnsaved")
+          : props.phase === "error"
+            ? props.t("persistenceError")
+            : props.t("persistenceSaved")}
+    </p>
+  );
+}
+
 function ForecastSummarySection(props: {
-  snapshot: ForecastWorkspaceSnapshot;
   totals: ReturnType<typeof forecastTotalsFromDraft>;
   currency: string | null;
   formattingLocale: string;
@@ -309,11 +366,11 @@ function ForecastSummarySection(props: {
 }) {
   const resultClass = financeResultSemanticTextClass(props.totals.resultMinor);
   return (
-    <section className={FINANCE_SUMMARY_SURFACE_CLASS}>
-      <dl className={FINANCE_SUMMARY_GRID_CLASS}>
-        <div>
+    <section className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS} data-finance-surface="forecast-summary">
+      <dl className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
+        <div className="sm:px-4 sm:first:ps-0">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.labels.income}</dt>
-          <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
+          <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
             {formatBudgetPlanningMinor(
               props.totals.totalIncomeMinor,
               props.currency,
@@ -321,9 +378,9 @@ function ForecastSummarySection(props: {
             )}
           </dd>
         </div>
-        <div>
+        <div className="sm:px-4">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.labels.expense}</dt>
-          <dd className={FINANCE_SUMMARY_VALUE_CLASS}>
+          <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
             {formatBudgetPlanningMinor(
               props.totals.totalExpenseMinor,
               props.currency,
@@ -331,9 +388,12 @@ function ForecastSummarySection(props: {
             )}
           </dd>
         </div>
-        <div>
+        <div className="sm:px-4 sm:last:pe-0">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.labels.result}</dt>
-          <dd className={cn(FINANCE_SUMMARY_RESULT_VALUE_CLASS, resultClass)}>
+          <dd
+            className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass)}
+            data-finance-forecast-summary="result"
+          >
             {formatBudgetPlanningMinor(props.totals.resultMinor, props.currency, props.formattingLocale)}
           </dd>
         </div>
@@ -347,10 +407,8 @@ function ForecastEditableSection(props: {
   incomeRows: ForecastWorkspaceSnapshot["rows"];
   expenseRows: ForecastWorkspaceSnapshot["rows"];
   readOnly: boolean;
-  currency: string | null;
   formattingLocale: string;
   yearName: string;
-  persistencePhase: BudgetWorkspacePersistencePhase;
   onPersistencePhaseChange: (phase: BudgetWorkspacePersistencePhase) => void;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
   tVariance: ReturnType<typeof useTranslations<"Finance.actuals">>;
@@ -430,36 +488,19 @@ function ForecastEditableSection(props: {
     dirtyAccountIdsRef.current.add(accountId);
   }, []);
 
-  const totals = forecastTotalsFromDraft(props.snapshot.rows, draftAmounts);
-
   return (
-    <>
-      {props.persistencePhase !== "hidden" ? (
-        <p className={FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS}>
-          {props.persistencePhase === "saving"
-            ? props.t("persistenceSaving")
-            : props.persistencePhase === "unsaved"
-              ? props.t("persistenceUnsaved")
-              : props.persistencePhase === "error"
-                ? props.t("persistenceError")
-                : props.t("persistenceSaved")}
-        </p>
-      ) : null}
-
+    <div className={FINANCE_FORECAST_TABLES_STACK_CLASS} data-finance-forecast-editable>
       <ForecastAccountTable
         title={props.t("incomeSectionWithYear", { year: props.yearName })}
         rows={props.incomeRows}
         draftAmounts={draftAmounts}
         readOnly={props.readOnly}
-        currency={props.currency}
         formattingLocale={props.formattingLocale}
         showComparison={Boolean(props.snapshot.approvedBaselineTotals)}
-        onCommit={(accountId, raw) => {
-          const normalized = normalizeBudgetAmountInput(raw);
-          const minor = parseBudgetInputToMinor(normalized);
-          if (minor === null) return;
-          updateLocalDraftAmount(accountId, minor);
-          void persistLine(accountId, minor);
+        onLocalDraftChange={updateLocalDraftAmount}
+        onPersist={(accountId, amountMinor) => {
+          if (amountMinor === null) return;
+          void persistLine(accountId, amountMinor);
         }}
         t={props.t}
         tVariance={props.tVariance}
@@ -471,28 +512,18 @@ function ForecastEditableSection(props: {
         rows={props.expenseRows}
         draftAmounts={draftAmounts}
         readOnly={props.readOnly}
-        currency={props.currency}
         formattingLocale={props.formattingLocale}
         showComparison={Boolean(props.snapshot.approvedBaselineTotals)}
-        onCommit={(accountId, raw) => {
-          const normalized = normalizeBudgetAmountInput(raw);
-          const minor = parseBudgetInputToMinor(normalized);
-          if (minor === null) return;
-          updateLocalDraftAmount(accountId, minor);
-          void persistLine(accountId, minor);
+        onLocalDraftChange={updateLocalDraftAmount}
+        onPersist={(accountId, amountMinor) => {
+          if (amountMinor === null) return;
+          void persistLine(accountId, amountMinor);
         }}
         t={props.t}
         tVariance={props.tVariance}
         lineErrors={lineErrors}
       />
-
-      <section className={FINANCE_SECTION_SURFACE_CLASS}>
-        <h3 className={FINANCE_SECTION_HEADER_CLASS}>{props.t("sectionTotals")}</h3>
-        <p className="text-sm tabular-nums">
-          {formatBudgetPlanningMinor(totals.resultMinor, props.currency, props.formattingLocale)}
-        </p>
-      </section>
-    </>
+    </div>
   );
 }
 
@@ -501,92 +532,134 @@ function ForecastAccountTable(props: {
   rows: ForecastWorkspaceSnapshot["rows"];
   draftAmounts: ForecastDraftAmounts;
   readOnly: boolean;
-  currency: string | null;
   formattingLocale: string;
   showComparison: boolean;
-  onCommit: (accountId: string, raw: string) => void;
+  onLocalDraftChange: (accountId: string, amountMinor: number | null) => void;
+  onPersist: (accountId: string, amountMinor: number | null) => void;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
   tVariance: ReturnType<typeof useTranslations<"Finance.actuals">>;
   lineErrors: Record<string, string>;
 }) {
+  const tableClass = props.showComparison
+    ? FINANCE_VARIANCE_COMPARISON_TABLE_CLASS
+    : "w-full min-w-0 table-fixed text-sm";
+
   return (
-    <section className={FINANCE_SECTION_SURFACE_CLASS}>
-      <h3 className={FINANCE_SECTION_HEADER_CLASS}>{props.title}</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-sm">
+    <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="forecast-section">
+      <h3 className={cn(FINANCE_SECTION_HEADER_CLASS, "py-2 text-xs font-semibold uppercase tracking-wide")}>
+        {props.title}
+      </h3>
+      <div className="min-w-0 overflow-x-auto">
+        <table
+          className={tableClass}
+          data-finance-variance-comparison-table={props.showComparison ? "forecast" : undefined}
+        >
+          {props.showComparison ? <FinanceVarianceComparisonColGroup mode="FULL_YEAR" /> : null}
           <thead>
             <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
-              <th className="text-start font-medium">{props.t("accountColumn")}</th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS}>
+                {props.t("accountColumn")}
+              </th>
               {props.showComparison ? (
                 <>
-                  <th className="text-end font-medium">{props.t("budgetColumn")}</th>
-                  <th className="text-end font-medium">{props.t("forecastColumn")}</th>
-                  <th className="text-end font-medium">{props.t("deltaColumn")}</th>
-                  <th className="text-end font-medium">{props.t("ratingColumn")}</th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {props.t("budgetColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {props.t("forecastColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {props.t("deltaColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {props.t("ratingColumn")}
+                  </th>
                 </>
               ) : (
-                <th className="text-end font-medium">{props.t("forecastColumn")}</th>
+                <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                  {props.t("forecastColumn")}
+                </th>
               )}
             </tr>
           </thead>
           <tbody>
             {props.rows.map((row) => {
-              const draftMinor = props.draftAmounts[row.accountId] ?? row.amountMinor;
-              const inputValue =
-                draftMinor === null ? "" : budgetDraftInputFromMinor(draftMinor);
+              const amountMinor = Object.prototype.hasOwnProperty.call(
+                props.draftAmounts,
+                row.accountId,
+              )
+                ? props.draftAmounts[row.accountId]!
+                : row.amountMinor;
+              const comparison = computeForecastBudgetComparisonMetrics({
+                canonicalSemantic: row.semantic as "INCOME" | "EXPENSE",
+                approvedBudgetMinor: row.approvedBudgetMinor,
+                forecastMinor: amountMinor,
+              });
               const hasComparison =
                 props.showComparison &&
-                row.approvedBudgetMinor !== null &&
-                draftMinor !== null;
-              const favorability = row.comparison.favorability;
+                comparison.rawForecastDeltaMinor !== null &&
+                comparison.favorability !== null;
+              const favorability = comparison.favorability;
+              const rowReadOnly = props.readOnly || row.lifecycle === "ARCHIVED";
+
               return (
-                <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
-                  <td>
+                <tr
+                  key={row.accountId}
+                  className={cn(
+                    FINANCE_TABLE_ROW_CLASS,
+                    row.lifecycle === "ARCHIVED" && "opacity-75",
+                  )}
+                >
+                  <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
                     <span className="font-medium">{row.accountName}</span>
                     {row.lifecycle === "ARCHIVED" ? (
-                      <span className="ms-2 text-xs text-[var(--muted)]">{props.t("archivedAccount")}</span>
+                      <span className="ms-2 text-xs text-[var(--muted)]">
+                        {props.t("archivedAccount")}
+                      </span>
                     ) : null}
                   </td>
                   {props.showComparison ? (
                     <>
-                      <td className="text-end tabular-nums">
+                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
                         {row.approvedBudgetMinor === null
                           ? "—"
-                          : formatBudgetPlanningMinor(
+                          : formatBudgetPlanningWholeMajorNumber(
                               row.approvedBudgetMinor,
-                              props.currency,
                               props.formattingLocale,
                             )}
                       </td>
-                      <td className="text-end">
-                        <ForecastAmountInput
-                          value={inputValue}
-                          readOnly={props.readOnly || row.lifecycle === "ARCHIVED"}
-                          label={props.t("forecastAmountLabel", { account: row.accountName })}
+                      <td className={cn(FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS, "align-middle")}>
+                        <ForecastAmountCell
+                          accountId={row.accountId}
+                          amountMinor={amountMinor}
+                          readOnly={rowReadOnly}
+                          formattingLocale={props.formattingLocale}
                           error={props.lineErrors[row.accountId]}
-                          onCommit={(raw) => props.onCommit(row.accountId, raw)}
+                          onLocalDraftChange={props.onLocalDraftChange}
+                          onPersist={props.onPersist}
+                          label={props.t("forecastAmountLabel", { account: row.accountName })}
                         />
                       </td>
                       <td
                         className={cn(
-                          "text-end tabular-nums",
+                          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
                           financeVarianceComparisonSemanticTextClass({
                             favorability,
                             hasComparison,
                           }),
                         )}
                       >
-                        {hasComparison && row.comparison.rawForecastDeltaMinor !== null
-                          ? formatBudgetPlanningMinor(
-                              row.comparison.rawForecastDeltaMinor,
-                              props.currency,
+                        {hasComparison
+                          ? formatBudgetPlanningSignedWholeMajorNumber(
+                              comparison.rawForecastDeltaMinor!,
                               props.formattingLocale,
                             )
                           : "—"}
                       </td>
                       <td
                         className={cn(
-                          "text-end",
+                          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+                          "text-xs",
                           financeVarianceComparisonSemanticTextClass({
                             favorability,
                             hasComparison,
@@ -605,13 +678,16 @@ function ForecastAccountTable(props: {
                       </td>
                     </>
                   ) : (
-                    <td className="text-end">
-                      <ForecastAmountInput
-                        value={inputValue}
-                        readOnly={props.readOnly || row.lifecycle === "ARCHIVED"}
-                        label={props.t("forecastAmountLabel", { account: row.accountName })}
+                    <td className={cn(FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS, "align-middle")}>
+                      <ForecastAmountCell
+                        accountId={row.accountId}
+                        amountMinor={amountMinor}
+                        readOnly={rowReadOnly}
+                        formattingLocale={props.formattingLocale}
                         error={props.lineErrors[row.accountId]}
-                        onCommit={(raw) => props.onCommit(row.accountId, raw)}
+                        onLocalDraftChange={props.onLocalDraftChange}
+                        onPersist={props.onPersist}
+                        label={props.t("forecastAmountLabel", { account: row.accountName })}
                       />
                     </td>
                   )}
@@ -625,27 +701,72 @@ function ForecastAccountTable(props: {
   );
 }
 
-function ForecastAmountInput(props: {
-  value: string;
+function ForecastAmountCell(props: {
+  accountId: string;
+  amountMinor: number | null;
   readOnly: boolean;
+  formattingLocale: string;
   label: string;
   error?: string;
-  onCommit: (raw: string) => void;
+  onLocalDraftChange: (accountId: string, amountMinor: number | null) => void;
+  onPersist: (accountId: string, amountMinor: number | null) => void;
 }) {
-  const [local, setLocal] = useState(props.value);
-  useEffect(() => setLocal(props.value), [props.value]);
+  const inputId = useId();
+  const [focused, setFocused] = useState(false);
+  const [editValue, setEditValue] = useState(() => budgetDraftInputFromMinor(props.amountMinor));
+
+  const displayValue = focused
+    ? editValue
+    : props.amountMinor !== null
+      ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.formattingLocale)
+      : "";
+
+  if (props.readOnly) {
+    return (
+      <span className={FINANCE_FORECAST_MONEY_CELL_READ_ONLY_CLASS}>
+        {props.amountMinor !== null
+          ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.formattingLocale)
+          : "—"}
+      </span>
+    );
+  }
 
   return (
-    <div className="inline-flex flex-col items-end gap-0.5">
+    <div className="ms-auto flex max-w-[9rem] flex-col items-end gap-0.5">
       <input
+        id={inputId}
         type="text"
-        inputMode="decimal"
+        inputMode="numeric"
         aria-label={props.label}
-        className={FINANCE_BUDGET_AMOUNT_INPUT_CLASS}
-        value={local}
-        readOnly={props.readOnly}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={() => props.onCommit(local)}
+        aria-invalid={props.error ? true : undefined}
+        className={FINANCE_FORECAST_MONEY_CELL_INPUT_CLASS}
+        value={displayValue}
+        onFocus={() => {
+          setFocused(true);
+          setEditValue(budgetDraftInputFromMinor(props.amountMinor));
+        }}
+        onChange={(e) => {
+          const next = normalizeBudgetAmountInput(e.target.value);
+          setEditValue(next);
+          if (next === "") {
+            props.onLocalDraftChange(props.accountId, null);
+            return;
+          }
+          const minor = parseBudgetInputToMinor(next);
+          if (minor !== null) {
+            props.onLocalDraftChange(props.accountId, minor);
+          }
+        }}
+        onBlur={() => {
+          setFocused(false);
+          if (editValue.trim() === "") {
+            props.onLocalDraftChange(props.accountId, null);
+            return;
+          }
+          const minor = parseBudgetInputToMinor(editValue);
+          if (minor === null) return;
+          props.onPersist(props.accountId, minor);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.currentTarget.blur();

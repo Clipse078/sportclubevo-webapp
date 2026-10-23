@@ -85,6 +85,24 @@ Catalog reconciliation: `reconcileFinanceForecastPermissionsForClubAdmin` (idemp
 
 Workspace tab **Prognose** (`/dashboard/finance/forecast`) with local-first line editing (FIN-01D pattern). Overview shows **Genehmigtes Budget** and **Aktuelle Prognose** when capability and data exist.
 
+### FIN-04A R2 — Forecast Workspace UX Refinement
+
+**PO UAT findings:** functionality acceptable; visual hierarchy, table density, money editing, and duplicate result presentation needed refinement.
+
+| Decision | R2 implementation |
+| --- | --- |
+| Table density | Reuse FIN-03A `FinanceVarianceComparisonColGroup` (`FULL_YEAR`) — compact row padding, shared column geometry for Einnahmen/Ausgaben |
+| Editable money cell | Borderless in-table cell; canonical `formatBudgetPlanningWholeMajorNumber` at rest; plain digits while focused; blur/Enter persist (FIN-01D) |
+| Money formatting | Context strip shows **Währung**; table numeric cells omit repeated ISO suffix; summary strip retains canonical `formatBudgetPlanningMinor` with CHF |
+| Variance | `formatBudgetPlanningSignedWholeMajorNumber` — explicit `+` / `−` / `0`; favorability text remains separate (Günstig / Ungünstig / Im Plan) |
+| Summary hierarchy | Single compact `FINANCE_SUMMARY_STRIP_*` strip (Einnahmen / Ausgaben / Ergebnis with result semantics) |
+| Duplicate result | Removed standalone **Prognose-Ergebnis** footer block below tables |
+| Save state | Subtle indicator beside **Aktuelle Prognose · Version n** in context strip |
+| Create modal | Segmented single choice retained; consequence copy per mode; default **Aus Budget starten** when baseline exists |
+| Responsive | `table-fixed`, `min-w-0`, section `overflow-x-auto` — no full-viewport column stretch |
+
+Status unchanged: **FIN-04A IMPLEMENTED / PO UAT IN PROGRESS** (Michael visual UAT).
+
 ## Migration
 
 `20261023180000_sce_finance_04a_forecast_foundation`

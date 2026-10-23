@@ -60,3 +60,28 @@ export function formatBudgetPlanningMinor(
 ): string {
   return formatFinanceMoneyMinor(amountMinor, currency, locale);
 }
+
+/** Explicit sign for variance columns (+/−/0) — whole major units without currency when context strip shows ISO code. */
+export function formatBudgetPlanningSignedWholeMajorNumber(
+  amountMinor: number,
+  locale: string,
+): string {
+  if (!Number.isFinite(amountMinor) || amountMinor === 0) {
+    return formatBudgetPlanningWholeMajorNumber(0, locale);
+  }
+  const magnitude = formatBudgetPlanningWholeMajorNumber(Math.abs(amountMinor), locale);
+  return amountMinor > 0 ? `+${magnitude}` : `−${magnitude}`;
+}
+
+/** Explicit sign with canonical ISO currency suffix (summary / emphasis). */
+export function formatBudgetPlanningSignedMinor(
+  amountMinor: number,
+  currency: string | null,
+  locale: string,
+): string {
+  if (!Number.isFinite(amountMinor) || amountMinor === 0) {
+    return formatBudgetPlanningMinor(0, currency, locale);
+  }
+  const magnitude = formatBudgetPlanningMinor(Math.abs(amountMinor), currency, locale);
+  return amountMinor > 0 ? `+${magnitude}` : `−${magnitude}`;
+}

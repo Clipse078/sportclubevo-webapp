@@ -1132,6 +1132,8 @@
       "createModeLabel": "Ausgangspunkt",
       "createModeEmpty": "Leer starten",
       "createModeFromBaseline": "Aus Budget starten",
+      "createModeEmptyDescription": "Prognose ohne Ausgangswerte erstellen.",
+      "createModeFromBaselineDescription": "Aktuelle genehmigte Budgetwerte als Ausgangspunkt übernehmen.",
       "baselineUnavailableHint": "Budget-Start ist ohne freigegebene Governance-Baseline nicht verfügbar.",
       "createConfirm": "Prognose erstellen",
       "cancel": "Abbrechen",

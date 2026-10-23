@@ -669,6 +669,8 @@
       "createModeLabel": "Starting point",
       "createModeEmpty": "Start empty",
       "createModeFromBaseline": "Start from budget",
+      "createModeEmptyDescription": "Create a forecast with no starting amounts.",
+      "createModeFromBaselineDescription": "Use current approved budget amounts as the starting point.",
       "baselineUnavailableHint": "Budget initialization requires an approved governance baseline.",
       "createConfirm": "Create forecast",
       "cancel": "Cancel",
