@@ -30,7 +30,7 @@ async function main() {
       operationId: "backfill-sfv-match-review-stage-fca",
       databaseUrl: process.env.DATABASE_URL,
       explicitIntent: true,
-      allowedRemoteEnvironments: ["stage", "production"],
+      allowedRemoteEnvironments: ["stage", "prod"],
     });
   }
 
