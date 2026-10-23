@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-02C |
-| **Status** | **IMPLEMENTED / PO UAT PENDING** |
+| **Status** | **IMPLEMENTED / PO UAT FINAL RETEST PENDING** |
 | **Branch** | `cursor/sce-finance-02c-annual-budget-creation` |
 | **Target** | `STAGE` |
 
@@ -39,6 +39,13 @@ Source and target remain **fully independent** after creation. No live inheritan
 - Year without budget shows explicit empty state for that year (no fallback to another year).
 - **Budget erstellen** opens a dialog with **SceSegmentedControl** (empty vs prior-year copy).
 - Prior-year template select shows `{year} · Aktuelle Baseline`.
+- Budget table section headings carry the selected financial year beside the section label (e.g. `Einnahmen · FY 2027`) using canonical `FinanceYear.name` from the workspace snapshot — not dates, sport season, or locale-derived labels.
+
+### PO UAT finding (R1)
+
+**Finding:** When scrolling the budget workspace, income/expense headings showed only `Einnahmen` / `Ausgaben`, so the active Finanzjahr was ambiguous with multiple years configured.
+
+**Resolution (FIN-02C-R1):** Section headings use `incomeSectionWithYear` / `expenseSectionWithYear` with `{year}` = resolved `snapshot.financeYearName`. Headings wrap safely (`break-words`) for long tenant names such as `Geschäftsjahr 2026/2027`.
 
 ## Tests
 
@@ -52,7 +59,7 @@ Source and target remain **fully independent** after creation. No live inheritan
 | --- | --- |
 | FIN-02A | COMPLETE + MERGED + PO UAT PASS |
 | FIN-02B | COMPLETE + MERGED + PO UAT PASS |
-| **FIN-02C** | **IMPLEMENTED / PO UAT PENDING** |
+| **FIN-02C** | **IMPLEMENTED / PO UAT FINAL RETEST PENDING** |
 | FIN-02D | Candidate / NOT STARTED |
 | FIN-01F | BACKLOG / LOW PRIORITY |
 | FIN-03+ | NOT STARTED |

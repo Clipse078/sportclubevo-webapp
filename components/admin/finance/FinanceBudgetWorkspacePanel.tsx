@@ -736,7 +736,7 @@ function BudgetWorkspaceEditor(props: {
       ) : null}
 
       <BudgetSection
-        title={t("incomeSection")}
+        title={t("incomeSectionWithYear", { year: props.snapshot.financeYearName })}
         rows={props.incomeRows}
         currency={props.workspaceCurrency}
         formattingLocale={props.formattingLocale}
@@ -747,7 +747,7 @@ function BudgetWorkspaceEditor(props: {
         onPersist={persistDraftAmount}
       />
       <BudgetSection
-        title={t("expenseSection")}
+        title={t("expenseSectionWithYear", { year: props.snapshot.financeYearName })}
         rows={props.expenseRows}
         currency={props.workspaceCurrency}
         formattingLocale={props.formattingLocale}
@@ -895,7 +895,7 @@ function BudgetSection(props: {
 
   return (
     <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="budget-section">
-      <h2 className={FINANCE_SECTION_HEADER_CLASS}>{props.title}</h2>
+      <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>{props.title}</h2>
       <table className="w-full min-w-0 text-sm">
         <thead>
           <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
