@@ -55,7 +55,7 @@ import {
   financeManagementSignalPresentation,
 } from "@/lib/finance/presentation/finance-management-signal-presentation";
 import {
-  financeActualResultSemanticTextClass,
+  financeResultSemanticTextClass,
 } from "@/lib/finance/presentation/finance-result-presentation";
 import {
   financeVarianceComparisonSemanticTextClass,
@@ -498,7 +498,7 @@ export function FinanceActualsWorkspacePanel({
               <p
                 className={cn(
                   FINANCE_SUMMARY_RESULT_VALUE_CLASS,
-                  financeActualResultSemanticTextClass(
+                  financeResultSemanticTextClass(
                     periodic?.periodSummary.resultMinor ??
                       snapshot.variance.actualSummary.resultMinor,
                   ),
@@ -539,7 +539,7 @@ export function FinanceActualsWorkspacePanel({
                 <p
                   className={cn(
                     FINANCE_SUMMARY_RESULT_VALUE_CLASS,
-                    financeActualResultSemanticTextClass(periodic.ytdSummary.resultMinor),
+                    financeResultSemanticTextClass(periodic.ytdSummary.resultMinor),
                   )}
                   data-finance-actual-result="ytd"
                 >

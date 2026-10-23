@@ -1,7 +1,10 @@
 import type { SceSemanticFeedbackTone } from "@/lib/design-system/sce-feedback-status-foundation";
 import { sceSemanticIconClass } from "@/lib/design-system/sce-feedback-status-micro-ux";
 
-/** Actual financial result semantics (income − expense), not budget favorability. */
+/**
+ * Canonical finance result semantics (income − expense net result).
+ * Independent of budget favorability / variance comparison semantics.
+ */
 export type FinanceResultPresentation = "POSITIVE" | "NEGATIVE" | "NEUTRAL";
 
 export function deriveFinanceResultPresentation(amountMinor: number): FinanceResultPresentation {
@@ -24,10 +27,10 @@ export function financeResultPresentationToFeedbackTone(
 }
 
 /**
- * Semantic text color for Ist-Ergebnis values only.
+ * Semantic text color for any calculated finance net/result value (minor units).
  * Neutral keeps the base summary typography (foreground) without extra class.
  */
-export function financeActualResultSemanticTextClass(amountMinor: number): string {
+export function financeResultSemanticTextClass(amountMinor: number): string {
   const presentation = deriveFinanceResultPresentation(amountMinor);
   if (presentation === "NEUTRAL") {
     return "";

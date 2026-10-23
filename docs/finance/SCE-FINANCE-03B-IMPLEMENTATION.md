@@ -19,7 +19,8 @@ Periodic **management measurement** and **management review** on top of FIN-03A 
 - Management review signals (factual, no fake period/YTD budget variance)
 - Extended **Finanzen → Ist** workspace (period slicers, URL `mode` + `periodStart` / `periodEnd`)
 - **FIN-03B-R1 (PO UAT refinement):** compact two-row toolbar, month/quarter slicers, contiguous month ranges
-- **FIN-03B-R2 (PO UAT refinement):** canonical **actual-result** semantic coloring for **Ist-Ergebnis** (period, YTD companion block, full-year summary); income/expense amounts stay neutral
+- **FIN-03B-R2 (PO UAT refinement):** canonical result semantic coloring for **Ist-Ergebnis** (period, YTD companion block, full-year summary); income/expense amounts stay neutral
+- **FIN-03B-R3 (PO UAT refinement):** **finance-wide** canonical **FINANCE RESULT PRESENTATION** — any calculated net/result value (Overview approved budget **Ergebnis**, Budget **Geplantes Ergebnis**, Ist **Ist-Ergebnis**) shares one helper; income/expense line amounts stay neutral
 - Account tables: full-year variance unchanged; period modes show **Zeitraum Ist / YTD Ist / Jahresbudget**
 - Ist-Buchungen filtered by selected measurement context
 
@@ -67,20 +68,44 @@ Module: `lib/finance/actual/finance-measurement-period.ts`
 
 Unchanged: no ledger, journals, or statutory accounting periods — `FinanceActualEntry` remains management actuals.
 
-## Presentation semantics (R2)
+## Presentation semantics (R2 + R3)
 
-Two separate systems — do not conflate:
+Three separate concepts — do not conflate:
 
-| System | Module | Applies when |
+| Concept | Module | Rule |
 | --- | --- | --- |
-| **Actual result** | `lib/finance/presentation/finance-result-presentation.ts` | **Ist-Ergebnis** only: `result = income − expense` → SUCCESS / ERROR / neutral typography from DS-07 tokens |
-| **Budget favorability** | `lib/finance/presentation/finance-variance-favorability-presentation.ts` | **FULL_YEAR** account **Abweichung / Bewertung** only (FIN-03A R5) |
+| **Finance result presentation** | `lib/finance/presentation/finance-result-presentation.ts` | Any calculated **net/result** (`income − expense`): **> 0** → SUCCESS typography, **< 0** → ERROR typography, **= 0** → neutral. API: `deriveFinanceResultPresentation(amountMinor)`, `financeResultSemanticTextClass(amountMinor)` |
+| **Budget favorability** | `lib/finance/presentation/finance-variance-favorability-presentation.ts` | **FULL_YEAR** account **Abweichung / Bewertung** only (FIN-03A R5): FAVORABLE / UNFAVORABLE / ON_PLAN |
+| **Account semantics** | Structure / reporting | INCOME and EXPENSE **amounts** are not auto success/danger-colored |
 
 `YTD_BUDGET_VARIANCE_SUPPORTED = false` and `PERIOD_BUDGET_VARIANCE_SUPPORTED = false` remain unchanged — sub-year modes do not gain Günstig/Ungünstig.
+
+### Surfaces using finance result presentation (R3 inventory)
+
+| Surface | Location | Result field |
+| --- | --- | --- |
+| Finance Overview | `FinanceOverviewPanel.tsx` | Approved baseline **Ergebnis** |
+| Budget workspace | `FinanceBudgetWorkspacePanel.tsx` | Governance baseline + working/draft **Geplantes Ergebnis** |
+| Ist workspace | `FinanceActualsWorkspacePanel.tsx` | Period / YTD / full-year **Ist-Ergebnis** |
+
+Domain/read models (e.g. FIN-01E `reporting-read-model.ts`) expose numeric `resultMinor` only — presentation stays in UI/presentation modules.
 
 ### R2 PO UAT finding
 
 Periodic summaries were visually too neutral: negative **Ist-Ergebnis** (e.g. Sep–Okt 2026, **−13'500 CHF**) did not stand out. Resolution: semantic danger/success on the **result value** via `deriveFinanceResultPresentation(amountMinor)`. Redundant text signal *«Das YTD-Ist-Ergebnis ist negativ.»* removed once the YTD **Ist-Ergebnis** KPI carries the same meaning. Remaining management hints (e.g. budget accounts without YTD activity) use small INFO icon + muted text.
+
+### R3 PO UAT finding
+
+R2 semantics were correct in **Ist** but **Overview** (Genehmigtes Budget **Ergebnis**) and **Budget** summaries still used neutral typography for positive/negative results. R3 generalizes the same helper finance-wide. **Positive result ≠ favorable variance** — e.g. approved budget **+150'000 CHF** is success-colored because the result is positive; expense **FAVORABLE** variance still comes from `finance-variance-favorability-presentation.ts`.
+
+### Future compatibility (not implemented)
+
+| Module | Result label (examples) | Same helper |
+| --- | --- | --- |
+| FIN-04 Forecast | Forecast-Ergebnis | Yes |
+| FIN-04 Scenario | Scenario-Ergebnis | Yes |
+| FIN-05 Management P&L | Periodenergebnis / Ergebnis | Yes |
+| FIN-11 statements | Calculated profit/loss where semantically appropriate | Reuse when presented as management result |
 
 ## Schema
 
