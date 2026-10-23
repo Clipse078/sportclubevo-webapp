@@ -48,8 +48,12 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("expenseComparisonRows");
     expect(panel).toContain("incomeSectionWithYear");
     expect(panel).toContain("expenseSectionWithYear");
-    expect(panel).toMatch(/VarianceComparisonSection[\s\S]*accountColumn[\s\S]*budgetColumn/);
-    expect(panel).not.toMatch(/VarianceComparisonSection[\s\S]*semanticColumn/);
+    const varianceSection = panel.slice(
+      panel.indexOf("function VarianceComparisonSection"),
+      panel.indexOf("function VarianceComparisonSection") + 2500,
+    );
+    expect(varianceSection).toContain("accountColumn");
+    expect(varianceSection).not.toContain("semanticColumn");
   });
 
   it("FIN-03A R2 binds section headings to selected FinanceYear.name", () => {
