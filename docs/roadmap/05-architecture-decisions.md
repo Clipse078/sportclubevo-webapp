@@ -497,6 +497,16 @@ Clubs distinguish Plan, Ist, Prognose, and later Verpfügbar (budget − actual 
 
 Forecast may be manual or derived later — not AI in FIN-01.
 
+**FIN-04 programme principle (accepted with FIN-04A closure):** *SCE generates the projection. The organisation owns the forecast.*
+
+| Concept | Role |
+| --- | --- |
+| **SCE projection** | System-generated expectation from financial/operational evidence (FIN-04B+) |
+| **Current forecast** | Organisation's accepted management expectation (FIN-04A) |
+| **Scenario** | Alternative what-if view (FIN-04D) |
+
+SCE projection must **never** silently overwrite current forecast; forecast updates from projection require **explicit user action**. Approved budget and actual remain independent measures (see [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md)).
+
 ### Consequences
 
 - Management income statement compares measures uniformly.

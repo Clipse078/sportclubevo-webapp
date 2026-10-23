@@ -23,6 +23,12 @@ type FinanceOverviewPanelProps = {
     expense: string;
     result: string;
   };
+  formattedForecast?: {
+    income: string;
+    expense: string;
+    result: string;
+    resultDeltaVsBudget: string | null;
+  };
   labels: {
     notConfiguredTitle: string;
     notConfiguredBody: string;
@@ -50,6 +56,9 @@ type FinanceOverviewPanelProps = {
     reportingNoBaselineTitle: string;
     reportingNoBaselineBody: string;
     openBudget: string;
+    reportingForecastTitle: string;
+    reportingForecastResultDelta: string;
+    openForecast: string;
   };
 };
 
@@ -59,6 +68,7 @@ export function FinanceOverviewPanel({
   canBudgetManage,
   reporting,
   formattedReporting,
+  formattedForecast,
   labels,
 }: FinanceOverviewPanelProps) {
   const reportingPrimary = financeOverviewReportingIsPrimaryContent(reporting);
@@ -129,6 +139,57 @@ export function FinanceOverviewPanel({
               </dd>
             </div>
           </dl>
+        </div>
+      ) : null}
+
+      {reporting.kind === "APPROVED_BASELINE" && reporting.forecast && formattedForecast ? (
+        <div
+          className={FINANCE_FUNCTIONAL_SURFACE_CLASS}
+          data-finance-surface="overview-forecast"
+          data-finance-reporting-state="current-forecast"
+        >
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
+            {labels.reportingForecastTitle}
+          </h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {reporting.forecast.financeYearName}
+            {reporting.forecast.currency ? ` · ${reporting.forecast.currency}` : null}
+          </p>
+          <dl className="mt-4 grid max-w-md gap-2 text-sm">
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-[var(--muted)]">{labels.reportingIncome}</dt>
+              <dd className="font-medium tabular-nums">{formattedForecast.income}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="text-[var(--muted)]">{labels.reportingExpense}</dt>
+              <dd className="font-medium tabular-nums">{formattedForecast.expense}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 border-t border-[var(--sce-color-border-standard)] pt-2">
+              <dt className="text-[var(--muted)]">{labels.reportingResult}</dt>
+              <dd
+                className={cn(
+                  "font-semibold tabular-nums",
+                  financeResultSemanticTextClass(reporting.forecast.resultMinor),
+                )}
+              >
+                {formattedForecast.result}
+              </dd>
+            </div>
+            {formattedForecast.resultDeltaVsBudget ? (
+              <div className="flex items-baseline justify-between gap-4 text-xs">
+                <dt className="text-[var(--muted)]">{labels.reportingForecastResultDelta}</dt>
+                <dd className="tabular-nums">{formattedForecast.resultDeltaVsBudget}</dd>
+              </div>
+            ) : null}
+          </dl>
+          <div className="mt-4">
+            <Link
+              href="/dashboard/finance/forecast"
+              className="inline-flex h-8 items-center rounded-md border border-[var(--sce-color-border-standard)] px-3 text-sm font-medium hover:bg-[var(--surface-2)]"
+            >
+              {labels.openForecast}
+            </Link>
+          </div>
         </div>
       ) : null}
 

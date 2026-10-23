@@ -9,7 +9,7 @@ import { filterFinanceStarterRecommendedCapabilityKeys } from "@/lib/finance/cap
 
 /** Capabilities with product surfaces implemented in FIN-01B / FIN-01D. */
 export const FINANCE_CAPABILITIES_IMPLEMENTED_01B: ReadonlySet<FinanceCapabilityKey> =
-  new Set(["OVERVIEW", "BUDGETING", "ACTUALS"]);
+  new Set(["OVERVIEW", "BUDGETING", "ACTUALS", "FORECASTING"]);
 
 export const FINANCE_SYSTEM_CAPABILITY_KEYS = FINANCE_CAPABILITY_KEYS;
 

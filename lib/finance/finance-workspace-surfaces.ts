@@ -13,6 +13,10 @@ import {
 export const FINANCE_WORKSPACE_STACK_CLASS =
   "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-4";
 
+/** FIN-04A R2 — tighter vertical rhythm for forecast workspace. */
+export const FINANCE_FORECAST_WORKSPACE_STACK_CLASS =
+  "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-3";
+
 /** Primary functional card (overview nudges, settings sections, empty states). */
 export const FINANCE_FUNCTIONAL_SURFACE_CLASS = cn(SCE_SURFACE_STANDARD_PANEL, "px-5 py-6");
 
@@ -47,15 +51,42 @@ export const FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS =
 
 export const FINANCE_SUMMARY_SURFACE_CLASS = cn(SCE_SURFACE_STANDARD_PANEL, "px-4 py-4");
 
+/** Compact analytical summary strip (FIN-04A R2 forecast). */
+export const FINANCE_SUMMARY_STRIP_SURFACE_CLASS = cn(SCE_SURFACE_DENSE_PANEL, "px-4 py-3");
+
 export const FINANCE_SUMMARY_GRID_CLASS = "grid min-w-0 gap-4 sm:grid-cols-3";
+
+export const FINANCE_SUMMARY_STRIP_GRID_CLASS =
+  "grid min-w-0 gap-3 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[var(--sce-surface-border-subtle)]";
 
 export const FINANCE_SUMMARY_LABEL_CLASS = "text-xs font-medium text-[var(--muted)]";
 
 export const FINANCE_SUMMARY_VALUE_CLASS =
   "mt-1 text-base font-semibold tabular-nums text-[var(--foreground)]";
 
+export const FINANCE_SUMMARY_STRIP_VALUE_CLASS =
+  "mt-0.5 text-sm font-semibold tabular-nums text-[var(--foreground)]";
+
 export const FINANCE_SUMMARY_RESULT_VALUE_CLASS =
   "mt-1 text-lg font-semibold tabular-nums text-[var(--foreground)]";
+
+export const FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS =
+  "mt-0.5 text-sm font-semibold tabular-nums text-[var(--foreground)]";
+
+/** Stacked income/expense forecast tables — shared workspace, minimal gap. */
+export const FINANCE_FORECAST_TABLES_STACK_CLASS = "flex min-w-0 flex-col gap-2";
+
+/** Editable forecast cell — integrates into table until focused (FIN-04A R2). */
+export const FINANCE_FORECAST_MONEY_CELL_INPUT_CLASS = cn(
+  "w-full min-w-[6.5rem] max-w-[9rem] border border-transparent bg-transparent py-1 pe-2 ps-2 text-end text-sm font-medium tabular-nums text-[var(--foreground)] shadow-none",
+  "rounded-[var(--radius-sm,0.25rem)]",
+  "hover:border-[var(--sce-surface-border-subtle)] hover:bg-[var(--surface-2)]/35",
+  "focus:border-[var(--sce-color-border-standard)] focus:bg-[var(--surface-1)]",
+  SCE_FORM_CONTROL_MICRO_UX_FOCUS_RING_CLASS,
+);
+
+export const FINANCE_FORECAST_MONEY_CELL_READ_ONLY_CLASS =
+  "inline-block min-w-[6.5rem] max-w-[9rem] py-1 pe-2 ps-2 text-end text-sm font-medium tabular-nums";
 
 /** Budget amount cells — local-first inputs stay native for performance (FIN-01D R3). */
 export const FINANCE_BUDGET_AMOUNT_INPUT_CLASS = cn(

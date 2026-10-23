@@ -35,6 +35,39 @@ export default async function FinanceOverviewPage() {
         }
       : undefined;
 
+  const forecastSlice =
+    workspace.overviewReporting.kind === "APPROVED_BASELINE"
+      ? workspace.overviewReporting.forecast
+      : null;
+
+  const formattedForecast = forecastSlice
+    ? {
+        income: formatBudgetPlanningMinor(
+          forecastSlice.incomeMinor,
+          forecastSlice.currency,
+          formattingLocale,
+        ),
+        expense: formatBudgetPlanningMinor(
+          forecastSlice.expenseMinor,
+          forecastSlice.currency,
+          formattingLocale,
+        ),
+        result: formatBudgetPlanningMinor(
+          forecastSlice.resultMinor,
+          forecastSlice.currency,
+          formattingLocale,
+        ),
+        resultDeltaVsBudget:
+          forecastSlice.resultDeltaVsBudgetMinor !== null
+            ? formatBudgetPlanningMinor(
+                forecastSlice.resultDeltaVsBudgetMinor,
+                forecastSlice.currency,
+                formattingLocale,
+              )
+            : null,
+      }
+    : undefined;
+
   return (
     <PageShell>
       <SceWorkspaceChrome
@@ -52,12 +85,14 @@ export default async function FinanceOverviewPage() {
             showStructure={workspace.canStructure}
             showBudget={workspace.showBudgetNav}
             showActuals={workspace.showActualsNav}
+            showForecast={workspace.showForecastNav}
             showSettings={workspace.canAdmin || workspace.canStructure}
             labels={{
               overview: t("nav.overview"),
               structure: t("nav.structure"),
               budget: t("nav.budget"),
               actuals: t("nav.actuals"),
+              forecast: t("nav.forecast"),
               settings: t("nav.structure_settings"),
             }}
             ariaLabel={t("contextTabsAria")}
@@ -70,6 +105,7 @@ export default async function FinanceOverviewPage() {
           canBudgetManage={workspace.canBudgetManage}
           reporting={workspace.overviewReporting}
           formattedReporting={formattedReporting}
+          formattedForecast={formattedForecast}
           labels={{
             notConfiguredTitle: t("overview.notConfiguredTitle"),
             notConfiguredBody: t("overview.notConfiguredBody"),
@@ -97,6 +133,9 @@ export default async function FinanceOverviewPage() {
             reportingNoBaselineTitle: t("overview.reportingNoBaselineTitle"),
             reportingNoBaselineBody: t("overview.reportingNoBaselineBody"),
             openBudget: t("overview.openBudget"),
+            reportingForecastTitle: t("overview.reportingForecastTitle"),
+            reportingForecastResultDelta: t("overview.reportingForecastResultDelta"),
+            openForecast: t("overview.openForecast"),
           }}
         />
         <p className="sr-only" data-finance-route={FINANCE_WORKSPACE_ROUTE_V1} />

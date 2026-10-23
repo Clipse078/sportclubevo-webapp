@@ -1394,6 +1394,7 @@ model Tenant {
   financialReportingGroups        FinancialReportingGroup[]
   financeBudgets                  FinanceBudget[]
   financeActualEntries            FinanceActualEntry[]
+  financeForecasts                FinanceForecast[]
 
   @@index([status])
   @@index([name])
@@ -1549,6 +1550,8 @@ model User {
   financeBudgetVersionsApproved      FinanceBudgetVersion[]  @relation("FinanceBudgetVersionApprovedBy")
   financeActualEntriesCreated        FinanceActualEntry[]    @relation("FinanceActualEntryCreatedBy")
   financeActualEntriesUpdated        FinanceActualEntry[]    @relation("FinanceActualEntryUpdatedBy")
+  financeForecastsCreated            FinanceForecast[]       @relation("FinanceForecastCreatedBy")
+  financeForecastVersionsCreated     FinanceForecastVersion[] @relation("FinanceForecastVersionCreatedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10729,6 +10732,7 @@ model FinanceYear {
   configurationsAsCurrent   FinanceConfiguration[] @relation("FinanceConfigurationCurrentYear")
   budgets                   FinanceBudget[]
   actualEntries             FinanceActualEntry[]
+  forecasts                 FinanceForecast[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -10790,6 +10794,7 @@ model FinancialAccount {
   reportingGroup  FinancialReportingGroup @relation(fields: [reportingGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   budgetLines     FinanceBudgetLine[]
   actualEntries   FinanceActualEntry[]
+  forecastLines   FinanceForecastLine[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, reportingGroupId])
@@ -10914,5 +10919,69 @@ model FinanceBudgetLine {
   financialAccount FinancialAccount     @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([budgetVersionId, financialAccountId])
+  @@index([financialAccountId])
+}
+
+enum FinanceForecastVersionStatus {
+  CURRENT
+  SUPERSEDED
+}
+
+/// Management forecast container per tenant financial year (FIN-04A) — independent from budget baseline.
+model FinanceForecast {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  financeYearId      String
+  /// Stable pointer to the active management forecast version (FIN-04A current forecast).
+  currentVersionId   String?  @unique
+  createdByUserId    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant         Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear    FinanceYear            @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy      User?                  @relation("FinanceForecastCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  currentVersion FinanceForecastVersion? @relation("FinanceForecastCurrentVersion", fields: [currentVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  versions       FinanceForecastVersion[]
+
+  @@unique([tenantId, financeYearId])
+  @@index([tenantId])
+  @@index([financeYearId])
+}
+
+model FinanceForecastVersion {
+  id              String                       @id @default(cuid())
+  forecastId      String
+  status          FinanceForecastVersionStatus @default(CURRENT)
+  versionNumber   Int                          @default(1)
+  /// Reserved for FIN-04B scenario identity — null means canonical current management forecast.
+  scenarioKey     String?
+  note            String?
+  createdByUserId String?
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+
+  forecast              FinanceForecast      @relation(fields: [forecastId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy             User?                @relation("FinanceForecastVersionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  currentForForecast    FinanceForecast?     @relation("FinanceForecastCurrentVersion")
+  lines                 FinanceForecastLine[]
+
+  @@index([forecastId, status])
+  @@index([forecastId, versionNumber])
+}
+
+/// Full-year forecast amount per account — not budget, not actual (FIN-04A annual grain).
+model FinanceForecastLine {
+  id                 String   @id @default(cuid())
+  forecastVersionId  String
+  financialAccountId String
+  amountMinor        Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  forecastVersion  FinanceForecastVersion @relation(fields: [forecastVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financialAccount FinancialAccount       @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([forecastVersionId, financialAccountId])
   @@index([financialAccountId])
 }

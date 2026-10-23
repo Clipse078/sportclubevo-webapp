@@ -41,8 +41,17 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
     const tabs = buildFinanceTabNavigationConfig({
       showStructure: true,
       showBudget: false,
+      showActuals: false,
+      showForecast: false,
       showSettings: true,
-      labels: { overview: "O", structure: "S", budget: "B", settings: "E" },
+      labels: {
+        overview: "O",
+        structure: "S",
+        budget: "B",
+        actuals: "A",
+        forecast: "F",
+        settings: "E",
+      },
     });
     expect(tabs.tabs.some((tab) => tab.key === "budget")).toBe(false);
   });
@@ -57,8 +66,17 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
     const tabs = buildFinanceTabNavigationConfig({
       showStructure: true,
       showBudget: true,
+      showActuals: false,
+      showForecast: false,
       showSettings: true,
-      labels: { overview: "O", structure: "S", budget: "B", settings: "E" },
+      labels: {
+        overview: "O",
+        structure: "S",
+        budget: "B",
+        actuals: "A",
+        forecast: "F",
+        settings: "E",
+      },
     });
     expect(tabs.tabs.map((tab) => tab.key)).toEqual([
       "overview",
@@ -91,8 +109,17 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
     const tabs = buildFinanceTabNavigationConfig({
       showStructure: true,
       showBudget: true,
+      showActuals: false,
+      showForecast: false,
       showSettings: true,
-      labels: { overview: "O", structure: "S", budget: "B", settings: "E" },
+      labels: {
+        overview: "O",
+        structure: "S",
+        budget: "B",
+        actuals: "A",
+        forecast: "F",
+        settings: "E",
+      },
     });
     expect(tabs.resolveActiveTabFromPathname("/dashboard/finance/budget", ["budget"])).toBe(
       "budget",
@@ -139,8 +166,17 @@ describe("FIN-01D capability-aware Finance workspace navigation", () => {
     const tabs = buildFinanceTabNavigationConfig({
       showStructure: false,
       showBudget: false,
+      showActuals: false,
+      showForecast: false,
       showSettings: false,
-      labels: { overview: "O", structure: "S", budget: "B", settings: "E" },
+      labels: {
+        overview: "O",
+        structure: "S",
+        budget: "B",
+        actuals: "A",
+        forecast: "F",
+        settings: "E",
+      },
     });
     expect(tabs.tabs[0]?.key).toBe("overview");
     expect(tabs.tabRoutes.overview).toBe("/dashboard/finance");
