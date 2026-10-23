@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02A** operational budgeting slice **COMPLETE + PO UAT PASS** (PR **#896** → **STAGE**); **FIN-02** programme **IN PROGRESS** (02B+ backlog) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02A** **COMPLETE + MERGED + PO UAT PASS** (PR **#896**); **FIN-02B** **COMPLETE + PO UAT PASS** (PR **#897** → **STAGE**); **FIN-02** programme **IN PROGRESS** |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -14,7 +14,7 @@
 | Package | Focus |
 | --- | --- |
 | **FIN-01** | Foundation & configurable structure |
-| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — **02A COMPLETE + PO UAT PASS**; see [`SCE-FINANCE-02A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02A-IMPLEMENTATION.md); **02B+** not started) |
+| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — **02A COMPLETE + MERGED + PO UAT PASS**; **02B COMPLETE + PO UAT PASS** — [`SCE-FINANCE-02B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02B-IMPLEMENTATION.md); **02C/02D** candidates **NOT STARTED**) |
 | **FIN-03** | Periodic measurement & budget control (**NOT STARTED**) |
 | **FIN-04** | Rolling forecast & scenarios (**NOT STARTED**) |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |

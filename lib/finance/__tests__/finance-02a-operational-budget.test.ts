@@ -1,5 +1,4 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { FinanceDomainError } from "@/lib/finance/errors";
 import { resolveApprovedBudgetMeasure } from "@/lib/finance/reporting/approved-budget-measure-provider";
 import {
   approveBudgetVersion,
@@ -26,7 +25,12 @@ function ctx(userId = "user-1"): FinanceAuthContext {
 type Store = {
   financeYear: Array<{ id: string; tenantId: string; name: string }>;
   financeConfiguration: Array<{ tenantId: string; baseCurrency: string | null }>;
-  financeBudget: Array<{ id: string; tenantId: string; financeYearId: string }>;
+  financeBudget: Array<{
+    id: string;
+    tenantId: string;
+    financeYearId: string;
+    currentBaselineVersionId: string | null;
+  }>;
   financeBudgetVersion: Array<{
     id: string;
     budgetId: string;
@@ -55,7 +59,7 @@ type Store = {
 function makeDb(store: Store) {
   let lineSeq = 0;
   let versionSeq = 0;
-  return {
+  const api = {
     financeYear: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         store.financeYear.find((y) => y.id === where.id) ?? null,
@@ -96,6 +100,7 @@ function makeDb(store: Store) {
           id: budgetId,
           tenantId: data.tenantId as string,
           financeYearId: data.financeYearId as string,
+          currentBaselineVersionId: null,
         });
         const versionsCreate = (data.versions as { create: Record<string, unknown> }).create;
         versionSeq += 1;
@@ -115,6 +120,19 @@ function makeDb(store: Store) {
         const versions = store.financeBudgetVersion.filter((v) => v.budgetId === budgetId);
         return include ? { ...budget, versions, financeYear: store.financeYear[0] } : budget;
       },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: { currentBaselineVersionId?: string };
+      }) => {
+        const budget = store.financeBudget.find((b) => b.id === where.id)!;
+        if (data.currentBaselineVersionId !== undefined) {
+          budget.currentBaselineVersionId = data.currentBaselineVersionId;
+        }
+        return budget;
+      },
       delete: async ({ where }: { where: { id: string } }) => {
         store.financeBudget = store.financeBudget.filter((b) => b.id !== where.id);
       },
@@ -124,13 +142,16 @@ function makeDb(store: Store) {
         const version = store.financeBudgetVersion.find((v) => v.id === where.id);
         if (!version || !include) return version ?? null;
         const budget = store.financeBudget.find((b) => b.id === version.budgetId)!;
+        const budgetVersions = store.financeBudgetVersion
+          .filter((v) => v.budgetId === budget.id)
+          .map((v) => ({ id: v.id, status: v.status }));
         const lines = store.financeBudgetLine
           .filter((l) => l.budgetVersionId === version.id)
           .map((line) => ({
             ...line,
             financialAccount: store.financialAccount.find((a) => a.id === line.financialAccountId)!,
           }));
-        return { ...version, budget, lines };
+        return { ...version, budget: { ...budget, versions: budgetVersions }, lines };
       },
       findFirst: async ({
         where,
@@ -182,11 +203,14 @@ function makeDb(store: Store) {
         data,
         include,
       }: {
-        where: { id: string };
+        where: { id: string; status?: "DRAFT" };
         data: Record<string, unknown>;
         include?: unknown;
       }) => {
         const version = store.financeBudgetVersion.find((v) => v.id === where.id)!;
+        if (where.status && version.status !== where.status) {
+          throw new Error("immutable");
+        }
         Object.assign(version, data);
         if (!include) return version;
         return {
@@ -241,7 +265,9 @@ function makeDb(store: Store) {
       findUnique: async ({ where }: { where: { id: string } }) =>
         store.financialAccount.find((a) => a.id === where.id) ?? null,
     },
+    $transaction: async <T>(fn: (tx: typeof api) => Promise<T>) => fn(api),
   };
+  return api;
 }
 
 describe("FIN-02A operational budgeting", () => {
@@ -283,7 +309,12 @@ describe("FIN-02A operational budgeting", () => {
   });
 
   it("creates working revision after approval without mutating baseline", async () => {
-    store.financeBudget.push({ id: "b1", tenantId: tenantA, financeYearId: "year-1" });
+    store.financeBudget.push({
+      id: "b1",
+      tenantId: tenantA,
+      financeYearId: "year-1",
+      currentBaselineVersionId: "v1",
+    });
     store.financeBudgetVersion.push({
       id: "v1",
       budgetId: "b1",
@@ -315,17 +346,23 @@ describe("FIN-02A operational budgeting", () => {
     const baselineLine = store.financeBudgetLine.find((l) => l.budgetVersionId === "v1")!;
     expect(baselineLine.amountMinor).toBe(50_00);
 
-    const measure = resolveApprovedBudgetMeasure(
-      store.financeBudgetVersion.map((v) => ({
+    const measure = resolveApprovedBudgetMeasure({
+      currentBaselineVersionId: "v1",
+      versions: store.financeBudgetVersion.map((v) => ({
         ...v,
         lines: store.financeBudgetLine.filter((l) => l.budgetVersionId === v.id),
       })),
-    );
+    });
     expect(measure?.valuesByAccountId.get("acc-exp")).toBe(50_00);
   });
 
-  it("rejects second approval while governance baseline exists", async () => {
-    store.financeBudget.push({ id: "b1", tenantId: tenantA, financeYearId: "year-1" });
+  it("allows controlled re-baseline of working revision (FIN-02B)", async () => {
+    store.financeBudget.push({
+      id: "b1",
+      tenantId: tenantA,
+      financeYearId: "year-1",
+      currentBaselineVersionId: "v1",
+    });
     store.financeBudgetVersion.push(
       {
         id: "v1",
@@ -357,8 +394,11 @@ describe("FIN-02A operational budgeting", () => {
       amountMinor: 1,
     });
 
-    await expect(approveBudgetVersion(db, ctx(), "v2")).rejects.toBeInstanceOf(
-      FinanceDomainError,
-    );
+    const approved = await approveBudgetVersion(db, ctx("reapprover"), "v2");
+    expect(approved?.status).toBe("APPROVED");
+    expect(store.financeBudget[0]!.currentBaselineVersionId).toBe("v2");
+    const v1 = store.financeBudgetVersion.find((v) => v.id === "v1")!;
+    expect(v1.status).toBe("APPROVED");
+    expect(v1.approvedByUserId).toBe("a");
   });
 });

@@ -1,4 +1,5 @@
 import type { FinanceBudgetVersionStatus } from "@prisma/client";
+import { resolveCurrentGovernanceBaselineVersion } from "@/lib/finance/budget/current-governance-baseline";
 import { FINANCIAL_MEASURE_APPROVED_BUDGET } from "@/lib/finance/reporting/financial-measures";
 import { assertSafeAmountMinor } from "@/lib/finance/money-types";
 
@@ -21,17 +22,22 @@ export type ApprovedBudgetMeasurePayload = {
   valuesByAccountId: ReadonlyMap<string, number>;
 };
 
-/**
- * Resolves APPROVED budget baseline only — never substitutes DRAFT for management reporting.
- */
-export function resolveApprovedBudgetMeasure(
-  versions: ReadonlyArray<ApprovedBudgetVersionWithLines>,
+export type ApprovedBudgetMeasureInput = {
+  currentBaselineVersionId?: string | null;
+  versions: ReadonlyArray<ApprovedBudgetVersionWithLines>;
+};
+
+function resolveApprovedBudgetMeasureFromInput(
+  input: ApprovedBudgetMeasureInput,
 ): ApprovedBudgetMeasurePayload | null {
-  const approved = versions.find((v) => v.status === "APPROVED") ?? null;
-  if (!approved) return null;
+  const baselineVersion = resolveCurrentGovernanceBaselineVersion({
+    currentBaselineVersionId: input.currentBaselineVersionId ?? null,
+    versions: input.versions,
+  });
+  if (!baselineVersion) return null;
 
   const valuesByAccountId = new Map<string, number>();
-  for (const line of approved.lines) {
+  for (const line of baselineVersion.lines) {
     assertSafeAmountMinor(line.amountMinor);
     if (valuesByAccountId.has(line.financialAccountId)) {
       throw new Error("FINANCE_REPORTING_DUPLICATE_ACCOUNT_LINE");
@@ -41,11 +47,33 @@ export function resolveApprovedBudgetMeasure(
 
   return {
     measure: FINANCIAL_MEASURE_APPROVED_BUDGET,
-    budgetVersionId: approved.id,
-    approvedAt: approved.approvedAt,
-    baseCurrency: approved.baseCurrency?.trim().toUpperCase() ?? null,
+    budgetVersionId: baselineVersion.id,
+    approvedAt: baselineVersion.approvedAt,
+    baseCurrency: baselineVersion.baseCurrency?.trim().toUpperCase() ?? null,
     valuesByAccountId,
   };
+}
+
+/**
+ * Resolves the current governance baseline for management reporting — never DRAFT revisions.
+ */
+export function resolveApprovedBudgetMeasure(
+  input: ApprovedBudgetMeasureInput,
+): ApprovedBudgetMeasurePayload | null;
+export function resolveApprovedBudgetMeasure(
+  versions: ReadonlyArray<ApprovedBudgetVersionWithLines>,
+): ApprovedBudgetMeasurePayload | null;
+export function resolveApprovedBudgetMeasure(
+  input: ApprovedBudgetMeasureInput | ReadonlyArray<ApprovedBudgetVersionWithLines>,
+): ApprovedBudgetMeasurePayload | null {
+  if (Array.isArray(input)) {
+    const versions = input as ReadonlyArray<ApprovedBudgetVersionWithLines>;
+    return resolveApprovedBudgetMeasureFromInput({
+      currentBaselineVersionId: null,
+      versions,
+    });
+  }
+  return resolveApprovedBudgetMeasureFromInput(input as ApprovedBudgetMeasureInput);
 }
 
 export function buildApprovedBudgetReportingContextKey(input: {

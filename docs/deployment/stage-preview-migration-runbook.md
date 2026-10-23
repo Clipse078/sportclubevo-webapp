@@ -46,6 +46,18 @@ Operator verify (read-only or `--apply` as above):
 
 See also `docs/finance/SCE-FINANCE-01E-IMPLEMENTATION.md` (R4 closure).
 
+## Finance (FIN-02B) — current baseline pointer before Preview UAT
+
+PR Preview code for FIN-02B+ selects `FinanceBudget.currentBaselineVersionId`. If the
+shared STAGE database has not applied:
+
+- `20261022210000_sce_finance_02b_current_governance_baseline`
+
+…Finance budget/reporting queries may fail with Prisma **column does not exist** while
+the UI still deploys. Apply step 3 **before** Product Owner browser UAT on Preview.
+
+Closure record: `docs/finance/SCE-FINANCE-02B-IMPLEMENTATION.md` (STAGE migration applied 2026-10-23).
+
 ## Historical note
 
 STAGE may list legacy `_prisma_migrations` rows whose names are absent from the

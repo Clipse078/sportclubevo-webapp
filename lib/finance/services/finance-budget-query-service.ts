@@ -7,6 +7,7 @@ import {
   type BudgetWorkspaceSnapshot,
 } from "@/lib/finance/budget/budget-presentation";
 import { evaluateBudgetApprovalReadiness } from "@/lib/finance/budget/budget-approval-readiness";
+import { resolveCurrentGovernanceBaselineVersion } from "@/lib/finance/budget/current-governance-baseline";
 import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import {
   listFinanceYearsForBudget,
@@ -61,7 +62,14 @@ export async function loadBudgetWorkspaceSnapshot(
 
   const budget = await loadBudgetForYear(db, ctx, selectedYearId);
   const draftVersion = budget?.versions.find((v) => v.status === "DRAFT") ?? null;
-  const approvedVersion = budget?.versions.find((v) => v.status === "APPROVED") ?? null;
+  const currentBaselineVersion =
+    budget && budget.versions.length > 0
+      ? resolveCurrentGovernanceBaselineVersion({
+          currentBaselineVersionId: budget.currentBaselineVersionId ?? null,
+          versions: budget.versions,
+        })
+      : null;
+  const approvedVersion = currentBaselineVersion;
   const workingVersion = draftVersion ?? approvedVersion ?? null;
 
   const rows = buildBudgetPlanningRows({
@@ -84,9 +92,17 @@ export async function loadBudgetWorkspaceSnapshot(
         ? "APPROVED"
         : "DRAFT";
 
+  const approvalMode: BudgetWorkspaceSnapshot["approvalMode"] =
+    draftVersion && approvedVersion
+      ? "REBASELINE"
+      : draftVersion && !approvedVersion
+        ? "FIRST_APPROVAL"
+        : null;
+
   const approvalReadiness =
-    draftVersion && !approvedVersion
+    draftVersion && approvalMode
       ? evaluateBudgetApprovalReadiness({
+          mode: approvalMode,
           versionStatus: "DRAFT",
           baseCurrency,
           lines: draftVersion.lines.map((line) => ({
@@ -97,7 +113,7 @@ export async function loadBudgetWorkspaceSnapshot(
               canonicalSemantic: line.financialAccount.canonicalSemantic,
             },
           })),
-          siblingApprovedExists: false,
+          currentBaselineExists: Boolean(approvedVersion),
         })
       : null;
 
@@ -141,6 +157,7 @@ export async function loadBudgetWorkspaceSnapshot(
         })
       : [],
     approvalReadiness,
+    approvalMode,
   };
 
   return { years, snapshot, hasAccounts, selectedYearId, baseCurrency };

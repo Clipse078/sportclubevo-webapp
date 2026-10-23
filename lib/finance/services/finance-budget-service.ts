@@ -8,6 +8,7 @@ import {
   type FinanceAuthContext,
 } from "@/lib/finance/finance-authorization";
 import { evaluateBudgetApprovalReadiness } from "@/lib/finance/budget/budget-approval-readiness";
+import { resolveCurrentGovernanceBaselineVersion } from "@/lib/finance/budget/current-governance-baseline";
 import { assertSafeAmountMinor } from "@/lib/finance/money-types";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
 import "@/lib/finance/budget/budget-account-delete-guard";
@@ -20,6 +21,7 @@ type Db = Pick<
   | "financeYear"
   | "financialAccount"
   | "financeConfiguration"
+  | "$transaction"
 >;
 
 const PLANNING_ACCOUNT_SEMANTICS = ["INCOME", "EXPENSE"] as const;
@@ -114,7 +116,11 @@ export async function getOrCreateDraftBudgetForYear(
   });
 
   if (existing) {
-    const approved = existing.versions.find((v) => v.status === "APPROVED");
+    const currentBaseline = resolveCurrentGovernanceBaselineVersion({
+      currentBaselineVersionId: existing.currentBaselineVersionId ?? null,
+      versions: existing.versions,
+    });
+    const approved = currentBaseline;
     const draft = existing.versions.find((v) => v.status === "DRAFT");
     if (approved && !draft) {
       throw new FinanceDomainError(
@@ -232,16 +238,19 @@ export async function deleteBudgetLine(
   return { deleted: true as const };
 }
 
-export async function approveBudgetVersion(
-  db: Db,
+async function executeApproveBudgetVersion(
+  db: Omit<Db, "$transaction">,
   ctx: FinanceAuthContext,
   budgetVersionId: string,
 ) {
-  requireFinanceBudgetApprove(ctx);
   const version = await db.financeBudgetVersion.findUnique({
     where: { id: budgetVersionId },
     include: {
-      budget: true,
+      budget: {
+        include: {
+          versions: { select: { id: true, status: true } },
+        },
+      },
       lines: {
         include: {
           financialAccount: {
@@ -256,9 +265,15 @@ export async function approveBudgetVersion(
   }
   assertSameTenant(version.budget.tenantId, ctx.tenantId, "Budget");
 
-  const siblingApproved = await db.financeBudgetVersion.findFirst({
-    where: { budgetId: version.budgetId, status: "APPROVED", id: { not: version.id } },
+  if (version.budgetId !== version.budget.id) {
+    throw new FinanceDomainError("FINANCE_BUDGET_NOT_READY", "Budget version mismatch.", 409);
+  }
+
+  const currentBaseline = resolveCurrentGovernanceBaselineVersion({
+    currentBaselineVersionId: version.budget.currentBaselineVersionId,
+    versions: version.budget.versions,
   });
+  const approvalMode = currentBaseline ? "REBASELINE" : "FIRST_APPROVAL";
 
   const configuration = await db.financeConfiguration.findUnique({
     where: { tenantId: ctx.tenantId },
@@ -267,10 +282,11 @@ export async function approveBudgetVersion(
   const baseCurrency = configuration?.baseCurrency?.trim().toUpperCase() ?? null;
 
   const readiness = evaluateBudgetApprovalReadiness({
+    mode: approvalMode,
     versionStatus: version.status === "APPROVED" ? "APPROVED" : "DRAFT",
     baseCurrency,
     lines: version.lines,
-    siblingApprovedExists: Boolean(siblingApproved),
+    currentBaselineExists: Boolean(currentBaseline),
   });
 
   if (!readiness.canApprove) {
@@ -287,6 +303,13 @@ export async function approveBudgetVersion(
       throw new FinanceDomainError(
         "FINANCE_BUDGET_BASELINE_EXISTS",
         "An approved baseline already exists for this financial year.",
+        409,
+      );
+    }
+    if (code === "NO_CURRENT_BASELINE_FOR_REBASELINE") {
+      throw new FinanceDomainError(
+        "FINANCE_BUDGET_NO_BASELINE",
+        "Approve a baseline before re-baselining.",
         409,
       );
     }
@@ -309,20 +332,44 @@ export async function approveBudgetVersion(
   }
 
   const frozenCurrency = baseCurrency!;
+  const approvedAt = new Date();
 
-  return db.financeBudgetVersion.update({
-    where: { id: version.id },
+  await db.financeBudgetVersion.update({
+    where: { id: version.id, status: "DRAFT" },
     data: {
       status: "APPROVED",
       baseCurrency: frozenCurrency,
-      approvedAt: new Date(),
+      approvedAt,
       approvedByUserId: ctx.userId,
     },
+  });
+
+  await db.financeBudget.update({
+    where: { id: version.budgetId },
+    data: { currentBaselineVersionId: version.id },
+  });
+
+  return db.financeBudgetVersion.findUnique({
+    where: { id: version.id },
     include: {
       lines: true,
       approvedBy: { select: { id: true, firstName: true, lastName: true } },
     },
   });
+}
+
+export async function approveBudgetVersion(
+  db: Db,
+  ctx: FinanceAuthContext,
+  budgetVersionId: string,
+) {
+  requireFinanceBudgetApprove(ctx);
+  if (typeof db.$transaction === "function") {
+    return db.$transaction(async (tx) =>
+      executeApproveBudgetVersion(tx as Omit<Db, "$transaction">, ctx, budgetVersionId),
+    );
+  }
+  return executeApproveBudgetVersion(db, ctx, budgetVersionId);
 }
 
 /**
@@ -352,7 +399,11 @@ export async function createWorkingBudgetRevision(
     throw new FinanceDomainError("FINANCE_NOT_FOUND", "Budget not found.", 404);
   }
 
-  const approved = budget.versions.find((v) => v.status === "APPROVED") ?? null;
+  const approved =
+    resolveCurrentGovernanceBaselineVersion({
+      currentBaselineVersionId: budget.currentBaselineVersionId ?? null,
+      versions: budget.versions,
+    }) ?? null;
   if (!approved) {
     throw new FinanceDomainError(
       "FINANCE_BUDGET_NO_BASELINE",

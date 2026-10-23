@@ -7,6 +7,7 @@ export type BudgetReadinessIssueCode =
   | "INVALID_LINE_AMOUNT"
   | "LINE_ON_ARCHIVED_ACCOUNT"
   | "APPROVED_BASELINE_ALREADY_EXISTS"
+  | "NO_CURRENT_BASELINE_FOR_REBASELINE"
   | "VERSION_NOT_DRAFT";
 
 export type BudgetReadinessIssue = {
@@ -19,6 +20,8 @@ export type BudgetApprovalReadiness = {
   issues: BudgetReadinessIssue[];
 };
 
+export type BudgetApprovalReadinessMode = "FIRST_APPROVAL" | "REBASELINE";
+
 type ReadinessLine = {
   amountMinor: number;
   financialAccountId: string;
@@ -28,20 +31,15 @@ type ReadinessLine = {
   };
 };
 
-export function evaluateBudgetApprovalReadiness(input: {
+function evaluateSharedBudgetReadiness(input: {
   versionStatus: "DRAFT" | "APPROVED";
   baseCurrency: string | null;
   lines: ReadonlyArray<ReadinessLine>;
-  siblingApprovedExists: boolean;
-}): BudgetApprovalReadiness {
+}): BudgetReadinessIssue[] {
   const issues: BudgetReadinessIssue[] = [];
 
   if (input.versionStatus !== "DRAFT") {
     issues.push({ code: "VERSION_NOT_DRAFT", severity: "blocker" });
-  }
-
-  if (input.siblingApprovedExists) {
-    issues.push({ code: "APPROVED_BASELINE_ALREADY_EXISTS", severity: "blocker" });
   }
 
   const currency = input.baseCurrency?.trim().toUpperCase() ?? "";
@@ -63,6 +61,26 @@ export function evaluateBudgetApprovalReadiness(input: {
     if (line.financialAccount.lifecycle === "ARCHIVED") {
       issues.push({ code: "LINE_ON_ARCHIVED_ACCOUNT", severity: "warning" });
     }
+  }
+
+  return issues;
+}
+
+export function evaluateBudgetApprovalReadiness(input: {
+  mode: BudgetApprovalReadinessMode;
+  versionStatus: "DRAFT" | "APPROVED";
+  baseCurrency: string | null;
+  lines: ReadonlyArray<ReadinessLine>;
+  currentBaselineExists: boolean;
+}): BudgetApprovalReadiness {
+  const issues = evaluateSharedBudgetReadiness(input);
+
+  if (input.mode === "FIRST_APPROVAL" && input.currentBaselineExists) {
+    issues.push({ code: "APPROVED_BASELINE_ALREADY_EXISTS", severity: "blocker" });
+  }
+
+  if (input.mode === "REBASELINE" && !input.currentBaselineExists) {
+    issues.push({ code: "NO_CURRENT_BASELINE_FOR_REBASELINE", severity: "blocker" });
   }
 
   const canApprove = !issues.some((issue) => issue.severity === "blocker");

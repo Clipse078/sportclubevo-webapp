@@ -1,8 +1,5 @@
 import type { CanonicalAccountSemantic, FinanceBudgetVersionStatus } from "@prisma/client";
-import {
-  evaluateBudgetApprovalReadiness,
-  type BudgetApprovalReadiness,
-} from "@/lib/finance/budget/budget-approval-readiness";
+import type { BudgetApprovalReadiness } from "@/lib/finance/budget/budget-approval-readiness";
 import { computeBudgetPlanningTotals } from "@/lib/finance/budget/budget-planning-totals";
 
 export type BudgetAccountPlanningRow = {
@@ -22,7 +19,10 @@ export type BudgetVersionHistoryEntry = {
   approvedAt: Date | null;
   approvedByLabel: string | null;
   createdAt: Date;
+  /** @deprecated use isCurrentBaseline — retained for transitional callers */
   isGovernanceBaseline: boolean;
+  isCurrentBaseline: boolean;
+  isHistoricalApproved: boolean;
 };
 
 export type BudgetApprovedBaselineSummary = {
@@ -57,6 +57,7 @@ export type BudgetWorkspaceSnapshot = {
   approvedBaseline: BudgetApprovedBaselineSummary | null;
   versionHistory: BudgetVersionHistoryEntry[];
   approvalReadiness: BudgetApprovalReadiness | null;
+  approvalMode: "FIRST_APPROVAL" | "REBASELINE" | null;
 };
 
 export function buildBudgetPlanningRows(input: {
@@ -104,17 +105,24 @@ export function buildBudgetVersionHistory(input: {
 }): BudgetVersionHistoryEntry[] {
   return [...input.versions]
     .sort((a, b) => b.versionNumber - a.versionNumber)
-    .map((version) => ({
-      versionId: version.id,
-      versionNumber: version.versionNumber,
-      status: version.status,
-      approvedAt: version.approvedAt,
-      approvedByLabel: version.approvedBy
-        ? `${version.approvedBy.firstName} ${version.approvedBy.lastName}`.trim()
-        : null,
-      createdAt: version.createdAt,
-      isGovernanceBaseline: version.id === input.governanceBaselineVersionId,
-    }));
+    .map((version) => {
+      const isCurrentBaseline = version.id === input.governanceBaselineVersionId;
+      const isHistoricalApproved =
+        version.status === "APPROVED" && !isCurrentBaseline;
+      return {
+        versionId: version.id,
+        versionNumber: version.versionNumber,
+        status: version.status,
+        approvedAt: version.approvedAt,
+        approvedByLabel: version.approvedBy
+          ? `${version.approvedBy.firstName} ${version.approvedBy.lastName}`.trim()
+          : null,
+        createdAt: version.createdAt,
+        isGovernanceBaseline: isCurrentBaseline,
+        isCurrentBaseline,
+        isHistoricalApproved,
+      };
+    });
 }
 
 export function budgetTotalsFromRows(

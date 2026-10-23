@@ -55,6 +55,8 @@ describe("FIN-01D budget workspace UX", () => {
   it("FIN-02A surfaces readiness, baseline, and revision without checkboxes", () => {
     expect(panel).toContain("readinessTitle");
     expect(panel).toContain("governanceBaselineTitle");
+    expect(panel).toContain("rebaselineDialogTitle");
+    expect(panel).toContain("currentBaselineBadge");
     expect(panel).toContain("startWorkingRevisionAction");
     expect(panel).not.toContain('type="checkbox"');
   });

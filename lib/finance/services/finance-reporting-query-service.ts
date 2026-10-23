@@ -118,7 +118,10 @@ export async function loadApprovedBudgetReportingReadModel(
     },
   });
 
-  const measure = resolveApprovedBudgetMeasure(budget?.versions ?? []);
+  const measure = resolveApprovedBudgetMeasure({
+    currentBaselineVersionId: budget?.currentBaselineVersionId ?? null,
+    versions: budget?.versions ?? [],
+  });
   if (!measure) {
     return emptyReadModel(ctx, {
       financeYearId: selectedYearId,

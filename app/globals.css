@@ -763,6 +763,11 @@ button {
   -moz-appearance: none;
   background-color: var(--sce-surface-subtle);
   border-color: var(--sce-surface-border-elevated);
+  /* h-9 toolbar height — override .fca-select vertical padding to avoid clipping selected text */
+  box-sizing: border-box;
+  line-height: 1.25rem;
+  padding-block: 0.4375rem;
+  padding-inline: 0.75rem 2rem;
 }
 
 .sce-toolbar-select:focus {

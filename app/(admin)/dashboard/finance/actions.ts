@@ -12,7 +12,10 @@ import {
   markFinanceSetupConfigured,
   setFinanceBaseCurrency,
 } from "@/lib/finance/services/finance-configuration-service";
-import { createFinanceYear } from "@/lib/finance/services/finance-year-service";
+import {
+  createFinanceYear,
+  updateFinanceYear,
+} from "@/lib/finance/services/finance-year-service";
 import {
   ensureDefaultFinanceCapabilities,
   setFinanceCapabilityEnabled,
@@ -77,6 +80,29 @@ export async function createFinanceYearAction(input: {
     });
     revalidatePath("/dashboard/finance");
     revalidatePath("/dashboard/finance/settings");
+    revalidatePath("/dashboard/finance/budget");
+    return { ok: true };
+  } catch (e) {
+    return toResult(e);
+  }
+}
+
+export async function updateFinanceYearAction(input: {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}): Promise<FinanceActionResult> {
+  try {
+    const ctx = await financeActionContext();
+    await updateFinanceYear(prisma, ctx, input.id, {
+      name: input.name,
+      startDate: new Date(input.startDate),
+      endDate: new Date(input.endDate),
+    });
+    revalidatePath("/dashboard/finance");
+    revalidatePath("/dashboard/finance/settings");
+    revalidatePath("/dashboard/finance/budget");
     return { ok: true };
   } catch (e) {
     return toResult(e);
