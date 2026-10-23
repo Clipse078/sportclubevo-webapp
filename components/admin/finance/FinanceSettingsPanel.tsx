@@ -9,7 +9,9 @@ import {
   createFinanceYearAction,
   saveFinanceBaseCurrencyAction,
   setFinanceCapabilityAction,
+  updateFinanceYearAction,
 } from "@/app/(admin)/dashboard/finance/actions";
+import { formatFinanceYearDateInputValue } from "@/lib/finance/setup/finance-year-date-input";
 import type { FinanceCapabilityKey } from "@prisma/client";
 import { useTranslations } from "next-intl";
 import { FINANCE_CAPABILITY_PRESENTATION_ORDER } from "@/lib/finance/capability-presentation";
@@ -23,12 +25,98 @@ import { FinanceBaseCurrencySelector } from "@/components/admin/finance/FinanceB
 import { formatIso4217CurrencyOptionLabel } from "@/lib/finance/currency/iso4217-currency";
 import { useLocale } from "next-intl";
 
+type FinanceYearSettingsRow = {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  periodEditable: boolean;
+};
+
 type FinanceSettingsPanelProps = {
   baseCurrency: string | null;
   canCompleteSetup: boolean;
   capabilityRows: { capability: FinanceCapabilityKey; enabled: boolean; configurable: boolean }[];
-  yearDraftDefaults: { name: string; startDate: string; endDate: string };
+  existingYears: FinanceYearSettingsRow[];
+  newYearDraftDefaults: { startDate: string; endDate: string };
 };
+
+function FinanceYearSettingsRowForm({ row }: { row: FinanceYearSettingsRow }) {
+  const t = useTranslations("Finance");
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <form
+      className="grid gap-3 rounded-lg border border-[var(--sce-color-border-subtle)] p-3 sm:grid-cols-2"
+      data-finance-year-id={row.id}
+      onSubmit={(event) => {
+        event.preventDefault();
+        setError(null);
+        const data = new FormData(event.currentTarget);
+        startTransition(async () => {
+          const result = await updateFinanceYearAction({
+            id: row.id,
+            name: String(data.get("name") ?? ""),
+            startDate: String(data.get("startDate") ?? ""),
+            endDate: String(data.get("endDate") ?? ""),
+          });
+          if (!result.ok) {
+            setError(result.error);
+            return;
+          }
+          router.refresh();
+        });
+      }}
+    >
+      <label className="flex flex-col gap-1 text-xs font-medium sm:col-span-2">
+        {t("settings.financeYearName")}
+        <input
+          name="name"
+          required
+          defaultValue={row.name}
+          className={FINANCE_FIELD_CONTROL_CLASS}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs font-medium">
+        {t("settings.financeYearStart")}
+        <input
+          type="date"
+          name="startDate"
+          required
+          readOnly={!row.periodEditable}
+          defaultValue={row.startDate}
+          className={FINANCE_FIELD_CONTROL_CLASS}
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-xs font-medium">
+        {t("settings.financeYearEnd")}
+        <input
+          type="date"
+          name="endDate"
+          required
+          readOnly={!row.periodEditable}
+          defaultValue={row.endDate}
+          className={FINANCE_FIELD_CONTROL_CLASS}
+        />
+      </label>
+      {!row.periodEditable ? (
+        <p className="text-xs text-[var(--muted)] sm:col-span-2">{t("settings.financeYearPeriodLocked")}</p>
+      ) : null}
+      <div className="sm:col-span-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Button type="submit" size="sm" disabled={pending}>
+          {t("settings.saveFinanceYear")}
+        </Button>
+        {error ? (
+          <p className="text-sm text-[var(--destructive)]" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    </form>
+  );
+}
 
 function FinanceBaseCurrencySettingsSection({ baseCurrency }: { baseCurrency: string | null }) {
   const t = useTranslations("Finance");
@@ -109,11 +197,13 @@ export function FinanceSettingsPanel({
   baseCurrency,
   canCompleteSetup,
   capabilityRows,
-  yearDraftDefaults,
+  existingYears,
+  newYearDraftDefaults,
 }: FinanceSettingsPanelProps) {
   const t = useTranslations("Finance");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const capabilityState = new Map(
     capabilityRows.map((row) => [row.capability, row] as const),
@@ -129,27 +219,50 @@ export function FinanceSettingsPanel({
       <section className={FINANCE_SETTINGS_SECTION_CLASS} data-finance-surface="settings-year">
         <h2 className="text-sm font-semibold">{t("settings.financeYearTitle")}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{t("settings.financeYearHelp")}</p>
+        {existingYears.length > 0 ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-xs font-medium text-[var(--foreground)]">
+              {t("settings.financeYearConfiguredTitle")}
+            </p>
+            <ul className="space-y-3">
+              {existingYears.map((row) => (
+                <li key={row.id}>
+                  <FinanceYearSettingsRowForm row={row} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <form
           className="mt-4 grid gap-3 sm:grid-cols-2"
           onSubmit={(event) => {
             event.preventDefault();
+            setCreateError(null);
             const data = new FormData(event.currentTarget);
             startTransition(async () => {
-              await createFinanceYearAction({
+              const result = await createFinanceYearAction({
                 name: String(data.get("name") ?? ""),
                 startDate: String(data.get("startDate") ?? ""),
                 endDate: String(data.get("endDate") ?? ""),
               });
+              if (!result.ok) {
+                setCreateError(result.error);
+                return;
+              }
+              event.currentTarget.reset();
               router.refresh();
             });
           }}
         >
+          <p className="text-xs font-medium text-[var(--foreground)] sm:col-span-2">
+            {t("settings.addFinanceYearHeading")}
+          </p>
           <label className="flex flex-col gap-1 text-xs font-medium sm:col-span-2">
             {t("settings.financeYearName")}
             <input
               name="name"
               required
-              defaultValue={yearDraftDefaults.name}
+              placeholder={t("settings.financeYearNamePlaceholder")}
               className={FINANCE_FIELD_CONTROL_CLASS}
             />
           </label>
@@ -159,7 +272,7 @@ export function FinanceSettingsPanel({
               type="date"
               name="startDate"
               required
-              defaultValue={yearDraftDefaults.startDate}
+              defaultValue={newYearDraftDefaults.startDate}
               className={FINANCE_FIELD_CONTROL_CLASS}
             />
           </label>
@@ -169,14 +282,19 @@ export function FinanceSettingsPanel({
               type="date"
               name="endDate"
               required
-              defaultValue={yearDraftDefaults.endDate}
+              defaultValue={newYearDraftDefaults.endDate}
               className={FINANCE_FIELD_CONTROL_CLASS}
             />
           </label>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 flex flex-col gap-2">
             <Button type="submit" size="sm" disabled={pending}>
               {t("settings.addFinanceYear")}
             </Button>
+            {createError ? (
+              <p className="text-sm text-[var(--destructive)]" role="alert">
+                {createError}
+              </p>
+            ) : null}
           </div>
         </form>
       </section>

@@ -9,7 +9,11 @@ import {
   FINANCE_SYSTEM_CAPABILITY_KEYS,
   isFinanceCapabilityImplemented,
 } from "@/lib/finance/capability-registry";
-import { listFinanceYears } from "@/lib/finance/services/finance-year-service";
+import {
+  listFinanceYears,
+  listFinanceYearsForSettings,
+} from "@/lib/finance/services/finance-year-service";
+import { formatFinanceYearDateInputValue } from "@/lib/finance/setup/finance-year-date-input";
 import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +29,15 @@ export default async function FinanceSettingsPage() {
   const years = workspace.canAdmin
     ? await listFinanceYears(prisma, workspace.ctx)
     : [];
+  const existingYears = workspace.canAdmin
+    ? (await listFinanceYearsForSettings(prisma, workspace.ctx)).map((year) => ({
+        id: year.id,
+        name: year.name,
+        startDate: formatFinanceYearDateInputValue(year.startDate),
+        endDate: formatFinanceYearDateInputValue(year.endDate),
+        periodEditable: year.periodEditable,
+      }))
+    : [];
   const config = workspace.snapshot.configuration;
   const canCompleteSetup =
     workspace.canAdmin &&
@@ -38,8 +51,7 @@ export default async function FinanceSettingsPage() {
     configurable: isFinanceCapabilityImplemented(capability) && workspace.canAdmin,
   }));
 
-  const yearDraftDefaults = {
-    name: t("settings.financeYearDefaultName"),
+  const newYearDraftDefaults = {
     startDate: "2026-01-01",
     endDate: "2026-12-31",
   };
@@ -77,7 +89,8 @@ export default async function FinanceSettingsPage() {
             baseCurrency={config?.baseCurrency ?? null}
             canCompleteSetup={canCompleteSetup}
             capabilityRows={capabilityRows}
-            yearDraftDefaults={yearDraftDefaults}
+            existingYears={existingYears}
+            newYearDraftDefaults={newYearDraftDefaults}
           />
         ) : (
           <p className="text-sm text-[var(--muted)]">{t("settings.structureOnlyHint")}</p>

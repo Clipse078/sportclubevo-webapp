@@ -98,7 +98,7 @@ export function FinanceOverviewPanel({
             {labels.reportingApprovedTitle}
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            {labels.reportingYearLabel}: {reporting.financeYearName}
+            {reporting.financeYearName}
             {reporting.currency ? ` · ${reporting.currency}` : null}
           </p>
           <dl className="mt-4 grid max-w-md gap-2 text-sm">

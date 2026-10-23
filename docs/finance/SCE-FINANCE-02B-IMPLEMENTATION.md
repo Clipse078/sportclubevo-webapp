@@ -7,6 +7,25 @@
 | **Builds on** | FIN-02A operational budgeting, FIN-01E reporting |
 | **FIN-02B status** | **IN PROGRESS** (implementation complete pending PO UAT) |
 
+## PO UAT finding (FIN-02B R2) — financial year identity
+
+During PO UAT, STAGE showed a generic concept label (`Finanzjahr`) as if it were the saved financial-year identity (selector and overview: `Finanzjahr: Finanzjahr · CHF`).
+
+**Root cause:** Category **B** — the domain model already had `FinanceYear.name`, but setup UX pre-filled the create form with the translated concept label (`settings.financeYearDefaultName`), which tenants saved as business data. There was no settings path to edit an existing year’s display name.
+
+**Resolution (R2):**
+
+| Rule | Detail |
+| --- | --- |
+| **Canonical identity** | `FinanceYear.id` (stable) + tenant-owned **`name`** + **`startDate`** + **`endDate`** |
+| **No inference** | Display name is never derived from locale, country, calendar year, season, or dates after save |
+| **Settings UX** | Empty name placeholder on create; list configured years with name + dates; save updates |
+| **Display contract** | User-facing surfaces show **`name`** (e.g. `FY 2026 · CHF`), not the i18n concept label |
+| **Mutability** | **Rename** always allowed (same id). **Period change** blocked when any **APPROVED** budget version exists for that year |
+| **Reporting** | Resolution remains by `financeYearId` / version ids — rename does not alter baselines |
+
+PO UAT retest is still **pending** after R2 lands on STAGE preview.
+
 ## Purpose
 
 When an organisation has an **approved governance baseline v1** and prepares a **working revision v2**, FIN-02B defines how v2 becomes the **current** governance baseline without mutating, deleting, or rewriting v1.
