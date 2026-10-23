@@ -19,6 +19,7 @@ Periodic **management measurement** and **management review** on top of FIN-03A 
 - Management review signals (factual, no fake period/YTD budget variance)
 - Extended **Finanzen → Ist** workspace (period slicers, URL `mode` + `periodStart` / `periodEnd`)
 - **FIN-03B-R1 (PO UAT refinement):** compact two-row toolbar, month/quarter slicers, contiguous month ranges
+- **FIN-03B-R2 (PO UAT refinement):** canonical **actual-result** semantic coloring for **Ist-Ergebnis** (period, YTD companion block, full-year summary); income/expense amounts stay neutral
 - Account tables: full-year variance unchanged; period modes show **Zeitraum Ist / YTD Ist / Jahresbudget**
 - Ist-Buchungen filtered by selected measurement context
 
@@ -65,6 +66,21 @@ Module: `lib/finance/actual/finance-measurement-period.ts`
 ### FIN-11 boundary
 
 Unchanged: no ledger, journals, or statutory accounting periods — `FinanceActualEntry` remains management actuals.
+
+## Presentation semantics (R2)
+
+Two separate systems — do not conflate:
+
+| System | Module | Applies when |
+| --- | --- | --- |
+| **Actual result** | `lib/finance/presentation/finance-result-presentation.ts` | **Ist-Ergebnis** only: `result = income − expense` → SUCCESS / ERROR / neutral typography from DS-07 tokens |
+| **Budget favorability** | `lib/finance/presentation/finance-variance-favorability-presentation.ts` | **FULL_YEAR** account **Abweichung / Bewertung** only (FIN-03A R5) |
+
+`YTD_BUDGET_VARIANCE_SUPPORTED = false` and `PERIOD_BUDGET_VARIANCE_SUPPORTED = false` remain unchanged — sub-year modes do not gain Günstig/Ungünstig.
+
+### R2 PO UAT finding
+
+Periodic summaries were visually too neutral: negative **Ist-Ergebnis** (e.g. Sep–Okt 2026, **−13'500 CHF**) did not stand out. Resolution: semantic danger/success on the **result value** via `deriveFinanceResultPresentation(amountMinor)`. Redundant text signal *«Das YTD-Ist-Ergebnis ist negativ.»* removed once the YTD **Ist-Ergebnis** KPI carries the same meaning. Remaining management hints (e.g. budget accounts without YTD activity) use small INFO icon + muted text.
 
 ## Schema
 

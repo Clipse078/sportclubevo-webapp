@@ -301,9 +301,6 @@ export async function loadActualsWorkspaceSnapshot(
   });
 
   const managementSignals = deriveManagementReviewSignals({
-    measurementPeriod,
-    periodSummary: periodic.periodSummary,
-    ytdSummary: periodic.ytdSummary,
     accounts: periodic.accounts,
   });
 

@@ -198,16 +198,6 @@ describe("FIN-03B periodic read model", () => {
   });
 
   it("management review signals stay factual", () => {
-    const period = resolveFinanceMeasurementPeriod({
-      financeYearId: "y1",
-      financeYearName: "FY 2026",
-      year: {
-        startDate: new Date("2026-01-01T00:00:00.000Z"),
-        endDate: new Date("2026-12-31T00:00:00.000Z"),
-      },
-      mode: "MONTH",
-      requestedPeriodIndex: 9,
-    });
     const model = buildPeriodicActualReadModel({
       measurementMode: "MONTH",
       approvedMeasure,
@@ -229,12 +219,8 @@ describe("FIN-03B periodic read model", () => {
       fullYearEntries: [],
     });
     const signals = deriveManagementReviewSignals({
-      measurementPeriod: period,
-      periodSummary: model.periodSummary,
-      ytdSummary: model.ytdSummary,
       accounts: model.accounts,
     });
-    expect(signals.some((s) => s.kind === "YTD_RESULT_NEGATIVE")).toBe(true);
     expect(signals.some((s) => s.kind === "PERIOD_HAS_ACTIVITY")).toBe(false);
     expect(JSON.stringify(signals)).not.toMatch(/over budget|off track|unfavorable/i);
   });

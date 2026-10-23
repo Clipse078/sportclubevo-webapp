@@ -144,4 +144,11 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     );
     expect(varianceSection).not.toContain("row.metrics.favorability ??");
   });
+
+  it("FIN-03B R2 colors Ist-Ergebnis via finance-result-presentation, not income/expense", () => {
+    expect(panel).toContain("finance-result-presentation");
+    expect(panel).toContain("financeActualResultSemanticTextClass");
+    expect(panel).not.toMatch(/actualIncome[\s\S]{0,200}financeActualResultSemanticTextClass/);
+    expect(panel).not.toMatch(/actualExpense[\s\S]{0,200}financeActualResultSemanticTextClass/);
+  });
 });

@@ -52,9 +52,16 @@ import {
   FinanceVarianceComparisonColGroup,
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 import {
+  financeManagementSignalPresentation,
+} from "@/lib/finance/presentation/finance-management-signal-presentation";
+import {
+  financeActualResultSemanticTextClass,
+} from "@/lib/finance/presentation/finance-result-presentation";
+import {
   financeVarianceComparisonSemanticTextClass,
   financeVarianceFavorabilityLabelKey,
 } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
+import { sceSemanticIconClass } from "@/lib/design-system/sce-feedback-status-micro-ux";
 import {
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_CURRENCY_CONTEXT_CLASS,
@@ -433,12 +440,25 @@ export function FinanceActualsWorkspacePanel({
 
       {snapshot.managementSignals.length > 0 ? (
         <div
-          className="flex flex-col gap-1 text-xs text-muted-foreground"
+          className="flex flex-col gap-1.5"
           data-finance-management-signals
         >
-          {snapshot.managementSignals.map((signal) => (
-            <p key={signal.kind}>{t(`managementSignal.${signal.kind}`)}</p>
-          ))}
+          {snapshot.managementSignals.map((signal) => {
+            const { tone, Icon } = financeManagementSignalPresentation(signal.kind);
+            return (
+              <p
+                key={signal.kind}
+                className="flex items-start gap-1.5 text-xs text-[var(--muted)]"
+                role="status"
+              >
+                <Icon
+                  className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", sceSemanticIconClass(tone))}
+                  aria-hidden
+                />
+                <span>{t(`managementSignal.${signal.kind}`)}</span>
+              </p>
+            );
+          })}
         </div>
       ) : null}
 
@@ -475,7 +495,16 @@ export function FinanceActualsWorkspacePanel({
             </div>
             <div>
               <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualResult")}</p>
-              <p className={FINANCE_SUMMARY_RESULT_VALUE_CLASS}>
+              <p
+                className={cn(
+                  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+                  financeActualResultSemanticTextClass(
+                    periodic?.periodSummary.resultMinor ??
+                      snapshot.variance.actualSummary.resultMinor,
+                  ),
+                )}
+                data-finance-actual-result="period"
+              >
                 {formatMoney(
                   periodic?.periodSummary.resultMinor ??
                     snapshot.variance.actualSummary.resultMinor,
@@ -507,7 +536,13 @@ export function FinanceActualsWorkspacePanel({
               </div>
               <div>
                 <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualResult")}</p>
-                <p className={FINANCE_SUMMARY_RESULT_VALUE_CLASS}>
+                <p
+                  className={cn(
+                    FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+                    financeActualResultSemanticTextClass(periodic.ytdSummary.resultMinor),
+                  )}
+                  data-finance-actual-result="ytd"
+                >
                   {formatMoney(periodic.ytdSummary.resultMinor)}
                 </p>
               </div>

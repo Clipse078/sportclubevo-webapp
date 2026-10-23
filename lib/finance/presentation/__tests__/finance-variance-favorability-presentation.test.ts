@@ -119,7 +119,7 @@ describe("FIN-03A R5 variance favorability presentation", () => {
   });
 
   it("applies shared semantic class to both Abweichung and Bewertung cells", () => {
-    const varianceSection = panel.slice(panel.indexOf("function VarianceComparisonSection"));
+    const varianceSection = panel.slice(panel.indexOf("function PeriodicComparisonSection"));
     expect(varianceSection).toContain("data-finance-variance-delta");
     expect(varianceSection).toContain("data-finance-variance-assessment");
     expect(varianceSection.match(/varianceSemanticClass/g)?.length).toBeGreaterThanOrEqual(2);
