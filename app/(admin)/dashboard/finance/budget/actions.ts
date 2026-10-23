@@ -7,12 +7,19 @@ import { financeErrorMessage } from "@/lib/finance/errors";
 import {
   approveBudgetVersion,
   createWorkingBudgetRevision,
-  getOrCreateDraftBudgetForYear,
   upsertBudgetLine,
 } from "@/lib/finance/services/finance-budget-service";
+import {
+  createAnnualBudgetForYear,
+  type CreateAnnualBudgetResult,
+} from "@/lib/finance/services/finance-annual-budget-service";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 
 export type FinanceBudgetActionResult = { ok: true } | { ok: false; error: string };
+
+export type CreateAnnualBudgetActionResult =
+  | { ok: true; summary: CreateAnnualBudgetResult["summary"] }
+  | { ok: false; error: string };
 
 async function budgetCtx() {
   const workspace = await loadFinanceWorkspaceContext();
@@ -31,11 +38,26 @@ function mapResult(fn: () => Promise<unknown>): Promise<FinanceBudgetActionResul
     }));
 }
 
-export async function ensureDraftBudgetAction(
-  financeYearId: string,
-): Promise<FinanceBudgetActionResult> {
+export async function createAnnualBudgetAction(input: {
+  targetFinanceYearId: string;
+  mode: "EMPTY" | "COPY_FROM_PRIOR";
+  sourceFinanceYearId?: string;
+}): Promise<CreateAnnualBudgetActionResult> {
   const ctx = await budgetCtx();
-  return mapResult(() => getOrCreateDraftBudgetForYear(prisma, ctx, financeYearId));
+  try {
+    const result = await createAnnualBudgetForYear(prisma, ctx, {
+      targetFinanceYearId: input.targetFinanceYearId,
+      mode: input.mode,
+      sourceFinanceYearId: input.sourceFinanceYearId,
+    });
+    revalidatePath("/dashboard/finance/budget");
+    return { ok: true, summary: result.summary };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      error: error instanceof FinanceDomainError ? error.message : financeErrorMessage(error),
+    };
+  }
 }
 
 export async function saveBudgetLineAction(input: {

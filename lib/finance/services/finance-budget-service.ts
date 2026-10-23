@@ -8,6 +8,7 @@ import {
   type FinanceAuthContext,
 } from "@/lib/finance/finance-authorization";
 import { evaluateBudgetApprovalReadiness } from "@/lib/finance/budget/budget-approval-readiness";
+import { createAnnualBudgetForYear } from "@/lib/finance/services/finance-annual-budget-service";
 import { resolveCurrentGovernanceBaselineVersion } from "@/lib/finance/budget/current-governance-baseline";
 import { assertSafeAmountMinor } from "@/lib/finance/money-types";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
@@ -133,26 +134,27 @@ export async function getOrCreateDraftBudgetForYear(
     if (approved) return { budget: existing, workingVersion: approved };
   }
 
-  const budget = await db.financeBudget.create({
-    data: {
-      tenantId: ctx.tenantId,
-      financeYearId,
-      createdByUserId: ctx.userId,
-      versions: {
-        create: {
-          status: "DRAFT",
-          versionNumber: 1,
-          createdByUserId: ctx.userId,
-        },
-      },
+  const created = await createAnnualBudgetForYear(db, ctx, {
+    targetFinanceYearId: financeYearId,
+    mode: "EMPTY",
+  });
+
+  const budget = await db.financeBudget.findUnique({
+    where: {
+      tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId },
     },
     include: {
       versions: true,
       financeYear: true,
     },
   });
+  if (!budget) {
+    throw new FinanceDomainError("FINANCE_NOT_FOUND", "Budget not found.", 404);
+  }
+  const workingVersion =
+    budget.versions.find((v) => v.id === created.workingVersionId) ?? budget.versions[0]!;
 
-  return { budget, workingVersion: budget.versions[0]! };
+  return { budget, workingVersion };
 }
 
 export async function loadBudgetForYear(

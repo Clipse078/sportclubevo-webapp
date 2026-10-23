@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { SceSegmentedControl } from "@/components/admin/shared/SceSegmentedControl";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { cn } from "@/lib/cn";
@@ -41,10 +42,12 @@ import {
 import type { BudgetReadinessIssueCode } from "@/lib/finance/budget/budget-approval-readiness";
 import {
   approveBudgetAction,
-  ensureDraftBudgetAction,
+  createAnnualBudgetAction,
   saveBudgetLineAction,
   startWorkingRevisionAction,
+  type CreateAnnualBudgetActionResult,
 } from "@/app/(admin)/dashboard/finance/budget/actions";
+import type { AnnualBudgetCreationContext } from "@/lib/finance/services/finance-annual-budget-service";
 import {
   FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
   FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS,
@@ -75,6 +78,7 @@ type FinanceBudgetWorkspacePanelProps = {
   canApprove: boolean;
   selectedYearId: string | null;
   formattingLocale: string;
+  annualCreation: AnnualBudgetCreationContext | null;
 };
 
 export function FinanceBudgetWorkspacePanel({
@@ -86,11 +90,16 @@ export function FinanceBudgetWorkspacePanel({
   canApprove,
   selectedYearId,
   formattingLocale,
+  annualCreation,
 }: FinanceBudgetWorkspacePanelProps) {
   const t = useTranslations("Finance.budget");
   const router = useRouter();
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [creationMode, setCreationMode] = useState<"EMPTY" | "COPY_FROM_PRIOR">("EMPTY");
+  const [copySourceYearId, setCopySourceYearId] = useState<string>("");
   const [persistencePhase, setPersistencePhase] =
     useState<BudgetWorkspacePersistencePhase>("hidden");
   const yearSelectId = useId();
@@ -113,7 +122,24 @@ export function FinanceBudgetWorkspacePanel({
 
   function onYearChange(yearId: string) {
     if (!yearId) return;
+    setCreateSuccess(null);
     router.push(`/dashboard/finance/budget?yearId=${encodeURIComponent(yearId)}`);
+  }
+
+  const copySources = annualCreation?.eligibleCopySources ?? [];
+  const canChoosePriorCopy = copySources.length > 0;
+  const selectedYearName =
+    years.find((y) => y.id === selectedYearId)?.name ?? snapshot?.financeYearName ?? "";
+
+  function openCreateBudgetDialog() {
+    setCreateSuccess(null);
+    setCreationMode("EMPTY");
+    setCopySourceYearId(
+      annualCreation?.defaultCopySourceFinanceYearId ??
+        annualCreation?.eligibleCopySources[0]?.financeYearId ??
+        "",
+    );
+    setCreateDialogOpen(true);
   }
 
   function runWorkspaceAction(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
@@ -127,6 +153,62 @@ export function FinanceBudgetWorkspacePanel({
       }
     });
   }
+
+  function runCreateAnnualBudget() {
+    if (!selectedYearId) return;
+    startWorkspaceTransition(async () => {
+      const result: CreateAnnualBudgetActionResult = await createAnnualBudgetAction({
+        targetFinanceYearId: selectedYearId,
+        mode: creationMode,
+        sourceFinanceYearId:
+          creationMode === "COPY_FROM_PRIOR" ? copySourceYearId || undefined : undefined,
+      });
+      if (!result.ok) {
+        setFeedback(result.error);
+        return;
+      }
+      setFeedback(null);
+      setCreateDialogOpen(false);
+      if (result.summary.mode === "EMPTY") {
+        setCreateSuccess(t("createSuccessEmpty", { year: selectedYearName }));
+      } else {
+        const income = formatBudgetPlanningMinor(
+          result.summary.totalIncomeMinor,
+          workspaceCurrency,
+          formattingLocale,
+        );
+        const expense = formatBudgetPlanningMinor(
+          result.summary.totalExpenseMinor,
+          workspaceCurrency,
+          formattingLocale,
+        );
+        const base = t("createSuccessCopy", {
+          year: selectedYearName,
+          count: result.summary.copiedLineCount,
+          income,
+          expense,
+        });
+        const excluded =
+          result.summary.excludedArchivedLineCount > 0
+            ? t("createSuccessCopyExcluded", {
+                count: result.summary.excludedArchivedLineCount,
+              })
+            : "";
+        setCreateSuccess(excluded ? `${base} ${excluded}` : base);
+      }
+      router.refresh();
+    });
+  }
+
+  const creationModeOptions = useMemo(() => {
+    const options: Array<{ value: "EMPTY" | "COPY_FROM_PRIOR"; label: string }> = [
+      { value: "EMPTY", label: t("createModeEmpty") },
+    ];
+    if (canChoosePriorCopy) {
+      options.push({ value: "COPY_FROM_PRIOR", label: t("createModeCopy") });
+    }
+    return options;
+  }, [canChoosePriorCopy, t]);
 
   if (years.length === 0) {
     return (
@@ -257,19 +339,83 @@ export function FinanceBudgetWorkspacePanel({
         </p>
       ) : null}
 
+      {createSuccess ? (
+        <p className="text-sm text-[var(--muted)]" role="status">
+          {createSuccess}
+        </p>
+      ) : null}
+
       {yearSelected && !snapshot?.versionId && canMutate && selectedYearId ? (
         <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS} data-finance-surface="empty-draft">
-          <h2 className="text-base font-semibold">{t("emptyTitle")}</h2>
+          <h2 className="text-base font-semibold">
+            {t("emptyTitle", { year: selectedYearName })}
+          </h2>
           <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">{t("emptyBody")}</p>
           <Button
             className="mt-4"
             disabled={workspacePending}
-            onClick={() => runWorkspaceAction(() => ensureDraftBudgetAction(selectedYearId))}
+            onClick={openCreateBudgetDialog}
           >
-            {t("startDraft")}
+            {t("createBudgetAction")}
           </Button>
         </div>
       ) : null}
+
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        title={t("createDialogTitle")}
+        description={t("createDialogBody", { year: selectedYearName })}
+        footer={
+          <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
+            <Button variant="secondary" onClick={() => setCreateDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button
+              disabled={
+                workspacePending ||
+                (creationMode === "COPY_FROM_PRIOR" && !copySourceYearId)
+              }
+              onClick={runCreateAnnualBudget}
+            >
+              {t("createBudgetConfirm")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <SceFormField label={t("createModeLabel")}>
+            <SceSegmentedControl
+              aria-label={t("createModeLabel")}
+              options={creationModeOptions}
+              value={creationMode}
+              onChange={setCreationMode}
+              disabled={workspacePending}
+            />
+          </SceFormField>
+
+          {creationMode === "COPY_FROM_PRIOR" && canChoosePriorCopy ? (
+            <SceFormField label={t("copySourceLabel")} htmlFor="annual-budget-copy-source">
+              <SceToolbarSelect
+                id="annual-budget-copy-source"
+                value={copySourceYearId}
+                onChange={(e) => setCopySourceYearId(e.target.value)}
+                disabled={workspacePending}
+              >
+                {copySources.map((source) => (
+                  <option key={source.financeYearId} value={source.financeYearId}>
+                    {t("copySourceOption", { year: source.financeYearName })}
+                  </option>
+                ))}
+              </SceToolbarSelect>
+            </SceFormField>
+          ) : null}
+
+          {creationMode === "COPY_FROM_PRIOR" && !canChoosePriorCopy ? (
+            <p className="text-sm text-[var(--muted)]">{t("copySourceUnavailable")}</p>
+          ) : null}
+        </div>
+      </Dialog>
 
       {yearSelected && snapshot?.versionId ? (
         <BudgetWorkspaceEditor
@@ -590,7 +736,7 @@ function BudgetWorkspaceEditor(props: {
       ) : null}
 
       <BudgetSection
-        title={t("incomeSection")}
+        title={t("incomeSectionWithYear", { year: props.snapshot.financeYearName })}
         rows={props.incomeRows}
         currency={props.workspaceCurrency}
         formattingLocale={props.formattingLocale}
@@ -601,7 +747,7 @@ function BudgetWorkspaceEditor(props: {
         onPersist={persistDraftAmount}
       />
       <BudgetSection
-        title={t("expenseSection")}
+        title={t("expenseSectionWithYear", { year: props.snapshot.financeYearName })}
         rows={props.expenseRows}
         currency={props.workspaceCurrency}
         formattingLocale={props.formattingLocale}
@@ -749,7 +895,7 @@ function BudgetSection(props: {
 
   return (
     <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="budget-section">
-      <h2 className={FINANCE_SECTION_HEADER_CLASS}>{props.title}</h2>
+      <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>{props.title}</h2>
       <table className="w-full min-w-0 text-sm">
         <thead>
           <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>

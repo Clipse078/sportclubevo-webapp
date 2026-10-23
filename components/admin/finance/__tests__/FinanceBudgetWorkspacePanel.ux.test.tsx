@@ -74,4 +74,30 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).toContain("data-budget-editable-scope");
     expect(panel).toContain('"working-revision"');
   });
+
+  it("FIN-02C uses create dialog with segmented choice (no checkboxes)", () => {
+    expect(panel).toContain("createAnnualBudgetAction");
+    expect(panel).toContain("createDialogTitle");
+    expect(panel).toContain("SceSegmentedControl");
+    expect(panel).toContain("createModeEmpty");
+    expect(panel).toContain("createModeCopy");
+    expect(panel).not.toContain('type="checkbox"');
+  });
+
+  it("FIN-02C R1 binds income and expense section headings to snapshot financeYearName", () => {
+    expect(panel).toContain('incomeSectionWithYear", { year: props.snapshot.financeYearName }');
+    expect(panel).toContain('expenseSectionWithYear", { year: props.snapshot.financeYearName }');
+    expect(panel).not.toContain('title={t("incomeSection")}');
+    expect(panel).not.toContain('title={t("expenseSection")}');
+    expect(panel).not.toContain("toLocaleDateString(props.snapshot.financeYear");
+    expect(panel).not.toContain("startDate");
+    expect(panel).toContain("break-words");
+    expect(panel).toContain("key={`${selectedYearId}:${snapshot.versionId}`}");
+  });
+
+  it("FIN-02C R1 preserves tenant-defined year names verbatim via translation year param", () => {
+    const de = readFileSync(join(process.cwd(), "messages/de.json"), "utf8");
+    expect(de).toContain('"incomeSectionWithYear": "Einnahmen · {year}"');
+    expect(de).toContain('"expenseSectionWithYear": "Ausgaben · {year}"');
+  });
 });

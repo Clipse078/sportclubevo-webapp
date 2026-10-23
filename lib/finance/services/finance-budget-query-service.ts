@@ -1,5 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
-import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
+import {
+  canManageDraftBudget,
+  type FinanceAuthContext,
+} from "@/lib/finance/finance-authorization";
 import {
   buildBudgetPlanningRows,
   buildBudgetVersionHistory,
@@ -14,6 +17,10 @@ import {
   loadBudgetForYear,
   resolveTenantBudgetCurrency,
 } from "@/lib/finance/services/finance-budget-service";
+import {
+  loadAnnualBudgetCreationContext,
+  type AnnualBudgetCreationContext,
+} from "@/lib/finance/services/finance-annual-budget-service";
 
 type Db = Pick<PrismaClient, "financialAccount" | "financeYear" | "financeConfiguration"> &
   Parameters<typeof loadBudgetForYear>[0];
@@ -28,6 +35,7 @@ export async function loadBudgetWorkspaceSnapshot(
   hasAccounts: boolean;
   selectedYearId: string | null;
   baseCurrency: string | null;
+  annualCreation: AnnualBudgetCreationContext | null;
 }> {
   const years = await listFinanceYearsForBudget(db, ctx);
   const baseCurrency = await resolveTenantBudgetCurrency(db, ctx);
@@ -52,12 +60,26 @@ export async function loadBudgetWorkspaceSnapshot(
     currentFinanceYearId: financeConfig?.currentFinanceYearId ?? null,
   });
   if (!selectedYearId) {
-    return { years, snapshot: null, hasAccounts, selectedYearId: null, baseCurrency };
+    return {
+      years,
+      snapshot: null,
+      hasAccounts,
+      selectedYearId: null,
+      baseCurrency,
+      annualCreation: null,
+    };
   }
 
   const year = years.find((y) => y.id === selectedYearId) ?? null;
   if (!year) {
-    return { years, snapshot: null, hasAccounts, selectedYearId: null, baseCurrency };
+    return {
+      years,
+      snapshot: null,
+      hasAccounts,
+      selectedYearId: null,
+      baseCurrency,
+      annualCreation: null,
+    };
   }
 
   const budget = await loadBudgetForYear(db, ctx, selectedYearId);
@@ -160,5 +182,10 @@ export async function loadBudgetWorkspaceSnapshot(
     approvalMode,
   };
 
-  return { years, snapshot, hasAccounts, selectedYearId, baseCurrency };
+  const annualCreation =
+    !budget && canManageDraftBudget(ctx)
+      ? await loadAnnualBudgetCreationContext(db, ctx, selectedYearId)
+      : null;
+
+  return { years, snapshot, hasAccounts, selectedYearId, baseCurrency, annualCreation };
 }
