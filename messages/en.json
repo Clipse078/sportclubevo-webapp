@@ -421,7 +421,8 @@
       "settings": "Setup",
       "structure": "Financial structure",
       "budget": "Budget",
-      "actuals": "Actuals"
+      "actuals": "Actuals",
+      "forecast": "Forecast"
     },
     "capabilityNavAria": "Finance capability navigation",
     "workspace": {
@@ -548,7 +549,10 @@
       "openStructure": "Open financial structure",
       "reportingNoBaselineTitle": "No approved budget baseline yet",
       "reportingNoBaselineBody": "Management reporting becomes available once a budget baseline is approved for the selected financial year. Draft planning does not appear here.",
-      "openBudget": "Open budget"
+      "openBudget": "Open budget",
+      "reportingForecastTitle": "Current forecast",
+      "reportingForecastResultDelta": "Forecast result vs approved budget",
+      "openForecast": "Open forecast"
     },
     "budget": {
       "pageTitle": "Budget",
@@ -644,6 +648,48 @@
         "saved": "Saved",
         "error": "Save failed"
       }
+    },
+    "forecast": {
+      "pageTitle": "Forecast",
+      "pageDescription": "Current management forecast per financial year — independent of approved budget and actuals.",
+      "yearLabel": "Financial year",
+      "currencyLabel": "Currency",
+      "yearPlaceholder": "Select financial year",
+      "viewOnlyHint": "Forecast is view-only. Editing requires forecast manage permission.",
+      "noYearTitle": "Financial year required",
+      "noYearBody": "Create at least one financial year in finance setup.",
+      "noAccountsTitle": "Financial structure required",
+      "noAccountsBody": "Create income and expense accounts before entering forecast amounts.",
+      "openStructure": "Open financial structure",
+      "emptyTitle": "No forecast yet for {year}",
+      "emptyBody": "Create the current management forecast for this financial year.",
+      "createAction": "Create forecast",
+      "createDialogTitle": "Create forecast",
+      "createDialogBody": "Target: {year}. Choose how to initialize.",
+      "createModeLabel": "Starting point",
+      "createModeEmpty": "Start empty",
+      "createModeFromBaseline": "Start from budget",
+      "baselineUnavailableHint": "Budget initialization requires an approved governance baseline.",
+      "createConfirm": "Create forecast",
+      "cancel": "Cancel",
+      "currentVersionLabel": "Current forecast · version {version}",
+      "totalIncome": "Forecast income",
+      "totalExpense": "Forecast expense",
+      "plannedResult": "Result",
+      "incomeSectionWithYear": "Income · {year}",
+      "expenseSectionWithYear": "Expense · {year}",
+      "sectionTotals": "Forecast result",
+      "accountColumn": "Account",
+      "budgetColumn": "Budget",
+      "forecastColumn": "Forecast",
+      "deltaColumn": "Variance",
+      "ratingColumn": "Rating",
+      "forecastAmountLabel": "Forecast for {account}",
+      "archivedAccount": "Archived",
+      "persistenceSaving": "Saving…",
+      "persistenceUnsaved": "Unsaved changes",
+      "persistenceSaved": "Saved",
+      "persistenceError": "Save failed"
     },
     "actuals": {
       "pageTitle": "Actuals",

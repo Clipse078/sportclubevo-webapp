@@ -5,6 +5,7 @@ import { loadFinanceSetupSnapshot } from "@/lib/finance/services/finance-configu
 import { resolveFinanceOverviewState } from "@/lib/finance/setup/finance-setup-state";
 import { resolveFinanceNavigation } from "@/lib/finance/navigation/finance-navigation";
 import { resolveFinanceOverviewReportingSlice } from "@/lib/finance/reporting/reporting-overview-state";
+import { loadCurrentForecastOverviewSummary } from "@/lib/finance/services/finance-forecast-query-service";
 import { loadApprovedBudgetReportingReadModel } from "@/lib/finance/services/finance-reporting-query-service";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -40,10 +41,21 @@ export async function loadFinanceWorkspaceContext() {
 
   const showBudgetNav = navigation.some((item) => item.key === "budget");
   const showActualsNav = navigation.some((item) => item.key === "actuals");
+  const showForecastNav = navigation.some((item) => item.key === "forecast");
 
   const reportingReadModel = await loadApprovedBudgetReportingReadModel(prisma, ctx, null);
   const overviewReporting = resolveFinanceOverviewReportingSlice({
     reporting: reportingReadModel,
+    forecastSummary:
+      showForecastNav &&
+      (permissionKeys.has(PERMISSIONS.FINANCE_VIEW) ||
+        permissionKeys.has(PERMISSIONS.FINANCE_FORECAST_VIEW))
+        ? await loadCurrentForecastOverviewSummary(
+            prisma,
+            ctx,
+            snapshot.configuration?.currentFinanceYearId ?? null,
+          )
+        : null,
   });
 
   const formattingLocale = resolveFinanceFormattingLocale(tenant);
@@ -60,6 +72,7 @@ export async function loadFinanceWorkspaceContext() {
     navigation,
     showBudgetNav,
     showActualsNav,
+    showForecastNav,
     canAdmin: permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     canStructure: permissionKeys.has(PERMISSIONS.FINANCE_STRUCTURE_MANAGE),
     canBudgetManage: permissionKeys.has(PERMISSIONS.FINANCE_BUDGET_MANAGE),
@@ -71,6 +84,12 @@ export async function loadFinanceWorkspaceContext() {
       permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_VIEW),
     canActualManage:
       permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_MANAGE) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
+    canForecastView:
+      permissionKeys.has(PERMISSIONS.FINANCE_VIEW) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_FORECAST_VIEW),
+    canForecastManage:
+      permissionKeys.has(PERMISSIONS.FINANCE_FORECAST_MANAGE) ||
       permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     overviewReporting,
   };

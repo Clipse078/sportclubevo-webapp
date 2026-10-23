@@ -884,7 +884,8 @@
       "settings": "Einrichtung",
       "structure": "Finanzstruktur",
       "budget": "Budget",
-      "actuals": "Ist"
+      "actuals": "Ist",
+      "forecast": "Prognose"
     },
     "capabilityNavAria": "Finanz-Funktionsnavigation",
     "workspace": {
@@ -1011,7 +1012,10 @@
       "openStructure": "Finanzstruktur öffnen",
       "reportingNoBaselineTitle": "Noch keine genehmigte Budget-Baseline",
       "reportingNoBaselineBody": "Management-Auswertungen stehen zur Verfügung, sobald eine Budget-Baseline für das gewählte Finanzjahr freigegeben ist. Entwürfe erscheinen hier nicht.",
-      "openBudget": "Budget öffnen"
+      "openBudget": "Budget öffnen",
+      "reportingForecastTitle": "Aktuelle Prognose",
+      "reportingForecastResultDelta": "Prognose-Ergebnis vs. genehmigtes Budget",
+      "openForecast": "Prognose öffnen"
     },
     "budget": {
       "pageTitle": "Budget",
@@ -1107,6 +1111,48 @@
         "saved": "Gespeichert",
         "error": "Speichern fehlgeschlagen"
       }
+    },
+    "forecast": {
+      "pageTitle": "Prognose",
+      "pageDescription": "Aktuelle Management-Prognose pro Finanzjahr — unabhängig von Budget-Baseline und Ist-Werten.",
+      "yearLabel": "Finanzjahr",
+      "currencyLabel": "Währung",
+      "yearPlaceholder": "Finanzjahr wählen",
+      "viewOnlyHint": "Prognose einsehbar. Bearbeiten erfordert Prognose-Verwaltungsberechtigung.",
+      "noYearTitle": "Finanzjahr erforderlich",
+      "noYearBody": "Legen Sie mindestens ein Finanzjahr in der Finanz-Einrichtung an.",
+      "noAccountsTitle": "Finanzstruktur erforderlich",
+      "noAccountsBody": "Erstellen Sie Einnahme- und Ausgabekonten, bevor Sie Prognosewerte erfassen.",
+      "openStructure": "Finanzstruktur öffnen",
+      "emptyTitle": "Noch keine Prognose für {year}",
+      "emptyBody": "Erstellen Sie die aktuelle Management-Prognose für dieses Finanzjahr.",
+      "createAction": "Prognose erstellen",
+      "createDialogTitle": "Prognose erstellen",
+      "createDialogBody": "Ziel: {year}. Wählen Sie den Ausgangspunkt.",
+      "createModeLabel": "Ausgangspunkt",
+      "createModeEmpty": "Leer starten",
+      "createModeFromBaseline": "Aus Budget starten",
+      "baselineUnavailableHint": "Budget-Start ist ohne freigegebene Governance-Baseline nicht verfügbar.",
+      "createConfirm": "Prognose erstellen",
+      "cancel": "Abbrechen",
+      "currentVersionLabel": "Aktuelle Prognose · Version {version}",
+      "totalIncome": "Prognose-Einnahmen",
+      "totalExpense": "Prognose-Ausgaben",
+      "plannedResult": "Ergebnis",
+      "incomeSectionWithYear": "Einnahmen · {year}",
+      "expenseSectionWithYear": "Ausgaben · {year}",
+      "sectionTotals": "Prognose-Ergebnis",
+      "accountColumn": "Konto",
+      "budgetColumn": "Budget",
+      "forecastColumn": "Prognose",
+      "deltaColumn": "Abweichung",
+      "ratingColumn": "Bewertung",
+      "forecastAmountLabel": "Prognose für {account}",
+      "archivedAccount": "Archiviert",
+      "persistenceSaving": "Wird gespeichert …",
+      "persistenceUnsaved": "Ungespeicherte Änderungen",
+      "persistenceSaved": "Gespeichert",
+      "persistenceError": "Speichern fehlgeschlagen"
     },
     "actuals": {
       "pageTitle": "Ist-Werte",

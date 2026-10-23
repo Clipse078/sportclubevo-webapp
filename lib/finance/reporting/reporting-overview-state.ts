@@ -1,4 +1,5 @@
 import type { FinancialReportingReadModel } from "@/lib/finance/reporting/reporting-read-model";
+import type { ForecastOverviewSummary } from "@/lib/finance/services/finance-forecast-query-service";
 
 export type FinanceOverviewReportingSlice =
   | { kind: "NONE" }
@@ -23,11 +24,13 @@ export type FinanceOverviewReportingSlice =
         incomeMinor: number;
         expenseMinor: number;
       }>;
+      forecast: ForecastOverviewSummary | null;
     };
 
 /** FIN-01E overview reporting resolves from the read model alone — not the formal setup workflow flag. */
 export function resolveFinanceOverviewReportingSlice(input: {
   reporting: FinancialReportingReadModel;
+  forecastSummary?: ForecastOverviewSummary | null;
 }): FinanceOverviewReportingSlice {
   const { reporting } = input;
 
@@ -60,6 +63,7 @@ export function resolveFinanceOverviewReportingSlice(input: {
             incomeMinor: node.incomeMinor,
             expenseMinor: node.expenseMinor,
           })),
+        forecast: input.forecastSummary ?? null,
       };
     default:
       return { kind: "NONE" };

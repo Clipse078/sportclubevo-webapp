@@ -124,3 +124,33 @@ export function canManageActuals(ctx: FinanceAuthContext): boolean {
     hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
   );
 }
+
+export function requireFinanceForecastView(ctx: FinanceAuthContext): void {
+  if (
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) &&
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_FORECAST_VIEW)
+  ) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to view forecasts.",
+      403,
+    );
+  }
+}
+
+export function requireFinanceForecastManage(ctx: FinanceAuthContext): void {
+  if (!canManageForecast(ctx)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to manage forecasts.",
+      403,
+    );
+  }
+}
+
+export function canManageForecast(ctx: FinanceAuthContext): boolean {
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_FORECAST_MANAGE) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
+  );
+}
