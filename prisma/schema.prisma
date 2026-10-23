@@ -10954,7 +10954,7 @@ model FinanceForecastVersion {
   forecastId      String
   status          FinanceForecastVersionStatus @default(CURRENT)
   versionNumber   Int                          @default(1)
-  /// Reserved for FIN-04B scenario identity — null means canonical current management forecast.
+  /// Reserved for FIN-04D scenario identity — null means canonical current management forecast (not SCE projection).
   scenarioKey     String?
   note            String?
   createdByUserId String?

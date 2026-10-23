@@ -18,7 +18,7 @@
 | **FIN-03** | Periodic measurement & budget control (**COMPLETE** — **03A** [`SCE-FINANCE-03A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03A-IMPLEMENTATION.md) + **03B** [`SCE-FINANCE-03B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03B-IMPLEMENTATION.md) **COMPLETE + PO UAT PASS** → **STAGE**) |
 | **FIN-04** | Forecasting programme (**IN PROGRESS** — principle: *SCE generates the projection. The organisation owns the forecast.*) |
 | **FIN-04A** | Current Forecast Foundation — **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md) (PR **#902** → **STAGE**) |
-| **FIN-04B** | SCE Projection Engine — **NOT STARTED** |
+| **FIN-04B** | SCE Projection Engine — **IN PROGRESS** (**04B-01** architecture & contract — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md); implementation **NOT STARTED**) |
 | **FIN-04C** | Rolling Forecast & Reforecasting — **NOT STARTED** |
 | **FIN-04D** | Scenarios & What-if — **NOT STARTED** |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |

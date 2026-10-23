@@ -168,7 +168,7 @@ Accepted product capabilities:
 | Subpackage | Focus | Status |
 | --- | --- | --- |
 | **FIN-04A** | Current Forecast Foundation | **COMPLETE + MERGED + PO UAT PASS** |
-| **FIN-04B** | SCE Projection Engine | **NOT STARTED** |
+| **FIN-04B** | SCE Projection Engine | **IN PROGRESS** — **04B-01** architecture: [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](./SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) |
 | **FIN-04C** | Rolling Forecast & Reforecasting | **NOT STARTED** |
 | **FIN-04D** | Scenarios & What-if | **NOT STARTED** |
 

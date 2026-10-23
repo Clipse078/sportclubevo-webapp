@@ -2,7 +2,7 @@
 
 > **Document type:** Architecture Decision Record (ADR) log  
 > **Status:** Active  
-> **Last updated:** 2026-10-21  
+> **Last updated:** 2026-10-23  
 > **Maintained by:** SportClubEvo engineering team
 
 ---
@@ -762,6 +762,38 @@ Tenants need Region, Program, Campaign, etc., without abandoning typed domain FK
 ### Consequences
 
 - Balances referential integrity, query performance, and tenant isolation vs pure EAV.
+
+---
+
+## ADR-034 — SCE Projection Engine (FIN-04B)
+
+**Status:** Accepted (FIN-04B-01 architecture review package)
+
+### Context
+
+FIN-04A established organisation-owned **current forecast** independent of budget and actuals. Clubs still need SCE to propose expectations from evidence without volunteer manual recalculation. Projection must remain distinct from forecast, scenario, and budget; governance and FIN-06 publication require traceability when projections influence management decisions.
+
+### Decision
+
+1. **Semantic split:** **SCE projection** (system-generated) ≠ **current forecast** (organisation-owned) ≠ **scenario** (FIN-04D what-if). Principle: *SCE generates the projection. The organisation owns the forecast.*
+2. **No silent overwrite:** SCE projection must never silently mutate current forecast, approved budget, or actuals. Adoption requires explicit user action (**SCE-Projektion übernehmen**).
+3. **Engine:** Numerical / statistical / driver-based calculation with traceable provenance — **not** an LLM as the canonical calculator. LLM may assist explanation later.
+4. **Data honesty:** Explicit **data sufficiency** (`SUFFICIENT` / `LIMITED` / `INSUFFICIENT`) with reason codes; no fabricated precision or fake ranges when unavailable. Naive YTD annualisation is **not** default intelligence.
+5. **Grain:** Published projection aligns with FIN-04A annual `FinanceYear` + `FinancialAccount` grain; finer calculation grain allowed internally without fake monthly published forecast rows.
+6. **Persistence:** **Versioned snapshot hybrid** — explicit generate/refresh writes immutable projection versions with **actualsThroughDate** cutoff; reads serve snapshots (staleness when evidence changes). Adoption audit links projection version → forecast version.
+7. **Isolation:** Tenant financial evidence only; no cross-tenant evidence in FIN-04B. Currency follows finance context — no FX in FIN-04B.
+8. **Capability / permissions:** Remains under **`FORECASTING`**; view via `finance.forecast.view`, generate/refresh/apply via `finance.forecast.manage` (distinct actions in code).
+9. **Identity:** Do **not** store SCE projection in `FinanceForecastVersion.scenarioKey` (reserved for FIN-04D scenarios). Future **`FinanceProjection*`** models are separate from **`FinanceForecast*`**.
+10. **UX placement:** SCE assist inside existing **Prognose** workspace; German labels **Aktuelle Prognose** vs **SCE-Projektion**.
+
+Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md). Code locks: `lib/finance/projection/projection-architecture-contract.ts`.
+
+### Consequences
+
+- FIN-04B-02+ may add Prisma migration for projection snapshots and adoption audit — not in FIN-04B-01.
+- FIN-04A services unchanged until adoption package; adoption provenance is a required future contract.
+- FIN-04C/D/05/06 must consume projection as a separate measure from current forecast and published snapshots.
+- Architecture tests in `finance-04b-projection-architecture.test.ts` guard durable semantics.
 
 ---
 
