@@ -3,9 +3,11 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-03A |
-| **Status** | **IMPLEMENTED / STAGE DB READY / PO UAT IN PROGRESS** |
+| **Status** | **COMPLETE + PO UAT PASS + MERGED TO STAGE** |
 | **Branch** | `cursor/sce-finance-03a-actuals-variance-foundation` |
 | **Target** | STAGE |
+| **PR** | **#900** → **STAGE** |
+| **PO UAT** | **PASS** — 2026-10-23 |
 
 ## Product scope
 
@@ -98,3 +100,53 @@ R4: **SCHEMA_CHANGE = NONE**; **NEW_MIGRATION = NONE**; presentation/UX closure 
 | 1 | UX | Variance / favorability values were technically correct but visually neutral — users could not instantly see favorable vs unfavorable vs on-plan without interpreting raw delta sign | **Abweichung** and **Bewertung** share restrained DS-07 semantic text color derived from **canonical favorability** (`computeAccountVarianceMetrics`), never from raw delta sign. **FAVORABLE** → success semantic; **UNFAVORABLE** → danger semantic; **ON_PLAN** → neutral; missing comparison → muted. Localized labels: DE **Günstig** / **Ungünstig** / **Im Plan** (EN/FR/IT equivalents). Internal enum values unchanged. |
 
 R5: **SCHEMA_CHANGE = NONE**; **NEW_MIGRATION = NONE**; presentation-only.
+
+## PO UAT closure (2026-10-23)
+
+Product Owner UAT **PASS** on designated shared STAGE Preview. Visually verified (example FY 2026):
+
+| Concept | Einnahmen | Ausgaben | Ergebnis |
+| --- | --- | --- | --- |
+| Approved governance baseline | 225'000 CHF | 75'000 CHF | 150'000 CHF |
+| Actual (Ist) performance | 0 CHF | 13'500 CHF | −13'500 CHF |
+
+These figures represent **different concepts** — approved baseline vs measured actuals — and must not be conflated in UX or reporting.
+
+**R1–R5** findings are **resolved**. **Production** was **not** promoted or modified during FIN-03A development / UAT. Shared STAGE migration `20261023120000_sce_finance_03a_actuals_foundation` was applied and verified (R1); no re-application at closure.
+
+FIN-03A establishes **management actuals and variance foundation** only. It deliberately does **not** implement GL / debit-credit / balance-sheet accounting. **FIN-11** remains the future accounting boundary.
+
+## Binary control compliance
+
+```text
+=== BINARY_CONTROL_COMPLIANCE ===
+NEW_BINARY_CHECKBOXES = 0
+CANONICAL_TOGGLES_USED = YES (SceSegmentedControl / FINANCE_DESIGN_SYSTEM)
+SINGLE_CHOICE_PATTERN = SEGMENTED_CONTROL
+MULTI_SELECTION_PATTERN = CHECKBOX_WHEN_MULTI_OR_ROW_SELECTION (unchanged programme rule)
+```
+
+## Closure validation (2026-10-23)
+
+| Gate | Result |
+| --- | --- |
+| FIN-01E regression | **PASS** (29 tests) |
+| FIN-02A / 02B / 02C regression | **PASS** (26 tests) |
+| FIN-03A regression (actuals, R1 guard, R3 layout/permissions, favorability, route contract) | **PASS** (51 tests) |
+| Design system governance | **PASS** (287 tests + governance scan) |
+| Changed-path ESLint | **PASS** (0 errors) |
+| `NODE_OPTIONS=--max-old-space-size=8192 npm run build` | **PASS** |
+
+## Roadmap linkage
+
+| Item | Status |
+| --- | --- |
+| FIN-01A–E | COMPLETE |
+| FIN-01F | BACKLOG / LOW PRIORITY |
+| FIN-02A–C | COMPLETE + PO UAT PASS |
+| FIN-02D | DEFERRED / BACKLOG |
+| FIN-02 | COMPLETE |
+| **FIN-03A** | **COMPLETE + PO UAT PASS** (PR **#900** → **STAGE**) |
+| FIN-03 | IN PROGRESS |
+| FIN-03B | NOT STARTED |
+| FIN-04 | NOT STARTED |
