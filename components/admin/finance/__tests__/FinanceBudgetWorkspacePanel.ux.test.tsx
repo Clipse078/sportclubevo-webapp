@@ -92,6 +92,7 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).not.toContain("toLocaleDateString(props.snapshot.financeYear");
     expect(panel).not.toContain("startDate");
     expect(panel).toContain("break-words");
+    expect(panel).toContain("key={`${selectedYearId}:${snapshot.versionId}`}");
   });
 
   it("FIN-02C R1 preserves tenant-defined year names verbatim via translation year param", () => {
