@@ -10,7 +10,7 @@
 | **Builds on** | FIN-02A operational budgeting, FIN-01E reporting |
 | **FIN-02B implementation** | **COMPLETE + MERGED (STAGE)** |
 | **FIN_02B_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative, 2026-10-23) |
-| **FIN-02 programme status** | **IN PROGRESS** (02B closed; **02C** implemented on branch — PO UAT pending; **02D** not started) |
+| **FIN-02 programme status** | **IN PROGRESS** (02A–02C closed on STAGE; **02D** candidate not started) |
 
 ## PO UAT confirmation (2026-10-23 — closure)
 
@@ -278,7 +278,7 @@ Published snapshots must bind to a **specific budget version id** at publication
 | --- | --- |
 | FIN-02A | COMPLETE + MERGED + PO UAT PASS |
 | FIN-02B | **COMPLETE + MERGED + PO UAT PASS** (PR **#897** → **STAGE**) |
-| FIN-02C | Candidate / **NOT STARTED** |
+| FIN-02C | **COMPLETE + MERGED + PO UAT PASS** (PR **#899** → **STAGE**) — see [`SCE-FINANCE-02C-IMPLEMENTATION.md`](./SCE-FINANCE-02C-IMPLEMENTATION.md) |
 | FIN-02D | Candidate / **NOT STARTED** |
 | FIN-01F | BACKLOG / LOW PRIORITY |
 | FIN-03+ | **NOT STARTED** |
