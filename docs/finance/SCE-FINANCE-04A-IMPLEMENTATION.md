@@ -2,23 +2,41 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04A |
-| **Status** | **IMPLEMENTED / PO UAT IN PROGRESS** |
+| **Package** | FIN-04A — Current Forecast Foundation |
+| **Status** | **COMPLETE + MERGED + PO UAT PASS** |
 | **Branch** | `cursor/sce-finance-04a-forecast-foundation` |
+| **PR** | **#902** → **STAGE** |
 | **Base** | `STAGE` (post FIN-03B merge `f2a28ec8`) |
 
 ## Purpose
 
 Introduce the first forward-looking management measure: **current forecast** per `FinanceYear`, independent of approved budget and actual entries.
 
-Management model:
+## Locked forecast semantics
 
-- **Approved budget** — governance baseline
-- **Actual** — what happened
-- **Current forecast** — management expectation for the full financial year
-- **Variance** — comparisons between measures (forecast vs budget in FIN-04A)
+These distinctions are **canonical** for FIN-04 and downstream reporting (FIN-05):
 
-Scenarios (FIN-04B) and reporting publications (FIN-05/06) are not implemented here but storage supports stable version identity.
+| Measure | Meaning |
+| --- | --- |
+| **Approved budget** | Governance baseline — what the organisation **approved**. Forecast must **never** silently overwrite approved budget. |
+| **Actual** | What **has happened**. Actual remains **independent** from forecast. |
+| **Current forecast** | The organisation's **current accepted management expectation** for the finance year. Organisation-owned; may be manually adjusted. |
+
+**Variance** in FIN-04A compares measures explicitly (forecast vs approved budget). Partial actual vs full-year forecast must not use budget-variance favorability semantics (`actual-forecast-policy.ts`).
+
+Scenarios and SCE-generated projections are **not** FIN-04A; see programme split below.
+
+## Canonical SCE projection principle
+
+> **SCE generates the projection. The organisation owns the forecast.**
+
+| Concept | Meaning |
+| --- | --- |
+| **SCE projection** | System-generated expectation based on available financial and operational evidence (FIN-04B+). |
+| **Current forecast** | The organisation's accepted/current management expectation (FIN-04A). |
+| **Scenario** | An alternative future assumption / what-if view (FIN-04D). |
+
+The SCE projection must **never** silently overwrite the current forecast. The current forecast may later be initialized or updated from an SCE projection **only through an explicit user action**.
 
 ## Architecture decision — persistence
 
@@ -27,7 +45,7 @@ Mirror the budget **container + version + line** pattern with forecast-specific 
 | Model | Role |
 | --- | --- |
 | `FinanceForecast` | One container per `(tenantId, financeYearId)` with `currentVersionId` pointer |
-| `FinanceForecastVersion` | Stable version identity, `versionNumber`, `status` (`CURRENT` / `SUPERSEDED`), optional `scenarioKey` (null = canonical current; reserved for FIN-04B) |
+| `FinanceForecastVersion` | Stable version identity, `versionNumber`, `status` (`CURRENT` / `SUPERSEDED`), optional `scenarioKey` (null = canonical current; **future compatibility hook** for FIN-04D — not mandatory scenario schema) |
 | `FinanceForecastLine` | `(forecastVersionId, financialAccountId, amountMinor)` annual grain |
 
 Forecast rows never update `FinanceBudget.currentBaselineVersionId`, `FinanceBudgetLine`, or `FinanceActualEntry`.
@@ -87,8 +105,6 @@ Workspace tab **Prognose** (`/dashboard/finance/forecast`) with local-first line
 
 ### FIN-04A R2 — Forecast Workspace UX Refinement
 
-**PO UAT findings:** functionality acceptable; visual hierarchy, table density, money editing, and duplicate result presentation needed refinement.
-
 | Decision | R2 implementation |
 | --- | --- |
 | Table density | Reuse FIN-03A `FinanceVarianceComparisonColGroup` (`FULL_YEAR`) — compact row padding, shared column geometry for Einnahmen/Ausgaben |
@@ -100,8 +116,6 @@ Workspace tab **Prognose** (`/dashboard/finance/forecast`) with local-first line
 | Save state | Subtle indicator beside **Aktuelle Prognose · Version n** in context strip |
 | Create modal | Segmented single choice retained; consequence copy per mode; default **Aus Budget starten** when baseline exists |
 | Responsive | `table-fixed`, `min-w-0`, section `overflow-x-auto` — no full-viewport column stretch |
-
-Status unchanged: **FIN-04A IMPLEMENTED / PO UAT IN PROGRESS** (Michael visual UAT).
 
 ## Migration
 
@@ -129,23 +143,104 @@ Status unchanged: **FIN-04A IMPLEMENTED / PO UAT IN PROGRESS** (Michael visual U
 
 Preview builds do not apply migrations automatically (`docs/deployment/stage-preview-migration-runbook.md`).
 
+No additional closure migration. Production remains untouched.
+
 ## Tests
 
-`lib/finance/__tests__/finance-04a-forecast-foundation.test.ts` plus FIN-01E / FIN-02 / FIN-03 regression suites.
+`lib/finance/__tests__/finance-04a-forecast-foundation.test.ts`, `finance-04a-r2-forecast-ux.test.ts`, `finance-04a-r1-migration-deployment-guard.test.ts`, plus FIN-01E / FIN-02 / FIN-03 regression suites.
 
-## PO UAT plan (Michael)
+## PO UAT closure (2026-10-23)
 
-1. Enable **FORECASTING** capability in Finanz-Einrichtung.
-2. Open **Prognose** tab for current finance year.
-3. Create forecast (empty and from approved baseline on a year with baseline).
-4. Edit forecast lines — verify local responsiveness and persistence.
-5. Confirm budget baseline and actuals unchanged.
-6. Overview: approved budget + current forecast sections.
-7. Verify forecast vs budget comparison columns when baseline exists.
-8. Confirm no monthly forecast phasing.
+Product Owner UAT **PASS** (Michael). No further FIN-04A visual refinement required before closure.
 
-## Roadmap state
+Accepted product capabilities:
 
-- FIN-04 **IN PROGRESS**
-- FIN-04A **IMPLEMENTED / PO UAT IN PROGRESS**
-- FIN-04B **NOT STARTED**
+- Forecasting capability and dedicated **Prognose** workspace
+- FinanceYear-specific forecasts; empty forecast creation; initialization from approved budget baseline
+- Independent forecast values; forecast income / expense / result; forecast-vs-budget comparison with favorability and canonical result semantics
+- Local-first editing; canonical money presentation; compact financial planning table UX
+- Overview integration; stable forecast/version architecture; shared STAGE schema migration; permissions/capability integration
+
+**Production** was **not** promoted during FIN-04A closure.
+
+## FIN-04 programme split (roadmap)
+
+| Subpackage | Focus | Status |
+| --- | --- | --- |
+| **FIN-04A** | Current Forecast Foundation | **COMPLETE + MERGED + PO UAT PASS** |
+| **FIN-04B** | SCE Projection Engine | **NOT STARTED** |
+| **FIN-04C** | Rolling Forecast & Reforecasting | **NOT STARTED** |
+| **FIN-04D** | Scenarios & What-if | **NOT STARTED** |
+
+**FIN-04** overall remains **IN PROGRESS** (04B–04D not started).
+
+### FIN-04B direction (document only — not implemented)
+
+FIN-04B introduces **SCE-generated projection** capability. The engine should progressively use appropriate evidence when available, including (non-exhaustive, not all required for v1):
+
+- Historical actuals; current YTD actuals; monthly/periodic patterns; seasonality; historical FinanceYears
+- Recurring income/expense patterns; known financial commitments
+- Receivables/invoices when FIN-08 exists; operational/driver data when reliable and appropriate
+
+Forecast/projection calculation is primarily **numerical / statistical / driver-based**. AI may later assist with explanation, interpretation, and anomaly/trend narratives — it must **not** replace deterministic financial calculation without explicit architecture approval. FIN-04B is **not** an LLM guessing financial values.
+
+**Insufficient data principle:** SCE must not fabricate predictive precision. If insufficient evidence exists for a meaningful projection, the product must communicate clearly (conceptually: *Not enough data for a reliable SCE projection.*). Later UX may expose confidence, expected range, data sufficiency, and driver explanations — **not** in FIN-04A closure.
+
+### FIN-04C direction (document only — not implemented)
+
+Rolling forecast & reforecasting. Preserve:
+
+- Approved budget remains immutable governance baseline
+- Actuals progressively replace uncertainty as periods close
+- Current forecast represents the latest accepted expectation
+- No fake annual-budget / 12 phasing; any period forecast/phasing must have explicit semantics
+
+### FIN-04D direction (document only — not implemented)
+
+Scenarios & what-if. **Current forecast ≠ scenario.** Examples may include Base / Optimistic / Conservative / custom scenarios — do not hardcode these as mandatory schema semantics during FIN-04A closure. Nullable `scenarioKey` in FIN-04A remains a future compatibility hook only.
+
+## FIN-05 compatibility (not implemented)
+
+**FIN-05 — Financial Reporting & Intelligence** will later consume approved budget, actual, current forecast, and where appropriate SCE projection / scenario information **without conflating semantics**. Management P&L / Erfolgsrechnung remains in FIN-05.
+
+## Binary control compliance
+
+```text
+=== BINARY_CONTROL_COMPLIANCE ===
+NEW_BINARY_CHECKBOXES = 0
+CANONICAL_TOGGLES_USED = YES (SceSegmentedControl / FINANCE_DESIGN_SYSTEM)
+SINGLE_CHOICE_PATTERN = SEGMENTED_CONTROL
+MULTI_SELECTION_PATTERN = CHECKBOX_WHEN_MULTI_OR_ROW_SELECTION (unchanged programme rule)
+```
+
+## Closure validation
+
+Recorded in the closure agent final report (FIN-04A tests, FIN-01E / FIN-02 / FIN-03 regression, design system governance, changed-path ESLint, production build).
+
+## STAGE merge record
+
+| Field | Value |
+| --- | --- |
+| **PR** | **#902** → **STAGE** |
+| **Implementation commit** | `12ce1df9` |
+| **R1 readiness commit** | `68ab832a` |
+| **R2 UX commit** | `c202d9b6` |
+| **PRODUCTION_PROMOTION** | **NO** |
+
+Post-merge **FEATURE_HEAD**, **MERGE_COMMIT**, and **POST_MERGE_ORIGIN_STAGE** are recorded in the closure agent final report.
+
+## Roadmap linkage
+
+| Item | Status |
+| --- | --- |
+| FIN-01A–E | COMPLETE |
+| FIN-01F | BACKLOG / LOW PRIORITY |
+| FIN-02 | COMPLETE |
+| FIN-02D | DEFERRED / BACKLOG |
+| FIN-03 | COMPLETE |
+| **FIN-04A** | **COMPLETE + PO UAT PASS** (PR **#902** → **STAGE**) |
+| **FIN-04B** | **NOT STARTED** — SCE Projection Engine |
+| **FIN-04C** | **NOT STARTED** — Rolling Forecast & Reforecasting |
+| **FIN-04D** | **NOT STARTED** — Scenarios & What-if |
+| **FIN-04** | **IN PROGRESS** |
+| FIN-05 | NOT STARTED |
