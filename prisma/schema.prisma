@@ -1395,6 +1395,8 @@ model Tenant {
   financeBudgets                  FinanceBudget[]
   financeActualEntries            FinanceActualEntry[]
   financeForecasts                FinanceForecast[]
+  financeProjections              FinanceProjection[]
+  financeProjectionAdoptions      FinanceProjectionAdoption[]
 
   @@index([status])
   @@index([name])
@@ -1552,6 +1554,9 @@ model User {
   financeActualEntriesUpdated        FinanceActualEntry[]    @relation("FinanceActualEntryUpdatedBy")
   financeForecastsCreated            FinanceForecast[]       @relation("FinanceForecastCreatedBy")
   financeForecastVersionsCreated     FinanceForecastVersion[] @relation("FinanceForecastVersionCreatedBy")
+  financeProjectionsCreated          FinanceProjection[]     @relation("FinanceProjectionCreatedBy")
+  financeProjectionVersionsGenerated FinanceProjectionVersion[] @relation("FinanceProjectionVersionGeneratedBy")
+  financeProjectionAdoptionsApplied  FinanceProjectionAdoption[] @relation("FinanceProjectionAdoptionAppliedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10733,6 +10738,8 @@ model FinanceYear {
   budgets                   FinanceBudget[]
   actualEntries             FinanceActualEntry[]
   forecasts                 FinanceForecast[]
+  projections               FinanceProjection[]
+  projectionEvidence        FinanceProjectionEvidence[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -10795,6 +10802,8 @@ model FinancialAccount {
   budgetLines     FinanceBudgetLine[]
   actualEntries   FinanceActualEntry[]
   forecastLines   FinanceForecastLine[]
+  projectionLines   FinanceProjectionLine[]
+  projectionEvidence FinanceProjectionEvidence[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, reportingGroupId])
@@ -10984,4 +10993,187 @@ model FinanceForecastLine {
 
   @@unique([forecastVersionId, financialAccountId])
   @@index([financialAccountId])
+}
+
+enum FinanceProjectionDataSufficiency {
+  SUFFICIENT
+  LIMITED
+  INSUFFICIENT
+}
+
+enum FinanceProjectionConfidence {
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+enum FinanceProjectionMethodologyFamily {
+  BASELINE_REFERENCE
+  RUN_RATE
+  HISTORICAL_PATTERN
+  SEASONAL_PATTERN
+  DRIVER_BASED
+  STATISTICAL
+  ENSEMBLE
+  NONE
+}
+
+enum FinanceProjectionGenerationActorType {
+  USER
+  SYSTEM
+}
+
+enum FinanceProjectionEvidenceKind {
+  HISTORICAL_ACTUALS
+  CURRENT_YEAR_ACTUALS
+  BUDGET_BASELINE
+  CURRENT_FORECAST
+  KNOWN_COMMITMENTS
+  RECEIVABLES
+  RECURRING_PATTERNS
+  OPERATIONAL_DRIVERS
+  MANUAL_ASSUMPTIONS
+}
+
+enum FinanceProjectionReasonDimension {
+  DATA_SUFFICIENCY
+  CONFIDENCE
+  GENERATION
+}
+
+enum FinanceProjectionAdoptionScope {
+  WHOLE_FINANCE_YEAR
+  SELECTED_ACCOUNTS
+}
+
+/// SCE projection container per tenant financial year (FIN-04B) — distinct from organisation forecast.
+model FinanceProjection {
+  id                         String   @id @default(cuid())
+  tenantId                   String
+  financeYearId              String
+  /// Canonical pointer to the active generated projection snapshot.
+  currentProjectionVersionId String?  @unique
+  createdByUserId            String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  tenant                   Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear              FinanceYear                @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy                User?                      @relation("FinanceProjectionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  currentProjectionVersion FinanceProjectionVersion?  @relation("FinanceProjectionCurrentVersion", fields: [currentProjectionVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  versions                 FinanceProjectionVersion[] @relation("FinanceProjectionVersions")
+  adoptions                FinanceProjectionAdoption[]
+
+  @@unique([tenantId, financeYearId])
+  @@index([tenantId])
+  @@index([financeYearId])
+}
+
+/// Immutable generated SCE projection snapshot (FIN-04B).
+model FinanceProjectionVersion {
+  id                   String                             @id @default(cuid())
+  financeProjectionId  String
+  status               FinanceForecastVersionStatus       @default(CURRENT)
+  versionNumber        Int
+  currency             String
+  actualsThroughDate   DateTime                           @db.Date
+  generatedAt          DateTime                           @default(now())
+  generatedByUserId    String?
+  generationActorType  FinanceProjectionGenerationActorType @default(USER)
+  methodologyFamily    FinanceProjectionMethodologyFamily
+  engineVersion        String
+  dataSufficiency      FinanceProjectionDataSufficiency
+  confidence           FinanceProjectionConfidence
+  /// Optional aggregate fingerprint for staleness evaluation (FIN-04B-02 foundation).
+  evidenceFingerprint  String?
+  createdAt            DateTime                           @default(now())
+  updatedAt            DateTime                           @updatedAt
+
+  financeProjection     FinanceProjection              @relation("FinanceProjectionVersions", fields: [financeProjectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  generatedBy           User?                          @relation("FinanceProjectionVersionGeneratedBy", fields: [generatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  currentForProjection  FinanceProjection?             @relation("FinanceProjectionCurrentVersion")
+  lines                 FinanceProjectionLine[]
+  evidence              FinanceProjectionEvidence[]
+  reasonCodes           FinanceProjectionReasonCode[]
+  adoptions             FinanceProjectionAdoption[]
+
+  @@unique([financeProjectionId, versionNumber])
+  @@index([financeProjectionId, status])
+}
+
+/// Annual projected amount per account for one projection version (FIN-04B published grain).
+model FinanceProjectionLine {
+  id                   String   @id @default(cuid())
+  projectionVersionId  String
+  financialAccountId   String
+  projectedAmountMinor Int?
+  lowerBoundMinor      Int?
+  upperBoundMinor      Int?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  projectionVersion FinanceProjectionVersion @relation(fields: [projectionVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financialAccount  FinancialAccount         @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([projectionVersionId, financialAccountId])
+  @@index([financialAccountId])
+}
+
+/// Structured provenance for a projection version — references evidence, does not clone ledger rows.
+model FinanceProjectionEvidence {
+  id                  String                      @id @default(cuid())
+  projectionVersionId String
+  kind                FinanceProjectionEvidenceKind
+  financeYearId       String?
+  financialAccountId  String?
+  observationsCount   Int?
+  fromDate            DateTime?                   @db.Date
+  throughDate         DateTime?                   @db.Date
+  sourceReference     String?
+  fingerprint         String?
+  createdAt           DateTime                    @default(now())
+
+  projectionVersion FinanceProjectionVersion @relation(fields: [projectionVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear       FinanceYear?             @relation(fields: [financeYearId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  financialAccount  FinancialAccount?        @relation(fields: [financialAccountId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([projectionVersionId, kind])
+  @@index([financeYearId])
+  @@index([financialAccountId])
+}
+
+/// Machine-readable sufficiency/confidence/generation reason codes for a projection version.
+model FinanceProjectionReasonCode {
+  id                  String                         @id @default(cuid())
+  projectionVersionId String
+  dimension           FinanceProjectionReasonDimension
+  code                String
+  createdAt           DateTime                       @default(now())
+
+  projectionVersion FinanceProjectionVersion @relation(fields: [projectionVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([projectionVersionId, dimension])
+}
+
+/// Adoption audit trail when projection values are applied to organisation forecast (FIN-04B-06+).
+model FinanceProjectionAdoption {
+  id                     String                         @id @default(cuid())
+  tenantId               String
+  financeProjectionId    String
+  projectionVersionId    String
+  sourceForecastVersionId String?
+  targetForecastVersionId String
+  applyScope             FinanceProjectionAdoptionScope
+  appliedAt              DateTime                       @default(now())
+  appliedByUserId        String
+
+  tenant            Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeProjection FinanceProjection        @relation(fields: [financeProjectionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  projectionVersion FinanceProjectionVersion @relation(fields: [projectionVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  appliedBy         User                     @relation("FinanceProjectionAdoptionAppliedBy", fields: [appliedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tenantId, appliedAt])
+  @@index([projectionVersionId])
+  @@index([targetForecastVersionId])
 }

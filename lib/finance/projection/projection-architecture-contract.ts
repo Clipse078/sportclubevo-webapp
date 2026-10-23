@@ -185,6 +185,8 @@ export const PROJECTION_TO_FORECAST_APPLY_SCOPE = {
   mutatesActuals: false,
   mutatesProjectionSnapshot: false,
   requiresExplicitUserAction: true,
+  /** FIN-04B-02+ contract: adoption creates a new organisation forecast version (FIN-04B-06). */
+  createsNewForecastVersion: true,
 } as const;
 
 /** Capability — reuse FORECASTING; projection is assist inside Prognose workspace. */
@@ -262,11 +264,14 @@ export type SceProjectionExplainability = {
   materialInfluences: readonly { code: string; weight: number | null }[];
 };
 
-/** Forecast adoption audit (future table/service — contract only in FIN-04B-01). */
+/** Forecast adoption audit (persisted in FIN-04B-02; workflow in FIN-04B-06). */
 export type ProjectionForecastAdoptionProvenance = {
   projectionVersionId: string;
   appliedAt: string;
   appliedByUserId: string;
+  /** Forecast version superseded when adoption completes (nullable until apply). */
+  sourceForecastVersionId: string | null;
+  /** New CURRENT forecast version created by adoption. */
   targetForecastVersionId: string;
   applyScope: "WHOLE_FINANCE_YEAR" | "SELECTED_ACCOUNTS";
 };

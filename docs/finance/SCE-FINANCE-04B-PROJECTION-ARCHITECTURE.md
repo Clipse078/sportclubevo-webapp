@@ -2,11 +2,11 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04B-01 — Architecture & contract (no calculation engine) |
-| **Status** | **ARCHITECTURE COMPLETE / REVIEW REQUIRED** |
+| **Package** | FIN-04B programme — **04B-01** architecture; **04B-02** persistence |
+| **Status** | **FIN-04B IN PROGRESS** — **04B-01 COMPLETE / APPROVED**; **04B-02 IMPLEMENTED** (shared STAGE migration **pending**) |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **Base** | `STAGE` (post FIN-04A merge PR **#902**, merge `eb3901ae`) |
-| **Implementation code** | Contract types in `lib/finance/projection/projection-architecture-contract.ts` only |
+| **Implementation code** | Contract: `lib/finance/projection/projection-architecture-contract.ts`; persistence: `lib/finance/services/finance-projection-service.ts` |
 
 ## Executive summary
 
@@ -68,7 +68,7 @@ If sufficient/limited → versioned snapshot written (hybrid persistence)
         ↓
 User reviews SCE-Projektion vs Aktuelle Prognose
         ↓
-Optional: SCE-Projektion übernehmen → updates current forecast only (audit trail)
+Optional: SCE-Projektion übernehmen → creates **new** organisation forecast version (audit trail)
         ↓
 Later: new actuals / evidence → projection may become STALE (still visible for comparison)
 ```
@@ -274,7 +274,7 @@ Event-driven invalidation may come later; semantics are defined now.
 
 **Apply:** single primary action **SCE-Projektion übernehmen**
 
-**First implementation scope:** **whole `FinanceYear`** projection → upsert all lines on **current forecast version** (FIN-04A grain). Per-account apply deferred to canonical row/multi-select pattern.
+**First implementation scope:** **whole `FinanceYear`** projection → materialise adopted values on a **new** `FinanceForecastVersion` (FIN-04A grain). Per-account apply deferred to canonical row/multi-select pattern.
 
 **Apply must not:** change approved budget, actuals, or projection snapshot rows.
 
@@ -282,15 +282,16 @@ Event-driven invalidation may come later; semantics are defined now.
 
 ## 17. Forecast version impact (FIN-04A compatibility)
 
-FIN-04A today: manual edits **mutate lines on current forecast version** in place.
+FIN-04A today: ordinary manual edits **mutate lines on the current forecast version** in place (unchanged by FIN-04B-02).
 
-**FIN-04B adoption (future FIN-04B-06) — required contract:**
+**FIN-04B adoption (future FIN-04B-06) — required contract (corrected FIN-04B-02):**
 
-1. **`FinanceProjectionAdoption`** (or equivalent) records: `projectionVersionId`, `appliedByUserId`, `appliedAt`, target `forecastVersionId`, scope.
-2. Forecast line amounts updated on **current** version (consistent with manual edit UX) **or** optional new forecast version — **default for v1 adoption:** in-place line upsert + adoption audit row (minimises FIN-04A behaviour change).
-3. FIN-04C may later promote adoption to **new forecast version** for rolling reforecast governance.
+1. **`FinanceProjectionAdoption`** records: `projectionVersionId`, `sourceForecastVersionId`, `targetForecastVersionId`, `appliedByUserId`, `appliedAt`, scope.
+2. Accepting an SCE projection is a meaningful change to organisation-owned current forecast → **create a new `FinanceForecastVersion`**, set it **CURRENT**, mark prior version **SUPERSEDED**, update `FinanceForecast.currentVersionId`.
+3. Reconstructable trail: **forecast before → projection accepted → forecast after** without rewriting historical projection snapshots or inferring overwritten line state from audit metadata alone.
+4. Generalising *all* forecast edits to version-on-every-save remains **FIN-04C / hardening** — not FIN-04B-02 scope.
 
-**This package does not change FIN-04A services or schema.**
+**FIN-04B-02:** adoption table exists; apply workflow **not** implemented. FIN-04A forecast services unchanged.
 
 ---
 
@@ -357,7 +358,7 @@ Derived minimal sequence (names indicative):
 
 | Step | Package | Deliverable |
 | --- | --- | --- |
-| 1 | **FIN-04B-02** | Prisma migration + projection container/version/line + adoption audit; lifecycle services (generate stub, persist snapshot) |
+| 1 | **FIN-04B-02** | **DONE (code)** — migration `20261023200000_sce_finance_04b_02_projection_persistence` + lifecycle services (generate stub, persist snapshot); STAGE apply pending |
 | 2 | **FIN-04B-03** | Evidence extraction (historical/current actuals, year boundaries), sufficiency evaluator (baseline rules) |
 | 3 | **FIN-04B-04** | First methodology plug-in (explicit, labeled — not naive default annualisation) behind methodology registry |
 | 4 | **FIN-04B-05** | Prognose workspace UX — states, stale, insufficient, comparison strip |
@@ -376,7 +377,7 @@ FIN-04B-01 **stops here** — architecture + contract + governance tests only.
 - No silent overwrite contracts
 - No LLM in numerical contract module
 - Tenant FinanceYear + no CHF hardcoding
-- No projection tables in schema yet
+- FIN-04B-02 projection persistence models present; immutability guards
 - FIN-04A forecast models intact
 - Published grain / no phasing
 

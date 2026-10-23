@@ -48,6 +48,7 @@ describe("FIN-04B projection vs forecast vs scenario semantics", () => {
     expect(PROJECTION_TO_FORECAST_APPLY_SCOPE.mutatesApprovedBudget).toBe(false);
     expect(PROJECTION_TO_FORECAST_APPLY_SCOPE.mutatesActuals).toBe(false);
     expect(PROJECTION_TO_FORECAST_APPLY_SCOPE.mutatesProjectionSnapshot).toBe(false);
+    expect(PROJECTION_TO_FORECAST_APPLY_SCOPE.createsNewForecastVersion).toBe(true);
   });
 });
 
@@ -126,12 +127,15 @@ describe("FIN-04B German product terminology", () => {
 });
 
 describe("FIN-04A schema integrity (regression guard)", () => {
-  it("keeps FIN-04A forecast models and does not add projection tables in FIN-04B-01", () => {
+  it("keeps FIN-04A forecast models alongside FIN-04B projection persistence", () => {
     const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
     expect(schema).toContain("model FinanceForecast");
     expect(schema).toContain("model FinanceForecastVersion");
     expect(schema).toContain("model FinanceForecastLine");
-    expect(schema).not.toMatch(/model FinanceProjection\b/);
+    expect(schema).toContain("model FinanceProjection");
+    expect(schema).toContain("model FinanceProjectionVersion");
+    expect(schema).toContain("model FinanceProjectionLine");
+    expect(schema).toContain("currentProjectionVersionId");
     expect(schema).not.toMatch(/model SceProjection\b/);
   });
 
