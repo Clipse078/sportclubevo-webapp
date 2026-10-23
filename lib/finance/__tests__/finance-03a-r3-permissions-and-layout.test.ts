@@ -248,7 +248,7 @@ describe("FIN-03A-R4 Ist-Buchungen table layout and create deduplication", () =>
 
   it("panel consumes one bookings colgroup for header and body", () => {
     expect(panel).toContain("finance-actuals-bookings-table-layout");
-    expect(panel.match(/FinanceActualsBookingsColGroup/g)?.length).toBe(1);
+    expect(panel.match(/<FinanceActualsBookingsColGroup/g)?.length).toBe(1);
     expect(panel).toContain("data-finance-actuals-bookings-table");
   });
 
