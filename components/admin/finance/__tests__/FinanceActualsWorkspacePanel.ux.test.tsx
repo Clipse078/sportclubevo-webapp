@@ -14,7 +14,7 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("createDialogTitle");
     expect(panel).toContain("SceSegmentedControl");
     expect(panel).toContain("modeYtd");
-    expect(panel).toContain("ytdBudgetVarianceUnsupported");
+    expect(panel).toContain("ytdBudgetReferenceSecondary");
     expect(panel).not.toContain('type="checkbox"');
   });
 
@@ -73,7 +73,7 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain('summaryTitleWithYear", { year: selectedYearName }');
     expect(panel).toContain('entriesTitle", { year: selectedYearName }');
     expect(panel).toContain('ytdContextWithYear", {');
-    expect(panel).toContain('ytdBudgetReferenceWithYear", { year: selectedYearName }');
+    expect(panel).toContain('ytdBudgetReferenceSecondary');
     expect(panel).toContain("break-words");
     expect(panel).not.toMatch(/years\.find\([^)]+\)\?\.(startDate|endDate)/);
   });
@@ -109,7 +109,7 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toMatch(
       /comparisonMode === "FULL_YEAR" \? \([\s\S]*deltaColumn[\s\S]*favorabilityColumn/,
     );
-    expect(panel).toContain("ytdBudgetVarianceUnsupported");
+    expect(panel).toContain("ytdBudgetReferenceSecondary");
     expect(panel).not.toMatch(/\/\s*12/);
     expect(panel).not.toMatch(/prorate/i);
   });
@@ -124,11 +124,12 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("router.push");
   });
 
-  it("FIN-03B adds month/quarter modes with URL periodIndex and no fake period variance columns", () => {
+  it("FIN-03B adds month/quarter modes with URL period range and no fake period variance columns", () => {
     expect(panel).toContain("modeMonth");
     expect(panel).toContain("modeQuarter");
-    expect(panel).toContain('params.set("periodIndex"');
-    expect(panel).toContain("periodBudgetVarianceUnsupported");
+    expect(panel).toContain("writeFinanceMeasurementPeriodToSearchParams");
+    expect(panel).toContain("FinanceMonthPeriodSlicer");
+    expect(panel).toContain("periodBudgetReferenceSecondary");
     expect(panel).toContain("periodActualColumn");
     expect(panel).not.toMatch(/\/\s*12/);
   });

@@ -16,6 +16,10 @@ import {
   isEffectiveDateOnOrBeforeCutoff,
 } from "@/lib/finance/actual/period-semantics";
 import { buildPeriodicActualReadModel } from "@/lib/finance/actual/periodic-account-read-model";
+import {
+  buildFinanceMonthSlicerOptions,
+  buildFinanceQuarterSlicerOptions,
+} from "@/lib/finance/actual/finance-measurement-period-slicer";
 import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import { requireFinanceActualView, type FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { resolveApprovedBudgetMeasure } from "@/lib/finance/reporting/approved-budget-measure-provider";
@@ -51,6 +55,10 @@ export type ActualsWorkspaceSnapshot = {
   selectedYearId: string | null;
   comparisonMode: BudgetComparisonMode;
   measurementPeriod: FinanceMeasurementPeriod | null;
+  periodSlicer: {
+    months: ReturnType<typeof buildFinanceMonthSlicerOptions>;
+    quarters: ReturnType<typeof buildFinanceQuarterSlicerOptions>;
+  } | null;
   ytdCutoffDate: Date | null;
   baseCurrency: string | null;
   entries: ActualsWorkspaceEntry[];
@@ -86,6 +94,8 @@ export async function loadActualsWorkspaceSnapshot(
     comparisonMode?: BudgetComparisonMode;
     measurementMode?: FinanceMeasurementMode;
     requestedPeriodIndex?: number | null;
+    requestedPeriodStartIndex?: number | null;
+    requestedPeriodEndIndex?: number | null;
     referenceDate?: Date;
     formattingLocale?: string;
   },
@@ -145,6 +155,7 @@ export async function loadActualsWorkspaceSnapshot(
         selectedYearId,
         comparisonMode,
         measurementPeriod: null,
+        periodSlicer: null,
         ytdCutoffDate: null,
         baseCurrency,
         entries: [],
@@ -162,15 +173,25 @@ export async function loadActualsWorkspaceSnapshot(
   const year = years.find((y) => y.id === selectedYearId)!;
   assertSameTenant(year.tenantId, ctx.tenantId, "Financial year");
 
+  const yearPeriod = { startDate: year.startDate, endDate: year.endDate };
+  const formattingLocale = input.formattingLocale ?? "de-CH";
+
   const measurementPeriod = resolveFinanceMeasurementPeriod({
     financeYearId: selectedYearId,
     financeYearName: year.name,
-    year: { startDate: year.startDate, endDate: year.endDate },
+    year: yearPeriod,
     mode: measurementMode,
     requestedPeriodIndex: input.requestedPeriodIndex,
+    requestedPeriodStartIndex: input.requestedPeriodStartIndex,
+    requestedPeriodEndIndex: input.requestedPeriodEndIndex,
     referenceDate: input.referenceDate,
-    locale: input.formattingLocale,
+    locale: formattingLocale,
   });
+
+  const periodSlicer = {
+    months: buildFinanceMonthSlicerOptions(yearPeriod, formattingLocale),
+    quarters: buildFinanceQuarterSlicerOptions(yearPeriod, formattingLocale),
+  };
 
   const accounts = (await listFinancialAccounts(db, ctx)).filter(
     (a) => a.canonicalSemantic === "INCOME" || a.canonicalSemantic === "EXPENSE",
@@ -183,6 +204,7 @@ export async function loadActualsWorkspaceSnapshot(
         selectedYearId,
         comparisonMode,
         measurementPeriod,
+        periodSlicer,
         ytdCutoffDate:
           measurementMode === "YTD" ? measurementPeriod.ytdCutoffDate : null,
         baseCurrency,
@@ -304,6 +326,7 @@ export async function loadActualsWorkspaceSnapshot(
       selectedYearId,
       comparisonMode,
       measurementPeriod,
+      periodSlicer,
       ytdCutoffDate,
       baseCurrency,
       entries: entriesForBookings.map((entry) => ({

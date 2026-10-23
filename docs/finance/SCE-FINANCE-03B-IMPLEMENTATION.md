@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-03B |
-| **Status** | **IMPLEMENTED / PO UAT PENDING** |
+| **Status** | **IMPLEMENTED / PO UAT IN PROGRESS** |
 | **Branch** | `cursor/sce-finance-03b-periodic-budget-control` |
 | **Target** | STAGE |
 
@@ -17,7 +17,8 @@ Periodic **management measurement** and **management review** on top of FIN-03A 
 - Modes: **FULL_YEAR**, **YTD**, **MONTH**, **QUARTER** (finance-year-relative quarters)
 - Periodic actual aggregation (period + YTD context + annual baseline reference)
 - Management review signals (factual, no fake period/YTD budget variance)
-- Extended **Finanzen → Ist** workspace (period navigation, URL `mode` + `periodIndex`)
+- Extended **Finanzen → Ist** workspace (period slicers, URL `mode` + `periodStart` / `periodEnd`)
+- **FIN-03B-R1 (PO UAT refinement):** compact two-row toolbar, month/quarter slicers, contiguous month ranges
 - Account tables: full-year variance unchanged; period modes show **Zeitraum Ist / YTD Ist / Jahresbudget**
 - Ist-Buchungen filtered by selected measurement context
 
@@ -45,7 +46,25 @@ Module: `lib/finance/actual/finance-measurement-period.ts`
 
 - Calendar months overlapping the finance year, clipped to boundaries
 - Quarters = consecutive groups of three finance-year months (not calendar Q1–Q4)
-- URL: `?yearId=&mode=month|quarter|ytd&periodIndex=`
+- URL: `?yearId=&mode=month|quarter|ytd&periodStart=&periodEnd=` (legacy `periodIndex` → single month)
+- Month range: finance-year-relative inclusive indices; aggregation spans `startDate` of first month through `endDate` of last month
+- Quarter labels: **Q1…Q4** with calendar year of quarter start (FY-relative grouping, not calendar Q1–Q4)
+
+### Month range interaction (no modifier keys)
+
+1. First click sets a single month.
+2. Click a later month → extend range to `[start, click]`.
+3. Click an earlier month → `[click, end]`.
+4. Click inside an existing range → collapse to that single month.
+5. Click the only selected month again → unchanged.
+
+### FIN-04 compatibility (not implemented)
+
+`periodStartIndex` / `periodEndIndex` (or resolved `startDate` / `endDate`) can later anchor forecast horizon, rolling windows, scenario comparison, and budget phasing without new persisted period entities.
+
+### FIN-11 boundary
+
+Unchanged: no ledger, journals, or statutory accounting periods — `FinanceActualEntry` remains management actuals.
 
 ## Schema
 
@@ -73,6 +92,6 @@ MULTI_SELECTION_PATTERN = CHECKBOX_WHEN_MULTI_OR_ROW_SELECTION (unchanged)
 | FIN-02 | COMPLETE |
 | FIN-02D | DEFERRED / BACKLOG |
 | FIN-03A | COMPLETE + PO UAT PASS |
-| **FIN-03B** | **IMPLEMENTED / PO UAT PENDING** |
+| **FIN-03B** | **IMPLEMENTED / PO UAT IN PROGRESS** |
 | FIN-03 | IN PROGRESS |
 | FIN-04 | NOT STARTED |

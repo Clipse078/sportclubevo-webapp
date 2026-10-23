@@ -20,6 +20,11 @@ import {
   measurementModeToSearchParam,
   type FinanceMeasurementMode,
 } from "@/lib/finance/actual/finance-measurement-period";
+import { writeFinanceMeasurementPeriodToSearchParams } from "@/lib/finance/actual/finance-measurement-period-url";
+import {
+  FinanceMonthPeriodSlicer,
+  FinanceQuarterPeriodSlicer,
+} from "@/components/admin/finance/FinanceMeasurementPeriodSlicer";
 import type { ActualsWorkspaceSnapshot } from "@/lib/finance/services/finance-actual-query-service";
 import {
   createActualEntryAction,
@@ -111,6 +116,7 @@ export function FinanceActualsWorkspacePanel({
   const baseCurrency = snapshot.baseCurrency;
   const comparisonMode = snapshot.comparisonMode;
   const measurementPeriod = snapshot.measurementPeriod;
+  const periodSlicer = snapshot.periodSlicer;
   const periodic = snapshot.periodic;
 
   const selectedYearName = years.find((y) => y.id === selectedYearId)?.name ?? "";
@@ -124,7 +130,9 @@ export function FinanceActualsWorkspacePanel({
   function pushContext(next: {
     yearId?: string;
     mode?: FinanceMeasurementMode;
-    periodIndex?: number;
+    periodStartIndex?: number;
+    periodEndIndex?: number;
+    quarterIndex?: number;
   }) {
     const params = new URLSearchParams(searchParams.toString());
     if (next.yearId) params.set("yearId", next.yearId);
@@ -133,14 +141,34 @@ export function FinanceActualsWorkspacePanel({
     if (modeParam) params.set("mode", modeParam);
     else params.delete("mode");
 
-    if (mode === "MONTH" || mode === "QUARTER") {
-      const index =
-        next.periodIndex ??
+    if (mode === "MONTH") {
+      const start =
+        next.periodStartIndex ??
+        measurementPeriod?.periodStartIndex ??
         measurementPeriod?.periodIndex ??
         0;
-      params.set("periodIndex", String(index));
+      const end =
+        next.periodEndIndex ??
+        measurementPeriod?.periodEndIndex ??
+        start;
+      writeFinanceMeasurementPeriodToSearchParams(params, mode, {
+        periodStartIndex: start,
+        periodEndIndex: end,
+      });
+    } else if (mode === "QUARTER") {
+      const qIndex =
+        next.quarterIndex ??
+        measurementPeriod?.periodIndex ??
+        0;
+      writeFinanceMeasurementPeriodToSearchParams(params, mode, {
+        periodStartIndex: qIndex,
+        periodEndIndex: qIndex,
+      });
     } else {
-      params.delete("periodIndex");
+      writeFinanceMeasurementPeriodToSearchParams(params, mode, {
+        periodStartIndex: null,
+        periodEndIndex: null,
+      });
     }
 
     router.push(`/dashboard/finance/actuals?${params.toString()}`);
@@ -156,13 +184,35 @@ export function FinanceActualsWorkspacePanel({
 
   function openCreateDialog() {
     resetForm();
-    if (
-      measurementPeriod &&
-      (comparisonMode === "MONTH" || comparisonMode === "QUARTER")
-    ) {
-      setEffectiveDate(formatFinanceYearDateInputValue(measurementPeriod.startDate));
-    }
     setDialogOpen(true);
+  }
+
+  function entriesEmptyMessage(): string {
+    if (comparisonMode === "FULL_YEAR") {
+      return t("entriesEmptyFullYear", { year: selectedYearName });
+    }
+    if (comparisonMode === "YTD" && snapshot.ytdCutoffDate) {
+      return t("entriesEmptyYtd", {
+        year: selectedYearName,
+        date: formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale),
+      });
+    }
+    if (comparisonMode === "QUARTER") {
+      return t("entriesEmptyQuarter", { period: periodLabel });
+    }
+    if (
+      comparisonMode === "MONTH" &&
+      measurementPeriod &&
+      measurementPeriod.periodStartIndex !== null &&
+      measurementPeriod.periodEndIndex !== null &&
+      measurementPeriod.periodStartIndex !== measurementPeriod.periodEndIndex
+    ) {
+      return t("entriesEmptyMonthRange", { period: periodLabel });
+    }
+    if (comparisonMode === "MONTH") {
+      return t("entriesEmptyMonthSingle", { period: periodLabel });
+    }
+    return t("entriesEmptyFullYear", { year: selectedYearName });
   }
 
   function openEditDialog(entry: ActualsWorkspaceSnapshot["entries"][number]) {
@@ -267,125 +317,129 @@ export function FinanceActualsWorkspacePanel({
     );
   }
 
+  const monthRangeStart = measurementPeriod?.periodStartIndex ?? 0;
+  const monthRangeEnd = measurementPeriod?.periodEndIndex ?? monthRangeStart;
+  const quarterSelectedIndex = measurementPeriod?.periodIndex ?? 0;
+  const useCompactQuarterLabels = selectedYearName.length > 12;
+
   return (
     <div className={FINANCE_WORKSPACE_STACK_CLASS}>
-      <div className={FINANCE_CONTEXT_STRIP_CLASS}>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">{t("financeYearLabel")}</span>
-          <SceToolbarSelect
-            value={selectedYearId ?? ""}
-            onChange={(event) =>
-              pushContext({ yearId: event.target.value, mode: comparisonMode })
+      <div className={cn(FINANCE_CONTEXT_STRIP_CLASS, "flex-col items-stretch gap-3")}>
+        <div className="flex min-w-0 flex-wrap items-end gap-x-6 gap-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">{t("financeYearLabel")}</span>
+            <SceToolbarSelect
+              value={selectedYearId ?? ""}
+              onChange={(event) =>
+                pushContext({ yearId: event.target.value, mode: comparisonMode })
+              }
+              aria-label={t("financeYearLabel")}
+            >
+              {years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name}
+                </option>
+              ))}
+            </SceToolbarSelect>
+          </label>
+          {baseCurrency ? (
+            <span className={FINANCE_CURRENCY_CONTEXT_CLASS}>{baseCurrency}</span>
+          ) : null}
+          {canMutate ? (
+            <div className="ms-auto flex shrink-0 items-center">{renderCaptureActualButton()}</div>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-col gap-2">
+          <SceSegmentedControl<FinanceMeasurementMode>
+            value={comparisonMode}
+            onChange={(value) =>
+              pushContext({
+                yearId: selectedYearId ?? undefined,
+                mode: value,
+                periodStartIndex: 0,
+                periodEndIndex: 0,
+                quarterIndex: 0,
+              })
             }
-            aria-label={t("financeYearLabel")}
-          >
-            {years.map((y) => (
-              <option key={y.id} value={y.id}>
-                {y.name}
-              </option>
-            ))}
-          </SceToolbarSelect>
-        </label>
-        {baseCurrency ? (
-          <span className={FINANCE_CURRENCY_CONTEXT_CLASS}>{baseCurrency}</span>
-        ) : null}
-        <SceSegmentedControl<FinanceMeasurementMode>
-          value={comparisonMode}
-          onChange={(value) =>
-            pushContext({ yearId: selectedYearId ?? undefined, mode: value, periodIndex: 0 })
-          }
-          options={[
-            { value: "FULL_YEAR", label: t("modeFullYear") },
-            { value: "YTD", label: t("modeYtd") },
-            { value: "MONTH", label: t("modeMonth") },
-            { value: "QUARTER", label: t("modeQuarter") },
-          ]}
-          aria-label={t("comparisonModeAria")}
-        />
-        {measurementPeriod &&
-        (comparisonMode === "MONTH" || comparisonMode === "QUARTER") &&
-        measurementPeriod.periodCount !== null &&
-        measurementPeriod.periodIndex !== null ? (
-          <div className="flex items-center gap-2 text-sm">
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-label={t("previousPeriodAria")}
-              disabled={
-                pending || measurementPeriod.periodIndex <= 0
-              }
-              onClick={() =>
+            options={[
+              { value: "FULL_YEAR", label: t("modeFullYear") },
+              { value: "YTD", label: t("modeYtd") },
+              { value: "MONTH", label: t("modeMonth") },
+              { value: "QUARTER", label: t("modeQuarter") },
+            ]}
+            aria-label={t("comparisonModeAria")}
+          />
+          {comparisonMode === "MONTH" && periodSlicer && measurementPeriod ? (
+            <FinanceMonthPeriodSlicer
+              options={periodSlicer.months}
+              startIndex={monthRangeStart}
+              endIndex={monthRangeEnd}
+              disabled={pending}
+              ariaLabel={t("monthSlicerAria")}
+              selectedRangeAriaLabel={t("monthSlicerSelectedRange", { period: periodLabel })}
+              onRangeChange={(startIndex, endIndex) =>
                 pushContext({
                   yearId: selectedYearId ?? undefined,
-                  mode: comparisonMode,
-                  periodIndex: measurementPeriod.periodIndex! - 1,
+                  mode: "MONTH",
+                  periodStartIndex: startIndex,
+                  periodEndIndex: endIndex,
                 })
               }
-            >
-              {t("previousPeriod")}
-            </Button>
-            <span className="min-w-[8rem] text-center font-medium break-words" data-finance-period-label>
-              {periodLabel}
-            </span>
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-label={t("nextPeriodAria")}
-              disabled={
-                pending ||
-                measurementPeriod.periodIndex >= measurementPeriod.periodCount - 1
-              }
-              onClick={() =>
+            />
+          ) : null}
+          {comparisonMode === "QUARTER" && periodSlicer && measurementPeriod ? (
+            <FinanceQuarterPeriodSlicer
+              options={periodSlicer.quarters}
+              selectedIndex={quarterSelectedIndex}
+              useCompactLabels={useCompactQuarterLabels}
+              disabled={pending}
+              ariaLabel={t("quarterSlicerAria", { year: selectedYearName })}
+              onSelect={(quarterIndex) =>
                 pushContext({
                   yearId: selectedYearId ?? undefined,
-                  mode: comparisonMode,
-                  periodIndex: measurementPeriod.periodIndex! + 1,
+                  mode: "QUARTER",
+                  quarterIndex,
                 })
               }
-            >
-              {t("nextPeriod")}
-            </Button>
-          </div>
-        ) : null}
-        {canMutate ? (
-          <div className="ms-auto flex shrink-0 items-center">{renderCaptureActualButton()}</div>
-        ) : null}
+            />
+          ) : null}
+        </div>
       </div>
 
       {!canMutate ? (
         <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
       ) : null}
 
-      {comparisonMode === "YTD" && snapshot.ytdCutoffDate ? (
+      {comparisonMode === "YTD" ? (
         <p className="text-sm text-muted-foreground">
           {t("ytdContextWithYear", {
             year: selectedYearName,
-            date: formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale),
+            date: snapshot.ytdCutoffDate
+              ? formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale)
+              : "",
           })}
-        </p>
-      ) : null}
-
-      {comparisonMode === "YTD" ? (
-        <p className="text-sm text-muted-foreground">
-          {t("ytdBudgetReferenceWithYear", { year: selectedYearName })}
-          {" · "}
-          {t("ytdBudgetVarianceUnsupported")}
+          <span className="mx-1.5 text-[var(--border-strong)]">·</span>
+          <span className="text-xs">{t("ytdBudgetReferenceSecondary")}</span>
         </p>
       ) : null}
       {comparisonMode === "MONTH" || comparisonMode === "QUARTER" ? (
-        <p className="text-sm text-muted-foreground">
-          {t("ytdBudgetReferenceWithYear", { year: selectedYearName })}
-          {" · "}
-          {t("periodBudgetVarianceUnsupported")}
+        <p className="text-sm text-[var(--foreground)]" data-finance-period-label>
+          {t("periodContextPrimary", { period: periodLabel, year: selectedYearName })}
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {t("periodBudgetReferenceSecondary")}
+          </span>
         </p>
       ) : null}
 
       {snapshot.managementSignals.length > 0 ? (
-        <ul className="text-sm text-muted-foreground list-disc ps-5" data-finance-management-signals>
+        <div
+          className="flex flex-col gap-1 text-xs text-muted-foreground"
+          data-finance-management-signals
+        >
           {snapshot.managementSignals.map((signal) => (
-            <li key={signal.kind}>{t(`managementSignal.${signal.kind}`)}</li>
+            <p key={signal.kind}>{t(`managementSignal.${signal.kind}`)}</p>
           ))}
-        </ul>
+        </div>
       ) : null}
 
       {feedback ? <p role="alert">{feedback}</p> : null}
@@ -461,7 +515,7 @@ export function FinanceActualsWorkspacePanel({
           </div>
         ) : null}
         {periodic?.budgetSummary ? (
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-3 text-xs text-muted-foreground">
             {t("annualBudgetReferenceTitle")}:{" "}
             {formatMoney(periodic.budgetSummary.resultMinor)}{" "}
             {baseCurrency ? `(${baseCurrency})` : null}
@@ -514,7 +568,7 @@ export function FinanceActualsWorkspacePanel({
         </h2>
         {snapshot.entries.length === 0 ? (
           <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>
-            <p>{t("entriesEmpty")}</p>
+            <p>{entriesEmptyMessage()}</p>
           </div>
         ) : (
           <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>

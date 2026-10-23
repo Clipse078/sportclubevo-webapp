@@ -5,6 +5,7 @@ import { FinanceActualsWorkspacePanel } from "@/components/admin/finance/Finance
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { parseMeasurementModeFromSearchParam } from "@/lib/finance/actual/finance-measurement-period";
+import { parseFinanceMeasurementPeriodFromSearchParams } from "@/lib/finance/actual/finance-measurement-period-url";
 import { loadActualsWorkspaceSnapshot } from "@/lib/finance/services/finance-actual-query-service";
 import { prisma } from "@/lib/db/prisma";
 import { redirect } from "next/navigation";
@@ -12,7 +13,13 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams: Promise<{ yearId?: string; mode?: string; periodIndex?: string }>;
+  searchParams: Promise<{
+    yearId?: string;
+    mode?: string;
+    periodIndex?: string;
+    periodStart?: string;
+    periodEnd?: string;
+  }>;
 };
 
 export default async function FinanceActualsPage({ searchParams }: PageProps) {
@@ -26,15 +33,13 @@ export default async function FinanceActualsPage({ searchParams }: PageProps) {
   }
 
   const measurementMode = parseMeasurementModeFromSearchParam(params.mode);
-  const requestedPeriodIndex =
-    params.periodIndex !== undefined && params.periodIndex !== ""
-      ? Number.parseInt(params.periodIndex, 10)
-      : null;
+  const periodParams = parseFinanceMeasurementPeriodFromSearchParams(params);
 
   const { years, snapshot } = await loadActualsWorkspaceSnapshot(prisma, workspace.ctx, {
     requestedYearId: params.yearId ?? null,
     measurementMode,
-    requestedPeriodIndex: Number.isFinite(requestedPeriodIndex) ? requestedPeriodIndex : null,
+    requestedPeriodStartIndex: periodParams.periodStartIndex,
+    requestedPeriodEndIndex: periodParams.periodEndIndex,
     formattingLocale: workspace.formattingLocale,
   });
 

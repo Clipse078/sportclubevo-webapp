@@ -234,17 +234,17 @@ describe("FIN-03B periodic read model", () => {
       ytdSummary: model.ytdSummary,
       accounts: model.accounts,
     });
-    expect(signals.some((s) => s.kind === "PERIOD_HAS_ACTIVITY")).toBe(true);
     expect(signals.some((s) => s.kind === "YTD_RESULT_NEGATIVE")).toBe(true);
+    expect(signals.some((s) => s.kind === "PERIOD_HAS_ACTIVITY")).toBe(false);
     expect(JSON.stringify(signals)).not.toMatch(/over budget|off track|unfavorable/i);
   });
 });
 
 describe("FIN-03B workspace snapshot integration", () => {
   it("J/K/L filters bookings and preserves URL params contract", () => {
-    expect(actualsPage).toContain("periodIndex");
+    expect(actualsPage).toContain("parseFinanceMeasurementPeriodFromSearchParams");
     expect(actualsPage).toContain("parseMeasurementModeFromSearchParam");
-    expect(panel).toContain('params.set("periodIndex"');
+    expect(panel).toContain("writeFinanceMeasurementPeriodToSearchParams");
     expect(panel).toContain("modeMonth");
     expect(panel).not.toMatch(/\/\s*12/);
   });

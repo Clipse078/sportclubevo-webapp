@@ -3,18 +3,18 @@ import type { FinanceMeasurementPeriod } from "@/lib/finance/actual/finance-meas
 import type { CanonicalFinancialResult } from "@/lib/finance/reporting/canonical-financial-result";
 
 export type ManagementReviewSignalKind =
-  | "PERIOD_HAS_ACTIVITY"
-  | "PERIOD_NO_ACTIVITY"
   | "ACCOUNTS_WITH_ACTUAL_NO_BUDGET"
   | "BUDGET_ACCOUNTS_WITHOUT_ACTUAL"
-  | "YTD_RESULT_NEGATIVE"
-  | "YTD_RESULT_POSITIVE";
+  | "YTD_RESULT_NEGATIVE";
 
 export type ManagementReviewSignal = {
   kind: ManagementReviewSignalKind;
   accountIds?: string[];
 };
 
+/**
+ * Only signals that add decision value — omit “data exists” diagnostics.
+ */
 export function deriveManagementReviewSignals(input: {
   measurementPeriod: FinanceMeasurementPeriod;
   periodSummary: CanonicalFinancialResult;
@@ -22,14 +22,6 @@ export function deriveManagementReviewSignals(input: {
   accounts: ReadonlyArray<AccountPeriodicMetrics>;
 }): ManagementReviewSignal[] {
   const signals: ManagementReviewSignal[] = [];
-  const periodTotal =
-    input.periodSummary.incomeMinor + input.periodSummary.expenseMinor;
-
-  if (periodTotal > 0) {
-    signals.push({ kind: "PERIOD_HAS_ACTIVITY" });
-  } else {
-    signals.push({ kind: "PERIOD_NO_ACTIVITY" });
-  }
 
   const actualNoBudget = input.accounts
     .filter((row) => row.periodActualMinor !== null && row.periodActualMinor > 0)
@@ -52,11 +44,6 @@ export function deriveManagementReviewSignals(input: {
     input.ytdSummary.resultMinor < 0
   ) {
     signals.push({ kind: "YTD_RESULT_NEGATIVE" });
-  } else if (
-    input.measurementPeriod.mode !== "FULL_YEAR" &&
-    input.ytdSummary.resultMinor > 0
-  ) {
-    signals.push({ kind: "YTD_RESULT_POSITIVE" });
   }
 
   return signals;

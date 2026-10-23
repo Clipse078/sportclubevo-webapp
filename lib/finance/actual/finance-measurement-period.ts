@@ -26,6 +26,10 @@ export type FinanceMeasurementPeriod = {
   /** YTD cutoff inclusive (period end for MONTH/QUARTER; reference for YTD). */
   ytdCutoffDate: Date;
   displayLabel: string;
+  /** Inclusive finance-year-relative month indices (MONTH range or QUARTER span). */
+  periodStartIndex: number | null;
+  periodEndIndex: number | null;
+  /** @deprecated Prefer periodStartIndex when start === end. Kept for legacy callers. */
   periodIndex: number | null;
   periodCount: number | null;
 };
@@ -108,28 +112,102 @@ export function enumerateFinanceYearQuarters(year: FinanceYearPeriod): FinanceYe
   return quarters;
 }
 
-export function formatMeasurementPeriodLabel(
-  period: Pick<FinanceMeasurementPeriod, "mode" | "startDate" | "endDate">,
-  locale: string,
-): string {
-  const formatter = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  if (period.mode === "FULL_YEAR" || period.mode === "YTD") {
-    return formatter.format(period.startDate);
-  }
-  if (period.mode === "MONTH") {
-    return formatter.format(period.startDate);
-  }
-  const short = new Intl.DateTimeFormat(locale, {
+function shortMonthYear(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     year: "numeric",
     timeZone: "UTC",
-  });
-  const startLabel = short.format(period.startDate);
-  const endLabel = short.format(period.endDate);
+  }).format(date);
+}
+
+function longMonthYear(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+/** Compact month chip label for the period slicer (locale-aware, not FinanceYear.name). */
+export function formatFinanceYearMonthChipLabel(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    month: "short",
+    timeZone: "UTC",
+  })
+    .format(date)
+    .replace(/\.$/, "");
+}
+
+export function formatFinanceYearQuarterLabel(
+  quarterIndex: number,
+  quarterStartDate: Date,
+  locale: string,
+  style: "compact" | "withYear" = "withYear",
+): string {
+  const q = `Q${quarterIndex + 1}`;
+  if (style === "compact") return q;
+  const year = quarterStartDate.getUTCFullYear();
+  return `${q} ${year}`;
+}
+
+export function normalizeFinanceYearPeriodRange(input: {
+  requestedStartIndex?: number | null;
+  requestedEndIndex?: number | null;
+  legacyPeriodIndex?: number | null;
+  monthCount: number;
+}): { startIndex: number; endIndex: number } {
+  let start =
+    input.requestedStartIndex ??
+    input.legacyPeriodIndex ??
+    input.requestedEndIndex ??
+    0;
+  let end = input.requestedEndIndex ?? input.requestedStartIndex ?? input.legacyPeriodIndex ?? start;
+
+  start = clampPeriodIndex(start, input.monthCount);
+  end = clampPeriodIndex(end, input.monthCount);
+  if (start > end) [start, end] = [end, start];
+  return { startIndex: start, endIndex: end };
+}
+
+export function formatMeasurementPeriodLabel(
+  period: Pick<FinanceMeasurementPeriod, "mode" | "startDate" | "endDate"> & {
+    periodStartIndex?: number | null;
+    periodEndIndex?: number | null;
+    quarterIndex?: number | null;
+  },
+  locale: string,
+): string {
+  if (period.mode === "FULL_YEAR" || period.mode === "YTD") {
+    return longMonthYear(period.startDate, locale);
+  }
+  if (period.mode === "QUARTER" && period.quarterIndex !== null && period.quarterIndex !== undefined) {
+    return formatFinanceYearQuarterLabel(period.quarterIndex, period.startDate, locale, "withYear");
+  }
+  if (period.mode === "MONTH") {
+    const sameMonth =
+      period.startDate.getUTCMonth() === period.endDate.getUTCMonth() &&
+      period.startDate.getUTCFullYear() === period.endDate.getUTCFullYear();
+    if (sameMonth) {
+      return longMonthYear(period.startDate, locale);
+    }
+    const startYear = period.startDate.getUTCFullYear();
+    const endYear = period.endDate.getUTCFullYear();
+    const startMonth = new Intl.DateTimeFormat(locale, {
+      month: "short",
+      timeZone: "UTC",
+    }).format(period.startDate);
+    const endMonth = new Intl.DateTimeFormat(locale, {
+      month: "short",
+      timeZone: "UTC",
+    }).format(period.endDate);
+    const trim = (s: string) => s.replace(/\.$/, "");
+    if (startYear === endYear) {
+      return `${trim(startMonth)}–${trim(endMonth)} ${startYear}`;
+    }
+    return `${trim(startMonth)} ${startYear}–${trim(endMonth)} ${endYear}`;
+  }
+  const startLabel = shortMonthYear(period.startDate, locale);
+  const endLabel = shortMonthYear(period.endDate, locale);
   return `${startLabel} – ${endLabel}`;
 }
 
@@ -190,6 +268,8 @@ export function resolveFinanceMeasurementPeriod(input: {
   year: FinanceYearPeriod;
   mode: FinanceMeasurementMode;
   requestedPeriodIndex?: number | null;
+  requestedPeriodStartIndex?: number | null;
+  requestedPeriodEndIndex?: number | null;
   referenceDate?: Date;
   locale?: string;
 }): FinanceMeasurementPeriod {
@@ -206,6 +286,8 @@ export function resolveFinanceMeasurementPeriod(input: {
       endDate: input.year.endDate,
       ytdCutoffDate: ytdCutoff,
       displayLabel: input.financeYearName,
+      periodStartIndex: null,
+      periodEndIndex: null,
       periodIndex: null,
       periodCount: null,
     };
@@ -221,6 +303,8 @@ export function resolveFinanceMeasurementPeriod(input: {
       endDate: ytdCutoff,
       ytdCutoffDate: ytdCutoff,
       displayLabel: formatFinanceYearDateInputValue(ytdCutoff),
+      periodStartIndex: null,
+      periodEndIndex: null,
       periodIndex: null,
       periodCount: null,
     };
@@ -233,24 +317,38 @@ export function resolveFinanceMeasurementPeriod(input: {
       referenceDate,
       input.year,
     );
-    const index = clampPeriodIndex(input.requestedPeriodIndex ?? defaultIndex, months.length);
-    const slice = months[index] ?? months[months.length - 1] ?? {
-      index: 0,
-      startDate: input.year.startDate,
-      endDate: input.year.endDate,
-    };
+    const { startIndex, endIndex } = normalizeFinanceYearPeriodRange({
+      requestedStartIndex: input.requestedPeriodStartIndex,
+      requestedEndIndex: input.requestedPeriodEndIndex,
+      legacyPeriodIndex:
+        input.requestedPeriodStartIndex === undefined &&
+        input.requestedPeriodEndIndex === undefined
+          ? (input.requestedPeriodIndex ?? defaultIndex)
+          : null,
+      monthCount: months.length,
+    });
+    const startSlice = months[startIndex]!;
+    const endSlice = months[endIndex]!;
     const period: FinanceMeasurementPeriod = {
       mode: "MONTH",
       financeYearId: input.financeYearId,
       financeYearName: input.financeYearName,
-      startDate: slice.startDate,
-      endDate: slice.endDate,
-      ytdCutoffDate: slice.endDate,
+      startDate: startSlice.startDate,
+      endDate: endSlice.endDate,
+      ytdCutoffDate: endSlice.endDate,
       displayLabel: formatMeasurementPeriodLabel(
-        { mode: "MONTH", startDate: slice.startDate, endDate: slice.endDate },
+        {
+          mode: "MONTH",
+          startDate: startSlice.startDate,
+          endDate: endSlice.endDate,
+          periodStartIndex: startIndex,
+          periodEndIndex: endIndex,
+        },
         locale,
       ),
-      periodIndex: slice.index,
+      periodStartIndex: startIndex,
+      periodEndIndex: endIndex,
+      periodIndex: startIndex,
       periodCount: months.length,
     };
     return period;
@@ -262,13 +360,20 @@ export function resolveFinanceMeasurementPeriod(input: {
     referenceDate,
     input.year,
   );
-  const index = clampPeriodIndex(input.requestedPeriodIndex ?? defaultIndex, quarters.length);
-  const slice = quarters[index] ?? quarters[quarters.length - 1] ?? {
+  const quarterIndex = clampPeriodIndex(
+    input.requestedPeriodStartIndex ??
+      input.requestedPeriodIndex ??
+      defaultIndex,
+    quarters.length,
+  );
+  const slice = quarters[quarterIndex] ?? quarters[quarters.length - 1] ?? {
     index: 0,
     startDate: input.year.startDate,
     endDate: input.year.endDate,
     monthIndices: [] as number[],
   };
+  const qStart = slice.monthIndices[0] ?? 0;
+  const qEnd = slice.monthIndices[slice.monthIndices.length - 1] ?? qStart;
   return {
     mode: "QUARTER",
     financeYearId: input.financeYearId,
@@ -277,9 +382,16 @@ export function resolveFinanceMeasurementPeriod(input: {
     endDate: slice.endDate,
     ytdCutoffDate: slice.endDate,
     displayLabel: formatMeasurementPeriodLabel(
-      { mode: "QUARTER", startDate: slice.startDate, endDate: slice.endDate },
+      {
+        mode: "QUARTER",
+        startDate: slice.startDate,
+        endDate: slice.endDate,
+        quarterIndex: slice.index,
+      },
       locale,
     ),
+    periodStartIndex: qStart,
+    periodEndIndex: qEnd,
     periodIndex: slice.index,
     periodCount: quarters.length,
   };
