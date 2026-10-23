@@ -203,6 +203,8 @@ export const PERMISSIONS = {
   FINANCE_BUDGET_VIEW: "finance.budget.view",
   FINANCE_BUDGET_MANAGE: "finance.budget.manage",
   FINANCE_APPROVE: "finance.approve",
+  FINANCE_ACTUAL_VIEW: "finance.actual.view",
+  FINANCE_ACTUAL_MANAGE: "finance.actual.manage",
   FINANCE_STRUCTURE_MANAGE: "finance.structure.manage",
   FINANCE_ADMIN: "finance.admin",
 

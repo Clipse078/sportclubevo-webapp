@@ -1393,6 +1393,7 @@ model Tenant {
   financialAccounts               FinancialAccount[]
   financialReportingGroups        FinancialReportingGroup[]
   financeBudgets                  FinanceBudget[]
+  financeActualEntries            FinanceActualEntry[]
 
   @@index([status])
   @@index([name])
@@ -1546,6 +1547,8 @@ model User {
   financeBudgetsCreated              FinanceBudget[]         @relation("FinanceBudgetCreatedBy")
   financeBudgetVersionsCreated       FinanceBudgetVersion[]  @relation("FinanceBudgetVersionCreatedBy")
   financeBudgetVersionsApproved      FinanceBudgetVersion[]  @relation("FinanceBudgetVersionApprovedBy")
+  financeActualEntriesCreated        FinanceActualEntry[]    @relation("FinanceActualEntryCreatedBy")
+  financeActualEntriesUpdated        FinanceActualEntry[]    @relation("FinanceActualEntryUpdatedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10725,6 +10728,7 @@ model FinanceYear {
   season                    Season?                @relation("FinanceYearSeason", fields: [seasonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   configurationsAsCurrent   FinanceConfiguration[] @relation("FinanceConfigurationCurrentYear")
   budgets                   FinanceBudget[]
+  actualEntries             FinanceActualEntry[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -10785,10 +10789,45 @@ model FinancialAccount {
   tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   reportingGroup  FinancialReportingGroup @relation(fields: [reportingGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   budgetLines     FinanceBudgetLine[]
+  actualEntries   FinanceActualEntry[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, reportingGroupId])
   @@index([tenantId, canonicalSemantic])
+}
+
+enum FinanceActualEntrySource {
+  MANUAL
+  IMPORT
+  SYSTEM
+}
+
+/// Management-finance actual amount — atomic measured outcome (FIN-03A), not a ledger posting.
+model FinanceActualEntry {
+  id                 String                   @id @default(cuid())
+  tenantId           String
+  financeYearId      String
+  financialAccountId String
+  effectiveDate      DateTime
+  amountMinor        Int
+  currency           String
+  description        String?
+  source             FinanceActualEntrySource @default(MANUAL)
+  createdByUserId    String?
+  updatedByUserId    String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear      FinanceYear      @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  financialAccount FinancialAccount @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy        User?            @relation("FinanceActualEntryCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updatedBy        User?            @relation("FinanceActualEntryUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, financeYearId])
+  @@index([tenantId, financialAccountId])
+  @@index([tenantId, financeYearId, effectiveDate])
+  @@index([financialAccountId])
 }
 
 /// Reporting presentation hierarchy — separate from FinancialAccount (ADR-032).

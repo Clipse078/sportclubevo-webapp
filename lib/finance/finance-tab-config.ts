@@ -1,17 +1,25 @@
 import type { ContextTabNavigationConfig } from "@/lib/context-tabs/types";
 
-export type FinanceWorkspaceTabId = "overview" | "structure" | "budget" | "settings";
+export type FinanceWorkspaceTabId = "overview" | "structure" | "budget" | "actuals" | "settings";
 
 export function buildFinanceTabNavigationConfig(input: {
   showStructure: boolean;
   showBudget: boolean;
+  showActuals: boolean;
   showSettings: boolean;
-  labels: { overview: string; structure: string; budget: string; settings: string };
+  labels: {
+    overview: string;
+    structure: string;
+    budget: string;
+    actuals: string;
+    settings: string;
+  };
 }): ContextTabNavigationConfig<FinanceWorkspaceTabId> {
   const tabRoutes: Record<FinanceWorkspaceTabId, string> = {
     overview: "/dashboard/finance",
     structure: "/dashboard/finance/structure",
     budget: "/dashboard/finance/budget",
+    actuals: "/dashboard/finance/actuals",
     settings: "/dashboard/finance/settings",
   };
 
@@ -23,6 +31,9 @@ export function buildFinanceTabNavigationConfig(input: {
   }
   if (input.showBudget) {
     tabs.push({ key: "budget", label: input.labels.budget, placement: "primary" });
+  }
+  if (input.showActuals) {
+    tabs.push({ key: "actuals", label: input.labels.actuals, placement: "primary" });
   }
   if (input.showSettings) {
     tabs.push({ key: "settings", label: input.labels.settings, placement: "primary" });
@@ -38,6 +49,9 @@ export function buildFinanceTabNavigationConfig(input: {
       }
       if (pathname.startsWith("/dashboard/finance/budget")) {
         return visibleKeys.includes("budget") ? "budget" : "overview";
+      }
+      if (pathname.startsWith("/dashboard/finance/actuals")) {
+        return visibleKeys.includes("actuals") ? "actuals" : "overview";
       }
       if (pathname.startsWith("/dashboard/finance/settings")) {
         return visibleKeys.includes("settings") ? "settings" : "overview";

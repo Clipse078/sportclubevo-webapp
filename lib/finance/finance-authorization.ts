@@ -94,3 +94,33 @@ export function canApproveBudget(ctx: FinanceAuthContext): boolean {
     hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
   );
 }
+
+export function requireFinanceActualView(ctx: FinanceAuthContext): void {
+  if (
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_VIEW) &&
+    !hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_VIEW)
+  ) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to view actuals.",
+      403,
+    );
+  }
+}
+
+export function requireFinanceActualManage(ctx: FinanceAuthContext): void {
+  if (!canManageActuals(ctx)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORBIDDEN",
+      "Insufficient permission to manage actuals.",
+      403,
+    );
+  }
+}
+
+export function canManageActuals(ctx: FinanceAuthContext): boolean {
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_MANAGE) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
+  );
+}

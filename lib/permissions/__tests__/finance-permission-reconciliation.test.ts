@@ -3,14 +3,58 @@ import type { PrismaClient } from "@prisma/client";
 
 import {
   FINANCE_PERMISSION_KEYS,
+  reconcileFinanceActualPermissionsForClubAdmin,
   reconcileFinancePermissions,
 } from "@/lib/permissions/finance-permission-reconciliation";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const reconcileClubAdmin = vi.hoisted(() => vi.fn());
+const listClubAdminRoles = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/permissions/tenant-club-admin-permission-reconciliation", () => ({
   reconcileTenantClubAdminPermissions: reconcileClubAdmin,
 }));
+
+vi.mock("@/lib/permissions/tenant-club-admin-role-discovery", () => ({
+  listTenantClubAdminRoleKeysForReconciliation: listClubAdminRoles,
+}));
+
+describe("reconcileFinanceActualPermissionsForClubAdmin", () => {
+  it("assigns finance.actual.view and finance.actual.manage to discovered Club Admin roles", async () => {
+    listClubAdminRoles.mockResolvedValue(["club_admin__demo"]);
+    const permissionCreate = vi.fn(async () => ({}));
+    const permissionFindUnique = vi.fn(async ({ where }: { where: { key: string } }) => {
+      if (
+        where.key === PERMISSIONS.FINANCE_ACTUAL_VIEW ||
+        where.key === PERMISSIONS.FINANCE_ACTUAL_MANAGE
+      ) {
+        return { id: `p-${where.key}` };
+      }
+      return null;
+    });
+    const roleFindUnique = vi.fn(async ({ where }: { where: { key: string } }) =>
+      where.key === "club_admin__demo" ? { id: "role-ca" } : null,
+    );
+    const rolePermissionFindUnique = vi.fn(async () => null);
+    const rolePermissionUpsert = vi.fn(async () => ({}));
+
+    const prisma = {
+      permission: {
+        findUnique: permissionFindUnique,
+        create: permissionCreate,
+      },
+      role: { findUnique: roleFindUnique },
+      rolePermission: {
+        findUnique: rolePermissionFindUnique,
+        upsert: rolePermissionUpsert,
+      },
+    } as unknown as PrismaClient;
+
+    const outcomes = await reconcileFinanceActualPermissionsForClubAdmin(prisma, false);
+    expect(outcomes).toHaveLength(2);
+    expect(rolePermissionUpsert).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe("reconcileFinancePermissions", () => {
   beforeEach(() => {

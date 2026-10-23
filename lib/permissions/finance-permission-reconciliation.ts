@@ -7,8 +7,10 @@
 
 import type { PermissionModule, PermissionScope, PrismaClient } from "@prisma/client";
 
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { reconcileTenantClubAdminPermissions } from "@/lib/permissions/tenant-club-admin-permission-reconciliation";
 import type { TenantClubAdminPermissionReconciliationResult } from "@/lib/permissions/tenant-club-admin-permission-reconciliation";
+import { listTenantClubAdminRoleKeysForReconciliation } from "@/lib/permissions/tenant-club-admin-role-discovery";
 
 const FINANCE_MODULE = "FINANCE" as PermissionModule;
 const TENANT_SCOPE = "TENANT" as PermissionScope;
@@ -38,6 +40,20 @@ export const FINANCE_PERMISSION_DEFS = [
   {
     key: "finance.budget.manage",
     name: "Manage draft budgets",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.actual.view",
+    name: "View management actuals",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.actual.manage",
+    name: "Manage management actuals",
     module: FINANCE_MODULE,
     scope: TENANT_SCOPE,
     grantableByAdmin: true,
@@ -78,6 +94,40 @@ export type FinancePermissionReconciliationResult = {
   superAdmin: RolePermissionSyncOutcome[];
   tenantClubAdmin: TenantClubAdminPermissionReconciliationResult;
 };
+
+const FINANCE_ACTUAL_PERMISSION_KEYS = [
+  PERMISSIONS.FINANCE_ACTUAL_VIEW,
+  PERMISSIONS.FINANCE_ACTUAL_MANAGE,
+] as const;
+
+/** Idempotent alignment of finance.actual.* on tenant Club Admin roles (FIN-03A catalog gap). */
+export async function reconcileFinanceActualPermissionsForClubAdmin(
+  prisma: PrismaClient,
+  dryRun = false,
+): Promise<RolePermissionSyncOutcome[]> {
+  for (const def of FINANCE_PERMISSION_DEFS) {
+    if (!(FINANCE_ACTUAL_PERMISSION_KEYS as readonly string[]).includes(def.key)) {
+      continue;
+    }
+    const existing = await prisma.permission.findUnique({
+      where: { key: def.key },
+      select: { id: true },
+    });
+    if (!existing && !dryRun) {
+      await prisma.permission.create({ data: def });
+    }
+  }
+
+  const clubAdminRoleKeys = await listTenantClubAdminRoleKeysForReconciliation(prisma);
+
+  const outcomes: RolePermissionSyncOutcome[] = [];
+  for (const roleKey of clubAdminRoleKeys) {
+    for (const permissionKey of FINANCE_ACTUAL_PERMISSION_KEYS) {
+      outcomes.push(await assignPermissionToRole(prisma, roleKey, permissionKey, dryRun));
+    }
+  }
+  return outcomes;
+}
 
 export async function reconcileFinancePermissions(
   prisma: PrismaClient,

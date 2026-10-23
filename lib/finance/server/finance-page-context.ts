@@ -39,6 +39,7 @@ export async function loadFinanceWorkspaceContext() {
   });
 
   const showBudgetNav = navigation.some((item) => item.key === "budget");
+  const showActualsNav = navigation.some((item) => item.key === "actuals");
 
   const reportingReadModel = await loadApprovedBudgetReportingReadModel(prisma, ctx, null);
   const overviewReporting = resolveFinanceOverviewReportingSlice({
@@ -58,11 +59,18 @@ export async function loadFinanceWorkspaceContext() {
     enabledCapabilities,
     navigation,
     showBudgetNav,
+    showActualsNav,
     canAdmin: permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     canStructure: permissionKeys.has(PERMISSIONS.FINANCE_STRUCTURE_MANAGE),
     canBudgetManage: permissionKeys.has(PERMISSIONS.FINANCE_BUDGET_MANAGE),
     canBudgetApprove:
       permissionKeys.has(PERMISSIONS.FINANCE_APPROVE) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
+    canActualView:
+      permissionKeys.has(PERMISSIONS.FINANCE_VIEW) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_VIEW),
+    canActualManage:
+      permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_MANAGE) ||
       permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     overviewReporting,
   };
