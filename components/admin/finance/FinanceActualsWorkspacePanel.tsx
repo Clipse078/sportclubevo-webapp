@@ -15,6 +15,16 @@ import {
   parseBudgetInputToMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
 import { formatFinanceYearDateInputValue } from "@/lib/finance/setup/finance-year-date-input";
+import type { AccountPeriodicMetrics } from "@/lib/finance/actual/periodic-account-read-model";
+import {
+  measurementModeToSearchParam,
+  type FinanceMeasurementMode,
+} from "@/lib/finance/actual/finance-measurement-period";
+import { writeFinanceMeasurementPeriodToSearchParams } from "@/lib/finance/actual/finance-measurement-period-url";
+import {
+  FinanceMonthPeriodSlicer,
+  FinanceQuarterPeriodSlicer,
+} from "@/components/admin/finance/FinanceMeasurementPeriodSlicer";
 import type { ActualsWorkspaceSnapshot } from "@/lib/finance/services/finance-actual-query-service";
 import {
   createActualEntryAction,
@@ -42,9 +52,16 @@ import {
   FinanceVarianceComparisonColGroup,
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 import {
+  financeManagementSignalPresentation,
+} from "@/lib/finance/presentation/finance-management-signal-presentation";
+import {
+  financeResultSemanticTextClass,
+} from "@/lib/finance/presentation/finance-result-presentation";
+import {
   financeVarianceComparisonSemanticTextClass,
   financeVarianceFavorabilityLabelKey,
 } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
+import { sceSemanticIconClass } from "@/lib/design-system/sce-feedback-status-micro-ux";
 import {
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_CURRENCY_CONTEXT_CLASS,
@@ -65,6 +82,7 @@ import {
 type FinanceYearOption = { id: string; name: string };
 
 type VarianceAccountRow = ActualsWorkspaceSnapshot["variance"]["accounts"][number];
+type PeriodicAccountRow = AccountPeriodicMetrics;
 
 type FinanceActualsWorkspacePanelProps = {
   years: FinanceYearOption[];
@@ -104,19 +122,62 @@ export function FinanceActualsWorkspacePanel({
   const selectedYearId = snapshot.selectedYearId;
   const baseCurrency = snapshot.baseCurrency;
   const comparisonMode = snapshot.comparisonMode;
+  const measurementPeriod = snapshot.measurementPeriod;
+  const periodSlicer = snapshot.periodSlicer;
+  const periodic = snapshot.periodic;
 
   const selectedYearName = years.find((y) => y.id === selectedYearId)?.name ?? "";
+  const periodLabel = measurementPeriod?.displayLabel ?? selectedYearName;
 
   const formatMoney = (minor: number) =>
     baseCurrency
       ? formatBudgetPlanningMinor(minor, baseCurrency, formattingLocale)
       : String(minor);
 
-  function pushContext(next: { yearId?: string; mode?: "FULL_YEAR" | "YTD" }) {
+  function pushContext(next: {
+    yearId?: string;
+    mode?: FinanceMeasurementMode;
+    periodStartIndex?: number;
+    periodEndIndex?: number;
+    quarterIndex?: number;
+  }) {
     const params = new URLSearchParams(searchParams.toString());
     if (next.yearId) params.set("yearId", next.yearId);
-    if (next.mode === "YTD") params.set("mode", "ytd");
-    else if (next.mode === "FULL_YEAR") params.delete("mode");
+    const mode = next.mode ?? comparisonMode;
+    const modeParam = measurementModeToSearchParam(mode);
+    if (modeParam) params.set("mode", modeParam);
+    else params.delete("mode");
+
+    if (mode === "MONTH") {
+      const start =
+        next.periodStartIndex ??
+        measurementPeriod?.periodStartIndex ??
+        measurementPeriod?.periodIndex ??
+        0;
+      const end =
+        next.periodEndIndex ??
+        measurementPeriod?.periodEndIndex ??
+        start;
+      writeFinanceMeasurementPeriodToSearchParams(params, mode, {
+        periodStartIndex: start,
+        periodEndIndex: end,
+      });
+    } else if (mode === "QUARTER") {
+      const qIndex =
+        next.quarterIndex ??
+        measurementPeriod?.periodIndex ??
+        0;
+      writeFinanceMeasurementPeriodToSearchParams(params, mode, {
+        periodStartIndex: qIndex,
+        periodEndIndex: qIndex,
+      });
+    } else {
+      writeFinanceMeasurementPeriodToSearchParams(params, mode, {
+        periodStartIndex: null,
+        periodEndIndex: null,
+      });
+    }
+
     router.push(`/dashboard/finance/actuals?${params.toString()}`);
   }
 
@@ -131,6 +192,34 @@ export function FinanceActualsWorkspacePanel({
   function openCreateDialog() {
     resetForm();
     setDialogOpen(true);
+  }
+
+  function entriesEmptyMessage(): string {
+    if (comparisonMode === "FULL_YEAR") {
+      return t("entriesEmptyFullYear", { year: selectedYearName });
+    }
+    if (comparisonMode === "YTD" && snapshot.ytdCutoffDate) {
+      return t("entriesEmptyYtd", {
+        year: selectedYearName,
+        date: formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale),
+      });
+    }
+    if (comparisonMode === "QUARTER") {
+      return t("entriesEmptyQuarter", { period: periodLabel });
+    }
+    if (
+      comparisonMode === "MONTH" &&
+      measurementPeriod &&
+      measurementPeriod.periodStartIndex !== null &&
+      measurementPeriod.periodEndIndex !== null &&
+      measurementPeriod.periodStartIndex !== measurementPeriod.periodEndIndex
+    ) {
+      return t("entriesEmptyMonthRange", { period: periodLabel });
+    }
+    if (comparisonMode === "MONTH") {
+      return t("entriesEmptyMonthSingle", { period: periodLabel });
+    }
+    return t("entriesEmptyFullYear", { year: selectedYearName });
   }
 
   function openEditDialog(entry: ActualsWorkspaceSnapshot["entries"][number]) {
@@ -235,108 +324,271 @@ export function FinanceActualsWorkspacePanel({
     );
   }
 
+  const monthRangeStart = measurementPeriod?.periodStartIndex ?? 0;
+  const monthRangeEnd = measurementPeriod?.periodEndIndex ?? monthRangeStart;
+  const quarterSelectedIndex = measurementPeriod?.periodIndex ?? 0;
+  const useCompactQuarterLabels = selectedYearName.length > 12;
+
   return (
     <div className={FINANCE_WORKSPACE_STACK_CLASS}>
-      <div className={FINANCE_CONTEXT_STRIP_CLASS}>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">{t("financeYearLabel")}</span>
-          <SceToolbarSelect
-            value={selectedYearId ?? ""}
-            onChange={(event) =>
-              pushContext({ yearId: event.target.value, mode: comparisonMode })
+      <div className={cn(FINANCE_CONTEXT_STRIP_CLASS, "flex-col items-stretch gap-3")}>
+        <div className="flex min-w-0 flex-wrap items-end gap-x-6 gap-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">{t("financeYearLabel")}</span>
+            <SceToolbarSelect
+              value={selectedYearId ?? ""}
+              onChange={(event) =>
+                pushContext({ yearId: event.target.value, mode: comparisonMode })
+              }
+              aria-label={t("financeYearLabel")}
+            >
+              {years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.name}
+                </option>
+              ))}
+            </SceToolbarSelect>
+          </label>
+          {baseCurrency ? (
+            <span className={FINANCE_CURRENCY_CONTEXT_CLASS}>{baseCurrency}</span>
+          ) : null}
+          {canMutate ? (
+            <div className="ms-auto flex shrink-0 items-center">{renderCaptureActualButton()}</div>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-col gap-2">
+          <SceSegmentedControl<FinanceMeasurementMode>
+            value={comparisonMode}
+            onChange={(value) =>
+              pushContext({
+                yearId: selectedYearId ?? undefined,
+                mode: value,
+                periodStartIndex: 0,
+                periodEndIndex: 0,
+                quarterIndex: 0,
+              })
             }
-            aria-label={t("financeYearLabel")}
-          >
-            {years.map((y) => (
-              <option key={y.id} value={y.id}>
-                {y.name}
-              </option>
-            ))}
-          </SceToolbarSelect>
-        </label>
-        {baseCurrency ? (
-          <span className={FINANCE_CURRENCY_CONTEXT_CLASS}>{baseCurrency}</span>
-        ) : null}
-        <SceSegmentedControl<"FULL_YEAR" | "YTD">
-          value={comparisonMode}
-          onChange={(value) => pushContext({ yearId: selectedYearId ?? undefined, mode: value })}
-          options={[
-            { value: "FULL_YEAR", label: t("modeFullYear") },
-            { value: "YTD", label: t("modeYtd") },
-          ]}
-          aria-label={t("comparisonModeAria")}
-        />
-        {canMutate ? (
-          <div className="ms-auto flex shrink-0 items-center">{renderCaptureActualButton()}</div>
-        ) : null}
+            options={[
+              { value: "FULL_YEAR", label: t("modeFullYear") },
+              { value: "YTD", label: t("modeYtd") },
+              { value: "MONTH", label: t("modeMonth") },
+              { value: "QUARTER", label: t("modeQuarter") },
+            ]}
+            aria-label={t("comparisonModeAria")}
+          />
+          {comparisonMode === "MONTH" && periodSlicer && measurementPeriod ? (
+            <FinanceMonthPeriodSlicer
+              options={periodSlicer.months}
+              startIndex={monthRangeStart}
+              endIndex={monthRangeEnd}
+              disabled={pending}
+              ariaLabel={t("monthSlicerAria")}
+              selectedRangeAriaLabel={t("monthSlicerSelectedRange", { period: periodLabel })}
+              onRangeChange={(startIndex, endIndex) =>
+                pushContext({
+                  yearId: selectedYearId ?? undefined,
+                  mode: "MONTH",
+                  periodStartIndex: startIndex,
+                  periodEndIndex: endIndex,
+                })
+              }
+            />
+          ) : null}
+          {comparisonMode === "QUARTER" && periodSlicer && measurementPeriod ? (
+            <FinanceQuarterPeriodSlicer
+              options={periodSlicer.quarters}
+              selectedIndex={quarterSelectedIndex}
+              useCompactLabels={useCompactQuarterLabels}
+              disabled={pending}
+              ariaLabel={t("quarterSlicerAria", { year: selectedYearName })}
+              onSelect={(quarterIndex) =>
+                pushContext({
+                  yearId: selectedYearId ?? undefined,
+                  mode: "QUARTER",
+                  quarterIndex,
+                })
+              }
+            />
+          ) : null}
+        </div>
       </div>
 
       {!canMutate ? (
         <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
       ) : null}
 
-      {comparisonMode === "YTD" && snapshot.ytdCutoffDate ? (
+      {comparisonMode === "YTD" ? (
         <p className="text-sm text-muted-foreground">
           {t("ytdContextWithYear", {
             year: selectedYearName,
-            date: formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale),
+            date: snapshot.ytdCutoffDate
+              ? formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale)
+              : "",
           })}
+          <span className="mx-1.5 text-[var(--border-strong)]">·</span>
+          <span className="text-xs">{t("ytdBudgetReferenceSecondary")}</span>
+        </p>
+      ) : null}
+      {comparisonMode === "MONTH" || comparisonMode === "QUARTER" ? (
+        <p className="text-sm text-[var(--foreground)]" data-finance-period-label>
+          {t("periodContextPrimary", { period: periodLabel, year: selectedYearName })}
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {t("periodBudgetReferenceSecondary")}
+          </span>
         </p>
       ) : null}
 
-      {comparisonMode === "YTD" ? (
-        <p className="text-sm text-muted-foreground">
-          {t("ytdBudgetReferenceWithYear", { year: selectedYearName })}
-          {" · "}
-          {t("ytdBudgetVarianceUnsupported")}
-        </p>
+      {snapshot.managementSignals.length > 0 ? (
+        <div
+          className="flex flex-col gap-1.5"
+          data-finance-management-signals
+        >
+          {snapshot.managementSignals.map((signal) => {
+            const { tone, Icon } = financeManagementSignalPresentation(signal.kind);
+            return (
+              <p
+                key={signal.kind}
+                className="flex items-start gap-1.5 text-xs text-[var(--muted)]"
+                role="status"
+              >
+                <Icon
+                  className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", sceSemanticIconClass(tone))}
+                  aria-hidden
+                />
+                <span>{t(`managementSignal.${signal.kind}`)}</span>
+              </p>
+            );
+          })}
+        </div>
       ) : null}
 
       {feedback ? <p role="alert">{feedback}</p> : null}
 
       <section className={FINANCE_SECTION_SURFACE_CLASS}>
         <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>
-          {t("summaryTitleWithYear", { year: selectedYearName })}
+          {comparisonMode === "FULL_YEAR"
+            ? t("summaryTitleWithYear", { year: selectedYearName })
+            : t("summaryTitleWithPeriodAndYear", {
+                period: periodLabel,
+                year: selectedYearName,
+              })}
         </h2>
         <div className={FINANCE_SUMMARY_SURFACE_CLASS}>
           <div className={FINANCE_SUMMARY_GRID_CLASS}>
             <div>
               <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualIncome")}</p>
               <p className={FINANCE_SUMMARY_VALUE_CLASS}>
-                {formatMoney(snapshot.variance.actualSummary.incomeMinor)}
+                {formatMoney(
+                  periodic?.periodSummary.incomeMinor ??
+                    snapshot.variance.actualSummary.incomeMinor,
+                )}
               </p>
             </div>
             <div>
               <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualExpense")}</p>
               <p className={FINANCE_SUMMARY_VALUE_CLASS}>
-                {formatMoney(snapshot.variance.actualSummary.expenseMinor)}
+                {formatMoney(
+                  periodic?.periodSummary.expenseMinor ??
+                    snapshot.variance.actualSummary.expenseMinor,
+                )}
               </p>
             </div>
             <div>
               <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualResult")}</p>
-              <p className={FINANCE_SUMMARY_RESULT_VALUE_CLASS}>
-                {formatMoney(snapshot.variance.actualSummary.resultMinor)}
+              <p
+                className={cn(
+                  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+                  financeResultSemanticTextClass(
+                    periodic?.periodSummary.resultMinor ??
+                      snapshot.variance.actualSummary.resultMinor,
+                  ),
+                )}
+                data-finance-actual-result="period"
+              >
+                {formatMoney(
+                  periodic?.periodSummary.resultMinor ??
+                    snapshot.variance.actualSummary.resultMinor,
+                )}
               </p>
             </div>
           </div>
         </div>
+        {periodic && comparisonMode !== "FULL_YEAR" && comparisonMode !== "YTD" ? (
+          <div className={cn(FINANCE_SUMMARY_SURFACE_CLASS, "mt-3 opacity-90")}>
+            <p className={cn(FINANCE_SUMMARY_LABEL_CLASS, "mb-2")}>
+              {t("ytdSummaryContext", {
+                year: selectedYearName,
+                date: formatYtdCutoffLabel(measurementPeriod!.ytdCutoffDate, formattingLocale),
+              })}
+            </p>
+            <div className={FINANCE_SUMMARY_GRID_CLASS}>
+              <div>
+                <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualIncome")}</p>
+                <p className={FINANCE_SUMMARY_VALUE_CLASS}>
+                  {formatMoney(periodic.ytdSummary.incomeMinor)}
+                </p>
+              </div>
+              <div>
+                <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualExpense")}</p>
+                <p className={FINANCE_SUMMARY_VALUE_CLASS}>
+                  {formatMoney(periodic.ytdSummary.expenseMinor)}
+                </p>
+              </div>
+              <div>
+                <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("actualResult")}</p>
+                <p
+                  className={cn(
+                    FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+                    financeResultSemanticTextClass(periodic.ytdSummary.resultMinor),
+                  )}
+                  data-finance-actual-result="ytd"
+                >
+                  {formatMoney(periodic.ytdSummary.resultMinor)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {periodic?.budgetSummary ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {t("annualBudgetReferenceTitle")}:{" "}
+            {formatMoney(periodic.budgetSummary.resultMinor)}{" "}
+            {baseCurrency ? `(${baseCurrency})` : null}
+          </p>
+        ) : null}
       </section>
 
-      {snapshot.variance.approvedBudgetVersionId ? (
+      {snapshot.variance.approvedBudgetVersionId && periodic ? (
         <>
-          <VarianceComparisonSection
-            title={t("incomeSectionWithYear", { year: selectedYearName })}
-            rows={incomeComparisonRows}
+          <PeriodicComparisonSection
+            title={
+              comparisonMode === "FULL_YEAR" || comparisonMode === "YTD"
+                ? t("incomeSectionWithYear", { year: selectedYearName })
+                : t("incomeSectionWithPeriodAndYear", {
+                    period: periodLabel,
+                    year: selectedYearName,
+                  })
+            }
+            rows={periodic.accounts.filter((row) => row.canonicalSemantic === "INCOME")}
             comparisonMode={comparisonMode}
             formatMoney={formatMoney}
             t={t}
+            legacyRows={incomeComparisonRows}
           />
-          <VarianceComparisonSection
-            title={t("expenseSectionWithYear", { year: selectedYearName })}
-            rows={expenseComparisonRows}
+          <PeriodicComparisonSection
+            title={
+              comparisonMode === "FULL_YEAR" || comparisonMode === "YTD"
+                ? t("expenseSectionWithYear", { year: selectedYearName })
+                : t("expenseSectionWithPeriodAndYear", {
+                    period: periodLabel,
+                    year: selectedYearName,
+                  })
+            }
+            rows={periodic.accounts.filter((row) => row.canonicalSemantic === "EXPENSE")}
             comparisonMode={comparisonMode}
             formatMoney={formatMoney}
             t={t}
+            legacyRows={expenseComparisonRows}
           />
         </>
       ) : (
@@ -345,11 +597,13 @@ export function FinanceActualsWorkspacePanel({
 
       <section className={FINANCE_SECTION_SURFACE_CLASS}>
         <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>
-          {t("entriesTitle", { year: selectedYearName })}
+          {comparisonMode === "FULL_YEAR" || comparisonMode === "YTD"
+            ? t("entriesTitle", { year: selectedYearName })
+            : t("entriesTitleWithPeriod", { period: periodLabel, year: selectedYearName })}
         </h2>
         {snapshot.entries.length === 0 ? (
           <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>
-            <p>{t("entriesEmpty")}</p>
+            <p>{entriesEmptyMessage()}</p>
           </div>
         ) : (
           <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>
@@ -512,16 +766,34 @@ export function FinanceActualsWorkspacePanel({
   );
 }
 
-function VarianceComparisonSection(props: {
+function PeriodicComparisonSection(props: {
   title: string;
-  rows: VarianceAccountRow[];
+  rows: PeriodicAccountRow[];
+  legacyRows: VarianceAccountRow[];
   comparisonMode: ActualsWorkspaceSnapshot["comparisonMode"];
   formatMoney: (minor: number) => string;
   t: (key: string, values?: Record<string, string>) => string;
 }) {
-  const { title, rows, comparisonMode, formatMoney, t } = props;
+  const { title, rows, legacyRows, comparisonMode, formatMoney, t } = props;
 
-  const columnMode = comparisonMode === "FULL_YEAR" ? "FULL_YEAR" : "YTD";
+  const columnMode =
+    comparisonMode === "FULL_YEAR"
+      ? "FULL_YEAR"
+      : comparisonMode === "YTD"
+        ? "YTD"
+        : "PERIOD";
+
+  const visiblePeriodicRows = rows.filter(
+    (row) =>
+      (row.periodActualMinor ?? 0) > 0 ||
+      (row.ytdActualMinor ?? 0) > 0 ||
+      row.approvedBudgetMinor !== null,
+  );
+
+  const visibleLegacyRows = legacyRows;
+
+  const tableRows =
+    columnMode === "FULL_YEAR" || columnMode === "YTD" ? visibleLegacyRows : visiblePeriodicRows;
 
   return (
     <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="actual-variance-group">
@@ -537,12 +809,28 @@ function VarianceComparisonSection(props: {
               <th className={FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS}>
                 {t("accountColumn")}
               </th>
-              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
-                {t("budgetColumn")}
-              </th>
-              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
-                {t("actualColumn")}
-              </th>
+              {columnMode === "PERIOD" ? (
+                <>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("periodActualColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("ytdActualColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("annualBudgetColumn")}
+                  </th>
+                </>
+              ) : (
+                <>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("budgetColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("actualColumn")}
+                  </th>
+                </>
+              )}
               {comparisonMode === "FULL_YEAR" ? (
                 <>
                   <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
@@ -556,61 +844,84 @@ function VarianceComparisonSection(props: {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
-              const hasComparison = row.metrics.rawDeltaMinor !== null;
-              const varianceSemanticClass = financeVarianceComparisonSemanticTextClass({
-                favorability: row.metrics.favorability,
-                hasComparison,
-              });
+            {columnMode === "PERIOD"
+              ? (tableRows as PeriodicAccountRow[]).map((row) => (
+                  <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
+                    <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
+                      {row.accountName}
+                    </td>
+                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                      {row.periodActualMinor !== null && row.periodActualMinor > 0
+                        ? formatMoney(row.periodActualMinor)
+                        : t("noActual")}
+                    </td>
+                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                      {row.ytdActualMinor !== null && row.ytdActualMinor > 0
+                        ? formatMoney(row.ytdActualMinor)
+                        : t("noActual")}
+                    </td>
+                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                      {row.approvedBudgetMinor !== null
+                        ? formatMoney(row.approvedBudgetMinor)
+                        : t("noBudget")}
+                    </td>
+                  </tr>
+                ))
+              : (tableRows as VarianceAccountRow[]).map((row) => {
+                  const hasComparison = row.metrics.rawDeltaMinor !== null;
+                  const varianceSemanticClass = financeVarianceComparisonSemanticTextClass({
+                    favorability: row.metrics.favorability,
+                    hasComparison,
+                  });
 
-              return (
-                <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
-                  <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
-                    {row.accountName}
-                  </td>
-                  <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                    {row.metrics.approvedBudgetMinor !== null
-                      ? formatMoney(row.metrics.approvedBudgetMinor)
-                      : t("noBudget")}
-                  </td>
-                  <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                    {row.metrics.hasActual
-                      ? formatMoney(row.metrics.actualMinor ?? 0)
-                      : t("noActual")}
-                  </td>
-                  {comparisonMode === "FULL_YEAR" ? (
-                    <>
-                      <td
-                        className={cn(
-                          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
-                          varianceSemanticClass,
-                        )}
-                        data-finance-variance-delta
-                        data-finance-variance-favorability={
-                          hasComparison ? row.metrics.favorability : undefined
-                        }
-                      >
-                        {hasComparison ? formatMoney(row.metrics.rawDeltaMinor!) : "—"}
+                  return (
+                    <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
+                      <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
+                        {row.accountName}
                       </td>
-                      <td
-                        className={cn(
-                          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
-                          varianceSemanticClass,
-                        )}
-                        data-finance-variance-assessment
-                        data-finance-variance-favorability={
-                          hasComparison ? row.metrics.favorability : undefined
-                        }
-                      >
-                        {hasComparison && row.metrics.favorability
-                          ? t(financeVarianceFavorabilityLabelKey(row.metrics.favorability))
-                          : "—"}
+                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                        {row.metrics.approvedBudgetMinor !== null
+                          ? formatMoney(row.metrics.approvedBudgetMinor)
+                          : t("noBudget")}
                       </td>
-                    </>
-                  ) : null}
-                </tr>
-              );
-            })}
+                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                        {row.metrics.hasActual
+                          ? formatMoney(row.metrics.actualMinor ?? 0)
+                          : t("noActual")}
+                      </td>
+                      {comparisonMode === "FULL_YEAR" ? (
+                        <>
+                          <td
+                            className={cn(
+                              FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+                              varianceSemanticClass,
+                            )}
+                            data-finance-variance-delta
+                            data-finance-variance-favorability={
+                              hasComparison ? row.metrics.favorability : undefined
+                            }
+                          >
+                            {hasComparison ? formatMoney(row.metrics.rawDeltaMinor!) : "—"}
+                          </td>
+                          <td
+                            className={cn(
+                              FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+                              varianceSemanticClass,
+                            )}
+                            data-finance-variance-assessment
+                            data-finance-variance-favorability={
+                              hasComparison ? row.metrics.favorability : undefined
+                            }
+                          >
+                            {hasComparison && row.metrics.favorability
+                              ? t(financeVarianceFavorabilityLabelKey(row.metrics.favorability))
+                              : "—"}
+                          </td>
+                        </>
+                      ) : null}
+                    </tr>
+                  );
+                })}
           </tbody>
         </table>
       </div>

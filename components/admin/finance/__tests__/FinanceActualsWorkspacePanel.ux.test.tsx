@@ -14,7 +14,7 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("createDialogTitle");
     expect(panel).toContain("SceSegmentedControl");
     expect(panel).toContain("modeYtd");
-    expect(panel).toContain("ytdBudgetVarianceUnsupported");
+    expect(panel).toContain("ytdBudgetReferenceSecondary");
     expect(panel).not.toContain('type="checkbox"');
   });
 
@@ -62,8 +62,8 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("incomeSectionWithYear");
     expect(panel).toContain("expenseSectionWithYear");
     const varianceSection = panel.slice(
-      panel.indexOf("function VarianceComparisonSection"),
-      panel.indexOf("function VarianceComparisonSection") + 2500,
+      panel.indexOf("function PeriodicComparisonSection"),
+      panel.indexOf("function PeriodicComparisonSection") + 2500,
     );
     expect(varianceSection).toContain("accountColumn");
     expect(varianceSection).not.toContain("semanticColumn");
@@ -73,9 +73,9 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain('summaryTitleWithYear", { year: selectedYearName }');
     expect(panel).toContain('entriesTitle", { year: selectedYearName }');
     expect(panel).toContain('ytdContextWithYear", {');
-    expect(panel).toContain('ytdBudgetReferenceWithYear", { year: selectedYearName }');
+    expect(panel).toContain('ytdBudgetReferenceSecondary');
     expect(panel).toContain("break-words");
-    expect(panel).not.toContain("startDate");
+    expect(panel).not.toMatch(/years\.find\([^)]+\)\?\.(startDate|endDate)/);
   });
 
   it("FIN-03A R2 preserves tenant-defined year names verbatim via translation year param", () => {
@@ -109,7 +109,7 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toMatch(
       /comparisonMode === "FULL_YEAR" \? \([\s\S]*deltaColumn[\s\S]*favorabilityColumn/,
     );
-    expect(panel).toContain("ytdBudgetVarianceUnsupported");
+    expect(panel).toContain("ytdBudgetReferenceSecondary");
     expect(panel).not.toMatch(/\/\s*12/);
     expect(panel).not.toMatch(/prorate/i);
   });
@@ -124,14 +124,31 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("router.push");
   });
 
+  it("FIN-03B adds month/quarter modes with URL period range and no fake period variance columns", () => {
+    expect(panel).toContain("modeMonth");
+    expect(panel).toContain("modeQuarter");
+    expect(panel).toContain("writeFinanceMeasurementPeriodToSearchParams");
+    expect(panel).toContain("FinanceMonthPeriodSlicer");
+    expect(panel).toContain("periodBudgetReferenceSecondary");
+    expect(panel).toContain("periodActualColumn");
+    expect(panel).not.toMatch(/\/\s*12/);
+  });
+
   it("FIN-03A R5 variance favorability uses canonical semantic presentation module", () => {
     expect(panel).toContain("finance-variance-favorability-presentation");
     expect(panel).toContain("financeVarianceComparisonSemanticTextClass");
     expect(de).toContain('"favorabilityFavorable": "Günstig"');
     const varianceSection = panel.slice(
-      panel.indexOf("function VarianceComparisonSection"),
-      panel.indexOf("function VarianceComparisonSection") + 3500,
+      panel.indexOf("function PeriodicComparisonSection"),
+      panel.indexOf("function PeriodicComparisonSection") + 3500,
     );
     expect(varianceSection).not.toContain("row.metrics.favorability ??");
+  });
+
+  it("FIN-03B R3 colors Ist-Ergebnis via canonical finance-result-presentation, not income/expense", () => {
+    expect(panel).toContain("finance-result-presentation");
+    expect(panel).toContain("financeResultSemanticTextClass");
+    expect(panel).not.toMatch(/actualIncome[\s\S]{0,200}financeResultSemanticTextClass/);
+    expect(panel).not.toMatch(/actualExpense[\s\S]{0,200}financeResultSemanticTextClass/);
   });
 });

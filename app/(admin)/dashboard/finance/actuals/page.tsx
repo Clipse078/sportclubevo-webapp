@@ -4,6 +4,8 @@ import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrom
 import { FinanceActualsWorkspacePanel } from "@/components/admin/finance/FinanceActualsWorkspacePanel";
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
+import { parseMeasurementModeFromSearchParam } from "@/lib/finance/actual/finance-measurement-period";
+import { parseFinanceMeasurementPeriodFromSearchParams } from "@/lib/finance/actual/finance-measurement-period-url";
 import { loadActualsWorkspaceSnapshot } from "@/lib/finance/services/finance-actual-query-service";
 import { prisma } from "@/lib/db/prisma";
 import { redirect } from "next/navigation";
@@ -11,7 +13,13 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams: Promise<{ yearId?: string; mode?: string }>;
+  searchParams: Promise<{
+    yearId?: string;
+    mode?: string;
+    periodIndex?: string;
+    periodStart?: string;
+    periodEnd?: string;
+  }>;
 };
 
 export default async function FinanceActualsPage({ searchParams }: PageProps) {
@@ -24,11 +32,15 @@ export default async function FinanceActualsPage({ searchParams }: PageProps) {
     redirect("/dashboard/finance");
   }
 
-  const comparisonMode = params.mode === "ytd" ? "YTD" : "FULL_YEAR";
+  const measurementMode = parseMeasurementModeFromSearchParam(params.mode);
+  const periodParams = parseFinanceMeasurementPeriodFromSearchParams(params);
 
   const { years, snapshot } = await loadActualsWorkspaceSnapshot(prisma, workspace.ctx, {
     requestedYearId: params.yearId ?? null,
-    comparisonMode,
+    measurementMode,
+    requestedPeriodStartIndex: periodParams.periodStartIndex,
+    requestedPeriodEndIndex: periodParams.periodEndIndex,
+    formattingLocale: workspace.formattingLocale,
   });
 
   return (

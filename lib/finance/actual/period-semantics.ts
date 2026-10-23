@@ -1,6 +1,6 @@
 import type { FinanceYearPeriod } from "@/lib/finance/actual/finance-year-membership";
 
-export type BudgetComparisonMode = "FULL_YEAR" | "YTD";
+export type BudgetComparisonMode = "FULL_YEAR" | "YTD" | "MONTH" | "QUARTER";
 
 /**
  * YTD cutoff for actual aggregation: min(referenceDate, year.endDate) when reference is in-year,
@@ -26,5 +26,8 @@ export function isEffectiveDateOnOrBeforeCutoff(effectiveDate: Date, cutoff: Dat
   return effectiveDate.getTime() <= cutoff.getTime();
 }
 
-/** FIN-03A does not fabricate phased budget — YTD budget variance is intentionally unsupported. */
+/** FIN-03A/03B do not fabricate phased budget — YTD budget variance is intentionally unsupported. */
 export const YTD_BUDGET_VARIANCE_SUPPORTED = false as const;
+
+/** Period (month/quarter) budget variance requires explicit phasing — not available in FIN-03B. */
+export const PERIOD_BUDGET_VARIANCE_SUPPORTED = false as const;

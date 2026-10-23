@@ -1,10 +1,25 @@
 import type { PrismaClient } from "@prisma/client";
 import { buildActualVarianceReadModel } from "@/lib/finance/actual/actual-variance-read-model";
+import {
+  isEffectiveDateOnOrBeforeYtdCutoff,
+  isEffectiveDateWithinMeasurementPeriod,
+  resolveFinanceMeasurementPeriod,
+  type FinanceMeasurementMode,
+  type FinanceMeasurementPeriod,
+} from "@/lib/finance/actual/finance-measurement-period";
+import {
+  deriveManagementReviewSignals,
+  type ManagementReviewSignal,
+} from "@/lib/finance/actual/management-review-signals";
 import type { BudgetComparisonMode } from "@/lib/finance/actual/period-semantics";
 import {
   isEffectiveDateOnOrBeforeCutoff,
-  resolveYtdCutoffDate,
 } from "@/lib/finance/actual/period-semantics";
+import { buildPeriodicActualReadModel } from "@/lib/finance/actual/periodic-account-read-model";
+import {
+  buildFinanceMonthSlicerOptions,
+  buildFinanceQuarterSlicerOptions,
+} from "@/lib/finance/actual/finance-measurement-period-slicer";
 import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import { requireFinanceActualView, type FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { resolveApprovedBudgetMeasure } from "@/lib/finance/reporting/approved-budget-measure-provider";
@@ -39,10 +54,17 @@ export type ActualsWorkspaceEntry = {
 export type ActualsWorkspaceSnapshot = {
   selectedYearId: string | null;
   comparisonMode: BudgetComparisonMode;
+  measurementPeriod: FinanceMeasurementPeriod | null;
+  periodSlicer: {
+    months: ReturnType<typeof buildFinanceMonthSlicerOptions>;
+    quarters: ReturnType<typeof buildFinanceQuarterSlicerOptions>;
+  } | null;
   ytdCutoffDate: Date | null;
   baseCurrency: string | null;
   entries: ActualsWorkspaceEntry[];
   variance: ReturnType<typeof buildActualVarianceReadModel>;
+  periodic: ReturnType<typeof buildPeriodicActualReadModel> | null;
+  managementSignals: ManagementReviewSignal[];
   selectableAccounts: Array<{
     id: string;
     name: string;
@@ -50,13 +72,32 @@ export type ActualsWorkspaceSnapshot = {
   }>;
 };
 
+function toEntryRows(
+  entries: ReadonlyArray<{
+    financialAccountId: string;
+    amountMinor: number;
+    financialAccount: { canonicalSemantic: string };
+  }>,
+) {
+  return entries.map((entry) => ({
+    financialAccountId: entry.financialAccountId,
+    canonicalSemantic: entry.financialAccount.canonicalSemantic as "INCOME" | "EXPENSE",
+    amountMinor: entry.amountMinor,
+  }));
+}
+
 export async function loadActualsWorkspaceSnapshot(
   db: Db,
   ctx: FinanceAuthContext,
   input: {
     requestedYearId: string | null;
     comparisonMode?: BudgetComparisonMode;
+    measurementMode?: FinanceMeasurementMode;
+    requestedPeriodIndex?: number | null;
+    requestedPeriodStartIndex?: number | null;
+    requestedPeriodEndIndex?: number | null;
     referenceDate?: Date;
+    formattingLocale?: string;
   },
 ): Promise<{
   years: Array<{ id: string; name: string }>;
@@ -64,7 +105,10 @@ export async function loadActualsWorkspaceSnapshot(
 }> {
   requireFinanceActualView(ctx);
 
-  const comparisonMode = input.comparisonMode ?? "FULL_YEAR";
+  const measurementMode: FinanceMeasurementMode =
+    input.measurementMode ?? input.comparisonMode ?? "FULL_YEAR";
+
+  const comparisonMode: BudgetComparisonMode = measurementMode;
 
   const [config, years] = await Promise.all([
     db.financeConfiguration.findUnique({
@@ -110,6 +154,8 @@ export async function loadActualsWorkspaceSnapshot(
       snapshot: {
         selectedYearId,
         comparisonMode,
+        measurementPeriod: null,
+        periodSlicer: null,
         ytdCutoffDate: null,
         baseCurrency,
         entries: [],
@@ -117,6 +163,8 @@ export async function loadActualsWorkspaceSnapshot(
           ...emptyVariance,
           availability: baseCurrency ? "NO_FINANCE_YEAR" : "NO_BASE_CURRENCY",
         },
+        periodic: null,
+        managementSignals: [],
         selectableAccounts: [],
       },
     };
@@ -124,6 +172,26 @@ export async function loadActualsWorkspaceSnapshot(
 
   const year = years.find((y) => y.id === selectedYearId)!;
   assertSameTenant(year.tenantId, ctx.tenantId, "Financial year");
+
+  const yearPeriod = { startDate: year.startDate, endDate: year.endDate };
+  const formattingLocale = input.formattingLocale ?? "de-CH";
+
+  const measurementPeriod = resolveFinanceMeasurementPeriod({
+    financeYearId: selectedYearId,
+    financeYearName: year.name,
+    year: yearPeriod,
+    mode: measurementMode,
+    requestedPeriodIndex: input.requestedPeriodIndex,
+    requestedPeriodStartIndex: input.requestedPeriodStartIndex,
+    requestedPeriodEndIndex: input.requestedPeriodEndIndex,
+    referenceDate: input.referenceDate,
+    locale: formattingLocale,
+  });
+
+  const periodSlicer = {
+    months: buildFinanceMonthSlicerOptions(yearPeriod, formattingLocale),
+    quarters: buildFinanceQuarterSlicerOptions(yearPeriod, formattingLocale),
+  };
 
   const accounts = (await listFinancialAccounts(db, ctx)).filter(
     (a) => a.canonicalSemantic === "INCOME" || a.canonicalSemantic === "EXPENSE",
@@ -135,7 +203,10 @@ export async function loadActualsWorkspaceSnapshot(
       snapshot: {
         selectedYearId,
         comparisonMode,
-        ytdCutoffDate: null,
+        measurementPeriod,
+        periodSlicer,
+        ytdCutoffDate:
+          measurementMode === "YTD" ? measurementPeriod.ytdCutoffDate : null,
         baseCurrency,
         entries: [],
         variance: {
@@ -144,17 +215,16 @@ export async function loadActualsWorkspaceSnapshot(
           financeYearName: year.name,
           availability: "NO_STRUCTURE",
         },
+        periodic: null,
+        managementSignals: [],
         selectableAccounts: [],
       },
     };
   }
 
   const ytdCutoffDate =
-    comparisonMode === "YTD"
-      ? resolveYtdCutoffDate(
-          { startDate: year.startDate, endDate: year.endDate },
-          input.referenceDate ?? new Date(),
-        )
+    measurementMode === "YTD" || measurementMode === "MONTH" || measurementMode === "QUARTER"
+      ? measurementPeriod.ytdCutoffDate
       : null;
 
   const rawEntries = await db.financeActualEntry.findMany({
@@ -172,10 +242,31 @@ export async function loadActualsWorkspaceSnapshot(
     },
   });
 
-  const filteredForAggregation = rawEntries.filter((entry) => {
-    if (comparisonMode !== "YTD" || !ytdCutoffDate) return true;
-    return isEffectiveDateOnOrBeforeCutoff(entry.effectiveDate, ytdCutoffDate);
-  });
+  const fullYearEntries = rawEntries;
+
+  const ytdEntries = rawEntries.filter((entry) =>
+    isEffectiveDateOnOrBeforeYtdCutoff(entry.effectiveDate, measurementPeriod.ytdCutoffDate),
+  );
+
+  const periodEntries = rawEntries.filter((entry) =>
+    isEffectiveDateWithinMeasurementPeriod(entry.effectiveDate, measurementPeriod),
+  );
+
+  const filteredForLegacyVariance =
+    measurementMode === "FULL_YEAR"
+      ? fullYearEntries
+      : measurementMode === "YTD"
+        ? ytdEntries
+        : periodEntries;
+
+  const entriesForBookings =
+    measurementMode === "FULL_YEAR"
+      ? fullYearEntries
+      : measurementMode === "YTD"
+        ? ytdEntries.filter((entry) =>
+            isEffectiveDateOnOrBeforeCutoff(entry.effectiveDate, measurementPeriod.ytdCutoffDate),
+          )
+        : periodEntries;
 
   const budget = await db.financeBudget.findUnique({
     where: {
@@ -193,25 +284,37 @@ export async function loadActualsWorkspaceSnapshot(
       })
     : null;
 
+  const accountPayload = accounts.map((a) => ({
+    id: a.id,
+    name: a.name,
+    canonicalSemantic: a.canonicalSemantic as "INCOME" | "EXPENSE",
+    lifecycle: a.lifecycle,
+  }));
+
+  const periodic = buildPeriodicActualReadModel({
+    measurementMode,
+    approvedMeasure,
+    accounts: accountPayload,
+    periodEntries: toEntryRows(periodEntries),
+    ytdEntries: toEntryRows(ytdEntries),
+    fullYearEntries: toEntryRows(fullYearEntries),
+  });
+
+  const managementSignals = deriveManagementReviewSignals({
+    accounts: periodic.accounts,
+  });
+
   const variance = buildActualVarianceReadModel({
     tenantId: ctx.tenantId,
     financeYearId: selectedYearId,
     financeYearName: year.name,
     baseCurrency,
     comparisonMode,
-    ytdCutoffDate,
+    ytdCutoffDate:
+      measurementMode === "YTD" ? measurementPeriod.ytdCutoffDate : ytdCutoffDate,
     approvedMeasure,
-    accounts: accounts.map((a) => ({
-      id: a.id,
-      name: a.name,
-      canonicalSemantic: a.canonicalSemantic as "INCOME" | "EXPENSE",
-      lifecycle: a.lifecycle,
-    })),
-    actualEntries: filteredForAggregation.map((entry) => ({
-      financialAccountId: entry.financialAccountId,
-      canonicalSemantic: entry.financialAccount.canonicalSemantic as "INCOME" | "EXPENSE",
-      amountMinor: entry.amountMinor,
-    })),
+    accounts: accountPayload,
+    actualEntries: toEntryRows(filteredForLegacyVariance),
   });
 
   return {
@@ -219,9 +322,11 @@ export async function loadActualsWorkspaceSnapshot(
     snapshot: {
       selectedYearId,
       comparisonMode,
+      measurementPeriod,
+      periodSlicer,
       ytdCutoffDate,
       baseCurrency,
-      entries: rawEntries.map((entry) => ({
+      entries: entriesForBookings.map((entry) => ({
         id: entry.id,
         effectiveDate: entry.effectiveDate,
         amountMinor: entry.amountMinor,
@@ -236,6 +341,8 @@ export async function loadActualsWorkspaceSnapshot(
         },
       })),
       variance,
+      periodic,
+      managementSignals,
       selectableAccounts: accounts
         .filter((a) => a.lifecycle === "ACTIVE")
         .map((a) => ({

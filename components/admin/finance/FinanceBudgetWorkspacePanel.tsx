@@ -48,6 +48,7 @@ import {
   type CreateAnnualBudgetActionResult,
 } from "@/app/(admin)/dashboard/finance/budget/actions";
 import type { AnnualBudgetCreationContext } from "@/lib/finance/services/finance-annual-budget-service";
+import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
   FINANCE_BUDGET_AMOUNT_INPUT_CLASS,
   FINANCE_BUDGET_PERSISTENCE_INDICATOR_CLASS,
@@ -645,7 +646,15 @@ function BudgetWorkspaceEditor(props: {
             </div>
             <div>
               <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("plannedResult")}</dt>
-              <dd className={FINANCE_SUMMARY_RESULT_VALUE_CLASS}>
+              <dd
+                className={cn(
+                  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+                  financeResultSemanticTextClass(
+                    props.snapshot.approvedBaseline.totals.resultMinor,
+                  ),
+                )}
+                data-finance-result="approved-baseline"
+              >
                 {formatBudgetPlanningMinor(
                   props.snapshot.approvedBaseline.totals.resultMinor,
                   props.snapshot.approvedBaseline.currency,
@@ -801,7 +810,14 @@ function BudgetWorkspaceEditor(props: {
           </div>
           <div className="sm:border-s sm:border-[var(--sce-surface-border-subtle)] sm:ps-4">
             <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{t("plannedResult")}</dt>
-            <dd className={FINANCE_SUMMARY_RESULT_VALUE_CLASS} data-budget-summary="result">
+            <dd
+              className={cn(
+                FINANCE_SUMMARY_RESULT_VALUE_CLASS,
+                financeResultSemanticTextClass(localTotals.resultMinor),
+              )}
+              data-budget-summary="result"
+              data-finance-result="working-totals"
+            >
               {formatBudgetPlanningMinor(
                 localTotals.resultMinor,
                 props.workspaceCurrency,

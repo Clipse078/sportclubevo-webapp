@@ -6,11 +6,12 @@
 export const FINANCE_VARIANCE_COMPARISON_TABLE_CLASS =
   "w-full min-w-0 table-fixed text-sm";
 
-export type FinanceVarianceComparisonColumnMode = "FULL_YEAR" | "YTD";
+export type FinanceVarianceComparisonColumnMode = "FULL_YEAR" | "YTD" | "PERIOD";
 
 const COLUMN_WIDTHS: Record<FinanceVarianceComparisonColumnMode, readonly string[]> = {
   FULL_YEAR: ["34%", "16.5%", "16.5%", "16.5%", "16.5%"],
   YTD: ["50%", "25%", "25%"],
+  PERIOD: ["34%", "22%", "22%", "22%"],
 };
 
 export function FinanceVarianceComparisonColGroup(props: {

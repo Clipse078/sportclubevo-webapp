@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cn } from "@/lib/cn";
+import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import type { FinanceOverviewReportingSlice } from "@/lib/finance/reporting/reporting-overview-state";
 import {
   financeOverviewReportingIsPrimaryContent,
@@ -116,7 +118,13 @@ export function FinanceOverviewPanel({
             </div>
             <div className="flex items-baseline justify-between gap-4 border-t border-[var(--sce-color-border-standard)] pt-2">
               <dt className="text-[var(--muted)]">{labels.reportingResult}</dt>
-              <dd className="font-semibold tabular-nums text-[var(--foreground)]">
+              <dd
+                className={cn(
+                  "font-semibold tabular-nums text-[var(--foreground)]",
+                  financeResultSemanticTextClass(reporting.resultMinor),
+                )}
+                data-finance-result="overview-approved-baseline"
+              >
                 {formattedReporting.result}
               </dd>
             </div>
