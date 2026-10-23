@@ -16,6 +16,12 @@ describe("FIN-01B finance permissions", () => {
       PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_BUDGET_MANAGE,
     );
     expect(PERMISSIONS.FINANCE_APPROVE).toBe(PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_APPROVE);
+    expect(PERMISSIONS.FINANCE_ACTUAL_VIEW).toBe(
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_ACTUAL_VIEW,
+    );
+    expect(PERMISSIONS.FINANCE_ACTUAL_MANAGE).toBe(
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_ACTUAL_MANAGE,
+    );
   });
 
   it("keeps person compensation permissions separate from finance.view", () => {

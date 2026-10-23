@@ -10,14 +10,22 @@ import {
 type FinanceWorkspaceTabsProps = {
   showStructure: boolean;
   showBudget: boolean;
+  showActuals: boolean;
   showSettings: boolean;
-  labels: { overview: string; structure: string; budget: string; settings: string };
+  labels: {
+    overview: string;
+    structure: string;
+    budget: string;
+    actuals: string;
+    settings: string;
+  };
   ariaLabel: string;
 };
 
 export function FinanceWorkspaceTabs({
   showStructure,
   showBudget,
+  showActuals,
   showSettings,
   labels,
   ariaLabel,
@@ -25,6 +33,7 @@ export function FinanceWorkspaceTabs({
   const config = buildFinanceTabNavigationConfig({
     showStructure,
     showBudget,
+    showActuals,
     showSettings,
     labels,
   });

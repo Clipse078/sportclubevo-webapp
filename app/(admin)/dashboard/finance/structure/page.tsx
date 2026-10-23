@@ -48,11 +48,13 @@ export default async function FinanceStructurePage() {
           <FinanceWorkspaceTabs
             showStructure={workspace.canStructure}
             showBudget={workspace.showBudgetNav}
+            showActuals={workspace.showActualsNav}
             showSettings={workspace.canAdmin || workspace.canStructure}
             labels={{
               overview: t("nav.overview"),
               structure: t("nav.structure"),
               budget: t("nav.budget"),
+              actuals: t("nav.actuals"),
               settings: t("nav.structure_settings"),
             }}
             ariaLabel={t("contextTabsAria")}

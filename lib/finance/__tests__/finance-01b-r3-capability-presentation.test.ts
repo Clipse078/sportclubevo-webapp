@@ -52,10 +52,10 @@ describe("FIN-01B-R3 finance capability presentation", () => {
   });
 
   it("keeps starter guidance non-mutating and availability-aware", () => {
-    expect(FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS).toEqual(["OVERVIEW", "BUDGETING"]);
+    expect(FINANCE_STARTER_RECOMMENDED_CAPABILITY_KEYS).toEqual(["OVERVIEW", "BUDGETING", "ACTUALS"]);
     expect(
       filterFinanceStarterRecommendedCapabilityKeys(isFinanceCapabilityImplemented),
-    ).toEqual(["OVERVIEW", "BUDGETING"]);
+    ).toEqual(["OVERVIEW", "BUDGETING", "ACTUALS"]);
     expect(FINANCE_DEFAULT_ENABLED_CAPABILITIES).toEqual(["OVERVIEW"]);
     expect(ensureDefaultFinanceCapabilities.toString()).not.toContain("BUDGETING");
     expect(ensureDefaultFinanceCapabilities.toString()).not.toContain("ACTUALS");

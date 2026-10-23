@@ -9,7 +9,7 @@ import { filterFinanceStarterRecommendedCapabilityKeys } from "@/lib/finance/cap
 
 /** Capabilities with product surfaces implemented in FIN-01B / FIN-01D. */
 export const FINANCE_CAPABILITIES_IMPLEMENTED_01B: ReadonlySet<FinanceCapabilityKey> =
-  new Set(["OVERVIEW", "BUDGETING"]);
+  new Set(["OVERVIEW", "BUDGETING", "ACTUALS"]);
 
 export const FINANCE_SYSTEM_CAPABILITY_KEYS = FINANCE_CAPABILITY_KEYS;
 
@@ -29,7 +29,9 @@ export const FINANCE_WORKSPACE_NAV: FinanceNavEntry[] = FINANCE_NAVIGATION_ENTRI
         ? "/dashboard/finance"
         : entry.key === "structure"
           ? "/dashboard/finance/structure"
-          : `/dashboard/finance/${entry.key}`,
+          : entry.key === "actuals"
+            ? "/dashboard/finance/actuals"
+            : `/dashboard/finance/${entry.key}`,
     labelKey: entry.labelKey,
     requiredCapabilities: [...entry.requiredCapabilities] as FinanceCapabilityKey[],
     permissionKeys: [...entry.permissionKeys] as PermissionKey[],

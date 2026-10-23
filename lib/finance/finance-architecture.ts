@@ -328,6 +328,7 @@ export const PROPOSED_FINANCE_PERMISSION_KEYS = {
   FINANCE_BUDGET_VIEW: "finance.budget.view",
   FINANCE_BUDGET_MANAGE: "finance.budget.manage",
   FINANCE_ACTUAL_VIEW: "finance.actual.view",
+  FINANCE_ACTUAL_MANAGE: "finance.actual.manage",
   FINANCE_FORECAST_MANAGE: "finance.forecast.manage",
   FINANCE_PERSONNEL_VIEW: "finance.personnel.view",
   FINANCE_STRUCTURE_MANAGE: "finance.structure.manage",
@@ -397,6 +398,15 @@ export const FINANCE_NAVIGATION_ENTRIES = [
       PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_BUDGET_VIEW,
     ],
     labelKey: "finance.nav.budget",
+  },
+  {
+    key: "actuals",
+    requiredCapabilities: ["ACTUALS"] as const,
+    permissionKeys: [
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_VIEW,
+      PROPOSED_FINANCE_PERMISSION_KEYS.FINANCE_ACTUAL_VIEW,
+    ],
+    labelKey: "finance.nav.actuals",
   },
   {
     key: "forecast",

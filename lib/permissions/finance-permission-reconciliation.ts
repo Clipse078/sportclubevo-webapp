@@ -43,6 +43,20 @@ export const FINANCE_PERMISSION_DEFS = [
     grantableByAdmin: true,
   },
   {
+    key: "finance.actual.view",
+    name: "View management actuals",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
+    key: "finance.actual.manage",
+    name: "Manage management actuals",
+    module: FINANCE_MODULE,
+    scope: TENANT_SCOPE,
+    grantableByAdmin: true,
+  },
+  {
     key: "finance.approve",
     name: "Approve finance baselines",
     module: FINANCE_MODULE,
