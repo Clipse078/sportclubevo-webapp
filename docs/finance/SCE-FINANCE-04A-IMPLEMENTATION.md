@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04A |
-| **Status** | **IMPLEMENTED / PO UAT PENDING** |
+| **Status** | **IMPLEMENTED / PO UAT IN PROGRESS** |
 | **Branch** | `cursor/sce-finance-04a-forecast-foundation` |
 | **Base** | `STAGE` (post FIN-03B merge `f2a28ec8`) |
 
@@ -89,9 +89,27 @@ Workspace tab **Prognose** (`/dashboard/finance/forecast`) with local-first line
 
 `20261023180000_sce_finance_04a_forecast_foundation`
 
-**STAGE PO UAT prerequisite:** apply migration via guarded STAGE process (`docs/deployment/stage-preview-migration-runbook.md`) before functional UAT on shared STAGE. Preview builds do not apply migrations automatically.
+### Shared STAGE migration (SCE-FIN-04A-R1)
 
-Production: untouched.
+| Field | Value |
+| --- | --- |
+| **SHARED STAGE MIGRATION** | **APPLIED** |
+| **Date (Europe/Stockholm)** | 2026-10-23 |
+| **Environment** | `APP_ENV=stage`, `SCE_DATA_ENVIRONMENT=STAGE` |
+| **Database** | Neon `neondb` @ `ep-wispy-hall-aso93dy6…` |
+| **Fingerprint** | `acd3b37682911890` |
+| **Mechanism** | Guarded `npm run db:migrate:deploy-if-enabled` via `scripts/sce-finance-04a-r1-stage-migration-verify.ts --apply` |
+| **Production** | Untouched |
+
+**Pre-migration (existing Finance preserved):** tenants 47; `FinanceConfiguration` 1; `FinanceYear` 2; `FinancialAccount` 5; `FinanceBudget` 2; `FinanceBudgetVersion` 3; `FinanceBudgetLine` 15; `FinanceActualEntry` 1; forecast tables absent; failed migrations 0.
+
+**Post-migration:** `FinanceForecast` / `FinanceForecastVersion` / `FinanceForecastLine` present; enum `FinanceForecastVersionStatus` = `CURRENT`, `SUPERSEDED`; migration history count = 1; forecast row counts 0; existing Finance counts unchanged; all forecast integrity checks 0.
+
+**Permission reconciliation (Club Admin):** pre — 19 roles, missing `finance.forecast.view` 19, missing `finance.forecast.manage` 19; post — 0 missing (targeted `reconcileFinanceForecastPermissionsForClubAdmin`).
+
+**Read smoke:** forecast Prisma select, finance configuration/currency, budget baseline pointer, `loadForecastWorkspaceSnapshot` — OK on shared STAGE.
+
+Preview builds do not apply migrations automatically (`docs/deployment/stage-preview-migration-runbook.md`).
 
 ## Tests
 
@@ -111,5 +129,5 @@ Production: untouched.
 ## Roadmap state
 
 - FIN-04 **IN PROGRESS**
-- FIN-04A **IMPLEMENTED / PO UAT PENDING**
+- FIN-04A **IMPLEMENTED / PO UAT IN PROGRESS**
 - FIN-04B **NOT STARTED**

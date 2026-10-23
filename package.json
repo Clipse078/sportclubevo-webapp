@@ -57,7 +57,9 @@
     "finance:01a:analyze-fca-workbook": "tsx scripts/finance/sce-finance-01a-analyze-fca-workbook.ts",
     "finance:01e:r4:stage-migration-verify": "tsx scripts/sce-finance-01e-r4-stage-migration-verify.ts",
     "finance:03a:r1:stage-migration-verify": "tsx scripts/sce-finance-03a-r1-stage-migration-verify.ts",
-    "finance:03a:r3:stage-permission-reconcile": "tsx scripts/sce-finance-03a-r3-stage-permission-reconcile.ts"
+    "finance:03a:r3:stage-permission-reconcile": "tsx scripts/sce-finance-03a-r3-stage-permission-reconcile.ts",
+    "finance:04a:r1:stage-migration-verify": "tsx scripts/sce-finance-04a-r1-stage-migration-verify.ts",
+    "finance:04a:r1:stage-permission-reconcile": "tsx scripts/sce-finance-04a-r1-stage-permission-reconcile.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",
