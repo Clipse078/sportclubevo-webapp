@@ -306,6 +306,10 @@ export async function createMatchWithMapping(
           homepageVisible: matchPublicationDefaults.homepageVisible,
           trainingsplanVisible: false,
           teamPageVisible: matchPublicationDefaults.teamPageVisible,
+          // Official SFV fixtures are website-eligible once publication defaults apply.
+          // Public feeds gate on reviewStage (SCE-ACTIVITY-CREATE-01C); DRAFT would hide
+          // every imported match until manual approval, which is not the SFV contract.
+          reviewStage: "APPROVED",
         },
         select: { id: true },
       });
