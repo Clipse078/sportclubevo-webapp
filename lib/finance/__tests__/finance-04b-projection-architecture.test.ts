@@ -138,6 +138,9 @@ describe("FIN-04A schema integrity (regression guard)", () => {
     expect(schema).toContain("model FinanceProjectionLine");
     expect(schema).toContain("currentProjectionVersionId");
     expect(schema).not.toMatch(/model SceProjection\b/);
+    const lineBlock = schema.match(/model FinanceProjectionLine \{[\s\S]*?\n\}/)?.[0];
+    expect(lineBlock).toContain("methodologyFamily");
+    expect(PROJECTION_METHODOLOGY_FAMILIES).toContain("MIXED");
   });
 
   it("documents scenarioKey as FIN-04D hook — projection must not reuse it", () => {
@@ -156,5 +159,10 @@ describe("FIN-04B architecture documentation present", () => {
     expect(doc).toContain("SCE generates the projection");
     expect(doc).toContain("VERSIONED_SNAPSHOT_HYBRID");
     expect(doc).toContain("SCE-Projektion");
+    const methodology = readFileSync(
+      resolve(process.cwd(), "docs/finance/SCE-FINANCE-04B-04-METHODOLOGY.md"),
+      "utf8",
+    );
+    expect(methodology).toContain("sce-projection-v1");
   });
 });
