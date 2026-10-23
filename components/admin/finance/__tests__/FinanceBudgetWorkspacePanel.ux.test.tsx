@@ -74,4 +74,13 @@ describe("FIN-01D budget workspace UX", () => {
     expect(panel).toContain("data-budget-editable-scope");
     expect(panel).toContain('"working-revision"');
   });
+
+  it("FIN-02C uses create dialog with segmented choice (no checkboxes)", () => {
+    expect(panel).toContain("createAnnualBudgetAction");
+    expect(panel).toContain("createDialogTitle");
+    expect(panel).toContain("SceSegmentedControl");
+    expect(panel).toContain("createModeEmpty");
+    expect(panel).toContain("createModeCopy");
+    expect(panel).not.toContain('type="checkbox"');
+  });
 });

@@ -10,7 +10,7 @@
 | **Builds on** | FIN-02A operational budgeting, FIN-01E reporting |
 | **FIN-02B implementation** | **COMPLETE + MERGED (STAGE)** |
 | **FIN_02B_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative, 2026-10-23) |
-| **FIN-02 programme status** | **IN PROGRESS** (02B closed; **02C/02D** candidates not started) |
+| **FIN-02 programme status** | **IN PROGRESS** (02B closed; **02C** implemented on branch — PO UAT pending; **02D** not started) |
 
 ## PO UAT confirmation (2026-10-23 — closure)
 

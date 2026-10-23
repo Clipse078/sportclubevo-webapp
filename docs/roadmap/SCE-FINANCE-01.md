@@ -14,7 +14,7 @@
 | Package | Focus |
 | --- | --- |
 | **FIN-01** | Foundation & configurable structure |
-| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — **02A COMPLETE + MERGED + PO UAT PASS**; **02B COMPLETE + PO UAT PASS** — [`SCE-FINANCE-02B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02B-IMPLEMENTATION.md); **02C/02D** candidates **NOT STARTED**) |
+| **FIN-02** | Budgeting & approved baseline (**IN PROGRESS** — **02A COMPLETE + MERGED + PO UAT PASS**; **02B COMPLETE + PO UAT PASS** — [`SCE-FINANCE-02B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02B-IMPLEMENTATION.md); **02C IMPLEMENTED / PO UAT PENDING** — [`SCE-FINANCE-02C-IMPLEMENTATION.md`](../finance/SCE-FINANCE-02C-IMPLEMENTATION.md); **02D** candidate **NOT STARTED**) |
 | **FIN-03** | Periodic measurement & budget control (**NOT STARTED**) |
 | **FIN-04** | Rolling forecast & scenarios (**NOT STARTED**) |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
