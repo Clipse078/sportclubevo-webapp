@@ -26,6 +26,25 @@ During PO UAT, STAGE showed a generic concept label (`Finanzjahr`) as if it were
 
 PO UAT retest is still **pending** after R2 lands on STAGE preview.
 
+## PO UAT finding (FIN-02B R3) — settings scope + year selector clipping
+
+During PO UAT on STAGE preview:
+
+1. **Finance → Einrichtung** mixed year-specific controls (Finanzjahre) with organisation-wide **Funktionen** in one undifferentiated workspace, so tenants could infer capabilities were scoped to the selected financial year.
+2. **Finance → Budget** financial-year selector clipped the selected label vertically (e.g. `FY 2026`).
+
+**Resolution (R3):**
+
+| Area | Detail |
+| --- | --- |
+| **Settings IA** | Separate surfaces: `settings-years` (Finanzjahre) vs `settings-capabilities` (Funktionen, tenant-wide copy) |
+| **Configured years** | Compact list: name + formatted period + **Bearbeiten** → dialog (name always editable; dates locked when policy requires) |
+| **Add year** | `+ Finanzjahr hinzufügen` opens canonical **Dialog** create flow (no permanently expanded form) |
+| **Capabilities** | Explicit i18n: settings apply **unabhängig vom Finanzjahr**; persistence unchanged (`FinanceTenantCapability`) |
+| **Selector clipping** | Root cause: `.fca-select` vertical padding on `.sce-toolbar-select` with fixed `h-9` — fixed in shared toolbar select CSS (`padding-block`, `line-height`) |
+
+PO UAT retest remains **pending** (do not mark FIN-02B PO UAT PASS until Michael re-tests).
+
 ## Purpose
 
 When an organisation has an **approved governance baseline v1** and prepares a **working revision v2**, FIN-02B defines how v2 becomes the **current** governance baseline without mutating, deleting, or rewriting v1.

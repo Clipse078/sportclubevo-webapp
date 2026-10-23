@@ -25,7 +25,7 @@ export default function SceToolbarSelect({
         {...props}
         {...{ [SCE_FORM_CONTROL_MICRO_UX_MARKERS.TOOLBAR_SELECT]: "true" }}
         className={cn(
-          "fca-select sce-toolbar-select h-9 w-full min-w-0 appearance-none pr-8 text-sm lg:w-auto",
+          "fca-select sce-toolbar-select h-9 w-full min-w-0 appearance-none text-sm leading-5 lg:w-auto",
           className,
         )}
       />
