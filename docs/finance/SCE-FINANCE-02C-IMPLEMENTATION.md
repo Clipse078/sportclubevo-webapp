@@ -6,9 +6,9 @@
 | **Feature branch** | `cursor/sce-finance-02c-annual-budget-creation` |
 | **Merge target** | `STAGE` |
 | **PR** | **#899** |
-| **Feature head at closure** | `6744fbe0c18f20c845bd914bbbb525fbff5bb5aa` (core `20595af8` … dialog reset `6d0addc1` … R1 `96824f4b` … R1 test `6744fbe0` … closure docs) |
-| **Merge commit (STAGE)** | *(recorded post-merge on STAGE — see closure commit after PR #899)* |
-| **FIN-02C implementation** | **COMPLETE + MERGED + PO UAT PASS** *(merge SHA on STAGE)* |
+| **Feature head at merge** | `ec8983c101a25924647dc7c2235fbdcc476895e8` (core `20595af8` … R1 `96824f4b` / `6744fbe0` … closure docs `ddf49ba1` / `ec8983c1`) |
+| **Merge commit (STAGE)** | `56e8223b4db00246daeef91ea52c1e2ecb733386` (2026-10-23, PR **#899**) |
+| **FIN-02C implementation** | **COMPLETE + MERGED (STAGE) + PO UAT PASS** |
 | **FIN_02C_PO_UAT** | **PASS** (Product Owner manual UAT — authoritative, 2026-10-23) |
 | **FIN-02 programme status** | **IN PROGRESS** (02A–02C closed on STAGE; **02D** candidate not started) |
 
