@@ -62,8 +62,8 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("incomeSectionWithYear");
     expect(panel).toContain("expenseSectionWithYear");
     const varianceSection = panel.slice(
-      panel.indexOf("function VarianceComparisonSection"),
-      panel.indexOf("function VarianceComparisonSection") + 2500,
+      panel.indexOf("function PeriodicComparisonSection"),
+      panel.indexOf("function PeriodicComparisonSection") + 2500,
     );
     expect(varianceSection).toContain("accountColumn");
     expect(varianceSection).not.toContain("semanticColumn");
@@ -75,7 +75,7 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain('ytdContextWithYear", {');
     expect(panel).toContain('ytdBudgetReferenceWithYear", { year: selectedYearName }');
     expect(panel).toContain("break-words");
-    expect(panel).not.toContain("startDate");
+    expect(panel).not.toMatch(/years\.find\([^)]+\)\?\.(startDate|endDate)/);
   });
 
   it("FIN-03A R2 preserves tenant-defined year names verbatim via translation year param", () => {
@@ -124,13 +124,22 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("router.push");
   });
 
+  it("FIN-03B adds month/quarter modes with URL periodIndex and no fake period variance columns", () => {
+    expect(panel).toContain("modeMonth");
+    expect(panel).toContain("modeQuarter");
+    expect(panel).toContain('params.set("periodIndex"');
+    expect(panel).toContain("periodBudgetVarianceUnsupported");
+    expect(panel).toContain("periodActualColumn");
+    expect(panel).not.toMatch(/\/\s*12/);
+  });
+
   it("FIN-03A R5 variance favorability uses canonical semantic presentation module", () => {
     expect(panel).toContain("finance-variance-favorability-presentation");
     expect(panel).toContain("financeVarianceComparisonSemanticTextClass");
     expect(de).toContain('"favorabilityFavorable": "Günstig"');
     const varianceSection = panel.slice(
-      panel.indexOf("function VarianceComparisonSection"),
-      panel.indexOf("function VarianceComparisonSection") + 3500,
+      panel.indexOf("function PeriodicComparisonSection"),
+      panel.indexOf("function PeriodicComparisonSection") + 3500,
     );
     expect(varianceSection).not.toContain("row.metrics.favorability ??");
   });
