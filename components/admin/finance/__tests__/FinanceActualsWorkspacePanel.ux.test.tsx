@@ -18,19 +18,32 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).not.toContain('type="checkbox"');
   });
 
-  it("FIN-03A R2 exposes Ist-Wert erfassen when user can mutate (toolbar + entries header)", () => {
+  it("FIN-03A R4 exposes exactly one canonical Ist-Wert erfassen action in the context strip", () => {
     expect(panel).toContain("captureActual");
     expect(panel).toContain("data-finance-actual-create");
-    expect(panel).toContain("data-finance-actual-create-entries");
+    expect(panel).not.toContain("data-finance-actual-create-entries");
     expect(panel).toContain("renderCaptureActualButton");
     expect(panel).toContain("ms-auto");
     expect(de).toContain('"captureActual": "Ist-Wert erfassen"');
+    expect(panel.match(/data-finance-actual-create/g)?.length).toBe(1);
   });
 
-  it("FIN-03A R2 keeps create action in empty state and after entries exist", () => {
-    expect(panel).toContain('context: "empty"');
+  it("FIN-03A R4 removes duplicate create actions from Ist-Buchungen header and empty state", () => {
+    expect(panel).not.toMatch(/entries-header/);
+    expect(panel).not.toContain('context: "empty"');
     expect(panel).toContain("snapshot.entries.length === 0");
-    expect(panel).toMatch(/entries-header/);
+    expect(panel).toContain("entriesEmpty");
+    const entriesSection = panel.slice(
+      panel.indexOf('entriesTitle", { year: selectedYearName }'),
+      panel.indexOf("<Dialog"),
+    );
+    expect(entriesSection).not.toContain("renderCaptureActualButton");
+  });
+
+  it("FIN-03A R4 view-only users still omit create action", () => {
+    expect(panel).toContain("!canMutate");
+    expect(panel).toContain("viewOnlyHint");
+    expect(panel).toMatch(/canMutate \? \([\s\S]*renderCaptureActualButton/);
   });
 
   it("FIN-03A R2 create flow shows configured FinanceYear.name", () => {
@@ -80,6 +93,16 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("FinanceVarianceComparisonColGroup");
     expect(panel).toContain("data-finance-variance-comparison-table");
     expect(de).toContain('"deltaColumn": "Abweichung"');
+  });
+
+  it("FIN-03A R4 uses shared Ist-Buchungen bookings table column layout", () => {
+    expect(panel).toContain("finance-actuals-bookings-table-layout");
+    expect(panel).toContain("FinanceActualsBookingsColGroup");
+    expect(panel).toContain("data-finance-actuals-bookings-table");
+    expect(panel).toContain("FINANCE_ACTUALS_BOOKINGS_TABLE_CLASS");
+    expect(panel).toContain("FINANCE_ACTUALS_BOOKINGS_CELL_NUMERIC_CLASS");
+    expect(panel).toContain("FINANCE_ACTUALS_BOOKINGS_CELL_DESCRIPTION_CLASS");
+    expect(panel).toContain("FINANCE_ACTUALS_BOOKINGS_TABLE_SCROLL_CLASS");
   });
 
   it("FIN-03A R2 YTD does not expose delta/favorability columns", () => {

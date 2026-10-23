@@ -22,6 +22,18 @@ import {
   updateActualEntryAction,
 } from "@/app/(admin)/dashboard/finance/actuals/actions";
 import {
+  FINANCE_ACTUALS_BOOKINGS_CELL_ACTIONS_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_CELL_DESCRIPTION_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_CELL_NUMERIC_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_CELL_TEXT_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_HEAD_ACTIONS_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_HEAD_NUMERIC_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_HEAD_TEXT_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_TABLE_CLASS,
+  FINANCE_ACTUALS_BOOKINGS_TABLE_SCROLL_CLASS,
+  FinanceActualsBookingsColGroup,
+} from "@/lib/finance/presentation/finance-actuals-bookings-table-layout";
+import {
   FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS,
   FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS,
   FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS,
@@ -189,18 +201,14 @@ export function FinanceActualsWorkspacePanel({
 
   const availability = snapshot.variance.availability;
 
-  function renderCaptureActualButton(attrs?: { context: "toolbar" | "entries-header" | "empty" }) {
+  function renderCaptureActualButton() {
     if (!canMutate) return null;
-    const dataAttr =
-      attrs?.context === "entries-header"
-        ? { "data-finance-actual-create-entries": true }
-        : { "data-finance-actual-create": true };
     return (
       <Button
         variant="primary"
         onClick={openCreateDialog}
         disabled={pending}
-        {...dataAttr}
+        data-finance-actual-create
       >
         {t("captureActual")}
       </Button>
@@ -255,9 +263,7 @@ export function FinanceActualsWorkspacePanel({
           aria-label={t("comparisonModeAria")}
         />
         {canMutate ? (
-          <div className="ms-auto flex shrink-0 items-center">
-            {renderCaptureActualButton({ context: "toolbar" })}
-          </div>
+          <div className="ms-auto flex shrink-0 items-center">{renderCaptureActualButton()}</div>
         ) : null}
       </div>
 
@@ -334,70 +340,93 @@ export function FinanceActualsWorkspacePanel({
       )}
 
       <section className={FINANCE_SECTION_SURFACE_CLASS}>
-        <div
-          className={cn(
-            FINANCE_SECTION_HEADER_CLASS,
-            "flex flex-wrap items-center justify-between gap-2 break-words",
-          )}
-        >
-          <h2 className="min-w-0 flex-1 text-sm font-semibold">
-            {t("entriesTitle", { year: selectedYearName })}
-          </h2>
-          {canMutate ? (
-            <div className="shrink-0">{renderCaptureActualButton({ context: "entries-header" })}</div>
-          ) : null}
-        </div>
+        <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>
+          {t("entriesTitle", { year: selectedYearName })}
+        </h2>
         {snapshot.entries.length === 0 ? (
           <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>
             <p>{t("entriesEmpty")}</p>
-            {canMutate ? (
-              <div className="mt-4">{renderCaptureActualButton({ context: "empty" })}</div>
-            ) : null}
           </div>
         ) : (
           <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>
-            <table className="w-full min-w-0 text-sm">
-              <thead>
-                <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
-                  <th className="text-left">{t("dateColumn")}</th>
-                  <th className="text-left">{t("accountColumn")}</th>
-                  <th className="text-left">{t("semanticColumn")}</th>
-                  <th className="text-right">{t("amountColumn")}</th>
-                  <th className="text-left">{t("descriptionColumn")}</th>
-                  {canMutate ? <th className="text-right">{t("actionsColumn")}</th> : null}
-                </tr>
-              </thead>
-              <tbody>
-                {snapshot.entries.map((entry) => (
-                  <tr key={entry.id} className={FINANCE_TABLE_ROW_CLASS}>
-                    <td>{formatFinanceYearDateInputValue(entry.effectiveDate)}</td>
-                    <td>{entry.account.name}</td>
-                    <td>
-                      {entry.account.canonicalSemantic === "INCOME"
-                        ? tStructure("income.label")
-                        : tStructure("expense.label")}
-                    </td>
-                    <td className="text-right">{formatMoney(entry.amountMinor)}</td>
-                    <td>{entry.description ?? "—"}</td>
+            <div className={FINANCE_ACTUALS_BOOKINGS_TABLE_SCROLL_CLASS}>
+              <table
+                className={FINANCE_ACTUALS_BOOKINGS_TABLE_CLASS}
+                data-finance-actuals-bookings-table
+              >
+                <FinanceActualsBookingsColGroup
+                  mode={canMutate ? "WITH_ACTIONS" : "VIEW_ONLY"}
+                />
+                <thead>
+                  <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
+                    <th className={FINANCE_ACTUALS_BOOKINGS_HEAD_TEXT_CLASS}>
+                      {t("dateColumn")}
+                    </th>
+                    <th className={FINANCE_ACTUALS_BOOKINGS_HEAD_TEXT_CLASS}>
+                      {t("accountColumn")}
+                    </th>
+                    <th className={FINANCE_ACTUALS_BOOKINGS_HEAD_TEXT_CLASS}>
+                      {t("semanticColumn")}
+                    </th>
+                    <th className={FINANCE_ACTUALS_BOOKINGS_HEAD_NUMERIC_CLASS}>
+                      {t("amountColumn")}
+                    </th>
+                    <th className={FINANCE_ACTUALS_BOOKINGS_HEAD_TEXT_CLASS}>
+                      {t("descriptionColumn")}
+                    </th>
                     {canMutate ? (
-                      <td className="space-x-2 text-right">
-                        <Button variant="secondary" size="sm" onClick={() => openEditDialog(entry)}>
-                          {t("editAction")}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleDelete(entry.id)}
-                          disabled={pending}
-                        >
-                          {t("deleteAction")}
-                        </Button>
-                      </td>
+                      <th className={FINANCE_ACTUALS_BOOKINGS_HEAD_ACTIONS_CLASS}>
+                        {t("actionsColumn")}
+                      </th>
                     ) : null}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {snapshot.entries.map((entry) => (
+                    <tr key={entry.id} className={FINANCE_TABLE_ROW_CLASS}>
+                      <td className={FINANCE_ACTUALS_BOOKINGS_CELL_TEXT_CLASS}>
+                        {formatFinanceYearDateInputValue(entry.effectiveDate)}
+                      </td>
+                      <td className={FINANCE_ACTUALS_BOOKINGS_CELL_TEXT_CLASS}>
+                        {entry.account.name}
+                      </td>
+                      <td className={FINANCE_ACTUALS_BOOKINGS_CELL_TEXT_CLASS}>
+                        {entry.account.canonicalSemantic === "INCOME"
+                          ? tStructure("income.label")
+                          : tStructure("expense.label")}
+                      </td>
+                      <td className={FINANCE_ACTUALS_BOOKINGS_CELL_NUMERIC_CLASS}>
+                        {formatMoney(entry.amountMinor)}
+                      </td>
+                      <td className={FINANCE_ACTUALS_BOOKINGS_CELL_DESCRIPTION_CLASS}>
+                        {entry.description ?? "—"}
+                      </td>
+                      {canMutate ? (
+                        <td className={FINANCE_ACTUALS_BOOKINGS_CELL_ACTIONS_CLASS}>
+                          <div className="inline-flex flex-wrap justify-end gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => openEditDialog(entry)}
+                            >
+                              {t("editAction")}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleDelete(entry.id)}
+                              disabled={pending}
+                            >
+                              {t("deleteAction")}
+                            </Button>
+                          </div>
+                        </td>
+                      ) : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </section>

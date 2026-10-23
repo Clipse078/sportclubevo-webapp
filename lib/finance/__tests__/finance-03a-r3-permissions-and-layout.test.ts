@@ -12,6 +12,7 @@ import {
 } from "@/lib/finance/services/finance-actual-service";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { TENANT_CLUB_ADMIN_DELEGATION_REGRESSION_KEYS } from "@/lib/permissions/tenant-club-admin-permission-contract";
+import { FINANCE_ACTUALS_BOOKINGS_TABLE_CLASS } from "@/lib/finance/presentation/finance-actuals-bookings-table-layout";
 import { FINANCE_VARIANCE_COMPARISON_TABLE_CLASS } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 
 function ctx(permissions: string[]): FinanceAuthContext {
@@ -221,5 +222,38 @@ describe("FIN-03A-R3 shared variance comparison table layout", () => {
     expect(panel).toContain(" · ");
     expect(panel).not.toMatch(/type="radio"/);
     expect(panel).not.toMatch(/canonicalSemantic.*select/i);
+  });
+});
+
+describe("FIN-03A-R4 Ist-Buchungen table layout and create deduplication", () => {
+  const panel = readFileSync(
+    join(process.cwd(), "components/admin/finance/FinanceActualsWorkspacePanel.tsx"),
+    "utf8",
+  );
+  const bookingsLayout = readFileSync(
+    join(
+      process.cwd(),
+      "lib/finance/presentation/finance-actuals-bookings-table-layout.tsx",
+    ),
+    "utf8",
+  );
+
+  it("defines stable six-column geometry for Datum through Aktionen", () => {
+    expect(bookingsLayout).toContain("FinanceActualsBookingsColGroup");
+    expect(bookingsLayout).toContain("WITH_ACTIONS");
+    expect(bookingsLayout).toContain("VIEW_ONLY");
+    expect(bookingsLayout).toContain("tabular-nums");
+    expect(bookingsLayout).toContain(FINANCE_ACTUALS_BOOKINGS_TABLE_CLASS);
+  });
+
+  it("panel consumes one bookings colgroup for header and body", () => {
+    expect(panel).toContain("finance-actuals-bookings-table-layout");
+    expect(panel.match(/FinanceActualsBookingsColGroup/g)?.length).toBe(1);
+    expect(panel).toContain("data-finance-actuals-bookings-table");
+  });
+
+  it("retains single toolbar create action only", () => {
+    expect(panel.match(/data-finance-actual-create/g)?.length).toBe(1);
+    expect(panel).not.toContain("data-finance-actual-create-entries");
   });
 });

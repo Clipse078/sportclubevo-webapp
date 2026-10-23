@@ -81,3 +81,12 @@ R2 is UI-only: **no schema / migration changes**.
 | 2 | Blocker | Club Admin sees view-only hint; **Ist-Wert erfassen** hidden | Root cause: FIN-03A added `finance.actual.*` in catalog only (no FIN-01D-style migration backfill); designated STAGE had **38** missing `club_admin__*` assignments. **Code:** `finance.admin` now satisfies actual manage (parity with budget approve). **Data:** guarded `scripts/sce-finance-03a-r3-stage-permission-reconcile.ts --apply` via `reconcileFinancePermissions` |
 
 R3: **SCHEMA_MIGRATION = NONE**; **PERMISSION_RECONCILIATION = REQUIRED** on shared STAGE (tenant-generic Club Admin alignment).
+
+## PO UAT findings (R4)
+
+| # | Severity | Finding | R4 resolution |
+| --- | --- | --- | --- |
+| 1 | UX | Three redundant **Ist-Wert erfassen** buttons (context strip, Ist-Buchungen header, empty state) | Single canonical create action retained in top context strip only; section header and empty state are informational |
+| 2 | UX | Ist-Buchungen table weak column separation (Betrag/Beschreibung, cramped actions) | Shared `finance-actuals-bookings-table-layout` (`table-fixed` + `colgroup`, tabular-nums Betrag, scoped `overflow-x-auto`) |
+
+R4: **SCHEMA_CHANGE = NONE**; **NEW_MIGRATION = NONE**; presentation/UX closure only.
