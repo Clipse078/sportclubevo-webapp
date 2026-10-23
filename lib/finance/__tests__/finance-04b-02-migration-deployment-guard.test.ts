@@ -1,5 +1,5 @@
 /**
- * FIN-04B-02 — migration committed; shared STAGE apply deferred to readiness package.
+ * FIN-04B-02 — migration guard; shared STAGE apply recorded in FIN-04B-03.
  */
 
 import { readFileSync } from "node:fs";
@@ -26,6 +26,8 @@ describe("FIN-04B-02 migration deployment guard", () => {
     expect(script).toContain("FinanceProjection");
     expect(script).toContain("BROKEN_CURRENT_PROJECTION_POINTERS");
     expect(script).toContain("INVALID_PROJECTION_RANGES");
+    expect(script).toContain("existingFinancePreserved");
+    expect(script).toContain("APPLY_DATABASE_MIGRATIONS");
   });
 
   it("includes range integrity CHECK in migration SQL", () => {

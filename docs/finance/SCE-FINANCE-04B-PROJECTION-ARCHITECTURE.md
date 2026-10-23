@@ -2,11 +2,11 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04B programme — **04B-01** architecture; **04B-02** persistence |
-| **Status** | **FIN-04B IN PROGRESS** — **04B-01 COMPLETE / APPROVED**; **04B-02 IMPLEMENTED** (shared STAGE migration **pending**) |
+| **Package** | FIN-04B programme — **04B-01** architecture; **04B-02** persistence; **04B-03** evidence & sufficiency |
+| **Status** | **FIN-04B IN PROGRESS** — **04B-01 COMPLETE / APPROVED**; **04B-02 IMPLEMENTED / STAGE APPLIED**; **04B-03 IMPLEMENTED** |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **Base** | `STAGE` (post FIN-04A merge PR **#902**, merge `eb3901ae`) |
-| **Implementation code** | Contract: `lib/finance/projection/projection-architecture-contract.ts`; persistence: `lib/finance/services/finance-projection-service.ts` |
+| **Implementation code** | Contract: `lib/finance/projection/projection-architecture-contract.ts`; persistence: `lib/finance/services/finance-projection-service.ts`; evidence: `lib/finance/services/finance-projection-evidence-service.ts` |
 
 ## Executive summary
 

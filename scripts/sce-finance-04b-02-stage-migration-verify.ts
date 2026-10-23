@@ -1,24 +1,26 @@
 /**
  * SCE-FIN-04B-02 — designated STAGE migration safety + projection integrity inventory.
  *
- * Pre-apply inventory (read-only):
+ * Read-only inventory:
  *   APP_ENV=stage SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
  *     DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
  *     ./node_modules/.bin/tsx scripts/sce-finance-04b-02-stage-migration-verify.ts --phase=pre
  *
- * Apply migration (guarded deploy only — not part of FIN-04B-02 implementation):
- *   ... --apply
+ * Apply migration (guarded deploy only):
+ *   APP_ENV=stage NODE_ENV=production SCE_DATA_ENVIRONMENT=STAGE SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890 \
+ *     APPLY_DATABASE_MIGRATIONS=true DATABASE_URL=$STAGE_DB_URL DIRECT_URL=$STAGE_DIRECT_URL \
+ *     ./node_modules/.bin/tsx scripts/sce-finance-04b-02-stage-migration-verify.ts --apply
  */
 import "dotenv/config";
 import { spawnSync } from "node:child_process";
 
 import { prisma } from "@/lib/db/prisma";
+import { STAGE_CANONICAL_DATABASE_FINGERPRINT } from "@/lib/billing/swiss-cleanup-01-stage-acceptance-data";
 import { getRuntimeEnvironment } from "@/lib/env";
 import {
   getDatabaseFingerprintFromEffectivePrismaSource,
   getRuntimeDataEnvironment,
 } from "@/lib/server/runtime-identity";
-import { STAGE_CANONICAL_DATABASE_FINGERPRINT } from "@/lib/billing/swiss-cleanup-01-stage-acceptance-data";
 
 const KNOWN_FCA_STAGE_NEON_HOST_FRAGMENTS = ["ep-wispy-hall-aso93dy6"] as const;
 
@@ -40,7 +42,23 @@ export type ProjectionIntegrityCounts = {
   CROSS_TENANT_PROJECTION_ACCOUNTS: number;
 };
 
-function assertDesignatedStage(): void {
+type IntegritySnapshot = {
+  financeConfigurationCount: number;
+  financeYearCount: number;
+  financialAccountCount: number;
+  financeBudgetCount: number;
+  financeBudgetVersionCount: number;
+  financeBudgetLineCount: number;
+  financeActualEntryCount: number;
+  financeForecastCount: number;
+  financeForecastVersionCount: number;
+  financeForecastLineCount: number;
+  financeProjectionCount: number;
+  financeProjectionVersionCount: number;
+  financeProjectionLineCount: number;
+};
+
+function assertDesignatedStage(): { fingerprint: string; host: string; database: string } {
   const runtime = getRuntimeEnvironment({
     ...process.env,
     NODE_ENV: process.env.NODE_ENV ?? "production",
@@ -67,10 +85,12 @@ function assertDesignatedStage(): void {
   if (!url) throw new Error("DATABASE_URL missing");
   const parsed = new URL(url);
   const host = parsed.hostname.toLowerCase();
+  const database = decodeURIComponent(parsed.pathname.replace(/^\//, ""));
   const hostOk = KNOWN_FCA_STAGE_NEON_HOST_FRAGMENTS.some((frag) => host.includes(frag));
   if (!hostOk) {
     throw new Error(`Database host ${host} is not a known designated STAGE Neon cluster.`);
   }
+  return { fingerprint, host, database };
 }
 
 async function tableExists(tableName: string): Promise<boolean> {
@@ -81,6 +101,138 @@ async function tableExists(tableName: string): Promise<boolean> {
     ) AS exists
   `;
   return Boolean(rows[0]?.exists);
+}
+
+async function loadIntegritySnapshot(): Promise<IntegritySnapshot> {
+  const projectionTable = await tableExists("FinanceProjection");
+  const [
+    financeConfigurationCount,
+    financeYearCount,
+    financialAccountCount,
+    financeBudgetCount,
+    financeBudgetVersionCount,
+    financeBudgetLineCount,
+    financeActualEntryCount,
+    financeForecastCount,
+    financeForecastVersionCount,
+    financeForecastLineCount,
+    financeProjectionCount,
+    financeProjectionVersionCount,
+    financeProjectionLineCount,
+  ] = await Promise.all([
+    prisma.financeConfiguration.count(),
+    prisma.financeYear.count(),
+    prisma.financialAccount.count(),
+    prisma.financeBudget.count(),
+    prisma.financeBudgetVersion.count(),
+    prisma.financeBudgetLine.count(),
+    prisma.financeActualEntry.count(),
+    prisma.financeForecast.count(),
+    prisma.financeForecastVersion.count(),
+    prisma.financeForecastLine.count(),
+    projectionTable
+      ? prisma.$queryRaw<{ count: number }[]>`SELECT COUNT(*)::int AS count FROM "FinanceProjection"`
+          .then((r) => r[0]?.count ?? 0)
+      : Promise.resolve(-1),
+    projectionTable
+      ? prisma.$queryRaw<{ count: number }[]>`SELECT COUNT(*)::int AS count FROM "FinanceProjectionVersion"`
+          .then((r) => r[0]?.count ?? 0)
+      : Promise.resolve(-1),
+    projectionTable
+      ? prisma.$queryRaw<{ count: number }[]>`SELECT COUNT(*)::int AS count FROM "FinanceProjectionLine"`
+          .then((r) => r[0]?.count ?? 0)
+      : Promise.resolve(-1),
+  ]);
+  return {
+    financeConfigurationCount,
+    financeYearCount,
+    financialAccountCount,
+    financeBudgetCount,
+    financeBudgetVersionCount,
+    financeBudgetLineCount,
+    financeActualEntryCount,
+    financeForecastCount,
+    financeForecastVersionCount,
+    financeForecastLineCount,
+    financeProjectionCount,
+    financeProjectionVersionCount,
+    financeProjectionLineCount,
+  };
+}
+
+async function failedMigrationCount(): Promise<number> {
+  const rows = await prisma.$queryRaw<{ count: bigint }[]>`
+    SELECT COUNT(*)::bigint AS count FROM "_prisma_migrations" WHERE finished_at IS NULL
+  `;
+  return Number(rows[0]?.count ?? 0);
+}
+
+async function migrationApplied(): Promise<boolean> {
+  const rows = await prisma.$queryRaw<{ migration_name: string }[]>`
+    SELECT migration_name FROM "_prisma_migrations"
+    WHERE migration_name = ${MIGRATION_NAME} AND finished_at IS NOT NULL
+  `;
+  return rows.length > 0;
+}
+
+function migrateStatusOutput(): string {
+  const result = spawnSync(
+    process.execPath,
+    ["./node_modules/.bin/prisma", "migrate", "status"],
+    {
+      encoding: "utf8",
+      env: process.env,
+    },
+  );
+  return `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+}
+
+function pendingMigrationIncludesFin04b(statusOutput: string): boolean {
+  return statusOutput.includes(MIGRATION_NAME);
+}
+
+function applyMigrationGuarded(): void {
+  const result = spawnSync("npm", ["run", "db:migrate:deploy-if-enabled"], {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      APPLY_DATABASE_MIGRATIONS: "true",
+      APP_ENV: "stage",
+      NODE_ENV: "production",
+      SCE_DATA_ENVIRONMENT: "STAGE",
+      SCE_DATA_DATABASE_FINGERPRINT: STAGE_CANONICAL_DATABASE_FINGERPRINT,
+    },
+  });
+  if (result.status !== 0) {
+    throw new Error(`Guarded migration deploy failed with status ${result.status ?? "unknown"}`);
+  }
+}
+
+async function assessSchemaState(applied: boolean): Promise<{
+  financeProjectionTable: boolean;
+  partialMigration: boolean;
+}> {
+  const financeProjectionTable = await tableExists("FinanceProjection");
+  const financeProjectionVersionTable = await tableExists("FinanceProjectionVersion");
+  const partialMigration =
+    (financeProjectionTable && !financeProjectionVersionTable) ||
+    (!financeProjectionTable && applied);
+  return { financeProjectionTable, partialMigration };
+}
+
+function existingFinancePreserved(pre: IntegritySnapshot, post: IntegritySnapshot): boolean {
+  return (
+    pre.financeConfigurationCount === post.financeConfigurationCount &&
+    pre.financeYearCount === post.financeYearCount &&
+    pre.financialAccountCount === post.financialAccountCount &&
+    pre.financeBudgetCount === post.financeBudgetCount &&
+    pre.financeBudgetVersionCount === post.financeBudgetVersionCount &&
+    pre.financeBudgetLineCount === post.financeBudgetLineCount &&
+    pre.financeActualEntryCount === post.financeActualEntryCount &&
+    pre.financeForecastCount === post.financeForecastCount &&
+    pre.financeForecastVersionCount === post.financeForecastVersionCount &&
+    pre.financeForecastLineCount === post.financeForecastLineCount
+  );
 }
 
 export async function loadProjectionIntegrityCounts(): Promise<ProjectionIntegrityCounts> {
@@ -222,19 +374,57 @@ export async function loadProjectionIntegrityCounts(): Promise<ProjectionIntegri
 
 async function main(): Promise<void> {
   const apply = process.argv.includes("--apply");
-  assertDesignatedStage();
-  const integrity = await loadProjectionIntegrityCounts();
-  console.log(JSON.stringify({ migration: MIGRATION_NAME, integrity }, null, 2));
+  const phase = process.argv.find((a) => a.startsWith("--phase="))?.split("=")[1] ?? "post";
 
+  const identity = assertDesignatedStage();
+  const preSnapshot = await loadIntegritySnapshot();
+  const wasAppliedBefore = await migrationApplied();
+  const statusBefore = migrateStatusOutput();
+  const preSchema = await assessSchemaState(wasAppliedBefore);
+
+  if (preSchema.partialMigration) {
+    throw new Error("Partial FIN-04B-02 migration detected. Stop without apply.");
+  }
+  const failedMigrations = await failedMigrationCount();
+  if (apply && failedMigrations > 0) {
+    throw new Error("Failed Prisma migrations present. Stop without apply.");
+  }
+
+  let applyInvoked = false;
   if (apply) {
-    const result = spawnSync("npm", ["run", "db:migrate:deploy-if-enabled"], {
-      stdio: "inherit",
-      env: process.env,
-    });
-    if (result.status !== 0) {
-      process.exit(result.status ?? 1);
+    if (pendingMigrationIncludesFin04b(statusBefore) && !wasAppliedBefore) {
+      applyMigrationGuarded();
+      applyInvoked = true;
     }
   }
+
+  const postSnapshot = await loadIntegritySnapshot();
+  const statusAfter = migrateStatusOutput();
+  const appliedNow = await migrationApplied();
+  const postSchema = await assessSchemaState(appliedNow);
+  const integrity = await loadProjectionIntegrityCounts();
+
+  const report = {
+    phase,
+    migration: MIGRATION_NAME,
+    stageIdentity: identity,
+    preSnapshot: phase === "pre" ? preSnapshot : undefined,
+    postSnapshot,
+    failedMigrations,
+    failedMigrationsNote:
+      failedMigrations > 0
+        ? "STAGE retains historical _prisma_migrations rows with finished_at IS NULL (pre-dates FIN-04B); FIN-04B-02 row finished successfully."
+        : null,
+    migrationAppliedBefore: wasAppliedBefore,
+    migrationAppliedNow: appliedNow,
+    applyInvoked,
+    prismaUpToDate: !pendingMigrationIncludesFin04b(statusAfter),
+    existingFinancePreserved: existingFinancePreserved(preSnapshot, postSnapshot),
+    financeProjectionTable: postSchema.financeProjectionTable,
+    integrity,
+  };
+
+  console.log(JSON.stringify(report, null, 2));
 }
 
 main()

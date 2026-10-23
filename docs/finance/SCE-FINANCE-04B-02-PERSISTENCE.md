@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B-02 |
-| **Status** | **IMPLEMENTED** — Prisma migration committed; **not applied to shared STAGE** in this package |
+| **Status** | **IMPLEMENTED** — Prisma migration **applied to designated shared STAGE** (FIN-04B-03) |
 | **Migration** | `20261023200000_sce_finance_04b_02_projection_persistence` |
 | **Service** | `lib/finance/services/finance-projection-service.ts` (`generateProjectionSnapshot`) |
 
@@ -30,7 +30,7 @@ Projection adoption (**FIN-04B-06**) must create a **new** `FinanceForecastVersi
 
 ## Integrity verification (shared STAGE)
 
-Script: `scripts/sce-finance-04b-02-stage-migration-verify.ts` — expects all listed integrity counters **= 0** after migration apply.
+Script: `scripts/sce-finance-04b-02-stage-migration-verify.ts` — designated STAGE identity + inventory; expects all listed integrity counters **= 0** after migration apply. Guarded apply requires `APPLY_DATABASE_MIGRATIONS=true`.
 
 ## Tests
 
