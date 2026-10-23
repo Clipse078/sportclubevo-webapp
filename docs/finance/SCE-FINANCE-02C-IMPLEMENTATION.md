@@ -144,10 +144,10 @@ MULTI_SELECTION_PATTERN = CHECKBOX_WHEN_MULTI_OR_ROW_SELECTION (unchanged progra
 
 | Gate | Result |
 | --- | --- |
-| Finance regression (FIN-01D…FIN-02C + copy-sources + workspace UX) | *(see closure run)* |
-| Design system governance | *(see closure run)* |
-| Changed-path ESLint | *(see closure run)* |
-| `NODE_OPTIONS=--max-old-space-size=8192 npm run build` | *(see closure run)* |
+| Finance regression (FIN-01D…FIN-02C + copy-sources + workspace UX) | **PASS** (255 tests, 37 files — closure 2026-10-23) |
+| Design system governance | **PASS** (287 tests + governance scan) |
+| Changed-path ESLint | **PASS** (0 errors; 2 pre-existing `react-hooks/exhaustive-deps` warnings on workspace panel) |
+| `NODE_OPTIONS=--max-old-space-size=8192 npm run build` | **PASS** |
 
 ## Roadmap linkage
 
