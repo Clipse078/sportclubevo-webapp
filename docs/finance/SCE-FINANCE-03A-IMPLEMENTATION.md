@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-03A |
-| **Status** | **IMPLEMENTED / STAGE DB READY / PO UAT PENDING** |
+| **Status** | **IMPLEMENTED / STAGE DB READY / PO UAT IN PROGRESS** |
 | **Branch** | `cursor/sce-finance-03a-actuals-variance-foundation` |
 | **Target** | STAGE |
 
@@ -62,3 +62,13 @@ Shared STAGE must apply `20261023120000_sce_finance_03a_actuals_foundation` befo
 4. Record income/expense actuals; verify full-year variance table.
 5. Switch to YTD mode — confirm no YTD budget variance label; annual budget remains reference.
 6. Re-baseline budget — actual entries unchanged; variance uses new baseline.
+
+## PO UAT findings (R2)
+
+| # | Severity | Finding | R2 resolution |
+| --- | --- | --- | --- |
+| 1 | Blocker | No discoverable **Ist-Wert erfassen** action | Primary action in context strip (`ms-auto`), entries section header, and empty state; label **Ist-Wert erfassen**; dialog shows configured `FinanceYear.name` |
+| 2 | UX | Flat variance table mixed income/expense with redundant **Typ** column | Split into **Einnahmen · {year}** then **Ausgaben · {year}**; **Typ** removed from comparison tables |
+| 3 | UX | Finance year name not repeated in scrolled sections | Section headings use `{SECTION} · {FinanceYear.name}` pattern (aligned with FIN-02C-R1) |
+
+R2 is UI-only: **no schema / migration changes**.

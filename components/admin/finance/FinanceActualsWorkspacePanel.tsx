@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { SceSegmentedControl } from "@/components/admin/shared/SceSegmentedControl";
+import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import {
   formatBudgetPlanningMinor,
@@ -39,12 +40,22 @@ import {
 
 type FinanceYearOption = { id: string; name: string };
 
+type VarianceAccountRow = ActualsWorkspaceSnapshot["variance"]["accounts"][number];
+
 type FinanceActualsWorkspacePanelProps = {
   years: FinanceYearOption[];
   snapshot: ActualsWorkspaceSnapshot;
   canMutate: boolean;
   formattingLocale: string;
 };
+
+function formatYtdCutoffLabel(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
 
 export function FinanceActualsWorkspacePanel({
   years,
@@ -150,7 +161,7 @@ export function FinanceActualsWorkspacePanel({
     });
   }
 
-  const varianceRows = useMemo(
+  const comparisonRows = useMemo(
     () =>
       snapshot.variance.accounts.filter(
         (row) => row.metrics.hasActual || row.metrics.hasApprovedBudget,
@@ -158,7 +169,35 @@ export function FinanceActualsWorkspacePanel({
     [snapshot.variance.accounts],
   );
 
+  const incomeComparisonRows = useMemo(
+    () => comparisonRows.filter((row) => row.canonicalSemantic === "INCOME"),
+    [comparisonRows],
+  );
+
+  const expenseComparisonRows = useMemo(
+    () => comparisonRows.filter((row) => row.canonicalSemantic === "EXPENSE"),
+    [comparisonRows],
+  );
+
   const availability = snapshot.variance.availability;
+
+  function renderCaptureActualButton(attrs?: { context: "toolbar" | "entries-header" | "empty" }) {
+    if (!canMutate) return null;
+    const dataAttr =
+      attrs?.context === "entries-header"
+        ? { "data-finance-actual-create-entries": true }
+        : { "data-finance-actual-create": true };
+    return (
+      <Button
+        variant="primary"
+        onClick={openCreateDialog}
+        disabled={pending}
+        {...dataAttr}
+      >
+        {t("captureActual")}
+      </Button>
+    );
+  }
 
   if (availability === "NO_BASE_CURRENCY") {
     return (
@@ -208,24 +247,39 @@ export function FinanceActualsWorkspacePanel({
           aria-label={t("comparisonModeAria")}
         />
         {canMutate ? (
-          <Button variant="primary" onClick={openCreateDialog} disabled={pending}>
-            {t("captureActual")}
-          </Button>
+          <div className="ms-auto flex shrink-0 items-center">
+            {renderCaptureActualButton({ context: "toolbar" })}
+          </div>
         ) : null}
       </div>
 
+      {!canMutate ? (
+        <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
+      ) : null}
+
       {comparisonMode === "YTD" && snapshot.ytdCutoffDate ? (
-        <p className="text-sm text-muted-foreground">{t("ytdCutoffHint", { date: snapshot.ytdCutoffDate.toISOString().slice(0, 10) })}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("ytdContextWithYear", {
+            year: selectedYearName,
+            date: formatYtdCutoffLabel(snapshot.ytdCutoffDate, formattingLocale),
+          })}
+        </p>
       ) : null}
 
       {comparisonMode === "YTD" ? (
-        <p className="text-sm text-muted-foreground">{t("ytdBudgetVarianceUnsupported")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("ytdBudgetReferenceWithYear", { year: selectedYearName })}
+          {" · "}
+          {t("ytdBudgetVarianceUnsupported")}
+        </p>
       ) : null}
 
       {feedback ? <p role="alert">{feedback}</p> : null}
 
       <section className={FINANCE_SECTION_SURFACE_CLASS}>
-        <h2 className={FINANCE_SECTION_HEADER_CLASS}>{t("summaryTitle")}</h2>
+        <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>
+          {t("summaryTitleWithYear", { year: selectedYearName })}
+        </h2>
         <div className={FINANCE_SUMMARY_SURFACE_CLASS}>
           <div className={FINANCE_SUMMARY_GRID_CLASS}>
             <div>
@@ -251,74 +305,50 @@ export function FinanceActualsWorkspacePanel({
       </section>
 
       {snapshot.variance.approvedBudgetVersionId ? (
-        <section className={FINANCE_SECTION_SURFACE_CLASS}>
-          <h2 className={FINANCE_SECTION_HEADER_CLASS}>
-            {comparisonMode === "FULL_YEAR" ? t("varianceTitle") : t("annualBudgetReferenceTitle")}
-          </h2>
-          <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
-                  <th className="text-left">{t("accountColumn")}</th>
-                  <th className="text-left">{t("semanticColumn")}</th>
-                  <th className="text-right">{t("budgetColumn")}</th>
-                  <th className="text-right">{t("actualColumn")}</th>
-                  {comparisonMode === "FULL_YEAR" ? (
-                    <>
-                      <th className="text-right">{t("deltaColumn")}</th>
-                      <th className="text-right">{t("favorabilityColumn")}</th>
-                    </>
-                  ) : null}
-                </tr>
-              </thead>
-              <tbody>
-                {varianceRows.map((row) => (
-                  <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
-                    <td>{row.accountName}</td>
-                    <td>
-                      {row.canonicalSemantic === "INCOME"
-                        ? tStructure("income.label")
-                        : tStructure("expense.label")}
-                    </td>
-                    <td className="text-right">
-                      {row.metrics.approvedBudgetMinor !== null
-                        ? formatMoney(row.metrics.approvedBudgetMinor)
-                        : t("noBudget")}
-                    </td>
-                    <td className="text-right">
-                      {row.metrics.hasActual
-                        ? formatMoney(row.metrics.actualMinor ?? 0)
-                        : t("noActual")}
-                    </td>
-                    {comparisonMode === "FULL_YEAR" ? (
-                      <>
-                        <td className="text-right">
-                          {row.metrics.rawDeltaMinor !== null
-                            ? formatMoney(row.metrics.rawDeltaMinor)
-                            : "—"}
-                        </td>
-                        <td className="text-right">
-                          {row.metrics.favorability ?? "—"}
-                        </td>
-                      </>
-                    ) : null}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <>
+          <VarianceComparisonSection
+            title={t("incomeSectionWithYear", { year: selectedYearName })}
+            rows={incomeComparisonRows}
+            comparisonMode={comparisonMode}
+            formatMoney={formatMoney}
+            t={t}
+          />
+          <VarianceComparisonSection
+            title={t("expenseSectionWithYear", { year: selectedYearName })}
+            rows={expenseComparisonRows}
+            comparisonMode={comparisonMode}
+            formatMoney={formatMoney}
+            t={t}
+          />
+        </>
       ) : (
         <p className="text-sm text-muted-foreground">{t("noApprovedBaseline")}</p>
       )}
 
       <section className={FINANCE_SECTION_SURFACE_CLASS}>
-        <h2 className={FINANCE_SECTION_HEADER_CLASS}>{t("entriesTitle", { year: selectedYearName })}</h2>
+        <div
+          className={cn(
+            FINANCE_SECTION_HEADER_CLASS,
+            "flex flex-wrap items-center justify-between gap-2 break-words",
+          )}
+        >
+          <h2 className="min-w-0 flex-1 text-sm font-semibold">
+            {t("entriesTitle", { year: selectedYearName })}
+          </h2>
+          {canMutate ? (
+            <div className="shrink-0">{renderCaptureActualButton({ context: "entries-header" })}</div>
+          ) : null}
+        </div>
         {snapshot.entries.length === 0 ? (
-          <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>{t("entriesEmpty")}</div>
+          <div className={FINANCE_EMPTY_DRAFT_SURFACE_CLASS}>
+            <p>{t("entriesEmpty")}</p>
+            {canMutate ? (
+              <div className="mt-4">{renderCaptureActualButton({ context: "empty" })}</div>
+            ) : null}
+          </div>
         ) : (
           <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>
-            <table className="w-full text-sm">
+            <table className="w-full min-w-0 text-sm">
               <thead>
                 <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
                   <th className="text-left">{t("dateColumn")}</th>
@@ -342,7 +372,7 @@ export function FinanceActualsWorkspacePanel({
                     <td className="text-right">{formatMoney(entry.amountMinor)}</td>
                     <td>{entry.description ?? "—"}</td>
                     {canMutate ? (
-                      <td className="text-right space-x-2">
+                      <td className="space-x-2 text-right">
                         <Button variant="secondary" size="sm" onClick={() => openEditDialog(entry)}>
                           {t("editAction")}
                         </Button>
@@ -381,21 +411,32 @@ export function FinanceActualsWorkspacePanel({
         }
       >
         {!editingId ? (
-          <SceFormField label={t("accountLabel")} htmlFor="actual-account">
-            <SceToolbarSelect
-              id="actual-account"
-              value={accountId}
-              onChange={(event) => setAccountId(event.target.value)}
-              aria-label={t("accountLabel")}
-            >
-              <option value="">{t("accountLabel")}</option>
-              {snapshot.selectableAccounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {`${a.name} (${a.canonicalSemantic === "INCOME" ? tStructure("income.label") : tStructure("expense.label")})`}
-                </option>
-              ))}
-            </SceToolbarSelect>
-          </SceFormField>
+          <>
+            <SceFormField label={t("financeYearLabel")} htmlFor="actual-finance-year">
+              <p
+                id="actual-finance-year"
+                className="text-sm font-semibold text-[var(--foreground)] break-words"
+                data-finance-year-name={selectedYearName}
+              >
+                {selectedYearName}
+              </p>
+            </SceFormField>
+            <SceFormField label={t("accountLabel")} htmlFor="actual-account">
+              <SceToolbarSelect
+                id="actual-account"
+                value={accountId}
+                onChange={(event) => setAccountId(event.target.value)}
+                aria-label={t("accountLabel")}
+              >
+                <option value="">{t("accountLabel")}</option>
+                {snapshot.selectableAccounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {`${a.name} (${a.canonicalSemantic === "INCOME" ? tStructure("income.label") : tStructure("expense.label")})`}
+                  </option>
+                ))}
+              </SceToolbarSelect>
+            </SceFormField>
+          </>
         ) : null}
         <SceFormField label={t("dateLabel")} htmlFor="actual-date">
           <input
@@ -427,5 +468,65 @@ export function FinanceActualsWorkspacePanel({
         </SceFormField>
       </Dialog>
     </div>
+  );
+}
+
+function VarianceComparisonSection(props: {
+  title: string;
+  rows: VarianceAccountRow[];
+  comparisonMode: ActualsWorkspaceSnapshot["comparisonMode"];
+  formatMoney: (minor: number) => string;
+  t: (key: string, values?: Record<string, string>) => string;
+}) {
+  const { title, rows, comparisonMode, formatMoney, t } = props;
+
+  return (
+    <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="actual-variance-group">
+      <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>{title}</h2>
+      <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>
+        <table className="w-full min-w-0 text-sm">
+          <thead>
+            <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
+              <th className="text-left">{t("accountColumn")}</th>
+              <th className="text-right">{t("budgetColumn")}</th>
+              <th className="text-right">{t("actualColumn")}</th>
+              {comparisonMode === "FULL_YEAR" ? (
+                <>
+                  <th className="text-right">{t("deltaColumn")}</th>
+                  <th className="text-right">{t("favorabilityColumn")}</th>
+                </>
+              ) : null}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
+                <td>{row.accountName}</td>
+                <td className="text-right">
+                  {row.metrics.approvedBudgetMinor !== null
+                    ? formatMoney(row.metrics.approvedBudgetMinor)
+                    : t("noBudget")}
+                </td>
+                <td className="text-right">
+                  {row.metrics.hasActual
+                    ? formatMoney(row.metrics.actualMinor ?? 0)
+                    : t("noActual")}
+                </td>
+                {comparisonMode === "FULL_YEAR" ? (
+                  <>
+                    <td className="text-right">
+                      {row.metrics.rawDeltaMinor !== null
+                        ? formatMoney(row.metrics.rawDeltaMinor)
+                        : "—"}
+                    </td>
+                    <td className="text-right">{row.metrics.favorability ?? "—"}</td>
+                  </>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
