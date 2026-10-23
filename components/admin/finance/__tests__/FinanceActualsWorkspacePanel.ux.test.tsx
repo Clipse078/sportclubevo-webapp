@@ -123,4 +123,15 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain('params.set("yearId"');
     expect(panel).toContain("router.push");
   });
+
+  it("FIN-03A R5 variance favorability uses canonical semantic presentation module", () => {
+    expect(panel).toContain("finance-variance-favorability-presentation");
+    expect(panel).toContain("financeVarianceComparisonSemanticTextClass");
+    expect(de).toContain('"favorabilityFavorable": "Günstig"');
+    const varianceSection = panel.slice(
+      panel.indexOf("function VarianceComparisonSection"),
+      panel.indexOf("function VarianceComparisonSection") + 3500,
+    );
+    expect(varianceSection).not.toContain("row.metrics.favorability ??");
+  });
 });

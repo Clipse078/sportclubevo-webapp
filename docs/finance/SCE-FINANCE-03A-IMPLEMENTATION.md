@@ -90,3 +90,11 @@ R3: **SCHEMA_MIGRATION = NONE**; **PERMISSION_RECONCILIATION = REQUIRED** on sha
 | 2 | UX | Ist-Buchungen table weak column separation (Betrag/Beschreibung, cramped actions) | Shared `finance-actuals-bookings-table-layout` (`table-fixed` + `colgroup`, tabular-nums Betrag, scoped `overflow-x-auto`) |
 
 R4: **SCHEMA_CHANGE = NONE**; **NEW_MIGRATION = NONE**; presentation/UX closure only.
+
+## PO UAT findings (R5)
+
+| # | Severity | Finding | R5 resolution |
+| --- | --- | --- | --- |
+| 1 | UX | Variance / favorability values were technically correct but visually neutral — users could not instantly see favorable vs unfavorable vs on-plan without interpreting raw delta sign | **Abweichung** and **Bewertung** share restrained DS-07 semantic text color derived from **canonical favorability** (`computeAccountVarianceMetrics`), never from raw delta sign. **FAVORABLE** → success semantic; **UNFAVORABLE** → danger semantic; **ON_PLAN** → neutral; missing comparison → muted. Localized labels: DE **Günstig** / **Ungünstig** / **Im Plan** (EN/FR/IT equivalents). Internal enum values unchanged. |
+
+R5: **SCHEMA_CHANGE = NONE**; **NEW_MIGRATION = NONE**; presentation-only.

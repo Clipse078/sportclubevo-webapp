@@ -42,6 +42,10 @@ import {
   FinanceVarianceComparisonColGroup,
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
 import {
+  financeVarianceComparisonSemanticTextClass,
+  financeVarianceFavorabilityLabelKey,
+} from "@/lib/finance/presentation/finance-variance-favorability-presentation";
+import {
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_CURRENCY_CONTEXT_CLASS,
   FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
@@ -552,33 +556,61 @@ function VarianceComparisonSection(props: {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
-                <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>{row.accountName}</td>
-                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                  {row.metrics.approvedBudgetMinor !== null
-                    ? formatMoney(row.metrics.approvedBudgetMinor)
-                    : t("noBudget")}
-                </td>
-                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                  {row.metrics.hasActual
-                    ? formatMoney(row.metrics.actualMinor ?? 0)
-                    : t("noActual")}
-                </td>
-                {comparisonMode === "FULL_YEAR" ? (
-                  <>
-                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                      {row.metrics.rawDeltaMinor !== null
-                        ? formatMoney(row.metrics.rawDeltaMinor)
-                        : "—"}
-                    </td>
-                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                      {row.metrics.favorability ?? "—"}
-                    </td>
-                  </>
-                ) : null}
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const hasComparison = row.metrics.rawDeltaMinor !== null;
+              const varianceSemanticClass = financeVarianceComparisonSemanticTextClass({
+                favorability: row.metrics.favorability,
+                hasComparison,
+              });
+
+              return (
+                <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
+                  <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
+                    {row.accountName}
+                  </td>
+                  <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                    {row.metrics.approvedBudgetMinor !== null
+                      ? formatMoney(row.metrics.approvedBudgetMinor)
+                      : t("noBudget")}
+                  </td>
+                  <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                    {row.metrics.hasActual
+                      ? formatMoney(row.metrics.actualMinor ?? 0)
+                      : t("noActual")}
+                  </td>
+                  {comparisonMode === "FULL_YEAR" ? (
+                    <>
+                      <td
+                        className={cn(
+                          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+                          varianceSemanticClass,
+                        )}
+                        data-finance-variance-delta
+                        data-finance-variance-favorability={
+                          hasComparison ? row.metrics.favorability : undefined
+                        }
+                      >
+                        {hasComparison ? formatMoney(row.metrics.rawDeltaMinor!) : "—"}
+                      </td>
+                      <td
+                        className={cn(
+                          FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+                          varianceSemanticClass,
+                        )}
+                        data-finance-variance-assessment
+                        data-finance-variance-favorability={
+                          hasComparison ? row.metrics.favorability : undefined
+                        }
+                      >
+                        {hasComparison && row.metrics.favorability
+                          ? t(financeVarianceFavorabilityLabelKey(row.metrics.favorability))
+                          : "—"}
+                      </td>
+                    </>
+                  ) : null}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
