@@ -72,3 +72,12 @@ Shared STAGE must apply `20261023120000_sce_finance_03a_actuals_foundation` befo
 | 3 | UX | Finance year name not repeated in scrolled sections | Section headings use `{SECTION} · {FinanceYear.name}` pattern (aligned with FIN-02C-R1) |
 
 R2 is UI-only: **no schema / migration changes**.
+
+## PO UAT findings (R3)
+
+| # | Severity | Finding | R3 resolution |
+| --- | --- | --- | --- |
+| 1 | UX | **Einnahmen** / **Ausgaben** variance tables misaligned (column geometry drifted per table) | Shared `finance-variance-comparison-table-layout` (`table-fixed` + common `colgroup`) consumed by both sections; German column label **Abweichung** |
+| 2 | Blocker | Club Admin sees view-only hint; **Ist-Wert erfassen** hidden | Root cause: FIN-03A added `finance.actual.*` in catalog only (no FIN-01D-style migration backfill); designated STAGE had **38** missing `club_admin__*` assignments. **Code:** `finance.admin` now satisfies actual manage (parity with budget approve). **Data:** guarded `scripts/sce-finance-03a-r3-stage-permission-reconcile.ts --apply` via `reconcileFinancePermissions` |
+
+R3: **SCHEMA_MIGRATION = NONE**; **PERMISSION_RECONCILIATION = REQUIRED** on shared STAGE (tenant-generic Club Admin alignment).

@@ -109,7 +109,7 @@ export function requireFinanceActualView(ctx: FinanceAuthContext): void {
 }
 
 export function requireFinanceActualManage(ctx: FinanceAuthContext): void {
-  if (!hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_MANAGE)) {
+  if (!canManageActuals(ctx)) {
     throw new FinanceDomainError(
       "FINANCE_FORBIDDEN",
       "Insufficient permission to manage actuals.",
@@ -119,5 +119,8 @@ export function requireFinanceActualManage(ctx: FinanceAuthContext): void {
 }
 
 export function canManageActuals(ctx: FinanceAuthContext): boolean {
-  return hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_MANAGE);
+  return (
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ACTUAL_MANAGE) ||
+    hasFinancePermission(ctx, PERMISSIONS.FINANCE_ADMIN)
+  );
 }

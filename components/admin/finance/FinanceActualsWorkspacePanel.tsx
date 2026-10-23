@@ -22,6 +22,14 @@ import {
   updateActualEntryAction,
 } from "@/app/(admin)/dashboard/finance/actuals/actions";
 import {
+  FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS,
+  FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS,
+  FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS,
+  FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+  FINANCE_VARIANCE_COMPARISON_TABLE_CLASS,
+  FinanceVarianceComparisonColGroup,
+} from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
+import {
   FINANCE_CONTEXT_STRIP_CLASS,
   FINANCE_CURRENCY_CONTEXT_CLASS,
   FINANCE_EMPTY_DRAFT_SURFACE_CLASS,
@@ -431,7 +439,7 @@ export function FinanceActualsWorkspacePanel({
                 <option value="">{t("accountLabel")}</option>
                 {snapshot.selectableAccounts.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {`${a.name} (${a.canonicalSemantic === "INCOME" ? tStructure("income.label") : tStructure("expense.label")})`}
+                    {`${a.name} · ${a.canonicalSemantic === "INCOME" ? tStructure("income.label") : tStructure("expense.label")}`}
                   </option>
                 ))}
               </SceToolbarSelect>
@@ -480,20 +488,36 @@ function VarianceComparisonSection(props: {
 }) {
   const { title, rows, comparisonMode, formatMoney, t } = props;
 
+  const columnMode = comparisonMode === "FULL_YEAR" ? "FULL_YEAR" : "YTD";
+
   return (
     <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="actual-variance-group">
       <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>{title}</h2>
       <div className={FINANCE_FUNCTIONAL_SURFACE_CLASS}>
-        <table className="w-full min-w-0 text-sm">
+        <table
+          className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS}
+          data-finance-variance-comparison-table
+        >
+          <FinanceVarianceComparisonColGroup mode={columnMode} />
           <thead>
             <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
-              <th className="text-left">{t("accountColumn")}</th>
-              <th className="text-right">{t("budgetColumn")}</th>
-              <th className="text-right">{t("actualColumn")}</th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS}>
+                {t("accountColumn")}
+              </th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                {t("budgetColumn")}
+              </th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                {t("actualColumn")}
+              </th>
               {comparisonMode === "FULL_YEAR" ? (
                 <>
-                  <th className="text-right">{t("deltaColumn")}</th>
-                  <th className="text-right">{t("favorabilityColumn")}</th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("deltaColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {t("favorabilityColumn")}
+                  </th>
                 </>
               ) : null}
             </tr>
@@ -501,25 +525,27 @@ function VarianceComparisonSection(props: {
           <tbody>
             {rows.map((row) => (
               <tr key={row.accountId} className={FINANCE_TABLE_ROW_CLASS}>
-                <td>{row.accountName}</td>
-                <td className="text-right">
+                <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>{row.accountName}</td>
+                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
                   {row.metrics.approvedBudgetMinor !== null
                     ? formatMoney(row.metrics.approvedBudgetMinor)
                     : t("noBudget")}
                 </td>
-                <td className="text-right">
+                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
                   {row.metrics.hasActual
                     ? formatMoney(row.metrics.actualMinor ?? 0)
                     : t("noActual")}
                 </td>
                 {comparisonMode === "FULL_YEAR" ? (
                   <>
-                    <td className="text-right">
+                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
                       {row.metrics.rawDeltaMinor !== null
                         ? formatMoney(row.metrics.rawDeltaMinor)
                         : "—"}
                     </td>
-                    <td className="text-right">{row.metrics.favorability ?? "—"}</td>
+                    <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                      {row.metrics.favorability ?? "—"}
+                    </td>
                   </>
                 ) : null}
               </tr>

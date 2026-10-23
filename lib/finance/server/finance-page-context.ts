@@ -69,7 +69,9 @@ export async function loadFinanceWorkspaceContext() {
     canActualView:
       permissionKeys.has(PERMISSIONS.FINANCE_VIEW) ||
       permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_VIEW),
-    canActualManage: permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_MANAGE),
+    canActualManage:
+      permissionKeys.has(PERMISSIONS.FINANCE_ACTUAL_MANAGE) ||
+      permissionKeys.has(PERMISSIONS.FINANCE_ADMIN),
     overviewReporting,
   };
 }

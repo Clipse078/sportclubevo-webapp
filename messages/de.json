@@ -1135,7 +1135,7 @@
       "semanticColumn": "Typ",
       "budgetColumn": "Budget",
       "actualColumn": "Ist",
-      "deltaColumn": "Delta",
+      "deltaColumn": "Abweichung",
       "favorabilityColumn": "Bewertung",
       "noBudget": "—",
       "noActual": "—",

@@ -75,6 +75,13 @@ describe("FIN-03A FinanceActualsWorkspacePanel UX contract", () => {
     expect(panel).toContain("selectedYearName");
   });
 
+  it("FIN-03A R3 uses shared variance comparison column layout module", () => {
+    expect(panel).toContain("finance-variance-comparison-table-layout");
+    expect(panel).toContain("FinanceVarianceComparisonColGroup");
+    expect(panel).toContain("data-finance-variance-comparison-table");
+    expect(de).toContain('"deltaColumn": "Abweichung"');
+  });
+
   it("FIN-03A R2 YTD does not expose delta/favorability columns", () => {
     expect(panel).toMatch(
       /comparisonMode === "FULL_YEAR" \? \([\s\S]*deltaColumn[\s\S]*favorabilityColumn/,
