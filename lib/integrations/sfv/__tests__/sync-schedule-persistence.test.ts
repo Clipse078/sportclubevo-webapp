@@ -360,6 +360,21 @@ describe("createMatchWithMapping — homeAway", () => {
     const createData = mockEventCreate.mock.calls[0][0].data;
     expect(createData.infoboardVisible).toBe(false);
   });
+
+  it("C11: SFV create sets reviewStage=APPROVED for public website eligibility", async () => {
+    await createMatchWithMapping(
+      makeEntry(),
+      makeContext(),
+      "season-1",
+      null,
+      "FC Allschwil",
+      true,
+      null,
+      "team-1",
+    );
+    const createData = mockEventCreate.mock.calls[0][0].data;
+    expect(createData.reviewStage).toBe("APPROVED");
+  });
 });
 
 // ── U1–U4: Update path ────────────────────────────────────────────────────────
