@@ -133,6 +133,8 @@ export const PROJECTION_METHODOLOGY_FAMILIES = [
   "DRIVER_BASED",
   "STATISTICAL",
   "ENSEMBLE",
+  /** Version-level aggregate when lines used different methodologies (FIN-04B-04). */
+  "MIXED",
   "NONE",
 ] as const;
 

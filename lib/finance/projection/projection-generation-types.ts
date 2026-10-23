@@ -27,6 +27,9 @@ export type ProjectionGenerationLineInput = {
   projectedAmountMinor: number | null;
   lowerBoundMinor?: number | null;
   upperBoundMinor?: number | null;
+  methodologyFamily: ProjectionMethodologyFamily;
+  dataSufficiency: ProjectionDataSufficiencyLevel;
+  confidence: ProjectionConfidenceLevel;
 };
 
 export type GenerateProjectionSnapshotInput = {

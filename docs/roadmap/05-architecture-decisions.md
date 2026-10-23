@@ -767,7 +767,7 @@ Tenants need Region, Program, Campaign, etc., without abandoning typed domain FK
 
 ## ADR-034 — SCE Projection Engine (FIN-04B)
 
-**Status:** Accepted (FIN-04B-01 architecture review; FIN-04B-02 persistence decisions)
+**Status:** Accepted (FIN-04B-01 architecture; FIN-04B-02 persistence; FIN-04B-04 initial engine)
 
 ### Context
 
@@ -786,12 +786,14 @@ FIN-04A established organisation-owned **current forecast** independent of budge
 9. **Capability / permissions:** Remains under **`FORECASTING`**; view via `finance.forecast.view`, generate/refresh/apply via `finance.forecast.manage` (distinct actions in code).
 10. **Identity:** Do **not** store SCE projection in `FinanceForecastVersion.scenarioKey` (reserved for FIN-04D scenarios). **`FinanceProjection*`** models are separate from **`FinanceForecast*`** (FIN-04B-02 migration).
 11. **UX placement:** SCE assist inside existing **Prognose** workspace; German labels **Aktuelle Prognose** vs **SCE-Projektion**.
+12. **FIN-04B-04 engine:** Deterministic **`sce-projection-v1`** — methodology selected **per financial account**; version may be **`MIXED`**. Historical seasonal pattern preferred when evidence supports it; **run rate** is an explicit conservative fallback; **`NONE`** / null amount is valid. Budget and current forecast are **not** predictive fallbacks. Generated snapshots remain **immutable** (new version on refresh).
 
-Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md). Code locks: `lib/finance/projection/projection-architecture-contract.ts`.
+Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md). Methodology detail: [`docs/finance/SCE-FINANCE-04B-04-METHODOLOGY.md`](../finance/SCE-FINANCE-04B-04-METHODOLOGY.md). Code locks: `lib/finance/projection/projection-architecture-contract.ts`.
 
 ### Consequences
 
-- FIN-04B-02 adds Prisma migration `20261023200000_sce_finance_04b_02_projection_persistence` (shared STAGE apply deferred).
+- FIN-04B-02 migration `20261023200000_sce_finance_04b_02_projection_persistence` applied on shared STAGE (FIN-04B-03).
+- FIN-04B-04 adds migration `20261023210000_sce_finance_04b_04_projection_line_methodology` (shared STAGE apply pending).
 - FIN-04A manual forecast services unchanged in FIN-04B-02; adoption workflow in FIN-04B-06 must create new forecast version per decision (7).
 - FIN-04C/D/05/06 must consume projection as a separate measure from current forecast and published snapshots.
 - Architecture tests in `finance-04b-projection-architecture.test.ts` guard durable semantics.

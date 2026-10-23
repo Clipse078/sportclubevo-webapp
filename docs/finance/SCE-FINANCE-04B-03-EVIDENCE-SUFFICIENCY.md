@@ -10,7 +10,7 @@
 
 Deterministic boundary that answers: *what trustworthy evidence exists for `(tenant, financeYear, account, actualsThroughDate)`*, and *is it sufficient to attempt a future projection methodology*?
 
-This package does **not** compute `projectedAmountMinor` or run predictive algorithms (FIN-04B-04).
+This package does **not** compute `projectedAmountMinor` by itself; FIN-04B-04 consumes these outputs in `generateFinanceYearProjection`.
 
 ## Service entry points
 

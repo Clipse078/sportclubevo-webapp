@@ -59,6 +59,9 @@ type ProjectionStore = {
     projectedAmountMinor: number | null;
     lowerBoundMinor: number | null;
     upperBoundMinor: number | null;
+    methodologyFamily: string;
+    dataSufficiency: string;
+    confidence: string;
   }>;
   financeProjectionEvidence: Array<Record<string, unknown>>;
   financeProjectionReasonCode: Array<Record<string, unknown>>;
@@ -230,6 +233,9 @@ function makeProjectionDb(store: ProjectionStore) {
               projectedAmountMinor: (line.projectedAmountMinor as number | null) ?? null,
               lowerBoundMinor: (line.lowerBoundMinor as number | null) ?? null,
               upperBoundMinor: (line.upperBoundMinor as number | null) ?? null,
+              methodologyFamily: (line.methodologyFamily as string) ?? "NONE",
+              dataSufficiency: (line.dataSufficiency as string) ?? "INSUFFICIENT",
+              confidence: (line.confidence as string) ?? "NONE",
             });
           }
         }
@@ -337,7 +343,7 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
       engineVersion: "stub-0.1.0",
       dataSufficiency: "SUFFICIENT",
       confidence: "MEDIUM",
-      lines: [{ financialAccountId: accountIncome, projectedAmountMinor: 50_000_00 }],
+      lines: [projectionLine({ projectedAmountMinor: 50_000_00 })],
     });
     expect(result.versionNumber).toBe(1);
     expect(store.financeProjection).toHaveLength(1);
@@ -355,7 +361,7 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
     const first = await generateProjectionSnapshot(db, ctx, baseGenerationInput());
     const second = await generateProjectionSnapshot(db, ctx, {
       ...baseGenerationInput(),
-      lines: [{ financialAccountId: accountIncome, projectedAmountMinor: 60_000_00 }],
+      lines: [projectionLine({ projectedAmountMinor: 60_000_00 })],
     });
     expect(second.versionNumber).toBe(2);
     expect(second.supersededVersionId).toBe(first.projectionVersionId);
@@ -379,7 +385,7 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
     await expect(
       generateProjectionSnapshot(db, projectionCtx(), {
         ...baseGenerationInput(),
-        lines: [{ financialAccountId: "acc-tenant-b", projectedAmountMinor: 1_00 }],
+        lines: [projectionLine({ financialAccountId: "acc-tenant-b", projectedAmountMinor: 1_00 })],
       }),
     ).rejects.toMatchObject({ code: "FINANCE_CROSS_TENANT" });
   });
@@ -441,7 +447,7 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
         engineVersion: "stub-0.1.0",
         dataSufficiency: "INSUFFICIENT",
         confidence: "NONE",
-        lines: [{ financialAccountId: accountIncome, projectedAmountMinor: 1_00 }],
+        lines: [projectionLine({ projectedAmountMinor: 1_00 })],
       }),
     ).rejects.toMatchObject({ code: "FINANCE_PROJECTION_INSUFFICIENT_WITH_AMOUNTS" });
   });
@@ -477,8 +483,8 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
       generateProjectionSnapshot(db, projectionCtx(), {
         ...baseGenerationInput(),
         lines: [
-          { financialAccountId: accountIncome, projectedAmountMinor: 1_00 },
-          { financialAccountId: accountIncome, projectedAmountMinor: 2_00 },
+          projectionLine({ projectedAmountMinor: 1_00 }),
+          projectionLine({ projectedAmountMinor: 2_00 }),
         ],
       }),
     ).rejects.toMatchObject({ code: "P2002" });
@@ -520,7 +526,7 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
     const db = makeProjectionDb(store);
     await generateProjectionSnapshot(db, projectionCtx(), {
       ...baseGenerationInput(),
-      lines: [{ financialAccountId: "acc-archived", projectedAmountMinor: 500_00 }],
+      lines: [projectionLine({ financialAccountId: "acc-archived", projectedAmountMinor: 500_00 })],
     });
     expect(store.financeProjectionLine[0]!.financialAccountId).toBe("acc-archived");
   });
@@ -531,7 +537,14 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
       ...baseGenerationInput(),
       dataSufficiency: "LIMITED",
       confidence: "LOW",
-      lines: [{ financialAccountId: accountIncome, projectedAmountMinor: null }],
+      lines: [
+        projectionLine({
+          projectedAmountMinor: null,
+          methodologyFamily: "NONE",
+          dataSufficiency: "LIMITED",
+          confidence: "LOW",
+        }),
+      ],
     });
     expect(store.financeProjectionLine[0]!.projectedAmountMinor).toBeNull();
   });
@@ -544,6 +557,25 @@ describe("FIN-04B-02 projection persistence lifecycle", () => {
   });
 });
 
+function projectionLine(
+  overrides?: Partial<{
+    financialAccountId: string;
+    projectedAmountMinor: number | null;
+    methodologyFamily: string;
+    dataSufficiency: string;
+    confidence: string;
+  }>,
+) {
+  return {
+    financialAccountId: accountIncome,
+    projectedAmountMinor: 50_000_00,
+    methodologyFamily: "BASELINE_REFERENCE",
+    dataSufficiency: "SUFFICIENT",
+    confidence: "MEDIUM",
+    ...overrides,
+  };
+}
+
 function baseGenerationInput() {
   return {
     financeYearId: yearId,
@@ -553,7 +585,7 @@ function baseGenerationInput() {
     engineVersion: "stub-0.1.0",
     dataSufficiency: "SUFFICIENT" as const,
     confidence: "MEDIUM" as const,
-    lines: [{ financialAccountId: accountIncome, projectedAmountMinor: 50_000_00 }],
+    lines: [projectionLine()],
   };
 }
 

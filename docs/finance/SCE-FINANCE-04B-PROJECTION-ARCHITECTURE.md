@@ -360,7 +360,7 @@ Derived minimal sequence (names indicative):
 | --- | --- | --- |
 | 1 | **FIN-04B-02** | **DONE (code)** — migration `20261023200000_sce_finance_04b_02_projection_persistence` + lifecycle services (generate stub, persist snapshot); STAGE apply pending |
 | 2 | **FIN-04B-03** | Evidence extraction (historical/current actuals, year boundaries), sufficiency evaluator (baseline rules) |
-| 3 | **FIN-04B-04** | First methodology plug-in (explicit, labeled — not naive default annualisation) behind methodology registry |
+| 3 | **FIN-04B-04** | **DONE (code)** — `sce-projection-v1` engine, per-line methodology, historical pattern + run rate + none; migration `20261023210000_sce_finance_04b_04_projection_line_methodology` pending STAGE |
 | 4 | **FIN-04B-05** | Prognose workspace UX — states, stale, insufficient, comparison strip |
 | 5 | **FIN-04B-06** | Apply workflow + forecast adoption provenance |
 | 6 | **FIN-04B-07** | Confidence/range hardening, explainability surfacing, driver provider registration API |

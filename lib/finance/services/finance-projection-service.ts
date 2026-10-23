@@ -254,6 +254,9 @@ export async function generateProjectionSnapshot(
                 projectedAmountMinor: line.projectedAmountMinor,
                 lowerBoundMinor: line.lowerBoundMinor ?? null,
                 upperBoundMinor: line.upperBoundMinor ?? null,
+                methodologyFamily: line.methodologyFamily,
+                dataSufficiency: line.dataSufficiency,
+                confidence: line.confidence,
               })),
             }
           : undefined,

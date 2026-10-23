@@ -11016,6 +11016,7 @@ enum FinanceProjectionMethodologyFamily {
   DRIVER_BASED
   STATISTICAL
   ENSEMBLE
+  MIXED
   NONE
 }
 
@@ -11110,6 +11111,9 @@ model FinanceProjectionLine {
   projectedAmountMinor Int?
   lowerBoundMinor      Int?
   upperBoundMinor      Int?
+  methodologyFamily    FinanceProjectionMethodologyFamily
+  dataSufficiency      FinanceProjectionDataSufficiency
+  confidence           FinanceProjectionConfidence
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
