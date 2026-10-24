@@ -19,8 +19,6 @@ import {
 } from "@/lib/finance/projection/projection-workspace-presentation";
 import type { ProjectionAccountExplainabilityDetailViewModel } from "@/lib/finance/projection/projection-workspace-explainability";
 import {
-  FINANCE_FUNCTIONAL_SURFACE_CLASS,
-  FINANCE_SECTION_HEADER_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
   FINANCE_SUMMARY_STRIP_GRID_CLASS,
   FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS,
@@ -127,15 +125,72 @@ export function FinanceProjectionWorkspaceSection({
     });
   }
 
+  const compactMetaLine = useMemo(() => {
+    if (!hasGeneratedVersion) return null;
+    const parts: string[] = [];
+    if (projection.actualsThroughDate) {
+      parts.push(
+        t("sourceCutoff", {
+          date: formatProjectionSourceCutoffDate(
+            projection.actualsThroughDate,
+            formattingLocale,
+          ),
+        }),
+      );
+    }
+    if (coverageLabel) {
+      parts.push(coverageLabel);
+    }
+    return parts.length > 0 ? parts.join(" · ") : null;
+  }, [
+    coverageLabel,
+    formattingLocale,
+    hasGeneratedVersion,
+    projection.actualsThroughDate,
+    t,
+  ]);
+
+  const secondaryMetaLine = useMemo(() => {
+    if (!hasGeneratedVersion) return null;
+    const parts: string[] = [];
+    if (projection.staleness === "STALE") {
+      parts.push(t("staleHint"));
+    }
+    if (projection.generatedAtIso) {
+      parts.push(
+        t("generatedAt", {
+          date: new Intl.DateTimeFormat(formattingLocale, {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date(projection.generatedAtIso)),
+        }),
+      );
+    }
+    if (projection.dashboard?.confidenceNote) {
+      parts.push(projection.dashboard.confidenceNote);
+    }
+    return parts.length > 0 ? parts.join(" · ") : null;
+  }, [
+    formattingLocale,
+    hasGeneratedVersion,
+    projection.dashboard,
+    projection.generatedAtIso,
+    projection.staleness,
+    t,
+  ]);
+
   return (
     <section
-      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-4")}
+      className={cn(FINANCE_SECTION_SURFACE_CLASS, "min-w-0")}
       data-finance-projection-state={projection.presentationState}
       aria-labelledby="finance-sce-projection-heading"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] px-4 py-3 sm:px-5">
         <div className="min-w-0 space-y-1">
-          <h2 id="finance-sce-projection-heading" className={FINANCE_SECTION_HEADER_CLASS}>
+          <h2 id="finance-sce-projection-heading" className="text-sm font-semibold text-[var(--foreground)]">
             {t("sectionTitle")}
           </h2>
           {projection.presentationState === "NO_PROJECTION" ? (
@@ -144,43 +199,21 @@ export function FinanceProjectionWorkspaceSection({
               <p className="max-w-2xl text-xs text-[var(--muted)]">{t("introExplainHint")}</p>
             </>
           ) : (
-            <p className="max-w-2xl text-sm text-[var(--muted)]">{t("sectionDescription")}</p>
+            <p className="max-w-2xl text-xs text-[var(--muted)]">{t("sectionDescription")}</p>
           )}
-          {projection.actualsThroughDate ? (
-            <p className="text-xs text-[var(--muted)]">
-              {t("sourceCutoff", {
-                date: formatProjectionSourceCutoffDate(
-                  projection.actualsThroughDate,
-                  formattingLocale,
-                ),
-              })}
+          {compactMetaLine ? (
+            <p className="text-xs text-[var(--muted)]" data-finance-projection-meta-primary>
+              {compactMetaLine}
             </p>
           ) : null}
-          {projection.generatedAtIso ? (
-            <p className="text-xs text-[var(--muted)]">
-              {t("generatedAt", {
-                date: new Intl.DateTimeFormat(formattingLocale, {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(projection.generatedAtIso)),
-              })}
+          {secondaryMetaLine ? (
+            <p className="text-xs text-[var(--muted)]" data-finance-projection-meta-secondary>
+              {secondaryMetaLine}
             </p>
-          ) : null}
-          {projection.staleness === "STALE" ? (
-            <p className="text-sm text-[var(--muted)]">{t("staleHint")}</p>
-          ) : null}
-          {coverageLabel ? (
-            <p className="text-xs text-[var(--muted)]">{coverageLabel}</p>
-          ) : null}
-          {projection.dashboard?.confidenceNote ? (
-            <p className="text-xs text-[var(--muted)]">{projection.dashboard.confidenceNote}</p>
           ) : null}
         </div>
         {canGenerate ? (
-          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button
               className="h-8 px-3 text-sm"
               variant="secondary"
@@ -205,6 +238,8 @@ export function FinanceProjectionWorkspaceSection({
           </div>
         ) : null}
       </div>
+
+      <div className="space-y-3 px-4 py-3 sm:px-5">
 
       {adoptBlockedStale ? (
         <p className="text-sm text-[var(--muted)]">{t("adoptStaleBlocked")}</p>
@@ -237,10 +272,7 @@ export function FinanceProjectionWorkspaceSection({
             formattingLocale={formattingLocale}
             t={t}
           />
-          <div
-            className="grid min-w-0 gap-3 lg:grid-cols-2"
-            data-finance-projection-visuals
-          >
+          <div className="grid min-w-0 gap-3 md:grid-cols-2" data-finance-projection-visuals>
             <FinanceProjectionOutlookChart
               title={t("chartOutlookTitle")}
               rows={projection.dashboard!.outlook}
@@ -258,33 +290,40 @@ export function FinanceProjectionWorkspaceSection({
               currency={currency}
               formattingLocale={formattingLocale}
             />
-            <div className="flex min-w-0 flex-col gap-3">
-              <FinanceProjectionCompositionChart
-                title={t("chartCompositionIncome")}
-                segments={projection.dashboard!.incomeComposition}
-                currency={currency}
-                formattingLocale={formattingLocale}
-              />
-              <FinanceProjectionCompositionChart
-                title={t("chartCompositionExpense")}
-                segments={projection.dashboard!.expenseComposition}
-                currency={currency}
-                formattingLocale={formattingLocale}
-              />
-            </div>
-          </div>
-          {projection.dashboard!.divergence !== null ? (
-            <FinanceProjectionDivergenceChart
-              title={t("chartDivergenceTitle")}
-              description={t("chartDivergenceDescription")}
-              alignedMessage={t("chartDivergenceAligned")}
-              rows={projection.dashboard!.divergence}
+            <FinanceProjectionCompositionChart
+              title={t("chartCompositionIncome")}
+              segments={projection.dashboard!.incomeComposition}
               currency={currency}
               formattingLocale={formattingLocale}
             />
-          ) : null}
+            <FinanceProjectionCompositionChart
+              title={t("chartCompositionExpense")}
+              segments={projection.dashboard!.expenseComposition}
+              currency={currency}
+              formattingLocale={formattingLocale}
+            />
+            {projection.dashboard!.divergence !== null ? (
+              <div className="md:col-span-2">
+                <FinanceProjectionDivergenceChart
+                  title={t("chartDivergenceTitle")}
+                  description={t("chartDivergenceDescription")}
+                  alignedMessage={t("chartDivergenceAligned")}
+                  rows={projection.dashboard!.divergence}
+                  currency={currency}
+                  formattingLocale={formattingLocale}
+                />
+              </div>
+            ) : null}
+          </div>
         </>
       ) : null}
+
+      <FinanceProjectionAccountDetailSection
+        projection={projection}
+        currency={currency}
+        formattingLocale={formattingLocale}
+        embedded
+      />
 
       {adoption && showAdoptAction ? (
         <Dialog
@@ -333,6 +372,7 @@ export function FinanceProjectionWorkspaceSection({
           </div>
         </Dialog>
       ) : null}
+      </div>
     </section>
   );
 }
@@ -381,6 +421,7 @@ export function FinanceProjectionAccountDetailSection(props: {
   projection: ProjectionWorkspaceViewModel;
   currency: string | null;
   formattingLocale: string;
+  embedded?: boolean;
 }) {
   const t = useTranslations("Finance.forecast");
   const tProj = useTranslations("Finance.forecast.projection");
@@ -390,14 +431,7 @@ export function FinanceProjectionAccountDetailSection(props: {
   const rows = props.projection.accounts.filter((a) => a.lifecycle === "ACTIVE");
   if (rows.length === 0) return null;
 
-  return (
-    <section
-      className={FINANCE_SECTION_SURFACE_CLASS}
-      data-finance-surface="projection-account-detail"
-    >
-      <h3 className="border-b border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-        {tProj("accountDetailSectionTitle")}
-      </h3>
+  const tableBlock = (
       <div className="min-w-0 overflow-x-auto">
         <table className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS}>
           <thead>
@@ -418,7 +452,10 @@ export function FinanceProjectionAccountDetailSection(props: {
           </thead>
           <tbody>
             {rows.map((account) => (
-              <tr key={account.accountId} className={FINANCE_TABLE_ROW_CLASS}>
+              <tr
+                key={account.accountId}
+                className={cn(FINANCE_TABLE_ROW_CLASS, props.embedded && "[&>td]:py-1.5")}
+              >
                 <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
                   <span className="font-medium">{account.accountName}</span>
                 </td>
@@ -456,6 +493,28 @@ export function FinanceProjectionAccountDetailSection(props: {
           </tbody>
         </table>
       </div>
+  );
+
+  if (props.embedded) {
+    return (
+      <div
+        className="border-t border-[var(--sce-surface-border-subtle)] pt-3"
+        data-finance-surface="projection-account-detail"
+      >
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {tProj("accountDetailSectionTitle")}
+        </h3>
+        {tableBlock}
+      </div>
+    );
+  }
+
+  return (
+    <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="projection-account-detail">
+      <h3 className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+        {tProj("accountDetailSectionTitle")}
+      </h3>
+      {tableBlock}
     </section>
   );
 }

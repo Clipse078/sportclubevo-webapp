@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C-05 workspace integration |
-| **Status** | **COMPLETE** (code); **04C-05R2** visual refinement complete — PO UAT resumes on STAGE |
+| **Status** | **04C-05R5** layout consolidation ready for final PO UAT (Michael); R4 lifecycle preserved |
 | **Route** | `/dashboard/finance/forecast` |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
 
@@ -62,6 +62,21 @@ Erweiterte Cutoff-/Reason-UX, revision detail URLs, und feinere Actuals-Expositi
 | **CTA** | **Prognose festhalten** nur bei `preview_ready`, passendem `loadedInputKey`, ohne Preview-Fehler, nicht während Submit. |
 | **Errors** | Preview-Fehler: **Die Vorschau konnte nicht geladen werden.** + **Erneut versuchen**; kein endloses Loading. |
 | **Tests** | `finance-04c-05r4-formal-reforecast-preview-lifecycle.test.ts`, `FinanceFormalReforecastDialog.preview-state.test.tsx`. |
+
+## FIN-04C-05R5 — Workspace layout consolidation (PO feedback)
+
+| Area | Change |
+| --- | --- |
+| **PO UAT (R4)** | Formalization preview lifecycle **PASS** — amounts, CTA, submit unchanged. |
+| **Workspace** | Current forecast, revision intelligence, change vs previous, and budget comparison share **one** rolling-forecast surface with subsection rhythm (typography + dividers), not stacked independent cards. |
+| **Revision density** | Prognoseentwicklung + Revisionsübersicht remain one integrated block with compact timeline and list. |
+| **Zero change** | When headline income/expense/result deltas are all zero, show quiet copy and **no** empty “Grösste Veränderungen” driver block. |
+| **Budget comparison** | Same analytical rhythm; reduced padding; no nested dark title bars. |
+| **Automatic forecast** | Compact primary/secondary metadata lines; summary + 2-column visual grid; account detail embedded in the same section. |
+| **Formal reforecast dialog** | Compact body; desktop fits without forced inner scroll at normal viewport; `max-md` overflow fallback retained. |
+| **R4 lifecycle** | Preview reducer, stale seq, blur-only label refresh, submit guard — **unchanged** (see R4 section). |
+
+Tests: `finance-04c-05r5-workspace-layout-consolidation.test.ts`, existing FIN-04C / R4 suites.
 
 ## PO UAT prerequisites
 

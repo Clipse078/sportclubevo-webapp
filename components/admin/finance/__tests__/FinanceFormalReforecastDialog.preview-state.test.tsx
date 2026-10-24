@@ -245,6 +245,18 @@ describe("FIN-04C-05R4 FinanceFormalReforecastDialog preview state", () => {
     await waitFor(() => expect(formalizeCurrentForecastAction).toHaveBeenCalledTimes(1));
   });
 
+  it("uses compact formal-reforecast dialog body for desktop non-forced scroll", async () => {
+    previewFormalReforecastAction.mockResolvedValue({ ok: true, preview: samplePreview });
+    renderDialog();
+    await waitFor(() => {
+      expect(document.querySelector("[data-finance-formal-reforecast-dialog]")).toBeTruthy();
+    });
+    const body = document.querySelector("[data-finance-formal-reforecast-dialog]");
+    const bodyParent = body?.parentElement;
+    expect(bodyParent?.className).toMatch(/md:flex-none/);
+    expect(bodyParent?.className).toMatch(/md:overflow-visible/);
+  });
+
   it("reopening dialog does not retain stuck loading state", async () => {
     previewFormalReforecastAction.mockResolvedValue({ ok: true, preview: samplePreview });
     const { rerender } = renderDialog(true);

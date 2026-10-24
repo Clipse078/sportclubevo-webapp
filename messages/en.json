@@ -730,7 +730,8 @@
         "budgetDriversTitle": "Material budget variances",
         "noPreviousForecast": "No earlier forecast to compare yet.",
         "noApprovedBudget": "No approved budget available as reference.",
-        "largestChangesTitle": "Largest changes"
+        "largestChangesTitle": "Largest changes",
+        "noChangeSincePrevious": "No changes compared to the last forecast."
       },
       "history": {
         "sectionTitle": "Forecast history",

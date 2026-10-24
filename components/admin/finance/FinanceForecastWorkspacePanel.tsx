@@ -38,7 +38,6 @@ import {
 import type { ForecastWorkspaceSnapshot } from "@/lib/finance/forecast/forecast-presentation";
 import type { ProjectionWorkspaceViewModel } from "@/lib/finance/projection/projection-workspace-presentation";
 import {
-  FinanceProjectionAccountDetailSection,
   FinanceProjectionWorkspaceSection,
 } from "@/components/admin/finance/FinanceProjectionWorkspaceSection";
 import { FinanceForecastRollingUxSections } from "@/components/admin/finance/FinanceForecastRollingUxSections";
@@ -63,7 +62,6 @@ import {
   FINANCE_FORECAST_TABLES_STACK_CLASS,
   FINANCE_FORECAST_WORKSPACE_STACK_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
-  FINANCE_SECTION_HEADER_CLASS,
   FINANCE_SECTION_SURFACE_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
   FINANCE_SUMMARY_STRIP_GRID_CLASS,
@@ -335,14 +333,6 @@ export function FinanceForecastWorkspacePanel({
         />
       ) : null}
 
-      {yearSelected && projection && projection.versionNumber !== null ? (
-        <FinanceProjectionAccountDetailSection
-          projection={projection}
-          currency={workspaceCurrency}
-          formattingLocale={formattingLocale}
-        />
-      ) : null}
-
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
@@ -609,7 +599,7 @@ function ForecastAccountTable(props: {
 
   return (
     <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="forecast-section">
-      <h3 className={cn(FINANCE_SECTION_HEADER_CLASS, "py-2 text-xs font-semibold uppercase tracking-wide")}>
+      <h3 className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
         {props.title}
       </h3>
       <div className="min-w-0 overflow-x-auto">

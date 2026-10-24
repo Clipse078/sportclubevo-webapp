@@ -205,7 +205,7 @@ describe("FIN-04C-05R3 visual polish closure", () => {
 
     it("integrates evolution and governance in one surface", () => {
       expect(rolling).toContain("data-finance-forecast-evolution");
-      expect(rolling).toContain("FINANCE_PROJECTION_CHART_SURFACE_CLASS");
+      expect(rolling).toContain("FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS");
       expect(rolling).toContain("prognoseverlauf-compact");
     });
   });

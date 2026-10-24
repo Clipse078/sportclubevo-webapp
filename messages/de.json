@@ -1193,7 +1193,8 @@
         "budgetDriversTitle": "Wesentliche Budget-Abweichungen",
         "noPreviousForecast": "Noch keine frühere Prognose zum Vergleichen.",
         "noApprovedBudget": "Kein genehmigtes Budget als Referenz vorhanden.",
-        "largestChangesTitle": "Grösste Veränderungen"
+        "largestChangesTitle": "Grösste Veränderungen",
+        "noChangeSincePrevious": "Keine Änderungen gegenüber der letzten Prognose."
       },
       "history": {
         "sectionTitle": "Prognoseverlauf",

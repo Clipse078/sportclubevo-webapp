@@ -70,3 +70,16 @@ export function selectMeaningfulForecastChangeDrivers<
 >(rows: readonly T[], limit = 5): T[] {
   return rows.filter((row) => row.deltaMinor !== 0).slice(0, limit);
 }
+
+/** Headline movement summary with no income, expense, or result delta. */
+export function isForecastComparisonMovementNeutral(summary: {
+  incomeDeltaMinor: number;
+  expenseDeltaMinor: number;
+  resultDeltaMinor: number;
+}): boolean {
+  return (
+    summary.incomeDeltaMinor === 0 &&
+    summary.expenseDeltaMinor === 0 &&
+    summary.resultDeltaMinor === 0
+  );
+}

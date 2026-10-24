@@ -28,15 +28,17 @@ import type {
 } from "@/lib/finance/forecast/forecast-history-read-model";
 import {
   buildForecastEvolutionChartPoints,
+  isForecastComparisonMovementNeutral,
   selectMeaningfulForecastChangeDrivers,
 } from "@/lib/finance/forecast/forecast-evolution-presentation";
 import { buildForecastHistoryRowSecondaryLine } from "@/lib/finance/forecast/forecast-revision-presentation";
-import { FINANCE_PROJECTION_CHART_SURFACE_CLASS } from "@/components/admin/finance/projection/FinanceProjectionBarChartPrimitives";
 import type { FormalReforecastOutcome } from "@/lib/finance/forecast/formal-reforecast-contract";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
-  FINANCE_FUNCTIONAL_SURFACE_CLASS,
-  FINANCE_SECTION_HEADER_CLASS,
+  FINANCE_FORECAST_ANALYSIS_HEADING_CLASS,
+  FINANCE_FORECAST_WORKSPACE_SECTION_CLASS,
+  FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS,
+  FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
   FINANCE_SUMMARY_STRIP_GRID_CLASS,
   FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS,
@@ -104,13 +106,12 @@ export function FinanceForecastCurrentHeader(props: {
   const resultClass = financeResultSemanticTextClass(props.totals.resultMinor);
 
   return (
-    <section
-      className="space-y-3"
-      data-finance-surface="current-forecast-header"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <h2 className={FINANCE_SECTION_HEADER_CLASS}>{props.t("currentForecastSectionTitle")}</h2>
+    <div className="space-y-2" data-finance-surface="current-forecast-header">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 space-y-0.5">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">
+            {props.t("currentForecastSectionTitle")}
+          </h2>
           <p className="text-sm font-medium text-[var(--foreground)]">{title}</p>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
             {revision?.asOfDate ? (
@@ -181,7 +182,7 @@ export function FinanceForecastCurrentHeader(props: {
           </div>
         </dl>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -204,38 +205,45 @@ export function FinanceForecastRollingUxSections({
   );
 
   return (
-    <div className="space-y-4" data-finance-rolling-forecast-ux>
-      <FinanceForecastCurrentHeader
-        snapshot={snapshot}
-        canFormalize={canFormalize}
-        onOpenFormalize={() => setFormalizeOpen(true)}
-        formattingLocale={formattingLocale}
-        currency={currency}
-        totals={currentTotals}
-        t={t}
-      />
+    <>
+      <section
+        className={FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS}
+        data-finance-rolling-forecast-workspace
+      >
+        <div className={FINANCE_FORECAST_WORKSPACE_SECTION_CLASS}>
+          <FinanceForecastCurrentHeader
+            snapshot={snapshot}
+            canFormalize={canFormalize}
+            onOpenFormalize={() => setFormalizeOpen(true)}
+            formattingLocale={formattingLocale}
+            currency={currency}
+            totals={currentTotals}
+            t={t}
+          />
+        </div>
 
-      <FinanceForecastEvolutionSection
-        history={rollingUx.history}
-        evolutionPoints={evolutionPoints}
-        currency={currency}
-        formattingLocale={formattingLocale}
-        t={t}
-      />
+        <FinanceForecastEvolutionSection
+          history={rollingUx.history}
+          evolutionPoints={evolutionPoints}
+          currency={currency}
+          formattingLocale={formattingLocale}
+          t={t}
+        />
 
-      <FinanceForecastChangeSincePreviousSection
-        vsPrevious={rollingUx.vsPrevious}
-        currency={currency}
-        formattingLocale={formattingLocale}
-        t={t}
-      />
+        <FinanceForecastChangeSincePreviousSection
+          vsPrevious={rollingUx.vsPrevious}
+          currency={currency}
+          formattingLocale={formattingLocale}
+          t={t}
+        />
 
-      <FinanceForecastBudgetComparisonSection
-        vsApprovedBudget={rollingUx.vsApprovedBudget}
-        currency={currency}
-        formattingLocale={formattingLocale}
-        t={t}
-      />
+        <FinanceForecastBudgetComparisonSection
+          vsApprovedBudget={rollingUx.vsApprovedBudget}
+          currency={currency}
+          formattingLocale={formattingLocale}
+          t={t}
+        />
+      </section>
 
       {canFormalize ? (
         <FinanceFormalReforecastDialog
@@ -259,7 +267,7 @@ export function FinanceForecastRollingUxSections({
           t={t}
         />
       ) : null}
-    </div>
+    </>
   );
 }
 
@@ -300,25 +308,26 @@ function FinanceForecastChangeSincePreviousSection(props: {
   const { t } = props;
   if (props.vsPrevious.kind === "NO_PREVIOUS_FORECAST") {
     return (
-      <p className="text-sm text-[var(--muted)]" data-finance-no-previous-forecast>
-        {t("comparison.noPreviousForecast")}
-      </p>
+      <div
+        className={FINANCE_FORECAST_WORKSPACE_SECTION_CLASS}
+        data-finance-no-previous-forecast
+      >
+        <p className="text-sm text-[var(--muted)]">{t("comparison.noPreviousForecast")}</p>
+      </div>
     );
   }
 
   const comparison = props.vsPrevious.comparison;
   const drivers = selectMeaningfulForecastChangeDrivers(comparison.largestChanges, 5);
+  const movementNeutral = isForecastComparisonMovementNeutral(comparison.summary);
 
   return (
-    <section
-      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-3 py-3")}
+    <div
+      className={cn(FINANCE_FORECAST_WORKSPACE_SECTION_CLASS, "space-y-2")}
       data-finance-surface="change-since-previous"
       aria-labelledby="finance-change-since-previous-heading"
     >
-      <h3
-        id="finance-change-since-previous-heading"
-        className={FINANCE_SECTION_HEADER_CLASS}
-      >
+      <h3 id="finance-change-since-previous-heading" className={FINANCE_FORECAST_ANALYSIS_HEADING_CLASS}>
         {t("comparison.changeSincePreviousTitle")}
       </h3>
       <CompactMovementSummary
@@ -333,6 +342,11 @@ function FinanceForecastChangeSincePreviousSection(props: {
           result: t("plannedResult"),
         }}
       />
+      {movementNeutral && drivers.length === 0 ? (
+        <p className="text-xs text-[var(--muted)]" data-finance-zero-change-quiet>
+          {t("comparison.noChangeSincePrevious")}
+        </p>
+      ) : null}
       {drivers.length > 0 ? (
         <FinanceForecastChangeDriverBars
           title={t("comparison.largestChangesTitle")}
@@ -346,7 +360,7 @@ function FinanceForecastChangeSincePreviousSection(props: {
           data-finance-surface="largest-changes"
         />
       ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -359,9 +373,12 @@ function FinanceForecastBudgetComparisonSection(props: {
   const { t } = props;
   if (props.vsApprovedBudget.kind === "NO_APPROVED_BUDGET") {
     return (
-      <p className="text-xs text-[var(--muted)]" data-finance-no-approved-budget>
-        {t("comparison.noApprovedBudget")}
-      </p>
+      <div
+        className={FINANCE_FORECAST_WORKSPACE_SECTION_CLASS}
+        data-finance-no-approved-budget
+      >
+        <p className="text-xs text-[var(--muted)]">{t("comparison.noApprovedBudget")}</p>
+      </div>
     );
   }
 
@@ -369,12 +386,12 @@ function FinanceForecastBudgetComparisonSection(props: {
   const drivers = selectMeaningfulForecastChangeDrivers(comparison.largestChanges, 5);
 
   return (
-    <section
-      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-3 border-s-2 border-[var(--sce-surface-border)] py-3 ps-4")}
+    <div
+      className={cn(FINANCE_FORECAST_WORKSPACE_SECTION_CLASS, "space-y-2")}
       data-finance-surface="current-vs-budget"
       aria-labelledby="finance-budget-comparison-heading"
     >
-      <h3 id="finance-budget-comparison-heading" className={FINANCE_SECTION_HEADER_CLASS}>
+      <h3 id="finance-budget-comparison-heading" className={FINANCE_FORECAST_ANALYSIS_HEADING_CLASS}>
         {t("comparison.vsBudgetCompactTitle")}
       </h3>
       <p className="text-xs text-[var(--muted)]">{t("comparison.vsBudgetCompactHint")}</p>
@@ -404,7 +421,7 @@ function FinanceForecastBudgetComparisonSection(props: {
           data-finance-surface="budget-change-drivers"
         />
       ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -427,8 +444,8 @@ function FinanceForecastEvolutionSection(props: {
   }
 
   return (
-    <section
-      className={cn(FINANCE_PROJECTION_CHART_SURFACE_CLASS, "space-y-0 py-3")}
+    <div
+      className={cn(FINANCE_FORECAST_WORKSPACE_SECTION_CLASS, "space-y-2")}
       data-finance-forecast-evolution
     >
       {showEvolution ? (
@@ -457,7 +474,7 @@ function FinanceForecastEvolutionSection(props: {
       ) : null}
 
       {showEvolution && showGovernance ? (
-        <hr className="my-3 border-[var(--sce-surface-border-subtle)]" />
+        <hr className="border-[var(--sce-surface-border-subtle)]" />
       ) : null}
 
       {showGovernance ? (
@@ -465,13 +482,10 @@ function FinanceForecastEvolutionSection(props: {
           data-finance-surface="prognoseverlauf-compact"
           aria-labelledby="finance-prognoseverlauf-compact-heading"
         >
-          <h4
-            id="finance-prognoseverlauf-compact-heading"
-            className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
-          >
+          <h4 id="finance-prognoseverlauf-compact-heading" className={FINANCE_FORECAST_ANALYSIS_HEADING_CLASS}>
             {props.t("history.governanceTitle")}
           </h4>
-          <ul className="mt-2 space-y-0 text-xs" role="list">
+          <ul className="mt-1.5 space-y-0 text-xs" role="list">
             {entries.map((entry) => {
               const secondaryLine = buildForecastHistoryRowSecondaryLine({
                 displayTitle: entry.presentation.displayTitle,
@@ -508,7 +522,7 @@ function FinanceForecastEvolutionSection(props: {
           </ul>
         </div>
       ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -679,6 +693,8 @@ export function FinanceFormalReforecastDialog(props: {
     <Dialog
       open={props.open}
       onClose={props.onClose}
+      size="md"
+      bodyClassName={FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS}
       title={props.t("formalReforecast.dialogTitle")}
       description={props.t("formalReforecast.dialogDescription")}
       footer={
@@ -697,7 +713,7 @@ export function FinanceFormalReforecastDialog(props: {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-3" data-finance-formal-reforecast-dialog>
         <SceFormField label={props.t("formalReforecast.asOfLabel")} htmlFor={asOfId} required>
           <input
             id={asOfId}
@@ -758,10 +774,10 @@ export function FinanceFormalReforecastDialog(props: {
 
         {preview ? (
           <div
-            className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "mt-2")}
+            className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "py-2")}
             data-finance-formal-reforecast-preview
           >
-            <p className="mb-2 text-xs text-[var(--muted)]">
+            <p className="mb-1.5 text-xs text-[var(--muted)]">
               {props.t("formalReforecast.amountsUnchangedHint")}
             </p>
             <dl className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
@@ -796,7 +812,7 @@ export function FinanceFormalReforecastDialog(props: {
                 </dd>
               </div>
             </dl>
-            <p className="mt-3 text-xs text-[var(--muted)]">
+            <p className="mt-2 text-xs text-[var(--muted)]">
               {props.t("formalReforecast.nextVersionMeta", {
                 version: preview.nextVersionNumber,
                 count: preview.lineCount,

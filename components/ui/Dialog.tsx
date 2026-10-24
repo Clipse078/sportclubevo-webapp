@@ -40,6 +40,8 @@ export type DialogProps = {
   size?: DialogSize;
   /** When "flex", body does not scroll — child layout owns a single scroll region. */
   bodyLayout?: "scroll" | "flex";
+  /** Optional override for dialog body layout classes. */
+  bodyClassName?: string;
   /** Elevated stack layer for subordinate dialogs over an existing modal (e.g. Activity Composer). */
   stackLayer?: "default" | "elevated";
 };
@@ -88,6 +90,7 @@ export function Dialog({
   footer,
   size = "md",
   bodyLayout = "scroll",
+  bodyClassName,
   stackLayer = "default",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -166,6 +169,7 @@ export function Dialog({
             className={cn(
               SCE_DIALOG_BODY,
               bodyLayout === "flex" && "flex min-h-0 flex-1 flex-col overflow-hidden",
+              bodyClassName,
             )}
           >
             {children}

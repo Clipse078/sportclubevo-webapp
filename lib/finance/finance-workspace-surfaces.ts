@@ -17,6 +17,26 @@ export const FINANCE_WORKSPACE_STACK_CLASS =
 export const FINANCE_FORECAST_WORKSPACE_STACK_CLASS =
   "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-3";
 
+/** FIN-04C-05R5 — one coherent rolling-forecast workspace (not independent dashboard cards). */
+export const FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS = cn(
+  SCE_SURFACE_STANDARD_PANEL,
+  "min-w-0 divide-y divide-[var(--sce-surface-border-subtle)] p-0",
+);
+
+/** Padding rhythm for subsections inside {@link FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS}. */
+export const FINANCE_FORECAST_WORKSPACE_SECTION_CLASS = "min-w-0 px-4 py-3 sm:px-5";
+
+/** Typography-only subsection titles — no nested dark header bars. */
+export const FINANCE_FORECAST_ANALYSIS_HEADING_CLASS =
+  "text-xs font-semibold uppercase tracking-wide text-[var(--muted)]";
+
+/**
+ * Formal reforecast dialog body — compact; desktop content fits without forced inner scroll;
+ * narrow viewports retain overflow fallback.
+ */
+export const FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS =
+  "min-h-0 flex-1 overflow-y-auto px-5 py-3 text-sm text-[var(--text-2)] max-md:max-h-[min(70dvh,100%)] md:flex-none md:overflow-visible";
+
 /** Primary functional card (overview nudges, settings sections, empty states). */
 export const FINANCE_FUNCTIONAL_SURFACE_CLASS = cn(SCE_SURFACE_STANDARD_PANEL, "px-5 py-6");
 
