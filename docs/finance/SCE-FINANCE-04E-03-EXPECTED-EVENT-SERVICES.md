@@ -118,4 +118,7 @@ See `EXPECTED_FINANCIAL_EVENT_04E_03_ARCHITECTURE_LOCKS` in
 
 ## Next
 
-**FIN-04E-04** — forecast timing read model & intelligence.
+**FIN-04E-04** — forecast timing read model & intelligence — see
+[`SCE-FINANCE-04E-04-FORECAST-TIMING-READ-MODEL.md`](./SCE-FINANCE-04E-04-FORECAST-TIMING-READ-MODEL.md).
+
+**FIN-04E-05** — workspace UX (next).

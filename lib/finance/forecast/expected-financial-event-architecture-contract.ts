@@ -83,6 +83,7 @@ export const EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS = {
   fin04dScenarioAssumptionSchemaUnchangedIn04e01: true,
   persistenceNotImplementedIn04e01: true,
   persistenceImplementedIn04e02: true,
+  timingReadModelImplementedIn04e04: true,
   directionDerivedFromFinancialAccount: true,
   independentEditableEventDirectionForbidden: true,
   treasuryTransferModelingDeferred: true,
@@ -122,6 +123,23 @@ export const EXPECTED_FINANCIAL_EVENT_CAPABILITY_KEY = "FORECASTING" as const;
 export const EXPECTED_FINANCIAL_EVENT_PERMISSIONS = {
   view: "finance.forecast.view",
   manage: "finance.forecast.manage",
+} as const;
+
+/** Machine-testable locks introduced with FIN-04E-04 read models. */
+export const EXPECTED_FINANCIAL_EVENT_04E_04_ARCHITECTURE_LOCKS = {
+  TIMING_READ_MODEL_IS_PRESENTATION_NEUTRAL: true,
+  ACCOUNTS_WITHOUT_EVENTS_REMAIN_VISIBLE: true,
+  EMPTY_EVENTS_MEANS_UNSCHEDULED_NOT_NO_DATA: true,
+  INCOME_AND_EXPENSE_REMAIN_DISTINCT: true,
+  AMBIGUOUS_TIMING_REMAINS_DISTINCT: true,
+  OVERALLOCATION_IS_EXPLICIT: true,
+  MISSING_FORECAST_LINE_IS_EXPLICIT: true,
+  NO_DOUBLE_COUNTING_OF_EXPECTED_EVENTS: true,
+  UPCOMING_SORT_DOES_NOT_CHANGE_TIMING_PRECISION: true,
+  NO_HARDCODED_MATERIALITY_THRESHOLD: true,
+  READ_MODEL_USES_CURRENT_FORECAST_POINTER: true,
+  READ_MODEL_USES_EXPLICIT_FINANCIAL_REFERENCE_DATE: true,
+  READ_MODEL_DOES_NOT_IMPLEMENT_LIQUIDITY: true,
 } as const;
 
 /** Machine-testable locks introduced with FIN-04E-03 application services. */

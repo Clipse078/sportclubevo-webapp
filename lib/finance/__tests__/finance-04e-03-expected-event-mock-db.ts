@@ -70,7 +70,7 @@ export function makeExpectedEventDb(store: ExpectedEventStore) {
   const parseDate = (iso: string | null | undefined): Date | null =>
     iso ? new Date(`${iso}T00:00:00.000Z`) : null;
 
-  return {
+  const db = {
     ...scenarioDb,
     financeActualEntry: {
       findMany: async ({
@@ -184,5 +184,8 @@ export function makeExpectedEventDb(store: ExpectedEventStore) {
     _helpers: {
       parseDate,
     },
+    $transaction: async <T>(fn: (tx: typeof db) => Promise<T>) => fn(db),
   };
+
+  return db;
 }

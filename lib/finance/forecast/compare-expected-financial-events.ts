@@ -33,3 +33,19 @@ export function sortExpectedFinancialEventsForList(
 ): ExpectedFinancialEventRecord[] {
   return [...events].sort(compareExpectedFinancialEventsForList);
 }
+
+/**
+ * Upcoming movement ordering: earliest business timing, then amount (materiality), then id.
+ * Sort surrogates for MONTH/RANGE are not exposed as exact dates on the read model.
+ */
+export function compareExpectedFinancialEventsForUpcoming(
+  a: ExpectedFinancialEventRecord,
+  b: ExpectedFinancialEventRecord,
+): number {
+  const pos = timingPositionMs(a) - timingPositionMs(b);
+  if (pos !== 0) return pos;
+  if (b.expectedAmountMinor !== a.expectedAmountMinor) {
+    return b.expectedAmountMinor - a.expectedAmountMinor;
+  }
+  return a.id.localeCompare(b.id);
+}
