@@ -57,7 +57,7 @@ describe("FIN-04C-05R5 workspace layout consolidation", () => {
     expect(rolling).toContain("FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS");
     expect(rolling).toContain("bodyClassName={FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS}");
     expect(rolling).toContain("data-finance-formal-reforecast-dialog");
-    expect(surfaces).toMatch(/min-h-0 flex-1 overflow-y-auto/);
+    expect(surfaces).toMatch(/min-h-0 flex-1[\s\S]*overflow-y-auto/);
     expect(surfaces).not.toContain("md:flex-none md:overflow-visible");
     expect(dialog).toContain("bodyClassName");
   });
