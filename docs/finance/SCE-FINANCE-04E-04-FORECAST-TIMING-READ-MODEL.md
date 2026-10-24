@@ -9,7 +9,7 @@
 
 ## Purpose
 
-Presentation-neutral intelligence layer for **Forecast Timing**. Sits above Current Forecast, Actual through cutoff, persisted `FinanceExpectedFinancialEvent`, FIN-04E-02 reconciliation, and FIN-04E-03 services — and below workspace UX (04E-05) and visual timing (04E-07).
+Presentation-neutral intelligence layer for **Forecast Timing**. Sits above Current Forecast, Actual through cutoff, persisted `FinanceExpectedFinancialEvent`, FIN-04E-02 reconciliation, and FIN-04E-03 services — consumed by workspace UX ([`SCE-FINANCE-04E-05-FORECAST-TIMING-WORKSPACE-UX.md`](./SCE-FINANCE-04E-05-FORECAST-TIMING-WORKSPACE-UX.md)); visual timing remains **04E-07**.
 
 Answers (for future UX, not implemented here):
 

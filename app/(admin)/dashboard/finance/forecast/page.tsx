@@ -93,6 +93,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
             labels={{
               current: t("forecast.subNav.current"),
               scenarios: t("forecast.subNav.scenarios"),
+              timing: t("forecast.subNav.timing"),
             }}
             ariaLabel={t("forecast.subNav.aria")}
           />
