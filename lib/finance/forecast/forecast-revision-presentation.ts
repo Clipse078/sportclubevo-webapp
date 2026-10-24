@@ -72,3 +72,44 @@ export function buildForecastHistoryDisplayMetadata(input: {
     revisionSourceLabel,
   };
 }
+
+/** Join metadata fragments without repeating identical tokens (FIN-04C-05R3). */
+export function joinForecastMetadataTokens(
+  tokens: readonly (string | null | undefined)[],
+): string | null {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const token of tokens) {
+    const trimmed = token?.trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(trimmed);
+  }
+  return unique.length > 0 ? unique.join(" · ") : null;
+}
+
+/**
+ * Secondary line for Revisionsübersicht rows — single source of truth, no duplicated Version tokens.
+ */
+export function buildForecastHistoryRowSecondaryLine(input: {
+  displayTitle: string;
+  displaySubtitle: string | null;
+  revisionSourceLabel: string;
+  revisionLabel: string | null;
+  revisionSource: ForecastRevisionSource | string | null;
+}): string | null {
+  const tokens: (string | null)[] = [input.displaySubtitle];
+
+  if (
+    input.revisionSource &&
+    !input.revisionLabel?.trim() &&
+    input.revisionSourceLabel.trim() &&
+    input.revisionSourceLabel.trim().toLowerCase() !== input.displayTitle.trim().toLowerCase()
+  ) {
+    tokens.push(input.revisionSourceLabel);
+  }
+
+  return joinForecastMetadataTokens(tokens);
+}

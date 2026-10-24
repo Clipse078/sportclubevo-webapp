@@ -1,4 +1,5 @@
 import type { FinanceForecastHistoryEntry } from "@/lib/finance/forecast/forecast-history-read-model";
+import { joinForecastMetadataTokens } from "@/lib/finance/forecast/forecast-revision-presentation";
 
 export type ForecastEvolutionChartPoint = {
   forecastVersionId: string;
@@ -11,6 +12,7 @@ export type ForecastEvolutionChartPoint = {
   asOfDate: string | null;
   revisionSourceLabel: string | null;
   revisionLabel: string | null;
+  displaySubtitle: string | null;
 };
 
 /**
@@ -23,9 +25,7 @@ export function buildForecastEvolutionChartPoints(
   return entriesChronological.map((entry) => ({
     forecastVersionId: entry.forecastVersionId,
     versionNumber: entry.versionNumber,
-    label: entry.isCurrent
-      ? entry.presentation.displayTitle
-      : entry.presentation.displayTitle,
+    label: entry.presentation.displayTitle,
     isCurrent: entry.isCurrent,
     resultMinor: entry.resultMinor,
     incomeMinor: entry.totalIncomeMinor,
@@ -33,7 +33,36 @@ export function buildForecastEvolutionChartPoints(
     asOfDate: entry.asOfDate,
     revisionSourceLabel: entry.presentation.revisionSourceLabel,
     revisionLabel: entry.revisionLabel,
+    displaySubtitle: entry.presentation.displaySubtitle,
   }));
+}
+
+export function resolveForecastEvolutionPointHeadline(
+  point: ForecastEvolutionChartPoint,
+  currentLabel: string,
+): string {
+  return point.isCurrent ? currentLabel : point.label;
+}
+
+/** Compact secondary metadata under timeline points (no duplicate tokens). */
+export function formatForecastEvolutionPointSecondaryMeta(input: {
+  point: ForecastEvolutionChartPoint;
+  asOfLine: string | null;
+  versionLine: string;
+}): string | null {
+  const tokens: (string | null)[] = [];
+  if (input.point.isCurrent && input.point.revisionLabel?.trim()) {
+    tokens.push(input.point.revisionLabel.trim());
+  }
+  if (input.point.displaySubtitle) {
+    tokens.push(input.point.displaySubtitle);
+  } else {
+    if (input.asOfLine) {
+      tokens.push(input.asOfLine);
+    }
+    tokens.push(input.versionLine);
+  }
+  return joinForecastMetadataTokens(tokens);
 }
 
 export function selectMeaningfulForecastChangeDrivers<

@@ -46,8 +46,13 @@ export function FinanceForecastChangeDriverBars(props: FinanceForecastChangeDriv
               <div className="min-w-0">
                 <p className="truncate text-[var(--foreground)]">{row.accountName}</p>
                 <div
-                  className="mt-1 flex h-2 w-full items-stretch overflow-hidden rounded-sm bg-[var(--surface-2)]"
-                  aria-hidden
+                  className="relative mt-1 flex h-2 w-full items-stretch overflow-hidden rounded-sm bg-[var(--surface-2)]"
+                  role="img"
+                  aria-label={
+                    isPositive
+                      ? `Mathematische Zunahme ${Math.round(fraction * 100)} Prozent der Skala`
+                      : `Mathematische Abnahme ${Math.round(fraction * 100)} Prozent der Skala`
+                  }
                 >
                   <div className="flex w-1/2 justify-end">
                     {!isPositive ? (
@@ -57,10 +62,15 @@ export function FinanceForecastChangeDriverBars(props: FinanceForecastChangeDriv
                           props.barClassName ?? "bg-[var(--foreground)]/50",
                         )}
                         style={{ width: `${fraction * 100}%` }}
+                        data-finance-driver-direction="negative"
                       />
                     ) : null}
                   </div>
-                  <div className="w-px shrink-0 bg-[var(--sce-surface-border-subtle)]" />
+                  <div
+                    className="absolute start-1/2 top-0 z-[1] h-full w-px -translate-x-1/2 bg-[var(--foreground)]/30"
+                    aria-hidden
+                    data-finance-driver-zero-axis
+                  />
                   <div className="flex w-1/2 justify-start">
                     {isPositive ? (
                       <div
@@ -69,6 +79,7 @@ export function FinanceForecastChangeDriverBars(props: FinanceForecastChangeDriv
                           props.barClassName ?? "bg-[var(--foreground)]/50",
                         )}
                         style={{ width: `${fraction * 100}%` }}
+                        data-finance-driver-direction="positive"
                       />
                     ) : null}
                   </div>

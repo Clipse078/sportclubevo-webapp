@@ -22,6 +22,8 @@ import {
   buildForecastEvolutionChartPoints,
   selectMeaningfulForecastChangeDrivers,
 } from "@/lib/finance/forecast/forecast-evolution-presentation";
+import { buildForecastHistoryRowSecondaryLine } from "@/lib/finance/forecast/forecast-revision-presentation";
+import { FINANCE_PROJECTION_CHART_SURFACE_CLASS } from "@/components/admin/finance/projection/FinanceProjectionBarChartPrimitives";
 import type { FormalReforecastOutcome } from "@/lib/finance/forecast/formal-reforecast-contract";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
@@ -404,10 +406,20 @@ function FinanceForecastEvolutionSection(props: {
     return null;
   }
 
+  const showEvolution = props.evolutionPoints.length > 0;
+  const showGovernance = entries.length > 0;
+  if (!showEvolution && !showGovernance) {
+    return null;
+  }
+
   return (
-    <div className="space-y-3" data-finance-forecast-evolution>
-      {props.evolutionPoints.length > 0 ? (
+    <section
+      className={cn(FINANCE_PROJECTION_CHART_SURFACE_CLASS, "space-y-0 py-3")}
+      data-finance-forecast-evolution
+    >
+      {showEvolution ? (
         <FinanceForecastEvolutionChart
+          embedded
           title={props.t("history.evolutionTitle")}
           seriesLabel={props.t("history.evolutionSeriesResult")}
           points={props.evolutionPoints}
@@ -419,27 +431,23 @@ function FinanceForecastEvolutionSection(props: {
             expense: props.t("totalExpense"),
             result: props.t("plannedResult"),
           }}
-          formatPointMeta={(point) => {
-            const parts: string[] = [];
-            if (point.asOfDate) {
-              parts.push(
-                props.t("history.asOfLine", {
+          formatPointAsOf={(point) =>
+            point.asOfDate
+              ? props.t("history.asOfLine", {
                   date: formatCalendarDateDisplay(point.asOfDate, props.formattingLocale),
-                }),
-              );
-            }
-            if (point.revisionSourceLabel) {
-              parts.push(point.revisionSourceLabel);
-            }
-            parts.push(props.t("versionMeta", { version: point.versionNumber }));
-            return parts.join(" · ");
-          }}
+                })
+              : null
+          }
+          formatVersionMeta={(version) => props.t("versionMeta", { version })}
         />
       ) : null}
 
-      {entries.length > 0 ? (
-        <section
-          className="border-t border-[var(--sce-surface-border-subtle)] pt-3"
+      {showEvolution && showGovernance ? (
+        <hr className="my-3 border-[var(--sce-surface-border-subtle)]" />
+      ) : null}
+
+      {showGovernance ? (
+        <div
           data-finance-surface="prognoseverlauf-compact"
           aria-labelledby="finance-prognoseverlauf-compact-heading"
         >
@@ -449,44 +457,44 @@ function FinanceForecastEvolutionSection(props: {
           >
             {props.t("history.governanceTitle")}
           </h4>
-          <ul className="mt-2 space-y-0 text-xs">
-            {entries.map((entry) => (
-              <li
-                key={entry.forecastVersionId}
-                className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] py-1.5 last:border-0"
-                data-finance-history-entry={entry.isCurrent ? "current" : "historical"}
-              >
-                <div className="min-w-0">
-                  <p className="font-medium text-[var(--foreground)]">
-                    {entry.presentation.displayTitle}
-                    {entry.isCurrent ? (
-                      <span
-                        className="ms-2 font-normal uppercase tracking-wide text-[var(--muted)]"
-                        data-finance-current-revision-marker
-                      >
-                        {props.t("history.currentBadge")}
-                      </span>
+          <ul className="mt-2 space-y-0 text-xs" role="list">
+            {entries.map((entry) => {
+              const secondaryLine = buildForecastHistoryRowSecondaryLine({
+                displayTitle: entry.presentation.displayTitle,
+                displaySubtitle: entry.presentation.displaySubtitle,
+                revisionSourceLabel: entry.presentation.revisionSourceLabel,
+                revisionLabel: entry.revisionLabel,
+                revisionSource: entry.revisionSource,
+              });
+              return (
+                <li
+                  key={entry.forecastVersionId}
+                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] py-1.5 last:border-0"
+                  data-finance-history-entry={entry.isCurrent ? "current" : "historical"}
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-[var(--foreground)]">
+                      {entry.isCurrent
+                        ? props.t("history.currentBadge")
+                        : entry.presentation.displayTitle}
+                      {entry.isCurrent && entry.presentation.displayTitle.trim().toLowerCase() !==
+                        props.t("history.currentBadge").trim().toLowerCase() ? (
+                        <span className="ms-2 font-normal text-[var(--muted)]">
+                          {entry.presentation.displayTitle}
+                        </span>
+                      ) : null}
+                    </p>
+                    {secondaryLine ? (
+                      <p className="text-[var(--muted)]">{secondaryLine}</p>
                     ) : null}
-                  </p>
-                  <p className="text-[var(--muted)]">
-                    {entry.asOfDate
-                      ? props.t("history.asOfLine", {
-                          date: formatCalendarDateDisplay(entry.asOfDate, props.formattingLocale),
-                        })
-                      : (entry.presentation.displaySubtitle ?? null)}
-                    {" · "}
-                    {props.t("versionMeta", { version: entry.versionNumber })}
-                    {entry.revisionSource && !entry.revisionLabel ? (
-                      <span> · {entry.presentation.revisionSourceLabel}</span>
-                    ) : null}
-                  </p>
-                </div>
-              </li>
-            ))}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-        </section>
+        </div>
       ) : null}
-    </div>
+    </section>
   );
 }
 

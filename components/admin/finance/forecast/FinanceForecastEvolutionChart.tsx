@@ -1,10 +1,13 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId } from "react";
 import { cn } from "@/lib/cn";
 import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import type { ForecastEvolutionChartPoint } from "@/lib/finance/forecast/forecast-evolution-presentation";
-import { FINANCE_PROJECTION_CHART_SURFACE_CLASS } from "@/components/admin/finance/projection/FinanceProjectionBarChartPrimitives";
+import {
+  formatForecastEvolutionPointSecondaryMeta,
+  resolveForecastEvolutionPointHeadline,
+} from "@/lib/finance/forecast/forecast-evolution-presentation";
 
 type FinanceForecastEvolutionChartProps = {
   title: string;
@@ -18,50 +21,26 @@ type FinanceForecastEvolutionChartProps = {
     expense: string;
     result: string;
   };
-  formatPointMeta: (point: ForecastEvolutionChartPoint) => string;
+  formatPointAsOf: (point: ForecastEvolutionChartPoint) => string | null;
+  formatVersionMeta: (versionNumber: number) => string;
+  embedded?: boolean;
 };
-
-const CHART_HEIGHT = 168;
-const CHART_PAD_X = 24;
-const CHART_PAD_Y = 20;
 
 export function FinanceForecastEvolutionChart(props: FinanceForecastEvolutionChartProps) {
   const baseId = useId();
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
-  const layout = useMemo(() => {
-    if (props.points.length === 0) return null;
-    const values = props.points.map((p) => p.resultMinor);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const span = max - min || Math.max(Math.abs(max), 1);
-    const width = 640;
-    const innerW = width - CHART_PAD_X * 2;
-    const innerH = CHART_HEIGHT - CHART_PAD_Y * 2;
-    const step = props.points.length > 1 ? innerW / (props.points.length - 1) : 0;
-
-    const coords = props.points.map((point, index) => {
-      const x = CHART_PAD_X + (props.points.length > 1 ? step * index : innerW / 2);
-      const normalized = (point.resultMinor - min) / span;
-      const y = CHART_PAD_Y + innerH - normalized * innerH;
-      return { point, x, y, index };
-    });
-
-    const polyline = coords.map((c) => `${c.x},${c.y}`).join(" ");
-
-    return { width, coords, polyline, min, max };
-  }, [props.points]);
-
-  if (!layout || props.points.length === 0) {
+  if (props.points.length === 0) {
     return null;
   }
 
-  const activeIndex = focusedIndex ?? layout.coords.findIndex((c) => c.point.isCurrent);
-  const active = activeIndex >= 0 ? layout.coords[activeIndex] : layout.coords[layout.coords.length - 1];
+  const showConnector = props.points.length >= 2;
 
   return (
     <div
-      className={FINANCE_PROJECTION_CHART_SURFACE_CLASS}
+      className={cn(
+        !props.embedded &&
+          "rounded-lg border border-[var(--sce-surface-border-subtle)] bg-[var(--surface-1)] p-4",
+      )}
       data-finance-chart="forecast-evolution"
       data-finance-surface="prognoseentwicklung"
     >
@@ -70,136 +49,117 @@ export function FinanceForecastEvolutionChart(props: FinanceForecastEvolutionCha
       </h3>
       <p className="mt-0.5 text-xs text-[var(--muted)]">{props.seriesLabel}</p>
 
-      <div className="mt-3 min-w-0 overflow-x-auto">
-        <svg
-          viewBox={`0 0 ${layout.width} ${CHART_HEIGHT}`}
-          className="h-[10.5rem] w-full min-w-[20rem] max-w-full text-[var(--foreground)]"
-          role="img"
-          aria-labelledby={`${baseId}-summary`}
-        >
-          <title id={`${baseId}-summary`}>
-            {props.title}: {props.points.length} Revisionen
-          </title>
-          {[0.25, 0.5, 0.75].map((frac) => {
-            const y = CHART_PAD_Y + (CHART_HEIGHT - CHART_PAD_Y * 2) * frac;
-            return (
-              <line
-                key={frac}
-                x1={CHART_PAD_X}
-                x2={layout.width - CHART_PAD_X}
-                y1={y}
-                y2={y}
-                className="stroke-[var(--sce-surface-border-subtle)]"
-                strokeWidth={1}
-              />
-            );
-          })}
-          <polyline
-            fill="none"
-            className="stroke-[var(--foreground)]/70"
-            strokeWidth={2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            points={layout.polyline}
+      <div
+        className={cn(
+          "relative mt-3 min-w-0",
+          showConnector && "sm:flex sm:items-stretch sm:gap-3",
+          !showConnector && "max-w-xs",
+        )}
+        role="list"
+        aria-labelledby={`${baseId}-summary`}
+      >
+        <p id={`${baseId}-summary`} className="sr-only">
+          {props.title}: {props.points.length} Revisionen
+        </p>
+        {showConnector ? (
+          <div
+            className="pointer-events-none absolute start-6 end-6 top-[1.15rem] hidden h-px bg-[var(--sce-surface-border-subtle)] sm:block"
+            aria-hidden
           />
-          {layout.coords.map(({ point, x, y, index }) => {
-            const isActive = index === activeIndex;
-            const isCurrent = point.isCurrent;
+        ) : null}
+        <div
+          className={cn(
+            "flex flex-col gap-2",
+            showConnector && "sm:flex-1 sm:flex-row sm:gap-3",
+          )}
+        >
+          {props.points.map((point, index) => {
+            const headline = resolveForecastEvolutionPointHeadline(
+              point,
+              props.currentBadgeLabel,
+            );
+            const valueLabel = formatFinanceManagementPlanningMinor(
+              point.resultMinor,
+              props.currency,
+              props.formattingLocale,
+            );
+            const secondaryMeta = formatForecastEvolutionPointSecondaryMeta({
+              point,
+              asOfLine: props.formatPointAsOf(point),
+              versionLine: props.formatVersionMeta(point.versionNumber),
+            });
+            const detailSummary = [
+              props.tooltipLabels.income,
+              formatFinanceManagementPlanningMinor(
+                point.incomeMinor,
+                props.currency,
+                props.formattingLocale,
+              ),
+              props.tooltipLabels.expense,
+              formatFinanceManagementPlanningMinor(
+                point.expenseMinor,
+                props.currency,
+                props.formattingLocale,
+              ),
+              props.tooltipLabels.result,
+              valueLabel,
+            ].join(", ");
+
             return (
-              <g key={point.forecastVersionId}>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={isActive ? 6 : 4.5}
+              <div
+                key={point.forecastVersionId}
+                className={cn("min-w-0 flex-1", showConnector && "sm:min-w-[5.5rem]")}
+                role="listitem"
+              >
+                <div
                   className={cn(
-                    "cursor-pointer transition-[r]",
-                    isCurrent
-                      ? "fill-[var(--primary)] stroke-[var(--primary)]"
-                      : "fill-[var(--surface-1)] stroke-[var(--foreground)]/60",
-                    isActive && !isCurrent && "stroke-[var(--foreground)]",
+                    "relative rounded-md border border-[var(--sce-surface-border-subtle)] bg-[var(--surface-2)]/30 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]",
+                    point.isCurrent && "border-[var(--primary)]/35 bg-[var(--surface-2)]/60",
                   )}
-                  strokeWidth={2}
                   tabIndex={0}
-                  role="button"
-                  aria-label={`${point.label}, ${formatFinanceManagementPlanningMinor(
-                    point.resultMinor,
-                    props.currency,
-                    props.formattingLocale,
-                  )}`}
-                  onFocus={() => setFocusedIndex(index)}
-                  onBlur={() => setFocusedIndex(null)}
-                  onMouseEnter={() => setFocusedIndex(index)}
-                  onMouseLeave={() => setFocusedIndex(null)}
-                />
-              </g>
+                  data-finance-evolution-point={point.isCurrent ? "current" : "historical"}
+                  aria-label={`${headline}, ${valueLabel}${secondaryMeta ? `, ${secondaryMeta}` : ""}`}
+                >
+                  {showConnector ? (
+                    <span
+                      className={cn(
+                        "mb-2 inline-block h-2 w-2 rounded-full ring-2 ring-[var(--surface-1)]",
+                        point.isCurrent
+                          ? "bg-[var(--primary)]"
+                          : "bg-[var(--foreground)]/45",
+                      )}
+                      aria-hidden
+                    />
+                  ) : null}
+                  <p
+                    className={cn(
+                      "text-xs font-semibold uppercase tracking-wide",
+                      point.isCurrent ? "text-[var(--primary)]" : "text-[var(--muted)]",
+                    )}
+                  >
+                    {headline}
+                  </p>
+                  <p className="mt-0.5 text-base font-semibold tabular-nums text-[var(--foreground)]">
+                    {valueLabel}
+                  </p>
+                  {secondaryMeta ? (
+                    <p className="mt-1 text-[0.65rem] leading-snug text-[var(--muted)]">
+                      {secondaryMeta}
+                    </p>
+                  ) : null}
+                  <span className="sr-only">{detailSummary}</span>
+                </div>
+                {showConnector && index < props.points.length - 1 ? (
+                  <div
+                    className="my-1 h-3 w-px self-center bg-[var(--sce-surface-border-subtle)] sm:hidden"
+                    aria-hidden
+                  />
+                ) : null}
+              </div>
             );
           })}
-        </svg>
-      </div>
-
-      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[0.65rem] text-[var(--muted)]">
-        {layout.coords.map(({ point, index }) => (
-          <span
-            key={point.forecastVersionId}
-            className={cn(
-              "truncate max-w-[8rem]",
-              index === activeIndex && "font-medium text-[var(--foreground)]",
-            )}
-          >
-            {point.isCurrent ? props.currentBadgeLabel : point.label}
-          </span>
-        ))}
-      </div>
-
-      {active ? (
-        <div
-          className="mt-3 rounded-md border border-[var(--sce-surface-border-subtle)] bg-[var(--surface-2)]/40 p-3 text-sm"
-          role="status"
-          aria-live="polite"
-        >
-          <p className="font-medium text-[var(--foreground)]">
-            {active.point.isCurrent ? props.currentBadgeLabel : active.point.label}
-            {active.point.revisionLabel ? (
-              <span className="ms-2 font-normal text-[var(--muted)]">
-                {active.point.revisionLabel}
-              </span>
-            ) : null}
-          </p>
-          <dl className="mt-2 grid gap-1 text-xs sm:grid-cols-3">
-            <div>
-              <dt className="text-[var(--muted)]">{props.tooltipLabels.income}</dt>
-              <dd className="tabular-nums">
-                {formatFinanceManagementPlanningMinor(
-                  active.point.incomeMinor,
-                  props.currency,
-                  props.formattingLocale,
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[var(--muted)]">{props.tooltipLabels.expense}</dt>
-              <dd className="tabular-nums">
-                {formatFinanceManagementPlanningMinor(
-                  active.point.expenseMinor,
-                  props.currency,
-                  props.formattingLocale,
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[var(--muted)]">{props.tooltipLabels.result}</dt>
-              <dd className="tabular-nums font-medium">
-                {formatFinanceManagementPlanningMinor(
-                  active.point.resultMinor,
-                  props.currency,
-                  props.formattingLocale,
-                )}
-              </dd>
-            </div>
-          </dl>
-          <p className="mt-2 text-xs text-[var(--muted)]">{props.formatPointMeta(active.point)}</p>
         </div>
-      ) : null}
+      </div>
 
       <table className="sr-only">
         <caption>{props.title}</caption>
@@ -212,7 +172,7 @@ export function FinanceForecastEvolutionChart(props: FinanceForecastEvolutionCha
         <tbody>
           {props.points.map((point) => (
             <tr key={point.forecastVersionId}>
-              <td>{point.label}</td>
+              <td>{resolveForecastEvolutionPointHeadline(point, props.currentBadgeLabel)}</td>
               <td>
                 {formatFinanceManagementPlanningMinor(
                   point.resultMinor,

@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C-05R2 PO UAT visual refinement |
-| **Status** | **COMPLETE** (code) — PO UAT resumes on STAGE |
+| **Status** | **COMPLETE** (R2 + R3 closure) — PO UAT resumes on STAGE |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
 | **PR** | #904 → STAGE |
 
@@ -32,10 +32,12 @@ Shared surfaces and spacing — no card soup.
 
 - Primary title: **Prognoseentwicklung**  
 - Data: **`FinanceForecastHistoryReadModel.entriesChronological`** (FIN-04C-04) — no second history query  
-- X-axis: categorical formal revisions (oldest → newest); **no fabricated calendar spacing** when `asOfDate` is missing  
-- Series: stored **Prognose-Ergebnis** (`resultMinor`) per revision  
-- Current revision highlighted; hover/focus detail panel with income/expense/result, Datenstand when present, revision source label, version  
-- Compact **Revisionsübersicht** list for governance metadata (reduced duplication vs. chart)
+- **FIN-04C-05R3:** compact executive **revision timeline** (not a tall generic line chart); no unexplained horizontal gridlines  
+- Each revision point shows **identity + whole-currency Ergebnis** without hover; **Aktuell** is the primary current marker (not color-only)  
+- Single revision: no meaningless connector line; two+ revisions: progression legible on desktop and stacked on narrow viewports  
+- **Revisionsübersicht** sits in the **same surface** below a thin separator (no detached metadata card)  
+- Secondary metadata uses **`joinForecastMetadataTokens` / `buildForecastHistoryRowSecondaryLine`** so tokens like `Version 2` are never duplicated (`Version 2 · Version 2` regression fixed)  
+- Legacy rows without `asOfDate` / `revisionLabel` / `revisionSource` remain **Frühere Prognose · Version n** (truthful; no invented dates)
 
 ## Change-driver visualization
 
@@ -43,6 +45,7 @@ Product question: *Was hat sich seit der letzten Prognose verändert?*
 
 - Compact signed deltas for income, expense, result (mathematical direction only — no favorability coloring on drivers)  
 - **`FinanceForecastChangeDriverBars`**: restrained horizontal diverging bars for largest absolute account deltas; zero-change accounts suppressed  
+- **FIN-04C-05R3:** visible **zero axis** at bar midpoint (`data-finance-driver-zero-axis`); direction is mathematical (+/−) with signed value labels — no favorability coloring on drivers  
 
 ### Waterfall / bridge evaluation
 
@@ -61,9 +64,20 @@ Section **Gegen genehmigtes Budget** — visually distinct (leading border accen
 
 ## Responsive & accessibility
 
-- Evolution chart scrolls horizontally on narrow viewports; compact governance list stacks cleanly.  
-- Evolution includes sr-only summary table; interactive points are keyboard focusable.  
+- Evolution timeline stacks vertically on narrow viewports; governance list remains compact in the shared surface.  
+- Evolution includes sr-only summary table; revision points are keyboard focusable with full text labels (not hover-only).  
 - Driver bars expose values as text labels (not color-only).
+
+## FIN-04C-05R3 closure (PO visual polish)
+
+| Area | R3 decision |
+| --- | --- |
+| Revision metadata | Deduplicated composition; governance secondary line from single helper |
+| Timeline density | Replaced tall SVG line chart with compact revision evolution strip |
+| Value scale | Directly labelled revision values; removed unexplained gridlines |
+| History integration | Prognoseentwicklung + Revisionsübersicht in one projection surface |
+| Change drivers | Explicit zero reference on diverging bars |
+| Scope | No 04C-06 / 04D / scheduled cash / module-wide visual intelligence |
 
 ## 04C-06 boundary
 
