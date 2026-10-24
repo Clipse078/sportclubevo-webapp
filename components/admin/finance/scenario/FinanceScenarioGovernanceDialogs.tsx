@@ -53,43 +53,57 @@ export function FinanceScenarioGovernanceDialogs({
   const [adoptPreview, setAdoptPreview] = useState<AdoptionPreview | null>(null);
   const [rebasePreview, setRebasePreview] = useState<RebasePreview | null>(null);
 
+  function closeAdoptDialog() {
+    setAdoptPreview(null);
+    onAdoptClose();
+  }
+
+  function closeRebaseDialog() {
+    setRebasePreview(null);
+    onRebaseClose();
+  }
+
   useEffect(() => {
-    if (!adoptOpen) {
-      setAdoptPreview(null);
-      return;
-    }
+    if (!adoptOpen) return;
+    let cancelled = false;
     startTransition(async () => {
       const result = await previewFinanceScenarioAdoptionAction({
         scenarioId: detail.scenarioId,
         financeYearId,
       });
+      if (cancelled) return;
       if (!result.ok) {
         onError(result.error);
-        onAdoptClose();
+        closeAdoptDialog();
         return;
       }
       setAdoptPreview(result.preview);
     });
-  }, [adoptOpen, detail.scenarioId, financeYearId, onAdoptClose, onError]);
+    return () => {
+      cancelled = true;
+    };
+  }, [adoptOpen, detail.scenarioId, financeYearId, onError]);
 
   useEffect(() => {
-    if (!rebaseOpen) {
-      setRebasePreview(null);
-      return;
-    }
+    if (!rebaseOpen) return;
+    let cancelled = false;
     startTransition(async () => {
       const result = await previewFinanceScenarioRebaseAction({
         scenarioId: detail.scenarioId,
         financeYearId,
       });
+      if (cancelled) return;
       if (!result.ok) {
         onError(result.error);
-        onRebaseClose();
+        closeRebaseDialog();
         return;
       }
       setRebasePreview(result.preview);
     });
-  }, [rebaseOpen, detail.scenarioId, financeYearId, onRebaseClose, onError]);
+    return () => {
+      cancelled = true;
+    };
+  }, [rebaseOpen, detail.scenarioId, financeYearId, onError]);
 
   function mapStaleError(code: string | undefined, fallback: string) {
     if (code === "FINANCE_SCENARIO_STALE") return t("errors.staleScenario");
@@ -113,7 +127,7 @@ export function FinanceScenarioGovernanceDialogs({
         onError(mapStaleError(result.errorCode, result.error));
         return;
       }
-      onAdoptClose();
+      closeAdoptDialog();
       router.refresh();
     });
   }
@@ -131,7 +145,7 @@ export function FinanceScenarioGovernanceDialogs({
         onError(mapStaleError(result.errorCode, result.error));
         return;
       }
-      onRebaseClose();
+      closeRebaseDialog();
       router.refresh();
     });
   }
@@ -146,13 +160,13 @@ export function FinanceScenarioGovernanceDialogs({
       <div data-finance-scenario-adopt-dialog={adoptOpen ? "open" : undefined}>
         <Dialog
           open={adoptOpen}
-          onClose={onAdoptClose}
+          onClose={closeAdoptDialog}
           title={t("governance.adoptDialogTitle")}
           description={t("governance.adoptDialogDescription")}
           footer={
             adoptPreview ? (
               <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
-                <Button type="button" variant="secondary" onClick={onAdoptClose}>
+                <Button type="button" variant="secondary" onClick={closeAdoptDialog}>
                   {tForecast("cancel")}
                 </Button>
                 <Button type="button" disabled={pending} onClick={runAdopt}>
@@ -233,13 +247,13 @@ export function FinanceScenarioGovernanceDialogs({
       <div data-finance-scenario-rebase-dialog={rebaseOpen ? "open" : undefined}>
         <Dialog
           open={rebaseOpen}
-          onClose={onRebaseClose}
+          onClose={closeRebaseDialog}
           title={t("governance.rebaseDialogTitle")}
           description={t("governance.rebaseDialogDescription")}
           footer={
             rebasePreview ? (
               <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
-                <Button type="button" variant="secondary" onClick={onRebaseClose}>
+                <Button type="button" variant="secondary" onClick={closeRebaseDialog}>
                   {tForecast("cancel")}
                 </Button>
                 <Button
