@@ -97,7 +97,8 @@ describe("FIN-04C-05R3 visual polish closure", () => {
         isCurrent: true,
       });
       expect(meta.displayTitle).toBe("Q3 Review");
-      expect(meta.displaySubtitle).toContain("Datenstand 30.09.2026");
+      expect(meta.displaySubtitle).toContain("Datenstand");
+      expect(meta.displaySubtitle).toContain("2026-09-30");
       expect(meta.displaySubtitle).toContain("Version 3");
       const line = buildForecastHistoryRowSecondaryLine({
         displayTitle: meta.displayTitle,
