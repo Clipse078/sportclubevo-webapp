@@ -2,19 +2,19 @@
 
 | Field | Value |
 | --- | --- |
-| **Package type** | Architecture / roadmap clarification only — **no implementation** |
-| **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
+| **Package type** | Architecture / roadmap clarification — **principles locked**; canonical FIN-04E architecture in [`SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](./SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md) |
+| **Status** | **Principles preserved** — superseded as primary architecture doc by **FIN-04E-01** (naming: **`FinanceExpectedFinancialEvent`**, not cash-only) |
 | **Triggered by** | FIN-04D-05 Product Owner UAT (non-empty scenario validation) |
-| **Related** | [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](./SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md), ADR-036, ADR-016 liquidity boundary |
+| **Related** | [`SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](./SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md), [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](./SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md), ADR-036, ADR-037, ADR-016 liquidity boundary |
 
 ## Locked principle (prominent)
 
 ```text
-ANNUAL EXPECTATION  ≠  EXPECTED CASH TIMING  ≠  EFFECTIVE-DATE SCENARIO ASSUMPTION
+ANNUAL EXPECTATION  ≠  EXPECTED FINANCIAL TIMING  ≠  EFFECTIVE-DATE SCENARIO ASSUMPTION
 ```
 
 - **Annual expectation** answers: *How much for the financial year?*
-- **Expected cash timing** answers: *When do we expect money in or out?*
+- **Expected financial timing** answers: *When do we expect money in or out?* (expectation — not settled cash)
 - **Effective-date scenario assumption** answers: *What changes, from when, on which financial events?*
 
 Do **not** collapse these into one field or one naive formula.
@@ -112,9 +112,9 @@ Examples (operational cash timing — not accrual recognition in v1):
 - Invoice due 15.08.2026
 - Sponsor installment expected 01.09.2026
 
-Future canonical concept (name subject to architecture research):
+**Canonical concept (FIN-04E-01):** **`FinanceExpectedFinancialEvent`** — see [`SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](./SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md). Historical placeholder name **`FinanceExpectedCashEvent`** is **not** canonical (cash implies settled movement).
 
-**`FinanceExpectedCashEvent`** (or equivalent) — **schema not implemented in this package**.
+**Schema not implemented in FIN-04D / FIN-04E-01.**
 
 Potential semantics (direction only):
 
@@ -195,7 +195,7 @@ Within **FIN-04 — Forecast Intelligence**, future timing capability includes:
 - expected inflow/outflow profile;
 - forecast timing confidence.
 
-**Status:** **PLANNED / ARCHITECTURE DIRECTION** — not implemented.
+**Status:** **IN PROGRESS** — **FIN-04E-01** architecture complete; implementation **04E-02+**.
 
 ## FIN-04D-06 boundary (unchanged)
 
@@ -208,7 +208,7 @@ FIN-04D-06 remains:
 
 Adoption copies calculated **full-year** scenario amounts into a formal Current Forecast revision. Rebase replaces the frozen annual starting point explicitly. Neither requires temporal assumptions.
 
-**Next package after this doc:** **FIN-04D-06**.
+**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **Next programme slice:** **FIN-04E-02** persistence.
 
 ## Future scenario UX (progressive disclosure — not implemented)
 
@@ -257,6 +257,7 @@ Income received before effective point remains; remove or adjust **future expect
 
 ## Related documents
 
+- [`SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](./SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md) — canonical FIN-04E architecture
 - [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](./SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md) — §5 assumptions, §9 actuals/timing boundary
 - [`SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md`](./SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md) — PO UAT closure
 - [`docs/roadmap/SCE-FINANCE-01.md`](../roadmap/SCE-FINANCE-01.md) — programme status

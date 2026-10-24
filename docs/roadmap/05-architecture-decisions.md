@@ -874,6 +874,45 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 
 ---
 
+## ADR-037 — Forecast Timing & Expected Financial Events (FIN-04E)
+
+**Status:** Accepted — **FIN-04E-01 architecture** (implementation **04E-02+** not started)
+
+### Context
+
+FIN-04A–04D deliver strong **annual** forecast and scenario intelligence. Product Owner UAT showed that annual assumptions (e.g. membership income −10%) cannot truthfully become effective-date scenarios (*ab 01.07.2026*) until SCE holds **temporal financial evidence**. Clubs also need to answer *when* expected income and payments occur — without conflating annual expectation, timing, effective-date assumptions, actual truth, liquidity (FIN-09), or accounting recognition (FIN-11).
+
+### Decision
+
+1. **Locked principle:** `ANNUAL EXPECTATION ≠ EXPECTED FINANCIAL TIMING ≠ EFFECTIVE-DATE ASSUMPTION` (equivalent to FIN-04D separation in `FINANCE_FORECAST_TIMING_LOCKED_PRINCIPLE`).
+2. **Canonical concept:** **`FinanceExpectedFinancialEvent`** — a dated **expectation** that an amount on a **`FinancialAccount`** is expected to occur around a business date. **Not** settled cash, Actual, invoice, or forecast version. Supersedes placeholder `FinanceExpectedCashEvent`.
+3. **Authority:** **Current Forecast** annual `amountMinor` remains organisation-owned **full-year authority**. Expected events are **timing evidence / decomposition** — do not silently redefine forecast as sum of events.
+4. **Unscheduled remainder:** Remaining future expectation not yet timed is **valid** and must be surfaced — **no naive month proration** (`annual × remaining months / 12`) and **no fake monthly phasing** unless explicit distribution evidence exists.
+5. **Reconciliation states (future):** `BALANCED`, `UNSCHEDULED_REMAINDER`, `OVERALLOCATED` — over-allocation must not be silently accepted.
+6. **Actual boundary:** Expected date ≠ actual settlement date; Actual through cutoff (FIN-03B + FIN-04C `actualsThroughDate`) remains authoritative; scenarios must not retroactively rewrite realized Actual.
+7. **Direction & amounts:** Derive inflow/outflow from **`FinancialAccount.canonicalSemantic`** — no independently editable event direction; positive magnitude per FIN-03 conventions.
+8. **Timing precision (v1 set):** `EXACT_DATE`, `DATE_RANGE`, `MONTH`, `UNSCHEDULED` — do not coerce approximate timing to exact dates.
+9. **Dates:** Expectation uses **business date-only** semantics; audit metadata may use timestamps; timezone must not shift business dates.
+10. **Sources:** Extensible model; **MANUAL** expected events in v1 so clubs need not wait for FIN-07/08; operational domains integrate via source references without duplicating commitment/receivable state.
+11. **FIN-04D unchanged in 04E-01:** Annual v1 scenario assumptions; no effective-date fields on `FinanceScenarioAssumption` until **FIN-04E-06**.
+12. **FIN-04B unchanged:** Projection does not depend on FIN-04E; optional future timing seam only.
+13. **FIN-09 boundary:** FIN-04E answers *when* movement is expected; FIN-09 answers liquidity given cash position — **liquidity not implemented in FIN-04E**.
+14. **FIN-11 boundary:** Expected payment/receipt timing ≠ accounting recognition date — FIN-04E is not an accrual engine.
+15. **Finance year:** Expectation belonging to a finance year may differ from cash date outside that year — do not auto-reject without liquidity context.
+16. **Neutrality & tenancy:** Tenant-scoped; integer minor units; country/sport/organisation agnostic core.
+17. **04E-01 scope:** Architecture contract + ADR + roadmap only — **no** Prisma, services, UI, charts, scenario effective dates, or liquidity in 04E-01.
+
+Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](../finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md). Code locks: `lib/finance/forecast/expected-financial-event-architecture-contract.ts`.
+
+### Consequences
+
+- FIN-04E-01 adds `finance-04e-expected-financial-event-architecture.test.ts` — guards terminology, boundaries, and no schema implementation.
+- FIN-04E-02+ will add persistence, reconciliation math, manual CRUD, read models, UX, effective-dated scenarios, visuals, and hardening per `EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN`.
+- **FIN-05** remains next programme slice after **FIN-04E** unless Product Owner reprioritizes.
+- [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) remains the FIN-04D-era principle doc; canonical architecture lives under FIN-04E.
+
+---
+
 ## ADR Template
 
 Copy this template to add a new ADR.
