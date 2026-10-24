@@ -804,7 +804,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../fi
 
 ## ADR-035 — Rolling Forecast & Reforecasting (FIN-04C)
 
-**Status:** Accepted — **FIN-04C-01 architecture** + **FIN-04C-02 persistence** (FIN-04C-03 service pending)
+**Status:** Accepted — **FIN-04C-01 architecture** + **FIN-04C-02 persistence** + **FIN-04C-03 formal reforecast service** (FIN-04C-04 queries next)
 
 ### Context
 
@@ -813,7 +813,7 @@ FIN-04A established organisation-owned **Aktuelle Prognose** with versioned cont
 ### Decision
 
 1. **Product principle:** *The current forecast is a living management view. Formal reforecasts create governance history.*
-2. **Working vs formal:** The **CURRENT** `FinanceForecastVersion` remains editable in place for ordinary line edits. A **formal reforecast** (tenant action **Neue Prognose festhalten**) or **Automatische Prognose übernehmen** supersedes the prior CURRENT (immutable history) and promotes a new CURRENT — **no DRAFT state**, no separate working-line table.
+2. **Working vs formal:** The **CURRENT** `FinanceForecastVersion` remains editable in place for ordinary line edits. A **formal reforecast** (tenant action **Neue Prognose festhalten**) or **Automatische Prognose übernehmen** supersedes the prior CURRENT (immutable history) and promotes a new CURRENT — **no DRAFT state**, no separate working-line table. Revision metadata (`revisionLabel`, Datenstand, `revisionSource`, lineage) is stored on the **promoted CURRENT**; amounts on that CURRENT remain editable until the next formal revision supersede.
 3. **Version semantics:** Manual field edits do **not** create formal versions. Formal checkpoints create immutable **SUPERSEDED** history with stable version IDs. **`FinanceForecast.currentVersionId`** remains the canonical current pointer (not MAX `versionNumber`).
 4. **Temporal metadata (04C-02+):** Formal revisions carry **`asOfDate`** (Datenstand) and **`actualsThroughDate`**, distinct from `createdAt`. Month-end not required; respect tenant **FinanceYear** boundaries.
 5. **Composition:** Full-year expectation at cutoff is conceptual actual-through-cutoff plus remainder; **`FinanceForecastLine`** stays annual `amountMinor` unless a later programme requires split columns.
@@ -826,7 +826,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`]
 
 ### Consequences
 
-- FIN-04C-02 migration `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle` extends `FinanceForecastVersion`; `persistFormalForecastRevision` is the internal lifecycle primitive; FIN-04C-03 implements **Neue Prognose festhalten**.
+- FIN-04C-02 migration `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle` extends `FinanceForecastVersion`; `persistFormalForecastRevision` is the internal lifecycle primitive; FIN-04C-03 exposes **Neue Prognose festhalten** via `formalizeCurrentForecast` + server actions (no automatic forecast side effects).
 - FIN-04B adoption behaviour and PO UAT semantics remain unchanged.
 - Architecture tests in `finance-04c-rolling-forecast-architecture.test.ts` guard durable semantics.
 - FIN-05/06 must reference superseded revision snapshots by stable IDs.

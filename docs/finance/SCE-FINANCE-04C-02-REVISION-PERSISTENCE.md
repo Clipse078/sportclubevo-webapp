@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C-02 — persistence + domain lifecycle foundation |
-| **Status** | **COMPLETE** (FIN-04C-03 service/UI next) |
+| **Status** | **COMPLETE** (FIN-04C-03 formal service complete; UX in 04C-05+) |
 | **Migration** | `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle` |
 | **Code** | `lib/finance/services/finance-forecast-revision-service.ts`, `lib/finance/forecast/forecast-version-snapshot-transition.ts` |
 
@@ -65,6 +65,6 @@ This package does not add permissions. Tenant-facing enforcement of `finance.for
 
 Guarded apply/read-only verify: `scripts/sce-finance-04c-02-stage-migration-verify.ts` (schema only — no forecast business data mutation).
 
-## Next (FIN-04C-03)
+## FIN-04C-03
 
-Tenant-facing **Neue Prognose festhalten** service wiring on top of `persistFormalForecastRevision`.
+Tenant-facing **Neue Prognose festhalten** — see [`SCE-FINANCE-04C-03-FORMAL-REFORECAST.md`](./SCE-FINANCE-04C-03-FORMAL-REFORECAST.md).

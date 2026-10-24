@@ -209,6 +209,26 @@ export const ROLLING_FORECAST_LEGACY_COMPATIBILITY = {
 /**
  * FIN-04C-02 implemented persistence facts (migration `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle`).
  */
+/**
+ * FIN-04C-03 implemented formal reforecast service facts.
+ */
+export const ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST = {
+  tenantFacingAction: "Neue Prognose festhalten",
+  previewService: "previewFormalCurrentForecast",
+  formalizationService: "formalizeCurrentForecast",
+  manualRevisionSourceSystemOwned: "MANUAL_REFORECAST",
+  manualEditDistinctFromFormalRevision: true,
+  promotedCurrentCarriesRevisionMetadata: true,
+  supersededPriorBecomesImmutableHistory: true,
+  formalizationPreservesFinancialAmounts: true,
+  noAutomaticForecastSideEffects: true,
+  expectedCurrentForecastVersionIdRequired: true,
+  financeYearCutoffValidationRequired: true,
+  actualsThroughDefaultsToAsOfDateWhenOmitted: true,
+  revisionLabelOptional: true,
+  mutableCurrentUntilNextFormalRevision: true,
+} as const;
+
 export const ROLLING_FORECAST_FIN_04C_02_PERSISTENCE = {
   financeForecastVersionRevisionMetadataPersisted: true,
   legacyRevisionMetadataNullable: true,
