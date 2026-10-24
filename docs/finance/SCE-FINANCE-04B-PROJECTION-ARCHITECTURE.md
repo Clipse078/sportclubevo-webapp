@@ -32,14 +32,16 @@ This package defines domain boundaries, grains, evidence, data sufficiency, meth
 | **Current forecast** | Organisation | Accepted management expectation (`FinanceForecast` current version); may be manual or explicitly adopted from projection. |
 | **Scenario** | Organisation (what-if) | Alternative assumption set (FIN-04D); not projection, not current forecast. |
 
-**German UI terminology (canonical):**
+**German UI terminology (canonical — FIN-04B-05R2):**
 
-| Concept | Label |
-| --- | --- |
-| Workspace tab | **Prognose** (unchanged FIN-04A) |
-| Organisation forecast | **Aktuelle Prognose** |
-| System projection | **SCE-Projektion** |
-| Explicit adoption | **SCE-Projektion übernehmen** |
+| Concept | Domain / persistence | Tenant-facing label |
+| --- | --- | --- |
+| Workspace tab | Prognose workspace | **Prognose** (unchanged FIN-04A) |
+| Organisation forecast | `FinanceForecast` current version | **Aktuelle Prognose** |
+| System projection | `FinanceProjection*` / projection engine | **Automatische Prognose** |
+| Explicit adoption (FIN-04B-06) | creates new forecast version | **Automatische Prognose übernehmen** |
+
+Internal code and docs may still say “SCE projection” for the engine; tenant Finance UX must not use SCE as a forecast prefix.
 
 Avoid parallel top-level tabs named “SCE-Prognose”, “Forecast”, and “Projection”. SCE assist lives **inside** the Prognose workspace.
 
@@ -68,9 +70,9 @@ Engine evaluates data sufficiency per account (and aggregate)
 If insufficient → persisted or returned result with INSUFFICIENT + reasons (no fabricated amounts)
 If sufficient/limited → versioned snapshot written (hybrid persistence)
         ↓
-User reviews SCE-Projektion vs Aktuelle Prognose
+User reviews Automatische Prognose vs Aktuelle Prognose
         ↓
-Optional: SCE-Projektion übernehmen → creates **new** organisation forecast version (audit trail)
+Optional: Automatische Prognose übernehmen → creates **new** organisation forecast version (audit trail)
         ↓
 Later: new actuals / evidence → projection may become STALE (still visible for comparison)
 ```
@@ -270,11 +272,11 @@ Event-driven invalidation may come later; semantics are defined now.
 
 **UX (future FIN-04B-05+):** Inside Prognose, show side-by-side:
 
-- SCE-Projektion total / per account
+- Automatische Prognose total / per account (domain: projection)
 - Aktuelle Prognose
 - Difference (signed, canonical money formatters)
 
-**Apply:** single primary action **SCE-Projektion übernehmen**
+**Apply:** single primary action **Automatische Prognose übernehmen**
 
 **First implementation scope:** **whole `FinanceYear`** projection → materialise adopted values on a **new** `FinanceForecastVersion` (FIN-04A grain). Per-account apply deferred to canonical row/multi-select pattern.
 

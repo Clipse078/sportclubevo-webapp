@@ -274,6 +274,7 @@ export function FinanceForecastWorkspacePanel({
       {yearSelected && projection && projection.versionNumber !== null ? (
         <FinanceProjectionAccountDetailSection
           projection={projection}
+          currency={workspaceCurrency}
           formattingLocale={formattingLocale}
         />
       ) : null}

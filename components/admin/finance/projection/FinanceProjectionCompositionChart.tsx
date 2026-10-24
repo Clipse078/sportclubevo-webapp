@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProjectionCompositionSegment } from "@/lib/finance/projection/projection-workspace-dashboard";
-import { formatBudgetPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
+import { formatFinanceAutomaticForecastMoneyMinor } from "@/lib/finance/projection/projection-amount-presentation";
 import {
   FINANCE_PROJECTION_CHART_SURFACE_CLASS,
   FinanceProjectionHorizontalBar,
@@ -35,7 +35,7 @@ export function FinanceProjectionCompositionChart(props: FinanceProjectionCompos
           <FinanceProjectionHorizontalBar
             key={segment.accountId}
             label={segment.accountName}
-            valueLabel={formatBudgetPlanningMinor(
+            valueLabel={formatFinanceAutomaticForecastMoneyMinor(
               segment.projectedAmountMinor,
               props.currency,
               props.formattingLocale,

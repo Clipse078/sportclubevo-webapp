@@ -205,11 +205,14 @@ export const PROJECTION_PERMISSION_CONTRACT = {
   adminImplied: "finance.admin",
 } as const;
 
-/** German product terminology (localization anchor — not core enum labels). */
+/**
+ * German product terminology (localization anchor — not core enum labels).
+ * Internal domain remains "projection"; tenant-facing label is Automatische Prognose.
+ */
 export const PROJECTION_GERMAN_PRODUCT_TERMS = {
   currentForecast: "Aktuelle Prognose",
-  sceProjection: "SCE-Projektion",
-  applyAction: "SCE-Projektion übernehmen",
+  automaticForecast: "Automatische Prognose",
+  applyAction: "Automatische Prognose übernehmen",
   workspaceTab: "Prognose",
 } as const;
 

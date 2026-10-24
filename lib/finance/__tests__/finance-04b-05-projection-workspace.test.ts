@@ -311,8 +311,8 @@ describe("FIN-04B-05 explainability view model", () => {
 });
 
 describe("FIN-04B-05 canonical terminology guard", () => {
-  it("keeps SCE-Projektion distinct from Aktuelle Prognose", () => {
-    expect(PROJECTION_GERMAN_PRODUCT_TERMS.sceProjection).toBe("SCE-Projektion");
+  it("keeps Automatische Prognose distinct from Aktuelle Prognose", () => {
+    expect(PROJECTION_GERMAN_PRODUCT_TERMS.automaticForecast).toBe("Automatische Prognose");
     expect(PROJECTION_GERMAN_PRODUCT_TERMS.currentForecast).toBe("Aktuelle Prognose");
   });
 });

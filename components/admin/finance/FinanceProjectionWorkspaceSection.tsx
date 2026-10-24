@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
 import {
-  formatBudgetPlanningMinor,
-  formatBudgetPlanningSignedWholeMajorNumber,
-} from "@/lib/finance/budget/budget-amount-presentation";
+  formatFinanceAutomaticForecastMoneyMinor,
+  formatFinanceAutomaticForecastSignedMinor,
+} from "@/lib/finance/projection/projection-amount-presentation";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import type { ProjectionWorkspaceViewModel } from "@/lib/finance/projection/projection-workspace-presentation";
 import {
@@ -217,6 +217,7 @@ export function FinanceProjectionWorkspaceSection({
               title={t("chartDivergenceTitle")}
               description={t("chartDivergenceDescription")}
               rows={projection.dashboard!.divergence}
+              currency={currency}
               formattingLocale={formattingLocale}
             />
           ) : null}
@@ -228,6 +229,7 @@ export function FinanceProjectionWorkspaceSection({
 
 export function FinanceProjectionAccountDetailSection(props: {
   projection: ProjectionWorkspaceViewModel;
+  currency: string | null;
   formattingLocale: string;
 }) {
   const t = useTranslations("Finance.forecast");
@@ -273,9 +275,9 @@ export function FinanceProjectionAccountDetailSection(props: {
                 <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
                   {account.projectedAmountMinor !== null ? (
                     <span className="tabular-nums">
-                      {formatBudgetPlanningMinor(
+                      {formatFinanceAutomaticForecastMoneyMinor(
                         account.projectedAmountMinor,
-                        null,
+                        props.currency,
                         props.formattingLocale,
                       )}
                     </span>
@@ -287,6 +289,7 @@ export function FinanceProjectionAccountDetailSection(props: {
                   <FinanceProjectionDeltaCell
                     accountId={account.accountId}
                     projection={props.projection}
+                    currency={props.currency}
                     formattingLocale={props.formattingLocale}
                   />
                 </td>
@@ -294,6 +297,7 @@ export function FinanceProjectionAccountDetailSection(props: {
                   <ProjectionExplainTrigger
                     accountId={account.accountId}
                     projection={props.projection}
+                    currency={props.currency}
                     formattingLocale={props.formattingLocale}
                   />
                 </td>
@@ -330,7 +334,7 @@ function ProjectionSummaryStrip(props: {
         <div className="sm:px-4 sm:first:ps-0">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{incomeLabel}</dt>
           <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-            {formatBudgetPlanningMinor(
+            {formatFinanceAutomaticForecastMoneyMinor(
               coverage.income.projectedTotalMinor,
               props.currency,
               props.formattingLocale,
@@ -340,7 +344,7 @@ function ProjectionSummaryStrip(props: {
         <div className="sm:px-4">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{expenseLabel}</dt>
           <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-            {formatBudgetPlanningMinor(
+            {formatFinanceAutomaticForecastMoneyMinor(
               coverage.expense.projectedTotalMinor,
               props.currency,
               props.formattingLocale,
@@ -356,7 +360,7 @@ function ProjectionSummaryStrip(props: {
             data-finance-projection-summary="result"
           >
             {coverage.result.minor !== null
-              ? formatBudgetPlanningMinor(
+              ? formatFinanceAutomaticForecastMoneyMinor(
                   coverage.result.minor,
                   props.currency,
                   props.formattingLocale,
@@ -372,6 +376,7 @@ function ProjectionSummaryStrip(props: {
 function ProjectionExplainTrigger(props: {
   accountId: string;
   projection: ProjectionWorkspaceViewModel;
+  currency: string | null;
   formattingLocale: string;
 }) {
   const t = useTranslations("Finance.forecast.projection");
@@ -408,6 +413,7 @@ function ProjectionExplainTrigger(props: {
         {detail ? (
           <ProjectionExplainabilityBody
             explainability={detail}
+            currency={props.currency}
             formattingLocale={props.formattingLocale}
             t={t}
           />
@@ -420,12 +426,14 @@ function ProjectionExplainTrigger(props: {
 export function FinanceProjectionAccountCell(props: {
   accountId: string;
   projection: ProjectionWorkspaceViewModel;
+  currency: string | null;
   formattingLocale: string;
 }) {
   return (
     <ProjectionExplainTrigger
       accountId={props.accountId}
       projection={props.projection}
+      currency={props.currency}
       formattingLocale={props.formattingLocale}
     />
   );
@@ -433,6 +441,7 @@ export function FinanceProjectionAccountCell(props: {
 
 function ProjectionExplainabilityBody(props: {
   explainability: ProjectionAccountExplainabilityDetailViewModel;
+  currency: string | null;
   formattingLocale: string;
   t: ReturnType<typeof useTranslations<"Finance.forecast.projection">>;
 }) {
@@ -476,16 +485,20 @@ function ProjectionExplainabilityBody(props: {
         <div>
           <dt className="text-[var(--muted)]">{props.t("explainKnownActual")}</dt>
           <dd>
-            {formatBudgetPlanningMinor(e.knownActualAmountMinor, null, props.formattingLocale)}
+            {formatFinanceAutomaticForecastMoneyMinor(
+              e.knownActualAmountMinor,
+              props.currency,
+              props.formattingLocale,
+            )}
           </dd>
         </div>
         {e.estimatedRemainingAmountMinor !== null ? (
           <div>
             <dt className="text-[var(--muted)]">{props.t("explainEstimatedRemainder")}</dt>
             <dd>
-              {formatBudgetPlanningMinor(
+              {formatFinanceAutomaticForecastMoneyMinor(
                 e.estimatedRemainingAmountMinor,
-                null,
+                props.currency,
                 props.formattingLocale,
               )}
             </dd>
@@ -495,7 +508,11 @@ function ProjectionExplainabilityBody(props: {
           <div>
             <dt className="text-[var(--muted)]">{props.t("explainProjection")}</dt>
             <dd>
-              {formatBudgetPlanningMinor(e.projectedAmountMinor, null, props.formattingLocale)}
+              {formatFinanceAutomaticForecastMoneyMinor(
+                e.projectedAmountMinor,
+                props.currency,
+                props.formattingLocale,
+              )}
             </dd>
           </div>
         ) : null}
@@ -504,8 +521,16 @@ function ProjectionExplainabilityBody(props: {
             <dt className="text-[var(--muted)]">{props.t("explainRange")}</dt>
             <dd>
               {props.t("explainRangeValue", {
-                lower: formatBudgetPlanningMinor(e.lowerBoundMinor, null, props.formattingLocale),
-                upper: formatBudgetPlanningMinor(e.upperBoundMinor, null, props.formattingLocale),
+                lower: formatFinanceAutomaticForecastMoneyMinor(
+                  e.lowerBoundMinor,
+                  props.currency,
+                  props.formattingLocale,
+                ),
+                upper: formatFinanceAutomaticForecastMoneyMinor(
+                  e.upperBoundMinor,
+                  props.currency,
+                  props.formattingLocale,
+                ),
               })}
             </dd>
           </div>
@@ -524,6 +549,7 @@ function ProjectionExplainabilityBody(props: {
 export function FinanceProjectionDeltaCell(props: {
   accountId: string;
   projection: ProjectionWorkspaceViewModel;
+  currency: string | null;
   formattingLocale: string;
 }) {
   const account = props.projection.accounts.find((row) => row.accountId === props.accountId);
@@ -532,7 +558,11 @@ export function FinanceProjectionDeltaCell(props: {
   }
   return (
     <span className="tabular-nums text-[var(--foreground)]">
-      {formatBudgetPlanningSignedWholeMajorNumber(account.deltaMinor, props.formattingLocale)}
+      {formatFinanceAutomaticForecastSignedMinor(
+        account.deltaMinor,
+        props.currency,
+        props.formattingLocale,
+      )}
     </span>
   );
 }

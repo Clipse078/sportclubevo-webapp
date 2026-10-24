@@ -120,8 +120,8 @@ describe("FIN-04B capability and permissions", () => {
 });
 
 describe("FIN-04B German product terminology", () => {
-  it("uses SCE-Projektion distinct from Aktuelle Prognose inside Prognose workspace", () => {
-    expect(PROJECTION_GERMAN_PRODUCT_TERMS.sceProjection).toBe("SCE-Projektion");
+  it("uses Automatische Prognose distinct from Aktuelle Prognose inside Prognose workspace", () => {
+    expect(PROJECTION_GERMAN_PRODUCT_TERMS.automaticForecast).toBe("Automatische Prognose");
     expect(PROJECTION_GERMAN_PRODUCT_TERMS.currentForecast).toBe("Aktuelle Prognose");
     expect(PROJECTION_GERMAN_PRODUCT_TERMS.workspaceTab).toBe("Prognose");
   });
@@ -158,7 +158,7 @@ describe("FIN-04B architecture documentation present", () => {
     );
     expect(doc).toContain("SCE generates the projection");
     expect(doc).toContain("VERSIONED_SNAPSHOT_HYBRID");
-    expect(doc).toContain("SCE-Projektion");
+    expect(doc).toMatch(/Automatische Prognose|tenant-facing.*projection/i);
     const methodology = readFileSync(
       resolve(process.cwd(), "docs/finance/SCE-FINANCE-04B-04-METHODOLOGY.md"),
       "utf8",

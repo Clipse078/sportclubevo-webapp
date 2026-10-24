@@ -24,7 +24,7 @@ describe("FIN-04B-05R1 projection intelligence dashboard UX", () => {
     expect(projectionSection).toContain("data-finance-projection-visuals");
   });
 
-  it("keeps SCE account detail separate from editable forecast table width", () => {
+  it("keeps automatic forecast account detail separate from editable forecast table width", () => {
     expect(forecastPanel).toContain("FinanceProjectionAccountDetailSection");
     expect(forecastPanel).not.toContain("FinanceProjectionAccountCell");
     expect(forecastPanel).not.toContain("projectionColumn");
@@ -33,5 +33,11 @@ describe("FIN-04B-05R1 projection intelligence dashboard UX", () => {
   it("does not expose adoption actions", () => {
     expect(projectionSection).not.toMatch(/übernehmen|adopt/i);
     expect(forecastPanel).not.toMatch(/adoptProjection|projectionAdopt/i);
+  });
+
+  it("uses Automatische Prognose terminology in German messages", () => {
+    const de = readFileSync(join(process.cwd(), "messages/de.json"), "utf8");
+    expect(de).toContain("Automatische Prognose");
+    expect(de).not.toContain("SCE-Projektion");
   });
 });

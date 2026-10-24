@@ -44,7 +44,7 @@ export function projectionInsufficientDataExplanation(
   if (reasons.includes("ACCOUNT_ARCHIVED")) {
     return "Archivierte Positionen werden nicht projiziert.";
   }
-  return "Für diese Position liegt keine verlässliche SCE-Projektion vor.";
+  return "Für diese Position liegt keine verlässliche automatische Prognose vor.";
 }
 
 export function buildProjectionExplainabilityNarrative(
@@ -73,12 +73,12 @@ export function buildProjectionExplainabilityNarrative(
         : "früheren Finanzjahren";
     const remainderPhrase =
       remainder !== null
-        ? ` Auf Basis dieses Verlaufs und der bisher verbuchten Ist-Daten schätzt SCE den Jahresendwert.`
+        ? ` Auf Basis dieses Verlaufs und der bisher verbuchten Ist-Daten wird der Jahresendwert geschätzt.`
         : "";
     return (
       `In den berücksichtigten Finanzjahren (${yearNames}) waren bis zu diesem Zeitpunkt ${shareText} der jährlichen Position verbucht.` +
       remainderPhrase +
-      ` Bekanntes Ist und geschätzter Rest ergeben die SCE-Projektion.`
+      ` Bekanntes Ist und geschätzter Rest ergeben die automatische Prognose.`
     );
   }
 
@@ -91,17 +91,17 @@ export function buildProjectionExplainabilityNarrative(
       );
       return (
         `Bisher sind etwa ${elapsedShare} % des Finanzjahres verstrichen. ` +
-        "SCE rechnet den bisherigen Ist-Verlauf linear auf das Jahresende hoch — geschätzter Rest und Projektion folgen daraus."
+        "Der bisherige Ist-Verlauf wird linear auf das Jahresende hochgerechnet — geschätzter Rest und automatische Prognose folgen daraus."
       );
     }
     return (
-      "SCE extrapoliert den bisherigen Ist-Verlauf linear auf das gesamte Finanzjahr. " +
-      "Bekanntes Ist plus geschätzter Rest ergeben die Jahresprojektion."
+      "Der bisherige Ist-Verlauf wird linear auf das gesamte Finanzjahr extrapoliert. " +
+      "Bekanntes Ist plus geschätzter Rest ergeben die automatische Prognose."
     );
   }
 
   if (projected !== null && remainder !== null) {
-    return "SCE kombiniert bekannte Ist-Daten mit einer konservativen Schätzung des verbleibenden Jahresverlaufs.";
+    return "Bekannte Ist-Daten werden mit einer konservativen Schätzung des verbleibenden Jahresverlaufs kombiniert.";
   }
 
   return null;
@@ -147,7 +147,7 @@ export function buildProjectionAccountExplainabilityDetail(
     insufficientExplanation,
     headlineQuestion:
       calculation.projectedAmountMinor !== null
-        ? "Warum prognostiziert SCE diese Position?"
+        ? "Wie wurde diese automatische Prognose berechnet?"
         : insufficientExplanation,
   };
 }

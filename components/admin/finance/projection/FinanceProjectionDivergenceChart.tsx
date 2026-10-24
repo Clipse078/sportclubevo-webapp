@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProjectionForecastDivergenceRow } from "@/lib/finance/projection/projection-workspace-dashboard";
-import { formatBudgetPlanningSignedWholeMajorNumber } from "@/lib/finance/budget/budget-amount-presentation";
+import { formatFinanceAutomaticForecastSignedMinor } from "@/lib/finance/projection/projection-amount-presentation";
 import {
   FINANCE_PROJECTION_CHART_SURFACE_CLASS,
   FinanceProjectionHorizontalBar,
@@ -11,6 +11,7 @@ type FinanceProjectionDivergenceChartProps = {
   title: string;
   description: string;
   rows: readonly ProjectionForecastDivergenceRow[];
+  currency: string | null;
   formattingLocale: string;
 };
 
@@ -29,8 +30,9 @@ export function FinanceProjectionDivergenceChart(props: FinanceProjectionDiverge
           <FinanceProjectionHorizontalBar
             key={row.accountId}
             label={row.accountName}
-            valueLabel={formatBudgetPlanningSignedWholeMajorNumber(
+            valueLabel={formatFinanceAutomaticForecastSignedMinor(
               row.deltaMinor,
+              props.currency,
               props.formattingLocale,
             )}
             fraction={row.absDeltaMinor / maxAbs}

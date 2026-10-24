@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   FINANCE_MONEY_ISO_SUFFIX_SEPARATOR,
+  formatFinanceAutomaticForecastMoneyMinor,
   formatFinanceMoneyMinor,
   formatFinanceMoneyWholeMajorNumber,
   getFinanceMoneyPresentationFormatters,
+  iso4217MinorUnitsPerMajor,
+  roundAmountMinorToWholeMajorPresentation,
 } from "@/lib/finance/presentation/finance-money-presentation";
 
 function expectedWholeMajorNumber(value: number, locale: string): string {
@@ -109,5 +112,24 @@ describe("FIN-01E R5 finance money presentation", () => {
     const second = getFinanceMoneyPresentationFormatters("EUR", "de-DE");
     expect(first).toBe(second);
     expect(first.wholeMajorNumber).toBe(second.wholeMajorNumber);
+  });
+
+  describe("FIN-04B automatic forecast whole-unit presentation", () => {
+    it("uses currency-aware minor units per major", () => {
+      expect(iso4217MinorUnitsPerMajor("CHF")).toBe(100);
+      expect(iso4217MinorUnitsPerMajor("JPY")).toBe(1);
+    });
+
+    it("rounds .49 down and .50 up for two-decimal currencies", () => {
+      expect(roundAmountMinorToWholeMajorPresentation(236_327_49, "CHF")).toBe(236_327_00);
+      expect(roundAmountMinorToWholeMajorPresentation(236_327_50, "CHF")).toBe(236_328_00);
+    });
+
+    it("formats without artificial decimal precision", () => {
+      const value = formatFinanceAutomaticForecastMoneyMinor(236_327_04, "CHF", "de-CH");
+      expect(value).not.toMatch(/[.,]\d{2}\s/);
+      expect(value).toContain("236");
+      expect(value).toContain("CHF");
+    });
   });
 });
