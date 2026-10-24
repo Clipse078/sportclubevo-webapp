@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D-04 — query / read model / comparison intelligence |
-| **Status** | **COMPLETE** — FIN-04D-05 workspace UX next |
+| **Status** | **COMPLETE** — consumed by FIN-04D-05 workspace UX |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Depends on** | FIN-04D-01 (architecture), FIN-04D-02 (persistence), FIN-04D-03 (`calculateFinanceScenario`) |
 

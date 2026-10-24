@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02** persistence; **04D-03+** engine, UX |
-| **Status** | **04D-01 COMPLETE**; **04D-02 COMPLETE**; **04D-03 COMPLETE** — see [`SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md`](./SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md), [`SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md`](./SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md) |
+| **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02** persistence; **04D-03** engine; **04D-04** query; **04D-05** workspace UX |
+| **Status** | **04D-01 … 04D-05 COMPLETE** (PO UAT on 04D-05) — see [`SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md`](./SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md) |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Base** | `STAGE` (post FIN-04C merge `c635f1c0`) |
 | **Implementation code** | **04D-01:** `scenario-architecture-contract.ts`, `scenario-assumption-calculation.ts` — **04D-03:** `calculate-finance-scenario.ts`, `finance-scenario-calculation-types.ts` |
