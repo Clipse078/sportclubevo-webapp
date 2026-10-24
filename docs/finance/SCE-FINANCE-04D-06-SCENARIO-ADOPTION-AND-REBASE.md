@@ -88,4 +88,4 @@ UAT figures are evidence only — not hardcoded in product logic.
 
 - Lifecycle regression: `finance-04d-07-scenario-lifecycle-regression.test.ts`
 - React `exhaustive-deps` warnings resolved in `FinanceScenarioGovernanceDialogs.tsx` (stable close callbacks)
-- **04D-06 COMPLETE** — **04D-07 COMPLETE** — **FIN-04D READY FOR MERGE** (PR **#905** open; merge by Product Owner only)
+- **04D-06 COMPLETE** — **04D-07 COMPLETE** — **FIN-04D COMPLETE / MERGED / PO UAT PASS** (PR **#905** → **STAGE**, merged)
