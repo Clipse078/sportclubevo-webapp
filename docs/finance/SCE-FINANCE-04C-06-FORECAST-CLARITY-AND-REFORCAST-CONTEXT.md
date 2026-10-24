@@ -4,7 +4,7 @@
 | --- | --- |
 | **Package** | FIN-04C-06 |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
-| **Status** | Code complete — PO UAT after STAGE migration when required |
+| **Status** | **PO UAT PASS** (FIN-04C-06R2 natural-height dialog); hardened under **FIN-04C-07** |
 
 ## Product objective
 

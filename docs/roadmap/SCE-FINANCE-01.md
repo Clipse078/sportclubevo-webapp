@@ -19,7 +19,7 @@
 | **FIN-04** | Forecasting programme (**IN PROGRESS** — principle: *SCE generates the projection. The organisation owns the forecast.*) |
 | **FIN-04A** | Current Forecast Foundation — **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md) (PR **#902** → **STAGE**) |
 | **FIN-04B** | SCE Projection Engine (Automatic Forecast) — **COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**) — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) |
-| **FIN-04C** | Rolling Forecast & Reforecasting — **IN PROGRESS** (**04C-01–06** complete; **04C-07** next — [`SCE-FINANCE-04C-06-FORECAST-CLARITY-AND-REFORCAST-CONTEXT.md`](../finance/SCE-FINANCE-04C-06-FORECAST-CLARITY-AND-REFORCAST-CONTEXT.md)) |
+| **FIN-04C** | Rolling Forecast & Reforecasting — **IMPLEMENTATION COMPLETE** (**04C-01–07**; final PO UAT / merge authorization pending — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md)) |
 | **FIN-04D** | Scenarios & What-if — **PLANNED** |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
 | **FIN-06** | Financial publishing & sharing (**NOT STARTED**) |

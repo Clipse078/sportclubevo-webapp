@@ -288,6 +288,21 @@ export const ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON = {
   viewPermissionOnly: "finance.forecast.view",
 } as const;
 
+/** FIN-04C-07 hardening & release closure (implementation complete — PO merge authorization pending). */
+export const ROLLING_FORECAST_FIN_04C_07_RELEASE_CLOSURE = {
+  packageCompletePendingPoUat: true,
+  noFin04dScope: true,
+  noNewMigrationUnlessIntegrityHole: true,
+  formalReforecastStaleCurrentGuardTested: true,
+  adoptionStaleInputGuardTested: true,
+  duplicateSubmissionGuardTested: true,
+  canonicalCurrentPointerAuditTested: true,
+  /** Manual edits remain in-place on CURRENT without line-level optimistic tokens (FIN-04C-03 boundary). */
+  lineLevelOptimisticConcurrencyDeferred: true,
+  residualManualEditRaceDocumented: true,
+  stageReadOnlyIntegrityScript: "scripts/sce-finance-04c-07-stage-readonly-integrity.ts",
+} as const;
+
 export const ROLLING_FORECAST_FIN_04C_02_PERSISTENCE = {
   financeForecastVersionRevisionMetadataPersisted: true,
   legacyRevisionMetadataNullable: true,

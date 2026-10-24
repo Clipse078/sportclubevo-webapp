@@ -15,6 +15,7 @@ import {
   ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST,
   ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON,
   ROLLING_FORECAST_FIN_04C_05_WORKSPACE_UX,
+  ROLLING_FORECAST_FIN_04C_07_RELEASE_CLOSURE,
   ROLLING_FORECAST_GERMAN_PRODUCT_TERMS,
   ROLLING_FORECAST_LEGACY_COMPATIBILITY,
   ROLLING_FORECAST_MEASURE_GUARDS,
@@ -243,6 +244,16 @@ describe("FIN-04C permissions and legacy models", () => {
     );
     expect(ROLLING_FORECAST_DATA_MODEL_EVOLUTION.FinanceForecast.action).toBe("KEEP");
     expect(ROLLING_FORECAST_DATA_MODEL_EVOLUTION.FinanceForecastLine.action).toBe("KEEP");
+  });
+});
+
+describe("FIN-04C-07 release closure locks", () => {
+  it("documents hardening complete pending PO merge authorization", () => {
+    expect(ROLLING_FORECAST_FIN_04C_07_RELEASE_CLOSURE.packageCompletePendingPoUat).toBe(true);
+    expect(ROLLING_FORECAST_FIN_04C_07_RELEASE_CLOSURE.noFin04dScope).toBe(true);
+    expect(ROLLING_FORECAST_FIN_04C_07_RELEASE_CLOSURE.lineLevelOptimisticConcurrencyDeferred).toBe(
+      true,
+    );
   });
 });
 

@@ -347,7 +347,7 @@ Missing FIN-04C metadata on legacy versions:
 | 4 | **FIN-04C-04** | Forecast history & comparison query layer (**COMPLETE** — [`SCE-FINANCE-04C-04-HISTORY-COMPARISON.md`](./SCE-FINANCE-04C-04-HISTORY-COMPARISON.md)) |
 | 5 | **FIN-04C-05** | Rolling forecast workspace UX (**COMPLETE** — [`SCE-FINANCE-04C-05-WORKSPACE-UX.md`](./SCE-FINANCE-04C-05-WORKSPACE-UX.md)) |
 | 6 | **FIN-04C-06** | Forecast clarity & reforecast context (**COMPLETE** — [`SCE-FINANCE-04C-06-FORECAST-CLARITY-AND-REFORCAST-CONTEXT.md`](./SCE-FINANCE-04C-06-FORECAST-CLARITY-AND-REFORCAST-CONTEXT.md)) |
-| 7 | **FIN-04C-07** | Hardening, concurrency & release closure (**NEXT**) |
+| 7 | **FIN-04C-07** | Hardening, concurrency & release closure (**COMPLETE** — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](./SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md); **PO merge pending**) |
 
 ---
 
