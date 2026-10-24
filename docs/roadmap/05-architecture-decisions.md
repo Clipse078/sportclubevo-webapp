@@ -767,7 +767,7 @@ Tenants need Region, Program, Campaign, etc., without abandoning typed domain FK
 
 ## ADR-034 — SCE Projection Engine (FIN-04B)
 
-**Status:** Accepted (FIN-04B-01 architecture through FIN-04B-07 hardening on PR **#903**)
+**Status:** Accepted — **FIN-04B COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**)
 
 ### Context
 
@@ -793,8 +793,9 @@ Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../fi
 
 ### Consequences
 
-- FIN-04B-02 migration `20261023200000_sce_finance_04b_02_projection_persistence` applied on shared STAGE (FIN-04B-03).
-- FIN-04B-04 adds migration `20261023210000_sce_finance_04b_04_projection_line_methodology` (shared STAGE apply pending).
+- FIN-04B-02 migration `20261023200000_sce_finance_04b_02_projection_persistence` applied on shared STAGE.
+- FIN-04B-04 migration `20261023210000_sce_finance_04b_04_projection_line_methodology` applied on shared STAGE.
+- **Production** not touched at FIN-04B closure; verify scripts: `npm run finance:04b:02:stage-migration-verify`, `npm run finance:04b:04:stage-migration-verify`.
 - FIN-04A manual forecast services unchanged in FIN-04B-02; adoption workflow in FIN-04B-06 must create new forecast version per decision (7).
 - FIN-04C/D/05/06 must consume projection as a separate measure from current forecast and published snapshots.
 - Architecture tests in `finance-04b-projection-architecture.test.ts` guard durable semantics.

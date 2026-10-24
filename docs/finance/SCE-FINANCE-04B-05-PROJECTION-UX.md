@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B-05 (+ **05R1** dashboard / explainability, **05R2** terminology + presentation precision) |
-| **Status** | **FIN-04B-05R2 IMPLEMENTED / PO UAT REQUIRED** |
+| **Status** | **COMPLETE + MERGED + PO UAT PASS** (05 / 05R1 / 05R2) |
 | **Route** | `/dashboard/finance/forecast` (tab **Prognose**) |
 
 ## Domain vs tenant terminology

@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B programme — **04B-01** architecture; **04B-02** persistence; **04B-03** evidence & sufficiency |
-| **Status** | **FIN-04B-07 IMPLEMENTED / FINAL PO UAT REQUIRED** — packages **01–07** on branch (see decomposition §22); **04B-06 PO functional UAT PASS** |
-| **Branch** | `cursor/sce-finance-04b-projection-engine` |
+| **Status** | **COMPLETE + MERGED + PO UAT PASS** — packages **01–07** (+ **05R1/R2**, **06R1**, **UAT-DATA-01**) on **STAGE** (PR **#903**) |
+| **Branch** | `cursor/sce-finance-04b-projection-engine` (merged) |
 | **Base** | `STAGE` (post FIN-04A merge PR **#902**, merge `eb3901ae`) |
 | **Implementation code** | Contract: `lib/finance/projection/projection-architecture-contract.ts`; persistence: `lib/finance/services/finance-projection-service.ts`; evidence: `lib/finance/services/finance-projection-evidence-service.ts` |
 
@@ -365,14 +365,38 @@ Derived minimal sequence (names indicative):
 
 | Step | Package | Deliverable |
 | --- | --- | --- |
-| 1 | **FIN-04B-02** | **DONE (code)** — migration `20261023200000_sce_finance_04b_02_projection_persistence` + lifecycle services (generate stub, persist snapshot); STAGE apply pending |
-| 2 | **FIN-04B-03** | Evidence extraction (historical/current actuals, year boundaries), sufficiency evaluator (baseline rules) |
-| 3 | **FIN-04B-04** | **DONE** — `sce-projection-v1` engine; migration `20261023210000_sce_finance_04b_04_projection_line_methodology` applied on shared STAGE |
-| 4 | **FIN-04B-05 / 05R1** | **IMPLEMENTED / PO UAT REQUIRED** — SCE projection intelligence dashboard + mandatory explainability (see `SCE-FINANCE-04B-05-PROJECTION-UX.md`) |
-| 5 | **FIN-04B-06 / 06R1** | **IMPLEMENTED** — explicit adoption + canonical `currentVersionId` reads ([`SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md`](./SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md); PO functional UAT **PASS**) |
-| 6 | **FIN-04B-07** | **IMPLEMENTED** — confidence/range/explainability hardening, domain separation guards, release regression matrix ([`SCE-FINANCE-04B-07-HARDENING.md`](./SCE-FINANCE-04B-07-HARDENING.md)) |
+| 1 | **FIN-04B-01** | **COMPLETE** — architecture contract + governance tests |
+| 2 | **FIN-04B-02** | **COMPLETE** — migration `20261023200000_sce_finance_04b_02_projection_persistence` + lifecycle services (shared **STAGE** applied) |
+| 3 | **FIN-04B-03** | **COMPLETE** — evidence extraction (historical/current actuals, year boundaries), sufficiency evaluator |
+| 4 | **FIN-04B-04** | **COMPLETE** — `sce-projection-v1` engine; migration `20261023210000_sce_finance_04b_04_projection_line_methodology` (shared **STAGE** applied) |
+| 5 | **FIN-04B-05 / 05R1 / 05R2** | **COMPLETE + PO UAT PASS** — automatic forecast workspace UX ([`SCE-FINANCE-04B-05-PROJECTION-UX.md`](./SCE-FINANCE-04B-05-PROJECTION-UX.md)) |
+| 6 | **FIN-04B-06 / 06R1** | **COMPLETE + PO UAT PASS** — explicit adoption + canonical `currentVersionId` ([`SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md`](./SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md)) |
+| 7 | **FIN-04B-07** | **COMPLETE + PO UAT PASS** — explainability, confidence, release hardening ([`SCE-FINANCE-04B-07-HARDENING.md`](./SCE-FINANCE-04B-07-HARDENING.md)) |
+| — | **FIN-04B-UAT-DATA-01** | **PRESERVED on STAGE** — fictional actuals fixture for regression/UAT ([`SCE-FINANCE-04B-UAT-DATA-01.md`](./SCE-FINANCE-04B-UAT-DATA-01.md)); not cleaned up at closure |
 
-FIN-04B-01 **stops here** — architecture + contract + governance tests only.
+---
+
+## 22a. PO UAT closure (2026-10-24)
+
+Product Owner UAT **PASS** (Michael): final **FIN-04B-07** visual and functional UAT across the Prognose automatic forecast surface, including explainability, confidence presentation, explicit refresh/adoption, and canonical **Aktuelle Prognose · Version n** after adoption.
+
+**Production** was **not** promoted during FIN-04B closure.
+
+### Delivered capability (programme)
+
+- Historical and current-year **Actual** evidence extraction; tenant-defined **FinanceYear** alignment
+- **Data sufficiency** (`SUFFICIENT` / `LIMITED` / `INSUFFICIENT`) with explicit insufficient-data state
+- Deterministic methodology selection per account — **HISTORICAL_PATTERN**, **RUN_RATE**, **NONE** (no user-selectable algorithms)
+- Account-level **Prognosesicherheit** and defensible expected ranges (historical only; no run-rate range fiction)
+- Structured **Berechnung anzeigen** explainability; immutable projection snapshots; evidence fingerprints and staleness
+- Explicit **Automatische Prognose aktualisieren** refresh; projection version lifecycle; comparison with **Aktuelle Prognose**
+- Explicit **Automatische Prognose übernehmen** adoption; forecast version lifecycle; adoption provenance; partial coverage semantics
+- **Null vs zero** adoption semantics; tenant isolation; currency safety; whole-unit automatic forecast presentation
+- **No** fake monthly phasing; **no** LLM numerical forecasting; **no** silent current-forecast or approved-budget overwrites
+
+### Merge
+
+PR **#903** → **STAGE** (FIN-04B closure merge). **FIN-04C** is **NEXT**; **FIN-04D** remains **PLANNED**.
 
 ---
 
@@ -403,13 +427,12 @@ FIN-04B-01 **stops here** — architecture + contract + governance tests only.
 
 ---
 
-## Binary control (FIN-04B-01)
+## Binary control (FIN-04B programme)
 
-No UI in this package.
+No new binary-setting checkboxes across FIN-04B-05…07. Adoption confirmation uses dialog actions only; future per-account apply scope remains row/multi-select (not checkbox proliferation).
 
 ```text
 NEW_BINARY_CHECKBOXES = 0
-CANONICAL_TOGGLES_USED = N/A (no new UI)
-SINGLE_CHOICE_PATTERN = N/A
-MULTI_SELECTION_PATTERN = N/A (future apply scope: row/multi-select if per-account)
+CANONICAL_TOGGLES_USED = existing Finance capability / permission gates only
+MULTI_SELECTION_PATTERN = reserved for future selected-account adoption scope (FIN-04C+)
 ```

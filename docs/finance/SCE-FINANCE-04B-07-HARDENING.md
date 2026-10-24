@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B-07 |
-| **Status** | **IMPLEMENTED / FINAL PO UAT REQUIRED** |
+| **Status** | **COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**) |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **PR** | #903 → STAGE |
 
@@ -37,11 +37,12 @@ Historical pattern matching uses stable **`FinancialAccount.id`** across finance
 
 ## UAT data
 
-**SCE-FIN-04B-UAT-DATA-01** remains on shared STAGE for Michael’s final visual UAT. This package does not clean it up or mutate FY 2026 Current Forecast on STAGE.
+**SCE-FIN-04B-UAT-DATA-01** remains on shared STAGE after merge (not cleaned up at FIN-04B closure). Cleanup remains documented behind explicit STAGE-only confirmation tokens.
 
-## PO UAT (FIN-04B-06)
+## PO UAT closure
 
-Product Owner functional UAT **PASS** (Michael): after adoption, FY 2026 displayed **Aktuelle Prognose · Version 2** via canonical `currentVersionId` resolution. FIN-04B-07 adds automated regression; final **visual** FIN-04B UAT remains PO-owned.
+- **FIN-04B-06** functional UAT **PASS** (Michael): after adoption, FY 2026 displayed **Aktuelle Prognose · Version 2** via canonical `currentVersionId` resolution.
+- **FIN-04B-07** final PO UAT **PASS** (Michael): full automatic forecast surface, explainability, confidence, refresh/adoption hardening accepted for merge.
 
 ## Tests
 

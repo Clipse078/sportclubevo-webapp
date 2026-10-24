@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** **COMPLETE + MERGED + PO UAT PASS** — PR **#902** → **STAGE**; **04B–04D** not started) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** + **04B** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903** → **STAGE**; **04C** **NEXT**; **04D** **PLANNED**) |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -18,9 +18,9 @@
 | **FIN-03** | Periodic measurement & budget control (**COMPLETE** — **03A** [`SCE-FINANCE-03A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03A-IMPLEMENTATION.md) + **03B** [`SCE-FINANCE-03B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03B-IMPLEMENTATION.md) **COMPLETE + PO UAT PASS** → **STAGE**) |
 | **FIN-04** | Forecasting programme (**IN PROGRESS** — principle: *SCE generates the projection. The organisation owns the forecast.*) |
 | **FIN-04A** | Current Forecast Foundation — **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md) (PR **#902** → **STAGE**) |
-| **FIN-04B** | SCE Projection Engine — **04B-01 … 04B-07 IMPLEMENTED / FINAL PO UAT REQUIRED** (PR **#903** → **STAGE**) — architecture [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md); hardening [`SCE-FINANCE-04B-07-HARDENING.md`](../finance/SCE-FINANCE-04B-07-HARDENING.md) |
-| **FIN-04C** | Rolling Forecast & Reforecasting — **NOT STARTED** |
-| **FIN-04D** | Scenarios & What-if — **NOT STARTED** |
+| **FIN-04B** | SCE Projection Engine (Automatic Forecast) — **COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**) — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) |
+| **FIN-04C** | Rolling Forecast & Reforecasting — **NEXT** |
+| **FIN-04D** | Scenarios & What-if — **PLANNED** |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
 | **FIN-06** | Financial publishing & sharing (**NOT STARTED**) |
 | **FIN-07** | Commitments & approvals |

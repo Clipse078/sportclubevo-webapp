@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B-06 |
-| **Status** | **IMPLEMENTED / PO functional UAT PASS** (FIN-04B-06); final FIN-04B visual UAT with **04B-07** |
+| **Status** | **COMPLETE + MERGED + PO UAT PASS** (06 / 06R1; final visual UAT with **04B-07**) |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **PR** | #903 → STAGE |
 
@@ -104,7 +104,7 @@ Server-side enforcement in `finance-projection-adoption-service.ts` and existing
 
 ## PO UAT closure (FIN-04B-06)
 
-Product Owner functional UAT **PASS** (Michael): after **Automatische Prognose übernehmen** on shared STAGE FY 2026, workspace context displayed **Aktuelle Prognose · Version 2** (canonical `FinanceForecast.currentVersionId` → version 2, not stale relation ordering). Visual polish across the full FIN-04B surface remains for final PO UAT after **FIN-04B-07**.
+Product Owner UAT **PASS** (Michael): after **Automatische Prognose übernehmen** on shared STAGE FY 2026, workspace context displayed **Aktuelle Prognose · Version 2** (canonical `FinanceForecast.currentVersionId` → version 2). Final **FIN-04B-07** visual UAT **PASS** closed the programme (PR **#903** → **STAGE**).
 
 ## Tests
 
