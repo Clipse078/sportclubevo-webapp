@@ -543,6 +543,7 @@ function ProjectionExplainTrigger(props: {
       <button
         type="button"
         className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+        aria-label={t("explainActionShort")}
         onClick={() => setDetailOpen(true)}
       >
         <Info className="h-3.5 w-3.5" aria-hidden />
@@ -687,7 +688,12 @@ function ProjectionExplainabilityBody(props: {
         {e.confidenceLabel ? (
           <div>
             <dt className="text-[var(--muted)]">{PROJECTION_CONFIDENCE_PRODUCT_TERM}</dt>
-            <dd>{e.confidenceLabel}</dd>
+            <dd>
+              {e.confidenceLabel}
+              {e.confidenceExplanation ? (
+                <span className="mt-1 block text-[var(--muted)]">{e.confidenceExplanation}</span>
+              ) : null}
+            </dd>
           </div>
         ) : null}
       </dl>

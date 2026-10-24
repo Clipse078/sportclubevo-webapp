@@ -73,7 +73,7 @@ export function projectionConfidenceLabel(level: ProjectionConfidenceLevel): str
     case "LOW":
       return "Geringe Prognosesicherheit";
     case "NONE":
-      return null;
+      return "Keine verlässliche Einschätzung";
     default:
       return null;
   }

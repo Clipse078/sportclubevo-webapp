@@ -8,6 +8,7 @@ import {
   PROJECTION_CAPABILITY_KEY,
   PROJECTION_EVIDENCE_AVAILABLE_FIN_04B_BASELINE,
   PROJECTION_METHODOLOGY_FAMILIES,
+  PROJECTION_DOMAIN_SEPARATION_GUARDS,
   PROJECTION_GERMAN_PRODUCT_TERMS,
   PROJECTION_PERMISSION_CONTRACT,
   PROJECTION_PUBLISHED_GRAIN,
@@ -147,6 +148,38 @@ describe("FIN-04A schema integrity (regression guard)", () => {
     const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
     expect(schema).toMatch(/scenarioKey/);
     expect(SCE_PROJECTION_ARCHITECTURE_LOCKS.useForecastScenarioKeyForProjection).toBe(false);
+  });
+});
+
+describe("FIN-04B-07 domain separation release guards", () => {
+  it("locks automatic forecast vs current forecast vs budget vs actual invariants", () => {
+    for (const value of Object.values(PROJECTION_DOMAIN_SEPARATION_GUARDS)) {
+      expect(value).toBe(true);
+    }
+    expect(SCE_PROJECTION_ARCHITECTURE_LOCKS.inferCurrentVersionByMaxVersionNumberForbidden).toBe(
+      true,
+    );
+    expect(SCE_PROJECTION_ARCHITECTURE_LOCKS.noUserSelectableForecastAlgorithm).toBe(true);
+  });
+
+  it("resolves canonical forecast version via pointer helper (not relation ordering)", () => {
+    const forecastService = readFileSync(
+      resolve(process.cwd(), "lib/finance/services/finance-forecast-service.ts"),
+      "utf8",
+    );
+    expect(forecastService).toContain("resolveCanonicalCurrentForecastVersionByPointer");
+    expect(forecastService).toMatch(/FinanceForecast\.currentVersionId/);
+    const queryService = readFileSync(
+      resolve(process.cwd(), "lib/finance/services/finance-forecast-query-service.ts"),
+      "utf8",
+    );
+    expect(queryService).toContain("resolveCanonicalCurrentForecastVersionByPointer");
+    const projectionService = readFileSync(
+      resolve(process.cwd(), "lib/finance/services/finance-projection-service.ts"),
+      "utf8",
+    );
+    expect(projectionService).toContain("currentProjectionVersionId");
+    expect(projectionService).toContain("currentProjectionVersion");
   });
 });
 

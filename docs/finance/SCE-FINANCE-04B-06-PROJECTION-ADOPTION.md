@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B-06 |
-| **Status** | **IMPLEMENTED / PO UAT REQUIRED** |
+| **Status** | **IMPLEMENTED / PO functional UAT PASS** (FIN-04B-06); final FIN-04B visual UAT with **04B-07** |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **PR** | #903 → STAGE |
 
@@ -102,6 +102,10 @@ Server-side enforcement in `finance-projection-adoption-service.ts` and existing
 | Server action | `app/(admin)/dashboard/finance/forecast/actions.ts` → `adoptProjectionAction` |
 | UI | `components/admin/finance/FinanceProjectionWorkspaceSection.tsx` |
 
+## PO UAT closure (FIN-04B-06)
+
+Product Owner functional UAT **PASS** (Michael): after **Automatische Prognose übernehmen** on shared STAGE FY 2026, workspace context displayed **Aktuelle Prognose · Version 2** (canonical `FinanceForecast.currentVersionId` → version 2, not stale relation ordering). Visual polish across the full FIN-04B surface remains for final PO UAT after **FIN-04B-07**.
+
 ## Tests
 
-`lib/finance/__tests__/finance-04b-06-projection-adoption.test.ts` — policy, lifecycle, partial coverage, precision, provenance, stale/concurrency guards, permissions, UX regression guards.
+`lib/finance/__tests__/finance-04b-06-projection-adoption.test.ts` — policy, lifecycle, partial coverage, precision, provenance, stale/concurrency guards, permissions, UX regression guards. Release matrix extended in `finance-04b-07-release-hardening.test.ts`.

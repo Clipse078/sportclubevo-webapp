@@ -3,6 +3,7 @@ import type {
   ProjectionMethodologyFamily,
 } from "@/lib/finance/projection/projection-architecture-contract";
 import type { ProjectionAccountCalculationResult } from "@/lib/finance/projection/projection-calculation-types";
+import { projectionConfidenceExplanation } from "@/lib/finance/projection/projection-confidence-explanation";
 import {
   projectionConfidenceLabel,
   projectionDataSufficiencyLabel,
@@ -112,6 +113,7 @@ export type ProjectionAccountExplainabilityDetailViewModel =
     narrative: string | null;
     headlineQuestion: string | null;
     insufficientExplanation: string | null;
+    confidenceExplanation: string | null;
   };
 
 export function buildProjectionAccountExplainabilityDetail(
@@ -140,11 +142,21 @@ export function buildProjectionAccountExplainabilityDetail(
     calculation.projectedAmountMinor === null
       ? projectionInsufficientDataExplanation(calculation.sufficiencyReasons)
       : null;
+  const confidenceExplanation =
+    calculation.projectedAmountMinor !== null
+      ? projectionConfidenceExplanation({
+          level: calculation.confidenceLevel,
+          rationaleCodes: calculation.confidenceRationaleCodes,
+          methodologyFamily: calculation.methodologyFamily,
+          dataSufficiency: calculation.dataSufficiency,
+        })
+      : null;
 
   return {
     ...base,
     narrative,
     insufficientExplanation,
+    confidenceExplanation,
     headlineQuestion:
       calculation.projectedAmountMinor !== null
         ? "Wie wurde diese automatische Prognose berechnet?"

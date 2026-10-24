@@ -88,7 +88,7 @@ describe("FIN-04B-05 presentation labels", () => {
     expect(projectionDataSufficiencyLabel("LIMITED")).toBe("Begrenzte Datengrundlage");
     expect(projectionDataSufficiencyLabel("INSUFFICIENT")).toBe("Nicht genügend Daten");
     expect(projectionConfidenceLabel("HIGH")).toContain("Prognosesicherheit");
-    expect(projectionConfidenceLabel("NONE")).toBeNull();
+    expect(projectionConfidenceLabel("NONE")).toBe("Keine verlässliche Einschätzung");
     expect(PROJECTION_CONFIDENCE_PRODUCT_TERM).toBe("Prognosesicherheit");
   });
 

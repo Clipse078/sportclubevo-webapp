@@ -50,6 +50,18 @@ export const SCE_PROJECTION_ARCHITECTURE_LOCKS = {
   publishedProjectionPhasingSupported: FORECAST_PHASING_SUPPORTED,
   useForecastScenarioKeyForProjection: false,
   fxConversionInProjection: false,
+  /** Missing evidence → null projection line amount; never implicit zero (FIN-04B-07). */
+  insufficientProjectionAmountRemainsNullNeverZero: true,
+  /** Reads/mutations use FinanceForecast.currentVersionId, not MAX(versionNumber) (FIN-04B-06R1). */
+  currentForecastVersionFromContainerPointer: true,
+  /** Reads use FinanceProjection.currentProjectionVersionId, not MAX(versionNumber). */
+  currentProjectionVersionFromContainerPointer: true,
+  inferCurrentVersionByMaxVersionNumberForbidden: true,
+  automaticForecastGenerationNeverMutatesCurrentForecast: true,
+  automaticForecastGenerationNeverMutatesApprovedBudget: true,
+  adoptionOnlyPathMutatesCurrentForecastFromProjection: true,
+  projectionSnapshotImmutableAfterAdoption: true,
+  noUserSelectableForecastAlgorithm: true,
 } as const;
 
 /**
@@ -189,6 +201,27 @@ export const PROJECTION_TO_FORECAST_APPLY_SCOPE = {
   requiresExplicitUserAction: true,
   /** FIN-04B-02+ contract: adoption creates a new organisation forecast version (FIN-04B-06). */
   createsNewForecastVersion: true,
+} as const;
+
+/** Release guards — domain separation invariants (FIN-04B-07). */
+export const PROJECTION_DOMAIN_SEPARATION_GUARDS = {
+  automaticForecastNeverMutatesApprovedBudget:
+    PROJECTION_TO_FORECAST_APPLY_SCOPE.mutatesApprovedBudget === false,
+  automaticForecastGenerationNeverMutatesCurrentForecast:
+    SCE_PROJECTION_ARCHITECTURE_LOCKS.automaticForecastGenerationNeverMutatesCurrentForecast,
+  currentForecastChangesFromProjectionOnlyViaExplicitAdoption:
+    PROJECTION_TO_FORECAST_APPLY_SCOPE.requiresExplicitUserAction,
+  adoptionCreatesNewFinanceForecastVersion: PROJECTION_TO_FORECAST_APPLY_SCOPE.createsNewForecastVersion,
+  priorCurrentForecastVersionSupersededOnAdoption: true,
+  automaticForecastSnapshotUnchangedAfterAdoption:
+    PROJECTION_TO_FORECAST_APPLY_SCOPE.mutatesProjectionSnapshot === false,
+  actualRemainsIndependent:
+    SCE_PROJECTION_ARCHITECTURE_LOCKS.actualRemainsIndependentFromForecastAndProjection,
+  nullInsufficientProjectionNeverImplicitZero:
+    SCE_PROJECTION_ARCHITECTURE_LOCKS.insufficientProjectionAmountRemainsNullNeverZero,
+  adoptionPreservesForecastWhenProjectionNull: true,
+  currentForecastVersionFromFinanceForecastPointer:
+    SCE_PROJECTION_ARCHITECTURE_LOCKS.currentForecastVersionFromContainerPointer,
 } as const;
 
 /** Capability — reuse FORECASTING; projection is assist inside Prognose workspace. */

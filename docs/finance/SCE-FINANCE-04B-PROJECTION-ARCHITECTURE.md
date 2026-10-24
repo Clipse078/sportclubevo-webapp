@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B programme — **04B-01** architecture; **04B-02** persistence; **04B-03** evidence & sufficiency |
-| **Status** | **FIN-04B IN PROGRESS** — **04B-01 COMPLETE / APPROVED**; **04B-02 IMPLEMENTED / STAGE APPLIED**; **04B-03 IMPLEMENTED**; **04B-06 IMPLEMENTED / PO UAT REQUIRED** |
+| **Status** | **FIN-04B-07 IMPLEMENTED / FINAL PO UAT REQUIRED** — packages **01–07** on branch (see decomposition §22); **04B-06 PO functional UAT PASS** |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **Base** | `STAGE` (post FIN-04A merge PR **#902**, merge `eb3901ae`) |
 | **Implementation code** | Contract: `lib/finance/projection/projection-architecture-contract.ts`; persistence: `lib/finance/services/finance-projection-service.ts`; evidence: `lib/finance/services/finance-projection-evidence-service.ts` |
@@ -369,8 +369,8 @@ Derived minimal sequence (names indicative):
 | 2 | **FIN-04B-03** | Evidence extraction (historical/current actuals, year boundaries), sufficiency evaluator (baseline rules) |
 | 3 | **FIN-04B-04** | **DONE** — `sce-projection-v1` engine; migration `20261023210000_sce_finance_04b_04_projection_line_methodology` applied on shared STAGE |
 | 4 | **FIN-04B-05 / 05R1** | **IMPLEMENTED / PO UAT REQUIRED** — SCE projection intelligence dashboard + mandatory explainability (see `SCE-FINANCE-04B-05-PROJECTION-UX.md`) |
-| 5 | **FIN-04B-06** | Apply workflow + forecast adoption provenance |
-| 6 | **FIN-04B-07** | Confidence/range hardening, explainability surfacing, driver provider registration API |
+| 5 | **FIN-04B-06 / 06R1** | **IMPLEMENTED** — explicit adoption + canonical `currentVersionId` reads ([`SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md`](./SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md); PO functional UAT **PASS**) |
+| 6 | **FIN-04B-07** | **IMPLEMENTED** — confidence/range/explainability hardening, domain separation guards, release regression matrix ([`SCE-FINANCE-04B-07-HARDENING.md`](./SCE-FINANCE-04B-07-HARDENING.md)) |
 
 FIN-04B-01 **stops here** — architecture + contract + governance tests only.
 
@@ -378,11 +378,13 @@ FIN-04B-01 **stops here** — architecture + contract + governance tests only.
 
 ## 23. Architecture tests
 
-`lib/finance/__tests__/finance-04b-projection-architecture.test.ts` guards:
+`lib/finance/__tests__/finance-04b-projection-architecture.test.ts` and `finance-04b-07-release-hardening.test.ts` guard:
 
 - Projection ≠ forecast ≠ scenario
-- No silent overwrite contracts
+- `PROJECTION_DOMAIN_SEPARATION_GUARDS` (budget/actual/current forecast/adoption invariants)
+- No silent overwrite contracts; canonical version pointers (not MAX versionNumber)
 - No LLM in numerical contract module
+- Data sufficiency ≠ confidence; null ≠ zero; run-rate without fake ranges
 - Tenant FinanceYear + no CHF hardcoding
 - FIN-04B-02 projection persistence models present; immutability guards
 - FIN-04A forecast models intact
@@ -396,7 +398,8 @@ FIN-04B-01 **stops here** — architecture + contract + governance tests only.
 - [`SCE-FINANCE-03A-IMPLEMENTATION.md`](./SCE-FINANCE-03A-IMPLEMENTATION.md) — actual grain
 - [`SCE-FINANCE-03B-IMPLEMENTATION.md`](./SCE-FINANCE-03B-IMPLEMENTATION.md) — period resolver
 - ADR-021, **ADR-034** (FIN-04B projection engine)
-- Code: `lib/finance/projection/projection-architecture-contract.ts`
+- [`SCE-FINANCE-04B-07-HARDENING.md`](./SCE-FINANCE-04B-07-HARDENING.md)
+- Code: `lib/finance/projection/projection-architecture-contract.ts`, `projection-confidence-explanation.ts`
 
 ---
 
