@@ -909,7 +909,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](
 
 - FIN-04E-01 adds `finance-04e-expected-financial-event-architecture.test.ts` — guards terminology and boundaries.
 - FIN-04E-02 adds persistence migration, validation, reconciliation engine, and `finance-04e-02-*.test.ts`.
-- FIN-04E-03+ will add manual CRUD services, read models, UX, effective-dated scenarios, visuals, and hardening per `EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN`.
+- **FIN-04E-03 COMPLETE** — manual expected event CRUD + reconciliation application service (`docs/finance/SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`); FIN-04E-04+ read models, UX, effective-dated scenarios, visuals, and hardening per `EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN`.
 - **FIN-05** remains next programme slice after **FIN-04E** unless Product Owner reprioritizes.
 - [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) remains the FIN-04D-era principle doc; canonical architecture lives under FIN-04E.
 

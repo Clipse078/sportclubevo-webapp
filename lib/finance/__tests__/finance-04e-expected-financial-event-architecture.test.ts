@@ -5,6 +5,9 @@ import { FINANCIAL_YEAR_CONFIGURABLE } from "@/lib/finance/finance-architecture"
 import { FORECAST_PHASING_SUPPORTED } from "@/lib/finance/forecast/forecast-contract";
 import {
   EXPECTED_FINANCIAL_EVENT_04E_02_ARCHITECTURE_LOCKS,
+  EXPECTED_FINANCIAL_EVENT_04E_03_ARCHITECTURE_LOCKS,
+  EXPECTED_FINANCIAL_EVENT_CAPABILITY_KEY,
+  EXPECTED_FINANCIAL_EVENT_PERMISSIONS,
   EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS,
   EXPECTED_FINANCIAL_EVENT_CANONICAL_MODEL_NAME,
   EXPECTED_FINANCIAL_EVENT_CURRENT_FORECAST_RELATIONSHIP,
@@ -24,6 +27,14 @@ import {
 } from "@/lib/finance/forecast/scenario-architecture-contract";
 
 describe("FIN-04E architecture contract locks", () => {
+  it("locks FIN-04E-03 service management invariants", () => {
+    expect(
+      EXPECTED_FINANCIAL_EVENT_04E_03_ARCHITECTURE_LOCKS.MANUAL_EVENT_CRUD_DOES_NOT_MUTATE_FORECAST,
+    ).toBe(true);
+    expect(EXPECTED_FINANCIAL_EVENT_CAPABILITY_KEY).toBe("FORECASTING");
+    expect(EXPECTED_FINANCIAL_EVENT_PERMISSIONS.manage).toBe("finance.forecast.manage");
+  });
+
   it("locks temporal intelligence boundaries (04E-01) and 04E-02 persistence locks", () => {
     expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.expectedEventIsNotActual).toBe(true);
     expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.expectedEventIsNotForecastVersion).toBe(

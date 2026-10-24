@@ -115,6 +115,31 @@ export const EXPECTED_FINANCIAL_EVENT_DOMAIN_DEFINITION = {
   auditMetadataTimestamped: true,
 } as const;
 
+/** Capability — reuse FORECASTING (FIN-04A–04D pattern). */
+export const EXPECTED_FINANCIAL_EVENT_CAPABILITY_KEY = "FORECASTING" as const;
+
+/** Permissions for manual expected event services (FIN-04E-03). */
+export const EXPECTED_FINANCIAL_EVENT_PERMISSIONS = {
+  view: "finance.forecast.view",
+  manage: "finance.forecast.manage",
+} as const;
+
+/** Machine-testable locks introduced with FIN-04E-03 application services. */
+export const EXPECTED_FINANCIAL_EVENT_04E_03_ARCHITECTURE_LOCKS = {
+  MANUAL_EVENT_CRUD_DOES_NOT_MUTATE_FORECAST: true,
+  DELETE_EVENT_RETURNS_AMOUNT_TO_DERIVED_UNSCHEDULED_REMAINDER: true,
+  OVERALLOCATED_IS_ALLOWED_AND_SURFACED: true,
+  SOURCE_OWNED_EVENT_NOT_GENERICALLY_MANUAL_MUTABLE: true,
+  VIEW_REQUIRES_FORECAST_VIEW: true,
+  MUTATION_REQUIRES_FORECAST_MANAGE: true,
+  CURRENT_FORECAST_RESOLVED_BY_POINTER: true,
+  ACTUAL_CUTOFF_EXPLICIT: true,
+  NO_SYSTEM_CLOCK: true,
+  NO_PRESENTATION_FORMATTING_IN_DOMAIN_SERVICE: true,
+  ARCHIVED_ACCOUNT_NEW_EVENT_REJECTED: true,
+  MANUAL_CREATE_ZERO_AMOUNT_REJECTED: true,
+} as const;
+
 /** Machine-testable locks introduced with FIN-04E-02 persistence & reconciliation. */
 export const EXPECTED_FINANCIAL_EVENT_04E_02_ARCHITECTURE_LOCKS = {
   UNSCHEDULED_REMAINDER_IS_DERIVED: true,

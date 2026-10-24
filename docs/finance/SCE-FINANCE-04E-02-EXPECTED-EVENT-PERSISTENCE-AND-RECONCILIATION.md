@@ -3,10 +3,10 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04E-02 — persistence & pure reconciliation foundation |
-| **Status** | **COMPLETE** (this package) |
+| **Status** | **COMPLETE** |
 | **Branch** | `cursor/sce-finance-04e-forecast-timing-f9d6` |
 | **ADR** | ADR-037 (extended) |
-| **Next** | **FIN-04E-03** — expected event services & manual management |
+| **Next** | **FIN-04E-04** — read model (services: **FIN-04E-03** complete — [`SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`](./SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md)) |
 
 ## Scope delivered
 
@@ -101,7 +101,7 @@ Likely reuse **`finance.forecast.view`** / **`finance.forecast.manage`** when 04
 
 - Migration is **additive** only.
 - **Not** auto-applied to Production.
-- **STAGE apply** deferred until 04E-03/UAT requires live persistence (guard tests document Preview/STAGE policy).
+- **STAGE apply** completed under FIN-04E-03 via `scripts/sce-finance-04e-02-stage-migration-verify.ts` (designated STAGE only; zero expected events created on shared STAGE).
 
 ## Code map
 

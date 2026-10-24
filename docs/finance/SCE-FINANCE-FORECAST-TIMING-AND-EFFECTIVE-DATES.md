@@ -195,7 +195,7 @@ Within **FIN-04 — Forecast Intelligence**, future timing capability includes:
 - expected inflow/outflow profile;
 - forecast timing confidence.
 
-**Status:** **IN PROGRESS** — **FIN-04E-01** architecture complete; **FIN-04E-02** persistence & reconciliation foundation complete — [`SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](./SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md); **04E-03+** services/UI.
+**Status:** **IN PROGRESS** — **FIN-04E-01–04E-03** complete — [`SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md`](./SCE-FINANCE-04E-03-EXPECTED-EVENT-SERVICES.md); **04E-04+** read model/UI.
 
 ## FIN-04D-06 boundary (unchanged)
 
@@ -208,7 +208,7 @@ FIN-04D-06 remains:
 
 Adoption copies calculated **full-year** scenario amounts into a formal Current Forecast revision. Rebase replaces the frozen annual starting point explicitly. Neither requires temporal assumptions.
 
-**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **FIN-04E-02:** **COMPLETE** — expected event persistence & reconciliation. **Next:** **FIN-04E-03** services.
+**FIN-04D-06:** **COMPLETE** — adoption/rebase (annual semantics). **FIN-04E-03:** **COMPLETE** — expected event services & STAGE persistence apply. **Next:** **FIN-04E-04** read model.
 
 ## Future scenario UX (progressive disclosure — not implemented)
 
