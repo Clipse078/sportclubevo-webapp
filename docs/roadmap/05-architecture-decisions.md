@@ -836,7 +836,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`]
 
 ## ADR-036 — Scenarios & What-if (FIN-04D)
 
-**Status:** Accepted — **FIN-04D-01** … **FIN-04D-07 COMPLETE** — **FIN-04D READY FOR MERGE** (PR **#905** → **STAGE**)
+**Status:** Accepted — **FIN-04D COMPLETE / MERGED / PO UAT PASS** (PR **#905** → **STAGE**)
 
 ### Context
 
@@ -867,8 +867,8 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 - FIN-04D-04 **COMPLETE** — `loadFinanceScenarioList` / `loadFinanceScenarioDetail`; frozen-baseline primary comparison; live Current Forecast context; Approved Budget secondary; driver ranking; scenario-to-scenario **DEFERRED** in v1.
 - FIN-04D-05R1 **PO UAT PASS** — scenario detail composition (decision → explanation → investigation).
 - FIN-04D-06 **COMPLETE + PO UAT PASS** — explicit adoption (`SCENARIO_ADOPTION`) and rebase with audit tables.
-- FIN-04D-07 **COMPLETE** — lifecycle regression, eslint hardening, release closure; **FIN-04D READY FOR MERGE** (not merged until PR **#905** merges).
-- **FIN-05** is the next major Finance package after FIN-04D closure, subject to Product Owner prioritization — do not implement timing/phasing ahead of that decision.
+- FIN-04D-07 **COMPLETE** — lifecycle regression, eslint hardening, release closure; **FIN-04D MERGED** to **STAGE** (PR **#905**).
+- Next Finance package subject to Product Owner prioritization — do not implement timing/phasing ahead of that decision.
 - Prognoseverlauf (FIN-04C) continues to exclude scenarios; scenario adoption creates **forecast** history, not scenario governance versions.
 - FIN-05/06 must treat scenarios as analytical inputs unless explicitly adopted into current forecast.
 

@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** + **04B** + **04C** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903**, **#904** → **STAGE**; **04D-01** … **04D-07 COMPLETE** on PR **#905** → **STAGE** — **04D-05R1 + 04D-06 PO UAT PASS** — **FIN-04D READY FOR MERGE** pending Product Owner authorization; **forecast timing / effective-date intelligence PLANNED / DEFERRED** — [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md); **FIN-05** next major Finance package after **04D** merge, subject to prioritization) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **COMPLETE** (**04A** + **04B** + **04C** + **04D** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903**, **#904**, **#905** → **STAGE**); **forecast timing / effective-date intelligence PLANNED / DEFERRED** — [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md); next Finance package subject to Product Owner prioritization |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -16,7 +16,7 @@
 | **FIN-01** | Foundation & configurable structure |
 | **FIN-02** | Budgeting & approved baseline (**COMPLETE** — **02A–02C COMPLETE + MERGED + PO UAT PASS**; **02D DEFERRED / BACKLOG**) |
 | **FIN-03** | Periodic measurement & budget control (**COMPLETE** — **03A** [`SCE-FINANCE-03A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03A-IMPLEMENTATION.md) + **03B** [`SCE-FINANCE-03B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03B-IMPLEMENTATION.md) **COMPLETE + PO UAT PASS** → **STAGE**) |
-| **FIN-04** | Forecast Intelligence & Scenarios (**IN PROGRESS** — principle: *SCE generates the projection. The organisation owns the forecast.*; **04D** next) |
+| **FIN-04** | Forecast Intelligence & Scenarios (**COMPLETE** — principle: *SCE generates the projection. The organisation owns the forecast.*; **04A–04D** merged + PO UAT PASS) |
 
 ### SCE product-wide UX principle (FIN-04C+)
 
@@ -24,7 +24,7 @@ SCE must **reduce management complexity rather than expose it**. Complex domain 
 | **FIN-04A** | Current Forecast Foundation — **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md) (PR **#902** → **STAGE**) |
 | **FIN-04B** | SCE Projection Engine (Automatic Forecast) — **COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**) — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) |
 | **FIN-04C** | Rolling Forecast & Reforecasting — **COMPLETE + MERGED + PO UAT PASS** (PR **#904** → **STAGE**) — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md) |
-| **FIN-04D** | Scenarios & What-if — **04D-01** … **04D-07 COMPLETE** — **04D-05R1 + 04D-06 PO UAT PASS** — **READY FOR MERGE** (PR **#905** → **STAGE**, open) — [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md), [`SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md`](../finance/SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md); **forecast timing / effective-date intelligence PLANNED / DEFERRED** — [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
+| **FIN-04D** | Scenarios & What-if — **COMPLETE + MERGED + PO UAT PASS** (PR **#905** → **STAGE**) — [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md), [`SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md`](../finance/SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md); **forecast timing / effective-date intelligence PLANNED / DEFERRED** — [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
 | **FIN-06** | Financial publishing & sharing (**NOT STARTED**) |
 | **FIN-07** | Commitments & approvals |

@@ -3,9 +3,9 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02** persistence; **04D-03** engine; **04D-04** query; **04D-05** workspace UX |
-| **Status** | **04D-01 … 04D-07 COMPLETE** — **04D-05R1 + 04D-06 Product Owner UAT PASS** — **FIN-04D READY FOR MERGE** (PR **#905** → **STAGE**, open pending Michael merge authorization); adoption/rebase: [`SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md`](./SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md); forecast timing direction (not implemented): [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
-| **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
-| **Base** | `STAGE` (post FIN-04C merge `c635f1c0`) |
+| **Status** | **FIN-04D COMPLETE / MERGED / PO UAT PASS** — **04D-01 … 04D-07 COMPLETE** (PR **#905** → **STAGE**); adoption/rebase: [`SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md`](./SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md); forecast timing direction (not implemented): [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
+| **Branch** | merged via PR **#905** |
+| **Base** | `STAGE` (merge commit `02891ae9`) |
 | **Implementation code** | **04D-01:** `scenario-architecture-contract.ts`, `scenario-assumption-calculation.ts` — **04D-03:** `calculate-finance-scenario.ts`, `finance-scenario-calculation-types.ts` |
 
 ## Executive summary
