@@ -804,7 +804,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../fi
 
 ## ADR-035 — Rolling Forecast & Reforecasting (FIN-04C)
 
-**Status:** Accepted — **FIN-04C-01 architecture** (implementation packages 04C-02+ pending)
+**Status:** Accepted — **FIN-04C-01 architecture** + **FIN-04C-02 persistence** (FIN-04C-03 service pending)
 
 ### Context
 
@@ -826,7 +826,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`]
 
 ### Consequences
 
-- FIN-04C-02 migration extends `FinanceForecastVersion` with revision metadata; services in 04C-03+ implement **Neue Prognose festhalten**.
+- FIN-04C-02 migration `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle` extends `FinanceForecastVersion`; `persistFormalForecastRevision` is the internal lifecycle primitive; FIN-04C-03 implements **Neue Prognose festhalten**.
 - FIN-04B adoption behaviour and PO UAT semantics remain unchanged.
 - Architecture tests in `finance-04c-rolling-forecast-architecture.test.ts` guard durable semantics.
 - FIN-05/06 must reference superseded revision snapshots by stable IDs.

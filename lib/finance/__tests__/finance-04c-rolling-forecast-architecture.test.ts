@@ -11,6 +11,7 @@ import {
   FORECAST_VERSION_STATE_MACHINE,
   ROLLING_FORECAST_CONCURRENCY_CONTRACT,
   ROLLING_FORECAST_DATA_MODEL_EVOLUTION,
+  ROLLING_FORECAST_FIN_04C_02_PERSISTENCE,
   ROLLING_FORECAST_GERMAN_PRODUCT_TERMS,
   ROLLING_FORECAST_LEGACY_COMPATIBILITY,
   ROLLING_FORECAST_MEASURE_GUARDS,
@@ -173,6 +174,18 @@ describe("FIN-04C numerical engine and phasing guards", () => {
     expect(SCE_ROLLING_FORECAST_ARCHITECTURE_LOCKS.numericalForecastNotLlm).toBe(true);
     expect(SCE_ROLLING_FORECAST_ARCHITECTURE_LOCKS.noFakeForecastPhasing).toBe(
       FORECAST_PHASING_SUPPORTED === false,
+    );
+  });
+});
+
+describe("FIN-04C-02 implemented persistence facts", () => {
+  it("records durable persistence primitives from FIN-04C-02", () => {
+    expect(ROLLING_FORECAST_FIN_04C_02_PERSISTENCE.formalRevisionPrimitive).toBe(
+      "persistFormalForecastRevision",
+    );
+    expect(ROLLING_FORECAST_FIN_04C_02_PERSISTENCE.legacyRevisionMetadataNullable).toBe(true);
+    expect(ROLLING_FORECAST_FIN_04C_02_PERSISTENCE.sourceProjectionVersionIdDistinctFromAdoption).toBe(
+      true,
     );
   });
 });

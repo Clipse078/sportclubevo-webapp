@@ -230,6 +230,7 @@ export async function createForecastForYear(
         forecastId,
         status: "CURRENT",
         versionNumber: 1,
+        revisionSource: "INITIAL_FORECAST",
         createdByUserId: ctx.userId,
         lines: seedLines.length
           ? {

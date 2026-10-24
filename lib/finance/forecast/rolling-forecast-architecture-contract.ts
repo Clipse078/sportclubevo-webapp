@@ -207,8 +207,23 @@ export const ROLLING_FORECAST_LEGACY_COMPATIBILITY = {
 } as const;
 
 /**
- * Data-model evolution recommendation (FIN-04C-02 migration — not implemented in 04C-01).
- * KEEP / EXTEND only fields with concrete lifecycle purpose.
+ * FIN-04C-02 implemented persistence facts (migration `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle`).
+ */
+export const ROLLING_FORECAST_FIN_04C_02_PERSISTENCE = {
+  financeForecastVersionRevisionMetadataPersisted: true,
+  legacyRevisionMetadataNullable: true,
+  formalRevisionPrimitive: "persistFormalForecastRevision",
+  sharedVersionTransitionPrimitive: "executeForecastVersionSnapshotTransition",
+  revisionMetadataOnPromotedCurrentVersion: true,
+  financeProjectionAdoptionRemainsAdoptionAudit: true,
+  sourceProjectionVersionIdDistinctFromAdoption: true,
+  manualLineEditUsesUpsertForecastLineInPlace: true,
+  supersededLineMutationRejected: true,
+  expectedCurrentVersionIdConcurrencyGuard: true,
+} as const;
+
+/**
+ * Data-model evolution (FIN-04C-01 recommendation; FIN-04C-02 implements FinanceForecastVersion extension).
  */
 export const ROLLING_FORECAST_DATA_MODEL_EVOLUTION = {
   FinanceForecast: { action: "KEEP" as const, notes: "Container + currentVersionId pointer unchanged." },

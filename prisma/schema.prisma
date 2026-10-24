@@ -10936,6 +10936,13 @@ enum FinanceForecastVersionStatus {
   SUPERSEDED
 }
 
+/// Formal forecast revision provenance (FIN-04C-02) — nullable on legacy versions.
+enum FinanceForecastRevisionSource {
+  INITIAL_FORECAST
+  MANUAL_REFORECAST
+  AUTOMATIC_FORECAST_ADOPTION
+}
+
 /// Management forecast container per tenant financial year (FIN-04A) — independent from budget baseline.
 model FinanceForecast {
   id                 String   @id @default(cuid())
@@ -10966,6 +10973,16 @@ model FinanceForecastVersion {
   /// Reserved for FIN-04D scenario identity — null means canonical current management forecast (not SCE projection).
   scenarioKey     String?
   note            String?
+  /// Datenstand — management information cutoff for this revision (distinct from createdAt).
+  asOfDate                    DateTime?                     @db.Date
+  /// Latest actual evidence included when this revision was established.
+  actualsThroughDate          DateTime?                     @db.Date
+  revisionSource              FinanceForecastRevisionSource?
+  revisionLabel               String?
+  /// Semantic lineage to the prior formal forecast version within the same container.
+  previousVersionId           String?
+  /// Direct revision provenance when an automatic forecast snapshot contributed (distinct from FinanceProjectionAdoption audit).
+  sourceProjectionVersionId   String?
   createdByUserId String?
   createdAt       DateTime                     @default(now())
   updatedAt       DateTime                     @updatedAt
@@ -10973,10 +10990,15 @@ model FinanceForecastVersion {
   forecast              FinanceForecast      @relation(fields: [forecastId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdBy             User?                @relation("FinanceForecastVersionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   currentForForecast    FinanceForecast?     @relation("FinanceForecastCurrentVersion")
+  previousVersion       FinanceForecastVersion?  @relation("FinanceForecastVersionLineage", fields: [previousVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  successorVersions     FinanceForecastVersion[] @relation("FinanceForecastVersionLineage")
+  sourceProjectionVersion FinanceProjectionVersion? @relation("FinanceForecastRevisionProjectionSource", fields: [sourceProjectionVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   lines                 FinanceForecastLine[]
 
   @@index([forecastId, status])
   @@index([forecastId, versionNumber])
+  @@index([previousVersionId])
+  @@index([sourceProjectionVersionId])
 }
 
 /// Full-year forecast amount per account — not budget, not actual (FIN-04A annual grain).
@@ -11098,6 +11120,7 @@ model FinanceProjectionVersion {
   evidence              FinanceProjectionEvidence[]
   reasonCodes           FinanceProjectionReasonCode[]
   adoptions             FinanceProjectionAdoption[]
+  forecastRevisionSources FinanceForecastVersion[] @relation("FinanceForecastRevisionProjectionSource")
 
   @@unique([financeProjectionId, versionNumber])
   @@index([financeProjectionId, status])

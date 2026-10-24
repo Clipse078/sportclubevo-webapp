@@ -140,6 +140,11 @@ type AdoptionStore = {
     forecastId: string;
     status: "CURRENT" | "SUPERSEDED";
     versionNumber: number;
+    revisionSource?: string | null;
+    sourceProjectionVersionId?: string | null;
+    previousVersionId?: string | null;
+    actualsThroughDate?: Date | null;
+    scenarioKey?: string | null;
   }>;
   financeForecastLine: Array<{
     id: string;
@@ -200,7 +205,20 @@ function makeAdoptionDb(store: AdoptionStore) {
       },
     },
     financeProjectionVersion: {
-      findUnique: async () => null,
+      findUnique: async ({
+        where,
+        select,
+      }: {
+        where: { id: string };
+        select?: { actualsThroughDate?: boolean };
+      }) => {
+        const row = store.financeProjectionVersion.find((v) => v.id === where.id) ?? null;
+        if (!row) return null;
+        if (select?.actualsThroughDate) {
+          return { actualsThroughDate: row.actualsThroughDate };
+        }
+        return row;
+      },
     },
     financeProjectionLine: {},
     financeForecast: {
@@ -259,6 +277,18 @@ function makeAdoptionDb(store: AdoptionStore) {
       },
     },
     financeForecastVersion: {
+      findFirst: async ({
+        where,
+        orderBy,
+      }: {
+        where: { forecastId: string };
+        orderBy: { versionNumber: "desc" };
+      }) => {
+        const rows = store.financeForecastVersion
+          .filter((v) => v.forecastId === where.forecastId)
+          .sort((a, b) => b.versionNumber - a.versionNumber);
+        return rows[0] ?? null;
+      },
       findUnique: async ({
         where,
         include,
@@ -301,6 +331,11 @@ function makeAdoptionDb(store: AdoptionStore) {
           status: "CURRENT";
           versionNumber: number;
           createdByUserId: string;
+          revisionSource?: string | null;
+          sourceProjectionVersionId?: string | null;
+          previousVersionId?: string | null;
+          actualsThroughDate?: Date | null;
+          scenarioKey?: string | null;
           lines?: { create: Array<{ financialAccountId: string; amountMinor: number }> };
         };
       }) => {
@@ -311,6 +346,11 @@ function makeAdoptionDb(store: AdoptionStore) {
           forecastId: data.forecastId,
           status: data.status,
           versionNumber: data.versionNumber,
+          revisionSource: data.revisionSource ?? null,
+          sourceProjectionVersionId: data.sourceProjectionVersionId ?? null,
+          previousVersionId: data.previousVersionId ?? null,
+          actualsThroughDate: data.actualsThroughDate ?? null,
+          scenarioKey: data.scenarioKey ?? null,
         });
         for (const line of data.lines?.create ?? []) {
           forecastLineSeq += 1;
@@ -463,6 +503,13 @@ describe("FIN-04B-06 adoptProjectionForYear service", () => {
       applyScope: "WHOLE_FINANCE_YEAR",
       appliedByUserId: "user-1",
     });
+    const adoptedVersion = store.financeForecastVersion.find(
+      (v) => v.id === result.targetForecastVersionId,
+    )!;
+    expect(adoptedVersion.revisionSource).toBe("AUTOMATIC_FORECAST_ADOPTION");
+    expect(adoptedVersion.sourceProjectionVersionId).toBe("pv-1");
+    expect(adoptedVersion.previousVersionId).toBe("fv-1");
+    expect(adoptedVersion.actualsThroughDate?.toISOString().slice(0, 10)).toBe("2026-06-30");
   });
 
   it("blocks stale projection adoption", async () => {
