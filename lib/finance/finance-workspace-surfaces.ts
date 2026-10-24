@@ -31,11 +31,11 @@ export const FINANCE_FORECAST_ANALYSIS_HEADING_CLASS =
   "text-xs font-semibold uppercase tracking-wide text-[var(--muted)]";
 
 /**
- * Formal reforecast dialog body — compact; desktop content fits without forced inner scroll;
- * narrow viewports retain overflow fallback.
+ * Formal reforecast dialog body — viewport-safe flex scroll region (header/footer stay fixed).
+ * Tall desktop viewports may show all content without scroll; constrained height scrolls here only.
  */
 export const FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS =
-  "min-h-0 flex-1 overflow-y-auto px-5 py-3 text-sm text-[var(--text-2)] max-md:max-h-[min(70dvh,100%)] md:flex-none md:overflow-visible";
+  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-3 text-sm text-[var(--text-2)]";
 
 /** Primary functional card (overview nudges, settings sections, empty states). */
 export const FINANCE_FUNCTIONAL_SURFACE_CLASS = cn(SCE_SURFACE_STANDARD_PANEL, "px-5 py-6");

@@ -53,12 +53,12 @@ describe("FIN-04C-05R5 workspace layout consolidation", () => {
     expect(rolling).toContain("FinanceForecastChangeDriverBars");
   });
 
-  it("formal-reforecast dialog uses compact desktop body architecture", () => {
+  it("formal-reforecast dialog uses viewport-safe body scroll architecture", () => {
     expect(rolling).toContain("FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS");
     expect(rolling).toContain("bodyClassName={FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS}");
     expect(rolling).toContain("data-finance-formal-reforecast-dialog");
-    expect(surfaces).toContain("md:flex-none md:overflow-visible");
-    expect(surfaces).toContain("max-md:max-h-[min(70dvh,100%)]");
+    expect(surfaces).toMatch(/min-h-0 flex-1 overflow-y-auto/);
+    expect(surfaces).not.toContain("md:flex-none md:overflow-visible");
     expect(dialog).toContain("bodyClassName");
   });
 

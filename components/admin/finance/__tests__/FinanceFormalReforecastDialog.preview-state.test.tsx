@@ -245,7 +245,7 @@ describe("FIN-04C-05R4 FinanceFormalReforecastDialog preview state", () => {
     await waitFor(() => expect(formalizeCurrentForecastAction).toHaveBeenCalledTimes(1));
   });
 
-  it("uses compact formal-reforecast dialog body for desktop non-forced scroll", async () => {
+  it("uses viewport-safe formal-reforecast dialog body scroll region", async () => {
     previewFormalReforecastAction.mockResolvedValue({ ok: true, preview: samplePreview });
     renderDialog();
     await waitFor(() => {
@@ -253,8 +253,13 @@ describe("FIN-04C-05R4 FinanceFormalReforecastDialog preview state", () => {
     });
     const body = document.querySelector("[data-finance-formal-reforecast-dialog]");
     const bodyParent = body?.parentElement;
-    expect(bodyParent?.className).toMatch(/md:flex-none/);
-    expect(bodyParent?.className).toMatch(/md:overflow-visible/);
+    expect(bodyParent?.className).toMatch(/min-h-0/);
+    expect(bodyParent?.className).toMatch(/flex-1/);
+    expect(bodyParent?.className).toMatch(/overflow-y-auto/);
+    expect(bodyParent?.className).not.toMatch(/md:overflow-visible/);
+    const shell = document.querySelector("[data-sce-dialog-shell]");
+    expect(shell?.className).toMatch(/max-h-\[var\(--sce-dialog-max-height\)\]/);
+    expect(shell?.className).toMatch(/overflow-hidden/);
   });
 
   it("reopening dialog does not retain stuck loading state", async () => {

@@ -47,7 +47,7 @@ export const SCE_DIALOG_WORKSPACE_PANEL = [
 
 /** Standard dialog panel widths — sized against content viewport via CSS vars. */
 export const SCE_DIALOG_PANEL_BASE =
-  "relative z-10 flex w-full min-w-0 max-w-full flex-col rounded-2xl border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)] outline-none max-h-[var(--sce-dialog-max-height)]";
+  "relative z-10 flex min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)] outline-none max-h-[var(--sce-dialog-max-height)]";
 
 /** DS-09 — narrow viewports use full dynamic viewport height (see SCE_DIALOG_MOBILE_SHELL_CLASS). */
 export const SCE_DIALOG_MOBILE_VIEWPORT_SHELL =
