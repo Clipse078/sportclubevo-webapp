@@ -25,7 +25,8 @@ describe("FIN-04B-05R1 projection intelligence dashboard UX", () => {
   });
 
   it("keeps automatic forecast account detail separate from editable forecast table width", () => {
-    expect(forecastPanel).toContain("FinanceProjectionAccountDetailSection");
+    expect(projectionSection).toContain("FinanceProjectionAccountDetailSection");
+    expect(projectionSection).toContain("embedded");
     expect(forecastPanel).not.toContain("FinanceProjectionAccountCell");
     expect(forecastPanel).not.toContain("projectionColumn");
   });

@@ -193,6 +193,21 @@ export function formatFinanceAutomaticForecastSignedMinor(
   return amountMinor > 0 ? `+${magnitude}` : `−${magnitude}`;
 }
 
+/**
+ * FIN-04C-05R2 — canonical Finance management-presentation money (whole major units).
+ * Use for forecast workspace summaries, comparisons, history, and management tables (read mode).
+ * Internal `amountMinor` and calculation precision are unchanged.
+ */
+export const FINANCE_MANAGEMENT_PRESENTATION_PRECISION =
+  AUTOMATIC_FORECAST_PRESENTATION_PRECISION;
+
+export const formatFinanceManagementMoneyMinor = formatFinanceAutomaticForecastMoneyMinor;
+export const formatFinanceManagementWholeMajorNumber =
+  formatFinanceAutomaticForecastWholeMajorNumber;
+export const formatFinanceManagementSignedWholeMajorNumber =
+  formatFinanceAutomaticForecastSignedWholeMajorNumber;
+export const formatFinanceManagementSignedMinor = formatFinanceAutomaticForecastSignedMinor;
+
 function isWholeMajorMinorUnits(amountMinor: number): boolean {
   return Number.isInteger(amountMinor) && amountMinor % 100 === 0;
 }

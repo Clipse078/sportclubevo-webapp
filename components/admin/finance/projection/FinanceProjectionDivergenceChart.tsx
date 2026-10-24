@@ -10,13 +10,28 @@ import {
 type FinanceProjectionDivergenceChartProps = {
   title: string;
   description: string;
-  rows: readonly ProjectionForecastDivergenceRow[];
+  alignedMessage: string;
+  rows: readonly ProjectionForecastDivergenceRow[] | null;
   currency: string | null;
   formattingLocale: string;
 };
 
 export function FinanceProjectionDivergenceChart(props: FinanceProjectionDivergenceChartProps) {
-  if (props.rows.length === 0) return null;
+  if (props.rows === null) return null;
+  if (props.rows.length === 0) {
+    return (
+      <div
+        className={FINANCE_PROJECTION_CHART_SURFACE_CLASS}
+        data-finance-chart="projection-divergence"
+        data-finance-projection-divergence="aligned"
+      >
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {props.title}
+        </h3>
+        <p className="mt-2 text-sm text-[var(--muted)]">{props.alignedMessage}</p>
+      </div>
+    );
+  }
   const maxAbs = props.rows[0]?.absDeltaMinor ?? 1;
 
   return (

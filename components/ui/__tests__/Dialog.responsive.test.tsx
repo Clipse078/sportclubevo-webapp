@@ -28,4 +28,14 @@ describe("Dialog SCE-RESPONSIVE-01", () => {
     expect(dialog).toContain("useSceModalDialog");
     expect(dialog).not.toMatch(/panelRef\.current\?\.focus\(\)/);
   });
+
+  it("Dialog panel shell caps height and contains overflow for scrollable body + fixed footer", () => {
+    const layout = readSource("lib/shell/responsive-layout.ts");
+    expect(layout).toMatch(/SCE_DIALOG_PANEL_BASE[\s\S]*overflow-hidden/);
+    expect(layout).toMatch(/SCE_DIALOG_PANEL_BASE[\s\S]*max-h-\[var\(--sce-dialog-max-height\)\]/);
+    const dialog = readSource("components/ui/Dialog.tsx");
+    expect(dialog).toContain("data-sce-dialog-shell");
+    expect(dialog).toContain("SCE_DIALOG_BODY");
+    expect(dialog).toContain("SCE_DIALOG_FOOTER");
+  });
 });

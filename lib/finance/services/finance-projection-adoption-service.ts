@@ -10,6 +10,8 @@ import {
   buildProjectionAdoptionPreview,
   type ProjectionAdoptionPreviewResult,
 } from "@/lib/finance/projection/projection-adoption-policy";
+import { FIN_04B_ADOPTION_REVISION_SOURCE } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
+import { executeForecastVersionSnapshotTransition } from "@/lib/finance/forecast/forecast-version-snapshot-transition";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
 import { resolveCanonicalCurrentForecastVersionByPointer } from "@/lib/finance/services/finance-forecast-service";
 import { resolveCurrentProjectionVersionForYear } from "@/lib/finance/services/finance-projection-service";
@@ -286,7 +288,7 @@ export async function adoptProjectionForYear(
   const run = async (tx: Db) => {
     const forecast = await tx.financeForecast.findUnique({
       where: { id: loaded.forecastId },
-      include: { currentVersion: true, versions: { orderBy: { versionNumber: "desc" } } },
+      include: { currentVersion: true },
     });
     if (!forecast?.currentVersionId || !forecast.currentVersion) {
       throw new FinanceDomainError(
@@ -321,31 +323,33 @@ export async function adoptProjectionForYear(
       );
     }
 
-    const nextVersionNumber = (forecast.versions[0]?.versionNumber ?? 0) + 1;
-
-    await tx.financeForecastVersion.update({
-      where: { id: forecast.currentVersionId },
-      data: { status: "SUPERSEDED" },
+    const projectionVersion = await tx.financeProjectionVersion.findUnique({
+      where: { id: loaded.projectionVersionId },
+      select: { actualsThroughDate: true },
     });
+    if (!projectionVersion) {
+      throw new FinanceDomainError(
+        "FINANCE_FORECAST_ADOPTION_PROJECTION_CHANGED",
+        "Die automatische Prognose wurde zwischenzeitlich aktualisiert. Bitte prüft den Stand erneut.",
+        409,
+      );
+    }
 
-    const targetVersion = await tx.financeForecastVersion.create({
-      data: {
-        forecastId: forecast.id,
-        status: "CURRENT",
-        versionNumber: nextVersionNumber,
-        createdByUserId: ctx.userId,
-        lines: {
-          create: preview.persistableLines.map((line) => ({
-            financialAccountId: line.financialAccountId,
-            amountMinor: line.amountMinor,
-          })),
-        },
+    const transition = await executeForecastVersionSnapshotTransition(tx, {
+      forecastId: forecast.id,
+      expectedCurrentForecastVersionId: input.expectedSourceForecastVersionId,
+      createdByUserId: ctx.userId,
+      lineSnapshot: preview.persistableLines.map((line) => ({
+        financialAccountId: line.financialAccountId,
+        amountMinor: line.amountMinor,
+      })),
+      newVersionMetadata: {
+        revisionSource: FIN_04B_ADOPTION_REVISION_SOURCE,
+        sourceProjectionVersionId: loaded.projectionVersionId,
+        previousVersionId: forecast.currentVersionId,
+        actualsThroughDate: projectionVersion.actualsThroughDate,
+        asOfDate: null,
       },
-    });
-
-    await tx.financeForecast.update({
-      where: { id: forecast.id },
-      data: { currentVersionId: targetVersion.id },
     });
 
     const adoption = await tx.financeProjectionAdoption.create({
@@ -354,15 +358,15 @@ export async function adoptProjectionForYear(
         financeProjectionId: loaded.financeProjectionId,
         projectionVersionId: loaded.projectionVersionId,
         sourceForecastVersionId: loaded.sourceForecastVersionId,
-        targetForecastVersionId: targetVersion.id,
+        targetForecastVersionId: transition.newCurrentVersionId,
         applyScope: "WHOLE_FINANCE_YEAR",
         appliedByUserId: ctx.userId,
       },
     });
 
     return {
-      targetForecastVersionId: targetVersion.id,
-      targetVersionNumber: nextVersionNumber,
+      targetForecastVersionId: transition.newCurrentVersionId,
+      targetVersionNumber: transition.newVersionNumber,
       adoptionId: adoption.id,
     };
   };

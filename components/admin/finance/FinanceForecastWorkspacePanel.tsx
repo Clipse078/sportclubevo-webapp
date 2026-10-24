@@ -21,9 +21,9 @@ import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import {
   budgetDraftInputFromMinor,
-  formatBudgetPlanningMinor,
-  formatBudgetPlanningSignedWholeMajorNumber,
-  formatBudgetPlanningWholeMajorNumber,
+  formatFinanceManagementPlanningMinor,
+  formatFinanceManagementPlanningSignedWholeMajorNumber,
+  formatFinanceManagementPlanningWholeMajorNumber,
   normalizeBudgetAmountInput,
   parseBudgetInputToMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
@@ -38,9 +38,11 @@ import {
 import type { ForecastWorkspaceSnapshot } from "@/lib/finance/forecast/forecast-presentation";
 import type { ProjectionWorkspaceViewModel } from "@/lib/finance/projection/projection-workspace-presentation";
 import {
-  FinanceProjectionAccountDetailSection,
   FinanceProjectionWorkspaceSection,
 } from "@/components/admin/finance/FinanceProjectionWorkspaceSection";
+import { FinanceForecastRollingUxSections } from "@/components/admin/finance/FinanceForecastRollingUxSections";
+import { FinanceWorkspaceDisclosure } from "@/components/admin/finance/FinanceWorkspaceDisclosure";
+import type { ForecastWorkspaceRollingUxData } from "@/lib/finance/services/finance-forecast-query-service";
 import { financeVarianceComparisonSemanticTextClass } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
@@ -61,7 +63,6 @@ import {
   FINANCE_FORECAST_TABLES_STACK_CLASS,
   FINANCE_FORECAST_WORKSPACE_STACK_CLASS,
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
-  FINANCE_SECTION_HEADER_CLASS,
   FINANCE_SECTION_SURFACE_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
   FINANCE_SUMMARY_STRIP_GRID_CLASS,
@@ -86,6 +87,7 @@ type FinanceYearOption = { id: string; name: string };
 type FinanceForecastWorkspacePanelProps = {
   years: FinanceYearOption[];
   snapshot: ForecastWorkspaceSnapshot | null;
+  rollingUx: ForecastWorkspaceRollingUxData | null;
   projection: ProjectionWorkspaceViewModel | null;
   baseCurrency: string | null;
   hasAccounts: boolean;
@@ -99,6 +101,7 @@ type FinanceForecastWorkspacePanelProps = {
 export function FinanceForecastWorkspacePanel({
   years,
   snapshot,
+  rollingUx,
   projection,
   baseCurrency,
   hasAccounts,
@@ -113,6 +116,7 @@ export function FinanceForecastWorkspacePanel({
   const router = useRouter();
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [creationMode, setCreationMode] = useState<"EMPTY" | "FROM_BASELINE">(() =>
     creation.canInitializeFromBaseline ? "FROM_BASELINE" : "EMPTY",
@@ -236,14 +240,9 @@ export function FinanceForecastWorkspacePanel({
           </SceFormField>
         ) : null}
 
-        {hasForecast && snapshot?.versionNumber ? (
+        {hasForecast && persistencePhase !== "hidden" ? (
           <div className="ms-auto flex max-w-md flex-col items-end gap-0.5 text-end">
-            <p className="text-xs text-[var(--muted)]">
-              {t("currentVersionLabel", { version: snapshot.versionNumber })}
-            </p>
-            {persistencePhase !== "hidden" ? (
-              <ForecastPersistenceIndicator phase={persistencePhase} t={t} />
-            ) : null}
+            <ForecastPersistenceIndicator phase={persistencePhase} t={t} />
           </div>
         ) : persistencePhase !== "hidden" ? (
           <div className="ms-auto text-end">
@@ -256,27 +255,16 @@ export function FinanceForecastWorkspacePanel({
         <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
       ) : null}
 
+      {successMessage ? (
+        <p className="text-sm text-[var(--muted)]" role="status">
+          {successMessage}
+        </p>
+      ) : null}
+
       {feedback ? (
         <p className="text-sm text-[var(--destructive)]" role="alert">
           {feedback}
         </p>
-      ) : null}
-
-      {yearSelected && projection ? (
-        <FinanceProjectionWorkspaceSection
-          projection={projection}
-          currency={workspaceCurrency}
-          formattingLocale={formattingLocale}
-          canGenerate={canGenerateProjection}
-        />
-      ) : null}
-
-      {yearSelected && projection && projection.versionNumber !== null ? (
-        <FinanceProjectionAccountDetailSection
-          projection={projection}
-          currency={workspaceCurrency}
-          formattingLocale={formattingLocale}
-        />
       ) : null}
 
       {yearSelected && !hasForecast && canMutate ? (
@@ -292,19 +280,34 @@ export function FinanceForecastWorkspacePanel({
 
       {yearSelected && hasForecast && snapshot && displayTotals ? (
         <>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {t("currentForecastSectionTitle")}
-          </h2>
-          <ForecastSummarySection
-            totals={displayTotals}
-            currency={workspaceCurrency}
-            formattingLocale={formattingLocale}
-            labels={{
-              income: t("totalIncome"),
-              expense: t("totalExpense"),
-              result: t("plannedResult"),
-            }}
-          />
+          {rollingUx ? (
+            <FinanceForecastRollingUxSections
+              snapshot={snapshot}
+              rollingUx={rollingUx}
+              currency={workspaceCurrency}
+              formattingLocale={formattingLocale}
+              canFormalize={canMutate}
+              currentTotals={displayTotals}
+              onFormalizeSuccess={(message) => {
+                setSuccessMessage(message);
+                setFeedback(null);
+              }}
+              onFormalizeError={(message) => setFeedback(message)}
+            />
+          ) : null}
+
+          {!rollingUx ? (
+            <ForecastSummarySection
+              totals={displayTotals}
+              currency={workspaceCurrency}
+              formattingLocale={formattingLocale}
+              labels={{
+                income: t("totalIncome"),
+                expense: t("totalExpense"),
+                result: t("plannedResult"),
+              }}
+            />
+          ) : null}
 
           <ForecastEditableSection
             snapshot={snapshot}
@@ -313,12 +316,22 @@ export function FinanceForecastWorkspacePanel({
             expenseRows={expenseRows}
             readOnly={readOnly}
             formattingLocale={formattingLocale}
+            workspaceCurrency={workspaceCurrency}
             yearName={selectedYearName}
             onPersistencePhaseChange={setPersistencePhase}
             t={t}
             tVariance={tVariance}
           />
         </>
+      ) : null}
+
+      {yearSelected && projection ? (
+        <FinanceProjectionWorkspaceSection
+          projection={projection}
+          currency={workspaceCurrency}
+          formattingLocale={formattingLocale}
+          canGenerate={canGenerateProjection}
+        />
       ) : null}
 
       <Dialog
@@ -400,7 +413,7 @@ function ForecastSummarySection(props: {
         <div className="sm:px-4 sm:first:ps-0">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.labels.income}</dt>
           <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-            {formatBudgetPlanningMinor(
+            {formatFinanceManagementPlanningMinor(
               props.totals.totalIncomeMinor,
               props.currency,
               props.formattingLocale,
@@ -410,7 +423,7 @@ function ForecastSummarySection(props: {
         <div className="sm:px-4">
           <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.labels.expense}</dt>
           <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-            {formatBudgetPlanningMinor(
+            {formatFinanceManagementPlanningMinor(
               props.totals.totalExpenseMinor,
               props.currency,
               props.formattingLocale,
@@ -423,7 +436,11 @@ function ForecastSummarySection(props: {
             className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass)}
             data-finance-forecast-summary="result"
           >
-            {formatBudgetPlanningMinor(props.totals.resultMinor, props.currency, props.formattingLocale)}
+            {formatFinanceManagementPlanningMinor(
+              props.totals.resultMinor,
+              props.currency,
+              props.formattingLocale,
+            )}
           </dd>
         </div>
       </dl>
@@ -438,6 +455,7 @@ function ForecastEditableSection(props: {
   expenseRows: ForecastWorkspaceSnapshot["rows"];
   readOnly: boolean;
   formattingLocale: string;
+  workspaceCurrency: string | null;
   yearName: string;
   onPersistencePhaseChange: (phase: BudgetWorkspacePersistencePhase) => void;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
@@ -518,8 +536,17 @@ function ForecastEditableSection(props: {
     dirtyAccountIdsRef.current.add(accountId);
   }, []);
 
+  const accountCount = props.incomeRows.length + props.expenseRows.length;
+
   return (
     <div className={FINANCE_FORECAST_TABLES_STACK_CLASS} data-finance-forecast-editable>
+      <FinanceWorkspaceDisclosure
+        title={props.t("accountColumn")}
+        summary={props.t("clarity.accountsSummary", { count: accountCount })}
+        expandLabel={props.t("clarity.accountsShowAll")}
+        collapseLabel={props.t("clarity.accountsHide")}
+        data-finance-disclosure="forecast-accounts"
+      >
       <ForecastAccountTable
         title={props.t("incomeSectionWithYear", { year: props.yearName })}
         rows={props.incomeRows}
@@ -527,6 +554,7 @@ function ForecastEditableSection(props: {
         draftAmounts={draftAmounts}
         readOnly={props.readOnly}
         formattingLocale={props.formattingLocale}
+        workspaceCurrency={props.workspaceCurrency}
         showComparison={Boolean(props.snapshot.approvedBaselineTotals)}
         onLocalDraftChange={updateLocalDraftAmount}
         onPersist={(accountId, amountMinor) => {
@@ -545,6 +573,7 @@ function ForecastEditableSection(props: {
         draftAmounts={draftAmounts}
         readOnly={props.readOnly}
         formattingLocale={props.formattingLocale}
+        workspaceCurrency={props.workspaceCurrency}
         showComparison={Boolean(props.snapshot.approvedBaselineTotals)}
         onLocalDraftChange={updateLocalDraftAmount}
         onPersist={(accountId, amountMinor) => {
@@ -555,6 +584,7 @@ function ForecastEditableSection(props: {
         tVariance={props.tVariance}
         lineErrors={lineErrors}
       />
+      </FinanceWorkspaceDisclosure>
     </div>
   );
 }
@@ -566,6 +596,7 @@ function ForecastAccountTable(props: {
   draftAmounts: ForecastDraftAmounts;
   readOnly: boolean;
   formattingLocale: string;
+  workspaceCurrency: string | null;
   showComparison: boolean;
   onLocalDraftChange: (accountId: string, amountMinor: number | null) => void;
   onPersist: (accountId: string, amountMinor: number | null) => void;
@@ -579,7 +610,7 @@ function ForecastAccountTable(props: {
 
   return (
     <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-surface="forecast-section">
-      <h3 className={cn(FINANCE_SECTION_HEADER_CLASS, "py-2 text-xs font-semibold uppercase tracking-wide")}>
+      <h3 className="border-b border-[var(--sce-surface-border-subtle)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
         {props.title}
       </h3>
       <div className="min-w-0 overflow-x-auto">
@@ -656,8 +687,9 @@ function ForecastAccountTable(props: {
                       <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
                         {row.approvedBudgetMinor === null
                           ? "—"
-                          : formatBudgetPlanningWholeMajorNumber(
+                          : formatFinanceManagementPlanningWholeMajorNumber(
                               row.approvedBudgetMinor,
+                              props.workspaceCurrency,
                               props.formattingLocale,
                             )}
                       </td>
@@ -667,6 +699,7 @@ function ForecastAccountTable(props: {
                           amountMinor={amountMinor}
                           readOnly={rowReadOnly}
                           formattingLocale={props.formattingLocale}
+                          workspaceCurrency={props.workspaceCurrency}
                           error={props.lineErrors[row.accountId]}
                           onLocalDraftChange={props.onLocalDraftChange}
                           onPersist={props.onPersist}
@@ -683,8 +716,9 @@ function ForecastAccountTable(props: {
                         )}
                       >
                         {hasComparison
-                          ? formatBudgetPlanningSignedWholeMajorNumber(
+                          ? formatFinanceManagementPlanningSignedWholeMajorNumber(
                               comparison.rawForecastDeltaMinor!,
+                              props.workspaceCurrency,
                               props.formattingLocale,
                             )
                           : "—"}
@@ -717,6 +751,7 @@ function ForecastAccountTable(props: {
                         amountMinor={amountMinor}
                         readOnly={rowReadOnly}
                         formattingLocale={props.formattingLocale}
+                        workspaceCurrency={props.workspaceCurrency}
                         error={props.lineErrors[row.accountId]}
                         onLocalDraftChange={props.onLocalDraftChange}
                         onPersist={props.onPersist}
@@ -739,6 +774,7 @@ function ForecastAmountCell(props: {
   amountMinor: number | null;
   readOnly: boolean;
   formattingLocale: string;
+  workspaceCurrency: string | null;
   label: string;
   error?: string;
   onLocalDraftChange: (accountId: string, amountMinor: number | null) => void;
@@ -751,14 +787,22 @@ function ForecastAmountCell(props: {
   const displayValue = focused
     ? editValue
     : props.amountMinor !== null
-      ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.formattingLocale)
+      ? formatFinanceManagementPlanningWholeMajorNumber(
+          props.amountMinor,
+          props.workspaceCurrency,
+          props.formattingLocale,
+        )
       : "";
 
   if (props.readOnly) {
     return (
       <span className={FINANCE_FORECAST_MONEY_CELL_READ_ONLY_CLASS}>
         {props.amountMinor !== null
-          ? formatBudgetPlanningWholeMajorNumber(props.amountMinor, props.formattingLocale)
+          ? formatFinanceManagementPlanningWholeMajorNumber(
+              props.amountMinor,
+              props.workspaceCurrency,
+              props.formattingLocale,
+            )
           : "—"}
       </span>
     );

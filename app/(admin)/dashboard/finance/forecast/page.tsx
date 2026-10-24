@@ -4,7 +4,10 @@ import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrom
 import { FinanceForecastWorkspacePanel } from "@/components/admin/finance/FinanceForecastWorkspacePanel";
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
-import { loadForecastWorkspaceSnapshot } from "@/lib/finance/services/finance-forecast-query-service";
+import {
+  loadForecastWorkspaceRollingUxData,
+  loadForecastWorkspaceSnapshot,
+} from "@/lib/finance/services/finance-forecast-query-service";
 import { loadProjectionWorkspaceViewModel } from "@/lib/finance/services/finance-projection-workspace-query-service";
 import { prisma } from "@/lib/db/prisma";
 import { redirect } from "next/navigation";
@@ -47,6 +50,11 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
         })
       : null;
 
+  const rollingUx =
+    selectedYearId && snapshot?.forecastId
+      ? await loadForecastWorkspaceRollingUxData(prisma, workspace.ctx, selectedYearId)
+      : null;
+
   return (
     <PageShell>
       <SceWorkspaceChrome
@@ -83,6 +91,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
           key={snapshot?.versionId ?? selectedYearId ?? "finance-forecast-workspace"}
           years={years.map((y) => ({ id: y.id, name: y.name }))}
           snapshot={snapshot}
+          rollingUx={rollingUx}
           projection={projection}
           baseCurrency={baseCurrency}
           hasAccounts={hasAccounts}
