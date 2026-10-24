@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04E programme — **04E-01** architecture & domain contract (this document) |
+| **Package** | FIN-04E programme — **04E-01** architecture; **04E-02** persistence & reconciliation — see [`SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](./SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md) |
 | **Status** | **IN PROGRESS** — **04E-01 ARCHITECTURE COMPLETE** (implementation packages **04E-02+** not started) |
 | **Branch** | `cursor/sce-finance-04e-forecast-timing` |
 | **Base** | `STAGE` after FIN-04A–04D **COMPLETE + MERGED + PO UAT PASS** |
@@ -199,7 +199,7 @@ ACTUAL THROUGH CUTOFF + REMAINING FUTURE EXPECTATION = FULL-YEAR EXPECTATION
 
 Timed + unscheduled **partition remaining future expectation only** — do not double-count Actual.
 
-Implementation: **FIN-04E-02+** (not 04E-01).
+Implementation: **FIN-04E-02** (persistence + pure reconciliation) — [`SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](./SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md).
 
 ---
 

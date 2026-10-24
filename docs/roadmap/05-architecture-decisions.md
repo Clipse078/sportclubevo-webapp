@@ -876,7 +876,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 
 ## ADR-037 — Forecast Timing & Expected Financial Events (FIN-04E)
 
-**Status:** Accepted — **FIN-04E-01 architecture** (implementation **04E-02+** not started)
+**Status:** Accepted — **FIN-04E-01 architecture** + **FIN-04E-02 persistence & reconciliation foundation**
 
 ### Context
 
@@ -901,13 +901,15 @@ FIN-04A–04D deliver strong **annual** forecast and scenario intelligence. Prod
 15. **Finance year:** Expectation belonging to a finance year may differ from cash date outside that year — do not auto-reject without liquidity context.
 16. **Neutrality & tenancy:** Tenant-scoped; integer minor units; country/sport/organisation agnostic core.
 17. **04E-01 scope:** Architecture contract + ADR + roadmap only — **no** Prisma, services, UI, charts, scenario effective dates, or liquidity in 04E-01.
+18. **04E-02 scope:** Additive **`FinanceExpectedFinancialEvent`** persistence; **derived** unscheduled remainder (no synthetic balancing rows); pure **`reconcileExpectedFinancialTiming`** with explicit cutoff; **UNSCHEDULED** timing precision **not** persisted as event rows.
 
-Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](../finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md). Code locks: `lib/finance/forecast/expected-financial-event-architecture-contract.ts`.
+Full contract: [`docs/finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md`](../finance/SCE-FINANCE-04E-FORECAST-TIMING-ARCHITECTURE.md). **04E-02 detail:** [`docs/finance/SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md`](../finance/SCE-FINANCE-04E-02-EXPECTED-EVENT-PERSISTENCE-AND-RECONCILIATION.md). Code locks: `lib/finance/forecast/expected-financial-event-architecture-contract.ts`.
 
 ### Consequences
 
-- FIN-04E-01 adds `finance-04e-expected-financial-event-architecture.test.ts` — guards terminology, boundaries, and no schema implementation.
-- FIN-04E-02+ will add persistence, reconciliation math, manual CRUD, read models, UX, effective-dated scenarios, visuals, and hardening per `EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN`.
+- FIN-04E-01 adds `finance-04e-expected-financial-event-architecture.test.ts` — guards terminology and boundaries.
+- FIN-04E-02 adds persistence migration, validation, reconciliation engine, and `finance-04e-02-*.test.ts`.
+- FIN-04E-03+ will add manual CRUD services, read models, UX, effective-dated scenarios, visuals, and hardening per `EXPECTED_FINANCIAL_EVENT_PACKAGE_PLAN`.
 - **FIN-05** remains next programme slice after **FIN-04E** unless Product Owner reprioritizes.
 - [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) remains the FIN-04D-era principle doc; canonical architecture lives under FIN-04E.
 

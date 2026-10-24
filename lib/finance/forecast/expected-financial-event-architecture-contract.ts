@@ -82,6 +82,7 @@ export const EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS = {
   effectiveDatedScenariosDeferredUntilTemporalFoundation: true,
   fin04dScenarioAssumptionSchemaUnchangedIn04e01: true,
   persistenceNotImplementedIn04e01: true,
+  persistenceImplementedIn04e02: true,
   directionDerivedFromFinancialAccount: true,
   independentEditableEventDirectionForbidden: true,
   treasuryTransferModelingDeferred: true,
@@ -112,6 +113,23 @@ export const EXPECTED_FINANCIAL_EVENT_DOMAIN_DEFINITION = {
   optionalConfidence: true,
   optionalSourceReference: true,
   auditMetadataTimestamped: true,
+} as const;
+
+/** Machine-testable locks introduced with FIN-04E-02 persistence & reconciliation. */
+export const EXPECTED_FINANCIAL_EVENT_04E_02_ARCHITECTURE_LOCKS = {
+  UNSCHEDULED_REMAINDER_IS_DERIVED: true,
+  EXPECTED_EVENTS_DO_NOT_REPLACE_ANNUAL_FORECAST: true,
+  NO_SYNTHETIC_BALANCING_EVENT: true,
+  OVERALLOCATION_DOES_NOT_MUTATE_FORECAST: true,
+  TIMING_ONLY_DOES_NOT_CREATE_FORECAST_REVISION: true,
+  EXPECTED_EVENT_DIRECTION_DERIVED_FROM_ACCOUNT: true,
+  EXPECTED_EVENT_DATE_MAY_CROSS_FINANCE_YEAR: true,
+  RECONCILIATION_CUTOFF_IS_EXPLICIT: true,
+  NO_SYSTEM_CLOCK_FINANCIAL_CUTOFF: true,
+  NO_FLOATING_POINT: true,
+  NO_NAIVE_MONTH_PRORATION: FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN
+    .forbiddenWithoutExplicitEvenDistributionEvidence,
+  UNSCHEDULED_TIMING_PRECISION_NOT_PERSISTED: true,
 } as const;
 
 /** Amount sign rule — align with FIN-03A positive magnitude per account semantic. */
@@ -345,11 +363,15 @@ export const EXPECTED_FINANCIAL_EVENT_VISUAL_INTELLIGENCE = {
   ] as const,
 } as const;
 
-/** Proposed persistence — FIN-04E-02+, not 04E-01. */
+/** Persistence — FIN-04E-02 foundation (services/UI in later packages). */
 export const EXPECTED_FINANCIAL_EVENT_PERSISTENCE_PROPOSAL = {
   migrationInFin04e01: false,
+  migrationInFin04e02: "20261024200000_sce_finance_04e_02_expected_event_persistence",
   primaryModel: EXPECTED_FINANCIAL_EVENT_CANONICAL_MODEL_NAME,
-  notInPrismaSchemaYet: true,
+  notInPrismaSchemaYet: false,
+  unscheduledRemainderPersisted: false,
+  syntheticBalancingEventPersisted: false,
+  permissionsReuseLikely: ["finance.forecast.view", "finance.forecast.manage"] as const,
 } as const;
 
 /** FIN-04E programme package sequence (FIN-04E-01 recommendation). */

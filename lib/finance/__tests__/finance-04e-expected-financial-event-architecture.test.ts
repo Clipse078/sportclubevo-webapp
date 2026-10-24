@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { FINANCIAL_YEAR_CONFIGURABLE } from "@/lib/finance/finance-architecture";
 import { FORECAST_PHASING_SUPPORTED } from "@/lib/finance/forecast/forecast-contract";
 import {
+  EXPECTED_FINANCIAL_EVENT_04E_02_ARCHITECTURE_LOCKS,
   EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS,
   EXPECTED_FINANCIAL_EVENT_CANONICAL_MODEL_NAME,
   EXPECTED_FINANCIAL_EVENT_CURRENT_FORECAST_RELATIONSHIP,
@@ -23,7 +24,7 @@ import {
 } from "@/lib/finance/forecast/scenario-architecture-contract";
 
 describe("FIN-04E architecture contract locks", () => {
-  it("locks temporal intelligence boundaries without implementing persistence", () => {
+  it("locks temporal intelligence boundaries (04E-01) and 04E-02 persistence locks", () => {
     expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.expectedEventIsNotActual).toBe(true);
     expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.expectedEventIsNotForecastVersion).toBe(
       true,
@@ -39,8 +40,15 @@ describe("FIN-04E architecture contract locks", () => {
     expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.persistenceNotImplementedIn04e01).toBe(
       true,
     );
+    expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.persistenceImplementedIn04e02).toBe(true);
     expect(EXPECTED_FINANCIAL_EVENT_PERSISTENCE_PROPOSAL.migrationInFin04e01).toBe(false);
-    expect(EXPECTED_FINANCIAL_EVENT_PERSISTENCE_PROPOSAL.notInPrismaSchemaYet).toBe(true);
+    expect(EXPECTED_FINANCIAL_EVENT_PERSISTENCE_PROPOSAL.notInPrismaSchemaYet).toBe(false);
+    expect(EXPECTED_FINANCIAL_EVENT_04E_02_ARCHITECTURE_LOCKS.UNSCHEDULED_REMAINDER_IS_DERIVED).toBe(
+      true,
+    );
+    expect(
+      EXPECTED_FINANCIAL_EVENT_04E_02_ARCHITECTURE_LOCKS.NO_SYNTHETIC_BALANCING_EVENT,
+    ).toBe(true);
   });
 
   it("forbids naive phasing and fake monthly distribution", () => {
@@ -146,10 +154,11 @@ describe("FIN-04E boundaries — FIN-04D, FIN-09, FIN-11", () => {
     expect(EXPECTED_FINANCIAL_EVENT_ARCHITECTURE_LOCKS.liquidityDeferredToFin09).toBe(true);
   });
 
-  it("does not introduce FinanceExpectedFinancialEvent prisma models yet", () => {
+  it("persists FinanceExpectedFinancialEvent without legacy cash placeholder model", () => {
     const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
-    expect(schema).not.toContain("model FinanceExpectedFinancialEvent");
+    expect(schema).toContain("model FinanceExpectedFinancialEvent");
     expect(schema).not.toContain("model FinanceExpectedCashEvent");
+    expect(schema).not.toContain("model FinanceUnscheduledRemainder");
   });
 });
 
