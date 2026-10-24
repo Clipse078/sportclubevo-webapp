@@ -31,7 +31,7 @@ describe("FIN-04C-06R1 reforecast dialog viewport accessibility", () => {
   it("B — body can scroll vertically when content exceeds available height", () => {
     expect(surfaces).toContain("FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS");
     expect(surfaces).toMatch(/overflow-y-auto/);
-    expect(surfaces).toMatch(/min-h-0 flex-1/);
+    expect(surfaces).toMatch(/min-h-0 flex-auto/);
     expect(surfaces).not.toContain("md:overflow-visible");
   });
 

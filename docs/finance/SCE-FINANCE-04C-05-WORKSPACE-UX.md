@@ -73,7 +73,7 @@ Erweiterte Cutoff-/Reason-UX, revision detail URLs, und feinere Actuals-Expositi
 | **Zero change** | When headline income/expense/result deltas are all zero, show quiet copy and **no** empty “Grösste Veränderungen” driver block. |
 | **Budget comparison** | Same analytical rhythm; reduced padding; no nested dark title bars. |
 | **Automatic forecast** | Compact primary/secondary metadata lines; summary + 2-column visual grid; account detail embedded in the same section. |
-| **Formal reforecast dialog** | Compact body; desktop fits without forced inner scroll at normal viewport; `max-md` overflow fallback retained. |
+| **Formal reforecast dialog** | Content-sized shell on desktop when default form fits; body `overflow-y-auto` only when viewport or expanded **Weitere Angaben** requires it; footer always outside body; `max-md` mobile shell retained (FIN-04C-06R2). |
 | **R4 lifecycle** | Preview reducer, stale seq, blur-only label refresh, submit guard — **unchanged** (see R4 section). |
 
 Tests: `finance-04c-05r5-workspace-layout-consolidation.test.ts`, existing FIN-04C / R4 suites.

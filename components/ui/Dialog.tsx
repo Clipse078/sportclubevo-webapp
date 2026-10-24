@@ -42,6 +42,14 @@ export type DialogProps = {
   bodyLayout?: "scroll" | "flex";
   /** Optional override for dialog body layout classes. */
   bodyClassName?: string;
+  /** Optional override for dialog panel shell classes. */
+  panelClassName?: string;
+  /** Optional override for dialog header region classes. */
+  headerClassName?: string;
+  /** Optional override for dialog description typography classes. */
+  descriptionClassName?: string;
+  /** Optional override for dialog footer region classes. */
+  footerClassName?: string;
   /** Elevated stack layer for subordinate dialogs over an existing modal (e.g. Activity Composer). */
   stackLayer?: "default" | "elevated";
 };
@@ -91,6 +99,10 @@ export function Dialog({
   size = "md",
   bodyLayout = "scroll",
   bodyClassName,
+  panelClassName,
+  headerClassName,
+  descriptionClassName,
+  footerClassName,
   stackLayer = "default",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -127,12 +139,13 @@ export function Dialog({
           SCE_DIALOG_MOBILE_VIEWPORT_SHELL,
           SCE_DIALOG_MOBILE_SHELL_CLASS,
           sizeClass[size],
+          panelClassName,
         )}
         data-sce-dialog-shell
         data-sce-dialog-mobile-adaptive="true"
       >
         {/* Header */}
-        <div className={SCE_DIALOG_HEADER}>
+        <div className={cn(SCE_DIALOG_HEADER, headerClassName)}>
           <div className="min-w-0 flex-1">
             <h2
               ref={titleRef}
@@ -145,7 +158,7 @@ export function Dialog({
             {description && (
               <p
                 id="sce-dialog-desc"
-                className="mt-1 text-sm text-[var(--text-2)]"
+                className={cn("mt-1 text-sm text-[var(--text-2)]", descriptionClassName)}
               >
                 {description}
               </p>
@@ -177,7 +190,7 @@ export function Dialog({
         )}
 
         {/* Footer */}
-        {footer && <div className={SCE_DIALOG_FOOTER}>{footer}</div>}
+        {footer && <div className={cn(SCE_DIALOG_FOOTER, footerClassName)}>{footer}</div>}
       </div>
     </SceModalOverlay>
   );

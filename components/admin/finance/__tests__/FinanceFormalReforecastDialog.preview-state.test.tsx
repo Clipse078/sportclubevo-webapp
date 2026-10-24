@@ -254,7 +254,8 @@ describe("FIN-04C-05R4 FinanceFormalReforecastDialog preview state", () => {
     const body = document.querySelector("[data-finance-formal-reforecast-dialog]");
     const bodyParent = body?.parentElement;
     expect(bodyParent?.className).toMatch(/min-h-0/);
-    expect(bodyParent?.className).toMatch(/flex-1/);
+    expect(bodyParent?.className).toMatch(/flex-auto/);
+    expect(bodyParent?.className).not.toMatch(/\bflex-1\b/);
     expect(bodyParent?.className).toMatch(/overflow-y-auto/);
     expect(bodyParent?.className).not.toMatch(/md:overflow-visible/);
     const shell = document.querySelector("[data-sce-dialog-shell]");

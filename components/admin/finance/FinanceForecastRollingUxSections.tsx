@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
@@ -51,10 +52,13 @@ import {
   FINANCE_FORECAST_WORKSPACE_SECTION_CLASS,
   FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS,
   FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS,
+  FINANCE_FORMAL_REFORECAST_DIALOG_FOOTER_CLASS,
+  FINANCE_FORMAL_REFORECAST_DIALOG_HEADER_CLASS,
+  FINANCE_FORMAL_REFORECAST_DIALOG_SHELL_CLASS,
+  FINANCE_FORMAL_REFORECAST_MORE_DETAILS_TRIGGER_CLASS,
+  FINANCE_FORMAL_REFORECAST_PREVIEW_CLASS,
   FINANCE_SUMMARY_LABEL_CLASS,
-  FINANCE_SUMMARY_STRIP_GRID_CLASS,
   FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS,
-  FINANCE_SUMMARY_STRIP_SURFACE_CLASS,
   FINANCE_SUMMARY_STRIP_VALUE_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
 import {
@@ -808,6 +812,10 @@ export function FinanceFormalReforecastDialog(props: {
       open={props.open}
       onClose={props.onClose}
       size="md"
+      panelClassName={FINANCE_FORMAL_REFORECAST_DIALOG_SHELL_CLASS}
+      headerClassName={FINANCE_FORMAL_REFORECAST_DIALOG_HEADER_CLASS}
+      footerClassName={FINANCE_FORMAL_REFORECAST_DIALOG_FOOTER_CLASS}
+      descriptionClassName="mt-0.5 leading-snug"
       bodyClassName={FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS}
       title={props.t("formalReforecast.dialogTitle")}
       description={props.t("formalReforecast.dialogDescription")}
@@ -827,7 +835,7 @@ export function FinanceFormalReforecastDialog(props: {
         </div>
       }
     >
-      <div className="space-y-3" data-finance-formal-reforecast-dialog>
+      <div className="space-y-2.5" data-finance-formal-reforecast-dialog>
         <SceFormField label={props.t("formalReforecast.asOfLabel")} htmlFor={asOfId} required>
           <input
             id={asOfId}
@@ -859,21 +867,31 @@ export function FinanceFormalReforecastDialog(props: {
           />
         </SceFormField>
 
-        <div>
+        <div data-finance-disclosure="formal-reforecast-more-details">
           <button
             type="button"
-            className="text-sm font-medium text-[var(--foreground)] hover:underline"
+            className={FINANCE_FORMAL_REFORECAST_MORE_DETAILS_TRIGGER_CLASS}
             aria-expanded={moreDetailsOpen}
             aria-controls={moreDetailsPanelId}
             onClick={() => setMoreDetailsOpen((open) => !open)}
             data-finance-formal-reforecast-more-details-trigger
+            data-finance-disclosure-trigger
           >
-            {moreDetailsOpen
-              ? props.t("formalReforecast.moreDetailsHide")
-              : props.t("formalReforecast.moreDetailsShow")}
+            <span>{props.t("formalReforecast.moreDetailsTitle")}</span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-[var(--muted)] transition-transform",
+                moreDetailsOpen && "rotate-180",
+              )}
+              aria-hidden
+            />
           </button>
           {moreDetailsOpen ? (
-            <div id={moreDetailsPanelId} className="mt-3 space-y-3">
+            <div
+              id={moreDetailsPanelId}
+              className="mt-2 space-y-2.5"
+              data-finance-disclosure-panel
+            >
               <SceFormField
                 label={props.t("formalReforecast.reasonLabel")}
                 htmlFor={reasonId}
@@ -962,15 +980,9 @@ export function FinanceFormalReforecastDialog(props: {
         ) : null}
 
         {preview ? (
-          <div
-            className={cn(FINANCE_SUMMARY_STRIP_SURFACE_CLASS, "py-2")}
-            data-finance-formal-reforecast-preview
-          >
-            <p className="mb-1.5 text-xs text-[var(--muted)]">
-              {props.t("formalReforecast.amountsUnchangedHint")}
-            </p>
-            <dl className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
-              <div className="sm:px-4 sm:first:ps-0">
+          <div className={FINANCE_FORMAL_REFORECAST_PREVIEW_CLASS} data-finance-formal-reforecast-preview>
+            <dl className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
+              <div className="min-w-0">
                 <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalIncome")}</dt>
                 <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
                   {formatFinanceManagementPlanningMinor(
@@ -980,7 +992,7 @@ export function FinanceFormalReforecastDialog(props: {
                   )}
                 </dd>
               </div>
-              <div className="sm:px-4">
+              <div className="min-w-0">
                 <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalExpense")}</dt>
                 <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
                   {formatFinanceManagementPlanningMinor(
@@ -990,7 +1002,7 @@ export function FinanceFormalReforecastDialog(props: {
                   )}
                 </dd>
               </div>
-              <div className="sm:px-4 sm:last:pe-0">
+              <div className="min-w-0">
                 <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("plannedResult")}</dt>
                 <dd className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass)}>
                   {formatFinanceManagementPlanningMinor(
@@ -1001,7 +1013,7 @@ export function FinanceFormalReforecastDialog(props: {
                 </dd>
               </div>
             </dl>
-            <p className="mt-2 text-xs text-[var(--muted)]">
+            <p className="mt-1.5 text-[var(--muted)]">
               {props.t("formalReforecast.nextVersionMeta", {
                 version: preview.nextVersionNumber,
                 count: preview.lineCount,

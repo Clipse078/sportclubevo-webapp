@@ -38,6 +38,12 @@ Collapsed summary (`N Versionen · zuletzt festgehalten …`) with **Verlauf anz
 - Default: **Datenstand** + optional **Bezeichnung** + amount preview (unchanged FIN-04C-05R4 lifecycle).
 - **Weitere Angaben** (disclosure): optional `FinanceForecastRevisionReason`, optional context when `OTHER`, optional **Ist-Daten berücksichtigt bis** (defaults to Datenstand).
 
+### Dialog layout (FIN-04C-06R2)
+
+Formal reforecast dialogs use **natural content height** when the complete default workflow fits the viewport. Body scrolling is a fallback for constrained-height or expanded-detail states, never the default desktop presentation.
+
+Progressive disclosure controls must visibly communicate interactivity; advanced financial metadata must not appear as an unlabeled/static-looking section (canonical button row + chevron, `aria-expanded`).
+
 Persistence (additive migration `20261024140000_sce_finance_04c_06_revision_reason`):
 
 - `revisionReason` — nullable enum
