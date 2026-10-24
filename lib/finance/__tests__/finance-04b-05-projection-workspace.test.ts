@@ -116,9 +116,13 @@ describe("FIN-04B-05 workspace view-model states", () => {
       lines: [],
       forecastAmountByAccountId: new Map(),
       coverageAccounts,
+      accountNameById: new Map([["a1", "Konto A"]]),
       explainabilityByAccountId: new Map(),
+      explainabilityDetailByAccountId: new Map(),
+      budgetTotals: null,
     });
     expect(vm.presentationState).toBe("NO_PROJECTION");
+    expect(vm.dashboard).toBeNull();
     expect(vm.financeYearName).toBe("Saison 2026/27");
   });
 
@@ -154,9 +158,13 @@ describe("FIN-04B-05 workspace view-model states", () => {
           projectedAmountMinor: 100_000_00,
         },
       ],
+      accountNameById: new Map([["a1", "Konto A"]]),
       explainabilityByAccountId: new Map(),
+      explainabilityDetailByAccountId: new Map(),
+      budgetTotals: null,
     });
     expect(vm.presentationState).toBe("AVAILABLE_FRESH");
+    expect(vm.dashboard).not.toBeNull();
     expect(vm.accounts[0]?.deltaMinor).toBe(10_000_00);
   });
 
@@ -187,7 +195,10 @@ describe("FIN-04B-05 workspace view-model states", () => {
       coverageAccounts: [
         { accountId: "a1", semantic: "INCOME", lifecycle: "ACTIVE", projectedAmountMinor: 1_000_00 },
       ],
+      accountNameById: new Map([["a1", "Konto A"]]),
       explainabilityByAccountId: new Map(),
+      explainabilityDetailByAccountId: new Map(),
+      budgetTotals: null,
     });
     expect(vm.presentationState).toBe("AVAILABLE_STALE");
   });
@@ -229,7 +240,13 @@ describe("FIN-04B-05 workspace view-model states", () => {
         { accountId: "a1", semantic: "INCOME", lifecycle: "ACTIVE", projectedAmountMinor: 1_000_00 },
         { accountId: "a2", semantic: "INCOME", lifecycle: "ACTIVE", projectedAmountMinor: null },
       ],
+      accountNameById: new Map([
+        ["a1", "Konto A"],
+        ["a2", "Konto B"],
+      ]),
       explainabilityByAccountId: new Map(),
+      explainabilityDetailByAccountId: new Map(),
+      budgetTotals: null,
     });
     expect(vm.presentationState).toBe("PARTIAL_COVERAGE");
   });
@@ -251,7 +268,10 @@ describe("FIN-04B-05 workspace view-model states", () => {
       coverageAccounts: [
         { accountId: "a1", semantic: "INCOME", lifecycle: "ACTIVE", projectedAmountMinor: null },
       ],
+      accountNameById: new Map([["a1", "Konto A"]]),
       explainabilityByAccountId: new Map(),
+      explainabilityDetailByAccountId: new Map(),
+      budgetTotals: null,
     });
     expect(vm.presentationState).toBe("INSUFFICIENT");
   });

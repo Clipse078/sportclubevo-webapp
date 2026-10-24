@@ -8,6 +8,7 @@ import {
   buildProjectionWorkspaceViewModel,
   type ProjectionWorkspaceViewModel,
 } from "@/lib/finance/projection/projection-workspace-presentation";
+import { buildProjectionAccountExplainabilityDetail } from "@/lib/finance/projection/projection-workspace-explainability";
 import type { ProjectionCoverageAccountInput } from "@/lib/finance/projection/projection-workspace-coverage";
 import { resolveCurrentProjectionVersionForYear } from "@/lib/finance/services/finance-projection-service";
 import {
@@ -21,6 +22,7 @@ type Db = Pick<
   | "financeYear"
   | "financialAccount"
   | "financeActualEntry"
+  | "financeBudget"
   | "financeBudget"
   | "financeBudgetVersion"
   | "financeBudgetLine"
@@ -67,11 +69,13 @@ export async function loadProjectionWorkspaceViewModel(
     where: { tenantId: ctx.tenantId },
     select: {
       id: true,
+      name: true,
       canonicalSemantic: true,
       lifecycle: true,
     },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
+  const accountNameById = new Map(accounts.map((a) => [a.id, a.name]));
 
   const coverageAccounts: ProjectionCoverageAccountInput[] = accounts
     .filter((a) => a.canonicalSemantic === "INCOME" || a.canonicalSemantic === "EXPENSE")
@@ -93,7 +97,10 @@ export async function loadProjectionWorkspaceViewModel(
       lines: [],
       forecastAmountByAccountId: input.forecastAmountByAccountId,
       coverageAccounts,
+      accountNameById,
       explainabilityByAccountId: new Map(),
+      explainabilityDetailByAccountId: new Map(),
+      budgetTotals: null,
     });
   }
 
@@ -142,6 +149,10 @@ export async function loadProjectionWorkspaceViewModel(
     string,
     ReturnType<typeof buildProjectionAccountExplainability>
   >();
+  const explainabilityDetailByAccountId = new Map<
+    string,
+    ReturnType<typeof buildProjectionAccountExplainabilityDetail>
+  >();
 
   for (const accountId of accountIds) {
     const context = evidenceContexts.get(accountId);
@@ -150,18 +161,58 @@ export async function loadProjectionWorkspaceViewModel(
     const historicalNames = calculation.historicalFinanceYearIdsUsed
       .map((id) => yearNameById.get(id))
       .filter((name): name is string => Boolean(name));
+    const detailInput = {
+      actualsThroughDate,
+      historicalFinanceYearNames: historicalNames,
+    };
     explainabilityByAccountId.set(
       accountId,
-      buildProjectionAccountExplainability(calculation, {
-        actualsThroughDate,
-        historicalFinanceYearNames: historicalNames,
-      }),
+      buildProjectionAccountExplainability(calculation, detailInput),
+    );
+    explainabilityDetailByAccountId.set(
+      accountId,
+      buildProjectionAccountExplainabilityDetail(calculation, detailInput),
     );
   }
 
   for (const row of coverageAccounts) {
     const line = currentVersion.lines.find((l) => l.financialAccountId === row.accountId);
     if (line) row.projectedAmountMinor = line.projectedAmountMinor;
+  }
+
+  let budgetTotals: {
+    incomeMinor: number | null;
+    expenseMinor: number | null;
+    resultMinor: number | null;
+  } | null = null;
+  const budgetVersion = await db.financeBudget.findFirst({
+    where: { financeYearId: input.financeYearId, tenantId: ctx.tenantId },
+    select: {
+      currentBaselineVersion: {
+        select: {
+          lines: {
+            select: {
+              amountMinor: true,
+              financialAccount: { select: { canonicalSemantic: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  const budgetLines = budgetVersion?.currentBaselineVersion?.lines ?? [];
+  if (budgetLines.length > 0) {
+    const incomeMinor = budgetLines
+      .filter((l) => l.financialAccount.canonicalSemantic === "INCOME")
+      .reduce((s, l) => s + l.amountMinor, 0);
+    const expenseMinor = budgetLines
+      .filter((l) => l.financialAccount.canonicalSemantic === "EXPENSE")
+      .reduce((s, l) => s + l.amountMinor, 0);
+    budgetTotals = {
+      incomeMinor,
+      expenseMinor,
+      resultMinor: incomeMinor - expenseMinor,
+    };
   }
 
   return buildProjectionWorkspaceViewModel({
@@ -178,6 +229,9 @@ export async function loadProjectionWorkspaceViewModel(
     lines: currentVersion.lines,
     forecastAmountByAccountId: input.forecastAmountByAccountId,
     coverageAccounts,
+    accountNameById,
     explainabilityByAccountId,
+    explainabilityDetailByAccountId,
+    budgetTotals,
   });
 }

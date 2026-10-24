@@ -1,74 +1,72 @@
-# SCE-FIN-04B-05 — Prognose workspace SCE projection UX
+# SCE-FIN-04B-05 / 05R1 — Prognose SCE projection intelligence UX
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04B-05 |
-| **Status** | **IMPLEMENTED / PO UAT REQUIRED** |
+| **Package** | FIN-04B-05 (+ **05R1** dashboard / explainability refinement) |
+| **Status** | **FIN-04B-05R1 IMPLEMENTED / PO UAT REQUIRED** |
 | **Route** | `/dashboard/finance/forecast` (tab **Prognose**) |
-| **Shared STAGE migration 04B-04** | **APPLIED** (see methodology doc) |
 
-## Canonical terminology
+## Locked product principle
 
-| Concept | German label |
-| --- | --- |
-| Organisation-owned management expectation | **Aktuelle Prognose** |
-| System-generated decision support | **SCE-Projektion** |
-| Workspace tab | **Prognose** |
-| Confidence (product) | **Prognosesicherheit** |
+**SCE generates the projection. The organisation owns the forecast.**
 
-No adoption action in FIN-04B-05 (`SCE-Projektion übernehmen` → FIN-04B-06).
+**NO UNEXPLAINED SCE PROJECTION.** Every non-null SCE predicted amount — and every deliberate non-prediction — must expose tenant-visible explainability derived from the same structured evidence/calculation that produced the persisted projection (not a parallel UI reconstruction).
 
-## Information architecture
+## Information architecture (Prognose)
 
-Inside **Prognose**:
+1. Finance year / currency context strip
+2. **SCE-Projektion intelligence dashboard** — projected Einnahmen / Ausgaben / Ergebnis, Datenstand, coverage (only after a version exists), staleness, Prognosesicherheit notes when confidence varies by account
+3. **Visual analysis** — finance-native charts (no third-party BI chrome):
+   - Financial outlook: Ist bisher · Aktuelle Prognose · SCE-Projektion (optional Budget reference)
+   - Composition ranked bars (income / expense accounts)
+   - Forecast vs SCE divergence (neutral; omitted when insufficient comparable accounts)
+4. **Account-level SCE detail table** — projection amount, neutral delta vs Prognose, explainability affordance
+5. **Aktuelle Prognose** — FIN-04A editable forecast workspace (unchanged ownership; not styled as equivalent editable SCE)
 
-1. Year / currency context strip (unchanged)
-2. **SCE-Projektion** — compact decision-support surface (read-only, generation/refresh when `finance.forecast.manage`)
-3. **Aktuelle Prognose** — existing FIN-04A editable forecast (primary)
+SCE is read-only. Adoption (**SCE-Projektion übernehmen**) remains **FIN-04B-06**.
 
-SCE does not replace or edit the forecast table. Optional SCE columns in the forecast account tables show projection amount and neutral delta (SCE − Prognose).
+## Charts and phasing
 
-## Lifecycle
+Charts represent **supported annual / cumulative actual data** and **annual** forecast/budget/SCE totals only.
 
-| Action | Permission | Behaviour |
-| --- | --- | --- |
-| SCE-Projektion erstellen | `finance.forecast.manage` | Calls FIN-04B-04 `generateFinanceYearProjection`; new immutable version |
-| SCE-Projektion aktualisieren | `finance.forecast.manage` | New version; prior version superseded |
-| View | `finance.forecast.view` | Read-only; no generation controls |
+**No synthetic future monthly SCE phasing** — `FORECAST_PHASING_SUPPORTED` remains false; do not distribute annual projections across remaining months.
 
-Staleness uses FIN-04B-03 fingerprint semantics (`FRESH` / `STALE`). Opening the workspace does not auto-regenerate.
+## First use
 
-## Coverage and aggregates
+Before the first generated version: intro copy + **SCE-Projektion erstellen** — **no** `0 von N Positionen projiziert` coverage line.
 
-Pure helper: `computeProjectionAggregateCoverage` (`lib/finance/projection/projection-workspace-coverage.ts`).
+## Coverage
 
-- Missing `projectedAmountMinor` is **not** treated as zero.
-- Summaries label partial income/expense/result when active accounts lack projections.
-- Result total is shown only when both income and expense sides are complete for active accounts.
-
-## Presentation states
-
-View-model: `buildProjectionWorkspaceViewModel` — `NO_PROJECTION`, `AVAILABLE_FRESH`, `AVAILABLE_STALE`, `PARTIAL_COVERAGE`, `INSUFFICIENT`, `GENERATION_FAILED` (reserved).
-
-## Methodology labels (primary UI)
-
-| Engine | UI |
-| --- | --- |
-| `HISTORICAL_PATTERN` | Historischer Verlauf |
-| `RUN_RATE` | Aktueller Verlauf |
-| `NONE` / version `MIXED` | No per-line method label / mixed version only |
-
-Engine version `sce-projection-v1` is not shown in primary UX.
+Pure helper: `computeProjectionAggregateCoverage`. Missing lines are not zero. Partial totals are labelled; Ergebnis withheld when incomplete.
 
 ## Explainability
 
-Per-account info affordance (dialog): method, data basis, historical `FinanceYear.name` list, cutoff, known actual + estimated remainder + projection, optional range, Prognosesicherheit.
+View-models: `buildProjectionAccountExplainabilityDetail`, narratives in `projection-workspace-explainability.ts`.
+
+Methodology labels: **Historischer Verlauf**, **Aktueller Verlauf**. Insufficient-data copy from sufficiency reason codes (no raw enums in UI).
+
+## Permissions
+
+| Capability | Permission |
+| --- | --- |
+| View dashboard + explainability | `finance.forecast.view` |
+| Generate / refresh | `finance.forecast.manage` |
+
+## Code map
+
+| Area | Location |
+| --- | --- |
+| Workspace VM | `lib/finance/projection/projection-workspace-presentation.ts` |
+| Dashboard VM | `lib/finance/projection/projection-workspace-dashboard.ts` |
+| Explainability | `lib/finance/projection/projection-workspace-explainability.ts` |
+| UI | `components/admin/finance/FinanceProjectionWorkspaceSection.tsx`, `components/admin/finance/projection/*Chart.tsx` |
+| Query | `lib/finance/services/finance-projection-workspace-query-service.ts` |
 
 ## Tests
 
 - `lib/finance/__tests__/finance-04b-05-projection-workspace.test.ts`
-- `lib/finance/__tests__/finance-04b-05-generation-action.test.ts`
-- FIN-04B-04 orchestrator regression for generation persistence
+- `lib/finance/__tests__/finance-04b-05r1-projection-dashboard.test.ts`
+- `components/admin/finance/__tests__/FinanceProjectionDashboard.ux.test.tsx`
 
 ## Next
 

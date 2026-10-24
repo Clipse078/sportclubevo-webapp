@@ -38,8 +38,7 @@ import {
 import type { ForecastWorkspaceSnapshot } from "@/lib/finance/forecast/forecast-presentation";
 import type { ProjectionWorkspaceViewModel } from "@/lib/finance/projection/projection-workspace-presentation";
 import {
-  FinanceProjectionAccountCell,
-  FinanceProjectionDeltaCell,
+  FinanceProjectionAccountDetailSection,
   FinanceProjectionWorkspaceSection,
 } from "@/components/admin/finance/FinanceProjectionWorkspaceSection";
 import { financeVarianceComparisonSemanticTextClass } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
@@ -269,6 +268,13 @@ export function FinanceForecastWorkspacePanel({
           currency={workspaceCurrency}
           formattingLocale={formattingLocale}
           canGenerate={canGenerateProjection}
+        />
+      ) : null}
+
+      {yearSelected && projection && projection.versionNumber !== null ? (
+        <FinanceProjectionAccountDetailSection
+          projection={projection}
+          formattingLocale={formattingLocale}
         />
       ) : null}
 
@@ -566,7 +572,6 @@ function ForecastAccountTable(props: {
   tVariance: ReturnType<typeof useTranslations<"Finance.actuals">>;
   lineErrors: Record<string, string>;
 }) {
-  const showProjectionColumns = Boolean(props.projection);
   const tableClass = props.showComparison
     ? FINANCE_VARIANCE_COMPARISON_TABLE_CLASS
     : "w-full min-w-0 table-fixed text-sm";
@@ -607,16 +612,6 @@ function ForecastAccountTable(props: {
                   {props.t("forecastColumn")}
                 </th>
               )}
-              {showProjectionColumns ? (
-                <>
-                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
-                    {props.t("projectionColumn")}
-                  </th>
-                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
-                    {props.t("projectionDeltaColumn")}
-                  </th>
-                </>
-              ) : null}
             </tr>
           </thead>
           <tbody>
@@ -728,24 +723,6 @@ function ForecastAccountTable(props: {
                       />
                     </td>
                   )}
-                  {showProjectionColumns && props.projection ? (
-                    <>
-                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                        <FinanceProjectionAccountCell
-                          accountId={row.accountId}
-                          projection={props.projection}
-                          formattingLocale={props.formattingLocale}
-                        />
-                      </td>
-                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
-                        <FinanceProjectionDeltaCell
-                          accountId={row.accountId}
-                          projection={props.projection}
-                          formattingLocale={props.formattingLocale}
-                        />
-                      </td>
-                    </>
-                  ) : null}
                 </tr>
               );
             })}

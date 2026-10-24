@@ -16,6 +16,8 @@ FIN-04B introduces **SCE-generated financial projections**: system expectations 
 
 > **SCE generates the projection. The organisation owns the forecast.**
 
+**NO UNEXPLAINED SCE PROJECTION (locked, FIN-04B-05R1):** Every generated account projection (and every deliberate non-prediction) must expose tenant-visible structured explainability derived from the same evidence/calculation that created the persisted line — not an independent UI guess. Charts must represent real supported data only; **no synthetic future monthly SCE phasing**. Account-level and insufficient-data explanations are mandatory for viewers with `finance.forecast.view`. Forecast adoption remains **FIN-04B-06**.
+
 This package defines domain boundaries, grains, evidence, data sufficiency, methodology abstraction, confidence, explainability, persistence/versioning, staleness, apply workflow, audit, permissions, and downstream compatibility — **without** implementing predictive algorithms, database migrations, or UI.
 
 ---
@@ -361,7 +363,7 @@ Derived minimal sequence (names indicative):
 | 1 | **FIN-04B-02** | **DONE (code)** — migration `20261023200000_sce_finance_04b_02_projection_persistence` + lifecycle services (generate stub, persist snapshot); STAGE apply pending |
 | 2 | **FIN-04B-03** | Evidence extraction (historical/current actuals, year boundaries), sufficiency evaluator (baseline rules) |
 | 3 | **FIN-04B-04** | **DONE** — `sce-projection-v1` engine; migration `20261023210000_sce_finance_04b_04_projection_line_methodology` applied on shared STAGE |
-| 4 | **FIN-04B-05** | **IMPLEMENTED / PO UAT REQUIRED** — Prognose workspace SCE-Projektion UX (see `SCE-FINANCE-04B-05-PROJECTION-UX.md`) |
+| 4 | **FIN-04B-05 / 05R1** | **IMPLEMENTED / PO UAT REQUIRED** — SCE projection intelligence dashboard + mandatory explainability (see `SCE-FINANCE-04B-05-PROJECTION-UX.md`) |
 | 5 | **FIN-04B-06** | Apply workflow + forecast adoption provenance |
 | 6 | **FIN-04B-07** | Confidence/range hardening, explainability surfacing, driver provider registration API |
 

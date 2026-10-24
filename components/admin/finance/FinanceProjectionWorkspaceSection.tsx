@@ -17,6 +17,7 @@ import {
   formatProjectionSourceCutoffDate,
   PROJECTION_CONFIDENCE_PRODUCT_TERM,
 } from "@/lib/finance/projection/projection-workspace-presentation";
+import type { ProjectionAccountExplainabilityDetailViewModel } from "@/lib/finance/projection/projection-workspace-explainability";
 import {
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
   FINANCE_SECTION_HEADER_CLASS,
@@ -25,7 +26,20 @@ import {
   FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS,
   FINANCE_SUMMARY_STRIP_SURFACE_CLASS,
   FINANCE_SUMMARY_STRIP_VALUE_CLASS,
+  FINANCE_TABLE_HEAD_ROW_CLASS,
+  FINANCE_TABLE_ROW_CLASS,
+  FINANCE_SECTION_SURFACE_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
+import {
+  FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS,
+  FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS,
+  FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS,
+  FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
+  FINANCE_VARIANCE_COMPARISON_TABLE_CLASS,
+} from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
+import { FinanceProjectionOutlookChart } from "@/components/admin/finance/projection/FinanceProjectionOutlookChart";
+import { FinanceProjectionCompositionChart } from "@/components/admin/finance/projection/FinanceProjectionCompositionChart";
+import { FinanceProjectionDivergenceChart } from "@/components/admin/finance/projection/FinanceProjectionDivergenceChart";
 import { generateProjectionAction } from "@/app/(admin)/dashboard/finance/forecast/actions";
 
 type FinanceProjectionWorkspaceSectionProps = {
@@ -46,14 +60,17 @@ export function FinanceProjectionWorkspaceSection({
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const hasGeneratedVersion = projection.versionNumber !== null;
+
   const coverageLabel = useMemo(() => {
+    if (!hasGeneratedVersion) return null;
     const { projectedAccountCount, eligibleAccountCount } = projection.coverage;
     if (eligibleAccountCount === 0) return null;
     return t("coveragePositions", {
       projected: projectedAccountCount,
       total: eligibleAccountCount,
     });
-  }, [projection.coverage, t]);
+  }, [hasGeneratedVersion, projection.coverage, t]);
 
   function runGeneration() {
     startTransition(async () => {
@@ -72,9 +89,12 @@ export function FinanceProjectionWorkspaceSection({
   const actionLabel =
     projection.presentationState === "NO_PROJECTION" ? t("createAction") : t("refreshAction");
 
+  const showDashboard =
+    hasGeneratedVersion && projection.coverage.projectedAccountCount > 0 && projection.dashboard;
+
   return (
     <section
-      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-3")}
+      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-4")}
       data-finance-projection-state={projection.presentationState}
       aria-labelledby="finance-sce-projection-heading"
     >
@@ -83,7 +103,14 @@ export function FinanceProjectionWorkspaceSection({
           <h2 id="finance-sce-projection-heading" className={FINANCE_SECTION_HEADER_CLASS}>
             {t("sectionTitle")}
           </h2>
-          <p className="max-w-2xl text-sm text-[var(--muted)]">{t("sectionDescription")}</p>
+          {projection.presentationState === "NO_PROJECTION" ? (
+            <>
+              <p className="max-w-2xl text-sm text-[var(--foreground)]">{t("introBody")}</p>
+              <p className="max-w-2xl text-xs text-[var(--muted)]">{t("introExplainHint")}</p>
+            </>
+          ) : (
+            <p className="max-w-2xl text-sm text-[var(--muted)]">{t("sectionDescription")}</p>
+          )}
           {projection.actualsThroughDate ? (
             <p className="text-xs text-[var(--muted)]">
               {t("sourceCutoff", {
@@ -113,6 +140,9 @@ export function FinanceProjectionWorkspaceSection({
           {coverageLabel ? (
             <p className="text-xs text-[var(--muted)]">{coverageLabel}</p>
           ) : null}
+          {projection.dashboard?.confidenceNote ? (
+            <p className="text-xs text-[var(--muted)]">{projection.dashboard.confidenceNote}</p>
+          ) : null}
         </div>
         {canGenerate ? (
           <Button
@@ -134,22 +164,144 @@ export function FinanceProjectionWorkspaceSection({
         </p>
       ) : null}
 
-      {projection.presentationState === "NO_PROJECTION" ? (
-        <p className="text-sm text-[var(--muted)]">{t("emptyBody")}</p>
-      ) : null}
-
       {projection.presentationState === "INSUFFICIENT" ? (
         <p className="text-sm text-[var(--muted)]">{t("insufficientBody")}</p>
       ) : null}
 
-      {projection.coverage.projectedAccountCount > 0 ? (
-        <ProjectionSummaryStrip
-          projection={projection}
-          currency={currency}
-          formattingLocale={formattingLocale}
-          t={t}
-        />
+      {showDashboard ? (
+        <>
+          <ProjectionSummaryStrip
+            projection={projection}
+            currency={currency}
+            formattingLocale={formattingLocale}
+            t={t}
+          />
+          <div
+            className="grid min-w-0 gap-3 lg:grid-cols-2"
+            data-finance-projection-visuals
+          >
+            <FinanceProjectionOutlookChart
+              title={t("chartOutlookTitle")}
+              rows={projection.dashboard!.outlook}
+              metricLabels={{
+                INCOME: t("summaryIncome"),
+                EXPENSE: t("summaryExpense"),
+                RESULT: t("summaryResult"),
+              }}
+              seriesLabels={{
+                actual: t("chartSeriesActual"),
+                forecast: t("chartSeriesForecast"),
+                projection: t("chartSeriesProjection"),
+                budget: t("chartSeriesBudget"),
+              }}
+              currency={currency}
+              formattingLocale={formattingLocale}
+            />
+            <div className="flex min-w-0 flex-col gap-3">
+              <FinanceProjectionCompositionChart
+                title={t("chartCompositionIncome")}
+                segments={projection.dashboard!.incomeComposition}
+                currency={currency}
+                formattingLocale={formattingLocale}
+              />
+              <FinanceProjectionCompositionChart
+                title={t("chartCompositionExpense")}
+                segments={projection.dashboard!.expenseComposition}
+                currency={currency}
+                formattingLocale={formattingLocale}
+              />
+            </div>
+          </div>
+          {projection.dashboard!.divergence ? (
+            <FinanceProjectionDivergenceChart
+              title={t("chartDivergenceTitle")}
+              description={t("chartDivergenceDescription")}
+              rows={projection.dashboard!.divergence}
+              formattingLocale={formattingLocale}
+            />
+          ) : null}
+        </>
       ) : null}
+    </section>
+  );
+}
+
+export function FinanceProjectionAccountDetailSection(props: {
+  projection: ProjectionWorkspaceViewModel;
+  formattingLocale: string;
+}) {
+  const t = useTranslations("Finance.forecast");
+  const tProj = useTranslations("Finance.forecast.projection");
+
+  if (props.projection.versionNumber === null) return null;
+
+  const rows = props.projection.accounts.filter((a) => a.lifecycle === "ACTIVE");
+  if (rows.length === 0) return null;
+
+  return (
+    <section
+      className={FINANCE_SECTION_SURFACE_CLASS}
+      data-finance-surface="projection-account-detail"
+    >
+      <h3 className="border-b border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+        {tProj("accountDetailSectionTitle")}
+      </h3>
+      <div className="min-w-0 overflow-x-auto">
+        <table className={FINANCE_VARIANCE_COMPARISON_TABLE_CLASS}>
+          <thead>
+            <tr className={FINANCE_TABLE_HEAD_ROW_CLASS}>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_ACCOUNT_CLASS}>
+                {t("accountColumn")}
+              </th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                {t("projectionColumn")}
+              </th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                {t("projectionDeltaColumn")}
+              </th>
+              <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                {tProj("explainColumn")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((account) => (
+              <tr key={account.accountId} className={FINANCE_TABLE_ROW_CLASS}>
+                <td className={FINANCE_VARIANCE_COMPARISON_ACCOUNT_CELL_CLASS}>
+                  <span className="font-medium">{account.accountName}</span>
+                </td>
+                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                  {account.projectedAmountMinor !== null ? (
+                    <span className="tabular-nums">
+                      {formatBudgetPlanningMinor(
+                        account.projectedAmountMinor,
+                        null,
+                        props.formattingLocale,
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[var(--muted)]">{account.noProjectionLabel}</span>
+                  )}
+                </td>
+                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                  <FinanceProjectionDeltaCell
+                    accountId={account.accountId}
+                    projection={props.projection}
+                    formattingLocale={props.formattingLocale}
+                  />
+                </td>
+                <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                  <ProjectionExplainTrigger
+                    accountId={account.accountId}
+                    projection={props.projection}
+                    formattingLocale={props.formattingLocale}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
@@ -217,7 +369,7 @@ function ProjectionSummaryStrip(props: {
   );
 }
 
-export function FinanceProjectionAccountCell(props: {
+function ProjectionExplainTrigger(props: {
   accountId: string;
   projection: ProjectionWorkspaceViewModel;
   formattingLocale: string;
@@ -226,145 +378,146 @@ export function FinanceProjectionAccountCell(props: {
   const account = props.projection.accounts.find((row) => row.accountId === props.accountId);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  if (!account) {
+  if (!account?.explainabilityDetail && !account?.explainability) {
     return <span className="text-[var(--muted)]">—</span>;
   }
 
-  if (account.projectedAmountMinor === null) {
-    return (
-      <span className="text-xs text-[var(--muted)]" data-finance-projection-account="none">
-        {account.noProjectionLabel}
-      </span>
-    );
-  }
+  const detail = account.explainabilityDetail;
 
   return (
     <>
-      <div className="flex items-center justify-end gap-1.5">
-        <span className="tabular-nums">
-          {formatBudgetPlanningMinor(
-            account.projectedAmountMinor,
-            null,
-            props.formattingLocale,
-          )}
-        </span>
-        {account.explainability ? (
-          <button
-            type="button"
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-            aria-label={t("explainAction")}
-            onClick={() => setDetailOpen(true)}
-          >
-            <Info className="h-3.5 w-3.5" aria-hidden />
-          </button>
-        ) : null}
-      </div>
-      {account.explainability ? (
-        <Dialog
-          open={detailOpen}
-          onClose={() => setDetailOpen(false)}
-          title={t("explainTitle")}
-          description={t("explainDescription")}
-          footer={
-            <Button variant="secondary" onClick={() => setDetailOpen(false)}>
-              {t("explainClose")}
-            </Button>
-          }
-        >
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+        onClick={() => setDetailOpen(true)}
+      >
+        <Info className="h-3.5 w-3.5" aria-hidden />
+        {t("explainActionShort")}
+      </button>
+      <Dialog
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        title={t("explainTitle")}
+        description={detail?.headlineQuestion ?? t("explainDescription")}
+        footer={
+          <Button variant="secondary" onClick={() => setDetailOpen(false)}>
+            {t("explainClose")}
+          </Button>
+        }
+      >
+        {detail ? (
           <ProjectionExplainabilityBody
-            explainability={account.explainability}
+            explainability={detail}
             formattingLocale={props.formattingLocale}
             t={t}
           />
-        </Dialog>
-      ) : null}
+        ) : null}
+      </Dialog>
     </>
   );
 }
 
+export function FinanceProjectionAccountCell(props: {
+  accountId: string;
+  projection: ProjectionWorkspaceViewModel;
+  formattingLocale: string;
+}) {
+  return (
+    <ProjectionExplainTrigger
+      accountId={props.accountId}
+      projection={props.projection}
+      formattingLocale={props.formattingLocale}
+    />
+  );
+}
+
 function ProjectionExplainabilityBody(props: {
-  explainability: NonNullable<
-    ProjectionWorkspaceViewModel["accounts"][number]["explainability"]
-  >;
+  explainability: ProjectionAccountExplainabilityDetailViewModel;
   formattingLocale: string;
   t: ReturnType<typeof useTranslations<"Finance.forecast.projection">>;
 }) {
   const e = props.explainability;
   return (
-    <dl className="space-y-2 text-sm">
-      {e.methodologyLabel ? (
-        <div>
-          <dt className="text-[var(--muted)]">{props.t("explainMethod")}</dt>
-          <dd>{e.methodologyLabel}</dd>
-        </div>
+    <div className="space-y-3 text-sm">
+      {e.insufficientExplanation ? (
+        <p className="text-[var(--foreground)]">{e.insufficientExplanation}</p>
       ) : null}
-      <div>
-        <dt className="text-[var(--muted)]">{props.t("explainData")}</dt>
-        <dd>{e.dataSufficiencyLabel}</dd>
-      </div>
-      {e.historicalFinanceYearCount > 0 ? (
+      {e.narrative ? <p className="text-[var(--muted)]">{e.narrative}</p> : null}
+      <dl className="space-y-2">
+        {e.methodologyLabel ? (
+          <div>
+            <dt className="text-[var(--muted)]">{props.t("explainMethod")}</dt>
+            <dd>{e.methodologyLabel}</dd>
+          </div>
+        ) : null}
         <div>
-          <dt className="text-[var(--muted)]">{props.t("explainHistoricalYears")}</dt>
+          <dt className="text-[var(--muted)]">{props.t("explainData")}</dt>
+          <dd>{e.dataSufficiencyLabel}</dd>
+        </div>
+        {e.historicalFinanceYearCount > 0 ? (
+          <div>
+            <dt className="text-[var(--muted)]">{props.t("explainHistoricalYears")}</dt>
+            <dd>
+              {props.t("explainHistoricalYearsValue", {
+                count: e.historicalFinanceYearCount,
+                names: e.historicalFinanceYearNames.join(", "),
+              })}
+            </dd>
+          </div>
+        ) : null}
+        <div>
+          <dt className="text-[var(--muted)]">{props.t("explainCurrentActuals")}</dt>
           <dd>
-            {props.t("explainHistoricalYearsValue", {
-              count: e.historicalFinanceYearCount,
-              names: e.historicalFinanceYearNames.join(", "),
+            {props.t("explainThroughDate", {
+              date: formatProjectionSourceCutoffDate(e.actualsThroughDate, props.formattingLocale),
             })}
           </dd>
         </div>
-      ) : null}
-      <div>
-        <dt className="text-[var(--muted)]">{props.t("explainCurrentActuals")}</dt>
-        <dd>
-          {props.t("explainThroughDate", {
-            date: formatProjectionSourceCutoffDate(e.actualsThroughDate, props.formattingLocale),
-          })}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-[var(--muted)]">{props.t("explainKnownActual")}</dt>
-        <dd>
-          {formatBudgetPlanningMinor(e.knownActualAmountMinor, null, props.formattingLocale)}
-        </dd>
-      </div>
-      {e.estimatedRemainingAmountMinor !== null ? (
         <div>
-          <dt className="text-[var(--muted)]">{props.t("explainEstimatedRemainder")}</dt>
+          <dt className="text-[var(--muted)]">{props.t("explainKnownActual")}</dt>
           <dd>
-            {formatBudgetPlanningMinor(
-              e.estimatedRemainingAmountMinor,
-              null,
-              props.formattingLocale,
-            )}
+            {formatBudgetPlanningMinor(e.knownActualAmountMinor, null, props.formattingLocale)}
           </dd>
         </div>
-      ) : null}
-      {e.projectedAmountMinor !== null ? (
-        <div>
-          <dt className="text-[var(--muted)]">{props.t("explainProjection")}</dt>
-          <dd>
-            {formatBudgetPlanningMinor(e.projectedAmountMinor, null, props.formattingLocale)}
-          </dd>
-        </div>
-      ) : null}
-      {e.lowerBoundMinor !== null && e.upperBoundMinor !== null ? (
-        <div>
-          <dt className="text-[var(--muted)]">{props.t("explainRange")}</dt>
-          <dd>
-            {props.t("explainRangeValue", {
-              lower: formatBudgetPlanningMinor(e.lowerBoundMinor, null, props.formattingLocale),
-              upper: formatBudgetPlanningMinor(e.upperBoundMinor, null, props.formattingLocale),
-            })}
-          </dd>
-        </div>
-      ) : null}
-      {e.confidenceLabel ? (
-        <div>
-          <dt className="text-[var(--muted)]">{PROJECTION_CONFIDENCE_PRODUCT_TERM}</dt>
-          <dd>{e.confidenceLabel}</dd>
-        </div>
-      ) : null}
-    </dl>
+        {e.estimatedRemainingAmountMinor !== null ? (
+          <div>
+            <dt className="text-[var(--muted)]">{props.t("explainEstimatedRemainder")}</dt>
+            <dd>
+              {formatBudgetPlanningMinor(
+                e.estimatedRemainingAmountMinor,
+                null,
+                props.formattingLocale,
+              )}
+            </dd>
+          </div>
+        ) : null}
+        {e.projectedAmountMinor !== null ? (
+          <div>
+            <dt className="text-[var(--muted)]">{props.t("explainProjection")}</dt>
+            <dd>
+              {formatBudgetPlanningMinor(e.projectedAmountMinor, null, props.formattingLocale)}
+            </dd>
+          </div>
+        ) : null}
+        {e.lowerBoundMinor !== null && e.upperBoundMinor !== null ? (
+          <div>
+            <dt className="text-[var(--muted)]">{props.t("explainRange")}</dt>
+            <dd>
+              {props.t("explainRangeValue", {
+                lower: formatBudgetPlanningMinor(e.lowerBoundMinor, null, props.formattingLocale),
+                upper: formatBudgetPlanningMinor(e.upperBoundMinor, null, props.formattingLocale),
+              })}
+            </dd>
+          </div>
+        ) : null}
+        {e.confidenceLabel ? (
+          <div>
+            <dt className="text-[var(--muted)]">{PROJECTION_CONFIDENCE_PRODUCT_TERM}</dt>
+            <dd>{e.confidenceLabel}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
   );
 }
 

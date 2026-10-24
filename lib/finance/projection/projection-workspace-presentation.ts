@@ -11,6 +11,11 @@ import {
   type ProjectionAggregateCoverage,
   type ProjectionCoverageAccountInput,
 } from "@/lib/finance/projection/projection-workspace-coverage";
+import {
+  buildProjectionWorkspaceDashboard,
+  type ProjectionWorkspaceDashboardViewModel,
+} from "@/lib/finance/projection/projection-workspace-dashboard";
+import type { ProjectionAccountExplainabilityDetailViewModel } from "@/lib/finance/projection/projection-workspace-explainability";
 
 export type ProjectionWorkspacePresentationState =
   | "NO_PROJECTION"
@@ -120,9 +125,13 @@ export function buildProjectionAccountExplainability(
 
 export type ProjectionWorkspaceAccountViewModel = {
   accountId: string;
+  accountName: string;
+  semantic: "INCOME" | "EXPENSE";
+  lifecycle: "ACTIVE" | "ARCHIVED";
   projectedAmountMinor: number | null;
   forecastAmountMinor: number | null;
   deltaMinor: number | null;
+  knownActualAmountMinor: number;
   dataSufficiency: ProjectionDataSufficiencyLevel;
   dataSufficiencyLabel: string;
   confidence: ProjectionConfidenceLevel;
@@ -131,6 +140,7 @@ export type ProjectionWorkspaceAccountViewModel = {
   methodologyLabel: string | null;
   noProjectionLabel: string | null;
   explainability: ProjectionAccountExplainabilityViewModel | null;
+  explainabilityDetail: ProjectionAccountExplainabilityDetailViewModel | null;
 };
 
 export type ProjectionWorkspaceViewModel = {
@@ -144,6 +154,7 @@ export type ProjectionWorkspaceViewModel = {
   coverage: ProjectionAggregateCoverage;
   versionDataSufficiency: ProjectionDataSufficiencyLevel | null;
   accounts: readonly ProjectionWorkspaceAccountViewModel[];
+  dashboard: ProjectionWorkspaceDashboardViewModel | null;
 };
 
 function derivePresentationState(input: {
@@ -183,7 +194,17 @@ export function buildProjectionWorkspaceViewModel(input: {
   }>;
   forecastAmountByAccountId: ReadonlyMap<string, number | null>;
   coverageAccounts: readonly ProjectionCoverageAccountInput[];
+  accountNameById: ReadonlyMap<string, string>;
   explainabilityByAccountId: ReadonlyMap<string, ProjectionAccountExplainabilityViewModel>;
+  explainabilityDetailByAccountId: ReadonlyMap<
+    string,
+    ProjectionAccountExplainabilityDetailViewModel
+  >;
+  budgetTotals: {
+    incomeMinor: number | null;
+    expenseMinor: number | null;
+    resultMinor: number | null;
+  } | null;
 }): ProjectionWorkspaceViewModel {
   const lineByAccount = new Map(input.lines.map((line) => [line.financialAccountId, line]));
   const accountById = new Map<string, ProjectionWorkspaceAccountViewModel>();
@@ -195,11 +216,17 @@ export function buildProjectionWorkspaceViewModel(input: {
     const dataSufficiency = line?.dataSufficiency ?? "INSUFFICIENT";
     const confidence = line?.confidence ?? "NONE";
     const methodologyFamily = line?.methodologyFamily ?? "NONE";
+    const explainabilityDetail =
+      input.explainabilityDetailByAccountId.get(account.accountId) ?? null;
     accountById.set(account.accountId, {
       accountId: account.accountId,
+      accountName: input.accountNameById.get(account.accountId) ?? account.accountId,
+      semantic: account.semantic,
+      lifecycle: account.lifecycle,
       projectedAmountMinor,
       forecastAmountMinor,
       deltaMinor: computeProjectionForecastDeltaMinor(projectedAmountMinor, forecastAmountMinor),
+      knownActualAmountMinor: explainabilityDetail?.knownActualAmountMinor ?? 0,
       dataSufficiency,
       dataSufficiencyLabel: projectionDataSufficiencyLabel(dataSufficiency),
       confidence,
@@ -209,6 +236,7 @@ export function buildProjectionWorkspaceViewModel(input: {
       noProjectionLabel:
         projectedAmountMinor === null ? projectionAccountNoAmountLabel(dataSufficiency) : null,
       explainability: input.explainabilityByAccountId.get(account.accountId) ?? null,
+      explainabilityDetail,
     });
   }
 
@@ -228,6 +256,16 @@ export function buildProjectionWorkspaceViewModel(input: {
     versionDataSufficiency: input.version?.dataSufficiency ?? null,
   });
 
+  const accounts = [...accountById.values()];
+  const dashboard =
+    hasProjection && coverage.projectedAccountCount > 0
+      ? buildProjectionWorkspaceDashboard({
+          accounts,
+          coverage,
+          budgetTotals: input.budgetTotals,
+        })
+      : null;
+
   return {
     financeYearId: input.financeYearId,
     financeYearName: input.financeYearName,
@@ -238,7 +276,8 @@ export function buildProjectionWorkspaceViewModel(input: {
     versionNumber: input.version?.versionNumber ?? null,
     coverage,
     versionDataSufficiency: input.version?.dataSufficiency ?? null,
-    accounts: [...accountById.values()],
+    accounts,
+    dashboard,
   };
 }
 
