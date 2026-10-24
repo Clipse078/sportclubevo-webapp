@@ -54,7 +54,7 @@ describe("FIN-04C-06R2 formal reforecast dialog natural height", () => {
 
   it("E — mobile shell retains single scroll region architecture", () => {
     expect(dialog).toContain("SCE_DIALOG_MOBILE_VIEWPORT_SHELL");
-    expect(dialog).toContain("max-md:h-[100dvh]");
+    expect(responsiveLayout).toMatch(/max-md:h-\[100dvh\]/);
     expect(surfaces).toMatch(/overflow-x-hidden/);
   });
 

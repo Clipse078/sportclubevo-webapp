@@ -39,7 +39,7 @@ describe("FIN-04C-06R1 reforecast dialog viewport accessibility", () => {
     expect(responsiveLayout).toContain('export const SCE_DIALOG_FOOTER =');
     expect(responsiveLayout).toMatch(/SCE_DIALOG_FOOTER[\s\S]*shrink-0/);
     expect(responsiveLayout).toMatch(/SCE_DIALOG_HEADER[\s\S]*shrink-0/);
-    expect(dialog).toMatch(/footer && <div className=\{SCE_DIALOG_FOOTER\}/);
+    expect(dialog).toMatch(/footer && <div className=\{cn\(SCE_DIALOG_FOOTER/);
   });
 
   it("D — desktop width does not disable vertical overflow protection", () => {

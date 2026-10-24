@@ -43,7 +43,7 @@ describe("FIN-04C-05 rolling forecast workspace UX", () => {
     expect(rolling).toContain("formalizeCurrentForecastAction");
     expect(rolling).toContain('type="date"');
     expect(rolling).toContain("labelPlaceholder");
-    expect(rolling).toContain("amountsUnchangedHint");
+    expect(rolling).toContain("formalReforecast.nextVersionMeta");
     expect(rolling).not.toMatch(/type="checkbox"/);
     expect(rolling).toContain("<Dialog");
   });
