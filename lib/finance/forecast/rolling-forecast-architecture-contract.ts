@@ -229,6 +229,27 @@ export const ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST = {
   mutableCurrentUntilNextFormalRevision: true,
 } as const;
 
+/** FIN-04C-04 implemented Prognoseverlauf read & comparison query layer. */
+export const ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON = {
+  historyQueryService: "loadFinanceForecastHistory",
+  versionComparisonService: "compareFinanceForecastVersions",
+  currentVsPreviousService: "getCurrentForecastVsPrevious",
+  currentVsApprovedBudgetService: "getCurrentForecastVsApprovedBudget",
+  prognoseverlaufCanonicalManagementRevisionsOnly: true,
+  automaticForecastExcludedFromHistory: true,
+  financeProjectionVersionExcludedFromHistory: true,
+  scenarioKeyExcludedFromHistory: true,
+  currentIdentifiedOnlyByCurrentVersionId: true,
+  historicalTotalsFromStoredVersionLines: true,
+  accountIdentityFinancialAccountId: true,
+  comparisonDeltaComparisonMinusBase: true,
+  absenceDistinctFromExplicitZero: true,
+  noFavorabilityInQueryLayer: true,
+  noMisleadingFullYearForecastMinusYtdActual: true,
+  approvedBudgetComparisonUsesGovernanceBaseline: true,
+  viewPermissionOnly: "finance.forecast.view",
+} as const;
+
 export const ROLLING_FORECAST_FIN_04C_02_PERSISTENCE = {
   financeForecastVersionRevisionMetadataPersisted: true,
   legacyRevisionMetadataNullable: true,

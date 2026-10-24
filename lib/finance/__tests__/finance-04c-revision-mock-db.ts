@@ -54,8 +54,34 @@ export type RevisionStore = {
   financialAccount: Array<{
     id: string;
     tenantId: string;
+    name?: string;
+    sortOrder?: number;
     canonicalSemantic: string;
     lifecycle: "ACTIVE" | "ARCHIVED";
+  }>;
+  user: Array<{
+    id: string;
+    tenantId: string;
+    firstName: string;
+    lastName: string;
+  }>;
+  financeBudget: Array<{
+    id: string;
+    tenantId: string;
+    financeYearId: string;
+    currentBaselineVersionId: string | null;
+  }>;
+  financeBudgetVersion: Array<{
+    id: string;
+    budgetId: string;
+    status: "APPROVED" | "DRAFT";
+    versionNumber: number;
+  }>;
+  financeBudgetLine: Array<{
+    id: string;
+    budgetVersionId: string;
+    financialAccountId: string;
+    amountMinor: number;
   }>;
 };
 
@@ -140,20 +166,44 @@ export function baseRevisionStore(): RevisionStore {
       {
         id: "acc-income",
         tenantId: revisionMockTenantA,
+        name: "Mitgliedsbeiträge",
+        sortOrder: 1,
         canonicalSemantic: "INCOME",
         lifecycle: "ACTIVE",
       },
       {
         id: "acc-expense",
         tenantId: revisionMockTenantA,
+        name: "Material",
+        sortOrder: 2,
         canonicalSemantic: "EXPENSE",
         lifecycle: "ARCHIVED",
       },
     ],
+    user: [{ id: "user-1", tenantId: revisionMockTenantA, firstName: "Max", lastName: "Muster" }],
+    financeBudget: [],
+    financeBudgetVersion: [],
+    financeBudgetLine: [],
   };
 }
 
-export function makeRevisionDb(store: RevisionStore) {
+export type RevisionDbQueryCounts = {
+  financeForecastVersionFindMany: number;
+  financeForecastLineFindMany: number;
+  financialAccountFindMany: number;
+  userFindMany: number;
+};
+
+export function emptyRevisionDbQueryCounts(): RevisionDbQueryCounts {
+  return {
+    financeForecastVersionFindMany: 0,
+    financeForecastLineFindMany: 0,
+    financialAccountFindMany: 0,
+    userFindMany: 0,
+  };
+}
+
+export function makeRevisionDb(store: RevisionStore, queryCounts?: RevisionDbQueryCounts) {
   let versionSeq = 0;
   let lineSeq = 0;
   let forecastSeq = 0;
@@ -189,6 +239,7 @@ export function makeRevisionDb(store: RevisionStore) {
             id: forecast.id,
             currentVersionId: forecast.currentVersionId,
             tenantId: forecast.tenantId,
+            financeYearId: forecast.financeYearId,
           };
         }
         const currentVersion = forecast.currentVersionId
@@ -241,10 +292,13 @@ export function makeRevisionDb(store: RevisionStore) {
         orderBy,
         select,
       }: {
-        where: { forecastId?: string; status?: "SUPERSEDED" | "CURRENT" };
+        where:
+          | { forecastId?: string; status?: "SUPERSEDED" | "CURRENT" }
+          | { forecastId: string };
         orderBy?: { versionNumber: "desc" | "asc" };
         select?: Record<string, boolean>;
       }) => {
+        if (queryCounts) queryCounts.financeForecastVersionFindMany += 1;
         let rows = store.financeForecastVersion.filter((v) => {
           if (where.forecastId && v.forecastId !== where.forecastId) return false;
           if (where.status && v.status !== where.status) return false;
@@ -368,17 +422,26 @@ export function makeRevisionDb(store: RevisionStore) {
         where,
         select,
       }: {
-        where: { forecastVersionId: string };
+        where:
+          | { forecastVersionId: string }
+          | { forecastVersionId: { in: string[] } };
         select?: { financialAccountId?: boolean; amountMinor?: boolean };
       }) => {
-        const rows = store.financeForecastLine.filter(
-          (l) => l.forecastVersionId === where.forecastVersionId,
-        );
+        if (queryCounts) queryCounts.financeForecastLineFindMany += 1;
+        const rows = store.financeForecastLine.filter((l) => {
+          if ("forecastVersionId" in where && typeof where.forecastVersionId === "string") {
+            return l.forecastVersionId === where.forecastVersionId;
+          }
+          return where.forecastVersionId.in.includes(l.forecastVersionId);
+        });
         if (select) {
-          return rows.map((row) => ({
-            financialAccountId: row.financialAccountId,
-            amountMinor: row.amountMinor,
-          }));
+          return rows.map((row) => {
+            const picked: Record<string, unknown> = {};
+            if (select.forecastVersionId) picked.forecastVersionId = row.forecastVersionId;
+            if (select.financialAccountId) picked.financialAccountId = row.financialAccountId;
+            if (select.amountMinor) picked.amountMinor = row.amountMinor;
+            return picked;
+          });
         }
         return rows;
       },
@@ -437,14 +500,90 @@ export function makeRevisionDb(store: RevisionStore) {
         return data;
       },
     },
-    financeBudget: { findUnique: async () => null },
-    financeBudgetVersion: { findUnique: async () => null },
-    financeBudgetLine: {},
+    financeBudget: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { tenantId_financeYearId: { tenantId: string; financeYearId: string } };
+        include?: { versions?: { select?: Record<string, boolean> } };
+      }) => {
+        const budget = store.financeBudget.find(
+          (b) =>
+            b.tenantId === where.tenantId_financeYearId.tenantId &&
+            b.financeYearId === where.tenantId_financeYearId.financeYearId,
+        );
+        if (!budget) return null;
+        return {
+          ...budget,
+          versions: include?.versions
+            ? store.financeBudgetVersion
+                .filter((v) => v.budgetId === budget.id)
+                .map((v) => ({ id: v.id, status: v.status, versionNumber: v.versionNumber }))
+            : undefined,
+        };
+      },
+    },
+    financeBudgetVersion: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { id: string };
+        include?: {
+          lines?: { include?: { financialAccount?: { select?: Record<string, boolean> } } };
+        };
+      }) => {
+        const version = store.financeBudgetVersion.find((v) => v.id === where.id);
+        if (!version) return null;
+        const lines = include?.lines
+          ? store.financeBudgetLine
+              .filter((l) => l.budgetVersionId === version.id)
+              .map((l) => {
+                const account = store.financialAccount.find((a) => a.id === l.financialAccountId)!;
+                return {
+                  ...l,
+                  financialAccount: include.lines?.include?.financialAccount
+                    ? { id: account.id, canonicalSemantic: account.canonicalSemantic }
+                    : undefined,
+                };
+              })
+          : undefined;
+        return { ...version, lines };
+      },
+    },
+    financeBudgetLine: {
+      findMany: async ({ where }: { where: { budgetVersionId: string } }) =>
+        store.financeBudgetLine.filter((l) => l.budgetVersionId === where.budgetVersionId),
+    },
     financialAccount: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         store.financialAccount.find((a) => a.id === where.id) ?? null,
-      findMany: async ({ where }: { where: { tenantId: string } }) =>
-        store.financialAccount.filter((a) => a.tenantId === where.tenantId),
+      findMany: async ({ where }: { where: { tenantId: string } }) => {
+        if (queryCounts) queryCounts.financialAccountFindMany += 1;
+        return store.financialAccount.filter((a) => a.tenantId === where.tenantId);
+      },
+    },
+    user: {
+      findMany: async ({
+        where,
+      }: {
+        where: { id: { in: string[] }; tenantId: string };
+        select?: { id?: boolean; firstName?: boolean; lastName?: boolean };
+      }) => {
+        if (queryCounts) queryCounts.userFindMany += 1;
+        return store.user.filter(
+          (u) => u.tenantId === where.tenantId && where.id.in.includes(u.id),
+        );
+      },
+    },
+    financeConfiguration: {
+      findUnique: async ({
+        select,
+      }: {
+        where: { tenantId: string };
+        select?: { baseCurrency?: boolean };
+      }) => ({ baseCurrency: "CHF" }),
     },
     $transaction: async <T>(fn: (tx: typeof db) => Promise<T>) => fn(db),
   };

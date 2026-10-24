@@ -13,6 +13,7 @@ import {
   ROLLING_FORECAST_DATA_MODEL_EVOLUTION,
   ROLLING_FORECAST_FIN_04C_02_PERSISTENCE,
   ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST,
+  ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON,
   ROLLING_FORECAST_GERMAN_PRODUCT_TERMS,
   ROLLING_FORECAST_LEGACY_COMPATIBILITY,
   ROLLING_FORECAST_MEASURE_GUARDS,
@@ -199,6 +200,20 @@ describe("FIN-04C-02 implemented persistence facts", () => {
     expect(ROLLING_FORECAST_FIN_04C_02_PERSISTENCE.legacyRevisionMetadataNullable).toBe(true);
     expect(ROLLING_FORECAST_FIN_04C_02_PERSISTENCE.sourceProjectionVersionIdDistinctFromAdoption).toBe(
       true,
+    );
+  });
+});
+
+describe("FIN-04C-04 history & comparison query locks", () => {
+  it("documents Prognoseverlauf query boundaries", () => {
+    expect(ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON.prognoseverlaufCanonicalManagementRevisionsOnly).toBe(
+      true,
+    );
+    expect(ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON.scenarioKeyExcludedFromHistory).toBe(
+      true,
+    );
+    expect(ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON.viewPermissionOnly).toBe(
+      "finance.forecast.view",
     );
   });
 });

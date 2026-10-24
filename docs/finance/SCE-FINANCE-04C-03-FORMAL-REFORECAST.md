@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C-03 — formal reforecast application service + server action foundation |
-| **Status** | **COMPLETE** (FIN-04C-04 history/comparison queries next) |
+| **Status** | **COMPLETE** (FIN-04C-04 complete — see [`SCE-FINANCE-04C-04-HISTORY-COMPARISON.md`](./SCE-FINANCE-04C-04-HISTORY-COMPARISON.md)) |
 | **Tenant action** | **Neue Prognose festhalten** |
 | **Code** | `lib/finance/services/finance-forecast-formal-reforecast-service.ts`, `app/(admin)/dashboard/finance/forecast/actions.ts` |
 
