@@ -71,4 +71,6 @@ Annual full-year amounts only — no effective dates, cash timing, phasing, or l
 
 ## Migration
 
-`20261024180000_sce_finance_04d_06_scenario_adoption_rebase` — additive enum value + audit tables. STAGE apply via guarded script `scripts/sce-finance-04d-06-stage-migration-verify.ts` (not applied in this Cloud Agent run).
+`20261024180000_sce_finance_04d_06_scenario_adoption_rebase` — additive enum value + audit tables.
+
+**STAGE migration verification (06U):** Applied on designated FC Allschwil STAGE Neon (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb`) with `APP_ENV=stage` and `SCE_DATA_ENVIRONMENT=STAGE` via guarded `scripts/sce-finance-04d-06-stage-migration-verify.ts --apply` (`APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled`, not `db push`). Pre/post finance row counts unchanged; `FinanceScenarioAdoption` / `FinanceScenarioRebase` empty; existing UAT scenario *Mitglieder -10 %* and Mitgliedsbeiträge −10% assumption preserved. **PO UAT ready** for adoption and rebase (Michael; not performed by Cursor).
