@@ -1168,6 +1168,8 @@
         "labelPlaceholder": "z. B. Q3 Review",
         "confirm": "Prognose festhalten",
         "previewLoading": "Vorschau wird geladen …",
+        "previewLoadFailed": "Die Vorschau konnte nicht geladen werden.",
+        "previewRetry": "Erneut versuchen",
         "amountsUnchangedHint": "Die Beträge ändern sich durch das Festhalten nicht.",
         "nextVersionMeta": "Nächste Version {version} · {count} Positionen",
         "success": "Prognosestand wurde als neue Version festgehalten.",

@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -39,7 +47,13 @@ import {
   formalizeCurrentForecastAction,
   previewFormalReforecastAction,
 } from "@/app/(admin)/dashboard/finance/forecast/actions";
-import type { FormalReforecastPreviewResult } from "@/lib/finance/forecast/formal-reforecast-contract";
+import {
+  INITIAL_FORMAL_REFORECAST_PREVIEW_DIALOG_STATE,
+  buildFormalReforecastPreviewInputKey,
+  isFormalReforecastPreviewLoading,
+  isFormalReforecastSubmitEnabled,
+  reduceFormalReforecastPreviewDialog,
+} from "@/lib/finance/forecast/formal-reforecast-preview-lifecycle";
 import { FinanceForecastEvolutionChart } from "@/components/admin/finance/forecast/FinanceForecastEvolutionChart";
 import { FinanceForecastChangeDriverBars } from "@/components/admin/finance/forecast/FinanceForecastChangeDriverBars";
 
@@ -514,7 +528,7 @@ function mapFormalOutcomeMessage(
   }
 }
 
-function FinanceFormalReforecastDialog(props: {
+export function FinanceFormalReforecastDialog(props: {
   open: boolean;
   onClose: () => void;
   financeYearId: string;
@@ -531,50 +545,119 @@ function FinanceFormalReforecastDialog(props: {
   const labelId = useId();
   const [asOfDate, setAsOfDate] = useState(props.defaultAsOfDate);
   const [revisionLabel, setRevisionLabel] = useState("");
-  const [preview, setPreview] = useState<FormalReforecastPreviewResult | null>(null);
-  const [previewError, setPreviewError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [previewPending, startPreviewTransition] = useTransition();
-  const [submitPending, startSubmitTransition] = useTransition();
+  const [previewState, dispatchPreview] = useReducer(
+    reduceFormalReforecastPreviewDialog,
+    INITIAL_FORMAL_REFORECAST_PREVIEW_DIALOG_STATE,
+  );
+  const previewRequestSeqRef = useRef(0);
+  const translateRef = useRef(props.t);
+  useEffect(() => {
+    translateRef.current = props.t;
+  });
 
-  const loadPreview = useCallback(() => {
-    if (!props.open) return;
-    startPreviewTransition(async () => {
+  const currentInputKey = buildFormalReforecastPreviewInputKey(asOfDate, revisionLabel);
+  const preview = previewState.preview;
+  const previewError = previewState.previewError;
+  const previewLoading = isFormalReforecastPreviewLoading(previewState.phase);
+  const submitPending = previewState.phase === "submitting";
+  const submitEnabled = isFormalReforecastSubmitEnabled({
+    phase: previewState.phase,
+    preview,
+    previewError,
+    loadedInputKey: previewState.loadedInputKey,
+    currentInputKey,
+  });
+
+  const requestPreview = useCallback(
+    async (inputKey: string, nextAsOfDate: string, nextRevisionLabel: string) => {
+      if (!props.open) return;
+      const seq = ++previewRequestSeqRef.current;
+      dispatchPreview({ type: "preview_requested", inputKey });
+
       const result = await previewFormalReforecastAction({
         financeYearId: props.financeYearId,
-        asOfDate: asOfDate || undefined,
-        revisionLabel: revisionLabel.trim() ? revisionLabel : null,
+        asOfDate: nextAsOfDate || undefined,
+        revisionLabel: nextRevisionLabel.trim() ? nextRevisionLabel : null,
       });
-      if (!result.ok) {
-        setPreview(null);
-        setPreviewError(mapFormalOutcomeMessage(result.outcome, props.t, result.error));
+
+      if (seq !== previewRequestSeqRef.current) {
         return;
       }
-      setPreviewError(null);
-      setPreview(result.preview);
-      if (!asOfDate && result.preview.asOfDate) {
+
+      if (!result.ok) {
+        const errorMessage =
+          result.outcome === "UNEXPECTED_ERROR"
+            ? translateRef.current("formalReforecast.previewLoadFailed")
+            : mapFormalOutcomeMessage(
+                result.outcome,
+                translateRef.current,
+                result.error,
+              );
+        dispatchPreview({
+          type: "preview_failed",
+          inputKey,
+          error: errorMessage,
+        });
+        return;
+      }
+
+      dispatchPreview({
+        type: "preview_succeeded",
+        inputKey,
+        preview: result.preview,
+      });
+
+      if (!nextAsOfDate && result.preview.asOfDate) {
         setAsOfDate(result.preview.asOfDate);
       }
-    });
-  }, [asOfDate, props.financeYearId, props.open, props.t, revisionLabel]);
+    },
+    [props.financeYearId, props.open],
+  );
 
   useEffect(() => {
-    if (props.open) {
-      loadPreview();
+    if (!props.open) {
+      previewRequestSeqRef.current += 1;
+      dispatchPreview({ type: "dialog_close_reset" });
+      return;
     }
-  }, [loadPreview, props.open]);
+    dispatchPreview({ type: "dialog_open_reset" });
+    const key = buildFormalReforecastPreviewInputKey(props.defaultAsOfDate, "");
+    queueMicrotask(() => {
+      void requestPreview(key, props.defaultAsOfDate, "");
+    });
+  }, [props.open, props.financeYearId, props.defaultAsOfDate, requestPreview]);
+
+  function refreshPreviewFromFields() {
+    if (!props.open || !asOfDate) return;
+    const key = buildFormalReforecastPreviewInputKey(asOfDate, revisionLabel);
+    void requestPreview(key, asOfDate, revisionLabel);
+  }
+
+  function handleAsOfDateChange(nextAsOfDate: string) {
+    setAsOfDate(nextAsOfDate);
+    if (!props.open || !nextAsOfDate) return;
+    const key = buildFormalReforecastPreviewInputKey(nextAsOfDate, revisionLabel);
+    void requestPreview(key, nextAsOfDate, revisionLabel);
+  }
 
   function submit() {
-    if (!preview) return;
-    startSubmitTransition(async () => {
+    if (!submitEnabled || !preview) return;
+    dispatchPreview({ type: "submit_started" });
+    void (async () => {
       const result = await formalizeCurrentForecastAction({
         financeYearId: props.financeYearId,
         expectedCurrentForecastVersionId: preview.currentForecastVersionId,
         asOfDate: preview.asOfDate,
         revisionLabel: revisionLabel.trim() ? revisionLabel : null,
       });
+      dispatchPreview({ type: "submit_finished" });
       if (!result.ok) {
-        const message = mapFormalOutcomeMessage(result.outcome, props.t, result.error);
+        const message = mapFormalOutcomeMessage(
+          result.outcome,
+          translateRef.current,
+          result.error,
+        );
         setSubmitError(message);
         props.onError(message);
         if (result.outcome === "STALE_CURRENT") {
@@ -583,9 +666,9 @@ function FinanceFormalReforecastDialog(props: {
         return;
       }
       setSubmitError(null);
-      props.onSuccess(props.t("formalReforecast.success"));
+      props.onSuccess(translateRef.current("formalReforecast.success"));
       router.refresh();
-    });
+    })();
   }
 
   const resultClass = preview
@@ -604,8 +687,9 @@ function FinanceFormalReforecastDialog(props: {
             {props.t("cancel")}
           </Button>
           <Button
-            disabled={submitPending || previewPending || !preview || Boolean(previewError)}
+            disabled={!submitEnabled || submitPending}
             onClick={submit}
+            aria-busy={submitPending}
             data-finance-formal-reforecast-action="confirm"
           >
             {props.t("formalReforecast.confirm")}
@@ -620,8 +704,8 @@ function FinanceFormalReforecastDialog(props: {
             type="date"
             className="fca-input w-full max-w-xs"
             value={asOfDate}
-            onChange={(e) => setAsOfDate(e.target.value)}
-            onBlur={loadPreview}
+            onChange={(e) => handleAsOfDateChange(e.target.value)}
+            onBlur={refreshPreviewFromFields}
             disabled={submitPending}
           />
         </SceFormField>
@@ -640,21 +724,30 @@ function FinanceFormalReforecastDialog(props: {
             placeholder={props.t("formalReforecast.labelPlaceholder")}
             maxLength={120}
             onChange={(e) => setRevisionLabel(e.target.value)}
-            onBlur={loadPreview}
+            onBlur={refreshPreviewFromFields}
             disabled={submitPending}
           />
         </SceFormField>
 
-        {previewPending ? (
-          <p className="text-sm text-[var(--muted)]" role="status">
+        {previewLoading ? (
+          <p className="text-sm text-[var(--muted)]" role="status" aria-live="polite">
             {props.t("formalReforecast.previewLoading")}
           </p>
         ) : null}
 
         {previewError ? (
-          <p className="text-sm text-[var(--destructive)]" role="alert">
-            {previewError}
-          </p>
+          <div className="space-y-2" role="alert">
+            <p className="text-sm text-[var(--destructive)]">{previewError}</p>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-8 px-3 text-sm"
+              disabled={previewLoading || submitPending}
+              onClick={refreshPreviewFromFields}
+            >
+              {props.t("formalReforecast.previewRetry")}
+            </Button>
+          </div>
         ) : null}
 
         {submitError ? (

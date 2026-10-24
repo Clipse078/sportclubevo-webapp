@@ -705,6 +705,8 @@
         "labelPlaceholder": "e.g. Q3 review",
         "confirm": "Record forecast",
         "previewLoading": "Loading preview…",
+        "previewLoadFailed": "The preview could not be loaded.",
+        "previewRetry": "Try again",
         "amountsUnchangedHint": "Formalization does not change amounts.",
         "nextVersionMeta": "Next version {version} · {count} positions",
         "success": "Forecast recorded as a new version.",

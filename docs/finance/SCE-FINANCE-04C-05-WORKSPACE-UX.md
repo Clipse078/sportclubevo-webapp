@@ -51,6 +51,18 @@ Management-Aktionen werden für View-only nicht als deaktivierte Buttons gezeigt
 
 Erweiterte Cutoff-/Reason-UX, revision detail URLs, und feinere Actuals-Exposition bleiben **04C-06**. 04C-05 ist end-to-end nutzbar nach STAGE-Migration.
 
+## FIN-04C-05R4 — Formalization preview state fix
+
+| Field | Value |
+| --- | --- |
+| **Symptom (PO UAT)** | Vorschau-Inhalt erscheint korrekt, aber **Vorschau wird geladen …** bleibt sichtbar und **Prognose festhalten** bleibt deaktiviert. |
+| **Root cause** | `useTransition`-Pending für die Vorschau wurde über ein `useEffect` getriggert, dessen `loadPreview`-Callback bei **jeder Bezeichnung-Eingabe** und bei instabilem `t` neu erzeugt wurde → dauernd neue Preview-Requests, `previewPending` praktisch nie `false` trotz bereits gerenderter Vorschau. |
+| **Lifecycle** | Explizit: `idle` → `loading_preview` → `preview_ready` \| `preview_error` → `submitting` (`formal-reforecast-preview-lifecycle.ts`). |
+| **Stale requests** | Monoton steigende Request-Seq + `pendingInputKey` im Reducer; späte Antworten überschreiben neuere Eingaben nicht. |
+| **CTA** | **Prognose festhalten** nur bei `preview_ready`, passendem `loadedInputKey`, ohne Preview-Fehler, nicht während Submit. |
+| **Errors** | Preview-Fehler: **Die Vorschau konnte nicht geladen werden.** + **Erneut versuchen**; kein endloses Loading. |
+| **Tests** | `finance-04c-05r4-formal-reforecast-preview-lifecycle.test.ts`, `FinanceFormalReforecastDialog.preview-state.test.tsx`. |
+
 ## PO UAT prerequisites
 
 1. Guarded STAGE migration applied and verified.  
