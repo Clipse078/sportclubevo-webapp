@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -53,15 +53,15 @@ export function FinanceScenarioGovernanceDialogs({
   const [adoptPreview, setAdoptPreview] = useState<AdoptionPreview | null>(null);
   const [rebasePreview, setRebasePreview] = useState<RebasePreview | null>(null);
 
-  function closeAdoptDialog() {
+  const closeAdoptDialog = useCallback(() => {
     setAdoptPreview(null);
     onAdoptClose();
-  }
+  }, [onAdoptClose]);
 
-  function closeRebaseDialog() {
+  const closeRebaseDialog = useCallback(() => {
     setRebasePreview(null);
     onRebaseClose();
-  }
+  }, [onRebaseClose]);
 
   useEffect(() => {
     if (!adoptOpen) return;
@@ -82,7 +82,7 @@ export function FinanceScenarioGovernanceDialogs({
     return () => {
       cancelled = true;
     };
-  }, [adoptOpen, detail.scenarioId, financeYearId, onError]);
+  }, [adoptOpen, closeAdoptDialog, detail.scenarioId, financeYearId, onError]);
 
   useEffect(() => {
     if (!rebaseOpen) return;
@@ -103,7 +103,7 @@ export function FinanceScenarioGovernanceDialogs({
     return () => {
       cancelled = true;
     };
-  }, [rebaseOpen, detail.scenarioId, financeYearId, onError]);
+  }, [closeRebaseDialog, detail.scenarioId, financeYearId, onError, rebaseOpen]);
 
   function mapStaleError(code: string | undefined, fallback: string) {
     if (code === "FINANCE_SCENARIO_STALE") return t("errors.staleScenario");

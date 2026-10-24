@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D-05 — tenant-facing scenario workspace |
-| **Status** | **COMPLETE** — **04D-05R1 COMPLETE** — **Product Owner UAT PASS** (visual + non-empty scenario) — **FIN-04D-06 NEXT** |
+| **Status** | **COMPLETE** — **04D-05R1 COMPLETE** — **Product Owner UAT PASS** (visual + non-empty scenario) — governance actions in **04D-06** (PO UAT PASS); **FIN-04D READY FOR MERGE** |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Depends on** | FIN-04D-01 … FIN-04D-04 |
 

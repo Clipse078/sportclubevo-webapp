@@ -73,4 +73,19 @@ Annual full-year amounts only — no effective dates, cash timing, phasing, or l
 
 `20261024180000_sce_finance_04d_06_scenario_adoption_rebase` — additive enum value + audit tables.
 
-**STAGE migration verification (06U):** Applied on designated FC Allschwil STAGE Neon (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb`) with `APP_ENV=stage` and `SCE_DATA_ENVIRONMENT=STAGE` via guarded `scripts/sce-finance-04d-06-stage-migration-verify.ts --apply` (`APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled`, not `db push`). Pre/post finance row counts unchanged; `FinanceScenarioAdoption` / `FinanceScenarioRebase` empty; existing UAT scenario *Mitglieder -10 %* and Mitgliedsbeiträge −10% assumption preserved. **PO UAT ready** for adoption and rebase (Michael; not performed by Cursor).
+**STAGE migration verification (06U):** Applied on designated FC Allschwil STAGE Neon (`SCE_DATA_DATABASE_FINGERPRINT=acd3b37682911890`, host fragment `ep-wispy-hall-aso93dy6`, database `neondb`) with `APP_ENV=stage` and `SCE_DATA_ENVIRONMENT=STAGE` via guarded `scripts/sce-finance-04d-06-stage-migration-verify.ts --apply` (`APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled`, not `db push`). Pre/post finance row counts unchanged; existing UAT scenario *Mitglieder -10 %* preserved.
+
+## Product Owner UAT (04D-06) — PASS
+
+Michael validated on STAGE (FCA):
+
+1. **Adoption** — *Als aktuelle Prognose übernehmen* on *Mitglieder -10 %*: confirmation explained formal forecast revision, scenario result vs today's Current Forecast, history preservation, budget/actual unchanged, scenario remains; after adoption Current Forecast matched scenario result; scenario stayed on frozen V3 baseline → **OUTDATED**; live comparison **0 CHF** (expected); contextual **Ausgangsprognose aktualisieren** shown.
+2. **Rebase** — preview showed recalculated result with assumptions unchanged; after rebase **Basiert auf aktueller Prognose**, assumption still **Mitgliedsbeiträge −10%**, effect recalculated from new baseline; Current Forecast **not** modified by rebase.
+
+UAT figures are evidence only — not hardcoded in product logic.
+
+## FIN-04D-07 closure
+
+- Lifecycle regression: `finance-04d-07-scenario-lifecycle-regression.test.ts`
+- React `exhaustive-deps` warnings resolved in `FinanceScenarioGovernanceDialogs.tsx` (stable close callbacks)
+- **04D-06 COMPLETE** — **04D-07 COMPLETE** — **FIN-04D READY FOR MERGE** (PR **#905** open; merge by Product Owner only)

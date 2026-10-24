@@ -836,7 +836,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`]
 
 ## ADR-036 — Scenarios & What-if (FIN-04D)
 
-**Status:** Accepted — **FIN-04D-01** … **FIN-04D-06 scenario adoption & rebase** (**04D-07+** hardening)
+**Status:** Accepted — **FIN-04D-01** … **FIN-04D-07 COMPLETE** — **FIN-04D READY FOR MERGE** (PR **#905** → **STAGE**)
 
 ### Context
 
@@ -850,12 +850,12 @@ FIN-04A–04C established distinct measures: approved budget, actual, automatic 
 4. **Assumptions (v1):** `PERCENT_CHANGE`, `DELTA_AMOUNT`, `ABSOLUTE_AMOUNT`, `EXCLUDE_ACCOUNT` on `FinancialAccount.id` — intent stored separately from calculated results; one assumption per account; deterministic integer minor-unit math (no LLM calculator).
 5. **Persistence (04D-02):** Dedicated `FinanceScenario*` models (migration `20261024160000_sce_finance_04d_02_scenario_persistence`) — **not** canonical storage via `FinanceForecastVersion.scenarioKey` (field remains legacy hook; ordinary revisions must not use it).
 6. **Lifecycle:** Active/archived via `archivedAt` — no DRAFT/CURRENT/APPROVED scenario states. **LIGHTWEIGHT** versioning (`updatedAt`); duplicate for forks.
-7. **Adoption:** Scenario → current forecast only via future explicit **Als aktuelle Prognose übernehmen** (formal forecast revision + provenance) — not in 04D-01.
+7. **Adoption:** Scenario → current forecast only via explicit **Als aktuelle Prognose übernehmen** (FIN-04D-06: formal forecast revision + `FinanceScenarioAdoption` provenance).
 8. **Automatic forecast:** Evidence/reference only in v1; not a scenario start baseline.
 9. **Permissions / navigation:** Reuse `finance.forecast.view` / `finance.forecast.manage`; scenarios live inside **Prognose** workspace secondary context **Szenarien** — no new top-level Finance tab.
 10. **Boundaries:** No timed-cash/phasing in v1; no finance-wide visual redesign; sport/country/organisation agnostic.
 11. **Annual vs timing (locked):** `ANNUAL EXPECTATION ≠ EXPECTED CASH TIMING ≠ EFFECTIVE-DATE ASSUMPTION`. v1 assumptions are full-year account semantics only — **no** `effectiveFrom` / `effectiveTo` on `FinanceScenarioAssumption` until temporal engine exists. **No naive month proration** (`annual × remaining months / 12`) without explicit even-distribution evidence.
-12. **Forecast timing direction:** Future **`FinanceExpectedCashEvent`** (name TBD), source-driven timing (FIN-07/08/09), and effective-date scenario assumptions — **PLANNED**, documented in [`docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md). **FIN-04D-06 READY FOR PO UAT** (annual adoption/rebase only).
+12. **Forecast timing direction:** Future **`FinanceExpectedCashEvent`** (name TBD), source-driven timing (FIN-07/08/09), and effective-date scenario assumptions — **PLANNED / DEFERRED**, documented in [`docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md). **FIN-04D-06 PO UAT PASS** (annual adoption/rebase only).
 
 Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md). Code locks: `lib/finance/forecast/scenario-architecture-contract.ts`.
 
@@ -865,7 +865,10 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 - FIN-04D-02 **COMPLETE** — models, lifecycle, partial active-name index.
 - FIN-04D-03 **COMPLETE** — pure `calculateFinanceScenario` + `calculatePersistedFinanceScenario` (`sce-scenario-v1`); no result persistence.
 - FIN-04D-04 **COMPLETE** — `loadFinanceScenarioList` / `loadFinanceScenarioDetail`; frozen-baseline primary comparison; live Current Forecast context; Approved Budget secondary; driver ranking; scenario-to-scenario **DEFERRED** in v1.
-- FIN-04D-06 **READY FOR PO UAT** — explicit adoption (`SCENARIO_ADOPTION`) and rebase; FIN-04D-07 hardening next.
+- FIN-04D-05R1 **PO UAT PASS** — scenario detail composition (decision → explanation → investigation).
+- FIN-04D-06 **COMPLETE + PO UAT PASS** — explicit adoption (`SCENARIO_ADOPTION`) and rebase with audit tables.
+- FIN-04D-07 **COMPLETE** — lifecycle regression, eslint hardening, release closure; **FIN-04D READY FOR MERGE** (not merged until PR **#905** merges).
+- **FIN-05** is the next major Finance package after FIN-04D closure, subject to Product Owner prioritization — do not implement timing/phasing ahead of that decision.
 - Prognoseverlauf (FIN-04C) continues to exclude scenarios; scenario adoption creates **forecast** history, not scenario governance versions.
 - FIN-05/06 must treat scenarios as analytical inputs unless explicitly adopted into current forecast.
 
