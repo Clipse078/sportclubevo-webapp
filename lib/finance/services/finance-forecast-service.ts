@@ -86,15 +86,42 @@ async function getVersionOrThrow(db: Db, ctx: FinanceAuthContext, versionId: str
   return version;
 }
 
+/**
+ * Canonical current forecast version for reads and mutations: always follow
+ * FinanceForecast.currentVersionId → FinanceForecastVersion (never stale includes).
+ */
+export async function resolveCanonicalCurrentForecastVersionByPointer(
+  db: Db,
+  ctx: FinanceAuthContext,
+  forecast: { id: string; currentVersionId: string | null },
+) {
+  if (!forecast.currentVersionId) return null;
+  const version = await db.financeForecastVersion.findUnique({
+    where: { id: forecast.currentVersionId },
+    include: {
+      lines: true,
+      forecast: { select: { id: true, tenantId: true } },
+    },
+  });
+  if (!version || version.forecastId !== forecast.id) {
+    return null;
+  }
+  assertSameTenant(version.forecast.tenantId, ctx.tenantId, "Forecast");
+  return version;
+}
+
 export async function resolveCurrentForecastVersionForYear(
   db: Db,
   ctx: FinanceAuthContext,
   financeYearId: string,
 ) {
   requireFinanceForecastView(ctx);
-  const forecast = await getForecastForYear(db, ctx, financeYearId);
+  const forecast = await db.financeForecast.findUnique({
+    where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId } },
+    select: { id: true, currentVersionId: true },
+  });
   if (!forecast?.currentVersionId) return null;
-  return forecast.currentVersion ?? null;
+  return resolveCanonicalCurrentForecastVersionByPointer(db, ctx, forecast);
 }
 
 export type CreateForecastResult = {

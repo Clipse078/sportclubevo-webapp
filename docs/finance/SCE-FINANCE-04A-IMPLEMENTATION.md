@@ -168,23 +168,15 @@ Accepted product capabilities:
 | Subpackage | Focus | Status |
 | --- | --- | --- |
 | **FIN-04A** | Current Forecast Foundation | **COMPLETE + MERGED + PO UAT PASS** |
-| **FIN-04B** | SCE Projection Engine | **NOT STARTED** |
-| **FIN-04C** | Rolling Forecast & Reforecasting | **NOT STARTED** |
-| **FIN-04D** | Scenarios & What-if | **NOT STARTED** |
+| **FIN-04B** | SCE Projection Engine (Automatic Forecast) | **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](./SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) (PR **#903** → **STAGE**) |
+| **FIN-04C** | Rolling Forecast & Reforecasting | **NEXT** |
+| **FIN-04D** | Scenarios & What-if | **PLANNED** |
 
-**FIN-04** overall remains **IN PROGRESS** (04B–04D not started).
+**FIN-04** overall remains **IN PROGRESS** (**04C** next; **04D** planned).
 
-### FIN-04B direction (document only — not implemented)
+### FIN-04B closure (reference)
 
-FIN-04B introduces **SCE-generated projection** capability. The engine should progressively use appropriate evidence when available, including (non-exhaustive, not all required for v1):
-
-- Historical actuals; current YTD actuals; monthly/periodic patterns; seasonality; historical FinanceYears
-- Recurring income/expense patterns; known financial commitments
-- Receivables/invoices when FIN-08 exists; operational/driver data when reliable and appropriate
-
-Forecast/projection calculation is primarily **numerical / statistical / driver-based**. AI may later assist with explanation, interpretation, and anomaly/trend narratives — it must **not** replace deterministic financial calculation without explicit architecture approval. FIN-04B is **not** an LLM guessing financial values.
-
-**Insufficient data principle:** SCE must not fabricate predictive precision. If insufficient evidence exists for a meaningful projection, the product must communicate clearly (conceptually: *Not enough data for a reliable SCE projection.*). Later UX may expose confidence, expected range, data sufficiency, and driver explanations — **not** in FIN-04A closure.
+FIN-04B delivered the **Automatische Prognose** engine inside the Prognose workspace (packages **04B-01 … 04B-07**). See [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](./SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) §22a for delivered capability and PO UAT closure.
 
 ### FIN-04C direction (document only — not implemented)
 

@@ -28,7 +28,7 @@ function formatterCacheKey(currency: string | null, locale: string, fractional: 
   return `${locale}\u0000${currency?.toUpperCase() ?? ""}\u0000${fractional ? "frac" : "whole"}`;
 }
 
-function resolveIso4217FractionDigits(currencyCode: string): number {
+export function resolveIso4217FractionDigits(currencyCode: string): number {
   try {
     return (
       new Intl.NumberFormat("en", {
@@ -95,6 +95,102 @@ function normalizeCurrencyCode(currencyCode: string | null): string | null {
 
 function majorUnitsFromMinor(amountMinor: number): number {
   return amountMinor / 100;
+}
+
+/** Minor units per one major unit for ISO 4217 (e.g. 100 for CHF, 1 for JPY). */
+export function iso4217MinorUnitsPerMajor(currencyCode: string | null): number {
+  const code = normalizeCurrencyCode(currencyCode);
+  const fractionDigits = code ? resolveIso4217FractionDigits(code) : 2;
+  return 10 ** fractionDigits;
+}
+
+/**
+ * FIN-04B-05R2 — tenant-facing automatic forecast amounts use whole major currency units.
+ * Internal `amountMinor` precision is unchanged; this rounds for display only.
+ */
+export const AUTOMATIC_FORECAST_PRESENTATION_PRECISION = "WHOLE_CURRENCY_UNIT" as const;
+
+/** Half-away-from-zero rounding at whole-major presentation boundary. */
+export function roundAmountMinorToWholeMajorPresentation(
+  amountMinor: number,
+  currencyCode: string | null,
+): number {
+  if (!Number.isFinite(amountMinor)) return amountMinor;
+  const factor = iso4217MinorUnitsPerMajor(currencyCode);
+  const major = amountMinor / factor;
+  if (major >= 0) {
+    return Math.round(major) * factor;
+  }
+  return -Math.round(Math.abs(major)) * factor;
+}
+
+function formatWholeMajorFromMinorPresentation(
+  amountMinor: number,
+  currencyCode: string | null,
+  locale: string,
+): string {
+  const factor = iso4217MinorUnitsPerMajor(currencyCode);
+  const roundedMajor = roundAmountMinorToWholeMajorPresentation(amountMinor, currencyCode) / factor;
+  return getFinanceMoneyFormatters(null, locale, false).wholeMajorNumber.format(roundedMajor);
+}
+
+export function formatFinanceAutomaticForecastWholeMajorNumber(
+  amountMinor: number,
+  currencyCode: string | null,
+  locale: string,
+): string {
+  if (!Number.isFinite(amountMinor)) return "";
+  return formatWholeMajorFromMinorPresentation(amountMinor, currencyCode, locale);
+}
+
+export function formatFinanceAutomaticForecastMoneyMinor(
+  amountMinor: number,
+  currencyCode: string | null,
+  locale: string,
+): string {
+  if (!Number.isFinite(amountMinor)) return "";
+  if (Number.isNaN(amountMinor)) return "";
+
+  const currency = normalizeCurrencyCode(currencyCode);
+  const formattedNumber = formatWholeMajorFromMinorPresentation(amountMinor, currency, locale);
+
+  if (!currency || !isSupportedIso4217CurrencyCode(currency)) {
+    return formattedNumber;
+  }
+
+  return `${formattedNumber}${FINANCE_MONEY_ISO_SUFFIX_SEPARATOR}${currency}`;
+}
+
+export function formatFinanceAutomaticForecastSignedWholeMajorNumber(
+  amountMinor: number,
+  currencyCode: string | null,
+  locale: string,
+): string {
+  if (!Number.isFinite(amountMinor) || amountMinor === 0) {
+    return formatFinanceAutomaticForecastWholeMajorNumber(0, currencyCode, locale);
+  }
+  const magnitude = formatFinanceAutomaticForecastWholeMajorNumber(
+    Math.abs(amountMinor),
+    currencyCode,
+    locale,
+  );
+  return amountMinor > 0 ? `+${magnitude}` : `−${magnitude}`;
+}
+
+export function formatFinanceAutomaticForecastSignedMinor(
+  amountMinor: number,
+  currencyCode: string | null,
+  locale: string,
+): string {
+  if (!Number.isFinite(amountMinor) || amountMinor === 0) {
+    return formatFinanceAutomaticForecastMoneyMinor(0, currencyCode, locale);
+  }
+  const magnitude = formatFinanceAutomaticForecastMoneyMinor(
+    Math.abs(amountMinor),
+    currencyCode,
+    locale,
+  );
+  return amountMinor > 0 ? `+${magnitude}` : `−${magnitude}`;
 }
 
 function isWholeMajorMinorUnits(amountMinor: number): boolean {

@@ -9,20 +9,29 @@ import {
   createForecastForYear,
   upsertForecastLine,
 } from "@/lib/finance/services/finance-forecast-service";
+import { generateFinanceYearProjection } from "@/lib/finance/services/finance-projection-generation-service";
+import { adoptProjectionForYear } from "@/lib/finance/services/finance-projection-adoption-service";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 
-export type FinanceForecastActionResult = { ok: true } | { ok: false; error: string };
+export type FinanceForecastActionResult =
+  | { ok: true; targetForecastVersionId?: string; targetVersionNumber?: number }
+  | { ok: false; error: string };
 
 async function forecastCtx() {
   const workspace = await loadFinanceWorkspaceContext();
   return workspace.ctx;
 }
 
+function revalidateFinanceForecastRoutes() {
+  revalidatePath("/dashboard/finance/forecast", "layout");
+  revalidatePath("/dashboard/finance/forecast");
+  revalidatePath("/dashboard/finance");
+}
+
 function mapResult(fn: () => Promise<unknown>): Promise<FinanceForecastActionResult> {
   return fn()
     .then(() => {
-      revalidatePath("/dashboard/finance/forecast");
-      revalidatePath("/dashboard/finance");
+      revalidateFinanceForecastRoutes();
       return { ok: true as const };
     })
     .catch((error: unknown) => ({
@@ -46,4 +55,40 @@ export async function saveForecastLineAction(input: {
 }): Promise<FinanceForecastActionResult> {
   const ctx = await forecastCtx();
   return mapResult(() => upsertForecastLine(prisma, ctx, input));
+}
+
+export async function generateProjectionAction(input: {
+  financeYearId: string;
+}): Promise<FinanceForecastActionResult> {
+  const ctx = await forecastCtx();
+  return mapResult(() =>
+    generateFinanceYearProjection(prisma, ctx, {
+      financeYearId: input.financeYearId,
+    }),
+  );
+}
+
+export async function adoptProjectionAction(input: {
+  financeYearId: string;
+  expectedSourceForecastVersionId: string;
+  expectedProjectionVersionId: string;
+}): Promise<FinanceForecastActionResult> {
+  const ctx = await forecastCtx();
+  return adoptProjectionForYear(prisma, ctx, {
+    financeYearId: input.financeYearId,
+    expectedSourceForecastVersionId: input.expectedSourceForecastVersionId,
+    expectedProjectionVersionId: input.expectedProjectionVersionId,
+  })
+    .then((result) => {
+      revalidateFinanceForecastRoutes();
+      return {
+        ok: true as const,
+        targetForecastVersionId: result.targetForecastVersionId,
+        targetVersionNumber: result.targetVersionNumber,
+      };
+    })
+    .catch((error: unknown) => ({
+      ok: false as const,
+      error: error instanceof FinanceDomainError ? error.message : financeErrorMessage(error),
+    }));
 }
