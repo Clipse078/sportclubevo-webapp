@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
@@ -20,6 +21,11 @@ import {
   formatFinanceManagementPlanningMinor,
   formatFinanceManagementPlanningSignedMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
+import {
+  enrichForecastBudgetComparisonDrivers,
+  forecastBudgetDriverFavorabilityLabelKey,
+  isForecastComparisonMovementNeutral,
+} from "@/lib/finance/forecast/forecast-clarity-presentation";
 import type { ForecastWorkspaceSnapshot } from "@/lib/finance/forecast/forecast-presentation";
 import type {
   CurrentForecastVsApprovedBudgetResult,
@@ -28,12 +34,18 @@ import type {
 } from "@/lib/finance/forecast/forecast-history-read-model";
 import {
   buildForecastEvolutionChartPoints,
-  isForecastComparisonMovementNeutral,
   selectMeaningfulForecastChangeDrivers,
 } from "@/lib/finance/forecast/forecast-evolution-presentation";
-import { buildForecastHistoryRowSecondaryLine } from "@/lib/finance/forecast/forecast-revision-presentation";
+import {
+  buildForecastHistoryExpandedEntryLine,
+} from "@/lib/finance/forecast/forecast-revision-presentation";
+import {
+  FORECAST_REVISION_REASONS,
+  FORECAST_REVISION_REASON_PRESENTATION,
+} from "@/lib/finance/forecast/forecast-revision-reason";
 import type { FormalReforecastOutcome } from "@/lib/finance/forecast/formal-reforecast-contract";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
+import { financeVarianceComparisonSemanticTextClass } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
 import {
   FINANCE_FORECAST_ANALYSIS_HEADING_CLASS,
   FINANCE_FORECAST_WORKSPACE_SECTION_CLASS,
@@ -58,6 +70,7 @@ import {
 } from "@/lib/finance/forecast/formal-reforecast-preview-lifecycle";
 import { FinanceForecastEvolutionChart } from "@/components/admin/finance/forecast/FinanceForecastEvolutionChart";
 import { FinanceForecastChangeDriverBars } from "@/components/admin/finance/forecast/FinanceForecastChangeDriverBars";
+import { FinanceWorkspaceDisclosure } from "@/components/admin/finance/FinanceWorkspaceDisclosure";
 
 function formatCalendarDateDisplay(iso: string, locale: string): string {
   const [year, month, day] = iso.split("-").map((part) => Number(part));
@@ -99,20 +112,62 @@ export function FinanceForecastCurrentHeader(props: {
     totalExpenseMinor: number;
     resultMinor: number;
   };
+  vsPrevious: CurrentForecastVsPreviousResult;
+  vsApprovedBudget: CurrentForecastVsApprovedBudgetResult;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
 }) {
   const revision = props.snapshot.currentRevision;
   const title = revision?.presentation.displayTitle ?? props.t("currentForecastSectionTitle");
   const resultClass = financeResultSemanticTextClass(props.totals.resultMinor);
 
+  const budgetContextLine =
+    props.vsApprovedBudget.kind === "COMPARISON"
+      ? props.t("clarity.versusBudgetResult", {
+          amount: formatFinanceManagementPlanningSignedMinor(
+            props.vsApprovedBudget.comparison.summary.resultDeltaMinor,
+            props.currency,
+            props.formattingLocale,
+          ),
+        })
+      : null;
+
+  let previousContextLine: string | null = null;
+  if (props.vsPrevious.kind === "COMPARISON") {
+    const neutral = isForecastComparisonMovementNeutral(props.vsPrevious.comparison.summary);
+    if (neutral) {
+      previousContextLine = props.t("clarity.noChangeSincePreviousShort");
+    } else {
+      previousContextLine = props.t("clarity.changeResultSincePrevious", {
+        amount: formatFinanceManagementPlanningSignedMinor(
+          props.vsPrevious.comparison.summary.resultDeltaMinor,
+          props.currency,
+          props.formattingLocale,
+        ),
+      });
+    }
+  }
+
+  const incomeFormatted = formatFinanceManagementPlanningMinor(
+    props.totals.totalIncomeMinor,
+    props.currency,
+    props.formattingLocale,
+  );
+  const expenseFormatted = formatFinanceManagementPlanningMinor(
+    props.totals.totalExpenseMinor,
+    props.currency,
+    props.formattingLocale,
+  );
+
   return (
-    <div className="space-y-2" data-finance-surface="current-forecast-header">
+    <div className="space-y-3" data-finance-surface="current-forecast-header">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 space-y-0.5">
           <h2 className="text-sm font-semibold text-[var(--foreground)]">
             {props.t("currentForecastSectionTitle")}
           </h2>
-          <p className="text-sm font-medium text-[var(--foreground)]">{title}</p>
+          {title !== props.t("currentForecastSectionTitle") ? (
+            <p className="text-sm font-medium text-[var(--foreground)]">{title}</p>
+          ) : null}
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
             {revision?.asOfDate ? (
               <span>
@@ -121,16 +176,8 @@ export function FinanceForecastCurrentHeader(props: {
                 })}
               </span>
             ) : null}
-            {revision?.revisionLabel ? (
-              <span>{revision.revisionLabel}</span>
-            ) : null}
             {props.snapshot.versionNumber ? (
               <span>{props.t("versionMeta", { version: props.snapshot.versionNumber })}</span>
-            ) : null}
-            {revision?.presentation.revisionSourceLabel &&
-            !revision.revisionLabel &&
-            revision.revisionSource ? (
-              <span>{revision.presentation.revisionSourceLabel}</span>
             ) : null}
           </div>
         </div>
@@ -145,42 +192,32 @@ export function FinanceForecastCurrentHeader(props: {
         ) : null}
       </div>
 
-      <div className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS} data-finance-surface="forecast-summary">
-        <dl className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
-          <div className="sm:px-4 sm:first:ps-0">
-            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalIncome")}</dt>
-            <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-              {formatFinanceManagementPlanningMinor(
-                props.totals.totalIncomeMinor,
-                props.currency,
-                props.formattingLocale,
-              )}
-            </dd>
-          </div>
-          <div className="sm:px-4">
-            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalExpense")}</dt>
-            <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-              {formatFinanceManagementPlanningMinor(
-                props.totals.totalExpenseMinor,
-                props.currency,
-                props.formattingLocale,
-              )}
-            </dd>
-          </div>
-          <div className="sm:px-4 sm:last:pe-0">
-            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("plannedResult")}</dt>
-            <dd
-              className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass)}
-              data-finance-forecast-summary="result"
-            >
-              {formatFinanceManagementPlanningMinor(
-                props.totals.resultMinor,
-                props.currency,
-                props.formattingLocale,
-              )}
-            </dd>
-          </div>
-        </dl>
+      <div className="space-y-1.5" data-finance-surface="forecast-summary">
+        <p className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("clarity.expectedResultLabel")}</p>
+        <p
+          className={cn("text-2xl font-semibold tabular-nums tracking-tight", resultClass)}
+          data-finance-forecast-summary="result"
+        >
+          {formatFinanceManagementPlanningMinor(
+            props.totals.resultMinor,
+            props.currency,
+            props.formattingLocale,
+          )}
+        </p>
+        <p className="text-sm text-[var(--muted)]">
+          {props.t("clarity.incomeExpenseComposition", {
+            income: incomeFormatted,
+            expense: expenseFormatted,
+          })}
+        </p>
+        <div className="space-y-0.5 text-sm text-[var(--foreground)]">
+          {budgetContextLine ? <p data-finance-budget-context-line>{budgetContextLine}</p> : null}
+          {previousContextLine ? (
+            <p className="text-[var(--muted)]" data-finance-previous-context-line>
+              {previousContextLine}
+            </p>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -218,17 +255,11 @@ export function FinanceForecastRollingUxSections({
             formattingLocale={formattingLocale}
             currency={currency}
             totals={currentTotals}
+            vsPrevious={rollingUx.vsPrevious}
+            vsApprovedBudget={rollingUx.vsApprovedBudget}
             t={t}
           />
         </div>
-
-        <FinanceForecastEvolutionSection
-          history={rollingUx.history}
-          evolutionPoints={evolutionPoints}
-          currency={currency}
-          formattingLocale={formattingLocale}
-          t={t}
-        />
 
         <FinanceForecastChangeSincePreviousSection
           vsPrevious={rollingUx.vsPrevious}
@@ -239,6 +270,14 @@ export function FinanceForecastRollingUxSections({
 
         <FinanceForecastBudgetComparisonSection
           vsApprovedBudget={rollingUx.vsApprovedBudget}
+          currency={currency}
+          formattingLocale={formattingLocale}
+          t={t}
+        />
+
+        <FinanceForecastEvolutionSection
+          history={rollingUx.history}
+          evolutionPoints={evolutionPoints}
           currency={currency}
           formattingLocale={formattingLocale}
           t={t}
@@ -271,34 +310,6 @@ export function FinanceForecastRollingUxSections({
   );
 }
 
-function CompactMovementSummary(props: {
-  incomeDeltaMinor: number;
-  expenseDeltaMinor: number;
-  resultDeltaMinor: number;
-  currency: string | null;
-  formattingLocale: string;
-  labels: { income: string; expense: string; result: string };
-}) {
-  return (
-    <dl className="grid gap-2 sm:grid-cols-3 sm:gap-4">
-      {(
-        [
-          ["income", props.incomeDeltaMinor, props.labels.income],
-          ["expense", props.expenseDeltaMinor, props.labels.expense],
-          ["result", props.resultDeltaMinor, props.labels.result],
-        ] as const
-      ).map(([key, delta, label]) => (
-        <div key={key}>
-          <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{label}</dt>
-          <dd className="mt-0.5 text-sm font-medium tabular-nums text-[var(--foreground)]">
-            {formatFinanceManagementPlanningSignedMinor(delta, props.currency, props.formattingLocale)}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 function FinanceForecastChangeSincePreviousSection(props: {
   vsPrevious: CurrentForecastVsPreviousResult;
   currency: string | null;
@@ -321,6 +332,18 @@ function FinanceForecastChangeSincePreviousSection(props: {
   const drivers = selectMeaningfulForecastChangeDrivers(comparison.largestChanges, 5);
   const movementNeutral = isForecastComparisonMovementNeutral(comparison.summary);
 
+  if (movementNeutral && drivers.length === 0) {
+    return (
+      <div
+        className={FINANCE_FORECAST_WORKSPACE_SECTION_CLASS}
+        data-finance-surface="change-since-previous"
+        data-finance-zero-change-quiet
+      >
+        <p className="text-sm text-[var(--muted)]">{t("clarity.noChangeSincePrevious")}</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(FINANCE_FORECAST_WORKSPACE_SECTION_CLASS, "space-y-2")}
@@ -328,28 +351,19 @@ function FinanceForecastChangeSincePreviousSection(props: {
       aria-labelledby="finance-change-since-previous-heading"
     >
       <h3 id="finance-change-since-previous-heading" className={FINANCE_FORECAST_ANALYSIS_HEADING_CLASS}>
-        {t("comparison.changeSincePreviousTitle")}
+        {t("clarity.whatChangedTitle")}
       </h3>
-      <CompactMovementSummary
-        incomeDeltaMinor={comparison.summary.incomeDeltaMinor}
-        expenseDeltaMinor={comparison.summary.expenseDeltaMinor}
-        resultDeltaMinor={comparison.summary.resultDeltaMinor}
-        currency={props.currency}
-        formattingLocale={props.formattingLocale}
-        labels={{
-          income: t("totalIncome"),
-          expense: t("totalExpense"),
-          result: t("plannedResult"),
-        }}
-      />
-      {movementNeutral && drivers.length === 0 ? (
-        <p className="text-xs text-[var(--muted)]" data-finance-zero-change-quiet>
-          {t("comparison.noChangeSincePrevious")}
-        </p>
-      ) : null}
+      <p className="text-sm font-medium tabular-nums text-[var(--foreground)]">
+        {t("clarity.changeResultSincePrevious", {
+          amount: formatFinanceManagementPlanningSignedMinor(
+            comparison.summary.resultDeltaMinor,
+            props.currency,
+            props.formattingLocale,
+          ),
+        })}
+      </p>
       {drivers.length > 0 ? (
         <FinanceForecastChangeDriverBars
-          title={t("comparison.largestChangesTitle")}
           rows={drivers.map((row) => ({
             key: row.financialAccountId,
             accountName: row.accountName,
@@ -370,7 +384,10 @@ function FinanceForecastBudgetComparisonSection(props: {
   formattingLocale: string;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
 }) {
+  const tVariance = useTranslations("Finance.actuals");
   const { t } = props;
+  const [showAll, setShowAll] = useState(false);
+
   if (props.vsApprovedBudget.kind === "NO_APPROVED_BUDGET") {
     return (
       <div
@@ -383,7 +400,8 @@ function FinanceForecastBudgetComparisonSection(props: {
   }
 
   const comparison = props.vsApprovedBudget.comparison;
-  const drivers = selectMeaningfulForecastChangeDrivers(comparison.largestChanges, 5);
+  const topDrivers = enrichForecastBudgetComparisonDrivers(comparison.largestChanges).slice(0, 5);
+  const allDrivers = enrichForecastBudgetComparisonDrivers(comparison.accountChanges);
 
   return (
     <div
@@ -394,32 +412,96 @@ function FinanceForecastBudgetComparisonSection(props: {
       <h3 id="finance-budget-comparison-heading" className={FINANCE_FORECAST_ANALYSIS_HEADING_CLASS}>
         {t("comparison.vsBudgetCompactTitle")}
       </h3>
-      <p className="text-xs text-[var(--muted)]">{t("comparison.vsBudgetCompactHint")}</p>
-      <CompactMovementSummary
-        incomeDeltaMinor={comparison.summary.incomeDeltaMinor}
-        expenseDeltaMinor={comparison.summary.expenseDeltaMinor}
-        resultDeltaMinor={comparison.summary.resultDeltaMinor}
-        currency={props.currency}
-        formattingLocale={props.formattingLocale}
-        labels={{
-          income: t("totalIncome"),
-          expense: t("totalExpense"),
-          result: t("plannedResult"),
-        }}
-      />
-      {drivers.length > 0 ? (
-        <FinanceForecastChangeDriverBars
-          title={t("comparison.budgetDriversTitle")}
-          rows={drivers.map((row) => ({
-            key: row.financialAccountId,
-            accountName: row.accountName,
-            deltaMinor: row.deltaMinor,
-          }))}
-          currency={props.currency}
-          formattingLocale={props.formattingLocale}
-          barClassName="bg-[var(--muted)]/55"
-          data-finance-surface="budget-change-drivers"
-        />
+      <div className="space-y-1">
+        <p className={FINANCE_SUMMARY_LABEL_CLASS}>{t("clarity.budgetResultHeadline")}</p>
+        <p className="text-sm font-medium tabular-nums text-[var(--foreground)]">
+          {t("clarity.versusBudgetResult", {
+            amount: formatFinanceManagementPlanningSignedMinor(
+              comparison.summary.resultDeltaMinor,
+              props.currency,
+              props.formattingLocale,
+            ),
+          })}
+        </p>
+      </div>
+      {topDrivers.length > 0 ? (
+        <div className="space-y-1.5" data-finance-surface="budget-change-drivers">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            {t("clarity.budgetTopDriversTitle")}
+          </p>
+          <ul className="space-y-1 text-sm" role="list">
+            {topDrivers.map((row) => {
+              const favorabilityKey = forecastBudgetDriverFavorabilityLabelKey(row.favorability);
+              return (
+                <li
+                  key={row.financialAccountId}
+                  className="flex flex-wrap items-baseline justify-between gap-2"
+                >
+                  <span className="text-[var(--foreground)]">{row.accountName}</span>
+                  <span className="flex items-baseline gap-2 tabular-nums">
+                    <span
+                      className={financeVarianceComparisonSemanticTextClass({
+                        favorability: row.favorability,
+                        hasComparison: row.favorability !== null,
+                      })}
+                    >
+                      {formatFinanceManagementPlanningSignedMinor(
+                        row.deltaMinor,
+                        props.currency,
+                        props.formattingLocale,
+                      )}
+                    </span>
+                    {favorabilityKey ? (
+                      <span
+                        className={cn(
+                          "text-xs",
+                          financeVarianceComparisonSemanticTextClass({
+                            favorability: row.favorability,
+                            hasComparison: true,
+                          }),
+                        )}
+                      >
+                        {tVariance(favorabilityKey)}
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+      {allDrivers.length > topDrivers.length ? (
+        <>
+          <button
+            type="button"
+            className="text-sm font-medium text-[var(--foreground)] hover:underline"
+            aria-expanded={showAll}
+            onClick={() => setShowAll((open) => !open)}
+            data-finance-budget-all-positions-trigger
+          >
+            {showAll ? t("clarity.hideBudgetPositions") : t("clarity.showAllBudgetPositions")}
+          </button>
+          {showAll ? (
+            <ul className="max-h-64 space-y-1 overflow-y-auto text-sm" role="list">
+              {allDrivers.map((row) => (
+                <li
+                  key={row.financialAccountId}
+                  className="flex justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] py-1 last:border-0"
+                >
+                  <span>{row.accountName}</span>
+                  <span className="tabular-nums">
+                    {formatFinanceManagementPlanningSignedMinor(
+                      row.deltaMinor,
+                      props.currency,
+                      props.formattingLocale,
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </>
       ) : null}
     </div>
   );
@@ -437,91 +519,86 @@ function FinanceForecastEvolutionSection(props: {
     return null;
   }
 
-  const showEvolution = props.evolutionPoints.length > 0;
-  const showGovernance = entries.length > 0;
-  if (!showEvolution && !showGovernance) {
-    return null;
-  }
+  const lastFormalizedDate =
+    entries.find((entry) => entry.isCurrent)?.asOfDate ??
+    entries.find((entry) => entry.asOfDate)?.asOfDate ??
+    null;
+
+  const collapsedSummary = lastFormalizedDate
+    ? props.t("clarity.historyCollapsedSummary", {
+        count: entries.length,
+        date: formatCalendarDateDisplay(lastFormalizedDate, props.formattingLocale),
+      })
+    : props.t("clarity.historyCollapsedSummaryNoDate", { count: entries.length });
 
   return (
     <div
-      className={cn(FINANCE_FORECAST_WORKSPACE_SECTION_CLASS, "space-y-2")}
+      className={FINANCE_FORECAST_WORKSPACE_SECTION_CLASS}
       data-finance-forecast-evolution
+      data-finance-surface="prognoseverlauf-compact"
     >
-      {showEvolution ? (
-        <FinanceForecastEvolutionChart
-          embedded
-          title={props.t("history.evolutionTitle")}
-          seriesLabel={props.t("history.evolutionSeriesResult")}
-          points={props.evolutionPoints}
-          currency={props.currency}
-          formattingLocale={props.formattingLocale}
-          currentBadgeLabel={props.t("history.currentBadge")}
-          tooltipLabels={{
-            income: props.t("totalIncome"),
-            expense: props.t("totalExpense"),
-            result: props.t("plannedResult"),
-          }}
-          formatPointAsOf={(point) =>
-            point.asOfDate
-              ? props.t("history.asOfLine", {
-                  date: formatCalendarDateDisplay(point.asOfDate, props.formattingLocale),
-                })
-              : null
-          }
-          formatVersionMeta={(version) => props.t("versionMeta", { version })}
-        />
-      ) : null}
-
-      {showEvolution && showGovernance ? (
-        <hr className="border-[var(--sce-surface-border-subtle)]" />
-      ) : null}
-
-      {showGovernance ? (
-        <div
-          data-finance-surface="prognoseverlauf-compact"
-          aria-labelledby="finance-prognoseverlauf-compact-heading"
-        >
-          <h4 id="finance-prognoseverlauf-compact-heading" className={FINANCE_FORECAST_ANALYSIS_HEADING_CLASS}>
-            {props.t("history.governanceTitle")}
-          </h4>
-          <ul className="mt-1.5 space-y-0 text-xs" role="list">
+      <FinanceWorkspaceDisclosure
+        title={props.t("history.sectionTitle")}
+        summary={collapsedSummary}
+        expandLabel={props.t("clarity.historyShow")}
+        collapseLabel={props.t("clarity.historyHide")}
+        data-finance-disclosure="prognoseverlauf"
+      >
+        {props.evolutionPoints.length > 0 ? (
+          <FinanceForecastEvolutionChart
+            embedded
+            title={props.t("history.evolutionTitle")}
+            seriesLabel={props.t("history.evolutionSeriesResult")}
+            points={props.evolutionPoints}
+            currency={props.currency}
+            formattingLocale={props.formattingLocale}
+            currentBadgeLabel={props.t("history.currentBadge")}
+            tooltipLabels={{
+              income: props.t("totalIncome"),
+              expense: props.t("totalExpense"),
+              result: props.t("plannedResult"),
+            }}
+            formatPointAsOf={(point) =>
+              point.asOfDate
+                ? props.t("history.asOfLine", {
+                    date: formatCalendarDateDisplay(point.asOfDate, props.formattingLocale),
+                  })
+                : null
+            }
+            formatVersionMeta={(version) => props.t("versionMeta", { version })}
+          />
+        ) : (
+          <ul className="space-y-0 text-xs" role="list">
             {entries.map((entry) => {
-              const secondaryLine = buildForecastHistoryRowSecondaryLine({
-                displayTitle: entry.presentation.displayTitle,
-                displaySubtitle: entry.presentation.displaySubtitle,
-                revisionSourceLabel: entry.presentation.revisionSourceLabel,
-                revisionLabel: entry.revisionLabel,
-                revisionSource: entry.revisionSource,
+              const asOfDisplay = entry.asOfDate
+                ? formatCalendarDateDisplay(entry.asOfDate, props.formattingLocale)
+                : null;
+              const expandedLine = buildForecastHistoryExpandedEntryLine({
+                asOfDateDisplay: asOfDisplay,
+                revisionReason: entry.revisionReason,
+                revisionContext: entry.revisionContext,
+                versionNumber: entry.versionNumber,
               });
               return (
                 <li
                   key={entry.forecastVersionId}
-                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] py-1.5 last:border-0"
+                  className="border-b border-[var(--sce-surface-border-subtle)] py-2 last:border-0"
                   data-finance-history-entry={entry.isCurrent ? "current" : "historical"}
                 >
-                  <div className="min-w-0">
-                    <p className="font-medium text-[var(--foreground)]">
-                      {entry.isCurrent
-                        ? props.t("history.currentBadge")
-                        : entry.presentation.displayTitle}
-                      {entry.isCurrent && entry.presentation.displayTitle.trim().toLowerCase() !==
-                        props.t("history.currentBadge").trim().toLowerCase() ? (
-                        <span className="ms-2 font-normal text-[var(--muted)]">
-                          {entry.presentation.displayTitle}
-                        </span>
-                      ) : null}
-                    </p>
-                    {secondaryLine ? (
-                      <p className="text-[var(--muted)]">{secondaryLine}</p>
-                    ) : null}
-                  </div>
+                  <p className="font-medium text-[var(--foreground)]">
+                    {entry.isCurrent
+                      ? `${props.t("history.currentBadge")} · ${entry.presentation.displayTitle}`
+                      : entry.presentation.displayTitle}
+                  </p>
+                  {expandedLine ? (
+                    <p className="text-[var(--muted)]">{expandedLine}</p>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
-        </div>
-      ) : null}
+        )}
+      </FinanceWorkspaceDisclosure>
     </div>
   );
 }
@@ -557,8 +634,16 @@ export function FinanceFormalReforecastDialog(props: {
   const router = useRouter();
   const asOfId = useId();
   const labelId = useId();
+  const actualsThroughId = useId();
+  const reasonId = useId();
+  const reasonContextId = useId();
   const [asOfDate, setAsOfDate] = useState(props.defaultAsOfDate);
+  const [actualsThroughDate, setActualsThroughDate] = useState(props.defaultAsOfDate);
+  const [customActualsCutoff, setCustomActualsCutoff] = useState(false);
   const [revisionLabel, setRevisionLabel] = useState("");
+  const [revisionReason, setRevisionReason] = useState("");
+  const [revisionContext, setRevisionContext] = useState("");
+  const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [previewState, dispatchPreview] = useReducer(
     reduceFormalReforecastPreviewDialog,
@@ -570,7 +655,12 @@ export function FinanceFormalReforecastDialog(props: {
     translateRef.current = props.t;
   });
 
-  const currentInputKey = buildFormalReforecastPreviewInputKey(asOfDate, revisionLabel);
+  const effectiveActualsThrough = customActualsCutoff ? actualsThroughDate : asOfDate;
+  const currentInputKey = buildFormalReforecastPreviewInputKey(
+    asOfDate,
+    revisionLabel,
+    effectiveActualsThrough,
+  );
   const preview = previewState.preview;
   const previewError = previewState.previewError;
   const previewLoading = isFormalReforecastPreviewLoading(previewState.phase);
@@ -584,7 +674,12 @@ export function FinanceFormalReforecastDialog(props: {
   });
 
   const requestPreview = useCallback(
-    async (inputKey: string, nextAsOfDate: string, nextRevisionLabel: string) => {
+    async (
+      inputKey: string,
+      nextAsOfDate: string,
+      nextActualsThrough: string,
+      nextRevisionLabel: string,
+    ) => {
       if (!props.open) return;
       const seq = ++previewRequestSeqRef.current;
       dispatchPreview({ type: "preview_requested", inputKey });
@@ -592,6 +687,7 @@ export function FinanceFormalReforecastDialog(props: {
       const result = await previewFormalReforecastAction({
         financeYearId: props.financeYearId,
         asOfDate: nextAsOfDate || undefined,
+        actualsThroughDate: nextActualsThrough || undefined,
         revisionLabel: nextRevisionLabel.trim() ? nextRevisionLabel : null,
       });
 
@@ -624,46 +720,62 @@ export function FinanceFormalReforecastDialog(props: {
 
       if (!nextAsOfDate && result.preview.asOfDate) {
         setAsOfDate(result.preview.asOfDate);
+        if (!customActualsCutoff) {
+          setActualsThroughDate(result.preview.asOfDate);
+        }
       }
     },
-    [props.financeYearId, props.open],
+    [customActualsCutoff, props.financeYearId, props.open],
   );
 
   useEffect(() => {
     if (!props.open) {
       previewRequestSeqRef.current += 1;
       dispatchPreview({ type: "dialog_close_reset" });
+      setMoreDetailsOpen(false);
+      setCustomActualsCutoff(false);
       return;
     }
     dispatchPreview({ type: "dialog_open_reset" });
-    const key = buildFormalReforecastPreviewInputKey(props.defaultAsOfDate, "");
+    setAsOfDate(props.defaultAsOfDate);
+    setActualsThroughDate(props.defaultAsOfDate);
+    const key = buildFormalReforecastPreviewInputKey(props.defaultAsOfDate, "", props.defaultAsOfDate);
     queueMicrotask(() => {
-      void requestPreview(key, props.defaultAsOfDate, "");
+      void requestPreview(key, props.defaultAsOfDate, props.defaultAsOfDate, "");
     });
   }, [props.open, props.financeYearId, props.defaultAsOfDate, requestPreview]);
 
   function refreshPreviewFromFields() {
     if (!props.open || !asOfDate) return;
-    const key = buildFormalReforecastPreviewInputKey(asOfDate, revisionLabel);
-    void requestPreview(key, asOfDate, revisionLabel);
+    const cutoff = customActualsCutoff ? actualsThroughDate : asOfDate;
+    const key = buildFormalReforecastPreviewInputKey(asOfDate, revisionLabel, cutoff);
+    void requestPreview(key, asOfDate, cutoff, revisionLabel);
   }
 
   function handleAsOfDateChange(nextAsOfDate: string) {
     setAsOfDate(nextAsOfDate);
+    if (!customActualsCutoff) {
+      setActualsThroughDate(nextAsOfDate);
+    }
     if (!props.open || !nextAsOfDate) return;
-    const key = buildFormalReforecastPreviewInputKey(nextAsOfDate, revisionLabel);
-    void requestPreview(key, nextAsOfDate, revisionLabel);
+    const cutoff = customActualsCutoff ? actualsThroughDate : nextAsOfDate;
+    const key = buildFormalReforecastPreviewInputKey(nextAsOfDate, revisionLabel, cutoff);
+    void requestPreview(key, nextAsOfDate, cutoff, revisionLabel);
   }
 
   function submit() {
     if (!submitEnabled || !preview) return;
     dispatchPreview({ type: "submit_started" });
+    const cutoff = customActualsCutoff ? actualsThroughDate : preview.asOfDate;
     void (async () => {
       const result = await formalizeCurrentForecastAction({
         financeYearId: props.financeYearId,
         expectedCurrentForecastVersionId: preview.currentForecastVersionId,
         asOfDate: preview.asOfDate,
+        actualsThroughDate: cutoff,
         revisionLabel: revisionLabel.trim() ? revisionLabel : null,
+        revisionReason: revisionReason.trim() ? revisionReason : null,
+        revisionContext: revisionContext.trim() ? revisionContext : null,
       });
       dispatchPreview({ type: "submit_finished" });
       if (!result.ok) {
@@ -688,6 +800,8 @@ export function FinanceFormalReforecastDialog(props: {
   const resultClass = preview
     ? financeResultSemanticTextClass(preview.resultMinor)
     : undefined;
+
+  const moreDetailsPanelId = useId();
 
   return (
     <Dialog
@@ -744,6 +858,81 @@ export function FinanceFormalReforecastDialog(props: {
             disabled={submitPending}
           />
         </SceFormField>
+
+        <div>
+          <button
+            type="button"
+            className="text-sm font-medium text-[var(--foreground)] hover:underline"
+            aria-expanded={moreDetailsOpen}
+            aria-controls={moreDetailsPanelId}
+            onClick={() => setMoreDetailsOpen((open) => !open)}
+            data-finance-formal-reforecast-more-details-trigger
+          >
+            {moreDetailsOpen
+              ? props.t("formalReforecast.moreDetailsHide")
+              : props.t("formalReforecast.moreDetailsShow")}
+          </button>
+          {moreDetailsOpen ? (
+            <div id={moreDetailsPanelId} className="mt-3 space-y-3">
+              <SceFormField
+                label={props.t("formalReforecast.reasonLabel")}
+                htmlFor={reasonId}
+                optional
+              >
+                <SceToolbarSelect
+                  id={reasonId}
+                  value={revisionReason}
+                  onChange={(e) => setRevisionReason(e.target.value)}
+                  disabled={submitPending}
+                >
+                  <option value="">{props.t("formalReforecast.reasonPlaceholder")}</option>
+                  {FORECAST_REVISION_REASONS.map((reason) => (
+                    <option key={reason} value={reason}>
+                      {FORECAST_REVISION_REASON_PRESENTATION[reason].label}
+                    </option>
+                  ))}
+                </SceToolbarSelect>
+              </SceFormField>
+              {revisionReason === "OTHER" ? (
+                <SceFormField
+                  label={props.t("formalReforecast.reasonOtherContextLabel")}
+                  htmlFor={reasonContextId}
+                  optional
+                >
+                  <input
+                    id={reasonContextId}
+                    type="text"
+                    className="fca-input w-full"
+                    value={revisionContext}
+                    maxLength={280}
+                    placeholder={props.t("formalReforecast.reasonOtherContextPlaceholder")}
+                    onChange={(e) => setRevisionContext(e.target.value)}
+                    disabled={submitPending}
+                  />
+                </SceFormField>
+              ) : null}
+              <SceFormField
+                label={props.t("formalReforecast.actualsThroughLabel")}
+                htmlFor={actualsThroughId}
+                optional
+                description={props.t("formalReforecast.actualsThroughHint")}
+              >
+                <input
+                  id={actualsThroughId}
+                  type="date"
+                  className="fca-input w-full max-w-xs"
+                  value={effectiveActualsThrough}
+                  onChange={(e) => {
+                    setCustomActualsCutoff(true);
+                    setActualsThroughDate(e.target.value);
+                  }}
+                  onBlur={refreshPreviewFromFields}
+                  disabled={submitPending}
+                />
+              </SceFormField>
+            </div>
+          ) : null}
+        </div>
 
         {previewLoading ? (
           <p className="text-sm text-[var(--muted)]" role="status" aria-live="polite">

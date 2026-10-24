@@ -10,6 +10,10 @@ export function mapFormalReforecastDomainError(error: unknown): FormalReforecast
       return "STALE_CURRENT";
     case "FINANCE_FORECAST_REVISION_INVALID_LABEL":
       return "INVALID_LABEL";
+    case "FINANCE_FORECAST_REVISION_INVALID_REASON":
+      return "INVALID_REVISION_REASON";
+    case "FINANCE_FORECAST_REVISION_INVALID_CONTEXT":
+      return "INVALID_REVISION_CONTEXT";
     case "FINANCE_FORBIDDEN":
       return "PERMISSION_DENIED";
     case "FINANCE_FORECAST_REVISION_INVALID_DATE":

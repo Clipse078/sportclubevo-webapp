@@ -28,10 +28,10 @@ const samplePreview = {
 describe("FIN-04C-05R4 formal reforecast preview lifecycle", () => {
   it("builds stable input keys for optional label whitespace", () => {
     expect(buildFormalReforecastPreviewInputKey("2026-10-24", "")).toBe(
-      "2026-10-24::",
+      "2026-10-24::2026-10-24::",
     );
     expect(buildFormalReforecastPreviewInputKey("2026-10-24", "  Q3 Review  ")).toBe(
-      "2026-10-24::Q3 Review",
+      "2026-10-24::2026-10-24::Q3 Review",
     );
   });
 

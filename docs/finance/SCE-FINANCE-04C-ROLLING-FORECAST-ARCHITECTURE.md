@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C programme — **04C-01** architecture; **04C-02** persistence; **04C-03+** service/UX |
-| **Status** | **04C-01 COMPLETE** · **04C-02 COMPLETE** · **04C-03 COMPLETE** · **04C-04 COMPLETE** · **04C-05 COMPLETE** · **04C-06 NEXT** |
+| **Status** | **04C-01 COMPLETE** · **04C-02 COMPLETE** · **04C-03 COMPLETE** · **04C-04 COMPLETE** · **04C-05 COMPLETE** · **04C-06 COMPLETE** · **04C-07 NEXT** |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
 | **Base** | `STAGE` (post FIN-04B merge PR **#903**, merge `f6bd28c5`) |
 | **Implementation code (04C-01)** | `lib/finance/forecast/rolling-forecast-architecture-contract.ts`, `forecast-revision-comparison.ts` |
@@ -345,9 +345,9 @@ Missing FIN-04C metadata on legacy versions:
 | 2 | **FIN-04C-02** | Persistence & revision lifecycle (**COMPLETE**) |
 | 3 | **FIN-04C-03** | Formal reforecast service (**COMPLETE** — [`SCE-FINANCE-04C-03-FORMAL-REFORECAST.md`](./SCE-FINANCE-04C-03-FORMAL-REFORECAST.md)) |
 | 4 | **FIN-04C-04** | Forecast history & comparison query layer (**COMPLETE** — [`SCE-FINANCE-04C-04-HISTORY-COMPARISON.md`](./SCE-FINANCE-04C-04-HISTORY-COMPARISON.md)) |
-| 5 | **FIN-04C-05** | Rolling forecast workspace UX (**NEXT**) |
-| 6 | **FIN-04C-06** | Reforecast context / reason / cutoff UX |
-| 7 | **FIN-04C-07** | Hardening, concurrency & release closure |
+| 5 | **FIN-04C-05** | Rolling forecast workspace UX (**COMPLETE** — [`SCE-FINANCE-04C-05-WORKSPACE-UX.md`](./SCE-FINANCE-04C-05-WORKSPACE-UX.md)) |
+| 6 | **FIN-04C-06** | Forecast clarity & reforecast context (**COMPLETE** — [`SCE-FINANCE-04C-06-FORECAST-CLARITY-AND-REFORCAST-CONTEXT.md`](./SCE-FINANCE-04C-06-FORECAST-CLARITY-AND-REFORCAST-CONTEXT.md)) |
+| 7 | **FIN-04C-07** | Hardening, concurrency & release closure (**NEXT**) |
 
 ---
 

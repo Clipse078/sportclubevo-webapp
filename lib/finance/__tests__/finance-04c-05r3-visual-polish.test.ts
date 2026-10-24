@@ -111,7 +111,7 @@ describe("FIN-04C-05R3 visual polish closure", () => {
     });
 
     it("rolling UX uses centralized secondary metadata helper", () => {
-      expect(rolling).toContain("buildForecastHistoryRowSecondaryLine");
+      expect(rolling).toContain("buildForecastHistoryExpandedEntryLine");
       expect(rolling).not.toMatch(/\{" · "\}\s*\n\s*\{props\.t\("versionMeta"/);
     });
   });

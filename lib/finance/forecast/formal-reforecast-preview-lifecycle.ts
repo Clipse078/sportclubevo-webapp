@@ -31,9 +31,11 @@ export const INITIAL_FORMAL_REFORECAST_PREVIEW_DIALOG_STATE: FormalReforecastPre
 export function buildFormalReforecastPreviewInputKey(
   asOfDate: string,
   revisionLabel: string,
+  actualsThroughDate?: string,
 ): string {
   const trimmed = revisionLabel.trim();
-  return `${asOfDate}::${trimmed.length > 0 ? trimmed : ""}`;
+  const cutoff = (actualsThroughDate ?? asOfDate).trim();
+  return `${asOfDate}::${cutoff}::${trimmed.length > 0 ? trimmed : ""}`;
 }
 
 export function isFormalReforecastPreviewLoading(

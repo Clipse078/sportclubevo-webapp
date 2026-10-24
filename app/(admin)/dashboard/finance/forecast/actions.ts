@@ -99,6 +99,8 @@ export async function previewFormalReforecastAction(input: {
   asOfDate?: string;
   actualsThroughDate?: string | null;
   revisionLabel?: string | null;
+  revisionReason?: string | null;
+  revisionContext?: string | null;
 }): Promise<
   | { ok: true; preview: FormalReforecastPreviewResult }
   | { ok: false; outcome: FormalReforecastOutcome; error: string }
@@ -123,6 +125,8 @@ export async function formalizeCurrentForecastAction(input: {
   asOfDate: string;
   actualsThroughDate?: string | null;
   revisionLabel?: string | null;
+  revisionReason?: string | null;
+  revisionContext?: string | null;
 }): Promise<FormalReforecastActionResult> {
   const ctx = await forecastCtx();
   try {

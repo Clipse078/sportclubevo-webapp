@@ -16,7 +16,11 @@ import type {
 import { recommendFormalReforecastAsOfDate } from "@/lib/finance/forecast/formal-reforecast-date-recommendation";
 import { normalizeFormalReforecastRevisionLabel } from "@/lib/finance/forecast/formal-reforecast-label";
 import { forecastTotalsFromRows } from "@/lib/finance/forecast/forecast-presentation";
-import { validateFormalRevisionMetadata } from "@/lib/finance/forecast/forecast-revision-metadata-validation";
+import {
+  parseFormalReforecastRevisionReasonInput,
+  validateFormalRevisionMetadata,
+  validateFormalReforecastRevisionContext,
+} from "@/lib/finance/forecast/forecast-revision-metadata-validation";
 import { persistFormalForecastRevision } from "@/lib/finance/services/finance-forecast-revision-service";
 import { resolveCanonicalCurrentForecastVersionByPointer } from "@/lib/finance/services/finance-forecast-service";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
@@ -216,13 +220,23 @@ export async function previewFormalCurrentForecast(
     asOfDate?: string;
     actualsThroughDate?: string | null;
     revisionLabel?: string | null;
+    revisionReason?: string | null;
+    revisionContext?: string | null;
   },
 ): Promise<FormalReforecastPreviewResult> {
   requireFinanceForecastView(ctx);
 
   const loaded = await loadCurrentForecastContext(db, ctx, input.financeYearId);
-  const dates = resolvePreviewDates(loaded.financeYear, input);
+  const dates = resolvePreviewDates(loaded.financeYear, {
+    asOfDate: input.asOfDate,
+    actualsThroughDate: input.actualsThroughDate,
+  });
   const revisionLabel = normalizeFormalReforecastRevisionLabel(input.revisionLabel);
+  const previewRevisionReason = parseFormalReforecastRevisionReasonInput(input.revisionReason);
+  validateFormalReforecastRevisionContext({
+    revisionReason: previewRevisionReason,
+    revisionContext: input.revisionContext,
+  });
   validateFormalRevisionMetadata(
     {
       asOfDate: dates.asOfDate,
@@ -265,6 +279,8 @@ export async function formalizeCurrentForecast(
     asOfDate: string;
     actualsThroughDate?: string | null;
     revisionLabel?: string | null;
+    revisionReason?: string | null;
+    revisionContext?: string | null;
   },
 ): Promise<FormalizeCurrentForecastResult> {
   requireFinanceForecastManage(ctx);
@@ -279,6 +295,11 @@ export async function formalizeCurrentForecast(
   }
 
   const revisionLabel = normalizeFormalReforecastRevisionLabel(input.revisionLabel);
+  const revisionReason = parseFormalReforecastRevisionReasonInput(input.revisionReason);
+  const { revisionContext } = validateFormalReforecastRevisionContext({
+    revisionReason,
+    revisionContext: input.revisionContext,
+  });
   const { asOfDate, actualsThroughDate } = buildManualFormalReforecastDates(input);
 
   const beforeTotals = loaded.totals;
@@ -292,6 +313,8 @@ export async function formalizeCurrentForecast(
     actualsThroughDate,
     revisionSource: "MANUAL_REFORECAST",
     revisionLabel,
+    revisionReason,
+    revisionContext,
     sourceProjectionVersionId: null,
     previousVersionId: loaded.currentVersion.id,
     createdByUserId: ctx.userId,

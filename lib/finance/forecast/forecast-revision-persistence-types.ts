@@ -1,3 +1,4 @@
+import type { ForecastRevisionReason } from "@/lib/finance/forecast/forecast-revision-reason";
 import type { ForecastRevisionSource } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
 
 /**
@@ -12,6 +13,8 @@ export type PersistFormalForecastRevisionInput = {
   actualsThroughDate: string;
   revisionSource: ForecastRevisionSource;
   revisionLabel?: string | null;
+  revisionReason?: ForecastRevisionReason | null;
+  revisionContext?: string | null;
   note?: string | null;
   sourceProjectionVersionId?: string | null;
   previousVersionId?: string | null;

@@ -1,3 +1,4 @@
+import type { ForecastRevisionReason } from "@/lib/finance/forecast/forecast-revision-reason";
 import type { ForecastRevisionSource, ForecastVersionStatus } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
 import type { FinanceForecastAccountComparisonRow, FinanceForecastVersionComparisonSummary } from "@/lib/finance/forecast/forecast-revision-comparison";
 import type { ForecastHistoryLineageDiagnostic } from "@/lib/finance/forecast/forecast-history-lineage";
@@ -17,6 +18,8 @@ export type FinanceForecastHistoryEntry = {
   isHistorical: boolean;
   revisionSource: ForecastRevisionSource | null;
   revisionLabel: string | null;
+  revisionReason: ForecastRevisionReason | null;
+  revisionContext: string | null;
   asOfDate: string | null;
   actualsThroughDate: string | null;
   createdAt: string;

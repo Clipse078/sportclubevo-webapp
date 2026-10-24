@@ -35,6 +35,9 @@ import {
   FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS,
   FINANCE_VARIANCE_COMPARISON_TABLE_CLASS,
 } from "@/lib/finance/presentation/finance-variance-comparison-table-layout";
+import { FinanceWorkspaceDisclosure } from "@/components/admin/finance/FinanceWorkspaceDisclosure";
+import { deriveProjectionManagementConclusion } from "@/lib/finance/projection/projection-management-conclusion";
+import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import { FinanceProjectionOutlookChart } from "@/components/admin/finance/projection/FinanceProjectionOutlookChart";
 import { FinanceProjectionCompositionChart } from "@/components/admin/finance/projection/FinanceProjectionCompositionChart";
 import { FinanceProjectionDivergenceChart } from "@/components/admin/finance/projection/FinanceProjectionDivergenceChart";
@@ -96,6 +99,16 @@ export function FinanceProjectionWorkspaceSection({
 
   const showDashboard =
     hasGeneratedVersion && projection.coverage.projectedAccountCount > 0 && projection.dashboard;
+
+  const managementConclusion = useMemo(() => {
+    if (!showDashboard || !projection.dashboard) return null;
+    const outlookResult = projection.dashboard.outlook.find((row) => row.metric === "RESULT");
+    return deriveProjectionManagementConclusion({
+      coverage: projection.coverage,
+      dashboard: projection.dashboard,
+      forecastResultMinor: outlookResult?.forecastMinor ?? null,
+    });
+  }, [projection.coverage, projection.dashboard, showDashboard]);
 
   const adoption = projection.adoption;
   const showAdoptAction =
@@ -264,66 +277,151 @@ export function FinanceProjectionWorkspaceSection({
         <p className="text-sm text-[var(--muted)]">{t("insufficientBody")}</p>
       ) : null}
 
-      {showDashboard ? (
-        <>
-          <ProjectionSummaryStrip
-            projection={projection}
-            currency={currency}
-            formattingLocale={formattingLocale}
-            t={t}
-          />
-          <div className="grid min-w-0 gap-3 md:grid-cols-2" data-finance-projection-visuals>
-            <FinanceProjectionOutlookChart
-              title={t("chartOutlookTitle")}
-              rows={projection.dashboard!.outlook}
-              metricLabels={{
-                INCOME: t("summaryIncome"),
-                EXPENSE: t("summaryExpense"),
-                RESULT: t("summaryResult"),
-              }}
-              seriesLabels={{
-                actual: t("chartSeriesActual"),
-                forecast: t("chartSeriesForecast"),
-                projection: t("chartSeriesProjection"),
-                budget: t("chartSeriesBudget"),
-              }}
+      {showDashboard && managementConclusion ? (
+        <div className="space-y-3" data-finance-projection-conclusion>
+          {managementConclusion.kind === "ALIGNED" ? (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                {t("clarityAlignedTitle")}
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                {t("clarityAlignedCoverage", {
+                  projected: managementConclusion.projectedAccountCount,
+                  total: managementConclusion.eligibleAccountCount,
+                })}
+              </p>
+              <p className="text-sm text-[var(--muted)]">{t("clarityAlignedBody")}</p>
+              {managementConclusion.missingProjectionCount > 0 ? (
+                <p className="text-xs text-[var(--muted)]">
+                  {t("clarityMissingData", {
+                    count: managementConclusion.missingProjectionCount,
+                  })}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                {t("clarityReviewTitle")}
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                {managementConclusion.resultDeltaMinor < 0
+                  ? t("clarityReviewResultBelow", {
+                      amount: formatFinanceManagementPlanningMinor(
+                        Math.abs(managementConclusion.resultDeltaMinor),
+                        currency,
+                        formattingLocale,
+                      ),
+                    })
+                  : t("clarityReviewResultAbove", {
+                      amount: formatFinanceManagementPlanningMinor(
+                        managementConclusion.resultDeltaMinor,
+                        currency,
+                        formattingLocale,
+                      ),
+                    })}
+              </p>
+              {managementConclusion.topDrivers.length > 0 ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    {t("clarityTopDrivers")}
+                  </p>
+                  <ul className="mt-1 space-y-1 text-sm" role="list">
+                    {managementConclusion.topDrivers.map((row) => (
+                      <li
+                        key={row.accountId}
+                        className="flex justify-between gap-2 tabular-nums"
+                      >
+                        <span>{row.accountName}</span>
+                        <span>
+                          {formatFinanceAutomaticForecastSignedMinor(
+                            row.deltaMinor,
+                            currency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          <FinanceWorkspaceDisclosure
+            title={<span className="sr-only">{t("clarityShowDetails")}</span>}
+            expandLabel={t("clarityShowDetails")}
+            collapseLabel={t("clarityHideDetails")}
+            data-finance-disclosure="projection-details"
+          >
+            <ProjectionSummaryStrip
+              projection={projection}
               currency={currency}
               formattingLocale={formattingLocale}
+              t={t}
             />
-            <FinanceProjectionCompositionChart
-              title={t("chartCompositionIncome")}
-              segments={projection.dashboard!.incomeComposition}
-              currency={currency}
-              formattingLocale={formattingLocale}
-            />
-            <FinanceProjectionCompositionChart
-              title={t("chartCompositionExpense")}
-              segments={projection.dashboard!.expenseComposition}
-              currency={currency}
-              formattingLocale={formattingLocale}
-            />
-            {projection.dashboard!.divergence !== null ? (
-              <div className="md:col-span-2">
-                <FinanceProjectionDivergenceChart
-                  title={t("chartDivergenceTitle")}
-                  description={t("chartDivergenceDescription")}
-                  alignedMessage={t("chartDivergenceAligned")}
-                  rows={projection.dashboard!.divergence}
+            <div
+              className="mt-3 grid min-w-0 gap-3 md:grid-cols-2"
+              data-finance-projection-visuals
+            >
+              <div className={cn(projection.dashboard!.expenseComposition.length === 0 && "md:col-span-2")}>
+                <FinanceProjectionOutlookChart
+                  title={t("chartOutlookTitle")}
+                  rows={projection.dashboard!.outlook}
+                  metricLabels={{
+                    INCOME: t("summaryIncome"),
+                    EXPENSE: t("summaryExpense"),
+                    RESULT: t("summaryResult"),
+                  }}
+                  seriesLabels={{
+                    actual: t("chartSeriesActual"),
+                    forecast: t("chartSeriesForecast"),
+                    projection: t("chartSeriesProjection"),
+                    budget: t("chartSeriesBudget"),
+                  }}
                   currency={currency}
                   formattingLocale={formattingLocale}
                 />
               </div>
-            ) : null}
-          </div>
-        </>
+              {projection.dashboard!.incomeComposition.length > 0 ? (
+                <FinanceProjectionCompositionChart
+                  title={t("chartCompositionIncome")}
+                  segments={projection.dashboard!.incomeComposition}
+                  currency={currency}
+                  formattingLocale={formattingLocale}
+                />
+              ) : null}
+              {projection.dashboard!.expenseComposition.length > 0 ? (
+                <FinanceProjectionCompositionChart
+                  title={t("chartCompositionExpense")}
+                  segments={projection.dashboard!.expenseComposition}
+                  currency={currency}
+                  formattingLocale={formattingLocale}
+                />
+              ) : null}
+              {projection.dashboard!.divergence !== null &&
+              projection.dashboard!.divergence.length > 0 ? (
+                <div className="md:col-span-2">
+                  <FinanceProjectionDivergenceChart
+                    title={t("chartDivergenceTitle")}
+                    description={t("chartDivergenceDescription")}
+                    alignedMessage={t("chartDivergenceAligned")}
+                    rows={projection.dashboard!.divergence}
+                    currency={currency}
+                    formattingLocale={formattingLocale}
+                  />
+                </div>
+              ) : null}
+            </div>
+            <FinanceProjectionAccountDetailSection
+              projection={projection}
+              currency={currency}
+              formattingLocale={formattingLocale}
+              embedded
+            />
+          </FinanceWorkspaceDisclosure>
+        </div>
       ) : null}
-
-      <FinanceProjectionAccountDetailSection
-        projection={projection}
-        currency={currency}
-        formattingLocale={formattingLocale}
-        embedded
-      />
 
       {adoption && showAdoptAction ? (
         <Dialog

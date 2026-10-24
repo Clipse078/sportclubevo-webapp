@@ -1,3 +1,7 @@
+import {
+  resolveForecastRevisionReasonPresentationLabel,
+  type ForecastRevisionReason,
+} from "@/lib/finance/forecast/forecast-revision-reason";
 import type { ForecastRevisionSource } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
 import { formatFinanceCalendarDateIso } from "@/lib/finance/dates/finance-calendar-date";
 
@@ -111,5 +115,21 @@ export function buildForecastHistoryRowSecondaryLine(input: {
     tokens.push(input.revisionSourceLabel);
   }
 
+  return joinForecastMetadataTokens(tokens);
+}
+
+/** Expanded Prognoseverlauf row — reason/context secondary, no empty placeholders. */
+export function buildForecastHistoryExpandedEntryLine(input: {
+  asOfDateDisplay: string | null;
+  revisionReason: ForecastRevisionReason | null;
+  revisionContext: string | null;
+  versionNumber: number;
+}): string | null {
+  const reasonLabel = resolveForecastRevisionReasonPresentationLabel(input.revisionReason);
+  const tokens: (string | null)[] = [input.asOfDateDisplay, reasonLabel];
+  if (input.revisionReason === "OTHER" && input.revisionContext?.trim()) {
+    tokens.push(input.revisionContext.trim());
+  }
+  tokens.push(`Version ${input.versionNumber}`);
   return joinForecastMetadataTokens(tokens);
 }

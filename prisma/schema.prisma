@@ -10943,6 +10943,17 @@ enum FinanceForecastRevisionSource {
   AUTOMATIC_FORECAST_ADOPTION
 }
 
+/// Optional structured reforecast context (FIN-04C-06) — nullable for legacy revisions.
+enum FinanceForecastRevisionReason {
+  PERIODIC_REVIEW
+  NEW_ACTUALS
+  ASSUMPTION_CHANGE
+  OPERATIONAL_CHANGE
+  MANAGEMENT_DECISION
+  CORRECTION
+  OTHER
+}
+
 /// Management forecast container per tenant financial year (FIN-04A) — independent from budget baseline.
 model FinanceForecast {
   id                 String   @id @default(cuid())
@@ -10979,6 +10990,8 @@ model FinanceForecastVersion {
   actualsThroughDate          DateTime?                     @db.Date
   revisionSource              FinanceForecastRevisionSource?
   revisionLabel               String?
+  revisionReason              FinanceForecastRevisionReason?
+  revisionContext             String?
   /// Semantic lineage to the prior formal forecast version within the same container.
   previousVersionId           String?
   /// Direct revision provenance when an automatic forecast snapshot contributed (distinct from FinanceProjectionAdoption audit).

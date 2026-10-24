@@ -11,7 +11,7 @@ type ChangeDriverRow = {
 };
 
 type FinanceForecastChangeDriverBarsProps = {
-  title: string;
+  title?: string;
   description?: string;
   rows: readonly ChangeDriverRow[];
   currency: string | null;
@@ -31,9 +31,11 @@ export function FinanceForecastChangeDriverBars(props: FinanceForecastChangeDriv
       data-finance-surface={props["data-finance-surface"]}
       data-finance-chart="forecast-change-drivers"
     >
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-        {props.title}
-      </h4>
+      {props.title ? (
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {props.title}
+        </h4>
+      ) : null}
       {props.description ? (
         <p className="mt-1 text-xs text-[var(--muted)]">{props.description}</p>
       ) : null}

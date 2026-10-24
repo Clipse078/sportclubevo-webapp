@@ -126,7 +126,8 @@ describe("FIN-04C-05 rolling forecast workspace UX", () => {
   });
 
   it("documents actualsThroughDate default (Datenstand only in dialog)", () => {
-    expect(rolling).not.toContain("actualsThroughDate");
+    expect(rolling).toContain("data-finance-formal-reforecast-more-details-trigger");
+    expect(rolling).toContain("formalReforecast.actualsThroughLabel");
     const doc = readFileSync(
       join(process.cwd(), "docs/finance/SCE-FINANCE-04C-05-WORKSPACE-UX.md"),
       "utf8",

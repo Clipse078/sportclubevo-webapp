@@ -41,6 +41,7 @@ import {
   FinanceProjectionWorkspaceSection,
 } from "@/components/admin/finance/FinanceProjectionWorkspaceSection";
 import { FinanceForecastRollingUxSections } from "@/components/admin/finance/FinanceForecastRollingUxSections";
+import { FinanceWorkspaceDisclosure } from "@/components/admin/finance/FinanceWorkspaceDisclosure";
 import type { ForecastWorkspaceRollingUxData } from "@/lib/finance/services/finance-forecast-query-service";
 import { financeVarianceComparisonSemanticTextClass } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
@@ -535,8 +536,17 @@ function ForecastEditableSection(props: {
     dirtyAccountIdsRef.current.add(accountId);
   }, []);
 
+  const accountCount = props.incomeRows.length + props.expenseRows.length;
+
   return (
     <div className={FINANCE_FORECAST_TABLES_STACK_CLASS} data-finance-forecast-editable>
+      <FinanceWorkspaceDisclosure
+        title={props.t("accountColumn")}
+        summary={props.t("clarity.accountsSummary", { count: accountCount })}
+        expandLabel={props.t("clarity.accountsShowAll")}
+        collapseLabel={props.t("clarity.accountsHide")}
+        data-finance-disclosure="forecast-accounts"
+      >
       <ForecastAccountTable
         title={props.t("incomeSectionWithYear", { year: props.yearName })}
         rows={props.incomeRows}
@@ -574,6 +584,7 @@ function ForecastEditableSection(props: {
         tVariance={props.tVariance}
         lineErrors={lineErrors}
       />
+      </FinanceWorkspaceDisclosure>
     </div>
   );
 }

@@ -108,6 +108,8 @@ export async function persistFormalForecastRevision(
       newVersionMetadata: {
         revisionSource: input.revisionSource,
         revisionLabel: input.revisionLabel ?? null,
+        revisionReason: input.revisionReason ?? null,
+        revisionContext: input.revisionContext ?? null,
         note: input.note ?? null,
         asOfDate,
         actualsThroughDate,

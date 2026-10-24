@@ -44,8 +44,8 @@ describe("FIN-04C-05R5 workspace layout consolidation", () => {
     })).toBe(true);
     expect(rolling).toContain("isForecastComparisonMovementNeutral");
     expect(rolling).toContain("data-finance-zero-change-quiet");
-    expect(rolling).toContain("comparison.noChangeSincePrevious");
-    expect(de).toContain("Keine Änderungen gegenüber der letzten Prognose");
+    expect(rolling).toContain("clarity.noChangeSincePrevious");
+    expect(de).toContain("Keine Änderungen seit der letzten Prognose");
   });
 
   it("non-zero change still renders meaningful drivers", () => {

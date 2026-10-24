@@ -76,6 +76,8 @@ type RawForecastVersionRow = {
   scenarioKey: string | null;
   revisionSource: string | null;
   revisionLabel: string | null;
+  revisionReason: string | null;
+  revisionContext: string | null;
   asOfDate: Date | null;
   actualsThroughDate: Date | null;
   previousVersionId: string | null;
@@ -128,6 +130,8 @@ async function loadForecastHistoryBundle(
       scenarioKey: true,
       revisionSource: true,
       revisionLabel: true,
+      revisionReason: true,
+      revisionContext: true,
       asOfDate: true,
       actualsThroughDate: true,
       previousVersionId: true,
@@ -242,6 +246,8 @@ function buildHistoryEntry(
     status: "CURRENT" | "SUPERSEDED";
     revisionSource: string | null;
     revisionLabel: string | null;
+    revisionReason: string | null;
+    revisionContext: string | null;
     asOfDate: Date | null;
     actualsThroughDate: Date | null;
     previousVersionId: string | null;
@@ -273,6 +279,8 @@ function buildHistoryEntry(
     isHistorical: !isCurrent,
     revisionSource: (row.revisionSource as ForecastRevisionSource | null) ?? null,
     revisionLabel: row.revisionLabel,
+    revisionReason: (row.revisionReason as FinanceForecastHistoryEntry["revisionReason"]) ?? null,
+    revisionContext: row.revisionContext,
     asOfDate: row.asOfDate ? formatFinanceCalendarDateIso(row.asOfDate) : null,
     actualsThroughDate: row.actualsThroughDate
       ? formatFinanceCalendarDateIso(row.actualsThroughDate)

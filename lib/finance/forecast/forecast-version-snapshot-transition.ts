@@ -1,10 +1,13 @@
 import type { PrismaClient } from "@prisma/client";
 import { FinanceDomainError } from "@/lib/finance/errors";
+import type { ForecastRevisionReason } from "@/lib/finance/forecast/forecast-revision-reason";
 import type { ForecastRevisionSource } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
 
 export type ForecastVersionSnapshotMetadata = {
   revisionSource?: ForecastRevisionSource | null;
   revisionLabel?: string | null;
+  revisionReason?: ForecastRevisionReason | null;
+  revisionContext?: string | null;
   note?: string | null;
   asOfDate?: Date | null;
   actualsThroughDate?: Date | null;
@@ -102,6 +105,8 @@ export async function executeForecastVersionSnapshotTransition(
       createdByUserId: input.createdByUserId ?? null,
       revisionSource: metadata.revisionSource ?? null,
       revisionLabel: metadata.revisionLabel?.trim() || null,
+      revisionReason: metadata.revisionReason ?? null,
+      revisionContext: metadata.revisionContext?.trim() || null,
       note: metadata.note?.trim() || null,
       asOfDate: metadata.asOfDate ?? null,
       actualsThroughDate: metadata.actualsThroughDate ?? null,

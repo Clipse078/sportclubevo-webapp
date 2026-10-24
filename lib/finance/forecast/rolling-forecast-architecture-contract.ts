@@ -229,6 +229,33 @@ export const ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST = {
   mutableCurrentUntilNextFormalRevision: true,
 } as const;
 
+/** FIN-04C-06 clarity & reforecast context principles (locked). */
+export const ROLLING_FORECAST_FIN_04C_06_CLARITY_PRINCIPLES = {
+  progressiveDisclosure:
+    "SCE Finance uses progressive disclosure. Financial workspaces lead with management meaning, changes and exceptions; detailed values, history and calculation evidence remain available on demand.",
+  comparisonFirst:
+    "A user should not need to mentally compare multiple financial versions to understand the current situation. SCE performs the comparison and communicates the result first.",
+  conclusionsFirst: "Show conclusions first. Numbers explain the conclusion.",
+  valueComparedDifferenceDriver:
+    "VALUE → COMPARED WITH → DIFFERENCE → DRIVER (render only what helps)",
+  numbersWithPurpose:
+    "A number is prominent only when it answers heading, change, budget fit, or review need.",
+  currentForecastDominance:
+    "Current Forecast is the organisation-owned management view; Automatic Forecast is supporting intelligence.",
+  fin04dBoundary: "Scenario UX and FIN-04D remain out of scope for FIN-04C-06.",
+} as const;
+
+/** FIN-04C-06 implemented forecast clarity & optional reforecast reason persistence. */
+export const ROLLING_FORECAST_FIN_04C_06_REFORECAST_CONTEXT = {
+  revisionReasonEnum: "FinanceForecastRevisionReason",
+  revisionReasonOptional: true,
+  revisionContextOptionalForOther: true,
+  revisionLabelIndependentFromReason: true,
+  actualsThroughHiddenByDefault: true,
+  actualsThroughDefaultsToAsOfDate: true,
+  legacyRevisionsNullReason: true,
+} as const;
+
 /** FIN-04C-05 implemented Prognose workspace UX integration. */
 export const ROLLING_FORECAST_FIN_04C_05_WORKSPACE_UX = {
   workspaceRoute: "/dashboard/finance/forecast",
@@ -287,6 +314,8 @@ export const ROLLING_FORECAST_DATA_MODEL_EVOLUTION = {
       "actualsThroughDate",
       "revisionSource",
       "revisionLabel",
+      "revisionReason",
+      "revisionContext",
       "previousVersionId",
       "sourceProjectionVersionId",
     ] as const,

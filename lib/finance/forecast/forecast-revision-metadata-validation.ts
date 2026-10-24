@@ -4,6 +4,12 @@ import {
 } from "@/lib/finance/dates/finance-calendar-date";
 import { FinanceDomainError } from "@/lib/finance/errors";
 import { FORECAST_REVISION_SOURCES } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
+import {
+  FORMAL_REFORECAST_REVISION_CONTEXT_MAX_LENGTH,
+  isKnownForecastRevisionReason,
+  normalizeFormalReforecastRevisionContext,
+  type ForecastRevisionReason,
+} from "@/lib/finance/forecast/forecast-revision-reason";
 import type { PersistFormalForecastRevisionInput } from "@/lib/finance/forecast/forecast-revision-persistence-types";
 
 export function assertKnownForecastRevisionSource(
@@ -51,4 +57,39 @@ export function validateFormalRevisionMetadata(
   }
 
   return { asOfDate, actualsThroughDate };
+}
+
+export function parseFormalReforecastRevisionReasonInput(
+  value: string | null | undefined,
+): ForecastRevisionReason | null {
+  if (value == null || value.trim() === "") return null;
+  const trimmed = value.trim();
+  if (!isKnownForecastRevisionReason(trimmed)) {
+    throw new FinanceDomainError(
+      "FINANCE_FORECAST_REVISION_INVALID_REASON",
+      "Unknown forecast revision reason.",
+    );
+  }
+  return trimmed;
+}
+
+export function validateFormalReforecastRevisionContext(input: {
+  revisionReason?: ForecastRevisionReason | null;
+  revisionContext?: string | null;
+}): { revisionReason: ForecastRevisionReason | null; revisionContext: string | null } {
+  const revisionReason = input.revisionReason ?? null;
+  let revisionContext = normalizeFormalReforecastRevisionContext(input.revisionContext);
+
+  if (revisionContext != null && revisionContext.length > FORMAL_REFORECAST_REVISION_CONTEXT_MAX_LENGTH) {
+    throw new FinanceDomainError(
+      "FINANCE_FORECAST_REVISION_INVALID_CONTEXT",
+      "revisionContext is too long.",
+    );
+  }
+
+  if (revisionReason !== "OTHER") {
+    revisionContext = null;
+  }
+
+  return { revisionReason, revisionContext };
 }
