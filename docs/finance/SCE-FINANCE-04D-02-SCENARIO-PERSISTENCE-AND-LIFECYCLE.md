@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D-02 — persistence + domain lifecycle foundation |
-| **Status** | **COMPLETE** (calculation engine FIN-04D-03 next) |
+| **Status** | **COMPLETE** — calculation engine in [`SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md`](./SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md) |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Migration** | `20261024160000_sce_finance_04d_02_scenario_persistence` |
 

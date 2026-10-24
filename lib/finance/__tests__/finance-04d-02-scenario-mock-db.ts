@@ -228,6 +228,23 @@ export function makeScenarioDb(store: ScenarioStore) {
     financialAccount: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         store.financialAccount.find((a) => a.id === where.id) ?? null,
+      findMany: async ({
+        where,
+        select,
+      }: {
+        where: { id: { in: string[] } };
+        select?: { id?: boolean; tenantId?: boolean; canonicalSemantic?: boolean };
+      }) => {
+        const rows = store.financialAccount.filter((a) => where.id.in.includes(a.id));
+        if (select) {
+          return rows.map((a) => ({
+            id: a.id,
+            tenantId: a.tenantId,
+            canonicalSemantic: a.canonicalSemantic,
+          }));
+        }
+        return rows;
+      },
     },
     financeScenario: {
       findUnique: async ({

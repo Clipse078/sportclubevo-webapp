@@ -836,7 +836,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`]
 
 ## ADR-036 — Scenarios & What-if (FIN-04D)
 
-**Status:** Accepted — **FIN-04D-01 architecture** + **FIN-04D-02 persistence/lifecycle** (engine/UX in **04D-03+**)
+**Status:** Accepted — **FIN-04D-01 architecture** + **FIN-04D-02 persistence/lifecycle** + **FIN-04D-03 calculation engine** (comparison/UX in **04D-04+**)
 
 ### Context
 
@@ -860,7 +860,9 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 ### Consequences
 
 - FIN-04D-01 adds architecture tests in `finance-04d-scenario-architecture.test.ts` — no Prisma migration in 04D-01.
-- FIN-04D-02 **COMPLETE** — models, lifecycle, partial active-name index; FIN-04D-03 calculation engine next; FIN-04D-04 comparisons; FIN-04D-05 UX; FIN-04D-06 adoption/rebase; FIN-04D-07 hardening.
+- FIN-04D-02 **COMPLETE** — models, lifecycle, partial active-name index.
+- FIN-04D-03 **COMPLETE** — pure `calculateFinanceScenario` + `calculatePersistedFinanceScenario` (`sce-scenario-v1`); no result persistence.
+- FIN-04D-04 comparisons next; FIN-04D-05 UX; FIN-04D-06 adoption/rebase; FIN-04D-07 hardening.
 - Prognoseverlauf (FIN-04C) continues to exclude scenarios; scenario adoption creates **forecast** history, not scenario governance versions.
 - FIN-05/06 must treat scenarios as analytical inputs unless explicitly adopted into current forecast.
 

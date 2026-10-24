@@ -15,6 +15,16 @@ import {
   assertValidFinanceScenarioName,
   normalizedScenarioNameKey,
 } from "@/lib/finance/forecast/scenario-metadata-validation";
+import { calculateFinanceScenario } from "@/lib/finance/forecast/calculate-finance-scenario";
+import {
+  FinanceScenarioCalculationError,
+  type FinanceScenarioCalculationErrorCode,
+} from "@/lib/finance/forecast/finance-scenario-calculation-errors";
+import type { ScenarioAssumptionKindV1 } from "@/lib/finance/forecast/scenario-architecture-contract";
+import type {
+  FinanceScenarioCalculationResult,
+  FinanceScenarioPlanningAccountSemantic,
+} from "@/lib/finance/forecast/finance-scenario-calculation-types";
 import { mapForecastLinesForSnapshot } from "@/lib/finance/forecast/forecast-version-snapshot-transition";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
 
@@ -771,6 +781,99 @@ export async function getFinanceScenarioById(
 ) {
   requireFinanceForecastView(ctx);
   return getScenarioOrThrow(db, ctx, scenarioId);
+}
+
+function mapScenarioCalculationError(error: unknown): never {
+  if (error instanceof FinanceScenarioCalculationError) {
+    const codeByCalculation: Record<
+      FinanceScenarioCalculationErrorCode,
+      FinanceDomainError["code"]
+    > = {
+      INVALID_SCENARIO_INPUT: "FINANCE_SCENARIO_CALCULATION_INVALID_INPUT",
+      DUPLICATE_BASELINE_ACCOUNT: "FINANCE_SCENARIO_DUPLICATE_BASELINE_ACCOUNT",
+      DUPLICATE_ASSUMPTION_ACCOUNT: "FINANCE_SCENARIO_DUPLICATE_ASSUMPTION_ACCOUNT",
+      ASSUMPTION_ACCOUNT_NOT_IN_BASELINE: "FINANCE_SCENARIO_ASSUMPTION_NOT_IN_BASELINE",
+      INVALID_ASSUMPTION_PAYLOAD: "FINANCE_SCENARIO_CALCULATION_INVALID_ASSUMPTION",
+      UNSUPPORTED_ACCOUNT_TYPE: "FINANCE_SCENARIO_CALCULATION_UNSUPPORTED_ACCOUNT",
+      UNSAFE_INTEGER_RESULT: "FINANCE_SCENARIO_CALCULATION_UNSAFE_INTEGER",
+    };
+    throw new FinanceDomainError(
+      codeByCalculation[error.code],
+      error.message,
+      400,
+    );
+  }
+  throw error;
+}
+
+async function getAccountSemanticsForScenarioCalculation(
+  db: Db,
+  ctx: FinanceAuthContext,
+  financialAccountIds: string[],
+) {
+  const uniqueIds = [...new Set(financialAccountIds)];
+  const accounts = await db.financialAccount.findMany({
+    where: { id: { in: uniqueIds } },
+    select: { id: true, tenantId: true, canonicalSemantic: true },
+  });
+  if (accounts.length !== uniqueIds.length) {
+    throw new FinanceDomainError("FINANCE_NOT_FOUND", "Financial account not found.", 404);
+  }
+  for (const account of accounts) {
+    assertSameTenant(account.tenantId, ctx.tenantId, "Financial account");
+  }
+  return accounts;
+}
+
+/**
+ * Loads persisted frozen baseline + assumptions and runs the canonical pure engine.
+ * Does not read live Current Forecast, Approved Budget, or Automatic Forecast.
+ */
+export async function calculatePersistedFinanceScenario(
+  db: Db,
+  ctx: FinanceAuthContext,
+  input: { scenarioId: string; financeYearId?: string },
+): Promise<FinanceScenarioCalculationResult> {
+  requireFinanceForecastView(ctx);
+  const scenario = await getScenarioOrThrow(db, ctx, input.scenarioId);
+
+  if (input.financeYearId && input.financeYearId !== scenario.financeYearId) {
+    throw new FinanceDomainError("FINANCE_NOT_FOUND", "Scenario not found.", 404);
+  }
+
+  await getFinanceYearOrThrow(db, ctx, scenario.financeYearId);
+
+  const baselineAccountIds = scenario.baselineLines.map((line) => line.financialAccountId);
+  const accountRows = await getAccountSemanticsForScenarioCalculation(
+    db,
+    ctx,
+    baselineAccountIds,
+  );
+
+  try {
+    return calculateFinanceScenario({
+      scenarioId: scenario.id,
+      tenantId: scenario.tenantId,
+      financeYearId: scenario.financeYearId,
+      baselineLines: scenario.baselineLines.map((line) => ({
+        financialAccountId: line.financialAccountId,
+        amountMinor: line.amountMinor,
+      })),
+      assumptions: scenario.assumptions.map((assumption) => ({
+        financialAccountId: assumption.financialAccountId,
+        kind: assumption.kind as ScenarioAssumptionKindV1,
+        percentBasisPoints: assumption.percentBasisPoints,
+        amountMinorDelta: assumption.amountMinorDelta,
+        absoluteAmountMinor: assumption.absoluteAmountMinor,
+      })),
+      accountSemantics: accountRows.map((account) => ({
+        financialAccountId: account.id,
+        canonicalSemantic: account.canonicalSemantic as FinanceScenarioPlanningAccountSemantic,
+      })),
+    });
+  } catch (error) {
+    mapScenarioCalculationError(error);
+  }
 }
 
 /** Guard: ordinary lifecycle must not mutate frozen baseline rows (FIN-04D-02). */
