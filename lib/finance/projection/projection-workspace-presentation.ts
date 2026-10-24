@@ -16,6 +16,7 @@ import {
   type ProjectionWorkspaceDashboardViewModel,
 } from "@/lib/finance/projection/projection-workspace-dashboard";
 import type { ProjectionAccountExplainabilityDetailViewModel } from "@/lib/finance/projection/projection-workspace-explainability";
+import type { ProjectionAdoptionPreviewResult } from "@/lib/finance/projection/projection-adoption-policy";
 
 export type ProjectionWorkspacePresentationState =
   | "NO_PROJECTION"
@@ -143,6 +144,17 @@ export type ProjectionWorkspaceAccountViewModel = {
   explainabilityDetail: ProjectionAccountExplainabilityDetailViewModel | null;
 };
 
+export type ProjectionAdoptionUiContext = ProjectionAdoptionPreviewResult & {
+  financeProjectionId: string;
+  canAdopt: boolean;
+  blockReason:
+    | null
+    | "NO_FORECAST"
+    | "NO_PROJECTION"
+    | "STALE_PROJECTION"
+    | "NO_ELIGIBLE_LINES";
+};
+
 export type ProjectionWorkspaceViewModel = {
   financeYearId: string;
   financeYearName: string;
@@ -151,10 +163,12 @@ export type ProjectionWorkspaceViewModel = {
   actualsThroughDate: string | null;
   generatedAtIso: string | null;
   versionNumber: number | null;
+  projectionVersionId: string | null;
   coverage: ProjectionAggregateCoverage;
   versionDataSufficiency: ProjectionDataSufficiencyLevel | null;
   accounts: readonly ProjectionWorkspaceAccountViewModel[];
   dashboard: ProjectionWorkspaceDashboardViewModel | null;
+  adoption: ProjectionAdoptionUiContext | null;
 };
 
 function derivePresentationState(input: {
@@ -176,6 +190,7 @@ export function buildProjectionWorkspaceViewModel(input: {
   financeYearId: string;
   financeYearName: string;
   version: {
+    id: string;
     versionNumber: number;
     actualsThroughDate: string;
     generatedAt: Date;
@@ -205,6 +220,7 @@ export function buildProjectionWorkspaceViewModel(input: {
     expenseMinor: number | null;
     resultMinor: number | null;
   } | null;
+  adoption: ProjectionAdoptionUiContext | null;
 }): ProjectionWorkspaceViewModel {
   const lineByAccount = new Map(input.lines.map((line) => [line.financialAccountId, line]));
   const accountById = new Map<string, ProjectionWorkspaceAccountViewModel>();
@@ -274,10 +290,12 @@ export function buildProjectionWorkspaceViewModel(input: {
     actualsThroughDate: input.version?.actualsThroughDate ?? null,
     generatedAtIso: input.version ? input.version.generatedAt.toISOString() : null,
     versionNumber: input.version?.versionNumber ?? null,
+    projectionVersionId: input.version?.id ?? null,
     coverage,
     versionDataSufficiency: input.version?.dataSufficiency ?? null,
     accounts,
     dashboard,
+    adoption: input.adoption,
   };
 }
 

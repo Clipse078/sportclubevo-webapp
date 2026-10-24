@@ -10,6 +10,7 @@ import {
   upsertForecastLine,
 } from "@/lib/finance/services/finance-forecast-service";
 import { generateFinanceYearProjection } from "@/lib/finance/services/finance-projection-generation-service";
+import { adoptProjectionForYear } from "@/lib/finance/services/finance-projection-adoption-service";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 
 export type FinanceForecastActionResult = { ok: true } | { ok: false; error: string };
@@ -56,6 +57,21 @@ export async function generateProjectionAction(input: {
   return mapResult(() =>
     generateFinanceYearProjection(prisma, ctx, {
       financeYearId: input.financeYearId,
+    }),
+  );
+}
+
+export async function adoptProjectionAction(input: {
+  financeYearId: string;
+  expectedSourceForecastVersionId: string;
+  expectedProjectionVersionId: string;
+}): Promise<FinanceForecastActionResult> {
+  const ctx = await forecastCtx();
+  return mapResult(() =>
+    adoptProjectionForYear(prisma, ctx, {
+      financeYearId: input.financeYearId,
+      expectedSourceForecastVersionId: input.expectedSourceForecastVersionId,
+      expectedProjectionVersionId: input.expectedProjectionVersionId,
     }),
   );
 }

@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04B programme — **04B-01** architecture; **04B-02** persistence; **04B-03** evidence & sufficiency |
-| **Status** | **FIN-04B IN PROGRESS** — **04B-01 COMPLETE / APPROVED**; **04B-02 IMPLEMENTED / STAGE APPLIED**; **04B-03 IMPLEMENTED** |
+| **Status** | **FIN-04B IN PROGRESS** — **04B-01 COMPLETE / APPROVED**; **04B-02 IMPLEMENTED / STAGE APPLIED**; **04B-03 IMPLEMENTED**; **04B-06 IMPLEMENTED / PO UAT REQUIRED** |
 | **Branch** | `cursor/sce-finance-04b-projection-engine` |
 | **Base** | `STAGE` (post FIN-04A merge PR **#902**, merge `eb3901ae`) |
 | **Implementation code** | Contract: `lib/finance/projection/projection-architecture-contract.ts`; persistence: `lib/finance/services/finance-projection-service.ts`; evidence: `lib/finance/services/finance-projection-evidence-service.ts` |
@@ -16,7 +16,7 @@ FIN-04B introduces **SCE-generated financial projections**: system expectations 
 
 > **SCE generates the projection. The organisation owns the forecast.**
 
-**NO UNEXPLAINED SCE PROJECTION (locked, FIN-04B-05R1):** Every generated account projection (and every deliberate non-prediction) must expose tenant-visible structured explainability derived from the same evidence/calculation that created the persisted line — not an independent UI guess. Charts must represent real supported data only; **no synthetic future monthly SCE phasing**. Account-level and insufficient-data explanations are mandatory for viewers with `finance.forecast.view`. Forecast adoption remains **FIN-04B-06**.
+**NO UNEXPLAINED SCE PROJECTION (locked, FIN-04B-05R1):** Every generated account projection (and every deliberate non-prediction) must expose tenant-visible structured explainability derived from the same evidence/calculation that created the persisted line — not an independent UI guess. Charts must represent real supported data only; **no synthetic future monthly SCE phasing**. Account-level and insufficient-data explanations are mandatory for viewers with `finance.forecast.view`. **NO UNEXPLAINED AUTOMATIC FORECAST** applies to all methodologies (historical, run-rate, future driver/statistical/ensemble) — explainability survives adoption unchanged (**FIN-04B-06** implements explicit adoption only; see `SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md`).
 
 This package defines domain boundaries, grains, evidence, data sufficiency, methodology abstraction, confidence, explainability, persistence/versioning, staleness, apply workflow, audit, permissions, and downstream compatibility — **without** implementing predictive algorithms, database migrations, or UI.
 
@@ -288,14 +288,17 @@ Event-driven invalidation may come later; semantics are defined now.
 
 FIN-04A today: ordinary manual edits **mutate lines on the current forecast version** in place (unchanged by FIN-04B-02).
 
-**FIN-04B adoption (future FIN-04B-06) — required contract (corrected FIN-04B-02):**
+**FIN-04B-06 adoption — required contract (implemented):**
 
-1. **`FinanceProjectionAdoption`** records: `projectionVersionId`, `sourceForecastVersionId`, `targetForecastVersionId`, `appliedByUserId`, `appliedAt`, scope.
-2. Accepting an SCE projection is a meaningful change to organisation-owned current forecast → **create a new `FinanceForecastVersion`**, set it **CURRENT**, mark prior version **SUPERSEDED**, update `FinanceForecast.currentVersionId`.
-3. Reconstructable trail: **forecast before → projection accepted → forecast after** without rewriting historical projection snapshots or inferring overwritten line state from audit metadata alone.
-4. Generalising *all* forecast edits to version-on-every-save remains **FIN-04C / hardening** — not FIN-04B-02 scope.
+1. **`FinanceProjectionAdoption`** records: `projectionVersionId`, `sourceForecastVersionId`, `targetForecastVersionId`, `appliedByUserId`, `appliedAt`, scope (`WHOLE_FINANCE_YEAR` first).
+2. Accepting Automatische Prognose → **new `FinanceForecastVersion`**, prior → **SUPERSEDED**, new → **CURRENT**, pointer updated.
+3. **Partial coverage:** accounts without projection keep current forecast amounts; **never null→zero**.
+4. **Exact `projectedAmountMinor`** adopted; UI whole-unit rounding is not persisted.
+5. **STALE** projection cannot be adopted; user must refresh first.
+6. **Concurrency:** expected forecast/projection version ids verified in transaction.
+7. Ordinary FIN-04A manual edits still mutate the current version in place (unchanged).
 
-**FIN-04B-02:** adoption table exists; apply workflow **not** implemented. FIN-04A forecast services unchanged.
+Detail: `docs/finance/SCE-FINANCE-04B-06-PROJECTION-ADOPTION.md`.
 
 ---
 

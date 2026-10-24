@@ -2,7 +2,8 @@ import type { PrismaClient } from "@prisma/client";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { requireFinanceForecastView } from "@/lib/finance/finance-authorization";
 import { calculateProjectionForAccount } from "@/lib/finance/projection/projection-account-calculator";
-import { evaluateProjectionEvidenceStaleness } from "@/lib/finance/projection/projection-evidence-staleness";
+import { previewProjectionAdoptionForYear } from "@/lib/finance/services/finance-projection-adoption-service";
+import { resolveProjectionVersionStaleness } from "@/lib/finance/services/finance-projection-staleness-resolver";
 import {
   buildProjectionAccountExplainability,
   buildProjectionWorkspaceViewModel,
@@ -34,6 +35,7 @@ type Db = Pick<
   | "financeProjectionLine"
   | "financeProjectionEvidence"
   | "financeProjectionReasonCode"
+  | "financeProjectionAdoption"
   | "$transaction"
 >;
 
@@ -101,6 +103,7 @@ export async function loadProjectionWorkspaceViewModel(
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
   }
 
@@ -119,31 +122,11 @@ export async function loadProjectionWorkspaceViewModel(
   });
   const yearNameById = new Map(bundle.years.map((y) => [y.id, y.name]));
 
-  const todayCutoff = formatUtcToday();
-  const currentEvidenceContexts = await getProjectionEvidenceContextForFinanceYearAccounts(
-    db,
-    ctx,
-    {
-      financeYearId: input.financeYearId,
-      actualsThroughDate: todayCutoff,
-      financialAccountIds: accountIds,
-    },
-  );
-  const combinedCurrentFingerprint = [...currentEvidenceContexts.values()]
-    .map((ctxRow) => ctxRow.evidenceFingerprint)
-    .sort()
-    .join("|");
-
-  const staleness = evaluateProjectionEvidenceStaleness(
-    {
-      evidenceFingerprint: currentVersion.evidenceFingerprint,
-      actualsThroughDate,
-    },
-    {
-      evidenceFingerprint: combinedCurrentFingerprint,
-      actualsThroughDate: todayCutoff,
-    },
-  );
+  const staleness = await resolveProjectionVersionStaleness(db, ctx, {
+    financeYearId: input.financeYearId,
+    projectionVersion: currentVersion,
+    financialAccountIds: accountIds,
+  });
 
   const explainabilityByAccountId = new Map<
     string,
@@ -215,10 +198,13 @@ export async function loadProjectionWorkspaceViewModel(
     };
   }
 
+  const adoption = await previewProjectionAdoptionForYear(db, ctx, input.financeYearId);
+
   return buildProjectionWorkspaceViewModel({
     financeYearId: year.id,
     financeYearName: year.name,
     version: {
+      id: currentVersion.id,
       versionNumber: currentVersion.versionNumber,
       actualsThroughDate,
       generatedAt: currentVersion.generatedAt,
@@ -233,5 +219,6 @@ export async function loadProjectionWorkspaceViewModel(
     explainabilityByAccountId,
     explainabilityDetailByAccountId,
     budgetTotals,
+    adoption,
   });
 }

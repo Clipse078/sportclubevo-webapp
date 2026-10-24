@@ -40,7 +40,11 @@ import {
 import { FinanceProjectionOutlookChart } from "@/components/admin/finance/projection/FinanceProjectionOutlookChart";
 import { FinanceProjectionCompositionChart } from "@/components/admin/finance/projection/FinanceProjectionCompositionChart";
 import { FinanceProjectionDivergenceChart } from "@/components/admin/finance/projection/FinanceProjectionDivergenceChart";
-import { generateProjectionAction } from "@/app/(admin)/dashboard/finance/forecast/actions";
+import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
+import {
+  adoptProjectionAction,
+  generateProjectionAction,
+} from "@/app/(admin)/dashboard/finance/forecast/actions";
 
 type FinanceProjectionWorkspaceSectionProps = {
   projection: ProjectionWorkspaceViewModel;
@@ -58,7 +62,10 @@ export function FinanceProjectionWorkspaceSection({
   const t = useTranslations("Finance.forecast.projection");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [adoptPending, startAdoptTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [adoptDialogOpen, setAdoptDialogOpen] = useState(false);
 
   const hasGeneratedVersion = projection.versionNumber !== null;
 
@@ -91,6 +98,34 @@ export function FinanceProjectionWorkspaceSection({
 
   const showDashboard =
     hasGeneratedVersion && projection.coverage.projectedAccountCount > 0 && projection.dashboard;
+
+  const adoption = projection.adoption;
+  const showAdoptAction =
+    canGenerate && adoption !== null && adoption.canAdopt && projection.projectionVersionId !== null;
+
+  const adoptBlockedStale =
+    canGenerate && adoption !== null && adoption.blockReason === "STALE_PROJECTION";
+  const adoptBlockedNoEligible =
+    canGenerate && adoption !== null && adoption.blockReason === "NO_ELIGIBLE_LINES";
+
+  function runAdoption() {
+    if (!adoption || !projection.projectionVersionId) return;
+    startAdoptTransition(async () => {
+      const result = await adoptProjectionAction({
+        financeYearId: projection.financeYearId,
+        expectedSourceForecastVersionId: adoption.sourceForecastVersionId,
+        expectedProjectionVersionId: adoption.projectionVersionId,
+      });
+      if (!result.ok) {
+        setFeedback(result.error);
+        return;
+      }
+      setFeedback(null);
+      setSuccessMessage(t("adoptSuccess"));
+      setAdoptDialogOpen(false);
+      router.refresh();
+    });
+  }
 
   return (
     <section
@@ -145,18 +180,44 @@ export function FinanceProjectionWorkspaceSection({
           ) : null}
         </div>
         {canGenerate ? (
-          <Button
-            className="h-8 shrink-0 px-3 text-sm"
-            disabled={pending}
-            onClick={runGeneration}
-            data-finance-projection-action={
-              projection.presentationState === "NO_PROJECTION" ? "create" : "refresh"
-            }
-          >
-            {actionLabel}
-          </Button>
+          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+            <Button
+              className="h-8 px-3 text-sm"
+              variant="secondary"
+              disabled={pending}
+              onClick={runGeneration}
+              data-finance-projection-action={
+                projection.presentationState === "NO_PROJECTION" ? "create" : "refresh"
+              }
+            >
+              {actionLabel}
+            </Button>
+            {showAdoptAction ? (
+              <Button
+                className="h-8 px-3 text-sm"
+                disabled={adoptPending}
+                onClick={() => setAdoptDialogOpen(true)}
+                data-finance-projection-action="adopt"
+              >
+                {t("adoptAction")}
+              </Button>
+            ) : null}
+          </div>
         ) : null}
       </div>
+
+      {adoptBlockedStale ? (
+        <p className="text-sm text-[var(--muted)]">{t("adoptStaleBlocked")}</p>
+      ) : null}
+      {adoptBlockedNoEligible ? (
+        <p className="text-sm text-[var(--muted)]">{t("adoptNoEligible")}</p>
+      ) : null}
+
+      {successMessage ? (
+        <p className="text-sm text-[var(--foreground)]" role="status">
+          {successMessage}
+        </p>
+      ) : null}
 
       {feedback ? (
         <p className="text-sm text-[var(--destructive)]" role="alert">
@@ -223,7 +284,95 @@ export function FinanceProjectionWorkspaceSection({
           ) : null}
         </>
       ) : null}
+
+      {adoption && showAdoptAction ? (
+        <Dialog
+          open={adoptDialogOpen}
+          onClose={() => setAdoptDialogOpen(false)}
+          title={t("adoptDialogTitle")}
+          description={t("adoptDialogDescription")}
+          footer={
+            <div className={SCE_DIALOG_ACTIONS_ROW_CLASS}>
+              <Button variant="secondary" onClick={() => setAdoptDialogOpen(false)}>
+                {t("adoptDialogCancel")}
+              </Button>
+              <Button disabled={adoptPending} onClick={runAdoption}>
+                {t("adoptDialogConfirm")}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-sm">
+            <p>
+              {t("adoptDialogImpactPositions", {
+                updated: adoption.eligibleAccountCount,
+                total: adoption.eligibleAccountCount + adoption.unchangedAccountCount,
+              })}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AdoptionImpactSummary
+                title={t("adoptDialogCurrentForecast")}
+                incomeLabel={t("summaryIncome")}
+                expenseLabel={t("summaryExpense")}
+                incomeMinor={adoption.currentTotals.incomeMinor}
+                expenseMinor={adoption.currentTotals.expenseMinor}
+                currency={currency}
+                formattingLocale={formattingLocale}
+              />
+              <AdoptionImpactSummary
+                title={t("adoptDialogAfterAdoption")}
+                incomeLabel={t("summaryIncome")}
+                expenseLabel={t("summaryExpense")}
+                incomeMinor={adoption.proposedTotals.incomeMinor}
+                expenseMinor={adoption.proposedTotals.expenseMinor}
+                currency={currency}
+                formattingLocale={formattingLocale}
+              />
+            </div>
+          </div>
+        </Dialog>
+      ) : null}
     </section>
+  );
+}
+
+function AdoptionImpactSummary(props: {
+  title: string;
+  incomeLabel: string;
+  expenseLabel: string;
+  incomeMinor: number;
+  expenseMinor: number;
+  currency: string | null;
+  formattingLocale: string;
+}) {
+  return (
+    <div className="rounded-md border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] p-3">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+        {props.title}
+      </p>
+      <dl className="space-y-1">
+        <div className="flex justify-between gap-2">
+          <dt className="text-[var(--muted)]">{props.incomeLabel}</dt>
+          <dd className="tabular-nums text-[var(--foreground)]">
+            {formatFinanceAutomaticForecastMoneyMinor(
+              props.incomeMinor,
+              props.currency,
+              props.formattingLocale,
+            )}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-[var(--muted)]">{props.expenseLabel}</dt>
+          <dd className="tabular-nums text-[var(--foreground)]">
+            {formatFinanceAutomaticForecastMoneyMinor(
+              props.expenseMinor,
+              props.currency,
+              props.formattingLocale,
+            )}
+          </dd>
+        </div>
+      </dl>
+    </div>
   );
 }
 

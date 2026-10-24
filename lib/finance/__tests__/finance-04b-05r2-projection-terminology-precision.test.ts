@@ -94,6 +94,7 @@ describe("FIN-04B-05R2 partial coverage preservation", () => {
       financeYearId: "fy1",
       financeYearName: "FY",
       version: {
+        id: "pv-test",
         versionNumber: 1,
         actualsThroughDate: "2026-10-24",
         generatedAt: new Date(),
@@ -124,6 +125,7 @@ describe("FIN-04B-05R2 partial coverage preservation", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.coverage.result.minor).toBeNull();
   });

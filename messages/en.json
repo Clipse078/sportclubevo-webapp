@@ -741,7 +741,18 @@
         "explainEstimatedRemainder": "Estimated remainder",
         "explainProjection": "Automatic forecast",
         "explainRange": "Expected range",
-        "explainRangeValue": "{lower}–{upper}"
+        "explainRangeValue": "{lower}–{upper}",
+        "adoptAction": "Apply automatic forecast",
+        "adoptSuccess": "The automatic forecast was applied as a new version of your current forecast.",
+        "adoptStaleBlocked": "New financial data is available since this calculation. Refresh the automatic forecast first.",
+        "adoptNoEligible": "There are currently no reliable automatic forecast values that can be applied.",
+        "adoptDialogTitle": "Apply automatic forecast?",
+        "adoptDialogDescription": "Available automatic forecast values will become a new version of your current forecast. Positions without a reliable automatic forecast stay unchanged. The previous forecast remains in the version history.",
+        "adoptDialogImpactPositions": "{updated} of {total} positions will be updated",
+        "adoptDialogCurrentForecast": "Current forecast",
+        "adoptDialogAfterAdoption": "After apply",
+        "adoptDialogCancel": "Cancel",
+        "adoptDialogConfirm": "Apply forecast"
       }
     },
     "actuals": {

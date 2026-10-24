@@ -120,6 +120,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.presentationState).toBe("NO_PROJECTION");
     expect(vm.dashboard).toBeNull();
@@ -131,6 +132,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       financeYearId: "fy1",
       financeYearName: "Saison 2026/27",
       version: {
+        id: "pv-test",
         versionNumber: 1,
         actualsThroughDate: "2026-09-30",
         generatedAt: new Date("2026-10-01T10:00:00.000Z"),
@@ -162,6 +164,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.presentationState).toBe("AVAILABLE_FRESH");
     expect(vm.dashboard).not.toBeNull();
@@ -173,6 +176,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       financeYearId: "fy1",
       financeYearName: "Y",
       version: {
+        id: "pv-test",
         versionNumber: 1,
         actualsThroughDate: "2026-09-30",
         generatedAt: new Date(),
@@ -199,6 +203,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.presentationState).toBe("AVAILABLE_STALE");
   });
@@ -208,6 +213,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       financeYearId: "fy1",
       financeYearName: "Y",
       version: {
+        id: "pv-test",
         versionNumber: 1,
         actualsThroughDate: "2026-09-30",
         generatedAt: new Date(),
@@ -247,6 +253,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.presentationState).toBe("PARTIAL_COVERAGE");
   });
@@ -256,6 +263,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       financeYearId: "fy1",
       financeYearName: "Y",
       version: {
+        id: "pv-test",
         versionNumber: 1,
         actualsThroughDate: "2026-09-30",
         generatedAt: new Date(),
@@ -272,6 +280,7 @@ describe("FIN-04B-05 workspace view-model states", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.presentationState).toBe("INSUFFICIENT");
   });

@@ -30,8 +30,10 @@ describe("FIN-04B-05R1 projection intelligence dashboard UX", () => {
     expect(forecastPanel).not.toContain("projectionColumn");
   });
 
-  it("does not expose adoption actions", () => {
-    expect(projectionSection).not.toMatch(/übernehmen|adopt/i);
+  it("exposes adoption as explicit consequential action without checkbox confirmation", () => {
+    expect(projectionSection).toContain('data-finance-projection-action="adopt"');
+    expect(projectionSection).toContain("adoptAction");
+    expect(projectionSection).not.toContain('type="checkbox"');
     expect(forecastPanel).not.toMatch(/adoptProjection|projectionAdopt/i);
   });
 

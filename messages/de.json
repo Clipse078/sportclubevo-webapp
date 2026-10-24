@@ -1204,7 +1204,18 @@
         "explainEstimatedRemainder": "Voraussichtlicher Rest",
         "explainProjection": "Automatische Prognose",
         "explainRange": "Erwarteter Bereich",
-        "explainRangeValue": "{lower}–{upper}"
+        "explainRangeValue": "{lower}–{upper}",
+        "adoptAction": "Automatische Prognose übernehmen",
+        "adoptSuccess": "Automatische Prognose wurde als neue Version der aktuellen Prognose übernommen.",
+        "adoptStaleBlocked": "Seit der Berechnung sind neue Finanzdaten verfügbar. Aktualisiert zuerst die automatische Prognose.",
+        "adoptNoEligible": "Derzeit liegen keine verlässlichen Werte der automatischen Prognose vor, die übernommen werden können.",
+        "adoptDialogTitle": "Automatische Prognose übernehmen?",
+        "adoptDialogDescription": "Die verfügbaren Werte der automatischen Prognose werden als neue Version eurer aktuellen Prognose übernommen. Positionen ohne verlässliche automatische Prognose bleiben unverändert. Die bisherige Prognose bleibt im Versionsverlauf erhalten.",
+        "adoptDialogImpactPositions": "{updated} von {total} Positionen werden aktualisiert",
+        "adoptDialogCurrentForecast": "Aktuelle Prognose",
+        "adoptDialogAfterAdoption": "Nach Übernahme",
+        "adoptDialogCancel": "Abbrechen",
+        "adoptDialogConfirm": "Prognose übernehmen"
       }
     },
     "actuals": {

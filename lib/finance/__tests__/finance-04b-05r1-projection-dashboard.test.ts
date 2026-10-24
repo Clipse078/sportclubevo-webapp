@@ -59,6 +59,7 @@ describe("FIN-04B-05R1 first-use coverage", () => {
       explainabilityByAccountId: new Map(),
       explainabilityDetailByAccountId: new Map(),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.presentationState).toBe("NO_PROJECTION");
     expect(vm.dashboard).toBeNull();
@@ -110,6 +111,7 @@ describe("FIN-04B-05R1 composition and divergence", () => {
     const dashboard = buildProjectionWorkspaceDashboard({
       coverage,
       budgetTotals: null,
+      adoption: null,
       accounts: [
         sampleAccount({ accountId: "a1", accountName: "A", projectedAmountMinor: 100_000_00 }),
         sampleAccount({ accountId: "a2", accountName: "B", projectedAmountMinor: 300_000_00 }),
@@ -126,6 +128,7 @@ describe("FIN-04B-05R1 composition and divergence", () => {
     const dashboard: ProjectionWorkspaceDashboardViewModel = buildProjectionWorkspaceDashboard({
       coverage,
       budgetTotals: null,
+      adoption: null,
       accounts: [sampleAccount({ deltaMinor: 10_000_00 })],
     });
     expect(dashboard.divergence).toBeNull();
@@ -139,6 +142,7 @@ describe("FIN-04B-05R1 composition and divergence", () => {
     const dashboard = buildProjectionWorkspaceDashboard({
       coverage,
       budgetTotals: null,
+      adoption: null,
       accounts: [
         sampleAccount({ accountId: "a1", accountName: "Small", deltaMinor: 5_000_00 }),
         sampleAccount({
@@ -240,6 +244,7 @@ describe("FIN-04B-05R1 phasing guard", () => {
       financeYearId: "fy1",
       financeYearName: "Y",
       version: {
+        id: "pv-test",
         versionNumber: 1,
         actualsThroughDate: "2026-09-30",
         generatedAt: new Date(),
@@ -290,6 +295,7 @@ describe("FIN-04B-05R1 phasing guard", () => {
         ],
       ]),
       budgetTotals: null,
+      adoption: null,
     });
     expect(vm.dashboard?.outlook.every((row) => !("monthly" in row))).toBe(true);
   });
