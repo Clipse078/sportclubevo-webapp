@@ -18,8 +18,9 @@ import {
 } from "@/lib/finance/budget/budget-amount-presentation";
 import {
   FINANCE_FUNCTIONAL_SURFACE_CLASS,
+  FINANCE_SECTION_HEADER_CLASS,
   FINANCE_SECTION_SURFACE_CLASS,
-  FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS,
+  FINANCE_SUMMARY_RESULT_VALUE_CLASS,
   FINANCE_SUMMARY_STRIP_SURFACE_CLASS,
   FINANCE_WORKSPACE_STACK_CLASS,
 } from "@/lib/finance/finance-workspace-surfaces";
@@ -72,7 +73,10 @@ export function FinanceScenarioDetailPanel({
   const comparison = detail.comparison;
   const primary = comparison.primary;
   const resultClass = financeResultSemanticTextClass(primary.scenarioResultMinor);
-  const deltaClass = financeResultSemanticTextClass(primary.resultDeltaMinor);
+  const deltaIsNeutral = primary.resultDeltaMinor === 0;
+  const deltaClass = deltaIsNeutral
+    ? "text-[var(--muted)]"
+    : financeResultSemanticTextClass(primary.resultDeltaMinor);
 
   const accountOptions: ScenarioAssumptionAccountOption[] = useMemo(
     () =>
@@ -217,6 +221,28 @@ export function FinanceScenarioDetailPanel({
     comparison.changeFlags.hasCompositionChange &&
     detail.assumptionCount > 0;
 
+  const accountEvidenceCount = detail.accountEffects.length;
+
+  const approvedBudgetRowSummary =
+    comparison.approvedBudget.kind === "NO_APPROVED_BUDGET"
+      ? t("noApprovedBudgetQuiet")
+      : t("approvedBudgetRowSummary", {
+          result: formatFinanceManagementPlanningMinor(
+            primary.scenarioResultMinor,
+            baseCurrency,
+            formattingLocale,
+          ),
+          delta: formatFinanceManagementPlanningSignedMinor(
+            comparison.approvedBudget.scenarioVsApprovedBudgetResultDeltaMinor,
+            baseCurrency,
+            formattingLocale,
+          ),
+        });
+
+  const provenanceSummary = comparison.sourceForecast.presentation.displaySubtitle
+    ? `${comparison.sourceForecast.presentation.displayTitle} · ${comparison.sourceForecast.presentation.displaySubtitle}`
+    : comparison.sourceForecast.presentation.displayTitle;
+
   return (
     <div className={cn(FINANCE_WORKSPACE_STACK_CLASS, "min-w-0")} data-finance-scenario-detail>
       <FinanceForecastSubContextTabs
@@ -244,10 +270,10 @@ export function FinanceScenarioDetailPanel({
         </p>
       ) : null}
 
-      <div className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS}>
+      <div className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS} data-finance-scenario-decision-summary>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <h1 className="text-lg font-semibold text-[var(--foreground)]">{detail.name}</h1>
+            <p className="text-base font-semibold text-[var(--foreground)]">{detail.name}</p>
             {detail.description ? (
               <p className="text-sm text-[var(--muted)]">{detail.description}</p>
             ) : null}
@@ -342,11 +368,13 @@ export function FinanceScenarioDetailPanel({
           ) : null}
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <p className="text-xs text-[var(--muted)]">{t("expectedResultLabel")}</p>
+        <div className="mt-4 flex flex-wrap items-end gap-x-10 gap-y-4">
+          <div className="min-w-[10rem]">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+              {t("expectedResultLabel")}
+            </p>
             <p
-              className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass, "tabular-nums")}
+              className={cn(FINANCE_SUMMARY_RESULT_VALUE_CLASS, resultClass, "tabular-nums")}
               data-finance-scenario-result
             >
               {formatFinanceManagementPlanningMinor(
@@ -356,9 +384,17 @@ export function FinanceScenarioDetailPanel({
               )}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-[var(--muted)]">{t("primaryDeltaLabel")}</p>
-            <p className={cn("text-xl font-semibold tabular-nums", deltaClass)}>
+          <div className="min-w-[10rem]">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+              {t("primaryDeltaLabel")}
+            </p>
+            <p
+              className={cn(
+                deltaIsNeutral ? "mt-1 text-base font-medium tabular-nums" : "mt-1 text-lg font-semibold tabular-nums",
+                deltaClass,
+              )}
+              data-finance-scenario-primary-delta
+            >
               {formatFinanceManagementPlanningSignedMinor(
                 primary.resultDeltaMinor,
                 baseCurrency,
@@ -375,127 +411,183 @@ export function FinanceScenarioDetailPanel({
         </p>
       ) : null}
 
-      <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-scenario-drivers>
-        <h2 className="text-sm font-semibold">{t("driversTitle")}</h2>
-        {detail.assumptionCount === 0 ? (
-          <p className="text-sm text-[var(--muted)]">{t("noAssumptionsDrivers")}</p>
-        ) : offsetting ? (
-          <p className="text-sm text-[var(--muted)]">{t("offsettingDriversIntro")}</p>
-        ) : comparison.summaryState === "NO_RESULT_CHANGE" ? (
-          <p className="text-sm text-[var(--muted)]">{t("noResultChange")}</p>
-        ) : null}
-        {detail.topDrivers.length > 0 ? (
-          <ul className="mt-2 space-y-2">
-            {detail.topDrivers.map((driver) => (
-              <li
-                key={driver.financialAccountId}
-                className="flex flex-wrap items-baseline justify-between gap-2 text-sm"
-              >
-                <div>
-                  <span className="font-medium">{driver.account.name}</span>
-                  <span className="ml-2 text-xs text-[var(--muted)]">
-                    {formatScenarioAssumptionChangeLabel({
-                      kind: driver.assumptionKind,
-                      percentBasisPoints:
-                        detail.assumptions.find((a) => a.financialAccountId === driver.financialAccountId)
-                          ?.percentBasisPoints ?? null,
-                      amountMinorDelta:
-                        detail.assumptions.find((a) => a.financialAccountId === driver.financialAccountId)
-                          ?.amountMinorDelta ?? null,
-                      absoluteAmountMinor:
-                        detail.assumptions.find((a) => a.financialAccountId === driver.financialAccountId)
-                          ?.absoluteAmountMinor ?? null,
-                      currency: baseCurrency,
-                      formattingLocale,
-                      labels: assumptionLabels,
-                    })}
-                  </span>
-                </div>
-                <span className="tabular-nums text-[var(--muted)]">
-                  {t("driverImpact", {
-                    amount: formatFinanceManagementPlanningSignedMinor(
-                      driver.resultContributionMinor,
-                      baseCurrency,
-                      formattingLocale,
-                    ),
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </section>
+      <div
+        className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
+        data-finance-scenario-decision-explanation
+      >
+        <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-scenario-drivers>
+          <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>{t("driversTitle")}</h2>
+          <div className="min-h-[7.5rem] px-4 py-4">
+            {detail.assumptionCount === 0 ? (
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[var(--foreground)]">{t("driversEmptyTitle")}</p>
+                <p className="text-sm text-[var(--muted)]">{t("driversEmptyBody")}</p>
+                <p className="text-xs text-[var(--muted)]">{t("driversEmptyHint")}</p>
+              </div>
+            ) : (
+              <>
+                {offsetting ? (
+                  <p className="mb-3 text-sm text-[var(--muted)]">{t("offsettingDriversIntro")}</p>
+                ) : comparison.summaryState === "NO_RESULT_CHANGE" ? (
+                  <p className="mb-3 text-sm text-[var(--muted)]">{t("noResultChange")}</p>
+                ) : null}
+                {detail.topDrivers.length > 0 ? (
+                  <ul className="space-y-3">
+                    {detail.topDrivers.map((driver) => (
+                      <li
+                        key={driver.financialAccountId}
+                        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-medium">{driver.account.name}</span>
+                          <span className="ml-2 text-xs text-[var(--muted)]">
+                            {formatScenarioAssumptionChangeLabel({
+                              kind: driver.assumptionKind,
+                              percentBasisPoints:
+                                detail.assumptions.find(
+                                  (a) => a.financialAccountId === driver.financialAccountId,
+                                )?.percentBasisPoints ?? null,
+                              amountMinorDelta:
+                                detail.assumptions.find(
+                                  (a) => a.financialAccountId === driver.financialAccountId,
+                                )?.amountMinorDelta ?? null,
+                              absoluteAmountMinor:
+                                detail.assumptions.find(
+                                  (a) => a.financialAccountId === driver.financialAccountId,
+                                )?.absoluteAmountMinor ?? null,
+                              currency: baseCurrency,
+                              formattingLocale,
+                              labels: assumptionLabels,
+                            })}
+                          </span>
+                        </div>
+                        <span className="shrink-0 tabular-nums text-[var(--muted)]">
+                          {t("driverImpact", {
+                            amount: formatFinanceManagementPlanningSignedMinor(
+                              driver.resultContributionMinor,
+                              baseCurrency,
+                              formattingLocale,
+                            ),
+                          })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            )}
+          </div>
+        </section>
 
-      <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-scenario-assumptions>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">{t("assumptions.sectionTitle")}</h2>
-          {canMutate && !detail.isArchived ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setEditingAssumptionId(null);
-                setAssumptionDialogOpen(true);
-              }}
-            >
-              {t("assumptions.addCta")}
-            </Button>
-          ) : null}
-        </div>
-        {detail.assumptionCount === 0 ? (
-          <p className="text-sm text-[var(--muted)]">{t("assumptions.empty")}</p>
-        ) : (
-          <ul className="mt-2 divide-y divide-[var(--border)] rounded-md border border-[var(--border)]">
-            {detail.assumptions.map((assumption) => {
-              const account = detail.accountEffects.find(
-                (a) => a.financialAccountId === assumption.financialAccountId,
-              )?.account;
-              return (
-                <li
-                  key={assumption.assumptionId}
-                  className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
-                >
-                  <div>
-                    <span className="font-medium">{account?.name ?? "—"}</span>
-                    <span className="ml-2 text-[var(--muted)]">
-                      {formatScenarioAssumptionChangeLabel({
-                        kind: assumption.kind,
-                        percentBasisPoints: assumption.percentBasisPoints,
-                        amountMinorDelta: assumption.amountMinorDelta,
-                        absoluteAmountMinor: assumption.absoluteAmountMinor,
-                        currency: baseCurrency,
-                        formattingLocale,
-                        labels: assumptionLabels,
-                      })}
-                    </span>
-                  </div>
-                  {canMutate && !detail.isArchived ? (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className="text-xs font-medium text-[var(--foreground)] hover:underline"
-                        onClick={() => {
-                          setEditingAssumptionId(assumption.assumptionId);
-                          setAssumptionDialogOpen(true);
-                        }}
-                      >
-                        {t("assumptions.edit")}
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs font-medium text-[var(--destructive)] hover:underline"
-                        onClick={() => runRemoveAssumption(assumption.financialAccountId)}
-                      >
-                        {t("assumptions.remove")}
-                      </button>
+        <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-scenario-assumptions>
+          <div
+            className={cn(
+              FINANCE_SECTION_HEADER_CLASS,
+              "flex flex-wrap items-center justify-between gap-2 py-2.5",
+            )}
+          >
+            <h2 className="text-sm font-semibold">{t("assumptions.sectionTitle")}</h2>
+            {canMutate && !detail.isArchived && detail.assumptionCount > 0 ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setEditingAssumptionId(null);
+                  setAssumptionDialogOpen(true);
+                }}
+              >
+                {t("assumptions.addCta")}
+              </Button>
+            ) : null}
+          </div>
+          {detail.assumptionCount === 0 ? (
+            <div className="flex min-h-[7.5rem] flex-col justify-center gap-3 px-4 py-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[var(--foreground)]">
+                  {t("assumptions.emptyTitle")}
+                </p>
+                <p className="text-sm text-[var(--muted)]">{t("assumptions.emptyBody")}</p>
+              </div>
+              {canMutate && !detail.isArchived ? (
+                <div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setEditingAssumptionId(null);
+                      setAssumptionDialogOpen(true);
+                    }}
+                  >
+                    {t("assumptions.addCta")}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <ul className="divide-y divide-[var(--sce-surface-border-subtle)]">
+              {detail.assumptions.map((assumption) => {
+                const account = detail.accountEffects.find(
+                  (a) => a.financialAccountId === assumption.financialAccountId,
+                )?.account;
+                const effectRow = detail.accountEffects.find(
+                  (a) => a.financialAccountId === assumption.financialAccountId,
+                );
+                return (
+                  <li
+                    key={assumption.assumptionId}
+                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium">{account?.name ?? "—"}</span>
+                      <span className="ml-2 text-[var(--muted)]">
+                        {formatScenarioAssumptionChangeLabel({
+                          kind: assumption.kind,
+                          percentBasisPoints: assumption.percentBasisPoints,
+                          amountMinorDelta: assumption.amountMinorDelta,
+                          absoluteAmountMinor: assumption.absoluteAmountMinor,
+                          currency: baseCurrency,
+                          formattingLocale,
+                          labels: assumptionLabels,
+                        })}
+                      </span>
+                      {effectRow && effectRow.deltaMinor !== 0 ? (
+                        <span className="ml-2 text-xs tabular-nums text-[var(--muted)]">
+                          {formatFinanceManagementPlanningSignedMinor(
+                            effectRow.deltaMinor,
+                            baseCurrency,
+                            formattingLocale,
+                          )}
+                        </span>
+                      ) : null}
                     </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                    {canMutate && !detail.isArchived ? (
+                      <div className="flex shrink-0 gap-2">
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-[var(--foreground)] hover:underline"
+                          onClick={() => {
+                            setEditingAssumptionId(assumption.assumptionId);
+                            setAssumptionDialogOpen(true);
+                          }}
+                        >
+                          {t("assumptions.edit")}
+                        </button>
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-[var(--destructive)] hover:underline"
+                          onClick={() => runRemoveAssumption(assumption.financialAccountId)}
+                        >
+                          {t("assumptions.remove")}
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
 
       {showLiveCurrent && comparison.liveCurrentForecast.kind === "AVAILABLE" ? (
         <section className={FINANCE_FUNCTIONAL_SURFACE_CLASS} data-finance-scenario-live-current>
@@ -515,125 +607,137 @@ export function FinanceScenarioDetailPanel({
         <p className="text-xs text-[var(--muted)]">{t("liveCurrentUnavailable")}</p>
       ) : null}
 
-      <FinanceWorkspaceDisclosure
-        title={t("approvedBudgetTitle")}
-        summary={t("approvedBudgetSummary")}
-        expandLabel={t("disclosureShow")}
-        collapseLabel={t("disclosureHide")}
-        data-finance-disclosure="approved-budget"
-      >
-        {comparison.approvedBudget.kind === "NO_APPROVED_BUDGET" ? (
-          <p className="text-sm text-[var(--muted)]">{t("noApprovedBudget")}</p>
-        ) : (
-          <div className="space-y-1 text-sm tabular-nums">
-            <p>
-              {t("approvedBudgetScenario")}:{" "}
-              {formatFinanceManagementPlanningMinor(
-                primary.scenarioResultMinor,
-                baseCurrency,
-                formattingLocale,
-              )}
-            </p>
-            <p>
-              {t("approvedBudgetReference")}:{" "}
-              {formatFinanceManagementPlanningMinor(
-                comparison.approvedBudget.approvedBudgetResultMinor,
-                baseCurrency,
-                formattingLocale,
-              )}
-            </p>
-            <p>
-              {t("approvedBudgetDelta")}:{" "}
-              {formatFinanceManagementPlanningSignedMinor(
-                comparison.approvedBudget.scenarioVsApprovedBudgetResultDeltaMinor,
-                baseCurrency,
-                formattingLocale,
-              )}
-            </p>
-          </div>
-        )}
-      </FinanceWorkspaceDisclosure>
+      <section className={FINANCE_SECTION_SURFACE_CLASS} data-finance-scenario-investigation>
+        <h2 className={cn(FINANCE_SECTION_HEADER_CLASS, "break-words")}>
+          {t("investigationSectionTitle")}
+        </h2>
+        <div className="divide-y divide-[var(--sce-surface-border-subtle)]">
+          <FinanceWorkspaceDisclosure
+            variant="row"
+            title={t("approvedBudgetTitle")}
+            summary={approvedBudgetRowSummary}
+            expandLabel={t("disclosureShow")}
+            collapseLabel={t("disclosureHide")}
+            data-finance-disclosure="approved-budget"
+          >
+            {comparison.approvedBudget.kind === "NO_APPROVED_BUDGET" ? (
+              <p className="text-sm text-[var(--muted)]">{t("noApprovedBudget")}</p>
+            ) : (
+              <div className="space-y-1 text-sm tabular-nums">
+                <p>
+                  {t("approvedBudgetScenario")}:{" "}
+                  {formatFinanceManagementPlanningMinor(
+                    primary.scenarioResultMinor,
+                    baseCurrency,
+                    formattingLocale,
+                  )}
+                </p>
+                <p>
+                  {t("approvedBudgetReference")}:{" "}
+                  {formatFinanceManagementPlanningMinor(
+                    comparison.approvedBudget.approvedBudgetResultMinor,
+                    baseCurrency,
+                    formattingLocale,
+                  )}
+                </p>
+                <p>
+                  {t("approvedBudgetDelta")}:{" "}
+                  {formatFinanceManagementPlanningSignedMinor(
+                    comparison.approvedBudget.scenarioVsApprovedBudgetResultDeltaMinor,
+                    baseCurrency,
+                    formattingLocale,
+                  )}
+                </p>
+              </div>
+            )}
+          </FinanceWorkspaceDisclosure>
 
-      <FinanceWorkspaceDisclosure
-        title={t("accountEvidenceTitle")}
-        expandLabel={t("disclosureShow")}
-        collapseLabel={t("disclosureHide")}
-        data-finance-disclosure="account-evidence"
-      >
-        <div className="min-w-0 overflow-x-auto">
-          <table className="w-full min-w-[28rem] text-left text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]">
-                <th className="py-2 pr-3 font-medium">{t("accountColumn")}</th>
-                <th className="py-2 pr-3 font-medium text-right">{t("baselineColumn")}</th>
-                <th className="py-2 pr-3 font-medium text-right">{t("scenarioColumn")}</th>
-                <th className="py-2 font-medium text-right">{t("deltaColumn")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.accountEffects.map((row) => (
-                <tr key={row.financialAccountId} className="border-b border-[var(--border)]/60">
-                  <td className="py-2 pr-3">{row.account.name}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
-                    {formatFinanceManagementPlanningMinor(
-                      row.baselineAmountMinor,
-                      baseCurrency,
-                      formattingLocale,
-                    )}
-                  </td>
-                  <td className="py-2 pr-3 text-right tabular-nums">
-                    {formatFinanceManagementPlanningMinor(
-                      row.scenarioAmountMinor,
-                      baseCurrency,
-                      formattingLocale,
-                    )}
-                  </td>
-                  <td className="py-2 text-right tabular-nums">
-                    {formatFinanceManagementPlanningSignedMinor(
-                      row.deltaMinor,
-                      baseCurrency,
-                      formattingLocale,
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <FinanceWorkspaceDisclosure
+            variant="row"
+            title={t("accountEvidenceTitle")}
+            summary={t("accountEvidenceSummary", { count: accountEvidenceCount })}
+            expandLabel={t("disclosureShow")}
+            collapseLabel={t("disclosureHide")}
+            data-finance-disclosure="account-evidence"
+          >
+            <div className="min-w-0 overflow-x-auto">
+              <table className="w-full min-w-[28rem] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--border)] text-xs text-[var(--muted)]">
+                    <th className="py-2 pr-3 font-medium">{t("accountColumn")}</th>
+                    <th className="py-2 pr-3 font-medium text-right">{t("baselineColumn")}</th>
+                    <th className="py-2 pr-3 font-medium text-right">{t("scenarioColumn")}</th>
+                    <th className="py-2 font-medium text-right">{t("deltaColumn")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.accountEffects.map((row) => (
+                    <tr key={row.financialAccountId} className="border-b border-[var(--border)]/60">
+                      <td className="py-2 pr-3">{row.account.name}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {formatFinanceManagementPlanningMinor(
+                          row.baselineAmountMinor,
+                          baseCurrency,
+                          formattingLocale,
+                        )}
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums">
+                        {formatFinanceManagementPlanningMinor(
+                          row.scenarioAmountMinor,
+                          baseCurrency,
+                          formattingLocale,
+                        )}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">
+                        {formatFinanceManagementPlanningSignedMinor(
+                          row.deltaMinor,
+                          baseCurrency,
+                          formattingLocale,
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </FinanceWorkspaceDisclosure>
+
+          <FinanceWorkspaceDisclosure
+            variant="row"
+            title={t("metadataTitle")}
+            summary={provenanceSummary}
+            expandLabel={t("disclosureShow")}
+            collapseLabel={t("disclosureHide")}
+            data-finance-disclosure="metadata"
+          >
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-[var(--muted)]">{t("metadataCreated")}</dt>
+                <dd>
+                  {new Date(detail.createdAt).toLocaleString(formattingLocale)}
+                  {detail.createdBy ? ` · ${detail.createdBy.displayName}` : ""}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-[var(--muted)]">{t("metadataUpdated")}</dt>
+                <dd>
+                  {new Date(detail.updatedAt).toLocaleString(formattingLocale)}
+                  {detail.updatedBy ? ` · ${detail.updatedBy.displayName}` : ""}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-[var(--muted)]">{t("metadataSourceForecast")}</dt>
+                <dd>
+                  {comparison.sourceForecast.presentation.displayTitle}
+                  {comparison.sourceForecast.presentation.displaySubtitle
+                    ? ` · ${comparison.sourceForecast.presentation.displaySubtitle}`
+                    : ""}
+                </dd>
+              </div>
+            </dl>
+          </FinanceWorkspaceDisclosure>
         </div>
-      </FinanceWorkspaceDisclosure>
-
-      <FinanceWorkspaceDisclosure
-        title={t("metadataTitle")}
-        expandLabel={t("disclosureShow")}
-        collapseLabel={t("disclosureHide")}
-        data-finance-disclosure="metadata"
-      >
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-xs text-[var(--muted)]">{t("metadataCreated")}</dt>
-            <dd>
-              {new Date(detail.createdAt).toLocaleString(formattingLocale)}
-              {detail.createdBy ? ` · ${detail.createdBy.displayName}` : ""}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-[var(--muted)]">{t("metadataUpdated")}</dt>
-            <dd>
-              {new Date(detail.updatedAt).toLocaleString(formattingLocale)}
-              {detail.updatedBy ? ` · ${detail.updatedBy.displayName}` : ""}
-            </dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-xs text-[var(--muted)]">{t("metadataSourceForecast")}</dt>
-            <dd>
-              {comparison.sourceForecast.presentation.displayTitle}
-              {comparison.sourceForecast.presentation.displaySubtitle
-                ? ` · ${comparison.sourceForecast.presentation.displaySubtitle}`
-                : ""}
-            </dd>
-          </div>
-        </dl>
-      </FinanceWorkspaceDisclosure>
+      </section>
 
       <FinanceScenarioAssumptionDialog
         open={assumptionDialogOpen}

@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D-05 — tenant-facing scenario workspace |
-| **Status** | **COMPLETE** — ready for Product Owner UAT |
+| **Status** | **04D-05R1** — PO UAT visual hierarchy correction (ready for re-UAT) |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Depends on** | FIN-04D-01 … FIN-04D-04 |
 
@@ -30,9 +30,19 @@
 
 **Overview:** name + expected result dominate; delta, assumption count, freshness (when outdated), last updated are secondary. Archived excluded by default; **Aktiv / Archiviert** segmented filter (no checkbox).
 
-**Detail (default visible):** identity → expected result → delta vs frozen starting point → freshness exception → top drivers → assumptions.
+### Detail composition (04D-05R1 — PO UAT correction)
 
-**Progressive disclosure:** genehmigtes Budget, Kontodetails, Herkunft metadata.
+**Before (04D-05):** result hero, then shallow disconnected section strips and loose **Details anzeigen** links on the ambient background.
+
+**After (04D-05R1):** three intentional layers on the Scenario detail body:
+
+1. **Decision summary** — dark result hero (variant identity, baseline context, expected result, delta vs Ausgangsprognose, overflow menu). Expected result stays primary; zero delta is visually quiet.
+2. **Decision explanation** — desktop two-column grid (~55–60% drivers / ~40–45% assumptions), stacked on narrow viewports. Padded Finance section surfaces with deliberate empty states when there are no assumptions (first-use guidance without duplicate CTAs).
+3. **Investigation** — one shared secondary surface (**Weitere Details**) with row-style disclosures for genehmigtes Budget, Kontodetails, and Herkunft (title + summary + chevron; no repeated standalone **Details anzeigen** in the collapsed row).
+
+**Charts:** still none in v1.
+
+**Responsive:** explanation columns collapse vertically; investigation rows stay full width; no page-level horizontal overflow architecture change.
 
 ## Create flow
 

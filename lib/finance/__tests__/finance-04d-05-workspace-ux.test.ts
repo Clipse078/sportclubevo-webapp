@@ -76,6 +76,8 @@ describe("FIN-04D-05 scenario workspace UX", () => {
     expect(detail).toContain("primaryDeltaLabel");
     expect(detail).toContain("data-finance-scenario-drivers");
     expect(detail).toContain("FinanceWorkspaceDisclosure");
+    expect(detail).toContain("data-finance-scenario-investigation");
+    expect(detail).toContain('variant="row"');
     expect(detail).toContain("offsettingDriversIntro");
     expect(detail).not.toContain("scenarioToScenario");
   });
