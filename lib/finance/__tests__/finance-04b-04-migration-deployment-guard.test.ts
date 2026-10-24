@@ -23,6 +23,18 @@ describe("FIN-04B-04 migration deployment guard", () => {
     expect(sql).not.toContain("DROP TABLE");
   });
 
+  it("provides a designated STAGE verify script for FIN-04B-04 migration", () => {
+    const script = readFileSync(
+      resolve(process.cwd(), "scripts/sce-finance-04b-04-stage-migration-verify.ts"),
+      "utf8",
+    );
+    expect(script).toContain(MIGRATION_NAME);
+    expect(script).toContain("methodologyFamily");
+    expect(script).toContain("sce-finance-04b-02-stage-migration-verify");
+    expect(script).toContain("MIGRATION_04B_02");
+    expect(script).toContain("APPLY_DATABASE_MIGRATIONS");
+  });
+
   it("schema declares line-level methodology fields", () => {
     const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
     const block = schema.match(/model FinanceProjectionLine \{[\s\S]*?\n\}/)?.[0];

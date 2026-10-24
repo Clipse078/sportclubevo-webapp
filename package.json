@@ -60,7 +60,8 @@
     "finance:03a:r3:stage-permission-reconcile": "tsx scripts/sce-finance-03a-r3-stage-permission-reconcile.ts",
     "finance:04a:r1:stage-migration-verify": "tsx scripts/sce-finance-04a-r1-stage-migration-verify.ts",
     "finance:04a:r1:stage-permission-reconcile": "tsx scripts/sce-finance-04a-r1-stage-permission-reconcile.ts",
-    "finance:04b:02:stage-migration-verify": "tsx scripts/sce-finance-04b-02-stage-migration-verify.ts"
+    "finance:04b:02:stage-migration-verify": "tsx scripts/sce-finance-04b-02-stage-migration-verify.ts",
+    "finance:04b:04:stage-migration-verify": "tsx scripts/sce-finance-04b-04-stage-migration-verify.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",

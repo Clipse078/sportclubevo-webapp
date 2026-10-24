@@ -103,7 +103,7 @@ async function tableExists(tableName: string): Promise<boolean> {
   return Boolean(rows[0]?.exists);
 }
 
-async function loadIntegritySnapshot(): Promise<IntegritySnapshot> {
+export async function loadIntegritySnapshot(): Promise<IntegritySnapshot> {
   const projectionTable = await tableExists("FinanceProjection");
   const [
     financeConfigurationCount,
@@ -427,11 +427,17 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(report, null, 2));
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+const isDirectCliRun = process.argv[1]?.includes(
+  "sce-finance-04b-02-stage-migration-verify",
+);
+
+if (isDirectCliRun) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

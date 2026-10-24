@@ -9,6 +9,7 @@ import {
   createForecastForYear,
   upsertForecastLine,
 } from "@/lib/finance/services/finance-forecast-service";
+import { generateFinanceYearProjection } from "@/lib/finance/services/finance-projection-generation-service";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 
 export type FinanceForecastActionResult = { ok: true } | { ok: false; error: string };
@@ -46,4 +47,15 @@ export async function saveForecastLineAction(input: {
 }): Promise<FinanceForecastActionResult> {
   const ctx = await forecastCtx();
   return mapResult(() => upsertForecastLine(prisma, ctx, input));
+}
+
+export async function generateProjectionAction(input: {
+  financeYearId: string;
+}): Promise<FinanceForecastActionResult> {
+  const ctx = await forecastCtx();
+  return mapResult(() =>
+    generateFinanceYearProjection(prisma, ctx, {
+      financeYearId: input.financeYearId,
+    }),
+  );
 }

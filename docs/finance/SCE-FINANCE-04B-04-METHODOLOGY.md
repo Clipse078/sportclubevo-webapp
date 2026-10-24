@@ -5,7 +5,7 @@
 | **Package** | FIN-04B-04 |
 | **Status** | **IMPLEMENTED** |
 | **Engine version** | `sce-projection-v1` |
-| **Shared STAGE migration (04B-04)** | **PENDING** (`20261023210000_sce_finance_04b_04_projection_line_methodology`) |
+| **Shared STAGE migration (04B-04)** | **APPLIED TO SHARED STAGE** (`20261023210000_sce_finance_04b_04_projection_line_methodology`) |
 
 ## Purpose
 

@@ -5,6 +5,7 @@ import { FinanceForecastWorkspacePanel } from "@/components/admin/finance/Financ
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 import { loadForecastWorkspaceSnapshot } from "@/lib/finance/services/finance-forecast-query-service";
+import { loadProjectionWorkspaceViewModel } from "@/lib/finance/services/finance-projection-workspace-query-service";
 import { prisma } from "@/lib/db/prisma";
 import { redirect } from "next/navigation";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -34,6 +35,17 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
 
   const { years, snapshot, hasAccounts, selectedYearId, baseCurrency, creation } =
     await loadForecastWorkspaceSnapshot(prisma, workspace.ctx, params.yearId ?? null);
+
+  const forecastAmountByAccountId = new Map<string, number | null>(
+    snapshot?.rows.map((row) => [row.accountId, row.amountMinor]) ?? [],
+  );
+  const projection =
+    selectedYearId && hasAccounts
+      ? await loadProjectionWorkspaceViewModel(prisma, workspace.ctx, {
+          financeYearId: selectedYearId,
+          forecastAmountByAccountId,
+        })
+      : null;
 
   return (
     <PageShell>
@@ -70,9 +82,11 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
         <FinanceForecastWorkspacePanel
           years={years.map((y) => ({ id: y.id, name: y.name }))}
           snapshot={snapshot}
+          projection={projection}
           baseCurrency={baseCurrency}
           hasAccounts={hasAccounts}
           canMutate={workspace.canForecastManage}
+          canGenerateProjection={workspace.canForecastManage}
           selectedYearId={selectedYearId}
           formattingLocale={workspace.formattingLocale}
           creation={creation}

@@ -36,6 +36,12 @@ import {
   type ForecastDraftAmounts,
 } from "@/lib/finance/forecast/forecast-draft-editing";
 import type { ForecastWorkspaceSnapshot } from "@/lib/finance/forecast/forecast-presentation";
+import type { ProjectionWorkspaceViewModel } from "@/lib/finance/projection/projection-workspace-presentation";
+import {
+  FinanceProjectionAccountCell,
+  FinanceProjectionDeltaCell,
+  FinanceProjectionWorkspaceSection,
+} from "@/components/admin/finance/FinanceProjectionWorkspaceSection";
 import { financeVarianceComparisonSemanticTextClass } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
@@ -81,9 +87,11 @@ type FinanceYearOption = { id: string; name: string };
 type FinanceForecastWorkspacePanelProps = {
   years: FinanceYearOption[];
   snapshot: ForecastWorkspaceSnapshot | null;
+  projection: ProjectionWorkspaceViewModel | null;
   baseCurrency: string | null;
   hasAccounts: boolean;
   canMutate: boolean;
+  canGenerateProjection: boolean;
   selectedYearId: string | null;
   formattingLocale: string;
   creation: { canInitializeFromBaseline: boolean };
@@ -92,9 +100,11 @@ type FinanceForecastWorkspacePanelProps = {
 export function FinanceForecastWorkspacePanel({
   years,
   snapshot,
+  projection,
   baseCurrency,
   hasAccounts,
   canMutate,
+  canGenerateProjection,
   selectedYearId,
   formattingLocale,
   creation,
@@ -253,11 +263,19 @@ export function FinanceForecastWorkspacePanel({
         </p>
       ) : null}
 
+      {yearSelected && projection ? (
+        <FinanceProjectionWorkspaceSection
+          projection={projection}
+          currency={workspaceCurrency}
+          formattingLocale={formattingLocale}
+          canGenerate={canGenerateProjection}
+        />
+      ) : null}
+
       {yearSelected && !hasForecast && canMutate ? (
         <section className={cn(FINANCE_EMPTY_DRAFT_SURFACE_CLASS, "py-4")}>
-          <h2 className="text-sm font-semibold">
-            {t("emptyTitle", { year: selectedYearName })}
-          </h2>
+          <h2 className="text-sm font-semibold">{t("currentForecastSectionTitle")}</h2>
+          <p className="mt-1 text-sm font-medium">{t("emptyTitle", { year: selectedYearName })}</p>
           <p className="mt-1.5 max-w-2xl text-sm text-[var(--muted)]">{t("emptyBody")}</p>
           <Button className="mt-3 h-8 px-3 text-sm" onClick={openCreateDialog}>
             {t("createAction")}
@@ -267,6 +285,9 @@ export function FinanceForecastWorkspacePanel({
 
       {yearSelected && hasForecast && snapshot && displayTotals ? (
         <>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            {t("currentForecastSectionTitle")}
+          </h2>
           <ForecastSummarySection
             totals={displayTotals}
             currency={workspaceCurrency}
@@ -280,6 +301,7 @@ export function FinanceForecastWorkspacePanel({
 
           <ForecastEditableSection
             snapshot={snapshot}
+            projection={projection}
             incomeRows={incomeRows}
             expenseRows={expenseRows}
             readOnly={readOnly}
@@ -404,6 +426,7 @@ function ForecastSummarySection(props: {
 
 function ForecastEditableSection(props: {
   snapshot: ForecastWorkspaceSnapshot;
+  projection: ProjectionWorkspaceViewModel | null;
   incomeRows: ForecastWorkspaceSnapshot["rows"];
   expenseRows: ForecastWorkspaceSnapshot["rows"];
   readOnly: boolean;
@@ -493,6 +516,7 @@ function ForecastEditableSection(props: {
       <ForecastAccountTable
         title={props.t("incomeSectionWithYear", { year: props.yearName })}
         rows={props.incomeRows}
+        projection={props.projection}
         draftAmounts={draftAmounts}
         readOnly={props.readOnly}
         formattingLocale={props.formattingLocale}
@@ -510,6 +534,7 @@ function ForecastEditableSection(props: {
       <ForecastAccountTable
         title={props.t("expenseSectionWithYear", { year: props.yearName })}
         rows={props.expenseRows}
+        projection={props.projection}
         draftAmounts={draftAmounts}
         readOnly={props.readOnly}
         formattingLocale={props.formattingLocale}
@@ -530,6 +555,7 @@ function ForecastEditableSection(props: {
 function ForecastAccountTable(props: {
   title: string;
   rows: ForecastWorkspaceSnapshot["rows"];
+  projection: ProjectionWorkspaceViewModel | null;
   draftAmounts: ForecastDraftAmounts;
   readOnly: boolean;
   formattingLocale: string;
@@ -540,6 +566,7 @@ function ForecastAccountTable(props: {
   tVariance: ReturnType<typeof useTranslations<"Finance.actuals">>;
   lineErrors: Record<string, string>;
 }) {
+  const showProjectionColumns = Boolean(props.projection);
   const tableClass = props.showComparison
     ? FINANCE_VARIANCE_COMPARISON_TABLE_CLASS
     : "w-full min-w-0 table-fixed text-sm";
@@ -580,6 +607,16 @@ function ForecastAccountTable(props: {
                   {props.t("forecastColumn")}
                 </th>
               )}
+              {showProjectionColumns ? (
+                <>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {props.t("projectionColumn")}
+                  </th>
+                  <th className={FINANCE_VARIANCE_COMPARISON_HEAD_NUMERIC_CLASS}>
+                    {props.t("projectionDeltaColumn")}
+                  </th>
+                </>
+              ) : null}
             </tr>
           </thead>
           <tbody>
@@ -691,6 +728,24 @@ function ForecastAccountTable(props: {
                       />
                     </td>
                   )}
+                  {showProjectionColumns && props.projection ? (
+                    <>
+                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                        <FinanceProjectionAccountCell
+                          accountId={row.accountId}
+                          projection={props.projection}
+                          formattingLocale={props.formattingLocale}
+                        />
+                      </td>
+                      <td className={FINANCE_VARIANCE_COMPARISON_NUMERIC_CELL_CLASS}>
+                        <FinanceProjectionDeltaCell
+                          accountId={row.accountId}
+                          projection={props.projection}
+                          formattingLocale={props.formattingLocale}
+                        />
+                      </td>
+                    </>
+                  ) : null}
                 </tr>
               );
             })}
