@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** + **04B** + **04C** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903**, **#904** → **STAGE**; **04D-01** + **04D-02** + **04D-03** on PR **#905** → **STAGE**; **04D-04+** **PLANNED**) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** + **04B** + **04C** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903**, **#904** → **STAGE**; **04D-01** through **04D-04** on PR **#905** → **STAGE**; **04D-05+** **PLANNED**) |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -24,7 +24,7 @@ SCE must **reduce management complexity rather than expose it**. Complex domain 
 | **FIN-04A** | Current Forecast Foundation — **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md) (PR **#902** → **STAGE**) |
 | **FIN-04B** | SCE Projection Engine (Automatic Forecast) — **COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**) — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) |
 | **FIN-04C** | Rolling Forecast & Reforecasting — **COMPLETE + MERGED + PO UAT PASS** (PR **#904** → **STAGE**) — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md) |
-| **FIN-04D** | Scenarios & What-if — **04D-01** + **04D-02** + **04D-03 COMPLETE** (PR **#905**) — [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md), [`SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md`](../finance/SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md), [`SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md`](../finance/SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md); **04D-04+ PLANNED** |
+| **FIN-04D** | Scenarios & What-if — **04D-01** + **04D-02** + **04D-03** + **04D-04 COMPLETE** (PR **#905**) — [`SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md), [`SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md`](../finance/SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md), [`SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md`](../finance/SCE-FINANCE-04D-03-SCENARIO-CALCULATION-ENGINE.md), [`SCE-FINANCE-04D-04-SCENARIO-QUERY-AND-COMPARISON.md`](../finance/SCE-FINANCE-04D-04-SCENARIO-QUERY-AND-COMPARISON.md); **04D-05+ PLANNED** |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
 | **FIN-06** | Financial publishing & sharing (**NOT STARTED**) |
 | **FIN-07** | Commitments & approvals |

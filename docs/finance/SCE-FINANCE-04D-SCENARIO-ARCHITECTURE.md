@@ -83,7 +83,7 @@ This avoids **dynamic historical dishonesty**: if Current Forecast later moves f
 | --- | --- | --- |
 | **Primary** | Scenario result vs **frozen baseline** | Single headline result delta + top drivers |
 | **Secondary** | Scenario result vs **Approved Budget** | On demand / budget-fit context |
-| **Tertiary (deferred)** | Scenario vs Scenario | FIN-04D-04+ if needed |
+| **Tertiary (deferred)** | Scenario vs Scenario | **DEFERRED in v1** (`SCENARIO_QUERY_LAYER.scenarioToScenarioComparisonV1`) |
 | **Context only** | Live Current Forecast | Labelled clearly — not a silent replacement for frozen baseline |
 
 Delta formula remains **comparison − base**. Favorability stays presentation-only.

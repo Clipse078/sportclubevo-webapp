@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D-03 — deterministic scenario calculation engine |
-| **Status** | **COMPLETE** — FIN-04D-04 query/comparison next |
+| **Status** | **COMPLETE** — consumed by FIN-04D-04 query/comparison |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Engine version** | `sce-scenario-v1` (`FINANCE_SCENARIO_CALCULATION_ENGINE_VERSION`) |
 

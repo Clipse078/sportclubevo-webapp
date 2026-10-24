@@ -225,6 +225,15 @@ export const SCENARIO_VERSIONING_DECISION = "LIGHTWEIGHT" as const;
 export const SCENARIO_VERSIONING_RATIONALE =
   "Scenarios are exploratory analytics, not governance checkpoints. Duplication covers intentional forks; forecast formal history remains on FinanceForecastVersion." as const;
 
+/** FIN-04D-04 query layer anchors (read models — no UI). */
+export const SCENARIO_QUERY_LAYER = {
+  listQuery: "loadFinanceScenarioList",
+  detailQuery: "loadFinanceScenarioDetail",
+  scenarioToScenarioComparisonV1: "DEFERRED",
+  topDriversDefaultLimit: 5,
+  readConsistency: "scenario row + baseline + assumptions loaded in one transaction boundary",
+} as const;
+
 /** Comparison hierarchy (presentation — query layer FIN-04D-04). */
 export const SCENARIO_COMPARISON_HIERARCHY = {
   primary: "SCENARIO_RESULT vs FROZEN_BASELINE (creation reference)",
