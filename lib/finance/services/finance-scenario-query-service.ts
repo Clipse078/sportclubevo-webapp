@@ -101,7 +101,6 @@ async function loadPlanningAccountPresentation(
     select: {
       id: true,
       name: true,
-      code: true,
       canonicalSemantic: true,
       lifecycle: true,
       sortOrder: true,
@@ -122,7 +121,7 @@ async function loadPlanningAccountPresentation(
       financialAccountId: account.id,
       name: account.name,
       accountType,
-      code: account.code,
+      code: null,
       lifecycle: account.lifecycle as "ACTIVE" | "ARCHIVED",
     });
     accountTypes.set(account.id, accountType);

@@ -1,8 +1,5 @@
 import type { ScenarioAssumptionKindV1 } from "@/lib/finance/forecast/scenario-architecture-contract";
-import type {
-  FinanceScenarioCalculationResult,
-  FinanceScenarioCalculationTotals,
-} from "@/lib/finance/forecast/finance-scenario-calculation-types";
+import type { FinanceScenarioCalculationResult } from "@/lib/finance/forecast/finance-scenario-calculation-types";
 import type { ForecastHistoryDisplayMetadata } from "@/lib/finance/forecast/forecast-revision-presentation";
 import type { FinanceForecastAccountComparisonRow } from "@/lib/finance/forecast/forecast-revision-comparison";
 
