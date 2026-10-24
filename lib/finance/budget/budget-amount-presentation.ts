@@ -3,6 +3,10 @@
  */
 
 import {
+  formatFinanceManagementMoneyMinor,
+  formatFinanceManagementSignedMinor,
+  formatFinanceManagementSignedWholeMajorNumber,
+  formatFinanceManagementWholeMajorNumber,
   formatFinanceMoneyMinor,
   formatFinanceMoneyWholeMajorNumber,
   getFinanceMoneyPresentationFormatters,
@@ -84,4 +88,37 @@ export function formatBudgetPlanningSignedMinor(
   }
   const magnitude = formatBudgetPlanningMinor(Math.abs(amountMinor), currency, locale);
   return amountMinor > 0 ? `+${magnitude}` : `−${magnitude}`;
+}
+
+/** FIN-04C-05R2 — whole-currency management presentation (forecast workspace and comparisons). */
+export function formatFinanceManagementPlanningMinor(
+  amountMinor: number,
+  currency: string | null,
+  locale: string,
+): string {
+  return formatFinanceManagementMoneyMinor(amountMinor, currency, locale);
+}
+
+export function formatFinanceManagementPlanningWholeMajorNumber(
+  amountMinor: number,
+  currency: string | null,
+  locale: string,
+): string {
+  return formatFinanceManagementWholeMajorNumber(amountMinor, currency, locale);
+}
+
+export function formatFinanceManagementPlanningSignedWholeMajorNumber(
+  amountMinor: number,
+  currency: string | null,
+  locale: string,
+): string {
+  return formatFinanceManagementSignedWholeMajorNumber(amountMinor, currency, locale);
+}
+
+export function formatFinanceManagementPlanningSignedMinor(
+  amountMinor: number,
+  currency: string | null,
+  locale: string,
+): string {
+  return formatFinanceManagementSignedMinor(amountMinor, currency, locale);
 }

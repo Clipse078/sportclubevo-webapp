@@ -41,7 +41,6 @@ export type ProjectionWorkspaceDashboardViewModel = {
 };
 
 const COMPOSITION_TOP_N = 8;
-const MIN_DIVERGENCE_ROWS = 2;
 
 function sumKnownActualMinor(
   accounts: readonly ProjectionWorkspaceAccountViewModel[],
@@ -114,8 +113,14 @@ function buildDivergence(
       absDeltaMinor: Math.abs(account.deltaMinor),
     });
   }
-  if (rows.length < MIN_DIVERGENCE_ROWS) return null;
-  return [...rows].sort((a, b) => b.absDeltaMinor - a.absDeltaMinor).slice(0, COMPOSITION_TOP_N);
+  if (rows.length === 0) return null;
+  const meaningful = rows.filter((row) => row.deltaMinor !== 0);
+  if (meaningful.length === 0) {
+    return [];
+  }
+  return [...meaningful]
+    .sort((a, b) => b.absDeltaMinor - a.absDeltaMinor)
+    .slice(0, COMPOSITION_TOP_N);
 }
 
 function buildConfidenceNote(

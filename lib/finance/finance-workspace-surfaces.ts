@@ -17,6 +17,48 @@ export const FINANCE_WORKSPACE_STACK_CLASS =
 export const FINANCE_FORECAST_WORKSPACE_STACK_CLASS =
   "mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-3";
 
+/** FIN-04C-05R5 — one coherent rolling-forecast workspace (not independent dashboard cards). */
+export const FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS = cn(
+  SCE_SURFACE_STANDARD_PANEL,
+  "min-w-0 divide-y divide-[var(--sce-surface-border-subtle)] p-0",
+);
+
+/** Padding rhythm for subsections inside {@link FINANCE_FORECAST_WORKSPACE_SURFACE_CLASS}. */
+export const FINANCE_FORECAST_WORKSPACE_SECTION_CLASS = "min-w-0 px-4 py-3 sm:px-5";
+
+/** Typography-only subsection titles — no nested dark header bars. */
+export const FINANCE_FORECAST_ANALYSIS_HEADING_CLASS =
+  "text-xs font-semibold uppercase tracking-wide text-[var(--muted)]";
+
+/**
+ * Formal reforecast dialog — natural content height when the default workflow fits the viewport.
+ * Shell is content-sized (not stretched in overlay); max-height caps only when the viewport requires it.
+ */
+export const FINANCE_FORMAL_REFORECAST_DIALOG_SHELL_CLASS = "h-auto self-center";
+
+/**
+ * Formal reforecast dialog body — overflow is a fallback for constrained height or expanded details.
+ * Uses flex-auto (content-sized basis), not flex-1 (0% basis), so desktop default is not a fixed scroll band.
+ */
+export const FINANCE_FORMAL_REFORECAST_DIALOG_BODY_CLASS =
+  "min-h-0 flex-auto overflow-x-hidden overflow-y-auto px-5 py-2.5 text-sm text-[var(--text-2)]";
+
+export const FINANCE_FORMAL_REFORECAST_DIALOG_HEADER_CLASS = "px-5 py-3";
+
+export const FINANCE_FORMAL_REFORECAST_DIALOG_FOOTER_CLASS = "px-5 py-3";
+
+/** Compact confirmation preview — summary only, not a nested dashboard card. */
+export const FINANCE_FORMAL_REFORECAST_PREVIEW_CLASS = cn(
+  SCE_SURFACE_DENSE_PANEL,
+  "px-3 py-2 text-xs",
+);
+
+/** Progressive disclosure row for optional reforecast metadata (button + chevron). */
+export const FINANCE_FORMAL_REFORECAST_MORE_DETAILS_TRIGGER_CLASS = cn(
+  "flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm font-medium text-[var(--foreground)]",
+  "hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
+);
+
 /** Primary functional card (overview nudges, settings sections, empty states). */
 export const FINANCE_FUNCTIONAL_SURFACE_CLASS = cn(SCE_SURFACE_STANDARD_PANEL, "px-5 py-6");
 

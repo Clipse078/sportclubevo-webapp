@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Canonical key** | `SCE-FINANCE-01` |
-| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** + **04B** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903** → **STAGE**; **04C** **NEXT**; **04D** **PLANNED**) |
+| **Status** | **IN_PROGRESS** — **FIN-01** foundation complete through **FIN-01E**; **FIN-01F** backlog; **FIN-02** **COMPLETE** (02A–02C merged + PO UAT PASS; **02D DEFERRED / BACKLOG**); **FIN-03** **COMPLETE** (**03A** + **03B** merged + PO UAT PASS — PRs **#900**, **#901** → **STAGE**); **FIN-04** **IN PROGRESS** (**04A** + **04B** + **04C** **COMPLETE + MERGED + PO UAT PASS** — PRs **#902**, **#903**, **#904** → **STAGE**; **04D** **PLANNED / NEXT**) |
 | **Product boundary** | Global, sport-agnostic **management finance** — not full statutory accounting v1 |
 | **Principle** | SCE provides the financial engine; the organisation builds its financial structure |
 | **First package** | [`SCE-FINANCE-01A`](./SCE-FINANCE-01A.md) (+ **FIN-01A-R1** correction) |
@@ -16,11 +16,15 @@
 | **FIN-01** | Foundation & configurable structure |
 | **FIN-02** | Budgeting & approved baseline (**COMPLETE** — **02A–02C COMPLETE + MERGED + PO UAT PASS**; **02D DEFERRED / BACKLOG**) |
 | **FIN-03** | Periodic measurement & budget control (**COMPLETE** — **03A** [`SCE-FINANCE-03A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03A-IMPLEMENTATION.md) + **03B** [`SCE-FINANCE-03B-IMPLEMENTATION.md`](../finance/SCE-FINANCE-03B-IMPLEMENTATION.md) **COMPLETE + PO UAT PASS** → **STAGE**) |
-| **FIN-04** | Forecasting programme (**IN PROGRESS** — principle: *SCE generates the projection. The organisation owns the forecast.*) |
+| **FIN-04** | Forecast Intelligence & Scenarios (**IN PROGRESS** — principle: *SCE generates the projection. The organisation owns the forecast.*; **04D** next) |
+
+### SCE product-wide UX principle (FIN-04C+)
+
+SCE must **reduce management complexity rather than expose it**. Complex domain models may exist underneath, but default experiences prioritize: conclusions before raw data; progressive disclosure; clear hierarchy; context before detail; exception/decision-oriented presentation; simple language; minimal cognitive load; advanced detail available without making it the default. Applies programme-wide, not Finance only.
 | **FIN-04A** | Current Forecast Foundation — **COMPLETE + MERGED + PO UAT PASS** — [`SCE-FINANCE-04A-IMPLEMENTATION.md`](../finance/SCE-FINANCE-04A-IMPLEMENTATION.md) (PR **#902** → **STAGE**) |
 | **FIN-04B** | SCE Projection Engine (Automatic Forecast) — **COMPLETE + MERGED + PO UAT PASS** (PR **#903** → **STAGE**) — [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) |
-| **FIN-04C** | Rolling Forecast & Reforecasting — **NEXT** |
-| **FIN-04D** | Scenarios & What-if — **PLANNED** |
+| **FIN-04C** | Rolling Forecast & Reforecasting — **COMPLETE + MERGED + PO UAT PASS** (PR **#904** → **STAGE**) — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md) |
+| **FIN-04D** | Scenarios & What-if — **PLANNED / NEXT** |
 | **FIN-05** | Financial reporting & intelligence (**NOT STARTED** — includes Management P&L / Erfolgsrechnung) |
 | **FIN-06** | Financial publishing & sharing (**NOT STARTED**) |
 | **FIN-07** | Commitments & approvals |

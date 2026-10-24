@@ -3,10 +3,24 @@ import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { resolveCurrentGovernanceBaselineVersion } from "@/lib/finance/budget/current-governance-baseline";
 import { computeBudgetPlanningTotals } from "@/lib/finance/budget/budget-planning-totals";
 import { computeForecastBudgetComparisonMetrics } from "@/lib/finance/forecast/forecast-budget-comparison";
+import { formatFinanceCalendarDateIso } from "@/lib/finance/dates/finance-calendar-date";
+import { recommendFormalReforecastAsOfDate } from "@/lib/finance/forecast/formal-reforecast-date-recommendation";
 import {
   buildForecastPlanningRows,
   type ForecastWorkspaceSnapshot,
 } from "@/lib/finance/forecast/forecast-presentation";
+import { buildForecastHistoryDisplayMetadata } from "@/lib/finance/forecast/forecast-revision-presentation";
+import type {
+  CurrentForecastVsApprovedBudgetResult,
+  CurrentForecastVsPreviousResult,
+  FinanceForecastHistoryReadModel,
+} from "@/lib/finance/forecast/forecast-history-read-model";
+import type { ForecastRevisionSource } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
+import {
+  getCurrentForecastVsApprovedBudget,
+  getCurrentForecastVsPrevious,
+  loadFinanceForecastHistory,
+} from "@/lib/finance/services/finance-forecast-history-query-service";
 import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget-selected-year";
 import {
   listFinanceYearsForForecast,
@@ -200,6 +214,31 @@ export async function loadForecastWorkspaceSnapshot(
       )
     : null;
 
+  const recommendedFormalReforecastAsOfDate =
+    year.startDate && year.endDate
+      ? recommendFormalReforecastAsOfDate({
+          startDate: year.startDate,
+          endDate: year.endDate,
+        })
+      : null;
+
+  const currentRevision = currentVersion
+    ? {
+        revisionLabel: currentVersion.revisionLabel,
+        revisionSource: (currentVersion.revisionSource as ForecastRevisionSource | null) ?? null,
+        asOfDate: currentVersion.asOfDate
+          ? formatFinanceCalendarDateIso(currentVersion.asOfDate)
+          : null,
+        presentation: buildForecastHistoryDisplayMetadata({
+          revisionLabel: currentVersion.revisionLabel,
+          revisionSource: currentVersion.revisionSource,
+          asOfDate: currentVersion.asOfDate,
+          versionNumber: currentVersion.versionNumber,
+          isCurrent: true,
+        }),
+      }
+    : null;
+
   const snapshot: ForecastWorkspaceSnapshot = {
     financeYearId: selectedYearId,
     financeYearName: year.name,
@@ -208,6 +247,8 @@ export async function loadForecastWorkspaceSnapshot(
     versionNumber: currentVersion?.versionNumber ?? null,
     status: currentVersion ? "CURRENT" : "NONE",
     currency: baseCurrency,
+    recommendedFormalReforecastAsOfDate,
+    currentRevision,
     rows,
     totals: {
       totalIncomeMinor: totals.totalIncomeMinor,
@@ -231,4 +272,35 @@ export async function loadForecastWorkspaceSnapshot(
     baseCurrency,
     creation,
   };
+}
+
+export type ForecastWorkspaceRollingUxData = {
+  history: FinanceForecastHistoryReadModel | null;
+  vsPrevious: CurrentForecastVsPreviousResult;
+  vsApprovedBudget: CurrentForecastVsApprovedBudgetResult;
+};
+
+/** Batched server read models for FIN-04C-05 workspace (history + comparisons). */
+export async function loadForecastWorkspaceRollingUxData(
+  db: Db &
+    Parameters<typeof loadFinanceForecastHistory>[0] &
+    Parameters<typeof getCurrentForecastVsPrevious>[0],
+  ctx: FinanceAuthContext,
+  financeYearId: string,
+): Promise<ForecastWorkspaceRollingUxData | null> {
+  const forecast = await db.financeForecast.findUnique({
+    where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId } },
+    select: { id: true },
+  });
+  if (!forecast) {
+    return null;
+  }
+
+  const [history, vsPrevious, vsApprovedBudget] = await Promise.all([
+    loadFinanceForecastHistory(db, ctx, financeYearId),
+    getCurrentForecastVsPrevious(db, ctx, financeYearId),
+    getCurrentForecastVsApprovedBudget(db, ctx, financeYearId),
+  ]);
+
+  return { history, vsPrevious, vsApprovedBudget };
 }
