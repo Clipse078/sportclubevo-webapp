@@ -736,16 +736,17 @@ export function FinanceFormalReforecastDialog(props: {
     if (!props.open) {
       previewRequestSeqRef.current += 1;
       dispatchPreview({ type: "dialog_close_reset" });
-      setMoreDetailsOpen(false);
-      setCustomActualsCutoff(false);
       return;
     }
     dispatchPreview({ type: "dialog_open_reset" });
-    setAsOfDate(props.defaultAsOfDate);
-    setActualsThroughDate(props.defaultAsOfDate);
-    const key = buildFormalReforecastPreviewInputKey(props.defaultAsOfDate, "", props.defaultAsOfDate);
+    const defaultAsOfDate = props.defaultAsOfDate;
     queueMicrotask(() => {
-      void requestPreview(key, props.defaultAsOfDate, props.defaultAsOfDate, "");
+      setMoreDetailsOpen(false);
+      setCustomActualsCutoff(false);
+      setAsOfDate(defaultAsOfDate);
+      setActualsThroughDate(defaultAsOfDate);
+      const key = buildFormalReforecastPreviewInputKey(defaultAsOfDate, "", defaultAsOfDate);
+      void requestPreview(key, defaultAsOfDate, defaultAsOfDate, "");
     });
   }, [props.open, props.financeYearId, props.defaultAsOfDate, requestPreview]);
 

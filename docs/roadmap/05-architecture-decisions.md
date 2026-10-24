@@ -804,7 +804,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../fi
 
 ## ADR-035 — Rolling Forecast & Reforecasting (FIN-04C)
 
-**Status:** Accepted — **FIN-04C-01 architecture** through **FIN-04C-07 hardening & release closure** (implementation complete; final PO UAT / merge authorization pending — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md))
+**Status:** Accepted — **FIN-04C-01 architecture** through **FIN-04C-07 hardening & release closure** (**COMPLETE** — PO UAT **PASS**, merged to **STAGE** via PR **#904** — [`SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md`](../finance/SCE-FINANCE-04C-07-HARDENING-AND-RELEASE-CLOSURE.md))
 
 ### Context
 

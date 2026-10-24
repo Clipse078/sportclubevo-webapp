@@ -4,7 +4,7 @@
 | --- | --- |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
 | **PR** | #904 → **STAGE** |
-| **Status** | **FIN-04C IMPLEMENTATION COMPLETE** — **FINAL PO UAT / MERGE AUTHORIZATION PENDING** |
+| **Status** | **FIN-04C COMPLETE** — PO UAT **PASS**, **MERGED TO STAGE** (PR **#904**) |
 | **Depends on** | FIN-04C-01 … FIN-04C-06R2 (PO UAT **PASS**) |
 
 ## Purpose
