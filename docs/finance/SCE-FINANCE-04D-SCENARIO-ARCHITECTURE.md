@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02+** persistence, engine, UX |
-| **Status** | **04D-01 COMPLETE** (architecture & domain contract) |
+| **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02** persistence; **04D-03+** engine, UX |
+| **Status** | **04D-01 COMPLETE**; **04D-02 COMPLETE** — see [`SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md`](./SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md) |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Base** | `STAGE` (post FIN-04C merge `c635f1c0`) |
 | **Implementation code (04D-01)** | `lib/finance/forecast/scenario-architecture-contract.ts`, `scenario-assumption-calculation.ts` |
@@ -242,7 +242,7 @@ Reuse FIN-04A/04B/04C:
 | Sub | Deliverable |
 | --- | --- |
 | **04D-01** | Architecture & domain contract (this package) |
-| **04D-02** | Persistence & lifecycle |
+| **04D-02** | Persistence & lifecycle (**COMPLETE**) |
 | **04D-03** | Calculation & assumption engine |
 | **04D-04** | Query & comparison layer |
 | **04D-05** | Workspace UX |
@@ -261,6 +261,7 @@ AI may explain or suggest assumptions in future — **never** the canonical nume
 
 ## Related documents
 
+- [`SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md`](./SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md) — Prisma models, lifecycle, migration
 - [`SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`](./SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md) — scenario boundary in §14
 - [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](./SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) — measure separation
 - ADR-036 in [`docs/roadmap/05-architecture-decisions.md`](../roadmap/05-architecture-decisions.md)

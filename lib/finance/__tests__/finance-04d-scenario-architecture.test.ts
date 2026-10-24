@@ -142,12 +142,14 @@ describe("FIN-04D tenant neutrality and boundaries", () => {
   });
 });
 
-describe("FIN-04D persistence proposal — not implemented in 04D-01", () => {
-  it("does not migrate in 04D-01 and uses dedicated scenario models", () => {
+describe("FIN-04D persistence — 04D-01 contract vs 04D-02 implementation", () => {
+  it("keeps dedicated scenario models separate from scenarioKey", () => {
     expect(SCENARIO_PERSISTENCE_PROPOSAL.migrationInFin04d01).toBe(false);
     expect(SCENARIO_PERSISTENCE_PROPOSAL.models.FinanceScenario).toBeDefined();
     const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
-    expect(schema).not.toContain("model FinanceScenario");
+    expect(schema).toContain("model FinanceScenario");
+    expect(schema).toContain("model FinanceScenarioBaselineLine");
+    expect(schema).toContain("model FinanceScenarioAssumption");
     expect(
       SCE_SCENARIO_ARCHITECTURE_LOCKS.financeForecastVersionScenarioKeyNotCanonicalScenarioStore,
     ).toBe(true);

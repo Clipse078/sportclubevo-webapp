@@ -836,7 +836,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`]
 
 ## ADR-036 — Scenarios & What-if (FIN-04D)
 
-**Status:** Accepted — **FIN-04D-01 architecture** (domain contract; persistence/engine/UX in **04D-02+**)
+**Status:** Accepted — **FIN-04D-01 architecture** + **FIN-04D-02 persistence/lifecycle** (engine/UX in **04D-03+**)
 
 ### Context
 
@@ -848,7 +848,7 @@ FIN-04A–04C established distinct measures: approved budget, actual, automatic 
 2. **Baseline policy:** **Hybrid reference + snapshot** — scenarios start from **Aktuelle Prognose** (v1); persist provenance (`baselineForecastVersionId`, Datenstand, optional actuals-through) **and** frozen baseline line amounts. Primary comparison: scenario result vs **frozen baseline**, not silently vs live current forecast.
 3. **Stability:** When current forecast formalizes a new version, scenarios **remain on creation baseline**; no silent rebase. Optional explicit **Auf aktuelle Prognose aktualisieren** deferred to FIN-04D-06.
 4. **Assumptions (v1):** `PERCENT_CHANGE`, `DELTA_AMOUNT`, `ABSOLUTE_AMOUNT`, `EXCLUDE_ACCOUNT` on `FinancialAccount.id` — intent stored separately from calculated results; one assumption per account; deterministic integer minor-unit math (no LLM calculator).
-5. **Persistence (04D-02+):** Dedicated `FinanceScenario*` models — **not** canonical storage via `FinanceForecastVersion.scenarioKey` (field remains legacy hook; ordinary revisions must not use it).
+5. **Persistence (04D-02):** Dedicated `FinanceScenario*` models (migration `20261024160000_sce_finance_04d_02_scenario_persistence`) — **not** canonical storage via `FinanceForecastVersion.scenarioKey` (field remains legacy hook; ordinary revisions must not use it).
 6. **Lifecycle:** Active/archived via `archivedAt` — no DRAFT/CURRENT/APPROVED scenario states. **LIGHTWEIGHT** versioning (`updatedAt`); duplicate for forks.
 7. **Adoption:** Scenario → current forecast only via future explicit **Als aktuelle Prognose übernehmen** (formal forecast revision + provenance) — not in 04D-01.
 8. **Automatic forecast:** Evidence/reference only in v1; not a scenario start baseline.
@@ -860,7 +860,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../fina
 ### Consequences
 
 - FIN-04D-01 adds architecture tests in `finance-04d-scenario-architecture.test.ts` — no Prisma migration in 04D-01.
-- FIN-04D-02 implements proposed models and lifecycle; FIN-04D-03 calculation engine; FIN-04D-04 comparisons; FIN-04D-05 UX; FIN-04D-06 adoption/rebase; FIN-04D-07 hardening.
+- FIN-04D-02 **COMPLETE** — models, lifecycle, partial active-name index; FIN-04D-03 calculation engine next; FIN-04D-04 comparisons; FIN-04D-05 UX; FIN-04D-06 adoption/rebase; FIN-04D-07 hardening.
 - Prognoseverlauf (FIN-04C) continues to exclude scenarios; scenario adoption creates **forecast** history, not scenario governance versions.
 - FIN-05/06 must treat scenarios as analytical inputs unless explicitly adopted into current forecast.
 
