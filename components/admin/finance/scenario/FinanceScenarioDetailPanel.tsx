@@ -39,6 +39,7 @@ import {
   FinanceScenarioAssumptionDialog,
   type ScenarioAssumptionAccountOption,
 } from "@/components/admin/finance/scenario/FinanceScenarioAssumptionDialog";
+import { FinanceScenarioGovernanceDialogs } from "@/components/admin/finance/scenario/FinanceScenarioGovernanceDialogs";
 
 type FinanceScenarioDetailPanelProps = {
   detail: FinanceScenarioDetailReadModel;
@@ -65,6 +66,8 @@ export function FinanceScenarioDetailPanel({
   const [metadataOpen, setMetadataOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [adoptOpen, setAdoptOpen] = useState(false);
+  const [rebaseOpen, setRebaseOpen] = useState(false);
   const [metaName, setMetaName] = useState(detail.name);
   const [metaDescription, setMetaDescription] = useState(detail.description ?? "");
   const [duplicateName, setDuplicateName] = useState("");
@@ -107,6 +110,10 @@ export function FinanceScenarioDetailPanel({
   function mapActionError(code: string | undefined, fallback: string): string {
     if (code === "FINANCE_SCENARIO_STALE") return t("errors.staleScenario");
     if (code === "FINANCE_SCENARIO_NAME_CONFLICT") return t("errors.nameConflict");
+    if (code === "FINANCE_SCENARIO_DELETE_BLOCKED_ADOPTION") {
+      return t("governance.deleteBlockedAdoption");
+    }
+    if (code === "FINANCE_SCENARIO_STALE_CURRENT_FORECAST") return t("errors.staleCurrentForecast");
     return fallback;
   }
 
@@ -281,12 +288,22 @@ export function FinanceScenarioDetailPanel({
               <p className="text-xs text-[var(--muted)]">{t("freshnessCurrentQuiet")}</p>
             ) : null}
             {comparison.baselineFreshness.status === "OUTDATED" ? (
-              <p className="text-sm text-[var(--warning)]" data-finance-scenario-freshness="outdated">
-                {t("freshnessOutdatedTitle")}
-                <span className="mt-0.5 block text-xs font-normal text-[var(--muted)]">
+              <div className="space-y-2" data-finance-scenario-freshness="outdated">
+                <p className="text-sm text-[var(--warning)]">{t("freshnessOutdatedTitle")}</p>
+                <span className="block text-xs font-normal text-[var(--muted)]">
                   {t("freshnessOutdatedBody")}
                 </span>
-              </p>
+                {canMutate && detail.governance.canUpdateSourceForecast ? (
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-[var(--foreground)] underline-offset-2 hover:underline"
+                    data-finance-scenario-rebase-contextual
+                    onClick={() => setRebaseOpen(true)}
+                  >
+                    {t("governance.rebaseAction")}
+                  </button>
+                ) : null}
+              </div>
             ) : null}
             {comparison.baselineFreshness.status === "CURRENT_FORECAST_UNAVAILABLE" ? (
               <p className="text-xs text-[var(--muted)]">{t("currentForecastUnavailable")}</p>
@@ -338,6 +355,32 @@ export function FinanceScenarioDetailPanel({
                         >
                           {t("actions.archive")}
                         </button>
+                        {detail.governance.canAdoptToCurrentForecast ? (
+                          <button
+                            type="button"
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)]"
+                            data-finance-scenario-adopt-menu
+                            onClick={() => {
+                              setMenuOpen(false);
+                              setAdoptOpen(true);
+                            }}
+                          >
+                            {t("governance.adoptAction")}
+                          </button>
+                        ) : null}
+                        {detail.governance.canUpdateSourceForecast ? (
+                          <button
+                            type="button"
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)]"
+                            data-finance-scenario-rebase-menu
+                            onClick={() => {
+                              setMenuOpen(false);
+                              setRebaseOpen(true);
+                            }}
+                          >
+                            {t("governance.rebaseAction")}
+                          </button>
+                        ) : null}
                       </>
                     ) : (
                       <button
@@ -351,16 +394,22 @@ export function FinanceScenarioDetailPanel({
                         {t("actions.restore")}
                       </button>
                     )}
-                    <button
-                      type="button"
-                      className="w-full px-3 py-2 text-left text-sm text-[var(--destructive)] hover:bg-[var(--surface-2)]"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setDeleteOpen(true);
-                      }}
-                    >
-                      {t("actions.delete")}
-                    </button>
+                    {detail.governance.canDelete ? (
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm text-[var(--destructive)] hover:bg-[var(--surface-2)]"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setDeleteOpen(true);
+                        }}
+                      >
+                        {t("actions.delete")}
+                      </button>
+                    ) : (
+                      <p className="px-3 py-2 text-xs text-[var(--muted)]">
+                        {t("governance.deleteBlockedAdoption")}
+                      </p>
+                    )}
                   </div>
                 </>
               ) : null}
@@ -823,6 +872,18 @@ export function FinanceScenarioDetailPanel({
             </Button>
           </div>
         }
+      />
+
+      <FinanceScenarioGovernanceDialogs
+        detail={detail}
+        financeYearId={financeYearId}
+        baseCurrency={baseCurrency}
+        formattingLocale={formattingLocale}
+        adoptOpen={adoptOpen}
+        rebaseOpen={rebaseOpen}
+        onAdoptClose={() => setAdoptOpen(false)}
+        onRebaseClose={() => setRebaseOpen(false)}
+        onError={setActionError}
       />
     </div>
   );

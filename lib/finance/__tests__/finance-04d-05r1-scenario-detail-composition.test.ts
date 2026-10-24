@@ -43,11 +43,13 @@ describe("FIN-04D-05R1 scenario detail visual hierarchy", () => {
     expect(disclosure).toContain("aria-label={triggerLabel}");
   });
 
-  it("preserves functional boundaries — no adoption, rebase, charts, or client calc", () => {
-    expect(detail).not.toContain("rebase");
-    expect(detail).not.toContain("adopt");
+  it("preserves functional boundaries — explicit governance labels, no charts, or client calc", () => {
+    expect(detail).toContain("governance.adoptAction");
+    expect(detail).toContain("governance.rebaseAction");
     expect(detail).not.toContain("calculateFinanceScenario");
     expect(detail).not.toMatch(/type="checkbox"/);
+    expect(de).toContain("Als aktuelle Prognose übernehmen");
+    expect(de).toContain("Ausgangsprognose aktualisieren");
     expect(detail).toContain("offsettingDriversIntro");
     expect(detail).toContain("canMutate");
   });

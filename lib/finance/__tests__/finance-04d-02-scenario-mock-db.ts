@@ -98,6 +98,8 @@ export type ScenarioStore = {
     absoluteAmountMinor: number | null;
     note: string | null;
   }>;
+  financeScenarioAdoption: Array<Record<string, unknown>>;
+  financeScenarioRebase: Array<Record<string, unknown>>;
 };
 
 export function createEmptyScenarioStore(): ScenarioStore {
@@ -147,6 +149,8 @@ export function createEmptyScenarioStore(): ScenarioStore {
     financeScenario: [],
     financeScenarioBaselineLine: [],
     financeScenarioAssumption: [],
+    financeScenarioAdoption: [],
+    financeScenarioRebase: [],
     financeBudget: [],
     financeBudgetVersion: [],
     financeBudgetLine: [],
@@ -253,6 +257,10 @@ export function makeScenarioDb(
   let scenarioSeq = 0;
   let baselineSeq = 0;
   let assumptionSeq = 0;
+  let forecastVersionSeq = 0;
+  let forecastLineSeq = 0;
+  let adoptionSeq = 0;
+  let rebaseSeq = 0;
 
   const db = {
     financeYear: {
@@ -263,6 +271,7 @@ export function makeScenarioDb(
       findUnique: async ({
         where,
         select,
+        include,
       }: {
         where:
           | { tenantId_financeYearId: { tenantId: string; financeYearId: string } }
@@ -273,6 +282,7 @@ export function makeScenarioDb(
           tenantId?: boolean;
           financeYearId?: boolean;
         };
+        include?: { currentVersion?: { include?: { lines?: boolean } } };
       }) => {
         const forecast =
           "tenantId_financeYearId" in where
@@ -291,7 +301,33 @@ export function makeScenarioDb(
             financeYearId: forecast.financeYearId,
           };
         }
-        return forecast;
+        const currentVersion = forecast.currentVersionId
+          ? store.financeForecastVersion.find((v) => v.id === forecast.currentVersionId)
+          : null;
+        return {
+          ...forecast,
+          currentVersion: include?.currentVersion
+            ? {
+                ...currentVersion,
+                lines: include.currentVersion.include?.lines
+                  ? store.financeForecastLine.filter(
+                      (l) => l.forecastVersionId === currentVersion?.id,
+                    )
+                  : undefined,
+              }
+            : undefined,
+        };
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: { currentVersionId?: string };
+      }) => {
+        const row = store.financeForecast.find((f) => f.id === where.id)!;
+        if (data.currentVersionId !== undefined) row.currentVersionId = data.currentVersionId;
+        return row;
       },
     },
     financeForecastVersion: {
@@ -323,9 +359,81 @@ export function makeScenarioDb(
             : undefined,
         };
       },
+      findFirst: async ({
+        where,
+        orderBy,
+        select,
+      }: {
+        where: { forecastId: string };
+        orderBy: { versionNumber: "desc" };
+        select?: { versionNumber?: boolean };
+      }) => {
+        const rows = store.financeForecastVersion
+          .filter((v) => v.forecastId === where.forecastId)
+          .sort((a, b) => b.versionNumber - a.versionNumber);
+        const row = rows[0] ?? null;
+        if (!row) return null;
+        if (select?.versionNumber) return { versionNumber: row.versionNumber };
+        return row;
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: { status?: "CURRENT" | "SUPERSEDED" };
+      }) => {
+        const row = store.financeForecastVersion.find((v) => v.id === where.id)!;
+        if (data.status) row.status = data.status;
+        return row;
+      },
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        forecastVersionSeq += 1;
+        const id = `fv-new-${forecastVersionSeq}`;
+        const row = {
+          id,
+          forecastId: data.forecastId as string,
+          status: data.status as "CURRENT" | "SUPERSEDED",
+          versionNumber: data.versionNumber as number,
+          revisionLabel: (data.revisionLabel as string | null | undefined) ?? null,
+          revisionSource: (data.revisionSource as string | null | undefined) ?? null,
+          asOfDate: (data.asOfDate as Date | null | undefined) ?? null,
+          actualsThroughDate: (data.actualsThroughDate as Date | null | undefined) ?? null,
+          previousVersionId: (data.previousVersionId as string | null | undefined) ?? null,
+          scenarioKey: null,
+        };
+        store.financeForecastVersion.push(row);
+        const lines = data.lines as
+          | { create: Array<{ financialAccountId: string; amountMinor: number }> }
+          | undefined;
+        for (const line of lines?.create ?? []) {
+          forecastLineSeq += 1;
+          store.financeForecastLine.push({
+            id: `fl-gov-${forecastLineSeq}`,
+            forecastVersionId: id,
+            financialAccountId: line.financialAccountId,
+            amountMinor: line.amountMinor,
+          });
+        }
+        return { id, ...row };
+      },
     },
     financeForecastLine: {
-      findMany: async () => store.financeForecastLine,
+      findMany: async ({
+        where,
+      }: {
+        where?: { forecastVersionId?: string | { in: string[] } };
+      } = {}) => {
+        if (!where?.forecastVersionId) return store.financeForecastLine;
+        if (typeof where.forecastVersionId === "string") {
+          return store.financeForecastLine.filter(
+            (l) => l.forecastVersionId === where.forecastVersionId,
+          );
+        }
+        return store.financeForecastLine.filter((l) =>
+          where.forecastVersionId!.in.includes(l.forecastVersionId),
+        );
+      },
     },
     financialAccount: {
       findUnique: async ({ where }: { where: { id: string } }) =>
@@ -537,6 +645,15 @@ export function makeScenarioDb(
         if (data.name !== undefined) row.name = data.name as string;
         if (data.description !== undefined) row.description = data.description as string | null;
         if (data.archivedAt !== undefined) row.archivedAt = data.archivedAt as Date | null;
+        if (data.sourceForecastVersionId !== undefined) {
+          row.sourceForecastVersionId = data.sourceForecastVersionId as string;
+        }
+        if (data.baselineAsOfDate !== undefined) {
+          row.baselineAsOfDate = data.baselineAsOfDate as Date | null;
+        }
+        if (data.baselineActualsThroughDate !== undefined) {
+          row.baselineActualsThroughDate = data.baselineActualsThroughDate as Date | null;
+        }
         row.updatedByUserId = (data.updatedByUserId as string | null) ?? row.updatedByUserId;
         row.updatedAt = new Date(row.updatedAt.getTime() + 5);
         if (data.name !== undefined || data.archivedAt !== undefined) {
@@ -589,6 +706,34 @@ export function makeScenarioDb(
           });
         }
         return { count: data.length };
+      },
+      deleteMany: async ({ where }: { where: { scenarioId: string } }) => {
+        const before = store.financeScenarioBaselineLine.length;
+        store.financeScenarioBaselineLine = store.financeScenarioBaselineLine.filter(
+          (line) => line.scenarioId !== where.scenarioId,
+        );
+        return { count: before - store.financeScenarioBaselineLine.length };
+      },
+    },
+    financeScenarioAdoption: {
+      count: async ({ where }: { where: { scenarioId: string; tenantId: string } }) =>
+        store.financeScenarioAdoption.filter(
+          (row) =>
+            row.scenarioId === where.scenarioId && row.tenantId === where.tenantId,
+        ).length,
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        adoptionSeq += 1;
+        const row = { id: `adopt-${adoptionSeq}`, ...data };
+        store.financeScenarioAdoption.push(row);
+        return row;
+      },
+    },
+    financeScenarioRebase: {
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        rebaseSeq += 1;
+        const row = { id: `rebase-${rebaseSeq}`, ...data };
+        store.financeScenarioRebase.push(row);
+        return row;
       },
     },
     financeScenarioAssumption: {

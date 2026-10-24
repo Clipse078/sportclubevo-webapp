@@ -31,7 +31,7 @@ describe("FIN-04D-02 schema / migration", () => {
     expect(schema).toContain("model FinanceScenarioBaselineLine");
     expect(schema).toContain("model FinanceScenarioAssumption");
     expect(schema).not.toContain("model FinanceScenarioResultLine");
-    expect(schema).not.toContain("model FinanceScenarioAdoption");
+    expect(schema).toContain("model FinanceScenarioAdoption");
     const sql = readFileSync(
       resolve(process.cwd(), `prisma/migrations/${MIGRATION_NAME}/migration.sql`),
       "utf8",

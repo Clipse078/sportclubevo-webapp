@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02** persistence; **04D-03** engine; **04D-04** query; **04D-05** workspace UX |
-| **Status** | **04D-01 … 04D-05 COMPLETE** — **04D-05 + 04D-05R1 PO UAT PASS** — **04D-06 NEXT** — see [`SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md`](./SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md); forecast timing direction: [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
+| **Status** | **04D-01 … 04D-06** — **04D-05R1 PO UAT PASS**; **04D-06 READY FOR PO UAT** — [`SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md`](./SCE-FINANCE-04D-06-SCENARIO-ADOPTION-AND-REBASE.md); forecast timing direction: [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Base** | `STAGE` (post FIN-04C merge `c635f1c0`) |
 | **Implementation code** | **04D-01:** `scenario-architecture-contract.ts`, `scenario-assumption-calculation.ts` — **04D-03:** `calculate-finance-scenario.ts`, `finance-scenario-calculation-types.ts` |

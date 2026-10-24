@@ -16,6 +16,16 @@ import {
   updateFinanceScenarioMetadata,
   upsertFinanceScenarioAssumption,
 } from "@/lib/finance/services/finance-scenario-service";
+import {
+  adoptFinanceScenarioToCurrentForecast,
+  previewFinanceScenarioAdoption,
+} from "@/lib/finance/services/finance-scenario-adoption-service";
+import {
+  previewFinanceScenarioRebase,
+  rebaseFinanceScenario,
+  type ScenarioRebasePreviewContext,
+} from "@/lib/finance/services/finance-scenario-rebase-service";
+import type { ScenarioAdoptionPreviewContext } from "@/lib/finance/services/finance-scenario-adoption-service";
 
 export type FinanceScenarioActionResult =
   | { ok: true; scenarioId?: string }
@@ -29,6 +39,7 @@ async function scenarioCtx() {
 function revalidateFinanceScenarioRoutes(financeYearId?: string, scenarioId?: string) {
   revalidatePath("/dashboard/finance/forecast", "layout");
   revalidatePath("/dashboard/finance/forecast");
+  revalidatePath("/dashboard/finance/forecast/history");
   revalidatePath("/dashboard/finance/forecast/scenarios");
   if (financeYearId) {
     revalidatePath(`/dashboard/finance/forecast/scenarios?yearId=${financeYearId}`);
@@ -173,6 +184,74 @@ export async function deleteFinanceScenarioAction(input: {
     await deleteFinanceScenario(prisma, ctx, input);
     revalidateFinanceScenarioRoutes(input.financeYearId);
     return { ok: true };
+  } catch (error) {
+    return mapScenarioError(error);
+  }
+}
+
+export async function previewFinanceScenarioAdoptionAction(input: {
+  scenarioId: string;
+  financeYearId: string;
+}): Promise<
+  | { ok: true; preview: ScenarioAdoptionPreviewContext }
+  | { ok: false; errorCode?: string; error: string }
+> {
+  const ctx = await scenarioCtx();
+  try {
+    const preview = await previewFinanceScenarioAdoption(prisma, ctx, {
+      scenarioId: input.scenarioId,
+    });
+    return { ok: true as const, preview };
+  } catch (error) {
+    return mapScenarioError(error) as { ok: false; errorCode?: string; error: string };
+  }
+}
+
+export async function adoptFinanceScenarioAction(input: {
+  scenarioId: string;
+  financeYearId: string;
+  expectedScenarioUpdatedAt: string;
+  expectedCurrentForecastVersionId: string;
+}): Promise<FinanceScenarioActionResult> {
+  const ctx = await scenarioCtx();
+  try {
+    await adoptFinanceScenarioToCurrentForecast(prisma, ctx, input);
+    revalidateFinanceScenarioRoutes(input.financeYearId, input.scenarioId);
+    return { ok: true, scenarioId: input.scenarioId };
+  } catch (error) {
+    return mapScenarioError(error);
+  }
+}
+
+export async function previewFinanceScenarioRebaseAction(input: {
+  scenarioId: string;
+  financeYearId: string;
+}): Promise<
+  | { ok: true; preview: ScenarioRebasePreviewContext }
+  | { ok: false; errorCode?: string; error: string }
+> {
+  const ctx = await scenarioCtx();
+  try {
+    const preview = await previewFinanceScenarioRebase(prisma, ctx, {
+      scenarioId: input.scenarioId,
+    });
+    return { ok: true as const, preview };
+  } catch (error) {
+    return mapScenarioError(error) as { ok: false; errorCode?: string; error: string };
+  }
+}
+
+export async function rebaseFinanceScenarioAction(input: {
+  scenarioId: string;
+  financeYearId: string;
+  expectedScenarioUpdatedAt: string;
+  expectedCurrentForecastVersionId: string;
+}): Promise<FinanceScenarioActionResult> {
+  const ctx = await scenarioCtx();
+  try {
+    await rebaseFinanceScenario(prisma, ctx, input);
+    revalidateFinanceScenarioRoutes(input.financeYearId, input.scenarioId);
+    return { ok: true, scenarioId: input.scenarioId };
   } catch (error) {
     return mapScenarioError(error);
   }

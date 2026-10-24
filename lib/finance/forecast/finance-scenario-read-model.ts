@@ -211,6 +211,14 @@ export type FinanceScenarioListReadModel = {
   items: FinanceScenarioListItemReadModel[];
 };
 
+export type FinanceScenarioGovernanceReadModel = {
+  hasAdoptionProvenance: boolean;
+  canDelete: boolean;
+  canAdoptToCurrentForecast: boolean;
+  canUpdateSourceForecast: boolean;
+  currentForecastVersionIdForActions: string | null;
+};
+
 export type FinanceScenarioDetailReadModel = {
   scenarioId: string;
   financeYearId: string;
@@ -227,6 +235,7 @@ export type FinanceScenarioDetailReadModel = {
   assumptionCount: number;
   calculation: FinanceScenarioCalculationResult;
   comparison: FinanceScenarioComparisonReadModel;
+  governance: FinanceScenarioGovernanceReadModel;
   topDrivers: FinanceScenarioDriver[];
   allDrivers: FinanceScenarioDriver[];
   accountEffects: FinanceScenarioAccountEffect[];

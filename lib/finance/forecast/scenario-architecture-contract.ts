@@ -543,7 +543,7 @@ export const SCENARIO_PACKAGE_PLAN = {
   "04D_04": "Scenario query & comparison layer",
   "04D_05": "Scenario workspace UX (Prognose → Szenarien) — PO UAT PASS",
   "04D_05R1": "Scenario detail visual hierarchy — PO UAT PASS",
-  "04D_06": "Explicit adoption & optional baseline rebase (NEXT — annual semantics)",
+  "04D_06": "Explicit adoption & baseline rebase (COMPLETE — annual semantics)",
   "04D_07": "Hardening & release closure",
   forecastTimingEffectiveDates: "PLANNED — see SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md",
 } as const;

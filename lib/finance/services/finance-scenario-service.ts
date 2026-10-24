@@ -37,6 +37,7 @@ type Db = Pick<
   | "financeScenario"
   | "financeScenarioBaselineLine"
   | "financeScenarioAssumption"
+  | "financeScenarioAdoption"
   | "financialAccount"
   | "$transaction"
 >;
@@ -666,6 +667,17 @@ export async function deleteFinanceScenario(
   requireFinanceForecastManage(ctx);
   const scenario = await getScenarioOrThrow(db, ctx, input.scenarioId);
   const expectedUpdatedAt = parseExpectedUpdatedAt(input.expectedUpdatedAt);
+
+  const adoptionCount = await db.financeScenarioAdoption.count({
+    where: { scenarioId: scenario.id, tenantId: ctx.tenantId },
+  });
+  if (adoptionCount > 0) {
+    throw new FinanceDomainError(
+      "FINANCE_SCENARIO_DELETE_BLOCKED_ADOPTION",
+      "This scenario cannot be deleted because it was adopted as the current forecast.",
+      409,
+    );
+  }
 
   const deleted = await db.financeScenario.deleteMany({
     where: {

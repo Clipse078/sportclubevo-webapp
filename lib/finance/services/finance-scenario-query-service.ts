@@ -45,6 +45,7 @@ type Db = Pick<
   | "financeScenario"
   | "financeScenarioBaselineLine"
   | "financeScenarioAssumption"
+  | "financeScenarioAdoption"
   | "financialAccount"
   | "financeBudget"
   | "financeBudgetVersion"
@@ -689,6 +690,19 @@ export async function loadFinanceScenarioDetail(
     };
   })();
 
+  const adoptionCount = await db.financeScenarioAdoption.count({
+    where: { scenarioId: scenarioRow.id, tenantId: ctx.tenantId },
+  });
+  const hasAdoptionProvenance = adoptionCount > 0;
+  const currentForecastVersionIdForActions =
+    currentForecast.kind === "AVAILABLE" ? currentForecast.currentVersionId : null;
+  const canUpdateSourceForecast =
+    baselineFreshness.status === "OUTDATED" &&
+    !scenarioRow.archivedAt &&
+    currentForecastVersionIdForActions != null;
+  const canAdoptToCurrentForecast =
+    !scenarioRow.archivedAt && currentForecastVersionIdForActions != null;
+
   return {
     scenarioId: scenarioRow.id,
     financeYearId: scenarioRow.financeYearId,
@@ -725,6 +739,13 @@ export async function loadFinanceScenarioDetail(
       approvedBudget,
       summaryState,
       changeFlags,
+    },
+    governance: {
+      hasAdoptionProvenance,
+      canDelete: !hasAdoptionProvenance,
+      canAdoptToCurrentForecast,
+      canUpdateSourceForecast,
+      currentForecastVersionIdForActions,
     },
     topDrivers,
     allDrivers,

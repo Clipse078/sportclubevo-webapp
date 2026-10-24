@@ -103,8 +103,9 @@ describe("FIN-04D-05 scenario workspace UX", () => {
     expect(actions).toContain("restoreFinanceScenario");
     expect(actions).toContain("deleteFinanceScenario");
     expect(actions).toContain("revalidatePath");
-    expect(detail).not.toContain("rebase");
-    expect(detail).not.toContain("adopt");
+    expect(actions).toContain("adoptFinanceScenario");
+    expect(actions).toContain("rebaseFinanceScenario");
+    expect(detail).toContain("FinanceScenarioGovernanceDialogs");
   });
 
   it("H. permissions — manage gated CTAs", () => {
