@@ -854,6 +854,8 @@ FIN-04A–04C established distinct measures: approved budget, actual, automatic 
 8. **Automatic forecast:** Evidence/reference only in v1; not a scenario start baseline.
 9. **Permissions / navigation:** Reuse `finance.forecast.view` / `finance.forecast.manage`; scenarios live inside **Prognose** workspace secondary context **Szenarien** — no new top-level Finance tab.
 10. **Boundaries:** No timed-cash/phasing in v1; no finance-wide visual redesign; sport/country/organisation agnostic.
+11. **Annual vs timing (locked):** `ANNUAL EXPECTATION ≠ EXPECTED CASH TIMING ≠ EFFECTIVE-DATE ASSUMPTION`. v1 assumptions are full-year account semantics only — **no** `effectiveFrom` / `effectiveTo` on `FinanceScenarioAssumption` until temporal engine exists. **No naive month proration** (`annual × remaining months / 12`) without explicit even-distribution evidence.
+12. **Forecast timing direction:** Future **`FinanceExpectedCashEvent`** (name TBD), source-driven timing (FIN-07/08/09), and effective-date scenario assumptions — **PLANNED**, documented in [`docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](../finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md). **FIN-04D-05 + 04D-05R1 PO UAT PASS**; **FIN-04D-06 NEXT** (annual adoption/rebase).
 
 Full contract: [`docs/finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md`](../finance/SCE-FINANCE-04D-SCENARIO-ARCHITECTURE.md). Code locks: `lib/finance/forecast/scenario-architecture-contract.ts`.
 

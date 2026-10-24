@@ -6,14 +6,21 @@ import { FORECAST_PHASING_SUPPORTED } from "@/lib/finance/forecast/forecast-cont
 import { ROLLING_FORECAST_SCENARIO_BOUNDARY } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
 import { applyScenarioAssumptionV1 } from "@/lib/finance/forecast/scenario-assumption-calculation";
 import {
+  FINANCE_FORECAST_TIMING_LOCKED_PRINCIPLE,
+  FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN,
+  FINANCE_TEMPORAL_MODEL_FUTURE,
   SCENARIO_AI_BOUNDARY,
+  SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1,
   SCENARIO_ASSUMPTION_KINDS_V1,
+  SCENARIO_ASSUMPTION_V1_FORBIDDEN_TEMPORAL_FIELDS,
   SCENARIO_BASELINE_POLICY,
   SCENARIO_COMPARISON_HIERARCHY,
+  SCENARIO_FUTURE_TEMPORAL_UX,
   SCENARIO_NAVIGATION_CONTRACT,
   SCENARIO_PERSISTENCE_PROPOSAL,
   SCENARIO_PERMISSION_CONTRACT,
   SCENARIO_STABILITY_POLICY,
+  SCENARIO_TIMED_CASH_BOUNDARY,
   SCENARIO_TO_CURRENT_FORECAST_ADOPTION,
   SCENARIO_UX_ARCHITECTURE,
   SCENARIO_VERSIONING_DECISION,
@@ -166,5 +173,55 @@ describe("FIN-04D architecture documentation present", () => {
     expect(doc).toContain("hypothetical");
     expect(doc).toContain("REFERENCE_PLUS_FROZEN_BASELINE_LINES");
     expect(doc).toContain("LIGHTWEIGHT");
+    expect(doc).toContain("SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md");
+  });
+
+  it("includes forecast timing and effective-date architecture document", () => {
+    const doc = readFileSync(
+      resolve(process.cwd(), "docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md"),
+      "utf8",
+    );
+    expect(doc).toContain("ANNUAL EXPECTATION");
+    expect(doc).toContain("no naive month proration");
+    expect(doc).toContain("FinanceExpectedCashEvent");
+    expect(doc).toContain("FIN-04D-06");
+  });
+});
+
+describe("FIN-04D v1 annual semantics and temporal boundaries", () => {
+  it("locks annual assumption semantics and forbids effective-date meaning in v1", () => {
+    expect(SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1.grain).toBe(
+      "FULL_FINANCIAL_YEAR_ACCOUNT_AMOUNT",
+    );
+    expect(SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1.notEffectiveDateChange).toBe(true);
+    expect(SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1.notCashTiming).toBe(true);
+    expect(SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1.doesNotRetroactivelyChangeActuals).toBe(true);
+    expect(FINANCE_FORECAST_TIMING_LOCKED_PRINCIPLE).toContain("ANNUAL_EXPECTATION");
+  });
+
+  it("forbids naive month proration and defers timing capability", () => {
+    expect(FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN.forbiddenWithoutExplicitEvenDistributionEvidence).toBe(
+      true,
+    );
+    expect(SCENARIO_TIMED_CASH_BOUNDARY.timingCapabilityImplemented).toBe(false);
+    expect(SCENARIO_TIMED_CASH_BOUNDARY.naiveMonthProrationForbidden).toBe(true);
+    expect(FINANCE_TEMPORAL_MODEL_FUTURE.implementedInFin04dV1).toBe(false);
+    expect(FINANCE_TEMPORAL_MODEL_FUTURE.actualHistoryImmutable).toBe(true);
+  });
+
+  it("does not add effective-date fields to FinanceScenarioAssumption schema", () => {
+    const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
+    const assumptionBlock = schema.slice(
+      schema.indexOf("model FinanceScenarioAssumption"),
+      schema.indexOf("enum FinanceProjectionDataSufficiency"),
+    );
+    for (const field of SCENARIO_ASSUMPTION_V1_FORBIDDEN_TEMPORAL_FIELDS) {
+      expect(assumptionBlock).not.toContain(field);
+    }
+  });
+
+  it("defers Ab Datum UX until temporal engine exists", () => {
+    expect(SCENARIO_FUTURE_TEMPORAL_UX.implementedInFin04d05).toBe(false);
+    expect(SCENARIO_FUTURE_TEMPORAL_UX.effectiveDateUiAllowedOnlyWithTemporalEngine).toBe(true);
   });
 });

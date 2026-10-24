@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D programme — **04D-01** architecture (this document); **04D-02** persistence; **04D-03** engine; **04D-04** query; **04D-05** workspace UX |
-| **Status** | **04D-01 … 04D-05 COMPLETE** (PO UAT on 04D-05) — see [`SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md`](./SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md) |
+| **Status** | **04D-01 … 04D-05 COMPLETE** — **04D-05 + 04D-05R1 PO UAT PASS** — **04D-06 NEXT** — see [`SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md`](./SCE-FINANCE-04D-05-SCENARIO-WORKSPACE-UX.md); forecast timing direction: [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Base** | `STAGE` (post FIN-04C merge `c635f1c0`) |
 | **Implementation code** | **04D-01:** `scenario-architecture-contract.ts`, `scenario-assumption-calculation.ts` — **04D-03:** `calculate-finance-scenario.ts`, `finance-scenario-calculation-types.ts` |
@@ -112,12 +112,30 @@ Deferred as a **start reference**; supported as **secondary comparison**.
 
 Avoid copying the entire forecast grid to change one answer.
 
-| Kind | Intent example | Requires baseline line? |
+### Annual semantics (locked)
+
+FIN-04D v1 assumptions are **annual forecast assumptions** on full-year `FinancialAccount` amounts.
+
+| Kind | Semantics (full financial year) | Requires baseline line? |
 | --- | --- | --- |
-| `PERCENT_CHANGE` | −10% on an account | Yes |
-| `DELTA_AMOUNT` | +20 000 minor units | Yes |
-| `ABSOLUTE_AMOUNT` | Account becomes X | No (may create scenario line) |
-| `EXCLUDE_ACCOUNT` | Expected inflow does not happen (zero) | No |
+| `PERCENT_CHANGE` | Change the **expected full-year** account amount by the specified percentage | Yes |
+| `DELTA_AMOUNT` | Change the **expected full-year** account amount by the specified delta (minor units) | Yes |
+| `ABSOLUTE_AMOUNT` | Set the **expected full-year** account amount to the specified amount | No (may create scenario line) |
+| `EXCLUDE_ACCOUNT` | Set the **expected full-year** account amount to **zero** | No |
+
+**Not in v1 (explicit non-meaning):**
+
+- change from a specific date; remaining-months-only change; monthly phasing; cash timing; particular payment/receipt events; retroactive change to realized actuals.
+
+**Do not add** `effectiveFrom` / `effectiveTo` / `startDate` / `endDate` on `FinanceScenarioAssumption` until a temporal engine exists — see [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md).
+
+**Locked principle:**
+
+```text
+ANNUAL EXPECTATION ≠ EXPECTED CASH TIMING ≠ EFFECTIVE-DATE ASSUMPTION
+```
+
+**No naive month proration:** do not infer impact via `annual × remaining months / 12` unless evidence establishes even periodic distribution.
 
 **Rules:**
 
@@ -127,7 +145,7 @@ Avoid copying the entire forecast grid to change one answer.
 - Deterministic application order: `financialAccountId` ascending, then assumption id
 - Rounding: `roundRationalToMinor` (integer minor units — no float money)
 
-**Extension boundary (future):** optional `driverRef` / driver kinds — v1 remains `FinancialAccount` + annual amount; no generic rules engine.
+**Extension boundary (future):** optional `driverRef` / driver kinds and **time-based assumptions** on expected financial events — v1 remains `FinancialAccount` + annual amount; no generic rules engine.
 
 ---
 
@@ -180,7 +198,7 @@ Provenance in `FinanceScenarioAdoption`. Never mutates Approved Budget.
 | --- | --- |
 | **Automatic Forecast** | Does not mutate scenario assumptions; not a v1 start baseline; optional future compare |
 | **Actuals after creation** | Do not silently change frozen baseline; display Datenstand / actuals-through metadata |
-| **Timed cash / phasing** | **Out of scope** — v1 is annual forecast scenario modelling; architecture must not block future timing assumptions (FIN-04 timing, FIN-07/08/09) |
+| **Timed cash / phasing** | **Out of scope in v1** — annual scenario modelling only; future timing intelligence documented in [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) (FIN-04 / FIN-07 / FIN-08 / FIN-09); **no naive month proration** |
 
 ---
 
@@ -261,6 +279,7 @@ AI may explain or suggest assumptions in future — **never** the canonical nume
 
 ## Related documents
 
+- [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md) — timing vs annual expectation; effective-date direction (not implemented)
 - [`SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md`](./SCE-FINANCE-04D-02-SCENARIO-PERSISTENCE-AND-LIFECYCLE.md) — Prisma models, lifecycle, migration
 - [`SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`](./SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md) — scenario boundary in §14
 - [`SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](./SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md) — measure separation

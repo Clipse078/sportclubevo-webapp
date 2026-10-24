@@ -144,6 +144,65 @@ export const SCENARIO_STABILITY_POLICY = {
   rebaseConflictResolutionExplicit: true,
 } as const;
 
+/**
+ * FIN-04D v1 assumption semantics — annual full-year FinancialAccount amounts only.
+ * See docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md.
+ */
+export const SCENARIO_ASSUMPTION_ANNUAL_SEMANTICS_V1 = {
+  grain: "FULL_FINANCIAL_YEAR_ACCOUNT_AMOUNT" as const,
+  PERCENT_CHANGE: "CHANGE_EXPECTED_FULL_YEAR_AMOUNT_BY_PERCENT" as const,
+  DELTA_AMOUNT: "CHANGE_EXPECTED_FULL_YEAR_AMOUNT_BY_DELTA" as const,
+  ABSOLUTE_AMOUNT: "SET_EXPECTED_FULL_YEAR_AMOUNT" as const,
+  EXCLUDE_ACCOUNT: "SET_EXPECTED_FULL_YEAR_AMOUNT_TO_ZERO" as const,
+  notEffectiveDateChange: true,
+  notRemainingMonthsOnly: true,
+  notCashTiming: true,
+  notParticularPaymentOrReceipt: true,
+  doesNotRetroactivelyChangeActuals: true,
+} as const;
+
+/** Must not appear on FinanceScenarioAssumption in FIN-04D v1 (false precision without temporal engine). */
+export const SCENARIO_ASSUMPTION_V1_FORBIDDEN_TEMPORAL_FIELDS = [
+  "effectiveFrom",
+  "effectiveTo",
+  "startDate",
+  "endDate",
+] as const;
+
+/** Locked separation — annual forecast ≠ cash timing ≠ dated scenario intent. */
+export const FINANCE_FORECAST_TIMING_LOCKED_PRINCIPLE =
+  "ANNUAL_EXPECTATION ≠ EXPECTED_CASH_TIMING ≠ EFFECTIVE_DATE_SCENARIO_ASSUMPTION" as const;
+
+/** Architecture rule: calendar duration alone is not financial evidence for phasing. */
+export const FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN = {
+  forbiddenWithoutExplicitEvenDistributionEvidence: true,
+  naiveFormulaPattern: "annualAmountMinor × remainingMonths / 12",
+  documentedIn: "docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md",
+} as const;
+
+/** Future finance temporal model — direction only; no schema in FIN-04D v1. */
+export const FINANCE_TEMPORAL_MODEL_FUTURE = {
+  annualExpectation: "FULL_YEAR_ACCOUNT_AMOUNT — current forecast & scenario v1",
+  expectedFinancialTiming: "EXPECTED_CASH_EVENTS — future FinanceExpectedCashEvent (name TBD)",
+  timeBasedScenarioAssumption: "CHANGES_ON_TEMPORAL_EVIDENCE — deferred",
+  implementedInFin04dV1: false,
+  status: "PLANNED_ARCHITECTURE_DIRECTION" as const,
+  actualHistoryImmutable: true,
+  expectedCashDateDistinctFromAccountingRecognition: true,
+  fin07CommitmentsProvidePaymentTiming: true,
+  fin08ReceivablesProvideReceiptTiming: true,
+  fin09LiquidityConsumesTimingProfile: true,
+  fin11MayAddRecognitionSemantics: true,
+} as const;
+
+/** Future scenario UX — progressive disclosure; not in FIN-04D-05. */
+export const SCENARIO_FUTURE_TEMPORAL_UX = {
+  defaultPeriodGerman: "Gesamtes Finanzjahr",
+  advancedEffectiveDateGerman: "Ab Datum",
+  effectiveDateUiAllowedOnlyWithTemporalEngine: true,
+  implementedInFin04d05: false,
+} as const;
+
 /** v1 assumption kinds — intent stored separately from calculated results. */
 export const SCENARIO_ASSUMPTION_KINDS_V1 = [
   "PERCENT_CHANGE",
@@ -290,12 +349,18 @@ export const SCENARIO_ACTUALS_BOUNDARY = {
   fakeMonthlyPhasingForbidden: true,
 } as const;
 
-/** Timed cash / liquidity boundary (explicit non-scope). */
+/** Timed cash / liquidity boundary (explicit non-scope in v1). */
 export const SCENARIO_TIMED_CASH_BOUNDARY = {
   v1AnnualForecastScenarioOnly: true,
   futureTimingAssumptionsPossible: true,
+  forecastTimingArchitectureDoc:
+    "docs/finance/SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md",
+  timingCapabilityImplemented: false,
   blocksFin04Fin07Fin08Fin09: false,
   noPseudoMonthlyPhasing: true,
+  naiveMonthProrationForbidden: FINANCE_NAIVE_MONTH_PRORATION_FORBIDDEN
+    .forbiddenWithoutExplicitEvenDistributionEvidence,
+  assumptionV1TemporalFieldsForbidden: true,
 } as const;
 
 /** Finance visual intelligence — decision-useful charts only; no FIN-wide redesign in 04D. */
@@ -476,9 +541,11 @@ export const SCENARIO_PACKAGE_PLAN = {
   "04D_02": "Persistence & scenario lifecycle (CRUD, archive, duplicate)",
   "04D_03": "Scenario calculation & assumption engine",
   "04D_04": "Scenario query & comparison layer",
-  "04D_05": "Scenario workspace UX (Prognose → Szenarien)",
-  "04D_06": "Explicit adoption & optional baseline rebase",
+  "04D_05": "Scenario workspace UX (Prognose → Szenarien) — PO UAT PASS",
+  "04D_05R1": "Scenario detail visual hierarchy — PO UAT PASS",
+  "04D_06": "Explicit adoption & optional baseline rebase (NEXT — annual semantics)",
   "04D_07": "Hardening & release closure",
+  forecastTimingEffectiveDates: "PLANNED — see SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md",
 } as const;
 
 /** AI / numerical boundary (aligned with FIN-04B). */

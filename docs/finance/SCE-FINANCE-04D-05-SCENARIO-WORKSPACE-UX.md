@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04D-05 — tenant-facing scenario workspace |
-| **Status** | **04D-05R1** — PO UAT visual hierarchy correction (ready for re-UAT) |
+| **Status** | **COMPLETE** — **04D-05R1 COMPLETE** — **Product Owner UAT PASS** (visual + non-empty scenario) — **FIN-04D-06 NEXT** |
 | **Branch** | `cursor/sce-finance-04d-scenarios-what-if` |
 | **Depends on** | FIN-04D-01 … FIN-04D-04 |
 
@@ -52,6 +52,12 @@ Small dialog: name, optional description/question. Server resolves **aktuelle Pr
 
 Modal: account (searchable picker), assumption type (segmented — percent / delta / absolute / exclude), values. Basis points stored server-side; UI converts deterministically. Mutations refresh canonical read models via server actions + `revalidatePath`.
 
+Assumptions are **annual full-year** account changes only (see [`SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md`](./SCE-FINANCE-FORECAST-TIMING-AND-EFFECTIVE-DATES.md)). **No Ab Datum / effective-date fields** in v1 — adding dates without temporal engine semantics would imply false precision.
+
+### PO UAT evidence (non-authoritative illustration)
+
+Non-empty scenario validated with **Mitgliedsbeiträge −10%**: baseline ≈ 236'327, contribution ≈ −23'633, scenario result ≈ 161'533 (display rounding). Stored minor units and engine output remain authoritative — do not hardcode these figures in product code.
+
 ## Freshness UX
 
 - `CURRENT`: quiet label only.
@@ -74,6 +80,12 @@ Persistence migration `20261024160000_sce_finance_04d_02_scenario_persistence` a
 | CANONICAL_TOGGLES_USED | YES (`SceSegmentedControl` for list filter + assumption kind + forecast create unchanged) |
 | MULTI_SELECTION_PATTERN | N/A |
 
-## PO UAT boundary
+## PO UAT status
 
-Automated matrix covers navigation, read models, mutations, permissions architecture, and regression guards. **Michael** performs manual PO UAT on shared STAGE. FIN-04D-06 (adoption/rebase) explicitly out of scope.
+| Check | Result |
+| --- | --- |
+| Visual UAT (04D-05R1 hierarchy) | **PASS** |
+| Non-empty scenario UAT (e.g. Mitgliedsbeiträge −10%) | **PASS** |
+| Implementation | **COMPLETE** |
+
+Automated matrix covers navigation, read models, mutations, permissions architecture, and regression guards. FIN-04D-06 (adoption/rebase) is **next** and remains out of scope for 04D-05.
