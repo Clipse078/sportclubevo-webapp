@@ -229,6 +229,17 @@ export const ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST = {
   mutableCurrentUntilNextFormalRevision: true,
 } as const;
 
+/** FIN-04C-05 implemented Prognose workspace UX integration. */
+export const ROLLING_FORECAST_FIN_04C_05_WORKSPACE_UX = {
+  workspaceRoute: "/dashboard/finance/forecast",
+  primarySection: "Aktuelle Prognose",
+  formalReforecastDialog: "Neue Prognose festhalten",
+  prognoseverlaufSection: "Prognoseverlauf",
+  actualsThroughHiddenDefaultsToAsOfDate: true,
+  automaticForecastSectionAfterCurrentForecast: true,
+  noBinaryCheckboxConfirmation: true,
+} as const;
+
 /** FIN-04C-04 implemented Prognoseverlauf read & comparison query layer. */
 export const ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON = {
   historyQueryService: "loadFinanceForecastHistory",

@@ -41,6 +41,8 @@ import {
   FinanceProjectionAccountDetailSection,
   FinanceProjectionWorkspaceSection,
 } from "@/components/admin/finance/FinanceProjectionWorkspaceSection";
+import { FinanceForecastRollingUxSections } from "@/components/admin/finance/FinanceForecastRollingUxSections";
+import type { ForecastWorkspaceRollingUxData } from "@/lib/finance/services/finance-forecast-query-service";
 import { financeVarianceComparisonSemanticTextClass } from "@/lib/finance/presentation/finance-variance-favorability-presentation";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
@@ -86,6 +88,7 @@ type FinanceYearOption = { id: string; name: string };
 type FinanceForecastWorkspacePanelProps = {
   years: FinanceYearOption[];
   snapshot: ForecastWorkspaceSnapshot | null;
+  rollingUx: ForecastWorkspaceRollingUxData | null;
   projection: ProjectionWorkspaceViewModel | null;
   baseCurrency: string | null;
   hasAccounts: boolean;
@@ -99,6 +102,7 @@ type FinanceForecastWorkspacePanelProps = {
 export function FinanceForecastWorkspacePanel({
   years,
   snapshot,
+  rollingUx,
   projection,
   baseCurrency,
   hasAccounts,
@@ -113,6 +117,7 @@ export function FinanceForecastWorkspacePanel({
   const router = useRouter();
   const [workspacePending, startWorkspaceTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [creationMode, setCreationMode] = useState<"EMPTY" | "FROM_BASELINE">(() =>
     creation.canInitializeFromBaseline ? "FROM_BASELINE" : "EMPTY",
@@ -236,14 +241,9 @@ export function FinanceForecastWorkspacePanel({
           </SceFormField>
         ) : null}
 
-        {hasForecast && snapshot?.versionNumber ? (
+        {hasForecast && persistencePhase !== "hidden" ? (
           <div className="ms-auto flex max-w-md flex-col items-end gap-0.5 text-end">
-            <p className="text-xs text-[var(--muted)]">
-              {t("currentVersionLabel", { version: snapshot.versionNumber })}
-            </p>
-            {persistencePhase !== "hidden" ? (
-              <ForecastPersistenceIndicator phase={persistencePhase} t={t} />
-            ) : null}
+            <ForecastPersistenceIndicator phase={persistencePhase} t={t} />
           </div>
         ) : persistencePhase !== "hidden" ? (
           <div className="ms-auto text-end">
@@ -256,27 +256,16 @@ export function FinanceForecastWorkspacePanel({
         <p className="text-sm text-[var(--muted)]">{t("viewOnlyHint")}</p>
       ) : null}
 
+      {successMessage ? (
+        <p className="text-sm text-[var(--muted)]" role="status">
+          {successMessage}
+        </p>
+      ) : null}
+
       {feedback ? (
         <p className="text-sm text-[var(--destructive)]" role="alert">
           {feedback}
         </p>
-      ) : null}
-
-      {yearSelected && projection ? (
-        <FinanceProjectionWorkspaceSection
-          projection={projection}
-          currency={workspaceCurrency}
-          formattingLocale={formattingLocale}
-          canGenerate={canGenerateProjection}
-        />
-      ) : null}
-
-      {yearSelected && projection && projection.versionNumber !== null ? (
-        <FinanceProjectionAccountDetailSection
-          projection={projection}
-          currency={workspaceCurrency}
-          formattingLocale={formattingLocale}
-        />
       ) : null}
 
       {yearSelected && !hasForecast && canMutate ? (
@@ -292,9 +281,21 @@ export function FinanceForecastWorkspacePanel({
 
       {yearSelected && hasForecast && snapshot && displayTotals ? (
         <>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {t("currentForecastSectionTitle")}
-          </h2>
+          {rollingUx ? (
+            <FinanceForecastRollingUxSections
+              snapshot={snapshot}
+              rollingUx={rollingUx}
+              currency={workspaceCurrency}
+              formattingLocale={formattingLocale}
+              canFormalize={canMutate}
+              onFormalizeSuccess={(message) => {
+                setSuccessMessage(message);
+                setFeedback(null);
+              }}
+              onFormalizeError={(message) => setFeedback(message)}
+            />
+          ) : null}
+
           <ForecastSummarySection
             totals={displayTotals}
             currency={workspaceCurrency}
@@ -319,6 +320,23 @@ export function FinanceForecastWorkspacePanel({
             tVariance={tVariance}
           />
         </>
+      ) : null}
+
+      {yearSelected && projection ? (
+        <FinanceProjectionWorkspaceSection
+          projection={projection}
+          currency={workspaceCurrency}
+          formattingLocale={formattingLocale}
+          canGenerate={canGenerateProjection}
+        />
+      ) : null}
+
+      {yearSelected && projection && projection.versionNumber !== null ? (
+        <FinanceProjectionAccountDetailSection
+          projection={projection}
+          currency={workspaceCurrency}
+          formattingLocale={formattingLocale}
+        />
       ) : null}
 
       <Dialog

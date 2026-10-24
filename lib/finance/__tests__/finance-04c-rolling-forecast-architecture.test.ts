@@ -14,6 +14,7 @@ import {
   ROLLING_FORECAST_FIN_04C_02_PERSISTENCE,
   ROLLING_FORECAST_FIN_04C_03_FORMAL_REFORECAST,
   ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON,
+  ROLLING_FORECAST_FIN_04C_05_WORKSPACE_UX,
   ROLLING_FORECAST_GERMAN_PRODUCT_TERMS,
   ROLLING_FORECAST_LEGACY_COMPATIBILITY,
   ROLLING_FORECAST_MEASURE_GUARDS,
@@ -205,6 +206,13 @@ describe("FIN-04C-02 implemented persistence facts", () => {
 });
 
 describe("FIN-04C-04 history & comparison query locks", () => {
+  it("documents FIN-04C-05 workspace UX locks", () => {
+    expect(ROLLING_FORECAST_FIN_04C_05_WORKSPACE_UX.formalReforecastDialog).toBe(
+      "Neue Prognose festhalten",
+    );
+    expect(ROLLING_FORECAST_FIN_04C_05_WORKSPACE_UX.noBinaryCheckboxConfirmation).toBe(true);
+  });
+
   it("documents Prognoseverlauf query boundaries", () => {
     expect(ROLLING_FORECAST_FIN_04C_04_HISTORY_COMPARISON.prognoseverlaufCanonicalManagementRevisionsOnly).toBe(
       true,

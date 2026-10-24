@@ -677,7 +677,9 @@
       "currentVersionLabel": "Current forecast · version {version}",
       "totalIncome": "Forecast income",
       "totalExpense": "Forecast expense",
-      "plannedResult": "Result",
+      "plannedResult": "Forecast result",
+      "currentAsOfLabel": "Data as of {date}",
+      "versionMeta": "Version {version}",
       "incomeSectionWithYear": "Income · {year}",
       "expenseSectionWithYear": "Expense · {year}",
       "sectionTotals": "Forecast result",
@@ -693,6 +695,43 @@
       "persistenceSaved": "Saved",
       "persistenceError": "Save failed",
       "currentForecastSectionTitle": "Current forecast",
+      "formalReforecast": {
+        "action": "Record new forecast",
+        "dialogTitle": "Record new forecast",
+        "dialogDescription": "Record the current forecast as a new version. Amounts stay unchanged and remain editable afterwards.",
+        "asOfLabel": "Data as of",
+        "labelField": "Label",
+        "labelHint": "Optional, e.g. for a review or meeting.",
+        "labelPlaceholder": "e.g. Q3 review",
+        "confirm": "Record forecast",
+        "previewLoading": "Loading preview…",
+        "amountsUnchangedHint": "Formalization does not change amounts.",
+        "nextVersionMeta": "Next version {version} · {count} positions",
+        "success": "Forecast recorded as a new version.",
+        "errors": {
+          "STALE_CURRENT": "The current forecast changed in the meantime. Reload and try again.",
+          "INVALID_AS_OF_DATE": "Data-as-of date is outside the financial year or invalid.",
+          "INVALID_ACTUALS_THROUGH_DATE": "Actuals cutoff date is invalid.",
+          "INVALID_LABEL": "Label is too long or invalid.",
+          "NO_CURRENT_FORECAST": "No current forecast to record.",
+          "PERMISSION_DENIED": "No permission to record forecasts.",
+          "INVALID_FINANCE_YEAR": "Financial year not found.",
+          "UNEXPECTED_ERROR": "Could not record forecast. Please try again."
+        }
+      },
+      "comparison": {
+        "vsPreviousTitle": "Current forecast vs. previous forecast",
+        "vsBudgetTitle": "Approved budget vs. current forecast",
+        "noPreviousForecast": "No earlier forecast to compare yet.",
+        "noApprovedBudget": "No approved budget available as reference.",
+        "largestChangesTitle": "Largest changes"
+      },
+      "history": {
+        "sectionTitle": "Forecast history",
+        "asOfLine": "Data as of {date}",
+        "resultLine": "Result {amount}",
+        "currentBadge": "Current"
+      },
       "projectionColumn": "Automatic forecast",
       "projectionDeltaColumn": "Delta vs current forecast",
       "projection": {

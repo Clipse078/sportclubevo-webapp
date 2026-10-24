@@ -1140,7 +1140,9 @@
       "currentVersionLabel": "Aktuelle Prognose · Version {version}",
       "totalIncome": "Prognose-Einnahmen",
       "totalExpense": "Prognose-Ausgaben",
-      "plannedResult": "Ergebnis",
+      "plannedResult": "Prognose-Ergebnis",
+      "currentAsOfLabel": "Datenstand {date}",
+      "versionMeta": "Version {version}",
       "incomeSectionWithYear": "Einnahmen · {year}",
       "expenseSectionWithYear": "Ausgaben · {year}",
       "sectionTotals": "Prognose-Ergebnis",
@@ -1156,6 +1158,43 @@
       "persistenceSaved": "Gespeichert",
       "persistenceError": "Speichern fehlgeschlagen",
       "currentForecastSectionTitle": "Aktuelle Prognose",
+      "formalReforecast": {
+        "action": "Neue Prognose festhalten",
+        "dialogTitle": "Neue Prognose festhalten",
+        "dialogDescription": "Halte den aktuellen Prognosestand als neue Version fest. Die Beträge bleiben unverändert und können danach weiterbearbeitet werden.",
+        "asOfLabel": "Datenstand",
+        "labelField": "Bezeichnung",
+        "labelHint": "Optional, z. B. für ein Review oder eine Sitzung.",
+        "labelPlaceholder": "z. B. Q3 Review",
+        "confirm": "Prognose festhalten",
+        "previewLoading": "Vorschau wird geladen …",
+        "amountsUnchangedHint": "Die Beträge ändern sich durch das Festhalten nicht.",
+        "nextVersionMeta": "Nächste Version {version} · {count} Positionen",
+        "success": "Prognosestand wurde als neue Version festgehalten.",
+        "errors": {
+          "STALE_CURRENT": "Die aktuelle Prognose wurde inzwischen geändert. Bitte lade den neuesten Stand und versuche es erneut.",
+          "INVALID_AS_OF_DATE": "Der Datenstand liegt ausserhalb des Finanzjahrs oder ist ungültig.",
+          "INVALID_ACTUALS_THROUGH_DATE": "Der Ist-Stichtag ist ungültig.",
+          "INVALID_LABEL": "Die Bezeichnung ist zu lang oder ungültig.",
+          "NO_CURRENT_FORECAST": "Es gibt keine aktuelle Prognose zum Festhalten.",
+          "PERMISSION_DENIED": "Keine Berechtigung, Prognosen festzuhalten.",
+          "INVALID_FINANCE_YEAR": "Finanzjahr nicht gefunden.",
+          "UNEXPECTED_ERROR": "Die Prognose konnte nicht festgehalten werden. Bitte versuche es erneut."
+        }
+      },
+      "comparison": {
+        "vsPreviousTitle": "Aktuelle Prognose vs. vorherige Prognose",
+        "vsBudgetTitle": "Genehmigtes Budget vs. aktuelle Prognose",
+        "noPreviousForecast": "Noch keine frühere Prognose zum Vergleichen.",
+        "noApprovedBudget": "Kein genehmigtes Budget als Referenz vorhanden.",
+        "largestChangesTitle": "Grösste Veränderungen"
+      },
+      "history": {
+        "sectionTitle": "Prognoseverlauf",
+        "asOfLine": "Datenstand {date}",
+        "resultLine": "Ergebnis {amount}",
+        "currentBadge": "Aktuell"
+      },
       "projectionColumn": "Automatische Prognose",
       "projectionDeltaColumn": "Abweichung zur aktuellen Prognose",
       "projection": {

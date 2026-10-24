@@ -804,7 +804,7 @@ Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../fi
 
 ## ADR-035 — Rolling Forecast & Reforecasting (FIN-04C)
 
-**Status:** Accepted — **FIN-04C-01 architecture** + **FIN-04C-02 persistence** + **FIN-04C-03 formal reforecast service** + **FIN-04C-04 history/comparison queries** (FIN-04C-05 UX next)
+**Status:** Accepted — **FIN-04C-01 architecture** + **FIN-04C-02 persistence** + **FIN-04C-03 formal reforecast service** + **FIN-04C-04 history/comparison queries** + **FIN-04C-05 workspace UX** (FIN-04C-06 next)
 
 ### Context
 

@@ -1,5 +1,7 @@
 import type { CanonicalAccountSemantic } from "@prisma/client";
 import { computeBudgetPlanningTotals } from "@/lib/finance/budget/budget-planning-totals";
+import type { ForecastHistoryDisplayMetadata } from "@/lib/finance/forecast/forecast-revision-presentation";
+import type { ForecastRevisionSource } from "@/lib/finance/forecast/rolling-forecast-architecture-contract";
 
 export type ForecastAccountPlanningRow = {
   accountId: string;
@@ -16,6 +18,13 @@ export type ForecastAccountPlanningRow = {
   };
 };
 
+export type ForecastCurrentRevisionPresentation = {
+  revisionLabel: string | null;
+  revisionSource: ForecastRevisionSource | null;
+  asOfDate: string | null;
+  presentation: ForecastHistoryDisplayMetadata;
+};
+
 export type ForecastWorkspaceSnapshot = {
   financeYearId: string;
   financeYearName: string;
@@ -24,6 +33,9 @@ export type ForecastWorkspaceSnapshot = {
   versionNumber: number | null;
   status: "NONE" | "CURRENT";
   currency: string | null;
+  /** Recommended Datenstand for formalization (inside finance year); null if none. */
+  recommendedFormalReforecastAsOfDate: string | null;
+  currentRevision: ForecastCurrentRevisionPresentation | null;
   rows: ForecastAccountPlanningRow[];
   totals: {
     totalIncomeMinor: number;

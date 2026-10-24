@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C programme — **04C-01** architecture; **04C-02** persistence; **04C-03+** service/UX |
-| **Status** | **04C-01 COMPLETE** · **04C-02 COMPLETE** · **04C-03 COMPLETE** · **04C-04 COMPLETE** · **04C-05 NEXT** |
+| **Status** | **04C-01 COMPLETE** · **04C-02 COMPLETE** · **04C-03 COMPLETE** · **04C-04 COMPLETE** · **04C-05 COMPLETE** · **04C-06 NEXT** |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
 | **Base** | `STAGE` (post FIN-04B merge PR **#903**, merge `f6bd28c5`) |
 | **Implementation code (04C-01)** | `lib/finance/forecast/rolling-forecast-architecture-contract.ts`, `forecast-revision-comparison.ts` |

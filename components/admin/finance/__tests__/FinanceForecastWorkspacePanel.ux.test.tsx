@@ -47,9 +47,9 @@ describe("FIN-04A R2 forecast workspace UX", () => {
     expect(panel).toContain("financeVarianceComparisonSemanticTextClass");
   });
 
-  it("places persistence feedback near version metadata", () => {
+  it("places persistence feedback in context strip", () => {
     expect(panel).toContain("data-finance-forecast-persistence");
-    expect(panel).toContain("currentVersionLabel");
+    expect(panel).toContain("ForecastPersistenceIndicator");
   });
 
   it("create modal remains single-choice segmented control without checkboxes", () => {
