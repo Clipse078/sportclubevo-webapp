@@ -214,10 +214,13 @@ export async function loadForecastWorkspaceSnapshot(
       )
     : null;
 
-  const recommendedFormalReforecastAsOfDate = recommendFormalReforecastAsOfDate({
-    startDate: year.startDate,
-    endDate: year.endDate,
-  });
+  const recommendedFormalReforecastAsOfDate =
+    year.startDate && year.endDate
+      ? recommendFormalReforecastAsOfDate({
+          startDate: year.startDate,
+          endDate: year.endDate,
+        })
+      : null;
 
   const currentRevision = currentVersion
     ? {

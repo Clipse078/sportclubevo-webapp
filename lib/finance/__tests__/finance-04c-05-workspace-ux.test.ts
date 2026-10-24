@@ -25,7 +25,7 @@ describe("FIN-04C-05 rolling forecast workspace UX", () => {
   });
 
   it("B. formalization CTA visible only for manage (canMutate)", () => {
-    expect(rolling).toContain('canFormalize={canMutate}');
+    expect(panel).toContain("canFormalize={canMutate}");
     expect(rolling).toContain('data-finance-formal-reforecast-action="open"');
     expect(rolling).toMatch(/canFormalize \? \([\s\S]*FinanceFormalReforecastDialog/);
     expect(de).toContain("Neue Prognose festhalten");
@@ -84,10 +84,8 @@ describe("FIN-04C-05 rolling forecast workspace UX", () => {
   });
 
   it("J. automatic forecast remains separate section after current forecast", () => {
-    const panelProjectionIdx = panel.indexOf("FinanceProjectionWorkspaceSection");
-    const rollingIdx = panel.indexOf("FinanceForecastRollingUxSections");
-    expect(rollingIdx).toBeGreaterThan(-1);
-    expect(panelProjectionIdx).toBeGreaterThan(rollingIdx);
+    const afterRolling = panel.slice(panel.indexOf("<FinanceForecastRollingUxSections"));
+    expect(afterRolling).toContain("<FinanceProjectionWorkspaceSection");
     expect(de).toContain("Automatische Prognose übernehmen");
     expect(de).toContain("Neue Prognose festhalten");
   });

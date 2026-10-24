@@ -149,6 +149,7 @@ export function FinanceForecastRollingUxSections({
 
       {canFormalize ? (
         <FinanceFormalReforecastDialog
+          key={formalizeOpen ? snapshot.versionId : "formal-reforecast-closed"}
           open={formalizeOpen}
           onClose={() => setFormalizeOpen(false)}
           financeYearId={snapshot.financeYearId}
@@ -189,7 +190,6 @@ function ComparisonTotalsStrip(props: {
   };
   "data-finance-surface"?: string;
 }) {
-  const resultClass = financeResultSemanticTextClass(props.resultMinor);
   return (
     <section
       className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS}
@@ -236,8 +236,12 @@ function FinanceForecastRevisionComparisonSection(props: {
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
 }) {
   const { t } = props;
-  const showPrevious = props.vsPrevious.kind === "COMPARISON";
-  const showBudget = props.vsApprovedBudget.kind === "COMPARISON";
+  const previousComparison =
+    props.vsPrevious.kind === "COMPARISON" ? props.vsPrevious.comparison : null;
+  const budgetComparison =
+    props.vsApprovedBudget.kind === "COMPARISON" ? props.vsApprovedBudget.comparison : null;
+  const showPrevious = previousComparison !== null;
+  const showBudget = budgetComparison !== null;
 
   if (!showPrevious && !showBudget) {
     if (props.vsPrevious.kind === "NO_PREVIOUS_FORECAST") {
@@ -251,25 +255,25 @@ function FinanceForecastRevisionComparisonSection(props: {
   }
 
   const largest =
-    showPrevious && props.vsPrevious.comparison.largestChanges.length > 0
-      ? props.vsPrevious.comparison.largestChanges
+    previousComparison && previousComparison.largestChanges.length > 0
+      ? previousComparison.largestChanges
           .filter((row) => row.deltaMinor !== 0)
           .slice(0, 5)
       : [];
 
   return (
     <div className="space-y-3" data-finance-revision-comparisons>
-      {showPrevious ? (
+      {showPrevious && previousComparison ? (
         <ComparisonTotalsStrip
           title={t("comparison.vsPreviousTitle")}
           currency={props.currency}
           formattingLocale={props.formattingLocale}
-          incomeMinor={props.vsPrevious.comparison.summary.comparisonIncomeMinor}
-          expenseMinor={props.vsPrevious.comparison.summary.comparisonExpenseMinor}
-          resultMinor={props.vsPrevious.comparison.summary.comparisonResultMinor}
-          incomeDeltaMinor={props.vsPrevious.comparison.summary.incomeDeltaMinor}
-          expenseDeltaMinor={props.vsPrevious.comparison.summary.expenseDeltaMinor}
-          resultDeltaMinor={props.vsPrevious.comparison.summary.resultDeltaMinor}
+          incomeMinor={previousComparison.summary.comparisonIncomeMinor}
+          expenseMinor={previousComparison.summary.comparisonExpenseMinor}
+          resultMinor={previousComparison.summary.comparisonResultMinor}
+          incomeDeltaMinor={previousComparison.summary.incomeDeltaMinor}
+          expenseDeltaMinor={previousComparison.summary.expenseDeltaMinor}
+          resultDeltaMinor={previousComparison.summary.resultDeltaMinor}
           labels={{
             income: t("totalIncome"),
             expense: t("totalExpense"),
@@ -326,17 +330,17 @@ function FinanceForecastRevisionComparisonSection(props: {
         </section>
       ) : null}
 
-      {showBudget ? (
+      {showBudget && budgetComparison ? (
         <ComparisonTotalsStrip
           title={t("comparison.vsBudgetTitle")}
           currency={props.currency}
           formattingLocale={props.formattingLocale}
-          incomeMinor={props.vsApprovedBudget.comparison.summary.comparisonIncomeMinor}
-          expenseMinor={props.vsApprovedBudget.comparison.summary.comparisonExpenseMinor}
-          resultMinor={props.vsApprovedBudget.comparison.summary.comparisonResultMinor}
-          incomeDeltaMinor={props.vsApprovedBudget.comparison.summary.incomeDeltaMinor}
-          expenseDeltaMinor={props.vsApprovedBudget.comparison.summary.expenseDeltaMinor}
-          resultDeltaMinor={props.vsApprovedBudget.comparison.summary.resultDeltaMinor}
+          incomeMinor={budgetComparison.summary.comparisonIncomeMinor}
+          expenseMinor={budgetComparison.summary.comparisonExpenseMinor}
+          resultMinor={budgetComparison.summary.comparisonResultMinor}
+          incomeDeltaMinor={budgetComparison.summary.incomeDeltaMinor}
+          expenseDeltaMinor={budgetComparison.summary.expenseDeltaMinor}
+          resultDeltaMinor={budgetComparison.summary.resultDeltaMinor}
           labels={{
             income: t("totalIncome"),
             expense: t("totalExpense"),
@@ -481,15 +485,6 @@ function FinanceFormalReforecastDialog(props: {
       }
     });
   }, [asOfDate, props.financeYearId, props.open, props.t, revisionLabel]);
-
-  useEffect(() => {
-    if (props.open) {
-      setAsOfDate(props.defaultAsOfDate);
-      setRevisionLabel("");
-      setSubmitError(null);
-      setPreviewError(null);
-    }
-  }, [props.defaultAsOfDate, props.open]);
 
   useEffect(() => {
     if (props.open) {
