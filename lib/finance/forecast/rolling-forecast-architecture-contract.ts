@@ -56,6 +56,7 @@ export const FORECAST_REVISION_SOURCES = [
   "INITIAL_FORECAST",
   "MANUAL_REFORECAST",
   "AUTOMATIC_FORECAST_ADOPTION",
+  "SCENARIO_ADOPTION",
 ] as const;
 
 export type ForecastRevisionSource = (typeof FORECAST_REVISION_SOURCES)[number];
@@ -63,6 +64,10 @@ export type ForecastRevisionSource = (typeof FORECAST_REVISION_SOURCES)[number];
 /** FIN-04B adoption remains a meaningful formal revision source (PO UAT). */
 export const FIN_04B_ADOPTION_REVISION_SOURCE: ForecastRevisionSource =
   "AUTOMATIC_FORECAST_ADOPTION";
+
+/** FIN-04D-06 explicit scenario → Current Forecast adoption. */
+export const FIN_04D_SCENARIO_ADOPTION_REVISION_SOURCE: ForecastRevisionSource =
+  "SCENARIO_ADOPTION";
 
 /** `FinanceForecastVersionStatus` lifecycle — no DRAFT in FIN-04C. */
 export const FORECAST_VERSION_STATUSES = ["CURRENT", "SUPERSEDED"] as const;

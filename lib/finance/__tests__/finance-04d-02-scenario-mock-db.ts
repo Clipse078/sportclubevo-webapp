@@ -1,0 +1,811 @@
+import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
+
+export const scenarioTenantA = "tenant-a";
+export const scenarioTenantB = "tenant-b";
+export const scenarioYearId = "fy-2026";
+
+export function scenarioCtx(overrides?: Partial<FinanceAuthContext>): FinanceAuthContext {
+  return {
+    tenantId: scenarioTenantA,
+    userId: "user-1",
+    permissionKeys: new Set(["finance.forecast.view", "finance.forecast.manage"]),
+    ...overrides,
+  };
+}
+
+export type ScenarioStore = {
+  financeYear: Array<{ id: string; tenantId: string }>;
+  financeForecast: Array<{
+    id: string;
+    tenantId: string;
+    financeYearId: string;
+    currentVersionId: string | null;
+  }>;
+  financeForecastVersion: Array<{
+    id: string;
+    forecastId: string;
+    status: "CURRENT" | "SUPERSEDED";
+    versionNumber: number;
+    revisionLabel?: string | null;
+    revisionSource?: string | null;
+    asOfDate?: Date | null;
+    actualsThroughDate?: Date | null;
+    scenarioKey?: string | null;
+  }>;
+  financeForecastLine: Array<{
+    id: string;
+    forecastVersionId: string;
+    financialAccountId: string;
+    amountMinor: number;
+  }>;
+  financialAccount: Array<{
+    id: string;
+    tenantId: string;
+    name: string;
+    code: string | null;
+    sortOrder: number;
+    canonicalSemantic: string;
+    lifecycle: "ACTIVE" | "ARCHIVED";
+  }>;
+  financeBudget: Array<{
+    id: string;
+    tenantId: string;
+    financeYearId: string;
+    currentBaselineVersionId: string | null;
+  }>;
+  financeBudgetVersion: Array<{
+    id: string;
+    budgetId: string;
+    status: "DRAFT" | "APPROVED";
+    versionNumber: number;
+  }>;
+  financeBudgetLine: Array<{
+    id: string;
+    budgetVersionId: string;
+    financialAccountId: string;
+    amountMinor: number;
+  }>;
+  user: Array<{ id: string; firstName: string; lastName: string }>;
+  financeScenario: Array<{
+    id: string;
+    tenantId: string;
+    financeYearId: string;
+    name: string;
+    description: string | null;
+    sourceForecastId: string;
+    sourceForecastVersionId: string;
+    baselineAsOfDate: Date | null;
+    baselineActualsThroughDate: Date | null;
+    createdByUserId: string | null;
+    updatedByUserId: string | null;
+    archivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+  financeScenarioBaselineLine: Array<{
+    id: string;
+    scenarioId: string;
+    financialAccountId: string;
+    amountMinor: number;
+  }>;
+  financeScenarioAssumption: Array<{
+    id: string;
+    scenarioId: string;
+    financialAccountId: string;
+    kind: string;
+    percentBasisPoints: number | null;
+    amountMinorDelta: number | null;
+    absoluteAmountMinor: number | null;
+    note: string | null;
+  }>;
+  financeScenarioAdoption: Array<Record<string, unknown>>;
+  financeScenarioRebase: Array<Record<string, unknown>>;
+};
+
+export function createEmptyScenarioStore(): ScenarioStore {
+  return {
+    financeYear: [{ id: scenarioYearId, tenantId: scenarioTenantA }],
+    financeForecast: [],
+    financeForecastVersion: [],
+    financeForecastLine: [],
+    financialAccount: [
+      {
+        id: "acc-income",
+        tenantId: scenarioTenantA,
+        name: "Income A",
+        code: "4000",
+        sortOrder: 1,
+        canonicalSemantic: "INCOME",
+        lifecycle: "ACTIVE",
+      },
+      {
+        id: "acc-expense",
+        tenantId: scenarioTenantA,
+        name: "Expense A",
+        code: "5000",
+        sortOrder: 2,
+        canonicalSemantic: "EXPENSE",
+        lifecycle: "ACTIVE",
+      },
+      {
+        id: "acc-archived",
+        tenantId: scenarioTenantA,
+        name: "Archived expense",
+        code: null,
+        sortOrder: 3,
+        canonicalSemantic: "EXPENSE",
+        lifecycle: "ARCHIVED",
+      },
+      {
+        id: "acc-other-tenant",
+        tenantId: scenarioTenantB,
+        name: "Other tenant",
+        code: null,
+        sortOrder: 1,
+        canonicalSemantic: "INCOME",
+        lifecycle: "ACTIVE",
+      },
+    ],
+    financeScenario: [],
+    financeScenarioBaselineLine: [],
+    financeScenarioAssumption: [],
+    financeScenarioAdoption: [],
+    financeScenarioRebase: [],
+    financeBudget: [],
+    financeBudgetVersion: [],
+    financeBudgetLine: [],
+    user: [{ id: "user-1", firstName: "Max", lastName: "Muster" }],
+  };
+}
+
+export type ScenarioDbQueryCounts = {
+  financeScenarioFindMany: number;
+  financeScenarioBaselineLineFindMany: number;
+  financeScenarioAssumptionFindMany: number;
+};
+
+export function seedApprovedBudget(
+  store: ScenarioStore,
+  lines: Array<{ financialAccountId: string; amountMinor: number }>,
+  options?: { approved?: boolean; versionId?: string },
+) {
+  const versionId = options?.versionId ?? "bv-approved";
+  store.financeBudget.push({
+    id: "budget-1",
+    tenantId: scenarioTenantA,
+    financeYearId: scenarioYearId,
+    currentBaselineVersionId: versionId,
+  });
+  store.financeBudgetVersion.push({
+    id: versionId,
+    budgetId: "budget-1",
+    status: options?.approved === false ? "DRAFT" : "APPROVED",
+    versionNumber: 1,
+  });
+  let seq = 0;
+  for (const line of lines) {
+    seq += 1;
+    store.financeBudgetLine.push({
+      id: `bl-${seq}`,
+      budgetVersionId: versionId,
+      financialAccountId: line.financialAccountId,
+      amountMinor: line.amountMinor,
+    });
+  }
+}
+
+export function seedCurrentForecast(
+  store: ScenarioStore,
+  lines: Array<{ financialAccountId: string; amountMinor: number }>,
+  versionId = "fv-v1",
+  meta?: { revisionLabel?: string | null; versionNumber?: number },
+) {
+  store.financeForecast.push({
+    id: "ff-1",
+    tenantId: scenarioTenantA,
+    financeYearId: scenarioYearId,
+    currentVersionId: versionId,
+  });
+  store.financeForecastVersion.push({
+    id: versionId,
+    forecastId: "ff-1",
+    status: "CURRENT",
+    versionNumber: meta?.versionNumber ?? 1,
+    revisionLabel: meta?.revisionLabel ?? null,
+    revisionSource: "MANUAL_REFORECAST",
+    asOfDate: new Date("2026-06-01"),
+    actualsThroughDate: new Date("2026-05-31"),
+    scenarioKey: null,
+  });
+  let seq = 0;
+  for (const line of lines) {
+    seq += 1;
+    store.financeForecastLine.push({
+      id: `fl-${seq}`,
+      forecastVersionId: versionId,
+      financialAccountId: line.financialAccountId,
+      amountMinor: line.amountMinor,
+    });
+  }
+}
+
+function normalizedNameKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+function assertActiveNameUnique(store: ScenarioStore, row: { tenantId: string; financeYearId: string; name: string; archivedAt: Date | null; id?: string }) {
+  if (row.archivedAt) return;
+  const key = normalizedNameKey(row.name);
+  const conflict = store.financeScenario.some(
+    (s) =>
+      s.archivedAt == null &&
+      s.tenantId === row.tenantId &&
+      s.financeYearId === row.financeYearId &&
+      normalizedNameKey(s.name) === key &&
+      s.id !== row.id,
+  );
+  if (conflict) {
+    const error = Object.assign(new Error("Unique constraint"), { code: "P2002" });
+    throw error;
+  }
+}
+
+export function makeScenarioDb(
+  store: ScenarioStore,
+  metrics?: { counts: ScenarioDbQueryCounts },
+) {
+  let scenarioSeq = 0;
+  let baselineSeq = 0;
+  let assumptionSeq = 0;
+  let forecastVersionSeq = 0;
+  let forecastLineSeq = 0;
+  let adoptionSeq = 0;
+  let rebaseSeq = 0;
+
+  const db = {
+    financeYear: {
+      findUnique: async ({ where }: { where: { id: string } }) =>
+        store.financeYear.find((y) => y.id === where.id) ?? null,
+    },
+    financeForecast: {
+      findUnique: async ({
+        where,
+        select,
+        include,
+      }: {
+        where:
+          | { tenantId_financeYearId: { tenantId: string; financeYearId: string } }
+          | { id: string };
+        select?: {
+          id?: boolean;
+          currentVersionId?: boolean;
+          tenantId?: boolean;
+          financeYearId?: boolean;
+        };
+        include?: { currentVersion?: { include?: { lines?: boolean } } };
+      }) => {
+        const forecast =
+          "tenantId_financeYearId" in where
+            ? store.financeForecast.find(
+                (f) =>
+                  f.tenantId === where.tenantId_financeYearId.tenantId &&
+                  f.financeYearId === where.tenantId_financeYearId.financeYearId,
+              )
+            : store.financeForecast.find((f) => f.id === where.id);
+        if (!forecast) return null;
+        if (select) {
+          return {
+            id: forecast.id,
+            currentVersionId: forecast.currentVersionId,
+            tenantId: forecast.tenantId,
+            financeYearId: forecast.financeYearId,
+          };
+        }
+        const currentVersion = forecast.currentVersionId
+          ? store.financeForecastVersion.find((v) => v.id === forecast.currentVersionId)
+          : null;
+        return {
+          ...forecast,
+          currentVersion: include?.currentVersion
+            ? {
+                ...currentVersion,
+                lines: include.currentVersion.include?.lines
+                  ? store.financeForecastLine.filter(
+                      (l) => l.forecastVersionId === currentVersion?.id,
+                    )
+                  : undefined,
+              }
+            : undefined,
+        };
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: { currentVersionId?: string };
+      }) => {
+        const row = store.financeForecast.find((f) => f.id === where.id)!;
+        if (data.currentVersionId !== undefined) row.currentVersionId = data.currentVersionId;
+        return row;
+      },
+    },
+    financeForecastVersion: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { id: string };
+        include?: {
+          lines?: boolean;
+          forecast?: { select: { id?: boolean; tenantId?: boolean; financeYearId?: boolean } };
+        };
+      }) => {
+        const row = store.financeForecastVersion.find((v) => v.id === where.id);
+        if (!row) return null;
+        const forecast = store.financeForecast.find((f) => f.id === row.forecastId)!;
+        return {
+          ...row,
+          forecastId: row.forecastId,
+          lines: include?.lines
+            ? store.financeForecastLine.filter((l) => l.forecastVersionId === row.id)
+            : undefined,
+          forecast: include?.forecast
+            ? {
+                id: forecast.id,
+                tenantId: forecast.tenantId,
+                financeYearId: forecast.financeYearId,
+              }
+            : undefined,
+        };
+      },
+      findFirst: async ({
+        where,
+        orderBy,
+        select,
+      }: {
+        where: { forecastId: string };
+        orderBy: { versionNumber: "desc" };
+        select?: { versionNumber?: boolean };
+      }) => {
+        const rows = store.financeForecastVersion
+          .filter((v) => v.forecastId === where.forecastId)
+          .sort((a, b) => b.versionNumber - a.versionNumber);
+        const row = rows[0] ?? null;
+        if (!row) return null;
+        if (select?.versionNumber) return { versionNumber: row.versionNumber };
+        return row;
+      },
+      update: async ({
+        where,
+        data,
+      }: {
+        where: { id: string };
+        data: { status?: "CURRENT" | "SUPERSEDED" };
+      }) => {
+        const row = store.financeForecastVersion.find((v) => v.id === where.id)!;
+        if (data.status) row.status = data.status;
+        return row;
+      },
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        forecastVersionSeq += 1;
+        const id = `fv-new-${forecastVersionSeq}`;
+        const row = {
+          id,
+          forecastId: data.forecastId as string,
+          status: data.status as "CURRENT" | "SUPERSEDED",
+          versionNumber: data.versionNumber as number,
+          revisionLabel: (data.revisionLabel as string | null | undefined) ?? null,
+          revisionSource: (data.revisionSource as string | null | undefined) ?? null,
+          asOfDate: (data.asOfDate as Date | null | undefined) ?? null,
+          actualsThroughDate: (data.actualsThroughDate as Date | null | undefined) ?? null,
+          previousVersionId: (data.previousVersionId as string | null | undefined) ?? null,
+          scenarioKey: null,
+        };
+        store.financeForecastVersion.push(row);
+        const lines = data.lines as
+          | { create: Array<{ financialAccountId: string; amountMinor: number }> }
+          | undefined;
+        for (const line of lines?.create ?? []) {
+          forecastLineSeq += 1;
+          store.financeForecastLine.push({
+            id: `fl-gov-${forecastLineSeq}`,
+            forecastVersionId: id,
+            financialAccountId: line.financialAccountId,
+            amountMinor: line.amountMinor,
+          });
+        }
+        return { id, ...row };
+      },
+    },
+    financeForecastLine: {
+      findMany: async ({
+        where,
+      }: {
+        where?: { forecastVersionId?: string | { in: string[] } };
+      } = {}) => {
+        if (!where?.forecastVersionId) return store.financeForecastLine;
+        if (typeof where.forecastVersionId === "string") {
+          return store.financeForecastLine.filter(
+            (l) => l.forecastVersionId === where.forecastVersionId,
+          );
+        }
+        return store.financeForecastLine.filter((l) =>
+          where.forecastVersionId!.in.includes(l.forecastVersionId),
+        );
+      },
+    },
+    financialAccount: {
+      findUnique: async ({ where }: { where: { id: string } }) =>
+        store.financialAccount.find((a) => a.id === where.id) ?? null,
+      findMany: async ({
+        where,
+        select,
+        orderBy,
+      }: {
+        where: { id?: { in: string[] }; tenantId?: string };
+        select?: Record<string, boolean>;
+        orderBy?: Array<{ sortOrder?: "asc"; name?: "asc" }>;
+      }) => {
+        let rows = store.financialAccount.filter((a) => {
+          if (where.tenantId && a.tenantId !== where.tenantId) return false;
+          if (where.id?.in && !where.id.in.includes(a.id)) return false;
+          return true;
+        });
+        if (orderBy) {
+          rows = [...rows].sort((a, b) => {
+            if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+            return a.name.localeCompare(b.name);
+          });
+        }
+        if (select) {
+          return rows.map((a) => {
+            const picked: Record<string, unknown> = {};
+            for (const key of Object.keys(select)) {
+              if (select[key]) {
+                picked[key] = a[key as keyof typeof a];
+              }
+            }
+            return picked;
+          });
+        }
+        return rows;
+      },
+    },
+    user: {
+      findMany: async ({
+        where,
+        select,
+      }: {
+        where: { id: { in: string[] } };
+        select?: { id?: boolean; firstName?: boolean; lastName?: boolean };
+      }) => {
+        const rows = store.user.filter((u) => where.id.in.includes(u.id));
+        if (select) {
+          return rows.map((u) => ({
+            id: u.id,
+            firstName: u.firstName,
+            lastName: u.lastName,
+          }));
+        }
+        return rows;
+      },
+    },
+    financeBudget: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { tenantId_financeYearId: { tenantId: string; financeYearId: string } };
+        include?: { versions?: { select: { id: boolean; status: boolean; versionNumber: boolean } } };
+      }) => {
+        const budget = store.financeBudget.find(
+          (b) =>
+            b.tenantId === where.tenantId_financeYearId.tenantId &&
+            b.financeYearId === where.tenantId_financeYearId.financeYearId,
+        );
+        if (!budget) return null;
+        return {
+          ...budget,
+          versions: include?.versions
+            ? store.financeBudgetVersion
+                .filter((v) => v.budgetId === budget.id)
+                .map((v) => ({
+                  id: v.id,
+                  status: v.status,
+                  versionNumber: v.versionNumber,
+                }))
+            : undefined,
+        };
+      },
+    },
+    financeBudgetVersion: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { id: string };
+        include?: {
+          lines?: { include: { financialAccount: { select: { id: boolean; canonicalSemantic: boolean } } } };
+        };
+      }) => {
+        const version = store.financeBudgetVersion.find((v) => v.id === where.id);
+        if (!version) return null;
+        const lines = store.financeBudgetLine.filter((l) => l.budgetVersionId === version.id);
+        return {
+          ...version,
+          lines: include?.lines
+            ? lines.map((line) => ({
+                ...line,
+                financialAccount: store.financialAccount.find((a) => a.id === line.financialAccountId)!,
+              }))
+            : undefined,
+        };
+      },
+    },
+    financeScenario: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { id: string };
+        include?: { baselineLines?: boolean; assumptions?: boolean };
+      }) => {
+        const row = store.financeScenario.find((s) => s.id === where.id);
+        if (!row) return null;
+        return {
+          ...row,
+          baselineLines: include?.baselineLines
+            ? store.financeScenarioBaselineLine.filter((l) => l.scenarioId === row.id)
+            : undefined,
+          assumptions: include?.assumptions
+            ? store.financeScenarioAssumption.filter((a) => a.scenarioId === row.id)
+            : undefined,
+        };
+      },
+      findUniqueOrThrow: async ({ where }: { where: { id: string } }) => {
+        const row = await db.financeScenario.findUnique({ where });
+        if (!row) throw new Error("not found");
+        return row;
+      },
+      findMany: async ({
+        where,
+        select,
+        orderBy,
+      }: {
+        where: {
+          tenantId: string;
+          financeYearId: string;
+          archivedAt?: null;
+          NOT?: { id: string };
+        };
+        select?: { id?: boolean; name?: boolean };
+        orderBy?: Array<{ updatedAt?: "desc"; id?: "asc" }>;
+      }) => {
+        if (metrics) metrics.counts.financeScenarioFindMany += 1;
+        let rows = store.financeScenario.filter((s) => {
+          if (s.tenantId !== where.tenantId) return false;
+          if (s.financeYearId !== where.financeYearId) return false;
+          if (where.archivedAt === null && s.archivedAt != null) return false;
+          if (where.NOT && s.id === where.NOT.id) return false;
+          return true;
+        });
+        if (orderBy) {
+          rows = [...rows].sort((a, b) => {
+            const updatedDiff = b.updatedAt.getTime() - a.updatedAt.getTime();
+            if (updatedDiff !== 0) return updatedDiff;
+            return a.id.localeCompare(b.id);
+          });
+        }
+        return rows.map((s) => (select ? { id: s.id, name: s.name } : s));
+      },
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        scenarioSeq += 1;
+        const now = new Date();
+        const row = {
+          id: `sc-${scenarioSeq}`,
+          tenantId: data.tenantId as string,
+          financeYearId: data.financeYearId as string,
+          name: data.name as string,
+          description: (data.description as string | null) ?? null,
+          sourceForecastId: data.sourceForecastId as string,
+          sourceForecastVersionId: data.sourceForecastVersionId as string,
+          baselineAsOfDate: (data.baselineAsOfDate as Date | null) ?? null,
+          baselineActualsThroughDate: (data.baselineActualsThroughDate as Date | null) ?? null,
+          createdByUserId: (data.createdByUserId as string | null) ?? null,
+          updatedByUserId: (data.updatedByUserId as string | null) ?? null,
+          archivedAt: (data.archivedAt as Date | null) ?? null,
+          createdAt: now,
+          updatedAt: now,
+        };
+        assertActiveNameUnique(store, row);
+        store.financeScenario.push(row);
+        return { ...row };
+      },
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: {
+          id: string;
+          tenantId: string;
+          updatedAt: Date;
+          archivedAt?: null;
+        };
+        data: Record<string, unknown>;
+      }) => {
+        const row = store.financeScenario.find(
+          (s) =>
+            s.id === where.id &&
+            s.tenantId === where.tenantId &&
+            s.updatedAt.getTime() === where.updatedAt.getTime() &&
+            (where.archivedAt === null ? s.archivedAt == null : true),
+        );
+        if (!row) return { count: 0 };
+        if (data.name !== undefined) row.name = data.name as string;
+        if (data.description !== undefined) row.description = data.description as string | null;
+        if (data.archivedAt !== undefined) row.archivedAt = data.archivedAt as Date | null;
+        if (data.sourceForecastVersionId !== undefined) {
+          row.sourceForecastVersionId = data.sourceForecastVersionId as string;
+        }
+        if (data.baselineAsOfDate !== undefined) {
+          row.baselineAsOfDate = data.baselineAsOfDate as Date | null;
+        }
+        if (data.baselineActualsThroughDate !== undefined) {
+          row.baselineActualsThroughDate = data.baselineActualsThroughDate as Date | null;
+        }
+        row.updatedByUserId = (data.updatedByUserId as string | null) ?? row.updatedByUserId;
+        row.updatedAt = new Date(row.updatedAt.getTime() + 5);
+        if (data.name !== undefined || data.archivedAt !== undefined) {
+          assertActiveNameUnique(store, row);
+        }
+        return { count: 1 };
+      },
+      deleteMany: async ({
+        where,
+      }: {
+        where: { id: string; tenantId: string; updatedAt: Date };
+      }) => {
+        const idx = store.financeScenario.findIndex(
+          (s) =>
+            s.id === where.id &&
+            s.tenantId === where.tenantId &&
+            s.updatedAt.getTime() === where.updatedAt.getTime(),
+        );
+        if (idx < 0) return { count: 0 };
+        const id = store.financeScenario[idx]!.id;
+        store.financeScenario.splice(idx, 1);
+        store.financeScenarioBaselineLine = store.financeScenarioBaselineLine.filter(
+          (l) => l.scenarioId !== id,
+        );
+        store.financeScenarioAssumption = store.financeScenarioAssumption.filter(
+          (a) => a.scenarioId !== id,
+        );
+        return { count: 1 };
+      },
+    },
+    financeScenarioBaselineLine: {
+      findMany: async ({
+        where,
+      }: {
+        where: { scenarioId: { in: string[] } };
+      }) => {
+        if (metrics) metrics.counts.financeScenarioBaselineLineFindMany += 1;
+        return store.financeScenarioBaselineLine.filter((line) =>
+          where.scenarioId.in.includes(line.scenarioId),
+        );
+      },
+      createMany: async ({ data }: { data: Array<Record<string, unknown>> }) => {
+        for (const item of data) {
+          baselineSeq += 1;
+          store.financeScenarioBaselineLine.push({
+            id: `sbl-${baselineSeq}`,
+            scenarioId: item.scenarioId as string,
+            financialAccountId: item.financialAccountId as string,
+            amountMinor: item.amountMinor as number,
+          });
+        }
+        return { count: data.length };
+      },
+      deleteMany: async ({ where }: { where: { scenarioId: string } }) => {
+        const before = store.financeScenarioBaselineLine.length;
+        store.financeScenarioBaselineLine = store.financeScenarioBaselineLine.filter(
+          (line) => line.scenarioId !== where.scenarioId,
+        );
+        return { count: before - store.financeScenarioBaselineLine.length };
+      },
+    },
+    financeScenarioAdoption: {
+      count: async ({ where }: { where: { scenarioId: string; tenantId: string } }) =>
+        store.financeScenarioAdoption.filter(
+          (row) =>
+            row.scenarioId === where.scenarioId && row.tenantId === where.tenantId,
+        ).length,
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        adoptionSeq += 1;
+        const row = { id: `adopt-${adoptionSeq}`, ...data };
+        store.financeScenarioAdoption.push(row);
+        return row;
+      },
+    },
+    financeScenarioRebase: {
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        rebaseSeq += 1;
+        const row = { id: `rebase-${rebaseSeq}`, ...data };
+        store.financeScenarioRebase.push(row);
+        return row;
+      },
+    },
+    financeScenarioAssumption: {
+      findMany: async ({
+        where,
+      }: {
+        where: { scenarioId: { in: string[] } };
+      }) => {
+        if (metrics) metrics.counts.financeScenarioAssumptionFindMany += 1;
+        return store.financeScenarioAssumption.filter((a) =>
+          where.scenarioId.in.includes(a.scenarioId),
+        );
+      },
+      findUnique: async ({
+        where,
+      }: {
+        where: { scenarioId_financialAccountId: { scenarioId: string; financialAccountId: string } };
+      }) => {
+        const row = store.financeScenarioAssumption.find(
+          (a) =>
+            a.scenarioId === where.scenarioId_financialAccountId.scenarioId &&
+            a.financialAccountId === where.scenarioId_financialAccountId.financialAccountId,
+        );
+        return row ?? null;
+      },
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        assumptionSeq += 1;
+        const row = {
+          id: `sa-${assumptionSeq}`,
+          scenarioId: data.scenarioId as string,
+          financialAccountId: data.financialAccountId as string,
+          kind: data.kind as string,
+          percentBasisPoints: (data.percentBasisPoints as number | null) ?? null,
+          amountMinorDelta: (data.amountMinorDelta as number | null) ?? null,
+          absoluteAmountMinor: (data.absoluteAmountMinor as number | null) ?? null,
+          note: (data.note as string | null) ?? null,
+        };
+        store.financeScenarioAssumption.push(row);
+        return row;
+      },
+      createMany: async ({ data }: { data: Array<Record<string, unknown>> }) => {
+        for (const item of data) {
+          await db.financeScenarioAssumption.create({ data: item });
+        }
+        return { count: data.length };
+      },
+      upsert: async ({
+        where,
+        create,
+        update,
+      }: {
+        where: {
+          scenarioId_financialAccountId: { scenarioId: string; financialAccountId: string };
+        };
+        create: Record<string, unknown>;
+        update: Record<string, unknown>;
+      }) => {
+        const existing = await db.financeScenarioAssumption.findUnique({ where });
+        if (existing) {
+          Object.assign(existing, update);
+          return existing;
+        }
+        return db.financeScenarioAssumption.create({ data: create });
+      },
+      delete: async ({ where }: { where: { id: string } }) => {
+        const idx = store.financeScenarioAssumption.findIndex((a) => a.id === where.id);
+        if (idx >= 0) store.financeScenarioAssumption.splice(idx, 1);
+        return store.financeScenarioAssumption[idx];
+      },
+    },
+    $transaction: async <T>(fn: (tx: typeof db) => Promise<T>) => fn(db),
+  };
+
+  return db;
+}

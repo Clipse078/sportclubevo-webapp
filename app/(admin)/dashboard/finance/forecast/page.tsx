@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { PageShell } from "@/components/ui/page";
 import { SceWorkspaceChrome } from "@/components/sce/workspace/SceWorkspaceChrome";
+import { FinanceForecastSubContextTabs } from "@/components/admin/finance/FinanceForecastSubContextTabs";
 import { FinanceForecastWorkspacePanel } from "@/components/admin/finance/FinanceForecastWorkspacePanel";
 import { FinanceWorkspaceTabs } from "@/components/admin/finance/FinanceWorkspaceTabs";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
@@ -87,7 +88,15 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
           />
         }
       >
-        <FinanceForecastWorkspacePanel
+        <div className="flex min-w-0 flex-col gap-6">
+          <FinanceForecastSubContextTabs
+            labels={{
+              current: t("forecast.subNav.current"),
+              scenarios: t("forecast.subNav.scenarios"),
+            }}
+            ariaLabel={t("forecast.subNav.aria")}
+          />
+          <FinanceForecastWorkspacePanel
           key={snapshot?.versionId ?? selectedYearId ?? "finance-forecast-workspace"}
           years={years.map((y) => ({ id: y.id, name: y.name }))}
           snapshot={snapshot}
@@ -100,7 +109,8 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
           selectedYearId={selectedYearId}
           formattingLocale={workspace.formattingLocale}
           creation={creation}
-        />
+          />
+        </div>
       </SceWorkspaceChrome>
     </PageShell>
   );

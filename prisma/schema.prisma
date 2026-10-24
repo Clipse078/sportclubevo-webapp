@@ -1397,6 +1397,9 @@ model Tenant {
   financeForecasts                FinanceForecast[]
   financeProjections              FinanceProjection[]
   financeProjectionAdoptions      FinanceProjectionAdoption[]
+  financeScenarios                FinanceScenario[]
+  financeScenarioAdoptions        FinanceScenarioAdoption[]
+  financeScenarioRebases          FinanceScenarioRebase[]
 
   @@index([status])
   @@index([name])
@@ -1554,9 +1557,13 @@ model User {
   financeActualEntriesUpdated        FinanceActualEntry[]    @relation("FinanceActualEntryUpdatedBy")
   financeForecastsCreated            FinanceForecast[]       @relation("FinanceForecastCreatedBy")
   financeForecastVersionsCreated     FinanceForecastVersion[] @relation("FinanceForecastVersionCreatedBy")
+  financeScenariosCreated            FinanceScenario[]       @relation("FinanceScenarioCreatedBy")
+  financeScenariosUpdated            FinanceScenario[]       @relation("FinanceScenarioUpdatedBy")
   financeProjectionsCreated          FinanceProjection[]     @relation("FinanceProjectionCreatedBy")
   financeProjectionVersionsGenerated FinanceProjectionVersion[] @relation("FinanceProjectionVersionGeneratedBy")
   financeProjectionAdoptionsApplied  FinanceProjectionAdoption[] @relation("FinanceProjectionAdoptionAppliedBy")
+  financeScenarioAdoptionsApplied    FinanceScenarioAdoption[]   @relation("FinanceScenarioAdoptionAppliedBy")
+  financeScenarioRebasesApplied      FinanceScenarioRebase[]     @relation("FinanceScenarioRebaseAppliedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -10740,6 +10747,8 @@ model FinanceYear {
   forecasts                 FinanceForecast[]
   projections               FinanceProjection[]
   projectionEvidence        FinanceProjectionEvidence[]
+  financeScenarios          FinanceScenario[]
+  financeScenarioAdoptions  FinanceScenarioAdoption[]
 
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
@@ -10804,6 +10813,8 @@ model FinancialAccount {
   forecastLines   FinanceForecastLine[]
   projectionLines   FinanceProjectionLine[]
   projectionEvidence FinanceProjectionEvidence[]
+  scenarioBaselineLines FinanceScenarioBaselineLine[]
+  scenarioAssumptions   FinanceScenarioAssumption[]
 
   @@index([tenantId, lifecycle])
   @@index([tenantId, reportingGroupId])
@@ -10941,6 +10952,7 @@ enum FinanceForecastRevisionSource {
   INITIAL_FORECAST
   MANUAL_REFORECAST
   AUTOMATIC_FORECAST_ADOPTION
+  SCENARIO_ADOPTION
 }
 
 /// Optional structured reforecast context (FIN-04C-06) — nullable for legacy revisions.
@@ -10970,6 +10982,7 @@ model FinanceForecast {
   createdBy      User?                  @relation("FinanceForecastCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   currentVersion FinanceForecastVersion? @relation("FinanceForecastCurrentVersion", fields: [currentVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   versions       FinanceForecastVersion[]
+  scenarios      FinanceScenario[]       @relation("FinanceScenarioSourceForecast")
 
   @@unique([tenantId, financeYearId])
   @@index([tenantId])
@@ -11007,6 +11020,11 @@ model FinanceForecastVersion {
   successorVersions     FinanceForecastVersion[] @relation("FinanceForecastVersionLineage")
   sourceProjectionVersion FinanceProjectionVersion? @relation("FinanceForecastRevisionProjectionSource", fields: [sourceProjectionVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   lines                 FinanceForecastLine[]
+  scenariosSourcedFrom  FinanceScenario[]         @relation("FinanceScenarioSourceForecastVersion")
+  scenarioAdoptionsAsSource   FinanceScenarioAdoption[] @relation("FinanceScenarioAdoptionSourceForecast")
+  scenarioAdoptionsAsResult   FinanceScenarioAdoption[] @relation("FinanceScenarioAdoptionResultForecast")
+  scenarioRebasesFrom           FinanceScenarioRebase[]   @relation("FinanceScenarioRebaseFromForecast")
+  scenarioRebasesTo             FinanceScenarioRebase[]   @relation("FinanceScenarioRebaseToForecast")
 
   @@index([forecastId, status])
   @@index([forecastId, versionNumber])
@@ -11028,6 +11046,130 @@ model FinanceForecastLine {
 
   @@unique([forecastVersionId, financialAccountId])
   @@index([financialAccountId])
+}
+
+enum FinanceScenarioAssumptionKind {
+  PERCENT_CHANGE
+  DELTA_AMOUNT
+  ABSOLUTE_AMOUNT
+  EXCLUDE_ACCOUNT
+}
+
+/// Hypothetical what-if model — distinct from current forecast governance (FIN-04D).
+model FinanceScenario {
+  id                         String    @id @default(cuid())
+  tenantId                   String
+  financeYearId              String
+  name                       String
+  description                String?
+  /// Provenance: canonical current forecast container at creation (immutable).
+  sourceForecastId           String
+  /// Provenance: FinanceForecast.currentVersionId snapshot at creation (immutable).
+  sourceForecastVersionId    String
+  baselineAsOfDate           DateTime? @db.Date
+  baselineActualsThroughDate DateTime? @db.Date
+  createdByUserId            String?
+  updatedByUserId            String?
+  archivedAt                 DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear           FinanceYear            @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceForecast        FinanceForecast        @relation("FinanceScenarioSourceForecast", fields: [sourceForecastId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceForecastVersion FinanceForecastVersion @relation("FinanceScenarioSourceForecastVersion", fields: [sourceForecastVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy             User?                  @relation("FinanceScenarioCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updatedBy             User?                  @relation("FinanceScenarioUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  baselineLines         FinanceScenarioBaselineLine[]
+  assumptions           FinanceScenarioAssumption[]
+  adoptions             FinanceScenarioAdoption[]
+  rebases               FinanceScenarioRebase[]
+
+  // Active name uniqueness per tenant+financeYear enforced via partial DB index (see FIN-04D-02 migration).
+  @@index([tenantId, financeYearId])
+  @@index([tenantId, financeYearId, archivedAt])
+  @@index([sourceForecastVersionId])
+}
+
+/// Frozen current-forecast account amounts at scenario creation — immutable in ordinary lifecycle (FIN-04D-02).
+model FinanceScenarioBaselineLine {
+  id                 String   @id @default(cuid())
+  scenarioId         String
+  financialAccountId String
+  amountMinor        Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  scenario         FinanceScenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financialAccount FinancialAccount @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([scenarioId, financialAccountId])
+  @@index([scenarioId])
+  @@index([financialAccountId])
+}
+
+/// Explicit assumption intent per account — one active row per scenario+account in v1 (FIN-04D-02).
+model FinanceScenarioAssumption {
+  id                  String                        @id @default(cuid())
+  scenarioId          String
+  financialAccountId  String
+  kind                FinanceScenarioAssumptionKind
+  percentBasisPoints  Int?
+  amountMinorDelta    Int?
+  absoluteAmountMinor Int?
+  note                String?
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt
+
+  scenario         FinanceScenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financialAccount FinancialAccount @relation(fields: [financialAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([scenarioId, financialAccountId])
+  @@index([scenarioId])
+  @@index([financialAccountId])
+}
+
+/// Formal audit when a scenario result becomes the organisation Current Forecast (FIN-04D-06).
+model FinanceScenarioAdoption {
+  id                         String   @id @default(cuid())
+  tenantId                   String
+  financeYearId              String
+  scenarioId                 String
+  sourceScenarioUpdatedAt    DateTime
+  sourceForecastVersionId    String
+  resultingForecastVersionId String   @unique
+  adoptedAt                  DateTime @default(now())
+  adoptedByUserId            String
+
+  tenant                   Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  financeYear              FinanceYear            @relation(fields: [financeYearId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  scenario                 FinanceScenario        @relation(fields: [scenarioId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceForecastVersion    FinanceForecastVersion @relation("FinanceScenarioAdoptionSourceForecast", fields: [sourceForecastVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  resultingForecastVersion FinanceForecastVersion @relation("FinanceScenarioAdoptionResultForecast", fields: [resultingForecastVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  adoptedBy                User                   @relation("FinanceScenarioAdoptionAppliedBy", fields: [adoptedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tenantId, financeYearId])
+  @@index([scenarioId])
+}
+
+/// Lightweight audit when a scenario frozen baseline is explicitly realigned to Current Forecast (FIN-04D-06).
+model FinanceScenarioRebase {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  scenarioId            String
+  fromForecastVersionId String
+  toForecastVersionId   String
+  rebasedAt             DateTime @default(now())
+  rebasedByUserId       String
+
+  tenant              Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  scenario            FinanceScenario        @relation(fields: [scenarioId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  fromForecastVersion FinanceForecastVersion @relation("FinanceScenarioRebaseFromForecast", fields: [fromForecastVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  toForecastVersion   FinanceForecastVersion @relation("FinanceScenarioRebaseToForecast", fields: [toForecastVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rebasedBy           User                   @relation("FinanceScenarioRebaseAppliedBy", fields: [rebasedByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([scenarioId])
+  @@index([tenantId])
 }
 
 enum FinanceProjectionDataSufficiency {
