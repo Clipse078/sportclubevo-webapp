@@ -13,18 +13,25 @@ import { generateFinanceYearProjection } from "@/lib/finance/services/finance-pr
 import { adoptProjectionForYear } from "@/lib/finance/services/finance-projection-adoption-service";
 import { loadFinanceWorkspaceContext } from "@/lib/finance/server/finance-page-context";
 
-export type FinanceForecastActionResult = { ok: true } | { ok: false; error: string };
+export type FinanceForecastActionResult =
+  | { ok: true; targetForecastVersionId?: string; targetVersionNumber?: number }
+  | { ok: false; error: string };
 
 async function forecastCtx() {
   const workspace = await loadFinanceWorkspaceContext();
   return workspace.ctx;
 }
 
+function revalidateFinanceForecastRoutes() {
+  revalidatePath("/dashboard/finance/forecast", "layout");
+  revalidatePath("/dashboard/finance/forecast");
+  revalidatePath("/dashboard/finance");
+}
+
 function mapResult(fn: () => Promise<unknown>): Promise<FinanceForecastActionResult> {
   return fn()
     .then(() => {
-      revalidatePath("/dashboard/finance/forecast");
-      revalidatePath("/dashboard/finance");
+      revalidateFinanceForecastRoutes();
       return { ok: true as const };
     })
     .catch((error: unknown) => ({
@@ -67,11 +74,21 @@ export async function adoptProjectionAction(input: {
   expectedProjectionVersionId: string;
 }): Promise<FinanceForecastActionResult> {
   const ctx = await forecastCtx();
-  return mapResult(() =>
-    adoptProjectionForYear(prisma, ctx, {
-      financeYearId: input.financeYearId,
-      expectedSourceForecastVersionId: input.expectedSourceForecastVersionId,
-      expectedProjectionVersionId: input.expectedProjectionVersionId,
-    }),
-  );
+  return adoptProjectionForYear(prisma, ctx, {
+    financeYearId: input.financeYearId,
+    expectedSourceForecastVersionId: input.expectedSourceForecastVersionId,
+    expectedProjectionVersionId: input.expectedProjectionVersionId,
+  })
+    .then((result) => {
+      revalidateFinanceForecastRoutes();
+      return {
+        ok: true as const,
+        targetForecastVersionId: result.targetForecastVersionId,
+        targetVersionNumber: result.targetVersionNumber,
+      };
+    })
+    .catch((error: unknown) => ({
+      ok: false as const,
+      error: error instanceof FinanceDomainError ? error.message : financeErrorMessage(error),
+    }));
 }

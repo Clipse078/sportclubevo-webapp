@@ -11,6 +11,7 @@ import { resolveBudgetSelectedYearId } from "@/lib/finance/budget/resolve-budget
 import {
   listFinanceYearsForForecast,
   loadForecastCreationContext,
+  resolveCanonicalCurrentForecastVersionByPointer,
 } from "@/lib/finance/services/finance-forecast-service";
 import { resolveTenantBudgetCurrency } from "@/lib/finance/services/finance-budget-service";
 import { loadBudgetForYear } from "@/lib/finance/services/finance-budget-service";
@@ -38,12 +39,11 @@ export async function loadCurrentForecastOverviewSummary(
 
   const forecast = await db.financeForecast.findUnique({
     where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId } },
-    include: {
-      financeYear: { select: { name: true } },
-      currentVersion: { include: { lines: true } },
-    },
+    include: { financeYear: { select: { name: true } } },
   });
-  if (!forecast?.currentVersion) return null;
+  if (!forecast) return null;
+  const currentVersion = await resolveCanonicalCurrentForecastVersionByPointer(db, ctx, forecast);
+  if (!currentVersion) return null;
 
   const currency = await resolveTenantBudgetCurrency(db, ctx);
 
@@ -53,7 +53,7 @@ export async function loadCurrentForecastOverviewSummary(
   });
   const semanticByAccount = new Map(accounts.map((a) => [a.id, a.canonicalSemantic]));
 
-  const incomeExpenseLines = forecast.currentVersion.lines.map((line) => ({
+  const incomeExpenseLines = currentVersion.lines.map((line) => ({
     amountMinor: line.amountMinor,
     financialAccount: {
       canonicalSemantic: semanticByAccount.get(line.financialAccountId) ?? "OTHER",
@@ -81,7 +81,7 @@ export async function loadCurrentForecastOverviewSummary(
   return {
     financeYearName: forecast.financeYear.name,
     currency,
-    versionNumber: forecast.currentVersion.versionNumber,
+    versionNumber: currentVersion.versionNumber,
     incomeMinor: forecastTotals.totalIncomeMinor,
     expenseMinor: forecastTotals.totalExpenseMinor,
     resultMinor: forecastTotals.resultMinor,
@@ -142,14 +142,12 @@ export async function loadForecastWorkspaceSnapshot(
 
   const forecast = await db.financeForecast.findUnique({
     where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId: selectedYearId } },
-    include: {
-      currentVersion: {
-        include: {
-          lines: true,
-        },
-      },
-    },
+    select: { id: true, currentVersionId: true },
   });
+
+  const currentVersion = forecast
+    ? await resolveCanonicalCurrentForecastVersionByPointer(db, ctx, forecast)
+    : null;
 
   const budget = await loadBudgetForYear(db, ctx, selectedYearId);
   const baseline =
@@ -167,7 +165,6 @@ export async function loadForecastWorkspaceSnapshot(
     }
   }
 
-  const currentVersion = forecast?.currentVersion ?? null;
   const rows = buildForecastPlanningRows({
     accounts,
     lines: currentVersion?.lines ?? [],

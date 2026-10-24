@@ -80,6 +80,7 @@ export default async function FinanceForecastPage({ searchParams }: PageProps) {
         }
       >
         <FinanceForecastWorkspacePanel
+          key={snapshot?.versionId ?? selectedYearId ?? "finance-forecast-workspace"}
           years={years.map((y) => ({ id: y.id, name: y.name }))}
           snapshot={snapshot}
           projection={projection}

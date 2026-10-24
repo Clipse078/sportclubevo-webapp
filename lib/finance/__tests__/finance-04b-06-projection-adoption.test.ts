@@ -5,7 +5,11 @@ import { FinanceDomainError } from "@/lib/finance/errors";
 import type { FinanceAuthContext } from "@/lib/finance/finance-authorization";
 import { buildProjectionAdoptionPreview } from "@/lib/finance/projection/projection-adoption-policy";
 import { formatFinanceAutomaticForecastMoneyMinor } from "@/lib/finance/projection/projection-amount-presentation";
-import { adoptProjectionForYear } from "@/lib/finance/services/finance-projection-adoption-service";
+import { loadForecastWorkspaceSnapshot } from "@/lib/finance/services/finance-forecast-query-service";
+import {
+  adoptProjectionForYear,
+} from "@/lib/finance/services/finance-projection-adoption-service";
+import { resolveCanonicalCurrentForecastVersionByPointer } from "@/lib/finance/services/finance-forecast-service";
 
 vi.mock("@/lib/finance/services/finance-projection-staleness-resolver", () => ({
   resolveProjectionVersionStaleness: vi.fn(async () => "FRESH" as const),
@@ -100,6 +104,8 @@ type AdoptionStore = {
   financialAccount: Array<{
     id: string;
     tenantId: string;
+    name: string;
+    sortOrder: number;
     canonicalSemantic: string;
     lifecycle: "ACTIVE" | "ARCHIVED";
   }>;
@@ -253,6 +259,29 @@ function makeAdoptionDb(store: AdoptionStore) {
       },
     },
     financeForecastVersion: {
+      findUnique: async ({
+        where,
+        include,
+      }: {
+        where: { id: string };
+        include?: {
+          lines?: boolean;
+          forecast?: { select?: { id?: boolean; tenantId?: boolean } };
+        };
+      }) => {
+        const row = store.financeForecastVersion.find((v) => v.id === where.id) ?? null;
+        if (!row) return null;
+        const forecast = store.financeForecast.find((f) => f.id === row.forecastId)!;
+        return {
+          ...row,
+          lines: include?.lines
+            ? store.financeForecastLine.filter((l) => l.forecastVersionId === row.id)
+            : undefined,
+          forecast: include?.forecast
+            ? { id: forecast.id, tenantId: forecast.tenantId }
+            : undefined,
+        };
+      },
       update: async ({
         where,
         data,
@@ -318,9 +347,30 @@ function seedAdoptionStore(): AdoptionStore {
   return {
     financeYear: [{ id: yearId, tenantId: tenantA, name: "FY 2026" }],
     financialAccount: [
-      { id: accountIncome, tenantId: tenantA, canonicalSemantic: "INCOME", lifecycle: "ACTIVE" },
-      { id: accountExpense, tenantId: tenantA, canonicalSemantic: "EXPENSE", lifecycle: "ACTIVE" },
-      { id: accountSparse, tenantId: tenantA, canonicalSemantic: "INCOME", lifecycle: "ACTIVE" },
+      {
+        id: accountIncome,
+        tenantId: tenantA,
+        name: "Income",
+        sortOrder: 1,
+        canonicalSemantic: "INCOME",
+        lifecycle: "ACTIVE",
+      },
+      {
+        id: accountExpense,
+        tenantId: tenantA,
+        name: "Expense",
+        sortOrder: 2,
+        canonicalSemantic: "EXPENSE",
+        lifecycle: "ACTIVE",
+      },
+      {
+        id: accountSparse,
+        tenantId: tenantA,
+        name: "Sparse",
+        sortOrder: 3,
+        canonicalSemantic: "INCOME",
+        lifecycle: "ACTIVE",
+      },
     ],
     financeProjection: [
       {
@@ -362,6 +412,26 @@ function seedAdoptionStore(): AdoptionStore {
 describe("FIN-04B-06 adoptProjectionForYear service", () => {
   beforeEach(() => {
     vi.mocked(resolveProjectionVersionStaleness).mockResolvedValue("FRESH");
+  });
+
+  it("FIN-04B-06R1 resolves version 2 from currentVersionId after adoption (workspace reload)", async () => {
+    const store = seedAdoptionStore();
+    const db = makeAdoptionDb(store);
+    await adoptProjectionForYear(db, ctx(), {
+      financeYearId: yearId,
+      expectedSourceForecastVersionId: "fv-1",
+      expectedProjectionVersionId: "pv-1",
+    });
+    const forecast = store.financeForecast[0]!;
+    const canonical = await resolveCanonicalCurrentForecastVersionByPointer(db, ctx(), forecast);
+    expect(canonical?.versionNumber).toBe(2);
+    expect(canonical?.status).toBe("CURRENT");
+    const v1 = store.financeForecastVersion.find((v) => v.id === "fv-1")!;
+    expect(v1.status).toBe("SUPERSEDED");
+    expect(forecast.currentVersionId).toBe(canonical?.id);
+    const adoption = store.financeProjectionAdoption[0]!;
+    expect(adoption.sourceForecastVersionId).toBe("fv-1");
+    expect(adoption.targetForecastVersionId).toBe(canonical?.id);
   });
 
   it("creates new CURRENT forecast version, supersedes prior, and records provenance", async () => {
@@ -457,7 +527,57 @@ describe("FIN-04B-06 adoptProjectionForYear service", () => {
   });
 });
 
+describe("FIN-04B-06R1 forecast workspace version resolution", () => {
+  it("loadForecastWorkspaceSnapshot exposes versionNumber 2 after adoption", async () => {
+    const store = seedAdoptionStore();
+    const db = {
+      ...makeAdoptionDb(store),
+      financeConfiguration: {
+        findUnique: async () => ({
+          currentFinanceYearId: yearId,
+          baseCurrency: "CHF",
+        }),
+      },
+      financeYear: {
+        findUnique: async ({ where }: { where: { id: string } }) =>
+          store.financeYear.find((y) => y.id === where.id) ?? null,
+        findMany: async ({ where }: { where: { tenantId: string } }) =>
+          store.financeYear.filter((y) => y.tenantId === where.tenantId),
+      },
+      financialAccount: {
+        findMany: async ({ where }: { where: { tenantId: string } }) =>
+          store.financialAccount
+            .filter((a) => a.tenantId === where.tenantId)
+            .map((a) => ({ ...a, reportingGroup: { name: "Group" } })),
+      },
+      financeBudget: {
+        findUnique: async () => null,
+      },
+    };
+    await adoptProjectionForYear(db, ctx(), {
+      financeYearId: yearId,
+      expectedSourceForecastVersionId: "fv-1",
+      expectedProjectionVersionId: "pv-1",
+    });
+    const workspace = await loadForecastWorkspaceSnapshot(
+      db,
+      ctx({ permissionKeys: new Set(["finance.forecast.view", "finance.budget.view"]) }),
+      yearId,
+    );
+    expect(workspace.snapshot?.versionNumber).toBe(2);
+    expect(workspace.snapshot?.versionId).toBe(store.financeForecast[0]!.currentVersionId);
+  });
+});
+
 describe("FIN-04B-06 dashboard regression guards", () => {
+  it("remounts forecast workspace when canonical forecast version id changes", () => {
+    const source = readFileSync(
+      join(process.cwd(), "app/(admin)/dashboard/finance/forecast/page.tsx"),
+      "utf8",
+    );
+    expect(source).toContain("key={snapshot?.versionId");
+  });
+
   it("keeps explainability and adoption CTA wiring in projection section", () => {
     const source = readFileSync(
       join(process.cwd(), "components/admin/finance/FinanceProjectionWorkspaceSection.tsx"),

@@ -88,6 +88,7 @@ Server-side enforcement in `finance-projection-adoption-service.ts` and existing
 - CTA on Automatische Prognose dashboard: **Automatische Prognose übernehmen** (manage only, fresh projection, eligible lines > 0).
 - Confirmation dialog with impact summary; **no checkbox** confirmation.
 - Success: compact message; Aktuelle Prognose workspace resolves to new version on refresh.
+- **Version label (FIN-04B-06R1):** context strip `Aktuelle Prognose · Version n` must read `versionNumber` from the forecast container pointer `FinanceForecast.currentVersionId` → `FinanceForecastVersion` (explicit lookup in `resolveCanonicalCurrentForecastVersionByPointer` / `loadForecastWorkspaceSnapshot`). After adoption, `revalidatePath` + client `router.refresh()` remount the workspace keyed by `snapshot.versionId`.
 
 ## Code map
 
@@ -95,6 +96,8 @@ Server-side enforcement in `finance-projection-adoption-service.ts` and existing
 | --- | --- |
 | Adoption policy / preview | `lib/finance/projection/projection-adoption-policy.ts` |
 | Transactional adopt | `lib/finance/services/finance-projection-adoption-service.ts` |
+| Canonical current version reads | `resolveCanonicalCurrentForecastVersionByPointer` in `lib/finance/services/finance-forecast-service.ts` |
+| Forecast workspace snapshot | `lib/finance/services/finance-forecast-query-service.ts` |
 | Staleness (shared) | `lib/finance/services/finance-projection-staleness-resolver.ts` |
 | Server action | `app/(admin)/dashboard/finance/forecast/actions.ts` → `adoptProjectionAction` |
 | UI | `components/admin/finance/FinanceProjectionWorkspaceSection.tsx` |

@@ -11,6 +11,7 @@ import {
   type ProjectionAdoptionPreviewResult,
 } from "@/lib/finance/projection/projection-adoption-policy";
 import { assertSameTenant } from "@/lib/finance/tenant-scope";
+import { resolveCanonicalCurrentForecastVersionByPointer } from "@/lib/finance/services/finance-forecast-service";
 import { resolveCurrentProjectionVersionForYear } from "@/lib/finance/services/finance-projection-service";
 import { resolveProjectionVersionStaleness } from "@/lib/finance/services/finance-projection-staleness-resolver";
 
@@ -89,9 +90,12 @@ async function loadAdoptionInputs(
 
   const forecast = await db.financeForecast.findUnique({
     where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId } },
-    include: { currentVersion: { include: { lines: true } } },
+    select: { id: true, currentVersionId: true },
   });
-  if (!forecast?.currentVersionId || !forecast.currentVersion) {
+  const currentVersion = forecast
+    ? await resolveCanonicalCurrentForecastVersionByPointer(db, ctx, forecast)
+    : null;
+  if (!forecast?.currentVersionId || !currentVersion) {
     throw new FinanceDomainError(
       "FINANCE_NOT_FOUND",
       "Für die Übernahme wird zuerst eine aktuelle Prognose benötigt.",
@@ -122,7 +126,7 @@ async function loadAdoptionInputs(
   }
 
   const currentForecastAmountByAccountId = new Map<string, number | null>();
-  for (const line of forecast.currentVersion.lines) {
+  for (const line of currentVersion.lines) {
     currentForecastAmountByAccountId.set(line.financialAccountId, line.amountMinor);
   }
 
@@ -136,7 +140,7 @@ async function loadAdoptionInputs(
     financeProjectionId: projectionVersion.financeProjectionId,
     projectionVersionId: projectionVersion.id,
     projectionVersion,
-    sourceForecastVersionId: forecast.currentVersion.id,
+    sourceForecastVersionId: currentVersion.id,
     forecastId: forecast.id,
     projectedAmountByAccountId,
     currentForecastAmountByAccountId,
@@ -157,9 +161,12 @@ export async function previewProjectionAdoptionForYear(
 
   const forecast = await db.financeForecast.findUnique({
     where: { tenantId_financeYearId: { tenantId: ctx.tenantId, financeYearId } },
-    include: { currentVersion: { include: { lines: true } } },
+    select: { id: true, currentVersionId: true },
   });
-  if (!forecast?.currentVersion) {
+  const currentVersion = forecast
+    ? await resolveCanonicalCurrentForecastVersionByPointer(db, ctx, forecast)
+    : null;
+  if (!currentVersion) {
     return null;
   }
 
@@ -181,12 +188,12 @@ export async function previewProjectionAdoptionForYear(
     projectionVersion.lines.map((line) => [line.financialAccountId, line.projectedAmountMinor]),
   );
   const currentForecastAmountByAccountId = new Map<string, number | null>(
-    forecast.currentVersion.lines.map((line) => [line.financialAccountId, line.amountMinor]),
+    currentVersion.lines.map((line) => [line.financialAccountId, line.amountMinor]),
   );
 
   const preview = buildProjectionAdoptionPreview({
     projectionVersionId: projectionVersion.id,
-    sourceForecastVersionId: forecast.currentVersion.id,
+    sourceForecastVersionId: currentVersion.id,
     accounts: planningAccounts,
     projectedAmountByAccountId,
     currentForecastAmountByAccountId,
