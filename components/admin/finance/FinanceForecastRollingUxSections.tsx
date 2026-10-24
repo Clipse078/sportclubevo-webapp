@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState, useTransition } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -9,8 +9,8 @@ import { SceFormField } from "@/components/sce/forms/SceFormField";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_ACTIONS_ROW_CLASS } from "@/lib/design-system/sce-action-dialog-micro-ux";
 import {
-  formatBudgetPlanningMinor,
-  formatBudgetPlanningSignedMinor,
+  formatFinanceManagementPlanningMinor,
+  formatFinanceManagementPlanningSignedMinor,
 } from "@/lib/finance/budget/budget-amount-presentation";
 import type { ForecastWorkspaceSnapshot } from "@/lib/finance/forecast/forecast-presentation";
 import type {
@@ -18,6 +18,10 @@ import type {
   CurrentForecastVsPreviousResult,
   FinanceForecastHistoryReadModel,
 } from "@/lib/finance/forecast/forecast-history-read-model";
+import {
+  buildForecastEvolutionChartPoints,
+  selectMeaningfulForecastChangeDrivers,
+} from "@/lib/finance/forecast/forecast-evolution-presentation";
 import type { FormalReforecastOutcome } from "@/lib/finance/forecast/formal-reforecast-contract";
 import { financeResultSemanticTextClass } from "@/lib/finance/presentation/finance-result-presentation";
 import {
@@ -34,6 +38,8 @@ import {
   previewFormalReforecastAction,
 } from "@/app/(admin)/dashboard/finance/forecast/actions";
 import type { FormalReforecastPreviewResult } from "@/lib/finance/forecast/formal-reforecast-contract";
+import { FinanceForecastEvolutionChart } from "@/components/admin/finance/forecast/FinanceForecastEvolutionChart";
+import { FinanceForecastChangeDriverBars } from "@/components/admin/finance/forecast/FinanceForecastChangeDriverBars";
 
 function formatCalendarDateDisplay(iso: string, locale: string): string {
   const [year, month, day] = iso.split("-").map((part) => Number(part));
@@ -55,6 +61,11 @@ type RollingUxSectionsProps = {
   currency: string | null;
   formattingLocale: string;
   canFormalize: boolean;
+  currentTotals: {
+    totalIncomeMinor: number;
+    totalExpenseMinor: number;
+    resultMinor: number;
+  };
   onFormalizeSuccess: (message: string) => void;
   onFormalizeError: (message: string) => void;
 };
@@ -64,49 +75,97 @@ export function FinanceForecastCurrentHeader(props: {
   canFormalize: boolean;
   onOpenFormalize: () => void;
   formattingLocale: string;
+  currency: string | null;
+  totals: {
+    totalIncomeMinor: number;
+    totalExpenseMinor: number;
+    resultMinor: number;
+  };
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
 }) {
   const revision = props.snapshot.currentRevision;
   const title = revision?.presentation.displayTitle ?? props.t("currentForecastSectionTitle");
+  const resultClass = financeResultSemanticTextClass(props.totals.resultMinor);
+
   return (
-    <div
-      className="flex flex-wrap items-start justify-between gap-3"
+    <section
+      className="space-y-3"
       data-finance-surface="current-forecast-header"
     >
-      <div className="min-w-0 space-y-1">
-        <h2 className={FINANCE_SECTION_HEADER_CLASS}>{props.t("currentForecastSectionTitle")}</h2>
-        <p className="text-sm font-medium text-[var(--foreground)]">{title}</p>
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
-          {revision?.asOfDate ? (
-            <span>
-              {props.t("currentAsOfLabel", {
-                date: formatCalendarDateDisplay(revision.asOfDate, props.formattingLocale),
-              })}
-            </span>
-          ) : null}
-          {revision?.revisionLabel ? (
-            <span>{revision.revisionLabel}</span>
-          ) : null}
-          {props.snapshot.versionNumber ? (
-            <span>{props.t("versionMeta", { version: props.snapshot.versionNumber })}</span>
-          ) : null}
-          {revision?.presentation.revisionSourceLabel &&
-          !revision.revisionLabel &&
-          revision.revisionSource ? (
-            <span>{revision.presentation.revisionSourceLabel}</span>
-          ) : null}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h2 className={FINANCE_SECTION_HEADER_CLASS}>{props.t("currentForecastSectionTitle")}</h2>
+          <p className="text-sm font-medium text-[var(--foreground)]">{title}</p>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
+            {revision?.asOfDate ? (
+              <span>
+                {props.t("currentAsOfLabel", {
+                  date: formatCalendarDateDisplay(revision.asOfDate, props.formattingLocale),
+                })}
+              </span>
+            ) : null}
+            {revision?.revisionLabel ? (
+              <span>{revision.revisionLabel}</span>
+            ) : null}
+            {props.snapshot.versionNumber ? (
+              <span>{props.t("versionMeta", { version: props.snapshot.versionNumber })}</span>
+            ) : null}
+            {revision?.presentation.revisionSourceLabel &&
+            !revision.revisionLabel &&
+            revision.revisionSource ? (
+              <span>{revision.presentation.revisionSourceLabel}</span>
+            ) : null}
+          </div>
         </div>
+        {props.canFormalize ? (
+          <Button
+            className="h-8 shrink-0 px-3 text-sm"
+            onClick={props.onOpenFormalize}
+            data-finance-formal-reforecast-action="open"
+          >
+            {props.t("formalReforecast.action")}
+          </Button>
+        ) : null}
       </div>
-      {props.canFormalize ? (
-        <Button
-          className="h-8 shrink-0 px-3 text-sm"
-          onClick={props.onOpenFormalize}
-          data-finance-formal-reforecast-action="open"
-        >
-          {props.t("formalReforecast.action")}
-        </Button>
-      ) : null}
-    </div>
+
+      <div className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS} data-finance-surface="forecast-summary">
+        <dl className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
+          <div className="sm:px-4 sm:first:ps-0">
+            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalIncome")}</dt>
+            <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
+              {formatFinanceManagementPlanningMinor(
+                props.totals.totalIncomeMinor,
+                props.currency,
+                props.formattingLocale,
+              )}
+            </dd>
+          </div>
+          <div className="sm:px-4">
+            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalExpense")}</dt>
+            <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
+              {formatFinanceManagementPlanningMinor(
+                props.totals.totalExpenseMinor,
+                props.currency,
+                props.formattingLocale,
+              )}
+            </dd>
+          </div>
+          <div className="sm:px-4 sm:last:pe-0">
+            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("plannedResult")}</dt>
+            <dd
+              className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass)}
+              data-finance-forecast-summary="result"
+            >
+              {formatFinanceManagementPlanningMinor(
+                props.totals.resultMinor,
+                props.currency,
+                props.formattingLocale,
+              )}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </section>
   );
 }
 
@@ -116,11 +175,17 @@ export function FinanceForecastRollingUxSections({
   currency,
   formattingLocale,
   canFormalize,
+  currentTotals,
   onFormalizeSuccess,
   onFormalizeError,
 }: RollingUxSectionsProps) {
   const t = useTranslations("Finance.forecast");
   const [formalizeOpen, setFormalizeOpen] = useState(false);
+
+  const evolutionPoints = useMemo(
+    () => buildForecastEvolutionChartPoints(rollingUx.history?.entriesChronological ?? []),
+    [rollingUx.history?.entriesChronological],
+  );
 
   return (
     <div className="space-y-4" data-finance-rolling-forecast-ux>
@@ -129,19 +194,28 @@ export function FinanceForecastRollingUxSections({
         canFormalize={canFormalize}
         onOpenFormalize={() => setFormalizeOpen(true)}
         formattingLocale={formattingLocale}
+        currency={currency}
+        totals={currentTotals}
         t={t}
       />
 
-      <FinanceForecastRevisionComparisonSection
-        vsPrevious={rollingUx.vsPrevious}
-        vsApprovedBudget={rollingUx.vsApprovedBudget}
+      <FinanceForecastEvolutionSection
+        history={rollingUx.history}
+        evolutionPoints={evolutionPoints}
         currency={currency}
         formattingLocale={formattingLocale}
         t={t}
       />
 
-      <FinanceForecastHistorySection
-        history={rollingUx.history}
+      <FinanceForecastChangeSincePreviousSection
+        vsPrevious={rollingUx.vsPrevious}
+        currency={currency}
+        formattingLocale={formattingLocale}
+        t={t}
+      />
+
+      <FinanceForecastBudgetComparisonSection
+        vsApprovedBudget={rollingUx.vsApprovedBudget}
         currency={currency}
         formattingLocale={formattingLocale}
         t={t}
@@ -173,256 +247,246 @@ export function FinanceForecastRollingUxSections({
   );
 }
 
-function ComparisonTotalsStrip(props: {
-  title: string;
-  currency: string | null;
-  formattingLocale: string;
-  incomeMinor: number;
-  expenseMinor: number;
-  resultMinor: number;
+function CompactMovementSummary(props: {
   incomeDeltaMinor: number;
   expenseDeltaMinor: number;
   resultDeltaMinor: number;
-  labels: {
-    income: string;
-    expense: string;
-    result: string;
-  };
-  "data-finance-surface"?: string;
+  currency: string | null;
+  formattingLocale: string;
+  labels: { income: string; expense: string; result: string };
 }) {
   return (
+    <dl className="grid gap-2 sm:grid-cols-3 sm:gap-4">
+      {(
+        [
+          ["income", props.incomeDeltaMinor, props.labels.income],
+          ["expense", props.expenseDeltaMinor, props.labels.expense],
+          ["result", props.resultDeltaMinor, props.labels.result],
+        ] as const
+      ).map(([key, delta, label]) => (
+        <div key={key}>
+          <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{label}</dt>
+          <dd className="mt-0.5 text-sm font-medium tabular-nums text-[var(--foreground)]">
+            {formatFinanceManagementPlanningSignedMinor(delta, props.currency, props.formattingLocale)}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function FinanceForecastChangeSincePreviousSection(props: {
+  vsPrevious: CurrentForecastVsPreviousResult;
+  currency: string | null;
+  formattingLocale: string;
+  t: ReturnType<typeof useTranslations<"Finance.forecast">>;
+}) {
+  const { t } = props;
+  if (props.vsPrevious.kind === "NO_PREVIOUS_FORECAST") {
+    return (
+      <p className="text-sm text-[var(--muted)]" data-finance-no-previous-forecast>
+        {t("comparison.noPreviousForecast")}
+      </p>
+    );
+  }
+
+  const comparison = props.vsPrevious.comparison;
+  const drivers = selectMeaningfulForecastChangeDrivers(comparison.largestChanges, 5);
+
+  return (
     <section
-      className={FINANCE_SUMMARY_STRIP_SURFACE_CLASS}
-      data-finance-surface={props["data-finance-surface"]}
+      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-3 py-3")}
+      data-finance-surface="change-since-previous"
+      aria-labelledby="finance-change-since-previous-heading"
     >
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-        {props.title}
+      <h3
+        id="finance-change-since-previous-heading"
+        className={FINANCE_SECTION_HEADER_CLASS}
+      >
+        {t("comparison.changeSincePreviousTitle")}
       </h3>
-      <dl className={FINANCE_SUMMARY_STRIP_GRID_CLASS}>
-        {(
-          [
-            ["income", props.incomeMinor, props.incomeDeltaMinor],
-            ["expense", props.expenseMinor, props.expenseDeltaMinor],
-            ["result", props.resultMinor, props.resultDeltaMinor],
-          ] as const
-        ).map(([key, amount, delta]) => (
-          <div key={key} className="sm:px-4 sm:first:ps-0">
-            <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.labels[key]}</dt>
-            <dd
-              className={cn(
-                key === "result"
-                  ? FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS
-                  : FINANCE_SUMMARY_STRIP_VALUE_CLASS,
-                key === "result" ? financeResultSemanticTextClass(amount) : undefined,
-              )}
-            >
-              {formatBudgetPlanningMinor(amount, props.currency, props.formattingLocale)}
-            </dd>
-            <dd className="mt-0.5 text-xs text-[var(--muted)] tabular-nums">
-              {formatBudgetPlanningSignedMinor(delta, props.currency, props.formattingLocale)}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <CompactMovementSummary
+        incomeDeltaMinor={comparison.summary.incomeDeltaMinor}
+        expenseDeltaMinor={comparison.summary.expenseDeltaMinor}
+        resultDeltaMinor={comparison.summary.resultDeltaMinor}
+        currency={props.currency}
+        formattingLocale={props.formattingLocale}
+        labels={{
+          income: t("totalIncome"),
+          expense: t("totalExpense"),
+          result: t("plannedResult"),
+        }}
+      />
+      {drivers.length > 0 ? (
+        <FinanceForecastChangeDriverBars
+          title={t("comparison.largestChangesTitle")}
+          rows={drivers.map((row) => ({
+            key: row.financialAccountId,
+            accountName: row.accountName,
+            deltaMinor: row.deltaMinor,
+          }))}
+          currency={props.currency}
+          formattingLocale={props.formattingLocale}
+          data-finance-surface="largest-changes"
+        />
+      ) : null}
     </section>
   );
 }
 
-function FinanceForecastRevisionComparisonSection(props: {
-  vsPrevious: CurrentForecastVsPreviousResult;
+function FinanceForecastBudgetComparisonSection(props: {
   vsApprovedBudget: CurrentForecastVsApprovedBudgetResult;
   currency: string | null;
   formattingLocale: string;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
 }) {
   const { t } = props;
-  const previousComparison =
-    props.vsPrevious.kind === "COMPARISON" ? props.vsPrevious.comparison : null;
-  const budgetComparison =
-    props.vsApprovedBudget.kind === "COMPARISON" ? props.vsApprovedBudget.comparison : null;
-  const showPrevious = previousComparison !== null;
-  const showBudget = budgetComparison !== null;
-
-  if (!showPrevious && !showBudget) {
-    if (props.vsPrevious.kind === "NO_PREVIOUS_FORECAST") {
-      return (
-        <p className="text-sm text-[var(--muted)]" data-finance-no-previous-forecast>
-          {t("comparison.noPreviousForecast")}
-        </p>
-      );
-    }
-    return null;
+  if (props.vsApprovedBudget.kind === "NO_APPROVED_BUDGET") {
+    return (
+      <p className="text-xs text-[var(--muted)]" data-finance-no-approved-budget>
+        {t("comparison.noApprovedBudget")}
+      </p>
+    );
   }
 
-  const largest =
-    previousComparison && previousComparison.largestChanges.length > 0
-      ? previousComparison.largestChanges
-          .filter((row) => row.deltaMinor !== 0)
-          .slice(0, 5)
-      : [];
+  const comparison = props.vsApprovedBudget.comparison;
+  const drivers = selectMeaningfulForecastChangeDrivers(comparison.largestChanges, 5);
 
   return (
-    <div className="space-y-3" data-finance-revision-comparisons>
-      {showPrevious && previousComparison ? (
-        <ComparisonTotalsStrip
-          title={t("comparison.vsPreviousTitle")}
+    <section
+      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "space-y-3 border-s-2 border-[var(--sce-surface-border)] py-3 ps-4")}
+      data-finance-surface="current-vs-budget"
+      aria-labelledby="finance-budget-comparison-heading"
+    >
+      <h3 id="finance-budget-comparison-heading" className={FINANCE_SECTION_HEADER_CLASS}>
+        {t("comparison.vsBudgetCompactTitle")}
+      </h3>
+      <p className="text-xs text-[var(--muted)]">{t("comparison.vsBudgetCompactHint")}</p>
+      <CompactMovementSummary
+        incomeDeltaMinor={comparison.summary.incomeDeltaMinor}
+        expenseDeltaMinor={comparison.summary.expenseDeltaMinor}
+        resultDeltaMinor={comparison.summary.resultDeltaMinor}
+        currency={props.currency}
+        formattingLocale={props.formattingLocale}
+        labels={{
+          income: t("totalIncome"),
+          expense: t("totalExpense"),
+          result: t("plannedResult"),
+        }}
+      />
+      {drivers.length > 0 ? (
+        <FinanceForecastChangeDriverBars
+          title={t("comparison.budgetDriversTitle")}
+          rows={drivers.map((row) => ({
+            key: row.financialAccountId,
+            accountName: row.accountName,
+            deltaMinor: row.deltaMinor,
+          }))}
           currency={props.currency}
           formattingLocale={props.formattingLocale}
-          incomeMinor={previousComparison.summary.comparisonIncomeMinor}
-          expenseMinor={previousComparison.summary.comparisonExpenseMinor}
-          resultMinor={previousComparison.summary.comparisonResultMinor}
-          incomeDeltaMinor={previousComparison.summary.incomeDeltaMinor}
-          expenseDeltaMinor={previousComparison.summary.expenseDeltaMinor}
-          resultDeltaMinor={previousComparison.summary.resultDeltaMinor}
-          labels={{
-            income: t("totalIncome"),
-            expense: t("totalExpense"),
-            result: t("plannedResult"),
-          }}
-          data-finance-surface="current-vs-previous"
+          barClassName="bg-[var(--muted)]/55"
+          data-finance-surface="budget-change-drivers"
         />
       ) : null}
-
-      {largest.length > 0 ? (
-        <section
-          className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "py-3")}
-          data-finance-surface="largest-changes"
-        >
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {t("comparison.largestChangesTitle")}
-          </h3>
-          <ul className="mt-2 space-y-1.5 text-sm">
-            {largest.map((row) => (
-              <li
-                key={row.financialAccountId}
-                className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] pb-1.5 last:border-0"
-              >
-                <span className="min-w-0 font-medium">{row.accountName}</span>
-                <span className="text-end text-xs text-[var(--muted)] tabular-nums">
-                  {row.baseAmountMinor !== null
-                    ? formatBudgetPlanningMinor(
-                        row.baseAmountMinor,
-                        props.currency,
-                        props.formattingLocale,
-                      )
-                    : "—"}{" "}
-                  →{" "}
-                  {row.comparisonAmountMinor !== null
-                    ? formatBudgetPlanningMinor(
-                        row.comparisonAmountMinor,
-                        props.currency,
-                        props.formattingLocale,
-                      )
-                    : "—"}{" "}
-                  <span className="text-[var(--foreground)]">
-                    (
-                    {formatBudgetPlanningSignedMinor(
-                      row.deltaMinor,
-                      props.currency,
-                      props.formattingLocale,
-                    )}
-                    )
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {showBudget && budgetComparison ? (
-        <ComparisonTotalsStrip
-          title={t("comparison.vsBudgetTitle")}
-          currency={props.currency}
-          formattingLocale={props.formattingLocale}
-          incomeMinor={budgetComparison.summary.comparisonIncomeMinor}
-          expenseMinor={budgetComparison.summary.comparisonExpenseMinor}
-          resultMinor={budgetComparison.summary.comparisonResultMinor}
-          incomeDeltaMinor={budgetComparison.summary.incomeDeltaMinor}
-          expenseDeltaMinor={budgetComparison.summary.expenseDeltaMinor}
-          resultDeltaMinor={budgetComparison.summary.resultDeltaMinor}
-          labels={{
-            income: t("totalIncome"),
-            expense: t("totalExpense"),
-            result: t("plannedResult"),
-          }}
-          data-finance-surface="current-vs-budget"
-        />
-      ) : props.vsApprovedBudget.kind === "NO_APPROVED_BUDGET" ? (
-        <p className="text-xs text-[var(--muted)]" data-finance-no-approved-budget>
-          {t("comparison.noApprovedBudget")}
-        </p>
-      ) : null}
-    </div>
+    </section>
   );
 }
 
-function FinanceForecastHistorySection(props: {
+function FinanceForecastEvolutionSection(props: {
   history: FinanceForecastHistoryReadModel | null;
+  evolutionPoints: ReturnType<typeof buildForecastEvolutionChartPoints>;
   currency: string | null;
   formattingLocale: string;
   t: ReturnType<typeof useTranslations<"Finance.forecast">>;
 }) {
   const entries = props.history?.entries ?? [];
-  if (entries.length === 0) {
+  if (entries.length === 0 && props.evolutionPoints.length === 0) {
     return null;
   }
 
   return (
-    <section
-      className={cn(FINANCE_FUNCTIONAL_SURFACE_CLASS, "py-3")}
-      data-finance-surface="prognoseverlauf"
-      aria-labelledby="finance-prognoseverlauf-heading"
-    >
-      <h3
-        id="finance-prognoseverlauf-heading"
-        className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
-      >
-        {props.t("history.sectionTitle")}
-      </h3>
-      <ul className="mt-2 space-y-0 text-sm">
-        {entries.map((entry) => (
-          <li
-            key={entry.forecastVersionId}
-            className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] py-2 last:border-0"
-            data-finance-history-entry={entry.isCurrent ? "current" : "historical"}
+    <div className="space-y-3" data-finance-forecast-evolution>
+      {props.evolutionPoints.length > 0 ? (
+        <FinanceForecastEvolutionChart
+          title={props.t("history.evolutionTitle")}
+          seriesLabel={props.t("history.evolutionSeriesResult")}
+          points={props.evolutionPoints}
+          currency={props.currency}
+          formattingLocale={props.formattingLocale}
+          currentBadgeLabel={props.t("history.currentBadge")}
+          tooltipLabels={{
+            income: props.t("totalIncome"),
+            expense: props.t("totalExpense"),
+            result: props.t("plannedResult"),
+          }}
+          formatPointMeta={(point) => {
+            const parts: string[] = [];
+            if (point.asOfDate) {
+              parts.push(
+                props.t("history.asOfLine", {
+                  date: formatCalendarDateDisplay(point.asOfDate, props.formattingLocale),
+                }),
+              );
+            }
+            if (point.revisionSourceLabel) {
+              parts.push(point.revisionSourceLabel);
+            }
+            parts.push(props.t("versionMeta", { version: point.versionNumber }));
+            return parts.join(" · ");
+          }}
+        />
+      ) : null}
+
+      {entries.length > 0 ? (
+        <section
+          className="border-t border-[var(--sce-surface-border-subtle)] pt-3"
+          data-finance-surface="prognoseverlauf-compact"
+          aria-labelledby="finance-prognoseverlauf-compact-heading"
+        >
+          <h4
+            id="finance-prognoseverlauf-compact-heading"
+            className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
           >
-            <div className="min-w-0">
-              <p className="font-medium">{entry.presentation.displayTitle}</p>
-              <p className="text-xs text-[var(--muted)]">
-                {entry.asOfDate
-                  ? `${props.t("history.asOfLine", {
-                      date: formatCalendarDateDisplay(entry.asOfDate, props.formattingLocale),
-                    })} · ${props.t("versionMeta", { version: entry.versionNumber })}`
-                  : (entry.presentation.displaySubtitle ?? null)}
-                {entry.revisionSource && !entry.revisionLabel ? (
-                  <span className="ms-1">· {entry.presentation.revisionSourceLabel}</span>
-                ) : null}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-0.5 text-end">
-              <span className="tabular-nums text-[var(--foreground)]">
-                {props.t("history.resultLine", {
-                  amount: formatBudgetPlanningMinor(
-                    entry.resultMinor,
-                    props.currency,
-                    props.formattingLocale,
-                  ),
-                })}
-              </span>
-              {entry.isCurrent ? (
-                <span
-                  className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]"
-                  data-finance-current-revision-marker
-                >
-                  {props.t("history.currentBadge")}
-                </span>
-              ) : null}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
+            {props.t("history.governanceTitle")}
+          </h4>
+          <ul className="mt-2 space-y-0 text-xs">
+            {entries.map((entry) => (
+              <li
+                key={entry.forecastVersionId}
+                className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--sce-surface-border-subtle)] py-1.5 last:border-0"
+                data-finance-history-entry={entry.isCurrent ? "current" : "historical"}
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-[var(--foreground)]">
+                    {entry.presentation.displayTitle}
+                    {entry.isCurrent ? (
+                      <span
+                        className="ms-2 font-normal uppercase tracking-wide text-[var(--muted)]"
+                        data-finance-current-revision-marker
+                      >
+                        {props.t("history.currentBadge")}
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="text-[var(--muted)]">
+                    {entry.asOfDate
+                      ? props.t("history.asOfLine", {
+                          date: formatCalendarDateDisplay(entry.asOfDate, props.formattingLocale),
+                        })
+                      : (entry.presentation.displaySubtitle ?? null)}
+                    {" · "}
+                    {props.t("versionMeta", { version: entry.versionNumber })}
+                    {entry.revisionSource && !entry.revisionLabel ? (
+                      <span> · {entry.presentation.revisionSourceLabel}</span>
+                    ) : null}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </div>
   );
 }
 
@@ -603,7 +667,7 @@ function FinanceFormalReforecastDialog(props: {
               <div className="sm:px-4 sm:first:ps-0">
                 <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalIncome")}</dt>
                 <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-                  {formatBudgetPlanningMinor(
+                  {formatFinanceManagementPlanningMinor(
                     preview.incomeMinor,
                     props.currency,
                     props.formattingLocale,
@@ -613,7 +677,7 @@ function FinanceFormalReforecastDialog(props: {
               <div className="sm:px-4">
                 <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("totalExpense")}</dt>
                 <dd className={FINANCE_SUMMARY_STRIP_VALUE_CLASS}>
-                  {formatBudgetPlanningMinor(
+                  {formatFinanceManagementPlanningMinor(
                     preview.expenseMinor,
                     props.currency,
                     props.formattingLocale,
@@ -623,7 +687,7 @@ function FinanceFormalReforecastDialog(props: {
               <div className="sm:px-4 sm:last:pe-0">
                 <dt className={FINANCE_SUMMARY_LABEL_CLASS}>{props.t("plannedResult")}</dt>
                 <dd className={cn(FINANCE_SUMMARY_STRIP_RESULT_VALUE_CLASS, resultClass)}>
-                  {formatBudgetPlanningMinor(
+                  {formatFinanceManagementPlanningMinor(
                     preview.resultMinor,
                     props.currency,
                     props.formattingLocale,

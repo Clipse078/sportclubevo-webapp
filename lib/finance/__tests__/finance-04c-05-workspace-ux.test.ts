@@ -10,6 +10,13 @@ const rolling = readFileSync(
   join(process.cwd(), "components/admin/finance/FinanceForecastRollingUxSections.tsx"),
   "utf8",
 );
+const evolutionChart = readFileSync(
+  join(
+    process.cwd(),
+    "components/admin/finance/forecast/FinanceForecastEvolutionChart.tsx",
+  ),
+  "utf8",
+);
 const page = readFileSync(
   join(process.cwd(), "app/(admin)/dashboard/finance/forecast/page.tsx"),
   "utf8",
@@ -54,22 +61,22 @@ describe("FIN-04C-05 rolling forecast workspace UX", () => {
     expect(rolling).toContain('result.outcome === "STALE_CURRENT"');
   });
 
-  it("F. Prognoseverlauf compact list with current marker and presentation titles", () => {
-    expect(rolling).toContain('data-finance-surface="prognoseverlauf"');
-    expect(rolling).toContain("entry.presentation.displayTitle");
-    expect(rolling).toContain("history.currentBadge");
-    expect(de).toContain('"sectionTitle": "Prognoseverlauf"');
+  it("F. Prognoseentwicklung chart and compact governance history", () => {
+    expect(evolutionChart).toContain('data-finance-surface="prognoseentwicklung"');
+    expect(rolling).toContain('data-finance-surface="prognoseverlauf-compact"');
+    expect(rolling).toContain("FinanceForecastEvolutionChart");
+    expect(de).toContain('"evolutionTitle": "Prognoseentwicklung"');
   });
 
-  it("G. current vs previous uses signed neutral deltas", () => {
-    expect(rolling).toContain("formatBudgetPlanningSignedMinor");
-    expect(rolling).toContain('data-finance-surface="current-vs-previous"');
+  it("G. change since previous uses signed neutral management deltas", () => {
+    expect(rolling).toContain("formatFinanceManagementPlanningSignedMinor");
+    expect(rolling).toContain('data-finance-surface="change-since-previous"');
     expect(de).toContain("Noch keine frühere Prognose");
   });
 
   it("H. largest changes capped from comparison read model", () => {
     expect(rolling).toContain("largestChanges");
-    expect(rolling).toContain(".slice(0, 5)");
+    expect(rolling).toContain("selectMeaningfulForecastChangeDrivers");
     expect(de).toContain("Grösste Veränderungen");
   });
 

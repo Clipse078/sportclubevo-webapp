@@ -1,8 +1,7 @@
 "use client";
 
 import type { ProjectionOutlookComparisonRow } from "@/lib/finance/projection/projection-workspace-dashboard";
-import { formatBudgetPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
-import { formatFinanceAutomaticForecastMoneyMinor } from "@/lib/finance/projection/projection-amount-presentation";
+import { formatFinanceManagementPlanningMinor } from "@/lib/finance/budget/budget-amount-presentation";
 import {
   FINANCE_PROJECTION_CHART_SURFACE_CLASS,
   FinanceProjectionChartLegend,
@@ -97,17 +96,11 @@ export function FinanceProjectionOutlookChart(props: FinanceProjectionOutlookCha
                       <span className="tabular-nums text-[var(--foreground)]">
                         {s.minor === null
                           ? "—"
-                          : s.key === "projection"
-                            ? formatFinanceAutomaticForecastMoneyMinor(
-                                s.minor,
-                                props.currency,
-                                props.formattingLocale,
-                              )
-                            : formatBudgetPlanningMinor(
-                                s.minor,
-                                props.currency,
-                                props.formattingLocale,
-                              )}
+                          : formatFinanceManagementPlanningMinor(
+                              s.minor,
+                              props.currency,
+                              props.formattingLocale,
+                            )}
                       </span>
                     </div>
                   );

@@ -121,7 +121,7 @@ describe("FIN-04B-05R1 composition and divergence", () => {
     expect(dashboard.incomeComposition[0]?.shareOfSideTotal).toBeCloseTo(0.75, 5);
   });
 
-  it("omits divergence when fewer than two comparable accounts exist", () => {
+  it("shows a single non-zero divergence when only one comparable account differs", () => {
     const coverage = computeProjectionAggregateCoverage([
       { accountId: "a1", semantic: "INCOME", lifecycle: "ACTIVE", projectedAmountMinor: 100_000_00 },
     ]);
@@ -131,7 +131,7 @@ describe("FIN-04B-05R1 composition and divergence", () => {
       adoption: null,
       accounts: [sampleAccount({ deltaMinor: 10_000_00 })],
     });
-    expect(dashboard.divergence).toBeNull();
+    expect(dashboard.divergence).toHaveLength(1);
   });
 
   it("ranks divergence by absolute delta", () => {

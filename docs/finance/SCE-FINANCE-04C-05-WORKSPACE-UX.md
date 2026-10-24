@@ -3,19 +3,21 @@
 | Field | Value |
 | --- | --- |
 | **Package** | FIN-04C-05 workspace integration |
-| **Status** | **COMPLETE** (code); PO UAT depends on STAGE migration `20261024120000_sce_finance_04c_02_forecast_revision_lifecycle` |
+| **Status** | **COMPLETE** (code); **04C-05R2** visual refinement complete — PO UAT resumes on STAGE |
 | **Route** | `/dashboard/finance/forecast` |
 | **Branch** | `cursor/sce-finance-04c-rolling-forecast` |
 
 ## Workspace hierarchy
 
 1. **Context strip** — Finanzjahr, Währung, Speicherstatus der Kontenbearbeitung  
-2. **Aktuelle Prognose** — Titel, Datenstand, Bezeichnung, Version (sekundär), **Neue Prognose festhalten** (nur `finance.forecast.manage`)  
-3. **Summen** — Prognose-Einnahmen, Prognose-Ausgaben, Prognose-Ergebnis  
-4. **Vergleiche** — Aktuelle vs. vorherige Prognose, Grösste Veränderungen, Budget-Kontext (nur genehmigtes Budget)  
-5. **Prognoseverlauf** — kompakte Revisionsliste (kein Audit-Log)  
+2. **Aktuelle Prognose** — Metadaten, integrierte Summen (Ganzzahl-Währung), **Neue Prognose festhalten** (nur `finance.forecast.manage`)  
+3. **Prognoseentwicklung** — Revisionsverlauf-Chart + kompakte Revisionsübersicht (FIN-04C-05R2)  
+4. **Veränderung seit letzter Prognose** — Bewegung + Treiber (FIN-04C-05R2)  
+5. **Gegen genehmigtes Budget** — Baseline-Vergleich + Treiber (FIN-04C-05R2)  
 6. **Kontenbearbeitung** — bestehende FIN-04A-Tabelle (weiter editierbar nach Formalisierung)  
 7. **Automatische Prognose** — FIN-04B (Aktualisieren / Übernehmen), visuell getrennt von Formalisierung  
+
+Details: `docs/finance/SCE-FINANCE-04C-05R2-VISUAL-INTELLIGENCE.md`
 
 ## Formalisierung
 

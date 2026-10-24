@@ -21,7 +21,7 @@ describe("FIN-04A R2 forecast workspace UX", () => {
   });
 
   it("rests forecast amounts on canonical whole-major formatting without per-cell currency", () => {
-    expect(panel).toContain("formatBudgetPlanningWholeMajorNumber");
+    expect(panel).toContain("formatFinanceManagementPlanningWholeMajorNumber");
     expect(panel).toContain("FINANCE_FORECAST_MONEY_CELL_INPUT_CLASS");
     expect(panel).not.toContain("FINANCE_BUDGET_AMOUNT_INPUT_CLASS");
   });
@@ -41,7 +41,7 @@ describe("FIN-04A R2 forecast workspace UX", () => {
   });
 
   it("shows explicit signed variance separate from favorability labels", () => {
-    expect(panel).toContain("formatBudgetPlanningSignedWholeMajorNumber");
+    expect(panel).toContain("formatFinanceManagementPlanningSignedWholeMajorNumber");
     expect(panel).toContain("computeForecastBudgetComparisonMetrics");
     expect(panel).toContain("favorabilityFavorable");
     expect(panel).toContain("financeVarianceComparisonSemanticTextClass");

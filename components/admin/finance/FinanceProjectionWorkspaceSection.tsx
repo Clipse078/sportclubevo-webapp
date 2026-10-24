@@ -273,10 +273,11 @@ export function FinanceProjectionWorkspaceSection({
               />
             </div>
           </div>
-          {projection.dashboard!.divergence ? (
+          {projection.dashboard!.divergence !== null ? (
             <FinanceProjectionDivergenceChart
               title={t("chartDivergenceTitle")}
               description={t("chartDivergenceDescription")}
+              alignedMessage={t("chartDivergenceAligned")}
               rows={projection.dashboard!.divergence}
               currency={currency}
               formattingLocale={formattingLocale}

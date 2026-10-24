@@ -1185,12 +1185,19 @@
       "comparison": {
         "vsPreviousTitle": "Aktuelle Prognose vs. vorherige Prognose",
         "vsBudgetTitle": "Genehmigtes Budget vs. aktuelle Prognose",
+        "changeSincePreviousTitle": "Veränderung seit letzter Prognose",
+        "vsBudgetCompactTitle": "Gegen genehmigtes Budget",
+        "vsBudgetCompactHint": "Abweichung der aktuellen Prognose vom genehmigten Budget (Governance-Baseline).",
+        "budgetDriversTitle": "Wesentliche Budget-Abweichungen",
         "noPreviousForecast": "Noch keine frühere Prognose zum Vergleichen.",
         "noApprovedBudget": "Kein genehmigtes Budget als Referenz vorhanden.",
         "largestChangesTitle": "Grösste Veränderungen"
       },
       "history": {
         "sectionTitle": "Prognoseverlauf",
+        "evolutionTitle": "Prognoseentwicklung",
+        "evolutionSeriesResult": "Prognose-Ergebnis",
+        "governanceTitle": "Revisionsübersicht",
         "asOfLine": "Datenstand {date}",
         "resultLine": "Ergebnis {amount}",
         "currentBadge": "Aktuell"
@@ -1230,6 +1237,7 @@
         "chartCompositionExpense": "Ausgaben · Zusammensetzung",
         "chartDivergenceTitle": "Grösste Abweichungen",
         "chartDivergenceDescription": "Hier weicht die automatische Prognose am stärksten von eurer aktuellen Prognose ab.",
+        "chartDivergenceAligned": "Aktuelle und automatische Prognose stimmen bei den prognostizierten Positionen überein.",
         "explainTitle": "Automatische Prognose — Details",
         "explainDescription": "Nachvollziehbare Herleitung für diese Position.",
         "explainClose": "Schliessen",

@@ -722,12 +722,19 @@
       "comparison": {
         "vsPreviousTitle": "Current forecast vs. previous forecast",
         "vsBudgetTitle": "Approved budget vs. current forecast",
+        "changeSincePreviousTitle": "Change since last forecast",
+        "vsBudgetCompactTitle": "Versus approved budget",
+        "vsBudgetCompactHint": "How the current forecast differs from the approved budget (governance baseline).",
+        "budgetDriversTitle": "Material budget variances",
         "noPreviousForecast": "No earlier forecast to compare yet.",
         "noApprovedBudget": "No approved budget available as reference.",
         "largestChangesTitle": "Largest changes"
       },
       "history": {
         "sectionTitle": "Forecast history",
+        "evolutionTitle": "Forecast evolution",
+        "evolutionSeriesResult": "Forecast result",
+        "governanceTitle": "Revision overview",
         "asOfLine": "Data as of {date}",
         "resultLine": "Result {amount}",
         "currentBadge": "Current"
@@ -767,6 +774,7 @@
         "chartCompositionExpense": "Expense · composition",
         "chartDivergenceTitle": "Largest gaps",
         "chartDivergenceDescription": "Where the automatic forecast differs most from your current forecast.",
+        "chartDivergenceAligned": "The current and automatic forecasts align on projected line items.",
         "explainTitle": "Automatic forecast — details",
         "explainDescription": "Traceable derivation for this account.",
         "explainClose": "Close",
