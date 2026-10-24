@@ -802,6 +802,37 @@ Full contract: [`docs/finance/SCE-FINANCE-04B-PROJECTION-ARCHITECTURE.md`](../fi
 
 ---
 
+## ADR-035 — Rolling Forecast & Reforecasting (FIN-04C)
+
+**Status:** Accepted — **FIN-04C-01 architecture** (implementation packages 04C-02+ pending)
+
+### Context
+
+FIN-04A established organisation-owned **Aktuelle Prognose** with versioned containers. FIN-04B added **Automatische Prognose** and explicit adoption that creates new forecast versions. Clubs need repeated in-year reassessment of year-end expectation without version noise on every keystroke, while preserving meaningful governance history for FIN-05 reporting and FIN-06 publication.
+
+### Decision
+
+1. **Product principle:** *The current forecast is a living management view. Formal reforecasts create governance history.*
+2. **Working vs formal:** The **CURRENT** `FinanceForecastVersion` remains editable in place for ordinary line edits. A **formal reforecast** (tenant action **Neue Prognose festhalten**) or **Automatische Prognose übernehmen** supersedes the prior CURRENT (immutable history) and promotes a new CURRENT — **no DRAFT state**, no separate working-line table.
+3. **Version semantics:** Manual field edits do **not** create formal versions. Formal checkpoints create immutable **SUPERSEDED** history with stable version IDs. **`FinanceForecast.currentVersionId`** remains the canonical current pointer (not MAX `versionNumber`).
+4. **Temporal metadata (04C-02+):** Formal revisions carry **`asOfDate`** (Datenstand) and **`actualsThroughDate`**, distinct from `createdAt`. Month-end not required; respect tenant **FinanceYear** boundaries.
+5. **Composition:** Full-year expectation at cutoff is conceptual actual-through-cutoff plus remainder; **`FinanceForecastLine`** stays annual `amountMinor` unless a later programme requires split columns.
+6. **Automatic forecast boundary:** Refreshing automatic forecast does not create a current forecast revision; editing current forecast does not mark automatic forecast stale (evidence-based staleness unchanged from FIN-04B).
+7. **FIN-04D boundary:** Ordinary reforecasts do **not** use `scenarioKey`. Scenarios remain hypothetical until explicit FIN-04D promotion workflows.
+8. **Permissions:** Reuse `finance.forecast.view` / `finance.forecast.manage` — no proliferation.
+9. **Legacy:** Existing FIN-04A/04B versions remain valid; missing new metadata uses safe display fallbacks without inventing false historical cutoffs.
+
+Full contract: [`docs/finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md`](../finance/SCE-FINANCE-04C-ROLLING-FORECAST-ARCHITECTURE.md). Code locks: `lib/finance/forecast/rolling-forecast-architecture-contract.ts`.
+
+### Consequences
+
+- FIN-04C-02 migration extends `FinanceForecastVersion` with revision metadata; services in 04C-03+ implement **Neue Prognose festhalten**.
+- FIN-04B adoption behaviour and PO UAT semantics remain unchanged.
+- Architecture tests in `finance-04c-rolling-forecast-architecture.test.ts` guard durable semantics.
+- FIN-05/06 must reference superseded revision snapshots by stable IDs.
+
+---
+
 ## ADR Template
 
 Copy this template to add a new ADR.
