@@ -16,6 +16,11 @@ import {
   emptyFinanceManagementPnlReadModel,
 } from "@/lib/finance/reporting/build-finance-management-pnl-read-model";
 import { buildFinanceVarianceAnalysisReadModel } from "@/lib/finance/reporting/build-finance-variance-analysis-read-model";
+import {
+  buildFinanceManagementReportingDetailReadModel,
+  type FinanceActualEntryDetailRow,
+} from "@/lib/finance/reporting/build-finance-management-reporting-detail-read-model";
+import type { FinanceManagementReportingDetailReadModel } from "@/lib/finance/reporting/finance-management-reporting-detail-read-model";
 import type { FinanceManagementPnlReadModel } from "@/lib/finance/reporting/finance-management-pnl-read-model";
 import type { FinanceManagementOverviewReadModel } from "@/lib/finance/reporting/finance-management-overview-read-model";
 import type { FinanceVarianceAnalysisReadModel } from "@/lib/finance/reporting/finance-variance-analysis-read-model";
@@ -39,6 +44,12 @@ export type LoadFinanceManagementReportingInput = {
   financeYearId: string | null;
   actualGrain?: "ANNUAL_FULL_YEAR" | "YTD";
   actualYtdCutoffDate?: Date | null;
+};
+
+export type LoadFinanceManagementReportingDetailInput = LoadFinanceManagementReportingInput & {
+  accountId: string | null;
+  groupId: string | null;
+  timingNavEnabled: boolean;
 };
 
 type ReportingStructureContext = {
@@ -421,11 +432,204 @@ export async function loadFinanceVarianceAnalysisReadModel(
   return model;
 }
 
+export async function loadFinanceManagementReportingDetailReadModel(
+  db: Db,
+  ctx: FinanceAuthContext,
+  input: LoadFinanceManagementReportingDetailInput,
+): Promise<FinanceManagementReportingDetailReadModel> {
+  requireFinanceReportingAccess(ctx);
+
+  if (input.accountId && input.groupId) {
+    return buildFinanceManagementReportingDetailReadModel({
+      ctx,
+      tenantId: ctx.tenantId,
+      financeYearId: "",
+      financeYearName: "",
+      baseCurrency: null,
+      structureAvailability: "NO_STRUCTURE",
+      groups: [],
+      accounts: [],
+      approvedMeasure: null,
+      actualMeasure: null,
+      forecastMeasure: null,
+      sourceVisibility: {
+        approvedBudget: canViewFinanceBudgetMeasures(ctx),
+        actual: canViewFinanceActualMeasures(ctx),
+        currentForecast: canViewFinanceForecastMeasures(ctx),
+      },
+      actualCutoffDate: null,
+      accountId: null,
+      groupId: null,
+      actualEntryRows: [],
+      timingNavEnabled: input.timingNavEnabled,
+    });
+  }
+
+  const structure = await loadReportingStructureContext(db, ctx, input.financeYearId);
+  if (!structure.ok) {
+    return buildFinanceManagementReportingDetailReadModel({
+      ctx,
+      tenantId: ctx.tenantId,
+      financeYearId: "",
+      financeYearName: "",
+      baseCurrency: structure.partial.baseCurrency,
+      structureAvailability: "NO_STRUCTURE",
+      groups: [],
+      accounts: [],
+      approvedMeasure: null,
+      actualMeasure: null,
+      forecastMeasure: null,
+      sourceVisibility: {
+        approvedBudget: canViewFinanceBudgetMeasures(ctx),
+        actual: canViewFinanceActualMeasures(ctx),
+        currentForecast: canViewFinanceForecastMeasures(ctx),
+      },
+      actualCutoffDate: null,
+      accountId: input.accountId,
+      groupId: input.groupId,
+      actualEntryRows: [],
+      timingNavEnabled: input.timingNavEnabled,
+    });
+  }
+
+  const { context } = structure;
+
+  if (input.accountId) {
+    const account = context.accounts.find((a) => a.id === input.accountId);
+    if (!account) {
+      return buildFinanceManagementReportingDetailReadModel({
+        ctx,
+        tenantId: ctx.tenantId,
+        financeYearId: context.financeYearId,
+        financeYearName: context.financeYearName,
+        baseCurrency: context.baseCurrency,
+        structureAvailability: "AVAILABLE",
+        groups: context.groups,
+        accounts: context.accounts,
+        approvedMeasure: null,
+        actualMeasure: null,
+        forecastMeasure: null,
+        sourceVisibility: {
+          approvedBudget: canViewFinanceBudgetMeasures(ctx),
+          actual: canViewFinanceActualMeasures(ctx),
+          currentForecast: canViewFinanceForecastMeasures(ctx),
+        },
+        actualCutoffDate: null,
+        accountId: input.accountId,
+        groupId: null,
+        actualEntryRows: [],
+        timingNavEnabled: input.timingNavEnabled,
+      });
+    }
+    assertSameTenant(account.tenantId, ctx.tenantId, "Financial account");
+  }
+
+  if (input.groupId) {
+    const group = context.groups.find((g) => g.id === input.groupId);
+    if (!group) {
+      return buildFinanceManagementReportingDetailReadModel({
+        ctx,
+        tenantId: ctx.tenantId,
+        financeYearId: context.financeYearId,
+        financeYearName: context.financeYearName,
+        baseCurrency: context.baseCurrency,
+        structureAvailability: "AVAILABLE",
+        groups: context.groups,
+        accounts: context.accounts,
+        approvedMeasure: null,
+        actualMeasure: null,
+        forecastMeasure: null,
+        sourceVisibility: {
+          approvedBudget: canViewFinanceBudgetMeasures(ctx),
+          actual: canViewFinanceActualMeasures(ctx),
+          currentForecast: canViewFinanceForecastMeasures(ctx),
+        },
+        actualCutoffDate: null,
+        accountId: null,
+        groupId: input.groupId,
+        actualEntryRows: [],
+        timingNavEnabled: input.timingNavEnabled,
+      });
+    }
+    assertSameTenant(group.tenantId, ctx.tenantId, "Reporting group");
+  }
+
+  const measures = await loadCanonicalMeasures(db, ctx, context.financeYearId, input);
+
+  let actualEntryRows: FinanceActualEntryDetailRow[] = [];
+  if (input.accountId && canViewFinanceActualMeasures(ctx)) {
+    actualEntryRows = await db.financeActualEntry.findMany({
+      where: {
+        tenantId: ctx.tenantId,
+        financeYearId: context.financeYearId,
+        financialAccountId: input.accountId,
+      },
+      select: {
+        id: true,
+        effectiveDate: true,
+        amountMinor: true,
+        currency: true,
+        description: true,
+      },
+      orderBy: [{ effectiveDate: "asc" }, { id: "asc" }],
+    });
+  }
+
+  if (!context.hasStructure) {
+    return buildFinanceManagementReportingDetailReadModel({
+      ctx,
+      tenantId: ctx.tenantId,
+      financeYearId: context.financeYearId,
+      financeYearName: context.financeYearName,
+      baseCurrency: context.baseCurrency,
+      structureAvailability: "NO_STRUCTURE",
+      groups: context.groups,
+      accounts: context.accounts,
+      approvedMeasure: measures.approvedMeasure,
+      actualMeasure: measures.actualMeasure,
+      forecastMeasure: measures.forecastMeasure,
+      sourceVisibility: measures.sourceVisibility,
+      actualCutoffDate: measures.actualMeasure?.cutoffDate ?? null,
+      accountId: input.accountId,
+      groupId: input.groupId,
+      actualEntryRows,
+      timingNavEnabled: input.timingNavEnabled,
+    });
+  }
+
+  return buildFinanceManagementReportingDetailReadModel({
+    ctx,
+    tenantId: ctx.tenantId,
+    financeYearId: context.financeYearId,
+    financeYearName: context.financeYearName,
+    baseCurrency: context.baseCurrency,
+    structureAvailability: "AVAILABLE",
+    groups: context.groups,
+    accounts: context.accounts,
+    approvedMeasure: measures.approvedMeasure,
+    actualMeasure: measures.actualMeasure,
+    forecastMeasure: measures.forecastMeasure,
+    sourceVisibility: measures.sourceVisibility,
+    actualCutoffDate: measures.actualMeasure?.cutoffDate ?? null,
+    accountId: input.accountId,
+    groupId: input.groupId,
+    actualEntryRows,
+    timingNavEnabled: input.timingNavEnabled,
+  });
+}
+
 /** FIN-05B query-shape guard — bounded loads per request (no per-row queries). */
 export const FINANCE_MANAGEMENT_REPORTING_QUERY_SHAPE = {
   structureLoads: 4,
   measureLoads: 3,
   perAccountQueryLoopForbidden: true,
+} as const;
+
+/** FIN-05E — detail load reuses PnL composition; actual evidence is one bounded query per open. */
+export const FINANCE_MANAGEMENT_REPORTING_DETAIL_QUERY_SHAPE = {
+  reusesManagementReportingMeasureLoads: true,
+  lazyActualEvidenceQuery: 1,
+  perEvidenceRowQueryForbidden: true,
 } as const;
 
 function requireFinanceReportingAccess(ctx: FinanceAuthContext): void {

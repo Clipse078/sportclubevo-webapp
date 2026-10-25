@@ -4,8 +4,8 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A–05D COMPLETE** on **STAGE** (05D PO UAT PASS); **FIN-05E NEXT**; **05F–05H** not started |
-| **Branch** | FIN-05D: `cursor/sce-finance-05d-overview-decision-intelligence-4dba` — see [`SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md`](./SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md) |
+| **Status** | **FIN-05A–05E COMPLETE** (05E PO UAT PASS — PR **#912** → **STAGE**); **FIN-05F NEXT**; **05G–05H** not started |
+| **Branch** | FIN-05E: `cursor/sce-finance-05e-reporting-workspace-drilldown-5fa5` — see [`SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md`](./SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md) |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
 | **ADR** | [ADR-038 — Financial Reporting & Intelligence (FIN-05)](../roadmap/05-architecture-decisions.md#adr-038--financial-reporting--intelligence-fin-05) |
@@ -434,4 +434,4 @@ Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liq
 
 FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
 
-**Next package: FIN-05E** — Reporting Workspace & Drill-down ([`SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md`](./SCE-FINANCE-05D-FINANCE-OVERVIEW-DECISION-INTELLIGENCE.md) complete on **STAGE** via PR **#911**).
+**Next package: FIN-05F** — Forecast / Budget / Actual Comparative Intelligence ([`SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md`](./SCE-FINANCE-05E-REPORTING-WORKSPACE-DRILLDOWN.md) complete via PR **#912** → **STAGE**).

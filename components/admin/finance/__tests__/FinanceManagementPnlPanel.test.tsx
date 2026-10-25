@@ -154,6 +154,9 @@ const labels = {
   favorabilityOnPlan: "On plan",
   partialSourcesHint: "Partial",
   unassignedHint: "Unassigned amounts",
+  investigateAccount: "Investigate",
+  investigateGroup: "Group detail",
+  exceptionsTitle: "Material variances",
 };
 
 describe("FinanceManagementPnlPanel", () => {

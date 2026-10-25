@@ -654,7 +654,49 @@ export const FINANCE_05D_IMPLEMENTATION = {
   workspaceRoute: "/dashboard/finance",
   maxDriversPerSide: 3,
   fin05dStatus: "COMPLETE_PO_UAT_PASS",
-  fin05eStatus: "NOT_STARTED",
+  fin05eStatus: "IMPLEMENTED_PO_UAT_PENDING",
+} as const;
+
+/** FIN-05E implementation locks — reporting workspace drill-down. */
+export const SCE_FINANCE_REPORTING_05E_ARCHITECTURE_LOCKS = {
+  reportingIsNotSourceOfTruth: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.reportingIsNotSourceOfTruth,
+  reportingIsAnalyseExplainPresent: true,
+  approvedBudgetRemainsGovernanceBaseline: true,
+  currentForecastRemainsOrganisationExpectation: true,
+  automaticForecastDoesNotReplaceCurrentForecast: true,
+  actualEvidenceRemainsCanonical: true,
+  managementPnlIsNotStatutoryAccounting:
+    SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.managementPnlIsNotStatutoryAccounting,
+  noAssetLiabilityEquityInFin05:
+    SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noAssetLiabilityEquityInFin05Reporting,
+  noLiquidityInFin05: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noLiquidityInFin05,
+  expectedEventsAreNotLiquidity: true,
+  noFakeMonthlyPhasing: SCE_FINANCE_REPORTING_ARCHITECTURE_LOCKS.noFakeMonthlyPhasing,
+  missingIsNotZero: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.missingIsNotZero,
+  unauthorizedIsNotZero: SCE_FINANCE_REPORTING_05C_ARCHITECTURE_LOCKS.unauthorizedIsNotZero,
+  unassignedAccountsRemainVisible: true,
+  drilldownDoesNotMutateSourceTruth: true,
+  noGenericBiBuilder: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.noGenericBiEngine,
+  publicationDeferredToFin06: true,
+  liquidityDeferredToFin09: true,
+  balanceSheetDeferredToFin11: true,
+  countryAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.countryAgnostic,
+  sportAgnostic: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.sportAgnostic,
+  teamNotRequired: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.teamNotRequired,
+  integerMinorUnits: SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS.moneyUsesIntegerMinorUnits,
+  tenantScopedDrilldown: true,
+  permissionAwareEvidence: true,
+  noNPlusOneReportingDrilldown: true,
+  lazyDetailEvidenceLoad: true,
+} as const;
+
+export const FINANCE_05E_IMPLEMENTATION = {
+  managementReportingDetailReadModel: "FinanceManagementReportingDetailReadModel",
+  detailQueryLoader: "loadFinanceManagementReportingDetailReadModel",
+  workspaceRoute: "/dashboard/finance/reports",
+  detailInteraction: "SCE_SHEET_CONTEXTUAL_DETAIL",
+  fin05eStatus: "IMPLEMENTED_PO_UAT_PENDING",
+  fin05fStatus: "NOT_STARTED",
 } as const;
 
 export const FINANCE_05C_IMPLEMENTATION = {

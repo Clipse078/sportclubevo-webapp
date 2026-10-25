@@ -394,6 +394,47 @@ export function buildManagementPnlSemanticSections(input: {
   return { incomeSection, expenseSection, hasUnassignedFinancialValues };
 }
 
+/** Full hierarchy nodes for drill-down resolution (before presentational root flattening). */
+export function buildManagementPnlResolutionSectionNodes(input: {
+  groups: FinancialReportingGroup[];
+  accounts: FinancialAccount[];
+  budgetVisible: boolean;
+  actualVisible: boolean;
+  forecastVisible: boolean;
+  budgetMap: ReadonlyMap<string, number> | null;
+  actualMap: ReadonlyMap<string, number> | null;
+  forecastMap: ReadonlyMap<string, number> | null;
+  varianceTree: ReadonlyArray<VarianceReportingTreeNode>;
+  unassignedAccounts: FinancialAccount[];
+}): { incomeNodes: ManagementPnlTreeNode[]; expenseNodes: ManagementPnlTreeNode[] } {
+  const transformInput = {
+    budgetVisible: input.budgetVisible,
+    actualVisible: input.actualVisible,
+    forecastVisible: input.forecastVisible,
+    budgetMap: input.budgetMap,
+    actualMap: input.actualMap,
+    forecastMap: input.forecastMap,
+  };
+
+  function buildRaw(semantic: "INCOME" | "EXPENSE"): ManagementPnlTreeNode[] {
+    const nodes: ManagementPnlTreeNode[] = [];
+    for (const root of input.varianceTree) {
+      const transformed = transformNodeForSemantic(root, semantic, transformInput);
+      if (transformed) nodes.push(transformed);
+    }
+    const residual = buildUnassignedResidual(
+      semantic,
+      input.unassignedAccounts.filter((account) => account.canonicalSemantic === semantic),
+      input.varianceTree,
+      transformInput,
+    );
+    if (residual) nodes.push(residual);
+    return nodes;
+  }
+
+  return { incomeNodes: buildRaw("INCOME"), expenseNodes: buildRaw("EXPENSE") };
+}
+
 export function buildManagementPnlVarianceTree(input: {
   groups: FinancialReportingGroup[];
   accounts: FinancialAccount[];
