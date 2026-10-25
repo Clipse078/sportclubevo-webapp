@@ -27,6 +27,79 @@ export function computeVariancePercent(
   return (rawDeltaMinor / approvedBudgetMinor) * 100;
 }
 
+export type SemanticVarianceMetrics = {
+  baselineMinor: number | null;
+  comparisonMinor: number | null;
+  hasBaseline: boolean;
+  hasComparison: boolean;
+  rawDeltaMinor: number | null;
+  favorabilityMinor: number | null;
+  favorability: VarianceFavorability | null;
+  variancePercent: number | null;
+};
+
+/**
+ * Canonical comparison variance (FIN-03A / FIN-05B):
+ * rawDeltaMinor = comparisonMinor - baselineMinor
+ * INCOME favorabilityMinor = rawDeltaMinor
+ * EXPENSE favorabilityMinor = baselineMinor - comparisonMinor
+ */
+export function computeSemanticVarianceMetrics(input: {
+  canonicalSemantic: "INCOME" | "EXPENSE";
+  baselineMinor: number | null;
+  comparisonMinor: number | null;
+}): SemanticVarianceMetrics {
+  const hasBaseline = input.baselineMinor !== null;
+  const hasComparison = input.comparisonMinor !== null;
+
+  if (!hasBaseline && !hasComparison) {
+    return {
+      baselineMinor: null,
+      comparisonMinor: null,
+      hasBaseline: false,
+      hasComparison: false,
+      rawDeltaMinor: null,
+      favorabilityMinor: null,
+      favorability: null,
+      variancePercent: null,
+    };
+  }
+
+  const baseline = input.baselineMinor ?? 0;
+  const comparison = input.comparisonMinor ?? 0;
+
+  if (hasBaseline) assertSafeAmountMinor(baseline);
+  if (hasComparison) assertSafeAmountMinor(comparison);
+
+  if (!hasBaseline || !hasComparison) {
+    return {
+      baselineMinor: hasBaseline ? baseline : null,
+      comparisonMinor: hasComparison ? comparison : null,
+      hasBaseline,
+      hasComparison,
+      rawDeltaMinor: null,
+      favorabilityMinor: null,
+      favorability: null,
+      variancePercent: null,
+    };
+  }
+
+  const rawDeltaMinor = comparison - baseline;
+  const favorabilityMinor =
+    input.canonicalSemantic === "INCOME" ? rawDeltaMinor : baseline - comparison;
+
+  return {
+    baselineMinor: baseline,
+    comparisonMinor: comparison,
+    hasBaseline: true,
+    hasComparison: true,
+    rawDeltaMinor,
+    favorabilityMinor,
+    favorability: resolveFavorability(favorabilityMinor),
+    variancePercent: computeVariancePercent(rawDeltaMinor, baseline),
+  };
+}
+
 /**
  * Canonical variance semantics (FIN-03A):
  * rawDelta = actual - budget
@@ -38,53 +111,19 @@ export function computeAccountVarianceMetrics(input: {
   approvedBudgetMinor: number | null;
   actualMinor: number | null;
 }): AccountVarianceMetrics {
-  const hasApprovedBudget = input.approvedBudgetMinor !== null;
-  const hasActual = input.actualMinor !== null;
-
-  if (!hasApprovedBudget && !hasActual) {
-    return {
-      approvedBudgetMinor: null,
-      actualMinor: null,
-      hasApprovedBudget: false,
-      hasActual: false,
-      rawDeltaMinor: null,
-      favorabilityMinor: null,
-      favorability: null,
-      variancePercent: null,
-    };
-  }
-
-  const budget = input.approvedBudgetMinor ?? 0;
-  const actual = input.actualMinor ?? 0;
-
-  if (hasApprovedBudget) assertSafeAmountMinor(budget);
-  if (hasActual) assertSafeAmountMinor(actual);
-
-  if (!hasApprovedBudget || !hasActual) {
-    return {
-      approvedBudgetMinor: hasApprovedBudget ? budget : null,
-      actualMinor: hasActual ? actual : null,
-      hasApprovedBudget,
-      hasActual,
-      rawDeltaMinor: null,
-      favorabilityMinor: null,
-      favorability: null,
-      variancePercent: null,
-    };
-  }
-
-  const rawDeltaMinor = actual - budget;
-  const favorabilityMinor =
-    input.canonicalSemantic === "INCOME" ? rawDeltaMinor : budget - actual;
-
+  const core = computeSemanticVarianceMetrics({
+    canonicalSemantic: input.canonicalSemantic,
+    baselineMinor: input.approvedBudgetMinor,
+    comparisonMinor: input.actualMinor,
+  });
   return {
-    approvedBudgetMinor: budget,
-    actualMinor: actual,
-    hasApprovedBudget: true,
-    hasActual: true,
-    rawDeltaMinor,
-    favorabilityMinor,
-    favorability: resolveFavorability(favorabilityMinor),
-    variancePercent: computeVariancePercent(rawDeltaMinor, budget),
+    approvedBudgetMinor: core.baselineMinor,
+    actualMinor: core.comparisonMinor,
+    hasApprovedBudget: core.hasBaseline,
+    hasActual: core.hasComparison,
+    rawDeltaMinor: core.rawDeltaMinor,
+    favorabilityMinor: core.favorabilityMinor,
+    favorability: core.favorability,
+    variancePercent: core.variancePercent,
   };
 }

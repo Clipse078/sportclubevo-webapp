@@ -4,8 +4,8 @@
 | --- | --- |
 | **Programme** | FIN-05 — Financial Reporting & Intelligence |
 | **Package** | **FIN-05A** — architecture, information design, domain contract |
-| **Status** | **FIN-05A COMPLETE** (architecture locked — implementation packages **05B–05H** not started) |
-| **Branch** | `cursor/sce-finance-05a-reporting-intelligence-architecture-067a` |
+| **Status** | **FIN-05A COMPLETE** (merged on **STAGE**); **FIN-05B IMPLEMENTED** (read models + variance engine — PO review pending); **05C–05H** not started |
+| **Branch** | FIN-05A: `cursor/sce-finance-05a-reporting-intelligence-architecture-067a`; FIN-05B: `cursor/sce-finance-05b-reporting-read-models-variance-engine-f86e` |
 | **Base** | `STAGE` after FIN-04E merge (PR **#907**, merge commit `c1450ef7ce5849705c4f9e4ace248e1996d45a4a`) |
 | **Code locks** | `lib/finance/reporting/finance-reporting-intelligence-architecture-contract.ts` |
 | **ADR** | [ADR-038 — Financial Reporting & Intelligence (FIN-05)](../roadmap/05-architecture-decisions.md#adr-038--financial-reporting--intelligence-fin-05) |
@@ -402,7 +402,7 @@ Tests: `lib/finance/__tests__/finance-05a-reporting-intelligence-architecture.te
 | Package | Focus |
 | --- | --- |
 | **FIN-05A** | Reporting & Intelligence Architecture (**this document**) |
-| **FIN-05B** | Management Reporting Read Models & Variance Engine |
+| **FIN-05B** | Management Reporting Read Models & Variance Engine — [`SCE-FINANCE-05B-MANAGEMENT-REPORTING-READ-MODELS-VARIANCE-ENGINE.md`](./SCE-FINANCE-05B-MANAGEMENT-REPORTING-READ-MODELS-VARIANCE-ENGINE.md) |
 | **FIN-05C** | Management P&L / Erfolgsrechnung |
 | **FIN-05D** | Finance Übersicht & Decision Intelligence |
 | **FIN-05E** | Reporting Workspace & Drill-down |
@@ -432,4 +432,6 @@ No manual browser UAT in FIN-05A — Product Owner visual UAT in later implement
 
 Full reporting UI, Übersicht redesign, statutory accounting, balance sheet, liquidity/treasury, publication/sharing, fake monthly phasing, new chart library, massive BI filters, FIN-04E reopen.
 
-**STOP — do not start FIN-05B in this package.**
+FIN-05B implementation locks: `SCE_FINANCE_REPORTING_05B_ARCHITECTURE_LOCKS` in `finance-reporting-intelligence-architecture-contract.ts`.
+
+**Next package: FIN-05C** — Management P&L / Erfolgsrechnung (do not start in FIN-05B).
